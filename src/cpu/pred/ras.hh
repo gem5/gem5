@@ -58,12 +58,10 @@ class ReturnAddrStack
     void reset();
 
     /** Returns the top address on the RAS. */
-    TheISA::PCState top()
-    { return addrStack[tos]; }
+    TheISA::PCState top() { return addrStack[tos]; }
 
     /** Returns the index of the top of the RAS. */
-    unsigned topIdx()
-    { return tos; }
+    unsigned topIdx() { return tos; }
 
     /** Pushes an address onto the RAS. */
     void push(const TheISA::PCState &return_addr);
@@ -78,17 +76,24 @@ class ReturnAddrStack
      */
     void restore(unsigned top_entry_idx, const TheISA::PCState &restored);
 
-     bool empty() { return usedEntries == 0; }
+    bool empty() { return usedEntries == 0; }
 
-     bool full() { return usedEntries == numEntries; }
+    bool full() { return usedEntries == numEntries; }
   private:
     /** Increments the top of stack index. */
-    inline void incrTos()
-    { if (++tos == numEntries) tos = 0; }
+    inline void
+    incrTos()
+    {
+        if (++tos == numEntries)
+            tos = 0;
+    }
 
     /** Decrements the top of stack index. */
-    inline void decrTos()
-    { tos = (tos == 0 ? numEntries - 1 : tos - 1); }
+    inline void
+    decrTos()
+    {
+        tos = (tos == 0 ? numEntries - 1 : tos - 1);
+    }
 
     /** The RAS itself. */
     std::vector<TheISA::PCState> addrStack;

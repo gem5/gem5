@@ -37,9 +37,9 @@ namespace branch_prediction
 void
 ReturnAddrStack::init(unsigned _numEntries)
 {
-     numEntries  = _numEntries;
-     addrStack.resize(numEntries);
-     reset();
+    numEntries = _numEntries;
+    addrStack.resize(numEntries);
+    reset();
 }
 
 void
