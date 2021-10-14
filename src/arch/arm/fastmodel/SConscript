@@ -123,17 +123,20 @@ lib_paths = (
 env.Append(LIBPATH=lib_paths)
 env.Append(RPATH=lib_paths)
 
-libs = (
+fm_libs = (
     'components',
     'pvbus',
     'armctmodel',
     'fmruntime',
     'IrisSupport',
+)
+env.Append(LIBS=list(staticify(env, lib) for lib in fm_libs))
+system_libs = (
     'atomic',
     'dl',
     'rt',
 )
-env.Append(LIBS=list(staticify(env, lib) for lib in libs))
+env.Append(LIBS=system_libs)
 
 
 class ProjectFileParser(Grammar):
