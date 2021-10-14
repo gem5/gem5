@@ -75,7 +75,8 @@ BPredUnit::BPredUnit(const Params &params)
 
 BPredUnit::BPredUnitStats::BPredUnitStats(statistics::Group *parent)
     : statistics::Group(parent),
-      ADD_STAT(lookups, statistics::units::Count::get(), "Number of BP lookups"),
+      ADD_STAT(lookups, statistics::units::Count::get(),
+              "Number of BP lookups"),
       ADD_STAT(condPredicted, statistics::units::Count::get(),
                "Number of conditional branches predicted"),
       ADD_STAT(condIncorrect, statistics::units::Count::get(),
@@ -145,8 +146,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     void *indirect_history = NULL;
 
     if (inst->isUncondCtrl()) {
-        DPRINTF(Branch, "[tid:%i] [sn:%llu] "
-            "Unconditional control\n",
+        DPRINTF(Branch, "[tid:%i] [sn:%llu] Unconditional control\n",
             tid,seqNum);
         pred_taken = true;
         // Tell the BP there was an unconditional branch.
@@ -165,9 +165,9 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
         iPred->genIndirectInfo(tid, indirect_history);
     }
 
-    DPRINTF(Branch, "[tid:%i] [sn:%llu] "
-            "Creating prediction history "
-            "for PC %s\n", tid, seqNum, pc);
+    DPRINTF(Branch,
+            "[tid:%i] [sn:%llu] Creating prediction history for PC %s\n",
+            tid, seqNum, pc);
 
     PredictorHistory predict_record(seqNum, pc.instAddr(), pred_taken,
                                     bp_history, indirect_history, tid, inst);

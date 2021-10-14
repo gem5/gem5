@@ -152,16 +152,14 @@ class BPredUnit : public SimObject
      * @param inst_PC The PC to look up.
      * @return Whether the BTB contains the given PC.
      */
-    bool BTBValid(Addr instPC)
-    { return BTB.valid(instPC, 0); }
+    bool BTBValid(Addr instPC) { return BTB.valid(instPC, 0); }
 
     /**
      * Looks up a given PC in the BTB to get the predicted target.
      * @param inst_PC The PC to look up.
      * @return The address of the target of the branch.
      */
-    TheISA::PCState BTBLookup(Addr instPC)
-    { return BTB.lookup(instPC, 0); }
+    TheISA::PCState BTBLookup(Addr instPC) { return BTB.lookup(instPC, 0); }
 
     /**
      * Updates the BP with taken/not taken information.
@@ -184,8 +182,11 @@ class BPredUnit : public SimObject
      * @param inst_PC The branch's PC that will be updated.
      * @param target_PC The branch's target that will be added to the BTB.
      */
-    void BTBUpdate(Addr instPC, const TheISA::PCState &target)
-    { BTB.update(instPC, target, 0); }
+    void
+    BTBUpdate(Addr instPC, const TheISA::PCState &target)
+    {
+        BTB.update(instPC, target, 0);
+    }
 
 
     void dump();
@@ -208,7 +209,9 @@ class BPredUnit : public SimObject
               inst(inst)
         {}
 
-        bool operator==(const PredictorHistory &entry) const {
+        bool
+        operator==(const PredictorHistory &entry) const
+        {
             return this->seqNum == entry.seqNum;
         }
 
