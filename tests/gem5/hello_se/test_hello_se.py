@@ -49,13 +49,11 @@ import re
 static_progs = {
     constants.gcn3_x86_tag: (
         "x86-hello64-static",
-        # "x86-hello32-static", # Running 32-bit binaries on gem5 is broken:
-                                # https://gem5.atlassian.net/browse/GEM5-1074
+        "x86-hello32-static",
     ),
     constants.arm_tag: (
         "arm-hello64-static",
-        # "arm-hello32-static", # Running 32-bit binaries on gem5 is broken.
-                                # https://gem5.atlassian.net/browse/GEM5-1074
+        "arm-hello32-static",
     ),
     constants.mips_tag: ("mips-hello",),
     constants.riscv_tag: ("riscv-hello",),
