@@ -150,6 +150,14 @@ PySource('gem5.components.processors',
 PySource('gem5.components.processors',
     'gem5/components/processors/cpu_types.py')
 PySource('gem5.components.processors',
+    'gem5/components/processors/gups_generator_core.py')
+PySource('gem5.components.processors',
+    'gem5/components/processors/gups_generator.py')
+PySource('gem5.components.processors',
+    'gem5/components/processors/gups_generator_ep.py')
+PySource('gem5.components.processors',
+    'gem5/components/processors/gups_generator_par.py')
+PySource('gem5.components.processors',
     'gem5/components/processors/linear_generator_core.py')
 PySource('gem5.components.processors',
     'gem5/components/processors/linear_generator.py')
