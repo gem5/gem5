@@ -263,17 +263,6 @@ class PCStateCommon : public PCStateBase
     MicroPC nupc() const { return _nupc; }
     void nupc(MicroPC val) { _nupc = val; }
 
-    /**
-     * Returns the memory address the bytes of the next instruction came from.
-     *
-     * @return Memory address of the next instruction's encoding.
-     */
-    Addr
-    nextInstAddr() const
-    {
-        return _npc;
-    }
-
     // Reset the macroop's upc without advancing the regular pc.
     void
     uReset()

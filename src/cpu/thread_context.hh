@@ -240,8 +240,6 @@ class ThreadContext : public PCEventScope
 
     virtual Addr instAddr() const = 0;
 
-    virtual Addr nextInstAddr() const = 0;
-
     virtual MicroPC microPC() const = 0;
 
     virtual RegVal readMiscRegNoEffect(RegIndex misc_reg) const = 0;

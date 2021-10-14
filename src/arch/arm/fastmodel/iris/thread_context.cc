@@ -597,12 +597,6 @@ ThreadContext::instAddr() const
     return pcState().instAddr();
 }
 
-Addr
-ThreadContext::nextInstAddr() const
-{
-    return pcState().nextInstAddr();
-}
-
 RegVal
 ThreadContext::readMiscRegNoEffect(RegIndex misc_reg) const
 {

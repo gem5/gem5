@@ -351,7 +351,6 @@ class ThreadContext : public gem5::ThreadContext
     ArmISA::PCState pcState() const override;
     void pcState(const ArmISA::PCState &val) override;
     Addr instAddr() const override;
-    Addr nextInstAddr() const override;
 
     RegVal readMiscRegNoEffect(RegIndex misc_reg) const override;
     RegVal

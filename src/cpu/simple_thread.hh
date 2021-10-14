@@ -430,7 +430,6 @@ class SimpleThread : public ThreadState, public ThreadContext
     }
 
     Addr instAddr() const override  { return _pcState.instAddr(); }
-    Addr nextInstAddr() const override { return _pcState.nextInstAddr(); }
     MicroPC microPC() const override { return _pcState.microPC(); }
     bool readPredicate() const { return predicate; }
     void setPredicate(bool val) { predicate = val; }

@@ -314,13 +314,6 @@ class Commit
     /** Returns the PC of a specific thread. */
     Addr instAddr(ThreadID tid) { return pc[tid]->instAddr(); }
 
-    /** Returns the next PC of a specific thread. */
-    Addr
-    nextInstAddr(ThreadID tid)
-    {
-        return pc[tid]->as<TheISA::PCState>().nextInstAddr();
-    }
-
     /** Reads the micro PC of a specific thread. */
     Addr microPC(ThreadID tid) { return pc[tid]->microPC(); }
 

@@ -1325,12 +1325,6 @@ CPU::instAddr(ThreadID tid)
     return commit.instAddr(tid);
 }
 
-Addr
-CPU::nextInstAddr(ThreadID tid)
-{
-    return commit.nextInstAddr(tid);
-}
-
 MicroPC
 CPU::microPC(ThreadID tid)
 {
