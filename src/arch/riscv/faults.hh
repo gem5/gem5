@@ -243,8 +243,9 @@ class BreakpointFault : public RiscvFault
     const PCState pcState;
 
   public:
-    BreakpointFault(const PCState &pc)
-        : RiscvFault("Breakpoint", FaultType::OTHERS, BREAKPOINT), pcState(pc)
+    BreakpointFault(const PCStateBase &pc)
+        : RiscvFault("Breakpoint", FaultType::OTHERS, BREAKPOINT),
+        pcState(pc.as<PCState>())
     {}
 
     RegVal trap_value() const override { return pcState.pc(); }

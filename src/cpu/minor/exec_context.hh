@@ -94,7 +94,7 @@ class ExecContext : public gem5::ExecContext
         inst(inst_)
     {
         DPRINTF(MinorExecute, "ExecContext setting PC: %s\n", *inst->pc);
-        pcState(inst->pc->as<TheISA::PCState>());
+        pcState(*inst->pc);
         setPredicate(inst->readPredicate());
         setMemAccPredicate(inst->readMemAccPredicate());
         thread.setIntReg(zeroReg, 0);
@@ -299,16 +299,18 @@ class ExecContext : public gem5::ExecContext
         return 0;
     }
 
-    TheISA::PCState
+    mutable TheISA::PCState tempPCState;
+    const PCStateBase &
     pcState() const override
     {
-        return thread.pcState();
+        set(tempPCState, thread.pcState());
+        return tempPCState;
     }
 
     void
-    pcState(const TheISA::PCState &val) override
+    pcState(const PCStateBase &val) override
     {
-        thread.pcState(val);
+        thread.pcState(val.as<TheISA::PCState>());
     }
 
     RegVal

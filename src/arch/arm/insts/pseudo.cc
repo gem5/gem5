@@ -60,8 +60,7 @@ DecoderFaultInst::DecoderFaultInst(ExtMachInst _machInst)
 Fault
 DecoderFaultInst::execute(ExecContext *xc, Trace::InstRecord *traceData) const
 {
-    const PCState pc_state(xc->pcState());
-    const Addr pc(pc_state.instAddr());
+    const Addr pc = xc->pcState().instAddr();
 
     switch (faultId) {
       case DecoderFault::UNALIGNED:
@@ -203,7 +202,7 @@ DebugStep::DebugStep(ExtMachInst _machInst)
 Fault
 DebugStep::execute(ExecContext *xc, Trace::InstRecord *traceData) const
 {
-    PCState pc_state(xc->pcState());
+    PCState pc_state = xc->pcState().as<PCState>();
     pc_state.debugStep(false);
     xc->pcState(pc_state);
 
@@ -213,7 +212,6 @@ DebugStep::execute(ExecContext *xc, Trace::InstRecord *traceData) const
 
     return std::make_shared<SoftwareStepFault>(machInst, ldx,
                                                pc_state.stepped());
-
 }
 
 } // namespace gem5

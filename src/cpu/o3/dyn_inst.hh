@@ -898,14 +898,14 @@ class DynInst : public ExecContext, public RefCounted
     }
 
     /** Read the PC state of this instruction. */
-    TheISA::PCState
+    const PCStateBase &
     pcState() const override
     {
-        return pc->as<TheISA::PCState>();
+        return *pc;
     }
 
     /** Set the PC state of this instruction. */
-    void pcState(const TheISA::PCState &val) override { set(pc, val); }
+    void pcState(const PCStateBase &val) override { set(pc, val); }
 
     /** Read the PC of this instruction. */
     Addr instAddr() const { return pc->instAddr(); }

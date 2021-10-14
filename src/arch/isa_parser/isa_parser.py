@@ -152,7 +152,8 @@ class Template(object):
 
             myDict['op_rd'] = operands.concatAttrStrings('op_rd')
             if operands.readPC:
-                myDict['op_rd'] = '__parserAutoPCState = xc->pcState();\n' + \
+                myDict['op_rd'] = \
+                        'set(__parserAutoPCState, xc->pcState());\n' + \
                                   myDict['op_rd']
 
             # Compose the op_wb string. If we're going to write back the

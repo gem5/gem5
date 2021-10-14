@@ -325,13 +325,13 @@ class ArmStaticInst : public StaticInst
     static inline Addr
     readPC(ExecContext *xc)
     {
-        return xc->pcState().instPC();
+        return xc->pcState().as<PCState>().instPC();
     }
 
     static inline void
     setNextPC(ExecContext *xc, Addr val)
     {
-        PCState pc = xc->pcState();
+        PCState pc = xc->pcState().as<PCState>();
         pc.instNPC(val);
         xc->pcState(pc);
     }
@@ -374,7 +374,7 @@ class ArmStaticInst : public StaticInst
     static inline void
     setIWNextPC(ExecContext *xc, Addr val)
     {
-        PCState pc = xc->pcState();
+        PCState pc = xc->pcState().as<PCState>();
         pc.instIWNPC(val);
         xc->pcState(pc);
     }
@@ -384,7 +384,7 @@ class ArmStaticInst : public StaticInst
     static inline void
     setAIWNextPC(ExecContext *xc, Addr val)
     {
-        PCState pc = xc->pcState();
+        PCState pc = xc->pcState().as<PCState>();
         pc.instAIWNPC(val);
         xc->pcState(pc);
     }

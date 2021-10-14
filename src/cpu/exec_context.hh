@@ -181,8 +181,8 @@ class ExecContext
      * @{
      * @name PC Control
      */
-    virtual TheISA::PCState pcState() const = 0;
-    virtual void pcState(const TheISA::PCState &val) = 0;
+    virtual const PCStateBase &pcState() const = 0;
+    virtual void pcState(const PCStateBase &val) = 0;
     /** @} */
 
     /**

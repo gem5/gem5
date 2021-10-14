@@ -72,9 +72,9 @@ output exec {{
     Fault
     Unknown::execute(ExecContext *xc, Trace::InstRecord *traceData) const
     {
-        inform("attempt to execute unknown instruction at %#x"
+        inform("attempt to execute unknown instruction at %s"
                "(inst 0x%08x, opcode 0x%x, binary: %s)",
-               xc->pcState().pc(), machInst, PO, inst2string(machInst));
+               xc->pcState(), machInst, PO, inst2string(machInst));
         return std::make_shared<UnimplementedOpcodeFault>();
     }
 }};

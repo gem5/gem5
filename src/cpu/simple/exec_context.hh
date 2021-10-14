@@ -467,16 +467,18 @@ class SimpleExecContext : public ExecContext
         thread->setMiscReg(misc_reg, val);
     }
 
-    TheISA::PCState
+    mutable TheISA::PCState tempPCState;
+    const PCStateBase &
     pcState() const override
     {
-        return thread->pcState();
+        set(tempPCState, thread->pcState());
+        return tempPCState;
     }
 
     void
-    pcState(const TheISA::PCState &val) override
+    pcState(const PCStateBase &val) override
     {
-        thread->pcState(val);
+        thread->pcState(val.as<TheISA::PCState>());
     }
 
     Fault
