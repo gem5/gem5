@@ -47,13 +47,13 @@ class SimpleIndirectPredictor : public IndirectPredictor
   public:
     SimpleIndirectPredictor(const SimpleIndirectPredictorParams &params);
 
-    bool lookup(Addr br_addr, TheISA::PCState& br_target, ThreadID tid);
+    bool lookup(Addr br_addr, PCStateBase& br_target, ThreadID tid);
     void recordIndirect(Addr br_addr, Addr tgt_addr, InstSeqNum seq_num,
                         ThreadID tid);
     void commit(InstSeqNum seq_num, ThreadID tid, void * indirect_history);
     void squash(InstSeqNum seq_num, ThreadID tid);
     void recordTarget(InstSeqNum seq_num, void * indirect_history,
-                      const TheISA::PCState& target, ThreadID tid);
+                      const PCStateBase& target, ThreadID tid);
     void genIndirectInfo(ThreadID tid, void* & indirect_history);
     void updateDirectionInfo(ThreadID tid, bool actually_taken);
     void deleteIndirectInfo(ThreadID tid, void * indirect_history);
@@ -73,9 +73,8 @@ class SimpleIndirectPredictor : public IndirectPredictor
 
     struct IPredEntry
     {
-        IPredEntry() : tag(0), target(0) { }
-        Addr tag;
-        TheISA::PCState target;
+        Addr tag = 0;
+        std::unique_ptr<PCStateBase> target;
     };
 
     std::vector<std::vector<IPredEntry> > targetCache;
@@ -95,11 +94,9 @@ class SimpleIndirectPredictor : public IndirectPredictor
 
     struct ThreadInfo
     {
-        ThreadInfo() : headHistEntry(0), ghr(0) { }
-
         std::deque<HistoryEntry> pathHist;
-        unsigned headHistEntry;
-        unsigned ghr;
+        unsigned headHistEntry = 0;
+        unsigned ghr = 0;
     };
 
     std::vector<ThreadInfo> threadInfo;

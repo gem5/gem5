@@ -371,9 +371,8 @@ BaseSimpleCPU::preExecute()
         const InstSeqNum cur_sn(0);
         set(t_info.predPC, thread->pcState());
         const bool predict_taken(
-            branchPred->predict(curStaticInst, cur_sn,
-                                t_info.predPC->as<TheISA::PCState>(),
-                                curThread));
+            branchPred->predict(curStaticInst, cur_sn, *t_info.predPC,
+                curThread));
 
         if (predict_taken)
             ++t_info.execContextStats.numPredictedBranches;
@@ -489,7 +488,8 @@ BaseSimpleCPU::advancePC(const Fault &fault)
             branchPred->update(cur_sn, curThread);
         } else {
             // Mis-predicted branch
-            branchPred->squash(cur_sn, thread->pcState(), branching, curThread);
+            branchPred->squash(cur_sn, thread->pcState(), branching,
+                    curThread);
             ++t_info.execContextStats.numBranchMispred;
         }
     }

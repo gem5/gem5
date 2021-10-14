@@ -156,7 +156,7 @@ Fetch2::updateBranchPrediction(const BranchData &branch)
         /* Unpredicted branch or barrier */
         DPRINTF(Branch, "Unpredicted branch seen inst: %s\n", *inst);
         branchPredictor.squash(inst->id.fetchSeqNum,
-            branch.target->as<TheISA::PCState>(), true, inst->id.threadId);
+            *branch.target, true, inst->id.threadId);
         // Update after squashing to accomodate O3CPU
         // using the branch prediction code.
         branchPredictor.update(inst->id.fetchSeqNum,
@@ -172,8 +172,7 @@ Fetch2::updateBranchPrediction(const BranchData &branch)
         /* Predicted taken, not taken */
         DPRINTF(Branch, "Branch mis-predicted inst: %s\n", *inst);
         branchPredictor.squash(inst->id.fetchSeqNum,
-            branch.target->as<TheISA::PCState>() /* Not used */,
-            false, inst->id.threadId);
+            *branch.target /* Not used */, false, inst->id.threadId);
         // Update after squashing to accomodate O3CPU
         // using the branch prediction code.
         branchPredictor.update(inst->id.fetchSeqNum,
@@ -184,7 +183,7 @@ Fetch2::updateBranchPrediction(const BranchData &branch)
         DPRINTF(Branch, "Branch mis-predicted target inst: %s target: %s\n",
             *inst, *branch.target);
         branchPredictor.squash(inst->id.fetchSeqNum,
-            branch.target->as<TheISA::PCState>(), true, inst->id.threadId);
+            *branch.target, true, inst->id.threadId);
         break;
     }
 }
@@ -206,8 +205,7 @@ Fetch2::predictBranch(MinorDynInstPtr inst, BranchData &branch)
         DPRINTF(Branch, "Trying to predict for inst: %s\n", *inst);
 
         if (branchPredictor.predict(inst->staticInst,
-                    inst->id.fetchSeqNum, inst_pc->as<TheISA::PCState>(),
-                    inst->id.threadId)) {
+                    inst->id.fetchSeqNum, *inst_pc, inst->id.threadId)) {
             set(branch.target, *inst_pc);
             inst->predictedTaken = true;
             set(inst->predictedTarget, inst_pc);

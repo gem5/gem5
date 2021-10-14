@@ -88,7 +88,7 @@ class BPredUnit : public SimObject
      * @return Returns if the branch is taken or not.
      */
     bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
-                 TheISA::PCState &pc, ThreadID tid);
+                 PCStateBase &pc, ThreadID tid);
 
     // @todo: Rename this function.
     virtual void uncondBranch(ThreadID tid, Addr pc, void * &bp_history) = 0;
@@ -119,7 +119,7 @@ class BPredUnit : public SimObject
      * @param tid The thread id.
      */
     void squash(const InstSeqNum &squashed_sn,
-                const TheISA::PCState &corr_target,
+                const PCStateBase &corr_target,
                 bool actually_taken, ThreadID tid);
 
     /**
@@ -155,11 +155,17 @@ class BPredUnit : public SimObject
     bool BTBValid(Addr instPC) { return BTB.valid(instPC, 0); }
 
     /**
-     * Looks up a given PC in the BTB to get the predicted target.
+     * Looks up a given PC in the BTB to get the predicted target. The PC may
+     * be changed or deleted in the future, so it needs to be used immediately,
+     * and/or copied for use later.
      * @param inst_PC The PC to look up.
      * @return The address of the target of the branch.
      */
-    TheISA::PCState BTBLookup(Addr instPC) { return BTB.lookup(instPC, 0); }
+    const PCStateBase *
+    BTBLookup(Addr inst_pc)
+    {
+        return BTB.lookup(inst_pc, 0);
+    }
 
     /**
      * Updates the BP with taken/not taken information.
@@ -183,7 +189,7 @@ class BPredUnit : public SimObject
      * @param target_PC The branch's target that will be added to the BTB.
      */
     void
-    BTBUpdate(Addr instPC, const TheISA::PCState &target)
+    BTBUpdate(Addr instPC, const PCStateBase &target)
     {
         BTB.update(instPC, target, 0);
     }
@@ -203,11 +209,20 @@ class BPredUnit : public SimObject
                          void *indirect_history, ThreadID _tid,
                          const StaticInstPtr & inst)
             : seqNum(seq_num), pc(instPC), bpHistory(bp_history),
-              indirectHistory(indirect_history), RASTarget(0), RASIndex(0),
-              tid(_tid), predTaken(pred_taken), usedRAS(0), pushedRAS(0),
-              wasCall(0), wasReturn(0), wasIndirect(0), target(MaxAddr),
-              inst(inst)
+              indirectHistory(indirect_history), tid(_tid),
+              predTaken(pred_taken), inst(inst)
         {}
+
+        PredictorHistory(const PredictorHistory &other) :
+            seqNum(other.seqNum), pc(other.pc), bpHistory(other.bpHistory),
+            indirectHistory(other.indirectHistory), RASIndex(other.RASIndex),
+            tid(other.tid), predTaken(other.predTaken), usedRAS(other.usedRAS),
+            pushedRAS(other.pushedRAS), wasCall(other.wasCall),
+            wasReturn(other.wasReturn), wasIndirect(other.wasIndirect),
+            target(other.target), inst(other.inst)
+        {
+            set(RASTarget, other.RASTarget);
+        }
 
         bool
         operator==(const PredictorHistory &entry) const
@@ -225,15 +240,15 @@ class BPredUnit : public SimObject
          * predictor.  It is used to update or restore state of the
          * branch predictor.
          */
-        void *bpHistory;
+        void *bpHistory = nullptr;
 
-        void *indirectHistory;
+        void *indirectHistory = nullptr;
 
         /** The RAS target (only valid if a return). */
-        TheISA::PCState RASTarget;
+        std::unique_ptr<PCStateBase> RASTarget;
 
         /** The RAS index of the instruction (only valid if a call). */
-        unsigned RASIndex;
+        unsigned RASIndex = 0;
 
         /** The thread id. */
         ThreadID tid;
@@ -242,24 +257,24 @@ class BPredUnit : public SimObject
         bool predTaken;
 
         /** Whether or not the RAS was used. */
-        bool usedRAS;
+        bool usedRAS = false;
 
         /* Whether or not the RAS was pushed */
-        bool pushedRAS;
+        bool pushedRAS = false;
 
         /** Whether or not the instruction was a call. */
-        bool wasCall;
+        bool wasCall = false;
 
         /** Whether or not the instruction was a return. */
-        bool wasReturn;
+        bool wasReturn = false;
 
         /** Wether this instruction was an indirect branch */
-        bool wasIndirect;
+        bool wasIndirect = false;
 
         /** Target of the branch. First it is predicted, and fixed later
          *  if necessary
          */
-        Addr target;
+        Addr target = MaxAddr;
 
         /** The branch instrction */
         const StaticInstPtr inst;

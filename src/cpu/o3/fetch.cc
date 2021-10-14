@@ -524,7 +524,7 @@ Fetch::lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &next_pc)
 
     ThreadID tid = inst->threadNumber;
     predict_taken = branchPred->predict(inst->staticInst, inst->seqNum,
-                                        next_pc.as<TheISA::PCState>(), tid);
+                                        next_pc, tid);
 
     if (predict_taken) {
         DPRINTF(Fetch, "[tid:%i] [sn:%llu] Branch at PC %#x "
@@ -968,7 +968,7 @@ Fetch::checkSignalsAndUpdate(ThreadID tid)
         if (fromCommit->commitInfo[tid].mispredictInst &&
             fromCommit->commitInfo[tid].mispredictInst->isControl()) {
             branchPred->squash(fromCommit->commitInfo[tid].doneSeqNum,
-                    fromCommit->commitInfo[tid].pc->as<TheISA::PCState>(),
+                    *fromCommit->commitInfo[tid].pc,
                     fromCommit->commitInfo[tid].branchTaken, tid);
         } else {
             branchPred->squash(fromCommit->commitInfo[tid].doneSeqNum,
@@ -990,7 +990,7 @@ Fetch::checkSignalsAndUpdate(ThreadID tid)
         // Update the branch predictor.
         if (fromDecode->decodeInfo[tid].branchMispredict) {
             branchPred->squash(fromDecode->decodeInfo[tid].doneSeqNum,
-                    fromDecode->decodeInfo[tid].nextPC->as<TheISA::PCState>(),
+                    *fromDecode->decodeInfo[tid].nextPC,
                     fromDecode->decodeInfo[tid].branchTaken, tid);
         } else {
             branchPred->squash(fromDecode->decodeInfo[tid].doneSeqNum,

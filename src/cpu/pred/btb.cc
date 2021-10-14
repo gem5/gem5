@@ -112,35 +112,35 @@ DefaultBTB::valid(Addr instPC, ThreadID tid)
 // @todo Create some sort of return struct that has both whether or not the
 // address is valid, and also the address.  For now will just use addr = 0 to
 // represent invalid entry.
-TheISA::PCState
-DefaultBTB::lookup(Addr instPC, ThreadID tid)
+const PCStateBase *
+DefaultBTB::lookup(Addr inst_pc, ThreadID tid)
 {
-    unsigned btb_idx = getIndex(instPC, tid);
+    unsigned btb_idx = getIndex(inst_pc, tid);
 
-    Addr inst_tag = getTag(instPC);
+    Addr inst_tag = getTag(inst_pc);
 
     assert(btb_idx < numEntries);
 
     if (btb[btb_idx].valid
         && inst_tag == btb[btb_idx].tag
         && btb[btb_idx].tid == tid) {
-        return btb[btb_idx].target;
+        return btb[btb_idx].target.get();
     } else {
-        return TheISA::PCState(0);
+        return nullptr;
     }
 }
 
 void
-DefaultBTB::update(Addr instPC, const TheISA::PCState &target, ThreadID tid)
+DefaultBTB::update(Addr inst_pc, const PCStateBase &target, ThreadID tid)
 {
-    unsigned btb_idx = getIndex(instPC, tid);
+    unsigned btb_idx = getIndex(inst_pc, tid);
 
     assert(btb_idx < numEntries);
 
     btb[btb_idx].tid = tid;
     btb[btb_idx].valid = true;
-    btb[btb_idx].target = target;
-    btb[btb_idx].tag = getTag(instPC);
+    set(btb[btb_idx].target, target);
+    btb[btb_idx].tag = getTag(inst_pc);
 }
 
 } // namespace branch_prediction

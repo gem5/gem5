@@ -52,7 +52,7 @@ class IndirectPredictor : public SimObject
     {
     }
 
-    virtual bool lookup(Addr br_addr, TheISA::PCState& br_target,
+    virtual bool lookup(Addr br_addr, PCStateBase& br_target,
                         ThreadID tid) = 0;
     virtual void recordIndirect(Addr br_addr, Addr tgt_addr,
                                 InstSeqNum seq_num, ThreadID tid) = 0;
@@ -60,7 +60,7 @@ class IndirectPredictor : public SimObject
                         void * indirect_history) = 0;
     virtual void squash(InstSeqNum seq_num, ThreadID tid) = 0;
     virtual void recordTarget(InstSeqNum seq_num, void * indirect_history,
-                              const TheISA::PCState& target, ThreadID tid) = 0;
+                              const PCStateBase& target, ThreadID tid) = 0;
     virtual void genIndirectInfo(ThreadID tid, void* & indirect_history) = 0;
     virtual void updateDirectionInfo(ThreadID tid, bool actually_taken) = 0;
     virtual void deleteIndirectInfo(ThreadID tid, void * indirect_history) = 0;

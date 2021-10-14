@@ -45,21 +45,17 @@ class DefaultBTB
   private:
     struct BTBEntry
     {
-        BTBEntry()
-            : tag(0), target(0), valid(false)
-        {}
-
         /** The entry's tag. */
-        Addr tag;
+        Addr tag = 0;
 
         /** The entry's target. */
-        TheISA::PCState target;
+        std::unique_ptr<PCStateBase> target;
 
         /** The entry's thread id. */
         ThreadID tid;
 
         /** Whether or not the entry is valid. */
-        bool valid;
+        bool valid = false;
     };
 
   public:
@@ -79,7 +75,7 @@ class DefaultBTB
      *  @param tid The thread id.
      *  @return Returns the target of the branch.
      */
-    TheISA::PCState lookup(Addr instPC, ThreadID tid);
+    const PCStateBase *lookup(Addr instPC, ThreadID tid);
 
     /** Checks if a branch is in the BTB.
      *  @param inst_PC The address of the branch to look up.
@@ -89,12 +85,11 @@ class DefaultBTB
     bool valid(Addr instPC, ThreadID tid);
 
     /** Updates the BTB with the target of a branch.
-     *  @param inst_PC The address of the branch being updated.
-     *  @param target_PC The target address of the branch.
+     *  @param inst_pc The address of the branch being updated.
+     *  @param target_pc The target address of the branch.
      *  @param tid The thread id.
      */
-    void update(Addr instPC, const TheISA::PCState &targetPC,
-                ThreadID tid);
+    void update(Addr inst_pc, const PCStateBase &target_pc, ThreadID tid);
 
   private:
     /** Returns the index into the BTB, based on the branch's PC.
