@@ -226,7 +226,11 @@ class ThreadContext : public PCEventScope
     virtual TheISA::PCState pcState() const = 0;
 
     virtual void pcState(const TheISA::PCState &val) = 0;
-    void pcState(Addr addr) { pcState(TheISA::PCState(addr)); }
+    void
+    pcState(Addr addr)
+    {
+        pcState(getIsaPtr()->newPCState(addr)->as<TheISA::PCState>());
+    }
 
     void
     setNPC(Addr val)
