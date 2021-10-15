@@ -693,10 +693,10 @@ decode QUADRANT default Unknown::unknown() {
                     0x1: mulh({{
                         bool negate = (Rs1_sd < 0) != (Rs2_sd < 0);
 
-                        uint64_t Rs1_lo = (uint32_t)abs(Rs1_sd);
-                        uint64_t Rs1_hi = (uint64_t)abs(Rs1_sd) >> 32;
-                        uint64_t Rs2_lo = (uint32_t)abs(Rs2_sd);
-                        uint64_t Rs2_hi = (uint64_t)abs(Rs2_sd) >> 32;
+                        uint64_t Rs1_lo = (uint32_t)std::abs(Rs1_sd);
+                        uint64_t Rs1_hi = (uint64_t)std::abs(Rs1_sd) >> 32;
+                        uint64_t Rs2_lo = (uint32_t)std::abs(Rs2_sd);
+                        uint64_t Rs2_hi = (uint64_t)std::abs(Rs2_sd) >> 32;
 
                         uint64_t hi = Rs1_hi*Rs2_hi;
                         uint64_t mid1 = Rs1_hi*Rs2_lo;
@@ -719,8 +719,8 @@ decode QUADRANT default Unknown::unknown() {
                     }});
                     0x1: mulhsu({{
                         bool negate = Rs1_sd < 0;
-                        uint64_t Rs1_lo = (uint32_t)abs(Rs1_sd);
-                        uint64_t Rs1_hi = (uint64_t)abs(Rs1_sd) >> 32;
+                        uint64_t Rs1_lo = (uint32_t)std::abs(Rs1_sd);
+                        uint64_t Rs1_hi = (uint64_t)std::abs(Rs1_sd) >> 32;
                         uint64_t Rs2_lo = (uint32_t)Rs2;
                         uint64_t Rs2_hi = Rs2 >> 32;
 
