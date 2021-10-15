@@ -344,7 +344,7 @@ decode OP default Unknown::unknown()
                 0x11: Priv::rdpic({{Rd = Pic;}}, {{Pcr<0:>}});
                 // 0x12 should cause an illegal instruction exception
                 0x13: NoPriv::rdgsr({{
-                       fault = checkFpEnableFault(xc);
+                       fault = checkFpEnabled(Pstate, Fprs);
                        if (fault)
                             return fault;
                        Rd = Gsr;
@@ -1260,11 +1260,11 @@ decode OP default Unknown::unknown()
         format Trap {
             0x20: Loadf::ldf({{Frds_uw = Mem_uw;}});
             0x21: decode RD {
-                0x0: Load::ldfsr({{fault = checkFpEnableFault(xc);
+                0x0: Load::ldfsr({{fault = checkFpEnabled(Pstate, Fprs);
                                      if (fault)
                                          return fault;
                                    Fsr = Mem_uw | Fsr<63:32>;}});
-                0x1: Load::ldxfsr({{fault = checkFpEnableFault(xc);
+                0x1: Load::ldxfsr({{fault = checkFpEnabled(Pstate, Fprs);
                                      if (fault)
                                          return fault;
                                     Fsr = Mem_udw;}});
@@ -1274,11 +1274,11 @@ decode OP default Unknown::unknown()
             0x23: Loadf::lddf({{Frd_udw = Mem_udw;}});
             0x24: Storef::stf({{Mem_uw = Frds_uw;}});
             0x25: decode RD {
-                0x0: StoreFsr::stfsr({{fault = checkFpEnableFault(xc);
+                0x0: StoreFsr::stfsr({{fault = checkFpEnabled(Pstate, Fprs);
                                        if (fault)
                                            return fault;
                                        Mem_uw = Fsr<31:0>;}});
-                0x1: StoreFsr::stxfsr({{fault = checkFpEnableFault(xc);
+                0x1: StoreFsr::stxfsr({{fault = checkFpEnabled(Pstate, Fprs);
                                         if (fault)
                                             return fault;
                                         Mem_udw = Fsr;}});
