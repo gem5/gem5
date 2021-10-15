@@ -324,8 +324,8 @@ GUPSGen::GenPort::recvTimingResp(PacketPtr pkt)
     return true;
 }
 
-GUPSGen::GUPSGenStat::GUPSGenStat(GUPSGen* parent):
-    Stats::Group(parent),
+GUPSGen::GUPSGenStat::GUPSGenStat(GUPSGen* parent) :
+    statistics::Group(parent),
     ADD_STAT(totalUpdates, statistics::units::Count::get(),
         "Total number of updates the generator made in the memory"),
     ADD_STAT(GUPS, statistics::units::Rate<statistics::units::Count,

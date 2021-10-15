@@ -301,25 +301,25 @@ class GUPSGen : public ClockedObject
      */
     int readRequests;
 
-    struct GUPSGenStat : public Stats::Group
+    struct GUPSGenStat : public statistics::Group
     {
         GUPSGenStat(GUPSGen* parent);
         void regStats() override;
 
-        Stats::Scalar totalUpdates;
-        Stats::Formula GUPS;
+        statistics::Scalar totalUpdates;
+        statistics::Formula GUPS;
 
-        Stats::Scalar totalReads;
-        Stats::Scalar totalBytesRead;
-        Stats::Formula avgReadBW;
-        Stats::Scalar totalReadLat;
-        Stats::Formula avgReadLat;
+        statistics::Scalar totalReads;
+        statistics::Scalar totalBytesRead;
+        statistics::Formula avgReadBW;
+        statistics::Scalar totalReadLat;
+        statistics::Formula avgReadLat;
 
-        Stats::Scalar totalWrites;
-        Stats::Scalar totalBytesWritten;
-        Stats::Formula avgWriteBW;
-        Stats::Scalar totalWriteLat;
-        Stats::Formula avgWriteLat;
+        statistics::Scalar totalWrites;
+        statistics::Scalar totalBytesWritten;
+        statistics::Formula avgWriteBW;
+        statistics::Scalar totalWriteLat;
+        statistics::Formula avgWriteLat;
     } stats;
 
   public:
