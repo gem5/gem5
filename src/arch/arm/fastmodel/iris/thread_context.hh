@@ -348,7 +348,6 @@ class ThreadContext : public gem5::ThreadContext
     }
 
     void pcStateNoRecord(const PCStateBase &val) override { pcState(val); }
-    MicroPC microPC() const override { return 0; }
 
     const PCStateBase &pcState() const override;
     void pcState(const PCStateBase &val) override;

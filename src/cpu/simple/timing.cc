@@ -180,7 +180,7 @@ TimingSimpleCPU::switchOut()
     assert(!fetchEvent.scheduled());
     assert(_status == BaseSimpleCPU::Running || _status == Idle);
     assert(!t_info.stayAtPC);
-    assert(thread->microPC() == 0);
+    assert(thread->pcState().microPC() == 0);
 
     updateCycleCounts();
     updateCycleCounters(BaseCPU::CPU_STATE_ON);

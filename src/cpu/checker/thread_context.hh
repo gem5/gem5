@@ -343,9 +343,6 @@ class CheckerThreadContext : public ThreadContext
     /** Reads this thread's PC. */
     Addr instAddr() const override { return actualTC->instAddr(); }
 
-    /** Reads this thread's next PC. */
-    MicroPC microPC() const override { return actualTC->microPC(); }
-
     RegVal
     readMiscRegNoEffect(RegIndex misc_reg) const override
     {

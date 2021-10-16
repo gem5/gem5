@@ -219,7 +219,7 @@ DynInst::~DynInst()
             DPRINTFR(O3PipeView, "O3PipeView:fetch:%llu:0x%08llx:%d:%llu:%s\n",
                      fetch,
                      instAddr(),
-                     microPC(),
+                     pcState().microPC(),
                      seqNum,
                      staticInst->disassemble(instAddr()));
 

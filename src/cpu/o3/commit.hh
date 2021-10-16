@@ -314,9 +314,6 @@ class Commit
     /** Returns the PC of a specific thread. */
     Addr instAddr(ThreadID tid) { return pc[tid]->instAddr(); }
 
-    /** Reads the micro PC of a specific thread. */
-    Addr microPC(ThreadID tid) { return pc[tid]->microPC(); }
-
   private:
     /** Time buffer interface. */
     TimeBuffer<TimeStruct> *timeBuffer;

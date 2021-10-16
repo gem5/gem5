@@ -295,13 +295,6 @@ class ThreadContext : public gem5::ThreadContext
         return cpu->instAddr(thread->threadId());
     }
 
-    /** Reads this thread's next PC. */
-    MicroPC
-    microPC() const override
-    {
-        return cpu->microPC(thread->threadId());
-    }
-
     /** Reads a miscellaneous register. */
     RegVal
     readMiscRegNoEffect(RegIndex misc_reg) const override

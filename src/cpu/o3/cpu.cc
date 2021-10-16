@@ -1325,12 +1325,6 @@ CPU::instAddr(ThreadID tid)
     return commit.instAddr(tid);
 }
 
-MicroPC
-CPU::microPC(ThreadID tid)
-{
-    return commit.microPC(tid);
-}
-
 void
 CPU::squashFromTC(ThreadID tid)
 {

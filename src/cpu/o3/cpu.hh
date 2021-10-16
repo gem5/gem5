@@ -393,9 +393,6 @@ class CPU : public BaseCPU
     /** Reads the commit PC of a specific thread. */
     Addr instAddr(ThreadID tid);
 
-    /** Reads the commit micro PC of a specific thread. */
-    MicroPC microPC(ThreadID tid);
-
     /** Initiates a squash of all in-flight instructions for a given
      * thread.  The source of the squash is an external update of
      * state through the TC.

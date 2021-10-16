@@ -92,7 +92,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     isCpuDrained() const
     {
         SimpleExecContext &t_info = *threadInfo[curThread];
-        return t_info.thread->microPC() == 0 &&
+        return t_info.thread->pcState().microPC() == 0 &&
             !locked && !t_info.stayAtPC;
     }
 

@@ -363,7 +363,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
         SimpleExecContext& t_info = *threadInfo[curThread];
         SimpleThread* thread = t_info.thread;
 
-        return thread->microPC() == 0 && !t_info.stayAtPC &&
+        return thread->pcState().microPC() == 0 && !t_info.stayAtPC &&
                !fetchEvent.scheduled();
     }
 
