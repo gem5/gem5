@@ -288,13 +288,6 @@ class ThreadContext : public gem5::ThreadContext
 
     void pcStateNoRecord(const PCStateBase &val) override;
 
-    /** Reads this thread's PC. */
-    Addr
-    instAddr() const override
-    {
-        return cpu->instAddr(thread->threadId());
-    }
-
     /** Reads a miscellaneous register. */
     RegVal
     readMiscRegNoEffect(RegIndex misc_reg) const override

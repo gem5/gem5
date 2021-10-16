@@ -669,8 +669,8 @@ ArmKvmCPU::updateKvmStateCore()
         setOneReg(ri->id, value);
     }
 
-    DPRINTF(KvmContext, "kvm(PC) := 0x%x\n", tc->instAddr());
-    setOneReg(REG_CORE32(usr_regs.ARM_pc), tc->instAddr());
+    DPRINTF(KvmContext, "kvm(PC) := 0x%x\n", tc->pcState().instAddr());
+    setOneReg(REG_CORE32(usr_regs.ARM_pc), tc->pcState().instAddr());
 
     for (const KvmCoreMiscRegInfo *ri(kvmCoreMiscRegs);
          ri->idx != NUM_MISCREGS; ++ri) {

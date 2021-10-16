@@ -340,9 +340,6 @@ class CheckerThreadContext : public ThreadContext
         return actualTC->pcState(val);
     }
 
-    /** Reads this thread's PC. */
-    Addr instAddr() const override { return actualTC->instAddr(); }
-
     RegVal
     readMiscRegNoEffect(RegIndex misc_reg) const override
     {

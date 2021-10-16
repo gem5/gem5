@@ -383,7 +383,7 @@ TLB::translate(const RequestPtr &req,
             if (!entry) {
                 DPRINTF(TLB, "Handling a TLB miss for "
                         "address %#x at pc %#x.\n",
-                        vaddr, tc->instAddr());
+                        vaddr, tc->pcState().instAddr());
                 if (mode == BaseMMU::Read) {
                     stats.rdMisses++;
                 } else {

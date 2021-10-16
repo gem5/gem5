@@ -834,7 +834,7 @@ Commit::commit()
                     "[tid:%i] Squashing due to branch mispred "
                     "PC:%#x [sn:%llu]\n",
                     tid,
-                    fromIEW->mispredictInst[tid]->instAddr(),
+                    fromIEW->mispredictInst[tid]->pcState().instAddr(),
                     fromIEW->squashedSeqNum[tid]);
             } else {
                 DPRINTF(Commit,

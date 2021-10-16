@@ -429,7 +429,6 @@ class SimpleThread : public ThreadState, public ThreadContext
         set(_pcState, val);
     }
 
-    Addr instAddr() const override  { return _pcState->instAddr(); }
     bool readPredicate() const { return predicate; }
     void setPredicate(bool val) { predicate = val; }
 

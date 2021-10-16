@@ -851,10 +851,10 @@ Execute::tryPCEvents(ThreadID thread_id)
     /* Handle PC events on instructions */
     Addr oldPC;
     do {
-        oldPC = thread->instAddr();
+        oldPC = thread->pcState().instAddr();
         cpu.threads[thread_id]->pcEventQueue.service(oldPC, thread);
         num_pc_event_checks++;
-    } while (oldPC != thread->instAddr());
+    } while (oldPC != thread->pcState().instAddr());
 
     if (num_pc_event_checks > 1) {
         DPRINTF(PCEvent, "Acting on PC Event to PC: %s\n",

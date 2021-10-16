@@ -122,12 +122,12 @@ BaseSimpleCPU::BaseSimpleCPU(const BaseSimpleCPUParams &p)
 void
 BaseSimpleCPU::checkPcEventQueue()
 {
-    Addr oldpc, pc = threadInfo[curThread]->thread->instAddr();
+    Addr oldpc, pc = threadInfo[curThread]->thread->pcState().instAddr();
     do {
         oldpc = pc;
         threadInfo[curThread]->thread->pcEventQueue.service(
                 oldpc, threadContexts[curThread]);
-        pc = threadInfo[curThread]->thread->instAddr();
+        pc = threadInfo[curThread]->thread->pcState().instAddr();
     } while (oldpc != pc);
 }
 
@@ -282,7 +282,7 @@ BaseSimpleCPU::setupFetchRequest(const RequestPtr &req)
     SimpleThread* thread = t_info.thread;
 
     auto &decoder = thread->decoder;
-    Addr instAddr = thread->instAddr();
+    Addr instAddr = thread->pcState().instAddr();
     Addr fetchPC = (instAddr & decoder.pcMask()) + t_info.fetchOffset;
 
     // set up memory request for instruction fetch

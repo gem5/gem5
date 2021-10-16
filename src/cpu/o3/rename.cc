@@ -783,7 +783,8 @@ Rename::skidInsert(ThreadID tid)
         warn("Skidbuffer contents:\n");
         for (it = skidBuffer[tid].begin(); it != skidBuffer[tid].end(); it++) {
             warn("[tid:%i] %s [sn:%llu].\n", tid,
-                    (*it)->staticInst->disassemble(inst->instAddr()),
+                    (*it)->staticInst->disassemble(
+                        inst->pcState().instAddr()),
                     (*it)->seqNum);
         }
         panic("Skidbuffer Exceeded Max Size");

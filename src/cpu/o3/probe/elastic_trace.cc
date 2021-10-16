@@ -418,7 +418,7 @@ ElasticTrace::addDepTraceRecord(const DynInstConstPtr& head_inst,
     new_record->physAddr = head_inst->physEffAddr;
     // Currently the tracing does not support split requests.
     new_record->size = head_inst->effSize;
-    new_record->pc = head_inst->instAddr();
+    new_record->pc = head_inst->pcState().instAddr();
 
     // Assign the timing information stored in the execution info object
     new_record->executeTick = exec_info_ptr->executeTick;

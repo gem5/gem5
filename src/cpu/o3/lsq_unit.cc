@@ -1496,7 +1496,7 @@ LSQUnit::read(LSQRequest *request, int load_idx)
                     DPRINTF(HtmCpu, "HTM LD (ST2LDF) "
                       "pc=0x%lx - vaddr=0x%lx - "
                       "paddr=0x%lx - htmUid=%u\n",
-                      load_inst->instAddr(),
+                      load_inst->pcState().instAddr(),
                       data_pkt->req->hasVaddr() ?
                         data_pkt->req->getVaddr() : 0lu,
                       data_pkt->getAddr(),

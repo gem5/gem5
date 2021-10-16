@@ -590,12 +590,6 @@ ThreadContext::pcState(const PCStateBase &val)
     call().resource_write(_instId, result, pcRscId, pc);
 }
 
-Addr
-ThreadContext::instAddr() const
-{
-    return pcState().instAddr();
-}
-
 RegVal
 ThreadContext::readMiscRegNoEffect(RegIndex misc_reg) const
 {

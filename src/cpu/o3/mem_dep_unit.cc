@@ -220,7 +220,7 @@ MemDepUnit::insert(const DynInstPtr &inst)
                                 std::begin(storeBarrierSNs),
                                 std::end(storeBarrierSNs));
     } else {
-        InstSeqNum dep = depPred.checkInst(inst->instAddr());
+        InstSeqNum dep = depPred.checkInst(inst->pcState().instAddr());
         if (dep != 0)
             producing_stores.push_back(dep);
     }
@@ -286,7 +286,7 @@ MemDepUnit::insert(const DynInstPtr &inst)
         DPRINTF(MemDepUnit, "Inserting store/atomic PC %s [sn:%lli].\n",
                 inst->pcState(), inst->seqNum);
 
-        depPred.insertStore(inst->instAddr(), inst->seqNum,
+        depPred.insertStore(inst->pcState().instAddr(), inst->seqNum,
                 inst->threadNumber);
 
         ++stats.insertedStores;
@@ -308,7 +308,7 @@ MemDepUnit::insertNonSpec(const DynInstPtr &inst)
         DPRINTF(MemDepUnit, "Inserting store/atomic PC %s [sn:%lli].\n",
                 inst->pcState(), inst->seqNum);
 
-        depPred.insertStore(inst->instAddr(), inst->seqNum,
+        depPred.insertStore(inst->pcState().instAddr(), inst->seqNum,
                 inst->threadNumber);
 
         ++stats.insertedStores;
@@ -572,19 +572,20 @@ MemDepUnit::violation(const DynInstPtr &store_inst,
         const DynInstPtr &violating_load)
 {
     DPRINTF(MemDepUnit, "Passing violating PCs to store sets,"
-            " load: %#x, store: %#x\n", violating_load->instAddr(),
-            store_inst->instAddr());
+            " load: %#x, store: %#x\n", violating_load->pcState().instAddr(),
+            store_inst->pcState().instAddr());
     // Tell the memory dependence unit of the violation.
-    depPred.violation(store_inst->instAddr(), violating_load->instAddr());
+    depPred.violation(store_inst->pcState().instAddr(),
+            violating_load->pcState().instAddr());
 }
 
 void
 MemDepUnit::issue(const DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Issuing instruction PC %#x [sn:%lli].\n",
-            inst->instAddr(), inst->seqNum);
+            inst->pcState().instAddr(), inst->seqNum);
 
-    depPred.issued(inst->instAddr(), inst->seqNum, inst->isStore());
+    depPred.issued(inst->pcState().instAddr(), inst->seqNum, inst->isStore());
 }
 
 MemDepUnit::MemDepEntryPtr &

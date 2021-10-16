@@ -1319,12 +1319,6 @@ CPU::pcState(const PCStateBase &val, ThreadID tid)
     commit.pcState(val, tid);
 }
 
-Addr
-CPU::instAddr(ThreadID tid)
-{
-    return commit.instAddr(tid);
-}
-
 void
 CPU::squashFromTC(ThreadID tid)
 {
@@ -1356,7 +1350,7 @@ CPU::instDone(ThreadID tid, const DynInstPtr &inst)
     thread[tid]->threadStats.numOps++;
     cpuStats.committedOps[tid]++;
 
-    probeInstCommit(inst->staticInst, inst->instAddr());
+    probeInstCommit(inst->staticInst, inst->pcState().instAddr());
 }
 
 void
@@ -1500,7 +1494,8 @@ CPU::dumpInsts()
     while (inst_list_it != instList.end()) {
         cprintf("Instruction:%i\nPC:%#x\n[tid:%i]\n[sn:%lli]\nIssued:%i\n"
                 "Squashed:%i\n\n",
-                num, (*inst_list_it)->instAddr(), (*inst_list_it)->threadNumber,
+                num, (*inst_list_it)->pcState().instAddr(),
+                (*inst_list_it)->threadNumber,
                 (*inst_list_it)->seqNum, (*inst_list_it)->isIssued(),
                 (*inst_list_it)->isSquashed());
         inst_list_it++;

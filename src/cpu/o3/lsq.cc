@@ -971,7 +971,7 @@ LSQ::SplitDataRequest::initiateTranslation()
 
     _mainReq = std::make_shared<Request>(base_addr,
                 _size, _flags, _inst->requestorId(),
-                _inst->instAddr(), _inst->contextId());
+                _inst->pcState().instAddr(), _inst->contextId());
     _mainReq->setByteEnable(_byteEnable);
 
     // Paddr is not used in _mainReq. However, we will accumulate the flags
@@ -1086,7 +1086,7 @@ LSQ::LSQRequest::addReq(Addr addr, unsigned size,
     if (isAnyActiveElement(byte_enable.begin(), byte_enable.end())) {
         auto req = std::make_shared<Request>(
                 addr, size, _flags, _inst->requestorId(),
-                _inst->instAddr(), _inst->contextId(),
+                _inst->pcState().instAddr(), _inst->contextId(),
                 std::move(_amo_op));
         req->setByteEnable(byte_enable);
         _reqs.push_back(req);
@@ -1173,7 +1173,7 @@ LSQ::SingleDataRequest::buildPackets()
             DPRINTF(HtmCpu,
               "HTM %s pc=0x%lx - vaddr=0x%lx - paddr=0x%lx - htmUid=%u\n",
               isLoad() ? "LD" : "ST",
-              _inst->instAddr(),
+              _inst->pcState().instAddr(),
               _packets.back()->req->hasVaddr() ?
                   _packets.back()->req->getVaddr() : 0lu,
               _packets.back()->getAddr(),
@@ -1203,7 +1203,7 @@ LSQ::SplitDataRequest::buildPackets()
                     _inst->getHtmTransactionUid());
                 DPRINTF(HtmCpu,
                   "HTM LD.0 pc=0x%lx-vaddr=0x%lx-paddr=0x%lx-htmUid=%u\n",
-                  _inst->instAddr(),
+                  _inst->pcState().instAddr(),
                   _mainPacket->req->hasVaddr() ?
                       _mainPacket->req->getVaddr() : 0lu,
                   _mainPacket->getAddr(),
@@ -1237,7 +1237,7 @@ LSQ::SplitDataRequest::buildPackets()
                   "HTM %s.%d pc=0x%lx-vaddr=0x%lx-paddr=0x%lx-htmUid=%u\n",
                   isLoad() ? "LD" : "ST",
                   i+1,
-                  _inst->instAddr(),
+                  _inst->pcState().instAddr(),
                   _packets.back()->req->hasVaddr() ?
                       _packets.back()->req->getVaddr() : 0lu,
                   _packets.back()->getAddr(),

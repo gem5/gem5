@@ -141,7 +141,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
            _cause |= (1L << 63);
         }
         tc->setMiscReg(cause, _cause);
-        tc->setMiscReg(epc, tc->instAddr());
+        tc->setMiscReg(epc, tc->pcState().instAddr());
         tc->setMiscReg(tval, trap_value());
         tc->setMiscReg(MISCREG_PRV, prv);
         tc->setMiscReg(MISCREG_STATUS, status);

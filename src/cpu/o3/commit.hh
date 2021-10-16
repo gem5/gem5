@@ -311,9 +311,6 @@ class Commit
     /** Sets the PC of a specific thread. */
     void pcState(const PCStateBase &val, ThreadID tid) { set(pc[tid], val); }
 
-    /** Returns the PC of a specific thread. */
-    Addr instAddr(ThreadID tid) { return pc[tid]->instAddr(); }
-
   private:
     /** Time buffer interface. */
     TimeBuffer<TimeStruct> *timeBuffer;

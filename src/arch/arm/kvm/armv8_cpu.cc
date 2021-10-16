@@ -282,8 +282,8 @@ ArmV8KvmCPU::updateKvmState()
         setOneReg(ri.kvm, value);
     }
 
-    setOneReg(INT_REG(regs.pc), tc->instAddr());
-    DPRINTF(KvmContext, "  PC := 0x%x\n", tc->instAddr());
+    setOneReg(INT_REG(regs.pc), tc->pcState().instAddr());
+    DPRINTF(KvmContext, "  PC := 0x%x\n", tc->pcState().instAddr());
 }
 
 void

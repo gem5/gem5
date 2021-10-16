@@ -512,7 +512,8 @@ namespace X86ISA
                         fatal("GpuTLB doesn't support full-system mode\n");
                     } else {
                         DPRINTF(GPUTLB, "Handling a TLB miss for address %#x "
-                                "at pc %#x.\n", vaddr, tc->instAddr());
+                                "at pc %#x.\n", vaddr,
+                                tc->pcState().instAddr());
 
                         Process *p = tc->getProcessPtr();
                         const EmulationPageTable::Entry *pte =

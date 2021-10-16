@@ -351,7 +351,6 @@ class ThreadContext : public gem5::ThreadContext
 
     const PCStateBase &pcState() const override;
     void pcState(const PCStateBase &val) override;
-    Addr instAddr() const override;
 
     RegVal readMiscRegNoEffect(RegIndex misc_reg) const override;
     RegVal

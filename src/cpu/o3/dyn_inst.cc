@@ -218,10 +218,10 @@ DynInst::~DynInst()
             // Print info needed by the pipeline activity viewer.
             DPRINTFR(O3PipeView, "O3PipeView:fetch:%llu:0x%08llx:%d:%llu:%s\n",
                      fetch,
-                     instAddr(),
+                     pcState().instAddr(),
                      pcState().microPC(),
                      seqNum,
-                     staticInst->disassemble(instAddr()));
+                     staticInst->disassemble(pcState().instAddr()));
 
             val = (decodeTick == -1) ? 0 : fetch + decodeTick;
             DPRINTFR(O3PipeView, "O3PipeView:decode:%llu\n", val);

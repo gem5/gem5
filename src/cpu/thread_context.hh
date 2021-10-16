@@ -235,8 +235,6 @@ class ThreadContext : public PCEventScope
 
     virtual void pcStateNoRecord(const PCStateBase &val) = 0;
 
-    virtual Addr instAddr() const = 0;
-
     virtual RegVal readMiscRegNoEffect(RegIndex misc_reg) const = 0;
 
     virtual RegVal readMiscReg(RegIndex misc_reg) = 0;

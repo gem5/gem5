@@ -51,16 +51,16 @@ void
 SimpleTrace::traceCommit(const DynInstConstPtr& dynInst)
 {
     DPRINTFR(SimpleTrace, "[%s]: Commit 0x%08x %s.\n", name(),
-             dynInst->instAddr(),
-             dynInst->staticInst->disassemble(dynInst->instAddr()));
+             dynInst->pcState().instAddr(),
+             dynInst->staticInst->disassemble(dynInst->pcState().instAddr()));
 }
 
 void
 SimpleTrace::traceFetch(const DynInstConstPtr& dynInst)
 {
     DPRINTFR(SimpleTrace, "[%s]: Fetch 0x%08x %s.\n", name(),
-             dynInst->instAddr(),
-             dynInst->staticInst->disassemble(dynInst->instAddr()));
+             dynInst->pcState().instAddr(),
+             dynInst->staticInst->disassemble(dynInst->pcState().instAddr()));
 }
 
 void

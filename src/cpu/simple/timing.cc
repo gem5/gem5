@@ -456,7 +456,7 @@ TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size,
     SimpleThread* thread = t_info.thread;
 
     Fault fault;
-    const Addr pc = thread->instAddr();
+    const Addr pc = thread->pcState().instAddr();
     unsigned block_size = cacheLineSize();
     BaseMMU::Mode mode = BaseMMU::Read;
 
@@ -530,7 +530,7 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
     SimpleThread* thread = t_info.thread;
 
     uint8_t *newData = new uint8_t[size];
-    const Addr pc = thread->instAddr();
+    const Addr pc = thread->pcState().instAddr();
     unsigned block_size = cacheLineSize();
     BaseMMU::Mode mode = BaseMMU::Write;
 
@@ -594,7 +594,7 @@ TimingSimpleCPU::initiateMemAMO(Addr addr, unsigned size,
     SimpleThread* thread = t_info.thread;
 
     Fault fault;
-    const Addr pc = thread->instAddr();
+    const Addr pc = thread->pcState().instAddr();
     unsigned block_size = cacheLineSize();
     BaseMMU::Mode mode = BaseMMU::Write;
 
@@ -1219,7 +1219,7 @@ TimingSimpleCPU::initiateHtmCmd(Request::Flags flags)
     SimpleThread* thread = t_info.thread;
 
     const Addr addr = 0x0ul;
-    const Addr pc = thread->instAddr();
+    const Addr pc = thread->pcState().instAddr();
     const int size = 8;
 
     if (traceData)
@@ -1265,7 +1265,7 @@ TimingSimpleCPU::htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
     SimpleThread* thread = t_info.thread;
 
     const Addr addr = 0x0ul;
-    const Addr pc = thread->instAddr();
+    const Addr pc = thread->pcState().instAddr();
     const int size = 8;
     const Request::Flags flags =
         Request::PHYSICAL|Request::STRICT_ORDER|Request::HTM_ABORT;

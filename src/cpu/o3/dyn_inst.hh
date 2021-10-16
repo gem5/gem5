@@ -515,9 +515,6 @@ class DynInst : public ExecContext, public RefCounted
 
     const PCStateBase &readPredTarg() { return *predPC; }
 
-    /** Returns the predicted PC immediately after the branch. */
-    Addr predInstAddr() { return predPC->instAddr(); }
-
     /** Returns whether the instruction was predicted taken or not. */
     bool readPredTaken() { return instFlags[PredTaken]; }
 
@@ -903,9 +900,6 @@ class DynInst : public ExecContext, public RefCounted
 
     /** Set the PC state of this instruction. */
     void pcState(const PCStateBase &val) override { set(pc, val); }
-
-    /** Read the PC of this instruction. */
-    Addr instAddr() const { return pc->instAddr(); }
 
     bool readPredicate() const override { return instFlags[Predicate]; }
 
