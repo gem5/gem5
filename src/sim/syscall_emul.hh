@@ -1662,7 +1662,7 @@ cloneFunc(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
     desc->returnInto(ctc, 0);
 
     std::unique_ptr<PCStateBase> cpc(tc->pcState().clone());
-    cpc->as<TheISA::PCState>().advance();
+    cpc->advance();
     ctc->pcState(*cpc);
     ctc->activate();
 
@@ -2226,7 +2226,7 @@ execveFunc(SyscallDesc *desc, ThreadContext *tc,
     new_p->initState();
     tc->activate();
     std::unique_ptr<PCStateBase> pc_state(tc->pcState().clone());
-    pc_state->as<TheISA::PCState>().advance();
+    pc_state->advance();
     tc->pcState(*pc_state);
 
     return SyscallReturn();

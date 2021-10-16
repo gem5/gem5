@@ -126,6 +126,8 @@ class PCStateBase : public Serializable
         _upc = 0;
     }
 
+    virtual void advance() = 0;
+
     void
     serialize(CheckpointOut &cp) const override
     {
@@ -370,7 +372,7 @@ class SimplePCState : public PCStateCommon
 
     // Advance the PC.
     void
-    advance()
+    advance() override
     {
         this->_pc = this->_npc;
         this->_npc += InstWidth;
@@ -493,7 +495,7 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
 
     // Advance the PC.
     void
-    advance()
+    advance() override
     {
         this->_pc = this->_npc;
         this->_npc = this->_nnpc;

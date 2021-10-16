@@ -288,7 +288,7 @@ class PCState : public GenericISA::UPCState<4>
     }
 
     void
-    advance()
+    advance() override
     {
         Base::advance();
         flags = nextFlags;

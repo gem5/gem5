@@ -50,9 +50,9 @@ class NopStaticInst : public StaticInst
     }
 
     void
-    advancePC(PCStateBase &pcState) const override
+    advancePC(PCStateBase &pc) const override
     {
-        pcState.as<TheISA::PCState>().advance();
+        pc.advance();
     }
 
     std::string
