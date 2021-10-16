@@ -233,14 +233,6 @@ class ThreadContext : public PCEventScope
         pcState(*new_pc);
     }
 
-    void
-    setNPC(Addr val)
-    {
-        std::unique_ptr<PCStateBase> pc_state(pcState().clone());
-        pc_state->as<TheISA::PCState>().setNPC(val);
-        pcState(*pc_state);
-    }
-
     virtual void pcStateNoRecord(const PCStateBase &val) = 0;
 
     virtual Addr instAddr() const = 0;

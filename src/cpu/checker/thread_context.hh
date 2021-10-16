@@ -335,13 +335,6 @@ class CheckerThreadContext : public ThreadContext
     }
 
     void
-    setNPC(Addr val)
-    {
-        checkerTC->setNPC(val);
-        actualTC->setNPC(val);
-    }
-
-    void
     pcStateNoRecord(const PCStateBase &val) override
     {
         return actualTC->pcState(val);
