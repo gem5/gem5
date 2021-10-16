@@ -1110,8 +1110,10 @@ BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
         //
         // We won't be able to rewind the current PC to the "correct"
         // value without figuring out how big the current instruction
-        // is, and that's probably not worth the effort.
-        tc->setNPC(tc->instAddr());
+        // is, and that's probably not worth the effort
+        std::unique_ptr<PCStateBase> pc(tc->pcState().clone());
+        stutterPC(*pc);
+        tc->pcState(*pc);
         // We currently assume that there is no need to migrate to a
         // different event queue when doing local accesses. Currently, they
         // are only used for m5ops, so it should be a valid assumption.

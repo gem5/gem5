@@ -40,6 +40,7 @@
 
 #include <vector>
 
+#include "arch/arm/pcstate.hh"
 #include "cpu/kvm/base.hh"
 #include "dev/arm/base_gic.hh"
 
@@ -61,6 +62,12 @@ class BaseArmKvmCPU : public BaseKvmCPU
 
   protected:
     Tick kvmRun(Tick ticks) override;
+
+    void
+    stutterPC(PCStateBase &pc) const override
+    {
+        pc.as<ArmISA::PCState>().setNPC(pc.instAddr());
+    }
 
     /** Override for synchronizing state in kvm_run */
     void ioctlRun() override;

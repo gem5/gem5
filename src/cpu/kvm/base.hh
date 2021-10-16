@@ -261,6 +261,15 @@ class BaseKvmCPU : public BaseCPU
     virtual uint64_t getHostCycles() const;
 
     /**
+     * Modify a PCStatePtr's value so that its next PC is the current PC.
+     *
+     * This needs to be implemented in KVM base classes since modifying the
+     * next PC value is an ISA specific operation. This is only used in
+     * doMMIOAccess, for reasons explained in a comment there.
+     */
+    virtual void stutterPC(PCStateBase &pc) const = 0;
+
+    /**
      * Request KVM to run the guest for a given number of ticks. The
      * method returns the approximate number of ticks executed.
      *
