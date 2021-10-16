@@ -29,7 +29,7 @@
 #ifndef __CPU_PRED_INDIRECT_BASE_HH__
 #define __CPU_PRED_INDIRECT_BASE_HH__
 
-#include "arch/pcstate.hh"
+#include "arch/generic/pcstate.hh"
 #include "config/the_isa.hh"
 #include "cpu/inst_seq.hh"
 #include "params/IndirectPredictor.hh"

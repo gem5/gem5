@@ -44,7 +44,7 @@
 
 #include <algorithm>
 
-#include "arch/pcstate.hh"
+#include "arch/generic/pcstate.hh"
 #include "base/compiler.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"

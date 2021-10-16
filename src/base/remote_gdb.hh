@@ -50,7 +50,7 @@
 #include <string>
 #include <vector>
 
-#include "arch/pcstate.hh"
+#include "arch/generic/pcstate.hh"
 #include "base/cprintf.hh"
 #include "base/pollevent.hh"
 #include "base/socket.hh"

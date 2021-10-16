@@ -38,6 +38,7 @@
 #ifndef __DEV_ARM_CSS_SCMI_PLATFORM_H__
 #define __DEV_ARM_CSS_SCMI_PLATFORM_H__
 
+#include "base/bitunion.hh"
 #include "dev/arm/css/scmi_protocols.hh"
 #include "dev/arm/css/scp.hh"
 #include "dev/dma_device.hh"

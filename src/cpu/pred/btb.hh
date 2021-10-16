@@ -29,7 +29,7 @@
 #ifndef __CPU_PRED_BTB_HH__
 #define __CPU_PRED_BTB_HH__
 
-#include "arch/pcstate.hh"
+#include "arch/generic/pcstate.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"

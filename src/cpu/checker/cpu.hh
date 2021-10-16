@@ -46,7 +46,7 @@
 #include <map>
 #include <queue>
 
-#include "arch/pcstate.hh"
+#include "arch/generic/pcstate.hh"
 #include "base/statistics.hh"
 #include "cpu/base.hh"
 #include "cpu/exec_context.hh"

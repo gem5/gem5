@@ -49,7 +49,7 @@
 #include <set>
 #include <vector>
 
-#include "arch/pcstate.hh"
+#include "arch/generic/pcstate.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"

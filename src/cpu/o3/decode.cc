@@ -40,7 +40,7 @@
 
 #include "cpu/o3/decode.hh"
 
-#include "arch/pcstate.hh"
+#include "arch/generic/pcstate.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/inst_seq.hh"

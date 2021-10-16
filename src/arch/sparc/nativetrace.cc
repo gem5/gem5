@@ -28,6 +28,7 @@
 
 #include "arch/sparc/nativetrace.hh"
 
+#include "arch/sparc/pcstate.hh"
 #include "arch/sparc/regs/int.hh"
 #include "cpu/thread_context.hh"
 #include "params/SparcNativeTrace.hh"

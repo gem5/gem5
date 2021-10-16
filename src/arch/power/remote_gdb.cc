@@ -142,6 +142,7 @@
 #include "arch/power/gdb-xml/gdb_xml_power_fpu.hh"
 #include "arch/power/gdb-xml/gdb_xml_powerpc_32.hh"
 #include "arch/power/gdb-xml/gdb_xml_powerpc_64.hh"
+#include "arch/power/pcstate.hh"
 #include "arch/power/regs/misc.hh"
 #include "cpu/thread_state.hh"
 #include "debug/GDBAcc.hh"

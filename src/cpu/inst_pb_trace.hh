@@ -38,7 +38,7 @@
 #ifndef __CPU_INST_PB_TRACE_HH__
 #define __CPU_INST_PB_TRACE_HH__
 
-#include "arch/pcstate.hh"
+#include "arch/generic/pcstate.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "cpu/static_inst_fwd.hh"
