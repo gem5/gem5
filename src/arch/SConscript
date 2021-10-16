@@ -61,7 +61,6 @@ env.SwitchingHeaders(
     Split('''
         decoder.hh
         isa.hh
-        pcstate.hh
         vecregs.hh
         '''),
     env.subst('${TARGET_ISA}'))
