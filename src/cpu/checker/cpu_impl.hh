@@ -74,10 +74,10 @@ Checker<DynInstPtr>::advancePC(const Fault &fault)
         if (curStaticInst) {
             if (curStaticInst->isLastMicroop())
                 curMacroStaticInst = nullStaticInstPtr;
-            TheISA::PCState pcState = thread->pcState();
-            curStaticInst->advancePC(pcState);
-            thread->pcState(pcState);
-            DPRINTF(Checker, "Advancing PC to %s.\n", thread->pcState());
+            std::unique_ptr<PCStateBase> pc_ptr(thread->pcState().clone());
+            curStaticInst->advancePC(*pc_ptr);
+            thread->pcState(*pc_ptr);
+            DPRINTF(Checker, "Advancing PC to %s.\n", *pc_ptr);
         }
     }
 }
@@ -282,29 +282,32 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
             }
 
             if (fault == NoFault) {
-                TheISA::PCState pcState = thread->pcState();
+                std::unique_ptr<PCStateBase> pc_state(
+                        thread->pcState().clone());
 
-                if (isRomMicroPC(pcState.microPC())) {
+                if (isRomMicroPC(pc_state->microPC())) {
                     fetchDone = true;
                     curStaticInst = decoder.fetchRomMicroop(
-                            pcState.microPC(), nullptr);
+                            pc_state->microPC(), nullptr);
                 } else if (!curMacroStaticInst) {
                     //We're not in the middle of a macro instruction
                     StaticInstPtr instPtr = nullptr;
 
                     //Predecode, ie bundle up an ExtMachInst
                     //If more fetch data is needed, pass it in.
-                    Addr fetchPC =
-                        (pcState.instAddr() & pc_mask) + fetchOffset;
-                    decoder.moreBytes(pcState, fetchPC);
+                    Addr fetch_pc =
+                        (pc_state->instAddr() & pc_mask) + fetchOffset;
+                    decoder.moreBytes(pc_state->as<TheISA::PCState>(),
+                            fetch_pc);
 
                     //If an instruction is ready, decode it.
                     //Otherwise, we'll have to fetch beyond the
                     //memory chunk at the current pc.
                     if (decoder.instReady()) {
                         fetchDone = true;
-                        instPtr = decoder.decode(pcState);
-                        thread->pcState(pcState);
+                        instPtr = decoder.decode(
+                                pc_state->as<TheISA::PCState>());
+                        thread->pcState(*pc_state);
                     } else {
                         fetchDone = false;
                         fetchOffset += decoder.moreBytesSize();
@@ -315,14 +318,14 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
                     if (instPtr && instPtr->isMacroop()) {
                         curMacroStaticInst = instPtr;
                         curStaticInst =
-                            instPtr->fetchMicroop(pcState.microPC());
+                            instPtr->fetchMicroop(pc_state->microPC());
                     } else {
                         curStaticInst = instPtr;
                     }
                 } else {
                     // Read the next micro op from the macro-op
                     curStaticInst =
-                        curMacroStaticInst->fetchMicroop(pcState.microPC());
+                        curMacroStaticInst->fetchMicroop(pc_state->microPC());
                     fetchDone = true;
                 }
             }

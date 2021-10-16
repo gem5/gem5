@@ -466,8 +466,10 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                 // only allow to disable compressed instructions
                 // if the following instruction is 4-byte aligned
                 if ((val & ISA_EXT_C_MASK) == 0 &&
-                    bits(tc->pcState().npc(), 2, 0) != 0)
+                        bits(tc->pcState().as<RiscvISA::PCState>().npc(),
+                            2, 0) != 0) {
                     val |= cur_val & ISA_EXT_C_MASK;
+                }
                 setMiscRegNoEffect(misc_reg, val);
             }
             break;

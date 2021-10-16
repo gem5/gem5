@@ -311,7 +311,7 @@ doREDFault(ThreadContext *tc, TrapType tt)
     RegVal CWP = tc->readMiscRegNoEffect(MISCREG_CWP);
     RegVal CANSAVE = tc->readMiscRegNoEffect(INTREG_CANSAVE);
     RegVal GL = tc->readMiscRegNoEffect(MISCREG_GL);
-    PCState pc = tc->pcState();
+    auto &pc = tc->pcState().as<PCState>();
 
     TL++;
 
@@ -390,7 +390,7 @@ doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     RegVal CWP = tc->readMiscRegNoEffect(MISCREG_CWP);
     RegVal CANSAVE = tc->readIntReg(INTREG_CANSAVE);
     RegVal GL = tc->readMiscRegNoEffect(MISCREG_GL);
-    PCState pc = tc->pcState();
+    auto &pc = tc->pcState().as<PCState>();
 
     // Increment the trap level
     TL++;
@@ -825,7 +825,7 @@ TrapInstruction::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
     // We need to explicitly advance the pc, since that's not done for us
     // on a faulting instruction
-    PCState pc = tc->pcState();
+    PCState pc = tc->pcState().as<PCState>();
     pc.advance();
     tc->pcState(pc);
 }

@@ -534,8 +534,8 @@ ArmFault::invoke32(ThreadContext *tc, const StaticInstPtr &inst)
     saved_cpsr.v = tc->readCCReg(CCREG_V);
     saved_cpsr.ge = tc->readCCReg(CCREG_GE);
 
-    [[maybe_unused]] Addr cur_pc = tc->pcState().pc();
-    ITSTATE it = tc->pcState().itstate();
+    [[maybe_unused]] Addr cur_pc = tc->pcState().as<PCState>().pc();
+    ITSTATE it = tc->pcState().as<PCState>().itstate();
     saved_cpsr.it2 = it.top6;
     saved_cpsr.it1 = it.bottom2;
 
@@ -688,7 +688,7 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
         spsr.t = 0;
     } else {
         spsr.ge = tc->readCCReg(CCREG_GE);
-        ITSTATE it = tc->pcState().itstate();
+        ITSTATE it = tc->pcState().as<PCState>().itstate();
         spsr.it2 = it.top6;
         spsr.it1 = it.bottom2;
         spsr.uao = 0;
@@ -696,7 +696,7 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
     tc->setMiscReg(spsr_idx, spsr);
 
     // Save preferred return address into ELR_ELx
-    Addr curr_pc = tc->pcState().pc();
+    Addr curr_pc = tc->pcState().instAddr();
     Addr ret_addr = curr_pc;
     if (from64)
         ret_addr += armPcElrOffset();
@@ -887,7 +887,7 @@ SupervisorCall::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     tc->getSystemPtr()->workload->syscall(tc);
 
     // Advance the PC since that won't happen automatically.
-    PCState pc = tc->pcState();
+    PCState pc = tc->pcState().as<PCState>();
     assert(inst);
     inst->advancePC(pc);
     tc->pcState(pc);

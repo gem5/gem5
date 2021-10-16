@@ -1661,9 +1661,9 @@ cloneFunc(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
 
     desc->returnInto(ctc, 0);
 
-    TheISA::PCState cpc = tc->pcState();
-    cpc.advance();
-    ctc->pcState(cpc);
+    std::unique_ptr<PCStateBase> cpc(tc->pcState().clone());
+    cpc->as<TheISA::PCState>().advance();
+    ctc->pcState(*cpc);
     ctc->activate();
 
     if (flags & OS::TGT_CLONE_VFORK) {
@@ -2225,8 +2225,9 @@ execveFunc(SyscallDesc *desc, ThreadContext *tc,
     new_p->init();
     new_p->initState();
     tc->activate();
-    TheISA::PCState pcState = tc->pcState();
-    tc->setNPC(pcState.instAddr());
+    std::unique_ptr<PCStateBase> pc_state(tc->pcState().clone());
+    pc_state->as<TheISA::PCState>().advance();
+    tc->pcState(*pc_state);
 
     return SyscallReturn();
 }

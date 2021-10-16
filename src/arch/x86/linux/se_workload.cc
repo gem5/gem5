@@ -116,7 +116,7 @@ EmuLinux::syscall(ThreadContext *tc)
     if (dynamic_cast<X86_64Process *>(process)) {
         syscallDescs64.get(rax)->doSyscall(tc);
     } else if (auto *proc32 = dynamic_cast<I386Process *>(process)) {
-        PCState pc = tc->pcState();
+        PCState pc = tc->pcState().as<PCState>();
         Addr eip = pc.pc();
         const auto &vsyscall = proc32->getVSyscallPage();
         if (eip >= vsyscall.base && eip < vsyscall.base + vsyscall.size) {
@@ -133,10 +133,10 @@ void
 EmuLinux::event(ThreadContext *tc)
 {
     Process *process = tc->getProcessPtr();
-    auto pcState = tc->pcState();
+    Addr pc = tc->pcState().instAddr();
 
     if (process->kvmInSE) {
-        Addr pc_page = mbits(pcState.pc(), 63, 12);
+        Addr pc_page = mbits(pc, 63, 12);
         if (pc_page == syscallCodeVirtAddr) {
             syscall(tc);
             return;
@@ -145,7 +145,7 @@ EmuLinux::event(ThreadContext *tc)
             return;
         }
     }
-    warn("Unexpected workload event at pc %#x.", pcState.pc());
+    warn("Unexpected workload event at pc %#x.", pc);
 }
 
 void

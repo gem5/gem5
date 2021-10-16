@@ -232,8 +232,7 @@ class Execute : public Named
     /** Actually create a branch to communicate to Fetch1/Fetch2 and,
      *  if that is a stream-changing branch update the streamSeqNum */
     void updateBranchData(ThreadID tid, BranchData::Reason reason,
-        MinorDynInstPtr inst, const TheISA::PCState &target,
-        BranchData &branch);
+        MinorDynInstPtr inst, const PCStateBase *target, BranchData &branch);
 
     /** Handle extracting mem ref responses from the memory queues and
      *  completing the associated instructions.

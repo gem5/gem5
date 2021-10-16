@@ -321,11 +321,11 @@ class CheckerThreadContext : public ThreadContext
     }
 
     /** Reads this thread's PC state. */
-    TheISA::PCState pcState() const override { return actualTC->pcState(); }
+    const PCStateBase &pcState() const override { return actualTC->pcState(); }
 
     /** Sets this thread's PC state. */
     void
-    pcState(const TheISA::PCState &val) override
+    pcState(const PCStateBase &val) override
     {
         DPRINTF(Checker, "Changing PC to %s, old PC %s\n",
                          val, checkerTC->pcState());
@@ -342,7 +342,7 @@ class CheckerThreadContext : public ThreadContext
     }
 
     void
-    pcStateNoRecord(const TheISA::PCState &val) override
+    pcStateNoRecord(const PCStateBase &val) override
     {
         return actualTC->pcState(val);
     }

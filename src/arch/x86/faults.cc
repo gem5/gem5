@@ -64,9 +64,8 @@ X86FaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         return;
     }
 
-    PCState pcState = tc->pcState();
-    Addr pc = pcState.pc();
-    DPRINTF(Faults, "RIP %#x: vector %d: %s\n", pc, vector, describe());
+    PCState pc = tc->pcState().as<PCState>();
+    DPRINTF(Faults, "RIP %#x: vector %d: %s\n", pc.pc(), vector, describe());
     using namespace X86ISAInst::rom_labels;
     HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
     MicroPC entry;
@@ -77,7 +76,7 @@ X86FaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         entry = extern_label_legacyModeInterrupt;
     }
     tc->setIntReg(INTREG_MICRO(1), vector);
-    tc->setIntReg(INTREG_MICRO(7), pc);
+    tc->setIntReg(INTREG_MICRO(7), pc.pc());
     if (errorCode != (uint64_t)(-1)) {
         if (m5reg.mode == LongMode) {
             entry = extern_label_longModeInterruptWithError;
@@ -90,9 +89,9 @@ X86FaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         assert(!isSoft());
         tc->setIntReg(INTREG_MICRO(15), errorCode);
     }
-    pcState.upc(romMicroPC(entry));
-    pcState.nupc(romMicroPC(entry) + 1);
-    tc->pcState(pcState);
+    pc.upc(romMicroPC(entry));
+    pc.nupc(romMicroPC(entry) + 1);
+    tc->pcState(pc);
 }
 
 std::string
@@ -109,14 +108,9 @@ X86FaultBase::describe() const
 void
 X86Trap::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    X86FaultBase::invoke(tc);
-    if (!FullSystem)
-        return;
-
     // This is the same as a fault, but it happens -after- the
     // instruction.
-    PCState pc = tc->pcState();
-    pc.uEnd();
+    X86FaultBase::invoke(tc);
 }
 
 void
@@ -168,8 +162,8 @@ PageFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             panic("Tried to %s unmapped address %#x.", modeStr, addr);
         } else {
             panic("Tried to %s unmapped address %#x.\nPC: %#x, Instr: %s",
-                  modeStr, addr, tc->pcState().pc(),
-                  inst->disassemble(tc->pcState().pc(),
+                  modeStr, addr, tc->pcState(),
+                  inst->disassemble(tc->pcState().instAddr(),
                       &loader::debugSymbolTable));
         }
     }

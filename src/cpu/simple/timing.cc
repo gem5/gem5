@@ -693,9 +693,8 @@ TimingSimpleCPU::fetch()
     if (_status == Idle)
         return;
 
-    TheISA::PCState pcState = thread->pcState();
-    bool needToFetch = !isRomMicroPC(pcState.microPC()) &&
-                       !curMacroStaticInst;
+    MicroPC upc = thread->pcState().microPC();
+    bool needToFetch = !isRomMicroPC(upc) && !curMacroStaticInst;
 
     if (needToFetch) {
         _status = BaseSimpleCPU::Running;

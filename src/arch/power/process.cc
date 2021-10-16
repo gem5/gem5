@@ -103,7 +103,7 @@ PowerProcess::initState()
     initVirtMem->readBlob(getStartPC(), &entryPoint, sizeof(Addr));
 
     // Update the PC state
-    auto pc = tc->pcState();
+    auto pc = tc->pcState().as<PowerISA::PCState>();
     pc.byteOrder(byteOrder);
     pc.set(gtoh(entryPoint, byteOrder));
     tc->pcState(pc);
@@ -356,7 +356,7 @@ PowerProcess::argsInit(int pageSize)
     msr.le = isLittleEndian;
     tc->setIntReg(INTREG_MSR, msr);
 
-    auto pc = tc->pcState();
+    auto pc = tc->pcState().as<PowerISA::PCState>();
     pc.set(getStartPC());
     pc.byteOrder(byteOrder);
     tc->pcState(pc);

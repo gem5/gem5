@@ -68,7 +68,7 @@ Trace::SparcNativeTrace::check(NativeTraceRecord *record)
         checkReg(*(regName++), regVal, realRegVal);
     }
 
-    SparcISA::PCState pc = tc->pcState();
+    auto &pc = tc->pcState().as<SparcISA::PCState>();
     // PC
     read(&realRegVal, sizeof(realRegVal));
     realRegVal = betoh(realRegVal);

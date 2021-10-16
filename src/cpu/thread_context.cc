@@ -116,7 +116,7 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
             panic("CC reg idx %d doesn't match, one: %#x, two: %#x",
                   i, t1, t2);
     }
-    if (!(one->pcState() == two->pcState()))
+    if (one->pcState() != two->pcState())
         panic("PC state doesn't match.");
     int id1 = one->cpuId();
     int id2 = two->cpuId();
@@ -243,9 +243,9 @@ unserialize(ThreadContext &tc, CheckpointIn &cp)
             tc.setCCRegFlat(i, ccRegs[i]);
     }
 
-    TheISA::PCState pcState;
-    pcState.unserialize(cp);
-    tc.pcState(pcState);
+    std::unique_ptr<PCStateBase> pc_state(tc.pcState().clone());
+    pc_state->unserialize(cp);
+    tc.pcState(*pc_state);
 
     // thread_num and cpu_id are deterministic from the config
 }

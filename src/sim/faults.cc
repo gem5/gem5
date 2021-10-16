@@ -73,9 +73,9 @@ SESyscallFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     tc->getSystemPtr()->workload->syscall(tc);
     // Move the PC forward since that doesn't happen automatically.
-    TheISA::PCState pc = tc->pcState();
-    inst->advancePC(pc);
-    tc->pcState(pc);
+    std::unique_ptr<PCStateBase> pc(tc->pcState().clone());
+    inst->advancePC(*pc);
+    tc->pcState(*pc);
 }
 
 void

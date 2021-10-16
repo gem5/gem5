@@ -141,7 +141,7 @@ RemoteGDB::AMD64GdbRegCache::getRegs(ThreadContext *context)
     r.r13 = context->readIntReg(INTREG_R13);
     r.r14 = context->readIntReg(INTREG_R14);
     r.r15 = context->readIntReg(INTREG_R15);
-    r.rip = context->pcState().pc();
+    r.rip = context->pcState().instAddr();
     r.eflags = context->readMiscRegNoEffect(MISCREG_RFLAGS);
     r.cs = context->readMiscRegNoEffect(MISCREG_CS);
     r.ss = context->readMiscRegNoEffect(MISCREG_SS);
@@ -163,7 +163,7 @@ RemoteGDB::X86GdbRegCache::getRegs(ThreadContext *context)
     r.ebp = context->readIntReg(INTREG_RBP);
     r.esi = context->readIntReg(INTREG_RSI);
     r.edi = context->readIntReg(INTREG_RDI);
-    r.eip = context->pcState().pc();
+    r.eip = context->pcState().instAddr();
     r.eflags = context->readMiscRegNoEffect(MISCREG_RFLAGS);
     r.cs = context->readMiscRegNoEffect(MISCREG_CS);
     r.ss = context->readMiscRegNoEffect(MISCREG_SS);

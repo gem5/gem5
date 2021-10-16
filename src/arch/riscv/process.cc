@@ -114,7 +114,7 @@ RiscvProcess32::initState()
     for (ContextID ctx: contextIds) {
         auto *tc = system->threads[ctx];
         tc->setMiscRegNoEffect(MISCREG_PRV, PRV_U);
-        PCState pc = tc->pcState();
+        PCState pc = tc->pcState().as<PCState>();
         pc.rv32(true);
         tc->pcState(pc);
     }

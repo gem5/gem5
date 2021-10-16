@@ -607,12 +607,11 @@ RegVal
 ISA::readMiscReg(int misc_reg)
 {
     CPSR cpsr = 0;
-    PCState pc(0);
     SCR scr = 0;
 
     if (misc_reg == MISCREG_CPSR) {
         cpsr = miscRegs[misc_reg];
-        pc = tc->pcState();
+        auto pc = tc->pcState().as<PCState>();
         cpsr.j = pc.jazelle() ? 1 : 0;
         cpsr.t = pc.thumb() ? 1 : 0;
         return cpsr;
@@ -959,7 +958,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
 
         DPRINTF(Arm, "Updating CPSR from %#x to %#x f:%d i:%d a:%d mode:%#x\n",
                 miscRegs[misc_reg], cpsr, cpsr.f, cpsr.i, cpsr.a, cpsr.mode);
-        PCState pc = tc->pcState();
+        PCState pc = tc->pcState().as<PCState>();
         pc.nextThumb(cpsr.t);
         pc.nextJazelle(cpsr.j);
         pc.illegalExec(cpsr.il == 1);
@@ -2602,7 +2601,7 @@ ISA::addressTranslation64(MMU::ArmTranslationType tran_type,
 
     auto req = std::make_shared<Request>(
         val, 0, flags,  Request::funcRequestorId,
-        tc->pcState().pc(), tc->contextId());
+        tc->pcState().instAddr(), tc->contextId());
 
     Fault fault = getMMUPtr(tc)->translateFunctional(
         req, tc, mode, tran_type);
@@ -2653,7 +2652,7 @@ ISA::addressTranslation(MMU::ArmTranslationType tran_type,
 
     auto req = std::make_shared<Request>(
         val, 0, flags,  Request::funcRequestorId,
-        tc->pcState().pc(), tc->contextId());
+        tc->pcState().instAddr(), tc->contextId());
 
     Fault fault = getMMUPtr(tc)->translateFunctional(
         req, tc, mode, tran_type);

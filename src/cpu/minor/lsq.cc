@@ -80,7 +80,7 @@ void
 LSQ::LSQRequest::tryToSuppressFault()
 {
     SimpleThread &thread = *port.cpu.threads[inst->id.threadId];
-    TheISA::PCState old_pc = thread.pcState();
+    std::unique_ptr<PCStateBase> old_pc(thread.pcState().clone());
     ExecContext context(port.cpu, thread, port.execute, inst, zeroReg);
     [[maybe_unused]] Fault fault = inst->translationFault;
 
@@ -92,7 +92,7 @@ LSQ::LSQRequest::tryToSuppressFault()
     } else {
         assert(inst->translationFault == fault);
     }
-    thread.pcState(old_pc);
+    thread.pcState(*old_pc);
 }
 
 void
@@ -102,14 +102,14 @@ LSQ::LSQRequest::completeDisabledMemAccess()
              *inst);
 
     SimpleThread &thread = *port.cpu.threads[inst->id.threadId];
-    TheISA::PCState old_pc = thread.pcState();
+    std::unique_ptr<PCStateBase> old_pc(thread.pcState().clone());
 
     ExecContext context(port.cpu, thread, port.execute, inst, zeroReg);
 
     context.setMemAccPredicate(false);
     inst->staticInst->completeAcc(nullptr, &context, inst->traceData);
 
-    thread.pcState(old_pc);
+    thread.pcState(*old_pc);
 }
 
 void
@@ -1131,7 +1131,7 @@ LSQ::tryToSendToTransfers(LSQRequestPtr request)
 
         SimpleThread &thread = *cpu.threads[request->inst->id.threadId];
 
-        TheISA::PCState old_pc = thread.pcState();
+        std::unique_ptr<PCStateBase> old_pc(thread.pcState().clone());
         ExecContext context(cpu, thread, execute, request->inst, zeroReg);
 
         /* Handle LLSC requests and tests */
@@ -1146,7 +1146,7 @@ LSQ::tryToSendToTransfers(LSQRequestPtr request)
                     "access for store conditional\n");
             }
         }
-        thread.pcState(old_pc);
+        thread.pcState(*old_pc);
     }
 
     /* See the do_access comment above */

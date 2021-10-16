@@ -65,7 +65,7 @@ BranchOp::branchTarget(ThreadContext *tc) const
     if (aa)
         addr = li;
     else
-        addr = tc->pcState().pc() + li;
+        addr = tc->pcState().instAddr() + li;
 
     return std::make_unique<PowerISA::PCState>(
             msr.sf ? addr : addr & UINT32_MAX);
@@ -114,7 +114,7 @@ BranchDispCondOp::branchTarget(ThreadContext *tc) const
     if (aa)
         addr = bd;
     else
-        addr = tc->pcState().pc() + bd;
+        addr = tc->pcState().instAddr() + bd;
 
     return std::make_unique<PowerISA::PCState>(
             msr.sf ? addr : addr & UINT32_MAX);

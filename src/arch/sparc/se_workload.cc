@@ -54,7 +54,7 @@ SEWorkload::is64(ThreadContext *tc)
 void
 SEWorkload::handleTrap(ThreadContext *tc, int trapNum)
 {
-    PCState pc = tc->pcState();
+    auto &pc = tc->pcState().as<PCState>();
     switch (trapNum) {
       case 0x01: // Software breakpoint
         warn("Software breakpoint encountered at pc %#x.", pc.pc());

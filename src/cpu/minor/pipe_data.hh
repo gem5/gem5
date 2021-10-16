@@ -130,20 +130,23 @@ class BranchData /* : public ReportIF, public BubbleIF */
 
     BranchData(Reason reason_, ThreadID thread_id,
             InstSeqNum new_stream_seq_num, InstSeqNum new_prediction_seq_num,
-            const PCStateBase &target, MinorDynInstPtr inst_) :
+            const PCStateBase *_target, MinorDynInstPtr inst_) :
         reason(reason_), threadId(thread_id),
         newStreamSeqNum(new_stream_seq_num),
         newPredictionSeqNum(new_prediction_seq_num),
-        target(target.clone()), inst(inst_)
-    {}
+        inst(inst_)
+    {
+        set(target, _target);
+    }
 
     BranchData(const BranchData &other) :
         reason(other.reason), threadId(other.threadId),
         newStreamSeqNum(other.newStreamSeqNum),
         newPredictionSeqNum(other.newPredictionSeqNum),
-        target(other.target->clone()),
         inst(other.inst)
-    {}
+    {
+        set(target, other.target);
+    }
     BranchData &
     operator=(const BranchData &other)
     {

@@ -44,7 +44,7 @@ UnimplementedOpcodeFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     panic_if(tc->getSystemPtr()->trapToGdb(SIGILL, tc->contextId()),
              "Unimplemented opcode encountered at virtual address %#x\n",
-             tc->pcState().pc());
+             tc->pcState().instAddr());
 }
 
 void
@@ -59,7 +59,7 @@ TrapFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     panic_if(tc->getSystemPtr()->trapToGdb(SIGTRAP, tc->contextId()),
              "Trap encountered at virtual address %#x\n",
-             tc->pcState().pc());
+             tc->pcState().instAddr());
 }
 
 } // namespace PowerISA

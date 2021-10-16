@@ -1307,14 +1307,14 @@ CPU::setArchCCReg(int reg_idx, RegVal val, ThreadID tid)
     regFile.setCCReg(phys_reg, val);
 }
 
-TheISA::PCState
+const PCStateBase &
 CPU::pcState(ThreadID tid)
 {
-    return commit.pcState(tid).as<TheISA::PCState>();
+    return commit.pcState(tid);
 }
 
 void
-CPU::pcState(const TheISA::PCState &val, ThreadID tid)
+CPU::pcState(const PCStateBase &val, ThreadID tid)
 {
     commit.pcState(val, tid);
 }

@@ -112,7 +112,8 @@ BaseSimpleCPU::BaseSimpleCPU(const BaseSimpleCPUParams &p)
         checker->setSystem(p.system);
         // Manipulate thread context
         ThreadContext *cpu_tc = threadContexts[0];
-        threadContexts[0] = new CheckerThreadContext<ThreadContext>(cpu_tc, this->checker);
+        threadContexts[0] = new CheckerThreadContext<ThreadContext>(
+                cpu_tc, this->checker);
     } else {
         checker = NULL;
     }
@@ -312,31 +313,31 @@ BaseSimpleCPU::preExecute()
     t_info.setMemAccPredicate(true);
 
     // decode the instruction
-    TheISA::PCState pcState = thread->pcState();
+    std::unique_ptr<PCStateBase> pc_state(thread->pcState().clone());
 
     auto &decoder = thread->decoder;
 
-    if (isRomMicroPC(pcState.microPC())) {
+    if (isRomMicroPC(pc_state->microPC())) {
         t_info.stayAtPC = false;
         curStaticInst = decoder.fetchRomMicroop(
-                pcState.microPC(), curMacroStaticInst);
+                pc_state->microPC(), curMacroStaticInst);
     } else if (!curMacroStaticInst) {
         //We're not in the middle of a macro instruction
         StaticInstPtr instPtr = NULL;
 
         //Predecode, ie bundle up an ExtMachInst
         //If more fetch data is needed, pass it in.
-        Addr fetchPC =
-            (pcState.instAddr() & decoder.pcMask()) + t_info.fetchOffset;
+        Addr fetch_pc =
+            (pc_state->instAddr() & decoder.pcMask()) + t_info.fetchOffset;
 
-        decoder.moreBytes(pcState, fetchPC);
+        decoder.moreBytes(pc_state->as<TheISA::PCState>(), fetch_pc);
 
         //Decode an instruction if one is ready. Otherwise, we'll have to
         //fetch beyond the MachInst at the current pc.
-        instPtr = decoder.decode(pcState);
+        instPtr = decoder.decode(pc_state->as<TheISA::PCState>());
         if (instPtr) {
             t_info.stayAtPC = false;
-            thread->pcState(pcState);
+            thread->pcState(*pc_state);
         } else {
             t_info.stayAtPC = true;
             t_info.fetchOffset += decoder.moreBytesSize();
@@ -347,13 +348,13 @@ BaseSimpleCPU::preExecute()
         if (instPtr && instPtr->isMacroop()) {
             curMacroStaticInst = instPtr;
             curStaticInst =
-                curMacroStaticInst->fetchMicroop(pcState.microPC());
+                curMacroStaticInst->fetchMicroop(pc_state->microPC());
         } else {
             curStaticInst = instPtr;
         }
     } else {
         //Read the next micro op from the macro op
-        curStaticInst = curMacroStaticInst->fetchMicroop(pcState.microPC());
+        curStaticInst = curMacroStaticInst->fetchMicroop(pc_state->microPC());
     }
 
     //If we decoded an instruction this "tick", record information about it.
@@ -460,7 +461,8 @@ BaseSimpleCPU::advancePC(const Fault &fault)
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
 
-    const bool branching(thread->pcState().branching());
+    const bool branching =
+        thread->pcState().as<TheISA::PCState>().branching();
 
     //Since we're moving to a new pc, zero out the offset
     t_info.fetchOffset = 0;
@@ -472,9 +474,9 @@ BaseSimpleCPU::advancePC(const Fault &fault)
         if (curStaticInst) {
             if (curStaticInst->isLastMicroop())
                 curMacroStaticInst = nullStaticInstPtr;
-            TheISA::PCState pcState = thread->pcState();
-            curStaticInst->advancePC(pcState);
-            thread->pcState(pcState);
+            std::unique_ptr<PCStateBase> pc(thread->pcState().clone());
+            curStaticInst->advancePC(*pc);
+            thread->pcState(*pc);
         }
     }
 
@@ -483,7 +485,7 @@ BaseSimpleCPU::advancePC(const Fault &fault)
         // instruction in flight at the same time.
         const InstSeqNum cur_sn(0);
 
-        if (t_info.predPC->as<TheISA::PCState>() == thread->pcState()) {
+        if (*t_info.predPC == thread->pcState()) {
             // Correctly predicted branch
             branchPred->update(cur_sn, curThread);
         } else {

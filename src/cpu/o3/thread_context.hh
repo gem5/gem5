@@ -277,16 +277,16 @@ class ThreadContext : public gem5::ThreadContext
     }
 
     /** Reads this thread's PC state. */
-    TheISA::PCState
+    const PCStateBase &
     pcState() const override
     {
         return cpu->pcState(thread->threadId());
     }
 
     /** Sets this thread's PC state. */
-    void pcState(const TheISA::PCState &val) override;
+    void pcState(const PCStateBase &val) override;
 
-    void pcStateNoRecord(const TheISA::PCState &val) override;
+    void pcStateNoRecord(const PCStateBase &val) override;
 
     /** Reads this thread's PC. */
     Addr

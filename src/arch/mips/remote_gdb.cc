@@ -179,7 +179,7 @@ RemoteGDB::MipsGdbRegCache::getRegs(ThreadContext *context)
     r.hi = context->readIntReg(INTREG_HI);
     r.badvaddr = context->readMiscRegNoEffect(MISCREG_BADVADDR);
     r.cause = context->readMiscRegNoEffect(MISCREG_CAUSE);
-    r.pc = context->pcState().pc();
+    r.pc = context->pcState().instAddr();
     for (int i = 0; i < 32; i++) r.fpr[i] = context->readFloatReg(i);
     r.fsr = context->readFloatReg(FLOATREG_FCCR);
     r.fir = context->readFloatReg(FLOATREG_FIR);

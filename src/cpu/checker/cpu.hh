@@ -354,19 +354,17 @@ class CheckerCPU : public BaseCPU, public ExecContext
         return (thread->htmTransactionStarts - thread->htmTransactionStops);
     }
 
-    mutable TheISA::PCState tempPCState;
     const PCStateBase &
     pcState() const override
     {
-        set(tempPCState, thread->pcState());
-        return tempPCState;
+        return thread->pcState();
     }
     void
     pcState(const PCStateBase &val) override
     {
         DPRINTF(Checker, "Changing PC to %s, old PC %s.\n",
                          val, thread->pcState());
-        thread->pcState(val.as<TheISA::PCState>());
+        thread->pcState(val);
     }
     Addr instAddr() { return thread->instAddr(); }
     MicroPC microPC() { return thread->microPC(); }

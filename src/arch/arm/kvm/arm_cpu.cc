@@ -820,7 +820,7 @@ ArmKvmCPU::updateTCStateCore()
 
     // We update the PC state after we have updated the CPSR the
     // contents of the CPSR affects how the npc is updated.
-    PCState pc = tc->pcState();
+    PCState pc = tc->pcState().as<PCState>();
     pc.set(getOneRegU32(REG_CORE32(usr_regs.ARM_pc)));
     tc->pcState(pc);
 

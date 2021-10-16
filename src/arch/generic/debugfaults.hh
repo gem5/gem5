@@ -61,9 +61,9 @@ class M5DebugFault : public FaultBase
     advancePC(ThreadContext *tc, const StaticInstPtr &inst)
     {
         if (inst) {
-            auto pc = tc->pcState();
-            inst->advancePC(pc);
-            tc->pcState(pc);
+            std::unique_ptr<PCStateBase> pc(tc->pcState().clone());
+            inst->advancePC(*pc);
+            tc->pcState(*pc);
         }
     }
 

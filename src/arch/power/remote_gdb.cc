@@ -192,7 +192,7 @@ RemoteGDB::PowerGdbRegCache::getRegs(ThreadContext *context)
     for (int i = 0; i < NumFloatArchRegs; i++)
         r.fpr[i] = context->readFloatReg(i);
 
-    r.pc = htog((uint32_t)context->pcState().pc(), order);
+    r.pc = htog((uint32_t)context->pcState().instAddr(), order);
     r.msr = 0; // MSR is privileged, hence not exposed here
     r.cr = htog((uint32_t)context->readIntReg(INTREG_CR), order);
     r.lr = htog((uint32_t)context->readIntReg(INTREG_LR), order);
@@ -215,7 +215,7 @@ RemoteGDB::PowerGdbRegCache::setRegs(ThreadContext *context) const
     for (int i = 0; i < NumFloatArchRegs; i++)
         context->setFloatReg(i, r.fpr[i]);
 
-    auto pc = context->pcState();
+    auto pc = context->pcState().as<PowerISA::PCState>();
     pc.byteOrder(order);
     pc.set(gtoh(r.pc, order));
     context->pcState(pc);
@@ -246,7 +246,7 @@ RemoteGDB::Power64GdbRegCache::getRegs(ThreadContext *context)
     for (int i = 0; i < NumFloatArchRegs; i++)
         r.fpr[i] = context->readFloatReg(i);
 
-    r.pc = htog(context->pcState().pc(), order);
+    r.pc = htog(context->pcState().instAddr(), order);
     r.msr = 0; // MSR is privileged, hence not exposed here
     r.cr = htog((uint32_t)context->readIntReg(INTREG_CR), order);
     r.lr = htog(context->readIntReg(INTREG_LR), order);
@@ -269,7 +269,7 @@ RemoteGDB::Power64GdbRegCache::setRegs(ThreadContext *context) const
     for (int i = 0; i < NumFloatArchRegs; i++)
         context->setFloatReg(i, r.fpr[i]);
 
-    auto pc = context->pcState();
+    auto pc = context->pcState().as<PowerISA::PCState>();
     pc.byteOrder(order);
     pc.set(gtoh(r.pc, order));
     context->pcState(pc);

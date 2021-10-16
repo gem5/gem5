@@ -57,18 +57,18 @@ namespace ArmISA
 void
 SkipFunc::returnFromFuncIn(ThreadContext *tc)
 {
-    PCState newPC = tc->pcState();
+    PCState new_pc = tc->pcState().as<PCState>();
     if (inAArch64(tc)) {
-        newPC.set(tc->readIntReg(INTREG_X30));
+        new_pc.set(tc->readIntReg(INTREG_X30));
     } else {
-        newPC.set(tc->readIntReg(ReturnAddressReg) & ~1ULL);
+        new_pc.set(tc->readIntReg(ReturnAddressReg) & ~1ULL);
     }
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
-        tc->pcStateNoRecord(newPC);
+        tc->pcStateNoRecord(new_pc);
     } else {
-        tc->pcState(newPC);
+        tc->pcState(new_pc);
     }
 }
 

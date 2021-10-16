@@ -299,18 +299,16 @@ class ExecContext : public gem5::ExecContext
         return 0;
     }
 
-    mutable TheISA::PCState tempPCState;
     const PCStateBase &
     pcState() const override
     {
-        set(tempPCState, thread.pcState());
-        return tempPCState;
+        return thread.pcState();
     }
 
     void
     pcState(const PCStateBase &val) override
     {
-        thread.pcState(val.as<TheISA::PCState>());
+        thread.pcState(val);
     }
 
     RegVal

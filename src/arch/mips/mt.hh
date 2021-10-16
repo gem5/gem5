@@ -39,6 +39,7 @@
 
 #include "arch/mips/faults.hh"
 #include "arch/mips/mt_constants.hh"
+#include "arch/mips/pcstate.hh"
 #include "arch/mips/pra_constants.hh"
 #include "arch/mips/regs/misc.hh"
 #include "base/bitfield.hh"
@@ -140,7 +141,7 @@ haltThread(TC *tc)
         // Save last known PC in TCRestart
         // @TODO: Needs to check if this is a branch and if so,
         // take previous instruction
-        PCState pc = tc->pcState();
+        auto &pc = tc->pcState().template as<MipsISA::PCState>();
         tc->setMiscReg(MISCREG_TC_RESTART, pc.npc());
 
         warn("%i: Halting thread %i in %s @ PC %x, setting restart PC to %x",

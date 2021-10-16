@@ -169,6 +169,8 @@ class ThreadContext : public gem5::ThreadContext
     iris::IrisCppAdapter &call() const { return client.irisCall(); }
     iris::IrisCppAdapter &noThrow() const { return client.irisCallNoThrow(); }
 
+    mutable ArmISA::PCState pc;
+
     void readMem(iris::MemorySpaceId space,
                  Addr addr, void *p, size_t size);
     void writeMem(iris::MemorySpaceId space,
@@ -345,11 +347,11 @@ class ThreadContext : public gem5::ThreadContext
         setCCRegFlat(reg_idx, val);
     }
 
-    void pcStateNoRecord(const ArmISA::PCState &val) override { pcState(val); }
+    void pcStateNoRecord(const PCStateBase &val) override { pcState(val); }
     MicroPC microPC() const override { return 0; }
 
-    ArmISA::PCState pcState() const override;
-    void pcState(const ArmISA::PCState &val) override;
+    const PCStateBase &pcState() const override;
+    void pcState(const PCStateBase &val) override;
     Addr instAddr() const override;
 
     RegVal readMiscRegNoEffect(RegIndex misc_reg) const override;

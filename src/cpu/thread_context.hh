@@ -223,24 +223,25 @@ class ThreadContext : public PCEventScope
 
     virtual void setCCReg(RegIndex reg_idx, RegVal val) = 0;
 
-    virtual TheISA::PCState pcState() const = 0;
+    virtual const PCStateBase &pcState() const = 0;
 
-    virtual void pcState(const TheISA::PCState &val) = 0;
+    virtual void pcState(const PCStateBase &val) = 0;
     void
     pcState(Addr addr)
     {
-        pcState(getIsaPtr()->newPCState(addr)->as<TheISA::PCState>());
+        std::unique_ptr<PCStateBase> new_pc(getIsaPtr()->newPCState(addr));
+        pcState(*new_pc);
     }
 
     void
     setNPC(Addr val)
     {
-        TheISA::PCState pc_state = pcState();
-        pc_state.setNPC(val);
-        pcState(pc_state);
+        std::unique_ptr<PCStateBase> pc_state(pcState().clone());
+        pc_state->as<TheISA::PCState>().setNPC(val);
+        pcState(*pc_state);
     }
 
-    virtual void pcStateNoRecord(const TheISA::PCState &val) = 0;
+    virtual void pcStateNoRecord(const PCStateBase &val) = 0;
 
     virtual Addr instAddr() const = 0;
 

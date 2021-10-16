@@ -650,10 +650,9 @@ AtomicSimpleCPU::tick()
 
         Fault fault = NoFault;
 
-        TheISA::PCState pcState = thread->pcState();
+        const PCStateBase &pc = thread->pcState();
 
-        bool needToFetch = !isRomMicroPC(pcState.microPC()) &&
-                           !curMacroStaticInst;
+        bool needToFetch = !isRomMicroPC(pc.microPC()) && !curMacroStaticInst;
         if (needToFetch) {
             ifetch_req->taskId(taskId());
             setupFetchRequest(ifetch_req);

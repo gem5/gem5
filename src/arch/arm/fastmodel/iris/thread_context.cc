@@ -553,11 +553,10 @@ ThreadContext::setStatus(Status new_status)
     _status = new_status;
 }
 
-ArmISA::PCState
+const PCStateBase &
 ThreadContext::pcState() const
 {
     ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
-    ArmISA::PCState pc;
 
     pc.thumb(cpsr.t);
     pc.nextThumb(pc.thumb());
@@ -579,9 +578,9 @@ ThreadContext::pcState() const
     return pc;
 }
 void
-ThreadContext::pcState(const ArmISA::PCState &val)
+ThreadContext::pcState(const PCStateBase &val)
 {
-    Addr pc = val.pc();
+    Addr pc = val.instAddr();
 
     ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
     if (cpsr.width && cpsr.t)
