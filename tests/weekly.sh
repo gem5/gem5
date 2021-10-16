@@ -51,13 +51,17 @@ docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "scons build/GCN3_X86/gem5.opt -j${threads} \
         || (rm -rf build && scons build/GCN3_X86/gem5.opt -j${threads})"
 
-# test LULESH
 # before pulling gem5 resources, make sure it doesn't exist already
-rm -rf ${gem5_root}/gem5-resources
+docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
+       "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest bash -c \
+       "rm -rf ${gem5_root}/gem5-resources"
 
+# test LULESH
 # Pull gem5 resources to the root of the gem5 directory -- currently the
 # pre-built binares for LULESH are out-of-date and won't run correctly with
-# ROCm 4.0.  In the meantime, we can build the binary as part of this script
+# ROCm 4.0.  In the meantime, we can build the binary as part of this script.
+# Moreover, DNNMark builds a library and thus doesn't have a binary, so we
+# need to build it before we run it.
 git clone -b develop https://gem5.googlesource.com/public/gem5-resources \
     "${gem5_root}/gem5-resources"
 
@@ -76,19 +80,7 @@ docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     configs/example/apu_se.py -n3 --mem-size=8GB \
     --benchmark-root="${gem5_root}/gem5-resources/src/gpu/lulesh/bin" -c lulesh
 
-# get DNNMark
-# Delete gem5 resources repo if it already exists -- need to do in docker
-# because of cachefiles DNNMark creates
-docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
-       "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest bash -c \
-       "rm -rf ${gem5_root}/gem5-resources"
-
-# Pull the gem5 resources to the root of the gem5 directory -- DNNMark
-# builds a library and thus doesn't have a binary, so we need to build
-# it before we run it
-git clone -b develop https://gem5.googlesource.com/public/gem5-resources \
-    "${gem5_root}/gem5-resources"
-
+# test DNNMark
 # setup cmake for DNNMark
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
      "${gem5_root}/gem5-resources/src/gpu/DNNMark" \
