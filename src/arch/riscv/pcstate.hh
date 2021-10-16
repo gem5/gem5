@@ -77,7 +77,7 @@ class PCState : public GenericISA::UPCState<4>
     bool rv32() const { return _rv32; }
 
     bool
-    branching() const
+    branching() const override
     {
         if (_compressed) {
             return npc() != pc() + 2 || nupc() != upc() + 1;

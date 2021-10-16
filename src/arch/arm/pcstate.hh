@@ -196,7 +196,7 @@ class PCState : public GenericISA::UPCState<4>
     uint8_t size() const { return _size; }
 
     bool
-    branching() const
+    branching() const override
     {
         return ((this->pc() + this->size()) != this->npc());
     }

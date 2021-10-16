@@ -461,8 +461,7 @@ BaseSimpleCPU::advancePC(const Fault &fault)
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
 
-    const bool branching =
-        thread->pcState().as<TheISA::PCState>().branching();
+    const bool branching = thread->pcState().branching();
 
     //Since we're moving to a new pc, zero out the offset
     t_info.fetchOffset = 0;

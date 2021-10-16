@@ -88,7 +88,7 @@ class PCState : public GenericISA::UPCState<8>
     void size(uint8_t newSize) { _size = newSize; }
 
     bool
-    branching() const
+    branching() const override
     {
         return (this->npc() != this->pc() + size()) ||
                (this->nupc() != this->upc() + 1);

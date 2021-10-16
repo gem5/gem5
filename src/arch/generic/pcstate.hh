@@ -127,6 +127,7 @@ class PCStateBase : public Serializable
     }
 
     virtual void advance() = 0;
+    virtual bool branching() const = 0;
 
     void
     serialize(CheckpointOut &cp) const override
@@ -365,7 +366,7 @@ class SimplePCState : public PCStateCommon
     };
 
     bool
-    branching() const
+    branching() const override
     {
         return this->npc() != this->pc() + InstWidth;
     }
@@ -414,7 +415,7 @@ class UPCState : public SimplePCState<InstWidth>
     explicit UPCState(Addr val) { set(val); }
 
     bool
-    branching() const
+    branching() const override
     {
         return this->npc() != this->pc() + InstWidth ||
                this->nupc() != this->upc() + 1;
@@ -486,7 +487,7 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
     explicit DelaySlotPCState(Addr val) { set(val); }
 
     bool
-    branching() const
+    branching() const override
     {
         return !(this->nnpc() == this->npc() + InstWidth &&
                  (this->npc() == this->pc() + InstWidth ||
@@ -559,7 +560,7 @@ class DelaySlotUPCState : public DelaySlotPCState<InstWidth>
     explicit DelaySlotUPCState(Addr val) { set(val); }
 
     bool
-    branching() const
+    branching() const override
     {
         return Base::branching() || this->nupc() != this->upc() + 1;
     }
