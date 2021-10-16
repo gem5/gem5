@@ -120,6 +120,12 @@ class PCStateBase : public Serializable
         return _upc;
     }
 
+    virtual void
+    uReset()
+    {
+        _upc = 0;
+    }
+
     void
     serialize(CheckpointOut &cp) const override
     {
@@ -265,9 +271,9 @@ class PCStateCommon : public PCStateBase
 
     // Reset the macroop's upc without advancing the regular pc.
     void
-    uReset()
+    uReset() override
     {
-        _upc = 0;
+        PCStateBase::uReset();
         _nupc = 1;
     }
 

@@ -447,7 +447,7 @@ Fetch2::evaluate()
                      * may be pointing to a microop other than 0.  Once
                      * advanced, however, the microop number *must* be 0
                      */
-                    fetch_info.pc->as<TheISA::PCState>().uReset();
+                    fetch_info.pc->uReset();
 
                     /* Advance PC for the next instruction */
                     decoded_inst->advancePC(*fetch_info.pc);
