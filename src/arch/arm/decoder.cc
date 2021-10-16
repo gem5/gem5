@@ -152,8 +152,9 @@ Decoder::consumeBytes(int numBytes)
 }
 
 void
-Decoder::moreBytes(const PCState &pc, Addr fetchPC)
+Decoder::moreBytes(const PCStateBase &_pc, Addr fetchPC)
 {
+    auto &pc = _pc.as<PCState>();
     data = letoh(data);
     offset = (fetchPC >= pc.instAddr()) ? 0 : pc.instAddr() - fetchPC;
     emi.thumb = pc.thumb();
@@ -171,10 +172,12 @@ Decoder::moreBytes(const PCState &pc, Addr fetchPC)
 }
 
 StaticInstPtr
-Decoder::decode(ArmISA::PCState &pc)
+Decoder::decode(PCStateBase &_pc)
 {
     if (!instDone)
         return NULL;
+
+    auto &pc = _pc.as<PCState>();
 
     const int inst_size((!emi.thumb || emi.bigThumb) ? 4 : 2);
     ExtMachInst this_emi(emi);

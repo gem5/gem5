@@ -66,7 +66,7 @@ class Decoder : public InstDecoder
     // Use this to give data to the predecoder. This should be used
     // when there is control flow.
     void
-    moreBytes(const PCState &pc, Addr fetchPC)
+    moreBytes(const PCStateBase &pc, Addr fetchPC)
     {
         emi = betoh(machInst);
         // The I bit, bit 13, is used to figure out where the ASI
@@ -124,12 +124,12 @@ class Decoder : public InstDecoder
 
   public:
     StaticInstPtr
-    decode(SparcISA::PCState &nextPC)
+    decode(PCStateBase &next_pc)
     {
         if (!instDone)
             return NULL;
         instDone = false;
-        return decode(emi, nextPC.instAddr());
+        return decode(emi, next_pc.instAddr());
     }
 };
 

@@ -67,9 +67,9 @@ class Decoder : public InstDecoder
     // Use this to give data to the predecoder. This should be used
     // when there is control flow.
     void
-    moreBytes(const PCState &pc, Addr fetchPC)
+    moreBytes(const PCStateBase &pc, Addr fetchPC)
     {
-        emi = gtoh(emi, pc.byteOrder());
+        emi = gtoh(emi, pc.as<PCState>().byteOrder());
         instDone = true;
     }
 
@@ -108,12 +108,12 @@ class Decoder : public InstDecoder
 
   public:
     StaticInstPtr
-    decode(PowerISA::PCState &nextPC)
+    decode(PCStateBase &next_pc)
     {
         if (!instDone)
             return NULL;
         instDone = false;
-        return decode(emi, nextPC.instAddr());
+        return decode(emi, next_pc.instAddr());
     }
 };
 

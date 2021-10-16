@@ -694,12 +694,12 @@ Decoder::decode(ExtMachInst mach_inst, Addr addr)
 }
 
 StaticInstPtr
-Decoder::decode(PCState &nextPC)
+Decoder::decode(PCStateBase &next_pc)
 {
     if (!instDone)
         return NULL;
     instDone = false;
-    updateNPC(nextPC);
+    updateNPC(next_pc.as<PCState>());
 
     StaticInstPtr &si = instBytes->si;
     if (si)

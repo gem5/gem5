@@ -382,7 +382,7 @@ Fetch2::evaluate()
                         decoder->moreBytesSize());
 
                 if (!decoder->instReady()) {
-                    decoder->moreBytes(fetch_info.pc->as<TheISA::PCState>(),
+                    decoder->moreBytes(*fetch_info.pc,
                         line_in->lineBaseAddr + fetch_info.inputIndex);
                     DPRINTF(Fetch, "Offering MachInst to decoder addr: 0x%x\n",
                             line_in->lineBaseAddr + fetch_info.inputIndex);
@@ -396,7 +396,7 @@ Fetch2::evaluate()
                      *  Remember not to assign it until *after* calling
                      *  decode */
                     StaticInstPtr decoded_inst =
-                        decoder->decode(fetch_info.pc->as<TheISA::PCState>());
+                        decoder->decode(*fetch_info.pc);
 
                     /* Make a new instruction and pick up the line, stream,
                      *  prediction, thread ids from the incoming line */

@@ -76,13 +76,13 @@ class Decoder : public InstDecoder
 
     //Use this to give data to the decoder. This should be used
     //when there is control flow.
-    void moreBytes(const PCState &pc, Addr fetchPC);
+    void moreBytes(const PCStateBase &pc, Addr fetchPC);
 
     bool needMoreBytes() { return more; }
     bool instReady() { return instDone; }
     void takeOverFrom(Decoder *old) {}
 
-    StaticInstPtr decode(RiscvISA::PCState &nextPC);
+    StaticInstPtr decode(PCStateBase &nextPC);
 };
 
 } // namespace RiscvISA

@@ -70,7 +70,7 @@ class Decoder : public InstDecoder
     //Use this to give data to the decoder. This should be used
     //when there is control flow.
     void
-    moreBytes(const PCState &pc, Addr fetchPC)
+    moreBytes(const PCStateBase &pc, Addr fetchPC)
     {
         emi = letoh(machInst);
         instDone = true;
@@ -111,12 +111,12 @@ class Decoder : public InstDecoder
 
   public:
     StaticInstPtr
-    decode(MipsISA::PCState &nextPC)
+    decode(PCStateBase &next_pc)
     {
         if (!instDone)
             return NULL;
         instDone = false;
-        return decode(emi, nextPC.instAddr());
+        return decode(emi, next_pc.instAddr());
     }
 };
 

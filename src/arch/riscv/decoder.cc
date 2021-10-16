@@ -48,7 +48,7 @@ void Decoder::reset()
 }
 
 void
-Decoder::moreBytes(const PCState &pc, Addr fetchPC)
+Decoder::moreBytes(const PCStateBase &pc, Addr fetchPC)
 {
     // The MSB of the upper and lower halves of a machine instruction.
     constexpr size_t max_bit = sizeof(machInst) * 8 - 1;
@@ -58,7 +58,7 @@ Decoder::moreBytes(const PCState &pc, Addr fetchPC)
     DPRINTF(Decode, "Requesting bytes 0x%08x from address %#x\n", inst,
             fetchPC);
 
-    bool aligned = pc.pc() % sizeof(machInst) == 0;
+    bool aligned = pc.instAddr() % sizeof(machInst) == 0;
     if (aligned) {
         emi = inst;
         if (compressed(emi))
@@ -97,19 +97,21 @@ Decoder::decode(ExtMachInst mach_inst, Addr addr)
 }
 
 StaticInstPtr
-Decoder::decode(RiscvISA::PCState &nextPC)
+Decoder::decode(PCStateBase &_next_pc)
 {
     if (!instDone)
         return nullptr;
     instDone = false;
 
+    auto &next_pc = _next_pc.as<PCState>();
+
     if (compressed(emi)) {
-        nextPC.npc(nextPC.instAddr() + sizeof(machInst) / 2);
+        next_pc.npc(next_pc.instAddr() + sizeof(machInst) / 2);
     } else {
-        nextPC.npc(nextPC.instAddr() + sizeof(machInst));
+        next_pc.npc(next_pc.instAddr() + sizeof(machInst));
     }
 
-    return decode(emi, nextPC.instAddr());
+    return decode(emi, next_pc.instAddr());
 }
 
 } // namespace RiscvISA

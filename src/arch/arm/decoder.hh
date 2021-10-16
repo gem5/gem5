@@ -182,7 +182,7 @@ class Decoder : public InstDecoder
      * @param fetchPC The address this chunk was fetched from.
      * @param inst Raw instruction data.
      */
-    void moreBytes(const PCState &pc, Addr fetchPC);
+    void moreBytes(const PCStateBase &pc, Addr fetchPC);
 
     /**
      * Decode an instruction or fetch it from the code cache.
@@ -195,7 +195,7 @@ class Decoder : public InstDecoder
      * @return A pointer to a static instruction or NULL if the
      * decoder isn't ready (see instReady()).
      */
-    StaticInstPtr decode(ArmISA::PCState &pc);
+    StaticInstPtr decode(PCStateBase &pc);
 
     /**
      * Take over the state from an old decoder when switching CPUs.

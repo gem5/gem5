@@ -297,16 +297,14 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
                     //If more fetch data is needed, pass it in.
                     Addr fetch_pc =
                         (pc_state->instAddr() & pc_mask) + fetchOffset;
-                    decoder.moreBytes(pc_state->as<TheISA::PCState>(),
-                            fetch_pc);
+                    decoder.moreBytes(*pc_state, fetch_pc);
 
                     //If an instruction is ready, decode it.
                     //Otherwise, we'll have to fetch beyond the
                     //memory chunk at the current pc.
                     if (decoder.instReady()) {
                         fetchDone = true;
-                        instPtr = decoder.decode(
-                                pc_state->as<TheISA::PCState>());
+                        instPtr = decoder.decode(*pc_state);
                         thread->pcState(*pc_state);
                     } else {
                         fetchDone = false;

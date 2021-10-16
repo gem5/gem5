@@ -330,11 +330,11 @@ BaseSimpleCPU::preExecute()
         Addr fetch_pc =
             (pc_state->instAddr() & decoder.pcMask()) + t_info.fetchOffset;
 
-        decoder.moreBytes(pc_state->as<TheISA::PCState>(), fetch_pc);
+        decoder.moreBytes(*pc_state, fetch_pc);
 
         //Decode an instruction if one is ready. Otherwise, we'll have to
         //fetch beyond the MachInst at the current pc.
-        instPtr = decoder.decode(pc_state->as<TheISA::PCState>());
+        instPtr = decoder.decode(*pc_state);
         if (instPtr) {
             t_info.stayAtPC = false;
             thread->pcState(*pc_state);

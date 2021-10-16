@@ -313,7 +313,7 @@ class Decoder : public InstDecoder
     // Use this to give data to the decoder. This should be used
     // when there is control flow.
     void
-    moreBytes(const PCState &pc, Addr fetchPC)
+    moreBytes(const PCStateBase &pc, Addr fetchPC)
     {
         DPRINTF(Decoder, "Getting more bytes.\n");
         basePC = fetchPC;
@@ -341,7 +341,7 @@ class Decoder : public InstDecoder
     }
 
   public:
-    StaticInstPtr decode(X86ISA::PCState &nextPC);
+    StaticInstPtr decode(PCStateBase &next_pc);
 
     StaticInstPtr fetchRomMicroop(
             MicroPC micropc, StaticInstPtr curMacroop) override;
