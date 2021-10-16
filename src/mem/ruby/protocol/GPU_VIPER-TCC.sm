@@ -618,19 +618,19 @@ machine(MachineType:TCC, "TCC Cache")
   // they can cause a resource stall deadlock!
 
   transition(WI, {RdBlk, WrVicBlk, Atomic, WrVicBlkBack}) { //TagArrayRead} {
-      // put putting the stalled requests in a buffer, we reduce resource contention
+      // by putting the stalled requests in a buffer, we reduce resource contention
       // since they won't try again every cycle and will instead only try again once
       // woken up
       st_stallAndWaitRequest;
   }
   transition(A, {RdBlk, WrVicBlk, WrVicBlkBack}) { //TagArrayRead} {
-      // put putting the stalled requests in a buffer, we reduce resource contention
+      // by putting the stalled requests in a buffer, we reduce resource contention
       // since they won't try again every cycle and will instead only try again once
       // woken up
       st_stallAndWaitRequest;
   }
   transition(IV, {WrVicBlk, Atomic, WrVicBlkBack}) { //TagArrayRead} {
-      // put putting the stalled requests in a buffer, we reduce resource contention
+      // by putting the stalled requests in a buffer, we reduce resource contention
       // since they won't try again every cycle and will instead only try again once
       // woken up
       st_stallAndWaitRequest;
@@ -681,7 +681,7 @@ transition(I, Atomic, A) {TagArrayRead} {
 
   transition(A, Atomic) {
     p_profileMiss;
-    // put putting the stalled requests in a buffer, we reduce resource contention
+    // by putting the stalled requests in a buffer, we reduce resource contention
     // since they won't try again every cycle and will instead only try again once
     // woken up
     st_stallAndWaitRequest;
