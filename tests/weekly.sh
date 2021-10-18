@@ -45,15 +45,21 @@ docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         ./main.py run --length very-long -j${threads} -t${threads}
 
 # For the GPU tests we compile and run GCN3_X86 inside a gcn-gpu container.
+# HACC requires setting numerous environment variables to run correctly.  To
+# avoid needing to set all of these, we instead build a docker for it, which
+# has all these variables pre-set in its Dockerfile
+# To avoid compiling gem5 multiple times, all GPU benchmarks will use this
 docker pull gcr.io/gem5-test/gcn-gpu:latest
+docker build -t hacc-test-weekly ${gem5_root}/gem5-resources/src/gpu/halo-finder
+
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
-    "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest bash -c \
+    "${gem5_root}" hacc-test-weekly bash -c \
     "scons build/GCN3_X86/gem5.opt -j${threads} \
-        || (rm -rf build && scons build/GCN3_X86/gem5.opt -j${threads})"
+        || rm -rf build && scons build/GCN3_X86/gem5.opt -j${threads}"
 
 # before pulling gem5 resources, make sure it doesn't exist already
 docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
-       "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest bash -c \
+       "${gem5_root}" hacc-test-weekly bash -c \
        "rm -rf ${gem5_root}/gem5-resources"
 
 # test LULESH
@@ -70,13 +76,13 @@ mkdir -p tests/testing-results
 # build LULESH
 docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
        "${gem5_root}/gem5-resources/src/gpu/lulesh" \
-       -u $UID:$GID gcr.io/gem5-test/gcn-gpu:latest bash -c \
+       -u $UID:$GID hacc-test-weekly bash -c \
        "make"
 
 # LULESH is heavily used in the HPC community on GPUs, and does a good job of
 # stressing several GPU compute and memory components
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
-    "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest build/GCN3_X86/gem5.opt \
+    "${gem5_root}" hacc-test-weekly build/GCN3_X86/gem5.opt \
     configs/example/apu_se.py -n3 --mem-size=8GB \
     --benchmark-root="${gem5_root}/gem5-resources/src/gpu/lulesh/bin" -c lulesh
 
@@ -84,29 +90,29 @@ docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
 # setup cmake for DNNMark
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
      "${gem5_root}/gem5-resources/src/gpu/DNNMark" \
-     gcr.io/gem5-test/gcn-gpu:latest bash -c "./setup.sh HIP"
+     hacc-test-weekly bash -c "./setup.sh HIP"
 
 # make the DNNMark library
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}/gem5-resources/src/gpu/DNNMark/build" \
-    gcr.io/gem5-test/gcn-gpu:latest bash -c "make -j${threads}"
+    hacc-test-weekly bash -c "make -j${threads}"
 
 # generate cachefiles -- since we are testing gfx801 and 4 CUs (default config)
 # in tester, we want cachefiles for this setup
 docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}/gem5-resources/src/gpu/DNNMark" \
     "-v${gem5_root}/gem5-resources/src/gpu/DNNMark/cachefiles:/root/.cache/miopen/2.9.0" \
-    gcr.io/gem5-test/gcn-gpu:latest bash -c \
+    hacc-test-weekly bash -c \
     "python3 generate_cachefiles.py cachefiles.csv --gfx-version=gfx801 \
     --num-cus=4"
 
 # generate mmap data for DNNMark (makes simulation much faster)
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
-    "${gem5_root}/gem5-resources/src/gpu/DNNMark" gcr.io/gem5-test/gcn-gpu:latest bash -c \
+    "${gem5_root}/gem5-resources/src/gpu/DNNMark" hacc-test-weekly bash -c \
     "g++ -std=c++0x generate_rand_data.cpp -o generate_rand_data"
 
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
-    "${gem5_root}/gem5-resources/src/gpu/DNNMark" gcr.io/gem5-test/gcn-gpu:latest bash -c \
+    "${gem5_root}/gem5-resources/src/gpu/DNNMark" hacc-test-weekly bash -c \
     "./generate_rand_data"
 
 # now we can run DNNMark!
@@ -117,7 +123,7 @@ docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
 # including both inference and training
 docker run --rm --volume "${gem5_root}":"${gem5_root}" -v \
        "${gem5_root}/gem5-resources/src/gpu/DNNMark/cachefiles:/root/.cache/miopen/2.9.0" \
-       -w "${gem5_root}/gem5-resources/src/gpu/DNNMark" gcr.io/gem5-test/gcn-gpu \
+       -w "${gem5_root}/gem5-resources/src/gpu/DNNMark" hacc-test-weekly \
        "${gem5_root}/build/GCN3_X86/gem5.opt" "${gem5_root}/configs/example/apu_se.py" -n3 \
        --benchmark-root="${gem5_root}/gem5-resources/src/gpu/DNNMark/build/benchmarks/test_fwd_softmax" \
        -c dnnmark_test_fwd_softmax \
@@ -126,7 +132,7 @@ docker run --rm --volume "${gem5_root}":"${gem5_root}" -v \
 
 docker run --rm --volume "${gem5_root}":"${gem5_root}" -v \
        "${gem5_root}/gem5-resources/src/gpu/DNNMark/cachefiles:/root/.cache/miopen/2.9.0" \
-       -w "${gem5_root}/gem5-resources/src/gpu/DNNMark" gcr.io/gem5-test/gcn-gpu \
+       -w "${gem5_root}/gem5-resources/src/gpu/DNNMark" hacc-test-weekly \
        "${gem5_root}/build/GCN3_X86/gem5.opt" "${gem5_root}/configs/example/apu_se.py" -n3 \
        --benchmark-root="${gem5_root}/gem5-resources/src/gpu/DNNMark/build/benchmarks/test_fwd_pool" \
        -c dnnmark_test_fwd_pool \
@@ -135,15 +141,29 @@ docker run --rm --volume "${gem5_root}":"${gem5_root}" -v \
 
 docker run --rm --volume "${gem5_root}":"${gem5_root}" -v \
        "${gem5_root}/gem5-resources/src/gpu/DNNMark/cachefiles:/root/.cache/miopen/2.9.0" \
-       -w "${gem5_root}/gem5-resources/src/gpu/DNNMark" gcr.io/gem5-test/gcn-gpu \
+       -w "${gem5_root}/gem5-resources/src/gpu/DNNMark" hacc-test-weekly \
        "${gem5_root}/build/GCN3_X86/gem5.opt" "${gem5_root}/configs/example/apu_se.py" -n3 \
        --benchmark-root="${gem5_root}/gem5-resources/src/gpu/DNNMark/build/benchmarks/test_bwd_bn" \
        -c dnnmark_test_bwd_bn \
        --options="-config ${gem5_root}/gem5-resources/src/gpu/DNNMark/config_example/bn_config.dnnmark \
        -mmap ${gem5_root}/gem5-resources/src/gpu/DNNMark/mmap.bin"
 
+# test HACC
+# build HACC
+docker run --rm -v ${PWD}:${PWD} -w \
+       "${gem5_root}/gem5-resources/src/gpu/halo-finder/src" -u $UID:$GID \
+       hacc-test-weekly make hip/ForceTreeTest
+
+# Like LULESH, HACC is heavily used in the HPC community and is used to stress
+# the GPU memory system
+docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
+       hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
+       ${gem5_root}/configs/example/apu_se.py -n3 \
+       --benchmark-root=${gem5_root}/gem5-resources/src/gpu/halo-finder/src/hip \
+       -c ForceTreeTest --options="0.5 0.1 64 0.1 1 N 12 rcb"
+
 # Delete the gem5 resources repo we created -- need to do in docker because of
 # cachefiles DNNMark creates
 docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
-       "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest bash -c \
+       "${gem5_root}" hacc-test-weekly bash -c \
        "rm -rf ${gem5_root}/gem5-resources"
