@@ -25,7 +25,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-This example runs a simple linux boot.
+This example runs a simple linux boot. It uses the 'riscv-disk-img' resource.
+It is built with the sources in `src/riscv-fs` in [gem5 resources](
+https://gem5.googlesource.com/public/gem5-resources).
 
 Characteristics
 ---------------
@@ -40,10 +42,13 @@ Characteristics
 import m5
 from m5.objects import Root
 
-from gem5.runtime import get_runtime_isa
 from gem5.components.boards.riscv_board import RiscvBoard
 from gem5.components.memory.single_channel import SingleChannelDDR3_1600
 from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.components.cachehierarchies.classic.\
+    private_l1_private_l2_cache_hierarchy import (
+        PrivateL1PrivateL2CacheHierarchy,
+    )
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.utils.requires import requires
@@ -51,11 +56,6 @@ from gem5.resources.resource import Resource
 
 # Run a check to ensure the right version of gem5 is being used.
 requires(isa_required=ISA.RISCV)
-
-from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy \
-    import (
-        PrivateL1PrivateL2CacheHierarchy,
-    )
 
 # Setup the cache hierarchy.
 # For classic, PrivateL1PrivateL2 and NoCache have been tested.
@@ -94,6 +94,3 @@ print("Beginning simulation!")
 # value is obtained from the gem5 terminal stdout. Look out for
 # "system.platform.terminal: Listening for connections on port <port>".
 exit_event = m5.simulate()
-print(
-    "Exiting @ tick {} because {}.".format(m5.curTick(), exit_event.getCause())
-)
