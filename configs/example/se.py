@@ -88,6 +88,7 @@ def get_processes(args):
         process = Process(pid = 100 + idx)
         process.executable = wrkld
         process.cwd = os.getcwd()
+        process.gid = os.getgid()
 
         if args.env:
             with open(args.env, 'r') as f:

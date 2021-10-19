@@ -140,6 +140,7 @@ def get_processes(cmd):
         argv = shlex.split(c)
 
         process = Process(pid=100 + idx, cwd=cwd, cmd=argv, executable=argv[0])
+        process.gid = os.getgid()
 
         print("info: %d. command and arguments: %s" % (idx + 1, process.cmd))
         multiprocesses.append(process)
