@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2009, 2013, 2015 ARM Limited
+# Copyright (c) 2009, 2013, 2015, 2021 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -39,6 +39,9 @@ from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
 from m5.objects.BaseTLB import BaseTLB
+
+class ArmLookupLevel(Enum):
+    vals = [ "L0", "L1", "L2", "L3" ]
 
 class ArmTLB(BaseTLB):
     type = 'ArmTLB'

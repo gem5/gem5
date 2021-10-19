@@ -48,6 +48,7 @@
 #include "arch/arm/utility.hh"
 #include "arch/generic/mmu.hh"
 #include "enums/TypeTLB.hh"
+#include "enums/ArmLookupLevel.hh"
 #include "sim/serialize.hh"
 
 namespace gem5
@@ -55,16 +56,6 @@ namespace gem5
 
 namespace ArmISA
 {
-
-// Lookup level
-enum LookupLevel
-{
-    L0 = 0,  // AArch64 only
-    L1,
-    L2,
-    L3,
-    MAX_LOOKUP_LEVELS
-};
 
 // Granule sizes
 enum GrainSize
@@ -98,6 +89,7 @@ struct PTE
 
 struct PageTableOps
 {
+    typedef enums::ArmLookupLevel LookupLevel;
     typedef int64_t pte_t;
 
     virtual bool isValid(pte_t pte, unsigned level) const = 0;
@@ -171,6 +163,8 @@ struct V8PageTableOps64k : public PageTableOps
 struct TlbEntry : public Serializable
 {
   public:
+    typedef enums::ArmLookupLevel LookupLevel;
+
     enum class MemoryType : std::uint8_t
     {
         StronglyOrdered,
@@ -264,7 +258,8 @@ struct TlbEntry : public Serializable
     TlbEntry(Addr _asn, Addr _vaddr, Addr _paddr,
              bool uncacheable, bool read_only) :
          pfn(_paddr >> PageShift), size(PageBytes - 1), vpn(_vaddr >> PageShift),
-         attributes(0), lookupLevel(L1), asid(_asn), vmid(0), N(0),
+         attributes(0), lookupLevel(LookupLevel::L1),
+         asid(_asn), vmid(0), N(0),
          innerAttrs(0), outerAttrs(0), ap(read_only ? 0x3 : 0), hap(0x3),
          domain(DomainType::Client),  mtype(MemoryType::StronglyOrdered),
          longDescFormat(false), isHyp(false), global(false), valid(true),
@@ -280,8 +275,9 @@ struct TlbEntry : public Serializable
     }
 
     TlbEntry() :
-         pfn(0), size(0), vpn(0), attributes(0), lookupLevel(L1), asid(0),
-         vmid(0), N(0), innerAttrs(0), outerAttrs(0), ap(0), hap(0x3),
+         pfn(0), size(0), vpn(0), attributes(0), lookupLevel(LookupLevel::L1),
+         asid(0), vmid(0), N(0),
+         innerAttrs(0), outerAttrs(0), ap(0), hap(0x3),
          domain(DomainType::Client), mtype(MemoryType::StronglyOrdered),
          longDescFormat(false), isHyp(false), global(false), valid(false),
          ns(true), nstid(true), el(EL0), type(TypeTLB::unified),

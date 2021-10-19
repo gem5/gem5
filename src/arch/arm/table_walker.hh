@@ -65,13 +65,15 @@ class TLB;
 
 class TableWalker : public ClockedObject
 {
+    using LookupLevel = enums::ArmLookupLevel;
+
   public:
     class WalkerState;
 
     class DescriptorBase
     {
       public:
-        DescriptorBase() : lookupLevel(L0) {}
+        DescriptorBase() : lookupLevel(LookupLevel::L0) {}
 
         /** Current lookup level for this descriptor */
         LookupLevel lookupLevel;
@@ -117,7 +119,7 @@ class TableWalker : public ClockedObject
         /** Default ctor */
         L1Descriptor() : data(0), _dirty(false)
         {
-            lookupLevel = L1;
+            lookupLevel = LookupLevel::L1;
         }
 
         uint64_t
@@ -280,13 +282,13 @@ class TableWalker : public ClockedObject
         /** Default ctor */
         L2Descriptor() : data(0), l1Parent(nullptr), _dirty(false)
         {
-            lookupLevel = L2;
+            lookupLevel = LookupLevel::L2;
         }
 
         L2Descriptor(L1Descriptor &parent) : data(0), l1Parent(&parent),
                                              _dirty(false)
         {
-            lookupLevel = L2;
+            lookupLevel = LookupLevel::L2;
         }
 
         uint64_t
@@ -449,10 +451,10 @@ class TableWalker : public ClockedObject
         dbgHeader() const override
         {
             if (type() == LongDescriptor::Page) {
-                assert(lookupLevel == L3);
+                assert(lookupLevel == LookupLevel::L3);
                 return "Inserting Page descriptor into TLB\n";
             } else {
-                assert(lookupLevel < L3);
+                assert(lookupLevel < LookupLevel::L3);
                 return "Inserting Block descriptor into TLB\n";
             }
         }
@@ -478,13 +480,14 @@ class TableWalker : public ClockedObject
                 // 4 KiB granule and at L1 for 16/64 KiB granules
                 switch (grainSize) {
                   case Grain4KB:
-                    if (lookupLevel == L0 || lookupLevel == L3)
+                    if (lookupLevel == LookupLevel::L0 ||
+                        lookupLevel == LookupLevel::L3)
                         return Invalid;
                     else
                         return Block;
 
                   case Grain16KB:
-                    if (lookupLevel == L2)
+                    if (lookupLevel == LookupLevel::L2)
                         return Block;
                     else
                         return Invalid;
@@ -492,8 +495,8 @@ class TableWalker : public ClockedObject
                   case Grain64KB:
                     // With Armv8.2-LPA (52bit PA) L1 Block descriptors
                     // are allowed for 64KiB granule
-                    if ((lookupLevel == L1 && physAddrRange == 52) ||
-                        lookupLevel == L2)
+                    if ((lookupLevel == LookupLevel::L1 && physAddrRange == 52) ||
+                        lookupLevel == LookupLevel::L2)
                         return Block;
                     else
                         return Invalid;
@@ -502,7 +505,7 @@ class TableWalker : public ClockedObject
                     return Invalid;
                 }
               case 0x3:
-                return lookupLevel == L3 ? Page : Table;
+                return lookupLevel == LookupLevel::L3 ? Page : Table;
               default:
                 return Invalid;
             }
@@ -515,13 +518,13 @@ class TableWalker : public ClockedObject
             if (type() == Block) {
                 switch (grainSize) {
                     case Grain4KB:
-                        return lookupLevel == L1 ? 30 /* 1 GiB */
-                                                 : 21 /* 2 MiB */;
+                        return lookupLevel == LookupLevel::L1 ?
+                            30 /* 1 GiB */ : 21 /* 2 MiB */;
                     case Grain16KB:
                         return 25  /* 32 MiB */;
                     case Grain64KB:
-                        return lookupLevel == L1 ? 42 /* 4 TiB */
-                                                 : 29 /* 512 MiB */;
+                        return lookupLevel == LookupLevel::L1 ?
+                            42 /* 4 TiB */ : 29 /* 512 MiB */;
                     default:
                         panic("Invalid AArch64 VM granule size\n");
                 }
@@ -592,7 +595,7 @@ class TableWalker : public ClockedObject
                 int va_hi = va_lo + stride - 1;
                 pa = nextTableAddr() | (bits(va, va_hi, va_lo) << 3);
             } else {
-                if (lookupLevel == L1)
+                if (lookupLevel == LookupLevel::L1)
                     pa = nextTableAddr() | (bits(va, 29, 21) << 3);
                 else  // lookupLevel == L2
                     pa = nextTableAddr() | (bits(va, 20, 12) << 3);
@@ -1003,7 +1006,7 @@ class TableWalker : public ClockedObject
   protected:
 
     /** Queues of requests for all the different lookup levels */
-    std::list<WalkerState *> stateQueues[MAX_LOOKUP_LEVELS];
+    std::list<WalkerState *> stateQueues[LookupLevel::Num_ArmLookupLevel];
 
     /** Queue of requests that have passed are waiting because the walker is
      * currently busy. */

@@ -109,7 +109,7 @@ class TlbTestInterface
     virtual Fault walkCheck(Addr pa, Addr size, Addr va, bool is_secure,
                             Addr is_priv, BaseMMU::Mode mode,
                             TlbEntry::DomainType domain,
-                            LookupLevel lookup_level) = 0;
+                            enums::ArmLookupLevel lookup_level) = 0;
 };
 
 class TLB : public BaseTLB
@@ -158,6 +158,7 @@ class TLB : public BaseTLB
   public:
     using Params = ArmTLBParams;
     using Lookup = TlbEntry::Lookup;
+    using LookupLevel = enums::ArmLookupLevel;
 
     TLB(const Params &p);
     TLB(const Params &p, int _size, TableWalker *_walker);

@@ -130,16 +130,16 @@ V7LPageTableOps::walkMask(unsigned level) const
     }
 }
 
-LookupLevel
+V7LPageTableOps::LookupLevel
 V7LPageTableOps::firstLevel(uint8_t tsz) const
 {
-    return L1;
+    return LookupLevel::L1;
 }
 
-LookupLevel
+V7LPageTableOps::LookupLevel
 V7LPageTableOps::lastLevel() const
 {
-    return L3;
+    return LookupLevel::L3;
 }
 
 bool
@@ -224,31 +224,31 @@ V8PageTableOps4k::walkMask(unsigned level) const
     }
 }
 
-LookupLevel
+V8PageTableOps4k::LookupLevel
 V8PageTableOps4k::firstLevel(uint8_t tsz) const
 {
-    if (tsz >= 16 && tsz <= 24) return L0;
-    if (tsz >= 25 && tsz <= 33) return L1;
-    if (tsz >= 34 && tsz <= 39) return L2;
+    if (tsz >= 16 && tsz <= 24) return LookupLevel::L0;
+    if (tsz >= 25 && tsz <= 33) return LookupLevel::L1;
+    if (tsz >= 34 && tsz <= 39) return LookupLevel::L2;
 
     panic("Unsupported TnSZ: %d\n", tsz);
 }
 
-LookupLevel
+V8PageTableOps4k::LookupLevel
 V8PageTableOps4k::firstS2Level(uint8_t sl0) const
 {
     switch (sl0) {
-      case 0: return L2;
-      case 1: return L1;
-      case 2: return L0;
+      case 0: return LookupLevel::L2;
+      case 1: return LookupLevel::L1;
+      case 2: return LookupLevel::L0;
       default: panic("Unsupported VTCR_EL2.SL0: %d", sl0);
     }
 }
 
-LookupLevel
+V8PageTableOps4k::LookupLevel
 V8PageTableOps4k::lastLevel() const
 {
-    return L3;
+    return LookupLevel::L3;
 }
 
 bool
@@ -335,32 +335,32 @@ V8PageTableOps16k::walkMask(unsigned level) const
     }
 }
 
-LookupLevel
+V8PageTableOps16k::LookupLevel
 V8PageTableOps16k::firstLevel(uint8_t tsz) const
 {
-    if (tsz == 16) return L0;
-    if (tsz >= 17 && tsz <= 27) return L1;
-    if (tsz >= 28 && tsz <= 38) return L2;
-    if (tsz == 39) return L3;
+    if (tsz == 16) return LookupLevel::L0;
+    if (tsz >= 17 && tsz <= 27) return LookupLevel::L1;
+    if (tsz >= 28 && tsz <= 38) return LookupLevel::L2;
+    if (tsz == 39) return LookupLevel::L3;
 
     panic("Unsupported TnSZ: %d\n", tsz);
 }
 
-LookupLevel
+V8PageTableOps16k::LookupLevel
 V8PageTableOps16k::firstS2Level(uint8_t sl0) const
 {
     switch (sl0) {
-      case 0: return L3;
-      case 1: return L2;
-      case 2: return L1;
+      case 0: return LookupLevel::L3;
+      case 1: return LookupLevel::L2;
+      case 2: return LookupLevel::L1;
       default: panic("Unsupported VTCR_EL2.SL0: %d", sl0);
     }
 }
 
-LookupLevel
+V8PageTableOps16k::LookupLevel
 V8PageTableOps16k::lastLevel() const
 {
-    return L3;
+    return LookupLevel::L3;
 }
 
 bool
@@ -439,31 +439,31 @@ V8PageTableOps64k::walkMask(unsigned level) const
     }
 }
 
-LookupLevel
+V8PageTableOps64k::LookupLevel
 V8PageTableOps64k::firstLevel(uint8_t tsz) const
 {
-    if (tsz >= 12 && tsz <= 21) return L1;
-    if (tsz >= 22 && tsz <= 34) return L2;
-    if (tsz >= 35 && tsz <= 39) return L3;
+    if (tsz >= 12 && tsz <= 21) return LookupLevel::L1;
+    if (tsz >= 22 && tsz <= 34) return LookupLevel::L2;
+    if (tsz >= 35 && tsz <= 39) return LookupLevel::L3;
 
     panic("Unsupported TnSZ: %d\n", tsz);
 }
 
-LookupLevel
+V8PageTableOps64k::LookupLevel
 V8PageTableOps64k::firstS2Level(uint8_t sl0) const
 {
     switch (sl0) {
-      case 0: return L3;
-      case 1: return L2;
-      case 2: return L1;
+      case 0: return LookupLevel::L3;
+      case 1: return LookupLevel::L2;
+      case 2: return LookupLevel::L1;
       default: panic("Unsupported VTCR_EL2.SL0: %d", sl0);
     }
 }
 
-LookupLevel
+V8PageTableOps64k::LookupLevel
 V8PageTableOps64k::lastLevel() const
 {
-    return L3;
+    return LookupLevel::L3;
 }
 
 const PageTableOps *

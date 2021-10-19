@@ -45,6 +45,8 @@
 #include "arch/arm/tlb.hh"
 #include "arch/generic/mmu.hh"
 
+#include "enums/ArmLookupLevel.hh"
+
 #include "params/ArmMMU.hh"
 
 namespace gem5
@@ -57,6 +59,8 @@ class TableWalker;
 class MMU : public BaseMMU
 {
   protected:
+    using LookupLevel = enums::ArmLookupLevel;
+
     ArmISA::TLB *
     getDTBPtr() const
     {
