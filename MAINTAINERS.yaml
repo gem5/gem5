@@ -201,6 +201,13 @@ learning-gem5:
   maintainers:
     - Jason Lowe-Power <jason@lowepower.com>
 
+stdlib:
+  desc: >-
+    The gem5 standard library found under `src/python/gem5`
+  status: maintained
+  maintainers:
+    - Bobby R. Bruce <bbruce@ucdavis.edu>
+
 mem:
   desc: >-
     General memory system (e.g., XBar, Packet)
