@@ -26,9 +26,16 @@
 
 from abc import ABCMeta, abstractmethod
 
-from .mem_mode import MemMode
+from .mem_mode import MemMode, mem_mode_to_string
 
-from m5.objects import System, Port, IOXBar, ClockDomain
+from m5.objects import (
+    System,
+    Port,
+    IOXBar,
+    ClockDomain,
+    SrcClockDomain,
+    VoltageDomain,
+)
 
 from typing import List
 
@@ -56,17 +63,31 @@ class AbstractBoard(System):
 
     def __init__(
         self,
+        clk_freq: str,
         processor: "AbstractProcessor",
         memory: "AbstractMemory",
         cache_hierarchy: "AbstractCacheHierarchy",
+        exit_on_work_items: bool = False,
     ) -> None:
         super(AbstractBoard, self).__init__()
         """
+        :param clk_freq: The clock frequency for this board.
         :param processor: The processor for this board.
         :param memory: The memory for this board.
         :param cache_hierarchy: The Cachie Hierarchy for this board.
+        :param exit_on_work_items: Whether the simulation should exit
+        on work items.
         """
 
+        # Set up the clock domain and the voltage domain.
+        self.clk_domain = SrcClockDomain()
+        self.clk_domain.clock = clk_freq
+        self.clk_domain.voltage_domain = VoltageDomain()
+
+        # Set whether to exit on work items.
+        self.exit_on_work_items = exit_on_work_items
+
+        # Set the processor, memory, and cache hierarchy.
         self.processor = processor
         self.memory = memory
         self.cache_hierarchy = cache_hierarchy
@@ -100,6 +121,24 @@ class AbstractBoard(System):
         :returns: The size of the cache line size.
         """
         return self.cache_line_size
+
+    def connect_system_port(self, port: Port) -> None:
+        self.system_port = port
+
+    def set_mem_mode(self, mem_mode: MemMode) -> None:
+        """
+        Set the memory mode of the board.
+
+        :param mem_mode: The memory mode the board is to be set to.
+        """
+        self.mem_mode = mem_mode_to_string(mem_mode=mem_mode)
+
+    def get_clock_domain(self) -> ClockDomain:
+        """Get the clock domain.
+
+        :returns: The clock domain.
+        """
+        return self.clk_domain
 
     # Technically `get_dma_ports` returns a list. This list could be empty to
     # indicate the presense of dma ports. Though I quite like having this
@@ -161,27 +200,6 @@ class AbstractBoard(System):
 
         This returns a *port* (not a bus) that should be connected to a
         CPU-side port for which coherent I/O (DMA) is issued.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_clock_domain(self) -> ClockDomain:
-        """Get the clock domain.
-
-        :returns: The clock domain.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def connect_system_port(self, port: Port) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def set_mem_mode(self, mem_mode: MemMode) -> None:
-        """
-        Set the memory mode of the board.
-
-        :param mem_mode: The memory mode the board is to be set to.
         """
         raise NotImplementedError
 

@@ -60,16 +60,11 @@ class TestBoard(AbstractBoard):
         cache_hierarchy: AbstractCacheHierarchy,
     ):
         super(TestBoard, self).__init__(
+            clk_freq=clk_freq,
             processor=processor,
             memory=memory,
             cache_hierarchy=cache_hierarchy,
         )
-        self.clk_domain = SrcClockDomain(
-            clock=clk_freq, voltage_domain=VoltageDomain()
-        )
-
-    def connect_system_port(self, port: Port) -> None:
-        self.system_port = port
 
     def connect_things(self) -> None:
         self.get_processor().incorporate_processor(self)
@@ -77,9 +72,6 @@ class TestBoard(AbstractBoard):
         self.get_memory().incorporate_memory(self)
 
         self.get_cache_hierarchy().incorporate_cache(self)
-
-    def get_clock_domain(self) -> ClockDomain:
-        return self.clk_domain
 
     @overrides(AbstractBoard)
     def has_io_bus(self) -> bool:
@@ -113,10 +105,6 @@ class TestBoard(AbstractBoard):
             "SimpleBoard does not have any I/O ports. Use has_coherent_io to "
             "check this."
         )
-
-    @overrides(AbstractBoard)
-    def set_mem_mode(self, mem_mode: MemMode) -> None:
-        self.mem_mode = mem_mode_to_string(mem_mode=mem_mode)
 
     @overrides(AbstractBoard)
     def setup_memory_ranges(self) -> None:

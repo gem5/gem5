@@ -25,10 +25,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-from typing import Optional
+from typing import Optional, List
 
 from ...utils.override import overrides
-from .simple_board import SimpleBoard
 from .abstract_board import AbstractBoard
 from ..processors.abstract_processor import AbstractProcessor
 from ..memory.abstract_memory_system import AbstractMemorySystem
@@ -66,7 +65,7 @@ from m5.util.fdthelper import (
 )
 
 
-class RiscvBoard(SimpleBoard):
+class RiscvBoard(AbstractBoard):
     """
     A board capable of full system simulation for RISC-V
 
@@ -84,8 +83,11 @@ class RiscvBoard(SimpleBoard):
         processor: AbstractProcessor,
         memory: AbstractMemorySystem,
         cache_hierarchy: AbstractCacheHierarchy,
+        exit_on_work_items: bool = False,
     ) -> None:
-        super().__init__(clk_freq, processor, memory, cache_hierarchy)
+        super().__init__(
+            clk_freq, processor, memory, cache_hierarchy, exit_on_work_items
+        )
 
         requires(isa_required=ISA.RISCV)
 
@@ -157,6 +159,17 @@ class RiscvBoard(SimpleBoard):
             )
 
     @overrides(AbstractBoard)
+    def has_dma_ports(self) -> bool:
+        return False
+
+    @overrides(AbstractBoard)
+    def get_dma_ports(self) -> List[Port]:
+        raise NotImplementedError(
+            "RISCVBoard does not have DMA Ports. "
+            "Use `has_dma_ports()` to check this."
+        )
+
+    @overrides(AbstractBoard)
     def has_io_bus(self) -> bool:
         return True
 
@@ -176,6 +189,20 @@ class RiscvBoard(SimpleBoard):
         mem_size = memory.get_size()
         self.mem_ranges = [AddrRange(start=0x80000000, size=mem_size)]
         memory.set_memory_range(self.mem_ranges)
+
+    @overrides(AbstractBoard)
+    def connect_things(self) -> None:
+        # Before incorporating the memory, set up the memory ranges
+        self.setup_memory_ranges()
+
+        # Incorporate the cache hierarchy for the motherboard.
+        self.get_cache_hierarchy().incorporate_cache(self)
+
+        # Incorporate the processor into the motherboard.
+        self.get_processor().incorporate_processor(self)
+
+        # Incorporate the memory into the motherboard.
+        self.get_memory().incorporate_memory(self)
 
     def set_workload(
         self, bootloader: AbstractResource, disk_image: AbstractResource,

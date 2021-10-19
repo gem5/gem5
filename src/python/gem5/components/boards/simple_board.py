@@ -37,7 +37,6 @@ from m5.objects import (
 )
 
 from .abstract_board import AbstractBoard
-from .mem_mode import MemMode, mem_mode_to_string
 from ..processors.abstract_processor import AbstractProcessor
 from ..memory.abstract_memory_system import AbstractMemorySystem
 from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
@@ -66,29 +65,12 @@ class SimpleBoard(AbstractBoard):
         exit_on_work_items: bool = False,
     ) -> None:
         super(SimpleBoard, self).__init__(
+            clk_freq=clk_freq,
             processor=processor,
             memory=memory,
             cache_hierarchy=cache_hierarchy,
+            exit_on_work_items=exit_on_work_items,
         )
-
-        # Set up the clock domain and the voltage domain.
-        self.clk_domain = SrcClockDomain()
-        self.clk_domain.clock = clk_freq
-        self.clk_domain.voltage_domain = VoltageDomain()
-
-        self.exit_on_work_items = exit_on_work_items
-
-    @overrides(AbstractBoard)
-    def get_clock_domain(self) -> ClockDomain:
-        return self.clk_domain
-
-    @overrides(AbstractBoard)
-    def connect_system_port(self, port: Port) -> None:
-        self.system_port = port
-
-    @overrides(AbstractBoard)
-    def set_mem_mode(self, mem_mode: MemMode) -> None:
-        self.mem_mode = mem_mode_to_string(mem_mode=mem_mode)
 
     @overrides(AbstractBoard)
     def connect_things(self) -> None:

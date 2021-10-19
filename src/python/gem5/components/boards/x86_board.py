@@ -55,8 +55,6 @@ from m5.objects import (
 
 from m5.util.convert import toMemorySize
 
-
-from .simple_board import SimpleBoard
 from ..processors.abstract_processor import AbstractProcessor
 from ..memory.abstract_memory_system import AbstractMemorySystem
 from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
@@ -66,7 +64,7 @@ import os
 from typing import List, Optional, Sequence
 
 
-class X86Board(SimpleBoard):
+class X86Board(AbstractBoard):
     """
     A board capable of full system simulation for X86.
 
