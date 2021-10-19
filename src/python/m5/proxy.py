@@ -172,7 +172,8 @@ class AttrProxy(BaseProxy):
         if attr.startswith('_'):
             return super(AttrProxy, self).__getattr__(self, attr)
         if hasattr(self, '_pdesc'):
-            raise AttributeError("Attribute reference on bound proxy")
+            raise AttributeError("Attribute reference on bound proxy "
+                                f"({self}.{attr})")
         # Return a copy of self rather than modifying self in place
         # since self could be an indirect reference via a variable or
         # parameter

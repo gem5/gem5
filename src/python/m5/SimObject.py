@@ -1534,9 +1534,9 @@ class SimObject(object, metaclass=MetaSimObject):
     def add_child(self, name, child):
         child = coerceSimObjectOrVector(child)
         if child.has_parent():
-            warn(f"{self}.{name} already has parent (Previously declared as "
-                 f"{child._parent}.{name}), not resetting parent.\n"
+            warn(f"{self}.{name} already has parent not resetting parent.\n"
                  f"\tNote: {name} is not a parameter of {type(self).__name__}")
+            warn(f"(Previously declared as {child._parent}.{name}")
             return
         if name in self._children:
             # This code path had an undiscovered bug that would make it fail
