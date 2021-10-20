@@ -54,7 +54,10 @@ def makeGpuFSSystem(args):
 
     # Use the common FSConfig to setup a Linux X86 System
     (TestCPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(args)
-    bm = SysConfig(disks=[args.disk_image], mem=args.mem_size)
+    disks = [args.disk_image]
+    if args.second_disk is not None:
+        disks.extend([args.second_disk])
+    bm = SysConfig(disks=disks, mem=args.mem_size)
     system = makeLinuxX86System(test_mem_mode, args.num_cpus, bm, True,
                                   cmdline=cmdline)
     system.workload.object_file = binary(args.kernel)
