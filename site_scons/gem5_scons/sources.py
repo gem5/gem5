@@ -168,7 +168,7 @@ SourceFilter.factories.update({
 class SourceList(list):
     def apply_filter(self, env, f):
         def match(source):
-            return f.predicate(env, source.tags)
+            return f.predicate(env, resolve_tags(env, source.tags))
         return SourceList(filter(match, self))
 
     def __getattr__(self, name):
