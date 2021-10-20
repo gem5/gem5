@@ -32,6 +32,7 @@ from m5.proxy import *
 from m5.objects.PciDevice import PciDevice
 from m5.objects.PciDevice import PciMemBar, PciMemUpperBar, PciLegacyIoBar
 from m5.objects.Device import DmaDevice
+from m5.objects.ClockedObject import ClockedObject
 
 # PCI device model for an AMD Vega 10 based GPU. The PCI codes and BARs
 # correspond to a Vega Frontier Edition hardware device. None of the PCI
@@ -78,7 +79,17 @@ class AMDGPUDevice(PciDevice):
     # The config script should not create a new cp here but rather assign the
     # same cp that is assigned to the Shader SimObject.
     cp = Param.GPUCommandProcessor(NULL, "Command Processor")
+    memory_manager = Param.AMDGPUMemoryManager("GPU Memory Manager")
+    memories = VectorParam.AbstractMemory([], "All memories in the device")
     device_ih = Param.AMDGPUInterruptHandler("GPU Interrupt handler")
+
+class AMDGPUMemoryManager(ClockedObject):
+    type = 'AMDGPUMemoryManager'
+    cxx_header = 'dev/amdgpu/memory_manager.hh'
+    cxx_class = 'gem5::AMDGPUMemoryManager'
+
+    port = RequestPort('Memory Port to access VRAM (device memory)')
+    system = Param.System(Parent.any, 'System the dGPU belongs to')
 
 class AMDGPUInterruptHandler(DmaDevice):
     type = 'AMDGPUInterruptHandler'

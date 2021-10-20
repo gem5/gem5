@@ -250,6 +250,8 @@ AMDGPUDevice::write(PacketPtr pkt)
 
     switch (barnum) {
       case FRAMEBUFFER_BAR:
+          gpuMemMgr->writeRequest(offset, pkt->getPtr<uint8_t>(),
+                                  pkt->getSize());
           writeFrame(pkt, offset);
           break;
       case DOORBELL_BAR:
@@ -265,6 +267,9 @@ AMDGPUDevice::write(PacketPtr pkt)
     // Record only if there is non-zero value, or a value to be overwritten.
     // Reads return 0 by default.
     uint64_t data = pkt->getUintX(ByteOrder::little);
+
+    DPRINTF(AMDGPUDevice, "PCI Write to %#lx data %#lx\n",
+                            pkt->getAddr(), data);
 
     if (data || regs.find(pkt->getAddr()) != regs.end())
         regs[pkt->getAddr()] = data;

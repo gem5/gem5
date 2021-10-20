@@ -36,6 +36,7 @@
 
 #include "base/bitunion.hh"
 #include "dev/amdgpu/amdgpu_defines.hh"
+#include "dev/amdgpu/memory_manager.hh"
 #include "dev/amdgpu/mmio_reader.hh"
 #include "dev/io_device.hh"
 #include "dev/pci/device.hh"
@@ -99,6 +100,8 @@ class AMDGPUDevice : public PciDevice
      * MMIO reader to populate device registers map.
      */
     AMDMMIOReader mmioReader;
+
+    AMDGPUMemoryManager *gpuMemMgr;
 
     /**
      * Blocks of the GPU
@@ -183,7 +186,7 @@ class AMDGPUDevice : public PciDevice
     /**
      * Methods related to translations and system/device memory.
      */
-    RequestorID vramRequestorId() { return 0; }
+    RequestorID vramRequestorId() { return gpuMemMgr->getRequestorID(); }
 
     Addr
     getPageTableBase(uint16_t vmid)
