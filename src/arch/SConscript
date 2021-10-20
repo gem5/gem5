@@ -69,15 +69,16 @@ env.SwitchingHeaders(
 
 amdgpu_isa = ['gcn3', 'vega']
 
-env.SwitchingHeaders(
-    Split('''
-        gpu_decoder.hh
-        gpu_isa.hh
-        gpu_registers.hh
-        gpu_types.hh
-        '''),
-    '{}'.format('amdgpu/' if env['TARGET_GPU_ISA'] in amdgpu_isa else '')+
-    env.subst('${TARGET_GPU_ISA}'))
+if env['BUILD_GPU']:
+    env.SwitchingHeaders(
+        Split('''
+            gpu_decoder.hh
+            gpu_isa.hh
+            gpu_registers.hh
+            gpu_types.hh
+            '''),
+        '{}'.format('amdgpu/' if env['TARGET_GPU_ISA'] in amdgpu_isa else '')+
+        env.subst('${TARGET_GPU_ISA}'))
 
 #################################################################
 #
