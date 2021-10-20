@@ -79,7 +79,11 @@ CompoundFlag('Exec', [ 'ExecEnable', 'ExecOpClass', 'ExecThread',
     'ExecFaulting', 'ExecUser', 'ExecKernel' ])
 CompoundFlag('ExecNoTicks', [ 'Exec', 'FmtTicksOff' ])
 
+Source('func_unit.cc')
 Source('pc_event.cc')
+
+SimObject('FuncUnit.py')
+SimObject('StaticInstFlags.py')
 
 if env['TARGET_ISA'] == 'null':
     Return()
@@ -93,13 +97,11 @@ SimObject('CheckerCPU.py')
 
 SimObject('BaseCPU.py')
 SimObject('CPUTracers.py')
-SimObject('FuncUnit.py')
 SimObject('TimingExpr.py')
 
 Source('activity.cc')
 Source('base.cc')
 Source('exetrace.cc')
-Source('func_unit.cc')
 Source('inteltrace.cc')
 Source('nativetrace.cc')
 Source('nop_static_inst.cc')
@@ -113,6 +115,5 @@ Source('thread_state.cc')
 Source('timing_expr.cc')
 
 SimObject('DummyChecker.py')
-SimObject('StaticInstFlags.py')
 Source('checker/cpu.cc')
 DebugFlag('Checker')
