@@ -157,6 +157,10 @@ def makeGpuFSSystem(args):
 
         system.ruby._cpu_ports[i].connectCpuPorts(cpu)
 
+    for i in range(len(system.cpu)):
+        for j in range(len(system.cpu[i].isa)):
+            system.cpu[i].isa[j].vendor_string = "AuthenticAMD"
+
     # The shader core will be whatever is after the CPU cores are accounted for
     shader_idx = args.num_cpus
     system.cpu.append(shader)
