@@ -28,8 +28,10 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from m5.params import *
+from m5.proxy import *
 from m5.objects.PciDevice import PciDevice
 from m5.objects.PciDevice import PciMemBar, PciMemUpperBar, PciLegacyIoBar
+from m5.objects.Device import DmaDevice
 
 # PCI device model for an AMD Vega 10 based GPU. The PCI codes and BARs
 # correspond to a Vega Frontier Edition hardware device. None of the PCI
@@ -71,3 +73,14 @@ class AMDGPUDevice(PciDevice):
     trace_file = Param.String("MMIO trace collected on hardware")
     checkpoint_before_mmios = Param.Bool(False, "Take a checkpoint before the"
                                                 " device begins sending MMIOs")
+
+    # The cp is needed here to handle certain packets the device may receive.
+    # The config script should not create a new cp here but rather assign the
+    # same cp that is assigned to the Shader SimObject.
+    cp = Param.GPUCommandProcessor(NULL, "Command Processor")
+    device_ih = Param.AMDGPUInterruptHandler("GPU Interrupt handler")
+
+class AMDGPUInterruptHandler(DmaDevice):
+    type = 'AMDGPUInterruptHandler'
+    cxx_header = "dev/amdgpu/interrupt_handler.hh"
+    cxx_class = 'gem5::AMDGPUInterruptHandler'

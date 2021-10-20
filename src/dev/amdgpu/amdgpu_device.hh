@@ -44,6 +44,8 @@
 namespace gem5
 {
 
+class AMDGPUInterruptHandler;
+
 /**
  * Device model for an AMD GPU. This models the interface between the PCI bus
  * and the various IP blocks behind it. It translates requests to the various
@@ -77,6 +79,14 @@ class AMDGPUDevice : public PciDevice
     void writeMMIO(PacketPtr pkt, Addr offset);
 
     /**
+     * Structures to hold registers, doorbells, and some frame memory
+     */
+    using GPURegMap = std::unordered_map<uint32_t, uint64_t>;
+    GPURegMap frame_regs;
+    GPURegMap regs;
+    std::unordered_map<uint32_t, QueueType> doorbells;
+
+    /**
      * VGA ROM methods
      */
     AddrRange romRange;
@@ -91,10 +101,13 @@ class AMDGPUDevice : public PciDevice
     AMDMMIOReader mmioReader;
 
     /**
-     * Device registers - Maps register address to register value
+     * Blocks of the GPU
      */
-    std::unordered_map<uint32_t, uint64_t> regs;
+    AMDGPUInterruptHandler *deviceIH;
 
+    /**
+     * Initial checkpoint support variables.
+     */
     bool checkpoint_before_mmios;
     int init_interrupt_count;
 
@@ -185,6 +198,41 @@ class AMDGPUDevice : public PciDevice
         assert(vmid > 0 && vmid < vmContexts.size());
         return vmContexts[vmid].ptStart;
     }
+
+    Addr
+    getMmioAperture(Addr addr)
+    {
+        // Aperture ranges:
+        // NBIO               0x0     - 0x4280
+        // IH                 0x4280  - 0x4980
+        // SDMA0              0x4980  - 0x5180
+        // SDMA1              0x5180  - 0x5980
+        // GRBM               0x8000  - 0xD000
+        // GFX                0x28000 - 0x3F000
+        // MMHUB              0x68000 - 0x6a120
+
+        if (IH_BASE <= addr && addr < IH_BASE + IH_SIZE)
+            return IH_BASE;
+        else if (SDMA0_BASE <= addr && addr < SDMA0_BASE + SDMA_SIZE)
+            return SDMA0_BASE;
+        else if (SDMA1_BASE <= addr && addr < SDMA1_BASE + SDMA_SIZE)
+            return SDMA1_BASE;
+        else if (GRBM_BASE <= addr && addr < GRBM_BASE + GRBM_SIZE)
+            return GRBM_BASE;
+        else if (GFX_BASE <= addr && addr < GFX_BASE + GFX_SIZE)
+            return GFX_BASE;
+        else if (MMHUB_BASE <= addr && addr < MMHUB_BASE + MMHUB_SIZE)
+            return MMHUB_BASE;
+        else {
+            warn_once("Accessing unsupported MMIO aperture! Assuming NBIO\n");
+            return NBIO_BASE;
+        }
+    }
+
+    /**
+     * Setters to set values from other GPU blocks.
+     */
+    void setDoorbellType(uint32_t offset, QueueType qt);
 };
 
 } // namespace gem5

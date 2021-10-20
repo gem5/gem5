@@ -34,6 +34,7 @@
 #include <fstream>
 
 #include "debug/AMDGPUDevice.hh"
+#include "dev/amdgpu/interrupt_handler.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/AMDGPUDevice.hh"
@@ -196,8 +197,19 @@ AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
 void
 AMDGPUDevice::writeMMIO(PacketPtr pkt, Addr offset)
 {
+    Addr aperture = getMmioAperture(offset);
+    Addr aperture_offset = offset - aperture;
+
     DPRINTF(AMDGPUDevice, "Wrote MMIO %#lx\n", offset);
-    mmioReader.writeFromTrace(pkt, MMIO_BAR, offset);
+
+    switch (aperture) {
+      case IH_BASE:
+        deviceIH->writeMMIO(pkt, aperture_offset >> IH_OFFSET_SHIFT);
+        break;
+      default:
+        DPRINTF(AMDGPUDevice, "Unknown MMIO aperture for %#x\n", offset);
+        break;
+    }
 }
 
 Tick
@@ -260,6 +272,19 @@ AMDGPUDevice::write(PacketPtr pkt)
     dispatchAccess(pkt, false);
 
     return pioDelay;
+}
+
+void
+AMDGPUDevice::setDoorbellType(uint32_t offset, QueueType qt)
+{
+    DPRINTF(AMDGPUDevice, "Setting doorbell type for %x\n", offset);
+    doorbells[offset] = qt;
+}
+
+void
+AMDGPUDevice::intrPost()
+{
+    PciDevice::intrPost();
 }
 
 void
