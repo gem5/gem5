@@ -36,6 +36,8 @@ from common.FSConfig import *
 from common import Simulation
 from ruby import Ruby
 
+from example.gpufs.Disjoint_VIPER import *
+
 def makeGpuFSSystem(args):
     # Boot options are standard gem5 options plus:
     # - Framebuffer device emulation 0 to reduce driver code paths.
@@ -133,6 +135,9 @@ def makeGpuFSSystem(args):
     system._dma_ports.append(sdma1)
     system._dma_ports.append(device_ih)
     system._dma_ports.append(pm4_pkt_proc)
+    system._dma_ports.append(gpu_mem_mgr)
+    system._dma_ports.append(sdma0_pt_walker)
+    system._dma_ports.append(sdma1_pt_walker)
 
     gpu_hsapp.pio = system.iobus.mem_side_ports
     gpu_cmd_proc.pio = system.iobus.mem_side_ports
@@ -143,8 +148,10 @@ def makeGpuFSSystem(args):
     pm4_pkt_proc.pio = system.iobus.mem_side_ports
 
     # Create Ruby system using Ruby.py for now
-    Ruby.create_system(args, True, system, system.iobus,
-                      system._dma_ports)
+    #Ruby.create_system(args, True, system, system.iobus,
+    #                   system._dma_ports)
+    system.ruby = Disjoint_VIPER()
+    system.ruby.create(args, system, system.iobus, system._dma_ports)
 
     # Create a seperate clock domain for Ruby
     system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock,

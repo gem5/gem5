@@ -71,7 +71,12 @@ def addRunFSOptions(parser):
                         help="Take a checkpoint before driver sends MMIOs. "
                         "This is used to switch out of KVM mode and into "
                         "timing mode required to read the VGA ROM on boot.")
-
+    parser.add_argument("--cpu-topology", type=str, default="Crossbar",
+                        help="Network topology to use for CPU side. "
+                        "Check configs/topologies for complete set")
+    parser.add_argument("--gpu-topology", type=str, default="Crossbar",
+                        help="Network topology to use for GPU side. "
+                        "Check configs/topologies for complete set")
 
 def runGpuFSSystem(args):
     '''
