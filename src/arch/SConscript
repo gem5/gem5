@@ -55,7 +55,7 @@ Import('*')
 #
 #################################################################
 
-env.TagImplies('gem5 lib', env.subst('${TARGET_ISA} isa'))
+env.TagImplies(env.subst('${TARGET_ISA} isa'), 'gem5 lib')
 
 env.SwitchingHeaders(
     Split('''
