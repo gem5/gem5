@@ -201,7 +201,7 @@ class SourceFile(object, metaclass=SourceMeta):
             tags = { tags }
         if not isinstance(tags, set):
             tags = set(tags)
-        self.tags = tags
+        self.tags = tags.copy()
 
         if add_tags:
             if isinstance(add_tags, str):
