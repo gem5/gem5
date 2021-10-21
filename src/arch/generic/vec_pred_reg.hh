@@ -1,4 +1,4 @@
-// Copyright (c) 2017 ARM Limited
+// Copyright (c) 2017, 2021 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -344,23 +344,25 @@ class VecPredRegContainer
     /// @tparam VecElem Type of the vector elements.
     /// @{
     template <typename VecElem>
-    VecPredRegT<VecElem, NumBits / sizeof(VecElem), Packed, true>
+    auto
     as() const
     {
         static_assert(NumBits % sizeof(VecElem) == 0,
                 "Container size incompatible with view size.");
-        return VecPredRegT<VecElem, NumBits / sizeof(VecElem), Packed, true>(
-                *this);
+        return VecPredRegT<VecElem,
+                           Packed ? NumBits : (NumBits / sizeof(VecElem)),
+                           Packed, true>(*this);
     }
 
     template <typename VecElem>
-    VecPredRegT<VecElem, NumBits / sizeof(VecElem), Packed, false>
+    auto
     as()
     {
         static_assert(NumBits % sizeof(VecElem) == 0,
                 "Container size incompatible with view size.");
-        return VecPredRegT<VecElem, NumBits / sizeof(VecElem), Packed, false>(
-                *this);
+        return VecPredRegT<VecElem,
+                           Packed ? NumBits : (NumBits / sizeof(VecElem)),
+                           Packed, false>(*this);
     }
     /// @}
 };
