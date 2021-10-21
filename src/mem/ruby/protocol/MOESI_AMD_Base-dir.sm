@@ -38,6 +38,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   Cycles l3_hit_latency := 50;
   bool noTCCdir := "False";
   bool CPUonly := "False";
+  bool GPUonly := "False";
   int TCC_select_num_bits;
   bool useL3OnWT := "False";
   Cycles to_memory_controller_latency := 1;
@@ -652,7 +653,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.Type := ProbeRequestType:PrbInv;
         out_msg.ReturnData := true;
         out_msg.MessageSize := MessageSizeType:Control;
-        out_msg.Destination.broadcast(MachineType:CorePair);
+        if (!GPUonly) {
+            out_msg.Destination.broadcast(MachineType:CorePair);
+        }
 
         // Add relevant TCC node to list. This replaces all TCPs and SQCs
         if (CPUonly) {
@@ -677,6 +680,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         APPEND_TRANSITION_COMMENT(" dc: Acks remaining: ");
         APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
         tbe.ProbeRequestStartTime := curCycle();
+        assert(out_msg.Destination.count() > 0);
       }
     }
   }
@@ -688,7 +692,10 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.Type := ProbeRequestType:PrbInv;
         out_msg.ReturnData := true;
         out_msg.MessageSize := MessageSizeType:Control;
-        out_msg.Destination.broadcast(MachineType:CorePair);  // won't be realistic for multisocket
+        if (!GPUonly) {
+            // won't be realistic for multisocket
+            out_msg.Destination.broadcast(MachineType:CorePair);
+        }
 
         // add relevant TCC node to list. This replaces all TCPs and SQCs
         if (((in_msg.Type == CoherenceRequestType:WriteThrough ||
@@ -715,6 +722,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         APPEND_TRANSITION_COMMENT(" dc: Acks remaining: ");
         APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
         tbe.ProbeRequestStartTime := curCycle();
+        assert(out_msg.Destination.count() > 0);
       }
     }
   }
@@ -726,7 +734,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.Type := ProbeRequestType:PrbDowngrade;
         out_msg.ReturnData := true;
         out_msg.MessageSize := MessageSizeType:Control;
-        out_msg.Destination.broadcast(MachineType:CorePair);
+        if (!GPUonly) {
+            out_msg.Destination.broadcast(MachineType:CorePair);
+        }
         // add relevant TCC node to the list. This replaces all TCPs and SQCs
         if (noTCCdir || CPUonly) {
           //Don't need to notify TCC about reads
@@ -751,6 +761,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         APPEND_TRANSITION_COMMENT(" sc: Acks remaining: ");
         APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
         tbe.ProbeRequestStartTime := curCycle();
+        assert(out_msg.Destination.count() > 0);
       }
     }
   }
@@ -762,7 +773,10 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.Type := ProbeRequestType:PrbDowngrade;
         out_msg.ReturnData := true;
         out_msg.MessageSize := MessageSizeType:Control;
-        out_msg.Destination.broadcast(MachineType:CorePair);  // won't be realistic for multisocket
+        if (!GPUonly) {
+            // won't be realistic for multisocket
+            out_msg.Destination.broadcast(MachineType:CorePair);
+        }
         // add relevant TCC node to the list. This replaces all TCPs and SQCs
         if (noTCCdir || CPUonly) {
           //Don't need to notify TCC about reads
@@ -788,6 +802,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         APPEND_TRANSITION_COMMENT(" sc: Acks remaining: ");
         APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
         tbe.ProbeRequestStartTime := curCycle();
+        assert(out_msg.Destination.count() > 0);
       }
     }
   }
@@ -799,7 +814,10 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.Type := ProbeRequestType:PrbInv;
         out_msg.ReturnData := false;
         out_msg.MessageSize := MessageSizeType:Control;
-        out_msg.Destination.broadcast(MachineType:CorePair);  // won't be realistic for multisocket
+        if (!GPUonly) {
+            // won't be realistic for multisocket
+            out_msg.Destination.broadcast(MachineType:CorePair);
+        }
 
         // add relevant TCC node to the list. This replaces all TCPs and SQCs
         if (noTCCdir && !CPUonly) {
@@ -825,6 +843,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
         DPRINTF(RubySlicc, "%s\n", out_msg);
         tbe.ProbeRequestStartTime := curCycle();
+        assert(out_msg.Destination.count() > 0);
       }
     }
   }
