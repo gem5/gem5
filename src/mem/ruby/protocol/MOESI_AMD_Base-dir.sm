@@ -654,8 +654,10 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.Destination.broadcast(MachineType:CorePair);
 
-        // add relevant TCC node to list. This replaces all TCPs and SQCs
-        if (noTCCdir) {
+        // Add relevant TCC node to list. This replaces all TCPs and SQCs
+        if (CPUonly) {
+            // CPU only has neither TCC nor TCC directory to add.
+        } else if (noTCCdir) {
           out_msg.Destination.add(mapAddressToRange(address,MachineType:TCC,
                                   TCC_select_low_bit, TCC_select_num_bits));
         } else {
