@@ -50,6 +50,22 @@ PySource('gem5.components.cachehierarchies',
     'gem5/components/cachehierarchies/abstract_cache_hierarchy.py')
 PySource('gem5.components.cachehierarchies',
     'gem5/components/cachehierarchies/abstract_two_level_cache_hierarchy.py')
+PySource('gem5.components.cachehierarchies.chi',
+    'gem5/components/cachehierarchies/chi/__init__.py')
+PySource('gem5.components.cachehierarchies.chi',
+    'gem5/components/cachehierarchies/chi/private_l1_cache_hierarchy.py')
+PySource('gem5.components.cachehierarchies.chi.nodes',
+    'gem5/components/cachehierarchies/chi/nodes/__init__.py')
+PySource('gem5.components.cachehierarchies.chi.nodes',
+    'gem5/components/cachehierarchies/chi/nodes/abstract_node.py')
+PySource('gem5.components.cachehierarchies.chi.nodes',
+    'gem5/components/cachehierarchies/chi/nodes/directory.py')
+PySource('gem5.components.cachehierarchies.chi.nodes',
+    'gem5/components/cachehierarchies/chi/nodes/dma_requestor.py')
+PySource('gem5.components.cachehierarchies.chi.nodes',
+    'gem5/components/cachehierarchies/chi/nodes/private_l1_moesi_cache.py')
+PySource('gem5.components.cachehierarchies.chi.nodes',
+    'gem5/components/cachehierarchies/chi/nodes/memory_controller.py')
 PySource('gem5.components.cachehierarchies.classic',
     'gem5/components/cachehierarchies/classic/__init__.py')
 PySource('gem5.components.cachehierarchies.classic',
