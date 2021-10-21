@@ -288,12 +288,26 @@ class X86Board(AbstractBoard):
             first partition should be the root partition.
         :param command: The command(s) to run with bash once the OS is booted
         :param kernel_args: Additional arguments to be passed to the kernel.
-        `earlyprintk=ttyS0 console=ttyS0 lpj=7999923 root=/dev/hda1` are
-        already passed. This parameter is used to pass additional arguments.
+        `earlyprintk=ttyS0 console=ttyS0 lpj=7999923
+        root=/dev/hda<partition_val>` are already passed (`<partition_val>` is
+        automatically inferred from resource metadata). This parameter is used
+        to pass additional arguments.
         """
 
         # Set the Linux kernel to use.
         self.workload.object_file = kernel.get_local_path()
+
+        # Determine where the root exists in the disk image. This is done by
+        # inspecting the resource metadata.
+        root_val = "/dev/hda"
+        try:
+            partition_val = disk_image.get_metadata()["additional_metadata"]\
+                                                     ["root_partition"]
+        except KeyError:
+            partition_val = None
+
+        if partition_val is not None:
+            root_val += partition_val
 
         # Options specified on the kernel command line.
         self.workload.command_line = " ".join(
@@ -301,7 +315,7 @@ class X86Board(AbstractBoard):
                 "earlyprintk=ttyS0",
                 "console=ttyS0",
                 "lpj=7999923",
-                "root=/dev/hda1",
+                f"root={root_val}",
             ] + kernel_args
         )
 

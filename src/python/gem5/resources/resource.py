@@ -28,9 +28,9 @@ from abc import ABCMeta
 import os
 from pathlib import Path
 
-from .downloader import get_resource
+from .downloader import get_resource, get_resources_json_obj
 
-from typing import Optional
+from typing import Optional, Dict
 
 """
 A Resource object encapsulates a gem5 resource. Resources are items needed to
@@ -50,11 +50,20 @@ class AbstractResource:
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, local_path: str):
+    def __init__(self, local_path: str, metadata: Dict = {}):
         self._local_path = local_path
+        self._metadata = metadata
 
     def get_local_path(self) -> str:
         return self._local_path
+
+    def get_metadata(self) -> Dict:
+        """
+        Returns the raw data from this resource, as seen in the
+        `resources.json` file. A user may specify the metadata of a local
+        resource.
+        """
+        return self._metadata
 
 
 class CustomResource(AbstractResource):
@@ -64,9 +73,10 @@ class CustomResource(AbstractResource):
     repository.
     """
 
-    def __init__(self, local_path: str):
+    def __init__(self, local_path: str, metadata: Optional[Dict] = None):
         """
         :param local_path: The path of the resource on the host system.
+        :param metadata: Add metadata for the custom resource.
         """
         super().__init__(local_path=local_path)
 
@@ -117,10 +127,13 @@ class Resource(AbstractResource):
 
         to_path = os.path.join(resource_directory, resource_name)
 
-        super(Resource, self).__init__(local_path=to_path)
+        super(Resource, self).__init__(
+                    local_path=to_path,
+                    metadata=get_resources_json_obj(resource_name))
         get_resource(
             resource_name=resource_name, to_path=to_path, override=override
         )
+
 
     def _get_default_resource_dir(cls) -> str:
         """

@@ -240,7 +240,19 @@ class RiscvBoard(AbstractBoard):
         image.child.image_file = disk_image.get_local_path()
         self.disk.vio.image = image
 
-        self.workload.command_line = "console=ttyS0 root=/dev/vda ro"
+        # Determine where the root exists in the disk image. This is done by
+        # inspecting the resource metadata.
+        root_val = "/dev/vda"
+        try:
+            partition_val = disk_image.get_metadata()["additional_metadata"]\
+                                                     ["root_partition"]
+        except KeyError:
+            partition_val = None
+
+        if partition_val is not None:
+            root_val += partition_val
+
+        self.workload.command_line = f"console=ttyS0 root={root_val} ro"
 
         # Note: This must be called after set_workload because it looks for an
         # attribute named "disk" and connects
