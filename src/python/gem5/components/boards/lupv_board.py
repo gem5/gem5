@@ -46,10 +46,10 @@ from m5.objects import (
     IOXBar,
     Clint,
     Plic,
-    Uart8250,
     Terminal,
     LupioRNG,
     LupioRTC,
+    LupioTTY,
     LupV,
     AddrRange,
     CowDiskImage,
@@ -98,7 +98,7 @@ class LupvBoard(SimpleBoard):
 
         # Initialize all the devices that we want to use on this board
         # Interrupt IDS for PIC Device
-        self._int_ids = { 'UART': 1, 'DISK': 2, 'RNG': 3}
+        self._int_ids = { 'TTY': 1, 'DISK': 2, 'RNG': 3}
 
         # CLINT
         self.clint = Clint(pio_addr=0x2000000)
@@ -109,7 +109,7 @@ class LupvBoard(SimpleBoard):
         #LupV Platform
         self.lupv = LupV(
             pic = self.pic,
-            uart_int_id = self._int_ids['UART']
+            uart_int_id = self._int_ids['TTY']
         )
 
         # LUPIO RNG
@@ -130,12 +130,16 @@ class LupvBoard(SimpleBoard):
             pio_addr=0x10008000,
         )
 
-        # UART
-        self.uart = Uart8250(pio_addr=0x10000000)
+        # LUPIO TTY
+        self.lupio_tty = LupioTTY(
+            pio_addr=0x20007000,
+            platform = self.lupv,
+            int_id = self._int_ids['TTY']
+        )
         self.terminal = Terminal()
 
         pic_srcs = [
-            self._int_ids['UART'],
+            self._int_ids['TTY'],
             self._int_ids['DISK'],
             self._int_ids['RNG']
         ]
@@ -157,7 +161,7 @@ class LupvBoard(SimpleBoard):
             self.pic,
         ]
         self._off_chip_devices = [
-            self.uart,
+            self.lupio_tty,
             self.disk,
             self.lupio_rng,
             self.lupio_rtc
@@ -239,7 +243,7 @@ class LupvBoard(SimpleBoard):
 
         # Linux boot command flags
         kernel_cmd = [
-            "earlycon console=ttyS0",
+            "earlycon console=ttyLIO0",
             "root=/dev/vda1",
             "ro"
         ]
@@ -366,21 +370,6 @@ class LupvBoard(SimpleBoard):
 
         soc_node.append(plic_node)
 
-        # UART node
-        uart = self.uart
-        uart_node = uart.generateBasicPioDeviceNode(
-            soc_state, "uart", uart.pio_addr, uart.pio_size
-        )
-        uart_node.append(
-            FdtPropertyWords("interrupts", [self._int_ids['UART']])
-        )
-        uart_node.append(FdtPropertyWords("clock-frequency", [0x384000]))
-        uart_node.append(
-            FdtPropertyWords("interrupt-parent", soc_state.phandle(plic))
-        )
-        uart_node.appendCompatible(["ns8250"])
-        soc_node.append(uart_node)
-
         # VirtIO MMIO disk node
         disk = self.disk
         disk_node = disk.generateBasicPioDeviceNode(
@@ -413,6 +402,19 @@ class LupvBoard(SimpleBoard):
         )
         lupio_rtc_node.appendCompatible(["lupio,rtc"])
         soc_node.append(lupio_rtc_node)
+
+        # LupioTTY Device
+        lupio_tty = self.lupio_tty
+        lupio_tty_node = lupio_tty.generateBasicPioDeviceNode(soc_state,
+                        "lupio-tty", lupio_tty.pio_addr, lupio_tty.pio_size)
+        lupio_tty_node.appendCompatible(["lupio,tty"])
+        lupio_tty_node.append(
+                FdtPropertyWords("interrupts",
+                [self.lupio_tty.int_id]))
+        lupio_tty_node.append(
+                FdtPropertyWords("interrupt-parent",
+                state.phandle(self.pic)))
+        soc_node.append(lupio_tty_node)
 
         root.append(soc_node)
         fdt = Fdt()
