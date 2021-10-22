@@ -48,6 +48,7 @@ from m5.objects import (
     Plic,
     Uart8250,
     Terminal,
+    LupioRNG,
     LupioRTC,
     LupV,
     AddrRange,
@@ -97,7 +98,7 @@ class LupvBoard(SimpleBoard):
 
         # Initialize all the devices that we want to use on this board
         # Interrupt IDS for PIC Device
-        self._int_ids = { 'UART': 1, 'DISK': 2}
+        self._int_ids = { 'UART': 1, 'DISK': 2, 'RNG': 3}
 
         # CLINT
         self.clint = Clint(pio_addr=0x2000000)
@@ -109,6 +110,13 @@ class LupvBoard(SimpleBoard):
         self.lupv = LupV(
             pic = self.pic,
             uart_int_id = self._int_ids['UART']
+        )
+
+        # LUPIO RNG
+        self.lupio_rng = LupioRNG(
+            pio_addr=0x20005000,
+            platform = self.lupv,
+            int_id = self._int_ids['RNG']
         )
 
         # LUPIO RTC
@@ -128,7 +136,8 @@ class LupvBoard(SimpleBoard):
 
         pic_srcs = [
             self._int_ids['UART'],
-            self._int_ids['DISK']
+            self._int_ids['DISK'],
+            self._int_ids['RNG']
         ]
         self.pic.n_contexts = self.processor.get_num_cores() * 2
         self.pic.n_src = max(pic_srcs) + 1
@@ -150,6 +159,7 @@ class LupvBoard(SimpleBoard):
         self._off_chip_devices = [
             self.uart,
             self.disk,
+            self.lupio_rng,
             self.lupio_rtc
         ]
 
@@ -382,6 +392,19 @@ class LupvBoard(SimpleBoard):
         )
         disk_node.appendCompatible(["virtio,mmio"])
         soc_node.append(disk_node)
+
+        # LupioRNG Device
+        lupio_rng = self.lupio_rng
+        lupio_rng_node = lupio_rng.generateBasicPioDeviceNode(soc_state,
+                            "lupio-rng", lupio_rng.pio_addr,lupio_rng.pio_size)
+        lupio_rng_node.appendCompatible(["lupio,rng"])
+        lupio_rng_node.append(
+                FdtPropertyWords("interrupts",
+                [self.lupio_rng.int_id]))
+        lupio_rng_node.append(
+                FdtPropertyWords("interrupt-parent",
+                state.phandle(self.pic)))
+        soc_node.append(lupio_rng_node)
 
         # LupioRTC Device
         lupio_rtc = self.lupio_rtc
