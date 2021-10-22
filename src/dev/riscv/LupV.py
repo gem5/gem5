@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2021 Huawei International
+# Copyright (c) 2021 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,24 +24,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.objects.Platform import Platform
+from m5.params import Param
 
-SimObject('HiFive.py', tags='riscv isa')
-SimObject('LupV.py', tags='riscv isa')
-SimObject('Clint.py', tags='riscv isa')
-SimObject('PlicDevice.py', tags='riscv isa')
-SimObject('Plic.py', tags='riscv isa')
-SimObject('RTC.py', tags='riscv isa')
-SimObject('RiscvVirtIOMMIO.py', tags='riscv isa')
-
-DebugFlag('Clint', tags='riscv isa')
-DebugFlag('Plic', tags='riscv isa')
-DebugFlag('VirtIOMMIO', tags='riscv isa')
-
-Source('hifive.cc', tags='riscv isa')
-Source('lupv.cc', tags='riscv isa')
-Source('clint.cc', tags='riscv isa')
-Source('plic_device.cc', tags='riscv isa')
-Source('plic.cc', tags='riscv isa')
-Source('rtc.cc', tags='riscv isa')
-Source('vio_mmio.cc', tags='riscv isa')
+class LupV(Platform):
+    type = 'LupV'
+    cxx_header = "dev/riscv/lupv.hh"
+    cxx_class = 'gem5::LupV'
+    pic = Param.Plic("PIC")
+    uart_int_id = Param.Int("Interrupt ID to be used if the PLIC is used here")
