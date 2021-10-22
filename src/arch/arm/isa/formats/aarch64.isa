@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 ARM Limited
+// Copyright (c) 2011-2021 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -401,7 +401,16 @@ namespace Aarch64
                           case 0x2:
                             return new Clrex64(machInst);
                           case 0x4:
-                            return new Dsb64(machInst);
+                            switch (bits(crm, 3, 2)) {
+                              case 0x1: // Non-Shareable
+                                return new Dsb64Local(machInst);
+                              case 0x0: // OuterShareable
+                              case 0x2: // InnerShareable
+                              case 0x3: // FullSystem
+                                return new Dsb64Shareable(machInst);
+                              default:
+                                GEM5_UNREACHABLE;
+                            }
                           case 0x5:
                             return new Dmb64(machInst);
                           case 0x6:

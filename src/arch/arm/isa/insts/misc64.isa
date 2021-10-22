@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013, 2016-2018, 2020 ARM Limited
+// Copyright (c) 2011-2013, 2016-2018, 2020-2021 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -172,12 +172,19 @@ let {{
     decoder_output += BasicConstructor64.subst(isbIop)
     exec_output += BasicExecute.subst(isbIop)
 
-    dsbIop = ArmInstObjParams("dsb", "Dsb64", "ArmStaticInst", "",
-                              ['IsReadBarrier', 'IsWriteBarrier',
-                               'IsSerializeAfter'])
-    header_output += BasicDeclare.subst(dsbIop)
-    decoder_output += BasicConstructor64.subst(dsbIop)
-    exec_output += BasicExecute.subst(dsbIop)
+    dsbLocalIop = ArmInstObjParams("dsb", "Dsb64Local", "ArmStaticInst", "",
+                                   ['IsReadBarrier', 'IsWriteBarrier',
+                                   'IsSerializeAfter'])
+    header_output += BasicDeclare.subst(dsbLocalIop)
+    decoder_output += BasicConstructor64.subst(dsbLocalIop)
+    exec_output += BasicExecute.subst(dsbLocalIop)
+
+    dsbShareableIop = ArmInstObjParams("dsb", "Dsb64Shareable", "ArmStaticInst", "",
+                                       ['IsReadBarrier', 'IsWriteBarrier',
+                                       'IsSerializeAfter'])
+    header_output += BasicDeclare.subst(dsbShareableIop)
+    decoder_output += BasicConstructor64.subst(dsbShareableIop)
+    exec_output += BasicExecute.subst(dsbShareableIop)
 
     dmbIop = ArmInstObjParams("dmb", "Dmb64", "ArmStaticInst", "",
                               ['IsReadBarrier', 'IsWriteBarrier'])
