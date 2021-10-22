@@ -47,6 +47,7 @@ from m5.objects import (
     Clint,
     Plic,
     Terminal,
+    LupioBLK,
     LupioRNG,
     LupioRTC,
     LupioTTY,
@@ -98,7 +99,7 @@ class LupvBoard(SimpleBoard):
 
         # Initialize all the devices that we want to use on this board
         # Interrupt IDS for PIC Device
-        self._int_ids = { 'TTY': 1, 'DISK': 2, 'RNG': 3}
+        self._int_ids = { 'TTY': 1, 'BLK': 2, 'RNG': 3}
 
         # CLINT
         self.clint = Clint(pio_addr=0x2000000)
@@ -112,6 +113,13 @@ class LupvBoard(SimpleBoard):
             uart_int_id = self._int_ids['TTY']
         )
 
+        # LUPIO BLK
+        self.lupio_blk = LupioBLK(
+            pio_addr=0x20000000,
+            platform = self.lupv,
+            int_id = self._int_ids['BLK']
+        )
+
         # LUPIO RNG
         self.lupio_rng = LupioRNG(
             pio_addr=0x20005000,
@@ -121,14 +129,6 @@ class LupvBoard(SimpleBoard):
 
         # LUPIO RTC
         self.lupio_rtc = LupioRTC(pio_addr=0x20004000)
-
-        # VirtIO Disk
-        self.disk = RiscvMmioVirtIO(
-            vio=VirtIOBlock(),
-            interrupt_id=self._int_ids['DISK'],
-            pio_size=4096,
-            pio_addr=0x10008000,
-        )
 
         # LUPIO TTY
         self.lupio_tty = LupioTTY(
@@ -140,7 +140,7 @@ class LupvBoard(SimpleBoard):
 
         pic_srcs = [
             self._int_ids['TTY'],
-            self._int_ids['DISK'],
+            self._int_ids['BLK'],
             self._int_ids['RNG']
         ]
         self.pic.n_contexts = self.processor.get_num_cores() * 2
@@ -161,8 +161,8 @@ class LupvBoard(SimpleBoard):
             self.pic,
         ]
         self._off_chip_devices = [
+            self.lupio_blk,
             self.lupio_tty,
-            self.disk,
             self.lupio_rng,
             self.lupio_rtc
         ]
@@ -171,6 +171,7 @@ class LupvBoard(SimpleBoard):
         """Connect the I/O devices to the I/O bus"""
         for device in self._off_chip_devices:
             device.pio = self.iobus.mem_side_ports
+        self.lupio_blk.dma = self.iobus.cpu_side_ports
 
         for device in self._on_chip_devices:
             device.pio = self.get_cache_hierarchy().get_mem_side_port()
@@ -239,12 +240,12 @@ class LupvBoard(SimpleBoard):
             read_only=False
         )
         image.child.image_file = disk_image
-        self.disk.vio.image = image
+        self.lupio_blk.image = image
 
         # Linux boot command flags
         kernel_cmd = [
             "earlycon console=ttyLIO0",
-            "root=/dev/vda1",
+            "root=/dev/lda1",
             "ro"
         ]
         self.workload.command_line = " ".join(kernel_cmd)
@@ -370,17 +371,19 @@ class LupvBoard(SimpleBoard):
 
         soc_node.append(plic_node)
 
-        # VirtIO MMIO disk node
-        disk = self.disk
-        disk_node = disk.generateBasicPioDeviceNode(
-            soc_state, "virtio_mmio", disk.pio_addr, disk.pio_size
-        )
-        disk_node.append(FdtPropertyWords("interrupts", [disk.interrupt_id]))
-        disk_node.append(
-            FdtPropertyWords("interrupt-parent", soc_state.phandle(plic))
-        )
-        disk_node.appendCompatible(["virtio,mmio"])
-        soc_node.append(disk_node)
+        # LupioBLK Device
+        lupio_blk = self.lupio_blk
+        lupio_blk_node = lupio_blk.generateBasicPioDeviceNode(soc_state,
+                            "lupio-blk", lupio_blk.pio_addr,
+                            lupio_blk.pio_size)
+        lupio_blk_node.appendCompatible(["lupio,blk"])
+        lupio_blk_node.append(
+                FdtPropertyWords("interrupts",
+                [self.lupio_blk.int_id]))
+        lupio_blk_node.append(
+                FdtPropertyWords("interrupt-parent",
+                state.phandle(self.pic)))
+        soc_node.append(lupio_blk_node)
 
         # LupioRNG Device
         lupio_rng = self.lupio_rng
