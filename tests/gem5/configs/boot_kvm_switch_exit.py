@@ -186,10 +186,10 @@ motherboard = X86Board(
 
 motherboard.connect_things()
 
-additional_kernal_args = [args.kernel_args]
+kernal_args = motherboard.get_default_kernel_args() + [args.kernel_args]
 
 # Set the Full System workload.
-motherboard.set_workload(
+motherboard.set_kernel_disk_workload(
     kernel=Resource(
         "x86-linux-kernel-5.4.49",
         override=args.override_download,
@@ -201,8 +201,8 @@ motherboard.set_workload(
         resource_directory=args.resource_directory,
     ),
     # The first exit signals to switch processors.
-    command="m5 exit\nm5 exit\n",
-    kernel_args=additional_kernal_args,
+    readfile_contents="m5 exit\nm5 exit\n",
+    kernel_args=kernal_args,
 )
 
 

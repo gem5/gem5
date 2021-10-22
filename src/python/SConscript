@@ -40,6 +40,8 @@ PySource('gem5.components.boards', 'gem5/components/boards/riscv_board.py')
 PySource('gem5.components.boards', 'gem5/components/boards/simple_board.py')
 PySource('gem5.components.boards', 'gem5/components/boards/test_board.py')
 PySource('gem5.components.boards', 'gem5/components/boards/x86_board.py')
+PySource('gem5.components.boards',
+    "gem5/components/boards/kernel_disk_workload.py")
 PySource('gem5.components.cachehierarchies',
     'gem5/components/cachehierarchies/__init__.py')
 PySource('gem5.components.cachehierarchies',

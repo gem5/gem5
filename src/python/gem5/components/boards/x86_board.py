@@ -25,14 +25,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+from .kernel_disk_workload import KernelDiskWorkload
 from ...resources.resource import AbstractResource
 from ...utils.override import overrides
 from .abstract_board import AbstractBoard
 from ...isas import ISA
 
-import m5
 from m5.objects import (
-    Cache,
     Pc,
     AddrRange,
     X86FsLinux,
@@ -64,7 +63,7 @@ import os
 from typing import List, Optional, Sequence
 
 
-class X86Board(AbstractBoard):
+class X86Board(AbstractBoard, KernelDiskWorkload):
     """
     A board capable of full system simulation for X86.
 
@@ -263,84 +262,6 @@ class X86Board(AbstractBoard):
         # Incorporate the memory into the motherboard.
         self.get_memory().incorporate_memory(self)
 
-
-    def set_workload(
-        self,
-        kernel: AbstractResource,
-        disk_image: AbstractResource,
-        command: Optional[str] = None,
-        kernel_args: List[str] = [],
-    ):
-        """Setup the full system files
-
-        See <url> for the currently tested kernels and OSes.
-
-        The command is an optional string to execute once the OS is fully
-        booted, assuming the disk image is setup to run `m5 readfile` after
-        booting.
-
-        **Limitations**
-        * Only supports a Linux kernel
-        * Disk must be configured correctly to use the command option
-
-        :param kernel: The compiled kernel binary resource
-        :param disk_image: A disk image resource containing the OS data. The
-            first partition should be the root partition.
-        :param command: The command(s) to run with bash once the OS is booted
-        :param kernel_args: Additional arguments to be passed to the kernel.
-        `earlyprintk=ttyS0 console=ttyS0 lpj=7999923
-        root=/dev/hda<partition_val>` are already passed (`<partition_val>` is
-        automatically inferred from resource metadata). This parameter is used
-        to pass additional arguments.
-        """
-
-        # Set the Linux kernel to use.
-        self.workload.object_file = kernel.get_local_path()
-
-        # Determine where the root exists in the disk image. This is done by
-        # inspecting the resource metadata.
-        root_val = "/dev/hda"
-        try:
-            partition_val = disk_image.get_metadata()["additional_metadata"]\
-                                                     ["root_partition"]
-        except KeyError:
-            partition_val = None
-
-        if partition_val is not None:
-            root_val += partition_val
-
-        # Options specified on the kernel command line.
-        self.workload.command_line = " ".join(
-            [
-                "earlyprintk=ttyS0",
-                "console=ttyS0",
-                "lpj=7999923",
-                f"root={root_val}",
-            ] + kernel_args
-        )
-
-        # Create the Disk image SimObject.
-        ide_disk = IdeDisk()
-        ide_disk.driveID = "device0"
-        ide_disk.image = CowDiskImage(
-            child=RawDiskImage(read_only=True), read_only=False
-        )
-        ide_disk.image.child.image_file = disk_image.get_local_path()
-
-        # Attach the SimObject to the system.
-        self.pc.south_bridge.ide.disks = [ide_disk]
-
-        # Set the script to be passed to the simulated system to execute after
-        # boot.
-        if command:
-            file_name = os.path.join(m5.options.outdir, "run")
-            bench_file = open(file_name, "w+")
-            bench_file.write(command)
-            bench_file.close()
-
-            # Set to the system readfile
-            self.readfile = file_name
-
     @overrides(AbstractBoard)
     def has_io_bus(self) -> bool:
         return True
@@ -381,4 +302,29 @@ class X86Board(AbstractBoard):
         self.mem_ranges = [
             data_range,  # All data
             AddrRange(0xC0000000, size=0x100000),  # For I/0
+        ]
+
+    @overrides(KernelDiskWorkload)
+    def get_disk_device(self):
+        return "/dev/hda"
+
+    @overrides(KernelDiskWorkload)
+    def _add_disk_to_board(self, disk_image: AbstractResource):
+        ide_disk = IdeDisk()
+        ide_disk.driveID = "device0"
+        ide_disk.image = CowDiskImage(
+            child=RawDiskImage(read_only=True), read_only=False
+        )
+        ide_disk.image.child.image_file = disk_image.get_local_path()
+
+        # Attach the SimObject to the system.
+        self.pc.south_bridge.ide.disks = [ide_disk]
+
+    @overrides(KernelDiskWorkload)
+    def get_default_kernel_args(self) -> List[str]:
+        return [
+            "earlyprintk=ttyS0",
+            "console=ttyS0",
+            "lpj=7999923",
+            "root={root_value}",
         ]

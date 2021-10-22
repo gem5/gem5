@@ -25,10 +25,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-from typing import Optional, List
+
+from typing import List
 
 from ...utils.override import overrides
 from .abstract_board import AbstractBoard
+from .kernel_disk_workload import KernelDiskWorkload
 from ..processors.abstract_processor import AbstractProcessor
 from ..memory.abstract_memory_system import AbstractMemorySystem
 from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
@@ -65,7 +67,7 @@ from m5.util.fdthelper import (
 )
 
 
-class RiscvBoard(AbstractBoard):
+class RiscvBoard(AbstractBoard, KernelDiskWorkload):
     """
     A board capable of full system simulation for RISC-V
 
@@ -203,73 +205,6 @@ class RiscvBoard(AbstractBoard):
 
         # Incorporate the memory into the motherboard.
         self.get_memory().incorporate_memory(self)
-
-    def set_workload(
-        self, bootloader: AbstractResource, disk_image: AbstractResource,
-        command: Optional[str] = None
-    ) -> None:
-        """Setup the full system files
-
-        See http://resources.gem5.org/resources/riscv-fs for the currently
-        tested kernels and OSes.
-
-        The command is an optional string to execute once the OS is fully
-        booted, assuming the disk image is setup to run `m5 readfile` after
-        booting.
-
-        After the workload is set up, this functino will generate the device
-        tree file and output it to the output directory.
-
-        **Limitations**
-        * Only supports a Linux kernel
-        * Disk must be configured correctly to use the command option
-        * This board doesn't support the command option
-
-        :param bootloader: The resource encapsulating the compiled bootloader
-            with the kernel as a payload
-        :param disk_image: The resource encapsulating the disk image containing
-            the OS data. The first partition should be the root partition.
-        :param command: The command(s) to run with bash once the OS is booted
-        """
-
-        self.workload.object_file = bootloader.get_local_path()
-
-        image = CowDiskImage(
-            child=RawDiskImage(read_only=True), read_only=False
-        )
-        image.child.image_file = disk_image.get_local_path()
-        self.disk.vio.image = image
-
-        # Determine where the root exists in the disk image. This is done by
-        # inspecting the resource metadata.
-        root_val = "/dev/vda"
-        try:
-            partition_val = disk_image.get_metadata()["additional_metadata"]\
-                                                     ["root_partition"]
-        except KeyError:
-            partition_val = None
-
-        if partition_val is not None:
-            root_val += partition_val
-
-        self.workload.command_line = f"console=ttyS0 root={root_val} ro"
-
-        # Note: This must be called after set_workload because it looks for an
-        # attribute named "disk" and connects
-        self._setup_io_devices()
-
-        self._setup_pma()
-
-        # Default DTB address if bbl is built with --with-dts option
-        self.workload.dtb_addr = 0x87E00000
-
-        # We need to wait to generate the device tree until after the disk is
-        # set up. Now that the disk and workload are set, we can generate the
-        # device tree file.
-        self.generate_device_tree(m5.options.outdir)
-        self.workload.dtb_filename = os.path.join(
-            m5.options.outdir, "device.dtb"
-        )
 
     def generate_device_tree(self, outdir: str) -> None:
         """Creates the dtb and dts files.
@@ -419,3 +354,33 @@ class RiscvBoard(AbstractBoard):
         fdt.add_rootnode(root)
         fdt.writeDtsFile(os.path.join(outdir, "device.dts"))
         fdt.writeDtbFile(os.path.join(outdir, "device.dtb"))
+
+    @overrides(KernelDiskWorkload)
+    def get_disk_device(self):
+        return "/dev/vda"
+
+    @overrides(KernelDiskWorkload)
+    def _add_disk_to_board(self, disk_image: AbstractResource):
+        image = CowDiskImage(
+            child=RawDiskImage(read_only=True), read_only=False
+        )
+        image.child.image_file = disk_image.get_local_path()
+        self.disk.vio.image = image
+
+        # Note: The below is a bit of a hack. We need to wait to generate the
+        # device tree until after the disk is set up. Now that the disk and
+        # workload are set, we can generate the device tree file.
+        self._setup_io_devices()
+        self._setup_pma()
+
+        # Default DTB address if bbl is built with --with-dts option
+        self.workload.dtb_addr = 0x87E00000
+
+        self.generate_device_tree(m5.options.outdir)
+        self.workload.dtb_filename = os.path.join(
+            m5.options.outdir, "device.dtb"
+        )
+
+    @overrides(KernelDiskWorkload)
+    def get_default_kernel_args(self) -> List[str]:
+        return ["console=ttyS0", "root={root_value}", "ro"]

@@ -107,8 +107,8 @@ board = X86Board(
 board.connect_things()
 
 # Here we set the Full System workload.
-# The `set_workload` function for the X86Board takes a kernel, a disk image,
-# and, optionally, a command to run.
+# The `set_kernel_disk_workload` function for the X86Board takes a kernel, a
+# disk image, and, optionally, a command to run.
 
 # This is the command to run after the system has booted. The first `m5 exit`
 # will stop the simulation so we can switch the CPU cores from KVM to timing
@@ -121,7 +121,7 @@ command = "m5 exit;" \
         + "sleep 1;" \
         + "m5 exit;"
 
-board.set_workload(
+board.set_kernel_disk_workload(
     # The x86 linux kernel will be automatically downloaded to the
     # `tests/gem5/resources` directory if not already present.
     kernel=Resource(
@@ -158,8 +158,9 @@ board.set_workload(
         ),
         override=True,
     ),
-    command=command,
+    readfile_contents=command,
 )
+
 
 root = Root(full_system=True, system=board)
 root.sim_quantum = int(1e9)  # sim_quantum must be st if KVM cores are used.

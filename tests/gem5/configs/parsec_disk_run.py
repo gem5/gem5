@@ -234,7 +234,7 @@ command = (
     + "m5 exit \n"
 )
 
-board.set_workload(
+board.set_kernel_disk_workload(
     kernel=Resource(
         "x86-linux-kernel-5.4.49",
         resource_directory=args.resource_directory,
@@ -245,7 +245,7 @@ board.set_workload(
         resource_directory=args.resource_directory,
         override=args.override_download,
     ),
-    command=command,
+    readfile_contents=command,
 )
 
 print("Running with ISA: " + get_runtime_isa().name)

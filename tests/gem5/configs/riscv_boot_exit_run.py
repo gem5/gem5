@@ -153,14 +153,14 @@ board = RiscvBoard(
 board.connect_things()
 
 # Set the Full System workload.
-board.set_workload(
-    disk_image=Resource(
-        "riscv-disk-img",
+board.set_kernel_disk_workload(
+    kernel=Resource(
+        "riscv-bootloader-vmlinux-5.10",
         override=args.override_download,
         resource_directory=args.resource_directory,
     ),
-    bootloader=Resource(
-        "riscv-bootloader-vmlinux-5.10",
+    disk_image=Resource(
+        "riscv-disk-img",
         override=args.override_download,
         resource_directory=args.resource_directory,
     ),

@@ -204,7 +204,7 @@ motherboard = X86Board(
 motherboard.connect_things()
 
 # Set the Full System workload.
-motherboard.set_workload(
+motherboard.set_kernel_disk_workload(
     kernel=Resource(
         "x86-linux-kernel-5.4.49",
         override=args.override_download,
@@ -215,7 +215,7 @@ motherboard.set_workload(
         override=args.override_download,
         resource_directory=args.resource_directory,
     ),
-    command=dedent(
+    readfile_contents=dedent(
         """
         m5 exit # signal end of boot
         m5 exit # exit in children and parent

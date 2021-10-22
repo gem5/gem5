@@ -194,12 +194,12 @@ motherboard = X86Board(
 
 motherboard.connect_things()
 
-additional_kernal_args = []
+kernal_args = motherboard.get_default_kernel_args()
 if args.boot_type == "init":
-    additional_kernal_args.append("init=/root/exit.sh")
+    kernal_args.append("init=/root/exit.sh")
 
 # Set the Full System workload.
-motherboard.set_workload(
+motherboard.set_kernel_disk_workload(
     kernel=Resource(
         "x86-linux-kernel-5.4.49",
         override=args.override_download,
@@ -210,7 +210,7 @@ motherboard.set_workload(
         override=args.override_download,
         resource_directory=args.resource_directory,
     ),
-    kernel_args=additional_kernal_args,
+    kernel_args=kernal_args,
 )
 
 
