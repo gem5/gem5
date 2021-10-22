@@ -161,6 +161,7 @@ main = Environment(tools=[
 
 main.Tool(SCons.Tool.FindTool(['gcc', 'clang'], main))
 main.Tool(SCons.Tool.FindTool(['g++', 'clang++'], main))
+main.Tool(SCons.Tool.FindTool(['m4'], main))
 
 Export('main')
 
