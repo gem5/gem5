@@ -55,8 +55,6 @@ from gem5.isas import ISA
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.resources.resource import Resource
 
-import os
-
 # This runs a check to ensure the gem5 binary is compiled to X86 and to the
 # MESI Two Level coherence protocol.
 requires(
@@ -122,40 +120,16 @@ command = "m5 exit;" \
         + "m5 exit;"
 
 board.set_kernel_disk_workload(
-    # The x86 linux kernel will be automatically downloaded to the
-    # `tests/gem5/resources` directory if not already present.
+    # The x86 linux kernel will be automatically downloaded to the if not
+    # already present.
     kernel=Resource(
         "x86-linux-kernel-5.4.49",
-        resource_directory=os.path.join(
-            os.path.dirname(
-                os.path.dirname(
-                    os.path.dirname(
-                        os.path.dirname(os.path.realpath(__file__))
-                    )
-                )
-            ),
-            "tests",
-            "gem5",
-            "resources",
-        ),
         override=True,
     ),
-    # The x86 ubuntu image will be automatically downloaded to the
-    # `tests/gem5/resources` directory if not already present.
+    # The x86 ubuntu image will be automatically downloaded to the if not
+    # already present.
     disk_image=Resource(
         "x86-ubuntu-img",
-        resource_directory=os.path.join(
-            os.path.dirname(
-                os.path.dirname(
-                    os.path.dirname(
-                        os.path.dirname(os.path.realpath(__file__))
-                    )
-                )
-            ),
-            "tests",
-            "gem5",
-            "resources",
-        ),
         override=True,
     ),
     readfile_contents=command,

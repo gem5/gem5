@@ -53,8 +53,6 @@ from gem5.components.memory.single_channel import SingleChannelDDR3_1600
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import CPUTypes
 
-import os
-
 # This check ensures the gem5 binary is compiled to the ARM ISA target. If not,
 # an exception will be thrown.
 requires(isa_required=ISA.ARM)
@@ -99,20 +97,6 @@ board.set_workload(
         # bucket, the local copy will be overwritten. If this were set to false
         # an exception would be thrown in this case.
         override=True,
-        # We hardcode the resource directory to `tests/gem5/resources`. The
-        # `arm-hello64-static` binary will be downloaded and stored there.
-        resource_directory=os.path.join(
-            os.path.dirname(
-                os.path.dirname(
-                    os.path.dirname(
-                        os.path.dirname(os.path.realpath(__file__))
-                    )
-                )
-            ),
-            "tests",
-            "gem5",
-            "resources",
-        ),
     )
 )
 
