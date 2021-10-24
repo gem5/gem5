@@ -44,10 +44,16 @@ docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}"/tests --rm gcr.io/gem5-test/ubuntu-20.04_all-dependencies \
         ./main.py run --length very-long -j${threads} -t${threads}
 
+mkdir -p tests/testing-results
+
+# GPU weekly tests start here
 # before pulling gem5 resources, make sure it doesn't exist already
 docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
        "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest bash -c \
        "rm -rf ${gem5_root}/gem5-resources"
+# delete Pannotia datasets and output files in case a failed regression run left
+# them around
+rm -f coAuthorsDBLP.graph 1k_128k.gr result.out
 
 # Pull gem5 resources to the root of the gem5 directory -- currently the
 # pre-built binares for LULESH are out-of-date and won't run correctly with
@@ -71,9 +77,14 @@ docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "scons build/GCN3_X86/gem5.opt -j${threads} \
         || rm -rf build && scons build/GCN3_X86/gem5.opt -j${threads}"
 
-# test LULESH
-mkdir -p tests/testing-results
+# Some of the apps we test use m5ops (and x86), so compile them for x86
+# Note: setting TERM in the environment is necessary as scons fails for m5ops if
+# it is not set.
+docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
+    "${gem5_root}/util/m5" hacc-test-weekly bash -c \
+    "export TERM=xterm-256color ; scons build/x86/out/m5"
 
+# test LULESH
 # build LULESH
 docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
        "${gem5_root}/gem5-resources/src/gpu/lulesh" \
@@ -163,8 +174,137 @@ docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        --benchmark-root=${gem5_root}/gem5-resources/src/gpu/halo-finder/src/hip \
        -c ForceTreeTest --options="0.5 0.1 64 0.1 1 N 12 rcb"
 
+# test Pannotia
+# Pannotia has 6 different benchmarks (BC, Color, FW, MIS, PageRank, SSSP), of
+# which 3 (Color, PageRank, SSSP) have 2 different variants.  Since they are
+# useful for testing irregular GPU application behavior, we test each.
+
+# build BC
+docker run --rm -v ${PWD}:${PWD} \
+       -w ${gem5_root}/gem5-resources/src/gpu/pannotia/bc -u $UID:$GID \
+       hacc-test-weekly bash -c \
+       "export GEM5_PATH=${gem5_root} ; make gem5-fusion"
+
+# # get input dataset for BC test
+wget http://dist.gem5.org/dist/develop/datasets/pannotia/bc/1k_128k.gr
+# run BC
+docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
+       hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
+       ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --benchmark-root=gem5-resources/src/gpu/pannotia/bc/bin -c bc.gem5 \
+       --options="1k_128k.gr"
+
+# build Color Max
+docker run --rm -v ${gem5_root}:${gem5_root} -w \
+       ${gem5_root}/gem5-resources/src/gpu/pannotia/color -u $UID:$GID \
+       hacc-test-weekly bash -c \
+       "export GEM5_PATH=${gem5_root} ; make gem5-fusion"
+
+# run Color (Max) (use same input dataset as BC for faster testing)
+docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
+       hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
+       ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/color/bin \
+       -c color_max.gem5 --options="1k_128k.gr 0"
+
+# build Color (MaxMin)
+docker run --rm -v ${gem5_root}:${gem5_root} -w \
+       ${gem5_root}/gem5-resources/src/gpu/pannotia/color -u $UID:$GID \
+       hacc-test-weekly bash -c \
+       "export GEM5_PATH=${gem5_root} ; export VARIANT=MAXMIN ; make gem5-fusion"
+
+# run Color (MaxMin) (use same input dataset as BC for faster testing)
+docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
+       hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
+       ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/color/bin \
+       -c color_maxmin.gem5 --options="1k_128k.gr 0"
+
+# build FW
+docker run --rm -v ${gem5_root}:${gem5_root} -w \
+       ${gem5_root}/gem5-resources/src/gpu/pannotia/fw -u $UID:$GID \
+       hacc-test-weekly bash -c \
+       "export GEM5_PATH=${gem5_root} ; make gem5-fusion"
+
+# run FW (use same input dataset as BC for faster testing)
+docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
+       hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
+       ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/fw/bin \
+       -c fw_hip.gem5 --options="1k_128k.gr"
+
+# build MIS
+docker run --rm -v ${gem5_root}:${gem5_root} -w \
+       ${gem5_root}/gem5-resources/src/gpu/pannotia/mis -u $UID:$GID \
+       hacc-test-weekly bash -c \
+       "export GEM5_PATH=${gem5_root} ; make gem5-fusion"
+
+# run MIS (use same input dataset as BC for faster testing)
+docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
+       hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
+       ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/mis/bin \
+       -c mis_hip.gem5 --options="1k_128k.gr 0"
+
+# build Pagerank Default variant
+docker run --rm -v ${gem5_root}:${gem5_root} -w \
+       ${gem5_root}/gem5-resources/src/gpu/pannotia/pagerank -u $UID:$GID \
+       hacc-test-weekly bash -c \
+       "export GEM5_PATH=${gem5_root} ; make gem5-fusion"
+
+# get PageRank input dataset
+wget http://dist.gem5.org/dist/develop/datasets/pannotia/pagerank/coAuthorsDBLP.graph
+# run PageRank (Default)
+docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
+       hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
+       ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/pagerank/bin \
+       -c pagerank.gem5 --options="coAuthorsDBLP.graph 1"
+
+# build PageRank SPMV variant
+docker run --rm -v ${gem5_root}:${gem5_root} -w \
+       ${gem5_root}/gem5-resources/src/gpu/pannotia/pagerank -u $UID:$GID \
+       hacc-test-weekly bash -c \
+       "export GEM5_PATH=${gem5_root} ; export VARIANT=SPMV ; make gem5-fusion"
+
+# run PageRank (SPMV)
+docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
+       hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
+       ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/pagerank/bin \
+       -c pagerank_spmv.gem5 --options="coAuthorsDBLP.graph 1"
+
+# build SSSP CSR variant
+docker run --rm -v ${gem5_root}:${gem5_root} -w \
+       ${gem5_root}/gem5-resources/src/gpu/pannotia/sssp -u $UID:$GID \
+       hacc-test-weekly bash -c \
+       "export GEM5_PATH=${gem5_root} ; make gem5-fusion"
+
+# run SSSP (CSR) (use same input dataset as BC for faster testing)
+docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
+       hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
+       ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/sssp/bin \
+       -c sssp.gem5 --options="1k_128k.gr 0"
+
+# build SSSP ELL variant
+docker run --rm -v ${gem5_root}:${gem5_root} -w \
+       ${gem5_root}/gem5-resources/src/gpu/pannotia/sssp -u $UID:$GID \
+       hacc-test-weekly bash -c \
+       "export GEM5_PATH=${gem5_root} ; export VARIANT=ELL ; make gem5-fusion"
+
+# run SSSP (ELL) (use same input dataset as BC for faster testing)
+docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
+       hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
+       ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/sssp/bin \
+       -c sssp_ell.gem5 --options="1k_128k.gr 0"
+
 # Delete the gem5 resources repo we created -- need to do in docker because of
 # cachefiles DNNMark creates
 docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
        "${gem5_root}" hacc-test-weekly bash -c \
        "rm -rf ${gem5_root}/gem5-resources"
+
+# delete Pannotia datasets we downloaded and output files it created
+rm -f coAuthorsDBLP.graph 1k_128k.gr result.out
