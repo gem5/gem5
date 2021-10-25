@@ -34,6 +34,8 @@ from m5.defines import buildEnv
 from m5.util import addToPath
 from .Ruby import create_topology
 from .Ruby import send_evicts
+from common import ObjectList
+from common import MemConfig
 from common import FileSystemConfig
 
 addToPath('../')
@@ -456,6 +458,87 @@ def construct_dirs(options, system, ruby_system, network):
         dir_cntrl_nodes.append(dir_cntrl)
 
     return dir_cntrl_nodes
+
+def construct_gpudirs(options, system, ruby_system, network):
+
+    dir_cntrl_nodes = []
+    mem_ctrls = []
+
+    xor_low_bit = 0
+
+    # For an odd number of CPUs, still create the right number of controllers
+    TCC_bits = int(math.log(options.num_tccs, 2))
+
+    dir_bits = int(math.log(options.dgpu_num_dirs, 2))
+    block_size_bits = int(math.log(options.cacheline_size, 2))
+    numa_bit = block_size_bits + dir_bits - 1
+
+    gpu_mem_range = AddrRange(0, size = options.dgpu_mem_size)
+    for i in range(options.dgpu_num_dirs):
+        addr_range = m5.objects.AddrRange(gpu_mem_range.start,
+                                          size = gpu_mem_range.size(),
+                                          intlvHighBit = numa_bit,
+                                          intlvBits = dir_bits,
+                                          intlvMatch = i,
+                                          xorHighBit = xor_low_bit)
+
+        dir_cntrl = DirCntrl(noTCCdir = True, TCC_select_num_bits = TCC_bits)
+        dir_cntrl.create(options, [addr_range], ruby_system, system)
+        dir_cntrl.number_of_TBEs = options.num_tbes
+        dir_cntrl.useL3OnWT = False
+
+        # Connect the Directory controller to the ruby network
+        dir_cntrl.requestFromCores = MessageBuffer(ordered = True)
+        dir_cntrl.requestFromCores.in_port = network.out_port
+
+        dir_cntrl.responseFromCores = MessageBuffer()
+        dir_cntrl.responseFromCores.in_port = network.out_port
+
+        dir_cntrl.unblockFromCores = MessageBuffer()
+        dir_cntrl.unblockFromCores.in_port = network.out_port
+
+        dir_cntrl.probeToCore = MessageBuffer()
+        dir_cntrl.probeToCore.out_port = network.in_port
+
+        dir_cntrl.responseToCore = MessageBuffer()
+        dir_cntrl.responseToCore.out_port = network.in_port
+
+        dir_cntrl.triggerQueue = MessageBuffer(ordered = True)
+        dir_cntrl.L3triggerQueue = MessageBuffer(ordered = True)
+        dir_cntrl.requestToMemory = MessageBuffer()
+        dir_cntrl.responseFromMemory = MessageBuffer()
+
+        dir_cntrl.requestFromDMA = MessageBuffer(ordered=True)
+        dir_cntrl.requestFromDMA.in_port = network.out_port
+
+        dir_cntrl.responseToDMA = MessageBuffer()
+        dir_cntrl.responseToDMA.out_port = network.in_port
+
+        dir_cntrl.requestToMemory = MessageBuffer()
+        dir_cntrl.responseFromMemory = MessageBuffer()
+
+        # Create memory controllers too
+        mem_type = ObjectList.mem_list.get(options.mem_type)
+        dram_intf = MemConfig.create_mem_intf(mem_type, gpu_mem_range, i,
+            int(math.log(options.dgpu_num_dirs, 2)), options.cacheline_size,
+            xor_low_bit)
+        if issubclass(mem_type, DRAMInterface):
+            mem_ctrl = m5.objects.MemCtrl(dram = dram_intf)
+        else:
+            mem_ctrl = dram_intf
+
+        mem_ctrl.port = dir_cntrl.memory_out_port
+        mem_ctrl.dram.enable_dram_powerdown = False
+        dir_cntrl.addr_ranges = dram_intf.range
+
+        # Append
+        exec("system.ruby.gpu_dir_cntrl%d = dir_cntrl" % i)
+        dir_cntrl_nodes.append(dir_cntrl)
+        mem_ctrls.append(mem_ctrl)
+
+    system.gpu_mem_ctrls = mem_ctrls
+
+    return dir_cntrl_nodes, mem_ctrls
 
 def construct_corepairs(options, system, ruby_system, network):
 

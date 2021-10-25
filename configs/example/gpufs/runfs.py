@@ -77,6 +77,12 @@ def addRunFSOptions(parser):
     parser.add_argument("--gpu-topology", type=str, default="Crossbar",
                         help="Network topology to use for GPU side. "
                         "Check configs/topologies for complete set")
+    parser.add_argument("--dgpu-mem-size", action="store", type=str,
+                        default="16GB", help="Specify the dGPU physical memory"
+                        "  size")
+    parser.add_argument("--dgpu-num-dirs", type=int, default=1, help="Set "
+                        "the number of dGPU directories (memory controllers")
+
 
 def runGpuFSSystem(args):
     '''
