@@ -176,14 +176,6 @@ class Decoder : public InstDecoder
      */
     StaticInstPtr decode(PCStateBase &pc);
 
-    /**
-     * Take over the state from an old decoder when switching CPUs.
-     *
-     * @param old Decoder used in old CPU
-     */
-    void takeOverFrom(Decoder *old) {}
-
-
   public: // ARM-specific decoder state manipulation
     void
     setContext(FPSCR fpscr)

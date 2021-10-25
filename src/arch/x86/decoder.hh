@@ -291,17 +291,22 @@ class Decoder : public InstDecoder
     }
 
     void
-    takeOverFrom(Decoder *old)
+    takeOverFrom(InstDecoder *old) override
     {
-        mode = old->mode;
-        submode = old->submode;
+        InstDecoder::takeOverFrom(old);
+
+        Decoder *dec = dynamic_cast<Decoder *>(old);
+        assert(dec);
+
+        mode = dec->mode;
+        submode = dec->submode;
         emi.mode.mode = mode;
         emi.mode.submode = submode;
-        altOp = old->altOp;
-        defOp = old->defOp;
-        altAddr = old->altAddr;
-        defAddr = old->defAddr;
-        stack = old->stack;
+        altOp = dec->altOp;
+        defOp = dec->defOp;
+        altAddr = dec->altAddr;
+        defAddr = dec->defAddr;
+        stack = dec->stack;
     }
 
     void

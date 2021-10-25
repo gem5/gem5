@@ -75,8 +75,6 @@ class Decoder : public InstDecoder
     //when there is control flow.
     void moreBytes(const PCStateBase &pc, Addr fetchPC);
 
-    void takeOverFrom(Decoder *old) {}
-
     StaticInstPtr decode(PCStateBase &nextPC);
 };
 

@@ -62,6 +62,18 @@ class InstDecoder
         outOfBytes = true;
     }
 
+    /**
+     * Take over the state from an old decoder when switching CPUs.
+     *
+     * @param old Decoder used in old CPU
+     */
+    virtual void
+    takeOverFrom(InstDecoder *old)
+    {
+        instDone = old->instDone;
+        outOfBytes = old->outOfBytes;
+    }
+
     void *moreBytesPtr() const { return _moreBytesPtr; }
     size_t moreBytesSize() const { return _moreBytesSize; }
     Addr pcMask() const { return _pcMask; }
