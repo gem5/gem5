@@ -41,6 +41,7 @@
 
 #include "cpu/simple/atomic.hh"
 
+#include "arch/generic/decoder.hh"
 #include "base/output.hh"
 #include "config/the_isa.hh"
 #include "cpu/exetrace.hh"

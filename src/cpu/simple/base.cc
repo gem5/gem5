@@ -41,6 +41,7 @@
 
 #include "cpu/simple/base.hh"
 
+#include "arch/generic/decoder.hh"
 #include "base/cprintf.hh"
 #include "base/inifile.hh"
 #include "base/loader/symtab.hh"

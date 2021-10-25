@@ -39,6 +39,8 @@
 
 #include <cassert>
 
+#include "arch/generic/decoder.hh"
+
 namespace gem5
 {
 

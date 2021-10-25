@@ -41,6 +41,7 @@
 
 #include "cpu/simple/timing.hh"
 
+#include "arch/generic/decoder.hh"
 #include "base/compiler.hh"
 #include "config/the_isa.hh"
 #include "cpu/exetrace.hh"

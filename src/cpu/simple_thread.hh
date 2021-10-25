@@ -45,7 +45,6 @@
 #include <algorithm>
 #include <vector>
 
-#include "arch/decoder.hh"
 #include "arch/generic/htm.hh"
 #include "arch/generic/mmu.hh"
 #include "arch/generic/pcstate.hh"

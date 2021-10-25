@@ -37,6 +37,7 @@
 
 #include "arch/arm/isa.hh"
 
+#include "arch/arm/decoder.hh"
 #include "arch/arm/faults.hh"
 #include "arch/arm/htm.hh"
 #include "arch/arm/interrupts.hh"
@@ -47,6 +48,7 @@
 #include "arch/arm/system.hh"
 #include "arch/arm/tlbi_op.hh"
 #include "arch/arm/utility.hh"
+#include "arch/generic/decoder.hh"
 #include "base/cprintf.hh"
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"

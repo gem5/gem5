@@ -41,6 +41,7 @@
 #include <iomanip>
 #include <sstream>
 
+#include "arch/generic/decoder.hh"
 #include "base/cast.hh"
 #include "base/compiler.hh"
 #include "base/logging.hh"

@@ -42,6 +42,7 @@
 
 #include <string>
 
+#include "arch/generic/decoder.hh"
 #include "base/callback.hh"
 #include "base/compiler.hh"
 #include "base/cprintf.hh"
