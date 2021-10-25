@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013,2017-2020 ARM Limited
+ * Copyright (c) 2012-2013,2017-2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -237,6 +237,12 @@ class Request
         // This separation is necessary to ensure the disjoint components
         // of the system work correctly together.
 
+        /** The Request is a TLB shootdown */
+        TLBI                        = 0x0000100000000000,
+
+        /** The Request is a TLB shootdown sync */
+        TLBI_SYNC                   = 0x0000200000000000,
+
         /**
          * These flags are *not* cleared when a Request object is
          * reused (assigned a new address).
@@ -248,6 +254,8 @@ class Request
 
     static const FlagsType HTM_CMD = HTM_START | HTM_COMMIT |
         HTM_CANCEL | HTM_ABORT;
+
+    static const FlagsType TLBI_CMD = TLBI | TLBI_SYNC;
 
     /** Requestor Ids that are statically allocated
      * @{*/
@@ -974,6 +982,10 @@ class Request
         return (isHTMStart() || isHTMCommit() ||
                 isHTMCancel() || isHTMAbort());
     }
+
+    bool isTlbi() const { return _flags.isSet(TLBI); }
+    bool isTlbiSync() const { return _flags.isSet(TLBI_SYNC); }
+    bool isTlbiCmd() const { return isTlbi() || isTlbiSync(); }
 
     bool
     isAtomic() const
