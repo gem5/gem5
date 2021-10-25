@@ -248,8 +248,8 @@ global_vars.AddVariables(
     ('CXX', 'C++ compiler', environ.get('CXX', main['CXX'])),
     ('CCFLAGS_EXTRA', 'Extra C and C++ compiler flags', ''),
     ('GEM5PY_CCFLAGS_EXTRA', 'Extra C and C++ gem5py compiler flags', ''),
-    ('GEM5PY_LDFLAGS_EXTRA', 'Extra marshal gem5py flags', ''),
-    ('LDFLAGS_EXTRA', 'Extra linker flags', ''),
+    ('GEM5PY_LINKFLAGS_EXTRA', 'Extra marshal gem5py flags', ''),
+    ('LINKFLAGS_EXTRA', 'Extra linker flags', ''),
     ('PYTHON_CONFIG', 'Python config binary to use',
      [ 'python3-config', 'python-config']
     ),
@@ -304,7 +304,7 @@ main.Prepend(CPPPATH=Dir('include'))
 
 # Initialize the Link-Time Optimization (LTO) flags
 main['LTO_CCFLAGS'] = []
-main['LTO_LDFLAGS'] = []
+main['LTO_LINKFLAGS'] = []
 
 # According to the readme, tcmalloc works best if the compiler doesn't
 # assume that we're using the builtin malloc and friends. These flags
@@ -386,7 +386,7 @@ if main['GCC']:
             warning('"make" not found, link time optimization will be '
                     'single threaded.')
 
-        for var in 'LTO_CCFLAGS', 'LTO_LDFLAGS':
+        for var in 'LTO_CCFLAGS', 'LTO_LINKFLAGS':
             # Use the same amount of jobs for LTO as we are running scons with.
             main[var] = ['-flto%s' % parallelism]
 
@@ -400,7 +400,7 @@ elif main['CLANG']:
 
     # Set the Link-Time Optimization (LTO) flags if enabled.
     if GetOption('with_lto'):
-        for var in 'LTO_CCFLAGS', 'LTO_LDFLAGS':
+        for var in 'LTO_CCFLAGS', 'LTO_LINKFLAGS':
             main[var] = ['-flto']
 
     # clang has a few additional warnings that we disable.
@@ -537,7 +537,7 @@ gem5py_env = main.Clone()
 
 # Bare minimum environment that only includes python
 gem5py_env.Append(CCFLAGS=['${GEM5PY_CCFLAGS_EXTRA}'])
-gem5py_env.Append(LINKFLAGS=['${GEM5PY_LDFLAGS_EXTRA}'])
+gem5py_env.Append(LINKFLAGS=['${GEM5PY_LINKFLAGS_EXTRA}'])
 
 main['HAVE_PKG_CONFIG'] = main.Detect('pkg-config')
 
@@ -709,7 +709,7 @@ Build variables for {dir}:
     sticky_vars.Save(current_vars_file, env)
 
     env.Append(CCFLAGS='$CCFLAGS_EXTRA')
-    env.Append(LINKFLAGS='$LDFLAGS_EXTRA')
+    env.Append(LINKFLAGS='$LINKFLAGS_EXTRA')
 
     exports=['env', 'gem5py_env']
 

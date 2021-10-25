@@ -830,10 +830,10 @@ envs = {
 envs['debug'].Append(CPPDEFINES=['DEBUG', 'TRACING_ON=1'])
 envs['opt'].Append(CCFLAGS=['-g'], CPPDEFINES=['TRACING_ON=1'])
 envs['fast'].Append(CPPDEFINES=['NDEBUG', 'TRACING_ON=0'])
-envs['prof'].Append(CCFLAGS=['-g', '-pg'], LDFLAGS=['-pg'],
+envs['prof'].Append(CCFLAGS=['-g', '-pg'], LINKFLAGS=['-pg'],
         CPPDEFINES=['NDEBUG', 'TRACING_ON=0'])
 envs['perf'].Append(CCFLAGS=['-g'], CPPDEFINES=['NDEBUG', 'TRACING_ON=0'],
-        LDFLAGS=['-Wl,--no-as-needed', '-lprofiler', '-Wl,--as-needed'])
+        LINKFLAGS=['-Wl,--no-as-needed', '-lprofiler', '-Wl,--as-needed'])
 
 # For Link Time Optimization, the optimisation flags used to compile
 # individual files are decoupled from those used at link time
@@ -844,13 +844,13 @@ if env['GCC']:
         envs['debug'].Append(CCFLAGS=['-gstabs+'])
     else:
         envs['debug'].Append(CCFLAGS=['-ggdb3'])
-    envs['debug'].Append(LDFLAGS=['-O0'])
+    envs['debug'].Append(LINKFLAGS=['-O0'])
     # opt, fast, prof and perf all share the same cc flags, also add
-    # the optimization to the ldflags as LTO defers the optimization
+    # the optimization to the linkflags as LTO defers the optimization
     # to link time
     for target in ['opt', 'fast', 'prof', 'perf']:
         envs[target].Append(CCFLAGS=['-O3', '${LTO_CCFLAGS}'])
-        envs[target].Append(LDFLAGS=['-O3', '${LTO_LDFLAGS}'])
+        envs[target].Append(LINKFLAGS=['-O3', '${LTO_LINKFLAGS}'])
 
 elif env['CLANG']:
     envs['debug'].Append(CCFLAGS=['-g', '-O0'])
