@@ -58,10 +58,6 @@ namespace gem5
 
 // @todo: Figure out a more architecture independent way to obtain the ITB and
 // DTB pointers.
-namespace TheISA
-{
-    class Decoder;
-}
 class BaseCPU;
 class BaseMMU;
 class BaseTLB;

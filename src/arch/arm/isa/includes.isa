@@ -70,6 +70,11 @@ output header {{
 #include "mem/packet.hh"
 #include "sim/faults.hh"
 
+namespace gem5::ArmISA
+{
+class Decoder;
+} // namespace gem5::ArmISA
+
 namespace gem5::ArmISAInst
 {
 using namespace ArmISA;
