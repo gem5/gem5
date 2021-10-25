@@ -28,6 +28,7 @@
 #ifndef __ARCH_GENERIC_DECODER_HH__
 #define __ARCH_GENERIC_DECODER_HH__
 
+#include "arch/generic/pcstate.hh"
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
 #include "base/types.hh"
@@ -96,6 +97,33 @@ class InstDecoder
      * instReady() even if this method returns true.
      */
     bool needMoreBytes() const { return outOfBytes; }
+
+    /**
+     * Feed data to the decoder.
+     *
+     * A CPU model uses this interface to load instruction data into
+     * the decoder. Once enough data has been loaded (check with
+     * instReady()), a decoded instruction can be retrieved using
+     * decode(PCStateBase &).
+     *
+     * This method is intended to support both fixed-length and
+     * variable-length instructions. Instruction data is fetch in
+     * MachInst blocks (which correspond to the size of a typical
+     * insturction). The method might need to be called multiple times
+     * if the instruction spans multiple blocks, in that case
+     * needMoreBytes() will return true and instReady() will return
+     * false.
+     *
+     * The fetchPC parameter is used to indicate where in memory the
+     * instruction was fetched from. This is should be the same
+     * address as the pc. If fetching multiple blocks, it indicates
+     * where subsequent blocks are fetched from (pc + n *
+     * sizeof(MachInst)).
+     *
+     * @param pc Instruction pointer that we are decoding.
+     * @param fetchPC The address this chunk was fetched from.
+     */
+    virtual void moreBytes(const PCStateBase &pc, Addr fetchPC) = 0;
 };
 
 } // namespace gem5

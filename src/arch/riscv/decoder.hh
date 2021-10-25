@@ -73,7 +73,7 @@ class Decoder : public InstDecoder
 
     //Use this to give data to the decoder. This should be used
     //when there is control flow.
-    void moreBytes(const PCStateBase &pc, Addr fetchPC);
+    void moreBytes(const PCStateBase &pc, Addr fetchPC) override;
 
     StaticInstPtr decode(PCStateBase &nextPC);
 };

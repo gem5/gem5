@@ -55,7 +55,7 @@ class Decoder : public InstDecoder
     // Use this to give data to the predecoder. This should be used
     // when there is control flow.
     void
-    moreBytes(const PCStateBase &pc, Addr fetchPC)
+    moreBytes(const PCStateBase &pc, Addr fetchPC) override
     {
         emi = gtoh(emi, pc.as<PCState>().byteOrder());
         instDone = true;

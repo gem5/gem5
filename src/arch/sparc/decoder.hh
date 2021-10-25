@@ -57,7 +57,7 @@ class Decoder : public InstDecoder
     // Use this to give data to the predecoder. This should be used
     // when there is control flow.
     void
-    moreBytes(const PCStateBase &pc, Addr fetchPC)
+    moreBytes(const PCStateBase &pc, Addr fetchPC) override
     {
         emi = betoh(machInst);
         // The I bit, bit 13, is used to figure out where the ASI
