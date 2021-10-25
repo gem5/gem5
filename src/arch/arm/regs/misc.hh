@@ -90,6 +90,7 @@ namespace ArmISA
         MISCREG_PMXEVTYPER_PMCCFILTR,
         MISCREG_SCTLR_RST,
         MISCREG_SEV_MAILBOX,
+        MISCREG_TLBINEEDSYNC,
 
         // AArch32 CP14 registers (debug/trace/ThumbEE/Jazelle control)
         MISCREG_DBGDIDR,
@@ -1302,6 +1303,7 @@ namespace ArmISA
         "pmxevtyper_pmccfiltr",
         "sctlr_rst",
         "sev_mailbox",
+        "tlbi_needsync",
 
         // AArch32 CP14 registers
         "dbgdidr",

@@ -1432,6 +1432,8 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges();
     InitReg(MISCREG_SEV_MAILBOX)
       .allPrivileges();
+    InitReg(MISCREG_TLBINEEDSYNC)
+      .allPrivileges().exceptUserMode();
 
     // AArch32 CP14 registers
     InitReg(MISCREG_DBGDIDR)
