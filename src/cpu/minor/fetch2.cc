@@ -39,7 +39,7 @@
 
 #include <string>
 
-#include "arch/decoder.hh"
+#include "arch/generic/decoder.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "cpu/minor/pipeline.hh"
@@ -313,7 +313,7 @@ Fetch2::evaluate()
             prediction.isBubble() /* No predicted branch */)
         {
             ThreadContext *thread = cpu.getContext(line_in->id.threadId);
-            TheISA::Decoder *decoder = thread->getDecoderPtr();
+            InstDecoder *decoder = thread->getDecoderPtr();
 
             /* Discard line due to prediction sequence number being wrong but
              * without the streamSeqNum number having changed */

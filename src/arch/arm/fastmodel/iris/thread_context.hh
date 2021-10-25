@@ -211,7 +211,7 @@ class ThreadContext : public gem5::ThreadContext
     }
 
     CheckerCPU *getCheckerCpuPtr() override { return nullptr; }
-    ArmISA::Decoder *
+    InstDecoder *
     getDecoderPtr() override
     {
         panic("%s not implemented.", __FUNCTION__);

@@ -356,7 +356,7 @@ class Fetch
     }
 
     /** The decoder. */
-    TheISA::Decoder *decoder[MaxThreads];
+    InstDecoder *decoder[MaxThreads];
 
     RequestPort &getInstPort() { return icachePort; }
 

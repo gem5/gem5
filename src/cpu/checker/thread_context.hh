@@ -155,7 +155,7 @@ class CheckerThreadContext : public ThreadContext
 
     BaseISA *getIsaPtr() override { return actualTC->getIsaPtr(); }
 
-    TheISA::Decoder *
+    InstDecoder *
     getDecoderPtr() override
     {
         return actualTC->getDecoderPtr();

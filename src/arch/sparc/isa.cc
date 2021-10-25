@@ -749,7 +749,7 @@ ISA::setMiscReg(int miscReg, RegVal val)
 
     switch (miscReg) {
       case MISCREG_ASI:
-        tc->getDecoderPtr()->setContext(val);
+        tc->getDecoderPtr()->as<Decoder>().setContext(val);
         break;
       case MISCREG_STICK:
       case MISCREG_TICK:

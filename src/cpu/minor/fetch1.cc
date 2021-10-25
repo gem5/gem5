@@ -98,7 +98,7 @@ Fetch1::Fetch1(const std::string &name_,
             maxLineWidth);
     }
 
-    size_t inst_size = cpu.threads[0]->decoder.moreBytesSize();
+    size_t inst_size = cpu.threads[0]->decoder->moreBytesSize();
 
     /* These assertions should be copied to the Python config. as well */
     if ((lineSnap % inst_size) != 0) {

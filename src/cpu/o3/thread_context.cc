@@ -58,8 +58,8 @@ ThreadContext::takeOverFrom(gem5::ThreadContext *old_context)
 
     getIsaPtr()->takeOverFrom(this, old_context);
 
-    TheISA::Decoder *newDecoder = getDecoderPtr();
-    TheISA::Decoder *oldDecoder = old_context->getDecoderPtr();
+    InstDecoder *newDecoder = getDecoderPtr();
+    InstDecoder *oldDecoder = old_context->getDecoderPtr();
     newDecoder->takeOverFrom(oldDecoder);
 
     thread->noSquashFromTC = false;

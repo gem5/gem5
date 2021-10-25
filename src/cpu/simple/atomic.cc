@@ -748,7 +748,7 @@ AtomicSimpleCPU::fetchInstMem()
 
     // ifetch_req is initialized to read the instruction
     // directly into the CPU object's inst field.
-    pkt.dataStatic(decoder.moreBytesPtr());
+    pkt.dataStatic(decoder->moreBytesPtr());
 
     Tick latency = sendPacket(icachePort, &pkt);
     assert(!pkt.isError());

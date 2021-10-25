@@ -63,6 +63,20 @@ class InstDecoder
         outOfBytes = true;
     }
 
+    template <class Type>
+    Type &
+    as()
+    {
+        return *static_cast<Type *>(this);
+    }
+
+    template <class Type>
+    const Type &
+    as() const
+    {
+        return *static_cast<const Type *>(this);
+    }
+
     /**
      * Take over the state from an old decoder when switching CPUs.
      *

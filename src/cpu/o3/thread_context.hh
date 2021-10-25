@@ -112,7 +112,7 @@ class ThreadContext : public gem5::ThreadContext
         return cpu->isa[thread->threadId()];
     }
 
-    TheISA::Decoder *
+    InstDecoder *
     getDecoderPtr() override
     {
         return cpu->fetch.decoder[thread->threadId()];

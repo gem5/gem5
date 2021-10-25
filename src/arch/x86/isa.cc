@@ -103,7 +103,7 @@ ISA::updateHandyM5Reg(Efer efer, CR0 cr0,
 
     regVal[MISCREG_M5_REG] = m5reg;
     if (tc)
-        tc->getDecoderPtr()->setM5Reg(m5reg);
+        tc->getDecoderPtr()->as<Decoder>().setM5Reg(m5reg);
 }
 
 void
@@ -479,7 +479,7 @@ void
 ISA::setThreadContext(ThreadContext *_tc)
 {
     BaseISA::setThreadContext(_tc);
-    tc->getDecoderPtr()->setM5Reg(regVal[MISCREG_M5_REG]);
+    tc->getDecoderPtr()->as<Decoder>().setM5Reg(regVal[MISCREG_M5_REG]);
 }
 
 std::string

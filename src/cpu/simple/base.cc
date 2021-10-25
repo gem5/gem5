@@ -269,7 +269,7 @@ BaseSimpleCPU::checkForInterrupts()
             t_info.fetchOffset = 0;
             interrupts[curThread]->updateIntrInfo();
             interrupt->invoke(tc);
-            thread->decoder.reset();
+            thread->decoder->reset();
         }
     }
 }
@@ -283,12 +283,12 @@ BaseSimpleCPU::setupFetchRequest(const RequestPtr &req)
 
     auto &decoder = thread->decoder;
     Addr instAddr = thread->pcState().instAddr();
-    Addr fetchPC = (instAddr & decoder.pcMask()) + t_info.fetchOffset;
+    Addr fetchPC = (instAddr & decoder->pcMask()) + t_info.fetchOffset;
 
     // set up memory request for instruction fetch
     DPRINTF(Fetch, "Fetch: Inst PC:%08p, Fetch PC:%08p\n", instAddr, fetchPC);
 
-    req->setVirt(fetchPC, decoder.moreBytesSize(), Request::INST_FETCH,
+    req->setVirt(fetchPC, decoder->moreBytesSize(), Request::INST_FETCH,
                  instRequestorId(), instAddr);
 }
 
@@ -320,7 +320,7 @@ BaseSimpleCPU::preExecute()
 
     if (isRomMicroPC(pc_state.microPC())) {
         t_info.stayAtPC = false;
-        curStaticInst = decoder.fetchRomMicroop(
+        curStaticInst = decoder->fetchRomMicroop(
                 pc_state.microPC(), curMacroStaticInst);
     } else if (!curMacroStaticInst) {
         //We're not in the middle of a macro instruction
@@ -329,19 +329,19 @@ BaseSimpleCPU::preExecute()
         //Predecode, ie bundle up an ExtMachInst
         //If more fetch data is needed, pass it in.
         Addr fetch_pc =
-            (pc_state.instAddr() & decoder.pcMask()) + t_info.fetchOffset;
+            (pc_state.instAddr() & decoder->pcMask()) + t_info.fetchOffset;
 
-        decoder.moreBytes(pc_state, fetch_pc);
+        decoder->moreBytes(pc_state, fetch_pc);
 
         //Decode an instruction if one is ready. Otherwise, we'll have to
         //fetch beyond the MachInst at the current pc.
-        instPtr = decoder.decode(pc_state);
+        instPtr = decoder->decode(pc_state);
         if (instPtr) {
             t_info.stayAtPC = false;
             thread->pcState(pc_state);
         } else {
             t_info.stayAtPC = true;
-            t_info.fetchOffset += decoder.moreBytesSize();
+            t_info.fetchOffset += decoder->moreBytesSize();
         }
 
         //If we decoded an instruction and it's microcoded, start pulling
@@ -469,7 +469,7 @@ BaseSimpleCPU::advancePC(const Fault &fault)
     if (fault != NoFault) {
         curMacroStaticInst = nullStaticInstPtr;
         fault->invoke(threadContexts[curThread], curStaticInst);
-        thread->decoder.reset();
+        thread->decoder->reset();
     } else {
         if (curStaticInst) {
             if (curStaticInst->isLastMicroop())
