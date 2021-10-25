@@ -1001,6 +1001,17 @@ let {{
     decoder_output += MiscRegRegImmOpConstructor.subst(mcr15Iop)
     exec_output += PredOpExecute.subst(mcr15Iop)
 
+    mcrTlbiCode = mcr15CheckCode + '''
+    performTlbi(xc, miscReg, Op1);
+    '''
+    mcrTlbiIop = ArmInstObjParams("mcr", "Tlbi", "TlbiOp",
+                                  { "code": mcrTlbiCode,
+                                    "predicate_test": predicateTest },
+                                  ["IsSerializeAfter","IsNonSpeculative"])
+    header_output += MiscRegRegImmOpDeclare.subst(mcrTlbiIop)
+    decoder_output += MiscRegRegImmOpConstructor.subst(mcrTlbiIop)
+    exec_output += PredOpExecute.subst(mcrTlbiIop)
+
 
     mrrc15code = '''
     int preFlatOp1 = snsBankedIndex(op1, xc->tcBase());

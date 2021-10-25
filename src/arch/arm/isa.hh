@@ -610,10 +610,6 @@ namespace ArmISA
         BaseISADevice &getGenericTimer();
         BaseISADevice &getGICv3CPUInterface();
 
-      private:
-        void assert32() { assert(((CPSR)readMiscReg(MISCREG_CPSR)).width); }
-        void assert64() { assert(!((CPSR)readMiscReg(MISCREG_CPSR)).width); }
-
       public:
         void clear();
 
@@ -641,6 +637,8 @@ namespace ArmISA
             auto *arm_isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
             return arm_isa->getSelfDebug();
         }
+
+        const ArmRelease* getRelease() const { return release; }
 
         RegVal readMiscRegNoEffect(int misc_reg) const;
         RegVal readMiscReg(int misc_reg);

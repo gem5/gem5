@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2013,2016-2018 ARM Limited
+// Copyright (c) 2010-2013,2016-2018, 2021 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -247,6 +247,37 @@ let {{
             return new McrDccmvau(machInst, miscReg, rt, iss);
           case MISCREG_DCCIMVAC:
             return new McrDccimvac(machInst, miscReg, rt, iss);
+          case MISCREG_TLBIALL:
+          case MISCREG_TLBIALLIS:
+          case MISCREG_ITLBIALL:
+          case MISCREG_DTLBIALL:
+          case MISCREG_TLBIMVA:
+          case MISCREG_TLBIMVAL:
+          case MISCREG_TLBIMVAIS:
+          case MISCREG_TLBIMVALIS:
+          case MISCREG_TLBIASID:
+          case MISCREG_TLBIASIDIS:
+          case MISCREG_TLBIMVAA:
+          case MISCREG_TLBIMVAAL:
+          case MISCREG_TLBIMVAAIS:
+          case MISCREG_TLBIMVAALIS:
+          case MISCREG_TLBIMVAH:
+          case MISCREG_TLBIMVALH:
+          case MISCREG_TLBIMVAHIS:
+          case MISCREG_TLBIMVALHIS:
+          case MISCREG_TLBIIPAS2:
+          case MISCREG_TLBIIPAS2L:
+          case MISCREG_TLBIIPAS2IS:
+          case MISCREG_TLBIIPAS2LIS:
+          case MISCREG_ITLBIMVA:
+          case MISCREG_DTLBIMVA:
+          case MISCREG_ITLBIASID:
+          case MISCREG_DTLBIASID:
+          case MISCREG_TLBIALLNSNH:
+          case MISCREG_TLBIALLNSNHIS:
+          case MISCREG_TLBIALLH:
+          case MISCREG_TLBIALLHIS:
+            return new Tlbi(machInst, miscReg, rt, iss);
           default:
             if (miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]) {
                 std::string full_mnem = csprintf("%s %s",

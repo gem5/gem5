@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013,2017-2019 ARM Limited
+ * Copyright (c) 2011-2013,2017-2019, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -250,6 +250,19 @@ class RegNone : public ArmISA::ArmStaticInst
 
     std::string generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const;
+};
+
+class TlbiOp64 : public MiscRegRegImmOp64
+{
+  protected:
+    TlbiOp64(const char *mnem, ArmISA::ExtMachInst _machInst,
+             OpClass __opClass, ArmISA::MiscRegIndex _dest,
+             ArmISA::IntRegIndex _op1, uint32_t _imm) :
+        MiscRegRegImmOp64(mnem, _machInst, __opClass, _dest, _op1, _imm)
+    {}
+
+    void performTlbi(ExecContext *xc,
+                     ArmISA::MiscRegIndex idx, RegVal value) const;
 };
 
 } // namespace gem5

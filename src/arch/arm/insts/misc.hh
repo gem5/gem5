@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2017-2018 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2017-2018, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -437,6 +437,19 @@ class McrMrcImplDefined : public McrMrcMiscInst
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
 
+};
+
+class TlbiOp : public MiscRegRegImmOp
+{
+  protected:
+    TlbiOp(const char *mnem, ArmISA::ExtMachInst _machInst,
+           OpClass __opClass, ArmISA::MiscRegIndex _dest,
+           ArmISA::IntRegIndex _op1, uint64_t _imm) :
+        MiscRegRegImmOp(mnem, _machInst, __opClass, _dest, _op1, _imm)
+    {}
+
+    void performTlbi(ExecContext *xc,
+                     ArmISA::MiscRegIndex dest_idx, RegVal value) const;
 };
 
 } // namespace gem5
