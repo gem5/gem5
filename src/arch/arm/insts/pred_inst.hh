@@ -46,6 +46,7 @@
 #include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
+#include "cpu/thread_context.hh"
 
 namespace gem5
 {
@@ -399,6 +400,17 @@ class PredMicroop : public PredOp
             apc.uEnd();
         else
             apc.uAdvance();
+    }
+
+    void
+    advancePC(ThreadContext *tc) const override
+    {
+        PCState pc = tc->pcState().as<PCState>();
+        if (flags[IsLastMicroop])
+            pc.uEnd();
+        else
+            pc.uAdvance();
+        tc->pcState(pc);
     }
 };
 

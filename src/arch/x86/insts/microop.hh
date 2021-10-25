@@ -142,6 +142,17 @@ class X86MicroopBase : public X86StaticInst
             xpc.uAdvance();
     }
 
+    void
+    advancePC(ThreadContext *tc) const override
+    {
+        PCState pc = tc->pcState().as<PCState>();
+        if (flags[IsLastMicroop])
+            pc.uEnd();
+        else
+            pc.uAdvance();
+        tc->pcState(pc);
+    }
+
     std::unique_ptr<PCStateBase> branchTarget(
             const PCStateBase &branch_pc) const override;
 

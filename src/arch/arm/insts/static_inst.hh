@@ -52,6 +52,7 @@
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
+#include "cpu/thread_context.hh"
 #include "sim/byteswap.hh"
 #include "sim/full_system.hh"
 
@@ -201,6 +202,14 @@ class ArmStaticInst : public StaticInst
     advancePC(PCStateBase &pcState) const override
     {
         pcState.as<PCState>().advance();
+    }
+
+    void
+    advancePC(ThreadContext *tc) const override
+    {
+        PCState pc = tc->pcState().as<PCState>();
+        pc.advance();
+        tc->pcState(pc);
     }
 
     uint64_t getEMI() const override { return machInst; }

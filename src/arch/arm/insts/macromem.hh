@@ -44,6 +44,7 @@
 #include "arch/arm/insts/pred_inst.hh"
 #include "arch/arm/pcstate.hh"
 #include "arch/arm/tlb.hh"
+#include "cpu/thread_context.hh"
 
 namespace gem5
 {
@@ -87,6 +88,20 @@ class MicroOp : public PredOp
             apc.advance();
         }
     }
+
+    void
+    advancePC(ThreadContext *tc) const override
+    {
+        PCState pc = tc->pcState().as<PCState>();
+        if (flags[IsLastMicroop]) {
+            pc.uEnd();
+        } else if (flags[IsMicroop]) {
+            pc.uAdvance();
+        } else {
+            pc.advance();
+        }
+        tc->pcState(pc);
+    }
 };
 
 class MicroOpX : public ArmStaticInst
@@ -108,6 +123,20 @@ class MicroOpX : public ArmStaticInst
         } else {
             apc.advance();
         }
+    }
+
+    void
+    advancePC(ThreadContext *tc) const override
+    {
+        PCState pc = tc->pcState().as<PCState>();
+        if (flags[IsLastMicroop]) {
+            pc.uEnd();
+        } else if (flags[IsMicroop]) {
+            pc.uAdvance();
+        } else {
+            pc.advance();
+        }
+        tc->pcState(pc);
     }
 };
 

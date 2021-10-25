@@ -50,5 +50,17 @@ RiscvMicroInst::advancePC(PCStateBase &pcState) const
     }
 }
 
+void
+RiscvMicroInst::advancePC(ThreadContext *tc) const
+{
+    PCState pc = tc->pcState().as<PCState>();
+    if (flags[IsLastMicroop]) {
+        pc.uEnd();
+    } else {
+        pc.uAdvance();
+    }
+    tc->pcState(pc);
+}
+
 } // namespace RiscvISA
 } // namespace gem5

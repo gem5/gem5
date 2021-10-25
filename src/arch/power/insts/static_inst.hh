@@ -33,6 +33,7 @@
 #include "arch/power/types.hh"
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
+#include "cpu/thread_context.hh"
 
 namespace gem5
 {
@@ -72,6 +73,14 @@ class PowerStaticInst : public StaticInst
     advancePC(PCStateBase &pc_state) const override
     {
         pc_state.as<PCState>().advance();
+    }
+
+    void
+    advancePC(ThreadContext *tc) const override
+    {
+        PCState pc = tc->pcState().as<PCState>();
+        pc.advance();
+        tc->pcState(pc);
     }
 
     std::unique_ptr<PCStateBase>

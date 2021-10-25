@@ -86,6 +86,14 @@ SparcStaticInst::advancePC(PCStateBase &pcState) const
 }
 
 void
+SparcStaticInst::advancePC(ThreadContext *tc) const
+{
+    PCState pc = tc->pcState().as<PCState>();
+    pc.advance();
+    tc->pcState(pc);
+}
+
+void
 SparcStaticInst::printSrcReg(std::ostream &os, int reg) const
 {
     if (_numSrcRegs > reg)

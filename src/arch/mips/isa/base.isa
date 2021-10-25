@@ -64,6 +64,14 @@ output header {{
             pc.as<PCState>().advance();
         }
 
+        void
+        advancePC(ThreadContext *tc) const override
+        {
+            PCState pc = tc->pcState().as<PCState>();
+            pc.advance();
+            tc->pcState(pc);
+        }
+
         std::unique_ptr<PCStateBase>
         buildRetPC(const PCStateBase &cur_pc,
                 const PCStateBase &call_pc) const override

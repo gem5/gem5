@@ -109,6 +109,17 @@ class SparcMicroInst : public SparcStaticInst
         else
             spc.uAdvance();
     }
+
+    void
+    advancePC(ThreadContext *tc) const override
+    {
+        PCState pc = tc->pcState().as<PCState>();
+        if (flags[IsLastMicroop])
+            pc.uEnd();
+        else
+            pc.uAdvance();
+        tc->pcState(pc);
+    }
 };
 
 class SparcDelayedMicroInst : public SparcMicroInst

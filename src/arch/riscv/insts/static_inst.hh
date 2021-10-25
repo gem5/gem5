@@ -36,6 +36,7 @@
 #include "arch/riscv/types.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
+#include "cpu/thread_context.hh"
 #include "mem/packet.hh"
 
 namespace gem5
@@ -62,6 +63,14 @@ class RiscvStaticInst : public StaticInst
     advancePC(PCStateBase &pc) const override
     {
         pc.as<PCState>().advance();
+    }
+
+    void
+    advancePC(ThreadContext *tc) const override
+    {
+        PCState pc = tc->pcState().as<PCState>();
+        pc.advance();
+        tc->pcState(pc);
     }
 
     std::unique_ptr<PCStateBase>
@@ -139,6 +148,7 @@ class RiscvMicroInst : public RiscvStaticInst
     }
 
     void advancePC(PCStateBase &pcState) const override;
+    void advancePC(ThreadContext *tc) const override;
 };
 
 } // namespace RiscvISA

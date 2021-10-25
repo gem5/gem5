@@ -37,6 +37,7 @@
 #include "base/trace.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
+#include "cpu/thread_context.hh"
 
 namespace gem5
 {
@@ -112,6 +113,7 @@ class SparcStaticInst : public StaticInst
         const RegId *indexArray, int num) const;
 
     void advancePC(PCStateBase &pcState) const override;
+    void advancePC(ThreadContext *tc) const override;
 
     static bool passesFpCondition(uint32_t fcc, uint32_t condition);
     static bool passesCondition(uint32_t codes, uint32_t condition);

@@ -41,6 +41,7 @@
 #include "arch/arm/insts/misc64.hh"
 #include "arch/arm/insts/static_inst.hh"
 #include "arch/arm/pcstate.hh"
+#include "cpu/thread_context.hh"
 
 namespace gem5
 {
@@ -86,6 +87,20 @@ class MightBeMicro64 : public ArmStaticInst
         } else {
             apc.advance();
         }
+    }
+
+    void
+    advancePC(ThreadContext *tc) const override
+    {
+        PCState pc = tc->pcState().as<PCState>();
+        if (flags[IsLastMicroop]) {
+            pc.uEnd();
+        } else if (flags[IsMicroop]) {
+            pc.uAdvance();
+        } else {
+            pc.advance();
+        }
+        tc->pcState(pc);
     }
 };
 

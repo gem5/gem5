@@ -42,6 +42,7 @@
 #include "arch/x86/types.hh"
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
+#include "cpu/thread_context.hh"
 #include "debug/X86.hh"
 
 namespace gem5
@@ -202,6 +203,14 @@ class X86StaticInst : public StaticInst
     advancePC(PCStateBase &pcState) const override
     {
         pcState.as<PCState>().advance();
+    }
+
+    void
+    advancePC(ThreadContext *tc) const override
+    {
+        PCState pc = tc->pcState().as<PCState>();
+        pc.advance();
+        tc->pcState(pc);
     }
 
     std::unique_ptr<PCStateBase>
