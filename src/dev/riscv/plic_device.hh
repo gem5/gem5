@@ -46,8 +46,6 @@
 namespace gem5
 {
 
-using namespace RiscvISA;
-
 class PlicIntDevice : public BasicPioDevice
 {
   protected:

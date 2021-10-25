@@ -733,13 +733,13 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
             args.copyIn(virt_proxy);
 
             assert(isdGPU || gfxVersion == GfxVersion::gfx902);
-            assert((args->va_addr % TheISA::PageBytes) == 0);
+            assert((args->va_addr % X86ISA::PageBytes) == 0);
             [[maybe_unused]] Addr mmap_offset = 0;
 
             Request::CacheCoherenceFlags mtype = defaultMtype;
             Addr pa_addr = 0;
 
-            int npages = divCeil(args->size, (int64_t)TheISA::PageBytes);
+            int npages = divCeil(args->size, (int64_t)X86ISA::PageBytes);
             bool cacheable = true;
 
             if (KFD_IOC_ALLOC_MEM_FLAGS_VRAM & args->flags) {

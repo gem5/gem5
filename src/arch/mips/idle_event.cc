@@ -28,12 +28,8 @@
 
 #include "arch/mips/idle_event.hh"
 
-#include "cpu/thread_context.hh"
-
 namespace gem5
 {
-
-using namespace MipsISA;
 
 void
 IdleStartEvent::process(ThreadContext *tc)

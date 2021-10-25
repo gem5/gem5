@@ -52,11 +52,6 @@
 namespace gem5
 {
 
-namespace TheISA
-{
-    class Decoder;
-} // namespace TheISA
-
 /**
  * Derived ThreadContext class for use with the Checker.  The template
  * parameter is the ThreadContext class used by the specific CPU being
