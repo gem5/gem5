@@ -52,11 +52,6 @@ class Decoder : public InstDecoder
   public:
     Decoder(ISA* isa=nullptr) : InstDecoder(&emi) {}
 
-    void
-    process()
-    {
-    }
-
     // Use this to give data to the predecoder. This should be used
     // when there is control flow.
     void

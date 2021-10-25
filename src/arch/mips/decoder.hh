@@ -55,11 +55,6 @@ class Decoder : public InstDecoder
     Decoder(ISA* isa = nullptr) : InstDecoder(&machInst)
     {}
 
-    void
-    process()
-    {
-    }
-
     //Use this to give data to the decoder. This should be used
     //when there is control flow.
     void
