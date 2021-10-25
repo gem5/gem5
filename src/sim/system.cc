@@ -49,7 +49,6 @@
 #include "base/loader/symtab.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "config/use_kvm.hh"
 #if USE_KVM
 #include "cpu/kvm/vm.hh"

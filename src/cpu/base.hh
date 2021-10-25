@@ -44,9 +44,6 @@
 
 #include <vector>
 
-// Before we do anything else, check if this build is the NULL ISA,
-// and if so stop here
-#include "config/the_isa.hh"
 #include "arch/generic/interrupts.hh"
 #include "base/statistics.hh"
 #include "debug/Mwait.hh"

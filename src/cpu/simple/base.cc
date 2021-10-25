@@ -49,7 +49,6 @@
 #include "base/pollevent.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
-#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/checker/thread_context.hh"

@@ -46,7 +46,6 @@
 #include "arch/generic/vec_pred_reg.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "debug/Context.hh"
 #include "debug/Quiesce.hh"

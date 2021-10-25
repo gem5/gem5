@@ -43,7 +43,6 @@
 #define __CPU_EXEC_CONTEXT_HH__
 
 #include "base/types.hh"
-#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/reg_class.hh"
 #include "cpu/static_inst_fwd.hh"

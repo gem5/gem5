@@ -51,7 +51,6 @@
 #include "arch/generic/tlb.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
-#include "config/the_isa.hh"
 #include "cpu/regfile.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
