@@ -125,6 +125,10 @@ AddOption('--with-systemc-tests', action='store_true',
           help='Build systemc tests')
 AddOption('--install-hooks', action='store_true',
           help='Install revision control hooks non-interactively')
+AddOption('--gprof', action='store_true',
+          help='Enable support for the gprof profiler')
+AddOption('--pprof', action='store_true',
+          help='Enable support for the pprof profiler')
 
 # Inject the built_tools directory into the python path.
 sys.path[1:1] = [ Dir('#build_tools').abspath ]
@@ -538,6 +542,14 @@ gem5py_env = main.Clone()
 # Bare minimum environment that only includes python
 gem5py_env.Append(CCFLAGS=['${GEM5PY_CCFLAGS_EXTRA}'])
 gem5py_env.Append(LINKFLAGS=['${GEM5PY_LINKFLAGS_EXTRA}'])
+
+if GetOption('gprof') and GetOption('pprof'):
+    error('Only one type of profiling should be enabled at a time')
+if GetOption('gprof'):
+    main.Append(CCFLAGS=['-g', '-pg'], LINKFLAGS=['-pg'])
+if GetOption('pprof'):
+    main.Append(CCFLAGS=['-g'],
+            LINKFLAGS=['-Wl,--no-as-needed', '-lprofiler', '-Wl,--as-needed'])
 
 main['HAVE_PKG_CONFIG'] = main.Detect('pkg-config')
 

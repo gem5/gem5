@@ -823,17 +823,11 @@ envs = {
     'debug': env.Clone(ENV_LABEL='debug', OBJSUFFIX='.do'),
     'opt': env.Clone(ENV_LABEL='opt', OBJSUFFIX='.o'),
     'fast': env.Clone(ENV_LABEL='fast', OBJSUFFIX='.fo'),
-    'prof': env.Clone(ENV_LABEL='prof', OBJSUFFIX='.po'),
-    'perf': env.Clone(ENV_LABEL='perf', OBJSUFFIX='.gpo')
 }
 
 envs['debug'].Append(CPPDEFINES=['DEBUG', 'TRACING_ON=1'])
 envs['opt'].Append(CCFLAGS=['-g'], CPPDEFINES=['TRACING_ON=1'])
 envs['fast'].Append(CPPDEFINES=['NDEBUG', 'TRACING_ON=0'])
-envs['prof'].Append(CCFLAGS=['-g', '-pg'], LINKFLAGS=['-pg'],
-        CPPDEFINES=['NDEBUG', 'TRACING_ON=0'])
-envs['perf'].Append(CCFLAGS=['-g'], CPPDEFINES=['NDEBUG', 'TRACING_ON=0'],
-        LINKFLAGS=['-Wl,--no-as-needed', '-lprofiler', '-Wl,--as-needed'])
 
 # For Link Time Optimization, the optimisation flags used to compile
 # individual files are decoupled from those used at link time
@@ -845,17 +839,16 @@ if env['GCC']:
     else:
         envs['debug'].Append(CCFLAGS=['-ggdb3'])
     envs['debug'].Append(LINKFLAGS=['-O0'])
-    # opt, fast, prof and perf all share the same cc flags, also add
-    # the optimization to the linkflags as LTO defers the optimization
-    # to link time
-    for target in ['opt', 'fast', 'prof', 'perf']:
+    # opt and fast share the same cc flags, also add the optimization to the
+    # linkflags as LTO defers the optimization to link time
+    for target in ['opt', 'fast']:
         envs[target].Append(CCFLAGS=['-O3', '${LTO_CCFLAGS}'])
         envs[target].Append(LINKFLAGS=['-O3', '${LTO_LINKFLAGS}'])
 
 elif env['CLANG']:
     envs['debug'].Append(CCFLAGS=['-g', '-O0'])
-    # opt, fast, prof and perf all share the same cc flags
-    for target in ['opt', 'fast', 'prof', 'perf']:
+    # opt and fast share the same cc flags
+    for target in ['opt', 'fast']:
         envs[target].Append(CCFLAGS=['-O3'])
 else:
     error('Unknown compiler, please fix compiler options')
