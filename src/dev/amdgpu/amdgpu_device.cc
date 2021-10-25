@@ -40,6 +40,7 @@
 #include "dev/amdgpu/sdma_engine.hh"
 #include "dev/hsa/hw_scheduler.hh"
 #include "gpu-compute/gpu_command_processor.hh"
+#include "mem/abstract_mem.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/AMDGPUDevice.hh"
@@ -60,6 +61,16 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     romBin.open(p.rom_binary, std::ios::binary);
     romBin.read((char *)rom.data(), ROM_SIZE);
     romBin.close();
+
+    // System pointer needs to be explicitly set for device memory since
+    // DRAMCtrl uses it to get (1) cache line size and (2) the mem mode.
+    // Note this means the cache line size is system wide.
+    for (auto& m : p.memories) {
+        m->system(p.system);
+
+        // Add to system's device memory map.
+        p.system->addDeviceMemory(gpuMemMgr->getRequestorID(), m);
+    }
 
     if (config.expansionROM) {
         romRange = RangeSize(config.expansionROM, ROM_SIZE);
