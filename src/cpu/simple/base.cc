@@ -313,14 +313,15 @@ BaseSimpleCPU::preExecute()
     t_info.setMemAccPredicate(true);
 
     // decode the instruction
-    std::unique_ptr<PCStateBase> pc_state(thread->pcState().clone());
+    set(preExecuteTempPC, thread->pcState());
+    auto &pc_state = *preExecuteTempPC;
 
     auto &decoder = thread->decoder;
 
-    if (isRomMicroPC(pc_state->microPC())) {
+    if (isRomMicroPC(pc_state.microPC())) {
         t_info.stayAtPC = false;
         curStaticInst = decoder.fetchRomMicroop(
-                pc_state->microPC(), curMacroStaticInst);
+                pc_state.microPC(), curMacroStaticInst);
     } else if (!curMacroStaticInst) {
         //We're not in the middle of a macro instruction
         StaticInstPtr instPtr = NULL;
@@ -328,16 +329,16 @@ BaseSimpleCPU::preExecute()
         //Predecode, ie bundle up an ExtMachInst
         //If more fetch data is needed, pass it in.
         Addr fetch_pc =
-            (pc_state->instAddr() & decoder.pcMask()) + t_info.fetchOffset;
+            (pc_state.instAddr() & decoder.pcMask()) + t_info.fetchOffset;
 
-        decoder.moreBytes(*pc_state, fetch_pc);
+        decoder.moreBytes(pc_state, fetch_pc);
 
         //Decode an instruction if one is ready. Otherwise, we'll have to
         //fetch beyond the MachInst at the current pc.
-        instPtr = decoder.decode(*pc_state);
+        instPtr = decoder.decode(pc_state);
         if (instPtr) {
             t_info.stayAtPC = false;
-            thread->pcState(*pc_state);
+            thread->pcState(pc_state);
         } else {
             t_info.stayAtPC = true;
             t_info.fetchOffset += decoder.moreBytesSize();
@@ -348,13 +349,13 @@ BaseSimpleCPU::preExecute()
         if (instPtr && instPtr->isMacroop()) {
             curMacroStaticInst = instPtr;
             curStaticInst =
-                curMacroStaticInst->fetchMicroop(pc_state->microPC());
+                curMacroStaticInst->fetchMicroop(pc_state.microPC());
         } else {
             curStaticInst = instPtr;
         }
     } else {
         //Read the next micro op from the macro op
-        curStaticInst = curMacroStaticInst->fetchMicroop(pc_state->microPC());
+        curStaticInst = curMacroStaticInst->fetchMicroop(pc_state.microPC());
     }
 
     //If we decoded an instruction this "tick", record information about it.

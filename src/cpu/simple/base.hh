@@ -42,6 +42,9 @@
 #ifndef __CPU_SIMPLE_BASE_HH__
 #define __CPU_SIMPLE_BASE_HH__
 
+#include <memory>
+
+#include "arch/generic/pcstate.hh"
 #include "base/statistics.hh"
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
@@ -128,6 +131,8 @@ class BaseSimpleCPU : public BaseCPU
      * the record as coming from a faulting instruction.
      */
     void traceFault();
+
+    std::unique_ptr<PCStateBase> preExecuteTempPC;
 
   public:
     void checkForInterrupts();
