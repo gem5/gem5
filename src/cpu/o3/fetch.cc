@@ -50,7 +50,6 @@
 #include "arch/generic/tlb.hh"
 #include "base/random.hh"
 #include "base/types.hh"
-#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/nop_static_inst.hh"

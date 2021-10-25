@@ -42,7 +42,6 @@
 
 #include "cpu/o3/cpu.hh"
 
-#include "config/the_isa.hh"
 #include "cpu/activity.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/checker/thread_context.hh"

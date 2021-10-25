@@ -50,7 +50,6 @@
 
 #include "base/refcnt.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/exetrace.hh"

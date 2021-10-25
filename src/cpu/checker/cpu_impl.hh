@@ -46,7 +46,6 @@
 #include <string>
 
 #include "base/refcnt.hh"
-#include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/null_static_inst.hh"
 #include "cpu/reg_class.hh"

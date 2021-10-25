@@ -51,7 +51,6 @@
 #include "arch/generic/debugfaults.hh"
 #include "arch/generic/vec_reg.hh"
 #include "base/circular_queue.hh"
-#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/comm.hh"

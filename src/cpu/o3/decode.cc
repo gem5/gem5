@@ -42,7 +42,6 @@
 
 #include "arch/generic/pcstate.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/dyn_inst.hh"
 #include "cpu/o3/limits.hh"

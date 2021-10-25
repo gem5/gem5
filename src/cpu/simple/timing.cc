@@ -43,7 +43,6 @@
 
 #include "arch/generic/decoder.hh"
 #include "base/compiler.hh"
-#include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
 #include "debug/Config.hh"
 #include "debug/Drain.hh"

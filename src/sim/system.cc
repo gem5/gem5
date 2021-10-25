@@ -49,7 +49,6 @@
 #include "base/loader/symtab.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"

@@ -28,7 +28,6 @@
 #include "sim/workload.hh"
 
 #include "base/remote_gdb.hh"
-#include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "sim/debug.hh"
 

@@ -43,7 +43,6 @@
 #define __CPU_CHECKER_THREAD_CONTEXT_HH__
 
 #include "arch/generic/pcstate.hh"
-#include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"

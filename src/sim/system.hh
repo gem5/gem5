@@ -51,7 +51,6 @@
 #include "base/loader/memory_image.hh"
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
-#include "config/the_isa.hh"
 #include "cpu/pc_event.hh"
 #include "enums/MemoryMode.hh"
 #include "mem/mem_requestor.hh"

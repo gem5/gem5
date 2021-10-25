@@ -44,7 +44,6 @@
 #include <sstream>
 
 #include "base/loader/symtab.hh"
-#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"

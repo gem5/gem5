@@ -47,7 +47,6 @@
 #include "arch/generic/pcstate.hh"
 #include "base/compiler.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "debug/Branch.hh"
 
 namespace gem5
