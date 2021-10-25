@@ -59,7 +59,6 @@ env.TagImplies(env.subst('${TARGET_ISA} isa'), 'gem5 lib')
 
 env.SwitchingHeaders(
     Split('''
-        decoder.hh
         isa.hh
         vecregs.hh
         '''),
