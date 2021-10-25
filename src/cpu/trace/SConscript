@@ -1,8 +1,5 @@
 Import('*')
 
-if env['CONF']['TARGET_ISA'] == 'null':
-    Return()
-
 # Only build TraceCPU if we have support for protobuf as TraceCPU relies on it
 SimObject('TraceCPU.py', sim_objects=['TraceCPU'], tags='protobuf')
 Source('trace_cpu.cc', tags='protobuf')

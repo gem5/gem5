@@ -44,10 +44,8 @@ Workload::registerThreadContext(ThreadContext *tc)
     panic_if(!success, "Failed to add thread context %d.",
             tc->contextId());
 
-#   if !IS_NULL_ISA
     if (gdb)
         gdb->addThreadContext(tc);
-#   endif
 }
 
 void
@@ -66,10 +64,8 @@ Workload::replaceThreadContext(ThreadContext *tc)
         panic_if(!success,
                 "Failed to insert replacement thread context %d.", id);
 
-#       if !IS_NULL_ISA
         if (gdb)
             gdb->replaceThreadContext(tc);
-#       endif
 
         return;
     }
@@ -79,12 +75,10 @@ Workload::replaceThreadContext(ThreadContext *tc)
 bool
 Workload::trapToGdb(int signal, ContextID ctx_id)
 {
-#   if !IS_NULL_ISA
     if (gdb && gdb->isAttached()) {
         gdb->trap(ctx_id, signal);
         return true;
     }
-#   endif
     return false;
 };
 
@@ -93,7 +87,6 @@ Workload::startup()
 {
     SimObject::startup();
 
-#   if !IS_NULL_ISA
     // Now that we're about to start simulation, wait for GDB connections if
     // requested.
     if (gdb && waitForRemoteGDB) {
@@ -101,7 +94,6 @@ Workload::startup()
                 gdb->port());
         gdb->connect();
     }
-#   endif
 }
 
 } // namespace gem5
