@@ -562,29 +562,6 @@ for extra_dir in extras_dir_list:
 for opt in env['CONF'].keys():
     env.ConfigFile(opt)
 
-def makeTheISA(source, target, env):
-    isas = sorted(set(env.Split('${ALL_ISAS}')))
-    target_isa = env['CONF']['TARGET_ISA']
-    is_null_isa = '1' if (target_isa.lower() == 'null') else '0'
-
-    def namespace(isa):
-        return isa[0].upper() + isa[1:].lower() + 'ISA'
-
-
-    code = code_formatter()
-    code('''\
-#ifndef __CONFIG_THE_ISA_HH__
-#define __CONFIG_THE_ISA_HH__
-
-#define TheISA ${{namespace(target_isa)}}
-
-#endif // __CONFIG_THE_ISA_HH__''')
-
-    code.write(str(target[0]))
-
-env.Command('config/the_isa.hh', [],
-            MakeAction(makeTheISA, Transform("CFG ISA", 0)))
-
 def makeTheGPUISA(source, target, env):
     gpu_isa = env['CONF']['TARGET_GPU_ISA']
 
