@@ -344,7 +344,7 @@ class Decoder : public InstDecoder
     }
 
   public:
-    StaticInstPtr decode(PCStateBase &next_pc);
+    StaticInstPtr decode(PCStateBase &next_pc) override;
 
     StaticInstPtr fetchRomMicroop(
             MicroPC micropc, StaticInstPtr curMacroop) override;

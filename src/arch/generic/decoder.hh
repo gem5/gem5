@@ -124,6 +124,19 @@ class InstDecoder
      * @param fetchPC The address this chunk was fetched from.
      */
     virtual void moreBytes(const PCStateBase &pc, Addr fetchPC) = 0;
+
+    /**
+     * Decode an instruction or fetch it from the code cache.
+     *
+     * This method decodes the currently pending pre-decoded
+     * instruction. Data must be fed to the decoder using moreBytes()
+     * until instReady() is true before calling this method.
+     *
+     * @param pc Instruction pointer that we are decoding.
+     * @return A pointer to a static instruction or NULL if the
+     * decoder isn't ready (see instReady()).
+     */
+    virtual StaticInstPtr decode(PCStateBase &pc) = 0;
 };
 
 } // namespace gem5

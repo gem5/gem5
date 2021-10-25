@@ -75,7 +75,7 @@ class Decoder : public InstDecoder
     //when there is control flow.
     void moreBytes(const PCStateBase &pc, Addr fetchPC) override;
 
-    StaticInstPtr decode(PCStateBase &nextPC);
+    StaticInstPtr decode(PCStateBase &nextPC) override;
 };
 
 } // namespace RiscvISA

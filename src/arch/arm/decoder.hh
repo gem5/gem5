@@ -137,18 +137,7 @@ class Decoder : public InstDecoder
 
     void moreBytes(const PCStateBase &pc, Addr fetchPC) override;
 
-    /**
-     * Decode an instruction or fetch it from the code cache.
-     *
-     * This method decodes the currently pending pre-decoded
-     * instruction. Data must be fed to the decoder using moreBytes()
-     * until instReady() is true before calling this method.
-     *
-     * @param pc Instruction pointer that we are decoding.
-     * @return A pointer to a static instruction or NULL if the
-     * decoder isn't ready (see instReady()).
-     */
-    StaticInstPtr decode(PCStateBase &pc);
+    StaticInstPtr decode(PCStateBase &pc) override;
 
   public: // ARM-specific decoder state manipulation
     void
