@@ -32,6 +32,7 @@
 #include "debug/LupioBLK.hh"
 #include "dev/dma_device.hh"
 #include "dev/io_device.hh"
+#include "dev/lupio/lupio_pic.hh"
 #include "dev/platform.hh"
 #include "dev/storage/disk_image.hh"
 #include "params/LupioBLK.hh"

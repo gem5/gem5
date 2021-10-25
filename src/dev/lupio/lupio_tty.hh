@@ -30,6 +30,7 @@
 #define __LUPIO_TTY_HH__
 
 #include "dev/io_device.hh"
+#include "dev/lupio/lupio_pic.hh"
 #include "dev/platform.hh"
 #include "dev/serial/serial.hh"
 #include "params/LupioTTY.hh"
