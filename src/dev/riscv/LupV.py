@@ -31,5 +31,5 @@ class LupV(Platform):
     type = 'LupV'
     cxx_header = "dev/riscv/lupv.hh"
     cxx_class = 'gem5::LupV'
-    pic = Param.Plic("PIC")
+    pic = Param.LupioPIC("PIC")
     uart_int_id = Param.Int("Interrupt ID to be used if the PLIC is used here")

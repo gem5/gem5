@@ -29,8 +29,8 @@
 #ifndef __DEV_RISCV_LUPV_HH__
 #define __DEV_RISCV_LUPV_HH__
 
+#include "dev/lupio/lupio_pic.hh"
 #include "dev/platform.hh"
-#include "dev/riscv/plic.hh"
 #include "params/LupV.hh"
 
 namespace gem5
@@ -49,7 +49,7 @@ using namespace RiscvISA;
 class LupV : public Platform
 {
   public:
-    Plic *pic;
+    LupioPIC *pic;
     int uartIntID;
 
   public:

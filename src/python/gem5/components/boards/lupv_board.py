@@ -48,16 +48,16 @@ from m5.objects import (
     Plic,
     Terminal,
     LupioBLK,
+    LupioPIC,
     LupioRNG,
     LupioRTC,
+    LupioTMR,
     LupioTTY,
     LupV,
     AddrRange,
     CowDiskImage,
     RawDiskImage,
     Frequency,
-    RiscvMmioVirtIO,
-    VirtIOBlock,
     Port,
 )
 
@@ -99,6 +99,9 @@ class LupvBoard(SimpleBoard):
 
         # Initialize all the devices that we want to use on this board
         # Interrupt IDS for PIC Device
+        self._excep_code = { 'INT_SOFT_SUPER': 1, 'INT_TIMER_SUPER': 5,
+                             'INT_TIMER_MACHINE': 7, 'INT_EXT_SUPER': 9,
+                             'INT_EXT_MACHINE': 10 }
         self._int_ids = { 'TTY': 1, 'BLK': 2, 'RNG': 3}
 
         # CLINT
@@ -107,9 +110,15 @@ class LupvBoard(SimpleBoard):
         # PLIC
         self.pic = Plic(pio_addr=0xc000000)
 
+        # LUPIO PIC
+        self.lupio_pic = LupioPIC(
+            pio_addr=0x20002000,
+            int_type = self._excep_code['INT_EXT_SUPER']
+        )
+
         #LupV Platform
         self.lupv = LupV(
-            pic = self.pic,
+            pic = self.lupio_pic,
             uart_int_id = self._int_ids['TTY']
         )
 
@@ -130,6 +139,12 @@ class LupvBoard(SimpleBoard):
         # LUPIO RTC
         self.lupio_rtc = LupioRTC(pio_addr=0x20004000)
 
+        # LUPIO TMR
+        self.lupio_tmr = LupioTMR(
+            pio_addr=0x20006000,
+            int_type = self._excep_code['INT_TIMER_SUPER']
+        )
+
         # LUPIO TTY
         self.lupio_tty = LupioTTY(
             pio_addr=0x20007000,
@@ -143,9 +158,18 @@ class LupvBoard(SimpleBoard):
             self._int_ids['BLK'],
             self._int_ids['RNG']
         ]
-        self.pic.n_contexts = self.processor.get_num_cores() * 2
-        self.pic.n_src = max(pic_srcs) + 1
 
+        # Set the number of sources to the PIC as 0 because we've removed the 
+        # connections from all the external devices to the PIC, and moved them
+        # to the LupioPIC.  The PIC and CLINT only remain on the board at this
+        # point for our bbl to use upon startup, and will 
+        # remain unused during the simulation
+        self.pic.n_src = 0
+        self.pic.n_contexts = 0
+        self.lupio_pic.n_src = max(pic_srcs) + 1
+        self.lupio_pic.num_threads = self.processor.get_num_cores()
+
+        self.lupio_tmr.num_threads = self.processor.get_num_cores()
         self.clint.num_threads = self.processor.get_num_cores()
 
         # Add the RTC
@@ -159,6 +183,8 @@ class LupvBoard(SimpleBoard):
         self._on_chip_devices = [
             self.clint,
             self.pic,
+            self.lupio_pic,
+            self.lupio_tmr
         ]
         self._off_chip_devices = [
             self.lupio_blk,
@@ -343,6 +369,32 @@ class LupvBoard(SimpleBoard):
         clint_node.appendCompatible(["riscv,clint0"])
         soc_node.append(clint_node)
 
+        # Clock
+        clk_node = FdtNode("lupv-clk")
+        clk_phandle = state.phandle(clk_node)
+        clk_node.append(FdtPropertyWords("phandle", [clk_phandle]))
+        clk_node.append(FdtPropertyWords("clock-frequency", [100000000]))
+        clk_node.append(FdtPropertyWords("#clock-cells", [0]))
+        clk_node.appendCompatible(["fixed-clock"])
+        root.append(clk_node)
+
+        # LupioTMR
+        lupio_tmr = self.lupio_tmr
+        lupio_tmr_node = lupio_tmr.generateBasicPioDeviceNode(soc_state,
+                            "lupio-tmr", lupio_tmr.pio_addr,
+                            lupio_tmr.pio_size)
+        int_state = FdtState(addr_cells=0, interrupt_cells=1)
+        lupio_tmr_node.append(FdtPropertyWords("clocks", [clk_phandle]))
+        int_extended = list()
+        for i, core in enumerate(self.get_processor().get_cores()):
+            phandle = state.phandle(f"cpu@{i}.int_state")
+            int_extended.append(phandle)
+            int_extended.append(self._excep_code['INT_TIMER_SUPER'])
+        lupio_tmr_node.append(
+            FdtPropertyWords("interrupts-extended", int_extended))
+        lupio_tmr_node.appendCompatible(["lupio,tmr"])
+        soc_node.append(lupio_tmr_node)
+
         # PLIC node
         plic = self.pic
         plic_node = plic.generateBasicPioDeviceNode(
@@ -355,7 +407,7 @@ class LupvBoard(SimpleBoard):
 
         phandle = int_state.phandle(plic)
         plic_node.append(FdtPropertyWords("phandle", [phandle]))
-        plic_node.append(FdtPropertyWords("riscv,ndev", [plic.n_src - 1]))
+        plic_node.append(FdtPropertyWords("riscv,ndev", 0))
 
         int_extended = list()
         for i, core in enumerate(self.get_processor().get_cores()):
@@ -371,6 +423,26 @@ class LupvBoard(SimpleBoard):
 
         soc_node.append(plic_node)
 
+        # LupioPIC Device
+        lupio_pic = self.lupio_pic
+        lupio_pic_node = lupio_pic.generateBasicPioDeviceNode(soc_state,
+                            "lupio-pic", lupio_pic.pio_addr,
+                            lupio_pic.pio_size)
+        int_state = FdtState(interrupt_cells=1)
+        lupio_pic_node.append(int_state.interruptCellsProperty())
+        phandle = state.phandle(lupio_pic)
+        lupio_pic_node.append(FdtPropertyWords("phandle", [phandle]))
+        int_extended = list()
+        for i, core in enumerate(self.get_processor().get_cores()):
+            phandle = state.phandle(f"cpu@{i}.int_state")
+            int_extended.append(phandle)
+            int_extended.append(self._excep_code['INT_EXT_SUPER'])
+        lupio_pic_node.append(
+            FdtPropertyWords("interrupts-extended", int_extended))
+        lupio_pic_node.append(FdtProperty("interrupt-controller"))
+        lupio_pic_node.appendCompatible(["lupio,pic"])
+        soc_node.append(lupio_pic_node)
+
         # LupioBLK Device
         lupio_blk = self.lupio_blk
         lupio_blk_node = lupio_blk.generateBasicPioDeviceNode(soc_state,
@@ -382,7 +454,7 @@ class LupvBoard(SimpleBoard):
                 [self.lupio_blk.int_id]))
         lupio_blk_node.append(
                 FdtPropertyWords("interrupt-parent",
-                state.phandle(self.pic)))
+                state.phandle(self.lupio_pic)))
         soc_node.append(lupio_blk_node)
 
         # LupioRNG Device
@@ -395,7 +467,7 @@ class LupvBoard(SimpleBoard):
                 [self.lupio_rng.int_id]))
         lupio_rng_node.append(
                 FdtPropertyWords("interrupt-parent",
-                state.phandle(self.pic)))
+                state.phandle(self.lupio_pic)))
         soc_node.append(lupio_rng_node)
 
         # LupioRTC Device
@@ -416,7 +488,7 @@ class LupvBoard(SimpleBoard):
                 [self.lupio_tty.int_id]))
         lupio_tty_node.append(
                 FdtPropertyWords("interrupt-parent",
-                state.phandle(self.pic)))
+                state.phandle(self.lupio_pic)))
         soc_node.append(lupio_tty_node)
 
         root.append(soc_node)

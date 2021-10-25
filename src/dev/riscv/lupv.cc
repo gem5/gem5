@@ -28,7 +28,7 @@
 
 #include "dev/riscv/lupv.hh"
 
-#include "dev/riscv/plic.hh"
+#include "dev/lupio/lupio_pic.hh"
 #include "params/LupV.hh"
 
 namespace gem5
