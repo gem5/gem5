@@ -42,7 +42,7 @@ void Decoder::reset()
 {
     aligned = true;
     mid = false;
-    more = true;
+    outOfBytes = true;
     emi = 0;
     instDone = false;
 }
@@ -63,19 +63,19 @@ Decoder::moreBytes(const PCStateBase &pc, Addr fetchPC)
         emi = inst;
         if (compressed(emi))
             emi = bits(emi, mid_bit, 0);
-        more = !compressed(emi);
+        outOfBytes = !compressed(emi);
         instDone = true;
     } else {
         if (mid) {
             assert(bits(emi, max_bit, mid_bit + 1) == 0);
             replaceBits(emi, max_bit, mid_bit + 1, inst);
             mid = false;
-            more = false;
+            outOfBytes = false;
             instDone = true;
         } else {
             emi = bits(inst, max_bit, mid_bit + 1);
             mid = !compressed(emi);
-            more = true;
+            outOfBytes = true;
             instDone = compressed(emi);
         }
     }

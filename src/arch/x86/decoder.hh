@@ -174,8 +174,6 @@ class Decoder : public InstDecoder
 
     // State machine state.
   protected:
-    // Whether or not we're out of bytes.
-    bool outOfBytes = true;
     // The size of the displacement value.
     int displacementSize;
     // The size of the immediate value.
@@ -320,8 +318,6 @@ class Decoder : public InstDecoder
         outOfBytes = false;
         process();
     }
-
-    bool needMoreBytes() { return outOfBytes; }
 
     void
     updateNPC(X86ISA::PCState &nextPC)

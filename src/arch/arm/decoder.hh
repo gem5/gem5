@@ -66,7 +66,6 @@ class Decoder : public InstDecoder
     ExtMachInst emi;
     uint32_t data;
     bool bigThumb;
-    bool outOfBytes;
     int offset;
     bool foundIt;
     ITSTATE itBits;
@@ -135,15 +134,6 @@ class Decoder : public InstDecoder
 
     /** Reset the decoders internal state. */
     void reset();
-
-    /**
-     * Can the decoder accept more data?
-     *
-     * A CPU model uses this method to determine if the decoder can
-     * accept more data. Note that an instruction can be ready (see
-     * instReady() even if this method returns true.
-     */
-    bool needMoreBytes() const { return outOfBytes; }
 
     /**
      * Feed data to the decoder.

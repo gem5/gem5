@@ -44,6 +44,7 @@ class InstDecoder
     Addr _pcMask;
 
     bool instDone = false;
+    bool outOfBytes = true;
 
   public:
     template <typename MoreBytesType>
@@ -68,6 +69,15 @@ class InstDecoder
      * decode a full instruction.
      */
     bool instReady() const { return instDone; }
+
+    /**
+     * Can the decoder accept more data?
+     *
+     * A CPU model uses this method to determine if the decoder can
+     * accept more data. Note that an instruction can be ready (see
+     * instReady() even if this method returns true.
+     */
+    bool needMoreBytes() const { return outOfBytes; }
 };
 
 } // namespace gem5
