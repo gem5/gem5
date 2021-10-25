@@ -378,12 +378,24 @@ let {{
     decoder_output += MiscRegRegOp64Constructor.subst(msrTlbiIop)
     exec_output += BasicExecute.subst(msrTlbiIop)
 
+    dvmCode = '''
+    if (dvmEnabled) {
+        Request::Flags memAccessFlags =
+            Request::STRICT_ORDER | Request::TLBI;
+
+        fault = xc->initiateSpecialMemCmd(memAccessFlags);
+
+        PendingDvm = true;
+    }
+    '''
     msrTlbiSIop = ArmInstObjParams("msr", "Tlbi64ShareableHub", "TlbiOp64",
-                                  tlbiCode,
+                                  { "code" : tlbiCode, "dvm_code" : dvmCode },
                                   ["IsSerializeAfter", "IsNonSpeculative"])
-    header_output += MiscRegRegOp64Declare.subst(msrTlbiSIop)
-    decoder_output += MiscRegRegOp64Constructor.subst(msrTlbiSIop)
+    header_output += DvmTlbiDeclare.subst(msrTlbiSIop)
+    decoder_output += DvmTlbiConstructor.subst(msrTlbiSIop)
     exec_output += BasicExecute.subst(msrTlbiSIop)
+    exec_output += DvmInitiateAcc.subst(msrTlbiSIop)
+    exec_output += DvmCompleteAcc.subst(msrTlbiSIop)
 
     buildDataXRegInst("msrNZCV", 1, '''
         CPSR cpsr = XOp1;

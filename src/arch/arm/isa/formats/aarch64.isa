@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 Arm Limited
+// Copyright (c) 2011-2022 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -37,7 +37,7 @@ output header {{
 namespace Aarch64
 {
     StaticInstPtr decodeDataProcImm(ExtMachInst machInst);
-    StaticInstPtr decodeBranchExcSys(ExtMachInst machInst);
+    StaticInstPtr decodeBranchExcSys(const Decoder &dec, ExtMachInst machInst);
     StaticInstPtr decodeLoadsStores(ExtMachInst machInst);
     StaticInstPtr decodeDataProcReg(ExtMachInst machInst);
 
@@ -207,7 +207,7 @@ output decoder {{
 namespace Aarch64
 {
     StaticInstPtr
-    decodeBranchExcSys(ExtMachInst machInst)
+    decodeBranchExcSys(const Decoder &dec, ExtMachInst machInst)
     {
         switch (bits(machInst, 30, 29)) {
           case 0x0:
@@ -551,7 +551,7 @@ namespace Aarch64
                               case MISCREG_TLBI_IPAS2E1IS_Xt:
                               case MISCREG_TLBI_IPAS2LE1IS_Xt:
                                 return new Tlbi64ShareableHub(
-                                  machInst, miscReg, rt, iss);
+                                  machInst, miscReg, rt, iss, dec.dvmEnabled);
                               default:
                                 return new Msr64(machInst, miscReg, rt, iss);
                             }
@@ -3106,7 +3106,7 @@ def format Aarch64() {{
                 return decodeDataProcImm(machInst);
             else
                 // bit 28:26=101
-                return decodeBranchExcSys(machInst);
+                return decodeBranchExcSys(*this, machInst);
         } else if (bits(machInst, 25) == 0) {
             // bit 27=1, 25=0
             return decodeLoadsStores(machInst);
