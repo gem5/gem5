@@ -43,6 +43,8 @@ class InstDecoder
     size_t _moreBytesSize;
     Addr _pcMask;
 
+    bool instDone = false;
+
   public:
     template <typename MoreBytesType>
     InstDecoder(MoreBytesType *mb_buf) :
@@ -56,6 +58,16 @@ class InstDecoder
     void *moreBytesPtr() const { return _moreBytesPtr; }
     size_t moreBytesSize() const { return _moreBytesSize; }
     Addr pcMask() const { return _pcMask; }
+
+    /**
+     * Is an instruction ready to be decoded?
+     *
+     * CPU models call this method to determine if decode() will
+     * return a new instruction on the next call. It typically only
+     * returns false if the decoder hasn't received enough data to
+     * decode a full instruction.
+     */
+    bool instReady() const { return instDone; }
 };
 
 } // namespace gem5

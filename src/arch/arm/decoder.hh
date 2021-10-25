@@ -66,7 +66,6 @@ class Decoder : public InstDecoder
     ExtMachInst emi;
     uint32_t data;
     bool bigThumb;
-    bool instDone;
     bool outOfBytes;
     int offset;
     bool foundIt;
@@ -145,16 +144,6 @@ class Decoder : public InstDecoder
      * instReady() even if this method returns true.
      */
     bool needMoreBytes() const { return outOfBytes; }
-
-    /**
-     * Is an instruction ready to be decoded?
-     *
-     * CPU models call this method to determine if decode() will
-     * return a new instruction on the next call. It typically only
-     * returns false if the decoder hasn't received enough data to
-     * decode a full instruction.
-     */
-    bool instReady() const { return instDone; }
 
     /**
      * Feed data to the decoder.

@@ -176,8 +176,6 @@ class Decoder : public InstDecoder
   protected:
     // Whether or not we're out of bytes.
     bool outOfBytes = true;
-    // Whether we've completed generating an ExtMachInst.
-    bool instDone = false;
     // The size of the displacement value.
     int displacementSize;
     // The size of the immediate value.
@@ -324,7 +322,6 @@ class Decoder : public InstDecoder
     }
 
     bool needMoreBytes() { return outOfBytes; }
-    bool instReady() { return instDone; }
 
     void
     updateNPC(X86ISA::PCState &nextPC)
