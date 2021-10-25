@@ -42,9 +42,7 @@ void Decoder::reset()
 {
     aligned = true;
     mid = false;
-    outOfBytes = true;
     emi = 0;
-    instDone = false;
 }
 
 void

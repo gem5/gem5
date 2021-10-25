@@ -55,6 +55,12 @@ class InstDecoder
 
     virtual StaticInstPtr fetchRomMicroop(
             MicroPC micropc, StaticInstPtr curMacroop);
+    virtual void
+    reset()
+    {
+        instDone = false;
+        outOfBytes = true;
+    }
 
     void *moreBytesPtr() const { return _moreBytesPtr; }
     size_t moreBytesSize() const { return _moreBytesSize; }

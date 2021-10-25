@@ -68,7 +68,7 @@ class Decoder : public InstDecoder
     Decoder(ISA* isa=nullptr) : InstDecoder(&machInst) { reset(); }
 
     void process() {}
-    void reset();
+    void reset() override;
 
     inline bool compressed(ExtMachInst inst) { return (inst & 0x3) < 0x3; }
 

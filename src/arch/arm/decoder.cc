@@ -67,11 +67,10 @@ Decoder::Decoder(ISA* isa)
 void
 Decoder::reset()
 {
+    InstDecoder::reset();
     bigThumb = false;
     offset = 0;
     emi = 0;
-    instDone = false;
-    outOfBytes = true;
     foundIt = false;
 }
 
