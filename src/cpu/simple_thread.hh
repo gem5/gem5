@@ -143,11 +143,11 @@ class SimpleThread : public ThreadState, public ThreadContext
     // constructor: initialize SimpleThread from given process structure
     // FS
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
-                 BaseMMU *_mmu, BaseISA *_isa);
+                 BaseMMU *_mmu, BaseISA *_isa, InstDecoder *_decoder);
     // SE
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
                  Process *_process, BaseMMU *_mmu,
-                 BaseISA *_isa);
+                 BaseISA *_isa, InstDecoder *_decoder);
 
     virtual ~SimpleThread() {}
 

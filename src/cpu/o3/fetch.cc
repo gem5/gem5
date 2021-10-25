@@ -136,8 +136,7 @@ Fetch::Fetch(CPU *_cpu, const O3CPUParams &params)
     branchPred = params.branchPred;
 
     for (ThreadID tid = 0; tid < numThreads; tid++) {
-        decoder[tid] = new TheISA::Decoder(
-                dynamic_cast<TheISA::ISA *>(params.isa[tid]));
+        decoder[tid] = params.decoder[tid];
         // Create space to buffer the cache line data,
         // which may not hold the entire cache line.
         fetchBuffer[tid] = new uint8_t[fetchBufferSize];

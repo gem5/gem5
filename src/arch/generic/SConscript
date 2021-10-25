@@ -45,6 +45,7 @@ SimObject('BaseInterrupts.py')
 SimObject('BaseISA.py')
 SimObject('BaseMMU.py')
 SimObject('BaseTLB.py')
+SimObject('InstDecoder.py')
 
 DebugFlag('PageTableWalker',
           "Page table walker state machine debugging")
@@ -52,8 +53,5 @@ DebugFlag('TLB')
 
 GTest('vec_reg.test', 'vec_reg.test.cc')
 GTest('vec_pred_reg.test', 'vec_pred_reg.test.cc')
-
-if env['TARGET_ISA'] == 'null':
-    Return()
 
 Source('decoder.cc')

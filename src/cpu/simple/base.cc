@@ -93,10 +93,11 @@ BaseSimpleCPU::BaseSimpleCPU(const BaseSimpleCPUParams &p)
     for (unsigned i = 0; i < numThreads; i++) {
         if (FullSystem) {
             thread = new SimpleThread(
-                this, i, p.system, p.mmu, p.isa[i]);
+                this, i, p.system, p.mmu, p.isa[i], p.decoder[i]);
         } else {
             thread = new SimpleThread(
-                this, i, p.system, p.workload[i], p.mmu, p.isa[i]);
+                this, i, p.system, p.workload[i], p.mmu, p.isa[i],
+                p.decoder[i]);
         }
         threadInfo.push_back(new SimpleExecContext(this, thread));
         ThreadContext *tc = thread->getTC();

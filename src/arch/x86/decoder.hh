@@ -44,6 +44,7 @@
 #include "cpu/decode_cache.hh"
 #include "cpu/static_inst.hh"
 #include "debug/Decoder.hh"
+#include "params/X86Decoder.hh"
 
 namespace gem5
 {
@@ -253,7 +254,7 @@ class Decoder : public InstDecoder
     void process();
 
   public:
-    Decoder(ISA *isa=nullptr) : InstDecoder(&fetchChunk)
+    Decoder(const X86DecoderParams &p) : InstDecoder(p, &fetchChunk)
     {
         emi.reset();
         emi.mode.mode = mode;

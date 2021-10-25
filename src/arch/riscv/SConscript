@@ -62,6 +62,7 @@ Source('bare_metal/fs_workload.cc', tags='riscv isa')
 
 SimObject('PMAChecker.py', tags='riscv isa')
 SimObject('PMP.py', tags='riscv isa')
+SimObject('RiscvDecoder.py', tags='riscv isa')
 SimObject('RiscvFsWorkload.py', tags='riscv isa')
 SimObject('RiscvInterrupts.py', tags='riscv isa')
 SimObject('RiscvISA.py', tags='riscv isa')

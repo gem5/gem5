@@ -43,6 +43,7 @@ Source('se_workload.cc', tags='mips isa')
 Source('tlb.cc', tags='mips isa')
 Source('utility.cc', tags='mips isa')
 
+SimObject('MipsDecoder.py', tags='mips isa')
 SimObject('MipsInterrupts.py', tags='mips isa')
 SimObject('MipsISA.py', tags='mips isa')
 SimObject('MipsMMU.py', tags='mips isa')

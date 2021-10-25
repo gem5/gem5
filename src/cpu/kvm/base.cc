@@ -87,11 +87,11 @@ BaseKvmCPU::BaseKvmCPU(const BaseKvmCPUParams &params)
 
     if (FullSystem)
         thread = new SimpleThread(this, 0, params.system, params.mmu,
-                                  params.isa[0]);
+                                  params.isa[0], params.decoder[0]);
     else
         thread = new SimpleThread(this, /* thread_num */ 0, params.system,
                                   params.workload[0], params.mmu,
-                                  params.isa[0]);
+                                  params.isa[0], params.decoder[0]);
 
     thread->setStatus(ThreadContext::Halted);
     tc = thread->getTC();

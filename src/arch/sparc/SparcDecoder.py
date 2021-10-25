@@ -1,9 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2009 The University of Edinburgh
-# Copyright (c) 2020 LabWare
-# Copyright (c) 2021 IBM Corporation
-# All rights reserved.
+# Copyright 2021 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -28,31 +23,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.objects.InstDecoder import InstDecoder
 
-Source('decoder.cc', tags='power isa')
-Source('faults.cc', tags='power isa')
-Source('insts/branch.cc', tags='power isa')
-Source('insts/mem.cc', tags='power isa')
-Source('insts/integer.cc', tags='power isa')
-Source('insts/floating.cc', tags='power isa')
-Source('insts/condition.cc', tags='power isa')
-Source('insts/static_inst.cc', tags='power isa')
-Source('linux/se_workload.cc', tags='power isa')
-Source('isa.cc', tags='power isa')
-Source('pagetable.cc', tags='power isa')
-Source('process.cc', tags='power isa')
-Source('remote_gdb.cc', tags='power isa')
-Source('se_workload.cc', tags='power isa')
-Source('tlb.cc', tags='power isa')
-
-SimObject('PowerDecoder.py', tags='power isa')
-SimObject('PowerInterrupts.py', tags='power isa')
-SimObject('PowerISA.py', tags='power isa')
-SimObject('PowerMMU.py', tags='power isa')
-SimObject('PowerSeWorkload.py', tags='power isa')
-SimObject('PowerTLB.py', tags='power isa')
-
-DebugFlag('Power', tags='power isa')
-
-ISADesc('isa/main.isa', tags='power isa')
+class SparcDecoder(InstDecoder):
+    type = 'SparcDecoder'
+    cxx_class = 'gem5::SparcISA::Decoder'
+    cxx_header = "arch/sparc/decoder.hh"

@@ -33,11 +33,13 @@
 #include "base/intmath.hh"
 #include "base/types.hh"
 #include "cpu/static_inst_fwd.hh"
+#include "params/InstDecoder.hh"
+#include "sim/sim_object.hh"
 
 namespace gem5
 {
 
-class InstDecoder
+class InstDecoder : public SimObject
 {
   protected:
     void *_moreBytesPtr;
@@ -49,8 +51,9 @@ class InstDecoder
 
   public:
     template <typename MoreBytesType>
-    InstDecoder(MoreBytesType *mb_buf) :
-        _moreBytesPtr(mb_buf), _moreBytesSize(sizeof(MoreBytesType)),
+    InstDecoder(const InstDecoderParams &params, MoreBytesType *mb_buf) :
+        SimObject(params), _moreBytesPtr(mb_buf),
+        _moreBytesSize(sizeof(MoreBytesType)),
         _pcMask(~mask(floorLog2(_moreBytesSize)))
     {}
 

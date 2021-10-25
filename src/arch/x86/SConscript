@@ -63,6 +63,7 @@ Source('utility.cc', tags='x86 isa')
 
 SimObject('X86SeWorkload.py', tags='x86 isa')
 SimObject('X86FsWorkload.py', tags='x86 isa')
+SimObject('X86Decoder.py', tags='x86 isa')
 SimObject('X86ISA.py', tags='x86 isa')
 SimObject('X86LocalApic.py', tags='x86 isa')
 SimObject('X86MMU.py', tags='x86 isa')

@@ -101,11 +101,12 @@ CheckerCPU::setSystem(System *system)
     systemPtr = system;
 
     if (FullSystem) {
-        thread = new SimpleThread(this, 0, systemPtr, mmu, p.isa[0]);
+        thread = new SimpleThread(this, 0, systemPtr, mmu, p.isa[0],
+                                  p.decoder[0]);
     } else {
         thread = new SimpleThread(this, 0, systemPtr,
                                   workload.size() ? workload[0] : NULL,
-                                  mmu, p.isa[0]);
+                                  mmu, p.isa[0], p.decoder[0]);
     }
 
     tc = thread->getTC();

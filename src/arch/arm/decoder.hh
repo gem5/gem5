@@ -51,6 +51,7 @@
 #include "cpu/static_inst.hh"
 #include "debug/Decode.hh"
 #include "enums/DecoderFlavor.hh"
+#include "params/ArmDecoder.hh"
 
 namespace gem5
 {
@@ -130,7 +131,7 @@ class Decoder : public InstDecoder
     }
 
   public: // Decoder API
-    Decoder(ISA* isa = nullptr);
+    Decoder(const ArmDecoderParams &params);
 
     /** Reset the decoders internal state. */
     void reset() override;

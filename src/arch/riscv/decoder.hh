@@ -37,6 +37,7 @@
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
 #include "debug/Decode.hh"
+#include "params/RiscvDecoder.hh"
 
 namespace gem5
 {
@@ -65,7 +66,10 @@ class Decoder : public InstDecoder
     StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
 
   public:
-    Decoder(ISA* isa=nullptr) : InstDecoder(&machInst) { reset(); }
+    Decoder(const RiscvDecoderParams &p) : InstDecoder(p, &machInst)
+    {
+        reset();
+    }
 
     void reset() override;
 

@@ -35,6 +35,7 @@
 #include "arch/power/types.hh"
 #include "cpu/static_inst.hh"
 #include "debug/Decode.hh"
+#include "params/PowerDecoder.hh"
 
 namespace gem5
 {
@@ -50,7 +51,7 @@ class Decoder : public InstDecoder
     ExtMachInst emi;
 
   public:
-    Decoder(ISA* isa=nullptr) : InstDecoder(&emi) {}
+    Decoder(const PowerDecoderParams &p) : InstDecoder(p, &emi) {}
 
     // Use this to give data to the predecoder. This should be used
     // when there is control flow.

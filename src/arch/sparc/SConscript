@@ -43,6 +43,7 @@ Source('se_workload.cc', tags='sparc isa')
 Source('tlb.cc', tags='sparc isa')
 Source('ua2005.cc', tags='sparc isa')
 
+SimObject('SparcDecoder.py', tags='sparc isa')
 SimObject('SparcFsWorkload.py', tags='sparc isa')
 SimObject('SparcInterrupts.py', tags='sparc isa')
 SimObject('SparcISA.py', tags='sparc isa')
