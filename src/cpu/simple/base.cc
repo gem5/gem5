@@ -474,9 +474,7 @@ BaseSimpleCPU::advancePC(const Fault &fault)
         if (curStaticInst) {
             if (curStaticInst->isLastMicroop())
                 curMacroStaticInst = nullStaticInstPtr;
-            std::unique_ptr<PCStateBase> pc(thread->pcState().clone());
-            curStaticInst->advancePC(*pc);
-            thread->pcState(*pc);
+            curStaticInst->advancePC(thread);
         }
     }
 

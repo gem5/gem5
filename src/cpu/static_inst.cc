@@ -30,6 +30,8 @@
 
 #include <iostream>
 
+#include "cpu/thread_context.hh"
+
 namespace gem5
 {
 
@@ -80,6 +82,14 @@ StaticInst::printFlags(std::ostream &outs,
             printed_a_flag = true;
         }
     }
+}
+
+void
+StaticInst::advancePC(ThreadContext *tc) const
+{
+    std::unique_ptr<PCStateBase> pc(tc->pcState().clone());
+    advancePC(*pc);
+    tc->pcState(*pc);
 }
 
 } // namespace gem5

@@ -74,10 +74,8 @@ Checker<DynInstPtr>::advancePC(const Fault &fault)
         if (curStaticInst) {
             if (curStaticInst->isLastMicroop())
                 curMacroStaticInst = nullStaticInstPtr;
-            std::unique_ptr<PCStateBase> pc_ptr(thread->pcState().clone());
-            curStaticInst->advancePC(*pc_ptr);
-            thread->pcState(*pc_ptr);
-            DPRINTF(Checker, "Advancing PC to %s.\n", *pc_ptr);
+            curStaticInst->advancePC(thread);
+            DPRINTF(Checker, "Advancing PC to %s.\n", thread->pcState());
         }
     }
 }
