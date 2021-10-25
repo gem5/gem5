@@ -47,10 +47,6 @@
 // Before we do anything else, check if this build is the NULL ISA,
 // and if so stop here
 #include "config/the_isa.hh"
-
-#if IS_NULL_ISA
-#error Including BaseCPU in a system without CPU support
-#else
 #include "arch/generic/interrupts.hh"
 #include "base/statistics.hh"
 #include "debug/Mwait.hh"
@@ -649,7 +645,5 @@ class BaseCPU : public ClockedObject
 };
 
 } // namespace gem5
-
-#endif // !IS_NULL_ISA
 
 #endif // __CPU_BASE_HH__

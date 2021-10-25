@@ -40,9 +40,6 @@
 
 Import('*')
 
-if env['CONF']['TARGET_ISA'] == 'null':
-    Return()
-
 SimObject('Serial.py', sim_objects=['SerialDevice', 'SerialNullDevice'])
 SimObject('Terminal.py', sim_objects=['Terminal'], enums=['TerminalDump'])
 SimObject('Uart.py', sim_objects=['Uart', 'SimpleUart', 'Uart8250'])
