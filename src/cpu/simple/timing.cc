@@ -1236,7 +1236,7 @@ TimingSimpleCPU::initiateSpecialMemCmd(Request::Flags flags)
     req->taskId(taskId());
     req->setInstCount(t_info.numInst);
 
-    assert(req->isHTMCmd());
+    assert(req->isHTMCmd() || req->isTlbiCmd());
 
     // Use the payload as a sanity check,
     // the memory subsystem will clear allocated data
@@ -1246,14 +1246,19 @@ TimingSimpleCPU::initiateSpecialMemCmd(Request::Flags flags)
     memcpy (data, &rc, size);
 
     // debugging output
-    if (req->isHTMStart())
-        DPRINTF(HtmCpu, "HTMstart htmUid=%u\n", t_info.getHtmTransactionUid());
-    else if (req->isHTMCommit())
-        DPRINTF(HtmCpu, "HTMcommit htmUid=%u\n", t_info.getHtmTransactionUid());
-    else if (req->isHTMCancel())
-        DPRINTF(HtmCpu, "HTMcancel htmUid=%u\n", t_info.getHtmTransactionUid());
-    else
-        panic("initiateHtmCmd: unknown CMD");
+    if (req->isHTMCmd()) {
+        if (req->isHTMStart())
+            DPRINTF(HtmCpu, "HTMstart htmUid=%u\n",
+                t_info.getHtmTransactionUid());
+        else if (req->isHTMCommit())
+            DPRINTF(HtmCpu, "HTMcommit htmUid=%u\n",
+                t_info.getHtmTransactionUid());
+        else if (req->isHTMCancel())
+            DPRINTF(HtmCpu, "HTMcancel htmUid=%u\n",
+                t_info.getHtmTransactionUid());
+        else
+            panic("initiateSpecialMemCmd: unknown HTM CMD");
+    }
 
     sendData(req, data, nullptr, true);
 
