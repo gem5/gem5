@@ -100,14 +100,15 @@ HSAPacketProcessor::setDeviceQueueDesc(uint64_t hostReadIndexPointer,
                                        uint64_t basePointer,
                                        uint64_t queue_id,
                                        uint32_t size, int doorbellSize,
-                                       GfxVersion gfxVersion)
+                                       GfxVersion gfxVersion,
+                                       Addr offset, uint64_t rd_idx)
 {
     DPRINTF(HSAPacketProcessor,
              "%s:base = %p, qID = %d, ze = %d\n", __FUNCTION__,
              (void *)basePointer, queue_id, size);
     hwSchdlr->registerNewQueue(hostReadIndexPointer,
                                basePointer, queue_id, size, doorbellSize,
-                               gfxVersion);
+                               gfxVersion, offset, rd_idx);
 }
 
 AddrRangeList
@@ -580,6 +581,20 @@ AQLRingBuffer::AQLRingBuffer(uint32_t size,
     for (auto& it : _aqlBuf)
         it.header = HSA_PACKET_TYPE_INVALID;
     std::fill(_aqlComplete.begin(), _aqlComplete.end(), false);
+}
+
+void
+AQLRingBuffer::setRdIdx(uint64_t value)
+{
+    _rdIdx = value;
+
+    // Mark entries below the previous doorbell value as complete. This will
+    // cause the next call to freeEntry on the queue to increment the read
+    // index to the next value which will be written to the doorbell.
+    for (int i = 0; i <= value; ++i) {
+        _aqlComplete[i] = true;
+        DPRINTF(HSAPacketProcessor, "Marking _aqlComplete[%d] true\n", i);
+    }
 }
 
 bool

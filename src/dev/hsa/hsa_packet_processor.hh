@@ -232,6 +232,7 @@ class AQLRingBuffer
      void incWrIdx(uint64_t value) { _wrIdx += value; }
      void incDispIdx(uint64_t value) { _dispIdx += value; }
      uint64_t compltnPending() { return (_dispIdx - _rdIdx); }
+     void setRdIdx(uint64_t value);
 };
 
 struct QCntxt
@@ -351,11 +352,13 @@ class HSAPacketProcessor: public DmaVirtDevice
                             uint64_t basePointer,
                             uint64_t queue_id,
                             uint32_t size, int doorbellSize,
-                            GfxVersion gfxVersion);
+                            GfxVersion gfxVersion,
+                            Addr offset = 0, uint64_t rd_idx = 0);
     void unsetDeviceQueueDesc(uint64_t queue_id, int doorbellSize);
     void setDevice(GPUCommandProcessor * dev);
     void updateReadIndex(int, uint32_t);
     void getCommandsFromHost(int pid, uint32_t rl_idx);
+    HWScheduler *hwScheduler() { return hwSchdlr; }
 
     // PIO interface
     virtual Tick read(Packet*) override;
