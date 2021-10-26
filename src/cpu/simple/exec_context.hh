@@ -430,20 +430,23 @@ class SimpleExecContext : public ExecContext
             byte_enable);
     }
 
-    Fault amoMem(Addr addr, uint8_t *data, unsigned int size,
-                 Request::Flags flags, AtomicOpFunctorPtr amo_op) override
+    Fault
+    amoMem(Addr addr, uint8_t *data, unsigned int size,
+           Request::Flags flags, AtomicOpFunctorPtr amo_op) override
     {
         return cpu->amoMem(addr, data, size, flags, std::move(amo_op));
     }
 
-    Fault initiateMemAMO(Addr addr, unsigned int size,
-                         Request::Flags flags,
-                         AtomicOpFunctorPtr amo_op) override
+    Fault
+    initiateMemAMO(Addr addr, unsigned int size,
+                   Request::Flags flags,
+                   AtomicOpFunctorPtr amo_op) override
     {
         return cpu->initiateMemAMO(addr, size, flags, std::move(amo_op));
     }
 
-    Fault initiateHtmCmd(Request::Flags flags) override
+    Fault
+    initiateHtmCmd(Request::Flags flags) override
     {
         return cpu->initiateHtmCmd(flags);
     }
