@@ -1,16 +1,5 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2013 Andreas Sandberg
 # All rights reserved.
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -35,27 +24,23 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.params import *
+from m5.SimObject import *
 
-if not env['USE_KVM'] or env['TARGET_ISA'] != env['KVM_ISA']:
-    Return()
+from m5.objects.BaseKvmCPU import BaseKvmCPU
 
-SimObject('KvmVM.py')
-SimObject('BaseKvmCPU.py')
+class X86KvmCPU(BaseKvmCPU):
+    type = 'X86KvmCPU'
+    cxx_header = "arch/x86/kvm/x86_cpu.hh"
+    cxx_class = 'gem5::X86KvmCPU'
 
-Source('base.cc')
-Source('device.cc')
-Source('vm.cc')
-Source('perfevent.cc')
-Source('timer.cc')
+    cxx_exports = [
+        PyBindMethod("dumpFpuRegs"),
+        PyBindMethod("dumpIntRegs"),
+        PyBindMethod("dumpSpecRegs"),
+        PyBindMethod("dumpXCRs"),
+        PyBindMethod("dumpXSave"),
+        PyBindMethod("dumpVCpuEvents"),
+    ]
 
-DebugFlag('Kvm', 'Basic KVM Functionality')
-DebugFlag('KvmContext', 'KVM/gem5 context synchronization')
-DebugFlag('KvmIO', 'KVM MMIO diagnostics')
-DebugFlag('KvmInt', 'KVM Interrupt handling')
-DebugFlag('KvmRun', 'KvmRun entry/exit diagnostics')
-DebugFlag('KvmTimer', 'KVM timing')
-
-CompoundFlag('KvmAll', [ 'Kvm', 'KvmContext', 'KvmRun',
-                         'KvmIO', 'KvmInt', 'KvmTimer' ],
-             'All KVM debug flags')
+    useXSave = Param.Bool(True, "Use XSave to synchronize FPU/SIMD registers")

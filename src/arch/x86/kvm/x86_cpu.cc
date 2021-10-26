@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/kvm/x86_cpu.hh"
+#include "arch/x86/kvm/x86_cpu.hh"
 
 #include <linux/kvm.h>
 
@@ -193,10 +193,12 @@ static void
 dumpKvm(const char *reg_name, const struct kvm_segment &seg)
 {
     inform("\t%s: @0x%llx+%x [sel: 0x%x, type: 0x%x]\n"
-           "\t\tpres.: %u, dpl: %u, db: %u, s: %u, l: %u, g: %u, avl: %u, unus.: %u\n",
+           "\t\tpres.: %u, dpl: %u, db: %u, s: %u, l: %u, g: %u, avl: %u, "
+           "unus.: %u\n",
            reg_name,
            seg.base, seg.limit, seg.selector, seg.type,
-           seg.present, seg.dpl, seg.db, seg.s, seg.l, seg.g, seg.avl, seg.unusable);
+           seg.present, seg.dpl, seg.db, seg.s, seg.l, seg.g, seg.avl,
+           seg.unusable);
 }
 
 static void
@@ -547,8 +549,8 @@ X86KvmCPU::X86KvmCPU(const X86KvmCPUParams &params)
     haveXCRs = kvm.capXCRs();
 
     if (useXSave && !haveXSave) {
-        warn("KVM: XSAVE not supported by host. MXCSR synchronization might be "
-             "unreliable due to kernel bugs.\n");
+        warn("KVM: XSAVE not supported by host. MXCSR synchronization might "
+             "be unreliable due to kernel bugs.\n");
         useXSave = false;
     } else if (!useXSave) {
         warn("KVM: XSave FPU/SIMD synchronization disabled by user.\n");
@@ -1321,7 +1323,8 @@ X86KvmCPU::handleKvmExitIO()
         handleIOMiscReg32(MISCREG_PCI_CONFIG_ADDRESS);
         return 0;
     } else if ((port & ~0x3) == IO_PCI_CONF_DATA_BASE) {
-        Addr pciConfigAddr(tc->readMiscRegNoEffect(MISCREG_PCI_CONFIG_ADDRESS));
+        Addr pciConfigAddr(tc->readMiscRegNoEffect(
+                    MISCREG_PCI_CONFIG_ADDRESS));
         if (pciConfigAddr & 0x80000000) {
             pAddr = X86ISA::x86PciConfigAddress((pciConfigAddr & 0x7ffffffc) |
                                                 (port & 0x3));
@@ -1473,7 +1476,8 @@ void
 X86KvmCPU::setCPUID(const Kvm::CPUIDVector &cpuid)
 {
     std::unique_ptr<struct kvm_cpuid2> kvm_cpuid(
-        newVarStruct<struct kvm_cpuid2, struct kvm_cpuid_entry2>(cpuid.size()));
+        newVarStruct<struct kvm_cpuid2, struct kvm_cpuid_entry2>(
+            cpuid.size()));
 
     kvm_cpuid->nent = cpuid.size();
     std::copy(cpuid.begin(), cpuid.end(), kvm_cpuid->entries);
