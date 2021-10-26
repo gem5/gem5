@@ -97,10 +97,10 @@ CPUProgressEvent::process()
     Counter temp = cpu->totalOps();
 
     if (_repeatEvent)
-      cpu->schedule(this, curTick() + _interval);
+        cpu->schedule(this, curTick() + _interval);
 
     if (cpu->switchedOut()) {
-      return;
+        return;
     }
 
 #ifndef NDEBUG
@@ -150,7 +150,7 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
     cpuList.push_back(this);
 
     DPRINTF(SyscallVerbose, "Constructing CPU with id %d, socket id %d\n",
-                _cpuId, _socketId);
+            _cpuId, _socketId);
 
     if (numThreads > maxThreadsPerCPU)
         maxThreadsPerCPU = numThreads;
@@ -196,7 +196,7 @@ BaseCPU::postInterrupt(ThreadID tid, int int_num, int index)
     interrupts[tid]->post(int_num, index);
     // Only wake up syscall emulation if it is not waiting on a futex.
     // This is to model the fact that instructions such as ARM SEV
-    // should wake up a WFE sleep, but not a futex syscall WAIT. */
+    // should wake up a WFE sleep, but not a futex syscall WAIT.
     if (FullSystem || !system->futexMap.is_waiting(threadContexts[tid]))
         wakeup(tid);
 }
@@ -210,7 +210,7 @@ BaseCPU::armMonitor(ThreadID tid, Addr address)
     monitor.armed = true;
     monitor.vAddr = address;
     monitor.pAddr = 0x0;
-    DPRINTF(Mwait,"[tid:%d] Armed monitor (vAddr=0x%lx)\n", tid, address);
+    DPRINTF(Mwait, "[tid:%d] Armed monitor (vAddr=0x%lx)\n", tid, address);
 }
 
 bool
@@ -227,7 +227,7 @@ BaseCPU::mwait(ThreadID tid, PacketPtr pkt)
         monitor.pAddr = pkt->getAddr() & mask;
         monitor.waiting = true;
 
-        DPRINTF(Mwait,"[tid:%d] mwait called (vAddr=0x%lx, "
+        DPRINTF(Mwait, "[tid:%d] mwait called (vAddr=0x%lx, "
                 "line's paddr=0x%lx)\n", tid, monitor.vAddr, monitor.pAddr);
         return true;
     } else {
@@ -264,7 +264,7 @@ BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseMMU *mmu)
     monitor.pAddr = req->getPaddr() & mask;
     monitor.waiting = true;
 
-    DPRINTF(Mwait,"[tid:%d] mwait called (vAddr=0x%lx, line's paddr=0x%lx)\n",
+    DPRINTF(Mwait, "[tid:%d] mwait called (vAddr=0x%lx, line's paddr=0x%lx)\n",
             tid, monitor.vAddr, monitor.pAddr);
 }
 
@@ -679,17 +679,20 @@ BaseCPU::getCurrentInstCount(ThreadID tid)
     return threadContexts[tid]->getCurrentInstCount();
 }
 
-AddressMonitor::AddressMonitor() {
+AddressMonitor::AddressMonitor()
+{
     armed = false;
     waiting = false;
     gotWakeup = false;
 }
 
-bool AddressMonitor::doMonitor(PacketPtr pkt) {
+bool
+AddressMonitor::doMonitor(PacketPtr pkt)
+{
     assert(pkt->req->hasPaddr());
     if (armed && waiting) {
         if (pAddr == pkt->getAddr()) {
-            DPRINTF(Mwait,"pAddr=0x%lx invalidated: waking up core\n",
+            DPRINTF(Mwait, "pAddr=0x%lx invalidated: waking up core\n",
                     pkt->getAddr());
             waiting = false;
             return true;

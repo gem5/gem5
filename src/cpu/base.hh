@@ -52,6 +52,7 @@
 #else
 #include "arch/generic/interrupts.hh"
 #include "base/statistics.hh"
+#include "debug/Mwait.hh"
 #include "mem/port_proxy.hh"
 #include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
@@ -60,7 +61,6 @@
 #include "sim/probe/pmu.hh"
 #include "sim/probe/probe.hh"
 #include "sim/system.hh"
-#include "debug/Mwait.hh"
 
 namespace gem5
 {
@@ -237,8 +237,7 @@ class BaseCPU : public ClockedObject
 
     virtual void wakeup(ThreadID tid) = 0;
 
-    void
-    postInterrupt(ThreadID tid, int int_num, int index);
+    void postInterrupt(ThreadID tid, int int_num, int index);
 
     void
     clearInterrupt(ThreadID tid, int int_num, int index)
@@ -283,20 +282,25 @@ class BaseCPU : public ClockedObject
     /// Notify the CPU that the indicated context is now halted.
     virtual void haltContext(ThreadID thread_num);
 
-   /// Given a Thread Context pointer return the thread num
-   int findContext(ThreadContext *tc);
+    /// Given a Thread Context pointer return the thread num
+    int findContext(ThreadContext *tc);
 
-   /// Given a thread num get tho thread context for it
-   virtual ThreadContext *getContext(int tn) { return threadContexts[tn]; }
+    /// Given a thread num get tho thread context for it
+    virtual ThreadContext *getContext(int tn) { return threadContexts[tn]; }
 
-   /// Get the number of thread contexts available
-   unsigned numContexts() {
-       return static_cast<unsigned>(threadContexts.size());
-   }
+    /// Get the number of thread contexts available
+    unsigned
+    numContexts()
+    {
+        return static_cast<unsigned>(threadContexts.size());
+    }
 
     /// Convert ContextID to threadID
-    ThreadID contextToThread(ContextID cid)
-    { return static_cast<ThreadID>(cid - threadContexts[0]->contextId()); }
+    ThreadID
+    contextToThread(ContextID cid)
+    {
+        return static_cast<ThreadID>(cid - threadContexts[0]->contextId());
+    }
 
   public:
     PARAMS(BaseCPU);
@@ -520,7 +524,8 @@ class BaseCPU : public ClockedObject
     CPUState previousState;
 
     /** base method keeping track of cycle progression **/
-    inline void updateCycleCounters(CPUState state)
+    inline void
+    updateCycleCounters(CPUState state)
     {
         uint32_t delta = curCycle() - previousCycle;
 
@@ -528,8 +533,7 @@ class BaseCPU : public ClockedObject
             ppActiveCycles->notify(delta);
         }
 
-        switch (state)
-        {
+        switch (state) {
           case CPU_STATE_WAKEUP:
             ppSleeping->notify(false);
             break;
@@ -560,14 +564,16 @@ class BaseCPU : public ClockedObject
     static std::vector<BaseCPU *> cpuList;   //!< Static global cpu list
 
   public:
-    void traceFunctions(Addr pc)
+    void
+    traceFunctions(Addr pc)
     {
         if (functionTracingEnabled)
             traceFunctionsInternal(pc);
     }
 
     static int numSimulatedCPUs() { return cpuList.size(); }
-    static Counter numSimulatedInsts()
+    static Counter
+    numSimulatedInsts()
     {
         Counter total = 0;
 
@@ -578,7 +584,8 @@ class BaseCPU : public ClockedObject
         return total;
     }
 
-    static Counter numSimulatedOps()
+    static Counter
+    numSimulatedOps()
     {
         Counter total = 0;
 
@@ -606,7 +613,8 @@ class BaseCPU : public ClockedObject
     void armMonitor(ThreadID tid, Addr address);
     bool mwait(ThreadID tid, PacketPtr pkt);
     void mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseMMU *mmu);
-    AddressMonitor *getCpuAddrMonitor(ThreadID tid)
+    AddressMonitor *
+    getCpuAddrMonitor(ThreadID tid)
     {
         assert(tid < numThreads);
         return &addressMonitor[tid];
