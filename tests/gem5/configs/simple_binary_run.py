@@ -67,13 +67,6 @@ parser.add_argument(
     help="The directory in which resources will be downloaded or exist.",
 )
 
-parser.add_argument(
-    "-o",
-    "--override-download",
-    action="store_true",
-    help="Override a local resource if the hashes do not match.",
-)
-
 args = parser.parse_args()
 
 def input_to_cputype(input: str) -> CPUTypes:
@@ -104,8 +97,7 @@ motherboard.connect_things()
 
 # Set the workload
 binary = Resource(args.resource,
-        resource_directory=args.resource_directory,
-        override=args.override_download)
+        resource_directory=args.resource_directory)
 motherboard.set_workload(binary)
 
 root = Root(full_system=False, system=motherboard)

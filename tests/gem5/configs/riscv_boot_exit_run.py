@@ -92,13 +92,6 @@ parser.add_argument(
     help="The directory in which resources will be downloaded or exist.",
 )
 
-parser.add_argument(
-    "-o",
-    "--override-download",
-    action="store_true",
-    help="Override a local resource if the hashes do not match.",
-)
-
 args = parser.parse_args()
 
 # Run a check to ensure the right version of gem5 is being used.
@@ -156,12 +149,10 @@ board.connect_things()
 board.set_kernel_disk_workload(
     kernel=Resource(
         "riscv-bootloader-vmlinux-5.10",
-        override=args.override_download,
         resource_directory=args.resource_directory,
     ),
     disk_image=Resource(
         "riscv-disk-img",
-        override=args.override_download,
         resource_directory=args.resource_directory,
     ),
 )

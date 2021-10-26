@@ -143,13 +143,6 @@ parser.add_argument(
     help="The directory in which resources will be downloaded or exist.",
 )
 
-parser.add_argument(
-    "-o",
-    "--override-download",
-    action="store_true",
-    help="Override a local resource if the hashes do not match.",
-)
-
 args = parser.parse_args()
 
 # Setup the cachie hierarchy.
@@ -238,12 +231,10 @@ board.set_kernel_disk_workload(
     kernel=Resource(
         "x86-linux-kernel-5.4.49",
         resource_directory=args.resource_directory,
-        override=args.override_download,
     ),
     disk_image=Resource(
         "x86-parsec",
         resource_directory=args.resource_directory,
-        override=args.override_download,
     ),
     readfile_contents=command,
 )

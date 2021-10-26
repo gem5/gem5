@@ -92,7 +92,6 @@ if have_hdf5():
         config_args=[
             "arm-hello64-static",
             "atomic",
-            "--override-download",
             "--resource-directory",
             resource_path,
         ],

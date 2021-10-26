@@ -79,7 +79,6 @@ def test_kvm_switch(cpu: str, num_cpus: int, mem_system: str, length: str):
             str(num_cpus),
             "--mem-system",
             mem_system,
-            "--override-download",
             "--resource-directory",
             resource_path,
             "--kernel-args=''",

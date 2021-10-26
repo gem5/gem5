@@ -92,12 +92,6 @@ parser.add_argument(
     help="The directory in which resources will be downloaded or exist.",
 )
 parser.add_argument(
-    "-o",
-    "--override-download",
-    action="store_true",
-    help="Override a local resource if the hashes do not match.",
-)
-parser.add_argument(
     "-k",
     "--kernel-args",
     type=str,
@@ -207,12 +201,10 @@ motherboard.connect_things()
 motherboard.set_kernel_disk_workload(
     kernel=Resource(
         "x86-linux-kernel-5.4.49",
-        override=args.override_download,
         resource_directory=args.resource_directory,
     ),
     disk_image=Resource(
         "x86-ubuntu-img",
-        override=args.override_download,
         resource_directory=args.resource_directory,
     ),
     readfile_contents=dedent(

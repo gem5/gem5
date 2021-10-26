@@ -91,7 +91,6 @@ def test_boot(
             mem_system,
             "--boot-type",
             boot_type,
-            "--override-download",
             "--resource-directory",
             resource_path,
         ]

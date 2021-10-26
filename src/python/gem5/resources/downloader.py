@@ -198,7 +198,7 @@ def get_resource(
     resource_name: str,
     to_path: str,
     unzip: bool = True,
-    override: bool = False,
+    download_md5_mismatch: bool = True,
 ) -> None:
     """
     Obtains a gem5 resource and stored it to a specified location. If the
@@ -212,10 +212,10 @@ def get_resource(
     :param unzip: If true, gzipped resources will be unzipped prior to saving
     to `to_path`. True by default.
 
-    :param override: If a resource is present with an incorrect hash (e.g.,
-    an outdated version of the resource is present), `get_resource` will delete
-    this local resource and re-download it if this parameter is True. False by
-    default.
+    :param download_md5_mismatch: If a resource is present with an incorrect
+    hash (e.g., an outdated version of the resource is present), `get_resource`
+    will delete this local resource and re-download it if this parameter is
+    True. True by default.
 
     :raises Exception: An exception is thrown if a file is already present at
     `to_path` but it does not have the correct md5 sum. An exception will also
@@ -242,7 +242,7 @@ def get_resource(
                 # In this case, the file has already been download, no need to
                 # do so again.
                 return
-            elif override:
+            elif download_md5_mismatch:
                 os.remove(to_path)
             else:
                 raise Exception(

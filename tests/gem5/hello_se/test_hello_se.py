@@ -107,7 +107,6 @@ def verify_config(isa, binary, cpu, hosts):
         config_args=[
             binary,
             cpu,
-            "--override-download",
             "--resource-directory",
             resource_path,
         ],

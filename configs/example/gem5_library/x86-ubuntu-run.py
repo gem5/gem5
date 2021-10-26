@@ -122,16 +122,10 @@ command = "m5 exit;" \
 board.set_kernel_disk_workload(
     # The x86 linux kernel will be automatically downloaded to the if not
     # already present.
-    kernel=Resource(
-        "x86-linux-kernel-5.4.49",
-        override=True,
-    ),
+    kernel=Resource("x86-linux-kernel-5.4.49"),
     # The x86 ubuntu image will be automatically downloaded to the if not
     # already present.
-    disk_image=Resource(
-        "x86-ubuntu-img",
-        override=True,
-    ),
+    disk_image=Resource("x86-ubuntu-img"),
     readfile_contents=command,
 )
 

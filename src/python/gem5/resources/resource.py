@@ -95,7 +95,7 @@ class Resource(AbstractResource):
         self,
         resource_name: str,
         resource_directory: Optional[str] = None,
-        override: bool = False,
+        download_md5_mismatch: bool = True,
     ):
         """
         :param resource_name: The name of the gem5 resource.
@@ -103,10 +103,10 @@ class Resource(AbstractResource):
         resource is to be stored. If this parameter is not set, it will set to
         the environment variable `GEM5_RESOURCE_DIR`. If the environment is not
         set it will default to `~/.cache/gem5` if available, otherwise the CWD.
-        :param override: If the resource is present, but does not have the
-        correct md5 value, the resoruce will be deleted and re-downloaded if
-        this value is True. Otherwise an exception will be thrown. False by
-        default.
+        :param download_md5_mismatch: If the resource is present, but does not
+        have the correct md5 value, the resoruce will be deleted and
+        re-downloaded if this value is True. Otherwise an exception will be
+        thrown. True by default.
         """
 
         if resource_directory == None:
@@ -131,7 +131,9 @@ class Resource(AbstractResource):
                     local_path=to_path,
                     metadata=get_resources_json_obj(resource_name))
         get_resource(
-            resource_name=resource_name, to_path=to_path, override=override
+            resource_name=resource_name,
+            to_path=to_path,
+            download_md5_mismatch=download_md5_mismatch
         )
 
 

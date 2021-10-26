@@ -84,20 +84,13 @@ board.connect_things()
 # download the binary from the gem5 Resources cloud bucket if it's not already
 # present.
 board.set_workload(
-    Resource(
-        # The `Resource` class reads the `resources.json` file from the gem5
-        # resources repository:
-        # https://gem5.googlesource.com/public/gem5-resource.
-        # Any resource specified in this file will be automatically retrieved.
-        # At the time of writing, this file is a WIP and does not contain all
-        # resources. Jira ticket: https://gem5.atlassian.net/browse/GEM5-1096
-        "arm-hello64-static",
-        # `override=True` means the if the binary already exists locally within
-        # the resource directory, and the hash's differ to that in the cloud
-        # bucket, the local copy will be overwritten. If this were set to false
-        # an exception would be thrown in this case.
-        override=True,
-    )
+    # The `Resource` class reads the `resources.json` file from the gem5
+    # resources repository:
+    # https://gem5.googlesource.com/public/gem5-resource.
+    # Any resource specified in this file will be automatically retrieved.
+    # At the time of writing, this file is a WIP and does not contain all
+    # resources. Jira ticket: https://gem5.atlassian.net/browse/GEM5-1096
+    Resource("arm-hello64-static")
 )
 
 # Lastly we setup the root, instantiate the design, and run the simulation.

@@ -72,7 +72,6 @@ def test_boot(
             cache_type,
             "--tick-exit",
             str(to_tick),
-            "--override-download",
             "--resource-directory",
             resource_path,
         ],

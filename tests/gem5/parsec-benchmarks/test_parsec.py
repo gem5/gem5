@@ -88,7 +88,6 @@ def test_parsec(
             benchmark,
             "--size",
             size,
-            "--override-download",
             "--resource-directory",
             resource_path,
         ],

@@ -66,7 +66,6 @@ gem5_verify_config(
     config_args=[
         "x86-m5-exit",
         "atomic",
-        "--override-download",
         "--resource-directory",
         resource_path,
     ],

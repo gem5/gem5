@@ -81,7 +81,6 @@ def test_kvm_fork_run(cpu: str, num_cpus: int, mem_system: str, length: str):
             "4",
             "--mem-system",
             mem_system,
-            "--override-download",
             "--resource-directory",
             resource_path,
             "--kernel-args=''",
