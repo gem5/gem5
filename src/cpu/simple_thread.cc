@@ -171,10 +171,7 @@ SimpleThread::copyArchRegs(ThreadContext *src_tc)
 void
 SimpleThread::htmAbortTransaction(uint64_t htm_uid, HtmFailureFaultCause cause)
 {
-    BaseSimpleCPU *baseSimpleCpu = dynamic_cast<BaseSimpleCPU*>(baseCpu);
-    assert(baseSimpleCpu);
-
-    baseSimpleCpu->htmSendAbortSignal(cause);
+    baseCpu->htmSendAbortSignal(threadId(), htm_uid, cause);
 
     // these must be reset after the abort signal has been sent
     htmTransactionStarts = 0;

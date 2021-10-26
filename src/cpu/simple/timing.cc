@@ -1259,9 +1259,10 @@ TimingSimpleCPU::initiateHtmCmd(Request::Flags flags)
 }
 
 void
-TimingSimpleCPU::htmSendAbortSignal(HtmFailureFaultCause cause)
+TimingSimpleCPU::htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
+                                    HtmFailureFaultCause cause)
 {
-    SimpleExecContext& t_info = *threadInfo[curThread];
+    SimpleExecContext& t_info = *threadInfo[tid];
     SimpleThread* thread = t_info.thread;
 
     const Addr addr = 0x0ul;

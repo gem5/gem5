@@ -327,7 +327,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
     /** hardware transactional memory **/
     Fault initiateHtmCmd(Request::Flags flags) override;
 
-    void htmSendAbortSignal(HtmFailureFaultCause) override;
+    void htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
+                            HtmFailureFaultCause) override;
 
   private:
 

@@ -231,10 +231,11 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     }
 
     void
-    htmSendAbortSignal(HtmFailureFaultCause cause) override
+    htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
+                       HtmFailureFaultCause cause) override
     {
         panic("htmSendAbortSignal() is for timing accesses, and should "
-              "never be called on AtomicSimpleCPU.\n");
+              "never be called on AtomicSimpleCPU.");
     }
 
     Fault writeMem(uint8_t *data, unsigned size,
