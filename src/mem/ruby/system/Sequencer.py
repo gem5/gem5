@@ -42,100 +42,100 @@ from m5.proxy import *
 from m5.objects.ClockedObject import ClockedObject
 
 class RubyPort(ClockedObject):
-   type = 'RubyPort'
-   abstract = True
-   cxx_header = "mem/ruby/system/RubyPort.hh"
-   cxx_class = 'gem5::ruby::RubyPort'
+    type = 'RubyPort'
+    abstract = True
+    cxx_header = "mem/ruby/system/RubyPort.hh"
+    cxx_class = 'gem5::ruby::RubyPort'
 
-   version = Param.Int(0, "")
+    version = Param.Int(0, "")
 
-   in_ports = VectorResponsePort("CPU side of this RubyPort/Sequencer. "
-               "The CPU request ports should be connected to this. If a CPU "
-               "has multiple ports (e.g., I/D ports) all of the ports for a "
-               "single CPU can connect to one RubyPort.")
-   slave    = DeprecatedParam(in_ports,
-                        '`slave` is now called `in_ports`')
+    in_ports = VectorResponsePort("CPU side of this RubyPort/Sequencer. "
+            "The CPU request ports should be connected to this. If a CPU "
+            "has multiple ports (e.g., I/D ports) all of the ports for a "
+            "single CPU can connect to one RubyPort.")
+    slave = DeprecatedParam(in_ports, '`slave` is now called `in_ports`')
 
-   interrupt_out_port = VectorRequestPort("Port to connect to x86 interrupt "
-                        "controller to send the CPU requests from outside.")
-   master             = DeprecatedParam(interrupt_out_port,
-                        '`master` is now called `interrupt_out_port`')
+    interrupt_out_port = VectorRequestPort("Port to connect to x86 interrupt "
+            "controller to send the CPU requests from outside.")
+    master = DeprecatedParam(interrupt_out_port,
+            '`master` is now called `interrupt_out_port`')
 
-   pio_request_port = RequestPort("Ruby pio request port")
-   pio_master_port  = DeprecatedParam(pio_request_port,
-                        '`pio_master_port` is now called `pio_request_port`')
+    pio_request_port = RequestPort("Ruby pio request port")
+    pio_master_port = DeprecatedParam(pio_request_port,
+            '`pio_master_port` is now called `pio_request_port`')
 
-   mem_request_port = RequestPort("Ruby mem request port")
-   mem_master_port  = DeprecatedParam(mem_request_port,
-                        '`mem_master_port` is now called `mem_request_port`')
+    mem_request_port = RequestPort("Ruby mem request port")
+    mem_master_port = DeprecatedParam(mem_request_port,
+            '`mem_master_port` is now called `mem_request_port`')
 
-   pio_response_port = ResponsePort("Ruby pio response port")
-   pio_slave_port    = DeprecatedParam(pio_response_port,
-                        '`pio_slave_port` is now called `pio_response_port`')
+    pio_response_port = ResponsePort("Ruby pio response port")
+    pio_slave_port = DeprecatedParam(pio_response_port,
+            '`pio_slave_port` is now called `pio_response_port`')
 
-   using_ruby_tester = Param.Bool(False, "")
-   no_retry_on_stall = Param.Bool(False, "")
-   ruby_system = Param.RubySystem(Parent.any, "")
-   system = Param.System(Parent.any, "system object")
-   support_data_reqs = Param.Bool(True, "data cache requests supported")
-   support_inst_reqs = Param.Bool(True, "inst cache requests supported")
-   is_cpu_sequencer = Param.Bool(True, "connected to a cpu")
+    using_ruby_tester = Param.Bool(False, "")
+    no_retry_on_stall = Param.Bool(False, "")
+    ruby_system = Param.RubySystem(Parent.any, "")
+    system = Param.System(Parent.any, "system object")
+    support_data_reqs = Param.Bool(True, "data cache requests supported")
+    support_inst_reqs = Param.Bool(True, "inst cache requests supported")
+    is_cpu_sequencer = Param.Bool(True, "connected to a cpu")
 
 class RubyPortProxy(RubyPort):
-   type = 'RubyPortProxy'
-   cxx_header = "mem/ruby/system/RubyPortProxy.hh"
-   cxx_class = 'gem5::ruby::RubyPortProxy'
+    type = 'RubyPortProxy'
+    cxx_header = "mem/ruby/system/RubyPortProxy.hh"
+    cxx_class = 'gem5::ruby::RubyPortProxy'
 
 class RubySequencer(RubyPort):
-   type = 'RubySequencer'
-   cxx_class = 'gem5::ruby::Sequencer'
-   cxx_header = "mem/ruby/system/Sequencer.hh"
+    type = 'RubySequencer'
+    cxx_class = 'gem5::ruby::Sequencer'
+    cxx_header = "mem/ruby/system/Sequencer.hh"
 
-   dcache = Param.RubyCache("")
+    dcache = Param.RubyCache("")
 
-   max_outstanding_requests = Param.Int(16,
-       "max requests (incl. prefetches) outstanding")
-   deadlock_threshold = Param.Cycles(500000,
-       "max outstanding cycles for a request before deadlock/livelock declared")
-   garnet_standalone = Param.Bool(False, "")
-   # id used by protocols that support multiple sequencers per controller
-   # 99 is the dummy default value
-   coreid = Param.Int(99, "CorePair core id")
+    max_outstanding_requests = Param.Int(16,
+        "max requests (incl. prefetches) outstanding")
+    deadlock_threshold = Param.Cycles(500000,
+        "max outstanding cycles for a request "
+        "before deadlock/livelock declared")
+    garnet_standalone = Param.Bool(False, "")
+    # id used by protocols that support multiple sequencers per controller
+    # 99 is the dummy default value
+    coreid = Param.Int(99, "CorePair core id")
 
-   def connectCpuPorts(self, cpu):
-      """
-      Helper for connecting all cpu memory request output ports to this
-      object's in_ports.
-      This assumes the provided cpu object is an instance of BaseCPU. Non-cpu
-      objects should use connectInstPort and connectDataPort.
-      """
-      import m5.objects
-      assert(isinstance(cpu, m5.objects.BaseCPU))
-      # this connects all cpu mem-side ports to self.in_ports
-      cpu.connectAllPorts(self)
+    def connectCpuPorts(self, cpu):
+        """
+        Helper for connecting all cpu memory request output ports to this
+        object's in_ports.
+        This assumes the provided cpu object is an instance of BaseCPU. Non-cpu
+        objects should use connectInstPort and connectDataPort.
+        """
+        import m5.objects
+        assert(isinstance(cpu, m5.objects.BaseCPU))
+        # this connects all cpu mem-side ports to self.in_ports
+        cpu.connectAllPorts(self)
 
-   def connectIOPorts(self, piobus):
-      """
-      Helper for connecting this object's IO request and response ports to the
-      provided bus object. Usually a iobus object is used to wireup IO
-      components in a full system simulation. Incoming/Outgoing IO requests do
-      not go though the SLICC protocol so the iobus must be connected to the
-      sequencer directly.
-      """
-      import m5.defines
-      self.pio_request_port = piobus.cpu_side_ports
-      self.mem_request_port = piobus.cpu_side_ports
-      if m5.defines.buildEnv['TARGET_ISA'] == "x86":
-         self.pio_response_port = piobus.mem_side_ports
+    def connectIOPorts(self, piobus):
+        """
+        Helper for connecting this object's IO request and response ports to
+        the provided bus object. Usually a iobus object is used to wireup IO
+        components in a full system simulation. Incoming/Outgoing IO requests
+        do not go though the SLICC protocol so the iobus must be connected to
+        the sequencer directly.
+        """
+        import m5.defines
+        self.pio_request_port = piobus.cpu_side_ports
+        self.mem_request_port = piobus.cpu_side_ports
+        if m5.defines.buildEnv['TARGET_ISA'] == "x86":
+            self.pio_response_port = piobus.mem_side_ports
 
 class RubyHTMSequencer(RubySequencer):
-   type = 'RubyHTMSequencer'
-   cxx_class = 'gem5::ruby::HTMSequencer'
-   cxx_header = "mem/ruby/system/HTMSequencer.hh"
+    type = 'RubyHTMSequencer'
+    cxx_class = 'gem5::ruby::HTMSequencer'
+    cxx_header = "mem/ruby/system/HTMSequencer.hh"
 
 class DMASequencer(RubyPort):
-   type = 'DMASequencer'
-   cxx_header = "mem/ruby/system/DMASequencer.hh"
-   cxx_class = 'gem5::ruby::DMASequencer'
+    type = 'DMASequencer'
+    cxx_header = "mem/ruby/system/DMASequencer.hh"
+    cxx_class = 'gem5::ruby::DMASequencer'
 
-   max_outstanding_requests = Param.Int(64, "max outstanding requests")
+    max_outstanding_requests = Param.Int(64, "max outstanding requests")
