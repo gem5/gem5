@@ -95,7 +95,7 @@ docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
 # stressing several GPU compute and memory components
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" hacc-test-weekly build/GCN3_X86/gem5.opt \
-    configs/example/apu_se.py -n3 --mem-size=8GB \
+    configs/example/apu_se.py -n3 --mem-size=8GB --reg-alloc-policy=dynamic \
     --benchmark-root="${gem5_root}/gem5-resources/src/gpu/lulesh/bin" -c lulesh
 
 # test DNNMark
@@ -137,6 +137,7 @@ docker run --rm --volume "${gem5_root}":"${gem5_root}" -v \
        "${gem5_root}/gem5-resources/src/gpu/DNNMark/cachefiles:/root/.cache/miopen/2.9.0" \
        -w "${gem5_root}/gem5-resources/src/gpu/DNNMark" hacc-test-weekly \
        "${gem5_root}/build/GCN3_X86/gem5.opt" "${gem5_root}/configs/example/apu_se.py" -n3 \
+       --reg-alloc-policy=dynamic \
        --benchmark-root="${gem5_root}/gem5-resources/src/gpu/DNNMark/build/benchmarks/test_fwd_softmax" \
        -c dnnmark_test_fwd_softmax \
        --options="-config ${gem5_root}/gem5-resources/src/gpu/DNNMark/config_example/softmax_config.dnnmark \
@@ -146,6 +147,7 @@ docker run --rm --volume "${gem5_root}":"${gem5_root}" -v \
        "${gem5_root}/gem5-resources/src/gpu/DNNMark/cachefiles:/root/.cache/miopen/2.9.0" \
        -w "${gem5_root}/gem5-resources/src/gpu/DNNMark" hacc-test-weekly \
        "${gem5_root}/build/GCN3_X86/gem5.opt" "${gem5_root}/configs/example/apu_se.py" -n3 \
+       --reg-alloc-policy=dynamic \
        --benchmark-root="${gem5_root}/gem5-resources/src/gpu/DNNMark/build/benchmarks/test_fwd_pool" \
        -c dnnmark_test_fwd_pool \
        --options="-config ${gem5_root}/gem5-resources/src/gpu/DNNMark/config_example/pool_config.dnnmark \
@@ -155,6 +157,7 @@ docker run --rm --volume "${gem5_root}":"${gem5_root}" -v \
        "${gem5_root}/gem5-resources/src/gpu/DNNMark/cachefiles:/root/.cache/miopen/2.9.0" \
        -w "${gem5_root}/gem5-resources/src/gpu/DNNMark" hacc-test-weekly \
        "${gem5_root}/build/GCN3_X86/gem5.opt" "${gem5_root}/configs/example/apu_se.py" -n3 \
+       --reg-alloc-policy=dynamic \
        --benchmark-root="${gem5_root}/gem5-resources/src/gpu/DNNMark/build/benchmarks/test_bwd_bn" \
        -c dnnmark_test_bwd_bn \
        --options="-config ${gem5_root}/gem5-resources/src/gpu/DNNMark/config_example/bn_config.dnnmark \
@@ -170,7 +173,7 @@ docker run --rm -v ${PWD}:${PWD} -w \
 # the GPU memory system
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
-       ${gem5_root}/configs/example/apu_se.py -n3 \
+       ${gem5_root}/configs/example/apu_se.py -n3 --reg-alloc-policy=dynamic \
        --benchmark-root=${gem5_root}/gem5-resources/src/gpu/halo-finder/src/hip \
        -c ForceTreeTest --options="0.5 0.1 64 0.1 1 N 12 rcb"
 
@@ -191,6 +194,7 @@ wget http://dist.gem5.org/dist/develop/datasets/pannotia/bc/1k_128k.gr
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
        ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --reg-alloc-policy=dynamic \
        --benchmark-root=gem5-resources/src/gpu/pannotia/bc/bin -c bc.gem5 \
        --options="1k_128k.gr"
 
@@ -204,6 +208,7 @@ docker run --rm -v ${gem5_root}:${gem5_root} -w \
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
        ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --reg-alloc-policy=dynamic \
        --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/color/bin \
        -c color_max.gem5 --options="1k_128k.gr 0"
 
@@ -217,6 +222,7 @@ docker run --rm -v ${gem5_root}:${gem5_root} -w \
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
        ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --reg-alloc-policy=dynamic \
        --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/color/bin \
        -c color_maxmin.gem5 --options="1k_128k.gr 0"
 
@@ -230,6 +236,7 @@ docker run --rm -v ${gem5_root}:${gem5_root} -w \
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
        ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --reg-alloc-policy=dynamic \
        --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/fw/bin \
        -c fw_hip.gem5 --options="1k_128k.gr"
 
@@ -243,6 +250,7 @@ docker run --rm -v ${gem5_root}:${gem5_root} -w \
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
        ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --reg-alloc-policy=dynamic \
        --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/mis/bin \
        -c mis_hip.gem5 --options="1k_128k.gr 0"
 
@@ -258,6 +266,7 @@ wget http://dist.gem5.org/dist/develop/datasets/pannotia/pagerank/coAuthorsDBLP.
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
        ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --reg-alloc-policy=dynamic \
        --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/pagerank/bin \
        -c pagerank.gem5 --options="coAuthorsDBLP.graph 1"
 
@@ -271,6 +280,7 @@ docker run --rm -v ${gem5_root}:${gem5_root} -w \
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
        ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --reg-alloc-policy=dynamic \
        --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/pagerank/bin \
        -c pagerank_spmv.gem5 --options="coAuthorsDBLP.graph 1"
 
@@ -284,6 +294,7 @@ docker run --rm -v ${gem5_root}:${gem5_root} -w \
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
        ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --reg-alloc-policy=dynamic \
        --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/sssp/bin \
        -c sssp.gem5 --options="1k_128k.gr 0"
 
@@ -297,6 +308,7 @@ docker run --rm -v ${gem5_root}:${gem5_root} -w \
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        hacc-test-weekly ${gem5_root}/build/GCN3_X86/gem5.opt \
        ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
+       --reg-alloc-policy=dynamic \
        --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/sssp/bin \
        -c sssp_ell.gem5 --options="1k_128k.gr 0"
 

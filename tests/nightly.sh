@@ -83,7 +83,6 @@ docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         ./main.py run --length long -j${threads} -t${threads}
 
 # Run the GPU tests.
-
 # For the GPU tests we compile and run GCN3_X86 inside a gcn-gpu container.
 docker pull gcr.io/gem5-test/gcn-gpu:latest
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
@@ -101,7 +100,7 @@ mkdir -p tests/testing-results
 # basic GPU functionality is working.
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest build/GCN3_X86/gem5.opt \
-    configs/example/apu_se.py -n3 -c square
+    configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c square
 
 # get HeteroSync
 wget -qN http://dist.gem5.org/dist/develop/test-progs/heterosync/gcn3/allSyncPrims-1kernel
@@ -112,8 +111,8 @@ wget -qN http://dist.gem5.org/dist/develop/test-progs/heterosync/gcn3/allSyncPri
 # atomics are tested.
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest build/GCN3_X86/gem5.opt \
-    configs/example/apu_se.py -n3  -c allSyncPrims-1kernel \
-    --options="sleepMutex 10 16 4"
+    configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c \
+    allSyncPrims-1kernel --options="sleepMutex 10 16 4"
 
 # run HeteroSync LFBarr -- similar setup to sleepMutex above -- 16 WGs
 # accessing unique data and then joining a lock-free barrier, 10 Ld/St per
@@ -122,5 +121,5 @@ docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
 # atomics are tested.
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest build/GCN3_X86/gem5.opt \
-    configs/example/apu_se.py -n3  -c allSyncPrims-1kernel \
-    --options="lfTreeBarrUniq 10 16 4"
+    configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c \
+    allSyncPrims-1kernel --options="lfTreeBarrUniq 10 16 4"
