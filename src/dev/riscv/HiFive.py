@@ -38,7 +38,7 @@ from m5.objects.PMAChecker import PMAChecker
 from m5.objects.Clint import Clint
 from m5.objects.Plic import Plic
 from m5.objects.RTC import RiscvRTC
-from m5.objects.Uart import Uart8250
+from m5.objects.Uart import RiscvUart8250
 from m5.objects.Terminal import Terminal
 from m5.params import *
 from m5.proxy import *
@@ -106,7 +106,7 @@ class HiFive(Platform):
     plic = Param.Plic(Plic(pio_addr=0xc000000), "PLIC")
 
     # Uart
-    uart = Uart8250(pio_addr=0x10000000)
+    uart = RiscvUart8250(pio_addr=0x10000000)
     # Int source ID to redirect console interrupts to
     # Set to 0 if using a pci interrupt for Uart instead
     uart_int_id = Param.Int(0xa, "PLIC Uart interrupt ID")
