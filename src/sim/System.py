@@ -44,6 +44,7 @@ from m5.proxy import *
 
 from m5.objects.DVFSHandler import *
 from m5.objects.SimpleMemory import *
+from m5.objects.Workload import StubWorkload
 
 class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing',
                                 'atomic_noncaching']
@@ -117,7 +118,7 @@ class System(SimObject):
     work_cpus_ckpt_count = Param.Counter(0,
         "create checkpoint when active cpu count value is reached")
 
-    workload = Param.Workload(NULL, "Workload to run on this system")
+    workload = Param.Workload(StubWorkload(), "Workload to run on this system")
     init_param = Param.UInt64(0, "numerical value to pass into simulator")
     readfile = Param.String("", "file to read startup script from")
     symbolfile = Param.String("", "file to get the symbols from")

@@ -96,9 +96,7 @@ void
 System::Threads::Thread::quiesce() const
 {
     context->suspend();
-    auto *workload = context->getSystemPtr()->workload;
-    if (workload)
-        workload->recordQuiesce();
+    context->getSystemPtr()->workload->recordQuiesce();
 }
 
 void
@@ -217,8 +215,9 @@ System::System(const Params &p)
                  AddrRange(1, 0)), // Create an empty range if disabled
       redirectPaths(p.redirect_paths)
 {
-    if (workload)
-        workload->setSystem(this);
+    panic_if(!workload, "No workload set for system %s "
+            "(could use StubWorkload?).", name());
+    workload->setSystem(this);
 
     // add self to global system list
     systemList.push_back(this);
@@ -277,8 +276,7 @@ System::registerThreadContext(ThreadContext *tc, ContextID assigned)
 {
     threads.insert(tc, assigned);
 
-    if (workload)
-        workload->registerThreadContext(tc);
+    workload->registerThreadContext(tc);
 
     for (auto *e: liveEvents)
         tc->schedule(e);
@@ -310,8 +308,7 @@ System::replaceThreadContext(ThreadContext *tc, ContextID context_id)
     auto *otc = threads[context_id];
     threads.replace(tc, context_id);
 
-    if (workload)
-        workload->replaceThreadContext(tc);
+    workload->replaceThreadContext(tc);
 
     for (auto *e: liveEvents) {
         otc->remove(e);
@@ -454,7 +451,7 @@ System::workItemEnd(uint32_t tid, uint32_t workid)
 bool
 System::trapToGdb(int signal, ContextID ctx_id) const
 {
-    return workload && workload->trapToGdb(signal, ctx_id);
+    return workload->trapToGdb(signal, ctx_id);
 }
 
 void
