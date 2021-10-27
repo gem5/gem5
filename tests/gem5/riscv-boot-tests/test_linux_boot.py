@@ -26,6 +26,8 @@
 
 import re
 
+from typing import Optional
+
 from testlib import *
 
 if config.bin_path:
@@ -38,10 +40,11 @@ def test_boot(
     cpu: str,
     num_cpus: int,
     cache_type: str,
-    to_tick: int,
     length: str,
+    to_tick: Optional[int] = None,
 ):
-    name = "{}-cpu_{}-{}-cores_riscv-boot-test_to-tick".format(
+
+    name = "{}-cpu_{}-{}-cores_riscv-boot-test".format(
         cpu, str(num_cpus), cache_type)
 
     verifiers = []
@@ -51,6 +54,21 @@ def test_boot(
         )
     )
     verifiers.append(verifier.MatchRegex(exit_regex))
+
+    config_args=[
+        "--cpu",
+        cpu,
+        "--num-cpus",
+        str(num_cpus),
+        "--mem-system",
+        cache_type,
+        "--resource-directory",
+        resource_path,
+    ]
+
+    if to_tick:
+        name += "_to-tick"
+        config_args += ["--tick-exit", str(to_tick)]
 
     gem5_verify_config(
         name=name,
@@ -63,18 +81,7 @@ def test_boot(
             "configs",
             "riscv_boot_exit_run.py",
         ),
-        config_args=[
-            "--cpu",
-            cpu,
-            "--num-cpus",
-            str(num_cpus),
-            "--mem-system",
-            cache_type,
-            "--tick-exit",
-            str(to_tick),
-            "--resource-directory",
-            resource_path,
-        ],
+        config_args=config_args,
         valid_isas=(constants.riscv_tag,),
         valid_hosts=constants.supported_hosts,
         length=length,
@@ -87,46 +94,83 @@ test_boot(
     cpu="atomic",
     num_cpus=1,
     cache_type="classic",
-    to_tick=10000000000,  # Simulates 1/100th of a second.
     length=constants.quick_tag,
+    to_tick=10000000000,  # Simulates 1/100th of a second.
 )
 
 test_boot(
     cpu="timing",
     num_cpus=1,
     cache_type="classic",
-    to_tick=10000000000,
     length=constants.quick_tag,
+    to_tick=10000000000,
 )
 
 test_boot(
     cpu="timing",
     num_cpus=1,
     cache_type="mi_example",
-    to_tick=10000000000,
     length=constants.quick_tag,
+    to_tick=10000000000,
 )
 
 test_boot(
     cpu="o3",
     num_cpus=1,
     cache_type="classic",
-    to_tick=10000000000,
     length=constants.quick_tag,
+    to_tick=10000000000,
 )
 
 test_boot(
     cpu="timing",
     num_cpus=4,
     cache_type="classic",
-    to_tick=10000000000,
     length=constants.quick_tag,
+    to_tick=10000000000,
 )
 
 test_boot(
     cpu="timing",
     num_cpus=4,
     cache_type="mi_example",
-    to_tick=10000000000,
     length=constants.quick_tag,
+    to_tick=10000000000,
+)
+
+#### The long (Nightly) tests ####
+
+test_boot(
+    cpu="atomic",
+    num_cpus=1,
+    cache_type="classic",
+    length=constants.long_tag,
+)
+
+test_boot(
+    cpu="timing",
+    num_cpus=1,
+    cache_type="mi_example",
+    length=constants.long_tag,
+)
+
+test_boot(
+    cpu="timing",
+    num_cpus=4,
+    cache_type="mi_example",
+    length=constants.long_tag,
+)
+
+test_boot(
+    cpu="atomic",
+    num_cpus=4,
+    cache_type="classic",
+    length=constants.long_tag,
+)
+
+test_boot(
+    cpu="o3",
+    num_cpus=8,
+    cache_type="mi_example",
+    length=constants.long_tag,
 )

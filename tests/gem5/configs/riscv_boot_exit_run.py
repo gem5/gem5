@@ -80,7 +80,7 @@ parser.add_argument(
     "-t",
     "--tick-exit",
     type=int,
-    required=True,
+    required=False,
     help="The tick to exit the simulation.",
 )
 
@@ -152,7 +152,7 @@ board.set_kernel_disk_workload(
         resource_directory=args.resource_directory,
     ),
     disk_image=Resource(
-        "riscv-disk-img",
+        "riscv-ubuntu-20.04-img",
         resource_directory=args.resource_directory,
     ),
 )
