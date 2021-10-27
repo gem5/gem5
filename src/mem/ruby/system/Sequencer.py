@@ -122,11 +122,9 @@ class RubySequencer(RubyPort):
         do not go though the SLICC protocol so the iobus must be connected to
         the sequencer directly.
         """
-        import m5.defines
         self.pio_request_port = piobus.cpu_side_ports
         self.mem_request_port = piobus.cpu_side_ports
-        if m5.defines.buildEnv['TARGET_ISA'] == "x86":
-            self.pio_response_port = piobus.mem_side_ports
+        self.pio_response_port = piobus.mem_side_ports
 
 class RubyHTMSequencer(RubySequencer):
     type = 'RubyHTMSequencer'
