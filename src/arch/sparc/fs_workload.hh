@@ -64,6 +64,7 @@ class FsWorkload : public Workload
         return pc;
     }
     loader::Arch getArch() const override { return loader::SPARC64; }
+    ByteOrder byteOrder() const override { return ByteOrder::big; }
 
     const loader::SymbolTable &
     symtab(ThreadContext *tc) override

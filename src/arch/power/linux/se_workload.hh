@@ -53,6 +53,8 @@ class EmuLinux : public SEWorkload
 
     EmuLinux(const Params &p) : SEWorkload(p, PageShift) {}
 
+    ByteOrder byteOrder() const override { return ByteOrder::big; }
+
     void syscall(ThreadContext *tc) override;
 };
 

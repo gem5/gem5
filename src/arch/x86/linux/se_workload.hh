@@ -68,6 +68,7 @@ class EmuLinux : public SEWorkload
     }
 
     loader::Arch getArch() const override { return loader::X86_64; }
+    ByteOrder byteOrder() const override { return ByteOrder::little; }
 
     void syscall(ThreadContext *tc) override;
     void event(ThreadContext *tc) override;

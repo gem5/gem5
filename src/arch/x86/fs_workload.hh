@@ -91,6 +91,8 @@ class FsWorkload : public KernelWorkload
         gdb = BaseRemoteGDB::build<RemoteGDB>(system);
     }
 
+    ByteOrder byteOrder() const override { return ByteOrder::little; }
+
   protected:
 
     smbios::SMBiosTable *smbiosTable;

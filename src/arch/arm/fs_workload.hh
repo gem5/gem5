@@ -143,6 +143,8 @@ class FsWorkload : public KernelWorkload
             return loader::Arm64;
     }
 
+    ByteOrder byteOrder() const override { return ByteOrder::little; }
+
     FsWorkload(const Params &p);
 
     void initState() override;

@@ -64,6 +64,7 @@ class BareMetal : public Workload
     }
 
     loader::Arch getArch() const override { return bootloader->getArch(); }
+    ByteOrder byteOrder() const override { return ByteOrder::little; }
 
     const loader::SymbolTable &
     symtab(ThreadContext *tc) override

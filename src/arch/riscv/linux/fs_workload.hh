@@ -53,6 +53,8 @@ class FsLinux : public KernelWorkload
         KernelWorkload::setSystem(sys);
         gdb = BaseRemoteGDB::build<RemoteGDB>(system);
     }
+
+    ByteOrder byteOrder() const override { return ByteOrder::little; }
 };
 
 } // namespace RiscvISA

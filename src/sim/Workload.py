@@ -43,6 +43,8 @@ class StubWorkload(Workload):
     cxx_class = 'gem5::StubWorkload'
 
     entry = Param.Addr(0, 'Dummy entry point for this workload.')
+    byte_order = Param.ByteOrder('little',
+            'Dummy byte order for this workload.')
 
 class KernelWorkload(Workload):
     type = 'KernelWorkload'
@@ -74,6 +76,7 @@ class SEWorkload(Workload, metaclass=SEWorkloadMeta):
     type = 'SEWorkload'
     cxx_header = "sim/se_workload.hh"
     cxx_class = 'gem5::SEWorkload'
+    abstract = True
 
     @classmethod
     def _is_compatible_with(cls, obj):

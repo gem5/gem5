@@ -47,6 +47,7 @@ class EmuLinux : public SEWorkload
     using Params = ArmEmuLinuxParams;
 
     EmuLinux(const Params &p) : SEWorkload(p, PageShift) {}
+    ByteOrder byteOrder() const override { return ByteOrder::little; }
 
     struct BaseSyscallABI {};
     struct SyscallABI32 : public SEWorkload::SyscallABI32,
