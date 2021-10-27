@@ -102,10 +102,6 @@ class SEWorkload(Workload, metaclass=SEWorkloadMeta):
         if len(options) > 1:
             raise ValueError("More than one SE workload is compatible with %s")
         elif len(options) < 1:
-            # For now, fall back to the base class if there are no matches.
-            # After we've had a chance to implement everything, this default
-            # can be removed since this should always find exactly one match.
-            return SEWorkload(*args, **kwargs)
             raise ValueError("No SE workload is compatible with %s", path)
 
         return options[0](*args, **kwargs)
