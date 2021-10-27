@@ -32,7 +32,7 @@ import shutil
 import gzip
 import hashlib
 import base64
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 from ..utils.filelock import FileLock
 
@@ -197,8 +197,8 @@ def get_resources_json_obj(resource_name: str) -> Dict:
 def get_resource(
     resource_name: str,
     to_path: str,
-    unzip: Optional[bool] = True,
-    override: Optional[bool] = False,
+    unzip: bool = True,
+    override: bool = False,
 ) -> None:
     """
     Obtains a gem5 resource and stored it to a specified location. If the

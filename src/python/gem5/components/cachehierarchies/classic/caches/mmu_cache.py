@@ -28,9 +28,6 @@ from .....utils.override import *
 
 from m5.objects import Cache, BasePrefetcher, StridePrefetcher
 
-from typing import Optional
-
-
 class MMUCache(Cache):
     """
     A simple Memory Management Unit (MMU) cache with default values.
@@ -39,13 +36,13 @@ class MMUCache(Cache):
     def __init__(
         self,
         size: str,
-        assoc: Optional[int] = 4,
-        tag_latency: Optional[int] = 1,
-        data_latency: Optional[int] = 1,
-        response_latency: Optional[int] = 1,
-        mshrs: Optional[int] = 20,
-        tgts_per_mshr: Optional[int] = 12,
-        writeback_clean: Optional[bool] = True,
+        assoc: int = 4,
+        tag_latency: int = 1,
+        data_latency: int = 1,
+        response_latency: int = 1,
+        mshrs: int = 20,
+        tgts_per_mshr: int = 12,
+        writeback_clean: bool = True,
     ):
         super(MMUCache, self).__init__()
         self.size = size

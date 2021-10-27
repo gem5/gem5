@@ -40,7 +40,7 @@ def test_boot(
     num_cpus: int,
     mem_system: str,
     length: str,
-    boot_type: Optional[str] = "init",
+    boot_type: str = "init",
     to_tick: Optional[int] = None,
 ):
 

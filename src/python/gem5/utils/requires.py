@@ -53,7 +53,7 @@ def _get_exception_str(msg: str):
 def requires(
     isa_required: Optional[ISA] = None,
     coherence_protocol_required: Optional[CoherenceProtocol] = None,
-    kvm_required: Optional[bool] = False,
+    kvm_required: bool = False,
 ) -> None:
     """
     Ensures the ISA/Coherence protocol/KVM requirements are met. An exception

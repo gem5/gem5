@@ -24,7 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Optional, Type
+from typing import Type
 
 from m5.objects import Cache, BasePrefetcher, StridePrefetcher
 
@@ -39,13 +39,13 @@ class L1ICache(Cache):
     def __init__(
         self,
         size: str,
-        assoc: Optional[int] = 8,
-        tag_latency: Optional[int] = 1,
-        data_latency: Optional[int] = 1,
-        response_latency: Optional[int] = 1,
-        mshrs: Optional[int] = 16,
-        tgts_per_mshr: Optional[int] = 20,
-        writeback_clean: Optional[bool] = True,
+        assoc: int = 8,
+        tag_latency: int = 1,
+        data_latency: int = 1,
+        response_latency: int = 1,
+        mshrs: int = 16,
+        tgts_per_mshr: int = 20,
+        writeback_clean: bool = True,
         PrefetcherCls: Type[BasePrefetcher] = StridePrefetcher,
     ):
         super(L1ICache, self).__init__()

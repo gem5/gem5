@@ -32,8 +32,6 @@ from ....runtime import get_runtime_isa
 
 from m5.objects import Bridge, BaseXBar, SystemXBar, BadAddr, Port
 
-from typing import Optional
-
 from ....utils.override import *
 
 
@@ -76,13 +74,13 @@ class NoCache(AbstractClassicCacheHierarchy):
         return membus
 
     def __init__(
-        self, membus: Optional[BaseXBar] = _get_default_membus.__func__()
+        self, membus: BaseXBar = _get_default_membus.__func__()
     ) -> None:
         """
         :param membus: The memory bus for this setup. This parameter is
         optional and will default toa 64 bit width SystemXBar is not specified.
 
-        :type membus: Optional[BaseXBar]
+        :type membus: BaseXBar
         """
         super(NoCache, self).__init__()
         self.membus = membus

@@ -39,9 +39,6 @@ from m5.objects import Cache, L2XBar, BaseXBar, SystemXBar, BadAddr, Port
 
 from ....utils.override import *
 
-from typing import Optional
-
-
 class PrivateL1PrivateL2CacheHierarchy(
     AbstractClassicCacheHierarchy, AbstractTwoLevelCacheHierarchy
 ):
@@ -71,7 +68,7 @@ class PrivateL1PrivateL2CacheHierarchy(
         l1d_size: str,
         l1i_size: str,
         l2_size: str,
-        membus: Optional[BaseXBar] = _get_default_membus.__func__(),
+        membus: BaseXBar = _get_default_membus.__func__(),
     ) -> None:
         """
         :param l1d_size: The size of the L1 Data Cache (e.g., "32kB").
@@ -89,7 +86,7 @@ class PrivateL1PrivateL2CacheHierarchy(
         :param membus: The memory bus. This parameter is optional parameter and
         will default to a 64 bit width SystemXBar is not specified.
 
-        :type membus: Optional[BaseXBar]
+        :type membus: BaseXBar
         """
 
         AbstractClassicCacheHierarchy.__init__(self=self)

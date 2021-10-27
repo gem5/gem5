@@ -28,7 +28,7 @@ from .....utils.override import *
 
 from m5.objects import Cache, BasePrefetcher, StridePrefetcher
 
-from typing import Optional, Type
+from typing import Type
 
 
 class L1DCache(Cache):
@@ -39,13 +39,13 @@ class L1DCache(Cache):
     def __init__(
         self,
         size: str,
-        assoc: Optional[int] = 8,
-        tag_latency: Optional[int] = 1,
-        data_latency: Optional[int] = 1,
-        response_latency: Optional[int] = 1,
-        mshrs: Optional[int] = 16,
-        tgts_per_mshr: Optional[int] = 20,
-        writeback_clean: Optional[bool] = True,
+        assoc: int = 8,
+        tag_latency: int = 1,
+        data_latency: int = 1,
+        response_latency: int = 1,
+        mshrs: int = 16,
+        tgts_per_mshr: int = 20,
+        writeback_clean: bool = True,
         PrefetcherCls: Type[BasePrefetcher] = StridePrefetcher,
     ):
         super(L1DCache, self).__init__()

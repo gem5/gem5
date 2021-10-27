@@ -37,9 +37,6 @@ from m5.objects import Cache, BaseXBar, SystemXBar, BadAddr, Port
 
 from ....utils.override import *
 
-from typing import Optional
-
-
 class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
     """
     A cache setup where each core has a private L1 data and instruction Cache.
@@ -63,7 +60,7 @@ class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
         self,
         l1d_size: str,
         l1i_size: str,
-        membus: Optional[BaseXBar] = _get_default_membus.__func__(),
+        membus: BaseXBar = _get_default_membus.__func__(),
     ) -> None:
         """
         :param l1d_size: The size of the L1 Data Cache (e.g., "32kB").

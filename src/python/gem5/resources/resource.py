@@ -85,7 +85,7 @@ class Resource(AbstractResource):
         self,
         resource_name: str,
         resource_directory: Optional[str] = None,
-        override: Optional[bool] = False,
+        override: bool = False,
     ):
         """
         :param resource_name: The name of the gem5 resource.

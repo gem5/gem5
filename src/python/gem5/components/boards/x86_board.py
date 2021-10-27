@@ -271,7 +271,7 @@ class X86Board(SimpleBoard):
         kernel: AbstractResource,
         disk_image: AbstractResource,
         command: Optional[str] = None,
-        kernel_args: Optional[List[str]] = [],
+        kernel_args: List[str] = [],
     ):
         """Setup the full system files
 
