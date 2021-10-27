@@ -49,11 +49,6 @@ from m5.objects.Workload import StubWorkload
 class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing',
                                 'atomic_noncaching']
 
-if buildEnv['TARGET_ISA'] in ('sparc', 'power'):
-    default_byte_order = 'big'
-else:
-    default_byte_order = 'little'
-
 class System(SimObject):
     type = 'System'
     cxx_header = "sim/system.hh"
@@ -95,9 +90,6 @@ class System(SimObject):
         "Leave this empty to unset the MAP_SHARED flag.")
 
     cache_line_size = Param.Unsigned(64, "Cache line size in bytes")
-
-    byte_order = Param.ByteOrder(default_byte_order,
-                                 "Default byte order of system components")
 
     redirect_paths = VectorParam.RedirectPath([], "Path redirections")
 

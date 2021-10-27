@@ -388,7 +388,7 @@ class System : public SimObject, public PCEventScope
     ByteOrder
     getGuestByteOrder() const
     {
-        return params().byte_order;
+        return workload->byteOrder();
     }
 
     /**
