@@ -192,7 +192,6 @@ motherboard = X86Board(
     processor=processor,
     memory=memory,
     cache_hierarchy=cache_hierarchy,
-    exit_on_work_items=True,
 )
 
 # Set the Full System workload.

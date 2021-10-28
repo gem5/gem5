@@ -77,14 +77,12 @@ class X86Board(AbstractBoard, KernelDiskWorkload):
         processor: AbstractProcessor,
         memory: AbstractMemorySystem,
         cache_hierarchy: AbstractCacheHierarchy,
-        exit_on_work_items: bool = False,
     ) -> None:
         super(X86Board, self).__init__(
             clk_freq=clk_freq,
             processor=processor,
             memory=memory,
             cache_hierarchy=cache_hierarchy,
-            exit_on_work_items=exit_on_work_items,
         )
 
         requires(isa_required=ISA.X86)

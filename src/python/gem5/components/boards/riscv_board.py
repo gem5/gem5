@@ -85,11 +85,8 @@ class RiscvBoard(AbstractBoard, KernelDiskWorkload):
         processor: AbstractProcessor,
         memory: AbstractMemorySystem,
         cache_hierarchy: AbstractCacheHierarchy,
-        exit_on_work_items: bool = False,
     ) -> None:
-        super().__init__(
-            clk_freq, processor, memory, cache_hierarchy, exit_on_work_items
-        )
+        super().__init__(clk_freq, processor, memory, cache_hierarchy)
         requires(isa_required=ISA.RISCV)
 
     @overrides(AbstractBoard)

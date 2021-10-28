@@ -67,7 +67,6 @@ class AbstractBoard(System):
         processor: "AbstractProcessor",
         memory: "AbstractMemory",
         cache_hierarchy: "AbstractCacheHierarchy",
-        exit_on_work_items: bool = False,
     ) -> None:
         super(AbstractBoard, self).__init__()
         """
@@ -75,17 +74,12 @@ class AbstractBoard(System):
         :param processor: The processor for this board.
         :param memory: The memory for this board.
         :param cache_hierarchy: The Cachie Hierarchy for this board.
-        :param exit_on_work_items: Whether the simulation should exit
-        on work items.
         """
 
         # Set up the clock domain and the voltage domain.
         self.clk_domain = SrcClockDomain()
         self.clk_domain.clock = clk_freq
         self.clk_domain.voltage_domain = VoltageDomain()
-
-        # Set whether to exit on work items.
-        self.exit_on_work_items = exit_on_work_items
 
         # Set the processor, memory, and cache hierarchy.
         self.processor = processor

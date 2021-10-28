@@ -136,6 +136,7 @@ class KernelDiskWorkload:
         readfile: Optional[str] = None,
         readfile_contents: Optional[str] = None,
         kernel_args: Optional[List[str]] = None,
+        exit_on_work_items: bool = True,
     ) -> None:
         """
         This function allows the setting of a full-system run with a Kernel
@@ -151,6 +152,8 @@ class KernelDiskWorkload:
         be created with the value of `readfile_contents`.
         :param kernel_args: An optional parameter for setting arguments to be
         passed to the kernel. By default set to `get_default_kernel_args()`.
+        :param exit_on_work_items: Whether the simulation should exit on work
+        items. True by default.
         """
 
         # Set the kernel to use.
@@ -176,3 +179,6 @@ class KernelDiskWorkload:
             file.close()
 
         self._add_disk_to_board(disk_image=disk_image)
+
+        # Set whether to exit on work items.
+        self.exit_on_work_items = exit_on_work_items
