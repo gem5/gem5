@@ -59,8 +59,7 @@ from ..memory.abstract_memory_system import AbstractMemorySystem
 from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
 from ...utils.requires import requires
 
-import os
-from typing import List, Optional, Sequence
+from typing import List, Sequence
 
 
 class X86Board(AbstractBoard, KernelDiskWorkload):

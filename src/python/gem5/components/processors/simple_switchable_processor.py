@@ -32,8 +32,6 @@ from .switchable_processor import SwitchableProcessor
 
 from ...utils.override import *
 
-from m5.objects import KvmVM
-
 
 class SimpleSwitchableProcessor(SwitchableProcessor):
     """

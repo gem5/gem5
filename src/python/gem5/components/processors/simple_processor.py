@@ -35,8 +35,6 @@ from .abstract_processor import AbstractProcessor
 from .cpu_types import CPUTypes
 from ..boards.abstract_board import AbstractBoard
 
-from typing import List
-
 
 class SimpleProcessor(AbstractProcessor):
     """

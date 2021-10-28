@@ -25,9 +25,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects import (
-    SrcClockDomain,
-    ClockDomain,
-    VoltageDomain,
     Port,
     IOXBar,
     AddrRange,

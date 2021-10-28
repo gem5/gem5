@@ -26,11 +26,8 @@
 
 from m5.objects import (
     AddrRange,
-    SrcClockDomain,
-    VoltageDomain,
     IOXBar,
     Port,
-    ClockDomain,
 )
 
 from .abstract_board import AbstractBoard
