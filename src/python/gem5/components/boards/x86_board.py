@@ -90,6 +90,8 @@ class X86Board(AbstractBoard, KernelDiskWorkload):
 
         requires(isa_required=ISA.X86)
 
+    @overrides(AbstractBoard)
+    def _setup_board(self) -> None:
         self.pc = Pc()
 
         self.workload = X86FsLinux()

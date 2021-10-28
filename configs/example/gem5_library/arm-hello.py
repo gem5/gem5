@@ -75,10 +75,6 @@ board = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-# This method must be called to connect all the components specified during
-# the board's construction.
-board.connect_things()
-
 # Here we set the workload. In this case we want to run a simple "Hello World!"
 # program compiled to the ARM ISA. The `Resource` class will automatically
 # download the binary from the gem5 Resources cloud bucket if it's not already

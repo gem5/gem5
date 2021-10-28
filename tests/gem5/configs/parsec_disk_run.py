@@ -214,8 +214,6 @@ board = X86Board(
     exit_on_work_items=True,
 )
 
-board.connect_things()
-
 # The command to run.
 command = (
     "cd /home/gem5/parsec-benchmark\n"

@@ -178,8 +178,6 @@ motherboard = X86Board(
     exit_on_work_items=True,
 )
 
-motherboard.connect_things()
-
 kernal_args = motherboard.get_default_kernel_args() + [args.kernel_args]
 
 # Set the Full System workload.

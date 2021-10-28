@@ -131,8 +131,6 @@ motherboard = TestBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-motherboard.connect_things()
-
 root = Root(full_system=False, system=motherboard)
 
 m5.instantiate()

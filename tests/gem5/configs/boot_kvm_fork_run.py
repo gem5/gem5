@@ -195,8 +195,6 @@ motherboard = X86Board(
     exit_on_work_items=True,
 )
 
-motherboard.connect_things()
-
 # Set the Full System workload.
 motherboard.set_kernel_disk_workload(
     kernel=Resource(

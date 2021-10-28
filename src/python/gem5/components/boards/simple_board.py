@@ -72,6 +72,8 @@ class SimpleBoard(AbstractBoard):
             exit_on_work_items=exit_on_work_items,
         )
 
+    @overrides(AbstractBoard)
+    def _setup_board(self) -> None:
         # Set up the memory ranges
         self.setup_memory_ranges()
 

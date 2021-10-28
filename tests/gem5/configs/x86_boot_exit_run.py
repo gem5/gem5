@@ -185,8 +185,6 @@ motherboard = X86Board(
     exit_on_work_items=True,
 )
 
-motherboard.connect_things()
-
 kernal_args = motherboard.get_default_kernel_args()
 if args.boot_type == "init":
     kernal_args.append("init=/root/exit.sh")

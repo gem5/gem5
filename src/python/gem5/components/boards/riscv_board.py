@@ -90,9 +90,10 @@ class RiscvBoard(AbstractBoard, KernelDiskWorkload):
         super().__init__(
             clk_freq, processor, memory, cache_hierarchy, exit_on_work_items
         )
-
         requires(isa_required=ISA.RISCV)
 
+    @overrides(AbstractBoard)
+    def _setup_board(self) -> None:
         self.workload = RiscvLinux()
 
         # Contains a CLINT, PLIC, UART, and some functions for the dtb, etc.

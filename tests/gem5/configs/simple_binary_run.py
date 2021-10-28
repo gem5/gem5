@@ -93,8 +93,6 @@ motherboard = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-motherboard.connect_things()
-
 # Set the workload
 binary = Resource(args.resource,
         resource_directory=args.resource_directory)

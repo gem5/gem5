@@ -92,7 +92,12 @@ class AbstractBoard(System):
         self.memory = memory
         self.cache_hierarchy = cache_hierarchy
 
-        self.setup_memory_ranges()
+
+        # Setup board properties unique to the board being constructed.
+        self._setup_board()
+
+        # Connect the memory, processor, and cache hierarchy.
+        self._connect_things()
 
     def get_processor(self) -> "AbstractProcessor":
         """Get the processor connected to the board.
@@ -135,10 +140,19 @@ class AbstractBoard(System):
 
     def get_clock_domain(self) -> ClockDomain:
         """Get the clock domain.
-
         :returns: The clock domain.
         """
         return self.clk_domain
+
+    @abstractmethod
+    def _setup_board(self) -> None:
+        """
+        This function is called in the AbstractBoard constructor, before the
+        memory, processor, and cache hierarchy components are incorporated via
+        `_connect_thing()`. This function should be overridden by boards to
+        specify components, connections unique to that board.
+        """
+        raise NotImplementedError
 
     # Technically `get_dma_ports` returns a list. This list could be empty to
     # indicate the presense of dma ports. Though I quite like having this
@@ -220,7 +234,7 @@ class AbstractBoard(System):
         raise NotImplementedError
 
     @final
-    def connect_things(self) -> None:
+    def _connect_things(self) -> None:
         """Connects all the components to the board.
 
         The order of this board is always:

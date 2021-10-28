@@ -102,8 +102,6 @@ board = X86Board(
     cache_hierarchy=cache_hierarchy,
 )
 
-board.connect_things()
-
 # Here we set the Full System workload.
 # The `set_kernel_disk_workload` function for the X86Board takes a kernel, a
 # disk image, and, optionally, a command to run.

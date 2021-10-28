@@ -143,8 +143,6 @@ board = RiscvBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-board.connect_things()
-
 # Set the Full System workload.
 board.set_kernel_disk_workload(
     kernel=Resource(

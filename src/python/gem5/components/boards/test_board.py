@@ -66,6 +66,8 @@ class TestBoard(AbstractBoard):
             cache_hierarchy=cache_hierarchy,
         )
 
+    @overrides(AbstractBoard)
+    def _setup_board(self) -> None:
         self.setup_memory_ranges()
 
     @overrides(AbstractBoard)
