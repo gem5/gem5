@@ -24,19 +24,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ...resources.resource import AbstractResource
 from m5.objects import (
     AddrRange,
     SrcClockDomain,
     VoltageDomain,
-    Process,
-    SEWorkload,
     IOXBar,
     Port,
     ClockDomain,
 )
 
 from .abstract_board import AbstractBoard
+from .se_binary_workload import SEBinaryWorkload
 from ..processors.abstract_processor import AbstractProcessor
 from ..memory.abstract_memory_system import AbstractMemorySystem
 from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
@@ -45,7 +43,7 @@ from ...utils.override import overrides
 from typing import List
 
 
-class SimpleBoard(AbstractBoard):
+class SimpleBoard(AbstractBoard, SEBinaryWorkload):
     """
     This is an incredibly simple system. It contains no I/O, and will work only
     with a classic cache hierarchy setup.
@@ -53,7 +51,7 @@ class SimpleBoard(AbstractBoard):
     **Limitations**
     * Only supports SE mode
 
-    You can run a binary executable via the `set_workload` function.
+    You can run a binary executable via the `set_se_binary_workload` function.
     """
 
     def __init__(
@@ -118,20 +116,3 @@ class SimpleBoard(AbstractBoard):
         # memory.
         self.mem_ranges = [AddrRange(memory.get_size())]
         memory.set_memory_range(self.mem_ranges)
-
-    def set_workload(self, binary: AbstractResource) -> None:
-        """Set up the system to run a specific binary.
-
-        **Limitations**
-        * Only supports single threaded applications
-        * Dynamically linked executables are partially supported when the host
-          ISA and the simulated ISA are the same.
-
-        :param binary: The resource encapsulating the binary to be run.
-        """
-
-        self.workload = SEWorkload.init_compatible(binary.get_local_path())
-
-        process = Process()
-        process.cmd = [binary.get_local_path()]
-        self.get_processor().get_cores()[0].set_workload(process)

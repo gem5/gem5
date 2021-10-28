@@ -96,7 +96,7 @@ motherboard = SimpleBoard(
 # Set the workload
 binary = Resource(args.resource,
         resource_directory=args.resource_directory)
-motherboard.set_workload(binary)
+motherboard.set_se_binary_workload(binary)
 
 root = Root(full_system=False, system=motherboard)
 

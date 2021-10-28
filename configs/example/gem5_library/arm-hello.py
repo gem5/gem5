@@ -79,7 +79,7 @@ board = SimpleBoard(
 # program compiled to the ARM ISA. The `Resource` class will automatically
 # download the binary from the gem5 Resources cloud bucket if it's not already
 # present.
-board.set_workload(
+board.set_se_binary_workload(
     # The `Resource` class reads the `resources.json` file from the gem5
     # resources repository:
     # https://gem5.googlesource.com/public/gem5-resource.
