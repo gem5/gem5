@@ -78,7 +78,7 @@ class X86Board(AbstractBoard, KernelDiskWorkload):
         memory: AbstractMemorySystem,
         cache_hierarchy: AbstractCacheHierarchy,
     ) -> None:
-        super(X86Board, self).__init__(
+        super().__init__(
             clk_freq=clk_freq,
             processor=processor,
             memory=memory,

@@ -47,11 +47,11 @@ Port.compat(ETHERNET_ROLE, ETHERNET_ROLE)
 
 class EtherInt(Port):
     def __init__(self, desc):
-        super(EtherInt, self).__init__(ETHERNET_ROLE, desc)
+        super().__init__(ETHERNET_ROLE, desc)
 
 class VectorEtherInt(VectorPort):
     def __init__(self, desc):
-        super(VectorEtherInt, self).__init__(ETHERNET_ROLE, desc)
+        super().__init__(ETHERNET_ROLE, desc)
 
 class EtherLink(SimObject):
     type = 'EtherLink'

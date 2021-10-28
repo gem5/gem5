@@ -65,7 +65,7 @@ let {{
 
         def __init__(self, mnem, Name, size=4, user=False, flavor="normal",
                     unsign=True, top = False, paired=False, ret_op=True):
-            super(AtomicInst64, self).__init__()
+            super().__init__()
 
             self.name= mnem
             self.Name = Name
@@ -166,7 +166,7 @@ let {{
         execBase = 'AmoOp'
 
         def __init__(self, *args, **kargs):
-            super(AtomicSingleOp, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
             self.suffix = buildMemSuffix(not self.unsign, self.size)
             if self.size == 8:
                 self.res = 'XResult_ud' #if self.unsign else 'XResult_sd'
@@ -267,7 +267,7 @@ let {{
         execBase = 'AmoOp'
 
         def __init__(self, *args, **kargs):
-            super(CasPair64, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
             self.paired = True
             self.offset = ""
             if self.size == 8:
@@ -386,7 +386,7 @@ let {{
         execBase = 'AmoOp'
 
         def __init__(self, *args, **kargs):
-            super(AtomicArithmeticSingleOp, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
             store_res = "%(utype)s unsMem = Mem%(suffix)s"
 
             if self.size != 8:

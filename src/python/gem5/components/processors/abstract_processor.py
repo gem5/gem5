@@ -38,7 +38,7 @@ class AbstractProcessor(SubSystem):
     __metaclass__ = ABCMeta
 
     def __init__(self, cores: List[AbstractCore]) -> None:
-        super(AbstractProcessor, self).__init__()
+        super().__init__()
         assert len(cores) > 0
 
         self.cores = cores

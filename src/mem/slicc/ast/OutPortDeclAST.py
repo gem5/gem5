@@ -32,7 +32,7 @@ from slicc.symbols import Type
 
 class OutPortDeclAST(DeclAST):
     def __init__(self, slicc, ident, msg_type, var_expr, pairs):
-        super(OutPortDeclAST, self).__init__(slicc, pairs)
+        super().__init__(slicc, pairs)
 
         self.ident = ident
         self.msg_type = msg_type

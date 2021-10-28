@@ -106,23 +106,23 @@ class OptionParser(dict):
 
     def __getattr__(self, attr):
         if attr.startswith('_'):
-            return super(OptionParser, self).__getattribute__(attr)
+            return super().__getattribute__(attr)
 
         if attr in self:
             return self[attr]
 
-        return super(OptionParser, self).__getattribute__(attr)
+        return super().__getattribute__(attr)
 
     def __setattr__(self, attr, value):
         if attr.startswith('_'):
-            super(OptionParser, self).__setattr__(attr, value)
+            super().__setattr__(attr, value)
         elif attr in self._allopts:
             defaults = { attr : value }
             self.set_defaults(**defaults)
             if attr in self:
                 self[attr] = value
         else:
-            super(OptionParser, self).__setattr__(attr, value)
+            super().__setattr__(attr, value)
 
     def parse_args(self):
         opts,args = self._optparse.parse_args()

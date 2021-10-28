@@ -29,7 +29,7 @@ let {{
 
 class ArmInstObjParams(InstObjParams):
     def __init__(self, *args, **kwargs):
-        super(ArmInstObjParams, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.padSrcRegIdx(self.operands.numDestRegs)
 
 }};

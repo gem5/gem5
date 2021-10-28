@@ -82,7 +82,7 @@ class ComplexGeneratorCore(AbstractGeneratorCore):
         to create more complex traffics that consist of linear and random
         traffic in different phases.
         """
-        super(ComplexGeneratorCore, self).__init__()
+        super().__init__()
         self.generator = PyTrafficGen()
         self._traffic_params = []
         self._traffic = []

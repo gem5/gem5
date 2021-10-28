@@ -59,7 +59,7 @@ class TestMacroop(Combinational_Macroop):
         print(message)
 
     def __init__(self, name):
-        super(TestMacroop, self).__init__(name)
+        super().__init__(name)
         self.directives = {
             "tweak": self.tweak,
             "untweak": self.untweak,

@@ -46,7 +46,7 @@ class RandomGenerator(AbstractProcessor):
         rd_perc: int = 100,
         data_limit: int = 0,
     ) -> None:
-        super(RandomGenerator, self).__init__(
+        super().__init__(
             cores=self._create_cores(
                 num_cores=num_cores,
                 duration=duration,

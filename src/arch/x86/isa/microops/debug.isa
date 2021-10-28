@@ -136,8 +136,7 @@ let {{
 
         class MicroDebugChild(MicroDebug):
             def __init__(self, message, flags=None):
-                super(MicroDebugChild, self).__init__(
-                        name, fault_class, message, False, flags)
+                super().__init__(name, fault_class, message, False, flags)
 
         microopClasses[name] = MicroDebugChild
 
@@ -148,7 +147,7 @@ let {{
 
             class MicroDebugOnceChild(MicroDebug):
                 def __init__(self, message, flags=None):
-                    super(MicroDebugOnceChild, self).__init__(
+                    super().__init__(
                             name_once, fault_once_class, message, True, flags)
 
             microopClasses[name_once] = MicroDebugOnceChild

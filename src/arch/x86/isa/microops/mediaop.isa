@@ -128,7 +128,7 @@ let {{
             if not "op_class" in dict:
                 dict["op_class"] = None
 
-            cls = super(MediaOpMeta, mcls).__new__(mcls, Name, bases, dict)
+            cls = super().__new__(mcls, Name, bases, dict)
             if not abstract:
                 cls.className = Name
                 cls.base_mnemonic = name
@@ -207,23 +207,23 @@ let {{
         abstract = True
         operand_types = ()
         def __init__(self, **kwargs):
-            super(Media0Op, self).__init__(**kwargs)
+            super().__init__(**kwargs)
 
     class Media2Op(MediaOp):
         abstract = True
         operand_types = (FloatDestOp, FloatSrc1Op)
         def __init__(self, op1, op2, **kwargs):
-            super(Media2Op, self).__init__(op1, op2, **kwargs)
+            super().__init__(op1, op2, **kwargs)
 
     class Media3Op(MediaOp):
         abstract = True
         operand_types = (FloatDestOp, FloatSrc1Op, FloatSrc2Op)
         def __init__(self, op1, op2, op3, **kwargs):
-            super(Media3Op, self).__init__(op1, op2, op3, **kwargs)
+            super().__init__(op1, op2, op3, **kwargs)
 
     class Mov2int(Media3Op):
         def __init__(self, dest, src1, src2=0, **kwargs):
-            super(Mov2int, self).__init__(dest, src1, src2, **kwargs)
+            super().__init__(dest, src1, src2, **kwargs)
         operand_types = (IntDestOp, FloatSrc1Op, Imm8Op)
         op_class = 'SimdMiscOp'
         code = '''
@@ -244,7 +244,7 @@ let {{
 
     class Mov2fp(Media3Op):
         def __init__(self, dest, src1, src2=0, **kwargs):
-            super(Mov2fp, self).__init__(dest, src1, src2, **kwargs)
+            super().__init__(dest, src1, src2, **kwargs)
         operand_types = (FloatDestOp, IntSrc1Op, Imm8Op)
         op_class = 'SimdMiscOp'
         code = '''
@@ -445,7 +445,7 @@ let {{
 
     class Mxor(Media3Op):
         def __init__(self, dest, src1, src2):
-            super(Mxor, self).__init__(dest, src1, src2, size=1)
+            super().__init__(dest, src1, src2, size=1)
         op_class = 'SimdAluOp'
         code = '''
             FpDestReg_uqw = FpSrcReg1_uqw ^ FpSrcReg2_uqw;
@@ -453,7 +453,7 @@ let {{
 
     class Mor(Media3Op):
         def __init__(self, dest, src1, src2):
-            super(Mor, self).__init__(dest, src1, src2, size=1)
+            super().__init__(dest, src1, src2, size=1)
         op_class = 'SimdAluOp'
         code = '''
             FpDestReg_uqw = FpSrcReg1_uqw | FpSrcReg2_uqw;
@@ -461,7 +461,7 @@ let {{
 
     class Mand(Media3Op):
         def __init__(self, dest, src1, src2):
-            super(Mand, self).__init__(dest, src1, src2, size=1)
+            super().__init__(dest, src1, src2, size=1)
         op_class = 'SimdAluOp'
         code = '''
             FpDestReg_uqw = FpSrcReg1_uqw & FpSrcReg2_uqw;
@@ -469,7 +469,7 @@ let {{
 
     class Mandn(Media3Op):
         def __init__(self, dest, src1, src2):
-            super(Mandn, self).__init__(dest, src1, src2, size=1)
+            super().__init__(dest, src1, src2, size=1)
         op_class = 'SimdAluOp'
         code = '''
             FpDestReg_uqw = ~FpSrcReg1_uqw & FpSrcReg2_uqw;
@@ -1551,7 +1551,7 @@ let {{
 
     class Emms(Media0Op):
         def __init__(self):
-            super(Emms, self).__init__(size=2)
+            super().__init__(size=2)
         op_class = 'FloatMiscOp'
         code = 'FTW = 0xFFFF;'
 }};

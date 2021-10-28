@@ -30,7 +30,7 @@ from slicc.symbols import Type
 
 class InfixOperatorExprAST(ExprAST):
     def __init__(self, slicc, left, op, right):
-        super(InfixOperatorExprAST, self).__init__(slicc)
+        super().__init__(slicc)
 
         self.left = left
         self.op = op
@@ -96,7 +96,7 @@ class InfixOperatorExprAST(ExprAST):
 
 class PrefixOperatorExprAST(ExprAST):
     def __init__(self, slicc, op, operand):
-        super(PrefixOperatorExprAST, self).__init__(slicc)
+        super().__init__(slicc)
 
         self.op = op
         self.operand = operand

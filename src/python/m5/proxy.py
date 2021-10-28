@@ -63,7 +63,7 @@ class BaseProxy(object):
         if not attr.startswith('_'):
             raise AttributeError(
                 "cannot set attribute '%s' on proxy object" % attr)
-        super(BaseProxy, self).__setattr__(attr, value)
+        super().__setattr__(attr, value)
 
     def _gen_op(operation):
         def op(self, operand):
@@ -163,14 +163,14 @@ class BaseProxy(object):
 
 class AttrProxy(BaseProxy):
     def __init__(self, search_self, search_up, attr):
-        super(AttrProxy, self).__init__(search_self, search_up)
+        super().__init__(search_self, search_up)
         self._attr = attr
         self._modifiers = []
 
     def __getattr__(self, attr):
         # python uses __bases__ internally for inheritance
         if attr.startswith('_'):
-            return super(AttrProxy, self).__getattr__(self, attr)
+            return super().__getattr__(self, attr)
         if hasattr(self, '_pdesc'):
             raise AttributeError("Attribute reference on bound proxy "
                                 f"({self}.{attr})")

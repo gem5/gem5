@@ -28,7 +28,7 @@ from slicc.ast.ExprAST import ExprAST
 
 class StaticCastAST(ExprAST):
     def __init__(self, slicc, type_ast, type_modifier, expr_ast):
-        super(StaticCastAST, self).__init__(slicc)
+        super().__init__(slicc)
 
         self.type_ast = type_ast
         self.expr_ast = expr_ast

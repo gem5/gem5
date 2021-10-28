@@ -449,7 +449,7 @@ class VecRegOperand(Operand):
         return wb
 
     def finalize(self, predRead, predWrite):
-        super(VecRegOperand, self).finalize(predRead, predWrite)
+        super().finalize(predRead, predWrite)
         if self.is_dest:
             self.op_rd = self.makeReadW(predWrite) + self.op_rd
 
@@ -585,7 +585,7 @@ class VecPredRegOperand(Operand):
         return wb
 
     def finalize(self, predRead, predWrite):
-        super(VecPredRegOperand, self).finalize(predRead, predWrite)
+        super().finalize(predRead, predWrite)
         if self.is_dest:
             self.op_rd = self.makeReadW(predWrite) + self.op_rd
 
@@ -738,7 +738,7 @@ class MemOperand(Operand):
 
 class PCStateOperand(Operand):
     def __init__(self, parser, *args, **kwargs):
-        super(PCStateOperand, self).__init__(parser, *args, **kwargs)
+        super().__init__(parser, *args, **kwargs)
         self.parser = parser
 
     def makeConstructor(self, predRead, predWrite):

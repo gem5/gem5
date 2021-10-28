@@ -29,7 +29,7 @@ from slicc.symbols.Symbol import Symbol
 
 class Action(Symbol):
   def __init__(self, table, ident, resources, location, pairs):
-    super(Action, self).__init__(table, ident, location, pairs)
+    super().__init__(table, ident, location, pairs)
     self.resources = resources
 
   def __repr__(self):

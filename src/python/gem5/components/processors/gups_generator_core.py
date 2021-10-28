@@ -40,7 +40,7 @@ class GUPSGeneratorCore(AbstractGeneratorCore):
         """
         Create a GUPSGeneratorCore as the main generator.
         """
-        super(GUPSGeneratorCore, self).__init__()
+        super().__init__()
         self.generator = GUPSGen(
             start_addr=start_addr, mem_size=mem_size, update_limit=update_limit
         )

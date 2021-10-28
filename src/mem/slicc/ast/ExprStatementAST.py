@@ -32,7 +32,7 @@ from slicc.symbols import Type
 
 class ExprStatementAST(StatementAST):
     def __init__(self, slicc, expr):
-        super(ExprStatementAST, self).__init__(slicc)
+        super().__init__(slicc)
         self.expr = expr
 
     def __repr__(self):

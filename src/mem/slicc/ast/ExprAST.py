@@ -28,7 +28,7 @@ from slicc.ast.AST import AST
 
 class ExprAST(AST):
     def __init__(self, slicc):
-        super(ExprAST, self).__init__(slicc)
+        super().__init__(slicc)
 
     def findResources(self, resources):
         # The default is no resources

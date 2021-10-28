@@ -70,7 +70,7 @@ class Rom_Macroop(object):
 
 class Rom(Micro_Container):
     def __init__(self, name):
-        super(Rom, self).__init__(name)
+        super().__init__(name)
         self.externs = {}
 
 ##########################################################################
@@ -96,14 +96,14 @@ class Statement(object):
 
 class Microop(Statement):
     def __init__(self):
-        super(Microop, self).__init__()
+        super().__init__()
         self.mnemonic = ""
         self.labels = []
         self.is_microop = True
 
 class Directive(Statement):
     def __init__(self):
-        super(Directive, self).__init__()
+        super().__init__()
         self.name = ""
         self.is_directive = True
 

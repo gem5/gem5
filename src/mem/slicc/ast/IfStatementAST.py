@@ -30,7 +30,7 @@ from slicc.symbols import Type
 
 class IfStatementAST(StatementAST):
     def __init__(self, slicc, cond, then, else_):
-        super(IfStatementAST, self).__init__(slicc)
+        super().__init__(slicc)
 
         assert cond is not None
         assert then is not None

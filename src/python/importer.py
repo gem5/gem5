@@ -31,7 +31,7 @@ import os
 
 class ByteCodeLoader(importlib.abc.Loader):
     def __init__(self, code):
-        super(ByteCodeLoader, self).__init__()
+        super().__init__()
         self.code = code
 
     def exec_module(self, module):

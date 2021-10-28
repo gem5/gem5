@@ -149,8 +149,7 @@ class ProjectFileParser(Grammar):
 
     class StringParam(Param):
         def __init__(self, name, value):
-            super(ProjectFileParser.StringParam, self).__init__(
-                    is_object=False)
+            super().__init__(is_object=False)
             self.name = name
             self.value = value
 
@@ -160,8 +159,7 @@ class ProjectFileParser(Grammar):
 
     class ObjectParam(Param):
         def __init__(self, type_name, name, params):
-            super(ProjectFileParser.ObjectParam, self).__init__(
-                    is_object=True)
+            super().__init__(is_object=True)
             self.type_name = type_name
             self.name = name
             self.params = params
@@ -362,13 +360,13 @@ class ArmFastModelBin(Executable):
         sources = list(filter(not_component, components_and_sources))
 
         self.components = components
-        super(ArmFastModelBin, self).__init__(target, *sources)
+        super().__init__(target, *sources)
 
     @classmethod
     def declare_all(cls, env):
         env = env.Clone()
         env.Prepend(LIBS=env['STATIC_LIB'][0])
-        super(ArmFastModelBin, cls).declare_all(env)
+        super().declare_all(env)
 
     def declare(self, env):
         env = env.Clone()
@@ -383,7 +381,7 @@ class ArmFastModelBin(Executable):
         for component in self.components:
             component.prepare_env(env)
 
-        binary = super(ArmFastModelBin, self).declare(env, objs)[0]
+        binary = super().declare(env, objs)[0]
 
         # We need a copy of the simulation engine lib alongside the executable
         # so that the license check works properly.

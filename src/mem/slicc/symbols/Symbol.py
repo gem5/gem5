@@ -29,7 +29,7 @@ from slicc.util import PairContainer
 
 class Symbol(PairContainer):
     def __init__(self, symtab, ident, location, pairs=None):
-        super(Symbol, self).__init__()
+        super().__init__()
 
         from slicc.util import Location
         from slicc.symbols import SymbolTable
@@ -56,7 +56,7 @@ class Symbol(PairContainer):
         if key in self.pairs:
             self.warning("Pair key '%s' re-defined. new: '%s' old: '%s'",
                          key, value, self.pairs[key])
-        super(Symbol, self).__setitem__(key, value)
+        super().__setitem__(key, value)
 
     @property
     def short(self):

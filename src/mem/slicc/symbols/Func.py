@@ -31,7 +31,7 @@ from slicc.symbols.Type import Type
 class Func(Symbol):
     def __init__(self, table, ident, name, location, return_type, param_types,
                  param_strings, body, pairs):
-        super(Func, self).__init__(table, ident, location, pairs)
+        super().__init__(table, ident, location, pairs)
         self.return_type = return_type
         self.param_types = param_types
         self.param_strings = param_strings

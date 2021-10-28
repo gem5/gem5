@@ -36,7 +36,7 @@ class L2Cache(AbstractL2Cache):
     def __init__(
         self, l2_size, l2_assoc, network, num_l2Caches, cache_line_size
     ):
-        super(L2Cache, self).__init__(network, cache_line_size)
+        super().__init__(network, cache_line_size)
 
         # This is the cache memory object that stores the cache data and tags
         self.L2cache = RubyCache(

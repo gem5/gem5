@@ -31,7 +31,7 @@ class SimplePt2Pt(SimpleNetwork):
     """A simple point-to-point network. This doesn't not use garnet."""
 
     def __init__(self, ruby_system):
-        super(SimplePt2Pt, self).__init__()
+        super().__init__()
         self.netifs = []
 
         # TODO: These should be in a base class

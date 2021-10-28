@@ -78,7 +78,7 @@ class DRAMSim3MemCtrl(DRAMsim3):
         :param mem_name: The name of the type  of memory to be configured.
         :param num_chnls: The number of channels.
         """
-        super(DRAMSim3MemCtrl, self).__init__()
+        super().__init__()
         ini_path, outdir = config_ds3(mem_name, num_chnls)
         self.configFile = ini_path
         self.filePath = outdir
@@ -94,7 +94,7 @@ class SingleChannel(AbstractMemorySystem):
         :param mem_name: The name of the type  of memory to be configured.
         :param num_chnls: The number of channels.
         """
-        super(SingleChannel, self).__init__()
+        super().__init__()
         self.mem_ctrl = DRAMSim3MemCtrl(mem_type, 1)
         self._size = toMemorySize(size)
         if not size:

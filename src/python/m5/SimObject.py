@@ -450,7 +450,7 @@ class MetaSimObject(type):
         if 'cxx_template_params' not in value_dict:
             value_dict['cxx_template_params'] = []
         cls_dict['_value_dict'] = value_dict
-        cls = super(MetaSimObject, mcls).__new__(mcls, name, bases, cls_dict)
+        cls = super().__new__(mcls, name, bases, cls_dict)
         if 'type' in value_dict:
             allClasses[name] = cls
         return cls
@@ -459,7 +459,7 @@ class MetaSimObject(type):
     def __init__(cls, name, bases, dict):
         # calls type.__init__()... I think that's a no-op, but leave
         # it here just in case it's not.
-        super(MetaSimObject, cls).__init__(name, bases, dict)
+        super().__init__(name, bases, dict)
 
         # initialize required attributes
 
@@ -1147,7 +1147,7 @@ class ParamInfo(object):
 
 class SimObjectCliWrapperException(Exception):
     def __init__(self, message):
-        super(Exception, self).__init__(message)
+        super().__init__(message)
 
 class SimObjectCliWrapper(object):
     """

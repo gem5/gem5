@@ -29,4 +29,4 @@ from slicc.ast.AST import AST
 
 class TypeFieldAST(AST):
     def __init__(self, slicc, pairs):
-        super(TypeFieldAST, self).__init__(slicc, pairs)
+        super().__init__(slicc, pairs)

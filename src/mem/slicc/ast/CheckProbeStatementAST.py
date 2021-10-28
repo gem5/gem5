@@ -30,7 +30,7 @@ from slicc.ast.StatementAST import StatementAST
 
 class CheckProbeStatementAST(StatementAST):
     def __init__(self, slicc, in_port, address):
-        super(StatementAST, self).__init__(slicc)
+        super().__init__(slicc)
         self.in_port = in_port
         self.address = address
 

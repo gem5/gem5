@@ -58,7 +58,7 @@ class SimpleBoard(AbstractBoard, SEBinaryWorkload):
         memory: AbstractMemorySystem,
         cache_hierarchy: AbstractCacheHierarchy,
     ) -> None:
-        super(SimpleBoard, self).__init__(
+        super().__init__(
             clk_freq=clk_freq,
             processor=processor,
             memory=memory,

@@ -28,7 +28,7 @@ from slicc.ast.AST import AST
 
 class PairListAST(AST):
     def __init__(self, slicc):
-        super(PairListAST, self).__init__(slicc)
+        super().__init__(slicc)
 
     def __repr__(self):
         return "[PairListAST] %r" % self.pairs

@@ -37,7 +37,7 @@ class AbstractMemorySystem(SubSystem):
     __metaclass__ = ABCMeta
 
     def __init__(self) -> None:
-        super(AbstractMemorySystem, self).__init__()
+        super().__init__()
 
     @abstractmethod
     def incorporate_memory(self, board: AbstractBoard) -> None:

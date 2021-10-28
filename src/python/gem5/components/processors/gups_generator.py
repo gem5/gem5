@@ -57,7 +57,7 @@ class GUPSGenerator(AbstractProcessor):
         simulation. Pass zero to run the benchmark to completion (The amount of
         time it takes to simulate depends on )
         """
-        super(GUPSGenerator, self).__init__(
+        super().__init__(
             cores=[
                 GUPSGeneratorCore(
                     start_addr=start_addr,

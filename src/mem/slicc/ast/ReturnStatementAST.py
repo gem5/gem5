@@ -29,7 +29,7 @@ from slicc.ast.StatementAST import StatementAST
 
 class ReturnStatementAST(StatementAST):
     def __init__(self, slicc, expr_ast):
-        super(ReturnStatementAST, self).__init__(slicc)
+        super().__init__(slicc)
 
         self.expr_ast = expr_ast
 

@@ -42,7 +42,7 @@ let {{
 
     class X86MicrocodeRom(Rom):
         def __init__(self, name):
-            super(X86MicrocodeRom, self).__init__(name)
+            super().__init__(name)
             self.directives = {}
 
         def add_microop(self, mnemonic, microop):

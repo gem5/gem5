@@ -36,7 +36,7 @@ class AbstractCore(SubSystem):
     __metaclass__ = ABCMeta
 
     def __init__(self, cpu_type: CPUTypes):
-        super(AbstractCore, self).__init__()
+        super().__init__()
         if cpu_type == CPUTypes.KVM:
             requires(kvm_required=True)
         self._cpu_type = cpu_type

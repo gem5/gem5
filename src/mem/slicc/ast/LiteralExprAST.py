@@ -30,7 +30,7 @@ from slicc.symbols import Type
 
 class LiteralExprAST(ExprAST):
     def __init__(self, slicc, literal, type):
-        super(LiteralExprAST, self).__init__(slicc)
+        super().__init__(slicc)
         self.literal = literal
         self.type = type
 

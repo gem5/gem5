@@ -47,7 +47,7 @@ class L1Cache(AbstractL1Cache):
         target_isa: ISA,
         clk_domain: ClockDomain,
     ):
-        super(L1Cache, self).__init__(network, cache_line_size)
+        super().__init__(network, cache_line_size)
 
         self.cacheMemory = RubyCache(
             size=size, assoc=assoc, start_index_bit=self.getBlockSizeBits()

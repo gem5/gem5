@@ -158,7 +158,7 @@ let {{
             self.control_indirect = True
 
         def __init__(self, name):
-            super(X86Macroop, self).__init__(name)
+            super().__init__(name)
             self.directives = {
                 "adjust_env" : self.setAdjustEnv,
                 "adjust_imm" : self.adjustImm,

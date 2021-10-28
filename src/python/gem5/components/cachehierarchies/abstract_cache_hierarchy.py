@@ -35,7 +35,7 @@ class AbstractCacheHierarchy(SubSystem):
     __metaclass__ = ABCMeta
 
     def __init__(self):
-        super(AbstractCacheHierarchy, self).__init__()
+        super().__init__()
 
     """
     A Cache Hierarchy incorporates any system components which manages

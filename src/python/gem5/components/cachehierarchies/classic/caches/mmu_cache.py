@@ -44,7 +44,7 @@ class MMUCache(Cache):
         tgts_per_mshr: int = 12,
         writeback_clean: bool = True,
     ):
-        super(MMUCache, self).__init__()
+        super().__init__()
         self.size = size
         self.assoc = assoc
         self.tag_latency = tag_latency

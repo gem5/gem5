@@ -63,7 +63,7 @@ if env['USE_SYSTEMC'] and GetOption('with_systemc_tests'):
     test_dir = Dir('.')
     class SystemCTestBin(Executable):
         def __init__(self, test):
-            super(SystemCTestBin, self).__init__(test.target, *test.sources)
+            super().__init__(test.target, *test.sources)
             self.reldir = test.reldir
             self.test_deps = test.deps
 
@@ -82,7 +82,7 @@ if env['USE_SYSTEMC'] and GetOption('with_systemc_tests'):
             sl_dir, sl_base = os.path.split(shared_lib_path)
             env.Append(LIBPATH=[sl_dir], LIBS=[sl_base])
 
-            super(SystemCTestBin, cls).declare_all(env)
+            super().declare_all(env)
 
         def declare(self, env):
             env = env.Clone()
@@ -97,7 +97,7 @@ if env['USE_SYSTEMC'] and GetOption('with_systemc_tests'):
             env.Append(LINKFLAGS=Split('-z origin'))
             env.Append(RPATH=[
                     env.Literal(os.path.join('\\$$ORIGIN', relpath))])
-            test_bin = super(SystemCTestBin, self).declare(env, objs)
+            test_bin = super().declare(env, objs)
             test_dir = self.dir.Dir(self.reldir)
             for dep in self.test_deps:
                 env.Depends(test_bin, test_dir.File(dep))

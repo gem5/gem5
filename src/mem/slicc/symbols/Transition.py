@@ -32,7 +32,7 @@ class Transition(Symbol):
     def __init__(self, table, machine, state, event, nextState, actions,
                  request_types, location):
         ident = "%s|%s" % (state, event)
-        super(Transition, self).__init__(table, ident, location)
+        super().__init__(table, ident, location)
 
         self.state = machine.states[state]
         self.event = machine.events[event]

@@ -51,7 +51,7 @@ class EventWrapper(Event):
     """Helper class to wrap callable objects in an Event base class"""
 
     def __init__(self, func, **kwargs):
-        super(EventWrapper, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         if not callable(func):
             raise RuntimeError("Can't wrap '%s', object is not callable" % \
@@ -68,7 +68,7 @@ class EventWrapper(Event):
 
 class ProgressEvent(Event):
     def __init__(self, eventq, period):
-        super(ProgressEvent, self).__init__()
+        super().__init__()
         self.period = int(period)
         self.eventq = eventq
         self.eventq.schedule(self, m5.curTick() + self.period)

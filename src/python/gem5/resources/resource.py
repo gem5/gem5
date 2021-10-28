@@ -127,7 +127,7 @@ class Resource(AbstractResource):
 
         to_path = os.path.join(resource_directory, resource_name)
 
-        super(Resource, self).__init__(
+        super().__init__(
                     local_path=to_path,
                     metadata=get_resources_json_obj(resource_name))
         get_resource(

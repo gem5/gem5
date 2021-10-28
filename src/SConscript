@@ -94,7 +94,7 @@ class PySource(SourceFile):
 
     def __init__(self, package, source, tags=None, add_tags=None):
         '''specify the python package, the source file, and any tags'''
-        super(PySource, self).__init__(source, tags, add_tags)
+        super().__init__(source, tags, add_tags)
 
         basename = os.path.basename(self.filename)
         modname, ext = os.path.splitext(basename)
@@ -145,7 +145,7 @@ class SimObject(PySource):
     def __init__(self, source, tags=None, add_tags=None):
         '''Specify the source file and any tags (automatically in
         the m5.objects package)'''
-        super(SimObject, self).__init__('m5.objects', source, tags, add_tags)
+        super().__init__('m5.objects', source, tags, add_tags)
         if self.fixed:
             raise AttributeError("Too late to call SimObject now.")
 
@@ -226,7 +226,7 @@ class TopLevelMeta(type):
 
     def __init__(cls, name, bases, d):
         TopLevelMeta.all.append(cls)
-        super(TopLevelMeta, cls).__init__(name, bases, d)
+        super().__init__(name, bases, d)
         cls.all = []
 
 class TopLevelBase(object, metaclass=TopLevelMeta):
@@ -235,7 +235,7 @@ class TopLevelBase(object, metaclass=TopLevelMeta):
     def __init__(self, target, *srcs_and_filts):
         '''Specify the target name and any sources. Sources that are
         not SourceFiles are evalued with Source().'''
-        super(TopLevelBase, self).__init__()
+        super().__init__()
         self.all.append(self)
         self.target = target
 
@@ -325,7 +325,7 @@ class Gem5(Executable):
         env.Depends(date_obj, objs)
         objs.append(date_obj)
 
-        return super(Gem5, self).declare(env, objs)
+        return super().declare(env, objs)
 
 
 class GTest(Executable):
@@ -334,7 +334,7 @@ class GTest(Executable):
     def __init__(self, *srcs_and_filts, **kwargs):
         if not kwargs.pop('skip_lib', False):
             srcs_and_filts = srcs_and_filts + (with_tag('gtest lib'),)
-        super(GTest, self).__init__(*srcs_and_filts)
+        super().__init__(*srcs_and_filts)
 
     @classmethod
     def declare_all(cls, env):
@@ -345,10 +345,10 @@ class GTest(Executable):
         env.Append(CPPFLAGS=env['GTEST_CPPFLAGS'])
         env['GTEST_OUT_DIR'] = \
             Dir(env['BUILDDIR']).Dir('unittests.${ENV_LABEL}')
-        return super(GTest, cls).declare_all(env)
+        return super().declare_all(env)
 
     def declare(self, env):
-        binary, stripped = super(GTest, self).declare(env)
+        binary, stripped = super().declare(env)
 
         out_dir = env['GTEST_OUT_DIR']
         xml_file = out_dir.Dir(str(self.dir)).File(self.target + '.xml')
@@ -520,7 +520,7 @@ SimObject.fixed = True
 class SimpleModuleLoader(importlib.abc.Loader):
     '''A simple wrapper which delegates setting up a module to a function.'''
     def __init__(self, executor):
-        super(SimpleModuleLoader, self).__init__()
+        super().__init__()
         self.executor = executor
     def create_module(self, spec):
         return None
@@ -530,7 +530,7 @@ class SimpleModuleLoader(importlib.abc.Loader):
 
 class M5MetaPathFinder(importlib.abc.MetaPathFinder):
     def __init__(self, modules):
-        super(M5MetaPathFinder, self).__init__()
+        super().__init__()
         self.modules = modules
         self.installed = set()
 

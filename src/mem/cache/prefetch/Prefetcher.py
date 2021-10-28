@@ -85,7 +85,7 @@ class BasePrefetcher(ClockedObject):
             "Size of pages for virtual addresses")
 
     def __init__(self, **kwargs):
-        super(BasePrefetcher, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._events = []
         self._tlbs = []
 

@@ -105,7 +105,7 @@ class TestPhaseMeta(type):
         if not d.pop('abstract', False):
             test_phase_classes[d['name']] = cls
 
-        super(TestPhaseMeta, cls).__init__(name, bases, d)
+        super().__init__(name, bases, d)
 
 class TestPhaseBase(metaclass=TestPhaseMeta):
     abstract = True
@@ -212,7 +212,7 @@ def info_filt(num):
 
 class DiffingChecker(Checker):
     def __init__(self, ref, test, tag, out_dir):
-        super(DiffingChecker, self).__init__(ref, test, tag)
+        super().__init__(ref, test, tag)
         self.out_dir = out_dir
 
     def is_bytes_mode(self):

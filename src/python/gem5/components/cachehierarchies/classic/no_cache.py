@@ -82,7 +82,7 @@ class NoCache(AbstractClassicCacheHierarchy):
 
         :type membus: BaseXBar
         """
-        super(NoCache, self).__init__()
+        super().__init__()
         self.membus = membus
 
     @overrides(AbstractClassicCacheHierarchy)

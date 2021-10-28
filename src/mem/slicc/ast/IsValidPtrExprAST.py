@@ -31,7 +31,7 @@ from slicc.symbols import Type
 
 class IsValidPtrExprAST(ExprAST):
     def __init__(self, slicc, variable, flag):
-        super(IsValidPtrExprAST, self).__init__(slicc)
+        super().__init__(slicc)
         self.variable = variable
         self.flag = flag
 

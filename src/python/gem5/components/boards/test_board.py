@@ -56,7 +56,7 @@ class TestBoard(AbstractBoard):
         memory: AbstractMemorySystem,
         cache_hierarchy: AbstractCacheHierarchy,
     ):
-        super(TestBoard, self).__init__(
+        super().__init__(
             clk_freq=clk_freq,
             processor=processor,
             memory=memory,

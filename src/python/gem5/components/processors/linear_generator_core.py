@@ -47,7 +47,7 @@ class LinearGeneratorCore(AbstractGeneratorCore):
         rd_perc: int,
         data_limit: int,
     ) -> None:
-        super(LinearGeneratorCore, self).__init__()
+        super().__init__()
         """ The linear generator core interface.
 
         This class defines the interface for a generator core that will create

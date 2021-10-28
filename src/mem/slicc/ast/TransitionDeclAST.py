@@ -31,7 +31,7 @@ from slicc.symbols import Transition
 class TransitionDeclAST(DeclAST):
     def __init__(self, slicc, request_types, states, events, next_state,
                  actions):
-        super(TransitionDeclAST, self).__init__(slicc)
+        super().__init__(slicc)
 
         self.request_types = request_types
         self.states = states

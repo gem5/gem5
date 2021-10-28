@@ -62,13 +62,8 @@ class Scalar(Statistic):
                  unit: Optional[str] = None,
                  description: Optional[str] = None,
                  datatype: Optional[StorageType] = None):
-        super(Scalar, self).__init__(
-                                     value=value,
-                                     type="Scalar",
-                                     unit=unit,
-                                     description=description,
-                                     datatype=datatype,
-                                    )
+        super().__init__(value=value, type="Scalar", unit=unit,
+                description=description, datatype=datatype)
 
 class BaseScalarVector(Statistic):
     """
@@ -81,13 +76,8 @@ class BaseScalarVector(Statistic):
                  unit: Optional[str] = None,
                  description: Optional[str] = None,
                  datatype: Optional[StorageType] = None):
-        super(BaseScalarVector, self).__init__(
-                                           value=list(value),
-                                           type=type,
-                                           unit=unit,
-                                           description=description,
-                                           datatype=datatype,
-                                           )
+        super().__init__(value=list(value), type=type, unit=unit,
+                description=description, datatype=datatype)
 
     def mean(self) -> float:
         """
@@ -150,13 +140,8 @@ class Distribution(BaseScalarVector):
                  unit: Optional[str] = None,
                  description: Optional[str] = None,
                  datatype: Optional[StorageType] = None):
-        super(Distribution, self).__init__(
-                                           value=value,
-                                           type="Distribution",
-                                           unit=unit,
-                                           description=description,
-                                           datatype=datatype,
-                                           )
+        super().__init__(value=value, type="Distribution", unit=unit,
+                description=description, datatype=datatype)
 
         self.min = min
         self.max = max
@@ -190,13 +175,8 @@ class Accumulator(BaseScalarVector):
                  unit: Optional[str] = None,
                  description: Optional[str] = None,
                  datatype: Optional[StorageType] = None):
-        super(Accumulator, self).__init__(
-                                     value=value,
-                                     type="Accumulator",
-                                     unit=unit,
-                                     description=description,
-                                     datatype=datatype,
-                                    )
+        super().__init__(value=value, type="Accumulator", unit=unit,
+                description=description, datatype=datatype)
 
         self._count = count
         self.min = min

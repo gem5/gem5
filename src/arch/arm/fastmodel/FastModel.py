@@ -47,7 +47,7 @@ class AmbaTargetSocket(Port):
         peer_role = AMBA_TARGET_ROLE(width)
         Port.compat(my_role, peer_role)
 
-        super(AmbaTargetSocket, self).__init__(my_role, desc)
+        super().__init__(my_role, desc)
 
 class VectorAmbaTargetSocket(VectorPort):
     def __init__(self, width, desc):
@@ -55,7 +55,7 @@ class VectorAmbaTargetSocket(VectorPort):
         peer_role = AMBA_TARGET_ROLE(width)
         Port.compat(my_role, peer_role)
 
-        super(VectorAmbaTargetSocket, self).__init__(my_role, desc)
+        super().__init__(my_role, desc)
 
 class AmbaInitiatorSocket(Port):
     def __init__(self, width, desc):
@@ -63,8 +63,7 @@ class AmbaInitiatorSocket(Port):
         peer_role = AMBA_INITIATOR_ROLE(width)
         Port.compat(my_role, peer_role)
 
-        super(AmbaInitiatorSocket, self).__init__(
-                my_role, desc, is_source=True)
+        super().__init__(my_role, desc, is_source=True)
 
 class VectorAmbaInitiatorSocket(VectorPort):
     def __init__(self, width, desc):
@@ -72,8 +71,7 @@ class VectorAmbaInitiatorSocket(VectorPort):
         peer_role = AMBA_INITIATOR_ROLE(width)
         Port.compat(my_role, peer_role)
 
-        super(VectorAmbaInitiatorSocket, self).__init__(
-                my_role, desc, is_source=True)
+        super().__init__(my_role, desc, is_source=True)
 
 class ScRequestPort(Port):
     def __init__(self, desc, port_type):
@@ -81,7 +79,7 @@ class ScRequestPort(Port):
         peer_role = SC_RESPONSE_PORT_ROLE(port_type)
         Port.compat(my_role, peer_role)
 
-        super(ScRequestPort, self).__init__(my_role, desc)
+        super().__init__(my_role, desc)
 
 class ScResponsePort(Port):
     def __init__(self, desc, port_type):
@@ -89,7 +87,7 @@ class ScResponsePort(Port):
         peer_role = SC_REQUEST_PORT_ROLE(port_type)
         Port.compat(my_role, peer_role)
 
-        super(ScResponsePort, self).__init__(my_role, desc)
+        super().__init__(my_role, desc)
 
 class AmbaToTlmBridge64(SystemC_ScModule):
     type = 'AmbaToTlmBridge64'

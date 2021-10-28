@@ -82,7 +82,7 @@ class SwitchableProcessor(AbstractProcessor):
 
             self.kvm_vm = KvmVM()
 
-        super(SwitchableProcessor, self).__init__(cores=all_cores)
+        super().__init__(cores=all_cores)
 
     @overrides(AbstractProcessor)
     def incorporate_processor(self, board: AbstractBoard) -> None:

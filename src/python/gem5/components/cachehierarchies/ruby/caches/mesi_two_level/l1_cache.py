@@ -56,7 +56,7 @@ class L1Cache(AbstractL1Cache):
         """Creating L1 cache controller. Consist of both instruction
         and data cache.
         """
-        super(L1Cache, self).__init__(network, cache_line_size)
+        super().__init__(network, cache_line_size)
 
         # This is the cache memory object that stores the cache data and tags
         self.L1Icache = RubyCache(

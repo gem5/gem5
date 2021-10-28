@@ -29,7 +29,7 @@ from slicc.symbols import Func, Type
 
 class StateDeclAST(DeclAST):
     def __init__(self, slicc, type_ast, pairs, states):
-        super(StateDeclAST, self).__init__(slicc, pairs)
+        super().__init__(slicc, pairs)
 
         self.type_ast = type_ast
         self.states = states

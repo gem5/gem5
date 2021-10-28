@@ -29,7 +29,7 @@ from slicc.ast.AST import AST
 
 class DeclListAST(AST):
     def __init__(self, slicc, decls):
-        super(DeclListAST, self).__init__(slicc)
+        super().__init__(slicc)
 
         if not isinstance(decls, (list, tuple)):
             decls = [ decls ]

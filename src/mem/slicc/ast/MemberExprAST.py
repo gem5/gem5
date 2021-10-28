@@ -29,7 +29,7 @@ from slicc.ast.ExprAST import ExprAST
 
 class MemberExprAST(ExprAST):
     def __init__(self, slicc, expr_ast, field):
-        super(MemberExprAST, self).__init__(slicc)
+        super().__init__(slicc)
 
         self.expr_ast = expr_ast
         self.field = field

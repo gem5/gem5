@@ -47,7 +47,7 @@ class RandomGeneratorCore(AbstractGeneratorCore):
         rd_perc: int,
         data_limit: int,
     ) -> None:
-        super(RandomGeneratorCore, self).__init__()
+        super().__init__()
         """ The random generator core interface.
 
         This class defines the interface for a generator core that will create

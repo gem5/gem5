@@ -30,7 +30,7 @@ from slicc.symbols import Action, Type, Var
 
 class ActionDeclAST(DeclAST):
     def __init__(self, slicc, ident, pairs, statement_list):
-        super(ActionDeclAST, self).__init__(slicc, pairs)
+        super().__init__(slicc, pairs)
         self.ident = ident
         self.statement_list = statement_list
 

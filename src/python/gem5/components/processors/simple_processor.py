@@ -42,7 +42,7 @@ class SimpleProcessor(AbstractProcessor):
     """
 
     def __init__(self, cpu_type: CPUTypes, num_cores: int) -> None:
-        super(SimpleProcessor, self).__init__(
+        super().__init__(
             cores=self._create_cores(
                 cpu_type=cpu_type,
                 num_cores=num_cores,

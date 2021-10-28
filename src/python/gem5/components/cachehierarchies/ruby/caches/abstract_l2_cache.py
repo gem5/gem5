@@ -39,7 +39,7 @@ class AbstractL2Cache(L2Cache_Controller):
         return cls._version - 1
 
     def __init__(self, network, cache_line_size):
-        super(AbstractL2Cache, self).__init__()
+        super().__init__()
 
         self.version = self.versionCount()
         self._cache_line_size = cache_line_size

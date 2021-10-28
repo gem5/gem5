@@ -89,7 +89,7 @@ let {{
 
         def __init__(self, it):
             self.value = next(it)
-            super(ImmOp, self).__init__()
+            super().__init__()
 
         def ctor_args(self):
             return str(self.value)
@@ -109,7 +109,7 @@ let {{
     class RegisterOp(object):
         def __init__(self, it):
             self.idx = next(it)
-            super(RegisterOp, self).__init__()
+            super().__init__()
 
         def ctor_args(self):
             return str(self.idx)

@@ -43,7 +43,7 @@ from slicc.symbols import Func, Type
 
 class FuncCallExprAST(ExprAST):
     def __init__(self, slicc, proc_name, exprs):
-        super(FuncCallExprAST, self).__init__(slicc)
+        super().__init__(slicc)
         self.proc_name = proc_name
         self.exprs = exprs
 

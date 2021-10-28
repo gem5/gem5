@@ -29,7 +29,7 @@ from slicc.ast.ExprAST import ExprAST
 
 class MethodCallExprAST(ExprAST):
     def __init__(self, slicc, proc_name, expr_ast_vec):
-        super(MethodCallExprAST, self).__init__(slicc)
+        super().__init__(slicc)
         self.proc_name = proc_name
         self.expr_ast_vec = expr_ast_vec
 
@@ -67,7 +67,7 @@ class MethodCallExprAST(ExprAST):
 
 class MemberMethodCallExprAST(MethodCallExprAST):
     def __init__(self, slicc, obj_expr_ast, func_call):
-        s = super(MemberMethodCallExprAST, self)
+        s = super()
         s.__init__(slicc, func_call.proc_name, func_call.exprs)
         self.obj_expr_ast = obj_expr_ast
 
@@ -157,7 +157,7 @@ class MemberMethodCallExprAST(MethodCallExprAST):
 
 class ClassMethodCallExprAST(MethodCallExprAST):
     def __init__(self, slicc, type_ast, proc_name, expr_ast_vec):
-        s = super(ClassMethodCallExprAST, self)
+        s = super()
         s.__init__(slicc, proc_name, expr_ast_vec)
 
         self.type_ast = type_ast

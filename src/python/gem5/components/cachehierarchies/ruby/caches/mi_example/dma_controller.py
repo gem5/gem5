@@ -37,7 +37,7 @@ class DMAController(AbstractDMAController):
 
     class DMAController(AbstractDMAController):
         def __init__(self, network, cache_line_size):
-            super(DMAController, self).__init__(network, cache_line_size)
+            super().__init__(network, cache_line_size)
 
     @overrides(AbstractDMAController)
     def connectQueues(self, network):

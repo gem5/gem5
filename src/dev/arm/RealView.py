@@ -604,7 +604,7 @@ class ParentMem(SimpleMemory):
     helper via the ParentMem interface.
     """
     def __init__(self, *args, **kwargs):
-        super(ParentMem, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._generators = []
 
     def addSubnodeGenerator(self, gen):
@@ -624,7 +624,7 @@ class ParentMem(SimpleMemory):
 
 class MmioSRAM(ParentMem):
     def __init__(self, *args, **kwargs):
-        super(MmioSRAM, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def generateDeviceTree(self, state):
         node = FdtNode("sram@%x" % int(self.range.start))
@@ -913,8 +913,7 @@ class VExpress_EMM(RealView):
     def setupBootLoader(self, cur_sys, loc, boot_loader=None):
         if boot_loader is None:
             boot_loader = loc('boot_emm.arm')
-        super(VExpress_EMM, self).setupBootLoader(
-                cur_sys, boot_loader, 0x8000000, 0x80000000)
+        super().setupBootLoader(cur_sys, boot_loader, 0x8000000, 0x80000000)
 
 class VExpress_EMM64(VExpress_EMM):
     # Three memory regions are specified totalling 512GiB
@@ -1230,7 +1229,7 @@ Interrupts:
         ]
 
     def __init__(self, **kwargs):
-        super(VExpress_GEM5_Base, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.clock32KHz.voltage_domain = self.io_voltage
         self.clock24MHz.voltage_domain = self.io_voltage
         self.system_watchdog.clk_domain = self.dcc.osc_sys
@@ -1273,8 +1272,7 @@ Interrupts:
             self.smmu.connect(dev)
 
     def setupBootLoader(self, cur_sys, boot_loader):
-        super(VExpress_GEM5_Base, self).setupBootLoader(
-                cur_sys, boot_loader, 0x8000000, 0x80000000)
+        super().setupBootLoader(cur_sys, boot_loader, 0x8000000, 0x80000000)
 
         #  Setup m5ops. It's technically not a part of the boot
         #  loader, but this is the only place we can configure the
@@ -1302,7 +1300,7 @@ Interrupts:
 
     def generateDeviceTree(self, state):
         # Generate using standard RealView function
-        dt = list(super(VExpress_GEM5_Base, self).generateDeviceTree(state))
+        dt = list(super().generateDeviceTree(state))
         if len(dt) > 1:
             raise Exception("System returned too many DT nodes")
         node = dt[0]
@@ -1344,11 +1342,10 @@ class VExpress_GEM5_V1_Base(VExpress_GEM5_Base):
     def setupBootLoader(self, cur_sys, loc, boot_loader=None):
         if boot_loader is None:
             boot_loader = [ loc('boot.arm64'), loc('boot.arm') ]
-        super(VExpress_GEM5_V1_Base, self).setupBootLoader(
-                cur_sys, boot_loader)
+        super().setupBootLoader(cur_sys, boot_loader)
 
     def _on_chip_devices(self):
-        return super(VExpress_GEM5_V1_Base,self)._on_chip_devices() + [
+        return super()._on_chip_devices() + [
                 self.gic, self.vgic, self.gicv2m,
             ]
 
@@ -1364,9 +1361,7 @@ class VExpress_GEM5_V1_HDLcd(VExpress_GEM5_V1_Base):
                    pio_addr=0x2b000000, interrupt=ArmSPI(num=95))
 
     def _on_chip_devices(self):
-        return super(VExpress_GEM5_V1_HDLcd,self)._on_chip_devices() + [
-                self.hdlcd,
-            ]
+        return super()._on_chip_devices() + [self.hdlcd,]
 
 class VExpress_GEM5_V2_Base(VExpress_GEM5_Base):
     gic = Gicv3(dist_addr=0x2c000000, redist_addr=0x2c010000,
@@ -1377,15 +1372,12 @@ class VExpress_GEM5_V2_Base(VExpress_GEM5_Base):
     gic.cpu_max = 128
 
     def _on_chip_devices(self):
-        return super(VExpress_GEM5_V2_Base,self)._on_chip_devices() + [
-                self.gic, self.gic.its
-            ]
+        return super()._on_chip_devices() + [self.gic, self.gic.its]
 
     def setupBootLoader(self, cur_sys, loc, boot_loader=None):
         if boot_loader is None:
             boot_loader = [ loc('boot_v2.arm64') ]
-        super(VExpress_GEM5_V2_Base, self).setupBootLoader(
-                cur_sys, boot_loader)
+        super().setupBootLoader(cur_sys, boot_loader)
 
 class VExpress_GEM5_V2(VExpress_GEM5_V2_Base):
     """
@@ -1399,9 +1391,7 @@ class VExpress_GEM5_V2_HDLcd(VExpress_GEM5_V2_Base):
                    pio_addr=0x2b000000, interrupt=ArmSPI(num=95))
 
     def _on_chip_devices(self):
-        return super(VExpress_GEM5_V2_HDLcd,self)._on_chip_devices() + [
-                self.hdlcd,
-            ]
+        return super()._on_chip_devices() + [self.hdlcd,]
 
 class VExpress_GEM5_Foundation(VExpress_GEM5_Base):
     """
@@ -1439,18 +1429,12 @@ class VExpress_GEM5_Foundation(VExpress_GEM5_Base):
         int_policy="ARM_PCI_INT_DEV", int_base=100, int_count=4)
 
     def _on_chip_devices(self):
-        return super(VExpress_GEM5_Foundation, self)._on_chip_devices() + [
-                self.gic
-            ]
+        return super()._on_chip_devices() + [self.gic]
 
     def _off_chip_devices(self):
-        return super(VExpress_GEM5_Foundation, self)._off_chip_devices() + [
-                self.clcd,
-                self.sp810_fake,
-        ]
+        return super()._off_chip_devices() + [self.clcd, self.sp810_fake,]
 
     def setupBootLoader(self, cur_sys, loc, boot_loader=None):
         if boot_loader is None:
             boot_loader = [ loc('boot_v2.arm64') ]
-        super(VExpress_GEM5_Foundation, self).setupBootLoader(
-                cur_sys, boot_loader)
+        super().setupBootLoader(cur_sys, boot_loader)

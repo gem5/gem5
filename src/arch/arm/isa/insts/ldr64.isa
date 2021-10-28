@@ -47,7 +47,7 @@ let {{
 
         def __init__(self, mnem, Name, size=4, sign=False, user=False,
                      literal=False, flavor="normal", top=False):
-            super(LoadInst64, self).__init__()
+            super().__init__()
 
             self.name = mnem
             self.Name = Name
@@ -175,14 +175,14 @@ let {{
 
     class LoadImmInst64(LoadInst64):
         def __init__(self, *args, **kargs):
-            super(LoadImmInst64, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
             self.offset = " + imm"
 
             self.wbDecl = "MicroAddXiUop(machInst, base, base, imm);"
 
     class LoadRegInst64(LoadInst64):
         def __init__(self, *args, **kargs):
-            super(LoadRegInst64, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
             self.offset = " + extendReg64(XOffset, type, shiftAmt, 64)"
 
             self.wbDecl = \
@@ -191,7 +191,7 @@ let {{
 
     class LoadRawRegInst64(LoadInst64):
         def __init__(self, *args, **kargs):
-            super(LoadRawRegInst64, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
             self.offset = ""
 
     class LoadSingle64(LoadInst64):

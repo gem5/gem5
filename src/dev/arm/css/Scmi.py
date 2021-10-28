@@ -57,7 +57,7 @@ class ScmiChannel(SimObject):
         "This is the doorbell used to notify the SCMI platform")
 
     def __init__(self, shmem, *args, **kwargs):
-        super(ScmiChannel, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         def shmemGenerator(state):
             shmem_node = FdtNode("scp-shmem@%x" % 0)

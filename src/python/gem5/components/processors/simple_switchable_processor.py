@@ -75,7 +75,7 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
             ],
         }
 
-        super(SimpleSwitchableProcessor, self).__init__(
+        super().__init__(
             switchable_cores=switchable_cores,
             starting_cores=self._start_key,
         )

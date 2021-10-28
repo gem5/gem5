@@ -68,7 +68,7 @@ class AbstractBoard(System):
         memory: "AbstractMemory",
         cache_hierarchy: "AbstractCacheHierarchy",
     ) -> None:
-        super(AbstractBoard, self).__init__()
+        super().__init__()
         """
         :param clk_freq: The clock frequency for this board.
         :param processor: The processor for this board.

@@ -48,7 +48,7 @@ class L2Cache(Cache):
         writeback_clean: bool = True,
         PrefetcherCls: Type[BasePrefetcher] = StridePrefetcher,
     ):
-        super(L2Cache, self).__init__()
+        super().__init__()
         self.size = size
         self.assoc = assoc
         self.tag_latency = tag_latency

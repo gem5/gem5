@@ -29,7 +29,7 @@ from slicc.symbols import Event, State
 
 class TypeFieldStateAST(TypeFieldAST):
     def __init__(self, slicc, field_id, perm_ast, pairs_ast):
-        super(TypeFieldStateAST, self).__init__(slicc, pairs_ast)
+        super().__init__(slicc, pairs_ast)
 
         self.field_id = field_id
         self.perm_ast = perm_ast

@@ -47,7 +47,7 @@ let {{
 
         def __init__(self, mnem, post, add, writeback, size=4,
                      sign=False, user=False, flavor="normal"):
-            super(StoreInst, self).__init__()
+            super().__init__()
 
             self.name = mnem
             self.post = post
@@ -88,7 +88,7 @@ let {{
         decConstBase = 'Srs'
 
         def __init__(self, mnem, post, add, writeback):
-            super(SrsInst, self).__init__()
+            super().__init__()
             self.name = mnem
             self.post = post
             self.add = add
@@ -145,7 +145,7 @@ let {{
 
     class StoreImmInst(StoreInst):
         def __init__(self, *args, **kargs):
-            super(StoreImmInst, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
             self.offset = self.op + " imm"
 
             if self.add:
@@ -155,7 +155,7 @@ let {{
 
     class StoreRegInst(StoreInst):
         def __init__(self, *args, **kargs):
-            super(StoreRegInst, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
             self.offset = self.op + " shift_rm_imm(Index, shiftAmt," + \
                                     " shiftType, OptShiftRmCondCodesC)"
             if self.add:
@@ -169,7 +169,7 @@ let {{
 
     class StoreSingle(StoreInst):
         def __init__(self, *args, **kargs):
-            super(StoreSingle, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
 
             # Build the default class name
             self.Name = self.nameFunc(self.post, self.add, self.writeback,
@@ -235,7 +235,7 @@ let {{
         nameFunc = staticmethod(storeImmClassName)
 
         def __init__(self, *args, **kargs):
-            super(StoreImmEx, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
             self.codeBlobs["postacc_code"] = \
                   "Result = !writeResult; SevMailbox = 1; LLSCLock = 0;"
 
@@ -254,7 +254,7 @@ let {{
 
     class StoreDouble(StoreInst):
         def __init__(self, *args, **kargs):
-            super(StoreDouble, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
 
             # Build the default class name
             self.Name = self.nameFunc(self.post, self.add, self.writeback)
@@ -321,7 +321,7 @@ let {{
         nameFunc = staticmethod(storeDoubleImmClassName)
 
         def __init__(self, *args, **kargs):
-            super(StoreDoubleImmEx, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
             self.codeBlobs["postacc_code"] = \
                   "Result = !writeResult; SevMailbox = 1; LLSCLock = 0;"
 

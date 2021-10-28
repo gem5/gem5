@@ -30,7 +30,7 @@ from slicc.symbols.Symbol import Symbol
 class Var(Symbol):
     def __init__(self, symtab, ident, location, type, code, pairs,
                  machine=None):
-        super(Var, self).__init__(symtab, ident, location, pairs)
+        super().__init__(symtab, ident, location, pairs)
 
         self.machine = machine
         self.type = type

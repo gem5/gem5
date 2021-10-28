@@ -35,7 +35,7 @@ from slicc.symbols import Var
 
 class DeferEnqueueingStatementAST(StatementAST):
     def __init__(self, slicc, queue_name, type_ast, statements):
-        super(DeferEnqueueingStatementAST, self).__init__(slicc)
+        super().__init__(slicc)
 
         self.queue_name = queue_name
         self.type_ast = type_ast

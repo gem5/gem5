@@ -39,7 +39,7 @@ class AbstractDMAController(DMA_Controller):
         return cls._version - 1
 
     def __init__(self, network, cache_line_size):
-        super(AbstractDMAController, self).__init__()
+        super().__init__()
         self.version = self.versionCount()
         self._cache_line_size = cache_line_size
         self.connectQueues(network)

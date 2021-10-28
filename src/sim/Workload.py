@@ -59,7 +59,7 @@ class KernelWorkload(Workload):
 class SEWorkloadMeta(type(Workload)):
     all_se_workload_classes = []
     def __new__(mcls, name, bases, dct):
-        cls = super(SEWorkloadMeta, mcls).__new__(mcls, name, bases, dct)
+        cls = super().__new__(mcls, name, bases, dct)
         SEWorkloadMeta.all_se_workload_classes.append(cls)
         return cls
 

@@ -47,9 +47,7 @@ class JsonLoader(json.JSONDecoder):
     """
 
     def __init__(self):
-        super(JsonLoader, self).__init__(self,
-            object_hook=self.__json_to_simstat
-        )
+        super().__init__(self, object_hook=self.__json_to_simstat)
 
     def __json_to_simstat(self, d: dict) -> Union[SimStat,Statistic,Group]:
         if 'type' in d:

@@ -46,8 +46,7 @@ from slicc.symbols.Var import Var
 class DataMember(Var):
     def __init__(self, symtab, ident, location, type, code, pairs,
                  machine, init_code):
-        super(DataMember, self).__init__(symtab, ident, location, type,
-                                         code, pairs, machine)
+        super().__init__(symtab, ident, location, type, code, pairs, machine)
         self.init_code = init_code
         self.real_c_type = self.type.c_ident
         if "template" in pairs:
@@ -55,13 +54,13 @@ class DataMember(Var):
 
 class Enumeration(PairContainer):
     def __init__(self, ident, pairs):
-        super(Enumeration, self).__init__(pairs)
+        super().__init__(pairs)
         self.ident = ident
         self.primary = False
 
 class Type(Symbol):
     def __init__(self, table, ident, location, pairs, machine=None):
-        super(Type, self).__init__(table, ident, location, pairs)
+        super().__init__(table, ident, location, pairs)
         self.c_ident = ident
         self.abstract_ident = ""
         if machine:

@@ -81,7 +81,7 @@ allParams = {}
 
 class MetaParamValue(type):
     def __new__(mcls, name, bases, dct):
-        cls = super(MetaParamValue, mcls).__new__(mcls, name, bases, dct)
+        cls = super().__new__(mcls, name, bases, dct)
         if name in allParams:
             warn("%s already exists in allParams. This may be caused by the " \
                  "Python 2.7 compatibility layer." % (name, ))
@@ -301,7 +301,7 @@ class SimObjectVector(VectorParamValue):
             warn("SimObject %s already has a parent" % value.get_name() +\
                  " that is being overwritten by a SimObjectVector")
         value.set_parent(val.get_parent(), val._name)
-        super(SimObjectVector, self).__setitem__(key, value)
+        super().__setitem__(key, value)
 
     # Enumerate the params of each member of the SimObject vector. Creates
     # strings that will allow indexing into the vector by the python code and
@@ -347,7 +347,7 @@ class VectorParamDesc(ParamDesc):
     # how to set this vector parameter in the absence of a default
     # value.
     def example_str(self):
-        s = super(VectorParamDesc, self).example_str()
+        s = super().example_str()
         help_str = "[" + s + "," + s + ", ...]"
         return help_str
 
@@ -548,7 +548,7 @@ class NumericParamValue(ParamValue):
 # Metaclass for bounds-checked integer parameters.  See CheckedInt.
 class CheckedIntType(MetaParamValue):
     def __init__(cls, name, bases, dict):
-        super(CheckedIntType, cls).__init__(name, bases, dict)
+        super().__init__(name, bases, dict)
 
         # CheckedInt is an abstract base class, so we actually don't
         # want to do any processing on it... the rest of this code is
@@ -1094,7 +1094,7 @@ class IpNetmask(IpAddress):
         return value
 
     def __str__(self):
-        return "%s/%d" % (super(IpNetmask, self).__str__(), self.netmask)
+        return "%s/%d" % (super().__str__(), self.netmask)
 
     def __eq__(self, other):
         if isinstance(other, IpNetmask):
@@ -1168,7 +1168,7 @@ class IpWithPort(IpAddress):
         return value
 
     def __str__(self):
-        return "%s:%d" % (super(IpWithPort, self).__str__(), self.port)
+        return "%s:%d" % (super().__str__(), self.port)
 
     def __eq__(self, other):
         if isinstance(other, IpWithPort):
@@ -1287,7 +1287,7 @@ allEnums = {}
 class MetaEnum(MetaParamValue):
     def __new__(mcls, name, bases, dict):
 
-        cls = super(MetaEnum, mcls).__new__(mcls, name, bases, dict)
+        cls = super().__new__(mcls, name, bases, dict)
         allEnums[name] = cls
         return cls
 
@@ -1316,7 +1316,7 @@ class MetaEnum(MetaParamValue):
         else:
             cls.cxx_type = 'enums::%s' % name
 
-        super(MetaEnum, cls).__init__(name, bases, init_dict)
+        super().__init__(name, bases, init_dict)
 
     # Generate C++ class declaration for this enum type.
     # Note that we wrap the enum in a class/struct to act as a namespace,
@@ -1694,33 +1694,33 @@ class Voltage(Float):
 
     def __new__(cls, value):
         value = convert.toVoltage(value)
-        return super(cls, Voltage).__new__(cls, value)
+        return super().__new__(cls, value)
 
     def __init__(self, value):
         value = convert.toVoltage(value)
-        super(Voltage, self).__init__(value)
+        super().__init__(value)
 
 class Current(Float):
     ex_str = "1mA"
 
     def __new__(cls, value):
         value = convert.toCurrent(value)
-        return super(cls, Current).__new__(cls, value)
+        return super().__new__(cls, value)
 
     def __init__(self, value):
         value = convert.toCurrent(value)
-        super(Current, self).__init__(value)
+        super().__init__(value)
 
 class Energy(Float):
     ex_str = "1pJ"
 
     def __new__(cls, value):
         value = convert.toEnergy(value)
-        return super(cls, Energy).__new__(cls, value)
+        return super().__new__(cls, value)
 
     def __init__(self, value):
         value = convert.toEnergy(value)
-        super(Energy, self).__init__(value)
+        super().__init__(value)
 
 class Temperature(ParamValue):
     cxx_type = 'Temperature'
@@ -1770,7 +1770,7 @@ class NetworkBandwidth(float,ParamValue):
     def __new__(cls, value):
         # convert to bits per second
         val = convert.toNetworkBandwidth(value)
-        return super(cls, NetworkBandwidth).__new__(cls, val)
+        return super().__new__(cls, val)
 
     def __str__(self):
         return str(self.val)
@@ -1809,7 +1809,7 @@ class MemoryBandwidth(float,ParamValue):
     def __new__(cls, value):
         # convert to bytes per second
         val = convert.toMemoryBandwidth(value)
-        return super(cls, MemoryBandwidth).__new__(cls, val)
+        return super().__new__(cls, val)
 
     def __call__(self, value):
         val = convert.toMemoryBandwidth(value)
@@ -2180,13 +2180,12 @@ Port.compat('GEM5 REQUESTOR', 'GEM5 RESPONDER')
 class RequestPort(Port):
     # RequestPort("description")
     def __init__(self, desc):
-        super(RequestPort, self).__init__(
-                'GEM5 REQUESTOR', desc, is_source=True)
+        super().__init__('GEM5 REQUESTOR', desc, is_source=True)
 
 class ResponsePort(Port):
     # ResponsePort("description")
     def __init__(self, desc):
-        super(ResponsePort, self).__init__('GEM5 RESPONDER', desc)
+        super().__init__('GEM5 RESPONDER', desc)
 
 # VectorPort description object.  Like Port, but represents a vector
 # of connections (e.g., as on a XBar).
@@ -2197,13 +2196,12 @@ class VectorPort(Port):
 class VectorRequestPort(VectorPort):
     # VectorRequestPort("description")
     def __init__(self, desc):
-        super(VectorRequestPort, self).__init__(
-                'GEM5 REQUESTOR', desc, is_source=True)
+        super().__init__('GEM5 REQUESTOR', desc, is_source=True)
 
 class VectorResponsePort(VectorPort):
     # VectorResponsePort("description")
     def __init__(self, desc):
-        super(VectorResponsePort, self).__init__('GEM5 RESPONDER', desc)
+        super().__init__('GEM5 RESPONDER', desc)
 
 # Old names, maintained for compatibility.
 MasterPort = RequestPort

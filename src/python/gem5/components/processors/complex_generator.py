@@ -34,7 +34,7 @@ from ..boards.abstract_board import AbstractBoard
 
 class ComplexGenerator(AbstractProcessor):
     def __init__(self, num_cores: int = 1) -> None:
-        super(ComplexGenerator, self).__init__(
+        super().__init__(
             cores=[ComplexGeneratorCore() for i in range(num_cores)]
         )
         """The complex generator

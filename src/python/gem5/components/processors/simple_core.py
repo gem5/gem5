@@ -45,7 +45,7 @@ from m5.objects import (
 
 class SimpleCore(AbstractCore):
     def __init__(self, cpu_type: CPUTypes, core_id: int):
-        super(SimpleCore, self).__init__(cpu_type=cpu_type)
+        super().__init__(cpu_type=cpu_type)
 
         if cpu_type == CPUTypes.ATOMIC:
             self.core = AtomicSimpleCPU(cpu_id=core_id)

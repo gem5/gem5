@@ -40,7 +40,7 @@ class AbstractDirectory(Directory_Controller):
 
     def __init__(self, network, cache_line_size):
         """ """
-        super(AbstractDirectory, self).__init__()
+        super().__init__()
         self.version = self.versionCount()
         self._cache_line_size = cache_line_size
         self.connectQueues(network)

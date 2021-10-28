@@ -30,7 +30,7 @@ from slicc.symbols.Type import Type
 
 class TypeDeclAST(DeclAST):
     def __init__(self, slicc, type_ast, pairs, field_asts):
-        super(TypeDeclAST, self).__init__(slicc, pairs)
+        super().__init__(slicc, pairs)
 
         self.type_ast = type_ast
         self.field_asts = field_asts

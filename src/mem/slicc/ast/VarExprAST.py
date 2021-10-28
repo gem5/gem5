@@ -31,7 +31,7 @@ from slicc.symbols import Type, Var
 
 class VarExprAST(ExprAST):
     def __init__(self, slicc, var):
-        super(VarExprAST, self).__init__(slicc)
+        super().__init__(slicc)
         self._var = var
 
     def __repr__(self):

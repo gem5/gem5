@@ -29,7 +29,7 @@ from slicc.ast.AST import AST
 
 class StatementListAST(AST):
     def __init__(self, slicc, statements):
-        super(StatementListAST, self).__init__(slicc)
+        super().__init__(slicc)
         if not isinstance(statements, (list, tuple)):
             statements = [ statements ]
         self.statements = statements

@@ -50,18 +50,15 @@ Port.compat(GICV3_COMMS_TARGET_ROLE, GICV3_COMMS_INITIATOR_ROLE)
 
 class Gicv3CommsTargetSocket(Port):
     def __init__(self, desc):
-        super(Gicv3CommsTargetSocket, self).__init__(
-                GICV3_COMMS_INITIATOR_ROLE, desc)
+        super().__init__(GICV3_COMMS_INITIATOR_ROLE, desc)
 
 class Gicv3CommsInitiatorSocket(Port):
     def __init__(self, desc):
-        super(Gicv3CommsInitiatorSocket, self).__init__(
-                GICV3_COMMS_TARGET_ROLE, desc, is_source=True)
+        super().__init__(GICV3_COMMS_TARGET_ROLE, desc, is_source=True)
 
 class VectorGicv3CommsInitiatorSocket(VectorPort):
     def __init__(self, desc):
-        super(VectorGicv3CommsInitiatorSocket, self).__init__(
-                GICV3_COMMS_TARGET_ROLE, desc, is_source=True)
+        super().__init__(GICV3_COMMS_TARGET_ROLE, desc, is_source=True)
 
 
 class SCFastModelGIC(SystemC_ScModule):

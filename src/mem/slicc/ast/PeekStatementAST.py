@@ -31,7 +31,7 @@ from slicc.symbols import Var
 
 class PeekStatementAST(StatementAST):
     def __init__(self, slicc, queue_name, type_ast, pairs, statements, method):
-        super(PeekStatementAST, self).__init__(slicc, pairs)
+        super().__init__(slicc, pairs)
 
         self.queue_name = queue_name
         self.type_ast = type_ast

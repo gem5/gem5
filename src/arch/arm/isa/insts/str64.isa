@@ -47,7 +47,7 @@ let {{
 
         def __init__(self, mnem, Name, size=4, user=False, flavor="normal",
                      top = False):
-            super(StoreInst64, self).__init__()
+            super().__init__()
 
             self.name = mnem
             self.Name = Name
@@ -143,14 +143,14 @@ let {{
 
     class StoreImmInst64(StoreInst64):
         def __init__(self, *args, **kargs):
-            super(StoreImmInst64, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
             self.offset = "+ imm"
 
             self.wbDecl = "MicroAddXiUop(machInst, base, base, imm);"
 
     class StoreRegInst64(StoreInst64):
         def __init__(self, *args, **kargs):
-            super(StoreRegInst64, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
             self.offset = "+ extendReg64(XOffset, type, shiftAmt, 64)"
 
             self.wbDecl = \
@@ -159,7 +159,7 @@ let {{
 
     class StoreRawRegInst64(StoreInst64):
         def __init__(self, *args, **kargs):
-            super(StoreRawRegInst64, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
             self.offset = ""
 
     class StoreSingle64(StoreInst64):
@@ -283,7 +283,7 @@ let {{
         post = False
         execBase = 'StoreEx64'
         def __init__(self, *args, **kargs):
-            super(StoreEx64, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
             self.codeBlobs["postacc_code"] = \
                  "XResult = !writeResult; SevMailbox = 1; LLSCLock = 0;"
 
@@ -350,7 +350,7 @@ let {{
         post = False
         writeback = False
         def __init__(self, *args, **kargs):
-            super(StoreImmDEx64, self).__init__(*args, **kargs)
+            super().__init__(*args, **kargs)
             self.codeBlobs["postacc_code"] = \
                  "XResult = !writeResult; SevMailbox = 1; LLSCLock = 0;"
 

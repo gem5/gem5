@@ -482,7 +482,7 @@ class InstObjParams(object):
 
 class ISAParser(Grammar):
     def __init__(self, output_dir):
-        super(ISAParser, self).__init__()
+        super().__init__()
         self.output_dir = output_dir
 
         self.filename = None # for output file watermarking/scaremongering
@@ -1436,8 +1436,7 @@ StaticInstPtr
         # Create a wrapper class that allows us to grab the current parser.
         class InstObjParamsWrapper(InstObjParams):
             def __init__(iop, *args, **kwargs):
-                super(InstObjParamsWrapper, iop).__init__(
-                        self, *args, **kwargs)
+                super().__init__(self, *args, **kwargs)
         self.exportContext['InstObjParams'] = InstObjParamsWrapper
         self.exportContext.update(self.templateMap)
 

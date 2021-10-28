@@ -389,7 +389,7 @@ let {{
         def __init__(self, data, segment, addr, disp,
                 dataSize, addressSize, baseFlags, atCPL0, prefetch, nonSpec,
                 implicitStack, uncacheable):
-            super(LdStSplitOp, self).__init__(0, segment, addr, disp,
+            super().__init__(0, segment, addr, disp,
                 dataSize, addressSize, baseFlags, atCPL0, prefetch, nonSpec,
                 implicitStack, uncacheable)
             (self.dataLow, self.dataHi) = data
@@ -503,7 +503,7 @@ let {{
                     addressSize=addressSize,
                     atCPL0=False, prefetch=False, nonSpec=nonSpec,
                     implicitStack=implicitStack, uncacheable=False):
-                super(LoadOp, self).__init__(data, segment, addr,
+                super().__init__(data, segment, addr,
                         disp, dataSize, addressSize, mem_flags,
                         atCPL0, prefetch, nonSpec, implicitStack, uncacheable)
                 self.className = Name
@@ -585,7 +585,7 @@ let {{
                     addressSize="env.addressSize",
                     atCPL0=False, prefetch=False, nonSpec=nonSpec,
                     implicitStack=False, uncacheable=False):
-                super(LoadOp, self).__init__(data, segment, addr,
+                super().__init__(data, segment, addr,
                         disp, dataSize, addressSize, mem_flags,
                         atCPL0, prefetch, nonSpec, implicitStack, uncacheable)
                 self.className = Name
@@ -646,7 +646,7 @@ let {{
                         dataSize="env.dataSize", addressSize=addressSize,
                         atCPL0=False, nonSpec=False,
                         implicitStack=implicitStack, uncacheable=False):
-                    super(StoreOp, self).__init__(data, segment, addr, disp,
+                    super().__init__(data, segment, addr, disp,
                             dataSize, addressSize, mem_flags, atCPL0, False,
                             nonSpec, implicitStack, uncacheable)
                     self.className = Name
@@ -655,7 +655,7 @@ let {{
             class StoreOp(MemNoDataOp):
                 def __init__(self, segment, addr, disp=0,
                         dataSize="env.dataSize", addressSize=addressSize):
-                    super(StoreOp, self).__init__(segment, addr, disp,
+                    super().__init__(segment, addr, disp,
                             dataSize, addressSize, mem_flags)
                     self.className = Name
                     self.mnemonic = name
@@ -720,7 +720,7 @@ let {{
                     addressSize="env.addressSize",
                     atCPL0=False, nonSpec=False, implicitStack=False,
                     uncacheable=False):
-                super(StoreOp, self).__init__(data, segment, addr, disp,
+                super().__init__(data, segment, addr, disp,
                         dataSize, addressSize, mem_flags, atCPL0, False,
                         nonSpec, implicitStack, uncacheable)
                 self.className = Name
@@ -748,7 +748,7 @@ let {{
     class LeaOp(LdStOp):
         def __init__(self, data, segment, addr, disp = 0,
                 dataSize="env.dataSize", addressSize="env.addressSize"):
-            super(LeaOp, self).__init__(data, segment, addr, disp,
+            super().__init__(data, segment, addr, disp,
                     dataSize, addressSize, "0",
                     False, False, False, False, False)
             self.className = "Lea"

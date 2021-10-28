@@ -30,7 +30,7 @@ from slicc.symbols import StateMachine, Type
 
 class MachineAST(DeclAST):
     def __init__(self, slicc, mtype, pairs_ast, config_parameters, decls):
-        super(MachineAST, self).__init__(slicc, pairs_ast)
+        super().__init__(slicc, pairs_ast)
 
         self.ident = mtype.value
         self.pairs_ast = pairs_ast

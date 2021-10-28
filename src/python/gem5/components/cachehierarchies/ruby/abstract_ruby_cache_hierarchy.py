@@ -35,7 +35,7 @@ class AbstractRubyCacheHierarchy(AbstractCacheHierarchy):
     """
 
     def __init__(self):
-        super(AbstractRubyCacheHierarchy, self).__init__()
+        super().__init__()
 
     @overrides(AbstractCacheHierarchy)
     def is_ruby(self) -> bool:

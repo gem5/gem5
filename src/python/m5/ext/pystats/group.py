@@ -133,8 +133,4 @@ class Vector(Group):
     https://gem5.atlassian.net/browse/GEM5-867.
     """
     def __init__(self, scalar_map: Mapping[str,Scalar]):
-        super(Vector, self).__init__(
-                                     type="Vector",
-                                     time_conversion=None,
-                                     **scalar_map,
-                                    )
+        super().__init__(type="Vector", time_conversion=None, **scalar_map)

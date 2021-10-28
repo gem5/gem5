@@ -42,7 +42,7 @@ from slicc.symbols import Var
 
 class FormalParamAST(AST):
     def __init__(self, slicc, type_ast, ident, default = None, qualifier=""):
-        super(FormalParamAST, self).__init__(slicc)
+        super().__init__(slicc)
         self.type_ast = type_ast
         self.ident = ident
         self.default = default

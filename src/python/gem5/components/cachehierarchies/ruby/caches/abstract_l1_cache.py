@@ -47,7 +47,7 @@ class AbstractL1Cache(L1Cache_Controller):
     # However, we need some way to set the index bits
     def __init__(self, network, cache_line_size):
         """ """
-        super(AbstractL1Cache, self).__init__()
+        super().__init__()
 
         self.version = self.versionCount()
         self._cache_line_size = cache_line_size

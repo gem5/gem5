@@ -76,7 +76,7 @@ class Singleton(type):
         if hasattr(cls, '_instance'):
             return cls._instance
 
-        cls._instance = super(Singleton, cls).__call__(*args, **kwargs)
+        cls._instance = super().__call__(*args, **kwargs)
         return cls._instance
 
 def addToPath(path):

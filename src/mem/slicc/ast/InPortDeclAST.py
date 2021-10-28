@@ -43,7 +43,7 @@ from slicc.symbols import Func, Type, Var
 
 class InPortDeclAST(DeclAST):
     def __init__(self, slicc, ident, msg_type, var_expr, pairs, statements):
-        super(InPortDeclAST, self).__init__(slicc, pairs)
+        super().__init__(slicc, pairs)
 
         self.ident = ident
         self.msg_type = msg_type

@@ -175,7 +175,7 @@ let {{
                 abstract = dict['abstract']
                 del dict['abstract']
 
-            cls = super(FpOpMeta, mcls).__new__(mcls, Name, bases, dict)
+            cls = super().__new__(mcls, Name, bases, dict)
             if not abstract:
                 cls.className = Name
                 cls.mnemonic = name
@@ -236,25 +236,25 @@ let {{
         abstract = True
         operand_types = ()
         def __init__(self, **kwargs):
-            super(Fp0Op, self).__init__(**kwargs)
+            super().__init__(**kwargs)
 
     class Fp1Op(FpOp):
         abstract = True
         operand_types = (FloatDestOp)
         def __init__(self, reg1, **kwargs):
-            super(Fp1Op, self).__init__(reg1, **kwargs)
+            super().__init__(reg1, **kwargs)
 
     class Fp2Op(FpOp):
         abstract = True
         operand_types = (FloatDestOp, FloatSrc1Op)
         def __init__(self, reg1, reg2, **kwargs):
-            super(Fp2Op, self).__init__(reg1, reg2, **kwargs)
+            super().__init__(reg1, reg2, **kwargs)
 
     class Fp3Op(FpOp):
         abstract = True
         operand_types = (FloatDestOp, FloatSrc1Op, FloatSrc2Op)
         def __init__(self, reg1, reg2, reg3, **kwargs):
-            super(Fp3Op, self).__init__(reg1, reg2, reg3, **kwargs)
+            super().__init__(reg1, reg2, reg3, **kwargs)
 
     class Movfp(Fp2Op):
         code = 'FpDestReg_uqw = FpSrcReg1_uqw;'

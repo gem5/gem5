@@ -30,7 +30,7 @@ from slicc.symbols import Func, Type
 
 class EnumDeclAST(DeclAST):
     def __init__(self, slicc, type_ast, pairs, fields):
-        super(EnumDeclAST, self).__init__(slicc, pairs)
+        super().__init__(slicc, pairs)
 
         self.type_ast = type_ast
         self.fields = fields
