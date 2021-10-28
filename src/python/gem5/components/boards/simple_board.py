@@ -72,16 +72,8 @@ class SimpleBoard(AbstractBoard):
             exit_on_work_items=exit_on_work_items,
         )
 
-    @overrides(AbstractBoard)
-    def connect_things(self) -> None:
-        # Incorporate the cache hierarchy for the motherboard.
-        self.get_cache_hierarchy().incorporate_cache(self)
-
-        # Incorporate the processor into the motherboard.
-        self.get_processor().incorporate_processor(self)
-
-        # Incorporate the memory into the motherboard.
-        self.get_memory().incorporate_memory(self)
+        # Set up the memory ranges
+        self.setup_memory_ranges()
 
     @overrides(AbstractBoard)
     def has_io_bus(self) -> bool:

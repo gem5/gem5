@@ -97,6 +97,12 @@ class X86Board(AbstractBoard, KernelDiskWorkload):
         # North Bridge
         self.iobus = IOXBar()
 
+        # Figure out the memory ranges.
+        self.setup_memory_ranges()
+
+        # Set up all of the I/O.
+        self._setup_io_devices()
+
     def _setup_io_devices(self):
         """ Sets up the x86 IO devices.
 
@@ -245,22 +251,6 @@ class X86Board(AbstractBoard, KernelDiskWorkload):
         )
 
         self.workload.e820_table.entries = entries
-
-    def connect_things(self) -> None:
-        # This board is a bit particular about the order that things are
-        # connected together.
-
-        # Set up all of the I/O before we incorporate anything else.
-        self._setup_io_devices()
-
-        # Incorporate the cache hierarchy for the motherboard.
-        self.get_cache_hierarchy().incorporate_cache(self)
-
-        # Incorporate the processor into the motherboard.
-        self.get_processor().incorporate_processor(self)
-
-        # Incorporate the memory into the motherboard.
-        self.get_memory().incorporate_memory(self)
 
     @overrides(AbstractBoard)
     def has_io_bus(self) -> bool:

@@ -37,7 +37,7 @@ from m5.objects import (
     VoltageDomain,
 )
 
-from typing import List
+from typing import List, final
 
 
 class AbstractBoard(System):
@@ -219,15 +219,24 @@ class AbstractBoard(System):
         """
         raise NotImplementedError
 
-    @abstractmethod
+    @final
     def connect_things(self) -> None:
         """Connects all the components to the board.
 
-        This should be called after the constructor.
+        The order of this board is always:
 
-        When implementing this function, derived boards should use this to
-        hook up the memory, process, and cache hierarchy as a *second* stage.
-        You should use this function to connect things together when you need
-        to know that everything has already been constructed.
+        1. Connect the memory.
+        2. Connect the processor.
+        3. Connect the cache hierarchy.
+
+        Developers may build upon this assumption when creating components.
         """
-        raise NotImplementedError
+
+        # Incorporate the memory into the motherboard.
+        self.get_memory().incorporate_memory(self)
+
+        # Incorporate the processor into the motherboard.
+        self.get_processor().incorporate_processor(self)
+
+        # Incorporate the cache hierarchy for the motherboard.
+        self.get_cache_hierarchy().incorporate_cache(self)

@@ -66,12 +66,7 @@ class TestBoard(AbstractBoard):
             cache_hierarchy=cache_hierarchy,
         )
 
-    def connect_things(self) -> None:
-        self.get_processor().incorporate_processor(self)
-
-        self.get_memory().incorporate_memory(self)
-
-        self.get_cache_hierarchy().incorporate_cache(self)
+        self.setup_memory_ranges()
 
     @overrides(AbstractBoard)
     def has_io_bus(self) -> bool:

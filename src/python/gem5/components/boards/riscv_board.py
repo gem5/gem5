@@ -123,6 +123,9 @@ class RiscvBoard(AbstractBoard, KernelDiskWorkload):
         self._on_chip_devices = [self.platform.clint, self.platform.plic]
         self._off_chip_devices = [self.platform.uart, self.disk]
 
+        # Set up the memory ranges
+        self.setup_memory_ranges()
+
     def _setup_io_devices(self) -> None:
         """Connect the I/O devices to the I/O bus"""
 
@@ -191,20 +194,6 @@ class RiscvBoard(AbstractBoard, KernelDiskWorkload):
         mem_size = memory.get_size()
         self.mem_ranges = [AddrRange(start=0x80000000, size=mem_size)]
         memory.set_memory_range(self.mem_ranges)
-
-    @overrides(AbstractBoard)
-    def connect_things(self) -> None:
-        # Before incorporating the memory, set up the memory ranges
-        self.setup_memory_ranges()
-
-        # Incorporate the cache hierarchy for the motherboard.
-        self.get_cache_hierarchy().incorporate_cache(self)
-
-        # Incorporate the processor into the motherboard.
-        self.get_processor().incorporate_processor(self)
-
-        # Incorporate the memory into the motherboard.
-        self.get_memory().incorporate_memory(self)
 
     def generate_device_tree(self, outdir: str) -> None:
         """Creates the dtb and dts files.
