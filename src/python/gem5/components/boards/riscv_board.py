@@ -183,9 +183,11 @@ class RiscvBoard(AbstractBoard, KernelDiskWorkload):
     def get_io_bus(self) -> IOXBar:
         return self.iobus
 
+    @overrides(AbstractBoard)
     def has_coherent_io(self) -> bool:
         return True
 
+    @overrides(AbstractBoard)
     def get_mem_side_coherent_io_port(self) -> Port:
         return self.iobus.mem_side_ports
 
