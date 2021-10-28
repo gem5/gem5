@@ -179,12 +179,29 @@ let {{
     decoder_output += BasicConstructor64.subst(dsbLocalIop)
     exec_output += BasicExecute.subst(dsbLocalIop)
 
-    dsbShareableIop = ArmInstObjParams("dsb", "Dsb64Shareable", "ArmStaticInst", "",
+    dvmCode = '''
+        if (dvmEnabled) {
+            Request::Flags memAccessFlags =
+                Request::STRICT_ORDER|Request::TLBI_SYNC;
+
+            if (!PendingDvm) {
+                memAccessFlags = memAccessFlags | Request::NO_ACCESS;
+            }
+
+            fault = xc->initiateSpecialMemCmd(memAccessFlags);
+
+            PendingDvm = false;
+        }
+    '''
+    dsbShareableIop = ArmInstObjParams("dsb", "Dsb64Shareable", "ArmStaticInst",
+                                       { "code" : "", "dvm_code" : dvmCode },
                                        ['IsReadBarrier', 'IsWriteBarrier',
-                                       'IsSerializeAfter'])
-    header_output += BasicDeclare.subst(dsbShareableIop)
-    decoder_output += BasicConstructor64.subst(dsbShareableIop)
+                                        'IsSerializeAfter'])
+    header_output += DvmDeclare.subst(dsbShareableIop)
+    decoder_output += DvmConstructor.subst(dsbShareableIop)
     exec_output += BasicExecute.subst(dsbShareableIop)
+    exec_output += DvmInitiateAcc.subst(dsbShareableIop)
+    exec_output += DvmCompleteAcc.subst(dsbShareableIop)
 
     dmbIop = ArmInstObjParams("dmb", "Dmb64", "ArmStaticInst", "",
                               ['IsReadBarrier', 'IsWriteBarrier'])

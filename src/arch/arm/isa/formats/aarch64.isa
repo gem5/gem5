@@ -407,7 +407,8 @@ namespace Aarch64
                               case 0x0: // OuterShareable
                               case 0x2: // InnerShareable
                               case 0x3: // FullSystem
-                                return new Dsb64Shareable(machInst);
+                                return new Dsb64Shareable(
+                                    machInst, dec.dvmEnabled);
                               default:
                                 GEM5_UNREACHABLE;
                             }
