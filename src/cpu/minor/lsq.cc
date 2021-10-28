@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014,2017-2018,2020 ARM Limited
+ * Copyright (c) 2013-2014,2017-2018,2020-2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1650,6 +1650,14 @@ LSQ::pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
         /* I've no idea why we need the PC, but give it */
         inst->pc->instAddr(), std::move(amo_op));
     request->request->setByteEnable(byte_enable);
+
+    /* If the request is marked as NO_ACCESS, setup a local access
+     * doing nothing */
+    if (flags.isSet(Request::NO_ACCESS)) {
+        assert(!request->request->isLocalAccess());
+        request->request->setLocalAccessor(
+            [] (ThreadContext *tc, PacketPtr pkt) { return Cycles(1); });
+    }
 
     requests.push(request);
     inst->inLSQ = true;

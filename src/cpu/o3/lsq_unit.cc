@@ -1336,7 +1336,6 @@ LSQUnit::read(LSQRequest *request, int load_idx)
 
     if (request->mainReq()->isLocalAccess()) {
         assert(!load_inst->memData);
-        assert(!load_inst->inHtmTransactionalState());
         load_inst->memData = new uint8_t[MaxDataBytes];
 
         gem5::ThreadContext *thread = cpu->tcBase(lsqID);
@@ -1349,37 +1348,6 @@ LSQUnit::read(LSQRequest *request, int load_idx)
         WritebackEvent *wb = new WritebackEvent(load_inst, main_pkt, this);
         cpu->schedule(wb, cpu->clockEdge(delay));
         return NoFault;
-    }
-
-    // hardware transactional memory
-    if (request->mainReq()->isHTMStart() || request->mainReq()->isHTMCommit())
-    {
-        // don't want to send nested transactionStarts and
-        // transactionStops outside of core, e.g. to Ruby
-        if (request->mainReq()->getFlags().isSet(Request::NO_ACCESS)) {
-            Cycles delay(0);
-            PacketPtr data_pkt =
-                new Packet(request->mainReq(), MemCmd::ReadReq);
-
-            // Allocate memory if this is the first time a load is issued.
-            if (!load_inst->memData) {
-                load_inst->memData =
-                    new uint8_t[request->mainReq()->getSize()];
-                // sanity checks espect zero in request's data
-                memset(load_inst->memData, 0, request->mainReq()->getSize());
-            }
-
-            data_pkt->dataStatic(load_inst->memData);
-            if (load_inst->inHtmTransactionalState()) {
-                data_pkt->setHtmTransactional(
-                    load_inst->getHtmTransactionUid());
-            }
-            data_pkt->makeResponse();
-
-            WritebackEvent *wb = new WritebackEvent(load_inst, data_pkt, this);
-            cpu->schedule(wb, cpu->clockEdge(delay));
-            return NoFault;
-        }
     }
 
     // Check the SQ for any previous stores that might lead to forwarding
