@@ -150,8 +150,6 @@ class BaseCPU(ClockedObject):
     workload = VectorParam.Process([], "processes to run")
 
     mmu = Param.BaseMMU(ArchMMU(), "CPU memory management unit")
-    if buildEnv['TARGET_ISA'] == 'power':
-        UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
     interrupts = VectorParam.BaseInterrupts([], "Interrupt Controller")
     isa = VectorParam.BaseISA([], "ISA instance")
 
