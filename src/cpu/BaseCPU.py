@@ -172,14 +172,8 @@ class BaseCPU(ClockedObject):
     dcache_port = RequestPort("Data Port")
     _cached_ports = ['icache_port', 'dcache_port']
 
-    _cached_ports += ArchMMU.walkerPorts()
-
     _uncached_interrupt_response_ports = []
     _uncached_interrupt_request_ports = []
-    if buildEnv['TARGET_ISA'] == 'x86':
-        _uncached_interrupt_response_ports += ["interrupts[0].pio",
-                                  "interrupts[0].int_responder"]
-        _uncached_interrupt_request_ports += ["interrupts[0].int_requestor"]
 
     def createInterruptController(self):
         self.interrupts = [ArchInterrupts() for i in range(self.numThreads)]
@@ -303,3 +297,19 @@ class BaseCPU(ClockedObject):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.power_state.possible_states=['ON', 'CLK_GATED', 'OFF']
+
+        self._cached_ports = self._cached_ports + ArchMMU.walkerPorts()
+
+        # Practically speaking, these ports will exist on the x86 interrupt
+        # controller class.
+        if "pio" in ArchInterrupts._ports:
+            self._uncached_interrupt_response_ports = \
+                self._uncached_interrupt_response_ports + ["interrupts[0].pio"]
+        if "int_responder" in ArchInterrupts._ports:
+            self._uncached_interrupt_response_ports = \
+                    self._uncached_interrupt_response_ports + [
+                    "interrupts[0].int_responder"]
+        if "int_requestor" in ArchInterrupts._ports:
+            self._uncached_interrupt_request_ports = \
+                    self._uncached_interrupt_request_ports + [
+                    "interrupts[0].int_requestor"]
