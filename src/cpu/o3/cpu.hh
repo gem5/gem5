@@ -68,7 +68,7 @@
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/timebuf.hh"
-#include "params/O3CPU.hh"
+#include "params/BaseO3CPU.hh"
 #include "sim/process.hh"
 
 namespace gem5
@@ -169,7 +169,7 @@ class CPU : public BaseCPU
 
   public:
     /** Constructs a CPU with the given parameters. */
-    CPU(const O3CPUParams &params);
+    CPU(const BaseO3CPUParams &params);
 
     ProbePointArg<PacketPtr> *ppInstAccessComplete;
     ProbePointArg<std::pair<DynInstPtr, PacketPtr> > *ppDataAccessComplete;

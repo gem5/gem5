@@ -51,7 +51,7 @@
 #include "cpu/minor/stats.hh"
 #include "cpu/simple_thread.hh"
 #include "enums/ThreadPolicy.hh"
-#include "params/MinorCPU.hh"
+#include "params/BaseMinorCPU.hh"
 
 namespace gem5
 {
@@ -126,7 +126,7 @@ class MinorCPU : public BaseCPU
     Port &getInstPort() override;
 
   public:
-    MinorCPU(const MinorCPUParams &params);
+    MinorCPU(const BaseMinorCPUParams &params);
 
     ~MinorCPU();
 

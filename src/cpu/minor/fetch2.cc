@@ -58,7 +58,7 @@ namespace minor
 
 Fetch2::Fetch2(const std::string &name,
     MinorCPU &cpu_,
-    const MinorCPUParams &params,
+    const BaseMinorCPUParams &params,
     Latch<ForwardLineData>::Output inp_,
     Latch<BranchData>::Output branchInp_,
     Latch<BranchData>::Input predictionOut_,

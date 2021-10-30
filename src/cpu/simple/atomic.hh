@@ -44,7 +44,7 @@
 #include "cpu/simple/base.hh"
 #include "cpu/simple/exec_context.hh"
 #include "mem/request.hh"
-#include "params/AtomicSimpleCPU.hh"
+#include "params/BaseAtomicSimpleCPU.hh"
 #include "sim/probe/probe.hh"
 
 namespace gem5
@@ -54,7 +54,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 {
   public:
 
-    AtomicSimpleCPU(const AtomicSimpleCPUParams &params);
+    AtomicSimpleCPU(const BaseAtomicSimpleCPUParams &params);
     virtual ~AtomicSimpleCPU();
 
     void init() override;

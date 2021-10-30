@@ -37,7 +37,7 @@
 
 Import('*')
 
-if 'O3CPU' in env['CPU_MODELS']:
+if env['TARGET_ISA'] != 'null':
     SimObject('SimpleTrace.py', sim_objects=['SimpleTrace'])
     Source('simple_trace.cc')
     DebugFlag('SimpleTrace')

@@ -59,7 +59,7 @@
 namespace gem5
 {
 
-struct O3CPUParams;
+struct BaseO3CPUParams;
 
 namespace o3
 {
@@ -132,7 +132,7 @@ class Commit
 
   public:
     /** Construct a Commit with the given parameters. */
-    Commit(CPU *_cpu, const O3CPUParams &params);
+    Commit(CPU *_cpu, const BaseO3CPUParams &params);
 
     /** Returns the name of the Commit. */
     std::string name() const;

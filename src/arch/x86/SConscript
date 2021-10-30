@@ -72,6 +72,13 @@ SimObject('X86NativeTrace.py', sim_objects=['X86NativeTrace'], tags='x86 isa')
 SimObject('X86TLB.py', sim_objects=['X86PagetableWalker', 'X86TLB'],
     tags='x86 isa')
 
+SimObject('X86CPU.py', sim_objects=[], tags='x86 isa')
+if env['TARGET_ISA'] == 'x86':
+    SimObject('AtomicSimpleCPU.py', sim_objects=[], tags='x86 isa')
+    SimObject('TimingSimpleCPU.py', sim_objects=[], tags='x86 isa')
+    SimObject('NonCachingSimpleCPU.py', sim_objects=[], tags='x86 isa')
+    SimObject('O3CPU.py', sim_objects=[], tags='x86 isa')
+
 DebugFlag('LocalApic', "Local APIC debugging", tags='x86 isa')
 DebugFlag('X86', "Generic X86 ISA debugging", tags='x86 isa')
 DebugFlag('ACPI', "ACPI debugging", tags='x86 isa')

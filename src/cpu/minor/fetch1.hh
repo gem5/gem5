@@ -386,7 +386,7 @@ class Fetch1 : public Named
   public:
     Fetch1(const std::string &name_,
         MinorCPU &cpu_,
-        const MinorCPUParams &params,
+        const BaseMinorCPUParams &params,
         Latch<BranchData>::Output inp_,
         Latch<ForwardLineData>::Input out_,
         Latch<BranchData>::Output prediction_,

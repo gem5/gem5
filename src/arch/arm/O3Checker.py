@@ -1,5 +1,4 @@
-# Copyright (c) 2007 The Regents of The University of Michigan
-# All rights reserved.
+# Copyright 2021 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,10 +23,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
-from m5.objects.CheckerCPU import CheckerCPU
+from m5.objects.ArmCPU import ArmO3Checker
 
-class O3Checker(CheckerCPU):
-    type = 'O3Checker'
-    cxx_class = 'gem5::o3::Checker'
-    cxx_header = 'cpu/o3/checker.hh'
+O3Checker = ArmO3Checker

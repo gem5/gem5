@@ -1,7 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
-# All rights reserved.
+# Copyright 2021 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -26,6 +23,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.objects.SparcCPU import SparcTimingSimpleCPU
 
-main.Append(ALL_CPU_MODELS=['O3CPU'])
+TimingSimpleCPU = SparcTimingSimpleCPU

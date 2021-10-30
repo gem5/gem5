@@ -1,3 +1,2 @@
 PROTOCOL = 'MOESI_AMD_Base'
 TARGET_ISA = 'x86'
-CPU_MODELS = 'AtomicSimpleCPU,O3CPU,TimingSimpleCPU'

@@ -53,7 +53,7 @@
 #include "debug/SimpleCPU.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "params/TimingSimpleCPU.hh"
+#include "params/BaseTimingSimpleCPU.hh"
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
@@ -74,7 +74,7 @@ TimingSimpleCPU::TimingCPUPort::TickEvent::schedule(PacketPtr _pkt, Tick t)
     cpu->schedule(this, t);
 }
 
-TimingSimpleCPU::TimingSimpleCPU(const TimingSimpleCPUParams &p)
+TimingSimpleCPU::TimingSimpleCPU(const BaseTimingSimpleCPUParams &p)
     : BaseSimpleCPU(p), fetchTranslation(this), icachePort(this),
       dcachePort(this), ifetch_pkt(NULL), dcache_pkt(NULL), previousCycle(0),
       fetchEvent([this]{ fetch(); }, name())

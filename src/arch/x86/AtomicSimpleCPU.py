@@ -1,5 +1,4 @@
-# Copyright (c) 2007 The Regents of The University of Michigan
-# All rights reserved.
+# Copyright 2021 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,19 +23,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import *
+from m5.objects.X86CPU import X86AtomicSimpleCPU
 
-from m5.objects.BaseSimpleCPU import BaseSimpleCPU
-
-class TimingSimpleCPU(BaseSimpleCPU):
-    type = 'TimingSimpleCPU'
-    cxx_header = "cpu/simple/timing.hh"
-    cxx_class = 'gem5::TimingSimpleCPU'
-
-    @classmethod
-    def memory_mode(cls):
-        return 'timing'
-
-    @classmethod
-    def support_take_over(cls):
-        return True
+AtomicSimpleCPU = X86AtomicSimpleCPU

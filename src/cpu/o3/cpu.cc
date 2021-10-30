@@ -70,7 +70,7 @@ struct BaseCPUParams;
 namespace o3
 {
 
-CPU::CPU(const O3CPUParams &params)
+CPU::CPU(const BaseO3CPUParams &params)
     : BaseCPU(params),
       mmu(params.mmu),
       tickEvent([this]{ tick(); }, "O3CPU tick",

@@ -1,4 +1,4 @@
-# Copyright 2020 Google, Inc.
+# Copyright 2021 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -23,9 +23,40 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.proxy import Self
 
-def add_cpu_models_var():
-    sticky_vars.Add(ListVariable('CPU_MODELS', 'CPU models', [],
-                sorted(set(main.Split('${ALL_CPU_MODELS}')))))
-AfterSConsopts(add_cpu_models_var)
+from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
+from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
+from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
+from m5.objects.BaseO3CPU import BaseO3CPU
+from m5.objects.X86Decoder import X86Decoder
+from m5.objects.X86MMU import X86MMU
+from m5.objects.X86LocalApic import X86LocalApic
+from m5.objects.X86ISA import X86ISA
+
+class X86CPU:
+    ArchDecoder = X86Decoder
+    ArchMMU = X86MMU
+    ArchInterrupts = X86LocalApic
+    ArchISA = X86ISA
+
+class X86AtomicSimpleCPU(BaseAtomicSimpleCPU, X86CPU):
+    mmu = X86MMU()
+
+class X86NonCachingSimpleCPU(BaseNonCachingSimpleCPU, X86CPU):
+    mmu = X86MMU()
+
+class X86TimingSimpleCPU(BaseTimingSimpleCPU, X86CPU):
+    mmu = X86MMU()
+
+class X86O3CPU(BaseO3CPU, X86CPU):
+    mmu = X86MMU()
+    needsTSO = True
+
+    # For x86, each CC reg is used to hold only a subset of the
+    # flags, so we need 4-5 times the number of CC regs as
+    # physical integer regs to be sure we don't run out.  In
+    # typical real machines, CC regs are not explicitly renamed
+    # (it's a side effect of int reg renaming), so they should
+    # never be the bottleneck here.
+    numPhysCCRegs = Self.numPhysIntRegs * 5

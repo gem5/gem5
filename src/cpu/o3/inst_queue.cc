@@ -50,7 +50,7 @@
 #include "cpu/o3/limits.hh"
 #include "debug/IQ.hh"
 #include "enums/OpClass.hh"
-#include "params/O3CPU.hh"
+#include "params/BaseO3CPU.hh"
 #include "sim/core.hh"
 
 // clang complains about std::set being overloaded with Packet::set if
@@ -85,7 +85,7 @@ InstructionQueue::FUCompletion::description() const
 }
 
 InstructionQueue::InstructionQueue(CPU *cpu_ptr, IEW *iew_ptr,
-        const O3CPUParams &params)
+        const BaseO3CPUParams &params)
     : cpu(cpu_ptr),
       iewStage(iew_ptr),
       fuPool(params.fuPool),

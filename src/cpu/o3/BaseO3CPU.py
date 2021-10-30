@@ -42,7 +42,7 @@ from m5.proxy import *
 
 from m5.objects.BaseCPU import BaseCPU
 from m5.objects.FUPool import *
-from m5.objects.O3Checker import O3Checker
+#from m5.objects.O3Checker import O3Checker
 from m5.objects.BranchPredictor import *
 
 class SMTFetchPolicy(ScopedEnum):
@@ -54,8 +54,8 @@ class SMTQueuePolicy(ScopedEnum):
 class CommitPolicy(ScopedEnum):
     vals = [ 'RoundRobin', 'OldestReady' ]
 
-class O3CPU(BaseCPU):
-    type = 'O3CPU'
+class BaseO3CPU(BaseCPU):
+    type = 'BaseO3CPU'
     cxx_class = 'gem5::o3::CPU'
     cxx_header = 'cpu/o3/dyn_inst.hh'
 
@@ -120,40 +120,36 @@ class O3CPU(BaseCPU):
     trapLatency = Param.Cycles(13, "Trap latency")
     fetchTrapLatency = Param.Cycles(1, "Fetch trap latency")
 
-    backComSize = Param.Unsigned(5, "Time buffer size for backwards communication")
-    forwardComSize = Param.Unsigned(5, "Time buffer size for forward communication")
+    backComSize = Param.Unsigned(5,
+            "Time buffer size for backwards communication")
+    forwardComSize = Param.Unsigned(5,
+            "Time buffer size for forward communication")
 
     LQEntries = Param.Unsigned(32, "Number of load queue entries")
     SQEntries = Param.Unsigned(32, "Number of store queue entries")
-    LSQDepCheckShift = Param.Unsigned(4, "Number of places to shift addr before check")
+    LSQDepCheckShift = Param.Unsigned(4,
+            "Number of places to shift addr before check")
     LSQCheckLoads = Param.Bool(True,
-        "Should dependency violations be checked for loads & stores or just stores")
+        "Should dependency violations be checked for "
+        "loads & stores or just stores")
     store_set_clear_period = Param.Unsigned(250000,
-            "Number of load/store insts before the dep predictor should be invalidated")
+            "Number of load/store insts before the dep predictor "
+            "should be invalidated")
     LFSTSize = Param.Unsigned(1024, "Last fetched store table size")
     SSITSize = Param.Unsigned(1024, "Store set ID table size")
 
     numRobs = Param.Unsigned(1, "Number of Reorder Buffers");
 
-    numPhysIntRegs = Param.Unsigned(256, "Number of physical integer registers")
+    numPhysIntRegs = Param.Unsigned(256,
+            "Number of physical integer registers")
     numPhysFloatRegs = Param.Unsigned(256, "Number of physical floating point "
                                       "registers")
-    # most ISAs don't use condition-code regs, so default is 0
-    _defaultNumPhysCCRegs = 0
-    if buildEnv['TARGET_ISA'] in ('arm','x86'):
-        # For x86, each CC reg is used to hold only a subset of the
-        # flags, so we need 4-5 times the number of CC regs as
-        # physical integer regs to be sure we don't run out.  In
-        # typical real machines, CC regs are not explicitly renamed
-        # (it's a side effect of int reg renaming), so they should
-        # never be the bottleneck here.
-        _defaultNumPhysCCRegs = Self.numPhysIntRegs * 5
     numPhysVecRegs = Param.Unsigned(256, "Number of physical vector "
                                       "registers")
     numPhysVecPredRegs = Param.Unsigned(32, "Number of physical predicate "
                                       "registers")
-    numPhysCCRegs = Param.Unsigned(_defaultNumPhysCCRegs,
-                                   "Number of physical cc registers")
+    # most ISAs don't use condition-code regs, so default is 0
+    numPhysCCRegs = Param.Unsigned(0, "Number of physical cc registers")
     numIQEntries = Param.Unsigned(64, "Number of instruction queue entries")
     numROBEntries = Param.Unsigned(192, "Number of reorder buffer entries")
 
@@ -173,25 +169,4 @@ class O3CPU(BaseCPU):
     branchPred = Param.BranchPredictor(TournamentBP(numThreads =
                                                        Parent.numThreads),
                                        "Branch Predictor")
-    needsTSO = Param.Bool(buildEnv['TARGET_ISA'] == 'x86',
-                          "Enable TSO Memory model")
-
-    def addCheckerCpu(self):
-        if buildEnv['TARGET_ISA'] in ['arm']:
-            from m5.objects.ArmMMU import ArmMMU
-
-            self.checker = O3Checker(workload=self.workload,
-                                     exitOnError=False,
-                                     updateOnError=True,
-                                     warnOnlyOnLoadError=True)
-            self.checker.mmu = ArmMMU()
-            self.checker.mmu.itb.size = self.mmu.itb.size
-            self.checker.mmu.dtb.size = self.mmu.dtb.size
-            self.checker.cpu_id = self.cpu_id
-
-        else:
-            print("ERROR: Checker only supported under ARM ISA!")
-            exit(1)
-
-# Deprecated
-DerivO3CPU = O3CPU
+    needsTSO = Param.Bool(False, "Enable TSO Memory model")

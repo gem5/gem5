@@ -201,7 +201,7 @@ LSQUnit::LSQUnit(uint32_t lqEntries, uint32_t sqEntries)
 }
 
 void
-LSQUnit::init(CPU *cpu_ptr, IEW *iew_ptr, const O3CPUParams &params,
+LSQUnit::init(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params,
         LSQ *lsq_ptr, unsigned id)
 {
     lsqID = id;

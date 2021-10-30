@@ -184,8 +184,8 @@ class MinorDefaultFUPool(MinorFUPool):
 
 class ThreadPolicy(Enum): vals = ['SingleThreaded', 'RoundRobin', 'Random']
 
-class MinorCPU(BaseCPU):
-    type = 'MinorCPU'
+class BaseMinorCPU(BaseCPU):
+    type = 'BaseMinorCPU'
     cxx_header = "cpu/minor/cpu.hh"
     cxx_class = 'gem5::MinorCPU'
 

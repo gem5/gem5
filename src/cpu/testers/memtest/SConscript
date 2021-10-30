@@ -28,7 +28,6 @@
 
 Import('*')
 
-#if 'O3CPU' in env['CPU_MODELS']:
 SimObject('MemTest.py', sim_objects=['MemTest'])
 
 Source('memtest.cc')

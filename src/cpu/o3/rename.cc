@@ -50,7 +50,7 @@
 #include "debug/Activity.hh"
 #include "debug/O3PipeView.hh"
 #include "debug/Rename.hh"
-#include "params/O3CPU.hh"
+#include "params/BaseO3CPU.hh"
 
 namespace gem5
 {
@@ -58,7 +58,7 @@ namespace gem5
 namespace o3
 {
 
-Rename::Rename(CPU *_cpu, const O3CPUParams &params)
+Rename::Rename(CPU *_cpu, const BaseO3CPUParams &params)
     : cpu(_cpu),
       iewToRenameDelay(params.iewToRenameDelay),
       decodeToRenameDelay(params.decodeToRenameDelay),

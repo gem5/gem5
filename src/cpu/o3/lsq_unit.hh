@@ -67,7 +67,7 @@
 namespace gem5
 {
 
-struct O3CPUParams;
+struct BaseO3CPUParams;
 
 namespace o3
 {
@@ -223,7 +223,7 @@ class LSQUnit
     }
 
     /** Initializes the LSQ unit with the specified number of entries. */
-    void init(CPU *cpu_ptr, IEW *iew_ptr, const O3CPUParams &params,
+    void init(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params,
             LSQ *lsq_ptr, unsigned id);
 
     /** Returns the name of the LSQ unit. */

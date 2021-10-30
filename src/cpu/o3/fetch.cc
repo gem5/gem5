@@ -63,7 +63,7 @@
 #include "debug/O3CPU.hh"
 #include "debug/O3PipeView.hh"
 #include "mem/packet.hh"
-#include "params/O3CPU.hh"
+#include "params/BaseO3CPU.hh"
 #include "sim/byteswap.hh"
 #include "sim/core.hh"
 #include "sim/eventq.hh"
@@ -81,7 +81,7 @@ Fetch::IcachePort::IcachePort(Fetch *_fetch, CPU *_cpu) :
 {}
 
 
-Fetch::Fetch(CPU *_cpu, const O3CPUParams &params)
+Fetch::Fetch(CPU *_cpu, const BaseO3CPUParams &params)
     : fetchPolicy(params.smtFetchPolicy),
       cpu(_cpu),
       branchPred(nullptr),

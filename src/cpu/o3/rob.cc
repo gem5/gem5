@@ -47,7 +47,7 @@
 #include "cpu/o3/limits.hh"
 #include "debug/Fetch.hh"
 #include "debug/ROB.hh"
-#include "params/O3CPU.hh"
+#include "params/BaseO3CPU.hh"
 
 namespace gem5
 {
@@ -55,7 +55,7 @@ namespace gem5
 namespace o3
 {
 
-ROB::ROB(CPU *_cpu, const O3CPUParams &params)
+ROB::ROB(CPU *_cpu, const BaseO3CPUParams &params)
     : robPolicy(params.smtROBPolicy),
       cpu(_cpu),
       numEntries(params.numROBEntries),

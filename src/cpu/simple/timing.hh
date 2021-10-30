@@ -45,7 +45,7 @@
 #include "cpu/simple/base.hh"
 #include "cpu/simple/exec_context.hh"
 #include "cpu/translation.hh"
-#include "params/TimingSimpleCPU.hh"
+#include "params/BaseTimingSimpleCPU.hh"
 
 namespace gem5
 {
@@ -54,7 +54,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 {
   public:
 
-    TimingSimpleCPU(const TimingSimpleCPUParams &params);
+    TimingSimpleCPU(const BaseTimingSimpleCPUParams &params);
     virtual ~TimingSimpleCPU();
 
     void init() override;
