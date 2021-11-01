@@ -37,8 +37,21 @@
 
 Import('*')
 
-if not env['CONF']['USE_KVM'] or \
-        env['CONF']['TARGET_ISA'] != env['CONF']['KVM_ISA']:
+if env['CONF']['USE_ARM_ISA']:
+    isa = 'arm'
+elif env['CONF']['USE_MIPS_ISA']:
+    isa = 'mips'
+elif env['CONF']['USE_POWER_ISA']:
+    isa = 'power'
+elif env['CONF']['USE_RISCV_ISA']:
+    isa = 'riscv'
+elif env['CONF']['USE_SPARC_ISA']:
+    isa = 'sparc'
+elif env['CONF']['USE_X86_ISA']:
+    isa = 'x86'
+elif env['CONF']['USE_NULL_ISA']:
+    isa = 'null'
+if not env['CONF']['USE_KVM'] or isa != env['CONF']['KVM_ISA']:
     Return()
 
 SimObject('KvmVM.py', sim_objects=['KvmVM'])

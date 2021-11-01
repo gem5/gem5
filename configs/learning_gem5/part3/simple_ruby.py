@@ -41,6 +41,8 @@ IMPORTANT: If you modify this file, it's likely that the Learning gem5 book
 import m5
 # import all of the SimObjects
 from m5.objects import *
+# XXX Deprecated
+from gem5.runtime import get_runtime_isa
 
 # Needed for running C++ threads
 m5.util.addToPath('../../')
@@ -79,13 +81,13 @@ system.caches = MyCacheSystem()
 system.caches.setup(system, system.cpu, [system.mem_ctrl])
 
 # get ISA for the binary to run.
-isa = str(m5.defines.buildEnv['TARGET_ISA']).lower()
+isa = get_runtime_isa()
 
 # Run application and use the compiled ISA to find the binary
 # grab the specific path to the binary
 thispath = os.path.dirname(os.path.realpath(__file__))
 binary = os.path.join(thispath, '../../../', 'tests/test-progs/threads/bin/',
-                      isa, 'linux/threads')
+                      isa.name.lower(), 'linux/threads')
 
 # Create a process for a simple "multi-threaded" application
 process = Process()

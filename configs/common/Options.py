@@ -467,7 +467,7 @@ def addFSOptions(parser):
     # System options
     parser.add_argument("--kernel", action="store", type=str)
     parser.add_argument("--os-type", action="store",
-                        choices=os_types[str(buildEnv['TARGET_ISA'])],
+                        choices=os_types,
                         default="linux",
                         help="Specifies type of OS to boot")
     parser.add_argument("--script", action="store", type=str)
@@ -476,7 +476,7 @@ def addFSOptions(parser):
         help="Stores changed frame buffers from the VNC server to compressed "
         "files in the gem5 output directory")
 
-    if buildEnv['TARGET_ISA'] == "arm":
+    if buildEnv['USE_ARM_ISA']:
         parser.add_argument(
             "--bare-metal", action="store_true",
             help="Provide the raw system without the linux specific bits")
