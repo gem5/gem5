@@ -23,6 +23,42 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.PowerCPU import PowerNonCachingSimpleCPU
+import m5.defines
 
-NonCachingSimpleCPU = PowerNonCachingSimpleCPU
+arch_vars = [
+    "USE_ARM_ISA",
+    "USE_MIPS_ISA",
+    "USE_POWER_ISA",
+    "USE_RISCV_ISA",
+    "USE_SPARC_ISA",
+    "USE_X86_ISA",
+]
+
+enabled = list(filter(lambda var: m5.defines.buildEnv[var], arch_vars))
+
+if len(enabled) == 1:
+    arch = enabled[0]
+    if arch == "USE_ARM_ISA":
+        from m5.objects.ArmCPU import (
+            ArmNonCachingSimpleCPU as NonCachingSimpleCPU,
+        )
+    elif arch == "USE_MIPS_ISA":
+        from m5.objects.MipsCPU import (
+            MipsNonCachingSimpleCPU as NonCachingSimpleCPU,
+        )
+    elif arch == "USE_POWER_ISA":
+        from m5.objects.PowerCPU import (
+            PowerNonCachingSimpleCPU as NonCachingSimpleCPU,
+        )
+    elif arch == "USE_RISCV_ISA":
+        from m5.objects.RiscvCPU import (
+            RiscvNonCachingSimpleCPU as NonCachingSimpleCPU,
+        )
+    elif arch == "USE_SPARC_ISA":
+        from m5.objects.SparcCPU import (
+            SparcNonCachingSimpleCPU as NonCachingSimpleCPU,
+        )
+    elif arch == "USE_X86_ISA":
+        from m5.objects.X86CPU import (
+            X86NonCachingSimpleCPU as NonCachingSimpleCPU,
+        )

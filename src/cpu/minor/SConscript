@@ -71,3 +71,6 @@ if not env['CONF']['USE_NULL_ISA']:
     CompoundFlag('Minor', [
         'MinorCPU', 'MinorExecute', 'MinorInterrupt', 'MinorMem',
         'MinorScoreboard'])
+
+    # For backwards compatibility
+    SimObject('MinorCPU.py', sim_objects=[])

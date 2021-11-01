@@ -23,6 +23,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.X86CPU import X86NonCachingSimpleCPU
+import m5.defines
 
-NonCachingSimpleCPU = X86NonCachingSimpleCPU
+arch_vars = [
+    "USE_ARM_ISA",
+    "USE_MIPS_ISA",
+    "USE_POWER_ISA",
+    "USE_RISCV_ISA",
+    "USE_SPARC_ISA",
+    "USE_X86_ISA",
+]
+
+enabled = list(filter(lambda var: m5.defines.buildEnv[var], arch_vars))
+
+if len(enabled) == 1:
+    arch = enabled[0]
+    if arch == "USE_ARM_ISA":
+        from m5.objects.ArmCPU import ArmO3Checker as O3Checker
