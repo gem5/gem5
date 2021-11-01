@@ -29,6 +29,9 @@
 
 Import('*')
 
+if env['USE_MIPS_ISA']:
+    env.TagImplies('mips isa', 'gem5 lib')
+
 Source('decoder.cc', tags='mips isa')
 Source('dsp.cc', tags='mips isa')
 Source('faults.cc', tags='mips isa')
