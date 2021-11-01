@@ -34,6 +34,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from gem5.runtime import get_supported_isas
 import m5.objects
 import m5.internal.params
 import inspect
@@ -139,13 +140,14 @@ class CPUList(ObjectList):
     def _add_objects(self):
         super(CPUList, self)._add_objects()
 
-        from m5.defines import buildEnv
         from importlib import import_module
 
-        for package in ["generic", buildEnv["TARGET_ISA"]]:
+        for isa in {
+            "generic",
+        } | {isa.name.lower() for isa in get_supported_isas()}:
             try:
                 package = import_module(
-                    ".cores." + package, package=__name__.rpartition(".")[0]
+                    ".cores." + isa, package=__name__.rpartition(".")[0]
                 )
             except ImportError:
                 # No timing models for this ISA

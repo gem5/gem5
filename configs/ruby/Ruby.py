@@ -42,6 +42,8 @@ import m5
 from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath, fatal
+from gem5.isas import ISA
+from gem5.runtime import get_runtime_isa
 
 addToPath("../")
 
@@ -324,9 +326,9 @@ def send_evicts(options):
     # 1. The O3 model must keep the LSQ coherent with the caches
     # 2. The x86 mwait instruction is built on top of coherence invalidations
     # 3. The local exclusive monitor in ARM systems
-    if options.cpu_type == "DerivO3CPU" or buildEnv["TARGET_ISA"] in (
-        "x86",
-        "arm",
+    if options.cpu_type == "DerivO3CPU" or get_runtime_isa() in (
+        ISA.X86,
+        ISA.ARM,
     ):
         return True
     return False

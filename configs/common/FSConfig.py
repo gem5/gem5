@@ -39,26 +39,35 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import m5
+import m5.defines
 from m5.objects import *
 from m5.util import *
 from common.Benchmarks import *
 from common import ObjectList
 
 # Populate to reflect supported os types per target ISA
-os_types = {
-    "mips": ["linux"],
-    "riscv": ["linux"],  # TODO that's a lie
-    "sparc": ["linux"],
-    "x86": ["linux"],
-    "arm": [
-        "linux",
-        "android-gingerbread",
-        "android-ics",
-        "android-jellybean",
-        "android-kitkat",
-        "android-nougat",
-    ],
-}
+os_types = set()
+if m5.defines.buildEnv["USE_ARM_ISA"]:
+    os_types.update(
+        [
+            "linux",
+            "android-gingerbread",
+            "android-ics",
+            "android-jellybean",
+            "android-kitkat",
+            "android-nougat",
+        ]
+    )
+if m5.defines.buildEnv["USE_MIPS_ISA"]:
+    os_types.add("linux")
+if m5.defines.buildEnv["USE_POWER_ISA"]:
+    os_types.add("linux")
+if m5.defines.buildEnv["USE_RISCV_ISA"]:
+    os_types.add("linux")  # TODO that's a lie
+if m5.defines.buildEnv["USE_SPARC_ISA"]:
+    os_types.add("linux")
+if m5.defines.buildEnv["USE_X86_ISA"]:
+    os_types.add("linux")
 
 
 class CowIdeDisk(IdeDisk):

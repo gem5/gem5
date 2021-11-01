@@ -35,6 +35,8 @@ import inspect
 import m5
 from m5.objects import *
 from m5.util import addToPath
+from gem5.isas import ISA
+from gem5.runtime import get_runtime_isa
 
 addToPath("../")
 
@@ -738,7 +740,7 @@ system.clk_domain = SrcClockDomain(
 
 if fast_forward:
     have_kvm_support = "BaseKvmCPU" in globals()
-    if have_kvm_support and buildEnv["TARGET_ISA"] == "x86":
+    if have_kvm_support and get_runtime_isa() == ISA.X86:
         system.vm = KvmVM()
         system.m5ops_base = 0xFFFF0000
         for i in range(len(host_cpu.workload)):
@@ -777,7 +779,7 @@ for i in range(args.num_cpus):
     system.cpu[i].dcache_port = ruby_port.in_ports
 
     ruby_port.mem_request_port = system.piobus.cpu_side_ports
-    if buildEnv["TARGET_ISA"] == "x86":
+    if get_runtime_isa() == ISA.X86:
         system.cpu[i].interrupts[0].pio = system.piobus.mem_side_ports
         system.cpu[i].interrupts[
             0

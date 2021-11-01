@@ -58,7 +58,7 @@ class IntMultDiv(FUDesc):
     # issues division microops.  The latency of these microops should really be
     # one (or a small number) cycle each since each of these computes one bit
     # of the quotient.
-    if buildEnv["TARGET_ISA"] in ("x86"):
+    if buildEnv["USE_X86_ISA"]:
         opList[1].opLat = 1
 
     count = 2

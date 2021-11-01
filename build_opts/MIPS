@@ -1,2 +1,2 @@
-TARGET_ISA = 'mips'
+USE_MIPS_ISA = True
 PROTOCOL = 'MI_example'

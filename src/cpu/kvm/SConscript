@@ -37,8 +37,11 @@
 
 Import('*')
 
-if not env['CONF']['USE_KVM'] or \
-        env['CONF']['TARGET_ISA'] != env['CONF']['KVM_ISA']:
+if not env['CONF']['USE_KVM']:
+    Return()
+
+kvm_isa = env['CONF']['KVM_ISA']
+if not env['CONF'][f'USE_{kvm_isa.upper()}_ISA']:
     Return()
 
 SimObject('KvmVM.py', sim_objects=['KvmVM'])

@@ -45,7 +45,7 @@ Import('*')
 #
 # Note: This will need reconfigured for multi-isa. E.g., if this is
 # incorporated: https://gem5-review.googlesource.com/c/public/gem5/+/52491
-if env['TARGET_ISA'] == 'arm':
+if env['USE_ARM_ISA']:
     GTest('aapcs64.test', 'aapcs64.test.cc', '../../base/debug.cc',
             '../../cpu/reg_class.cc', '../../sim/bufval.cc')
 Source('decoder.cc', tags='arm isa')

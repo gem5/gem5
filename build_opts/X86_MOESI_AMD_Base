@@ -1,2 +1,2 @@
 PROTOCOL = 'MOESI_AMD_Base'
-TARGET_ISA = 'x86'
+USE_X86_ISA = True

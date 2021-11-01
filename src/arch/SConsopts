@@ -27,8 +27,6 @@ Import('*')
 
 def add_isa_lists():
     sticky_vars.AddVariables(
-        EnumVariable('TARGET_ISA', 'Target ISA', 'null',
-            sorted(set(main.Split('${ALL_ISAS}')))),
         EnumVariable('TARGET_GPU_ISA', 'Target GPU ISA', 'gcn3',
             sorted(set(main.Split('${ALL_GPU_ISAS}')))),
         )

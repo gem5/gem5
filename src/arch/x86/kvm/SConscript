@@ -37,8 +37,7 @@
 
 Import('*')
 
-if not env['CONF']['USE_KVM'] or \
-        env['CONF']['TARGET_ISA'] != env['CONF']['KVM_ISA']:
+if not env['CONF']['USE_KVM'] or env['CONF']['KVM_ISA'] != 'x86':
     Return()
 
 SimObject('X86KvmCPU.py', sim_objects=['X86KvmCPU'], tags='x86 isa')

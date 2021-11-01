@@ -772,7 +772,7 @@ def addFSOptions(parser):
     parser.add_argument(
         "--os-type",
         action="store",
-        choices=os_types[str(buildEnv["TARGET_ISA"])],
+        choices=os_types,
         default="linux",
         help="Specifies type of OS to boot",
     )
@@ -784,7 +784,7 @@ def addFSOptions(parser):
         "files in the gem5 output directory",
     )
 
-    if buildEnv["TARGET_ISA"] == "arm":
+    if buildEnv["USE_ARM_ISA"]:
         parser.add_argument(
             "--bare-metal",
             action="store_true",

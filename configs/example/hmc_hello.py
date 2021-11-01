@@ -36,8 +36,10 @@ import argparse
 import m5
 from m5.objects import *
 from m5.util import *
+from gem5.runtime import get_runtime_isa
 
 addToPath("../")
+
 from common import MemConfig
 from common import HMC
 
@@ -67,9 +69,9 @@ system.cpu.createInterruptController()
 # functional-only port to allow the system to read and write memory.
 system.system_port = system.membus.cpu_side_ports
 # get ISA for the binary to run.
-isa = str(m5.defines.buildEnv["TARGET_ISA"]).lower()
+isa = get_runtime_isa()
 # run 'hello' and use the compiled ISA to find the binary
-binary = "tests/test-progs/hello/bin/" + isa + "/linux/hello"
+binary = "tests/test-progs/hello/bin/" + isa.name.lower() + "/linux/hello"
 # create a process for a simple "Hello World" application
 process = Process()
 # cmd is a list which begins with the executable (like argv)
