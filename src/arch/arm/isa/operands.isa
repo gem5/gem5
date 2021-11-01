@@ -419,6 +419,7 @@ def operands {{
     'SevMailbox': cntrlRegNC('MISCREG_SEV_MAILBOX'),
     'LLSCLock': cntrlRegNC('MISCREG_LOCKFLAG'),
     'Dczid' : cntrlRegNC('MISCREG_DCZID_EL0'),
+    'PendingDvm': cntrlRegNC('MISCREG_TLBINEEDSYNC'),
 
     #Register fields for microops
     'URa' : intReg('ura'),
