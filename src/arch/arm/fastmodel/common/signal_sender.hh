@@ -35,7 +35,11 @@
 
 #include "dev/intpin.hh"
 
-namespace FastModel
+namespace gem5
+{
+
+GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
+namespace fastmodel
 {
 
 class SignalSender : public IntSinkPinBase
@@ -53,6 +57,7 @@ class SignalSender : public IntSinkPinBase
     void lowerOnDevice() override { signal_out.set_state(id, false); }
 };
 
-} // namespace FastModel
+} // namespace fastmodel
+} // namespace gem5
 
 #endif  // __ARCH_ARM_FASTMODEL_COMMON_SIGNAL_SENDER_HH__
