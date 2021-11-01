@@ -40,6 +40,9 @@
 
 Import('*')
 
+if env['USE_ARM_ISA']:
+    env.TagImplies('arm isa', 'gem5 lib')
+
 # The GTest function does not have a 'tags' parameter. We therefore apply this
 # guard to ensure this test is only built when ARM is compiled.
 #

@@ -57,25 +57,18 @@ Import('*')
 #################################################################
 
 if env['CONF']['USE_ARM_ISA']:
-    env.TagImplies('arm isa', 'gem5 lib')
     isa = 'arm'
 elif env['CONF']['USE_MIPS_ISA']:
-    env.TagImplies('mips isa', 'gem5 lib')
     isa = 'mips'
 elif env['CONF']['USE_POWER_ISA']:
-    env.TagImplies('power isa', 'gem5 lib')
     isa = 'power'
 elif env['CONF']['USE_RISCV_ISA']:
-    env.TagImplies('riscv isa', 'gem5 lib')
     isa = 'riscv'
 elif env['CONF']['USE_SPARC_ISA']:
-    env.TagImplies('sparc isa', 'gem5 lib')
     isa = 'sparc'
 elif env['CONF']['USE_X86_ISA']:
-    env.TagImplies('x86 isa', 'gem5 lib')
     isa = 'x86'
 elif env['CONF']['USE_NULL_ISA']:
-    env.TagImplies('null isa', 'gem5 lib')
     isa = 'null'
 
 amdgpu_isa = ['gcn3', 'vega']
