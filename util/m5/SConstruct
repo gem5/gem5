@@ -94,7 +94,8 @@ else:
 # Propogate the environment's PATH setting.
 main['ENV']['PATH'] = os.environ['PATH']
 # Pass through terminal information to, for instance, enable color output.
-main['ENV']['TERM'] = os.environ['TERM']
+if 'TERM' in os.environ:
+    main['ENV']['TERM'] = os.environ['TERM']
 # Pass through the java CLASSPATH (if it exists) so we can find libraries.
 main['ENV']['CLASSPATH'] = os.environ.get('CLASSPATH', '')
 
