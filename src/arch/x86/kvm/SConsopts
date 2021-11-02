@@ -1,16 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2015 ARM Limited
-# All rights reserved.
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
+# Copyright 2021 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -37,20 +25,21 @@
 
 Import('*')
 
-if env['CONF']['KVM_ISA'] == 'arm':
+from gem5_scons import warning
+
+import gem5_scons
+
+host_isa = None
+try:
     import platform
     host_isa = platform.machine()
-    env.TagImplies(f'{host_isa} kvm', 'arm kvm')
+except:
+    pass
 
-SimObject('KvmGic.py',
-    sim_objects=['MuxingKvmGicV2', 'MuxingKvmGicV3'], tags='arm kvm')
-Source('gic.cc', tags='arm kvm')
-
-SimObject('BaseArmKvmCPU.py', sim_objects=['BaseArmKvmCPU'], tags='arm kvm')
-Source('base_cpu.cc', tags='arm kvm')
-
-SimObject('ArmKvmCPU.py', sim_objects=['ArmKvmCPU'], tags='armv71 kvm')
-Source('arm_cpu.cc', tags='armv71 kvm')
-
-SimObject('ArmV8KvmCPU.py', sim_objects=['ArmV8KvmCPU'], tags='aarch64 kvm')
-Source('armv8_cpu.cc', tags='aarch64 kvm')
+if host_isa == 'x86_64':
+    with gem5_scons.Configure(main) as conf:
+        if conf.CheckTypeSize('struct kvm_xsave',
+                '#include <linux/kvm.h>') != 0:
+            conf.env['CONF']['KVM_ISA'] = 'x86'
+        else:
+            warning("KVM on x86 requires xsave support in kernel headers.")
