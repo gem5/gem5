@@ -518,8 +518,11 @@ X86_64Process::initState()
         /* PF handler */
         pTable->map(PFHandlerVirtAddr, pfHandlerPhysAddr, PageBytes, false);
         /* MMIO region for m5ops */
-        pTable->map(MMIORegionVirtAddr, MMIORegionPhysAddr,
-                    16 * PageBytes, false);
+        auto m5op_range = system->m5opRange();
+        if (m5op_range.size()) {
+            pTable->map(MMIORegionVirtAddr, m5op_range.start(),
+                        m5op_range.size(), false);
+        }
     } else {
         for (int i = 0; i < contextIds.size(); i++) {
             ThreadContext * tc = system->threads[contextIds[i]];
