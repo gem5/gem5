@@ -29,6 +29,7 @@ from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
 from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
 from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
 from m5.objects.BaseO3CPU import BaseO3CPU
+from m5.objects.FUPool import DefaultFUPool
 from m5.objects.X86Decoder import X86Decoder
 from m5.objects.X86MMU import X86MMU
 from m5.objects.X86LocalApic import X86LocalApic
@@ -60,3 +61,9 @@ class X86O3CPU(BaseO3CPU, X86CPU):
     # (it's a side effect of int reg renaming), so they should
     # never be the bottleneck here.
     numPhysCCRegs = Self.numPhysIntRegs * 5
+
+    # DIV and IDIV instructions in x86 are implemented using a loop which
+    # issues division microops.  The latency of these microops should really be
+    # one (or a small number) cycle each since each of these computes one bit
+    # of the quotient.
+    fuPool = DefaultFUPool(int_div_lat=1)

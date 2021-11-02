@@ -47,6 +47,10 @@ class FUPool(SimObject):
     cxx_header = "cpu/o3/fu_pool.hh"
     FUList = VectorParam.FUDesc("list of FU's for this pool")
 
+    # This latency may need to be specialized for x86. This makes it easy to
+    # access in subclasses.
+    int_div_lat = Param.Cycles(20, "Default latency for IntDiv")
+
 class DefaultFUPool(FUPool):
     FUList = [ IntALU(), IntMultDiv(), FP_ALU(), FP_MultDiv(), ReadPort(),
                SIMD_Unit(), PredALU(), WritePort(), RdWrPort(), IprPort() ]
