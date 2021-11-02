@@ -139,6 +139,11 @@ structure (Sequencer, external = "yes") {
                      Cycles, Cycles, Cycles);
   void writeUniqueCallback(Addr, DataBlock);
 
+  void unaddressedCallback(Addr, RubyRequestType);
+  void unaddressedCallback(Addr, RubyRequestType, MachineType);
+  void unaddressedCallback(Addr, RubyRequestType, MachineType,
+                    Cycles, Cycles, Cycles);
+
   // ll/sc support
   void writeCallbackScFail(Addr, DataBlock);
   bool llscCheckMonitor(Addr);
@@ -170,6 +175,8 @@ structure(RubyRequest, desc="...", interface="Message", external="yes") {
   PacketPtr pkt,             desc="Packet associated with this request";
   bool htmFromTransaction,   desc="Memory request originates within a HTM transaction";
   int htmTransactionUid,     desc="Used to identify the unique HTM transaction that produced this request";
+  bool isTlbi,               desc="Memory request is a TLB shootdown (invalidation) operation";
+  Addr tlbiTransactionUid,   desc="Unique identifier of the TLB shootdown operation that produced this request";
 
   RequestPtr getRequestPtr();
 }
