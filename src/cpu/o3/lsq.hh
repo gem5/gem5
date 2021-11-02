@@ -257,6 +257,7 @@ class LSQ
         std::vector<bool> _byteEnable;
         uint32_t _numOutstandingPackets;
         AtomicOpFunctorPtr _amo_op;
+        bool _hasStaleTranslation;
 
       protected:
         LSQUnit* lsqUnit() { return &_port; }
@@ -264,7 +265,8 @@ class LSQ
         LSQRequest(LSQUnit* port, const DynInstPtr& inst, bool isLoad,
                 const Addr& addr, const uint32_t& size,
                 const Request::Flags& flags_, PacketDataPtr data=nullptr,
-                uint64_t* res=nullptr, AtomicOpFunctorPtr amo_op=nullptr);
+                uint64_t* res=nullptr, AtomicOpFunctorPtr amo_op=nullptr,
+                bool stale_translation=false);
 
         bool
         isLoad() const
@@ -330,6 +332,10 @@ class LSQ
         }
 
         const DynInstPtr& instruction() { return _inst; }
+
+        bool hasStaleTranslation() const { return _hasStaleTranslation; }
+
+        virtual void markAsStaleTranslation() = 0;
 
         /** Set up virtual request.
          * For a previously allocated Request objects.
@@ -571,6 +577,7 @@ class LSQ
                        std::move(amo_op)) {}
 
         virtual ~SingleDataRequest() {}
+        virtual void markAsStaleTranslation();
         virtual void initiateTranslation();
         virtual void finish(const Fault &fault, const RequestPtr &req,
                 gem5::ThreadContext* tc, BaseMMU::Mode mode);
@@ -594,6 +601,7 @@ class LSQ
                 const Request::Flags& flags_);
         inline virtual ~UnsquashableDirectRequest() {}
         virtual void initiateTranslation();
+        virtual void markAsStaleTranslation();
         virtual void finish(const Fault &fault, const RequestPtr &req,
                 gem5::ThreadContext* tc, BaseMMU::Mode mode);
         virtual std::string
@@ -635,6 +643,7 @@ class LSQ
                 _mainPacket = nullptr;
             }
         }
+        virtual void markAsStaleTranslation();
         virtual void finish(const Fault &fault, const RequestPtr &req,
                 gem5::ThreadContext* tc, BaseMMU::Mode mode);
         virtual bool recvTimingResp(PacketPtr pkt);
@@ -839,6 +848,11 @@ class LSQ
      */
     Fault write(LSQRequest* request, uint8_t *data, ssize_t store_idx);
 
+    /** Checks if queues have any marked operations left,
+     * and sends the appropriate Sync Completion message if not.
+     */
+    void checkStaleTranslations();
+
     /**
      * Retry the previous send that failed.
      */
@@ -889,6 +903,10 @@ class LSQ
     /** The number of used cache ports in this cycle by loads. */
     int usedLoadPorts;
 
+    /** If the LSQ is currently waiting for stale translations */
+    bool waitingForStaleTranslation;
+    /** The ID if the transaction that made translations stale */
+    Addr staleTranslationWaitTxnId;
 
     /** The LSQ policy for SMT mode. */
     SMTQueuePolicy lsqPolicy;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014, 2017-2020 ARM Limited
+ * Copyright (c) 2010-2014, 2017-2021 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -1236,6 +1236,39 @@ LSQUnit::trySendPacket(bool isLoad, PacketPtr data_pkt)
             data_pkt->print(), request->instruction()->seqNum,
             ret ? "": "not ", lsq->cacheBlocked(), cache_got_blocked);
     return ret;
+}
+
+void
+LSQUnit::startStaleTranslationFlush()
+{
+    DPRINTF(LSQUnit, "Unit %p marking stale translations %d %d\n", this,
+        storeQueue.size(), loadQueue.size());
+    for (auto& entry : storeQueue) {
+        if (entry.valid() && entry.hasRequest())
+            entry.request()->markAsStaleTranslation();
+    }
+    for (auto& entry : loadQueue) {
+        if (entry.valid() && entry.hasRequest())
+            entry.request()->markAsStaleTranslation();
+    }
+}
+
+bool
+LSQUnit::checkStaleTranslations() const
+{
+    DPRINTF(LSQUnit, "Unit %p checking stale translations\n", this);
+    for (auto& entry : storeQueue) {
+        if (entry.valid() && entry.hasRequest()
+            && entry.request()->hasStaleTranslation())
+            return true;
+    }
+    for (auto& entry : loadQueue) {
+        if (entry.valid() && entry.hasRequest()
+            && entry.request()->hasStaleTranslation())
+            return true;
+    }
+    DPRINTF(LSQUnit, "Unit %p found no stale translations\n", this);
+    return false;
 }
 
 void

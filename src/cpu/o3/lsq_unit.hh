@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014,2017-2018,2020 ARM Limited
+ * Copyright (c) 2012-2014,2017-2018,2020-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -316,6 +316,10 @@ class LSQUnit
         assert(htm_uid >= lastRetiredHtmUid);
         lastRetiredHtmUid = htm_uid;
     }
+
+    // Stale translation checks
+    void startStaleTranslationFlush();
+    bool checkStaleTranslations() const;
 
     /** Returns if either the LQ or SQ is full. */
     bool isFull() { return lqFull() || sqFull(); }

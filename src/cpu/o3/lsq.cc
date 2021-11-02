@@ -73,6 +73,8 @@ LSQ::LSQ(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params)
       _cacheBlocked(false),
       cacheStorePorts(params.cacheStorePorts), usedStorePorts(0),
       cacheLoadPorts(params.cacheLoadPorts), usedLoadPorts(0),
+      waitingForStaleTranslation(false),
+      staleTranslationWaitTxnId(0),
       lsqPolicy(params.smtLSQPolicy),
       LQEntries(params.LQEntries),
       SQEntries(params.SQEntries),
@@ -431,6 +433,10 @@ LSQ::recvTimingResp(PacketPtr pkt)
     // Update the LSQRequest state (this may delete the request)
     request->packetReplied();
 
+    if (waitingForStaleTranslation) {
+        checkStaleTranslations();
+    }
+
     return true;
 }
 
@@ -447,6 +453,19 @@ LSQ::recvTimingSnoopReq(PacketPtr pkt)
         for (ThreadID tid = 0; tid < numThreads; tid++) {
             thread[tid].checkSnoop(pkt);
         }
+    } else if (pkt->req && pkt->req->isTlbiExtSync()) {
+        DPRINTF(LSQ, "received TLBI Ext Sync\n");
+        assert(!waitingForStaleTranslation);
+
+        waitingForStaleTranslation = true;
+        staleTranslationWaitTxnId = pkt->req->getExtraData();
+
+        for (auto& unit : thread) {
+            unit.startStaleTranslationFlush();
+        }
+
+        // In case no units have pending ops, just go ahead
+        checkStaleTranslations();
     }
 }
 
@@ -1048,7 +1067,8 @@ LSQ::LSQRequest::LSQRequest(
 LSQ::LSQRequest::LSQRequest(
         LSQUnit *port, const DynInstPtr& inst, bool isLoad,
         const Addr& addr, const uint32_t& size, const Request::Flags& flags_,
-           PacketDataPtr data, uint64_t* res, AtomicOpFunctorPtr amo_op)
+        PacketDataPtr data, uint64_t* res, AtomicOpFunctorPtr amo_op,
+        bool stale_translation)
     : _state(State::NotIssued),
     numTranslatedFragments(0),
     numInTranslationFragments(0),
@@ -1056,7 +1076,8 @@ LSQ::LSQRequest::LSQRequest(
     _res(res), _addr(addr), _size(size),
     _flags(flags_),
     _numOutstandingPackets(0),
-    _amo_op(std::move(amo_op))
+    _amo_op(std::move(amo_op)),
+    _hasStaleTranslation(stale_translation)
 {
     flags.set(Flag::IsLoad, isLoad);
     flags.set(Flag::WriteBackToRegister,
@@ -1134,6 +1155,36 @@ LSQ::LSQRequest::sendFragmentToTranslation(int i)
             this, isLoad() ? BaseMMU::Read : BaseMMU::Write);
 }
 
+void
+LSQ::SingleDataRequest::markAsStaleTranslation()
+{
+    // If this element has been translated and is currently being requested,
+    // then it may be stale
+    if ((!flags.isSet(Flag::Complete)) &&
+        (!flags.isSet(Flag::Discarded)) &&
+        (flags.isSet(Flag::TranslationStarted))) {
+        _hasStaleTranslation = true;
+    }
+
+    DPRINTF(LSQ, "SingleDataRequest %d 0x%08x isBlocking:%d\n",
+        (int)_state, (uint32_t)flags, _hasStaleTranslation);
+}
+
+void
+LSQ::SplitDataRequest::markAsStaleTranslation()
+{
+    // If this element has been translated and is currently being requested,
+    // then it may be stale
+    if ((!flags.isSet(Flag::Complete)) &&
+        (!flags.isSet(Flag::Discarded)) &&
+        (flags.isSet(Flag::TranslationStarted))) {
+        _hasStaleTranslation = true;
+    }
+
+    DPRINTF(LSQ, "SplitDataRequest %d 0x%08x isBlocking:%d\n",
+        (int)_state, (uint32_t)flags, _hasStaleTranslation);
+}
+
 bool
 LSQ::SingleDataRequest::recvTimingResp(PacketPtr pkt)
 {
@@ -1141,6 +1192,7 @@ LSQ::SingleDataRequest::recvTimingResp(PacketPtr pkt)
     flags.set(Flag::Complete);
     assert(pkt == _packets.front());
     _port.completeDataAccess(pkt);
+    _hasStaleTranslation = false;
     return true;
 }
 
@@ -1166,6 +1218,7 @@ LSQ::SplitDataRequest::recvTimingResp(PacketPtr pkt)
         _port.completeDataAccess(resp);
         delete resp;
     }
+    _hasStaleTranslation = false;
     return true;
 }
 
@@ -1424,11 +1477,49 @@ LSQ::UnsquashableDirectRequest::initiateTranslation()
 }
 
 void
+LSQ::UnsquashableDirectRequest::markAsStaleTranslation()
+{
+    // HTM/TLBI operations do not translate,
+    // so cannot have stale translations
+    _hasStaleTranslation = false;
+}
+
+void
 LSQ::UnsquashableDirectRequest::finish(const Fault &fault,
         const RequestPtr &req, gem5::ThreadContext* tc,
         BaseMMU::Mode mode)
 {
     panic("unexpected behaviour - finish()");
+}
+
+void
+LSQ::checkStaleTranslations()
+{
+    assert(waitingForStaleTranslation);
+
+    DPRINTF(LSQ, "Checking pending TLBI sync\n");
+    // Check if all thread queues are complete
+    for (const auto& unit : thread) {
+        if (unit.checkStaleTranslations())
+            return;
+    }
+    DPRINTF(LSQ, "No threads have blocking TLBI sync\n");
+
+    // All thread queues have committed their sync operations
+    // => send a RubyRequest to the sequencer
+    auto req = Request::createMemManagement(
+        Request::TLBI_EXT_SYNC_COMP,
+        cpu->dataRequestorId());
+    req->setExtraData(staleTranslationWaitTxnId);
+    PacketPtr pkt = Packet::createRead(req);
+
+    // TODO - reserve some credit for these responses?
+    if (!dcachePort.sendTimingReq(pkt)) {
+        panic("Couldn't send TLBI_EXT_SYNC_COMP message");
+    }
+
+    waitingForStaleTranslation = false;
+    staleTranslationWaitTxnId = 0;
 }
 
 Fault
