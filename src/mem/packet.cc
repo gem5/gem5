@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2019 ARM Limited
+ * Copyright (c) 2011-2019, 2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -232,6 +232,7 @@ MemCmd::commandInfo[] =
     { {IsRead, IsRequest, NeedsResponse}, HTMReqResp, "HTMReq" },
     { {IsRead, IsResponse}, InvalidCmd, "HTMReqResp" },
     { {IsRead, IsRequest}, InvalidCmd, "HTMAbort" },
+    { {IsRequest}, InvalidCmd, "TlbiExtSync" },
 };
 
 AddrRange

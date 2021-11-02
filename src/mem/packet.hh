@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2019 ARM Limited
+ * Copyright (c) 2012-2019, 2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -144,6 +144,8 @@ class MemCmd
         HTMReq,
         HTMReqResp,
         HTMAbort,
+        // Tlb shootdown
+        TlbiExtSync,
         NUM_MEM_CMDS
     };
 
