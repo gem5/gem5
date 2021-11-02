@@ -243,6 +243,14 @@ class Request
         /** The Request is a TLB shootdown sync */
         TLBI_SYNC                   = 0x0000200000000000,
 
+        /** The Request tells the CPU model that a
+            remote TLB Sync has been requested */
+        TLBI_EXT_SYNC               = 0x0000400000000000,
+
+        /** The Request tells the interconnect that a
+            remote TLB Sync request has completed */
+        TLBI_EXT_SYNC_COMP          = 0x0000800000000000,
+
         /**
          * These flags are *not* cleared when a Request object is
          * reused (assigned a new address).
@@ -255,7 +263,8 @@ class Request
     static const FlagsType HTM_CMD = HTM_START | HTM_COMMIT |
         HTM_CANCEL | HTM_ABORT;
 
-    static const FlagsType TLBI_CMD = TLBI | TLBI_SYNC;
+    static const FlagsType TLBI_CMD = TLBI | TLBI_SYNC |
+        TLBI_EXT_SYNC | TLBI_EXT_SYNC_COMP;
 
     /** Requestor Ids that are statically allocated
      * @{*/
@@ -985,7 +994,14 @@ class Request
 
     bool isTlbi() const { return _flags.isSet(TLBI); }
     bool isTlbiSync() const { return _flags.isSet(TLBI_SYNC); }
-    bool isTlbiCmd() const { return isTlbi() || isTlbiSync(); }
+    bool isTlbiExtSync() const { return _flags.isSet(TLBI_EXT_SYNC); }
+    bool isTlbiExtSyncComp() const { return _flags.isSet(TLBI_EXT_SYNC_COMP); }
+    bool
+    isTlbiCmd() const
+    {
+        return (isTlbi() || isTlbiSync() ||
+                isTlbiExtSync() || isTlbiExtSyncComp());
+    }
 
     bool
     isAtomic() const
