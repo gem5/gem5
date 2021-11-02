@@ -198,6 +198,9 @@ class InfoAccess
     /** Grab the information class for this statistic */
     const Info *info() const;
 
+    /** Check if the info is new style stats */
+    bool newStyleStats() const;
+
   public:
     InfoAccess()
         : _info(nullptr) {};
@@ -259,7 +262,7 @@ class DataWrap : public InfoAccess
             parent->addStat(info);
 
         if (name) {
-            info->setName(name, parent == nullptr);
+            info->setName(name, !newStyleStats());
             info->flags.set(display);
         }
 
@@ -286,7 +289,7 @@ class DataWrap : public InfoAccess
     name(const std::string &name)
     {
         Info *info = this->info();
-        info->setName(name);
+        info->setName(name, !newStyleStats());
         info->flags.set(display);
         return this->self();
     }

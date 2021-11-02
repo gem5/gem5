@@ -111,7 +111,7 @@ InfoAccess::setInit()
 Info *
 InfoAccess::info()
 {
-    if (_info) {
+    if (newStyleStats()) {
         // New-style stats
         return _info;
     } else {
@@ -125,7 +125,7 @@ InfoAccess::info()
 const Info *
 InfoAccess::info() const
 {
-    if (_info) {
+    if (newStyleStats()) {
         // New-style stats
         return _info;
     } else {
@@ -134,6 +134,12 @@ InfoAccess::info() const
         assert(i != statsMap().end());
         return (*i).second;
     }
+}
+
+bool
+InfoAccess::newStyleStats() const
+{
+    return _info != nullptr;
 }
 
 Formula::Formula(Group *parent, const char *name, const char *desc)
