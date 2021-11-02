@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013,2019 ARM Limited
+ * Copyright (c) 2012-2013,2019,2021 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -179,6 +179,8 @@ class RubyPort : public ClockedObject
   protected:
     void trySendRetries();
     void ruby_hit_callback(PacketPtr pkt);
+    void ruby_unaddressed_callback(PacketPtr pkt);
+    void ruby_stale_translation_callback(Addr txnId);
     void testDrainComplete();
     void ruby_eviction_callback(Addr address);
 
