@@ -1097,13 +1097,30 @@ TimingSimpleCPU::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
     }
 
     // Making it uniform across all CPUs:
-    // The CPUs need to be woken up only on an invalidation packet (when using caches)
-    // or on an incoming write packet (when not using caches)
-    // It is not necessary to wake up the processor on all incoming packets
+    // The CPUs need to be woken up only on an invalidation packet
+    // (when using caches) or on an incoming write packet (when not
+    // using caches) It is not necessary to wake up the processor on
+    // all incoming packets
     if (pkt->isInvalidate() || pkt->isWrite()) {
         for (auto &t_info : cpu->threadInfo) {
             t_info->thread->getIsaPtr()->handleLockedSnoop(pkt,
                     cacheBlockMask);
+        }
+    } else if (pkt->req && pkt->req->isTlbiExtSync()) {
+        // We received a TLBI_EXT_SYNC request.
+        // In a detailed sim we would wait for memory ops to complete,
+        // but in our simple case we just respond immediately
+        auto reply_req = Request::createMemManagement(
+            Request::TLBI_EXT_SYNC_COMP,
+            cpu->dataRequestorId());
+
+        // Extra Data = the transaction ID of the Sync we're completing
+        reply_req->setExtraData(pkt->req->getExtraData());
+        PacketPtr reply_pkt = Packet::createRead(reply_req);
+
+        // TODO - reserve some credit for these responses?
+        if (!sendTimingReq(reply_pkt)) {
+            panic("Couldn't send TLBI_EXT_SYNC_COMP message");
         }
     }
 }
