@@ -201,7 +201,8 @@ BaseArmKvmCPU::getRegList() const
 
         // Request the actual register list now that we know how many
         // register we need to allocate space for.
-        std::unique_ptr<kvm_reg_list> regs;
+        std::unique_ptr<kvm_reg_list, void(*)(void *p)>
+            regs(nullptr, [](void *p) { operator delete(p); });
         const size_t size(sizeof(kvm_reg_list) +
                           regs_probe.n * sizeof(uint64_t));
         regs.reset((kvm_reg_list *)operator new(size));

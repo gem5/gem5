@@ -222,7 +222,8 @@ const Kvm::CPUIDVector &
 Kvm::getSupportedCPUID() const
 {
     if (supportedCPUIDCache.empty()) {
-        std::unique_ptr<struct kvm_cpuid2> cpuid;
+        std::unique_ptr<struct kvm_cpuid2, void(*)(void *p)>
+            cpuid(nullptr, [](void *p) { operator delete(p); });
         int i(1);
         do {
             cpuid.reset((struct kvm_cpuid2 *)operator new(
@@ -254,7 +255,8 @@ const Kvm::MSRIndexVector &
 Kvm::getSupportedMSRs() const
 {
     if (supportedMSRCache.empty()) {
-        std::unique_ptr<struct kvm_msr_list> msrs;
+        std::unique_ptr<struct kvm_msr_list, void(*)(void *p)>
+            msrs(nullptr, [](void *p) { operator delete(p); });
         int i(0);
         do {
             msrs.reset((struct kvm_msr_list *)operator new(

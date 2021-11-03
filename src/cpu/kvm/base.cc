@@ -1131,7 +1131,8 @@ BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
 void
 BaseKvmCPU::setSignalMask(const sigset_t *mask)
 {
-    std::unique_ptr<struct kvm_signal_mask> kvm_mask;
+    std::unique_ptr<struct kvm_signal_mask, void(*)(void *p)>
+        kvm_mask(nullptr, [](void *p) { operator delete(p); });
 
     if (mask) {
         kvm_mask.reset((struct kvm_signal_mask *)operator new(

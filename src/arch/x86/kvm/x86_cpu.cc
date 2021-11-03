@@ -167,10 +167,14 @@ static_assert(sizeof(FXSave) == 512, "Unexpected size of FXSave");
         APPLY_DTABLE(idt, MISCREG_IDTR - MISCREG_SEG_SEL_BASE); \
     } while (0)
 
-template<typename STRUCT, typename ENTRY>
-static STRUCT *newVarStruct(size_t entries)
+template<typename Struct, typename Entry>
+static auto
+newVarStruct(size_t entries)
 {
-    return (STRUCT *)operator new(sizeof(STRUCT) + entries * sizeof(ENTRY));
+    size_t size = sizeof(Struct) + entries * sizeof(Entry);
+    return std::unique_ptr<Struct, void(*)(Struct *)>(
+            (Struct *)operator new(size),
+            [](Struct *p) { operator delete(p); });
 }
 
 static void
@@ -664,9 +668,8 @@ void
 X86KvmCPU::dumpMSRs() const
 {
     const Kvm::MSRIndexVector &supported_msrs(vm.kvm->getSupportedMSRs());
-    std::unique_ptr<struct kvm_msrs> msrs(
-        newVarStruct<struct kvm_msrs, struct kvm_msr_entry>(
-            supported_msrs.size()));
+    auto msrs = newVarStruct<struct kvm_msrs, struct kvm_msr_entry>(
+            supported_msrs.size());
 
     msrs->nmsrs = supported_msrs.size();
     for (int i = 0; i < supported_msrs.size(); ++i) {
@@ -1111,8 +1114,8 @@ X86KvmCPU::updateThreadContextMSRs()
 {
     const Kvm::MSRIndexVector &msrs(getMsrIntersection());
 
-    std::unique_ptr<struct kvm_msrs> kvm_msrs(
-        newVarStruct<struct kvm_msrs, struct kvm_msr_entry>(msrs.size()));
+    auto kvm_msrs = newVarStruct<struct kvm_msrs, struct kvm_msr_entry>(
+            msrs.size());
     struct kvm_msr_entry *entry;
 
     // Create a list of MSRs to read
@@ -1475,9 +1478,8 @@ X86KvmCPU::setCPUID(const struct kvm_cpuid2 &cpuid)
 void
 X86KvmCPU::setCPUID(const Kvm::CPUIDVector &cpuid)
 {
-    std::unique_ptr<struct kvm_cpuid2> kvm_cpuid(
-        newVarStruct<struct kvm_cpuid2, struct kvm_cpuid_entry2>(
-            cpuid.size()));
+    auto kvm_cpuid = newVarStruct<struct kvm_cpuid2, struct kvm_cpuid_entry2>(
+            cpuid.size());
 
     kvm_cpuid->nent = cpuid.size();
     std::copy(cpuid.begin(), cpuid.end(), kvm_cpuid->entries);
@@ -1496,8 +1498,8 @@ X86KvmCPU::setMSRs(const struct kvm_msrs &msrs)
 void
 X86KvmCPU::setMSRs(const KvmMSRVector &msrs)
 {
-    std::unique_ptr<struct kvm_msrs> kvm_msrs(
-        newVarStruct<struct kvm_msrs, struct kvm_msr_entry>(msrs.size()));
+    auto kvm_msrs = newVarStruct<struct kvm_msrs, struct kvm_msr_entry>(
+            msrs.size());
 
     kvm_msrs->nmsrs = msrs.size();
     std::copy(msrs.begin(), msrs.end(), kvm_msrs->entries);
@@ -1517,8 +1519,7 @@ X86KvmCPU::getMSRs(struct kvm_msrs &msrs) const
 void
 X86KvmCPU::setMSR(uint32_t index, uint64_t value)
 {
-    std::unique_ptr<struct kvm_msrs> kvm_msrs(
-        newVarStruct<struct kvm_msrs, struct kvm_msr_entry>(1));
+    auto kvm_msrs = newVarStruct<struct kvm_msrs, struct kvm_msr_entry>(1);
     struct kvm_msr_entry &entry(kvm_msrs->entries[0]);
 
     kvm_msrs->nmsrs = 1;
@@ -1532,8 +1533,7 @@ X86KvmCPU::setMSR(uint32_t index, uint64_t value)
 uint64_t
 X86KvmCPU::getMSR(uint32_t index) const
 {
-    std::unique_ptr<struct kvm_msrs> kvm_msrs(
-        newVarStruct<struct kvm_msrs, struct kvm_msr_entry>(1));
+    auto kvm_msrs = newVarStruct<struct kvm_msrs, struct kvm_msr_entry>(1);
     struct kvm_msr_entry &entry(kvm_msrs->entries[0]);
 
     kvm_msrs->nmsrs = 1;

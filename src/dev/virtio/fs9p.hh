@@ -132,7 +132,8 @@ class VirtIO9PBase : public VirtIODeviceBase
     };
 
     /** Currently active configuration (host byte order) */
-    std::unique_ptr<Config> config;
+    std::unique_ptr<Config, void(*)(void *p)> config =
+        {nullptr, [](void *p){ operator delete(p); }};
 
     /** VirtIO device ID */
     static const DeviceId ID_9P = 0x09;

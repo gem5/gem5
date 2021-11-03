@@ -414,7 +414,8 @@ const ArmKvmCPU::RegIndexVector &
 ArmKvmCPU::getRegList() const
 {
     if (_regIndexList.size() == 0) {
-        std::unique_ptr<struct kvm_reg_list> regs;
+        std::unique_ptr<struct kvm_reg_list, void(*)(void *p)>
+            regs(nullptr, [](void *p) { operator delete(p); });
         uint64_t i = 1;
 
         do {
