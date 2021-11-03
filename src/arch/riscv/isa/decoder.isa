@@ -1420,6 +1420,7 @@ decode QUADRANT default Unknown::unknown() {
                         } else {
                             STATUS status = xc->readMiscReg(MISCREG_STATUS);
                             xc->setMiscReg(MISCREG_PRV, status.mpp);
+                            xc->setMiscReg(MISCREG_NMIE, 1);
                             status.mie = status.mpie;
                             status.mpie = 1;
                             status.mpp = PRV_U;

@@ -187,6 +187,16 @@ enum MiscRegIndex
     MISCREG_FFLAGS,
     MISCREG_FRM,
 
+    // These registers are not in the standard, hence does not exist in the
+    // CSRData map. These are mainly used to provide a minimal implementation
+    // for non-maskable-interrupt in our simple cpu.
+    // non-maskable-interrupt-vector-base-address: NMI version of xTVEC
+    MISCREG_NMIVEC,
+    // non-maskable-interrupt-enable: NMI version of xIE
+    MISCREG_NMIE,
+    // non-maskable-interrupt-pending: NMI version of xIP
+    MISCREG_NMIP,
+
     NUM_MISCREGS
 };
 
