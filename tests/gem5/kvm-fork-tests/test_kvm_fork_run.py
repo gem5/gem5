@@ -118,12 +118,6 @@ test_kvm_fork_run(
 ### The long (nightly) tests ####
 
 test_kvm_fork_run(
-    cpu="atomic",
-    num_cpus=1,
-    mem_system="mesi_two_level",
-    length=constants.long_tag,
-)
-test_kvm_fork_run(
     cpu="timing",
     num_cpus=1,
     mem_system="mesi_two_level",

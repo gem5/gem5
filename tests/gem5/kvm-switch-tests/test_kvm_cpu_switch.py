@@ -116,12 +116,6 @@ test_kvm_switch(
 ### The long (nightly) tests ####
 
 test_kvm_switch(
-    cpu="atomic",
-    num_cpus=1,
-    mem_system="mesi_two_level",
-    length=constants.long_tag,
-)
-test_kvm_switch(
     cpu="timing",
     num_cpus=1,
     mem_system="mesi_two_level",
