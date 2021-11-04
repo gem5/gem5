@@ -212,6 +212,20 @@ AMDGPUDevice::readMMIO(PacketPtr pkt, Addr offset)
     mmioReader.readFromTrace(pkt, MMIO_BAR, offset);
 
     switch (aperture) {
+      case NBIO_BASE:
+        switch (aperture_offset) {
+          // This is a PCIe status register. At some point during driver init
+          // the driver checks that interrupts are enabled. This is only
+          // checked once, so if the MMIO trace does not exactly line up with
+          // what the driver is doing in gem5, this may still have the first
+          // bit zero causing driver to fail. Therefore, we always set this
+          // bit to one as there is no harm to do so.
+          case 0x3c: // mmPCIE_DATA2 << 2
+            uint32_t value = pkt->getLE<uint32_t>() | 0x1;
+            DPRINTF(AMDGPUDevice, "Marking interrupts enabled: %#lx\n", value);
+            pkt->setLE<uint32_t>(value);
+            break;
+        } break;
       case GRBM_BASE:
         gpuvm.readMMIO(pkt, aperture_offset >> GRBM_OFFSET_SHIFT);
         break;
