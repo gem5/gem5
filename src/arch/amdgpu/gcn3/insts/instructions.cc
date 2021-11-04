@@ -20601,7 +20601,6 @@ namespace Gcn3ISA
             }
         }
 
-        wf->execMask() = sdst.rawData();
         sdst.write();
     }
 

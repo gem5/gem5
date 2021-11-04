@@ -22454,7 +22454,6 @@ namespace VegaISA
             }
         }
 
-        wf->execMask() = sdst.rawData();
         sdst.write();
     } // execute
     // --- Inst_VOP3__V_CMP_LT_I32 class methods ---
