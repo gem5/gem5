@@ -34,6 +34,7 @@
 #include <memory>
 
 #include "arch/amdgpu/vega/faults.hh"
+#include "mem/abstract_mem.hh"
 #include "mem/packet_access.hh"
 
 namespace gem5
@@ -84,7 +85,9 @@ Walker::WalkerState::startFunctional(Addr base, Addr vaddr,
         DPRINTF(GPUPTWalker, "Sending functional read to %#lx\n",
                 read->getAddr());
 
-        walker->port.sendFunctional(read);
+        auto devmem = walker->system->getDeviceMemory(read);
+        assert(devmem);
+        devmem->access(read);
 
         fault = stepWalk();
         assert(fault == NoFault || read == NULL);

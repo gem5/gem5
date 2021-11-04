@@ -179,6 +179,9 @@ class Walker : public ClockedObject
     void walkerResponse(WalkerState *state, VegaTlbEntry& entry,
                         PacketPtr pkt);
 
+    // System pointer for functional accesses
+    System *system;
+
   public:
     void setTLB(GpuTLB * _tlb)
     {
@@ -191,7 +194,7 @@ class Walker : public ClockedObject
         port(name() + ".port", this),
         funcState(this, nullptr, true), tlb(nullptr),
         requestorId(p.system->getRequestorId(this)),
-        deviceRequestorId(999)
+        deviceRequestorId(999), system(p.system)
     {
         DPRINTF(GPUPTWalker, "Walker::Walker %p\n", this);
     }
