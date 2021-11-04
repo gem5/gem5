@@ -36,9 +36,15 @@
 #define	LIBELF_ARCH		EM_386
 #define	LIBELF_BYTEORDER	ELFDATA2LSB
 #define	LIBELF_CLASS		ELFCLASS32
+#elif	defined(__aarch64__)
+#define	LIBELF_ARCH		EM_AARCH64
+#define	LIBELF_BYTEORDER	ELFDATA2LSB
+#define	LIBELF_CLASS		ELFCLASS64
+#else
+#error	Unknown Apple or DragonFly architecture.
 #endif
 
-#endif	/* __DragonFly__ */
+#endif	/* __APPLE__ || __DragonFly__ */
 
 #ifdef __FreeBSD__
 
