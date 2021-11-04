@@ -102,7 +102,7 @@ class Resource(AbstractResource):
         :param resource_directory: The location of the directory in which the
         resource is to be stored. If this parameter is not set, it will set to
         the environment variable `GEM5_RESOURCE_DIR`. If the environment is not
-        set it will default to `~/.cache/gem5`.
+        set it will default to `~/.cache/gem5` if available, otherwise the CWD.
         :param override: If the resource is present, but does not have the
         correct md5 value, the resoruce will be deleted and re-downloaded if
         this value is True. Otherwise an exception will be thrown. False by
@@ -137,8 +137,28 @@ class Resource(AbstractResource):
 
     def _get_default_resource_dir(cls) -> str:
         """
-        Obtain the default gem5 resources directory on the host system.
+        Obtain the default gem5 resources directory on the host system. This
+        function will iterate through sensible targets until it finds one that
+        works on the host system.
 
         :returns: The default gem5 resources directory.
         """
-        return os.path.join(Path.home(), ".cache", "gem5")
+        test_list = [
+            # First try `~/.cache/gem5`.
+            os.path.join(Path.home(), ".cache", "gem5"),
+            # Last resort, just put things in the cwd.
+            os.path.join(Path.cwd(), "resources"),
+        ]
+
+        for path in test_list:
+            if os.path.exists(path): # If the path already exists...
+                if os.path.isdir(path): # Check to see the path is a directory.
+                    return path # If so, the path is valid and can be used.
+            else: # If the path does not exist, try to create it.
+                try:
+                    os.makedirs(path, exist_ok=False)
+                    return path
+                except OSError:
+                    continue # If the path cannot be created, then try another.
+
+        raise Exception("Cannot find a valid location to download resources")
