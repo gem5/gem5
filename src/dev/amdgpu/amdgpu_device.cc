@@ -88,6 +88,8 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     sdma1->setId(1);
     deviceIH->setGPUDevice(this);
     pm4PktProc->setGPUDevice(this);
+    cp->hsaPacketProc().setGPUDevice(this);
+    cp->setGPUDevice(this);
 }
 
 void

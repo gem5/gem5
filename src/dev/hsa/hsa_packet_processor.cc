@@ -39,6 +39,7 @@
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/HSAPacketProcessor.hh"
+#include "dev/amdgpu/amdgpu_device.hh"
 #include "dev/dma_device.hh"
 #include "dev/hsa/hsa_packet.hh"
 #include "dev/hsa/hw_scheduler.hh"
@@ -46,6 +47,7 @@
 #include "gpu-compute/gpu_command_processor.hh"
 #include "mem/packet_access.hh"
 #include "mem/page_table.hh"
+#include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/proxy_ptr.hh"
 #include "sim/system.hh"
@@ -71,7 +73,8 @@ namespace gem5
 HSAPP_EVENT_DESCRIPTION_GENERATOR(QueueProcessEvent)
 
 HSAPacketProcessor::HSAPacketProcessor(const Params &p)
-    : DmaVirtDevice(p), numHWQueues(p.numHWQueues), pioAddr(p.pioAddr),
+    : DmaVirtDevice(p), walker(p.walker),
+      numHWQueues(p.numHWQueues), pioAddr(p.pioAddr),
       pioSize(PAGE_SIZE), pioDelay(10), pktProcessDelay(p.pktProcessDelay)
 {
     DPRINTF(HSAPacketProcessor, "%s:\n", __FUNCTION__);
@@ -87,6 +90,15 @@ HSAPacketProcessor::~HSAPacketProcessor()
     for (auto &queue : regdQList) {
         delete queue;
     }
+}
+
+void
+HSAPacketProcessor::setGPUDevice(AMDGPUDevice *gpu_device)
+{
+    gpuDevice = gpu_device;
+
+    assert(walker);
+    walker->setDevRequestor(gpuDevice->vramRequestorId());
 }
 
 void
@@ -164,12 +176,20 @@ HSAPacketProcessor::read(Packet *pkt)
 TranslationGenPtr
 HSAPacketProcessor::translate(Addr vaddr, Addr size)
 {
-    // Grab the process and try to translate the virtual address with it; with
-    // new extensions, it will likely be wrong to just arbitrarily grab context
-    // zero.
-    auto process = sys->threads[0]->getProcessPtr();
+    if (!FullSystem) {
+        // Grab the process and try to translate the virtual address with it;
+        // with new extensions, it will likely be wrong to just arbitrarily
+        // grab context zero.
+        auto process = sys->threads[0]->getProcessPtr();
 
-    return process->pTable->translateRange(vaddr, size);
+        return process->pTable->translateRange(vaddr, size);
+    }
+
+    // In full system use the page tables setup by the kernel driver rather
+    // than the CPU page tables.
+    return TranslationGenPtr(
+        new AMDGPUVM::UserTranslationGen(&gpuDevice->getVM(), walker,
+                                         1 /* vmid */, vaddr, size));
 }
 
 /**

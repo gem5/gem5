@@ -55,6 +55,8 @@
 namespace gem5
 {
 
+class AMDGPUDevice;
+
 // Ideally, each queue should store this status and
 // the processPkt() should make decisions based on that
 // status variable.
@@ -254,6 +256,8 @@ class HSAPacketProcessor: public DmaVirtDevice
     typedef void (DmaDevice::*DmaFnPtr)(Addr, int, Event*, uint8_t*, Tick);
     GPUCommandProcessor *gpu_device;
     HWScheduler *hwSchdlr;
+    AMDGPUDevice *gpuDevice;
+    VegaISA::Walker *walker;
 
     // Structure to store the read values of dependency signals
     // from shared memory. Also used for tracking the status of
@@ -356,6 +360,7 @@ class HSAPacketProcessor: public DmaVirtDevice
                             Addr offset = 0, uint64_t rd_idx = 0);
     void unsetDeviceQueueDesc(uint64_t queue_id, int doorbellSize);
     void setDevice(GPUCommandProcessor * dev);
+    void setGPUDevice(AMDGPUDevice *gpu_device);
     void updateReadIndex(int, uint32_t);
     void getCommandsFromHost(int pid, uint32_t rl_idx);
     HWScheduler *hwScheduler() { return hwSchdlr; }

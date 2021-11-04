@@ -33,9 +33,11 @@
 
 #include <cassert>
 
+#include "arch/amdgpu/vega/pagetable_walker.hh"
 #include "base/chunk_generator.hh"
 #include "debug/GPUCommandProc.hh"
 #include "debug/GPUKernelInfo.hh"
+#include "dev/amdgpu/amdgpu_device.hh"
 #include "gpu-compute/dispatcher.hh"
 #include "mem/se_translating_port_proxy.hh"
 #include "mem/translating_port_proxy.hh"
@@ -50,7 +52,7 @@ namespace gem5
 
 GPUCommandProcessor::GPUCommandProcessor(const Params &p)
     : DmaVirtDevice(p), dispatcher(*p.dispatcher), _driver(nullptr),
-      hsaPP(p.hsapp)
+      walker(p.walker), hsaPP(p.hsapp)
 {
     assert(hsaPP);
     hsaPP->setDevice(this);
@@ -354,6 +356,13 @@ GPUCommandProcessor::getAddrRanges() const
 {
     AddrRangeList ranges;
     return ranges;
+}
+
+void
+GPUCommandProcessor::setGPUDevice(AMDGPUDevice *gpu_device)
+{
+    gpuDevice = gpu_device;
+    walker->setDevRequestor(gpuDevice->vramRequestorId());
 }
 
 void

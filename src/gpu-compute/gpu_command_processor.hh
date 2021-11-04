@@ -77,6 +77,7 @@ class GPUCommandProcessor : public DmaVirtDevice
 
     HSAPacketProcessor& hsaPacketProc();
 
+    void setGPUDevice(AMDGPUDevice *gpu_device);
     void setShader(Shader *shader);
     Shader* shader();
     GPUComputeDriver* driver();
@@ -128,6 +129,8 @@ class GPUCommandProcessor : public DmaVirtDevice
     Shader *_shader;
     GPUDispatcher &dispatcher;
     GPUComputeDriver *_driver;
+    AMDGPUDevice *gpuDevice;
+    VegaISA::Walker *walker;
 
     // Typedefing dmaRead and dmaWrite function pointer
     typedef void (DmaDevice::*DmaFnPtr)(Addr, int, Event*, uint8_t*, Tick);

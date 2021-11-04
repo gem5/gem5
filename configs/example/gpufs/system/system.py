@@ -95,11 +95,15 @@ def makeGpuFSSystem(args):
 
     # This arbitrary address is something in the X86 I/O hole
     hsapp_gpu_map_paddr = 0xe00000000
+    hsapp_pt_walker = VegaPagetableWalker()
     gpu_hsapp = HSAPacketProcessor(pioAddr=hsapp_gpu_map_paddr,
-                                   numHWQueues=args.num_hw_queues)
+                                   numHWQueues=args.num_hw_queues,
+                                   walker=hsapp_pt_walker)
     dispatcher = GPUDispatcher()
+    cp_pt_walker = VegaPagetableWalker()
     gpu_cmd_proc = GPUCommandProcessor(hsapp=gpu_hsapp,
-                                       dispatcher=dispatcher)
+                                       dispatcher=dispatcher,
+                                       walker=cp_pt_walker)
     shader.dispatcher = dispatcher
     shader.gpu_cmd_proc = gpu_cmd_proc
 
@@ -136,6 +140,8 @@ def makeGpuFSSystem(args):
     system._dma_ports.append(device_ih)
     system._dma_ports.append(pm4_pkt_proc)
     system._dma_ports.append(gpu_mem_mgr)
+    system._dma_ports.append(hsapp_pt_walker)
+    system._dma_ports.append(cp_pt_walker)
     system._dma_ports.append(sdma0_pt_walker)
     system._dma_ports.append(sdma1_pt_walker)
 
