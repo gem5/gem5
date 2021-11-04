@@ -1439,7 +1439,7 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
     Addr addr = pkt->getAddr();
     bool is_secure = pkt->isSecure();
     const bool has_old_data = blk && blk->isValid();
-    const std::string old_state = blk ? blk->print() : "";
+    const std::string old_state = (debug::Cache && blk) ? blk->print() : "";
 
     // When handling a fill, we should have no writes to this line.
     assert(addr == pkt->getBlockAddr(blkSize));
