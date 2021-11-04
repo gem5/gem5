@@ -76,7 +76,7 @@ GicV2::GicV2(const Params &p)
       cpuPioDelay(p.cpu_pio_delay), intLatency(p.int_latency),
       enabled(false), haveGem5Extensions(p.gem5_extensions),
       itLines(p.it_lines),
-      intEnabled {}, pendingInt {}, activeInt {},
+      intEnabled {}, pendingInt {}, activeInt {}, intGroup {},
       intPriority {}, intConfig {}, cpuTarget {},
       cpuSgiPending {}, cpuSgiActive {},
       cpuSgiPendingExt {}, cpuSgiActiveExt {},
