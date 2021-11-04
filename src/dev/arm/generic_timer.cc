@@ -730,6 +730,7 @@ GenericTimer::CoreTimers::CoreTimers(GenericTimer &_parent,
     ArmInterruptPin *_irqVirt, ArmInterruptPin *_irqHyp)
       : parent(_parent),
         cntfrq(parent.params().cntfrq),
+        cntkctl(0), cnthctl(0),
         threadContext(system.threads[cpu]),
         irqPhysS(_irqPhysS),
         irqPhysNS(_irqPhysNS),
