@@ -465,6 +465,7 @@ DistPrint::operator()(std::ostream &stream) const
     print.flags = flags;
     print.descriptions = descriptions;
     print.desc = desc;
+    print.enableUnits = enableUnits;
     print.unitStr = unitStr;
     print.pdf = Nan;
     print.cdf = Nan;
