@@ -24,28 +24,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.objects.Device import BasicPioDevice
+from m5.params import Param
 
-SimObject('LupioBLK.py', tags='riscv isa')
-SimObject('LupioIPI.py', tags='riscv isa')
-SimObject('LupioPIC.py', tags='riscv isa')
-SimObject('LupioRNG.py', tags='riscv isa')
-SimObject('LupioRTC.py', tags='riscv isa')
-SimObject('LupioTMR.py', tags='riscv isa')
-SimObject('LupioTTY.py', tags='riscv isa')
-
-DebugFlag('LupioBLK')
-DebugFlag('LupioIPI')
-DebugFlag('LupioPIC')
-DebugFlag('LupioRNG')
-DebugFlag('LupioRTC')
-DebugFlag('LupioTMR')
-DebugFlag('LupioTTY')
-
-Source('lupio_blk.cc', tags='riscv isa')
-Source('lupio_ipi.cc', tags='riscv isa')
-Source('lupio_pic.cc', tags='riscv isa')
-Source('lupio_rng.cc', tags='riscv isa')
-Source('lupio_rtc.cc', tags='riscv isa')
-Source('lupio_tmr.cc', tags='riscv isa')
-Source('lupio_tty.cc', tags='riscv isa')
+class LupioIPI(BasicPioDevice):
+    type = 'LupioIPI'
+    cxx_class='gem5::LupioIPI'
+    cxx_header = 'dev/lupio/lupio_ipi.hh'
+    pio_size = Param.Addr(0x1000, "PIO Size")
+    int_type = Param.Int("Type of interrupt")
+    num_threads = Param.Int("Number of threads")
