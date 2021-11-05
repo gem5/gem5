@@ -59,7 +59,7 @@ DynInst::DynInst(const StaticInstPtr &static_inst,
       regs(staticInst->numSrcRegs(), staticInst->numDestRegs()),
       predPC(pred_pc), macroop(_macroop)
 {
-    this->regs.init();
+    regs.init();
 
     status.reset();
 
@@ -99,7 +99,7 @@ DynInst::~DynInst()
 {
 #if TRACING_ON
     if (debug::O3PipeView) {
-        Tick fetch = this->fetchTick;
+        Tick fetch = fetchTick;
         // fetchTick can be -1 if the instruction fetched outside the trace
         // window.
         if (fetch != -1) {
@@ -107,24 +107,24 @@ DynInst::~DynInst()
             // Print info needed by the pipeline activity viewer.
             DPRINTFR(O3PipeView, "O3PipeView:fetch:%llu:0x%08llx:%d:%llu:%s\n",
                      fetch,
-                     this->instAddr(),
-                     this->microPC(),
-                     this->seqNum,
-                     this->staticInst->disassemble(this->instAddr()));
+                     instAddr(),
+                     microPC(),
+                     seqNum,
+                     staticInst->disassemble(instAddr()));
 
-            val = (this->decodeTick == -1) ? 0 : fetch + this->decodeTick;
+            val = (decodeTick == -1) ? 0 : fetch + decodeTick;
             DPRINTFR(O3PipeView, "O3PipeView:decode:%llu\n", val);
-            val = (this->renameTick == -1) ? 0 : fetch + this->renameTick;
+            val = (renameTick == -1) ? 0 : fetch + renameTick;
             DPRINTFR(O3PipeView, "O3PipeView:rename:%llu\n", val);
-            val = (this->dispatchTick == -1) ? 0 : fetch + this->dispatchTick;
+            val = (dispatchTick == -1) ? 0 : fetch + dispatchTick;
             DPRINTFR(O3PipeView, "O3PipeView:dispatch:%llu\n", val);
-            val = (this->issueTick == -1) ? 0 : fetch + this->issueTick;
+            val = (issueTick == -1) ? 0 : fetch + issueTick;
             DPRINTFR(O3PipeView, "O3PipeView:issue:%llu\n", val);
-            val = (this->completeTick == -1) ? 0 : fetch + this->completeTick;
+            val = (completeTick == -1) ? 0 : fetch + completeTick;
             DPRINTFR(O3PipeView, "O3PipeView:complete:%llu\n", val);
-            val = (this->commitTick == -1) ? 0 : fetch + this->commitTick;
+            val = (commitTick == -1) ? 0 : fetch + commitTick;
 
-            Tick valS = (this->storeTick == -1) ? 0 : fetch + this->storeTick;
+            Tick valS = (storeTick == -1) ? 0 : fetch + storeTick;
             DPRINTFR(O3PipeView, "O3PipeView:retire:%llu:store:%llu\n",
                     val, valS);
         }
@@ -231,14 +231,14 @@ DynInst::execute()
     // when using the TC during an instruction's execution
     // (specifically for instructions that have side-effects that use
     // the TC).  Fix this.
-    bool no_squash_from_TC = this->thread->noSquashFromTC;
-    this->thread->noSquashFromTC = true;
+    bool no_squash_from_TC = thread->noSquashFromTC;
+    thread->noSquashFromTC = true;
 
-    this->fault = this->staticInst->execute(this, this->traceData);
+    fault = staticInst->execute(this, traceData);
 
-    this->thread->noSquashFromTC = no_squash_from_TC;
+    thread->noSquashFromTC = no_squash_from_TC;
 
-    return this->fault;
+    return fault;
 }
 
 Fault
@@ -248,14 +248,14 @@ DynInst::initiateAcc()
     // when using the TC during an instruction's execution
     // (specifically for instructions that have side-effects that use
     // the TC).  Fix this.
-    bool no_squash_from_TC = this->thread->noSquashFromTC;
-    this->thread->noSquashFromTC = true;
+    bool no_squash_from_TC = thread->noSquashFromTC;
+    thread->noSquashFromTC = true;
 
-    this->fault = this->staticInst->initiateAcc(this, this->traceData);
+    fault = staticInst->initiateAcc(this, traceData);
 
-    this->thread->noSquashFromTC = no_squash_from_TC;
+    thread->noSquashFromTC = no_squash_from_TC;
 
-    return this->fault;
+    return fault;
 }
 
 Fault
@@ -265,26 +265,26 @@ DynInst::completeAcc(PacketPtr pkt)
     // when using the TC during an instruction's execution
     // (specifically for instructions that have side-effects that use
     // the TC).  Fix this.
-    bool no_squash_from_TC = this->thread->noSquashFromTC;
-    this->thread->noSquashFromTC = true;
+    bool no_squash_from_TC = thread->noSquashFromTC;
+    thread->noSquashFromTC = true;
 
-    if (this->cpu->checker) {
-        if (this->isStoreConditional()) {
-            this->reqToVerify->setExtraData(pkt->req->getExtraData());
+    if (cpu->checker) {
+        if (isStoreConditional()) {
+            reqToVerify->setExtraData(pkt->req->getExtraData());
         }
     }
 
-    this->fault = this->staticInst->completeAcc(pkt, this, this->traceData);
+    fault = staticInst->completeAcc(pkt, this, traceData);
 
-    this->thread->noSquashFromTC = no_squash_from_TC;
+    thread->noSquashFromTC = no_squash_from_TC;
 
-    return this->fault;
+    return fault;
 }
 
 void
 DynInst::trap(const Fault &fault)
 {
-    this->cpu->trap(fault, this->threadNumber, this->staticInst);
+    cpu->trap(fault, threadNumber, staticInst);
 }
 
 Fault

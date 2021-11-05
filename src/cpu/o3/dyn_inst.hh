@@ -638,7 +638,7 @@ class DynInst : public ExecContext, public RefCounted
     getHtmTransactionUid() const override
     {
         assert(instFlags[HtmFromTransaction]);
-        return this->htmUid;
+        return htmUid;
     }
 
     uint64_t
@@ -658,7 +658,7 @@ class DynInst : public ExecContext, public RefCounted
     getHtmTransactionalDepth() const override
     {
         if (inHtmTransactionalState())
-            return this->htmDepth;
+            return htmDepth;
         else
             return 0;
     }
@@ -1072,7 +1072,7 @@ class DynInst : public ExecContext, public RefCounted
     RegVal
     readMiscReg(int misc_reg) override
     {
-        return this->cpu->readMiscReg(misc_reg, this->threadNumber);
+        return cpu->readMiscReg(misc_reg, threadNumber);
     }
 
     /** Sets a misc. register, including any side-effects the write
@@ -1104,7 +1104,7 @@ class DynInst : public ExecContext, public RefCounted
     {
         const RegId& reg = si->srcRegIdx(idx);
         assert(reg.is(MiscRegClass));
-        return this->cpu->readMiscReg(reg.index(), this->threadNumber);
+        return cpu->readMiscReg(reg.index(), threadNumber);
     }
 
     /** Sets a misc. register, including any side-effects the write
@@ -1126,47 +1126,47 @@ class DynInst : public ExecContext, public RefCounted
         // using the TC during an instruction's execution (specifically for
         // instructions that have side-effects that use the TC).  Fix this.
         // See cpu/o3/dyn_inst_impl.hh.
-        bool no_squash_from_TC = this->thread->noSquashFromTC;
-        this->thread->noSquashFromTC = true;
+        bool no_squash_from_TC = thread->noSquashFromTC;
+        thread->noSquashFromTC = true;
 
         for (int i = 0; i < _destMiscRegIdx.size(); i++)
-            this->cpu->setMiscReg(
-                _destMiscRegIdx[i], _destMiscRegVal[i], this->threadNumber);
+            cpu->setMiscReg(
+                _destMiscRegIdx[i], _destMiscRegVal[i], threadNumber);
 
-        this->thread->noSquashFromTC = no_squash_from_TC;
+        thread->noSquashFromTC = no_squash_from_TC;
     }
 
     void
     forwardOldRegs()
     {
 
-        for (int idx = 0; idx < this->numDestRegs(); idx++) {
-            PhysRegIdPtr prev_phys_reg = this->regs.prevDestIdx(idx);
-            const RegId& original_dest_reg = this->staticInst->destRegIdx(idx);
+        for (int idx = 0; idx < numDestRegs(); idx++) {
+            PhysRegIdPtr prev_phys_reg = regs.prevDestIdx(idx);
+            const RegId& original_dest_reg = staticInst->destRegIdx(idx);
             switch (original_dest_reg.classValue()) {
               case IntRegClass:
-                this->setIntRegOperand(this->staticInst.get(), idx,
-                        this->cpu->readIntReg(prev_phys_reg));
+                setIntRegOperand(staticInst.get(), idx,
+                        cpu->readIntReg(prev_phys_reg));
                 break;
               case FloatRegClass:
-                this->setFloatRegOperandBits(this->staticInst.get(), idx,
-                        this->cpu->readFloatReg(prev_phys_reg));
+                setFloatRegOperandBits(staticInst.get(), idx,
+                        cpu->readFloatReg(prev_phys_reg));
                 break;
               case VecRegClass:
-                this->setVecRegOperand(this->staticInst.get(), idx,
-                        this->cpu->readVecReg(prev_phys_reg));
+                setVecRegOperand(staticInst.get(), idx,
+                        cpu->readVecReg(prev_phys_reg));
                 break;
               case VecElemClass:
-                this->setVecElemOperand(this->staticInst.get(), idx,
-                        this->cpu->readVecElem(prev_phys_reg));
+                setVecElemOperand(staticInst.get(), idx,
+                        cpu->readVecElem(prev_phys_reg));
                 break;
               case VecPredRegClass:
-                this->setVecPredRegOperand(this->staticInst.get(), idx,
-                        this->cpu->readVecPredReg(prev_phys_reg));
+                setVecPredRegOperand(staticInst.get(), idx,
+                        cpu->readVecPredReg(prev_phys_reg));
                 break;
               case CCRegClass:
-                this->setCCRegOperand(this->staticInst.get(), idx,
-                        this->cpu->readCCReg(prev_phys_reg));
+                setCCRegOperand(staticInst.get(), idx,
+                        cpu->readCCReg(prev_phys_reg));
                 break;
               case MiscRegClass:
                 // no need to forward misc reg values
@@ -1196,19 +1196,19 @@ class DynInst : public ExecContext, public RefCounted
     RegVal
     readIntRegOperand(const StaticInst *si, int idx) override
     {
-        return this->cpu->readIntReg(this->regs.renamedSrcIdx(idx));
+        return cpu->readIntReg(regs.renamedSrcIdx(idx));
     }
 
     RegVal
     readFloatRegOperandBits(const StaticInst *si, int idx) override
     {
-        return this->cpu->readFloatReg(this->regs.renamedSrcIdx(idx));
+        return cpu->readFloatReg(regs.renamedSrcIdx(idx));
     }
 
     const TheISA::VecRegContainer&
     readVecRegOperand(const StaticInst *si, int idx) const override
     {
-        return this->cpu->readVecReg(this->regs.renamedSrcIdx(idx));
+        return cpu->readVecReg(regs.renamedSrcIdx(idx));
     }
 
     /**
@@ -1217,32 +1217,31 @@ class DynInst : public ExecContext, public RefCounted
     TheISA::VecRegContainer&
     getWritableVecRegOperand(const StaticInst *si, int idx) override
     {
-        return this->cpu->getWritableVecReg(this->regs.renamedDestIdx(idx));
+        return cpu->getWritableVecReg(regs.renamedDestIdx(idx));
     }
 
     RegVal
     readVecElemOperand(const StaticInst *si, int idx) const override
     {
-        return this->cpu->readVecElem(this->regs.renamedSrcIdx(idx));
+        return cpu->readVecElem(regs.renamedSrcIdx(idx));
     }
 
     const TheISA::VecPredRegContainer&
     readVecPredRegOperand(const StaticInst *si, int idx) const override
     {
-        return this->cpu->readVecPredReg(this->regs.renamedSrcIdx(idx));
+        return cpu->readVecPredReg(regs.renamedSrcIdx(idx));
     }
 
     TheISA::VecPredRegContainer&
     getWritableVecPredRegOperand(const StaticInst *si, int idx) override
     {
-        return this->cpu->getWritableVecPredReg(
-                this->regs.renamedDestIdx(idx));
+        return cpu->getWritableVecPredReg(regs.renamedDestIdx(idx));
     }
 
     RegVal
     readCCRegOperand(const StaticInst *si, int idx) override
     {
-        return this->cpu->readCCReg(this->regs.renamedSrcIdx(idx));
+        return cpu->readCCReg(regs.renamedSrcIdx(idx));
     }
 
     /** @todo: Make results into arrays so they can handle multiple dest
@@ -1251,14 +1250,14 @@ class DynInst : public ExecContext, public RefCounted
     void
     setIntRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
-        this->cpu->setIntReg(this->regs.renamedDestIdx(idx), val);
+        cpu->setIntReg(regs.renamedDestIdx(idx), val);
         setResult(val);
     }
 
     void
     setFloatRegOperandBits(const StaticInst *si, int idx, RegVal val) override
     {
-        this->cpu->setFloatReg(this->regs.renamedDestIdx(idx), val);
+        cpu->setFloatReg(regs.renamedDestIdx(idx), val);
         setResult(val);
     }
 
@@ -1266,7 +1265,7 @@ class DynInst : public ExecContext, public RefCounted
     setVecRegOperand(const StaticInst *si, int idx,
                      const TheISA::VecRegContainer& val) override
     {
-        this->cpu->setVecReg(this->regs.renamedDestIdx(idx), val);
+        cpu->setVecReg(regs.renamedDestIdx(idx), val);
         setResult(val);
     }
 
@@ -1274,7 +1273,7 @@ class DynInst : public ExecContext, public RefCounted
     setVecElemOperand(const StaticInst *si, int idx, RegVal val) override
     {
         int reg_idx = idx;
-        this->cpu->setVecElem(this->regs.renamedDestIdx(reg_idx), val);
+        cpu->setVecElem(regs.renamedDestIdx(reg_idx), val);
         setResult(val);
     }
 
@@ -1282,14 +1281,14 @@ class DynInst : public ExecContext, public RefCounted
     setVecPredRegOperand(const StaticInst *si, int idx,
                          const TheISA::VecPredRegContainer& val) override
     {
-        this->cpu->setVecPredReg(this->regs.renamedDestIdx(idx), val);
+        cpu->setVecPredReg(regs.renamedDestIdx(idx), val);
         setResult(val);
     }
 
     void
     setCCRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
-        this->cpu->setCCReg(this->regs.renamedDestIdx(idx), val);
+        cpu->setCCReg(regs.renamedDestIdx(idx), val);
         setResult(val);
     }
 };
