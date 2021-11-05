@@ -1048,9 +1048,13 @@ Fetch::buildInst(ThreadID tid, StaticInstPtr staticInst,
     // Get a sequence number.
     InstSeqNum seq = cpu->getAndIncrementInstSeq();
 
+    DynInst::Arrays arrays;
+    arrays.numSrcs = staticInst->numSrcRegs();
+    arrays.numDests = staticInst->numDestRegs();
+
     // Create a new DynInst from the instruction fetched.
-    DynInstPtr instruction =
-        new DynInst(staticInst, curMacroop, this_pc, next_pc, seq, cpu);
+    DynInstPtr instruction = new (arrays) DynInst(
+            arrays, staticInst, curMacroop, this_pc, next_pc, seq, cpu);
     instruction->setTid(tid);
 
     instruction->setThreadState(cpu->thread[tid]);

@@ -42,6 +42,7 @@
 
 #include <algorithm>
 
+#include "base/intmath.hh"
 #include "debug/DynInst.hh"
 #include "debug/IQ.hh"
 #include "debug/O3PipeView.hh"
@@ -52,13 +53,15 @@ namespace gem5
 namespace o3
 {
 
-DynInst::DynInst(const StaticInstPtr &static_inst,
+DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &static_inst,
         const StaticInstPtr &_macroop, InstSeqNum seq_num, CPU *_cpu)
     : seqNum(seq_num), staticInst(static_inst), cpu(_cpu),
-      regs(staticInst->numSrcRegs(), staticInst->numDestRegs()),
-      macroop(_macroop)
+      _numSrcs(arrays.numSrcs), _numDests(arrays.numDests),
+      _flatDestIdx(arrays.flatDestIdx), _destIdx(arrays.destIdx),
+      _prevDestIdx(arrays.prevDestIdx), _srcIdx(arrays.srcIdx),
+      _readySrcIdx(arrays.readySrcIdx), macroop(_macroop)
 {
-    regs.init();
+    std::fill(_readySrcIdx, _readySrcIdx + (numSrcs() + 7) / 8, 0);
 
     status.reset();
 
@@ -89,22 +92,122 @@ DynInst::DynInst(const StaticInstPtr &static_inst,
 
 }
 
-DynInst::DynInst(const StaticInstPtr &static_inst,
+DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &static_inst,
         const StaticInstPtr &_macroop, const PCStateBase &_pc,
         const PCStateBase &pred_pc, InstSeqNum seq_num, CPU *_cpu)
-    : DynInst(static_inst, _macroop, seq_num, _cpu)
+    : DynInst(arrays, static_inst, _macroop, seq_num, _cpu)
 {
     set(pc, _pc);
     set(predPC, pred_pc);
 }
 
-DynInst::DynInst(const StaticInstPtr &_staticInst,
+DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &_staticInst,
         const StaticInstPtr &_macroop)
-    : DynInst(_staticInst, _macroop, 0, nullptr)
+    : DynInst(arrays, _staticInst, _macroop, 0, nullptr)
 {}
+
+/*
+ * This custom "new" operator uses the default "new" operator to allocate space
+ * for a DynInst, but also pads out the number of bytes to make room for some
+ * extra structures the DynInst needs. We save time and improve performance by
+ * only going to the heap once to get space for all these structures.
+ *
+ * When a DynInst is allocated with new, the compiler will call this "new"
+ * operator with "count" set to the number of bytes it needs to store the
+ * DynInst. We ultimately call into the default new operator to get those
+ * bytes, but before we do, we pad out "count" so that there will be extra
+ * space for some structures the DynInst needs. We take into account both the
+ * absolute size of these structures, and also what alignment they need.
+ *
+ * Once we've gotten a buffer large enough to hold the DynInst itself and these
+ * extra structures, we construct the extra bits using placement new. This
+ * constructs the structures in place in the space we created for them.
+ *
+ * Next, we return the buffer as the result of our operator. The compiler takes
+ * that buffer and constructs the DynInst in the beginning of it using the
+ * DynInst constructor.
+ *
+ * To avoid having to calculate where these extra structures are twice, once
+ * when making room for them and initializing them, and then once again in the
+ * DynInst constructor, we also pass in a structure called "arrays" which holds
+ * pointers to them. The fields of "arrays" are initialized in this operator,
+ * and are then consumed in the DynInst constructor.
+ */
+void *
+DynInst::operator new(size_t count, Arrays &arrays)
+{
+    // Convenience variables for brevity.
+    const auto num_dests = arrays.numDests;
+    const auto num_srcs = arrays.numSrcs;
+
+    // Figure out where everything will go.
+    uintptr_t inst = 0;
+    size_t inst_size = count;
+
+    uintptr_t flat_dest_idx = roundUp(inst + inst_size, alignof(RegId));
+    size_t flat_dest_idx_size = sizeof(*arrays.flatDestIdx) * num_dests;
+
+    uintptr_t dest_idx =
+        roundUp(flat_dest_idx + flat_dest_idx_size, alignof(PhysRegIdPtr));
+    size_t dest_idx_size = sizeof(*arrays.destIdx) * num_dests;
+
+    uintptr_t prev_dest_idx =
+        roundUp(dest_idx + dest_idx_size, alignof(PhysRegIdPtr));
+    size_t prev_dest_idx_size = sizeof(*arrays.prevDestIdx) * num_dests;
+
+    uintptr_t src_idx =
+        roundUp(prev_dest_idx + prev_dest_idx_size, alignof(PhysRegIdPtr));
+    size_t src_idx_size = sizeof(*arrays.srcIdx) * num_srcs;
+
+    uintptr_t ready_src_idx =
+        roundUp(src_idx + src_idx_size, alignof(uint8_t));
+    size_t ready_src_idx_size =
+        sizeof(*arrays.readySrcIdx) * ((num_srcs + 7) / 8);
+
+    // Figure out how much space we need in total.
+    size_t total_size = ready_src_idx + ready_src_idx_size;
+
+    // Actually allocate it.
+    uint8_t *buf = (uint8_t *)::operator new(total_size);
+
+    // Fill in "arrays" with pointers to all the arrays.
+    arrays.flatDestIdx = (RegId *)(buf + flat_dest_idx);
+    arrays.destIdx = (PhysRegIdPtr *)(buf + dest_idx);
+    arrays.prevDestIdx = (PhysRegIdPtr *)(buf + prev_dest_idx);
+    arrays.srcIdx = (PhysRegIdPtr *)(buf + src_idx);
+    arrays.readySrcIdx = (uint8_t *)(buf + ready_src_idx);
+
+    // Initialize all the extra components.
+    new (arrays.flatDestIdx) RegId[num_dests];
+    new (arrays.destIdx) PhysRegIdPtr[num_dests];
+    new (arrays.prevDestIdx) PhysRegIdPtr[num_dests];
+    new (arrays.srcIdx) PhysRegIdPtr[num_srcs];
+    new (arrays.readySrcIdx) uint8_t[num_srcs];
+
+    return buf;
+}
 
 DynInst::~DynInst()
 {
+    /*
+     * The buffer this DynInst occupies also holds some of the structures it
+     * points to. We need to call their destructors manually to make sure that
+     * they're cleaned up appropriately, but we don't need to free their memory
+     * explicitly since that's part of the DynInst's buffer and is already
+     * going to be freed as part of deleting the DynInst.
+     */
+    for (int i = 0; i < _numDests; i++) {
+        _flatDestIdx[i].~RegId();
+        _destIdx[i].~PhysRegIdPtr();
+        _prevDestIdx[i].~PhysRegIdPtr();
+    }
+
+    for (int i = 0; i < _numSrcs; i++)
+        _srcIdx[i].~PhysRegIdPtr();
+
+    for (int i = 0; i < ((_numSrcs + 7) / 8); i++)
+        _readySrcIdx[i].~uint8_t();
+
 #if TRACING_ON
     if (debug::O3PipeView) {
         Tick fetch = fetchTick;
@@ -202,7 +305,7 @@ DynInst::markSrcRegReady()
 void
 DynInst::markSrcRegReady(RegIndex src_idx)
 {
-    regs.readySrcIdx(src_idx, true);
+    readySrcIdx(src_idx, true);
     markSrcRegReady();
 }
 
@@ -222,7 +325,7 @@ DynInst::setSquashed()
     // ensures that dest regs will be pinned to the same phys register if
     // re-rename happens.
     for (int idx = 0; idx < numDestRegs(); idx++) {
-        PhysRegIdPtr phys_dest_reg = regs.renamedDestIdx(idx);
+        PhysRegIdPtr phys_dest_reg = renamedDestIdx(idx);
         if (phys_dest_reg->isPinned()) {
             phys_dest_reg->incrNumPinnedWrites();
             if (isPinnedRegsWritten())

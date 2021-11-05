@@ -1089,7 +1089,7 @@ Rename::renameDestRegs(const DynInstPtr &inst, ThreadID tid)
 
         rename_result = map->rename(flat_dest_regid);
 
-        inst->regs.flattenedDestIdx(dest_idx, flat_dest_regid);
+        inst->flattenedDestIdx(dest_idx, flat_dest_regid);
 
         scoreboard->unsetReg(rename_result.first);
 

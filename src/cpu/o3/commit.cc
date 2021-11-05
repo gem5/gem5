@@ -1300,8 +1300,8 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
 
     // Update the commit rename map
     for (int i = 0; i < head_inst->numDestRegs(); i++) {
-        renameMap[tid]->setEntry(head_inst->regs.flattenedDestIdx(i),
-                                 head_inst->regs.renamedDestIdx(i));
+        renameMap[tid]->setEntry(head_inst->flattenedDestIdx(i),
+                                 head_inst->renamedDestIdx(i));
     }
 
     // hardware transactional memory
