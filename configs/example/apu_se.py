@@ -544,6 +544,7 @@ if fast_forward:
     have_kvm_support = 'BaseKvmCPU' in globals()
     if have_kvm_support and buildEnv['TARGET_ISA'] == "x86":
         system.vm = KvmVM()
+        system.m5ops_base = 0xffff0000
         for i in range(len(host_cpu.workload)):
             host_cpu.workload[i].useArchPT = True
             host_cpu.workload[i].kvmInSE = True

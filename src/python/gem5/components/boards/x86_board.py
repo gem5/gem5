@@ -99,6 +99,8 @@ class X86Board(AbstractBoard, KernelDiskWorkload):
         # Set up all of the I/O.
         self._setup_io_devices()
 
+        self.m5ops_base = 0xffff0000
+
     def _setup_io_devices(self):
         """ Sets up the x86 IO devices.
 

@@ -445,6 +445,8 @@ def connectX86RubySystem(x86_sys):
 def makeX86System(mem_mode, numCPUs=1, mdesc=None, workload=None, Ruby=False):
     self = System()
 
+    self.m5ops_base = 0xffff0000
+
     if workload is None:
         workload = X86FsWorkload()
     self.workload = workload
