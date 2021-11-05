@@ -246,18 +246,18 @@ set(PCStateBase &dest, const PCStateBase &src)
 namespace GenericISA
 {
 
-class PCStateCommon : public PCStateBase
+class PCStateWithNext : public PCStateBase
 {
   protected:
     Addr _npc = 0;
 
     MicroPC _nupc = 1;
 
-    PCStateCommon(const PCStateCommon &other) : PCStateBase(other),
+    PCStateWithNext(const PCStateWithNext &other) : PCStateBase(other),
         _npc(other._npc), _nupc(other._nupc)
     {}
-    PCStateCommon &operator=(const PCStateCommon &other) = default;
-    PCStateCommon() {}
+    PCStateWithNext &operator=(const PCStateWithNext &other) = default;
+    PCStateWithNext() {}
 
   public:
     Addr pc() const { return _pc; }
@@ -296,7 +296,7 @@ class PCStateCommon : public PCStateBase
     update(const PCStateBase &other) override
     {
         PCStateBase::update(other);
-        auto &pcstate = other.as<PCStateCommon>();
+        auto &pcstate = other.as<PCStateWithNext>();
         _npc = pcstate._npc;
         _nupc = pcstate._nupc;
     }
@@ -304,7 +304,7 @@ class PCStateCommon : public PCStateBase
     bool
     equals(const PCStateBase &other) const override
     {
-        auto &ps = other.as<PCStateCommon>();
+        auto &ps = other.as<PCStateWithNext>();
         return PCStateBase::equals(other) &&
             _npc == ps._npc && _nupc == ps._nupc;
     }
@@ -335,10 +335,10 @@ class PCStateCommon : public PCStateBase
 
 // The most basic type of PC.
 template <int InstWidth>
-class SimplePCState : public PCStateCommon
+class SimplePCState : public PCStateWithNext
 {
   protected:
-    typedef PCStateCommon Base;
+    typedef PCStateWithNext Base;
 
   public:
     SimplePCState(const SimplePCState &other) : Base(other) {}
