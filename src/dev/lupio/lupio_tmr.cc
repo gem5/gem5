@@ -34,11 +34,11 @@
 #include "params/LupioTMR.hh"
 
 // Specific fields for CTRL
-#define LUPIO_TMR_IE    0x1
-#define LUPIO_TMR_PD    0x2
+#define LUPIO_TMR_IRQE    0x1
+#define LUPIO_TMR_PRDC    0x2
 
 // Specific fields for STAT
-#define LUPIO_TMR_EX    0x1
+#define LUPIO_TMR_EXPD 0x1
 
 namespace gem5
 {
@@ -47,26 +47,37 @@ LupioTMR::LupioTMR(const Params &params) :
     BasicPioDevice(params, params.pio_size),
     system(params.system),
     nThread(params.num_threads),
-    tmrEvent([this]{ lupioTMRCallback(); }, name()),
     intType(params.int_type)
 {
+    timers.resize(nThread);
+
+    for (int cpu = 0; cpu < nThread; cpu++) {
+        timers[cpu].tmrEvent = new EventFunctionWrapper(
+            [=]{
+                lupioTMRCallback(cpu);
+            }, name()+"done"
+        );
+    }
+
     DPRINTF(LupioTMR, "LupioTMR initalized\n");
 }
 
-void
-LupioTMR::updateIRQ(int level)
+LupioTMR::~LupioTMR()
 {
-    if (nThread > 1) {
-        panic("This device currently does not offer SMP support\n");
+    for (int cpu = 0; cpu < nThread; cpu++) {
+        delete timers[cpu].tmrEvent;
     }
+}
 
-    auto tc = system->threads[0];
+void
+LupioTMR::updateIRQ(int level, int cpu)
+{
+    auto tc = system->threads[cpu];
     // post an interrupt
     if (level) {
         tc->getCpuPtr()->postInterrupt(tc->threadId(), intType, 0);
-    }
-    // clear the interrupt
-    else {
+    } else {
+        // clear the interrupt
         tc->getCpuPtr()->clearInterrupt(tc->threadId(), intType, 0);
     }
 }
@@ -78,52 +89,61 @@ LupioTMR::lupioTMRCurrentTime()
 }
 
 void
-LupioTMR::lupioTMRSet()
+LupioTMR::lupioTMRSet(int cpu)
 {
-    startTime = curTick();
-    if (!tmrEvent.scheduled()) {
-        schedule(tmrEvent, (reload * sim_clock::as_int::ns) + curTick());
+    // Start the timer
+    timers[cpu].startTime = curTick();
+
+    // Schedule the timer to fire at the number of ticks stored
+    // in the reload register from the current tick
+    if (!timers[cpu].tmrEvent->scheduled()) {
+        // Convert the reload value to ticks from nanoseconds
+        schedule(*(timers[cpu].tmrEvent),
+                (timers[cpu].reload * sim_clock::as_int::ns) + curTick());
     }
 }
 
 void
-LupioTMR::lupioTMRCallback()
+LupioTMR::lupioTMRCallback(int cpu)
 {
     // Signal expiration
-    expired = true;
-    if (ie) {
-        updateIRQ(1);
+    timers[cpu].expired = true;
+    if (timers[cpu].ie) {
+        updateIRQ(1, cpu);
     }
 
     // If periodic timer, reload
-    if (pd && reload) {
-        lupioTMRSet();
+    if (timers[cpu].pd && timers[cpu].reload) {
+        lupioTMRSet(cpu);
     }
 }
 
 uint64_t
 LupioTMR::lupioTMRRead(uint8_t addr, int size)
 {
-    uint64_t r = 0;
+    uint32_t r = 0;
 
-    switch (addr >> 2) {
+    size_t cpu = addr >> LUPIO_TMR_MAX;
+    size_t reg = (addr >> 2) & (LUPIO_TMR_MAX - 1);
+
+    switch (reg) {
         case LUPIO_TMR_TIME:
             r = lupioTMRCurrentTime();
             DPRINTF(LupioTMR, "Read LUPIO_TMR_TME: %d\n", r);
             break;
         case LUPIO_TMR_LOAD:
-            r = reload;
+            r = timers[cpu].reload;
             DPRINTF(LupioTMR, "Read LUPIO_TMR_LOAD: %d\n", r);
             break;
         case LUPIO_TMR_STAT:
-            if (expired) {
-                r |= LUPIO_TMR_EX;
+            if (timers[cpu].expired) {
+                r |= LUPIO_TMR_EXPD;
             }
 
             // Acknowledge expiration
-            expired = false;
+            timers[cpu].expired = false;
             DPRINTF(LupioTMR, "Read LUPIO_TMR_STAT: %d\n", r);
-            updateIRQ(0);
+            updateIRQ(0, cpu);
             break;
 
         default:
@@ -139,26 +159,31 @@ LupioTMR::lupioTMRWrite(uint8_t addr, uint64_t val64, int size)
 {
     uint32_t val = val64;
 
-    switch (addr >> 2) {
+    size_t cpu = addr >> LUPIO_TMR_MAX;
+    size_t reg = (addr >> 2) & (LUPIO_TMR_MAX - 1);
+
+    switch (reg) {
         case LUPIO_TMR_LOAD:
-            reload = val;
-            DPRINTF(LupioTMR, "Write LUPIO_TMR_LOAD: %d\n", reload);
+            timers[cpu].reload = val;
+            DPRINTF(LupioTMR, "Write LUPIO_TMR_LOAD: %d\n",
+                    timers[cpu].reload);
             break;
 
         case LUPIO_TMR_CTRL:
-                    ie = val & LUPIO_TMR_IE;
-                    pd = val & LUPIO_TMR_PD;
+            timers[cpu].ie = val & LUPIO_TMR_IRQE;
+            timers[cpu].pd = val & LUPIO_TMR_PRDC;
             DPRINTF(LupioTMR, "Write LUPIO_TMR_CTRL\n");
 
             // Stop current timer if any
-            if (curTick() < startTime + (reload * sim_clock::as_int::ns)
-                && tmrEvent.scheduled()) {
-                deschedule(tmrEvent);
+            if (curTick() < timers[cpu].startTime +
+                (timers[cpu].reload * sim_clock::as_int::ns) &&
+                (timers[cpu].tmrEvent)->scheduled()) {
+                deschedule(*(timers[cpu].tmrEvent));
             }
 
             // If reload isn't 0, start a new one
-            if (reload) {
-                lupioTMRSet();
+            if (timers[cpu].reload) {
+                lupioTMRSet(cpu);
             }
             break;
 

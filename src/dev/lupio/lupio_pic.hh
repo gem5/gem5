@@ -35,6 +35,8 @@
 #include "params/LupioPIC.hh"
 #include "sim/system.hh"
 
+#define LUPIO_PIC_NSRC 32
+
 namespace gem5
 {
 
@@ -62,13 +64,18 @@ class LupioPIC : public BasicPioDevice
         LUPIO_PIC_PRIO,
         LUPIO_PIC_MASK,
         LUPIO_PIC_PEND,
+        LUPIO_PIC_ENAB,
 
         // Max offset
         LUPIO_PIC_MAX,
     };
 
     uint32_t pending = 0;
-    uint32_t mask = 0;
+    // Register for masking or unmasking up to 32 sources
+    uint32_t mask[LUPIO_PIC_NSRC];
+    // Regitser to determine which input IRQ is routed to the
+    // corresponding processor
+    uint32_t enable[LUPIO_PIC_NSRC];
 
   protected:
     /**

@@ -49,10 +49,8 @@ class LupioTMR : public BasicPioDevice
     const ByteOrder byteOrder = ByteOrder::little;
     System *system;
     int nThread;
-    EventFunctionWrapper tmrEvent;
     int intType;
-
-    Tick startTime = 0;
+    int nCPUs = 0;
 
     // Register map
     enum
@@ -66,15 +64,17 @@ class LupioTMR : public BasicPioDevice
         LUPIO_TMR_MAX,
     };
 
-    // Timer registers
-    uint64_t reload = 0;
+    struct LupioTimer
+    {
+        Event *tmrEvent = nullptr;
+        uint64_t reload = 0;
+        bool ie = false;            // Control
+        bool pd = false;
+        bool expired = false;       // Status
+        Tick startTime = 0;
+    };
 
-    // Control
-    bool ie = false;
-    bool pd = false;
-
-    // Status
-    bool expired = false;
+    std::vector<LupioTimer> timers;
 
     /**
      * Function to return data pertaining to the timer, such as the simulated
@@ -93,20 +93,21 @@ class LupioTMR : public BasicPioDevice
     /**
      * Schedule the next timer event
      */
-    void lupioTMRSet();
+    void lupioTMRSet(int cpu);
     /**
      * Process the timer's event
      */
-    void lupioTMRCallback();
+    void lupioTMRCallback(int cpu);
 
     /**
      * Post or clear timer interrupts
      */
-    void updateIRQ(int level);
+    void updateIRQ(int level, int cpu);
 
   public:
     PARAMS(LupioTMR);
     LupioTMR(const Params &params);
+    ~LupioTMR();
 
     /**
      * Implement BasicPioDevice virtual functions
