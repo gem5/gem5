@@ -65,7 +65,6 @@ class SparcFaultBase : public FaultBase
         const TrapType trapType;
         const FaultPriority priority;
         const PrivilegeLevelSpec nextPrivilegeLevel;
-        FaultStat count;
         FaultVals(const FaultName& name_, const TrapType& trapType_,
                 const FaultPriority& priority_, const PrivilegeLevelSpec& il)
             : name(name_), trapType(trapType_), priority(priority_),
@@ -76,7 +75,6 @@ class SparcFaultBase : public FaultBase
                 nullStaticInstPtr);
     virtual TrapType trapType() = 0;
     virtual FaultPriority priority() = 0;
-    virtual FaultStat & countStat() = 0;
     virtual PrivilegeLevel getNextLevel(PrivilegeLevel current) = 0;
 };
 
@@ -89,7 +87,6 @@ class SparcFault : public SparcFaultBase
     FaultName name() const { return vals.name; }
     TrapType trapType() { return vals.trapType; }
     FaultPriority priority() { return vals.priority; }
-    FaultStat & countStat() { return vals.count; }
 
     PrivilegeLevel
     getNextLevel(PrivilegeLevel current)

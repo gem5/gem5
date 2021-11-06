@@ -524,7 +524,6 @@ ArmFault::invoke32(ThreadContext *tc, const StaticInstPtr &inst)
     FaultBase::invoke(tc);
     if (!FullSystem)
         return;
-    countStat()++;
 
     SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
     SCR scr = tc->readMiscReg(MISCREG_SCR);

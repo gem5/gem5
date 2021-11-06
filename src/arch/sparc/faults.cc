@@ -503,7 +503,6 @@ SparcFaultBase::invoke(ThreadContext * tc, const StaticInstPtr &inst)
     if (!FullSystem)
         return;
 
-    countStat()++;
 
     // We can refer to this to see what the trap level -was-, but something
     // in the middle could change it in the regfile out from under us.
