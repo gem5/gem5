@@ -105,14 +105,14 @@ test_kvm_switch(
     cpu="timing", num_cpus=4, mem_system="classic", length=constants.quick_tag
 )
 
+### The long (nightly) tests ####
+
 test_kvm_switch(
     cpu="timing",
     num_cpus=4,
     mem_system="mi_example",
-    length=constants.quick_tag,
+    length=constants.long_tag,
 )
-
-### The long (nightly) tests ####
 
 test_kvm_switch(
     cpu="timing",
