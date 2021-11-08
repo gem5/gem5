@@ -43,6 +43,7 @@ def define_options(parser):
                         default=None,
                         help="NoC config. parameters and bindings. "
                            "Required for CustomMesh topology")
+    parser.add_argument("--enable-dvm", default=False, action="store_true")
 
 def read_config_file(file):
     ''' Read file as a module and return it '''
@@ -64,6 +65,13 @@ def create_system(options, full_system, system, dma_ports, bootmem,
 
     if options.num_l3caches < 1:
         m5.fatal('--num-l3caches must be at least 1')
+
+    if full_system and options.enable_dvm:
+        if len(cpus) <= 1:
+            m5.fatal("--enable-dvm can't be used with a single CPU")
+        for cpu in cpus:
+            for decoder in cpu.decoder:
+                decoder.dvm_enabled = True
 
     # read specialized classes from config file if provided
     if options.chi_config:
