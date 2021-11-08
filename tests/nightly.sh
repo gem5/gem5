@@ -128,3 +128,19 @@ docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest build/GCN3_X86/gem5.opt \
     configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c \
     allSyncPrims-1kernel --options="lfTreeBarrUniq 10 16 4"
+
+# Run an SST test.
+build_and_run_SST () {
+    isa=$1
+    variant=$2
+
+    docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
+        "${gem5_root}" --rm gcr.io/gem5-test/sst-env \
+            bash -c "\
+scons build/${isa}/libgem5_${variant}.so -j${compile_threads} --without-tcmalloc; \
+cd ext/sst; \
+make clean; make -j ${compile_threads}; \
+sst --add-lib-path=./ sst/example.py; \
+"
+}
+build_and_run_SST RISCV opt
