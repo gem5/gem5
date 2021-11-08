@@ -150,7 +150,7 @@ class CpuCluster(SubSystem):
         self.toL2Bus = L2XBar(width=64, clk_domain=clk_domain)
         self.l2 = self._l2_type()
         for cpu in self.cpus:
-            cpu.connectAllPorts(self.toL2Bus)
+            cpu.connectCachedPorts(self.toL2Bus)
         self.toL2Bus.mem_side_ports = self.l2.cpu_side
 
     def addPMUs(self, ints, events=[]):
@@ -184,7 +184,7 @@ class CpuCluster(SubSystem):
             self.l2.mem_side = bus.cpu_side_ports
         except AttributeError:
             for cpu in self.cpus:
-                cpu.connectAllPorts(bus)
+                cpu.connectCachedPorts(bus)
 
 
 class AtomicCluster(CpuCluster):
