@@ -96,7 +96,7 @@ class MyCacheSystem(RubySystem):
         # Set up a proxy port for the system_port. Used for load binaries and
         # other functional-only things.
         self.sys_port_proxy = RubyPortProxy()
-        system.system_port = self.sys_port_proxy.slave
+        system.system_port = self.sys_port_proxy.in_ports
 
         # Connect the cpu's cache, interrupt, and TLB ports to Ruby
         for i,cpu in enumerate(cpus):
@@ -149,13 +149,13 @@ class L1Cache(L1Cache_Controller):
         """
         self.mandatoryQueue = MessageBuffer()
         self.requestFromCache = MessageBuffer(ordered = True)
-        self.requestFromCache.master = ruby_system.network.slave
+        self.requestFromCache.out_port = ruby_system.network.in_port
         self.responseFromCache = MessageBuffer(ordered = True)
-        self.responseFromCache.master = ruby_system.network.slave
+        self.responseFromCache.out_port = ruby_system.network.in_port
         self.forwardToCache = MessageBuffer(ordered = True)
-        self.forwardToCache.slave = ruby_system.network.master
+        self.forwardToCache.in_port = ruby_system.network.out_port
         self.responseToCache = MessageBuffer(ordered = True)
-        self.responseToCache.slave = ruby_system.network.master
+        self.responseToCache.in_port = ruby_system.network.out_port
 
 class DirController(Directory_Controller):
 
@@ -181,16 +181,16 @@ class DirController(Directory_Controller):
 
     def connectQueues(self, ruby_system):
         self.requestToDir = MessageBuffer(ordered = True)
-        self.requestToDir.slave = ruby_system.network.master
+        self.requestToDir.in_port = ruby_system.network.out_port
         self.dmaRequestToDir = MessageBuffer(ordered = True)
-        self.dmaRequestToDir.slave = ruby_system.network.master
+        self.dmaRequestToDir.in_port = ruby_system.network.out_port
 
         self.responseFromDir = MessageBuffer()
-        self.responseFromDir.master = ruby_system.network.slave
+        self.responseFromDir.out_port = ruby_system.network.in_port
         self.dmaResponseFromDir = MessageBuffer(ordered = True)
-        self.dmaResponseFromDir.master = ruby_system.network.slave
+        self.dmaResponseFromDir.out_port = ruby_system.network.in_port
         self.forwardFromDir = MessageBuffer()
-        self.forwardFromDir.master = ruby_system.network.slave
+        self.forwardFromDir.out_port = ruby_system.network.in_port
         self.requestToMemory = MessageBuffer()
         self.responseFromMemory = MessageBuffer()
 

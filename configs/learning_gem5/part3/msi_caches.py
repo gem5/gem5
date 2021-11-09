@@ -98,7 +98,7 @@ class MyCacheSystem(RubySystem):
         # Set up a proxy port for the system_port. Used for load binaries and
         # other functional-only things.
         self.sys_port_proxy = RubyPortProxy()
-        system.system_port = self.sys_port_proxy.slave
+        system.system_port = self.sys_port_proxy.in_ports
 
         # Connect the cpu's cache, interrupt, and TLB ports to Ruby
         for i,cpu in enumerate(cpus):
@@ -155,18 +155,19 @@ class L1Cache(L1Cache_Controller):
         # explicitly connected to anything.
         self.mandatoryQueue = MessageBuffer()
 
-        # All message buffers must be created and connected to the general
-        # Ruby network. In this case, "slave/master" don't mean the same thing
-        # as normal gem5 ports. If a MessageBuffer is a "to" buffer (i.e., out)
-        # then you use the "master", otherwise, the slave.
+        # All message buffers must be created and connected to the
+        # general Ruby network. In this case, "in_port/out_port" don't
+        # mean the same thing as normal gem5 ports. If a MessageBuffer
+        # is a "to" buffer (i.e., out) then you use the "out_port",
+        # otherwise, the in_port.
         self.requestToDir = MessageBuffer(ordered = True)
-        self.requestToDir.master = ruby_system.network.slave
+        self.requestToDir.out_port = ruby_system.network.in_port
         self.responseToDirOrSibling = MessageBuffer(ordered = True)
-        self.responseToDirOrSibling.master = ruby_system.network.slave
+        self.responseToDirOrSibling.out_port = ruby_system.network.in_port
         self.forwardFromDir = MessageBuffer(ordered = True)
-        self.forwardFromDir.slave = ruby_system.network.master
+        self.forwardFromDir.in_port = ruby_system.network.out_port
         self.responseFromDirOrSibling = MessageBuffer(ordered = True)
-        self.responseFromDirOrSibling.slave = ruby_system.network.master
+        self.responseFromDirOrSibling.in_port = ruby_system.network.out_port
 
 class DirController(Directory_Controller):
 
@@ -192,14 +193,14 @@ class DirController(Directory_Controller):
 
     def connectQueues(self, ruby_system):
         self.requestFromCache = MessageBuffer(ordered = True)
-        self.requestFromCache.slave = ruby_system.network.master
+        self.requestFromCache.in_port = ruby_system.network.out_port
         self.responseFromCache = MessageBuffer(ordered = True)
-        self.responseFromCache.slave = ruby_system.network.master
+        self.responseFromCache.in_port = ruby_system.network.out_port
 
         self.responseToCache = MessageBuffer(ordered = True)
-        self.responseToCache.master = ruby_system.network.slave
+        self.responseToCache.out_port = ruby_system.network.in_port
         self.forwardToCache = MessageBuffer(ordered = True)
-        self.forwardToCache.master = ruby_system.network.slave
+        self.forwardToCache.out_port = ruby_system.network.in_port
 
         # These are other special message buffers. They are used to send
         # requests to memory and responses from memory back to the controller.
