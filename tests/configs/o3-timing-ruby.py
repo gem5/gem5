@@ -45,7 +45,7 @@ system.cpu.clk_domain = SrcClockDomain(clock = '2GHz')
 system.physmem.port = system.membus.master
 # create the interrupt controller
 cpu.createInterruptController()
-cpu.connectAllPorts(system.membus)
+cpu.connectBus(system.membus)
 
 # Connect the system port for loading of binaries etc
 system.system_port = system.membus.slave

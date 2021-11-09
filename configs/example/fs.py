@@ -263,7 +263,7 @@ def build_drive_system(np):
                                   cpu_id=0)
     drive_sys.cpu.createThreads()
     drive_sys.cpu.createInterruptController()
-    drive_sys.cpu.connectAllPorts(drive_sys.membus)
+    drive_sys.cpu.connectBus(drive_sys.membus)
     if args.kernel is not None:
         drive_sys.workload.object_file = binary(args.kernel)
 

@@ -112,7 +112,8 @@ class RubySequencer(RubyPort):
         import m5.objects
         assert(isinstance(cpu, m5.objects.BaseCPU))
         # this connects all cpu mem-side ports to self.in_ports
-        cpu.connectAllPorts(self)
+        cpu.connectAllPorts(
+            self.in_ports, self.in_ports, self.interrupt_out_port)
 
     def connectIOPorts(self, piobus):
         """

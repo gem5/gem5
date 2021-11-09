@@ -210,7 +210,10 @@ for cpu in cpus:
     cpu.addPrivateSplitL1Caches(L1(size = args.l1size, assoc = 1),
                                 L1(size = args.l1size, assoc = 4))
     # connect cpu level-1 caches to shared level-2 cache
-    cpu.connectAllPorts(system.toL2bus, system.membus)
+    cpu.connectAllPorts(
+        system.toL2bus.cpu_side_ports,
+        system.membus.cpu_side_ports,
+        system.membus.mem_side_ports)
 
 
 # ----------------------

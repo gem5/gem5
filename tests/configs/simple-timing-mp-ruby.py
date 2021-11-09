@@ -83,7 +83,10 @@ for (i, cpu) in enumerate(system.cpu):
     #
     # Tie the cpu ports to the ruby cpu ports
     #
-    cpu.connectAllPorts(system.ruby._cpu_ports[i])
+    cpu.connectAllPorts(
+        system.ruby._cpu_ports[i].in_ports,
+        system.ruby._cpu_ports[i].in_ports,
+        system.ruby._cpu_ports[i].interrupt_out_port)
 
 # -----------------------
 # run simulation

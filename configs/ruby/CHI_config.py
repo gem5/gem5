@@ -360,7 +360,8 @@ class CPUSequencerWrapper:
         for p in cpu._cached_ports:
             if str(p) != 'icache_port':
                 exec('cpu.%s = self.data_seq.in_ports' % p)
-        cpu.connectUncachedPorts(self.data_seq)
+        cpu.connectUncachedPorts(
+            self.data_seq.in_ports, self.data_seq.out_ports)
 
     def connectIOPorts(self, piobus):
         self.data_seq.connectIOPorts(piobus)

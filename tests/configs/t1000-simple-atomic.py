@@ -43,7 +43,7 @@ cpu = AtomicSimpleCPU(cpu_id=0, clk_domain = system.cpu_clk_domain)
 system.cpu = cpu
 # create the interrupt controller
 cpu.createInterruptController()
-cpu.connectAllPorts(system.membus)
+cpu.connectBus(system.membus)
 
 # create the memory controllers and connect them, stick with
 # the physmem name to avoid bumping all the reference stats

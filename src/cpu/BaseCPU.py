@@ -186,21 +186,23 @@ class BaseCPU(ClockedObject):
     def createInterruptController(self):
         self.interrupts = [ArchInterrupts() for i in range(self.numThreads)]
 
-    def connectCachedPorts(self, bus):
+    def connectCachedPorts(self, in_ports):
         for p in self._cached_ports:
-            exec('self.%s = bus.slave' % p)
+            exec('self.%s = in_ports' % p)
 
-    def connectUncachedPorts(self, bus):
+    def connectUncachedPorts(self, in_ports, out_ports):
         for p in self._uncached_interrupt_response_ports:
-            exec('self.%s = bus.master' % p)
+            exec('self.%s = out_ports' % p)
         for p in self._uncached_interrupt_request_ports:
-            exec('self.%s = bus.slave' % p)
+            exec('self.%s = in_ports' % p)
 
-    def connectAllPorts(self, cached_bus, uncached_bus = None):
-        self.connectCachedPorts(cached_bus)
-        if not uncached_bus:
-            uncached_bus = cached_bus
-        self.connectUncachedPorts(uncached_bus)
+    def connectAllPorts(self, cached_in, uncached_in, uncached_out):
+        self.connectCachedPorts(cached_in)
+        self.connectUncachedPorts(uncached_in, uncached_out)
+
+    def connectBus(self, bus):
+        self.connectAllPorts(bus.cpu_side_ports,
+            bus.cpu_side_ports, bus.mem_side_ports)
 
     def addPrivateSplitL1Caches(self, ic, dc, iwc = None, dwc = None):
         self.icache = ic
@@ -229,7 +231,7 @@ class BaseCPU(ClockedObject):
                                   xbar=None):
         self.addPrivateSplitL1Caches(ic, dc, iwc, dwc)
         self.toL2Bus = xbar if xbar else L2XBar()
-        self.connectCachedPorts(self.toL2Bus)
+        self.connectCachedPorts(self.toL2Bus.cpu_side_ports)
         self.l2cache = l2c
         self.toL2Bus.mem_side_ports = self.l2cache.cpu_side
         self._cached_ports = ['l2cache.mem_side']

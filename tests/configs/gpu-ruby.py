@@ -301,7 +301,10 @@ cpu.createInterruptController()
 # Tie the cpu cache ports to the ruby cpu ports and
 # physmem, respectively
 #
-cpu.connectAllPorts(system.ruby._cpu_ports[0])
+cpu.connectAllPorts(
+    system.ruby._cpu_ports[0].in_ports,
+    system.ruby._cpu_ports[0].in_ports,
+    system.ruby._cpu_ports[0].interrupt_out_port)
 system.ruby._cpu_ports[0].mem_master_port = system.piobus.slave
 
 # attach CU ports to Ruby

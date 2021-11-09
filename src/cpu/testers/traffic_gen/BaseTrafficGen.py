@@ -108,15 +108,19 @@ class BaseTrafficGen(ClockedObject):
     def createInterruptController(self):
         pass
 
-    def connectCachedPorts(self, bus):
+    def connectCachedPorts(self, in_ports):
         if hasattr(self, '_cached_ports') and (len(self._cached_ports) > 0):
             for p in self._cached_ports:
-                exec('self.%s = bus.cpu_side_ports' % p)
+                exec('self.%s = in_ports' % p)
         else:
-            self.port = bus.cpu_side_ports
+            self.port = in_ports
 
-    def connectAllPorts(self, cached_bus, uncached_bus = None):
-        self.connectCachedPorts(cached_bus)
+    def connectAllPorts(self, cached_in, uncached_in, uncached_out):
+        self.connectCachedPorts(cached_in)
+
+    def connectBus(self, bus):
+        self.connectAllPorts(bus.cpu_side_ports,
+            bus.cpu_side_ports, bus.mem_side_ports)
 
     def addPrivateSplitL1Caches(self, ic, dc, iwc = None, dwc = None):
         self.dcache = dc

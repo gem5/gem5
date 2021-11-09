@@ -122,8 +122,10 @@ class BaseSystem(object, metaclass=ABCMeta):
         if not cpu.switched_out:
             self.create_caches_private(cpu)
             cpu.createInterruptController()
-            cpu.connectAllPorts(sha_bus if sha_bus != None else system.membus,
-                                system.membus)
+            cached_bus = sha_bus if sha_bus != None else system.membus
+            cpu.connectAllPorts(cached_bus.cpu_side_ports,
+                                system.membus.cpu_side_ports,
+                                system.membus.mem_side_ports)
 
     def init_kvm_cpus(self, cpus):
         """
@@ -191,7 +193,7 @@ class BaseSystem(object, metaclass=ABCMeta):
             for i, cpu in enumerate(system.cpu):
                 if not cpu.switched_out:
                     cpu.createInterruptController()
-                    cpu.connectCachedPorts(system.ruby._cpu_ports[i])
+                    cpu.connectCachedPorts(system.ruby._cpu_ports[i].in_ports)
         else:
             sha_bus = self.create_caches_shared(system)
             for cpu in system.cpu:
