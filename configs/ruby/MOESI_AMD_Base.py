@@ -259,19 +259,19 @@ def create_system(options, full_system, system, dma_devices, bootmem,
 
         # Connect the Directory controller to the ruby network
         dir_cntrl.requestFromCores = MessageBuffer(ordered = True)
-        dir_cntrl.requestFromCores.slave = ruby_system.network.master
+        dir_cntrl.requestFromCores.in_port = ruby_system.network.out_port
 
         dir_cntrl.responseFromCores = MessageBuffer()
-        dir_cntrl.responseFromCores.slave = ruby_system.network.master
+        dir_cntrl.responseFromCores.in_port = ruby_system.network.out_port
 
         dir_cntrl.unblockFromCores = MessageBuffer()
-        dir_cntrl.unblockFromCores.slave = ruby_system.network.master
+        dir_cntrl.unblockFromCores.in_port = ruby_system.network.out_port
 
         dir_cntrl.probeToCore = MessageBuffer()
-        dir_cntrl.probeToCore.master = ruby_system.network.slave
+        dir_cntrl.probeToCore.out_port = ruby_system.network.in_port
 
         dir_cntrl.responseToCore = MessageBuffer()
-        dir_cntrl.responseToCore.master = ruby_system.network.slave
+        dir_cntrl.responseToCore.out_port = ruby_system.network.in_port
 
         dir_cntrl.triggerQueue = MessageBuffer(ordered = True)
         dir_cntrl.L3triggerQueue = MessageBuffer(ordered = True)
@@ -305,19 +305,19 @@ def create_system(options, full_system, system, dma_devices, bootmem,
 
         # Connect the CP controllers and the network
         cp_cntrl.requestFromCore = MessageBuffer()
-        cp_cntrl.requestFromCore.master = ruby_system.network.slave
+        cp_cntrl.requestFromCore.out_port = ruby_system.network.in_port
 
         cp_cntrl.responseFromCore = MessageBuffer()
-        cp_cntrl.responseFromCore.master = ruby_system.network.slave
+        cp_cntrl.responseFromCore.out_port = ruby_system.network.in_port
 
         cp_cntrl.unblockFromCore = MessageBuffer()
-        cp_cntrl.unblockFromCore.master = ruby_system.network.slave
+        cp_cntrl.unblockFromCore.out_port = ruby_system.network.in_port
 
         cp_cntrl.probeToCore = MessageBuffer()
-        cp_cntrl.probeToCore.slave = ruby_system.network.master
+        cp_cntrl.probeToCore.in_port = ruby_system.network.out_port
 
         cp_cntrl.responseToCore = MessageBuffer()
-        cp_cntrl.responseToCore.slave = ruby_system.network.master
+        cp_cntrl.responseToCore.in_port = ruby_system.network.out_port
 
         cp_cntrl.mandatoryQueue = MessageBuffer()
         cp_cntrl.triggerQueue = MessageBuffer(ordered = True)

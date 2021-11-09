@@ -116,11 +116,11 @@ def construct(options, system, ruby_system):
         cp_cntrl.create(options, ruby_system, system)
 
         # Connect the CP controllers to the ruby network
-        cp_cntrl.requestFromCore = ruby_system.network.slave
-        cp_cntrl.responseFromCore = ruby_system.network.slave
-        cp_cntrl.unblockFromCore = ruby_system.network.slave
-        cp_cntrl.probeToCore = ruby_system.network.master
-        cp_cntrl.responseToCore = ruby_system.network.master
+        cp_cntrl.requestFromCore = ruby_system.network.in_port
+        cp_cntrl.responseFromCore = ruby_system.network.in_port
+        cp_cntrl.unblockFromCore = ruby_system.network.in_port
+        cp_cntrl.probeToCore = ruby_system.network.out_port
+        cp_cntrl.responseToCore = ruby_system.network.out_port
 
         exec("system.cp_cntrl%d = cp_cntrl" % i)
         #

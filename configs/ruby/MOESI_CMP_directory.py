@@ -117,13 +117,13 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         # Connect the L1 controllers and the network
         l1_cntrl.mandatoryQueue = MessageBuffer()
         l1_cntrl.requestFromL1Cache = MessageBuffer()
-        l1_cntrl.requestFromL1Cache.master = ruby_system.network.slave
+        l1_cntrl.requestFromL1Cache.out_port = ruby_system.network.in_port
         l1_cntrl.responseFromL1Cache = MessageBuffer()
-        l1_cntrl.responseFromL1Cache.master = ruby_system.network.slave
+        l1_cntrl.responseFromL1Cache.out_port = ruby_system.network.in_port
         l1_cntrl.requestToL1Cache = MessageBuffer()
-        l1_cntrl.requestToL1Cache.slave = ruby_system.network.master
+        l1_cntrl.requestToL1Cache.in_port = ruby_system.network.out_port
         l1_cntrl.responseToL1Cache = MessageBuffer()
-        l1_cntrl.responseToL1Cache.slave = ruby_system.network.master
+        l1_cntrl.responseToL1Cache.in_port = ruby_system.network.out_port
         l1_cntrl.triggerQueue = MessageBuffer(ordered = True)
 
 
@@ -162,18 +162,18 @@ def create_system(options, full_system, system, dma_ports, bootmem,
 
         # Connect the L2 controllers and the network
         l2_cntrl.GlobalRequestFromL2Cache = MessageBuffer()
-        l2_cntrl.GlobalRequestFromL2Cache.master = ruby_system.network.slave
+        l2_cntrl.GlobalRequestFromL2Cache.out_port = ruby_system.network.in_port
         l2_cntrl.L1RequestFromL2Cache = MessageBuffer()
-        l2_cntrl.L1RequestFromL2Cache.master = ruby_system.network.slave
+        l2_cntrl.L1RequestFromL2Cache.out_port = ruby_system.network.in_port
         l2_cntrl.responseFromL2Cache = MessageBuffer()
-        l2_cntrl.responseFromL2Cache.master = ruby_system.network.slave
+        l2_cntrl.responseFromL2Cache.out_port = ruby_system.network.in_port
 
         l2_cntrl.GlobalRequestToL2Cache = MessageBuffer()
-        l2_cntrl.GlobalRequestToL2Cache.slave = ruby_system.network.master
+        l2_cntrl.GlobalRequestToL2Cache.in_port = ruby_system.network.out_port
         l2_cntrl.L1RequestToL2Cache = MessageBuffer()
-        l2_cntrl.L1RequestToL2Cache.slave = ruby_system.network.master
+        l2_cntrl.L1RequestToL2Cache.in_port = ruby_system.network.out_port
         l2_cntrl.responseToL2Cache = MessageBuffer()
-        l2_cntrl.responseToL2Cache.slave = ruby_system.network.master
+        l2_cntrl.responseToL2Cache.in_port = ruby_system.network.out_port
         l2_cntrl.triggerQueue = MessageBuffer(ordered = True)
 
     # Run each of the ruby memory controllers at a ratio of the frequency of
@@ -192,13 +192,13 @@ def create_system(options, full_system, system, dma_ports, bootmem,
     for dir_cntrl in dir_cntrl_nodes:
         # Connect the directory controllers and the network
         dir_cntrl.requestToDir = MessageBuffer()
-        dir_cntrl.requestToDir.slave = ruby_system.network.master
+        dir_cntrl.requestToDir.in_port = ruby_system.network.out_port
         dir_cntrl.responseToDir = MessageBuffer()
-        dir_cntrl.responseToDir.slave = ruby_system.network.master
+        dir_cntrl.responseToDir.in_port = ruby_system.network.out_port
         dir_cntrl.responseFromDir = MessageBuffer()
-        dir_cntrl.responseFromDir.master = ruby_system.network.slave
+        dir_cntrl.responseFromDir.out_port = ruby_system.network.in_port
         dir_cntrl.forwardFromDir = MessageBuffer()
-        dir_cntrl.forwardFromDir.master = ruby_system.network.slave
+        dir_cntrl.forwardFromDir.out_port = ruby_system.network.in_port
         dir_cntrl.requestToMemory = MessageBuffer()
         dir_cntrl.responseFromMemory = MessageBuffer()
         dir_cntrl.triggerQueue = MessageBuffer(ordered = True)
@@ -210,7 +210,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         #
         dma_seq = DMASequencer(version = i,
                                ruby_system = ruby_system,
-                               slave = dma_port)
+                               in_ports = dma_port)
 
         dma_cntrl = DMA_Controller(version = i,
                                    dma_sequencer = dma_seq,
@@ -223,11 +223,11 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         # Connect the dma controller to the network
         dma_cntrl.mandatoryQueue = MessageBuffer()
         dma_cntrl.responseFromDir = MessageBuffer()
-        dma_cntrl.responseFromDir.slave = ruby_system.network.master
+        dma_cntrl.responseFromDir.in_port = ruby_system.network.out_port
         dma_cntrl.reqToDir = MessageBuffer()
-        dma_cntrl.reqToDir.master = ruby_system.network.slave
+        dma_cntrl.reqToDir.out_port = ruby_system.network.in_port
         dma_cntrl.respToDir = MessageBuffer()
-        dma_cntrl.respToDir.master = ruby_system.network.slave
+        dma_cntrl.respToDir.out_port = ruby_system.network.in_port
         dma_cntrl.triggerQueue = MessageBuffer(ordered = True)
 
 
@@ -248,11 +248,11 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         # Connect the dma controller to the network
         io_controller.mandatoryQueue = MessageBuffer()
         io_controller.responseFromDir = MessageBuffer()
-        io_controller.responseFromDir.slave = ruby_system.network.master
+        io_controller.responseFromDir.in_port = ruby_system.network.out_port
         io_controller.reqToDir = MessageBuffer()
-        io_controller.reqToDir.master = ruby_system.network.slave
+        io_controller.reqToDir.out_port = ruby_system.network.in_port
         io_controller.respToDir = MessageBuffer()
-        io_controller.respToDir.master = ruby_system.network.slave
+        io_controller.respToDir.out_port = ruby_system.network.in_port
         io_controller.triggerQueue = MessageBuffer(ordered = True)
 
         all_cntrls = all_cntrls + [io_controller]

@@ -130,7 +130,7 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
         if len(system.mem_ranges) > 1:
             crossbar = IOXBar()
             crossbars.append(crossbar)
-            dir_cntrl.memory = crossbar.slave
+            dir_cntrl.memory = crossbar.cpu_side_ports
 
         dir_ranges = []
         for r in system.mem_ranges:
@@ -150,7 +150,7 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
             dir_ranges.append(dram_intf.range)
 
             if crossbar != None:
-                mem_ctrl.port = crossbar.master
+                mem_ctrl.port = crossbar.mem_side_ports
             else:
                 mem_ctrl.port = dir_cntrl.memory
 
@@ -223,14 +223,14 @@ def create_system(options, full_system, system, piobus = None, dma_ports = [],
     # part (i.e. here).
     sys_port_proxy = RubyPortProxy(ruby_system = ruby)
     if piobus is not None:
-        sys_port_proxy.pio_master_port = piobus.slave
+        sys_port_proxy.pio_request_port = piobus.cpu_side_ports
 
     # Give the system port proxy a SimObject parent without creating a
     # full-fledged controller
     system.sys_port_proxy = sys_port_proxy
 
     # Connect the system port for loading of binaries etc
-    system.system_port = system.sys_port_proxy.slave
+    system.system_port = system.sys_port_proxy.in_ports
 
     setup_memory_controllers(system, ruby, dir_cntrls, options)
 

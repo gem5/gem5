@@ -95,13 +95,13 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         # Connect the L1 controllers and the network
         l1_cntrl.mandatoryQueue = MessageBuffer()
         l1_cntrl.requestFromCache = MessageBuffer(ordered = True)
-        l1_cntrl.requestFromCache.master = ruby_system.network.slave
+        l1_cntrl.requestFromCache.out_port = ruby_system.network.in_port
         l1_cntrl.responseFromCache = MessageBuffer(ordered = True)
-        l1_cntrl.responseFromCache.master = ruby_system.network.slave
+        l1_cntrl.responseFromCache.out_port = ruby_system.network.in_port
         l1_cntrl.forwardToCache = MessageBuffer(ordered = True)
-        l1_cntrl.forwardToCache.slave = ruby_system.network.master
+        l1_cntrl.forwardToCache.in_port = ruby_system.network.out_port
         l1_cntrl.responseToCache = MessageBuffer(ordered = True)
-        l1_cntrl.responseToCache.slave = ruby_system.network.master
+        l1_cntrl.responseToCache.in_port = ruby_system.network.out_port
 
     phys_mem_size = sum([r.size() for r in system.mem_ranges])
     assert(phys_mem_size % options.num_dirs == 0)
@@ -122,16 +122,16 @@ def create_system(options, full_system, system, dma_ports, bootmem,
     for dir_cntrl in dir_cntrl_nodes:
         # Connect the directory controllers and the network
         dir_cntrl.requestToDir = MessageBuffer(ordered = True)
-        dir_cntrl.requestToDir.slave = ruby_system.network.master
+        dir_cntrl.requestToDir.in_port = ruby_system.network.out_port
         dir_cntrl.dmaRequestToDir = MessageBuffer(ordered = True)
-        dir_cntrl.dmaRequestToDir.slave = ruby_system.network.master
+        dir_cntrl.dmaRequestToDir.in_port = ruby_system.network.out_port
 
         dir_cntrl.responseFromDir = MessageBuffer()
-        dir_cntrl.responseFromDir.master = ruby_system.network.slave
+        dir_cntrl.responseFromDir.out_port = ruby_system.network.in_port
         dir_cntrl.dmaResponseFromDir = MessageBuffer(ordered = True)
-        dir_cntrl.dmaResponseFromDir.master = ruby_system.network.slave
+        dir_cntrl.dmaResponseFromDir.out_port = ruby_system.network.in_port
         dir_cntrl.forwardFromDir = MessageBuffer()
-        dir_cntrl.forwardFromDir.master = ruby_system.network.slave
+        dir_cntrl.forwardFromDir.out_port = ruby_system.network.in_port
         dir_cntrl.requestToMemory = MessageBuffer()
         dir_cntrl.responseFromMemory = MessageBuffer()
 
@@ -149,15 +149,15 @@ def create_system(options, full_system, system, dma_ports, bootmem,
                                    ruby_system = ruby_system)
 
         exec("ruby_system.dma_cntrl%d = dma_cntrl" % i)
-        exec("ruby_system.dma_cntrl%d.dma_sequencer.slave = dma_port" % i)
+        exec("ruby_system.dma_cntrl%d.dma_sequencer.in_ports = dma_port" % i)
         dma_cntrl_nodes.append(dma_cntrl)
 
         # Connect the directory controllers and the network
         dma_cntrl.mandatoryQueue = MessageBuffer()
         dma_cntrl.requestToDir = MessageBuffer()
-        dma_cntrl.requestToDir.master = ruby_system.network.slave
+        dma_cntrl.requestToDir.out_port = ruby_system.network.in_port
         dma_cntrl.responseFromDir = MessageBuffer(ordered = True)
-        dma_cntrl.responseFromDir.slave = ruby_system.network.master
+        dma_cntrl.responseFromDir.in_port = ruby_system.network.out_port
 
     all_cntrls = l1_cntrl_nodes + dir_cntrl_nodes + dma_cntrl_nodes
 
@@ -173,9 +173,9 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         # Connect the dma controller to the network
         io_controller.mandatoryQueue = MessageBuffer()
         io_controller.requestToDir = MessageBuffer()
-        io_controller.requestToDir.master = ruby_system.network.slave
+        io_controller.requestToDir.out_port = ruby_system.network.in_port
         io_controller.responseFromDir = MessageBuffer(ordered = True)
-        io_controller.responseFromDir.slave = ruby_system.network.master
+        io_controller.responseFromDir.in_port = ruby_system.network.out_port
 
         all_cntrls = all_cntrls + [io_controller]
 

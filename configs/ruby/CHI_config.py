@@ -351,7 +351,6 @@ class CPUSequencerWrapper:
         self.__dict__['support_inst_reqs'] = True
         # Compatibility with certain scripts that wire up ports
         # without connectCpuPorts
-        self.__dict__['slave'] = dseq.in_ports
         self.__dict__['in_ports'] = dseq.in_ports
 
     def connectCpuPorts(self, cpu):
