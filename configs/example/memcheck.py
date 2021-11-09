@@ -251,7 +251,7 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
           xbar = L2XBar(width = 32)
           subsys.xbar = xbar
           if next_cache:
-               xbar.master = next_cache.cpu_side
+               xbar.mem_side_ports = next_cache.cpu_side
 
           # Create and connect the caches, both the ones fanning out
           # to create the tree, and the ones used to connect testers
@@ -261,12 +261,12 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
 
           subsys.cache = tester_caches + tree_caches
           for cache in tree_caches:
-               cache.mem_side = xbar.slave
+               cache.mem_side = xbar.cpu_side_ports
                make_cache_level(ncaches[1:], prototypes[1:], level - 1, cache)
           for tester, checker, cache in zip(testers, checkers, tester_caches):
-               tester.port = checker.slave
-               checker.master = cache.cpu_side
-               cache.mem_side = xbar.slave
+               tester.port = checker.cpu_side_port
+               checker.mem_side_port = cache.cpu_side
+               cache.mem_side = xbar.cpu_side_ports
      else:
           if not next_cache:
                print("Error: No next-level cache at top level")
@@ -276,21 +276,21 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
                # Create a crossbar and add it to the subsystem
                xbar = L2XBar(width = 32)
                subsys.xbar = xbar
-               xbar.master = next_cache.cpu_side
+               xbar.mem_side_ports = next_cache.cpu_side
                for tester, checker in zip(testers, checkers):
-                    tester.port = checker.slave
-                    checker.master = xbar.slave
+                    tester.port = checker.cpu_side_port
+                    checker.mem_side_port = xbar.cpu_side_ports
           else:
                # Single tester
-               testers[0].port = checkers[0].slave
-               checkers[0].master = next_cache.cpu_side
+               testers[0].port = checkers[0].cpu_side_port
+               checkers[0].mem_side_port = next_cache.cpu_side
 
 # Top level call to create the cache hierarchy, bottom up
 make_cache_level(cachespec, cache_proto, len(cachespec), None)
 
 # Connect the lowest level crossbar to the memory
 last_subsys = getattr(system, 'l%dsubsys0' % len(cachespec))
-last_subsys.xbar.master = system.physmem.port
+last_subsys.xbar.mem_side_ports = system.physmem.port
 last_subsys.xbar.point_of_coherency = True
 
 root = Root(full_system = False, system = system)
@@ -301,7 +301,7 @@ else:
 
 # The system port is never used in the tester so merely connect it
 # to avoid problems
-root.system.system_port = last_subsys.xbar.slave
+root.system.system_port = last_subsys.xbar.cpu_side_ports
 
 # Instantiate configuration
 m5.instantiate()

@@ -126,11 +126,11 @@ for ruby_port in system.ruby._cpu_ports:
     # Tie the ruby tester ports to the ruby cpu read and write ports
     #
     if ruby_port.support_data_reqs and ruby_port.support_inst_reqs:
-        tester.cpuInstDataPort = ruby_port.slave
+        tester.cpuInstDataPort = ruby_port.in_ports
     elif ruby_port.support_data_reqs:
-        tester.cpuDataPort = ruby_port.slave
+        tester.cpuDataPort = ruby_port.in_ports
     elif ruby_port.support_inst_reqs:
-        tester.cpuInstPort = ruby_port.slave
+        tester.cpuInstPort = ruby_port.in_ports
 
     # Do not automatically retry stalled Ruby requests
     ruby_port.no_retry_on_stall = True

@@ -273,7 +273,7 @@ class ConfigManager(object):
     def gather_port_connections(self, object_name, obj):
         """Gather all the port-to-port connections from the named object.
         Returns a list of (PortConnection, PortConnection) with unordered
-        (wrt. master/slave) connection information"""
+        (wrt. requestor/responder) connection information"""
 
         if object_name == 'Null':
             return NULL
@@ -292,8 +292,8 @@ class ConfigManager(object):
 
     def bind_ports(self, connections):
         """Bind all ports from the given connection list.  Note that the
-        connection list *must* list all connections with both (slave,master)
-        and (master,slave) orderings"""
+        connection list *must* list all connections with both
+        (responder,requestor) and (requestor,responder) orderings"""
 
         # Markup a dict of how many connections are made to each port.
         #   This will be used to check that the next-to-be-made connection
@@ -312,7 +312,7 @@ class ConfigManager(object):
                 (port.object_name, port.port_name)] += 1
 
         # Step through the sorted connections.  Exactly one of
-        #   each (slave,master) and (master,slave) pairs will be
+        #   each (responder,requestor) and (requestor,responder) pairs will be
         #   bindable because the connections are sorted.
         # For example:        port_bind_indices
         #   left      right   left right

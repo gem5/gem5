@@ -254,7 +254,7 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
           xbar = L2XBar()
           subsys.xbar = xbar
           if next_cache:
-               xbar.master = next_cache.cpu_side
+               xbar.mem_side_ports = next_cache.cpu_side
 
           # Create and connect the caches, both the ones fanning out
           # to create the tree, and the ones used to connect testers
@@ -264,11 +264,11 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
 
           subsys.cache = tester_caches + tree_caches
           for cache in tree_caches:
-               cache.mem_side = xbar.slave
+               cache.mem_side = xbar.cpu_side_ports
                make_cache_level(ncaches[1:], prototypes[1:], level - 1, cache)
           for tester, cache in zip(testers, tester_caches):
                tester.port = cache.cpu_side
-               cache.mem_side = xbar.slave
+               cache.mem_side = xbar.cpu_side_ports
      else:
           if not next_cache:
                print("Error: No next-level cache at top level")
@@ -278,9 +278,9 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
                # Create a crossbar and add it to the subsystem
                xbar = L2XBar()
                subsys.xbar = xbar
-               xbar.master = next_cache.cpu_side
+               xbar.mem_side_ports = next_cache.cpu_side
                for tester in testers:
-                    tester.port = xbar.slave
+                    tester.port = xbar.cpu_side_ports
           else:
                # Single tester
                testers[0].port = next_cache.cpu_side
@@ -297,10 +297,10 @@ if args.noncoherent_cache:
                                    data_latency = 10, sequential_access = True,
                                    response_latency = 20, tgts_per_mshr = 8,
                                    mshrs = 64)
-     last_subsys.xbar.master = system.llc.cpu_side
+     last_subsys.xbar.mem_side_ports = system.llc.cpu_side
      system.llc.mem_side = system.physmem.port
 else:
-     last_subsys.xbar.master = system.physmem.port
+     last_subsys.xbar.mem_side_ports = system.physmem.port
 
 root = Root(full_system = False, system = system)
 if args.atomic:
@@ -310,7 +310,7 @@ else:
 
 # The system port is never used in the tester so merely connect it
 # to avoid problems
-root.system.system_port = last_subsys.xbar.slave
+root.system.system_port = last_subsys.xbar.cpu_side_ports
 
 # Instantiate configuration
 m5.instantiate()

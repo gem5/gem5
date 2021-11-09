@@ -133,7 +133,7 @@ for (i, cpu) in enumerate(cpus):
     #
     # Tie the cpu memtester ports to the correct system ports
     #
-    cpu.port = system.ruby._cpu_ports[i].slave
+    cpu.port = system.ruby._cpu_ports[i].in_ports
 
     #
     # Since the memtester is incredibly bursty, increase the deadlock

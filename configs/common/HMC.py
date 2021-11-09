@@ -356,25 +356,25 @@ def config_hmc_host_ctrl(opt, system):
         mb = system.membus
         for i in range(opt.num_links_controllers):
             if opt.enable_global_monitor:
-                mb.master = hh.lmonitor[i].slave
-                hh.lmonitor[i].master = hh.seriallink[i].slave
+                mb.mem_side_ports = hh.lmonitor[i].cpu_side_port
+                hh.lmonitor[i].mem_side_port = hh.seriallink[i].cpu_side_port
             else:
-                mb.master = hh.seriallink[i].slave
+                mb.mem_side_ports = hh.seriallink[i].cpu_side_port
     if opt.arch == "mixed":
         mb = system.membus
         if opt.enable_global_monitor:
-            mb.master = hh.lmonitor[0].slave
-            hh.lmonitor[0].master = hh.seriallink[0].slave
-            mb.master = hh.lmonitor[1].slave
-            hh.lmonitor[1].master = hh.seriallink[1].slave
+            mb.mem_side_ports = hh.lmonitor[0].cpu_side_port
+            hh.lmonitor[0].mem_side_port = hh.seriallink[0].cpu_side_port
+            mb.mem_side_ports = hh.lmonitor[1].cpu_side_port
+            hh.lmonitor[1].mem_side_port = hh.seriallink[1].cpu_side_port
         else:
-            mb.master = hh.seriallink[0].slave
-            mb.master = hh.seriallink[1].slave
+            mb.mem_side_ports = hh.seriallink[0].cpu_side_port
+            mb.mem_side_ports = hh.seriallink[1].cpu_side_port
 
     if opt.arch == "same":
         for i in range(opt.num_links_controllers):
             if opt.enable_global_monitor:
-                hh.lmonitor[i].master = hh.seriallink[i].slave
+                hh.lmonitor[i].mem_side_port = hh.seriallink[i].cpu_side_port
 
     return system
 
@@ -412,11 +412,13 @@ def config_hmc_dev(opt, system, hmc_host):
     # Attach 4 serial link to 4 crossbar/s
     for i in range(opt.num_serial_links):
         if opt.enable_link_monitor:
-            system.hmc_host.seriallink[i].master = \
-                system.hmc_dev.lmonitor[i].slave
-            system.hmc_dev.lmonitor[i].master = system.hmc_dev.xbar[i].slave
+            system.hmc_host.seriallink[i].mem_side_port = \
+                system.hmc_dev.lmonitor[i].cpu_side_port
+            system.hmc_dev.lmonitor[i].mem_side_port = \
+                system.hmc_dev.xbar[i].cpu_side_ports
         else:
-            system.hmc_host.seriallink[i].master = system.hmc_dev.xbar[i].slave
+            system.hmc_host.seriallink[i].mem_side_port = \
+                system.hmc_dev.xbar[i].cpu_side_ports
 
     # Connecting xbar with each other for request arriving at the wrong xbar,
     # then it will be forward to correct xbar. Bridge is used to connect xbars
@@ -432,7 +434,7 @@ def config_hmc_dev(opt, system, hmc_host):
         it = iter(list(range(len(system.hmc_dev.buffers))))
 
         # necesarry to add system_port to one of the xbar
-        system.system_port = system.hmc_dev.xbar[3].slave
+        system.system_port = system.hmc_dev.xbar[3].cpu_side_ports
 
         # iterate over all the crossbars and connect them as required
         for i in range(numx):
@@ -448,10 +450,10 @@ def config_hmc_dev(opt, system, hmc_host):
                             (j + 1) * int(opt.mem_chunk)]
 
                     # Connect the bridge between corssbars
-                    system.hmc_dev.xbar[i].master = system.hmc_dev.buffers[
-                            index].slave
-                    system.hmc_dev.buffers[
-                            index].master = system.hmc_dev.xbar[j].slave
+                    system.hmc_dev.xbar[i].mem_side_ports = \
+                        system.hmc_dev.buffers[index].cpu_side_port
+                    system.hmc_dev.buffers[index].mem_side_port = \
+                        system.hmc_dev.xbar[j].cpu_side_ports
                 else:
                     # Don't connect the xbar to itself
                     pass
@@ -460,25 +462,37 @@ def config_hmc_dev(opt, system, hmc_host):
     # can only direct traffic to it local vaults
     if opt.arch == "mixed":
         system.hmc_dev.buffer30 = Bridge(ranges=system.mem_ranges[0:4])
-        system.hmc_dev.xbar[3].master = system.hmc_dev.buffer30.slave
-        system.hmc_dev.buffer30.master = system.hmc_dev.xbar[0].slave
+        system.hmc_dev.xbar[3].mem_side_ports = \
+            system.hmc_dev.buffer30.cpu_side_port
+        system.hmc_dev.buffer30.mem_side_port = \
+            system.hmc_dev.xbar[0].cpu_side_ports
 
         system.hmc_dev.buffer31 = Bridge(ranges=system.mem_ranges[4:8])
-        system.hmc_dev.xbar[3].master = system.hmc_dev.buffer31.slave
-        system.hmc_dev.buffer31.master = system.hmc_dev.xbar[1].slave
+        system.hmc_dev.xbar[3].mem_side_ports = \
+            system.hmc_dev.buffer31.cpu_side_port
+        system.hmc_dev.buffer31.mem_side_port = \
+            system.hmc_dev.xbar[1].cpu_side_ports
 
         system.hmc_dev.buffer32 = Bridge(ranges=system.mem_ranges[8:12])
-        system.hmc_dev.xbar[3].master = system.hmc_dev.buffer32.slave
-        system.hmc_dev.buffer32.master = system.hmc_dev.xbar[2].slave
+        system.hmc_dev.xbar[3].mem_side_ports = \
+            system.hmc_dev.buffer32.cpu_side_port
+        system.hmc_dev.buffer32.mem_side_port = \
+            system.hmc_dev.xbar[2].cpu_side_ports
 
         system.hmc_dev.buffer20 = Bridge(ranges=system.mem_ranges[0:4])
-        system.hmc_dev.xbar[2].master = system.hmc_dev.buffer20.slave
-        system.hmc_dev.buffer20.master = system.hmc_dev.xbar[0].slave
+        system.hmc_dev.xbar[2].mem_side_ports = \
+            system.hmc_dev.buffer20.cpu_side_port
+        system.hmc_dev.buffer20.mem_side_port = \
+            system.hmc_dev.xbar[0].cpu_side_ports
 
         system.hmc_dev.buffer21 = Bridge(ranges=system.mem_ranges[4:8])
-        system.hmc_dev.xbar[2].master = system.hmc_dev.buffer21.slave
-        system.hmc_dev.buffer21.master = system.hmc_dev.xbar[1].slave
+        system.hmc_dev.xbar[2].mem_side_ports = \
+            system.hmc_dev.buffer21.cpu_side_port
+        system.hmc_dev.buffer21.mem_side_port = \
+            system.hmc_dev.xbar[1].cpu_side_ports
 
         system.hmc_dev.buffer23 = Bridge(ranges=system.mem_ranges[12:16])
-        system.hmc_dev.xbar[2].master = system.hmc_dev.buffer23.slave
-        system.hmc_dev.buffer23.master = system.hmc_dev.xbar[3].slave
+        system.hmc_dev.xbar[2].mem_side_ports = \
+            system.hmc_dev.buffer23.cpu_side_port
+        system.hmc_dev.buffer23.mem_side_port = \
+            system.hmc_dev.xbar[3].cpu_side_ports

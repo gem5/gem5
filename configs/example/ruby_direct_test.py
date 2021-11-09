@@ -111,7 +111,7 @@ for ruby_port in system.ruby._cpu_ports:
     #
     # Tie the ruby tester ports to the ruby cpu ports
     #
-    system.cpu.cpuPort = ruby_port.slave
+    system.cpu.cpuPort = ruby_port.in_ports
 
 # -----------------------
 # run simulation

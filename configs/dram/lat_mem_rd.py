@@ -250,7 +250,7 @@ system.monitor = CommMonitor()
 system.monitor.footprint = MemFootprintProbe()
 
 # connect the traffic generator to the system
-system.tgen.port = system.monitor.slave
+system.tgen.port = system.monitor.cpu_side_port
 
 # create the actual cache hierarchy, for now just go with something
 # basic to explore some of the options
@@ -270,23 +270,23 @@ class L3Cache(Cache):
 # note that everything is in the same clock domain, 2.0 GHz as
 # specified above
 system.l1cache = L1_DCache(size = '64kB')
-system.monitor.master = system.l1cache.cpu_side
+system.monitor.mem_side_port = system.l1cache.cpu_side
 
 system.l2cache = L2Cache(size = '512kB', writeback_clean = True)
 system.l2cache.xbar = L2XBar()
-system.l1cache.mem_side = system.l2cache.xbar.slave
-system.l2cache.cpu_side = system.l2cache.xbar.master
+system.l1cache.mem_side = system.l2cache.xbar.cpu_side_ports
+system.l2cache.cpu_side = system.l2cache.xbar.mem_side_ports
 
 # make the L3 mostly exclusive, and correspondingly ensure that the L2
 # writes back also clean lines to the L3
 system.l3cache = L3Cache(size = '4MB', clusivity = 'mostly_excl')
 system.l3cache.xbar = L2XBar()
-system.l2cache.mem_side = system.l3cache.xbar.slave
-system.l3cache.cpu_side = system.l3cache.xbar.master
-system.l3cache.mem_side = system.membus.slave
+system.l2cache.mem_side = system.l3cache.xbar.cpu_side_ports
+system.l3cache.cpu_side = system.l3cache.xbar.mem_side_ports
+system.l3cache.mem_side = system.membus.cpu_side_ports
 
 # connect the system port even if it is not used in this example
-system.system_port = system.membus.slave
+system.system_port = system.membus.cpu_side_ports
 
 # every period, dump and reset all stats
 periodicStatDump(period)

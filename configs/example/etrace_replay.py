@@ -110,7 +110,7 @@ system.cpu.dataTraceFile=args.data_trace_file
 # Configure the classic memory system args
 MemClass = Simulation.setMemClass(args)
 system.membus = SystemXBar()
-system.system_port = system.membus.slave
+system.system_port = system.membus.cpu_side_ports
 CacheConfig.config_cache(args, system)
 MemConfig.config_mem(args, system)
 

@@ -48,7 +48,7 @@ def add_options(parser):
 def build_system(options):
     # create the system we are going to simulate
     system = System()
-    # use timing mode for the interaction between master-slave ports
+    # use timing mode for the interaction between requestor-responder ports
     system.mem_mode = 'timing'
     # set the clock fequency of the system
     clk = '100GHz'
@@ -62,30 +62,30 @@ def build_system(options):
     # Connect the traffic generatiors
     if options.arch == "distributed":
         for i in range(options.num_tgen):
-            system.tgen[i].port = system.membus.slave
+            system.tgen[i].port = system.membus.cpu_side_ports
         # connect the system port even if it is not used in this example
-        system.system_port = system.membus.slave
+        system.system_port = system.membus.cpu_side_ports
     if options.arch == "mixed":
         for i in range(int(options.num_tgen/2)):
-            system.tgen[i].port = system.membus.slave
+            system.tgen[i].port = system.membus.cpu_side_ports
         hh = system.hmc_host
         if options.enable_global_monitor:
-            system.tgen[2].port = hh.lmonitor[2].slave
-            hh.lmonitor[2].master = hh.seriallink[2].slave
-            system.tgen[3].port = hh.lmonitor[3].slave
-            hh.lmonitor[3].master = hh.seriallink[3].slave
+            system.tgen[2].port = hh.lmonitor[2].cpu_side_port
+            hh.lmonitor[2].mem_side_port = hh.seriallink[2].cpu_side_port
+            system.tgen[3].port = hh.lmonitor[3].cpu_side_port
+            hh.lmonitor[3].mem_side_port = hh.seriallink[3].cpu_side_port
         else:
-            system.tgen[2].port = hh.seriallink[2].slave
-            system.tgen[3].port = hh.seriallink[3].slave
+            system.tgen[2].port = hh.seriallink[2].cpu_side_port
+            system.tgen[3].port = hh.seriallink[3].cpu_side_port
         # connect the system port even if it is not used in this example
-        system.system_port = system.membus.slave
+        system.system_port = system.membus.cpu_side_ports
     if options.arch == "same":
         hh = system.hmc_host
         for i in range(options.num_links_controllers):
             if options.enable_global_monitor:
-                system.tgen[i].port = hh.lmonitor[i].slave
+                system.tgen[i].port = hh.lmonitor[i].cpu_side_port
             else:
-                system.tgen[i].port = hh.seriallink[i].slave
+                system.tgen[i].port = hh.seriallink[i].cpu_side_port
     # set up the root SimObject
     root = Root(full_system=False, system=system)
     return root

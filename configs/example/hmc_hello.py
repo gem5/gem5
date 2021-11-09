@@ -47,7 +47,7 @@ HMC.add_options(parser)
 options = parser.parse_args()
 # create the system we are going to simulate
 system = System()
-# use timing mode for the interaction between master-slave ports
+# use timing mode for the interaction between requestor-responder ports
 system.mem_mode = 'timing'
 # set the clock fequency of the system
 clk = '1GHz'
@@ -58,13 +58,13 @@ system.cpu = TimingSimpleCPU()
 # config memory system
 MemConfig.config_mem(options, system)
 # hook the CPU ports up to the membus
-system.cpu.icache_port = system.membus.slave
-system.cpu.dcache_port = system.membus.slave
+system.cpu.icache_port = system.membus.cpu_side_ports
+system.cpu.dcache_port = system.membus.cpu_side_ports
 # create the interrupt controller for the CPU and connect to the membus
 system.cpu.createInterruptController()
 # connect special port in the system to the membus. This port is a
 # functional-only port to allow the system to read and write memory.
-system.system_port = system.membus.slave
+system.system_port = system.membus.cpu_side_ports
 # get ISA for the binary to run.
 isa = str(m5.defines.buildEnv['TARGET_ISA']).lower()
 # run 'hello' and use the compiled ISA to find the binary

@@ -136,7 +136,7 @@ def config_tlb_hierarchy(options, system, shader_idx):
 
     #===========================================================
     # Specify the TLB hierarchy (i.e., port connections)
-    # All TLBs but the last level TLB need to have a memSidePort (master)
+    # All TLBs but the last level TLB need to have a memSidePort
     #===========================================================
 
     # Each TLB is connected with its Coalescer through a single port.
@@ -152,7 +152,7 @@ def config_tlb_hierarchy(options, system, shader_idx):
                         system.%s_tlb[%d].cpu_side_ports[0]' % \
                         (name, index, name, index))
 
-    # Connect the cpuSidePort (slave) of all the coalescers in level 1
+    # Connect the cpuSidePort of all the coalescers in level 1
     # < Modify here if you want a different configuration >
     for TLB_type in L1:
         name = TLB_type['name']
@@ -188,8 +188,8 @@ def config_tlb_hierarchy(options, system, shader_idx):
                         (shader_idx, index, scalar_tlb_index,
                          scalar_tlb_port_id))
 
-    # Connect the memSidePorts (masters) of all the TLBs with the
-    # cpuSidePorts (slaves) of the Coalescers of the next level
+    # Connect the memSidePorts of all the TLBs with the
+    # cpuSidePorts of the Coalescers of the next level
     # < Modify here if you want a different configuration >
     # L1 <-> L2
     l2_coalescer_index = 0

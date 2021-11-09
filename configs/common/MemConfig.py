@@ -156,7 +156,7 @@ def config_mem(options, system):
     if opt_external_memory_system:
         subsystem.external_memory = m5.objects.ExternalSlave(
             port_type=opt_external_memory_system,
-            port_data="init_mem0", port=xbar.master,
+            port_data="init_mem0", port=xbar.mem_side_ports,
             addr_ranges=system.mem_ranges)
         subsystem.workload.addr_check = False
         return

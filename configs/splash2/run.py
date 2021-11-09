@@ -198,10 +198,10 @@ system.l2 = L2(size = args.l2size, assoc = 8)
 # Connect the L2 cache and memory together
 # ----------------------
 
-system.physmem.port = system.membus.master
-system.l2.cpu_side = system.toL2bus.master
-system.l2.mem_side = system.membus.slave
-system.system_port = system.membus.slave
+system.physmem.port = system.membus.mem_side_ports
+system.l2.cpu_side = system.toL2bus.mem_side_ports
+system.l2.mem_side = system.membus.cpu_side_ports
+system.system_port = system.membus.cpu_side_ports
 
 # ----------------------
 # Connect the L2 cache and clusters together

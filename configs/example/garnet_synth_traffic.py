@@ -121,7 +121,7 @@ for ruby_port in system.ruby._cpu_ports:
      #
      # Tie the cpu test ports to the ruby cpu port
      #
-     cpus[i].test = ruby_port.slave
+     cpus[i].test = ruby_port.in_ports
      i += 1
 
 # -----------------------

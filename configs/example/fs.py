@@ -148,7 +148,7 @@ def build_test_system(np):
 
         # Connect the ruby io port to the PIO bus,
         # assuming that there is just one such port.
-        test_sys.iobus.master = test_sys.ruby._io_port.slave
+        test_sys.iobus.mem_side_ports = test_sys.ruby._io_port.in_ports
 
         for (i, cpu) in enumerate(test_sys.cpu):
             #
@@ -164,12 +164,12 @@ def build_test_system(np):
         if args.caches or args.l2cache:
             # By default the IOCache runs at the system clock
             test_sys.iocache = IOCache(addr_ranges = test_sys.mem_ranges)
-            test_sys.iocache.cpu_side = test_sys.iobus.master
-            test_sys.iocache.mem_side = test_sys.membus.slave
+            test_sys.iocache.cpu_side = test_sys.iobus.mem_side_ports
+            test_sys.iocache.mem_side = test_sys.membus.cpu_side_ports
         elif not args.external_memory_system:
             test_sys.iobridge = Bridge(delay='50ns', ranges = test_sys.mem_ranges)
-            test_sys.iobridge.slave = test_sys.iobus.master
-            test_sys.iobridge.master = test_sys.membus.slave
+            test_sys.iobridge.cpu_side_port = test_sys.iobus.mem_side_ports
+            test_sys.iobridge.mem_side_port = test_sys.membus.cpu_side_ports
 
         # Sanity check
         if args.simpoint_profile:
@@ -272,15 +272,15 @@ def build_drive_system(np):
 
     drive_sys.iobridge = Bridge(delay='50ns',
                                 ranges = drive_sys.mem_ranges)
-    drive_sys.iobridge.slave = drive_sys.iobus.master
-    drive_sys.iobridge.master = drive_sys.membus.slave
+    drive_sys.iobridge.cpu_side_port = drive_sys.iobus.mem_side_ports
+    drive_sys.iobridge.mem_side_port = drive_sys.membus.cpu_side_ports
 
     # Create the appropriate memory controllers and connect them to the
     # memory bus
     drive_sys.mem_ctrls = [DriveMemClass(range = r)
                            for r in drive_sys.mem_ranges]
     for i in range(len(drive_sys.mem_ctrls)):
-        drive_sys.mem_ctrls[i].port = drive_sys.membus.master
+        drive_sys.mem_ctrls[i].port = drive_sys.membus.mem_side_ports
 
     drive_sys.init_param = args.init_param
 
