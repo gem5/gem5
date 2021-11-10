@@ -194,6 +194,8 @@ motherboard = X86Board(
     cache_hierarchy=cache_hierarchy,
 )
 
+kernel_args = motherboard.get_default_kernel_args() + [args.kernel_args]
+
 # Set the Full System workload.
 motherboard.set_kernel_disk_workload(
     kernel=Resource(
@@ -210,7 +212,7 @@ motherboard.set_kernel_disk_workload(
         m5 exit # exit in children and parent
         """
     ),
-    kernel_args=[args.kernel_args]
+    kernel_args=kernel_args
 )
 
 
