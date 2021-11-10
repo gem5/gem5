@@ -60,7 +60,6 @@ for isa in test_progs:
                 config_args=[
                     binary,
                     cpu,
-                    "--override-download",
                     "--resource-directory",
                     resource_path,
                 ],
