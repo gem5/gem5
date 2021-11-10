@@ -159,7 +159,10 @@ root = Root(full_system=True, system=board)
 
 m5.instantiate()
 
-exit_event = m5.simulate(args.tick_exit)
+if args.tick_exit:
+    exit_event = m5.simulate(args.tick_exit)
+else:
+    exit_event = m5.simulate()
 print(
     "Exiting @ tick {} because {}.".format(m5.curTick(), exit_event.getCause())
 )
