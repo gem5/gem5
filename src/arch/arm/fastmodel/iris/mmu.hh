@@ -38,6 +38,7 @@
 #ifndef __ARCH_ARM_FASTMODEL_IRIS_MMU_HH__
 #define __ARCH_ARM_FASTMODEL_IRIS_MMU_HH__
 
+#include "arch/arm/page_size.hh"
 #include "arch/generic/mmu.hh"
 
 #include "params/IrisMMU.hh"
@@ -52,9 +53,18 @@ class MMU : public BaseMMU
 {
   public:
     MMU(const Params &p) : BaseMMU(p) {}
+
+    TranslationGenPtr
+    translateFunctional(Addr start, Addr size, ThreadContext *tc,
+            Mode mode, Request::Flags flags) override
+    {
+        return TranslationGenPtr(new MMUTranslationGen(
+                    ArmISA::PageBytes, start, size, tc, this, mode, flags));
+    }
 };
 
 } // namespace Iris
+
 } // namespace gem5
 
 #endif // __ARCH_ARM_FASTMODEL_IRIS_MMU_HH__
