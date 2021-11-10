@@ -226,7 +226,9 @@ class PhysRegFile
     readVecElem(PhysRegIdPtr phys_reg) const
     {
         assert(phys_reg->is(VecElemClass));
-        RegVal val = vectorElemRegFile[phys_reg->flatIndex()];
+        RegVal val = vectorElemRegFile[
+                phys_reg->index() * TheISA::NumVecElemPerVecReg +
+                phys_reg->elemIndex()];
         DPRINTF(IEW, "RegFile: Access to element %d of vector register %i,"
                 " has data %#x\n", phys_reg->elemIndex(),
                 phys_reg->index(), val);
@@ -313,7 +315,8 @@ class PhysRegFile
         DPRINTF(IEW, "RegFile: Setting element %d of vector register %i to"
                 " %#x\n", phys_reg->elemIndex(), int(phys_reg->index()), val);
 
-        vectorElemRegFile[phys_reg->flatIndex()] = val;
+        vectorElemRegFile[phys_reg->index() * TheISA::NumVecElemPerVecReg +
+                phys_reg->elemIndex()] = val;
     }
 
     /** Sets a predicate register to the given value. */
