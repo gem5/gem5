@@ -348,50 +348,7 @@ class ArmFastModelComponent(object):
         return res
 
 
-class ArmFastModelBin(Executable):
-    def __init__(self, target, *components_and_sources):
-        def is_component(x):
-            return isinstance(x, ArmFastModelComponent)
-
-        def not_component(x):
-            return not is_component(x)
-
-        components = list(filter(is_component, components_and_sources))
-        sources = list(filter(not_component, components_and_sources))
-
-        self.components = components
-        super().__init__(target, *sources)
-
-    @classmethod
-    def declare_all(cls, env):
-        env = env.Clone()
-        env.Prepend(LIBS=env['STATIC_LIB'][0])
-        super().declare_all(env)
-
-    def declare(self, env):
-        env = env.Clone()
-
-        sources = list(self.sources)
-        for f in self.filters:
-            sources += Source.all.apply_filter(f)
-
-        objs = self.srcs_to_objs(env, sources)
-        objs = objs + env['MAIN_OBJS']
-
-        for component in self.components:
-            component.prepare_env(env)
-
-        binary = super().declare(env, objs)[0]
-
-        # We need a copy of the simulation engine lib alongside the executable
-        # so that the license check works properly.
-        local_engine = binary.File(simulation_engine_name)
-        Depends(binary, local_engine)
-        main.Command(local_engine, simulation_engine_lib,
-                MakeAction("cp ${SOURCE} ${TARGET}", Transform('COPY')))
-
 Export('ArmFastModelComponent')
-Export('ArmFastModelBin')
 
 PySource('m5', 'arm_fast_model.py')
 Source('fastmodel.cc')
