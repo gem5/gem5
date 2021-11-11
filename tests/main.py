@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''
 The main source for testlib. Ties together the default test runners and
 loaders.
