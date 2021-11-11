@@ -48,6 +48,7 @@ gem5RequestToSSTRequest(gem5::PacketPtr pkt,
     switch ((gem5::MemCmd::Command)pkt->cmd.toInt()) {
         case gem5::MemCmd::HardPFReq:
         case gem5::MemCmd::SoftPFReq:
+        case gem5::MemCmd::SoftPFExReq:
         case gem5::MemCmd::LoadLockedReq:
         case gem5::MemCmd::ReadExReq:
         case gem5::MemCmd::ReadReq:
@@ -58,8 +59,15 @@ gem5RequestToSSTRequest(gem5::PacketPtr pkt,
         case gem5::MemCmd::WriteReq:
             cmd = SST::Interfaces::SimpleMem::Request::Command::Write;
             break;
+        case gem5::MemCmd::CleanInvalidReq:
+        case gem5::MemCmd::InvalidateReq:
+            cmd = SST::Interfaces::SimpleMem::Request::Command::FlushLineInv;
+            break;
+        case gem5::MemCmd::CleanSharedReq:
+            cmd = SST::Interfaces::SimpleMem::Request::Command::FlushLine;
+            break;
         default:
-            assert(false && "Unable to convert gem5 packet");
+            panic("Unable to convert gem5 packet: %s\n", pkt->cmd.toString());
     }
 
     SST::Interfaces::SimpleMem::Addr addr = pkt->getAddr();
