@@ -100,7 +100,7 @@ for (i, ruby_port) in enumerate(system.ruby._cpu_ports):
      # Tie the cpu port to the ruby cpu ports and
      # physmem, respectively
      #
-     cpus[i].port = ruby_port.slave
+     cpus[i].port = ruby_port.in_ports
 
      #
      # Since the memtester is incredibly bursty, increase the deadlock

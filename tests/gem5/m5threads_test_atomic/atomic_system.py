@@ -62,7 +62,7 @@ root.system.membus = SystemXBar()
 root.system.membus.badaddr_responder = BadAddr()
 root.system.membus.default = root.system.membus.badaddr_responder.pio
 
-root.system.system_port = root.system.membus.slave
+root.system.system_port = root.system.membus.cpu_side_ports
 
 process = Process(executable = args.cmd,
                   cmd = [args.cmd, str(args.num_cores)])
@@ -96,7 +96,7 @@ for cpu in root.system.cpu:
 
 root.system.mem_ctrl = DDR3_1600_8x8()
 root.system.mem_ctrl.range = root.system.mem_ranges[0]
-root.system.mem_ctrl.port = root.system.membus.master
+root.system.mem_ctrl.port = root.system.membus.mem_side_ports
 
 m5.instantiate()
 exit_event = m5.simulate()

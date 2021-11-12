@@ -72,7 +72,7 @@ system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock,
 
 # Connect the ruby io port to the PIO bus,
 # assuming that there is just one such port.
-system.iobus.master = system.ruby._io_port.slave
+system.iobus.mem_side_ports = system.ruby._io_port.in_ports
 
 for (i, cpu) in enumerate(system.cpu):
     # create the interrupt controller

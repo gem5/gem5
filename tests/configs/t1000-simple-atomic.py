@@ -50,7 +50,7 @@ cpu.connectBus(system.membus)
 system.physmem = [SimpleMemory(range = r)
                   for r in system.mem_ranges]
 for i in range(len(system.physmem)):
-    system.physmem[i].port = system.membus.master
+    system.physmem[i].port = system.membus.mem_side_ports
 
 root = Root(full_system=True, system=system)
 

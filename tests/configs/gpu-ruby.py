@@ -305,7 +305,7 @@ cpu.connectAllPorts(
     system.ruby._cpu_ports[0].in_ports,
     system.ruby._cpu_ports[0].in_ports,
     system.ruby._cpu_ports[0].interrupt_out_port)
-system.ruby._cpu_ports[0].mem_master_port = system.piobus.slave
+system.ruby._cpu_ports[0].mem_request_port = system.piobus.cpu_side_ports
 
 # attach CU ports to Ruby
 # Because of the peculiarities of the CP core, you may have 1 CPU but 2
@@ -338,8 +338,8 @@ gpu_port_idx = gpu_port_idx + 1
 assert(args.num_cp == 0)
 
 # connect dispatcher to the system.piobus
-dispatcher.pio = system.piobus.master
-dispatcher.dma = system.piobus.slave
+dispatcher.pio = system.piobus.mem_side_ports
+dispatcher.dma = system.piobus.cpu_side_ports
 
 ################# Connect the CPU and GPU via GPU Dispatcher ###################
 # CPU rings the GPU doorbell to notify a pending task

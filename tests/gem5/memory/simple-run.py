@@ -76,14 +76,14 @@ system.monitor.trace = MemTraceProbe(trace_file = "monitor.ptrc.gz")
 system.monitor.stackdist = StackDistProbe(verify = True)
 
 # connect the traffic generator to the bus via a communication monitor
-system.cpu.port = system.monitor.slave
-system.monitor.master = system.membus.slave
+system.cpu.port = system.monitor.cpu_side_port
+system.monitor.mem_side_port = system.membus.cpu_side_ports
 
 # connect the system port even if it is not used in this example
-system.system_port = system.membus.slave
+system.system_port = system.membus.cpu_side_ports
 
 # connect memory to the membus
-system.physmem.port = system.membus.master
+system.physmem.port = system.membus.mem_side_ports
 
 # -----------------------
 # run simulation

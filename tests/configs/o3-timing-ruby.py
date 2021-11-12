@@ -42,12 +42,12 @@ system = System(cpu = cpu,
 # CPUs frequency
 system.cpu.clk_domain = SrcClockDomain(clock = '2GHz')
 
-system.physmem.port = system.membus.master
+system.physmem.port = system.membus.mem_side_ports
 # create the interrupt controller
 cpu.createInterruptController()
 cpu.connectBus(system.membus)
 
 # Connect the system port for loading of binaries etc
-system.system_port = system.membus.slave
+system.system_port = system.membus.cpu_side_ports
 
 root = Root(full_system = False, system = system)

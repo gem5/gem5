@@ -43,7 +43,7 @@ class L1Cache(Cache):
 
     def connectBus(self, bus):
         """Connect this cache to a memory-side bus"""
-        self.mem_side = bus.slave
+        self.mem_side = bus.cpu_side_ports
 
     def connectCPU(self, cpu):
         """Connect this cache's port to a CPU-side port
@@ -83,10 +83,10 @@ class L2Cache(Cache):
     tgts_per_mshr = 12
 
     def connectCPUSideBus(self, bus):
-        self.cpu_side = bus.master
+        self.cpu_side = bus.mem_side_ports
 
     def connectMemSideBus(self, bus):
-        self.mem_side = bus.slave
+        self.mem_side = bus.cpu_side_ports
 
 
 class MySimpleMemory(SimpleMemory):
@@ -134,8 +134,8 @@ system.cpu = valid_cpu[args.cpu]()
 
 if args.cpu == "AtomicSimpleCPU":
     system.membus = SystemXBar()
-    system.cpu.icache_port = system.membus.slave
-    system.cpu.dcache_port = system.membus.slave
+    system.cpu.icache_port = system.membus.cpu_side_ports
+    system.cpu.dcache_port = system.membus.cpu_side_ports
 else:
     system.cpu.l1d = L1DCache()
     system.cpu.l1i = L1ICache()
@@ -151,14 +151,14 @@ else:
 
 system.cpu.createInterruptController()
 if m5.defines.buildEnv['TARGET_ISA'] == "x86":
-    system.cpu.interrupts[0].pio = system.membus.master
-    system.cpu.interrupts[0].int_master = system.membus.slave
-    system.cpu.interrupts[0].int_slave = system.membus.master
+    system.cpu.interrupts[0].pio = system.membus.mem_side_ports
+    system.cpu.interrupts[0].int_master = system.membus.cpu_side_ports
+    system.cpu.interrupts[0].int_slave = system.membus.mem_side_ports
 
 system.mem_ctrl = valid_mem[args.mem]()
 system.mem_ctrl.range = system.mem_ranges[0]
-system.mem_ctrl.port = system.membus.master
-system.system_port = system.membus.slave
+system.mem_ctrl.port = system.membus.mem_side_ports
+system.system_port = system.membus.cpu_side_ports
 
 process = Process()
 process.cmd = [args.binary]

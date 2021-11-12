@@ -48,10 +48,10 @@ for cpu in cpus:
     cpu.clk_domain = system.cpu_clk_domain
 
 # connect memory to membus
-system.physmem.port = system.membus.master
+system.physmem.port = system.membus.mem_side_ports
 
 # Connect the system port for loading of binaries etc
-system.system_port = system.membus.slave
+system.system_port = system.membus.cpu_side_ports
 
 # -----------------------
 # run simulation
