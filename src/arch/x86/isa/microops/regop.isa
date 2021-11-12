@@ -990,7 +990,7 @@ let {{
                 CCFlagBits flags = cfofBits;
                 uint64_t top = PSrcReg1 << realShiftAmt;
                 uint64_t bottom = flags.cf << (realShiftAmt - 1);
-                if(shiftAmt > 1) {
+                if(realShiftAmt > 1) {
                     bottom |= bits(PSrcReg1, dataSize * 8 - 1,
                             dataSize * 8 - realShiftAmt + 1);
                 }
