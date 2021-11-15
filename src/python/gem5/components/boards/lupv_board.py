@@ -54,6 +54,7 @@ from m5.objects import (
     LupioRTC,
     LupioTMR,
     LupioTTY,
+    LupioSYS,
     LupV,
     AddrRange,
     CowDiskImage,
@@ -148,6 +149,9 @@ class LupvBoard(SimpleBoard):
         # LUPIO RTC
         self.lupio_rtc = LupioRTC(pio_addr=0x20004000)
 
+        #LUPIO SYS
+        self.lupio_sys = LupioSYS(pio_addr= 0x20003000)
+
         # LUPIO TMR
         self.lupio_tmr = LupioTMR(
             pio_addr=0x20006000,
@@ -200,6 +204,7 @@ class LupvBoard(SimpleBoard):
         self._off_chip_devices = [
             self.lupio_blk,
             self.lupio_tty,
+            self.lupio_sys,
             self.lupio_rng,
             self.lupio_rtc
         ]
@@ -265,6 +270,7 @@ class LupvBoard(SimpleBoard):
         script to start the simulaiton.
         After the workload is set up, this function will generate the device
         tree file and output it to the output directory.
+
         **Limitations**
         * Only supports a Linux kernel
         * Must use the provided bootloader and disk image as denoted in the
@@ -496,6 +502,29 @@ class LupvBoard(SimpleBoard):
                 FdtPropertyWords("interrupt-parent",
                 state.phandle(self.lupio_pic)))
         soc_node.append(lupio_rng_node)
+
+        #LupioSYS Device
+        lupio_sys = self.lupio_sys
+        lupio_sys_node = lupio_sys.generateBasicPioDeviceNode(soc_state,
+                        "lupio-sys", lupio_sys.pio_addr, lupio_sys.pio_size)
+        lupio_sys_node.appendCompatible(["syscon"])
+        sys_phandle = state.phandle(self.lupio_sys)
+        lupio_sys_node.append(FdtPropertyWords("phandle", [sys_phandle]))
+        soc_node.append(lupio_sys_node)
+
+        poweroff_node = FdtNode("poweroff")
+        poweroff_node.appendCompatible(["syscon-poweroff"])
+        poweroff_node.append(FdtPropertyWords("regmap", [sys_phandle]))
+        poweroff_node.append(FdtPropertyWords("offset", [0x0]))
+        poweroff_node.append(FdtPropertyWords("value", [1]))
+        soc_node.append(poweroff_node)
+
+        reboot_node = FdtNode("reboot")
+        reboot_node.appendCompatible(["syscon-reboot"])
+        reboot_node.append(FdtPropertyWords("regmap", [sys_phandle]))
+        reboot_node.append(FdtPropertyWords("offset", [0x4]))
+        reboot_node.append(FdtPropertyWords("value", [1]))
+        soc_node.append(reboot_node)
 
         # LupioRTC Device
         lupio_rtc = self.lupio_rtc
