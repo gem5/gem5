@@ -234,17 +234,24 @@ class AbstractBoard(System):
         The order of this board is always:
 
         1. Connect the memory.
-        2. Connect the processor.
-        3. Connect the cache hierarchy.
+        2. Connect the cache hierarchy.
+        3. Connect the processor.
 
         Developers may build upon this assumption when creating components.
+
+        Notes
+        -----
+
+        * The processor is incorporated after the cache hierarchy due to a bug
+        noted here: https://gem5.atlassian.net/browse/GEM5-1113. Until this
+        bug is fixed, this ordering must be maintained.
         """
 
         # Incorporate the memory into the motherboard.
         self.get_memory().incorporate_memory(self)
 
-        # Incorporate the processor into the motherboard.
-        self.get_processor().incorporate_processor(self)
-
         # Incorporate the cache hierarchy for the motherboard.
         self.get_cache_hierarchy().incorporate_cache(self)
+
+        # Incorporate the processor into the motherboard.
+        self.get_processor().incorporate_processor(self)
