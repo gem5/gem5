@@ -86,6 +86,8 @@ class AbstractBoard(System):
         self.memory = memory
         self.cache_hierarchy = cache_hierarchy
 
+        # Setup the board and memory system's memory ranges.
+        self._setup_memory_ranges()
 
         # Setup board properties unique to the board being constructed.
         self._setup_board()
@@ -143,8 +145,9 @@ class AbstractBoard(System):
         """
         This function is called in the AbstractBoard constructor, before the
         memory, processor, and cache hierarchy components are incorporated via
-        `_connect_thing()`. This function should be overridden by boards to
-        specify components, connections unique to that board.
+        `_connect_thing()`, but after the `_setup_memory_ranges()` function.
+        This function should be overridden by boards to specify components,
+        connections unique to that board.
         """
         raise NotImplementedError
 
@@ -212,18 +215,24 @@ class AbstractBoard(System):
         raise NotImplementedError
 
     @abstractmethod
-    def setup_memory_ranges(self) -> None:
+    def _setup_memory_ranges(self) -> None:
         """
-        Set the memory ranges for this board.
+        Set the memory ranges for this board and memory system.
 
-        This is called by at the end of the constructor. It can query the
-        board's memory to determine the size and the set the memory ranges on
-        the memory if it needs to move the memory devices.
+        This is called in the constructor, prior to `_setup_board` and
+        `_connect_things`. It should query the board's memory to determine the
+        size and the set the memory ranges on the memory system and on the
+        board.
 
-        The simplest implementation just sets the board's memory range to be
-        the size of memory and memory's memory range to be the same as the
-        board. Full system implementations will likely need something more
-        complicated.
+        The simplest implementation sets the board's memory range to the size
+        of memory and memory system's range to be the same as the board. Full
+        system implementations will likely need something more complicated.
+
+        Notes
+        -----
+        * This *must* be called prior to the incorporation of the cache
+        hierarchy (via `_connect_things`) as cache hierarchies depend upon
+        knowing the memory system's ranges.
         """
         raise NotImplementedError
 

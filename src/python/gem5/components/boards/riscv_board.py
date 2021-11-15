@@ -121,9 +121,6 @@ class RiscvBoard(AbstractBoard, KernelDiskWorkload):
         self._on_chip_devices = [self.platform.clint, self.platform.plic]
         self._off_chip_devices = [self.platform.uart, self.disk]
 
-        # Set up the memory ranges
-        self.setup_memory_ranges()
-
     def _setup_io_devices(self) -> None:
         """Connect the I/O devices to the I/O bus"""
 
@@ -189,7 +186,7 @@ class RiscvBoard(AbstractBoard, KernelDiskWorkload):
         return self.iobus.mem_side_ports
 
     @overrides(AbstractBoard)
-    def setup_memory_ranges(self):
+    def _setup_memory_ranges(self):
         memory = self.get_memory()
         mem_size = memory.get_size()
         self.mem_ranges = [AddrRange(start=0x80000000, size=mem_size)]

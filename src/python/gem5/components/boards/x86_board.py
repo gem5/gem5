@@ -96,9 +96,6 @@ class X86Board(AbstractBoard, KernelDiskWorkload):
         # North Bridge
         self.iobus = IOXBar()
 
-        # Figure out the memory ranges.
-        self.setup_memory_ranges()
-
         # Set up all of the I/O.
         self._setup_io_devices()
 
@@ -276,7 +273,7 @@ class X86Board(AbstractBoard, KernelDiskWorkload):
         return self.iobus.mem_side_ports
 
     @overrides(AbstractBoard)
-    def setup_memory_ranges(self):
+    def _setup_memory_ranges(self):
         memory = self.get_memory()
 
         if memory.get_size() > toMemorySize("3GB"):

@@ -67,8 +67,7 @@ class SimpleBoard(AbstractBoard, SEBinaryWorkload):
 
     @overrides(AbstractBoard)
     def _setup_board(self) -> None:
-        # Set up the memory ranges
-        self.setup_memory_ranges()
+        pass
 
     @overrides(AbstractBoard)
     def has_io_bus(self) -> bool:
@@ -104,7 +103,7 @@ class SimpleBoard(AbstractBoard, SEBinaryWorkload):
         )
 
     @overrides(AbstractBoard)
-    def setup_memory_ranges(self) -> None:
+    def _setup_memory_ranges(self) -> None:
         memory = self.get_memory()
 
         # The simple board just has one memory range that is the size of the
