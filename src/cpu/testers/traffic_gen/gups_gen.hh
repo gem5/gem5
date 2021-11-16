@@ -256,7 +256,7 @@ class GUPSGen : public ClockedObject
     /**
      * @brief Size of the memory in bytes that will be allocated for the array.
      */
-    const uint32_t memSize;
+    const uint64_t memSize;
 
     /**
      * @brief The number of updates to do before creating an exit event.
