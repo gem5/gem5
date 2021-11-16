@@ -36,29 +36,88 @@ import argparse
 import importlib
 
 from os.path import join
-from m5.objects import Root
-from m5.stats import gem5stats
+from m5.objects import Root, MemorySize
 from gem5.components.boards.test_board import TestBoard
-from gem5.components.processors.linear_generator import LinearGenerator
-from gem5.components.processors.random_generator import RandomGenerator
 
 
-generator_class_map = {
-    "LinearGenerator": LinearGenerator,
-    "RandomGenerator": RandomGenerator,
-}
+def generator_factory(
+    generator_class: str, generator_cores: int, mem_size: MemorySize
+):
+    if generator_class == "LinearGenerator":
+        from gem5.components.processors.linear_generator import LinearGenerator
 
-generator_initializers = dict(rate="20GB/s")
+        return LinearGenerator(
+            duration="250us",
+            rate="40GB/s",
+            num_cores=generator_cores,
+            max_addr=mem_size,
+        )
+    elif generator_class == "RandomGenerator":
+        from gem5.components.processors.random_generator import RandomGenerator
+
+        return RandomGenerator(
+            duration="250us",
+            rate="40GB/s",
+            num_cores=generator_cores,
+            max_addr=mem_size,
+        )
+    elif generator_class == "GUPSGenerator":
+        if generator_cores != 1:
+            raise ValueError(
+                "Only one core should be used with GUPSGenerator. "
+                "In order to use multiple cores of GUPS generator, use either "
+                "GUPSGeneratorEP or GUPSGeneratorPAR."
+            )
+        from gem5.components.processors.gups_generator import GUPSGenerator
+
+        table_size = f"{int(mem_size / 2)}B"
+        return GUPSGenerator(0, table_size, update_limit=1000)
+    elif generator_class == "GUPSGeneratorEP":
+        from gem5.components.processors.gups_generator_ep import (
+            GUPSGeneratorEP,
+        )
+
+        table_size = f"{int(mem_size / 2)}B"
+        return GUPSGeneratorEP(
+            generator_cores, 0, table_size, update_limit=1000
+        )
+    elif generator_class == "GUPSGeneratorPAR":
+        from gem5.components.processors.gups_generator_par import (
+            GUPSGeneratorPAR,
+        )
+
+        table_size = f"{int(mem_size / 2)}B"
+        return GUPSGeneratorPAR(
+            generator_cores, 0, table_size, update_limit=1000
+        )
+    else:
+        raise ValueError(f"Unknown generator class {generator_class}")
 
 
-def cache_factory(cache_class):
+def cache_factory(cache_class: str):
     if cache_class == "NoCache":
         from gem5.components.cachehierarchies.classic.no_cache import NoCache
 
         return NoCache()
+    elif cache_class == "PrivateL1":
+        from gem5.components.cachehierarchies\
+            .classic.private_l1_cache_hierarchy import (
+            PrivateL1CacheHierarchy,
+        )
+
+        return PrivateL1CacheHierarchy(l1d_size="32KiB", l1i_size="32KiB")
+    elif cache_class == "PrivateL1PrivateL2":
+        from gem5.components.cachehierarchies\
+            .classic.private_l1_private_l2_cache_hierarchy import (
+            PrivateL1PrivateL2CacheHierarchy,
+        )
+
+        return PrivateL1PrivateL2CacheHierarchy(
+            l1d_size="32KiB", l1i_size="32KiB", l2_size="256KiB"
+        )
     elif cache_class == "MESITwoLevel":
-        from gem5.components.cachehierarchies.ruby\
-            .mesi_two_level_cache_hierarchy import (
+        from gem5.components.cachehierarchies\
+            .ruby.mesi_two_level_cache_hierarchy import (
             MESITwoLevelCacheHierarchy,
         )
 
@@ -84,14 +143,24 @@ parser.add_argument(
     "generator_class",
     type=str,
     help="The class of generator to use.",
-    choices=["LinearGenerator", "RandomGenerator"],
+    choices=[
+        "LinearGenerator",
+        "RandomGenerator",
+        "GUPSGenerator",
+        "GUPSGeneratorEP",
+        "GUPSGeneratorPAR",
+    ],
+)
+
+parser.add_argument(
+    "generator_cores", type=int, help="The number of generator cores to use."
 )
 
 parser.add_argument(
     "cache_class",
     type=str,
     help="The cache class to import and instantiate.",
-    choices=["NoCache", "MESITwoLevel"],
+    choices=["NoCache", "PrivateL1", "PrivateL1PrivateL2", "MESITwoLevel"],
 )
 
 parser.add_argument(
@@ -110,10 +179,8 @@ parser.add_argument(
     help="The arguments needed to instantiate the memory class.",
 )
 
-args = parser.parse_args()
 
-generator_class = generator_class_map[args.generator_class]
-generator = generator_class(**generator_initializers)
+args = parser.parse_args()
 
 cache_hierarchy = cache_factory(args.cache_class)
 
@@ -121,6 +188,10 @@ memory_class = getattr(
     importlib.import_module(args.mem_module), args.mem_class
 )
 memory = memory_class(*args.mem_args)
+
+generator = generator_factory(
+    args.generator_class, args.generator_cores, memory.get_size()
+)
 
 # We use the Test Board. This is a special board to run traffic generation
 # tasks
@@ -141,8 +212,3 @@ exit_event = m5.simulate()
 print(
     "Exiting @ tick {} because {}.".format(m5.curTick(), exit_event.getCause())
 )
-
-stats = gem5stats.get_simstat(root)
-json_out = join(m5.options.outdir, "stats.json")
-with open(json_out, "w") as json_stats:
-    stats.dump(json_stats, indent=2)

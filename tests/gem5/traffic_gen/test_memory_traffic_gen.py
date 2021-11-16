@@ -35,34 +35,47 @@ from testlib import *
 
 
 def test_memory(
-    generator: str, cache: str, module: str, memory: str, *args
+    generator: str,
+    generator_cores: str,
+    cache: str,
+    module: str,
+    memory: str,
+    *args,
 ) -> None:
-    protocol_map = {"NoCache": None, "MESITwoLevel": "MESI_Two_Level"}
+    protocol_map = {
+        "NoCache": None,
+        "PrivateL1": None,
+        "PrivateL1PrivateL2": None,
+        "MESITwoLevel": "MESI_Two_Level",
+    }
     tag_map = {
         "NoCache": constants.quick_tag,
+        "PrivateL1": constants.quick_tag,
+        "PrivateL1PrivateL2": constants.quick_tag,
         "MESITwoLevel": constants.long_tag,
     }
 
+    name = (
+        "test-memory-"
+        + f"{generator}-{generator_cores}-{cache}-{module}-{memory}"
+    )
+    for arg in args:
+        name += "-" + arg
+
     gem5_verify_config(
-        name="test-memory-"
-        + generator
-        + "."
-        + cache
-        + "."
-        + module
-        + "."
-        + memory,
+        name=name,
         fixtures=(),
         verifiers=(),
         config=joinpath(
             config.base_dir,
             "tests",
             "gem5",
-            "configs",
+            "traffic_gen",
             "simple_traffic_run.py",
         ),
         config_args=[
             generator,
+            generator_cores,
             cache,
             module,
             memory,
@@ -75,143 +88,68 @@ def test_memory(
     )
 
 
-test_memory(
-    "LinearGenerator",
-    "NoCache",
-    "gem5.components.memory.single_channel",
+cache_classes = ["NoCache", "PrivateL1", "PrivateL1PrivateL2", "MESITwoLevel"]
+common_memory_classes = [
     "SingleChannelDDR3_1600",
-    "512MiB",
-)
-test_memory(
-    "LinearGenerator",
-    "NoCache",
-    "gem5.components.memory.single_channel",
     "SingleChannelDDR3_2133",
-    "512MiB",
-)
-test_memory(
-    "LinearGenerator",
-    "NoCache",
-    "gem5.components.memory.single_channel",
     "SingleChannelDDR4_2400",
-    "512MiB",
-)
-test_memory(
-    "LinearGenerator",
-    "NoCache",
-    "gem5.components.memory.single_channel",
     "SingleChannelLPDDR3_1600",
-    "512MiB",
-)
-test_memory(
-    "LinearGenerator",
-    "NoCache",
-    "gem5.components.memory.single_channel",
     "SingleChannelHBM",
-    "512MiB",
-)
-test_memory(
-    "RandomGenerator",
-    "NoCache",
+]
+multi_memory_classes = [
+    "DualChannelDDR3_1600",
+    "DualChannelDDR3_2133",
+    "DualChannelDDR4_2400",
+    "DualChannelLPDDR3_1600",
+    "HBM2Stack",
+]
+
+
+def create_single_core_tests(module, memory_classes):
+    # TODO: Add GUPSGenerator to these tests after adding ClockDomain as
+    # an input parameter.
+    generator_classes = ["LinearGenerator", "RandomGenerator"]
+    for generator_class in generator_classes:
+        for cache_class in cache_classes:
+            for memory_class in memory_classes:
+                test_memory(
+                    generator_class,
+                    "1",
+                    cache_class,
+                    module,
+                    memory_class,
+                    "512MiB",
+                )
+
+
+def create_dual_core_tests(module, memory_classes):
+    generator_classes = ["GUPSGeneratorEP", "GUPSGeneratorPAR"]
+    for generator_class in generator_classes:
+        for cache_class in cache_classes:
+            for memory_class in memory_classes:
+                test_memory(
+                    generator_class,
+                    "2",
+                    cache_class,
+                    module,
+                    memory_class,
+                    "512MiB",
+                )
+
+create_single_core_tests(
     "gem5.components.memory.single_channel",
-    "SingleChannelDDR3_1600",
-    "512MiB",
+    common_memory_classes,
 )
-test_memory(
-    "RandomGenerator",
-    "NoCache",
+create_dual_core_tests(
     "gem5.components.memory.single_channel",
-    "SingleChannelDDR3_2133",
-    "512MiB",
+    common_memory_classes,
 )
-test_memory(
-    "RandomGenerator",
-    "NoCache",
-    "gem5.components.memory.single_channel",
-    "SingleChannelDDR4_2400",
-    "512MiB",
+
+create_single_core_tests(
+    "gem5.components.memory.multi_channel",
+    common_memory_classes + multi_memory_classes,
 )
-test_memory(
-    "RandomGenerator",
-    "NoCache",
-    "gem5.components.memory.single_channel",
-    "SingleChannelLPDDR3_1600",
-    "512MiB",
-)
-test_memory(
-    "RandomGenerator",
-    "NoCache",
-    "gem5.components.memory.single_channel",
-    "SingleChannelHBM",
-    "512MiB",
-)
-test_memory(
-    "LinearGenerator",
-    "MESITwoLevel",
-    "gem5.components.memory.single_channel",
-    "SingleChannelDDR3_1600",
-    "512MiB",
-)
-test_memory(
-    "LinearGenerator",
-    "MESITwoLevel",
-    "gem5.components.memory.single_channel",
-    "SingleChannelDDR3_2133",
-    "512MiB",
-)
-test_memory(
-    "LinearGenerator",
-    "MESITwoLevel",
-    "gem5.components.memory.single_channel",
-    "SingleChannelDDR4_2400",
-    "512MiB",
-)
-test_memory(
-    "LinearGenerator",
-    "MESITwoLevel",
-    "gem5.components.memory.single_channel",
-    "SingleChannelLPDDR3_1600",
-    "512MiB",
-)
-test_memory(
-    "LinearGenerator",
-    "MESITwoLevel",
-    "gem5.components.memory.single_channel",
-    "SingleChannelHBM",
-    "512MiB",
-)
-test_memory(
-    "RandomGenerator",
-    "MESITwoLevel",
-    "gem5.components.memory.single_channel",
-    "SingleChannelDDR3_1600",
-    "512MiB",
-)
-test_memory(
-    "RandomGenerator",
-    "MESITwoLevel",
-    "gem5.components.memory.single_channel",
-    "SingleChannelDDR3_2133",
-    "512MiB",
-)
-test_memory(
-    "RandomGenerator",
-    "MESITwoLevel",
-    "gem5.components.memory.single_channel",
-    "SingleChannelDDR4_2400",
-    "512MiB",
-)
-test_memory(
-    "RandomGenerator",
-    "MESITwoLevel",
-    "gem5.components.memory.single_channel",
-    "SingleChannelLPDDR3_1600",
-    "512MiB",
-)
-test_memory(
-    "RandomGenerator",
-    "MESITwoLevel",
-    "gem5.components.memory.single_channel",
-    "SingleChannelHBM",
-    "512MiB",
+create_dual_core_tests(
+    "gem5.components.memory.multi_channel",
+    common_memory_classes + multi_memory_classes,
 )
