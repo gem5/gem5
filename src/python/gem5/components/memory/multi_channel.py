@@ -27,15 +27,20 @@
 """Multi channel "generic" DDR memory controllers
 """
 
-import enum
 from math import log
 from ...utils.override import overrides
 from m5.util.convert import toMemorySize
 from ..boards.abstract_board import AbstractBoard
 from .abstract_memory_system import AbstractMemorySystem
-from typing import Type, Sequence, Tuple, List, Optional
 from m5.objects import AddrRange, DRAMInterface, MemCtrl, Port
+from typing import Type, Sequence, Tuple, List, Optional, Union
 
+
+def _try_convert(val, cls):
+    try:
+        return cls(val)
+    except:
+        raise Exception(f"Could not convert {val} to {cls}")
 
 def _isPow2(num):
     log_num = int(log(num, 2))
@@ -53,8 +58,8 @@ class MultiChannelMemory(AbstractMemorySystem):
     def __init__(
         self,
         dram_interface_class: Type[DRAMInterface],
-        num_channels: int,
-        interleaving_size: int,
+        num_channels: Union[int, str],
+        interleaving_size: Union[int, str],
         size: Optional[str] = None,
         addr_mapping: Optional[str] = None,
     ) -> None:
@@ -66,12 +71,21 @@ class MultiChannelMemory(AbstractMemorySystem):
         :param size: Optionally specify the size of the DRAM controller's
             address space. By default, it starts at 0 and ends at the size of
             the DRAM device specified
-        :param add_mapping: Defines the address mapping scheme to be used.
-            By default, it is RoRaBaChCo
+        :param addr_mapping: Defines the address mapping scheme to be used.
+            If None, it is defaulted to addr_mapping from dram_interface_class.
         :param interleaving_size: Defines the interleaving size of the multi-
             channel memory system. By default, it is equivalent to the atom
             size, i.e., 64.
         """
+        num_channels = _try_convert(num_channels, int)
+        interleaving_size = _try_convert(interleaving_size, int)
+
+        if size:
+            size = _try_convert(size, str)
+
+        if addr_mapping:
+            addr_mapping = _try_convert(addr_mapping, str)
+
         super().__init__()
         self._dram_class = dram_interface_class
         self._num_channels = num_channels
@@ -98,7 +112,6 @@ class MultiChannelMemory(AbstractMemorySystem):
             MemCtrl(dram=self._dram[i]) for i in range(num_channels)
         ]
 
-
     def _get_dram_size(self, num_channels: int, dram: DRAMInterface) -> int:
         return num_channels * (
             dram.device_size.value
@@ -107,8 +120,6 @@ class MultiChannelMemory(AbstractMemorySystem):
         )
 
     def _interleave_addresses(self):
-        print(f"Memory is interleaving the address range {self._mem_range}"
-            f" using {self._intlv_size} as interleaving size.")
         if self._addr_mapping == "RoRaBaChCo":
             rowbuffer_size = (
                 self._dram_class.device_rowbuffer_size.value
@@ -127,8 +138,8 @@ class MultiChannelMemory(AbstractMemorySystem):
         for i, ctrl in enumerate(self.mem_ctrl):
             ctrl.dram.range = AddrRange(
                 start=self._mem_range.start,
-                end=self._mem_range.size(),
-                intlvHighBit = intlv_low_bit + intlv_bits - 1,
+                size=self._mem_range.size(),
+                intlvHighBit=intlv_low_bit + intlv_bits - 1,
                 xorHighBit=0,
                 intlvBits=intlv_bits,
                 intlvMatch=i,
@@ -137,10 +148,12 @@ class MultiChannelMemory(AbstractMemorySystem):
     @overrides(AbstractMemorySystem)
     def incorporate_memory(self, board: AbstractBoard) -> None:
         if self._intlv_size < int(board.get_cache_line_size()):
-            raise ValueError("Memory interleaving size can not be smaller than"
-            " board's cache line size.\nBoard's cache line size: "
-            f"{board.get_cache_line_size()}\n, This memory's interleaving "
-            f"size: {self._intlv_size}")
+            raise ValueError(
+                "Memory interleaving size can not be smaller than"
+                " board's cache line size.\nBoard's cache line size: "
+                f"{board.get_cache_line_size()}\n, This memory's interleaving "
+                f"size: {self._intlv_size}"
+            )
 
     @overrides(AbstractMemorySystem)
     def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
@@ -168,3 +181,131 @@ class MultiChannelMemory(AbstractMemorySystem):
             )
         self._mem_range = ranges[0]
         self._interleave_addresses()
+
+
+from .dram_interfaces.ddr3 import DDR3_1600_8x8, DDR3_2133_8x8
+from .dram_interfaces.ddr4 import DDR4_2400_8x8
+from .dram_interfaces.lpddr3 import LPDDR3_1600_1x32
+from .dram_interfaces.hbm import HBM_1000_4H_1x64, HBM_1000_4H_1x128
+
+def SingleChannelDDR3_1600(
+    size: Optional[str] = None,
+) -> AbstractMemorySystem:
+    """
+    A single channel memory system using DDR3_1600_8x8 based DIMM
+    """
+    return MultiChannelMemory(
+        DDR3_1600_8x8,
+        1,
+        64,
+        size=size,
+    )
+
+def DualChannelDDR3_1600(
+    size: Optional[str] = None,
+) -> AbstractMemorySystem:
+    """
+    A dual channel memory system using DDR3_1600_8x8 based DIMM
+    """
+    return MultiChannelMemory(
+        DDR3_1600_8x8,
+        2,
+        64,
+        size=size,
+    )
+
+def SingleChannelDDR3_2133(
+    size: Optional[str] = None,
+) -> AbstractMemorySystem:
+    """
+    A single channel memory system using DDR3_2133_8x8 based DIMM
+    """
+    return MultiChannelMemory(
+        DDR3_2133_8x8,
+        1,
+        64,
+        size=size,
+    )
+
+def DualChannelDDR3_2133(
+    size: Optional[str] = None,
+) -> AbstractMemorySystem:
+    """
+    A dual channel memory system using DDR3_2133_8x8 based DIMM
+    """
+    return MultiChannelMemory(
+        DDR3_2133_8x8,
+        2,
+        64,
+        size=size,
+    )
+
+def SingleChannelDDR4_2400(
+    size: Optional[str] = None,
+) -> AbstractMemorySystem:
+    """
+    A single channel memory system using DDR4_2400_8x8 based DIMM
+    """
+    return MultiChannelMemory(
+        DDR4_2400_8x8,
+        1,
+        64,
+        size=size,
+    )
+
+def DualChannelDDR4_2400(
+    size: Optional[str] = None,
+) -> AbstractMemorySystem:
+    """
+    A dual channel memory system using DDR4_2400_8x8 based DIMM
+    """
+    return MultiChannelMemory(
+        DDR4_2400_8x8,
+        2,
+        64,
+        size=size,
+    )
+
+def SingleChannelLPDDR3_1600(
+    size: Optional[str] = None,
+) -> AbstractMemorySystem:
+    return MultiChannelMemory(
+        LPDDR3_1600_1x32,
+        1,
+        64,
+        size=size,
+    )
+
+def DualChannelLPDDR3_1600(
+    size: Optional[str] = None,
+) -> AbstractMemorySystem:
+    return MultiChannelMemory(
+        LPDDR3_1600_1x32,
+        2,
+        64,
+        size=size,
+    )
+
+def SingleChannelHBM(
+    size: Optional[str] = None,
+) -> AbstractMemorySystem:
+    if not size:
+        size = "256MiB"
+    return MultiChannelMemory(
+        HBM_1000_4H_1x128,
+        1,
+        64,
+        size=size
+    )
+
+def HBM2Stack(
+    size: Optional[str] = None,
+) -> AbstractMemorySystem:
+    if not size:
+        size = "4GiB"
+    return MultiChannelMemory(
+        HBM_1000_4H_1x64,
+        16,
+        64,
+        size=size,
+    )
