@@ -27,7 +27,6 @@
 
 #include <vector>
 
-#include "systemc/core/scheduler.hh"
 #include "systemc/ext/channel/sc_signal_in_if.hh"
 #include "systemc/ext/core/sc_event.hh"
 #include "systemc/ext/core/sc_time.hh"
@@ -52,16 +51,12 @@ sc_trace_file::~sc_trace_file() {}
 sc_trace_file *
 sc_create_vcd_trace_file(const char *name)
 {
-    auto tf = new ::sc_gem5::VcdTraceFile(name);
-    ::sc_gem5::scheduler.registerTraceFile(tf);
-    return tf;
+    return new ::sc_gem5::VcdTraceFile(name);
 }
 
 void
 sc_close_vcd_trace_file(sc_trace_file *tf)
 {
-    ::sc_gem5::scheduler.unregisterTraceFile(
-            static_cast<::sc_gem5::TraceFile *>(tf));
     delete tf;
 }
 
