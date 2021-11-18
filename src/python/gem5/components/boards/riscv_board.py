@@ -42,6 +42,7 @@ from ...utils.requires import requires
 import m5
 
 from m5.objects import (
+    BadAddr,
     Bridge,
     PMAChecker,
     RiscvLinux,
@@ -107,6 +108,8 @@ class RiscvBoard(AbstractBoard, KernelDiskWorkload):
 
         # Incoherent I/O bus
         self.iobus = IOXBar()
+        self.iobus.badaddr_responder = BadAddr()
+        self.iobus.default = self.iobus.badaddr_responder.pio
 
         # The virtio disk
         self.disk = RiscvMmioVirtIO(
