@@ -72,7 +72,7 @@ def requires(
     runtime_coherence_protocol = get_runtime_coherence_protocol()
     kvm_available = os.access("/dev/kvm", mode=os.R_OK | os.W_OK)
 
-    if isa_required != None and isa_required != runtime_isa:
+    if isa_required != None and isa_required.value != runtime_isa.value:
         raise Exception(
             _get_exception_str(
                 msg="The current ISA is '{}'. Required: '{}'".format(
@@ -83,7 +83,8 @@ def requires(
 
     if (
         coherence_protocol_required != None
-        and coherence_protocol_required != runtime_coherence_protocol
+        and coherence_protocol_required.value
+        != runtime_coherence_protocol.value
     ):
         raise Exception(
             _get_exception_str(
