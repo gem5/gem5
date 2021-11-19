@@ -103,7 +103,34 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
             "gem5_library",
             "x86-parsec-benchmarks.py",
         ),
-        config_args=["--benchmark","blackscholes", "--size","simsmall"],
+        config_args=["--benchmark","blackscholes","--size","simsmall"],
+        valid_isas=(constants.x86_tag,),
+        protocol="MESI_Two_Level",
+        valid_hosts=constants.supported_hosts,
+        length=constants.long_tag,
+    )
+
+if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
+    # The x86-npb-benchmarks uses KVM cores, this test will therefore only be
+    # run on systems that support KVM.
+    gem5_verify_config(
+        name="test-gem5-library-example-x86-npb-benchmarks",
+        fixtures=(),
+        verifiers=(),
+        config=joinpath(
+            config.base_dir,
+            "configs",
+            "example",
+            "gem5_library",
+            "x86-npb-benchmarks.py",
+        ),
+        config_args=["--benchmark",
+            "bt",
+            "--size",
+            "A",
+            "--maxinsts",
+            "5000000000"
+        ],
         valid_isas=(constants.x86_tag,),
         protocol="MESI_Two_Level",
         valid_hosts=constants.supported_hosts,
