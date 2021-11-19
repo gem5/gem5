@@ -74,8 +74,6 @@ build_target POWER
 # Run the unit tests.
 unit_test opt
 unit_test debug
-unit_test perf
-unit_test prof
 
 # Run the gem5 long tests.
 docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
