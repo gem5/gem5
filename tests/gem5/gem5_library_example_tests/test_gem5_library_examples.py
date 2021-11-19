@@ -157,3 +157,20 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
         valid_hosts=constants.supported_hosts,
         length=constants.long_tag,
     )
+
+gem5_verify_config(
+    name="test-gem5-library-example-riscv-ubuntu-run",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "gem5_library",
+        "riscv-ubuntu-run.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.riscv_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.long_tag,
+)
