@@ -56,7 +56,7 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
     # The x86-ubuntu-run uses KVM cores, this test will therefore only be run
     # on systems that support KVM.
     gem5_verify_config(
-        name="test-gem5-library-example-x86-ubuntu-run",
+        name="test-gem5-library-example-x86-ubuntu-run-with-kvm",
         fixtures=(),
         verifiers=(),
         config=joinpath(
@@ -64,10 +64,27 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
             "configs",
             "example",
             "gem5_library",
-            "x86-ubuntu-run.py",
+            "x86-ubuntu-run-with-kvm.py",
         ),
         config_args=[],
         valid_isas=(constants.x86_tag,),
         valid_hosts=constants.supported_hosts,
         length=constants.long_tag,
     )
+
+gem5_verify_config(
+    name="test-gem5-library-example-x86-ubuntu-run",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "gem5_library",
+        "x86-ubuntu-run.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.x86_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.long_tag,
+)
