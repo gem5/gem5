@@ -61,7 +61,7 @@ def CheckLinkFlag(context, flag, autoadd=True, set_for_shared=True):
     ret = context.TryLink('int main(int, char *[]) { return 0; }', '.cc')
     if not (ret and autoadd):
         context.env['LINKFLAGS'] = last_linkflags
-    if set_for_shared:
+    if (ret and set_for_shared):
         assert(autoadd)
         context.env.Append(SHLINKFLAGS=[flag])
     context.Result(ret)
