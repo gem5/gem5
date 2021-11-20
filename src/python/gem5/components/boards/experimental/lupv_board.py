@@ -27,14 +27,14 @@
 import os
 from typing import Optional
 
-from ...utils.override import overrides
-from .simple_board import SimpleBoard
-from .abstract_board import AbstractBoard
-from ..processors.abstract_processor import AbstractProcessor
-from ..memory.abstract_memory_system import AbstractMemorySystem
-from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
-from ...isas import ISA
-from ...runtime import get_runtime_isa
+from ....utils.override import overrides
+from ..simple_board import SimpleBoard
+from ..abstract_board import AbstractBoard
+from ...processors.abstract_processor import AbstractProcessor
+from ...memory.abstract_memory_system import AbstractMemorySystem
+from ...cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
+from ....isas import ISA
+from ....runtime import get_runtime_isa
 
 import m5
 from m5.objects import (
@@ -173,10 +173,10 @@ class LupvBoard(SimpleBoard):
             self._int_ids['RNG']
         ]
 
-        # Set the number of sources to the PIC as 0 because we've removed the 
+        # Set the number of sources to the PIC as 0 because we've removed the
         # connections from all the external devices to the PIC, and moved them
         # to the LupioPIC.  The PIC and CLINT only remain on the board at this
-        # point for our bbl to use upon startup, and will 
+        # point for our bbl to use upon startup, and will
         # remain unused during the simulation
         self.pic.n_src = 0
         self.pic.n_contexts = 0
