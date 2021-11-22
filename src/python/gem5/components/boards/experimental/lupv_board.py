@@ -33,7 +33,7 @@ from ...processors.abstract_processor import AbstractProcessor
 from ...memory.abstract_memory_system import AbstractMemorySystem
 from ...cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
 from ....isas import ISA
-from ....runtime import get_runtime_isa
+from ....utils.requires import requires
 
 import m5
 from m5.objects import (
@@ -89,14 +89,11 @@ class LupvBoard(AbstractBoard):
         cache_hierarchy: AbstractCacheHierarchy,
     ) -> None:
 
-        super().__init__(clk_freq, processor, memory, cache_hierarchy)
-        if get_runtime_isa() != ISA.RISCV:
-            raise EnvironmentError(
-                "RiscvBoard will only work with the RISC-V ISA. Please"
-                " recompile gem5 with ISA=RISCV."
-            )
+        requires(isa_required=ISA.RISCV)
         if cache_hierarchy.is_ruby():
             raise EnvironmentError("RiscvBoard is not compatible with Ruby")
+
+        super().__init__(clk_freq, processor, memory, cache_hierarchy)
 
     @overrides(AbstractBoard)
     def _setup_board(self) -> None:
