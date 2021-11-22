@@ -25,10 +25,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-from typing import Optional
+from typing import Optional, List
 
 from ....utils.override import overrides
-from ..simple_board import SimpleBoard
 from ..abstract_board import AbstractBoard
 from ...processors.abstract_processor import AbstractProcessor
 from ...memory.abstract_memory_system import AbstractMemorySystem
@@ -72,7 +71,7 @@ from m5.util.fdthelper import (
     FdtState,
 )
 
-class LupvBoard(SimpleBoard):
+class LupvBoard(AbstractBoard):
     """
     A board capable of full system simulation for RISC-V.
     This board uses a set of LupIO education-friendly devices.
@@ -89,6 +88,7 @@ class LupvBoard(SimpleBoard):
         memory: AbstractMemorySystem,
         cache_hierarchy: AbstractCacheHierarchy,
     ) -> None:
+
         super().__init__(clk_freq, processor, memory, cache_hierarchy)
         if get_runtime_isa() != ISA.RISCV:
             raise EnvironmentError(
@@ -97,6 +97,10 @@ class LupvBoard(SimpleBoard):
             )
         if cache_hierarchy.is_ruby():
             raise EnvironmentError("RiscvBoard is not compatible with Ruby")
+
+    @overrides(AbstractBoard)
+    def _setup_board(self) -> None:
+
         self.workload = RiscvLinux()
 
         # Initialize all the devices that we want to use on this board
@@ -240,6 +244,17 @@ class LupvBoard(SimpleBoard):
             )
 
     @overrides(AbstractBoard)
+    def has_dma_ports(self) -> bool:
+        return False
+
+    @overrides(AbstractBoard)
+    def get_dma_ports(self) -> List[Port]:
+        raise NotImplementedError(
+            "The LupvBoard does not have DMA Ports. "
+            "Use `has_dma_ports()` to check this."
+        )
+
+    @overrides(AbstractBoard)
     def has_io_bus(self) -> bool:
         return True
 
@@ -254,7 +269,7 @@ class LupvBoard(SimpleBoard):
         return self.iobus.mem_side_ports
 
     @overrides(AbstractBoard)
-    def setup_memory_ranges(self):
+    def _setup_memory_ranges(self):
         memory = self.get_memory()
         mem_size = memory.get_size()
         self.mem_ranges = [AddrRange(start=0x80000000, size=mem_size)]
