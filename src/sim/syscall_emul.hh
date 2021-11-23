@@ -2543,9 +2543,15 @@ selectFunc(SyscallDesc *desc, ThreadContext *tc, int nfds,
     if (retval == -1)
         return -errno;
 
-    FD_ZERO(reinterpret_cast<fd_set *>((typename OS::fd_set *)readfds));
-    FD_ZERO(reinterpret_cast<fd_set *>((typename OS::fd_set *)writefds));
-    FD_ZERO(reinterpret_cast<fd_set *>((typename OS::fd_set *)errorfds));
+    if (readfds) {
+        FD_ZERO(reinterpret_cast<fd_set *>((typename OS::fd_set *)readfds));
+    }
+    if (writefds) {
+        FD_ZERO(reinterpret_cast<fd_set *>((typename OS::fd_set *)writefds));
+    }
+    if (errorfds) {
+        FD_ZERO(reinterpret_cast<fd_set *>((typename OS::fd_set *)errorfds));
+    }
 
     /**
      * We need to translate the host file descriptor set into a target file
