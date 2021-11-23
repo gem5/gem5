@@ -43,5 +43,5 @@ root = LinuxArmFSSystemUniprocessor(mem_mode='atomic',
                                     mem_class=SimpleMemory,
                                     cpu_class=AtomicSimpleCPU).create_root()
 
-run_test = functools.partial(checkpoint.run_test, interval=0.2)
-
+run_test = functools.partial(checkpoint.run_test, interval=0.2,
+                             max_checkpoints=3)
