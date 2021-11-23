@@ -25,15 +25,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from ...utils.override import overrides
+from typing import Optional
 from m5.objects import Addr
+from ...utils.override import overrides
 
 from ..boards.mem_mode import MemMode
-
-from .gups_generator_core import GUPSGeneratorCore
-
 from .abstract_processor import AbstractProcessor
 from ..boards.abstract_board import AbstractBoard
+from .gups_generator_core import GUPSGeneratorCore
 
 
 class GUPSGenerator(AbstractProcessor):
@@ -42,6 +41,7 @@ class GUPSGenerator(AbstractProcessor):
         start_addr: Addr,
         mem_size: str,
         update_limit: int = 0,
+        clk_freq: Optional[str] = None,
     ):
         """The GUPSGenerator class
         This class defines the interface for a single core GUPSGenerator, this
@@ -63,6 +63,7 @@ class GUPSGenerator(AbstractProcessor):
                     start_addr=start_addr,
                     mem_size=mem_size,
                     update_limit=update_limit,
+                    clk_freq=clk_freq,
                 )
             ]
         )

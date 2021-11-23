@@ -24,10 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import Port, GUPSGen, Addr
 
+from typing import Optional
 from ...utils.override import overrides
 from .abstract_generator_core import AbstractGeneratorCore
+from m5.objects import Port, GUPSGen, Addr, SrcClockDomain, VoltageDomain
 
 
 class GUPSGeneratorCore(AbstractGeneratorCore):
@@ -36,14 +37,24 @@ class GUPSGeneratorCore(AbstractGeneratorCore):
         start_addr: Addr,
         mem_size: str,
         update_limit: int,
+        clk_freq: Optional[str],
     ):
         """
         Create a GUPSGeneratorCore as the main generator.
         """
         super().__init__()
         self.generator = GUPSGen(
-            start_addr=start_addr, mem_size=mem_size, update_limit=update_limit
-        )
+                start_addr=start_addr,
+                mem_size=mem_size,
+                update_limit=update_limit,
+            )
+        if clk_freq:
+            clock_domain = SrcClockDomain(
+                clock=clk_freq, voltage_domain=VoltageDomain()
+            )
+            self.generator.clk_domain = clock_domain
+
+
 
     @overrides(AbstractGeneratorCore)
     def connect_dcache(self, port: Port) -> None:

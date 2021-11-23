@@ -25,17 +25,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from ...utils.override import overrides
+from typing import Optional
 from m5.objects import Addr
-from m5.util.convert import toMemorySize
-
 from ..boards.mem_mode import MemMode
-
-from .gups_generator_core import GUPSGeneratorCore
-
+from ...utils.override import overrides
+from m5.util.convert import toMemorySize
 from .abstract_processor import AbstractProcessor
 from ..boards.abstract_board import AbstractBoard
-
+from .gups_generator_core import GUPSGeneratorCore
 
 class GUPSGeneratorEP(AbstractProcessor):
     def __init__(
@@ -44,6 +41,7 @@ class GUPSGeneratorEP(AbstractProcessor):
         start_addr: Addr,
         mem_size: str,
         update_limit: int = 0,
+        clk_freq: Optional[str] = None,
     ):
         """The GUPSGeneratorEP class
         This class defines the interface for multi core GUPSGenerator, this
@@ -64,6 +62,7 @@ class GUPSGeneratorEP(AbstractProcessor):
                 start_addr=start_addr,
                 mem_size=mem_size,
                 update_limit=update_limit,
+                clk_freq=clk_freq,
             )
         )
 
@@ -73,6 +72,7 @@ class GUPSGeneratorEP(AbstractProcessor):
         start_addr: Addr,
         mem_size: str,
         update_limit: int,
+        clk_freq: Optional[str],
     ):
         """
         Helper function to create cores.
@@ -85,6 +85,7 @@ class GUPSGeneratorEP(AbstractProcessor):
                 start_addr=start_addr + i * chunk_size,
                 mem_size=table_size,
                 update_limit=update_limit,
+                clk_freq=clk_freq
             )
             for i in range(num_cores)
         ]
