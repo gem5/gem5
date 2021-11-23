@@ -1006,6 +1006,11 @@ class BaseCache : public ClockedObject
             @sa Packet::Command */
         statistics::Vector misses;
         /**
+         * Total number of cycles per thread/command spent waiting for a hit.
+         * Used to calculate the average hit latency.
+         */
+        statistics::Vector hitLatency;
+        /**
          * Total number of cycles per thread/command spent waiting for a miss.
          * Used to calculate the average miss latency.
          */
@@ -1050,6 +1055,10 @@ class BaseCache : public ClockedObject
         statistics::Formula demandHits;
         /** Number of hit for all accesses. */
         statistics::Formula overallHits;
+        /** Total number of cycles spent waiting for demand hits. */
+        statistics::Formula demandHitLatency;
+        /** Total number of cycles spent waiting for all hits. */
+        statistics::Formula overallHitLatency;
 
         /** Number of misses for demand accesses. */
         statistics::Formula demandMisses;

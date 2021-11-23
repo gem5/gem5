@@ -1954,6 +1954,8 @@ BaseCache::CacheCmdStats::CacheCmdStats(BaseCache &c,
                ("number of " + name + " hits").c_str()),
       ADD_STAT(misses, statistics::units::Count::get(),
                ("number of " + name + " misses").c_str()),
+      ADD_STAT(hitLatency, statistics::units::Tick::get(),
+               ("number of " + name + " hit ticks").c_str()),
       ADD_STAT(missLatency, statistics::units::Tick::get(),
                ("number of " + name + " miss ticks").c_str()),
       ADD_STAT(accesses, statistics::units::Count::get(),
@@ -2008,6 +2010,15 @@ BaseCache::CacheCmdStats::regStatsFromParent()
         ;
     for (int i = 0; i < max_requestors; i++) {
         misses.subname(i, system->getRequestorName(i));
+    }
+
+    // Hit latency statistics
+    hitLatency
+        .init(max_requestors)
+        .flags(total | nozero | nonan)
+        ;
+    for (int i = 0; i < max_requestors; i++) {
+        hitLatency.subname(i, system->getRequestorName(i));
     }
 
     // Miss latency statistics
@@ -2116,6 +2127,10 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
              "number of demand (read+write) hits"),
     ADD_STAT(overallHits, statistics::units::Count::get(),
              "number of overall hits"),
+    ADD_STAT(demandHitLatency, statistics::units::Tick::get(),
+             "number of demand (read+write) hit ticks"),
+    ADD_STAT(overallHitLatency, statistics::units::Tick::get(),
+            "number of overall hit ticks"),
     ADD_STAT(demandMisses, statistics::units::Count::get(),
              "number of demand (read+write) misses"),
     ADD_STAT(overallMisses, statistics::units::Count::get(),
@@ -2248,6 +2263,17 @@ BaseCache::CacheStats::regStats()
     overallMissLatency = demandMissLatency + SUM_NON_DEMAND(missLatency);
     for (int i = 0; i < max_requestors; i++) {
         overallMissLatency.subname(i, system->getRequestorName(i));
+    }
+
+    demandHitLatency.flags(total | nozero | nonan);
+    demandHitLatency = SUM_DEMAND(hitLatency);
+    for (int i = 0; i < max_requestors; i++) {
+        demandHitLatency.subname(i, system->getRequestorName(i));
+    }
+    overallHitLatency.flags(total | nozero | nonan);
+    overallHitLatency = demandHitLatency + SUM_NON_DEMAND(hitLatency);
+    for (int i = 0; i < max_requestors; i++) {
+        overallHitLatency.subname(i, system->getRequestorName(i));
     }
 
     demandAccesses.flags(total | nozero | nonan);
