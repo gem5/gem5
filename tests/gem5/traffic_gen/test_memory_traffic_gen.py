@@ -106,9 +106,7 @@ multi_memory_classes = [
 
 
 def create_single_core_tests(module, memory_classes):
-    # TODO: Add GUPSGenerator to these tests after adding ClockDomain as
-    # an input parameter.
-    generator_classes = ["LinearGenerator", "RandomGenerator"]
+    generator_classes = ["LinearGenerator", "RandomGenerator", "GUPSGenerator"]
     for generator_class in generator_classes:
         for cache_class in cache_classes:
             for memory_class in memory_classes:

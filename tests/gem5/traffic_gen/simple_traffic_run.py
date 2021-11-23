@@ -35,7 +35,6 @@ import m5
 import argparse
 import importlib
 
-from os.path import join
 from m5.objects import Root, MemorySize
 from gem5.components.boards.test_board import TestBoard
 
@@ -71,15 +70,18 @@ def generator_factory(
         from gem5.components.processors.gups_generator import GUPSGenerator
 
         table_size = f"{int(mem_size / 2)}B"
-        return GUPSGenerator(0, table_size, update_limit=1000)
+        return GUPSGenerator(
+            0, table_size, update_limit=1000, clk_freq="2GHz"
+        )
     elif generator_class == "GUPSGeneratorEP":
         from gem5.components.processors.gups_generator_ep import (
             GUPSGeneratorEP,
         )
 
         table_size = f"{int(mem_size / 2)}B"
+
         return GUPSGeneratorEP(
-            generator_cores, 0, table_size, update_limit=1000
+            generator_cores, 0, table_size, update_limit=1000, clk_freq="2GHz"
         )
     elif generator_class == "GUPSGeneratorPAR":
         from gem5.components.processors.gups_generator_par import (
@@ -88,7 +90,7 @@ def generator_factory(
 
         table_size = f"{int(mem_size / 2)}B"
         return GUPSGeneratorPAR(
-            generator_cores, 0, table_size, update_limit=1000
+            generator_cores, 0, table_size, update_limit=1000, clk_freq="2GHz"
         )
     else:
         raise ValueError(f"Unknown generator class {generator_class}")
