@@ -78,7 +78,7 @@ class CustomResource(AbstractResource):
         :param local_path: The path of the resource on the host system.
         :param metadata: Add metadata for the custom resource.
         """
-        super().__init__(local_path=local_path)
+        super().__init__(local_path=local_path, metadata=metadata)
 
 
 class Resource(AbstractResource):
