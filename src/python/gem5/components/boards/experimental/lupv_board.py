@@ -25,13 +25,15 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-from typing import Optional, List
+from typing import List
 
 from ....utils.override import overrides
 from ..abstract_board import AbstractBoard
 from ...processors.abstract_processor import AbstractProcessor
 from ...memory.abstract_memory_system import AbstractMemorySystem
 from ...cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
+from ..kernel_disk_workload import KernelDiskWorkload
+from ....resources.resource import AbstractResource
 from ....isas import ISA
 from ....utils.requires import requires
 
@@ -71,7 +73,7 @@ from m5.util.fdthelper import (
     FdtState,
 )
 
-class LupvBoard(AbstractBoard):
+class LupvBoard(AbstractBoard, KernelDiskWorkload):
     """
     A board capable of full system simulation for RISC-V.
     This board uses a set of LupIO education-friendly devices.
@@ -272,56 +274,7 @@ class LupvBoard(AbstractBoard):
         self.mem_ranges = [AddrRange(start=0x80000000, size=mem_size)]
         memory.set_memory_range(self.mem_ranges)
 
-    def set_workload(
-        self, bootloader: str, disk_image: str, command: Optional[str] = None
-    ):
-        """Setup the full system files
-        See https://github.com/darchr/lupio-gem5/blob/lupio/README.md
-        for running the full system, and downloading the right files to do so.
-        The command passes in a boot loader and disk image, as well as the
-        script to start the simulaiton.
-        After the workload is set up, this function will generate the device
-        tree file and output it to the output directory.
-
-        **Limitations**
-        * Only supports a Linux kernel
-        * Must use the provided bootloader and disk image as denoted in the
-        README above.
-        """
-        self.workload.object_file = bootloader
-        # Set the disk image for the block device to use
-        image = CowDiskImage(
-            child=RawDiskImage(read_only=True),
-            read_only=False
-        )
-        image.child.image_file = disk_image
-        self.lupio_blk.image = image
-
-        # Linux boot command flags
-        kernel_cmd = [
-            "earlycon console=ttyLIO0",
-            "root=/dev/lda1",
-            "ro"
-        ]
-        self.workload.command_line = " ".join(kernel_cmd)
-
-        # Note: This must be called after set_workload because it looks for an
-        # attribute named "disk" and connects
-        self._setup_io_devices()
-        self._setup_pma()
-
-        # Default DTB address if bbl is built with --with-dts option
-        self.workload.dtb_addr = 0x87E00000
-
-        # We need to wait to generate the device tree until after the disk is
-        # set up. Now that the disk and workload are set, we can generate the
-        # device tree file.
-        self.generate_device_tree(m5.options.outdir)
-        self.workload.dtb_filename = os.path.join(
-            m5.options.outdir, "device.dtb"
-        )
-
-    def generate_device_tree(self, outdir: str) -> None:
+    def _generate_device_tree(self, outdir: str) -> None:
         """Creates the dtb and dts files.
         Creates two files in the outdir: 'device.dtb' and 'device.dts'
         :param outdir: Directory to output the files
@@ -564,3 +517,38 @@ class LupvBoard(AbstractBoard):
         fdt.add_rootnode(root)
         fdt.writeDtsFile(os.path.join(outdir, "device.dts"))
         fdt.writeDtbFile(os.path.join(outdir, "device.dtb"))
+
+    @overrides(KernelDiskWorkload)
+    def get_default_kernel_args(self) -> List[str]:
+        return ["earlycon console=ttyLIO0", "root={root_value}", "ro"]
+
+    @overrides(KernelDiskWorkload)
+    def get_disk_device(self) -> str:
+        return "/dev/lda"
+
+    @overrides(KernelDiskWorkload)
+    def _add_disk_to_board(self, disk_image: AbstractResource) -> None:
+        # Note: This must be called after set_workload because it looks for an
+        # attribute named "disk" and connects
+
+       # Set the disk image for the block device to use
+        image = CowDiskImage(
+            child=RawDiskImage(read_only=True),
+            read_only=False
+        )
+        image.child.image_file = disk_image.get_local_path()
+        self.lupio_blk.image = image
+
+        self._setup_io_devices()
+        self._setup_pma()
+
+        # Default DTB address if bbl is built with --with-dts option
+        self.workload.dtb_addr = 0x87E00000
+
+        # We need to wait to generate the device tree until after the disk is
+        # set up. Now that the disk and workload are set, we can generate the
+        # device tree file.
+        self._generate_device_tree(m5.options.outdir)
+        self.workload.dtb_filename = os.path.join(
+            m5.options.outdir, "device.dtb"
+        )
