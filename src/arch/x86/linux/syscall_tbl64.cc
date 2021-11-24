@@ -309,7 +309,7 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 259, "mknodat", mknodatFunc<X86Linux64> },
     { 260, "fchownat", fchownatFunc<X86Linux64> },
     { 261, "futimesat", futimesatFunc<X86Linux64> },
-    { 262, "newfstatat" },
+    { 262, "newfstatat", newfstatatFunc<X86Linux64> },
     { 263, "unlinkat", unlinkatFunc<X86Linux64> },
     { 264, "renameat", renameatFunc<X86Linux64> },
     { 265, "linkat" },
