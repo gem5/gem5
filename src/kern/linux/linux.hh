@@ -297,6 +297,9 @@ class Linux : public OperatingSystem
     // for *at syscalls
     static const int TGT_AT_FDCWD     = -100;
     static const int TGT_AT_REMOVEDIR = 0x200;
+    static const int TGT_AT_SYMLINK_FOLLOW = 0x400;
+    static const int TGT_AT_NO_AUTOMOUNT = 0x800;
+    static const int TGT_AT_EMPTY_PATH = 0x1000;
 
     // for MREMAP
     static const unsigned TGT_MREMAP_MAYMOVE    = 0x1;
