@@ -1371,6 +1371,45 @@ statFunc(SyscallDesc *desc, ThreadContext *tc,
     return 0;
 }
 
+/// Target newfstatat() handler.
+template <class OS>
+SyscallReturn
+newfstatatFunc(SyscallDesc *desc, ThreadContext *tc, int dirfd,
+               VPtr<> pathname, VPtr<typename OS::tgt_stat> tgt_stat,
+               int flags)
+{
+    std::string path;
+
+    if (!SETranslatingPortProxy(tc).tryReadString(path, pathname))
+        return -EFAULT;
+
+    if (path.empty() && !(flags & OS::TGT_AT_EMPTY_PATH))
+        return -ENOENT;
+    flags = flags & ~OS::TGT_AT_EMPTY_PATH;
+
+    warn_if(flags != 0, "newfstatat: Flag bits %#x not supported.", flags);
+
+    // Modifying path from the directory descriptor
+    if (auto res = atSyscallPath<OS>(tc, dirfd, path); !res.successful()) {
+        return res;
+    }
+
+    auto p = tc->getProcessPtr();
+
+    // Adjust path for cwd and redirection
+    path = p->checkPathRedirect(path);
+
+    struct stat host_buf;
+    int result = stat(path.c_str(), &host_buf);
+
+    if (result < 0)
+        return -errno;
+
+    copyOutStatBuf<OS>(tgt_stat, &host_buf);
+
+    return 0;
+}
+
 /// Target fstatat64() handler.
 template <class OS>
 SyscallReturn
