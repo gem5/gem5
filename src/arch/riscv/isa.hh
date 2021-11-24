@@ -98,7 +98,7 @@ class ISA : public BaseISA
     int flattenCCIndex(int reg) const { return reg; }
     int flattenMiscIndex(int reg) const { return reg; }
 
-    bool inUserMode() const override { return true; }
+    bool inUserMode() const override;
     void copyRegsFrom(ThreadContext *src) override;
 
     void serialize(CheckpointOut &cp) const override;

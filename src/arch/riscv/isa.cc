@@ -205,6 +205,11 @@ ISA::ISA(const Params &p) : BaseISA(p)
     clear();
 }
 
+bool ISA::inUserMode() const
+{
+    return miscRegFile[MISCREG_PRV] == PRV_U;
+}
+
 void
 ISA::copyRegsFrom(ThreadContext *src)
 {
