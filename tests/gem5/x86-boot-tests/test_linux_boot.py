@@ -39,13 +39,14 @@ def test_boot(
     cpu: str,
     num_cpus: int,
     mem_system: str,
+    memory_class: str,
     length: str,
     boot_type: str = "init",
     to_tick: Optional[int] = None,
 ):
 
-    name = "{}-cpu_{}-cores_{}_{}_x86-boot-test".format(
-        cpu, str(num_cpus), mem_system, boot_type
+    name = "{}-cpu_{}-cores_{}_{}_{}_x86-boot-test".format(
+        cpu, str(num_cpus), mem_system, memory_class, boot_type
     )
     verifiers = []
     additional_config_args = []
@@ -89,6 +90,8 @@ def test_boot(
             str(num_cpus),
             "--mem-system",
             mem_system,
+            "--dram-class",
+            memory_class,
             "--boot-type",
             boot_type,
             "--resource-directory",
@@ -108,6 +111,7 @@ test_boot(
     cpu="atomic",
     num_cpus=1,
     mem_system="classic",
+    memory_class="SingleChannelDDR3_1600",
     to_tick=10000000000, #Simulates 1/100th of a second.
     length=constants.quick_tag,
 )
@@ -116,6 +120,7 @@ test_boot(
     cpu="timing",
     num_cpus=1,
     mem_system="classic",
+    memory_class="SingleChannelDDR3_2133",
     to_tick=10000000000,
     length=constants.quick_tag,
 )
@@ -124,6 +129,7 @@ test_boot(
     cpu="atomic",
     num_cpus=4,
     mem_system="classic",
+    memory_class="SingleChannelDDR4_2400",
     to_tick=10000000000,
     length=constants.quick_tag,
 )
@@ -132,6 +138,7 @@ test_boot(
     cpu="o3",
     num_cpus=1,
     mem_system="classic",
+    memory_class="SingleChannelLPDDR3_1600",
     to_tick=10000000000,
     length=constants.quick_tag,
 )
@@ -142,6 +149,7 @@ test_boot(
     cpu="atomic",
     num_cpus=1,
     mem_system="classic",
+    memory_class="SingleChannelHBM",
     boot_type="init",
     length=constants.long_tag,
 )
@@ -150,6 +158,7 @@ test_boot(
     cpu="timing",
     num_cpus=1,
     mem_system="mesi_two_level",
+    memory_class="DualChannelDDR3_1600",
     boot_type="init",
     length=constants.long_tag,
 )
@@ -158,6 +167,7 @@ test_boot(
     cpu="timing",
     num_cpus=1,
     mem_system="mi_example",
+    memory_class="DualChannelDDR3_2133",
     boot_type="init",
     length=constants.long_tag,
 )
@@ -166,6 +176,7 @@ test_boot(
     cpu="atomic",
     num_cpus=4,
     mem_system="classic",
+    memory_class="DualChannelDDR4_2400",
     boot_type="systemd",
     length=constants.long_tag,
 )
@@ -179,9 +190,19 @@ test_boot(
 #    cpu="o3",
 #    num_cpus=2,
 #    mem_system="mesi_two_level",
+#    memory_class="DualChannelDDR4_2400"
 #    boot_type="init",
 #    length=constants.long_tag,
 #)
+
+test_boot(
+    cpu="atomic",
+    num_cpus=4,
+    mem_system="classic",
+    memory_class="HBM2Stack",
+    boot_type="systemd",
+    length=constants.long_tag,
+)
 
 #### The very-long (Weekly) tests ####
 
@@ -260,11 +281,11 @@ for mem_system in run_map:
     for cpu in run_map[mem_system]:
         for num_cpus in run_map[mem_system][cpu]:
             if run_map[mem_system][cpu][num_cpus]:
-
                 test_boot(
                     cpu=cpu,
                     num_cpus=num_cpus,
                     mem_system=mem_system,
+                    memory_class="DualChannelDDR4_2400",
                     boot_type="systemd",
                     length=constants.very_long_tag,
-                )
+                    )

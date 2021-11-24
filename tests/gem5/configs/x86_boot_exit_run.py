@@ -35,16 +35,16 @@ from gem5.runtime import (
     get_runtime_coherence_protocol,
     get_runtime_isa,
 )
-from gem5.utils.requires import requires
-from gem5.components.boards.x86_board import X86Board
-from gem5.components.memory.single_channel import SingleChannelDDR3_1600
-from gem5.components.processors.simple_processor import SimpleProcessor
-from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
-from gem5.coherence_protocol import CoherenceProtocol
+from gem5.utils.requires import requires
 from gem5.resources.resource import Resource
+from gem5.coherence_protocol import CoherenceProtocol
+from gem5.components.boards.x86_board import X86Board
+from gem5.components.processors.cpu_types import CPUTypes
+from gem5.components.processors.simple_processor import SimpleProcessor
 
 import argparse
+import importlib
 
 parser = argparse.ArgumentParser(
     description="A script to run the gem5 boot test. This test boots the "
@@ -73,6 +73,13 @@ parser.add_argument(
     choices=("kvm", "atomic", "timing", "o3"),
     required=True,
     help="The CPU type.",
+)
+parser.add_argument(
+    "-d",
+    "--dram-class",
+    type=str,
+    required=True,
+    help="The python class for the memory interface to use"
 )
 parser.add_argument(
     "-b",
@@ -154,7 +161,11 @@ assert cache_hierarchy != None
 # Setup the system memory.
 # Warning: This must be kept at 3GB for now. X86Motherboard does not support
 # anything else right now!
-memory = SingleChannelDDR3_1600(size="3GB")
+python_module = "gem5.components.memory.multi_channel"
+memory_class = getattr(
+    importlib.import_module(python_module), args.dram_class
+)
+memory = memory_class(size="3GiB")
 
 # Setup a Processor.
 
