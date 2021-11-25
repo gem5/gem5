@@ -36,15 +36,15 @@ Characteristics
 import m5
 from m5.objects import Root
 
-from gem5.components.boards.riscv_board import RiscvBoard
-from gem5.components.memory.single_channel import SingleChannelDDR3_1600
-from gem5.components.processors.simple_processor import SimpleProcessor
-from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.utils.requires import requires
 from gem5.resources.resource import Resource
+from gem5.components.processors.cpu_types import CPUTypes
+from gem5.components.boards.riscv_board import RiscvBoard
+from gem5.components.processors.simple_processor import SimpleProcessor
 
 import argparse
+import importlib
 
 parser = argparse.ArgumentParser(
     description="A script to run the RISCV boot exit tests."
@@ -74,6 +74,14 @@ parser.add_argument(
     choices=("classic", "mi_example",),
     required=True,
     help="The memory system.",
+)
+
+parser.add_argument(
+    "-d",
+    "--dram-class",
+    type=str,
+    required=True,
+    help="The python class for the memory interface to use"
 )
 
 parser.add_argument(
@@ -117,7 +125,11 @@ elif args.mem_system == "mi_example":
     )
 
 # Setup the system memory.
-memory = SingleChannelDDR3_1600()
+python_module = "gem5.components.memory.multi_channel"
+memory_class = getattr(
+    importlib.import_module(python_module), args.dram_class
+)
+memory = memory_class(size="4GiB")
 
 # Setup a processor.
 if args.cpu == "kvm":

@@ -40,12 +40,13 @@ def test_boot(
     cpu: str,
     num_cpus: int,
     cache_type: str,
+    memory_class: str,
     length: str,
     to_tick: Optional[int] = None,
 ):
 
-    name = "{}-cpu_{}-{}-cores_riscv-boot-test".format(
-        cpu, str(num_cpus), cache_type)
+    name = "{}-cpu_{}-cores_{}_{}_riscv-boot-test".format(
+        cpu, str(num_cpus), cache_type, memory_class)
 
     verifiers = []
     exit_regex = re.compile(
@@ -62,6 +63,8 @@ def test_boot(
         str(num_cpus),
         "--mem-system",
         cache_type,
+        "--dram-class",
+        memory_class,
         "--resource-directory",
         resource_path,
     ]
@@ -94,6 +97,7 @@ test_boot(
     cpu="atomic",
     num_cpus=1,
     cache_type="classic",
+    memory_class="SingleChannelDDR3_1600",
     length=constants.quick_tag,
     to_tick=10000000000,  # Simulates 1/100th of a second.
 )
@@ -102,6 +106,7 @@ test_boot(
     cpu="timing",
     num_cpus=1,
     cache_type="classic",
+    memory_class="SingleChannelDDR3_2133",
     length=constants.quick_tag,
     to_tick=10000000000,
 )
@@ -110,6 +115,7 @@ test_boot(
     cpu="timing",
     num_cpus=1,
     cache_type="mi_example",
+    memory_class="SingleChannelDDR4_2400",
     length=constants.quick_tag,
     to_tick=10000000000,
 )
@@ -118,6 +124,7 @@ test_boot(
     cpu="o3",
     num_cpus=1,
     cache_type="classic",
+    memory_class="DualChannelDDR3_1600",
     length=constants.quick_tag,
     to_tick=10000000000,
 )
@@ -126,6 +133,7 @@ test_boot(
     cpu="timing",
     num_cpus=4,
     cache_type="classic",
+    memory_class="DualChannelDDR3_2133",
     length=constants.quick_tag,
     to_tick=10000000000,
 )
@@ -134,6 +142,7 @@ test_boot(
     cpu="timing",
     num_cpus=4,
     cache_type="mi_example",
+    memory_class="DualChannelDDR4_2400",
     length=constants.quick_tag,
     to_tick=10000000000,
 )
@@ -144,37 +153,42 @@ test_boot(
 # https://gem5.atlassian.net/browse/GEM5-1120, these tests have been disabled
 # until the exact error causing the Nightly tests to timeout is established.
 
-#test_boot(
-#    cpu="atomic",
-#    num_cpus=1,
-#    cache_type="classic",
-#    length=constants.long_tag,
-#)
+# test_boot(
+#     cpu="atomic",
+#     num_cpus=1,
+#     cache_type="classic",
+#     memory_class="HBM2Stack",
+#     length=constants.long_tag,
+# )
 
-#test_boot(
-#    cpu="timing",
-#    num_cpus=1,
-#    cache_type="mi_example",
-#    length=constants.long_tag,
-#)
+# test_boot(
+#     cpu="timing",
+#     num_cpus=1,
+#     cache_type="mi_example",
+#     memory_class="SingleChannelLPDDR3_1600",
+#     length=constants.long_tag,
+# )
 
-#test_boot(
-#    cpu="timing",
-#    num_cpus=4,
-#    cache_type="mi_example",
-#    length=constants.long_tag,
-#)
+# test_boot(
+#     cpu="timing",
+#     num_cpus=4,
+#     cache_type="mi_example",
+#     memory_class="DualChannelDDR4_2400",
+#     length=constants.long_tag,
+# )
 
-#test_boot(
-#    cpu="atomic",
-#    num_cpus=4,
-#    cache_type="classic",
-#    length=constants.long_tag,
-#)
+# test_boot(
+#     cpu="atomic",
+#     num_cpus=4,
+#     cache_type="classic",
+#     memory_class="DualChannelLPDDR3_1600",
+#     length=constants.long_tag,
+# )
 
-#test_boot(
-#    cpu="o3",
-#    num_cpus=8,
-#    cache_type="mi_example",
-#    length=constants.long_tag,
-#)
+# test_boot(
+#     cpu="o3",
+#     num_cpus=8,
+#     cache_type="mi_example",
+#     memory_class="HBM2Stack",
+#     length=constants.long_tag,
+# )
