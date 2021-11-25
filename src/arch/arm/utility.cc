@@ -665,8 +665,7 @@ mcrMrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc, uint32_t iss,
 
 
 bool
-mcrMrc14TrapToHyp(const MiscRegIndex miscReg, HCR hcr, CPSR cpsr, SCR scr,
-                  HDCR hdcr, HSTR hstr, HCPTR hcptr, uint32_t iss)
+mcrMrc14TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc, uint32_t iss)
 {
     bool isRead;
     uint32_t crm;
@@ -674,6 +673,14 @@ mcrMrc14TrapToHyp(const MiscRegIndex miscReg, HCR hcr, CPSR cpsr, SCR scr,
     uint32_t crn;
     uint32_t opc1;
     uint32_t opc2;
+
+    const CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    const SCR scr = tc->readMiscReg(MISCREG_SCR);
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR);
+    const HDCR hdcr = tc->readMiscReg(MISCREG_HDCR);
+    const HSTR hstr = tc->readMiscReg(MISCREG_HSTR);
+    const HCPTR hcptr = tc->readMiscReg(MISCREG_HCPTR);
+
     bool trapToHype = false;
 
     if (!inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP)) {

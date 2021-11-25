@@ -302,8 +302,8 @@ Fault mcrMrc15Trap(const MiscRegIndex miscReg, ExtMachInst machInst,
 bool mcrMrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc,
                        uint32_t iss, ExceptionClass *ec=nullptr);
 
-bool mcrMrc14TrapToHyp(const MiscRegIndex miscReg, HCR hcr, CPSR cpsr, SCR scr,
-                       HDCR hdcr, HSTR hstr, HCPTR hcptr, uint32_t iss);
+bool mcrMrc14TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc,
+                       uint32_t iss);
 
 Fault mcrrMrrc15Trap(const MiscRegIndex miscReg, ExtMachInst machInst,
                      ThreadContext *tc, uint32_t imm);

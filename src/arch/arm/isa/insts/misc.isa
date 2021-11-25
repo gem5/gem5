@@ -897,8 +897,7 @@ let {{
         return std::make_shared<UndefinedInstruction>(machInst, false,
                                                       mnemonic);
     }
-    if (mcrMrc14TrapToHyp((MiscRegIndex) op1, Hcr, Cpsr, Scr, Hdcr,
-                          Hstr, Hcptr, imm)) {
+    if (mcrMrc14TrapToHyp((MiscRegIndex) op1, xc->tcBase(), imm)) {
         return std::make_shared<HypervisorTrap>(machInst, imm,
                                                 EC_TRAPPED_CP14_MCR_MRC);
     }
@@ -922,8 +921,7 @@ let {{
         return std::make_shared<UndefinedInstruction>(machInst, false,
                                                       mnemonic);
     }
-    if (mcrMrc14TrapToHyp(miscReg, Hcr, Cpsr, Scr, Hdcr,
-                          Hstr, Hcptr, imm)) {
+    if (mcrMrc14TrapToHyp(miscReg, xc->tcBase(), imm)) {
         return std::make_shared<HypervisorTrap>(machInst, imm,
                                                 EC_TRAPPED_CP14_MCR_MRC);
     }
