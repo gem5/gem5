@@ -64,6 +64,13 @@ ScxEvsCortexA76<Types>::setCluster(SimObject *cluster)
 }
 
 template <class Types>
+void
+ScxEvsCortexA76<Types>::setResetAddr(int core, Addr addr, bool secure)
+{
+    panic("Not implemented for A76.");
+}
+
+template <class Types>
 ScxEvsCortexA76<Types>::ScxEvsCortexA76(
         const sc_core::sc_module_name &mod_name, const Params &p) :
     Base(mod_name), amba(Base::amba, p.name + ".amba", -1),

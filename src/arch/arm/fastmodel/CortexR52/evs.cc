@@ -63,6 +63,13 @@ ScxEvsCortexR52<Types>::setCluster(SimObject *cluster)
 }
 
 template <class Types>
+void
+ScxEvsCortexR52<Types>::setResetAddr(int core, Addr addr, bool secure)
+{
+    panic("Not implemented for R52.");
+}
+
+template <class Types>
 ScxEvsCortexR52<Types>::CorePins::CorePins(Evs *_evs, int _cpu) :
         name(csprintf("%s.cpu%s", _evs->name(), _cpu)),
     evs(_evs), cpu(_cpu),

@@ -156,6 +156,8 @@ class ScxEvsCortexR52 : public Types::Base, public Iris::BaseCpuEvs
     void setSysCounterFrq(uint64_t sys_counter_frq) override;
 
     void setCluster(SimObject *cluster) override;
+
+    void setResetAddr(int core, Addr addr, bool secure) override;
 };
 
 struct ScxEvsCortexR52x1Types

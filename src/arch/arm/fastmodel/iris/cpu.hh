@@ -51,6 +51,7 @@ class BaseCpuEvs
     virtual void setClkPeriod(Tick clk_period) = 0;
     virtual void setSysCounterFrq(uint64_t sys_counter_frq) = 0;
     virtual void setCluster(SimObject *cluster) = 0;
+    virtual void setResetAddr(int core, Addr addr, bool secure) = 0;
 };
 
 // This CPU class adds some mechanisms which help attach the gem5 and fast
@@ -85,6 +86,12 @@ class BaseCPU : public gem5::BaseCPU
 
     Counter totalInsts() const override;
     Counter totalOps() const override { return totalInsts(); }
+
+    virtual void
+    setResetAddr(Addr addr, bool secure = false)
+    {
+        panic("%s not implemented.", __FUNCTION__);
+    }
 
   protected:
     sc_core::sc_module *evs;
