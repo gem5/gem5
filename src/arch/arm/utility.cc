@@ -519,14 +519,12 @@ mcrMrc15TrapToHyp(const MiscRegIndex misc_reg, ThreadContext *tc, uint32_t iss,
     uint32_t opc2;
     bool trap_to_hyp = false;
 
-    const CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
     const HCR hcr = tc->readMiscReg(MISCREG_HCR);
-    const SCR scr = tc->readMiscReg(MISCREG_SCR);
     const HDCR hdcr = tc->readMiscReg(MISCREG_HDCR);
     const HSTR hstr = tc->readMiscReg(MISCREG_HSTR);
     const HCPTR hcptr = tc->readMiscReg(MISCREG_HCPTR);
 
-    if (!inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP)) {
+    if (EL2Enabled(tc) && (currEL(tc) < EL2)) {
         mcrMrcIssExtract(iss, is_read, crm, rt, crn, opc1, opc2);
         trap_to_hyp  = ((uint32_t) hstr) & (1 << crn);
         trap_to_hyp |= hdcr.tpm  && (crn == 9) && (crm >= 12);
@@ -674,8 +672,6 @@ mcrMrc14TrapToHyp(const MiscRegIndex misc_reg, ThreadContext *tc, uint32_t iss)
     uint32_t opc1;
     uint32_t opc2;
 
-    const CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-    const SCR scr = tc->readMiscReg(MISCREG_SCR);
     const HCR hcr = tc->readMiscReg(MISCREG_HCR);
     const HDCR hdcr = tc->readMiscReg(MISCREG_HDCR);
     const HSTR hstr = tc->readMiscReg(MISCREG_HSTR);
@@ -683,7 +679,7 @@ mcrMrc14TrapToHyp(const MiscRegIndex misc_reg, ThreadContext *tc, uint32_t iss)
 
     bool trap_to_hyp = false;
 
-    if (!inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP)) {
+    if (EL2Enabled(tc) && (currEL(tc) < EL2)) {
         mcrMrcIssExtract(iss, is_read, crm, rt, crn, opc1, opc2);
         inform("trap check M:%x N:%x 1:%x 2:%x hdcr %x, hcptr %x, hstr %x\n",
                 crm, crn, opc1, opc2, hdcr, hcptr, hstr);
@@ -743,12 +739,10 @@ mcrrMrrc15TrapToHyp(const MiscRegIndex misc_reg, ThreadContext *tc,
     bool is_read;
     bool trap_to_hyp = false;
 
-    const CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
     const HCR hcr = tc->readMiscReg(MISCREG_HCR);
-    const SCR scr = tc->readMiscReg(MISCREG_SCR);
     const HSTR hstr = tc->readMiscReg(MISCREG_HSTR);
 
-    if (!inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP)) {
+    if (EL2Enabled(tc) && (currEL(tc) < EL2)) {
         // This is technically the wrong function, but we can re-use it for
         // the moment because we only need one field, which overlaps with the
         // mcrmrc layout
