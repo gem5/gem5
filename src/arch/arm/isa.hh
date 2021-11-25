@@ -844,15 +844,11 @@ namespace ArmISA
                 }
             } else {
                 if (miscRegInfo[reg][MISCREG_BANKED]) {
-                    bool secure_reg = release->has(ArmExtension::SECURITY) &&
-                                      !highestELIs64 &&
-                                      inSecureState(miscRegs[MISCREG_SCR],
-                                                    miscRegs[MISCREG_CPSR]);
+                    bool secure_reg = !highestELIs64 && inSecureState();
                     flat_idx += secure_reg ? 2 : 1;
                 } else {
                     flat_idx = snsBankedIndex64((MiscRegIndex)reg,
-                        !inSecureState(miscRegs[MISCREG_SCR],
-                                       miscRegs[MISCREG_CPSR]));
+                        !inSecureState());
                 }
             }
             return flat_idx;
@@ -952,9 +948,8 @@ namespace ArmISA
             }
 
             // do additional S/NS flattenings if mapped to NS while in S
-            bool S = release->has(ArmExtension::SECURITY) && !highestELIs64 &&
-                     inSecureState(miscRegs[MISCREG_SCR],
-                                   miscRegs[MISCREG_CPSR]);
+            bool S = !highestELIs64 && inSecureState();
+
             int lower = lookUpMiscReg[flat_idx].lower;
             int upper = lookUpMiscReg[flat_idx].upper;
             // upper == 0, which is CPSR, is not MISCREG_BANKED_CHILD (no-op)
@@ -962,6 +957,9 @@ namespace ArmISA
             upper += S && miscRegInfo[upper][MISCREG_BANKED_CHILD];
             return std::make_pair(lower, upper);
         }
+
+        /** Return true if the PE is in Secure state */
+        bool inSecureState() const;
 
         unsigned getCurSveVecLenInBits() const;
 

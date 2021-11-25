@@ -217,23 +217,6 @@ Addr purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
 int computeAddrTop(ThreadContext *tc, bool selbit, bool isInstr,
                    TCR tcr, ExceptionLevel el);
 
-static inline bool
-inSecureState(SCR scr, CPSR cpsr)
-{
-    switch ((OperatingMode) (uint8_t) cpsr.mode) {
-      case MODE_MON:
-      case MODE_EL3T:
-      case MODE_EL3H:
-        return true;
-      case MODE_HYP:
-      case MODE_EL2T:
-      case MODE_EL2H:
-        return false;
-      default:
-        return !scr.ns;
-    }
-}
-
 bool isSecureBelowEL3(ThreadContext *tc);
 
 bool longDescFormatInUse(ThreadContext *tc);

@@ -2333,13 +2333,7 @@ Gicv3CPUInterface::groupEnabled(Gicv3::GroupId group) const
 bool
 Gicv3CPUInterface::inSecureState() const
 {
-    if (!gic->getSystem()->has(ArmExtension::SECURITY)) {
-        return false;
-    }
-
-    CPSR cpsr = isa->readMiscRegNoEffect(MISCREG_CPSR);
-    SCR scr = isa->readMiscRegNoEffect(MISCREG_SCR);
-    return gem5::inSecureState(scr, cpsr);
+    return isa->inSecureState();
 }
 
 int

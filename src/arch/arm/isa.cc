@@ -2531,6 +2531,30 @@ ISA::getGICv3CPUInterface()
     return *gicv3CpuInterface.get();
 }
 
+bool
+ISA::inSecureState() const
+{
+    if (!release->has(ArmExtension::SECURITY)) {
+        return false;
+    }
+
+    SCR scr = miscRegs[MISCREG_SCR];
+    CPSR cpsr = miscRegs[MISCREG_CPSR];
+
+    switch ((OperatingMode) (uint8_t) cpsr.mode) {
+      case MODE_MON:
+      case MODE_EL3T:
+      case MODE_EL3H:
+        return true;
+      case MODE_HYP:
+      case MODE_EL2T:
+      case MODE_EL2H:
+        return false;
+      default:
+        return !scr.ns;
+    }
+}
+
 unsigned
 ISA::getCurSveVecLenInBits() const
 {
