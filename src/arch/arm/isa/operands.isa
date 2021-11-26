@@ -425,8 +425,6 @@ def operands {{
     'ElrHyp': cntrlRegNC('MISCREG_ELR_HYP'),
     'Hcr': cntrlReg('MISCREG_HCR'),
     'Hcr64': cntrlReg('MISCREG_HCR_EL2'),
-    'Hdcr': cntrlReg('MISCREG_HDCR'),
-    'Hcptr': cntrlReg('MISCREG_HCPTR'),
     'CptrEl264': cntrlReg('MISCREG_CPTR_EL2'),
     'CptrEl364': cntrlReg('MISCREG_CPTR_EL3'),
     'Hstr': cntrlReg('MISCREG_HSTR'),
