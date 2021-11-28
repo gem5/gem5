@@ -43,7 +43,7 @@ import m5
 from m5.objects import Root
 
 from gem5.components.boards.riscv_board import RiscvBoard
-from gem5.components.memory.single_channel import SingleChannelDDR3_1600
+from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.cachehierarchies.classic.\
     private_l1_private_l2_cache_hierarchy import (

@@ -89,14 +89,12 @@ def test_memory(
 
 
 cache_classes = ["NoCache", "PrivateL1", "PrivateL1PrivateL2", "MESITwoLevel"]
-common_memory_classes = [
+memory_classes = [
     "SingleChannelDDR3_1600",
     "SingleChannelDDR3_2133",
     "SingleChannelDDR4_2400",
     "SingleChannelLPDDR3_1600",
     "SingleChannelHBM",
-]
-multi_memory_classes = [
     "DualChannelDDR3_1600",
     "DualChannelDDR3_2133",
     "DualChannelDDR4_2400",
@@ -135,19 +133,10 @@ def create_dual_core_tests(module, memory_classes):
                 )
 
 create_single_core_tests(
-    "gem5.components.memory.single_channel",
-    common_memory_classes,
+    "gem5.components.memory",
+    memory_classes,
 )
 create_dual_core_tests(
-    "gem5.components.memory.single_channel",
-    common_memory_classes,
-)
-
-create_single_core_tests(
-    "gem5.components.memory.multi_channel",
-    common_memory_classes + multi_memory_classes,
-)
-create_dual_core_tests(
-    "gem5.components.memory.multi_channel",
-    common_memory_classes + multi_memory_classes,
+    "gem5.components.memory",
+    memory_classes,
 )

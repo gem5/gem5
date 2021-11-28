@@ -161,7 +161,7 @@ assert cache_hierarchy != None
 # Setup the system memory.
 # Warning: This must be kept at 3GB for now. X86Motherboard does not support
 # anything else right now!
-python_module = "gem5.components.memory.multi_channel"
+python_module = "gem5.components.memory"
 memory_class = getattr(
     importlib.import_module(python_module), args.dram_class
 )

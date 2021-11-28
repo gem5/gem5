@@ -125,7 +125,7 @@ elif args.mem_system == "mi_example":
     )
 
 # Setup the system memory.
-python_module = "gem5.components.memory.multi_channel"
+python_module = "gem5.components.memory"
 memory_class = getattr(
     importlib.import_module(python_module), args.dram_class
 )

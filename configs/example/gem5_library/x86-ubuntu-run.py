@@ -47,8 +47,8 @@ scons build/X86/gem5.opt
 import m5
 from m5.objects import Root
 
-from gem5.prebuilt.demo.x86_demo_board import X86DemoBoard
 from gem5.resources.resource import Resource
+from gem5.prebuilt.demo.x86_demo_board import X86DemoBoard
 
 # Here we setup the board. The prebuilt X86DemoBoard allows for Full-System X86
 # simulation.
