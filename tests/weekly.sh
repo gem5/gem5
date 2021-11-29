@@ -42,7 +42,7 @@ fi
 # Run the gem5 very-long tests.
 docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}"/tests --rm gcr.io/gem5-test/ubuntu-20.04_all-dependencies \
-        ./main.py run --length very-long -j${threads} -t${threads}
+        ./main.py run --length very-long -j${threads} -t${threads} -vv
 
 mkdir -p tests/testing-results
 

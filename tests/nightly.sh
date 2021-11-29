@@ -78,7 +78,7 @@ unit_test debug
 # Run the gem5 long tests.
 docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}"/tests --rm gcr.io/gem5-test/ubuntu-20.04_all-dependencies \
-        ./main.py run --length long -j${threads} -t${threads}
+        ./main.py run --length long -j${threads} -t${threads} -vv
 
 # Run the GPU tests.
 # For the GPU tests we compile and run GCN3_X86 inside a gcn-gpu container.
