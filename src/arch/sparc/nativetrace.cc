@@ -79,7 +79,7 @@ Trace::SparcNativeTrace::check(NativeTraceRecord *record)
     // NPC
     read(&realRegVal, sizeof(realRegVal));
     realRegVal = betoh(realRegVal);
-    pc.nnpc();
+    regVal = pc.nnpc();
     checkReg("npc", regVal, realRegVal);
 
     // CCR
