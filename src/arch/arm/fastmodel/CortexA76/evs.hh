@@ -69,10 +69,13 @@ class ScxEvsCortexA76 : public Types::Base, public Iris::BaseCpuEvs
     ClockRateControlInitiatorSocket clockRateControl;
     ClockRateControlInitiatorSocket periphClockRateControl;
 
-    typedef sc_gem5::TlmTargetBaseWrapper<
+    using TlmGicTarget = sc_gem5::TlmTargetBaseWrapper<
         64, svp_gicv3_comms::gicv3_comms_fw_if,
         svp_gicv3_comms::gicv3_comms_bw_if, 1,
-        sc_core::SC_ONE_OR_MORE_BOUND> TlmGicTarget;
+        sc_core::SC_ONE_OR_MORE_BOUND>;
+
+    template <typename T>
+    using SignalInitiator = amba_pv::signal_master_port<T>;
 
     AmbaInitiator amba;
     std::vector<std::unique_ptr<TlmGicTarget>> redist;
@@ -86,6 +89,7 @@ class ScxEvsCortexA76 : public Types::Base, public Iris::BaseCpuEvs
     std::vector<std::unique_ptr<SignalReceiver>> pmuirq;
     std::vector<std::unique_ptr<SignalReceiver>> vcpumntirq;
     std::vector<std::unique_ptr<SignalReceiver>> cntpnsirq;
+    std::vector<std::unique_ptr<SignalInitiator<uint64_t>>> rvbaraddr;
 
     CortexA76Cluster *gem5CpuCluster;
 

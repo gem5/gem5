@@ -57,6 +57,9 @@ component CortexA76x3
         core.pmuirq => self.pmuirq;
         core.vcpumntirq => self.vcpumntirq;
 
+        // Core reset addrs.
+        self.rvbaraddr => core.rvbaraddr;
+
         // Clocks.
         clock1Hz.clk_out => clockDiv.clk_in;
         clock1Hz.clk_out => clockDivPeriph.clk_in;
@@ -96,4 +99,5 @@ component CortexA76x3
     master port<Signal> pmuirq[3];
     master port<Signal> vcpumntirq[3];
     master port<Signal> cntpnsirq[3];
+    slave port<Value_64> rvbaraddr[3];
 }

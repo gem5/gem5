@@ -95,6 +95,12 @@ CortexA76::setCluster(CortexA76Cluster *_cluster, int _num)
     set_evs_param("vfp-enable_at_reset", params().vfp_enable_at_reset);
 }
 
+void
+CortexA76::setResetAddr(Addr addr, bool secure)
+{
+    evs_base_cpu->setResetAddr(num, addr, secure);
+}
+
 Port &
 CortexA76::getPort(const std::string &if_name, PortID idx)
 {

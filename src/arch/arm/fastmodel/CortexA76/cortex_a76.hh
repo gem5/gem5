@@ -74,6 +74,8 @@ class CortexA76 : public Iris::CPU<CortexA76TC>
 
     void setCluster(CortexA76Cluster *_cluster, int _num);
 
+    void setResetAddr(Addr addr, bool secure = false) override;
+
     Port &getPort(const std::string &if_name,
             PortID idx=InvalidPortID) override;
 };
