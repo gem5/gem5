@@ -62,6 +62,9 @@ component CortexR52x4
         self.ppi_3 => core.extppi_in_3;
 
         self.spi => core.spi_in;
+
+        // Core reset addrs.
+        self.cfgvectable => core.cfgvectable;
     }
 
     properties
@@ -77,6 +80,7 @@ component CortexR52x4
     slave port<Signal> poweron_reset[4];
     slave port<Signal> halt[4];
     slave port<Signal> top_reset;
+    slave port<Value_64> cfgvectable[4];
 
     slave port<ExportedClockRateControl> clock_rate_s
     {

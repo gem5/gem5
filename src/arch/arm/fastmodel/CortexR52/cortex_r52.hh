@@ -72,6 +72,8 @@ class CortexR52 : public Iris::CPU<CortexR52TC>
 
     void setCluster(CortexR52Cluster *_cluster, int _num);
 
+    void setResetAddr(Addr addr, bool secure = false) override;
+
     Port &getPort(const std::string &if_name,
             PortID idx=InvalidPortID) override;
 };

@@ -79,6 +79,8 @@ class ScxEvsCortexR52 : public Types::Base, public Iris::BaseCpuEvs
     struct CorePins
     {
         using CoreInt = IntSinkPin<CorePins>;
+        template <typename T>
+        using SignalInitiator = amba_pv::signal_master_port<T>;
 
         std::string name;
         Evs *evs;
@@ -107,6 +109,8 @@ class ScxEvsCortexR52 : public Types::Base, public Iris::BaseCpuEvs
         SignalSender core_reset;
         SignalSender poweron_reset;
         SignalSender halt;
+
+        SignalInitiator<uint64_t> cfgvectable;
     };
 
     std::vector<std::unique_ptr<CorePins>> corePins;

@@ -66,7 +66,7 @@ template <class Types>
 void
 ScxEvsCortexR52<Types>::setResetAddr(int core, Addr addr, bool secure)
 {
-    panic("Not implemented for R52.");
+    this->corePins[core]->cfgvectable.set_state(0, addr);
 }
 
 template <class Types>
@@ -78,7 +78,8 @@ ScxEvsCortexR52<Types>::CorePins::CorePins(Evs *_evs, int _cpu) :
     amba(evs->amba[cpu], name + ".amba", -1),
     core_reset(name + ".core_reset", 0),
     poweron_reset(name + ".poweron_reset", 0),
-    halt(name + ".halt", 0)
+    halt(name + ".halt", 0),
+    cfgvectable((name + "cfgvectable").c_str())
 {
     for (int i = 0; i < Evs::PpiCount; i++) {
         ppis.emplace_back(
@@ -87,6 +88,7 @@ ScxEvsCortexR52<Types>::CorePins::CorePins(Evs *_evs, int _cpu) :
     core_reset.signal_out.bind(evs->core_reset[cpu]);
     poweron_reset.signal_out.bind(evs->poweron_reset[cpu]);
     halt.signal_out.bind(evs->halt[cpu]);
+    cfgvectable.bind(evs->cfgvectable[cpu]);
 }
 
 
