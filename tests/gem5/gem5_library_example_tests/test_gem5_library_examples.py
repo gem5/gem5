@@ -68,7 +68,6 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
         ),
         config_args=[],
         valid_isas=(constants.x86_tag,),
-        protocol="MESI_Two_Level",
         valid_hosts=constants.supported_hosts,
         length=constants.long_tag,
     )

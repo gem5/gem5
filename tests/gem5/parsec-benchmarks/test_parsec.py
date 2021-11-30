@@ -50,12 +50,6 @@ def test_parsec(
         # Don't run the tests if KVM is unavailable.
         return
 
-
-    if mem_system == "mesi_two_level":
-        protocol_to_use="MESI_Two_Level"
-    else:
-        protocol_to_use=None
-
     gem5_verify_config(
         name="{}-boot-cpu_{}-detailed-cpu_{}-cores_{}_{}_{}_parsec-test"\
             .format(
@@ -93,7 +87,6 @@ def test_parsec(
         ],
         valid_isas=(constants.x86_tag,),
         valid_hosts=constants.supported_hosts,
-        protocol=protocol_to_use,
         length=length,
     )
 

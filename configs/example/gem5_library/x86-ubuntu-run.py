@@ -35,9 +35,8 @@ Usage
 -----
 
 ```
-scons build/X86_MESI_Two_Level/gem5.opt
-./build/X86_MESI_Two_Level/gem5.opt \
-    configs/example/gem5_library/x86-ubuntu-run.py
+scons build/X86/gem5.opt
+./build/X86/gem5.opt configs/example/gem5_library/x86-ubuntu-run.py
 ```
 """
 

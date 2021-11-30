@@ -50,7 +50,7 @@ builds=("ARM"
         "RISCV"
         "SPARC"
         "X86"
-        "X86_MESI_Two_Level"
+        "X86_MI_example"
         "X86_MOESI_AMD_Base")
 
 # The optimizations to use for each build target.
