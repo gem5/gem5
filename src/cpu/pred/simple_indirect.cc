@@ -104,7 +104,9 @@ SimpleIndirectPredictor::lookup(Addr br_addr, PCStateBase& target,
     DPRINTF(Indirect, "Looking up %x (set:%d)\n", br_addr, set_index);
     const auto &iset = targetCache[set_index];
     for (auto way = iset.begin(); way != iset.end(); ++way) {
-        if (way->tag == tag) {
+        // tag may be 0 and match the default in way->tag, so we also have to
+        // check that way->target has been initialized.
+        if (way->tag == tag && way->target) {
             DPRINTF(Indirect, "Hit %x (target:%s)\n", br_addr, *way->target);
             set(target, *way->target);
             return true;
