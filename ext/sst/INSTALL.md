@@ -11,14 +11,14 @@ installed.
 ### Downloading the SST-Core Source Code
 
 ```sh
-wget https://github.com/sstsimulator/sst-core/releases/download/v11.0.0_Final/sstcore-11.0.0.tar.gz
-tar xf sstcore-11.0.0.tar.gz
+wget https://github.com/sstsimulator/sst-core/releases/download/v11.1.0_Final/sstcore-11.1.0.tar.gz
+tar xf sstcore-11.1.0.tar.gz
 ```
 
 ### Installing SST-Core
 
 ```sh
-cd sstcore-11.0.0
+cd sstcore-11.1.0
 ./configure --prefix=$SST_CORE_HOME --with-python=/usr/bin/python3-config \
             --disable-mpi # optional, used when MPI is not available.
 make all -j$(nproc)
@@ -36,14 +36,14 @@ export PATH=$SST_CORE_HOME/bin:$PATH
 ### Downloading the SST-Elements Source Code
 
 ```sh
-wget https://github.com/sstsimulator/sst-elements/releases/download/v11.0.0_Final/sstelements-11.0.0.tar.gz
-tar xf sstelements-11.0.0.tar.gz
+wget https://github.com/sstsimulator/sst-elements/releases/download/v11.1.0_Final/sstelements-11.1.0.tar.gz
+tar xf sstelements-11.1.0.tar.gz
 ```
 
 ### Installing SST-Elements
 
-```shs
-cd sst-elements-library-11.0.0
+```sh
+cd sst-elements-library-11.1.0
 ./configure --prefix=$SST_CORE_HOME --with-python=/usr/bin/python3-config \
             --with-sst-core=$SST_CORE_HOME
 make all -j$(nproc)
@@ -75,20 +75,17 @@ make
 
 ### Running an example simulation
 
-Downloading the built bootloader containing a Linux Kernel and a workload,
-
-```sh
-wget http://dist.gem5.org/dist/develop/misc/riscv/bbl-busybox-boot-exit
-```
-
 Running the simulation
 
 ```sh
 sst --add-lib-path=./ sst/example.py
 ```
 
-`bbl-busybox-boot-exit` contains an m5 binary, and `m5 exit` will be called
-upon the booting process reaching the early userspace.
+The example SST system configuration will instantiate the gem5 system
+as specified in the gem5 system configuration located at
+`gem5/configs/example/sst/riscv_fs.py`. This configuration will download
+the `bbl-busybox-boot-exit` resource, which contains an m5 binary, and
+`m5 exit` will be called upon the booting process reaching the early userspace.
 More information about building a bootloader containing a Linux Kernel and a
 customized workload is available at
 [https://gem5.googlesource.com/public/gem5-resources/+/refs/heads/develop/src/riscv-boot-exit-nodisk/].
