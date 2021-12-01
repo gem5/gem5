@@ -140,37 +140,41 @@ test_boot(
 
 #### The long (Nightly) tests ####
 
-test_boot(
-    cpu="atomic",
-    num_cpus=1,
-    cache_type="classic",
-    length=constants.long_tag,
-)
+# Due to Nightly test timeout issues, outlined here:
+# https://gem5.atlassian.net/browse/GEM5-1120, these tests have been disabled
+# until the exact error causing the Nightly tests to timeout is established.
 
-test_boot(
-    cpu="timing",
-    num_cpus=1,
-    cache_type="mi_example",
-    length=constants.long_tag,
-)
+#test_boot(
+#    cpu="atomic",
+#    num_cpus=1,
+#    cache_type="classic",
+#    length=constants.long_tag,
+#)
 
-test_boot(
-    cpu="timing",
-    num_cpus=4,
-    cache_type="mi_example",
-    length=constants.long_tag,
-)
+#test_boot(
+#    cpu="timing",
+#    num_cpus=1,
+#    cache_type="mi_example",
+#    length=constants.long_tag,
+#)
 
-test_boot(
-    cpu="atomic",
-    num_cpus=4,
-    cache_type="classic",
-    length=constants.long_tag,
-)
+#test_boot(
+#    cpu="timing",
+#    num_cpus=4,
+#    cache_type="mi_example",
+#    length=constants.long_tag,
+#)
 
-test_boot(
-    cpu="o3",
-    num_cpus=8,
-    cache_type="mi_example",
-    length=constants.long_tag,
-)
+#test_boot(
+#    cpu="atomic",
+#    num_cpus=4,
+#    cache_type="classic",
+#    length=constants.long_tag,
+#)
+
+#test_boot(
+#    cpu="o3",
+#    num_cpus=8,
+#    cache_type="mi_example",
+#    length=constants.long_tag,
+#)

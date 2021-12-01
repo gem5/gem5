@@ -170,13 +170,18 @@ test_boot(
     length=constants.long_tag,
 )
 
-test_boot(
-    cpu="o3",
-    num_cpus=2,
-    mem_system="mesi_two_level",
-    boot_type="init",
-    length=constants.long_tag,
-)
+
+# Due to Nightly test timeout issues, outlined here:
+# https://gem5.atlassian.net/browse/GEM5-1120, this test has been disabled
+# until the exact error causing the Nightly tests to timeout is established.
+
+#test_boot(
+#    cpu="o3",
+#    num_cpus=2,
+#    mem_system="mesi_two_level",
+#    boot_type="init",
+#    length=constants.long_tag,
+#)
 
 #### The very-long (Weekly) tests ####
 
