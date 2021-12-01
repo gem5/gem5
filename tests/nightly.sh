@@ -32,11 +32,18 @@ set -x
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 gem5_root="${dir}/.."
 
-# We assume the lone argument is the number of threads. If no argument is
-# given we default to one.
-threads=1
+# The first argument is the number of threads to be used for compilation. If no
+# argument is given we default to one.
+compile_threads=1
 if [[ $# -gt 0 ]]; then
-    threads=$1
+    compile_threads=$1
+fi
+
+# The second argument is the number of threads used to run gem5 (one gem5
+# instance per thread). If no argument is given we default to one.
+run_threads=1
+if [[ $# -gt 1 ]]; then
+    run_threads=$2
 fi
 
 build_target () {
@@ -47,8 +54,8 @@ build_target () {
     # compilation: https://gem5.atlassian.net/browse/GEM5-753
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --rm gcr.io/gem5-test/ubuntu-20.04_all-dependencies \
-            bash -c "scons build/${isa}/gem5.opt -j${threads} \
-                || (rm -rf build && scons build/${isa}/gem5.opt -j${threads})"
+            bash -c "scons build/${isa}/gem5.opt -j${compile_threads} \
+                || (rm -rf build && scons build/${isa}/gem5.opt -j${compile_threads})"
 }
 
 unit_test () {
@@ -56,7 +63,7 @@ unit_test () {
 
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --rm gcr.io/gem5-test/ubuntu-20.04_all-dependencies \
-            scons build/NULL/unittests.${build} -j${threads}
+            scons build/NULL/unittests.${build} -j${compile_threads}
 }
 
 # Ensure we have the latest docker images.
@@ -78,15 +85,15 @@ unit_test debug
 # Run the gem5 long tests.
 docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}"/tests --rm gcr.io/gem5-test/ubuntu-20.04_all-dependencies \
-        ./main.py run --length long -j${threads} -t${threads} -vv
+        ./main.py run --length long -j${compile_threads} -t${run_threads} -vv
 
 # Run the GPU tests.
 # For the GPU tests we compile and run GCN3_X86 inside a gcn-gpu container.
 docker pull gcr.io/gem5-test/gcn-gpu:latest
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest bash -c \
-    "scons build/GCN3_X86/gem5.opt -j${threads} \
-        || (rm -rf build && scons build/GCN3_X86/gem5.opt -j${threads})"
+    "scons build/GCN3_X86/gem5.opt -j${compile_threads} \
+        || (rm -rf build && scons build/GCN3_X86/gem5.opt -j${compile_threads})"
 
 # get square
 wget -qN http://dist.gem5.org/dist/develop/test-progs/square/square
