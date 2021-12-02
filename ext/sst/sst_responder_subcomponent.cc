@@ -40,6 +40,7 @@ SSTResponderSubComponent::SSTResponderSubComponent(SST::ComponentId_t id,
 {
     sstResponder = new SSTResponder(this);
     gem5SimObjectName = params.find<std::string>("response_receiver_name", "");
+    memSize = params.find<std::string>("mem_size", "8GiB");
     if (gem5SimObjectName == "")
         assert(false && "The response_receiver_name must be specified");
 }
@@ -58,7 +59,7 @@ SSTResponderSubComponent::setTimeConverter(SST::TimeConverter* tc)
     SST::Params interface_params;
     // This is how you tell the interface the name of the port it should use
     interface_params.insert("port", "port");
-    interface_params.insert("mem_size", "8GiB");
+    interface_params.insert("mem_size", memSize.c_str());
     // Loads a “memHierarchy.memInterface” into index 0 of the “memory” slot
     // SHARE_PORTS means the interface can use our port as if it were its own
     // INSERT_STATS means the interface will inherit our statistic

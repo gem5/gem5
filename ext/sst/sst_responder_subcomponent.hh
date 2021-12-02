@@ -67,6 +67,7 @@ class SSTResponderSubComponent: public SST::SubComponent
     std::vector<SST::Interfaces::SimpleMem::Request*> initRequests;
 
     std::string gem5SimObjectName;
+    std::string memSize;
 
   public:
     SSTResponderSubComponent(SST::ComponentId_t id, SST::Params& params);
