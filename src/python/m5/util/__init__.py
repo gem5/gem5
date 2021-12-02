@@ -41,6 +41,8 @@ import os
 import re
 import sys
 
+from functools import wraps
+
 from . import convert
 
 from .attrdict import attrdict, multiattrdict, optiondict
@@ -70,6 +72,36 @@ def warn(fmt, *args):
 # condition that they may be interested in.
 def inform(fmt, *args):
     print('info:', fmt % args, file=sys.stdout)
+
+def callOnce(func):
+    """Decorator that enables to run a given function only once. Subsequent
+    calls are discarded."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not wrapper.has_run:
+            wrapper.has_run = True
+            return func(*args, **kwargs)
+    wrapper.has_run = False
+    return wrapper
+
+def deprecated(replacement=None, logger=warn):
+    """This decorator warns the user about a deprecated function."""
+    def decorator(func):
+        @callOnce
+        def notifyDeprecation():
+            try:
+                func_name = lambda f: f.__module__ + '.' +  f.__qualname__
+                message = f'Function {func_name(func)} is deprecated.'
+                if replacement:
+                    message += f' Prefer {func_name(replacement)} instead.'
+            except AttributeError:
+                message = f'Function {func} is deprecated.'
+                if replacement:
+                    message += f' Prefer {replacement} instead.'
+            logger(message)
+        notifyDeprecation()
+        return func
+    return decorator
 
 class Singleton(type):
     def __call__(cls, *args, **kwargs):
