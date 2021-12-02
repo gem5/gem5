@@ -285,8 +285,10 @@ gem5Component::simulateGem5(uint64_t current_cycle)
 
     // Here, if the next event in gem5's queue is not executed within the next
     // cycle, there's no need to enter the gem5's sim loop.
-    if (next_end_tick < gem5::mainEventQueue[0]->getHead()->when())
+    if (gem5::mainEventQueue[0]->empty() ||
+        next_end_tick < gem5::mainEventQueue[0]->getHead()->when()) {
         return gem5::simulate_limit_event;
+    }
     gem5::simulate_limit_event->reschedule(next_end_tick);
     gem5::Event *local_event = doSimLoop(gem5::mainEventQueue[0]);
     gem5::BaseGlobalEvent *global_event = local_event->globalEvent();
