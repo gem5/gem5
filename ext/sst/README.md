@@ -57,7 +57,7 @@ the request from the SubComponent and send it to the SST memory hierarchy.
 
 See `INSTALL.md`.
 
-## Running an example simulation
+## Running an example simulation (RISCV)
 
 Downloading the built bootloader containing a Linux Kernel and a workload,
 
@@ -76,6 +76,32 @@ upon the booting process reaching the early userspace.
 More information about building a bootloader containing a Linux Kernel and a
 customized workload is available at
 [https://gem5.googlesource.com/public/gem5-resources/+/refs/heads/develop/src/riscv-boot-exit-nodisk/].
+
+## Running an example simulation (Arm)
+
+Download the prebuilt bootloader and Linux Kernel with embedded initramfs and
+extract them under the $M5_PATH directory (make sure M5_PATH points to a valid
+directory):
+
+```sh
+wget http://dist.gem5.org/dist/develop/arm/aarch-sst-20211207.tar.bz2
+tar -xf aarch-sst-20211207.tar.bz2
+
+# copying bootloaders
+cp binaries/boot* $M5_PATH/binaries/
+
+# copying Linux Kernel
+cp binaries/vmlinux_exit.arm64 $M5_PATH/binaries/
+```
+
+`vmlinux_exit.arm64` contains an m5 binary, and `m5 exit` will be called upon
+the booting process reaching the early userspace.
+
+Run the simulation:
+
+```sh
+sst sst/arm_example.py
+```
 
 ## Notes
 
