@@ -75,17 +75,4 @@ make
 
 ### Running an example simulation
 
-Running the simulation
-
-```sh
-sst --add-lib-path=./ sst/example.py
-```
-
-The example SST system configuration will instantiate the gem5 system
-as specified in the gem5 system configuration located at
-`gem5/configs/example/sst/riscv_fs.py`. This configuration will download
-the `bbl-busybox-boot-exit` resource, which contains an m5 binary, and
-`m5 exit` will be called upon the booting process reaching the early userspace.
-More information about building a bootloader containing a Linux Kernel and a
-customized workload is available at
-[https://gem5.googlesource.com/public/gem5-resources/+/refs/heads/develop/src/riscv-boot-exit-nodisk/].
+See `README.md`
