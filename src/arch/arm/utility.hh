@@ -108,13 +108,11 @@ bool isSecure(ThreadContext *tc);
 
 bool inAArch64(ThreadContext *tc);
 
-static inline ExceptionLevel
-currEL(const ThreadContext *tc)
-{
-    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
-
-    return opModeToEL((OperatingMode)(uint8_t)cpsr.mode);
-}
+/**
+ * Returns the current Exception Level (EL) of the
+ * provided ThreadContext
+ */
+ExceptionLevel currEL(const ThreadContext *tc);
 
 inline ExceptionLevel
 currEL(CPSR cpsr)

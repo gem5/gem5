@@ -859,10 +859,10 @@ namespace ArmISA
          * HCR_EL2.E2H is enabled and executing at EL2
          */
         int
-        redirectRegVHE(ThreadContext * tc, int misc_reg)
+        redirectRegVHE(int misc_reg)
         {
             const HCR hcr = readMiscRegNoEffect(MISCREG_HCR_EL2);
-            if (hcr.e2h == 0x0 || currEL(tc) != EL2)
+            if (hcr.e2h == 0x0 || currEL() != EL2)
                 return misc_reg;
             SCR scr = readMiscRegNoEffect(MISCREG_SCR_EL3);
             bool sec_el2 = scr.eel2 && release->has(ArmExtension::FEAT_SEL2);
@@ -960,6 +960,11 @@ namespace ArmISA
 
         /** Return true if the PE is in Secure state */
         bool inSecureState() const;
+
+        /**
+         * Returns the current Exception Level (EL) of the ISA object
+         */
+        ExceptionLevel currEL() const;
 
         unsigned getCurSveVecLenInBits() const;
 

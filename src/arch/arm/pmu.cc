@@ -491,8 +491,7 @@ PMU::CounterState::isFiltered() const
     assert(pmu.isa);
 
     const PMEVTYPER_t filter(this->filter);
-    const CPSR cpsr(pmu.isa->readMiscRegNoEffect(MISCREG_CPSR));
-    const ExceptionLevel el(currEL(cpsr));
+    const ExceptionLevel el(pmu.isa->currEL());
     const bool secure(pmu.isa->inSecureState());
 
     switch (el) {

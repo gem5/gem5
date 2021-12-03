@@ -309,7 +309,7 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
 
     void activateIRQ(uint32_t intid, Gicv3::GroupId group);
     void generateSGI(RegVal val, Gicv3::GroupId group);
-    int currEL() const;
+    ArmISA::ExceptionLevel currEL() const;
     void deactivateIRQ(uint32_t intid, Gicv3::GroupId group);
     void dropPriority(Gicv3::GroupId group);
     uint64_t eoiMaintenanceInterruptStatus() const;

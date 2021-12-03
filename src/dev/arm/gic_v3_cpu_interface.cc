@@ -2336,29 +2336,10 @@ Gicv3CPUInterface::inSecureState() const
     return isa->inSecureState();
 }
 
-int
+ExceptionLevel
 Gicv3CPUInterface::currEL() const
 {
-    CPSR cpsr = isa->readMiscRegNoEffect(MISCREG_CPSR);
-    bool is_64 = opModeIs64((OperatingMode)(uint8_t) cpsr.mode);
-
-    if (is_64) {
-        return (ExceptionLevel)(uint8_t) cpsr.el;
-    } else {
-        switch (cpsr.mode) {
-          case MODE_USER:
-            return 0;
-
-          case MODE_HYP:
-            return 2;
-
-          case MODE_MON:
-            return 3;
-
-          default:
-            return 1;
-        }
-    }
+    return isa->currEL();
 }
 
 bool

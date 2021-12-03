@@ -124,6 +124,13 @@ inAArch64(ThreadContext *tc)
     return opModeIs64((OperatingMode) (uint8_t) cpsr.mode);
 }
 
+ExceptionLevel
+currEL(const ThreadContext *tc)
+{
+    return static_cast<ArmISA::ISA *>(
+        const_cast<ThreadContext *>(tc)->getIsaPtr())->currEL();
+}
+
 bool
 longDescFormatInUse(ThreadContext *tc)
 {

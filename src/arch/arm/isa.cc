@@ -629,7 +629,7 @@ ISA::readMiscReg(int misc_reg)
                   miscRegName[misc_reg]);
     }
 #endif
-    misc_reg = redirectRegVHE(tc, misc_reg);
+    misc_reg = redirectRegVHE(misc_reg);
 
     switch (unflattenMiscReg(misc_reg)) {
       case MISCREG_HCR:
@@ -1006,7 +1006,7 @@ ISA::setMiscReg(int misc_reg, RegVal val)
                     miscRegName[misc_reg], val);
         }
 #endif
-        misc_reg = redirectRegVHE(tc, misc_reg);
+        misc_reg = redirectRegVHE(misc_reg);
 
         switch (unflattenMiscReg(misc_reg)) {
           case MISCREG_CPACR:
@@ -2553,6 +2553,14 @@ ISA::inSecureState() const
       default:
         return !scr.ns;
     }
+}
+
+ExceptionLevel
+ISA::currEL() const
+{
+    CPSR cpsr = readMiscRegNoEffect(MISCREG_CPSR);
+
+    return opModeToEL((OperatingMode)(uint8_t)cpsr.mode);
 }
 
 unsigned
