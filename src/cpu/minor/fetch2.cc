@@ -223,7 +223,7 @@ Fetch2::predictBranch(MinorDynInstPtr inst, BranchData &branch)
         BranchData new_branch = BranchData(BranchData::BranchPrediction,
             inst->id.threadId,
             inst->id.streamSeqNum, thread.predictionSeqNum + 1,
-            inst->predictedTarget.get(), inst);
+            *inst->predictedTarget, inst);
 
         /* Mark with a new prediction number by the stream number of the
          *  instruction causing the prediction */

@@ -130,7 +130,7 @@ class BranchData /* : public ReportIF, public BubbleIF */
 
     BranchData(Reason reason_, ThreadID thread_id,
             InstSeqNum new_stream_seq_num, InstSeqNum new_prediction_seq_num,
-            const PCStateBase *_target, MinorDynInstPtr inst_) :
+            const PCStateBase &_target, MinorDynInstPtr inst_) :
         reason(reason_), threadId(thread_id),
         newStreamSeqNum(new_stream_seq_num),
         newPredictionSeqNum(new_prediction_seq_num),

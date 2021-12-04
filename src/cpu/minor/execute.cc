@@ -296,14 +296,14 @@ Execute::tryToBranch(MinorDynInstPtr inst, Fault fault, BranchData &branch)
         reason = BranchData::NoBranch;
     }
 
-    updateBranchData(inst->id.threadId, reason, inst, target.get(), branch);
+    updateBranchData(inst->id.threadId, reason, inst, *target, branch);
 }
 
 void
 Execute::updateBranchData(
     ThreadID tid,
     BranchData::Reason reason,
-    MinorDynInstPtr inst, const PCStateBase *target,
+    MinorDynInstPtr inst, const PCStateBase &target,
     BranchData &branch)
 {
     if (reason != BranchData::NoBranch) {
@@ -443,7 +443,7 @@ Execute::takeInterrupt(ThreadID thread_id, BranchData &branch)
         /* Assume that an interrupt *must* cause a branch.  Assert this? */
 
         updateBranchData(thread_id, BranchData::Interrupt,
-            MinorDynInst::bubble(), &cpu.getContext(thread_id)->pcState(),
+            MinorDynInst::bubble(), cpu.getContext(thread_id)->pcState(),
             branch);
     }
 
@@ -1032,7 +1032,7 @@ Execute::commitInst(MinorDynInstPtr inst, bool early_memory_issue,
             cpu.stats.numFetchSuspends++;
 
             updateBranchData(thread_id, BranchData::SuspendThread, inst,
-                &resume_pc, branch);
+                resume_pc, branch);
         }
     }
 
@@ -1140,7 +1140,7 @@ Execute::commit(ThreadID thread_id, bool only_commit_microops, bool discard,
 
             /* Branch as there was a change in PC */
             updateBranchData(thread_id, BranchData::UnpredictedBranch,
-                MinorDynInst::bubble(), &thread->pcState(), branch);
+                MinorDynInst::bubble(), thread->pcState(), branch);
         } else if (mem_response &&
             num_mem_refs_committed < memoryCommitLimit)
         {
@@ -1495,7 +1495,8 @@ Execute::evaluate()
              *  the bag */
             if (commit_info.drainState == DrainHaltFetch) {
                 updateBranchData(commit_tid, BranchData::HaltFetch,
-                        MinorDynInst::bubble(), nullptr, branch);
+                        MinorDynInst::bubble(),
+                        cpu.getContext(commit_tid)->pcState(), branch);
 
                 cpu.wakeupOnEvent(Pipeline::ExecuteStageId);
                 setDrainState(commit_tid, DrainAllInsts);
