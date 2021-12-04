@@ -77,18 +77,13 @@ operator <<(std::ostream &os, const InstId &id)
     return os;
 }
 
-MinorDynInstPtr MinorDynInst::bubbleInst = NULL;
-
-void
-MinorDynInst::init()
-{
-    if (!bubbleInst) {
-        bubbleInst = new MinorDynInst(nullStaticInstPtr);
-        assert(bubbleInst->isBubble());
-        /* Make bubbleInst immortal */
-        bubbleInst->incref();
-    }
-}
+MinorDynInstPtr MinorDynInst::bubbleInst = []() {
+    auto *inst = new MinorDynInst(nullStaticInstPtr);
+    assert(inst->isBubble());
+    // Make bubbleInst immortal.
+    inst->incref();
+    return inst;
+}();
 
 bool
 MinorDynInst::isLastOpInInst() const

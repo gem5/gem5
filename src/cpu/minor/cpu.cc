@@ -76,8 +76,6 @@ MinorCPU::MinorCPU(const MinorCPUParams &params) :
         fatal("The Minor model doesn't support checking (yet)\n");
     }
 
-    minor::MinorDynInst::init();
-
     pipeline = new minor::Pipeline(*this, params);
     activityRecorder = pipeline->getActivityRecorder();
 

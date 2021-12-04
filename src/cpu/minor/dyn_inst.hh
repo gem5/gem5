@@ -267,9 +267,6 @@ class MinorDynInst : public RefCounted
      *  a whole instruction or the last microop from a macroop */
     bool isLastOpInInst() const;
 
-    /** Initialise the class */
-    static void init();
-
     /** Print (possibly verbose) instruction information for
      *  MinorTrace using the given Named object's name */
     void minorTraceInst(const Named &named_object,
