@@ -367,7 +367,10 @@ atSyscallPath(ThreadContext *tc, int dirfd, std::string &path)
         if (!ffdp)
             return -EBADF;
 
-        path = ffdp->getFileName() + "/" + path;
+        if (path.empty())
+            path = ffdp->getFileName();
+        else
+            path = ffdp->getFileName() + "/" + path;
     }
 
     return 0;
