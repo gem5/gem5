@@ -32,9 +32,6 @@ Import('*')
 
 main.Append(ALL_PROTOCOLS=[
     'GPU_VIPER',
-    'GPU_VIPER_Baseline',
-    'GPU_VIPER_Region',
-    'GPU_RfO',
     'MOESI_AMD_Base',
     'MESI_Two_Level',
     'MESI_Three_Level',
