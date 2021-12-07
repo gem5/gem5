@@ -36,7 +36,7 @@ from m5.SimObject import SimObject
 
 from m5.objects.Bridge import Bridge
 from m5.objects.ClockedObject import ClockedObject
-from m5.objects.Device import DmaDevice
+from m5.objects.Device import DmaVirtDevice
 from m5.objects.LdsState import LdsState
 from m5.objects.Process import EmulatedDriver
 
@@ -267,7 +267,7 @@ class GPUDispatcher(SimObject):
     cxx_class = 'gem5::GPUDispatcher'
     cxx_header = 'gpu-compute/dispatcher.hh'
 
-class GPUCommandProcessor(DmaDevice):
+class GPUCommandProcessor(DmaVirtDevice):
     type = 'GPUCommandProcessor'
     cxx_class = 'gem5::GPUCommandProcessor'
     cxx_header = 'gpu-compute/gpu_command_processor.hh'

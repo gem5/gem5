@@ -32,9 +32,9 @@
 from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
-from m5.objects.Device import DmaDevice
+from m5.objects.Device import DmaVirtDevice
 
-class HSAPacketProcessor(DmaDevice):
+class HSAPacketProcessor(DmaVirtDevice):
     type = 'HSAPacketProcessor'
     cxx_header = 'dev/hsa/hsa_packet_processor.hh'
     cxx_class = 'gem5::HSAPacketProcessor'
