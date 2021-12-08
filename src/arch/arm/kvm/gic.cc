@@ -47,56 +47,48 @@
 namespace gem5
 {
 
-KvmKernelGicV2::KvmKernelGicV2(KvmVM &_vm, Addr cpu_addr, Addr dist_addr,
-                               unsigned it_lines)
-    : cpuRange(RangeSize(cpu_addr, KVM_VGIC_V2_CPU_SIZE)),
-      distRange(RangeSize(dist_addr, KVM_VGIC_V2_DIST_SIZE)),
-      vm(_vm),
-      kdev(vm.createDevice(KVM_DEV_TYPE_ARM_VGIC_V2))
+KvmKernelGic::KvmKernelGic(KvmVM &_vm, uint32_t dev, unsigned it_lines)
+    : vm(_vm),
+      kdev(vm.createDevice(dev))
 {
     // Tell the VM that we will emulate the GIC in the kernel. This
     // disables IRQ and FIQ handling in the KVM CPU model.
     vm.enableKernelIRQChip();
 
-    kdev.setAttr<uint64_t>(
-        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_DIST, dist_addr);
-    kdev.setAttr<uint64_t>(
-        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_CPU, cpu_addr);
-
     kdev.setAttr<uint32_t>(KVM_DEV_ARM_VGIC_GRP_NR_IRQS, 0, it_lines);
 }
 
-KvmKernelGicV2::~KvmKernelGicV2()
+KvmKernelGic::~KvmKernelGic()
 {
 }
 
 void
-KvmKernelGicV2::setSPI(unsigned spi)
+KvmKernelGic::setSPI(unsigned spi)
 {
     setIntState(KVM_ARM_IRQ_TYPE_SPI, 0, spi, true);
 }
 
 void
-KvmKernelGicV2::clearSPI(unsigned spi)
+KvmKernelGic::clearSPI(unsigned spi)
 {
     setIntState(KVM_ARM_IRQ_TYPE_SPI, 0, spi, false);
 }
 
 void
-KvmKernelGicV2::setPPI(unsigned vcpu, unsigned ppi)
+KvmKernelGic::setPPI(unsigned vcpu, unsigned ppi)
 {
     setIntState(KVM_ARM_IRQ_TYPE_PPI, vcpu, ppi, true);
 }
 
 void
-KvmKernelGicV2::clearPPI(unsigned vcpu, unsigned ppi)
+KvmKernelGic::clearPPI(unsigned vcpu, unsigned ppi)
 {
     setIntState(KVM_ARM_IRQ_TYPE_PPI, vcpu, ppi, false);
 }
 
 void
-KvmKernelGicV2::setIntState(unsigned type, unsigned vcpu, unsigned irq,
-                            bool high)
+KvmKernelGic::setIntState(unsigned type, unsigned vcpu, unsigned irq,
+                          bool high)
 {
     assert(type <= KVM_ARM_IRQ_TYPE_MASK);
     assert(vcpu <= KVM_ARM_IRQ_VCPU_MASK);
@@ -107,6 +99,18 @@ KvmKernelGicV2::setIntState(unsigned type, unsigned vcpu, unsigned irq,
         (irq << KVM_ARM_IRQ_NUM_SHIFT));
 
     vm.setIRQLine(line, high);
+}
+
+KvmKernelGicV2::KvmKernelGicV2(KvmVM &_vm, Addr cpu_addr, Addr dist_addr,
+                               unsigned it_lines)
+    : KvmKernelGic(_vm, KVM_DEV_TYPE_ARM_VGIC_V2, it_lines),
+      cpuRange(RangeSize(cpu_addr, KVM_VGIC_V2_CPU_SIZE)),
+      distRange(RangeSize(dist_addr, KVM_VGIC_V2_DIST_SIZE))
+{
+    kdev.setAttr<uint64_t>(
+        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_DIST, dist_addr);
+    kdev.setAttr<uint64_t>(
+        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_CPU, cpu_addr);
 }
 
 uint32_t
@@ -165,8 +169,6 @@ KvmKernelGicV2::writeCpu(ContextID ctx, Addr daddr, uint32_t data)
     setGicReg(KVM_DEV_ARM_VGIC_GRP_CPU_REGS, vcpu, daddr, data);
 }
 
-
-
 MuxingKvmGic::MuxingKvmGic(const MuxingKvmGicParams &p)
     : GicV2(p),
       system(*p.system),
@@ -190,14 +192,14 @@ MuxingKvmGic::startup()
     GicV2::startup();
     usingKvm = kernelGic && vm && vm->validEnvironment();
     if (usingKvm)
-        fromGicV2ToKvm();
+        fromGicToKvm();
 }
 
 DrainState
 MuxingKvmGic::drain()
 {
     if (usingKvm)
-        fromKvmToGicV2();
+        fromKvmToGic();
     return GicV2::drain();
 }
 
@@ -209,7 +211,7 @@ MuxingKvmGic::drainResume()
     if (use_kvm != usingKvm) {
         // Should only occur due to CPU switches
         if (use_kvm) // from simulation to KVM emulation
-            fromGicV2ToKvm();
+            fromGicToKvm();
         // otherwise, drain() already sync'd the state back to the GicV2
 
         usingKvm = use_kvm;
@@ -284,13 +286,13 @@ MuxingKvmGic::blockIntUpdate() const
 }
 
 void
-MuxingKvmGic::fromGicV2ToKvm()
+MuxingKvmGic::fromGicToKvm()
 {
     copyGicState(static_cast<GicV2*>(this), kernelGic);
 }
 
 void
-MuxingKvmGic::fromKvmToGicV2()
+MuxingKvmGic::fromKvmToGic()
 {
     copyGicState(kernelGic, static_cast<GicV2*>(this));
 
