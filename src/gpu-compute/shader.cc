@@ -35,6 +35,7 @@
 
 #include <limits>
 
+#include "arch/amdgpu/common/tlb.hh"
 #include "base/chunk_generator.hh"
 #include "debug/GPUAgentDisp.hh"
 #include "debug/GPUDisp.hh"

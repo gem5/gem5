@@ -35,6 +35,7 @@
 
 #include <limits>
 
+#include "arch/amdgpu/common/tlb.hh"
 #include "base/output.hh"
 #include "debug/GPUDisp.hh"
 #include "debug/GPUExec.hh"

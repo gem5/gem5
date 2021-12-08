@@ -37,8 +37,8 @@
 #include <array>
 #include <type_traits>
 
+#include "arch/amdgpu/common/tlb.hh"
 #include "arch/amdgpu/gcn3/gpu_registers.hh"
-#include "arch/amdgpu/gcn3/tlb.hh"
 #include "gpu-compute/dispatcher.hh"
 #include "gpu-compute/hsa_queue_entry.hh"
 #include "gpu-compute/misc.hh"

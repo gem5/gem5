@@ -32,7 +32,7 @@
  *
  */
 
-#include "arch/amdgpu/gcn3/tlb.hh"
+#include "arch/amdgpu/common/tlb.hh"
 
 #include <cmath>
 #include <cstring>

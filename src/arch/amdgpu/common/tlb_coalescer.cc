@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/amdgpu/gcn3/tlb_coalescer.hh"
+#include "arch/amdgpu/common/tlb_coalescer.hh"
 
 #include <cstring>
 

@@ -39,7 +39,7 @@
 #include <string>
 #include <vector>
 
-#include "arch/amdgpu/gcn3/tlb.hh"
+#include "arch/amdgpu/common/tlb.hh"
 #include "arch/generic/tlb.hh"
 #include "arch/x86/isa.hh"
 #include "arch/x86/pagetable.hh"

@@ -33,6 +33,7 @@
 
 #include "gpu-compute/fetch_unit.hh"
 
+#include "arch/amdgpu/common/tlb.hh"
 #include "base/bitfield.hh"
 #include "debug/GPUFetch.hh"
 #include "debug/GPUPort.hh"
