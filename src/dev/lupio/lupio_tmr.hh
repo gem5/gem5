@@ -50,7 +50,6 @@ class LupioTMR : public BasicPioDevice
     System *system;
     int nThread;
     int intType;
-    int nCPUs = 0;
 
     // Register map
     enum
