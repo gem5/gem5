@@ -64,6 +64,13 @@ parser.add_argument(
 parser.add_argument(
     "num_cpus", type=int, help="The number of CPU in the system"
 )
+parser.add_argument(
+    "--max-ticks",
+    type=int,
+    required=False,
+    default=m5.MaxTick,
+    help="The maximum number of ticks to simulate. Used for testing.",
+)
 
 args = parser.parse_args()
 
@@ -105,7 +112,7 @@ root = Root(full_system=True, system=board)
 m5.instantiate()
 print("Beginning simulation!")
 
-exit_event = m5.simulate()
+exit_event = m5.simulate(args.max_ticks)
 
 print(
     "Exiting @ tick {} because {}.".format(m5.curTick(), exit_event.getCause())

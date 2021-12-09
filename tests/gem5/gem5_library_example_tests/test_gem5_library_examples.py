@@ -174,3 +174,20 @@ gem5_verify_config(
     valid_hosts=constants.supported_hosts,
     length=constants.long_tag,
 )
+
+gem5_verify_config(
+    name="test-lupv-example",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "lupv",
+        "run_lupv.py",
+    ),
+    config_args=["timing", "1", "--max-ticks", "1000000000"],
+    valid_isas=(constants.riscv_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.long_tag,
+)
