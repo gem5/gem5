@@ -108,10 +108,10 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--maxinsts",
+    "--ticks",
     type = int,
-    help = "Optionally put the maximum number of instructions to execute \
-    during ROI simulation. It accepts an integer number."
+    help = "Optionally put the maximum number of ticks to execute during the "\
+        "ROI. It accepts an integer value."
 )
 
 args = parser.parse_args()
@@ -259,13 +259,13 @@ else:
 # The next exit_event is to simulate the ROI. It should be exited with a cause
 # marked by `workend`.
 
-# Next, we need to check if the user passed a value for --maxinsts. If yes,
-# then we limit out execution to this time only. Otherwise, we simulate until
-# the ROI ends.
-if args.maxinsts is None:
-    exit_event = m5.simulate()
+# Next, we need to check if the user passed a value for --ticks. If yes,
+# then we limit out execution to this number of ticks during the ROI.
+# Otherwise, we simulate until the ROI ends.
+if args.ticks:
+    exit_event = m5.simulate(args.ticks)
 else:
-    exit_event = m5.simulate(args.maxinsts)
+    exit_event = m5.simulate()
 
 
 # Reached the end of ROI.
@@ -279,8 +279,8 @@ if exit_event.getCause() == "workend":
     m5.stats.dump()
     end_tick = m5.curTick()
 elif exit_event.getCause() == "simulate() limit reached" and \
-    args.maxinsts is not None:
-    print("Dump stats at the end of {} instructions".format(args.maxinsts))
+    args.ticks is not None:
+    print("Dump stats at the end of {} ticks in the ROI".format(args.ticks))
 
     m5.stats.dump()
     end_tick = m5.curTick()
