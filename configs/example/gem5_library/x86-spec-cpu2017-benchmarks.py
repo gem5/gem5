@@ -123,7 +123,8 @@ parser.add_argument(
 parser.add_argument(
     "--partition",
     type = str,
-    required = True,
+    required = False,
+    default=None,
     help = "Input the root partition of the SPEC disk-image. If the disk is \
     not partitioned, then pass \"\"."
 )
