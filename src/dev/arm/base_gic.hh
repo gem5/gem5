@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2017-2018 ARM Limited
+ * Copyright (c) 2012-2013, 2017-2018, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -133,6 +133,24 @@ class BaseGicRegisters
     virtual void writeDistributor(ContextID ctx, Addr daddr,
                                   uint32_t data) = 0;
     virtual void writeCpu(ContextID ctx, Addr daddr, uint32_t data) = 0;
+
+  protected:
+    static void copyDistRegister(BaseGicRegisters* from,
+                                 BaseGicRegisters* to,
+                                 ContextID ctx, Addr daddr);
+    static void copyCpuRegister(BaseGicRegisters* from,
+                                BaseGicRegisters* to,
+                                ContextID ctx, Addr daddr);
+    static void copyBankedDistRange(System *sys,
+                                    BaseGicRegisters* from,
+                                    BaseGicRegisters* to,
+                                    Addr daddr, size_t size);
+    static void clearBankedDistRange(System *sys, BaseGicRegisters* to,
+                                     Addr daddr, size_t size);
+    static void copyDistRange(BaseGicRegisters* from,
+                              BaseGicRegisters* to,
+                              Addr daddr, size_t size);
+    static void clearDistRange(BaseGicRegisters* to, Addr daddr, size_t size);
 };
 
 /**

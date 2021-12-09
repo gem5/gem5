@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2017-2018 ARM Limited
+ * Copyright (c) 2012, 2017-2018, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -39,6 +39,7 @@
 
 #include "cpu/thread_context.hh"
 #include "dev/arm/realview.hh"
+#include "debug/GIC.hh"
 #include "params/ArmInterruptPin.hh"
 #include "params/ArmPPI.hh"
 #include "params/ArmSigInterruptPin.hh"
@@ -77,6 +78,61 @@ const BaseGic::Params &
 BaseGic::params() const
 {
     return dynamic_cast<const Params &>(_params);
+}
+
+void
+BaseGicRegisters::copyDistRegister(BaseGicRegisters* from,
+                                   BaseGicRegisters* to,
+                                   ContextID ctx, Addr daddr)
+{
+    auto val = from->readDistributor(ctx, daddr);
+    DPRINTF(GIC, "copy dist 0x%x 0x%08x\n", daddr, val);
+    to->writeDistributor(ctx, daddr, val);
+}
+
+void
+BaseGicRegisters::copyCpuRegister(BaseGicRegisters* from,
+                                  BaseGicRegisters* to,
+                                  ContextID ctx, Addr daddr)
+{
+    auto val = from->readCpu(ctx, daddr);
+    DPRINTF(GIC, "copy cpu  0x%x 0x%08x\n", daddr, val);
+    to->writeCpu(ctx, daddr, val);
+}
+
+void
+BaseGicRegisters::copyBankedDistRange(System *sys, BaseGicRegisters* from,
+                                      BaseGicRegisters* to,
+                                      Addr daddr, size_t size)
+{
+    for (int ctx = 0; ctx < sys->threads.size(); ++ctx)
+        for (auto a = daddr; a < daddr + size; a += 4)
+            copyDistRegister(from, to, ctx, a);
+}
+
+void
+BaseGicRegisters::clearBankedDistRange(System *sys, BaseGicRegisters* to,
+                                       Addr daddr, size_t size)
+{
+    for (int ctx = 0; ctx < sys->threads.size(); ++ctx)
+        for (auto a = daddr; a < daddr + size; a += 4)
+            to->writeDistributor(ctx, a, 0xFFFFFFFF);
+}
+
+void
+BaseGicRegisters::copyDistRange(BaseGicRegisters* from,
+                                BaseGicRegisters* to,
+                                Addr daddr, size_t size)
+{
+    for (auto a = daddr; a < daddr + size; a += 4)
+        copyDistRegister(from, to, 0, a);
+}
+
+void
+BaseGicRegisters::clearDistRange(BaseGicRegisters* to, Addr daddr, size_t size)
+{
+    for (auto a = daddr; a < daddr + size; a += 4)
+        to->writeDistributor(0, a, 0xFFFFFFFF);
 }
 
 ArmInterruptPinGen::ArmInterruptPinGen(const ArmInterruptPinParams &p)

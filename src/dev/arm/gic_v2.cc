@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2013, 2015-2018, 2020 ARM Limited
+ * Copyright (c) 2010, 2013, 2015-2018, 2020-2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -992,6 +992,78 @@ GicV2::drainResume()
 {
     // There may be pending interrupts if checkpointed from Kvm; post them.
     updateIntState(-1);
+}
+
+void
+GicV2::copyGicState(BaseGicRegisters* from, BaseGicRegisters* to)
+{
+    Addr set, clear;
+    size_t size;
+
+    /// CPU state (GICC_*)
+    // Copy CPU Interface Control Register (CTLR),
+    //      Interrupt Priority Mask Register (PMR), and
+    //      Binary Point Register (BPR)
+    for (int ctx = 0; ctx < sys->threads.size(); ++ctx) {
+        copyCpuRegister(from, to, ctx, GICC_CTLR);
+        copyCpuRegister(from, to, ctx, GICC_PMR);
+        copyCpuRegister(from, to, ctx, GICC_BPR);
+    }
+
+    /// Distributor state (GICD_*)
+    // Copy Distributor Control Register (CTLR)
+    copyDistRegister(from, to, 0, GICD_CTLR);
+
+    // Copy interrupt-enabled statuses (I[CS]ENABLERn; R0 is per-CPU banked)
+    set   = GICD_ISENABLER.start();
+    clear = GICD_ICENABLER.start();
+    size  = itLines / 8;
+    clearBankedDistRange(sys, to, clear, 4);
+    copyBankedDistRange(sys, from, to, set, 4);
+
+    set += 4, clear += 4, size -= 4;
+    clearDistRange(to, clear, size);
+    copyDistRange(from, to, set, size);
+
+    // Copy pending interrupts (I[CS]PENDRn; R0 is per-CPU banked)
+    set   = GICD_ISPENDR.start();
+    clear = GICD_ICPENDR.start();
+    size  = itLines / 8;
+    clearBankedDistRange(sys, to, clear, 4);
+    copyBankedDistRange(sys, from, to, set, 4);
+
+    set += 4, clear += 4, size -= 4;
+    clearDistRange(to, clear, size);
+    copyDistRange(from, to, set, size);
+
+    // Copy active interrupts (I[CS]ACTIVERn; R0 is per-CPU banked)
+    set   = GICD_ISACTIVER.start();
+    clear = GICD_ICACTIVER.start();
+    size  = itLines / 8;
+    clearBankedDistRange(sys, to, clear, 4);
+    copyBankedDistRange(sys, from, to, set, 4);
+
+    set += 4, clear += 4, size -= 4;
+    clearDistRange(to, clear, size);
+    copyDistRange(from, to, set, size);
+
+    // Copy interrupt priorities (IPRIORITYRn; R0-7 are per-CPU banked)
+    set   = GICD_IPRIORITYR.start();
+    copyBankedDistRange(sys, from, to, set, 32);
+
+    set += 32;
+    size = itLines - 32;
+    copyDistRange(from, to, set, size);
+
+    // Copy interrupt processor target regs (ITARGETRn; R0-7 are read-only)
+    set = GICD_ITARGETSR.start() + 32;
+    size = itLines - 32;
+    copyDistRange(from, to, set, size);
+
+    // Copy interrupt configuration registers (ICFGRn)
+    set = GICD_ICFGR.start();
+    size = itLines / 4;
+    copyDistRange(from, to, set, size);
 }
 
 void

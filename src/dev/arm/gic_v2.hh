@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2013, 2015-2020 ARM Limited
+ * Copyright (c) 2010, 2013, 2015-2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -512,7 +512,9 @@ class GicV2 : public BaseGic, public BaseGicRegisters
 
     bool supportsVersion(GicVersion version) override;
 
-  protected:
+  protected: /** GIC state transfer */
+    void copyGicState(BaseGicRegisters* from, BaseGicRegisters* to);
+
     /** Handle a read to the distributor portion of the GIC
      * @param pkt packet to respond to
      */

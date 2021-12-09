@@ -205,22 +205,6 @@ class MuxingKvmGic : public GicV2
     /** Multiplexing implementation */
     void fromGicV2ToKvm();
     void fromKvmToGicV2();
-
-    void copyGicState(BaseGicRegisters* from, BaseGicRegisters* to);
-
-    void copyDistRegister(BaseGicRegisters* from, BaseGicRegisters* to,
-                          ContextID ctx, Addr daddr);
-    void copyCpuRegister(BaseGicRegisters* from, BaseGicRegisters* to,
-                         ContextID ctx, Addr daddr);
-
-    void copyBankedDistRange(BaseGicRegisters* from, BaseGicRegisters* to,
-                             Addr daddr, size_t size);
-    void clearBankedDistRange(BaseGicRegisters* to,
-                              Addr daddr, size_t size);
-    void copyDistRange(BaseGicRegisters* from, BaseGicRegisters* to,
-                       Addr daddr, size_t size);
-    void clearDistRange(BaseGicRegisters* to,
-                        Addr daddr, size_t size);
 };
 
 } // namespace gem5
