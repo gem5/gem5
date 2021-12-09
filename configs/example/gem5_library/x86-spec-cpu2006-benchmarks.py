@@ -65,7 +65,7 @@ from gem5.components.processors.simple_switchable_processor import(
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.coherence_protocol import CoherenceProtocol
-from gem5.resources.resource import Resource, CustomResource
+from gem5.resources.resource import Resource, CustomDiskImageResource
 
 from m5.stats.gem5stats import get_simstat
 from m5.util import warn
@@ -227,15 +227,6 @@ except FileExistsError:
 
 command = "{} {} {}".format(args.benchmark, args.size, output_dir)
 
-# For enabling CustomResource, we pass an additional parameter to mount the
-# correct partition.
-
-metadata = {
-    "additional_metadata" : {
-        "root_partition" : args.partition,
-    },
-}
-
 board.set_kernel_disk_workload(
     # The x86 linux kernel will be automatically downloaded to the
     # `~/.cache/gem5` directory if not already present.
@@ -245,9 +236,9 @@ board.set_kernel_disk_workload(
         "x86-linux-kernel-4.19.83",
     ),
     # The location of the x86 SPEC CPU 2017 image
-    disk_image=CustomResource(
+    disk_image=CustomDiskImageResource(
         args.image,
-        metadata=metadata
+        disk_root_partition=args.partition,
     ),
     readfile_contents=command,
 )

@@ -80,6 +80,36 @@ class CustomResource(AbstractResource):
         """
         super().__init__(local_path=local_path, metadata=metadata)
 
+class CustomDiskImageResource(CustomResource):
+    """
+    A custom disk image gem5 resource. It can be used to specify a custom,
+    local disk image.
+    """
+
+    def __init__(
+        self,
+        local_path: str,
+        disk_root_partition: Optional[str] = None,
+        metadata: Dict = {},
+    ):
+        """
+        :param local_path: The path of the disk image on the host system.
+        :param disk_root_partition: The root disk partition to use.
+        :param metadata: Metadata for the resource.
+        """
+
+        # Behind the scenes, we set the the root partition via the metadata.
+        # For a traditional, non-custom, resource it is the metadata that is
+        # used to specify the disk image partition root. Therefore, when the
+        # root disk partition specified during the construction, we apply it as
+        # metadata.
+        if disk_root_partition:
+            disk_root_partition_dict = {
+                "additional_metadata": {"root_partition": disk_root_partition}
+            }
+            metadata.update(disk_root_partition_dict)
+
+        super().__init__(local_path=local_path, metadata=metadata)
 
 class Resource(AbstractResource):
     """
