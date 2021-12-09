@@ -29640,6 +29640,42 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_LSHL_OR_B32
 
+    class Inst_VOP3__V_AND_OR_B32 : public Inst_VOP3A
+    {
+      public:
+        Inst_VOP3__V_AND_OR_B32(InFmt_VOP3A*);
+        ~Inst_VOP3__V_AND_OR_B32();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 3; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //src_0
+                return 4;
+              case 1: //src_1
+                return 4;
+              case 2: //src_2
+                return 4;
+              case 3: //vdst
+                return 4;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+    }; // Inst_VOP3__V_AND_OR_B32
+
     class Inst_VOP3__V_MAD_F16 : public Inst_VOP3A
     {
       public:

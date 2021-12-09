@@ -6951,8 +6951,7 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OPU_VOP3__V_AND_OR_B32(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_VOP3__V_AND_OR_B32(&iFmt->iFmt_VOP3A);
     }
 
     GPUStaticInst*
