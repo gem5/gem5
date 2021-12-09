@@ -42,9 +42,11 @@
 #include "cpu/kvm/device.hh"
 #include "cpu/kvm/vm.hh"
 #include "dev/arm/gic_v2.hh"
+#include "dev/arm/gic_v3.hh"
 #include "dev/platform.hh"
 
 #include "params/MuxingKvmGicV2.hh"
+#include "params/MuxingKvmGicV3.hh"
 
 namespace gem5
 {
@@ -77,6 +79,8 @@ class KvmKernelGic
     KvmKernelGic(const KvmKernelGic &&other) = delete;
     KvmKernelGic &operator=(const KvmKernelGic &&rhs) = delete;
     KvmKernelGic &operator=(const KvmKernelGic &rhs) = delete;
+
+    virtual void init() {}
 
   public:
     /**
@@ -184,11 +188,78 @@ class KvmKernelGicV2 : public KvmKernelGic, public GicV2Registers
     const AddrRange distRange;
 };
 
+class KvmKernelGicV3 : public KvmKernelGic, public Gicv3Registers
+{
+  public:
+    /**
+     * Instantiate a KVM in-kernel GICv3 model.
+     *
+     * This constructor instantiates an in-kernel GICv3 model and wires
+     * it up to the virtual memory system.
+     *
+     * @param vm KVM VM representing this system
+     * @param params MuxingKvmGicV3 parameters
+     */
+    KvmKernelGicV3(KvmVM &vm,
+                   const MuxingKvmGicV3Params &params);
+
+    void init() override;
+
+  public: // Gicv3Registers
+    uint32_t readDistributor(Addr daddr) override;
+    uint32_t readRedistributor(const ArmISA::Affinity &aff,
+                               Addr daddr) override;
+    RegVal readCpu(const ArmISA::Affinity &aff,
+                   ArmISA::MiscRegIndex misc_reg) override;
+
+    void writeDistributor(Addr daddr, uint32_t data) override;
+    void writeRedistributor(const ArmISA::Affinity &aff,
+                            Addr daddr, uint32_t data) override;
+    void writeCpu(const ArmISA::Affinity &aff,
+                  ArmISA::MiscRegIndex misc_reg, RegVal data) override;
+
+  protected:
+    /**
+     * Get value of GIC register "from" a cpu
+     *
+     * @param group Distributor or CPU (KVM_DEV_ARM_VGIC_GRP_{DIST,CPU}_REGS)
+     * @param mpidr CPU affinity numbers
+     * @param offset register offset
+     */
+    template <typename Ret>
+    Ret getGicReg(unsigned group, unsigned mpidr, unsigned offset);
+
+    /**
+     * Set value of GIC register "from" a cpu
+     *
+     * @param group Distributor or CPU (KVM_DEV_ARM_VGIC_GRP_{DIST,CPU}_REGS)
+     * @param mpidr CPU affinity numbers
+     * @param offset register offset
+     * @param value value to set register to
+     */
+    template <typename Arg>
+    void setGicReg(unsigned group, unsigned mpidr, unsigned offset,
+                   Arg value);
+
+  private:
+    /** Address range for the redistributor */
+    const AddrRange redistRange;
+    /** Address range for the distributor */
+    const AddrRange distRange;
+};
+
 struct GicV2Types
 {
     using SimGic = GicV2;
     using KvmGic = KvmKernelGicV2;
     using Params = MuxingKvmGicV2Params;
+};
+
+struct GicV3Types
+{
+    using SimGic = Gicv3;
+    using KvmGic = KvmKernelGicV3;
+    using Params = MuxingKvmGicV3Params;
 };
 
 template <class Types>

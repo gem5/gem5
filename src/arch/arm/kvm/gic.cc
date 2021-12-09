@@ -40,6 +40,7 @@
 #include <linux/kvm.h>
 
 #include "arch/arm/kvm/base_cpu.hh"
+#include "arch/arm/regs/misc.hh"
 #include "debug/GIC.hh"
 #include "debug/Interrupt.hh"
 #include "params/MuxingKvmGicV2.hh"
@@ -169,6 +170,101 @@ KvmKernelGicV2::writeCpu(ContextID ctx, Addr daddr, uint32_t data)
     setGicReg(KVM_DEV_ARM_VGIC_GRP_CPU_REGS, vcpu, daddr, data);
 }
 
+#ifndef SZ_64K
+#define SZ_64K 0x00000040
+#endif
+
+KvmKernelGicV3::KvmKernelGicV3(KvmVM &_vm,
+                               const MuxingKvmGicV3Params &p)
+    : KvmKernelGic(_vm, KVM_DEV_TYPE_ARM_VGIC_V3, p.it_lines),
+      redistRange(RangeSize(p.redist_addr, KVM_VGIC_V3_REDIST_SIZE)),
+      distRange(RangeSize(p.dist_addr, KVM_VGIC_V3_DIST_SIZE))
+{
+    kdev.setAttr<uint64_t>(
+        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V3_ADDR_TYPE_DIST, p.dist_addr);
+    kdev.setAttr<uint64_t>(
+        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V3_ADDR_TYPE_REDIST, p.redist_addr);
+}
+
+void
+KvmKernelGicV3::init()
+{
+    kdev.setAttr<uint64_t>(
+        KVM_DEV_ARM_VGIC_GRP_CTRL, KVM_DEV_ARM_VGIC_CTRL_INIT, 0);
+}
+
+template <typename Ret>
+Ret
+KvmKernelGicV3::getGicReg(unsigned group, unsigned mpidr, unsigned offset)
+{
+    Ret reg;
+
+    assert(mpidr <= KVM_DEV_ARM_VGIC_V3_MPIDR_MASK);
+    const uint64_t attr(
+        ((uint64_t)mpidr << KVM_DEV_ARM_VGIC_V3_MPIDR_SHIFT) |
+        (offset << KVM_DEV_ARM_VGIC_OFFSET_SHIFT));
+
+    kdev.getAttrPtr(group, attr, &reg);
+    return reg;
+}
+
+template <typename Arg>
+void
+KvmKernelGicV3::setGicReg(unsigned group, unsigned mpidr, unsigned offset,
+                          Arg value)
+{
+    Arg reg = value;
+
+    assert(mpidr <= KVM_DEV_ARM_VGIC_V3_MPIDR_MASK);
+    const uint64_t attr(
+        ((uint64_t)mpidr << KVM_DEV_ARM_VGIC_V3_MPIDR_SHIFT) |
+        (offset << KVM_DEV_ARM_VGIC_OFFSET_SHIFT));
+
+    kdev.setAttrPtr(group, attr, &reg);
+}
+
+uint32_t
+KvmKernelGicV3::readDistributor(Addr daddr)
+{
+    return getGicReg<uint32_t>(KVM_DEV_ARM_VGIC_GRP_DIST_REGS, 0, daddr);
+}
+
+uint32_t
+KvmKernelGicV3::readRedistributor(const ArmISA::Affinity &aff, Addr daddr)
+{
+    return getGicReg<uint32_t>(KVM_DEV_ARM_VGIC_GRP_REDIST_REGS, aff, daddr);
+}
+
+RegVal
+KvmKernelGicV3::readCpu(const ArmISA::Affinity &aff,
+                        ArmISA::MiscRegIndex misc_reg)
+{
+    auto sys_reg = ArmISA::encodeAArch64SysReg(misc_reg).packed();
+    return getGicReg<RegVal>(KVM_DEV_ARM_VGIC_GRP_CPU_SYSREGS, aff, sys_reg);
+}
+
+void
+KvmKernelGicV3::writeDistributor(Addr daddr, uint32_t data)
+{
+    setGicReg<uint32_t>(KVM_DEV_ARM_VGIC_GRP_DIST_REGS, 0, daddr, data);
+}
+
+void
+KvmKernelGicV3::writeRedistributor(const ArmISA::Affinity &aff, Addr daddr,
+                                   uint32_t data)
+{
+    setGicReg<uint32_t>(KVM_DEV_ARM_VGIC_GRP_REDIST_REGS, aff, daddr, data);
+}
+
+void
+KvmKernelGicV3::writeCpu(const ArmISA::Affinity &aff,
+                         ArmISA::MiscRegIndex misc_reg,
+                         RegVal data)
+{
+    auto sys_reg = ArmISA::encodeAArch64SysReg(misc_reg).packed();
+    setGicReg<RegVal>(KVM_DEV_ARM_VGIC_GRP_CPU_SYSREGS, aff, sys_reg, data);
+}
+
 template <class Types>
 MuxingKvmGic<Types>::MuxingKvmGic(const Params &p)
   : SimGic(p),
@@ -188,10 +284,15 @@ MuxingKvmGic<Types>::startup()
 {
     SimGic::startup();
 
-    KvmVM *vm = system.getKvmVM();
-    usingKvm = kernelGic && vm && vm->validEnvironment();
-    if (usingKvm)
-        fromGicToKvm();
+    if (kernelGic) {
+        kernelGic->init();
+
+        KvmVM *vm = system.getKvmVM();
+        if (vm && vm->validEnvironment()) {
+            usingKvm = true;
+            fromGicToKvm();
+        }
+    }
 }
 
 template <class Types>
@@ -323,5 +424,6 @@ MuxingKvmGic<Types>::fromKvmToGic()
 }
 
 template class MuxingKvmGic<GicV2Types>;
+template class MuxingKvmGic<GicV3Types>;
 
 } // namespace gem5

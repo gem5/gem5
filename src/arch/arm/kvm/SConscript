@@ -44,7 +44,7 @@ if not (env['USE_KVM'] and env['KVM_ISA'] == 'arm'):
     Return()
 
 SimObject('KvmGic.py',
-    sim_objects=['MuxingKvmGicV2'], tags='arm isa')
+    sim_objects=['MuxingKvmGicV2', 'MuxingKvmGicV3'], tags='arm isa')
 Source('gic.cc', tags='arm isa')
 
 SimObject('BaseArmKvmCPU.py', sim_objects=['BaseArmKvmCPU'], tags='arm isa')
