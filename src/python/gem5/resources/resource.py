@@ -73,7 +73,7 @@ class CustomResource(AbstractResource):
     repository.
     """
 
-    def __init__(self, local_path: str, metadata: Optional[Dict] = None):
+    def __init__(self, local_path: str, metadata: Dict = {}):
         """
         :param local_path: The path of the resource on the host system.
         :param metadata: Add metadata for the custom resource.
