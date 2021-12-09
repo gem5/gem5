@@ -78,7 +78,8 @@ parser.add_argument(
     "-d",
     "--dram-class",
     type=str,
-    required=True,
+    required=False,
+    default="DualChannelDDR3_1600",
     help="The python class for the memory interface to use"
 )
 parser.add_argument(
