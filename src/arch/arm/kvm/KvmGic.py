@@ -1,4 +1,4 @@
-# Copyright (c) 2015, 2017 ARM Limited
+# Copyright (c) 2015, 2017, 2021 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -38,10 +38,11 @@ from m5.proxy import *
 
 from m5.objects.Gic import GicV2
 
-class MuxingKvmGic(GicV2):
-    type = 'MuxingKvmGic'
+class MuxingKvmGicV2(GicV2):
+    type = 'MuxingKvmGicV2'
     cxx_header = "arch/arm/kvm/gic.hh"
-    cxx_class = 'gem5::MuxingKvmGic'
+    cxx_class = 'gem5::MuxingKvmGic<gem5::GicV2Types>'
+    cxx_template_params = [ 'class Types' ]
 
     simulate_gic = Param.Bool(False,
         "Forcing the simulation to use the gem5 GIC instead of the host GIC")

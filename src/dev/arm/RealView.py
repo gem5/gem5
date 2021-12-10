@@ -73,8 +73,8 @@ from m5.objects.CfiMemory import CfiMemory
 # emulation. Use a GIC model that automatically switches between
 # gem5's GIC model and KVM's GIC model if KVM is available.
 try:
-    from m5.objects.KvmGic import MuxingKvmGic
-    kvm_gicv2_class = MuxingKvmGic
+    from m5.objects.KvmGic import MuxingKvmGicV2
+    kvm_gicv2_class = MuxingKvmGicV2
 except ImportError:
     # KVM support wasn't compiled into gem5. Fallback to a
     # software-only GIC.

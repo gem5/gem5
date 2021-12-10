@@ -42,7 +42,7 @@
 #include "arch/arm/kvm/base_cpu.hh"
 #include "debug/GIC.hh"
 #include "debug/Interrupt.hh"
-#include "params/MuxingKvmGic.hh"
+#include "params/MuxingKvmGicV2.hh"
 
 namespace gem5
 {
@@ -101,16 +101,16 @@ KvmKernelGic::setIntState(unsigned type, unsigned vcpu, unsigned irq,
     vm.setIRQLine(line, high);
 }
 
-KvmKernelGicV2::KvmKernelGicV2(KvmVM &_vm, Addr cpu_addr, Addr dist_addr,
-                               unsigned it_lines)
-    : KvmKernelGic(_vm, KVM_DEV_TYPE_ARM_VGIC_V2, it_lines),
-      cpuRange(RangeSize(cpu_addr, KVM_VGIC_V2_CPU_SIZE)),
-      distRange(RangeSize(dist_addr, KVM_VGIC_V2_DIST_SIZE))
+KvmKernelGicV2::KvmKernelGicV2(KvmVM &_vm,
+                               const MuxingKvmGicV2Params &p)
+    : KvmKernelGic(_vm, KVM_DEV_TYPE_ARM_VGIC_V2, p.it_lines),
+      cpuRange(RangeSize(p.cpu_addr, KVM_VGIC_V2_CPU_SIZE)),
+      distRange(RangeSize(p.dist_addr, KVM_VGIC_V2_DIST_SIZE))
 {
     kdev.setAttr<uint64_t>(
-        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_DIST, dist_addr);
+        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_DIST, p.dist_addr);
     kdev.setAttr<uint64_t>(
-        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_CPU, cpu_addr);
+        KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_CPU, p.cpu_addr);
 }
 
 uint32_t
@@ -169,27 +169,24 @@ KvmKernelGicV2::writeCpu(ContextID ctx, Addr daddr, uint32_t data)
     setGicReg(KVM_DEV_ARM_VGIC_GRP_CPU_REGS, vcpu, daddr, data);
 }
 
-MuxingKvmGic::MuxingKvmGic(const MuxingKvmGicParams &p)
-    : GicV2(p),
-      system(*p.system),
-      kernelGic(nullptr),
-      usingKvm(false)
+template <class Types>
+MuxingKvmGic<Types>::MuxingKvmGic(const Params &p)
+  : SimGic(p),
+    system(*p.system),
+    kernelGic(nullptr),
+    usingKvm(false)
 {
     auto vm = system.getKvmVM();
     if (vm && !p.simulate_gic) {
-        kernelGic = new KvmKernelGicV2(*vm, p.cpu_addr, p.dist_addr,
-                                       p.it_lines);
+        kernelGic = new KvmGic(*vm, p);
     }
 }
 
-MuxingKvmGic::~MuxingKvmGic()
-{
-}
-
+template <class Types>
 void
-MuxingKvmGic::startup()
+MuxingKvmGic<Types>::startup()
 {
-    GicV2::startup();
+    SimGic::startup();
 
     KvmVM *vm = system.getKvmVM();
     usingKvm = kernelGic && vm && vm->validEnvironment();
@@ -197,18 +194,20 @@ MuxingKvmGic::startup()
         fromGicToKvm();
 }
 
+template <class Types>
 DrainState
-MuxingKvmGic::drain()
+MuxingKvmGic<Types>::drain()
 {
     if (usingKvm)
         fromKvmToGic();
-    return GicV2::drain();
+    return SimGic::drain();
 }
 
+template <class Types>
 void
-MuxingKvmGic::drainResume()
+MuxingKvmGic<Types>::drainResume()
 {
-    GicV2::drainResume();
+    SimGic::drainResume();
 
     KvmVM *vm = system.getKvmVM();
     bool use_kvm = kernelGic && vm && vm->validEnvironment();
@@ -222,65 +221,72 @@ MuxingKvmGic::drainResume()
     }
 }
 
+template <class Types>
 Tick
-MuxingKvmGic::read(PacketPtr pkt)
+MuxingKvmGic<Types>::read(PacketPtr pkt)
 {
     if (!usingKvm)
-        return GicV2::read(pkt);
+        return SimGic::read(pkt);
 
     panic("MuxingKvmGic: PIO from gem5 is currently unsupported\n");
 }
 
+template <class Types>
 Tick
-MuxingKvmGic::write(PacketPtr pkt)
+MuxingKvmGic<Types>::write(PacketPtr pkt)
 {
     if (!usingKvm)
-        return GicV2::write(pkt);
+        return SimGic::write(pkt);
 
     panic("MuxingKvmGic: PIO from gem5 is currently unsupported\n");
 }
 
+template <class Types>
 void
-MuxingKvmGic::sendInt(uint32_t num)
+MuxingKvmGic<Types>::sendInt(uint32_t num)
 {
     if (!usingKvm)
-        return GicV2::sendInt(num);
+        return SimGic::sendInt(num);
 
     DPRINTF(Interrupt, "Set SPI %d\n", num);
     kernelGic->setSPI(num);
 }
 
+template <class Types>
 void
-MuxingKvmGic::clearInt(uint32_t num)
+MuxingKvmGic<Types>::clearInt(uint32_t num)
 {
     if (!usingKvm)
-        return GicV2::clearInt(num);
+        return SimGic::clearInt(num);
 
     DPRINTF(Interrupt, "Clear SPI %d\n", num);
     kernelGic->clearSPI(num);
 }
 
+template <class Types>
 void
-MuxingKvmGic::sendPPInt(uint32_t num, uint32_t cpu)
+MuxingKvmGic<Types>::sendPPInt(uint32_t num, uint32_t cpu)
 {
     if (!usingKvm)
-        return GicV2::sendPPInt(num, cpu);
+        return SimGic::sendPPInt(num, cpu);
     DPRINTF(Interrupt, "Set PPI %d:%d\n", cpu, num);
     kernelGic->setPPI(cpu, num);
 }
 
+template <class Types>
 void
-MuxingKvmGic::clearPPInt(uint32_t num, uint32_t cpu)
+MuxingKvmGic<Types>::clearPPInt(uint32_t num, uint32_t cpu)
 {
     if (!usingKvm)
-        return GicV2::clearPPInt(num, cpu);
+        return SimGic::clearPPInt(num, cpu);
 
     DPRINTF(Interrupt, "Clear PPI %d:%d\n", cpu, num);
     kernelGic->clearPPI(cpu, num);
 }
 
+template <class Types>
 bool
-MuxingKvmGic::blockIntUpdate() const
+MuxingKvmGic<Types>::blockIntUpdate() const
 {
     // During Kvm->Gic state transfer, writes to the Gic will call
     // updateIntState() which can post an interrupt.  Since we're only
@@ -289,27 +295,33 @@ MuxingKvmGic::blockIntUpdate() const
     return usingKvm;
 }
 
+template <class Types>
 void
-MuxingKvmGic::fromGicToKvm()
+MuxingKvmGic<Types>::fromGicToKvm()
 {
-    copyGicState(static_cast<GicV2*>(this),
-                 static_cast<KvmKernelGicV2*>(kernelGic));
+    this->copyGicState(static_cast<SimGic*>(this),
+                       static_cast<KvmGic*>(kernelGic));
 }
 
+template <class Types>
 void
-MuxingKvmGic::fromKvmToGic()
+MuxingKvmGic<Types>::fromKvmToGic()
 {
-    copyGicState(static_cast<KvmKernelGicV2*>(kernelGic),
-                 static_cast<GicV2*>(this));
+    this->copyGicState(static_cast<KvmGic*>(kernelGic),
+                       static_cast<SimGic*>(this));
 
     // the values read for the Interrupt Priority Mask Register (PMR)
     // have been shifted by three bits due to its having been emulated by
     // a VGIC with only 5 PMR bits in its VMCR register.  Presently the
     // Linux kernel does not repair this inaccuracy, so we correct it here.
-    for (int cpu = 0; cpu < system.threads.size(); ++cpu) {
-       cpuPriority[cpu] <<= 3;
-       assert((cpuPriority[cpu] & ~0xff) == 0);
+    if constexpr(std::is_same<SimGic, GicV2>::value) {
+        for (int cpu = 0; cpu < system.threads.size(); ++cpu) {
+           this->cpuPriority[cpu] <<= 3;
+           assert((this->cpuPriority[cpu] & ~0xff) == 0);
+        }
     }
 }
+
+template class MuxingKvmGic<GicV2Types>;
 
 } // namespace gem5

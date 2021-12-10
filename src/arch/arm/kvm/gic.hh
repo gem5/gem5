@@ -44,6 +44,8 @@
 #include "dev/arm/gic_v2.hh"
 #include "dev/platform.hh"
 
+#include "params/MuxingKvmGicV2.hh"
+
 namespace gem5
 {
 
@@ -135,18 +137,16 @@ class KvmKernelGicV2 : public KvmKernelGic, public GicV2Registers
 {
   public:
     /**
-     * Instantiate a KVM in-kernel GIC model.
+     * Instantiate a KVM in-kernel GICv2 model.
      *
-     * This constructor instantiates an in-kernel GIC model and wires
+     * This constructor instantiates an in-kernel GICv2 model and wires
      * it up to the virtual memory system.
      *
      * @param vm KVM VM representing this system
-     * @param cpu_addr GIC CPU interface base address
-     * @param dist_addr GIC distributor base address
-     * @param it_lines Number of interrupt lines to support
+     * @param params MuxingKvmGicV2 params
      */
-    KvmKernelGicV2(KvmVM &vm, Addr cpu_addr, Addr dist_addr,
-                   unsigned it_lines);
+    KvmKernelGicV2(KvmVM &vm,
+                   const MuxingKvmGicV2Params &params);
 
   public: // GicV2Registers
     uint32_t readDistributor(ContextID ctx, Addr daddr) override;
@@ -184,13 +184,22 @@ class KvmKernelGicV2 : public KvmKernelGic, public GicV2Registers
     const AddrRange distRange;
 };
 
-struct MuxingKvmGicParams;
-
-class MuxingKvmGic : public GicV2
+struct GicV2Types
 {
+    using SimGic = GicV2;
+    using KvmGic = KvmKernelGicV2;
+    using Params = MuxingKvmGicV2Params;
+};
+
+template <class Types>
+class MuxingKvmGic : public Types::SimGic
+{
+    using SimGic = typename Types::SimGic;
+    using KvmGic = typename Types::KvmGic;
+    using Params = typename Types::Params;
+
   public: // SimObject / Serializable / Drainable
-    MuxingKvmGic(const MuxingKvmGicParams &p);
-    ~MuxingKvmGic();
+    MuxingKvmGic(const Params &p);
 
     void startup() override;
     DrainState drain() override;
