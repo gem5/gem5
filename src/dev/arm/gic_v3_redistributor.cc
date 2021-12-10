@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021 Arm Limited
+ * Copyright (c) 2019-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1044,6 +1044,34 @@ Gicv3Redistributor::canBeSelectedFor1toNInterrupt(Gicv3::GroupId group) const
     }
 
     return true;
+}
+
+void
+Gicv3Redistributor::copy(Gicv3Registers *from, Gicv3Registers *to)
+{
+    const auto affinity = getAffinity();
+    // SGI_Base regs
+    gic->copyRedistRegister(from, to, affinity, GICR_CTLR);
+    gic->copyRedistRegister(from, to, affinity, GICR_WAKER);
+
+    gic->clearRedistRegister(to, affinity, GICR_ICENABLER0);
+    gic->clearRedistRegister(to, affinity, GICR_ICPENDR0);
+    gic->clearRedistRegister(to, affinity, GICR_ICACTIVER0);
+
+    gic->copyRedistRegister(from, to, affinity, GICR_ISENABLER0);
+    gic->copyRedistRegister(from, to, affinity, GICR_ISPENDR0);
+    gic->copyRedistRegister(from, to, affinity, GICR_ISACTIVER0);
+    gic->copyRedistRegister(from, to, affinity, GICR_ICFGR0);
+    gic->copyRedistRegister(from, to, affinity, GICR_ICFGR1);
+    gic->copyRedistRegister(from, to, affinity, GICR_IGRPMODR0);
+    gic->copyRedistRegister(from, to, affinity, GICR_NSACR);
+
+    gic->copyRedistRange(from, to, affinity,
+        GICR_IPRIORITYR.start(), GICR_IPRIORITYR.size());
+
+    // RD_Base regs
+    gic->copyRedistRegister(from, to, affinity, GICR_PROPBASER);
+    gic->copyRedistRegister(from, to, affinity, GICR_PENDBASER);
 }
 
 void
