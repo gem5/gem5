@@ -62,10 +62,18 @@ MaxTick = 2**64 - 1
 
 _drain_manager = _m5.drain.DrainManager.instance()
 
-# The final hook to generate .ini files.  Called from the user script
-# once the config is built.
+_instantiated = False # Has m5.instantiate() been called?
+
+# The final call to instantiate the SimObject graph and initialize the
+# system.
 def instantiate(ckpt_dir=None):
+    global _instantiated
     from m5 import options
+
+    if _instantiated:
+        fatal("m5.instantiate() called twice.")
+
+    _instantiated = True
 
     root = objects.Root.getInstance()
 
@@ -148,6 +156,10 @@ def instantiate(ckpt_dir=None):
 need_startup = True
 def simulate(*args, **kwargs):
     global need_startup
+    global _instantiated
+
+    if not _instantiated:
+        fatal("m5.instantiate() must be called before m5.simulate().")
 
     if need_startup:
         root = objects.Root.getInstance()
