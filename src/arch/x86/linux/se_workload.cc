@@ -120,7 +120,7 @@ EmuLinux::syscall(ThreadContext *tc)
         Addr eip = pc.pc();
         const auto &vsyscall = proc32->getVSyscallPage();
         if (eip >= vsyscall.base && eip < vsyscall.base + vsyscall.size) {
-            pc.npc(vsyscall.base + vsyscall.vsysexitOffset);
+            pc.set(vsyscall.base + vsyscall.vsysexitOffset);
             tc->pcState(pc);
         }
         syscallDescs32.get(rax)->doSyscall(tc);

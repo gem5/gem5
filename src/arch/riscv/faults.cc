@@ -157,11 +157,12 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         if (isInterrupt() && bits(tc->readMiscReg(tvec), 1, 0) == 1)
             addr += 4 * _code;
         pc_state.set(addr);
+        tc->pcState(pc_state);
     } else {
-        invokeSE(tc, inst);
         inst->advancePC(pc_state);
+        tc->pcState(pc_state);
+        invokeSE(tc, inst);
     }
-    tc->pcState(pc_state);
 }
 
 void
