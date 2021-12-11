@@ -101,8 +101,6 @@ class gem5Component: public SST::Component
     void finish();
     bool clockTick(SST::Cycle_t current_cycle);
 
-    int startM5(int argc, char **_argv);
-
 
   // stuff needed for gem5 sim
   public:

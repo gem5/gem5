@@ -89,6 +89,9 @@
 #include <string>
 #include <vector>
 
+#include <pybind11/embed.h>
+#include <pybind11/pybind11.h>
+
 // gem5 Headers
 #include <sim/core.hh>
 #include <sim/init.hh>
@@ -117,6 +120,8 @@
 
 // More SST Headers
 #include <core/timeConverter.h>
+
+namespace py = pybind11;
 
 gem5Component::gem5Component(SST::ComponentId_t id, SST::Params& params):
     SST::Component(id), threadInitialized(false)
@@ -365,98 +370,26 @@ gem5Component::execPythonCommands(const std::vector<std::string>& commands)
     return 0;
 }
 
-int
-gem5Component::startM5(int argc, char **_argv)
-{
-    // This function should be similar to m5Main() of src/sim/init.cc
-
-#if HAVE_PROTOBUF
-    // Verify that the version of the protobuf library that we linked
-    // against is compatible with the version of the headers we
-    // compiled against.
-    GOOGLE_PROTOBUF_VERIFY_VERSION;
-#endif
-
-
-#if PY_MAJOR_VERSION >= 3
-    typedef std::unique_ptr<wchar_t[], decltype(&PyMem_RawFree)> WArgUPtr;
-    std::vector<WArgUPtr> v_argv;
-    std::vector<wchar_t *> vp_argv;
-    v_argv.reserve(argc);
-    vp_argv.reserve(argc);
-    for (int i = 0; i < argc; i++) {
-        v_argv.emplace_back(Py_DecodeLocale(_argv[i], NULL), &PyMem_RawFree);
-        vp_argv.emplace_back(v_argv.back().get());
-    }
-
-    wchar_t **argv = vp_argv.data();
-#else
-    char **argv = _argv;
-#endif
-
-    PySys_SetArgv(argc, argv);
-
-    // We have to set things up in the special __main__ module
-    pythonMain = PyImport_AddModule(PyCC("__main__"));
-    if (pythonMain == NULL)
-        panic("Could not import __main__");
-
-    const std::vector<std::string> commands = {
-        "import m5",
-        "m5.main()"
-    };
-    execPythonCommands(commands);
-
-#if HAVE_PROTOBUF
-    google::protobuf::ShutdownProtobufLibrary();
-#endif
-
-    return 0;
-}
-
 void
 gem5Component::initPython(int argc, char *_argv[])
 {
-    // should be similar to main() in src/sim/main.cc
-    PyObject *mainModule, *mainDict;
-
-    int ret;
-
-    // Initialize m5 special signal handling.
+    // Initialize gem5 special signal handling.
     gem5::initSignals();
 
-#if PY_MAJOR_VERSION >= 3
-    std::unique_ptr<wchar_t[], decltype(&PyMem_RawFree)> program(
-        Py_DecodeLocale(_argv[0], NULL),
-        &PyMem_RawFree);
-    Py_SetProgramName(program.get());
-#else
-    Py_SetProgramName(_argv[0]);
-#endif
+    if (!Py_IsInitialized())
+        py::initialize_interpreter(false, argc, _argv);
 
-    // Register native modules with Python's init system before
-    // initializing the interpreter.
-    if (!Py_IsInitialized()) {
-        gem5::registerNativeModules();
-        // initialize embedded Python interpreter
-        Py_Initialize();
-    } else {
-        // https://stackoverflow.com/a/28349174
-        PyImport_AddModule("_m5");
-        PyObject* module = gem5::EmbeddedPyBind::initAll();
-        PyObject* sys_modules = PyImport_GetModuleDict();
-        PyDict_SetItemString(sys_modules, "_m5", module);
-        Py_DECREF(module);
+    auto importer = py::module_::import("importer");
+    importer.attr("install")();
+
+    try {
+        py::module_::import("m5").attr("main")();
+    } catch (py::error_already_set &e) {
+        if (!e.matches(PyExc_SystemExit)) {
+            std::cerr << e.what();
+            output.output(CALL_INFO, "Calling m5.main(...) failed.\n");
+        }
     }
-
-
-    // Initialize the embedded m5 python library
-    ret = gem5::EmbeddedPython::initAll();
-
-    if (ret == 0)
-        startM5(argc, _argv); // start m5
-    else
-        output.output(CALL_INFO, "Not calling m5Main due to ret=%d\n", ret);
 }
 
 void
