@@ -25,15 +25,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "pybind11/embed.h"
+#include "pybind11/eval.h"
 #include "pybind11/pybind11.h"
-#include "python/m5ImporterCode.hh"
 
 #include "python/embedded.hh"
+#include "python/m5ImporterCode.hh"
+#include "python/pybind_init.hh"
 
 namespace py = pybind11;
 
-PYBIND11_EMBEDDED_MODULE(importer, m)
+namespace
+{
+
+void
+importerInit(py::module_ &m)
 {
     m.def("_init_all_embedded", gem5::EmbeddedPython::initAll);
     py::str importer_code(
@@ -41,3 +46,7 @@ PYBIND11_EMBEDDED_MODULE(importer, m)
             gem5::Blobs::m5ImporterCode_len);
     py::exec(std::move(importer_code), m.attr("__dict__"));
 }
+
+GEM5_PYBIND_MODULE_INIT(importer, importerInit)
+
+} // anonymous namespace
