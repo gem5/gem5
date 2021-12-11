@@ -48,6 +48,7 @@
 
 #include "base/cprintf.hh"
 #include "python/pybind11/pybind.hh"
+#include "python/pybind_init.hh"
 
 namespace py = pybind11;
 
@@ -126,9 +127,6 @@ EmbeddedPyBind::initAll(py::module_ &_m5)
     }
 }
 
-PYBIND11_EMBEDDED_MODULE(_m5, _m5)
-{
-    EmbeddedPyBind::initAll(_m5);
-}
+GEM5_PYBIND_MODULE_INIT(_m5, EmbeddedPyBind::initAll)
 
 } // namespace gem5
