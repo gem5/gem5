@@ -43,6 +43,7 @@
 
 #include "pybind11/pybind11.h"
 
+#include <list>
 #include <map>
 #include <string>
 
@@ -64,14 +65,22 @@ class EmbeddedPyBind
   private:
     void (*initFunc)(pybind11::module_ &);
 
-    bool depsReady() const;
-    void init(pybind11::module_ &m);
+    void init();
 
-    bool registered;
+    bool registered = false;
     const std::string name;
     const std::string base;
 
-    static std::map<std::string, EmbeddedPyBind *> &getMap();
+    // The _m5 module.
+    static pybind11::module_ *mod;
+
+    // A map from initialized module names to their descriptors.
+    static std::map<std::string, EmbeddedPyBind *> &getReady();
+    // A map to pending modules from the name of what they're waiting on.
+    static std::multimap<std::string, EmbeddedPyBind *> &getPending();
+
+    // Initialize all modules waiting on "finished".
+    static void initPending(const std::string &finished);
 };
 
 } // namespace gem5

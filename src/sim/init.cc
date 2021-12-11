@@ -55,76 +55,89 @@ namespace py = pybind11;
 namespace gem5
 {
 
+pybind11::module_ *EmbeddedPyBind::mod = nullptr;
+
 EmbeddedPyBind::EmbeddedPyBind(const char *_name,
                                void (*init_func)(py::module_ &),
-                               const char *_base)
-    : initFunc(init_func), registered(false), name(_name), base(_base)
+                               const char *_base) :
+    initFunc(init_func), name(_name), base(_base)
 {
-    getMap()[_name] = this;
+    init();
 }
 
 EmbeddedPyBind::EmbeddedPyBind(const char *_name,
-                               void (*init_func)(py::module_ &))
-    : initFunc(init_func), registered(false), name(_name), base("")
+                               void (*init_func)(py::module_ &)) :
+    EmbeddedPyBind(_name, init_func, "")
+{}
+
+void
+EmbeddedPyBind::init()
 {
-    getMap()[_name] = this;
+    // If this module is already registered, complain and stop.
+    if (registered) {
+        cprintf("Warning: %s already registered.\n", name);
+        return;
+    }
+
+    auto &ready = getReady();
+    auto &pending = getPending();
+
+    // If we're not ready for this module yet, defer intialization.
+    if (!mod || (!base.empty() && ready.find(base) == ready.end())) {
+        pending.insert({std::string(base), this});
+        return;
+    }
+
+    // We must be ready, so set this module up.
+    initFunc(*mod);
+    ready[name] = this;
+    registered = true;
+
+    // Find any other modules that were waiting for this one and init them.
+    initPending(name);
 }
 
 void
-EmbeddedPyBind::init(py::module_ &m)
+EmbeddedPyBind::initPending(const std::string &finished)
 {
-    if (!registered) {
-        initFunc(m);
-        registered = true;
-    } else {
-        cprintf("Warning: %s already registered.\n", name);
-    }
-}
+    auto &pending = getPending();
 
-bool
-EmbeddedPyBind::depsReady() const
-{
-    return base.empty() || getMap()[base]->registered;
+    auto range = pending.equal_range(finished);
+    std::list<std::pair<std::string, EmbeddedPyBind *>> todo(
+        range.first, range.second);
+    pending.erase(range.first, range.second);
+
+    for (auto &entry: todo)
+        entry.second->init();
 }
 
 std::map<std::string, EmbeddedPyBind *> &
-EmbeddedPyBind::getMap()
+EmbeddedPyBind::getReady()
 {
-    static std::map<std::string, EmbeddedPyBind *> objs;
-    return objs;
+    static std::map<std::string, EmbeddedPyBind *> ready;
+    return ready;
+}
+
+std::multimap<std::string, EmbeddedPyBind *> &
+EmbeddedPyBind::getPending()
+{
+    static std::multimap<std::string, EmbeddedPyBind *> pending;
+    return pending;
 }
 
 void
 EmbeddedPyBind::initAll(py::module_ &_m5)
 {
-    std::list<EmbeddedPyBind *> pending;
-
     pybind_init_core(_m5);
     pybind_init_debug(_m5);
 
     pybind_init_event(_m5);
     pybind_init_stats(_m5);
 
-    for (auto &kv : EmbeddedPyBind::getMap()) {
-        auto &obj = kv.second;
-        if (obj->base.empty()) {
-            obj->init(_m5);
-        } else {
-            pending.push_back(obj);
-        }
-    }
+    mod = &_m5;
 
-    while (!pending.empty()) {
-        for (auto it = pending.begin(); it != pending.end(); ) {
-            EmbeddedPyBind &obj = **it;
-            if (obj.depsReady()) {
-                obj.init(_m5);
-                it = pending.erase(it);
-            } else {
-                ++it;
-            }
-        }
-    }
+    // Init all the modules that were waiting on the _m5 module itself.
+    initPending("");
 }
 
 GEM5_PYBIND_MODULE_INIT(_m5, EmbeddedPyBind::initAll)
