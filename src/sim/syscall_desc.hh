@@ -95,10 +95,15 @@ class SyscallDesc
         _name(name), _num(num), executor(exec), dumper(dump)
     {}
 
+    void retrySyscall(ThreadContext *tc);
+
   private:
     /** System call name (e.g., open, mmap, clone, socket, etc.) */
     std::string _name;
     int _num;
+
+    void setupRetry(ThreadContext *tc);
+    void handleReturn(ThreadContext *tc, const SyscallReturn &ret);
 
     /** Mechanism for ISAs to connect to the emul function definitions */
     Executor executor;
