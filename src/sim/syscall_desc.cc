@@ -44,12 +44,14 @@ SyscallDesc::doSyscall(ThreadContext *tc)
 
     SyscallReturn retval = executor(this, tc);
 
-    if (retval.needsRetry())
+    if (retval.needsRetry()) {
         DPRINTF_SYSCALL(Base, "Needs retry.\n", name());
-    else if (retval.suppressed())
+    } else if (retval.suppressed()) {
         DPRINTF_SYSCALL(Base, "No return value.\n", name());
-    else
+    } else {
+        returnInto(tc, retval);
         DPRINTF_SYSCALL(Base, "Returned %d.\n", retval.encodedValue());
+    }
 }
 
 } // namespace gem5

@@ -82,9 +82,6 @@ struct Result<ABI, SyscallReturn,
     static void
     store(ThreadContext *tc, const SyscallReturn &ret)
     {
-        if (ret.suppressed() || ret.needsRetry())
-            return;
-
         RegVal val;
         if (ret.successful()) {
             tc->setCCReg(ArmISA::CCREG_C, 0);

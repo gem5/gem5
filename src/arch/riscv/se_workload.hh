@@ -75,9 +75,6 @@ struct Result<RiscvISA::SEWorkload::SyscallABI, SyscallReturn>
     static void
     store(ThreadContext *tc, const SyscallReturn &ret)
     {
-        if (ret.suppressed() || ret.needsRetry())
-            return;
-
         if (ret.successful()) {
             // no error
             tc->setIntReg(RiscvISA::ReturnValueReg, ret.returnValue());

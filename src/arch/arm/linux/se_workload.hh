@@ -74,9 +74,6 @@ struct Result<ABI, SyscallReturn,
     static void
     store(ThreadContext *tc, const SyscallReturn &ret)
     {
-        if (ret.suppressed() || ret.needsRetry())
-            return;
-
         tc->setIntReg(ArmISA::ReturnValueReg, ret.encodedValue());
         if (ret.count() > 1)
             tc->setIntReg(ArmISA::SyscallPseudoReturnReg, ret.value2());

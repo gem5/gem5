@@ -77,9 +77,6 @@ struct Result<PowerISA::SEWorkload::SyscallABI, SyscallReturn>
     static void
     store(ThreadContext *tc, const SyscallReturn &ret)
     {
-        if (ret.suppressed() || ret.needsRetry())
-            return;
-
         PowerISA::Cr cr = tc->readIntReg(PowerISA::INTREG_CR);
         if (ret.successful()) {
             cr.cr0.so = 0;
