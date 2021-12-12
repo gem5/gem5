@@ -89,9 +89,6 @@ struct Result<ABI, SyscallReturn,
     static void
     store(ThreadContext *tc, const SyscallReturn &ret)
     {
-        if (ret.suppressed() || ret.needsRetry())
-            return;
-
         // check for error condition.  SPARC syscall convention is to
         // indicate success/failure in reg the carry bit of the ccr
         // and put the return value itself in the standard return value reg.
