@@ -533,7 +533,8 @@ TableWalker::processWalkWrapper()
     unsigned num_squashed = 0;
     ThreadContext *tc = currState->tc;
     while ((num_squashed < numSquashable) && currState &&
-           (currState->transState->squashed() || te)) {
+           (currState->transState->squashed() ||
+            (te && !te->partial))) {
         pendingQueue.pop_front();
         num_squashed++;
         stats.squashedBefore++;
