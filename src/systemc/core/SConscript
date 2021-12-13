@@ -39,7 +39,6 @@ if env['USE_SYSTEMC']:
     Source('object.cc')
     Source('port.cc')
     Source('process.cc')
-    Source('scheduler.cc')
     Source('sched_event.cc')
     Source('sensitivity.cc')
     Source('time.cc')
@@ -72,3 +71,11 @@ if env['USE_SYSTEMC']:
                     append['CCFLAGS'] = [flag]
                     break
         Source('sc_time_python.cc', append=append)
+
+    # Disable the false positive warning for the event members of the scheduler.
+    with gem5_scons.Configure(main) as conf:
+        flag = '-Wno-free-nonheap-object'
+        append = {}
+        if conf.CheckCxxFlag(flag, autoadd=False):
+            append['CCFLAGS'] = [flag]
+        Source('scheduler.cc', append=append)
