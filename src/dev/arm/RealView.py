@@ -73,12 +73,14 @@ from m5.objects.CfiMemory import CfiMemory
 # emulation. Use a GIC model that automatically switches between
 # gem5's GIC model and KVM's GIC model if KVM is available.
 try:
-    from m5.objects.KvmGic import MuxingKvmGicV2
+    from m5.objects.KvmGic import MuxingKvmGicV2, MuxingKvmGicV3
     kvm_gicv2_class = MuxingKvmGicV2
+    kvm_gicv3_class = MuxingKvmGicV3
 except ImportError:
     # KVM support wasn't compiled into gem5. Fallback to a
     # software-only GIC.
     kvm_gicv2_class = Gic400
+    kvm_gicv3_class = Gicv3
     pass
 
 class AmbaPioDevice(BasicPioDevice):
@@ -1420,9 +1422,9 @@ class VExpress_GEM5_Foundation(VExpress_GEM5_Base):
 
     clcd = Pl111(pio_addr=0x1c1f0000, interrupt=ArmSPI(num=46))
 
-    gic = Gicv3(dist_addr=0x2f000000, redist_addr=0x2f100000,
-                maint_int=ArmPPI(num=25), gicv4=False,
-                its=NULL)
+    gic = kvm_gicv3_class(dist_addr=0x2f000000, redist_addr=0x2f100000,
+                          maint_int=ArmPPI(num=25), gicv4=False,
+                          its=NULL)
 
     pci_host = GenericArmPciHost(
         conf_base=0x40000000, conf_size='256MiB', conf_device_bits=12,
