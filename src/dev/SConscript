@@ -35,7 +35,7 @@ Source('isa_fake.cc')
 Source('dma_device.cc')
 Source('dma_virt_device.cc')
 
-SimObject('IntPin.py')
+SimObject('IntPin.py', sim_objects=[])
 Source('intpin.cc')
 
 DebugFlag('IsaFake')
