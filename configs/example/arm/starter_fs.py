@@ -148,6 +148,9 @@ def create(args):
             os.path.join(m5.options.outdir, 'system.dtb')
         system.generateDtb(system.workload.dtb_filename)
 
+    if args.initrd:
+        system.workload.initrd_filename = args.initrd
+
     # Linux boot command flags
     kernel_cmd = [
         # Tell Linux to use the simulated serial port as a console
@@ -196,6 +199,8 @@ def main():
                         help="DTB file to load")
     parser.add_argument("--kernel", type=str, default=default_kernel,
                         help="Linux kernel")
+    parser.add_argument("--initrd", type=str, default=None,
+                        help="initrd/initramfs file to load")
     parser.add_argument("--disk-image", type=str,
                         default=default_disk,
                         help="Disk to instantiate")
