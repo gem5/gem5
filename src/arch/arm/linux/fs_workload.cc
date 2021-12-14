@@ -91,6 +91,21 @@ FsLinux::initState()
     bool dtb_file_specified = params().dtb_filename != "";
 
     if (kernel_has_fdt_support && dtb_file_specified) {
+        bool initrd_file_specified = params().initrd_filename != "";
+        size_t initrd_len = 0;
+
+        if (initrd_file_specified) {
+            inform("Loading initrd file: %s at address %#x\n",
+                    params().initrd_filename, params().initrd_addr);
+
+            loader::ImageFileDataPtr initrd_file_data(
+                new loader::ImageFileData(params().initrd_filename));
+            system->physProxy.writeBlob(params().initrd_addr,
+                                        initrd_file_data->data(),
+                                        initrd_file_data->len());
+            initrd_len = initrd_file_data->len();
+        }
+
         // Kernel supports flattened device tree and dtb file specified.
         // Using Device Tree Blob to describe system configuration.
         inform("Loading DTB file: %s at address %#x\n", params().dtb_filename,
@@ -98,8 +113,8 @@ FsLinux::initState()
 
         auto *dtb_file = new loader::DtbFile(params().dtb_filename);
 
-        if (!dtb_file->addBootCmdLine(
-                    commandLine.c_str(), commandLine.size())) {
+        if (!dtb_file->addBootData(commandLine.c_str(), commandLine.size(),
+                                   params().initrd_addr, initrd_len)) {
             warn("couldn't append bootargs to DTB file: %s\n",
                  params().dtb_filename);
         }
