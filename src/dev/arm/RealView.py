@@ -750,6 +750,8 @@ class RealView(Platform):
         cur_sys.workload.boot_loader = boot_loader
         cur_sys.workload.load_addr_offset = load_offset
         cur_sys.workload.dtb_addr = load_offset + dtb_addr
+        # Use 0x200000 as this is the maximum size allowed for a DTB
+        cur_sys.workload.initrd_addr = cur_sys.workload.dtb_addr + 0x200000
         cur_sys.workload.cpu_release_addr = cur_sys.workload.dtb_addr - 8
 
     def generateDeviceTree(self, state):
