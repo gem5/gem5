@@ -56,7 +56,7 @@ class RemoteGDB : public BaseRemoteGDB
 
     bool acc(Addr addr, size_t len) override;
     // A breakpoint will be 2 bytes if it is compressed and 4 if not
-    bool checkBpLen(size_t len) override { return len == 2 || len == 4; }
+    bool checkBpKind(size_t kind) override { return kind == 2 || kind == 4; }
 
     class RiscvGdbRegCache : public BaseGdbRegCache
     {

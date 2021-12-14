@@ -362,10 +362,10 @@ RemoteGDB::gdbRegs()
 }
 
 bool
-RemoteGDB::checkBpLen(size_t len)
+RemoteGDB::checkBpKind(size_t kind)
 {
     // 2 for Thumb ISA, 4 for ARM ISA.
-    return len == 2 || len == 4;
+    return kind == 2 || kind == 4;
 }
 
 } // namespace gem5
