@@ -106,12 +106,11 @@ class MemBus(SystemXBar):
 
 class CpuCluster(SubSystem):
     def __init__(self, system,  num_cpus, cpu_clock, cpu_voltage,
-                 cpu_type, l1i_type, l1d_type, wcache_type, l2_type):
+                 cpu_type, l1i_type, l1d_type, l2_type):
         super(CpuCluster, self).__init__()
         self._cpu_type = cpu_type
         self._l1i_type = l1i_type
         self._l1d_type = l1d_type
-        self._wcache_type = wcache_type
         self._l2_type = l2_type
 
         assert num_cpus > 0
@@ -140,9 +139,7 @@ class CpuCluster(SubSystem):
         for cpu in self.cpus:
             l1i = None if self._l1i_type is None else self._l1i_type()
             l1d = None if self._l1d_type is None else self._l1d_type()
-            iwc = None if self._wcache_type is None else self._wcache_type()
-            dwc = None if self._wcache_type is None else self._wcache_type()
-            cpu.addPrivateSplitL1Caches(l1i, l1d, iwc, dwc)
+            cpu.addPrivateSplitL1Caches(l1i, l1d)
 
     def addL2(self, clk_domain):
         if self._l2_type is None:
