@@ -65,17 +65,6 @@ class L1D(L1_DCache):
     write_buffers = 16
 
 
-class WalkCache(PageTableWalkerCache):
-    tag_latency = 4
-    data_latency = 4
-    response_latency = 4
-    mshrs = 6
-    tgts_per_mshr = 8
-    size = '1kB'
-    assoc = 8
-    write_buffers = 16
-
-
 class L2(L2Cache):
     tag_latency = 12
     data_latency = 12

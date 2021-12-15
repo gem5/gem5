@@ -1332,16 +1332,6 @@ class HPI_MMU(ArmMMU):
     itb = ArmTLB(entry_type="instruction", size=256)
     dtb = ArmTLB(entry_type="data", size=256)
 
-class HPI_WalkCache(Cache):
-    data_latency = 4
-    tag_latency = 4
-    response_latency = 4
-    mshrs = 6
-    tgts_per_mshr = 8
-    size = '1kB'
-    assoc = 8
-    write_buffers = 16
-
 class HPI_BP(TournamentBP):
     localPredictorSize = 64
     localCtrBits = 2
@@ -1442,7 +1432,7 @@ class HPI(MinorCPU):
 
 __all__ = [
     "HPI_BP",
-    "HPI_ITB", "HPI_DTB", "HPI_WalkCache",
+    "HPI_ITB", "HPI_DTB",
     "HPI_ICache", "HPI_DCache", "HPI_L2",
     "HPI",
 ]
