@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 ARM Limited
+ * Copyright (c) 2015-2017, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -189,8 +189,8 @@ class MuxingKvmGic : public GicV2
     void sendPPInt(uint32_t num, uint32_t cpu) override;
     void clearPPInt(uint32_t num, uint32_t cpu) override;
 
-  protected: // GicV2
-    void updateIntState(int hint) override;
+  protected: // BaseGic
+    bool blockIntUpdate() const override;
 
   protected:
     /** System this interrupt controller belongs to */

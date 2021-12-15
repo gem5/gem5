@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 ARM Limited
+ * Copyright (c) 2015-2017, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -273,17 +273,15 @@ MuxingKvmGic::clearPPInt(uint32_t num, uint32_t cpu)
     kernelGic->clearPPI(cpu, num);
 }
 
-void
-MuxingKvmGic::updateIntState(int hint)
+bool
+MuxingKvmGic::blockIntUpdate() const
 {
-    // During Kvm->GicV2 state transfer, writes to the GicV2 will call
+    // During Kvm->Gic state transfer, writes to the Gic will call
     // updateIntState() which can post an interrupt.  Since we're only
-    // using the GicV2 model for holding state in this circumstance, we
+    // using the Gic model for holding state in this circumstance, we
     // short-circuit this behavior, as the GicV2 is not actually active.
-    if (!usingKvm)
-        return GicV2::updateIntState(hint);
+    return usingKvm;
 }
-
 
 void
 MuxingKvmGic::fromGicV2ToKvm()

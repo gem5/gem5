@@ -448,7 +448,7 @@ class GicV2 : public BaseGic, public BaseGicRegisters
     /** See if some processor interrupt flags need to be enabled/disabled
      * @param hint which set of interrupts needs to be checked
      */
-    virtual void updateIntState(int hint);
+    void updateIntState(int hint);
 
     /** Update the register that records priority of the highest priority
      *  active interrupt*/
