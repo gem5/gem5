@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 ARM Limited
+ * Copyright (c) 2019, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -2032,6 +2032,9 @@ Gicv3CPUInterface::updateDistributor()
 void
 Gicv3CPUInterface::update()
 {
+    if (gic->blockIntUpdate())
+        return;
+
     bool signal_IRQ = false;
     bool signal_FIQ = false;
 
@@ -2066,6 +2069,9 @@ Gicv3CPUInterface::update()
 void
 Gicv3CPUInterface::virtualUpdate()
 {
+    if (gic->blockIntUpdate())
+        return;
+
     bool signal_IRQ = false;
     bool signal_FIQ = false;
     int lr_idx = getHPPVILR();

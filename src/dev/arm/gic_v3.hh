@@ -58,6 +58,7 @@ class Gicv3 : public BaseGic
   protected:
     friend class Gicv3CPUInterface;
     friend class Gicv3Redistributor;
+    friend class Gicv3Distributor;
 
     Gicv3Distributor * distributor;
     std::vector<Gicv3Redistributor *> redistributors;

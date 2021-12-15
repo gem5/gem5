@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 ARM Limited
+ * Copyright (c) 2019-2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1085,6 +1085,9 @@ Gicv3Distributor::clearIrqCpuInterface(uint32_t int_id)
 void
 Gicv3Distributor::update()
 {
+    if (gic->blockIntUpdate())
+        return;
+
     // Find the highest priority pending SPI
     for (int int_id = Gicv3::SGI_MAX + Gicv3::PPI_MAX; int_id < itLines;
          int_id++) {

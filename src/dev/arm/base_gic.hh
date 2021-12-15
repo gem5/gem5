@@ -119,6 +119,16 @@ class BaseGic :  public PioDevice
     /** Check if version supported */
     virtual bool supportsVersion(GicVersion version) = 0;
 
+  protected: // GIC state transfer
+    /**
+     * When trasferring the state between two GICs (essentially
+     * writing architectural registers) an interrupt might be posted
+     * by the model. We don't want this to happen as the GIC might
+     * be in an inconsistent state. We therefore disable side effects
+     * by relying on the blockIntUpdate method.
+     */
+    virtual bool blockIntUpdate() const { return false; }
+
   protected:
     /** Platform this GIC belongs to. */
     Platform *platform;

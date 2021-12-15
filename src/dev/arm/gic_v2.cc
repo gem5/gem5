@@ -738,6 +738,9 @@ GicV2::getCpuPriority(unsigned cpu)
 void
 GicV2::updateIntState(int hint)
 {
+    if (blockIntUpdate())
+        return;
+
     for (int cpu = 0; cpu < sys->threads.size(); cpu++) {
         if (!cpuEnabled(cpu))
             continue;
