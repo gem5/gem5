@@ -92,15 +92,10 @@ sc_main_result_str()
 // Make our sc_main wrapper available in the internal _m5 python module under
 // the systemc submodule.
 
-struct InstallScMain : public ::sc_gem5::PythonInitFunc
-{
-    void
-    run(pybind11::module_ &systemc) override
-    {
-        systemc.def("sc_main", &sc_main);
-        systemc.def("sc_main_result_code", &sc_main_result_code);
-        systemc.def("sc_main_result_str", &sc_main_result_str);
-    }
-} installScMain;
+::sc_gem5::PythonInitFunc installScMain([](pybind11::module_ &systemc) {
+    systemc.def("sc_main", &sc_main);
+    systemc.def("sc_main_result_code", &sc_main_result_code);
+    systemc.def("sc_main_result_str", &sc_main_result_str);
+});
 
 } // anonymous namespace
