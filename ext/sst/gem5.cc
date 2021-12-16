@@ -262,7 +262,7 @@ gem5Component::clockTick(SST::Cycle_t currentCycle)
         );
         // output gem5 stats
         const std::vector<std::string> output_stats_commands = {
-            "import m5.stats"
+            "import m5.stats",
             "m5.stats.dump()"
         };
         execPythonCommands(output_stats_commands);
