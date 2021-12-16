@@ -382,8 +382,27 @@ gem5Component::initPython(int argc, char *_argv[])
     // Initialize gem5 special signal handling.
     gem5::initSignals();
 
-    if (!Py_IsInitialized())
-        py::initialize_interpreter(false, argc, _argv);
+    if (!Py_IsInitialized()) {
+        py::initialize_interpreter(true, argc, _argv);
+    } else {
+        // pybind doesn't provide a way to set sys.argv if not initializing the
+        // interpreter, so we have to do that manually if it's already running.
+        py::list py_argv;
+        auto sys = py::module::import("sys");
+        if (py::hasattr(sys, "argv")) {
+            // sys.argv already exists, so grab that.
+            py_argv = sys.attr("argv");
+        } else {
+            // sys.argv doesn't exist, so create it.
+            sys.add_object("argv", py_argv);
+        }
+        // Clear out argv just in case it has something in it.
+        py_argv.attr("clear")();
+
+        // Fill it with our argvs.
+        for (int i = 0; i < argc; i++)
+            py_argv.append(_argv[i]);
+    }
 
     auto importer = py::module_::import("importer");
     importer.attr("install")();
