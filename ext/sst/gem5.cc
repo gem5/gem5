@@ -194,6 +194,7 @@ gem5Component::init(unsigned phase)
         initPython(args.size(), &args[0]);
 
         const std::vector<std::string> m5_instantiate_commands = {
+            "import m5",
             "m5.instantiate()"
         };
         execPythonCommands(m5_instantiate_commands);
@@ -201,7 +202,10 @@ gem5Component::init(unsigned phase)
         // calling SimObject.startup()
         const std::vector<std::string> simobject_setup_commands = {
             "import atexit",
-            "import _m5",
+            "import _m5.core",
+            "import m5",
+            "import m5.stats",
+            "import m5.objects.Root",
             "root = m5.objects.Root.getInstance()",
             "for obj in root.descendants(): obj.startup()",
             "atexit.register(m5.stats.dump)",
@@ -258,6 +262,7 @@ gem5Component::clockTick(SST::Cycle_t currentCycle)
         );
         // output gem5 stats
         const std::vector<std::string> output_stats_commands = {
+            "import m5.stats"
             "m5.stats.dump()"
         };
         execPythonCommands(output_stats_commands);
