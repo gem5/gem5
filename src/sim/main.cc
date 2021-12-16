@@ -60,27 +60,10 @@ main(int argc, char **argv)
     // It's probably not necessary, but is mostly harmless and might be useful.
     Py_SetProgramName(program.get());
 
-    py::scoped_interpreter guard;
+    py::scoped_interpreter guard(true, argc, argv);
 
     auto importer = py::module_::import("importer");
     importer.attr("install")();
-
-    // Embedded python doesn't set up sys.argv, so we'll do that ourselves.
-    py::list py_argv;
-    auto sys = py::module::import("sys");
-    if (py::hasattr(sys, "argv")) {
-        // sys.argv already exists, so grab that.
-        py_argv = sys.attr("argv");
-    } else {
-        // sys.argv doesn't exist, so create it.
-        sys.add_object("argv", py_argv);
-    }
-    // Clear out argv just in case it has something in it.
-    py_argv.attr("clear")();
-
-    // Fill it with our argvs.
-    for (int i = 0; i < argc; i++)
-        py_argv.append(argv[i]);
 
     try {
         py::module_::import("m5").attr("main")();
