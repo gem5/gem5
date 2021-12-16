@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2020 ARM Limited
+ * Copyright (c) 2010-2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1153,6 +1153,46 @@ namespace ArmISA
 
     extern std::bitset<NUM_MISCREG_INFOS> miscRegInfo[NUM_MISCREGS];
 
+    struct MiscRegNum64
+    {
+        MiscRegNum64(unsigned _op0, unsigned _op1,
+                     unsigned _crn, unsigned _crm,
+                     unsigned _op2)
+          : op0(_op0), op1(_op1), crn(_crn),
+            crm(_crm), op2(_op2)
+        {
+            assert(op0 < 4 && op1 < 8 && crn < 16 && crm < 16 && op2 < 8);
+        }
+
+        MiscRegNum64(const MiscRegNum64& rhs) = default;
+
+        bool
+        operator==(const MiscRegNum64 &other) const
+        {
+            return op0 == other.op0 &&
+                op1 == other.op1 &&
+                crn == other.crn &&
+                crm == other.crm &&
+                op2 == other.op2;
+        }
+
+        uint32_t
+        packed() const
+        {
+            return op0 << 14 |
+                   op1 << 11 |
+                   crn << 7  |
+                   crm << 3  |
+                   op2;
+        }
+
+        unsigned op0;
+        unsigned op1;
+        unsigned crn;
+        unsigned crm;
+        unsigned op2;
+    };
+
     // Decodes 32-bit CP14 registers accessible through MCR/MRC instructions
     MiscRegIndex decodeCP14Reg(unsigned crn, unsigned opc1,
                                unsigned crm, unsigned opc2);
@@ -2285,5 +2325,18 @@ namespace ArmISA
 
 } // namespace ArmISA
 } // namespace gem5
+
+namespace std
+{
+template<>
+struct hash<gem5::ArmISA::MiscRegNum64>
+{
+    size_t
+    operator()(const gem5::ArmISA::MiscRegNum64& reg) const
+    {
+        return reg.packed();
+    }
+};
+} // namespace std
 
 #endif // __ARCH_ARM_REGS_MISC_HH__
