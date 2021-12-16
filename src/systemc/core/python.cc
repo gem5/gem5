@@ -38,13 +38,6 @@ namespace sc_gem5
 namespace
 {
 
-PythonReadyFunc *&
-firstReadyFunc()
-{
-    static PythonReadyFunc *first = nullptr;
-    return first;
-}
-
 PythonInitFunc *&
 firstInitFunc()
 {
@@ -53,28 +46,15 @@ firstInitFunc()
 }
 
 void
-python_ready(pybind11::args args)
-{
-    for (auto ptr = firstReadyFunc(); ptr; ptr = ptr->next)
-        ptr->run();
-}
-
-void
 systemc_pybind(pybind11::module_ &m_internal)
 {
     pybind11::module_ m = m_internal.def_submodule("systemc");
-    m.def("python_ready", &python_ready);
     for (auto ptr = firstInitFunc(); ptr; ptr = ptr->next)
         ptr->run(m);
 }
 gem5::EmbeddedPyBind embed_("systemc", &systemc_pybind);
 
 } // anonymous namespace
-
-PythonReadyFunc::PythonReadyFunc() : next(firstReadyFunc())
-{
-    firstReadyFunc() = this;
-}
 
 PythonInitFunc::PythonInitFunc() : next(firstInitFunc())
 {

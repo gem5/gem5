@@ -33,15 +33,6 @@
 namespace sc_gem5
 {
 
-struct PythonReadyFunc
-{
-    PythonReadyFunc *next;
-
-    PythonReadyFunc();
-    ~PythonReadyFunc() {}
-    virtual void run() = 0;
-};
-
 struct PythonInitFunc
 {
     PythonInitFunc *next;

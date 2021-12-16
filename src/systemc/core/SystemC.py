@@ -63,11 +63,3 @@ class SystemC_ScModule(SystemC_ScObject):
     @cxxMethod(return_value_policy="reference", cxx_name="gem5_getPort")
     def getPort(self, if_name, iex):
         return None
-
-try:
-    import _m5
-except:
-    pass
-else:
-    import _m5.systemc
-    _m5.systemc.python_ready()
