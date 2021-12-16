@@ -277,9 +277,9 @@ class LogChecker(DiffingChecker):
     test_filt = merge_filts(
         r'^/.*:\d+: ',
         r'^Global frequency set at \d* ticks per second\n',
-        r'info: Entering event queue @ \d*\.  Starting simulation\.\.\.\n',
-        r'warn: Ignoring request to set stack size\.\n',
-        r'^warn: No dot file generated. Please install pydot ' +
+        r'.*info: Entering event queue @ \d*\.  Starting simulation\.\.\.\n',
+        r'.*warn: Ignoring request to set stack size\.\n',
+        r'^.*warn: No dot file generated. Please install pydot ' +
         r'to generate the dot file and pdf.\n',
         info_filt(804),
         in_file_filt,

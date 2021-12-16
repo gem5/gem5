@@ -63,7 +63,8 @@ if env['USE_SYSTEMC'] and GetOption('with_systemc_tests'):
     test_dir = Dir('.')
     class SystemCTestBin(Executable):
         def __init__(self, test):
-            super().__init__(test.target, *test.sources)
+            all_sources = test.sources + [with_tag('main')]
+            super().__init__(test.target, *all_sources)
             self.reldir = test.reldir
             self.test_deps = test.deps
 
@@ -78,26 +79,16 @@ if env['USE_SYSTEMC'] and GetOption('with_systemc_tests'):
 
             env.Append(CPPPATH=test_dir.Dir('include'))
 
-            shared_lib_path = env['SHARED_LIB'][0].abspath
-            sl_dir, sl_base = os.path.split(shared_lib_path)
-            env.Append(LIBPATH=[sl_dir], LIBS=[sl_base])
+            env.Append(LIBPATH=['${BUILDDIR}'], LIBS=['gem5_${ENV_LABEL}'])
+            env.AddLocalRPATH('${BUILDDIR}')
+
+            env['OBJSUFFIX'] = '.sc' + env['OBJSUFFIX'][1:]
+            env['SHOBJSUFFIX'] = '.sc' + env['OBJSUFFIX'][1:]
 
             super().declare_all(env)
 
         def declare(self, env):
-            env = env.Clone()
-            sources = list(self.sources)
-            for f in self.filters:
-                sources += Source.all.apply_filter(f)
-            objs = self.srcs_to_objs(env, sources)
-            objs = objs + env['MAIN_OBJS']
-            relpath = os.path.relpath(
-                    env['SHARED_LIB'][0].dir.abspath,
-                    self.path(env).dir.abspath)
-            env.Append(LINKFLAGS=Split('-z origin'))
-            env.Append(RPATH=[
-                    env.Literal(os.path.join('\\$$ORIGIN', relpath))])
-            test_bin = super().declare(env, objs)
+            test_bin, _u = super().declare(env)
             test_dir = self.dir.Dir(self.reldir)
             for dep in self.test_deps:
                 env.Depends(test_bin, test_dir.File(dep))
