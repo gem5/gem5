@@ -355,7 +355,8 @@ gem5Component::doSimLoop(gem5::EventQueue* eventq)
 int
 gem5Component::execPythonCommands(const std::vector<std::string>& commands)
 {
-    PyObject *dict = PyModule_GetDict(pythonMain);
+    static PyObject *dict =
+        py::module_::import("__main__").attr("__dict__").ptr();
 
     PyObject *result;
 

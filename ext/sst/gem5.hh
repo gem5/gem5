@@ -104,7 +104,6 @@ class gem5Component: public SST::Component
 
   // stuff needed for gem5 sim
   public:
-    PyObject *pythonMain;
     int execPythonCommands(const std::vector<std::string>& commands);
 
   private:
