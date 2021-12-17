@@ -112,21 +112,6 @@ class L1D(L1Cache):
     assoc = 4
     write_buffers = 4
 
-# TLB Cache
-# Use a cache as a L2 TLB
-class WalkCache(Cache):
-    tag_latency = 2
-    data_latency = 2
-    response_latency = 2
-    mshrs = 6
-    tgts_per_mshr = 8
-    size = '1kB'
-    assoc = 2
-    write_buffers = 16
-    is_read_only = True
-    # Writeback clean lines as well
-    writeback_clean = True
-
 # L2 Cache
 class L2(Cache):
     tag_latency = 9

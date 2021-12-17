@@ -32,7 +32,7 @@ Import('*')
 
 if 'O3CPU' in env['CPU_MODELS']:
     SimObject('FUPool.py', sim_objects=['FUPool'])
-    SimObject('FuncUnitConfig.py')
+    SimObject('FuncUnitConfig.py', sim_objects=[])
     SimObject('O3CPU.py', sim_objects=['O3CPU'], enums=[
         'SMTFetchPolicy', 'SMTQueuePolicy', 'CommitPolicy'])
 

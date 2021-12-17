@@ -33,48 +33,43 @@
 namespace
 {
 
-struct InstallScTime : public ::sc_gem5::PythonInitFunc
-{
-    void
-    run(pybind11::module_ &systemc) override
-    {
-        pybind11::class_<sc_core::sc_time> sc_time(systemc, "sc_time");
-        sc_time
-            // Constructors (omitting nonstandard and deprecated)
-            .def(pybind11::init<>())
-            .def(pybind11::init<double, sc_core::sc_time_unit>())
-            .def(pybind11::init<const sc_core::sc_time &>())
+::sc_gem5::PythonInitFunc installScTime([](pybind11::module_ &systemc) {
+    pybind11::class_<sc_core::sc_time> sc_time(systemc, "sc_time");
+    sc_time
+        // Constructors (omitting nonstandard and deprecated)
+        .def(pybind11::init<>())
+        .def(pybind11::init<double, sc_core::sc_time_unit>())
+        .def(pybind11::init<const sc_core::sc_time &>())
 
-            // Converters.
-            .def("value", &sc_core::sc_time::value)
-            .def("to_double", &sc_core::sc_time::to_double)
-            .def("to_seconds", &sc_core::sc_time::to_seconds)
-            .def("to_string", &sc_core::sc_time::to_string)
-            .def("__str__", &sc_core::sc_time::to_string)
+        // Converters.
+        .def("value", &sc_core::sc_time::value)
+        .def("to_double", &sc_core::sc_time::to_double)
+        .def("to_seconds", &sc_core::sc_time::to_seconds)
+        .def("to_string", &sc_core::sc_time::to_string)
+        .def("__str__", &sc_core::sc_time::to_string)
 
-            // Operators.
-            .def(pybind11::self == pybind11::self)
-            .def(pybind11::self != pybind11::self)
-            .def(pybind11::self < pybind11::self)
-            .def(pybind11::self <= pybind11::self)
-            .def(pybind11::self > pybind11::self)
-            .def(pybind11::self >= pybind11::self)
-            .def(pybind11::self += pybind11::self)
-            .def(pybind11::self -= pybind11::self)
-            .def(pybind11::self *= double())
-            .def(pybind11::self /= double())
-            ;
+        // Operators.
+        .def(pybind11::self == pybind11::self)
+        .def(pybind11::self != pybind11::self)
+        .def(pybind11::self < pybind11::self)
+        .def(pybind11::self <= pybind11::self)
+        .def(pybind11::self > pybind11::self)
+        .def(pybind11::self >= pybind11::self)
+        .def(pybind11::self += pybind11::self)
+        .def(pybind11::self -= pybind11::self)
+        .def(pybind11::self *= double())
+        .def(pybind11::self /= double())
+        ;
 
-        pybind11::enum_<sc_core::sc_time_unit>(sc_time, "sc_time_unit")
-            .value("SC_FS", sc_core::SC_FS)
-            .value("SC_PS", sc_core::SC_PS)
-            .value("SC_NS", sc_core::SC_NS)
-            .value("SC_US", sc_core::SC_US)
-            .value("SC_MS", sc_core::SC_MS)
-            .value("SC_SEC", sc_core::SC_SEC)
-            .export_values()
-            ;
-    }
-} installScTime;
+    pybind11::enum_<sc_core::sc_time_unit>(sc_time, "sc_time_unit")
+        .value("SC_FS", sc_core::SC_FS)
+        .value("SC_PS", sc_core::SC_PS)
+        .value("SC_NS", sc_core::SC_NS)
+        .value("SC_US", sc_core::SC_US)
+        .value("SC_MS", sc_core::SC_MS)
+        .value("SC_SEC", sc_core::SC_SEC)
+        .export_values()
+        ;
+});
 
 } // anonymous namespace

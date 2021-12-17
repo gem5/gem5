@@ -38,13 +38,6 @@ namespace sc_gem5
 namespace
 {
 
-PythonReadyFunc *&
-firstReadyFunc()
-{
-    static PythonReadyFunc *first = nullptr;
-    return first;
-}
-
 PythonInitFunc *&
 firstInitFunc()
 {
@@ -52,33 +45,31 @@ firstInitFunc()
     return first;
 }
 
-void
-python_ready(pybind11::args args)
-{
-    for (auto ptr = firstReadyFunc(); ptr; ptr = ptr->next)
-        ptr->run();
-}
+bool python_initialized = false;
 
 void
 systemc_pybind(pybind11::module_ &m_internal)
 {
     pybind11::module_ m = m_internal.def_submodule("systemc");
-    m.def("python_ready", &python_ready);
     for (auto ptr = firstInitFunc(); ptr; ptr = ptr->next)
-        ptr->run(m);
+        ptr->callback(m);
+
+    python_initialized = true;
 }
 gem5::EmbeddedPyBind embed_("systemc", &systemc_pybind);
 
 } // anonymous namespace
 
-PythonReadyFunc::PythonReadyFunc() : next(firstReadyFunc())
-{
-    firstReadyFunc() = this;
-}
-
-PythonInitFunc::PythonInitFunc() : next(firstInitFunc())
+PythonInitFunc::PythonInitFunc(Callback run) :
+    callback(run), next(firstInitFunc())
 {
     firstInitFunc() = this;
+
+    // If the python was already initialized, run the callback immediately.
+    if (python_initialized) {
+        auto systemc_module = pybind11::module_::import("_m5.systemc");
+        callback(systemc_module);
+    }
 }
 
 } // namespace sc_gem5

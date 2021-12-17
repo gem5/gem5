@@ -59,14 +59,12 @@ import devices
 # l1_icache_class, l1_dcache_class, walk_cache_class, l2_Cache_class). Any of
 # the cache class may be 'None' if the particular cache is not present.
 cpu_types = {
-    "atomic" : ( AtomicSimpleCPU, None, None, None, None),
+    "atomic" : ( AtomicSimpleCPU, None, None, None),
     "minor" : (MinorCPU,
                devices.L1I, devices.L1D,
-               devices.WalkCache,
                devices.L2),
     "hpi" : ( HPI.HPI,
               HPI.HPI_ICache, HPI.HPI_DCache,
-              HPI.HPI_WalkCache,
               HPI.HPI_L2)
 }
 

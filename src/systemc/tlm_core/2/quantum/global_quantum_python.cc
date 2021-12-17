@@ -31,21 +31,17 @@
 namespace
 {
 
-struct InstallTlmGlobalQuantum : public ::sc_gem5::PythonInitFunc
-{
-    void
-    run(pybind11::module_ &systemc) override
-    {
-        pybind11::class_<tlm::tlm_global_quantum>(
-                systemc, "tlm_global_quantum")
-            .def_static("instance", &tlm::tlm_global_quantum::instance,
-                        pybind11::return_value_policy::reference)
-            .def("set", &tlm::tlm_global_quantum::set)
-            .def("get", &tlm::tlm_global_quantum::get)
-            .def("compute_local_quantum",
-                    &tlm::tlm_global_quantum::compute_local_quantum)
-            ;
-    }
-} installTlmGlobalQuantum;
+::sc_gem5::PythonInitFunc installTlmGlobalQuantum(
+        [](pybind11::module_ &systemc) {
+    pybind11::class_<tlm::tlm_global_quantum>(
+            systemc, "tlm_global_quantum")
+        .def_static("instance", &tlm::tlm_global_quantum::instance,
+                    pybind11::return_value_policy::reference)
+        .def("set", &tlm::tlm_global_quantum::set)
+        .def("get", &tlm::tlm_global_quantum::get)
+        .def("compute_local_quantum",
+                &tlm::tlm_global_quantum::compute_local_quantum)
+        ;
+});
 
 } // anonymous namespace

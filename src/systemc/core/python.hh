@@ -33,22 +33,14 @@
 namespace sc_gem5
 {
 
-struct PythonReadyFunc
-{
-    PythonReadyFunc *next;
-
-    PythonReadyFunc();
-    ~PythonReadyFunc() {}
-    virtual void run() = 0;
-};
-
 struct PythonInitFunc
 {
+    using Callback = void(*)(pybind11::module_ &systemc);
+    Callback callback;
+
     PythonInitFunc *next;
 
-    PythonInitFunc();
-    ~PythonInitFunc() {}
-    virtual void run(pybind11::module_ &systemc) = 0;
+    PythonInitFunc(Callback run);
 };
 
 } // namespace sc_gem5

@@ -194,6 +194,7 @@ gem5Component::init(unsigned phase)
         initPython(args.size(), &args[0]);
 
         const std::vector<std::string> m5_instantiate_commands = {
+            "import m5",
             "m5.instantiate()"
         };
         execPythonCommands(m5_instantiate_commands);
@@ -201,7 +202,10 @@ gem5Component::init(unsigned phase)
         // calling SimObject.startup()
         const std::vector<std::string> simobject_setup_commands = {
             "import atexit",
-            "import _m5",
+            "import _m5.core",
+            "import m5",
+            "import m5.stats",
+            "import m5.objects.Root",
             "root = m5.objects.Root.getInstance()",
             "for obj in root.descendants(): obj.startup()",
             "atexit.register(m5.stats.dump)",
@@ -258,6 +262,7 @@ gem5Component::clockTick(SST::Cycle_t currentCycle)
         );
         // output gem5 stats
         const std::vector<std::string> output_stats_commands = {
+            "import m5.stats",
             "m5.stats.dump()"
         };
         execPythonCommands(output_stats_commands);
@@ -355,7 +360,8 @@ gem5Component::doSimLoop(gem5::EventQueue* eventq)
 int
 gem5Component::execPythonCommands(const std::vector<std::string>& commands)
 {
-    PyObject *dict = PyModule_GetDict(pythonMain);
+    static PyObject *dict =
+        py::module_::import("__main__").attr("__dict__").ptr();
 
     PyObject *result;
 
@@ -376,8 +382,27 @@ gem5Component::initPython(int argc, char *_argv[])
     // Initialize gem5 special signal handling.
     gem5::initSignals();
 
-    if (!Py_IsInitialized())
-        py::initialize_interpreter(false, argc, _argv);
+    if (!Py_IsInitialized()) {
+        py::initialize_interpreter(true, argc, _argv);
+    } else {
+        // pybind doesn't provide a way to set sys.argv if not initializing the
+        // interpreter, so we have to do that manually if it's already running.
+        py::list py_argv;
+        auto sys = py::module::import("sys");
+        if (py::hasattr(sys, "argv")) {
+            // sys.argv already exists, so grab that.
+            py_argv = sys.attr("argv");
+        } else {
+            // sys.argv doesn't exist, so create it.
+            sys.add_object("argv", py_argv);
+        }
+        // Clear out argv just in case it has something in it.
+        py_argv.attr("clear")();
+
+        // Fill it with our argvs.
+        for (int i = 0; i < argc; i++)
+            py_argv.append(_argv[i]);
+    }
 
     auto importer = py::module_::import("importer");
     importer.attr("install")();

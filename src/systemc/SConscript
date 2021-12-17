@@ -32,4 +32,4 @@ env.UseSystemcCheck(warn=True)
 
 env.Append(CPPPATH=Dir('ext'))
 
-SimObject('Tlm.py')
+SimObject('Tlm.py', sim_objects=[])
