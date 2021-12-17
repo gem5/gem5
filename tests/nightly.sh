@@ -108,7 +108,7 @@ docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         || (rm -rf build && scons build/${gpu_isa}/gem5.opt -j${compile_threads})"
 
 # get square
-wget -qN http://dist.gem5.org/dist/develop/test-progs/square/square
+wget -qN http://dist.gem5.org/dist/v21-2/test-progs/square/square
 
 mkdir -p tests/testing-results
 
@@ -120,7 +120,7 @@ docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c square
 
 # get HeteroSync
-wget -qN http://dist.gem5.org/dist/develop/test-progs/heterosync/gcn3/allSyncPrims-1kernel
+wget -qN http://dist.gem5.org/dist/v21-2/test-progs/heterosync/gcn3/allSyncPrims-1kernel
 
 # run HeteroSync sleepMutex -- 16 WGs (4 per CU in default config), each doing
 # 10 Ld/St per thread and 4 iterations of the critical section is a reasonable

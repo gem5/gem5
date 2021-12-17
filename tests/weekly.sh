@@ -75,8 +75,29 @@ rm -f coAuthorsDBLP.graph 1k_128k.gr result.out
 # Moreover, DNNMark builds a library and thus doesn't have a binary, so we
 # need to build it before we run it.
 # Need to pull this first because HACC's docker requires this path to exist
-git clone -b develop https://gem5.googlesource.com/public/gem5-resources \
+git clone https://gem5.googlesource.com/public/gem5-resources \
     "${gem5_root}/gem5-resources"
+
+
+# The following script is to ensure these tests are runnable as the resources
+# directory changes over time. The gem5 resources repository stable branch is
+# tagged upon the new release for that of the previous release. For example,
+# when v22.0 is released, the stable branch will be tagged with "v21.2.X.X"
+# prior to the merging of the develop/staging branch into the stable branch.
+# This is so a user may revert the gem5-resources sources back to a state
+# compatable with a particular major release.
+#
+# To ensure the v21.2 version of these tests continues to run as future
+# versions are released, we run this check. If there's been another release,
+# we checkout the correct version of gem5 resources.
+cd "${gem5_root}/gem5-resources"
+version_tag=$(git tag | grep "v21.2")
+
+if [[ ${version_tag} != "" ]]; then
+       git checkout "${version_tag}"
+fi
+
+cd "${gem5_root}"
 
 # For the GPU tests we compile and run the GPU ISA inside a gcn-gpu container.
 # HACC requires setting numerous environment variables to run correctly.  To
@@ -203,7 +224,7 @@ docker run --rm -v ${PWD}:${PWD} \
        "export GEM5_PATH=${gem5_root} ; make gem5-fusion"
 
 # # get input dataset for BC test
-wget http://dist.gem5.org/dist/develop/datasets/pannotia/bc/1k_128k.gr
+wget http://dist.gem5.org/dist/v21-2/datasets/pannotia/bc/1k_128k.gr
 # run BC
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        hacc-test-weekly ${gem5_root}/build/${gpu_isa}/gem5.opt \
@@ -275,7 +296,7 @@ docker run --rm -v ${gem5_root}:${gem5_root} -w \
        "export GEM5_PATH=${gem5_root} ; make gem5-fusion"
 
 # get PageRank input dataset
-wget http://dist.gem5.org/dist/develop/datasets/pannotia/pagerank/coAuthorsDBLP.graph
+wget http://dist.gem5.org/dist/v21-2/datasets/pannotia/pagerank/coAuthorsDBLP.graph
 # run PageRank (Default)
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        hacc-test-weekly ${gem5_root}/build/${gpu_isa}/gem5.opt \
