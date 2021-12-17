@@ -41,13 +41,16 @@ This Python module contains functions used to download, list, and obtain
 information about resources from resources.gem5.org.
 """
 
+def _resources_json_version_required() -> str:
+    """
+    Specifies the version of resources.json to obtain.
+    """
+    return "21.2"
 
 def _get_resources_json_uri() -> str:
-    # TODO: This is hardcoded to develop. This will need updated for each
-    # release to the stable branch.
     uri = (
         "https://gem5.googlesource.com/public/gem5-resources/"
-        + "+/refs/heads/develop/resources.json?format=TEXT"
+        + "+/refs/heads/stable/resources.json?format=TEXT"
     )
 
     return uri
@@ -64,8 +67,27 @@ def _get_resources_json() -> Dict:
     # text. Therefore when we open the URL we receive the JSON in base64
     # format. Conversion is needed before it can be loaded.
     with urllib.request.urlopen(_get_resources_json_uri()) as url:
-        return json.loads(base64.b64decode(url.read()).decode("utf-8"))
+        to_return = json.loads(base64.b64decode(url.read()).decode("utf-8"))
 
+    # If the current version pulled is not correct, look up the
+    # "previous-versions" field to find the correct one.
+    version = _resources_json_version_required()
+    if to_return["version"] != version:
+        if version in to_return["previous-versions"].keys():
+            with urllib.request.urlopen(
+                    to_return["previous-versions"][version]
+                ) as url:
+                to_return = json.loads(
+                    base64.b64decode(url.read()).decode("utf-8")
+                )
+        else:
+            # This should never happen, but we thrown an exception to explain
+            # that we can't find the version.
+            raise Exception(
+                f"Version '{version}' of resources.json cannot be found."
+                )
+
+    return to_return
 
 def _get_url_base() -> str:
     """
