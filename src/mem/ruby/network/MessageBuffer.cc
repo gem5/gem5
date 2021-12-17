@@ -64,13 +64,23 @@ MessageBuffer::MessageBuffer(const Params &p)
     m_last_arrival_time(0), m_strict_fifo(p.ordered),
     m_randomization(p.randomization),
     m_allow_zero_latency(p.allow_zero_latency),
-    ADD_STAT(m_not_avail_count, "Number of times this buffer did not have "
-                                "N slots available"),
-    ADD_STAT(m_buf_msgs, "Average number of messages in buffer"),
-    ADD_STAT(m_stall_time, "Average number of cycles messages are stalled in "
-                           "this MB"),
-    ADD_STAT(m_stall_count, "Number of times messages were stalled"),
-    ADD_STAT(m_occupancy, "Average occupancy of buffer capacity")
+    ADD_STAT(m_not_avail_count, statistics::units::Count::get(),
+             "Number of times this buffer did not have N slots available"),
+    ADD_STAT(m_msg_count, statistics::units::Count::get(),
+             "Number of messages passed the buffer"),
+    ADD_STAT(m_buf_msgs, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Tick>::get(),
+             "Average number of messages in buffer"),
+    ADD_STAT(m_stall_time, statistics::units::Tick::get(),
+             "Total number of ticks messages were stalled in this buffer"),
+    ADD_STAT(m_stall_count, statistics::units::Count::get(),
+             "Number of times messages were stalled"),
+    ADD_STAT(m_avg_stall_time, statistics::units::Rate<
+                statistics::units::Tick, statistics::units::Count>::get(),
+             "Average stall ticks per message"),
+    ADD_STAT(m_occupancy, statistics::units::Rate<
+                statistics::units::Ratio, statistics::units::Tick>::get(),
+             "Average occupancy of buffer capacity")
 {
     m_msg_counter = 0;
     m_consumer = NULL;
@@ -93,11 +103,17 @@ MessageBuffer::MessageBuffer(const Params &p)
     m_not_avail_count
         .flags(statistics::nozero);
 
+    m_msg_count
+        .flags(statistics::nozero);
+
     m_buf_msgs
         .flags(statistics::nozero);
 
     m_stall_count
         .flags(statistics::nozero);
+
+    m_avg_stall_time
+        .flags(statistics::nozero | statistics::nonan);
 
     m_occupancy
         .flags(statistics::nozero);
@@ -110,6 +126,8 @@ MessageBuffer::MessageBuffer(const Params &p)
     } else {
         m_occupancy = 0;
     }
+
+    m_avg_stall_time = m_stall_time / m_msg_count;
 }
 
 unsigned int
@@ -288,8 +306,6 @@ MessageBuffer::dequeue(Tick current_time, bool decrement_messages)
     message->updateDelayedTicks(current_time);
     Tick delay = message->getDelayedTicks();
 
-    m_stall_time = curTick() - message->getTime();
-
     // record previous size and time so the current buffer size isn't
     // adjusted until schd cycle
     if (m_time_last_time_pop < current_time) {
@@ -301,6 +317,10 @@ MessageBuffer::dequeue(Tick current_time, bool decrement_messages)
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(), std::greater<MsgPtr>());
     m_prio_heap.pop_back();
     if (decrement_messages) {
+        // Record how much time is passed since the message was enqueued
+        m_stall_time += curTick() - message->getLastEnqueueTime();
+        m_msg_count++;
+
         // If the message will be removed from the queue, decrement the
         // number of message in the queue.
         m_buf_msgs--;

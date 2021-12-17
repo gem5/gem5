@@ -264,9 +264,11 @@ class MessageBuffer : public SimObject
 
     // Count the # of times I didn't have N slots available
     statistics::Scalar m_not_avail_count;
+    statistics::Scalar m_msg_count;
     statistics::Average m_buf_msgs;
-    statistics::Average m_stall_time;
+    statistics::Scalar m_stall_time;
     statistics::Scalar m_stall_count;
+    statistics::Formula m_avg_stall_time;
     statistics::Formula m_occupancy;
 };
 
