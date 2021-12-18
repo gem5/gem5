@@ -37,8 +37,8 @@
 
 set -e
 
-DOCKER_IMAGE_ALL_DEP=gcr.io/gem5-test/ubuntu-20.04_all-dependencies
-DOCKER_IMAGE_CLANG_COMPILE=gcr.io/gem5-test/clang-version-9
+DOCKER_IMAGE_ALL_DEP=gcr.io/gem5-test/ubuntu-20.04_all-dependencies:v21-2
+DOCKER_IMAGE_CLANG_COMPILE=gcr.io/gem5-test/clang-version-9:v21-2
 PRESUBMIT_STAGE2=tests/jenkins/presubmit-stage2.sh
 GEM5ART_TESTS=tests/jenkins/gem5art-tests.sh
 

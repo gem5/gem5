@@ -99,7 +99,7 @@ for compiler in ${images[@]}; do
     # targets for this test
     build_indices=(${build_permutation[@]:0:$builds_count})
 
-    repo_name="${base_url}/${compiler}:latest"
+    repo_name="${base_url}/${compiler}:v21-2"
 
     # Grab compiler image
     docker pull $repo_name >/dev/null
