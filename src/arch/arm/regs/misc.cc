@@ -1454,6 +1454,10 @@ std::bitset<NUM_MISCREG_INFOS> miscRegInfo[NUM_MISCREGS]; // initialized below
 
 namespace {
 
+// The map is translating a MiscRegIndex into AArch64 system register
+// numbers (op0, op1, crn, crm, op2)
+std::unordered_map<MiscRegIndex, MiscRegNum64> idxToMiscRegNum;
+
 // The map is translating AArch64 system register numbers
 // (op0, op1, crn, crm, op2) into a MiscRegIndex
 std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
@@ -1944,6 +1948,17 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
         } else {
             return MISCREG_UNKNOWN;
         }
+    }
+}
+
+MiscRegNum64
+encodeAArch64SysReg(MiscRegIndex misc_reg)
+{
+    if (auto it = idxToMiscRegNum.find(misc_reg);
+        it != idxToMiscRegNum.end()) {
+        return it->second;
+    } else {
+        panic("Invalid MiscRegIndex: %n\n", misc_reg);
     }
 }
 
@@ -4584,6 +4599,12 @@ ISA::initializeMiscRegMetadata()
     // DBGDTRRX_EL0 -> DBGDTRRXint
     // DBGDTRTX_EL0 -> DBGDTRRXint
     // MDCR_EL3 -> SDCR, NAM D7-2108 (the latter is unimpl. in gem5)
+
+    // Populate the idxToMiscRegNum map
+    assert(idxToMiscRegNum.empty());
+    for (const auto& [key, val] : miscRegNumToIdx) {
+        idxToMiscRegNum.insert({val, key});
+    }
 
     completed = true;
 }
