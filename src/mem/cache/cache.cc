@@ -693,11 +693,16 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
     bool is_invalidate = pkt->isInvalidate() &&
         !mshr->wasWholeLineWrite;
 
+    bool from_core = false;
+    bool from_pref = false;
+
     MSHR::TargetList targets = mshr->extractServiceableTargets(pkt);
     for (auto &target: targets) {
         Packet *tgt_pkt = target.pkt;
         switch (target.source) {
           case MSHR::Target::FromCPU:
+            from_core = true;
+
             Tick completion_time;
             // Here we charge on completion_time the delay of the xbar if the
             // packet comes from it, charged on headerDelay.
@@ -852,8 +857,8 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
 
           case MSHR::Target::FromPrefetcher:
             assert(tgt_pkt->cmd == MemCmd::HardPFReq);
-            if (blk)
-                blk->setPrefetched();
+            from_pref = true;
+
             delete tgt_pkt;
             break;
 
@@ -880,6 +885,10 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
           default:
             panic("Illegal target->source enum %d\n", target.source);
         }
+    }
+
+    if (blk && !from_core && from_pref) {
+        blk->setPrefetched();
     }
 
     maintainClusivity(targets.hasFromCache, blk);
