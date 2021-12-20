@@ -65,6 +65,13 @@ Decoder::Decoder(const ArmDecoderParams &params)
     // Initialize SVE vector length
     sveLen = (dynamic_cast<ISA *>(params.isa)
             ->getCurSveVecLenInBitsAtReset() >> 7) - 1;
+
+    if (dvmEnabled) {
+        warn_once(
+            "DVM Ops instructions are micro-architecturally "
+            "modelled as loads. This will tamper the effective "
+            "number of loads stat\n");
+    }
 }
 
 void
