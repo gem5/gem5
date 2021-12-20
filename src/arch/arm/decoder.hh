@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 ARM Limited
+ * Copyright (c) 2013-2014, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -62,6 +62,10 @@ namespace ArmISA
 class ISA;
 class Decoder : public InstDecoder
 {
+  public: // Public decoder parameters
+    /** True if the decoder should emit DVM Ops (treated as Loads) */
+    const bool dvmEnabled;
+
   protected:
     //The extended machine instruction being generated
     ExtMachInst emi;
