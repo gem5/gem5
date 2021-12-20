@@ -188,7 +188,7 @@ motherboard.set_kernel_disk_workload(
         resource_directory=args.resource_directory,
     ),
     disk_image=Resource(
-        "x86-ubuntu-img",
+        "x86-ubuntu-18.04-img",
         resource_directory=args.resource_directory,
     ),
     # The first exit signals to switch processors.
