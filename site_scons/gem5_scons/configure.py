@@ -48,7 +48,10 @@ def CheckCxxFlag(context, flag, autoadd=True):
     context.Message("Checking for compiler %s support... " % flag)
     last_cxxflags = context.env['CXXFLAGS']
     context.env.Append(CXXFLAGS=[flag])
+    pre_werror = context.env['CXXFLAGS']
+    context.env.Append(CXXFLAGS=['-Werror'])
     ret = context.TryCompile('// CheckCxxFlag DO NOTHING', '.cc')
+    context.env['CXXFLAGS'] = pre_werror
     if not (ret and autoadd):
         context.env['CXXFLAGS'] = last_cxxflags
     context.Result(ret)
@@ -58,7 +61,10 @@ def CheckLinkFlag(context, flag, autoadd=True, set_for_shared=True):
     context.Message("Checking for linker %s support... " % flag)
     last_linkflags = context.env['LINKFLAGS']
     context.env.Append(LINKFLAGS=[flag])
+    pre_werror = context.env['LINKFLAGS']
+    context.env.Append(CXXFLAGS=['-Werror'])
     ret = context.TryLink('int main(int, char *[]) { return 0; }', '.cc')
+    context.env['LINKFLAGS'] = pre_werror
     if not (ret and autoadd):
         context.env['LINKFLAGS'] = last_linkflags
     if (ret and set_for_shared):
