@@ -331,6 +331,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                         ldsApeBase(i + 1);
                     break;
                   case GfxVersion::gfx900:
+                  case GfxVersion::gfx902:
                     args->process_apertures[i].scratch_base =
                         scratchApeBaseV9();
                     args->process_apertures[i].lds_base =
@@ -631,6 +632,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                     ape_args->lds_base = ldsApeBase(i + 1);
                     break;
                   case GfxVersion::gfx900:
+                  case GfxVersion::gfx902:
                     ape_args->scratch_base = scratchApeBaseV9();
                     ape_args->lds_base = ldsApeBaseV9();
                     break;
