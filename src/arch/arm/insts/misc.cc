@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2017-2018 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2017-2018, 2021 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -362,14 +362,7 @@ McrMrcMiscInst::McrMrcMiscInst(const char *_mnemonic, ExtMachInst _machInst,
 Fault
 McrMrcMiscInst::execute(ExecContext *xc, Trace::InstRecord *traceData) const
 {
-    bool hypTrap = mcrMrc15TrapToHyp(miscReg, xc->tcBase(), iss);
-
-    if (hypTrap) {
-        return std::make_shared<HypervisorTrap>(machInst, iss,
-                                                EC_TRAPPED_CP15_MCR_MRC);
-    } else {
-        return NoFault;
-    }
+    return mcrMrc15Trap(miscReg, machInst, xc->tcBase(), iss);
 }
 
 std::string
@@ -388,11 +381,9 @@ McrMrcImplDefined::McrMrcImplDefined(const char *_mnemonic,
 Fault
 McrMrcImplDefined::execute(ExecContext *xc, Trace::InstRecord *traceData) const
 {
-    bool hypTrap = mcrMrc15TrapToHyp(miscReg, xc->tcBase(), iss);
-
-    if (hypTrap) {
-        return std::make_shared<HypervisorTrap>(machInst, iss,
-                                                EC_TRAPPED_CP15_MCR_MRC);
+    Fault fault = mcrMrc15Trap(miscReg, machInst, xc->tcBase(), iss);
+    if (fault != NoFault) {
+        return fault;
     } else {
         return std::make_shared<UndefinedInstruction>(machInst, false,
                                                       mnemonic);

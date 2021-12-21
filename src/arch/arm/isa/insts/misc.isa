@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2013,2017-2020 ARM Limited
+// Copyright (c) 2010-2013,2017-2021 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -1115,7 +1115,7 @@ let {{
         MiscRegIndex miscReg = (MiscRegIndex) xc->tcBase()->flattenRegId(
             RegId(MiscRegClass, preFlatDest)).index();
 
-        bool hypTrap = mcrMrc15TrapToHyp(miscReg, xc->tcBase(), imm);
+        Fault fault = mcrMrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 
         auto [can_write, undefined] = canWriteCoprocReg(miscReg, Scr, Cpsr,
                                                         xc->tcBase());
@@ -1123,14 +1123,13 @@ let {{
         // if we're in non secure PL1 mode then we can trap regardless
         // of whether the register is accessible, in other modes we
         // trap if only if the register IS accessible.
-        if (undefined || (!can_write & !(hypTrap & !inUserMode(Cpsr) &
+        if (undefined || (!can_write && !(fault != NoFault && !inUserMode(Cpsr) &&
                                          !isSecure(xc->tcBase())))) {
             return std::make_shared<UndefinedInstruction>(machInst, false,
                                                           mnemonic);
         }
-        if (hypTrap) {
-            return std::make_shared<HypervisorTrap>(machInst, imm,
-                                                    EC_TRAPPED_CP15_MCR_MRC);
+        if (fault != NoFault) {
+            return fault;
         }
     '''
 
