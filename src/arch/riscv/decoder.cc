@@ -105,8 +105,10 @@ Decoder::decode(PCStateBase &_next_pc)
 
     if (compressed(emi)) {
         next_pc.npc(next_pc.instAddr() + sizeof(machInst) / 2);
+        next_pc.compressed(true);
     } else {
         next_pc.npc(next_pc.instAddr() + sizeof(machInst));
+        next_pc.compressed(false);
     }
 
     return decode(emi, next_pc.instAddr());
