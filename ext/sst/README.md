@@ -62,7 +62,7 @@ See `INSTALL.md`.
 Downloading the built bootloader containing a Linux Kernel and a workload,
 
 ```sh
-wget http://dist.gem5.org/dist/develop/misc/riscv/bbl-busybox-boot-exit
+wget http://dist.gem5.org/dist/v21-2/misc/riscv/bbl-busybox-boot-exit
 ```
 
 Running the simulation
@@ -78,7 +78,7 @@ the `bbl-busybox-boot-exit` resource, which contains an m5 binary, and
 `m5 exit` will be called upon the booting process reaching the early userspace.
 More information about building a bootloader containing a Linux Kernel and a
 customized workload is available at
-[https://gem5.googlesource.com/public/gem5-resources/+/refs/heads/develop/src/riscv-boot-exit-nodisk/].
+[https://gem5.googlesource.com/public/gem5-resources/+/refs/heads/stable/src/riscv-boot-exit-nodisk/].
 
 ## Running an example simulation (Arm)
 
@@ -87,7 +87,7 @@ extract them under the $M5_PATH directory (make sure M5_PATH points to a valid
 directory):
 
 ```sh
-wget http://dist.gem5.org/dist/develop/arm/aarch-sst-20211207.tar.bz2
+wget http://dist.gem5.org/dist/v21-2/arm/aarch-sst-20211207.tar.bz2
 tar -xf aarch-sst-20211207.tar.bz2
 
 # copying bootloaders
