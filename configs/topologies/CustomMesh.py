@@ -59,12 +59,15 @@ class CustomMesh(SimpleTopology):
     # _makeXYMesh, _makeCustomMesh
     # --------------------------------------------------------------------------
 
-    def _connectRouters(self, latency, weight, src_node, dst_node, dst_port):
+    def _connectRouters(
+        self, latency, weight, src_node, dst_node, src_port, dst_port
+    ):
         self._int_links.append(
             self._IntLink(
                 link_id=self._link_count,
                 src_node=self._routers[src_node],
                 dst_node=self._routers[dst_node],
+                src_outport=src_port,
                 dst_inport=dst_port,
                 latency=latency,
                 weight=weight,
@@ -72,7 +75,9 @@ class CustomMesh(SimpleTopology):
         )
         self._link_count += 1
 
-    def _connectXYRouters(self, weight, src_node, dst_node, dst_port):
+    def _connectXYRouters(
+        self, weight, src_node, dst_node, src_port, dst_port
+    ):
         latency = self._router_link_latency
         if (src_node, dst_node) in self._custom_links:
             custom_weight, latency = self._custom_links[(src_node, dst_node)]
@@ -87,7 +92,9 @@ class CustomMesh(SimpleTopology):
                 )
             assert (src_node, dst_node) in self._custom_non_XY_links
             del self._custom_non_XY_links[(src_node, dst_node)]
-        self._connectRouters(latency, weight, src_node, dst_node, dst_port)
+        self._connectRouters(
+            latency, weight, src_node, dst_node, src_port, dst_port
+        )
 
     def _makeXYMesh(self, num_rows, num_columns):
 
@@ -106,9 +113,13 @@ class CustomMesh(SimpleTopology):
                     east = col + (row * num_columns)
                     west = (col + 1) + (row * num_columns)
                     # East output to West input
-                    self._connectXYRouters(link_weights[0], east, west, "West")
+                    self._connectXYRouters(
+                        link_weights[0], east, west, "east_out", "west_in"
+                    )
                     # West output to East input
-                    self._connectXYRouters(link_weights[1], west, east, "East")
+                    self._connectXYRouters(
+                        link_weights[1], west, east, "west_out", "east_in"
+                    )
 
         # North output to South input links
         # South output to North input links
@@ -119,11 +130,11 @@ class CustomMesh(SimpleTopology):
                     south = col + ((row + 1) * num_columns)
                     # North output to South input
                     self._connectXYRouters(
-                        link_weights[2], north, south, "South"
+                        link_weights[2], north, south, "north_out", "south_in"
                     )
                     # South output to North input
                     self._connectXYRouters(
-                        link_weights[3], south, north, "North"
+                        link_weights[3], south, north, "south_out", "north_in"
                     )
 
     def _makeCustomMesh(self):
@@ -136,7 +147,7 @@ class CustomMesh(SimpleTopology):
                     src,
                     dst,
                 )
-            self._connectRouters(latency, weight, src, dst, None)
+            self._connectRouters(latency, weight, src, dst, None, None)
 
     # --------------------------------------------------------------------------
     # distributeNodes
@@ -164,6 +175,8 @@ class CustomMesh(SimpleTopology):
                 link_id=self._link_count,
                 src_node=node_router,
                 dst_node=mesh_router,
+                src_outport="rnf2mesh_out",
+                dst_inport="rnf2mesh_in",
                 latency=noc_params.node_link_latency,
             )
         )
@@ -174,6 +187,8 @@ class CustomMesh(SimpleTopology):
                 link_id=self._link_count,
                 src_node=mesh_router,
                 dst_node=node_router,
+                src_outport="mesh2rnf_out",
+                dst_inport="mesh2rnf_in",
                 latency=noc_params.node_link_latency,
             )
         )
