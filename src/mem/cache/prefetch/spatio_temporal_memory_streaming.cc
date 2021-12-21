@@ -55,7 +55,8 @@ STeMS::STeMS(const STeMSPrefetcherParams &p)
                          p.pattern_sequence_table_replacement_policy,
                          ActiveGenerationTableEntry(
                              spatialRegionSize / blkSize)),
-    rmob(p.region_miss_order_buffer_entries)
+    rmob(p.region_miss_order_buffer_entries),
+    lastTriggerCounter(0)
 {
     fatal_if(!isPowerOf2(spatialRegionSize),
         "The spatial region size must be a power of 2.");
