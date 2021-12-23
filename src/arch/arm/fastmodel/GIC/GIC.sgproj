@@ -16,6 +16,7 @@ config "gcc"
     SIMGEN_COMMAND_LINE = "--num-comps-file 50";
     TARGET_MAXVIEW = "0";
     TARGET_SYSTEMC = "1";
+    TARGET_SYSTEMC_AUTO = "1";
 }
 files
 {
