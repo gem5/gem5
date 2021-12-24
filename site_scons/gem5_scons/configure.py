@@ -62,7 +62,7 @@ def CheckLinkFlag(context, flag, autoadd=True, set_for_shared=True):
     last_linkflags = context.env['LINKFLAGS']
     context.env.Append(LINKFLAGS=[flag])
     pre_werror = context.env['LINKFLAGS']
-    context.env.Append(CXXFLAGS=['-Werror'])
+    context.env.Append(LINKFLAGS=['-Werror'])
     ret = context.TryLink('int main(int, char *[]) { return 0; }', '.cc')
     context.env['LINKFLAGS'] = pre_werror
     if not (ret and autoadd):
