@@ -66,7 +66,7 @@ build_target () {
     # compilation: https://gem5.atlassian.net/browse/GEM5-753
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --rm \
-        gcr.io/gem5-test/ubuntu-20.04_all-dependencies:v21-2 \
+        gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest \
             bash -c "scons build/${isa}/gem5.opt -j${compile_threads} \
                 || (rm -rf build && scons build/${isa}/gem5.opt -j${compile_threads})"
 }
@@ -76,12 +76,12 @@ unit_test () {
 
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --rm \
-        gcr.io/gem5-test/ubuntu-20.04_all-dependencies:v21-2 \
+        gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest \
             scons build/NULL/unittests.${build} -j${compile_threads}
 }
 
 # Ensure we have the latest docker images.
-docker pull gcr.io/gem5-test/ubuntu-20.04_all-dependencies:v21-2
+docker pull gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest
 
 # Try to build the ISA targets.
 build_target NULL
@@ -99,18 +99,18 @@ unit_test debug
 # Run the gem5 long tests.
 docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}"/tests --rm \
-    gcr.io/gem5-test/ubuntu-20.04_all-dependencies:v21-2 \
+    gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest \
         ./main.py run --length long -j${compile_threads} -t${run_threads} -vv
 
 # For the GPU tests we compile and run the GPU ISA inside a gcn-gpu container.
-docker pull gcr.io/gem5-test/gcn-gpu:v21-2
+docker pull gcr.io/gem5-test/gcn-gpu:latest
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
-    "${gem5_root}" gcr.io/gem5-test/gcn-gpu:v21-2  bash -c \
+    "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest  bash -c \
     "scons build/${gpu_isa}/gem5.opt -j${compile_threads} \
         || (rm -rf build && scons build/${gpu_isa}/gem5.opt -j${compile_threads})"
 
 # get square
-wget -qN http://dist.gem5.org/dist/v21-2/test-progs/square/square
+wget -qN http://dist.gem5.org/dist/develop/test-progs/square/square
 
 mkdir -p tests/testing-results
 
@@ -118,18 +118,18 @@ mkdir -p tests/testing-results
 # Thus, we always want to run this in the nightly regressions to make sure
 # basic GPU functionality is working.
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
-    "${gem5_root}" gcr.io/gem5-test/gcn-gpu:v21-2  build/${gpu_isa}/gem5.opt \
+    "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest  build/${gpu_isa}/gem5.opt \
     configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c square
 
 # get HeteroSync
-wget -qN http://dist.gem5.org/dist/v21-2/test-progs/heterosync/gcn3/allSyncPrims-1kernel
+wget -qN http://dist.gem5.org/dist/develop/test-progs/heterosync/gcn3/allSyncPrims-1kernel
 
 # run HeteroSync sleepMutex -- 16 WGs (4 per CU in default config), each doing
 # 10 Ld/St per thread and 4 iterations of the critical section is a reasonable
 # moderate contention case for the default 4 CU GPU config and help ensure GPU
 # atomics are tested.
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
-    "${gem5_root}" gcr.io/gem5-test/gcn-gpu:v21-2 build/${gpu_isa}/gem5.opt \
+    "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest build/${gpu_isa}/gem5.opt \
     configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c \
     allSyncPrims-1kernel --options="sleepMutex 10 16 4"
 
@@ -139,7 +139,7 @@ docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
 # moderate contention case for the default 4 CU GPU config and help ensure GPU
 # atomics are tested.
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
-    "${gem5_root}" gcr.io/gem5-test/gcn-gpu:v21-2  build/${gpu_isa}/gem5.opt \
+    "${gem5_root}" gcr.io/gem5-test/gcn-gpu:latest  build/${gpu_isa}/gem5.opt \
     configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c \
     allSyncPrims-1kernel --options="lfTreeBarrUniq 10 16 4"
 
@@ -149,7 +149,7 @@ build_and_run_SST () {
     variant=$2
 
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
-        "${gem5_root}" --rm gcr.io/gem5-test/sst-env:v21-2 \
+        "${gem5_root}" --rm gcr.io/gem5-test/sst-env:latest \
             bash -c "\
 scons build/${isa}/libgem5_${variant}.so -j${compile_threads} --without-tcmalloc; \
 cd ext/sst; \
