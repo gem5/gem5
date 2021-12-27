@@ -35,6 +35,7 @@
 
 from m5.params import *
 from m5.proxy import *
+from m5.objects.MemCtrl import MemCtrl
 from m5.objects.MemInterface import MemInterface
 from m5.objects.DRAMInterface import AddrMap
 
@@ -64,6 +65,16 @@ class NVMInterface(MemInterface):
 
     two_cycle_rdwr = Param.Bool(False,
                      "Two cycles required to send read and write commands")
+
+
+    def controller(self):
+        """
+        Instantiate the memory controller and bind it to
+        the current interface.
+        """
+        controller = MemCtrl()
+        controller.nvm = self
+        return controller
 
 # NVM delays and device architecture defined to mimic PCM like memory.
 # Can be configured with DDR4_2400 sharing the channel
