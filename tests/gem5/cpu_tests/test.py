@@ -57,7 +57,7 @@ valid_isas = {
 
 base_path = joinpath(config.bin_path, 'cpu_tests')
 
-base_url = config.resource_url + '/gem5/cpu_tests/benchmarks/bin/'
+base_url = config.resource_url + '/test-progs/cpu-tests/bin/'
 
 isa_url = {
     constants.gcn3_x86_tag : base_url + "x86",

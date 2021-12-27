@@ -121,7 +121,7 @@ board.set_kernel_disk_workload(
     kernel=Resource("x86-linux-kernel-5.4.49"),
     # The x86 ubuntu image will be automatically downloaded to the if not
     # already present.
-    disk_image=Resource("x86-ubuntu-img"),
+    disk_image=Resource("x86-ubuntu-18.04-img"),
     readfile_contents=command,
 )
 

@@ -107,7 +107,8 @@ initMemReqHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type,
                 pkt1->dataStatic(&(reinterpret_cast<T*>(
                     gpuDynInst->d_data))[lane * N]);
                 pkt2->dataStatic(&(reinterpret_cast<T*>(
-                    gpuDynInst->d_data))[lane * N + req1->getSize()]);
+                    gpuDynInst->d_data))[lane * N +
+                                         req1->getSize()/sizeof(T)]);
                 DPRINTF(GPUMem, "CU%d: WF[%d][%d]: index: %d unaligned memory "
                         "request for %#x\n", gpuDynInst->cu_id,
                         gpuDynInst->simdId, gpuDynInst->wfSlotId, lane,

@@ -1,3 +1,70 @@
+# Version 21.2.0.0
+
+## API (user-facing) changes
+
+All `SimObject` declarations in SConscript files now require a `sim_objects` parameter which should list all SimObject classes declared in that file which need c++ wrappers.
+Those are the SimObject classes which have a `type` attribute defined.
+
+Also, there is now an optional `enums` parameter which needs to list all of the Enum types defined in that SimObject file.
+This should technically only include Enum types which generate c++ wrapper files, but currently all Enums do that so all Enums should be listed.
+
+## Initial release of the "gem5 standard library"
+
+Previous release had an alpha release of the "components library."
+This has now been wrapped in a larger "standard library".
+
+The *gem5 standard library* is a Python package which contains the following:
+
+- **Components:** A set of Python classes which wrap gem5's models. Some of the components are preconfigured to match real hardware (e.g., `SingleChannelDDR3_1600`) and others are parameterized. Components can be combined together onto *boards* which can be simulated.
+- **Resources:** A set of utilities to interact with the gem5-resources repository/website. Using this module allows you to *automatically* download and use many of gem5's prebuilt resources (e.g., kernels, disk images, etc.).
+- **Simulate:** *THIS MODULE IS IN BETA!* A simpler interface to gem5's simulation/run capabilities. Expect API changes to this module in future releases. Feedback is appreciated.
+- **Prebuilt**: These are fully functioning prebuilt systems. These systems are built from the components in `components`. This release has a "demo" board to show an example of how to use the prebuilt systems.
+
+Examples of using the gem5 standard library can be found in `configs/example/gem5_library/`.
+The source code is found under `src/python/gem5`.
+
+## Many Arm improvements
+
+- [Improved configurability for Arm architectural extensions](https://gem5.atlassian.net/browse/GEM5-1132): we have improved how to enable/disable architectural extensions for an Arm system. Rather than working with indipendent boolean values, we now use a unified ArmRelease object modelling the architectural features supported by a FS/SE Arm simulation
+- [Arm TLB can store partial entries](https://gem5.atlassian.net/browse/GEM5-1108): It is now possible to configure an ArmTLB as a walk cache: storing intermediate PAs obtained during a translation table walk.
+- [Implemented a multilevel TLB hierarchy](https://gem5.atlassian.net/browse/GEM5-790): enabling users to compose/model a customizable multilevel TLB hierarchy in gem5. The default Arm MMU has now an Instruction L1 TLB, a Data L1 TLB and a Unified (Instruction + Data) L2 TLB.
+- Provided an Arm example script for the gem5-SST integration (<https://gem5.atlassian.net/browse/GEM5-1121>).
+
+## GPU improvements
+
+- Vega support: gfx900 (Vega) discrete GPUs are now both supported and tested with [gem5-resources applications](https://gem5.googlesource.com/public/gem5-resources/+/refs/heads/stable/src/gpu/).
+- Improvements to the VIPER coherence protocol to fix bugs and improve performance: this improves scalability for large applications running on relatively small GPU configurations, which caused deadlocks in VIPER's L2.  Instead of continually replaying these requests, the updated protocol instead wakes up the pending requests once the prior request to this cache line has completed.
+- Additional GPU applications: The [Pannotia graph analytics benchmark suite](https://github.com/pannotia/pannotia) has been added to gem5-resources, including Makefiles, READMEs, and sample commands on how to run each application in gem5.
+- Regression Testing: Several GPU applications are now tested as part of the nightly and weekly regressions, which improves test coverage and avoids introducing inadvertent bugs.
+- Minor updates to the architecture model: We also added several small changes/fixes to the HSA queue size (to allow larger GPU applications with many kernels to run), the TLB (to create GCN3- and Vega-specific TLBs), adding new instructions that were previously unimplemented in GCN3 and Vega, and fixing corner cases for some instructions that were leading to incorrect behavior.
+
+## gem5-SST bridges revived
+
+We now support gem5 cores connected to SST memory system for gem5 full system mode.
+This has been tested for RISC-V and Arm.
+See `ext/sst/README.md` for details.
+
+## LupIO devices
+
+LupIO devices were developed by Prof. Joel Porquet-Lupine as a set of open-source I/O devices to be used for teaching.
+They were designed to model a complete set of I/O devices that are neither too complex to teach in a classroom setting, or too simple to translate to understanding real-world devices.
+Our collection consists of a real-time clock, random number generator, terminal device, block device, system controller, timer device, programmable interrupt controller, as well as an inter-processor interrupt controller.
+A more detailed outline of LupIO can be found here: <https://luplab.cs.ucdavis.edu/assets/lupio/wcae21-porquet-lupio-paper.pdf>.
+Within gem5, these devices offer the capability to run simulations with a complete set of I/O devices that are both easy to understand and manipulate.
+
+The initial implementation of the LupIO devices are for the RISC-V ISA.
+However, they should be simple to extend to other ISAs through small source changes and updating the SConscripts.
+
+## Other improvements
+
+- Removed master/slave terminology: this was a closed ticket which was marked as done even though there were multiple references of master/slave in the config scripts which we fixed.
+- Armv8.2-A FEAT_UAO implementation.
+- Implemented 'at' variants of file syscall in SE mode (<https://gem5.atlassian.net/browse/GEM5-1098>).
+- Improved modularity in SConscripts.
+- Arm atomic support in the CHI protocol
+- Many testing improvements.
+- New "tester" CPU which mimics GUPS.
+
 # Version 21.1.0.2
 
 **[HOTFIX]** [A commit introduced `std::vector` with `resize()` to initialize all storages](https://gem5-review.googlesource.com/c/public/gem5/+/27085).
