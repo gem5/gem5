@@ -826,7 +826,8 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 
     // received a response from the icache: execute the received
     // instruction
-    assert(!pkt || !pkt->isError());
+    panic_if(pkt && pkt->isError(), "Instruction fetch (%s) failed: %s",
+            pkt->getAddrRange().to_string(), pkt->print());
     assert(_status == IcacheWaitResponse);
 
     _status = BaseSimpleCPU::Running;
@@ -950,7 +951,8 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
 
     // received a response from the dcache: complete the load or store
     // instruction
-    assert(!pkt->isError());
+    panic_if(pkt->isError(), "Data access (%s) failed: %s",
+            pkt->getAddrRange().to_string(), pkt->print());
     assert(_status == DcacheWaitResponse || _status == DTBWaitResponse ||
            pkt->req->getFlags().isSet(Request::NO_ACCESS));
 
