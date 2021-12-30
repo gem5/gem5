@@ -305,7 +305,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
     walker->pma->check(read->req);
     // Effective privilege mode for pmp checks for page table
     // walks is S mode according to specs
-    fault = walker->pmp->pmpCheck(read->req, mode,
+    fault = walker->pmp->pmpCheck(read->req, BaseMMU::Read,
                     RiscvISA::PrivilegeMode::PRV_S, tc, entry.vaddr);
 
     if (fault == NoFault) {
@@ -357,7 +357,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                         walker->pma->check(read->req);
 
                         fault = walker->pmp->pmpCheck(read->req,
-                                            mode, pmode, tc, entry.vaddr);
+                                            BaseMMU::Write, pmode, tc, entry.vaddr);
 
                     }
                     // perform step 8 only if pmp checks pass
