@@ -74,6 +74,7 @@ STeMS::checkForActiveGenerationsEnd()
         if (agt_entry.isValid()) {
             bool generation_ended = false;
             bool sr_is_secure = agt_entry.isSecure();
+            Addr pst_addr = 0;
             for (auto &seq_entry : agt_entry.sequence) {
                 if (seq_entry.counter > 0) {
                     Addr cache_addr =
@@ -81,6 +82,8 @@ STeMS::checkForActiveGenerationsEnd()
                     if (!inCache(cache_addr, sr_is_secure) &&
                             !inMissQueue(cache_addr, sr_is_secure)) {
                         generation_ended = true;
+                        pst_addr = (agt_entry.pc << spatialRegionSizeBits)
+                                    + seq_entry.offset;
                         break;
                     }
                 }
@@ -88,13 +91,13 @@ STeMS::checkForActiveGenerationsEnd()
             if (generation_ended) {
                 // PST is indexed using the PC (secure bit is unused)
                 ActiveGenerationTableEntry *pst_entry =
-                    patternSequenceTable.findEntry(agt_entry.pc,
+                    patternSequenceTable.findEntry(pst_addr,
                                                    false /*unused*/);
                 if (pst_entry == nullptr) {
                     // Tipically an entry will not exist
-                    pst_entry = patternSequenceTable.findVictim(agt_entry.pc);
+                    pst_entry = patternSequenceTable.findVictim(pst_addr);
                     assert(pst_entry != nullptr);
-                    patternSequenceTable.insertEntry(agt_entry.pc,
+                    patternSequenceTable.insertEntry(pst_addr,
                             false /*unused*/, pst_entry);
                 } else {
                     patternSequenceTable.accessEntry(pst_entry);
