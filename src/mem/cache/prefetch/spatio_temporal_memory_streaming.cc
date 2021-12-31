@@ -56,6 +56,7 @@ STeMS::STeMS(const STeMSPrefetcherParams &p)
                          ActiveGenerationTableEntry(
                              spatialRegionSize / blkSize)),
     rmob(p.region_miss_order_buffer_entries),
+    addDuplicateEntriesToRMOB(p.add_duplicate_entries_to_rmob),
     lastTriggerCounter(0)
 {
     fatal_if(!isPowerOf2(spatialRegionSize),
@@ -119,6 +120,16 @@ STeMS::addToRMOB(Addr sr_addr, Addr pst_addr, unsigned int delta)
     rmob_entry.srAddress = sr_addr;
     rmob_entry.pstAddress = pst_addr;
     rmob_entry.delta = delta;
+
+    if (!addDuplicateEntriesToRMOB) {
+        for (const auto& entry : rmob) {
+            if (entry.srAddress == sr_addr &&
+                entry.pstAddress == pst_addr &&
+                entry.delta == delta) {
+                return;
+            }
+        }
+    }
 
     rmob.push_back(rmob_entry);
 }
