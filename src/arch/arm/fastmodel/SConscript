@@ -81,7 +81,16 @@ pvlib_flavor = env['PVLIB_FLAVOR']
 pvlib_lib_dir = pvlib_home.Dir('lib').Dir(pvlib_flavor)
 
 simulation_engine_name = 'libMAXCOREInitSimulationEngine.3.so'
-simulation_engine_lib = pvlib_lib_dir.File(simulation_engine_name)
+simulation_engine_lib = env.Command(
+            Dir(env['BUILDDIR']).File(simulation_engine_name),
+            pvlib_lib_dir.File(simulation_engine_name),
+            MakeAction("cp ${SOURCE} ${TARGET}", Transform('COPY')))
+
+arm_singleton_registry_name = 'arm_singleton_registry.so'
+arm_singleton_registry_lib = env.Command(
+            Dir(env['BUILDDIR']).File(arm_singleton_registry_name),
+            pvlib_lib_dir.File(arm_singleton_registry_name),
+            MakeAction("cp ${SOURCE} ${TARGET}", Transform('COPY')))
 
 
 def staticify(env, name):
@@ -95,9 +104,7 @@ def staticify(env, name):
         full_name = Dir(path).File(static_name).get_abspath()
         if os.path.isfile(full_name):
             return File(full_name)
-
-    return name
-
+    raise BuildError("Failed to find FM static lib: " + name)
 
 # Adjust the build environment to support building in Fast Models.
 
@@ -121,16 +128,20 @@ lib_paths = (
     pvlib_home.Dir('Iris').Dir(pvlib_flavor),
 )
 env.Append(LIBPATH=lib_paths)
-env.Append(RPATH=lib_paths)
 
-fm_libs = (
+# Per ARM's 11.16 release note, a platform build with simgen automatically
+# copies libraries into the build target directory along with the other
+# dependencies. Therefore, we only need to add each simgen result into rpath and
+# no other shared librarires are required here.
+fm_static_libs = (
     'components',
     'pvbus',
     'armctmodel',
     'fmruntime',
     'IrisSupport',
 )
-env.Append(LIBS=list(staticify(env, lib) for lib in fm_libs))
+env.Append(LIBS=list(staticify(env, lib) for lib in fm_static_libs))
+
 system_libs = (
     'atomic',
     'dl',
@@ -337,7 +348,8 @@ class ArmFastModelComponent(object):
         self.headerpaths = [gen_dir]
         self.libs = static_lib_nodes + shared_libs
         self.libpaths = [simgen_dir]
-        self.rpaths = [simgen_dir]
+        # Simgen also puts required share library under the project folder.
+        self.rpaths = [simgen_dir, project_file_dir]
         self.log = gen_dir.File('build_%s.log' % tlc)
         self.simgen_cmd = env.subst('${SIMGEN} -p %s --configuration %s -b ' +
             '--verbose off --num-build-cpus 100 --build-dir %s >%s') % \
@@ -363,6 +375,11 @@ class ArmFastModelComponent(object):
         # This allocation is fixed and may not be as optimal as a dynamic one,
         # but the difference is probably not significant.
         env.SideEffect(next(license_cycle), lib_nodes[0])
+
+        # We need a copy of the simulation engine lib and arm_singleton_registry
+        # (introduced in 11.16) alongside the executable.
+        Depends(lib_nodes[0], simulation_engine_lib)
+        Depends(lib_nodes[0], arm_singleton_registry_lib)
 
     def prepare_env(self, env):
         env.Append(LIBPATH=self.libpaths)
