@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016-2019 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2016-2019, 2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -476,7 +476,6 @@ class AbortFault : public ArmFaultVals<T>
     FSR getFsr(ThreadContext *tc) const override;
     uint8_t getFaultStatusCode(ThreadContext *tc) const;
     bool abortDisable(ThreadContext *tc) override;
-    uint32_t iss() const override;
     bool isStage2() const override { return stage2; }
     void annotate(ArmFault::AnnotationIDs id, uint64_t val) override;
     void setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg) override;
@@ -501,6 +500,7 @@ class PrefetchAbort : public AbortFault<PrefetchAbort>
     // @todo: external aborts should be routed if SCR.EA == 1
     bool routeToMonitor(ThreadContext *tc) const override;
     bool routeToHyp(ThreadContext *tc) const override;
+    uint32_t iss() const override;
     uint32_t vectorCatchFlag() const override { return 0x08000808; }
 };
 

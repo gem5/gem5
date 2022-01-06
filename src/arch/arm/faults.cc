@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2014, 2016-2019 ARM Limited
+ * Copyright (c) 2010, 2012-2014, 2016-2019, 2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -397,42 +397,41 @@ ArmFault::getFaultAddrReg64() const
 void
 ArmFault::setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg)
 {
-    uint32_t value;
+    ESR esr = 0;
     uint32_t exc_class = (uint32_t) ec(tc);
-    uint32_t issVal = iss();
+    uint32_t iss_val = iss();
 
     assert(!from64 || ArmSystem::highestELIs64(tc));
 
-    value = exc_class << 26;
+    esr.ec = exc_class;
 
     // HSR.IL not valid for Prefetch Aborts (0x20, 0x21) and Data Aborts (0x24,
     // 0x25) for which the ISS information is not valid (ARMv7).
     // @todo: ARMv8 revises AArch32 functionality: when HSR.IL is not
     // valid it is treated as RES1.
     if (to64) {
-        value |= 1 << 25;
+        esr.il = 1;
     } else if ((bits(exc_class, 5, 3) != 4) ||
-               (bits(exc_class, 2) && bits(issVal, 24))) {
+               (bits(exc_class, 2) && bits(iss_val, 24))) {
         if (!machInst.thumb || machInst.bigThumb)
-            value |= 1 << 25;
+            esr.il = 1;
     }
     // Condition code valid for EC[5:4] nonzero
     if (!from64 && ((bits(exc_class, 5, 4) == 0) &&
                     (bits(exc_class, 3, 0) != 0))) {
+
         if (!machInst.thumb) {
-            uint32_t      cond;
-            ConditionCode condCode = (ConditionCode) (uint32_t) machInst.condCode;
+            ConditionCode cond_code = (ConditionCode) (uint32_t) machInst.condCode;
             // If its on unconditional instruction report with a cond code of
             // 0xE, ie the unconditional code
-            cond  = (condCode == COND_UC) ? COND_AL : condCode;
-            value |= cond << 20;
-            value |= 1    << 24;
+            esr.cond_iss.cv = 1;
+            esr.cond_iss.cond = (cond_code == COND_UC) ? COND_AL : cond_code;
         }
-        value |= bits(issVal, 19, 0);
+        esr.cond_iss.iss = bits(iss_val, 19, 0);
     } else {
-        value |= issVal;
+        esr.iss = iss_val;
     }
-    tc->setMiscReg(syndrome_reg, value);
+    tc->setMiscReg(syndrome_reg, esr);
 }
 
 void
@@ -1250,18 +1249,6 @@ AbortFault<T>::annotate(ArmFault::AnnotationIDs id, uint64_t val)
 }
 
 template<class T>
-uint32_t
-AbortFault<T>::iss() const
-{
-    uint32_t val;
-
-    val  = srcEncoded & 0x3F;
-    val |= write << 6;
-    val |= s1ptw << 7;
-    return (val);
-}
-
-template<class T>
 bool
 AbortFault<T>::isMMUFault() const
 {
@@ -1309,6 +1296,18 @@ PrefetchAbort::ec(ThreadContext *tc) const
         }
         return ec;
     }
+}
+
+uint32_t
+PrefetchAbort::iss() const
+{
+    ESR esr = 0;
+    auto& iss = esr.instruction_abort_iss;
+
+    iss.ifsc = srcEncoded & 0x3F;
+    iss.s1ptw = s1ptw;
+
+    return iss;
 }
 
 bool
@@ -1406,28 +1405,29 @@ DataAbort::routeToHyp(ThreadContext *tc) const
 uint32_t
 DataAbort::iss() const
 {
-    uint32_t val;
+    ESR esr = 0;
+    auto& iss = esr.data_abort_iss;
 
-    // Add on the data abort specific fields to the generic abort ISS value
-    val  = AbortFault<DataAbort>::iss();
-
-    val |= cm << 8;
+    iss.dfsc = srcEncoded & 0x3F;
+    iss.wnr = write;
+    iss.s1ptw = s1ptw;
+    iss.cm = cm;
 
     // ISS is valid if not caused by a stage 1 page table walk, and when taken
     // to AArch64 only when directed to EL2
     if (!s1ptw && stage2 && (!to64 || toEL == EL2)) {
-        val |= isv << 24;
+        iss.isv = isv;
         if (isv) {
-            val |= sas << 22;
-            val |= sse << 21;
-            val |= srt << 16;
+            iss.sas = sas;
+            iss.sse = sse;
+            iss.srt = srt;
             // AArch64 only. These assignments are safe on AArch32 as well
             // because these vars are initialized to false
-            val |= sf << 15;
-            val |= ar << 14;
+            iss.sf = sf;
+            iss.ar = ar;
         }
     }
-    return (val);
+    return iss;
 }
 
 void
@@ -1692,14 +1692,11 @@ Watchpoint::Watchpoint(ExtMachInst _mach_inst, Addr _vaddr,
 uint32_t
 Watchpoint::iss() const
 {
-    uint32_t iss = 0x0022;
-// NV
-//    if (toEL == EL2)
-//        iss |= 0x02000;
-    if (cm)
-        iss |= 0x00100;
-    if (write)
-        iss |= 0x00040;
+    ESR esr = 0;
+    auto& iss = esr.watchpoint_iss;
+    iss.dfsc = 0b100010;
+    iss.cm = cm;
+    iss.wnr = write;
     return iss;
 }
 
@@ -1778,21 +1775,17 @@ SoftwareStepFault::ec(ThreadContext *tc) const
 uint32_t
 SoftwareStepFault::iss() const
 {
-    uint32_t iss= 0x0022;
-    if (stepped) {
-        iss |= 0x1000000;
-    }
-
-    if (isldx) {
-        iss |= 0x40;
-    }
-
+    ESR esr = 0;
+    auto& iss = esr.software_step_iss;
+    iss.ifsc = 0b100010;
+    iss.isv = stepped;
+    iss.ex = isldx;
     return iss;
-
 }
 
 void
-ArmSev::invoke(ThreadContext *tc, const StaticInstPtr &inst) {
+ArmSev::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+{
     DPRINTF(Faults, "Invoking ArmSev Fault\n");
     if (!FullSystem)
         return;
