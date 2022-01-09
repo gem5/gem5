@@ -335,6 +335,11 @@ TLB::translate(const RequestPtr &req,
         if (m5Reg.mode != LongMode) {
             DPRINTF(TLB, "Not in long mode. Checking segment protection.\n");
 
+            // CPUs won't know to use CS when building fetch requests, so we
+            // need to override the value of "seg" here if this is a fetch.
+            if (mode == BaseMMU::Execute)
+                seg = SEGMENT_REG_CS;
+
             SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
             // Check for an unusable segment.
             if (attr.unusable) {
