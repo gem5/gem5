@@ -99,31 +99,52 @@ I8237::I8237(const Params &p) : BasicPioDevice(p, 16), latency(p.pio_latency),
     // Add the other registers individually.
     regs.addRegisters({
         statusCommandReg.
-            reader(readUnimpl("status register")).
-            writer(writeUnimpl("command register")),
+            reader([this](auto &reg) -> uint8_t { return statusVal; }).
+            writer([this](auto &reg, const uint8_t &value) {
+                        commandVal = value;
+                    }),
 
         requestReg.
-            writer(writeUnimpl("request register")),
+            writer(this, &I8237::setRequestBit),
 
         setMaskBitReg.
             writer(this, &I8237::setMaskBit),
 
         modeReg.
-            writer(writeUnimpl("mode register")),
+            writer([this](auto &reg, const uint8_t &value) {
+                        channels[bits(value, 1, 0)].mode = value;
+                    }),
 
         clearFlipFlopReg.
-            writer(writeUnimpl("clear LSB/MSB flip-flop register")),
+            writer([this](auto &reg, const uint8_t &value) {
+                        highByte = false;
+                    }),
 
         temporaryMasterClearReg.
-            reader(readUnimpl("temporary register")).
-            writer(writeUnimpl("master clear register")),
+            reader([this](auto &reg) ->uint8_t { return tempVal; }).
+            writer([this](auto &reg, const uint8_t &value) { reset(); }),
 
         clearMaskReg.
-            writer(writeUnimpl("clear mask register")),
+            writer([this](auto &reg, const uint8_t &value) { maskVal = 0x0; }),
 
         writeMaskReg.
-            writer(writeUnimpl("write all mask register bits"))
+            writer([this](auto &reg, const uint8_t &value) {
+                        maskVal = bits(value, 3, 0);
+                    })
     });
+
+    reset();
+}
+
+void
+I8237::reset()
+{
+    maskVal = 0xf;
+    requestVal = 0x0;
+    commandVal = 0x0;
+    statusVal = 0x0;
+    tempVal = 0x0;
+    highByte = false;
 }
 
 void
@@ -131,9 +152,17 @@ I8237::setMaskBit(Register &reg, const uint8_t &command)
 {
     uint8_t select = bits(command, 1, 0);
     uint8_t bitVal = bits(command, 2);
-    if (!bitVal)
-        panic("Turning on i8237 channels unimplemented.");
-    replaceBits(maskReg, select, bitVal);
+    panic_if(!bitVal, "Turning on i8237 channels unimplemented.");
+    replaceBits(maskVal, select, bitVal);
+}
+
+void
+I8237::setRequestBit(Register &reg, const uint8_t &command)
+{
+    uint8_t select = bits(command, 1, 0);
+    uint8_t bitVal = bits(command, 2);
+    panic_if(bitVal, "Requesting i8237 DMA transfers is unimplemented.");
+    replaceBits(requestVal, select, bitVal);
 }
 
 Tick
@@ -155,13 +184,13 @@ I8237::write(PacketPtr pkt)
 void
 I8237::serialize(CheckpointOut &cp) const
 {
-    SERIALIZE_SCALAR(maskReg);
+    paramOut(cp, "maskReg", maskVal);
 }
 
 void
 I8237::unserialize(CheckpointIn &cp)
 {
-    UNSERIALIZE_SCALAR(maskReg);
+    paramIn(cp, "maskReg", maskVal);
 }
 
 } // namespace X86ISA
