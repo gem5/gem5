@@ -1669,9 +1669,15 @@ let {{
                     SegLimitDest = desc.limit;
                     SegAttrDest = attr;
                 } else {
+                    HandyM5Reg m5reg = M5Reg;
+
                     SegBaseDest = SegBaseDest;
                     SegLimitDest = SegLimitDest;
-                    SegAttrDest = SegAttrDest;
+
+                    SegAttr attr = SegAttrDest;
+                    if (m5reg != LongMode)
+                        attr.unusable = 1;
+                    SegAttrDest = attr;
                 }
                 break;
             }

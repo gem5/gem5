@@ -334,13 +334,11 @@ TLB::translate(const RequestPtr &req,
         // If we're not in 64-bit mode, do protection/limit checks
         if (m5Reg.mode != LongMode) {
             DPRINTF(TLB, "Not in long mode. Checking segment protection.\n");
-            // Check for a NULL segment selector.
-            if (!(seg == SEGMENT_REG_TSG || seg == SYS_SEGMENT_REG_IDTR ||
-                        seg == SEGMENT_REG_HS || seg == SEGMENT_REG_LS)
-                    && !tc->readMiscRegNoEffect(MISCREG_SEG_SEL(seg)))
+            SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
+            // Check for an unusable segment.
+            if (attr.unusable)
                 return std::make_shared<GeneralProtection>(0);
             bool expandDown = false;
-            SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
             if (seg >= SEGMENT_REG_ES && seg <= SEGMENT_REG_HS) {
                 if (!attr.writable && (mode == BaseMMU::Write || storeCheck))
                     return std::make_shared<GeneralProtection>(0);
