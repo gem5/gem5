@@ -334,16 +334,23 @@ TLB::translate(const RequestPtr &req,
         // If we're not in 64-bit mode, do protection/limit checks
         if (m5Reg.mode != LongMode) {
             DPRINTF(TLB, "Not in long mode. Checking segment protection.\n");
+
             SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
             // Check for an unusable segment.
-            if (attr.unusable)
+            if (attr.unusable) {
+                DPRINTF(TLB, "Unusable segment.\n");
                 return std::make_shared<GeneralProtection>(0);
+            }
             bool expandDown = false;
             if (seg >= SEGMENT_REG_ES && seg <= SEGMENT_REG_HS) {
-                if (!attr.writable && (mode == BaseMMU::Write || storeCheck))
+                if (!attr.writable && (mode == BaseMMU::Write || storeCheck)) {
+                    DPRINTF(TLB, "Tried to write to unwritable segment.\n");
                     return std::make_shared<GeneralProtection>(0);
-                if (!attr.readable && mode == BaseMMU::Read)
+                }
+                if (!attr.readable && mode == BaseMMU::Read) {
+                    DPRINTF(TLB, "Tried to read from unreadble segment.\n");
                     return std::make_shared<GeneralProtection>(0);
+                }
                 expandDown = attr.expandDown;
 
             }
@@ -361,8 +368,11 @@ TLB::translate(const RequestPtr &req,
                 if (offset <= limit || endOffset <= limit)
                     return std::make_shared<GeneralProtection>(0);
             } else {
-                if (offset > limit || endOffset > limit)
+                if (offset > limit || endOffset > limit) {
+                    DPRINTF(TLB, "Segment limit check failed, "
+                            "offset = %#x limit = %#x.\n", offset, limit);
                     return std::make_shared<GeneralProtection>(0);
+                }
             }
         }
         if (m5Reg.submode != SixtyFourBitMode ||
