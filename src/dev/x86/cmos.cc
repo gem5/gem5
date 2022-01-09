@@ -56,7 +56,7 @@ X86ISA::Cmos::read(PacketPtr pkt)
         pkt->setLE(address);
         break;
       case 0x1:
-        pkt->setLE(readRegister(address));
+        pkt->setLE(readRegister(address.regNum));
         break;
       default:
         panic("Read from undefined CMOS port.\n");
@@ -75,7 +75,8 @@ X86ISA::Cmos::write(PacketPtr pkt)
         address = pkt->getLE<uint8_t>();
         break;
       case 0x1:
-        writeRegister(address, pkt->getLE<uint8_t>());
+        // Ignore the NMI mask bit since we never try to generate one anyway.
+        writeRegister(address.regNum, pkt->getLE<uint8_t>());
         break;
       default:
         panic("Write to undefined CMOS port.\n");
