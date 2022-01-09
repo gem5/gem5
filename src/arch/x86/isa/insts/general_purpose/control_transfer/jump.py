@@ -157,7 +157,8 @@ def macroop JMP_FAR_REAL_M
     slli t3, t3, 4, dataSize=8
     wrsel cs, t1, dataSize=2
     wrbase cs, t3, dataSize=8
-    wrip t0, t2, dataSize=asz
+    # Put t2 first so it isn't sign extended.
+    wrip t2, t0
 };
 
 def macroop JMP_FAR_REAL_P
@@ -183,6 +184,7 @@ def macroop JMP_FAR_REAL_I
     slli t3, t1, 4, dataSize=8
     wrsel cs, t1, dataSize=2
     wrbase cs, t3, dataSize=8
-    wrip t0, t2, dataSize=asz
+    # Put t2 first so it isn't sign extended.
+    wrip t2, t0
 };
 '''
