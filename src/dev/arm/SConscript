@@ -64,7 +64,7 @@ SimObject('NoMali.py', sim_objects=['NoMaliGpu', 'CustomNoMaliGpu'],
     enums=['NoMaliGpuType'], tags='arm isa')
 SimObject('VirtIOMMIO.py', sim_objects=['MmioVirtIO'], tags='arm isa')
 if env['USE_ARM_FASTMODEL']:
-    SimObject('VExpressFastmodel.py', tags='arm isa')
+    SimObject('VExpressFastmodel.py', sim_objects=[], tags='arm isa')
 
 Source('a9scu.cc', tags='arm isa')
 Source('amba_device.cc', tags='arm isa')
