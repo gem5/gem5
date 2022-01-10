@@ -45,6 +45,7 @@ class VExpressFastmodel(VExpress_GEM5_Base):
     generic_timer = SubSystem()
     generic_timer_mem = SubSystem()
     sys_counter = SubSystem()
+    el2_watchdog = SubSystem()
 
     def _on_chip_devices(self):
         return [
