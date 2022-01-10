@@ -82,7 +82,8 @@ void EmulEnv::doModRM(const ExtMachInst & machInst)
                     base = INTREG_RDI;
                     break;
                   case 6:
-                    base = INTREG_RBP;
+                    // There is a special case when mod is 0 and rm is 6.
+                    base = machInst.modRM.mod == 0 ? INTREG_T0 : INTREG_RBP;
                     break;
                   case 7:
                     base = INTREG_RBX;
