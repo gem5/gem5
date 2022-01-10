@@ -53,6 +53,16 @@ class Intel8254Timer : public EventManager
         Bitfield<0> bcd;
     EndBitUnion(CtrlReg)
 
+    BitUnion8(ReadBackCommandVal)
+        Bitfield<4> status; // Active low.
+        Bitfield<5> count; // Active low.
+        SubBitUnion(select, 3, 1)
+            Bitfield<3> cnt2;
+            Bitfield<2> cnt1;
+            Bitfield<1> cnt0;
+        EndSubBitUnion(select)
+    EndBitUnion(ReadBackCommandVal)
+
     enum SelectVal
     {
         SelectCounter0,
@@ -151,6 +161,8 @@ class Intel8254Timer : public EventManager
 
       public:
         Counter(Intel8254Timer *p, const std::string &name, unsigned int num);
+
+        unsigned int index() const { return num; }
 
         /** Latch the current count (if one is not already latched) */
         void latchCount();

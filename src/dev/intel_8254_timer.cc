@@ -58,12 +58,24 @@ Intel8254Timer::writeControl(const CtrlReg data)
 {
     int sel = data.sel;
 
-    if (sel == ReadBackCommand)
-       panic("PITimer Read-Back Command is not implemented.\n");
+    if (sel == ReadBackCommand) {
+        ReadBackCommandVal rb_val = static_cast<uint8_t>(data);
 
-    if (data.rw == LatchCommand)
+        panic_if(!rb_val.status,
+                "Latching the PIT status byte is not implemented.");
+
+        if (!rb_val.count) {
+            for (auto &cnt: counter) {
+                if (bits((uint8_t)rb_val.select, cnt->index()))
+                    cnt->latchCount();
+            }
+        }
+        return;
+    }
+
+    if (data.rw == LatchCommand) {
         counter[sel]->latchCount();
-    else {
+    } else {
         counter[sel]->setRW(data.rw);
         counter[sel]->setMode(data.mode);
         counter[sel]->setBCD(data.bcd);
