@@ -29,6 +29,7 @@
 #ifndef __DEV_8254_HH__
 #define __DEV_8254_HH__
 
+#include <array>
 #include <iostream>
 #include <string>
 
@@ -212,7 +213,7 @@ class Intel8254Timer : public EventManager
     const std::string &name() const { return _name; }
 
     /** PIT has three seperate counters */
-    Counter *counter[3];
+    std::array<Counter, 3> counters;
 
     virtual void
     counterInterrupt(unsigned int num)
@@ -226,9 +227,6 @@ class Intel8254Timer : public EventManager
     ~Intel8254Timer()
     {}
 
-    Intel8254Timer(EventManager *em, const std::string &name,
-            Counter *counter0, Counter *counter1, Counter *counter2);
-
     Intel8254Timer(EventManager *em, const std::string &name);
 
     /** Write control word */
@@ -238,21 +236,21 @@ class Intel8254Timer : public EventManager
     readCounter(unsigned int num)
     {
         assert(num < 3);
-        return counter[num]->read();
+        return counters[num].read();
     }
 
     void
     writeCounter(unsigned int num, const uint8_t data)
     {
         assert(num < 3);
-        counter[num]->write(data);
+        counters[num].write(data);
     }
 
     bool
     outputHigh(unsigned int num)
     {
         assert(num < 3);
-        return counter[num]->outputHigh();
+        return counters[num].outputHigh();
     }
 
     /**
