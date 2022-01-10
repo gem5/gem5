@@ -39,7 +39,7 @@
 microcode = '''
     def macroop IN_R_I {
         .adjust_imm trimImm(8)
-        limm t1, imm, dataSize=asz
+        limm t1, imm, dataSize=8
         mfence
         ld reg, intseg, [1, t1, t0], "IntAddrPrefixIO << 3", addressSize=8, \
             nonSpec=True
