@@ -176,7 +176,7 @@ class CpuCluster(SubSystem):
 class AtomicCluster(CpuCluster):
     def __init__(self, system, num_cpus, cpu_clock, cpu_voltage="1.0V"):
         cpu_config = [ ObjectList.cpu_list.get("AtomicSimpleCPU"), None,
-                       None, None, None ]
+                       None, None ]
         super(AtomicCluster, self).__init__(system, num_cpus, cpu_clock,
                                             cpu_voltage, *cpu_config)
     def addL1(self):
@@ -185,7 +185,7 @@ class AtomicCluster(CpuCluster):
 class KvmCluster(CpuCluster):
     def __init__(self, system, num_cpus, cpu_clock, cpu_voltage="1.0V"):
         cpu_config = [ ObjectList.cpu_list.get("ArmV8KvmCPU"), None, None,
-            None, None ]
+            None ]
         super(KvmCluster, self).__init__(system, num_cpus, cpu_clock,
                                          cpu_voltage, *cpu_config)
     def addL1(self):
