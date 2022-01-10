@@ -40,8 +40,7 @@ for name in ('x1', 'x2', 'x3', 'x4'):
 
 SimObject('FastModelCortexR52.py', sim_objects=[
     'FastModelCortexR52', 'FastModelCortexR52Cluster'] +
-    [f'FastModelScxEvsCortexR52x{num}' for num in (1, 2, 3, 4)] +
-    [f'FastModelCortexR52x{num}' for num in (1, 2, 3, 4)])
+    [f'FastModelScxEvsCortexR52x{num}' for num in (1, 2, 3, 4)])
 Source('cortex_r52.cc')
 Source('evs.cc')
 Source('thread_context.cc')
