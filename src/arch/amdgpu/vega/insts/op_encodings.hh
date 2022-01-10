@@ -414,6 +414,25 @@ namespace VegaISA
             }
         }
 
+        template<int N>
+        void
+        initMemRead(GPUDynInstPtr gpuDynInst, Addr offset)
+        {
+            Wavefront *wf = gpuDynInst->wavefront();
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    Addr vaddr = gpuDynInst->addr[lane] + offset;
+                    for (int i = 0; i < N; ++i) {
+                        (reinterpret_cast<VecElemU32*>(
+                            gpuDynInst->d_data))[lane * N + i]
+                            = wf->ldsChunk->read<VecElemU32>(
+                                vaddr + i*sizeof(VecElemU32));
+                    }
+                }
+            }
+        }
+
         template<typename T>
         void
         initDualMemRead(GPUDynInstPtr gpuDynInst, Addr offset0, Addr offset1)
@@ -444,6 +463,25 @@ namespace VegaISA
                     Addr vaddr = gpuDynInst->addr[lane] + offset;
                     wf->ldsChunk->write<T>(vaddr,
                         (reinterpret_cast<T*>(gpuDynInst->d_data))[lane]);
+                }
+            }
+        }
+
+        template<int N>
+        void
+        initMemWrite(GPUDynInstPtr gpuDynInst, Addr offset)
+        {
+            Wavefront *wf = gpuDynInst->wavefront();
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    Addr vaddr = gpuDynInst->addr[lane] + offset;
+                    for (int i = 0; i < N; ++i) {
+                        wf->ldsChunk->write<VecElemU32>(
+                            vaddr + i*sizeof(VecElemU32),
+                            (reinterpret_cast<VecElemU32*>(
+                                gpuDynInst->d_data))[lane * N + i]);
+                    }
                 }
             }
         }

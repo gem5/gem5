@@ -35542,6 +35542,8 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_DS__DS_WRITE_B96
 
     class Inst_DS__DS_WRITE_B128 : public Inst_DS
@@ -35574,6 +35576,8 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_DS__DS_WRITE_B128
 
     class Inst_DS__DS_READ_B96 : public Inst_DS
@@ -35606,6 +35610,8 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_DS__DS_READ_B96
 
     class Inst_DS__DS_READ_B128 : public Inst_DS
@@ -35638,6 +35644,8 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_DS__DS_READ_B128
 
     class Inst_MUBUF__BUFFER_LOAD_FORMAT_X : public Inst_MUBUF
