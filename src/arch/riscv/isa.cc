@@ -575,3 +575,17 @@ ISA::globalClearExclusive()
 
 } // namespace RiscvISA
 } // namespace gem5
+
+std::ostream &
+operator<<(std::ostream &os, gem5::RiscvISA::PrivilegeMode pm)
+{
+    switch (pm) {
+    case gem5::RiscvISA::PRV_U:
+        return os << "PRV_U";
+    case gem5::RiscvISA::PRV_S:
+        return os << "PRV_S";
+    case gem5::RiscvISA::PRV_M:
+        return os << "PRV_M";
+    }
+    return os << "PRV_<invalid>";
+}
