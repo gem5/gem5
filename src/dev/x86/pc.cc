@@ -68,6 +68,7 @@ Pc::init()
      */
     X86ISA::I82094AA &ioApic = *southBridge->ioApic;
     X86ISA::I82094AA::RedirTableEntry entry = 0;
+    entry.mask = 1;
     entry.deliveryMode = X86ISA::delivery_mode::ExtInt;
     entry.vector = 0x20;
     ioApic.writeReg(0x10, entry.bottomDW);
@@ -76,7 +77,6 @@ Pc::init()
     entry.vector = 0x24;
     ioApic.writeReg(0x18, entry.bottomDW);
     ioApic.writeReg(0x19, entry.topDW);
-    entry.mask = 1;
     entry.vector = 0x21;
     ioApic.writeReg(0x12, entry.bottomDW);
     ioApic.writeReg(0x13, entry.topDW);
