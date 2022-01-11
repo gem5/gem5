@@ -141,6 +141,10 @@ let {{
                 else:
                     regString = "INTREG_R%s" % opType.reg
                 env.addReg(regString)
+                if env.regmUsed:
+                    regString = "env.regm"
+                else:
+                    regString = "env.reg"
                 env.addToDisassembly(
                     "printReg(out, RegId(IntRegClass, %s), regSize);\n" %
                     regString)
