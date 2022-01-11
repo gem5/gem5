@@ -107,6 +107,12 @@ def parse_options():
         help="Reduce verbosity")
     option('-v', "--verbose", action="count", default=0,
         help="Increase verbosity")
+    option('--main-isa', action='store', default=None,
+          help='Select the main target ISA. This dictates what the '
+          '`gem5.runtime.get_runtime_isa()` function returns when multiple '
+          'ISAs are compiled into the gem5 binary. Note: This functionality '
+          'is deprecated. The `gem5.runtime.get_runtime_isa()` function will '
+          'be removed in future releases of gem5.')
 
     # Statistics options
     group("Statistics Options")

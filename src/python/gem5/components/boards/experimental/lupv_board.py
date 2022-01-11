@@ -35,7 +35,6 @@ from ...cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
 from ..kernel_disk_workload import KernelDiskWorkload
 from ....resources.resource import AbstractResource
 from ....isas import ISA
-from ....utils.requires import requires
 
 import m5
 from m5.objects import (
@@ -91,9 +90,13 @@ class LupvBoard(AbstractBoard, KernelDiskWorkload):
         cache_hierarchy: AbstractCacheHierarchy,
     ) -> None:
 
-        requires(isa_required=ISA.RISCV)
         if cache_hierarchy.is_ruby():
             raise EnvironmentError("RiscvBoard is not compatible with Ruby")
+
+        if processor.get_isa() != ISA.RISCV:
+            raise Exception("The LupvBoard requires a processor using the "
+                "RISCV ISA. Current processor "
+                f"ISA: '{processor.get_isa().name}'.")
 
         super().__init__(clk_freq, processor, memory, cache_hierarchy)
 

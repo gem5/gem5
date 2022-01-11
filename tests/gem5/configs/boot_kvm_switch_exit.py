@@ -42,9 +42,7 @@ from gem5.components.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
 )
 from gem5.resources.resource import Resource
-from gem5.runtime import (
-    get_runtime_coherence_protocol, get_runtime_isa
-)
+from gem5.runtime import get_runtime_coherence_protocol
 from gem5.simulate.simulator import Simulator
 from gem5.simulate.exit_event import ExitEvent
 from gem5.utils.requires import requires
@@ -168,6 +166,7 @@ assert cpu_type != None
 processor = SimpleSwitchableProcessor(
     starting_core_type=CPUTypes.KVM,
     switch_core_type=cpu_type,
+    isa=ISA.X86,
     num_cores=args.num_cpus,
 )
 
@@ -199,7 +198,7 @@ motherboard.set_kernel_disk_workload(
 
 # Begin running of the simulation. This will exit once the Linux system boot
 # is complete.
-print("Running with ISA: " + get_runtime_isa().name)
+print("Running with ISA: " + processor.get_isa().name)
 print("Running with protocol: " + get_runtime_coherence_protocol().name)
 print()
 

@@ -37,6 +37,7 @@ from gem5.components.boards.simple_board import SimpleBoard
 from gem5.components.cachehierarchies.classic.no_cache import NoCache
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.simulate.simulator import Simulator
+from gem5.isas import get_isa_from_str, get_isas_str_set
 
 import argparse
 
@@ -55,6 +56,13 @@ parser.add_argument(
     type=str,
     choices=("kvm", "timing", "atomic", "o3"),
     help="The CPU type used.",
+)
+
+parser.add_argument(
+    "isa",
+    type=str,
+    choices=get_isas_str_set(),
+    help="The ISA used",
 )
 
 parser.add_argument(
@@ -82,7 +90,11 @@ def input_to_cputype(input: str) -> CPUTypes:
 # Setup the system.
 cache_hierarchy = NoCache()
 memory = SingleChannelDDR3_1600()
-processor = SimpleProcessor(cpu_type=input_to_cputype(args.cpu), num_cores=1)
+processor = SimpleProcessor(
+    cpu_type=input_to_cputype(args.cpu),
+    isa=get_isa_from_str(args.isa),
+    num_cores=1,
+)
 
 motherboard = SimpleBoard(
     clk_freq="3GHz",

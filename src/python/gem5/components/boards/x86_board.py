@@ -57,7 +57,6 @@ from m5.util.convert import toMemorySize
 from ..processors.abstract_processor import AbstractProcessor
 from ..memory.abstract_memory_system import AbstractMemorySystem
 from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
-from ...utils.requires import requires
 
 from typing import List, Sequence
 
@@ -85,7 +84,9 @@ class X86Board(AbstractBoard, KernelDiskWorkload):
             cache_hierarchy=cache_hierarchy,
         )
 
-        requires(isa_required=ISA.X86)
+        if self.get_processor().get_isa() != ISA.X86:
+            raise Exception("The X86Board requires a processor using the X86 "
+                f"ISA. Current processor ISA: '{processor.get_isa().name}'.")
 
     @overrides(AbstractBoard)
     def _setup_board(self) -> None:

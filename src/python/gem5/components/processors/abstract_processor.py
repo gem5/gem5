@@ -25,11 +25,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from abc import ABCMeta, abstractmethod
+
+from ...utils.requires import requires
 from .abstract_core import AbstractCore
 
 from m5.objects import SubSystem
 
 from ..boards.abstract_board import AbstractBoard
+from ...isas import ISA
 
 from typing import List
 
@@ -41,6 +44,13 @@ class AbstractProcessor(SubSystem):
         super().__init__()
         assert len(cores) > 0
 
+        # In the stdlib we assume the system processor conforms to a single
+        # ISA target.
+        assert len(set(core.get_isa() for core in cores)) == 1
+        self._isa = cores[0].get_isa()
+
+        requires(isa_required=self._isa)
+
         self.cores = cores
 
     def get_num_cores(self) -> int:
@@ -48,6 +58,9 @@ class AbstractProcessor(SubSystem):
 
     def get_cores(self) -> List[AbstractCore]:
         return self.cores
+
+    def get_isa(self) -> ISA:
+        return self._isa
 
     @abstractmethod
     def incorporate_processor(self, board: AbstractBoard) -> None:

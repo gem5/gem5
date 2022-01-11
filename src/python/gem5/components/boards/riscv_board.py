@@ -37,7 +37,6 @@ from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
 from ...resources.resource import AbstractResource
 
 from ...isas import ISA
-from ...utils.requires import requires
 
 import m5
 
@@ -89,7 +88,11 @@ class RiscvBoard(AbstractBoard, KernelDiskWorkload):
         cache_hierarchy: AbstractCacheHierarchy,
     ) -> None:
         super().__init__(clk_freq, processor, memory, cache_hierarchy)
-        requires(isa_required=ISA.RISCV)
+
+        if processor.get_isa() != ISA.RISCV:
+            raise Exception("The RISCVBoard requires a processor using the"
+                "RISCV ISA. Current processor ISA: "
+                f"'{processor.get_isa().name}'.")
 
     @overrides(AbstractBoard)
     def _setup_board(self) -> None:

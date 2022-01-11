@@ -46,6 +46,14 @@ from testlib import *
 
 import re
 
+isa_str_map = {
+    constants.gcn3_x86_tag: "x86",
+    constants.arm_tag: "arm",
+    constants.mips_tag: "mips",
+    constants.riscv_tag: "riscv",
+    constants.sparc_tag: "sparc",
+}
+
 static_progs = {
     constants.gcn3_x86_tag: (
         "x86-hello64-static",
@@ -109,6 +117,7 @@ def verify_config(isa, binary, cpu, hosts):
             cpu,
             "--resource-directory",
             resource_path,
+            isa_str_map[isa],
         ],
         valid_isas=(isa,),
         valid_hosts=hosts,

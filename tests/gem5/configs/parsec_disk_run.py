@@ -198,6 +198,7 @@ else:
 processor = SimpleSwitchableProcessor(
     starting_core_type=boot_type,
     switch_core_type=roi_type,
+    isa=ISA.X86,
     num_cores=args.num_cpus,
 )
 

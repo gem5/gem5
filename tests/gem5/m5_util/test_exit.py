@@ -68,6 +68,7 @@ gem5_verify_config(
         "atomic",
         "--resource-directory",
         resource_path,
+        "x86",
     ],
     valid_isas=(constants.gcn3_x86_tag,),
 )

@@ -79,6 +79,7 @@ memory = DualChannelDDR4_2400(size = "3GB")
 # Here we setup the processor. We use a simple processor.
 processor = SimpleProcessor(
     cpu_type=CPUTypes.TIMING,
+    isa=ISA.RISCV,
     num_cores=2,
 )
 

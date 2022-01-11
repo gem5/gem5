@@ -144,7 +144,11 @@ else:
         "CPU type '{}' is not supported in the boot tests.".format(args.cpu)
     )
 
-processor = SimpleProcessor(cpu_type=cpu_type, num_cores=args.num_cpus)
+processor = SimpleProcessor(
+    cpu_type=cpu_type,
+    isa=ISA.RISCV,
+    num_cores=args.num_cpus,
+)
 
 # Setup the board.
 board = RiscvBoard(

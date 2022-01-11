@@ -26,7 +26,10 @@
 
 from abc import ABCMeta, abstractmethod
 from typing import Optional
+import importlib
+
 from .cpu_types import CPUTypes
+from ...isas import ISA
 from ...utils.requires import requires
 
 from m5.objects import BaseMMU, Port, SubSystem
@@ -43,6 +46,10 @@ class AbstractCore(SubSystem):
 
     def get_type(self) -> CPUTypes:
         return self._cpu_type
+
+    @abstractmethod
+    def get_isa(self) -> ISA:
+        raise NotImplementedError
 
     @abstractmethod
     def connect_icache(self, port: Port) -> None:
@@ -102,3 +109,66 @@ class AbstractCore(SubSystem):
         This is used in the board to setup system-specific MMU settings.
         """
         raise NotImplementedError
+
+    @classmethod
+    def cpu_simobject_factory(cls, cpu_type: CPUTypes, isa: ISA, core_id: int):
+        """
+        A factory used to return the SimObject core object given the cpu type,
+        and ISA target. An exception will be thrown if there is an
+        incompatibility.
+
+        :param cpu_type: The target CPU type.
+        :param isa: The target ISA.
+        :param core_id: The id of the core to be returned.
+        """
+        requires(isa_required=isa)
+
+        _isa_string_map = {
+            ISA.X86 : "X86",
+            ISA.ARM : "Arm",
+            ISA.RISCV : "Riscv",
+            ISA.SPARC : "Sparc",
+            ISA.POWER : "Power",
+            ISA.MIPS : "Mips",
+        }
+
+        _cpu_types_string_map = {
+            CPUTypes.ATOMIC : "AtomicSimpleCPU",
+            CPUTypes.O3 : "O3CPU",
+            CPUTypes.TIMING : "TimingSimpleCPU",
+            CPUTypes.KVM : "KvmCPU"
+        }
+
+        if isa not in _isa_string_map:
+            raise NotImplementedError(f"ISA '{isa.name}' does not have an"
+                "entry in `AbstractCore.cpu_simobject_factory._isa_string_map`"
+            )
+
+        if cpu_type not in _cpu_types_string_map:
+            raise NotImplementedError(f"CPUType '{cpu_type.name}' "
+                "does not have an entry in "
+                "`AbstractCore.cpu_simobject_factory._cpu_types_string_map`"
+            )
+
+        if cpu_type == CPUTypes.KVM:
+            # For some reason, the KVM CPU is under "m5.objects" not the
+            # "m5.objects.{ISA}CPU".
+            module_str = f"m5.objects"
+        else:
+            module_str = f"m5.objects.{_isa_string_map[isa]}CPU"
+
+        cpu_class_str = f"{_isa_string_map[isa]}"\
+                        f"{_cpu_types_string_map[cpu_type]}"
+
+        try:
+            to_return_cls = getattr(importlib.import_module(module_str),
+                                    cpu_class_str
+                                   )
+        except ImportError:
+            raise Exception(
+                f"Cannot find CPU type '{cpu_type.name}' for '{isa.name}' "
+                "ISA. Please ensure you have compiled the correct version of "
+                "gem5."
+            )
+
+        return to_return_cls(cpu_id=core_id)

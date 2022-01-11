@@ -94,6 +94,7 @@ if have_hdf5():
             "atomic",
             "--resource-directory",
             resource_path,
+            "arm",
         ],
         gem5_args=["--stats-file=h5://stats.h5"],
         valid_isas=(constants.arm_tag,),

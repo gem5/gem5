@@ -33,7 +33,10 @@ from m5.util import warn
 
 from .abstract_processor import AbstractProcessor
 from .cpu_types import CPUTypes
+from ...isas import ISA
 from ..boards.abstract_board import AbstractBoard
+
+from typing import Optional
 
 
 class SimpleProcessor(AbstractProcessor):
@@ -41,11 +44,28 @@ class SimpleProcessor(AbstractProcessor):
     A SimpeProcessor contains a number of cores of a a single CPUType.
     """
 
-    def __init__(self, cpu_type: CPUTypes, num_cores: int) -> None:
+    def __init__(
+        self,
+        cpu_type: CPUTypes,
+        num_cores: int,
+        isa: Optional[ISA] = None,
+    ) -> None:
+        """
+        param cpu_type: The CPU type for each type in the processor.
+:
+        :param num_cores: The number of CPU cores in the processor.
+
+        :param isa: The ISA of the processor. This argument is optional. If not
+        set the `runtime.get_runtime_isa` is used to determine the ISA at
+        runtime. **WARNING**: This functionality is deprecated. It is
+        recommended you explicitly set your ISA via SimpleProcessor
+        construction.
+        """
         super().__init__(
             cores=self._create_cores(
                 cpu_type=cpu_type,
                 num_cores=num_cores,
+                isa = isa,
             )
         )
 
@@ -55,9 +75,15 @@ class SimpleProcessor(AbstractProcessor):
 
             self.kvm_vm = KvmVM()
 
-    def _create_cores(self, cpu_type: CPUTypes, num_cores: int):
+    def _create_cores(
+        self,
+        cpu_type: CPUTypes,
+        num_cores: int,
+        isa: Optional[ISA]
+    ):
         return [
-            SimpleCore(cpu_type=cpu_type, core_id=i) for i in range(num_cores)
+            SimpleCore(cpu_type=cpu_type, core_id=i, isa=isa,) \
+                for i in range(num_cores)
         ]
 
     @overrides(AbstractProcessor)
