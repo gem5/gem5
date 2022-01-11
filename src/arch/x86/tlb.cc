@@ -328,6 +328,10 @@ TLB::translate(const RequestPtr &req,
 
     HandyM5Reg m5Reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
 
+    const Addr logAddrSize = (flags >> AddrSizeFlagShift) & AddrSizeFlagMask;
+    const int addrSize = 8 << logAddrSize;
+    const Addr addrMask = mask(addrSize);
+
     // If protected mode has been enabled...
     if (m5Reg.prot) {
         DPRINTF(TLB, "In protected mode.\n");
@@ -361,11 +365,11 @@ TLB::translate(const RequestPtr &req,
             }
             Addr base = tc->readMiscRegNoEffect(MISCREG_SEG_BASE(seg));
             Addr limit = tc->readMiscRegNoEffect(MISCREG_SEG_LIMIT(seg));
-            bool sizeOverride = (flags & (AddrSizeFlagBit << FlagShift));
-            unsigned logSize = sizeOverride ? (unsigned)m5Reg.altAddr
-                                            : (unsigned)m5Reg.defAddr;
-            int size = (1 << logSize) * 8;
-            Addr offset = bits(vaddr - base, size - 1, 0);
+            Addr offset;
+            if (mode == BaseMMU::Execute)
+                offset = vaddr - base;
+            else
+                offset = (vaddr - base) & addrMask;
             Addr endOffset = offset + req->getSize() - 1;
             if (expandDown) {
                 DPRINTF(TLB, "Checking an expand down segment.\n");
@@ -380,8 +384,7 @@ TLB::translate(const RequestPtr &req,
                 }
             }
         }
-        if (m5Reg.submode != SixtyFourBitMode ||
-                (flags & (AddrSizeFlagBit << FlagShift)))
+        if (m5Reg.submode != SixtyFourBitMode && addrSize != 64)
             vaddr &= mask(32);
         // If paging is enabled, do the translation.
         if (m5Reg.paging) {
@@ -434,8 +437,7 @@ TLB::translate(const RequestPtr &req,
             DPRINTF(TLB, "Entry found with paddr %#x, "
                     "doing protection checks.\n", entry->paddr);
             // Do paging protection checks.
-            bool inUser = (m5Reg.cpl == 3 &&
-                    !(flags & (CPL0FlagBit << FlagShift)));
+            bool inUser = m5Reg.cpl == 3 && !(flags & CPL0FlagBit);
             CR0 cr0 = tc->readMiscRegNoEffect(MISCREG_CR0);
             bool badWrite = (!entry->writable && (inUser || cr0.wp));
             if ((inUser && !entry->user) ||

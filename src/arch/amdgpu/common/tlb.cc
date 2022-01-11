@@ -467,18 +467,10 @@ namespace X86ISA
 
                 Addr base = tc->readMiscRegNoEffect(MISCREG_SEG_BASE(seg));
                 Addr limit = tc->readMiscRegNoEffect(MISCREG_SEG_LIMIT(seg));
-                // This assumes we're not in 64 bit mode. If we were, the
-                // default address size is 64 bits, overridable to 32.
-                int size = 32;
-                bool sizeOverride = (flags & (AddrSizeFlagBit << FlagShift));
-                SegAttr csAttr = tc->readMiscRegNoEffect(MISCREG_CS_ATTR);
+                Addr logSize = (flags >> AddrSizeFlagShift) & AddrSizeFlagMask;
+                int size = 8 << logSize;
 
-                if ((csAttr.defaultSize && sizeOverride) ||
-                    (!csAttr.defaultSize && !sizeOverride)) {
-                    size = 16;
-                }
-
-                Addr offset = bits(vaddr - base, size - 1, 0);
+                Addr offset = (vaddr - base) & mask(size);
                 Addr endOffset = offset + req->getSize() - 1;
 
                 if (expandDown) {
@@ -552,8 +544,7 @@ namespace X86ISA
                 }
 
                 // Do paging protection checks.
-                bool inUser = (m5Reg.cpl == 3 &&
-                               !(flags & (CPL0FlagBit << FlagShift)));
+                bool inUser = m5Reg.cpl == 3 && !(flags & CPL0FlagBit);
 
                 CR0 cr0 = tc->readMiscRegNoEffect(MISCREG_CR0);
                 bool badWrite = (!entry->writable && (inUser || cr0.wp));
@@ -765,8 +756,7 @@ namespace X86ISA
         bool storeCheck = flags & Request::READ_MODIFY_WRITE;
 
         // Do paging protection checks.
-        bool inUser
-            = (m5Reg.cpl == 3 && !(flags & (CPL0FlagBit << FlagShift)));
+        bool inUser = m5Reg.cpl == 3 && !(flags & CPL0FlagBit);
         CR0 cr0 = tc->readMiscRegNoEffect(MISCREG_CR0);
 
         bool badWrite = (!tlb_entry->writable && (inUser || cr0.wp));

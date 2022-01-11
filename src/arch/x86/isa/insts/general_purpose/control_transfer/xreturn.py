@@ -41,9 +41,9 @@ def macroop RET_NEAR
     .function_return
     .control_indirect
 
-    ld t1, ss, [1, t0, rsp]
+    ld t1, ss, [1, t0, rsp], addressSize=ssz
     # Check address of return
-    addi rsp, rsp, dsz
+    addi rsp, rsp, dsz, dataSize=ssz
     wripi t1, 0
 };
 
@@ -55,10 +55,10 @@ def macroop RET_NEAR_I
     .control_indirect
 
     limm t2, imm
-    ld t1, ss, [1, t0, rsp]
+    ld t1, ss, [1, t0, rsp], addressSize=ssz
     # Check address of return
-    addi rsp, rsp, dsz
-    add rsp, rsp, t2
+    addi rsp, rsp, dsz, dataSize=ssz
+    add rsp, rsp, t2, dataSize=ssz
     wripi t1, 0
 };
 
@@ -91,15 +91,15 @@ def macroop RET_FAR {
     .control_indirect
 
     # Get the return RIP
-    ld t1, ss, [1, t0, rsp]
+    ld t1, ss, [1, t0, rsp], addressSize=ssz
 
     # Get the return CS
-    ld t2, ss, [1, t0, rsp], ssz
+    ld t2, ss, [1, t0, rsp], dsz, addressSize=ssz
 
     # increment the stack pointer to pop the instruction pointer
     # and the code segment from the stack.
-    addi rsp, rsp, dsz
-    addi rsp, rsp, dsz
+    addi rsp, rsp, dsz, dataSize=ssz
+    addi rsp, rsp, dsz, dataSize=ssz
 
     # Get the rpl
     andi t3, t2, 0x3
@@ -115,10 +115,10 @@ def macroop RET_FAR {
     andi t3, t2, 0xF8, dataSize=8
     andi t0, t2, 0x4, flags=(EZF,), dataSize=2
     br label("globalDescriptor"), flags=(CEZF,)
-    ld t3, tsl, [1, t0, t3], dataSize=8
+    ld t3, tsl, [1, t0, t3], dataSize=8, addressSize=8
     br label("processDescriptor")
 globalDescriptor:
-    ld t3, tsg, [1, t0, t3], dataSize=8
+    ld t3, tsg, [1, t0, t3], dataSize=8, addressSize=8
 processDescriptor:
     chks t2, t3, IretCheck, dataSize=8
     # There should be validity checks on the RIP checks here, but I'll do
