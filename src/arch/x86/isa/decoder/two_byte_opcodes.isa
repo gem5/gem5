@@ -667,7 +667,7 @@
             }
         }
         0x14: decode OPCODE_OP_BOTTOM3 {
-            0x0: push_fs();
+            0x0: Inst::PUSH(sFv);
             0x1: pop_fs();
             0x2: CPUIDInst::CPUID({{
                 CpuidResult result;
@@ -694,7 +694,7 @@
             default: Inst::UD2();
         }
         0x15: decode OPCODE_OP_BOTTOM3 {
-            0x0: push_gs();
+            0x0: Inst::PUSH(sGv);
             0x1: pop_gs();
             0x2: rsm_smm();
             0x3: Inst::BTS(Ev,Gv);

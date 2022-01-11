@@ -43,7 +43,7 @@
         0x00: decode OPCODE_OP_BOTTOM3 {
             0x6: decode MODE_SUBMODE {
                 0x0: UD2();
-                default: WarnUnimpl::push_ES();
+                default: PUSH(sEv);
             }
             0x7: decode MODE_SUBMODE {
                 0x0: UD2();
@@ -57,7 +57,7 @@
         0x01: decode OPCODE_OP_BOTTOM3 {
             0x6: decode MODE_SUBMODE {
                 0x0: UD2();
-                default: WarnUnimpl::push_CS();
+                default: PUSH(sCv);
             }
             //Any time this is seen, it should generate a two byte opcode
             0x7: M5InternalError::error(
@@ -70,7 +70,7 @@
         0x02: decode OPCODE_OP_BOTTOM3 {
             0x6: decode MODE_SUBMODE {
                 0x0: UD2();
-                default: WarnUnimpl::push_SS();
+                default: PUSH(sSv);
             }
             0x7: decode MODE_SUBMODE {
                 0x0: UD2();
@@ -84,7 +84,7 @@
         0x03: decode OPCODE_OP_BOTTOM3 {
             0x6: decode MODE_SUBMODE {
                 0x0: UD2();
-                default: WarnUnimpl::push_DS();
+                default: PUSH(sDv);
             }
             0x7: decode MODE_SUBMODE {
                 0x0: UD2();
