@@ -632,6 +632,7 @@ namespace VegaISA
             Addr stride = 0;
             Addr buf_idx = 0;
             Addr buf_off = 0;
+            Addr buffer_offset = 0;
             BufferRsrcDescriptor rsrc_desc;
 
             std::memcpy((void*)&rsrc_desc, s_rsrc_desc.rawDataPtr(),
@@ -654,42 +655,6 @@ namespace VegaISA
 
                     buf_off = v_off[lane] + inst_offset;
 
-
-                    /**
-                     * Range check behavior causes out of range accesses to
-                     * to be treated differently. Out of range accesses return
-                     * 0 for loads and are ignored for stores. For
-                     * non-formatted accesses, this is done on a per-lane
-                     * basis.
-                     */
-                    if (stride == 0 || !rsrc_desc.swizzleEn) {
-                        if (buf_off + stride * buf_idx >=
-                            rsrc_desc.numRecords - s_offset.rawData()) {
-                            DPRINTF(VEGA, "mubuf out-of-bounds condition 1: "
-                                    "lane = %d, buffer_offset = %llx, "
-                                    "const_stride = %llx, "
-                                    "const_num_records = %llx\n",
-                                    lane, buf_off + stride * buf_idx,
-                                    stride, rsrc_desc.numRecords);
-                            oobMask.set(lane);
-                            continue;
-                        }
-                    }
-
-                    if (stride != 0 && rsrc_desc.swizzleEn) {
-                        if (buf_idx >= rsrc_desc.numRecords ||
-                            buf_off >= stride) {
-                            DPRINTF(VEGA, "mubuf out-of-bounds condition 2: "
-                                    "lane = %d, offset = %llx, "
-                                    "index = %llx, "
-                                    "const_num_records = %llx\n",
-                                    lane, buf_off, buf_idx,
-                                    rsrc_desc.numRecords);
-                            oobMask.set(lane);
-                            continue;
-                        }
-                    }
-
                     if (rsrc_desc.swizzleEn) {
                         Addr idx_stride = 8 << rsrc_desc.idxStride;
                         Addr elem_size = 2 << rsrc_desc.elemSize;
@@ -704,11 +669,49 @@ namespace VegaISA
                                 lane, idx_stride, elem_size, idx_msb, idx_lsb,
                                 off_msb, off_lsb);
 
-                        vaddr += ((idx_msb * stride + off_msb * elem_size)
-                            * idx_stride + idx_lsb * elem_size + off_lsb);
+                        buffer_offset =(idx_msb * stride + off_msb * elem_size)
+                            * idx_stride + idx_lsb * elem_size + off_lsb;
                     } else {
-                        vaddr += buf_off + stride * buf_idx;
+                        buffer_offset = buf_off + stride * buf_idx;
                     }
+
+
+                    /**
+                     * Range check behavior causes out of range accesses to
+                     * to be treated differently. Out of range accesses return
+                     * 0 for loads and are ignored for stores. For
+                     * non-formatted accesses, this is done on a per-lane
+                     * basis.
+                     */
+                    if (rsrc_desc.stride == 0 || !rsrc_desc.swizzleEn) {
+                        if (buffer_offset >=
+                            rsrc_desc.numRecords - s_offset.rawData()) {
+                            DPRINTF(VEGA, "mubuf out-of-bounds condition 1: "
+                                    "lane = %d, buffer_offset = %llx, "
+                                    "const_stride = %llx, "
+                                    "const_num_records = %llx\n",
+                                    lane, buf_off + stride * buf_idx,
+                                    stride, rsrc_desc.numRecords);
+                            oobMask.set(lane);
+                            continue;
+                        }
+                    }
+
+                    if (rsrc_desc.stride != 0 && rsrc_desc.swizzleEn) {
+                        if (buf_idx >= rsrc_desc.numRecords ||
+                            buf_off >= stride) {
+                            DPRINTF(VEGA, "mubuf out-of-bounds condition 2: "
+                                    "lane = %d, offset = %llx, "
+                                    "index = %llx, "
+                                    "const_num_records = %llx\n",
+                                    lane, buf_off, buf_idx,
+                                    rsrc_desc.numRecords);
+                            oobMask.set(lane);
+                            continue;
+                        }
+                    }
+
+                    vaddr += buffer_offset;
 
                     DPRINTF(VEGA, "Calculating mubuf address for lane %d: "
                             "vaddr = %llx, base_addr = %llx, "
