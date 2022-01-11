@@ -36,7 +36,37 @@
 microcode = '''
 def macroop IRET_REAL {
     .serialize_after
-    panic "Real mode iret isn't implemented!"
+
+    # temp_RIP
+    ld t1, ss, [1, t0, rsp], "0 * env.dataSize", addressSize=ssz
+    # temp_CS
+    ld t2, ss, [1, t0, rsp], "1 * env.dataSize", addressSize=ssz
+    # temp_RFLAGS
+    ld t3, ss, [1, t0, rsp], "2 * env.dataSize", addressSize=ssz
+
+    # Update RSP now that all memory accesses have succeeded.
+    addi rsp, rsp, "3 * env.dataSize", dataSize=ssz
+
+    # Update CS.
+    wrsel cs, t2
+    # Make sure there isn't any junk in the upper bits of the base.
+    mov t4, t0, t2
+    slli t4, t4, 4, dataSize=8
+    wrbase cs, t4, dataSize=8
+
+    # Update RFLAGS
+    # Get the current RFLAGS
+    rflags t4
+    # Flip flag bits if they should change.
+    xor t5, t4, t3
+    # Don't change VIF, VIP, or VM
+    limm t6, "~(VIFBit | VIPBit | VMBit)", dataSize=8
+    and t5, t5, t6, dataSize=8
+    # Write back RFLAGS with flipped bits.
+    wrflags t4, t5, dataSize=8
+
+    # Update RIP
+    wrip t1, t0
 };
 
 def macroop IRET_PROT {
