@@ -35467,6 +35467,15 @@ namespace VegaISA
         }
 
         vdst.write();
+
+        /**
+         * This is needed because we treat this instruction as a load
+         * but it's not an actual memory request.
+         * Without this, the destination register never gets marked as
+         * free, leading to a  possible deadlock
+         */
+        wf->computeUnit->vrf[wf->simdId]->
+            scheduleWriteOperandsFromLoad(wf, gpuDynInst);
     } // execute
     // --- Inst_DS__DS_PERMUTE_B32 class methods ---
 
@@ -35541,6 +35550,15 @@ namespace VegaISA
         }
 
         vdst.write();
+
+        /**
+         * This is needed because we treat this instruction as a load
+         * but it's not an actual memory request.
+         * Without this, the destination register never gets marked as
+         * free, leading to a  possible deadlock
+         */
+        wf->computeUnit->vrf[wf->simdId]->
+            scheduleWriteOperandsFromLoad(wf, gpuDynInst);
     } // execute
     // --- Inst_DS__DS_BPERMUTE_B32 class methods ---
 
@@ -35615,6 +35633,15 @@ namespace VegaISA
         }
 
         vdst.write();
+
+        /**
+         * This is needed because we treat this instruction as a load
+         * but it's not an actual memory request.
+         * Without this, the destination register never gets marked as
+         * free, leading to a  possible deadlock
+         */
+        wf->computeUnit->vrf[wf->simdId]->
+            scheduleWriteOperandsFromLoad(wf, gpuDynInst);
     } // execute
 
     // --- Inst_DS__DS_ADD_U64 class methods ---
