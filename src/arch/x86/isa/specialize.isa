@@ -104,17 +104,22 @@ let {{
 
 let {{
     class OpType(object):
-        parser = re.compile(r"(?P<tag>[A-Z]+)(?P<size>[a-z]*)|(r(?P<reg>[A-Z0-9]+)(?P<rsize>[a-z]*))")
+        parser = re.compile(r"(?P<tag>[A-Z]+)(?P<size>[a-z]*)|"
+                             "(r(?P<reg>[A-Z0-9]+)(?P<rsize>[a-z]*))|"
+                             "(s(?P<seg>[A-Z0-9]+)(?P<ssize>[a-z]*))")
         def __init__(self, opTypeString):
             match = OpType.parser.search(opTypeString)
             if match == None:
                 raise Exception("Problem parsing operand type {}".format(
                     opTypeString))
             self.reg = match.group("reg")
+            self.seg = match.group("seg")
             self.tag = match.group("tag")
             self.size = match.group("size")
             if not self.size:
                 self.size = match.group("rsize")
+            if not self.size:
+                self.size = match.group("ssize")
 
     ModRMRegIndex = "(MODRM_REG | (REX_R << 3))"
     ModRMRMIndex = "(MODRM_RM | (REX_B << 3))"
@@ -150,6 +155,16 @@ let {{
                     regString)
 
                 Name += "_R"
+
+            elif opType.seg:
+                env.addReg("SEGMENT_REG_%sS" % opType.seg)
+                if env.regmUsed:
+                    regString = "env.regm"
+                else:
+                    regString = "env.reg"
+                env.addToDisassembly("printSegment(out, %s);\n" % regString)
+
+                Name += "_S"
 
             elif opType.tag == "B":
                 # This refers to registers whose index is encoded as part of
