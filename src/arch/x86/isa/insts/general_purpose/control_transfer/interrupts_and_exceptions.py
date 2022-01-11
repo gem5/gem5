@@ -263,8 +263,7 @@ def macroop INT3 {
     br rom_label("legacyModeInterrupt")
 };
 
-def macroop INT_I {
-
+def macroop INT_LONG_I {
     #load the byte-sized interrupt vector specified in the instruction
     .adjust_imm trimImm(8)
     limm t1, imm, dataSize=8
@@ -272,10 +271,62 @@ def macroop INT_I {
     rdip t7
 
     # Are we in long mode?
-    rdm5reg t5
-    andi t0, t5, 0x1, flags=(EZF,)
-    br rom_label("longModeSoftInterrupt"), flags=(CEZF,)
+    br rom_label("longModeSoftInterrupt")
+};
+
+def macroop INT_PROT_I {
+    #load the byte-sized interrupt vector specified in the instruction
+    .adjust_imm trimImm(8)
+    limm t1, imm, dataSize=8
+
+    rdip t7
+
+    # Are we in long mode?
     br rom_label("legacyModeInterrupt")
+};
+
+def macroop INT_REAL_I {
+    #load the byte-sized interrupt vector specified in the instruction
+    .adjust_imm trimImm(8)
+    limm t1, imm, dataSize=8
+
+    # temp_RIP
+    ld t2, idtr, [4, t1, t0], dataSize=2, addressSize=8
+    # temp_CS
+    ld t3, idtr, [4, t1, t0], 2, dataSize=2, addressSize=8
+
+    cda ss, [1, t0, rsp], -2, dataSize=2, addressSize=ssz
+    cda ss, [1, t0, rsp], -6, dataSize=2, addressSize=ssz
+
+    rflags t4, dataSize=8
+    rdsel t5, cs, dataSize=8
+    rdip t6
+
+    # Push RFLAGS.
+    st t4, ss, [1, t0, rsp], -2, dataSize=2, addressSize=ssz
+    # Push CS.
+    st t5, ss, [1, t0, rsp], -4, dataSize=2, addressSize=ssz
+    # Push the next RIP.
+    st t6, ss, [1, t0, rsp], -6, dataSize=2, addressSize=ssz
+
+    # Update RSP
+    subi rsp, rsp, 6, dataSize=ssz
+
+    # Set the CS selector.
+    wrsel cs, t3, dataSize=2
+    # Make sure there isn't any junk in the upper bits of the base.
+    mov t3, t0, t3
+    # Compute and set CS base.
+    slli t3, t3, 4, dataSize=8
+    wrbase cs, t3, dataSize=8
+
+    # If AC, TF, IF or RF are set, we want to flip them.
+    limm t7, "(ACBit | TFBit | IFBit | RFBit)", dataSize=8
+    and t7, t4, t7, dataSize=8
+    wrflags t4, t7, dataSize=8
+
+    # Set the new RIP
+    wrip t2, t0
 };
 '''
 #let {{

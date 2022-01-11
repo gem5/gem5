@@ -403,7 +403,13 @@
                             }});
                     }
 
-                    default: Inst::INT(Ib);
+                    default: decode MODE_MODE {
+                        0x0: Inst::INT_LONG(Ib);
+                        0x1: decode MODE_SUBMODE {
+                            0x4: Inst::INT_REAL(Ib);
+                            default: Inst::INT_PROT(Ib);
+                        }
+                    }
                 }
                 0x6: decode MODE_SUBMODE {
                     0x0: Inst::UD2();
