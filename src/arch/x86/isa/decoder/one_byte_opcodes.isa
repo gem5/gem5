@@ -388,7 +388,7 @@
                 0x1: Inst::LEAVE();
                 0x2: ret_far_Iw();
                 0x3: decode MODE_SUBMODE {
-                    0x3, 0x4: ret_far_real();
+                    0x3, 0x4: Inst::RET_FAR_REAL();
                     default: Inst::RET_FAR();
                 }
                 0x4: Inst::INT3();
