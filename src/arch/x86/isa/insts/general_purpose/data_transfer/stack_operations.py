@@ -100,6 +100,12 @@ def macroop PUSH_P {
     subi rsp, rsp, ssz
 };
 
+def macroop PUSH_S {
+    rdsel t1, sr
+    st t1, ss, [1, t0, rsp], "-env.dataSize", addressSize=ssz
+    subi rsp, rsp, dsz, dataSize=ssz
+};
+
 def macroop PUSHA {
     # Check all the stack addresses. We'll assume that if the beginning and
     # end are ok, then the stuff in the middle should be as well.
