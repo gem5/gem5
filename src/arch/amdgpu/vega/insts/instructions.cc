@@ -39848,7 +39848,13 @@ namespace VegaISA
         gpuDynInst->execUnitId = wf->execUnitId;
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-        gpuDynInst->computeUnit()->globalMemoryPipe.issueRequest(gpuDynInst);
+
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+            gpuDynInst->computeUnit()->globalMemoryPipe.
+                issueRequest(gpuDynInst);
+        } else {
+            fatal("Unsupported scope for flat instruction.\n");
+        }
     } // execute
 
     void
@@ -39901,7 +39907,13 @@ namespace VegaISA
         gpuDynInst->execUnitId = wf->execUnitId;
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
-        gpuDynInst->computeUnit()->globalMemoryPipe.issueRequest(gpuDynInst);
+
+        if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+            gpuDynInst->computeUnit()->globalMemoryPipe.
+                issueRequest(gpuDynInst);
+        } else {
+            fatal("Unsupported scope for flat instruction.\n");
+        }
     } // execute
     void
     Inst_MUBUF__BUFFER_WBINVL1_VOL::initiateAcc(GPUDynInstPtr gpuDynInst)

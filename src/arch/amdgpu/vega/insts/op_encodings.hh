@@ -800,35 +800,107 @@ namespace VegaISA
         void
         initMemRead(GPUDynInstPtr gpuDynInst)
         {
-            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+                initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
+            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
+                Wavefront *wf = gpuDynInst->wavefront();
+                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                    if (gpuDynInst->exec_mask[lane]) {
+                        Addr vaddr = gpuDynInst->addr[lane];
+                        (reinterpret_cast<T*>(gpuDynInst->d_data))[lane]
+                            = wf->ldsChunk->read<T>(vaddr);
+                    }
+                }
+            }
         }
 
         template<int N>
         void
         initMemRead(GPUDynInstPtr gpuDynInst)
         {
-            initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::ReadReq);
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+                initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::ReadReq);
+            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
+                Wavefront *wf = gpuDynInst->wavefront();
+                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                    if (gpuDynInst->exec_mask[lane]) {
+                        Addr vaddr = gpuDynInst->addr[lane];
+                        for (int i = 0; i < N; ++i) {
+                            (reinterpret_cast<VecElemU32*>(
+                                gpuDynInst->d_data))[lane * N + i]
+                                = wf->ldsChunk->read<VecElemU32>(
+                                        vaddr + i*sizeof(VecElemU32));
+                        }
+                    }
+                }
+            }
         }
 
         template<typename T>
         void
         initMemWrite(GPUDynInstPtr gpuDynInst)
         {
-            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+                initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
+            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
+                Wavefront *wf = gpuDynInst->wavefront();
+                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                    if (gpuDynInst->exec_mask[lane]) {
+                        Addr vaddr = gpuDynInst->addr[lane];
+                        wf->ldsChunk->write<T>(vaddr,
+                            (reinterpret_cast<T*>(gpuDynInst->d_data))[lane]);
+                    }
+                }
+            }
         }
 
         template<int N>
         void
         initMemWrite(GPUDynInstPtr gpuDynInst)
         {
-            initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::WriteReq);
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+                initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::WriteReq);
+            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
+                Wavefront *wf = gpuDynInst->wavefront();
+                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                    if (gpuDynInst->exec_mask[lane]) {
+                        Addr vaddr = gpuDynInst->addr[lane];
+                        for (int i = 0; i < N; ++i) {
+                            wf->ldsChunk->write<VecElemU32>(
+                                vaddr + i*sizeof(VecElemU32),
+                                (reinterpret_cast<VecElemU32*>(
+                                    gpuDynInst->d_data))[lane * N + i]);
+                        }
+                    }
+                }
+            }
         }
 
         template<typename T>
         void
         initAtomicAccess(GPUDynInstPtr gpuDynInst)
         {
-            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::SwapReq, true);
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+                initMemReqHelper<T, 1>(gpuDynInst, MemCmd::SwapReq, true);
+            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
+                Wavefront *wf = gpuDynInst->wavefront();
+                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                    if (gpuDynInst->exec_mask[lane]) {
+                        Addr vaddr = gpuDynInst->addr[lane];
+                        auto amo_op =
+                            gpuDynInst->makeAtomicOpFunctor<T>(
+                                &(reinterpret_cast<T*>(
+                                    gpuDynInst->a_data))[lane],
+                                &(reinterpret_cast<T*>(
+                                    gpuDynInst->x_data))[lane]);
+
+                        T tmp = wf->ldsChunk->read<T>(vaddr);
+                        (*amo_op)(reinterpret_cast<uint8_t *>(&tmp));
+                        wf->ldsChunk->write<T>(vaddr, tmp);
+                        (reinterpret_cast<T*>(gpuDynInst->d_data))[lane] = tmp;
+                    }
+                }
+            }
         }
 
         void
