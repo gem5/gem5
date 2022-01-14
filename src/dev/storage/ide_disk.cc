@@ -49,6 +49,7 @@
 #include <deque>
 #include <string>
 
+#include "base/bitfield.hh"
 #include "base/chunk_generator.hh"
 #include "base/compiler.hh"
 #include "base/cprintf.hh" // csprintf
@@ -613,6 +614,10 @@ IdeDisk::startCommand()
     uint32_t size = 0;
     dmaRead = false;
 
+    // Clear any existing errors.
+    replaceBits(status, 0, 0);
+    replaceBits(cmdReg.error, 2, 0);
+
     // Decode commands
     switch (cmdReg.command) {
         // Supported non-data commands
@@ -642,10 +647,17 @@ IdeDisk::startCommand()
 
         // Supported PIO data-in commands
       case WDCC_IDENTIFY:
-      case ATAPI_IDENTIFY_DEVICE:
         cmdBytes = cmdBytesLeft = sizeof(struct ataparams);
         devState = Prepare_Data_In;
         action = ACT_DATA_READY;
+        break;
+
+      case ATAPI_IDENTIFY_DEVICE:
+        // We're not an ATAPI device, so this command isn't implemented.
+        devState = Command_Execution;
+        action = ACT_CMD_ERROR;
+        replaceBits(cmdReg.error, 2, 1);
+        replaceBits(status, 0, 1);
         break;
 
       case WDCC_READMULTI:
@@ -805,7 +817,7 @@ IdeDisk::updateState(DevAction_t action)
         break;
 
       case Command_Execution:
-        if (action == ACT_CMD_COMPLETE) {
+        if (action == ACT_CMD_ERROR || action == ACT_CMD_COMPLETE) {
             // clear the BSY bit
             setComplete();
 
