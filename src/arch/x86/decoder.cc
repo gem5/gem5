@@ -515,7 +515,7 @@ Decoder::doModRMState(uint8_t nextByte)
     State nextState = ErrorState;
     ModRM modRM = nextByte;
     DPRINTF(Decoder, "Found modrm byte %#x.\n", nextByte);
-    if (defOp == 1) {
+    if (emi.addrSize == 2) {
         // Figure out 16 bit displacement size.
         if ((modRM.mod == 0 && modRM.rm == 6) || modRM.mod == 2)
             displacementSize = 2;
