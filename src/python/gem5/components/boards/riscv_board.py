@@ -54,6 +54,7 @@ from m5.objects import (
     RawDiskImage,
     RiscvMmioVirtIO,
     VirtIOBlock,
+    VirtIORng,
     Frequency,
     Port,
 )
@@ -119,10 +120,18 @@ class RiscvBoard(AbstractBoard, KernelDiskWorkload):
             pio_addr=0x10008000,
         )
 
+        # The virtio rng
+        self.rng = RiscvMmioVirtIO(
+            vio=VirtIORng(),
+            interrupt_id=0x8,
+            pio_size=4096,
+            pio_addr=0x10007000,
+        )
+
         # Note: This overrides the platform's code because the platform isn't
         # general enough.
         self._on_chip_devices = [self.platform.clint, self.platform.plic]
-        self._off_chip_devices = [self.platform.uart, self.disk]
+        self._off_chip_devices = [self.platform.uart, self.disk, self.rng]
 
     def _setup_io_devices(self) -> None:
         """Connect the I/O devices to the I/O bus"""
@@ -336,6 +345,18 @@ class RiscvBoard(AbstractBoard, KernelDiskWorkload):
         )
         disk_node.appendCompatible(["virtio,mmio"])
         soc_node.append(disk_node)
+
+        # VirtIO MMIO rng node
+        rng = self.rng
+        rng_node = rng.generateBasicPioDeviceNode(
+            soc_state, "virtio_mmio", rng.pio_addr, rng.pio_size
+        )
+        rng_node.append(FdtPropertyWords("interrupts", [rng.interrupt_id]))
+        rng_node.append(
+            FdtPropertyWords("interrupt-parent", soc_state.phandle(plic))
+        )
+        rng_node.appendCompatible(["virtio,mmio"])
+        soc_node.append(rng_node)
 
         root.append(soc_node)
 

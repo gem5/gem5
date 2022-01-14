@@ -75,6 +75,7 @@ from common import Options
 #                               linux kernel payload)
 # --disk-image (optional):      Path to disk image file. Not needed if using
 #                               ramfs (might run into issues though).
+# --virtio-rng (optional):      Enable VirtIO entropy source device
 # --command-line (optional):    Specify to override default.
 # --dtb-filename (optional):    Path to DTB file. Auto-generated if empty.
 # --bare-metal (boolean):       Use baremetal Riscv (default False). Use this
@@ -129,6 +130,8 @@ parser.add_argument("--bare-metal", action="store_true",
 parser.add_argument("--dtb-filename", action="store", type=str,
     help="Specifies device tree blob file to use with device-tree-"\
         "enabled kernels")
+parser.add_argument("--virtio-rng", action="store_true",
+    help="Enable VirtIORng device")
 
 # ---------------------------- Parse Options --------------------------- #
 args = parser.parse_args()
@@ -175,6 +178,15 @@ if args.disk_image:
         interrupt_id=0x8,
         pio_size=4096,
         pio_addr=0x10008000
+    )
+
+# VirtIORng
+if args.virtio_rng:
+    system.platform.rng = RiscvMmioVirtIO(
+        vio=VirtIORng(),
+        interrupt_id=0x8,
+        pio_size=4096,
+        pio_addr=0x10007000
     )
 
 system.bridge = Bridge(delay='50ns')

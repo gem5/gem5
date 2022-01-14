@@ -126,6 +126,8 @@ class HiFive(Platform):
         devices = [self.uart]
         if hasattr(self, "disk"):
             devices.append(self.disk)
+        if hasattr(self, "rng"):
+            devices.append(self.rng)
         return devices
 
     def _on_chip_ranges(self):
