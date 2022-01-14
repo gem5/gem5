@@ -181,7 +181,7 @@ ThreadContext::installBp(BpInfoIt it)
     const auto &space_ids = getBpSpaceIds();
     for (auto sid: space_ids) {
         BpId id;
-        call().breakpoint_set_code(_instId, id, pc, sid, 0, true);
+        call().breakpoint_set_code(_instId, id, pc, sid, 0);
         it->second->ids.push_back(id);
     }
 }
