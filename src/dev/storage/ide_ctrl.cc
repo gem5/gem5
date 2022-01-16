@@ -50,10 +50,6 @@
 #include "params/IdeController.hh"
 #include "sim/byteswap.hh"
 
-// clang complains about std::set being overloaded with Packet::set if
-// we open up the entire namespace std
-using std::string;
-
 namespace gem5
 {
 
@@ -65,7 +61,7 @@ enum BMIRegOffset
     BMIDescTablePtr = 0x4
 };
 
-IdeController::Channel::Channel(string newName) : _name(newName)
+IdeController::Channel::Channel(std::string newName) : _name(newName)
 {
     bmiRegs.reset();
     bmiRegs.status.dmaCap0 = 1;
@@ -287,8 +283,8 @@ IdeController::Channel::accessBMI(Addr offset,
                     newVal.intStatus = 0; // clear the interrupt?
                 } else {
                     // Assigning two bitunion fields to each other does not
-                    // work as intended, so we need to use this temporary variable
-                    // to get around the bug.
+                    // work as intended, so we need to use this temporary
+                    // variable to get around the bug.
                     uint8_t tmp = oldVal.intStatus;
                     newVal.intStatus = tmp;
                 }
@@ -309,8 +305,9 @@ IdeController::Channel::accessBMI(Addr offset,
             break;
           default:
             if (size != sizeof(uint8_t) && size != sizeof(uint16_t) &&
-                    size != sizeof(uint32_t))
-                panic("IDE controller write of invalid write size: %x\n", size);
+                    size != sizeof(uint32_t)) {
+                panic("IDE controller write of invalid size: %x\n", size);
+            }
             memcpy((uint8_t *)&bmiRegs + offset, data, size);
         }
     }

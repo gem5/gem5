@@ -355,7 +355,8 @@ class IdeDisk : public SimObject
     bool isIENSet() { return nIENBit; }
     bool isDEVSelect();
 
-    void setComplete()
+    void
+    setComplete()
     {
         // clear out the status byte
         status = 0;
@@ -365,10 +366,13 @@ class IdeDisk : public SimObject
         status |= STATUS_SEEK_BIT;
     }
 
-    uint32_t getLBABase()
+    uint32_t
+    getLBABase()
     {
-        return  (Addr)(((cmdReg.head & 0xf) << 24) | (cmdReg.cyl_high << 16) |
-                       (cmdReg.cyl_low << 8) | (cmdReg.sec_num));
+        return ((cmdReg.head & 0xf) << 24) |
+               (cmdReg.cyl_high << 16) |
+               (cmdReg.cyl_low << 8) |
+               (cmdReg.sec_num);
     }
 
     inline Addr pciToDma(Addr pciAddr);

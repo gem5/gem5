@@ -538,8 +538,9 @@ IdeDisk::doDmaWrite()
 void
 IdeDisk::dmaWriteDone()
 {
-    DPRINTF(IdeDisk, "doWriteDone: curPrd byte count %d, eot %#x cmd bytes left:%d\n",
-                curPrd.getByteCount(), curPrd.getEOT(), cmdBytesLeft);
+    DPRINTF(IdeDisk,
+            "doWriteDone: curPrd byte count %d, eot %#x cmd bytes left:%d\n",
+            curPrd.getByteCount(), curPrd.getEOT(), cmdBytesLeft);
     // check for the EOT
     if (curPrd.getEOT()) {
         assert(cmdBytesLeft == 0);
@@ -559,9 +560,9 @@ IdeDisk::readDisk(uint32_t sector, uint8_t *data)
 {
     uint32_t bytesRead = image->read(data, sector);
 
-    if (bytesRead != SectorSize)
-        panic("Can't read from %s. Only %d of %d read. errno=%d\n",
-              name(), bytesRead, SectorSize, errno);
+    panic_if(bytesRead != SectorSize,
+            "Can't read from %s. Only %d of %d read. errno=%d",
+            name(), bytesRead, SectorSize, errno);
 }
 
 void
@@ -569,9 +570,9 @@ IdeDisk::writeDisk(uint32_t sector, uint8_t *data)
 {
     uint32_t bytesWritten = image->write(data, sector);
 
-    if (bytesWritten != SectorSize)
-        panic("Can't write to %s. Only %d of %d written. errno=%d\n",
-              name(), bytesWritten, SectorSize, errno);
+    panic_if(bytesWritten != SectorSize,
+            "Can't write to %s. Only %d of %d written. errno=%d",
+            name(), bytesWritten, SectorSize, errno);
 }
 
 ////
@@ -581,11 +582,11 @@ IdeDisk::writeDisk(uint32_t sector, uint8_t *data)
 void
 IdeDisk::startDma(const uint32_t &prdTableBase)
 {
-    if (dmaState != Dma_Start)
-        panic("Inconsistent DMA state, should be in Dma_Start!\n");
+    panic_if(dmaState != Dma_Start,
+            "Inconsistent DMA state, should be in Dma_Start!");
 
-    if (devState != Transfer_Data_Dma)
-        panic("Inconsistent device state for DMA start!\n");
+    panic_if(devState != Transfer_Data_Dma,
+            "Inconsistent device state for DMA start!");
 
     // PRD base address is given by bits 31:2
     curPrdAddr = pciToDma((Addr)(prdTableBase & ~0x3ULL));
@@ -599,11 +600,11 @@ IdeDisk::startDma(const uint32_t &prdTableBase)
 void
 IdeDisk::abortDma()
 {
-    if (dmaState == Dma_Idle)
-        panic("Inconsistent DMA state, should be Start or Transfer!");
+    panic_if(dmaState == Dma_Idle,
+            "Inconsistent DMA state, should be Start or Transfer!");
 
-    if (devState != Transfer_Data_Dma && devState != Prepare_Data_Dma)
-        panic("Inconsistent device state, should be Transfer or Prepare!\n");
+    panic_if(devState != Transfer_Data_Dma && devState != Prepare_Data_Dma,
+            "Inconsistent device state, should be Transfer or Prepare!");
 
     updateState(ACT_CMD_ERROR);
 }
@@ -652,8 +653,8 @@ IdeDisk::startCommand()
 
       case WDCC_READMULTI:
       case WDCC_READ:
-        if (!(cmdReg.drive & DRIVE_LBA_BIT))
-            panic("Attempt to perform CHS access, only supports LBA\n");
+        panic_if(!(cmdReg.drive & DRIVE_LBA_BIT),
+                "Attempt to perform CHS access, only supports LBA");
 
         if (cmdReg.sec_count == 0)
             cmdBytes = cmdBytesLeft = (256 * SectorSize);
@@ -670,8 +671,8 @@ IdeDisk::startCommand()
         // Supported PIO data-out commands
       case WDCC_WRITEMULTI:
       case WDCC_WRITE:
-        if (!(cmdReg.drive & DRIVE_LBA_BIT))
-            panic("Attempt to perform CHS access, only supports LBA\n");
+        panic_if(!(cmdReg.drive & DRIVE_LBA_BIT),
+                "Attempt to perform CHS access, only supports LBA");
 
         if (cmdReg.sec_count == 0)
             cmdBytes = cmdBytesLeft = (256 * SectorSize);
@@ -689,14 +690,15 @@ IdeDisk::startCommand()
         dmaRead = true;  // a write to the disk is a DMA read from memory
         [[fallthrough]];
       case WDCC_READDMA:
-        if (!(cmdReg.drive & DRIVE_LBA_BIT))
-            panic("Attempt to perform CHS access, only supports LBA\n");
+        panic_if(!(cmdReg.drive & DRIVE_LBA_BIT),
+                "Attempt to perform CHS access, only supports LBA");
 
         if (cmdReg.sec_count == 0)
             cmdBytes = cmdBytesLeft = (256 * SectorSize);
         else
             cmdBytes = cmdBytesLeft = (cmdReg.sec_count * SectorSize);
-        DPRINTF(IdeDisk, "Setting cmdBytesLeft to %d in readdma\n", cmdBytesLeft);
+        DPRINTF(IdeDisk, "Setting cmdBytesLeft to %d in readdma\n",
+                cmdBytesLeft);
 
         curSector = getLBABase();
 
@@ -728,8 +730,7 @@ void
 IdeDisk::intrPost()
 {
     DPRINTF(IdeDisk, "Posting Interrupt\n");
-    if (intrPending)
-        panic("Attempt to post an interrupt with one pending\n");
+    panic_if(intrPending, "Attempt to post an interrupt with one pending");
 
     intrPending = true;
 
@@ -743,8 +744,7 @@ void
 IdeDisk::intrClear()
 {
     DPRINTF(IdeDisk, "Clearing Interrupt\n");
-    if (!intrPending)
-        panic("Attempt to clear a non-pending interrupt\n");
+    panic_if(!intrPending, "Attempt to clear a non-pending interrupt");
 
     intrPending = false;
 
