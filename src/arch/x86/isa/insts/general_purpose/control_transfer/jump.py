@@ -153,12 +153,12 @@ def macroop JMP_FAR_REAL_M
     lea t1, seg, sib, disp, dataSize=asz
     ld t2, seg, [1, t0, t1], dsz
     ld t1, seg, [1, t0, t1]
-    zexti t3, t1, 15, dataSize=8
+    zexti t3, t2, 15, dataSize=8
     slli t3, t3, 4, dataSize=8
-    wrsel cs, t1, dataSize=2
+    wrsel cs, t2, dataSize=2
     wrbase cs, t3, dataSize=8
-    # Put t2 first so it isn't sign extended.
-    wrip t2, t0
+    # Put t1 first so it isn't sign extended.
+    wrip t1, t0
 };
 
 def macroop JMP_FAR_REAL_P
