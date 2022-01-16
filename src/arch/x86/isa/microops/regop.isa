@@ -1162,7 +1162,7 @@ let {{
         code = 'DoubleBits = PSrcReg1 ^ op2;'
 
     class Wrip(WrRegOp, CondRegOp):
-        code = 'NRIP = PSrcReg1 + sop2 + CSBase;'
+        code = 'NRIP = ((SrcReg1 + sop2) & mask(dataSize * 8)) + CSBase;'
         else_code = "NRIP = NRIP;"
 
     class Wruflags(WrRegOp):
