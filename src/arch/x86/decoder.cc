@@ -544,8 +544,7 @@ Decoder::doModRMState(uint8_t nextByte)
 
     // If there's an SIB, get that next.
     // There is no SIB in 16 bit mode.
-    if (modRM.rm == 4 && modRM.mod != 3) {
-            // && in 32/64 bit mode)
+    if (modRM.rm == 4 && modRM.mod != 3 && emi.addrSize != 2) {
         nextState = SIBState;
     } else if (displacementSize) {
         nextState = DisplacementState;
