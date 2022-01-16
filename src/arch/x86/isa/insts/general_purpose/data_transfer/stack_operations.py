@@ -64,6 +64,15 @@ def macroop POP_P {
     st t1, seg, riprel, disp
 };
 
+def macroop POP_REAL_S {
+    ld t1, ss, [1, t0, rsp], addressSize=ssz, dataSize=2
+    addi rsp, rsp, dsz, dataSize=ssz
+    wrsel sr, t1
+    mov t1, t0, t1, dataSize=2
+    slli t1, t1, 4, dataSize=8
+    wrbase sr, t1, dataSize=8
+};
+
 def macroop PUSH_R {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override

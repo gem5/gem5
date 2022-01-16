@@ -47,6 +47,7 @@
             }
             0x7: decode MODE_SUBMODE {
                 0x0: UD2();
+                0x4: POP_REAL(sEv);
                 default: WarnUnimpl::pop_ES();
             }
             default: MultiInst::ADD(OPCODE_OP_BOTTOM3,
@@ -74,6 +75,7 @@
             }
             0x7: decode MODE_SUBMODE {
                 0x0: UD2();
+                0x4: POP_REAL(sSv);
                 default: WarnUnimpl::pop_SS();
             }
             default: MultiInst::ADC(OPCODE_OP_BOTTOM3,
@@ -88,6 +90,7 @@
             }
             0x7: decode MODE_SUBMODE {
                 0x0: UD2();
+                0x4: POP_REAL(sDv);
                 default: WarnUnimpl::pop_DS();
             }
             default: MultiInst::SBB(OPCODE_OP_BOTTOM3,

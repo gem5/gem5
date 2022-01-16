@@ -668,7 +668,10 @@
         }
         0x14: decode OPCODE_OP_BOTTOM3 {
             0x0: Inst::PUSH(sFv);
-            0x1: pop_fs();
+            0x1: decode MODE_SUBMODE {
+                0x4: Inst::POP_REAL(sFv);
+                default: pop_fs();
+            }
             0x2: CPUIDInst::CPUID({{
                 CpuidResult result;
                 bool success = doCpuid(xc->tcBase(), bits(Rax, 31, 0),
@@ -695,7 +698,10 @@
         }
         0x15: decode OPCODE_OP_BOTTOM3 {
             0x0: Inst::PUSH(sGv);
-            0x1: pop_gs();
+            0x1: decode MODE_SUBMODE {
+                0x4: Inst::POP_REAL(sGv);
+                default: pop_gs();
+            }
             0x2: rsm_smm();
             0x3: Inst::BTS(Ev,Gv);
             0x4: Inst::SHRD(Ev,Gv,Ib);
