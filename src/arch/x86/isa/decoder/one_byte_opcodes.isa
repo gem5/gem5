@@ -362,10 +362,12 @@
             0x3: RET_NEAR();
             0x4: decode MODE_SUBMODE {
                 0x0: UD2();
+                0x4: LES_REAL(Gz,Mz);
                 default: WarnUnimpl::les_Gz_Mp();
             }
             0x5: decode MODE_SUBMODE {
                 0x0: UD2();
+                0x4: LDS_REAL(Gz,Mz);
                 default: WarnUnimpl::lds_Gz_Mp();
             }
             //0x6: group12_Eb_Ib();

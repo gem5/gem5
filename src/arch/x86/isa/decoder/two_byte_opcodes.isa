@@ -744,10 +744,19 @@
             0x16: decode OPCODE_OP_BOTTOM3 {
                 0x0: CMPXCHG(Eb,Gb);
                 0x1: CMPXCHG(Ev,Gv);
-                0x2: WarnUnimpl::lss_Gz_Mp();
+                0x2: decode MODE_SUBMODE {
+                    0x4: LSS_REAL(Gz,Mz);
+                    default: WarnUnimpl::lss_Gz_Mp();
+                }
                 0x3: BTR(Ev,Gv);
-                0x4: WarnUnimpl::lfs_Gz_Mp();
-                0x5: WarnUnimpl::lgs_Gz_Mp();
+                0x4: decode MODE_SUBMODE {
+                    0x4: LFS_REAL(Gz,Mz);
+                    default: WarnUnimpl::lfs_Gz_Mp();
+                }
+                0x5: decode MODE_SUBMODE {
+                    0x4: LGS_REAL(Gz,Mz);
+                    default: WarnUnimpl::lgs_Gz_Mp();
+                }
                 //The size of the second operand in these instructions
                 //should really be "b" or "w", but it's set to v in order
                 //to have a consistent register size. This shouldn't
