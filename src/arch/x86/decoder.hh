@@ -59,7 +59,7 @@ class Decoder : public InstDecoder
     // These are defined and documented in decoder_tables.cc
     static const uint8_t SizeTypeToSize[3][10];
     typedef const uint8_t ByteTable[256];
-    static ByteTable Prefixes;
+    static ByteTable Prefixes[2];
 
     static ByteTable UsesModRMOneByte;
     static ByteTable UsesModRMTwoByte;
@@ -70,7 +70,6 @@ class Decoder : public InstDecoder
     static ByteTable ImmediateTypeTwoByte;
     static ByteTable ImmediateTypeThreeByte0F38;
     static ByteTable ImmediateTypeThreeByte0F3A;
-    static ByteTable ImmediateTypeVex[10];
 
     static X86ISAInst::MicrocodeRom microcodeRom;
 
