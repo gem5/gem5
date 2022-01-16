@@ -51,7 +51,7 @@ X86ISA::I8259::I8259(const Params &p)
     }
 
     int in_count = p.port_inputs_connection_count;
-    panic_if(in_count >= NumLines,
+    panic_if(in_count > NumLines,
             "I8259 only supports 8 inputs, but there are %d.", in_count);
     for (int i = 0; i < in_count; i++) {
         inputs.push_back(new IntSinkPin<I8259>(
