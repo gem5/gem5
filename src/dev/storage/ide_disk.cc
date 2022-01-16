@@ -63,12 +63,9 @@ namespace gem5
 {
 
 IdeDisk::IdeDisk(const Params &p)
-    : SimObject(p), ctrl(NULL), image(p.image), diskDelay(p.delay),
-      ideDiskStats(this),
+    : SimObject(p), image(p.image), diskDelay(p.delay), ideDiskStats(this),
       dmaTransferEvent([this]{ doDmaTransfer(); }, name()),
-      dmaReadCG(NULL),
       dmaReadWaitEvent([this]{ doDmaRead(); }, name()),
-      dmaWriteCG(NULL),
       dmaWriteWaitEvent([this]{ doDmaWrite(); }, name()),
       dmaPrdReadEvent([this]{ dmaPrdReadDone(); }, name()),
       dmaReadEvent([this]{ dmaReadDone(); }, name()),
@@ -159,7 +156,7 @@ IdeDisk::reset(int id)
     cmdBytesLeft = 0;
     drqBytesLeft = 0;
     dmaRead = false;
-    intrPending = false;
+    pendingInterrupt = false;
     dmaAborted = false;
 
     // set the device state to idle
@@ -190,16 +187,14 @@ IdeDisk::reset(int id)
 bool
 IdeDisk::isDEVSelect()
 {
-    return ctrl->isDiskSelected(this);
+    return channel->selected() == this;
 }
 
 Addr
 IdeDisk::pciToDma(Addr pciAddr)
 {
-    if (ctrl)
-        return ctrl->pciToDma(pciAddr);
-    else
-        panic("Access to unset controller!\n");
+    panic_if(!ctrl, "Access to unset controller!");
+    return ctrl->pciToDma(pciAddr);
 }
 
 ////
@@ -343,16 +338,18 @@ IdeDisk::doDmaTransfer()
         return;
     }
 
-    if (dmaState != Dma_Transfer || devState != Transfer_Data_Dma)
+    if (dmaState != Dma_Transfer || devState != Transfer_Data_Dma) {
         panic("Inconsistent DMA transfer state: dmaState = %d devState = %d\n",
               dmaState, devState);
+    }
 
     if (ctrl->dmaPending() || ctrl->drainState() != DrainState::Running) {
         schedule(dmaTransferEvent, curTick() + DMA_BACKOFF_PERIOD);
         return;
-    } else
+    } else {
         ctrl->dmaRead(curPrdAddr, sizeof(PrdEntry_t), &dmaPrdReadEvent,
                 (uint8_t*)&curPrd.entry);
+    }
 }
 
 void
@@ -727,30 +724,28 @@ IdeDisk::startCommand()
 ////
 
 void
-IdeDisk::intrPost()
+IdeDisk::postInterrupt()
 {
     DPRINTF(IdeDisk, "Posting Interrupt\n");
-    panic_if(intrPending, "Attempt to post an interrupt with one pending");
+    panic_if(pendingInterrupt,
+            "Attempt to post an interrupt with one pending");
 
-    intrPending = true;
+    pendingInterrupt = true;
 
-    // talk to controller to set interrupt
-    if (ctrl) {
-        ctrl->intrPost();
-    }
+    assert(channel);
+    channel->postInterrupt();
 }
 
 void
-IdeDisk::intrClear()
+IdeDisk::clearInterrupt()
 {
     DPRINTF(IdeDisk, "Clearing Interrupt\n");
-    panic_if(!intrPending, "Attempt to clear a non-pending interrupt");
+    panic_if(!pendingInterrupt, "Attempt to clear a non-pending interrupt");
 
-    intrPending = false;
+    pendingInterrupt = false;
 
-    // talk to controller to clear interrupt
-    if (ctrl)
-        ctrl->intrClear();
+    assert(channel);
+    channel->clearInterrupt();
 }
 
 ////
@@ -786,12 +781,12 @@ IdeDisk::updateState(DevAction_t action)
       case Device_Idle_SI:
         if (action == ACT_SELECT_WRITE && !isDEVSelect()) {
             devState = Device_Idle_NS;
-            intrClear();
+            clearInterrupt();
         } else if (action == ACT_STAT_READ || isIENSet()) {
             devState = Device_Idle_S;
-            intrClear();
+            clearInterrupt();
         } else if (action == ACT_CMD_WRITE) {
-            intrClear();
+            clearInterrupt();
             startCommand();
         }
 
@@ -799,11 +794,11 @@ IdeDisk::updateState(DevAction_t action)
 
       case Device_Idle_NS:
         if (action == ACT_SELECT_WRITE && isDEVSelect()) {
-            if (!isIENSet() && intrPending) {
+            if (!isIENSet() && pendingInterrupt) {
                 devState = Device_Idle_SI;
-                intrPost();
+                postInterrupt();
             }
-            if (isIENSet() || !intrPending) {
+            if (isIENSet() || !pendingInterrupt) {
                 devState = Device_Idle_S;
             }
         }
@@ -816,7 +811,7 @@ IdeDisk::updateState(DevAction_t action)
 
             if (!isIENSet()) {
                 devState = Device_Idle_SI;
-                intrPost();
+                postInterrupt();
             } else {
                 devState = Device_Idle_S;
             }
@@ -830,7 +825,7 @@ IdeDisk::updateState(DevAction_t action)
 
             if (!isIENSet()) {
                 devState = Device_Idle_SI;
-                intrPost();
+                postInterrupt();
             } else {
                 devState = Device_Idle_S;
             }
@@ -861,7 +856,7 @@ IdeDisk::updateState(DevAction_t action)
 
             if (!isIENSet()) {
                 devState = Data_Ready_INTRQ_In;
-                intrPost();
+                postInterrupt();
             } else {
                 devState = Transfer_Data_In;
             }
@@ -871,7 +866,7 @@ IdeDisk::updateState(DevAction_t action)
       case Data_Ready_INTRQ_In:
         if (action == ACT_STAT_READ) {
             devState = Transfer_Data_In;
-            intrClear();
+            clearInterrupt();
         }
         break;
 
@@ -917,7 +912,7 @@ IdeDisk::updateState(DevAction_t action)
 
             if (!isIENSet()) {
                 devState = Device_Idle_SI;
-                intrPost();
+                postInterrupt();
             } else {
                 devState = Device_Idle_S;
             }
@@ -937,7 +932,7 @@ IdeDisk::updateState(DevAction_t action)
                 devState = Transfer_Data_Out;
             } else {
                 devState = Data_Ready_INTRQ_Out;
-                intrPost();
+                postInterrupt();
             }
         }
         break;
@@ -945,7 +940,7 @@ IdeDisk::updateState(DevAction_t action)
       case Data_Ready_INTRQ_Out:
         if (action == ACT_STAT_READ) {
             devState = Transfer_Data_Out;
-            intrClear();
+            clearInterrupt();
         }
         break;
 
@@ -992,7 +987,7 @@ IdeDisk::updateState(DevAction_t action)
 
             if (!isIENSet()) {
                 devState = Device_Idle_SI;
-                intrPost();
+                postInterrupt();
             } else {
                 devState = Device_Idle_S;
             }
@@ -1022,11 +1017,11 @@ IdeDisk::updateState(DevAction_t action)
             // set the seek bit
             status |= STATUS_SEEK_BIT;
             // clear the controller state for DMA transfer
-            ctrl->setDmaComplete(this);
+            channel->setDmaComplete();
 
             if (!isIENSet()) {
                 devState = Device_Idle_SI;
-                intrPost();
+                postInterrupt();
             } else {
                 devState = Device_Idle_S;
             }
@@ -1037,13 +1032,13 @@ IdeDisk::updateState(DevAction_t action)
         if (action == ACT_CMD_ERROR) {
             setComplete();
             status |= STATUS_SEEK_BIT;
-            ctrl->setDmaComplete(this);
+            channel->setDmaComplete();
             dmaAborted = false;
             dmaState = Dma_Idle;
 
             if (!isIENSet()) {
                 devState = Device_Idle_SI;
-                intrPost();
+                postInterrupt();
             } else {
                 devState = Device_Idle_S;
             }
@@ -1128,7 +1123,7 @@ IdeDisk::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(drqBytesLeft);
     SERIALIZE_SCALAR(curSector);
     SERIALIZE_SCALAR(dmaRead);
-    SERIALIZE_SCALAR(intrPending);
+    paramOut(cp, "intrPending", pendingInterrupt);
     SERIALIZE_SCALAR(dmaAborted);
     SERIALIZE_ENUM(devState);
     SERIALIZE_ENUM(dmaState);
@@ -1181,7 +1176,7 @@ IdeDisk::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(drqBytesLeft);
     UNSERIALIZE_SCALAR(curSector);
     UNSERIALIZE_SCALAR(dmaRead);
-    UNSERIALIZE_SCALAR(intrPending);
+    paramIn(cp, "intrPending", pendingInterrupt);
     UNSERIALIZE_SCALAR(dmaAborted);
     UNSERIALIZE_ENUM(devState);
     UNSERIALIZE_ENUM(dmaState);
