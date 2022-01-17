@@ -392,7 +392,10 @@
                 // confuse the instruction type specialization code.
                 0x0: Inst::ENTER(Iw,Iw);
                 0x1: Inst::LEAVE();
-                0x2: ret_far_Iw();
+                0x2: decode MODE_SUBMODE {
+                    0x3, 0x4: Inst::RET_FAR_REAL(Iw);
+                    default: ret_far_Iw();
+                }
                 0x3: decode MODE_SUBMODE {
                     0x3, 0x4: Inst::RET_FAR_REAL();
                     default: Inst::RET_FAR();

@@ -85,6 +85,31 @@ def macroop RET_FAR_REAL {
     wrip t1, t0
 };
 
+def macroop RET_FAR_REAL_I {
+    .function_return
+    .control_indirect
+
+    # Pop the return RIP.
+    ld t1, ss, [1, t0, rsp], addressSize=ssz
+    # Pop the return CS.
+    ld t2, ss, [1, t0, rsp], dsz, addressSize=ssz
+    # Adjust RSP.
+    addi rsp, rsp, "2 * env.dataSize", dataSize=ssz
+
+    addi rsp, rsp, imm, dataSize=ssz
+
+    # Set the CS selector.
+    wrsel cs, t2
+    # Make sure there isn't any junk in the upper bits of the base.
+    mov t2, t0, t2
+    # Compute and set CS base.
+    slli t2, t2, 4, dataSize=8
+    wrbase cs, t2, dataSize=8
+
+    # Set the new RIP.
+    wrip t1, t0
+};
+
 def macroop RET_FAR {
     .adjust_env oszIn64Override
     .function_return
