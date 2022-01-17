@@ -305,6 +305,7 @@
             0x1: CQO(rAv,rDv);
             0x2: decode MODE_SUBMODE {
                 0x0: UD2();
+                0x4: CALL_FAR_REAL(Iz);
                 default: WarnUnimpl::call_far_Ap();
             }
             0x3: WarnUnimpl::fwait(); //aka wait
@@ -568,7 +569,10 @@
                 0x0: INC(Ev);
                 0x1: DEC(Ev);
                 0x2: CALL_NEAR(Ev);
-                0x3: WarnUnimpl::call_far_Mp();
+                0x3: decode MODE_SUBMODE {
+                    0x4: CALL_FAR_REAL(Mz);
+                    default: WarnUnimpl::call_far_Mp();
+                }
                 0x4: JMP(Ev);
                 0x5: decode MODE_SUBMODE {
                     0x0: JMP_FAR(Mz);
