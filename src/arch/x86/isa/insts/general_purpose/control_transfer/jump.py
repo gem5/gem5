@@ -151,7 +151,7 @@ def macroop JMP_FAR_REAL_M
     .control_indirect
 
     lea t1, seg, sib, disp, dataSize=asz
-    ld t2, seg, [1, t0, t1], dsz
+    ld t2, seg, [1, t0, t1], dsz, dataSize=2
     ld t1, seg, [1, t0, t1]
     zexti t3, t2, 15, dataSize=8
     slli t3, t3, 4, dataSize=8
