@@ -504,30 +504,29 @@ ISA::unserialize(CheckpointIn &cp)
 
 const int WARN_FAILURE = 10000;
 
-// RISC-V allows multiple locks per hart, but each SC has to unlock the most
-// recent one, so we use a stack here.
-std::unordered_map<int, std::stack<Addr>> locked_addrs;
+const Addr INVALID_RESERVATION_ADDR = (Addr) -1;
+std::unordered_map<int, Addr> load_reservation_addrs;
 
 void
 ISA::handleLockedSnoop(PacketPtr pkt, Addr cacheBlockMask)
 {
-    std::stack<Addr>& locked_addr_stack = locked_addrs[tc->contextId()];
+    Addr& load_reservation_addr = load_reservation_addrs[tc->contextId()];
 
-    if (locked_addr_stack.empty())
+    if (load_reservation_addr == INVALID_RESERVATION_ADDR)
         return;
     Addr snoop_addr = pkt->getAddr() & cacheBlockMask;
     DPRINTF(LLSC, "Locked snoop on address %x.\n", snoop_addr);
-    if ((locked_addr_stack.top() & cacheBlockMask) == snoop_addr)
-        locked_addr_stack.pop();
+    if ((load_reservation_addr & cacheBlockMask) == snoop_addr)
+        load_reservation_addr = INVALID_RESERVATION_ADDR;
 }
 
 
 void
 ISA::handleLockedRead(const RequestPtr &req)
 {
-    std::stack<Addr>& locked_addr_stack = locked_addrs[tc->contextId()];
+    Addr& load_reservation_addr = load_reservation_addrs[tc->contextId()];
 
-    locked_addr_stack.push(req->getPaddr() & ~0xF);
+    load_reservation_addr = req->getPaddr() & ~0xF;
     DPRINTF(LLSC, "[cid:%d]: Reserved address %x.\n",
             req->contextId(), req->getPaddr() & ~0xF);
 }
@@ -535,23 +534,25 @@ ISA::handleLockedRead(const RequestPtr &req)
 bool
 ISA::handleLockedWrite(const RequestPtr &req, Addr cacheBlockMask)
 {
-    std::stack<Addr>& locked_addr_stack = locked_addrs[tc->contextId()];
+    Addr& load_reservation_addr = load_reservation_addrs[tc->contextId()];
+    bool lr_addr_empty = (load_reservation_addr == INVALID_RESERVATION_ADDR);
 
     // Normally RISC-V uses zero to indicate success and nonzero to indicate
     // failure (right now only 1 is reserved), but in gem5 zero indicates
     // failure and one indicates success, so here we conform to that (it should
     // be switched in the instruction's implementation)
 
-    DPRINTF(LLSC, "[cid:%d]: locked_addrs empty? %s.\n", req->contextId(),
-            locked_addr_stack.empty() ? "yes" : "no");
-    if (!locked_addr_stack.empty()) {
+    DPRINTF(LLSC, "[cid:%d]: load_reservation_addrs empty? %s.\n",
+            req->contextId(),
+            lr_addr_empty ? "yes" : "no");
+    if (!lr_addr_empty) {
         DPRINTF(LLSC, "[cid:%d]: addr = %x.\n", req->contextId(),
                 req->getPaddr() & ~0xF);
         DPRINTF(LLSC, "[cid:%d]: last locked addr = %x.\n", req->contextId(),
-                locked_addr_stack.top());
+                load_reservation_addr);
     }
-    if (locked_addr_stack.empty()
-            || locked_addr_stack.top() != ((req->getPaddr() & ~0xF))) {
+    if (lr_addr_empty
+            || load_reservation_addr != ((req->getPaddr() & ~0xF))) {
         req->setExtraData(0);
         int stCondFailures = tc->readStCondFailures();
         tc->setStCondFailures(++stCondFailures);
@@ -564,6 +565,7 @@ ISA::handleLockedWrite(const RequestPtr &req, Addr cacheBlockMask)
     if (req->isUncacheable()) {
         req->setExtraData(2);
     }
+
     return true;
 }
 
