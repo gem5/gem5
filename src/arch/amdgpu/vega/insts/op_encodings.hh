@@ -911,12 +911,14 @@ namespace VegaISA
             // be a 64-bit address. Otherwise, saddr is the reg index for a
             // scalar reg used as the base address for a 32-bit address.
             if ((saddr == 0x7f && isFlatGlobal()) || isFlat()) {
-                calcAddr64(gpuDynInst, vaddr, offset);
+                calcAddrVgpr(gpuDynInst, vaddr, offset);
             } else {
-                ConstScalarOperandU32 sbase(gpuDynInst, saddr);
+                // Assume we are operating in 64-bit mode and read a pair of
+                // SGPRs for the address base.
+                ConstScalarOperandU64 sbase(gpuDynInst, saddr);
                 sbase.read();
 
-                calcAddr32(gpuDynInst, vaddr, sbase, offset);
+                calcAddrSgpr(gpuDynInst, vaddr, sbase, offset);
             }
 
             if (isFlat()) {
@@ -953,20 +955,23 @@ namespace VegaISA
         void generateGlobalDisassembly();
 
         void
-        calcAddr32(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &vaddr,
-                   ConstScalarOperandU32 &saddr, ScalarRegU32 offset)
+        calcAddrSgpr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &vaddr,
+                     ConstScalarOperandU64 &saddr, ScalarRegU32 offset)
         {
+            // Use SGPR pair as a base address and add VGPR-offset and
+            // instruction offset. The VGPR-offset is always 32-bits so we
+            // mask any upper bits from the vaddr.
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {
                     gpuDynInst->addr.at(lane) =
-                        (vaddr[lane] + saddr.rawData() + offset) & 0xffffffff;
+                        saddr.rawData() + (vaddr[lane] & 0xffffffff) + offset;
                 }
             }
         }
 
         void
-        calcAddr64(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &addr,
-                   ScalarRegU32 offset)
+        calcAddrVgpr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &addr,
+                     ScalarRegU32 offset)
         {
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {
