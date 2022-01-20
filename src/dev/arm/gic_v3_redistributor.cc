@@ -1017,17 +1017,7 @@ uint32_t
 Gicv3Redistributor::getAffinity() const
 {
     ThreadContext *tc = gic->getSystem()->threads[cpuId];
-    uint64_t mpidr = getMPIDR(gic->getSystem(), tc);
-    /*
-     * Aff3 = MPIDR[39:32]
-     * (Note getMPIDR() returns uint32_t so Aff3 is always 0...)
-     * Aff2 = MPIDR[23:16]
-     * Aff1 = MPIDR[15:8]
-     * Aff0 = MPIDR[7:0]
-     * affinity = Aff3.Aff2.Aff1.Aff0
-     */
-    uint64_t affinity = ((mpidr & 0xff00000000) >> 8) | (mpidr & (0xffffff));
-    return affinity;
+    return gem5::ArmISA::getAffinity(gic->getSystem(), tc);
 }
 
 bool
