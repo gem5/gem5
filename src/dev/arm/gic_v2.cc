@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2013, 2015-2018, 2020-2021 Arm Limited
+ * Copyright (c) 2010, 2013, 2015-2018, 2020-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -63,6 +63,61 @@ const AddrRange GicV2::GICD_ICACTIVER (0x380, 0x400);
 const AddrRange GicV2::GICD_IPRIORITYR(0x400, 0x800);
 const AddrRange GicV2::GICD_ITARGETSR (0x800, 0xc00);
 const AddrRange GicV2::GICD_ICFGR     (0xc00, 0xd00);
+
+void
+GicV2Registers::copyDistRegister(GicV2Registers* from,
+                                 GicV2Registers* to,
+                                 ContextID ctx, Addr daddr)
+{
+    auto val = from->readDistributor(ctx, daddr);
+    DPRINTF(GIC, "copy dist 0x%x 0x%08x\n", daddr, val);
+    to->writeDistributor(ctx, daddr, val);
+}
+
+void
+GicV2Registers::copyCpuRegister(GicV2Registers* from,
+                                GicV2Registers* to,
+                                ContextID ctx, Addr daddr)
+{
+    auto val = from->readCpu(ctx, daddr);
+    DPRINTF(GIC, "copy cpu  0x%x 0x%08x\n", daddr, val);
+    to->writeCpu(ctx, daddr, val);
+}
+
+void
+GicV2Registers::copyBankedDistRange(System *sys, GicV2Registers* from,
+                                    GicV2Registers* to,
+                                    Addr daddr, size_t size)
+{
+    for (int ctx = 0; ctx < sys->threads.size(); ++ctx)
+        for (auto a = daddr; a < daddr + size; a += 4)
+            copyDistRegister(from, to, ctx, a);
+}
+
+void
+GicV2Registers::clearBankedDistRange(System *sys, GicV2Registers* to,
+                                     Addr daddr, size_t size)
+{
+    for (int ctx = 0; ctx < sys->threads.size(); ++ctx)
+        for (auto a = daddr; a < daddr + size; a += 4)
+            to->writeDistributor(ctx, a, 0xFFFFFFFF);
+}
+
+void
+GicV2Registers::copyDistRange(GicV2Registers* from,
+                              GicV2Registers* to,
+                              Addr daddr, size_t size)
+{
+    for (auto a = daddr; a < daddr + size; a += 4)
+        copyDistRegister(from, to, 0, a);
+}
+
+void
+GicV2Registers::clearDistRange(GicV2Registers* to, Addr daddr, size_t size)
+{
+    for (auto a = daddr; a < daddr + size; a += 4)
+        to->writeDistributor(0, a, 0xFFFFFFFF);
+}
 
 GicV2::GicV2(const Params &p)
     : BaseGic(p),
@@ -998,7 +1053,7 @@ GicV2::drainResume()
 }
 
 void
-GicV2::copyGicState(BaseGicRegisters* from, BaseGicRegisters* to)
+GicV2::copyGicState(GicV2Registers* from, GicV2Registers* to)
 {
     Addr set, clear;
     size_t size;

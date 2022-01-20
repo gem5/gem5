@@ -292,13 +292,15 @@ MuxingKvmGic::blockIntUpdate() const
 void
 MuxingKvmGic::fromGicToKvm()
 {
-    copyGicState(static_cast<GicV2*>(this), kernelGic);
+    copyGicState(static_cast<GicV2*>(this),
+                 static_cast<KvmKernelGicV2*>(kernelGic));
 }
 
 void
 MuxingKvmGic::fromKvmToGic()
 {
-    copyGicState(kernelGic, static_cast<GicV2*>(this));
+    copyGicState(static_cast<KvmKernelGicV2*>(kernelGic),
+                 static_cast<GicV2*>(this));
 
     // the values read for the Interrupt Priority Mask Register (PMR)
     // have been shifted by three bits due to its having been emulated by

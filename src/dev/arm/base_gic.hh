@@ -134,35 +134,6 @@ class BaseGic :  public PioDevice
     Platform *platform;
 };
 
-class BaseGicRegisters
-{
-  public:
-    virtual uint32_t readDistributor(ContextID ctx, Addr daddr) = 0;
-    virtual uint32_t readCpu(ContextID ctx, Addr daddr) = 0;
-
-    virtual void writeDistributor(ContextID ctx, Addr daddr,
-                                  uint32_t data) = 0;
-    virtual void writeCpu(ContextID ctx, Addr daddr, uint32_t data) = 0;
-
-  protected:
-    static void copyDistRegister(BaseGicRegisters* from,
-                                 BaseGicRegisters* to,
-                                 ContextID ctx, Addr daddr);
-    static void copyCpuRegister(BaseGicRegisters* from,
-                                BaseGicRegisters* to,
-                                ContextID ctx, Addr daddr);
-    static void copyBankedDistRange(System *sys,
-                                    BaseGicRegisters* from,
-                                    BaseGicRegisters* to,
-                                    Addr daddr, size_t size);
-    static void clearBankedDistRange(System *sys, BaseGicRegisters* to,
-                                     Addr daddr, size_t size);
-    static void copyDistRange(BaseGicRegisters* from,
-                              BaseGicRegisters* to,
-                              Addr daddr, size_t size);
-    static void clearDistRange(BaseGicRegisters* to, Addr daddr, size_t size);
-};
-
 /**
  * This SimObject is instantiated in the python world and
  * serves as an ArmInterruptPin generator. In this way it

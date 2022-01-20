@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017, 2021 Arm Limited
+ * Copyright (c) 2015-2017, 2021-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -54,7 +54,7 @@ namespace gem5
  * model. It exposes an API that is similar to that of
  * software-emulated GIC models in gem5.
  */
-class KvmKernelGic : public BaseGicRegisters
+class KvmKernelGic
 {
   public:
     /**
@@ -131,7 +131,7 @@ class KvmKernelGic : public BaseGicRegisters
     KvmDevice kdev;
 };
 
-class KvmKernelGicV2 : public KvmKernelGic
+class KvmKernelGicV2 : public KvmKernelGic, public GicV2Registers
 {
   public:
     /**
@@ -148,7 +148,7 @@ class KvmKernelGicV2 : public KvmKernelGic
     KvmKernelGicV2(KvmVM &vm, Addr cpu_addr, Addr dist_addr,
                    unsigned it_lines);
 
-  public: // BaseGicRegisters
+  public: // GicV2Registers
     uint32_t readDistributor(ContextID ctx, Addr daddr) override;
     uint32_t readCpu(ContextID ctx, Addr daddr) override;
 
