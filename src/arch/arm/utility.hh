@@ -223,7 +223,7 @@ RegVal readMPIDR(ArmSystem *arm_sys, ThreadContext *tc);
 RegVal getMPIDR(ArmSystem *arm_sys, ThreadContext *tc);
 
 /** Retrieves MPIDR_EL1.{Aff2,Aff1,Aff0} affinity numbers */
-RegVal getAffinity(ArmSystem *arm_sys, ThreadContext *tc);
+Affinity getAffinity(ArmSystem *arm_sys, ThreadContext *tc);
 
 static inline uint32_t
 mcrMrcIssBuild(bool isRead, uint32_t crm, IntRegIndex rt, uint32_t crn,

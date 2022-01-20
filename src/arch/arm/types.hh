@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2017-2018 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2017-2018, 2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -201,6 +201,13 @@ namespace ArmISA
         Bitfield<11, 8>  ltrd;
         Bitfield<11, 8>  ltcoproc;
     EndBitUnion(ExtMachInst)
+
+    BitUnion32(Affinity)
+        Bitfield<31, 24> aff3;
+        Bitfield<23, 16> aff2;
+        Bitfield<15, 8>  aff1;
+        Bitfield<7, 0>   aff0;
+    EndBitUnion(Affinity)
 
     // Shift types for ARM instructions
     enum ArmShiftType

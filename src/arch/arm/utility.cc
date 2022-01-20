@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2014, 2016-2020 ARM Limited
+ * Copyright (c) 2009-2014, 2016-2020, 2022 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -199,13 +199,13 @@ getMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
 static RegVal
 getAff2(ArmSystem *arm_sys, ThreadContext *tc)
 {
-    return arm_sys->multiThread ? tc->socketId() << 16 : 0;
+    return arm_sys->multiThread ? tc->socketId() : 0;
 }
 
 static RegVal
 getAff1(ArmSystem *arm_sys, ThreadContext *tc)
 {
-    return arm_sys->multiThread ? tc->cpuId() << 8 : tc->socketId() << 8;
+    return arm_sys->multiThread ? tc->cpuId() : tc->socketId();
 }
 
 static RegVal
@@ -214,10 +214,14 @@ getAff0(ArmSystem *arm_sys, ThreadContext *tc)
     return arm_sys->multiThread ? tc->threadId() : tc->cpuId();
 }
 
-RegVal
+Affinity
 getAffinity(ArmSystem *arm_sys, ThreadContext *tc)
 {
-    return getAff2(arm_sys, tc) | getAff1(arm_sys, tc) | getAff0(arm_sys, tc);
+    Affinity aff = 0;
+    aff.aff0 = getAff0(arm_sys, tc);
+    aff.aff1 = getAff1(arm_sys, tc);
+    aff.aff2 = getAff2(arm_sys, tc);
+    return aff;
 }
 
 bool
