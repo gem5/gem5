@@ -229,15 +229,11 @@ class SimObject(PySource):
 # no whitespace at the end before or after the ;, and is all on one line. This
 # should still cover most cases, and a completely accurate scanner would be
 # MUCH more complex.
-protoc_import_re = re.compile(r'^import\s+\"(.*\.proto)\"\;$', re.M)
-
-def protoc_scanner(node, env, path):
-    deps = []
-    for imp in protoc_import_re.findall(node.get_text_contents()):
-        deps.append(Dir(env['BUILDDIR']).File(imp))
-    return deps
-
-env.Append(SCANNERS=Scanner(function=protoc_scanner, skeys=['.proto']))
+protoc_scanner = SCons.Scanner.Classic(name='ProtobufScanner',
+                                       suffixes=['.proto'],
+                                       path_variable='BUILDDIR',
+                                       regex=r'^import\s+\"(.*\.proto)\"\;$')
+env.Append(SCANNERS=protoc_scanner)
 
 def protoc_emitter(target, source, env):
     root, ext = os.path.splitext(source[0].get_abspath())
