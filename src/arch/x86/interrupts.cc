@@ -600,13 +600,6 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
 X86ISA::Interrupts::Interrupts(const Params &p)
     : BaseInterrupts(p), sys(p.system), clockDomain(*p.clk_domain),
       apicTimerEvent([this]{ processApicTimerEvent(); }, name()),
-      pendingSmi(false), smiVector(0),
-      pendingNmi(false), nmiVector(0),
-      pendingExtInt(false), extIntVector(0),
-      pendingInit(false), initVector(0),
-      pendingStartup(false), startupVector(0),
-      startedUp(false), pendingUnmaskableInt(false),
-      pendingIPIs(0),
       intResponsePort(name() + ".int_responder", this, this),
       intRequestPort(name() + ".int_requestor", this, this, p.int_latency),
       pioPort(this), pioDelay(p.pio_latency)
@@ -614,8 +607,6 @@ X86ISA::Interrupts::Interrupts(const Params &p)
     memset(regs, 0, sizeof(regs));
     //Set the local apic DFR to the flat model.
     regs[APIC_DESTINATION_FORMAT] = (uint32_t)(-1);
-    ISRV = 0;
-    IRRV = 0;
 
     // At reset, all LVT entries start out zeroed, except for their mask bit.
     LVTEntry masked = 0;

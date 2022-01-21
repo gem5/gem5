@@ -77,11 +77,11 @@ ApicRegIndex decodeAddr(Addr paddr);
 class Interrupts : public BaseInterrupts
 {
   protected:
-    System *sys;
+    System *sys = nullptr;
     ClockDomain &clockDomain;
 
     // Storage for the APIC registers
-    uint32_t regs[NUM_APIC_REGS];
+    uint32_t regs[NUM_APIC_REGS] = {};
 
     BitUnion32(LVTEntry)
         Bitfield<7, 0> vector;
@@ -104,29 +104,29 @@ class Interrupts : public BaseInterrupts
      * A set of variables to keep track of interrupts that don't go through
      * the IRR.
      */
-    bool pendingSmi;
-    uint8_t smiVector;
-    bool pendingNmi;
-    uint8_t nmiVector;
-    bool pendingExtInt;
-    uint8_t extIntVector;
-    bool pendingInit;
-    uint8_t initVector;
-    bool pendingStartup;
-    uint8_t startupVector;
-    bool startedUp;
+    bool pendingSmi = false;
+    uint8_t smiVector = 0;
+    bool pendingNmi = false;
+    uint8_t nmiVector = 0;
+    bool pendingExtInt = false;
+    uint8_t extIntVector = 0;
+    bool pendingInit = false;
+    uint8_t initVector = 0;
+    bool pendingStartup = false;
+    uint8_t startupVector = 0;
+    bool startedUp = false;
 
     // This is a quick check whether any of the above (except ExtInt) are set.
-    bool pendingUnmaskableInt;
+    bool pendingUnmaskableInt = false;
 
     // A count of how many IPIs are in flight.
-    int pendingIPIs;
+    int pendingIPIs = 0;
 
     /*
      * IRR and ISR maintenance.
      */
-    uint8_t IRRV;
-    uint8_t ISRV;
+    uint8_t IRRV = 0;
+    uint8_t ISRV = 0;
 
     int
     findRegArrayMSB(ApicRegIndex base)
@@ -174,7 +174,7 @@ class Interrupts : public BaseInterrupts
 
     void requestInterrupt(uint8_t vector, uint8_t deliveryMode, bool level);
 
-    int initialApicId;
+    int initialApicId = 0;
 
     // Ports for interrupts.
     IntResponsePort<Interrupts> intResponsePort;
@@ -183,7 +183,7 @@ class Interrupts : public BaseInterrupts
     // Port for memory mapped register accesses.
     PioPort<Interrupts> pioPort;
 
-    Tick pioDelay;
+    Tick pioDelay = 0;
     Addr pioAddr = MaxAddr;
 
   public:
