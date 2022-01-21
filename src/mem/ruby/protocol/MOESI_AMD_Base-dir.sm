@@ -646,202 +646,274 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   action(icd_probeInvCoreDataForDMA, "icd", desc="Probe inv cores, return data for DMA") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
-      enqueue(probeNetwork_out, NBProbeRequestMsg, response_latency) {
-        out_msg.addr := address;
-        out_msg.Type := ProbeRequestType:PrbInv;
-        out_msg.ReturnData := true;
-        out_msg.MessageSize := MessageSizeType:Control;
+      NetDest probe_dests;
+      // Add relevant machine types based on CPUonly, GPUonly and noTCCdir:
+      //  CPUonly &&  GPUonly -> Invalid
+      //  CPUonly && !GPUonly -> Add CorePairs
+      // !CPUonly &&  GPUonly -> Add TCCs or TCC dirs
+      // !CPUonly && !GPUonly -> Add CorePairs and TCCs or TCC dirs
+      if (CPUonly) {
+        assert(!GPUonly);
+        probe_dests.broadcast(MachineType:CorePair);
+      } else {
+        // CPU + GPU system
         if (!GPUonly) {
-            out_msg.Destination.broadcast(MachineType:CorePair);
+          probe_dests.broadcast(MachineType:CorePair);
         }
 
-        // Add relevant TCC node to list. This replaces all TCPs and SQCs
-        if (CPUonly) {
-            // CPU only has neither TCC nor TCC directory to add.
-        } else if (noTCCdir) {
-          out_msg.Destination.add(mapAddressToRange(address,MachineType:TCC,
-                                  TCC_select_low_bit, TCC_select_num_bits));
+        // CPU + GPU or GPU only system
+        if (noTCCdir) {
+          probe_dests.add(mapAddressToRange(address, MachineType:TCC,
+                                            TCC_select_low_bit,
+                                            TCC_select_num_bits));
         } else {
-          out_msg.Destination.add(mapAddressToRange(address,
-                                                    MachineType:TCCdir,
-                            TCC_select_low_bit, TCC_select_num_bits));
+          probe_dests.add(mapAddressToRange(address, MachineType:TCCdir,
+                                            TCC_select_low_bit,
+                                            TCC_select_num_bits));
         }
-        out_msg.Destination.remove(in_msg.Requestor);
-        tbe.NumPendingAcks := out_msg.Destination.count();
-        if (tbe.NumPendingAcks == 0) {
-          enqueue(triggerQueue_out, TriggerMsg, 1) {
-            out_msg.addr := address;
-            out_msg.Type := TriggerType:AcksComplete;
-          }
+      }
+      probe_dests.remove(in_msg.Requestor);
+
+      if (probe_dests.count() > 0) {
+        enqueue(probeNetwork_out, NBProbeRequestMsg, response_latency) {
+          out_msg.addr := address;
+          out_msg.Type := ProbeRequestType:PrbInv;
+          out_msg.ReturnData := true;
+          out_msg.MessageSize := MessageSizeType:Control;
+          out_msg.Destination := probe_dests;
+          tbe.NumPendingAcks := out_msg.Destination.count();
+          DPRINTF(RubySlicc, "%s\n", out_msg);
+          APPEND_TRANSITION_COMMENT(" dc: Acks remaining: ");
+          APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
+          tbe.ProbeRequestStartTime := curCycle();
+          assert(out_msg.Destination.count() > 0);
         }
-        DPRINTF(RubySlicc, "%s\n", out_msg);
-        APPEND_TRANSITION_COMMENT(" dc: Acks remaining: ");
-        APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
-        tbe.ProbeRequestStartTime := curCycle();
-        assert(out_msg.Destination.count() > 0);
+      }
+
+      if (probe_dests.count() == 0) {
+        enqueue(triggerQueue_out, TriggerMsg, 1) {
+          out_msg.addr := address;
+          out_msg.Type := TriggerType:AcksComplete;
+        }
       }
     }
   }
 
   action(dc_probeInvCoreData, "dc", desc="probe inv cores, return data") {
     peek(requestNetwork_in, CPURequestMsg) {
-      enqueue(probeNetwork_out, NBProbeRequestMsg, response_latency) {
-        out_msg.addr := address;
-        out_msg.Type := ProbeRequestType:PrbInv;
-        out_msg.ReturnData := true;
-        out_msg.MessageSize := MessageSizeType:Control;
+      NetDest probe_dests;
+      // Add relevant machine types based on CPUonly, GPUonly and noTCCdir:
+      //  CPUonly &&  GPUonly -> Invalid
+      //  CPUonly && !GPUonly -> Add CorePairs
+      // !CPUonly &&  GPUonly -> Add TCCs or TCC dirs if no write conflict
+      // !CPUonly && !GPUonly -> Add CorePairs and TCCs or TCC dirs
+      //                         if no write conflict
+      if (CPUonly) {
+        assert(!GPUonly);
+        probe_dests.broadcast(MachineType:CorePair);
+      } else {
+        // CPU + GPU system
         if (!GPUonly) {
-            // won't be realistic for multisocket
-            out_msg.Destination.broadcast(MachineType:CorePair);
+          probe_dests.broadcast(MachineType:CorePair);
         }
 
-        // add relevant TCC node to list. This replaces all TCPs and SQCs
-        if (((in_msg.Type == CoherenceRequestType:WriteThrough ||
-              in_msg.Type == CoherenceRequestType:Atomic) &&
-             in_msg.NoWriteConflict) ||
-            CPUonly) {
-        } else if (noTCCdir) {
-          out_msg.Destination.add(mapAddressToRange(address,MachineType:TCC,
-                                  TCC_select_low_bit, TCC_select_num_bits));
-        } else {
-	      out_msg.Destination.add(mapAddressToRange(address,
-                                                    MachineType:TCCdir,
-                            TCC_select_low_bit, TCC_select_num_bits));
-        }
-        out_msg.Destination.remove(in_msg.Requestor);
-        tbe.NumPendingAcks := out_msg.Destination.count();
-        if (tbe.NumPendingAcks == 0) {
-          enqueue(triggerQueue_out, TriggerMsg, 1) {
-            out_msg.addr := address;
-            out_msg.Type := TriggerType:AcksComplete;
+        // CPU + GPU or GPU only system
+        if ((in_msg.Type != CoherenceRequestType:WriteThrough &&
+             in_msg.Type != CoherenceRequestType:Atomic) ||
+             !in_msg.NoWriteConflict) {
+          if (noTCCdir) {
+            probe_dests.add(mapAddressToRange(address, MachineType:TCC,
+                                              TCC_select_low_bit,
+                                              TCC_select_num_bits));
+          } else {
+            probe_dests.add(mapAddressToRange(address, MachineType:TCCdir,
+                                              TCC_select_low_bit,
+                                              TCC_select_num_bits));
           }
         }
-        DPRINTF(RubySlicc, "%s\n", out_msg);
-        APPEND_TRANSITION_COMMENT(" dc: Acks remaining: ");
-        APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
-        tbe.ProbeRequestStartTime := curCycle();
-        assert(out_msg.Destination.count() > 0);
+      }
+      probe_dests.remove(in_msg.Requestor);
+
+      if (probe_dests.count() > 0) {
+        enqueue(probeNetwork_out, NBProbeRequestMsg, response_latency) {
+          out_msg.addr := address;
+          out_msg.Type := ProbeRequestType:PrbInv;
+          out_msg.ReturnData := true;
+          out_msg.MessageSize := MessageSizeType:Control;
+          out_msg.Destination := probe_dests;
+          tbe.NumPendingAcks := out_msg.Destination.count();
+          DPRINTF(RubySlicc, "%s\n", out_msg);
+          APPEND_TRANSITION_COMMENT(" dc: Acks remaining: ");
+          APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
+          tbe.ProbeRequestStartTime := curCycle();
+          assert(out_msg.Destination.count() > 0);
+        }
+      }
+
+      if (probe_dests.count() == 0) {
+        enqueue(triggerQueue_out, TriggerMsg, 1) {
+          out_msg.addr := address;
+          out_msg.Type := TriggerType:AcksComplete;
+        }
       }
     }
   }
 
   action(scd_probeShrCoreDataForDma, "dsc", desc="probe shared cores, return data for DMA") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
-      enqueue(probeNetwork_out, NBProbeRequestMsg, response_latency) {
-        out_msg.addr := address;
-        out_msg.Type := ProbeRequestType:PrbDowngrade;
-        out_msg.ReturnData := true;
-        out_msg.MessageSize := MessageSizeType:Control;
+      NetDest probe_dests;
+      // Add relevant machine types based on CPUonly, GPUonly and noTCCdir:
+      //  CPUonly &&  GPUonly -> Invalid
+      //  CPUonly && !GPUonly -> Add CorePairs
+      // !CPUonly &&  GPUonly -> Add TCCs or TCC dirs
+      // !CPUonly && !GPUonly -> Add CorePairs and TCCs or TCC dirs
+      if (CPUonly) {
+        assert(!GPUonly);
+        probe_dests.broadcast(MachineType:CorePair);
+      } else {
+        // CPU + GPU system
         if (!GPUonly) {
-            out_msg.Destination.broadcast(MachineType:CorePair);
+          probe_dests.broadcast(MachineType:CorePair);
         }
-        // add relevant TCC node to the list. This replaces all TCPs and SQCs
-        if (noTCCdir || CPUonly) {
-          //Don't need to notify TCC about reads
-        } else {
-          out_msg.Destination.add(mapAddressToRange(address,
-                                                    MachineType:TCCdir,
-                            TCC_select_low_bit, TCC_select_num_bits));
+
+        // CPU + GPU or GPU only system
+        // We don't need to notify TCC about reads
+        if (!noTCCdir) {
+          probe_dests.add(mapAddressToRange(address, MachineType:TCCdir,
+                                            TCC_select_low_bit,
+                                            TCC_select_num_bits));
         }
-        if (noTCCdir && !CPUonly) {
-          out_msg.Destination.add(mapAddressToRange(address,MachineType:TCC,
-                                  TCC_select_low_bit, TCC_select_num_bits));
+      }
+      probe_dests.remove(in_msg.Requestor);
+
+      if (probe_dests.count() > 0) {
+        enqueue(probeNetwork_out, NBProbeRequestMsg, response_latency) {
+          out_msg.addr := address;
+          out_msg.Type := ProbeRequestType:PrbDowngrade;
+          out_msg.ReturnData := true;
+          out_msg.MessageSize := MessageSizeType:Control;
+          out_msg.Destination := probe_dests;
+          tbe.NumPendingAcks := out_msg.Destination.count();
+          DPRINTF(RubySlicc, "%s\n", (out_msg));
+          APPEND_TRANSITION_COMMENT(" sc: Acks remaining: ");
+          APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
+          tbe.ProbeRequestStartTime := curCycle();
+          assert(out_msg.Destination.count() > 0);
         }
-        out_msg.Destination.remove(in_msg.Requestor);
-        tbe.NumPendingAcks := out_msg.Destination.count();
-        if (tbe.NumPendingAcks == 0) {
-          enqueue(triggerQueue_out, TriggerMsg, 1) {
-            out_msg.addr := address;
-            out_msg.Type := TriggerType:AcksComplete;
-          }
+      }
+
+      if (probe_dests.count() == 0) {
+        enqueue(triggerQueue_out, TriggerMsg, 1) {
+          out_msg.addr := address;
+          out_msg.Type := TriggerType:AcksComplete;
         }
-        DPRINTF(RubySlicc, "%s\n", (out_msg));
-        APPEND_TRANSITION_COMMENT(" sc: Acks remaining: ");
-        APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
-        tbe.ProbeRequestStartTime := curCycle();
-        assert(out_msg.Destination.count() > 0);
       }
     }
   }
 
   action(sc_probeShrCoreData, "sc", desc="probe shared cores, return data") {
     peek(requestNetwork_in, CPURequestMsg) { // not the right network?
-      enqueue(probeNetwork_out, NBProbeRequestMsg, response_latency) {
-        out_msg.addr := address;
-        out_msg.Type := ProbeRequestType:PrbDowngrade;
-        out_msg.ReturnData := true;
-        out_msg.MessageSize := MessageSizeType:Control;
+      NetDest probe_dests;
+      // Add relevant machine types based on CPUonly, GPUonly and noTCCdir:
+      //  CPUonly &&  GPUonly -> Invalid
+      //  CPUonly && !GPUonly -> Add CorePairs
+      // !CPUonly &&  GPUonly -> Add TCCs or TCC dirs
+      // !CPUonly && !GPUonly -> Add CorePairs and TCCs or TCC dirs
+      if (CPUonly) {
+        assert(!GPUonly);
+        probe_dests.broadcast(MachineType:CorePair);
+      } else {
+        // CPU + GPU system
         if (!GPUonly) {
-            // won't be realistic for multisocket
-            out_msg.Destination.broadcast(MachineType:CorePair);
+          probe_dests.broadcast(MachineType:CorePair);
         }
-        // add relevant TCC node to the list. This replaces all TCPs and SQCs
-        if (noTCCdir || CPUonly) {
-          //Don't need to notify TCC about reads
-        } else {
-	      out_msg.Destination.add(mapAddressToRange(address,
-                                                    MachineType:TCCdir,
-                            TCC_select_low_bit, TCC_select_num_bits));
-          tbe.NumPendingAcks := tbe.NumPendingAcks + 1;
+
+        // CPU + GPU or GPU only system
+        // We don't need to notify TCC about reads
+        if (!noTCCdir) {
+          probe_dests.add(mapAddressToRange(address, MachineType:TCCdir,
+                                            TCC_select_low_bit,
+                                            TCC_select_num_bits));
         }
-        if (noTCCdir && !CPUonly) {
-          out_msg.Destination.add(mapAddressToRange(address,MachineType:TCC,
-                                  TCC_select_low_bit, TCC_select_num_bits));
+      }
+      probe_dests.remove(in_msg.Requestor);
+
+      if (probe_dests.count() > 0) {
+        enqueue(probeNetwork_out, NBProbeRequestMsg, response_latency) {
+          out_msg.addr := address;
+          out_msg.Type := ProbeRequestType:PrbDowngrade;
+          out_msg.ReturnData := true;
+          out_msg.MessageSize := MessageSizeType:Control;
+          out_msg.Destination := probe_dests;
+          tbe.NumPendingAcks := out_msg.Destination.count();
+          DPRINTF(RubySlicc, "%s\n", (out_msg));
+          APPEND_TRANSITION_COMMENT(" sc: Acks remaining: ");
+          APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
+          tbe.ProbeRequestStartTime := curCycle();
+          assert(out_msg.Destination.count() > 0);
         }
-        out_msg.Destination.remove(in_msg.Requestor);
-        tbe.NumPendingAcks := out_msg.Destination.count();
-        if (tbe.NumPendingAcks == 0) {
-          enqueue(triggerQueue_out, TriggerMsg, 1) {
-            out_msg.addr := address;
-            out_msg.Type := TriggerType:AcksComplete;
-          }
+      }
+
+      if (probe_dests.count() == 0) {
+        enqueue(triggerQueue_out, TriggerMsg, 1) {
+          out_msg.addr := address;
+          out_msg.Type := TriggerType:AcksComplete;
         }
-        DPRINTF(RubySlicc, "%s\n", (out_msg));
-        APPEND_TRANSITION_COMMENT(" sc: Acks remaining: ");
-        APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
-        tbe.ProbeRequestStartTime := curCycle();
-        assert(out_msg.Destination.count() > 0);
       }
     }
   }
 
   action(ic_probeInvCore, "ic", desc="probe invalidate core, no return data needed") {
     peek(requestNetwork_in, CPURequestMsg) { // not the right network?
-      enqueue(probeNetwork_out, NBProbeRequestMsg, response_latency) {
-        out_msg.addr := address;
-        out_msg.Type := ProbeRequestType:PrbInv;
-        out_msg.ReturnData := false;
-        out_msg.MessageSize := MessageSizeType:Control;
+      NetDest probe_dests;
+      // Add relevant machine types based on CPUonly, GPUonly and noTCCdir:
+      //  CPUonly &&  GPUonly -> Invalid
+      //  CPUonly && !GPUonly -> Add CorePairs
+      // !CPUonly &&  GPUonly -> Add TCCs or TCC dirs
+      // !CPUonly && !GPUonly -> Add CorePairs and TCCs or TCC dirs
+      if (CPUonly) {
+        assert(!GPUonly);
+        probe_dests.broadcast(MachineType:CorePair);
+      } else {
+        // CPU + GPU system
         if (!GPUonly) {
-            // won't be realistic for multisocket
-            out_msg.Destination.broadcast(MachineType:CorePair);
+          probe_dests.broadcast(MachineType:CorePair);
         }
 
-        // add relevant TCC node to the list. This replaces all TCPs and SQCs
-        if (noTCCdir && !CPUonly) {
-            out_msg.Destination.add(mapAddressToRange(address,MachineType:TCC,
-                              TCC_select_low_bit, TCC_select_num_bits));
+        // CPU + GPU or GPU only system
+        if (noTCCdir) {
+          probe_dests.add(mapAddressToRange(address, MachineType:TCC,
+                                            TCC_select_low_bit,
+                                            TCC_select_num_bits));
         } else {
-            if (!noTCCdir) {
-                out_msg.Destination.add(mapAddressToRange(address,
-                                                          MachineType:TCCdir,
-                                                          TCC_select_low_bit,
-                                                          TCC_select_num_bits));
-            }
+          probe_dests.add(mapAddressToRange(address, MachineType:TCCdir,
+                                            TCC_select_low_bit,
+                                            TCC_select_num_bits));
         }
-        out_msg.Destination.remove(in_msg.Requestor);
-        tbe.NumPendingAcks := out_msg.Destination.count();
-        if (tbe.NumPendingAcks == 0) {
-          enqueue(triggerQueue_out, TriggerMsg, 1) {
-            out_msg.addr := address;
-            out_msg.Type := TriggerType:AcksComplete;
-          }
+      }
+      probe_dests.remove(in_msg.Requestor);
+
+      if (probe_dests.count() > 0) {
+        enqueue(probeNetwork_out, NBProbeRequestMsg, response_latency) {
+          out_msg.addr := address;
+          out_msg.Type := ProbeRequestType:PrbInv;
+          out_msg.ReturnData := false;
+          out_msg.MessageSize := MessageSizeType:Control;
+          out_msg.Destination := probe_dests;
+          tbe.NumPendingAcks := out_msg.Destination.count();
+          APPEND_TRANSITION_COMMENT(" ic: Acks remaining: ");
+          APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
+          DPRINTF(RubySlicc, "%s\n", out_msg);
+          tbe.ProbeRequestStartTime := curCycle();
+          assert(out_msg.Destination.count() > 0);
         }
-        APPEND_TRANSITION_COMMENT(" ic: Acks remaining: ");
-        APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
-        DPRINTF(RubySlicc, "%s\n", out_msg);
-        tbe.ProbeRequestStartTime := curCycle();
-        assert(out_msg.Destination.count() > 0);
+      }
+
+      if (probe_dests.count() == 0) {
+        enqueue(triggerQueue_out, TriggerMsg, 1) {
+          out_msg.addr := address;
+          out_msg.Type := TriggerType:AcksComplete;
+        }
       }
     }
   }
