@@ -71,8 +71,7 @@ X86FaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
     MicroPC entry;
     if (m5reg.mode == LongMode) {
-        entry = isSoft() ? extern_label_longModeSoftInterrupt :
-                           extern_label_longModeInterrupt;
+        entry = extern_label_longModeInterrupt;
     } else {
         if (m5reg.submode == RealMode)
             entry = extern_label_realModeInterrupt;
@@ -88,9 +87,6 @@ X86FaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             panic("Legacy mode interrupts with error codes "
                     "aren't implemented.");
         }
-        // Software interrupts shouldn't have error codes. If one
-        // does, there would need to be microcode to set it up.
-        assert(!isSoft());
         tc->setIntReg(INTREG_MICRO(15), errorCode);
     }
     pc.upc(romMicroPC(entry));
