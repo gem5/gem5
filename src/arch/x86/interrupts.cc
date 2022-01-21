@@ -275,6 +275,40 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
 
 
 void
+X86ISA::Interrupts::raiseInterruptPin(int number)
+{
+    panic_if(number < 0 || number > 1,
+            "Asked to raise unrecognized int pin %d.", number);
+    DPRINTF(LocalApic, "Raised wired interrupt pin LINT%d.\n", number);
+
+    const LVTEntry entry =
+        regs[(number == 0) ? APIC_LVT_LINT0 : APIC_LVT_LINT1];
+
+    if (entry.masked) {
+        DPRINTF(LocalApic, "The interrupt was masked.\n");
+        return;
+    }
+
+    PacketPtr pkt = buildIntAcknowledgePacket();
+    auto on_completion = [this, dm=entry.deliveryMode, trigger=entry.trigger](
+            PacketPtr pkt) {
+        requestInterrupt(pkt->getLE<uint8_t>(), dm, trigger);
+        delete pkt;
+    };
+    intRequestPort.sendMessage(pkt, sys->isTimingMode(), on_completion);
+}
+
+
+void
+X86ISA::Interrupts::lowerInterruptPin(int number)
+{
+    panic_if(number < 0 || number > 1,
+            "Asked to lower unrecognized int pin %d.", number);
+    DPRINTF(LocalApic, "Lowered wired interrupt pin LINT%d.\n", number);
+}
+
+
+void
 X86ISA::Interrupts::setThreadContext(ThreadContext *_tc)
 {
     assert(_tc);
@@ -602,6 +636,8 @@ X86ISA::Interrupts::Interrupts(const Params &p)
       apicTimerEvent([this]{ processApicTimerEvent(); }, name()),
       intResponsePort(name() + ".int_responder", this, this),
       intRequestPort(name() + ".int_requestor", this, this, p.int_latency),
+      lint0Pin(name() + ".lint0", 0, this, 0),
+      lint1Pin(name() + ".lint1", 0, this, 1),
       pioPort(this), pioDelay(p.pio_latency)
 {
     memset(regs, 0, sizeof(regs));

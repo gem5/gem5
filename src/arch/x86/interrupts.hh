@@ -56,6 +56,7 @@
 #include "arch/x86/regs/apic.hh"
 #include "base/bitfield.hh"
 #include "cpu/thread_context.hh"
+#include "dev/intpin.hh"
 #include "dev/io_device.hh"
 #include "dev/x86/intdev.hh"
 #include "params/X86LocalApic.hh"
@@ -176,9 +177,13 @@ class Interrupts : public BaseInterrupts
 
     int initialApicId = 0;
 
-    // Ports for interrupts.
+    // Ports for interrupt messages.
     IntResponsePort<Interrupts> intResponsePort;
     IntRequestPort<Interrupts> intRequestPort;
+
+    // Pins for wired interrupts.
+    IntSinkPin<Interrupts> lint0Pin;
+    IntSinkPin<Interrupts> lint1Pin;
 
     // Port for memory mapped register accesses.
     PioPort<Interrupts> pioPort;
@@ -222,8 +227,12 @@ class Interrupts : public BaseInterrupts
     AddrRangeList getAddrRanges() const;
     AddrRangeList getIntAddrRange() const;
 
-    Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID) override
+    void raiseInterruptPin(int number);
+    void lowerInterruptPin(int number);
+
+    Port &
+    getPort(const std::string &if_name,
+            PortID idx=InvalidPortID) override
     {
         if (if_name == "int_requestor") {
             return intRequestPort;
@@ -231,8 +240,13 @@ class Interrupts : public BaseInterrupts
             return intResponsePort;
         } else if (if_name == "pio") {
             return pioPort;
+        } else if (if_name == "lint0") {
+            return lint0Pin;
+        } else if (if_name == "lint1") {
+            return lint1Pin;
+        } else {
+            return SimObject::getPort(if_name, idx);
         }
-        return SimObject::getPort(if_name, idx);
     }
 
     /*

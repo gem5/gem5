@@ -42,7 +42,7 @@ from m5.proxy import *
 
 from m5.objects.BaseInterrupts import BaseInterrupts
 from m5.objects.ClockDomain import DerivedClockDomain
-from m5.SimObject import SimObject
+from m5.objects.IntPin import IntSinkPin
 
 class X86LocalApic(BaseInterrupts):
     type = 'X86LocalApic'
@@ -56,6 +56,9 @@ class X86LocalApic(BaseInterrupts):
     int_responder = ResponsePort("Port for receiving interrupt messages")
     int_slave     = DeprecatedParam(int_responder,
                         '`int_slave` is now called `int_responder`')
+
+    lint0 = IntSinkPin('Local interrupt pin 0')
+    lint1 = IntSinkPin('Local interrupt pin 1')
 
     int_latency = Param.Latency('1ns', \
             "Latency for an interrupt to propagate through this device.")
