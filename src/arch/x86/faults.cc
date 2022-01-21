@@ -79,7 +79,8 @@ X86FaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             entry = extern_label_legacyModeInterrupt;
     }
     tc->setIntReg(INTREG_MICRO(1), vector);
-    tc->setIntReg(INTREG_MICRO(7), pc.pc());
+    Addr cs_base = tc->readMiscRegNoEffect(MISCREG_CS_EFF_BASE);
+    tc->setIntReg(INTREG_MICRO(7), pc.pc() - cs_base);
     if (errorCode != (uint64_t)(-1)) {
         if (m5reg.mode == LongMode) {
             entry = extern_label_longModeInterruptWithError;
