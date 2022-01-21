@@ -72,6 +72,9 @@ namespace X86ISA
     // accesses from the CPU, and the other is for all APICs to communicate.
     const Addr PhysAddrAPICRangeSize = 1 << 12;
 
+    // Put this in an unused part of the 16 bit IO port address space.
+    const Addr PhysAddrIntA = 0x8000000100000000ULL;
+
     static inline Addr
     x86IOAddress(const uint32_t port)
     {

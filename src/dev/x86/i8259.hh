@@ -99,6 +99,8 @@ class I8259 : public BasicPioDevice
             return BasicPioDevice::getPort(if_name, idx);
     }
 
+    AddrRangeList getAddrRanges() const override;
+
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;
 

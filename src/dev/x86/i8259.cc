@@ -28,6 +28,7 @@
 
 #include "dev/x86/i8259.hh"
 
+#include "arch/x86/x86_traits.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "debug/I8259.hh"
@@ -62,6 +63,17 @@ X86ISA::I8259::I8259(const Params &p)
         state = false;
 }
 
+AddrRangeList
+X86ISA::I8259::getAddrRanges() const
+{
+    AddrRangeList ranges = BasicPioDevice::getAddrRanges();
+    if (mode == enums::I8259Master || mode == enums::I8259Single) {
+        // Listen for INTA messages.
+        ranges.push_back(RangeSize(PhysAddrIntA, 1));
+    }
+    return ranges;
+}
+
 void
 X86ISA::I8259::init()
 {
@@ -75,8 +87,11 @@ Tick
 X86ISA::I8259::read(PacketPtr pkt)
 {
     assert(pkt->getSize() == 1);
-    switch(pkt->getAddr() - pioAddr)
-    {
+    if (pkt->getAddr() == PhysAddrIntA) {
+        assert(mode == enums::I8259Master || mode == enums::I8259Single);
+        pkt->setLE<uint8_t>(getVector());
+    }
+    switch(pkt->getAddr() - pioAddr) {
       case 0x0:
         if (readIRR) {
             DPRINTF(I8259, "Reading IRR as %#x.\n", IRR);
