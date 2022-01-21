@@ -66,9 +66,10 @@ SimpleNetwork::SimpleNetwork(const Params &p)
     // record the routers
     for (std::vector<BasicRouter*>::const_iterator i = p.routers.begin();
          i != p.routers.end(); ++i) {
-        Switch* s = safe_cast<Switch*>(*i);
-        m_switches.push_back(s);
+        auto* s = safe_cast<Switch*>(*i);
         s->init_net_ptr(this);
+        auto id = static_cast<size_t>(s->params().router_id);
+        m_switches[id] = s;
     }
 
     const std::vector<int> &physical_vnets_channels =
@@ -108,7 +109,6 @@ SimpleNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
 {
     NodeID local_dest = getLocalNodeID(global_dest);
     assert(local_dest < m_nodes);
-    assert(src < m_switches.size());
     assert(m_switches[src] != NULL);
 
     SimpleExtLink *simple_link = safe_cast<SimpleExtLink*>(link);
@@ -179,9 +179,9 @@ SimpleNetwork::regStats()
             ;
 
         // Now state what the formula is.
-        for (int i = 0; i < m_switches.size(); i++) {
+        for (auto& [id, sw]: m_switches) {
             *(networkStats.m_msg_counts[(unsigned int) type]) +=
-                sum(m_switches[i]->getMsgCount(type));
+                sum(sw->getMsgCount(type));
         }
 
         *(networkStats.m_msg_bytes[(unsigned int) type]) =
@@ -193,8 +193,8 @@ SimpleNetwork::regStats()
 void
 SimpleNetwork::collateStats()
 {
-    for (int i = 0; i < m_switches.size(); i++) {
-        m_switches[i]->collateStats();
+    for (auto& [id, sw]: m_switches) {
+        sw->collateStats();
     }
 }
 
@@ -212,8 +212,8 @@ SimpleNetwork::print(std::ostream& out) const
 bool
 SimpleNetwork::functionalRead(Packet *pkt)
 {
-    for (unsigned int i = 0; i < m_switches.size(); i++) {
-        if (m_switches[i]->functionalRead(pkt))
+    for (auto& [id, sw]: m_switches) {
+        if (sw->functionalRead(pkt))
             return true;
     }
     for (unsigned int i = 0; i < m_int_link_buffers.size(); ++i) {
@@ -228,8 +228,8 @@ bool
 SimpleNetwork::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
-    for (unsigned int i = 0; i < m_switches.size(); i++) {
-        if (m_switches[i]->functionalRead(pkt, mask))
+    for (auto& [id, sw]: m_switches) {
+        if (sw->functionalRead(pkt, mask))
             read = true;
     }
     for (unsigned int i = 0; i < m_int_link_buffers.size(); ++i) {
@@ -244,8 +244,8 @@ SimpleNetwork::functionalWrite(Packet *pkt)
 {
     uint32_t num_functional_writes = 0;
 
-    for (unsigned int i = 0; i < m_switches.size(); i++) {
-        num_functional_writes += m_switches[i]->functionalWrite(pkt);
+    for (auto& [id, sw]: m_switches) {
+        num_functional_writes += sw->functionalWrite(pkt);
     }
 
     for (unsigned int i = 0; i < m_int_link_buffers.size(); ++i) {

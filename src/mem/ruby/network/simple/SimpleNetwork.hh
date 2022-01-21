@@ -102,7 +102,7 @@ class SimpleNetwork : public Network
     SimpleNetwork(const SimpleNetwork& obj);
     SimpleNetwork& operator=(const SimpleNetwork& obj);
 
-    std::vector<Switch*> m_switches;
+    std::unordered_map<int, Switch*> m_switches;
     std::vector<MessageBuffer*> m_int_link_buffers;
     const int m_buffer_size;
     const int m_endpoint_bandwidth;
