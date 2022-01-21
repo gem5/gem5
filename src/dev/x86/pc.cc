@@ -107,7 +107,7 @@ Pc::init()
 void
 Pc::postConsoleInt()
 {
-    southBridge->ioApic->signalInterrupt(4);
+    southBridge->ioApic->requestInterrupt(4);
     southBridge->pic1->signalInterrupt(4);
 }
 
@@ -121,7 +121,7 @@ Pc::clearConsoleInt()
 void
 Pc::postPciInt(int line)
 {
-    southBridge->ioApic->signalInterrupt(line);
+    southBridge->ioApic->requestInterrupt(line);
 }
 
 void

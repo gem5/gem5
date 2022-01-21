@@ -31,6 +31,7 @@
 
 #include <map>
 
+#include "arch/x86/intmessage.hh"
 #include "base/bitunion.hh"
 #include "dev/x86/intdev.hh"
 #include "dev/intpin.hh"
@@ -43,7 +44,6 @@ namespace gem5
 namespace X86ISA
 {
 
-class I8259;
 class Interrupts;
 
 class I82094AA : public BasicPioDevice
@@ -66,8 +66,6 @@ class I82094AA : public BasicPioDevice
     EndBitUnion(RedirTableEntry)
 
   protected:
-    I8259 * extIntPic;
-
     uint8_t regSel;
     uint8_t initialApicId;
     uint8_t id;
@@ -87,6 +85,8 @@ class I82094AA : public BasicPioDevice
 
     IntRequestPort<I82094AA> intRequestPort;
 
+    void signalInterrupt(TriggerIntMessage message);
+
   public:
     using Params = I82094AAParams;
 
@@ -105,7 +105,7 @@ class I82094AA : public BasicPioDevice
 
     bool recvResponse(PacketPtr pkt);
 
-    void signalInterrupt(int line);
+    void requestInterrupt(int line);
     void raiseInterruptPin(int number);
     void lowerInterruptPin(int number);
 

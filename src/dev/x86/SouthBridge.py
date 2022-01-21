@@ -81,7 +81,6 @@ class SouthBridge(SimObject):
         # Tell the devices about each other
         self.pic1.slave = self.pic2
         self.speaker.i8254 = self.pit
-        self.io_apic.external_int_pic = self.pic1
         # Connect to the bus
         self.cmos.pio = bus.mem_side_ports
         self.dma1.pio = bus.mem_side_ports
