@@ -126,6 +126,15 @@ test_boot(
 )
 
 test_boot(
+    cpu="timing",
+    num_cpus=8,
+    mem_system="classic",
+    memory_class="SingleChannelDDR3_2133",
+    to_tick=10000000000,
+    length=constants.quick_tag,
+)
+
+test_boot(
     cpu="atomic",
     num_cpus=4,
     mem_system="classic",
@@ -167,6 +176,15 @@ test_boot(
     cpu="timing",
     num_cpus=1,
     mem_system="mi_example",
+    memory_class="DualChannelDDR3_2133",
+    boot_type="init",
+    length=constants.long_tag,
+)
+
+test_boot(
+    cpu="timing",
+    num_cpus=4,
+    mem_system="classic",
     memory_class="DualChannelDDR3_2133",
     boot_type="init",
     length=constants.long_tag,
@@ -224,15 +242,15 @@ run_map = {
         },
         "timing": {
             1: True,
-            2: False,  # Timeout
-            4: False,  # Timeout
-            8: False,  # Timeout
+            2: True,
+            4: True,
+            8: True,
         },
         "o3": {
             1: False,  # Timeout
-            2: False,  # Not Supported
-            4: False,  # Not Supported
-            8: False,  # Not Supported
+            2: False,  # Timeout
+            4: False,  # Timeout
+            8: False,  # Timeout
         },
     },
     "mi_example": {
