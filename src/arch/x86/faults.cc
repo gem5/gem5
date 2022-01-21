@@ -74,7 +74,10 @@ X86FaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         entry = isSoft() ? extern_label_longModeSoftInterrupt :
                            extern_label_longModeInterrupt;
     } else {
-        entry = extern_label_legacyModeInterrupt;
+        if (m5reg.submode == RealMode)
+            entry = extern_label_realModeInterrupt;
+        else
+            entry = extern_label_legacyModeInterrupt;
     }
     tc->setIntReg(INTREG_MICRO(1), vector);
     tc->setIntReg(INTREG_MICRO(7), pc.pc());
