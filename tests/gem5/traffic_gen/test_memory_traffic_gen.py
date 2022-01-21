@@ -61,7 +61,8 @@ def test_memory(
             "traffic_gen",
             "simple_traffic_run.py",
         ),
-        config_args=[generator, generator_cores, cache, module, memory]
+        config_args=[generator, generator_cores, cache, module]
+        + [memory]
         + list(args),
         valid_isas=(constants.all_compiled_tag,),
         valid_hosts=constants.supported_hosts,

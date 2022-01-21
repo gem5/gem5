@@ -42,6 +42,7 @@ Built in test cases that verify particular details about a gem5 run.
 """
 import re
 import os
+import json
 
 from testlib import test_util
 from testlib.configuration import constants
@@ -149,7 +150,7 @@ class DerivedGoldStandard(MatchGoldStandard):
             standard_filename,
             test_filename=self._file,
             ignore_regex=ignore_regex,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -270,6 +271,63 @@ class NoMatchRegex(MatchRegex):
         for fname in self.filenames:
             if self.parse_file(joinpath(tempdir, fname)):
                 test_util.fail("Could not match regex.")
+
+
+class MatchJSONStats(Verifier):
+    """
+    Verifer to check the correctness of stats reported by gem5. It uses
+    gem5stats to store the stastistics as json files and does the comparison.
+    """
+
+    def __init__(
+        self,
+        truth_name: str,
+        test_name: str,
+        test_name_in_outdir: bool = False,
+    ):
+        """
+        :param truth_dir: The path to the directory including the trusted_stats
+        for this test.
+        :param test_name_in_m5out: True if the 'test_name' dir is to found in
+        the `m5.options.outdir`.
+        """
+        super(MatchJSONStats, self).__init__()
+        self.truth_name = truth_name
+        self.test_name = test_name
+        self.test_name_in_outdir = test_name_in_outdir
+
+    def _compare_stats(self, trusted_file, test_file):
+        trusted_stats = json.load(trusted_file)
+        test_stats = json.load(test_file)
+        is_subset = trusted_stats.items() <= test_stats.items()
+        if is_subset:
+            err = (
+                "Following differences found between "
+                + f"{self.truth_name} and {self.test_name}.\n"
+            )
+            diffs = set(trusted_stats.items()) - set(test_stats.items())
+            for diff in diffs:
+                trusted_value = trusted_stats[diff[0]]
+                test_value = None
+                if diff[0] in test_stats.keys():
+                    test_value = test_stats[diff[0]]
+                err += f"{diff[0]}:\n"
+                err += (
+                    f"trusted_value: {trusted_value}, "
+                    + f"test_value: {test_value}"
+                )
+            test_util.fail(err)
+
+    def test(self, params):
+        trusted_file = open(self.truth_name, "r")
+        if self.test_name_in_outdir:
+            fixtures = params.fixtures
+            tempdir = fixtures[constants.tempdir_fixture_name].path
+            test_file = open(joinpath(tempdir, self.test_name), "r")
+        else:
+            test_file = open(self.test_name, "r")
+
+        return self._compare_stats(trusted_file, test_file)
 
 
 _re_type = type(re.compile(""))
