@@ -56,9 +56,10 @@ def macroop IRET_REAL {
 
     # Update RFLAGS
     # Get the current RFLAGS
-    rflags t4
+    rflags t4, dataSize=8
     # Flip flag bits if they should change.
-    xor t5, t4, t3
+    mov t5, t4, t3
+    xor t5, t5, t4, dataSize=8
     # Don't change VIF, VIP, or VM
     limm t6, "~(VIFBit | VIPBit | VMBit)", dataSize=8
     and t5, t5, t6, dataSize=8
