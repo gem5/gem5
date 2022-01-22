@@ -83,6 +83,8 @@ class I8259 : public BasicPioDevice
     void requestInterrupt(int line);
     void handleEOI(int line);
 
+    int getVector();
+
   public:
     using Params = I8259Params;
 
@@ -119,7 +121,6 @@ class I8259 : public BasicPioDevice
     void signalInterrupt(int line);
     void raiseInterruptPin(int number);
     void lowerInterruptPin(int number);
-    int getVector();
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
