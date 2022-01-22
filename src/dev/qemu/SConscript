@@ -26,7 +26,8 @@
 Import('*')
 
 SimObject('QemuFwCfg.py', sim_objects=[
-    'QemuFwCfgItem', 'QemuFwCfgItemFile', 'QemuFwCfgItemString',
+    'QemuFwCfgItem',
+    'QemuFwCfgItemBytes', 'QemuFwCfgItemFile', 'QemuFwCfgItemString',
     'QemuFwCfg', 'QemuFwCfgIo', 'QemuFwCfgMmio'])
 Source('fw_cfg.cc')
 

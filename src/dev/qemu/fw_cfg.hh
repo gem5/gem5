@@ -40,6 +40,7 @@
 #include "params/QemuFwCfg.hh"
 #include "params/QemuFwCfgIo.hh"
 #include "params/QemuFwCfgItem.hh"
+#include "params/QemuFwCfgItemBytes.hh"
 #include "params/QemuFwCfgItemFile.hh"
 #include "params/QemuFwCfgItemString.hh"
 #include "params/QemuFwCfgMmio.hh"
@@ -132,6 +133,26 @@ class FwCfgItemString : public FwCfgItemFixed
     {
         return sizeof(std::string::value_type) * str.length();
     }
+};
+
+// An item who's value comes from an array of bytes.
+class FwCfgItemBytes : public FwCfgItemFixed
+{
+  private:
+    std::vector<uint8_t> data;
+
+  public:
+    FwCfgItemBytes(const std::string &new_path, bool arch_specific,
+            const std::vector<uint8_t> &_data, uint16_t new_index=0) :
+        FwCfgItemFixed(new_path, arch_specific, new_index), data(_data)
+    {}
+
+    FwCfgItemBytes(const QemuFwCfgItemBytesParams &p) :
+        FwCfgItemBytes(p.path, p.arch_specific, p.data, p.index)
+    {}
+
+    const void *bytes() const override { return (void *)data.data(); }
+    uint64_t length() const override { return data.size(); }
 };
 
 /*

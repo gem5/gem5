@@ -56,6 +56,14 @@ class QemuFwCfgItemString(QemuFwCfgItem):
     # The string which directly populates this item.
     string = Param.String('String to export')
 
+class QemuFwCfgItemBytes(QemuFwCfgItem):
+    type = 'QemuFwCfgItemBytes'
+    cxx_class = 'gem5::qemu::FwCfgItemFactory<gem5::qemu::FwCfgItemBytes>'
+    cxx_template_params = ['class ItemType']
+    cxx_header = 'dev/qemu/fw_cfg.hh'
+
+    data = VectorParam.UInt8('Bytes to export')
+
 class QemuFwCfg(PioDevice):
     type = 'QemuFwCfg'
     cxx_class = 'gem5::qemu::FwCfg'
