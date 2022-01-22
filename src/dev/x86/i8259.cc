@@ -39,12 +39,8 @@
 namespace gem5
 {
 
-X86ISA::I8259::I8259(const Params &p)
-    : BasicPioDevice(p, 2),
-      latency(p.pio_latency),
-      mode(p.mode), slave(p.slave),
-      IRR(0), ISR(0), IMR(0),
-      readIRR(true), initControlWord(0), autoEOI(false)
+X86ISA::I8259::I8259(const Params &p) : BasicPioDevice(p, 2),
+      latency(p.pio_latency), mode(p.mode), slave(p.slave)
 {
     for (int i = 0; i < p.port_output_connection_count; i++) {
         output.push_back(new IntSourcePin<I8259>(
@@ -58,9 +54,6 @@ X86ISA::I8259::I8259(const Params &p)
         inputs.push_back(new IntSinkPin<I8259>(
                     csprintf("%s.inputs[%d]", name(), i), i, this));
     }
-
-    for (bool &state: pinStates)
-        state = false;
 }
 
 AddrRangeList
