@@ -200,8 +200,8 @@ X86ISA::I8042::write(PacketPtr pkt)
                     "get byte %d.\n", data - ReadControllerRamBase);
         } else if (data > WriteControllerRamBase &&
                 data < WriteControllerRamBase + RamSize) {
-            panic("Attempted to use i8042 read controller RAM command to "
-                    "get byte %d.\n", data - ReadControllerRamBase);
+            panic("Attempted to use i8042 write controller RAM command to "
+                    "get byte %d.\n", data - WriteControllerRamBase);
         } else if (data >= PulseOutputBitBase &&
                 data < PulseOutputBitBase + NumOutputBits) {
             panic("Attempted to use i8042 pulse output bit command to "
