@@ -226,11 +226,26 @@ X86ISA::I8042::write(PacketPtr pkt)
             commandByte.disableMouse = 0;
             break;
           case TestMouse:
-            panic("i8042 \"Test mouse\" command not implemented.\n");
+            // The response to this is from the 8042, not the mouse.
+            // Hard code no errors detected.
+            writeData(0x00);
+            break;
           case SelfTest:
-            panic("i8042 \"Self test\" command not implemented.\n");
+            // Exactly what this does is essentially undocumented, but this:
+            // https://www.os2museum.com/wp/
+            //          ibm-pcat-8042-keyboard-controller-commands/
+            // says that this should essentially reset some values.
+            commandByte.convertScanCodes = 1;
+            commandByte.disableMouse = 1;
+            commandByte.disableKeyboard = 1;
+            commandByte.passedSelfTest = 1;
+            statusReg.passedSelfTest = 1;
+            writeData(0x55); // Self test passed.
+            break;
           case InterfaceTest:
-            panic("i8042 \"Interface test\" command not implemented.\n");
+            // Hard code no errors detected.
+            writeData(0x00);
+            break;
           case DiagnosticDump:
             panic("i8042 \"Diagnostic dump\" command not implemented.\n");
           case DisableKeyboard:
