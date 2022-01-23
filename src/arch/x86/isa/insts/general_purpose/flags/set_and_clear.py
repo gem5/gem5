@@ -72,10 +72,18 @@ def macroop STI {
     wrflags t1, t0
 };
 
+def macroop STI_VIRT {
+    panic "Virtual mode sti isn't implemented!"
+};
+
 def macroop CLI {
     rflags t1
     limm t2, "~IFBit", dataSize=8
     and t1, t1, t2
     wrflags t1, t0
+};
+
+def macroop CLI_VIRT {
+    panic "Virtual mode cli isn't implemented!"
 };
 '''

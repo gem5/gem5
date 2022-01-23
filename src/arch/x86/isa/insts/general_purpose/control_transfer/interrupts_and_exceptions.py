@@ -264,6 +264,14 @@ def macroop INT3 {
     br rom_label("legacyModeInterrupt")
 };
 
+def macroop INT3_VIRT {
+    panic "Virtual mode int3 isn't implemented!"
+};
+
+def macroop INT3_REAL {
+    panic "Real mode int3 isn't implemented!"
+};
+
 def macroop INT_LONG_I {
     #load the byte-sized interrupt vector specified in the instruction
     .adjust_imm trimImm(8)
@@ -328,6 +336,10 @@ def macroop INT_REAL_I {
 
     # Set the new RIP
     wrip t2, t0
+};
+
+def macroop INT_VIRT_I {
+    panic "Virtual mode int3 isn't implemented!"
 };
 '''
 #let {{

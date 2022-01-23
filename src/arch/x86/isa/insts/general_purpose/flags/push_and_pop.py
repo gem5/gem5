@@ -42,11 +42,19 @@ def macroop PUSHF {
     subi rsp, rsp, dsz, dataSize=ssz
 };
 
+def macroop PUSHF_VIRT {
+    panic "Virtual mode pushf isn't implemented!"
+};
+
 def macroop POPF {
     .adjust_env oszIn64Override
 
     ld t1, ss, [1, t0, rsp], addressSize=ssz
     addi rsp, rsp, dsz, dataSize=ssz
     wrflags t1, t0
+};
+
+def macroop POPF_VIRT {
+    panic "Virtual mode popf isn't implemented!"
 };
 '''

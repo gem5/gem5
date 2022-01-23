@@ -669,7 +669,7 @@
         0x14: decode OPCODE_OP_BOTTOM3 {
             0x0: Inst::PUSH(sFv);
             0x1: decode MODE_SUBMODE {
-                0x4: Inst::POP_REAL(sFv);
+                0x3, 0x4: Inst::POP_REAL(sFv);
                 default: pop_fs();
             }
             0x2: CPUIDInst::CPUID({{
@@ -699,7 +699,7 @@
         0x15: decode OPCODE_OP_BOTTOM3 {
             0x0: Inst::PUSH(sGv);
             0x1: decode MODE_SUBMODE {
-                0x4: Inst::POP_REAL(sGv);
+                0x3, 0x4: Inst::POP_REAL(sGv);
                 default: pop_gs();
             }
             0x2: rsm_smm();
@@ -751,16 +751,16 @@
                 0x0: CMPXCHG(Eb,Gb);
                 0x1: CMPXCHG(Ev,Gv);
                 0x2: decode MODE_SUBMODE {
-                    0x4: LSS_REAL(Gz,Mz);
+                    0x3, 0x4: LSS_REAL(Gz,Mz);
                     default: WarnUnimpl::lss_Gz_Mp();
                 }
                 0x3: BTR(Ev,Gv);
                 0x4: decode MODE_SUBMODE {
-                    0x4: LFS_REAL(Gz,Mz);
+                    0x3, 0x4: LFS_REAL(Gz,Mz);
                     default: WarnUnimpl::lfs_Gz_Mp();
                 }
                 0x5: decode MODE_SUBMODE {
-                    0x4: LGS_REAL(Gz,Mz);
+                    0x3, 0x4: LGS_REAL(Gz,Mz);
                     default: WarnUnimpl::lgs_Gz_Mp();
                 }
                 //The size of the second operand in these instructions

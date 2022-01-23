@@ -46,12 +46,20 @@ microcode = '''
         mfence
     };
 
+    def macroop IN_VIRT_R_I {
+        panic "Virtual mode in isn't implemented!"
+    };
+
     def macroop IN_R_R {
         zexti t2, regm, 15, dataSize=8
         mfence
         ld reg, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8, \
             nonSpec=True
         mfence
+    };
+
+    def macroop IN_VIRT_R_R {
+        panic "Virtual mode in isn't implemented!"
     };
 
     def macroop OUT_I_R {
@@ -63,11 +71,19 @@ microcode = '''
         mfence
     };
 
+    def macroop OUT_VIRT_I_R {
+        panic "Virtual mode out isn't implemented!"
+    };
+
     def macroop OUT_R_R {
         zexti t2, reg, 15, dataSize=8
         mfence
         st regm, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8, \
             nonSpec=True
         mfence
+    };
+
+    def macroop OUT_VIRT_R_R {
+        panic "Virtual mode out isn't implemented!"
     };
 '''

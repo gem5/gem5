@@ -47,7 +47,7 @@
             }
             0x7: decode MODE_SUBMODE {
                 0x0: UD2();
-                0x4: POP_REAL(sEv);
+                0x3, 0x4: POP_REAL(sEv);
                 default: WarnUnimpl::pop_ES();
             }
             default: MultiInst::ADD(OPCODE_OP_BOTTOM3,
@@ -75,7 +75,7 @@
             }
             0x7: decode MODE_SUBMODE {
                 0x0: UD2();
-                0x4: POP_REAL(sSv);
+                0x3, 0x4: POP_REAL(sSv);
                 default: WarnUnimpl::pop_SS();
             }
             default: MultiInst::ADC(OPCODE_OP_BOTTOM3,
@@ -90,7 +90,7 @@
             }
             0x7: decode MODE_SUBMODE {
                 0x0: UD2();
-                0x4: POP_REAL(sDv);
+                0x3, 0x4: POP_REAL(sDv);
                 default: WarnUnimpl::pop_DS();
             }
             default: MultiInst::SBB(OPCODE_OP_BOTTOM3,
@@ -192,10 +192,22 @@
             0x1: IMUL(Gv,Ev,Iz);
             0x2: PUSH(Ib);
             0x3: IMUL(Gv,Ev,Ib);
-            0x4: StringInst::INS(Yb,rD);
-            0x5: StringInst::INS(Yz,rD);
-            0x6: StringInst::OUTS(rD,Xb);
-            0x7: StringInst::OUTS(rD,Xz);
+            0x4: decode MODE_SUBMODE {
+                0x3: StringInst::INS_VIRT(Yb,rD);
+                default: StringInst::INS(Yb,rD);
+            }
+            0x5: decode MODE_SUBMODE {
+                0x3: StringInst::INS_VIRT(Yz,rD);
+                default: StringInst::INS(Yz,rD);
+            }
+            0x6: decode MODE_SUBMODE {
+                0x3: StringInst::OUTS_VIRT(rD,Xb);
+                default: StringInst::OUTS(rD,Xb);
+            }
+            0x7: decode MODE_SUBMODE {
+                0x3: StringInst::OUTS_VIRT(rD,Xz);
+                default: StringInst::OUTS(rD,Xz);
+            }
         }
         0x0E: decode OPCODE_OP_BOTTOM3 {
             0x0: JO(Jb);
@@ -305,12 +317,18 @@
             0x1: CQO(rAv,rDv);
             0x2: decode MODE_SUBMODE {
                 0x0: UD2();
-                0x4: CALL_FAR_REAL(Iz);
+                0x3, 0x4: CALL_FAR_REAL(Iz);
                 default: WarnUnimpl::call_far_Ap();
             }
             0x3: WarnUnimpl::fwait(); //aka wait
-            0x4: PUSHF();
-            0x5: POPF();
+            0x4: decode MODE_SUBMODE {
+                0x3: PUSHF_VIRT();
+                default: PUSHF();
+            }
+            0x5: decode MODE_SUBMODE {
+                0x3: POPF_VIRT();
+                default: POPF();
+            }
             //The 64 bit versions of both of these should be illegal only
             //if CPUID says it isn't supported. For now, we'll just assume
             //that it's supported.
@@ -366,12 +384,12 @@
             0x3: RET_NEAR();
             0x4: decode MODE_SUBMODE {
                 0x0: UD2();
-                0x4: LES_REAL(Gz,Mz);
+                0x3, 0x4: LES_REAL(Gz,Mz);
                 default: WarnUnimpl::les_Gz_Mp();
             }
             0x5: decode MODE_SUBMODE {
                 0x0: UD2();
-                0x4: LDS_REAL(Gz,Mz);
+                0x3, 0x4: LDS_REAL(Gz,Mz);
                 default: WarnUnimpl::lds_Gz_Mp();
             }
             //0x6: group12_Eb_Ib();
@@ -400,7 +418,11 @@
                     0x3, 0x4: Inst::RET_FAR_REAL();
                     default: Inst::RET_FAR();
                 }
-                0x4: Inst::INT3();
+                0x4: decode MODE_SUBMODE {
+                    0x4: Inst::INT3_REAL();
+                    0x3: Inst::INT3_VIRT();
+                    default: Inst::INT3();
+                }
                 0x5: decode FullSystemInt default inst_ib() {
                     0: decode IMMEDIATE {
                         // Really only the LSB matters, but the decoder
@@ -416,6 +438,7 @@
                         0x0: Inst::INT_LONG(Ib);
                         0x1: decode MODE_SUBMODE {
                             0x4: Inst::INT_REAL(Ib);
+                            0x3: Inst::INT_VIRT(Ib);
                             default: Inst::INT_PROT(Ib);
                         }
                     }
@@ -499,10 +522,22 @@
             0x1: LOOPE(Jb);
             0x2: LOOP(Jb);
             0x3: JRCXZ(Jb);
-            0x4: IN(rAb,Ib);
-            0x5: IN(rAv,Iv);
-            0x6: OUT(Ib,rAb);
-            0x7: OUT(Iv,rAv);
+            0x4: decode MODE_SUBMODE {
+                0x3: IN_VIRT(rAb,Ib);
+                default: IN(rAb,Ib);
+            }
+            0x5: decode MODE_SUBMODE {
+                0x3: IN_VIRT(rAv,Iv);
+                default: IN(rAv,Iv);
+            }
+            0x6: decode MODE_SUBMODE {
+                0x3: OUT_VIRT(Ib,rAb);
+                default: OUT(Ib,rAb);
+            }
+            0x7: decode MODE_SUBMODE {
+                0x3: OUT_VIRT(Iv,rAv);
+                default: OUT(Iv,rAv);
+            }
         }
         0x1D: decode OPCODE_OP_BOTTOM3 {
             0x0: CALL_NEAR(Jz);
@@ -515,10 +550,22 @@
                 0x4: JMP_FAR_REAL(Iz);
             }
             0x3: JMP(Jb);
-            0x4: IN(rAb,rD);
-            0x5: IN(rAv,rD);
-            0x6: OUT(rD,rAb);
-            0x7: OUT(rD,rAv);
+            0x4: decode MODE_SUBMODE {
+                0x3: IN_VIRT(rAb,rD);
+                default: IN(rAb,rD);
+            }
+            0x5: decode MODE_SUBMODE {
+                0x3: IN_VIRT(rAv,rD);
+                default: IN(rAv,rD);
+            }
+            0x6: decode MODE_SUBMODE {
+                0x3: OUT_VIRT(rD,rAb);
+                default: OUT(rD,rAb);
+            }
+            0x7: decode MODE_SUBMODE {
+                0x3: OUT_VIRT(rD,rAv);
+                default: OUT(rD,rAv);
+            }
         }
         0x1E: decode OPCODE_OP_BOTTOM3 {
             0x0: M5InternalError::error(
@@ -557,8 +604,14 @@
         0x1F: decode OPCODE_OP_BOTTOM3 {
             0x0: CLC();
             0x1: STC();
-            0x2: CLI();
-            0x3: STI();
+            0x2: decode MODE_SUBMODE {
+                0x3: CLI_VIRT();
+                default: CLI();
+            }
+            0x3: decode MODE_SUBMODE {
+                0x3: STI_VIRT();
+                default: STI();
+            }
             0x4: CLD();
             0x5: STD();
             //0x6: group4();
