@@ -48,10 +48,8 @@ const uint8_t NumOutputBits = 14;
 
 
 X86ISA::I8042::I8042(const Params &p)
-    : BasicPioDevice(p, 0), // pioSize arg is dummy value... not used
-      latency(p.pio_latency),
+    : PioDevice(p), latency(p.pio_latency),
       dataPort(p.data_port), commandPort(p.command_port),
-      statusReg(0), commandByte(0), dataReg(0), lastCommand(NoCommand),
       mouse(p.mouse), keyboard(p.keyboard)
 {
     fatal_if(!mouse, "The i8042 model requires a mouse instance");
@@ -80,7 +78,6 @@ AddrRangeList
 X86ISA::I8042::getAddrRanges() const
 {
     AddrRangeList ranges;
-    // TODO: Are these really supposed to be a single byte and not 4?
     ranges.push_back(RangeSize(dataPort, 1));
     ranges.push_back(RangeSize(commandPort, 1));
     return ranges;
