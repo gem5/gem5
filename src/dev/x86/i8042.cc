@@ -55,13 +55,11 @@ X86ISA::I8042::I8042(const Params &p)
     fatal_if(!mouse, "The i8042 model requires a mouse instance");
     fatal_if(!keyboard, "The i8042 model requires a keyboard instance");
 
-    statusReg.passedSelfTest = 1;
-    statusReg.commandLast = 1;
     statusReg.keyboardUnlocked = 1;
 
     commandByte.convertScanCodes = 1;
-    commandByte.passedSelfTest = 1;
-    commandByte.keyboardFullInt = 1;
+    commandByte.disableMouse = 1;
+    commandByte.disableKeyboard = 1;
 
     for (int i = 0; i < p.port_keyboard_int_pin_connection_count; i++) {
         keyboardIntPin.push_back(new IntSourcePin<I8042>(
