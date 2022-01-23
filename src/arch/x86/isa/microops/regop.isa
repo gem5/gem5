@@ -1177,18 +1177,21 @@ let {{
 
     class Wrflags(WrRegOp):
         code = '''
-            RegVal newFlags = PSrcReg1 ^ op2;
-            RegVal userFlagMask = 0xDD5;
+            const RegVal new_flags = PSrcReg1 ^ op2;
 
             // Get only the user flags
-            ccFlagBits = newFlags & ccFlagMask;
-            dfBit = newFlags & DFBit;
-            cfofBits = newFlags & cfofMask;
+            ccFlagBits = new_flags & ccFlagMask;
+            dfBit = new_flags & DFBit;
+            cfofBits = new_flags & cfofMask;
             ecfBit = 0;
             ezfBit = 0;
 
             // Get everything else
-            nccFlagBits = newFlags & ~userFlagMask;
+            const RegVal IOPLMask = mask(2) << 12;
+            const RegVal SysFlagMask =
+                TFBit | IFBit | IOPLMask | NTBit | RFBit | VMBit |
+                ACBit | VIFBit | VIPBit | IDBit;
+            nccFlagBits = new_flags & SysFlagMask;
         '''
 
     class Rdip(RdRegOp):
@@ -1200,7 +1203,7 @@ let {{
     class Rflags(RdRegOp):
         code = '''
             DestReg = ccFlagBits | cfofBits | dfBit |
-                      ecfBit | ezfBit | nccFlagBits;
+                      ecfBit | ezfBit | nccFlagBits | (1 << 1);
             '''
 
     class Ruflag(RegOp):
