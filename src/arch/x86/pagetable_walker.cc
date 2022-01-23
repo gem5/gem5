@@ -530,7 +530,10 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         // value back to memory.
         if (doWrite) {
             write = oldRead;
-            write->setLE<uint64_t>(pte);
+            if (dataSize == 8)
+                write->setLE<uint64_t>(pte);
+            else
+                write->setLE<uint32_t>(pte);
             write->cmd = MemCmd::WriteReq;
         } else {
             write = NULL;
