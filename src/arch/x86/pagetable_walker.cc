@@ -477,7 +477,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         }
         // 4 KB page
         entry.logBytes = 12;
-        nextRead = mbits(pte, 31, 12) + vaddr.norml2 * dataSize;
+        nextRead = mbits(pte, 31, 12) + vaddr.norml1 * dataSize;
         nextState = PTE;
         break;
       case PTE:
