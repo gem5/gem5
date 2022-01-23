@@ -318,6 +318,12 @@ ISA::setMiscReg(int miscReg, RegVal val)
         break;
       case MISCREG_CR8:
         break;
+      case MISCREG_RFLAGS:
+        {
+            RFLAGS rflags = val;
+            panic_if(rflags.vm, "Virtual 8086 mode is not supported.");
+            break;
+        }
       case MISCREG_CS_ATTR:
         {
             SegAttr toggled = regVal[miscReg] ^ val;
