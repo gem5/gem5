@@ -37,7 +37,7 @@ from m5.objects import (
     VoltageDomain,
 )
 
-from typing import List, final
+from typing import List
 
 
 class AbstractBoard(System):
@@ -236,7 +236,6 @@ class AbstractBoard(System):
         """
         raise NotImplementedError
 
-    @final
     def _connect_things(self) -> None:
         """Connects all the components to the board.
 
