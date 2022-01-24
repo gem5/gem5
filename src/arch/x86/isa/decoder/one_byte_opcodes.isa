@@ -606,10 +606,12 @@
             0x1: STC();
             0x2: decode MODE_SUBMODE {
                 0x3: CLI_VIRT();
+                0x4: CLI_REAL();
                 default: CLI();
             }
             0x3: decode MODE_SUBMODE {
                 0x3: STI_VIRT();
+                0x4: STI_REAL();
                 default: STI();
             }
             0x4: CLD();
