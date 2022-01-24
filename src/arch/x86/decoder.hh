@@ -110,6 +110,8 @@ class Decoder : public InstDecoder
     uint8_t defAddr = 0;
     uint8_t stack = 0;
 
+    uint8_t cpl = 0;
+
     uint8_t
     getNextByte()
     {
@@ -256,6 +258,7 @@ class Decoder : public InstDecoder
     Decoder(const X86DecoderParams &p) : InstDecoder(p, &fetchChunk)
     {
         emi.reset();
+        emi.mode.cpl = cpl;
         emi.mode.mode = mode;
         emi.mode.submode = submode;
     }
@@ -263,8 +266,10 @@ class Decoder : public InstDecoder
     void
     setM5Reg(HandyM5Reg m5Reg)
     {
+        cpl = m5Reg.cpl;
         mode = (X86Mode)(uint64_t)m5Reg.mode;
         submode = (X86SubMode)(uint64_t)m5Reg.submode;
+        emi.mode.cpl = cpl;
         emi.mode.mode = mode;
         emi.mode.submode = submode;
         altOp = m5Reg.altOp;
@@ -298,8 +303,10 @@ class Decoder : public InstDecoder
         Decoder *dec = dynamic_cast<Decoder *>(old);
         assert(dec);
 
+        cpl = dec->cpl;
         mode = dec->mode;
         submode = dec->submode;
+        emi.mode.cpl = cpl;
         emi.mode.mode = mode;
         emi.mode.submode = submode;
         altOp = dec->altOp;
