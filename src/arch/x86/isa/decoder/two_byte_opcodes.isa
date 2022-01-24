@@ -52,7 +52,10 @@
                     0x0: Inst::LLDT_64(Ew);
                     default: Inst::LLDT(Ew);
                 }
-                0x3: Inst::LTR(Ew);
+                0x3: decode MODE_SUBMODE {
+                    0x0: Inst::LTR_64(Ew);
+                    default: Inst::LTR(Ew);
+                }
                 0x4: verr_Mw_or_Rv();
                 0x5: verw_Mw_or_Rv();
                 //0x6: jmpe_Ev(); // IA-64
