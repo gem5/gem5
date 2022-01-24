@@ -156,7 +156,7 @@ processCSDescriptor:
     # appropriate/other RIP checks.
     # if temp_RIP > CS.limit throw #GP(0)
     rdlimit t6, cs, dataSize=8
-    sub t0, t1, t6, flags=(ECF,)
+    sub t0, t6, t1, flags=(ECF,)
     fault "std::make_shared<GeneralProtection>(0)", flags=(CECF,)
 
     #(temp_CPL!=CPL)
