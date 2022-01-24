@@ -54,6 +54,7 @@ output header {{
 
 #include "arch/generic/debugfaults.hh"
 #include "arch/x86/emulenv.hh"
+#include "arch/x86/insts/decode_fault.hh"
 #include "arch/x86/insts/macroop.hh"
 #include "arch/x86/insts/microdebug.hh"
 #include "arch/x86/insts/microfpop.hh"
