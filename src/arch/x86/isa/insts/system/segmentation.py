@@ -211,6 +211,60 @@ def macroop LTR_P
     st t1, tsg, [8, t4, t0], dataSize=8
 };
 
+def macroop LLDT_64_R
+{
+    .serialize_after
+    chks reg, t0, InGDTCheck, flags=(EZF,)
+    br label("end"), flags=(CEZF,)
+    limm t4, 0, dataSize=8
+    srli t4, reg, 3, dataSize=2
+    ld t1, tsg, [8, t4, t0], dataSize=8
+    ld t2, tsg, [8, t4, t0], 8, dataSize=8
+    chks reg, t1, LDTCheck
+    wrdh t3, t1, t2
+    wrdl tsl, t1, reg
+    wrbase tsl, t3, dataSize=8
+end:
+    fault "NoFault"
+};
+
+def macroop LLDT_64_M
+{
+    .serialize_after
+    ld t5, seg, sib, disp, dataSize=2
+    chks t5, t0, InGDTCheck, flags=(EZF,)
+    br label("end"), flags=(CEZF,)
+    limm t4, 0, dataSize=8
+    srli t4, t5, 3, dataSize=2
+    ld t1, tsg, [8, t4, t0], dataSize=8
+    ld t2, tsg, [8, t4, t0], 8, dataSize=8
+    chks t5, t1, LDTCheck
+    wrdh t3, t1, t2
+    wrdl tsl, t1, t5
+    wrbase tsl, t3, dataSize=8
+end:
+    fault "NoFault"
+};
+
+def macroop LLDT_64_P
+{
+    .serialize_after
+    rdip t7
+    ld t5, seg, riprel, disp, dataSize=2
+    chks t5, t0, InGDTCheck, flags=(EZF,)
+    br label("end"), flags=(CEZF,)
+    limm t4, 0, dataSize=8
+    srli t4, t5, 3, dataSize=2
+    ld t1, tsg, [8, t4, t0], dataSize=8
+    ld t2, tsg, [8, t4, t0], 8, dataSize=8
+    chks t5, t1, LDTCheck
+    wrdh t3, t1, t2
+    wrdl tsl, t1, t5
+    wrbase tsl, t3, dataSize=8
+end:
+    fault "NoFault"
+};
+
 def macroop LLDT_R
 {
     .serialize_after
@@ -218,12 +272,9 @@ def macroop LLDT_R
     br label("end"), flags=(CEZF,)
     limm t4, 0, dataSize=8
     srli t4, reg, 3, dataSize=2
-    ldst t1, tsg, [8, t4, t0], dataSize=8
-    ld t2, tsg, [8, t4, t0], 8, dataSize=8
+    ld t1, tsg, [8, t4, t0], dataSize=8
     chks reg, t1, LDTCheck
-    wrdh t3, t1, t2
     wrdl tsl, t1, reg
-    wrbase tsl, t3, dataSize=8
 end:
     fault "NoFault"
 };
@@ -236,33 +287,16 @@ def macroop LLDT_M
     br label("end"), flags=(CEZF,)
     limm t4, 0, dataSize=8
     srli t4, t5, 3, dataSize=2
-    ldst t1, tsg, [8, t4, t0], dataSize=8
-    ld t2, tsg, [8, t4, t0], 8, dataSize=8
+    ld t1, tsg, [8, t4, t0], dataSize=8
     chks t5, t1, LDTCheck
-    wrdh t3, t1, t2
     wrdl tsl, t1, t5
-    wrbase tsl, t3, dataSize=8
 end:
     fault "NoFault"
 };
 
 def macroop LLDT_P
 {
-    .serialize_after
-    rdip t7
-    ld t5, seg, riprel, disp, dataSize=2
-    chks t5, t0, InGDTCheck, flags=(EZF,)
-    br label("end"), flags=(CEZF,)
-    limm t4, 0, dataSize=8
-    srli t4, t5, 3, dataSize=2
-    ldst t1, tsg, [8, t4, t0], dataSize=8
-    ld t2, tsg, [8, t4, t0], 8, dataSize=8
-    chks t5, t1, LDTCheck
-    wrdh t3, t1, t2
-    wrdl tsl, t1, t5
-    wrbase tsl, t3, dataSize=8
-end:
-    fault "NoFault"
+    panic "LLDT in non-64 bit mode doesn't support RIP addressing."
 };
 
 def macroop SWAPGS

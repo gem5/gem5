@@ -48,7 +48,10 @@
             0x00: decode MODRM_REG {
                 0x0: sldt_Mw_or_Rv();
                 0x1: str_Mw_or_Rv();
-                0x2: Inst::LLDT(Ew);
+                0x2: decode MODE_SUBMODE {
+                    0x0: Inst::LLDT_64(Ew);
+                    default: Inst::LLDT(Ew);
+                }
                 0x3: Inst::LTR(Ew);
                 0x4: verr_Mw_or_Rv();
                 0x5: verw_Mw_or_Rv();
