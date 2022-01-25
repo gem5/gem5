@@ -240,7 +240,8 @@ def protoc_emitter(target, source, env):
     return [root + '.pb.cc', root + '.pb.h'], source
 
 protoc_action = MakeAction('${PROTOC} --cpp_out ${BUILDDIR} '
-        '--proto_path ${BUILDDIR} ${SOURCE.get_abspath()}',
+        '--proto_path ${BUILDDIR} --proto_path ${SOURCE.dir} '
+        '${SOURCE.get_abspath()}',
         Transform("PROTOC"))
 protobuf_builder = Builder(action=protoc_action, emitter=protoc_emitter,
         src_suffix='.proto')
