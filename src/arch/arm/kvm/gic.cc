@@ -91,12 +91,27 @@ void
 KvmKernelGic::setIntState(unsigned type, unsigned vcpu, unsigned irq,
                           bool high)
 {
+    const unsigned vcpu_index = vcpu & 0xff;
+    const unsigned vcpu2_index = (vcpu >> 8) & 0xff;
+
+#if defined(KVM_CAP_ARM_IRQ_LINE_LAYOUT_2) && defined(KVM_ARM_IRQ_VCPU2_SHIFT)
+    static const bool vcpu2_enabled = vm.checkExtension(
+        KVM_CAP_ARM_IRQ_LINE_LAYOUT_2);
+    uint32_t kvm_vcpu = (vcpu2_index << KVM_ARM_IRQ_VCPU2_SHIFT) |
+                        (vcpu_index << KVM_ARM_IRQ_VCPU_SHIFT);
+#else
+    static const bool vcpu2_enabled = false;
+    uint32_t kvm_vcpu = (vcpu_index << KVM_ARM_IRQ_VCPU_SHIFT);
+#endif
+
+    panic_if((!vcpu2_enabled && vcpu2_index) || kvm_vcpu > 0xffff,
+              "VCPU out of range");
+
     assert(type <= KVM_ARM_IRQ_TYPE_MASK);
-    assert(vcpu <= KVM_ARM_IRQ_VCPU_MASK);
     assert(irq <= KVM_ARM_IRQ_NUM_MASK);
     const uint32_t line(
+        kvm_vcpu |
         (type << KVM_ARM_IRQ_TYPE_SHIFT) |
-        (vcpu << KVM_ARM_IRQ_VCPU_SHIFT) |
         (irq << KVM_ARM_IRQ_NUM_SHIFT));
 
     vm.setIRQLine(line, high);
