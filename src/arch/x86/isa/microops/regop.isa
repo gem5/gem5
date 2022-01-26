@@ -1533,14 +1533,12 @@ let {{
                     break;
                 }
               case SegIntCSCheck:
-                if (m5reg.mode == LongMode) {
+                if (desc.type.codeOrData != 1) {
+                    fault = std::make_shared<GeneralProtection>(selector);
+                } else if (m5reg.mode == LongMode) {
                     if (desc.l != 1 || desc.d != 0) {
                         fault = std::make_shared<GeneralProtection>(selector);
                     }
-                } else {
-                    fault = std::make_shared<GenericISA::M5PanicFault>(
-                            "Interrupt CS "
-                            "checks not implemented in legacy mode.\\n");
                 }
                 break;
               case SegTRCheck:
