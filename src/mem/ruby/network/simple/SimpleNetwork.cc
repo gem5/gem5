@@ -179,9 +179,9 @@ SimpleNetwork::regStats()
             ;
 
         // Now state what the formula is.
-        for (auto& [id, sw]: m_switches) {
+        for (auto& it : m_switches) {
             *(networkStats.m_msg_counts[(unsigned int) type]) +=
-                sum(sw->getMsgCount(type));
+                sum(it.second->getMsgCount(type));
         }
 
         *(networkStats.m_msg_bytes[(unsigned int) type]) =
@@ -193,8 +193,8 @@ SimpleNetwork::regStats()
 void
 SimpleNetwork::collateStats()
 {
-    for (auto& [id, sw]: m_switches) {
-        sw->collateStats();
+    for (auto& it : m_switches) {
+        it.second->collateStats();
     }
 }
 
@@ -212,8 +212,8 @@ SimpleNetwork::print(std::ostream& out) const
 bool
 SimpleNetwork::functionalRead(Packet *pkt)
 {
-    for (auto& [id, sw]: m_switches) {
-        if (sw->functionalRead(pkt))
+    for (auto& it : m_switches) {
+        if (it.second->functionalRead(pkt))
             return true;
     }
     for (unsigned int i = 0; i < m_int_link_buffers.size(); ++i) {
@@ -228,8 +228,8 @@ bool
 SimpleNetwork::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
-    for (auto& [id, sw]: m_switches) {
-        if (sw->functionalRead(pkt, mask))
+    for (auto& it : m_switches) {
+        if (it.second->functionalRead(pkt, mask))
             read = true;
     }
     for (unsigned int i = 0; i < m_int_link_buffers.size(); ++i) {
@@ -244,8 +244,8 @@ SimpleNetwork::functionalWrite(Packet *pkt)
 {
     uint32_t num_functional_writes = 0;
 
-    for (auto& [id, sw]: m_switches) {
-        num_functional_writes += sw->functionalWrite(pkt);
+    for (auto& it : m_switches) {
+        num_functional_writes += it.second->functionalWrite(pkt);
     }
 
     for (unsigned int i = 0; i < m_int_link_buffers.size(); ++i) {
