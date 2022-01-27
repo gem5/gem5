@@ -498,7 +498,7 @@ transition({UD_RU, UC_RU, RU}, WriteEvictFull, BUSY_BLKD) {
   ProcessNextState;
 }
 
-transition({UD_RSC, UC_RSC, SC_RSC, UD, RU, RSD, RUSD, RUSC, UD_RSD, SD_RSD, RSC, UD_RU, UC_RU, SD, UC, SC, I},
+transition({UD_RSC, UC_RSC, SC_RSC, SD_RSC, UD, RU, RSD, RUSD, RUSC, UD_RSD, SD_RSD, RSC, UD_RU, UC_RU, SD, UC, SC, I},
             {WriteBackFull_Stale, WriteEvictFull_Stale, WriteCleanFull_Stale}, BUSY_BLKD) {
   Initiate_Request_Stale;
   Initiate_CopyBack_Stale;
