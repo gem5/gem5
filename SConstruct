@@ -733,9 +733,6 @@ Build variables for {dir}:
     if env['USE_EFENCE']:
         env.Append(LIBS=['efence'])
 
-    if env['KVM_ISA'] != env['TARGET_ISA']:
-        env['USE_KVM'] = False
-
     # Save sticky variable settings back to current variables file
     sticky_vars.Save(current_vars_file, env)
 
