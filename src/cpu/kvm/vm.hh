@@ -420,11 +420,6 @@ class KvmVM : public SimObject
     bool validEnvironment() const;
 
     /**
-     * Initialize system pointer. Invoked by system object.
-     */
-    void setSystem(System *s);
-
-    /**
       * Get the VCPUID for a given context
       */
     long contextIdToVCpuId(ContextID ctx) const;

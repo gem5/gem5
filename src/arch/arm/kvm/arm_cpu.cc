@@ -374,12 +374,12 @@ ArmKvmCPU::kvmRun(Tick ticks)
     if (fiqAsserted != simFIQ) {
         fiqAsserted = simFIQ;
         DPRINTF(KvmInt, "KVM: Update FIQ state: %i\n", simFIQ);
-        vm.setIRQLine(interruptVcpuFiq(vcpuID), simFIQ);
+        vm->setIRQLine(interruptVcpuFiq(vcpuID), simFIQ);
     }
     if (irqAsserted != simIRQ) {
         irqAsserted = simIRQ;
         DPRINTF(KvmInt, "KVM: Update IRQ state: %i\n", simIRQ);
-        vm.setIRQLine(interruptVcpuIrq(vcpuID), simIRQ);
+        vm->setIRQLine(interruptVcpuIrq(vcpuID), simIRQ);
     }
 
     return BaseKvmCPU::kvmRun(ticks);

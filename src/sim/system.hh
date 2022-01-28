@@ -334,7 +334,13 @@ class System : public SimObject, public PCEventScope
      * Get a pointer to the Kernel Virtual Machine (KVM) SimObject,
      * if present.
      */
-    KvmVM *getKvmVM() { return kvmVM; }
+    KvmVM *getKvmVM() const { return kvmVM; }
+
+    /**
+     * Set the pointer to the Kernel Virtual Machine (KVM) SimObject. For use
+     * by that object to declare itself to the system.
+     */
+    void setKvmVM(KvmVM *const vm) { kvmVM = vm; }
 
     /** Get a pointer to access the physical memory of the system */
     memory::PhysicalMemory& getPhysMem() { return physmem; }
@@ -395,7 +401,7 @@ class System : public SimObject, public PCEventScope
 
   protected:
 
-    KvmVM *const kvmVM = nullptr;
+    KvmVM *kvmVM = nullptr;
 
     memory::PhysicalMemory physmem;
 

@@ -306,12 +306,13 @@ Kvm::createVM()
 
 KvmVM::KvmVM(const KvmVMParams &params)
     : SimObject(params),
-      kvm(new Kvm()), system(nullptr),
+      kvm(new Kvm()), system(params.system),
       vmFD(kvm->createVM()),
       started(false),
       _hasKernelIRQChip(false),
       nextVCPUID(0)
 {
+    system->setKvmVM(this);
     maxMemorySlot = kvm->capNumMemSlots();
     /* If we couldn't determine how memory slots there are, guess 32. */
     if (!maxMemorySlot)
@@ -357,7 +358,6 @@ KvmVM::cpuStartup()
 void
 KvmVM::delayedStartup()
 {
-    assert(system); // set by the system during its construction
     const std::vector<memory::BackingStoreEntry> &memories(
         system->getPhysMem().getBackingStore());
 
@@ -553,18 +553,9 @@ KvmVM::validEnvironment() const
     return true;
 }
 
-void
-KvmVM::setSystem(System *s)
-{
-    panic_if(system != nullptr, "setSystem() can only be called once");
-    panic_if(s == nullptr, "setSystem() called with null System*");
-    system = s;
-}
-
 long
 KvmVM::contextIdToVCpuId(ContextID ctx) const
 {
-    assert(system != nullptr);
     return dynamic_cast<BaseKvmCPU*>
         (system->threads[ctx]->getCpuPtr())->getVCpuID();
 }

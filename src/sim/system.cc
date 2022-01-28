@@ -50,10 +50,6 @@
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
-#include "config/use_kvm.hh"
-#if USE_KVM
-#include "cpu/kvm/vm.hh"
-#endif
 #if !IS_NULL_ISA
 #include "cpu/base.hh"
 #endif
@@ -198,9 +194,6 @@ System::System(const Params &p)
       init_param(p.init_param),
       physProxy(_systemPort, p.cache_line_size),
       workload(p.workload),
-#if USE_KVM
-      kvmVM(p.kvm_vm),
-#endif
       physmem(name() + ".physmem", p.memories, p.mmap_using_noreserve,
               p.shared_backstore),
       ShadowRomRanges(p.shadow_rom_ranges.begin(),
@@ -220,12 +213,6 @@ System::System(const Params &p)
 
     // add self to global system list
     systemList.push_back(this);
-
-#if USE_KVM
-    if (kvmVM) {
-        kvmVM->setSystem(this);
-    }
-#endif
 
     // check if the cache line size is a value known to work
     if (_cacheLineSize != 16 && _cacheLineSize != 32 &&
