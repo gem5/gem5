@@ -188,7 +188,7 @@ void
 MuxingKvmGic::startup()
 {
     GicV2::startup();
-    usingKvm = (kernelGic != nullptr) && system.validKvmEnvironment();
+    usingKvm = kernelGic && vm && vm->validEnvironment();
     if (usingKvm)
         fromGicV2ToKvm();
 }
@@ -205,7 +205,7 @@ void
 MuxingKvmGic::drainResume()
 {
     GicV2::drainResume();
-    bool use_kvm = (kernelGic != nullptr) && system.validKvmEnvironment();
+    bool use_kvm = kernelGic && vm && vm->validEnvironment();
     if (use_kvm != usingKvm) {
         // Should only occur due to CPU switches
         if (use_kvm) // from simulation to KVM emulation

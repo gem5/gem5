@@ -416,6 +416,9 @@ class KvmVM : public SimObject
     /** Global KVM interface */
     Kvm *kvm;
 
+    /** Verify gem5 configuration will support KVM emulation */
+    bool validEnvironment() const;
+
     /**
      * Initialize system pointer. Invoked by system object.
      */

@@ -542,6 +542,17 @@ KvmVM::createDevice(uint32_t type, uint32_t flags)
 #endif
 }
 
+bool
+KvmVM::validEnvironment() const
+{
+    for (auto *tc: system->threads) {
+        if (!dynamic_cast<BaseKvmCPU *>(tc->getCpuPtr()))
+            return false;
+    }
+
+    return true;
+}
+
 void
 KvmVM::setSystem(System *s)
 {

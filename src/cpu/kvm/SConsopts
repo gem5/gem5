@@ -79,3 +79,4 @@ else:
     warning("Can not enable KVM, host seems to lack KVM support")
 
 export_vars.append('USE_KVM')
+export_vars.append('KVM_ISA')

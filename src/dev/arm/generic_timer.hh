@@ -280,9 +280,7 @@ class ArchTimerKvm : public ArchTimer
     // For ArchTimer's in a GenericTimerISA with Kvm execution about
     // to begin, skip rescheduling the event.
     // Otherwise, we should reschedule the event (if necessary).
-    bool scheduleEvents() override {
-        return !system.validKvmEnvironment();
-    }
+    bool scheduleEvents() override;
 };
 
 class GenericTimer : public SimObject

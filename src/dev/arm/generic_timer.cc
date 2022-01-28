@@ -38,13 +38,17 @@
 #include "dev/arm/generic_timer.hh"
 
 #include <cmath>
+#include <string_view>
 
 #include "arch/arm/page_size.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
+#include "config/kvm_isa.hh"
+#include "config/use_kvm.hh"
 #include "cpu/base.hh"
+#include "cpu/kvm/vm.hh"
 #include "debug/Timer.hh"
 #include "dev/arm/base_gic.hh"
 #include "mem/packet_access.hh"
@@ -401,6 +405,18 @@ void
 ArchTimer::drainResume()
 {
     updateCounter();
+}
+
+bool
+ArchTimerKvm::scheduleEvents()
+{
+    if constexpr (USE_KVM &&
+            std::string_view(KVM_ISA) == std::string_view("arm")) {
+        auto *vm = system.getKvmVM();
+        return !vm || !vm->validEnvironment();
+    } else {
+        return true;
+    }
 }
 
 GenericTimer::GenericTimer(const GenericTimerParams &p)

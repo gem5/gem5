@@ -52,7 +52,6 @@
 #include "config/the_isa.hh"
 #include "config/use_kvm.hh"
 #if USE_KVM
-#include "cpu/kvm/base.hh"
 #include "cpu/kvm/vm.hh"
 #endif
 #if !IS_NULL_ISA
@@ -314,24 +313,6 @@ System::replaceThreadContext(ThreadContext *tc, ContextID context_id)
         otc->remove(e);
         tc->schedule(e);
     }
-}
-
-bool
-System::validKvmEnvironment() const
-{
-#if USE_KVM
-    if (threads.empty())
-        return false;
-
-    for (auto *tc: threads) {
-        if (!dynamic_cast<BaseKvmCPU *>(tc->getCpuPtr()))
-            return false;
-    }
-
-    return true;
-#else
-    return false;
-#endif
 }
 
 Addr

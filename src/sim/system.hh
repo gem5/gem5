@@ -336,9 +336,6 @@ class System : public SimObject, public PCEventScope
      */
     KvmVM *getKvmVM() { return kvmVM; }
 
-    /** Verify gem5 configuration will support KVM emulation */
-    bool validKvmEnvironment() const;
-
     /** Get a pointer to access the physical memory of the system */
     memory::PhysicalMemory& getPhysMem() { return physmem; }
     const memory::PhysicalMemory& getPhysMem() const { return physmem; }
