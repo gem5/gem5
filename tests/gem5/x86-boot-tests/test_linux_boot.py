@@ -307,3 +307,43 @@ for mem_system in run_map:
                     boot_type="systemd",
                     length=constants.very_long_tag,
                     )
+
+# To ensure the O3 CPU is working correctly, we include some "init" tests here.
+# There were not included above as booting to "systemd" takes too long with
+# o3 CPUs
+test_boot(
+    cpu="o3",
+    num_cpus=1,
+    mem_system="classic",
+    memory_class="DualChannelDDR4_2400",
+    boot_type="init",
+    length=constants.very_long_tag,
+)
+
+test_boot(
+    cpu="o3",
+    num_cpus=2,
+    mem_system="classic",
+    memory_class="DualChannelDDR4_2400",
+    boot_type="init",
+    length=constants.very_long_tag,
+)
+
+test_boot(
+    cpu="o3",
+    num_cpus=4,
+    mem_system="classic",
+    memory_class="DualChannelDDR4_2400",
+    boot_type="init",
+    length=constants.very_long_tag,
+)
+
+test_boot(
+    cpu="o3",
+    num_cpus=8,
+    mem_system="classic",
+    memory_class="DualChannelDDR4_2400",
+    boot_type="init",
+    length=constants.very_long_tag,
+)
+
