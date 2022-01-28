@@ -772,8 +772,21 @@ namespace VegaISA
 
         if (numDstRegOperands()) {
             reg = instData.VDST;
-            dstOps.emplace_back(reg, getOperandSize(opNum), false,
-                                  false, true, false);
+            /*
+              The v_readfirstlane_b32 instruction (op = 2) is a special case
+              VOP1 instruction which has a scalar register as the destination.
+              (See section 6.6.2 "Special Cases" in the Vega ISA manual)
+
+              Therefore we change the dest op to be scalar reg = true and
+              vector reg = false in reserve of all other instructions.
+             */
+            if (instData.OP == 2) {
+                dstOps.emplace_back(reg, getOperandSize(opNum), false,
+                                      true, false, false);
+            } else {
+                dstOps.emplace_back(reg, getOperandSize(opNum), false,
+                                      false, true, false);
+            }
         }
 
         assert(srcOps.size() == numSrcRegOperands());
