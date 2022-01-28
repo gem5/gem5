@@ -128,7 +128,7 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
             "bt",
             "--size",
             "A",
-            "--maxinsts",
+            "--ticks",
             "5000000000"
         ],
         valid_isas=(constants.x86_tag,),
