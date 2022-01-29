@@ -1,3 +1,17 @@
+
+# Version 21.2.1.0
+
+Version 21.0.1 is a minor gem5 release consisting of bug fixes. The 21.0.1 release:
+
+* Fixes a bug in which [a RCV instruction is wrongly regarded as a branch](https://gem5.atlassian.net/browse/GEM5-1137).
+* Removes outdated and incomplete standard library documentation.
+Users wishing to learn more about the gem5 standard library should consult materials [on the gem5 website](https://www.gem5.org/documentation/gem5-stdlib/overview).
+* Adds a VirtIO entropy device (VirtIORng) to RISC-V.
+Without this, [RISCV Disk images can take considerable time to boot and occasionally do so in error](https://gem5.atlassian.net/browse/GEM5-1151).
+* Removes the 'typing.final' decorator from the standard library.
+'typing.final' was introduced in Python 3.8, but v21.2 of gem5 supports Python 3.6.
+* Fixes the broken NPB stdlib example test.
+
 # Version 21.2.0.0
 
 ## API (user-facing) changes
