@@ -215,7 +215,7 @@ def t_ANY_MULTILINECOMMENT(t):
 # in the "asm" state since it knows it saw a label and not a mnemonic.
 def t_params_COLON(t):
     r':'
-    t.lexer.begin('asm')
+    t.lexer.pop_state()
     return t
 
 # Parameters are a string of text which don't contain an unescaped statement
@@ -228,7 +228,7 @@ def t_params_PARAMS(t):
         val = mo.group(0)
         return val[1]
     t.value = unescapeParamsRE.sub(unescapeParams, t.value)
-    t.lexer.begin('asm')
+    t.lexer.pop_state()
     return t
 
 # An "ID" in the micro assembler is either a label, directive, or mnemonic
@@ -241,7 +241,7 @@ def t_asm_ID(t):
     # If the ID is really "extern", we shouldn't start looking for parameters
     # yet. The real ID, the label itself, is coming up.
     if t.type != 'EXTERN':
-        t.lexer.begin('params')
+        t.lexer.push_state('params')
     return t
 
 # If there is a label and you're -not- in the assembler (which would be caught
@@ -254,12 +254,12 @@ def t_ANY_ID(t):
 # Braces enter and exit micro assembly
 def t_INITIAL_LBRACE(t):
     r'\{'
-    t.lexer.begin('asm')
+    t.lexer.push_state('asm')
     return t
 
 def t_asm_RBRACE(t):
     r'\}'
-    t.lexer.begin('INITIAL')
+    t.lexer.pop_state()
     return t
 
 # At the top level, keep track of newlines only for line counting.
@@ -279,12 +279,12 @@ def t_asm_NEWLINE(t):
 def t_params_NEWLINE(t):
     r'\n+'
     t.lineno += t.value.count('\n')
-    t.lexer.begin('asm')
+    t.lexer.pop_state()
     return t
 
 def t_params_SEMI(t):
     r';'
-    t.lexer.begin('asm')
+    t.lexer.pop_state()
     return t
 
 # Basic regular expressions to pick out simple tokens
