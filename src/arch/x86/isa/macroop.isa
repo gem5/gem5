@@ -133,10 +133,6 @@ def template MacroConstructor {{
 let {{
     from micro_asm import Combinational_Macroop, Rom_Macroop
     class X86Macroop(Combinational_Macroop):
-        def add_microop(self, mnemonic, microop):
-            microop.mnemonic = mnemonic
-            microop.micropc = len(self.microops)
-            self.microops.append(microop)
         def setAdjustEnv(self, val):
             self.adjust_env = val
         def adjustImm(self, val):

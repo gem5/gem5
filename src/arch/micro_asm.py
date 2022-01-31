@@ -49,6 +49,8 @@ class Micro_Container(object):
         self.labels = {}
 
     def add_microop(self, mnemonic, microop):
+        microop.mnemonic = mnemonic
+        microop.micropc = len(self.microops)
         self.microops.append(microop)
 
     def __str__(self):
