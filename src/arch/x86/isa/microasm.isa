@@ -52,9 +52,9 @@ let {{
     sys.path[0:0] = ["src/arch/x86/isa/"]
     from insts import microcode
     # print microcode
-    from micro_asm import MicroAssembler, Rom_Macroop
+    from micro_asm import MicroAssembler, RomMacroop
     mainRom = X86MicrocodeRom('main ROM')
-    assembler = MicroAssembler(X86Macroop, microopClasses, mainRom, Rom_Macroop)
+    assembler = MicroAssembler(X86Macroop, microopClasses, mainRom, RomMacroop)
 
     def gpRegIdx(idx):
         return "X86ISA::GpRegIndex(%s)" % idx

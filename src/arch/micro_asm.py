@@ -40,7 +40,7 @@ from ply import yacc
 #
 ##########################################################################
 
-class Micro_Container(object):
+class MicroContainer:
     def __init__(self, name):
         self.microops = []
         self.name = name
@@ -59,10 +59,10 @@ class Micro_Container(object):
             string += "  %s\n" % microop
         return string
 
-class Combinational_Macroop(Micro_Container):
+class CombinationalMacroop(MicroContainer):
     pass
 
-class Rom_Macroop(object):
+class RomMacroop:
     def __init__(self, name, target):
         self.name = name
         self.target = target
@@ -70,7 +70,7 @@ class Rom_Macroop(object):
     def __str__(self):
         return "%s: %s\n" % (self.name, self.target)
 
-class Rom(Micro_Container):
+class Rom(MicroContainer):
     def __init__(self, name):
         super().__init__(name)
         self.externs = {}

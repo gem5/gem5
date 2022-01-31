@@ -131,8 +131,8 @@ def template MacroConstructor {{
 }};
 
 let {{
-    from micro_asm import Combinational_Macroop, Rom_Macroop
-    class X86Macroop(Combinational_Macroop):
+    from micro_asm import CombinationalMacroop, RomMacroop
+    class X86Macroop(CombinationalMacroop):
         def setAdjustEnv(self, val):
             self.adjust_env = val
         def adjustImm(self, val):
