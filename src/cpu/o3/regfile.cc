@@ -59,16 +59,16 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
       floatRegFile(_numPhysicalFloatRegs),
       vectorRegFile(_numPhysicalVecRegs),
       vectorElemRegFile(_numPhysicalVecRegs * (
-                  classes.at(VecElemClass).size() /
-                  classes.at(VecRegClass).size())),
+                  classes.at(VecElemClass).numRegs() /
+                  classes.at(VecRegClass).numRegs())),
       vecPredRegFile(_numPhysicalVecPredRegs),
       ccRegFile(_numPhysicalCCRegs),
       numPhysicalIntRegs(_numPhysicalIntRegs),
       numPhysicalFloatRegs(_numPhysicalFloatRegs),
       numPhysicalVecRegs(_numPhysicalVecRegs),
       numPhysicalVecElemRegs(_numPhysicalVecRegs * (
-                  classes.at(VecElemClass).size() /
-                  classes.at(VecRegClass).size())),
+                  classes.at(VecElemClass).numRegs() /
+                  classes.at(VecRegClass).numRegs())),
       numPhysicalVecPredRegs(_numPhysicalVecPredRegs),
       numPhysicalCCRegs(_numPhysicalCCRegs),
       totalNumRegs(_numPhysicalIntRegs
@@ -120,7 +120,7 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
     }
 
     // Misc regs have a fixed mapping but still need PhysRegIds.
-    for (phys_reg = 0; phys_reg < regClasses.at(MiscRegClass).size();
+    for (phys_reg = 0; phys_reg < regClasses.at(MiscRegClass).numRegs();
             phys_reg++) {
         miscRegIds.emplace_back(MiscRegClass, phys_reg, 0);
     }

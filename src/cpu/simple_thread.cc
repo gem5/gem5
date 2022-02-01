@@ -78,12 +78,12 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 {
     assert(isa);
     const auto &regClasses = isa->regClasses();
-    intRegs.resize(regClasses.at(IntRegClass).size());
-    floatRegs.resize(regClasses.at(FloatRegClass).size());
-    vecRegs.resize(regClasses.at(VecRegClass).size());
-    vecElemRegs.resize(regClasses.at(VecElemClass).size());
-    vecPredRegs.resize(regClasses.at(VecPredRegClass).size());
-    ccRegs.resize(regClasses.at(CCRegClass).size());
+    intRegs.resize(regClasses.at(IntRegClass).numRegs());
+    floatRegs.resize(regClasses.at(FloatRegClass).numRegs());
+    vecRegs.resize(regClasses.at(VecRegClass).numRegs());
+    vecElemRegs.resize(regClasses.at(VecElemClass).numRegs());
+    vecPredRegs.resize(regClasses.at(VecPredRegClass).numRegs());
+    ccRegs.resize(regClasses.at(CCRegClass).numRegs());
     clearArchRegs();
 }
 

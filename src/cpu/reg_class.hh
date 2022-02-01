@@ -95,23 +95,23 @@ class VecElemRegClassOps : public RegClassOps
 class RegClass
 {
   private:
-    size_t _size;
+    size_t _numRegs;
     const RegIndex _zeroReg;
 
     static inline DefaultRegClassOps defaultOps;
     RegClassOps *_ops = &defaultOps;
 
   public:
-    RegClass(size_t new_size, RegIndex new_zero=-1) :
-        _size(new_size), _zeroReg(new_zero)
+    RegClass(size_t num_regs, RegIndex new_zero=-1) :
+        _numRegs(num_regs), _zeroReg(new_zero)
     {}
-    RegClass(size_t new_size, RegClassOps &new_ops, RegIndex new_zero=-1) :
-        RegClass(new_size, new_zero)
+    RegClass(size_t num_regs, RegClassOps &new_ops, RegIndex new_zero=-1) :
+        RegClass(num_regs, new_zero)
     {
         _ops = &new_ops;
     }
 
-    size_t size() const { return _size; }
+    size_t numRegs() const { return _numRegs; }
     RegIndex zeroReg() const { return _zeroReg; }
 
     std::string regName(const RegId &id) const { return _ops->regName(id); }

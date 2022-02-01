@@ -195,19 +195,20 @@ CPU::CPU(const BaseO3CPUParams &params)
     const auto &regClasses = params.isa[0]->regClasses();
 
     assert(params.numPhysIntRegs >=
-            numThreads * regClasses.at(IntRegClass).size());
+            numThreads * regClasses.at(IntRegClass).numRegs());
     assert(params.numPhysFloatRegs >=
-            numThreads * regClasses.at(FloatRegClass).size());
+            numThreads * regClasses.at(FloatRegClass).numRegs());
     assert(params.numPhysVecRegs >=
-            numThreads * regClasses.at(VecRegClass).size());
+            numThreads * regClasses.at(VecRegClass).numRegs());
     assert(params.numPhysVecPredRegs >=
-            numThreads * regClasses.at(VecPredRegClass).size());
+            numThreads * regClasses.at(VecPredRegClass).numRegs());
     assert(params.numPhysCCRegs >=
-            numThreads * regClasses.at(CCRegClass).size());
+            numThreads * regClasses.at(CCRegClass).numRegs());
 
     // Just make this a warning and go ahead anyway, to keep from having to
     // add checks everywhere.
-    warn_if(regClasses.at(CCRegClass).size() == 0 && params.numPhysCCRegs != 0,
+    warn_if(regClasses.at(CCRegClass).numRegs() == 0 &&
+            params.numPhysCCRegs != 0,
             "Non-zero number of physical CC regs specified, even though\n"
             "    ISA does not use them.");
 
@@ -224,7 +225,7 @@ CPU::CPU(const BaseO3CPUParams &params)
     // Initialize rename map to assign physical registers to the
     // architectural registers for active threads only.
     for (ThreadID tid = 0; tid < active_threads; tid++) {
-        for (RegIndex ridx = 0; ridx < regClasses.at(IntRegClass).size();
+        for (RegIndex ridx = 0; ridx < regClasses.at(IntRegClass).numRegs();
                 ++ridx) {
             // Note that we can't use the rename() method because we don't
             // want special treatment for the zero register at this point
@@ -233,7 +234,7 @@ CPU::CPU(const BaseO3CPUParams &params)
             commitRenameMap[tid].setEntry(RegId(IntRegClass, ridx), phys_reg);
         }
 
-        for (RegIndex ridx = 0; ridx < regClasses.at(FloatRegClass).size();
+        for (RegIndex ridx = 0; ridx < regClasses.at(FloatRegClass).numRegs();
                 ++ridx) {
             PhysRegIdPtr phys_reg = freeList.getFloatReg();
             renameMap[tid].setEntry(RegId(FloatRegClass, ridx), phys_reg);
@@ -241,7 +242,7 @@ CPU::CPU(const BaseO3CPUParams &params)
                     RegId(FloatRegClass, ridx), phys_reg);
         }
 
-        const size_t numVecs = regClasses.at(VecRegClass).size();
+        const size_t numVecs = regClasses.at(VecRegClass).numRegs();
         /* Initialize the full-vector interface */
         for (RegIndex ridx = 0; ridx < numVecs; ++ridx) {
             RegId rid = RegId(VecRegClass, ridx);
@@ -250,7 +251,7 @@ CPU::CPU(const BaseO3CPUParams &params)
             commitRenameMap[tid].setEntry(rid, phys_reg);
         }
         /* Initialize the vector-element interface */
-        const size_t numElems = regClasses.at(VecElemClass).size();
+        const size_t numElems = regClasses.at(VecElemClass).numRegs();
         for (RegIndex ridx = 0; ridx < numElems; ++ridx) {
             RegId lrid = RegId(VecElemClass, ridx);
             PhysRegIdPtr phys_elem = freeList.getVecElem();
@@ -258,15 +259,15 @@ CPU::CPU(const BaseO3CPUParams &params)
             commitRenameMap[tid].setEntry(lrid, phys_elem);
         }
 
-        for (RegIndex ridx = 0; ridx < regClasses.at(VecPredRegClass).size();
-                ++ridx) {
+        for (RegIndex ridx = 0;
+                ridx < regClasses.at(VecPredRegClass).numRegs(); ++ridx) {
             PhysRegIdPtr phys_reg = freeList.getVecPredReg();
             renameMap[tid].setEntry(RegId(VecPredRegClass, ridx), phys_reg);
             commitRenameMap[tid].setEntry(
                     RegId(VecPredRegClass, ridx), phys_reg);
         }
 
-        for (RegIndex ridx = 0; ridx < regClasses.at(CCRegClass).size();
+        for (RegIndex ridx = 0; ridx < regClasses.at(CCRegClass).numRegs();
                 ++ridx) {
             PhysRegIdPtr phys_reg = freeList.getCCReg();
             renameMap[tid].setEntry(RegId(CCRegClass, ridx), phys_reg);
@@ -728,21 +729,22 @@ CPU::insertThread(ThreadID tid)
     //Bind Int Regs to Rename Map
     const auto &regClasses = isa[tid]->regClasses();
 
-    for (RegIndex idx = 0; idx < regClasses.at(IntRegClass).size(); idx++) {
+    for (RegIndex idx = 0; idx < regClasses.at(IntRegClass).numRegs(); idx++) {
         PhysRegIdPtr phys_reg = freeList.getIntReg();
         renameMap[tid].setEntry(RegId(IntRegClass, idx), phys_reg);
         scoreboard.setReg(phys_reg);
     }
 
     //Bind Float Regs to Rename Map
-    for (RegIndex idx = 0; idx < regClasses.at(FloatRegClass).size(); idx++) {
+    for (RegIndex idx = 0; idx < regClasses.at(FloatRegClass).numRegs();
+            idx++) {
         PhysRegIdPtr phys_reg = freeList.getFloatReg();
         renameMap[tid].setEntry(RegId(FloatRegClass, idx), phys_reg);
         scoreboard.setReg(phys_reg);
     }
 
     //Bind condition-code Regs to Rename Map
-    for (RegIndex idx = 0; idx < regClasses.at(CCRegClass).size(); idx++) {
+    for (RegIndex idx = 0; idx < regClasses.at(CCRegClass).numRegs(); idx++) {
         PhysRegIdPtr phys_reg = freeList.getCCReg();
         renameMap[tid].setEntry(RegId(CCRegClass, idx), phys_reg);
         scoreboard.setReg(phys_reg);
