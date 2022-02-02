@@ -67,14 +67,18 @@ GPUComputeDriver::GPUComputeDriver(const Params &p)
 
     // Convert the 3 bit mtype specified in Shader.py to the proper type
     // used for requests.
-    if (MtypeFlags::SHARED & p.m_type)
+    std::bitset<MtypeFlags::NUM_MTYPE_BITS> mtype(p.m_type);
+    if (mtype.test(MtypeFlags::SHARED)) {
         defaultMtype.set(Request::SHARED);
+    }
 
-    if (MtypeFlags::READ_WRITE & p.m_type)
+    if (mtype.test(MtypeFlags::READ_WRITE)) {
         defaultMtype.set(Request::READ_WRITE);
+    }
 
-    if (MtypeFlags::CACHED & p.m_type)
+    if (mtype.test(MtypeFlags::CACHED)) {
         defaultMtype.set(Request::CACHED);
+    }
 }
 
 const char*
