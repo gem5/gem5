@@ -333,7 +333,7 @@ decodeCP14Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
     // If we get here then it must be a register that we haven't implemented
     warn("CP14 unimplemented crn[%d], opc1[%d], crm[%d], opc2[%d]",
          crn, opc1, crm, opc2);
-    return MISCREG_CP14_UNIMPL;
+    return MISCREG_UNKNOWN;
 }
 
 MiscRegIndex
@@ -1143,7 +1143,7 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
         return MISCREG_IMPDEF_UNIMPL;
     }
     // Unrecognized register
-    return MISCREG_CP15_UNIMPL;
+    return MISCREG_UNKNOWN;
 }
 
 MiscRegIndex
@@ -1202,7 +1202,7 @@ decodeCP15Reg64(unsigned crm, unsigned opc1)
         break;
     }
     // Unrecognized register
-    return MISCREG_CP15_UNIMPL;
+    return MISCREG_UNKNOWN;
 }
 
 std::tuple<bool, bool>
@@ -4545,12 +4545,6 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges();
     InitReg(MISCREG_RAZ)
       .allPrivileges().exceptUserMode().writes(0);
-    InitReg(MISCREG_CP14_UNIMPL)
-      .unimplemented()
-      .warnNotFail();
-    InitReg(MISCREG_CP15_UNIMPL)
-      .unimplemented()
-      .warnNotFail();
     InitReg(MISCREG_UNKNOWN);
     InitReg(MISCREG_IMPDEF_UNIMPL)
       .unimplemented()

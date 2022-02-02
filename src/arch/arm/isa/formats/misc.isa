@@ -166,7 +166,7 @@ let {{
         switch (miscReg) {
           case MISCREG_NOP:
             return new NopInst(machInst);
-          case MISCREG_CP14_UNIMPL:
+          case MISCREG_UNKNOWN:
             return new FailUnimplemented(isRead ? "mrc unknown" : "mcr unknown",
                     machInst,
                     csprintf("miscreg crn:%d opc1:%d crm:%d opc2:%d %s unknown",
@@ -211,7 +211,7 @@ let {{
           case MISCREG_NOP:
             return new McrMrcMiscInst(isRead ? "mrc nop" : "mcr nop",
                                       machInst, iss, MISCREG_NOP);
-          case MISCREG_CP15_UNIMPL:
+          case MISCREG_UNKNOWN:
             return new FailUnimplemented(isRead ? "mrc unkown" : "mcr unkown",
                     machInst,
                     csprintf("miscreg crn:%d opc1:%d crm:%d opc2:%d %s unknown",
@@ -301,7 +301,7 @@ let {{
         const bool isRead = bits(machInst, 20);
 
         switch (miscReg) {
-          case MISCREG_CP15_UNIMPL:
+          case MISCREG_UNKNOWN:
             return new FailUnimplemented(isRead ? "mrc" : "mcr", machInst,
                     csprintf("miscreg crm:%d opc1:%d 64-bit %s unknown",
                     crm, opc1, isRead ? "read" : "write"));

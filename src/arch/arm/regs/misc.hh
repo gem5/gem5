@@ -1059,7 +1059,7 @@ namespace ArmISA
 
         // NUM_PHYS_MISCREGS specifies the number of actual physical
         // registers, not considering the following pseudo-registers
-        // (dummy registers), like UNKNOWN, CP15_UNIMPL, MISCREG_IMPDEF_UNIMPL.
+        // (dummy registers), like MISCREG_UNKNOWN, MISCREG_IMPDEF_UNIMPL.
         // Checkpointing should use this physical index when
         // saving/restoring register values.
         NUM_PHYS_MISCREGS,
@@ -1067,8 +1067,6 @@ namespace ArmISA
         // Dummy registers
         MISCREG_NOP,
         MISCREG_RAZ,
-        MISCREG_CP14_UNIMPL,
-        MISCREG_CP15_UNIMPL,
         MISCREG_UNKNOWN,
 
         // Implementation defined register: this represent
@@ -2206,8 +2204,6 @@ namespace ArmISA
         // Dummy registers
         "nop",
         "raz",
-        "cp14_unimpl",
-        "cp15_unimpl",
         "unknown",
         "impl_defined",
         "erridr_el1",
