@@ -253,8 +253,6 @@ global_vars_file = os.path.join(build_root, 'variables.global')
 global_vars = Variables(global_vars_file, args=ARGUMENTS)
 
 global_vars.AddVariables(
-    ('CC', 'C compiler', environ.get('CC', main['CC'])),
-    ('CXX', 'C++ compiler', environ.get('CXX', main['CXX'])),
     ('CCFLAGS_EXTRA', 'Extra C and C++ compiler flags', ''),
     ('GEM5PY_CCFLAGS_EXTRA', 'Extra C and C++ gem5py compiler flags', ''),
     ('GEM5PY_LINKFLAGS_EXTRA', 'Extra marshal gem5py flags', ''),
@@ -262,7 +260,6 @@ global_vars.AddVariables(
     ('PYTHON_CONFIG', 'Python config binary to use',
      [ 'python3-config', 'python-config']
     ),
-    ('PROTOC', 'protoc tool', environ.get('PROTOC', 'protoc')),
     ('BATCH', 'Use batch pool for build and tests', False),
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
     ('M5_BUILD_CACHE', 'Cache built objects in this directory', False),

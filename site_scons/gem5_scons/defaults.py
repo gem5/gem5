@@ -63,6 +63,16 @@ def EnvDefaults(env):
                 any([key.startswith(prefix) for prefix in use_prefixes]):
             env['ENV'][key] = val
 
+    # These variables from the environment override/become SCons variables,
+    # with a default if they weren't in the host environment.
+    var_overrides = {
+        'CC': env['CC'],
+        'CXX': env['CXX'],
+        'PROTOC': 'protoc'
+    }
+    for key,default in var_overrides.items():
+        env[key] = env['ENV'].get(key, default)
+
     # Tell scons to avoid implicit command dependencies to avoid issues
     # with the param wrappes being compiled twice (see
     # https://github.com/SCons/scons/issues/2811
