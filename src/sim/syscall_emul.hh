@@ -1672,6 +1672,7 @@ cloneFunc(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
     }
 
     if (flags & OS::TGT_CLONE_THREAD) {
+        cp->pTable->initState();
         cp->pTable->shared = true;
         cp->useForClone = true;
     }
