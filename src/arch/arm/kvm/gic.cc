@@ -190,6 +190,8 @@ void
 MuxingKvmGic::startup()
 {
     GicV2::startup();
+
+    KvmVM *vm = system.getKvmVM();
     usingKvm = kernelGic && vm && vm->validEnvironment();
     if (usingKvm)
         fromGicToKvm();
@@ -207,6 +209,8 @@ void
 MuxingKvmGic::drainResume()
 {
     GicV2::drainResume();
+
+    KvmVM *vm = system.getKvmVM();
     bool use_kvm = kernelGic && vm && vm->validEnvironment();
     if (use_kvm != usingKvm) {
         // Should only occur due to CPU switches
