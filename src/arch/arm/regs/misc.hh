@@ -1392,7 +1392,7 @@ namespace ArmISA
         "actlr_ns",
         "actlr_s",
         "cpacr",
-        "sdrc",
+        "sdcr",
         "scr",
         "sder",
         "nsacr",
