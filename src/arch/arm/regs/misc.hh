@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Arm Limited
+ * Copyright (c) 2010-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1150,6 +1150,65 @@ namespace ArmISA
     };
 
     extern std::bitset<NUM_MISCREG_INFOS> miscRegInfo[NUM_MISCREGS];
+
+    struct MiscRegNum32
+    {
+        MiscRegNum32(unsigned _coproc, unsigned _opc1,
+                     unsigned _crn, unsigned _crm,
+                     unsigned _opc2)
+          : reg64(0), coproc(_coproc), opc1(_opc1), crn(_crn),
+            crm(_crm), opc2(_opc2)
+        {
+            // MCR/MRC CP14 or CP15 register
+            assert(coproc == 0b1110 || coproc == 0b1111);
+            assert(opc1 < 8 && crn < 16 && crm < 16 && opc2 < 8);
+        }
+
+        MiscRegNum32(unsigned _coproc, unsigned _opc1,
+                     unsigned _crm)
+          : reg64(1), coproc(_coproc), opc1(_opc1), crn(0),
+            crm(_crm), opc2(0)
+        {
+            // MCRR/MRRC CP14 or CP15 register
+            assert(coproc == 0b1110 || coproc == 0b1111);
+            assert(opc1 < 16 && crm < 16);
+        }
+
+        MiscRegNum32(const MiscRegNum32& rhs) = default;
+
+        bool
+        operator==(const MiscRegNum32 &other) const
+        {
+            return reg64 == other.reg64 &&
+                coproc == other.coproc &&
+                opc1 == other.opc1 &&
+                crn == other.crn &&
+                crm == other.crm &&
+                opc2 == other.opc2;
+        }
+
+        uint32_t
+        packed() const
+        {
+            return reg64 << 19  |
+                   coproc << 15 |
+                   opc1 << 11   |
+                   crn << 7     |
+                   crm << 3     |
+                   opc2;
+        }
+
+        // 1 if the register is 64bit wide (accessed through MCRR/MRCC)
+        // 0 otherwise. We need this when generating the hash as there
+        // might be collisions between 32 and 64 bit registers
+        const unsigned reg64;
+
+        unsigned coproc;
+        unsigned opc1;
+        unsigned crn;
+        unsigned crm;
+        unsigned opc2;
+    };
 
     struct MiscRegNum64
     {
@@ -2326,6 +2385,16 @@ namespace ArmISA
 
 namespace std
 {
+template<>
+struct hash<gem5::ArmISA::MiscRegNum32>
+{
+    size_t
+    operator()(const gem5::ArmISA::MiscRegNum32& reg) const
+    {
+        return reg.packed();
+    }
+};
+
 template<>
 struct hash<gem5::ArmISA::MiscRegNum64>
 {

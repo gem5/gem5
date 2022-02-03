@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015-2021 Arm Limited
+ * Copyright (c) 2010-2013, 2015-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -50,1159 +50,512 @@ namespace gem5
 namespace ArmISA
 {
 
+namespace
+{
+
+std::unordered_map<MiscRegNum32, MiscRegIndex> miscRegNum32ToIdx{
+    // MCR/MRC regs
+    { MiscRegNum32(14, 0, 0, 0, 0), MISCREG_DBGDIDR },
+    { MiscRegNum32(14, 0, 0, 0, 2), MISCREG_DBGDTRRXext },
+    { MiscRegNum32(14, 0, 0, 0, 4), MISCREG_DBGBVR0 },
+    { MiscRegNum32(14, 0, 0, 0, 5), MISCREG_DBGBCR0 },
+    { MiscRegNum32(14, 0, 0, 0, 6), MISCREG_DBGWVR0 },
+    { MiscRegNum32(14, 0, 0, 0, 7), MISCREG_DBGWCR0 },
+    { MiscRegNum32(14, 0, 0, 1, 0), MISCREG_DBGDSCRint },
+    { MiscRegNum32(14, 0, 0, 1, 4), MISCREG_DBGBVR1 },
+    { MiscRegNum32(14, 0, 0, 1, 5), MISCREG_DBGBCR1 },
+    { MiscRegNum32(14, 0, 0, 1, 6), MISCREG_DBGWVR1 },
+    { MiscRegNum32(14, 0, 0, 1, 7), MISCREG_DBGWCR1 },
+    { MiscRegNum32(14, 0, 0, 2, 2), MISCREG_DBGDSCRext },
+    { MiscRegNum32(14, 0, 0, 2, 4), MISCREG_DBGBVR2 },
+    { MiscRegNum32(14, 0, 0, 2, 5), MISCREG_DBGBCR2 },
+    { MiscRegNum32(14, 0, 0, 2, 6), MISCREG_DBGWVR2 },
+    { MiscRegNum32(14, 0, 0, 2, 7), MISCREG_DBGWCR2 },
+    { MiscRegNum32(14, 0, 0, 3, 2), MISCREG_DBGDTRTXext },
+    { MiscRegNum32(14, 0, 0, 3, 4), MISCREG_DBGBVR3 },
+    { MiscRegNum32(14, 0, 0, 3, 5), MISCREG_DBGBCR3 },
+    { MiscRegNum32(14, 0, 0, 3, 6), MISCREG_DBGWVR3 },
+    { MiscRegNum32(14, 0, 0, 3, 7), MISCREG_DBGWCR3 },
+    { MiscRegNum32(14, 0, 0, 4, 4), MISCREG_DBGBVR4 },
+    { MiscRegNum32(14, 0, 0, 4, 5), MISCREG_DBGBCR4 },
+    { MiscRegNum32(14, 0, 0, 4, 6), MISCREG_DBGWVR4 },
+    { MiscRegNum32(14, 0, 0, 4, 7), MISCREG_DBGWCR4 },
+    { MiscRegNum32(14, 0, 0, 5, 4), MISCREG_DBGBVR5 },
+    { MiscRegNum32(14, 0, 0, 5, 5), MISCREG_DBGBCR5 },
+    { MiscRegNum32(14, 0, 0, 5, 6), MISCREG_DBGWVR5 },
+    { MiscRegNum32(14, 0, 0, 5, 7), MISCREG_DBGWCR5 },
+    { MiscRegNum32(14, 0, 0, 6, 2), MISCREG_DBGOSECCR },
+    { MiscRegNum32(14, 0, 0, 6, 4), MISCREG_DBGBVR6 },
+    { MiscRegNum32(14, 0, 0, 6, 5), MISCREG_DBGBCR6 },
+    { MiscRegNum32(14, 0, 0, 6, 6), MISCREG_DBGWVR6 },
+    { MiscRegNum32(14, 0, 0, 6, 7), MISCREG_DBGWCR6 },
+    { MiscRegNum32(14, 0, 0, 7, 0), MISCREG_DBGVCR },
+    { MiscRegNum32(14, 0, 0, 7, 4), MISCREG_DBGBVR7 },
+    { MiscRegNum32(14, 0, 0, 7, 5), MISCREG_DBGBCR7 },
+    { MiscRegNum32(14, 0, 0, 7, 6), MISCREG_DBGWVR7 },
+    { MiscRegNum32(14, 0, 0, 7, 7), MISCREG_DBGWCR7 },
+    { MiscRegNum32(14, 0, 0, 8, 4), MISCREG_DBGBVR8 },
+    { MiscRegNum32(14, 0, 0, 8, 5), MISCREG_DBGBCR8 },
+    { MiscRegNum32(14, 0, 0, 8, 6), MISCREG_DBGWVR8 },
+    { MiscRegNum32(14, 0, 0, 8, 7), MISCREG_DBGWCR8 },
+    { MiscRegNum32(14, 0, 0, 9, 4), MISCREG_DBGBVR9 },
+    { MiscRegNum32(14, 0, 0, 9, 5), MISCREG_DBGBCR9 },
+    { MiscRegNum32(14, 0, 0, 9, 6), MISCREG_DBGWVR9 },
+    { MiscRegNum32(14, 0, 0, 9, 7), MISCREG_DBGWCR9 },
+    { MiscRegNum32(14, 0, 0, 10, 4), MISCREG_DBGBVR10 },
+    { MiscRegNum32(14, 0, 0, 10, 5), MISCREG_DBGBCR10 },
+    { MiscRegNum32(14, 0, 0, 10, 6), MISCREG_DBGWVR10 },
+    { MiscRegNum32(14, 0, 0, 10, 7), MISCREG_DBGWCR10 },
+    { MiscRegNum32(14, 0, 0, 11, 4), MISCREG_DBGBVR11 },
+    { MiscRegNum32(14, 0, 0, 11, 5), MISCREG_DBGBCR11 },
+    { MiscRegNum32(14, 0, 0, 11, 6), MISCREG_DBGWVR11 },
+    { MiscRegNum32(14, 0, 0, 11, 7), MISCREG_DBGWCR11 },
+    { MiscRegNum32(14, 0, 0, 12, 4), MISCREG_DBGBVR12 },
+    { MiscRegNum32(14, 0, 0, 12, 5), MISCREG_DBGBCR12 },
+    { MiscRegNum32(14, 0, 0, 12, 6), MISCREG_DBGWVR12 },
+    { MiscRegNum32(14, 0, 0, 12, 7), MISCREG_DBGWCR12 },
+    { MiscRegNum32(14, 0, 0, 13, 4), MISCREG_DBGBVR13 },
+    { MiscRegNum32(14, 0, 0, 13, 5), MISCREG_DBGBCR13 },
+    { MiscRegNum32(14, 0, 0, 13, 6), MISCREG_DBGWVR13 },
+    { MiscRegNum32(14, 0, 0, 13, 7), MISCREG_DBGWCR13 },
+    { MiscRegNum32(14, 0, 0, 14, 4), MISCREG_DBGBVR14 },
+    { MiscRegNum32(14, 0, 0, 14, 5), MISCREG_DBGBCR14 },
+    { MiscRegNum32(14, 0, 0, 14, 6), MISCREG_DBGWVR14 },
+    { MiscRegNum32(14, 0, 0, 14, 7), MISCREG_DBGWCR14 },
+    { MiscRegNum32(14, 0, 0, 15, 4), MISCREG_DBGBVR15 },
+    { MiscRegNum32(14, 0, 0, 15, 5), MISCREG_DBGBCR15 },
+    { MiscRegNum32(14, 0, 0, 15, 6), MISCREG_DBGWVR15 },
+    { MiscRegNum32(14, 0, 0, 15, 7), MISCREG_DBGWCR15 },
+    { MiscRegNum32(14, 0, 1, 0, 1), MISCREG_DBGBXVR0 },
+    { MiscRegNum32(14, 0, 1, 0, 4), MISCREG_DBGOSLAR },
+    { MiscRegNum32(14, 0, 1, 1, 1), MISCREG_DBGBXVR1 },
+    { MiscRegNum32(14, 0, 1, 1, 4), MISCREG_DBGOSLSR },
+    { MiscRegNum32(14, 0, 1, 2, 1), MISCREG_DBGBXVR2 },
+    { MiscRegNum32(14, 0, 1, 3, 1), MISCREG_DBGBXVR3 },
+    { MiscRegNum32(14, 0, 1, 3, 4), MISCREG_DBGOSDLR },
+    { MiscRegNum32(14, 0, 1, 4, 1), MISCREG_DBGBXVR4 },
+    { MiscRegNum32(14, 0, 1, 4, 4), MISCREG_DBGPRCR },
+    { MiscRegNum32(14, 0, 1, 5, 1), MISCREG_DBGBXVR5 },
+    { MiscRegNum32(14, 0, 1, 6, 1), MISCREG_DBGBXVR6 },
+    { MiscRegNum32(14, 0, 1, 7, 1), MISCREG_DBGBXVR7 },
+    { MiscRegNum32(14, 0, 1, 8, 1), MISCREG_DBGBXVR8 },
+    { MiscRegNum32(14, 0, 1, 9, 1), MISCREG_DBGBXVR9 },
+    { MiscRegNum32(14, 0, 1, 10, 1), MISCREG_DBGBXVR10 },
+    { MiscRegNum32(14, 0, 1, 11, 1), MISCREG_DBGBXVR11 },
+    { MiscRegNum32(14, 0, 1, 12, 1), MISCREG_DBGBXVR12 },
+    { MiscRegNum32(14, 0, 1, 13, 1), MISCREG_DBGBXVR13 },
+    { MiscRegNum32(14, 0, 1, 14, 1), MISCREG_DBGBXVR14 },
+    { MiscRegNum32(14, 0, 1, 15, 1), MISCREG_DBGBXVR15 },
+    { MiscRegNum32(14, 6, 1, 0, 0), MISCREG_TEEHBR },
+    { MiscRegNum32(14, 7, 0, 0, 0), MISCREG_JIDR },
+    { MiscRegNum32(14, 7, 1, 0, 0), MISCREG_JOSCR },
+    { MiscRegNum32(14, 7, 2, 0, 0), MISCREG_JMCR },
+    { MiscRegNum32(15, 0, 0, 0, 0), MISCREG_MIDR },
+    { MiscRegNum32(15, 0, 0, 0, 1), MISCREG_CTR },
+    { MiscRegNum32(15, 0, 0, 0, 2), MISCREG_TCMTR },
+    { MiscRegNum32(15, 0, 0, 0, 3), MISCREG_TLBTR },
+    { MiscRegNum32(15, 0, 0, 0, 4), MISCREG_MIDR },
+    { MiscRegNum32(15, 0, 0, 0, 5), MISCREG_MPIDR },
+    { MiscRegNum32(15, 0, 0, 0, 6), MISCREG_REVIDR },
+    { MiscRegNum32(15, 0, 0, 0, 7), MISCREG_MIDR },
+    { MiscRegNum32(15, 0, 0, 1, 0), MISCREG_ID_PFR0 },
+    { MiscRegNum32(15, 0, 0, 1, 1), MISCREG_ID_PFR1 },
+    { MiscRegNum32(15, 0, 0, 1, 2), MISCREG_ID_DFR0 },
+    { MiscRegNum32(15, 0, 0, 1, 3), MISCREG_ID_AFR0 },
+    { MiscRegNum32(15, 0, 0, 1, 4), MISCREG_ID_MMFR0 },
+    { MiscRegNum32(15, 0, 0, 1, 5), MISCREG_ID_MMFR1 },
+    { MiscRegNum32(15, 0, 0, 1, 6), MISCREG_ID_MMFR2 },
+    { MiscRegNum32(15, 0, 0, 1, 7), MISCREG_ID_MMFR3 },
+    { MiscRegNum32(15, 0, 0, 2, 0), MISCREG_ID_ISAR0 },
+    { MiscRegNum32(15, 0, 0, 2, 1), MISCREG_ID_ISAR1 },
+    { MiscRegNum32(15, 0, 0, 2, 2), MISCREG_ID_ISAR2 },
+    { MiscRegNum32(15, 0, 0, 2, 3), MISCREG_ID_ISAR3 },
+    { MiscRegNum32(15, 0, 0, 2, 4), MISCREG_ID_ISAR4 },
+    { MiscRegNum32(15, 0, 0, 2, 5), MISCREG_ID_ISAR5 },
+    { MiscRegNum32(15, 0, 0, 2, 6), MISCREG_ID_MMFR4 },
+    { MiscRegNum32(15, 0, 0, 2, 7), MISCREG_ID_ISAR6 },
+    { MiscRegNum32(15, 0, 0, 3, 0), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 3, 1), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 3, 2), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 3, 3), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 3, 4), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 3, 5), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 3, 6), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 3, 7), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 4, 0), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 4, 1), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 4, 2), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 4, 3), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 4, 4), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 4, 5), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 4, 6), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 4, 7), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 5, 0), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 5, 1), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 5, 2), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 5, 3), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 5, 4), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 5, 5), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 5, 6), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 5, 7), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 6, 0), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 6, 1), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 6, 2), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 6, 3), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 6, 4), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 6, 5), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 6, 6), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 6, 7), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 7, 0), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 7, 1), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 7, 2), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 7, 3), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 7, 4), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 7, 5), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 7, 6), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 7, 7), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 8, 0), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 8, 1), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 8, 2), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 8, 3), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 8, 4), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 8, 5), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 8, 6), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 8, 7), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 9, 0), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 9, 1), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 9, 2), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 9, 3), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 9, 4), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 9, 5), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 9, 6), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 9, 7), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 10, 0), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 10, 1), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 10, 2), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 10, 3), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 10, 4), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 10, 5), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 10, 6), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 10, 7), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 11, 0), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 11, 1), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 11, 2), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 11, 3), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 11, 4), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 11, 5), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 11, 6), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 11, 7), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 12, 0), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 12, 1), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 12, 2), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 12, 3), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 12, 4), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 12, 5), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 12, 6), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 12, 7), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 13, 0), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 13, 1), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 13, 2), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 13, 3), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 13, 4), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 13, 5), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 13, 6), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 13, 7), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 14, 0), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 14, 1), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 14, 2), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 14, 3), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 14, 4), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 14, 5), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 14, 6), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 14, 7), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 15, 0), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 15, 1), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 15, 2), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 15, 3), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 15, 4), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 15, 5), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 15, 6), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 0, 15, 7), MISCREG_RAZ },
+    { MiscRegNum32(15, 0, 1, 0, 0), MISCREG_SCTLR },
+    { MiscRegNum32(15, 0, 1, 0, 1), MISCREG_ACTLR },
+    { MiscRegNum32(15, 0, 1, 0, 2), MISCREG_CPACR },
+    { MiscRegNum32(15, 0, 1, 1, 0), MISCREG_SCR },
+    { MiscRegNum32(15, 0, 1, 1, 1), MISCREG_SDER },
+    { MiscRegNum32(15, 0, 1, 1, 2), MISCREG_NSACR },
+    { MiscRegNum32(15, 0, 1, 3, 1), MISCREG_SDCR },
+    { MiscRegNum32(15, 0, 2, 0, 0), MISCREG_TTBR0 },
+    { MiscRegNum32(15, 0, 2, 0, 1), MISCREG_TTBR1 },
+    { MiscRegNum32(15, 0, 2, 0, 2), MISCREG_TTBCR },
+    { MiscRegNum32(15, 0, 3, 0, 0), MISCREG_DACR },
+    { MiscRegNum32(15, 0, 4, 6, 0), MISCREG_ICC_PMR },
+    { MiscRegNum32(15, 0, 5, 0, 0), MISCREG_DFSR },
+    { MiscRegNum32(15, 0, 5, 0, 1), MISCREG_IFSR },
+    { MiscRegNum32(15, 0, 5, 1, 0), MISCREG_ADFSR },
+    { MiscRegNum32(15, 0, 5, 1, 1), MISCREG_AIFSR },
+    { MiscRegNum32(15, 0, 6, 0, 0), MISCREG_DFAR },
+    { MiscRegNum32(15, 0, 6, 0, 2), MISCREG_IFAR },
+    { MiscRegNum32(15, 0, 7, 0, 4), MISCREG_NOP },
+    { MiscRegNum32(15, 0, 7, 1, 0), MISCREG_ICIALLUIS },
+    { MiscRegNum32(15, 0, 7, 1, 6), MISCREG_BPIALLIS },
+    { MiscRegNum32(15, 0, 7, 2, 7), MISCREG_DBGDEVID0 },
+    { MiscRegNum32(15, 0, 7, 4, 0), MISCREG_PAR },
+    { MiscRegNum32(15, 0, 7, 5, 0), MISCREG_ICIALLU },
+    { MiscRegNum32(15, 0, 7, 5, 1), MISCREG_ICIMVAU },
+    { MiscRegNum32(15, 0, 7, 5, 4), MISCREG_CP15ISB },
+    { MiscRegNum32(15, 0, 7, 5, 6), MISCREG_BPIALL },
+    { MiscRegNum32(15, 0, 7, 5, 7), MISCREG_BPIMVA },
+    { MiscRegNum32(15, 0, 7, 6, 1), MISCREG_DCIMVAC },
+    { MiscRegNum32(15, 0, 7, 6, 2), MISCREG_DCISW },
+    { MiscRegNum32(15, 0, 7, 8, 0), MISCREG_ATS1CPR },
+    { MiscRegNum32(15, 0, 7, 8, 1), MISCREG_ATS1CPW },
+    { MiscRegNum32(15, 0, 7, 8, 2), MISCREG_ATS1CUR },
+    { MiscRegNum32(15, 0, 7, 8, 3), MISCREG_ATS1CUW },
+    { MiscRegNum32(15, 0, 7, 8, 4), MISCREG_ATS12NSOPR },
+    { MiscRegNum32(15, 0, 7, 8, 5), MISCREG_ATS12NSOPW },
+    { MiscRegNum32(15, 0, 7, 8, 6), MISCREG_ATS12NSOUR },
+    { MiscRegNum32(15, 0, 7, 8, 7), MISCREG_ATS12NSOUW },
+    { MiscRegNum32(15, 0, 7, 10, 1), MISCREG_DCCMVAC },
+    { MiscRegNum32(15, 0, 7, 10, 2), MISCREG_DCCSW },
+    { MiscRegNum32(15, 0, 7, 10, 4), MISCREG_CP15DSB },
+    { MiscRegNum32(15, 0, 7, 10, 5), MISCREG_CP15DMB },
+    { MiscRegNum32(15, 0, 7, 11, 1), MISCREG_DCCMVAU },
+    { MiscRegNum32(15, 0, 7, 13, 1), MISCREG_NOP },
+    { MiscRegNum32(15, 0, 7, 14, 1), MISCREG_DCCIMVAC },
+    { MiscRegNum32(15, 0, 7, 14, 2), MISCREG_DCCISW },
+    { MiscRegNum32(15, 0, 8, 3, 0), MISCREG_TLBIALLIS },
+    { MiscRegNum32(15, 0, 8, 3, 1), MISCREG_TLBIMVAIS },
+    { MiscRegNum32(15, 0, 8, 3, 2), MISCREG_TLBIASIDIS },
+    { MiscRegNum32(15, 0, 8, 3, 3), MISCREG_TLBIMVAAIS },
+    { MiscRegNum32(15, 0, 8, 3, 5), MISCREG_TLBIMVALIS },
+    { MiscRegNum32(15, 0, 8, 3, 7), MISCREG_TLBIMVAALIS },
+    { MiscRegNum32(15, 0, 8, 5, 0), MISCREG_ITLBIALL },
+    { MiscRegNum32(15, 0, 8, 5, 1), MISCREG_ITLBIMVA },
+    { MiscRegNum32(15, 0, 8, 5, 2), MISCREG_ITLBIASID },
+    { MiscRegNum32(15, 0, 8, 6, 0), MISCREG_DTLBIALL },
+    { MiscRegNum32(15, 0, 8, 6, 1), MISCREG_DTLBIMVA },
+    { MiscRegNum32(15, 0, 8, 6, 2), MISCREG_DTLBIASID },
+    { MiscRegNum32(15, 0, 8, 7, 0), MISCREG_TLBIALL },
+    { MiscRegNum32(15, 0, 8, 7, 1), MISCREG_TLBIMVA },
+    { MiscRegNum32(15, 0, 8, 7, 2), MISCREG_TLBIASID },
+    { MiscRegNum32(15, 0, 8, 7, 3), MISCREG_TLBIMVAA },
+    { MiscRegNum32(15, 0, 8, 7, 5), MISCREG_TLBIMVAL },
+    { MiscRegNum32(15, 0, 8, 7, 7), MISCREG_TLBIMVAAL },
+    { MiscRegNum32(15, 0, 9, 12, 0), MISCREG_PMCR },
+    { MiscRegNum32(15, 0, 9, 12, 1), MISCREG_PMCNTENSET },
+    { MiscRegNum32(15, 0, 9, 12, 2), MISCREG_PMCNTENCLR },
+    { MiscRegNum32(15, 0, 9, 12, 3), MISCREG_PMOVSR },
+    { MiscRegNum32(15, 0, 9, 12, 4), MISCREG_PMSWINC },
+    { MiscRegNum32(15, 0, 9, 12, 5), MISCREG_PMSELR },
+    { MiscRegNum32(15, 0, 9, 12, 6), MISCREG_PMCEID0 },
+    { MiscRegNum32(15, 0, 9, 12, 7), MISCREG_PMCEID1 },
+    { MiscRegNum32(15, 0, 9, 13, 0), MISCREG_PMCCNTR },
+    { MiscRegNum32(15, 0, 9, 13, 1), MISCREG_PMXEVTYPER_PMCCFILTR },
+    { MiscRegNum32(15, 0, 9, 13, 2), MISCREG_PMXEVCNTR },
+    { MiscRegNum32(15, 0, 9, 14, 0), MISCREG_PMUSERENR },
+    { MiscRegNum32(15, 0, 9, 14, 1), MISCREG_PMINTENSET },
+    { MiscRegNum32(15, 0, 9, 14, 2), MISCREG_PMINTENCLR },
+    { MiscRegNum32(15, 0, 9, 14, 3), MISCREG_PMOVSSET },
+    { MiscRegNum32(15, 0, 10, 2, 0), MISCREG_PRRR_MAIR0 },
+    { MiscRegNum32(15, 0, 10, 2, 1), MISCREG_NMRR_MAIR1 },
+    { MiscRegNum32(15, 0, 10, 3, 0), MISCREG_AMAIR0 },
+    { MiscRegNum32(15, 0, 10, 3, 1), MISCREG_AMAIR1 },
+    { MiscRegNum32(15, 0, 12, 0, 0), MISCREG_VBAR },
+    { MiscRegNum32(15, 0, 12, 0, 1), MISCREG_MVBAR },
+    { MiscRegNum32(15, 0, 12, 1, 0), MISCREG_ISR },
+    { MiscRegNum32(15, 0, 12, 8, 0), MISCREG_ICC_IAR0 },
+    { MiscRegNum32(15, 0, 12, 8, 1), MISCREG_ICC_EOIR0 },
+    { MiscRegNum32(15, 0, 12, 8, 2), MISCREG_ICC_HPPIR0 },
+    { MiscRegNum32(15, 0, 12, 8, 3), MISCREG_ICC_BPR0 },
+    { MiscRegNum32(15, 0, 12, 8, 4), MISCREG_ICC_AP0R0 },
+    { MiscRegNum32(15, 0, 12, 8, 5), MISCREG_ICC_AP0R1 },
+    { MiscRegNum32(15, 0, 12, 8, 6), MISCREG_ICC_AP0R2 },
+    { MiscRegNum32(15, 0, 12, 8, 7), MISCREG_ICC_AP0R3 },
+    { MiscRegNum32(15, 0, 12, 9, 0), MISCREG_ICC_AP1R0 },
+    { MiscRegNum32(15, 0, 12, 9, 1), MISCREG_ICC_AP1R1 },
+    { MiscRegNum32(15, 0, 12, 9, 2), MISCREG_ICC_AP1R2 },
+    { MiscRegNum32(15, 0, 12, 9, 3), MISCREG_ICC_AP1R3 },
+    { MiscRegNum32(15, 0, 12, 11, 1), MISCREG_ICC_DIR },
+    { MiscRegNum32(15, 0, 12, 11, 3), MISCREG_ICC_RPR },
+    { MiscRegNum32(15, 0, 12, 12, 0), MISCREG_ICC_IAR1 },
+    { MiscRegNum32(15, 0, 12, 12, 1), MISCREG_ICC_EOIR1 },
+    { MiscRegNum32(15, 0, 12, 12, 2), MISCREG_ICC_HPPIR1 },
+    { MiscRegNum32(15, 0, 12, 12, 3), MISCREG_ICC_BPR1 },
+    { MiscRegNum32(15, 0, 12, 12, 4), MISCREG_ICC_CTLR },
+    { MiscRegNum32(15, 0, 12, 12, 5), MISCREG_ICC_SRE },
+    { MiscRegNum32(15, 0, 12, 12, 6), MISCREG_ICC_IGRPEN0 },
+    { MiscRegNum32(15, 0, 12, 12, 7), MISCREG_ICC_IGRPEN1 },
+    { MiscRegNum32(15, 0, 13, 0, 0), MISCREG_FCSEIDR },
+    { MiscRegNum32(15, 0, 13, 0, 1), MISCREG_CONTEXTIDR },
+    { MiscRegNum32(15, 0, 13, 0, 2), MISCREG_TPIDRURW },
+    { MiscRegNum32(15, 0, 13, 0, 3), MISCREG_TPIDRURO },
+    { MiscRegNum32(15, 0, 13, 0, 4), MISCREG_TPIDRPRW },
+    { MiscRegNum32(15, 0, 14, 0, 0), MISCREG_CNTFRQ },
+    { MiscRegNum32(15, 0, 14, 1, 0), MISCREG_CNTKCTL },
+    { MiscRegNum32(15, 0, 14, 2, 0), MISCREG_CNTP_TVAL },
+    { MiscRegNum32(15, 0, 14, 2, 1), MISCREG_CNTP_CTL },
+    { MiscRegNum32(15, 0, 14, 3, 0), MISCREG_CNTV_TVAL },
+    { MiscRegNum32(15, 0, 14, 3, 1), MISCREG_CNTV_CTL },
+    { MiscRegNum32(15, 1, 0, 0, 0), MISCREG_CCSIDR },
+    { MiscRegNum32(15, 1, 0, 0, 1), MISCREG_CLIDR },
+    { MiscRegNum32(15, 1, 0, 0, 7), MISCREG_AIDR },
+    { MiscRegNum32(15, 2, 0, 0, 0), MISCREG_CSSELR },
+    { MiscRegNum32(15, 4, 0, 0, 0), MISCREG_VPIDR },
+    { MiscRegNum32(15, 4, 0, 0, 5), MISCREG_VMPIDR },
+    { MiscRegNum32(15, 4, 1, 0, 0), MISCREG_HSCTLR },
+    { MiscRegNum32(15, 4, 1, 0, 1), MISCREG_HACTLR },
+    { MiscRegNum32(15, 4, 1, 1, 0), MISCREG_HCR },
+    { MiscRegNum32(15, 4, 1, 1, 1), MISCREG_HDCR },
+    { MiscRegNum32(15, 4, 1, 1, 2), MISCREG_HCPTR },
+    { MiscRegNum32(15, 4, 1, 1, 3), MISCREG_HSTR },
+    { MiscRegNum32(15, 4, 1, 1, 4), MISCREG_HCR2 },
+    { MiscRegNum32(15, 4, 1, 1, 7), MISCREG_HACR },
+    { MiscRegNum32(15, 4, 2, 0, 2), MISCREG_HTCR },
+    { MiscRegNum32(15, 4, 2, 1, 2), MISCREG_VTCR },
+    { MiscRegNum32(15, 4, 5, 1, 0), MISCREG_HADFSR },
+    { MiscRegNum32(15, 4, 5, 1, 1), MISCREG_HAIFSR },
+    { MiscRegNum32(15, 4, 5, 2, 0), MISCREG_HSR },
+    { MiscRegNum32(15, 4, 6, 0, 0), MISCREG_HDFAR },
+    { MiscRegNum32(15, 4, 6, 0, 2), MISCREG_HIFAR },
+    { MiscRegNum32(15, 4, 6, 0, 4), MISCREG_HPFAR },
+    { MiscRegNum32(15, 4, 7, 8, 0), MISCREG_ATS1HR },
+    { MiscRegNum32(15, 4, 7, 8, 1), MISCREG_ATS1HW },
+    { MiscRegNum32(15, 4, 8, 0, 1), MISCREG_TLBIIPAS2IS },
+    { MiscRegNum32(15, 4, 8, 0, 5), MISCREG_TLBIIPAS2LIS },
+    { MiscRegNum32(15, 4, 8, 3, 0), MISCREG_TLBIALLHIS },
+    { MiscRegNum32(15, 4, 8, 3, 1), MISCREG_TLBIMVAHIS },
+    { MiscRegNum32(15, 4, 8, 3, 4), MISCREG_TLBIALLNSNHIS },
+    { MiscRegNum32(15, 4, 8, 3, 5), MISCREG_TLBIMVALHIS },
+    { MiscRegNum32(15, 4, 8, 4, 1), MISCREG_TLBIIPAS2 },
+    { MiscRegNum32(15, 4, 8, 4, 5), MISCREG_TLBIIPAS2L },
+    { MiscRegNum32(15, 4, 8, 7, 0), MISCREG_TLBIALLH },
+    { MiscRegNum32(15, 4, 8, 7, 1), MISCREG_TLBIMVAH },
+    { MiscRegNum32(15, 4, 8, 7, 4), MISCREG_TLBIALLNSNH },
+    { MiscRegNum32(15, 4, 8, 7, 5), MISCREG_TLBIMVALH },
+    { MiscRegNum32(15, 4, 10, 2, 0), MISCREG_HMAIR0 },
+    { MiscRegNum32(15, 4, 10, 2, 1), MISCREG_HMAIR1 },
+    { MiscRegNum32(15, 4, 10, 3, 0), MISCREG_HAMAIR0 },
+    { MiscRegNum32(15, 4, 10, 3, 1), MISCREG_HAMAIR1 },
+    { MiscRegNum32(15, 4, 12, 0, 0), MISCREG_HVBAR },
+    { MiscRegNum32(15, 4, 12, 8, 0), MISCREG_ICH_AP0R0 },
+    { MiscRegNum32(15, 4, 12, 8, 1), MISCREG_ICH_AP0R1 },
+    { MiscRegNum32(15, 4, 12, 8, 2), MISCREG_ICH_AP0R2 },
+    { MiscRegNum32(15, 4, 12, 8, 3), MISCREG_ICH_AP0R3 },
+    { MiscRegNum32(15, 4, 12, 9, 0), MISCREG_ICH_AP1R0 },
+    { MiscRegNum32(15, 4, 12, 9, 1), MISCREG_ICH_AP1R1 },
+    { MiscRegNum32(15, 4, 12, 9, 2), MISCREG_ICH_AP1R2 },
+    { MiscRegNum32(15, 4, 12, 9, 3), MISCREG_ICH_AP1R3 },
+    { MiscRegNum32(15, 4, 12, 9, 5), MISCREG_ICC_HSRE },
+    { MiscRegNum32(15, 4, 12, 11, 0), MISCREG_ICH_HCR },
+    { MiscRegNum32(15, 4, 12, 11, 1), MISCREG_ICH_VTR },
+    { MiscRegNum32(15, 4, 12, 11, 2), MISCREG_ICH_MISR },
+    { MiscRegNum32(15, 4, 12, 11, 3), MISCREG_ICH_EISR },
+    { MiscRegNum32(15, 4, 12, 11, 5), MISCREG_ICH_ELRSR },
+    { MiscRegNum32(15, 4, 12, 11, 7), MISCREG_ICH_VMCR },
+    { MiscRegNum32(15, 4, 12, 12, 0), MISCREG_ICH_LR0 },
+    { MiscRegNum32(15, 4, 12, 12, 1), MISCREG_ICH_LR1 },
+    { MiscRegNum32(15, 4, 12, 12, 2), MISCREG_ICH_LR2 },
+    { MiscRegNum32(15, 4, 12, 12, 3), MISCREG_ICH_LR3 },
+    { MiscRegNum32(15, 4, 12, 12, 4), MISCREG_ICH_LR4 },
+    { MiscRegNum32(15, 4, 12, 12, 5), MISCREG_ICH_LR5 },
+    { MiscRegNum32(15, 4, 12, 12, 6), MISCREG_ICH_LR6 },
+    { MiscRegNum32(15, 4, 12, 12, 7), MISCREG_ICH_LR7 },
+    { MiscRegNum32(15, 4, 12, 13, 0), MISCREG_ICH_LR8 },
+    { MiscRegNum32(15, 4, 12, 13, 1), MISCREG_ICH_LR9 },
+    { MiscRegNum32(15, 4, 12, 13, 2), MISCREG_ICH_LR10 },
+    { MiscRegNum32(15, 4, 12, 13, 3), MISCREG_ICH_LR11 },
+    { MiscRegNum32(15, 4, 12, 13, 4), MISCREG_ICH_LR12 },
+    { MiscRegNum32(15, 4, 12, 13, 5), MISCREG_ICH_LR13 },
+    { MiscRegNum32(15, 4, 12, 13, 6), MISCREG_ICH_LR14 },
+    { MiscRegNum32(15, 4, 12, 13, 7), MISCREG_ICH_LR15 },
+    { MiscRegNum32(15, 4, 12, 14, 0), MISCREG_ICH_LRC0 },
+    { MiscRegNum32(15, 4, 12, 14, 1), MISCREG_ICH_LRC1 },
+    { MiscRegNum32(15, 4, 12, 14, 2), MISCREG_ICH_LRC2 },
+    { MiscRegNum32(15, 4, 12, 14, 3), MISCREG_ICH_LRC3 },
+    { MiscRegNum32(15, 4, 12, 14, 4), MISCREG_ICH_LRC4 },
+    { MiscRegNum32(15, 4, 12, 14, 5), MISCREG_ICH_LRC5 },
+    { MiscRegNum32(15, 4, 12, 14, 6), MISCREG_ICH_LRC6 },
+    { MiscRegNum32(15, 4, 12, 14, 7), MISCREG_ICH_LRC7 },
+    { MiscRegNum32(15, 4, 12, 15, 0), MISCREG_ICH_LRC8 },
+    { MiscRegNum32(15, 4, 12, 15, 1), MISCREG_ICH_LRC9 },
+    { MiscRegNum32(15, 4, 12, 15, 2), MISCREG_ICH_LRC10 },
+    { MiscRegNum32(15, 4, 12, 15, 3), MISCREG_ICH_LRC11 },
+    { MiscRegNum32(15, 4, 12, 15, 4), MISCREG_ICH_LRC12 },
+    { MiscRegNum32(15, 4, 12, 15, 5), MISCREG_ICH_LRC13 },
+    { MiscRegNum32(15, 4, 12, 15, 6), MISCREG_ICH_LRC14 },
+    { MiscRegNum32(15, 4, 12, 15, 7), MISCREG_ICH_LRC15 },
+    { MiscRegNum32(15, 4, 13, 0, 2), MISCREG_HTPIDR },
+    { MiscRegNum32(15, 4, 14, 1, 0), MISCREG_CNTHCTL },
+    { MiscRegNum32(15, 4, 14, 2, 0), MISCREG_CNTHP_TVAL },
+    { MiscRegNum32(15, 4, 14, 2, 1), MISCREG_CNTHP_CTL },
+    { MiscRegNum32(15, 6, 12, 12, 4), MISCREG_ICC_MCTLR },
+    { MiscRegNum32(15, 6, 12, 12, 5), MISCREG_ICC_MSRE },
+    { MiscRegNum32(15, 6, 12, 12, 7), MISCREG_ICC_MGRPEN1 },
+    // MCRR/MRRC regs
+    { MiscRegNum32(15, 0, 2), MISCREG_TTBR0 },
+    { MiscRegNum32(15, 0, 7), MISCREG_PAR },
+    { MiscRegNum32(15, 0, 12), MISCREG_ICC_SGI1R },
+    { MiscRegNum32(15, 0, 14), MISCREG_CNTPCT },
+    { MiscRegNum32(15, 0, 15), MISCREG_CPUMERRSR },
+    { MiscRegNum32(15, 1, 2), MISCREG_TTBR1 },
+    { MiscRegNum32(15, 1, 12), MISCREG_ICC_ASGI1R },
+    { MiscRegNum32(15, 1, 14), MISCREG_CNTVCT },
+    { MiscRegNum32(15, 1, 15), MISCREG_L2MERRSR },
+    { MiscRegNum32(15, 2, 12), MISCREG_ICC_SGI0R },
+    { MiscRegNum32(15, 2, 14), MISCREG_CNTP_CVAL },
+    { MiscRegNum32(15, 3, 14), MISCREG_CNTV_CVAL },
+    { MiscRegNum32(15, 4, 2), MISCREG_HTTBR },
+    { MiscRegNum32(15, 4, 14), MISCREG_CNTVOFF },
+    { MiscRegNum32(15, 6, 2), MISCREG_VTTBR },
+    { MiscRegNum32(15, 6, 14), MISCREG_CNTHP_CVAL },
+};
+
+}
+
 MiscRegIndex
 decodeCP14Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
 {
-    switch(crn) {
-      case 0:
-        switch (opc1) {
-          case 0:
-            switch (opc2) {
-              case 0:
-                switch (crm) {
-                  case 0:
-                    return MISCREG_DBGDIDR;
-                  case 1:
-                    return MISCREG_DBGDSCRint;
-                  case 7:
-                    return MISCREG_DBGVCR;
-                }
-                break;
-              case 2:
-                switch (crm) {
-                  case 0:
-                    return MISCREG_DBGDTRRXext;
-                  case 2:
-                    return MISCREG_DBGDSCRext;
-                  case 3:
-                    return MISCREG_DBGDTRTXext;
-                  case 6:
-                    return MISCREG_DBGOSECCR;
-                }
-                break;
-              case 4:
-                switch (crm) {
-                  case 0:
-                    return MISCREG_DBGBVR0;
-                  case 1:
-                    return MISCREG_DBGBVR1;
-                  case 2:
-                    return MISCREG_DBGBVR2;
-                  case 3:
-                    return MISCREG_DBGBVR3;
-                  case 4:
-                    return MISCREG_DBGBVR4;
-                  case 5:
-                    return MISCREG_DBGBVR5;
-                  case 6:
-                    return MISCREG_DBGBVR6;
-                  case 7:
-                    return MISCREG_DBGBVR7;
-                  case 8:
-                    return MISCREG_DBGBVR8;
-                  case 9:
-                    return MISCREG_DBGBVR9;
-                  case 10:
-                    return MISCREG_DBGBVR10;
-                  case 11:
-                    return MISCREG_DBGBVR11;
-                  case 12:
-                    return MISCREG_DBGBVR12;
-                  case 13:
-                    return MISCREG_DBGBVR13;
-                  case 14:
-                    return MISCREG_DBGBVR14;
-                  case 15:
-                    return MISCREG_DBGBVR15;
-                }
-                break;
-              case 5:
-                switch (crm) {
-                  case 0:
-                    return MISCREG_DBGBCR0;
-                  case 1:
-                    return MISCREG_DBGBCR1;
-                  case 2:
-                    return MISCREG_DBGBCR2;
-                  case 3:
-                    return MISCREG_DBGBCR3;
-                  case 4:
-                    return MISCREG_DBGBCR4;
-                  case 5:
-                    return MISCREG_DBGBCR5;
-                  case 6:
-                    return MISCREG_DBGBCR6;
-                  case 7:
-                    return MISCREG_DBGBCR7;
-                  case 8:
-                    return MISCREG_DBGBCR8;
-                  case 9:
-                    return MISCREG_DBGBCR9;
-                  case 10:
-                    return MISCREG_DBGBCR10;
-                  case 11:
-                    return MISCREG_DBGBCR11;
-                  case 12:
-                    return MISCREG_DBGBCR12;
-                  case 13:
-                    return MISCREG_DBGBCR13;
-                  case 14:
-                    return MISCREG_DBGBCR14;
-                  case 15:
-                    return MISCREG_DBGBCR15;
-                }
-                break;
-              case 6:
-                switch (crm) {
-                  case 0:
-                    return MISCREG_DBGWVR0;
-                  case 1:
-                    return MISCREG_DBGWVR1;
-                  case 2:
-                    return MISCREG_DBGWVR2;
-                  case 3:
-                    return MISCREG_DBGWVR3;
-                  case 4:
-                    return MISCREG_DBGWVR4;
-                  case 5:
-                    return MISCREG_DBGWVR5;
-                  case 6:
-                    return MISCREG_DBGWVR6;
-                  case 7:
-                    return MISCREG_DBGWVR7;
-                  case 8:
-                    return MISCREG_DBGWVR8;
-                  case 9:
-                    return MISCREG_DBGWVR9;
-                  case 10:
-                    return MISCREG_DBGWVR10;
-                  case 11:
-                    return MISCREG_DBGWVR11;
-                  case 12:
-                    return MISCREG_DBGWVR12;
-                  case 13:
-                    return MISCREG_DBGWVR13;
-                  case 14:
-                    return MISCREG_DBGWVR14;
-                  case 15:
-                    return MISCREG_DBGWVR15;
-                    break;
-                }
-                break;
-              case 7:
-                switch (crm) {
-                  case 0:
-                    return MISCREG_DBGWCR0;
-                  case 1:
-                    return MISCREG_DBGWCR1;
-                  case 2:
-                    return MISCREG_DBGWCR2;
-                  case 3:
-                    return MISCREG_DBGWCR3;
-                  case 4:
-                    return MISCREG_DBGWCR4;
-                  case 5:
-                    return MISCREG_DBGWCR5;
-                  case 6:
-                    return MISCREG_DBGWCR6;
-                  case 7:
-                    return MISCREG_DBGWCR7;
-                  case 8:
-                    return MISCREG_DBGWCR8;
-                  case 9:
-                    return MISCREG_DBGWCR9;
-                  case 10:
-                    return MISCREG_DBGWCR10;
-                  case 11:
-                    return MISCREG_DBGWCR11;
-                  case 12:
-                    return MISCREG_DBGWCR12;
-                  case 13:
-                    return MISCREG_DBGWCR13;
-                  case 14:
-                    return MISCREG_DBGWCR14;
-                  case 15:
-                    return MISCREG_DBGWCR15;
-                }
-                break;
-            }
-            break;
-          case 7:
-            switch (opc2) {
-              case 0:
-                switch (crm) {
-                  case 0:
-                    return MISCREG_JIDR;
-                }
-              break;
-            }
-            break;
-        }
-        break;
-      case 1:
-        switch (opc1) {
-          case 0:
-            switch(opc2) {
-              case 1:
-                switch(crm) {
-                  case 0:
-                      return MISCREG_DBGBXVR0;
-                  case 1:
-                      return MISCREG_DBGBXVR1;
-                  case 2:
-                      return MISCREG_DBGBXVR2;
-                  case 3:
-                      return MISCREG_DBGBXVR3;
-                  case 4:
-                      return MISCREG_DBGBXVR4;
-                  case 5:
-                      return MISCREG_DBGBXVR5;
-                  case 6:
-                      return MISCREG_DBGBXVR6;
-                  case 7:
-                      return MISCREG_DBGBXVR7;
-                  case 8:
-                      return MISCREG_DBGBXVR8;
-                  case 9:
-                      return MISCREG_DBGBXVR9;
-                  case 10:
-                      return MISCREG_DBGBXVR10;
-                  case 11:
-                      return MISCREG_DBGBXVR11;
-                  case 12:
-                      return MISCREG_DBGBXVR12;
-                  case 13:
-                      return MISCREG_DBGBXVR13;
-                  case 14:
-                      return MISCREG_DBGBXVR14;
-                  case 15:
-                      return MISCREG_DBGBXVR15;
-                }
-                break;
-              case 4:
-                switch (crm) {
-                  case 0:
-                    return MISCREG_DBGOSLAR;
-                  case 1:
-                    return MISCREG_DBGOSLSR;
-                  case 3:
-                    return MISCREG_DBGOSDLR;
-                  case 4:
-                    return MISCREG_DBGPRCR;
-                }
-                break;
-            }
-            break;
-          case 6:
-            switch (crm) {
-              case 0:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_TEEHBR;
-                }
-                break;
-            }
-            break;
-          case 7:
-            switch (crm) {
-              case 0:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_JOSCR;
-                }
-                break;
-            }
-            break;
-        }
-        break;
-      case 2:
-        switch (opc1) {
-          case 7:
-            switch (crm) {
-              case 0:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_JMCR;
-                }
-                break;
-            }
-            break;
-        }
-        break;
+    MiscRegNum32 cop_reg(14, opc1, crn, crm, opc2);
+    auto it = miscRegNum32ToIdx.find(cop_reg);
+    if (it != miscRegNum32ToIdx.end()) {
+        return it->second;
+    } else {
+        warn("CP14 unimplemented crn[%d], opc1[%d], crm[%d], opc2[%d]",
+             crn, opc1, crm, opc2);
+        return MISCREG_UNKNOWN;
     }
-    // If we get here then it must be a register that we haven't implemented
-    warn("CP14 unimplemented crn[%d], opc1[%d], crm[%d], opc2[%d]",
-         crn, opc1, crm, opc2);
-    return MISCREG_UNKNOWN;
 }
 
 MiscRegIndex
 decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
 {
-    switch (crn) {
-      case 0:
-        switch (opc1) {
-          case 0:
-            switch (crm) {
-              case 0:
-                switch (opc2) {
-                  case 1:
-                    return MISCREG_CTR;
-                  case 2:
-                    return MISCREG_TCMTR;
-                  case 3:
-                    return MISCREG_TLBTR;
-                  case 5:
-                    return MISCREG_MPIDR;
-                  case 6:
-                    return MISCREG_REVIDR;
-                  default:
-                    return MISCREG_MIDR;
-                }
-                break;
-              case 1:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_ID_PFR0;
-                  case 1:
-                    return MISCREG_ID_PFR1;
-                  case 2:
-                    return MISCREG_ID_DFR0;
-                  case 3:
-                    return MISCREG_ID_AFR0;
-                  case 4:
-                    return MISCREG_ID_MMFR0;
-                  case 5:
-                    return MISCREG_ID_MMFR1;
-                  case 6:
-                    return MISCREG_ID_MMFR2;
-                  case 7:
-                    return MISCREG_ID_MMFR3;
-                }
-                break;
-              case 2:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_ID_ISAR0;
-                  case 1:
-                    return MISCREG_ID_ISAR1;
-                  case 2:
-                    return MISCREG_ID_ISAR2;
-                  case 3:
-                    return MISCREG_ID_ISAR3;
-                  case 4:
-                    return MISCREG_ID_ISAR4;
-                  case 5:
-                    return MISCREG_ID_ISAR5;
-                  case 6:
-                    return MISCREG_ID_MMFR4;
-                  case 7:
-                    return MISCREG_ID_ISAR6;
-                }
-                break;
-              default:
-                return MISCREG_RAZ; // read as zero
-            }
-            break;
-          case 1:
-            if (crm == 0) {
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_CCSIDR;
-                  case 1:
-                    return MISCREG_CLIDR;
-                  case 7:
-                    return MISCREG_AIDR;
-                }
-            }
-            break;
-          case 2:
-            if (crm == 0 && opc2 == 0) {
-                return MISCREG_CSSELR;
-            }
-            break;
-          case 4:
-            if (crm == 0) {
-                if (opc2 == 0)
-                    return MISCREG_VPIDR;
-                else if (opc2 == 5)
-                    return MISCREG_VMPIDR;
-            }
-            break;
-        }
-        break;
-      case 1:
-        if (opc1 == 0) {
-            if (crm == 0) {
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_SCTLR;
-                  case 1:
-                    return MISCREG_ACTLR;
-                  case 0x2:
-                    return MISCREG_CPACR;
-                }
-            } else if (crm == 1) {
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_SCR;
-                  case 1:
-                    return MISCREG_SDER;
-                  case 2:
-                    return MISCREG_NSACR;
-                }
-            } else if (crm == 3) {
-                if ( opc2 == 1)
-                    return MISCREG_SDCR;
-            }
-        } else if (opc1 == 4) {
-            if (crm == 0) {
-                if (opc2 == 0)
-                    return MISCREG_HSCTLR;
-                else if (opc2 == 1)
-                    return MISCREG_HACTLR;
-            } else if (crm == 1) {
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_HCR;
-                  case 1:
-                    return MISCREG_HDCR;
-                  case 2:
-                    return MISCREG_HCPTR;
-                  case 4:
-                    return MISCREG_HCR2;
-                  case 3:
-                    return MISCREG_HSTR;
-                  case 7:
-                    return MISCREG_HACR;
-                }
-            }
-        }
-        break;
-      case 2:
-        if (opc1 == 0 && crm == 0) {
-            switch (opc2) {
-              case 0:
-                return MISCREG_TTBR0;
-              case 1:
-                return MISCREG_TTBR1;
-              case 2:
-                return MISCREG_TTBCR;
-            }
-        } else if (opc1 == 4) {
-            if (crm == 0 && opc2 == 2)
-                return MISCREG_HTCR;
-            else if (crm == 1 && opc2 == 2)
-                return MISCREG_VTCR;
-        }
-        break;
-      case 3:
-        if (opc1 == 0 && crm == 0 && opc2 == 0) {
-            return MISCREG_DACR;
-        }
-        break;
-      case 4:
-        if (opc1 == 0 && crm == 6 && opc2 == 0) {
-            return MISCREG_ICC_PMR;
-        }
-        break;
-      case 5:
-        if (opc1 == 0) {
-            if (crm == 0) {
-                if (opc2 == 0) {
-                    return MISCREG_DFSR;
-                } else if (opc2 == 1) {
-                    return MISCREG_IFSR;
-                }
-            } else if (crm == 1) {
-                if (opc2 == 0) {
-                    return MISCREG_ADFSR;
-                } else if (opc2 == 1) {
-                    return MISCREG_AIFSR;
-                }
-            }
-        } else if (opc1 == 4) {
-            if (crm == 1) {
-                if (opc2 == 0)
-                    return MISCREG_HADFSR;
-                else if (opc2 == 1)
-                    return MISCREG_HAIFSR;
-            } else if (crm == 2 && opc2 == 0) {
-                return MISCREG_HSR;
-            }
-        }
-        break;
-      case 6:
-        if (opc1 == 0 && crm == 0) {
-            switch (opc2) {
-              case 0:
-                return MISCREG_DFAR;
-              case 2:
-                return MISCREG_IFAR;
-            }
-        } else if (opc1 == 4 && crm == 0) {
-            switch (opc2) {
-              case 0:
-                return MISCREG_HDFAR;
-              case 2:
-                return MISCREG_HIFAR;
-              case 4:
-                return MISCREG_HPFAR;
-            }
-        }
-        break;
-      case 7:
-        if (opc1 == 0) {
-            switch (crm) {
-              case 0:
-                if (opc2 == 4) {
-                    return MISCREG_NOP;
-                }
-                break;
-              case 1:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_ICIALLUIS;
-                  case 6:
-                    return MISCREG_BPIALLIS;
-                }
-                break;
-              case 2:
-                switch (opc2) {
-                  case 7:
-                    return MISCREG_DBGDEVID0;
-                }
-                break;
-              case 4:
-                if (opc2 == 0) {
-                    return MISCREG_PAR;
-                }
-                break;
-              case 5:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_ICIALLU;
-                  case 1:
-                    return MISCREG_ICIMVAU;
-                  case 4:
-                    return MISCREG_CP15ISB;
-                  case 6:
-                    return MISCREG_BPIALL;
-                  case 7:
-                    return MISCREG_BPIMVA;
-                }
-                break;
-              case 6:
-                if (opc2 == 1) {
-                    return MISCREG_DCIMVAC;
-                } else if (opc2 == 2) {
-                    return MISCREG_DCISW;
-                }
-                break;
-              case 8:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_ATS1CPR;
-                  case 1:
-                    return MISCREG_ATS1CPW;
-                  case 2:
-                    return MISCREG_ATS1CUR;
-                  case 3:
-                    return MISCREG_ATS1CUW;
-                  case 4:
-                    return MISCREG_ATS12NSOPR;
-                  case 5:
-                    return MISCREG_ATS12NSOPW;
-                  case 6:
-                    return MISCREG_ATS12NSOUR;
-                  case 7:
-                    return MISCREG_ATS12NSOUW;
-                }
-                break;
-              case 10:
-                switch (opc2) {
-                  case 1:
-                    return MISCREG_DCCMVAC;
-                  case 2:
-                    return MISCREG_DCCSW;
-                  case 4:
-                    return MISCREG_CP15DSB;
-                  case 5:
-                    return MISCREG_CP15DMB;
-                }
-                break;
-              case 11:
-                if (opc2 == 1) {
-                    return MISCREG_DCCMVAU;
-                }
-                break;
-              case 13:
-                if (opc2 == 1) {
-                    return MISCREG_NOP;
-                }
-                break;
-              case 14:
-                if (opc2 == 1) {
-                    return MISCREG_DCCIMVAC;
-                } else if (opc2 == 2) {
-                    return MISCREG_DCCISW;
-                }
-                break;
-            }
-        } else if (opc1 == 4 && crm == 8) {
-            if (opc2 == 0)
-                return MISCREG_ATS1HR;
-            else if (opc2 == 1)
-                return MISCREG_ATS1HW;
-        }
-        break;
-      case 8:
-        if (opc1 == 0) {
-            switch (crm) {
-              case 3:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_TLBIALLIS;
-                  case 1:
-                    return MISCREG_TLBIMVAIS;
-                  case 2:
-                    return MISCREG_TLBIASIDIS;
-                  case 3:
-                    return MISCREG_TLBIMVAAIS;
-                  case 5:
-                    return MISCREG_TLBIMVALIS;
-                  case 7:
-                    return MISCREG_TLBIMVAALIS;
-                }
-                break;
-              case 5:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_ITLBIALL;
-                  case 1:
-                    return MISCREG_ITLBIMVA;
-                  case 2:
-                    return MISCREG_ITLBIASID;
-                }
-                break;
-              case 6:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_DTLBIALL;
-                  case 1:
-                    return MISCREG_DTLBIMVA;
-                  case 2:
-                    return MISCREG_DTLBIASID;
-                }
-                break;
-              case 7:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_TLBIALL;
-                  case 1:
-                    return MISCREG_TLBIMVA;
-                  case 2:
-                    return MISCREG_TLBIASID;
-                  case 3:
-                    return MISCREG_TLBIMVAA;
-                  case 5:
-                    return MISCREG_TLBIMVAL;
-                  case 7:
-                    return MISCREG_TLBIMVAAL;
-                }
-                break;
-            }
-        } else if (opc1 == 4) {
-            if (crm == 0) {
-                switch (opc2) {
-                  case 1:
-                    return MISCREG_TLBIIPAS2IS;
-                  case 5:
-                    return MISCREG_TLBIIPAS2LIS;
-                }
-            } else if (crm == 3) {
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_TLBIALLHIS;
-                  case 1:
-                    return MISCREG_TLBIMVAHIS;
-                  case 4:
-                    return MISCREG_TLBIALLNSNHIS;
-                  case 5:
-                    return MISCREG_TLBIMVALHIS;
-                }
-            } else if (crm == 4) {
-                switch (opc2) {
-                  case 1:
-                    return MISCREG_TLBIIPAS2;
-                  case 5:
-                    return MISCREG_TLBIIPAS2L;
-                }
-            } else if (crm == 7) {
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_TLBIALLH;
-                  case 1:
-                    return MISCREG_TLBIMVAH;
-                  case 4:
-                    return MISCREG_TLBIALLNSNH;
-                  case 5:
-                    return MISCREG_TLBIMVALH;
-                }
-            }
-        }
-        break;
-      case 9:
-        // Every cop register with CRn = 9 and CRm in
-        // {0-2}, {5-8} is implementation defined regardless
-        // of opc1 and opc2.
-        switch (crm) {
-          case 0:
-          case 1:
-          case 2:
-          case 5:
-          case 6:
-          case 7:
-          case 8:
+    MiscRegNum32 cop_reg(15, opc1, crn, crm, opc2);
+    auto it = miscRegNum32ToIdx.find(cop_reg);
+    if (it != miscRegNum32ToIdx.end()) {
+        return it->second;
+    } else {
+        if ((crn == 15) ||
+            (crn == 9 && (crm <= 2 || crm >= 5)) ||
+            (crn == 10 && opc1 == 0 && crm <= 1) ||
+            (crn == 11 && opc1 <= 7 && (crm <= 8 || crm ==15))) {
             return MISCREG_IMPDEF_UNIMPL;
+        } else {
+            return MISCREG_UNKNOWN;
         }
-        if (opc1 == 0) {
-            switch (crm) {
-              case 12:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_PMCR;
-                  case 1:
-                    return MISCREG_PMCNTENSET;
-                  case 2:
-                    return MISCREG_PMCNTENCLR;
-                  case 3:
-                    return MISCREG_PMOVSR;
-                  case 4:
-                    return MISCREG_PMSWINC;
-                  case 5:
-                    return MISCREG_PMSELR;
-                  case 6:
-                    return MISCREG_PMCEID0;
-                  case 7:
-                    return MISCREG_PMCEID1;
-                }
-                break;
-              case 13:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_PMCCNTR;
-                  case 1:
-                    // Selector is PMSELR.SEL
-                    return MISCREG_PMXEVTYPER_PMCCFILTR;
-                  case 2:
-                    return MISCREG_PMXEVCNTR;
-                }
-                break;
-              case 14:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_PMUSERENR;
-                  case 1:
-                    return MISCREG_PMINTENSET;
-                  case 2:
-                    return MISCREG_PMINTENCLR;
-                  case 3:
-                    return MISCREG_PMOVSSET;
-                }
-                break;
-            }
-        } else if (opc1 == 1) {
-            switch (crm) {
-              case 0:
-                switch (opc2) {
-                  case 2: // L2CTLR, L2 Control Register
-                    return MISCREG_L2CTLR;
-                  case 3:
-                    return MISCREG_L2ECTLR;
-                }
-                break;
-                break;
-            }
-        }
-        break;
-      case 10:
-        if (opc1 == 0) {
-            // crm 0, 1, 4, and 8, with op2 0 - 7, reserved for TLB lockdown
-            if (crm < 2) {
-                return MISCREG_IMPDEF_UNIMPL;
-            } else if (crm == 2) { // TEX Remap Registers
-                if (opc2 == 0) {
-                    // Selector is TTBCR.EAE
-                    return MISCREG_PRRR_MAIR0;
-                } else if (opc2 == 1) {
-                    // Selector is TTBCR.EAE
-                    return MISCREG_NMRR_MAIR1;
-                }
-            } else if (crm == 3) {
-                if (opc2 == 0) {
-                    return MISCREG_AMAIR0;
-                } else if (opc2 == 1) {
-                    return MISCREG_AMAIR1;
-                }
-            }
-        } else if (opc1 == 4) {
-            // crm 0, 1, 4, and 8, with op2 0 - 7, reserved for TLB lockdown
-            if (crm == 2) {
-                if (opc2 == 0)
-                    return MISCREG_HMAIR0;
-                else if (opc2 == 1)
-                    return MISCREG_HMAIR1;
-            } else if (crm == 3) {
-                if (opc2 == 0)
-                    return MISCREG_HAMAIR0;
-                else if (opc2 == 1)
-                    return MISCREG_HAMAIR1;
-            }
-        }
-        break;
-      case 11:
-        if (opc1 <=7) {
-            switch (crm) {
-              case 0:
-              case 1:
-              case 2:
-              case 3:
-              case 4:
-              case 5:
-              case 6:
-              case 7:
-              case 8:
-              case 15:
-                // Reserved for DMA operations for TCM access
-                return MISCREG_IMPDEF_UNIMPL;
-              default:
-                break;
-            }
-        }
-        break;
-      case 12:
-        if (opc1 == 0) {
-            if (crm == 0) {
-                if (opc2 == 0) {
-                    return MISCREG_VBAR;
-                } else if (opc2 == 1) {
-                    return MISCREG_MVBAR;
-                }
-            } else if (crm == 1) {
-                if (opc2 == 0) {
-                    return MISCREG_ISR;
-                }
-            } else if (crm == 8) {
-                switch (opc2) {
-                    case 0:
-                        return MISCREG_ICC_IAR0;
-                    case 1:
-                        return MISCREG_ICC_EOIR0;
-                    case 2:
-                        return MISCREG_ICC_HPPIR0;
-                    case 3:
-                        return MISCREG_ICC_BPR0;
-                    case 4:
-                        return MISCREG_ICC_AP0R0;
-                    case 5:
-                        return MISCREG_ICC_AP0R1;
-                    case 6:
-                        return MISCREG_ICC_AP0R2;
-                    case 7:
-                        return MISCREG_ICC_AP0R3;
-                }
-            } else if (crm == 9) {
-                switch (opc2) {
-                    case 0:
-                        return MISCREG_ICC_AP1R0;
-                    case 1:
-                        return MISCREG_ICC_AP1R1;
-                    case 2:
-                        return MISCREG_ICC_AP1R2;
-                    case 3:
-                        return MISCREG_ICC_AP1R3;
-                }
-            } else if (crm == 11) {
-                switch (opc2) {
-                    case 1:
-                        return MISCREG_ICC_DIR;
-                    case 3:
-                        return MISCREG_ICC_RPR;
-                }
-            } else if (crm == 12) {
-                switch (opc2) {
-                    case 0:
-                        return MISCREG_ICC_IAR1;
-                    case 1:
-                        return MISCREG_ICC_EOIR1;
-                    case 2:
-                        return MISCREG_ICC_HPPIR1;
-                    case 3:
-                        return MISCREG_ICC_BPR1;
-                    case 4:
-                        return MISCREG_ICC_CTLR;
-                    case 5:
-                        return MISCREG_ICC_SRE;
-                    case 6:
-                        return MISCREG_ICC_IGRPEN0;
-                    case 7:
-                        return MISCREG_ICC_IGRPEN1;
-                }
-            }
-        } else if (opc1 == 4) {
-            if (crm == 0 && opc2 == 0) {
-                return MISCREG_HVBAR;
-            } else if (crm == 8) {
-                switch (opc2) {
-                    case 0:
-                        return MISCREG_ICH_AP0R0;
-                    case 1:
-                        return MISCREG_ICH_AP0R1;
-                    case 2:
-                        return MISCREG_ICH_AP0R2;
-                    case 3:
-                        return MISCREG_ICH_AP0R3;
-                }
-            } else if (crm == 9) {
-                switch (opc2) {
-                    case 0:
-                        return MISCREG_ICH_AP1R0;
-                    case 1:
-                        return MISCREG_ICH_AP1R1;
-                    case 2:
-                        return MISCREG_ICH_AP1R2;
-                    case 3:
-                        return MISCREG_ICH_AP1R3;
-                    case 5:
-                        return MISCREG_ICC_HSRE;
-                }
-            } else if (crm == 11) {
-                switch (opc2) {
-                    case 0:
-                        return MISCREG_ICH_HCR;
-                    case 1:
-                        return MISCREG_ICH_VTR;
-                    case 2:
-                        return MISCREG_ICH_MISR;
-                    case 3:
-                        return MISCREG_ICH_EISR;
-                    case 5:
-                        return MISCREG_ICH_ELRSR;
-                    case 7:
-                        return MISCREG_ICH_VMCR;
-                }
-            } else if (crm == 12) {
-                switch (opc2) {
-                    case 0:
-                        return MISCREG_ICH_LR0;
-                    case 1:
-                        return MISCREG_ICH_LR1;
-                    case 2:
-                        return MISCREG_ICH_LR2;
-                    case 3:
-                        return MISCREG_ICH_LR3;
-                    case 4:
-                        return MISCREG_ICH_LR4;
-                    case 5:
-                        return MISCREG_ICH_LR5;
-                    case 6:
-                        return MISCREG_ICH_LR6;
-                    case 7:
-                        return MISCREG_ICH_LR7;
-                }
-            } else if (crm == 13) {
-                switch (opc2) {
-                    case 0:
-                        return MISCREG_ICH_LR8;
-                    case 1:
-                        return MISCREG_ICH_LR9;
-                    case 2:
-                        return MISCREG_ICH_LR10;
-                    case 3:
-                        return MISCREG_ICH_LR11;
-                    case 4:
-                        return MISCREG_ICH_LR12;
-                    case 5:
-                        return MISCREG_ICH_LR13;
-                    case 6:
-                        return MISCREG_ICH_LR14;
-                    case 7:
-                        return MISCREG_ICH_LR15;
-                }
-            } else if (crm == 14) {
-                switch (opc2) {
-                    case 0:
-                        return MISCREG_ICH_LRC0;
-                    case 1:
-                        return MISCREG_ICH_LRC1;
-                    case 2:
-                        return MISCREG_ICH_LRC2;
-                    case 3:
-                        return MISCREG_ICH_LRC3;
-                    case 4:
-                        return MISCREG_ICH_LRC4;
-                    case 5:
-                        return MISCREG_ICH_LRC5;
-                    case 6:
-                        return MISCREG_ICH_LRC6;
-                    case 7:
-                        return MISCREG_ICH_LRC7;
-                }
-            } else if (crm == 15) {
-                switch (opc2) {
-                    case 0:
-                        return MISCREG_ICH_LRC8;
-                    case 1:
-                        return MISCREG_ICH_LRC9;
-                    case 2:
-                        return MISCREG_ICH_LRC10;
-                    case 3:
-                        return MISCREG_ICH_LRC11;
-                    case 4:
-                        return MISCREG_ICH_LRC12;
-                    case 5:
-                        return MISCREG_ICH_LRC13;
-                    case 6:
-                        return MISCREG_ICH_LRC14;
-                    case 7:
-                        return MISCREG_ICH_LRC15;
-                }
-            }
-        } else if (opc1 == 6) {
-            if (crm == 12) {
-                switch (opc2) {
-                    case 4:
-                        return MISCREG_ICC_MCTLR;
-                    case 5:
-                        return MISCREG_ICC_MSRE;
-                    case 7:
-                        return MISCREG_ICC_MGRPEN1;
-                }
-            }
-        }
-        break;
-      case 13:
-        if (opc1 == 0) {
-            if (crm == 0) {
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_FCSEIDR;
-                  case 1:
-                    return MISCREG_CONTEXTIDR;
-                  case 2:
-                    return MISCREG_TPIDRURW;
-                  case 3:
-                    return MISCREG_TPIDRURO;
-                  case 4:
-                    return MISCREG_TPIDRPRW;
-                }
-            }
-        } else if (opc1 == 4) {
-            if (crm == 0 && opc2 == 2)
-                return MISCREG_HTPIDR;
-        }
-        break;
-      case 14:
-        if (opc1 == 0) {
-            switch (crm) {
-              case 0:
-                if (opc2 == 0)
-                    return MISCREG_CNTFRQ;
-                break;
-              case 1:
-                if (opc2 == 0)
-                    return MISCREG_CNTKCTL;
-                break;
-              case 2:
-                if (opc2 == 0)
-                    return MISCREG_CNTP_TVAL;
-                else if (opc2 == 1)
-                    return MISCREG_CNTP_CTL;
-                break;
-              case 3:
-                if (opc2 == 0)
-                    return MISCREG_CNTV_TVAL;
-                else if (opc2 == 1)
-                    return MISCREG_CNTV_CTL;
-                break;
-            }
-        } else if (opc1 == 4) {
-            if (crm == 1 && opc2 == 0) {
-                return MISCREG_CNTHCTL;
-            } else if (crm == 2) {
-                if (opc2 == 0)
-                    return MISCREG_CNTHP_TVAL;
-                else if (opc2 == 1)
-                    return MISCREG_CNTHP_CTL;
-            }
-        }
-        break;
-      case 15:
-        // Implementation defined
-        return MISCREG_IMPDEF_UNIMPL;
     }
-    // Unrecognized register
-    return MISCREG_UNKNOWN;
 }
 
 MiscRegIndex
 decodeCP15Reg64(unsigned crm, unsigned opc1)
 {
-    switch (crm) {
-      case 2:
-        switch (opc1) {
-          case 0:
-            return MISCREG_TTBR0;
-          case 1:
-            return MISCREG_TTBR1;
-          case 4:
-            return MISCREG_HTTBR;
-          case 6:
-            return MISCREG_VTTBR;
-        }
-        break;
-      case 7:
-        if (opc1 == 0)
-            return MISCREG_PAR;
-        break;
-      case 14:
-        switch (opc1) {
-          case 0:
-            return MISCREG_CNTPCT;
-          case 1:
-            return MISCREG_CNTVCT;
-          case 2:
-            return MISCREG_CNTP_CVAL;
-          case 3:
-            return MISCREG_CNTV_CVAL;
-          case 4:
-            return MISCREG_CNTVOFF;
-          case 6:
-            return MISCREG_CNTHP_CVAL;
-        }
-        break;
-      case 12:
-        switch (opc1) {
-          case 0:
-            return MISCREG_ICC_SGI1R;
-          case 1:
-            return MISCREG_ICC_ASGI1R;
-          case 2:
-            return MISCREG_ICC_SGI0R;
-          default:
-            break;
-        }
-        break;
-      case 15:
-        if (opc1 == 0)
-            return MISCREG_CPUMERRSR;
-        else if (opc1 == 1)
-            return MISCREG_L2MERRSR;
-        break;
+    MiscRegNum32 cop_reg(15, opc1, crm);
+    auto it = miscRegNum32ToIdx.find(cop_reg);
+    if (it != miscRegNum32ToIdx.end()) {
+        return it->second;
+    } else {
+        return MISCREG_UNKNOWN;
     }
-    // Unrecognized register
-    return MISCREG_UNKNOWN;
 }
 
 std::tuple<bool, bool>
