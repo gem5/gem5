@@ -234,11 +234,12 @@ args.num_cp = 0
 #
 # Make generic DMA sequencer for Ruby to use
 #
-dma_devices = [TesterDma()] * n_DMAs
-system.piobus = IOXBar()
-for _, dma_device in enumerate(dma_devices):
-    dma_device.pio = system.piobus.mem_side_ports
-system.dma_devices = dma_devices
+if n_DMAs > 0:
+    dma_devices = [TesterDma()] * n_DMAs
+    system.piobus = IOXBar()
+    for _, dma_device in enumerate(dma_devices):
+        dma_device.pio = system.piobus.mem_side_ports
+    system.dma_devices = dma_devices
 
 #
 # Create the Ruby system
@@ -250,7 +251,8 @@ system.dma_devices = dma_devices
 # size of system.cpu
 cpu_list = [ system.cpu ] * args.num_cpus
 Ruby.create_system(args, full_system = False,
-                   system = system, dma_ports = system.dma_devices,
+                   system = system,
+                   dma_ports = system.dma_devices if n_DMAs > 0 else [],
                    cpus = cpu_list)
 
 #
@@ -275,7 +277,10 @@ print("Attaching ruby ports to the tester")
 for i, ruby_port in enumerate(system.ruby._cpu_ports):
     ruby_port.no_retry_on_stall = True
     ruby_port.using_ruby_tester = True
-    ruby_port.mem_request_port = system.piobus.cpu_side_ports
+
+    # piobus is only created if there are DMAs
+    if n_DMAs > 0:
+        ruby_port.mem_request_port = system.piobus.cpu_side_ports
 
     if i < n_CUs:
         tester.cu_vector_ports = ruby_port.in_ports
