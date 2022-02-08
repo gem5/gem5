@@ -326,6 +326,15 @@ transition({I, SC, UC, SD, UD, RU, RSC, RSD, RUSD, RUSC,
   ProcessNextState;
 }
 
+transition({I, SC, UC, SD, UD, RU, RSC, RSD, RUSD, RUSC,
+            SC_RSC, SD_RSD, SD_RSC, UC_RSC, UC_RU, UD_RU, UD_RSD, UD_RSC},
+            CleanUnique_Stale, BUSY_BLKD) {
+  Initiate_Request_Stale;
+  Initiate_CleanUnique_Stale;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
 // WriteUniquePtl
 
 transition({UD,UD_RU,UD_RSD,UD_RSC,UC,UC_RU,UC_RSC},
@@ -661,7 +670,7 @@ transition(BUSY_INTR, {SnpOnce,SnpOnceFwd}, BUSY_BLKD) {
 
 transition({BUSY_BLKD,BUSY_INTR},
             {ReadShared, ReadNotSharedDirty, ReadUnique, ReadUnique_PoC,
-            ReadOnce, CleanUnique,
+            ReadOnce, CleanUnique, CleanUnique_Stale,
             Load, Store, Prefetch,
             WriteBackFull, WriteBackFull_Stale,
             WriteEvictFull, WriteEvictFull_Stale,
@@ -847,6 +856,12 @@ transition(BUSY_BLKD, SendCompUCResp) {
   ProcessNextState_ClearPending;
 }
 
+transition(BUSY_BLKD, SendCompUCRespStale) {
+  Pop_TriggerQueue;
+  Send_CompUC_Stale;
+  ProcessNextState_ClearPending;
+}
+
 transition(BUSY_BLKD, SendRespSepData) {
   Pop_TriggerQueue;
   Send_RespSepData;
@@ -1011,7 +1026,7 @@ transition(BUSY_BLKD, FinishCleanUnique) {
 transition(BUSY_BLKD, CheckUpgrade_FromStore) {
   Pop_TriggerQueue;
   Callback_Miss; // note: Callback happens only if tbe.dataValid
-  CheckUpgrade_FromStore;
+  CheckUpgrade_FromStoreOrRU;
   ProcessNextState_ClearPending;
 }
 
@@ -1023,7 +1038,7 @@ transition(BUSY_BLKD, CheckUpgrade_FromCU) {
 
 transition(BUSY_BLKD, CheckUpgrade_FromRU) {
   Pop_TriggerQueue;
-  CheckUpgrade_FromRU;
+  CheckUpgrade_FromStoreOrRU;
   ProcessNextState_ClearPending;
 }
 

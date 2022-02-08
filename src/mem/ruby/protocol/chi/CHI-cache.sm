@@ -356,6 +356,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     WriteBackFull_Stale,    desc="";
     WriteEvictFull_Stale,   desc="";
     WriteCleanFull_Stale,   desc="";
+    CleanUnique_Stale,   desc="";
 
     // Cache fill handling
     CheckCacheFill,   desc="Check if need to write or update the cache and trigger any necessary allocation and evictions";
@@ -425,6 +426,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SendCompIResp,  desc="Ack Evict with Comp_I";
     SendCleanUnique,desc="Send a CleanUnique";
     SendCompUCResp, desc="Ack CleanUnique with Comp_UC";
+    SendCompUCRespStale, desc="Ack stale CleanUnique with Comp_UC";
 
     // Checks if an upgrade using a CleanUnique was sucessfull
     CheckUpgrade_FromStore, desc="Upgrade needed by a Store";

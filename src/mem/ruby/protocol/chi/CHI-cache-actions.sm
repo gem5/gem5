@@ -219,6 +219,17 @@ action(Initiate_Request_Stale, desc="") {
     was_retried := in_msg.allowRetry == false;
   }
   copyCacheAndDir(cache_entry, getDirEntry(address), tbe, initial);
+
+  // usually we consider data locally invalid on RU states even if we
+  // have a copy; so it override it to valid so we can comeback to UD_RU/UC_RU
+  // at the end of this transaction
+  if (tbe.dir_ownerExists && tbe.dir_ownerIsExcl && is_valid(cache_entry)) {
+    // treat the data we got from the cache as valid
+    tbe.dataBlk := cache_entry.DataBlk;
+    tbe.dataBlkValid.fillMask();
+    tbe.dataValid := true;
+  }
+
   incomingTransactionStart(address, curTransitionEvent(), initial, was_retried);
 }
 
@@ -287,6 +298,8 @@ action(RestoreFromHazard, desc="") {
   } else if (hazard_tbe.pendReqType == CHIRequestType:WriteEvictFull) {
     tbe.is_stale := (tbe.dataValid && tbe.dataUnique) == false;
   } else if (hazard_tbe.pendReqType == CHIRequestType:Evict) {
+    tbe.is_stale := tbe.dataValid == false;
+  } else if (hazard_tbe.pendReqType == CHIRequestType:CleanUnique) {
     tbe.is_stale := tbe.dataValid == false;
   }
 
@@ -575,44 +588,49 @@ action(Initiate_ReadUnique_Hit_InvUpstream, desc="") {
 action(Initiate_CleanUnique, desc="") {
   tbe.actions.push(Event:ReadMissPipe); // TODO need another latency pipe ??
 
+  // invalidates everyone except requestor
+  if (tbe.dir_sharers.count() > 1) {
+    tbe.actions.push(Event:SendSnpCleanInvalidNoReq);
+  }
+  // auto upgrade if HN
+  tbe.dataUnique := tbe.dataUnique || is_HN;
+  // get unique permission
+  if (tbe.dataUnique == false) {
+    tbe.actions.push(Event:SendCleanUnique);
+    tbe.actions.push(Event:CheckUpgrade_FromCU);
+  }
+  // next actions will depend on the data state after snoops+CleanUnique
+  tbe.actions.push(Event:FinishCleanUnique);
+}
+
+action(Initiate_CleanUnique_Stale, desc="") {
   // requestor don't have the line anymore; send response but don't update the
   // directory on CompAck. The requestor knows we are not tracking it and will
   // send a ReadUnique later
-  if (tbe.dir_sharers.isElement(tbe.requestor) == false) {
-    tbe.actions.push(Event:SendCompUCResp);
-    tbe.actions.push(Event:WaitCompAck);
-    tbe.updateDirOnCompAck := false;
-  } else {
-    // invalidates everyone except requestor
-    if (tbe.dir_sharers.count() > 1) {
-      tbe.actions.push(Event:SendSnpCleanInvalidNoReq);
-    }
-    // auto upgrade if HN
-    tbe.dataUnique := tbe.dataUnique || is_HN;
-    // get unique permission
-    if (tbe.dataUnique == false) {
-      tbe.actions.push(Event:SendCleanUnique);
-      tbe.actions.push(Event:CheckUpgrade_FromCU);
-    }
-    // next actions will depend on the data state after snoops+CleanUnique
-    tbe.actions.push(Event:FinishCleanUnique);
-  }
+  tbe.actions.push(Event:SendCompUCRespStale);
+  tbe.actions.push(Event:WaitCompAck);
+  tbe.updateDirOnCompAck := false;
 }
 
 action(Finish_CleanUnique, desc="") {
   // This is should be executed at the end of a transaction
   assert(tbe.actions.empty());
-  tbe.actions.push(Event:SendCompUCResp);
-  tbe.actions.push(Event:WaitCompAck);
 
   // everyone may have been hit by an invalidation so check again
   if (tbe.dir_sharers.isElement(tbe.requestor) == false) {
     tbe.updateDirOnCompAck := false;
     assert(tbe.dataValid == false);
+    assert(tbe.is_stale);
+    tbe.actions.push(Event:SendCompUCRespStale);
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.is_stale := false;
   } else {
     // must be the only one in sharers map
     assert(tbe.dir_sharers.count() == 1);
     assert(tbe.dataUnique);
+
+    tbe.actions.push(Event:SendCompUCResp);
+    tbe.actions.push(Event:WaitCompAck);
 
     // similar to Initiate_MaitainCoherence; writeback if the owner has data as
     // clean data and we have it dirty and cannot keep it
@@ -828,13 +846,6 @@ action(Initiate_CopyBack_Stale, desc="") {
   tbe.dir_sharers.remove(tbe.requestor);
   assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
 
-  // usually we consider data locally invalid on RU states even if we
-  // have a copy; consider it valid for this transition only so we can
-  // comeback to UD_RU/UC_RU
-  if (is_valid(cache_entry) && (tbe.dataValid == false) &&
-      tbe.dir_ownerExists && tbe.dir_ownerIsExcl) {
-    tbe.dataValid := true;
-  }
 }
 
 action(Initiate_Evict, desc="") {
@@ -2452,6 +2463,19 @@ action(Send_CompUC, desc="") {
   }
 }
 
+action(Send_CompUC_Stale, desc="") {
+  assert(is_valid(tbe));
+  enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+    out_msg.addr := address;
+    out_msg.type := CHIResponseType:Comp_UC;
+    out_msg.responder := machineID;
+    out_msg.Destination.add(tbe.requestor);
+    // We don't know if this is a stale clean unique or a bug, so flag the
+    // reponse so the requestor can make further checks
+    out_msg.stale := true;
+  }
+}
+
 action(Send_CompAck, desc="") {
   assert(is_valid(tbe));
   enqueue(rspOutPort, CHIResponseMsg, response_latency) {
@@ -2549,20 +2573,25 @@ action(Send_PCrdGrant, desc="") {
   }
 }
 
-// Note on CheckUpgrade_FromStore/CheckUpgrade_FromCU/CheckUpgrade_FromRU
+// Note on CheckUpgrade_FromStoreOrRU/CheckUpgrade_FromCU
 // We will always get Comp_UC; but if our data is invalidated before
 // Comp_UC we would need to go to UCE. Since we don't use the UCE state
 // we remain in the transient state and follow-up with ReadUnique.
 // Note this assumes the responder knows we have invalid data when sending
 // us Comp_UC and does not register us as owner.
 
-action(CheckUpgrade_FromStore, desc="") {
+action(CheckUpgrade_FromStoreOrRU, desc="") {
   assert(is_HN == false);
   if (tbe.dataUnique) {
     // success, just send CompAck next
     assert(tbe.dataValid);
   } else {
+    // will need to get data instead
     tbe.actions.pushFront(Event:SendReadUnique);
+    // we must have received an invalidation snoop that marked
+    // the req as stale
+    assert(tbe.is_stale);
+    tbe.is_stale := false;
   }
   tbe.actions.pushFront(Event:SendCompAck);
 }
@@ -2579,17 +2608,6 @@ action(CheckUpgrade_FromCU, desc="") {
   tbe.actions.pushFront(Event:SendCompAck);
 }
 
-action(CheckUpgrade_FromRU, desc="") {
-  assert(is_HN == false);
-  if (tbe.dataUnique) {
-    // success, just send CompAck next
-    assert(tbe.dataValid);
-  } else {
-    // will need to get data instead
-    tbe.actions.pushFront(Event:SendReadUnique);
-  }
-  tbe.actions.pushFront(Event:SendCompAck);
-}
 
 action(Finalize_UpdateCacheFromTBE, desc="") {
   assert(is_valid(tbe));
