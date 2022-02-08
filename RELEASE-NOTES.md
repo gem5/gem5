@@ -1,7 +1,7 @@
 
 # Version 21.2.1.0
 
-Version 21.0.1 is a minor gem5 release consisting of bug fixes. The 21.0.1 release:
+Version 21.2.1 is a minor gem5 release consisting of bug fixes. The 21.2.1 release:
 
 * Fixes a bug in which [a RCV instruction is wrongly regarded as a branch](https://gem5.atlassian.net/browse/GEM5-1137).
 * Removes outdated and incomplete standard library documentation.
