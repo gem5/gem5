@@ -310,7 +310,7 @@ def main():
 
     verbose = options.verbose - options.quiet
     if verbose >= 0:
-        print("gem5 Simulator System.  http://gem5.org")
+        print("gem5 Simulator System.  https://www.gem5.org")
         print(brief_copyright)
         print()
 
