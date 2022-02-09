@@ -80,7 +80,7 @@ import atexit
 import os
 import sys
 
-from os import mkdir, environ
+from os import mkdir, remove, environ
 from os.path import abspath, dirname, expanduser
 from os.path import isdir, isfile
 from os.path import join, split
@@ -238,8 +238,6 @@ if not isdir(build_root):
     mkdir(build_root)
 main['BUILDROOT'] = build_root
 
-main.SConsignFile(os.path.join(build_root, "sconsign"))
-
 
 ########################################################################
 #
@@ -280,154 +278,6 @@ main['GCC'] = CXX_version and CXX_version.find('g++') >= 0
 main['CLANG'] = CXX_version and CXX_version.find('clang') >= 0
 if main['GCC'] + main['CLANG'] > 1:
     error('Two compilers enabled at once?')
-
-# Set up default C++ compiler flags
-if main['GCC'] or main['CLANG']:
-    # As gcc and clang share many flags, do the common parts here
-    main.Append(CCFLAGS=['-pipe'])
-    main.Append(CCFLAGS=['-fno-strict-aliasing'])
-
-    # Enable -Wall and -Wextra and then disable the few warnings that
-    # we consistently violate
-    main.Append(CCFLAGS=['-Wall', '-Wundef', '-Wextra',
-                         '-Wno-sign-compare', '-Wno-unused-parameter'])
-
-    # We always compile using C++17
-    main.Append(CXXFLAGS=['-std=c++17'])
-
-    if sys.platform.startswith('freebsd'):
-        main.Append(CCFLAGS=['-I/usr/local/include'])
-        main.Append(CXXFLAGS=['-I/usr/local/include'])
-        # On FreeBSD we need libthr.
-        main.Append(LIBS=['thr'])
-
-    with gem5_scons.Configure(main) as conf:
-        conf.CheckLinkFlag('-Wl,--as-needed')
-
-    linker = GetOption('linker')
-    if linker:
-        with gem5_scons.Configure(main) as conf:
-            if not conf.CheckLinkFlag(f'-fuse-ld={linker}'):
-                error(f'Linker "{linker}" is not supported')
-            if linker == 'gold' and not GetOption('with_lto'):
-                # Tell the gold linker to use threads. The gold linker
-                # segfaults if both threads and LTO are enabled.
-                conf.CheckLinkFlag('-Wl,--threads')
-                conf.CheckLinkFlag(
-                        '-Wl,--thread-count=%d' % GetOption('num_jobs'))
-
-    # Treat warnings as errors but white list some warnings that we
-    # want to allow (e.g., deprecation warnings).
-    main.Append(CCFLAGS=['-Werror',
-                         '-Wno-error=deprecated-declarations',
-                         '-Wno-error=deprecated',
-                        ])
-
-else:
-    error('\n'.join((
-          "Don't know what compiler options to use for your compiler.",
-          "compiler: " + main['CXX'],
-          "version: " + CXX_version.replace('\n', '<nl>') if
-                CXX_version else 'COMMAND NOT FOUND!',
-          "If you're trying to use a compiler other than GCC",
-          "or clang, there appears to be something wrong with your",
-          "environment.",
-          "",
-          "If you are trying to use a compiler other than those listed",
-          "above you will need to ease fix SConstruct and ",
-          "src/SConscript to support that compiler.")))
-
-if main['GCC']:
-    if compareVersions(main['CXXVERSION'], "7") < 0:
-        error('gcc version 7 or newer required.\n'
-              'Installed version:', main['CXXVERSION'])
-
-    with gem5_scons.Configure(main) as conf:
-        # This warning has a false positive in the systemc code in g++ 11.1.
-        conf.CheckCxxFlag('-Wno-free-nonheap-object')
-
-    # Add the appropriate Link-Time Optimization (LTO) flags if `--with-lto` is
-    # set.
-    if GetOption('with_lto'):
-        # g++ uses "make" to parallelize LTO. The program can be overriden with
-        # the environment variable "MAKE", but we currently make no attempt to
-        # plumb that variable through.
-        parallelism = ''
-        if main.Detect('make'):
-            parallelism = '=%d' % GetOption('num_jobs')
-        else:
-            warning('"make" not found, link time optimization will be '
-                    'single threaded.')
-
-        for var in 'LTO_CCFLAGS', 'LTO_LINKFLAGS':
-            # Use the same amount of jobs for LTO as we are running scons with.
-            main[var] = ['-flto%s' % parallelism]
-
-    main.Append(TCMALLOC_CCFLAGS=['-fno-builtin-malloc', '-fno-builtin-calloc',
-                                  '-fno-builtin-realloc', '-fno-builtin-free'])
-
-elif main['CLANG']:
-    if compareVersions(main['CXXVERSION'], "6") < 0:
-        error('clang version 6 or newer required.\n'
-              'Installed version:', main['CXXVERSION'])
-
-    # Set the Link-Time Optimization (LTO) flags if enabled.
-    if GetOption('with_lto'):
-        for var in 'LTO_CCFLAGS', 'LTO_LINKFLAGS':
-            main[var] = ['-flto']
-
-    # clang has a few additional warnings that we disable.
-    with gem5_scons.Configure(main) as conf:
-        conf.CheckCxxFlag('-Wno-c99-designator')
-        conf.CheckCxxFlag('-Wno-defaulted-function-deleted')
-
-    main.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
-
-    # On Mac OS X/Darwin we need to also use libc++ (part of XCode) as
-    # opposed to libstdc++, as the later is dated.
-    if sys.platform == "darwin":
-        main.Append(CXXFLAGS=['-stdlib=libc++'])
-        main.Append(LIBS=['c++'])
-
-# Add sanitizers flags
-sanitizers=[]
-if GetOption('with_ubsan'):
-    sanitizers.append('undefined')
-if GetOption('with_asan'):
-    # Available for gcc >= 5 or llvm >= 3.1 both a requirement
-    # by the build system
-    sanitizers.append('address')
-    suppressions_file = Dir('util').File('lsan-suppressions').get_abspath()
-    suppressions_opt = 'suppressions=%s' % suppressions_file
-    suppressions_opts = ':'.join([suppressions_opt, 'print_suppressions=0'])
-    main['ENV']['LSAN_OPTIONS'] = suppressions_opts
-    print()
-    warning('To suppress false positive leaks, set the LSAN_OPTIONS '
-            'environment variable to "%s" when running gem5' %
-            suppressions_opts)
-    warning('LSAN_OPTIONS=%s' % suppressions_opts)
-    print()
-if sanitizers:
-    sanitizers = ','.join(sanitizers)
-    if main['GCC'] or main['CLANG']:
-        main.Append(CCFLAGS=['-fsanitize=%s' % sanitizers,
-                             '-fno-omit-frame-pointer'],
-                    LINKFLAGS='-fsanitize=%s' % sanitizers)
-    else:
-        warning("Don't know how to enable %s sanitizer(s) for your "
-                "compiler." % sanitizers)
-
-if sys.platform == 'cygwin':
-    # cygwin has some header file issues...
-    main.Append(CCFLAGS=["-Wno-uninitialized"])
-
-
-if not GetOption('no_compress_debug'):
-    with gem5_scons.Configure(main) as conf:
-        if not conf.CheckCxxFlag('-gz'):
-            warning("Can't enable object file debug section compression")
-        if not conf.CheckLinkFlag('-gz'):
-            warning("Can't enable executable debug section compression")
 
 
 ########################################################################
@@ -493,49 +343,6 @@ def config_embedded_python(env):
         warning('Embedded python library too new. '
                 f'Python 3 expected, found {ver_string}.')
 
-if main['USE_PYTHON']:
-    config_embedded_python(main)
-    gem5py_env = main.Clone()
-else:
-    gem5py_env = main.Clone()
-    config_embedded_python(gem5py_env)
-
-# Bare minimum environment that only includes python
-gem5py_env.Append(CCFLAGS=['${GEM5PY_CCFLAGS_EXTRA}'])
-gem5py_env.Append(LINKFLAGS=['${GEM5PY_LINKFLAGS_EXTRA}'])
-
-if GetOption('gprof') and GetOption('pprof'):
-    error('Only one type of profiling should be enabled at a time')
-if GetOption('gprof'):
-    main.Append(CCFLAGS=['-g', '-pg'], LINKFLAGS=['-pg'])
-if GetOption('pprof'):
-    main.Append(CCFLAGS=['-g'],
-            LINKFLAGS=['-Wl,--no-as-needed', '-lprofiler', '-Wl,--as-needed'])
-
-main['HAVE_PKG_CONFIG'] = main.Detect('pkg-config')
-
-with gem5_scons.Configure(main) as conf:
-    # On Solaris you need to use libsocket for socket ops
-    if not conf.CheckLibWithHeader(
-            [None, 'socket'], 'sys/socket.h', 'C++', 'accept(0,0,0);'):
-       error("Can't find library with socket calls (e.g. accept()).")
-
-    if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++','zlibVersion();'):
-        error('Did not find needed zlib compression library '
-              'and/or zlib.h header file.\n'
-              'Please install zlib and try again.')
-
-if not GetOption('without_tcmalloc'):
-    with gem5_scons.Configure(main) as conf:
-        if conf.CheckLib('tcmalloc'):
-            conf.env.Append(CCFLAGS=conf.env['TCMALLOC_CCFLAGS'])
-        elif conf.CheckLib('tcmalloc_minimal'):
-            conf.env.Append(CCFLAGS=conf.env['TCMALLOC_CCFLAGS'])
-        else:
-            warning("You can get a 12% performance improvement by "
-                    "installing tcmalloc (libgoogle-perftools-dev package "
-                    "on Ubuntu or RedHat).")
-
 
 ########################################################################
 #
@@ -544,12 +351,212 @@ if not GetOption('without_tcmalloc'):
 ########################################################################
 
 for variant_path in variant_paths:
-    if not GetOption('silent'):
-        print("Building in", variant_path)
-
     # Make a copy of the build-root environment to use for this config.
     env = main.Clone()
     env['BUILDDIR'] = variant_path
+
+    gem5_build = os.path.join(build_root, variant_path, 'gem5.build')
+    env['GEM5BUILD'] = gem5_build
+    Execute(Mkdir(gem5_build))
+
+    env.SConsignFile(os.path.join(gem5_build, 'sconsign'))
+
+    # Set up default C++ compiler flags
+    if env['GCC'] or env['CLANG']:
+        # As gcc and clang share many flags, do the common parts here
+        env.Append(CCFLAGS=['-pipe'])
+        env.Append(CCFLAGS=['-fno-strict-aliasing'])
+
+        # Enable -Wall and -Wextra and then disable the few warnings that
+        # we consistently violate
+        env.Append(CCFLAGS=['-Wall', '-Wundef', '-Wextra',
+                            '-Wno-sign-compare', '-Wno-unused-parameter'])
+
+        # We always compile using C++17
+        env.Append(CXXFLAGS=['-std=c++17'])
+
+        if sys.platform.startswith('freebsd'):
+            env.Append(CCFLAGS=['-I/usr/local/include'])
+            env.Append(CXXFLAGS=['-I/usr/local/include'])
+            # On FreeBSD we need libthr.
+            env.Append(LIBS=['thr'])
+
+        with gem5_scons.Configure(env) as conf:
+            conf.CheckLinkFlag('-Wl,--as-needed')
+
+        linker = GetOption('linker')
+        if linker:
+            with gem5_scons.Configure(env) as conf:
+                if not conf.CheckLinkFlag(f'-fuse-ld={linker}'):
+                    error(f'Linker "{linker}" is not supported')
+                if linker == 'gold' and not GetOption('with_lto'):
+                    # Tell the gold linker to use threads. The gold linker
+                    # segfaults if both threads and LTO are enabled.
+                    conf.CheckLinkFlag('-Wl,--threads')
+                    conf.CheckLinkFlag(
+                            '-Wl,--thread-count=%d' % GetOption('num_jobs'))
+
+        # Treat warnings as errors but white list some warnings that we
+        # want to allow (e.g., deprecation warnings).
+        env.Append(CCFLAGS=['-Werror',
+                             '-Wno-error=deprecated-declarations',
+                             '-Wno-error=deprecated',
+                            ])
+
+    else:
+        error('\n'.join((
+              "Don't know what compiler options to use for your compiler.",
+              "compiler: " + env['CXX'],
+              "version: " + CXX_version.replace('\n', '<nl>') if
+                    CXX_version else 'COMMAND NOT FOUND!',
+              "If you're trying to use a compiler other than GCC",
+              "or clang, there appears to be something wrong with your",
+              "environment.",
+              "",
+              "If you are trying to use a compiler other than those listed",
+              "above you will need to ease fix SConstruct and ",
+              "src/SConscript to support that compiler.")))
+
+    if env['GCC']:
+        if compareVersions(env['CXXVERSION'], "7") < 0:
+            error('gcc version 7 or newer required.\n'
+                  'Installed version:', env['CXXVERSION'])
+
+        with gem5_scons.Configure(env) as conf:
+            # This warning has a false positive in the systemc in g++ 11.1.
+            conf.CheckCxxFlag('-Wno-free-nonheap-object')
+
+        # Add the appropriate Link-Time Optimization (LTO) flags if
+        # `--with-lto` is set.
+        if GetOption('with_lto'):
+            # g++ uses "make" to parallelize LTO. The program can be overriden
+            # with the environment variable "MAKE", but we currently make no
+            # attempt to plumb that variable through.
+            parallelism = ''
+            if env.Detect('make'):
+                parallelism = '=%d' % GetOption('num_jobs')
+            else:
+                warning('"make" not found, link time optimization will be '
+                        'single threaded.')
+
+            for var in 'LTO_CCFLAGS', 'LTO_LINKFLAGS':
+                # Use the same amount of jobs for LTO as scons.
+                env[var] = ['-flto%s' % parallelism]
+
+        env.Append(TCMALLOC_CCFLAGS=[
+            '-fno-builtin-malloc', '-fno-builtin-calloc',
+            '-fno-builtin-realloc', '-fno-builtin-free'])
+
+    elif env['CLANG']:
+        if compareVersions(env['CXXVERSION'], "6") < 0:
+            error('clang version 6 or newer required.\n'
+                  'Installed version:', env['CXXVERSION'])
+
+        # Set the Link-Time Optimization (LTO) flags if enabled.
+        if GetOption('with_lto'):
+            for var in 'LTO_CCFLAGS', 'LTO_LINKFLAGS':
+                env[var] = ['-flto']
+
+        # clang has a few additional warnings that we disable.
+        with gem5_scons.Configure(env) as conf:
+            conf.CheckCxxFlag('-Wno-c99-designator')
+            conf.CheckCxxFlag('-Wno-defaulted-function-deleted')
+
+        env.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
+
+        # On Mac OS X/Darwin we need to also use libc++ (part of XCode) as
+        # opposed to libstdc++, as the later is dated.
+        if sys.platform == "darwin":
+            env.Append(CXXFLAGS=['-stdlib=libc++'])
+            env.Append(LIBS=['c++'])
+
+    # Add sanitizers flags
+    sanitizers=[]
+    if GetOption('with_ubsan'):
+        sanitizers.append('undefined')
+    if GetOption('with_asan'):
+        # Available for gcc >= 5 or llvm >= 3.1 both a requirement
+        # by the build system
+        sanitizers.append('address')
+        suppressions_file = Dir('util').File('lsan-suppressions').get_abspath()
+        suppressions_opt = 'suppressions=%s' % suppressions_file
+        suppressions_opts = ':'.join([suppressions_opt,
+                                      'print_suppressions=0'])
+        env['ENV']['LSAN_OPTIONS'] = suppressions_opts
+        print()
+        warning('To suppress false positive leaks, set the LSAN_OPTIONS '
+                'environment variable to "%s" when running gem5' %
+                suppressions_opts)
+        warning('LSAN_OPTIONS=%s' % suppressions_opts)
+        print()
+    if sanitizers:
+        sanitizers = ','.join(sanitizers)
+        if env['GCC'] or env['CLANG']:
+            env.Append(CCFLAGS=['-fsanitize=%s' % sanitizers,
+                                 '-fno-omit-frame-pointer'],
+                        LINKFLAGS='-fsanitize=%s' % sanitizers)
+        else:
+            warning("Don't know how to enable %s sanitizer(s) for your "
+                    "compiler." % sanitizers)
+
+    if sys.platform == 'cygwin':
+        # cygwin has some header file issues...
+        env.Append(CCFLAGS=["-Wno-uninitialized"])
+
+
+    if not GetOption('no_compress_debug'):
+        with gem5_scons.Configure(env) as conf:
+            if not conf.CheckCxxFlag('-gz'):
+                warning("Can't enable object file debug section compression")
+            if not conf.CheckLinkFlag('-gz'):
+                warning("Can't enable executable debug section compression")
+
+    if env['USE_PYTHON']:
+        config_embedded_python(env)
+        gem5py_env = env.Clone()
+    else:
+        gem5py_env = env.Clone()
+        config_embedded_python(gem5py_env)
+
+    # Bare minimum environment that only includes python
+    gem5py_env.Append(CCFLAGS=['${GEM5PY_CCFLAGS_EXTRA}'])
+    gem5py_env.Append(LINKFLAGS=['${GEM5PY_LINKFLAGS_EXTRA}'])
+
+    if GetOption('gprof') and GetOption('pprof'):
+        error('Only one type of profiling should be enabled at a time')
+    if GetOption('gprof'):
+        env.Append(CCFLAGS=['-g', '-pg'], LINKFLAGS=['-pg'])
+    if GetOption('pprof'):
+        env.Append(CCFLAGS=['-g'],
+                LINKFLAGS=['-Wl,--no-as-needed', '-lprofiler',
+                    '-Wl,--as-needed'])
+
+    env['HAVE_PKG_CONFIG'] = env.Detect('pkg-config')
+
+    with gem5_scons.Configure(env) as conf:
+        # On Solaris you need to use libsocket for socket ops
+        if not conf.CheckLibWithHeader(
+                [None, 'socket'], 'sys/socket.h', 'C++', 'accept(0,0,0);'):
+           error("Can't find library with socket calls (e.g. accept()).")
+
+        if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++','zlibVersion();'):
+            error('Did not find needed zlib compression library '
+                  'and/or zlib.h header file.\n'
+                  'Please install zlib and try again.')
+
+    if not GetOption('without_tcmalloc'):
+        with gem5_scons.Configure(env) as conf:
+            if conf.CheckLib('tcmalloc'):
+                conf.env.Append(CCFLAGS=conf.env['TCMALLOC_CCFLAGS'])
+            elif conf.CheckLib('tcmalloc_minimal'):
+                conf.env.Append(CCFLAGS=conf.env['TCMALLOC_CCFLAGS'])
+            else:
+                warning("You can get a 12% performance improvement by "
+                        "installing tcmalloc (libgoogle-perftools-dev package "
+                        "on Ubuntu or RedHat).")
+
+    if not GetOption('silent'):
+        print("Building in", variant_path)
 
     # variant_dir is the tail component of build path, and is used to
     # determine the build parameters (e.g., 'X86')
@@ -580,20 +587,19 @@ for variant_path in variant_paths:
     # Set env variables according to the build directory config.
     sticky_vars.files = []
     # Variables for $BUILD_ROOT/$VARIANT_DIR are stored in
-    # $BUILD_ROOT/variables/$VARIANT_DIR so you can nuke
-    # $BUILD_ROOT/$VARIANT_DIR without losing your variables settings.
-    current_vars_file = os.path.join(build_root, 'variables', variant_dir)
-    if isfile(current_vars_file):
-        sticky_vars.files.append(current_vars_file)
+    # $BUILD_ROOT/$VARIANT_DIR/gem5.build/variables
+
+    gem5_build_vars = os.path.join(gem5_build, 'variables')
+    build_root_vars = os.path.join(build_root, 'variables', variant_dir)
+    current_vars_files = [gem5_build_vars, build_root_vars]
+    existing_vars_files = list(filter(isfile, current_vars_files))
+    if existing_vars_files:
+        sticky_vars.files.extend(existing_vars_files)
         if not GetOption('silent'):
-            print("Using saved variables file %s" % current_vars_file)
+            print('Using saved variables file(s) %s' %
+                    ', '.join(existing_vars_files))
     else:
         # Variant specific variables file doesn't exist.
-
-        # Make sure the directory is there so we can create the file later.
-        opt_dir = dirname(current_vars_file)
-        if not isdir(opt_dir):
-            mkdir(opt_dir)
 
         # Get default build variables from source tree.  Variables are
         # normally determined by name of $VARIANT_DIR, but can be
@@ -602,20 +608,22 @@ for variant_path in variant_paths:
         opts_dir = Dir('#build_opts').abspath
         if default:
             default_vars_files = [
-                    os.path.join(build_root, 'variables', default),
+                    gem5_build_vars,
+                    build_root_vars,
                     os.path.join(opts_dir, default)
                 ]
         else:
             default_vars_files = [os.path.join(opts_dir, variant_dir)]
-        existing_files = list(filter(isfile, default_vars_files))
-        if existing_files:
-            default_vars_file = existing_files[0]
+        existing_default_files = list(filter(isfile, default_vars_files))
+        if existing_default_files:
+            default_vars_file = existing_default_files[0]
             sticky_vars.files.append(default_vars_file)
-            print("Variables file %s not found,\n  using defaults in %s"
-                  % (current_vars_file, default_vars_file))
+            print("Variables file(s) %s not found,\n  using defaults in %s" %
+                    (' or '.join(current_vars_files), default_vars_file))
         else:
-            error("Cannot find variables file %s or default file(s) %s"
-                  % (current_vars_file, ' or '.join(default_vars_files)))
+            error("Cannot find variables file(s) %s or default file(s) %s" %
+                    (' or '.join(current_vars_file),
+                     ' or '.join(default_vars_files)))
             Exit(1)
 
     # Apply current settings for EXTRAS to env.
@@ -666,8 +674,12 @@ Build variables for {dir}:
 '''.format(dir=variant_dir, help=sticky_vars.GenerateHelpText(env)),
          append=True)
 
-    # Save sticky variable settings back to current variables file
-    sticky_vars.Save(current_vars_file, env)
+    # If the old vars file exists, delete it to avoid confusion/stale values.
+    if isfile(build_root_vars):
+        warning(f'Deleting old variant variables file "{build_root_vars}"')
+        remove(build_root_vars)
+    # Save sticky variables back to the gem5.build variant variables file.
+    sticky_vars.Save(gem5_build_vars, env)
 
     # Pull all the sticky variables into the CONF dict.
     env['CONF'].update({key: env[key] for key in sticky_vars.keys()})
