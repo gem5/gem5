@@ -486,15 +486,14 @@ class CHI_HNF(CHI_Node):
         '''HNFs may also define the 'pairing' parameter to allow pairing'''
         pairing = None
 
-    _addr_ranges = []
+    _addr_ranges = {}
     @classmethod
-    def createAddrRanges(cls, sys_mem_ranges, cache_line_size, num_hnfs):
+    def createAddrRanges(cls, sys_mem_ranges, cache_line_size, hnfs):
         # Create the HNFs interleaved addr ranges
         block_size_bits = int(math.log(cache_line_size, 2))
-        cls._addr_ranges = []
-        llc_bits = int(math.log(num_hnfs, 2))
+        llc_bits = int(math.log(len(hnfs), 2))
         numa_bit = block_size_bits + llc_bits - 1
-        for i in range(num_hnfs):
+        for i, hnf in enumerate(hnfs):
             ranges = []
             for r in sys_mem_ranges:
                 addr_range = AddrRange(r.start, size = r.size(),
@@ -502,7 +501,7 @@ class CHI_HNF(CHI_Node):
                                         intlvBits = llc_bits,
                                         intlvMatch = i)
                 ranges.append(addr_range)
-            cls._addr_ranges.append((ranges, numa_bit, i))
+            cls._addr_ranges[hnf] = (ranges, numa_bit)
 
     @classmethod
     def getAddrRanges(cls, hnf_idx):
@@ -514,10 +513,9 @@ class CHI_HNF(CHI_Node):
     def __init__(self, hnf_idx, ruby_system, llcache_type, parent):
         super(CHI_HNF, self).__init__(ruby_system)
 
-        addr_ranges,intlvHighBit,intlvMatch = self.getAddrRanges(hnf_idx)
+        addr_ranges,intlvHighBit = self.getAddrRanges(hnf_idx)
         # All ranges should have the same interleaving
         assert(len(addr_ranges) >= 1)
-        assert(intlvMatch == hnf_idx)
 
         ll_cache = llcache_type(start_index_bit = intlvHighBit + 1)
         self._cntrl = CHI_HNFController(ruby_system, ll_cache, NULL,
