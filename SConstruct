@@ -240,27 +240,9 @@ def makePathListAbsolute(path_list, root=GetLaunchDir()):
 # doesn't work (obviously!).
 BUILD_TARGETS[:] = makePathListAbsolute(BUILD_TARGETS)
 
-# Generate a list of the unique build roots and configs that the
-# collected targets reference.
-variant_paths = set()
-build_root = None
-for t in BUILD_TARGETS:
-    this_build_root, variant = parse_build_path(t)
-
-    # Make sure all targets use the same build root.
-    if not build_root:
-        build_root = this_build_root
-    elif this_build_root != build_root:
-        error("build targets not under same build root\n  %s\n  %s" %
-            (build_root, this_build_root))
-
-    # Collect all the variants into a set.
-    variant_paths.add(os.path.join('/', build_root, variant))
-
-# Make sure build_root exists (might not if this is the first build there)
-if not isdir(build_root):
-    mkdir(build_root)
-main['BUILDROOT'] = build_root
+# Generate a list of the unique build directories that the collected targets
+# reference.
+variant_paths = set(map(parse_build_path, BUILD_TARGETS))
 
 
 ########################################################################
@@ -395,7 +377,7 @@ for variant_path in variant_paths:
     env = main.Clone()
     env['BUILDDIR'] = variant_path
 
-    gem5_build = os.path.join(build_root, variant_path, 'gem5.build')
+    gem5_build = os.path.join(variant_path, 'gem5.build')
     env['GEM5BUILD'] = gem5_build
     Execute(Mkdir(gem5_build))
 
