@@ -2422,7 +2422,7 @@ class Kconfig(object):
                     #
                     # Named choices ('choice FOO') also end up here.
 
-                    if token is not _T_CHOICE:
+                    if token not in (_T_CHOICE, _T_CONTCHOICE):
                         self._warn("style: quotes recommended around '{}' in '{}'"
                                    .format(name, self._line.strip()),
                                    self.filename, self.linenr)
@@ -3078,9 +3078,38 @@ class Kconfig(object):
 
                 self._parse_props(node)
                 self._parse_block(_T_ENDCHOICE, node, node)
-                node.list = node.next
 
+                node.list = node.next
                 prev.next = prev = node
+
+            elif t0 is _T_CONTCHOICE:
+                # Named choice
+                name = self._expect_str_and_eol()
+                choice = self.named_choices.get(name)
+                if not choice:
+                    self._parse_error(f"can't continue choice '{name}'")
+
+                assert(len(choice.nodes))
+                # Add more to the earlier node.
+                node = choice.nodes[-1]
+
+                # Find the end of its list so we can add to it.
+                if node.list:
+                    sub_prev = node.list
+                    while sub_prev.next:
+                        sub_prev = sub_prev.next
+                else:
+                    # If we don't have a list at all, temporarily make one up.
+                    sub_prev = MenuNode()
+
+                # Parse any new properties.
+                self._parse_props(node)
+                # Read in new subnodes.
+                self._parse_block(_T_ENDCHOICE, node, sub_prev)
+
+                # If we made up a lead node, move the list to where it belongs.
+                if not node.list:
+                    node.list = sub_prev.next
 
             elif t0 is _T_MAINMENU:
                 self.top_node.prompt = (self._expect_str_and_eol(), self.y)
@@ -6856,6 +6885,7 @@ except AttributeError:
     _T_CLOSE_PAREN,
     _T_COMMENT,
     _T_CONFIG,
+    _T_CONTCHOICE,
     _T_DEFAULT,
     _T_DEFCONFIG_LIST,
     _T_DEF_BOOL,
@@ -6899,7 +6929,7 @@ except AttributeError:
     _T_TRISTATE,
     _T_UNEQUAL,
     _T_VISIBLE,
-) = range(1, 51)
+) = range(1, 52)
 
 # Keyword to token map, with the get() method assigned directly as a small
 # optimization
@@ -6911,6 +6941,7 @@ _get_keyword = {
     "choice":         _T_CHOICE,
     "comment":        _T_COMMENT,
     "config":         _T_CONFIG,
+    "cont_choice":    _T_CONTCHOICE,
     "def_bool":       _T_DEF_BOOL,
     "def_hex":        _T_DEF_HEX,
     "def_int":        _T_DEF_INT,
@@ -7024,6 +7055,7 @@ _STRING_LEX = frozenset({
     _T_BOOL,
     _T_CHOICE,
     _T_COMMENT,
+    _T_CONTCHOICE,
     _T_HEX,
     _T_INT,
     _T_MAINMENU,
