@@ -60,13 +60,15 @@ slicc_scanner = Classic("SliccScanner", ['.sm', '.slicc'], "SLICC_PATH",
                         r'''include[ \t]["'](.*)["'];''')
 env.Append(SCANNERS=slicc_scanner)
 
+slicc_includes = ['mem/ruby/slicc_interface/RubySlicc_includes.hh'] + \
+        env['SLICC_INCLUDES']
 def slicc_emitter(target, source, env):
     assert len(source) == 1
     filepath = source[0].srcnode().abspath
 
     slicc = SLICC(filepath, protocol_base.abspath, verbose=False)
     slicc.process()
-    slicc.writeCodeFiles(output_dir.abspath, env['SLICC_INCLUDES'])
+    slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
     if env['SLICC_HTML']:
         slicc.writeHTMLFiles(html_dir.abspath)
 
@@ -79,7 +81,7 @@ def slicc_action(target, source, env):
 
     slicc = SLICC(filepath, protocol_base.abspath, verbose=True)
     slicc.process()
-    slicc.writeCodeFiles(output_dir.abspath, env['SLICC_INCLUDES'])
+    slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
     if env['SLICC_HTML']:
         slicc.writeHTMLFiles(html_dir.abspath)
 
