@@ -486,7 +486,7 @@ class MicroAssembler(object):
     def __init__(self, macro_type, microops,
             rom = None, rom_macroop_type = None):
         self.lexer = lex.lex()
-        self.parser = yacc.yacc()
+        self.parser = yacc.yacc(write_tables=False)
         self.parser.macro_type = macro_type
         self.parser.macroops = {}
         self.parser.microops = microops
