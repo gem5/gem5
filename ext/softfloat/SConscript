@@ -31,19 +31,19 @@
 
 import os
 
-Import('main')
+Import('env')
 
-env = main.Clone()
-if env['GCC']:
-    env.Append(CCFLAGS=['-Wno-unused-variable',
-                        '-Wno-unused-label',
-                        '-Wno-implicit-fallthrough',
-                        '-g'])
+sf_env = env.Clone()
+if sf_env['GCC']:
+    sf_env.Append(CCFLAGS=['-Wno-unused-variable',
+                           '-Wno-unused-label',
+                           '-Wno-implicit-fallthrough',
+                           '-g'])
 
-elif env['CLANG']:
-    env.Append(CCFLAGS=['-Wno-unused-variable',
-                        '-Wno-unused-label',
-                        '-g'])
+elif sf_env['CLANG']:
+    sf_env.Append(CCFLAGS=['-Wno-unused-variable',
+                           '-Wno-unused-label',
+                           '-g'])
 
 # Add the appropriate files for the library
 softfloat_files = []
@@ -271,8 +271,8 @@ SoftfloatFile('ui64_to_f16.c')
 SoftfloatFile('ui64_to_f32.c')
 SoftfloatFile('ui64_to_f64.c')
 
-env.Library('softfloat', [env.SharedObject(f) for f in softfloat_files])
+sf_env.Library('softfloat', [sf_env.SharedObject(f) for f in softfloat_files])
 
-main.Prepend(CPPPATH=Dir('./'))
-main.Append(LIBS=['softfloat'])
-main.Prepend(LIBPATH=[Dir('.')])
+env.Prepend(CPPPATH=Dir('./'))
+env.Append(LIBS=['softfloat'])
+env.Prepend(LIBPATH=[Dir('.')])

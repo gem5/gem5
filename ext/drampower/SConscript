@@ -39,9 +39,9 @@
 
 import os
 
-Import('main')
+Import('env')
 
-main.Prepend(CPPPATH=Dir('./src'))
+env.Prepend(CPPPATH=Dir('./src'))
 
 # Add the appropriate files for the library
 drampower_files = []
@@ -63,7 +63,7 @@ DRAMPowerFile('CAHelpers.cc')
 DRAMPowerFile('CmdHandlers.cc')
 DRAMPowerFile('MemBankWiseParams.cc')
 
-main.Library('drampower', [main.SharedObject(f) for f in drampower_files])
+env.Library('drampower', [env.SharedObject(f) for f in drampower_files])
 
-main.Append(LIBS=['drampower'])
-main.Prepend(LIBPATH=[Dir('.')])
+env.Append(LIBS=['drampower'])
+env.Prepend(LIBPATH=[Dir('.')])

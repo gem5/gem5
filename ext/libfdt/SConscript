@@ -28,7 +28,7 @@
 #
 # Authors: Anthony Gutierrez
 
-Import('main')
+Import('env')
 
 fdt_files = []
 
@@ -43,7 +43,7 @@ FdtFile('fdt_wip.c')
 FdtFile('fdt_empty_tree.c')
 FdtFile('fdt_strerror.c')
 
-main.Library('fdt', [main.SharedObject(f) for f in fdt_files])
-main.Prepend(CPPPATH=Dir('.'))
-main.Append(LIBS=['fdt'])
-main.Prepend(LIBPATH=[Dir('.')])
+env.Library('fdt', [env.SharedObject(f) for f in fdt_files])
+env.Prepend(CPPPATH=Dir('.'))
+env.Append(LIBS=['fdt'])
+env.Prepend(LIBPATH=[Dir('.')])

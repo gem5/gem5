@@ -643,23 +643,6 @@ sticky_vars.Add(BoolVariable('USE_EFENCE',
 
 ########################################################################
 #
-# Find and process all the SConscript files in ext. These are shared by
-# all variants in a build root.
-#
-########################################################################
-
-ext_dir = Dir('#ext').abspath
-ext_build_dirs = []
-for root, dirs, files in os.walk(ext_dir):
-    if 'SConscript' in files:
-        build_dir = os.path.relpath(root, ext_dir)
-        ext_build_dirs.append(build_dir)
-        main.SConscript(os.path.join(root, 'SConscript'),
-                        variant_dir=os.path.join(build_root, build_dir))
-
-
-########################################################################
-#
 # Define build environments for required variants.
 #
 ########################################################################
@@ -686,9 +669,6 @@ for variant_path in variant_paths:
         sticky_vars.files.append(current_vars_file)
         if not GetOption('silent'):
             print("Using saved variables file %s" % current_vars_file)
-    elif variant_dir in ext_build_dirs:
-        # Things in ext are built without a variant directory.
-        continue
     else:
         # Variant specific variables file doesn't exist.
 
@@ -740,6 +720,15 @@ Build variables for {dir}:
     env.Append(LINKFLAGS='$LINKFLAGS_EXTRA')
 
     exports=['env', 'gem5py_env']
+
+    ext_dir = Dir('#ext').abspath
+    variant_ext = os.path.join(variant_path, 'ext')
+    for root, dirs, files in os.walk(ext_dir):
+        if 'SConscript' in files:
+            build_dir = os.path.relpath(root, ext_dir)
+            SConscript(os.path.join(root, 'SConscript'),
+                       variant_dir=os.path.join(variant_ext, build_dir),
+                       exports=exports)
 
     # The src/SConscript file sets up the build rules in 'env' according
     # to the configured variables.  It returns a list of environments,

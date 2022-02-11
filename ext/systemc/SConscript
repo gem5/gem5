@@ -26,8 +26,8 @@
 import os
 from m5.util.terminal import get_termcap
 
-Import('main')
-systemc = main.Clone()
+Import('env')
+systemc = env.Clone()
 
 build_root = Dir('.').abspath
 src_root = Dir('.').srcdir.abspath
