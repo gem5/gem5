@@ -243,49 +243,12 @@ main.SConsignFile(os.path.join(build_root, "sconsign"))
 
 ########################################################################
 #
-# Set up global sticky variables... these are common to an entire build
-# tree (not specific to a particular build like X86)
-#
-########################################################################
-
-global_vars_file = os.path.join(build_root, 'variables.global')
-
-global_vars = Variables(global_vars_file, args=ARGUMENTS)
-
-global_vars.AddVariables(
-    ('BATCH', 'Use batch pool for build and tests', False),
-    ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
-    ('M5_BUILD_CACHE', 'Cache built objects in this directory', False),
-    ('EXTRAS', 'Add extra directories to the compilation', '')
-    )
-
-# Update main environment with values from ARGUMENTS & global_vars_file
-global_vars.Update(main)
-Help('''
-Global build variables:
-{help}
-'''.format(help=global_vars.GenerateHelpText(main)), append=True)
-
-# Save sticky variable settings back to current variables file
-global_vars.Save(global_vars_file, main)
-
-
-########################################################################
-#
 # Set up various paths.
 #
 ########################################################################
 
-# Parse EXTRAS variable to build list of all directories where we're
-# look for sources etc.  This list is exported as extras_dir_list.
 base_dir = Dir('#src').abspath
-if main['EXTRAS']:
-    extras_dir_list = makePathListAbsolute(main['EXTRAS'].split(':'))
-else:
-    extras_dir_list = []
-
 Export('base_dir')
-Export('extras_dir_list')
 
 # the ext directory should be on the #includes path
 main.Append(CPPPATH=[Dir('ext')])
@@ -454,24 +417,10 @@ if sanitizers:
         warning("Don't know how to enable %s sanitizer(s) for your "
                 "compiler." % sanitizers)
 
-# Do this after we save setting back, or else we'll tack on an
-# extra 'qdo' every time we run scons.
-if main['BATCH']:
-    main['CC']     = main['BATCH_CMD'] + ' ' + main['CC']
-    main['CXX']    = main['BATCH_CMD'] + ' ' + main['CXX']
-    main['AS']     = main['BATCH_CMD'] + ' ' + main['AS']
-    main['AR']     = main['BATCH_CMD'] + ' ' + main['AR']
-    main['RANLIB'] = main['BATCH_CMD'] + ' ' + main['RANLIB']
-
 if sys.platform == 'cygwin':
     # cygwin has some header file issues...
     main.Append(CCFLAGS=["-Wno-uninitialized"])
 
-
-# Cache build files in the supplied directory.
-if main['M5_BUILD_CACHE']:
-    print('Using build cache located at', main['M5_BUILD_CACHE'])
-    CacheDir(main['M5_BUILD_CACHE'])
 
 if not GetOption('no_compress_debug'):
     with gem5_scons.Configure(main) as conf:
@@ -625,32 +574,8 @@ for variant_path in variant_paths:
     sticky_vars = Variables(args=ARGUMENTS)
     Export('sticky_vars')
 
-    # Sticky variables that should be exported to #defines in config/*.hh
-    # (see src/SConscript).
-    export_vars = []
-    Export('export_vars')
-
-    # Walk the tree and execute all SConsopts scripts that wil add to the
-    # above variables
-    if GetOption('verbose'):
-        print("Reading SConsopts")
-    for bdir in [ base_dir ] + extras_dir_list:
-        if not isdir(bdir):
-            error("Directory '%s' does not exist." % bdir)
-        for root, dirs, files in os.walk(bdir):
-            if 'SConsopts' in files:
-                if GetOption('verbose'):
-                    print("Reading", os.path.join(root, 'SConsopts'))
-                SConscript(os.path.join(root, 'SConsopts'),
-                        exports={'main': env})
-
-    # Call any callbacks which the SConsopts files registered.
-    for cb in after_sconsopts_callbacks:
-        cb()
-
-    # Add any generic sticky variables here.
-    sticky_vars.Add(BoolVariable('USE_EFENCE',
-        'Link with Electric Fence malloc debugger', False))
+    # EXTRAS is special since it affects what SConsopts need to be read.
+    sticky_vars.Add(('EXTRAS', 'Add extra directories to the compilation', ''))
 
     # Set env variables according to the build directory config.
     sticky_vars.files = []
@@ -693,7 +618,48 @@ for variant_path in variant_paths:
                   % (current_vars_file, ' or '.join(default_vars_files)))
             Exit(1)
 
-    # Apply current variable settings to env
+    # Apply current settings for EXTRAS to env.
+    sticky_vars.Update(env)
+
+    # Parse EXTRAS variable to build list of all directories where we're
+    # look for sources etc.  This list is exported as extras_dir_list.
+    if env['EXTRAS']:
+        extras_dir_list = makePathListAbsolute(env['EXTRAS'].split(':'))
+    else:
+        extras_dir_list = []
+
+    Export('extras_dir_list')
+
+    # Sticky variables that should be exported to #defines in config/*.hh
+    # (see src/SConscript).
+    export_vars = []
+    Export('export_vars')
+
+    # Walk the tree and execute all SConsopts scripts that wil add to the
+    # above variables
+    if GetOption('verbose'):
+        print("Reading SConsopts")
+
+    def trySConsopts(dir):
+        sconsopts_path = os.path.join(dir, 'SConsopts')
+        if not isfile(sconsopts_path):
+            return
+        if GetOption('verbose'):
+            print("Reading", sconsopts_path)
+        SConscript(sconsopts_path, exports={'main': env})
+
+    trySConsopts(Dir('#').abspath)
+    for bdir in [ base_dir ] + extras_dir_list:
+        if not isdir(bdir):
+            error("Directory '%s' does not exist." % bdir)
+        for root, dirs, files in os.walk(bdir):
+            trySConsopts(root)
+
+    # Call any callbacks which the SConsopts files registered.
+    for cb in after_sconsopts_callbacks:
+        cb()
+
+    # Update env for new variables added by the SConsopts.
     sticky_vars.Update(env)
 
     Help('''
@@ -702,12 +668,23 @@ Build variables for {dir}:
 '''.format(dir=variant_dir, help=sticky_vars.GenerateHelpText(env)),
          append=True)
 
-    # Process variable settings.
-    if env['USE_EFENCE']:
-        env.Append(LIBS=['efence'])
-
     # Save sticky variable settings back to current variables file
     sticky_vars.Save(current_vars_file, env)
+
+    # Do this after we save setting back, or else we'll tack on an
+    # extra 'qdo' every time we run scons.
+    if env['BATCH']:
+        env['CC']     = env['BATCH_CMD'] + ' ' + env['CC']
+        env['CXX']    = env['BATCH_CMD'] + ' ' + env['CXX']
+        env['AS']     = env['BATCH_CMD'] + ' ' + env['AS']
+        env['AR']     = env['BATCH_CMD'] + ' ' + env['AR']
+        env['RANLIB'] = env['BATCH_CMD'] + ' ' + env['RANLIB']
+
+    # Cache build files in the supplied directory.
+    if env['M5_BUILD_CACHE']:
+        print('Using build cache located at', env['M5_BUILD_CACHE'])
+        CacheDir(env['M5_BUILD_CACHE'])
+
 
     env.Append(CCFLAGS='$CCFLAGS_EXTRA')
     env.Append(LINKFLAGS='$LINKFLAGS_EXTRA')

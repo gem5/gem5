@@ -57,6 +57,9 @@ Export(SourceFilter.factories)
 
 Import('*')
 
+if env['USE_EFENCE']:
+    env.Append(LIBS=['efence'])
+
 # Children need to see the environment
 Export('env')
 
