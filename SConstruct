@@ -597,52 +597,6 @@ if not GetOption('without_tcmalloc'):
 
 ########################################################################
 #
-# Read and process SConsopts files. These can add new settings which
-# affect each variant directory independently.
-#
-########################################################################
-
-# Register a callback which is called after all SConsopts files have been read.
-after_sconsopts_callbacks = []
-def AfterSConsopts(cb):
-    after_sconsopts_callbacks.append(cb)
-Export('AfterSConsopts')
-
-# Sticky variables get saved in the variables file so they persist from
-# one invocation to the next (unless overridden, in which case the new
-# value becomes sticky).
-sticky_vars = Variables(args=ARGUMENTS)
-Export('sticky_vars')
-
-# Sticky variables that should be exported to #defines in config/*.hh
-# (see src/SConscript).
-export_vars = []
-Export('export_vars')
-
-# Walk the tree and execute all SConsopts scripts that wil add to the
-# above variables
-if GetOption('verbose'):
-    print("Reading SConsopts")
-for bdir in [ base_dir ] + extras_dir_list:
-    if not isdir(bdir):
-        error("Directory '%s' does not exist." % bdir)
-    for root, dirs, files in os.walk(bdir):
-        if 'SConsopts' in files:
-            if GetOption('verbose'):
-                print("Reading", os.path.join(root, 'SConsopts'))
-            SConscript(os.path.join(root, 'SConsopts'))
-
-# Call any callbacks which the SConsopts files registered.
-for cb in after_sconsopts_callbacks:
-    cb()
-
-# Add any generic sticky variables here.
-sticky_vars.Add(BoolVariable('USE_EFENCE',
-    'Link with Electric Fence malloc debugger', False))
-
-
-########################################################################
-#
 # Define build environments for required variants.
 #
 ########################################################################
@@ -658,6 +612,52 @@ for variant_path in variant_paths:
     # variant_dir is the tail component of build path, and is used to
     # determine the build parameters (e.g., 'X86')
     (build_root, variant_dir) = os.path.split(variant_path)
+
+    ####################################################################
+    #
+    # Read and process SConsopts files. These can add new settings which
+    # affect each variant directory independently.
+    #
+    ####################################################################
+
+    # Register a callback to call after all SConsopts files have been read.
+    after_sconsopts_callbacks = []
+    def AfterSConsopts(cb):
+        after_sconsopts_callbacks.append(cb)
+    Export('AfterSConsopts')
+
+    # Sticky variables get saved in the variables file so they persist from
+    # one invocation to the next (unless overridden, in which case the new
+    # value becomes sticky).
+    sticky_vars = Variables(args=ARGUMENTS)
+    Export('sticky_vars')
+
+    # Sticky variables that should be exported to #defines in config/*.hh
+    # (see src/SConscript).
+    export_vars = []
+    Export('export_vars')
+
+    # Walk the tree and execute all SConsopts scripts that wil add to the
+    # above variables
+    if GetOption('verbose'):
+        print("Reading SConsopts")
+    for bdir in [ base_dir ] + extras_dir_list:
+        if not isdir(bdir):
+            error("Directory '%s' does not exist." % bdir)
+        for root, dirs, files in os.walk(bdir):
+            if 'SConsopts' in files:
+                if GetOption('verbose'):
+                    print("Reading", os.path.join(root, 'SConsopts'))
+                SConscript(os.path.join(root, 'SConsopts'),
+                        exports={'main': env})
+
+    # Call any callbacks which the SConsopts files registered.
+    for cb in after_sconsopts_callbacks:
+        cb()
+
+    # Add any generic sticky variables here.
+    sticky_vars.Add(BoolVariable('USE_EFENCE',
+        'Link with Electric Fence malloc debugger', False))
 
     # Set env variables according to the build directory config.
     sticky_vars.files = []
