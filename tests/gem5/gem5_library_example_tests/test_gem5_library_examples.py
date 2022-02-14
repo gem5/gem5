@@ -70,6 +70,7 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
         valid_isas=(constants.x86_tag,),
         valid_hosts=constants.supported_hosts,
         length=constants.long_tag,
+        uses_kvm=True,
     )
 
 gem5_verify_config(
@@ -108,6 +109,7 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
         protocol="MESI_Two_Level",
         valid_hosts=constants.supported_hosts,
         length=constants.long_tag,
+        uses_kvm=True,
     )
 
 if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
@@ -135,6 +137,7 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
         protocol="MESI_Two_Level",
         valid_hosts=constants.supported_hosts,
         length=constants.long_tag,
+        uses_kvm=True,
     )
 
 if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
@@ -156,6 +159,7 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
         protocol="MESI_Two_Level",
         valid_hosts=constants.supported_hosts,
         length=constants.long_tag,
+        uses_kvm=True,
     )
 
 gem5_verify_config(

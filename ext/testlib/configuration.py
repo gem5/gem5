@@ -254,6 +254,8 @@ def define_constants(constants):
     constants.host_x86_64_tag = 'x86_64'
     constants.host_arm_tag = 'aarch64'
 
+    constants.kvm_tag = 'kvm'
+
     constants.supported_tags = {
         constants.isa_tag_type : (
             constants.x86_tag,

@@ -88,6 +88,7 @@ def test_parsec(
         valid_isas=(constants.x86_tag,),
         valid_hosts=constants.supported_hosts,
         length=length,
+        uses_kvm=True,
     )
 
 

@@ -135,7 +135,8 @@ for name in arm_fs_quick_tests:
         valid_isas=(constants.arm_tag,),
         length=constants.quick_tag,
         valid_hosts=valid_hosts,
-        fixtures=(arm_fs_binaries,)
+        fixtures=(arm_fs_binaries,),
+        uses_kvm= name in arm_fs_kvm_tests,
     )
 
 for name in arm_fs_long_tests:
@@ -151,5 +152,6 @@ for name in arm_fs_long_tests:
         config_args=args,
         valid_isas=(constants.arm_tag,),
         length=constants.long_tag,
-        fixtures=(arm_fs_binaries,)
+        fixtures=(arm_fs_binaries,),
+        uses_kvm= name in arm_fs_kvm_tests,
     )
