@@ -120,6 +120,10 @@ class MemTest : public ClockedObject
 
     PacketPtr retryPkt;
 
+    // Set if reached the maximum number of outstanding requests.
+    // Won't tick until a response is received.
+    bool waitResponse;
+
     const unsigned size;
 
     const Cycles interval;
@@ -141,6 +145,8 @@ class MemTest : public ClockedObject
     const unsigned blockSize;
 
     const Addr blockAddrMask;
+
+    const unsigned sizeBlocks;
 
     /**
      * Get the block aligned address.
