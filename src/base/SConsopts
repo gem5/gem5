@@ -80,5 +80,4 @@ sticky_vars.Add(BoolVariable('USE_POSIX_CLOCK', 'Use POSIX Clocks',
 
 
 export_vars.extend([
-        'HAVE_FENV', 'HAVE_PNG', 'USE_POSIX_CLOCK', 'HAVE_VALGRIND',
-        'HAVE_DEPRECATED_NAMESPACE'])
+        'HAVE_FENV', 'HAVE_PNG', 'HAVE_VALGRIND', 'HAVE_DEPRECATED_NAMESPACE'])

@@ -46,5 +46,3 @@ main.AddMethod(use_systemc_check, 'UseSystemcCheck')
 
 sticky_vars.Add(BoolVariable('USE_SYSTEMC', 'Enable SystemC API support',
                              main.UseSystemcCheck()))
-
-export_vars.append('USE_SYSTEMC')

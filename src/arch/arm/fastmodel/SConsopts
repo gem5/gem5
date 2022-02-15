@@ -45,9 +45,3 @@ sticky_vars.AddVariables(
      'The maximum number of ARM licenses to use concurrently', 1),
     ('SIMGEN', 'simgen executable', os.environ.get('SIMGEN', default_simgen)),
 )
-
-export_vars.extend([
-        'ARMLMD_LICENSE_FILE',
-        'PVLIB_HOME',
-        'PVLIB_FLAVOR',
-])

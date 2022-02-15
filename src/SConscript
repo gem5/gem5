@@ -60,7 +60,11 @@ Import('*')
 # Children need to see the environment
 Export('env')
 
-build_env = [(opt, env[opt]) for opt in export_vars]
+all_export_vars = set()
+all_export_vars.update(export_vars)
+all_export_vars.update(sticky_vars.keys())
+
+build_env = [(opt, env[opt]) for opt in all_export_vars]
 
 from code_formatter import code_formatter
 
@@ -533,7 +537,7 @@ for extra_dir in extras_dir_list:
             build_dir = os.path.join(env['BUILDDIR'], root[prefix_len:])
             SConscript(os.path.join(root, 'SConscript'), variant_dir=build_dir)
 
-for opt in export_vars:
+for opt in all_export_vars:
     env.ConfigFile(opt)
 
 def makeTheISA(source, target, env):
