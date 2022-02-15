@@ -102,6 +102,17 @@ docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest \
         ./main.py run --length long -j${compile_threads} -t${run_threads} -vv
 
+# Unfortunately, due docker being unable run KVM, we do so separately.
+# This script excluses all tags, includes all tests tagged as "kvm", then
+# removes all those part of the 'very-long' (weekly) tests, or for compilation
+# to '.debug' or '.fast'. We also remove ARM targets as our Jenkins is an X86
+# system. Users wishing to run this script elsewhere should be aware of this.
+cd "${gem5_root}/tests"
+./main.py run -j${compile_threads} -vv \
+    --exclude-tags ".*" --include-tags kvm --exclude-tags very\-long \
+    --exclude-tags debug --exclude-tags fast --exclude-tags ARM
+cd "${gem5_root}"
+
 # For the GPU tests we compile and run the GPU ISA inside a gcn-gpu container.
 docker pull gcr.io/gem5-test/gcn-gpu:latest
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
