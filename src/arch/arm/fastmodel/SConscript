@@ -302,6 +302,10 @@ for header in common_headers:
     header_src = examples_common_dir.Dir('include').File(header)
     Command(header_target, header_src, Copy('${TARGET}', '${SOURCE}'))
 
+if not env['CONF']['SIMGEN']:
+    env['CONF']['SIMGEN'] = os.path.join(
+            env['CONF']['MAXCORE_HOME'], 'bin', 'simgen')
+
 class ArmFastModelComponent(object):
     def __init__(self, project_file, *extra_deps, tags=None):
         if not tags:

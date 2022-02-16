@@ -28,7 +28,7 @@
 
 Import('*')
 
-if env['USE_SPARC_ISA']:
+if env['CONF']['USE_SPARC_ISA']:
     env.TagImplies('sparc isa', 'gem5 lib')
 
 Source('asi.cc', tags='sparc isa')

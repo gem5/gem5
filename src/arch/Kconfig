@@ -1,4 +1,4 @@
-# Copyright 2020 Google, Inc.
+# Copyright 2022 Google LLC
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -23,7 +23,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+config TARGET_GPU_ISA
+    string
 
-sticky_vars.Add(BoolVariable('BUILD_GPU', 'Build the compute-GPU model',
-                             False))
+rsource "amdgpu/Kconfig"
+
+rsource "arm/Kconfig"
+rsource "mips/Kconfig"
+rsource "null/Kconfig"
+rsource "power/Kconfig"
+rsource "riscv/Kconfig"
+rsource "sparc/Kconfig"
+rsource "x86/Kconfig"

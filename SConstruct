@@ -77,6 +77,7 @@
 
 # Global Python imports
 import atexit
+import itertools
 import os
 import sys
 
@@ -115,8 +116,6 @@ AddOption('--no-colors', dest='use_colors', action='store_false',
           help="Don't add color to abbreviated scons output")
 AddOption('--with-cxx-config', action='store_true',
           help="Build with support for C++-based configuration")
-AddOption('--default',
-          help='Override which build_opts file to use for defaults')
 AddOption('--ignore-style', action='store_true',
           help='Disable style checking hooks')
 AddOption('--linker', action='store', default=None, choices=linker_options,
@@ -162,6 +161,7 @@ sys.path[1:1] = [ Dir('#build_tools').abspath ]
 # declared above.
 from gem5_scons import error, warning, summarize_warnings, parse_build_path
 from gem5_scons import TempFileSpawn, EnvDefaults, MakeAction, MakeActionTool
+from gem5_scons import kconfig
 import gem5_scons
 from gem5_scons.builders import ConfigFile, AddLocalRPATH, SwitchingHeaders
 from gem5_scons.builders import Blob
@@ -214,13 +214,6 @@ Default(environ.get('M5_DEFAULT_BINARY', 'build/ARM/gem5.debug'))
 # the target(s).
 #
 ########################################################################
-
-# helper function: find last occurrence of element in list
-def rfind(l, elt, offs = -1):
-    for i in range(len(l)+offs, 0, -1):
-        if l[i] == elt:
-            return i
-    raise ValueError("element not found")
 
 # Take a list of paths (or SCons Nodes) and return a list with all
 # paths made absolute and ~-expanded.  Paths will be interpreted
@@ -380,6 +373,10 @@ for variant_path in variant_paths:
     gem5_build = os.path.join(variant_path, 'gem5.build')
     env['GEM5BUILD'] = gem5_build
     Execute(Mkdir(gem5_build))
+
+    config_file = Dir(gem5_build).File('config')
+    kconfig_file = Dir(gem5_build).File('Kconfig')
+    gem5_kconfig_file = Dir('#src').File('Kconfig')
 
     env.SConsignFile(os.path.join(gem5_build, 'sconsign'))
 
@@ -662,59 +659,13 @@ for variant_path in variant_paths:
         after_sconsopts_callbacks.append(cb)
     Export('AfterSConsopts')
 
-    # Sticky variables get saved in the variables file so they persist from
-    # one invocation to the next (unless overridden, in which case the new
-    # value becomes sticky).
-    sticky_vars = Variables(args=ARGUMENTS)
-    Export('sticky_vars')
+    extras_file = os.path.join(gem5_build, 'extras')
+    extras_var = Variables(extras_file, args=ARGUMENTS)
 
-    # EXTRAS is special since it affects what SConsopts need to be read.
-    sticky_vars.Add(('EXTRAS', 'Add extra directories to the compilation', ''))
-
-    # Set env variables according to the build directory config.
-    sticky_vars.files = []
-    # Variables for $BUILD_ROOT/$VARIANT_DIR are stored in
-    # $BUILD_ROOT/$VARIANT_DIR/gem5.build/variables
-
-    gem5_build_vars = os.path.join(gem5_build, 'variables')
-    build_root_vars = os.path.join(build_root, 'variables', variant_dir)
-    current_vars_files = [gem5_build_vars, build_root_vars]
-    existing_vars_files = list(filter(isfile, current_vars_files))
-    if existing_vars_files:
-        sticky_vars.files.extend(existing_vars_files)
-        if not GetOption('silent'):
-            print('Using saved variables file(s) %s' %
-                    ', '.join(existing_vars_files))
-    else:
-        # Variant specific variables file doesn't exist.
-
-        # Get default build variables from source tree.  Variables are
-        # normally determined by name of $VARIANT_DIR, but can be
-        # overridden by '--default=' arg on command line.
-        default = GetOption('default')
-        opts_dir = Dir('#build_opts').abspath
-        if default:
-            default_vars_files = [
-                    gem5_build_vars,
-                    build_root_vars,
-                    os.path.join(opts_dir, default)
-                ]
-        else:
-            default_vars_files = [os.path.join(opts_dir, variant_dir)]
-        existing_default_files = list(filter(isfile, default_vars_files))
-        if existing_default_files:
-            default_vars_file = existing_default_files[0]
-            sticky_vars.files.append(default_vars_file)
-            print("Variables file(s) %s not found,\n  using defaults in %s" %
-                    (' or '.join(current_vars_files), default_vars_file))
-        else:
-            error("Cannot find variables file(s) %s or default file(s) %s" %
-                    (' or '.join(current_vars_files),
-                     ' or '.join(default_vars_files)))
-            Exit(1)
+    extras_var.Add(('EXTRAS', 'Add extra directories to the compilation', ''))
 
     # Apply current settings for EXTRAS to env.
-    sticky_vars.Update(env)
+    extras_var.Update(env)
 
     # Parse EXTRAS variable to build list of all directories where we're
     # look for sources etc.  This list is exported as extras_dir_list.
@@ -724,6 +675,17 @@ for variant_path in variant_paths:
         extras_dir_list = []
 
     Export('extras_dir_list')
+
+    # Generate a Kconfig that will source the main gem5 one, and any in any
+    # EXTRAS directories.
+    kconfig_base_py = Dir('#build_tools').File('kconfig_base.py')
+    kconfig_base_cmd_parts = [f'"{kconfig_base_py}" "{kconfig_file.abspath}"',
+            f'"{gem5_kconfig_file.abspath}"']
+    for ed in extras_dir_list:
+        kconfig_base_cmd_parts.append(f'"{ed}"')
+    kconfig_base_cmd = ' '.join(kconfig_base_cmd_parts)
+    if env.Execute(kconfig_base_cmd) != 0:
+        error("Failed to build base Kconfig file")
 
     # Variables which were determined with Configure.
     env['CONF'] = {}
@@ -752,24 +714,15 @@ for variant_path in variant_paths:
     for cb in after_sconsopts_callbacks:
         cb()
 
-    # Update env for new variables added by the SConsopts.
-    sticky_vars.Update(env)
+    # If no config exists yet, see if we know how to make one?
+    if not isfile(config_file.abspath):
+        buildopts_file = Dir('#build_opts').File(variant_dir)
+        if not isfile(buildopts_file.abspath):
+            error('No config found, and no implicit config recognized')
+        kconfig.defconfig(env, kconfig_file.abspath, buildopts_file.abspath,
+                config_file.abspath)
 
-    Help('''
-Build variables for {dir}:
-{help}
-'''.format(dir=variant_dir, help=sticky_vars.GenerateHelpText(env)),
-         append=True)
-
-    # If the old vars file exists, delete it to avoid confusion/stale values.
-    if isfile(build_root_vars):
-        warning(f'Deleting old variant variables file "{build_root_vars}"')
-        remove(build_root_vars)
-    # Save sticky variables back to the gem5.build variant variables file.
-    sticky_vars.Save(gem5_build_vars, env)
-
-    # Pull all the sticky variables into the CONF dict.
-    env['CONF'].update({key: env[key] for key in sticky_vars.keys()})
+    kconfig.update_env(env, kconfig_file.abspath, config_file.abspath)
 
     # Do this after we save setting back, or else we'll tack on an
     # extra 'qdo' every time we run scons.

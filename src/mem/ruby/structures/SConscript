@@ -40,7 +40,7 @@
 
 Import('*')
 
-if env['CONF']['PROTOCOL'] == 'None':
+if not env['CONF']['RUBY']:
     Return()
 
 SimObject('RubyCache.py', sim_objects=['RubyCache'])
@@ -57,5 +57,5 @@ Source('TimerTable.cc')
 Source('BankedArray.cc')
 Source('ALUFreeListArray.cc')
 Source('TBEStorage.cc')
-if env['PROTOCOL'] == 'CHI':
+if env['CONF']['PROTOCOL'] == 'CHI':
     Source('MN_TBETable.cc')
