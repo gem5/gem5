@@ -65,7 +65,7 @@ if env['USE_SYSTEMC']:
         Source('python.cc')
         Source('sc_main_python.cc')
         append = {}
-        with gem5_scons.Configure(main) as conf:
+        with gem5_scons.Configure(env) as conf:
             for flag in ('-Wno-self-assign-overloaded', '-Wno-self-assign'):
                 if conf.CheckCxxFlag(flag, autoadd=False):
                     append['CCFLAGS'] = [flag]
@@ -73,7 +73,7 @@ if env['USE_SYSTEMC']:
         Source('sc_time_python.cc', append=append)
 
     # Disable the false positive warning for the event members of the scheduler.
-    with gem5_scons.Configure(main) as conf:
+    with gem5_scons.Configure(env) as conf:
         flag = '-Wno-free-nonheap-object'
         append = {}
         if conf.CheckCxxFlag(flag, autoadd=False):

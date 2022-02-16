@@ -28,7 +28,7 @@ Import('*')
 from gem5_scons.util import compareVersions
 
 if env['USE_SYSTEMC']:
-    if main['GCC'] and compareVersions(main['CXXVERSION'], '10.0') >= 0:
+    if env['GCC'] and compareVersions(env['CXXVERSION'], '10.0') >= 0:
         disable_false_positives = {
             "CCFLAGS": [ "-Wno-array-bounds",
                          "-Wno-stringop-overflow" ]
