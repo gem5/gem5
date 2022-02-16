@@ -49,7 +49,7 @@ from gem5_scons import Transform
 
 Import('*')
 
-if env['CONF']['PROTOCOL'] == 'None':
+if not env['CONF']['RUBY']:
     Return()
 
 DebugFlag('ProtocolTrace')
@@ -112,7 +112,7 @@ MakeInclude('structures/PerfectCacheMemory.hh')
 MakeInclude('structures/PersistentTable.hh')
 MakeInclude('structures/RubyPrefetcher.hh')
 MakeInclude('structures/TBEStorage.hh')
-if env['PROTOCOL'] == 'CHI':
+if env['CONF']['PROTOCOL'] == 'CHI':
     MakeInclude('structures/MN_TBEStorage.hh')
     MakeInclude('structures/MN_TBETable.hh')
 MakeInclude('structures/TBETable.hh')

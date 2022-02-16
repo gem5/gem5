@@ -29,7 +29,7 @@
 
 Import('*')
 
-if env['USE_MIPS_ISA']:
+if env['CONF']['USE_MIPS_ISA']:
     env.TagImplies('mips isa', 'gem5 lib')
 
 Source('decoder.cc', tags='mips isa')

@@ -81,6 +81,3 @@ with gem5_scons.Configure(werror_env) as conf:
         warning("Deprecated namespaces are not supported by this compiler.\n"
                 "Please make sure to check the mailing list for deprecation "
                 "announcements.")
-
-sticky_vars.Add(BoolVariable('USE_POSIX_CLOCK', 'Use POSIX Clocks',
-                             '${CONF["HAVE_POSIX_CLOCK"]}'))
