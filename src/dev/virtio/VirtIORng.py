@@ -46,5 +46,3 @@ class VirtIORng(VirtIODeviceBase):
     cxx_class = 'gem5::VirtIORng'
 
     qSize = Param.Unsigned(16, "Request queue size")
-
-    entropy_source = Param.String("/dev/random", "The source of entropy")
