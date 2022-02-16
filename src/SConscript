@@ -57,17 +57,13 @@ Export(SourceFilter.factories)
 
 Import('*')
 
-if env['USE_EFENCE']:
+if env['CONF']['USE_EFENCE']:
     env.Append(LIBS=['efence'])
 
 # Children need to see the environment
 Export('env')
 
-all_export_vars = set()
-all_export_vars.update(export_vars)
-all_export_vars.update(sticky_vars.keys())
-
-build_env = [(opt, env[opt]) for opt in all_export_vars]
+build_env = list(env['CONF'].items())
 
 from code_formatter import code_formatter
 
@@ -264,7 +260,7 @@ cxx_file.add_emitter('.proto', protoc_emitter)
 def ProtoBuf(source, tags=None, add_tags=None):
     '''Add a Protocol Buffer to build'''
 
-    if not env['HAVE_PROTOC'] or not env['HAVE_PROTOBUF']:
+    if not env['HAVE_PROTOC'] or not env['CONF']['HAVE_PROTOBUF']:
         error('Got protobuf to build, but lacks support!')
 
     '''Specify the source file, and any tags'''
@@ -558,12 +554,12 @@ for extra_dir in extras_dir_list:
             build_dir = os.path.join(env['BUILDDIR'], root[prefix_len:])
             SConscript(os.path.join(root, 'SConscript'), variant_dir=build_dir)
 
-for opt in all_export_vars:
+for opt in env['CONF'].keys():
     env.ConfigFile(opt)
 
 def makeTheISA(source, target, env):
     isas = sorted(set(env.Split('${ALL_ISAS}')))
-    target_isa = env['TARGET_ISA']
+    target_isa = env['CONF']['TARGET_ISA']
     is_null_isa = '1' if (target_isa.lower() == 'null') else '0'
 
     def namespace(isa):
@@ -586,7 +582,7 @@ env.Command('config/the_isa.hh', [],
             MakeAction(makeTheISA, Transform("CFG ISA", 0)))
 
 def makeTheGPUISA(source, target, env):
-    gpu_isa = env['TARGET_GPU_ISA']
+    gpu_isa = env['CONF']['TARGET_GPU_ISA']
 
     if gpu_isa:
         namespace = gpu_isa[0].upper() + gpu_isa[1:].lower() + 'ISA'

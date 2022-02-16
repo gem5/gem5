@@ -27,7 +27,7 @@ import gem5_scons
 
 Import('*')
 
-if env['USE_SYSTEMC']:
+if env['CONF']['USE_SYSTEMC']:
     SimObject('SystemC.py', sim_objects=[
         'SystemC_Kernel', 'SystemC_ScObject', 'SystemC_ScModule'])
 

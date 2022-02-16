@@ -75,12 +75,11 @@ SimObject('RiscvTLB.py', sim_objects=['RiscvPagetableWalker', 'RiscvTLB'],
     tags='riscv isa')
 
 SimObject('RiscvCPU.py', sim_objects=[], tags='riscv isa')
-if env['TARGET_ISA'] == 'riscv':
-    SimObject('AtomicSimpleCPU.py', sim_objects=[], tags='riscv isa')
-    SimObject('TimingSimpleCPU.py', sim_objects=[], tags='riscv isa')
-    SimObject('NonCachingSimpleCPU.py', sim_objects=[], tags='riscv isa')
-    SimObject('O3CPU.py', sim_objects=[], tags='riscv isa')
-    SimObject('MinorCPU.py', sim_objects=[], tags='riscv isa')
+SimObject('AtomicSimpleCPU.py', sim_objects=[], tags='riscv isa')
+SimObject('TimingSimpleCPU.py', sim_objects=[], tags='riscv isa')
+SimObject('NonCachingSimpleCPU.py', sim_objects=[], tags='riscv isa')
+SimObject('O3CPU.py', sim_objects=[], tags='riscv isa')
+SimObject('MinorCPU.py', sim_objects=[], tags='riscv isa')
 
 DebugFlag('RiscvMisc', tags='riscv isa')
 DebugFlag('PMP', tags='riscv isa')

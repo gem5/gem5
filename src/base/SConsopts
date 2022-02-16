@@ -31,30 +31,35 @@ import gem5_scons
 
 with gem5_scons.Configure(main) as conf:
     # Check for <fenv.h> (C99 FP environment control)
-    conf.env['HAVE_FENV'] = conf.CheckHeader('fenv.h', '<>')
+    conf.env['CONF']['HAVE_FENV'] = conf.CheckHeader('fenv.h', '<>')
 
-    if not conf.env['HAVE_FENV']:
+    if conf.env['CONF']['HAVE_FENV']:
+        conf.env.TagImplies('fenv', 'gem5 lib')
+    else:
         warning("Header file <fenv.h> not found.\n"
                 "This host has no IEEE FP rounding mode control.")
 
     # Check for <png.h> (libpng library needed if wanting to dump
     # frame buffer image in png format)
-    conf.env['HAVE_PNG'] = conf.CheckHeader('png.h', '<>')
+    conf.env['CONF']['HAVE_PNG'] = conf.CheckHeader('png.h', '<>')
 
-    if not conf.env['HAVE_PNG']:
+    if conf.env['CONF']['HAVE_PNG']:
+        conf.env.TagImplies('png', 'gem5 lib')
+    else:
         warning("Header file <png.h> not found.\n"
                 "This host has no libpng library.\n"
                 "Disabling support for PNG framebuffers.")
 
-    have_posix_clock = \
+    conf.env['CONF']['HAVE_POSIX_CLOCK'] = \
         conf.CheckLibWithHeader([None, 'rt'], 'time.h', 'C',
                                 'clock_nanosleep(0,0,NULL,NULL);')
-    if not have_posix_clock:
+    if not conf.env['CONF']['HAVE_POSIX_CLOCK']:
         warning("Can't find library for POSIX clocks.")
 
     # Valgrind gets much less confused if you tell it when you're using
     # alternative stacks.
-    conf.env['HAVE_VALGRIND'] = conf.CheckCHeader('valgrind/valgrind.h')
+    conf.env['CONF']['HAVE_VALGRIND'] = \
+            conf.CheckCHeader('valgrind/valgrind.h')
 
 
 # Check if the compiler supports the [[gnu::deprecated]] attribute
@@ -64,20 +69,16 @@ werror_env.Append(CCFLAGS=['-Werror'])
 with gem5_scons.Configure(werror_env) as conf:
 
     # Store result in the main environment
-    main['HAVE_DEPRECATED_NAMESPACE'] = conf.TryCompile('''
+    main['CONF']['HAVE_DEPRECATED_NAMESPACE'] = conf.TryCompile('''
         int main() {return 0;}
         namespace [[gnu::deprecated("Test namespace deprecation")]]
         test_deprecated_namespace {}
     ''', '.cc')
 
-    if not main['HAVE_DEPRECATED_NAMESPACE']:
+    if not main['CONF']['HAVE_DEPRECATED_NAMESPACE']:
         warning("Deprecated namespaces are not supported by this compiler.\n"
                 "Please make sure to check the mailing list for deprecation "
                 "announcements.")
 
 sticky_vars.Add(BoolVariable('USE_POSIX_CLOCK', 'Use POSIX Clocks',
-                             have_posix_clock))
-
-
-export_vars.extend([
-        'HAVE_FENV', 'HAVE_PNG', 'HAVE_VALGRIND', 'HAVE_DEPRECATED_NAMESPACE'])
+                             '${CONF["HAVE_POSIX_CLOCK"]}'))

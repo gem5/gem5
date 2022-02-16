@@ -36,7 +36,7 @@ from gem5_scons import Transform
 
 Import('*')
 
-if env['PROTOCOL'] == 'None':
+if env['CONF']['PROTOCOL'] == 'None':
     Return()
 
 output_dir = Dir('.')
@@ -69,7 +69,7 @@ def slicc_emitter(target, source, env):
     slicc = SLICC(filepath, protocol_base.abspath, verbose=False)
     slicc.process()
     slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
-    if env['SLICC_HTML']:
+    if env['CONF']['SLICC_HTML']:
         slicc.writeHTMLFiles(html_dir.abspath)
 
     target.extend([output_dir.File(f) for f in sorted(slicc.files())])
@@ -82,13 +82,13 @@ def slicc_action(target, source, env):
     slicc = SLICC(filepath, protocol_base.abspath, verbose=True)
     slicc.process()
     slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
-    if env['SLICC_HTML']:
+    if env['CONF']['SLICC_HTML']:
         slicc.writeHTMLFiles(html_dir.abspath)
 
 slicc_builder = Builder(action=MakeAction(slicc_action, Transform("SLICC")),
                         emitter=slicc_emitter)
 
-protocol = env['PROTOCOL']
+protocol = env['CONF']['PROTOCOL']
 protocol_dir = None
 for path in env['PROTOCOL_DIRS']:
     if os.path.exists(path.File("%s.slicc" % protocol).abspath):

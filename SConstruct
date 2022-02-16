@@ -630,10 +630,8 @@ for variant_path in variant_paths:
 
     Export('extras_dir_list')
 
-    # Sticky variables that should be exported to #defines in config/*.hh
-    # (see src/SConscript).
-    export_vars = []
-    Export('export_vars')
+    # Variables which were determined with Configure.
+    env['CONF'] = {}
 
     # Walk the tree and execute all SConsopts scripts that wil add to the
     # above variables
@@ -671,19 +669,22 @@ Build variables for {dir}:
     # Save sticky variable settings back to current variables file
     sticky_vars.Save(current_vars_file, env)
 
+    # Pull all the sticky variables into the CONF dict.
+    env['CONF'].update({key: env[key] for key in sticky_vars.keys()})
+
     # Do this after we save setting back, or else we'll tack on an
     # extra 'qdo' every time we run scons.
-    if env['BATCH']:
-        env['CC']     = env['BATCH_CMD'] + ' ' + env['CC']
-        env['CXX']    = env['BATCH_CMD'] + ' ' + env['CXX']
-        env['AS']     = env['BATCH_CMD'] + ' ' + env['AS']
-        env['AR']     = env['BATCH_CMD'] + ' ' + env['AR']
-        env['RANLIB'] = env['BATCH_CMD'] + ' ' + env['RANLIB']
+    if env['CONF']['BATCH']:
+        env['CC']     = env['CONF']['BATCH_CMD'] + ' ' + env['CC']
+        env['CXX']    = env['CONF']['BATCH_CMD'] + ' ' + env['CXX']
+        env['AS']     = env['CONF']['BATCH_CMD'] + ' ' + env['AS']
+        env['AR']     = env['CONF']['BATCH_CMD'] + ' ' + env['AR']
+        env['RANLIB'] = env['CONF']['BATCH_CMD'] + ' ' + env['RANLIB']
 
     # Cache build files in the supplied directory.
-    if env['M5_BUILD_CACHE']:
-        print('Using build cache located at', env['M5_BUILD_CACHE'])
-        CacheDir(env['M5_BUILD_CACHE'])
+    if env['CONF']['M5_BUILD_CACHE']:
+        print('Using build cache located at', env['CONF']['M5_BUILD_CACHE'])
+        CacheDir(env['CONF']['M5_BUILD_CACHE'])
 
 
     env.Append(CCFLAGS='$CCFLAGS_EXTRA')

@@ -25,7 +25,7 @@
 
 Import('*')
 
-if not env['USE_ARM_FASTMODEL']:
+if not env['CONF']['USE_ARM_FASTMODEL']:
     Return()
 
 protocol_dir = Dir('..').Dir('protocol')

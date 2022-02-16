@@ -41,13 +41,13 @@ with gem5_scons.Configure(main) as conf:
     # include path and library path provided by pkg-config. We perform
     # this check even if there isn't a pkg-config configuration for hdf5
     # since some installations don't use pkg-config.
-    conf.env['HAVE_HDF5'] = \
+    conf.env['CONF']['HAVE_HDF5'] = \
             conf.CheckLibWithHeader('hdf5', 'hdf5.h', 'C',
                                     'H5Fcreate("", 0, 0, 0);') and \
             conf.CheckLibWithHeader('hdf5_cpp', 'H5Cpp.h', 'C++',
                                     'H5::H5File("", 0);')
 
-    if not conf.env['HAVE_HDF5']:
+    if conf.env['CONF']['HAVE_HDF5']:
+        conf.env.TagImplies('hdf5', 'gem5 lib')
+    else:
         warning("Couldn't find HDF5 C++ libraries. Disabling HDF5 support.")
-
-export_vars.append('HAVE_HDF5')

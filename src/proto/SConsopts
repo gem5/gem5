@@ -65,13 +65,18 @@ with gem5_scons.Configure(main) as conf:
     # automatically added to the LIBS environment variable. After
     # this, we can use the HAVE_PROTOBUF flag to determine if we have
     # got both protoc and libprotobuf available.
-    conf.env['HAVE_PROTOBUF'] = conf.env['HAVE_PROTOC'] and \
+    conf.env['CONF']['HAVE_PROTOBUF'] = conf.env['HAVE_PROTOC'] and \
         conf.CheckLibWithHeader('protobuf', 'google/protobuf/message.h',
                                 'C++', 'GOOGLE_PROTOBUF_VERIFY_VERSION;')
 
 # If we have the compiler but not the library, print another warning.
-if main['HAVE_PROTOC'] and not main['HAVE_PROTOBUF']:
+if main['HAVE_PROTOC'] and not main['CONF']['HAVE_PROTOBUF']:
     warning('Did not find protocol buffer library and/or headers.\n'
             'Please install libprotobuf-dev for tracing support.')
 
-export_vars.append('HAVE_PROTOBUF')
+if main['CONF']['HAVE_PROTOBUF']:
+    main.TagImplies('protobuf', 'gem5 lib')
+    # protoc relies on the fact that undefined preprocessor symbols are
+    # explanded to 0 but since we use -Wundef they end up generating
+    # warnings.
+    main.Append(CCFLAGS='-DPROTOBUF_INLINE_NOT_IN_HEADERS=0')

@@ -40,7 +40,7 @@
 
 Import('*')
 
-if env['TARGET_ISA'] != 'null':
+if env['CONF']['TARGET_ISA'] != 'null':
     SimObject('BaseMinorCPU.py', sim_objects=[
         'MinorOpClass', 'MinorOpClassSet', 'MinorFUTiming', 'MinorFU',
         'MinorFUPool', 'BaseMinorCPU'],

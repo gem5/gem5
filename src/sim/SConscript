@@ -104,7 +104,7 @@ GTest('proxy_ptr.test', 'proxy_ptr.test.cc')
 GTest('serialize.test', 'serialize.test.cc', with_tag('gem5 serialize'))
 GTest('serialize_handlers.test', 'serialize_handlers.test.cc')
 
-if env['TARGET_ISA'] != 'null':
+if env['CONF']['TARGET_ISA'] != 'null':
     SimObject('InstTracer.py', sim_objects=['InstTracer'])
     SimObject('Process.py', sim_objects=['Process', 'EmulatedDriver'])
     Source('faults.cc')

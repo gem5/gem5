@@ -28,7 +28,7 @@
 
 Import('*')
 
-if env['PROTOCOL'] == 'None':
+if env['CONF']['PROTOCOL'] == 'None':
     Return()
 
 Source('AccessTraceForAddress.cc')

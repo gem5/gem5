@@ -34,11 +34,10 @@ Source('info.cc')
 Source('storage.cc')
 Source('text.cc')
 
-if env['HAVE_HDF5']:
-    if env['GCC']:
-        Source('hdf5.cc', append={'CXXFLAGS': '-Wno-deprecated-copy'})
-    else:
-        Source('hdf5.cc')
+if env['GCC']:
+    Source('hdf5.cc', append={'CXXFLAGS': '-Wno-deprecated-copy'}, tags='hdf5')
+else:
+    Source('hdf5.cc', tags='hdf5')
 
 GTest('group.test', 'group.test.cc', 'group.cc', 'info.cc',
     with_tag('gem5 trace'))

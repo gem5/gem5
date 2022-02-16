@@ -30,7 +30,7 @@ import sys
 
 Import('*')
 
-if env['TARGET_ISA'] != 'null':
+if env['CONF']['TARGET_ISA'] != 'null':
     SimObject('FUPool.py', sim_objects=['FUPool'])
     SimObject('FuncUnitConfig.py', sim_objects=[])
     SimObject('BaseO3CPU.py', sim_objects=['BaseO3CPU'], enums=[

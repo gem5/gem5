@@ -28,7 +28,7 @@
 
 Import('*')
 
-if env['TARGET_ISA'] != 'null':
+if env['CONF']['TARGET_ISA'] != 'null':
     SimObject('BaseAtomicSimpleCPU.py', sim_objects=['BaseAtomicSimpleCPU'])
     Source('atomic.cc')
 

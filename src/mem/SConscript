@@ -97,7 +97,7 @@ Source('port_terminator.cc')
 
 GTest('translation_gen.test', 'translation_gen.test.cc')
 
-if env['TARGET_ISA'] != 'null':
+if env['CONF']['TARGET_ISA'] != 'null':
     Source('translating_port_proxy.cc')
     Source('se_translating_port_proxy.cc')
     Source('page_table.cc')

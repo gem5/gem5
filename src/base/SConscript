@@ -42,14 +42,10 @@ GTest('cprintf.test', 'cprintf.test.cc')
 Executable('cprintftime', 'cprintftime.cc', 'cprintf.cc')
 Source('debug.cc', add_tags=['gem5 trace', 'gem5 events'])
 GTest('debug.test', 'debug.test.cc', 'debug.cc')
-if env['HAVE_FENV']:
-    Source('fenv.cc')
-else:
-    warning("No IEEE FP rounding mode control.\n"
-            "FP results may deviate slightly from other platforms.")
-if env['HAVE_PNG']:
+Source('fenv.cc', tags='fenv')
+if env['CONF']['HAVE_PNG']:
     SourceLib('png')
-    Source('pngwriter.cc')
+Source('pngwriter.cc', tags='png')
 Source('fiber.cc')
 GTest('fiber.test', 'fiber.test.cc', 'fiber.cc')
 GTest('flags.test', 'flags.test.cc')
@@ -70,7 +66,7 @@ Source('pixel.cc')
 GTest('pixel.test', 'pixel.test.cc', 'pixel.cc')
 Source('pollevent.cc')
 Source('random.cc')
-if env['TARGET_ISA'] != 'null':
+if env['CONF']['TARGET_ISA'] != 'null':
     Source('remote_gdb.cc')
 Source('socket.cc')
 GTest('socket.test', 'socket.test.cc', 'socket.cc')

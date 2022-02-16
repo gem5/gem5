@@ -25,7 +25,7 @@
 
 Import('*')
 
-if not env['USE_SYSTEMC'] or not env['USE_PYTHON']:
+if not env['CONF']['USE_SYSTEMC'] or not env['USE_PYTHON']:
     Return()
 
 PySource('m5', 'systemc.py')

@@ -46,13 +46,13 @@ from gem5_scons import Transform, warning, error
 
 import os.path
 
-if env['USE_ARM_FASTMODEL']:
-    if not env['USE_SYSTEMC']:
+if env['CONF']['USE_ARM_FASTMODEL']:
+    if not env['CONF']['USE_SYSTEMC']:
         warning('ARM Fast Models require systemc support')
-        env['USE_ARM_FASTMODEL'] = False
+        env['CONF']['USE_ARM_FASTMODEL'] = False
         Return()
 
-if not env['USE_ARM_FASTMODEL']:
+if not env['CONF']['USE_ARM_FASTMODEL']:
     Return()
 
 
@@ -60,7 +60,7 @@ systemc_home = Dir('#/src/systemc/ext/systemc_home')
 env['ENV']['SYSTEMC_HOME'] = systemc_home.abspath
 
 def extract_var(name):
-    if name not in env:
+    if name not in env['CONF']:
         error('Error: %s is not set' % name)
     print('%s = %s' % (name, env[name]))
     # Make sure the value of this variable shows up as an environment variable
@@ -77,7 +77,7 @@ maxcore_home = Dir(maxcore_home)
 armlmd_license_file = File(armlmd_license_file)
 
 
-pvlib_flavor = env['PVLIB_FLAVOR']
+pvlib_flavor = env['CONF']['PVLIB_FLAVOR']
 pvlib_lib_dir = pvlib_home.Dir('lib').Dir(pvlib_flavor)
 
 simulation_engine_name = 'libMAXCOREInitSimulationEngine.3.so'
@@ -254,7 +254,7 @@ class ProjectFileParser(Grammar):
         t[0] = t[1]
 
 
-license_count = int(env['ARMLMD_LICENSE_COUNT'])
+license_count = int(env['CONF']['ARMLMD_LICENSE_COUNT'])
 arm_licenses = list((Value(object()) for i in range(license_count)))
 license_cycle = cycle(arm_licenses)
 
@@ -348,8 +348,9 @@ class ArmFastModelComponent(object):
         # Simgen also puts required share library under the project folder.
         self.rpaths = [simgen_dir, project_file_dir]
         self.log = gen_dir.File('build_%s.log' % tlc)
-        self.simgen_cmd = env.subst('${SIMGEN} -p %s --configuration %s -b ' +
-            '--verbose off --num-build-cpus 100 --build-dir %s >%s') % \
+        self.simgen_cmd = env.subst('${CONF["SIMGEN"]} -p %s '
+            '--configuration %s -b --verbose off --num-build-cpus 100 '
+            '--build-dir %s >%s') % \
             (shlex.quote(project_file.srcnode().abspath),
              shlex.quote(config_name),
              shlex.quote(simgen_dir.abspath),
