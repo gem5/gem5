@@ -30,23 +30,6 @@ import os
 
 Import('*')
 
-main.Append(ALL_PROTOCOLS=[
-    'GPU_VIPER',
-    'MOESI_AMD_Base',
-    'MESI_Two_Level',
-    'MESI_Three_Level',
-    'MESI_Three_Level_HTM',
-    'MI_example',
-    'MOESI_CMP_directory',
-    'MOESI_CMP_token',
-    'MOESI_hammer',
-    'Garnet_standalone',
-    'None'
-    ])
-
-opt = BoolVariable('SLICC_HTML', 'Create HTML files', False)
-sticky_vars.Add(opt)
-
 main.Append(PROTOCOL_DIRS=[Dir('.')])
 
 protocol_base = Dir('.')

@@ -40,7 +40,7 @@
 
 Import('*')
 
-if env['USE_X86_ISA']:
+if env['CONF']['USE_X86_ISA']:
     env.TagImplies('x86 isa', 'gem5 lib')
 
 Source('cpuid.cc', tags='x86 isa')

@@ -1,19 +1,4 @@
-# Copyright (c) 2013, 2015-2020 ARM Limited
-# All rights reserved.
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2011 Advanced Micro Devices, Inc.
-# Copyright (c) 2009 The Hewlett-Packard Development Company
-# Copyright (c) 2004-2005 The Regents of The University of Michigan
-# All rights reserved.
+# Copyright 2022 Google LLC
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -38,16 +23,28 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
-import os.path
+menu "Ruby"
+    menuconfig RUBY
+        bool "Enable"
 
-from gem5_scons import warning
+    if RUBY
+        config PROTOCOL
+            string
 
-Import('*')
+        config NEED_PARTIAL_FUNC_READS
+            bool
 
-sticky_vars.AddVariables(
-    ('BATCH', 'Use batch pool for build and tests', False),
-    ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
-    ('M5_BUILD_CACHE', 'Cache built objects in this directory', False),
-    ('USE_EFENCE', 'Link with Electric Fence malloc debugger', False),
-    )
+        choice "Ruby protocol"
+        prompt "Ruby protocol"
+        endchoice
+
+        config SLICC_HTML
+            bool 'Create HTML files'
+
+        config NUMBER_BITS_PER_SET
+            int 'Max elements in set'
+            default 64
+    endif
+endmenu
+
+rsource "protocol/Kconfig"

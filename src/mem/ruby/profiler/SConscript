@@ -28,7 +28,7 @@
 
 Import('*')
 
-if env['CONF']['PROTOCOL'] == 'None':
+if not env['CONF']['RUBY']:
     Return()
 
 Source('AccessTraceForAddress.cc')
