@@ -73,6 +73,19 @@ def defconfig(env, base_kconfig, config_in, config_out):
         error("Failed to run defconfig")
 
 
+def menuconfig(
+    env, base_kconfig, config_path, main_menu_text, style="aquatic"
+):
+    """
+    Interface of handling menuconfig.py of Kconfiglib
+    """
+    kconfig_env = _prep_env(env, base_kconfig, config_path)
+    kconfig_env["ENV"]["MENUCONFIG_STYLE"] = style
+    kconfig_env["ENV"]["MAIN_MENU_TEXT"] = main_menu_text
+    if kconfig_env.Execute('"${MENUCONFIG_PY}" "${BASE_KCONFIG}"') != 0:
+        error("Failed to run menuconfig")
+
+
 def update_env(env, base_kconfig, config_path):
     """
     Update the Scons' env["CONF"] options from kconfig env
