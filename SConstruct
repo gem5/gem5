@@ -259,27 +259,60 @@ Targets:
 #
 ########################################################################
 
+kconfig_actions = ('menuconfig',)
+
+Help("""
+Kconfig:
+        In addition to the default configs, you can also create your own
+        configs, or edit one that already exists. To edit or create a config
+        for a particular directory, give SCons a target which is the directory
+        to configure, and then "menuconfig". For example:
+
+        scons menuconfig build/foo/bar
+
+        will set up a build directory in build/foo/bar if one doesn't already
+        exist, and open the menuconfig editor to view/set configuration
+        values.
+""", append=True)
+
 # Take a list of paths (or SCons Nodes) and return a list with all
 # paths made absolute and ~-expanded.  Paths will be interpreted
 # relative to the launch directory unless a different root is provided
+
+def makePathAbsolute(path, root=GetLaunchDir()):
+    return abspath(os.path.join(root, expanduser(str(path))))
 def makePathListAbsolute(path_list, root=GetLaunchDir()):
-    return [abspath(os.path.join(root, expanduser(str(p))))
-            for p in path_list]
+    return [makePathAbsolute(p, root) for p in path_list]
 
-# Each target must have 'build' in the interior of the path; the
-# directory below this will determine the build parameters.  For
-# example, for target 'foo/bar/build/X86/arch/x86/blah.do' we
-# recognize that X86 specifies the configuration because it
-# follow 'build' in the build path.
+if BUILD_TARGETS and BUILD_TARGETS[0] in kconfig_actions:
+    # The build targets are really arguments for the kconfig action.
+    kconfig_args = BUILD_TARGETS[:]
+    BUILD_TARGETS[:] = []
 
-# The funky assignment to "[:]" is needed to replace the list contents
-# in place rather than reassign the symbol to a new list, which
-# doesn't work (obviously!).
-BUILD_TARGETS[:] = makePathListAbsolute(BUILD_TARGETS)
+    kconfig_action = kconfig_args[0]
+    if len(kconfig_args) < 2:
+        error(f'Missing arguments for kconfig action {kconfig_action}')
+    dir_to_configure = makePathAbsolute(kconfig_args[1])
 
-# Generate a list of the unique build directories that the collected targets
-# reference.
-variant_paths = set(map(parse_build_path, BUILD_TARGETS))
+    kconfig_args = kconfig_args[2:]
+
+    variant_paths = {dir_to_configure}
+else:
+    # Each target must have 'build' in the interior of the path; the
+    # directory below this will determine the build parameters.  For
+    # example, for target 'foo/bar/build/X86/arch/x86/blah.do' we
+    # recognize that X86 specifies the configuration because it
+    # follow 'build' in the build path.
+
+    # The funky assignment to "[:]" is needed to replace the list contents
+    # in place rather than reassign the symbol to a new list, which
+    # doesn't work (obviously!).
+    BUILD_TARGETS[:] = makePathListAbsolute(BUILD_TARGETS)
+
+    # Generate a list of the unique build directories that the collected
+    # targets reference.
+    variant_paths = set(map(parse_build_path, BUILD_TARGETS))
+    kconfig_action = None
 
 
 ########################################################################
@@ -757,6 +790,15 @@ for variant_path in variant_paths:
     # Call any callbacks which the SConsopts files registered.
     for cb in after_sconsopts_callbacks:
         cb()
+
+    # Handle any requested kconfig action, then exit.
+    if kconfig_action:
+        if kconfig_action == 'menuconfig':
+            kconfig.menuconfig(env, kconfig_file.abspath, config_file.abspath,
+                    variant_path)
+        else:
+            error(f'Unrecognized kconfig action {kconfig_action}')
+        Exit(0)
 
     # If no config exists yet, see if we know how to make one?
     if not isfile(config_file.abspath):
