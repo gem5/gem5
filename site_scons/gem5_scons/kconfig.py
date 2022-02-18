@@ -28,6 +28,12 @@ import os
 from . import error
 import kconfiglib
 
+_kconfig_helpers = {
+    "DEFCONFIG_PY": "defconfig.py",
+    "MENUCONFIG_PY": "menuconfig.py",
+    "SETCONFIG_PY": "setconfig.py",
+}
+
 
 def _prep_env(env, base_kconfig, config_path=None):
     """
@@ -47,15 +53,29 @@ def _prep_env(env, base_kconfig, config_path=None):
     if config_path:
         kconfig_env["ENV"]["KCONFIG_CONFIG"] = config_path
 
+    kconfig_env["BASE_KCONFIG"] = base_kconfig
+
     ext = env.Dir("#ext")
     kconfiglib_dir = ext.Dir("Kconfiglib")
-    defconfig_py = kconfiglib_dir.File("defconfig.py")
-    menuconfig_py = kconfiglib_dir.File("menuconfig.py")
-
-    kconfig_env["DEFCONFIG_PY"] = defconfig_py
-    kconfig_env["MENUCONFIG_PY"] = menuconfig_py
-    kconfig_env["BASE_KCONFIG"] = base_kconfig
+    for key, name in _kconfig_helpers.items():
+        kconfig_env[key] = kconfiglib_dir.File(name)
     return kconfig_env
+
+
+def _process_kconfig(env, base_kconfig):
+    """
+    Create the kconfig instance by given Scons env vars
+
+    :param env: Scons env
+    :param base_kconfig: path to the Top-level Kconfig file
+    """
+    saved_env = os.environ
+    try:
+        os.environ.update({key: str(val) for key, val in env["ENV"].items()})
+        kconfig = kconfiglib.Kconfig(filename=base_kconfig)
+    finally:
+        os.environ = saved_env
+    return kconfig
 
 
 def defconfig(env, base_kconfig, config_in, config_out):
@@ -86,6 +106,29 @@ def menuconfig(
         error("Failed to run menuconfig")
 
 
+def setconfig(env, base_kconfig, config_path, assignments):
+    """
+    Interface of handling setconfig.py of Kconfiglib
+    """
+    kconfig_env = _prep_env(env, base_kconfig, config_path)
+
+    kconfig = _process_kconfig(kconfig_env, base_kconfig)
+    sym_names = list(sym.name for sym in kconfig.unique_defined_syms)
+
+    filtered = dict(
+        {key: val for key, val in assignments.items() if key in sym_names}
+    )
+
+    setconfig_cmd_parts = ['"${SETCONFIG_PY}" --kconfig "${BASE_KCONFIG}"']
+    for key, val in filtered.items():
+        if isinstance(val, bool):
+            val = "y" if val else "n"
+        setconfig_cmd_parts.append(f"{key}={val}")
+    setconfig_cmd = " ".join(setconfig_cmd_parts)
+    if kconfig_env.Execute(setconfig_cmd) != 0:
+        error("Failed to run setconfig")
+
+
 def update_env(env, base_kconfig, config_path):
     """
     Update the Scons' env["CONF"] options from kconfig env
@@ -96,12 +139,7 @@ def update_env(env, base_kconfig, config_path):
     """
     kconfig_env = _prep_env(env, base_kconfig, config_path)
 
-    saved_env = os.environ
-    os.environ.update(
-        {key: str(val) for key, val in kconfig_env["ENV"].items()}
-    )
-    kconfig = kconfiglib.Kconfig(filename=base_kconfig)
-    os.environ = saved_env
+    kconfig = _process_kconfig(kconfig_env, base_kconfig)
 
     kconfig.load_config(config_path)
     for sym in kconfig.unique_defined_syms:
