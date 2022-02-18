@@ -33,6 +33,7 @@ _kconfig_helpers = {
     "GUICONFIG_PY": "guiconfig.py",
     "LISTNEWCONFIG_PY": "listnewconfig.py",
     "MENUCONFIG_PY": "menuconfig.py",
+    "SAVEDEFCONFIG_PY": "savedefconfig.py",
     "SETCONFIG_PY": "setconfig.py",
 }
 
@@ -102,6 +103,19 @@ def menuconfig(
     kconfig_env["ENV"]["MAIN_MENU_TEXT"] = main_menu_text
     if kconfig_env.Execute('"${MENUCONFIG_PY}" "${BASE_KCONFIG}"') != 0:
         error("Failed to run menuconfig")
+
+
+def savedefconfig(env, base_kconfig, config_in, config_out):
+    kconfig_env = _prep_env(env, base_kconfig, config_in)
+    kconfig_env["CONFIG_OUT"] = config_out
+    if (
+        kconfig_env.Execute(
+            '"${SAVEDEFCONFIG_PY}" '
+            '--kconfig "${BASE_KCONFIG}" --out "${CONFIG_OUT}"'
+        )
+        != 0
+    ):
+        error("Failed to run savedefconfig")
 
 
 def setconfig(env, base_kconfig, config_path, assignments):

@@ -264,6 +264,7 @@ kconfig_actions = (
     'guiconfig',
     'listnewconfig',
     'menuconfig',
+    'savedefconfig',
     'setconfig',
 )
 
@@ -314,6 +315,17 @@ Kconfig tools:
         values, and view help text. menuconfig runs in text mode.
 
         scons menuconfig build/foo/bar
+
+
+        savedefconfig:
+        Save a defconfig file which would give rise to the current config.
+        For instance, you could use menuconfig to set up a config how you want
+        it with the options you cared about, and then use savedefconfig to save
+        a minimal config file. These files would be suitable to use in the
+        defconfig directory. The second argument specifies the filename for
+        the new defconfig file.
+
+        scons savedefconfig build/foo/bar new_def_config
 
 
         setconfig:
@@ -856,6 +868,12 @@ for variant_path in variant_paths:
         elif kconfig_action == 'menuconfig':
             kconfig.menuconfig(env, kconfig_file.abspath, config_file.abspath,
                     variant_path)
+        elif kconfig_action == 'savedefconfig':
+            if len(kconfig_args) != 1:
+                error('Usage: scons defconfig <build dir> <defconfig file>')
+            defconfig_path = makePathAbsolute(kconfig_args[0])
+            kconfig.savedefconfig(env, kconfig_file.abspath,
+                    config_file.abspath, defconfig_path)
         elif kconfig_action == 'setconfig':
             kconfig.setconfig(env, kconfig_file.abspath, config_file.abspath,
                     ARGUMENTS)
