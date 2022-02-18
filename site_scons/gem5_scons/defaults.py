@@ -67,6 +67,7 @@ def EnvDefaults(env):
             "LINKFLAGS_EXTRA",
             "LANG",
             "LC_CTYPE",
+            "DISPLAY",
         ]
     )
 
