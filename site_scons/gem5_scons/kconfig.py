@@ -30,6 +30,7 @@ import kconfiglib
 
 _kconfig_helpers = {
     "DEFCONFIG_PY": "defconfig.py",
+    "LISTNEWCONFIG_PY": "listnewconfig.py",
     "MENUCONFIG_PY": "menuconfig.py",
     "SETCONFIG_PY": "setconfig.py",
 }
@@ -74,6 +75,15 @@ def defconfig(env, base_kconfig, config_in, config_out):
         != 0
     ):
         error("Failed to run defconfig")
+
+
+def listnewconfig(env, base_kconfig, config_path):
+    kconfig_env = _prep_env(env, base_kconfig, config_path)
+    # Provide a little visual separation between SCons output and
+    # listnewconfig output.
+    print()
+    if kconfig_env.Execute('"${LISTNEWCONFIG_PY}" "${BASE_KCONFIG}"') != 0:
+        error("Failed to run listnewconfig")
 
 
 def menuconfig(
