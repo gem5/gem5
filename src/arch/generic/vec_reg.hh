@@ -104,6 +104,7 @@
 
 #include "base/cprintf.hh"
 #include "base/logging.hh"
+#include "base/types.hh"
 #include "sim/serialize_handlers.hh"
 
 namespace gem5
@@ -264,7 +265,27 @@ struct ShowParam<VecRegContainer<Sz>>
  * vector registers.
  */
 /** @{ */
-using DummyVecRegContainer = VecRegContainer<8>;
+struct DummyVecRegContainer
+{
+    RegVal filler = 0;
+    bool operator == (const DummyVecRegContainer &d) const { return true; }
+    bool operator != (const DummyVecRegContainer &d) const { return true; }
+};
+template <>
+struct ParseParam<DummyVecRegContainer>
+{
+    static bool
+    parse(const std::string &s, DummyVecRegContainer &value)
+    {
+        return false;
+    }
+};
+static_assert(sizeof(DummyVecRegContainer) == sizeof(RegVal));
+static inline std::ostream &
+operator<<(std::ostream &os, const DummyVecRegContainer &d)
+{
+    return os;
+}
 /** @} */
 
 } // namespace gem5
