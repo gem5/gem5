@@ -259,20 +259,44 @@ Targets:
 #
 ########################################################################
 
-kconfig_actions = ('menuconfig',)
+kconfig_actions = (
+    'menuconfig',
+    'defconfig',
+)
 
 Help("""
 Kconfig:
         In addition to the default configs, you can also create your own
-        configs, or edit one that already exists. To edit or create a config
-        for a particular directory, give SCons a target which is the directory
-        to configure, and then "menuconfig". For example:
+        configs, or edit one that already exists. To use one of the kconfig
+        tools with a particular directory, use a target which is the directory
+        to configure, and then the name of the tool. For example, to run
+        menuconfig on directory build/foo/bar, run:
 
         scons menuconfig build/foo/bar
 
         will set up a build directory in build/foo/bar if one doesn't already
         exist, and open the menuconfig editor to view/set configuration
         values.
+
+        The tools available for working with kconfig are generally very
+        similar to ones used with the linux kernel, so information about the
+        kernel versions will typically (but not always) apply here as well.
+
+Kconfig tools:
+        menuconfig:
+        Opens the menuconfig editor which will let you view and edit config
+        values, and view help text. menuconfig runs in text mode.
+
+        scons menuconfig build/foo/bar
+
+
+        defconfig:
+        Set up a config using values specified in a defconfig file, or if no
+        value is given, use the default. The second argument specifies the
+        defconfig file. A defconfig file in the defconfig directory can be
+        implicitly specified in the build path via `build/<build_opts file>/`
+
+        scons defconfig build/foo/bar build_opts/MIPS
 """, append=True)
 
 # Take a list of paths (or SCons Nodes) and return a list with all
@@ -796,6 +820,12 @@ for variant_path in variant_paths:
         if kconfig_action == 'menuconfig':
             kconfig.menuconfig(env, kconfig_file.abspath, config_file.abspath,
                     variant_path)
+        elif kconfig_action == 'defconfig':
+            if len(kconfig_args) != 1:
+                error('Usage: scons defconfig <build dir> <defconfig file>')
+            defconfig_path = makePathAbsolute(kconfig_args[0])
+            kconfig.defconfig(env, kconfig_file.abspath,
+                    defconfig_path, config_file.abspath)
         else:
             error(f'Unrecognized kconfig action {kconfig_action}')
         Exit(0)
