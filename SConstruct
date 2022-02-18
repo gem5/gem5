@@ -264,6 +264,8 @@ kconfig_actions = (
     'guiconfig',
     'listnewconfig',
     'menuconfig',
+    'oldconfig',
+    'olddefconfig',
     'savedefconfig',
     'setconfig',
 )
@@ -315,6 +317,22 @@ Kconfig tools:
         values, and view help text. menuconfig runs in text mode.
 
         scons menuconfig build/foo/bar
+
+
+        oldconfig:
+        Update an existing config by adding settings for new options. This is
+        the same as the olddefconfig tool, except it asks what values you want
+        for the new settings.
+
+        scons oldconfig build/foo/bar
+
+
+        olddefconfig:
+        Update an existing config by adding settings for new options. This is
+        the same as the oldconfig tool, except it uses the default for any new
+        setting.
+
+        scons olddefconfig build/foo/bar
 
 
         savedefconfig:
@@ -868,6 +886,11 @@ for variant_path in variant_paths:
         elif kconfig_action == 'menuconfig':
             kconfig.menuconfig(env, kconfig_file.abspath, config_file.abspath,
                     variant_path)
+        elif kconfig_action == 'oldconfig':
+            kconfig.oldconfig(env, kconfig_file.abspath, config_file.abspath)
+        elif kconfig_action == 'olddefconfig':
+            kconfig.olddefconfig(env, kconfig_file.abspath,
+                    config_file.abspath)
         elif kconfig_action == 'savedefconfig':
             if len(kconfig_args) != 1:
                 error('Usage: scons defconfig <build dir> <defconfig file>')

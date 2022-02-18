@@ -33,6 +33,8 @@ _kconfig_helpers = {
     "GUICONFIG_PY": "guiconfig.py",
     "LISTNEWCONFIG_PY": "listnewconfig.py",
     "MENUCONFIG_PY": "menuconfig.py",
+    "OLDCONFIG_PY": "oldconfig.py",
+    "OLDDEFCONFIG_PY": "olddefconfig.py",
     "SAVEDEFCONFIG_PY": "savedefconfig.py",
     "SETCONFIG_PY": "setconfig.py",
 }
@@ -93,6 +95,18 @@ def listnewconfig(env, base_kconfig, config_path):
     print()
     if kconfig_env.Execute('"${LISTNEWCONFIG_PY}" "${BASE_KCONFIG}"') != 0:
         error("Failed to run listnewconfig")
+
+
+def oldconfig(env, base_kconfig, config_path):
+    kconfig_env = _prep_env(env, base_kconfig, config_path)
+    if kconfig_env.Execute('"${OLDCONFIG_PY}" "${BASE_KCONFIG}"') != 0:
+        error("Failed to run oldconfig")
+
+
+def olddefconfig(env, base_kconfig, config_path):
+    kconfig_env = _prep_env(env, base_kconfig, config_path)
+    if kconfig_env.Execute('"${OLDDEFCONFIG_PY}" "${BASE_KCONFIG}"') != 0:
+        error("Failed to run oldconfig")
 
 
 def menuconfig(
