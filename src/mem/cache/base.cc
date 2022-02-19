@@ -2222,10 +2222,10 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
     ADD_STAT(overallMissRate, statistics::units::Ratio::get(),
              "miss rate for overall accesses"),
     ADD_STAT(demandAvgMissLatency, statistics::units::Rate<
-                statistics::units::Cycle, statistics::units::Count>::get(),
-             "average overall miss latency"),
+                statistics::units::Tick, statistics::units::Count>::get(),
+             "average overall miss latency in ticks"),
     ADD_STAT(overallAvgMissLatency, statistics::units::Rate<
-                statistics::units::Cycle, statistics::units::Count>::get(),
+                statistics::units::Tick, statistics::units::Count>::get(),
              "average overall miss latency"),
     ADD_STAT(blockedCycles, statistics::units::Cycle::get(),
             "number of cycles access was blocked"),
@@ -2257,13 +2257,13 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
     ADD_STAT(overallMshrMissRate, statistics::units::Ratio::get(),
              "mshr miss ratio for overall accesses"),
     ADD_STAT(demandAvgMshrMissLatency, statistics::units::Rate<
-                statistics::units::Cycle, statistics::units::Count>::get(),
+                statistics::units::Tick, statistics::units::Count>::get(),
              "average overall mshr miss latency"),
     ADD_STAT(overallAvgMshrMissLatency, statistics::units::Rate<
-                statistics::units::Cycle, statistics::units::Count>::get(),
+                statistics::units::Tick, statistics::units::Count>::get(),
              "average overall mshr miss latency"),
     ADD_STAT(overallAvgMshrUncacheableLatency, statistics::units::Rate<
-                statistics::units::Cycle, statistics::units::Count>::get(),
+                statistics::units::Tick, statistics::units::Count>::get(),
              "average overall mshr uncacheable latency"),
     ADD_STAT(replacements, statistics::units::Count::get(),
              "number of replacements"),
