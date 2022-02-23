@@ -1025,17 +1025,20 @@ decode QUADRANT default Unknown::unknown() {
                 }}, FloatDivOp);
                 0x10: decode ROUND_MODE {
                     0x0: fsgnj_s({{
-                        Fd_bits = boxF32(insertBits(unboxF32(Fs2_bits), 30, 0,
-                                                    unboxF32(Fs1_bits)));
+                        auto sign = bits(unboxF32(Fs2_bits), 31);
+                        Fd_bits = boxF32(insertBits(unboxF32(Fs1_bits), 31,
+                                                    sign));
                         }}, FloatMiscOp);
                     0x1: fsgnjn_s({{
-                        Fd_bits = boxF32(insertBits(unboxF32(~Fs2_bits), 30, 0,
-                                                    unboxF32(Fs1_bits)));
+                        auto sign = ~bits(unboxF32(Fs2_bits), 31);
+                        Fd_bits = boxF32(insertBits(unboxF32(Fs1_bits), 31,
+                                                    sign));
                         }}, FloatMiscOp);
                     0x2: fsgnjx_s({{
-                        Fd_bits = boxF32(insertBits(
-                                    unboxF32(Fs1_bits) ^ unboxF32(Fs2_bits),
-                                    30, 0, unboxF32(Fs1_bits)));
+                        auto sign = bits(
+                            unboxF32(Fs1_bits) ^ unboxF32(Fs2_bits), 31);
+                        Fd_bits = boxF32(insertBits(unboxF32(Fs1_bits), 31,
+                                                    sign));
                         }}, FloatMiscOp);
                 }
                 0x11: decode ROUND_MODE {
