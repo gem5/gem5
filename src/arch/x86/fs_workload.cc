@@ -66,9 +66,7 @@ installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
                SegDescriptor desc, bool longmode)
 {
     bool honorBase = !longmode || seg == SEGMENT_REG_FS ||
-                                  seg == SEGMENT_REG_GS ||
-                                  seg == SEGMENT_REG_TSL ||
-                                  seg == SYS_SEGMENT_REG_TR;
+                                  seg == SEGMENT_REG_GS;
 
     SegAttr attr = 0;
 
