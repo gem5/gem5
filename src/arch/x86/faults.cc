@@ -256,7 +256,7 @@ InitInterrupt::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
     SegAttr tslAttr = 0;
     tslAttr.unusable = 1;
-    tslAttr.present = 0;
+    tslAttr.present = 1;
     tslAttr.type = 2; // LDT
     tc->setMiscReg(MISCREG_TSL, 0);
     tc->setMiscReg(MISCREG_TSL_BASE, 0);
@@ -264,8 +264,8 @@ InitInterrupt::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     tc->setMiscReg(MISCREG_TSL_ATTR, tslAttr);
 
     SegAttr trAttr = 0;
-    trAttr.unusable = 1;
-    trAttr.present = 0;
+    trAttr.unusable = 0;
+    trAttr.present = 1;
     trAttr.type = 3; // Busy 16-bit TSS
     tc->setMiscReg(MISCREG_TR, 0);
     tc->setMiscReg(MISCREG_TR_BASE, 0);
