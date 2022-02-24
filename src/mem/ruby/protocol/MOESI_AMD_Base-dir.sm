@@ -61,29 +61,26 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 {
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_U") {
-    U, AccessPermission:Backing_Store,          desc="unblocked";
+    U, AccessPermission:Backing_Store,                 desc="unblocked";
+    BL, AccessPermission:Busy,                  desc="got L3 WB request";
     // BL is Busy because it's possible for the data only to be in the network
     // in the WB, L3 has sent it and gone on with its business in possibly I
     // state.
-    BL, AccessPermission:Busy,                  desc="got L3 WB request";
-    BL_WM, AccessPermission:Busy,               desc="writing L3 WB to memory, waiting for ack";
-    BDR_M, AccessPermission:Backing_Store,      desc="DMA read, blocked waiting for memory";
-    BS_M, AccessPermission:Backing_Store,       desc="blocked waiting for memory";
-    BM_M, AccessPermission:Backing_Store,       desc="blocked waiting for memory";
-    B_M, AccessPermission:Backing_Store,        desc="blocked waiting for memory";
-    BP, AccessPermission:Backing_Store,         desc="blocked waiting for probes, no need for memory";
-    BDR_PM, AccessPermission:Backing_Store,     desc="DMA read, blocked waiting for probes and memory";
-    BS_PM, AccessPermission:Backing_Store,      desc="blocked waiting for probes and Memory";
-    BM_PM, AccessPermission:Backing_Store,      desc="blocked waiting for probes and Memory";
-    B_PM, AccessPermission:Backing_Store,       desc="blocked waiting for probes and Memory";
-    BDW_P, AccessPermission:Backing_Store,      desc="DMA write, blocked waiting for probes, no need for memory";
-    BDW_WM, AccessPermission:Backing_Store,     desc="DMA write, writing to memory, waiting for ack";
-    BDR_Pm, AccessPermission:Backing_Store,     desc="DMA read, blocked waiting for probes, already got memory";
-    BS_Pm, AccessPermission:Backing_Store,      desc="blocked waiting for probes, already got memory";
-    BM_Pm, AccessPermission:Backing_Store,      desc="blocked waiting for probes, already got memory";
-    B_Pm, AccessPermission:Backing_Store,       desc="blocked waiting for probes, already got memory";
-    B_WM, AccessPermission:Backing_Store,       desc="writing to memory, waiting for ack";
-    B, AccessPermission:Backing_Store,          desc="sent response, Blocked til ack";
+    BDR_M, AccessPermission:Backing_Store,  desc="DMA read, blocked waiting for memory";
+    BS_M, AccessPermission:Backing_Store,                 desc="blocked waiting for memory";
+    BM_M, AccessPermission:Backing_Store,                 desc="blocked waiting for memory";
+    B_M, AccessPermission:Backing_Store,                 desc="blocked waiting for memory";
+    BP, AccessPermission:Backing_Store,                 desc="blocked waiting for probes, no need for memory";
+    BDR_PM, AccessPermission:Backing_Store, desc="DMA read, blocked waiting for probes and memory";
+    BS_PM, AccessPermission:Backing_Store,                desc="blocked waiting for probes and Memory";
+    BM_PM, AccessPermission:Backing_Store,                desc="blocked waiting for probes and Memory";
+    B_PM, AccessPermission:Backing_Store,                desc="blocked waiting for probes and Memory";
+    BDW_P, AccessPermission:Backing_Store, desc="DMA write, blocked waiting for probes, no need for memory";
+    BDR_Pm, AccessPermission:Backing_Store, desc="DMA read, blocked waiting for probes, already got memory";
+    BS_Pm, AccessPermission:Backing_Store,                desc="blocked waiting for probes, already got memory";
+    BM_Pm, AccessPermission:Backing_Store,                desc="blocked waiting for probes, already got memory";
+    B_Pm, AccessPermission:Backing_Store,                desc="blocked waiting for probes, already got memory";
+    B, AccessPermission:Backing_Store,                  desc="sent response, Blocked til ack";
   }
 
   // Events
@@ -135,6 +132,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   // DirectoryEntry
   structure(Entry, desc="...", interface="AbstractCacheEntry", main="false") {
     State DirectoryState,          desc="Directory state";
+    DataBlock DataBlk,             desc="data for the block";
     NetDest VicDirtyIgnore,  desc="VicDirty coming from whom to ignore";
   }
 
@@ -195,6 +193,16 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     dir_entry :=  static_cast(Entry, "pointer",
                               directory.allocate(addr, new Entry));
     return dir_entry;
+  }
+
+  DataBlock getDataBlock(Addr addr), return_by_ref="yes" {
+    TBE tbe := TBEs.lookup(addr);
+    if (is_valid(tbe) && tbe.MemData) {
+      DPRINTF(RubySlicc, "Returning DataBlk from TBE %s:%s\n", addr, tbe);
+      return tbe.DataBlk;
+    }
+    DPRINTF(RubySlicc, "Returning DataBlk from Dir %s:%s\n", addr, getDirectoryEntry(addr));
+    return getDirectoryEntry(addr).DataBlk;
   }
 
   State getState(TBE tbe, CacheEntry entry, Addr addr) {
@@ -371,7 +379,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
           trigger(Event:MemData, in_msg.addr, entry, tbe);
           DPRINTF(RubySlicc, "%s\n", in_msg);
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
-          trigger(Event:WBAck, in_msg.addr, entry, tbe);
+          trigger(Event:WBAck, in_msg.addr, entry, tbe); // ignore WBAcks, don't care about them.
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg.Type);
           error("Invalid message");
@@ -912,13 +920,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   action(d_writeDataToMemory, "d", desc="Write data to memory") {
     peek(responseNetwork_in, ResponseMsg) {
-      enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
-        out_msg.addr := address;
-        out_msg.Type := MemoryRequestType:MEMORY_WB;
-        out_msg.Sender := machineID;
-        out_msg.MessageSize := MessageSizeType:Writeback_Data;
-        out_msg.DataBlk := in_msg.DataBlk;
-      }
+      getDirectoryEntry(address).DataBlk := in_msg.DataBlk;
       if (tbe.Dirty == false) {
           // have to update the TBE, too, because of how this
           // directory deals with functional writes
@@ -964,6 +966,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         tbe.WTRequestor := in_msg.WTRequestor;
         tbe.LastSender := in_msg.Requestor;
       }
+      tbe.DataBlk := getDirectoryEntry(address).DataBlk; // Data only for WBs
       tbe.Dirty := false;
       if (in_msg.Type == CoherenceRequestType:WriteThrough) {
         tbe.DataBlk.copyPartial(in_msg.DataBlk,in_msg.writeMask);
@@ -977,37 +980,30 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   }
 
   action(dt_deallocateTBE, "dt", desc="deallocate TBE Entry") {
+    if (tbe.Dirty == false) {
+        getDirectoryEntry(address).DataBlk := tbe.DataBlk;
+    }
     TBEs.deallocate(address);
     unset_tbe();
   }
 
   action(wd_writeBackData, "wd", desc="Write back data if needed") {
-    if (tbe.wtData || tbe.atomicData || tbe.Dirty == false) {
-      if (tbe.atomicData) {
-        tbe.DataBlk.atomicPartial(tbe.DataBlk, tbe.writeMask);
-      }
-      enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
-        out_msg.addr := address;
-        out_msg.Type := MemoryRequestType:MEMORY_WB;
-        out_msg.Sender := machineID;
-        out_msg.MessageSize := MessageSizeType:Writeback_Data;
-        out_msg.DataBlk := tbe.DataBlk;
-        out_msg.Len := tbe.Len;
-        DPRINTF(ProtocolTrace, "%s\n", out_msg);
-      }
+    if (tbe.wtData) {
+      getDirectoryEntry(address).DataBlk.copyPartial(tbe.DataBlk, tbe.writeMask);
+    } else if (tbe.atomicData) {
+      tbe.DataBlk.atomicPartial(getDirectoryEntry(address).DataBlk,tbe.writeMask);
+      getDirectoryEntry(address).DataBlk := tbe.DataBlk;
+    } else if (tbe.Dirty == false) {
+      getDirectoryEntry(address).DataBlk := tbe.DataBlk;
     }
   }
 
   action(mt_writeMemDataToTBE, "mt", desc="write Mem data to TBE") {
     peek(memQueue_in, MemoryMsg) {
       if (tbe.wtData == true) {
-        // Keep the write-through data based on mask, but use the memory block
-        // for the masked-off data.
-        DataBlock tmpBlk := in_msg.DataBlk;
-        tmpBlk.copyPartial(tbe.DataBlk, tbe.writeMask);
-        tbe.DataBlk := tmpBlk;
+          // do nothing
       } else if (tbe.Dirty == false) {
-        tbe.DataBlk := in_msg.DataBlk;
+        tbe.DataBlk := getDirectoryEntry(address).DataBlk;
       }
       tbe.MemData := true;
     }
@@ -1187,10 +1183,6 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     stall_and_wait(dmaRequestQueue_in, address);
   }
 
-  action(su_stallAndWaitRequest, "su", desc="Stall and wait on the address") {
-    stall_and_wait(unblockNetwork_in, address);
-  }
-
   action(wad_wakeUpDependents, "wad", desc="Wake up any requests waiting for this address") {
     wakeUpBuffers(address);
   }
@@ -1207,18 +1199,18 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   }
 
   // TRANSITIONS
-  transition({BL, BL_WM, BDR_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_P, BDW_WM, BS_PM, BM_PM, B_PM, BDR_Pm, BS_Pm, BM_Pm, B_Pm, B, B_WM}, {RdBlkS, RdBlkM, RdBlk, CtoD}) {
+  transition({BL, BDR_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_P, BS_PM, BM_PM, B_PM, BDR_Pm, BS_Pm, BM_Pm, B_Pm, B}, {RdBlkS, RdBlkM, RdBlk, CtoD}) {
       st_stallAndWaitRequest;
   }
 
   // It may be possible to save multiple invalidations here!
-  transition({BL, BL_WM, BDR_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_P, BDW_WM, BS_PM, BM_PM, B_PM, BDR_Pm, BS_Pm, BM_Pm, B_Pm, B, B_WM}, {Atomic, WriteThrough}) {
+  transition({BL, BS_M, BM_M, B_M, BP, BS_PM, BM_PM, B_PM, BS_Pm, BM_Pm, B_Pm, B}, {Atomic, WriteThrough}) {
       st_stallAndWaitRequest;
   }
 
   // The exit state is always going to be U, so wakeUpDependents logic should be covered in all the
   // transitions which are flowing into U.
-  transition({BL, BL_WM, BDR_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_P, BDW_WM, BS_PM, BM_PM, B_PM, BDR_Pm, BS_Pm, BM_Pm, B_Pm, B, B_WM}, {DmaRead,DmaWrite}){
+  transition({BL, BDR_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_P, BS_PM, BM_PM, B_PM, BDR_Pm, BS_Pm, BM_Pm, B_Pm, B}, {DmaRead,DmaWrite}){
     sd_stallAndWaitRequest;
   }
 
@@ -1241,6 +1233,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   transition(U, DmaWrite, BDW_P) {L3TagArrayRead} {
     atd_allocateTBEforDMA;
+    da_sendResponseDmaAck;
     icd_probeInvCoreDataForDMA;
     pd_popDmaRequestQueue;
   }
@@ -1300,10 +1293,12 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     zz_recycleRequestQueue;
   }
 
-  transition(BL, CPUData, BL_WM) {L3TagArrayWrite, L3DataArrayWrite} {
+  transition(BL, CPUData, U) {L3TagArrayWrite, L3DataArrayWrite} {
     d_writeDataToMemory;
     al_allocateL3Block;
     pr_profileL3HitMiss; //Must come after al_allocateL3Block and before dt_deallocateTBE
+    wad_wakeUpDependents;
+    dt_deallocateTBE;
     pr_popResponseQueue;
   }
 
@@ -1313,13 +1308,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     pr_popResponseQueue;
   }
 
-  transition(BL_WM, WBAck, U) {
-    wad_wakeUpDependents;
-    dt_deallocateTBE;
-    pm_popMemQueue;
-  }
-
-  transition({B, B_WM, BDR_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_P, BDW_WM, BS_PM, BM_PM, B_PM, BDR_Pm, BS_Pm, BM_Pm, B_Pm}, {VicDirty, VicClean}) {
+  transition({B, BDR_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_P, BS_PM, BM_PM, B_PM, BDR_Pm, BS_Pm, BM_Pm, B_Pm}, {VicDirty, VicClean}) {
     z_stall;
   }
 
@@ -1327,7 +1316,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     pm_popMemQueue;
   }
 
-  transition({U, BL, BL_WM, BDR_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_P, BDW_WM, BS_PM, BM_PM, B_PM, BDR_Pm, BS_Pm, BM_Pm, B_Pm, B, B_WM}, StaleVicDirty) {
+  transition({U, BL, BDR_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_P, BS_PM, BM_PM, B_PM, BDR_Pm, BS_Pm, BM_Pm, B_Pm, B}, StaleVicDirty) {
     rv_removeVicDirtyIgnore;
     w_sendResponseWBAck;
     p_popRequestQueue;
@@ -1387,7 +1376,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     pm_popMemQueue;
   }
 
-  transition(BS_M, MemData, B_WM){L3TagArrayWrite, L3DataArrayWrite} {
+  transition(BS_M, MemData, B){L3TagArrayWrite, L3DataArrayWrite} {
     mt_writeMemDataToTBE;
     s_sendResponseS;
     wd_writeBackData;
@@ -1396,7 +1385,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     pm_popMemQueue;
   }
 
-  transition(BM_M, MemData, B_WM){L3TagArrayWrite, L3DataArrayWrite} {
+  transition(BM_M, MemData, B){L3TagArrayWrite, L3DataArrayWrite} {
     mt_writeMemDataToTBE;
     m_sendResponseM;
     wd_writeBackData;
@@ -1405,7 +1394,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     pm_popMemQueue;
   }
 
-  transition(B_M, MemData, B_WM){L3TagArrayWrite, L3DataArrayWrite} {
+  transition(B_M, MemData, B){L3TagArrayWrite, L3DataArrayWrite} {
     mt_writeMemDataToTBE;
     es_sendResponseES;
     wd_writeBackData;
@@ -1414,7 +1403,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     pm_popMemQueue;
   }
 
-  transition(BS_M, L3Hit, B_WM) {L3TagArrayWrite, L3DataArrayWrite} {
+  transition(BS_M, L3Hit, B) {L3TagArrayWrite, L3DataArrayWrite} {
     s_sendResponseS;
     wd_writeBackData;
     alwt_allocateL3BlockOnWT;
@@ -1422,7 +1411,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     ptl_popTriggerQueue;
   }
 
-  transition(BM_M, L3Hit, B_WM) {L3DataArrayWrite, L3TagArrayWrite} {
+  transition(BM_M, L3Hit, B) {L3DataArrayWrite, L3TagArrayWrite} {
     m_sendResponseM;
     wd_writeBackData;
     alwt_allocateL3BlockOnWT;
@@ -1430,7 +1419,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     ptl_popTriggerQueue;
   }
 
-  transition(B_M, L3Hit, B_WM) {L3DataArrayWrite, L3TagArrayWrite} {
+  transition(B_M, L3Hit, B) {L3DataArrayWrite, L3TagArrayWrite} {
     es_sendResponseES;
     wd_writeBackData;
     alwt_allocateL3BlockOnWT;
@@ -1464,18 +1453,12 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     pt_popTriggerQueue;
   }
 
-  transition(BDW_P, ProbeAcksComplete, BDW_WM) {
-    wd_writeBackData;
-    da_sendResponseDmaAck;
-    pt_popTriggerQueue;
-  }
-
-  transition(BDW_WM, WBAck, U) {
+  transition(BDW_P, ProbeAcksComplete, U) {
     // Check for pending requests from the core we put to sleep while waiting
     // for a response
     wada_wakeUpAllDependentsAddr;
     dt_deallocateTBE;
-    pm_popMemQueue;
+    pt_popTriggerQueue;
   }
 
   transition(BDR_Pm, ProbeAcksComplete, U) {
@@ -1487,7 +1470,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     pt_popTriggerQueue;
   }
 
-  transition(BS_Pm, ProbeAcksComplete, B_WM){L3DataArrayWrite, L3TagArrayWrite} {
+  transition(BS_Pm, ProbeAcksComplete, B){L3DataArrayWrite, L3TagArrayWrite} {
     sf_setForwardReqTime;
     s_sendResponseS;
     wd_writeBackData;
@@ -1496,7 +1479,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     pt_popTriggerQueue;
   }
 
-  transition(BM_Pm, ProbeAcksComplete, B_WM){L3DataArrayWrite, L3TagArrayWrite} {
+  transition(BM_Pm, ProbeAcksComplete, B){L3DataArrayWrite, L3TagArrayWrite} {
     sf_setForwardReqTime;
     m_sendResponseM;
     wd_writeBackData;
@@ -1505,7 +1488,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     pt_popTriggerQueue;
   }
 
-  transition(B_Pm, ProbeAcksComplete, B_WM){L3DataArrayWrite, L3TagArrayWrite} {
+  transition(B_Pm, ProbeAcksComplete, B){L3DataArrayWrite, L3TagArrayWrite} {
     sf_setForwardReqTime;
     es_sendResponseES;
     wd_writeBackData;
@@ -1514,25 +1497,12 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     pt_popTriggerQueue;
   }
 
-  transition(BP, ProbeAcksComplete, B_WM){L3TagArrayWrite, L3TagArrayWrite} {
+  transition(BP, ProbeAcksComplete, B){L3TagArrayWrite, L3TagArrayWrite} {
     sf_setForwardReqTime;
     c_sendResponseCtoD;
     wd_writeBackData;
     alwt_allocateL3BlockOnWT;
     dt_deallocateTBE;
     pt_popTriggerQueue;
-  }
-
-  transition(B_WM, WBAck, B) {
-    wada_wakeUpAllDependentsAddr;
-    pm_popMemQueue;
-  }
-
-  transition(B_WM, UnblockWriteThrough) {
-    z_stall;
-  }
-
-  transition(B_WM, CoreUnblock) {
-    su_stallAndWaitRequest;
   }
 }
