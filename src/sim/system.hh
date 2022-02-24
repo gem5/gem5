@@ -144,7 +144,7 @@ class System : public SimObject, public PCEventScope
             return threads[id];
         }
 
-        void insert(ThreadContext *tc, ContextID id=InvalidContextID);
+        void insert(ThreadContext *tc);
         void replace(ThreadContext *tc, ContextID id);
 
         friend class System;
@@ -578,8 +578,7 @@ class System : public SimObject, public PCEventScope
 
   public:
 
-    void registerThreadContext(
-            ThreadContext *tc, ContextID assigned=InvalidContextID);
+    void registerThreadContext(ThreadContext *tc);
     void replaceThreadContext(ThreadContext *tc, ContextID context_id);
 
     void serialize(CheckpointOut &cp) const override;

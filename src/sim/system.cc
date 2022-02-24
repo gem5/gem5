@@ -95,31 +95,18 @@ System::Threads::Thread::quiesce() const
 }
 
 void
-System::Threads::insert(ThreadContext *tc, ContextID id)
+System::Threads::insert(ThreadContext *tc)
 {
-    if (id == InvalidContextID) {
-        for (id = 0; id < size(); id++) {
-            if (!threads[id].context)
-                break;
-        }
-    }
-
+    ContextID id = size();
     tc->setContextId(id);
 
-    if (id >= size())
-        threads.resize(id + 1);
-
-    fatal_if(threads[id].context,
-            "Cannot have two thread contexts with the same id (%d).", id);
-
-    auto *sys = tc->getSystemPtr();
-
-    auto &t = thread(id);
+    auto &t = threads.emplace_back();
     t.context = tc;
     // Look up this thread again on resume, in case the threads vector has
     // been reallocated.
     t.resumeEvent = new EventFunctionWrapper(
-            [this, id](){ thread(id).resume(); }, sys->name());
+            [this, id](){ thread(id).resume(); },
+            tc->getSystemPtr()->name());
 }
 
 void
@@ -258,9 +245,9 @@ System::setMemoryMode(enums::MemoryMode mode)
 }
 
 void
-System::registerThreadContext(ThreadContext *tc, ContextID assigned)
+System::registerThreadContext(ThreadContext *tc)
 {
-    threads.insert(tc, assigned);
+    threads.insert(tc);
 
     workload->registerThreadContext(tc);
 

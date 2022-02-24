@@ -431,15 +431,10 @@ BaseCPU::registerThreadContexts()
              "per thread (%i)\n",
              name(), interrupts.size(), numThreads);
 
-    ThreadID size = threadContexts.size();
-    for (ThreadID tid = 0; tid < size; ++tid) {
+    for (ThreadID tid = 0; tid < threadContexts.size(); ++tid) {
         ThreadContext *tc = threadContexts[tid];
 
-        if (system->multiThread) {
-            system->registerThreadContext(tc);
-        } else {
-            system->registerThreadContext(tc, _cpuId);
-        }
+        system->registerThreadContext(tc);
 
         if (!FullSystem)
             tc->getProcessPtr()->assignThreadContext(tc->contextId());
