@@ -57,6 +57,7 @@
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "mem/packet_access.hh"
+#include "sim/bufval.hh"
 
 namespace gem5
 {
@@ -345,40 +346,17 @@ Packet::popSenderState()
 uint64_t
 Packet::getUintX(ByteOrder endian) const
 {
-    switch(getSize()) {
-      case 1:
-        return (uint64_t)get<uint8_t>(endian);
-      case 2:
-        return (uint64_t)get<uint16_t>(endian);
-      case 4:
-        return (uint64_t)get<uint32_t>(endian);
-      case 8:
-        return (uint64_t)get<uint64_t>(endian);
-      default:
-        panic("%i isn't a supported word size.\n", getSize());
-    }
+    auto [val, success] =
+        gem5::getUintX(getConstPtr<void>(), getSize(), endian);
+    panic_if(!success, "%i isn't a supported word size.\n", getSize());
+    return val;
 }
 
 void
 Packet::setUintX(uint64_t w, ByteOrder endian)
 {
-    switch(getSize()) {
-      case 1:
-        set<uint8_t>((uint8_t)w, endian);
-        break;
-      case 2:
-        set<uint16_t>((uint16_t)w, endian);
-        break;
-      case 4:
-        set<uint32_t>((uint32_t)w, endian);
-        break;
-      case 8:
-        set<uint64_t>((uint64_t)w, endian);
-        break;
-      default:
-        panic("%i isn't a supported word size.\n", getSize());
-    }
-
+    bool success = gem5::setUintX(w, getPtr<void>(), getSize(), endian);
+    panic_if(!success, "%i isn't a supported word size.\n", getSize());
 }
 
 void
