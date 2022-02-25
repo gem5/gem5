@@ -45,6 +45,7 @@ SimObject('PowerDomain.py', sim_objects=['PowerDomain'])
 
 Source('async.cc')
 Source('backtrace_%s.cc' % env['BACKTRACE_IMPL'], add_tags='gem5 trace')
+Source('bufval.cc')
 Source('core.cc')
 Source('cur_tick.cc', add_tags='gem5 trace')
 Source('tags.cc')
@@ -93,6 +94,7 @@ env.TagImplies('gem5 drain', ['gem5 events', 'gem5 trace'])
 env.TagImplies('gem5 events', ['gem5 serialize', 'gem5 trace'])
 env.TagImplies('gem5 serialize', 'gem5 trace')
 
+GTest('bufval.test', 'bufval.test.cc', 'bufval.cc')
 GTest('byteswap.test', 'byteswap.test.cc', '../base/types.cc')
 GTest('globals.test', 'globals.test.cc', 'globals.cc',
     with_tag('gem5 serialize'))
