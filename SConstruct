@@ -98,7 +98,7 @@ import SCons.Tool
 #
 ########################################################################
 
-linker_options = ('bfd', 'gold', 'lld')
+linker_options = ('bfd', 'gold', 'lld', 'mold')
 
 AddOption('--no-colors', dest='use_colors', action='store_false',
           help="Don't add color to abbreviated scons output")
