@@ -368,7 +368,7 @@ let {{
 
     class PremFp(Fp3Op):
         code = '''
-            RegVal new_fsw = FSW;
+            [[maybe_unused]] RegVal new_fsw = FSW;
             int src1_exp;
             int src2_exp;
             std::frexp(FpSrcReg1, &src1_exp);
