@@ -40,8 +40,7 @@ template <class First>
 bool
 pairFail(const std::pair<First, bool> &p)
 {
-    auto &[first, success] = p;
-    return !success;
+    return !p.second;
 }
 
 bool
