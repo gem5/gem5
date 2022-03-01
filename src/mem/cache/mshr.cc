@@ -678,6 +678,9 @@ MSHR::promoteReadable()
 void
 MSHR::promoteWritable()
 {
+    if (deferredTargets.empty()) {
+        return;
+    }
     PacketPtr def_tgt_pkt = deferredTargets.front().pkt;
     if (deferredTargets.needsWritable &&
         !(hasPostInvalidate() || hasPostDowngrade()) &&
