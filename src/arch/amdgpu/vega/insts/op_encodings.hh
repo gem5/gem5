@@ -905,8 +905,16 @@ namespace VegaISA
 
         void
         calcAddr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &vaddr,
-                 ScalarRegU32 saddr, ScalarRegU32 offset)
+                 ScalarRegU32 saddr, ScalarRegI32 offset)
         {
+            // Offset is a 13-bit field w/the following meanings:
+            // In Flat instructions, offset is a 12-bit unsigned number
+            // In Global/Scratch instructions, offset is a 13-bit signed number
+            if (isFlat()) {
+                offset = offset & 0xfff;
+            } else {
+                offset = (ScalarRegI32)sext<13>(offset);
+            }
             // If saddr = 0x7f there is no scalar reg to read and address will
             // be a 64-bit address. Otherwise, saddr is the reg index for a
             // scalar reg used as the base address for a 32-bit address.
@@ -956,7 +964,7 @@ namespace VegaISA
 
         void
         calcAddrSgpr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &vaddr,
-                     ConstScalarOperandU64 &saddr, ScalarRegU32 offset)
+                     ConstScalarOperandU64 &saddr, ScalarRegI32 offset)
         {
             // Use SGPR pair as a base address and add VGPR-offset and
             // instruction offset. The VGPR-offset is always 32-bits so we
@@ -971,7 +979,7 @@ namespace VegaISA
 
         void
         calcAddrVgpr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &addr,
-                     ScalarRegU32 offset)
+                     ScalarRegI32 offset)
         {
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {
