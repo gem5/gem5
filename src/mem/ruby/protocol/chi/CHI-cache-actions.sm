@@ -939,26 +939,29 @@ action(Initiate_MaitainCoherence, desc="") {
   assert(tbe.actions.empty());
   // go through either the fill or the writeback pipeline
   if (tbe.dataValid && tbe.dataToBeInvalid) {
+    // we don't need to WB if the upstream is SD, because the
+    // owner is responsible for the WB
+    bool has_non_ex_owner := tbe.dir_ownerExists && !tbe.dir_ownerIsExcl;
     if (is_HN) {
-      if (tbe.dataDirty && (tbe.dataMaybeDirtyUpstream == false)) {
+      if (tbe.dataDirty && !has_non_ex_owner) {
         tbe.actions.push(Event:SendWriteNoSnp);
         tbe.actions.push(Event:WriteBEPipe);
         tbe.actions.push(Event:SendWBData);
       }
     } else {
       if (tbe.dir_sharers.isEmpty() && (tbe.dataDirty || tbe.dataUnique)) {
+        assert(!has_non_ex_owner);
         tbe.actions.push(Event:SendWriteBackOrWriteEvict);
         tbe.actions.push(Event:WriteBEPipe);
         tbe.actions.push(Event:SendWBData);
-      } else if ((tbe.dir_sharers.isEmpty() == false) && tbe.dataDirty &&
-                 (tbe.dataMaybeDirtyUpstream == false)) {
+      } else if (tbe.dataDirty && !has_non_ex_owner) {
+        assert(!tbe.dir_sharers.isEmpty());
         tbe.actions.push(Event:SendWriteClean);
         tbe.actions.push(Event:WriteBEPipe);
         tbe.actions.push(Event:SendWBData);
       }
     }
-  }
-  else if (tbe.dataValid) {
+  } else if (tbe.dataValid) {
     tbe.actions.push(Event:CheckCacheFill);
   }
   tbe.actions.push(Event:TagArrayWrite);
