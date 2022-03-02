@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 ARM Limited
+ * Copyright (c) 2021-2022 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1033,7 +1033,7 @@ transition(BUSY_BLKD, SendCompDBIDRespStale) {
 
 transition(BUSY_BLKD, MaintainCoherence) {
   Pop_TriggerQueue;
-  Initiate_MaitainCoherence;
+  Initiate_MaintainCoherence;
   ProcessNextState_ClearPending;
 }
 

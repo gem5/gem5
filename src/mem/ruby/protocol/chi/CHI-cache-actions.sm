@@ -918,7 +918,7 @@ action(Initiate_Evict, desc="") {
   tbe.actions.pushNB(Event:TagArrayWrite);
 }
 
-action(Initiate_MaitainCoherence, desc="") {
+action(Initiate_MaintainCoherence, desc="") {
   // issue a copy back if necessary to maintain coherence for data we are
   // droping. This is should be executed at the end of a transaction
   assert(tbe.actions.empty());
