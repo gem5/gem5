@@ -690,43 +690,28 @@ action(Finish_CleanUnique, desc="") {
     tbe.updateDirOnCompAck := false;
     assert(tbe.dataValid == false);
     assert(tbe.is_stale);
+    tbe.is_stale := false;
     tbe.actions.push(Event:SendCompUCRespStale);
     tbe.actions.push(Event:WaitCompAck);
-    tbe.is_stale := false;
+    tbe.actions.push(Event:TagArrayWrite);
   } else {
     // must be the only one in sharers map
     assert(tbe.dir_sharers.count() == 1);
     assert(tbe.dataUnique);
-
-    tbe.actions.push(Event:SendCompUCResp);
-    tbe.actions.push(Event:WaitCompAck);
-
-    // similar to Initiate_MaitainCoherence; writeback if the owner has data as
-    // clean data and we have it dirty and cannot keep it
-    bool fill_pipeline := tbe.dataValid && tbe.dataDirty;
-    bool req_has_dirty := tbe.dir_ownerExists && (tbe.dir_owner == tbe.requestor);
-    if (tbe.dataValid && tbe.dataDirty && tbe.dataToBeInvalid &&
-        (req_has_dirty == false)) {
-      fill_pipeline := false;
-      if (is_HN) {
-        tbe.actions.push(Event:SendWriteNoSnp);
-      } else {
-        tbe.actions.push(Event:SendWriteClean);
-      }
-      tbe.actions.push(Event:WriteBEPipe);
-      tbe.actions.push(Event:SendWBData);
-    }
 
     // needed by UpdateDirState_FromReqResp triggered by the expected CompAck
     tbe.dataMaybeDirtyUpstream := true;
     tbe.requestorToBeExclusiveOwner := true;
     tbe.dir_ownerExists := false;
 
-    if (fill_pipeline) {
-      tbe.actions.push(Event:CheckCacheFill);
-    }
+    tbe.actions.push(Event:SendCompUCResp);
+    tbe.actions.push(Event:WaitCompAck);
+
+    // Ensure we writeback or update the cache if the owner has data as
+    // clean data and we have it dirty.
+    // MaintainCoherence queues the TagArrayWrite
+    tbe.actions.push(Event:MaintainCoherence);
   }
-  tbe.actions.push(Event:TagArrayWrite);
 }
 
 
