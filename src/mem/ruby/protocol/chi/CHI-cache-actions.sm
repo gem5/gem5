@@ -1748,7 +1748,7 @@ action(UpdateDirState_FromReqDataResp, desc="") {
       } else if (in_msg.type == CHIDataType:CBWrData_UD_PD) {
         assert(tbe.dir_ownerExists && tbe.dir_ownerIsExcl && (tbe.dir_owner == in_msg.responder));
         assert(tbe.dir_sharers.isElement(in_msg.responder));
-        if (tbe.pendReqType != CHIRequestType:WriteCleanFull) {
+        if (tbe.reqType != CHIRequestType:WriteCleanFull) {
           tbe.dir_ownerExists := false;
           tbe.dir_ownerIsExcl := false;
           tbe.dir_sharers.remove(in_msg.responder);
@@ -1766,7 +1766,7 @@ action(UpdateDirState_FromReqDataResp, desc="") {
         assert(tbe.dir_sharers.isElement(in_msg.responder));
         tbe.dir_ownerExists := false;
         tbe.dir_ownerIsExcl := false;
-        if (tbe.pendReqType != CHIRequestType:WriteCleanFull) {
+        if (tbe.reqType != CHIRequestType:WriteCleanFull) {
           tbe.dir_sharers.remove(in_msg.responder);
         }
 
@@ -1913,7 +1913,13 @@ action(UpdateDataState_FromReqDataResp, desc="") {
         assert(tbe.dataUnique);
         tbe.dataDirty := true;
         tbe.dataValid := true;
-        tbe.dataMaybeDirtyUpstream := false;
+        if (tbe.reqType == CHIRequestType:WriteCleanFull) {
+          // upstream data can still be UC if this is a WriteCleanFull
+          assert(tbe.dir_ownerExists && tbe.dir_ownerIsExcl);
+          tbe.dataMaybeDirtyUpstream := true;
+        } else {
+          tbe.dataMaybeDirtyUpstream := false;
+        }
 
       } else if (in_msg.type == CHIDataType:CBWrData_SD_PD) {
         tbe.dataDirty := true;
