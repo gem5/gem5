@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 ARM Limited
+ * Copyright (c) 2021-2022 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -2201,27 +2201,15 @@ action(Send_CompData, desc="") {
   bool is_rd_nsd := tbe.reqType == CHIRequestType:ReadNotSharedDirty;
   bool is_rd_unique := tbe.reqType == CHIRequestType:ReadUnique;
 
+  // if the config allows (or not caching the data) and line has no sharers
+  bool snd_unique_on_rs := (fwd_unique_on_readshared || tbe.dataToBeInvalid)
+                          && tbe.dataUnique && tbe.dir_sharers.isEmpty();
+  // if the request type allows and we won't be caching the data
+  bool snd_dirty_on_rs := is_rd_shared && !is_rd_nsd && tbe.dataToBeInvalid;
+
   if (is_rd_once) {
     tbe.snd_msgType := CHIDataType:CompData_I;
-  } else if (tbe.dataToBeInvalid) {
-    // We will drop the data so propagate it's coherent state upstream
-    if (tbe.dataUnique && tbe.dataDirty) {
-      tbe.snd_msgType := CHIDataType:CompData_UD_PD;
-    } else if (tbe.dataUnique) {
-      tbe.snd_msgType := CHIDataType:CompData_UC;
-    } else if (tbe.dataDirty) {
-      if (is_rd_nsd) {
-        tbe.snd_msgType := CHIDataType:CompData_SC;
-      } else {
-        tbe.snd_msgType := CHIDataType:CompData_SD_PD;
-      }
-    } else {
-      tbe.snd_msgType := CHIDataType:CompData_SC;
-    }
-  } else if (is_rd_unique ||
-             (is_rd_shared && tbe.dataUnique &&
-              fwd_unique_on_readshared && (tbe.dir_ownerExists == false))) {
-    // propagates dirtyness
+  } else if (is_rd_unique || (is_rd_shared && snd_unique_on_rs)) {
     assert(tbe.dataUnique);
     if (tbe.dataDirty) {
       tbe.snd_msgType := CHIDataType:CompData_UD_PD;
@@ -2229,8 +2217,13 @@ action(Send_CompData, desc="") {
       tbe.snd_msgType := CHIDataType:CompData_UC;
     }
   } else if (is_rd_shared) {
-    // still keeping a copy so can send as SC
-    tbe.snd_msgType := CHIDataType:CompData_SC;
+    if (tbe.dataDirty && snd_dirty_on_rs) {
+      tbe.snd_msgType := CHIDataType:CompData_SD_PD;
+    } else {
+      // notice the MaintainCoherence will send WriteClean if the line
+      // is dirty and we won't be caching the data
+      tbe.snd_msgType := CHIDataType:CompData_SC;
+    }
   } else {
     error("Invalid request type");
   }
