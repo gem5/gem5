@@ -59,10 +59,13 @@ def _get_resources_json_uri() -> str:
 
     return uri
 
-def _get_resources_json_at_url(url: str) -> Dict:
+def _get_resources_json_at_url(url: str, use_caching: bool = True) -> Dict:
     '''
     Returns a resource JSON, in the form of a Python Dict. The URL location
     of the JSON must be specified.
+
+    If `use_caching` is True, a copy of the JSON will be cached locally, and
+    used for up to an hour after retrieval.
 
     **Note**: The URL is assumed to be the location within a Google Source
     repository. Special processing is done to handle this. This is the primary
@@ -70,6 +73,9 @@ def _get_resources_json_at_url(url: str) -> Dict:
     resources JSON comapared to just using the `_download` function directly.
 
     :param url: The URL of the JSON file.
+    :param use_caching: True if a cached file is to be used (up to an hour),
+    otherwise the file will be retrieved from the URL regardless. True by
+    default.
     '''
 
     file_path = os.path.join(
@@ -77,7 +83,19 @@ def _get_resources_json_at_url(url: str) -> Dict:
         f"gem5-resources-{hashlib.md5(url.encode()).hexdigest()}.base64",
     )
 
-    _download(url, file_path)
+    # The resources.json file can change at any time, but to avoid excessive
+    # retrieval we cache a version locally and use it for up to an hour before
+    # obtaining a fresh copy.
+    #
+    # `time.time()` and `os.path.getmtime(..)` both return an unix epoch time
+    # in seconds. Therefore, the value of "3600" here represents an hour
+    # difference between the two values. `time.time()` gets the current time,
+    # and `os.path.getmtime(<file>)` gets the modification time of the file.
+    # This is the most portable solution as other ideas, like "file creation
+    # time", are  not always the same concept between operating systems.
+    if not use_caching or not os.path.exists(file_path) or \
+        (time.time() - os.path.getmtime(file_path)) > 3600:
+                _download(url, file_path)
 
     # Note: Google Source does not properly support obtaining files as raw
     # text. Therefore when we open the URL we receive the JSON in base64
