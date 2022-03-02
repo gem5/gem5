@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 ARM Limited
+ * Copyright (c) 2021-2022 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -163,8 +163,15 @@ AccessPermission getAccessPermission(Addr addr) {
   TBE tbe := getCurrentActiveTBE(addr);
   if(is_valid(tbe)) {
     assert(Cache_State_to_permission(tbe.state) == AccessPermission:Busy);
-    if (tbe.expected_req_resp.hasExpected() ||
-        tbe.expected_snp_resp.hasExpected()) {
+    // It's assumed that if all caches are in transient state, the latest data
+    // is 1) within an inflight message, then 2 ) in memory. But with
+    // CleanUnique there may be no inflight messages with data, so it needs
+    // special handling.
+    bool cu_requester_or_responder :=
+      (tbe.reqType == CHIRequestType:CleanUnique) ||
+      (tbe.pendReqType == CHIRequestType:CleanUnique);
+    if ((tbe.expected_req_resp.hasExpected() ||
+        tbe.expected_snp_resp.hasExpected()) && !cu_requester_or_responder) {
       DPRINTF(RubySlicc, "%x %s,%s\n", addr, tbe.state, AccessPermission:Busy);
       return AccessPermission:Busy;
     }
