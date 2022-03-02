@@ -1298,7 +1298,6 @@ action(Send_WriteCleanFull, desc="") {
   assert(tbe.dataValid);
   assert(is_HN == false);
   assert(tbe.dataDirty);
-  assert(tbe.dataMaybeDirtyUpstream == false);
 
   enqueue(reqOutPort, CHIRequestMsg, request_latency) {
     prepareRequest(tbe, CHIRequestType:WriteCleanFull, out_msg);
