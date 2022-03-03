@@ -40,7 +40,9 @@ with gem5_scons.Configure(main) as conf:
     # we rely on exists since version 2.6.36 of the kernel, but somehow
     # the KVM_API_VERSION does not reflect the change. We test for one of
     # the types as a fall back.
-    conf.env['KVM_ISA'] = None
+    # The default value of KVM_ISA should serialize to a string in the
+    # C++ header and test False in Scons/Python.
+    conf.env['KVM_ISA'] = ''
     if not conf.CheckHeader('linux/kvm.h', '<>'):
         print("Info: Compatible header file <linux/kvm.h> not found, "
               "disabling KVM support.")

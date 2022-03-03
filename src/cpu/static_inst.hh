@@ -42,6 +42,7 @@
 #ifndef __CPU_STATIC_INST_HH__
 #define __CPU_STATIC_INST_HH__
 
+#include <array>
 #include <bitset>
 #include <cstdint>
 #include <memory>
