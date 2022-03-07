@@ -124,10 +124,10 @@ FwCfg::addItem(FwCfgItem *item)
 
     const std::string &path = item->path();
     if (path.empty() || path[0] != '.') {
-        const auto [pit, psuccess] =
+        const auto res =
             names.insert(std::make_pair(item->path(), item->index()));
 
-        panic_if(!psuccess, "Duplicate firmware config item path %s.",
+        panic_if(!res.second, "Duplicate firmware config item path %s.",
                 item->path());
     }
 }
@@ -147,7 +147,7 @@ FwCfg::select(uint16_t key)
         return;
     }
 
-    auto [index, item] = *iter;
+    auto item = iter->second;
 
     current = item;
     if (current)
