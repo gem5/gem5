@@ -140,6 +140,7 @@ class PhysicalMemory : public Serializable
     const bool mmapUsingNoReserve;
 
     const std::string sharedBackstore;
+    uint64_t sharedBackstoreSize;
 
     // The physical memory used to provide the memory in the simulated
     // system

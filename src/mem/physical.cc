@@ -79,7 +79,7 @@ PhysicalMemory::PhysicalMemory(const std::string& _name,
                                bool mmap_using_noreserve,
                                const std::string& shared_backstore) :
     _name(_name), size(0), mmapUsingNoReserve(mmap_using_noreserve),
-    sharedBackstore(shared_backstore)
+    sharedBackstore(shared_backstore), sharedBackstoreSize(0)
 {
     if (mmap_using_noreserve)
         warn("Not reserving swap space. May cause SIGSEGV on actual usage\n");
@@ -201,17 +201,22 @@ PhysicalMemory::createBackingStore(
 
     int shm_fd;
     int map_flags;
+    off_t map_offset;
 
     if (sharedBackstore.empty()) {
         shm_fd = -1;
         map_flags =  MAP_ANON | MAP_PRIVATE;
+        map_offset = 0;
     } else {
-        DPRINTF(AddrRanges, "Sharing backing store as %s\n",
-                sharedBackstore.c_str());
+        // Newly create backstore will be located after previous one.
+        map_offset = sharedBackstoreSize;
+        sharedBackstoreSize += range.size();
+        DPRINTF(AddrRanges, "Sharing backing store as %s at offset %llu\n",
+                sharedBackstore.c_str(), (uint64_t)map_offset);
         shm_fd = shm_open(sharedBackstore.c_str(), O_CREAT | O_RDWR, 0666);
         if (shm_fd == -1)
                panic("Shared memory failed");
-        if (ftruncate(shm_fd, range.size()))
+        if (ftruncate(shm_fd, sharedBackstoreSize))
                panic("Setting size of shared memory failed");
         map_flags = MAP_SHARED;
     }
@@ -224,7 +229,7 @@ PhysicalMemory::createBackingStore(
 
     uint8_t* pmem = (uint8_t*) mmap(NULL, range.size(),
                                     PROT_READ | PROT_WRITE,
-                                    map_flags, shm_fd, 0);
+                                    map_flags, shm_fd, map_offset);
 
     if (pmem == (uint8_t*) MAP_FAILED) {
         perror("mmap");
