@@ -443,17 +443,14 @@ def construct_dirs(options, system, ruby_system, network):
 
         dir_cntrl.triggerQueue = MessageBuffer(ordered = True)
         dir_cntrl.L3triggerQueue = MessageBuffer(ordered = True)
-        dir_cntrl.requestToMemory = MessageBuffer()
-        dir_cntrl.responseFromMemory = MessageBuffer()
+        dir_cntrl.requestToMemory = MessageBuffer(ordered = True)
+        dir_cntrl.responseFromMemory = MessageBuffer(ordered = True)
 
         dir_cntrl.requestFromDMA = MessageBuffer(ordered=True)
         dir_cntrl.requestFromDMA.in_port = network.out_port
 
         dir_cntrl.responseToDMA = MessageBuffer()
         dir_cntrl.responseToDMA.out_port = network.in_port
-
-        dir_cntrl.requestToMemory = MessageBuffer()
-        dir_cntrl.responseFromMemory = MessageBuffer()
 
         exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
