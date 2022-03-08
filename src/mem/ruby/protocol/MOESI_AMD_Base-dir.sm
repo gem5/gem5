@@ -132,7 +132,6 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   // DirectoryEntry
   structure(Entry, desc="...", interface="AbstractCacheEntry", main="false") {
     State DirectoryState,          desc="Directory state";
-    DataBlock DataBlk,             desc="data for the block";
     NetDest VicDirtyIgnore,  desc="VicDirty coming from whom to ignore";
   }
 
@@ -193,16 +192,6 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     dir_entry :=  static_cast(Entry, "pointer",
                               directory.allocate(addr, new Entry));
     return dir_entry;
-  }
-
-  DataBlock getDataBlock(Addr addr), return_by_ref="yes" {
-    TBE tbe := TBEs.lookup(addr);
-    if (is_valid(tbe) && tbe.MemData) {
-      DPRINTF(RubySlicc, "Returning DataBlk from TBE %s:%s\n", addr, tbe);
-      return tbe.DataBlk;
-    }
-    DPRINTF(RubySlicc, "Returning DataBlk from Dir %s:%s\n", addr, getDirectoryEntry(addr));
-    return getDirectoryEntry(addr).DataBlk;
   }
 
   State getState(TBE tbe, CacheEntry entry, Addr addr) {
@@ -920,7 +909,13 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   action(d_writeDataToMemory, "d", desc="Write data to memory") {
     peek(responseNetwork_in, ResponseMsg) {
-      getDirectoryEntry(address).DataBlk := in_msg.DataBlk;
+      enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.Sender := machineID;
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.DataBlk := in_msg.DataBlk;
+      }
       if (tbe.Dirty == false) {
           // have to update the TBE, too, because of how this
           // directory deals with functional writes
@@ -966,7 +961,6 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         tbe.WTRequestor := in_msg.WTRequestor;
         tbe.LastSender := in_msg.Requestor;
       }
-      tbe.DataBlk := getDirectoryEntry(address).DataBlk; // Data only for WBs
       tbe.Dirty := false;
       if (in_msg.Type == CoherenceRequestType:WriteThrough) {
         tbe.DataBlk.copyPartial(in_msg.DataBlk,in_msg.writeMask);
@@ -980,30 +974,36 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   }
 
   action(dt_deallocateTBE, "dt", desc="deallocate TBE Entry") {
-    if (tbe.Dirty == false) {
-        getDirectoryEntry(address).DataBlk := tbe.DataBlk;
-    }
     TBEs.deallocate(address);
     unset_tbe();
   }
 
   action(wd_writeBackData, "wd", desc="Write back data if needed") {
-    if (tbe.wtData) {
-      getDirectoryEntry(address).DataBlk.copyPartial(tbe.DataBlk, tbe.writeMask);
-    } else if (tbe.atomicData) {
-      tbe.DataBlk.atomicPartial(getDirectoryEntry(address).DataBlk,tbe.writeMask);
-      getDirectoryEntry(address).DataBlk := tbe.DataBlk;
-    } else if (tbe.Dirty == false) {
-      getDirectoryEntry(address).DataBlk := tbe.DataBlk;
+    if (tbe.wtData || tbe.atomicData || tbe.Dirty == false) {
+      if (tbe.atomicData) {
+        tbe.DataBlk.atomicPartial(tbe.DataBlk, tbe.writeMask);
+      }
+      enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.Sender := machineID;
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.DataBlk := tbe.DataBlk;
+        DPRINTF(ProtocolTrace, "%s\n", out_msg);
+      }
     }
   }
 
   action(mt_writeMemDataToTBE, "mt", desc="write Mem data to TBE") {
     peek(memQueue_in, MemoryMsg) {
       if (tbe.wtData == true) {
-          // do nothing
+        // Keep the write-through data based on mask, but use the memory block
+        // for the masked-off data.
+        DataBlock tmpBlk := in_msg.DataBlk;
+        tmpBlk.copyPartial(tbe.DataBlk, tbe.writeMask);
+        tbe.DataBlk := tmpBlk;
       } else if (tbe.Dirty == false) {
-        tbe.DataBlk := getDirectoryEntry(address).DataBlk;
+        tbe.DataBlk := in_msg.DataBlk;
       }
       tbe.MemData := true;
     }
