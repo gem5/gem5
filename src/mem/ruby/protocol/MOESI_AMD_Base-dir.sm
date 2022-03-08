@@ -61,26 +61,28 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 {
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_U") {
-    U, AccessPermission:Backing_Store,                 desc="unblocked";
+    U, AccessPermission:Backing_Store,          desc="unblocked";
     BL, AccessPermission:Busy,                  desc="got L3 WB request";
     // BL is Busy because it's possible for the data only to be in the network
     // in the WB, L3 has sent it and gone on with its business in possibly I
     // state.
-    BDR_M, AccessPermission:Backing_Store,  desc="DMA read, blocked waiting for memory";
-    BS_M, AccessPermission:Backing_Store,                 desc="blocked waiting for memory";
-    BM_M, AccessPermission:Backing_Store,                 desc="blocked waiting for memory";
-    B_M, AccessPermission:Backing_Store,                 desc="blocked waiting for memory";
-    BP, AccessPermission:Backing_Store,                 desc="blocked waiting for probes, no need for memory";
-    BDR_PM, AccessPermission:Backing_Store, desc="DMA read, blocked waiting for probes and memory";
-    BS_PM, AccessPermission:Backing_Store,                desc="blocked waiting for probes and Memory";
-    BM_PM, AccessPermission:Backing_Store,                desc="blocked waiting for probes and Memory";
-    B_PM, AccessPermission:Backing_Store,                desc="blocked waiting for probes and Memory";
-    BDW_P, AccessPermission:Backing_Store, desc="DMA write, blocked waiting for probes, no need for memory";
-    BDR_Pm, AccessPermission:Backing_Store, desc="DMA read, blocked waiting for probes, already got memory";
-    BS_Pm, AccessPermission:Backing_Store,                desc="blocked waiting for probes, already got memory";
-    BM_Pm, AccessPermission:Backing_Store,                desc="blocked waiting for probes, already got memory";
-    B_Pm, AccessPermission:Backing_Store,                desc="blocked waiting for probes, already got memory";
-    B, AccessPermission:Backing_Store,                  desc="sent response, Blocked til ack";
+    BDR_M, AccessPermission:Backing_Store,      desc="DMA read, blocked waiting for memory";
+    BDW_M, AccessPermission:Backing_Store,      desc="DMA write, blocked waiting for memory";
+    BS_M, AccessPermission:Backing_Store,       desc="blocked waiting for memory";
+    BM_M, AccessPermission:Backing_Store,       desc="blocked waiting for memory";
+    B_M, AccessPermission:Backing_Store,        desc="blocked waiting for memory";
+    BP, AccessPermission:Backing_Store,         desc="blocked waiting for probes, no need for memory";
+    BDR_PM, AccessPermission:Backing_Store,     desc="DMA read, blocked waiting for probes and memory";
+    BDW_PM, AccessPermission:Backing_Store,     desc="DMA write, blocked waiting for probes and memory";
+    BS_PM, AccessPermission:Backing_Store,      desc="blocked waiting for probes and Memory";
+    BM_PM, AccessPermission:Backing_Store,      desc="blocked waiting for probes and Memory";
+    B_PM, AccessPermission:Backing_Store,       desc="blocked waiting for probes and Memory";
+    BDR_Pm, AccessPermission:Backing_Store,     desc="DMA read, blocked waiting for probes, already got memory";
+    BDW_Pm, AccessPermission:Backing_Store,     desc="DMA write, blocked waiting for probes, already got memory";
+    BS_Pm, AccessPermission:Backing_Store,      desc="blocked waiting for probes, already got memory";
+    BM_Pm, AccessPermission:Backing_Store,      desc="blocked waiting for probes, already got memory";
+    B_Pm, AccessPermission:Backing_Store,       desc="blocked waiting for probes, already got memory";
+    B, AccessPermission:Backing_Store,          desc="sent response, Blocked til ack";
   }
 
   // Events
@@ -579,7 +581,13 @@ machine(MachineType:Directory, "AMD Baseline protocol")
           out_msg.Type := TriggerType:L3Hit;
         }
         CacheEntry entry := static_cast(CacheEntry, "pointer", L3CacheMemory.lookup(address));
-        tbe.DataBlk := entry.DataBlk;
+
+        // tbe.DataBlk may have partial data (e.g., for DMA writes). Make sure
+        // not to clobber the data before merging it with the L3 cache data.
+        DataBlock tmpBlk := entry.DataBlk;
+        tmpBlk.copyPartial(tbe.DataBlk, tbe.writeMask);
+        tbe.DataBlk := tmpBlk;
+
         tbe.L3Hit := true;
         tbe.MemData := true;
         L3CacheMemory.deallocate(address);
@@ -937,7 +945,14 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         tbe.wtData := true;
         tbe.Dirty := true;
         tbe.DataBlk := in_msg.DataBlk;
-        tbe.writeMask.fillMask();
+        // DMAs can be partial cache line. This is indicated by a "Len" value
+        // which is non-zero. In this case make sure to set the writeMask
+        // appropriately. This can occur for either reads or writes.
+        if (in_msg.Len != 0) {
+          tbe.writeMask.setMask(addressOffset(in_msg.PhysicalAddress, address), in_msg.Len);
+        } else {
+          tbe.writeMask.fillMask();
+        }
       }
     }
   }
@@ -998,7 +1013,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     peek(memQueue_in, MemoryMsg) {
       if (tbe.wtData == true) {
         // Keep the write-through data based on mask, but use the memory block
-        // for the masked-off data.
+        // for the masked-off data. If we received a probe with data, the mask
+        // will be filled and the tbe data will fully overwrite the memory
+        // data in the temp block.
         DataBlock tmpBlk := in_msg.DataBlk;
         tmpBlk.copyPartial(tbe.DataBlk, tbe.writeMask);
         tbe.DataBlk := tmpBlk;
@@ -1199,7 +1216,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   }
 
   // TRANSITIONS
-  transition({BL, BDR_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_P, BS_PM, BM_PM, B_PM, BDR_Pm, BS_Pm, BM_Pm, B_Pm, B}, {RdBlkS, RdBlkM, RdBlk, CtoD}) {
+  transition({BL, BDR_M, BDW_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_PM, BS_PM, BM_PM, B_PM, BDR_Pm, BDW_Pm, BS_Pm, BM_Pm, B_Pm, B}, {RdBlkS, RdBlkM, RdBlk, CtoD}) {
       st_stallAndWaitRequest;
   }
 
@@ -1210,7 +1227,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   // The exit state is always going to be U, so wakeUpDependents logic should be covered in all the
   // transitions which are flowing into U.
-  transition({BL, BDR_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_P, BS_PM, BM_PM, B_PM, BDR_Pm, BS_Pm, BM_Pm, B_Pm, B}, {DmaRead,DmaWrite}){
+  transition({BL, BDR_M, BDW_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_PM, BS_PM, BM_PM, B_PM, BDR_Pm, BDW_Pm, BS_Pm, BM_Pm, B_Pm, B}, {DmaRead,DmaWrite}){
     sd_stallAndWaitRequest;
   }
 
@@ -1231,9 +1248,10 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     p_popRequestQueue;
   }
 
-  transition(U, DmaWrite, BDW_P) {L3TagArrayRead} {
+  transition(U, DmaWrite, BDW_PM) {L3TagArrayRead} {
     atd_allocateTBEforDMA;
-    da_sendResponseDmaAck;
+    qdr_queueDmaRdReq;
+    pr_profileL3HitMiss; //Must come after qdr_queueDmaRdReq
     icd_probeInvCoreDataForDMA;
     pd_popDmaRequestQueue;
   }
@@ -1308,15 +1326,15 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     pr_popResponseQueue;
   }
 
-  transition({B, BDR_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_P, BS_PM, BM_PM, B_PM, BDR_Pm, BS_Pm, BM_Pm, B_Pm}, {VicDirty, VicClean}) {
+  transition({B, BDR_M, BDW_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_PM, BS_PM, BM_PM, B_PM, BDR_Pm, BDW_Pm, BS_Pm, BM_Pm, B_Pm}, {VicDirty, VicClean}) {
     z_stall;
   }
 
-  transition({U, BL, BDR_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_P, BS_PM, BM_PM, B_PM, BDR_Pm, BS_Pm, BM_Pm, B_Pm, B}, WBAck) {
+  transition({U, BL, BDR_M, BDW_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_PM, BS_PM, BM_PM, B_PM, BDR_Pm, BDW_Pm, BS_Pm, BM_Pm, B_Pm, B}, WBAck) {
     pm_popMemQueue;
   }
 
-  transition({U, BL, BDR_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_P, BS_PM, BM_PM, B_PM, BDR_Pm, BS_Pm, BM_Pm, B_Pm, B}, StaleVicDirty) {
+  transition({U, BL, BDR_M, BDW_M, BS_M, BM_M, B_M, BP, BDR_PM, BDW_PM, BS_PM, BM_PM, B_PM, BDR_Pm, BDW_Pm, BS_Pm, BM_Pm, B_Pm, B}, StaleVicDirty) {
     rv_removeVicDirtyIgnore;
     w_sendResponseWBAck;
     p_popRequestQueue;
@@ -1333,6 +1351,11 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   }
 
   transition(BDR_PM, MemData, BDR_Pm) {
+    mt_writeMemDataToTBE;
+    pm_popMemQueue;
+  }
+
+  transition(BDW_PM, MemData, BDW_Pm) {
     mt_writeMemDataToTBE;
     pm_popMemQueue;
   }
@@ -1356,6 +1379,10 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     ptl_popTriggerQueue;
   }
 
+  transition(BDW_PM, L3Hit, BDW_Pm) {
+    ptl_popTriggerQueue;
+  }
+
   transition(BS_PM, L3Hit, BS_Pm) {} {
     ptl_popTriggerQueue;
   }
@@ -1371,6 +1398,15 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   transition(BDR_M, MemData, U) {
     mt_writeMemDataToTBE;
     dd_sendResponseDmaData;
+    wada_wakeUpAllDependentsAddr;
+    dt_deallocateTBE;
+    pm_popMemQueue;
+  }
+
+  transition(BDW_M, MemData, U) {
+    mt_writeMemDataToTBE;
+    da_sendResponseDmaAck;
+    wd_writeBackData;
     wada_wakeUpAllDependentsAddr;
     dt_deallocateTBE;
     pm_popMemQueue;
@@ -1427,7 +1463,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     ptl_popTriggerQueue;
   }
 
-  transition({BDR_PM, BS_PM, BDW_P, BM_PM, B_PM, BDR_Pm, BS_Pm, BM_Pm, B_Pm, BP}, CPUPrbResp) {
+  transition({BDR_PM, BDW_PM, BS_PM, BM_PM, B_PM, BDR_Pm, BDW_Pm, BS_Pm, BM_Pm, B_Pm, BP}, CPUPrbResp) {
     y_writeProbeDataToTBE;
     x_decrementAcks;
     o_checkForCompletion;
@@ -1435,6 +1471,10 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   }
 
   transition(BDR_PM, ProbeAcksComplete, BDR_M) {
+    pt_popTriggerQueue;
+  }
+
+  transition(BDW_PM, ProbeAcksComplete, BDW_M) {
     pt_popTriggerQueue;
   }
 
@@ -1453,7 +1493,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     pt_popTriggerQueue;
   }
 
-  transition(BDW_P, ProbeAcksComplete, U) {
+  transition(BDR_Pm, ProbeAcksComplete, U) {
+    dd_sendResponseDmaData;
     // Check for pending requests from the core we put to sleep while waiting
     // for a response
     wada_wakeUpAllDependentsAddr;
@@ -1461,8 +1502,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     pt_popTriggerQueue;
   }
 
-  transition(BDR_Pm, ProbeAcksComplete, U) {
-    dd_sendResponseDmaData;
+  transition(BDW_Pm, ProbeAcksComplete, U) {
+    da_sendResponseDmaAck;
+    wd_writeBackData;
     // Check for pending requests from the core we put to sleep while waiting
     // for a response
     wada_wakeUpAllDependentsAddr;
