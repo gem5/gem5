@@ -103,4 +103,11 @@ services:
             args:
                 - version=11
         image: gcr.io/gem5-test/clang-version-11
+    clang-12:
+        build:
+            context: ubuntu-20.04_clang-version
+            dockerfile: Dockerfile
+            args:
+                - version=12
+        image: gcr.io/gem5-test/clang-version-12
 
