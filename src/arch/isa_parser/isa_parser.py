@@ -1459,20 +1459,12 @@ StaticInstPtr
         for op_name, op_desc in user_dict.items():
             assert(isinstance(op_desc, OperandDesc))
 
-            base_cls_name = op_desc.attrs['base_cls_name']
+            base_cls = op_desc.attrs['base_cls']
 
             op_desc.setName(op_name)
 
-            # New class name will be e.g. "IntReg_Ra"
-            cls_name = base_cls_name + '_' + op_name
-            # Evaluate string arg to get class object.  Note that the
-            # actual base class for "IntReg" is "IntRegOperand", i.e. we
-            # have to append "Operand".
-            try:
-                base_cls = eval(base_cls_name + 'Operand')
-            except NameError:
-                error(lineno,
-                      'error: unknown operand base class "%s"' % base_cls_name)
+            # New class name will be e.g. "IntRegOperand_Ra"
+            cls_name = base_cls.__name__ + '_' + op_name
             # The following statement creates a new class called
             # <cls_name> as a subclass of <base_cls> with the attributes
             # in op_desc.attrs, just as if we evaluated a class declaration.

@@ -38,7 +38,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class OperandDesc(object):
-    def __init__(self, base_cls_name, dflt_ext, reg_spec, flags=None,
+    def __init__(self, base_cls, dflt_ext, reg_spec, flags=None,
             sort_pri=None, read_code=None, write_code=None,
             read_predicate=None, write_predicate=None):
 
@@ -77,7 +77,7 @@ class OperandDesc(object):
                 attrs['elems'] = elem_spec
 
         attrs.update({
-            'base_cls_name': base_cls_name,
+            'base_cls': base_cls,
             'dflt_ext': dflt_ext,
             'reg_spec': reg_spec,
             'flags': flags,
@@ -288,28 +288,28 @@ class IntRegOperand(RegValOperand):
 
 class IntRegOperandDesc(RegOperandDesc):
     def __init__(self, *args, **kwargs):
-        super().__init__('IntRegClass', 'RegVal', *args, **kwargs)
+        super().__init__('IntRegClass', RegValOperand, *args, **kwargs)
 
 class FloatRegOperand(RegValOperand):
     reg_class = 'FloatRegClass'
 
 class FloatRegOperandDesc(RegOperandDesc):
     def __init__(self, *args, **kwargs):
-        super().__init__('FloatRegClass', 'RegVal', *args, **kwargs)
+        super().__init__('FloatRegClass', RegValOperand, *args, **kwargs)
 
 class CCRegOperand(RegValOperand):
     reg_class = 'CCRegClass'
 
 class CCRegOperandDesc(RegOperandDesc):
     def __init__(self, *args, **kwargs):
-        super().__init__('CCRegClass', 'RegVal', *args, **kwargs)
+        super().__init__('CCRegClass', RegValOperand, *args, **kwargs)
 
 class VecElemOperand(RegValOperand):
     reg_class = 'VecElemClass'
 
 class VecElemOperandDesc(RegOperandDesc):
     def __init__(self, *args, **kwargs):
-        super().__init__('VecElemClass', 'RegVal', *args, **kwargs)
+        super().__init__('VecElemClass', RegValOperand, *args, **kwargs)
 
 class VecRegOperand(RegOperand):
     reg_class = 'VecRegClass'
@@ -441,7 +441,7 @@ class VecRegOperand(RegOperand):
 
 class VecRegOperandDesc(RegOperandDesc):
     def __init__(self, *args, **kwargs):
-        super().__init__('VecRegClass', 'VecReg', *args, **kwargs)
+        super().__init__('VecRegClass', VecRegOperand, *args, **kwargs)
 
 class VecPredRegOperand(RegOperand):
     reg_class = 'VecPredRegClass'
@@ -506,7 +506,7 @@ class VecPredRegOperand(RegOperand):
 
 class VecPredRegOperandDesc(RegOperandDesc):
     def __init__(self, *args, **kwargs):
-        super().__init__('VecPredRegClass', 'VecPredReg', *args, **kwargs)
+        super().__init__('VecPredRegClass', VecPredRegOperand, *args, **kwargs)
 
 class ControlRegOperand(Operand):
     reg_class = 'MiscRegClass'
@@ -564,7 +564,7 @@ class ControlRegOperand(Operand):
 
 class ControlRegOperandDesc(RegOperandDesc):
     def __init__(self, *args, **kwargs):
-        super().__init__('MiscRegClass', 'ControlReg', *args, **kwargs)
+        super().__init__('MiscRegClass', ControlRegOperand, *args, **kwargs)
 
 class MemOperand(Operand):
     def isMem(self):
@@ -589,7 +589,7 @@ class MemOperand(Operand):
 
 class MemOperandDesc(OperandDesc):
     def __init__(self, *args, **kwargs):
-        super().__init__('Mem', *args, **kwargs)
+        super().__init__(MemOperand, *args, **kwargs)
 
 class PCStateOperand(Operand):
     def __init__(self, parser, *args, **kwargs):
@@ -631,4 +631,4 @@ class PCStateOperand(Operand):
 
 class PCStateOperandDesc(OperandDesc):
     def __init__(self, *args, **kwargs):
-        super().__init__('PCState', *args, **kwargs)
+        super().__init__(PCStateOperand, *args, **kwargs)
