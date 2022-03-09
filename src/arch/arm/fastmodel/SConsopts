@@ -36,7 +36,7 @@ sticky_vars.AddVariables(
     ('PVLIB_HOME', 'Fast Model portfolio directory',
      os.environ.get('PVLIB_HOME', '')),
     ('PVLIB_FLAVOR', 'What build flavor of the Fast Model pvlib to use',
-     'Linux64_GCC-6.4'),
+     'Linux64_GCC-7.3'),
     ('MAXCORE_HOME', 'Fast Model tools directory',
      os.environ.get('MAXCORE_HOME', '')),
     ('ARMLMD_LICENSE_FILE', 'ARM license file location',

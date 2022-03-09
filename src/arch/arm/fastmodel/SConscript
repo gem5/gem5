@@ -104,7 +104,7 @@ def staticify(env, name):
         full_name = Dir(path).File(static_name).get_abspath()
         if os.path.isfile(full_name):
             return File(full_name)
-    raise BuildError("Failed to find FM static lib: " + name)
+    error("Failed to find FM static lib: " + name)
 
 # Adjust the build environment to support building in Fast Models.
 
