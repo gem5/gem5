@@ -174,7 +174,8 @@ class PhysicalMemory : public Serializable
     PhysicalMemory(const std::string& _name,
                    const std::vector<AbstractMemory*>& _memories,
                    bool mmap_using_noreserve,
-                   const std::string& shared_backstore);
+                   const std::string& shared_backstore,
+                   bool auto_unlink_shared_backstore);
 
     /**
      * Unmap all the backing store we have used.

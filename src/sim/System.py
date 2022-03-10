@@ -87,6 +87,9 @@ class System(SimObject):
     shared_backstore = Param.String("", "backstore's shmem segment filename, "
         "use to directly address the backstore from another host-OS process. "
         "Leave this empty to unset the MAP_SHARED flag.")
+    auto_unlink_shared_backstore = Param.Bool(False, "Automatically remove the "
+        "shmem segment file upon destruction. This is used only if "
+        "shared_backstore is non-empty.")
 
     cache_line_size = Param.Unsigned(64, "Cache line size in bytes")
 

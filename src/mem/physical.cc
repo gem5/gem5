@@ -55,6 +55,7 @@
 #include "debug/Checkpoint.hh"
 #include "mem/abstract_mem.hh"
 #include "sim/serialize.hh"
+#include "sim/sim_exit.hh"
 
 /**
  * On Linux, MAP_NORESERVE allow us to simulate a very large memory
@@ -77,10 +78,16 @@ namespace memory
 PhysicalMemory::PhysicalMemory(const std::string& _name,
                                const std::vector<AbstractMemory*>& _memories,
                                bool mmap_using_noreserve,
-                               const std::string& shared_backstore) :
+                               const std::string& shared_backstore,
+                               bool auto_unlink_shared_backstore) :
     _name(_name), size(0), mmapUsingNoReserve(mmap_using_noreserve),
     sharedBackstore(shared_backstore), sharedBackstoreSize(0)
 {
+    // Register cleanup callback if requested.
+    if (auto_unlink_shared_backstore && !sharedBackstore.empty()) {
+        registerExitCallback([=]() { shm_unlink(shared_backstore.c_str()); });
+    }
+
     if (mmap_using_noreserve)
         warn("Not reserving swap space. May cause SIGSEGV on actual usage\n");
 
