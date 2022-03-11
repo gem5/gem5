@@ -554,6 +554,15 @@ action(Initiate_ReadOnce_HitUpstream, desc="") {
   }
   tbe.updateDirOnCompAck := false;
   // no need to update or access tags/data on ReadOnce served from upstream
+
+  if (is_invalid(cache_entry)) {
+    // if we receive data, invalidate at the end so it can be dropped
+    tbe.dataToBeInvalid := true;
+  } else if (tbe.dataValid == false) {
+    // possible on UD_RU,UC_RU where cache_entry valid but tbe.dataValid == false
+    // this prevents going to RU if no data is received from snoop
+    tbe.dataValid := true;
+  }
 }
 
 
