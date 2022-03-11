@@ -404,18 +404,8 @@ ArmFault::setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg)
     assert(!from64 || ArmSystem::highestELIs64(tc));
 
     esr.ec = exc_class;
+    esr.il = il(tc);
 
-    // HSR.IL not valid for Prefetch Aborts (0x20, 0x21) and Data Aborts (0x24,
-    // 0x25) for which the ISS information is not valid (ARMv7).
-    // @todo: ARMv8 revises AArch32 functionality: when HSR.IL is not
-    // valid it is treated as RES1.
-    if (to64) {
-        esr.il = 1;
-    } else if ((bits(exc_class, 5, 3) != 4) ||
-               (bits(exc_class, 2) && bits(iss_val, 24))) {
-        if (!machInst.thumb || machInst.bigThumb)
-            esr.il = 1;
-    }
     // Condition code valid for EC[5:4] nonzero
     if (!from64 && ((bits(exc_class, 5, 4) == 0) &&
                     (bits(exc_class, 3, 0) != 0))) {
@@ -1364,6 +1354,12 @@ DataAbort::ec(ThreadContext *tc) const
         }
         return ec;
     }
+}
+
+bool
+DataAbort::il(ThreadContext *tc) const
+{
+    return !isv? true : AbortFault<DataAbort>::il(tc);
 }
 
 bool
