@@ -334,7 +334,7 @@ in_port(reqRdyPort, CHIRequestMsg, reqRdy, rank=3,
           }
         } else if (in_msg.type == CHIRequestType:WriteCleanFull) {
           if (is_invalid(dir_entry) || (dir_entry.ownerExists == false) ||
-              (dir_entry.ownerIsExcl == false) || (dir_entry.owner != in_msg.requestor)) {
+              (dir_entry.owner != in_msg.requestor)) {
             trigger(Event:WriteCleanFull_Stale, in_msg.addr, cache_entry, tbe);
           }
         } else if (in_msg.type == CHIRequestType:Evict) {
