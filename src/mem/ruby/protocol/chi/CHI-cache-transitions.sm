@@ -1043,6 +1043,12 @@ transition(BUSY_BLKD, FinishCleanUnique) {
   ProcessNextState_ClearPending;
 }
 
+transition(BUSY_BLKD, FinishCopyBack_Stale) {
+  Pop_TriggerQueue;
+  Finish_CopyBack_Stale;
+  ProcessNextState_ClearPending;
+}
+
 transition(BUSY_BLKD, CheckUpgrade_FromStore) {
   Pop_TriggerQueue;
   Callback_Miss; // note: Callback happens only if tbe.dataValid

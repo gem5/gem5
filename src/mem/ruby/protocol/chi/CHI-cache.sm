@@ -504,6 +504,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     TX_Data, desc="Transmit pending data messages";
     MaintainCoherence, desc="Queues a WriteBack or Evict before droping the only valid copy of the block";
     FinishCleanUnique, desc="Sends acks and perform any writeback after a CleanUnique";
+    FinishCopyBack_Stale, desc="Check if a Evict needs to be sent";
     ActionStalledOnHazard, desc="Stall a trigger action because until finish handling snoop hazard";
 
     // This is triggered once a transaction doesn't have
