@@ -934,8 +934,8 @@ UndefinedInstruction::ec(ThreadContext *tc) const
 }
 
 
-HypervisorCall::HypervisorCall(ExtMachInst _machInst, uint32_t _imm) :
-        ArmFaultVals<HypervisorCall>(_machInst, _imm)
+HypervisorCall::HypervisorCall(ExtMachInst mach_inst, uint32_t _imm) :
+        ArmFaultVals<HypervisorCall>(mach_inst, _imm)
 {
     bStep = true;
 }
@@ -1613,8 +1613,8 @@ SystemError::routeToHyp(ThreadContext *tc) const
 }
 
 
-SoftwareBreakpoint::SoftwareBreakpoint(ExtMachInst _mach_inst, uint32_t _iss)
-    : ArmFaultVals<SoftwareBreakpoint>(_mach_inst, _iss)
+SoftwareBreakpoint::SoftwareBreakpoint(ExtMachInst mach_inst, uint32_t _iss)
+    : ArmFaultVals<SoftwareBreakpoint>(mach_inst, _iss)
 {}
 
 bool
@@ -1633,8 +1633,8 @@ SoftwareBreakpoint::ec(ThreadContext *tc) const
     return from64 ? EC_SOFTWARE_BREAKPOINT_64 : vals.ec;
 }
 
-HardwareBreakpoint::HardwareBreakpoint(Addr _vaddr,  uint32_t _iss)
-    : ArmFaultVals<HardwareBreakpoint>(0x0, _iss), vAddr(_vaddr)
+HardwareBreakpoint::HardwareBreakpoint(Addr vaddr,  uint32_t _iss)
+    : ArmFaultVals<HardwareBreakpoint>(0x0, _iss), vAddr(vaddr)
 {}
 
 bool
@@ -1683,9 +1683,9 @@ HardwareBreakpoint::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
 }
 
-Watchpoint::Watchpoint(ExtMachInst _mach_inst, Addr _vaddr,
+Watchpoint::Watchpoint(ExtMachInst mach_inst, Addr _vaddr,
                        bool _write, bool _cm)
-    : ArmFaultVals<Watchpoint>(_mach_inst), vAddr(_vaddr),
+    : ArmFaultVals<Watchpoint>(mach_inst), vAddr(_vaddr),
       write(_write), cm(_cm)
 {}
 
@@ -1744,9 +1744,9 @@ Watchpoint::ec(ThreadContext *tc) const
             return EC_WATCHPOINT_LOWER_EL;
 }
 
-SoftwareStepFault::SoftwareStepFault(ExtMachInst _mach_inst, bool is_ldx,
+SoftwareStepFault::SoftwareStepFault(ExtMachInst mach_inst, bool is_ldx,
                                      bool _stepped)
-    : ArmFaultVals<SoftwareStepFault>(_mach_inst), isldx(is_ldx),
+    : ArmFaultVals<SoftwareStepFault>(mach_inst), isldx(is_ldx),
                                       stepped(_stepped)
 {
     bStep = true;
