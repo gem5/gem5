@@ -239,6 +239,7 @@ def define_constants(constants):
     constants.mips_tag = 'MIPS'
     constants.power_tag = 'POWER'
     constants.null_tag = 'NULL'
+    constants.all_compiled_tag = 'ALL'
 
     constants.variant_tag_type = 'variant'
     constants.opt_tag = 'opt'
@@ -266,6 +267,7 @@ def define_constants(constants):
             constants.mips_tag,
             constants.power_tag,
             constants.null_tag,
+            constants.all_compiled_tag,
             ),
         constants.variant_tag_type: (
             constants.opt_tag,
@@ -293,7 +295,8 @@ def define_constants(constants):
         constants.riscv_tag : (constants.host_x86_64_tag,),
         constants.mips_tag  : (constants.host_x86_64_tag,),
         constants.power_tag : (constants.host_x86_64_tag,),
-        constants.null_tag  : (None,)
+        constants.null_tag  : (None,),
+        constants.all_compiled_tag: (None,),
     }
 
     constants.supported_isas = constants.supported_tags['isa']
