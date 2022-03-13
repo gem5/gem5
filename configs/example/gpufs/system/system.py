@@ -82,12 +82,9 @@ def makeGpuFSSystem(args):
     system.shadow_rom_ranges = [AddrRange(0xc0000, size = Addr('128kB'))]
 
     # Create specified number of CPUs. GPUFS really only needs one.
-    system.cpu = [TestCPUClass(clk_domain=system.cpu_clk_domain, cpu_id=i)
+    system.cpu = [X86KvmCPU(clk_domain=system.cpu_clk_domain, cpu_id=i)
                     for i in range(args.num_cpus)]
-
-    if ObjectList.is_kvm_cpu(TestCPUClass) or \
-        ObjectList.is_kvm_cpu(FutureClass):
-        system.kvm_vm = KvmVM()
+    system.kvm_vm = KvmVM()
 
     # Create AMDGPU and attach to southbridge
     shader = createGPU(system, args)
