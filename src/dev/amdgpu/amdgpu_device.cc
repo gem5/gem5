@@ -54,7 +54,8 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     : PciDevice(p), gpuMemMgr(p.memory_manager), deviceIH(p.device_ih),
       sdma0(p.sdma0), sdma1(p.sdma1), pm4PktProc(p.pm4_pkt_proc), cp(p.cp),
       checkpoint_before_mmios(p.checkpoint_before_mmios),
-      init_interrupt_count(0), _lastVMID(0)
+      init_interrupt_count(0), _lastVMID(0),
+      deviceMem(name() + ".deviceMem", p.memories, false, "", false)
 {
     // Loading the rom binary dumped from hardware.
     std::ifstream romBin;
@@ -513,6 +514,7 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     SERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs)/sizeof(sdma_engs[0]));
 
     // Serialize the device memory
+    deviceMem.serializeSection(cp, "deviceMem");
 }
 
 void
@@ -573,6 +575,7 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
     }
 
     // Unserialize the device memory
+    deviceMem.unserializeSection(cp, "deviceMem");
 }
 
 uint16_t

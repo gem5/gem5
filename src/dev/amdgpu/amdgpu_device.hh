@@ -131,6 +131,11 @@ class AMDGPUDevice : public PciDevice
     // last vmid allocated by map_process PM4 packet
     uint16_t _lastVMID;
 
+    /*
+     * Backing store for GPU memory / framebuffer / VRAM
+     */
+    memory::PhysicalMemory deviceMem;
+
   public:
     AMDGPUDevice(const AMDGPUDeviceParams &p);
 
