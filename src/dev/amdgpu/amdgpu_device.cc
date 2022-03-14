@@ -179,7 +179,13 @@ AMDGPUDevice::readFrame(PacketPtr pkt, Addr offset)
 {
     DPRINTF(AMDGPUDevice, "Read framebuffer address %#lx\n", offset);
 
+    /* Try MMIO trace for frame writes first. */
     mmioReader.readFromTrace(pkt, FRAMEBUFFER_BAR, offset);
+
+    /* If the driver wrote something, use that value over the trace. */
+    if (frame_regs.find(offset) != frame_regs.end()) {
+        pkt->setUintX(frame_regs[offset], ByteOrder::little);
+    }
 
     /* Handle special counter addresses in framebuffer. */
     if (offset == 0xa28000) {
@@ -247,8 +253,9 @@ AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
     Addr aperture_offset = offset - aperture;
 
     // Record the value
-    frame_regs[aperture_offset] = pkt->getLE<uint32_t>();
+    frame_regs[offset] = pkt->getLE<uint32_t>();
     if (aperture == gpuvm.gartBase()) {
+        frame_regs[aperture_offset] = pkt->getLE<uint32_t>();
         DPRINTF(AMDGPUDevice, "GART translation %p -> %p\n", aperture_offset,
             bits(frame_regs[aperture_offset], 48, 12));
         gpuvm.gartTable[aperture_offset] = pkt->getLE<uint32_t>();
