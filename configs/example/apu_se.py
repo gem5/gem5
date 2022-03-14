@@ -161,7 +161,7 @@ parser.add_argument('--fast-forward-pseudo-op', action='store_true',
                     ' m5_switchcpu pseudo-ops will toggle back and forth')
 parser.add_argument("--num-hw-queues", type=int, default=10,
                     help="number of hw queues in packet processor")
-parser.add_argument("--reg-alloc-policy", type=str, default="simple",
+parser.add_argument("--reg-alloc-policy", type=str, default="dynamic",
                     help="register allocation policy (simple/dynamic)")
 
 parser.add_argument("--dgpu", action="store_true", default=False,
