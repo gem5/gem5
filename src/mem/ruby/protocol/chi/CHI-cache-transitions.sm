@@ -1085,7 +1085,7 @@ transition({BUSY_BLKD,BUSY_INTR}, NCBWrData) {
 
 transition(BUSY_BLKD,
            {SnpRespData_I_PD,SnpRespData_I,SnpRespData_SC_PD,
-            SnpRespData_SC,SnpRespData_SD,SnpRespData_UD,
+            SnpRespData_SC,SnpRespData_SD,SnpRespData_UC,SnpRespData_UD,
             SnpRespData_SC_Fwded_SC,SnpRespData_SC_Fwded_SD_PD,
             SnpRespData_SC_PD_Fwded_SC,SnpRespData_I_Fwded_SD_PD,
             SnpRespData_I_PD_Fwded_SC,SnpRespData_I_Fwded_SC}) {
