@@ -1023,6 +1023,7 @@ GPUComputeDriver::setMtype(RequestPtr req)
 {
     // If we are a dGPU then set the MTYPE from our VMAs.
     if (isdGPU) {
+        assert(!FullSystem);
         AddrRange range = RangeSize(req->getVaddr(), req->getSize());
         auto vma = gpuVmas.contains(range);
         assert(vma != gpuVmas.end());
