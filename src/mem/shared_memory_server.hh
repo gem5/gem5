@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
- * All rights reserved.
+ * Copyright 2022 Google, Inc.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,65 +25,71 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __SOCKET_HH__
-#define __SOCKET_HH__
+#ifndef __MEM_SHARED_MEMORY_SERVER_HH__
+#define __MEM_SHARED_MEMORY_SERVER_HH__
 
-#include <sys/socket.h>
-#include <sys/types.h>
+#include <memory>
+#include <string>
+
+#include "base/pollevent.hh"
+#include "params/SharedMemoryServer.hh"
+#include "sim/sim_object.hh"
+#include "sim/system.hh"
 
 namespace gem5
 {
-
-class ListenSocket
+namespace memory
 {
-  protected:
-    /**
-     * The following variables are only used by socket unit tests:
-     * listeningDisabled, anyListening, bindToLoopback.
-     */
-    static bool listeningDisabled;
-    static bool anyListening;
 
-    static bool bindToLoopback;
-
+class SharedMemoryServer : public SimObject
+{
   public:
-    static void disableAll();
-    static bool allDisabled();
+    enum class RequestType : int
+    {
+        kGetPhysRange = 0,
+    };
 
-    static void loopbackOnly();
+    explicit SharedMemoryServer(const SharedMemoryServerParams& params);
+    ~SharedMemoryServer();
 
-  protected:
-    bool listening;
-    int fd;
+  private:
+    class BaseShmPollEvent : public PollEvent
+    {
+      public:
+        BaseShmPollEvent(int fd, SharedMemoryServer* shm_server);
 
-    /*
-     * cleanup resets the static variables back to their default values.
-     */
-    static void cleanup();
+        const std::string& name() const;
 
-  public:
-    /**
-     * @ingroup api_socket
-     * @{
-     */
-    ListenSocket();
-    virtual ~ListenSocket();
+      protected:
+        bool tryReadAll(void* buffer, size_t size);
 
-    virtual int accept(bool nodelay = false);
+        SharedMemoryServer* shmServer;
+        std::string eventName;
+    };
 
-    virtual bool listen(int port, bool reuse = true);
+    class ListenSocketEvent : public BaseShmPollEvent
+    {
+      public:
+        using BaseShmPollEvent::BaseShmPollEvent;
+        void process(int revent) override;
+    };
 
-    int getfd() const { return fd; }
-    bool islistening() const { return listening; }
+    class ClientSocketEvent : public BaseShmPollEvent
+    {
+      public:
+        using BaseShmPollEvent::BaseShmPollEvent;
+        void process(int revent) override;
+    };
 
-    /* Create a socket, adding SOCK_CLOEXEC if available. */
-    static int socketCloexec(int domain, int type, int protocol);
-    /* Accept a connection, adding SOCK_CLOEXEC if available. */
-    static int acceptCloexec(int sockfd, struct sockaddr *addr,
-                              socklen_t *addrlen);
-    /** @} */ // end of api_socket
+    std::string unixSocketPath;
+    System* system;
+
+    int serverFd;
+    std::unique_ptr<ListenSocketEvent> listenSocketEvent;
+    std::unique_ptr<ClientSocketEvent> clientSocketEvent;
 };
 
+} // namespace memory
 } // namespace gem5
 
-#endif //__SOCKET_HH__
+#endif  // __MEM_SHARED_MEMORY_SERVER_HH__

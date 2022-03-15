@@ -247,7 +247,8 @@ PhysicalMemory::createBackingStore(
     // remember this backing store so we can checkpoint it and unmap
     // it appropriately
     backingStore.emplace_back(range, pmem,
-                              conf_table_reported, in_addr_map, kvm_map);
+                              conf_table_reported, in_addr_map, kvm_map,
+                              shm_fd, map_offset);
 
     // point the memories to their backing store
     for (const auto& m : _memories) {
