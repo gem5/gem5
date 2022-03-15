@@ -224,7 +224,17 @@ GPUCommandProcessor::updateHsaSignal(Addr signal_handle, uint64_t signal_value,
 
         DPRINTF(GPUCommandProc, "Calling signal wakeup event on "
                 "signal event value %d\n", *event_val);
-        signalWakeupEvent(*event_val);
+
+        // The mailbox/wakeup signal uses the SE mode proxy port to write
+        // the event value. This is not available in full system mode so
+        // instead we need to issue a DMA write to the address. The value of
+        // *event_val clears the event.
+        if (FullSystem) {
+            auto cb = new DmaVirtCallback<uint64_t>(function, *event_val);
+            dmaWriteVirt(mailbox_addr, sizeof(Addr), cb, &cb->dmaBuffer, 0);
+        } else {
+            signalWakeupEvent(*event_val);
+        }
     }
 }
 
