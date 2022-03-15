@@ -1230,6 +1230,9 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 4, 14, 3, 0), MISCREG_CNTHV_TVAL_EL2 },
     { MiscRegNum64(3, 4, 14, 3, 1), MISCREG_CNTHV_CTL_EL2 },
     { MiscRegNum64(3, 4, 14, 3, 2), MISCREG_CNTHV_CVAL_EL2 },
+    { MiscRegNum64(3, 4, 14, 5, 0), MISCREG_CNTHPS_TVAL_EL2 },
+    { MiscRegNum64(3, 4, 14, 5, 1), MISCREG_CNTHPS_CTL_EL2 },
+    { MiscRegNum64(3, 4, 14, 5, 2), MISCREG_CNTHPS_CVAL_EL2 },
     { MiscRegNum64(3, 5, 1, 0, 0), MISCREG_SCTLR_EL12 },
     { MiscRegNum64(3, 5, 1, 0, 2), MISCREG_CPACR_EL12 },
     { MiscRegNum64(3, 5, 1, 2, 0), MISCREG_ZCR_EL12 },
@@ -1350,6 +1353,7 @@ ISA::initializeMiscRegMetadata()
     bool EnIB = true; // using APIBKey_EL1 key of instr addrs in ELs 0,1
 
     const bool vhe_implemented = release->has(ArmExtension::FEAT_VHE);
+    const bool sel2_implemented = release->has(ArmExtension::FEAT_SEL2);
     /**
      * Some registers alias with others, and therefore need to be translated.
      * When two mapping registers are given, they are the 32b lower and
@@ -3298,19 +3302,18 @@ ISA::initializeMiscRegMetadata()
       .mapsTo(MISCREG_CNTHP_TVAL);
     InitReg(MISCREG_CNTHPS_CTL_EL2)
       .mon()
-      .hyp()
+      .hypSecure()
       .res0(0xfffffffffffffff8)
-      .unimplemented();
+      .implemented(sel2_implemented);
     InitReg(MISCREG_CNTHPS_CVAL_EL2)
       .mon()
-      .hyp()
-      .res0(0xfffffffffffffff8)
-      .unimplemented();
+      .hypSecure()
+      .implemented(sel2_implemented);
     InitReg(MISCREG_CNTHPS_TVAL_EL2)
       .mon()
-      .hyp()
-      .res0(0xfffffffffffffff8)
-      .unimplemented();
+      .hypSecure()
+      .res0(0xffffffff00000000)
+      .implemented(sel2_implemented);
     InitReg(MISCREG_CNTHV_CTL_EL2)
       .mon()
       .hyp()
