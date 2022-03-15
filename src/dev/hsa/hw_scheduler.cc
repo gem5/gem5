@@ -335,6 +335,11 @@ HWScheduler::write(Addr db_addr, uint64_t doorbell_reg)
     uint32_t al_idx = dbMap[db_addr];
     // Modify the write pointer
     activeList[al_idx].qDesc->writeIndex = doorbell_reg;
+    // If a queue is unmapped and remapped (common in full system) the qDesc
+    // gets reused. Keep the readIndex up to date so that when the HSA packet
+    // processor gets commands from host, the correct entry is read after
+    // remapping.
+    activeList[al_idx].qDesc->readIndex = doorbell_reg - 1;
     DPRINTF(HSAPacketProcessor, "queue %d qDesc->writeIndex %d\n",
             al_idx, activeList[al_idx].qDesc->writeIndex);
     // If this queue is mapped, then start DMA to fetch the
