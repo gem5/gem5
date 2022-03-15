@@ -34,41 +34,69 @@
 import m5
 from m5.objects import *
 
-def TLB_constructor(level):
+def TLB_constructor(options, level, gpu_ctrl=None, full_system=False):
 
-    constructor_call = "X86GPUTLB(size = options.L%(level)dTLBentries, \
-            assoc = options.L%(level)dTLBassoc, \
-            hitLatency = options.L%(level)dAccessLatency,\
-            missLatency2 = options.L%(level)dMissLatency,\
-            maxOutstandingReqs = options.L%(level)dMaxOutstandingReqs,\
-            accessDistance = options.L%(level)dAccessDistanceStat,\
-            clk_domain = SrcClockDomain(\
-                clock = options.gpu_clock,\
-                voltage_domain = VoltageDomain(\
-                    voltage = options.gpu_voltage)))" % locals()
-    return constructor_call
-
-def Coalescer_constructor(level):
-
-    constructor_call = "TLBCoalescer(probesPerCycle = \
-                options.L%(level)dProbesPerCycle, \
-                coalescingWindow = options.L%(level)dCoalescingWindow,\
-                disableCoalescing = options.L%(level)dDisableCoalescing,\
+    if full_system:
+        constructor_call = "VegaGPUTLB(\
+                gpu_device = gpu_ctrl, \
+                size = options.L%(level)dTLBentries, \
+                assoc = options.L%(level)dTLBassoc, \
+                hitLatency = options.L%(level)dAccessLatency,\
+                missLatency1 = options.L%(level)dMissLatency,\
+                missLatency2 = options.L%(level)dMissLatency,\
+                maxOutstandingReqs = options.L%(level)dMaxOutstandingReqs,\
+                clk_domain = SrcClockDomain(\
+                    clock = options.gpu_clock,\
+                    voltage_domain = VoltageDomain(\
+                        voltage = options.gpu_voltage)))" % locals()
+    else:
+        constructor_call = "X86GPUTLB(size = options.L%(level)dTLBentries, \
+                assoc = options.L%(level)dTLBassoc, \
+                hitLatency = options.L%(level)dAccessLatency,\
+                missLatency2 = options.L%(level)dMissLatency,\
+                maxOutstandingReqs = options.L%(level)dMaxOutstandingReqs,\
+                accessDistance = options.L%(level)dAccessDistanceStat,\
                 clk_domain = SrcClockDomain(\
                     clock = options.gpu_clock,\
                     voltage_domain = VoltageDomain(\
                         voltage = options.gpu_voltage)))" % locals()
     return constructor_call
 
+def Coalescer_constructor(options, level, full_system):
+
+    if full_system:
+        constructor_call = "VegaTLBCoalescer(probesPerCycle = \
+            options.L%(level)dProbesPerCycle, \
+            tlb_level  = %(level)d ,\
+            coalescingWindow = options.L%(level)dCoalescingWindow,\
+            disableCoalescing = options.L%(level)dDisableCoalescing,\
+            clk_domain = SrcClockDomain(\
+                clock = options.gpu_clock,\
+                voltage_domain = VoltageDomain(\
+                    voltage = options.gpu_voltage)))" % locals()
+    else:
+        constructor_call = "TLBCoalescer(probesPerCycle = \
+            options.L%(level)dProbesPerCycle, \
+            coalescingWindow = options.L%(level)dCoalescingWindow,\
+            disableCoalescing = options.L%(level)dDisableCoalescing,\
+            clk_domain = SrcClockDomain(\
+                clock = options.gpu_clock,\
+                voltage_domain = VoltageDomain(\
+                    voltage = options.gpu_voltage)))" % locals()
+    return constructor_call
+
 def create_TLB_Coalescer(options, my_level, my_index, tlb_name,
-    coalescer_name):
+                         coalescer_name, gpu_ctrl=None, full_system=False):
     # arguments: options, TLB level, number of private structures for this
     # Level, TLB name and  Coalescer name
     for i in range(my_index):
-        tlb_name.append(eval(TLB_constructor(my_level)))
-        coalescer_name.append(eval(Coalescer_constructor(my_level)))
+        tlb_name.append(
+            eval(TLB_constructor(options, my_level, gpu_ctrl, full_system)))
+        coalescer_name.append(
+            eval(Coalescer_constructor(options, my_level, full_system)))
 
-def config_tlb_hierarchy(options, system, shader_idx):
+def config_tlb_hierarchy(options, system, shader_idx, gpu_ctrl=None,
+                         full_system=False):
     n_cu = options.num_compute_units
 
     if options.TLB_config == "perLane":
@@ -121,7 +149,7 @@ def config_tlb_hierarchy(options, system, shader_idx):
                     options.L1TLBassoc = options.L1TLBentries
             # call the constructors for the TLB and the Coalescer
             create_TLB_Coalescer(options, level, TLB_index,\
-                TLB_array, Coalescer_array)
+                TLB_array, Coalescer_array, gpu_ctrl, full_system)
 
             system_TLB_name = TLB_type['name'] + '_tlb'
             system_Coalescer_name = TLB_type['name'] + '_coalescer'
@@ -198,8 +226,17 @@ def config_tlb_hierarchy(options, system, shader_idx):
                     system.l2_coalescer[0].cpu_side_ports[%d]' % \
                     (name, index, l2_coalescer_index))
             l2_coalescer_index += 1
+
     # L2 <-> L3
     system.l2_tlb[0].mem_side_ports[0] = \
         system.l3_coalescer[0].cpu_side_ports[0]
+
+    # L3 TLB Vega page table walker to memory for full system only
+    if full_system:
+        for TLB_type in L3:
+            name = TLB_type['name']
+            for index in range(TLB_type['width']):
+                exec('system._dma_ports.append(system.%s_tlb[%d].walker)' % \
+                        (name, index))
 
     return system

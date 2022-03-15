@@ -33,6 +33,7 @@ from m5.util import panic
 
 from common.Benchmarks import *
 from common.FSConfig import *
+from common import GPUTLBConfig
 from common import Simulation
 from ruby import Ruby
 
@@ -89,6 +90,10 @@ def makeGpuFSSystem(args):
     # Create AMDGPU and attach to southbridge
     shader = createGPU(system, args)
     connectGPU(system, args)
+
+    # The shader core will be whatever is after the CPU cores are accounted for
+    shader_idx = args.num_cpus
+    system.cpu.append(shader)
 
     # This arbitrary address is something in the X86 I/O hole
     hsapp_gpu_map_paddr = 0xe00000000
@@ -150,9 +155,12 @@ def makeGpuFSSystem(args):
     device_ih.pio = system.iobus.mem_side_ports
     pm4_pkt_proc.pio = system.iobus.mem_side_ports
 
-    # Create Ruby system using Ruby.py for now
-    #Ruby.create_system(args, True, system, system.iobus,
-    #                   system._dma_ports)
+    # Full system needs special TLBs for SQC, Scalar, and vector data ports
+    args.full_system = True
+    GPUTLBConfig.config_tlb_hierarchy(args, system, shader_idx,
+                                      system.pc.south_bridge.gpu, True)
+
+    # Create Ruby system using disjoint VIPER topology
     system.ruby = Disjoint_VIPER()
     system.ruby.create(args, system, system.iobus, system._dma_ports)
 
@@ -161,6 +169,10 @@ def makeGpuFSSystem(args):
                                    voltage_domain = system.voltage_domain)
 
     for (i, cpu) in enumerate(system.cpu):
+        # Break once we reach the shader "CPU"
+        if i == args.num_cpus:
+            break
+
         #
         # Tie the cpu ports to the correct ruby system ports
         #
@@ -170,13 +182,8 @@ def makeGpuFSSystem(args):
 
         system.ruby._cpu_ports[i].connectCpuPorts(cpu)
 
-    for i in range(len(system.cpu)):
         for j in range(len(system.cpu[i].isa)):
             system.cpu[i].isa[j].vendor_string = "AuthenticAMD"
-
-    # The shader core will be whatever is after the CPU cores are accounted for
-    shader_idx = args.num_cpus
-    system.cpu.append(shader)
 
     gpu_port_idx = len(system.ruby._cpu_ports) \
                    - args.num_compute_units - args.num_sqc \
