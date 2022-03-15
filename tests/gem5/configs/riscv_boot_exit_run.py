@@ -60,7 +60,7 @@ parser.add_argument(
     "-c",
     "--cpu",
     type=str,
-    choices=("kvm", "atomic", "timing", "o3"),
+    choices=("kvm", "atomic", "timing", "o3", "minor"),
     required=True,
     help="The CPU type.",
 )
@@ -139,6 +139,8 @@ elif args.cpu == "timing":
     cpu_type = CPUTypes.TIMING
 elif args.cpu == "o3":
     cpu_type = CPUTypes.O3
+elif args.cpu == "minor":
+    cpu_type = CPUTypes.MINOR
 else:
     raise NotImplementedError(
         "CPU type '{}' is not supported in the boot tests.".format(args.cpu)

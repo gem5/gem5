@@ -112,6 +112,44 @@ test_boot(
 )
 
 test_boot(
+    cpu="minor",
+    num_cpus=1,
+    cache_type="classic",
+    memory_class="SingleChannelDDR3_2133",
+    length=constants.quick_tag,
+    to_tick=10000000000,
+)
+
+test_boot(
+    cpu="minor",
+    num_cpus=4,
+    cache_type="classic",
+    memory_class="SingleChannelDDR3_2133",
+    length=constants.quick_tag,
+    to_tick=10000000000,
+)
+
+test_boot(
+    cpu="minor",
+    num_cpus=1,
+    cache_type="mi_example",
+    memory_class="SingleChannelDDR3_2133",
+    length=constants.quick_tag,
+    to_tick=10000000000,
+)
+
+test_boot(
+    cpu="minor",
+    num_cpus=8,
+    cache_type="mi_example",
+    memory_class="SingleChannelDDR3_2133",
+    length=constants.quick_tag,
+    to_tick=10000000000,
+)
+
+
+
+test_boot(
     cpu="timing",
     num_cpus=1,
     cache_type="mi_example",
