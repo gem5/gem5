@@ -62,6 +62,10 @@ GlobalMemPipeline::init()
 bool
 GlobalMemPipeline::coalescerReady(GPUDynInstPtr mp) const
 {
+    // System requests do not need GPU coalescer tokens. Make sure nothing
+    // has bypassed the operand gather check stage.
+    assert(!mp->isSystemReq());
+
     // We require one token from the coalescer's uncoalesced table to
     // proceed
     int token_count = 1;
