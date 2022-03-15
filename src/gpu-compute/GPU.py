@@ -224,6 +224,7 @@ class Shader(ClockedObject):
     CUs = VectorParam.ComputeUnit('Number of compute units')
     gpu_cmd_proc = Param.GPUCommandProcessor('Command processor for GPU')
     dispatcher = Param.GPUDispatcher('GPU workgroup dispatcher')
+    system_hub = Param.AMDGPUSystemHub(NULL, 'GPU System Hub (FS Mode only)')
     n_wf = Param.Int(10, 'Number of wavefront slots per SIMD')
     impl_kern_launch_acq = Param.Bool(True, """Insert acq packet into
                                          ruby at kernel launch""")

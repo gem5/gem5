@@ -463,6 +463,8 @@ class ComputeUnit : public ClockedObject
     bool isDone() const;
     bool isVectorAluIdle(uint32_t simdId) const;
 
+    void handleSQCReturn(PacketPtr pkt);
+
   protected:
     RequestorID _requestorId;
 

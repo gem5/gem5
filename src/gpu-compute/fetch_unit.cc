@@ -206,6 +206,15 @@ FetchUnit::initiateFetch(Wavefront *wavefront)
 
         computeUnit.sqcTLBPort.sendFunctional(pkt);
 
+        /**
+         * For full system, if this is a device request we need to set the
+         * requestor ID of the packet to the GPU memory manager so it is routed
+         * through Ruby as a memory request and not a PIO request.
+         */
+        if (!pkt->req->systemReq()) {
+            pkt->req->requestorId(computeUnit.vramRequestorId());
+        }
+
         GpuTranslationState *sender_state =
              safe_cast<GpuTranslationState*>(pkt->senderState);
 
@@ -250,6 +259,15 @@ FetchUnit::fetch(PacketPtr pkt, Wavefront *wavefront)
     }
 
     /**
+     * For full system, if this is a device request we need to set the
+     * requestor ID of the packet to the GPU memory manager so it is routed
+     * through Ruby as a memory request and not a PIO request.
+     */
+    if (!pkt->req->systemReq()) {
+        pkt->req->requestorId(computeUnit.vramRequestorId());
+    }
+
+    /**
      * we should have reserved an entry in the fetch buffer
      * for this cache line. here we get the pointer to the
      * entry used to buffer this request's line data.
@@ -263,7 +281,11 @@ FetchUnit::fetch(PacketPtr pkt, Wavefront *wavefront)
     if (timingSim) {
         // translation is done. Send the appropriate timing memory request.
 
-        if (!computeUnit.sqcPort.sendTimingReq(pkt)) {
+        if (pkt->req->systemReq()) {
+            SystemHubEvent *resp_event = new SystemHubEvent(pkt, this);
+            assert(computeUnit.shader->systemHub);
+            computeUnit.shader->systemHub->sendRequest(pkt, resp_event);
+        } else if (!computeUnit.sqcPort.sendTimingReq(pkt)) {
             computeUnit.sqcPort.retries.push_back(std::make_pair(pkt,
                                                                    wavefront));
 
@@ -641,6 +663,13 @@ FetchUnit::FetchBufDesc::fetchBytesRemaining() const
 
     assert(bytes_remaining <= bufferedBytes());
     return bytes_remaining;
+}
+
+void
+FetchUnit::SystemHubEvent::process()
+{
+    reqPkt->makeResponse();
+    fetchUnit->computeUnit.handleSQCReturn(reqPkt);
 }
 
 } // namespace gem5

@@ -979,8 +979,15 @@ ComputeUnit::DataPort::recvReqRetry()
 bool
 ComputeUnit::SQCPort::recvTimingResp(PacketPtr pkt)
 {
-    computeUnit->fetchStage.processFetchReturn(pkt);
+    computeUnit->handleSQCReturn(pkt);
+
     return true;
+}
+
+void
+ComputeUnit::handleSQCReturn(PacketPtr pkt)
+{
+    fetchStage.processFetchReturn(pkt);
 }
 
 void

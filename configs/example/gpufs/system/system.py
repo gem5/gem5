@@ -133,6 +133,10 @@ def makeGpuFSSystem(args):
     gpu_mem_mgr = AMDGPUMemoryManager()
     system.pc.south_bridge.gpu.memory_manager = gpu_mem_mgr
 
+    # CPU data path (SystemHub)
+    system_hub = AMDGPUSystemHub()
+    shader.system_hub = system_hub
+
     # GPU, HSAPP, and GPUCommandProc are DMA devices
     system._dma_ports.append(gpu_hsapp)
     system._dma_ports.append(gpu_cmd_proc)
@@ -141,6 +145,7 @@ def makeGpuFSSystem(args):
     system._dma_ports.append(sdma1)
     system._dma_ports.append(device_ih)
     system._dma_ports.append(pm4_pkt_proc)
+    system._dma_ports.append(system_hub)
     system._dma_ports.append(gpu_mem_mgr)
     system._dma_ports.append(hsapp_pt_walker)
     system._dma_ports.append(cp_pt_walker)
@@ -154,6 +159,7 @@ def makeGpuFSSystem(args):
     sdma1.pio = system.iobus.mem_side_ports
     device_ih.pio = system.iobus.mem_side_ports
     pm4_pkt_proc.pio = system.iobus.mem_side_ports
+    system_hub.pio = system.iobus.mem_side_ports
 
     # Full system needs special TLBs for SQC, Scalar, and vector data ports
     args.full_system = True

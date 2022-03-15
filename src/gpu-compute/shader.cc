@@ -65,7 +65,7 @@ Shader::Shader(const Params &p) : ClockedObject(p),
     trace_vgpr_all(1), n_cu((p.CUs).size()), n_wf(p.n_wf),
     globalMemSize(p.globalmem),
     nextSchedCu(0), sa_n(0), gpuCmdProc(*p.gpu_cmd_proc),
-    _dispatcher(*p.dispatcher),
+    _dispatcher(*p.dispatcher), systemHub(p.system_hub),
     max_valu_insts(p.max_valu_insts), total_valu_insts(0),
     stats(this, p.CUs[0]->wfSize())
 {
