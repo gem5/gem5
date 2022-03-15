@@ -136,7 +136,8 @@ class AbstractCore(SubSystem):
             CPUTypes.ATOMIC : "AtomicSimpleCPU",
             CPUTypes.O3 : "O3CPU",
             CPUTypes.TIMING : "TimingSimpleCPU",
-            CPUTypes.KVM : "KvmCPU"
+            CPUTypes.KVM : "KvmCPU",
+            CPUTypes.MINOR : "MinorCPU",
         }
 
         if isa not in _isa_string_map:

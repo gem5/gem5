@@ -92,7 +92,7 @@ class SimpleProcessor(AbstractProcessor):
             board.kvm_vm = self.kvm_vm
 
         # Set the memory mode.
-        if self._cpu_type == CPUTypes.TIMING or self._cpu_type == CPUTypes.O3:
+        if self._cpu_type in (CPUTypes.TIMING, CPUTypes.O3, CPUTypes.MINOR):
             board.set_mem_mode(MemMode.TIMING)
         elif self._cpu_type == CPUTypes.KVM:
             board.set_mem_mode(MemMode.ATOMIC_NONCACHING)
