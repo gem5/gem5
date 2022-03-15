@@ -1349,6 +1349,7 @@ ISA::initializeMiscRegMetadata()
     bool EnIA = true; // using APIAKey_EL1 key of instr addrs in ELs 0,1
     bool EnIB = true; // using APIBKey_EL1 key of instr addrs in ELs 0,1
 
+    const bool vhe_implemented = release->has(ArmExtension::FEAT_VHE);
     /**
      * Some registers alias with others, and therefore need to be translated.
      * When two mapping registers are given, they are the 32b lower and
@@ -3313,14 +3314,17 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_CNTHV_CTL_EL2)
       .mon()
       .hyp()
-      .res0(0xfffffffffffffff8);
+      .res0(0xfffffffffffffff8)
+      .implemented(vhe_implemented);
     InitReg(MISCREG_CNTHV_CVAL_EL2)
       .mon()
-      .hyp();
+      .hyp()
+      .implemented(vhe_implemented);
     InitReg(MISCREG_CNTHV_TVAL_EL2)
       .mon()
       .hyp()
-      .res0(0xffffffff00000000);
+      .res0(0xffffffff00000000)
+      .implemented(vhe_implemented);
     InitReg(MISCREG_CNTHVS_CTL_EL2)
       .mon()
       .hyp()

@@ -89,6 +89,7 @@ Reference:
     int_el1_phys = Param.ArmPPI("EL1 physical timer interrupt")
     int_el1_virt = Param.ArmPPI("EL1 virtual timer interrupt")
     int_el2_ns_phys = Param.ArmPPI("EL2 Non-secure physical timer interrupt")
+    int_el2_ns_virt = Param.ArmPPI("EL2 Non-secure virtual timer interrupt")
     int_el3_phys = Param.ArmPPI("EL3 physical timer interrupt")
 
     # This value should be in theory initialized by the highest
@@ -112,7 +113,8 @@ Reference:
             self.int_el3_phys.generateFdtProperty(gic) +
             self.int_el1_phys.generateFdtProperty(gic) +
             self.int_el1_virt.generateFdtProperty(gic) +
-            self.int_el2_ns_phys.generateFdtProperty(gic)))
+            self.int_el2_ns_phys.generateFdtProperty(gic) +
+            self.int_el2_ns_virt.generateFdtProperty(gic)))
 
         if self._freq_in_dtb:
             node.append(self.counter.unproxy(self).generateDtb())

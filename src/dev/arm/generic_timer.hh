@@ -305,7 +305,8 @@ class GenericTimer : public SimObject
                    ArmInterruptPin *irq_el3_phys,
                    ArmInterruptPin *irq_el1_phys,
                    ArmInterruptPin *irq_el1_virt,
-                   ArmInterruptPin *irq_el2_ns_phys);
+                   ArmInterruptPin *irq_el2_ns_phys,
+                   ArmInterruptPin *irq_el2_ns_virt);
 
         /// Generic Timer parent reference
         GenericTimer &parent;
@@ -326,11 +327,13 @@ class GenericTimer : public SimObject
         ArmInterruptPin const *irqPhysEL1;
         ArmInterruptPin const *irqVirtEL1;
         ArmInterruptPin const *irqPhysNsEL2;
+        ArmInterruptPin const *irqVirtNsEL2;
 
         ArchTimerKvm physEL3;
         ArchTimerKvm physEL1;
         ArchTimerKvm virtEL1;
         ArchTimerKvm physNsEL2;
+        ArchTimerKvm virtNsEL2;
 
         // Event Stream. Events are generated based on a configurable
         // transitionBit over the counter value. transitionTo indicates
