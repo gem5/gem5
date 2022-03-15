@@ -1,4 +1,4 @@
-# Copyright (c) 2009-2021 ARM Limited
+# Copyright (c) 2009-2022 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -832,10 +832,10 @@ class VExpress_EMM(RealView):
 
     sys_counter = SystemCounter()
     generic_timer = GenericTimer(
-        int_phys_s=ArmPPI(num=29, int_type='IRQ_TYPE_LEVEL_LOW'),
-        int_phys_ns=ArmPPI(num=30, int_type='IRQ_TYPE_LEVEL_LOW'),
-        int_virt=ArmPPI(num=27, int_type='IRQ_TYPE_LEVEL_LOW'),
-        int_hyp=ArmPPI(num=26, int_type='IRQ_TYPE_LEVEL_LOW'))
+        int_el3_phys=ArmPPI(num=29, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el1_phys=ArmPPI(num=30, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el1_virt=ArmPPI(num=27, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el2_ns_phys=ArmPPI(num=26, int_type='IRQ_TYPE_LEVEL_LOW'))
 
     timer0 = Sp804(int0=ArmSPI(num=34), int1=ArmSPI(num=34),
                    pio_addr=0x1C110000, clock0='1MHz', clock1='1MHz')
@@ -1045,11 +1045,11 @@ Interrupts:
       0- 15: Software generated interrupts (SGIs)
      16- 31: On-chip private peripherals (PPIs)
         25   : vgic
-        26   : generic_timer (hyp)
-        27   : generic_timer (virt)
+        26   : generic_timer (phys non-sec EL2)
+        27   : generic_timer (virt EL1)
         28   : Reserved (Legacy FIQ)
-        29   : generic_timer (phys, sec)
-        30   : generic_timer (phys, non-sec)
+        29   : generic_timer (phys EL3)
+        30   : generic_timer (phys EL1)
         31   : Reserved (Legacy IRQ)
     32- 95: Mother board peripherals (SPIs)
         32   : Watchdog (SP805)
@@ -1125,10 +1125,10 @@ Interrupts:
 
     sys_counter = SystemCounter()
     generic_timer = GenericTimer(
-        int_phys_s=ArmPPI(num=29, int_type='IRQ_TYPE_LEVEL_LOW'),
-        int_phys_ns=ArmPPI(num=30, int_type='IRQ_TYPE_LEVEL_LOW'),
-        int_virt=ArmPPI(num=27, int_type='IRQ_TYPE_LEVEL_LOW'),
-        int_hyp=ArmPPI(num=26, int_type='IRQ_TYPE_LEVEL_LOW'))
+        int_el3_phys=ArmPPI(num=29, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el1_phys=ArmPPI(num=30, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el1_virt=ArmPPI(num=27, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el2_ns_phys=ArmPPI(num=26, int_type='IRQ_TYPE_LEVEL_LOW'))
     generic_timer_mem = GenericTimerMem(cnt_control_base=0x2a430000,
                                         cnt_read_base=0x2a800000,
                                         cnt_ctl_base=0x2a810000,

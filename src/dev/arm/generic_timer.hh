@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2015, 2017-2018,2020 ARM Limited
+ * Copyright (c) 2013, 2015, 2017-2018,2020,2022 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -302,8 +302,10 @@ class GenericTimer : public SimObject
     {
       public:
         CoreTimers(GenericTimer &_parent, ArmSystem &system, unsigned cpu,
-                   ArmInterruptPin *_irqPhysS, ArmInterruptPin *_irqPhysNS,
-                   ArmInterruptPin *_irqVirt, ArmInterruptPin *_irqHyp);
+                   ArmInterruptPin *irq_el3_phys,
+                   ArmInterruptPin *irq_el1_phys,
+                   ArmInterruptPin *irq_el1_virt,
+                   ArmInterruptPin *irq_el2_ns_phys);
 
         /// Generic Timer parent reference
         GenericTimer &parent;
@@ -320,15 +322,15 @@ class GenericTimer : public SimObject
         /// Thread (HW) context associated to this PE implementation
         ThreadContext *threadContext;
 
-        ArmInterruptPin const *irqPhysS;
-        ArmInterruptPin const *irqPhysNS;
-        ArmInterruptPin const *irqVirt;
-        ArmInterruptPin const *irqHyp;
+        ArmInterruptPin const *irqPhysEL3;
+        ArmInterruptPin const *irqPhysEL1;
+        ArmInterruptPin const *irqVirtEL1;
+        ArmInterruptPin const *irqPhysNsEL2;
 
-        ArchTimerKvm physS;
-        ArchTimerKvm physNS;
-        ArchTimerKvm virt;
-        ArchTimerKvm hyp;
+        ArchTimerKvm physEL3;
+        ArchTimerKvm physEL1;
+        ArchTimerKvm virtEL1;
+        ArchTimerKvm physNsEL2;
 
         // Event Stream. Events are generated based on a configurable
         // transitionBit over the counter value. transitionTo indicates
