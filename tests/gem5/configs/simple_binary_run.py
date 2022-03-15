@@ -54,7 +54,7 @@ parser.add_argument(
 parser.add_argument(
     "cpu",
     type=str,
-    choices=("kvm", "timing", "atomic", "o3"),
+    choices=("kvm", "timing", "atomic", "o3", "minor"),
     help="The CPU type used.",
 )
 
@@ -84,6 +84,8 @@ def input_to_cputype(input: str) -> CPUTypes:
         return CPUTypes.ATOMIC
     elif input == "o3":
         return CPUTypes.O3
+    elif input == "minor":
+        return CPUTypes.MINOR
     else:
         raise NotADirectoryError("Unknown CPU type '{}'.".format(input))
 

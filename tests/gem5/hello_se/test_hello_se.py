@@ -72,9 +72,9 @@ dynamic_progs = {constants.gcn3_x86_tag: ("x86-hello64-dynamic",)}
 
 cpu_types = {
     constants.gcn3_x86_tag: ("timing", "atomic", "o3"),
-    constants.arm_tag: ("timing", "atomic", "o3"),
+    constants.arm_tag: ("timing", "atomic", "o3", "minor"),
     constants.mips_tag: ("timing", "atomic", "o3"),
-    constants.riscv_tag: ("timing", "atomic", "o3"),
+    constants.riscv_tag: ("timing", "atomic", "o3", "minor"),
     constants.sparc_tag: ("timing", "atomic"),
 }
 
