@@ -60,12 +60,13 @@
   }
 
 #define PKT_TYPE(PKT) ((hsa_packet_type_t)(((PKT->header) >> \
-            HSA_PACKET_HEADER_TYPE) & (HSA_PACKET_HEADER_WIDTH_TYPE - 1)))
+            HSA_PACKET_HEADER_TYPE) & mask(HSA_PACKET_HEADER_WIDTH_TYPE)))
 
 // checks if the barrier bit is set in the header -- shift the barrier bit
 // to LSB, then bitwise "and" to mask off all other bits
 #define IS_BARRIER(PKT) ((hsa_packet_header_t)(((PKT->header) >> \
-            HSA_PACKET_HEADER_BARRIER) & HSA_PACKET_HEADER_WIDTH_BARRIER))
+            HSA_PACKET_HEADER_BARRIER) & \
+            mask(HSA_PACKET_HEADER_WIDTH_BARRIER)))
 
 namespace gem5
 {
