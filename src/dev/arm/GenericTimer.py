@@ -91,6 +91,7 @@ Reference:
     int_el2_ns_phys = Param.ArmPPI("EL2 Non-secure physical timer interrupt")
     int_el2_ns_virt = Param.ArmPPI("EL2 Non-secure virtual timer interrupt")
     int_el2_s_phys = Param.ArmPPI("EL2 Secure physical timer interrupt")
+    int_el2_s_virt = Param.ArmPPI("EL2 Secure virtual timer interrupt")
     int_el3_phys = Param.ArmPPI("EL3 physical timer interrupt")
 
     # This value should be in theory initialized by the highest

@@ -500,7 +500,8 @@ GenericTimer::createTimers(unsigned cpus)
                            p.int_el1_virt->get(tc),
                            p.int_el2_ns_phys->get(tc),
                            p.int_el2_ns_virt->get(tc),
-                           p.int_el2_s_phys->get(tc)));
+                           p.int_el2_s_phys->get(tc),
+                           p.int_el2_s_virt->get(tc)));
     }
 }
 
@@ -675,6 +676,19 @@ GenericTimer::setMiscReg(int reg, unsigned cpu, RegVal val)
         core.physSEL2.setTimerValue(val);
         return;
 
+      // EL2 Secure virtual timer
+      case MISCREG_CNTHVS_CTL_EL2:
+        core.virtSEL2.setControl(val);
+        return;
+
+      case MISCREG_CNTHVS_CVAL_EL2:
+        core.virtSEL2.setCompareValue(val);
+        return;
+
+      case MISCREG_CNTHVS_TVAL_EL2:
+        core.virtSEL2.setTimerValue(val);
+        return;
+
       default:
         warn("Writing to unknown register: %s\n", miscRegName[reg]);
         return;
@@ -782,6 +796,16 @@ GenericTimer::readMiscReg(int reg, unsigned cpu)
       case MISCREG_CNTHPS_TVAL_EL2:
         return core.physSEL2.timerValue();
 
+      // EL2 Secure virtual timer
+      case MISCREG_CNTHVS_CTL_EL2:
+        return core.virtSEL2.control();
+
+      case MISCREG_CNTHVS_CVAL_EL2:
+        return core.virtSEL2.compareValue();
+
+      case MISCREG_CNTHVS_TVAL_EL2:
+        return core.virtSEL2.timerValue();
+
       default:
         warn("Reading from unknown register: %s\n", miscRegName[reg]);
         return 0;
@@ -792,7 +816,8 @@ GenericTimer::CoreTimers::CoreTimers(GenericTimer &_parent,
     ArmSystem &system, unsigned cpu,
     ArmInterruptPin *irq_el3_phys, ArmInterruptPin *irq_el1_phys,
     ArmInterruptPin *irq_el1_virt, ArmInterruptPin *irq_el2_ns_phys,
-    ArmInterruptPin *irq_el2_ns_virt, ArmInterruptPin *irq_el2_s_phys)
+    ArmInterruptPin *irq_el2_ns_virt, ArmInterruptPin *irq_el2_s_phys,
+    ArmInterruptPin *irq_el2_s_virt)
       : parent(_parent),
         cntfrq(parent.params().cntfrq),
         cntkctl(0), cnthctl(0),
@@ -803,6 +828,7 @@ GenericTimer::CoreTimers::CoreTimers(GenericTimer &_parent,
         irqPhysNsEL2(irq_el2_ns_phys),
         irqVirtNsEL2(irq_el2_ns_virt),
         irqPhysSEL2(irq_el2_s_phys),
+        irqVirtSEL2(irq_el2_s_virt),
         physEL3(csprintf("%s.el3_phys_timer%d", parent.name(), cpu),
                 system, parent, parent.systemCounter,
                 irq_el3_phys),
@@ -821,6 +847,9 @@ GenericTimer::CoreTimers::CoreTimers(GenericTimer &_parent,
         physSEL2(csprintf("%s.el2_s_phys_timer%d", parent.name(), cpu),
                  system, parent, parent.systemCounter,
                  irq_el2_s_phys),
+        virtSEL2(csprintf("%s.el2_s_virt_timer%d", parent.name(), cpu),
+                 system, parent, parent.systemCounter,
+                 irq_el2_s_virt),
         physEvStream{
            EventFunctionWrapper([this]{ physEventStreamCallback(); },
            csprintf("%s.phys_event_gen%d", parent.name(), cpu)), 0, 0
@@ -899,6 +928,7 @@ GenericTimer::CoreTimers::serialize(CheckpointOut &cp) const
     physNsEL2.serializeSection(cp, "phys_ns_el2_timer");
     virtNsEL2.serializeSection(cp, "virt_ns_el2_timer");
     physSEL2.serializeSection(cp, "phys_s_el2_timer");
+    virtSEL2.serializeSection(cp, "virt_s_el2_timer");
 }
 
 void
@@ -934,6 +964,7 @@ GenericTimer::CoreTimers::unserialize(CheckpointIn &cp)
     physNsEL2.unserializeSection(cp, "phys_ns_el2_timer");
     virtNsEL2.unserializeSection(cp, "virt_ns_el2_timer");
     physSEL2.unserializeSection(cp, "phys_s_el2_timer");
+    virtSEL2.unserializeSection(cp, "virt_s_el2_timer");
 }
 
 void

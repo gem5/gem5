@@ -1230,6 +1230,9 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 4, 14, 3, 0), MISCREG_CNTHV_TVAL_EL2 },
     { MiscRegNum64(3, 4, 14, 3, 1), MISCREG_CNTHV_CTL_EL2 },
     { MiscRegNum64(3, 4, 14, 3, 2), MISCREG_CNTHV_CVAL_EL2 },
+    { MiscRegNum64(3, 4, 14, 4, 0), MISCREG_CNTHVS_TVAL_EL2 },
+    { MiscRegNum64(3, 4, 14, 4, 1), MISCREG_CNTHVS_CTL_EL2 },
+    { MiscRegNum64(3, 4, 14, 4, 2), MISCREG_CNTHVS_CVAL_EL2 },
     { MiscRegNum64(3, 4, 14, 5, 0), MISCREG_CNTHPS_TVAL_EL2 },
     { MiscRegNum64(3, 4, 14, 5, 1), MISCREG_CNTHPS_CTL_EL2 },
     { MiscRegNum64(3, 4, 14, 5, 2), MISCREG_CNTHPS_CVAL_EL2 },
@@ -3330,19 +3333,18 @@ ISA::initializeMiscRegMetadata()
       .implemented(vhe_implemented);
     InitReg(MISCREG_CNTHVS_CTL_EL2)
       .mon()
-      .hyp()
+      .hypSecure()
       .res0(0xfffffffffffffff8)
-      .unimplemented();
+      .implemented(vhe_implemented && sel2_implemented);
     InitReg(MISCREG_CNTHVS_CVAL_EL2)
       .mon()
-      .hyp()
-      .res0(0xfffffffffffffff8)
-      .unimplemented();
+      .hypSecure()
+      .implemented(vhe_implemented && sel2_implemented);
     InitReg(MISCREG_CNTHVS_TVAL_EL2)
       .mon()
-      .hyp()
-      .res0(0xfffffffffffffff8)
-      .unimplemented();
+      .hypSecure()
+      .res0(0xffffffff00000000)
+      .implemented(vhe_implemented && sel2_implemented);
     // ENDIF Armv8.1-VHE
     InitReg(MISCREG_CNTVOFF_EL2)
       .mon()

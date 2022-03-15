@@ -837,7 +837,8 @@ class VExpress_EMM(RealView):
         int_el1_virt=ArmPPI(num=27, int_type='IRQ_TYPE_LEVEL_LOW'),
         int_el2_ns_phys=ArmPPI(num=26, int_type='IRQ_TYPE_LEVEL_LOW'),
         int_el2_ns_virt=ArmPPI(num=28, int_type='IRQ_TYPE_LEVEL_LOW'),
-        int_el2_s_phys=ArmPPI(num=20, int_type='IRQ_TYPE_LEVEL_LOW'))
+        int_el2_s_phys=ArmPPI(num=20, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el2_s_virt=ArmPPI(num=19, int_type='IRQ_TYPE_LEVEL_LOW'))
 
     timer0 = Sp804(int0=ArmSPI(num=34), int1=ArmSPI(num=34),
                    pio_addr=0x1C110000, clock0='1MHz', clock1='1MHz')
@@ -1046,6 +1047,7 @@ Memory map:
 Interrupts:
       0- 15: Software generated interrupts (SGIs)
      16- 31: On-chip private peripherals (PPIs)
+        19   : generic_timer (virt sec EL2)
         20   : generic_timer (phys sec EL2)
         25   : vgic
         26   : generic_timer (phys non-sec EL2)
@@ -1133,7 +1135,8 @@ Interrupts:
         int_el1_virt=ArmPPI(num=27, int_type='IRQ_TYPE_LEVEL_LOW'),
         int_el2_ns_phys=ArmPPI(num=26, int_type='IRQ_TYPE_LEVEL_LOW'),
         int_el2_ns_virt=ArmPPI(num=28, int_type='IRQ_TYPE_LEVEL_LOW'),
-        int_el2_s_phys=ArmPPI(num=20, int_type='IRQ_TYPE_LEVEL_LOW'))
+        int_el2_s_phys=ArmPPI(num=20, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el2_s_virt=ArmPPI(num=19, int_type='IRQ_TYPE_LEVEL_LOW'))
     generic_timer_mem = GenericTimerMem(cnt_control_base=0x2a430000,
                                         cnt_read_base=0x2a800000,
                                         cnt_ctl_base=0x2a810000,
