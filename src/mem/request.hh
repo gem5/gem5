@@ -812,6 +812,12 @@ class Request
         return _requestorId;
     }
 
+    void
+    requestorId(RequestorID rid)
+    {
+        _requestorId = rid;
+    }
+
     uint32_t
     taskId() const
     {
