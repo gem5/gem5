@@ -183,6 +183,8 @@ class Shader : public ClockedObject
         shHiddenPrivateBaseVmid = sh_hidden_base_new;
     }
 
+    RequestorID vramRequestorId();
+
     EventFunctionWrapper tickEvent;
 
     // is this simulation going to be timing mode in the memory?

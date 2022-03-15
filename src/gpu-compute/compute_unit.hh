@@ -458,6 +458,7 @@ class ComputeUnit : public ClockedObject
     void updatePageDivergenceDist(Addr addr);
 
     RequestorID requestorId() { return _requestorId; }
+    RequestorID vramRequestorId();
 
     bool isDone() const;
     bool isVectorAluIdle(uint32_t simdId) const;

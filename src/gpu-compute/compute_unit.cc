@@ -2010,6 +2010,15 @@ ComputeUnit::sendToLds(GPUDynInstPtr gpuDynInst)
 }
 
 /**
+ * Forward the VRAM requestor ID needed for device memory from shader.
+ */
+RequestorID
+ComputeUnit::vramRequestorId()
+{
+    return FullSystem ? shader->vramRequestorId() : requestorId();
+}
+
+/**
  * get the result of packets sent to the LDS when they return
  */
 bool

@@ -523,6 +523,15 @@ Shader::notifyCuSleep() {
         stats.shaderActiveTicks += curTick() - _lastInactiveTick;
 }
 
+/**
+ * Forward the VRAM requestor ID needed for device memory from CP.
+ */
+RequestorID
+Shader::vramRequestorId()
+{
+    return gpuCmdProc.vramRequestorId();
+}
+
 Shader::ShaderStats::ShaderStats(statistics::Group *parent, int wf_size)
     : statistics::Group(parent),
       ADD_STAT(allLatencyDist, "delay distribution for all"),

@@ -65,6 +65,15 @@ GPUCommandProcessor::hsaPacketProc()
     return *hsaPP;
 }
 
+/**
+ * Forward the VRAM requestor ID needed for device memory from GPU device.
+ */
+RequestorID
+GPUCommandProcessor::vramRequestorId()
+{
+    return gpuDevice->vramRequestorId();
+}
+
 TranslationGenPtr
 GPUCommandProcessor::translate(Addr vaddr, Addr size)
 {
