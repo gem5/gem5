@@ -400,6 +400,8 @@ struct DummyVecPredRegContainer
     RegVal filler = 0;
     bool operator == (const DummyVecPredRegContainer &d) const { return true; }
     bool operator != (const DummyVecPredRegContainer &d) const { return true; }
+    template <typename VecElem>
+    VecElem *as() { return nullptr; }
 };
 template <>
 struct ParseParam<DummyVecPredRegContainer>
