@@ -35,6 +35,7 @@
 #include <map>
 
 #include "base/bitunion.hh"
+#include "dev/amdgpu/amdgpu_defines.hh"
 #include "dev/amdgpu/mmio_reader.hh"
 #include "dev/io_device.hh"
 #include "dev/pci/device.hh"
@@ -42,15 +43,6 @@
 
 namespace gem5
 {
-
-/* Names of BARs used by the device. */
-constexpr int FRAMEBUFFER_BAR = 0;
-constexpr int DOORBELL_BAR = 2;
-constexpr int MMIO_BAR = 5;
-
-/* By default the X86 kernel expects the vga ROM at 0xc0000. */
-constexpr uint32_t VGA_ROM_DEFAULT = 0xc0000;
-constexpr uint32_t ROM_SIZE = 0x20000;        // 128kB
 
 /**
  * Device model for an AMD GPU. This models the interface between the PCI bus
