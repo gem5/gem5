@@ -261,7 +261,7 @@ namespace bitfield_backend
 
         BitUnionOperators(const BitUnionOperators &) = default;
 
-        BitUnionOperators() {}
+        BitUnionOperators() = default;
 
         //Conversion operators.
         operator const typename Base::__StorageType () const
