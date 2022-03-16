@@ -83,27 +83,34 @@ def _get_resources_json_at_url(url: str, use_caching: bool = True) -> Dict:
         f"gem5-resources-{hashlib.md5(url.encode()).hexdigest()}.base64",
     )
 
-    # The resources.json file can change at any time, but to avoid excessive
-    # retrieval we cache a version locally and use it for up to an hour before
-    # obtaining a fresh copy.
-    #
-    # `time.time()` and `os.path.getmtime(..)` both return an unix epoch time
-    # in seconds. Therefore, the value of "3600" here represents an hour
-    # difference between the two values. `time.time()` gets the current time,
-    # and `os.path.getmtime(<file>)` gets the modification time of the file.
-    # This is the most portable solution as other ideas, like "file creation
-    # time", are  not always the same concept between operating systems.
-    if not use_caching or not os.path.exists(file_path) or \
-        (time.time() - os.path.getmtime(file_path)) > 3600:
-                _download(url, file_path)
+    # We apply a lock on the resources file for when it's downloaded, or
+    # re-downloaded, and read. This stops a corner-case from occuring where
+    # the file is re-downloaded while being read by another gem5 thread.
+    # Note the timeout is 120 so the `_download` function is given time to run
+    # its Truncated Exponential Backoff algorithm
+    # (maximum of roughly 1 minute). Typically this code will run quickly.
+    with FileLock("{}.lock".format(file_path), timeout=120):
 
-    # Note: Google Source does not properly support obtaining files as raw
-    # text. Therefore when we open the URL we receive the JSON in base64
-    # format. Conversion is needed before it can be loaded.
-    with open(file_path) as file:
-        to_return = json.loads(base64.b64decode(file.read()).decode("utf-8"))
+        # The resources.json file can change at any time, but to avoid
+        # excessive retrieval we cache a version locally and use it for up to
+        # an hour before obtaining a fresh copy.
+        #
+        # `time.time()` and `os.path.getmtime(..)` both return an unix epoch
+        # time in seconds. Therefore, the value of "3600" here represents an
+        # hour difference between the two values. `time.time()` gets the
+        # current time, and `os.path.getmtime(<file>)` gets the modification
+        # time of the file. This is the most portable solution as other ideas,
+        # like "file creation time", are  not always the same concept between
+        # operating systems.
+        if not use_caching or not os.path.exists(file_path) or \
+            (time.time() - os.path.getmtime(file_path)) > 3600:
+                    _download(url, file_path)
 
-    return to_return
+        # Note: Google Source does not properly support obtaining files as raw
+        # text. Therefore when we open the URL we receive the JSON in base64
+        # format. Conversion is needed before it can be loaded.
+        with open(file_path) as file:
+            return json.loads(base64.b64decode(file.read()).decode("utf-8"))
 
 def _get_resources_json() -> Dict:
     """
