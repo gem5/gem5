@@ -535,7 +535,6 @@ void
 GenericTimer::setMiscReg(int reg, unsigned cpu, RegVal val)
 {
     CoreTimers &core(getTimers(cpu));
-    ThreadContext *tc = system.threads[cpu];
 
     switch (reg) {
       case MISCREG_CNTFRQ:
@@ -547,10 +546,6 @@ GenericTimer::setMiscReg(int reg, unsigned cpu, RegVal val)
       case MISCREG_CNTKCTL:
       case MISCREG_CNTKCTL_EL1:
       {
-        if (ELIsInHost(tc, currEL(tc))) {
-            tc->setMiscReg(MISCREG_CNTHCTL_EL2, val);
-            return;
-        }
         RegVal old_cnt_ctl = core.cntkctl;
         core.cntkctl = val;
 
