@@ -931,6 +931,9 @@ namespace VegaISA
 
             if (isFlat()) {
                 gpuDynInst->resolveFlatSegment(gpuDynInst->exec_mask);
+            } else {
+                gpuDynInst->staticInstruction()->executed_as =
+                    enums::SC_GLOBAL;
             }
         }
 
