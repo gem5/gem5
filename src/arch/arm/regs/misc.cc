@@ -2744,7 +2744,8 @@ ISA::initializeMiscRegMetadata()
                      | (LSMAOE ? 0 : 0x10000000))
       .mapsTo(MISCREG_SCTLR_NS);
     InitReg(MISCREG_SCTLR_EL12)
-      .allPrivileges().exceptUserMode()
+      .monE2H()
+      .hypE2H()
       .res0( 0x20440 | (EnDB   ? 0 :     0x2000)
                      | (IESB   ? 0 :   0x200000)
                      | (EnDA   ? 0 :  0x8000000)
@@ -2761,7 +2762,8 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_CPACR);
     InitReg(MISCREG_CPACR_EL12)
-      .allPrivileges().exceptUserMode()
+      .monE2H()
+      .hypE2H()
       .mapsTo(MISCREG_CPACR_EL1);
     InitReg(MISCREG_SCTLR_EL2)
       .hyp().mon()
@@ -2815,19 +2817,22 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_TTBR0_NS);
     InitReg(MISCREG_TTBR0_EL12)
-      .allPrivileges().exceptUserMode()
+      .monE2H()
+      .hypE2H()
       .mapsTo(MISCREG_TTBR0_EL1);
     InitReg(MISCREG_TTBR1_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_TTBR1_NS);
     InitReg(MISCREG_TTBR1_EL12)
-      .allPrivileges().exceptUserMode()
+      .monE2H()
+      .hypE2H()
       .mapsTo(MISCREG_TTBR1_EL1);
     InitReg(MISCREG_TCR_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_TTBCR_NS);
     InitReg(MISCREG_TCR_EL12)
-      .allPrivileges().exceptUserMode()
+      .monE2H()
+      .hypE2H()
       .mapsTo(MISCREG_TTBCR_NS);
     InitReg(MISCREG_TTBR0_EL2)
       .hyp().mon()
@@ -2858,12 +2863,14 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_SPSR_SVC); // NAM C5.2.17 SPSR_EL1
     InitReg(MISCREG_SPSR_EL12)
-      .allPrivileges().exceptUserMode()
+      .monE2H()
+      .hypE2H()
       .mapsTo(MISCREG_SPSR_SVC);
     InitReg(MISCREG_ELR_EL1)
       .allPrivileges().exceptUserMode();
     InitReg(MISCREG_ELR_EL12)
-      .allPrivileges().exceptUserMode()
+      .monE2H()
+      .hypE2H()
       .mapsTo(MISCREG_ELR_EL1);
     InitReg(MISCREG_SP_EL0)
       .allPrivileges().exceptUserMode();
@@ -2914,18 +2921,21 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_ADFSR_NS);
     InitReg(MISCREG_AFSR0_EL12)
-      .allPrivileges().exceptUserMode()
+      .monE2H()
+      .hypE2H()
       .mapsTo(MISCREG_ADFSR_NS);
     InitReg(MISCREG_AFSR1_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_AIFSR_NS);
     InitReg(MISCREG_AFSR1_EL12)
-      .allPrivileges().exceptUserMode()
+      .monE2H()
+      .hypE2H()
       .mapsTo(MISCREG_AIFSR_NS);
     InitReg(MISCREG_ESR_EL1)
       .allPrivileges().exceptUserMode();
     InitReg(MISCREG_ESR_EL12)
-      .allPrivileges().exceptUserMode()
+      .monE2H()
+      .hypE2H()
       .mapsTo(MISCREG_ESR_EL1);
     InitReg(MISCREG_IFSR32_EL2)
       .hyp().mon()
@@ -2951,7 +2961,8 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DFAR_NS, MISCREG_IFAR_NS);
     InitReg(MISCREG_FAR_EL12)
-      .allPrivileges().exceptUserMode()
+      .monE2H()
+      .hypE2H()
       .mapsTo(MISCREG_DFAR_NS, MISCREG_IFAR_NS);
     InitReg(MISCREG_FAR_EL2)
       .hyp().mon()
@@ -3135,13 +3146,15 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_PRRR_NS, MISCREG_NMRR_NS);
     InitReg(MISCREG_MAIR_EL12)
-      .allPrivileges().exceptUserMode()
+      .monE2H()
+      .hypE2H()
       .mapsTo(MISCREG_PRRR_NS, MISCREG_NMRR_NS);
     InitReg(MISCREG_AMAIR_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_AMAIR0_NS, MISCREG_AMAIR1_NS);
     InitReg(MISCREG_AMAIR_EL12)
-      .allPrivileges().exceptUserMode()
+      .monE2H()
+      .hypE2H()
       .mapsTo(MISCREG_AMAIR0_NS, MISCREG_AMAIR1_NS);
     InitReg(MISCREG_MAIR_EL2)
       .hyp().mon()
@@ -3161,7 +3174,8 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_VBAR_NS);
     InitReg(MISCREG_VBAR_EL12)
-      .allPrivileges().exceptUserMode()
+      .monE2H()
+      .hypE2H()
       .mapsTo(MISCREG_VBAR_NS);
     InitReg(MISCREG_RVBAR_EL1)
       .allPrivileges().exceptUserMode().writes(0);
@@ -3183,7 +3197,8 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_CONTEXTIDR_NS);
     InitReg(MISCREG_CONTEXTIDR_EL12)
-      .allPrivileges().exceptUserMode()
+      .monE2H()
+      .hypE2H()
       .mapsTo(MISCREG_CONTEXTIDR_NS);
     InitReg(MISCREG_TPIDR_EL1)
       .allPrivileges().exceptUserMode()
@@ -3899,7 +3914,8 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ZCR_EL2)
         .hyp().mon();
     InitReg(MISCREG_ZCR_EL12)
-        .allPrivileges().exceptUserMode()
+        .monE2H()
+        .hypE2H()
         .mapsTo(MISCREG_ZCR_EL1);
     InitReg(MISCREG_ZCR_EL1)
         .allPrivileges().exceptUserMode();
