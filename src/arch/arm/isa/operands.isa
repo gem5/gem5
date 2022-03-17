@@ -1,5 +1,5 @@
 // -*- mode:c++ -*-
-// Copyright (c) 2010-2014, 2016-2018, 2021 ARM Limited
+// Copyright (c) 2010-2014, 2016-2018, 2021-2022 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -201,6 +201,10 @@ let {{
             super().__init__(ctype, idx, sort_pri=id,
                     read_code=self.read_code, write_code=self.write_code,
                     flags=self.flags)
+
+    class CntrlReg64(CntrlReg):
+        def __init__(self, idx, id=srtNormal, ctype='ud'):
+            super().__init__(idx, id, ctype)
 
     class CntrlNsBankedReg(CntrlReg):
         read_code = cntrlNsBankedRead
@@ -427,17 +431,17 @@ def operands {{
     'FpscrQc': CntrlRegNC('MISCREG_FPSCR_QC'),
     'FpscrExc': CntrlRegNC('MISCREG_FPSCR_EXC'),
     'Cpacr': CntrlReg('MISCREG_CPACR'),
-    'Cpacr64': CntrlReg('MISCREG_CPACR_EL1'),
+    'Cpacr64': CntrlReg64('MISCREG_CPACR_EL1'),
     'Fpexc': CntrlRegNC('MISCREG_FPEXC'),
     'Nsacr': CntrlReg('MISCREG_NSACR'),
     'ElrHyp': CntrlRegNC('MISCREG_ELR_HYP'),
     'Hcr': CntrlReg('MISCREG_HCR'),
-    'Hcr64': CntrlReg('MISCREG_HCR_EL2'),
-    'CptrEl264': CntrlReg('MISCREG_CPTR_EL2'),
-    'CptrEl364': CntrlReg('MISCREG_CPTR_EL3'),
+    'Hcr64': CntrlReg64('MISCREG_HCR_EL2'),
+    'CptrEl264': CntrlReg64('MISCREG_CPTR_EL2'),
+    'CptrEl364': CntrlReg64('MISCREG_CPTR_EL3'),
     'Hstr': CntrlReg('MISCREG_HSTR'),
     'Scr': CntrlReg('MISCREG_SCR'),
-    'Scr64': CntrlReg('MISCREG_SCR_EL3'),
+    'Scr64': CntrlReg64('MISCREG_SCR_EL3'),
     'Sctlr': CntrlRegNC('MISCREG_SCTLR'),
     'SevMailbox': CntrlRegNC('MISCREG_SEV_MAILBOX'),
     'LLSCLock': CntrlRegNC('MISCREG_LOCKFLAG'),
