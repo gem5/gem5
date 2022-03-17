@@ -488,6 +488,7 @@ class SyscallTable32 : public SyscallDescTable<EmuLinux::SyscallABI32>
         { base + 363, "sys_rt_tgsigqueueinfo" },
         { base + 364, "sys_perf_event_open" },
         { base + 365, "sys_recvmmsg" },
+        { base + 384, "getrandom", getrandomFunc<ArmLinux32> }
     })
     {}
 };
@@ -758,6 +759,7 @@ class SyscallTable64 : public SyscallDescTable<EmuLinux::SyscallABI64>
         {  base + 269, "sendmmsg" },
         {  base + 270, "process_vm_readv" },
         {  base + 271, "process_vm_writev" },
+        {  base + 278, "getrandom", getrandomFunc<ArmLinux64> },
         { base + 1024, "open", openFunc<ArmLinux64> },
         { base + 1025, "link" },
         { base + 1026, "unlink", unlinkFunc },
