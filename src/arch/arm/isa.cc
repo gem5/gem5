@@ -589,6 +589,78 @@ ISA::copyRegsFrom(ThreadContext *src)
     static_cast<MMU *>(tc->getMMUPtr())->invalidateMiscReg();
 }
 
+/**
+ * Returns the enconcing equivalent when VHE is implemented and
+ * HCR_EL2.E2H is enabled and executing at EL2
+ */
+int
+ISA::redirectRegVHE(int misc_reg)
+{
+    const HCR hcr = readMiscRegNoEffect(MISCREG_HCR_EL2);
+    if (hcr.e2h == 0x0 || currEL() != EL2)
+        return misc_reg;
+    SCR scr = readMiscRegNoEffect(MISCREG_SCR_EL3);
+    bool sec_el2 = scr.eel2 && release->has(ArmExtension::FEAT_SEL2);
+    switch(misc_reg) {
+      case MISCREG_SPSR_EL1:
+          return MISCREG_SPSR_EL2;
+      case MISCREG_ELR_EL1:
+          return MISCREG_ELR_EL2;
+      case MISCREG_SCTLR_EL1:
+          return MISCREG_SCTLR_EL2;
+      case MISCREG_CPACR_EL1:
+          return MISCREG_CPTR_EL2;
+//      case :
+//          return MISCREG_TRFCR_EL2;
+      case MISCREG_TTBR0_EL1:
+          return MISCREG_TTBR0_EL2;
+      case MISCREG_TTBR1_EL1:
+          return MISCREG_TTBR1_EL2;
+      case MISCREG_TCR_EL1:
+          return MISCREG_TCR_EL2;
+      case MISCREG_AFSR0_EL1:
+          return MISCREG_AFSR0_EL2;
+      case MISCREG_AFSR1_EL1:
+          return MISCREG_AFSR1_EL2;
+      case MISCREG_ESR_EL1:
+          return MISCREG_ESR_EL2;
+      case MISCREG_FAR_EL1:
+          return MISCREG_FAR_EL2;
+      case MISCREG_MAIR_EL1:
+          return MISCREG_MAIR_EL2;
+      case MISCREG_AMAIR_EL1:
+          return MISCREG_AMAIR_EL2;
+      case MISCREG_VBAR_EL1:
+          return MISCREG_VBAR_EL2;
+      case MISCREG_CONTEXTIDR_EL1:
+          return MISCREG_CONTEXTIDR_EL2;
+      case MISCREG_CNTKCTL_EL1:
+          return MISCREG_CNTHCTL_EL2;
+      case MISCREG_CNTP_TVAL_EL0:
+          return sec_el2? MISCREG_CNTHPS_TVAL_EL2:
+                         MISCREG_CNTHP_TVAL_EL2;
+      case MISCREG_CNTP_CTL_EL0:
+          return sec_el2? MISCREG_CNTHPS_CTL_EL2:
+                         MISCREG_CNTHP_CTL_EL2;
+      case MISCREG_CNTP_CVAL_EL0:
+          return sec_el2? MISCREG_CNTHPS_CVAL_EL2:
+                         MISCREG_CNTHP_CVAL_EL2;
+      case MISCREG_CNTV_TVAL_EL0:
+          return sec_el2? MISCREG_CNTHVS_TVAL_EL2:
+                         MISCREG_CNTHV_TVAL_EL2;
+      case MISCREG_CNTV_CTL_EL0:
+          return sec_el2? MISCREG_CNTHVS_CTL_EL2:
+                         MISCREG_CNTHV_CTL_EL2;
+      case MISCREG_CNTV_CVAL_EL0:
+          return sec_el2? MISCREG_CNTHVS_CVAL_EL2:
+                         MISCREG_CNTHV_CVAL_EL2;
+      default:
+          return misc_reg;
+    }
+    /*should not be accessible */
+    return misc_reg;
+}
+
 RegVal
 ISA::readMiscRegNoEffect(int misc_reg) const
 {
