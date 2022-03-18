@@ -1362,8 +1362,10 @@ ComputeUnit::DataPort::processMemRespEvent(PacketPtr pkt)
     // The status vector and global memory response for WriteResp packets get
     // handled by the WriteCompleteResp packets.
     if (pkt->cmd == MemCmd::WriteResp) {
-        delete pkt;
-        return;
+        if (!FullSystem || !pkt->req->systemReq()) {
+            delete pkt;
+            return;
+        }
     }
 
     // this is for read, write and atomic
