@@ -158,31 +158,31 @@ class GpuTLB : public ClockedObject
     {
         VegaTLBStats(statistics::Group *parent);
 
-        Stats::Scalar maxDownstreamReached;
-        Stats::Scalar outstandingReqsMax;
+        statistics::Scalar maxDownstreamReached;
+        statistics::Scalar outstandingReqsMax;
 
         // local_stats are as seen from the TLB
         // without taking into account coalescing
-        Stats::Scalar localNumTLBAccesses;
-        Stats::Scalar localNumTLBHits;
-        Stats::Scalar localNumTLBMisses;
-        Stats::Formula localTLBMissRate;
+        statistics::Scalar localNumTLBAccesses;
+        statistics::Scalar localNumTLBHits;
+        statistics::Scalar localNumTLBMisses;
+        statistics::Formula localTLBMissRate;
 
         // global_stats are as seen from the
         // CU's perspective taking into account
         // all coalesced requests.
-        Stats::Scalar globalNumTLBAccesses;
-        Stats::Scalar globalNumTLBHits;
-        Stats::Scalar globalNumTLBMisses;
-        Stats::Formula globalTLBMissRate;
+        statistics::Scalar globalNumTLBAccesses;
+        statistics::Scalar globalNumTLBHits;
+        statistics::Scalar globalNumTLBMisses;
+        statistics::Formula globalTLBMissRate;
 
         // from the CU perspective (global)
-        Stats::Scalar accessCycles;
-        Stats::Scalar pageTableCycles;
+        statistics::Scalar accessCycles;
+        statistics::Scalar pageTableCycles;
 
         // from the perspective of this TLB
-        Stats::Scalar localCycles;
-        Stats::Formula localLatency;
+        statistics::Scalar localCycles;
+        statistics::Formula localLatency;
     } stats;
 
 

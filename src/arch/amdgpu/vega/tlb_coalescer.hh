@@ -110,24 +110,24 @@ class VegaTLBCoalescer : public ClockedObject
     CoalescingTable issuedTranslationsTable;
 
     // number of packets the coalescer receives
-    Stats::Scalar uncoalescedAccesses;
+    statistics::Scalar uncoalescedAccesses;
     // number packets the coalescer send to the TLB
-    Stats::Scalar coalescedAccesses;
+    statistics::Scalar coalescedAccesses;
 
     // Number of cycles the coalesced requests spend waiting in
     // coalescerFIFO. For each packet the coalescer receives we take into
     // account the number of all uncoalesced requests this pkt "represents"
-    Stats::Scalar queuingCycles;
+    statistics::Scalar queuingCycles;
 
     // On average how much time a request from the
     // uncoalescedAccesses that reaches the TLB
     // spends waiting?
-    Stats::Scalar localqueuingCycles;
-    Stats::Scalar localCycles;
+    statistics::Scalar localqueuingCycles;
+    statistics::Scalar localCycles;
   // localqueuingCycles/uncoalescedAccesses
-    Stats::Formula localLatency;
+    statistics::Formula localLatency;
    // latency of a request to be completed
-    Stats::Formula latency;
+    statistics::Formula latency;
 
     bool canCoalesce(PacketPtr pkt1, PacketPtr pkt2);
     void updatePhysAddresses(PacketPtr pkt);
