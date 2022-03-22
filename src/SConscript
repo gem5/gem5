@@ -78,6 +78,9 @@ def GdbXml(xml_id, symbol, tags=None, add_tags=None):
 class Source(SourceFile):
     pass
 
+class SourceLib(SourceItem):
+    pass
+
 build_tools = Dir('#build_tools')
 
 # Build a small helper that runs Python code using the same version of Python
@@ -318,11 +321,15 @@ class TopLevelBase(object, metaclass=TopLevelMeta):
         self.target = target
 
         isFilter = lambda arg: isinstance(arg, SourceFilter)
-        self.filters = filter(isFilter, srcs_and_filts)
-        sources = filter(lambda a: not isFilter(a), srcs_and_filts)
+        isLib = lambda arg: isinstance(arg, SourceLib)
+        # If something isn't a library or filter, assume it's a source file.
+        isSourceFile = lambda arg: not isFilter(arg) and not isLib(arg)
+        self.filters = list(filter(isFilter, srcs_and_filts))
+        self.sourceLibs = list(filter(isLib, srcs_and_filts))
+        source_files = list(filter(isSourceFile, srcs_and_filts))
 
         srcs = SourceList()
-        for src in sources:
+        for src in source_files:
             if not isinstance(src, SourceFile):
                 src = Source(src, tags=[])
             srcs.append(src)
@@ -335,6 +342,12 @@ class TopLevelBase(object, metaclass=TopLevelMeta):
         for f in self.filters:
             srcs += Source.all.apply_filter(env, f)
         return srcs
+
+    def libs(self, env):
+        libs = self.sourceLibs
+        for f in self.filters:
+            libs += SourceLib.all.apply_filter(env, f)
+        return libs
 
     def srcs_to_objs(self, env, sources):
         return list([ s.static(env) for s in sources ])
@@ -381,6 +394,10 @@ class Executable(TopLevelBase):
         env = env.Clone()
         env['BIN_RPATH_PREFIX'] = os.path.relpath(
                 env['BUILDDIR'], self.path(env).dir.abspath)
+
+        libs = self.libs(env)
+        if libs:
+            env.Append(LIBS=list(lib.source for lib in libs))
 
         executable = env.Program(self.path(env).abspath, objs)[0]
 
@@ -439,6 +456,7 @@ class GTest(Executable):
 # Children should have access
 Export('GdbXml')
 Export('Source')
+Export('SourceLib')
 Export('PySource')
 Export('SimObject')
 Export('ProtoBuf')
