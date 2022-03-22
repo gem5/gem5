@@ -73,6 +73,17 @@ def _dot_create_ctrl_node(full_path, label):
                          fontcolor = "#000000" \
                          )
 
+def _dot_create_int_edge(src, dst):
+    return pydot.Edge(src, dst,
+        weight = .5,
+        color = '#042d50',
+        dir = 'forward')
+
+def _dot_create_ext_edge(src, dst):
+    return pydot.Edge(src, dst,
+        weight = 1.0,
+        color = '#381526',
+        dir = 'both')
 
 def _dot_create(network, callgraph):
     for r in network.routers:
@@ -86,7 +97,7 @@ def _dot_create(network, callgraph):
            (connected[link.src_node.path()] == link.dst_node.path()):
            continue
         callgraph.add_edge(
-            pydot.Edge(link.src_node.path(), link.dst_node.path())
+            _dot_create_int_edge(link.src_node.path(), link.dst_node.path())
         )
         connected[link.dst_node.path()] = link.src_node.path()
 
@@ -114,9 +125,8 @@ def _dot_create(network, callgraph):
             _dot_create_ctrl_node(ctrl.path(), label)
         )
 
-        callgraph.add_edge(
-            pydot.Edge(link.ext_node.path(), link.int_node.path())
-        )
+        callgraph.add_edge(_dot_create_ext_edge(
+                link.ext_node.path(), link.int_node.path()))
 
 def _do_dot(network, outdir, dotFilename):
     callgraph = pydot.Dot(graph_type='graph', rankdir='LR')
