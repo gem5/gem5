@@ -48,7 +48,7 @@ else:
     warning("No IEEE FP rounding mode control.\n"
             "FP results may deviate slightly from other platforms.")
 if env['HAVE_PNG']:
-    env.Append(LIBS=['png'])
+    SourceLib('png')
     Source('pngwriter.cc')
 Source('fiber.cc')
 GTest('fiber.test', 'fiber.test.cc', 'fiber.cc')

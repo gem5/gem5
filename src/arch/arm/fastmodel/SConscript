@@ -140,15 +140,12 @@ fm_static_libs = (
     'fmruntime',
     'IrisSupport',
 )
-env.Append(LIBS=list(staticify(env, lib) for lib in fm_static_libs))
+for lib in fm_static_libs:
+    SourceLib(staticify(env, lib))
 
-system_libs = (
-    'atomic',
-    'dl',
-    'rt',
-)
-env.Append(LIBS=system_libs)
-
+SourceLib('atomic')
+SourceLib('dl')
+SourceLib('rt')
 
 class ProjectFileParser(Grammar):
     class Param(object):
