@@ -251,6 +251,16 @@ namespace gem5
 
 namespace ruby
 {
+""")
+        # For protocol-specific types, wrap in the protocol namespace
+        if not self.shared:
+            code("""
+
+namespace ${{protocol}}
+{
+""")
+
+        code("""
 
 $klass ${{self.c_ident}}$parent
 {
@@ -435,6 +445,14 @@ operator<<(::std::ostream& out, const ${{self.c_ident}}& obj)
     return out;
 }
 
+""")
+        # For protocol-specific types, close the protocol namespace
+        if not self.shared:
+            code("""
+} // namespace ${{protocol}}
+""")
+
+        code("""
 } // namespace ruby
 } // namespace gem5
 
@@ -460,6 +478,16 @@ namespace gem5
 
 namespace ruby
 {
+""")
+        # For protocol-specific types, wrap in the protocol namespace
+        if not self.shared:
+            code("""
+
+namespace ${{protocol}}
+{
+""")
+
+        code("""
 
 /** \\brief Print the state of this object */
 void
@@ -492,6 +520,21 @@ out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";"""
         # print the code for the methods in the type
         for item in self.methods:
             code(self.methods[item].generateCode())
+
+        # For protocol-specific types, close the protocol namespace
+        if not self.shared:
+            code("""
+
+} // namespace ${{protocol}}
+""")
+
+        # For protocol-specific types, close the protocol namespace
+        if not self.shared:
+            code(
+                """
+
+} // namespace ${{protocol}}
+""")
 
         code(
             """
@@ -531,8 +574,14 @@ namespace gem5
 namespace ruby
 {
 
-"""
-        )
+""")
+        # For protocol-specific types, wrap in the protocol namespace
+        if not self.shared:
+            code("""
+
+namespace ${{protocol}}
+{
+""")
 
         if self.isMachineType:
             code("struct MachineID;")
@@ -610,6 +659,15 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj);
 ::std::ostream&
 operator<<(::std::ostream& out, const ${{self.c_ident}}& obj);
 
+""")
+
+        # For protocol-specific types, close the protocol namespace
+        if not self.shared:
+            code("""
+} // namespace ${{protocol}}
+""")
+
+        code("""
 } // namespace ruby
 } // namespace gem5
 """
@@ -666,6 +724,16 @@ namespace gem5
 
 namespace ruby
 {
+""")
+            # For protocol-specific types, wrap in the protocol namespace
+            if not self.shared:
+                code("""
+
+namespace ${{protocol}}
+{
+""")
+
+            code("""
 
 // Code to convert the current state to an access permission
 AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
@@ -687,6 +755,16 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
     // Appease the compiler since this function has a return value
     return AccessPermission_Invalid;
 }
+
+""")
+
+            # For protocol-specific types, close the protocol namespace
+            if not self.shared:
+                code("""
+} // namespace ${{protocol}}
+""")
+
+            code("""
 
 } // namespace ruby
 } // namespace gem5
@@ -710,6 +788,15 @@ namespace gem5
 
 namespace ruby
 {
+""")
+        # For protocol-specific types, wrap in the protocol namespace
+        if not self.shared:
+            code("""
+
+namespace ${{protocol}}
+{
+""")
+        code("""
 
 // Code for output operator
 ::std::ostream&
@@ -861,9 +948,9 @@ ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
             for enum in reversed(list(self.enums.values())):
                 # Check if there is a defined machine with this type
                 if enum.primary:
-                    code(
-                        "    base += ${{enum.ident}}_Controller::getNumControllers();"
-                    )
+                    code("""
+    base += ${{protocol}}::${{enum.ident}}_Controller::getNumControllers();
+""")
                 else:
                     code("    base += 0;")
                 code("    [[fallthrough]];")
@@ -894,9 +981,9 @@ ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
             for enum in self.enums.values():
                 code("case ${{self.c_ident}}_${{enum.ident}}:")
                 if enum.primary:
-                    code(
-                        "return ${{enum.ident}}_Controller::getNumControllers();"
-                    )
+                    code("""
+    return ${{protocol}}::${{enum.ident}}_Controller::getNumControllers();
+""")
                 else:
                     code("return 0;")
 
@@ -923,8 +1010,14 @@ get${{enum.ident}}MachineID(NodeID RubyNode)
       MachineID mach = {MachineType_${{enum.ident}}, RubyNode};
       return mach;
 }
-"""
-                )
+""")
+
+        # For protocol-specific types, close the protocol namespace
+        if not self.shared:
+            code("""
+
+} // namespace ${{protocol}}
+""")
 
         code(
             """
