@@ -31,6 +31,12 @@ from slicc.ast.AST import AST
 class DeclAST(AST):
     def __init__(self, slicc, pairs=None):
         super().__init__(slicc, pairs)
+        # If true, then this declaration is shared between protocols
+        self.shared = False
+
+    def setShared(self, shared: bool):
+        """Used to mark this declaration as shared between protocols"""
+        self.shared = shared
 
     def files(self, parent=None):
         return set()

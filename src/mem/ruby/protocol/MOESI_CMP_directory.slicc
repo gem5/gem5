@@ -1,5 +1,4 @@
 protocol "MOESI_CMP_directory";
-include "RubySlicc_interfaces.slicc";
 include "MOESI_CMP_directory-msg.sm";
 include "MOESI_CMP_directory-L1cache.sm";
 include "MOESI_CMP_directory-L2cache.sm";

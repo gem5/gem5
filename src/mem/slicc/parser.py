@@ -51,16 +51,36 @@ from slicc.symbols import SymbolTable
 
 class SLICC(Grammar):
     def __init__(
-        self, filename, base_dir, verbose=False, traceback=False, **kwargs
+        self,
+        protocol,
+        includes,
+        base_dir,
+        verbose=False,
+        traceback=False,
+        **kwargs,
     ):
+        """Entrypoint for SLICC parsing
+        protocol: The protocol `.slicc` file to parse
+        includes: list of `.slicc` files that are shared between all protocols
+        """
         self.protocol = None
         self.traceback = traceback
         self.verbose = verbose
         self.symtab = SymbolTable(self)
         self.base_dir = base_dir
 
+        if not includes:
+            # raise error
+            pass
+
         try:
-            self.decl_list = self.parse_file(filename, **kwargs)
+            self.decl_list = self.parse_file(includes[0], **kwargs)
+            for include in includes[1:]:
+                self.decl_list += self.parse_file(include, **kwargs)
+            # set all of the types parsed so far as shared
+            self.decl_list.setShared()
+
+            self.decl_list += self.parse_file(protocol, **kwargs)
         except ParseError as e:
             if not self.traceback:
                 sys.exit(str(e))

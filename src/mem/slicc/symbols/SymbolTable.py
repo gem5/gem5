@@ -55,7 +55,7 @@ class SymbolTable(object):
         pairs["primitive"] = "yes"
         pairs["external"] = "yes"
         location = Location("init", 0, no_warning=not slicc.verbose)
-        void = Type(self, "void", location, pairs)
+        void = Type(self, "void", location, pairs, shared=False)
         self.newSymbol(void)
 
     def __repr__(self):

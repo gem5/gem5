@@ -63,10 +63,12 @@ class Enumeration(PairContainer):
 
 
 class Type(Symbol):
-    def __init__(self, table, ident, location, pairs, machine=None):
+    def __init__(self, table, ident, location, pairs, shared=False,
+                 machine=None):
         super().__init__(table, ident, location, pairs)
         self.c_ident = ident
         self.abstract_ident = ""
+        self.shared = shared
         if machine:
             if self.isExternal or self.isPrimitive:
                 if "external_name" in self:

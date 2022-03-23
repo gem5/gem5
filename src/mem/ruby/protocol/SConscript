@@ -66,7 +66,12 @@ def slicc_emitter(target, source, env):
     assert len(source) == 1
     filepath = source[0].srcnode().abspath
 
-    slicc = SLICC(filepath, protocol_base.abspath, verbose=False)
+    slicc = SLICC(
+        filepath,
+        [os.path.join(protocol_base.abspath, 'RubySlicc_interfaces.slicc')],
+        protocol_base.abspath,
+        verbose=False
+    )
     slicc.process()
     slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
     if env['CONF']['SLICC_HTML']:
@@ -78,8 +83,12 @@ def slicc_emitter(target, source, env):
 def slicc_action(target, source, env):
     assert len(source) == 1
     filepath = source[0].srcnode().abspath
-
-    slicc = SLICC(filepath, protocol_base.abspath, verbose=True)
+    slicc = SLICC(
+        filepath,
+        [os.path.join(protocol_base.abspath, 'RubySlicc_interfaces.slicc')],
+        protocol_base.abspath,
+        verbose=True
+    )
     slicc.process()
     slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
     if env['CONF']['SLICC_HTML']:
