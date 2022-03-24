@@ -370,12 +370,11 @@ namespace ${protocol}
 
 extern std::stringstream ${ident}_transitionComment;
 
-class $c_ident : public AbstractController
+class $c_ident : public AbstractController, Base${ident}Machine
 {
   public:
     typedef ${py_ident}Params Params;
     $c_ident(const Params &p);
-    static int getNumControllers();
     void init();
 
     MessageBuffer *getMandatoryQueue() const;
@@ -474,7 +473,6 @@ bool m_possible[${ident}_State_NUM][${ident}_Event_NUM];
 
 static std::vector<statistics::Vector *> eventVec;
 static std::vector<std::vector<statistics::Vector *> > transVec;
-static int m_num_controllers;
 
 // Internal functions
 """
@@ -660,7 +658,6 @@ namespace ruby
 namespace ${protocol}
 {
 
-int $c_ident::m_num_controllers = 0;
 std::vector<statistics::Vector *>  $c_ident::eventVec;
 std::vector<std::vector<statistics::Vector *> >  $c_ident::transVec;
 
@@ -1120,12 +1117,6 @@ $c_ident::getTransitionCount(${ident}_State state,
                              ${ident}_Event event)
 {
     return m_counters[state][event];
-}
-
-int
-$c_ident::getNumControllers()
-{
-    return m_num_controllers;
 }
 
 MessageBuffer*

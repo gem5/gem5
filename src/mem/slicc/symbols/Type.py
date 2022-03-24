@@ -648,6 +648,20 @@ int ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj);
                     """
 
 MachineID get${{enum.ident}}MachineID(NodeID RubyNode);
+""")
+
+                # Machine types are expected to be overridden by protocol-
+                # specific classes.
+                if self.isMachineType:
+                    code("""
+
+class Base${{enum.ident}}Machine {
+  protected:
+    static int m_num_controllers;
+  public:
+    static int getNumControllers() { return m_num_controllers; }
+};
+
 """
                 )
 
@@ -957,10 +971,8 @@ ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
                 # Check if there is a defined machine with this type
                 if enum.primary:
                     code("""
-    base += ${{protocol}}::${{enum.ident}}_Controller::getNumControllers();
+    base += Base${{enum.ident}}Machine::getNumControllers();
 """)
-                else:
-                    code("    base += 0;")
                 code("    [[fallthrough]];")
                 code("  case ${{self.c_ident}}_${{enum.ident}}:")
             code("    break;")
@@ -988,12 +1000,9 @@ ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
             # For each field
             for enum in self.enums.values():
                 code("case ${{self.c_ident}}_${{enum.ident}}:")
-                if enum.primary:
-                    code("""
-    return ${{protocol}}::${{enum.ident}}_Controller::getNumControllers();
+                code("""
+    return Base${{enum.ident}}Machine::getNumControllers();
 """)
-                else:
-                    code("return 0;")
 
             # total num
             code(
@@ -1018,6 +1027,11 @@ get${{enum.ident}}MachineID(NodeID RubyNode)
       MachineID mach = {MachineType_${{enum.ident}}, RubyNode};
       return mach;
 }
+""")
+                if self.isMachineType:
+                    code("""
+
+int Base${{enum.ident}}Machine::m_num_controllers = 0;
 """)
 
         # For protocol-specific types, close the protocol namespace
