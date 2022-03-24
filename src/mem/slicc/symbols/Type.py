@@ -75,7 +75,15 @@ class Type(Symbol):
                     self.c_ident = self["external_name"]
             else:
                 # Append with machine name
-                self.c_ident = f"{machine}_{ident}"
+                self.c_ident = "%s_%s" % (machine, ident)
+        if shared or not table.slicc.protocol or self.isExternal:
+            self.protocol_specific = ""
+            self.gen_filename = self.c_ident
+            self.header_string = self.c_ident
+        else:
+            self.protocol_specific = table.slicc.protocol
+            self.gen_filename = self.protocol_specific + '/' + self.c_ident
+            self.header_string = self.protocol_specific + '_' + self.c_ident
 
         self.pairs.setdefault("desc", "No description avaliable")
 
@@ -225,8 +233,8 @@ class Type(Symbol):
         code = self.symtab.codeFormatter()
         code(
             """
-#ifndef __${{self.c_ident}}_HH__
-#define __${{self.c_ident}}_HH__
+#ifndef __${{self.header_string}}_HH__
+#define __${{self.header_string}}_HH__
 
 #include <iostream>
 
@@ -237,7 +245,7 @@ class Type(Symbol):
 
         for dm in self.data_members.values():
             if not dm.type.isPrimitive:
-                code('#include "mem/ruby/protocol/$0.hh"', dm.type.c_ident)
+                code('#include "mem/ruby/protocol/$0.hh"',dm.type.gen_filename)
 
         parent = ""
         if "interface" in self:
@@ -456,11 +464,11 @@ operator<<(::std::ostream& out, const ${{self.c_ident}}& obj)
 } // namespace ruby
 } // namespace gem5
 
-#endif // __${{self.c_ident}}_HH__
+#endif // __${{self.header_string}}_HH__
 """
         )
 
-        code.write(path, f"{self.c_ident}.hh")
+        code.write(path, f"{self.gen_filename}.hh")
 
     def printTypeCC(self, path):
         code = self.symtab.codeFormatter()
@@ -470,7 +478,7 @@ operator<<(::std::ostream& out, const ${{self.c_ident}}& obj)
 #include <iostream>
 #include <memory>
 
-#include "mem/ruby/protocol/${{self.c_ident}}.hh"
+#include "mem/ruby/protocol/${{self.gen_filename}}.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 namespace gem5
@@ -543,14 +551,14 @@ out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";"""
 """
         )
 
-        code.write(path, f"{self.c_ident}.cc")
+        code.write(path, f"{self.gen_filename}.cc")
 
     def printEnumHH(self, path):
         code = self.symtab.codeFormatter()
         code(
             """
-#ifndef __${{self.c_ident}}_HH__
-#define __${{self.c_ident}}_HH__
+#ifndef __${{self.header_string}}_HH__
+#define __${{self.header_string}}_HH__
 
 #include <iostream>
 #include <string>
@@ -696,11 +704,11 @@ struct hash<gem5::ruby::MachineType>
         # Trailer
         code(
             """
-#endif // __${{self.c_ident}}_HH__
+#endif // __${{self.header_string}}_HH__
 """
         )
 
-        code.write(path, f"{self.c_ident}.hh")
+        code.write(path, f"{self.gen_filename}.hh")
 
     def printEnumCC(self, path):
         code = self.symtab.codeFormatter()
@@ -711,7 +719,7 @@ struct hash<gem5::ruby::MachineType>
 #include <string>
 
 #include "base/logging.hh"
-#include "mem/ruby/protocol/${{self.c_ident}}.hh"
+#include "mem/ruby/protocol/${{self.gen_filename}}.hh"
 
 """
         )
@@ -776,8 +784,8 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
             for enum in self.enums.values():
                 if enum.primary:
                     code(
-                        '#include "mem/ruby/protocol/${{enum.ident}}'
-                        '_Controller.hh"'
+                        "#include \"mem/ruby/protocol/${{protocol}}/"
+                        "${{enum.ident}}_Controller.hh\""
                     )
             code('#include "mem/ruby/common/MachineID.hh"')
 
@@ -1027,7 +1035,7 @@ get${{enum.ident}}MachineID(NodeID RubyNode)
         )
 
         # Write the file
-        code.write(path, f"{self.c_ident}.cc")
+        code.write(path, f"{self.gen_filename}.cc")
 
 
 __all__ = ["Type"]

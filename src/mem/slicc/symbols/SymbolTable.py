@@ -135,6 +135,7 @@ class SymbolTable(object):
 
     def writeCodeFiles(self, path, includes):
         makeDir(path)
+        makeDir(os.path.join(path, self.slicc.protocol))
 
         code = self.codeFormatter()
 
@@ -143,9 +144,12 @@ class SymbolTable(object):
 
         for symbol in self.sym_vec:
             if isinstance(symbol, Type) and not symbol.isPrimitive:
-                code('#include "mem/ruby/protocol/${{symbol.c_ident}}.hh"')
+                ident = symbol.c_ident
+                if not symbol.shared and not symbol.isExternal:
+                    ident = f"{self.slicc.protocol}/{ident}"
+                code('#include "mem/ruby/protocol/${{ident}}.hh"')
 
-        code.write(path, "Types.hh")
+        code.write(path, f"{self.slicc.protocol}/Types.hh")
 
         for symbol in self.sym_vec:
             symbol.writeCodeFiles(path, includes)

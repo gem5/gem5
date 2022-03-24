@@ -42,13 +42,14 @@ class MachineAST(DeclAST):
         return f"[Machine: {self.ident!r}]"
 
     def files(self, parent=None):
+        file_prefix = f"{self.slicc.protocol}/{self.ident}"
         s = set(
             (
-                f"{self.ident}_Controller.cc",
-                f"{self.ident}_Controller.hh",
-                f"{self.ident}_Controller.py",
-                f"{self.ident}_Transitions.cc",
-                f"{self.ident}_Wakeup.cc",
+                f"{file_prefix}_Controller.cc",
+                f"{file_prefix}_Controller.hh",
+                f"{file_prefix}_Controller.py",
+                f"{file_prefix}_Transitions.cc",
+                f"{file_prefix}_Wakeup.cc",
             )
         )
 

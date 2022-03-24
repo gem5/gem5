@@ -47,6 +47,8 @@ class EnumDeclAST(DeclAST):
             ident = f"{parent}_{self.type_ast.ident}"
         else:
             ident = self.type_ast.ident
+        if not self.shared:
+            ident = f"{self.slicc.protocol}/{ident}"
         s = set((f"{ident}.hh", f"{ident}.cc"))
         return s
 
