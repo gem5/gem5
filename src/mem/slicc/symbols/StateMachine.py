@@ -254,7 +254,7 @@ class StateMachine(Symbol):
         ident = self.ident
 
         protocol = self.symtab.slicc.protocol
-        py_ident = f"{ident}_Controller"
+        py_ident = f"{protocol}_{ident}_Controller"
         c_ident = f"{self.ident}_Controller"
         gen_filename = f"{protocol}/{py_ident}"
 
@@ -291,6 +291,25 @@ class $py_ident(RubyController):
                 )
 
         code.dedent()
+
+        # Needed for backwards compatibility while there is only one protocol
+        # compiled. When moving to multiple protocols in the gem5 binary, this
+        # will need to change.
+        code("""
+
+from m5.defines import buildEnv
+from m5.util import warn
+
+if buildEnv["PROTOCOL"] == "${protocol}":
+    class ${c_ident}(${py_ident}):
+        def __init__(self, *args, **kwargs):
+            warn(
+                "${c_ident} is deprecated. Use %s_${c_ident} instead",
+                buildEnv['PROTOCOL']
+            )
+            super().__init__(*args, **kwargs)
+""")
+
         code.write(path, f"{gen_filename}.py")
 
     def printControllerHH(self, path):
@@ -298,8 +317,11 @@ class $py_ident(RubyController):
         code = self.symtab.codeFormatter()
         ident = self.ident
         c_ident = f"{self.ident}_Controller"
-        header_string = self.symtab.slicc.protocol + '_' + self.ident
-        gen_filename = f"{self.symtab.slicc.protocol}/{c_ident}"
+
+        protocol = self.symtab.slicc.protocol
+        header_string = protocol + '_' + self.ident
+        gen_filename = f"{protocol}/{c_ident}"
+        py_ident = f"{protocol}_{ident}_Controller"
 
         code(
             """
@@ -316,7 +338,7 @@ class $py_ident(RubyController):
 #include "mem/ruby/protocol/TransitionResult.hh"
 #include "mem/ruby/protocol/${protocol}/Types.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
-#include "params/$c_ident.hh"
+#include "params/$py_ident.hh"
 
 """
         )
@@ -351,7 +373,7 @@ extern std::stringstream ${ident}_transitionComment;
 class $c_ident : public AbstractController
 {
   public:
-    typedef ${c_ident}Params Params;
+    typedef ${py_ident}Params Params;
     $c_ident(const Params &p);
     static int getNumControllers();
     void init();

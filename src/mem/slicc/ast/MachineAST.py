@@ -43,11 +43,14 @@ class MachineAST(DeclAST):
 
     def files(self, parent=None):
         file_prefix = f"{self.slicc.protocol}/{self.ident}"
+        # Can't have multiple python simobject files with the same name
+        # So, we have to prepend the protocol name to the .py file
+        py_prefix = f"{self.slicc.protocol}/{self.slicc.protocol}_{self.ident}"
         s = set(
             (
                 f"{file_prefix}_Controller.cc",
                 f"{file_prefix}_Controller.hh",
-                f"{file_prefix}_Controller.py",
+                f"{py_prefix}_Controller.py",
                 f"{file_prefix}_Transitions.cc",
                 f"{file_prefix}_Wakeup.cc",
             )
