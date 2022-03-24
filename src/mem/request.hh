@@ -523,6 +523,22 @@ class Request
     ~Request() {}
 
     /**
+     * Factory method for creating memory management requests, with
+     * unspecified addr and size.
+     */
+    static RequestPtr
+    createMemManagement(Flags flags, RequestorID id)
+    {
+        auto mgmt_req = std::make_shared<Request>();
+        mgmt_req->_flags.set(flags);
+        mgmt_req->_requestorId = id;
+        mgmt_req->_time = curTick();
+
+        assert(mgmt_req->isMemMgmt());
+        return mgmt_req;
+    }
+
+    /**
      * Set up Context numbers.
      */
     void
