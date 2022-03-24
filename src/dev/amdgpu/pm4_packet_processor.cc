@@ -166,7 +166,12 @@ PM4PacketProcessor::decodeNext(PM4Queue *q)
             q->id(), q->rptr(), q->wptr());
 
     if (q->rptr() < q->wptr()) {
-        PM4Header h{0, 0, 0, 0, 0, 0};
+        /* Additional braces here are needed due to a clang compilation bug
+           falsely throwing a "suggest braces around initialization of
+           subject" error. More info on this bug is available here:
+           https://stackoverflow.com/questions/31555584
+         */
+        PM4Header h{{{0, 0, 0, 0, 0, 0}}};
         auto cb = new DmaVirtCallback<PM4Header>(
             [ = ] (PM4Header header)
                 { decodeHeader(q, header); }, h);
