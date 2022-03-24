@@ -121,16 +121,6 @@ class AMDGPUDevice : public PciDevice
     bool checkpoint_before_mmios;
     int init_interrupt_count;
 
-    // GART aperture. This is the initial 1-level privledged page table that
-    // resides in framebuffer memory.
-    uint32_t gartBase = 0x0;
-    uint32_t gartSize = 0x0;
-
-    // MMHUB aperture. These addresses are set by the GPU. For now we wait
-    // until the driver reads them before setting them.
-    uint64_t mmhubBase = 0x0;
-    uint64_t mmhubTop = 0x0;
-
     // VMIDs data structures
     // map of pasids to vmids
     std::unordered_map<uint16_t, uint16_t> idMap;

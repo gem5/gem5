@@ -66,11 +66,10 @@ class AMDGPUSystemHub : public DmaDevice
 
     class ResponseEvent : public Event
     {
-       PacketPtr reqPkt;
        Event *callback;
 
        public:
-        ResponseEvent(PacketPtr pkt, Event *_callback);
+        ResponseEvent(Event *_callback);
 
         void process();
 

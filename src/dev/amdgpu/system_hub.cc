@@ -39,7 +39,7 @@ namespace gem5
 void
 AMDGPUSystemHub::sendRequest(PacketPtr pkt, Event *callback)
 {
-    ResponseEvent *dmaRespEvent = new ResponseEvent(pkt, callback);
+    ResponseEvent *dmaRespEvent = new ResponseEvent(callback);
     Tick delay = 0;
 
     // Assuming read XOR write (i.e., not an atomic).
@@ -59,8 +59,8 @@ AMDGPUSystemHub::dmaResponse(PacketPtr pkt)
 {
 }
 
-AMDGPUSystemHub::ResponseEvent::ResponseEvent(PacketPtr pkt, Event *_callback)
-    : reqPkt(pkt), callback(_callback)
+AMDGPUSystemHub::ResponseEvent::ResponseEvent(Event *_callback)
+    : callback(_callback)
 {
     // Delete this event after process is called
     setFlags(Event::AutoDelete);
