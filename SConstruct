@@ -44,15 +44,6 @@
 #
 # SCons top-level build description (SConstruct) file.
 #
-# While in this directory ('gem5'), just type 'scons' to build the default
-# configuration (see below), or type 'scons build/<CONFIG>/<binary>'
-# to build some other configuration (e.g., 'build/X86/gem5.opt' for
-# the optimized X86 version).
-#
-# You can build gem5 in a different directory as long as there is a
-# 'build/<CONFIG>' somewhere along the target path.  The build system
-# expects that all configs under the same build directory are being
-# built for the same host system.
 #
 # Examples:
 #
@@ -81,7 +72,7 @@ import itertools
 import os
 import sys
 
-from os import mkdir, remove, environ
+from os import mkdir, remove, environ, listdir
 from os.path import abspath, dirname, expanduser
 from os.path import isdir, isfile
 from os.path import join, split
@@ -206,6 +197,59 @@ if not ('CC' in main and 'CXX' in main):
 
 # Find default configuration & binary.
 Default(environ.get('M5_DEFAULT_BINARY', 'build/ARM/gem5.debug'))
+
+buildopts_dir = Dir('#build_opts')
+buildopts = list([f for f in os.listdir(buildopts_dir.abspath) if
+        isfile(os.path.join(buildopts_dir.abspath, f))])
+buildopts.sort()
+
+buildopt_list = '\n'.join(' ' * 10 + buildopt for buildopt in buildopts)
+
+Help(f"""
+Targets:
+        To build gem5 using a predefined configuration, use a target with
+        a directory called "build" in the path, followed by a directory named
+        after a predefined configuration, and then the actual target, likely
+        a gem5 binary. For example:
+
+        scons build/X86/gem5.opt
+
+        The "build" component tells SCons that the next part names an initial
+        configuration, and the part after that is the actual target.
+        The predefined targets currently available are:
+
+{buildopt_list}
+
+        The extension on the gem5 binary specifies what type of binary to
+        build. Options are:
+
+        debug: A debug binary with optimizations turned off and debug info
+            turned on.
+        opt: An optimized binary with debugging still turned on.
+        fast: An optimized binary with debugging, asserts, and tracing
+            disabled.
+
+        gem5 can also be built as a static or dynamic library. In that case,
+        the extension is fixed by the operating system, so the binary type
+        is part of the target file name. For example:
+
+        scons build/ARM/libgem5_opt.so
+
+        To build unit tests, you can use a target like this:
+
+        scons build/RISCV/unittests.debug
+
+        The unittests.debug part of the target is actual a directory which
+        holds the results for all the unit tests built with the "debug"
+        settings. When that's used as the target, SCons will build all the
+        files under that directory, which will run all the tests.
+
+        To build and run an individual test, you can built it's binary
+        specifically and then run it manually:
+
+        scons build/SPARC/base/bitunion.test.opt
+        build/SPARC/base/bitunion.test.opt
+""", append=True)
 
 
 ########################################################################
