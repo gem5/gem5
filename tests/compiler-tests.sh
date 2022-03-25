@@ -9,6 +9,9 @@ dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 gem5_root="${dir}/.."
 build_dir="${gem5_root}/build"
 
+# The per-container Docker memory limit.
+docker_mem_limit="18g"
+
 # All Docker images in the gem5 testing GCR which we want to compile with.
 images=("gcc-version-11"
         "gcc-version-10"
@@ -125,7 +128,8 @@ for compiler in ${images[@]}; do
             # Build with container
             {
                 docker run --rm -v "${gem5_root}":"/gem5" -u $UID:$GID \
-                    -w /gem5 $repo_name /usr/bin/env python3 /usr/bin/scons \
+                    -w /gem5 --memory="${docker_mem_limit}" $repo_name \
+                    /usr/bin/env python3 /usr/bin/scons \
                     "${build_out}" "${build_args}"
             }>"${build_stdout}" 2>"${build_stderr}"
             result=$?
