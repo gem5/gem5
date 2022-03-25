@@ -196,7 +196,14 @@ if not ('CC' in main and 'CXX' in main):
     error("No C++ compiler installed (package g++ on Ubuntu and RedHat)")
 
 # Find default configuration & binary.
-Default(environ.get('M5_DEFAULT_BINARY', 'build/ARM/gem5.debug'))
+default_target = environ.get('M5_DEFAULT_BINARY', None)
+if default_target:
+    Default(default_target)
+
+# If no target is set, even a default, print help instead.
+if not BUILD_TARGETS:
+    warning("No target specified, and no default.")
+    SetOption('help', True)
 
 buildopts_dir = Dir('#build_opts')
 buildopts = list([f for f in os.listdir(buildopts_dir.abspath) if
