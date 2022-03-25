@@ -109,6 +109,42 @@ def main(args=None):
         os.path.dirname(__file__), "..", "ruby", "protocol"
     )
 
+    output("Generating shared files")
+    slicc = SLICC(
+            None,
+            [os.path.join(protocol_base, 'RubySlicc_interfaces.slicc')],
+            protocol_base,
+            shared_only=True,
+            verbose=True, debug=opts.debug,
+            traceback=opts.tb
+        )
+    if opts.print_files:
+        for i in sorted(slicc.files()):
+            print('    %s' % i)
+    else:
+        output("Processing AST...")
+        slicc.process()
+        output("Writing C++ files...")
+        slicc.writeCodeFiles(opts.code_path, [])
+
+    output("Generating shared files")
+    slicc = SLICC(
+            None,
+            [os.path.join(protocol_base, 'RubySlicc_interfaces.slicc')],
+            protocol_base,
+            shared_only=True,
+            verbose=True, debug=opts.debug,
+            traceback=opts.tb
+        )
+    if opts.print_files:
+        for i in sorted(slicc.files()):
+            print(f"    {i}")
+    else:
+        output("Processing AST...")
+        slicc.process()
+        output("Writing C++ files...")
+        slicc.writeCodeFiles(opts.code_path, [])
+
     for slicc_file in files:
         output(f"Working on {slicc_file}")
         slicc = SLICC(
@@ -118,6 +154,10 @@ def main(args=None):
             verbose=True,
             debug=opts.debug,
             traceback=opts.tb,
+            shared_only=False,
+            verbose=True, 
+            debug=opts.debug,
+            traceback=opts.tb
         )
 
         if opts.print_files:

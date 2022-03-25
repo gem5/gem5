@@ -133,9 +133,10 @@ class SymbolTable(object):
             if isinstance(symbol, type):
                 yield symbol
 
-    def writeCodeFiles(self, path, includes):
+    def writeCodeFiles(self, path, includes, shared_only=False):
         makeDir(path)
-        makeDir(os.path.join(path, self.slicc.protocol))
+        if not shared_only:
+            makeDir(os.path.join(path, self.slicc.protocol))
 
         code = self.codeFormatter()
 
@@ -149,10 +150,16 @@ class SymbolTable(object):
                     ident = f"{self.slicc.protocol}/{ident}"
                 code('#include "mem/ruby/protocol/${{ident}}.hh"')
 
-        code.write(path, f"{self.slicc.protocol}/Types.hh")
+        if not shared_only:
+            code.write(path, f"{self.slicc.protocol}/Types.hh")
 
         for symbol in self.sym_vec:
-            symbol.writeCodeFiles(path, includes)
+            if shared_only:
+                if hasattr(symbol, 'shared') and symbol.shared:
+                    symbol.writeCodeFiles(path, includes)
+            else:
+                if not hasattr(symbol, 'shared') or not symbol.shared:
+                    symbol.writeCodeFiles(path, includes)
 
     def writeHTMLFiles(self, path):
         makeDir(path)
