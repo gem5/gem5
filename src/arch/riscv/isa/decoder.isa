@@ -312,7 +312,7 @@ decode QUADRANT default Unknown::unknown() {
                                 "source reg x0", machInst);
                     }
                     NPC = Rc1;
-                }}, IsIndirectControl, IsUncondControl, IsCall);
+                }}, IsIndirectControl, IsUncondControl);
                 default: CROp::c_mv({{
                     if (RC1 == 0) {
                         return std::make_shared<IllegalInstFault>(
@@ -1534,13 +1534,13 @@ decode QUADRANT default Unknown::unknown() {
             0x0: Jump::jalr({{
                 Rd = NPC;
                 NPC = (imm + Rs1) & (~0x1);
-            }}, IsIndirectControl, IsUncondControl, IsCall);
+            }}, IsIndirectControl, IsUncondControl);
         }
 
         0x1b: JOp::jal({{
             Rd = NPC;
             NPC = PC + imm;
-        }}, IsDirectControl, IsUncondControl, IsCall);
+        }}, IsDirectControl, IsUncondControl);
 
         0x1c: decode FUNCT3 {
             format SystemOp {

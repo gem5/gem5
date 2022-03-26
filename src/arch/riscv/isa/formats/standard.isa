@@ -240,6 +240,49 @@ def template JumpDeclare {{
     };
 }};
 
+def template JumpConstructor {{
+    %(class_name)s::%(class_name)s(MachInst machInst)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+        %(imm_code)s;
+        if (QUADRANT != 0x3) {
+            // Handle "c_jr" instruction, set "IsReturn" flag if RC1 is 1 or 5
+            if (CFUNCT1 == 0 && (RC1 == 1 || RC1 == 5))
+                flags[IsReturn] = true;
+        } else {
+            bool rd_link = (RD == 1 || RD == 5);
+            bool rs1_link = (RS1 == 1 || RS1 == 5);
+            // Handle "jalr" and "jal" instruction,
+            // set "IsCall" if RD is link register
+            if (rd_link)
+                flags[IsCall] = true;
+
+            // Handle "Jalr" instruction
+            if (FUNCT3 == 0x0) {
+                // If RD is not link and RS1 is link, then pop RAS
+                if (!rd_link && rs1_link) flags[IsReturn] = true;
+                else if (rd_link) {
+                    // If RD is link and RS1 is not link, push RAS
+                    if (!rs1_link) flags[IsCall] = true;
+                    // If RD is link and RS1 is link and rd != rs1
+                    else if (rs1_link) {
+                        if (RS1 != RD) {
+                            // Both are link and RS1 == RD, pop then push
+                            flags[IsReturn] = true;
+                            flags[IsCall] = true;
+                        } else {
+                            // Both are link and RS1 != RD, push RAS
+                            flags[IsCall] = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}};
+
 def template JumpExecute {{
     Fault
     %(class_name)s::execute(
@@ -420,7 +463,7 @@ def format Jump(code, *opt_flags) {{
         {'code': code, 'imm_code': 'imm = sext<12>(IMM12);',
          'regs': ','.join(regs)}, opt_flags)
     header_output = JumpDeclare.subst(iop)
-    decoder_output = ImmConstructor.subst(iop)
+    decoder_output = JumpConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
     exec_output = JumpExecute.subst(iop)
 }};
@@ -450,7 +493,7 @@ def format JOp(code, *opt_flags) {{
         {'code': code, 'imm_code': imm_code,
          'regs': ','.join(regs)}, opt_flags)
     header_output = BranchDeclare.subst(iop)
-    decoder_output = ImmConstructor.subst(iop)
+    decoder_output = JumpConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
     exec_output = BranchExecute.subst(iop)
 }};
