@@ -88,7 +88,6 @@ docker pull gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest
 
 # Try to build the ISA targets.
 build_target NULL
-exit 0
 build_target RISCV
 build_target X86
 build_target ARM
