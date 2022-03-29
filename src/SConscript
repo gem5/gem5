@@ -76,7 +76,9 @@ class Source(SourceFile):
     pass
 
 class SourceLib(SourceItem):
-    pass
+    def __init__(self, *args, **kwargs):
+        self.priority = kwargs.pop('priority', 0)
+        super().__init__(*args, **kwargs)
 
 build_tools = Dir('#build_tools')
 
@@ -388,6 +390,8 @@ class Executable(TopLevelBase):
                 env['BUILDDIR'], self.path(env).dir.abspath)
 
         libs = self.libs(env)
+        # Higher priority libraries should be earlier in the list.
+        libs.sort(key=lambda l: l.priority, reverse=True)
         if libs:
             env.Append(LIBS=list(lib.source for lib in libs))
 
