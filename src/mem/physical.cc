@@ -50,6 +50,7 @@
 #include <iostream>
 #include <string>
 
+#include "base/intmath.hh"
 #include "base/trace.hh"
 #include "debug/AddrRanges.hh"
 #include "debug/Checkpoint.hh"
@@ -81,7 +82,8 @@ PhysicalMemory::PhysicalMemory(const std::string& _name,
                                const std::string& shared_backstore,
                                bool auto_unlink_shared_backstore) :
     _name(_name), size(0), mmapUsingNoReserve(mmap_using_noreserve),
-    sharedBackstore(shared_backstore), sharedBackstoreSize(0)
+    sharedBackstore(shared_backstore), sharedBackstoreSize(0),
+    pageSize(sysconf(_SC_PAGE_SIZE))
 {
     // Register cleanup callback if requested.
     if (auto_unlink_shared_backstore && !sharedBackstore.empty()) {
@@ -217,7 +219,9 @@ PhysicalMemory::createBackingStore(
     } else {
         // Newly create backstore will be located after previous one.
         map_offset = sharedBackstoreSize;
-        sharedBackstoreSize += range.size();
+        // mmap requires the offset to be multiple of page, so we need to
+        // upscale the range size.
+        sharedBackstoreSize += roundUp(range.size(), pageSize);
         DPRINTF(AddrRanges, "Sharing backing store as %s at offset %llu\n",
                 sharedBackstore.c_str(), (uint64_t)map_offset);
         shm_fd = shm_open(sharedBackstore.c_str(), O_CREAT | O_RDWR, 0666);

@@ -156,6 +156,8 @@ class PhysicalMemory : public Serializable
     const std::string sharedBackstore;
     uint64_t sharedBackstoreSize;
 
+    long pageSize;
+
     // The physical memory used to provide the memory in the simulated
     // system
     std::vector<BackingStoreEntry> backingStore;
