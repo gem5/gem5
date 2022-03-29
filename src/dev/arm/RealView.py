@@ -1206,6 +1206,9 @@ Interrupts:
     vram = SimpleMemory(range=AddrRange(0x18000000, size='32MB'),
                         conf_table_reported=False)
 
+    ethernet = IGbE_e1000(pci_bus=0, pci_dev=0, pci_func=0,
+                                   InterruptLine=1, InterruptPin=1)
+
     def _off_chip_devices(self):
         return [
             self.realview_io,
@@ -1220,6 +1223,7 @@ Interrupts:
             self.clock24MHz,
             self.vio[0],
             self.vio[1],
+            self.ethernet,
         ] + self.uart
 
     def _off_chip_memory(self):
