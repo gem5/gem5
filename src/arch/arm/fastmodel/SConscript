@@ -61,13 +61,15 @@ systemc_home = Dir('#/src/systemc/ext/systemc_home')
 env['ENV']['SYSTEMC_HOME'] = systemc_home.abspath
 
 def extract_var(name):
-    if name not in env['CONF']:
-        error('Error: %s is not set' % name)
-    print('%s = %s' % (name, env[name]))
+    val = env['CONF'].get(name, None)
+    if val is None:
+        error(f'{name} is not set')
+    if env['CONF']['USE_ARM_FASTMODEL']:
+        print(f'{name} = {val}')
     # Make sure the value of this variable shows up as an environment variable
     # for commands scons runs.
-    env['ENV'][name] = env[name]
-    return env[name]
+    env['ENV'][name] = val
+    return val
 
 pvlib_home, maxcore_home, armlmd_license_file = \
     list(map(extract_var, ('PVLIB_HOME', 'MAXCORE_HOME',
