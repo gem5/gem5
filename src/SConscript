@@ -259,11 +259,6 @@ cxx_file.add_emitter('.proto', protoc_emitter)
 
 def ProtoBuf(source, tags=None, add_tags=None):
     '''Add a Protocol Buffer to build'''
-
-    if not env['HAVE_PROTOC'] or not env['CONF']['HAVE_PROTOBUF']:
-        error('Got protobuf to build, but lacks support!')
-
-    '''Specify the source file, and any tags'''
     Source(source, tags, add_tags, append={'CXXFLAGS': '-Wno-array-bounds'})
 
 env['PROTOC_GRPC'] = distutils.spawn.find_executable('grpc_cpp_plugin')
