@@ -485,7 +485,7 @@ class LSQUnit
      */
     InstSeqNum stallingStoreIsn;
     /** The index of the above store. */
-    int stallingLoadIdx;
+    ssize_t stallingLoadIdx;
 
     /** The packet that needs to be retried. */
     PacketPtr retryPkt;
@@ -539,10 +539,10 @@ class LSQUnit
 
   public:
     /** Executes the load at the given index. */
-    Fault read(LSQRequest *request, int load_idx);
+    Fault read(LSQRequest *request, ssize_t load_idx);
 
     /** Executes the store at the given index. */
-    Fault write(LSQRequest *request, uint8_t *data, int store_idx);
+    Fault write(LSQRequest *requst, uint8_t *data, ssize_t store_idx);
 
     /** Returns the index of the head load instruction. */
     int getLoadHead() { return loadQueue.head(); }

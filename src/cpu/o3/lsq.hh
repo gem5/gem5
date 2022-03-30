@@ -832,12 +832,12 @@ class LSQ
     /** Executes a read operation, using the load specified at the load
      * index.
      */
-    Fault read(LSQRequest* request, int load_idx);
+    Fault read(LSQRequest* request, ssize_t load_idx);
 
     /** Executes a store operation, using the store specified at the store
      * index.
      */
-    Fault write(LSQRequest* request, uint8_t *data, int store_idx);
+    Fault write(LSQRequest* request, uint8_t *data, ssize_t store_idx);
 
     /**
      * Retry the previous send that failed.

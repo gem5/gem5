@@ -660,7 +660,7 @@ LSQUnit::executeStore(const DynInstPtr &store_inst)
     // Make sure that a store exists.
     assert(storeQueue.size() != 0);
 
-    int store_idx = store_inst->sqIdx;
+    ssize_t store_idx = store_inst->sqIdx;
 
     DPRINTF(LSQUnit, "Executing store PC %s [sn:%lli]\n",
             store_inst->pcState(), store_inst->seqNum);
@@ -1046,7 +1046,7 @@ LSQUnit::storePostSend()
     if (isStalled() &&
         storeWBIt->instruction()->seqNum == stallingStoreIsn) {
         DPRINTF(LSQUnit, "Unstalling, stalling store [sn:%lli] "
-                "load idx:%i\n",
+                "load idx:%li\n",
                 stallingStoreIsn, stallingLoadIdx);
         stalled = false;
         stallingStoreIsn = 0;
@@ -1172,7 +1172,7 @@ LSQUnit::completeStore(typename StoreQueue::iterator store_idx)
     if (isStalled() &&
         store_inst->seqNum == stallingStoreIsn) {
         DPRINTF(LSQUnit, "Unstalling, stalling store [sn:%lli] "
-                "load idx:%i\n",
+                "load idx:%li\n",
                 stallingStoreIsn, stallingLoadIdx);
         stalled = false;
         stallingStoreIsn = 0;
@@ -1282,7 +1282,7 @@ LSQUnit::cacheLineSize()
 }
 
 Fault
-LSQUnit::read(LSQRequest *request, int load_idx)
+LSQUnit::read(LSQRequest *request, ssize_t load_idx)
 {
     LQEntry& load_entry = loadQueue[load_idx];
     const DynInstPtr& load_inst = load_entry.instruction();
@@ -1567,7 +1567,7 @@ LSQUnit::read(LSQRequest *request, int load_idx)
 }
 
 Fault
-LSQUnit::write(LSQRequest *request, uint8_t *data, int store_idx)
+LSQUnit::write(LSQRequest *request, uint8_t *data, ssize_t store_idx)
 {
     assert(storeQueue[store_idx].valid());
 

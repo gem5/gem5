@@ -1432,7 +1432,7 @@ LSQ::UnsquashableDirectRequest::finish(const Fault &fault,
 }
 
 Fault
-LSQ::read(LSQRequest* request, int load_idx)
+LSQ::read(LSQRequest* request, ssize_t load_idx)
 {
     assert(request->req()->contextId() == request->contextId());
     ThreadID tid = cpu->contextToThread(request->req()->contextId());
@@ -1441,7 +1441,7 @@ LSQ::read(LSQRequest* request, int load_idx)
 }
 
 Fault
-LSQ::write(LSQRequest* request, uint8_t *data, int store_idx)
+LSQ::write(LSQRequest* request, uint8_t *data, ssize_t store_idx)
 {
     ThreadID tid = cpu->contextToThread(request->req()->contextId());
 
