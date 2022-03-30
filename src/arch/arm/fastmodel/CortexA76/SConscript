@@ -25,9 +25,6 @@
 
 Import('*')
 
-if not env['CONF']['USE_ARM_FASTMODEL']:
-    Return()
-
 protocol_dir = Dir('..').Dir('protocol')
 
 for name in ('x1', 'x2', 'x3', 'x4'):
@@ -39,7 +36,8 @@ for name in ('x1', 'x2', 'x3', 'x4'):
 
 SimObject('FastModelCortexA76.py', sim_objects=[
     'FastModelCortexA76', 'FastModelCortexA76Cluster'] +
-    [f'FastModelScxEvsCortexA76x{num}' for num in (1, 2, 3, 4)])
-Source('cortex_a76.cc')
-Source('evs.cc')
-Source('thread_context.cc')
+    [f'FastModelScxEvsCortexA76x{num}' for num in (1, 2, 3, 4)],
+    tags='arm fastmodel')
+Source('cortex_a76.cc', tags='arm fastmodel')
+Source('evs.cc', tags='arm fastmodel')
+Source('thread_context.cc', tags='arm fastmodel')

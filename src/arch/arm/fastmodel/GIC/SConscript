@@ -25,13 +25,11 @@
 
 Import('*')
 
-if not env['CONF']['USE_ARM_FASTMODEL']:
-    Return()
-
 protocol_dir = Dir('..').Dir('protocol')
 
 ArmFastModelComponent(File('GIC.sgproj'), File('GIC.lisa'),
                       protocol_dir.File('SignalInterruptProtocol.lisa')
                       ).prepare_env(env)
-SimObject('FastModelGIC.py', sim_objects=['SCFastModelGIC', 'FastModelGIC'])
-Source('gic.cc')
+SimObject('FastModelGIC.py', sim_objects=['SCFastModelGIC', 'FastModelGIC'],
+        tags='arm fastmodel')
+Source('gic.cc', tags='arm fastmodel')

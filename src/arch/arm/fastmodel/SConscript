@@ -48,13 +48,11 @@ from gem5_scons import Transform, warning, error
 import os.path
 
 if env['CONF']['USE_ARM_FASTMODEL']:
-    if not env['CONF']['USE_SYSTEMC']:
+    if env['CONF']['USE_SYSTEMC']:
+        env.TagImplies('arm fastmodel', 'arm isa')
+    else:
         warning('ARM Fast Models require systemc support')
         env['CONF']['USE_ARM_FASTMODEL'] = False
-        Return()
-
-if not env['CONF']['USE_ARM_FASTMODEL']:
-    Return()
 
 
 systemc_home = Dir('#/src/systemc/ext/systemc_home')
@@ -144,11 +142,11 @@ fm_static_libs = (
     'IrisSupport',
 )
 for lib in fm_static_libs:
-    SourceLib(staticify(env, lib))
+    SourceLib(staticify(env, lib), tags='arm fastmodel')
 
-SourceLib('atomic')
-SourceLib('dl')
-SourceLib('rt')
+SourceLib('atomic', tags='arm fastmodel')
+SourceLib('dl', tags='arm fastmodel')
+SourceLib('rt', tags='arm fastmodel')
 
 class ProjectFileParser(Grammar):
     def __init__(self):
@@ -399,7 +397,9 @@ class ArmFastModelComponent(object):
         env.Append(LIBPATH=self.libpaths)
         env.AddLocalRPATH(*self.rpaths)
         env.Append(CPPPATH=self.headerpaths)
-        env.Prepend(LIBS=self.libs)
+        # Put these libraries earlier in the list by setting priority.
+        for lib in self.libs:
+            SourceLib(lib, priority=1, tags='arm fastmodel')
 
     def simgen_builder(self, target, source, env):
         cmd = self.simgen_cmd
@@ -414,10 +414,10 @@ class ArmFastModelComponent(object):
 
 Export('ArmFastModelComponent')
 
-PySource('m5', 'arm_fast_model.py')
-Source('fastmodel.cc')
+PySource('m5', 'arm_fast_model.py', tags='arm fastmodel')
+Source('fastmodel.cc', tags='arm fastmodel')
 
 SimObject('FastModel.py', sim_objects=[
-    'AmbaToTlmBridge64', 'AmbaFromTlmBridge64'])
-Source('amba_to_tlm_bridge.cc')
-Source('amba_from_tlm_bridge.cc')
+    'AmbaToTlmBridge64', 'AmbaFromTlmBridge64'], tags='arm fastmodel')
+Source('amba_to_tlm_bridge.cc', tags='arm fastmodel')
+Source('amba_from_tlm_bridge.cc', tags='arm fastmodel')
