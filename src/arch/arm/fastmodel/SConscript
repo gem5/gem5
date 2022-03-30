@@ -74,8 +74,6 @@ pvlib_home, maxcore_home, armlmd_license_file = \
 
 pvlib_home = Dir(pvlib_home)
 maxcore_home = Dir(maxcore_home)
-armlmd_license_file = File(armlmd_license_file)
-
 
 pvlib_flavor = env['CONF']['PVLIB_FLAVOR']
 pvlib_lib_dir = pvlib_home.Dir('lib').Dir(pvlib_flavor)
