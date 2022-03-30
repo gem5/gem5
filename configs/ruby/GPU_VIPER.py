@@ -518,7 +518,7 @@ def construct_gpudirs(options, system, ruby_system, network):
         dir_cntrl.responseFromMemory = MessageBuffer()
 
         # Create memory controllers too
-        mem_type = ObjectList.mem_list.get(options.mem_type)
+        mem_type = ObjectList.mem_list.get(options.dgpu_mem_type)
         dram_intf = MemConfig.create_mem_intf(mem_type, gpu_mem_range, i,
             int(math.log(options.dgpu_num_dirs, 2)), options.cacheline_size,
             xor_low_bit)
