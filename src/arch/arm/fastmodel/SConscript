@@ -36,6 +36,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from itertools import cycle
+import logging
 import shlex
 
 Import('*')
@@ -147,6 +148,19 @@ SourceLib('dl')
 SourceLib('rt')
 
 class ProjectFileParser(Grammar):
+    def __init__(self):
+        self.log = logging.getLogger('fm_proj_ply')
+        if GetOption('verbose'):
+            self.log.setLevel(logging.DEBUG)
+
+        self.yacc_kwargs['write_tables'] = False
+
+        self.yacc_kwargs['debuglog'] = self.log
+        self.yacc_kwargs['errorlog'] = self.log
+
+        self.lex_kwargs['debuglog'] = self.log
+        self.lex_kwargs['errorlog'] = self.log
+
     class Param(object):
         def __init__(self, is_object):
             self.is_object = is_object

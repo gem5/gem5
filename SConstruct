@@ -85,6 +85,9 @@ from os.path import abspath, dirname, expanduser
 from os.path import isdir, isfile
 from os.path import join, split
 
+import logging
+logging.basicConfig()
+
 # SCons imports
 import SCons
 import SCons.Node
