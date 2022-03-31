@@ -57,6 +57,7 @@
 #include "gpu-compute/gpu_compute_driver.hh"
 #include "gpu-compute/hsa_queue_entry.hh"
 #include "params/GPUCommandProcessor.hh"
+#include "sim/full_system.hh"
 
 namespace gem5
 {
@@ -218,6 +219,10 @@ class GPUCommandProcessor : public DmaVirtDevice
                     "space.\n",
                     task->amdQueue.compute_tmpring_size_wavesize * 1024,
                     task->privMemPerItem());
+
+            // Currently this is not supported in GPU full system
+            fatal_if(FullSystem,
+                     "Runtime dynamic scratch allocation not supported");
 
             updateHsaSignal(task->amdQueue.queue_inactive_signal.handle, 1,
                             [ = ] (const uint64_t &dma_buffer)
