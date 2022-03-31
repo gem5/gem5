@@ -51,6 +51,7 @@
 #include "base/statistics.hh"
 #include "debug/RubyCacheTrace.hh"
 #include "debug/RubySystem.hh"
+#include "enums/RubyProtocols.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/system/DMASequencer.hh"
@@ -104,8 +105,16 @@ RubySystem::registerNetwork(Network* network_ptr)
 }
 
 void
-RubySystem::registerAbstractController(AbstractController* cntrl)
+RubySystem::registerAbstractController(AbstractController* cntrl,
+                                       enums::RubyProtocols protocol)
 {
+    // Check and enforce that controllers can only come from one protocol
+    fatal_if(protocol != getProtocol(),
+             "Ruby only supports using machines from a single protocol. "
+             "The current machine %s is part of the protocol %s. Other "
+             "controllers instantiated were part of protocol %s.",
+             cntrl->name(), enums::RubyProtocolsStrings[protocol],
+             enums::RubyProtocolsStrings[getProtocol()]);
     m_abs_cntrl_vec.push_back(cntrl);
 
     MachineID id = cntrl->getMachineID();

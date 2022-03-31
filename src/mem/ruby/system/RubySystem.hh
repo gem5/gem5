@@ -35,6 +35,7 @@
 #ifndef __MEM_RUBY_SYSTEM_RUBYSYSTEM_HH__
 #define __MEM_RUBY_SYSTEM_RUBYSYSTEM_HH__
 
+#include <string>
 #include <unordered_map>
 
 #include "base/callback.hh"
@@ -105,7 +106,7 @@ class RubySystem : public ClockedObject
     bool functionalWrite(Packet *ptr);
 
     void registerNetwork(Network*);
-    void registerAbstractController(AbstractController*);
+    void registerAbstractController(AbstractController*, enums::RubyProtocols);
     void registerMachineID(const MachineID& mach_id, Network* network);
     void registerRequestorIDs();
 
