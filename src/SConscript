@@ -38,6 +38,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import collections
+import copy
 import distutils.spawn
 import itertools
 import os
@@ -329,13 +330,13 @@ class TopLevelBase(object, metaclass=TopLevelMeta):
         self.dir = Dir('.')
 
     def sources(self, env):
-        srcs = self.srcs
+        srcs = copy.copy(self.srcs)
         for f in self.filters:
             srcs += Source.all.apply_filter(env, f)
         return srcs
 
     def libs(self, env):
-        libs = self.sourceLibs
+        libs = copy.copy(self.sourceLibs)
         for f in self.filters:
             libs += SourceLib.all.apply_filter(env, f)
         return libs
