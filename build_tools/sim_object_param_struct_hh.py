@@ -73,7 +73,7 @@ ports = sim_object._ports.local
 try:
     ptypes = [p.ptype for p in params]
 except:
-    print(sim_object, p, p.ptype_str)
+    print(sim_object)
     print(params)
     raise
 
