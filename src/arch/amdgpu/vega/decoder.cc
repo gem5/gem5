@@ -4438,14 +4438,13 @@ namespace VegaISA
     GPUStaticInst*
     Decoder::decode_OP_SOP2__S_MUL_HI_U32(MachInst iFmt)
     {
-        fatal("Trying to decode instruction without a class\n");
-        return nullptr;
+        return new Inst_SOP2__S_MUL_HI_U32(&iFmt->iFmt_SOP2);
     }
 
     GPUStaticInst*
     Decoder::decode_OP_SOP2__S_MUL_HI_I32(MachInst iFmt)
     {
-        return new Inst_SOP2__S_MUL_I32(&iFmt->iFmt_SOP2);
+        return new Inst_SOP2__S_MUL_HI_I32(&iFmt->iFmt_SOP2);
     }
 
     GPUStaticInst*

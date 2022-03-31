@@ -1473,6 +1473,68 @@ namespace VegaISA
     {
         panicUnimplemented();
     } // execute
+    // --- Inst_SOP2__S_MUL_HI_U32 class methods ---
+
+    Inst_SOP2__S_MUL_HI_U32::Inst_SOP2__S_MUL_HI_U32(InFmt_SOP2 *iFmt)
+        : Inst_SOP2(iFmt, "s_mul_hi_u32")
+    {
+        setFlag(ALU);
+    } // Inst_SOP2__S_MUL_HI_U32
+
+    Inst_SOP2__S_MUL_HI_U32::~Inst_SOP2__S_MUL_HI_U32()
+    {
+    } // ~Inst_SOP2__S_MUL_HI_U32
+
+    // --- description from .arch file ---
+    // D.u = (S0.u * S1.u) >> 32;
+    void
+    Inst_SOP2__S_MUL_HI_U32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        ConstScalarOperandU32 src0(gpuDynInst, instData.SSRC0);
+        ConstScalarOperandU32 src1(gpuDynInst, instData.SSRC1);
+        ScalarOperandU32 sdst(gpuDynInst, instData.SDST);
+
+        src0.read();
+        src1.read();
+
+        VecElemU64 tmp_dst =
+            ((VecElemU64)src0.rawData() * (VecElemU64)src1.rawData());
+        sdst = (tmp_dst >> 32);
+
+        sdst.write();
+    } // execute
+    // --- Inst_SOP2__S_MUL_HI_I32 class methods ---
+
+    Inst_SOP2__S_MUL_HI_I32::Inst_SOP2__S_MUL_HI_I32(InFmt_SOP2 *iFmt)
+        : Inst_SOP2(iFmt, "s_mul_hi_i32")
+    {
+        setFlag(ALU);
+    } // Inst_SOP2__S_MUL_HI_I32
+
+    Inst_SOP2__S_MUL_HI_I32::~Inst_SOP2__S_MUL_HI_I32()
+    {
+    } // ~Inst_SOP2__S_MUL_HI_I32
+
+    // --- description from .arch file ---
+    // D.u = (S0.u * S1.u) >> 32;
+    void
+    Inst_SOP2__S_MUL_HI_I32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        ConstScalarOperandI32 src0(gpuDynInst, instData.SSRC0);
+        ConstScalarOperandI32 src1(gpuDynInst, instData.SSRC1);
+        ScalarOperandI32 sdst(gpuDynInst, instData.SDST);
+
+        src0.read();
+        src1.read();
+
+        VecElemI64 tmp_src0 =
+            sext<std::numeric_limits<VecElemI64>::digits>(src0.rawData());
+        VecElemI64 tmp_src1 =
+            sext<std::numeric_limits<VecElemI64>::digits>(src1.rawData());
+        sdst = (VecElemI32)((tmp_src0 * tmp_src1) >> 32);
+
+        sdst.write();
+    } // execute
     // --- Inst_SOPK__S_MOVK_I32 class methods ---
 
     Inst_SOPK__S_MOVK_I32::Inst_SOPK__S_MOVK_I32(InFmt_SOPK *iFmt)
