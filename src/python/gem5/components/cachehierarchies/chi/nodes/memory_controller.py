@@ -28,7 +28,7 @@ from typing import List
 
 from m5.objects import (
     AddrRange,
-    Memory_Controller,
+    CHI_Memory_Controller,
     MessageBuffer,
     Port,
     RubyNetwork,
@@ -47,7 +47,7 @@ class MemCtrlMessageBuffer(MessageBuffer):
     ordered = True
 
 
-class MemoryController(Memory_Controller):
+class MemoryController(CHI_Memory_Controller):
     """A controller that connects to memory"""
 
     _version = 0
