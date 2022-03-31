@@ -80,7 +80,8 @@ def _get_resources_json_at_url(url: str, use_caching: bool = True) -> Dict:
 
     file_path = os.path.join(
         gettempdir(),
-        f"gem5-resources-{hashlib.md5(url.encode()).hexdigest()}.base64",
+        f"gem5-resources-{hashlib.md5(url.encode()).hexdigest()}"
+        f"-{str(os.getuid())}.base64",
     )
 
     # We apply a lock on the resources file for when it's downloaded, or
