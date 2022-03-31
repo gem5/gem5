@@ -98,6 +98,12 @@ GpuTLB::GpuTLB(const VegaGPUTLBParams &p)
 
     // assuming one walker per TLB, set our walker's TLB to this TLB.
     walker->setTLB(this);
+
+    // gpuDevice should be non-null in full system only and is set by GpuTLB
+    // params from the config file.
+    if (gpuDevice) {
+        gpuDevice->getVM().registerTLB(this);
+    }
 }
 
 GpuTLB::~GpuTLB()

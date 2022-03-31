@@ -143,6 +143,12 @@ class AMDGPUVM : public Serializable
     uint64_t mmhubBase = 0x0;
     uint64_t mmhubTop = 0x0;
 
+    /**
+     * List of TLBs associated with the GPU device. This is used for flushing
+     * the TLBs upon a driver request.
+     */
+    std::vector<VegaISA::GpuTLB *> gpu_tlbs;
+
   public:
     AMDGPUVM();
 
@@ -275,6 +281,13 @@ class AMDGPUVM : public Serializable
         assert(vmid > 0 && vmid < vmContexts.size());
         return vmContexts[vmid].ptStart;
     }
+
+    /**
+     * Control methods for TLBs associated with the GPU device.
+     */
+    void registerTLB(VegaISA::GpuTLB *tlb);
+    void invalidateTLBs();
+
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

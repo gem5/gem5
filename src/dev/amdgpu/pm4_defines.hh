@@ -56,6 +56,7 @@ enum it_opcode_type
     IT_RELEASE_MEM                       = 0x49,
     IT_SET_UCONFIG_REG                   = 0x79,
     IT_SWITCH_BUFFER                     = 0x8B,
+    IT_INVALIDATE_TLBS                   = 0x98,
     IT_MAP_PROCESS                       = 0xA1,
     IT_MAP_QUEUES                        = 0xA2,
     IT_UNMAP_QUEUES                      = 0xA3,

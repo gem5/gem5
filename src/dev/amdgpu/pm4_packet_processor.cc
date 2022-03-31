@@ -305,6 +305,13 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
                     dmaBuffer);
         } break;
 
+      case IT_INVALIDATE_TLBS: {
+        DPRINTF(PM4PacketProcessor, "Functionaly invalidating all TLBs\n");
+        gpuDevice->getVM().invalidateTLBs();
+        q->incRptr((header.count + 1) * sizeof(uint32_t));
+        decodeNext(q);
+        } break;
+
       default: {
         warn("PM4 packet opcode 0x%x not supported.\n", header.opcode);
         DPRINTF(PM4PacketProcessor, "PM4 packet opcode 0x%x not supported.\n",
