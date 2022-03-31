@@ -117,14 +117,6 @@ PySource('gem5.components.cachehierarchies.ruby',
     'gem5/components/cachehierarchies/ruby/mi_example_cache_hierarchy.py')
 PySource('gem5.components.cachehierarchies.ruby.caches',
     'gem5/components/cachehierarchies/ruby/caches/__init__.py')
-PySource('gem5.components.cachehierarchies.ruby.caches',
-    'gem5/components/cachehierarchies/ruby/caches/abstract_directory.py')
-PySource('gem5.components.cachehierarchies.ruby.caches',
-    'gem5/components/cachehierarchies/ruby/caches/abstract_dma_controller.py')
-PySource('gem5.components.cachehierarchies.ruby.caches',
-    'gem5/components/cachehierarchies/ruby/caches/abstract_l1_cache.py')
-PySource('gem5.components.cachehierarchies.ruby.caches',
-    'gem5/components/cachehierarchies/ruby/caches/abstract_l2_cache.py')
 PySource('gem5.components.cachehierarchies.ruby.caches.mesi_two_level',
     'gem5/components/cachehierarchies/ruby/caches/mesi_two_level/__init__.py')
 PySource('gem5.components.cachehierarchies.ruby.caches.mesi_two_level',

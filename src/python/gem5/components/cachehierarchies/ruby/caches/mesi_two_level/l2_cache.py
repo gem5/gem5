@@ -24,19 +24,32 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ..abstract_l2_cache import AbstractL2Cache
-from ......utils.override import *
-
-from m5.objects import MessageBuffer, RubyCache
+from m5.objects import (
+    MessageBuffer,
+    MESI_Two_Level_L2Cache_Controller,
+    RubyCache,
+)
 
 import math
 
 
-class L2Cache(AbstractL2Cache):
+class L2Cache(MESI_Two_Level_L2Cache_Controller):
+
+    _version = 0
+
+    @classmethod
+    def versionCount(cls):
+        cls._version += 1  # Use count for this particular type
+        return cls._version - 1
+
     def __init__(
         self, l2_size, l2_assoc, network, num_l2Caches, cache_line_size
     ):
-        super().__init__(network, cache_line_size)
+        super().__init__()
+
+        self.version = self.versionCount()
+        self._cache_line_size = cache_line_size
+        self.connectQueues(network)
 
         # This is the cache memory object that stores the cache data and tags
         self.L2cache = RubyCache(
@@ -52,7 +65,6 @@ class L2Cache(AbstractL2Cache):
         bits = int(math.log(self._cache_line_size, 2)) + l2_bits
         return bits
 
-    @overrides(AbstractL2Cache)
     def connectQueues(self, network):
         self.DirRequestFromL2Cache = MessageBuffer()
         self.DirRequestFromL2Cache.out_port = network.in_port

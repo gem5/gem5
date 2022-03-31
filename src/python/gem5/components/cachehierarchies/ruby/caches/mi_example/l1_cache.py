@@ -24,15 +24,29 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ......utils.override import overrides
+import math
+
+from .....processors.cpu_types import CPUTypes
 from .....processors.abstract_core import AbstractCore
 from ......isas import ISA
-from ..abstract_l1_cache import AbstractL1Cache
 
-from m5.objects import MessageBuffer, RubyCache, ClockDomain
+from m5.objects import (
+    MessageBuffer,
+    MI_example_L1Cache_Controller,
+    RubyCache,
+    ClockDomain,
+)
 
 
-class L1Cache(AbstractL1Cache):
+class L1Cache(MI_example_L1Cache_Controller):
+
+    _version = 0
+
+    @classmethod
+    def versionCount(cls):
+        cls._version += 1  # Use count for this particular type
+        return cls._version - 1
+
     def __init__(
         self,
         size: str,
@@ -43,7 +57,10 @@ class L1Cache(AbstractL1Cache):
         target_isa: ISA,
         clk_domain: ClockDomain,
     ):
-        super().__init__(network, cache_line_size)
+        super().__init__()
+        self.version = self.versionCount()
+        self._cache_line_size = cache_line_size
+        self.connectQueues(network)
 
         self.cacheMemory = RubyCache(
             size=size, assoc=assoc, start_index_bit=self.getBlockSizeBits()

@@ -25,16 +25,29 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from .....processors.abstract_core import AbstractCore
+from .....processors.cpu_types import CPUTypes
 from ......isas import ISA
-from ..abstract_l1_cache import AbstractL1Cache
-from ......utils.override import *
 
-from m5.objects import MessageBuffer, RubyPrefetcher, RubyCache, ClockDomain
+from m5.objects import (
+    MESI_Two_Level_L1Cache_Controller,
+    MessageBuffer,
+    RubyPrefetcher,
+    RubyCache,
+    ClockDomain,
+)
 
 import math
 
 
-class L1Cache(AbstractL1Cache):
+class L1Cache(MESI_Two_Level_L1Cache_Controller):
+
+    _version = 0
+
+    @classmethod
+    def versionCount(cls):
+        cls._version += 1  # Use count for this particular type
+        return cls._version - 1
+
     def __init__(
         self,
         l1i_size,
@@ -51,7 +64,11 @@ class L1Cache(AbstractL1Cache):
         """Creating L1 cache controller. Consist of both instruction
         and data cache.
         """
-        super().__init__(network, cache_line_size)
+        super().__init__()
+
+        self.version = self.versionCount()
+        self._cache_line_size = cache_line_size
+        self.connectQueues(network)
 
         # This is the cache memory object that stores the cache data and tags
         self.L1Icache = RubyCache(
