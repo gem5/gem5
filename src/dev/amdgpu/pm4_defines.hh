@@ -43,9 +43,11 @@ namespace gem5
 {
 
 /**
- * PM4 opcodes. Taken from linux tree at
- * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/rocm-4.3.x/
+ * PM4 opcodes. Taken from linux tree from the following locations:
+ * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/roc-4.3.x/
  *     drivers/gpu/drm/amd/amdkfd/kfd_pm4_opcodes.h
+ * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/roc-4.3.x/
+ *     drivers/gpu/drm/amd/amdgpu/soc15d.h
  */
 enum it_opcode_type
 {

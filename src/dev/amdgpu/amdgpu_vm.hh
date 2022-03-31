@@ -45,9 +45,9 @@
  * MMIO offsets for graphics register bus manager (GRBM). These values were
  * taken from linux header files. The header files can be found here:
  *
- * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/rocm-4.2.0/
+ * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/roc-4.3.x/
  *      drivers/gpu/drm/amd/include/ asic_reg/gc/gc_9_0_offset.h
- * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/rocm-4.2.0/
+ * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/roc-4.3.x/
  *      drivers/gpu/drm/amd/include/ asic_reg/mmhub/mmhub_1_0_offset.h
  */
 

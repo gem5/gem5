@@ -35,7 +35,7 @@
 /**
  * Commands for the SDMA engine. The header files can be found here:
  *
- * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/rocm-4.3.x/
+ * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/roc-4.3.x/
  *      drivers/gpu/drm/amd/amdgpu/vega10_sdma_pkt_open.h
  */
 #define SDMA_OP_NOP  0

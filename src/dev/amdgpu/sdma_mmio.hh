@@ -36,9 +36,9 @@
  * MMIO offsets for SDMA engine. These values were taken from the linux header
  * for SDMA. The header files can be found here:
  *
- * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/rocm-4.3.x/
+ * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/roc-4.3.x/
  *      drivers/gpu/drm/amd/include/asic_reg/sdma0/sdma0_4_0_offset.h
- * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/rocm-4.3.x/
+ * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/roc-4.3.x/
  *     drivers/gpu/drm/amd/include/asic_reg/sdma1/sdma1_4_0_offset.h
  */
 #define mmSDMA_GFX_RB_CNTL                                0x0080

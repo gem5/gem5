@@ -38,7 +38,7 @@ namespace gem5
 
 /**
  * Queue descriptor with relevant MQD attributes. Taken from
- * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/rocm-4.3.x/
+ * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/roc-4.3.x/
  *     drivers/gpu/drm/amd/include/v9_structs.h
  */
 typedef struct GEM5_PACKED
@@ -186,7 +186,7 @@ typedef struct GEM5_PACKED
 
 /**
  * Queue descriptor for SDMA-based user queues (RLC queues). Taken from
- * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/rocm-4.2.0/
+ * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/roc-4.3.x/
  *     drivers/gpu/drm/amd/include/v9_structs.h
  */
 typedef struct GEM5_PACKED

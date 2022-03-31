@@ -50,7 +50,7 @@ namespace gem5
 
 /**
  * Defines from driver code. Taken from
- * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/rocm-4.2.0/
+ * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/roc-4.3.x/
  *     drivers/gpu/drm/amd/include/soc15_ih_clientid.h
  */
 enum soc15_ih_clientid
