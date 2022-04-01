@@ -268,8 +268,7 @@ RubyPort::MemResponsePort::recvTimingReq(PacketPtr pkt)
     // Check for pio requests and directly send them to the dedicated
     // pio port.
     if (pkt->cmd != MemCmd::MemSyncReq) {
-        if (!isPhysMemAddress(pkt)) {
-            assert(!pkt->req->isHTMCmd());
+        if (!pkt->req->isMemMgmt() && !isPhysMemAddress(pkt)) {
             assert(ruby_port->memRequestPort.isConnected());
             DPRINTF(RubyPort, "Request address %#x assumed to be a "
                     "pio address\n", pkt->getAddr());
