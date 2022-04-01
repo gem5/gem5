@@ -383,7 +383,7 @@ let {{
         Request::Flags memAccessFlags =
             Request::STRICT_ORDER | Request::TLBI;
 
-        fault = xc->initiateSpecialMemCmd(memAccessFlags);
+        fault = xc->initiateMemMgmtCmd(memAccessFlags);
 
         PendingDvm = true;
     }

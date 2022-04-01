@@ -116,9 +116,9 @@ class ExecContext : public gem5::ExecContext
     }
 
     Fault
-    initiateSpecialMemCmd(Request::Flags flags) override
+    initiateMemMgmtCmd(Request::Flags flags) override
     {
-        panic("ExecContext::initiateSpecialMemCmd() not implemented "
+        panic("ExecContext::initiateMemMgmtCmd() not implemented "
               " on MinorCPU\n");
         return NoFault;
     }

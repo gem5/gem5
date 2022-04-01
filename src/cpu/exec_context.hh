@@ -144,13 +144,13 @@ class ExecContext
     }
 
     /**
-     * Initiate a Special memory command with no valid address.
+     * Initiate a memory management command with no valid address.
      * Currently, these instructions need to bypass squashing in the O3 model
      * Examples include HTM commands and TLBI commands.
      * e.g. tell Ruby we're starting/stopping a HTM transaction,
      *      or tell Ruby to issue a TLBI operation
      */
-    virtual Fault initiateSpecialMemCmd(Request::Flags flags) = 0;
+    virtual Fault initiateMemMgmtCmd(Request::Flags flags) = 0;
 
     /**
      * For atomic-mode contexts, perform an atomic memory write operation.

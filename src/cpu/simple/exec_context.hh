@@ -446,9 +446,9 @@ class SimpleExecContext : public ExecContext
     }
 
     Fault
-    initiateSpecialMemCmd(Request::Flags flags) override
+    initiateMemMgmtCmd(Request::Flags flags) override
     {
-        return cpu->initiateSpecialMemCmd(flags);
+        return cpu->initiateMemMgmtCmd(flags);
     }
 
     /**

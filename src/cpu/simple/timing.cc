@@ -1216,7 +1216,7 @@ TimingSimpleCPU::printAddr(Addr a)
 }
 
 Fault
-TimingSimpleCPU::initiateSpecialMemCmd(Request::Flags flags)
+TimingSimpleCPU::initiateMemMgmtCmd(Request::Flags flags)
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
@@ -1257,7 +1257,7 @@ TimingSimpleCPU::initiateSpecialMemCmd(Request::Flags flags)
             DPRINTF(HtmCpu, "HTMcancel htmUid=%u\n",
                 t_info.getHtmTransactionUid());
         else
-            panic("initiateSpecialMemCmd: unknown HTM CMD");
+            panic("initiateMemMgmtCmd: unknown HTM CMD");
     }
 
     sendData(req, data, nullptr, true);

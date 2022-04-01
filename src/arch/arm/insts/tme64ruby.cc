@@ -77,7 +77,7 @@ Tstart64::initiateAcc(ExecContext *xc,
             memAccessFlags = memAccessFlags | Request::NO_ACCESS;
         }
 
-        fault = xc->initiateSpecialMemCmd(memAccessFlags);
+        fault = xc->initiateMemMgmtCmd(memAccessFlags);
     }
 
     return fault;
@@ -175,7 +175,7 @@ Tcancel64::initiateAcc(ExecContext *xc, Trace::InstRecord *traceData) const
     Request::Flags memAccessFlags =
         Request::STRICT_ORDER|Request::PHYSICAL|Request::HTM_CANCEL;
 
-    fault = xc->initiateSpecialMemCmd(memAccessFlags);
+    fault = xc->initiateMemMgmtCmd(memAccessFlags);
 
     return fault;
 }
@@ -231,7 +231,7 @@ MicroTcommit64::initiateAcc(ExecContext *xc,
         memAccessFlags = memAccessFlags | Request::NO_ACCESS;
     }
 
-    fault = xc->initiateSpecialMemCmd(memAccessFlags);
+    fault = xc->initiateMemMgmtCmd(memAccessFlags);
 
     return fault;
 }

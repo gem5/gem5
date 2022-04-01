@@ -188,7 +188,7 @@ let {{
                 memAccessFlags = memAccessFlags | Request::NO_ACCESS;
             }
 
-            fault = xc->initiateSpecialMemCmd(memAccessFlags);
+            fault = xc->initiateMemMgmtCmd(memAccessFlags);
 
             PendingDvm = false;
         }

@@ -242,7 +242,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     };
 
     Fault
-    initiateSpecialMemCmd(Request::Flags flags) override
+    initiateMemMgmtCmd(Request::Flags flags) override
     {
         panic("not yet supported!");
         return NoFault;

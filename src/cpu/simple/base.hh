@@ -191,14 +191,13 @@ class BaseSimpleCPU : public BaseCPU
     void unserializeThread(CheckpointIn &cp, ThreadID tid) override;
 
     /**
-     * Special memory commands such as hardware transactional memory
-     * commands (HtmCmds) or TLBI commands, e.g. start a
-     * transaction and commit a transaction, are memory operations but are
+     * Memory management commands such as hardware transactional memory
+     * commands or TLB invalidation commands are memory operations but are
      * neither really (true) loads nor stores.
      * For this reason the interface is extended,
-     * and initiateSpecialMemCmd() is used to instigate the command.
+     * and initiateMemMgmtCmd() is used to instigate the command.
      */
-    virtual Fault initiateSpecialMemCmd(Request::Flags flags) = 0;
+    virtual Fault initiateMemMgmtCmd(Request::Flags flags) = 0;
 
 };
 

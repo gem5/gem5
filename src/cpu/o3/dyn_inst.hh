@@ -397,7 +397,7 @@ class DynInst : public ExecContext, public RefCounted
     Fault initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
             const std::vector<bool> &byte_enable) override;
 
-    Fault initiateSpecialMemCmd(Request::Flags flags) override;
+    Fault initiateMemMgmtCmd(Request::Flags flags) override;
 
     Fault writeMem(uint8_t *data, unsigned size, Addr addr,
                    Request::Flags flags, uint64_t *res,

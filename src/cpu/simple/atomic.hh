@@ -224,9 +224,9 @@ class AtomicSimpleCPU : public BaseSimpleCPU
         override;
 
     Fault
-    initiateSpecialMemCmd(Request::Flags flags) override
+    initiateMemMgmtCmd(Request::Flags flags) override
     {
-        panic("initiateSpecialMemCmd() is for timing accesses, and "
+        panic("initiateMemMgmtCmd() is for timing accesses, and "
               "should never be called on AtomicSimpleCPU.\n");
     }
 

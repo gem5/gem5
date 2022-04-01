@@ -325,7 +325,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void finishTranslation(WholeTranslationState *state);
 
     /** hardware transactional memory & TLBI operations **/
-    Fault initiateSpecialMemCmd(Request::Flags flags) override;
+    Fault initiateMemMgmtCmd(Request::Flags flags) override;
 
     void htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
                             HtmFailureFaultCause) override;
