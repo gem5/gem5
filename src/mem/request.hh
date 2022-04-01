@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013,2017-2021 Arm Limited
+ * Copyright (c) 2012-2013,2017-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1018,6 +1018,7 @@ class Request
         return (isTlbi() || isTlbiSync() ||
                 isTlbiExtSync() || isTlbiExtSyncComp());
     }
+    bool isMemMgmt() const { return isTlbiCmd() || isHTMCmd(); }
 
     bool
     isAtomic() const
