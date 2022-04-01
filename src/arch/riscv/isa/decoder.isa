@@ -431,13 +431,35 @@ decode QUADRANT default Unknown::unknown() {
         }
 
         0x04: decode FUNCT3 {
+            0x1: decode FS3 {
+                0x00: IOp::slli({{
+                    Rd = Rs1 << imm;
+                }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                format ROp {
+                    0x0c: decode RS2 {
+                        0x00: clz({{
+                            Rd = clz64(Rs1);
+                        }});
+                        0x01: ctz({{
+                            Rd = ctz64(Rs1);
+                        }});
+                        0x02: cpop({{
+                            Rd = popCount(Rs1);
+                        }});
+                        0x04: sextb({{
+                            Rd = sext<8>(Rs1_ub);
+                        }});
+                        0x05: sexth({{
+                            Rd = sext<16>(Rs1_uh);
+                        }});
+                    }
+                }
+            }
+
             format IOp {
                 0x0: addi({{
                     Rd_sd = Rs1_sd + imm;
                 }});
-                0x1: slli({{
-                    Rd = Rs1 << imm;
-                }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
                 0x2: slti({{
                     Rd = (Rs1_sd < imm) ? 1 : 0;
                 }});
@@ -447,13 +469,36 @@ decode QUADRANT default Unknown::unknown() {
                 0x4: xori({{
                     Rd = Rs1 ^ imm;
                 }}, uint64_t);
-                0x5: decode SRTYPE {
+                0x5: decode FS3 {
                     0x0: srli({{
                         Rd = Rs1 >> imm;
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
-                    0x1: srai({{
+                    0x5: orcb({{
+                        Rd = 0;
+                        Rd |= (Rs1<7:0> ? UINT64_C(0xff) : 0x0);
+                        Rd |= (Rs1<15:8> ? UINT64_C(0xff) : 0x0) << 8;
+                        Rd |= (Rs1<23:16> ? UINT64_C(0xff) : 0x0) << 16;
+                        Rd |= (Rs1<31:24> ? UINT64_C(0xff) : 0x0) << 24;
+                        Rd |= (Rs1<39:32> ? UINT64_C(0xff) : 0x0) << 32;
+                        Rd |= (Rs1<47:40> ? UINT64_C(0xff) : 0x0) << 40;
+                        Rd |= (Rs1<55:48> ? UINT64_C(0xff) : 0x0) << 48;
+                        Rd |= (Rs1<63:56> ? UINT64_C(0xff) : 0x0) << 56;
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0x8: srai({{
                         Rd_sd = Rs1_sd >> imm;
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0xc: rori({{
+                        Rd = (Rs1 >> imm) | (Rs1 << ((64 - imm) & (64 - 1)));
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0xd: decode RS2 {
+                        0x18: rev8({{
+                            Rd = 0;
+                            Rd |= ((Rs1 & 0xffULL) << 56) | (((Rs1 >> 56) & 0xffULL));
+                            Rd |= (((Rs1 >> 8) & 0xffULL) << 48) | (((Rs1 >> 48) & 0xffULL) << 8);
+                            Rd |= (((Rs1 >> 16) & 0xffULL) << 40) | (((Rs1 >> 40) & 0xffULL) << 16);
+                            Rd |= (((Rs1 >> 24) & 0xffULL) << 32) | (((Rs1 >> 32) & 0xffULL) << 24);
+                        }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    }
                 }
                 0x6: ori({{
                     Rd = Rs1 | imm;
@@ -473,15 +518,34 @@ decode QUADRANT default Unknown::unknown() {
                 0x0: addiw({{
                     Rd_sw = (int32_t)(Rs1_sw + imm);
                 }}, int32_t);
-                0x1: slliw({{
-                    Rd_sd = Rs1_sw << imm;
-                }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
-                0x5: decode SRTYPE {
+                0x1: decode FS3 {
+                    0x0: slliw({{
+                        Rd_sd = Rs1_sw << imm;
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
+                    0x1: slliuw({{
+                        Rd = ((uint64_t)(Rs1_uw)) << imm;
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
+                    0xc: decode FS2 {
+                        0x0: clzw({{
+                            Rd = clz32(Rs1);
+                        }});
+                        0x1: ctzw({{
+                            Rd = ctz32(Rs1);
+                        }});
+                        0x2: cpopw({{
+                            Rd = popCount(Rs1<31:0>);
+                        }});
+                    }
+                }
+                0x5: decode FS3 {
                     0x0: srliw({{
                         Rd_sd = (int32_t)(Rs1_uw >> imm);
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
-                    0x1: sraiw({{
+                    0x8: sraiw({{
                         Rd_sd = Rs1_sw >> imm;
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
+                    0xc: roriw({{
+                        Rd = (int32_t) ((Rs1_uw >> imm) | (Rs1_uw << ((32 - imm) & (32 - 1))));
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
                 }
             }
@@ -712,6 +776,10 @@ decode QUADRANT default Unknown::unknown() {
                         Rd = negate ? ~res + (Rs1_sd*Rs2_sd == 0 ? 1 : 0)
                                     : res;
                     }}, IntMultOp);
+                    0x30: rol({{
+                        int shamt = Rs2 & (64 - 1);
+                        Rd = (Rs1 << shamt) | (Rs1 >> ((64 - shamt) & (64 - 1)));
+                    }});
                 }
                 0x2: decode FUNCT7 {
                     0x0: slt({{
@@ -737,6 +805,9 @@ decode QUADRANT default Unknown::unknown() {
                                        carry;
                         Rd = negate ? ~res + (Rs1_sd*Rs2 == 0 ? 1 : 0) : res;
                     }}, IntMultOp);
+                    0x10: sh1add({{
+                        Rd = (Rs1 << 1) + Rs2;
+                    }});
                 }
                 0x3: decode FUNCT7 {
                     0x0: sltu({{
@@ -773,6 +844,15 @@ decode QUADRANT default Unknown::unknown() {
                             Rd_sd = Rs1_sd/Rs2_sd;
                         }
                     }}, IntDivOp);
+                    0x5: min({{
+                        Rd = (((int64_t) Rs1) < ((int64_t) Rs2)) ? Rs1 : Rs2;
+                    }});
+                    0x10: sh2add({{
+                        Rd = (Rs1 << 2) + Rs2;
+                    }});
+                    0x20: xnor({{
+                        Rd = ~(Rs1 ^ Rs2);
+                    }});
                 }
                 0x5: decode FUNCT7 {
                     0x0: srl({{
@@ -787,6 +867,13 @@ decode QUADRANT default Unknown::unknown() {
                     }}, IntDivOp);
                     0x20: sra({{
                         Rd_sd = Rs1_sd >> Rs2<5:0>;
+                    }});
+                    0x5: minu({{
+                        Rd = Rs1 < Rs2 ? Rs1 : Rs2;
+                    }});
+                    0x30: ror({{
+                        int shamt = Rs2 & (64 - 1);
+                        Rd = (Rs1 >> shamt) | (Rs1 << ((64 - shamt) & (64 - 1)));
                     }});
                 }
                 0x6: decode FUNCT7 {
@@ -804,6 +891,15 @@ decode QUADRANT default Unknown::unknown() {
                             Rd = Rs1_sd%Rs2_sd;
                         }
                     }}, IntDivOp);
+                    0x5: max({{
+                        Rd = (((int64_t) Rs1) > ((int64_t) Rs2)) ? Rs1 : Rs2;
+                    }});
+                    0x10: sh3add({{
+                        Rd = (Rs1 << 3) + Rs2;
+                    }});
+                    0x20: orn({{
+                        Rd = Rs1 | (~Rs2);
+                    }});
                 }
                 0x7: decode FUNCT7 {
                     0x0: and({{
@@ -816,6 +912,12 @@ decode QUADRANT default Unknown::unknown() {
                             Rd = Rs1%Rs2;
                         }
                     }}, IntDivOp);
+                    0x5: maxu({{
+                        Rd = Rs1 > Rs2 ? Rs1 : Rs2;
+                    }});
+                    0x20: andn({{
+                        Rd = Rs1 & (~Rs2);
+                    }});
                 }
             }
         }
@@ -833,23 +935,45 @@ decode QUADRANT default Unknown::unknown() {
                     0x1: mulw({{
                         Rd_sd = (int32_t)(Rs1_sw*Rs2_sw);
                     }}, IntMultOp);
+                    0x4: adduw({{
+                        Rd = Rs1_uw + Rs2;
+                    }});
                     0x20: subw({{
                         Rd_sd = Rs1_sw - Rs2_sw;
                     }});
                 }
-                0x1: sllw({{
-                    Rd_sd = Rs1_sw << Rs2<4:0>;
-                }});
-                0x4: divw({{
-                    if (Rs2_sw == 0) {
-                        Rd_sd = -1;
-                    } else if (Rs1_sw == std::numeric_limits<int32_t>::min()
-                            && Rs2_sw == -1) {
-                        Rd_sd = std::numeric_limits<int32_t>::min();
-                    } else {
-                        Rd_sd = Rs1_sw/Rs2_sw;
-                    }
-                }}, IntDivOp);
+                0x1: decode FUNCT7 {
+                    0x0: sllw({{
+                        Rd_sd = Rs1_sw << Rs2<4:0>;
+                    }});
+                    0x30: rolw({{
+                        int shamt = Rs2 & (32 - 1);
+                        Rd = (int32_t) ((Rs1_uw << shamt) | (Rs1_uw >> ((32 - shamt) & (32 - 1))));
+                    }});
+                }
+                0x2: decode FUNCT7 {
+                    0x10: sh1adduw({{
+                        Rd = (((uint64_t)Rs1_uw) << 1) + Rs2;
+                    }});
+                }
+                0x4: decode FUNCT7 {
+                    0x1: divw({{
+                        if (Rs2_sw == 0) {
+                            Rd_sd = -1;
+                        } else if (Rs1_sw == std::numeric_limits<int32_t>::min()
+                                && Rs2_sw == -1) {
+                            Rd_sd = std::numeric_limits<int32_t>::min();
+                        } else {
+                            Rd_sd = Rs1_sw/Rs2_sw;
+                        }
+                    }}, IntDivOp);
+                    0x4: zexth ({{
+                        Rd = Rs1_uh;
+                    }});
+                    0x10: sh2adduw({{
+                        Rd = (((uint64_t)Rs1_uw) << 2) + Rs2;
+                    }});
+                }
                 0x5: decode FUNCT7 {
                     0x0: srlw({{
                         Rd_sd = (int32_t)(Rs1_uw >> Rs2<4:0>);
@@ -864,17 +988,26 @@ decode QUADRANT default Unknown::unknown() {
                     0x20: sraw({{
                         Rd_sd = Rs1_sw >> Rs2<4:0>;
                     }});
+                    0x30: rorw({{
+                        int shamt = Rs2 & (32 - 1);
+                        Rd = (int32_t) ((Rs1_uw >> shamt) | (Rs1_uw << ((32 - shamt) & (32 - 1))));
+                    }});
                 }
-                0x6: remw({{
-                    if (Rs2_sw == 0) {
-                        Rd_sd = Rs1_sw;
-                    } else if (Rs1_sw == std::numeric_limits<int32_t>::min()
-                            && Rs2_sw == -1) {
-                        Rd_sd = 0;
-                    } else {
-                        Rd_sd = Rs1_sw%Rs2_sw;
-                    }
-                }}, IntDivOp);
+                0x6:  decode FUNCT7 {
+                    0x1: remw({{
+                        if (Rs2_sw == 0) {
+                            Rd_sd = Rs1_sw;
+                        } else if (Rs1_sw == std::numeric_limits<int32_t>::min()
+                                && Rs2_sw == -1) {
+                            Rd_sd = 0;
+                        } else {
+                            Rd_sd = Rs1_sw%Rs2_sw;
+                        }
+                    }}, IntDivOp);
+                    0x10: sh3adduw({{
+                        Rd = (((uint64_t)Rs1_uw) << 3) + Rs2;
+                    }});
+                }
                 0x7: remuw({{
                     if (Rs2_uw == 0) {
                         Rd_sd = (int32_t)Rs1_uw;
