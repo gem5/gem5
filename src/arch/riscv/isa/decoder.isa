@@ -776,6 +776,14 @@ decode QUADRANT default Unknown::unknown() {
                         Rd = negate ? ~res + (Rs1_sd*Rs2_sd == 0 ? 1 : 0)
                                     : res;
                     }}, IntMultOp);
+                    0x5: clmul({{
+                        Rd = 0;
+                        for (int i = 0; i < 64; i++) {
+                            if ((Rs2 >> i) & 1) {
+                                Rd ^= Rs1 << i;
+                            }
+                        }
+                    }});
                     0x30: rol({{
                         int shamt = Rs2 & (64 - 1);
                         Rd = (Rs1 << shamt) | (Rs1 >> ((64 - shamt) & (64 - 1)));
@@ -805,6 +813,14 @@ decode QUADRANT default Unknown::unknown() {
                                        carry;
                         Rd = negate ? ~res + (Rs1_sd*Rs2 == 0 ? 1 : 0) : res;
                     }}, IntMultOp);
+                    0x5: clmulr({{
+                        Rd = 0;
+                        for (int i = 0; i < 64; i++) {
+                            if ((Rs2 >> i) & 1) {
+                                Rd ^= Rs1 >> (64-i-1);
+                            }
+                        }
+                    }});
                     0x10: sh1add({{
                         Rd = (Rs1 << 1) + Rs2;
                     }});
@@ -828,6 +844,14 @@ decode QUADRANT default Unknown::unknown() {
 
                         Rd = hi + (mid1 >> 32) + (mid2 >> 32) + carry;
                     }}, IntMultOp);
+                    0x5: clmulh({{
+                        Rd = 0;
+                        for (int i = 1; i < 64; i++) {
+                            if ((Rs2 >> i) & 1) {
+                                Rd ^= (Rs1 >> (64-i));
+                            }
+                        }
+                    }});
                 }
                 0x4: decode FUNCT7 {
                     0x0: xor({{
