@@ -432,9 +432,23 @@ decode QUADRANT default Unknown::unknown() {
 
         0x04: decode FUNCT3 {
             0x1: decode FS3 {
-                0x00: IOp::slli({{
-                    Rd = Rs1 << imm;
-                }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                format IOp {
+                    0x00: slli({{
+                        Rd = Rs1 << imm;
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0x05: bseti({{
+                        uint64_t index = imm & (64 - 1);
+                        Rd = Rs1 | (UINT64_C(1) << index);
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0x09: bclri({{
+                        uint64_t index = imm & (64 - 1);
+                        Rd = Rs1 & (~(UINT64_C(1) << index));
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0x0d: binvi({{
+                        uint64_t index = imm & (64 - 1);
+                        Rd = Rs1 ^ (UINT64_C(1) << index);
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                }
                 format ROp {
                     0x0c: decode RS2 {
                         0x00: clz({{
@@ -486,6 +500,10 @@ decode QUADRANT default Unknown::unknown() {
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
                     0x8: srai({{
                         Rd_sd = Rs1_sd >> imm;
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0x9: bexti({{
+                        uint64_t index = imm & (64 - 1);
+                        Rd = (Rs1 >> index) & 0x1;
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
                     0xc: rori({{
                         Rd = (Rs1 >> imm) | (Rs1 << ((64 - imm) & (64 - 1)));
@@ -784,9 +802,21 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }});
+                    0x14: bset({{
+                        Rs2 &= (64 - 1);
+                        Rd = Rs1 | (UINT64_C(1) << Rs2);
+                    }});
+                    0x24: bclr({{
+                        Rs2 &= (64 - 1);
+                        Rd = Rs1 & (~(UINT64_C(1) << Rs2));
+                    }});
                     0x30: rol({{
                         int shamt = Rs2 & (64 - 1);
                         Rd = (Rs1 << shamt) | (Rs1 >> ((64 - shamt) & (64 - 1)));
+                    }});
+                    0x34: binv({{
+                        Rs2 &= (64 - 1);
+                        Rd = Rs1 ^ (UINT64_C(1) << Rs2);
                     }});
                 }
                 0x2: decode FUNCT7 {
@@ -894,6 +924,10 @@ decode QUADRANT default Unknown::unknown() {
                     }});
                     0x5: minu({{
                         Rd = Rs1 < Rs2 ? Rs1 : Rs2;
+                    }});
+                    0x24: bext({{
+                        Rs2 &= (64 - 1);
+                        Rd = (Rs1 >> Rs2) & 0x1;
                     }});
                     0x30: ror({{
                         int shamt = Rs2 & (64 - 1);
