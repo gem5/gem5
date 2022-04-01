@@ -268,7 +268,10 @@ class ProjectFileParser(Grammar):
         t[0] = t[1]
 
 
-license_count = int(env['CONF']['ARMLMD_LICENSE_COUNT'])
+# If fast model is disabled, ARMLMD_LICENSE_COUNT will be 0 which will break
+# the cycle() iterator below. The fast model components won't be built, but
+# they still need to be set up successfully with valid license slots.
+license_count = max(int(env['CONF']['ARMLMD_LICENSE_COUNT']), 1)
 arm_licenses = list((Value(object()) for i in range(license_count)))
 license_cycle = cycle(arm_licenses)
 
