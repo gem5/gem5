@@ -36,7 +36,10 @@ from gem5.utils.requires import requires
 from gem5.resources.resource import Resource
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.x86_board import X86Board
-from gem5.components.processors.cpu_types import CPUTypes
+from gem5.components.processors.cpu_types import(
+    get_cpu_types_str_set,
+    get_cpu_type_from_str,
+)
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.simulate.simulator import Simulator
 
@@ -67,7 +70,7 @@ parser.add_argument(
     "-c",
     "--cpu",
     type=str,
-    choices=("kvm", "atomic", "timing", "o3"),
+    choices=get_cpu_types_str_set(),
     required=True,
     help="The CPU type.",
 )
@@ -166,25 +169,10 @@ memory_class = getattr(
 memory = memory_class(size="3GiB")
 
 # Setup a Processor.
-
-cpu_type = None
-if args.cpu == "kvm":
-    cpu_type = CPUTypes.KVM
-elif args.cpu == "atomic":
-    cpu_type = CPUTypes.ATOMIC
-elif args.cpu == "timing":
-    cpu_type = CPUTypes.TIMING
-elif args.cpu == "o3":
-    cpu_type = CPUTypes.O3
-else:
-    raise NotImplementedError(
-        "CPU type '{}' is not supported in the boot tests.".format(args.cpu)
-    )
-
-assert cpu_type != None
-
 processor = SimpleProcessor(
-    cpu_type=cpu_type, isa=ISA.X86, num_cores=args.num_cpus
+    cpu_type=get_cpu_type_from_str(args.cpu),
+    isa=ISA.X86,
+    num_cores=args.num_cpus,
 )
 
 # Setup the motherboard.

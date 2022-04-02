@@ -25,11 +25,43 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from enum import Enum
-
+from typing import Set
+import os
 
 class CPUTypes(Enum):
-    ATOMIC = 1
-    KVM = 2
-    O3 = 3
-    TIMING = 4
-    MINOR = 5
+    ATOMIC = "atomic"
+    KVM = "kvm"
+    O3 = "o3"
+    TIMING = "timing"
+    MINOR = "minor"
+
+def get_cpu_types_str_set() -> Set[CPUTypes]:
+    """
+    Returns a set of all the CPU types as strings.
+    """
+    return {cpu_type.value for cpu_type in CPUTypes}
+
+def get_cpu_type_from_str(input: str) -> CPUTypes:
+    """
+    Will return the correct enum given the input string. This is matched on
+    the enum's value. E.g., "kvm" will return ISA.KVM. Throws an exception if
+    the input string is invalid.
+
+    `get_cpu_types_str_set()` can be used to determine the valid strings.
+
+    This is for parsing text inputs that specify CPU Type targets.
+
+    :param input: The CPU Type to return, as a string. Case-insensitive.
+    """
+    for cpu_type in CPUTypes:
+        if input.lower() == cpu_type.value:
+            return cpu_type
+
+    valid_cpu_types_list_str =str()
+    for cpu_type_str in get_cpu_types_str_set():
+        valid_cpu_types_list_str += f"{os.linesep}{cpu_type_str}"
+
+    raise Exception(
+        f"CPU type '{input}' does not correspond to a known CPU type. "
+        f"Known CPU Types:{valid_cpu_types_list_str}"
+    )
