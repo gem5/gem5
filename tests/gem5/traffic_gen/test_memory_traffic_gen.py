@@ -31,6 +31,8 @@ TODO: At present all the Single Channel memory components are tested. This
       should be expanded to included DRAMSIM3 memory systems.
 """
 
+import os
+
 from testlib import *
 
 
@@ -50,10 +52,21 @@ def test_memory(
     for arg in args:
         name += "-" + arg
 
+    stats_verifier = verifier.MatchJSONStats(
+        os.path.join(
+            os.path.dirname(__file__),
+            "trusted_stats",
+            f"{generator}-{generator_cores}-{cache}-{module}-{memory}",
+            "trusted_stats.json",
+        ),
+        "output.json",
+        True,
+    )
+
     gem5_verify_config(
         name=name,
         fixtures=(),
-        verifiers=(),
+        verifiers=(stats_verifier,),
         config=joinpath(
             config.base_dir,
             "tests",
