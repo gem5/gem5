@@ -49,6 +49,7 @@
 #include <cassert>
 #include <climits>
 
+#include "debug/RubyProtocol.hh"
 #include "debug/RubySlicc.hh"
 #include "mem/packet.hh"
 #include "mem/ruby/common/Address.hh"

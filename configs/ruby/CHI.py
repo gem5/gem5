@@ -79,6 +79,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
     # Node types
     CHI_RNF = chi_defs.CHI_RNF
     CHI_HNF = chi_defs.CHI_HNF
+    CHI_MN = chi_defs.CHI_MN
     CHI_SNF_MainMem = chi_defs.CHI_SNF_MainMem
     CHI_SNF_BootMem = chi_defs.CHI_SNF_BootMem
     CHI_RNI_DMA = chi_defs.CHI_RNI_DMA
@@ -139,6 +140,14 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         all_cntrls.extend(rnf.getAllControllers())
         network_nodes.append(rnf)
         network_cntrls.extend(rnf.getNetworkSideControllers())
+
+    # Creates one Misc Node
+    ruby_system.mn = [ CHI_MN(ruby_system, [cpu.l1d for cpu in cpus]) ]
+    for mn in ruby_system.mn:
+        all_cntrls.extend(mn.getAllControllers())
+        network_nodes.append(mn)
+        network_cntrls.extend(mn.getNetworkSideControllers())
+        assert(mn.getAllControllers() == mn.getNetworkSideControllers())
 
     # Look for other memories
     other_memories = []

@@ -230,6 +230,9 @@ class CHI_L1Controller(CHI_Cache_Controller):
         self.number_of_TBEs = 16
         self.number_of_repl_TBEs = 16
         self.number_of_snoop_TBEs = 4
+        self.number_of_DVM_TBEs = 16
+        self.number_of_DVM_snoop_TBEs = 4
+
         self.unify_repl_TBEs = False
 
 class CHI_L2Controller(CHI_Cache_Controller):
@@ -262,6 +265,8 @@ class CHI_L2Controller(CHI_Cache_Controller):
         self.number_of_TBEs = 32
         self.number_of_repl_TBEs = 32
         self.number_of_snoop_TBEs = 16
+        self.number_of_DVM_TBEs = 1 # should not receive any dvm
+        self.number_of_DVM_snoop_TBEs = 1 # should not receive any dvm
         self.unify_repl_TBEs = False
 
 class CHI_HNFController(CHI_Cache_Controller):
@@ -295,7 +300,40 @@ class CHI_HNFController(CHI_Cache_Controller):
         self.number_of_TBEs = 32
         self.number_of_repl_TBEs = 32
         self.number_of_snoop_TBEs = 1 # should not receive any snoop
+        self.number_of_DVM_TBEs = 1 # should not receive any dvm
+        self.number_of_DVM_snoop_TBEs = 1 # should not receive any dvm
         self.unify_repl_TBEs = False
+
+class CHI_MNController(MiscNode_Controller):
+    '''
+    Default parameters for a Misc Node
+    '''
+
+    def __init__(self, ruby_system, addr_range, l1d_caches,
+                 early_nonsync_comp):
+        super(CHI_MNController, self).__init__(
+            version = Versions.getVersion(MiscNode_Controller),
+            ruby_system = ruby_system,
+            mandatoryQueue = MessageBuffer(),
+            triggerQueue = TriggerMessageBuffer(),
+            retryTriggerQueue = TriggerMessageBuffer(),
+            schedRspTriggerQueue = TriggerMessageBuffer(),
+            reqRdy = TriggerMessageBuffer(),
+            snpRdy = TriggerMessageBuffer(),
+        )
+        # Set somewhat large number since we really a lot on internal
+        # triggers. To limit the controller performance, tweak other
+        # params such as: input port buffer size, cache banks, and output
+        # port latency
+        self.transitions_per_cycle = 1024
+        self.addr_ranges = [addr_range]
+        # 16 total transaction buffer entries, but 1 is reserved for DVMNonSync
+        self.number_of_DVM_TBEs = 16
+        self.number_of_non_sync_TBEs = 1
+        self.early_nonsync_comp = early_nonsync_comp
+
+        # "upstream_destinations" = targets for DVM snoops
+        self.upstream_destinations = l1d_caches
 
 class CHI_DMAController(CHI_Cache_Controller):
     '''
@@ -333,6 +371,8 @@ class CHI_DMAController(CHI_Cache_Controller):
         self.number_of_TBEs = 16
         self.number_of_repl_TBEs = 1
         self.number_of_snoop_TBEs = 1 # should not receive any snoop
+        self.number_of_DVM_TBEs = 1 # should not receive any dvm
+        self.number_of_DVM_snoop_TBEs = 1 # should not receive any dvm
         self.unify_repl_TBEs = False
 
 class CPUSequencerWrapper:
@@ -534,6 +574,40 @@ class CHI_HNF(CHI_Node):
     def getNetworkSideControllers(self):
         return [self._cntrl]
 
+
+class CHI_MN(CHI_Node):
+    '''
+    Encapsulates a Misc Node controller.
+    '''
+
+    class NoC_Params(CHI_Node.NoC_Params):
+        '''HNFs may also define the 'pairing' parameter to allow pairing'''
+        pairing = None
+
+
+    # The CHI controller can be a child of this object or another if
+    # 'parent' if specified
+    def __init__(self, ruby_system, l1d_caches, early_nonsync_comp=False):
+        super(CHI_MN, self).__init__(ruby_system)
+
+        # MiscNode has internal address range starting at 0
+        addr_range = AddrRange(0, size = "1kB")
+
+        self._cntrl = CHI_MNController(ruby_system, addr_range, l1d_caches,
+                                       early_nonsync_comp)
+
+        self.cntrl = self._cntrl
+
+        self.connectController(self._cntrl)
+
+    def connectController(self, cntrl):
+        CHI_Node.connectController(self, cntrl)
+
+    def getAllControllers(self):
+        return [self._cntrl]
+
+    def getNetworkSideControllers(self):
+        return [self._cntrl]
 
 class CHI_SNF_Base(CHI_Node):
     '''

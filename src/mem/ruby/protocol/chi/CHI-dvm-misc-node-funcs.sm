@@ -1,0 +1,322 @@
+/*
+ * Copyright (c) 2021-2022 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+////////////////////////////////////////////////////////////////////////////
+// CHI-cache function definitions
+////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////
+// External functions
+
+Tick clockEdge();
+Tick curTick();
+Tick cyclesToTicks(Cycles c);
+Cycles ticksToCycles(Tick t);
+void set_tbe(TBE b);
+void unset_tbe();
+MachineID mapAddressToDownstreamMachine(Addr addr);
+NetDest allUpstreamDest();
+
+void incomingTransactionStart(Addr, Event, State, bool);
+void incomingTransactionEnd(Addr, State);
+void outgoingTransactionStart(Addr, Event);
+void outgoingTransactionEnd(Addr, bool);
+// Overloads for transaction-measuring functions
+// final bool = isMemoryAccess
+// if false, uses a "global access" table
+void incomingTransactionStart(Addr, Event, State, bool, bool);
+void incomingTransactionEnd(Addr, State, bool);
+void outgoingTransactionStart(Addr, Event, bool);
+void outgoingTransactionEnd(Addr, bool, bool);
+Event curTransitionEvent();
+State curTransitionNextState();
+
+void notifyPfHit(RequestPtr req, bool is_read, DataBlock blk) { }
+void notifyPfMiss(RequestPtr req, bool is_read, DataBlock blk) { }
+void notifyPfFill(RequestPtr req, DataBlock blk, bool from_pf) { }
+void notifyPfEvict(Addr blkAddr, bool hwPrefetched) { }
+void notifyPfComplete(Addr addr) { }
+
+void scheduleEvent(Cycles);
+
+////////////////////////////////////////////////////////////////////////////
+// Interface functions required by SLICC
+
+int tbePartition(bool is_non_sync) {
+    if (is_non_sync) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+State getState(TBE tbe, Addr txnId) {
+  if (is_valid(tbe)) {
+      return tbe.state;
+  } else {
+    return State:Unallocated;
+  }
+}
+
+void setState(TBE tbe, Addr txnId, State state) {
+  if (is_valid(tbe)) {
+    tbe.state := state;
+  }
+}
+
+TBE nullTBE(), return_by_pointer="yes" {
+  return OOD;
+}
+
+TBE getCurrentActiveTBE(Addr txnId), return_by_pointer="yes" {
+  // Current Active TBE for an address
+  return dvmTBEs[txnId];
+}
+
+AccessPermission getAccessPermission(Addr txnId) {
+  // MN has no memory
+  return AccessPermission:NotPresent;
+}
+
+void setAccessPermission(Addr txnId, State state) {}
+
+void functionalRead(Addr txnId, Packet *pkt, WriteMask &mask) {
+  // We don't have any memory, so we can't functionalRead
+  // => we don't fill the `mask` argument
+}
+
+int functionalWrite(Addr txnId, Packet *pkt) {
+  // No memory => no functional writes
+  return 0;
+}
+
+Cycles mandatoryQueueLatency(RubyRequestType type) {
+  return intToCycles(1);
+}
+
+Cycles tagLatency(bool from_sequencer) {
+  return intToCycles(0);
+}
+
+Cycles dataLatency() {
+  return intToCycles(0);
+}
+
+bool inCache(Addr txnId) {
+  return false;
+}
+
+bool hasBeenPrefetched(Addr txnId) {
+  return false;
+}
+
+bool inMissQueue(Addr txnId) {
+  return false;
+}
+
+void notifyCoalesced(Addr txnId, RubyRequestType type, RequestPtr req,
+                     DataBlock data_blk, bool was_miss) {
+  DPRINTF(RubySlicc, "Unused notifyCoalesced(txnId=%#x, type=%s, was_miss=%d)\n",
+                      txnId, type, was_miss);
+}
+
+////////////////////////////////////////////////////////////////////////////
+// State->Event converters
+
+Event reqToEvent(CHIRequestType type) {
+  if (type == CHIRequestType:DvmOpNonSync) {
+    return Event:DvmTlbi_Initiate;
+  } else if (type == CHIRequestType:DvmOpSync) {
+    return Event:DvmSync_Initiate;
+  } else {
+    error("Invalid/unexpected CHIRequestType");
+  }
+}
+
+Event respToEvent (CHIResponseType type) {
+  if (type == CHIResponseType:SnpResp_I) {
+    return Event:SnpResp_I;
+  } else {
+    error("Invalid/unexpected CHIResponseType");
+  }
+}
+
+Event dataToEvent (CHIDataType type) {
+  if (type == CHIDataType:NCBWrData) {
+    return Event:NCBWrData;
+  } else {
+    error("Invalid/unexpected CHIDataType");
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////
+// Allocation
+
+void clearExpectedReqResp(TBE tbe) {
+  assert(blockSize >= data_channel_size);
+  assert((blockSize % data_channel_size) == 0);
+  tbe.expected_req_resp.clear(blockSize / data_channel_size);
+}
+
+void clearExpectedSnpResp(TBE tbe) {
+  assert(blockSize >= data_channel_size);
+  assert((blockSize % data_channel_size) == 0);
+  tbe.expected_snp_resp.clear(blockSize / data_channel_size);
+}
+
+void initializeTBE(TBE tbe, Addr txnId, int storSlot) {
+  assert(is_valid(tbe));
+
+  tbe.timestamp := curTick();
+
+  tbe.wakeup_pending_req := false;
+  tbe.wakeup_pending_snp := false;
+  tbe.wakeup_pending_tgr := false;
+
+  tbe.txnId := txnId;
+
+  tbe.storSlot := storSlot;
+
+  clearExpectedReqResp(tbe);
+  clearExpectedSnpResp(tbe);
+  // Technically we don't *know* if we're waiting on other transactions,
+  // but we need to stop this transaction from errantly being *finished*.
+  tbe.waiting_on_other_txns := true;
+
+  tbe.sched_responses := 0;
+  tbe.block_on_sched_responses := false;
+
+
+  tbe.pendAction := Event:null;
+  tbe.finalState := State:null;
+  tbe.delayNextAction := intToTick(0);
+
+  // The MN uses the list of "upstream destinations"
+  // as targets for snoops
+  tbe.notSentTargets := allUpstreamDest();
+  tbe.pendingTargets.clear();
+  tbe.receivedTargets.clear();
+}
+
+TBE allocateDvmRequestTBE(Addr txnId, CHIRequestMsg in_msg), return_by_pointer="yes" {
+  DPRINTF(RubySlicc, "allocateDvmRequestTBE %x %016llx\n", in_msg.type, txnId);
+
+  bool isNonSync := in_msg.type == CHIRequestType:DvmOpNonSync;
+
+  int partition := tbePartition(isNonSync);
+  // We must have reserved resources for this allocation
+  storDvmTBEs.decrementReserved(partition);
+  assert(storDvmTBEs.areNSlotsAvailable(1, partition));
+
+  dvmTBEs.allocate(txnId);
+  TBE tbe := dvmTBEs[txnId];
+
+  // Setting .txnId = txnId
+  initializeTBE(tbe, txnId, storDvmTBEs.addEntryToNewSlot(partition));
+
+  tbe.isNonSync := isNonSync;
+
+  tbe.requestor := in_msg.requestor;
+  tbe.reqType := in_msg.type;
+
+  // We don't want to send a snoop request to
+  // the original requestor
+  tbe.notSentTargets.remove(in_msg.requestor);
+
+  return tbe;
+}
+
+void deallocateDvmTBE(TBE tbe) {
+  assert(is_valid(tbe));
+  storDvmTBEs.removeEntryFromSlot(tbe.storSlot, tbePartition(tbe.isNonSync));
+  dvmTBEs.deallocate(tbe.txnId);
+}
+
+void clearPendingAction(TBE tbe) {
+  tbe.pendAction := Event:null;
+}
+
+////////////////////////////////////////////////////////////////////////////
+// Retry-related
+
+void processRetryQueue() {
+  // send credit if requestor waiting for it and we have resources
+
+  // Ask the DVM storage if we have space to retry anything.
+  if (storDvmTBEs.hasPossibleRetry()) {
+    RetryQueueEntry toRetry := storDvmTBEs.popNextRetryEntry();
+    storDvmTBEs.incrementReserved(tbePartition(toRetry.isNonSync));
+    enqueue(retryTriggerOutPort, RetryTriggerMsg, crd_grant_latency) {
+      out_msg.txnId := toRetry.txnId;
+      out_msg.retryDest := toRetry.retryDest;
+      out_msg.event := Event:SendPCrdGrant;
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////
+// Other
+
+void printResources() {
+  DPRINTF(RubySlicc, "Resources(used/rsvd/max): dvmTBEs=%d/%d/%d\n",
+                storDvmTBEs.size(), storDvmTBEs.reserved(), storDvmTBEs.capacity());
+  DPRINTF(RubySlicc, "Resources(in/out size): req=%d/%d rsp=%d/%d dat=%d/%d snp=%d/%d trigger=%d\n",
+                reqIn.getSize(curTick()), reqOut.getSize(curTick()),
+                rspIn.getSize(curTick()), rspOut.getSize(curTick()),
+                datIn.getSize(curTick()), datOut.getSize(curTick()),
+                snpIn.getSize(curTick()), snpOut.getSize(curTick()),
+                triggerQueue.getSize(curTick()));
+}
+
+void printTBEState(TBE tbe) {
+  DPRINTF(RubySlicc, "STATE: txnId=%#x reqType=%d state=%d pendAction=%s\n",
+                      tbe.txnId, tbe.reqType, tbe.state, tbe.pendAction);
+}
+
+void prepareRequest(TBE tbe, CHIRequestType type, CHIRequestMsg & out_msg) {
+  out_msg.addr := tbe.txnId;
+  out_msg.accAddr := tbe.txnId;
+  out_msg.accSize := blockSize;
+  out_msg.requestor := machineID;
+  out_msg.fwdRequestor := tbe.requestor;
+  out_msg.type := type;
+  out_msg.allowRetry := false;
+  out_msg.isSeqReqValid := false;
+  out_msg.is_local_pf := false;
+  out_msg.is_remote_pf := false;
+}

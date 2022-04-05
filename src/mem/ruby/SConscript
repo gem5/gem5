@@ -1,5 +1,17 @@
 # -*- mode:python -*-
 
+# Copyright (c) 2021 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2009 The Hewlett-Packard Development Company
 # All rights reserved.
 #
@@ -55,11 +67,12 @@ DebugFlag('RubySystem')
 DebugFlag('RubyTester')
 DebugFlag('RubyStats')
 DebugFlag('RubyResourceStalls')
+DebugFlag('RubyProtocol')
 
 CompoundFlag('Ruby', [ 'RubyQueue', 'RubyNetwork', 'RubyTester',
     'RubyGenerated', 'RubySlicc', 'RubySystem', 'RubyCache',
     'RubyDma', 'RubyPort', 'RubySequencer', 'RubyCacheTrace',
-    'RubyPrefetcher'])
+    'RubyPrefetcher', 'RubyProtocol'])
 
 #
 # Link includes
@@ -98,6 +111,9 @@ MakeInclude('structures/PerfectCacheMemory.hh')
 MakeInclude('structures/PersistentTable.hh')
 MakeInclude('structures/RubyPrefetcher.hh')
 MakeInclude('structures/TBEStorage.hh')
+if env['PROTOCOL'] == 'CHI':
+    MakeInclude('structures/MN_TBEStorage.hh')
+    MakeInclude('structures/MN_TBETable.hh')
 MakeInclude('structures/TBETable.hh')
 MakeInclude('structures/TimerTable.hh')
 MakeInclude('structures/WireBuffer.hh')

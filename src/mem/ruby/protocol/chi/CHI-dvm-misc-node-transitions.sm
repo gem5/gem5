@@ -1,0 +1,184 @@
+/*
+ * Copyright (c) 2021 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+////////////////////////////////////////////////////////////////////////////
+// CHI-dvm-misc-node transition definition
+////////////////////////////////////////////////////////////////////////////
+
+// Allocate resources and move to the ready queue
+transition(Unallocated, AllocRequest) {
+  AllocateTBE_Request;
+}
+
+transition(Unallocated, AllocRequestWithCredit) {
+  AllocateTBE_Request_WithCredit;
+}
+
+transition(Unallocated, SendRetryAck) {
+  Send_RetryAck;
+  Pop_RetryTriggerQueue;
+}
+
+transition(Unallocated, SendPCrdGrant) {
+  Send_PCrdGrant;
+  Pop_RetryTriggerQueue;
+}
+
+transition(Unallocated, DvmTlbi_Initiate, DvmNonSync_Partial) {
+  Initiate_Request_DVM;
+  Pop_ReqRdyQueue;
+
+  Send_DvmNonSyncDBIDResp;
+}
+
+transition(Unallocated, DvmSync_Initiate, DvmSync_Partial) {
+  Initiate_Request_DVM;
+  Pop_ReqRdyQueue;
+
+  Send_DvmSyncDBIDResp;
+}
+
+transition(DvmSync_Partial, NCBWrData, DvmSync_ReadyToDist) {
+  Receive_ReqDataResp; // Uses data from top of queue
+  Pop_DataInQueue;     // Pops data from top of queue
+
+  // Update the "Pending Operations" set
+  // This looks at all current DVM operations and updates which operation is distributing.
+  // We may not start snooping immediately.
+  Enqueue_UpdatePendingOps;
+  ProcessNextState;
+}
+
+transition(DvmNonSync_Partial, NCBWrData, DvmNonSync_ReadyToDist) {
+  Receive_ReqDataResp; // Uses data from top of queue
+  Pop_DataInQueue;     // Pops data from top of queue
+
+  // Update the "Pending Operations" set
+  // This looks at all current DVM operations and updates which operation is distributing.
+  // We may not start snooping immediately.
+  Enqueue_UpdatePendingOps;
+  ProcessNextState;
+}
+
+transition({DvmSync_ReadyToDist,DvmSync_Distributing}, DvmSendNextMessage_P1, DvmSync_Distributing) {
+  Pop_TriggerQueue;
+  // Enqueues SendNextMessage_P2
+  Send_DvmSnoop_P1;
+  // Process the enqueued event immediately
+  ProcessNextState_ClearPending;
+}
+transition(DvmSync_Distributing, DvmSendNextMessage_P2) {
+  Pop_TriggerQueue;
+  // This may enqueue a SendNextMessage event, or it could enqueue a FinishSending if there are no elements left.
+  Send_DvmSnoop_P2;
+  // Process the enqueued event immediately
+  ProcessNextState_ClearPending;
+}
+
+transition({DvmNonSync_ReadyToDist,DvmNonSync_Distributing}, DvmSendNextMessage_P1, DvmNonSync_Distributing) {
+  Pop_TriggerQueue;
+  // Enqueues SendNextMessage_P2
+  Send_DvmSnoop_P1;
+  // Process the enqueued event immediately
+  ProcessNextState_ClearPending;
+}
+transition(DvmNonSync_Distributing, DvmSendNextMessage_P2) {
+  Pop_TriggerQueue;
+  // This may enqueue a SendNextMessage event, or it could enqueue a FinishSending if there are no elements left.
+  Send_DvmSnoop_P2;
+  // Process the enqueued event immediately
+  ProcessNextState_ClearPending;
+}
+
+transition(DvmSync_Distributing, DvmFinishDistributing, DvmSync_Waiting) {
+  Pop_TriggerQueue;
+
+  // Now that we're done distributing, pick someone else to start distributing
+  Enqueue_UpdatePendingOps;
+  ProcessNextState_ClearPending;
+}
+
+transition(DvmNonSync_Distributing, DvmFinishDistributing, DvmNonSync_Waiting) {
+  Pop_TriggerQueue;
+
+  // Now that we're done distributing, pick someone else to start distributing
+  Enqueue_UpdatePendingOps;
+  ProcessNextState_ClearPending;
+}
+
+transition(DvmSync_Waiting, DvmFinishWaiting, DvmOp_Complete) {
+//   would enqueue a Comp send
+//   ProcessNextState (which should send a Final event?)
+  Pop_TriggerQueue;
+  Send_Comp;
+  Profile_OutgoingEnd_DVM;
+  // Now that we're done waiting, someone else might be able to start
+  // e.g. because only one Sync can be in progress at once,
+  // our finishing could free up space for the next Sync to start.
+  Enqueue_UpdatePendingOps;
+
+  ProcessNextState_ClearPending;
+}
+
+transition(DvmNonSync_Waiting, DvmFinishWaiting, DvmOp_Complete) {
+//   would enqueue a Comp send
+//   ProcessNextState (which should send a Final event?)
+  Pop_TriggerQueue;
+  // NonSync can Comp early, so this action checks if a Comp would already have been sent
+  Send_Comp_NonSync;
+  Profile_OutgoingEnd_DVM;
+
+  // Now that we're done waiting, someone else might be able to start
+  //(not sure if this applied to NonSyncs, but re-calling this function doesn't hurt)
+  Enqueue_UpdatePendingOps;
+
+  ProcessNextState_ClearPending;
+}
+
+// On receiving a SnpResp
+transition({DvmSync_Distributing,DvmNonSync_Distributing,DvmSync_Waiting,DvmNonSync_Waiting}, SnpResp_I) {
+  Receive_SnpResp; // Uses data from top of resp queue
+  Pop_RespInQueue; // Pops data from top of resp queue
+
+  ProcessNextState;
+}
+
+transition(DvmOp_Complete, Final, Unallocated) {
+  Pop_TriggerQueue; // "Final" event is applied from the trigger queue
+
+  Finalize_DeallocateRequest; // Deallocate the DVM TBE
+}

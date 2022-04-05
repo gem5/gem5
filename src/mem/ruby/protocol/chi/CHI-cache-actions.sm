@@ -60,9 +60,10 @@ action(AllocateTBE_Request, desc="") {
       assert(in_msg.allowRetry);
       enqueue(retryTriggerOutPort, RetryTriggerMsg, 0) {
         out_msg.addr := in_msg.addr;
+        out_msg.usesTxnId := false;
         out_msg.event := Event:SendRetryAck;
         out_msg.retryDest := in_msg.requestor;
-        retryQueue.emplace(in_msg.addr,in_msg.requestor);
+        retryQueue.emplace(in_msg.addr,false,in_msg.requestor);
       }
     }
   }
@@ -106,6 +107,23 @@ action(AllocateTBE_Snoop, desc="") {
   snpInPort.dequeue(clockEdge());
 }
 
+action(AllocateTBE_DvmSnoop, desc="") {
+  // No retry for snoop requests; just create resource stall
+  check_allocate(storDvmSnpTBEs);
+
+  storDvmSnpTBEs.incrementReserved();
+
+  // Move request to rdy queue
+  peek(snpInPort, CHIRequestMsg) {
+    enqueue(snpRdyOutPort, CHIRequestMsg, allocation_latency) {
+      assert(in_msg.usesTxnId);
+      assert(in_msg.addr == address);
+      out_msg := in_msg;
+    }
+  }
+  snpInPort.dequeue(clockEdge());
+}
+
 action(AllocateTBE_SeqRequest, desc="") {
   // No retry for sequencer requests; just create resource stall
   check_allocate(storTBEs);
@@ -137,6 +155,49 @@ action(AllocateTBE_SeqRequest, desc="") {
         } else {
           out_msg.type := CHIRequestType:Store;
         }
+      } else {
+        error("Invalid RubyRequestType");
+      }
+    }
+  }
+  seqInPort.dequeue(clockEdge());
+}
+
+action(AllocateTBE_SeqDvmRequest, desc="") {
+  // No retry for sequencer requests; just create resource stall
+  check_allocate(storDvmTBEs);
+
+  // reserve a slot for this request
+  storDvmTBEs.incrementReserved();
+
+  // Move request to rdy queue
+  peek(seqInPort, RubyRequest) {
+    enqueue(reqRdyOutPort, CHIRequestMsg, allocation_latency) {
+      // DVM operations do not relate to memory addresses
+      // Use the DVM transaction ID instead
+      out_msg.usesTxnId := true;
+      out_msg.txnId := in_msg.tlbiTransactionUid;
+
+      // TODO - zero these out?
+      out_msg.addr := in_msg.tlbiTransactionUid;
+      out_msg.accAddr := in_msg.tlbiTransactionUid;
+      out_msg.accSize := blockSize;
+      assert(in_msg.Prefetch == PrefetchBit:No);
+      out_msg.is_local_pf := false;
+      out_msg.is_remote_pf := false;
+
+      out_msg.requestor := machineID;
+      out_msg.fwdRequestor := machineID;
+      out_msg.seqReq := in_msg.getRequestPtr();
+      out_msg.isSeqReqValid := true;
+
+
+      if (in_msg.Type == RubyRequestType:TLBI) {
+        out_msg.type := CHIRequestType:DvmTlbi_Initiate;
+      } else if (in_msg.Type == RubyRequestType:TLBI_SYNC) {
+        out_msg.type := CHIRequestType:DvmSync_Initiate;
+      } else if (in_msg.Type == RubyRequestType:TLBI_EXT_SYNC_COMP) {
+        out_msg.type := CHIRequestType:DvmSync_ExternCompleted;
       } else {
         error("Invalid RubyRequestType");
       }
@@ -209,6 +270,14 @@ action(Initiate_Request, desc="") {
   tbe.actions.pushNB(Event:TagArrayRead);
 
   incomingTransactionStart(address, curTransitionEvent(), initial, was_retried);
+}
+
+action(Initiate_Request_DVM, desc="") {
+  peek(reqRdyPort, CHIRequestMsg) {
+    // "address" for DVM = transaction ID
+    TBE tbe := allocateDvmRequestTBE(address, in_msg);
+    set_tbe(tbe);
+  }
 }
 
 action(Initiate_Request_Stale, desc="") {
@@ -1566,6 +1635,12 @@ action(ExpectCompAck, desc="") {
   tbe.expected_req_resp.addExpectedCount(1);
 }
 
+action(ExpectComp, desc="") {
+  assert(is_valid(tbe));
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:Comp);
+  tbe.expected_req_resp.addExpectedCount(1);
+}
+
 action(Receive_ReqDataResp, desc="") {
   assert(is_valid(tbe));
   assert(tbe.expected_req_resp.hasExpected());
@@ -2075,6 +2150,16 @@ action(Send_Retry, desc="") {
   }
 }
 
+action(Send_Retry_DVM, desc="") {
+  assert(tbe.pendReqAllowRetry);
+  assert(tbe.rcvdRetryCredit);
+  assert(tbe.rcvdRetryAck);
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequestRetryDVM(tbe, out_msg);
+  }
+  destsWaitingRetry.removeNetDest(tbe.pendReqDest);
+}
+
 action(Receive_RetryAck_Hazard, desc="") {
   TBE hazard_tbe := getHazardTBE(tbe);
   assert(hazard_tbe.pendReqAllowRetry);
@@ -2545,6 +2630,10 @@ action(Send_Comp_WU, desc="") {
 action(Send_SnpRespI, desc="") {
   enqueue(rspOutPort, CHIResponseMsg, response_latency) {
     out_msg.addr := address;
+    if (tbe.is_dvm_tbe || tbe.is_dvm_snp_tbe) {
+      out_msg.usesTxnId := true;
+      out_msg.txnId := tbe.addr;
+    }
     out_msg.type := CHIResponseType:SnpResp_I;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
@@ -2555,6 +2644,7 @@ action(Send_RetryAck, desc="") {
   peek(retryTriggerInPort, RetryTriggerMsg) {
     enqueue(rspOutPort, CHIResponseMsg, response_latency) {
       out_msg.addr := in_msg.addr;
+      out_msg.usesTxnId := in_msg.usesTxnId;
       out_msg.type := CHIResponseType:RetryAck;
       out_msg.responder := machineID;
       out_msg.Destination.add(in_msg.retryDest);
@@ -2566,6 +2656,7 @@ action(Send_PCrdGrant, desc="") {
   peek(retryTriggerInPort, RetryTriggerMsg) {
     enqueue(rspOutPort, CHIResponseMsg, response_latency) {
       out_msg.addr := in_msg.addr;
+      out_msg.usesTxnId := in_msg.usesTxnId;
       out_msg.type := CHIResponseType:PCrdGrant;
       out_msg.responder := machineID;
       out_msg.Destination.add(in_msg.retryDest);
@@ -2760,6 +2851,37 @@ action(Finalize_DeallocateRequest, desc="") {
   incomingTransactionEnd(address, curTransitionNextState());
 }
 
+action(Finalize_DeallocateDvmRequest, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.actions.empty());
+  wakeupPendingReqs(tbe);
+  wakeupPendingSnps(tbe);
+  wakeupPendingTgrs(tbe);
+
+  // Don't call processRetryQueue() because DVM ops don't interact with the retry queue
+
+  assert(tbe.is_dvm_tbe);
+  deallocateDvmTBE(tbe);
+  unset_tbe();
+}
+
+action(Finalize_DeallocateDvmSnoop, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.actions.empty());
+  wakeupPendingReqs(tbe);
+  wakeupPendingSnps(tbe);
+  wakeupPendingTgrs(tbe);
+
+  // Don't call processRetryQueue() because DVM ops don't interact with the retry queue
+
+  assert(tbe.is_dvm_snp_tbe);
+  deallocateDvmSnoopTBE(tbe);
+  unset_tbe();
+
+  // Last argument = false, so it uses a "unique ID" rather than an address
+  incomingTransactionEnd(address, curTransitionNextState(), false);
+}
+
 action(Pop_ReqRdyQueue, desc="") {
   reqRdyPort.dequeue(clockEdge());
 }
@@ -2791,6 +2913,13 @@ action(Pop_ReplTriggerQueue, desc="") {
 
 action(Pop_RetryTriggerQueue, desc="") {
   retryTriggerInPort.dequeue(clockEdge());
+}
+
+action(Pop_SnpInPort, desc="") {
+  snpInPort.dequeue(clockEdge());
+}
+action(Pop_SeqInPort, desc="") {
+  seqInPort.dequeue(clockEdge());
 }
 
 action(ProcessNextState, desc="") {
@@ -3074,4 +3203,191 @@ action(SnpInvPipe, desc="") {
 action(SnpOncePipe, desc="") {
   assert(is_valid(tbe));
   tbe.delayNextAction := curTick() + cyclesToTicks(snp_latency);
+}
+
+//////////////////////////////////
+// DVM Actions
+
+action(Send_DvmTlbi, desc="") {
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, CHIRequestType:DvmOpNonSync, out_msg);
+    DPRINTF(RubyProtocol, "Sending DvmOpNonSync to %d\n", getMiscNodeMachine());
+
+    out_msg.usesTxnId := true;
+    out_msg.txnId := tbe.addr; // for DVM TBEs addr = txnId
+
+    out_msg.Destination.clear();
+    out_msg.Destination.add(getMiscNodeMachine());
+    out_msg.dataToFwdRequestor := false;
+
+    // Don't set message size, we don't use the data inside the messages
+
+    allowRequestRetry(tbe, out_msg);
+  }
+
+  // TLBIs can be ended early if the MN chooses to send CompDBIDResp.
+  // Otherwise, the MN sends a plain DBIDResp, and then sends a Comp later.
+  // => We add two possible response types, then add 1 to the count
+  // e.g. "expect exactly 1 (CompDBIDResp OR DBIDResp)"
+  clearExpectedReqResp(tbe);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:CompDBIDResp);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:DBIDResp);
+  tbe.expected_req_resp.addExpectedCount(1);
+  // If a plain DBIDResp is recieved, then Comp will be manually expected.
+  // (expect_sep_wu_comp also sort of handles this, but it's WU specific,
+  // and ProcessNextState doesn't respect it).
+
+  // Push a value to the list of pending NonSyncs
+  // The actual value doesn't matter, but we have to pick
+  // a type which already has function signatures
+  // e.g. TriggerQueue has push(Event) specified in SLICC but not push(addr)
+  DPRINTF(RubyProtocol, "Pushing pending nonsync to blocklist %16x\n", tbe.addr);
+  dvmPendingNonSyncsBlockingSync.push(Event:DvmTlbi_Initiate);
+}
+
+// Try to send a DVM Sync, but put it in the pending slot
+// if there are pending Non-Syncs blocking it.
+action(Try_Send_DvmSync, desc="") {
+  if (dvmPendingNonSyncsBlockingSync.empty()){
+    DPRINTF(RubyProtocol, "Nonsync queue is empty so %016x can proceed\n", tbe.addr);
+    tbe.actions.push(Event:DvmSync_Send);
+  } else {
+    assert(!dvmHasPendingSyncOp);
+    DPRINTF(RubyProtocol, "Nonsync queue is not empty so %016x is now pending\n", tbe.addr);
+    dvmHasPendingSyncOp := true;
+    dvmPendingSyncOp := address;
+  }
+}
+
+// Try to send a DVM sync that was put in the pending slot
+// due to pending Non-Syncs blocking it. Those Non-Syncs may not be
+// blocking it anymore.
+action(Try_Send_Pending_DvmSync, desc="") {
+  // Pop an element off the list of pending NonSyncs
+  // It won't necessarily be ours, but that doesn't matter.
+  assert(!dvmPendingNonSyncsBlockingSync.empty());
+  DPRINTF(RubyProtocol, "Popping nonsync from blocklist %16x\n", tbe.addr);
+  dvmPendingNonSyncsBlockingSync.pop();
+
+  if (dvmPendingNonSyncsBlockingSync.empty() && dvmHasPendingSyncOp) {
+    DPRINTF(RubyProtocol, "Blocklist now empty, pending op %16x can proceed\n", dvmPendingSyncOp);
+    TBE syncTBE := getDvmTBE(dvmPendingSyncOp);
+    assert(is_valid(syncTBE));
+    syncTBE.actions.push(Event:DvmSync_Send);
+
+    dvmHasPendingSyncOp := false;
+  }
+}
+
+action(Send_DvmSync, desc="") {
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, CHIRequestType:DvmOpSync, out_msg);
+    DPRINTF(RubyProtocol, "Sending DvmOpSync to %d\n", getMiscNodeMachine());
+
+    out_msg.usesTxnId := true;
+    out_msg.txnId := tbe.addr; // for DVM TBEs addr = txnId
+
+    out_msg.Destination.clear();
+    out_msg.Destination.add(getMiscNodeMachine());
+    out_msg.dataToFwdRequestor := false;
+
+    // Don't set message size, we don't use the data inside the messages
+
+    allowRequestRetry(tbe, out_msg);
+  }
+
+  clearExpectedReqResp(tbe);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:DBIDResp);
+  tbe.expected_req_resp.addExpectedCount(1);
+  // Comp will be expected later
+}
+
+action(Send_DvmTlbi_NCBWrData, desc="") {
+  enqueue(datOutPort, CHIDataMsg, data_latency) {
+    out_msg.addr := tbe.addr;
+    out_msg.type := CHIDataType:NCBWrData;
+
+    out_msg.usesTxnId := true;
+    out_msg.txnId := tbe.addr; // for DVM TBEs addr = txnId
+
+    // Set dataBlk to all 0 - we don't actually use the contents
+    out_msg.dataBlk.clear();
+    // Data should be 8 bytes - this function is (offset, range)
+    out_msg.bitMask.setMask(0, 8);
+
+    out_msg.responder := machineID;
+
+    out_msg.Destination.clear();
+    out_msg.Destination.add(getMiscNodeMachine());
+  }
+}
+
+action(Send_DvmSync_NCBWrData, desc="") {
+  enqueue(datOutPort, CHIDataMsg, data_latency) {
+    out_msg.addr := tbe.addr;
+    out_msg.type := CHIDataType:NCBWrData;
+
+    out_msg.usesTxnId := true;
+    out_msg.txnId := tbe.addr; // for DVM TBEs addr = txnId
+
+    // Set dataBlk to all 0 - we don't actually use the contents
+    out_msg.dataBlk.clear();
+    // Data should be 8 bytes - this function is (offset, range)
+    // I assume the range is in bytes...
+    out_msg.bitMask.setMask(0, 8);
+
+    out_msg.responder := machineID;
+
+    out_msg.Destination.clear();
+    out_msg.Destination.add(getMiscNodeMachine());
+  }
+}
+
+action(DvmTlbi_CompCallback, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.is_dvm_tbe);
+  assert(tbe.reqType == CHIRequestType:DvmTlbi_Initiate);
+  sequencer.unaddressedCallback(tbe.addr, RubyRequestType:TLBI);
+}
+
+action(DvmSync_CompCallback, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.is_dvm_tbe);
+  assert(tbe.reqType == CHIRequestType:DvmSync_Initiate);
+  sequencer.unaddressedCallback(tbe.addr, RubyRequestType:TLBI_SYNC);
+}
+
+//////////////////////////////////
+// DVM Snoop Actions
+
+action(Initiate_DvmSnoop, desc="") {
+  // DvmSnoop cannot be retried
+  bool was_retried := false;
+  peek(snpRdyPort, CHIRequestMsg) {
+    set_tbe(allocateDvmSnoopTBE(address, in_msg));
+  }
+  // Last argument = false, so it uses a "unique ID" rather than an address
+  // "Incoming" transactions for DVM = time between receiving a Snooped DVM op
+  // and sending the SnpResp_I
+  incomingTransactionStart(address, curTransitionEvent(), State:I, was_retried, false);
+}
+
+action(DvmExtTlbi_EnqueueSnpResp, desc=""){
+  tbe.delayNextAction := curTick() + cyclesToTicks(dvm_ext_tlbi_latency);
+  tbe.actions.push(Event:SendSnpIResp);
+}
+
+action(DvmExtSync_TriggerCallback, desc=""){
+  assert(is_valid(tbe));
+  assert(tbe.is_dvm_snp_tbe);
+  sequencer.unaddressedCallback(tbe.addr, RubyRequestType:TLBI_EXT_SYNC);
+}
+
+action(Profile_OutgoingStart_DVM, desc="") {
+  outgoingTransactionStart(address, curTransitionEvent(), false);
+}
+
+action(Profile_OutgoingEnd_DVM, desc="") {
+  assert(is_valid(tbe));
+  outgoingTransactionEnd(address, tbe.rcvdRetryAck, false);
 }
