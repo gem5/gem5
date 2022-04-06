@@ -94,6 +94,14 @@ import SCons.Node
 import SCons.Node.FS
 import SCons.Tool
 
+if getattr(SCons, '__version__', None) in ('3.0.0', '3.0.1'):
+    # Monkey patch a fix which appears in version 3.0.2, since we only
+    # require version 3.0.0
+    def __hash__(self):
+        return hash(self.lstr)
+    import SCons.Subst
+    SCons.Subst.Literal.__hash__ = __hash__
+
 
 ########################################################################
 #
