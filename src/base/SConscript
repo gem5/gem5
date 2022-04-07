@@ -60,6 +60,7 @@ GTest('logging.test', 'logging.test.cc', 'logging.cc', 'hostinfo.cc',
     'cprintf.cc', 'gtest/logging.cc', skip_lib=True)
 Source('match.cc', add_tags='gem5 trace')
 GTest('match.test', 'match.test.cc', 'match.cc', 'str.cc')
+GTest('memoizer.test', 'memoizer.test.cc')
 Source('output.cc')
 Source('pixel.cc')
 GTest('pixel.test', 'pixel.test.cc', 'pixel.cc')
