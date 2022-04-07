@@ -84,8 +84,8 @@ isSecure(ThreadContext *tc)
 bool
 isSecureBelowEL3(ThreadContext *tc)
 {
-    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-    return ArmSystem::haveEL(tc, EL3) && scr.ns == 0;
+    return ArmSystem::haveEL(tc, EL3) &&
+        static_cast<SCR>(tc->readMiscRegNoEffect(MISCREG_SCR)).ns == 0;
 }
 
 ExceptionLevel
@@ -249,11 +249,10 @@ HaveLVA(ThreadContext *tc)
 ExceptionLevel
 s1TranslationRegime(ThreadContext* tc, ExceptionLevel el)
 {
-
-    SCR scr = tc->readMiscReg(MISCREG_SCR);
     if (el != EL0)
         return el;
-    else if (ArmSystem::haveEL(tc, EL3) && ELIs32(tc, EL3) && scr.ns == 0)
+    else if (ArmSystem::haveEL(tc, EL3) && ELIs32(tc, EL3) &&
+             static_cast<SCR>(tc->readMiscRegNoEffect(MISCREG_SCR)).ns == 0)
         return EL3;
     else if (HaveVirtHostExt(tc) && ELIsInHost(tc, el))
         return EL2;
@@ -271,11 +270,11 @@ HaveSecureEL2Ext(ThreadContext *tc)
 bool
 IsSecureEL2Enabled(ThreadContext *tc)
 {
-    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
     if (ArmSystem::haveEL(tc, EL2) && HaveSecureEL2Ext(tc) &&
         !ELIs32(tc, EL2)) {
         if (ArmSystem::haveEL(tc, EL3))
-            return !ELIs32(tc, EL3) && scr.eel2;
+            return !ELIs32(tc, EL3) && static_cast<SCR>(
+                tc->readMiscRegNoEffect(MISCREG_SCR_EL3)).eel2;
         else
             return isSecure(tc);
     }
@@ -285,9 +284,10 @@ IsSecureEL2Enabled(ThreadContext *tc)
 bool
 EL2Enabled(ThreadContext *tc)
 {
-    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
     return ArmSystem::haveEL(tc, EL2) &&
-           (!ArmSystem::haveEL(tc, EL3) || scr.ns || IsSecureEL2Enabled(tc));
+           (!ArmSystem::haveEL(tc, EL3) || static_cast<SCR>(
+                tc->readMiscRegNoEffect(MISCREG_SCR_EL3)).ns ||
+            IsSecureEL2Enabled(tc));
 }
 
 bool
