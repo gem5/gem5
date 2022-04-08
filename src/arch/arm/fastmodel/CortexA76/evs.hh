@@ -35,6 +35,7 @@
 #include "arch/arm/fastmodel/common/signal_sender.hh"
 #include "arch/arm/fastmodel/iris/cpu.hh"
 #include "arch/arm/fastmodel/protocol/exported_clock_rate_control.hh"
+#include "dev/reset_port.hh"
 #include "mem/port_proxy.hh"
 #include "params/FastModelScxEvsCortexA76x1.hh"
 #include "params/FastModelScxEvsCortexA76x2.hh"
@@ -98,6 +99,8 @@ class ScxEvsCortexA76 : public Types::Base, public Iris::BaseCpuEvs
 
     SignalSender dbg_reset;
 
+    ResetResponsePort<ScxEvsCortexA76> model_reset;
+
     CortexA76Cluster *gem5CpuCluster;
 
     const Params &params;
@@ -126,6 +129,8 @@ class ScxEvsCortexA76 : public Types::Base, public Iris::BaseCpuEvs
     void setCluster(SimObject *cluster) override;
 
     void setResetAddr(int core, Addr addr, bool secure) override;
+
+    void requestReset();
 };
 
 struct ScxEvsCortexA76x1Types

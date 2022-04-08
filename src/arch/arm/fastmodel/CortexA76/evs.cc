@@ -71,12 +71,30 @@ ScxEvsCortexA76<Types>::setResetAddr(int core, Addr addr, bool secure)
 }
 
 template <class Types>
+void
+ScxEvsCortexA76<Types>::requestReset()
+{
+    // Reset all cores.
+    for (auto &poweron_reset : this->poweron_reset) {
+        poweron_reset->signal_out.set_state(0, true);
+        poweron_reset->signal_out.set_state(0, false);
+    }
+    // Reset DSU.
+    this->top_reset.signal_out.set_state(0, true);
+    this->top_reset.signal_out.set_state(0, false);
+    // Reset debug APB.
+    this->dbg_reset.signal_out.set_state(0, true);
+    this->dbg_reset.signal_out.set_state(0, false);
+}
+
+template <class Types>
 ScxEvsCortexA76<Types>::ScxEvsCortexA76(
         const sc_core::sc_module_name &mod_name, const Params &p) :
     Base(mod_name),
     amba(Base::amba, p.name + ".amba", -1),
     top_reset(p.name + ".top_reset", 0),
     dbg_reset(p.name + ".dbg_reset", 0),
+    model_reset(p.name + ".model_reset", -1, this),
     params(p)
 {
     for (int i = 0; i < CoreCount; i++) {
@@ -178,6 +196,8 @@ ScxEvsCortexA76<Types>::gem5_getPort(const std::string &if_name, int idx)
         return top_reset;
     else if (if_name == "dbg_reset")
         return dbg_reset;
+    else if (if_name == "model_reset")
+        return model_reset;
     else
         return Base::gem5_getPort(if_name, idx);
 }

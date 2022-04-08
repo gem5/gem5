@@ -31,6 +31,7 @@ from m5.objects.ArmInterrupts import ArmInterrupts
 from m5.objects.ArmISA import ArmISA
 from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
 from m5.objects.FastModelGIC import Gicv3CommsTargetSocket
+from m5.objects.ResetPort import ResetResponsePort
 from m5.objects.IntPin import IntSinkPin
 from m5.objects.Gic import ArmPPI
 from m5.objects.Iris import IrisBaseCPU
@@ -172,6 +173,7 @@ class FastModelCortexA76Cluster(SimObject):
             'all resettable registers in DynamIQ.')
     dbg_reset = IntSinkPin('Initialize the shared debug APB, Cross Trigger ' \
             'Interface (CTI), and Cross Trigger Matrix (CTM) logic.')
+    model_reset = ResetResponsePort('A reset port to reset the whole cluster.')
 
     # These parameters are described in "Fast Models Reference Manual" section
     # 3.4.19, "ARMCortexA7x1CT".
