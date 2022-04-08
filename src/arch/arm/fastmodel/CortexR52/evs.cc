@@ -99,6 +99,7 @@ ScxEvsCortexR52<Types>::ScxEvsCortexR52(
     ext_slave(Base::ext_slave, p.name + ".ext_slave", -1),
     top_reset(p.name + ".top_reset", 0),
     dbg_reset(p.name + ".dbg_reset", 0),
+    model_reset(p.name + ".model_reset", -1, this),
     params(p)
 {
     for (int i = 0; i < CoreCount; i++)
@@ -148,6 +149,8 @@ ScxEvsCortexR52<Types>::gem5_getPort(const std::string &if_name, int idx)
         return this->top_reset;
     } else if (if_name == "dbg_reset") {
         return this->dbg_reset;
+    } else if (if_name == "model_reset") {
+        return this->model_reset;
     } else if (if_name == "spi") {
         return *this->spis.at(idx);
     } else if (if_name.substr(0, 3) == "ppi") {

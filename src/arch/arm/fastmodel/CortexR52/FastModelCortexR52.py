@@ -30,6 +30,7 @@ from m5.SimObject import SimObject
 from m5.objects.ArmInterrupts import ArmInterrupts
 from m5.objects.ArmISA import ArmISA
 from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
+from m5.objects.ResetPort import ResetResponsePort
 from m5.objects.IntPin import IntSinkPin, VectorIntSinkPin
 from m5.objects.Iris import IrisBaseCPU
 from m5.objects.SystemC import SystemC_ScModule
@@ -116,6 +117,7 @@ class FastModelCortexR52Cluster(SimObject):
     top_reset = IntSinkPin('This signal resets timer and interrupt controller.')
     dbg_reset = IntSinkPin('Initialize the shared debug APB, Cross Trigger ' \
             'Interface (CTI), and Cross Trigger Matrix (CTM) logic.')
+    model_reset = ResetResponsePort('A reset port to reset the whole cluster.')
 
     CLUSTER_ID = Param.UInt16(0, "CLUSTER_ID[15:8] equivalent to " \
             "CFGMPIDRAFF2, CLUSTER_ID[7:0] equivalent to CFGMPIDRAFF1")

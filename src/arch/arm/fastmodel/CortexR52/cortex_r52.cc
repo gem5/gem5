@@ -159,7 +159,7 @@ CortexR52Cluster::getPort(const std::string &if_name, PortID idx)
     if (if_name == "spi") {
         return evs->gem5_getPort(if_name, idx);
     } else if (if_name == "ext_slave" || if_name == "top_reset" ||
-               if_name == "dbg_reset") {
+               if_name == "dbg_reset" || if_name == "model_reset") {
         assert(idx == InvalidPortID);
         return evs->gem5_getPort(if_name, idx);
     } else {
