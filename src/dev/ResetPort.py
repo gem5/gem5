@@ -1,7 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
-# All rights reserved.
+# Copyright 2022 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -26,38 +23,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.params import Port, VectorPort
 
-SimObject('Device.py', sim_objects=[
-    'PioDevice', 'BasicPioDevice', 'DmaDevice', 'DmaVirtDevice', 'IsaFake'])
-Source('io_device.cc')
-Source('isa_fake.cc')
-Source('dma_device.cc')
-Source('dma_virt_device.cc')
+RESET_REQUEST_ROLE = 'Reset Request'
+RESET_RESPONSE_ROLE = 'Reset Response'
+Port.compat(RESET_REQUEST_ROLE, RESET_RESPONSE_ROLE)
 
-SimObject('IntPin.py', sim_objects=[])
-Source('intpin.cc')
+# ResetRequestPort is an artifact request port for reset purpose.
+class ResetRequestPort(Port):
+    def __init__(self, desc):
+        super().__init__(RESET_REQUEST_ROLE, desc, is_source=True)
 
-SimObject('ResetPort.py', sim_objects=[])
-Source('reset_port.cc')
+# ResetResponsePort is an artifact response port for reset purpose.
+# The owner should perform whole reset when receiving a request.
+class ResetResponsePort(Port):
+    def __init__(self, desc):
+        super().__init__(RESET_RESPONSE_ROLE, desc)
 
-DebugFlag('IsaFake')
-DebugFlag('DMA')
-
-SimObject('Platform.py', sim_objects=['Platform'])
-Source('platform.cc')
-
-if env['CONF']['TARGET_ISA'] == 'null':
-    Return()
-
-SimObject('BadDevice.py', sim_objects=['BadDevice'])
-
-Source('baddev.cc')
-Source('intel_8254_timer.cc')
-Source('mc146818.cc')
-Source('pixelpump.cc')
-
-DebugFlag('Intel8254Timer')
-DebugFlag('MC146818')
-
-GTest('reg_bank.test', 'reg_bank.test.cc')
+# VectorResetRequestPort presents a bank of artifact reset request
+# ports.
+class VectorResetRequestPort(VectorPort):
+    def __init__(self, desc):
+        super().__init__(RESET_REQUEST_ROLE, desc, is_source=True)
