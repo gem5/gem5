@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016-2020 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2016-2020, 2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -207,6 +207,8 @@ Addr purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
                       TCR tcr, bool isInstr);
 Addr purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
                       bool isInstr);
+Addr maskTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
+                    int topbit);
 int computeAddrTop(ThreadContext *tc, bool selbit, bool isInstr,
                    TCR tcr, ExceptionLevel el);
 

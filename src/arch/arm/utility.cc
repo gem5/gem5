@@ -469,6 +469,22 @@ computeAddrTop(ThreadContext *tc, bool selbit, bool is_instr,
     int res = (tbi && (!tbid || !is_instr))? 55: 63;
     return res;
 }
+
+Addr
+maskTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
+               int topbit)
+{
+    if (topbit == 63) {
+        return addr;
+    } else if (bits(addr,55) && (el <= EL1 || ELIsInHost(tc, el))) {
+        uint64_t mask = ((uint64_t)0x1 << topbit) -1;
+        addr = addr | ~mask;
+    } else {
+        addr = bits(addr, topbit, 0);
+    }
+    return addr;  // Nothing to do if this is not a tagged address
+}
+
 Addr
 purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
                  TCR tcr, bool is_instr)
@@ -476,15 +492,7 @@ purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
     bool selbit = bits(addr, 55);
     int topbit = computeAddrTop(tc, selbit, is_instr, tcr, el);
 
-    if (topbit == 63) {
-        return addr;
-    } else if (selbit && (el == EL1 || el == EL0 || ELIsInHost(tc, el))) {
-        uint64_t mask = ((uint64_t)0x1 << topbit) -1;
-        addr = addr | ~mask;
-    } else {
-        addr = bits(addr, topbit, 0);
-    }
-    return addr;  // Nothing to do if this is not a tagged address
+    return maskTaggedAddr(addr, tc, el, topbit);
 }
 
 Addr
