@@ -96,9 +96,10 @@ template <class Types>
 ScxEvsCortexR52<Types>::ScxEvsCortexR52(
         const sc_core::sc_module_name &mod_name, const Params &p) :
     Base(mod_name),
-    params(p),
     ext_slave(Base::ext_slave, p.name + ".ext_slave", -1),
-    top_reset(p.name + ".top_reset", 0)
+    top_reset(p.name + ".top_reset", 0),
+    dbg_reset(p.name + ".dbg_reset", 0),
+    params(p)
 {
     for (int i = 0; i < CoreCount; i++)
         corePins.emplace_back(new CorePins(this, i));
@@ -109,6 +110,7 @@ ScxEvsCortexR52<Types>::ScxEvsCortexR52(
     }
 
     top_reset.signal_out.bind(Base::top_reset);
+    dbg_reset.signal_out.bind(Base::dbg_reset);
 
     clockRateControl.bind(this->clock_rate_s);
     signalInterrupt.bind(this->signal_interrupt);
@@ -144,6 +146,8 @@ ScxEvsCortexR52<Types>::gem5_getPort(const std::string &if_name, int idx)
         return this->ext_slave;
     } else if (if_name == "top_reset") {
         return this->top_reset;
+    } else if (if_name == "dbg_reset") {
+        return this->dbg_reset;
     } else if (if_name == "spi") {
         return *this->spis.at(idx);
     } else if (if_name.substr(0, 3) == "ppi") {

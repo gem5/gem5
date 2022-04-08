@@ -119,13 +119,15 @@ class ScxEvsCortexR52 : public Types::Base, public Iris::BaseCpuEvs
 
     std::vector<std::unique_ptr<ClstrInt>> spis;
 
-    CortexR52Cluster *gem5CpuCluster;
-
-    const Params &params;
-
     AmbaTarget ext_slave;
 
     SignalSender top_reset;
+
+    SignalSender dbg_reset;
+
+    CortexR52Cluster *gem5CpuCluster;
+
+    const Params &params;
 
   public:
     ScxEvsCortexR52(const Params &p) : ScxEvsCortexR52(p.name.c_str(), p) {}

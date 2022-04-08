@@ -114,6 +114,8 @@ class FastModelCortexR52Cluster(SimObject):
 
     ext_slave = AmbaTargetSocket(64, 'AMBA target socket')
     top_reset = IntSinkPin('This signal resets timer and interrupt controller.')
+    dbg_reset = IntSinkPin('Initialize the shared debug APB, Cross Trigger ' \
+            'Interface (CTI), and Cross Trigger Matrix (CTM) logic.')
 
     CLUSTER_ID = Param.UInt16(0, "CLUSTER_ID[15:8] equivalent to " \
             "CFGMPIDRAFF2, CLUSTER_ID[7:0] equivalent to CFGMPIDRAFF1")
