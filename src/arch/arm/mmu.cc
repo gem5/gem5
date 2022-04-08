@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016-2021 Arm Limited
+ * Copyright (c) 2010-2013, 2016-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -197,6 +197,8 @@ void
 MMU::invalidateMiscReg()
 {
     s1State.miscRegValid = false;
+    s1State.computeAddrTop.flush();
+    s2State.computeAddrTop.flush();
 }
 
 Fault
@@ -237,11 +239,12 @@ MMU::translateSe(const RequestPtr &req, ThreadContext *tc, Mode mode,
     updateMiscReg(tc, NormalTran, state.isStage2);
     Addr vaddr_tainted = req->getVaddr();
     Addr vaddr = 0;
-    if (state.aarch64)
+    if (state.aarch64) {
         vaddr = purifyTaggedAddr(vaddr_tainted, tc, state.aarch64EL,
-                                 (TCR)state.ttbcr, mode==Execute);
-    else
+            static_cast<TCR>(state.ttbcr), mode==Execute, state);
+    } else {
         vaddr = vaddr_tainted;
+    }
     Request::Flags flags = req->getFlags();
 
     bool is_fetch = (mode == Execute);
@@ -480,7 +483,7 @@ MMU::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
 
     Addr vaddr_tainted = req->getVaddr();
     Addr vaddr = purifyTaggedAddr(vaddr_tainted, tc, state.aarch64EL,
-        (TCR)state.ttbcr, mode==Execute);
+        static_cast<TCR>(state.ttbcr), mode==Execute, state);
 
     Request::Flags flags = req->getFlags();
     bool is_fetch  = (mode == Execute);
@@ -789,6 +792,18 @@ MMU::checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req, Mode mode,
     return false;
 }
 
+Addr
+MMU::purifyTaggedAddr(Addr vaddr_tainted, ThreadContext *tc, ExceptionLevel el,
+                      TCR tcr, bool is_inst, CachedState& state)
+{
+    const bool selbit = bits(vaddr_tainted, 55);
+
+    // Call the memoized version of computeAddrTop
+    const auto topbit = state.computeAddrTop(tc, selbit, is_inst, tcr, el);
+
+    return maskTaggedAddr(vaddr_tainted, tc, el, topbit);
+}
+
 Fault
 MMU::translateMmuOff(ThreadContext *tc, const RequestPtr &req, Mode mode,
         ArmTranslationType tran_type, Addr vaddr, bool long_desc_format,
@@ -947,11 +962,12 @@ MMU::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
 
     Addr vaddr_tainted = req->getVaddr();
     Addr vaddr = 0;
-    if (state.aarch64)
+    if (state.aarch64) {
         vaddr = purifyTaggedAddr(vaddr_tainted, tc, state.aarch64EL,
-            (TCR)state.ttbcr, mode==Execute);
-    else
+            static_cast<TCR>(state.ttbcr), mode==Execute, state);
+    } else {
         vaddr = vaddr_tainted;
+    }
     Request::Flags flags = req->getFlags();
 
     bool is_fetch  = (mode == Execute);
@@ -1443,7 +1459,7 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
     ExceptionLevel target_el = state.aarch64 ? state.aarch64EL : EL1;
     if (state.aarch64) {
         vaddr = purifyTaggedAddr(vaddr_tainted, tc, target_el,
-            (TCR)state.ttbcr, mode==Execute);
+            static_cast<TCR>(state.ttbcr), mode==Execute, state);
     } else {
         vaddr = vaddr_tainted;
     }

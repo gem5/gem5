@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016, 2019-2021 Arm Limited
+ * Copyright (c) 2010-2013, 2016, 2019-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,8 +43,9 @@
 
 #include "arch/arm/page_size.hh"
 #include "arch/arm/tlb.hh"
+#include "arch/arm/utility.hh"
 #include "arch/generic/mmu.hh"
-
+#include "base/memoizer.hh"
 #include "enums/ArmLookupLevel.hh"
 
 #include "params/ArmMMU.hh"
@@ -130,10 +131,43 @@ class MMU : public BaseMMU
         S12E1Tran = 0x100
     };
 
-    struct CachedState {
-        explicit CachedState(MMU *_mmu, bool stage2)
-          : mmu(_mmu), isStage2(stage2)
+    struct CachedState
+    {
+        CachedState(MMU *_mmu, bool stage2)
+          : mmu(_mmu), isStage2(stage2),
+            computeAddrTop(ArmISA::computeAddrTop)
         {}
+
+        CachedState&
+        operator=(const CachedState &rhs)
+        {
+            isStage2 = rhs.isStage2;
+            cpsr = rhs.cpsr;
+            aarch64 = rhs.aarch64;
+            aarch64EL = EL0;
+            sctlr = rhs.sctlr;
+            scr = rhs.scr;
+            isPriv = rhs.isPriv;
+            isSecure = rhs.isSecure;
+            isHyp = rhs.isHyp;
+            ttbcr = rhs.ttbcr;
+            asid = rhs.asid;
+            vmid = rhs.vmid;
+            prrr = rhs.prrr;
+            nmrr = rhs.nmrr;
+            hcr = rhs.hcr;
+            dacr = rhs.dacr;
+            miscRegValid = rhs.miscRegValid;
+            curTranType = rhs.curTranType;
+            stage2Req = rhs.stage2Req;
+            stage2DescReq = rhs.stage2DescReq;
+            directToStage2 = rhs.directToStage2;
+
+            // When we copy we just flush the memoizer cache
+            computeAddrTop.flush();
+
+            return *this;
+        }
 
         void updateMiscReg(ThreadContext *tc, ArmTranslationType tran_type);
 
@@ -173,6 +207,9 @@ class MMU : public BaseMMU
         // Indicates whether all translation requests should
         // be routed directly to the stage 2 TLB
         bool directToStage2 = false;
+
+        Memoizer<int, ThreadContext*, bool,
+                 bool, TCR, ExceptionLevel> computeAddrTop;
     };
 
     MMU(const ArmMMUParams &p);
@@ -397,7 +434,12 @@ class MMU : public BaseMMU
                              ThreadContext *tc, bool stage2);
     Fault checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
                              ThreadContext *tc, CachedState &state);
+
   protected:
+    Addr purifyTaggedAddr(Addr vaddr_tainted, ThreadContext *tc,
+                          ExceptionLevel el,
+                          TCR tcr, bool is_inst, CachedState& state);
+
     bool checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
                   Mode mode, const bool is_priv, CachedState &state);
 
