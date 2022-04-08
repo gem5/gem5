@@ -60,6 +60,12 @@ component CortexA76x2
         // Core reset addrs.
         self.rvbaraddr => core.rvbaraddr;
 
+        // Reset signals.
+        self.core_reset => core.reset;
+        self.poweron_reset => core.cpuporeset;
+        self.top_reset => core.sporeset;
+        self.dbg_reset => core.presetdbg;
+
         // Clocks.
         clock1Hz.clk_out => clockDiv.clk_in;
         clock1Hz.clk_out => clockDivPeriph.clk_in;
@@ -100,4 +106,8 @@ component CortexA76x2
     master port<Signal> vcpumntirq[2];
     master port<Signal> cntpnsirq[2];
     slave port<Value_64> rvbaraddr[2];
+    slave port<Signal> core_reset[2];
+    slave port<Signal> poweron_reset[2];
+    slave port<Signal> top_reset;
+    slave port<Signal> dbg_reset;
 }

@@ -104,7 +104,7 @@ CortexA76::setResetAddr(Addr addr, bool secure)
 Port &
 CortexA76::getPort(const std::string &if_name, PortID idx)
 {
-    if (if_name == "redistributor")
+    if (if_name == "redistributor" || if_name == "core_reset")
         return cluster->getEvs()->gem5_getPort(if_name, num);
     else
         return Base::getPort(if_name, idx);
@@ -199,7 +199,8 @@ CortexA76Cluster::CortexA76Cluster(const Params &p) :
 Port &
 CortexA76Cluster::getPort(const std::string &if_name, PortID idx)
 {
-    if (if_name == "amba") {
+    if (if_name == "amba" || if_name == "top_reset" ||
+        if_name == "dbg_reset") {
         return evs->gem5_getPort(if_name, idx);
     } else {
         return SimObject::getPort(if_name, idx);

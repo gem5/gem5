@@ -31,6 +31,7 @@ from m5.objects.ArmInterrupts import ArmInterrupts
 from m5.objects.ArmISA import ArmISA
 from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
 from m5.objects.FastModelGIC import Gicv3CommsTargetSocket
+from m5.objects.IntPin import IntSinkPin
 from m5.objects.Gic import ArmPPI
 from m5.objects.Iris import IrisBaseCPU
 from m5.objects.SystemC import SystemC_ScModule
@@ -46,6 +47,10 @@ class FastModelCortexA76(IrisBaseCPU):
     evs = Parent.evs
 
     redistributor = Gicv3CommsTargetSocket('GIC communication target')
+    core_reset = IntSinkPin('Raising this signal will put the core into ' \
+                            'reset mode.')
+    poweron_reset = IntSinkPin('Power on reset. Initializes all the ' \
+                               'processor logic, including debug logic.')
 
     CFGEND = Param.Bool(False, "Endianness configuration at reset.  "\
             "0, little endian. 1, big endian.")
@@ -163,6 +168,10 @@ class FastModelCortexA76Cluster(SimObject):
             "Non-secure physical timer event")
 
     amba = AmbaInitiatorSocket(64, 'AMBA initiator socket')
+    top_reset = IntSinkPin('A single cluster-wide power on reset signal for ' \
+            'all resettable registers in DynamIQ.')
+    dbg_reset = IntSinkPin('Initialize the shared debug APB, Cross Trigger ' \
+            'Interface (CTI), and Cross Trigger Matrix (CTM) logic.')
 
     # These parameters are described in "Fast Models Reference Manual" section
     # 3.4.19, "ARMCortexA7x1CT".
