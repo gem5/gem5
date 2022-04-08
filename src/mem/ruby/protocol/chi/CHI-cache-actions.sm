@@ -1934,7 +1934,12 @@ action(UpdateDataState_FromWUDataResp, desc="") {
     peek(datInPort, CHIDataMsg) {
       assert(in_msg.type == CHIDataType:NCBWrData);
       tbe.dataDirty := true;
-      tbe.dataValid := tbe.accSize == blockSize;
+      if (tbe.reqType == CHIRequestType:WriteUniquePtl) {
+        // we are just updating any valid data we already had
+        tbe.dataValid := tbe.dataValid || (tbe.accSize == blockSize);
+      } else {
+        tbe.dataValid := tbe.accSize == blockSize;
+      }
     }
   }
   printTBEState(tbe);
