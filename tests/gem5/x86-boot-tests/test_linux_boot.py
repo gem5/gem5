@@ -261,10 +261,10 @@ run_map = {
             8: False,  # Not Supported
         },
         "timing": {
-            1: True,
-            2: True,
-            4: True,
-            8: True,
+            1: False,  # MI_Example does not successfully boot with the Timing
+            2: False,  # Jira: https://gem5.atlassian.net/browse/GEM5-1216
+            4: False,
+            8: False,
         },
         "o3": {
             1: False,  # Timeout
