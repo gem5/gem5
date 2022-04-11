@@ -238,13 +238,13 @@ run_map = {
             1: True,
             2: True,
             4: False,  # We already run this in the long (Nightly) tests.
-            8: True,
+            8: False,  # Jira: https://gem5.atlassian.net/browse/GEM5-1217
         },
         "timing": {
             1: True,
             2: True,
             4: True,
-            8: True,
+            8: False,  # Jira: https://gem5.atlassian.net/browse/GEM5-1217
         },
         "o3": {
             1: False,  # Timeout
