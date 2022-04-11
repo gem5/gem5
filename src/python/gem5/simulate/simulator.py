@@ -32,6 +32,7 @@ from m5.objects import Root
 from m5.util import warn
 
 import os
+from pathlib import Path
 from typing import Optional, List, Tuple, Dict, Generator, Union
 
 from .exit_event_generators import (
@@ -76,6 +77,7 @@ class Simulator:
             Dict[Union[str, ExitEvent], Generator[Optional[bool], None, None]]
         ] = None,
         expected_execution_order: Optional[List[ExitEvent]] = None,
+        checkpoint_path: Optional[Path] = None,
     ) -> None:
         """
         :param board: The board to be simulated.
@@ -91,6 +93,9 @@ class Simulator:
         encountered (e.g., 'Workbegin', 'Workend', then 'Exit'), an Exception
         is thrown. If this parameter is not specified, any ordering of exit
         events is valid.
+        :param checkpoint_path: An optional parameter specifying the directory
+        of the checkpoint to instantiate from. When the path is None, no
+        checkpoint will be loaded. By default, the path is None.
 
         `on_exit_event` usage notes
         ---------------------------
@@ -177,6 +182,8 @@ class Simulator:
 
         self._last_exit_event = None
         self._exit_event_count = 0
+
+        self._checkpoint_path = checkpoint_path
 
     def get_stats(self) -> Dict:
         """
@@ -283,7 +290,10 @@ class Simulator:
                 m5.ticks.fixGlobalFrequency()
                 root.sim_quantum = m5.ticks.fromSeconds(0.001)
 
-            m5.instantiate()
+            # m5.instantiate() takes a parameter specifying the path to the
+            # checkpoint directory. If the parameter is None, no checkpoint
+            # will be restored.
+            m5.instantiate(self._checkpoint_path)
             self._instantiated = True
 
     def run(self, max_ticks: int = m5.MaxTick) -> None:
@@ -353,3 +363,13 @@ class Simulator:
             # run loop.
             if exit_on_completion:
                 return
+
+    def save_checkpoint(self, checkpoint_dir: Path) -> None:
+        """
+        This function will save the checkpoint to the specified directory.
+
+        :param checkpoint_dir: The path to the directory where the checkpoint
+        will be saved.
+        """
+        m5.checkpoint(str(checkpoint_dir))
+
