@@ -633,7 +633,7 @@ for variant_path in variant_paths:
                     (' or '.join(current_vars_files), default_vars_file))
         else:
             error("Cannot find variables file(s) %s or default file(s) %s" %
-                    (' or '.join(current_vars_file),
+                    (' or '.join(current_vars_files),
                      ' or '.join(default_vars_files)))
             Exit(1)
 
