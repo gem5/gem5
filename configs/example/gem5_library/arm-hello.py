@@ -37,7 +37,7 @@ Usage
 
 ```
 scons build/ARM/gem5.opt
-./build/ARM/gem5.opt configs/gem5_library/arm-hello.py
+./build/ARM/gem5.opt configs/example/gem5_library/arm-hello.py
 ```
 """
 
