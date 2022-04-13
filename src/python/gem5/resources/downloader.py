@@ -35,6 +35,7 @@ import base64
 import time
 import random
 from pathlib import Path
+import tarfile
 from tempfile import gettempdir
 from urllib.error import HTTPError
 from typing import List, Dict
@@ -286,6 +287,7 @@ def get_resource(
     resource_name: str,
     to_path: str,
     unzip: bool = True,
+    untar: bool = True,
     download_md5_mismatch: bool = True,
 ) -> None:
     """
@@ -299,6 +301,9 @@ def get_resource(
 
     :param unzip: If true, gzipped resources will be unzipped prior to saving
     to `to_path`. True by default.
+
+    :param untar: If true, tar achieve resource will be unpacked prior to
+    saving to `to_path`. True by default.
 
     :param download_md5_mismatch: If a resource is present with an incorrect
     hash (e.g., an outdated version of the resource is present), `get_resource`
@@ -360,8 +365,16 @@ def get_resource(
                 )
             )
 
+        run_tar_extract = untar and "is_tar_archive" in resource_json and \
+                          resource_json["is_tar_archive"]
+
+        tar_extension = ".tar"
+        if run_tar_extract:
+            download_dest += tar_extension
+
+        zip_extension = ".gz"
         if run_unzip:
-            download_dest += ".gz"
+            download_dest += zip_extension
 
         # TODO: Might be nice to have some kind of download status bar here.
         # TODO: There might be a case where this should be silenced.
@@ -385,10 +398,22 @@ def get_resource(
                     resource_name, download_dest
                 )
             )
+            unzip_to = download_dest[:-len(zip_extension)]
             with gzip.open(download_dest, "rb") as f:
-                with open(to_path, "wb") as o:
+                with open(unzip_to, "wb") as o:
                     shutil.copyfileobj(f, o)
             os.remove(download_dest)
+            download_dest = unzip_to
             print(
                 "Finished decompressing resource '{}'.".format(resource_name)
             )
+
+        if run_tar_extract:
+            print(
+                f"Unpacking the the resource '{resource_name}' "
+                f"('{download_dest}')"
+            )
+            unpack_to = download_dest[:-len(tar_extension)]
+            with tarfile.open(download_dest) as f:
+                f.extractall(unpack_to)
+            os.remove(download_dest)
