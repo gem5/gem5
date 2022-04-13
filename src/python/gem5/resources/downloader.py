@@ -34,9 +34,12 @@ import hashlib
 import base64
 import time
 import random
+from pathlib import Path
 from tempfile import gettempdir
 from urllib.error import HTTPError
 from typing import List, Dict
+
+from .md5_utils import md5_file, md5_dir
 
 from ..utils.filelock import FileLock
 
@@ -195,31 +198,6 @@ def _get_resources(resources_group: Dict) -> Dict[str, Dict]:
 
     return to_return
 
-
-def _get_md5(file: str) -> str:
-    """
-    Gets the md5 of a file.
-
-    :param file: The file needing an md5 value.
-
-    :returns: The md5 of the input file.
-    """
-
-    # Note: This code is slightly more complex than you might expect as
-    # `hashlib.md5(<file>)` returns malloc errors for large files (such as
-    # disk images).
-    md5_object = hashlib.md5()
-    block_size = 128 * md5_object.block_size
-    a_file = open(file, "rb")
-    chunk = a_file.read(block_size)
-
-    while chunk:
-        md5_object.update(chunk)
-        chunk = a_file.read(block_size)
-
-    return md5_object.hexdigest()
-
-
 def _download(
     url: str,
     download_to: str,
@@ -343,17 +321,20 @@ def get_resource(
 
         if os.path.exists(to_path):
 
-            if not os.path.isfile(to_path):
-                raise Exception(
-                    "There is a directory at '{}'.".format(to_path)
-                )
+            if os.path.isfile(to_path):
+                md5 = md5_file(Path(to_path))
+            else:
+                md5 = md5_dir(Path(to_path))
 
-            if _get_md5(to_path) == resource_json["md5sum"]:
+            if md5 == resource_json["md5sum"]:
                 # In this case, the file has already been download, no need to
                 # do so again.
                 return
             elif download_md5_mismatch:
-                os.remove(to_path)
+                if os.path.isfile(to_path):
+                    os.remove(to_path)
+                else:
+                    shutil.rmtree(to_path)
             else:
                 raise Exception(
                     "There already a file present at '{}' but "
