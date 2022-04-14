@@ -253,7 +253,7 @@ AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
     Addr aperture_offset = offset - aperture;
 
     // Record the value
-    frame_regs[offset] = pkt->getLE<uint32_t>();
+    frame_regs[offset] = pkt->getUintX(ByteOrder::little);
     if (aperture == gpuvm.gartBase()) {
         frame_regs[aperture_offset] = pkt->getLE<uint32_t>();
         DPRINTF(AMDGPUDevice, "GART translation %p -> %p\n", aperture_offset,
