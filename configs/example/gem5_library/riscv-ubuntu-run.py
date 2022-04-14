@@ -115,7 +115,5 @@ board.set_kernel_disk_workload(
     ),
 )
 
-root = Root(full_system=True, system=board)
-
 simulator = Simulator(board=board)
 simulator.run()
