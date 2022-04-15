@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2022 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,7 @@ from m5.objects import (
 from typing import List
 
 
-class AbstractBoard(System):
+class AbstractBoard:
     """The abstract board interface.
 
     Boards are used as the object which can connect together all other
@@ -65,16 +65,18 @@ class AbstractBoard(System):
         self,
         clk_freq: str,
         processor: "AbstractProcessor",
-        memory: "AbstractMemory",
+        memory: "AbstractMemorySystem",
         cache_hierarchy: "AbstractCacheHierarchy",
     ) -> None:
-        super().__init__()
         """
         :param clk_freq: The clock frequency for this board.
         :param processor: The processor for this board.
         :param memory: The memory for this board.
         :param cache_hierarchy: The Cachie Hierarchy for this board.
         """
+
+        if not isinstance(self, System):
+            raise Exception("A gem5 stdlib board must inherit from System.")
 
         # Set up the clock domain and the voltage domain.
         self.clk_domain = SrcClockDomain()

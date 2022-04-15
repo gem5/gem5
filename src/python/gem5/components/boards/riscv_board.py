@@ -29,7 +29,7 @@ import os
 from typing import List
 
 from ...utils.override import overrides
-from .abstract_board import AbstractBoard
+from .abstract_system_board import AbstractSystemBoard
 from .kernel_disk_workload import KernelDiskWorkload
 from ..processors.abstract_processor import AbstractProcessor
 from ..memory.abstract_memory_system import AbstractMemorySystem
@@ -68,7 +68,7 @@ from m5.util.fdthelper import (
 )
 
 
-class RiscvBoard(AbstractBoard, KernelDiskWorkload):
+class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
     """
     A board capable of full system simulation for RISC-V
 
@@ -94,7 +94,7 @@ class RiscvBoard(AbstractBoard, KernelDiskWorkload):
                 "RISCV ISA. Current processor ISA: "
                 f"'{processor.get_isa().name}'.")
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def _setup_board(self) -> None:
         self.workload = RiscvLinux()
 
@@ -173,34 +173,34 @@ class RiscvBoard(AbstractBoard, KernelDiskWorkload):
                 uncacheable=uncacheable_range
             )
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def has_dma_ports(self) -> bool:
         return False
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def get_dma_ports(self) -> List[Port]:
         raise NotImplementedError(
             "RISCVBoard does not have DMA Ports. "
             "Use `has_dma_ports()` to check this."
         )
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def has_io_bus(self) -> bool:
         return True
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def get_io_bus(self) -> IOXBar:
         return self.iobus
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def has_coherent_io(self) -> bool:
         return True
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def get_mem_side_coherent_io_port(self) -> Port:
         return self.iobus.mem_side_ports
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def _setup_memory_ranges(self):
         memory = self.get_memory()
         mem_size = memory.get_size()

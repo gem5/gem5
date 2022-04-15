@@ -28,7 +28,7 @@
 from .kernel_disk_workload import KernelDiskWorkload
 from ...resources.resource import AbstractResource
 from ...utils.override import overrides
-from .abstract_board import AbstractBoard
+from .abstract_system_board import AbstractSystemBoard
 from ...isas import ISA
 
 from m5.objects import (
@@ -61,7 +61,7 @@ from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
 from typing import List, Sequence
 
 
-class X86Board(AbstractBoard, KernelDiskWorkload):
+class X86Board(AbstractSystemBoard, KernelDiskWorkload):
     """
     A board capable of full system simulation for X86.
 
@@ -88,7 +88,7 @@ class X86Board(AbstractBoard, KernelDiskWorkload):
             raise Exception("The X86Board requires a processor using the X86 "
                 f"ISA. Current processor ISA: '{processor.get_isa().name}'.")
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def _setup_board(self) -> None:
         self.pc = Pc()
 
@@ -251,31 +251,31 @@ class X86Board(AbstractBoard, KernelDiskWorkload):
 
         self.workload.e820_table.entries = entries
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def has_io_bus(self) -> bool:
         return True
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def get_io_bus(self) -> BaseXBar:
         return self.iobus
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def has_dma_ports(self) -> bool:
         return True
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def get_dma_ports(self) -> Sequence[Port]:
         return [self.pc.south_bridge.ide.dma, self.iobus.mem_side_ports]
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def has_coherent_io(self) -> bool:
         return True
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def get_mem_side_coherent_io_port(self) -> Port:
         return self.iobus.mem_side_ports
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def _setup_memory_ranges(self):
         memory = self.get_memory()
 
