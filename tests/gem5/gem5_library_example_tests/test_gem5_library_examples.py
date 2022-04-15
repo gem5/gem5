@@ -195,3 +195,20 @@ gem5_verify_config(
     valid_hosts=constants.supported_hosts,
     length=constants.long_tag,
 )
+
+gem5_verify_config(
+    name="test-gem5-library-example-arm-ubuntu-boot-test",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "gem5_library",
+        "arm-ubuntu-boot-exit.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.arm_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.long_tag,
+)

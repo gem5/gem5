@@ -79,7 +79,18 @@ class SimpleCore(AbstractCore):
 
     @overrides(AbstractCore)
     def connect_walker_ports(self, port1: Port, port2: Port) -> None:
-        self.core.mmu.connectWalkerPorts(port1, port2)
+        if self.get_isa() == ISA.ARM:
+
+            # Unlike X86 and RISCV MMU, the ARM MMU has two L1 TLB walker ports
+            # named `walker` and `stage2_walker` for both data and instruction.
+            # The gem5 standard library currently supports one TLB walker port
+            # per cache level. Therefore, we are explicitly setting the walker
+            # ports and not setting the stage2_walker ports for ARM systems.
+
+            self.core.mmu.itb_walker.port = port1
+            self.core.mmu.dtb_walker.port = port2
+        else:
+            self.core.mmu.connectWalkerPorts(port1, port2)
 
     @overrides(AbstractCore)
     def set_workload(self, process: Process) -> None:
