@@ -68,7 +68,7 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
         ),
         config_args=[],
         valid_isas=(constants.x86_tag,),
-        valid_hosts=constants.supported_hosts,
+        valid_hosts=(constants.host_x86_64_tag,),
         length=constants.long_tag,
         uses_kvm=True,
     )
@@ -107,7 +107,7 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
         config_args=["--benchmark","blackscholes","--size","simsmall"],
         valid_isas=(constants.x86_tag,),
         protocol="MESI_Two_Level",
-        valid_hosts=constants.supported_hosts,
+        valid_hosts=(constants.host_x86_64_tag,),
         length=constants.long_tag,
         uses_kvm=True,
     )
@@ -135,7 +135,7 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
         ],
         valid_isas=(constants.x86_tag,),
         protocol="MESI_Two_Level",
-        valid_hosts=constants.supported_hosts,
+        valid_hosts=(constants.host_x86_64_tag,),
         length=constants.long_tag,
         uses_kvm=True,
     )
@@ -157,7 +157,7 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
         config_args=["--benchmark","bfs","--synthetic","1","--size","1"],
         valid_isas=(constants.x86_tag,),
         protocol="MESI_Two_Level",
-        valid_hosts=constants.supported_hosts,
+        valid_hosts=(constants.host_x86_64_tag,),
         length=constants.long_tag,
         uses_kvm=True,
     )

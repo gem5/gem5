@@ -84,7 +84,7 @@ def test_kvm_switch(cpu: str, num_cpus: int, mem_system: str, length: str):
             "--kernel-args=''",
         ],
         valid_isas=(isa_to_use,),
-        valid_hosts=constants.supported_hosts,
+        valid_hosts=(constants.host_x86_64_tag,),
         protocol=protocol_to_use,
         length=length,
         uses_kvm=True,
