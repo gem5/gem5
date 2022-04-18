@@ -114,7 +114,7 @@ void
 AMDGPUInterruptHandler::submitWritePointer()
 {
     uint8_t *dataPtr = new uint8_t[sizeof(uint32_t)];
-    regs.IH_Wptr += INTR_COOKIE_SIZE;
+    regs.IH_Wptr += sizeof(AMDGPUInterruptCookie);
     Addr paddr = regs.WptrAddr;
     std::memcpy(dataPtr, &regs.IH_Wptr, sizeof(uint32_t));
 
@@ -127,7 +127,7 @@ AMDGPUInterruptHandler::submitInterruptCookie()
 {
     assert(!interruptQueue.empty());
     auto cookie = interruptQueue.front();
-    size_t cookieSize = INTR_COOKIE_SIZE * sizeof(uint32_t);
+    size_t cookieSize = sizeof(AMDGPUInterruptCookie);
 
     uint8_t *dataPtr = new uint8_t[cookieSize];
     std::memcpy(dataPtr, cookie, cookieSize);

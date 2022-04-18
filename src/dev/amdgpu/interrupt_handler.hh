@@ -78,6 +78,8 @@ enum ihSourceId
            drivers/gpu/drm/amd/amdgpu/amdgpu_irq.h#L46
  *
  */
+constexpr uint32_t INTR_COOKIE_SIZE = 32; // in bytes
+
 typedef struct
 {
     uint32_t clientId : 8;
@@ -98,6 +100,7 @@ typedef struct
     uint32_t source_data_dw3;
     uint32_t source_data_dw4;
 } AMDGPUInterruptCookie;
+static_assert(sizeof(AMDGPUInterruptCookie) == INTR_COOKIE_SIZE);
 
 /**
  * Struct to contain all interrupt handler related registers.
@@ -115,8 +118,6 @@ typedef struct
     Addr WptrAddr;
     uint32_t IH_Doorbell;
 } AMDGPUIHRegs;
-
-constexpr uint32_t INTR_COOKIE_SIZE = 32; // in bytes
 
 class AMDGPUInterruptHandler : public DmaDevice
 {
