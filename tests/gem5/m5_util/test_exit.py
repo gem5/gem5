@@ -70,5 +70,5 @@ gem5_verify_config(
         resource_path,
         "x86",
     ],
-    valid_isas=(constants.gcn3_x86_tag,),
+    valid_isas=(constants.vega_x86_tag,),
 )

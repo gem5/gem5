@@ -36,7 +36,7 @@ gem5_verify_config(
     config_args = [],
     length = constants.quick_tag,
     valid_isas=(
-        constants.gcn3_x86_tag,
+        constants.vega_x86_tag,
         constants.riscv_tag,
         constants.arm_tag,
     ),
@@ -50,7 +50,7 @@ gem5_verify_config(
     config_args = [],
     length = constants.quick_tag,
     valid_isas=(
-        constants.gcn3_x86_tag,
+        constants.vega_x86_tag,
         constants.riscv_tag,
         constants.arm_tag
     ),

@@ -70,7 +70,7 @@ def test_boot(
         isa_to_use=constants.x86_tag
     else:
         protocol_to_use=None
-        isa_to_use=constants.gcn3_x86_tag
+        isa_to_use=constants.vega_x86_tag
 
     gem5_verify_config(
         name=name,
