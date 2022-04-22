@@ -32,36 +32,43 @@ import sys
 
 from SCons.Scanner import Classic
 
+from code_formatter import code_formatter
 from gem5_scons import Transform
 
-Import('*')
+Import("*")
 
-if env['CONF']['PROTOCOL'] == 'None':
+if env["CONF"]["PROTOCOL"] == "None":
     Return()
 
-output_dir = Dir('.')
-html_dir = Dir('html')
-slicc_dir = Dir('../slicc')
+output_dir = Dir(".")
+html_dir = Dir("html")
+slicc_dir = Dir("../slicc")
 
-sys.path[1:1] = [ Dir('..').Dir('..').srcnode().abspath ]
+sys.path[1:1] = [Dir("..").Dir("..").srcnode().abspath]
 from slicc.parser import SLICC
 
 slicc_depends = []
-for root,dirs,files in os.walk(slicc_dir.srcnode().abspath):
+for root, dirs, files in os.walk(slicc_dir.srcnode().abspath):
     for f in files:
-        if f.endswith('.py'):
+        if f.endswith(".py"):
             slicc_depends.append(File(os.path.join(root, f)))
 
 #
 # Use SLICC
 #
 env["SLICC_PATH"] = env["PROTOCOL_DIRS"]
-slicc_scanner = Classic("SliccScanner", ['.sm', '.slicc'], "SLICC_PATH",
-                        r'''include[ \t]["'](.*)["'];''')
+slicc_scanner = Classic(
+    "SliccScanner",
+    [".sm", ".slicc"],
+    "SLICC_PATH",
+    r"""include[ \t]["'](.*)["'];""",
+)
 env.Append(SCANNERS=slicc_scanner)
 
-slicc_includes = ['mem/ruby/slicc_interface/RubySlicc_includes.hh'] + \
-        env['SLICC_INCLUDES']
+slicc_includes = ["mem/ruby/slicc_interface/RubySlicc_includes.hh"] + env[
+    "SLICC_INCLUDES"
+]
+
 
 def slicc_emitter(target, source, env, shared_only):
     assert len(source) == 1
@@ -69,18 +76,19 @@ def slicc_emitter(target, source, env, shared_only):
 
     slicc = SLICC(
         filepath,
-        [os.path.join(protocol_base.abspath, 'RubySlicc_interfaces.slicc')],
+        [os.path.join(protocol_base.abspath, "RubySlicc_interfaces.slicc")],
         protocol_base.abspath,
         shared_only=shared_only,
-        verbose=False
+        verbose=False,
     )
     slicc.process()
     slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
-    if env['CONF']['SLICC_HTML'] and not shared_only:
+    if env["CONF"]["SLICC_HTML"] and not shared_only:
         slicc.writeHTMLFiles(html_dir.abspath)
 
     target.extend([output_dir.File(f) for f in sorted(slicc.files())])
     return target, source
+
 
 def slicc_action(target, source, env, shared_only):
     assert len(source) == 1
@@ -88,35 +96,43 @@ def slicc_action(target, source, env, shared_only):
 
     slicc = SLICC(
         filepath,
-        [os.path.join(protocol_base.abspath, 'RubySlicc_interfaces.slicc')],
+        [os.path.join(protocol_base.abspath, "RubySlicc_interfaces.slicc")],
         protocol_base.abspath,
         shared_only=shared_only,
-        verbose=True
+        verbose=True,
     )
     slicc.process()
     slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
-    if env['CONF']['SLICC_HTML'] and not shared_only:
+    if env["CONF"]["SLICC_HTML"] and not shared_only:
         slicc.writeHTMLFiles(html_dir.abspath)
 
-slicc_builder = Builder(
-    action=MakeAction(functools.partial(slicc_action, shared_only=False),
-                      Transform("SLICC")),
-    emitter=functools.partial(slicc_emitter, shared_only=False))
-slicc_builder_shared = Builder(
-    action=MakeAction(functools.partial(slicc_action, shared_only=True),
-                      Transform("SLICC_shared")),
-    emitter=functools.partial(slicc_emitter, shared_only=True))
 
-env.Append(BUILDERS={'SLICC' : slicc_builder})
-env.Append(BUILDERS={'SLICC_shared' : slicc_builder_shared})
+slicc_builder = Builder(
+    action=MakeAction(
+        functools.partial(slicc_action, shared_only=False), Transform("SLICC")
+    ),
+    emitter=functools.partial(slicc_emitter, shared_only=False),
+)
+slicc_builder_shared = Builder(
+    action=MakeAction(
+        functools.partial(slicc_action, shared_only=True),
+        Transform("SLICC_shared"),
+    ),
+    emitter=functools.partial(slicc_emitter, shared_only=True),
+)
+
+env.Append(BUILDERS={"SLICC": slicc_builder})
+env.Append(BUILDERS={"SLICC_shared": slicc_builder_shared})
+
 
 # Needed to get around the fact that SLICC's output doesn't deal with
 # parentheses well
 def RubySource(*args, **kwargs):
     append = {}
-    if env['CLANG']:
-        append['CCFLAGS'] = '-Wno-parentheses'
+    if env["CLANG"]:
+        append["CCFLAGS"] = "-Wno-parentheses"
     Source(*args, append=append, **kwargs)
+
 
 def runSlicc(slicc_file, shared):
     if shared:
@@ -127,28 +143,65 @@ def runSlicc(slicc_file, shared):
 
     for f in nodes:
         s = str(f)
-        if s.endswith('.cc'):
+        if s.endswith(".cc"):
             RubySource(f)
-        elif s.endswith('.py'):
+        elif s.endswith(".py"):
             filename = os.path.basename(s)
             # We currently only expect ${ident}_Controller.py to be generated,
             # and for it to contain a single SimObject with the same name
-            assert(filename.endswith('_Controller.py'))
+            assert filename.endswith("_Controller.py")
             SimObject(f, sim_objects=[os.path.splitext(filename)[0]])
 
-for protocol in [env['CONF']['PROTOCOL']]:
+
+for protocol in [env["CONF"]["PROTOCOL"]]:
     if protocol == "None":
         continue
     protocol_dir = None
-    for path in env['PROTOCOL_DIRS']:
+    for path in env["PROTOCOL_DIRS"]:
         if os.path.exists(path.File("%s.slicc" % protocol).abspath):
             protocol_dir = Dir(path)
             break
 
     if not protocol_dir:
-        raise ValueError("Could not find {}.slicc in PROTOCOL_DIRS".format(
-            protocol))
+        raise ValueError(
+            "Could not find {}.slicc in PROTOCOL_DIRS".format(protocol)
+        )
 
     runSlicc(protocol_dir.File("%s.slicc" % protocol), shared=False)
 
 runSlicc(protocol_base.File("RubySlicc_interfaces.slicc"), shared=True)
+
+
+# Make an enum that lists all of the possible ruby protocols. This can then
+# be used by SimObjects and the C++ source for tracking which protocol is in
+# use
+def makeProtocolEnum(source, target, env):
+    all_protocols = sorted(set(env.Split("${ALL_PROTOCOLS}")))
+
+    code = code_formatter()
+    code(
+        """
+from m5.params import Enum
+
+class RubyProtocols(Enum):
+"""
+    )
+
+    code.indent()
+    code("vals = [")
+    code.indent()
+    for protocol in all_protocols:
+        code('"${{protocol}}",')
+    code.dedent()
+    code("]")
+    code.dedent()
+
+    code.write(str(target[0]))
+
+
+env.Command(
+    "RubyProtocols.py",
+    None,
+    MakeAction(makeProtocolEnum, Transform("PROTOCOL ENUM")),
+)
+SimObject("RubyProtocols.py", sim_objects=[], enums=["RubyProtocols"])

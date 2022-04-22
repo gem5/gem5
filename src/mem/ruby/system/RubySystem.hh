@@ -39,6 +39,7 @@
 
 #include "base/callback.hh"
 #include "base/output.hh"
+#include "enums/RubyProtocols.hh"
 #include "mem/packet.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
@@ -116,6 +117,15 @@ class RubySystem : public ClockedObject
         schedule(e, tick);
     }
 
+    /**
+     * @brief get the currently active Ruby protocol
+     *
+     */
+    enums::RubyProtocols getProtocol()
+    {
+        return m_protocol;
+    }
+
   private:
     // Private copy constructor and assignment operator
     RubySystem(const RubySystem& obj);
@@ -153,6 +163,8 @@ class RubySystem : public ClockedObject
     std::unordered_map<MachineID, unsigned> machineToNetwork;
     std::unordered_map<RequestorID, unsigned> requestorToNetwork;
     std::unordered_map<unsigned, std::vector<AbstractController*>> netCntrls;
+
+    enums::RubyProtocols m_protocol;
 
   public:
     Profiler* m_profiler;

@@ -78,7 +78,7 @@ bool RubySystem::m_cooldown_enabled = false;
 
 RubySystem::RubySystem(const Params &p)
     : ClockedObject(p), m_access_backing_store(p.access_backing_store),
-      m_cache_recorder(NULL)
+      m_protocol(p.protocol), m_cache_recorder(NULL)
 {
     m_randomization = p.randomization;
 
