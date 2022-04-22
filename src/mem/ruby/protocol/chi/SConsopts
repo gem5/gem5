@@ -41,7 +41,4 @@ Import('*')
 
 main.Append(ALL_PROTOCOLS=['CHI'])
 
-# CHI requires Ruby's inerface to support partial functional reads
-main.Append(NEED_PARTIAL_FUNC_READS=['CHI'])
-
 main.Append(PROTOCOL_DIRS=[Dir('.')])

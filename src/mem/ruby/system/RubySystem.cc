@@ -497,9 +497,18 @@ RubySystem::resetStats()
     ClockedObject::resetStats();
 }
 
-#ifndef PARTIAL_FUNC_READS
 bool
-RubySystem::functionalRead(PacketPtr pkt)
+RubySystem::functionalRead(PacketPtr pkt) {
+    if (getProtocol() == enums::CHI) {
+        // Only CHI needs to use partial functional reads
+        return partialFunctionalRead(pkt);
+    } else {
+        return simpleFunctionalRead(pkt);
+    }
+}
+
+bool
+RubySystem::simpleFunctionalRead(PacketPtr pkt)
 {
     Addr address(pkt->getAddr());
     Addr line_address = makeLineAddress(address);
@@ -613,9 +622,9 @@ RubySystem::functionalRead(PacketPtr pkt)
 
     return false;
 }
-#else
+
 bool
-RubySystem::functionalRead(PacketPtr pkt)
+RubySystem::partialFunctionalRead(PacketPtr pkt)
 {
     Addr address(pkt->getAddr());
     Addr line_address = makeLineAddress(address);
@@ -709,7 +718,6 @@ RubySystem::functionalRead(PacketPtr pkt)
 
     return bytes.isFull();
 }
-#endif
 
 // The function searches through all the buffers that exist in different
 // cache, directory and memory controllers, and in the network components
