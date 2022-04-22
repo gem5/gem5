@@ -48,13 +48,7 @@ def _resources_json_version_required() -> str:
     return "21.2"
 
 def _get_resources_json_uri() -> str:
-    uri = (
-        "https://gem5.googlesource.com/public/gem5-resources/"
-        + "+/refs/heads/stable/resources.json?format=TEXT"
-    )
-
-    return uri
-
+    return "https://resources.gem5.org/resources.json"
 
 def _get_resources_json() -> Dict:
     """
@@ -63,11 +57,18 @@ def _get_resources_json() -> Dict:
     :returns: The Resources JSON (as a Python Dictionary).
     """
 
-    # Note: Google Source does not properly support obtaining files as raw
-    # text. Therefore when we open the URL we receive the JSON in base64
-    # format. Conversion is needed before it can be loaded.
+
     with urllib.request.urlopen(_get_resources_json_uri()) as url:
-        to_return = json.loads(base64.b64decode(url.read()).decode("utf-8"))
+        try:
+            to_return = json.loads(url.read())
+        except json.JSONDecodeError:
+            # This is a bit of a hack. If the URL specified exists in a Google
+            # Source repo (which is the case when on the gem5 develop branch)
+            # we retrieve the JSON in base64 format. This cannot be loaded
+            # directly as text. Conversion is therefore needed.
+            to_return = json.loads(
+                base64.b64decode(url.read()).decode("utf-8")
+            )
 
     # If the current version pulled is not correct, look up the
     # "previous-versions" field to find the correct one.
@@ -77,9 +78,12 @@ def _get_resources_json() -> Dict:
             with urllib.request.urlopen(
                     to_return["previous-versions"][version]
                 ) as url:
-                to_return = json.loads(
-                    base64.b64decode(url.read()).decode("utf-8")
-                )
+                try:
+                    to_return = json.loads(url.read())
+                except json.JSONDecodeError:
+                    to_return = json.loads(
+                        base64.b64decode(url.read()).decode("utf-8")
+                    )
         else:
             # This should never happen, but we thrown an exception to explain
             # that we can't find the version.
