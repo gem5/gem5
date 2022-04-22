@@ -56,12 +56,7 @@ def _resources_json_version_required() -> str:
     return "develop"
 
 def _get_resources_json_uri() -> str:
-    uri = (
-        "https://gem5.googlesource.com/public/gem5-resources/"
-        + "+/refs/heads/stable/resources.json?format=TEXT"
-    )
-
-    return uri
+    return "https://resources.gem5.org/resources.json"
 
 def _get_resources_json_at_url(url: str, use_caching: bool = True) -> Dict:
     '''
@@ -70,11 +65,6 @@ def _get_resources_json_at_url(url: str, use_caching: bool = True) -> Dict:
 
     If `use_caching` is True, a copy of the JSON will be cached locally, and
     used for up to an hour after retrieval.
-
-    **Note**: The URL is assumed to be the location within a Google Source
-    repository. Special processing is done to handle this. This is the primary
-    reason there are separate functions for handling the retrieving of the
-    resources JSON comapared to just using the `_download` function directly.
 
     :param url: The URL of the JSON file.
     :param use_caching: True if a cached file is to be used (up to an hour),
@@ -85,7 +75,7 @@ def _get_resources_json_at_url(url: str, use_caching: bool = True) -> Dict:
     file_path = os.path.join(
         gettempdir(),
         f"gem5-resources-{hashlib.md5(url.encode()).hexdigest()}"
-        f"-{str(os.getuid())}.base64",
+        f"-{str(os.getuid())}.json",
     )
 
     # We apply a lock on the resources file for when it's downloaded, or
@@ -111,11 +101,19 @@ def _get_resources_json_at_url(url: str, use_caching: bool = True) -> Dict:
             (time.time() - os.path.getmtime(file_path)) > 3600:
                     _download(url, file_path)
 
-        # Note: Google Source does not properly support obtaining files as raw
-        # text. Therefore when we open the URL we receive the JSON in base64
-        # format. Conversion is needed before it can be loaded.
-        with open(file_path) as file:
-            return json.loads(base64.b64decode(file.read()).decode("utf-8"))
+    with open(file_path) as f:
+        file_contents = f.read()
+
+    try:
+        to_return = json.loads(file_contents)
+    except json.JSONDecodeError:
+        # This is a bit of a hack. If the URL specified exists in a Google
+        # Source repo (which is the case when on the gem5 develop branch) we
+        # retrieve the JSON in base64 format. This cannot be loaded directly as
+        # text. Conversion is therefore needed.
+        to_return = json.loads(base64.b64decode(file_contents).decode("utf-8"))
+
+    return to_return
 
 def _get_resources_json() -> Dict:
     """
