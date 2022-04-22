@@ -26,6 +26,7 @@
 
 import json
 import urllib.request
+import urllib.parse
 import hashlib
 import os
 import shutil
@@ -58,23 +59,41 @@ def _resources_json_version_required() -> str:
 def _get_resources_json_uri() -> str:
     return "https://resources.gem5.org/resources.json"
 
-def _get_resources_json_at_url(url: str, use_caching: bool = True) -> Dict:
+def _url_validator(url):
+    try:
+        result = urllib.parse.urlparse(url)
+        return all([result.scheme, result.netloc, result.path])
+    except:
+        return False
+
+def _get_resources_json_at_path(path: str, use_caching: bool = True) -> Dict:
     '''
-    Returns a resource JSON, in the form of a Python Dict. The URL location
+    Returns a resource JSON, in the form of a Python Dict. The location
     of the JSON must be specified.
 
-    If `use_caching` is True, a copy of the JSON will be cached locally, and
-    used for up to an hour after retrieval.
+    If `use_caching` is True, and a URL is passed, a copy of the JSON will be
+    cached locally, and used for up to an hour after retrieval.
 
-    :param url: The URL of the JSON file.
+    :param path: The URL or local path of the JSON file.
     :param use_caching: True if a cached file is to be used (up to an hour),
     otherwise the file will be retrieved from the URL regardless. True by
-    default.
+    default. Only valid in cases where a URL is passed.
     '''
 
-    file_path = os.path.join(
+    # If a local valid path is passed, just load it.
+    if Path(path).is_file():
+        return json.load(open(path))
+
+    # If it's not a local path, it should be a URL. We check this here and
+    # raise an Exception if it's not.
+    if not _url_validator(path):
+        raise Exception(
+            f"Resources location '{path}' is not a valid path or URL."
+        )
+
+    download_path = os.path.join(
         gettempdir(),
-        f"gem5-resources-{hashlib.md5(url.encode()).hexdigest()}"
+        f"gem5-resources-{hashlib.md5(path.encode()).hexdigest()}"
         f"-{str(os.getuid())}.json",
     )
 
@@ -84,7 +103,7 @@ def _get_resources_json_at_url(url: str, use_caching: bool = True) -> Dict:
     # Note the timeout is 120 so the `_download` function is given time to run
     # its Truncated Exponential Backoff algorithm
     # (maximum of roughly 1 minute). Typically this code will run quickly.
-    with FileLock("{}.lock".format(file_path), timeout=120):
+    with FileLock("{}.lock".format(download_path), timeout=120):
 
         # The resources.json file can change at any time, but to avoid
         # excessive retrieval we cache a version locally and use it for up to
@@ -97,11 +116,11 @@ def _get_resources_json_at_url(url: str, use_caching: bool = True) -> Dict:
         # time of the file. This is the most portable solution as other ideas,
         # like "file creation time", are  not always the same concept between
         # operating systems.
-        if not use_caching or not os.path.exists(file_path) or \
-            (time.time() - os.path.getmtime(file_path)) > 3600:
-                    _download(url, file_path)
+        if not use_caching or not os.path.exists(download_path) or \
+            (time.time() - os.path.getmtime(download_path)) > 3600:
+                    _download(path, download_path)
 
-    with open(file_path) as f:
+    with open(download_path) as f:
         file_contents = f.read()
 
     try:
@@ -122,15 +141,16 @@ def _get_resources_json() -> Dict:
     :returns: The Resources JSON (as a Python Dictionary).
     """
 
-    to_return = _get_resources_json_at_url(url = _get_resources_json_uri())
+    path = os.getenv("GEM5_RESOURCE_JSON", _get_resources_json_uri())
+    to_return = _get_resources_json_at_path(path = path)
 
     # If the current version pulled is not correct, look up the
     # "previous-versions" field to find the correct one.
     version = _resources_json_version_required()
     if to_return["version"] != version:
         if version in to_return["previous-versions"].keys():
-            to_return = _get_resources_json_at_url(
-                url = to_return["previous-versions"][version]
+            to_return = _get_resources_json_at_path(
+                path = to_return["previous-versions"][version]
             )
         else:
             # This should never happen, but we thrown an exception to explain
