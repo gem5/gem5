@@ -1175,6 +1175,8 @@ class SimObject(object, metaclass=MetaSimObject):
 
     # Call C++ to create C++ object corresponding to this object
     def createCCObject(self):
+        if self.abstract:
+            fatal(f"Cannot instantiate an abstract SimObject ({self.path()})")
         self.getCCParams()
         self.getCCObject() # force creation
 
