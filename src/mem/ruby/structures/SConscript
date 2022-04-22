@@ -40,7 +40,7 @@
 
 Import('*')
 
-if env['CONF']['PROTOCOL'] == 'None':
+if len(env['CONF']['PROTOCOL']) == 0:
     Return()
 
 SimObject('RubyCache.py', sim_objects=['RubyCache'])

@@ -49,7 +49,7 @@ from gem5_scons import Transform
 
 Import('*')
 
-if env['CONF']['PROTOCOL'] == 'None':
+if len(env['CONF']['PROTOCOL']) == 0:
     Return()
 
 DebugFlag('ProtocolTrace')

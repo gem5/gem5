@@ -35,7 +35,7 @@ Import('*')
 # When this dependency is removed, the ruby tester should be compiled
 # independently from Ruby
 #
-if env['CONF']['PROTOCOL'] == 'None':
+if len(env['CONF']['PROTOCOL']) == 0:
     Return()
 
 SimObject('RubyTester.py', sim_objects=['RubyTester'])

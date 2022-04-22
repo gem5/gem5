@@ -28,8 +28,13 @@ Import('*')
 main.SetDefault(ALL_PROTOCOLS=[], PROTOCOL_DIRS=[], SLICC_INCLUDES=[])
 
 def add_protocols_var():
-    sticky_vars.Add(EnumVariable('PROTOCOL', 'Coherence protocol for Ruby',
+    sticky_vars.Add(EnumVariable('PROTOCOL', 'Default ruby protocol',
                                  'None', main['ALL_PROTOCOLS']))
+    sticky_vars.Add(ListVariable(
+        'BUILD_PROTOCOLS', 'Coherence protocols to build', 'none',
+        main['ALL_PROTOCOLS']
+    ))
+
 AfterSConsopts(add_protocols_var)
 
 sticky_vars.Add(('NUMBER_BITS_PER_SET', 'Max elements in set (default 64)',

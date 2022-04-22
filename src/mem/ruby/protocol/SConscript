@@ -33,11 +33,11 @@ import sys
 from SCons.Scanner import Classic
 
 from code_formatter import code_formatter
-from gem5_scons import Transform
+from gem5_scons import error, Transform
 
 Import("*")
 
-if env["CONF"]["PROTOCOL"] == "None":
+if len(env["CONF"]["PROTOCOL"]) == 0:
     Return()
 
 output_dir = Dir(".")
@@ -153,9 +153,21 @@ def runSlicc(slicc_file, shared):
             SimObject(f, sim_objects=[os.path.splitext(filename)[0]])
 
 
-for protocol in [env["CONF"]["PROTOCOL"]]:
+build_protocols = env["CONF"]["BUILD_PROTOCOLS"]
+if (
+    env["CONF"]["PROTOCOL"] not in build_protocols
+    and env["CONF"]["PROTOCOL"] != "None"
+):
+    build_protocols.append(env["CONF"]["PROTOCOL"])
+
+for protocol in build_protocols:
     if protocol == "None":
         continue
+
+    if protocol == "GPU_VIPER":
+        if not env["CONF"]["BUILD_GPU"]:
+            error("RUBY: Cannot build protocol GPU_VIPER without BUILD_GPU")
+
     protocol_dir = None
     for path in env["PROTOCOL_DIRS"]:
         if os.path.exists(path.File("%s.slicc" % protocol).abspath):
