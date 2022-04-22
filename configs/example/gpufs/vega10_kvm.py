@@ -47,7 +47,7 @@ from ruby import Ruby
 demo_runscript = '''\
 export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 export HSA_ENABLE_SDMA=0
-dmesg -n8
+dmesg -n3
 dd if=/root/roms/vega10.rom of=/dev/mem bs=1k seek=768 count=128
 if [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then
     echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."
@@ -57,7 +57,7 @@ modprobe -v amdgpu ip_block_mask=0xff ppfeaturemask=0 dpm=0 audio=0
 echo "Running {} {}"
 echo "{}" | base64 -d > myapp
 chmod +x myapp
-echo ./myapp {}
+./myapp {}
 /sbin/m5 exit
 '''
 
