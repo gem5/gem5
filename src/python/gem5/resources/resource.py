@@ -153,7 +153,12 @@ class Resource(AbstractResource):
                     )
                 )
         else:
-            os.makedirs(resource_directory)
+            # `exist_ok=True` here as, occasionally, if multiple instance of
+            # gem5 are started simultaneously, a race condition can exist to
+            # create the resource directory. Without `exit_ok=True`, threads
+            # which lose this race will thrown a `FileExistsError` exception.
+            # `exit_ok=True` ensures no exception is thrown.
+            os.makedirs(resource_directory, exist_ok=True)
 
         to_path = os.path.join(resource_directory, resource_name)
 
