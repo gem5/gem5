@@ -335,10 +335,19 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
     while (!pred_hist.empty() &&
            pred_hist.front().seqNum > squashed_sn) {
         if (pred_hist.front().usedRAS) {
-            DPRINTF(Branch, "[tid:%i] [squash sn:%llu]"
-                    " Restoring top of RAS to: %i,"
-                    " target: %s\n", tid, squashed_sn,
-                    pred_hist.front().RASIndex, *pred_hist.front().RASTarget);
+            if (pred_hist.front().RASTarget != nullptr) {
+                DPRINTF(Branch, "[tid:%i] [squash sn:%llu]"
+                        " Restoring top of RAS to: %i,"
+                        " target: %s\n", tid, squashed_sn,
+                        pred_hist.front().RASIndex,
+                        *pred_hist.front().RASTarget);
+            }
+            else {
+                DPRINTF(Branch, "[tid:%i] [squash sn:%llu]"
+                        " Restoring top of RAS to: %i,"
+                        " target: INVALID_TARGET\n", tid, squashed_sn,
+                        pred_hist.front().RASIndex);
+            }
 
             RAS[tid].restore(pred_hist.front().RASIndex,
                              pred_hist.front().RASTarget.get());
