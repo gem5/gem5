@@ -46,7 +46,7 @@
 #include "base/logging.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-#include "debug/Fault.hh"
+#include "debug/Faults.hh"
 #include "mem/page_table.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
@@ -59,7 +59,7 @@ FaultBase::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     panic_if(!FullSystem, "fault (%s) detected @ PC %s",
              name(), tc->pcState());
-    DPRINTF(Fault, "Fault %s at PC: %s\n", name(), tc->pcState());
+    DPRINTF(Faults, "Fault %s at PC: %s\n", name(), tc->pcState());
 }
 
 void
