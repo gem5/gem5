@@ -48,7 +48,7 @@ from gem5.components.processors.cpu_types import (
     get_cpu_type_from_str,
 )
 from gem5.isas import ISA
-from gem5.runtime import get_runtime_isa, get_runtime_coherence_protocol
+from gem5.runtime import get_runtime_isa
 from gem5.simulate.simulator import Simulator
 from gem5.simulate.exit_event import ExitEvent
 from gem5.utils.requires import requires
@@ -213,6 +213,11 @@ board.set_kernel_disk_workload(
     ),
     readfile_contents=command,
 )
+
+print("Running with ISA: " + get_runtime_isa().name)
+print("Running with protocol: " + type(cache_hierarchy).__name__)
+print()
+
 
 # Here we define some custom workbegin/workend exit event generators. Here we
 # want to switch to detailed CPUs at the beginning of the ROI, then continue to

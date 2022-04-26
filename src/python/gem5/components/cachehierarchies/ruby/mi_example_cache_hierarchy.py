@@ -31,13 +31,18 @@ from .topologies.simple_pt2pt import SimplePt2Pt
 from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
 from ..abstract_cache_hierarchy import AbstractCacheHierarchy
 from ...boards.abstract_board import AbstractBoard
-from ....coherence_protocol import CoherenceProtocol
 from ....isas import ISA
 from ....utils.override import overrides
 from ....utils.requires import requires
 
 
-from m5.objects import RubySystem, RubySequencer, DMASequencer, RubyPortProxy
+from m5.objects import (
+    RubyProtocols,
+    RubySystem,
+    RubySequencer,
+    DMASequencer,
+    RubyPortProxy,
+)
 
 
 class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
@@ -59,9 +64,9 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
     @overrides(AbstractCacheHierarchy)
     def incorporate_cache(self, board: AbstractBoard) -> None:
 
-        requires(coherence_protocol_required=CoherenceProtocol.MI_EXAMPLE)
+        requires(coherence_protocol_required="MI_example")
 
-        self.ruby_system = RubySystem()
+        self.ruby_system = RubySystem(protocol = RubyProtocols("MI_example"))
 
         # Ruby's global network.
         self.ruby_system.network = SimplePt2Pt(self.ruby_system)

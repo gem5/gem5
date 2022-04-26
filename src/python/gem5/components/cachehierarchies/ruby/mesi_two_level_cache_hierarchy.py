@@ -27,7 +27,6 @@
 
 from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
 from ..abstract_two_level_cache_hierarchy import AbstractTwoLevelCacheHierarchy
-from ....coherence_protocol import CoherenceProtocol
 from ....isas import ISA
 from ...boards.abstract_board import AbstractBoard
 from ....utils.requires import requires
@@ -38,7 +37,13 @@ from .caches.mesi_two_level.l2_cache import L2Cache
 from .caches.mesi_two_level.directory import Directory
 from .caches.mesi_two_level.dma_controller import DMAController
 
-from m5.objects import RubySystem, RubySequencer, DMASequencer, RubyPortProxy
+from m5.objects import (
+    RubyProtocols,
+    RubySystem,
+    RubySequencer,
+    DMASequencer,
+    RubyPortProxy,
+)
 
 
 class MESITwoLevelCacheHierarchy(
@@ -77,11 +82,13 @@ class MESITwoLevelCacheHierarchy(
 
     def incorporate_cache(self, board: AbstractBoard) -> None:
 
-        requires(coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL)
+        requires(coherence_protocol_required="MESI_Two_Level")
 
         cache_line_size = board.get_cache_line_size()
 
-        self.ruby_system = RubySystem()
+        self.ruby_system = RubySystem(
+            protocol = RubyProtocols("MESI_Two_Level")
+        )
 
         # MESI_Two_Level needs 3 virtual networks
         self.ruby_system.number_of_virtual_networks = 3

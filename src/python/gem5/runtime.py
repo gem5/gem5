@@ -30,9 +30,9 @@ This file contains functions to extract gem5 runtime information.
 
 from m5.defines import buildEnv
 from m5.util import warn
+from m5.objects import RubyProtocols
 
 from .isas import ISA, get_isa_from_str, get_isas_str_set
-from .coherence_protocol import CoherenceProtocol
 from typing import Set
 
 
@@ -51,6 +51,11 @@ def get_supported_isas() -> Set[ISA]:
 
     return supported_isas
 
+def get_supported_ruby_protocols() -> Set[RubyProtocols]:
+    """Returns the Ruby protocols supported in this gem5 binary"""
+    return set(
+        RubyProtocols(protocol) for protocol in buildEnv["BUILD_PROTOCOLS"]
+    )
 
 def get_runtime_isa() -> ISA:
     """
@@ -87,30 +92,4 @@ def get_runtime_isa() -> ISA:
         "compiled to one ISA."
     )
 
-
-def get_runtime_coherence_protocol() -> CoherenceProtocol:
-    """Gets the cache coherence protocol.
-    This can be inferred at runtime.
-
-    :returns: The cache coherence protocol.
-    """
-    protocol_map = {
-        "mi_example": CoherenceProtocol.MI_EXAMPLE,
-        "moesi_hammer": CoherenceProtocol.ARM_MOESI_HAMMER,
-        "garnet_standalone": CoherenceProtocol.GARNET_STANDALONE,
-        "moesi_cmp_token": CoherenceProtocol.MOESI_CMP_TOKEN,
-        "mesi_two_level": CoherenceProtocol.MESI_TWO_LEVEL,
-        "moesi_amd_base": CoherenceProtocol.MOESI_AMD_BASE,
-        "mesi_three_level_htm": CoherenceProtocol.MESI_THREE_LEVEL_HTM,
-        "mesi_three_level": CoherenceProtocol.MESI_THREE_LEVEL,
-        "gpu_viper": CoherenceProtocol.GPU_VIPER,
-        "chi": CoherenceProtocol.CHI,
-    }
-
-    protocol_str = str(buildEnv["PROTOCOL"]).lower()
-    if protocol_str not in protocol_map.keys():
-        raise NotImplementedError(
-            "Protocol '" + buildEnv["PROTOCOL"] + "' not recognized."
-        )
-
-    return protocol_map[protocol_str]
+    return main_isa

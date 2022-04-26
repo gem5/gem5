@@ -24,9 +24,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ..runtime import get_runtime_coherence_protocol, get_supported_isas
+from m5.objects import RubyProtocols
+
+from ..runtime import get_supported_isas, get_supported_ruby_protocols
 from ..isas import ISA
-from ..coherence_protocol import CoherenceProtocol
 from typing import Optional
 import os
 import inspect
@@ -52,7 +53,7 @@ def _get_exception_str(msg: str):
 
 def requires(
     isa_required: Optional[ISA] = None,
-    coherence_protocol_required: Optional[CoherenceProtocol] = None,
+    coherence_protocol_required: Optional[str] = None,
     kvm_required: bool = False,
 ) -> None:
     """
@@ -60,8 +61,8 @@ def requires(
     will be raise if they are not.
 
     :param isa_required: The ISA(s) gem5 must be compiled to.
-    :param coherence_protocol_required: The coherence protocol gem5 must be
-        compiled to.
+    :param coherence_protocol_required: The coherence protocol gem5 must have
+        compiled.
     :param kvm_required: The host system must have the Kernel-based Virtual
         Machine available.
     :raises Exception: Raises an exception if the required ISA or coherence
@@ -69,7 +70,7 @@ def requires(
     """
 
     supported_isas = get_supported_isas()
-    runtime_coherence_protocol = get_runtime_coherence_protocol()
+    supported_protocols = get_supported_ruby_protocols()
     kvm_available = os.access("/dev/kvm", mode=os.R_OK | os.W_OK)
 
     # Note, previously I had the following code here:
@@ -103,18 +104,14 @@ def requires(
 
     if (
         coherence_protocol_required != None
-        and coherence_protocol_required.value
-        != runtime_coherence_protocol.value
+        and RubyProtocols(coherence_protocol_required) not in
+            supported_protocols
     ):
-        raise Exception(
-            _get_exception_str(
-                msg="The current coherence protocol is "
-                "'{}'. Required: '{}'".format(
-                    runtime_coherence_protocol.name,
-                    coherence_protocol_required.name,
-                )
-            )
-        )
+        msg = f"The required Ruby protocol is '{coherence_protocol_required}'."
+        msg += " Supported protocols: "
+        for protocol in supported_protocols:
+            msg += f"{os.linesep}{protocol}"
+        raise Exception(_get_exception_str(msg=msg))
 
     if kvm_required and not kvm_available:
         raise Exception(

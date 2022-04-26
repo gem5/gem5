@@ -68,7 +68,7 @@ class X86DemoBoard(X86Board):
     def __init__(self):
         requires(
             isa_required=ISA.X86,
-            coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL,
+            coherence_protocol_required="MESI_Two_Level",
         )
 
         warn(

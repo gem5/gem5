@@ -30,10 +30,8 @@ This script will run a simple boot exit test.
 
 import m5
 
-from gem5.runtime import get_runtime_coherence_protocol
 from gem5.isas import ISA
 from gem5.utils.requires import requires
-from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.processors.cpu_types import (
     get_cpu_types_str_set,
@@ -113,9 +111,9 @@ args = parser.parse_args()
 
 coherence_protocol_required = None
 if args.mem_system == "mi_example":
-    coherence_protocol_required = CoherenceProtocol.MI_EXAMPLE
+    coherence_protocol_required = "MI_example"
 elif args.mem_system == "mesi_two_level":
-    coherence_protocol_required = CoherenceProtocol.MESI_TWO_LEVEL
+    coherence_protocol_required = "MESI_Two_Level"
 
 requires(
     isa_required=ISA.X86,
@@ -193,7 +191,7 @@ motherboard.set_workload(workload)
 # Begin running of the simulation. This will exit once the Linux system boot
 # is complete.
 print("Running with ISA: " + processor.get_isa().name)
-print("Running with protocol: " + get_runtime_coherence_protocol().name)
+print("Running with protocol: " + type(cache_hierarchy).__name__)
 print()
 
 print("Beginning simulation!")
