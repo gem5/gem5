@@ -130,6 +130,26 @@ def cache_factory(cache_class: str):
             l2_assoc="4",
             num_l2_banks=1,
         )
+    elif cache_class == "MIExample":
+        from gem5.components.cachehierarchies\
+            .ruby.mi_example_cache_hierarchy import (
+            MIExampleCacheHierarchy,
+        )
+
+        return MIExampleCacheHierarchy(
+            size="16KiB",
+            assoc=8,
+        )
+    elif cache_class == "CHIL1":
+        from gem5.components.cachehierarchies\
+            .chi.private_l1_cache_hierarchy import (
+            PrivateL1CacheHierarchy,
+        )
+
+        return PrivateL1CacheHierarchy(
+            size="16KiB",
+            assoc=8,
+        )
     else:
         raise ValueError(f"The cache class {cache_class} is not supported.")
 
@@ -160,7 +180,14 @@ parser.add_argument(
     "cache_class",
     type=str,
     help="The cache class to import and instantiate.",
-    choices=["NoCache", "PrivateL1", "PrivateL1PrivateL2", "MESITwoLevel"],
+    choices=[
+        "NoCache",
+        "PrivateL1",
+        "PrivateL1PrivateL2",
+        "MESITwoLevel",
+        "MIExample",
+        "CHIL1"
+    ],
 )
 
 parser.add_argument(
