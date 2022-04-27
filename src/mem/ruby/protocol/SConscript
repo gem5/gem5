@@ -26,8 +26,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import functools
 import os.path
-import re
 import sys
 
 from SCons.Scanner import Classic
@@ -62,7 +62,8 @@ env.Append(SCANNERS=slicc_scanner)
 
 slicc_includes = ['mem/ruby/slicc_interface/RubySlicc_includes.hh'] + \
         env['SLICC_INCLUDES']
-def slicc_emitter(target, source, env):
+
+def slicc_emitter(target, source, env, shared_only):
     assert len(source) == 1
     filepath = source[0].srcnode().abspath
 
@@ -70,60 +71,84 @@ def slicc_emitter(target, source, env):
         filepath,
         [os.path.join(protocol_base.abspath, 'RubySlicc_interfaces.slicc')],
         protocol_base.abspath,
+        shared_only=shared_only,
         verbose=False
     )
     slicc.process()
     slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
-    if env['CONF']['SLICC_HTML']:
+    if env['CONF']['SLICC_HTML'] and not shared_only:
         slicc.writeHTMLFiles(html_dir.abspath)
 
     target.extend([output_dir.File(f) for f in sorted(slicc.files())])
     return target, source
 
-def slicc_action(target, source, env):
+def slicc_action(target, source, env, shared_only):
     assert len(source) == 1
     filepath = source[0].srcnode().abspath
+
     slicc = SLICC(
         filepath,
         [os.path.join(protocol_base.abspath, 'RubySlicc_interfaces.slicc')],
         protocol_base.abspath,
+        shared_only=shared_only,
         verbose=True
     )
     slicc.process()
     slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
-    if env['CONF']['SLICC_HTML']:
+    if env['CONF']['SLICC_HTML'] and not shared_only:
         slicc.writeHTMLFiles(html_dir.abspath)
 
-slicc_builder = Builder(action=MakeAction(slicc_action, Transform("SLICC")),
-                        emitter=slicc_emitter)
-
-protocol = env['CONF']['PROTOCOL']
-protocol_dir = None
-for path in env['PROTOCOL_DIRS']:
-    if os.path.exists(path.File("%s.slicc" % protocol).abspath):
-        protocol_dir = Dir(path)
-        break
-
-if not protocol_dir:
-    raise ValueError("Could not find {}.slicc in PROTOCOL_DIRS".format(
-        protocol))
-
-sources = [ protocol_dir.File("%s.slicc" % protocol) ]
+slicc_builder = Builder(
+    action=MakeAction(functools.partial(slicc_action, shared_only=False),
+                      Transform("SLICC")),
+    emitter=functools.partial(slicc_emitter, shared_only=False))
+slicc_builder_shared = Builder(
+    action=MakeAction(functools.partial(slicc_action, shared_only=True),
+                      Transform("SLICC_shared")),
+    emitter=functools.partial(slicc_emitter, shared_only=True))
 
 env.Append(BUILDERS={'SLICC' : slicc_builder})
-nodes = env.SLICC([], sources)
-env.Depends(nodes, slicc_depends)
+env.Append(BUILDERS={'SLICC_shared' : slicc_builder_shared})
 
-append = {}
-if env['CLANG']:
-    append['CCFLAGS'] = '-Wno-parentheses'
-for f in nodes:
-    s = str(f)
-    if s.endswith('.cc'):
-        Source(f, append=append)
-    elif s.endswith('.py'):
-        filename = os.path.basename(s)
-        # We currently only expect ${ident}_Controller.py to be generated, and
-        # for it to contain a single SimObject with the same name.
-        assert(filename.endswith('_Controller.py'))
-        SimObject(f, sim_objects=[os.path.splitext(filename)[0]])
+# Needed to get around the fact that SLICC's output doesn't deal with
+# parentheses well
+def RubySource(*args, **kwargs):
+    append = {}
+    if env['CLANG']:
+        append['CCFLAGS'] = '-Wno-parentheses'
+    Source(*args, append=append, **kwargs)
+
+def runSlicc(slicc_file, shared):
+    if shared:
+        nodes = env.SLICC_shared([], [slicc_file])
+    else:
+        nodes = env.SLICC([], [slicc_file])
+    env.Depends(nodes, slicc_depends)
+
+    for f in nodes:
+        s = str(f)
+        if s.endswith('.cc'):
+            RubySource(f)
+        elif s.endswith('.py'):
+            filename = os.path.basename(s)
+            # We currently only expect ${ident}_Controller.py to be generated,
+            # and for it to contain a single SimObject with the same name
+            assert(filename.endswith('_Controller.py'))
+            SimObject(f, sim_objects=[os.path.splitext(filename)[0]])
+
+for protocol in [env['CONF']['PROTOCOL']]:
+    if protocol == "None":
+        continue
+    protocol_dir = None
+    for path in env['PROTOCOL_DIRS']:
+        if os.path.exists(path.File("%s.slicc" % protocol).abspath):
+            protocol_dir = Dir(path)
+            break
+
+    if not protocol_dir:
+        raise ValueError("Could not find {}.slicc in PROTOCOL_DIRS".format(
+            protocol))
+
+    runSlicc(protocol_dir.File("%s.slicc" % protocol), shared=False)
+
+runSlicc(protocol_base.File("RubySlicc_interfaces.slicc"), shared=True)
