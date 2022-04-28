@@ -57,7 +57,8 @@ class ResetResponsePort : public ResetResponsePortBase
 class ResetRequestPort : public Port
 {
   public:
-    using Port::Port;
+    ResetRequestPort(const std::string &_name, PortID _id)
+        : Port(_name, _id) {}
     void bind(Port &p) override;
     void unbind() override;
     void requestReset();
