@@ -80,10 +80,15 @@ _start:
         ldr	x1, =GIC_DIST_BASE // GICD_CTLR
         mov	w0, #7 // EnableGrp0 | EnableGrp1NS | EnableGrp1S
         str	w0, [x1]
-
+        mov	x2, #0xffe8
+        ldr	w2, [x1, x2] // GICD_PIDR2
+        and	w3, w2, #0xf0 // GICD_PIDR2.Read ArchRev
+        cmp	w3, #0x30 // Check if GICv3
+        mov	w4, #0x20000 // 128KiB redistributor stride
+        mov	w5, #0x40000 // 256KiB redistributor stride
+        csel	w2, w4, w5, eq // Select the correct redistributor stride
 
         ldr	x1, =GIC_REDIST_BASE
-        mov	x2, #1 << 18 // GICv4
         mov	w0, #~0 // Grp1 interrupts
 1:      add	x5, x1, #0x10000 // SGI base
         str	w0, [x5, #0x80] // GICR_IGROUPR0
