@@ -75,7 +75,7 @@ _start:
         ldr x1, =0xff00ffffff
 #ifdef GICV3
         tst	x0, x1 // check for cpuid==zero
-        b.ne	2f // secondary CPU
+        b.ne	3f // secondary CPU
 
         ldr	x1, =GIC_DIST_BASE // GICD_CTLR
         mov	w0, #7 // EnableGrp0 | EnableGrp1NS | EnableGrp1S
@@ -90,7 +90,15 @@ _start:
 
         ldr	x1, =GIC_REDIST_BASE
         mov	w0, #~0 // Grp1 interrupts
-1:      add	x5, x1, #0x10000 // SGI base
+1:  ldr	w3, [x1, #0x14] // GICR_WAKER
+        and	w3, w3, #~0x2 // Setting GICR_WAKER.ProcessorSleep to 0
+        str	w3, [x1, #0x14]
+        dsb	sy
+2:  ldr	w3, [x1, #0x14] // Re-reading GICR_WAKER
+        ands	w3, w3, #0x4 // Checking GICR_WAKER.ChildrenAsleep
+        b.ne	2b // Keep reading GICR_WAKER.ChildrenAsleep until awake
+
+        add	x5, x1, #0x10000 // SGI base
         str	w0, [x5, #0x80] // GICR_IGROUPR0
         ldr	w4, [x1, #0x8] // GICR_TYPER
         add	x1, x1, x2 // Point to next redistributor
@@ -105,7 +113,7 @@ _start:
         str	w0, [x1], #4
 
         /* SRE & Disable IRQ/FIQ Bypass & Allow EL2 access to ICC_SRE_EL2 */
-2:      mrs	x10, S3_6_C12_C12_5 // read ICC_SRE_EL3
+3:  mrs	x10, S3_6_C12_C12_5 // read ICC_SRE_EL3
         orr	x10, x10, #0xf      // enable 0xf
         msr	S3_6_C12_C12_5, x10 // write ICC_SRE_EL3
         isb
