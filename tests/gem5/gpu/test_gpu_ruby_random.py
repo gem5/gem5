@@ -24,25 +24,27 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""
-This test will first run the GPU protocol random tester -- it should take about
-30 seconds to run and provides good coverage for the coherence protocol.
-
-Input choices (some are default and thus implicit):
- - use small cache size to encourage races
- - use small system size to encourage races since more requests per CU (and
-   faster sim)
- - use small address range to encourage more races
- - use small episode length to encourage more races
- - 50K tests runs in ~30 seconds with reasonably good coverage
- - num-dmas = 0 because VIPER doesn't support partial cache line writes, which
-   DMAs need
-"""
-
 from testlib import *
 
+"""
+This file contains random tests for the Ruby GPU protocols.
+"""
+
+# This test will first run the GPU protocol random tester -- it should take
+# about 30 seconds to run and provides good coverage for the coherence
+# protocol.
+#
+# Input choices (some are default and thus implicit):
+# - use small cache size to encourage races
+# - use small system size to encourage races since more requests per CU (and
+#   faster sim)
+# - use small address range to encourage more races
+# - use small episode length to encourage more races
+# - 50K tests runs in ~30 seconds with reasonably good coverage
+# - num-dmas = 0 because VIPER doesn't support partial cache line writes, which
+#   DMAs need
 gem5_verify_config(
-    name="ruby-gpu-random-test",
+    name="ruby-gpu-random-test-perCheckin",
     fixtures=(),
     verifiers=(),
     config=joinpath(
@@ -60,4 +62,39 @@ gem5_verify_config(
     valid_isas=(constants.vega_x86_tag,),
     valid_hosts=constants.supported_hosts,
     length=constants.quick_tag,
+)
+
+
+# This test will run the GPU protocol random tester in nightly -- it should
+# take about 30 minutes to run and provides good coverage for the coherence
+# protocol.
+#
+# Input choices (some are default and thus implicit):
+#  - use small cache size to encourage races
+#  - use small system size to encourage races since more requests per CU (and
+#    faster sim)
+#  - use small address range to encourage more races
+#  - use small episode length to encourage more races
+#  - 5M tests runs in ~30 minutes with reasonably good coverage
+#  - num-dmas = 0 because VIPER doesn't support partial cache line writes,
+#    which DMAs need
+gem5_verify_config(
+    name="ruby-gpu-random-test-nightly",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "ruby_gpu_random_test.py",
+    ),
+    config_args=[
+        "--test-length",
+        "5000000",
+        "--num-dmas",
+        "0",
+    ],
+    valid_isas=(constants.vega_x86_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.long_tag,
 )
