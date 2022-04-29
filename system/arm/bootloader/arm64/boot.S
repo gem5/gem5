@@ -74,23 +74,26 @@ _start:
         // extract the primary CPU.
         ldr x1, =0xff00ffffff
 #ifdef GICV3
-        and	x2, x0, #0xff // use Aff0 as cpuid for now...
         tst	x0, x1 // check for cpuid==zero
-        b.ne	1f // secondary CPU
+        b.ne	2f // secondary CPU
 
         ldr	x1, =GIC_DIST_BASE // GICD_CTLR
         mov	w0, #7 // EnableGrp0 | EnableGrp1NS | EnableGrp1S
         str	w0, [x1]
 
 
-1:      ldr	x1, =GIC_REDIST_BASE + 0x10000 + 0x80 // GICR_IGROUPR0
-        // 128K for each redistributor, 256K strided...
-        mov	x3, #1 << 18 // GICv4
-        mul	x3, x3, x2
-        add	x1, x1, x3
+        ldr	x1, =GIC_REDIST_BASE
+        mov	x2, #1 << 18 // GICv4
         mov	w0, #~0 // Grp1 interrupts
-        str	w0, [x1], #4
-        b.ne	2f // Only local interrupts for secondary CPUs
+1:      add	x5, x1, #0x10000 // SGI base
+        str	w0, [x5, #0x80] // GICR_IGROUPR0
+        ldr	w4, [x1, #0x8] // GICR_TYPER
+        add	x1, x1, x2 // Point to next redistributor
+        // Check GICR_TYPER.Last, which is set to 1
+        // if this is the last redistributor
+        ands	w4, w4, #0x10
+        b.eq	1b // Branch back if not last redistributor
+
         ldr	x1, =GIC_DIST_BASE + 0x84 // GICD_IGROUPR
         str	w0, [x1], #4
         str	w0, [x1], #4
