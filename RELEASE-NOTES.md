@@ -1,3 +1,8 @@
+# Version 21.2.1.1
+
+**[HOTFIX]** In order to ensure v21 of gem5 remains compatible with future changes, the gem5 stdlib downloader has been updated to obtain the resources.json file from <https://resources.gem5.org/resources.json>.
+As this domain is under the gem5 project control, unlike the previous googlesource URL, we can ensure longer-term stability.
+The fix also ensures the downloader can parse plain-text JSON and base64 encoding of the resources.json file.
 
 # Version 21.2.1.0
 
