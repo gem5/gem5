@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2020 ARM Limited
+ * Copyright (c) 2012, 2020, 2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -61,7 +61,8 @@ _start:
         orr	x0, x0, #(1 << 10)		// 64-bit EL2
         msr	scr_el3, x0
 
-        msr	cptr_el3, xzr			// Disable copro. traps to EL3
+        mov	x0, #(1 << 8)			// Disable SVE trap to EL3
+        msr	cptr_el3, x0			// Disable copro. traps to EL3
 
         /*
          * Check for the primary CPU to avoid a race on the distributor
