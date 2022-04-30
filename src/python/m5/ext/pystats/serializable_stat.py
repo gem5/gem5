@@ -30,11 +30,10 @@ from typing import Dict, List, Union, Any, IO
 
 from .storagetype import StorageType
 
-
-class JsonSerializable:
+class SerializableStat:
     """
-    Classes which inherit from JsonSerializable can be translated into JSON
-    using Python's json package.
+    Classes which inherit from SerializableStat can be serialized as JSON
+    output.
 
     Usage
     -----
@@ -80,7 +79,7 @@ class JsonSerializable:
             A value which can be handled by the Python stdlib JSON package.
         """
 
-        if isinstance(value, JsonSerializable):
+        if isinstance(value, SerializableStat):
             return value.to_json()
         elif isinstance(value, (str, int, float)):
             return value

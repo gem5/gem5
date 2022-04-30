@@ -25,10 +25,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
-from m5.ext.pystats.jsonserializable import JsonSerializable
+from m5.ext.pystats.serializable_stat import SerializableStat
 
 
-class MockSerializable(JsonSerializable):
+class MockSerializable(SerializableStat):
     def __init__(self):
         self.child_1 = MockSerializableChild()
         self.child_1.stat1 = 2
@@ -43,7 +43,7 @@ class MockSerializable(JsonSerializable):
         self.child_list.append(child_list_2)
 
 
-class MockSerializableChild(JsonSerializable):
+class MockSerializableChild(SerializableStat):
     def __init__(self):
         pass
 
