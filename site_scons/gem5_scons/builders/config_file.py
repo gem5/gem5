@@ -70,7 +70,7 @@ def ConfigFile(env):
         val = env['CONF'][variable]
         if isinstance(val, bool):
             # Force value to 0/1
-            val = int(val)
+            val = str(int(val))
         elif isinstance(val, str):
             val = '"' + val + '"'
 
