@@ -110,7 +110,7 @@ BaseArmKvmCPU::startup()
 
     if (!vm->hasKernelIRQChip())
         virtTimerPin = static_cast<ArmSystem *>(system)\
-            ->getGenericTimer()->params().int_virt->get(tc);
+            ->getGenericTimer()->params().int_el1_virt->get(tc);
 }
 
 Tick
