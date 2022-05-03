@@ -27,6 +27,5 @@
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt -y update
-RUN apt -y upgrade
-RUN apt -y install build-essential m4 scons python3-dev python-is-python3
+RUN apt -y update && apt -y upgrade && \
+    apt -y install build-essential m4 scons python3-dev python-is-python3

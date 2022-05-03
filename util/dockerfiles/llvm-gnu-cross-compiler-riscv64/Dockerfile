@@ -29,9 +29,7 @@
 FROM ubuntu:20.04 AS stage1
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt -y update
-RUN apt -y upgrade
-RUN apt -y install \
+RUN apt -y update && apt -y upgrade && apt -y install \
   binutils build-essential libtool texinfo gzip zip unzip patchutils curl git \
   make cmake ninja-build automake bison flex gperf grep sed gawk bc \
   zlib1g-dev libexpat1-dev libmpc-dev libglib2.0-dev libfdt-dev libpixman-1-dev
