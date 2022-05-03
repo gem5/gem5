@@ -282,7 +282,8 @@ run_map = {
         },
         "timing": {
             1: True,
-            2: True,
+            2: False,  # Disabled due to
+                       # https://gem5.atlassian.net/browse/GEM5-1219.
             4: True,
             8: True,
         },
