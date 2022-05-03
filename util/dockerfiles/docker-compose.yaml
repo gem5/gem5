@@ -6,6 +6,11 @@ services:
             context: gcn-gpu
             dockerfile: Dockerfile
         image: gcr.io/gem5-test/gcn-gpu
+    gpu-fs:
+        build:
+            context: gcn-gpu
+            dockerfile: Dockerfile
+        image: gcr.io/gem5-test/gpu-fs
     sst:
         build:
             context: sst-11.1.0
