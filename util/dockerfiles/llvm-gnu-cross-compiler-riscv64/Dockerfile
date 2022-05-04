@@ -39,9 +39,10 @@ FROM stage1 AS stage2
 RUN mkdir -p /riscv/_install
 WORKDIR /riscv
 ENV PATH=`/riscv/_install/bin:$PATH`
-RUN git clone --recursive https://github.com/riscv/riscv-gnu-toolchain
+RUN git clone https://github.com/riscv/riscv-gnu-toolchain
 WORKDIR /riscv/riscv-gnu-toolchain
-RUN git checkout --recurse-submodules 051b9f7ddb7d136777505ea19c70a41926842b96
+RUN git checkout 051b9f7ddb7d136777505ea19c70a41926842b96
+RUN git submodule update --init --recursive
 RUN ./configure --prefix=/riscv/_install --enable-multilib
 RUN make linux -j`nproc`
 RUN make install
