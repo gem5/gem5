@@ -453,8 +453,7 @@ ArmFault::update(ThreadContext *tc)
         toEL = fromEL;
 
     // Check for Set Priviledge Access Never, if PAN is supported
-    if (auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-        isa->getRelease()->has(ArmExtension::FEAT_PAN)) {
+    if (HaveExt(tc, ArmExtension::FEAT_PAN)) {
         if (toEL == EL1) {
             const SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
             span = !sctlr.span;
@@ -1384,7 +1383,7 @@ DataAbort::routeToHyp(ThreadContext *tc) const
 
     bool amo = hcr.amo;
     if (hcr.tge == 1)
-        amo =  (!HaveVirtHostExt(tc) || hcr.e2h == 0);
+        amo =  (!HaveExt(tc, ArmExtension::FEAT_VHE) || hcr.e2h == 0);
 
     // if in Hyp mode then stay in Hyp mode
     toHyp = fromEL == EL2 ||

@@ -774,9 +774,7 @@ MMU::checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req, Mode mode,
     // gem5)
     // 4) Instructions to be treated as unprivileged, unless
     // HCR_EL2.{E2H, TGE} == {1, 0}
-    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-    const bool has_pan = isa->getRelease()->has(ArmExtension::FEAT_PAN);
-    if (has_pan && state.cpsr.pan && (ap & 0x1) &&
+    if (HaveExt(tc, ArmExtension::FEAT_PAN) && state.cpsr.pan && (ap & 0x1) &&
         mode != BaseMMU::Execute) {
 
         if (req->isCacheMaintenance() &&
@@ -851,8 +849,8 @@ MMU::translateMmuOff(ThreadContext *tc, const RequestPtr &req, Mode mode,
     // Set memory attributes
     TlbEntry temp_te;
     temp_te.ns = !state.isSecure;
-    bool dc = (HaveVirtHostExt(tc)
-               && state.hcr.e2h == 1 && state.hcr.tge == 1) ? 0: state.hcr.dc;
+    bool dc = (HaveExt(tc, ArmExtension::FEAT_VHE) &&
+               state.hcr.e2h == 1 && state.hcr.tge == 1) ? 0: state.hcr.dc;
     bool i_cacheability = state.sctlr.i && !state.sctlr.m;
     if (state.isStage2 || !dc || state.isSecure ||
        (state.isHyp && !(tran_type & S1CTran))) {
@@ -1009,7 +1007,8 @@ MMU::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
     }
 
     bool vm = state.hcr.vm;
-    if (HaveVirtHostExt(tc) && state.hcr.e2h == 1 && state.hcr.tge ==1)
+    if (HaveExt(tc, ArmExtension::FEAT_VHE) &&
+        state.hcr.e2h == 1 && state.hcr.tge == 1)
         vm = 0;
     else if (state.hcr.dc == 1)
         vm = 1;
@@ -1234,7 +1233,8 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
         // determine EL we need to translate in
         switch (aarch64EL) {
           case EL0:
-            if (HaveVirtHostExt(tc) && hcr.tge == 1 && hcr.e2h == 1) {
+            if (HaveExt(tc, ArmExtension::FEAT_VHE) &&
+                hcr.tge == 1 && hcr.e2h == 1) {
                 // VHE code for EL2&0 regime
                 sctlr = tc->readMiscReg(MISCREG_SCTLR_EL2);
                 ttbcr = tc->readMiscReg(MISCREG_TCR_EL2);
@@ -1296,7 +1296,8 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
             isHyp &= (tran_type & S1S2NsTran) == 0;
             isHyp &= (tran_type & S1CTran)    == 0;
             bool vm = hcr.vm;
-            if (HaveVirtHostExt(tc) && hcr.e2h == 1 && hcr.tge ==1) {
+            if (HaveExt(tc, ArmExtension::FEAT_VHE) &&
+                hcr.e2h == 1 && hcr.tge ==1) {
                 vm = 0;
             }
 

@@ -92,7 +92,8 @@ ExceptionLevel
 debugTargetFrom(ThreadContext *tc, bool secure)
 {
     bool route_to_el2;
-    if (ArmSystem::haveEL(tc, EL2) && (!secure || HaveSecureEL2Ext(tc))) {
+    if (ArmSystem::haveEL(tc, EL2) &&
+        (!secure || HaveExt(tc, ArmExtension::FEAT_SEL2))) {
         if (ELIs32(tc, EL2)) {
             const HCR hcr = tc->readMiscReg(MISCREG_HCR);
             const HDCR hdcr = tc->readMiscRegNoEffect(MISCREG_HDCR);
@@ -225,24 +226,10 @@ getAffinity(ArmSystem *arm_sys, ThreadContext *tc)
 }
 
 bool
-HavePACExt(ThreadContext *tc)
+HaveExt(ThreadContext* tc, ArmExtension ext)
 {
     auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-    return isa->getRelease()->has(ArmExtension::FEAT_PAuth);
-}
-
-bool
-HaveVirtHostExt(ThreadContext *tc)
-{
-    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-    return isa->getRelease()->has(ArmExtension::FEAT_VHE);
-}
-
-bool
-HaveLVA(ThreadContext *tc)
-{
-    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-    return isa->getRelease()->has(ArmExtension::FEAT_LVA);
+    return isa->getRelease()->has(ext);
 }
 
 ExceptionLevel
@@ -253,23 +240,16 @@ s1TranslationRegime(ThreadContext* tc, ExceptionLevel el)
     else if (ArmSystem::haveEL(tc, EL3) && ELIs32(tc, EL3) &&
              static_cast<SCR>(tc->readMiscRegNoEffect(MISCREG_SCR)).ns == 0)
         return EL3;
-    else if (HaveVirtHostExt(tc) && ELIsInHost(tc, el))
+    else if (HaveExt(tc, ArmExtension::FEAT_VHE) && ELIsInHost(tc, el))
         return EL2;
     else
         return EL1;
 }
 
 bool
-HaveSecureEL2Ext(ThreadContext *tc)
-{
-    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-    return isa->getRelease()->has(ArmExtension::FEAT_SEL2);
-}
-
-bool
 IsSecureEL2Enabled(ThreadContext *tc)
 {
-    if (ArmSystem::haveEL(tc, EL2) && HaveSecureEL2Ext(tc) &&
+    if (ArmSystem::haveEL(tc, EL2) && HaveExt(tc, ArmExtension::FEAT_SEL2) &&
         !ELIs32(tc, EL2)) {
         if (ArmSystem::haveEL(tc, EL3))
             return !ELIs32(tc, EL3) && static_cast<SCR>(
@@ -309,7 +289,8 @@ ELIsInHost(ThreadContext *tc, ExceptionLevel el)
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     return (ArmSystem::haveEL(tc, EL2) &&
             (IsSecureEL2Enabled(tc) || !isSecureBelowEL3(tc)) &&
-            HaveVirtHostExt(tc) && !ELIs32(tc, EL2) && hcr.e2h == 1 &&
+            HaveExt(tc, ArmExtension::FEAT_VHE) &&
+            !ELIs32(tc, EL2) && hcr.e2h == 1 &&
             (el == EL2 || (el == EL0 && hcr.tge == 1)));
 }
 
@@ -360,14 +341,15 @@ ELStateUsingAArch32K(ThreadContext *tc, ExceptionLevel el, bool secure)
     } else {
         SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
         bool aarch32_below_el3 = have_el3 && scr.rw == 0 &&
-                            (!secure || !HaveSecureEL2Ext(tc) || !scr.eel2);
+            (!secure || !HaveExt(tc, ArmExtension::FEAT_SEL2) || !scr.eel2);
 
         HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-        bool sec_el2 = HaveSecureEL2Ext(tc) && scr.eel2;
+        bool sec_el2 = HaveExt(tc, ArmExtension::FEAT_SEL2) && scr.eel2;
         bool aarch32_at_el1 = (aarch32_below_el3 ||
                                (have_el2 && (sec_el2 || !secure) &&
-                                hcr.rw == 0 && !(hcr.e2h && hcr.tge &&
-                                                 HaveVirtHostExt(tc))));
+                                hcr.rw == 0 &&
+                                !(hcr.e2h && hcr.tge &&
+                                 HaveExt(tc, ArmExtension::FEAT_VHE))));
 
         // Only know if EL0 using AArch32 from PSTATE
         if (el == EL0 && !aarch32_at_el1) {
@@ -444,7 +426,7 @@ computeAddrTop(ThreadContext *tc, bool selbit, bool is_instr,
           case EL2:
           {
             TCR tcr = tc->readMiscReg(MISCREG_TCR_EL2);
-            if (HaveVirtHostExt(tc) && ELIsInHost(tc, el)) {
+            if (HaveExt(tc, ArmExtension::FEAT_VHE) && ELIsInHost(tc, el)) {
                 tbi = selbit? tcr.tbi1 : tcr.tbi0;
                 tbid = selbit? tcr.tbid1 : tcr.tbid0;
             } else {
@@ -1276,7 +1258,8 @@ isUnpriviledgeAccess(ThreadContext *tc)
     bool unpriv_el1 = currEL(tc) == EL1 &&
         !(ArmSystem::haveEL(tc, EL2) &&
             have_nv_ext && hcr.nv == 1 && hcr.nv1 == 1);
-    bool unpriv_el2 = ArmSystem::haveEL(tc, EL2) && HaveVirtHostExt(tc) &&
+    bool unpriv_el2 = ArmSystem::haveEL(tc, EL2) &&
+                      HaveExt(tc, ArmExtension::FEAT_VHE) &&
                       currEL(tc) == EL2 && hcr.e2h == 1 && hcr.tge == 1;
 
     return (unpriv_el1 || unpriv_el2) && !cpsr.uao;

@@ -45,13 +45,13 @@ let {{
     def pacEnabledCode(hint):
         if hint:
             code = """
-                if (!HavePACExt(xc->tcBase())) {
+                if (!HaveExt(xc->tcBase(), ArmExtension::FEAT_PAuth)) {
                     return NoFault;
                 }
                 """
         else:
             code = """
-                if (!HavePACExt(xc->tcBase())) {
+                if (!HaveExt(xc->tcBase(), ArmExtension::FEAT_PAuth)) {
                     return std::make_shared<UndefinedInstruction>(
                         machInst, true);
                 }

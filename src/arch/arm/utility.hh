@@ -51,6 +51,7 @@
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "enums/ArmExtension.hh"
 
 namespace gem5
 {
@@ -120,10 +121,12 @@ currEL(CPSR cpsr)
     return opModeToEL((OperatingMode) (uint8_t)cpsr.mode);
 }
 
-bool HavePACExt(ThreadContext *tc);
-bool HaveVirtHostExt(ThreadContext *tc);
-bool HaveLVA(ThreadContext *tc);
-bool HaveSecureEL2Ext(ThreadContext *tc);
+/**
+ * Returns true if the provided ThreadContext supports the ArmExtension
+ * passed as a second argument.
+ */
+bool HaveExt(ThreadContext *tc, ArmExtension ext);
+
 bool IsSecureEL2Enabled(ThreadContext *tc);
 bool EL2Enabled(ThreadContext *tc);
 
