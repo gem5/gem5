@@ -88,7 +88,7 @@ Gicv3Distributor::Gicv3Distributor(Gicv3 * gic, uint32_t it_lines)
       gicdTyper(0),
       gicdPidr0(0x92),
       gicdPidr1(0xb4),
-      gicdPidr2(0x3b),
+      gicdPidr2(gic->params().gicv4 ? 0x4b : 0x3b),
       gicdPidr3(0),
       gicdPidr4(0x44)
 {

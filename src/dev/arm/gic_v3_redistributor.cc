@@ -193,10 +193,7 @@ Gicv3Redistributor::read(Addr addr, size_t size, bool is_secure_access)
       }
 
       case GICR_PIDR2: { // Peripheral ID2 Register
-          uint8_t arch_rev = 0x3; // 0x3 GICv3
-          uint8_t jedec = 0x1; // JEP code
-          uint8_t des_1 = 0x3; // JEP106 identification code, bits[6:4]
-          return (arch_rev << 4) | (jedec << 3) | (des_1 << 0);
+          return gic->getDistributor()->gicdPidr2;
       }
 
       case GICR_PIDR3: // Peripheral ID3 Register
