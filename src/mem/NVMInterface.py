@@ -44,7 +44,7 @@ from m5.objects.DRAMInterface import AddrMap
 # are modeled without getting into too much detail of the media itself.
 class NVMInterface(MemInterface):
     type = 'NVMInterface'
-    cxx_header = "mem/mem_interface.hh"
+    cxx_header = "mem/nvm_interface.hh"
     cxx_class = 'gem5::memory::NVMInterface'
 
     # NVM DIMM could have write buffer to offload writes

@@ -66,6 +66,7 @@ namespace gem5
 namespace memory
 {
 
+class MemInterface;
 class DRAMInterface;
 class NVMInterface;
 

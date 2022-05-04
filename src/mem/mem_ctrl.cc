@@ -46,7 +46,9 @@
 #include "debug/MemCtrl.hh"
 #include "debug/NVM.hh"
 #include "debug/QOS.hh"
+#include "mem/dram_interface.hh"
 #include "mem/mem_interface.hh"
+#include "mem/nvm_interface.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -263,11 +265,11 @@ MemCtrl::addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
 
             MemPacket* mem_pkt;
             if (is_dram) {
-                mem_pkt = dram->decodePacket(pkt, addr, size, true, true);
+                mem_pkt = dram->decodePacket(pkt, addr, size, true);
                 // increment read entries of the rank
                 dram->setupRank(mem_pkt->rank, true);
             } else {
-                mem_pkt = nvm->decodePacket(pkt, addr, size, true, false);
+                mem_pkt = nvm->decodePacket(pkt, addr, size, true);
                 // Increment count to trigger issue of non-deterministic read
                 nvm->setupRank(mem_pkt->rank, true);
                 // Default readyTime to Max; will be reset once read is issued
@@ -342,10 +344,10 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram)
         if (!merged) {
             MemPacket* mem_pkt;
             if (is_dram) {
-                mem_pkt = dram->decodePacket(pkt, addr, size, false, true);
+                mem_pkt = dram->decodePacket(pkt, addr, size, false);
                 dram->setupRank(mem_pkt->rank, false);
             } else {
-                mem_pkt = nvm->decodePacket(pkt, addr, size, false, false);
+                mem_pkt = nvm->decodePacket(pkt, addr, size, false);
                 nvm->setupRank(mem_pkt->rank, false);
             }
             assert(totalWriteQueueSize < writeBufferSize);
@@ -825,8 +827,8 @@ MemCtrl::doBurstAccess(MemPacket* mem_pkt)
 
     // Issue the next burst and update bus state to reflect
     // when previous command was issued
+    std::vector<MemPacketQueue>& queue = selQueue(mem_pkt->isRead());
     if (mem_pkt->isDram()) {
-        std::vector<MemPacketQueue>& queue = selQueue(mem_pkt->isRead());
         std::tie(cmd_at, nextBurstAt) =
                  dram->doBurstAccess(mem_pkt, nextBurstAt, queue);
 
@@ -836,7 +838,7 @@ MemCtrl::doBurstAccess(MemPacket* mem_pkt)
 
     } else {
         std::tie(cmd_at, nextBurstAt) =
-                 nvm->doBurstAccess(mem_pkt, nextBurstAt);
+                 nvm->doBurstAccess(mem_pkt, nextBurstAt, queue);
 
         // Update timing for NVM ranks if NVM is configured on this channel
         if (dram)
@@ -923,7 +925,7 @@ MemCtrl::processNextReqEvent()
     // check ranks for refresh/wakeup - uses busStateNext, so done after
     // turnaround decisions
     // Default to busy status and update based on interface specifics
-    bool dram_busy = dram ? dram->isBusy() : true;
+    bool dram_busy = dram ? dram->isBusy(false, false) : true;
     bool nvm_busy = true;
     bool all_writes_nvm = false;
     if (nvm) {
