@@ -774,8 +774,9 @@ MMU::checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req, Mode mode,
     // gem5)
     // 4) Instructions to be treated as unprivileged, unless
     // HCR_EL2.{E2H, TGE} == {1, 0}
-    const AA64MMFR1 mmfr1 = tc->readMiscReg(MISCREG_ID_AA64MMFR1_EL1);
-    if (mmfr1.pan && state.cpsr.pan && (ap & 0x1) &&
+    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+    const bool has_pan = isa->getRelease()->has(ArmExtension::FEAT_PAN);
+    if (has_pan && state.cpsr.pan && (ap & 0x1) &&
         mode != BaseMMU::Execute) {
 
         if (req->isCacheMaintenance() &&

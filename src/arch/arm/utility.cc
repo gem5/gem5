@@ -227,23 +227,22 @@ getAffinity(ArmSystem *arm_sys, ThreadContext *tc)
 bool
 HavePACExt(ThreadContext *tc)
 {
-    AA64ISAR1 id_aa64isar1 = tc->readMiscReg(MISCREG_ID_AA64ISAR1_EL1);
-    return id_aa64isar1.api | id_aa64isar1.apa |
-        id_aa64isar1.gpi | id_aa64isar1.gpa;
+    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+    return isa->getRelease()->has(ArmExtension::FEAT_PAuth);
 }
 
 bool
 HaveVirtHostExt(ThreadContext *tc)
 {
-    AA64MMFR1 id_aa64mmfr1 = tc->readMiscReg(MISCREG_ID_AA64MMFR1_EL1);
-    return id_aa64mmfr1.vh;
+    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+    return isa->getRelease()->has(ArmExtension::FEAT_VHE);
 }
 
 bool
 HaveLVA(ThreadContext *tc)
 {
-    const AA64MMFR2 mm_fr2 = tc->readMiscReg(MISCREG_ID_AA64MMFR2_EL1);
-    return (bool)mm_fr2.varange;
+    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+    return isa->getRelease()->has(ArmExtension::FEAT_LVA);
 }
 
 ExceptionLevel
@@ -263,8 +262,8 @@ s1TranslationRegime(ThreadContext* tc, ExceptionLevel el)
 bool
 HaveSecureEL2Ext(ThreadContext *tc)
 {
-    AA64PFR0 id_aa64pfr0 = tc->readMiscReg(MISCREG_ID_AA64PFR0_EL1);
-    return id_aa64pfr0.sel2;
+    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+    return isa->getRelease()->has(ArmExtension::FEAT_SEL2);
 }
 
 bool

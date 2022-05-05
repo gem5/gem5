@@ -453,8 +453,8 @@ ArmFault::update(ThreadContext *tc)
         toEL = fromEL;
 
     // Check for Set Priviledge Access Never, if PAN is supported
-    AA64MMFR1 mmfr1 = tc->readMiscReg(MISCREG_ID_AA64MMFR1_EL1);
-    if (mmfr1.pan) {
+    if (auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+        isa->getRelease()->has(ArmExtension::FEAT_PAN)) {
         if (toEL == EL1) {
             const SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
             span = !sctlr.span;
