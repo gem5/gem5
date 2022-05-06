@@ -415,12 +415,19 @@ PM4PacketProcessor::processMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
     gpuDevice->insertQId(vmid, new_q->id());
 
     if (mqd->aql) {
-        // Note: The size of the AQL queue is currently hardcoded to 64k. This
-        // can cause issues if the AQL queue is larger since it will not wrap
-        // around at the right time in the HSAPacketProcessor.
+        // The queue size is encoded in the cp_hqd_pq_control field in the
+        // kernel driver in the 6 lowest bits as log2(queue_size / 4) - 1
+        // number of dwords.
+        //
+        //      https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/
+        //          roc-4.3.x/drivers/gpu/drm/amd/amdgpu/gfx_v9_0.c#L3561
+        //
+        // Queue size is then 2^(cp_hqd_pq_control[5:0] + 1) dword. Multiply
+        // by 4 to get the number of bytes as HSAPP expects.
+        int mqd_size = (1 << ((mqd->hqd_pq_control & 0x3f) + 1)) * 4;
         auto &hsa_pp = gpuDevice->CP()->hsaPacketProc();
         hsa_pp.setDeviceQueueDesc(mqd->aqlRptr, mqd->base, new_q->id(),
-                                  65536, 8, GfxVersion::gfx900, offset,
+                                  mqd_size, 8, GfxVersion::gfx900, offset,
                                   mqd->mqdReadIndex);
     }
 
