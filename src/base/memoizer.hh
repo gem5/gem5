@@ -141,7 +141,7 @@ class Memoizer
         });
     }
 
-    template <auto Start, auto End, auto Inc, class F>
+    template <size_t Start, size_t End, size_t Inc, class F>
     constexpr void
     iterateTupleArgs(F&& func)
     {
