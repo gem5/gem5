@@ -103,8 +103,8 @@ class Memoizer
             // Return the cached result
             return it->second;
         }
-        auto [it, emplaced] = cache.emplace(key, func(args...));
-        return it->second;
+        auto emplaced = cache.emplace(key, func(args...));
+        return emplaced.first->second;
     };
 
     /** Clear the memoization cache */
