@@ -304,7 +304,10 @@ for header in common_headers:
     Command(header_target, header_src, Copy('${TARGET}', '${SOURCE}'))
 
 class ArmFastModelComponent(object):
-    def __init__(self, project_file, *extra_deps):
+    def __init__(self, project_file, *extra_deps, tags=None):
+        if not tags:
+            tags = ['arm fastmodel']
+        self.tags = tags
         project_file = File(project_file)
         project_file_dir = project_file.Dir('.')
 
@@ -403,7 +406,7 @@ class ArmFastModelComponent(object):
         env.Append(CPPPATH=self.headerpaths)
         # Put these libraries earlier in the list by setting priority.
         for lib in self.libs:
-            SourceLib(lib, priority=1, tags='arm fastmodel')
+            SourceLib(lib, priority=1, tags=self.tags)
 
     def simgen_builder(self, target, source, env):
         cmd = self.simgen_cmd
