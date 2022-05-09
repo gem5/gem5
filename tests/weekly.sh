@@ -222,7 +222,7 @@ docker run --rm -v ${PWD}:${PWD} -w \
 # Like LULESH, HACC is heavily used in the HPC community and is used to stress
 # the GPU memory system
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
-       --memory="${docker_mem_limit}"hacc-test-weekly \
+       --memory="${docker_mem_limit}" hacc-test-weekly \
        ${gem5_root}/build/${gpu_isa}/gem5.opt \
        ${gem5_root}/configs/example/apu_se.py -n3 --reg-alloc-policy=dynamic \
        --benchmark-root=${gem5_root}/gem5-resources/src/gpu/halo-finder/src/hip \
