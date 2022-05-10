@@ -40,7 +40,14 @@
 
 Import('*')
 
-GTest('aapcs64.test', 'aapcs64.test.cc', '../../base/debug.cc')
+# The GTest function does not have a 'tags' parameter. We therefore apply this
+# guard to ensure this test is only built when ARM is compiled.
+#
+# Note: This will need reconfigured for multi-isa. E.g., if this is
+# incorporated: https://gem5-review.googlesource.com/c/public/gem5/+/52491
+if env['TARGET_ISA'] == 'arm':
+    GTest('aapcs64.test', 'aapcs64.test.cc', '../../base/debug.cc')
+
 Source('decoder.cc', tags='arm isa')
 Source('faults.cc', tags='arm isa')
 Source('htm.cc', tags='arm isa')
