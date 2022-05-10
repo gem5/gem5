@@ -25,6 +25,6 @@
 
 Import('*')
 
-SimObject('SystemC_Example.py')
+SimObject('SystemC_Example.py', sim_objects=["SystemC_Printer", "Gem5_Feeder"])
 Source('printer.cc')
 Source('feeder.cc')
