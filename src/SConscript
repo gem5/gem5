@@ -186,7 +186,8 @@ class SimObject(PySource):
                     SIMOBJ=simobj,
                     PARAMS_CC=cc_file,
                     USE_PYTHON=env['USE_PYTHON'])
-            Source(cc_file, tags=self.tags, add_tags='python')
+            Source(cc_file, tags=self.tags,
+                   add_tags=('python' if env['USE_PYTHON'] else None))
 
             # CXX config header.
             gem5py_env.Command([ "${CXXCONFIG_HH}" ], srcs,
@@ -230,8 +231,9 @@ class SimObject(PySource):
                     ENUM=enum,
                     ENUM_CC=cc_file,
                     ENUMCC_PY=build_tools.File('enum_cc.py'),
-                    USE_PYTHON='--use-python' if env['USE_PYTHON'] else '')
-            Source(cc_file, tags=self.tags, add_tags='python')
+                    USE_PYTHON=env['USE_PYTHON'])
+            Source(cc_file, tags=self.tags,
+                   add_tags=('python' if env['USE_PYTHON'] else None))
 
 # This regular expression is simplistic and assumes that the import takes up
 # the entire line, doesn't have the keyword "public", uses double quotes, has
