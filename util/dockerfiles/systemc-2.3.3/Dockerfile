@@ -1,14 +1,5 @@
-# Copyright (c) 2012-2014 ARM Limited
-# All rights reserved
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
+# Copyright (c) 2021 The Regents of the University of California
+# All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -33,36 +24,30 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-ARCH = ARM
-VARIANT = opt
+FROM ubuntu:20.04
 
-SYSTEMC_INC = /opt/systemc/include
-SYSTEMC_LIB = /opt/systemc/lib-linux64
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt -y update && apt -y upgrade && \
+    apt -y install build-essential git m4 scons zlib1g zlib1g-dev \
+    libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
+    python3-dev python-is-python3 doxygen libboost-all-dev \
+    libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config pip \
+    python3-venv wget
 
-CXXFLAGS = -I../../../build/$(ARCH) -L../../../build/$(ARCH)
-CXXFLAGS += -I$(SYSTEMC_INC) -L$(SYSTEMC_LIB)
-CXXFLAGS += -std=c++17
-CXXFLAGS += -g -DTRACING_ON
-LIBS = -lgem5_$(VARIANT) -lsystemc -lpng
+RUN mkdir /systemc
+WORKDIR /systemc
+RUN wget https://www.accellera.org/images/downloads/standards/systemc/systemc-2.3.3.tar.gz; \
+    tar xf systemc-2.3.3.tar.gz
 
-ALL = gem5.$(VARIANT).sc
+WORKDIR /systemc/systemc-2.3.3
+RUN mkdir objdir
+WORKDIR objdir
+ENV CXX="g++"
+ENV CXXFLAGS="-std=c++17"
 
-all: $(ALL)
+RUN ../configure --prefix=/opt/systemc
+RUN make -j8 && make install
+RUN make clean
 
-.cc.o:
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-sc_gem5_control.o: sc_gem5_control.cc sc_gem5_control.hh
-sc_logger.o: sc_logger.cc sc_logger.hh
-sc_module.o: sc_module.cc sc_module.hh
-stats.o: stats.cc stats.hh
-main.o: main.cc sc_logger.hh sc_module.hh stats.hh
-
-gem5.$(VARIANT).sc: main.o stats.o \
-	sc_gem5_control.o sc_logger.o sc_module.o
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
-
-clean:
-	$(RM) $(ALL)
-	$(RM) *.o
-	$(RM) -r m5out
+WORKDIR /
+RUN rm -rf /systemc/systemc-2.3.3/objdir

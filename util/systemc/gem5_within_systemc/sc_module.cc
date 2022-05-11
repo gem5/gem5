@@ -63,6 +63,7 @@
 #include "sim/core.hh"
 #include "sim/cur_tick.hh"
 #include "sim/eventq.hh"
+#include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/stat_control.hh"
 
@@ -101,19 +102,19 @@ Module::SCEventQueue::wakeup(gem5::Tick when)
 void
 Module::setupEventQueues(Module &module)
 {
-    fatal_if(mainEventQueue.size() != 0,
+    fatal_if(gem5::mainEventQueue.size() != 0,
         "Gem5SystemC::Module::setupEventQueues must be called"
         " before any gem5 event queues are set up");
 
     gem5::numMainEventQueues = 1;
     gem5::mainEventQueue.push_back(new SCEventQueue("events", module));
-    gem5::curEventQueue(getEventQueue(0));
+    gem5::curEventQueue(gem5::getEventQueue(0));
 }
 
 void
 Module::catchup()
 {
-    gem5::EventQueue *eventq = getEventQueue(0);
+    gem5::EventQueue *eventq = gem5::getEventQueue(0);
     gem5::Tick systemc_time = sc_core::sc_time_stamp().value();
     gem5::Tick gem5_time = gem5::curTick();
 
@@ -144,7 +145,7 @@ Module::serviceAsyncEvent()
     gem5::EventQueue *eventq = gem5::getEventQueue(0);
     std::lock_guard<gem5::EventQueue> lock(*eventq);
 
-    assert(async_event);
+    assert(gem5::async_event);
 
     /* Catch up gem5 time with SystemC time so that any event here won't
      * be in the past relative to the current time */
@@ -153,36 +154,37 @@ Module::serviceAsyncEvent()
     /* Move time on to match SystemC */
     catchup();
 
-    async_event = false;
-    if (async_statdump || async_statreset) {
-        statistics::schedStatEvent(async_statdump, async_statreset);
-        async_statdump = false;
-        async_statreset = false;
+    gem5::async_event = false;
+    if (gem5::async_statdump || gem5::async_statreset) {
+        gem5::statistics::schedStatEvent(gem5::async_statdump,
+                                         gem5::async_statreset);
+        gem5::async_statdump = false;
+        gem5::async_statreset = false;
     }
 
-    if (async_exit) {
-        async_exit = false;
+    if (gem5::async_exit) {
+        gem5::async_exit = false;
         gem5::exitSimLoop("user interrupt received");
     }
 
-    if (async_io) {
-        async_io = false;
-        pollQueue.service();
+    if (gem5::async_io) {
+        gem5::async_io = false;
+        gem5::pollQueue.service();
     }
 
-    if (async_exception)
+    if (gem5::async_exception)
         fatal("received async_exception, shouldn't be possible");
 }
 
 void
 Module::serviceExternalEvent()
 {
-    gem5::EventQueue *eventq = getEventQueue(0);
+    gem5::EventQueue *eventq = gem5::getEventQueue(0);
 
-    if (!in_simulate && !async_event)
+    if (!in_simulate && !gem5::async_event)
         warn("Gem5SystemC external event received while not in simulate");
 
-    if (async_event)
+    if (gem5::async_event)
         serviceAsyncEvent();
 
     if (in_simulate && !eventq->empty())
@@ -192,12 +194,12 @@ Module::serviceExternalEvent()
 void
 Module::eventLoop()
 {
-    gem5::EventQueue *eventq = getEventQueue(0);
+    gem5::EventQueue *eventq = gem5::getEventQueue(0);
 
     fatal_if(!in_simulate, "Gem5SystemC event loop entered while"
         " outside Gem5SystemC::Module::simulate");
 
-    if (async_event)
+    if (gem5::async_event)
         serviceAsyncEvent();
 
     while (!eventq->empty()) {
@@ -248,8 +250,8 @@ Module::eventLoop()
     fatal("Ran out of events without seeing exit event");
 }
 
-GlobalSimLoopExitEvent *
-Module::simulate(Tick num_cycles)
+gem5::GlobalSimLoopExitEvent *
+Module::simulate(gem5::Tick num_cycles)
 {
     inform("Entering event queue @ %d.  Starting simulation...",
         gem5::curTick());
@@ -259,8 +261,9 @@ Module::simulate(Tick num_cycles)
     else /* counter would roll over or be set to MaxTick anyhow */
         num_cycles = gem5::MaxTick;
 
-    gem5::GlobalEvent *limit_event = new GlobalSimLoopExitEvent(num_cycles,
-        "simulate() limit reached", 0, 0);
+    gem5::GlobalEvent *limit_event =
+        new gem5::GlobalSimLoopExitEvent(num_cycles,
+            "simulate() limit reached", 0, 0);
 
     exitEvent = NULL;
 
@@ -286,7 +289,7 @@ Module::simulate(Tick num_cycles)
     assert(global_event != NULL);
 
     gem5::GlobalSimLoopExitEvent *global_exit_event =
-        dynamic_cast<GlobalSimLoopExitEvent *>(global_event);
+        dynamic_cast<gem5::GlobalSimLoopExitEvent *>(global_event);
     assert(global_exit_event != NULL);
 
     if (global_exit_event != limit_event) {

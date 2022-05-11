@@ -16,6 +16,11 @@ services:
             context: sst-11.1.0
             dockerfile: Dockerfile
         image: gcr.io/gem5-test/sst-env
+    systemc:
+        build:
+            context: systemc-2.3.3
+            dockerfile: Dockerfile
+        image: gcr.io/gem5-test/systemc-env
     ubuntu-18.04_all-dependencies:
         build:
             context: ubuntu-18.04_all-dependencies
