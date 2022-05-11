@@ -86,6 +86,12 @@ class AbstractBoard(System):
         self.memory = memory
         self.cache_hierarchy = cache_hierarchy
 
+        # This variable determines whether the board is to be executed in
+        # full-system or syscall-emulation mode. This is set when the workload
+        # is defined. Whether or not the board is to be run in FS mode is
+        # determined by which kind of workload is set.
+        self._is_fs = None
+
         # Setup the board and memory system's memory ranges.
         self._setup_memory_ranges()
 
@@ -139,6 +145,33 @@ class AbstractBoard(System):
         :returns: The clock domain.
         """
         return self.clk_domain
+
+    def _set_fullsystem(self, is_fs: bool) -> None:
+        """
+        Sets whether this board is to be run in FS or SE mode. This is set
+        via the workload (the workload specified determines whether this will
+        be run in FS mode or not). This is not intended to be set in a
+        configuration script ergo, it's private.
+
+        :param is_fs: Set whether the board is to be run in FS mode or SE mode.
+        """
+        self._is_fs = is_fs
+
+    def is_fullsystem(self) -> bool:
+        """
+        Returns True if the board is to be run in FS mode. Otherwise the board
+        is to be run in Se mode. An exception will be thrown if this has not
+        been set.
+
+        This function is used by the Simulator module to setup the simulation
+        correctly.
+        """
+        if self._is_fs  == None:
+            raise Exception("The workload for this board not yet to be set. "
+                            "Whether the board is to be executed in FS or SE "
+                            "mode is determined by which 'set workload' "
+                            "function is run.")
+        return self._is_fs
 
     @abstractmethod
     def _setup_board(self) -> None:

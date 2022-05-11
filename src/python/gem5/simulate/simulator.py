@@ -71,7 +71,7 @@ class Simulator:
     def __init__(
         self,
         board: AbstractBoard,
-        full_system: bool = True,
+        full_system: Optional[bool] = None,
         on_exit_event: Optional[
             Dict[Union[str, ExitEvent], Generator[Optional[bool], None, None]]
         ] = None,
@@ -79,9 +79,10 @@ class Simulator:
     ) -> None:
         """
         :param board: The board to be simulated.
-        :param full_system: Whether to run in full-system simulation or not. If
-        False, the simulation will run in Syscall-Execution mode. True by
-        default.
+        :param full_system: Whether to run as a full-system simulation or not.
+        This is optional and used to override default behavior. If not set,
+        whether or not to run in FS mode will be determined via the board's
+        `is_fullsystem()` function.
         :param on_exit_event: An optional map to specify the generator to
         execute on each exit event. The generator may yield a boolean which,
         if True, will have the Simulator exit the run loop.
@@ -264,7 +265,12 @@ class Simulator:
         """
 
         if not self._instantiated:
-            root = Root(full_system=self._full_system, board=self._board)
+            root = Root(
+                full_system=self._full_system
+                if self._full_system is not None
+                else self._board.is_fullsystem(),
+                board=self._board,
+            )
 
             # We take a copy of the Root in case it's required elsewhere
             # (for example, in `get_stats()`).

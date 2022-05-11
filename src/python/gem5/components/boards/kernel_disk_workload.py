@@ -26,6 +26,7 @@
 
 from abc import abstractmethod
 
+from .abstract_board import AbstractBoard
 from ...resources.resource import AbstractResource
 
 from typing import List, Optional
@@ -155,6 +156,14 @@ class KernelDiskWorkload:
         :param exit_on_work_items: Whether the simulation should exit on work
         items. True by default.
         """
+
+        # We assume this this is in a multiple-inheritance setup with an
+        # Abstract board. This function will not work otherwise.
+        assert(isinstance(self,AbstractBoard))
+
+        # If we are setting a workload of this type, we need to run as a
+        # full-system simulation.
+        self._set_fullsystem(True)
 
         # Set the kernel to use.
         self.workload.object_file = kernel.get_local_path()

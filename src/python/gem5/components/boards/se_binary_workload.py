@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from .abstract_board import AbstractBoard
 from ...resources.resource import AbstractResource
 
 from m5.objects import SEWorkload, Process
@@ -48,6 +49,14 @@ class SEBinaryWorkload:
 
         :param binary: The resource encapsulating the binary to be run.
         """
+
+        # We assume this this is in a multiple-inheritance setup with an
+        # Abstract board. This function will not work otherwise.
+        assert(isinstance(self,AbstractBoard))
+
+        # If we are setting a workload of this type, we need to run as a
+        # SE-mode simulation.
+        self._set_fullsystem(False)
 
         self.workload = SEWorkload.init_compatible(binary.get_local_path())
 

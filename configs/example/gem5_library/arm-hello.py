@@ -88,7 +88,7 @@ board.set_se_binary_workload(
 )
 
 # Lastly we run the simulation.
-simulator = Simulator(board=board, full_system=False)
+simulator = Simulator(board=board)
 simulator.run()
 
 print(

@@ -100,7 +100,7 @@ binary = Resource(args.resource,
 motherboard.set_se_binary_workload(binary)
 
 # Run the simulation
-simulator = Simulator(board=motherboard, full_system=False)
+simulator = Simulator(board=motherboard)
 simulator.run()
 
 print(
