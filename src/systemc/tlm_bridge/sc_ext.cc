@@ -34,11 +34,67 @@
 #include "systemc/tlm_bridge/sc_ext.hh"
 
 #include "systemc/ext/utils/sc_report_handler.hh"
+#include "systemc/tlm_bridge/gem5_to_tlm.hh"
+#include "systemc/tlm_bridge/tlm_to_gem5.hh"
 
 using namespace gem5;
 
 namespace Gem5SystemC
 {
+namespace
+{
+
+struct ControlConversionRegister
+{
+    ControlConversionRegister()
+    {
+        sc_gem5::addPayloadToPacketConversionStep(
+            [] (PacketPtr pkt, tlm::tlm_generic_payload &trans)
+            {
+                ControlExtension *control_ex = nullptr;
+                trans.get_extension(control_ex);
+                if (!control_ex) {
+                    return;
+                }
+
+                if (control_ex->isPrivileged()) {
+                    pkt->req->setFlags(Request::PRIVILEGED);
+                } else {
+                    pkt->req->clearFlags(Request::PRIVILEGED);
+                }
+
+                if (control_ex->isSecure()) {
+                    pkt->req->setFlags(Request::SECURE);
+                } else {
+                    pkt->req->clearFlags(Request::SECURE);
+                }
+
+                if (control_ex->isInstruction()) {
+                    pkt->req->setFlags(Request::INST_FETCH);
+                } else {
+                    pkt->req->clearFlags(Request::INST_FETCH);
+                }
+
+                pkt->qosValue(control_ex->getQos());
+            });
+        sc_gem5::addPacketToPayloadConversionStep(
+            [] (PacketPtr pkt, tlm::tlm_generic_payload &trans)
+            {
+                ControlExtension *control_ex = nullptr;
+                trans.get_extension(control_ex);
+                if (!control_ex) {
+                    return;
+                }
+
+                control_ex->setPrivileged(pkt->req->isPriv());
+                control_ex->setSecure(pkt->req->isSecure());
+                control_ex->setInstruction(pkt->req->isInstFetch());
+                control_ex->setQos(pkt->qosValue());
+            });
+    }
+};
+
+} // namespace
 
 Gem5Extension::Gem5Extension(PacketPtr p) : packet(p)
 {
@@ -127,6 +183,8 @@ AtomicExtension::getAtomicOpFunctor() const
 ControlExtension::ControlExtension()
     : privileged(false), secure(false), instruction(false), qos(0)
 {
+    [[maybe_unused]] static ControlConversionRegister *conversion_register =
+        new ControlConversionRegister();
 }
 
 tlm::tlm_extension_base *
