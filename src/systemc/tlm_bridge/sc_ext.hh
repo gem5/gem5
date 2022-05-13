@@ -34,6 +34,7 @@
 #ifndef __SYSTEMC_TLM_BRIDGE_SC_EXT_HH__
 #define __SYSTEMC_TLM_BRIDGE_SC_EXT_HH__
 
+#include <cstdint>
 #include <memory>
 
 #include "base/amo.hh"
@@ -81,6 +82,41 @@ class AtomicExtension: public tlm::tlm_extension<AtomicExtension>
   private:
     std::shared_ptr<gem5::AtomicOpFunctor> _op;
     bool _needReturn;
+};
+
+class ControlExtension : public tlm::tlm_extension<ControlExtension>
+{
+  public:
+    ControlExtension();
+
+    tlm_extension_base *clone() const override;
+    void copy_from(const tlm_extension_base &ext) override;
+
+    static ControlExtension &getExtension(
+            const tlm::tlm_generic_payload *payload);
+    static ControlExtension &getExtension(
+            const tlm::tlm_generic_payload &payload);
+
+    /* Secure and privileged access */
+    bool isPrivileged() const;
+    void setPrivileged(bool p);
+    bool isSecure() const;
+    void setSecure(bool s);
+    bool isInstruction() const;
+    void setInstruction(bool i);
+
+    /* Quality of Service (AXI4) */
+    uint8_t getQos() const;
+    void setQos(uint8_t q);
+
+  private:
+    /* Secure and privileged access */
+    bool privileged;
+    bool secure;
+    bool instruction;
+
+    /* Quality of Service (AXI4) */
+    uint8_t qos;
 };
 
 } // namespace Gem5SystemC

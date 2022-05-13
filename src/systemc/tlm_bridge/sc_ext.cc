@@ -125,4 +125,85 @@ AtomicExtension::getAtomicOpFunctor() const
     return _op.get();
 }
 
+ControlExtension::ControlExtension()
+    : privileged(false), secure(false), instruction(false), qos(0)
+{
+}
+
+tlm::tlm_extension_base *
+ControlExtension::clone() const
+{
+    return new ControlExtension(*this);
+}
+
+void
+ControlExtension::copy_from(const tlm::tlm_extension_base &ext)
+{
+    const ControlExtension &from = static_cast<const ControlExtension &>(ext);
+    *this = from;
+}
+
+ControlExtension &
+ControlExtension::getExtension(const tlm::tlm_generic_payload &payload)
+{
+    return ControlExtension::getExtension(&payload);
+}
+
+ControlExtension &
+ControlExtension::getExtension(const tlm::tlm_generic_payload *payload)
+{
+    ControlExtension *result = nullptr;
+    payload->get_extension(result);
+    sc_assert(result);
+    return *result;
+}
+
+bool
+ControlExtension::isPrivileged() const
+{
+    return privileged;
+}
+
+void
+ControlExtension::setPrivileged(bool p)
+{
+    privileged = p;
+}
+
+bool
+ControlExtension::isSecure() const
+{
+    return secure;
+}
+
+void
+ControlExtension::setSecure(bool s)
+{
+    secure = s;
+}
+
+bool
+ControlExtension::isInstruction() const
+{
+    return instruction;
+}
+
+void
+ControlExtension::setInstruction(bool i)
+{
+    instruction = i;
+}
+
+uint8_t
+ControlExtension::getQos() const
+{
+    return qos;
+}
+
+void
+ControlExtension::setQos(uint8_t q)
+{
+    qos = q;
+}
+
 } // namespace Gem5SystemC
