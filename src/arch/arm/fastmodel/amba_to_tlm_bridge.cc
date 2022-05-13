@@ -160,7 +160,7 @@ AmbaToTlmBridge64::maybeSetupAtomicExtension(
     trans.set_data_ptr(dummy_buffer);
 
     // The return value would store in the extension. We don't need to specify
-    // need_return here.
+    // returnRequired here.
     atomic_ex = new Gem5SystemC::AtomicExtension(
         std::make_shared<FarAtomicOpFunctor>(fa), false);
     if (trans.has_mm())

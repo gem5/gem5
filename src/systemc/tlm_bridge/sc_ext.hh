@@ -47,10 +47,10 @@ namespace Gem5SystemC
 class Gem5Extension: public tlm::tlm_extension<Gem5Extension>
 {
   public:
-    Gem5Extension(gem5::PacketPtr _packet);
+    Gem5Extension(gem5::PacketPtr p);
 
-    virtual tlm_extension_base *clone() const;
-    virtual void copy_from(const tlm_extension_base &ext);
+    tlm_extension_base *clone() const override;
+    void copy_from(const tlm_extension_base &ext) override;
 
     static Gem5Extension &getExtension(
             const tlm::tlm_generic_payload *payload);
@@ -66,22 +66,22 @@ class AtomicExtension: public tlm::tlm_extension<AtomicExtension>
 {
   public:
     AtomicExtension(
-        std::shared_ptr<gem5::AtomicOpFunctor> amo_op, bool need_return);
+        std::shared_ptr<gem5::AtomicOpFunctor> o, bool r);
 
-    virtual tlm_extension_base *clone() const;
-    virtual void copy_from(const tlm_extension_base &ext);
+    tlm_extension_base *clone() const override;
+    void copy_from(const tlm_extension_base &ext) override;
 
     static AtomicExtension &getExtension(
             const tlm::tlm_generic_payload *payload);
     static AtomicExtension &getExtension(
             const tlm::tlm_generic_payload &payload);
 
-    bool needReturn() const;
+    bool isReturnRequired() const;
     gem5::AtomicOpFunctor* getAtomicOpFunctor() const;
 
   private:
-    std::shared_ptr<gem5::AtomicOpFunctor> _op;
-    bool _needReturn;
+    std::shared_ptr<gem5::AtomicOpFunctor> op;
+    bool returnRequired;
 };
 
 class ControlExtension : public tlm::tlm_extension<ControlExtension>

@@ -40,17 +40,16 @@ using namespace gem5;
 namespace Gem5SystemC
 {
 
-Gem5Extension::Gem5Extension(PacketPtr _packet)
+Gem5Extension::Gem5Extension(PacketPtr p) : packet(p)
 {
-    packet = _packet;
 }
 
 Gem5Extension &
 Gem5Extension::getExtension(const tlm::tlm_generic_payload *payload)
 {
-    Gem5Extension *result = NULL;
+    Gem5Extension *result = nullptr;
     payload->get_extension(result);
-    sc_assert(result != NULL);
+    sc_assert(result != nullptr);
     return *result;
 }
 
@@ -75,13 +74,13 @@ Gem5Extension::clone() const
 void
 Gem5Extension::copy_from(const tlm::tlm_extension_base &ext)
 {
-    const Gem5Extension &cpyFrom = static_cast<const Gem5Extension &>(ext);
-    packet = cpyFrom.packet;
+    const Gem5Extension &from = static_cast<const Gem5Extension &>(ext);
+    packet = from.packet;
 }
 
 AtomicExtension::AtomicExtension(
-    std::shared_ptr<gem5::AtomicOpFunctor> amo_op, bool need_return)
-  : _op(amo_op), _needReturn(need_return)
+    std::shared_ptr<gem5::AtomicOpFunctor> o, bool r)
+    : op(o), returnRequired(r)
 {
 }
 
@@ -114,15 +113,15 @@ AtomicExtension::getExtension(const tlm::tlm_generic_payload *payload)
 }
 
 bool
-AtomicExtension::needReturn() const
+AtomicExtension::isReturnRequired() const
 {
-    return _needReturn;
+    return returnRequired;
 }
 
 gem5::AtomicOpFunctor*
 AtomicExtension::getAtomicOpFunctor() const
 {
-    return _op.get();
+    return op.get();
 }
 
 ControlExtension::ControlExtension()

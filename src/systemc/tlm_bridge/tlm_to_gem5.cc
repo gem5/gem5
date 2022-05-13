@@ -105,7 +105,7 @@ payload2packet(RequestorID _id, tlm::tlm_generic_payload &trans)
     trans.get_extension(atomic_ex);
     if (atomic_ex) {
         cmd = MemCmd::SwapReq;
-        Request::Flags flags = (atomic_ex->needReturn() ?
+        Request::Flags flags = (atomic_ex->isReturnRequired() ?
                                 Request::ATOMIC_RETURN_OP :
                                 Request::ATOMIC_NO_RETURN_OP);
         AtomicOpFunctorPtr amo_op = AtomicOpFunctorPtr(
