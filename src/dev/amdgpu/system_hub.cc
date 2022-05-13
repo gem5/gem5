@@ -42,15 +42,13 @@ AMDGPUSystemHub::sendRequest(PacketPtr pkt, Event *callback)
     ResponseEvent *dmaRespEvent = new ResponseEvent(callback);
     Tick delay = 0;
 
-    // Assuming read XOR write (i.e., not an atomic).
-    assert(pkt->isRead() ^ pkt->isWrite());
-
-    if (pkt->isRead()) {
-        dmaRead(pkt->getAddr(), pkt->getSize(), dmaRespEvent,
-                pkt->getPtr<uint8_t>(), 0, 0, delay);
-    } else {
+    if (pkt->isWrite()) {
         dmaWrite(pkt->getAddr(), pkt->getSize(), dmaRespEvent,
                  pkt->getPtr<uint8_t>(), 0, 0, delay);
+    } else {
+        assert(pkt->isRead());
+        dmaRead(pkt->getAddr(), pkt->getSize(), dmaRespEvent,
+                pkt->getPtr<uint8_t>(), 0, 0, delay);
     }
 }
 
