@@ -59,6 +59,7 @@ class AmbaToTlmBridge64 : public amba_pv::amba_pv_to_tlm_bridge<64>
     void invalidateDirectMemPtr(sc_dt::uint64 start_range,
                                 sc_dt::uint64 end_range);
     void maybeSetupAtomicExtension(amba_pv::amba_pv_transaction &trans);
+    void setupControlExtension(amba_pv::amba_pv_transaction &trans);
 
     tlm_utils::simple_target_socket<
         AmbaToTlmBridge64, 64, tlm::tlm_base_protocol_types> targetProxy;
