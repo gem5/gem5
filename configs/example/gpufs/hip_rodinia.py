@@ -40,8 +40,7 @@ from common import Options
 from common import GPUTLBOptions
 from ruby import Ruby
 
-
-demo_runscript = '''\
+rodinia_runscript = '''\
 export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 export HSA_ENABLE_SDMA=0
 dmesg -n3
@@ -51,15 +50,36 @@ if [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then
     /sbin/m5 exit
 fi
 modprobe -v amdgpu ip_block_mask=0xff ppfeaturemask=0 dpm=0 audio=0
-echo "Running {} {}"
-echo "{}" | base64 -d > myapp
-chmod +x myapp
-./myapp {}
+echo "Running {}"
+cd /home/gem5/HIP-Examples/rodinia_3.0/hip/{}/
+make clean
+make
+make test
 /sbin/m5 exit
 '''
 
-def addDemoOptions(parser):
+def addRodiniaOptions(parser):
     parser.add_argument("-a", "--app", default=None,
+                        choices=['b+tree',
+                                 'backprop',
+                                 'bfs',
+                                 'cfd',
+                                 'dwt2d',
+                                 'gaussian',
+                                 'heartwall',
+                                 'hotspot',
+                                 'hybridsort',
+                                 'kmeans',
+                                 'lavaMD',
+                                 'leukocyte',
+                                 'lud',
+                                 'myocyte',
+                                 'nn',
+                                 'nw',
+                                 'particlefilter',
+                                 'pathfinder',
+                                 'srad',
+                                 'streamcluster'],
                         help="GPU application to run")
     parser.add_argument("-o", "--opts", default="",
                         help="GPU application arguments")
@@ -71,7 +91,7 @@ if __name__ == "__m5_main__":
     AmdGPUOptions.addAmdGPUOptions(parser)
     Ruby.define_options(parser)
     GPUTLBOptions.tlb_options(parser)
-    addDemoOptions(parser)
+    addRodiniaOptions(parser)
 
     # Parse now so we can override options
     args = parser.parse_args()
@@ -90,17 +110,10 @@ if __name__ == "__m5_main__":
         print("No MMIO trace path. Use %s --gpu-mmio-trace <path>"
                 % sys.argv[0])
         sys.exit(1)
-    elif not os.path.isfile(args.app):
-        print("Could not find applcation", args.app)
-        sys.exit(1)
-
-    with open(os.path.abspath(args.app), 'rb') as binfile:
-        encodedBin = base64.b64encode(binfile.read()).decode()
 
     _, tempRunscript = tempfile.mkstemp()
     with open(tempRunscript, 'w') as b64file:
-        runscriptStr = demo_runscript.format(args.app, args.opts, encodedBin,
-                                             args.opts)
+        runscriptStr = rodinia_runscript.format(args.app, args.app)
         b64file.write(runscriptStr)
 
     if args.second_disk == None:
@@ -119,6 +132,8 @@ if __name__ == "__m5_main__":
     args.timing_gpu = True
     args.script = tempRunscript
     args.dgpu_xor_low_bit = 0
+
+    print(args.disk_image)
 
     # Run gem5
     runfs.runGpuFSSystem(args)
