@@ -38,6 +38,7 @@ class HBMCtrl(MemCtrl):
     # HBMCtrl uses the SimpleMemCtlr's interface
     # `dram` as the first pseudo channel, the second
     # pseudo channel interface is following
+    # HBMCtrl has been tested with two HBM_2000_4H_1x64 interfaces
     dram_2 = Param.DRAMInterface("DRAM memory interface")
 
     partitioned_q = Param.Bool(True, "split queues for pseudo channels")
