@@ -513,6 +513,7 @@ class MemCtrl : public qos::MemCtrl
     uint32_t writeHighThreshold;
     uint32_t writeLowThreshold;
     const uint32_t minWritesPerSwitch;
+    const uint32_t minReadsPerSwitch;
     uint32_t writesThisTime;
     uint32_t readsThisTime;
 

@@ -71,6 +71,7 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
     writeHighThreshold(writeBufferSize * p.write_high_thresh_perc / 100.0),
     writeLowThreshold(writeBufferSize * p.write_low_thresh_perc / 100.0),
     minWritesPerSwitch(p.min_writes_per_switch),
+    minReadsPerSwitch(p.min_reads_per_switch),
     writesThisTime(0), readsThisTime(0),
     memSchedPolicy(p.mem_sched_policy),
     frontendLatency(p.static_frontend_latency),
@@ -1016,8 +1017,11 @@ MemCtrl::processNextReqEvent(MemInterface* mem_intr,
             // we have so many writes that we have to transition
             // don't transition if the writeRespQueue is full and
             // there are no other writes that can issue
+            // Also ensure that we've issued a minimum defined number
+            // of reads before switching, or have emptied the readQ
             if ((totalWriteQueueSize > writeHighThreshold) &&
-               !(nvmWriteBlock(mem_intr))) {
+               (readsThisTime >= minReadsPerSwitch || totalReadQueueSize == 0)
+               && !(nvmWriteBlock(mem_intr))) {
                 switch_to_writes = true;
             }
 

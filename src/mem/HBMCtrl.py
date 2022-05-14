@@ -41,4 +41,9 @@ class HBMCtrl(MemCtrl):
     # HBMCtrl has been tested with two HBM_2000_4H_1x64 interfaces
     dram_2 = Param.DRAMInterface("DRAM memory interface")
 
+    # For mixed traffic, HBMCtrl with HBM_2000_4H_1x64 interfaaces
+    # gives the best results with following min_r/w_per_switch
+    min_reads_per_switch = 64
+    min_writes_per_switch = 64
+
     partitioned_q = Param.Bool(True, "split queues for pseudo channels")
