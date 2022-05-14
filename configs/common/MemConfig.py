@@ -235,7 +235,7 @@ def config_mem(options, system):
                 # Create a controller if not sharing a channel with DRAM
                 # in which case the controller has already been created
                 if not opt_hybrid_channel:
-                    mem_ctrl = m5.objects.MemCtrl()
+                    mem_ctrl = m5.objects.HeteroMemCtrl()
                     mem_ctrl.nvm = nvm_intf
 
                     mem_ctrls.append(mem_ctrl)

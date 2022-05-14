@@ -73,7 +73,7 @@ class NVMInterface(MemInterface):
         the current interface.
         """
         controller = MemCtrl()
-        controller.nvm = self
+        controller.dram = self
         return controller
 
 # NVM delays and device architecture defined to mimic PCM like memory.

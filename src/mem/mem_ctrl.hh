@@ -242,7 +242,7 @@ typedef std::deque<MemPacket*> MemPacketQueue;
  */
 class MemCtrl : public qos::MemCtrl
 {
-  private:
+  protected:
 
     // For now, make use of a queued response port to avoid dealing with
     // flow control for the responses being sent back
@@ -293,10 +293,15 @@ class MemCtrl : public qos::MemCtrl
      * processRespondEvent is called; no parameters are allowed
      * in these methods
      */
-    void processNextReqEvent();
+    virtual void processNextReqEvent(MemInterface* mem_intr,
+                          MemPacketQueue& resp_queue,
+                          EventFunctionWrapper& resp_event,
+                          EventFunctionWrapper& next_req_event);
     EventFunctionWrapper nextReqEvent;
 
-    void processRespondEvent();
+    virtual void processRespondEvent(MemInterface* mem_intr,
+                        MemPacketQueue& queue,
+                        EventFunctionWrapper& resp_event);
     EventFunctionWrapper respondEvent;
 
     /**
@@ -326,11 +331,12 @@ class MemCtrl : public qos::MemCtrl
      *
      * @param pkt The request packet from the outside world
      * @param pkt_count The number of memory bursts the pkt
-     * @param is_dram Does this packet access DRAM?
-     * translate to. If pkt size is larger then one full burst,
-     * then pkt_count is greater than one.
+     * @param mem_intr The memory interface this pkt will
+     * eventually go to
+     * @return if all the read pkts are already serviced by wrQ
      */
-    void addToReadQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram);
+    bool addToReadQueue(PacketPtr pkt, unsigned int pkt_count,
+                        MemInterface* mem_intr);
 
     /**
      * Decode the incoming pkt, create a mem_pkt and push to the
@@ -340,19 +346,22 @@ class MemCtrl : public qos::MemCtrl
      *
      * @param pkt The request packet from the outside world
      * @param pkt_count The number of memory bursts the pkt
-     * @param is_dram Does this packet access DRAM?
-     * translate to. If pkt size is larger then one full burst,
-     * then pkt_count is greater than one.
+     * @param mem_intr The memory interface this pkt will
+     * eventually go to
      */
-    void addToWriteQueue(PacketPtr pkt, unsigned int pkt_count, bool is_dram);
+    void addToWriteQueue(PacketPtr pkt, unsigned int pkt_count,
+                         MemInterface* mem_intr);
 
     /**
      * Actually do the burst based on media specific access function.
      * Update bus statistics when complete.
      *
      * @param mem_pkt The memory packet created from the outside world pkt
+     * @param mem_intr The memory interface to access
+     * @return Time when the command was issued
+     *
      */
-    void doBurstAccess(MemPacket* mem_pkt);
+    virtual Tick doBurstAccess(MemPacket* mem_pkt, MemInterface* mem_intr);
 
     /**
      * When a packet reaches its "readyTime" in the response Q,
@@ -362,29 +371,31 @@ class MemCtrl : public qos::MemCtrl
      *
      * @param pkt The packet from the outside world
      * @param static_latency Static latency to add before sending the packet
+     * @param mem_intr the memory interface to access
      */
-    void accessAndRespond(PacketPtr pkt, Tick static_latency);
+    virtual void accessAndRespond(PacketPtr pkt, Tick static_latency,
+                                                MemInterface* mem_intr);
 
     /**
      * Determine if there is a packet that can issue.
      *
      * @param pkt The packet to evaluate
      */
-    bool packetReady(MemPacket* pkt);
+    virtual bool packetReady(MemPacket* pkt, MemInterface* mem_intr);
 
     /**
      * Calculate the minimum delay used when scheduling a read-to-write
      * transision.
      * @param return minimum delay
      */
-    Tick minReadToWriteDataGap();
+    virtual Tick minReadToWriteDataGap();
 
     /**
      * Calculate the minimum delay used when scheduling a write-to-read
      * transision.
      * @param return minimum delay
      */
-    Tick minWriteToReadDataGap();
+    virtual Tick minWriteToReadDataGap();
 
     /**
      * The memory schduler/arbiter - picks which request needs to
@@ -395,10 +406,11 @@ class MemCtrl : public qos::MemCtrl
      *
      * @param queue Queued requests to consider
      * @param extra_col_delay Any extra delay due to a read/write switch
+     * @param mem_intr the memory interface to choose from
      * @return an iterator to the selected packet, else queue.end()
      */
-    MemPacketQueue::iterator chooseNext(MemPacketQueue& queue,
-        Tick extra_col_delay);
+    virtual MemPacketQueue::iterator chooseNext(MemPacketQueue& queue,
+        Tick extra_col_delay, MemInterface* mem_intr);
 
     /**
      * For FR-FCFS policy reorder the read/write queue depending on row buffer
@@ -408,8 +420,9 @@ class MemCtrl : public qos::MemCtrl
      * @param extra_col_delay Any extra delay due to a read/write switch
      * @return an iterator to the selected packet, else queue.end()
      */
-    MemPacketQueue::iterator chooseNextFRFCFS(MemPacketQueue& queue,
-            Tick extra_col_delay);
+    virtual std::pair<MemPacketQueue::iterator, Tick>
+    chooseNextFRFCFS(MemPacketQueue& queue, Tick extra_col_delay,
+                    MemInterface* mem_intr);
 
     /**
      * Calculate burst window aligned tick
@@ -428,11 +441,21 @@ class MemCtrl : public qos::MemCtrl
      * Burst-align an address.
      *
      * @param addr The potentially unaligned address
-     * @param is_dram Does this packet access DRAM?
+     * @param mem_intr The DRAM interface this pkt belongs to
      *
      * @return An address aligned to a memory burst
      */
-    Addr burstAlign(Addr addr, bool is_dram) const;
+    virtual Addr burstAlign(Addr addr, MemInterface* mem_intr) const;
+
+    /**
+     * Check if mem pkt's size is sane
+     *
+     * @param mem_pkt memory packet
+     * @param mem_intr memory interface
+     * @return An address aligned to a memory burst
+     */
+    virtual bool pktSizeCheck(MemPacket* mem_pkt,
+                              MemInterface* mem_intr) const;
 
     /**
      * The controller's main read and write queues,
@@ -468,14 +491,11 @@ class MemCtrl : public qos::MemCtrl
     std::unordered_multiset<Tick> burstTicks;
 
     /**
-     * Create pointer to interface of the actual dram media when connected
-     */
-    DRAMInterface* const dram;
++    * Create pointer to interface of the actual memory media when connected
++    */
+    MemInterface* dram;
 
-    /**
-     * Create pointer to interface of the actual nvm media when connected
-     */
-    NVMInterface* const nvm;
+    virtual AddrRangeList getAddrRanges();
 
     /**
      * The following are basic design parameters of the memory
@@ -483,10 +503,10 @@ class MemCtrl : public qos::MemCtrl
      * The rowsPerBank is determined based on the capacity, number of
      * ranks and banks, the burst size, and the row buffer size.
      */
-    const uint32_t readBufferSize;
-    const uint32_t writeBufferSize;
-    const uint32_t writeHighThreshold;
-    const uint32_t writeLowThreshold;
+    uint32_t readBufferSize;
+    uint32_t writeBufferSize;
+    uint32_t writeHighThreshold;
+    uint32_t writeLowThreshold;
     const uint32_t minWritesPerSwitch;
     uint32_t writesThisTime;
     uint32_t readsThisTime;
@@ -611,6 +631,36 @@ class MemCtrl : public qos::MemCtrl
         return (is_read ? readQueue : writeQueue);
     };
 
+    virtual bool respQEmpty()
+    {
+        return respQueue.empty();
+    }
+
+    /**
+     * Checks if the memory interface is already busy
+     *
+     * @param mem_intr memory interface to check
+     * @return a boolean indicating if memory is busy
+     */
+    virtual bool memBusy(MemInterface* mem_intr);
+
+    /**
+     * Will access memory interface and select non-deterministic
+     * reads to issue
+     * @param mem_intr memory interface to use
+     */
+    virtual void nonDetermReads(MemInterface* mem_intr);
+
+    /**
+     * Will check if all writes are for nvm interface
+     * and nvm's write resp queue is full. The generic mem_intr is
+     * used as the same function can be called for a dram interface,
+     * in which case dram functions will eventually return false
+     * @param mem_intr memory interface to use
+     * @return a boolean showing if nvm is blocked with writes
+     */
+    virtual bool nvmWriteBlock(MemInterface* mem_intr);
+
     /**
      * Remove commands that have already issued from burstTicks
      */
@@ -625,7 +675,7 @@ class MemCtrl : public qos::MemCtrl
      *
      * @return bool flag, set once drain complete
      */
-    bool allIntfDrained() const;
+    virtual bool allIntfDrained() const;
 
     DrainState drain() override;
 
@@ -709,10 +759,13 @@ class MemCtrl : public qos::MemCtrl
 
   protected:
 
-    Tick recvAtomic(PacketPtr pkt);
-    Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor);
-    void recvFunctional(PacketPtr pkt);
-    bool recvTimingReq(PacketPtr pkt);
+    virtual Tick recvAtomic(PacketPtr pkt);
+    virtual Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor);
+    virtual void recvFunctional(PacketPtr pkt);
+    virtual bool recvTimingReq(PacketPtr pkt);
+
+    bool recvFunctionalLogic(PacketPtr pkt, MemInterface* mem_intr);
+    Tick recvAtomicLogic(PacketPtr pkt, MemInterface* mem_intr);
 
 };
 
