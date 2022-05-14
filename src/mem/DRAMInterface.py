@@ -79,11 +79,18 @@ class DRAMInterface(MemInterface):
     # timing behaviour and constraints - all in nanoseconds
 
     # the amount of time in nanoseconds from issuing an activate command
-    # to the data being available in the row buffer for a read/write
-    tRCD = Param.Latency("RAS to CAS delay")
+    # to the data being available in the row buffer for a read
+    tRCD = Param.Latency("RAS to Read CAS delay")
 
-    # the time from issuing a read/write command to seeing the actual data
-    tCL = Param.Latency("CAS latency")
+    # the amount of time in nanoseconds from issuing an activate command
+    # to the data being available in the row buffer for a write
+    tRCD_WR = Param.Latency(Self.tRCD, "RAS to Write CAS delay")
+
+    # the time from issuing a read command to seeing the actual data
+    tCL = Param.Latency("Read CAS latency")
+
+    # the time from issuing a write command to seeing the actual data
+    tCWL = Param.Latency(Self.tCL, "Write CAS latency")
 
     # minimum time between a precharge and subsequent activate
     tRP = Param.Latency("Row precharge time")

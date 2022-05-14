@@ -214,8 +214,8 @@ DRAMInterface::activateBank(Rank& rank_ref, Bank& bank_ref,
     bank_ref.preAllowedAt = act_at + tRAS;
 
     // Respect the row-to-column command delay for both read and write cmds
-    bank_ref.rdAllowedAt = std::max(act_at + tRCD, bank_ref.rdAllowedAt);
-    bank_ref.wrAllowedAt = std::max(act_at + tRCD, bank_ref.wrAllowedAt);
+    bank_ref.rdAllowedAt = std::max(act_at + tRCD_RD, bank_ref.rdAllowedAt);
+    bank_ref.wrAllowedAt = std::max(act_at + tRCD_WR, bank_ref.wrAllowedAt);
 
     // start by enforcing tRRD
     for (int i = 0; i < banksPerRank; i++) {
@@ -399,7 +399,8 @@ DRAMInterface::doBurstAccess(MemPacket* mem_pkt, Tick next_burst_at,
 
     // verify that we have command bandwidth to issue the burst
     // if not, shift to next burst window
-    if (dataClockSync && ((cmd_at - rank_ref.lastBurstTick) > clkResyncDelay))
+    Tick max_sync = clkResyncDelay + (mem_pkt->isRead() ? tRL : tWL);
+    if (dataClockSync && ((cmd_at - rank_ref.lastBurstTick) > max_sync))
         cmd_at = ctrl->verifyMultiCmd(cmd_at, maxCommandsPerWindow, tCK);
     else
         cmd_at = ctrl->verifySingleCmd(cmd_at, maxCommandsPerWindow, false);
@@ -423,7 +424,11 @@ DRAMInterface::doBurstAccess(MemPacket* mem_pkt, Tick next_burst_at,
     DPRINTF(DRAM, "Schedule RD/WR burst at tick %d\n", cmd_at);
 
     // update the packet ready time
-    mem_pkt->readyTime = cmd_at + tCL + tBURST;
+    if (mem_pkt->isRead()) {
+        mem_pkt->readyTime = cmd_at + tRL + tBURST;
+    } else {
+        mem_pkt->readyTime = cmd_at + tWL + tBURST;
+    }
 
     rank_ref.lastBurstTick = cmd_at;
 
@@ -632,19 +637,21 @@ DRAMInterface::DRAMInterface(const DRAMInterfaceParams &_p)
     : MemInterface(_p),
       bankGroupsPerRank(_p.bank_groups_per_rank),
       bankGroupArch(_p.bank_groups_per_rank > 0),
-      tCL(_p.tCL),
+      tRL(_p.tCL),
+      tWL(_p.tCWL),
       tBURST_MIN(_p.tBURST_MIN), tBURST_MAX(_p.tBURST_MAX),
-      tCCD_L_WR(_p.tCCD_L_WR), tCCD_L(_p.tCCD_L), tRCD(_p.tRCD),
+      tCCD_L_WR(_p.tCCD_L_WR), tCCD_L(_p.tCCD_L),
+      tRCD_RD(_p.tRCD), tRCD_WR(_p.tRCD_WR),
       tRP(_p.tRP), tRAS(_p.tRAS), tWR(_p.tWR), tRTP(_p.tRTP),
       tRFC(_p.tRFC), tREFI(_p.tREFI), tRRD(_p.tRRD), tRRD_L(_p.tRRD_L),
       tPPD(_p.tPPD), tAAD(_p.tAAD),
       tXAW(_p.tXAW), tXP(_p.tXP), tXS(_p.tXS),
-      clkResyncDelay(tCL + _p.tBURST_MAX),
+      clkResyncDelay(_p.tBURST_MAX),
       dataClockSync(_p.data_clock_sync),
       burstInterleave(tBURST != tBURST_MIN),
       twoCycleActivate(_p.two_cycle_activate),
       activationLimit(_p.activation_limit),
-      wrToRdDlySameBG(tCL + _p.tBURST_MAX + _p.tWTR_L),
+      wrToRdDlySameBG(tWL + _p.tBURST_MAX + _p.tWTR_L),
       rdToWrDlySameBG(_p.tRTW + _p.tBURST_MAX),
       pageMgmt(_p.page_policy),
       maxAccessesPerRow(_p.max_accesses_per_row),
@@ -1024,10 +1031,6 @@ DRAMInterface::minBankPrep(const MemPacketQueue& queue,
     Tick min_act_at = MaxTick;
     std::vector<uint32_t> bank_mask(ranksPerChannel, 0);
 
-    // latest Tick for which ACT can occur without incurring additoinal
-    // delay on the data bus
-    const Tick hidden_act_max = std::max(min_col_at - tRCD, curTick());
-
     // Flag condition when burst can issue back-to-back with previous burst
     bool found_seamless_bank = false;
 
@@ -1062,6 +1065,13 @@ DRAMInterface::minBankPrep(const MemPacketQueue& queue,
                 Tick act_at = ranks[i]->banks[j].openRow == Bank::NO_ROW ?
                     std::max(ranks[i]->banks[j].actAllowedAt, curTick()) :
                     std::max(ranks[i]->banks[j].preAllowedAt, curTick()) + tRP;
+
+                // latest Tick for which ACT can occur without
+                // incurring additoinal delay on the data bus
+                const Tick tRCD = ctrl->inReadBusState(false) ?
+                                                 tRCD_RD : tRCD_WR;
+                const Tick hidden_act_max =
+                            std::max(min_col_at - tRCD, curTick());
 
                 // When is the earliest the R/W burst can issue?
                 const Tick col_allowed_at = ctrl->inReadBusState(false) ?
