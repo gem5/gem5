@@ -116,6 +116,9 @@ class MemPacket
     /** Does this packet access DRAM?*/
     const bool dram;
 
+    /** pseudo channel num*/
+    const uint8_t pseudoChannel;
+
     /** Will be populated by address decoder */
     const uint8_t rank;
     const uint8_t bank;
@@ -200,14 +203,14 @@ class MemPacket
      */
     inline bool isDram() const { return dram; }
 
-    MemPacket(PacketPtr _pkt, bool is_read, bool is_dram, uint8_t _rank,
-               uint8_t _bank, uint32_t _row, uint16_t bank_id, Addr _addr,
-               unsigned int _size)
+    MemPacket(PacketPtr _pkt, bool is_read, bool is_dram, uint8_t _channel,
+               uint8_t _rank, uint8_t _bank, uint32_t _row, uint16_t bank_id,
+               Addr _addr, unsigned int _size)
         : entryTime(curTick()), readyTime(curTick()), pkt(_pkt),
           _requestorId(pkt->requestorId()),
-          read(is_read), dram(is_dram), rank(_rank), bank(_bank), row(_row),
-          bankId(bank_id), addr(_addr), size(_size), burstHelper(NULL),
-          _qosValue(_pkt->qosValue())
+          read(is_read), dram(is_dram), pseudoChannel(_channel), rank(_rank),
+          bank(_bank), row(_row), bankId(bank_id), addr(_addr), size(_size),
+          burstHelper(NULL), _qosValue(_pkt->qosValue())
     { }
 
 };
@@ -296,12 +299,14 @@ class MemCtrl : public qos::MemCtrl
     virtual void processNextReqEvent(MemInterface* mem_intr,
                           MemPacketQueue& resp_queue,
                           EventFunctionWrapper& resp_event,
-                          EventFunctionWrapper& next_req_event);
+                          EventFunctionWrapper& next_req_event,
+                          bool& retry_wr_req);
     EventFunctionWrapper nextReqEvent;
 
     virtual void processRespondEvent(MemInterface* mem_intr,
                         MemPacketQueue& queue,
-                        EventFunctionWrapper& resp_event);
+                        EventFunctionWrapper& resp_event,
+                        bool& retry_rd_req);
     EventFunctionWrapper respondEvent;
 
     /**
@@ -664,7 +669,7 @@ class MemCtrl : public qos::MemCtrl
     /**
      * Remove commands that have already issued from burstTicks
      */
-    void pruneBurstTick();
+    virtual void pruneBurstTick();
 
   public:
 
@@ -692,7 +697,8 @@ class MemCtrl : public qos::MemCtrl
      *                           in a burst window
      * @return tick for command issue without contention
      */
-    Tick verifySingleCmd(Tick cmd_tick, Tick max_cmds_per_burst);
+    virtual Tick verifySingleCmd(Tick cmd_tick, Tick max_cmds_per_burst,
+                                bool row_cmd);
 
     /**
      * Check for command bus contention for multi-cycle (2 currently)
@@ -708,7 +714,7 @@ class MemCtrl : public qos::MemCtrl
      *                           in a burst window
      * @return tick for command issue without contention
      */
-    Tick verifyMultiCmd(Tick cmd_tick, Tick max_cmds_per_burst,
+    virtual Tick verifyMultiCmd(Tick cmd_tick, Tick max_cmds_per_burst,
                         Tick max_multi_cmd_split = 0);
 
     /**
@@ -723,16 +729,26 @@ class MemCtrl : public qos::MemCtrl
      *
      * @return true if event is scheduled
      */
-    bool requestEventScheduled() const { return nextReqEvent.scheduled(); }
+    virtual bool requestEventScheduled(uint8_t pseudo_channel = 0) const
+    {
+        assert(pseudo_channel == 0);
+        return nextReqEvent.scheduled();
+    }
 
     /**
      * restart the controller
      * This can be used by interfaces to restart the
      * scheduler after maintainence commands complete
-     *
      * @param Tick to schedule next event
+     * @param pseudo_channel pseudo channel number for which scheduler
+     * needs to restart, will always be 0 for controllers which control
+     * only a single channel
      */
-    void restartScheduler(Tick tick) { schedule(nextReqEvent, tick); }
+    virtual void restartScheduler(Tick tick, uint8_t pseudo_channel = 0)
+    {
+        assert(pseudo_channel == 0);
+        schedule(nextReqEvent, tick);
+    }
 
     /**
      * Check the current direction of the memory channel

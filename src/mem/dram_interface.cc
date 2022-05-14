@@ -88,7 +88,7 @@ DRAMInterface::chooseNextFRFCFS(MemPacketQueue& queue, Tick min_col_at) const
         MemPacket* pkt = *i;
 
         // select optimal DRAM packet in Q
-        if (pkt->isDram()) {
+        if (pkt->isDram() && (pkt->pseudoChannel == pseudoChannel)) {
             const Bank& bank = ranks[pkt->rank]->banks[pkt->bank];
             const Tick col_allowed_at = pkt->isRead() ? bank.rdAllowedAt :
                                                         bank.wrAllowedAt;
@@ -183,7 +183,7 @@ DRAMInterface::activateBank(Rank& rank_ref, Bank& bank_ref,
     if (twoCycleActivate)
         act_at = ctrl->verifyMultiCmd(act_tick, maxCommandsPerWindow, tAAD);
     else
-        act_at = ctrl->verifySingleCmd(act_tick, maxCommandsPerWindow);
+        act_at = ctrl->verifySingleCmd(act_tick, maxCommandsPerWindow, true);
 
     DPRINTF(DRAM, "Activate at tick %d\n", act_at);
 
@@ -301,7 +301,7 @@ DRAMInterface::prechargeBank(Rank& rank_ref, Bank& bank, Tick pre_tick,
         // Issuing an explicit PRE command
         // Verify that we have command bandwidth to issue the precharge
         // if not, shift to next burst window
-        pre_at = ctrl->verifySingleCmd(pre_tick, maxCommandsPerWindow);
+        pre_at = ctrl->verifySingleCmd(pre_tick, maxCommandsPerWindow, true);
         // enforce tPPD
         for (int i = 0; i < banksPerRank; i++) {
             rank_ref.banks[i].preAllowedAt = std::max(pre_at + tPPD,
@@ -402,7 +402,7 @@ DRAMInterface::doBurstAccess(MemPacket* mem_pkt, Tick next_burst_at,
     if (dataClockSync && ((cmd_at - rank_ref.lastBurstTick) > clkResyncDelay))
         cmd_at = ctrl->verifyMultiCmd(cmd_at, maxCommandsPerWindow, tCK);
     else
-        cmd_at = ctrl->verifySingleCmd(cmd_at, maxCommandsPerWindow);
+        cmd_at = ctrl->verifySingleCmd(cmd_at, maxCommandsPerWindow, false);
 
     // if we are interleaving bursts, ensure that
     // 1) we don't double interleave on next burst issue
@@ -513,6 +513,13 @@ DRAMInterface::doBurstAccess(MemPacket* mem_pkt, Tick next_burst_at,
             // 3) make sure we are not considering the packet that we are
             //    currently dealing with
             while (!got_more_hits && p != queue[i].end()) {
+
+                if ((*p)->pseudoChannel != pseudoChannel) {
+                    // only consider if this pkt belongs to this interface
+                    ++p;
+                    continue;
+                }
+
                 if (mem_pkt != (*p)) {
                     bool same_rank_bank = (mem_pkt->rank == (*p)->rank) &&
                                           (mem_pkt->bank == (*p)->bank);
@@ -819,7 +826,7 @@ DRAMInterface::isBusy(bool read_queue_empty, bool all_writes_nvm)
 
 MemPacket*
 DRAMInterface::decodePacket(const PacketPtr pkt, Addr pkt_addr,
-                       unsigned size, bool is_read)
+                       unsigned size, bool is_read, uint8_t pseudo_channel)
 {
     // decode the address based on the address mapping scheme, with
     // Ro, Ra, Co, Ba and Ch denoting row, rank, column, bank and
@@ -899,8 +906,8 @@ DRAMInterface::decodePacket(const PacketPtr pkt, Addr pkt_addr,
     // later
     uint16_t bank_id = banksPerRank * rank + bank;
 
-    return new MemPacket(pkt, is_read, true, rank, bank, row, bank_id,
-                   pkt_addr, size);
+    return new MemPacket(pkt, is_read, true, pseudo_channel, rank, bank, row,
+                   bank_id, pkt_addr, size);
 }
 
 void DRAMInterface::setupRank(const uint8_t rank, const bool is_read)
@@ -1032,6 +1039,8 @@ DRAMInterface::minBankPrep(const MemPacketQueue& queue,
     // bank in question
     std::vector<bool> got_waiting(ranksPerChannel * banksPerRank, false);
     for (const auto& p : queue) {
+        if (p->pseudoChannel != pseudoChannel)
+            continue;
         if (p->isDram() && ranks[p->rank]->inRefIdleState())
             got_waiting[p->bankId] = true;
     }
@@ -1288,11 +1297,10 @@ DRAMInterface::Rank::processRefreshEvent()
         // if a request is at the moment being handled and this request is
         // accessing the current rank then wait for it to finish
         if ((rank == dram.activeRank)
-            && (dram.ctrl->requestEventScheduled())) {
+            && (dram.ctrl->requestEventScheduled(dram.pseudoChannel))) {
             // hand control over to the request loop until it is
             // evaluated next
             DPRINTF(DRAM, "Refresh awaiting draining\n");
-
             return;
         } else {
             refreshState = REF_PD_EXIT;
@@ -1649,10 +1657,10 @@ DRAMInterface::Rank::processPowerEvent()
         }
 
         // completed refresh event, ensure next request is scheduled
-        if (!dram.ctrl->requestEventScheduled()) {
+        if (!(dram.ctrl->requestEventScheduled(dram.pseudoChannel))) {
             DPRINTF(DRAM, "Scheduling next request after refreshing"
                            " rank %d\n", rank);
-            dram.ctrl->restartScheduler(curTick());
+            dram.ctrl->restartScheduler(curTick(), dram.pseudoChannel);
         }
     }
 

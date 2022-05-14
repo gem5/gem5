@@ -195,15 +195,16 @@ HeteroMemCtrl::recvTimingReq(PacketPtr pkt)
 void
 HeteroMemCtrl::processRespondEvent(MemInterface* mem_intr,
                         MemPacketQueue& queue,
-                        EventFunctionWrapper& resp_event)
+                        EventFunctionWrapper& resp_event,
+                        bool& retry_rd_req)
 {
     DPRINTF(MemCtrl,
             "processRespondEvent(): Some req has reached its readyTime\n");
 
     if (queue.front()->isDram()) {
-        MemCtrl::processRespondEvent(dram, queue, resp_event);
+        MemCtrl::processRespondEvent(dram, queue, resp_event, retry_rd_req);
     } else {
-        MemCtrl::processRespondEvent(nvm, queue, resp_event);
+        MemCtrl::processRespondEvent(nvm, queue, resp_event, retry_rd_req);
     }
 }
 
@@ -285,11 +286,17 @@ HeteroMemCtrl::doBurstAccess(MemPacket* mem_pkt, MemInterface* mem_intr)
         cmd_at = MemCtrl::doBurstAccess(mem_pkt, mem_intr);
         // Update timing for NVM ranks if NVM is configured on this channel
         nvm->addRankToRankDelay(cmd_at);
+        // Since nextBurstAt and nextReqAt are part of the interface, making
+        // sure that they are same for both nvm and dram interfaces
+        nvm->nextBurstAt = dram->nextBurstAt;
+        nvm->nextReqTime = dram->nextReqTime;
 
     } else {
         cmd_at = MemCtrl::doBurstAccess(mem_pkt, nvm);
         // Update timing for NVM ranks if NVM is configured on this channel
         dram->addRankToRankDelay(cmd_at);
+        dram->nextBurstAt = nvm->nextBurstAt;
+        dram->nextReqTime = nvm->nextReqTime;
     }
 
     return cmd_at;

@@ -95,7 +95,8 @@ class HeteroMemCtrl : public MemCtrl
 
     virtual void processRespondEvent(MemInterface* mem_intr,
                         MemPacketQueue& queue,
-                        EventFunctionWrapper& resp_event) override;
+                        EventFunctionWrapper& resp_event,
+                        bool& retry_rd_req) override;
 
     /**
      * Checks if the memory interface is already busy

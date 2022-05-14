@@ -62,9 +62,9 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
     port(name() + ".port", *this), isTimingMode(false),
     retryRdReq(false), retryWrReq(false),
     nextReqEvent([this] {processNextReqEvent(dram, respQueue,
-                         respondEvent, nextReqEvent);}, name()),
+                         respondEvent, nextReqEvent, retryWrReq);}, name()),
     respondEvent([this] {processRespondEvent(dram, respQueue,
-                         respondEvent); }, name()),
+                         respondEvent, retryRdReq); }, name()),
     dram(p.dram),
     readBufferSize(dram->readBufferSize),
     writeBufferSize(dram->writeBufferSize),
@@ -76,8 +76,7 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
     frontendLatency(p.static_frontend_latency),
     backendLatency(p.static_backend_latency),
     commandWindow(p.command_window),
-    nextBurstAt(0), prevArrival(0),
-    nextReqTime(0),
+    prevArrival(0),
     stats(*this)
 {
     DPRINTF(MemCtrl, "Setting up controller\n");
@@ -115,7 +114,7 @@ MemCtrl::startup()
         // have to worry about negative values when computing the time for
         // the next request, this will add an insignificant bubble at the
         // start of simulation
-        nextBurstAt = curTick() + dram->commandOffset();
+        dram->nextBurstAt = curTick() + dram->commandOffset();
     }
 }
 
@@ -253,7 +252,8 @@ MemCtrl::addToReadQueue(PacketPtr pkt,
             }
 
             MemPacket* mem_pkt;
-            mem_pkt = mem_intr->decodePacket(pkt, addr, size, true);
+            mem_pkt = mem_intr->decodePacket(pkt, addr, size, true,
+                                                    mem_intr->pseudoChannel);
 
             // Increment read entries of the rank (dram)
             // Increment count to trigger issue of non-deterministic read (nvm)
@@ -325,7 +325,8 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count,
         // and enqueue it
         if (!merged) {
             MemPacket* mem_pkt;
-            mem_pkt = mem_intr->decodePacket(pkt, addr, size, false);
+            mem_pkt = mem_intr->decodePacket(pkt, addr, size, false,
+                                                    mem_intr->pseudoChannel);
             // Default readyTime to Max if nvm interface;
             //will be reset once read is issued
             mem_pkt->readyTime = MaxTick;
@@ -479,7 +480,8 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
 void
 MemCtrl::processRespondEvent(MemInterface* mem_intr,
                         MemPacketQueue& queue,
-                        EventFunctionWrapper& resp_event)
+                        EventFunctionWrapper& resp_event,
+                        bool& retry_rd_req)
 {
 
     DPRINTF(MemCtrl,
@@ -538,8 +540,8 @@ MemCtrl::processRespondEvent(MemInterface* mem_intr,
 
     // We have made a location in the queue available at this point,
     // so if there is a read that was forced to wait, retry now
-    if (retryRdReq) {
-        retryRdReq = false;
+    if (retry_rd_req) {
+        retry_rd_req = false;
         port.sendRetryReq();
     }
 }
@@ -556,7 +558,10 @@ MemCtrl::chooseNext(MemPacketQueue& queue, Tick extra_col_delay,
         if (queue.size() == 1) {
             // available rank corresponds to state refresh idle
             MemPacket* mem_pkt = *(queue.begin());
-            if (packetReady(mem_pkt, dram)) {
+            if (mem_pkt->pseudoChannel != mem_intr->pseudoChannel) {
+                return ret;
+            }
+            if (packetReady(mem_pkt, mem_intr)) {
                 ret = queue.begin();
                 DPRINTF(MemCtrl, "Single request, going to a free rank\n");
             } else {
@@ -566,7 +571,7 @@ MemCtrl::chooseNext(MemPacketQueue& queue, Tick extra_col_delay,
             // check if there is a packet going to a free rank
             for (auto i = queue.begin(); i != queue.end(); ++i) {
                 MemPacket* mem_pkt = *i;
-                if (packetReady(mem_pkt, dram)) {
+                if (packetReady(mem_pkt, mem_intr)) {
                     ret = i;
                     break;
                 }
@@ -590,7 +595,8 @@ MemCtrl::chooseNextFRFCFS(MemPacketQueue& queue, Tick extra_col_delay,
     Tick col_allowed_at = MaxTick;
 
     // time we need to issue a column command to be seamless
-    const Tick min_col_at = std::max(nextBurstAt + extra_col_delay, curTick());
+    const Tick min_col_at = std::max(mem_intr->nextBurstAt + extra_col_delay,
+                                    curTick());
 
     std::tie(selected_pkt_it, col_allowed_at) =
                  mem_intr->chooseNextFRFCFS(queue, min_col_at);
@@ -664,7 +670,7 @@ MemCtrl::getBurstWindow(Tick cmd_tick)
 }
 
 Tick
-MemCtrl::verifySingleCmd(Tick cmd_tick, Tick max_cmds_per_burst)
+MemCtrl::verifySingleCmd(Tick cmd_tick, Tick max_cmds_per_burst, bool row_cmd)
 {
     // start with assumption that there is no contention on command bus
     Tick cmd_at = cmd_tick;
@@ -789,17 +795,17 @@ MemCtrl::doBurstAccess(MemPacket* mem_pkt, MemInterface* mem_intr)
     // Issue the next burst and update bus state to reflect
     // when previous command was issued
     std::vector<MemPacketQueue>& queue = selQueue(mem_pkt->isRead());
-    std::tie(cmd_at, nextBurstAt) =
-                mem_intr->doBurstAccess(mem_pkt, nextBurstAt, queue);
+    std::tie(cmd_at, mem_intr->nextBurstAt) =
+            mem_intr->doBurstAccess(mem_pkt, mem_intr->nextBurstAt, queue);
 
     DPRINTF(MemCtrl, "Access to %#x, ready at %lld next burst at %lld.\n",
-            mem_pkt->addr, mem_pkt->readyTime, nextBurstAt);
+            mem_pkt->addr, mem_pkt->readyTime, mem_intr->nextBurstAt);
 
     // Update the minimum timing between the requests, this is a
     // conservative estimate of when we have to schedule the next
     // request to not introduce any unecessary bubbles. In most cases
     // we will wake up sooner than we have to.
-    nextReqTime = nextBurstAt - dram->commandOffset();
+    mem_intr->nextReqTime = mem_intr->nextBurstAt - mem_intr->commandOffset();
 
     // Update the common bus stats
     if (mem_pkt->isRead()) {
@@ -865,7 +871,8 @@ void
 MemCtrl::processNextReqEvent(MemInterface* mem_intr,
                         MemPacketQueue& resp_queue,
                         EventFunctionWrapper& resp_event,
-                        EventFunctionWrapper& next_req_event) {
+                        EventFunctionWrapper& next_req_event,
+                        bool& retry_wr_req) {
     // transition is handled by QoS algorithm if enabled
     if (turnPolicy) {
         // select bus state - only done if QoS algorithms are in use
@@ -1109,11 +1116,11 @@ MemCtrl::processNextReqEvent(MemInterface* mem_intr,
     }
     // It is possible that a refresh to another rank kicks things back into
     // action before reaching this point.
-    if (!nextReqEvent.scheduled())
-        schedule(next_req_event, std::max(nextReqTime, curTick()));
+    if (!next_req_event.scheduled())
+        schedule(next_req_event, std::max(mem_intr->nextReqTime, curTick()));
 
-    if (retryWrReq && totalWriteQueueSize < writeBufferSize) {
-        retryWrReq = false;
+    if (retry_wr_req && totalWriteQueueSize < writeBufferSize) {
+        retry_wr_req = false;
         port.sendRetryReq();
     }
 }

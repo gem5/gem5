@@ -120,7 +120,7 @@ void NVMInterface::setupRank(const uint8_t rank, const bool is_read)
 
 MemPacket*
 NVMInterface::decodePacket(const PacketPtr pkt, Addr pkt_addr,
-                       unsigned size, bool is_read)
+                       unsigned size, bool is_read, uint8_t pseudo_channel)
 {
     // decode the address based on the address mapping scheme, with
     // Ro, Ra, Co, Ba and Ch denoting row, rank, column, bank and
@@ -200,8 +200,8 @@ NVMInterface::decodePacket(const PacketPtr pkt, Addr pkt_addr,
     // later
     uint16_t bank_id = banksPerRank * rank + bank;
 
-    return new MemPacket(pkt, is_read, false, rank, bank, row, bank_id,
-                   pkt_addr, size);
+    return new MemPacket(pkt, is_read, false, pseudo_channel, rank, bank, row,
+                   bank_id, pkt_addr, size);
 }
 
 std::pair<MemPacketQueue::iterator, Tick>
@@ -299,7 +299,7 @@ NVMInterface::chooseRead(MemPacketQueue& queue)
                                               maxCommandsPerWindow, tCK);
             } else {
                 cmd_at = ctrl->verifySingleCmd(cmd_at,
-                                               maxCommandsPerWindow);
+                                              maxCommandsPerWindow, false);
             }
 
             // Update delay to next read
@@ -436,7 +436,7 @@ NVMInterface::doBurstAccess(MemPacket* pkt, Tick next_burst_at,
     // one command cycle
     // Write command may require multiple cycles to enable larger address space
     if (pkt->isRead() || !twoCycleRdWr) {
-        cmd_at = ctrl->verifySingleCmd(cmd_at, maxCommandsPerWindow);
+        cmd_at = ctrl->verifySingleCmd(cmd_at, maxCommandsPerWindow, false);
     } else {
         cmd_at = ctrl->verifyMultiCmd(cmd_at, maxCommandsPerWindow, tCK);
     }
