@@ -842,16 +842,9 @@ action(Initiate_WriteUnique_PartialWrite, desc="") {
 }
 
 action(Initiate_WriteUnique_Forward, desc="") {
-  if (comp_wu) {
-    tbe.actions.push(Event:SendDBIDResp_WU);
-    tbe.actions.pushNB(Event:WriteFEPipe);
-    tbe.actions.pushNB(Event:SendWriteUnique);
-    tbe.actions.pushNB(Event:SendComp_WU);
-  } else {
-    tbe.actions.push(Event:SendCompDBIDResp_WU);
-    tbe.actions.pushNB(Event:WriteFEPipe);
-    tbe.actions.pushNB(Event:SendWriteUnique);
-  }
+  tbe.actions.push(Event:WriteFEPipe);
+  tbe.actions.push(Event:SendWriteUnique);
+  tbe.actions.push(Event:SendCompDBIDResp_WU);
   tbe.actions.push(Event:WriteBEPipe);
   tbe.actions.push(Event:SendWUData);
   tbe.dataToBeInvalid := true;
