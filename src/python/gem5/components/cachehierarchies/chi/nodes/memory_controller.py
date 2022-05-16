@@ -76,6 +76,13 @@ class MemoryController(Memory_Controller):
         self.requestToMemory = MemCtrlMessageBuffer()
         self.reqRdy = TriggerMessageBuffer()
 
+        # The Memory_Controller implementation deallocates the TBE for
+        # write requests when they are queue up to memory. The size of this
+        # buffer must be limited to prevent unlimited outstanding writes.
+        self.requestToMemory.buffer_size = (
+            int(self.to_memory_controller_latency) + 1
+        )
+
         self.reqOut = MessageBuffer()
         self.rspOut = MessageBuffer()
         self.snpOut = MessageBuffer()

@@ -683,6 +683,13 @@ class CHI_SNF_Base(CHI_Node):
             transitions_per_cycle=1024,
         )
 
+        # The Memory_Controller implementation deallocates the TBE for
+        # write requests when they are queue up to memory. The size of this
+        # buffer must be limited to prevent unlimited outstanding writes.
+        self._cntrl.requestToMemory.buffer_size = (
+            int(self._cntrl.to_memory_controller_latency) + 1
+        )
+
         self.connectController(self._cntrl)
 
         if parent:
