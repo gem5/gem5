@@ -897,18 +897,26 @@ action(Finish_CopyBack_Stale, desc="") {
 }
 
 action(Initiate_Evict, desc="") {
-  tbe.actions.push(Event:SendCompIResp);
-
-  assert(tbe.dir_sharers.isElement(tbe.requestor));
-  assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
-  tbe.dir_sharers.remove(tbe.requestor);
-
-  if ((is_HN == false) && (tbe.dir_sharers.count() == 0) &&
+  if ((is_HN == false) && (tbe.dir_sharers.count() == 1) &&
       (tbe.dataValid == false)) {
-    tbe.actions.push(Event:SendEvict);
+    // last sharer and we also don't have a copy the line, so we also need to
+    // send an eviction downstream
+    if (tbe.dataUnique) {
+      // we need to send a WriteEvictFull so need the upstream data before
+      // we ack the evict
+      tbe.actions.push(Event:SendSnpOnce);
+      tbe.actions.push(Event:SendCompIResp);
+      tbe.actions.push(Event:SendWriteBackOrWriteEvict);
+      tbe.actions.push(Event:WriteBEPipe);
+      tbe.actions.push(Event:SendWBData);
+    } else {
+      tbe.actions.push(Event:SendCompIResp);
+      tbe.actions.push(Event:SendEvict);
+    }
+  } else {
+    tbe.actions.push(Event:SendCompIResp);
   }
-
-  tbe.actions.pushNB(Event:TagArrayWrite);
+  tbe.actions.push(Event:TagArrayWrite);
 }
 
 action(Initiate_MaintainCoherence, desc="") {
@@ -2518,6 +2526,13 @@ action(Send_RespSepData, desc="") {
 
 action(Send_CompI, desc="") {
   assert(is_valid(tbe));
+
+  // Used to ack Evict request
+  assert(tbe.dir_sharers.isElement(tbe.requestor));
+  assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
+
+  tbe.dir_sharers.remove(tbe.requestor);
+
   enqueue(rspOutPort, CHIResponseMsg, response_latency) {
     out_msg.addr := address;
     out_msg.type := CHIResponseType:Comp_I;
