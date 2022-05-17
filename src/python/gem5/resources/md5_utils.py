@@ -45,6 +45,21 @@ def _md5_update_from_dir(directory:  Path, hash: Hash) -> Hash:
             hash = _md5_update_from_dir(path, hash)
     return hash
 
+def md5(path: Path) -> str:
+    """
+    Gets the md5 value of a file or directory. `md5_file` is used if the path
+    is a file and `md5_dir` is used if the path is a directory. An exception
+    is returned if the path is not a valid file or directory.
+
+    :param path: The path to get the md5 of.
+    """
+    if path.is_file():
+        return md5_file(Path(path))
+    elif path.is_dir():
+        return md5_dir(Path(path))
+    else:
+        raise Exception(f"Path '{path}' is not a valid file or directory.")
+
 def md5_file(filename:  Path) -> str:
     """
     Gives the md5 hash of a file
