@@ -107,8 +107,7 @@ in_port(datInPort, CHIDataMsg, datIn, rank=9,
     peek(datInPort, CHIDataMsg) {
       // We don't have any transactions that use data requests
       assert(!in_msg.usesTxnId);
-      int received := in_msg.bitMask.count();
-      assert((received <= data_channel_size) && (received > 0));
+      assert((in_msg.bitMask.count() <= data_channel_size) && (in_msg.bitMask.count() > 0));
       trigger(dataToEvent(in_msg.type), in_msg.addr,
               getCacheEntry(in_msg.addr), getCurrentActiveTBE(in_msg.addr));
     }

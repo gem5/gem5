@@ -87,8 +87,7 @@ in_port(datInPort, CHIDataMsg, datIn, rank=10,
   if (datInPort.isReady(clockEdge())) {
     printResources();
     peek(datInPort, CHIDataMsg) {
-      int received := in_msg.bitMask.count();
-      assert((received <= data_channel_size) && (received > 0));
+      assert((in_msg.bitMask.count() <= data_channel_size) && (in_msg.bitMask.count() > 0));
       assert(in_msg.usesTxnId);
       trigger(dataToEvent(in_msg.type), in_msg.txnId, getCurrentActiveTBE(in_msg.txnId));
     }
@@ -121,8 +120,7 @@ in_port(reqInPort, CHIRequestMsg, reqIn, rank=2,
     peek(reqInPort, CHIRequestMsg) {
       assert(in_msg.usesTxnId);
       // Make sure we aren't already processing this
-      TBE tbe := getCurrentActiveTBE(in_msg.txnId);
-      assert(!is_valid(tbe));
+      assert(!is_valid(getCurrentActiveTBE(in_msg.txnId)));
       if (in_msg.allowRetry) {
         trigger(Event:AllocRequest, in_msg.txnId, nullTBE());
       } else {
