@@ -800,11 +800,26 @@ class Request
     }
 
     void
+    clearFlags(Flags flags)
+    {
+        assert(hasPaddr() || hasVaddr());
+        _flags.clear(flags);
+    }
+
+    void
     setCacheCoherenceFlags(CacheCoherenceFlags extraFlags)
     {
         // TODO: do mem_sync_op requests have valid paddr/vaddr?
         assert(hasPaddr() || hasVaddr());
         _cacheCoherenceFlags.set(extraFlags);
+    }
+
+    void
+    clearCacheCoherenceFlags(CacheCoherenceFlags extraFlags)
+    {
+        // TODO: do mem_sync_op requests have valid paddr/vaddr?
+        assert(hasPaddr() || hasVaddr());
+        _cacheCoherenceFlags.clear(extraFlags);
     }
 
     /** Accessor function for vaddr.*/
