@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 Arm Limited
+# Copyright (c) 2019-2022 Arm Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -79,6 +79,7 @@ arm_fs_long_tests = [
     'realview-simple-timing-ruby',
     'realview64-simple-timing-ruby',
     'realview64-simple-timing-dual-ruby',
+    'realview64-o3-dual-ruby',
 
 
     # The following tests fail. These are recorded in the GEM5-640
