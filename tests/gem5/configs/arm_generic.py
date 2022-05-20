@@ -124,6 +124,12 @@ class LinuxArmSystemBuilder(object):
                                         self.machine_type, self.num_cpus,
                                         sc, ruby=self.use_ruby)
 
+        # TODO: This is removing SECURITY and VIRTUALIZATION extensions
+        # from AArch32 runs to fix long regressions. Find a fix or
+        # remove EL3/EL2 support at AArch32
+        if not self.aarch64_kernel:
+            system.release = ArmRelease(extensions=["LPAE"])
+
         # We typically want the simulator to panic if the kernel
         # panics or oopses. This prevents the simulator from running
         # an obviously failed test case until the end of time.
