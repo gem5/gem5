@@ -777,7 +777,7 @@ machine(MachineType:Memory, "Memory controller interface") :
 
   // Notice we only use this here and call wakeUp when leaving this state
   transition({READING_MEM,WAITING_NET_DATA,SENDING_NET_DATA},
-             {ReadNoSnp, ReadNoSnpSep, WriteNoSnpPtl}) {
+             {ReadNoSnp, ReadNoSnpSep, WriteNoSnpPtl, WriteNoSnp}) {
     stallRequestQueue;
   }
 
