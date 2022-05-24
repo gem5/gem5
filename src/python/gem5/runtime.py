@@ -30,38 +30,36 @@ This file contains functions to extract gem5 runtime information.
 
 from m5.defines import buildEnv
 from m5.util import warn
-import os
 
 from .isas import ISA, get_isa_from_str, get_isas_str_set
 from .coherence_protocol import CoherenceProtocol
 from typing import Set
-from m5 import options
 
 def get_supported_isas() -> Set[ISA]:
+    """
+    Returns the set of all the ISAs compiled into the current binary.
+    """
     supported_isas = set()
 
-    # This if-statement is an intermediate step so the stdlib works on the
-    # "old style" of determining the available ISA (via the "TARGET_ISA"
-    # environment variable) and the "new style" which enables multiple ISAs
-    # (via the "USE_X_ISA" environment variables). Once multiple ISAs are fully
-    # incorporated, this code may be simplified.
     if "TARGET_ISA" in buildEnv.keys():
         supported_isas.add(get_isa_from_str(buildEnv["TARGET_ISA"]))
-    else:
-        for key in get_isas_str_set():
-            if buildEnv[f"USE_{key.upper()}_ISA"]:
-                supported_isas.add(get_isa_from_str(key))
+
+    for key in get_isas_str_set():
+        if f"USE_{key.upper()}_ISA" in buildEnv:
+            supported_isas.add(get_isa_from_str(key))
+
     return supported_isas
 
 
 
 def get_runtime_isa() -> ISA:
-    """Returns a single target ISA at runtime.
-    This is inferred at runtime and is assumed to be the ISA target ISA.
-    This is determined one of two ways:
+    """
+    Returns a single target ISA at runtime.
 
-    1. The gem5 binary is compiled to one ISA target.
-    2. The user specifies the target ISA via gem5's `--main-isa` parameter.
+    This determined via the "TARGET_ISA" parameter, which is set at
+    compilation. If not set, but only one ISA is compiled, we assume it's the
+    one ISA. If neither the "TARGET_ISA" parameter is set and there are
+    multiple ISA targets, an exception is thrown.
 
     **WARNING**: This function is deprecated and may be removed in future
     versions of gem5. This function should not be relied upon to run gem5
@@ -73,43 +71,17 @@ def get_runtime_isa() -> ISA:
     warn("The `get_runtime_isa` function is deprecated. Please migrate away "
          "from using this function.")
 
-    supported = get_supported_isas()
-    main_isa_param = options.main_isa
+    if "TARGET_ISA" in buildEnv.keys():
+        return get_isa_from_str(buildEnv["TARGET_ISA"])
 
-    supported_list_str = ""
-    for isa in supported:
-        supported_list_str += f"{os.linesep}{isa.name}"
+    supported_isas = get_supported_isas()
 
+    if len(supported_isas) == 1:
+        return next(iter(supported_isas))
 
-    if not main_isa_param:
-        if len(supported) == 1:
-            # In this case, where the main_isa_param is not specified, but only
-            # one ISA is compiled, we go with the ISA that has been compiled.
-            return next(iter(supported))
-
-        # If there are multiple supported ISAs, but no main ISA specified, we
-        # raise an exception.
-        raise Exception("The gem5 binary is compiled with multiple-ISAs. "
-                        "Please specify which you require using the "
-                        "`--main-isa` parameter when running gem5. "
-                        f"Supported ISAs: {supported_list_str}"
-                       )
-
-    assert main_isa_param
-
-    main_isa = get_isa_from_str(main_isa_param)
-
-    if main_isa not in supported:
-        # In the case the user has specified an ISA not compiled into
-        # the binary.
-        raise Exception(f"The ISA specified via the `--main-isa` "
-                        f"parameter, '{main_isa_param}', has not been "
-                        f"compiled into the binary. ISAs available: "
-                        f"{supported_list_str}."
-                       )
-
-    return main_isa
-
+    raise Exception("Cannot determine the the runtime ISA. Either the "
+                    "'TARGET_ISA' parameter must be set or the binary only "
+                    "compiled to one ISA.")
 
 def get_runtime_coherence_protocol() -> CoherenceProtocol:
     """Gets the cache coherence protocol.
