@@ -33,7 +33,7 @@ dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 gem5_root="${dir}/.."
 
 # The per-container Docker memory limit.
-docker_mem_limit="18g"
+docker_mem_limit="24g"
 
 # We assume the first two arguments are the number of threads followed by the
 # GPU ISA to test. These default to 1 and GCN3_X86 is no argument is given.
