@@ -63,3 +63,44 @@ for isa in isa_map.keys():
         valid_hosts=constants.supported_hosts,
         length=length_map[isa],
     )
+
+    gem5_verify_config(
+        name=f"supported-isas-check_{isa}-compiled-alone",
+        verifiers=(),
+        fixtures=(),
+        config=joinpath(
+            config.base_dir,
+            "tests",
+            "gem5",
+            "configs",
+            "supported_isa_check.py",
+        ),
+        config_args=["-e", isa],
+        valid_isas=(isa_map[isa],),
+        valid_hosts=constants.supported_hosts,
+        length=length_map[isa],
+    )
+
+    # Remove this when the muli-isa work is incorporated. `build/ALL/gem5.opt`
+    # must be compilable.
+    continue
+
+    if isa != "null":
+        # The null isa is not "supported" in a case where other ISAs are
+        # present.
+        gem5_verify_config(
+            name=f"supported-isas-check_{isa}-all-compiled",
+            verifiers=(),
+            fixtures=(),
+            config=joinpath(
+                config.base_dir,
+                "tests",
+                "gem5",
+                "configs",
+                "supported_isa_check.py",
+            ),
+            config_args=["-e", isa],
+            valid_isas=(constants.all_compiled_tag,),
+            valid_hosts=constants.supported_hosts,
+            length=constants.long_tag,
+        )
