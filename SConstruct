@@ -399,7 +399,18 @@ for variant_path in variant_paths:
         if linker:
             with gem5_scons.Configure(env) as conf:
                 if not conf.CheckLinkFlag(f'-fuse-ld={linker}'):
-                    error(f'Linker "{linker}" is not supported')
+                    # check mold support for gcc older than 12.1.0
+                    if linker == 'mold' and \
+                       (env['GCC'] and \
+                           compareVersions(env['CXXVERSION'],
+                                           "12.1.0") < 0) and \
+                       ((isdir('/usr/libexec/mold') and \
+                           conf.CheckLinkFlag('-B/usr/libexec/mold')) or \
+                       (isdir('/usr/local/libexec/mold') and \
+                           conf.CheckLinkFlag('-B/usr/local/libexec/mold'))):
+                        pass # support mold
+                    else:
+                        error(f'Linker "{linker}" is not supported')
                 if linker == 'gold' and not GetOption('with_lto'):
                     # Tell the gold linker to use threads. The gold linker
                     # segfaults if both threads and LTO are enabled.
