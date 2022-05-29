@@ -144,13 +144,17 @@ changes, we require all change descriptions be strictly formatted.
 A canonical commit message consists of three parts:
  * A short summary line describing the change. This line starts with one or
    more keywords (found in the MAINTAINERS file) separated by commas followed
-   by a colon and a description of the change. This line should be no more than
-   65 characters long since version control systems usually add a prefix that
-   causes line-wrapping for longer lines.
+   by a colon and a description of the change. This short description is
+   written in the imperative mood, and should say what happens when the patch
+   is applied. Keep it short and simple. Write it in sentence case preferably
+   not ending in a period. This line should be no more than 65 characters long
+   since version control systems usually add a prefix that causes line-wrapping
+   for longer lines.
  * (Optional, but highly recommended) A detailed description. This describes
    what you have done and why. If the change isn't obvious, you might want to
    motivate why it is needed. Lines need to be wrapped to 72 characters or
-   less.
+   less. Leave a blank line between the first short summary line and this
+   detailed description.
  * Tags describing patch metadata. You are highly recommended to use
    tags to acknowledge reviewers for their work. Gerrit will automatically add
    most tags.
