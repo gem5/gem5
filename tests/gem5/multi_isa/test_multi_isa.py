@@ -31,7 +31,7 @@ isa_map = {
     "mips": constants.mips_tag,
     "null": constants.null_tag,
     "arm": constants.arm_tag,
-    "x86": constants.gcn3_x86_tag,
+    "x86": constants.vega_x86_tag,
     "power": constants.power_tag,
     "riscv": constants.riscv_tag,
 }
