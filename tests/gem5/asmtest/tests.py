@@ -214,6 +214,17 @@ binaries = (
     'rv64um-ps-remu',
     'rv64um-ps-remuw',
     'rv64um-ps-remw',
+    'rv64uzfh-ps-fadd',
+    'rv64uzfh-ps-fclass',
+    'rv64uzfh-ps-fcmp',
+    'rv64uzfh-ps-fcvt',
+    'rv64uzfh-ps-fcvt_w',
+    'rv64uzfh-ps-fdiv',
+    'rv64uzfh-ps-fmadd',
+    'rv64uzfh-ps-fmin',
+    'rv64uzfh-ps-ldst',
+    'rv64uzfh-ps-move',
+    'rv64uzfh-ps-recoding',
 )
 
 
