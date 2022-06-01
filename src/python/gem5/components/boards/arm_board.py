@@ -75,6 +75,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
     **Limitations**
     * The board currently does not support ruby caches.
     * stage2 walker ports are ignored.
+    * This version does not support SECURITY extension.
     """
     __metaclass__ = ABCMeta
 
