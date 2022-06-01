@@ -185,7 +185,11 @@ SyscallDescTable<SEWorkload::SyscallABI> EmuLinux::syscallDescs64 = {
     { 58,   "vhangup" },
     { 59,   "pipe2", pipe2Func },
     { 60,   "quotactl" },
+#if defined(SYS_getdents64)
     { 61,   "getdents64", getdents64Func },
+#else
+    { 61,   "getdents64" },
+#endif
     { 62,   "lseek", lseekFunc },
     { 63,   "read", readFunc<RiscvLinux64> },
     { 64,   "write", writeFunc<RiscvLinux64> },
@@ -436,7 +440,11 @@ SyscallDescTable<SEWorkload::SyscallABI> EmuLinux::syscallDescs64 = {
     { 1062, "time", timeFunc<RiscvLinux64> },
     { 1063, "utime" },
     { 1064, "creat" },
+#if defined(SYS_getdents)
     { 1065, "getdents", getdentsFunc },
+#else
+    { 1065, "getdents" },
+#endif
     { 1066, "futimesat" },
     { 1067, "select", selectFunc<RiscvLinux64> },
     { 1068, "poll", pollFunc<RiscvLinux64> },
@@ -516,7 +524,11 @@ SyscallDescTable<SEWorkload::SyscallABI> EmuLinux::syscallDescs32 = {
     { 58,   "vhangup" },
     { 59,   "pipe2", pipe2Func },
     { 60,   "quotactl" },
+#if defined(SYS_getdents64)
     { 61,   "getdents64", getdents64Func },
+#else
+    { 61,   "getdents64" },
+#endif
     { 62,   "lseek", lseekFunc },
     { 63,   "read", readFunc<RiscvLinux32> },
     { 64,   "write", writeFunc<RiscvLinux32> },
@@ -767,7 +779,11 @@ SyscallDescTable<SEWorkload::SyscallABI> EmuLinux::syscallDescs32 = {
     { 1062, "time", timeFunc<RiscvLinux32> },
     { 1063, "utime" },
     { 1064, "creat" },
+#if defined(SYS_getdents)
     { 1065, "getdents", getdentsFunc },
+#else
+    { 1065, "getdents" },
+#endif
     { 1066, "futimesat" },
     { 1067, "select", selectFunc<RiscvLinux32> },
     { 1068, "poll", pollFunc<RiscvLinux32> },
