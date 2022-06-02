@@ -229,19 +229,19 @@ class MN_TBEStorage
     }
 
   private:
-    struct MN_TBEStorageStats : public Stats::Group
+    struct MN_TBEStorageStats : public statistics::Group
     {
-        MN_TBEStorageStats(Stats::Group *parent)
-          : Stats::Group(parent),
+        MN_TBEStorageStats(statistics::Group *parent)
+          : statistics::Group(parent),
             ADD_STAT(avg_size, "Avg. number of slots allocated"),
             ADD_STAT(avg_util, "Avg. utilization"),
             ADD_STAT(avg_reserved, "Avg. number of slots reserved")
         {}
 
         // Statistical variables
-        Stats::Average avg_size;
-        Stats::Average avg_util;
-        Stats::Average avg_reserved;
+        statistics::Average avg_size;
+        statistics::Average avg_util;
+        statistics::Average avg_reserved;
     } m_stats;
 
     std::vector<TBEStorage *> partitions;
