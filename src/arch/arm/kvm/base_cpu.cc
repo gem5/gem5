@@ -220,7 +220,8 @@ void
 BaseArmKvmCPU::kvmArmVCpuInit(const struct kvm_vcpu_init &init)
 {
     if (ioctl(KVM_ARM_VCPU_INIT, (void *)&init) == -1)
-        panic("KVM: Failed to initialize vCPU\n");
+        panic("KVM: Failed to initialize vCPU; errno %d (%s)\n",
+            errno, strerror(errno));
 }
 
 bool
