@@ -27,13 +27,13 @@
 from abc import ABCMeta, abstractmethod
 from typing import Optional
 import importlib
+import platform
 
 from .cpu_types import CPUTypes
 from ...isas import ISA
 from ...utils.requires import requires
 
 from m5.objects import BaseMMU, Port, SubSystem
-
 
 class AbstractCore(SubSystem):
     __metaclass__ = ABCMeta
@@ -158,8 +158,18 @@ class AbstractCore(SubSystem):
         else:
             module_str = f"m5.objects.{_isa_string_map[isa]}CPU"
 
-        cpu_class_str = f"{_isa_string_map[isa]}"\
-                        f"{_cpu_types_string_map[cpu_type]}"
+        # GEM5 compiles two versions of KVM for ARM depending upon the host CPU
+        # : ArmKvmCPU and ArmV8KvmCPU for 32 bit (Armv7l) and 64 bit (Armv8)
+        # respectively.
+
+        if isa.name == "ARM" and \
+                cpu_type == CPUTypes.KVM and \
+                platform.architecture()[0] == "64bit":
+            cpu_class_str = f"{_isa_string_map[isa]}V8"\
+                            f"{_cpu_types_string_map[cpu_type]}"
+        else:
+            cpu_class_str = f"{_isa_string_map[isa]}"\
+                            f"{_cpu_types_string_map[cpu_type]}"
 
         try:
             to_return_cls = getattr(importlib.import_module(module_str),
