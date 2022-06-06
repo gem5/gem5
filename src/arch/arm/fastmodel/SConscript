@@ -318,6 +318,8 @@ class ArmFastModelComponent(object):
         tlc = None
         # Config name.
         config_name = None
+        # simgen_arg
+        simgen_command_line = ''
 
         # Scan for particular properties of the project.
         for param in proj.params:
@@ -326,6 +328,12 @@ class ArmFastModelComponent(object):
                     tlc = param.value
                 elif param.name == 'ACTIVE_CONFIG_LINUX':
                     config_name = param.value
+
+        for param in proj.params:
+            if param.name == config_name:
+                for sub_param in param.params:
+                    if sub_param.name == 'SIMGEN_COMMAND_LINE':
+                        simgen_command_line = sub_param.value
 
         assert tlc is not None and config_name is not None
 
@@ -369,11 +377,12 @@ class ArmFastModelComponent(object):
         self.rpaths = [simgen_dir, project_file_dir]
         self.log = gen_dir.File('build_%s.log' % tlc)
         self.simgen_cmd = env.subst('${CONF["SIMGEN"]} -p %s '
-            '--configuration %s -b --verbose off --num-build-cpus %d '
+            '--configuration %s -b --verbose off --num-build-cpus %d %s '
             '--build-dir %s >%s') % \
             (shlex.quote(project_file.srcnode().abspath),
              shlex.quote(config_name),
              GetOption('num_jobs'),
+             simgen_command_line,
              shlex.quote(simgen_dir.abspath),
              shlex.quote(self.log.abspath))
 
