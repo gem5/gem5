@@ -62,8 +62,8 @@ parser.add_argument(
 args = parser.parse_args()
 
 # If the directory doesn't exist, create it.
-if not Path(args.download_dir).exists():
-    os.makedirs(args.download_dir)
+if not Path(args.download_directory).exists():
+    os.makedirs(args.download_directory)
 
 
 ids = args.ids
@@ -83,7 +83,7 @@ for id in ids:
         continue
 
     resource_json = get_resources_json_obj(id)
-    download_path = os.path.join(args.download_dir, id)
+    download_path = os.path.join(args.download_directory, id)
     try:
         get_resource(resource_name=id, to_path=download_path)
     except Exception:
