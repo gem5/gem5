@@ -40,7 +40,7 @@ gem5_verify_config(
     config=joinpath(
         config.base_dir, "tests", "gem5", "configs", "download_check.py"
     ),
-    config_args=["--resource-directory", resource_path],
+    config_args=["--download-directory", resource_path],
     valid_isas=(constants.null_tag,),
     length=constants.very_long_tag,
 )
