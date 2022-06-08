@@ -176,7 +176,10 @@ class CheckerCPU : public BaseCPU, public ExecContext
     RegVal
     getRegOperand(const StaticInst *si, int idx) override
     {
-        return thread->getReg(si->srcRegIdx(idx));
+        const RegId& id = si->srcRegIdx(idx);
+        if (id.is(InvalidRegClass))
+            return 0;
+        return thread->getReg(id);
     }
 
     void
