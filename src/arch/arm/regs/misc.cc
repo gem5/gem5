@@ -1317,7 +1317,7 @@ encodeAArch64SysReg(MiscRegIndex misc_reg)
         it != idxToMiscRegNum.end()) {
         return it->second;
     } else {
-        panic("Invalid MiscRegIndex: %n\n", misc_reg);
+        panic("Invalid MiscRegIndex: %d\n", misc_reg);
     }
 }
 
