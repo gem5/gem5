@@ -240,7 +240,7 @@ docker run --rm -v ${PWD}:${PWD} \
        "export GEM5_PATH=${gem5_root} ; make gem5-fusion"
 
 # # get input dataset for BC test
-wget http://dist.gem5.org/dist/develop/datasets/pannotia/bc/1k_128k.gr
+wget http://dist.gem5.org/dist/v22-0/datasets/pannotia/bc/1k_128k.gr
 # run BC
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        --memory="${docker_mem_limit}" hacc-test-weekly \
@@ -317,7 +317,7 @@ docker run --rm -v ${gem5_root}:${gem5_root} -w \
        "export GEM5_PATH=${gem5_root} ; make gem5-fusion"
 
 # get PageRank input dataset
-wget http://dist.gem5.org/dist/develop/datasets/pannotia/pagerank/coAuthorsDBLP.graph
+wget http://dist.gem5.org/dist/v22-0/datasets/pannotia/pagerank/coAuthorsDBLP.graph
 # run PageRank (Default)
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        --memory="${docker_mem_limit}" hacc-test-weekly \
