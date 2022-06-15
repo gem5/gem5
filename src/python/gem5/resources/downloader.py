@@ -54,7 +54,7 @@ def _resources_json_version_required() -> str:
     """
     Specifies the version of resources.json to obtain.
     """
-    return "develop"
+    return "22.0"
 
 def _get_resources_json_uri() -> str:
     return "https://resources.gem5.org/resources.json"
