@@ -100,12 +100,12 @@ git clone https://gem5.googlesource.com/public/gem5-resources \
 
 cd "${gem5_root}/gem5-resources"
 git checkout develop
-#version_tag=$(git tag | grep "v21.2")
-#
-#if [[ ${version_tag} != "" ]]; then
-#       git checkout "${version_tag}"
-#fi
-#
+version_tag=$(git tag | grep "v22.0")
+
+if [[ ${version_tag} != "" ]]; then
+       git checkout "${version_tag}"
+fi
+
 cd "${gem5_root}"
 
 # For the GPU tests we compile and run the GPU ISA inside a gcn-gpu container.
