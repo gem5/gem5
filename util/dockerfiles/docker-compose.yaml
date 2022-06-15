@@ -8,7 +8,7 @@ services:
         image: gcr.io/gem5-test/gcn-gpu
     gpu-fs:
         build:
-            context: gcn-gpu
+            context: gpu-fs
             dockerfile: Dockerfile
         image: gcr.io/gem5-test/gpu-fs
     sst:
