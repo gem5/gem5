@@ -2017,6 +2017,7 @@ namespace VegaISA
     Inst_SOPK__S_GETREG_B32::Inst_SOPK__S_GETREG_B32(InFmt_SOPK *iFmt)
         : Inst_SOPK(iFmt, "s_getreg_b32")
     {
+        setFlag(ALU);
     } // Inst_SOPK__S_GETREG_B32
 
     Inst_SOPK__S_GETREG_B32::~Inst_SOPK__S_GETREG_B32()
@@ -2031,7 +2032,20 @@ namespace VegaISA
     void
     Inst_SOPK__S_GETREG_B32::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        ScalarRegI16 simm16 = instData.SIMM16;
+        ScalarRegU32 hwregId = simm16 & 0x3f;
+        ScalarRegU32 offset = (simm16 >> 6) & 31;
+        ScalarRegU32 size = ((simm16 >> 11) & 31) + 1;
+
+        ScalarOperandU32 hwreg(gpuDynInst, hwregId);
+        ScalarOperandU32 sdst(gpuDynInst, instData.SDST);
+        hwreg.read();
+        sdst.read();
+
+        // Store value from hardware to part of the SDST.
+        ScalarRegU32 mask = (((1U << size) - 1U) << offset);
+        sdst = (hwreg.rawData() & ~mask);
+        sdst.write();
     } // execute
     // --- Inst_SOPK__S_SETREG_B32 class methods ---
 
