@@ -610,7 +610,7 @@ let {{
 
     microAddXiSpAlignUopIop = ArmInstObjParams('addxi_uop',
             'MicroAddXiSpAlignUop', 'MicroIntImmXOp', '''
-        if (isSP((IntRegIndex) urb) && bits(XURb, 3, 0) &&
+        if (isSP((RegIndex) urb) && bits(XURb, 3, 0) &&
             SPAlignmentCheckEnabled(xc->tcBase())) {
             return std::make_shared<SPAlignmentFault>();
         }

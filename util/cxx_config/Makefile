@@ -36,8 +36,8 @@
 ARCH = ARM
 VARIANT = opt
 
-CXXFLAGS = -I../../build/$(ARCH) -L../../build/$(ARCH)
-CXXFLAGS += -std=c++0x
+CXXFLAGS = -I../../build/$(ARCH) -L../../build/$(ARCH) -DTRACING_ON=1
+CXXFLAGS += -std=c++17
 LIBS = -lgem5_$(VARIANT)
 
 ## You may also need protobuf flags

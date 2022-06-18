@@ -25,6 +25,6 @@
 
 Import('*')
 
-if env['USE_SYSTEMC']:
+if env['CONF']['USE_SYSTEMC']:
     Source('sc_concatref.cc')
     Source('sc_value_base.cc')

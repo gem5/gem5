@@ -44,6 +44,7 @@
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
+#include "dev/amdgpu/system_hub.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
 #include "gpu-compute/hsa_queue_entry.hh"
@@ -183,6 +184,8 @@ class Shader : public ClockedObject
         shHiddenPrivateBaseVmid = sh_hidden_base_new;
     }
 
+    RequestorID vramRequestorId();
+
     EventFunctionWrapper tickEvent;
 
     // is this simulation going to be timing mode in the memory?
@@ -223,6 +226,7 @@ class Shader : public ClockedObject
 
     GPUCommandProcessor &gpuCmdProc;
     GPUDispatcher &_dispatcher;
+    AMDGPUSystemHub *systemHub;
 
     int64_t max_valu_insts;
     int64_t total_valu_insts;

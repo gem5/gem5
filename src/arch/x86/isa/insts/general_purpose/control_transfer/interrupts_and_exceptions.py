@@ -36,7 +36,38 @@
 microcode = '''
 def macroop IRET_REAL {
     .serialize_after
-    panic "Real mode iret isn't implemented!"
+
+    # temp_RIP
+    ld t1, ss, [1, t0, rsp], "0 * env.dataSize", addressSize=ssz
+    # temp_CS
+    ld t2, ss, [1, t0, rsp], "1 * env.dataSize", addressSize=ssz
+    # temp_RFLAGS
+    ld t3, ss, [1, t0, rsp], "2 * env.dataSize", addressSize=ssz
+
+    # Update RSP now that all memory accesses have succeeded.
+    addi rsp, rsp, "3 * env.dataSize", dataSize=ssz
+
+    # Update CS.
+    wrsel cs, t2
+    # Make sure there isn't any junk in the upper bits of the base.
+    mov t4, t0, t2
+    slli t4, t4, 4, dataSize=8
+    wrbase cs, t4, dataSize=8
+
+    # Update RFLAGS
+    # Get the current RFLAGS
+    rflags t4, dataSize=8
+    # Flip flag bits if they should change.
+    mov t5, t4, t3
+    xor t5, t5, t4, dataSize=8
+    # Don't change VIF, VIP, or VM
+    limm t6, "~(VIFBit | VIPBit | VMBit)", dataSize=8
+    and t5, t5, t6, dataSize=8
+    # Write back RFLAGS with flipped bits.
+    wrflags t4, t5, dataSize=8
+
+    # Update RIP
+    wrip t1, t0
 };
 
 def macroop IRET_PROT {
@@ -53,9 +84,9 @@ def macroop IRET_PROT {
     #t4 = handy m5 register
 
     # Pop temp_RIP, temp_CS, and temp_RFLAGS
-    ld t1, ss, [1, t0, rsp], "0 * env.stackSize", dataSize=ssz
-    ld t2, ss, [1, t0, rsp], "1 * env.stackSize", dataSize=ssz
-    ld t3, ss, [1, t0, rsp], "2 * env.stackSize", dataSize=ssz
+    ld t1, ss, [1, t0, rsp], "0 * env.dataSize", addressSize=ssz
+    ld t2, ss, [1, t0, rsp], "1 * env.dataSize", addressSize=ssz
+    ld t3, ss, [1, t0, rsp], "2 * env.dataSize", addressSize=ssz
 
     # Read the handy m5 register for use later
     rdm5reg t4
@@ -100,10 +131,10 @@ protToVirtFallThrough:
     andi t6, t2, 0xF8, dataSize=8
     andi t0, t2, 0x4, flags=(EZF,), dataSize=2
     br label("globalCSDescriptor"), flags=(CEZF,)
-    ld t8, tsl, [1, t0, t6], dataSize=8, atCPL0=True
+    ld t8, tsl, [1, t0, t6], dataSize=8, addressSize=8, atCPL0=True
     br label("processCSDescriptor")
 globalCSDescriptor:
-    ld t8, tsg, [1, t0, t6], dataSize=8, atCPL0=True
+    ld t8, tsg, [1, t0, t6], dataSize=8, addressSize=8, atCPL0=True
 processCSDescriptor:
     chks t2, t6, dataSize=8
 
@@ -125,7 +156,7 @@ processCSDescriptor:
     # appropriate/other RIP checks.
     # if temp_RIP > CS.limit throw #GP(0)
     rdlimit t6, cs, dataSize=8
-    sub t0, t1, t6, flags=(ECF,)
+    sub t0, t6, t1, flags=(ECF,)
     fault "std::make_shared<GeneralProtection>(0)", flags=(CECF,)
 
     #(temp_CPL!=CPL)
@@ -135,32 +166,32 @@ processCSDescriptor:
     br label("doPopStackStuff"), flags=(nCEZF,)
     # We can modify user visible state here because we're know
     # we're done with things that can fault.
-    addi rsp, rsp, "3 * env.stackSize"
+    addi rsp, rsp, "3 * env.dataSize", dataSize=ssz
     br label("fallThroughPopStackStuff")
 
 doPopStackStuffAndCheckRIP:
     # Check if the RIP is canonical.
-    srai t7, t1, 47, flags=(EZF,), dataSize=ssz
+    srai t7, t1, 47, flags=(EZF,), dataSize=8
     # if t7 isn't 0 or -1, it wasn't canonical.
     br label("doPopStackStuff"), flags=(CEZF,)
-    addi t0, t7, 1, flags=(EZF,), dataSize=ssz
+    addi t0, t7, 1, flags=(EZF,), dataSize=8
     fault "std::make_shared<GeneralProtection>(0)", flags=(nCEZF,)
 
 doPopStackStuff:
     #    POP.v temp_RSP
-    ld t6, ss, [1, t0, rsp], "3 * env.dataSize", dataSize=ssz
+    ld t6, ss, [1, t0, rsp], "3 * env.dataSize", addressSize=ssz
     #    POP.v temp_SS
-    ld t9, ss, [1, t0, rsp], "4 * env.dataSize", dataSize=ssz
+    ld t9, ss, [1, t0, rsp], "4 * env.dataSize", addressSize=ssz
     #    SS = READ_DESCRIPTOR (temp_SS, ss_chk)
     andi t0, t9, 0xFC, flags=(EZF,), dataSize=2
     br label("processSSDescriptor"), flags=(CEZF,)
     andi t7, t9, 0xF8, dataSize=8
     andi t0, t9, 0x4, flags=(EZF,), dataSize=2
     br label("globalSSDescriptor"), flags=(CEZF,)
-    ld t7, tsl, [1, t0, t7], dataSize=8, atCPL0=True
+    ld t7, tsl, [1, t0, t7], dataSize=8, addressSize=8, atCPL0=True
     br label("processSSDescriptor")
 globalSSDescriptor:
-    ld t7, tsg, [1, t0, t7], dataSize=8, atCPL0=True
+    ld t7, tsg, [1, t0, t7], dataSize=8, addressSize=8, atCPL0=True
 processSSDescriptor:
     chks t9, t7, dataSize=8
 
@@ -213,7 +244,7 @@ skipSegmentSquashing:
     #  RF cleared
 
     #RIP = temp_RIP
-    wrip t0, t1, dataSize=ssz
+    wrip t0, t1
 };
 
 def macroop IRET_VIRT {
@@ -233,8 +264,15 @@ def macroop INT3 {
     br rom_label("legacyModeInterrupt")
 };
 
-def macroop INT_I {
+def macroop INT3_VIRT {
+    panic "Virtual mode int3 isn't implemented!"
+};
 
+def macroop INT3_REAL {
+    panic "Real mode int3 isn't implemented!"
+};
+
+def macroop INT_LONG_I {
     #load the byte-sized interrupt vector specified in the instruction
     .adjust_imm trimImm(8)
     limm t1, imm, dataSize=8
@@ -242,10 +280,66 @@ def macroop INT_I {
     rdip t7
 
     # Are we in long mode?
-    rdm5reg t5
-    andi t0, t5, 0x1, flags=(EZF,)
-    br rom_label("longModeSoftInterrupt"), flags=(CEZF,)
+    br rom_label("longModeSoftInterrupt")
+};
+
+def macroop INT_PROT_I {
+    #load the byte-sized interrupt vector specified in the instruction
+    .adjust_imm trimImm(8)
+    limm t1, imm, dataSize=8
+
+    rdip t7
+
+    # Are we in long mode?
     br rom_label("legacyModeInterrupt")
+};
+
+def macroop INT_REAL_I {
+    #load the byte-sized interrupt vector specified in the instruction
+    .adjust_imm trimImm(8)
+    limm t1, imm, dataSize=8
+
+    # temp_RIP
+    ld t2, idtr, [4, t1, t0], dataSize=2, addressSize=8
+    # temp_CS
+    ld t3, idtr, [4, t1, t0], 2, dataSize=2, addressSize=8
+
+    cda ss, [1, t0, rsp], -2, dataSize=2, addressSize=ssz
+    cda ss, [1, t0, rsp], -6, dataSize=2, addressSize=ssz
+
+    rflags t4, dataSize=8
+    rdsel t5, cs, dataSize=8
+    rdip t6
+
+    # Push RFLAGS.
+    st t4, ss, [1, t0, rsp], -2, dataSize=2, addressSize=ssz
+    # Push CS.
+    st t5, ss, [1, t0, rsp], -4, dataSize=2, addressSize=ssz
+    # Push the next RIP.
+    st t6, ss, [1, t0, rsp], -6, dataSize=2, addressSize=ssz
+
+    # Update RSP
+    subi rsp, rsp, 6, dataSize=ssz
+
+    # Set the CS selector.
+    wrsel cs, t3, dataSize=2
+    # Make sure there isn't any junk in the upper bits of the base.
+    mov t3, t0, t3
+    # Compute and set CS base.
+    slli t3, t3, 4, dataSize=8
+    wrbase cs, t3, dataSize=8
+
+    # If AC, TF, IF or RF are set, we want to flip them.
+    limm t7, "(ACBit | TFBit | IFBit | RFBit)", dataSize=8
+    and t7, t4, t7, dataSize=8
+    wrflags t4, t7, dataSize=8
+
+    # Set the new RIP
+    wrip t2, t0
+};
+
+def macroop INT_VIRT_I {
+    panic "Virtual mode int3 isn't implemented!"
 };
 '''
 #let {{

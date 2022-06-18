@@ -31,12 +31,16 @@ gem5 while still being functinal.
 """
 
 from gem5.resources.resource import Resource
-from gem5.components.processors.cpu_types import CPUTypes
+from gem5.components.processors.cpu_types import(
+    get_cpu_types_str_set,
+    get_cpu_type_from_str,
+)
 from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.boards.simple_board import SimpleBoard
 from gem5.components.cachehierarchies.classic.no_cache import NoCache
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.simulate.simulator import Simulator
+from gem5.isas import get_isa_from_str, get_isas_str_set
 
 import argparse
 
@@ -53,8 +57,15 @@ parser.add_argument(
 parser.add_argument(
     "cpu",
     type=str,
-    choices=("kvm", "timing", "atomic", "o3"),
+    choices=get_cpu_types_str_set(),
     help="The CPU type used.",
+)
+
+parser.add_argument(
+    "isa",
+    type=str,
+    choices=get_isas_str_set(),
+    help="The ISA used",
 )
 
 parser.add_argument(
@@ -67,22 +78,14 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-def input_to_cputype(input: str) -> CPUTypes:
-    if input == "kvm":
-        return CPUTypes.KVM
-    elif input == "timing":
-        return CPUTypes.TIMING
-    elif input == "atomic":
-        return CPUTypes.ATOMIC
-    elif input == "o3":
-        return CPUTypes.O3
-    else:
-        raise NotADirectoryError("Unknown CPU type '{}'.".format(input))
-
 # Setup the system.
 cache_hierarchy = NoCache()
 memory = SingleChannelDDR3_1600()
-processor = SimpleProcessor(cpu_type=input_to_cputype(args.cpu), num_cores=1)
+processor = SimpleProcessor(
+    cpu_type=get_cpu_type_from_str(args.cpu),
+    isa=get_isa_from_str(args.isa),
+    num_cores=1,
+)
 
 motherboard = SimpleBoard(
     clk_freq="3GHz",
@@ -97,7 +100,7 @@ binary = Resource(args.resource,
 motherboard.set_se_binary_workload(binary)
 
 # Run the simulation
-simulator = Simulator(board=motherboard, full_system=False)
+simulator = Simulator(board=motherboard)
 simulator.run()
 
 print(

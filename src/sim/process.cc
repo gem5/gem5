@@ -388,6 +388,7 @@ Process::unserialize(CheckpointIn &cp)
     memState->unserialize(cp);
     pTable->unserialize(cp);
     fds->unserialize(cp);
+
     /**
      * Checkpoints for pipes, device drivers or sockets currently
      * do not work. Need to come back and fix them at a later date.

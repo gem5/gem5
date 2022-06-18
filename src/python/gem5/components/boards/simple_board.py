@@ -30,7 +30,7 @@ from m5.objects import (
     Port,
 )
 
-from .abstract_board import AbstractBoard
+from .abstract_system_board import AbstractSystemBoard
 from .se_binary_workload import SEBinaryWorkload
 from ..processors.abstract_processor import AbstractProcessor
 from ..memory.abstract_memory_system import AbstractMemorySystem
@@ -40,7 +40,7 @@ from ...utils.override import overrides
 from typing import List
 
 
-class SimpleBoard(AbstractBoard, SEBinaryWorkload):
+class SimpleBoard(AbstractSystemBoard, SEBinaryWorkload):
     """
     This is an incredibly simple system. It contains no I/O, and will work only
     with a classic cache hierarchy setup.
@@ -65,44 +65,44 @@ class SimpleBoard(AbstractBoard, SEBinaryWorkload):
             cache_hierarchy=cache_hierarchy,
         )
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def _setup_board(self) -> None:
         pass
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def has_io_bus(self) -> bool:
         return False
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def get_io_bus(self) -> IOXBar:
         raise NotImplementedError(
             "SimpleBoard does not have an IO Bus. "
             "Use `has_io_bus()` to check this."
         )
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def has_dma_ports(self) -> bool:
         return False
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def get_dma_ports(self) -> List[Port]:
         raise NotImplementedError(
             "SimpleBoard does not have DMA Ports. "
             "Use `has_dma_ports()` to check this."
         )
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def has_coherent_io(self) -> bool:
         return False
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def get_mem_side_coherent_io_port(self) -> Port:
         raise NotImplementedError(
             "SimpleBoard does not have any I/O ports. Use has_coherent_io to "
             "check this."
         )
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def _setup_memory_ranges(self) -> None:
         memory = self.get_memory()
 

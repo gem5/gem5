@@ -135,7 +135,7 @@ decode QUADRANT default Unknown::unknown() {
                     return std::make_shared<IllegalInstFault>(
                             "source reg x0", machInst);
                 }
-                Rc1_sd = (int32_t)Rc1_sd + imm;
+                Rc1_sw = (int32_t)(Rc1_sw + imm);
             }});
             0x2: c_li({{
                 imm = CIMM5;
@@ -312,7 +312,7 @@ decode QUADRANT default Unknown::unknown() {
                                 "source reg x0", machInst);
                     }
                     NPC = Rc1;
-                }}, IsIndirectControl, IsUncondControl, IsCall);
+                }}, IsIndirectControl, IsUncondControl);
                 default: CROp::c_mv({{
                     if (RC1 == 0) {
                         return std::make_shared<IllegalInstFault>(
@@ -400,6 +400,15 @@ decode QUADRANT default Unknown::unknown() {
 
         0x01: decode FUNCT3 {
             format Load {
+                0x1: flh({{
+                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                    if (status.fs == FPUStatus::OFF)
+                        return std::make_shared<IllegalInstFault>(
+                                    "FPU is off", machInst);
+                    freg_t fd;
+                    fd = freg(f16(Mem_uh));
+                    Fd_bits = fd.v;
+                }}, inst_flags=FloatMemReadOp);
                 0x2: flw({{
                     STATUS status = xc->readMiscReg(MISCREG_STATUS);
                     if (status.fs == FPUStatus::OFF)
@@ -431,13 +440,49 @@ decode QUADRANT default Unknown::unknown() {
         }
 
         0x04: decode FUNCT3 {
+            0x1: decode FS3 {
+                format IOp {
+                    0x00: slli({{
+                        Rd = Rs1 << imm;
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0x05: bseti({{
+                        uint64_t index = imm & (64 - 1);
+                        Rd = Rs1 | (UINT64_C(1) << index);
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0x09: bclri({{
+                        uint64_t index = imm & (64 - 1);
+                        Rd = Rs1 & (~(UINT64_C(1) << index));
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0x0d: binvi({{
+                        uint64_t index = imm & (64 - 1);
+                        Rd = Rs1 ^ (UINT64_C(1) << index);
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                }
+                format ROp {
+                    0x0c: decode RS2 {
+                        0x00: clz({{
+                            Rd = clz64(Rs1);
+                        }});
+                        0x01: ctz({{
+                            Rd = ctz64(Rs1);
+                        }});
+                        0x02: cpop({{
+                            Rd = popCount(Rs1);
+                        }});
+                        0x04: sextb({{
+                            Rd = sext<8>(Rs1_ub);
+                        }});
+                        0x05: sexth({{
+                            Rd = sext<16>(Rs1_uh);
+                        }});
+                    }
+                }
+            }
+
             format IOp {
                 0x0: addi({{
                     Rd_sd = Rs1_sd + imm;
                 }});
-                0x1: slli({{
-                    Rd = Rs1 << imm;
-                }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
                 0x2: slti({{
                     Rd = (Rs1_sd < imm) ? 1 : 0;
                 }});
@@ -447,13 +492,40 @@ decode QUADRANT default Unknown::unknown() {
                 0x4: xori({{
                     Rd = Rs1 ^ imm;
                 }}, uint64_t);
-                0x5: decode SRTYPE {
+                0x5: decode FS3 {
                     0x0: srli({{
                         Rd = Rs1 >> imm;
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
-                    0x1: srai({{
+                    0x5: orcb({{
+                        Rd = 0;
+                        Rd |= (Rs1<7:0> ? UINT64_C(0xff) : 0x0);
+                        Rd |= (Rs1<15:8> ? UINT64_C(0xff) : 0x0) << 8;
+                        Rd |= (Rs1<23:16> ? UINT64_C(0xff) : 0x0) << 16;
+                        Rd |= (Rs1<31:24> ? UINT64_C(0xff) : 0x0) << 24;
+                        Rd |= (Rs1<39:32> ? UINT64_C(0xff) : 0x0) << 32;
+                        Rd |= (Rs1<47:40> ? UINT64_C(0xff) : 0x0) << 40;
+                        Rd |= (Rs1<55:48> ? UINT64_C(0xff) : 0x0) << 48;
+                        Rd |= (Rs1<63:56> ? UINT64_C(0xff) : 0x0) << 56;
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0x8: srai({{
                         Rd_sd = Rs1_sd >> imm;
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0x9: bexti({{
+                        uint64_t index = imm & (64 - 1);
+                        Rd = (Rs1 >> index) & 0x1;
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0xc: rori({{
+                        Rd = (Rs1 >> imm) | (Rs1 << ((64 - imm) & (64 - 1)));
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0xd: decode RS2 {
+                        0x18: rev8({{
+                            Rd = 0;
+                            Rd |= ((Rs1 & 0xffULL) << 56) | (((Rs1 >> 56) & 0xffULL));
+                            Rd |= (((Rs1 >> 8) & 0xffULL) << 48) | (((Rs1 >> 48) & 0xffULL) << 8);
+                            Rd |= (((Rs1 >> 16) & 0xffULL) << 40) | (((Rs1 >> 40) & 0xffULL) << 16);
+                            Rd |= (((Rs1 >> 24) & 0xffULL) << 32) | (((Rs1 >> 32) & 0xffULL) << 24);
+                        }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    }
                 }
                 0x6: ori({{
                     Rd = Rs1 | imm;
@@ -471,17 +543,36 @@ decode QUADRANT default Unknown::unknown() {
         0x06: decode FUNCT3 {
             format IOp {
                 0x0: addiw({{
-                    Rd_sd = Rs1_sw + imm;
+                    Rd_sw = (int32_t)(Rs1_sw + imm);
                 }}, int32_t);
-                0x1: slliw({{
-                    Rd_sd = Rs1_sw << imm;
-                }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
-                0x5: decode SRTYPE {
+                0x1: decode FS3 {
+                    0x0: slliw({{
+                        Rd_sd = Rs1_sw << imm;
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
+                    0x1: slliuw({{
+                        Rd = ((uint64_t)(Rs1_uw)) << imm;
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
+                    0xc: decode FS2 {
+                        0x0: clzw({{
+                            Rd = clz32(Rs1);
+                        }});
+                        0x1: ctzw({{
+                            Rd = ctz32(Rs1);
+                        }});
+                        0x2: cpopw({{
+                            Rd = popCount(Rs1<31:0>);
+                        }});
+                    }
+                }
+                0x5: decode FS3 {
                     0x0: srliw({{
                         Rd_sd = (int32_t)(Rs1_uw >> imm);
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
-                    0x1: sraiw({{
+                    0x8: sraiw({{
                         Rd_sd = Rs1_sw >> imm;
+                    }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
+                    0xc: roriw({{
+                        Rd = (int32_t) ((Rs1_uw >> imm) | (Rs1_uw << ((32 - imm) & (32 - 1))));
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
                 }
             }
@@ -506,6 +597,14 @@ decode QUADRANT default Unknown::unknown() {
 
         0x09: decode FUNCT3 {
             format Store {
+                0x1: fsh({{
+                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                    if (status.fs == FPUStatus::OFF)
+                        return std::make_shared<IllegalInstFault>(
+                                "FPU is off", machInst);
+
+                    Mem_uh = (uint16_t)Fs2_bits;
+                }}, inst_flags=FloatMemWriteOp);
                 0x2: fsw({{
                     STATUS status = xc->readMiscReg(MISCREG_STATUS);
                     if (status.fs == FPUStatus::OFF)
@@ -712,6 +811,30 @@ decode QUADRANT default Unknown::unknown() {
                         Rd = negate ? ~res + (Rs1_sd*Rs2_sd == 0 ? 1 : 0)
                                     : res;
                     }}, IntMultOp);
+                    0x5: clmul({{
+                        Rd = 0;
+                        for (int i = 0; i < 64; i++) {
+                            if ((Rs2 >> i) & 1) {
+                                Rd ^= Rs1 << i;
+                            }
+                        }
+                    }});
+                    0x14: bset({{
+                        Rs2 &= (64 - 1);
+                        Rd = Rs1 | (UINT64_C(1) << Rs2);
+                    }});
+                    0x24: bclr({{
+                        Rs2 &= (64 - 1);
+                        Rd = Rs1 & (~(UINT64_C(1) << Rs2));
+                    }});
+                    0x30: rol({{
+                        int shamt = Rs2 & (64 - 1);
+                        Rd = (Rs1 << shamt) | (Rs1 >> ((64 - shamt) & (64 - 1)));
+                    }});
+                    0x34: binv({{
+                        Rs2 &= (64 - 1);
+                        Rd = Rs1 ^ (UINT64_C(1) << Rs2);
+                    }});
                 }
                 0x2: decode FUNCT7 {
                     0x0: slt({{
@@ -737,6 +860,17 @@ decode QUADRANT default Unknown::unknown() {
                                        carry;
                         Rd = negate ? ~res + (Rs1_sd*Rs2 == 0 ? 1 : 0) : res;
                     }}, IntMultOp);
+                    0x5: clmulr({{
+                        Rd = 0;
+                        for (int i = 0; i < 64; i++) {
+                            if ((Rs2 >> i) & 1) {
+                                Rd ^= Rs1 >> (64-i-1);
+                            }
+                        }
+                    }});
+                    0x10: sh1add({{
+                        Rd = (Rs1 << 1) + Rs2;
+                    }});
                 }
                 0x3: decode FUNCT7 {
                     0x0: sltu({{
@@ -757,6 +891,14 @@ decode QUADRANT default Unknown::unknown() {
 
                         Rd = hi + (mid1 >> 32) + (mid2 >> 32) + carry;
                     }}, IntMultOp);
+                    0x5: clmulh({{
+                        Rd = 0;
+                        for (int i = 1; i < 64; i++) {
+                            if ((Rs2 >> i) & 1) {
+                                Rd ^= (Rs1 >> (64-i));
+                            }
+                        }
+                    }});
                 }
                 0x4: decode FUNCT7 {
                     0x0: xor({{
@@ -773,6 +915,15 @@ decode QUADRANT default Unknown::unknown() {
                             Rd_sd = Rs1_sd/Rs2_sd;
                         }
                     }}, IntDivOp);
+                    0x5: min({{
+                        Rd = (((int64_t) Rs1) < ((int64_t) Rs2)) ? Rs1 : Rs2;
+                    }});
+                    0x10: sh2add({{
+                        Rd = (Rs1 << 2) + Rs2;
+                    }});
+                    0x20: xnor({{
+                        Rd = ~(Rs1 ^ Rs2);
+                    }});
                 }
                 0x5: decode FUNCT7 {
                     0x0: srl({{
@@ -787,6 +938,17 @@ decode QUADRANT default Unknown::unknown() {
                     }}, IntDivOp);
                     0x20: sra({{
                         Rd_sd = Rs1_sd >> Rs2<5:0>;
+                    }});
+                    0x5: minu({{
+                        Rd = Rs1 < Rs2 ? Rs1 : Rs2;
+                    }});
+                    0x24: bext({{
+                        Rs2 &= (64 - 1);
+                        Rd = (Rs1 >> Rs2) & 0x1;
+                    }});
+                    0x30: ror({{
+                        int shamt = Rs2 & (64 - 1);
+                        Rd = (Rs1 >> shamt) | (Rs1 << ((64 - shamt) & (64 - 1)));
                     }});
                 }
                 0x6: decode FUNCT7 {
@@ -804,6 +966,15 @@ decode QUADRANT default Unknown::unknown() {
                             Rd = Rs1_sd%Rs2_sd;
                         }
                     }}, IntDivOp);
+                    0x5: max({{
+                        Rd = (((int64_t) Rs1) > ((int64_t) Rs2)) ? Rs1 : Rs2;
+                    }});
+                    0x10: sh3add({{
+                        Rd = (Rs1 << 3) + Rs2;
+                    }});
+                    0x20: orn({{
+                        Rd = Rs1 | (~Rs2);
+                    }});
                 }
                 0x7: decode FUNCT7 {
                     0x0: and({{
@@ -816,6 +987,12 @@ decode QUADRANT default Unknown::unknown() {
                             Rd = Rs1%Rs2;
                         }
                     }}, IntDivOp);
+                    0x5: maxu({{
+                        Rd = Rs1 > Rs2 ? Rs1 : Rs2;
+                    }});
+                    0x20: andn({{
+                        Rd = Rs1 & (~Rs2);
+                    }});
                 }
             }
         }
@@ -833,23 +1010,45 @@ decode QUADRANT default Unknown::unknown() {
                     0x1: mulw({{
                         Rd_sd = (int32_t)(Rs1_sw*Rs2_sw);
                     }}, IntMultOp);
+                    0x4: adduw({{
+                        Rd = Rs1_uw + Rs2;
+                    }});
                     0x20: subw({{
                         Rd_sd = Rs1_sw - Rs2_sw;
                     }});
                 }
-                0x1: sllw({{
-                    Rd_sd = Rs1_sw << Rs2<4:0>;
-                }});
-                0x4: divw({{
-                    if (Rs2_sw == 0) {
-                        Rd_sd = -1;
-                    } else if (Rs1_sw == std::numeric_limits<int32_t>::min()
-                            && Rs2_sw == -1) {
-                        Rd_sd = std::numeric_limits<int32_t>::min();
-                    } else {
-                        Rd_sd = Rs1_sw/Rs2_sw;
-                    }
-                }}, IntDivOp);
+                0x1: decode FUNCT7 {
+                    0x0: sllw({{
+                        Rd_sd = Rs1_sw << Rs2<4:0>;
+                    }});
+                    0x30: rolw({{
+                        int shamt = Rs2 & (32 - 1);
+                        Rd = (int32_t) ((Rs1_uw << shamt) | (Rs1_uw >> ((32 - shamt) & (32 - 1))));
+                    }});
+                }
+                0x2: decode FUNCT7 {
+                    0x10: sh1adduw({{
+                        Rd = (((uint64_t)Rs1_uw) << 1) + Rs2;
+                    }});
+                }
+                0x4: decode FUNCT7 {
+                    0x1: divw({{
+                        if (Rs2_sw == 0) {
+                            Rd_sd = -1;
+                        } else if (Rs1_sw == std::numeric_limits<int32_t>::min()
+                                && Rs2_sw == -1) {
+                            Rd_sd = std::numeric_limits<int32_t>::min();
+                        } else {
+                            Rd_sd = Rs1_sw/Rs2_sw;
+                        }
+                    }}, IntDivOp);
+                    0x4: zexth ({{
+                        Rd = Rs1_uh;
+                    }});
+                    0x10: sh2adduw({{
+                        Rd = (((uint64_t)Rs1_uw) << 2) + Rs2;
+                    }});
+                }
                 0x5: decode FUNCT7 {
                     0x0: srlw({{
                         Rd_sd = (int32_t)(Rs1_uw >> Rs2<4:0>);
@@ -864,17 +1063,26 @@ decode QUADRANT default Unknown::unknown() {
                     0x20: sraw({{
                         Rd_sd = Rs1_sw >> Rs2<4:0>;
                     }});
+                    0x30: rorw({{
+                        int shamt = Rs2 & (32 - 1);
+                        Rd = (int32_t) ((Rs1_uw >> shamt) | (Rs1_uw << ((32 - shamt) & (32 - 1))));
+                    }});
                 }
-                0x6: remw({{
-                    if (Rs2_sw == 0) {
-                        Rd_sd = Rs1_sw;
-                    } else if (Rs1_sw == std::numeric_limits<int32_t>::min()
-                            && Rs2_sw == -1) {
-                        Rd_sd = 0;
-                    } else {
-                        Rd_sd = Rs1_sw%Rs2_sw;
-                    }
-                }}, IntDivOp);
+                0x6:  decode FUNCT7 {
+                    0x1: remw({{
+                        if (Rs2_sw == 0) {
+                            Rd_sd = Rs1_sw;
+                        } else if (Rs1_sw == std::numeric_limits<int32_t>::min()
+                                && Rs2_sw == -1) {
+                            Rd_sd = 0;
+                        } else {
+                            Rd_sd = Rs1_sw%Rs2_sw;
+                        }
+                    }}, IntDivOp);
+                    0x10: sh3adduw({{
+                        Rd = (((uint64_t)Rs1_uw) << 3) + Rs2;
+                    }});
+                }
                 0x7: remuw({{
                     if (Rs2_uw == 0) {
                         Rd_sd = (int32_t)Rs1_uw;
@@ -903,6 +1111,14 @@ decode QUADRANT default Unknown::unknown() {
                                          f64(freg(Fs3_bits))));
                     Fd_bits = fd.v;
                 }}, FloatMultAccOp);
+                0x2: fmadd_h({{
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f16_mulAdd(f16(freg(Fs1_bits)),
+                                         f16(freg(Fs2_bits)),
+                                         f16(freg(Fs3_bits))));
+                    Fd_bits = fd.v;
+                }}, FloatMultAccOp);
             }
             0x11: decode FUNCT2 {
                 0x0: fmsub_s({{
@@ -923,6 +1139,15 @@ decode QUADRANT default Unknown::unknown() {
                                         mask(63, 63))));
                     Fd_bits = fd.v;
                 }}, FloatMultAccOp);
+                0x2: fmsub_h({{
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f16_mulAdd(f16(freg(Fs1_bits)),
+                                    f16(freg(Fs2_bits)),
+                                    f16(f16(freg(Fs3_bits)).v ^
+                                        mask(15, 15))));
+                    Fd_bits = fd.v;
+                }}, FloatMultAccOp);
             }
             0x12: decode FUNCT2 {
                 0x0: fnmsub_s({{
@@ -941,6 +1166,15 @@ decode QUADRANT default Unknown::unknown() {
                                              mask(63, 63)),
                                          f64(freg(Fs2_bits)),
                                          f64(freg(Fs3_bits))));
+                    Fd_bits = fd.v;
+                }}, FloatMultAccOp);
+                0x2: fnmsub_h({{
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f16_mulAdd(f16(f16(freg(Fs1_bits)).v ^
+                                             mask(15, 15)),
+                                         f16(freg(Fs2_bits)),
+                                         f16(freg(Fs3_bits))));
                     Fd_bits = fd.v;
                 }}, FloatMultAccOp);
             }
@@ -965,6 +1199,16 @@ decode QUADRANT default Unknown::unknown() {
                                         mask(63, 63))));
                     Fd_bits = fd.v;
                 }}, FloatMultAccOp);
+                0x2: fnmadd_h({{
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f16_mulAdd(f16(f16(freg(Fs1_bits)).v ^
+                                             mask(15, 15)),
+                                    f16(freg(Fs2_bits)),
+                                    f16(f16(freg(Fs3_bits)).v ^
+                                        mask(15, 15))));
+                    Fd_bits = fd.v;
+                }}, FloatMultAccOp);
             }
             0x14: decode FUNCT7 {
                 0x0: fadd_s({{
@@ -981,6 +1225,13 @@ decode QUADRANT default Unknown::unknown() {
                                       f64(freg(Fs2_bits))));
                     Fd_bits = fd.v;
                 }}, FloatAddOp);
+                0x2: fadd_h({{
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f16_add(f16(freg(Fs1_bits)),
+                                      f16(freg(Fs2_bits))));
+                    Fd_bits = fd.v;
+                }}, FloatAddOp);
                 0x4: fsub_s({{
                     RM_REQUIRED;
                     freg_t fd;
@@ -993,6 +1244,13 @@ decode QUADRANT default Unknown::unknown() {
                     freg_t fd;
                     fd = freg(f64_sub(f64(freg(Fs1_bits)),
                                       f64(freg(Fs2_bits))));
+                    Fd_bits = fd.v;
+                }}, FloatAddOp);
+                0x6: fsub_h({{
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f16_sub(f16(freg(Fs1_bits)),
+                                      f16(freg(Fs2_bits))));
                     Fd_bits = fd.v;
                 }}, FloatAddOp);
                 0x8: fmul_s({{
@@ -1009,6 +1267,13 @@ decode QUADRANT default Unknown::unknown() {
                                       f64(freg(Fs2_bits))));
                     Fd_bits = fd.v;
                 }}, FloatMultOp);
+                0xa: fmul_h({{
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f16_mul(f16(freg(Fs1_bits)),
+                                      f16(freg(Fs2_bits))));
+                    Fd_bits = fd.v;
+                }}, FloatMultOp);
                 0xc: fdiv_s({{
                     RM_REQUIRED;
                     freg_t fd;
@@ -1023,19 +1288,29 @@ decode QUADRANT default Unknown::unknown() {
                                       f64(freg(Fs2_bits))));
                     Fd_bits = fd.v;
                 }}, FloatDivOp);
+                0xe: fdiv_h({{
+                    RM_REQUIRED;
+                    freg_t fd;
+                    fd = freg(f16_div(f16(freg(Fs1_bits)),
+                                      f16(freg(Fs2_bits))));
+                    Fd_bits = fd.v;
+                }}, FloatDivOp);
                 0x10: decode ROUND_MODE {
                     0x0: fsgnj_s({{
-                        Fd_bits = boxF32(insertBits(unboxF32(Fs2_bits), 30, 0,
-                                                    unboxF32(Fs1_bits)));
+                        auto sign = bits(unboxF32(Fs2_bits), 31);
+                        Fd_bits = boxF32(insertBits(unboxF32(Fs1_bits), 31,
+                                                    sign));
                         }}, FloatMiscOp);
                     0x1: fsgnjn_s({{
-                        Fd_bits = boxF32(insertBits(unboxF32(~Fs2_bits), 30, 0,
-                                                    unboxF32(Fs1_bits)));
+                        auto sign = ~bits(unboxF32(Fs2_bits), 31);
+                        Fd_bits = boxF32(insertBits(unboxF32(Fs1_bits), 31,
+                                                    sign));
                         }}, FloatMiscOp);
                     0x2: fsgnjx_s({{
-                        Fd_bits = boxF32(insertBits(
-                                    unboxF32(Fs1_bits) ^ unboxF32(Fs2_bits),
-                                    30, 0, unboxF32(Fs1_bits)));
+                        auto sign = bits(
+                            unboxF32(Fs1_bits) ^ unboxF32(Fs2_bits), 31);
+                        Fd_bits = boxF32(insertBits(unboxF32(Fs1_bits), 31,
+                                                    sign));
                         }}, FloatMiscOp);
                 }
                 0x11: decode ROUND_MODE {
@@ -1049,6 +1324,24 @@ decode QUADRANT default Unknown::unknown() {
                         Fd_bits = insertBits(
                                 Fs1_bits ^ Fs2_bits, 62, 0, Fs1_bits);
                     }}, FloatMiscOp);
+                }
+                0x12: decode ROUND_MODE {
+                    0x0: fsgnj_h({{
+                        auto sign = bits(unboxF16(Fs2_bits), 15);
+                        Fd_bits = boxF16(insertBits(unboxF16(Fs1_bits), 15,
+                                                    sign));
+                        }}, FloatMiscOp);
+                    0x1: fsgnjn_h({{
+                        auto sign = ~bits(unboxF16(Fs2_bits), 15);
+                        Fd_bits = boxF16(insertBits(unboxF16(Fs1_bits), 15,
+                                                    sign));
+                        }}, FloatMiscOp);
+                    0x2: fsgnjx_h({{
+                        auto sign = bits(
+                            unboxF16(Fs1_bits) ^ unboxF16(Fs2_bits), 15);
+                        Fd_bits = boxF16(insertBits(unboxF16(Fs1_bits), 15,
+                                                    sign));
+                        }}, FloatMiscOp);
                 }
                 0x14: decode ROUND_MODE {
                     0x0: fmin_s({{
@@ -1111,26 +1404,78 @@ decode QUADRANT default Unknown::unknown() {
                             Fd_bits = f64(defaultNaNF64UI).v;
                     }}, FloatCmpOp);
                 }
-                0x20: fcvt_s_d({{
-                    if (CONV_SGN != 1) {
-                        return std::make_shared<IllegalInstFault>(
-                                "CONV_SGN != 1", machInst);
-                    }
-                    RM_REQUIRED;
-                    freg_t fd;
-                    fd = freg(f64_to_f32(f64(freg(Fs1_bits))));
-                    Fd_bits = fd.v;
-                }}, FloatCvtOp);
-                0x21: fcvt_d_s({{
-                    if (CONV_SGN != 0) {
-                        return std::make_shared<IllegalInstFault>(
-                                "CONV_SGN != 0", machInst);
-                    }
-                    RM_REQUIRED;
-                    freg_t fd;
-                    fd = freg(f32_to_f64(f32(freg(Fs1_bits))));
-                    Fd_bits = fd.v;
-                }}, FloatCvtOp);
+                0x16: decode ROUND_MODE {
+                    0x0: fmin_h({{
+                        bool less = f16_lt_quiet(f16(freg(Fs1_bits)),
+                            f16(freg(Fs2_bits))) ||
+                            (f16_eq(f16(freg(Fs1_bits)),
+                            f16(freg(Fs2_bits))) &&
+                            bits(f16(freg(Fs1_bits)).v, 15));
+
+                        Fd_bits = less ||
+                            isNaNF16UI(f16(freg(Fs2_bits)).v) ?
+                            freg(Fs1_bits).v : freg(Fs2_bits).v;
+                        if (isNaNF16UI(f16(freg(Fs1_bits)).v) &&
+                            isNaNF16UI(f16(freg(Fs2_bits)).v))
+                            Fd_bits = f16(defaultNaNF16UI).v;
+                        }}, FloatCmpOp);
+                    0x1: fmax_h({{
+                        bool greater = f16_lt_quiet(f16(freg(Fs2_bits)),
+                            f16(freg(Fs1_bits))) ||
+                            (f16_eq(f16(freg(Fs2_bits)),
+                            f16(freg(Fs1_bits))) &&
+                            bits(f16(freg(Fs2_bits)).v, 15));
+
+                        Fd_bits = greater ||
+                            isNaNF16UI(f16(freg(Fs2_bits)).v) ?
+                            freg(Fs1_bits).v : freg(Fs2_bits).v;
+                        if (isNaNF16UI(f16(freg(Fs1_bits)).v) &&
+                            isNaNF16UI(f16(freg(Fs2_bits)).v))
+                            Fd_bits = f16(defaultNaNF16UI).v;
+                        }}, FloatCmpOp);
+                }
+                0x20: decode CONV_SGN {
+                    0x1: fcvt_s_d({{
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(f64_to_f32(f64(freg(Fs1_bits))));
+                        Fd_bits = fd.v;
+                    }}, FloatCvtOp);
+                    0x2: fcvt_s_h({{
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(f16_to_f32(f16(freg(Fs1_bits))));
+                        Fd_bits = fd.v;
+                    }}, FloatCvtOp);
+                }
+                0x21: decode CONV_SGN {
+                    0x0: fcvt_d_s({{
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(f32_to_f64(f32(freg(Fs1_bits))));
+                        Fd_bits = fd.v;
+                    }}, FloatCvtOp);
+                    0x2: fcvt_d_h({{
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(f16_to_f64(f16(freg(Fs1_bits))));
+                        Fd_bits = fd.v;
+                    }}, FloatCvtOp);
+                }
+                0x22: decode CONV_SGN {
+                    0x0: fcvt_h_s({{
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(f32_to_f16(f32(freg(Fs1_bits))));
+                        Fd_bits = fd.v;
+                    }}, FloatCvtOp);
+                    0x1: fcvt_h_d({{
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(f64_to_f16(f64(freg(Fs1_bits))));
+                        Fd_bits = fd.v;
+                    }}, FloatCvtOp);
+                }
                 0x2c: fsqrt_s({{
                     if (RS2 != 0) {
                         return std::make_shared<IllegalInstFault>(
@@ -1149,6 +1494,16 @@ decode QUADRANT default Unknown::unknown() {
                     freg_t fd;
                     RM_REQUIRED;
                     fd = freg(f64_sqrt(f64(freg(Fs1_bits))));
+                    Fd_bits = fd.v;
+                }}, FloatSqrtOp);
+                0x2e: fsqrt_h({{
+                    if (RS2 != 0) {
+                        return std::make_shared<IllegalInstFault>(
+                                "source reg x1", machInst);
+                    }
+                    freg_t fd;
+                    RM_REQUIRED;
+                    fd = freg(f16_sqrt(f16(freg(Fs1_bits))));
                     Fd_bits = fd.v;
                 }}, FloatSqrtOp);
                 0x50: decode ROUND_MODE {
@@ -1171,6 +1526,17 @@ decode QUADRANT default Unknown::unknown() {
                     }}, FloatCmpOp);
                     0x2: feq_d({{
                         Rd = f64_eq(f64(freg(Fs1_bits)), f64(freg(Fs2_bits)));
+                    }}, FloatCmpOp);
+                }
+                0x52: decode ROUND_MODE {
+                    0x0: fle_h({{
+                        Rd = f16_le(f16(freg(Fs1_bits)), f16(freg(Fs2_bits)));
+                    }}, FloatCmpOp);
+                    0x1: flt_h({{
+                        Rd = f16_lt(f16(freg(Fs1_bits)), f16(freg(Fs2_bits)));
+                    }}, FloatCmpOp);
+                    0x2: feq_h({{
+                        Rd = f16_eq(f16(freg(Fs1_bits)), f16(freg(Fs2_bits)));
                     }}, FloatCmpOp);
                 }
                 0x60: decode CONV_SGN {
@@ -1213,6 +1579,26 @@ decode QUADRANT default Unknown::unknown() {
                         Rd = f64_to_ui64(f64(freg(Fs1_bits)), rm, true);
                     }}, FloatCvtOp);
                 }
+                0x62: decode CONV_SGN {
+                    0x0: fcvt_w_h({{
+                        RM_REQUIRED;
+                        Rd_sd = sext<32>(f16_to_i32(f16(freg(Fs1_bits)), rm,
+                                                    true));
+                    }}, FloatCvtOp);
+                    0x1: fcvt_wu_h({{
+                        RM_REQUIRED;
+                        Rd = sext<32>(f16_to_ui32(f16(freg(Fs1_bits)), rm,
+                                                  true));
+                    }}, FloatCvtOp);
+                    0x2: fcvt_l_h({{
+                        RM_REQUIRED;
+                        Rd_sd = f16_to_i64(f16(freg(Fs1_bits)), rm, true);
+                    }}, FloatCvtOp);
+                    0x3: fcvt_lu_h({{
+                        RM_REQUIRED;
+                        Rd = f16_to_ui64(f16(freg(Fs1_bits)), rm, true);
+                    }}, FloatCvtOp);
+                }
                 0x68: decode CONV_SGN {
                     0x0: fcvt_s_w({{
                         RM_REQUIRED;
@@ -1223,7 +1609,7 @@ decode QUADRANT default Unknown::unknown() {
                     0x1: fcvt_s_wu({{
                         RM_REQUIRED;
                         freg_t fd;
-                        fd = freg(ui32_to_f32((int32_t)Rs1_uw));
+                        fd = freg(ui32_to_f32((uint32_t)Rs1_uw));
                         Fd_bits = fd.v;
                         }}, FloatCvtOp);
                     0x2: fcvt_s_l({{
@@ -1257,8 +1643,34 @@ decode QUADRANT default Unknown::unknown() {
                         Fd = (double)Rs1;
                     }}, FloatCvtOp);
                 }
+                0x6a: decode CONV_SGN {
+                    0x0: fcvt_h_w({{
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(i32_to_f16((int32_t)Rs1_sw));
+                        Fd_bits = fd.v;
+                        }}, FloatCvtOp);
+                    0x1: fcvt_h_wu({{
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(ui32_to_f16((uint32_t)Rs1_uw));
+                        Fd_bits = fd.v;
+                        }}, FloatCvtOp);
+                    0x2: fcvt_h_l({{
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(i64_to_f16(Rs1_ud));
+                        Fd_bits = fd.v;
+                        }}, FloatCvtOp);
+                    0x3: fcvt_h_lu({{
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(ui64_to_f16(Rs1));
+                        Fd_bits = fd.v;
+                        }}, FloatCvtOp);
+                }
                 0x70: decode ROUND_MODE {
-                    0x0: fmv_x_s({{
+                    0x0: fmv_x_w({{
                         Rd = (uint32_t)Fs1_bits;
                         if ((Rd&0x80000000) != 0) {
                             Rd |= (0xFFFFFFFFULL << 32);
@@ -1276,7 +1688,18 @@ decode QUADRANT default Unknown::unknown() {
                         Rd = f64_classify(f64(freg(Fs1_bits)));
                     }}, FloatMiscOp);
                 }
-                0x78: fmv_s_x({{
+                0x72: decode ROUND_MODE {
+                    0x0: fmv_x_h({{
+                        Rd = (uint16_t)Fs1_bits;
+                        if ((Rd&0x8000) != 0) {
+                            Rd |= (0xFFFFFFFFFFFFULL << 16);
+                        }
+                    }}, FloatCvtOp);
+                    0x1: fclass_h({{
+                        Rd = f16_classify(f16(freg(Fs1_bits)));
+                    }}, FloatMiscOp);
+                }
+                0x78: fmv_w_x({{
                     freg_t fd;
                     fd = freg(f32(Rs1_uw));
                     Fd_bits = fd.v;
@@ -1284,6 +1707,11 @@ decode QUADRANT default Unknown::unknown() {
                 0x79: fmv_d_x({{
                     freg_t fd;
                     fd = freg(f64(Rs1));
+                    Fd_bits = fd.v;
+                }}, FloatCvtOp);
+                0x7a: fmv_h_x({{
+                    freg_t fd;
+                    fd = freg(f16(Rs1_uh));
                     Fd_bits = fd.v;
                 }}, FloatCvtOp);
             }
@@ -1340,13 +1768,13 @@ decode QUADRANT default Unknown::unknown() {
             0x0: Jump::jalr({{
                 Rd = NPC;
                 NPC = (imm + Rs1) & (~0x1);
-            }}, IsIndirectControl, IsUncondControl, IsCall);
+            }}, IsIndirectControl, IsUncondControl);
         }
 
         0x1b: JOp::jal({{
             Rd = NPC;
             NPC = PC + imm;
-        }}, IsDirectControl, IsUncondControl, IsCall);
+        }}, IsDirectControl, IsUncondControl);
 
         0x1c: decode FUNCT3 {
             format SystemOp {

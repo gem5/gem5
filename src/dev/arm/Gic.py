@@ -283,7 +283,7 @@ class Gicv3(BaseGic):
         "Maximum number of PE. This is affecting the maximum number of "
         "redistributors")
 
-    gicv4 = Param.Bool(True, "GICv4 extension available")
+    gicv4 = Param.Bool(False, "GIC is GICv4 compatible")
 
     def interruptCells(self, int_type, int_num, int_trigger, partition=None):
         """

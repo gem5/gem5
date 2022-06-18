@@ -43,7 +43,7 @@ from m5.objects import *
 # create the system we are going to simulate
 system = System()
 
-# Set the clock fequency of the system (and all of its children)
+# Set the clock frequency of the system (and all of its children)
 system.clk_domain = SrcClockDomain()
 system.clk_domain.clock = '1GHz'
 system.clk_domain.voltage_domain = VoltageDomain()

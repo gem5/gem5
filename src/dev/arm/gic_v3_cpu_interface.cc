@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 ARM Limited
+ * Copyright (c) 2019, 2021-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -2032,6 +2032,9 @@ Gicv3CPUInterface::updateDistributor()
 void
 Gicv3CPUInterface::update()
 {
+    if (gic->blockIntUpdate())
+        return;
+
     bool signal_IRQ = false;
     bool signal_FIQ = false;
 
@@ -2066,6 +2069,9 @@ Gicv3CPUInterface::update()
 void
 Gicv3CPUInterface::virtualUpdate()
 {
+    if (gic->blockIntUpdate())
+        return;
+
     bool signal_IRQ = false;
     bool signal_FIQ = false;
     int lr_idx = getHPPVILR();
@@ -2584,6 +2590,29 @@ Gicv3CPUInterface::deassertWakeRequest()
 {
     auto *tc = gic->getSystem()->threads[cpuId];
     ArmSystem::callClearWakeRequest(tc);
+}
+
+void
+Gicv3CPUInterface::copy(Gicv3Registers *from, Gicv3Registers *to)
+{
+    const auto affinity = redistributor->getAffinity();
+    gic->copyCpuRegister(from, to, affinity, MISCREG_ICC_PMR_EL1);
+
+    gic->copyCpuRegister(from, to, affinity, MISCREG_ICC_AP1R0_EL1);
+    if (PRIORITY_BITS >= 6) {
+        gic->copyCpuRegister(from, to, affinity, MISCREG_ICC_AP1R1_EL1);
+    }
+
+    if (PRIORITY_BITS >= 7) {
+        gic->copyCpuRegister(from, to, affinity, MISCREG_ICC_AP1R2_EL1);
+        gic->copyCpuRegister(from, to, affinity, MISCREG_ICC_AP1R3_EL1);
+    }
+
+    gic->copyCpuRegister(from, to, affinity, MISCREG_ICC_BPR1_EL1);
+    gic->copyCpuRegister(from, to, affinity, MISCREG_ICC_CTLR_EL1);
+    gic->copyCpuRegister(from, to, affinity, MISCREG_ICC_SRE_EL1);
+    gic->copyCpuRegister(from, to, affinity, MISCREG_ICC_IGRPEN0_EL1);
+    gic->copyCpuRegister(from, to, affinity, MISCREG_ICC_IGRPEN1_EL1);
 }
 
 void

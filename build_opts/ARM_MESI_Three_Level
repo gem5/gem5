@@ -2,5 +2,4 @@
 # All rights reserved.
 
 TARGET_ISA = 'arm'
-CPU_MODELS = 'TimingSimpleCPU,O3CPU'
 PROTOCOL = 'MESI_Three_Level'

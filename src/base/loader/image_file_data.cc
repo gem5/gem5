@@ -108,7 +108,9 @@ ImageFileData::ImageFileData(const std::string &fname)
 
     // Open the file.
     int fd = open(fname.c_str(), O_RDONLY);
-    panic_if(fd < 0, "Failed to open file %s.\n", fname);
+    fatal_if(fd < 0, "Failed to open file %s.\n"
+        "This error typically occurs when the file path specified is "
+        "incorrect.\n", fname);
 
     // Decompress GZ files.
     if (hasGzipMagic(fd)) {

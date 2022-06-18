@@ -139,6 +139,9 @@ printRegName(std::ostream &os, const RegId& reg,
 {
     const auto &reg_class = reg_classes.at(reg.classValue());
     switch (reg.classValue()) {
+      case InvalidRegClass:
+        os << 'z';
+        break;
       case MiscRegClass:
         {
             RegIndex misc_reg = reg.index();
@@ -152,14 +155,10 @@ printRegName(std::ostream &os, const RegId& reg,
         os << 'v' << reg.index();
         break;
       case VecElemClass:
-        os << 'v' << reg.index() << '[' << reg.elemIndex() << ']';
+        os << reg_class.regName(reg);
         break;
       case IntRegClass:
-        if (reg.index() == reg_class.zeroReg()) {
-            os << 'z';
-        } else {
-            os << 'r' << reg.index();
-        }
+        os << 'r' << reg.index();
         break;
       case CCRegClass:
         os << 'c' << reg.index();

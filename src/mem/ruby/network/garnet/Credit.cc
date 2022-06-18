@@ -46,7 +46,7 @@ namespace garnet
 // and m_is_free_signal (whether VC is free or not)
 
 Credit::Credit(int vc, bool is_free_signal, Tick curTime)
-    : flit(0, vc, 0, RouteInfo(), 0, nullptr, 0, 0, curTime)
+    : flit(0, 0, vc, 0, RouteInfo(), 0, nullptr, 0, 0, curTime)
 {
     m_is_free_signal = is_free_signal;
     m_type = CREDIT_;

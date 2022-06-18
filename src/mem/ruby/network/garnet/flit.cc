@@ -43,7 +43,7 @@ namespace garnet
 {
 
 // Constructor for the flit
-flit::flit(int id, int  vc, int vnet, RouteInfo route, int size,
+flit::flit(int packet_id, int id, int  vc, int vnet, RouteInfo route, int size,
     MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime)
 {
     m_size = size;
@@ -51,6 +51,7 @@ flit::flit(int id, int  vc, int vnet, RouteInfo route, int size,
     m_enqueue_time = curTime;
     m_dequeue_time = curTime;
     m_time = curTime;
+    m_packet_id = id;
     m_id = id;
     m_vnet = vnet;
     m_vc = vc;
@@ -82,7 +83,7 @@ flit::serialize(int ser_id, int parts, uint32_t bWidth)
     int new_size = (int)divCeil((float)msgSize, (float)bWidth);
     assert(new_id < new_size);
 
-    flit *fl = new flit(new_id, m_vc, m_vnet, m_route,
+    flit *fl = new flit(m_packet_id, new_id, m_vc, m_vnet, m_route,
                     new_size, m_msg_ptr, msgSize, bWidth, m_time);
     fl->set_enqueue_time(m_enqueue_time);
     fl->set_src_delay(src_delay);
@@ -97,7 +98,7 @@ flit::deserialize(int des_id, int num_flits, uint32_t bWidth)
     int new_size = (int)divCeil((float)msgSize, (float)bWidth);
     assert(new_id < new_size);
 
-    flit *fl = new flit(new_id, m_vc, m_vnet, m_route,
+    flit *fl = new flit(m_packet_id, new_id, m_vc, m_vnet, m_route,
                     new_size, m_msg_ptr, msgSize, bWidth, m_time);
     fl->set_enqueue_time(m_enqueue_time);
     fl->set_src_delay(src_delay);
@@ -109,6 +110,7 @@ void
 flit::print(std::ostream& out) const
 {
     out << "[flit:: ";
+    out << "PacketId=" << m_packet_id << " ";
     out << "Id=" << m_id << " ";
     out << "Type=" << m_type << " ";
     out << "Size=" << m_size << " ";

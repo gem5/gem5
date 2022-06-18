@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2017-2018 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2017-2018, 2021 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -37,6 +37,7 @@
  */
 
 #include "arch/arm/insts/misc.hh"
+#include "arch/arm/tlbi_op.hh"
 
 #include "cpu/reg_class.hh"
 
@@ -338,7 +339,7 @@ RegImmRegShiftOp::generateDisassembly(
     printMnemonic(ss);
     printIntReg(ss, dest);
     ccprintf(ss, ", #%d, ", imm);
-    printShiftOperand(ss, op1, true, shiftAmt, INTREG_ZERO, shiftType);
+    printShiftOperand(ss, op1, true, shiftAmt, int_reg::Zero, shiftType);
     printIntReg(ss, op1);
     return ss.str();
 }
@@ -362,14 +363,7 @@ McrMrcMiscInst::McrMrcMiscInst(const char *_mnemonic, ExtMachInst _machInst,
 Fault
 McrMrcMiscInst::execute(ExecContext *xc, Trace::InstRecord *traceData) const
 {
-    bool hypTrap = mcrMrc15TrapToHyp(miscReg, xc->tcBase(), iss);
-
-    if (hypTrap) {
-        return std::make_shared<HypervisorTrap>(machInst, iss,
-                                                EC_TRAPPED_CP15_MCR_MRC);
-    } else {
-        return NoFault;
-    }
+    return mcrMrc15Trap(miscReg, machInst, xc->tcBase(), iss);
 }
 
 std::string
@@ -388,11 +382,9 @@ McrMrcImplDefined::McrMrcImplDefined(const char *_mnemonic,
 Fault
 McrMrcImplDefined::execute(ExecContext *xc, Trace::InstRecord *traceData) const
 {
-    bool hypTrap = mcrMrc15TrapToHyp(miscReg, xc->tcBase(), iss);
-
-    if (hypTrap) {
-        return std::make_shared<HypervisorTrap>(machInst, iss,
-                                                EC_TRAPPED_CP15_MCR_MRC);
+    Fault fault = mcrMrc15Trap(miscReg, machInst, xc->tcBase(), iss);
+    if (fault != NoFault) {
+        return fault;
     } else {
         return std::make_shared<UndefinedInstruction>(machInst, false,
                                                       mnemonic);
@@ -404,6 +396,289 @@ McrMrcImplDefined::generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const
 {
     return csprintf("%-10s (implementation defined)", mnemonic);
+}
+
+void
+TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
+{
+    ThreadContext* tc = xc->tcBase();
+    auto isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+    auto release = isa->getRelease();
+
+    switch (dest_idx) {
+      case MISCREG_TLBIALL: // TLBI all entries, EL0&1,
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIALL tlbiOp(EL1, secure);
+            tlbiOp(tc);
+            return;
+        }
+      // TLB Invalidate All, Inner Shareable
+      case MISCREG_TLBIALLIS:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIALL tlbiOp(EL1, secure);
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // Instruction TLB Invalidate All
+      case MISCREG_ITLBIALL:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            ITLBIALL tlbiOp(EL1, secure);
+            tlbiOp(tc);
+            return;
+        }
+      // Data TLB Invalidate All
+      case MISCREG_DTLBIALL:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            DTLBIALL tlbiOp(EL1, secure);
+            tlbiOp(tc);
+            return;
+        }
+      // TLB Invalidate by VA
+      // mcr tlbimval(is) is invalidating all matching entries
+      // regardless of the level of lookup, since in gem5 we cache
+      // in the tlb the last level of lookup only.
+      case MISCREG_TLBIMVA:
+      case MISCREG_TLBIMVAL:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIMVA tlbiOp(EL1,
+                           secure,
+                           mbits(value, 31, 12),
+                           bits(value, 7,0));
+
+            tlbiOp(tc);
+            return;
+        }
+      // TLB Invalidate by VA, Inner Shareable
+      case MISCREG_TLBIMVAIS:
+      case MISCREG_TLBIMVALIS:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIMVA tlbiOp(EL1,
+                           secure,
+                           mbits(value, 31, 12),
+                           bits(value, 7,0));
+
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // TLB Invalidate by ASID match
+      case MISCREG_TLBIASID:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIASID tlbiOp(EL1,
+                            secure,
+                            bits(value, 7,0));
+
+            tlbiOp(tc);
+            return;
+        }
+      // TLB Invalidate by ASID match, Inner Shareable
+      case MISCREG_TLBIASIDIS:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIASID tlbiOp(EL1,
+                            secure,
+                            bits(value, 7,0));
+
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // mcr tlbimvaal(is) is invalidating all matching entries
+      // regardless of the level of lookup, since in gem5 we cache
+      // in the tlb the last level of lookup only.
+      // TLB Invalidate by VA, All ASID
+      case MISCREG_TLBIMVAA:
+      case MISCREG_TLBIMVAAL:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIMVAA tlbiOp(EL1, secure,
+                            mbits(value, 31,12));
+
+            tlbiOp(tc);
+            return;
+        }
+      // TLB Invalidate by VA, All ASID, Inner Shareable
+      case MISCREG_TLBIMVAAIS:
+      case MISCREG_TLBIMVAALIS:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIMVAA tlbiOp(EL1, secure,
+                            mbits(value, 31,12));
+
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // mcr tlbimvalh(is) is invalidating all matching entries
+      // regardless of the level of lookup, since in gem5 we cache
+      // in the tlb the last level of lookup only.
+      // TLB Invalidate by VA, Hyp mode
+      case MISCREG_TLBIMVAH:
+      case MISCREG_TLBIMVALH:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIMVAA tlbiOp(EL2, secure,
+                            mbits(value, 31,12));
+
+            tlbiOp(tc);
+            return;
+        }
+      // TLB Invalidate by VA, Hyp mode, Inner Shareable
+      case MISCREG_TLBIMVAHIS:
+      case MISCREG_TLBIMVALHIS:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIMVAA tlbiOp(EL2, secure,
+                            mbits(value, 31,12));
+
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // mcr tlbiipas2l(is) is invalidating all matching entries
+      // regardless of the level of lookup, since in gem5 we cache
+      // in the tlb the last level of lookup only.
+      // TLB Invalidate by Intermediate Physical Address, Stage 2
+      case MISCREG_TLBIIPAS2:
+      case MISCREG_TLBIIPAS2L:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIIPA tlbiOp(EL1,
+                           secure,
+                           static_cast<Addr>(bits(value, 35, 0)) << 12);
+
+            tlbiOp(tc);
+            return;
+        }
+      // TLB Invalidate by Intermediate Physical Address, Stage 2,
+      // Inner Shareable
+      case MISCREG_TLBIIPAS2IS:
+      case MISCREG_TLBIIPAS2LIS:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIIPA tlbiOp(EL1,
+                           secure,
+                           static_cast<Addr>(bits(value, 35, 0)) << 12);
+
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // Instruction TLB Invalidate by VA
+      case MISCREG_ITLBIMVA:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            ITLBIMVA tlbiOp(EL1,
+                            secure,
+                            mbits(value, 31, 12),
+                            bits(value, 7,0));
+
+            tlbiOp(tc);
+            return;
+        }
+      // Data TLB Invalidate by VA
+      case MISCREG_DTLBIMVA:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            DTLBIMVA tlbiOp(EL1,
+                            secure,
+                            mbits(value, 31, 12),
+                            bits(value, 7,0));
+
+            tlbiOp(tc);
+            return;
+        }
+      // Instruction TLB Invalidate by ASID match
+      case MISCREG_ITLBIASID:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            ITLBIASID tlbiOp(EL1,
+                             secure,
+                             bits(value, 7,0));
+
+            tlbiOp(tc);
+            return;
+        }
+      // Data TLB Invalidate by ASID match
+      case MISCREG_DTLBIASID:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            DTLBIASID tlbiOp(EL1,
+                             secure,
+                             bits(value, 7,0));
+
+            tlbiOp(tc);
+            return;
+        }
+      // TLB Invalidate All, Non-Secure Non-Hyp
+      case MISCREG_TLBIALLNSNH:
+        {
+            TLBIALLN tlbiOp(EL1);
+            tlbiOp(tc);
+            return;
+        }
+      // TLB Invalidate All, Non-Secure Non-Hyp, Inner Shareable
+      case MISCREG_TLBIALLNSNHIS:
+        {
+            TLBIALLN tlbiOp(EL1);
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // TLB Invalidate All, Hyp mode
+      case MISCREG_TLBIALLH:
+        {
+            TLBIALLN tlbiOp(EL2);
+            tlbiOp(tc);
+            return;
+        }
+      // TLB Invalidate All, Hyp mode, Inner Shareable
+      case MISCREG_TLBIALLHIS:
+        {
+            TLBIALLN tlbiOp(EL2);
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      default:
+        panic("Unrecognized TLBIOp\n");
+    }
 }
 
 } // namespace gem5

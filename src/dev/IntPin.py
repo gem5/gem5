@@ -35,6 +35,17 @@ class IntSourcePin(VectorPort):
     def __init__(self, desc):
         super().__init__(INT_SOURCE_ROLE, desc, is_source=True)
 
+# A vector of source pins which might represent a bank of physical pins. Unlike
+# IntSourcePin, each source pin in VectorIntSourcePin can only connect to a
+# single sink pin. VectorIntSourcePin has the same definition as IntSourcePin
+# right now, but will likely be implemented differently in the future.
+# VectorIntSourcePin is defined as its own separate type to differentiate it
+# from IntSourcePin and make it clear to the user how it should be interpreted
+# and used.
+class VectorIntSourcePin(VectorPort):
+    def __init__(self, desc):
+        super().__init__(INT_SOURCE_ROLE, desc, is_source=True)
+
 # Each "physical" pin can be driven by a single source pin since there are no
 # provisions for resolving competing signals running to the same pin.
 class IntSinkPin(Port):

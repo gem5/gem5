@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016-2020 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2016-2020, 2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -51,6 +51,7 @@
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "enums/ArmExtension.hh"
 
 namespace gem5
 {
@@ -120,10 +121,12 @@ currEL(CPSR cpsr)
     return opModeToEL((OperatingMode) (uint8_t)cpsr.mode);
 }
 
-bool HavePACExt(ThreadContext *tc);
-bool HaveVirtHostExt(ThreadContext *tc);
-bool HaveLVA(ThreadContext *tc);
-bool HaveSecureEL2Ext(ThreadContext *tc);
+/**
+ * Returns true if the provided ThreadContext supports the ArmExtension
+ * passed as a second argument.
+ */
+bool HaveExt(ThreadContext *tc, ArmExtension ext);
+
 bool IsSecureEL2Enabled(ThreadContext *tc);
 bool EL2Enabled(ThreadContext *tc);
 
@@ -207,6 +210,8 @@ Addr purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
                       TCR tcr, bool isInstr);
 Addr purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
                       bool isInstr);
+Addr maskTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
+                    int topbit);
 int computeAddrTop(ThreadContext *tc, bool selbit, bool isInstr,
                    TCR tcr, ExceptionLevel el);
 
@@ -223,10 +228,10 @@ RegVal readMPIDR(ArmSystem *arm_sys, ThreadContext *tc);
 RegVal getMPIDR(ArmSystem *arm_sys, ThreadContext *tc);
 
 /** Retrieves MPIDR_EL1.{Aff2,Aff1,Aff0} affinity numbers */
-RegVal getAffinity(ArmSystem *arm_sys, ThreadContext *tc);
+Affinity getAffinity(ArmSystem *arm_sys, ThreadContext *tc);
 
 static inline uint32_t
-mcrMrcIssBuild(bool isRead, uint32_t crm, IntRegIndex rt, uint32_t crn,
+mcrMrcIssBuild(bool isRead, uint32_t crm, RegIndex rt, uint32_t crn,
                uint32_t opc1, uint32_t opc2)
 {
     return (isRead << 0) |
@@ -238,19 +243,19 @@ mcrMrcIssBuild(bool isRead, uint32_t crm, IntRegIndex rt, uint32_t crn,
 }
 
 static inline void
-mcrMrcIssExtract(uint32_t iss, bool &isRead, uint32_t &crm, IntRegIndex &rt,
+mcrMrcIssExtract(uint32_t iss, bool &isRead, uint32_t &crm, RegIndex &rt,
                  uint32_t &crn, uint32_t &opc1, uint32_t &opc2)
 {
     isRead = (iss >> 0) & 0x1;
     crm = (iss >> 1) & 0xF;
-    rt = (IntRegIndex)((iss >> 5) & 0xF);
+    rt = (RegIndex)((iss >> 5) & 0xF);
     crn = (iss >> 10) & 0xF;
     opc1 = (iss >> 14) & 0x7;
     opc2 = (iss >> 17) & 0x7;
 }
 
 static inline uint32_t
-mcrrMrrcIssBuild(bool isRead, uint32_t crm, IntRegIndex rt, IntRegIndex rt2,
+mcrrMrrcIssBuild(bool isRead, uint32_t crm, RegIndex rt, RegIndex rt2,
                  uint32_t opc1)
 {
     return (isRead << 0) |
@@ -262,7 +267,7 @@ mcrrMrrcIssBuild(bool isRead, uint32_t crm, IntRegIndex rt, IntRegIndex rt2,
 
 static inline uint32_t
 msrMrs64IssBuild(bool isRead, uint32_t op0, uint32_t op1, uint32_t crn,
-                 uint32_t crm, uint32_t op2, IntRegIndex rt)
+                 uint32_t crm, uint32_t op2, RegIndex rt)
 {
     return isRead |
         (crm << 1) |
@@ -348,7 +353,7 @@ decodeMrsMsrBankedIntRegIndex(uint8_t sysM, bool r)
 
     validReg = decodeMrsMsrBankedReg(
             sysM, r, isIntReg, regIdx, 0, 0, 0, false);
-    return (validReg && isIntReg) ? regIdx : INTREG_ZERO;
+    return (validReg && isIntReg) ? regIdx : int_reg::Zero;
 }
 
 /**

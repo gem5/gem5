@@ -29,6 +29,7 @@
 #ifndef __DEV_8254_HH__
 #define __DEV_8254_HH__
 
+#include <array>
 #include <iostream>
 #include <string>
 
@@ -52,6 +53,16 @@ class Intel8254Timer : public EventManager
         Bitfield<3, 1> mode;
         Bitfield<0> bcd;
     EndBitUnion(CtrlReg)
+
+    BitUnion8(ReadBackCommandVal)
+        Bitfield<4> status; // Active low.
+        Bitfield<5> count; // Active low.
+        SubBitUnion(select, 3, 1)
+            Bitfield<3> cnt2;
+            Bitfield<2> cnt1;
+            Bitfield<1> cnt0;
+        EndSubBitUnion(select)
+    EndBitUnion(ReadBackCommandVal)
 
     enum SelectVal
     {
@@ -152,6 +163,8 @@ class Intel8254Timer : public EventManager
       public:
         Counter(Intel8254Timer *p, const std::string &name, unsigned int num);
 
+        unsigned int index() const { return num; }
+
         /** Latch the current count (if one is not already latched) */
         void latchCount();
 
@@ -200,7 +213,7 @@ class Intel8254Timer : public EventManager
     const std::string &name() const { return _name; }
 
     /** PIT has three seperate counters */
-    Counter *counter[3];
+    std::array<Counter, 3> counters;
 
     virtual void
     counterInterrupt(unsigned int num)
@@ -214,9 +227,6 @@ class Intel8254Timer : public EventManager
     ~Intel8254Timer()
     {}
 
-    Intel8254Timer(EventManager *em, const std::string &name,
-            Counter *counter0, Counter *counter1, Counter *counter2);
-
     Intel8254Timer(EventManager *em, const std::string &name);
 
     /** Write control word */
@@ -226,21 +236,21 @@ class Intel8254Timer : public EventManager
     readCounter(unsigned int num)
     {
         assert(num < 3);
-        return counter[num]->read();
+        return counters[num].read();
     }
 
     void
     writeCounter(unsigned int num, const uint8_t data)
     {
         assert(num < 3);
-        counter[num]->write(data);
+        counters[num].write(data);
     }
 
     bool
     outputHigh(unsigned int num)
     {
         assert(num < 3);
-        return counter[num]->outputHigh();
+        return counters[num].outputHigh();
     }
 
     /**

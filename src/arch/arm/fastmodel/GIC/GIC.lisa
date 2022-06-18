@@ -53,6 +53,9 @@ component GIC
         // For the CPU interface.
         gic.redistributor_m => self.redistributor;
 
+        // Outgoing wake requests.
+        gic.wake_request => self.wake_request;
+
         // Internal ports for PPI and SPI programmatic access.
         self.ppi_0 => gic.ppi_in_0;
         self.ppi_1 => gic.ppi_in_1;
@@ -323,6 +326,8 @@ component GIC
     slave port<AMBAPV> amba_s;
 
     master port<GICv3Comms> redistributor[256];
+
+    master port<Signal> wake_request[256];
 
     #define setPPI(C) \
           case C: ppi_##C[num].setValue(state); \

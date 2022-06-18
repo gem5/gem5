@@ -488,6 +488,7 @@ class SyscallTable32 : public SyscallDescTable<EmuLinux::SyscallABI32>
         { base + 363, "sys_rt_tgsigqueueinfo" },
         { base + 364, "sys_perf_event_open" },
         { base + 365, "sys_recvmmsg" },
+        { base + 384, "getrandom", getrandomFunc<ArmLinux32> }
     })
     {}
 };
@@ -758,6 +759,29 @@ class SyscallTable64 : public SyscallDescTable<EmuLinux::SyscallABI64>
         {  base + 269, "sendmmsg" },
         {  base + 270, "process_vm_readv" },
         {  base + 271, "process_vm_writev" },
+        {  base + 272, "kcmp" },
+        {  base + 273, "finit_module" },
+        {  base + 274, "sched_setattr"},
+        {  base + 275, "sched_getattr"},
+        {  base + 276, "renameat2"},
+        {  base + 277, "seccomp"},
+        {  base + 278, "getrandom", getrandomFunc<ArmLinux64> },
+        {  base + 279, "memfd_create" },
+        {  base + 280, "bpf" },
+        {  base + 281, "execveat"},
+        {  base + 282, "userfaultfd"},
+        {  base + 283, "membarrier"},
+        {  base + 284, "mlock2"},
+        {  base + 285, "copy_file_range"},
+        {  base + 286, "preadv2"},
+        {  base + 287, "pwritev2"},
+        {  base + 288, "pkey_mprotect"},
+        {  base + 289, "pkey_alloc"},
+        {  base + 290, "pkey_free"},
+        {  base + 291, "statx"},
+        {  base + 292, "io_pgetevents"},
+        {  base + 293, "rseq", ignoreWarnOnceFunc },
+        {  base + 294, "kexec_file_load"},
         { base + 1024, "open", openFunc<ArmLinux64> },
         { base + 1025, "link" },
         { base + 1026, "unlink", unlinkFunc },
@@ -848,14 +872,14 @@ EmuLinux::syscall(ThreadContext *tc)
 
     SyscallDesc *desc = nullptr;
     if (dynamic_cast<ArmLinuxProcess64 *>(process)) {
-        int num = tc->readIntReg(INTREG_X8);
+        int num = tc->getReg(int_reg::X8);
         desc = syscallDescs64Low.get(num, false);
         if (!desc)
             desc = syscallDescs64Low.get(num, false);
         if (!desc)
             desc = privSyscallDescs64.get(num);
     } else {
-        int num = tc->readIntReg(INTREG_R7);
+        int num = tc->getReg(int_reg::R7);
         desc = syscallDescs32Low.get(num, false);
         if (!desc)
             desc = syscallDescs32Low.get(num, false);

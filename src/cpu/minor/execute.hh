@@ -78,9 +78,6 @@ class Execute : public Named
     /** Pointer back to the containing CPU */
     MinorCPU &cpu;
 
-    /** Index of the zero integer register. */
-    const RegIndex zeroReg;
-
     /** Number of instructions that can be issued per cycle */
     unsigned int issueLimit;
 
@@ -326,7 +323,7 @@ class Execute : public Named
   public:
     Execute(const std::string &name_,
         MinorCPU &cpu_,
-        const MinorCPUParams &params,
+        const BaseMinorCPUParams &params,
         Latch<ForwardInstData>::Output inp_,
         Latch<BranchData>::Input out_);
 

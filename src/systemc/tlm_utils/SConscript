@@ -25,6 +25,6 @@
 
 Import('*')
 
-if env['USE_SYSTEMC']:
+if env['CONF']['USE_SYSTEMC']:
     Source('convenience_socket_bases.cc')
     Source('instance_specific_extensions.cc')

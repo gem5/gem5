@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 ARM Limited
+ * Copyright (c) 2021-2022 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -67,8 +67,18 @@ transition({I,SC,UC,SD,UD,UD_T,RU,RSC,RSD,RUSD,SC_RSC,UC_RSC,SD_RSC,UD_RSC,UC_RU
   AllocateTBE_Snoop;
 }
 
+transition({I}, AllocDvmSnoop) {
+  AllocateTBE_DvmSnoop;
+}
+
 transition({UD,UD_T,SD,UC,SC,I,BUSY_INTR,BUSY_BLKD}, AllocSeqRequest) {
   AllocateTBE_SeqRequest;
+}
+
+// You can't allocate a DVM request on the same TBE as another DVM request,
+// so we don't need a long "Transition-from" list and we can change the output state.
+transition({I}, AllocSeqDvmRequest) {
+  AllocateTBE_SeqDvmRequest;
 }
 
 transition({I,SC,UC,SD,UD,UD_T,RU,RSC,RSD,RUSD,SC_RSC,SD_RSC,SD_RSD,UC_RSC,UC_RU,UD_RU,UD_RSD,UD_RSC,RUSC
@@ -326,14 +336,33 @@ transition({I, SC, UC, SD, UD, RU, RSC, RSD, RUSD, RUSC,
   ProcessNextState;
 }
 
+transition({I, SC, UC, SD, UD, RU, RSC, RSD, RUSD, RUSC,
+            SC_RSC, SD_RSD, SD_RSC, UC_RSC, UC_RU, UD_RU, UD_RSD, UD_RSC},
+            CleanUnique_Stale, BUSY_BLKD) {
+  Initiate_Request_Stale;
+  Initiate_CleanUnique_Stale;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
 // WriteUniquePtl
 
-transition({UD,UD_RU,UD_RSD,UD_RSC,UC,UC_RU,UC_RSC},
+transition({UD,UD_RSD,UD_RSC,UC,UC_RSC},
            {WriteUnique, WriteUniquePtl_PoC, WriteUniqueFull_PoC, WriteUniqueFull_PoC_Alloc},
            BUSY_BLKD) {
   Initiate_Request;
   Initiate_WriteUnique_LocalWrite;
   Profile_Hit;
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition({UD_RU,UC_RU},
+           {WriteUnique, WriteUniquePtl_PoC, WriteUniqueFull_PoC, WriteUniqueFull_PoC_Alloc},
+           BUSY_BLKD) {
+  Initiate_Request;
+  Initiate_WriteUnique_LocalWrite;
+  Profile_Miss;
   Pop_ReqRdyQueue;
   ProcessNextState;
 }
@@ -498,7 +527,7 @@ transition({UD_RU, UC_RU, RU}, WriteEvictFull, BUSY_BLKD) {
   ProcessNextState;
 }
 
-transition({UD_RSC, UC_RSC, SC_RSC, UD, RU, RSD, RUSD, RUSC, UD_RSD, SD_RSD, RSC, UD_RU, UC_RU, SD, UC, SC, I},
+transition({UD_RSC, UC_RSC, SC_RSC, SD_RSC, UD, RU, RSD, RUSD, RUSC, UD_RSD, SD_RSD, RSC, UD_RU, UC_RU, SD, UC, SC, I},
             {WriteBackFull_Stale, WriteEvictFull_Stale, WriteCleanFull_Stale}, BUSY_BLKD) {
   Initiate_Request_Stale;
   Initiate_CopyBack_Stale;
@@ -661,7 +690,7 @@ transition(BUSY_INTR, {SnpOnce,SnpOnceFwd}, BUSY_BLKD) {
 
 transition({BUSY_BLKD,BUSY_INTR},
             {ReadShared, ReadNotSharedDirty, ReadUnique, ReadUnique_PoC,
-            ReadOnce, CleanUnique,
+            ReadOnce, CleanUnique, CleanUnique_Stale,
             Load, Store, Prefetch,
             WriteBackFull, WriteBackFull_Stale,
             WriteEvictFull, WriteEvictFull_Stale,
@@ -847,6 +876,12 @@ transition(BUSY_BLKD, SendCompUCResp) {
   ProcessNextState_ClearPending;
 }
 
+transition(BUSY_BLKD, SendCompUCRespStale) {
+  Pop_TriggerQueue;
+  Send_CompUC_Stale;
+  ProcessNextState_ClearPending;
+}
+
 transition(BUSY_BLKD, SendRespSepData) {
   Pop_TriggerQueue;
   Send_RespSepData;
@@ -998,7 +1033,7 @@ transition(BUSY_BLKD, SendCompDBIDRespStale) {
 
 transition(BUSY_BLKD, MaintainCoherence) {
   Pop_TriggerQueue;
-  Initiate_MaitainCoherence;
+  Initiate_MaintainCoherence;
   ProcessNextState_ClearPending;
 }
 
@@ -1008,10 +1043,16 @@ transition(BUSY_BLKD, FinishCleanUnique) {
   ProcessNextState_ClearPending;
 }
 
+transition(BUSY_BLKD, FinishCopyBack_Stale) {
+  Pop_TriggerQueue;
+  Finish_CopyBack_Stale;
+  ProcessNextState_ClearPending;
+}
+
 transition(BUSY_BLKD, CheckUpgrade_FromStore) {
   Pop_TriggerQueue;
   Callback_Miss; // note: Callback happens only if tbe.dataValid
-  CheckUpgrade_FromStore;
+  CheckUpgrade_FromStoreOrRU;
   ProcessNextState_ClearPending;
 }
 
@@ -1023,7 +1064,7 @@ transition(BUSY_BLKD, CheckUpgrade_FromCU) {
 
 transition(BUSY_BLKD, CheckUpgrade_FromRU) {
   Pop_TriggerQueue;
-  CheckUpgrade_FromRU;
+  CheckUpgrade_FromStoreOrRU;
   ProcessNextState_ClearPending;
 }
 
@@ -1050,7 +1091,7 @@ transition({BUSY_BLKD,BUSY_INTR}, NCBWrData) {
 
 transition(BUSY_BLKD,
            {SnpRespData_I_PD,SnpRespData_I,SnpRespData_SC_PD,
-            SnpRespData_SC,SnpRespData_SD,SnpRespData_UD,
+            SnpRespData_SC,SnpRespData_SD,SnpRespData_UC,SnpRespData_UD,
             SnpRespData_SC_Fwded_SC,SnpRespData_SC_Fwded_SD_PD,
             SnpRespData_SC_PD_Fwded_SC,SnpRespData_I_Fwded_SD_PD,
             SnpRespData_I_PD_Fwded_SC,SnpRespData_I_Fwded_SC}) {
@@ -1215,4 +1256,188 @@ transition({BUSY_BLKD,BUSY_INTR}, Final, *) {
   Finalize_UpdateCacheFromTBE;
   Finalize_UpdateDirectoryFromTBE;
   Finalize_DeallocateRequest;
+}
+
+////////////////////////////////////////////////////////
+// DVM transitions
+
+
+// I, DvmTlbi_Initiate, DvmTlbi_Unconfirmed
+// I, DvmSync_Initiate, DvmSync_Unconfirmed
+  // Sync should expect only DBIDResp,
+  // but Tlbi could expect both DBIDResp and CompDBIDResp.
+  // Other CompDBIDResp handlers call a "Receive" action twice - is that relevant?
+transition(I, DvmTlbi_Initiate, DvmTlbi_Unconfirmed) {
+  Initiate_Request_DVM;
+
+  Send_DvmTlbi;
+  Profile_OutgoingStart_DVM;
+
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+transition(I, DvmSync_Initiate, DvmSync_Unsent) {
+  Initiate_Request_DVM;
+
+  Try_Send_DvmSync;
+  Profile_OutgoingStart_DVM;
+
+  Pop_ReqRdyQueue;
+  ProcessNextState;
+}
+
+transition(DvmSync_Unsent, DvmSync_Send, DvmSync_Unconfirmed) {
+  Pop_TriggerQueue;
+
+  Send_DvmSync;
+
+  ProcessNextState_ClearPending;
+}
+
+// {DvmTlbi_Unconfirmed,DvmSync_Unconfirmed}, RetryAck
+// {DvmTlbi_Unconfirmed,DvmSync_Unconfirmed}, PCrdGrant
+  // See other RetryAck, PCrdGrants
+transition({DvmTlbi_Unconfirmed,DvmSync_Unconfirmed}, RetryAck) {
+  Receive_RetryAck;
+  Pop_RespInQueue;
+  ProcessNextState;
+}
+transition({DvmTlbi_Unconfirmed,DvmSync_Unconfirmed}, PCrdGrant) {
+  Receive_PCrdGrant;
+  Pop_RespInQueue;
+  ProcessNextState;
+}
+
+// Resend the request after RetryAck+PCrdGrant received
+transition({DvmTlbi_Unconfirmed,DvmSync_Unconfirmed}, DoRetry) {
+  Send_Retry_DVM;
+  Pop_RetryTriggerQueue;
+  ProcessNextState_ClearPending;
+}
+
+// DvmTlbi_Unconfirmed, DBIDResp, DvmTlbi_Waiting
+// DvmSync_Unconfirmed, DBIDResp, DvmSync_Waiting
+  // Should both send NCBWrData
+transition(DvmTlbi_Unconfirmed, DBIDResp, DvmTlbi_Waiting) {
+  Receive_ReqResp;
+  Pop_RespInQueue;
+
+  Send_DvmTlbi_NCBWrData;
+  ExpectComp;
+
+  ProcessNextState;
+}
+transition(DvmSync_Unconfirmed, DBIDResp, DvmSync_Waiting) {
+  Receive_ReqResp;
+  Pop_RespInQueue;
+
+  Send_DvmSync_NCBWrData;
+  ExpectComp;
+
+  ProcessNextState;
+}
+
+// DvmTlbi_Unconfirmed, CompDBIDResp, DvmOp_Finished
+  // should call ProcessNextState
+// {DvmTlbi_Waiting,DvmSync_Waiting}, Comp, DvmOp_Finished
+  // should call ProcessNextState
+transition(DvmTlbi_Unconfirmed, CompDBIDResp, DvmOp_Finished) {
+  Receive_ReqResp;
+  Pop_RespInQueue;
+
+  Send_DvmTlbi_NCBWrData;
+
+  // We got the comp as well, so send the callback
+  DvmTlbi_CompCallback;
+  Profile_OutgoingEnd_DVM;
+  Try_Send_Pending_DvmSync;
+  ProcessNextState;
+}
+transition(DvmTlbi_Waiting, Comp, DvmOp_Finished) {
+  Receive_ReqResp;
+  Pop_RespInQueue;
+
+  DvmTlbi_CompCallback;
+  Profile_OutgoingEnd_DVM;
+  Try_Send_Pending_DvmSync;
+  ProcessNextState;
+}
+transition(DvmSync_Waiting, Comp, DvmOp_Finished) {
+  Receive_ReqResp;
+  Pop_RespInQueue;
+
+  DvmSync_CompCallback;
+  Profile_OutgoingEnd_DVM;
+  ProcessNextState;
+}
+
+// DvmOp_Finished, Final, I
+  // Should deallocate DvmOp
+transition(DvmOp_Finished, Final, I) {
+  Pop_TriggerQueue; // "Final" is triggered from Trigger queue, so pop that
+  Finalize_DeallocateDvmRequest;
+}
+
+/////////////////////////////////////////////////
+// DVM snoops
+
+transition(I, {SnpDvmOpNonSync_P1,SnpDvmOpNonSync_P2}, DvmExtTlbi_Partial) {
+  // First message has arrived, could be P1 or P2 because either order is allowed
+  Initiate_DvmSnoop;
+  Pop_SnoopRdyQueue;
+}
+
+transition(I, {SnpDvmOpSync_P1,SnpDvmOpSync_P2}, DvmExtSync_Partial) {
+  // First message has arrived, could be P1 or P2 because either order is allowed
+  Initiate_DvmSnoop;
+  Pop_SnoopRdyQueue;
+}
+
+transition(DvmExtTlbi_Partial, {SnpDvmOpNonSync_P1,SnpDvmOpNonSync_P2}, DvmExtTlbi_Executing) {
+  // TODO - some check that we didn't receive a {P1,P1} or {P2,P2} pair?
+  // We receive this event directly from the SnpInPort, so pop it
+  Pop_SnpInPort;
+
+  // Triggers SnpResp_I from inside Ruby with a delay
+  DvmExtTlbi_EnqueueSnpResp;
+  ProcessNextState;
+}
+
+transition(DvmExtSync_Partial, {SnpDvmOpSync_P1,SnpDvmOpSync_P2}, DvmExtSync_Executing) {
+  // TODO - some check that we didn't receive a {P1,P1} or {P2,P2} pair?
+  // We receive this event directly from the SnpInPort, so pop it
+  Pop_SnpInPort;
+
+  // Tell the CPU model to perform a Sync
+  // e.g. flush load-store-queue
+  DvmExtSync_TriggerCallback;
+
+  // We just wait for the CPU to finish
+}
+
+transition(DvmExtTlbi_Executing, SendSnpIResp, DvmExtOp_Finished) {
+  // TLBI snoop response has been triggered after the delay
+  Pop_TriggerQueue;
+
+  // Send the snoop response to the MN
+  Send_SnpRespI;
+
+  // Should trigger Final state
+  ProcessNextState_ClearPending;
+}
+
+transition(DvmExtSync_Executing, DvmSync_ExternCompleted, DvmExtOp_Finished) {
+  Pop_SeqInPort;
+
+  // The CPU model has declared that the Sync is complete
+  // => send the snoop response to the MN
+  Send_SnpRespI;
+
+  // Should trigger Final state
+  ProcessNextState_ClearPending;
+}
+
+transition(DvmExtOp_Finished, Final, I) {
+  Pop_TriggerQueue;
+  Finalize_DeallocateDvmSnoop;
 }

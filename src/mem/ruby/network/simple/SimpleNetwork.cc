@@ -61,19 +61,33 @@ namespace ruby
 SimpleNetwork::SimpleNetwork(const Params &p)
     : Network(p), m_buffer_size(p.buffer_size),
       m_endpoint_bandwidth(p.endpoint_bandwidth),
-      m_adaptive_routing(p.adaptive_routing),
       networkStats(this)
 {
     // record the routers
     for (std::vector<BasicRouter*>::const_iterator i = p.routers.begin();
          i != p.routers.end(); ++i) {
-        Switch* s = safe_cast<Switch*>(*i);
-        m_switches.push_back(s);
+        auto* s = safe_cast<Switch*>(*i);
         s->init_net_ptr(this);
+        auto id = static_cast<size_t>(s->params().router_id);
+        m_switches[id] = s;
     }
 
-    m_int_link_buffers = p.int_link_buffers;
-    m_num_connected_buffers = 0;
+    const std::vector<int> &physical_vnets_channels =
+        p.physical_vnets_channels;
+    const std::vector<int> &physical_vnets_bandwidth =
+        p.physical_vnets_bandwidth;
+    bool physical_vnets = physical_vnets_channels.size() > 0;
+    int vnets = p.number_of_virtual_networks;
+
+    fatal_if(physical_vnets && (physical_vnets_channels.size() != vnets),
+        "physical_vnets_channels must provide channel count for all vnets");
+
+    fatal_if(!physical_vnets && (physical_vnets_bandwidth.size() != 0),
+        "physical_vnets_bandwidth also requires physical_vnets_channels");
+
+    fatal_if((physical_vnets_bandwidth.size() != vnets) &&
+             (physical_vnets_bandwidth.size() != 0),
+        "physical_vnets_bandwidth must provide BW for all vnets");
 }
 
 void
@@ -95,14 +109,20 @@ SimpleNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
 {
     NodeID local_dest = getLocalNodeID(global_dest);
     assert(local_dest < m_nodes);
-    assert(src < m_switches.size());
     assert(m_switches[src] != NULL);
 
     SimpleExtLink *simple_link = safe_cast<SimpleExtLink*>(link);
 
+    // some destinations don't use all vnets, but Switch requires the size
+    // output buffer list to match the number of vnets
+    int num_vnets = params().number_of_virtual_networks;
+    gem5_assert(num_vnets >= m_fromNetQueues[local_dest].size());
+    m_fromNetQueues[local_dest].resize(num_vnets, nullptr);
+
     m_switches[src]->addOutPort(m_fromNetQueues[local_dest],
-                                routing_table_entry[0], simple_link->m_latency,
-                                simple_link->m_bw_multiplier);
+                                routing_table_entry[0],
+                                simple_link->m_latency, 0,
+                                simple_link->m_bw_multiplier, true);
 }
 
 // From an endpoint node to a switch
@@ -122,24 +142,19 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                                 PortDirection src_outport,
                                 PortDirection dst_inport)
 {
-    // Create a set of new MessageBuffers
-    std::vector<MessageBuffer*> queues(m_virtual_networks);
-
-    for (int i = 0; i < m_virtual_networks; i++) {
-        // allocate a buffer
-        assert(m_num_connected_buffers < m_int_link_buffers.size());
-        MessageBuffer* buffer_ptr = m_int_link_buffers[m_num_connected_buffers];
-        m_num_connected_buffers++;
-        queues[i] = buffer_ptr;
-    }
-
     // Connect it to the two switches
     SimpleIntLink *simple_link = safe_cast<SimpleIntLink*>(link);
 
-    m_switches[dest]->addInPort(queues);
-    m_switches[src]->addOutPort(queues, routing_table_entry[0],
+    m_switches[dest]->addInPort(simple_link->m_buffers);
+    m_switches[src]->addOutPort(simple_link->m_buffers, routing_table_entry[0],
                                 simple_link->m_latency,
-                                simple_link->m_bw_multiplier);
+                                simple_link->m_weight,
+                                simple_link->m_bw_multiplier,
+                                false,
+                                dst_inport);
+    // Maitain a global list of buffers (used for functional accesses only)
+    m_int_link_buffers.insert(m_int_link_buffers.end(),
+            simple_link->m_buffers.begin(), simple_link->m_buffers.end());
 }
 
 void
@@ -164,9 +179,9 @@ SimpleNetwork::regStats()
             ;
 
         // Now state what the formula is.
-        for (int i = 0; i < m_switches.size(); i++) {
+        for (auto& it : m_switches) {
             *(networkStats.m_msg_counts[(unsigned int) type]) +=
-                sum(m_switches[i]->getMsgCount(type));
+                sum(it.second->getMsgCount(type));
         }
 
         *(networkStats.m_msg_bytes[(unsigned int) type]) =
@@ -178,8 +193,8 @@ SimpleNetwork::regStats()
 void
 SimpleNetwork::collateStats()
 {
-    for (int i = 0; i < m_switches.size(); i++) {
-        m_switches[i]->collateStats();
+    for (auto& it : m_switches) {
+        it.second->collateStats();
     }
 }
 
@@ -197,8 +212,8 @@ SimpleNetwork::print(std::ostream& out) const
 bool
 SimpleNetwork::functionalRead(Packet *pkt)
 {
-    for (unsigned int i = 0; i < m_switches.size(); i++) {
-        if (m_switches[i]->functionalRead(pkt))
+    for (auto& it : m_switches) {
+        if (it.second->functionalRead(pkt))
             return true;
     }
     for (unsigned int i = 0; i < m_int_link_buffers.size(); ++i) {
@@ -213,8 +228,8 @@ bool
 SimpleNetwork::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;
-    for (unsigned int i = 0; i < m_switches.size(); i++) {
-        if (m_switches[i]->functionalRead(pkt, mask))
+    for (auto& it : m_switches) {
+        if (it.second->functionalRead(pkt, mask))
             read = true;
     }
     for (unsigned int i = 0; i < m_int_link_buffers.size(); ++i) {
@@ -229,8 +244,8 @@ SimpleNetwork::functionalWrite(Packet *pkt)
 {
     uint32_t num_functional_writes = 0;
 
-    for (unsigned int i = 0; i < m_switches.size(); i++) {
-        num_functional_writes += m_switches[i]->functionalWrite(pkt);
+    for (auto& it : m_switches) {
+        num_functional_writes += it.second->functionalWrite(pkt);
     }
 
     for (unsigned int i = 0; i < m_int_link_buffers.size(); ++i) {

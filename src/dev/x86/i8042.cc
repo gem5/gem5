@@ -48,22 +48,18 @@ const uint8_t NumOutputBits = 14;
 
 
 X86ISA::I8042::I8042(const Params &p)
-    : BasicPioDevice(p, 0), // pioSize arg is dummy value... not used
-      latency(p.pio_latency),
+    : PioDevice(p), latency(p.pio_latency),
       dataPort(p.data_port), commandPort(p.command_port),
-      statusReg(0), commandByte(0), dataReg(0), lastCommand(NoCommand),
       mouse(p.mouse), keyboard(p.keyboard)
 {
     fatal_if(!mouse, "The i8042 model requires a mouse instance");
     fatal_if(!keyboard, "The i8042 model requires a keyboard instance");
 
-    statusReg.passedSelfTest = 1;
-    statusReg.commandLast = 1;
     statusReg.keyboardUnlocked = 1;
 
     commandByte.convertScanCodes = 1;
-    commandByte.passedSelfTest = 1;
-    commandByte.keyboardFullInt = 1;
+    commandByte.disableMouse = 1;
+    commandByte.disableKeyboard = 1;
 
     for (int i = 0; i < p.port_keyboard_int_pin_connection_count; i++) {
         keyboardIntPin.push_back(new IntSourcePin<I8042>(
@@ -80,7 +76,6 @@ AddrRangeList
 X86ISA::I8042::getAddrRanges() const
 {
     AddrRangeList ranges;
-    // TODO: Are these really supposed to be a single byte and not 4?
     ranges.push_back(RangeSize(dataPort, 1));
     ranges.push_back(RangeSize(commandPort, 1));
     return ranges;
@@ -200,8 +195,8 @@ X86ISA::I8042::write(PacketPtr pkt)
                     "get byte %d.\n", data - ReadControllerRamBase);
         } else if (data > WriteControllerRamBase &&
                 data < WriteControllerRamBase + RamSize) {
-            panic("Attempted to use i8042 read controller RAM command to "
-                    "get byte %d.\n", data - ReadControllerRamBase);
+            panic("Attempted to use i8042 write controller RAM command to "
+                    "get byte %d.\n", data - WriteControllerRamBase);
         } else if (data >= PulseOutputBitBase &&
                 data < PulseOutputBitBase + NumOutputBits) {
             panic("Attempted to use i8042 pulse output bit command to "
@@ -231,11 +226,26 @@ X86ISA::I8042::write(PacketPtr pkt)
             commandByte.disableMouse = 0;
             break;
           case TestMouse:
-            panic("i8042 \"Test mouse\" command not implemented.\n");
+            // The response to this is from the 8042, not the mouse.
+            // Hard code no errors detected.
+            writeData(0x00);
+            break;
           case SelfTest:
-            panic("i8042 \"Self test\" command not implemented.\n");
+            // Exactly what this does is essentially undocumented, but this:
+            // https://www.os2museum.com/wp/
+            //          ibm-pcat-8042-keyboard-controller-commands/
+            // says that this should essentially reset some values.
+            commandByte.convertScanCodes = 1;
+            commandByte.disableMouse = 1;
+            commandByte.disableKeyboard = 1;
+            commandByte.passedSelfTest = 1;
+            statusReg.passedSelfTest = 1;
+            writeData(0x55); // Self test passed.
+            break;
           case InterfaceTest:
-            panic("i8042 \"Interface test\" command not implemented.\n");
+            // Hard code no errors detected.
+            writeData(0x00);
+            break;
           case DiagnosticDump:
             panic("i8042 \"Diagnostic dump\" command not implemented.\n");
           case DisableKeyboard:

@@ -59,7 +59,7 @@ struct Result<X86PseudoInstABI, T>
         // This assumes that all pseudo ops have their return value set
         // by the pseudo op instruction. This may need to be revisited if we
         // modify the pseudo op ABI in util/m5/m5op_x86.S
-        tc->setIntReg(X86ISA::INTREG_RAX, ret);
+        tc->setReg(X86ISA::int_reg::Rax, ret);
     }
 };
 
@@ -76,12 +76,12 @@ struct Argument<X86PseudoInstABI, uint64_t>
 
         using namespace X86ISA;
 
-        const int int_reg_map[] = {
-            INTREG_RDI, INTREG_RSI, INTREG_RDX,
-            INTREG_RCX, INTREG_R8, INTREG_R9
+        constexpr RegId int_reg_map[] = {
+            int_reg::Rdi, int_reg::Rsi, int_reg::Rdx,
+            int_reg::Rcx, int_reg::R8, int_reg::R9
         };
 
-        return tc->readIntReg(int_reg_map[state++]);
+        return tc->getReg(int_reg_map[state++]);
     }
 };
 

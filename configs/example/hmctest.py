@@ -50,7 +50,7 @@ def build_system(options):
     system = System()
     # use timing mode for the interaction between requestor-responder ports
     system.mem_mode = 'timing'
-    # set the clock fequency of the system
+    # set the clock frequency of the system
     clk = '100GHz'
     vd = VoltageDomain(voltage='1V')
     system.clk_domain = SrcClockDomain(clock=clk, voltage_domain=vd)

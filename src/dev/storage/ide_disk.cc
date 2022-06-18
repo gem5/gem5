@@ -49,6 +49,7 @@
 #include <deque>
 #include <string>
 
+#include "base/bitfield.hh"
 #include "base/chunk_generator.hh"
 #include "base/compiler.hh"
 #include "base/cprintf.hh" // csprintf
@@ -63,12 +64,9 @@ namespace gem5
 {
 
 IdeDisk::IdeDisk(const Params &p)
-    : SimObject(p), ctrl(NULL), image(p.image), diskDelay(p.delay),
-      ideDiskStats(this),
+    : SimObject(p), image(p.image), diskDelay(p.delay), ideDiskStats(this),
       dmaTransferEvent([this]{ doDmaTransfer(); }, name()),
-      dmaReadCG(NULL),
       dmaReadWaitEvent([this]{ doDmaRead(); }, name()),
-      dmaWriteCG(NULL),
       dmaWriteWaitEvent([this]{ doDmaWrite(); }, name()),
       dmaPrdReadEvent([this]{ dmaPrdReadDone(); }, name()),
       dmaReadEvent([this]{ dmaReadDone(); }, name()),
@@ -159,7 +157,7 @@ IdeDisk::reset(int id)
     cmdBytesLeft = 0;
     drqBytesLeft = 0;
     dmaRead = false;
-    intrPending = false;
+    pendingInterrupt = false;
     dmaAborted = false;
 
     // set the device state to idle
@@ -190,16 +188,14 @@ IdeDisk::reset(int id)
 bool
 IdeDisk::isDEVSelect()
 {
-    return ctrl->isDiskSelected(this);
+    return channel->selected() == this;
 }
 
 Addr
 IdeDisk::pciToDma(Addr pciAddr)
 {
-    if (ctrl)
-        return ctrl->pciToDma(pciAddr);
-    else
-        panic("Access to unset controller!\n");
+    panic_if(!ctrl, "Access to unset controller!");
+    return ctrl->pciToDma(pciAddr);
 }
 
 ////
@@ -343,16 +339,18 @@ IdeDisk::doDmaTransfer()
         return;
     }
 
-    if (dmaState != Dma_Transfer || devState != Transfer_Data_Dma)
+    if (dmaState != Dma_Transfer || devState != Transfer_Data_Dma) {
         panic("Inconsistent DMA transfer state: dmaState = %d devState = %d\n",
               dmaState, devState);
+    }
 
     if (ctrl->dmaPending() || ctrl->drainState() != DrainState::Running) {
         schedule(dmaTransferEvent, curTick() + DMA_BACKOFF_PERIOD);
         return;
-    } else
+    } else {
         ctrl->dmaRead(curPrdAddr, sizeof(PrdEntry_t), &dmaPrdReadEvent,
                 (uint8_t*)&curPrd.entry);
+    }
 }
 
 void
@@ -538,8 +536,9 @@ IdeDisk::doDmaWrite()
 void
 IdeDisk::dmaWriteDone()
 {
-    DPRINTF(IdeDisk, "doWriteDone: curPrd byte count %d, eot %#x cmd bytes left:%d\n",
-                curPrd.getByteCount(), curPrd.getEOT(), cmdBytesLeft);
+    DPRINTF(IdeDisk,
+            "doWriteDone: curPrd byte count %d, eot %#x cmd bytes left:%d\n",
+            curPrd.getByteCount(), curPrd.getEOT(), cmdBytesLeft);
     // check for the EOT
     if (curPrd.getEOT()) {
         assert(cmdBytesLeft == 0);
@@ -559,9 +558,9 @@ IdeDisk::readDisk(uint32_t sector, uint8_t *data)
 {
     uint32_t bytesRead = image->read(data, sector);
 
-    if (bytesRead != SectorSize)
-        panic("Can't read from %s. Only %d of %d read. errno=%d\n",
-              name(), bytesRead, SectorSize, errno);
+    panic_if(bytesRead != SectorSize,
+            "Can't read from %s. Only %d of %d read. errno=%d",
+            name(), bytesRead, SectorSize, errno);
 }
 
 void
@@ -569,9 +568,9 @@ IdeDisk::writeDisk(uint32_t sector, uint8_t *data)
 {
     uint32_t bytesWritten = image->write(data, sector);
 
-    if (bytesWritten != SectorSize)
-        panic("Can't write to %s. Only %d of %d written. errno=%d\n",
-              name(), bytesWritten, SectorSize, errno);
+    panic_if(bytesWritten != SectorSize,
+            "Can't write to %s. Only %d of %d written. errno=%d",
+            name(), bytesWritten, SectorSize, errno);
 }
 
 ////
@@ -581,11 +580,11 @@ IdeDisk::writeDisk(uint32_t sector, uint8_t *data)
 void
 IdeDisk::startDma(const uint32_t &prdTableBase)
 {
-    if (dmaState != Dma_Start)
-        panic("Inconsistent DMA state, should be in Dma_Start!\n");
+    panic_if(dmaState != Dma_Start,
+            "Inconsistent DMA state, should be in Dma_Start!");
 
-    if (devState != Transfer_Data_Dma)
-        panic("Inconsistent device state for DMA start!\n");
+    panic_if(devState != Transfer_Data_Dma,
+            "Inconsistent device state for DMA start!");
 
     // PRD base address is given by bits 31:2
     curPrdAddr = pciToDma((Addr)(prdTableBase & ~0x3ULL));
@@ -599,11 +598,11 @@ IdeDisk::startDma(const uint32_t &prdTableBase)
 void
 IdeDisk::abortDma()
 {
-    if (dmaState == Dma_Idle)
-        panic("Inconsistent DMA state, should be Start or Transfer!");
+    panic_if(dmaState == Dma_Idle,
+            "Inconsistent DMA state, should be Start or Transfer!");
 
-    if (devState != Transfer_Data_Dma && devState != Prepare_Data_Dma)
-        panic("Inconsistent device state, should be Transfer or Prepare!\n");
+    panic_if(devState != Transfer_Data_Dma && devState != Prepare_Data_Dma,
+            "Inconsistent device state, should be Transfer or Prepare!");
 
     updateState(ACT_CMD_ERROR);
 }
@@ -614,6 +613,10 @@ IdeDisk::startCommand()
     DevAction_t action = ACT_NONE;
     uint32_t size = 0;
     dmaRead = false;
+
+    // Clear any existing errors.
+    replaceBits(status, 0, 0);
+    replaceBits(cmdReg.error, 2, 0);
 
     // Decode commands
     switch (cmdReg.command) {
@@ -644,16 +647,23 @@ IdeDisk::startCommand()
 
         // Supported PIO data-in commands
       case WDCC_IDENTIFY:
-      case ATAPI_IDENTIFY_DEVICE:
         cmdBytes = cmdBytesLeft = sizeof(struct ataparams);
         devState = Prepare_Data_In;
         action = ACT_DATA_READY;
         break;
 
+      case ATAPI_IDENTIFY_DEVICE:
+        // We're not an ATAPI device, so this command isn't implemented.
+        devState = Command_Execution;
+        action = ACT_CMD_ERROR;
+        replaceBits(cmdReg.error, 2, 1);
+        replaceBits(status, 0, 1);
+        break;
+
       case WDCC_READMULTI:
       case WDCC_READ:
-        if (!(cmdReg.drive & DRIVE_LBA_BIT))
-            panic("Attempt to perform CHS access, only supports LBA\n");
+        panic_if(!(cmdReg.drive & DRIVE_LBA_BIT),
+                "Attempt to perform CHS access, only supports LBA");
 
         if (cmdReg.sec_count == 0)
             cmdBytes = cmdBytesLeft = (256 * SectorSize);
@@ -670,8 +680,8 @@ IdeDisk::startCommand()
         // Supported PIO data-out commands
       case WDCC_WRITEMULTI:
       case WDCC_WRITE:
-        if (!(cmdReg.drive & DRIVE_LBA_BIT))
-            panic("Attempt to perform CHS access, only supports LBA\n");
+        panic_if(!(cmdReg.drive & DRIVE_LBA_BIT),
+                "Attempt to perform CHS access, only supports LBA");
 
         if (cmdReg.sec_count == 0)
             cmdBytes = cmdBytesLeft = (256 * SectorSize);
@@ -689,14 +699,15 @@ IdeDisk::startCommand()
         dmaRead = true;  // a write to the disk is a DMA read from memory
         [[fallthrough]];
       case WDCC_READDMA:
-        if (!(cmdReg.drive & DRIVE_LBA_BIT))
-            panic("Attempt to perform CHS access, only supports LBA\n");
+        panic_if(!(cmdReg.drive & DRIVE_LBA_BIT),
+                "Attempt to perform CHS access, only supports LBA");
 
         if (cmdReg.sec_count == 0)
             cmdBytes = cmdBytesLeft = (256 * SectorSize);
         else
             cmdBytes = cmdBytesLeft = (cmdReg.sec_count * SectorSize);
-        DPRINTF(IdeDisk, "Setting cmdBytesLeft to %d in readdma\n", cmdBytesLeft);
+        DPRINTF(IdeDisk, "Setting cmdBytesLeft to %d in readdma\n",
+                cmdBytesLeft);
 
         curSector = getLBABase();
 
@@ -725,32 +736,28 @@ IdeDisk::startCommand()
 ////
 
 void
-IdeDisk::intrPost()
+IdeDisk::postInterrupt()
 {
     DPRINTF(IdeDisk, "Posting Interrupt\n");
-    if (intrPending)
-        panic("Attempt to post an interrupt with one pending\n");
+    panic_if(pendingInterrupt,
+            "Attempt to post an interrupt with one pending");
 
-    intrPending = true;
+    pendingInterrupt = true;
 
-    // talk to controller to set interrupt
-    if (ctrl) {
-        ctrl->intrPost();
-    }
+    assert(channel);
+    channel->postInterrupt();
 }
 
 void
-IdeDisk::intrClear()
+IdeDisk::clearInterrupt()
 {
     DPRINTF(IdeDisk, "Clearing Interrupt\n");
-    if (!intrPending)
-        panic("Attempt to clear a non-pending interrupt\n");
+    panic_if(!pendingInterrupt, "Attempt to clear a non-pending interrupt");
 
-    intrPending = false;
+    pendingInterrupt = false;
 
-    // talk to controller to clear interrupt
-    if (ctrl)
-        ctrl->intrClear();
+    assert(channel);
+    channel->clearInterrupt();
 }
 
 ////
@@ -786,12 +793,12 @@ IdeDisk::updateState(DevAction_t action)
       case Device_Idle_SI:
         if (action == ACT_SELECT_WRITE && !isDEVSelect()) {
             devState = Device_Idle_NS;
-            intrClear();
+            clearInterrupt();
         } else if (action == ACT_STAT_READ || isIENSet()) {
             devState = Device_Idle_S;
-            intrClear();
+            clearInterrupt();
         } else if (action == ACT_CMD_WRITE) {
-            intrClear();
+            clearInterrupt();
             startCommand();
         }
 
@@ -799,24 +806,24 @@ IdeDisk::updateState(DevAction_t action)
 
       case Device_Idle_NS:
         if (action == ACT_SELECT_WRITE && isDEVSelect()) {
-            if (!isIENSet() && intrPending) {
+            if (!isIENSet() && pendingInterrupt) {
                 devState = Device_Idle_SI;
-                intrPost();
+                postInterrupt();
             }
-            if (isIENSet() || !intrPending) {
+            if (isIENSet() || !pendingInterrupt) {
                 devState = Device_Idle_S;
             }
         }
         break;
 
       case Command_Execution:
-        if (action == ACT_CMD_COMPLETE) {
+        if (action == ACT_CMD_ERROR || action == ACT_CMD_COMPLETE) {
             // clear the BSY bit
             setComplete();
 
             if (!isIENSet()) {
                 devState = Device_Idle_SI;
-                intrPost();
+                postInterrupt();
             } else {
                 devState = Device_Idle_S;
             }
@@ -830,7 +837,7 @@ IdeDisk::updateState(DevAction_t action)
 
             if (!isIENSet()) {
                 devState = Device_Idle_SI;
-                intrPost();
+                postInterrupt();
             } else {
                 devState = Device_Idle_S;
             }
@@ -861,7 +868,7 @@ IdeDisk::updateState(DevAction_t action)
 
             if (!isIENSet()) {
                 devState = Data_Ready_INTRQ_In;
-                intrPost();
+                postInterrupt();
             } else {
                 devState = Transfer_Data_In;
             }
@@ -871,7 +878,7 @@ IdeDisk::updateState(DevAction_t action)
       case Data_Ready_INTRQ_In:
         if (action == ACT_STAT_READ) {
             devState = Transfer_Data_In;
-            intrClear();
+            clearInterrupt();
         }
         break;
 
@@ -917,7 +924,7 @@ IdeDisk::updateState(DevAction_t action)
 
             if (!isIENSet()) {
                 devState = Device_Idle_SI;
-                intrPost();
+                postInterrupt();
             } else {
                 devState = Device_Idle_S;
             }
@@ -937,7 +944,7 @@ IdeDisk::updateState(DevAction_t action)
                 devState = Transfer_Data_Out;
             } else {
                 devState = Data_Ready_INTRQ_Out;
-                intrPost();
+                postInterrupt();
             }
         }
         break;
@@ -945,7 +952,7 @@ IdeDisk::updateState(DevAction_t action)
       case Data_Ready_INTRQ_Out:
         if (action == ACT_STAT_READ) {
             devState = Transfer_Data_Out;
-            intrClear();
+            clearInterrupt();
         }
         break;
 
@@ -992,7 +999,7 @@ IdeDisk::updateState(DevAction_t action)
 
             if (!isIENSet()) {
                 devState = Device_Idle_SI;
-                intrPost();
+                postInterrupt();
             } else {
                 devState = Device_Idle_S;
             }
@@ -1022,11 +1029,11 @@ IdeDisk::updateState(DevAction_t action)
             // set the seek bit
             status |= STATUS_SEEK_BIT;
             // clear the controller state for DMA transfer
-            ctrl->setDmaComplete(this);
+            channel->setDmaComplete();
 
             if (!isIENSet()) {
                 devState = Device_Idle_SI;
-                intrPost();
+                postInterrupt();
             } else {
                 devState = Device_Idle_S;
             }
@@ -1037,13 +1044,13 @@ IdeDisk::updateState(DevAction_t action)
         if (action == ACT_CMD_ERROR) {
             setComplete();
             status |= STATUS_SEEK_BIT;
-            ctrl->setDmaComplete(this);
+            channel->setDmaComplete();
             dmaAborted = false;
             dmaState = Dma_Idle;
 
             if (!isIENSet()) {
                 devState = Device_Idle_SI;
-                intrPost();
+                postInterrupt();
             } else {
                 devState = Device_Idle_S;
             }
@@ -1128,7 +1135,7 @@ IdeDisk::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(drqBytesLeft);
     SERIALIZE_SCALAR(curSector);
     SERIALIZE_SCALAR(dmaRead);
-    SERIALIZE_SCALAR(intrPending);
+    paramOut(cp, "intrPending", pendingInterrupt);
     SERIALIZE_SCALAR(dmaAborted);
     SERIALIZE_ENUM(devState);
     SERIALIZE_ENUM(dmaState);
@@ -1181,7 +1188,7 @@ IdeDisk::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(drqBytesLeft);
     UNSERIALIZE_SCALAR(curSector);
     UNSERIALIZE_SCALAR(dmaRead);
-    UNSERIALIZE_SCALAR(intrPending);
+    paramIn(cp, "intrPending", pendingInterrupt);
     UNSERIALIZE_SCALAR(dmaAborted);
     UNSERIALIZE_ENUM(devState);
     UNSERIALIZE_ENUM(dmaState);

@@ -78,9 +78,18 @@ in_port(rspInPort, CHIResponseMsg, rspIn, rank=10,
   if (rspInPort.isReady(clockEdge())) {
     printResources();
     peek(rspInPort, CHIResponseMsg) {
-      TBE tbe := getCurrentActiveTBE(in_msg.addr);
-      trigger(respToEvent(in_msg.type, tbe), in_msg.addr,
-              getCacheEntry(in_msg.addr), tbe);
+      if (in_msg.usesTxnId) {
+        // A ResponseMsg that uses transaction ID
+        // is separate from the memory system,
+        // uses a separate TBE table and doesn't have a cache entry
+        TBE tbe := getDvmTBE(in_msg.txnId);
+        trigger(respToEvent(in_msg.type, tbe), in_msg.txnId,
+                nullCacheEntry(), tbe);
+      } else {
+        TBE tbe := getCurrentActiveTBE(in_msg.addr);
+        trigger(respToEvent(in_msg.type, tbe), in_msg.addr,
+                getCacheEntry(in_msg.addr), tbe);
+      }
     }
   }
 }
@@ -96,8 +105,9 @@ in_port(datInPort, CHIDataMsg, datIn, rank=9,
   if (datInPort.isReady(clockEdge())) {
     printResources();
     peek(datInPort, CHIDataMsg) {
-      assert((in_msg.bitMask.count() <= data_channel_size)
-              && (in_msg.bitMask.count() > 0));
+      // We don't have any transactions that use data requests
+      assert(!in_msg.usesTxnId);
+      assert((in_msg.bitMask.count() <= data_channel_size) && (in_msg.bitMask.count() > 0));
       trigger(dataToEvent(in_msg.type), in_msg.addr,
               getCacheEntry(in_msg.addr), getCurrentActiveTBE(in_msg.addr));
     }
@@ -116,16 +126,26 @@ in_port(snpRdyPort, CHIRequestMsg, snpRdy, rank=8,
     printResources();
     peek(snpRdyPort, CHIRequestMsg) {
       assert(in_msg.allowRetry == false);
-      TBE tbe := getCurrentActiveTBE(in_msg.addr);
-      if (is_valid(tbe) && tbe.hasUseTimeout) {
-        // we may be in the BUSY_INTR waiting for a cache block, but if
-        // the timeout is set the snoop must still wait, so trigger the
-        // stall form here to prevent creating other states
-        trigger(Event:SnpStalled, in_msg.addr,
-                getCacheEntry(in_msg.addr), tbe);
+      if (in_msg.usesTxnId) {
+        TBE tbe := getDvmTBE(in_msg.txnId);
+        if (is_valid(tbe)) {
+          assert(tbe.is_dvm_snp_tbe);
+        }
+        // TBE may be valid or invalid
+        trigger(snpToEvent(in_msg.type), in_msg.txnId,
+                nullCacheEntry(), tbe);
       } else {
-        trigger(snpToEvent(in_msg.type), in_msg.addr,
-                getCacheEntry(in_msg.addr), tbe);
+        TBE tbe := getCurrentActiveTBE(in_msg.addr);
+        if (is_valid(tbe) && tbe.hasUseTimeout) {
+          // we may be in the BUSY_INTR waiting for a cache block, but if
+          // the timeout is set the snoop must still wait, so trigger the
+          // stall form here to prevent creating other states
+          trigger(Event:SnpStalled, in_msg.addr,
+                  getCacheEntry(in_msg.addr), tbe);
+        } else {
+          trigger(snpToEvent(in_msg.type), in_msg.addr,
+                  getCacheEntry(in_msg.addr), tbe);
+        }
       }
     }
   }
@@ -152,8 +172,21 @@ in_port(snpInPort, CHIRequestMsg, snpIn, rank=7) {
     printResources();
     peek(snpInPort, CHIRequestMsg) {
       assert(in_msg.allowRetry == false);
-      trigger(Event:AllocSnoop, in_msg.addr,
-              getCacheEntry(in_msg.addr), getCurrentActiveTBE(in_msg.addr));
+      if (in_msg.usesTxnId) {
+        TBE preexistingTBE := getDvmTBE(in_msg.txnId);
+        // If this is just building on another transaction invoke the thing directly
+        if (is_valid(preexistingTBE)){
+          assert(preexistingTBE.is_dvm_snp_tbe);
+          trigger(snpToEvent(in_msg.type), in_msg.txnId,
+                  nullCacheEntry(), preexistingTBE);
+        } else {
+          trigger(Event:AllocDvmSnoop, in_msg.txnId,
+                  nullCacheEntry(), nullTBE());
+        }
+      } else {
+        trigger(Event:AllocSnoop, in_msg.addr,
+                getCacheEntry(in_msg.addr), getCurrentActiveTBE(in_msg.addr));
+      }
     }
   }
 }
@@ -169,16 +202,24 @@ in_port(retryTriggerInPort, RetryTriggerMsg, retryTriggerQueue, rank=6,
     printResources();
     peek(retryTriggerInPort, RetryTriggerMsg) {
       Event ev := in_msg.event;
-      TBE tbe := getCurrentActiveTBE(in_msg.addr);
       assert((ev == Event:SendRetryAck) || (ev == Event:SendPCrdGrant) ||
               (ev == Event:DoRetry));
-      if (ev == Event:DoRetry) {
+      if (in_msg.usesTxnId) {
+        TBE tbe := getDvmTBE(in_msg.addr);
+        CacheEntry entry := nullCacheEntry();
         assert(is_valid(tbe));
-        if (tbe.is_req_hazard || tbe.is_repl_hazard) {
-          ev := Event:DoRetry_Hazard;
+        trigger(ev, in_msg.addr, entry, tbe);
+      } else {
+        TBE tbe := getCurrentActiveTBE(in_msg.addr);
+        CacheEntry entry := getCacheEntry(in_msg.addr);
+        if (ev == Event:DoRetry) {
+          assert(is_valid(tbe));
+          if (tbe.is_req_hazard || tbe.is_repl_hazard) {
+            ev := Event:DoRetry_Hazard;
+          }
         }
+        trigger(ev, in_msg.addr, entry, tbe);
       }
-      trigger(ev, in_msg.addr, getCacheEntry(in_msg.addr), tbe);
     }
   }
 }
@@ -195,18 +236,24 @@ in_port(triggerInPort, TriggerMsg, triggerQueue, rank=5,
   if (triggerInPort.isReady(clockEdge())) {
     printResources();
     peek(triggerInPort, TriggerMsg) {
-      TBE tbe := getCurrentActiveTBE(in_msg.addr);
-      assert(is_valid(tbe));
-      if (in_msg.from_hazard != (tbe.is_req_hazard || tbe.is_repl_hazard)) {
-        // possible when handling a snoop hazard and an action from the
-        // the initial transaction got woken up. Stall the action until the
-        // hazard ends
-        assert(in_msg.from_hazard == false);
-        assert(tbe.is_req_hazard || tbe.is_repl_hazard);
-        trigger(Event:ActionStalledOnHazard, in_msg.addr,
-                getCacheEntry(in_msg.addr), tbe);
+      if (in_msg.usesTxnId) {
+        TBE tbe := getDvmTBE(in_msg.addr);
+        assert(is_valid(tbe));
+        trigger(tbe.pendAction, in_msg.addr, nullCacheEntry(), tbe);
       } else {
-        trigger(tbe.pendAction, in_msg.addr, getCacheEntry(in_msg.addr), tbe);
+        TBE tbe := getCurrentActiveTBE(in_msg.addr);
+        assert(is_valid(tbe));
+        if (in_msg.from_hazard != (tbe.is_req_hazard || tbe.is_repl_hazard)) {
+          // possible when handling a snoop hazard and an action from the
+          // the initial transaction got woken up. Stall the action until the
+          // hazard ends
+          assert(in_msg.from_hazard == false);
+          assert(tbe.is_req_hazard || tbe.is_repl_hazard);
+          trigger(Event:ActionStalledOnHazard, in_msg.addr,
+                  getCacheEntry(in_msg.addr), tbe);
+        } else {
+          trigger(tbe.pendAction, in_msg.addr, getCacheEntry(in_msg.addr), tbe);
+        }
       }
     }
   }
@@ -258,36 +305,53 @@ in_port(reqRdyPort, CHIRequestMsg, reqRdy, rank=3,
   if (reqRdyPort.isReady(clockEdge())) {
     printResources();
     peek(reqRdyPort, CHIRequestMsg) {
-      CacheEntry cache_entry := getCacheEntry(in_msg.addr);
-      TBE tbe := getCurrentActiveTBE(in_msg.addr);
+      if (in_msg.usesTxnId) {
+        TBE preexistingTBE := getDvmTBE(in_msg.txnId);
 
-      DirEntry dir_entry := getDirEntry(in_msg.addr);
+        // DVM transactions do not directly relate to the Cache,
+        // and do not have cache entries
+        trigger(
+          reqToEvent(in_msg.type, in_msg.is_local_pf),
+          in_msg.txnId,
+          nullCacheEntry(),
+          preexistingTBE);
+      } else {
+        CacheEntry cache_entry := getCacheEntry(in_msg.addr);
+        TBE tbe := getCurrentActiveTBE(in_msg.addr);
 
-      // Special case for possibly stale writebacks or evicts
-      if (in_msg.type == CHIRequestType:WriteBackFull) {
-        if (is_invalid(dir_entry) || (dir_entry.ownerExists == false) ||
-            (dir_entry.owner != in_msg.requestor)) {
-          trigger(Event:WriteBackFull_Stale, in_msg.addr, cache_entry, tbe);
+        DirEntry dir_entry := getDirEntry(in_msg.addr);
+
+        // Special case for possibly stale writebacks or evicts
+        if (in_msg.type == CHIRequestType:WriteBackFull) {
+          if (is_invalid(dir_entry) || (dir_entry.ownerExists == false) ||
+              (dir_entry.owner != in_msg.requestor)) {
+            trigger(Event:WriteBackFull_Stale, in_msg.addr, cache_entry, tbe);
+          }
+        } else if (in_msg.type == CHIRequestType:WriteEvictFull) {
+          if (is_invalid(dir_entry) || (dir_entry.ownerExists == false) ||
+              (dir_entry.ownerIsExcl == false) || (dir_entry.owner != in_msg.requestor)) {
+            trigger(Event:WriteEvictFull_Stale, in_msg.addr, cache_entry, tbe);
+          }
+        } else if (in_msg.type == CHIRequestType:WriteCleanFull) {
+          if (is_invalid(dir_entry) || (dir_entry.ownerExists == false) ||
+              (dir_entry.owner != in_msg.requestor)) {
+            trigger(Event:WriteCleanFull_Stale, in_msg.addr, cache_entry, tbe);
+          }
+        } else if (in_msg.type == CHIRequestType:Evict) {
+          if (is_invalid(dir_entry) ||
+              (dir_entry.sharers.isElement(in_msg.requestor) == false)) {
+            trigger(Event:Evict_Stale, in_msg.addr, cache_entry, tbe);
+          }
+        } else if (in_msg.type == CHIRequestType:CleanUnique) {
+          if (is_invalid(dir_entry) ||
+              (dir_entry.sharers.isElement(in_msg.requestor) == false)) {
+            trigger(Event:CleanUnique_Stale, in_msg.addr, cache_entry, tbe);
+          }
         }
-      } else if (in_msg.type == CHIRequestType:WriteEvictFull) {
-        if (is_invalid(dir_entry) || (dir_entry.ownerExists == false) ||
-            (dir_entry.ownerIsExcl == false) || (dir_entry.owner != in_msg.requestor)) {
-          trigger(Event:WriteEvictFull_Stale, in_msg.addr, cache_entry, tbe);
-        }
-      } else if (in_msg.type == CHIRequestType:WriteCleanFull) {
-        if (is_invalid(dir_entry) || (dir_entry.ownerExists == false) ||
-            (dir_entry.ownerIsExcl == false) || (dir_entry.owner != in_msg.requestor)) {
-          trigger(Event:WriteCleanFull_Stale, in_msg.addr, cache_entry, tbe);
-        }
-      } else if (in_msg.type == CHIRequestType:Evict) {
-        if (is_invalid(dir_entry) ||
-            (dir_entry.sharers.isElement(in_msg.requestor) == false)) {
-          trigger(Event:Evict_Stale, in_msg.addr, cache_entry, tbe);
-        }
+
+        // Normal request path
+        trigger(reqToEvent(in_msg.type, in_msg.is_local_pf), in_msg.addr, cache_entry, tbe);
       }
-
-      // Normal request path
-      trigger(reqToEvent(in_msg.type, in_msg.is_local_pf), in_msg.addr, cache_entry, tbe);
     }
   }
 }
@@ -311,6 +375,9 @@ in_port(reqInPort, CHIRequestMsg, reqIn, rank=2,
   if (reqInPort.isReady(clockEdge())) {
     printResources();
     peek(reqInPort, CHIRequestMsg) {
+      // DVM Sync and TLBIs from external sources will use txnId requests,
+      // but they aren't implemented yet.
+      assert(!in_msg.usesTxnId);
       if (in_msg.allowRetry) {
         trigger(Event:AllocRequest, in_msg.addr,
               getCacheEntry(in_msg.addr), getCurrentActiveTBE(in_msg.addr));
@@ -332,9 +399,32 @@ in_port(seqInPort, RubyRequest, mandatoryQueue, rank=1) {
   if (seqInPort.isReady(clockEdge())) {
     printResources();
     peek(seqInPort, RubyRequest) {
-      trigger(Event:AllocSeqRequest, in_msg.LineAddress,
-              getCacheEntry(in_msg.LineAddress),
-              getCurrentActiveTBE(in_msg.LineAddress));
+      if (in_msg.isTlbi) {
+        TBE tbe := getDvmTBE(in_msg.tlbiTransactionUid);
+
+        if (in_msg.Type == RubyRequestType:TLBI_EXT_SYNC_COMP) {
+          assert(is_valid(tbe));
+          // Trigger the relevant event on the TBE for this ID
+          trigger(Event:DvmSync_ExternCompleted,
+            in_msg.tlbiTransactionUid,  // "Address" equivalent
+            nullCacheEntry(), // no cache entry
+            tbe, // TBE exists already, the event should be invoked on it
+          );
+        } else {
+          // There shouldn't be a transaction with the same ID
+          assert(!is_valid(tbe));
+          // Allocate a new TBE
+          trigger(Event:AllocSeqDvmRequest,
+            in_msg.tlbiTransactionUid,  // "Address" equivalent
+            nullCacheEntry(), // no cache entry
+            nullTBE(), // TBE isn't allocated yet
+          );
+        }
+      } else {
+        trigger(Event:AllocSeqRequest, in_msg.LineAddress,
+                getCacheEntry(in_msg.LineAddress),
+                getCurrentActiveTBE(in_msg.LineAddress));
+      }
     }
   }
 }
@@ -386,6 +476,8 @@ void processNextState(Addr address, TBE tbe, CacheEntry cache_entry) {
     assert(tbe.pendAction != Event:null);
     enqueue(triggerOutPort, TriggerMsg, trigger_latency) {
       out_msg.addr := tbe.addr;
+      // TODO - put usesTxnId on the TBE?
+      out_msg.usesTxnId := tbe.is_dvm_tbe || tbe.is_dvm_snp_tbe;
       out_msg.from_hazard := tbe.is_req_hazard || tbe.is_repl_hazard;
     }
   }

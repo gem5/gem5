@@ -47,6 +47,20 @@ def format Inst(*opTypeSet) {{
      decode_block, exec_output) = blocks.makeList()
 }};
 
+def format Cpl0Inst(*opTypeSet) {{
+    blocks = specializeInst(Name, list(opTypeSet), EmulEnv())
+    (header_output, decoder_output,
+     decode_block, exec_output) = blocks.makeList()
+    decode_block = '''
+        if (emi.mode.cpl != 0) {
+            return new DecodeFaultInst("%(Name)s", emi,
+                    std::make_shared<GeneralProtection>(0));
+        } else {
+            %(decode_block)s
+        }
+    ''' % {'decode_block': decode_block, 'Name': Name}
+}};
+
 def format MultiInst(switchVal, *opTypeSets) {{
     switcher = {}
     for (count, opTypeSet) in zip(range(len(opTypeSets)), opTypeSets):

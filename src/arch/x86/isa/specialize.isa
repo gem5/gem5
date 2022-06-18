@@ -104,17 +104,22 @@ let {{
 
 let {{
     class OpType(object):
-        parser = re.compile(r"(?P<tag>[A-Z]+)(?P<size>[a-z]*)|(r(?P<reg>[A-Z0-9]+)(?P<rsize>[a-z]*))")
+        parser = re.compile(r"(?P<tag>[A-Z]+)(?P<size>[a-z]*)|"
+                             "(r(?P<reg>[A-Z0-9]+)(?P<rsize>[a-z]*))|"
+                             "(s(?P<seg>[A-Z0-9]+)(?P<ssize>[a-z]*))")
         def __init__(self, opTypeString):
             match = OpType.parser.search(opTypeString)
             if match == None:
                 raise Exception("Problem parsing operand type {}".format(
                     opTypeString))
             self.reg = match.group("reg")
+            self.seg = match.group("seg")
             self.tag = match.group("tag")
             self.size = match.group("size")
             if not self.size:
                 self.size = match.group("rsize")
+            if not self.size:
+                self.size = match.group("ssize")
 
     ModRMRegIndex = "(MODRM_REG | (REX_R << 3))"
     ModRMRMIndex = "(MODRM_RM | (REX_B << 3))"
@@ -137,15 +142,29 @@ let {{
                 #Figure out what to do with fixed register operands
                 #This is the index to use, so we should stick it some place.
                 if opType.reg in ("A", "B", "C", "D"):
-                    regString = "INTREG_R%sX" % opType.reg
+                    regString = "int_reg::R%sx" % opType.reg.lower()
                 else:
-                    regString = "INTREG_R%s" % opType.reg
+                    regString = "int_reg::R%s" % opType.reg.lower()
                 env.addReg(regString)
+                if env.regmUsed:
+                    regString = "env.regm"
+                else:
+                    regString = "env.reg"
                 env.addToDisassembly(
                     "printReg(out, RegId(IntRegClass, %s), regSize);\n" %
                     regString)
 
                 Name += "_R"
+
+            elif opType.seg:
+                env.addReg("segment_idx::%ss" % opType.seg)
+                if env.regmUsed:
+                    regString = "env.regm"
+                else:
+                    regString = "env.reg"
+                env.addToDisassembly("printSegment(out, %s);\n" % regString)
+
+                Name += "_S"
 
             elif opType.tag == "B":
                 # This refers to registers whose index is encoded as part of
@@ -256,12 +275,14 @@ let {{
                 if opType.tag == "X":
                     env.addToDisassembly(
                             '''printMem(out, env.seg,
-                                1, X86ISA::NUM_INTREGS, X86ISA::INTREG_RSI, 0,
+                                1, X86ISA::int_reg::NumRegs,
+                                X86ISA::int_reg::Rsi, 0,
                                 env.addressSize, false);''')
                 else:
                     env.addToDisassembly(
-                            '''printMem(out, SEGMENT_REG_ES,
-                                1, X86ISA::NUM_INTREGS, X86ISA::INTREG_RDI, 0,
+                            '''printMem(out, segment_idx::Es,
+                                1, X86ISA::int_reg::NumRegs,
+                                X86ISA::int_reg::Rdi, 0,
                                 env.addressSize, false);''')
                 Name += "_M"
             else:

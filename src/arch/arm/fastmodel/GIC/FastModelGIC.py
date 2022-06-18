@@ -41,6 +41,7 @@ from m5.SimObject import SimObject
 
 from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
 from m5.objects.Gic import BaseGic
+from m5.objects.IntPin import VectorIntSourcePin
 from m5.objects.SystemC import SystemC_ScModule
 
 GICV3_COMMS_TARGET_ROLE = 'GICV3 COMMS TARGET'
@@ -472,6 +473,8 @@ class FastModelGIC(BaseGic):
 
     redistributor = VectorGicv3CommsInitiatorSocket(
             'GIC communication initiator')
+
+    wake_request = VectorIntSourcePin('GIC wake request initiator')
 
     # Used for DTB autogeneration
     _state = FdtState(addr_cells=2, size_cells=2, interrupt_cells=3)

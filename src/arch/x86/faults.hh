@@ -70,7 +70,6 @@ class X86FaultBase : public FaultBase
     const char *name() const override { return faultName; }
     virtual bool isBenign() { return true; }
     virtual const char *mnemonic() const { return mnem; }
-    virtual bool isSoft() { return false; }
 
     void invoke(ThreadContext *tc, const StaticInstPtr &inst=
                 nullStaticInstPtr) override;
@@ -367,16 +366,6 @@ class StartupInterrupt : public X86Interrupt
 
     void invoke(ThreadContext *tc, const StaticInstPtr &inst=
                 nullStaticInstPtr) override;
-};
-
-class SoftwareInterrupt : public X86Interrupt
-{
-  public:
-    SoftwareInterrupt(uint8_t _vector) :
-        X86Interrupt("Software Interrupt", "#INTR", _vector)
-    {}
-
-    bool isSoft() override { return true; }
 };
 
 } // namespace X86ISA

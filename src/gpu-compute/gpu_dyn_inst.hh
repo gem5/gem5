@@ -476,11 +476,16 @@ class GPUDynInst : public GPUExecContext
 
     // inst used to save/restore a wavefront context
     bool isSaveRestore;
+
+    bool isSystemReq() { return systemReq; }
+    void setSystemReq() { systemReq = true; }
+
   private:
     GPUStaticInst *_staticInst;
     const InstSeqNum _seqNum;
     int maxSrcVecRegOpSize;
     int maxSrcScalarRegOpSize;
+    bool systemReq = false;
 
     // the time the request was started
     Tick accessTime = -1;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013,2017-2020 ARM Limited
+ * Copyright (c) 2011-2013,2017-2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,6 +37,8 @@
 
 #include "arch/arm/insts/misc64.hh"
 #include "arch/arm/isa.hh"
+
+#include "arch/arm/tlbi_op.hh"
 
 namespace gem5
 {
@@ -886,6 +888,360 @@ RegNone::generateDisassembly(
     printMnemonic(ss);
     printIntReg(ss, dest);
     return ss.str();
+}
+
+void
+TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
+{
+    ThreadContext* tc = xc->tcBase();
+    auto isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+    auto release = isa->getRelease();
+
+    bool asid_16bits = ArmSystem::haveLargeAsid64(tc);
+
+    switch (dest_idx) {
+      // AArch64 TLB Invalidate All, EL3
+      case MISCREG_TLBI_ALLE3:
+        {
+            TLBIALLEL tlbiOp(EL3, true);
+            tlbiOp(tc);
+            return;
+        }
+      // AArch64 TLB Invalidate All, EL3, Inner Shareable
+      case MISCREG_TLBI_ALLE3IS:
+        {
+            TLBIALLEL tlbiOp(EL3, true);
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // AArch64 TLB Invalidate All, EL2
+      case MISCREG_TLBI_ALLE2:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIALLEL tlbiOp(EL2, secure);
+            tlbiOp(tc);
+            return;
+        }
+      // AArch64 TLB Invalidate All, EL2, Inner Shareable
+      case MISCREG_TLBI_ALLE2IS:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIALLEL tlbiOp(EL2, secure);
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // AArch64 TLB Invalidate All, EL1
+      case MISCREG_TLBI_ALLE1:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIALLEL tlbiOp(EL1, secure);
+            tlbiOp(tc);
+            return;
+        }
+      // AArch64 TLB Invalidate All, EL1, Inner Shareable
+      case MISCREG_TLBI_ALLE1IS:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIALLEL tlbiOp(EL1, secure);
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      case MISCREG_TLBI_VMALLS12E1:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIVMALL tlbiOp(EL1, secure, true);
+            tlbiOp(tc);
+            return;
+        }
+      case MISCREG_TLBI_VMALLE1:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            ExceptionLevel target_el = EL1;
+            if (EL2Enabled(tc)) {
+                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+                if (hcr.tge && hcr.e2h) {
+                    target_el = EL2;
+                }
+            }
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIVMALL tlbiOp(target_el, secure, false);
+            tlbiOp(tc);
+            return;
+        }
+      case MISCREG_TLBI_VMALLS12E1IS:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIVMALL tlbiOp(EL1, secure, true);
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      case MISCREG_TLBI_VMALLE1IS:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            ExceptionLevel target_el = EL1;
+            if (EL2Enabled(tc)) {
+                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+                if (hcr.tge && hcr.e2h) {
+                    target_el = EL2;
+                }
+            }
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIVMALL tlbiOp(target_el, secure, false);
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // VAEx(IS) and VALEx(IS) are the same because TLBs
+      // only store entries
+      // from the last level of translation table walks
+      // AArch64 TLB Invalidate by VA, EL3
+      case MISCREG_TLBI_VAE3_Xt:
+      case MISCREG_TLBI_VALE3_Xt:
+        {
+
+            TLBIMVAA tlbiOp(EL3, true,
+                            static_cast<Addr>(bits(value, 43, 0)) << 12);
+            tlbiOp(tc);
+            return;
+        }
+      // AArch64 TLB Invalidate by VA, EL3, Inner Shareable
+      case MISCREG_TLBI_VAE3IS_Xt:
+      case MISCREG_TLBI_VALE3IS_Xt:
+        {
+            TLBIMVAA tlbiOp(EL3, true,
+                            static_cast<Addr>(bits(value, 43, 0)) << 12);
+
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // AArch64 TLB Invalidate by VA, EL2
+      case MISCREG_TLBI_VAE2_Xt:
+      case MISCREG_TLBI_VALE2_Xt:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+
+            if (hcr.e2h) {
+                // The asid will only be used when e2h == 1
+                auto asid = asid_16bits ? bits(value, 63, 48) :
+                                          bits(value, 55, 48);
+
+                TLBIMVA tlbiOp(EL2, secure,
+                               static_cast<Addr>(bits(value, 43, 0)) << 12,
+                               asid);
+                tlbiOp(tc);
+            } else {
+                TLBIMVAA tlbiOp(EL2, secure,
+                                static_cast<Addr>(bits(value, 43, 0)) << 12);
+                tlbiOp(tc);
+            }
+            return;
+        }
+      // AArch64 TLB Invalidate by VA, EL2, Inner Shareable
+      case MISCREG_TLBI_VAE2IS_Xt:
+      case MISCREG_TLBI_VALE2IS_Xt:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+
+            if (hcr.e2h) {
+                // The asid will only be used when e2h == 1
+                auto asid = asid_16bits ? bits(value, 63, 48) :
+                                          bits(value, 55, 48);
+
+                TLBIMVA tlbiOp(EL2, secure,
+                               static_cast<Addr>(bits(value, 43, 0)) << 12,
+                               asid);
+                tlbiOp.broadcast(tc);
+            } else {
+                TLBIMVAA tlbiOp(EL2, secure,
+                                static_cast<Addr>(bits(value, 43, 0)) << 12);
+                tlbiOp.broadcast(tc);
+            }
+            return;
+        }
+      // AArch64 TLB Invalidate by VA, EL1
+      case MISCREG_TLBI_VAE1_Xt:
+      case MISCREG_TLBI_VALE1_Xt:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            auto asid = asid_16bits ? bits(value, 63, 48) :
+                                      bits(value, 55, 48);
+
+            ExceptionLevel target_el = EL1;
+            if (EL2Enabled(tc)) {
+                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+                if (hcr.tge && hcr.e2h) {
+                    target_el = EL2;
+                }
+            }
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIMVA tlbiOp(target_el, secure,
+                           static_cast<Addr>(bits(value, 43, 0)) << 12,
+                           asid);
+
+            tlbiOp(tc);
+            return;
+        }
+      // AArch64 TLB Invalidate by VA, EL1, Inner Shareable
+      case MISCREG_TLBI_VAE1IS_Xt:
+      case MISCREG_TLBI_VALE1IS_Xt:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            auto asid = asid_16bits ? bits(value, 63, 48) :
+                                      bits(value, 55, 48);
+
+            ExceptionLevel target_el = EL1;
+            if (EL2Enabled(tc)) {
+                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+                if (hcr.tge && hcr.e2h) {
+                    target_el = EL2;
+                }
+            }
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIMVA tlbiOp(target_el, secure,
+                            static_cast<Addr>(bits(value, 43, 0)) << 12,
+                            asid);
+
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // AArch64 TLB Invalidate by ASID, EL1
+      case MISCREG_TLBI_ASIDE1_Xt:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            auto asid = asid_16bits ? bits(value, 63, 48) :
+                                      bits(value, 55, 48);
+
+            ExceptionLevel target_el = EL1;
+            if (EL2Enabled(tc)) {
+                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+                if (hcr.tge && hcr.e2h) {
+                    target_el = EL2;
+                }
+            }
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIASID tlbiOp(target_el, secure, asid);
+            tlbiOp(tc);
+            return;
+        }
+      // AArch64 TLB Invalidate by ASID, EL1, Inner Shareable
+      case MISCREG_TLBI_ASIDE1IS_Xt:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            auto asid = asid_16bits ? bits(value, 63, 48) :
+                                      bits(value, 55, 48);
+
+            ExceptionLevel target_el = EL1;
+            if (EL2Enabled(tc)) {
+                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+                if (hcr.tge && hcr.e2h) {
+                    target_el = EL2;
+                }
+            }
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIASID tlbiOp(target_el, secure, asid);
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // VAAE1(IS) and VAALE1(IS) are the same because TLBs only store
+      // entries from the last level of translation table walks
+      // AArch64 TLB Invalidate by VA, All ASID, EL1
+      case MISCREG_TLBI_VAAE1_Xt:
+      case MISCREG_TLBI_VAALE1_Xt:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            ExceptionLevel target_el = EL1;
+            if (EL2Enabled(tc)) {
+                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+                if (hcr.tge && hcr.e2h) {
+                    target_el = EL2;
+                }
+            }
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIMVAA tlbiOp(target_el, secure,
+                static_cast<Addr>(bits(value, 43, 0)) << 12);
+
+            tlbiOp(tc);
+            return;
+        }
+      // AArch64 TLB Invalidate by VA, All ASID, EL1, Inner Shareable
+      case MISCREG_TLBI_VAAE1IS_Xt:
+      case MISCREG_TLBI_VAALE1IS_Xt:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            ExceptionLevel target_el = EL1;
+            if (EL2Enabled(tc)) {
+                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+                if (hcr.tge && hcr.e2h) {
+                    target_el = EL2;
+                }
+            }
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIMVAA tlbiOp(target_el, secure,
+                static_cast<Addr>(bits(value, 43, 0)) << 12);
+
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // AArch64 TLB Invalidate by Intermediate Physical Address,
+      // Stage 2, EL1
+      case MISCREG_TLBI_IPAS2E1_Xt:
+      case MISCREG_TLBI_IPAS2LE1_Xt:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIIPA tlbiOp(EL1, secure,
+                           static_cast<Addr>(bits(value, 35, 0)) << 12);
+
+            tlbiOp(tc);
+            return;
+        }
+      // AArch64 TLB Invalidate by Intermediate Physical Address,
+      // Stage 2, EL1, Inner Shareable
+      case MISCREG_TLBI_IPAS2E1IS_Xt:
+      case MISCREG_TLBI_IPAS2LE1IS_Xt:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIIPA tlbiOp(EL1, secure,
+                           static_cast<Addr>(bits(value, 35, 0)) << 12);
+
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      default:
+        panic("Invalid TLBI\n");
+    }
 }
 
 } // namespace gem5

@@ -112,7 +112,7 @@ RemoteGDB::gdbRegs()
     }
 
     // If that didn't work, decide based on the current mode of the context.
-    HandyM5Reg m5reg = context()->readMiscRegNoEffect(MISCREG_M5_REG);
+    HandyM5Reg m5reg = context()->readMiscRegNoEffect(misc_reg::M5Reg);
     if (m5reg.submode == SixtyFourBitMode)
         return &regCache64;
     else
@@ -125,87 +125,87 @@ void
 RemoteGDB::AMD64GdbRegCache::getRegs(ThreadContext *context)
 {
     DPRINTF(GDBAcc, "getRegs in remotegdb \n");
-    r.rax = context->readIntReg(INTREG_RAX);
-    r.rbx = context->readIntReg(INTREG_RBX);
-    r.rcx = context->readIntReg(INTREG_RCX);
-    r.rdx = context->readIntReg(INTREG_RDX);
-    r.rsi = context->readIntReg(INTREG_RSI);
-    r.rdi = context->readIntReg(INTREG_RDI);
-    r.rbp = context->readIntReg(INTREG_RBP);
-    r.rsp = context->readIntReg(INTREG_RSP);
-    r.r8 = context->readIntReg(INTREG_R8);
-    r.r9 = context->readIntReg(INTREG_R9);
-    r.r10 = context->readIntReg(INTREG_R10);
-    r.r11 = context->readIntReg(INTREG_R11);
-    r.r12 = context->readIntReg(INTREG_R12);
-    r.r13 = context->readIntReg(INTREG_R13);
-    r.r14 = context->readIntReg(INTREG_R14);
-    r.r15 = context->readIntReg(INTREG_R15);
+    r.rax = context->getReg(int_reg::Rax);
+    r.rbx = context->getReg(int_reg::Rbx);
+    r.rcx = context->getReg(int_reg::Rcx);
+    r.rdx = context->getReg(int_reg::Rdx);
+    r.rsi = context->getReg(int_reg::Rsi);
+    r.rdi = context->getReg(int_reg::Rdi);
+    r.rbp = context->getReg(int_reg::Rbp);
+    r.rsp = context->getReg(int_reg::Rsp);
+    r.r8 = context->getReg(int_reg::R8);
+    r.r9 = context->getReg(int_reg::R9);
+    r.r10 = context->getReg(int_reg::R10);
+    r.r11 = context->getReg(int_reg::R11);
+    r.r12 = context->getReg(int_reg::R12);
+    r.r13 = context->getReg(int_reg::R13);
+    r.r14 = context->getReg(int_reg::R14);
+    r.r15 = context->getReg(int_reg::R15);
     r.rip = context->pcState().instAddr();
-    r.eflags = context->readMiscRegNoEffect(MISCREG_RFLAGS);
-    r.cs = context->readMiscRegNoEffect(MISCREG_CS);
-    r.ss = context->readMiscRegNoEffect(MISCREG_SS);
-    r.ds = context->readMiscRegNoEffect(MISCREG_DS);
-    r.es = context->readMiscRegNoEffect(MISCREG_ES);
-    r.fs = context->readMiscRegNoEffect(MISCREG_FS);
-    r.gs = context->readMiscRegNoEffect(MISCREG_GS);
+    r.eflags = context->readMiscRegNoEffect(misc_reg::Rflags);
+    r.cs = context->readMiscRegNoEffect(misc_reg::Cs);
+    r.ss = context->readMiscRegNoEffect(misc_reg::Ss);
+    r.ds = context->readMiscRegNoEffect(misc_reg::Ds);
+    r.es = context->readMiscRegNoEffect(misc_reg::Es);
+    r.fs = context->readMiscRegNoEffect(misc_reg::Fs);
+    r.gs = context->readMiscRegNoEffect(misc_reg::Gs);
 }
 
 void
 RemoteGDB::X86GdbRegCache::getRegs(ThreadContext *context)
 {
     DPRINTF(GDBAcc, "getRegs in remotegdb \n");
-    r.eax = context->readIntReg(INTREG_RAX);
-    r.ecx = context->readIntReg(INTREG_RCX);
-    r.edx = context->readIntReg(INTREG_RDX);
-    r.ebx = context->readIntReg(INTREG_RBX);
-    r.esp = context->readIntReg(INTREG_RSP);
-    r.ebp = context->readIntReg(INTREG_RBP);
-    r.esi = context->readIntReg(INTREG_RSI);
-    r.edi = context->readIntReg(INTREG_RDI);
+    r.eax = context->getReg(int_reg::Rax);
+    r.ecx = context->getReg(int_reg::Rcx);
+    r.edx = context->getReg(int_reg::Rdx);
+    r.ebx = context->getReg(int_reg::Rbx);
+    r.esp = context->getReg(int_reg::Rsp);
+    r.ebp = context->getReg(int_reg::Rbp);
+    r.esi = context->getReg(int_reg::Rsi);
+    r.edi = context->getReg(int_reg::Rdi);
     r.eip = context->pcState().instAddr();
-    r.eflags = context->readMiscRegNoEffect(MISCREG_RFLAGS);
-    r.cs = context->readMiscRegNoEffect(MISCREG_CS);
-    r.ss = context->readMiscRegNoEffect(MISCREG_SS);
-    r.ds = context->readMiscRegNoEffect(MISCREG_DS);
-    r.es = context->readMiscRegNoEffect(MISCREG_ES);
-    r.fs = context->readMiscRegNoEffect(MISCREG_FS);
-    r.gs = context->readMiscRegNoEffect(MISCREG_GS);
+    r.eflags = context->readMiscRegNoEffect(misc_reg::Rflags);
+    r.cs = context->readMiscRegNoEffect(misc_reg::Cs);
+    r.ss = context->readMiscRegNoEffect(misc_reg::Ss);
+    r.ds = context->readMiscRegNoEffect(misc_reg::Ds);
+    r.es = context->readMiscRegNoEffect(misc_reg::Es);
+    r.fs = context->readMiscRegNoEffect(misc_reg::Fs);
+    r.gs = context->readMiscRegNoEffect(misc_reg::Gs);
 }
 
 void
 RemoteGDB::AMD64GdbRegCache::setRegs(ThreadContext *context) const
 {
     DPRINTF(GDBAcc, "setRegs in remotegdb \n");
-    context->setIntReg(INTREG_RAX, r.rax);
-    context->setIntReg(INTREG_RBX, r.rbx);
-    context->setIntReg(INTREG_RCX, r.rcx);
-    context->setIntReg(INTREG_RDX, r.rdx);
-    context->setIntReg(INTREG_RSI, r.rsi);
-    context->setIntReg(INTREG_RDI, r.rdi);
-    context->setIntReg(INTREG_RBP, r.rbp);
-    context->setIntReg(INTREG_RSP, r.rsp);
-    context->setIntReg(INTREG_R8, r.r8);
-    context->setIntReg(INTREG_R9, r.r9);
-    context->setIntReg(INTREG_R10, r.r10);
-    context->setIntReg(INTREG_R11, r.r11);
-    context->setIntReg(INTREG_R12, r.r12);
-    context->setIntReg(INTREG_R13, r.r13);
-    context->setIntReg(INTREG_R14, r.r14);
-    context->setIntReg(INTREG_R15, r.r15);
+    context->setReg(int_reg::Rax, r.rax);
+    context->setReg(int_reg::Rbx, r.rbx);
+    context->setReg(int_reg::Rcx, r.rcx);
+    context->setReg(int_reg::Rdx, r.rdx);
+    context->setReg(int_reg::Rsi, r.rsi);
+    context->setReg(int_reg::Rdi, r.rdi);
+    context->setReg(int_reg::Rbp, r.rbp);
+    context->setReg(int_reg::Rsp, r.rsp);
+    context->setReg(int_reg::R8, r.r8);
+    context->setReg(int_reg::R9, r.r9);
+    context->setReg(int_reg::R10, r.r10);
+    context->setReg(int_reg::R11, r.r11);
+    context->setReg(int_reg::R12, r.r12);
+    context->setReg(int_reg::R13, r.r13);
+    context->setReg(int_reg::R14, r.r14);
+    context->setReg(int_reg::R15, r.r15);
     context->pcState(r.rip);
-    context->setMiscReg(MISCREG_RFLAGS, r.eflags);
-    if (r.cs != context->readMiscRegNoEffect(MISCREG_CS))
+    context->setMiscReg(misc_reg::Rflags, r.eflags);
+    if (r.cs != context->readMiscRegNoEffect(misc_reg::Cs))
         warn("Remote gdb: Ignoring update to CS.\n");
-    if (r.ss != context->readMiscRegNoEffect(MISCREG_SS))
+    if (r.ss != context->readMiscRegNoEffect(misc_reg::Ss))
         warn("Remote gdb: Ignoring update to SS.\n");
-    if (r.ds != context->readMiscRegNoEffect(MISCREG_DS))
+    if (r.ds != context->readMiscRegNoEffect(misc_reg::Ds))
         warn("Remote gdb: Ignoring update to DS.\n");
-    if (r.es != context->readMiscRegNoEffect(MISCREG_ES))
+    if (r.es != context->readMiscRegNoEffect(misc_reg::Es))
         warn("Remote gdb: Ignoring update to ES.\n");
-    if (r.fs != context->readMiscRegNoEffect(MISCREG_FS))
+    if (r.fs != context->readMiscRegNoEffect(misc_reg::Fs))
         warn("Remote gdb: Ignoring update to FS.\n");
-    if (r.gs != context->readMiscRegNoEffect(MISCREG_GS))
+    if (r.gs != context->readMiscRegNoEffect(misc_reg::Gs))
         warn("Remote gdb: Ignoring update to GS.\n");
 }
 
@@ -213,27 +213,27 @@ void
 RemoteGDB::X86GdbRegCache::setRegs(ThreadContext *context) const
 {
     DPRINTF(GDBAcc, "setRegs in remotegdb \n");
-    context->setIntReg(INTREG_RAX, r.eax);
-    context->setIntReg(INTREG_RCX, r.ecx);
-    context->setIntReg(INTREG_RDX, r.edx);
-    context->setIntReg(INTREG_RBX, r.ebx);
-    context->setIntReg(INTREG_RSP, r.esp);
-    context->setIntReg(INTREG_RBP, r.ebp);
-    context->setIntReg(INTREG_RSI, r.esi);
-    context->setIntReg(INTREG_RDI, r.edi);
+    context->setReg(int_reg::Rax, r.eax);
+    context->setReg(int_reg::Rcx, r.ecx);
+    context->setReg(int_reg::Rdx, r.edx);
+    context->setReg(int_reg::Rbx, r.ebx);
+    context->setReg(int_reg::Rsp, r.esp);
+    context->setReg(int_reg::Rbp, r.ebp);
+    context->setReg(int_reg::Rsi, r.esi);
+    context->setReg(int_reg::Rdi, r.edi);
     context->pcState(r.eip);
-    context->setMiscReg(MISCREG_RFLAGS, r.eflags);
-    if (r.cs != context->readMiscRegNoEffect(MISCREG_CS))
+    context->setMiscReg(misc_reg::Rflags, r.eflags);
+    if (r.cs != context->readMiscRegNoEffect(misc_reg::Cs))
         warn("Remote gdb: Ignoring update to CS.\n");
-    if (r.ss != context->readMiscRegNoEffect(MISCREG_SS))
+    if (r.ss != context->readMiscRegNoEffect(misc_reg::Ss))
         warn("Remote gdb: Ignoring update to SS.\n");
-    if (r.ds != context->readMiscRegNoEffect(MISCREG_DS))
+    if (r.ds != context->readMiscRegNoEffect(misc_reg::Ds))
         warn("Remote gdb: Ignoring update to DS.\n");
-    if (r.es != context->readMiscRegNoEffect(MISCREG_ES))
+    if (r.es != context->readMiscRegNoEffect(misc_reg::Es))
         warn("Remote gdb: Ignoring update to ES.\n");
-    if (r.fs != context->readMiscRegNoEffect(MISCREG_FS))
+    if (r.fs != context->readMiscRegNoEffect(misc_reg::Fs))
         warn("Remote gdb: Ignoring update to FS.\n");
-    if (r.gs != context->readMiscRegNoEffect(MISCREG_GS))
+    if (r.gs != context->readMiscRegNoEffect(misc_reg::Gs))
         warn("Remote gdb: Ignoring update to GS.\n");
 }
 

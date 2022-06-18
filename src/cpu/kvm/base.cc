@@ -64,14 +64,14 @@ namespace gem5
 
 BaseKvmCPU::BaseKvmCPU(const BaseKvmCPUParams &params)
     : BaseCPU(params),
-      vm(*params.system->getKvmVM()),
+      vm(nullptr),
       _status(Idle),
       dataPort(name() + ".dcache_port", this),
       instPort(name() + ".icache_port", this),
       alwaysSyncTC(params.alwaysSyncTC),
       threadContextDirty(true),
       kvmStateDirty(false),
-      vcpuID(vm.allocVCPUID()), vcpuFD(-1), vcpuMMapSize(0),
+      vcpuID(-1), vcpuFD(-1), vcpuMMapSize(0),
       _kvmRun(NULL), mmioRing(NULL),
       pageSize(sysconf(_SC_PAGE_SIZE)),
       tickEvent([this]{ tick(); }, "BaseKvmCPU tick",
@@ -108,6 +108,8 @@ BaseKvmCPU::~BaseKvmCPU()
 void
 BaseKvmCPU::init()
 {
+    vm = system->getKvmVM();
+    vcpuID = vm->allocVCPUID();
     BaseCPU::init();
     fatal_if(numThreads != 1, "KVM: Multithreading not supported");
 }
@@ -118,19 +120,19 @@ BaseKvmCPU::startup()
     const BaseKvmCPUParams &p =
         dynamic_cast<const BaseKvmCPUParams &>(params());
 
-    Kvm &kvm(*vm.kvm);
+    Kvm &kvm = *vm->kvm;
 
     BaseCPU::startup();
 
     assert(vcpuFD == -1);
 
     // Tell the VM that a CPU is about to start.
-    vm.cpuStartup();
+    vm->cpuStartup();
 
     // We can't initialize KVM CPUs in BaseKvmCPU::init() since we are
     // not guaranteed that the parent KVM VM has initialized at that
     // point. Initialize virtual CPUs here instead.
-    vcpuFD = vm.createVCPU(vcpuID);
+    vcpuFD = vm->createVCPU(vcpuID);
 
     // Map the KVM run structure
     vcpuMMapSize = kvm.getVCPUMMapSize();

@@ -68,7 +68,7 @@
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/timebuf.hh"
-#include "params/O3CPU.hh"
+#include "params/BaseO3CPU.hh"
 #include "sim/process.hh"
 
 namespace gem5
@@ -169,7 +169,7 @@ class CPU : public BaseCPU
 
   public:
     /** Constructs a CPU with the given parameters. */
-    CPU(const O3CPUParams &params);
+    CPU(const BaseO3CPUParams &params);
 
     ProbePointArg<PacketPtr> *ppInstAccessComplete;
     ProbePointArg<std::pair<DynInstPtr, PacketPtr> > *ppDataAccessComplete;
@@ -311,78 +311,25 @@ class CPU : public BaseCPU
      */
     void setMiscReg(int misc_reg, RegVal val, ThreadID tid);
 
-    RegVal readIntReg(PhysRegIdPtr phys_reg);
+    RegVal getReg(PhysRegIdPtr phys_reg);
+    void getReg(PhysRegIdPtr phys_reg, void *val);
+    void *getWritableReg(PhysRegIdPtr phys_reg);
 
-    RegVal readFloatReg(PhysRegIdPtr phys_reg);
-
-    const TheISA::VecRegContainer& readVecReg(PhysRegIdPtr reg_idx) const;
-
-    /**
-     * Read physical vector register for modification.
-     */
-    TheISA::VecRegContainer& getWritableVecReg(PhysRegIdPtr reg_idx);
-
-    RegVal readVecElem(PhysRegIdPtr reg_idx) const;
-
-    const TheISA::VecPredRegContainer&
-        readVecPredReg(PhysRegIdPtr reg_idx) const;
-
-    TheISA::VecPredRegContainer& getWritableVecPredReg(PhysRegIdPtr reg_idx);
-
-    RegVal readCCReg(PhysRegIdPtr phys_reg);
-
-    void setIntReg(PhysRegIdPtr phys_reg, RegVal val);
-
-    void setFloatReg(PhysRegIdPtr phys_reg, RegVal val);
-
-    void setVecReg(PhysRegIdPtr reg_idx, const TheISA::VecRegContainer& val);
-
-    void setVecElem(PhysRegIdPtr reg_idx, RegVal val);
-
-    void setVecPredReg(PhysRegIdPtr reg_idx,
-            const TheISA::VecPredRegContainer& val);
-
-    void setCCReg(PhysRegIdPtr phys_reg, RegVal val);
-
-    RegVal readArchIntReg(int reg_idx, ThreadID tid);
-
-    RegVal readArchFloatReg(int reg_idx, ThreadID tid);
-
-    const TheISA::VecRegContainer&
-        readArchVecReg(int reg_idx, ThreadID tid) const;
-    /** Read architectural vector register for modification. */
-    TheISA::VecRegContainer& getWritableArchVecReg(int reg_idx, ThreadID tid);
-
-    RegVal readArchVecElem(const RegIndex& reg_idx,
-            const ElemIndex& ldx, ThreadID tid) const;
-
-    const TheISA::VecPredRegContainer& readArchVecPredReg(
-            int reg_idx, ThreadID tid) const;
-
-    TheISA::VecPredRegContainer&
-        getWritableArchVecPredReg(int reg_idx, ThreadID tid);
-
-    RegVal readArchCCReg(int reg_idx, ThreadID tid);
+    void setReg(PhysRegIdPtr phys_reg, RegVal val);
+    void setReg(PhysRegIdPtr phys_reg, const void *val);
 
     /** Architectural register accessors.  Looks up in the commit
      * rename table to obtain the true physical index of the
      * architected register first, then accesses that physical
      * register.
      */
-    void setArchIntReg(int reg_idx, RegVal val, ThreadID tid);
 
-    void setArchFloatReg(int reg_idx, RegVal val, ThreadID tid);
+    RegVal getArchReg(const RegId &reg, ThreadID tid);
+    void getArchReg(const RegId &reg, void *val, ThreadID tid);
+    void *getWritableArchReg(const RegId &reg, ThreadID tid);
 
-    void setArchVecPredReg(int reg_idx, const TheISA::VecPredRegContainer& val,
-                           ThreadID tid);
-
-    void setArchVecReg(int reg_idx, const TheISA::VecRegContainer& val,
-            ThreadID tid);
-
-    void setArchVecElem(const RegIndex& reg_idx, const ElemIndex& ldx,
-                        RegVal val, ThreadID tid);
-
-    void setArchCCReg(int reg_idx, RegVal val, ThreadID tid);
+    void setArchReg(const RegId &reg, RegVal val, ThreadID tid);
+    void setArchReg(const RegId &reg, const void *val, ThreadID tid);
 
     /** Sets the commit PC state of a specific thread. */
     void pcState(const PCStateBase &new_pc_state, ThreadID tid);

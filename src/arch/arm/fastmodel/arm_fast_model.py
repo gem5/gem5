@@ -42,20 +42,8 @@ def set_armlmd_license_file(force=False):
 # 7.6 of the Fast Models User Guide.
 
 def scx_initialize(id):
-    # Change our working directory to where the simulation engine library
-    # is so that the fast model code can find it. It looks in the binary
-    # directory and in the current working directory, and we can change
-    # the later. This avoids having to make copies of that library all
-    # over the place.
-    cwd = os.getcwd()
-    os.chdir(os.path.join(buildEnv['PVLIB_HOME'], 'lib',
-                          buildEnv['PVLIB_FLAVOR']))
-
     # Actually run scx_initialize.
     _m5.arm_fast_model.scx_initialize(id)
-
-    # Restore the previous working directory.
-    os.chdir(cwd)
 
 def scx_load_application(instance, application):
     _m5.arm_fast_model.scx_load_application(instance, application)

@@ -63,7 +63,7 @@ The following are steps to compile gem5 in Python 3 environment,
 *Step 1*: ensure Python 3 is installed. On Ubuntu like systems, you can try \
 this command:
 
-    sudo apt-get install python3 python3-six python-is-python3 python3-pydot
+    sudo apt-get install python3 python-is-python3 python3-pydot
 
 To run Python 3 from a container, you can try the Docker files in \
 util/dockerfiles folder.

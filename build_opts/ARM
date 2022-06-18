@@ -1,3 +1,2 @@
 TARGET_ISA = 'arm'
-CPU_MODELS = 'AtomicSimpleCPU,TimingSimpleCPU,O3CPU,MinorCPU'
 PROTOCOL = 'CHI'

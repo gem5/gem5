@@ -755,45 +755,39 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
         switch (it->type) {
           case REG_R:
           case REG_X:
-            values.push_back(thread->readIntReg(it->index));
+            values.push_back(thread->getReg(RegId(IntRegClass, it->index)));
             break;
           case REG_S:
             if (instRecord.isetstate == ISET_A64) {
-                const ArmISA::VecRegContainer& vc = thread->readVecReg(
-                    RegId(VecRegClass, it->index));
+                ArmISA::VecRegContainer vc;
+                thread->getReg(RegId(VecRegClass, it->index), &vc);
                 auto vv = vc.as<uint32_t>();
                 values.push_back(vv[0]);
             } else {
-                const VecElem elem = thread->readVecElem(
-                    RegId(VecElemClass,
-                        it->index / NumVecElemPerNeonVecReg,
-                        it->index % NumVecElemPerNeonVecReg));
+                const VecElem elem = thread->getReg(
+                    RegId(VecElemClass, it->index));
                 values.push_back(elem);
             }
             break;
           case REG_D:
             if (instRecord.isetstate == ISET_A64) {
-                const ArmISA::VecRegContainer& vc = thread->readVecReg(
-                    RegId(VecRegClass, it->index));
+                ArmISA::VecRegContainer vc;
+                thread->getReg(RegId(VecRegClass, it->index), &vc);
                 auto vv = vc.as<uint64_t>();
                 values.push_back(vv[0]);
             } else {
-                const VecElem w0 = thread->readVecElem(
-                    RegId(VecElemClass,
-                        it->index / NumVecElemPerNeonVecReg,
-                        it->index % NumVecElemPerNeonVecReg));
-                const VecElem w1 = thread->readVecElem(
-                    RegId(VecElemClass,
-                        (it->index + 1) / NumVecElemPerNeonVecReg,
-                        (it->index + 1) % NumVecElemPerNeonVecReg));
+                const VecElem w0 = thread->getReg(
+                    RegId(VecElemClass, it->index));
+                const VecElem w1 = thread->getReg(
+                    RegId(VecElemClass, it->index + 1));
 
                 values.push_back((uint64_t)(w1) << 32 | w0);
             }
             break;
           case REG_P:
             {
-                const ArmISA::VecPredRegContainer& pc =
-                    thread->readVecPredReg(RegId(VecPredRegClass, it->index));
+                ArmISA::VecPredRegContainer pc;
+                thread->getReg(RegId(VecPredRegClass, it->index), &pc);
                 auto pv = pc.as<uint8_t>();
                 uint64_t p = 0;
                 for (int i = maxVectorLength * 8; i > 0; ) {
@@ -804,28 +798,20 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
             break;
           case REG_Q:
             if (instRecord.isetstate == ISET_A64) {
-                const ArmISA::VecRegContainer& vc = thread->readVecReg(
-                    RegId(VecRegClass, it->index));
+                ArmISA::VecRegContainer vc;
+                thread->getReg(RegId(VecRegClass, it->index), &vc);
                 auto vv = vc.as<uint64_t>();
                 values.push_back(vv[0]);
                 values.push_back(vv[1]);
             } else {
-                const VecElem w0 = thread->readVecElem(
-                    RegId(VecElemClass,
-                        it->index / NumVecElemPerNeonVecReg,
-                        it->index % NumVecElemPerNeonVecReg));
-                const VecElem w1 = thread->readVecElem(
-                    RegId(VecElemClass,
-                        (it->index + 1) / NumVecElemPerNeonVecReg,
-                        (it->index + 1) % NumVecElemPerNeonVecReg));
-                const VecElem w2 = thread->readVecElem(
-                    RegId(VecElemClass,
-                        (it->index + 2) / NumVecElemPerNeonVecReg,
-                        (it->index + 2) % NumVecElemPerNeonVecReg));
-                const VecElem w3 = thread->readVecElem(
-                    RegId(VecElemClass,
-                        (it->index + 3) / NumVecElemPerNeonVecReg,
-                        (it->index + 3) % NumVecElemPerNeonVecReg));
+                const VecElem w0 = thread->getReg(
+                    RegId(VecElemClass, it->index));
+                const VecElem w1 = thread->getReg(
+                    RegId(VecElemClass, it->index + 1));
+                const VecElem w2 = thread->getReg(
+                    RegId(VecElemClass, it->index + 2));
+                const VecElem w3 = thread->getReg(
+                    RegId(VecElemClass, it->index + 3));
 
                 values.push_back((uint64_t)(w1) << 32 | w0);
                 values.push_back((uint64_t)(w3) << 32 | w2);
@@ -834,8 +820,8 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
           case REG_Z:
             {
                 int8_t i = maxVectorLength;
-                const ArmISA::VecRegContainer& vc = thread->readVecReg(
-                    RegId(VecRegClass, it->index));
+                ArmISA::VecRegContainer vc;
+                thread->getReg(RegId(VecRegClass, it->index), &vc);
                 auto vv = vc.as<uint64_t>();
                 while (i > 0) {
                     values.push_back(vv[--i]);
@@ -846,16 +832,16 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
             if (it->index == MISCREG_CPSR) {
                 // Read condition codes from aliased integer regs
                 CPSR cpsr = thread->readMiscRegNoEffect(it->index);
-                cpsr.nz = thread->readCCReg(CCREG_NZ);
-                cpsr.c = thread->readCCReg(CCREG_C);
-                cpsr.v = thread->readCCReg(CCREG_V);
-                cpsr.ge = thread->readCCReg(CCREG_GE);
+                cpsr.nz = thread->getReg(cc_reg::Nz);
+                cpsr.c = thread->getReg(cc_reg::C);
+                cpsr.v = thread->getReg(cc_reg::V);
+                cpsr.ge = thread->getReg(cc_reg::Ge);
                 values.push_back(cpsr);
             } else if (it->index == MISCREG_NZCV) {
                 CPSR cpsr = 0;
-                cpsr.nz = thread->readCCReg(CCREG_NZ);
-                cpsr.c = thread->readCCReg(CCREG_C);
-                cpsr.v = thread->readCCReg(CCREG_V);
+                cpsr.nz = thread->getReg(cc_reg::Nz);
+                cpsr.c = thread->getReg(cc_reg::C);
+                cpsr.v = thread->getReg(cc_reg::V);
                 values.push_back(cpsr);
             } else if (it->index == MISCREG_FPCR) {
                 // Read FPSCR and extract FPCR value
@@ -1153,25 +1139,25 @@ TarmacParserRecord::advanceTrace()
             int base_index = atoi(&buf[1]);
             char* pch = strchr(buf, '_');
             if (pch == NULL) {
-                regRecord.index = INTREG_USR(base_index);
+                regRecord.index = int_reg::usr(base_index);
             } else {
                 ++pch;
                 if (strncmp(pch, "usr", 3) == 0)
-                    regRecord.index = INTREG_USR(base_index);
+                    regRecord.index = int_reg::usr(base_index);
                 else if (strncmp(pch, "fiq", 3) == 0)
-                    regRecord.index = INTREG_FIQ(base_index);
+                    regRecord.index = int_reg::fiq(base_index);
                 else if (strncmp(pch, "irq", 3) == 0)
-                    regRecord.index = INTREG_IRQ(base_index);
+                    regRecord.index = int_reg::irq(base_index);
                 else if (strncmp(pch, "svc", 3) == 0)
-                    regRecord.index = INTREG_SVC(base_index);
+                    regRecord.index = int_reg::svc(base_index);
                 else if (strncmp(pch, "mon", 3) == 0)
-                    regRecord.index = INTREG_MON(base_index);
+                    regRecord.index = int_reg::mon(base_index);
                 else if (strncmp(pch, "abt", 3) == 0)
-                    regRecord.index = INTREG_ABT(base_index);
+                    regRecord.index = int_reg::abt(base_index);
                 else if (strncmp(pch, "und", 3) == 0)
-                    regRecord.index = INTREG_UND(base_index);
+                    regRecord.index = int_reg::und(base_index);
                 else if (strncmp(pch, "hyp", 3) == 0)
-                    regRecord.index = INTREG_HYP(base_index);
+                    regRecord.index = int_reg::hyp(base_index);
             }
         } else if (std::tolower(buf[0]) == 'x' && isdigit(buf[1])) {
             // X register (A64)
@@ -1200,7 +1186,7 @@ TarmacParserRecord::advanceTrace()
         } else if (strncmp(buf, "SP_EL", 5) == 0) {
             // A64 stack pointer
             regRecord.type = REG_X;
-            regRecord.index = INTREG_SP0 + atoi(&buf[5]);
+            regRecord.index = int_reg::Sp0 + atoi(&buf[5]);
         } else if (miscRegMap.count(buf)) {
             // Misc. register
             regRecord.type = REG_MISC;

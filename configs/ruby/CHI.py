@@ -43,6 +43,7 @@ def define_options(parser):
                         default=None,
                         help="NoC config. parameters and bindings. "
                            "Required for CustomMesh topology")
+    parser.add_argument("--enable-dvm", default=False, action="store_true")
 
 def read_config_file(file):
     ''' Read file as a module and return it '''
@@ -65,6 +66,13 @@ def create_system(options, full_system, system, dma_ports, bootmem,
     if options.num_l3caches < 1:
         m5.fatal('--num-l3caches must be at least 1')
 
+    if full_system and options.enable_dvm:
+        if len(cpus) <= 1:
+            m5.fatal("--enable-dvm can't be used with a single CPU")
+        for cpu in cpus:
+            for decoder in cpu.decoder:
+                decoder.dvm_enabled = True
+
     # read specialized classes from config file if provided
     if options.chi_config:
         chi_defs = read_config_file(options.chi_config)
@@ -79,6 +87,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
     # Node types
     CHI_RNF = chi_defs.CHI_RNF
     CHI_HNF = chi_defs.CHI_HNF
+    CHI_MN = chi_defs.CHI_MN
     CHI_SNF_MainMem = chi_defs.CHI_SNF_MainMem
     CHI_SNF_BootMem = chi_defs.CHI_SNF_BootMem
     CHI_RNI_DMA = chi_defs.CHI_RNI_DMA
@@ -140,6 +149,14 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         network_nodes.append(rnf)
         network_cntrls.extend(rnf.getNetworkSideControllers())
 
+    # Creates one Misc Node
+    ruby_system.mn = [ CHI_MN(ruby_system, [cpu.l1d for cpu in cpus]) ]
+    for mn in ruby_system.mn:
+        all_cntrls.extend(mn.getAllControllers())
+        network_nodes.append(mn)
+        network_cntrls.extend(mn.getNetworkSideControllers())
+        assert(mn.getAllControllers() == mn.getNetworkSideControllers())
+
     # Look for other memories
     other_memories = []
     if bootmem:
@@ -156,8 +173,9 @@ def create_system(options, full_system, system, dma_ports, bootmem,
     for m in other_memories:
         sysranges.append(m.range)
 
+    hnf_list = [i for i in range(options.num_l3caches)]
     CHI_HNF.createAddrRanges(sysranges, system.cache_line_size.value,
-                             options.num_l3caches)
+                             hnf_list)
     ruby_system.hnf = [ CHI_HNF(i, ruby_system, HNFCache, None)
                         for i in range(options.num_l3caches) ]
 

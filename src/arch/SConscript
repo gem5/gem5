@@ -40,6 +40,7 @@
 
 import sys
 import os
+import os.path
 import re
 
 from gem5_scons import Transform
@@ -55,18 +56,18 @@ Import('*')
 #
 #################################################################
 
-env.TagImplies(env.subst('${TARGET_ISA} isa'), 'gem5 lib')
+env.TagImplies(env.subst('${CONF["TARGET_ISA"]} isa'), 'gem5 lib')
 
 env.SwitchingHeaders(
     Split('''
         isa.hh
         vecregs.hh
         '''),
-    env.subst('${TARGET_ISA}'))
+    env.subst('${CONF["TARGET_ISA"]}'))
 
 amdgpu_isa = ['gcn3', 'vega']
 
-if env['BUILD_GPU']:
+if env['CONF']['BUILD_GPU']:
     env.SwitchingHeaders(
         Split('''
             gpu_decoder.hh
@@ -74,8 +75,9 @@ if env['BUILD_GPU']:
             gpu_registers.hh
             gpu_types.hh
             '''),
-        '{}'.format('amdgpu/' if env['TARGET_GPU_ISA'] in amdgpu_isa else '')+
-        env.subst('${TARGET_GPU_ISA}'))
+        '{}'.format('amdgpu/' if
+            env['CONF']['TARGET_GPU_ISA'] in amdgpu_isa else '') +
+        env.subst('${CONF["TARGET_GPU_ISA"]}'))
 
 #################################################################
 #
@@ -103,8 +105,12 @@ SCons.Tool.SourceFileScanner.add_scanner('.cc.inc', SCons.Tool.CScanner)
 # Now create a Builder object that uses isa_parser.py to generate C++
 # output from the ISA description (*.isa) files.
 #
-
-parser_files = Glob('isa_parser/*.py')
+parser_files = []
+for root, dirnames, filenames in os.walk(Dir("isa_parser").srcnode().abspath):
+    for name in filenames:
+        _, ext = os.path.splitext(name)
+        if ext == '.py':
+            parser_files.append(os.path.join(root, name))
 micro_asm_py = File('micro_asm.py')
 
 # import ply here because SCons screws with sys.path when performing actions.
@@ -114,7 +120,7 @@ arch_dir = Dir('.')
 
 def run_parser(target, source, env):
     # Add the current directory to the system path so we can import files.
-    sys.path[0:0] = [ arch_dir.abspath ]
+    sys.path[0:0] = [ arch_dir.srcnode().abspath ]
     import isa_parser
 
     parser = isa_parser.ISAParser(target[0].dir.abspath)

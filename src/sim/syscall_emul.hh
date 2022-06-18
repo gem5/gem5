@@ -90,6 +90,7 @@
 #include "base/intmath.hh"
 #include "base/loader/object_file.hh"
 #include "base/logging.hh"
+#include "base/random.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
@@ -1672,6 +1673,7 @@ cloneFunc(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
     }
 
     if (flags & OS::TGT_CLONE_THREAD) {
+        cp->pTable->initState();
         cp->pTable->shared = true;
         cp->useForClone = true;
     }
@@ -3037,6 +3039,23 @@ ftruncateFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd,
 
     int result = ftruncate(sim_fd, length);
     return (result == -1) ? -errno : result;
+}
+
+template <typename OS>
+SyscallReturn
+getrandomFunc(SyscallDesc *desc, ThreadContext *tc,
+              VPtr<> buf_ptr, typename OS::size_t count,
+              unsigned int flags)
+{
+    SETranslatingPortProxy proxy(tc);
+
+    TypedBufferArg<uint8_t> buf(buf_ptr, count);
+    for (int i = 0; i < count; ++i) {
+        buf[i] = gem5::random_mt.random<uint8_t>();
+    }
+    buf.copyOut(proxy);
+
+    return count;
 }
 
 } // namespace gem5

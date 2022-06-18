@@ -33,6 +33,7 @@
 
 #include <limits>
 
+#include "arch/amdgpu/common/gpu_translation_state.hh"
 #include "arch/amdgpu/common/tlb.hh"
 #include "base/chunk_generator.hh"
 #include "debug/GPUAgentDisp.hh"
@@ -64,7 +65,7 @@ Shader::Shader(const Params &p) : ClockedObject(p),
     trace_vgpr_all(1), n_cu((p.CUs).size()), n_wf(p.n_wf),
     globalMemSize(p.globalmem),
     nextSchedCu(0), sa_n(0), gpuCmdProc(*p.gpu_cmd_proc),
-    _dispatcher(*p.dispatcher),
+    _dispatcher(*p.dispatcher), systemHub(p.system_hub),
     max_valu_insts(p.max_valu_insts), total_valu_insts(0),
     stats(this, p.CUs[0]->wfSize())
 {
@@ -520,6 +521,15 @@ Shader::notifyCuSleep() {
     _activeCus--;
     if (!_activeCus)
         stats.shaderActiveTicks += curTick() - _lastInactiveTick;
+}
+
+/**
+ * Forward the VRAM requestor ID needed for device memory from CP.
+ */
+RequestorID
+Shader::vramRequestorId()
+{
+    return gpuCmdProc.vramRequestorId();
 }
 
 Shader::ShaderStats::ShaderStats(statistics::Group *parent, int wf_size)

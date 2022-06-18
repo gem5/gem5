@@ -8,13 +8,12 @@ config "gcc"
     ADDITIONAL_COMPILER_SETTINGS = "-O3 -Wall -std=c++14 -Wno-deprecated -Wno-unused-function";
     ADDITIONAL_LINKER_SETTINGS = "-Wl,--no-undefined";
     BUILD_DIR = "./gcc";
-    COMPILER = "gcc-6.4";
+    COMPILER = "gcc-7.3";
     CONFIG_DESCRIPTION = "";
     CONFIG_NAME = "gcc";
     PLATFORM = "Linux64";
     PREPROCESSOR_DEFINES = "NDEBUG";
     SIMGEN_COMMAND_LINE = "--num-comps-file 50";
-    TARGET_MAXVIEW = "0";
     TARGET_SYSTEMC = "1";
     TARGET_SYSTEMC_AUTO = "1";
 

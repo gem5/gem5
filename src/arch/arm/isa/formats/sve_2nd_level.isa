@@ -43,9 +43,9 @@ namespace Aarch64
     StaticInstPtr
     decodeSveIntArithBinPred(ExtMachInst machInst)
     {
-        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
 
         switch (bits(machInst, 20, 19)) {
           case 0x0:
@@ -147,9 +147,9 @@ namespace Aarch64
     StaticInstPtr
     decodeSveIntReduc(ExtMachInst machInst)
     {
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
 
         uint8_t size = bits(machInst, 23, 22);
 
@@ -221,10 +221,10 @@ namespace Aarch64
     StaticInstPtr
     decodeSveIntMulAdd(ExtMachInst machInst)
     {
-        IntRegIndex zda = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zda = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
 
         uint8_t size = bits(machInst, 23, 22);
         uint8_t opc = (bits(machInst, 15) << 1) | bits(machInst, 13);
@@ -248,8 +248,8 @@ namespace Aarch64
     StaticInstPtr
     decodeSveShiftByImmPred0(ExtMachInst machInst)
     {
-        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
         uint8_t imm3 = (uint8_t) bits(machInst, 7, 5);
 
         uint8_t tsize = (bits(machInst, 23, 22) << 2) | bits(machInst, 9, 8);
@@ -304,9 +304,9 @@ namespace Aarch64
     StaticInstPtr
     decodeSveShiftByVectorPred(ExtMachInst machInst)
     {
-        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
         uint8_t size = bits(machInst, 23, 22);
         uint8_t opc = bits(machInst, 18, 16);
         switch (opc) {
@@ -335,9 +335,9 @@ namespace Aarch64
     StaticInstPtr
     decodeSveShiftByWideElemsPred(ExtMachInst machInst)
     {
-        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
         uint8_t size = bits(machInst, 23, 22);
         uint8_t opc = bits(machInst, 18, 16);
         switch (opc) {
@@ -373,9 +373,9 @@ namespace Aarch64
     StaticInstPtr
     decodeSveIntArithUnaryPred(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
         unsigned esize = bits(machInst, 23, 22);
         uint8_t opg = bits(machInst, 20, 19);
         uint8_t opc = bits(machInst, 18, 16);
@@ -451,9 +451,9 @@ namespace Aarch64
     StaticInstPtr
     decodeSveIntArithUnpred(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
         uint8_t opc = (uint8_t) bits(machInst, 12, 10);
         uint8_t size = (uint8_t) bits(machInst, 23, 22);
@@ -485,9 +485,9 @@ namespace Aarch64
     StaticInstPtr
     decodeSveIntLogUnpred(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
         uint8_t opc = (uint8_t) (bits(machInst, 23, 22) << 3
                 | bits(machInst, 12, 10));
 
@@ -508,7 +508,7 @@ namespace Aarch64
     StaticInstPtr
     decodeSveIndexGen(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
         uint8_t size = (uint8_t) bits(machInst, 23, 22);
         uint8_t grp = (uint8_t) bits(machInst, 11, 10);
 
@@ -536,7 +536,7 @@ namespace Aarch64
             case 1:
                 { // INDEX (scalar, immediate)
                     int8_t imm5 = sext<5>(bits(machInst, 20, 16));
-                    IntRegIndex zn = (IntRegIndex) (uint8_t) bits(
+                    RegIndex zn = (RegIndex) (uint8_t) bits(
                             machInst, 9, 5);
                     switch (size) {
                         case 0:
@@ -557,7 +557,7 @@ namespace Aarch64
             case 2:
                 { // INDEX (immediate, scalar)
                     int8_t imm5 = sext<5>(bits(machInst, 9, 5));
-                    IntRegIndex zm = (IntRegIndex) (uint8_t) bits(
+                    RegIndex zm = (RegIndex) (uint8_t) bits(
                             machInst, 20, 16);
                     switch (size) {
                         case 0:
@@ -577,9 +577,9 @@ namespace Aarch64
                 }
             case 3:
                 { // INDEX (scalars)
-                    IntRegIndex zn = (IntRegIndex) (uint8_t) bits(
+                    RegIndex zn = (RegIndex) (uint8_t) bits(
                             machInst, 9, 5);
-                    IntRegIndex zm = (IntRegIndex) (uint8_t) bits(
+                    RegIndex zm = (RegIndex) (uint8_t) bits(
                             machInst, 20, 16);
                     switch (size) {
                         case 0:
@@ -606,10 +606,10 @@ namespace Aarch64
         uint8_t b23_22 = bits(machInst, 23, 22);
         uint8_t b11 = bits(machInst, 11);
         if ((b23_22 & 0x2) == 0x0 && b11 == 0x0) {
-            IntRegIndex rd = makeSP(
-                (IntRegIndex) (uint8_t) bits(machInst, 4, 0));
-            IntRegIndex rn = makeSP(
-                (IntRegIndex) (uint8_t) bits(machInst, 20, 16));
+            RegIndex rd = makeSP(
+                (RegIndex) (uint8_t) bits(machInst, 4, 0));
+            RegIndex rn = makeSP(
+                (RegIndex) (uint8_t) bits(machInst, 20, 16));
             uint64_t imm = sext<6>(bits(machInst, 10, 5));
             if ((b23_22 & 0x1) == 0x0) {
                 return new AddvlXImm(machInst, rd, rn, imm);
@@ -617,7 +617,7 @@ namespace Aarch64
                 return new AddplXImm(machInst, rd, rn, imm);
             }
         } else if (b23_22 == 0x2 && b11 == 0x0) {
-            IntRegIndex rd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            RegIndex rd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
             uint64_t imm = sext<6>(bits(machInst, 10, 5));
             if (bits(machInst, 20, 16) == 0x1f) {
                 return new SveRdvl(machInst, rd, imm);
@@ -629,9 +629,9 @@ namespace Aarch64
     StaticInstPtr
     decodeSveShiftByWideElemsUnpred(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
         uint8_t size = bits(machInst, 23, 22);
         uint8_t opc = (uint8_t) bits(machInst, 11, 10);
         switch (opc) {
@@ -651,8 +651,8 @@ namespace Aarch64
     StaticInstPtr
     decodeSveShiftByImmUnpredB(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
         uint8_t imm3 = (uint8_t) bits(machInst, 18, 16);
 
         uint8_t tsize = (bits(machInst, 23, 22) << 2) | bits(machInst, 20, 19);
@@ -712,9 +712,9 @@ namespace Aarch64
     StaticInstPtr
     decodeSveCompVecAddr(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
         uint8_t mult = 1 << bits(machInst, 11, 10);
 
         uint8_t opc = bits(machInst, 23, 22);
@@ -739,8 +739,8 @@ namespace Aarch64
     StaticInstPtr
     decodeSveIntMiscUnpred(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
 
         uint8_t size = bits(machInst, 23, 22);
         uint8_t opc = bits(machInst, 11, 10);
@@ -751,7 +751,7 @@ namespace Aarch64
                 if (size == 0) {
                     break;
                 }
-                IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst,
+                RegIndex zm = (RegIndex) (uint8_t) bits(machInst,
                                                               20, 16);
                 return decodeSveBinUnpredF<SveFtssel>(
                     size, machInst, zd, zn, zm);
@@ -783,7 +783,7 @@ namespace Aarch64
         if (b13_12 == 0) {
             uint8_t pattern = (uint8_t) bits(machInst, 9, 5);
             uint8_t imm4 = (uint8_t) bits(machInst, 19, 16) + 1;
-            IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
             unsigned size = (unsigned) bits(machInst, 23, 22);
             if (opc20) {
                 if (opc11 == 0) {
@@ -817,7 +817,7 @@ namespace Aarch64
         } else if (b13_12 == 3) {
             uint8_t pattern = (uint8_t) bits(machInst, 9, 5);
             uint8_t imm4 = (uint8_t) bits(machInst, 19, 16) + 1;
-            IntRegIndex rdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            RegIndex rdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
             unsigned size = (unsigned) bits(machInst, 23, 22);
             switch (opc11_10) {
                 case 0:
@@ -856,7 +856,7 @@ namespace Aarch64
         } else if (opc20 && b13_12 == 2 && !(opc11_10 & 0x2)) {
             uint8_t pattern = (uint8_t) bits(machInst, 9, 5);
             uint8_t imm4 = (uint8_t) bits(machInst, 19, 16) + 1;
-            IntRegIndex rdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            RegIndex rdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
             unsigned size = (unsigned) bits(machInst, 23, 22);
             if (opc11_10 & 0x1) {
                 return decodeSveElemIntCountU<SveDec>(size, machInst,
@@ -868,7 +868,7 @@ namespace Aarch64
         } else if (!opc20 && b13_12 == 2 && opc11_10 == 0) {
             uint8_t pattern = (uint8_t) bits(machInst, 9, 5);
             uint8_t imm4 = (uint8_t) bits(machInst, 19, 16) + 1;
-            IntRegIndex rd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            RegIndex rd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
             unsigned size = (unsigned) bits(machInst, 23, 22);
             return decodeSveElemIntCountU<SveCntx>(size, machInst,
                     rd, pattern, imm4);
@@ -879,7 +879,7 @@ namespace Aarch64
     StaticInstPtr
     decodeSveLogMaskImm(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
         bool n = bits(machInst, 17);
         uint8_t immr = bits(machInst, 16, 11);
         uint8_t imms = bits(machInst, 10, 5);
@@ -932,8 +932,8 @@ namespace Aarch64
     StaticInstPtr
     decodeSveIntWideImmPred(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 19, 16);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 19, 16);
         uint8_t size = bits(machInst, 23, 22);
 
         if (bits(machInst, 15) == 0x0) {
@@ -982,8 +982,8 @@ namespace Aarch64
         if (!b23_22) {
             uint8_t position =
                 bits(machInst, 20, 16) << 3 | bits(machInst, 12, 10);
-            IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-            IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+            RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+            RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 9, 5);
             return new SveExt<uint8_t>(machInst, zdn, zm, position);
         }
         return new Unknown64(machInst);
@@ -995,38 +995,38 @@ namespace Aarch64
         uint8_t b12_10 = bits(machInst, 12, 10);
         if (b12_10 == 0x4) {
             unsigned size = (unsigned) bits(machInst, 23, 22);
-            IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-            IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-            IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+            RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+            RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+            RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
             return decodeSveBinUnpredU<SveTbl>(size, machInst, zd, zn, zm);
         } else if (bits(machInst, 20, 16) == 0x0 && b12_10 == 0x6) {
             uint8_t size = bits(machInst, 23, 22);
-            IntRegIndex rn = makeSP(
-                    (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-            IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            RegIndex rn = makeSP(
+                    (RegIndex) (uint8_t) bits(machInst, 9, 5));
+            RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
             return decodeSveUnaryUnpredU<SveDupScalar>(size, machInst, zd, rn);
         } else if (bits(machInst, 20, 16) == 0x4 && b12_10 == 0x6) {
             uint8_t size = bits(machInst, 23, 22);
-            IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-            IntRegIndex rm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+            RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+            RegIndex rm = (RegIndex) (uint8_t) bits(machInst, 9, 5);
             return decodeSveUnaryUnpredU<SveInsr>(size, machInst, zdn, rm);
         } else if (bits(machInst, 20, 16) == 0x14 && b12_10 == 0x6) {
             uint8_t size = bits(machInst, 23, 22);
-            IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-            IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+            RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+            RegIndex vm = (RegIndex) (uint8_t) bits(machInst, 9, 5);
             return decodeSveUnaryUnpredU<SveInsrf>(size, machInst, zdn, vm);
         } else if (bits(machInst, 20, 16) == 0x18 && b12_10 == 0x6) {
             uint8_t size = bits(machInst, 23, 22);
-            IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-            IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+            RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+            RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
             return decodeSveUnaryUnpredU<SveRevv>(size, machInst, zd, zn);
         } else if (b12_10 == 0x0 && bits(machInst, 20, 16) != 0x0) {
             uint8_t imm =
                 bits(machInst, 23, 22) << 5 | // imm3h
                 bits(machInst, 20) << 4 |     // imm3l
                 bits(machInst, 19, 16);       // tsz
-            IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-            IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+            RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+            RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
             if (imm & 0x1) {
                 imm >>= 1;
                 return new SveDupIdx<uint8_t>(machInst, zd, zn, imm);
@@ -1047,8 +1047,8 @@ namespace Aarch64
         } else if (bits(machInst, 23, 22) != 0x0 &&
                    bits(machInst, 20, 18) == 0x4 && b12_10 == 0x6) {
             unsigned size = (unsigned) bits(machInst, 23, 22);
-            IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-            IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+            RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+            RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
             if (bits(machInst, 17)) {
                 if (bits(machInst, 16)) {
                     return decodeSveUnpackU<SveUunpkhi>(size, machInst,
@@ -1075,9 +1075,9 @@ namespace Aarch64
     {
         if (bits(machInst, 20) == 0x0 && bits(machInst, 12, 11) != 0x3 &&
                 bits(machInst, 9) == 0x0 && bits(machInst, 4) == 0x0) {
-            IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-            IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-            IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+            RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+            RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+            RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
             uint8_t size = bits(machInst, 23, 22);
 
@@ -1106,8 +1106,8 @@ namespace Aarch64
         } else if (bits(machInst, 23, 22) == 0x0 &&
                 bits(machInst, 20, 17) == 0x8 && bits(machInst, 12, 9) == 0x0
                 && bits(machInst, 4) == 0x0) {
-            IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
-            IntRegIndex pn = (IntRegIndex) (uint8_t) bits(machInst, 8, 5);
+            RegIndex pd = (RegIndex) (uint8_t) bits(machInst, 3, 0);
+            RegIndex pn = (RegIndex) (uint8_t) bits(machInst, 8, 5);
             if (bits(machInst, 16)) {
                 return new SvePunpkhi<uint8_t, uint16_t>(machInst, pd, pn);
             } else {
@@ -1116,8 +1116,8 @@ namespace Aarch64
         } else if (bits(machInst, 20, 16) == 0x14 &&
                 bits(machInst, 12, 9) == 0x00 && bits(machInst, 4) == 0) {
             uint8_t size = bits(machInst, 23, 22);
-            IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
-            IntRegIndex pn = (IntRegIndex) (uint8_t) bits(machInst, 8, 5);
+            RegIndex pd = (RegIndex) (uint8_t) bits(machInst, 3, 0);
+            RegIndex pn = (RegIndex) (uint8_t) bits(machInst, 8, 5);
             return decodeSveUnaryUnpredU<SveRevp>(size, machInst, pd, pn);
         }
         return new Unknown64(machInst);
@@ -1126,9 +1126,9 @@ namespace Aarch64
     StaticInstPtr
     decodeSvePermIntlv(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
         uint8_t size = bits(machInst, 23, 22);
 
@@ -1160,9 +1160,9 @@ namespace Aarch64
           case 0x0:
             if (!b13) {
                 uint8_t size = bits(machInst, 23, 22);
-                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
-                IntRegIndex vn = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
-                IntRegIndex zd = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 12, 10);
+                RegIndex vn = (RegIndex)(uint8_t) bits(machInst, 9, 5);
+                RegIndex zd = (RegIndex)(uint8_t) bits(machInst, 4, 0);
                 return decodeSveUnaryPredU<SveCpySimdFpScalar>(size,
                         machInst, zd, vn, pg);
             }
@@ -1170,9 +1170,9 @@ namespace Aarch64
           case 0x1:
             if (!b13 && b23) {
                 // sve_int_perm_compact
-                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
-                IntRegIndex zn = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
-                IntRegIndex zd = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 12, 10);
+                RegIndex zn = (RegIndex)(uint8_t) bits(machInst, 9, 5);
+                RegIndex zd = (RegIndex)(uint8_t) bits(machInst, 4, 0);
                 if (bits(machInst, 22)) {
                     return new SveCompact<uint64_t>(machInst, zd, zn, pg);
                 } else {
@@ -1183,10 +1183,10 @@ namespace Aarch64
           case 0x8:
             if (b13) {
                 uint8_t size = bits(machInst, 23, 22);
-                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
-                IntRegIndex rn = makeSP(
-                        (IntRegIndex)(uint8_t) bits(machInst, 9, 5));
-                IntRegIndex zd = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 12, 10);
+                RegIndex rn = makeSP(
+                        (RegIndex)(uint8_t) bits(machInst, 9, 5));
+                RegIndex zd = (RegIndex)(uint8_t) bits(machInst, 4, 0);
                 return decodeSveUnaryPredU<SveCpyScalar>(size,
                         machInst, zd, rn, pg);
             }
@@ -1194,9 +1194,9 @@ namespace Aarch64
           case 0xC:
             if (!b13) {
                 uint8_t size = bits(machInst, 23, 22);
-                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
-                IntRegIndex zdn = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
-                IntRegIndex zm = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
+                RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 12, 10);
+                RegIndex zdn = (RegIndex)(uint8_t) bits(machInst, 4, 0);
+                RegIndex zm = (RegIndex)(uint8_t) bits(machInst, 9, 5);
                 return decodeSveBinDestrPredU<SveSplice>(size, machInst,
                         zdn, zm, pg);
             }
@@ -1207,9 +1207,9 @@ namespace Aarch64
             if (b13) {
                 uint8_t AB = bits(machInst, 16);
                 uint8_t size = bits(machInst, 23, 22);
-                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
-                IntRegIndex zn = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
-                IntRegIndex rd = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 12, 10);
+                RegIndex zn = (RegIndex)(uint8_t) bits(machInst, 9, 5);
+                RegIndex rd = (RegIndex)(uint8_t) bits(machInst, 4, 0);
                 if (!AB) {
                     return decodeSveUnaryPredU<SveLasta>(size,
                             machInst, rd, zn, pg);
@@ -1223,9 +1223,9 @@ namespace Aarch64
             if (!b13) {
                 uint8_t AB = bits(machInst, 16);
                 uint8_t size = bits(machInst, 23, 22);
-                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
-                IntRegIndex zn = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
-                IntRegIndex vd = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 12, 10);
+                RegIndex zn = (RegIndex)(uint8_t) bits(machInst, 9, 5);
+                RegIndex vd = (RegIndex)(uint8_t) bits(machInst, 4, 0);
                 if (!AB) {
                     return decodeSveUnaryPredU<SveLastaf>(size,
                             machInst, vd, zn, pg);
@@ -1239,9 +1239,9 @@ namespace Aarch64
             if (!b13) {
                 uint8_t AB = bits(machInst, 16);
                 uint8_t size = bits(machInst, 23, 22);
-                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
-                IntRegIndex zm = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
-                IntRegIndex zdn = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 12, 10);
+                RegIndex zm = (RegIndex)(uint8_t) bits(machInst, 9, 5);
+                RegIndex zdn = (RegIndex)(uint8_t) bits(machInst, 4, 0);
                 if (!AB) {
                     return decodeSveUnaryPredU<SveClastav>(size,
                             machInst, zdn, zm, pg);
@@ -1255,9 +1255,9 @@ namespace Aarch64
             if (!b13) {
                 uint8_t AB = bits(machInst, 16);
                 uint8_t size = bits(machInst, 23, 22);
-                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
-                IntRegIndex zm = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
-                IntRegIndex zdn = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 12, 10);
+                RegIndex zm = (RegIndex)(uint8_t) bits(machInst, 9, 5);
+                RegIndex zdn = (RegIndex)(uint8_t) bits(machInst, 4, 0);
                 if (!AB) {
                     return decodeSveUnaryPredU<SveClastaf>(size,
                             machInst, zdn, zm, pg);
@@ -1271,9 +1271,9 @@ namespace Aarch64
             if (b13) {
                 uint8_t AB = bits(machInst, 16);
                 uint8_t size = bits(machInst, 23, 22);
-                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
-                IntRegIndex zm = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
-                IntRegIndex rdn = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 12, 10);
+                RegIndex zm = (RegIndex)(uint8_t) bits(machInst, 9, 5);
+                RegIndex rdn = (RegIndex)(uint8_t) bits(machInst, 4, 0);
                 if (!AB) {
                     return decodeSveUnaryPredU<SveClasta>(size,
                             machInst, rdn, zm, pg);
@@ -1286,9 +1286,9 @@ namespace Aarch64
         }
         if (bits(machInst, 20, 18) == 0x1 && !b13) {
             unsigned size = (unsigned) bits(machInst, 23, 22);
-            IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
-            IntRegIndex zn = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
-            IntRegIndex zd = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+            RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 12, 10);
+            RegIndex zn = (RegIndex)(uint8_t) bits(machInst, 9, 5);
+            RegIndex zd = (RegIndex)(uint8_t) bits(machInst, 4, 0);
             uint8_t opc17_16 = bits(machInst, 17, 16);
             switch (opc17_16) {
                 case 0x00:
@@ -1325,10 +1325,10 @@ namespace Aarch64
     StaticInstPtr
     decodeSveSelVec(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 13, 10);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 13, 10);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
         uint8_t size = bits(machInst, 23, 22);
 
@@ -1345,10 +1345,10 @@ namespace Aarch64
             bits(machInst, 15) << 2 |
             bits(machInst, 13) << 1 |
             bits(machInst, 4);
-        IntRegIndex pd = (IntRegIndex) (uint8_t)bits(machInst, 3, 0);
-        IntRegIndex pg = (IntRegIndex) (uint8_t)bits(machInst, 12, 10);
-        IntRegIndex zn = (IntRegIndex) (uint8_t)bits(machInst, 9, 5);
-        IntRegIndex zm = (IntRegIndex) (uint8_t)bits(machInst, 20, 16);
+        RegIndex pd = (RegIndex) (uint8_t)bits(machInst, 3, 0);
+        RegIndex pg = (RegIndex) (uint8_t)bits(machInst, 12, 10);
+        RegIndex zn = (RegIndex) (uint8_t)bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex) (uint8_t)bits(machInst, 20, 16);
         if (b14 && size != 3) {
             // sve_int_cmp_1
             switch (opc) {
@@ -1418,9 +1418,9 @@ namespace Aarch64
     decodeSveIntCmpUImm(ExtMachInst machInst)
     {
         uint8_t cmp = bits(machInst, 13) << 1 | bits(machInst, 4);
-        IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex pd = (RegIndex) (uint8_t) bits(machInst, 3, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
         int64_t imm = (int64_t) bits(machInst, 20, 14);
         uint8_t size = bits(machInst, 23, 22);
         switch (cmp) {
@@ -1445,9 +1445,9 @@ namespace Aarch64
     {
         uint8_t opc = bits(machInst, 15) << 2 | bits(machInst, 13) << 1 |
             bits(machInst, 4);
-        IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex pd = (RegIndex) (uint8_t) bits(machInst, 3, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
         int64_t imm = sext<5>(bits(machInst, 20, 16));
         uint8_t size = bits(machInst, 23, 22);
         switch (opc) {
@@ -1478,10 +1478,10 @@ namespace Aarch64
     StaticInstPtr
     decodeSvePredLogicalOps(ExtMachInst machInst)
     {
-        IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
-        IntRegIndex pn = (IntRegIndex) (uint8_t) bits(machInst, 8, 5);
-        IntRegIndex pm = (IntRegIndex) (uint8_t) bits(machInst, 19, 16);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 13, 10);
+        RegIndex pd = (RegIndex) (uint8_t) bits(machInst, 3, 0);
+        RegIndex pn = (RegIndex) (uint8_t) bits(machInst, 8, 5);
+        RegIndex pm = (RegIndex) (uint8_t) bits(machInst, 19, 16);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 13, 10);
         uint8_t opc = (bits(machInst, 23, 22) << 2) |
                       (bits(machInst, 9) << 1) |
                       bits(machInst, 4);
@@ -1526,10 +1526,10 @@ namespace Aarch64
     {
         if (bits(machInst, 23) == 0x0 && bits(machInst, 9) == 0x0) {
             uint8_t opc = (bits(machInst, 22) << 1) | bits(machInst, 4);
-            IntRegIndex pm = (IntRegIndex)(uint8_t) bits(machInst, 19, 16);
-            IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 13, 10);
-            IntRegIndex pn = (IntRegIndex)(uint8_t) bits(machInst, 8, 5);
-            IntRegIndex pd = (IntRegIndex)(uint8_t) bits(machInst, 3, 0);
+            RegIndex pm = (RegIndex)(uint8_t) bits(machInst, 19, 16);
+            RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 13, 10);
+            RegIndex pn = (RegIndex)(uint8_t) bits(machInst, 8, 5);
+            RegIndex pd = (RegIndex)(uint8_t) bits(machInst, 3, 0);
             switch (opc) {
               case 0x0:
                 // BRKPA
@@ -1554,9 +1554,9 @@ namespace Aarch64
         if (bits(machInst, 18, 16) == 0x0 && bits(machInst, 9) == 0x0) {
             bool flagset = bits(machInst, 22);
             bool merging = bits(machInst, 4);
-            IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 13, 10);
-            IntRegIndex pn = (IntRegIndex)(uint8_t) bits(machInst, 8, 5);
-            IntRegIndex pd = (IntRegIndex)(uint8_t) bits(machInst, 3, 0);
+            RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 13, 10);
+            RegIndex pn = (RegIndex)(uint8_t) bits(machInst, 8, 5);
+            RegIndex pd = (RegIndex)(uint8_t) bits(machInst, 3, 0);
             if (bits(machInst, 23)) {
                 if (flagset) {
                     if (!merging) {
@@ -1593,8 +1593,8 @@ namespace Aarch64
         if (bits(machInst, 23, 22) == 0x1 &&
                 bits(machInst, 18, 16) == 0x0 &&
                 bits(machInst, 9) == 0x0) {
-            IntRegIndex pn = (IntRegIndex) (uint8_t) bits(machInst, 8, 5);
-            IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 13, 10);
+            RegIndex pn = (RegIndex) (uint8_t) bits(machInst, 8, 5);
+            RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 13, 10);
             return new SvePtest(machInst, pn, pg);
         }
         return new Unknown64(machInst);
@@ -1606,8 +1606,8 @@ namespace Aarch64
         uint8_t size = bits(machInst, 23, 22);
         uint8_t opc18_16 = bits(machInst, 18, 16);
         uint8_t opc10_9 = bits(machInst, 10, 9);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 8, 5);
-        IntRegIndex pdn = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 8, 5);
+        RegIndex pdn = (RegIndex) (uint8_t) bits(machInst, 3, 0);
         if (opc18_16 == 0x1 && opc10_9 == 0x2) {
             return decodeSveUnaryPredU<SvePnext>(size,
                     machInst, pdn, pdn, pg);
@@ -1620,7 +1620,7 @@ namespace Aarch64
     StaticInstPtr
     decodeSveInitPred(ExtMachInst machInst)
     {
-        IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+        RegIndex pd = (RegIndex) (uint8_t) bits(machInst, 3, 0);
         unsigned size = bits(machInst, 23, 22);
         uint8_t imm = bits(machInst, 9, 5);
 
@@ -1636,7 +1636,7 @@ namespace Aarch64
     decodeSveZeroPredReg(ExtMachInst machInst)
     {
         if (bits(machInst, 23, 22) == 0x0 && bits(machInst, 18, 16) == 0x0) {
-            IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+            RegIndex pd = (RegIndex) (uint8_t) bits(machInst, 3, 0);
             return new SvePfalse(machInst, pd);
         }
         return new Unknown64(machInst);
@@ -1649,9 +1649,9 @@ namespace Aarch64
                 bits(machInst, 18, 16) == 0x0 &&
                 bits(machInst, 9) == 0x0 &&
                 bits(machInst, 4) == 0x0) {
-            IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 13, 10);
-            IntRegIndex pn = (IntRegIndex)(uint8_t) bits(machInst, 8, 5);
-            IntRegIndex pdm = (IntRegIndex)(uint8_t) bits(machInst, 3, 0);
+            RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 13, 10);
+            RegIndex pn = (RegIndex)(uint8_t) bits(machInst, 8, 5);
+            RegIndex pdm = (RegIndex)(uint8_t) bits(machInst, 3, 0);
             if (bits(machInst, 22) == 0x0) {
                 return new SveBrkn(machInst, pdm, pn, pdm, pg);
             } else {
@@ -1668,8 +1668,8 @@ namespace Aarch64
         if (bits(machInst, 23)) {
             return new Unknown64(machInst);
         }
-        IntRegIndex pd = (IntRegIndex)(uint8_t) bits(machInst, 3, 0);
-        IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 8, 5);
+        RegIndex pd = (RegIndex)(uint8_t) bits(machInst, 3, 0);
+        RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 8, 5);
         if (bits(machInst, 22)) {
             return new SveRdffrsPred(machInst, pd, pg);
         } else {
@@ -1683,7 +1683,7 @@ namespace Aarch64
         if (bits(machInst, 23, 22) != 0) {
             return new Unknown64(machInst);
         }
-        IntRegIndex pd = (IntRegIndex)(uint8_t) bits(machInst, 3, 0);
+        RegIndex pd = (RegIndex)(uint8_t) bits(machInst, 3, 0);
         return new SveRdffrUnpred(machInst, pd);
     }  // decodeSveReadPredFromFFRUnpred
 
@@ -1756,9 +1756,9 @@ namespace Aarch64
                     if (bits(machInst, 10, 9) != 0x0) {
                         return new Unknown64(machInst);
                     }
-                    IntRegIndex zdn = (IntRegIndex) (uint8_t)
+                    RegIndex zdn = (RegIndex) (uint8_t)
                         bits(machInst, 4, 0);
-                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                    RegIndex pg = (RegIndex) (uint8_t)
                         bits(machInst, 8, 5);
                     uint8_t esize = bits(machInst, 23, 22);
                     if (esize == 0x0) {
@@ -1797,9 +1797,9 @@ namespace Aarch64
                 break;
               case 0x1:
                 {
-                    IntRegIndex rdn = (IntRegIndex) (uint8_t)
+                    RegIndex rdn = (RegIndex) (uint8_t)
                         bits(machInst, 4, 0);
-                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                    RegIndex pg = (RegIndex) (uint8_t)
                         bits(machInst, 8, 5);
                     uint8_t esize = bits(machInst, 23, 22);
                     uint8_t opc = bits(machInst, 18, 17);
@@ -1861,7 +1861,7 @@ namespace Aarch64
                         bits(machInst, 4, 0) == 0x0) {
                     uint8_t opc = bits(machInst, 18, 16);
                     if (opc == 0x0) {
-                        IntRegIndex pn = (IntRegIndex)(uint8_t)
+                        RegIndex pn = (RegIndex)(uint8_t)
                             bits(machInst, 8, 5);
                         return new SveWrffr(machInst, pn);
                     } else if (opc == 0x4 && bits(machInst, 8, 5) == 0x0) {
@@ -1873,9 +1873,9 @@ namespace Aarch64
         } else {
             uint8_t opc = bits(machInst, 18, 16);
             if (opc == 0 && bits(machInst, 9) == 0) {
-                IntRegIndex rd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-                IntRegIndex pn = (IntRegIndex) (uint8_t) bits(machInst, 8, 5);
-                IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 13,
+                RegIndex rd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+                RegIndex pn = (RegIndex) (uint8_t) bits(machInst, 8, 5);
+                RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 13,
                         10);
                 uint8_t esize = bits(machInst, 23, 22);
                 return decodeSveUnaryPredU<SveCntp>(esize,
@@ -1892,8 +1892,8 @@ namespace Aarch64
             (bits(machInst, 23) << 8) | (bits(machInst, 13, 10) << 4) |
             bits(machInst, 3, 0);
         uint8_t b10 = (uint8_t) bits(machInst, 10);
-        IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex rm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex rn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex rm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
         if (b23_13_12_11_10_3_2_1_0 == 0x180) {
             uint8_t s64b = bits(machInst, 22);
             uint8_t ne = bits(machInst, 4);
@@ -1911,7 +1911,7 @@ namespace Aarch64
                 }
             }
         } else if (b10) {
-            IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+            RegIndex pd = (RegIndex) (uint8_t) bits(machInst, 3, 0);
             uint8_t size = (uint8_t) bits(machInst, 23, 22);
             uint8_t s64b = (uint8_t) bits(machInst, 12);
             uint8_t opc = (uint8_t) bits(machInst, 11) << 1 |
@@ -1954,7 +1954,7 @@ namespace Aarch64
     StaticInstPtr
     decodeSveIntWideImmUnpred0(ExtMachInst machInst)
     {
-        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
         uint64_t imm = bits(machInst, 12, 5);
         uint8_t sh = bits(machInst, 13);
         uint8_t size = bits(machInst, 23, 22);
@@ -1996,7 +1996,7 @@ namespace Aarch64
     StaticInstPtr
     decodeSveIntWideImmUnpred1(ExtMachInst machInst)
     {
-        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
         uint64_t imm = bits(machInst, 12, 5);
         uint8_t size = bits(machInst, 23, 22);
 
@@ -2021,7 +2021,7 @@ namespace Aarch64
     StaticInstPtr
     decodeSveIntWideImmUnpred2(ExtMachInst machInst)
     {
-        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
         uint64_t imm = bits(machInst, 12, 5);
         uint8_t size = bits(machInst, 23, 22);
 
@@ -2036,7 +2036,7 @@ namespace Aarch64
     StaticInstPtr
     decodeSveIntWideImmUnpred3(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
         uint64_t imm = bits(machInst, 12, 5);
         uint8_t sh = bits(machInst, 13);
         uint8_t size = bits(machInst, 23, 22);
@@ -2064,7 +2064,7 @@ namespace Aarch64
     StaticInstPtr
     decodeSveIntWideImmUnpred4(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
         uint8_t size = bits(machInst, 23, 22);
 
         if (bits(machInst, 18, 17) == 0x0 && size != 0x0) {
@@ -2109,9 +2109,9 @@ namespace Aarch64
     StaticInstPtr
     decodeSveMultiplyAddUnpred(ExtMachInst machInst)
     {
-        IntRegIndex zda = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex zda = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
         uint8_t size = (uint8_t) bits(machInst, 23, 22);
 
@@ -2144,8 +2144,8 @@ namespace Aarch64
     StaticInstPtr
     decodeSveMultiplyIndexed(ExtMachInst machInst)
     {
-        IntRegIndex zda = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zda = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
 
         uint8_t size = (uint8_t) bits(machInst, 23, 22);
 
@@ -2155,7 +2155,7 @@ namespace Aarch64
 
         uint8_t usig = (uint8_t) bits(machInst, 10);
         if (size & 0x1) {
-            IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 19, 16);
+            RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 19, 16);
             uint8_t i1 = (uint8_t) bits(machInst, 20);
             if (usig) {
                 return new SveUdoti<uint16_t, uint64_t>(machInst,
@@ -2165,7 +2165,7 @@ namespace Aarch64
                                                         zda, zn, zm, i1);
             }
         } else {
-            IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 18, 16);
+            RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 18, 16);
             uint8_t i2 = (uint8_t) bits(machInst, 20, 19);
             if (usig) {
                 return new SveUdoti<uint8_t, uint32_t>(machInst,
@@ -2181,9 +2181,9 @@ namespace Aarch64
     StaticInstPtr
     decodeSveFpFastReduc(ExtMachInst machInst)
     {
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
 
         uint8_t size = bits(machInst, 23, 22);
 
@@ -2210,8 +2210,8 @@ namespace Aarch64
     StaticInstPtr
     decodeSveFpUnaryUnpred(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
 
         uint8_t size = (uint8_t) bits(machInst, 23, 22);
         if (size == 0) {
@@ -2233,9 +2233,9 @@ namespace Aarch64
     StaticInstPtr
     decodeSveFpCmpZero(ExtMachInst machInst)
     {
-        IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex pd = (RegIndex) (uint8_t) bits(machInst, 3, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
 
         uint8_t size = bits(machInst, 23, 22);
         if (size == 0) {
@@ -2275,9 +2275,9 @@ namespace Aarch64
             return new Unknown64(machInst);
         }
 
-        IntRegIndex vdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex vdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
 
         return decodeSveUnaryPredF<SveFadda>(size, machInst, vdn, zm, pg);
     }  // decodeSveFpAccumReduc
@@ -2285,9 +2285,9 @@ namespace Aarch64
     StaticInstPtr
     decodeSveFpArithUnpred(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
         uint8_t size = bits(machInst, 23, 22);
         if (size == 0) {
@@ -2321,9 +2321,9 @@ namespace Aarch64
     StaticInstPtr
     decodeSveFpArithPred0(ExtMachInst machInst)
     {
-        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
 
         uint8_t size = (uint8_t) bits(machInst, 23, 22);
         if (size == 0) {
@@ -2378,8 +2378,8 @@ namespace Aarch64
     StaticInstPtr
     decodeSveFpTrigMAddCoeff(ExtMachInst machInst)
     {
-        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 9, 5);
         uint8_t imm = (uint8_t) bits(machInst, 18, 16);
 
         uint8_t size = (uint8_t) bits(machInst, 23, 22);
@@ -2393,8 +2393,8 @@ namespace Aarch64
     StaticInstPtr
     decodeSveFpArithImmPred(ExtMachInst machInst)
     {
-        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
         uint64_t imm;
 
         uint8_t size = (uint8_t) bits(machInst, 23, 22);
@@ -2456,9 +2456,9 @@ namespace Aarch64
     StaticInstPtr
     decodeSveFpUnaryPred(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
 
         uint8_t size = (uint8_t) bits(machInst, 23, 22);
         if (size == 0) {
@@ -2656,10 +2656,10 @@ namespace Aarch64
     StaticInstPtr
     decodeSveFpCmpVec(ExtMachInst machInst)
     {
-        IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex pd = (RegIndex) (uint8_t) bits(machInst, 3, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
 
         uint8_t size = bits(machInst, 23, 22);
         if (size == 0) {
@@ -2691,10 +2691,10 @@ namespace Aarch64
     StaticInstPtr
     decodeSveFpFusedMulAdd(ExtMachInst machInst)
     {
-        IntRegIndex zda = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zda = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
 
         uint8_t size = bits(machInst, 23, 22);
         if (size == 0) {
@@ -2736,9 +2736,9 @@ namespace Aarch64
     {
         uint8_t size = bits(machInst, 23, 22);
         uint8_t rot = bits(machInst, 16) << 1 | 0x01;
-        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
         switch (size) {
             case 1:
                 return new SveFcadd<uint16_t>(machInst,
@@ -2761,10 +2761,10 @@ namespace Aarch64
             return new Unknown64(machInst);
         }
 
-        IntRegIndex zda = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
-        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex zda = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
         uint8_t rot = bits(machInst, 14, 13);
         switch (size) {
             case 1:
@@ -2789,20 +2789,20 @@ namespace Aarch64
             return new Unknown64(machInst);
         }
 
-        IntRegIndex zda = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex zm;
+        RegIndex zda = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm;
         uint8_t rot = bits(machInst, 11, 10);
         uint8_t imm;
 
         switch (size) {
             case 2:
-                zm = (IntRegIndex) (uint8_t) bits(machInst, 18, 16);
+                zm = (RegIndex) (uint8_t) bits(machInst, 18, 16);
                 imm = bits(machInst, 20, 19);
                 return new SveFcmlai<uint16_t>(machInst,
                         zda, zn, zm, rot, imm);
             case 3:
-                zm = (IntRegIndex) (uint8_t) bits(machInst, 19, 16);
+                zm = (RegIndex) (uint8_t) bits(machInst, 19, 16);
                 imm = bits(machInst, 20);
                 return new SveFcmlai<uint32_t>(machInst,
                         zda, zn, zm, rot, imm);
@@ -2813,8 +2813,8 @@ namespace Aarch64
     StaticInstPtr
     decodeSveFpMulIndexed(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
 
         uint8_t size = bits(machInst, 23, 22);
         switch (size) {
@@ -2822,17 +2822,17 @@ namespace Aarch64
           case 0x1:
             return new SveFmulIdx<uint16_t>(
                 machInst, zd, zn,
-                (IntRegIndex) (uint8_t) bits(machInst, 18, 16),
+                (RegIndex) (uint8_t) bits(machInst, 18, 16),
                 bits(machInst, 20, 19) | (bits(machInst, 22) << 2));
           case 0x2:
             return new SveFmulIdx<uint32_t>(
                 machInst, zd, zn,
-                (IntRegIndex) (uint8_t) bits(machInst, 18, 16),
+                (RegIndex) (uint8_t) bits(machInst, 18, 16),
                 bits(machInst, 20, 19));
           case 0x3:
             return new SveFmulIdx<uint64_t>(
                 machInst, zd, zn,
-                (IntRegIndex) (uint8_t) bits(machInst, 19, 16),
+                (RegIndex) (uint8_t) bits(machInst, 19, 16),
                 bits(machInst, 20));
           default:
             return new Unknown64(machInst);
@@ -2843,8 +2843,8 @@ namespace Aarch64
     StaticInstPtr
     decodeSveFpMulAddIndexed(ExtMachInst machInst)
     {
-        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
         const uint8_t op = bits(machInst, 10);
 
         uint8_t size = bits(machInst, 23, 22);
@@ -2854,36 +2854,36 @@ namespace Aarch64
             if (op) {
                 return new SveFmlsIdx<uint16_t>(
                     machInst, zd, zn,
-                    (IntRegIndex) (uint8_t) bits(machInst, 18, 16),
+                    (RegIndex) (uint8_t) bits(machInst, 18, 16),
                     bits(machInst, 20, 19) | (bits(machInst, 22) << 2));
             } else {
                 return new SveFmlaIdx<uint16_t>(
                     machInst, zd, zn,
-                    (IntRegIndex) (uint8_t) bits(machInst, 18, 16),
+                    (RegIndex) (uint8_t) bits(machInst, 18, 16),
                     bits(machInst, 20, 19) | (bits(machInst, 22) << 2));
             }
           case 0x2:
             if (op) {
                 return new SveFmlsIdx<uint32_t>(
                     machInst, zd, zn,
-                    (IntRegIndex) (uint8_t) bits(machInst, 18, 16),
+                    (RegIndex) (uint8_t) bits(machInst, 18, 16),
                     bits(machInst, 20, 19));
             } else {
                 return new SveFmlaIdx<uint32_t>(
                     machInst, zd, zn,
-                    (IntRegIndex) (uint8_t) bits(machInst, 18, 16),
+                    (RegIndex) (uint8_t) bits(machInst, 18, 16),
                     bits(machInst, 20, 19));
             }
           case 0x3:
             if (op) {
                 return new SveFmlsIdx<uint64_t>(
                     machInst, zd, zn,
-                    (IntRegIndex) (uint8_t) bits(machInst, 19, 16),
+                    (RegIndex) (uint8_t) bits(machInst, 19, 16),
                     bits(machInst, 20));
             } else {
                 return new SveFmlaIdx<uint64_t>(
                     machInst, zd, zn,
-                    (IntRegIndex) (uint8_t) bits(machInst, 19, 16),
+                    (RegIndex) (uint8_t) bits(machInst, 19, 16),
                     bits(machInst, 20));
             }
           default:
@@ -2897,11 +2897,11 @@ namespace Aarch64
         if (bits(machInst, 15)) {
             if (bits(machInst, 22)) {
                 // SVE load and broadcast element
-                IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-                IntRegIndex rn = makeSP(
-                        (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+                RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+                RegIndex rn = makeSP(
+                        (RegIndex) (uint8_t) bits(machInst, 9, 5));
                 uint64_t imm = bits(machInst, 21, 16);
-                IntRegIndex pg = (IntRegIndex) (uint8_t)
+                RegIndex pg = (RegIndex) (uint8_t)
                                  bits(machInst, 12, 10);
                 uint8_t dtype = (bits(machInst, 24, 23) << 2) |
                                 bits(machInst, 14, 13);
@@ -2910,12 +2910,12 @@ namespace Aarch64
             } else {
                 if (bits(machInst, 21)) {
                     // SVE 32-bit gather load (vector plus immediate)
-                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                    RegIndex zt = (RegIndex) (uint8_t)
                                      bits(machInst, 4, 0);
-                    IntRegIndex zn = (IntRegIndex) (uint8_t)
+                    RegIndex zn = (RegIndex) (uint8_t)
                                      bits(machInst, 9, 5);
                     uint64_t imm = bits(machInst, 20, 16);
-                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                    RegIndex pg = (RegIndex) (uint8_t)
                                      bits(machInst, 12, 10);
                     uint8_t dtype = (bits(machInst, 24, 23) << 1) |
                                     bits(machInst, 14);
@@ -2938,12 +2938,12 @@ namespace Aarch64
             uint8_t b24_23 = bits(machInst, 24, 23);
             if (b24_23 != 0x3 && bits(machInst, 21) == 0) {
                 // SVE 32-bit gather load (scalar plus 32-bit unscaled offsets)
-                IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-                IntRegIndex rn = makeSP(
-                        (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-                IntRegIndex zm = (IntRegIndex) (uint8_t)
+                RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+                RegIndex rn = makeSP(
+                        (RegIndex) (uint8_t) bits(machInst, 9, 5));
+                RegIndex zm = (RegIndex) (uint8_t)
                          bits(machInst, 20, 16);
-                IntRegIndex pg = (IntRegIndex) (uint8_t)
+                RegIndex pg = (RegIndex) (uint8_t)
                          bits(machInst, 12, 10);
                 uint8_t dtype = (bits(machInst, 24, 23) << 1) |
                                 bits(machInst, 14);
@@ -2964,13 +2964,13 @@ namespace Aarch64
                 if (bits(machInst, 21)) {
                     // SVE 32-bit gather load halfwords (scalar plus 32-bit
                     // scaled offsets)
-                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                    RegIndex zt = (RegIndex) (uint8_t)
                              bits(machInst, 4, 0);
-                    IntRegIndex rn = makeSP(
-                            (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-                    IntRegIndex zm = (IntRegIndex) (uint8_t)
+                    RegIndex rn = makeSP(
+                            (RegIndex) (uint8_t) bits(machInst, 9, 5));
+                    RegIndex zm = (RegIndex) (uint8_t)
                              bits(machInst, 20, 16);
-                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                    RegIndex pg = (RegIndex) (uint8_t)
                              bits(machInst, 12, 10);
                     uint8_t xs = bits(machInst, 22);
                     uint8_t ff = bits(machInst, 13);
@@ -2995,13 +2995,13 @@ namespace Aarch64
                 if (bits(machInst, 21)) {
                     // SVE 32-bit gather load words (scalar plus 32-bit scaled
                     // offsets)
-                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                    RegIndex zt = (RegIndex) (uint8_t)
                              bits(machInst, 4, 0);
-                    IntRegIndex rn = makeSP(
-                            (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-                    IntRegIndex zm = (IntRegIndex) (uint8_t)
+                    RegIndex rn = makeSP(
+                            (RegIndex) (uint8_t) bits(machInst, 9, 5));
+                    RegIndex zm = (RegIndex) (uint8_t)
                              bits(machInst, 20, 16);
-                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                    RegIndex pg = (RegIndex) (uint8_t)
                              bits(machInst, 12, 10);
                     uint8_t xs = bits(machInst, 22);
                     uint8_t ff = bits(machInst, 13);
@@ -3016,20 +3016,20 @@ namespace Aarch64
                 if (bits(machInst, 22) == 0 && bits(machInst, 14, 13) == 0x0 &&
                         bits(machInst, 4) == 0) {
                     // SVE load predicate register
-                    IntRegIndex pt = (IntRegIndex) (uint8_t)
+                    RegIndex pt = (RegIndex) (uint8_t)
                         bits(machInst, 3, 0);
-                    IntRegIndex rn = makeSP(
-                            (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+                    RegIndex rn = makeSP(
+                            (RegIndex) (uint8_t) bits(machInst, 9, 5));
                     uint64_t imm = sext<9>((bits(machInst, 21, 16) << 3) |
                                            bits(machInst, 12, 10));
                     return new SveLdrPred(machInst, pt, rn, imm);
                 } else if (bits(machInst, 22) == 0 &&
                            bits(machInst, 14, 13) == 0x2) {
                     // SVE load vector register
-                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                    RegIndex zt = (RegIndex) (uint8_t)
                         bits(machInst, 4, 0);
-                    IntRegIndex rn = makeSP(
-                            (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+                    RegIndex rn = makeSP(
+                            (RegIndex) (uint8_t) bits(machInst, 9, 5));
                     uint64_t imm = sext<9>((bits(machInst, 21, 16) << 3) |
                                            bits(machInst, 12, 10));
                     return new SveLdrVec(machInst, zt, rn, imm);
@@ -3052,10 +3052,10 @@ namespace Aarch64
             return new Unknown64(machInst);
         }
 
-        IntRegIndex zt = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
-        IntRegIndex rn = makeSP((IntRegIndex)(uint8_t) bits(machInst, 9, 5));
-        IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
-        IntRegIndex rm = (IntRegIndex)(uint8_t) bits(machInst, 20, 16);
+        RegIndex zt = (RegIndex)(uint8_t) bits(machInst, 4, 0);
+        RegIndex rn = makeSP((RegIndex)(uint8_t) bits(machInst, 9, 5));
+        RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 12, 10);
+        RegIndex rm = (RegIndex)(uint8_t) bits(machInst, 20, 16);
         uint8_t msz = bits(machInst, 24, 23);
         switch (msz) {
             case 0:
@@ -3083,9 +3083,9 @@ namespace Aarch64
             return new Unknown64(machInst);
         }
 
-        IntRegIndex zt = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
-        IntRegIndex rn = makeSP((IntRegIndex)(uint8_t) bits(machInst, 9, 5));
-        IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
+        RegIndex zt = (RegIndex)(uint8_t) bits(machInst, 4, 0);
+        RegIndex rn = makeSP((RegIndex)(uint8_t) bits(machInst, 9, 5));
+        RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 12, 10);
         uint64_t imm = sext<4>(bits(machInst, 19, 16));
         uint8_t msz = bits(machInst, 24, 23);
         switch (msz) {
@@ -3109,10 +3109,10 @@ namespace Aarch64
     StaticInstPtr
     decodeSveContigLoadSS(ExtMachInst machInst)
     {
-        IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex rn = makeSP((IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-        IntRegIndex rm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex rn = makeSP((RegIndex) (uint8_t) bits(machInst, 9, 5));
+        RegIndex rm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
 
         if (rm == 0x1f) {
             return new Unknown64(machInst);
@@ -3125,10 +3125,10 @@ namespace Aarch64
     StaticInstPtr
     decodeSveContigFFLoadSS(ExtMachInst machInst)
     {
-        IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex rn = makeSP((IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-        IntRegIndex rm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex rn = makeSP((RegIndex) (uint8_t) bits(machInst, 9, 5));
+        RegIndex rm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
 
         return decodeSveContigLoadSSInsts<SveContigFFLoadSS>(
             bits(machInst, 24, 21), machInst, zt, pg, rn, rm, true);
@@ -3137,10 +3137,10 @@ namespace Aarch64
     StaticInstPtr
     decodeSveContigLoadSI(ExtMachInst machInst)
     {
-        IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex rn = makeSP((IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+        RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex rn = makeSP((RegIndex) (uint8_t) bits(machInst, 9, 5));
         uint64_t imm = sext<4>(bits(machInst, 19, 16));
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
 
         return decodeSveContigLoadSIInsts<SveContigLoadSI>(
             bits(machInst, 24, 21), machInst, zt, pg, rn, imm, false);
@@ -3149,10 +3149,10 @@ namespace Aarch64
     StaticInstPtr
     decodeSveContigNFLoadSI(ExtMachInst machInst)
     {
-        IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex rn = makeSP((IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+        RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex rn = makeSP((RegIndex) (uint8_t) bits(machInst, 9, 5));
         uint64_t imm = sext<4>(bits(machInst, 19, 16));
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
 
         return decodeSveContigLoadSIInsts<SveContigNFLoadSI>(
             bits(machInst, 24, 21), machInst, zt, pg, rn, imm, true);
@@ -3167,11 +3167,11 @@ namespace Aarch64
     StaticInstPtr
     decodeSveLoadStructsSS(ExtMachInst machInst)
     {
-        IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex rn = makeSP(
-                (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-        IntRegIndex rm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex rn = makeSP(
+                (RegIndex) (uint8_t) bits(machInst, 9, 5));
+        RegIndex rm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
         uint8_t msz = bits(machInst, 24, 23);
         uint8_t num = bits(machInst, 22, 21);
 
@@ -3192,11 +3192,11 @@ namespace Aarch64
     StaticInstPtr
     decodeSveLoadStructsSI(ExtMachInst machInst)
     {
-        IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex rn = makeSP(
-                (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+        RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex rn = makeSP(
+                (RegIndex) (uint8_t) bits(machInst, 9, 5));
         int64_t imm = sext<4>(bits(machInst, 19, 16));
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
         uint8_t msz = bits(machInst, 24, 23);
         uint8_t num = bits(machInst, 22, 21);
 
@@ -3257,12 +3257,12 @@ namespace Aarch64
             {
                 // SVE 64-bit gather load (scalar plus unpacked 32-bit unscaled
                 // offsets)
-                IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-                IntRegIndex rn = makeSP(
-                        (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-                IntRegIndex zm = (IntRegIndex) (uint8_t)
+                RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+                RegIndex rn = makeSP(
+                        (RegIndex) (uint8_t) bits(machInst, 9, 5));
+                RegIndex zm = (RegIndex) (uint8_t)
                          bits(machInst, 20, 16);
-                IntRegIndex pg = (IntRegIndex) (uint8_t)
+                RegIndex pg = (RegIndex) (uint8_t)
                          bits(machInst, 12, 10);
                 uint8_t dtype = (bits(machInst, 24, 23) << 1) |
                                 bits(machInst, 14);
@@ -3275,12 +3275,12 @@ namespace Aarch64
           case 0x1:
             if (bits(machInst, 22)) {
                 // SVE 64-bit gather load (scalar plus 64-bit unscaled offsets)
-                IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-                IntRegIndex rn = makeSP(
-                        (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-                IntRegIndex zm = (IntRegIndex) (uint8_t)
+                RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+                RegIndex rn = makeSP(
+                        (RegIndex) (uint8_t) bits(machInst, 9, 5));
+                RegIndex zm = (RegIndex) (uint8_t)
                          bits(machInst, 20, 16);
-                IntRegIndex pg = (IntRegIndex) (uint8_t)
+                RegIndex pg = (RegIndex) (uint8_t)
                          bits(machInst, 12, 10);
                 uint8_t dtype = (bits(machInst, 24, 23) << 1) |
                                 bits(machInst, 14);
@@ -3299,12 +3299,12 @@ namespace Aarch64
             if (bits(machInst, 24, 23) != 0x0) {
                 //  SVE 64-bit gather load (scalar plus unpacked 32-bit scaled
                 //  offsets)
-                IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-                IntRegIndex rn = makeSP(
-                        (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-                IntRegIndex zm = (IntRegIndex) (uint8_t)
+                RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+                RegIndex rn = makeSP(
+                        (RegIndex) (uint8_t) bits(machInst, 9, 5));
+                RegIndex zm = (RegIndex) (uint8_t)
                          bits(machInst, 20, 16);
-                IntRegIndex pg = (IntRegIndex) (uint8_t)
+                RegIndex pg = (RegIndex) (uint8_t)
                          bits(machInst, 12, 10);
                 uint8_t dtype = (bits(machInst, 24, 23) << 1) |
                                 bits(machInst, 14);
@@ -3322,10 +3322,10 @@ namespace Aarch64
           case 0x3:
             if (bits(machInst, 22) == 0) {
                 // SVE 64-bit gather load (vector plus immediate)
-                IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-                IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+                RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+                RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
                 uint64_t imm = bits(machInst, 20, 16);
-                IntRegIndex pg = (IntRegIndex) (uint8_t)
+                RegIndex pg = (RegIndex) (uint8_t)
                                  bits(machInst, 12, 10);
                 uint8_t dtype = (bits(machInst, 24, 23) << 1) |
                                 bits(machInst, 14);
@@ -3336,13 +3336,13 @@ namespace Aarch64
                 if (bits(machInst, 24, 23) != 0x0) {
                     // SVE 64-bit gather load (scalar plus 64-bit scaled
                     // offsets)
-                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                    RegIndex zt = (RegIndex) (uint8_t)
                              bits(machInst, 4, 0);
-                    IntRegIndex rn = makeSP(
-                            (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-                    IntRegIndex zm = (IntRegIndex) (uint8_t)
+                    RegIndex rn = makeSP(
+                            (RegIndex) (uint8_t) bits(machInst, 9, 5));
+                    RegIndex zm = (RegIndex) (uint8_t)
                              bits(machInst, 20, 16);
-                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                    RegIndex pg = (RegIndex) (uint8_t)
                              bits(machInst, 12, 10);
                     uint8_t dtype = (bits(machInst, 24, 23) << 1) |
                                     bits(machInst, 14);
@@ -3364,10 +3364,10 @@ namespace Aarch64
     StaticInstPtr
     decodeSveContigStoreSS(ExtMachInst machInst)
     {
-        IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex rn = makeSP((IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-        IntRegIndex rm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex rn = makeSP((RegIndex) (uint8_t) bits(machInst, 9, 5));
+        RegIndex rm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
 
         if (rm == 0x1f) {
             return new Unknown64(machInst);
@@ -3380,10 +3380,10 @@ namespace Aarch64
     StaticInstPtr
     decodeSveContigStoreSI(ExtMachInst machInst)
     {
-        IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex rn = makeSP((IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+        RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex rn = makeSP((RegIndex) (uint8_t) bits(machInst, 9, 5));
         int8_t imm = sext<4>(bits(machInst, 19, 16));
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
 
         return decodeSveContigStoreSIInsts<SveContigStoreSI>(
             bits(machInst, 24, 21), machInst, zt, pg, rn, imm);
@@ -3404,11 +3404,11 @@ namespace Aarch64
     StaticInstPtr
     decodeSveStoreStructsSS(ExtMachInst machInst)
     {
-        IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex rn = makeSP(
-                (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-        IntRegIndex rm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex rn = makeSP(
+                (RegIndex) (uint8_t) bits(machInst, 9, 5));
+        RegIndex rm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
         uint8_t msz = bits(machInst, 24, 23);
         uint8_t num = bits(machInst, 22, 21);
 
@@ -3423,11 +3423,11 @@ namespace Aarch64
     StaticInstPtr
     decodeSveStoreStructsSI(ExtMachInst machInst)
     {
-        IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex rn = makeSP(
-                (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+        RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex rn = makeSP(
+                (RegIndex) (uint8_t) bits(machInst, 9, 5));
         int64_t imm = sext<4>(bits(machInst, 19, 16));
-        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        RegIndex pg = (RegIndex) (uint8_t) bits(machInst, 12, 10);
         uint8_t msz = bits(machInst, 24, 23);
         uint8_t num = bits(machInst, 22, 21);
 
@@ -3446,9 +3446,9 @@ namespace Aarch64
         switch (bits(machInst, 15, 13)) {
           case 0x0:
             if (bits(machInst, 24, 22) == 0x6 && bits(machInst, 4) == 0x0) {
-                IntRegIndex pt = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
-                IntRegIndex rn = makeSP(
-                    (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+                RegIndex pt = (RegIndex) (uint8_t) bits(machInst, 3, 0);
+                RegIndex rn = makeSP(
+                    (RegIndex) (uint8_t) bits(machInst, 9, 5));
                 int16_t imm = sext<9>((bits(machInst, 21, 16) << 3) |
                                       bits(machInst, 12, 10));
                 return new SveStrPred(machInst, pt, rn, imm);
@@ -3456,9 +3456,9 @@ namespace Aarch64
             break;
           case 0x2:
             if (bits(machInst, 24, 22) == 0x6) {
-                IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-                IntRegIndex rn = makeSP(
-                    (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+                RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+                RegIndex rn = makeSP(
+                    (RegIndex) (uint8_t) bits(machInst, 9, 5));
                 int16_t imm = sext<9>((bits(machInst, 21, 16) << 3) |
                                       bits(machInst, 12, 10));
                 return new SveStrVec(machInst, zt, rn, imm);
@@ -3475,12 +3475,12 @@ namespace Aarch64
           case 0x4:
           case 0x6:
             {
-                IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-                IntRegIndex rn = makeSP(
-                        (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-                IntRegIndex zm = (IntRegIndex) (uint8_t)
+                RegIndex zt = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+                RegIndex rn = makeSP(
+                        (RegIndex) (uint8_t) bits(machInst, 9, 5));
+                RegIndex zm = (RegIndex) (uint8_t)
                          bits(machInst, 20, 16);
-                IntRegIndex pg = (IntRegIndex) (uint8_t)
+                RegIndex pg = (RegIndex) (uint8_t)
                          bits(machInst, 12, 10);
                 uint8_t msz = bits(machInst, 24, 23);
                 uint8_t xs = bits(machInst, 22);
@@ -3525,13 +3525,13 @@ namespace Aarch64
                 {
                     // SVE 64-bit scatter store (scalar plus 64-bit unscaled
                     // offsets)
-                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                    RegIndex zt = (RegIndex) (uint8_t)
                             bits(machInst, 4, 0);
-                    IntRegIndex rn = makeSP(
-                            (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-                    IntRegIndex zm = (IntRegIndex) (uint8_t)
+                    RegIndex rn = makeSP(
+                            (RegIndex) (uint8_t) bits(machInst, 9, 5));
+                    RegIndex zm = (RegIndex) (uint8_t)
                             bits(machInst, 20, 16);
-                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                    RegIndex pg = (RegIndex) (uint8_t)
                             bits(machInst, 12, 10);
                     uint8_t msz = bits(machInst, 24, 23);
 
@@ -3543,13 +3543,13 @@ namespace Aarch64
                 if (bits(machInst, 24, 23) != 0x0) {
                     // SVE 64-bit scatter store (scalar plus 64-bit scaled
                     // offsets)
-                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                    RegIndex zt = (RegIndex) (uint8_t)
                             bits(machInst, 4, 0);
-                    IntRegIndex rn = makeSP(
-                            (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-                    IntRegIndex zm = (IntRegIndex) (uint8_t)
+                    RegIndex rn = makeSP(
+                            (RegIndex) (uint8_t) bits(machInst, 9, 5));
+                    RegIndex zm = (RegIndex) (uint8_t)
                             bits(machInst, 20, 16);
-                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                    RegIndex pg = (RegIndex) (uint8_t)
                             bits(machInst, 12, 10);
                     uint8_t msz = bits(machInst, 24, 23);
 
@@ -3561,12 +3561,12 @@ namespace Aarch64
               case 0x2:
                 {
                     // SVE 64-bit scatter store (vector plus immediate)
-                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                    RegIndex zt = (RegIndex) (uint8_t)
                             bits(machInst, 4, 0);
-                    IntRegIndex zn = (IntRegIndex) (uint8_t)
+                    RegIndex zn = (RegIndex) (uint8_t)
                             bits(machInst, 9, 5);
                     uint64_t imm = bits(machInst, 20, 16);
-                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                    RegIndex pg = (RegIndex) (uint8_t)
                             bits(machInst, 12, 10);
                     uint8_t msz = bits(machInst, 24, 23);
 
@@ -3576,12 +3576,12 @@ namespace Aarch64
               case 0x3:
                 if (bits(machInst, 24, 23) != 0x3) {
                     // SVE 32-bit scatter store (vector plus immediate)
-                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                    RegIndex zt = (RegIndex) (uint8_t)
                             bits(machInst, 4, 0);
-                    IntRegIndex zn = (IntRegIndex) (uint8_t)
+                    RegIndex zn = (RegIndex) (uint8_t)
                             bits(machInst, 9, 5);
                     uint64_t imm = bits(machInst, 20, 16);
-                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                    RegIndex pg = (RegIndex) (uint8_t)
                             bits(machInst, 12, 10);
                     uint8_t msz = bits(machInst, 24, 23);
 

@@ -26,6 +26,7 @@
 
 from abc import abstractmethod
 
+from .abstract_board import AbstractBoard
 from ...resources.resource import AbstractResource
 
 from typing import List, Optional
@@ -133,6 +134,7 @@ class KernelDiskWorkload:
         self,
         kernel: AbstractResource,
         disk_image: AbstractResource,
+        bootloader: Optional[AbstractResource] = None,
         readfile: Optional[str] = None,
         readfile_contents: Optional[str] = None,
         kernel_args: Optional[List[str]] = None,
@@ -144,6 +146,8 @@ class KernelDiskWorkload:
 
         :param kernel: The kernel to boot.
         :param disk_image: The disk image to mount.
+        :param bootloader: The current implementation of the ARM board requires
+        three resources to operate -- kernel, disk image, and, a bootloader.
         :param readfile: An optional parameter stating the file to be read by
         by `m5 readfile`.
         :param readfile_contents: An optional parameter stating the contents of
@@ -156,6 +160,14 @@ class KernelDiskWorkload:
         items. True by default.
         """
 
+        # We assume this this is in a multiple-inheritance setup with an
+        # Abstract board. This function will not work otherwise.
+        assert(isinstance(self,AbstractBoard))
+
+        # If we are setting a workload of this type, we need to run as a
+        # full-system simulation.
+        self._set_fullsystem(True)
+
         # Set the kernel to use.
         self.workload.object_file = kernel.get_local_path()
 
@@ -165,6 +177,13 @@ class KernelDiskWorkload:
         ).format(
             root_value=self.get_default_kernel_root_val(disk_image=disk_image)
         )
+
+        # Setting the bootloader information for ARM board. The current
+        # implementation of the ArmBoard class expects a boot loader file to be
+        # provided along with the kernel and the disk image.
+
+        if bootloader is not None:
+            self._bootloader = [bootloader.get_local_path()]
 
         # Set the readfile.
         if readfile:

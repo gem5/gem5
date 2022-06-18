@@ -64,43 +64,43 @@ void X86StaticInst::printSegment(std::ostream &os, int segment)
 {
     switch (segment)
     {
-      case SEGMENT_REG_ES:
+      case segment_idx::Es:
         ccprintf(os, "ES");
         break;
-      case SEGMENT_REG_CS:
+      case segment_idx::Cs:
         ccprintf(os, "CS");
         break;
-      case SEGMENT_REG_SS:
+      case segment_idx::Ss:
         ccprintf(os, "SS");
         break;
-      case SEGMENT_REG_DS:
+      case segment_idx::Ds:
         ccprintf(os, "DS");
         break;
-      case SEGMENT_REG_FS:
+      case segment_idx::Fs:
         ccprintf(os, "FS");
         break;
-      case SEGMENT_REG_GS:
+      case segment_idx::Gs:
         ccprintf(os, "GS");
         break;
-      case SEGMENT_REG_HS:
+      case segment_idx::Hs:
         ccprintf(os, "HS");
         break;
-      case SEGMENT_REG_TSL:
+      case segment_idx::Tsl:
         ccprintf(os, "TSL");
         break;
-      case SEGMENT_REG_TSG:
+      case segment_idx::Tsg:
         ccprintf(os, "TSG");
         break;
-      case SEGMENT_REG_LS:
+      case segment_idx::Ls:
         ccprintf(os, "LS");
         break;
-      case SEGMENT_REG_MS:
+      case segment_idx::Ms:
         ccprintf(os, "MS");
         break;
-      case SYS_SEGMENT_REG_TR:
+      case segment_idx::Tr:
         ccprintf(os, "TR");
         break;
-      case SYS_SEGMENT_REG_IDTR:
+      case segment_idx::Idtr:
         ccprintf(os, "IDTR");
         break;
       default:
@@ -166,56 +166,57 @@ X86StaticInst::printReg(std::ostream &os, RegId reg, int size)
                 suffix = "l";
 
             switch (reg_idx) {
-              case INTREG_RAX:
+              case int_reg::Rax:
                 ccprintf(os, abcdFormats[size], "a");
                 break;
-              case INTREG_RBX:
+              case int_reg::Rbx:
                 ccprintf(os, abcdFormats[size], "b");
                 break;
-              case INTREG_RCX:
+              case int_reg::Rcx:
                 ccprintf(os, abcdFormats[size], "c");
                 break;
-              case INTREG_RDX:
+              case int_reg::Rdx:
                 ccprintf(os, abcdFormats[size], "d");
                 break;
-              case INTREG_RSP:
+              case int_reg::Rsp:
                 ccprintf(os, piFormats[size], "sp");
                 break;
-              case INTREG_RBP:
+              case int_reg::Rbp:
                 ccprintf(os, piFormats[size], "bp");
                 break;
-              case INTREG_RSI:
+              case int_reg::Rsi:
                 ccprintf(os, piFormats[size], "si");
                 break;
-              case INTREG_RDI:
+              case int_reg::Rdi:
                 ccprintf(os, piFormats[size], "di");
                 break;
-              case INTREG_R8W:
+              case int_reg::R8:
                 ccprintf(os, longFormats[size], "8");
                 break;
-              case INTREG_R9W:
+              case int_reg::R9:
                 ccprintf(os, longFormats[size], "9");
                 break;
-              case INTREG_R10W:
+              case int_reg::R10:
                 ccprintf(os, longFormats[size], "10");
                 break;
-              case INTREG_R11W:
+              case int_reg::R11:
                 ccprintf(os, longFormats[size], "11");
                 break;
-              case INTREG_R12W:
+              case int_reg::R12:
                 ccprintf(os, longFormats[size], "12");
                 break;
-              case INTREG_R13W:
+              case int_reg::R13:
                 ccprintf(os, longFormats[size], "13");
                 break;
-              case INTREG_R14W:
+              case int_reg::R14:
                 ccprintf(os, longFormats[size], "14");
                 break;
-              case INTREG_R15W:
+              case int_reg::R15:
                 ccprintf(os, longFormats[size], "15");
                 break;
               default:
-                ccprintf(os, microFormats[size], reg_idx - INTREG_MICRO_BEGIN);
+                ccprintf(os, microFormats[size],
+                        reg_idx - int_reg::MicroBegin);
             }
             ccprintf(os, suffix);
         }
@@ -265,13 +266,13 @@ X86StaticInst::printMem(std::ostream &os, uint8_t segment,
         os << "rip";
         someAddr = true;
     } else {
-        if (scale != 0 && index != NUM_INTREGS) {
+        if (scale != 0 && index != int_reg::NumRegs) {
             if (scale != 1)
                 ccprintf(os, "%d*", scale);
             printReg(os, RegId(IntRegClass, index), addressSize);
             someAddr = true;
         }
-        if (base != NUM_INTREGS) {
+        if (base != int_reg::NumRegs) {
             if (someAddr)
                 os << " + ";
             printReg(os, RegId(IntRegClass, base), addressSize);

@@ -55,13 +55,8 @@ Scoreboard::findIndex(const RegId& reg, Index &scoreboard_index)
 
     switch (reg.classValue()) {
       case IntRegClass:
-        if (reg.index() == zeroReg) {
-            /* Don't bother with the zero register */
-            ret = false;
-        } else {
-            scoreboard_index = reg.index();
-            ret = true;
-        }
+        scoreboard_index = reg.index();
+        ret = true;
         break;
       case FloatRegClass:
         scoreboard_index = floatRegOffset + reg.index();
@@ -82,6 +77,9 @@ Scoreboard::findIndex(const RegId& reg, Index &scoreboard_index)
         break;
       case MiscRegClass:
           /* Don't bother with Misc registers */
+        ret = false;
+        break;
+      case InvalidRegClass:
         ret = false;
         break;
       default:
@@ -135,8 +133,8 @@ Scoreboard::markupInstDests(MinorDynInstPtr inst, Cycles retire_time,
                 " regIndex: %d final numResults: %d returnCycle: %d\n",
                 *inst, index, numResults[index], returnCycle[index]);
         } else {
-            /* Use zeroReg to mark invalid/untracked dests */
-            inst->flatDestRegIdx[dest_index] = RegId(IntRegClass, zeroReg);
+            /* Use an invalid ID to mark invalid/untracked dests */
+            inst->flatDestRegIdx[dest_index] = RegId();
         }
     }
 }

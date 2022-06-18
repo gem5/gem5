@@ -45,6 +45,7 @@ root = fs.Dir('#')
 extra_python_nodes = [
     root.Dir('src').Dir('python').srcnode(), # gem5 includes
     root.Dir('ext').Dir('ply').srcnode(), # ply is used by several files
+    root.Dir('ext').Dir('Kconfiglib').Dir('import').srcnode(), # kconfiglib
 ]
 
 extra_python_paths = [ node.abspath for node in extra_python_nodes ]

@@ -52,7 +52,7 @@ gem5_verify_config(
     config=joinpath(config_path, 'simple_memobj.py'),
     config_args = [],
     # note: by default the above script uses x86
-    valid_isas=(constants.gcn3_x86_tag,),
+    valid_isas=(constants.vega_x86_tag,),
 )
 
 gem5_verify_config(
@@ -61,7 +61,7 @@ gem5_verify_config(
     config=joinpath(config_path, 'simple_cache.py'),
     config_args = [],
     # note: by default the above script uses x86
-    valid_isas=(constants.gcn3_x86_tag,),
+    valid_isas=(constants.vega_x86_tag,),
 )
 
 # Note: for simple memobj and simple cache I want to use the traffic generator

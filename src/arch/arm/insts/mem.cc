@@ -119,7 +119,7 @@ SrsOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
         printMnemonic(ss, "ib");
         break;
     }
-    printIntReg(ss, INTREG_SP);
+    printIntReg(ss, int_reg::Sp);
     if (wb) {
         ss << "!";
     }

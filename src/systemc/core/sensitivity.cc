@@ -214,8 +214,20 @@ void newDynamicSensitivityEventAndList(
 
 DynamicSensitivityEventOrList::DynamicSensitivityEventOrList(
         Process *p, const sc_core::sc_event_or_list *eol) :
-    Sensitivity(p), DynamicSensitivity(p), SensitivityEvents(p, eol->events)
+    Sensitivity(p),
+    DynamicSensitivity(p),
+    SensitivityEvents(p, eol->events),
+    list(eol)
 {}
+
+DynamicSensitivityEventOrList::~DynamicSensitivityEventOrList()
+{
+    if (list->autoDelete) {
+        panic_if(list->busy,
+                 "sc_event_or_list can never be busy in gem5 implementation");
+        delete list;
+    }
+}
 
 bool
 DynamicSensitivityEventOrList::notifyWork(Event *e)
@@ -233,8 +245,20 @@ DynamicSensitivityEventOrList::notifyWork(Event *e)
 
 DynamicSensitivityEventAndList::DynamicSensitivityEventAndList(
         Process *p, const sc_core::sc_event_and_list *eal) :
-    Sensitivity(p), DynamicSensitivity(p), SensitivityEvents(p, eal->events)
+    Sensitivity(p),
+    DynamicSensitivity(p),
+    SensitivityEvents(p, eal->events),
+    list(eal)
 {}
+
+DynamicSensitivityEventAndList::~DynamicSensitivityEventAndList()
+{
+    if (list->autoDelete) {
+        panic_if(list->busy,
+                 "sc_event_and_list can never be busy in gem5 implementation");
+        delete list;
+    }
+}
 
 bool
 DynamicSensitivityEventAndList::notifyWork(Event *e)

@@ -37,10 +37,10 @@
 #
 # Authors: Andreas Hansson
 
-Import('main')
+Import('env')
 
-main.Library('iostream3', [main.SharedObject('zfstream.cc')])
+env.Library('iostream3', [env.SharedObject('zfstream.cc')])
 
-main.Prepend(CPPPATH=Dir('.'))
-main.Append(LIBS=['iostream3'])
-main.Prepend(LIBPATH=[Dir('.')])
+env.Prepend(CPPPATH=Dir('.'))
+env.Append(LIBS=['iostream3'])
+env.Prepend(LIBPATH=[Dir('.')])

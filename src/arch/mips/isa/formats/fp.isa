@@ -104,11 +104,11 @@ output exec {{
         assert(sizeof(T) == 4);
 
         for (int i = 0; i < inst->numSrcRegs(); i++) {
-            uint64_t src_bits = xc->readFloatRegOperandBits(inst, 0);
+            uint64_t src_bits = xc->getRegOperand(inst, 0);
 
             if (isNan(&src_bits, 32) ) {
                 mips_nan = MIPS32_QNAN;
-                xc->setFloatRegOperandBits(inst, 0, mips_nan);
+                xc->setRegOperand(inst, 0, mips_nan);
                 if (traceData) { traceData->setData(mips_nan); }
                 return true;
             }
@@ -129,7 +129,7 @@ output exec {{
             mips_nan = MIPS32_QNAN;
 
             //Set value to QNAN
-            cpu->setFloatRegOperandBits(inst, 0, mips_nan);
+            cpu->setRegOperand(inst, 0, mips_nan);
 
             //Read FCSR from FloatRegFile
             uint32_t fcsr_bits =

@@ -1,3 +1,2 @@
 TARGET_ISA = 'sparc'
-CPU_MODELS = 'AtomicSimpleCPU,TimingSimpleCPU,O3CPU'
 PROTOCOL = 'MI_example'

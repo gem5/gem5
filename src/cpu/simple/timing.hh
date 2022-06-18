@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013,2015,2018,2020 ARM Limited
+ * Copyright (c) 2012-2013,2015,2018,2020-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,7 +45,7 @@
 #include "cpu/simple/base.hh"
 #include "cpu/simple/exec_context.hh"
 #include "cpu/translation.hh"
-#include "params/TimingSimpleCPU.hh"
+#include "params/BaseTimingSimpleCPU.hh"
 
 namespace gem5
 {
@@ -54,7 +54,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 {
   public:
 
-    TimingSimpleCPU(const TimingSimpleCPUParams &params);
+    TimingSimpleCPU(const BaseTimingSimpleCPUParams &params);
     virtual ~TimingSimpleCPU();
 
     void init() override;
@@ -324,8 +324,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
      */
     void finishTranslation(WholeTranslationState *state);
 
-    /** hardware transactional memory **/
-    Fault initiateHtmCmd(Request::Flags flags) override;
+    /** hardware transactional memory & TLBI operations **/
+    Fault initiateMemMgmtCmd(Request::Flags flags) override;
 
     void htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
                             HtmFailureFaultCause) override;

@@ -38,6 +38,5 @@ class I82094AA(BasicPioDevice):
     int_requestor = RequestPort("Port for sending interrupt messages")
     int_latency = Param.Latency('1ns', \
             "Latency for an interrupt to propagate through this device.")
-    external_int_pic = Param.I8259(NULL, "External PIC, if any")
 
     inputs = VectorIntSinkPin('The pins that drive this IO APIC')

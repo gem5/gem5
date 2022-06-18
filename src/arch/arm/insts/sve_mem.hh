@@ -50,8 +50,8 @@ namespace ArmISA
 class SveMemVecFillSpill : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex base;
+    RegIndex dest;
+    RegIndex base;
     uint64_t imm;
 
     /// True if the base register is SP (used for SP alignment checking).
@@ -60,8 +60,8 @@ class SveMemVecFillSpill : public ArmStaticInst
     unsigned memAccessFlags;
 
     SveMemVecFillSpill(const char *mnem, ExtMachInst _machInst,
-                       OpClass __opClass, IntRegIndex _dest,
-                       IntRegIndex _base, uint64_t _imm)
+                       OpClass __opClass, RegIndex _dest,
+                       RegIndex _base, uint64_t _imm)
         : ArmStaticInst(mnem, _machInst, __opClass),
           dest(_dest), base(_base), imm(_imm),
           memAccessFlags(ArmISA::MMU::AllowUnaligned)
@@ -76,8 +76,8 @@ class SveMemVecFillSpill : public ArmStaticInst
 class SveMemPredFillSpill : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex base;
+    RegIndex dest;
+    RegIndex base;
     uint64_t imm;
 
     /// True if the base register is SP (used for SP alignment checking).
@@ -86,8 +86,8 @@ class SveMemPredFillSpill : public ArmStaticInst
     unsigned memAccessFlags;
 
     SveMemPredFillSpill(const char *mnem, ExtMachInst _machInst,
-                        OpClass __opClass, IntRegIndex _dest,
-                        IntRegIndex _base, uint64_t _imm)
+                        OpClass __opClass, RegIndex _dest,
+                        RegIndex _base, uint64_t _imm)
         : ArmStaticInst(mnem, _machInst, __opClass),
           dest(_dest), base(_base), imm(_imm),
           memAccessFlags(ArmISA::MMU::AllowUnaligned)
@@ -102,10 +102,10 @@ class SveMemPredFillSpill : public ArmStaticInst
 class SveContigMemSS : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex gp;
-    IntRegIndex base;
-    IntRegIndex offset;
+    RegIndex dest;
+    RegIndex gp;
+    RegIndex base;
+    RegIndex offset;
 
     /// True if the base register is SP (used for SP alignment checking).
     bool baseIsSP;
@@ -113,8 +113,8 @@ class SveContigMemSS : public ArmStaticInst
     unsigned memAccessFlags;
 
     SveContigMemSS(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                   IntRegIndex _dest, IntRegIndex _gp, IntRegIndex _base,
-                   IntRegIndex _offset)
+                   RegIndex _dest, RegIndex _gp, RegIndex _base,
+                   RegIndex _offset)
         : ArmStaticInst(mnem, _machInst, __opClass),
           dest(_dest), gp(_gp), base(_base), offset(_offset),
           memAccessFlags(ArmISA::MMU::AllowUnaligned)
@@ -129,9 +129,9 @@ class SveContigMemSS : public ArmStaticInst
 class SveContigMemSI : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex gp;
-    IntRegIndex base;
+    RegIndex dest;
+    RegIndex gp;
+    RegIndex base;
     uint64_t imm;
 
     /// True if the base register is SP (used for SP alignment checking).
@@ -140,7 +140,7 @@ class SveContigMemSI : public ArmStaticInst
     unsigned memAccessFlags;
 
     SveContigMemSI(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                   IntRegIndex _dest, IntRegIndex _gp, IntRegIndex _base,
+                   RegIndex _dest, RegIndex _gp, RegIndex _base,
                    uint64_t _imm)
         : ArmStaticInst(mnem, _machInst, __opClass),
           dest(_dest), gp(_gp), base(_base), imm(_imm),

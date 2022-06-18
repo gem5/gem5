@@ -157,9 +157,9 @@ EmuFreebsd::syscall(ThreadContext *tc)
     process->Process::syscall(tc);
 
     if (dynamic_cast<ArmProcess64 *>(process))
-        syscallDescs64.get(tc->readIntReg(INTREG_X8))->doSyscall(tc);
+        syscallDescs64.get(tc->getReg(int_reg::X8))->doSyscall(tc);
     else
-        syscallDescs32.get(tc->readIntReg(INTREG_R7))->doSyscall(tc);
+        syscallDescs32.get(tc->getReg(int_reg::R7))->doSyscall(tc);
 }
 
 } // namespace ArmISA

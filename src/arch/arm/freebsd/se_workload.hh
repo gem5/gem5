@@ -84,15 +84,15 @@ struct Result<ABI, SyscallReturn,
     {
         RegVal val;
         if (ret.successful()) {
-            tc->setCCReg(ArmISA::CCREG_C, 0);
+            tc->setReg(ArmISA::cc_reg::C, (RegVal)0);
             val = ret.returnValue();
         } else {
-            tc->setCCReg(ArmISA::CCREG_C, 1);
+            tc->setReg(ArmISA::cc_reg::C, 1);
             val = ret.encodedValue();
         }
-        tc->setIntReg(ArmISA::ReturnValueReg, val);
+        tc->setReg(ArmISA::ReturnValueReg, val);
         if (ret.count() > 1)
-            tc->setIntReg(ArmISA::SyscallPseudoReturnReg, ret.value2());
+            tc->setReg(ArmISA::SyscallPseudoReturnReg, ret.value2());
     }
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013,2020 ARM Limited
+ * Copyright (c) 2012-2013,2020-2021 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -268,8 +268,7 @@ RubyPort::MemResponsePort::recvTimingReq(PacketPtr pkt)
     // Check for pio requests and directly send them to the dedicated
     // pio port.
     if (pkt->cmd != MemCmd::MemSyncReq) {
-        if (!isPhysMemAddress(pkt)) {
-            assert(!pkt->req->isHTMCmd());
+        if (!pkt->req->isMemMgmt() && !isPhysMemAddress(pkt)) {
             assert(ruby_port->memRequestPort.isConnected());
             DPRINTF(RubyPort, "Request address %#x assumed to be a "
                     "pio address\n", pkt->getAddr());
@@ -472,6 +471,54 @@ RubyPort::ruby_hit_callback(PacketPtr pkt)
     port->hitCallback(pkt);
 
     trySendRetries();
+}
+
+void
+RubyPort::ruby_unaddressed_callback(PacketPtr pkt)
+{
+    DPRINTF(RubyPort, "Unaddressed callback for %s\n", pkt->cmdString());
+
+    assert(pkt->isRequest());
+
+    // First we must retrieve the request port from the sender State
+    RubyPort::SenderState *senderState =
+        safe_cast<RubyPort::SenderState *>(pkt->popSenderState());
+    MemResponsePort *port = senderState->port;
+    assert(port != NULL);
+    delete senderState;
+
+    port->hitCallback(pkt);
+
+    trySendRetries();
+}
+
+void
+RubyPort::ruby_stale_translation_callback(Addr txnId)
+{
+    DPRINTF(RubyPort, "Stale Translation Callback\n");
+
+    // Allocate the invalidate request and packet on the stack, as it is
+    // assumed they will not be modified or deleted by receivers.
+    // TODO: should this really be using funcRequestorId?
+    auto request = std::make_shared<Request>(
+        0, RubySystem::getBlockSizeBytes(), Request::TLBI_EXT_SYNC,
+        Request::funcRequestorId);
+    // Store the txnId in extraData instead of the address
+    request->setExtraData(txnId);
+
+    // Use a single packet to signal all snooping ports of the external sync.
+    // This assumes that snooping ports do NOT modify the packet/request
+    // TODO rename TlbiExtSync to StaleTranslation
+    Packet pkt(request, MemCmd::TlbiExtSync);
+    // TODO - see where response_ports is filled, might be we only want to send
+    // to specific places
+    for (auto &port : response_ports) {
+        // check if the connected request port is snooping
+        if (port->isSnooping()) {
+            // send as a snoop request
+            port->sendTimingSnoopReq(&pkt);
+        }
+    }
 }
 
 void

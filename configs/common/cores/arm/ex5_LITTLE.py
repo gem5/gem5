@@ -88,7 +88,7 @@ class ex5_LITTLE_FUP(MinorFUPool):
         ex5_LITTLE_FP(), ex5_LITTLE_MemFU(),
         ex5_LITTLE_MiscFU()]
 
-class ex5_LITTLE(MinorCPU):
+class ex5_LITTLE(ArmMinorCPU):
     executeFuncUnits = ex5_LITTLE_FUP()
 
 class L1Cache(Cache):

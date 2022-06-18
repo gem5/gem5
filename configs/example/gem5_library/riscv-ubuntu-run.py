@@ -53,6 +53,7 @@ from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.resources.resource import Resource
+from gem5.simulate.simulator import Simulator
 
 # This runs a check to ensure the gem5 binary is compiled for RISCV.
 
@@ -79,6 +80,7 @@ memory = DualChannelDDR4_2400(size = "3GB")
 # Here we setup the processor. We use a simple processor.
 processor = SimpleProcessor(
     cpu_type=CPUTypes.TIMING,
+    isa=ISA.RISCV,
     num_cores=2,
 )
 
@@ -113,34 +115,5 @@ board.set_kernel_disk_workload(
     ),
 )
 
-root = Root(full_system=True, system=board)
-
-m5.instantiate()
-
-# We simulate the system till we encounter `m5_exit instruction encountered`.
-
-exit_event = m5.simulate()
-
-# We check whether the simulation ended with `m5_exit instruction encountered`
-
-if exit_event.getCause() == "m5_exit instruction encountered":
-    # We acknowledge the user that the boot was successful.
-
-    print("Successfully completed booting!")
-else:
-    # `m5_exit instruction encountered` was never encountered. We exit the
-    # program unsuccessfully.
-
-    print("The startup was not completed successfully!",)
-    print(
-    "Exiting @ tick {} because {}."\
-        .format(m5.curTick(), exit_event.getCause())
-    )
-    exit(-1)
-
-# We are done with the simulation. We exit the program now.
-
-print(
-"Exiting @ tick {} because {}."\
-    .format(m5.curTick(), exit_event.getCause())
-)
+simulator = Simulator(board=board)
+simulator.run()

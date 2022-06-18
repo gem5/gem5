@@ -90,7 +90,7 @@ class QueueEntry : public Packet::SenderState, public Named
         const Tick recvTime;  //!< Time when request was received (for stats)
         const Tick readyTime; //!< Time when request is ready to be serviced
         const Counter order;  //!< Global order (for memory consistency mgmt)
-        const PacketPtr pkt;  //!< Pending request packet.
+        PacketPtr pkt;  //!< Pending request packet.
 
         /**
          * Default constructor. Assigns the current tick as the arrival time

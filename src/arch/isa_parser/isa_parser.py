@@ -127,17 +127,6 @@ class Template(object):
             if operands.readPC or operands.setPC:
                 myDict['op_decl'] += pcstate_decl
 
-            # In case there are predicated register reads and write, declare
-            # the variables for register indicies. It is being assumed that
-            # all the operands in the OperandList are also in the
-            # SubOperandList and in the same order. Otherwise, it is
-            # expected that predication would not be used for the operands.
-            if operands.predRead:
-                myDict['op_decl'] += 'uint8_t _sourceIndex = 0;\n'
-            if operands.predWrite:
-                myDict['op_decl'] += \
-                    '[[maybe_unused]] uint8_t _destIndex = 0;\n'
-
             is_src = lambda op: op.is_src
             is_dest = lambda op: op.is_dest
 
@@ -400,14 +389,6 @@ class InstObjParams(object):
         # The header of the constructor declares the variables to be used
         # in the body of the constructor.
         header = ''
-        header += '\n\t_numSrcRegs = 0;'
-        header += '\n\t_numDestRegs = 0;'
-        header += '\n\t_numFPDestRegs = 0;'
-        header += '\n\t_numVecDestRegs = 0;'
-        header += '\n\t_numVecElemDestRegs = 0;'
-        header += '\n\t_numVecPredDestRegs = 0;'
-        header += '\n\t_numIntDestRegs = 0;'
-        header += '\n\t_numCCDestRegs = 0;'
 
         self.constructor = header + \
                            self.operands.concatAttrStrings('constructor')
@@ -525,6 +506,18 @@ class ISAParser(Grammar):
 
         symbols = ('makeList', 're')
         self.exportContext = dict([(s, eval(s)) for s in symbols])
+        self.exportContext.update({
+            'overrideInOperand': overrideInOperand,
+            'IntRegOp': IntRegOperandDesc,
+            'FloatRegOp': FloatRegOperandDesc,
+            'CCRegOp': CCRegOperandDesc,
+            'VecElemOp': VecElemOperandDesc,
+            'VecRegOp': VecRegOperandDesc,
+            'VecPredRegOp': VecPredRegOperandDesc,
+            'ControlRegOp': ControlRegOperandDesc,
+            'MemOp': MemOperandDesc,
+            'PCStateOp': PCStateOperandDesc,
+        })
 
         self.maxMiscDestRegs = 0
 
@@ -1453,75 +1446,19 @@ StaticInstPtr
 
     def buildOperandNameMap(self, user_dict, lineno):
         operand_name = {}
-        for op_name, val in user_dict.items():
+        for op_name, op_desc in user_dict.items():
+            assert(isinstance(op_desc, OperandDesc))
 
-            # Check if extra attributes have been specified.
-            if len(val) > 9:
-                error(lineno, 'error: too many attributes for operand "%s"' %
-                      base_cls_name)
+            base_cls = op_desc.attrs['base_cls']
 
-            # Pad val with None in case optional args are missing
-            val += (None, None, None, None)
-            base_cls_name, dflt_ext, reg_spec, flags, sort_pri, \
-            read_code, write_code, read_predicate, write_predicate = val[:9]
+            op_desc.setName(op_name)
 
-            # Canonical flag structure is a triple of lists, where each list
-            # indicates the set of flags implied by this operand always, when
-            # used as a source, and when used as a dest, respectively.
-            # For simplicity this can be initialized using a variety of fairly
-            # obvious shortcuts; we convert these to canonical form here.
-            if not flags:
-                # no flags specified (e.g., 'None')
-                flags = ( [], [], [] )
-            elif isinstance(flags, str):
-                # a single flag: assumed to be unconditional
-                flags = ( [ flags ], [], [] )
-            elif isinstance(flags, list):
-                # a list of flags: also assumed to be unconditional
-                flags = ( flags, [], [] )
-            elif isinstance(flags, tuple):
-                # it's a tuple: it should be a triple,
-                # but each item could be a single string or a list
-                (uncond_flags, src_flags, dest_flags) = flags
-                flags = (makeList(uncond_flags),
-                         makeList(src_flags), makeList(dest_flags))
-
-            # Accumulate attributes of new operand class in tmp_dict
-            tmp_dict = {}
-            attrList = ['reg_spec', 'flags', 'sort_pri',
-                        'read_code', 'write_code',
-                        'read_predicate', 'write_predicate']
-            if dflt_ext:
-                dflt_ctype = self.operandTypeMap[dflt_ext]
-                attrList.extend(['dflt_ctype', 'dflt_ext'])
-            # reg_spec is either just a string or a dictionary
-            # (for elems of vector)
-            if isinstance(reg_spec, tuple):
-                (reg_spec, elem_spec) = reg_spec
-                if isinstance(elem_spec, str):
-                    attrList.append('elem_spec')
-                else:
-                    assert(isinstance(elem_spec, dict))
-                    elems = elem_spec
-                    attrList.append('elems')
-            for attr in attrList:
-                tmp_dict[attr] = eval(attr)
-            tmp_dict['base_name'] = op_name
-
-            # New class name will be e.g. "IntReg_Ra"
-            cls_name = base_cls_name + '_' + op_name
-            # Evaluate string arg to get class object.  Note that the
-            # actual base class for "IntReg" is "IntRegOperand", i.e. we
-            # have to append "Operand".
-            try:
-                base_cls = eval(base_cls_name + 'Operand')
-            except NameError:
-                error(lineno,
-                      'error: unknown operand base class "%s"' % base_cls_name)
+            # New class name will be e.g. "IntRegOperand_Ra"
+            cls_name = base_cls.__name__ + '_' + op_name
             # The following statement creates a new class called
             # <cls_name> as a subclass of <base_cls> with the attributes
-            # in tmp_dict, just as if we evaluated a class declaration.
-            operand_name[op_name] = type(cls_name, (base_cls,), tmp_dict)
+            # in op_desc.attrs, just as if we evaluated a class declaration.
+            operand_name[op_name] = type(cls_name, (base_cls,), op_desc.attrs)
 
         self.operandNameMap.update(operand_name)
 
@@ -1540,7 +1477,7 @@ StaticInstPtr
         extensions = self.operandTypeMap.keys()
 
         operandsREString = r'''
-        (?<!\w)      # neg. lookbehind assertion: prevent partial matches
+        (?<!\w|:)     # neg. lookbehind assertion: prevent partial matches
         ((%s)(?:_(%s))?)   # match: operand with optional '_' then suffix
         (?!\w)       # neg. lookahead assertion: prevent partial matches
         ''' % ('|'.join(operands), '|'.join(extensions))

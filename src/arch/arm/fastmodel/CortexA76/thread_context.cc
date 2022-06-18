@@ -102,7 +102,7 @@ CortexA76TC::readIntRegFlat(RegIndex idx) const
 
     auto *non_const_this = const_cast<CortexA76TC *>(this);
 
-    if (idx == ArmISA::INTREG_R13_MON || idx == ArmISA::INTREG_R14_MON) {
+    if (idx == ArmISA::int_reg::R13Mon || idx == ArmISA::int_reg::R14Mon) {
         orig_cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
         ArmISA::CPSR new_cpsr = orig_cpsr;
         new_cpsr.mode = ArmISA::MODE_MON;
@@ -111,7 +111,7 @@ CortexA76TC::readIntRegFlat(RegIndex idx) const
 
     RegVal val = ThreadContext::readIntRegFlat(idx);
 
-    if (idx == ArmISA::INTREG_R13_MON || idx == ArmISA::INTREG_R14_MON) {
+    if (idx == ArmISA::int_reg::R13Mon || idx == ArmISA::int_reg::R14Mon) {
         non_const_this->setMiscReg(ArmISA::MISCREG_CPSR, orig_cpsr);
     }
 
@@ -123,7 +123,7 @@ CortexA76TC::setIntRegFlat(RegIndex idx, RegVal val)
 {
     ArmISA::CPSR orig_cpsr;
 
-    if (idx == ArmISA::INTREG_R13_MON || idx == ArmISA::INTREG_R14_MON) {
+    if (idx == ArmISA::int_reg::R13Mon || idx == ArmISA::int_reg::R14Mon) {
         orig_cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
         ArmISA::CPSR new_cpsr = orig_cpsr;
         new_cpsr.mode = ArmISA::MODE_MON;
@@ -132,7 +132,7 @@ CortexA76TC::setIntRegFlat(RegIndex idx, RegVal val)
 
     ThreadContext::setIntRegFlat(idx, val);
 
-    if (idx == ArmISA::INTREG_R13_MON || idx == ArmISA::INTREG_R14_MON) {
+    if (idx == ArmISA::int_reg::R13Mon || idx == ArmISA::int_reg::R14Mon) {
         setMiscReg(ArmISA::MISCREG_CPSR, orig_cpsr);
     }
 }
@@ -142,10 +142,10 @@ CortexA76TC::readCCRegFlat(RegIndex idx) const
 {
     RegVal result = Iris::ThreadContext::readCCRegFlat(idx);
     switch (idx) {
-      case ArmISA::CCREG_NZ:
+      case ArmISA::cc_reg::Nz:
         result = ((ArmISA::CPSR)result).nz;
         break;
-      case ArmISA::CCREG_FP:
+      case ArmISA::cc_reg::Fp:
         result = bits(result, 31, 28);
         break;
       default:
@@ -158,14 +158,14 @@ void
 CortexA76TC::setCCRegFlat(RegIndex idx, RegVal val)
 {
     switch (idx) {
-      case ArmISA::CCREG_NZ:
+      case ArmISA::cc_reg::Nz:
         {
             ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
             cpsr.nz = val;
             val = cpsr;
         }
         break;
-      case ArmISA::CCREG_FP:
+      case ArmISA::cc_reg::Fp:
         {
             ArmISA::FPSCR fpscr = readMiscRegNoEffect(ArmISA::MISCREG_FPSCR);
             val = insertBits(fpscr, 31, 28, val);
@@ -267,7 +267,7 @@ Iris::ThreadContext::IdxNameMap CortexA76TC::miscRegIdxNameMap({
         { ArmISA::MISCREG_DBGOSLAR, "DBGOSLAR" },
         // ArmISA::MISCREG_DBGOSLSR?
         // ArmISA::MISCREG_DBGOSDLR?
-        { ArmISA::MISCREG_DBGPRCR, "DBGPRCR_EL1" }, //XXX verify
+        // ArmISA::MISCREG_DBGPRCR?
         // ArmISA::MISCREG_DBGDSAR?
         { ArmISA::MISCREG_DBGCLAIMSET, "DBGCLAIMSET" },
         { ArmISA::MISCREG_DBGCLAIMCLR, "DBGCLAIMCLR" },
@@ -283,119 +283,119 @@ Iris::ThreadContext::IdxNameMap CortexA76TC::miscRegIdxNameMap({
 
         // AArch32 CP15 registers (system control)
         { ArmISA::MISCREG_MIDR, "MIDR" },
-        { ArmISA::MISCREG_CTR, "CTR" },
-        { ArmISA::MISCREG_TCMTR, "TCMTR" },
-        { ArmISA::MISCREG_TLBTR, "TLBTR" },
-        { ArmISA::MISCREG_MPIDR, "MPIDR" },
-        { ArmISA::MISCREG_REVIDR, "REVIDR" },
-        { ArmISA::MISCREG_ID_PFR0, "ID_PFR0" },
-        { ArmISA::MISCREG_ID_PFR1, "ID_PFR1" },
-        { ArmISA::MISCREG_ID_DFR0, "ID_DFR0" },
-        { ArmISA::MISCREG_ID_AFR0, "ID_AFR0" },
-        { ArmISA::MISCREG_ID_MMFR0, "ID_MMFR0" },
-        { ArmISA::MISCREG_ID_MMFR1, "ID_MMFR1" },
-        { ArmISA::MISCREG_ID_MMFR2, "ID_MMFR2" },
-        { ArmISA::MISCREG_ID_MMFR3, "ID_MMFR3" },
-        { ArmISA::MISCREG_ID_MMFR4, "ID_MMFR4" },
-        { ArmISA::MISCREG_ID_ISAR0, "ID_ISAR0" },
-        { ArmISA::MISCREG_ID_ISAR1, "ID_ISAR1" },
-        { ArmISA::MISCREG_ID_ISAR2, "ID_ISAR2" },
-        { ArmISA::MISCREG_ID_ISAR3, "ID_ISAR3" },
-        { ArmISA::MISCREG_ID_ISAR4, "ID_ISAR4" },
-        { ArmISA::MISCREG_ID_ISAR5, "ID_ISAR5" },
-        { ArmISA::MISCREG_ID_ISAR6, "ID_ISAR6" },
-        { ArmISA::MISCREG_CCSIDR, "CCSIDR" },
-        { ArmISA::MISCREG_CLIDR, "CLIDR" },
-        { ArmISA::MISCREG_AIDR, "AIDR" },
-        { ArmISA::MISCREG_CSSELR, "CSSELR_EL1" }, //XXX verify
+        // ArmISA::MISCREG_CTR?
+        // ArmISA::MISCREG_TCMTR?
+        // ArmISA::MISCREG_TLBTR?
+        // ArmISA::MISCREG_MPIDR?
+        // ArmISA::MISCREG_REVIDR?
+        // ArmISA::MISCREG_ID_PFR0?
+        // ArmISA::MISCREG_ID_PFR1?
+        // ArmISA::MISCREG_ID_DFR0?
+        // ArmISA::MISCREG_ID_AFR0?
+        // ArmISA::MISCREG_ID_MMFR0?
+        // ArmISA::MISCREG_ID_MMFR1?
+        // ArmISA::MISCREG_ID_MMFR2?
+        // ArmISA::MISCREG_ID_MMFR3?
+        // ArmISA::MISCREG_ID_MMFR4?
+        // ArmISA::MISCREG_ID_ISAR0?
+        // ArmISA::MISCREG_ID_ISAR1?
+        // ArmISA::MISCREG_ID_ISAR2?
+        // ArmISA::MISCREG_ID_ISAR3?
+        // ArmISA::MISCREG_ID_ISAR4?
+        // ArmISA::MISCREG_ID_ISAR5?
+        // ArmISA::MISCREG_ID_ISAR6?
+        // ArmISA::MISCREG_CCSIDR?
+        // ArmISA::MISCREG_CLIDR?
+        // ArmISA::MISCREG_AIDR?
+        // ArmISA::MISCREG_CSSELR?
         // ArmISA::MISCREG_CSSELR_NS?
         // ArmISA::MISCREG_CSSELR_S?
-        { ArmISA::MISCREG_VPIDR, "VPIDR" },
-        { ArmISA::MISCREG_VMPIDR, "VMPIDR" },
+        // ArmISA::MISCREG_VPIDR?
+        // ArmISA::MISCREG_VMPIDR?,
         // ArmISA::MISCREG_SCTLR?
         // ArmISA::MISCREG_SCTLR_NS?
         // ArmISA::MISCREG_SCTLR_S?
         // ArmISA::MISCREG_ACTLR?
         // ArmISA::MISCREG_ACTLR_NS?
         // ArmISA::MISCREG_ACTLR_S?
-        { ArmISA::MISCREG_CPACR, "CPACR" },
+        // ArmISA::MISCREG_CPACR?
         { ArmISA::MISCREG_SCR, "SCR" },
         { ArmISA::MISCREG_SDER, "SDER" },
-        { ArmISA::MISCREG_NSACR, "NSACR" },
-        { ArmISA::MISCREG_HSCTLR, "HSCTLR" },
-        { ArmISA::MISCREG_HACTLR, "HACTLR" },
-        { ArmISA::MISCREG_HCR, "HCR" },
-        { ArmISA::MISCREG_HDCR, "HDCR" },
-        { ArmISA::MISCREG_HCPTR, "HCPTR" },
-        { ArmISA::MISCREG_HSTR, "HSTR_EL2" }, //XXX verify
-        { ArmISA::MISCREG_HACR, "HACR" },
+        // ArmISA::MISCREG_NSACR?
+        // ArmISA::MISCREG_HSCTLR?
+        // ArmISA::MISCREG_HACTLR?
+        // ArmISA::MISCREG_HCR?
+        // ArmISA::MISCREG_HDCR?
+        // ArmISA::MISCREG_HCPTR?
+        // ArmISA::MISCREG_HSTR?
+        // ArmISA::MISCREG_HACR?
         // ArmISA::MISCREG_TTBR0?
-        { ArmISA::MISCREG_TTBR0_NS, "NS_TTBR0" }, //XXX verify
+        // ArmISA::MISCREG_TTBR0_NS?
         // ArmISA::MISCREG_TTBR0_S?
         // ArmISA::MISCREG_TTBR1?
-        { ArmISA::MISCREG_TTBR1_NS, "NS_TTBR1" }, //XXX verify
+        // ArmISA::MISCREG_TTBR1_NS?
         // ArmISA::MISCREG_TTBR1_S?
         // ArmISA::MISCREG_TTBCR?
-        { ArmISA::MISCREG_TTBCR_NS, "NS_TTBCR" }, //XXX verify
+        // ArmISA::MISCREG_TTBCR_NS?
         // ArmISA::MISCREG_TTBCR_S?
         // ArmISA::MISCREG_HTCR?
         // ArmISA::MISCREG_VTCR?
         // ArmISA::MISCREG_DACR?
-        { ArmISA::MISCREG_DACR_NS, "NS_DACR" }, //XXX verify
+        // ArmISA::MISCREG_DACR_NS?
         // ArmISA::MISCREG_DACR_S?
         // ArmISA::MISCREG_DFSR?
-        { ArmISA::MISCREG_DFSR_NS, "NS_DFSR" }, //XXX verify
+        // ArmISA::MISCREG_DFSR_NS?
         // ArmISA::MISCREG_DFSR_S?
         // ArmISA::MISCREG_IFSR?
-        { ArmISA::MISCREG_IFSR_NS, "NS_IFSR" },
+        // ArmISA::MISCREG_IFSR_NS?
         // ArmISA::MISCREG_IFSR_S?
-        { ArmISA::MISCREG_ADFSR, "ADFSR" },
+        // ArmISA::MISCREG_ADFSR?
         // ArmISA::MISCREG_ADFSR_NS?
         // ArmISA::MISCREG_ADFSR_S?
-        { ArmISA::MISCREG_AIFSR, "AIFSR" },
+        // ArmISA::MISCREG_AIFSR?
         // ArmISA::MISCREG_AIFSR_NS?
         // ArmISA::MISCREG_AIFSR_S?
         // ArmISA::MISCREG_HADFSR?
         // ArmISA::MISCREG_HAIFSR?
-        { ArmISA::MISCREG_HSR, "HSR" },
+        // ArmISA::MISCREG_HSR?
         // ArmISA::MISCREG_DFAR?
-        { ArmISA::MISCREG_DFAR_NS, "NS_DFAR" }, //XXX verify
+        // ArmISA::MISCREG_DFAR_NS?
         // ArmISA::MISCREG_DFAR_S?
         // ArmISA::MISCREG_IFAR?
-        { ArmISA::MISCREG_IFAR_NS, "NS_IFAR" }, //XXX verify
+        // ArmISA::MISCREG_IFAR_NS?
         // ArmISA::MISCREG_IFAR_S?
-        { ArmISA::MISCREG_HDFAR, "HDFAR" },
-        { ArmISA::MISCREG_HIFAR, "HIFAR" },
-        { ArmISA::MISCREG_HPFAR, "HPFAR" },
-        { ArmISA::MISCREG_ICIALLUIS, "ICIALLUIS" },
+        // ArmISA::MISCREG_HDFAR?
+        // ArmISA::MISCREG_HIFAR?
+        // ArmISA::MISCREG_HPFAR?
+        // ArmISA::MISCREG_ICIALLUIS?
         // ArmISA::MISCREG_BPIALLIS?
         // ArmISA::MISCREG_PAR?
-        { ArmISA::MISCREG_PAR_NS, "NS_PAR" }, //XXX verify
+        // ArmISA::MISCREG_PAR_NS?
         // ArmISA::MISCREG_PAR_S?
-        { ArmISA::MISCREG_ICIALLU, "ICIALLU" },
-        { ArmISA::MISCREG_ICIMVAU, "ICIMVAU" },
+        // ArmISA::MISCREG_ICIALLU?
+        // ArmISA::MISCREG_ICIMVAU?
         // ArmISA::MISCREG_CP15ISB?
         // ArmISA::MISCREG_BPIALL?
         // ArmISA::MISCREG_BPIMVA?
-        { ArmISA::MISCREG_DCIMVAC, "DCIMVAC" },
-        { ArmISA::MISCREG_DCISW, "DCISW" },
-        { ArmISA::MISCREG_ATS1CPR, "ATS1CPR" },
-        { ArmISA::MISCREG_ATS1CPW, "ATS1CPW" },
-        { ArmISA::MISCREG_ATS1CUR, "ATS1CUR" },
-        { ArmISA::MISCREG_ATS1CUW, "ATS1CUW" },
-        { ArmISA::MISCREG_ATS12NSOPR, "ATS12NSOPR" },
-        { ArmISA::MISCREG_ATS12NSOPW, "ATS12NSOPW" },
-        { ArmISA::MISCREG_ATS12NSOUR, "ATS12NSOUR" },
-        { ArmISA::MISCREG_ATS12NSOUW, "ATS12NSOUW" },
-        { ArmISA::MISCREG_DCCMVAC, "DCCMVAC" },
-        { ArmISA::MISCREG_DCCSW, "DCCSW" },
+        // ArmISA::MISCREG_DCIMVAC?
+        // ArmISA::MISCREG_DCISW?
+        // ArmISA::MISCREG_ATS1CPR?
+        // ArmISA::MISCREG_ATS1CPW?
+        // ArmISA::MISCREG_ATS1CUR?
+        // ArmISA::MISCREG_ATS1CUW?
+        // ArmISA::MISCREG_ATS12NSOPR?
+        // ArmISA::MISCREG_ATS12NSOPW?
+        // ArmISA::MISCREG_ATS12NSOUR?
+        // ArmISA::MISCREG_ATS12NSOUW?
+        // ArmISA::MISCREG_DCCMVAC?
+        // ArmISA::MISCREG_DCCSW?
         // ArmISA::MISCREG_CP15DSB?
         // ArmISA::MISCREG_CP15DMB?
-        { ArmISA::MISCREG_DCCMVAU, "DCCMVAU" },
+        // ArmISA::MISCREG_DCCMVAU?
         // ArmISA::MISCREG_DCCIMVAC?
-        { ArmISA::MISCREG_DCCISW, "DCCISW" },
-        { ArmISA::MISCREG_ATS1HR, "ATS1HR" },
-        { ArmISA::MISCREG_ATS1HW, "ATS1HW" },
+        // ArmISA::MISCREG_DCCISW?
+        // ArmISA::MISCREG_ATS1HR?
+        // ArmISA::MISCREG_ATS1HW?
         // ArmISA::MISCREG_TLBIALLIS?
         // ArmISA::MISCREG_TLBIMVAIS?
         // ArmISA::MISCREG_TLBIASIDIS?
@@ -437,7 +437,7 @@ Iris::ThreadContext::IdxNameMap CortexA76TC::miscRegIdxNameMap({
         { ArmISA::MISCREG_PMCCNTR, "PMCCNTR" },
         { ArmISA::MISCREG_PMXEVTYPER, "PMXEVTYPER" },
         { ArmISA::MISCREG_PMCCFILTR, "PMCCFILTR" },
-        { ArmISA::MISCREG_PMXEVCNTR, "PMXEVCNTR_EL0" }, //XXX verify
+        { ArmISA::MISCREG_PMXEVCNTR, "PMXEVCNTR" },
         { ArmISA::MISCREG_PMUSERENR, "PMUSERENR" },
         { ArmISA::MISCREG_PMINTENSET, "PMINTENSET" },
         { ArmISA::MISCREG_PMINTENCLR, "PMINTENCLR" },
@@ -445,50 +445,50 @@ Iris::ThreadContext::IdxNameMap CortexA76TC::miscRegIdxNameMap({
         // ArmISA::MISCREG_L2CTLR?
         // ArmISA::MISCREG_L2ECTLR?
         // ArmISA::MISCREG_PRRR?
-        { ArmISA::MISCREG_PRRR_NS, "NS_PRRR" }, //XXX verify
+        // ArmISA::MISCREG_PRRR_NS?
         // ArmISA::MISCREG_PRRR_S?
         // ArmISA::MISCREG_MAIR0?
         // ArmISA::MISCREG_MAIR0_NS?
         // ArmISA::MISCREG_MAIR0_S?
         // ArmISA::MISCREG_NMRR?
-        { ArmISA::MISCREG_NMRR_NS, "NS_NMRR" }, //XXX verify
+        // ArmISA::MISCREG_NMRR_NS?
         // ArmISA::MISCREG_NMRR_S?
         // ArmISA::MISCREG_MAIR1?
         // ArmISA::MISCREG_MAIR1_NS?
         // ArmISA::MISCREG_MAIR1_S?
         // ArmISA::MISCREG_AMAIR0?
-        { ArmISA::MISCREG_AMAIR0_NS, "NS_AMAIR0" }, //XXX verify
+        // ArmISA::MISCREG_AMAIR0_N?
         // ArmISA::MISCREG_AMAIR0_S?
         // ArmISA::MISCREG_AMAIR1?
-        { ArmISA::MISCREG_AMAIR1_NS, "NS_AMAIR1" }, //XXX verify
+        // ArmISA::MISCREG_AMAIR1_NS?
         // ArmISA::MISCREG_AMAIR1_S?
-        { ArmISA::MISCREG_HMAIR0, "HMAIR0" },
-        { ArmISA::MISCREG_HMAIR1, "HMAIR1" },
-        { ArmISA::MISCREG_HAMAIR0, "HAMAIR0" },
-        { ArmISA::MISCREG_HAMAIR1, "HAMAIR1" },
+        // ArmISA::MISCREG_HMAIR0?
+        // ArmISA::MISCREG_HMAIR1?
+        // ArmISA::MISCREG_HAMAIR0?
+        // ArmISA::MISCREG_HAMAIR1?
         // ArmISA::MISCREG_VBAR?
-        { ArmISA::MISCREG_VBAR_NS, "NS_VBAR" }, //XXX verify
+        // ArmISA::MISCREG_VBAR_NS?
         // ArmISA::MISCREG_VBAR_S?
         { ArmISA::MISCREG_MVBAR, "MVBAR" },
-        { ArmISA::MISCREG_RMR, "RMR" },
-        { ArmISA::MISCREG_ISR, "ISR" },
-        { ArmISA::MISCREG_HVBAR, "HVBAR" },
-        { ArmISA::MISCREG_FCSEIDR, "FCSEIDR" },
+        // ArmISA::MISCREG_RMR?
+        // ArmISA::MISCREG_ISR?
+        // ArmISA::MISCREG_HVBAR?
+        // ArmISA::MISCREG_FCSEIDR?
         // ArmISA::MISCREG_CONTEXTIDR?
-        { ArmISA::MISCREG_CONTEXTIDR_NS, "NS_CONTEXTIDR" }, //XXX verify
+        // ArmISA::MISCREG_CONTEXTIDR_NS?
         // ArmISA::MISCREG_CONTEXTIDR_S?
         // ArmISA::MISCREG_TPIDRURW?
-        { ArmISA::MISCREG_TPIDRURW_NS, "NS_TPIDRURW" }, //XXX verify
+        // ArmISA::MISCREG_TPIDRURW_NS?
         // ArmISA::MISCREG_TPIDRURW_S?
         // ArmISA::MISCREG_TPIDRURO?
-        { ArmISA::MISCREG_TPIDRURO_NS, "NS_TPIDRURO" }, //XXX verify
+        // ArmISA::MISCREG_TPIDRURO_NS?
         // ArmISA::MISCREG_TPIDRURO_S?
         // ArmISA::MISCREG_TPIDRPRW?
-        { ArmISA::MISCREG_TPIDRPRW_NS, "NS_TPIDRPRW" }, //XXX verify
-        /// ArmISA::MISCREG_TPIDRPRW_S?
-        { ArmISA::MISCREG_HTPIDR, "HTPIDR" },
+        // ArmISA::MISCREG_TPIDRPRW_NS?
+        // ArmISA::MISCREG_TPIDRPRW_S?
+        // ArmISA::MISCREG_HTPIDR?
         { ArmISA::MISCREG_CNTFRQ, "CNTFRQ" },
-        { ArmISA::MISCREG_CNTKCTL, "CNTKCTL" },
+        // ArmISA::MISCREG_CNTKCTL?
         { ArmISA::MISCREG_CNTP_TVAL, "CNTP_TVAL" },
         // ArmISA::MISCREG_CNTP_TVAL_NS?
         // ArmISA::MISCREG_CNTP_TVAL_S?
@@ -497,9 +497,9 @@ Iris::ThreadContext::IdxNameMap CortexA76TC::miscRegIdxNameMap({
         // ArmISA::MISCREG_CNTP_CTL_S?
         { ArmISA::MISCREG_CNTV_TVAL, "CNTV_TVAL" },
         { ArmISA::MISCREG_CNTV_CTL, "CNTV_CTL" },
-        { ArmISA::MISCREG_CNTHCTL, "CNTHCTL" },
-        { ArmISA::MISCREG_CNTHP_TVAL, "CNTHP_TVAL" },
-        { ArmISA::MISCREG_CNTHP_CTL, "CNTHP_CTL" },
+        // ArmISA::MISCREG_CNTHCTL?
+        // ArmISA::MISCREG_CNTHP_TVAL?
+        // ArmISA::MISCREG_CNTHP_CTL?
         // ArmISA::MISCREG_IL1DATA0?
         // ArmISA::MISCREG_IL1DATA1?
         // ArmISA::MISCREG_IL1DATA2?
@@ -509,11 +509,11 @@ Iris::ThreadContext::IdxNameMap CortexA76TC::miscRegIdxNameMap({
         // ArmISA::MISCREG_DL1DATA2?
         // ArmISA::MISCREG_DL1DATA3?
         // ArmISA::MISCREG_DL1DATA4?
-        { ArmISA::MISCREG_RAMINDEX, "RAMIDX" }, //XXX verify
+        // ArmISA::MISCREG_RAMINDEX?
         // ArmISA::MISCREG_L2ACTLR?
         // ArmISA::MISCREG_CBAR?
-        { ArmISA::MISCREG_HTTBR, "HTTBR" },
-        { ArmISA::MISCREG_VTTBR, "VTTBR" },
+        // ArmISA::MISCREG_HTTBR?
+        // ArmISA::MISCREG_VTTBR?
         { ArmISA::MISCREG_CNTPCT, "CNTPCT" },
         { ArmISA::MISCREG_CNTVCT, "CNTVCT" },
         { ArmISA::MISCREG_CNTP_CVAL, "CNTP_CVAL" },
@@ -521,9 +521,9 @@ Iris::ThreadContext::IdxNameMap CortexA76TC::miscRegIdxNameMap({
         // ArmISA::MISCREG_CNTP_CVAL_S?
         { ArmISA::MISCREG_CNTV_CVAL, "CNTV_CVAL" },
         { ArmISA::MISCREG_CNTVOFF, "CNTVOFF" },
-        { ArmISA::MISCREG_CNTHP_CVAL, "CNTHP_CVAL" },
+        // ArmISA::MISCREG_CNTHP_CVAL?
         // ArmISA::MISCREG_CPUMERRSR?
-        { ArmISA::MISCREG_L2MERRSR, "L2MERRSR" },
+        // ArmISA::MISCREG_L2MERRSR?
 
         // AArch64 registers (Op0=2)
         { ArmISA::MISCREG_MDCCINT_EL1, "MDCCINT_EL1" },
@@ -807,7 +807,7 @@ Iris::ThreadContext::IdxNameMap CortexA76TC::miscRegIdxNameMap({
         { ArmISA::MISCREG_CPUACTLR_EL1, "CPUACTLR_EL1" },
         { ArmISA::MISCREG_CPUECTLR_EL1, "CPUECTLR_EL1" },
         // ArmISA::MISCREG_CPUMERRSR_EL1?
-        { ArmISA::MISCREG_L2MERRSR_EL1, "L2MERRSR_EL1" },
+        // ArmISA::MISCREG_L2MERRSR_EL1?
         // ArmISA::MISCREG_CBAR_EL1?
         { ArmISA::MISCREG_CONTEXTIDR_EL2, "CONTEXTIDR_EL2" },
 
@@ -832,107 +832,107 @@ Iris::ThreadContext::IdxNameMap CortexA76TC::miscRegIdxNameMap({
 });
 
 Iris::ThreadContext::IdxNameMap CortexA76TC::intReg32IdxNameMap({
-        { ArmISA::INTREG_R0, "R0" },
-        { ArmISA::INTREG_R1, "R1" },
-        { ArmISA::INTREG_R2, "R2" },
-        { ArmISA::INTREG_R3, "R3" },
-        { ArmISA::INTREG_R4, "R4" },
-        { ArmISA::INTREG_R5, "R5" },
-        { ArmISA::INTREG_R6, "R6" },
-        { ArmISA::INTREG_R7, "R7" },
-        { ArmISA::INTREG_R8, "R8" },
-        { ArmISA::INTREG_R9, "R9" },
-        { ArmISA::INTREG_R10, "R10" },
-        { ArmISA::INTREG_R11, "R11" },
-        { ArmISA::INTREG_R12, "R12" },
-        { ArmISA::INTREG_R13, "R13" },
-        { ArmISA::INTREG_R14, "R14" },
-        { ArmISA::INTREG_R15, "R15" }
+        { ArmISA::int_reg::R0, "R0" },
+        { ArmISA::int_reg::R1, "R1" },
+        { ArmISA::int_reg::R2, "R2" },
+        { ArmISA::int_reg::R3, "R3" },
+        { ArmISA::int_reg::R4, "R4" },
+        { ArmISA::int_reg::R5, "R5" },
+        { ArmISA::int_reg::R6, "R6" },
+        { ArmISA::int_reg::R7, "R7" },
+        { ArmISA::int_reg::R8, "R8" },
+        { ArmISA::int_reg::R9, "R9" },
+        { ArmISA::int_reg::R10, "R10" },
+        { ArmISA::int_reg::R11, "R11" },
+        { ArmISA::int_reg::R12, "R12" },
+        { ArmISA::int_reg::R13, "R13" },
+        { ArmISA::int_reg::R14, "R14" },
+        { ArmISA::int_reg::R15, "R15" }
 });
 
 Iris::ThreadContext::IdxNameMap CortexA76TC::intReg64IdxNameMap({
-        { ArmISA::INTREG_X0, "X0" },
-        { ArmISA::INTREG_X1, "X1" },
-        { ArmISA::INTREG_X2, "X2" },
-        { ArmISA::INTREG_X3, "X3" },
-        { ArmISA::INTREG_X4, "X4" },
-        { ArmISA::INTREG_X5, "X5" },
-        { ArmISA::INTREG_X6, "X6" },
-        { ArmISA::INTREG_X7, "X7" },
-        { ArmISA::INTREG_X8, "X8" },
-        { ArmISA::INTREG_X9, "X9" },
-        { ArmISA::INTREG_X10, "X10" },
-        { ArmISA::INTREG_X11, "X11" },
-        { ArmISA::INTREG_X12, "X12" },
-        { ArmISA::INTREG_X13, "X13" },
-        { ArmISA::INTREG_X14, "X14" },
-        { ArmISA::INTREG_X15, "X15" },
-        { ArmISA::INTREG_X16, "X16" },
-        { ArmISA::INTREG_X17, "X17" },
-        { ArmISA::INTREG_X18, "X18" },
-        { ArmISA::INTREG_X19, "X19" },
-        { ArmISA::INTREG_X20, "X20" },
-        { ArmISA::INTREG_X21, "X21" },
-        { ArmISA::INTREG_X22, "X22" },
-        { ArmISA::INTREG_X23, "X23" },
-        { ArmISA::INTREG_X24, "X24" },
-        { ArmISA::INTREG_X25, "X25" },
-        { ArmISA::INTREG_X26, "X26" },
-        { ArmISA::INTREG_X27, "X27" },
-        { ArmISA::INTREG_X28, "X28" },
-        { ArmISA::INTREG_X29, "X29" },
-        { ArmISA::INTREG_X30, "X30" },
-        { ArmISA::INTREG_SPX, "SP" },
+        { ArmISA::int_reg::X0, "X0" },
+        { ArmISA::int_reg::X1, "X1" },
+        { ArmISA::int_reg::X2, "X2" },
+        { ArmISA::int_reg::X3, "X3" },
+        { ArmISA::int_reg::X4, "X4" },
+        { ArmISA::int_reg::X5, "X5" },
+        { ArmISA::int_reg::X6, "X6" },
+        { ArmISA::int_reg::X7, "X7" },
+        { ArmISA::int_reg::X8, "X8" },
+        { ArmISA::int_reg::X9, "X9" },
+        { ArmISA::int_reg::X10, "X10" },
+        { ArmISA::int_reg::X11, "X11" },
+        { ArmISA::int_reg::X12, "X12" },
+        { ArmISA::int_reg::X13, "X13" },
+        { ArmISA::int_reg::X14, "X14" },
+        { ArmISA::int_reg::X15, "X15" },
+        { ArmISA::int_reg::X16, "X16" },
+        { ArmISA::int_reg::X17, "X17" },
+        { ArmISA::int_reg::X18, "X18" },
+        { ArmISA::int_reg::X19, "X19" },
+        { ArmISA::int_reg::X20, "X20" },
+        { ArmISA::int_reg::X21, "X21" },
+        { ArmISA::int_reg::X22, "X22" },
+        { ArmISA::int_reg::X23, "X23" },
+        { ArmISA::int_reg::X24, "X24" },
+        { ArmISA::int_reg::X25, "X25" },
+        { ArmISA::int_reg::X26, "X26" },
+        { ArmISA::int_reg::X27, "X27" },
+        { ArmISA::int_reg::X28, "X28" },
+        { ArmISA::int_reg::X29, "X29" },
+        { ArmISA::int_reg::X30, "X30" },
+        { ArmISA::int_reg::Spx, "SP" },
 });
 
 Iris::ThreadContext::IdxNameMap CortexA76TC::flattenedIntIdxNameMap({
-        { ArmISA::INTREG_R0, "X0" },
-        { ArmISA::INTREG_R1, "X1" },
-        { ArmISA::INTREG_R2, "X2" },
-        { ArmISA::INTREG_R3, "X3" },
-        { ArmISA::INTREG_R4, "X4" },
-        { ArmISA::INTREG_R5, "X5" },
-        { ArmISA::INTREG_R6, "X6" },
-        { ArmISA::INTREG_R7, "X7" },
-        { ArmISA::INTREG_R8, "X8" },
-        { ArmISA::INTREG_R9, "X9" },
-        { ArmISA::INTREG_R10, "X10" },
-        { ArmISA::INTREG_R11, "X11" },
-        { ArmISA::INTREG_R12, "X12" },
-        { ArmISA::INTREG_R13, "X13" },
-        { ArmISA::INTREG_R14, "X14" },
+        { ArmISA::int_reg::R0, "X0" },
+        { ArmISA::int_reg::R1, "X1" },
+        { ArmISA::int_reg::R2, "X2" },
+        { ArmISA::int_reg::R3, "X3" },
+        { ArmISA::int_reg::R4, "X4" },
+        { ArmISA::int_reg::R5, "X5" },
+        { ArmISA::int_reg::R6, "X6" },
+        { ArmISA::int_reg::R7, "X7" },
+        { ArmISA::int_reg::R8, "X8" },
+        { ArmISA::int_reg::R9, "X9" },
+        { ArmISA::int_reg::R10, "X10" },
+        { ArmISA::int_reg::R11, "X11" },
+        { ArmISA::int_reg::R12, "X12" },
+        { ArmISA::int_reg::R13, "X13" },
+        { ArmISA::int_reg::R14, "X14" },
         // Skip PC.
-        { ArmISA::INTREG_R13_SVC, "X19" },
-        { ArmISA::INTREG_R14_SVC, "X18" },
-        { ArmISA::INTREG_R13_MON, "R13" }, // Need to be in monitor mode?
-        { ArmISA::INTREG_R14_MON, "R14" }, // Need to be in monitor mode?
-        { ArmISA::INTREG_R13_HYP, "X15" },
-        { ArmISA::INTREG_R13_ABT, "X21" },
-        { ArmISA::INTREG_R14_ABT, "X20" },
-        { ArmISA::INTREG_R13_UND, "X23" },
-        { ArmISA::INTREG_R14_UND, "X22" },
-        { ArmISA::INTREG_R13_IRQ, "X17" },
-        { ArmISA::INTREG_R14_IRQ, "X16" },
-        { ArmISA::INTREG_R8_FIQ, "X24" },
-        { ArmISA::INTREG_R9_FIQ, "X25" },
-        { ArmISA::INTREG_R10_FIQ, "X26" },
-        { ArmISA::INTREG_R11_FIQ, "X27" },
-        { ArmISA::INTREG_R12_FIQ, "X28" },
-        { ArmISA::INTREG_R13_FIQ, "X29" },
-        { ArmISA::INTREG_R14_FIQ, "X30" },
+        { ArmISA::int_reg::R13Svc, "X19" },
+        { ArmISA::int_reg::R14Svc, "X18" },
+        { ArmISA::int_reg::R13Mon, "R13" }, // Need to be in monitor mode?
+        { ArmISA::int_reg::R14Mon, "R14" }, // Need to be in monitor mode?
+        { ArmISA::int_reg::R13Hyp, "X15" },
+        { ArmISA::int_reg::R13Abt, "X21" },
+        { ArmISA::int_reg::R14Abt, "X20" },
+        { ArmISA::int_reg::R13Und, "X23" },
+        { ArmISA::int_reg::R14Und, "X22" },
+        { ArmISA::int_reg::R13Irq, "X17" },
+        { ArmISA::int_reg::R14Irq, "X16" },
+        { ArmISA::int_reg::R8Fiq, "X24" },
+        { ArmISA::int_reg::R9Fiq, "X25" },
+        { ArmISA::int_reg::R10Fiq, "X26" },
+        { ArmISA::int_reg::R11Fiq, "X27" },
+        { ArmISA::int_reg::R12Fiq, "X28" },
+        { ArmISA::int_reg::R13Fiq, "X29" },
+        { ArmISA::int_reg::R14Fiq, "X30" },
         // Skip zero, ureg0-2, and dummy regs.
-        { ArmISA::INTREG_SP0, "SP_EL0" },
-        { ArmISA::INTREG_SP1, "SP_EL1" },
-        { ArmISA::INTREG_SP2, "SP_EL2" },
-        { ArmISA::INTREG_SP3, "SP_EL3" },
+        { ArmISA::int_reg::Sp0, "SP_EL0" },
+        { ArmISA::int_reg::Sp1, "SP_EL1" },
+        { ArmISA::int_reg::Sp2, "SP_EL2" },
+        { ArmISA::int_reg::Sp3, "SP_EL3" },
 });
 
 Iris::ThreadContext::IdxNameMap CortexA76TC::ccRegIdxNameMap({
-        { ArmISA::CCREG_NZ, "CPSR" },
-        { ArmISA::CCREG_C, "CPSR.C" },
-        { ArmISA::CCREG_V, "CPSR.V" },
-        { ArmISA::CCREG_GE, "CPSR.GE" },
-        { ArmISA::CCREG_FP, "FPSCR" },
+        { ArmISA::cc_reg::Nz, "CPSR" },
+        { ArmISA::cc_reg::C, "CPSR.C" },
+        { ArmISA::cc_reg::V, "CPSR.V" },
+        { ArmISA::cc_reg::Ge, "CPSR.GE" },
+        { ArmISA::cc_reg::Fp, "FPSCR" },
 });
 
 Iris::ThreadContext::IdxNameMap CortexA76TC::vecRegIdxNameMap({

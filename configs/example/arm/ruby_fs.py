@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017, 2020-2021 Arm Limited
+# Copyright (c) 2016-2017, 2020-2022 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -46,7 +46,7 @@ from common import MemConfig
 from common import ObjectList
 from common import Options
 from common import SysPaths
-from common.cores.arm import HPI
+from common.cores.arm import O3_ARM_v7a, HPI
 from ruby import Ruby
 
 import devices
@@ -57,18 +57,12 @@ default_disk = 'linaro-minimal-aarch64.img'
 default_root_device = '/dev/vda1'
 
 
-# Pre-defined CPU configurations. Each tuple must be ordered as : (cpu_class,
-# l1_icache_class, l1_dcache_class, walk_cache_class, l2_Cache_class). Any of
-# the cache class may be 'None' if the particular cache is not present.
+# Pre-defined CPU configurations.
 cpu_types = {
-
-    "noncaching" : ( NonCachingSimpleCPU, None, None, None),
-    "minor" : (MinorCPU,
-               devices.L1I, devices.L1D,
-               devices.L2),
-    "hpi" : ( HPI.HPI,
-              HPI.HPI_ICache, HPI.HPI_DCache,
-              HPI.HPI_L2)
+    "noncaching" : NonCachingSimpleCPU,
+    "minor" : MinorCPU,
+    "hpi" : HPI.HPI,
+    "o3" : O3_ARM_v7a.O3_ARM_v7a_3,
 }
 
 def create_cow_image(name):
@@ -100,7 +94,7 @@ def create(args):
         print("Error: Bootscript %s does not exist" % args.script)
         sys.exit(1)
 
-    cpu_class = cpu_types[args.cpu][0]
+    cpu_class = cpu_types[args.cpu]
     mem_mode = cpu_class.memory_mode()
 
     system = devices.ArmRubySystem(args.mem_size,
@@ -115,7 +109,7 @@ def create(args):
         devices.CpuCluster(system,
                            args.num_cpus,
                            args.cpu_freq, "1.0V",
-                           *cpu_types[args.cpu]),
+                           cpu_class, None, None, None),
     ]
 
     # Add the PCI devices we need for this system. The base system

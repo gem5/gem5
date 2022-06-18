@@ -32,8 +32,10 @@
 
 #include "arch/arm/fastmodel/amba_ports.hh"
 #include "arch/arm/fastmodel/common/signal_receiver.hh"
+#include "arch/arm/fastmodel/common/signal_sender.hh"
 #include "arch/arm/fastmodel/iris/cpu.hh"
 #include "arch/arm/fastmodel/protocol/exported_clock_rate_control.hh"
+#include "dev/reset_port.hh"
 #include "mem/port_proxy.hh"
 #include "params/FastModelScxEvsCortexA76x1.hh"
 #include "params/FastModelScxEvsCortexA76x2.hh"
@@ -90,6 +92,14 @@ class ScxEvsCortexA76 : public Types::Base, public Iris::BaseCpuEvs
     std::vector<std::unique_ptr<SignalReceiver>> vcpumntirq;
     std::vector<std::unique_ptr<SignalReceiver>> cntpnsirq;
     std::vector<std::unique_ptr<SignalInitiator<uint64_t>>> rvbaraddr;
+    std::vector<std::unique_ptr<SignalSender>> core_reset;
+    std::vector<std::unique_ptr<SignalSender>> poweron_reset;
+
+    SignalSender top_reset;
+
+    SignalSender dbg_reset;
+
+    ResetResponsePort<ScxEvsCortexA76> model_reset;
 
     CortexA76Cluster *gem5CpuCluster;
 
@@ -119,6 +129,8 @@ class ScxEvsCortexA76 : public Types::Base, public Iris::BaseCpuEvs
     void setCluster(SimObject *cluster) override;
 
     void setResetAddr(int core, Addr addr, bool secure) override;
+
+    void requestReset();
 };
 
 struct ScxEvsCortexA76x1Types

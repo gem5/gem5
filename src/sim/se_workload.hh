@@ -81,6 +81,9 @@ class SEWorkload : public Workload
         panic("No workload symbol table for syscall emulation mode.");
     }
 
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
+
     void syscall(ThreadContext *tc) override;
 
     // For now, assume the only type of events are system calls.

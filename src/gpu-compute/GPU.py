@@ -37,6 +37,7 @@ from m5.objects.ClockedObject import ClockedObject
 from m5.objects.Device import DmaVirtDevice
 from m5.objects.LdsState import LdsState
 from m5.objects.Process import EmulatedDriver
+from m5.objects.VegaGPUTLB import VegaPagetableWalker
 
 class PrefetchType(Enum): vals = [
     'PF_CU',
@@ -223,6 +224,7 @@ class Shader(ClockedObject):
     CUs = VectorParam.ComputeUnit('Number of compute units')
     gpu_cmd_proc = Param.GPUCommandProcessor('Command processor for GPU')
     dispatcher = Param.GPUDispatcher('GPU workgroup dispatcher')
+    system_hub = Param.AMDGPUSystemHub(NULL, 'GPU System Hub (FS Mode only)')
     n_wf = Param.Int(10, 'Number of wavefront slots per SIMD')
     impl_kern_launch_acq = Param.Bool(True, """Insert acq packet into
                                          ruby at kernel launch""")
@@ -272,6 +274,8 @@ class GPUCommandProcessor(DmaVirtDevice):
     dispatcher = Param.GPUDispatcher('workgroup dispatcher for the GPU')
 
     hsapp = Param.HSAPacketProcessor('PP attached to this device')
+    walker = Param.VegaPagetableWalker(VegaPagetableWalker(),
+            "Page table walker")
 
 class StorageClassType(Enum): vals = [
     'SC_SPILL',

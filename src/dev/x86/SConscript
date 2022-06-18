@@ -55,6 +55,9 @@ SimObject('I8042.py', sim_objects=['I8042'], tags='x86 isa')
 Source('i8042.cc', tags='x86 isa')
 DebugFlag('I8042', 'The I8042 keyboard controller', tags='x86 isa');
 
+SimObject('X86Ide.py', sim_objects=['X86IdeController'], tags='x86 isa');
+Source('ide_ctrl.cc', tags='x86 isa')
+
 SimObject('PcSpeaker.py', sim_objects=['PcSpeaker'], tags='x86 isa')
 Source('speaker.cc', tags='x86 isa')
 DebugFlag('PcSpeaker', tags='x86 isa')
@@ -62,3 +65,6 @@ DebugFlag('PcSpeaker', tags='x86 isa')
 SimObject('I82094AA.py', sim_objects=['I82094AA'], tags='x86 isa')
 Source('i82094aa.cc', tags='x86 isa')
 DebugFlag('I82094AA', tags='x86 isa')
+
+SimObject('X86QemuFwCfg.py', sim_objects=['QemuFwCfgItemE820'], tags='x86 isa')
+Source('qemu_fw_cfg.cc', tags='x86 isa')

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014,2017-2018,2020 ARM Limited
+ * Copyright (c) 2012-2014,2017-2018,2020-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -67,7 +67,7 @@
 namespace gem5
 {
 
-struct O3CPUParams;
+struct BaseO3CPUParams;
 
 namespace o3
 {
@@ -223,7 +223,7 @@ class LSQUnit
     }
 
     /** Initializes the LSQ unit with the specified number of entries. */
-    void init(CPU *cpu_ptr, IEW *iew_ptr, const O3CPUParams &params,
+    void init(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params,
             LSQ *lsq_ptr, unsigned id);
 
     /** Returns the name of the LSQ unit. */
@@ -316,6 +316,10 @@ class LSQUnit
         assert(htm_uid >= lastRetiredHtmUid);
         lastRetiredHtmUid = htm_uid;
     }
+
+    // Stale translation checks
+    void startStaleTranslationFlush();
+    bool checkStaleTranslations() const;
 
     /** Returns if either the LQ or SQ is full. */
     bool isFull() { return lqFull() || sqFull(); }
@@ -485,7 +489,7 @@ class LSQUnit
      */
     InstSeqNum stallingStoreIsn;
     /** The index of the above store. */
-    int stallingLoadIdx;
+    ssize_t stallingLoadIdx;
 
     /** The packet that needs to be retried. */
     PacketPtr retryPkt;
@@ -539,10 +543,10 @@ class LSQUnit
 
   public:
     /** Executes the load at the given index. */
-    Fault read(LSQRequest *request, int load_idx);
+    Fault read(LSQRequest *request, ssize_t load_idx);
 
     /** Executes the store at the given index. */
-    Fault write(LSQRequest *request, uint8_t *data, int store_idx);
+    Fault write(LSQRequest *requst, uint8_t *data, ssize_t store_idx);
 
     /** Returns the index of the head load instruction. */
     int getLoadHead() { return loadQueue.head(); }

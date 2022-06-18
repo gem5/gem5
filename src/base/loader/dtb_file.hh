@@ -58,13 +58,27 @@ class DtbFile : public ImageFile
     DtbFile(const std::string &name);
     ~DtbFile();
 
+    /** Adds the passed in Command Line options and initrd for the kernel
+      * to the proper location in the device tree.
+      * @param _cmdline command line to append
+      * @param cmdline_len length of the command line string
+      * @param initrd_addr starting physical address of initrd
+      * @param initrd_len length of initrd data in memory
+      * @return returns true on success, false otherwise
+      */
+    bool addBootData(const char* _cmdline, size_t cmdline_len,
+                     off_t initrd_addr, size_t initrd_len);
+
     /** Adds the passed in Command Line options for the kernel
       * to the proper location in the device tree.
       * @param _args command line to append
       * @param len length of the command line string
       * @return returns true on success, false otherwise
       */
-    bool addBootCmdLine(const char* _args, size_t len);
+    inline bool
+    addBootCmdLine(const char* _args, size_t len) {
+        return addBootData(_args, len, 0, 0);
+    }
 
     /** Parse the DTB file enough to find the provided release
      * address and return it.

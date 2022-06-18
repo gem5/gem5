@@ -239,6 +239,7 @@ class CustomMesh(SimpleTopology):
         # classify nodes into different types
         rnf_nodes = []
         hnf_nodes = []
+        mn_nodes = []
         mem_nodes = []
         io_mem_nodes = []
         rni_dma_nodes = []
@@ -248,6 +249,7 @@ class CustomMesh(SimpleTopology):
         # the same base type.
         rnf_params = None
         hnf_params = None
+        mn_params = None
         mem_params = None
         io_mem_params = None
         rni_dma_params = None
@@ -264,6 +266,9 @@ class CustomMesh(SimpleTopology):
             elif isinstance(n, CHI.CHI_HNF):
                 hnf_nodes.append(n)
                 hnf_params = check_same(type(n).NoC_Params, hnf_params)
+            elif isinstance(n, CHI.CHI_MN):
+                mn_nodes.append(n)
+                mn_params = check_same(type(n).NoC_Params, mn_params)
             elif isinstance(n, CHI.CHI_SNF_MainMem):
                 mem_nodes.append(n)
                 mem_params = check_same(type(n).NoC_Params, mem_params)
@@ -297,6 +302,9 @@ class CustomMesh(SimpleTopology):
 
         # Place CHI_HNF on the mesh
         self.distributeNodes(hnf_params, hnf_nodes)
+
+        # Place CHI_MN on the mesh
+        self.distributeNodes(options, mn_params, mn_nodes)
 
         # Place CHI_SNF_MainMem on the mesh
         self.distributeNodes(mem_params, mem_nodes)

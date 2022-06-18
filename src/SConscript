@@ -37,13 +37,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import bisect
 import collections
+import copy
 import distutils.spawn
-import importlib
-import importlib.abc
-import importlib.machinery
-import importlib.util
+import itertools
 import os
 import os.path
 import re
@@ -61,10 +58,13 @@ Export(SourceFilter.factories)
 
 Import('*')
 
+if env['CONF']['USE_EFENCE']:
+    env.Append(LIBS=['efence'])
+
 # Children need to see the environment
 Export('env')
 
-build_env = [(opt, env[opt]) for opt in export_vars]
+build_env = list(env['CONF'].items())
 
 from code_formatter import code_formatter
 
@@ -74,6 +74,11 @@ def GdbXml(xml_id, symbol, tags=None, add_tags=None):
 
 class Source(SourceFile):
     pass
+
+class SourceLib(SourceItem):
+    def __init__(self, *args, **kwargs):
+        self.priority = kwargs.pop('priority', 0)
+        super().__init__(*args, **kwargs)
 
 build_tools = Dir('#build_tools')
 
@@ -93,8 +98,6 @@ gem5py_env['ENV']['PYTHONPATH'] = ':'.join(pythonpath)
 
 class PySource(SourceFile):
     '''Add a python source file to the named package'''
-    modules = {}
-
     def __init__(self, package, source, tags=None, add_tags=None):
         '''specify the python package, the source file, and any tags'''
         super().__init__(source, tags, add_tags)
@@ -116,11 +119,7 @@ class PySource(SourceFile):
         if not os.path.exists(abspath):
             abspath = self.tnode.abspath
 
-        self.modname = modname
         self.modpath = modpath
-        self.abspath = abspath
-
-        PySource.modules[modpath] = self
 
         cpp = File(self.filename + '.cc')
 
@@ -143,12 +142,6 @@ class SimObject(PySource):
     '''Add a SimObject python file as a python source object and add
     it to a list of sim object modules'''
 
-    fixed = False
-
-    sim_objects = dict()
-    enums = dict()
-    tags = dict()
-
     def __init__(self, source, *, sim_objects=None, enums=None,
             tags=None, add_tags=None):
         '''Specify the source file and any tags (automatically in
@@ -162,34 +155,104 @@ class SimObject(PySource):
             enums = []
 
         super().__init__('m5.objects', source, tags, add_tags)
-        if self.fixed:
-            error("Too late to call SimObject now.")
 
-        SimObject.sim_objects[self.modpath] = sim_objects
-        SimObject.enums[self.modpath] = enums
-        SimObject.tags[self.modpath] = self.tags
+        build_dir = Dir(env['BUILDDIR'])
+        module = self.modpath
+
+        # Generate all of the SimObject param C++ files.
+        for simobj in sim_objects:
+            # Some helper functions
+            srcs = [ Value(module), Value(simobj),
+                    "${GEM5PY_M5}", "${PYSCRIPT}" ]
+            def cmdline(*args):
+                all_args = [ 'GEM5PY_M5', 'PYSCRIPT', 'MODULE' ] + list(args)
+                return ' '.join(list('"${%s}"' % arg for arg in all_args))
+
+            # Params header.
+            gem5py_env.Command([ "${PARAMS_HH}" ], srcs,
+                    MakeAction(cmdline('PARAMS_HH'), Transform("SO Param", 2)),
+                    MODULE=module,
+                    SIMOBJ=simobj,
+                    PYSCRIPT=build_tools.File('sim_object_param_struct_hh.py'),
+                    PARAMS_HH=build_dir.File(f'params/{simobj}.hh'))
+
+            # Params cc.
+            cc_file = build_dir.File(f'python/_m5/param_{simobj}.cc')
+            gem5py_env.Command([ "${PARAMS_CC}" ], srcs,
+                    MakeAction(cmdline('PARAMS_CC', 'USE_PYTHON'),
+                        Transform("SO Param", 2)),
+                    PYSCRIPT=build_tools.File('sim_object_param_struct_cc.py'),
+                    MODULE=module,
+                    SIMOBJ=simobj,
+                    PARAMS_CC=cc_file,
+                    USE_PYTHON=env['USE_PYTHON'])
+            Source(cc_file, tags=self.tags,
+                   add_tags=('python' if env['USE_PYTHON'] else None))
+
+            # CXX config header.
+            gem5py_env.Command([ "${CXXCONFIG_HH}" ], srcs,
+                    MakeAction(cmdline('CXXCONFIG_HH'),
+                        Transform("CXXCPRHH", 2)),
+                    PYSCRIPT=build_tools.File('cxx_config_hh.py'),
+                    MODULE=module,
+                    CXXCONFIG_HH=build_dir.File(f'cxx_config/{simobj}.hh'))
+
+            # CXX config cc.
+            cc_file=build_dir.File(f'cxx_config/{simobj}.cc')
+            gem5py_env.Command([ "${CXXCONFIG_CC}" ], srcs,
+                    MakeAction(cmdline('CXXCONFIG_CC'),
+                        Transform("CXXCPRCC", 2)),
+                    PYSCRIPT=build_tools.File('cxx_config_cc.py'),
+                    MODULE=module,
+                    CXXCONFIG_CC=cc_file)
+            if GetOption('with_cxx_config'):
+                Source(cc_file, tags=self.tags)
+
+        # C++ versions of enum params.
+        for enum in enums:
+            gem5py_env.Command([ "${ENUM_HH}" ],
+                    [ Value(module), Value(enum),
+                        "${GEM5PY_M5}", "${ENUMHH_PY}" ],
+                    MakeAction('"${GEM5PY_M5}" "${ENUMHH_PY}" "${MODULE}" ' \
+                            '"${ENUM_HH}"',
+                        Transform("ENUMDECL", 2)),
+                    MODULE=module,
+                    ENUM=enum,
+                    ENUM_HH=build_dir.File(f'enums/{enum}.hh'),
+                    ENUMHH_PY=build_tools.File('enum_hh.py'))
+            cc_file = build_dir.File(f'enums/{enum}.cc')
+            gem5py_env.Command([ "${ENUM_CC}" ],
+                    [ Value(module), Value(enum),
+                        "${GEM5PY_M5}", "${ENUMCC_PY}" ],
+                    MakeAction('"${GEM5PY_M5}" "${ENUMCC_PY}" "${MODULE}" ' \
+                            '"${ENUM_CC}" "${USE_PYTHON}"',
+                        Transform("ENUM STR", 2)),
+                    MODULE=module,
+                    ENUM=enum,
+                    ENUM_CC=cc_file,
+                    ENUMCC_PY=build_tools.File('enum_cc.py'),
+                    USE_PYTHON=env['USE_PYTHON'])
+            Source(cc_file, tags=self.tags,
+                   add_tags=('python' if env['USE_PYTHON'] else None))
 
 # This regular expression is simplistic and assumes that the import takes up
 # the entire line, doesn't have the keyword "public", uses double quotes, has
 # no whitespace at the end before or after the ;, and is all on one line. This
 # should still cover most cases, and a completely accurate scanner would be
 # MUCH more complex.
-protoc_import_re = re.compile(r'^import\s+\"(.*\.proto)\"\;$', re.M)
-
-def protoc_scanner(node, env, path):
-    deps = []
-    for imp in protoc_import_re.findall(node.get_text_contents()):
-        deps.append(Dir(env['BUILDDIR']).File(imp))
-    return deps
-
-env.Append(SCANNERS=Scanner(function=protoc_scanner, skeys=['.proto']))
+protoc_scanner = SCons.Scanner.Classic(name='ProtobufScanner',
+                                       suffixes=['.proto'],
+                                       path_variable='BUILDDIR',
+                                       regex=r'^import\s+\"(.*\.proto)\"\;$')
+env.Append(SCANNERS=protoc_scanner)
 
 def protoc_emitter(target, source, env):
     root, ext = os.path.splitext(source[0].get_abspath())
     return [root + '.pb.cc', root + '.pb.h'], source
 
 protoc_action = MakeAction('${PROTOC} --cpp_out ${BUILDDIR} '
-        '--proto_path ${BUILDDIR} ${SOURCE.get_abspath()}',
+        '--proto_path ${BUILDDIR} --proto_path ${SOURCE.dir} '
+        '${SOURCE.get_abspath()}',
         Transform("PROTOC"))
 protobuf_builder = Builder(action=protoc_action, emitter=protoc_emitter,
         src_suffix='.proto')
@@ -201,11 +264,6 @@ cxx_file.add_emitter('.proto', protoc_emitter)
 
 def ProtoBuf(source, tags=None, add_tags=None):
     '''Add a Protocol Buffer to build'''
-
-    if not env['HAVE_PROTOC'] or not env['HAVE_PROTOBUF']:
-        error('Got protobuf to build, but lacks support!')
-
-    '''Specify the source file, and any tags'''
     Source(source, tags, add_tags, append={'CXXFLAGS': '-Wno-array-bounds'})
 
 env['PROTOC_GRPC'] = distutils.spawn.find_executable('grpc_cpp_plugin')
@@ -259,11 +317,15 @@ class TopLevelBase(object, metaclass=TopLevelMeta):
         self.target = target
 
         isFilter = lambda arg: isinstance(arg, SourceFilter)
-        self.filters = filter(isFilter, srcs_and_filts)
-        sources = filter(lambda a: not isFilter(a), srcs_and_filts)
+        isLib = lambda arg: isinstance(arg, SourceLib)
+        # If something isn't a library or filter, assume it's a source file.
+        isSourceFile = lambda arg: not isFilter(arg) and not isLib(arg)
+        self.filters = list(filter(isFilter, srcs_and_filts))
+        self.sourceLibs = list(filter(isLib, srcs_and_filts))
+        source_files = list(filter(isSourceFile, srcs_and_filts))
 
         srcs = SourceList()
-        for src in sources:
+        for src in source_files:
             if not isinstance(src, SourceFile):
                 src = Source(src, tags=[])
             srcs.append(src)
@@ -272,10 +334,16 @@ class TopLevelBase(object, metaclass=TopLevelMeta):
         self.dir = Dir('.')
 
     def sources(self, env):
-        srcs = self.srcs
+        srcs = copy.copy(self.srcs)
         for f in self.filters:
             srcs += Source.all.apply_filter(env, f)
         return srcs
+
+    def libs(self, env):
+        libs = copy.copy(self.sourceLibs)
+        for f in self.filters:
+            libs += SourceLib.all.apply_filter(env, f)
+        return libs
 
     def srcs_to_objs(self, env, sources):
         return list([ s.static(env) for s in sources ])
@@ -322,6 +390,12 @@ class Executable(TopLevelBase):
         env = env.Clone()
         env['BIN_RPATH_PREFIX'] = os.path.relpath(
                 env['BUILDDIR'], self.path(env).dir.abspath)
+
+        libs = self.libs(env)
+        # Higher priority libraries should be earlier in the list.
+        libs.sort(key=lambda l: l.priority, reverse=True)
+        if libs:
+            env.Append(LIBS=list(lib.source for lib in libs))
 
         executable = env.Program(self.path(env).abspath, objs)[0]
 
@@ -380,6 +454,7 @@ class GTest(Executable):
 # Children should have access
 Export('GdbXml')
 Export('Source')
+Export('SourceLib')
 Export('PySource')
 Export('SimObject')
 Export('ProtoBuf')
@@ -481,12 +556,12 @@ for extra_dir in extras_dir_list:
             build_dir = os.path.join(env['BUILDDIR'], root[prefix_len:])
             SConscript(os.path.join(root, 'SConscript'), variant_dir=build_dir)
 
-for opt in export_vars:
+for opt in env['CONF'].keys():
     env.ConfigFile(opt)
 
 def makeTheISA(source, target, env):
     isas = sorted(set(env.Split('${ALL_ISAS}')))
-    target_isa = env['TARGET_ISA']
+    target_isa = env['CONF']['TARGET_ISA']
     is_null_isa = '1' if (target_isa.lower() == 'null') else '0'
 
     def namespace(isa):
@@ -509,9 +584,12 @@ env.Command('config/the_isa.hh', [],
             MakeAction(makeTheISA, Transform("CFG ISA", 0)))
 
 def makeTheGPUISA(source, target, env):
-    gpu_isa = env['TARGET_GPU_ISA']
+    gpu_isa = env['CONF']['TARGET_GPU_ISA']
 
-    namespace = gpu_isa[0].upper() + gpu_isa[1:].lower() + 'ISA'
+    if gpu_isa:
+        namespace = gpu_isa[0].upper() + gpu_isa[1:].lower() + 'ISA'
+    else:
+        namespace = 'None'
 
     code = code_formatter()
     code('''\
@@ -524,112 +602,6 @@ def makeTheGPUISA(source, target, env):
 env.Command('config/the_gpu_isa.hh', [],
             MakeAction(makeTheGPUISA, Transform("CFG ISA", 0)))
 
-########################################################################
-#
-# Prevent any SimObjects from being added after this point, they
-# should all have been added in the SConscripts above
-#
-SimObject.fixed = True
-
-class SimpleModuleLoader(importlib.abc.Loader):
-    '''A simple wrapper which delegates setting up a module to a function.'''
-    def __init__(self, executor):
-        super().__init__()
-        self.executor = executor
-    def create_module(self, spec):
-        return None
-
-    def exec_module(self, module):
-        self.executor(module)
-
-class M5MetaPathFinder(importlib.abc.MetaPathFinder):
-    def __init__(self, modules):
-        super().__init__()
-        self.modules = modules
-        self.installed = set()
-
-    def unload(self):
-        import sys
-        for module in self.installed:
-            del sys.modules[module]
-        self.installed = set()
-
-    def find_spec(self, fullname, path, target=None):
-        spec = None
-
-        # If this isn't even in the m5 package, ignore it.
-        if fullname.startswith('m5.'):
-            if fullname.startswith('m5.objects'):
-                # When imported in this context, return a spec for a dummy
-                # package which just serves to house the modules within it.
-                # This is subtley different from "import * from m5.objects"
-                # which relies on the __init__.py in m5.objects. That in turn
-                # indirectly relies on the c++ based _m5 package which doesn't
-                # exist yet.
-                if fullname == 'm5.objects':
-                    dummy_loader = SimpleModuleLoader(lambda x: None)
-                    spec = importlib.machinery.ModuleSpec(
-                            name=fullname, loader=dummy_loader,
-                            is_package=True)
-                    spec.loader_state = self.modules.keys()
-
-                # If this is a module within the m5.objects package, return a
-                # spec that maps to its source file.
-                elif fullname in self.modules:
-                    source = self.modules[fullname]
-                    spec = importlib.util.spec_from_file_location(
-                            name=fullname, location=source.abspath)
-
-            # The artificial m5.defines subpackage.
-            elif fullname == 'm5.defines':
-                def build_m5_defines(module):
-                    module.__dict__['buildEnv'] = dict(build_env)
-
-                spec = importlib.util.spec_from_loader(name=fullname,
-                        loader=SimpleModuleLoader(build_m5_defines))
-
-        # If we're handling this module, write it down so we can unload it
-        # later.
-        if spec is not None:
-            self.installed.add(fullname)
-
-        return spec
-
-import m5.SimObject
-import m5.params
-
-m5.SimObject.clear()
-m5.params.clear()
-
-# install the python importer so we can grab stuff from the source
-# tree itself.  We can't have SimObjects added after this point or
-# else we won't know about them for the rest of the stuff.
-importer = M5MetaPathFinder(PySource.modules)
-sys.meta_path[0:0] = [ importer ]
-
-import_globals = globals().copy()
-# import all sim objects so we can populate the all_objects list
-# make sure that we're working with a list, then let's sort it
-gem5_lib_simobjects = SimObject.all.with_tag(env, 'gem5 lib')
-gem5_lib_modnames = sorted(map(lambda so: so.modname, gem5_lib_simobjects))
-for modname in gem5_lib_modnames:
-    exec('from m5.objects import %s' % modname, import_globals)
-
-# we need to unload all of the currently imported modules so that they
-# will be re-imported the next time the sconscript is run
-importer.unload()
-sys.meta_path.remove(importer)
-
-sim_objects = m5.SimObject.allClasses
-all_enums = m5.params.allEnums
-
-########################################################################
-#
-# calculate extra dependencies
-#
-module_depends = ["m5", "m5.SimObject", "m5.params"]
-depends = [ PySource.modules[dep].snode for dep in module_depends ]
-depends.sort(key = lambda x: x.name)
 
 ########################################################################
 #
@@ -666,144 +638,6 @@ m5_module_source = \
         Source.all.with_all_tags(env, 'm5_module', 'gem5 lib')
 m5_module_static = list(map(lambda s: s.static(gem5py_env), m5_module_source))
 gem5py_env.Program(gem5py_m5, [ 'python/gem5py.cc' ] + m5_module_static)
-
-########################################################################
-#
-# Create all of the SimObject param headers and enum headers
-#
-
-# Generate all of the SimObject param C++ struct header files
-
-for module, simobjs in sorted(SimObject.sim_objects.items()):
-    tags = SimObject.tags[module]
-    for simobj in simobjs:
-        gem5py_env.Command([ "${PARAMS_HH}" ],
-                [ Value(module), Value(simobj),
-                    "${GEM5PY_M5}", "${PARAMSTRUCT_PY}" ],
-                MakeAction('"${GEM5PY_M5}" "${PARAMSTRUCT_PY}" "${MODULE}" ' \
-                        '"${PARAMS_HH}"',
-                    Transform("SO Param", 2)),
-                MODULE=module,
-                SIMOBJ=simobj,
-                PARAMSTRUCT_PY=build_tools.File(
-                    'sim_object_param_struct_hh.py'),
-                PARAMS_HH=File(f'params/{simobj}.hh'))
-        cc_file = File(f'python/_m5/param_{simobj}.cc')
-        gem5py_env.Command([ "${PARAMS_CC}" ],
-                [ Value(module), Value(simobj),
-                    "${GEM5PY_M5}", "${PARAMSTRUCT_PY}" ],
-                MakeAction('"${GEM5PY_M5}" "${PARAMSTRUCT_PY}" "${MODULE}" ' \
-                        '"${PARAMS_CC}" "${USE_PYTHON}"',
-                    Transform("SO Param", 2)),
-                PARAMSTRUCT_PY=build_tools.File(
-                    'sim_object_param_struct_cc.py'),
-                MODULE=module,
-                SIMOBJ=simobj,
-                PARAMS_CC=cc_file,
-                USE_PYTHON=env['USE_PYTHON'])
-        Source(cc_file, tags=tags, add_tags='python')
-
-# C++ parameter description files
-if GetOption('with_cxx_config'):
-    def createSimObjectCxxConfig(is_header):
-        def body(target, source, env):
-            assert len(target) == 1 and len(source) == 1
-
-            name = source[0].get_contents().decode('utf-8')
-            obj = sim_objects[name]
-
-            code = code_formatter()
-            obj.cxx_config_param_file(code, is_header)
-            code.write(target[0].abspath)
-        return body
-
-    for name,simobj in sorted(sim_objects.items()):
-        py_source = PySource.modules[simobj.__module__]
-        extra_deps = [ py_source.tnode ]
-
-        cxx_config_hh_file = File('cxx_config/%s.hh' % name)
-        cxx_config_cc_file = File('cxx_config/%s.cc' % name)
-        env.Command(cxx_config_hh_file, Value(name),
-                    MakeAction(createSimObjectCxxConfig(True),
-                    Transform("CXXCPRHH")))
-        env.Command(cxx_config_cc_file, Value(name),
-                    MakeAction(createSimObjectCxxConfig(False),
-                    Transform("CXXCPRCC")))
-        env.Depends(cxx_config_hh_file, depends + extra_deps)
-        env.Depends(cxx_config_cc_file, depends + extra_deps)
-        Source(cxx_config_cc_file)
-
-    cxx_config_init_cc_file = File('cxx_config/init.cc')
-
-    def createCxxConfigInitCC(target, source, env):
-        assert len(target) == 1
-
-        code = code_formatter()
-
-        for name,simobj in sorted(sim_objects.items()):
-            if not hasattr(simobj, 'abstract') or not simobj.abstract:
-                code('#include "cxx_config/${name}.hh"')
-        code()
-        code('namespace gem5')
-        code('{')
-        code()
-        code('void cxxConfigInit()')
-        code('{')
-        code.indent()
-        for name,simobj in sorted(sim_objects.items()):
-            not_abstract = not hasattr(simobj, 'abstract') or \
-                not simobj.abstract
-            if not_abstract and 'type' in simobj.__dict__:
-                code('cxx_config_directory["${name}"] = '
-                     '${name}CxxConfigParams::makeDirectoryEntry();')
-        code.dedent()
-        code('}')
-        code('')
-        code('} // namespace gem5')
-        code.write(target[0].abspath)
-
-    env.Command(cxx_config_init_cc_file, [],
-        MakeAction(createCxxConfigInitCC, Transform("CXXCINIT")))
-    Source(cxx_config_init_cc_file)
-
-# Generate all enum header files
-def createEnumStrings(target, source, env):
-    assert len(target) == 1 and len(source) == 2
-
-    name = source[0].get_text_contents()
-    use_python = source[1].read()
-    obj = all_enums[name]
-
-    code = code_formatter()
-    obj.cxx_def(code)
-    if use_python:
-        obj.pybind_def(code)
-    code.write(target[0].abspath)
-
-def createEnumDecls(target, source, env):
-    assert len(target) == 1 and len(source) == 1
-
-    name = source[0].get_text_contents()
-    obj = all_enums[name]
-
-    code = code_formatter()
-    obj.cxx_decl(code)
-    code.write(target[0].abspath)
-
-for name,enum in sorted(all_enums.items()):
-    py_source = PySource.modules[enum.__module__]
-    extra_deps = [ py_source.tnode ]
-
-    cc_file = File('enums/%s.cc' % name)
-    env.Command(cc_file, [Value(name), Value(env['USE_PYTHON'])],
-                MakeAction(createEnumStrings, Transform("ENUM STR")))
-    env.Depends(cc_file, depends + extra_deps)
-    Source(cc_file)
-
-    hh_file = File('enums/%s.hh' % name)
-    env.Command(hh_file, Value(name),
-                MakeAction(createEnumDecls, Transform("ENUMDECL")))
-    env.Depends(hh_file, depends + extra_deps)
 
 
 # version tags

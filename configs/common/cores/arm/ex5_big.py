@@ -99,7 +99,7 @@ class ex5_big_BP(BiModeBP):
     RASSize = 48
     instShiftAmt = 2
 
-class ex5_big(DerivO3CPU):
+class ex5_big(ArmO3CPU):
     LQEntries = 16
     SQEntries = 16
     LSQDepCheckShift = 0

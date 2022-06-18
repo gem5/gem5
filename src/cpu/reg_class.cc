@@ -39,15 +39,36 @@
  */
 
 #include "cpu/reg_class.hh"
+
+#include <sstream>
+
 #include "base/cprintf.hh"
+#include "sim/bufval.hh"
+#include "sim/byteswap.hh"
 
 namespace gem5
 {
 
 std::string
-DefaultRegClassOps::regName(const RegId &id) const
+RegClassOps::regName(const RegId &id) const
 {
     return csprintf("r%d", id.index());
+}
+
+std::string
+RegClassOps::valString(const void *val, size_t size) const
+{
+    // If this is just a RegVal, or could be interpreted as one, print it
+    // that way.
+    auto [reg_val_str, reg_val_success] = printUintX(val, size, HostByteOrder);
+    if (reg_val_success)
+        return reg_val_str;
+
+    // Otherwise, print it as a sequence of bytes. Use big endian order so
+    // that the most significant bytes are printed first, like digits in a
+    // regular number.
+
+    return printByteBuf(val, size, ByteOrder::big);
 }
 
 const char *RegId::regClassStrings[] = {

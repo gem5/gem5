@@ -61,7 +61,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2) :
+                   RegIndex _dest, RegIndex _op1, RegIndex _op2) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2)
     {
@@ -91,7 +91,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
+                   RegIndex _dest, RegIndex _op1, RegIndex _op2,
                    uint64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2, _imm)
@@ -122,7 +122,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, uint64_t _imm) :
+                   RegIndex _dest, RegIndex _op1, uint64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm)
     {
@@ -151,7 +151,7 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, uint64_t _imm) :
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest, uint64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _imm)
     {
         %(set_reg_idx_arr)s;
@@ -180,7 +180,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1) :
+                   RegIndex _dest, RegIndex _op1) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1)
     {

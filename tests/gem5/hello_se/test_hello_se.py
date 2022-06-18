@@ -46,8 +46,16 @@ from testlib import *
 
 import re
 
+isa_str_map = {
+    constants.gcn3_x86_tag: "x86",
+    constants.arm_tag: "arm",
+    constants.mips_tag: "mips",
+    constants.riscv_tag: "riscv",
+    constants.sparc_tag: "sparc",
+}
+
 static_progs = {
-    constants.gcn3_x86_tag: (
+    constants.vega_x86_tag: (
         "x86-hello64-static",
         "x86-hello32-static",
     ),
@@ -60,20 +68,20 @@ static_progs = {
     constants.sparc_tag: ("sparc-hello",),
 }
 
-dynamic_progs = {constants.gcn3_x86_tag: ("x86-hello64-dynamic",)}
+dynamic_progs = {constants.vega_x86_tag: ("x86-hello64-dynamic",)}
 
 cpu_types = {
-    constants.gcn3_x86_tag: ("timing", "atomic", "o3"),
-    constants.arm_tag: ("timing", "atomic", "o3"),
+    constants.vega_x86_tag: ("timing", "atomic", "o3"),
+    constants.arm_tag: ("timing", "atomic", "o3", "minor"),
     constants.mips_tag: ("timing", "atomic", "o3"),
-    constants.riscv_tag: ("timing", "atomic", "o3"),
+    constants.riscv_tag: ("timing", "atomic", "o3", "minor"),
     constants.sparc_tag: ("timing", "atomic"),
 }
 
 # We only want to test x86, arm, and riscv on quick. Mips and sparc will be
 # left for long.
 os_length = {
-    constants.gcn3_x86_tag: constants.quick_tag,
+    constants.vega_x86_tag: constants.quick_tag,
     constants.arm_tag: constants.quick_tag,
     constants.mips_tag: constants.long_tag,
     constants.riscv_tag: constants.quick_tag,
@@ -109,6 +117,7 @@ def verify_config(isa, binary, cpu, hosts):
             cpu,
             "--resource-directory",
             resource_path,
+            isa_str_map[isa],
         ],
         valid_isas=(isa,),
         valid_hosts=hosts,

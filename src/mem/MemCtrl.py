@@ -59,11 +59,9 @@ class MemCtrl(QoSMemCtrl):
     # bus in front of the controller for multiple ports
     port = ResponsePort("This port responds to memory requests")
 
-    # Interface to volatile, DRAM media
-    dram = Param.DRAMInterface(NULL, "DRAM interface")
-
-    # Interface to non-volatile media
-    nvm = Param.NVMInterface(NULL, "NVM interface")
+    # Interface to memory media
+    dram = Param.MemInterface("Memory interface, can be a DRAM"
+                              "or an NVM interface ")
 
     # read and write buffer depths are set in the interface
     # the controller will read these values when instantiated
@@ -79,6 +77,10 @@ class MemCtrl(QoSMemCtrl):
     # minimum write bursts to schedule before switching back to reads
     min_writes_per_switch = Param.Unsigned(16, "Minimum write bursts before "
                                            "switching to reads")
+
+    # minimum read bursts to schedule before switching back to writes
+    min_reads_per_switch = Param.Unsigned(16, "Minimum read bursts before "
+                                           "switching to writes")
 
     # scheduler, address map and page policy
     mem_sched_policy = Param.MemSched('frfcfs', "Memory scheduling policy")

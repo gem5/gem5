@@ -44,6 +44,7 @@
 #include "config/the_gpu_isa.hh"
 #include "gpu-compute/scheduler.hh"
 #include "mem/packet.hh"
+#include "sim/eventq.hh"
 
 namespace gem5
 {
@@ -236,6 +237,21 @@ class FetchUnit
         // wavefront whose IB is serviced by this fetch buffer
         Wavefront *wavefront;
         TheGpuISA::Decoder *_decoder;
+    };
+
+    class SystemHubEvent : public Event
+    {
+      FetchUnit *fetchUnit;
+      PacketPtr reqPkt;
+
+      public:
+        SystemHubEvent(PacketPtr pkt, FetchUnit *fetch_unit)
+            : fetchUnit(fetch_unit), reqPkt(pkt)
+        {
+            setFlags(Event::AutoDelete);
+        }
+
+        void process();
     };
 
     bool timingSim;

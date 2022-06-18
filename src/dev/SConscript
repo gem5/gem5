@@ -38,13 +38,16 @@ Source('dma_virt_device.cc')
 SimObject('IntPin.py', sim_objects=[])
 Source('intpin.cc')
 
+SimObject('ResetPort.py', sim_objects=[])
+Source('reset_port.cc')
+
 DebugFlag('IsaFake')
 DebugFlag('DMA')
 
 SimObject('Platform.py', sim_objects=['Platform'])
 Source('platform.cc')
 
-if env['TARGET_ISA'] == 'null':
+if env['CONF']['TARGET_ISA'] == 'null':
     Return()
 
 SimObject('BadDevice.py', sim_objects=['BadDevice'])

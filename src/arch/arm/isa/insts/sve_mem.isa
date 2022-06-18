@@ -41,8 +41,8 @@ output header {{
     template <template <typename T1, typename T2> class Base>
     StaticInstPtr
     decodeSveContigLoadSSInsts(uint8_t dtype, ExtMachInst machInst,
-                               IntRegIndex zt, IntRegIndex pg, IntRegIndex rn,
-                               IntRegIndex rm, bool firstFaulting)
+                               RegIndex zt, RegIndex pg, RegIndex rn,
+                               RegIndex rm, bool firstFaulting)
     {
         const char* mn = firstFaulting ? "ldff1" : "ld1";
         switch (dtype) {
@@ -86,7 +86,7 @@ output header {{
     template <template <typename T1, typename T2> class Base>
     StaticInstPtr
     decodeSveContigLoadSIInsts(uint8_t dtype, ExtMachInst machInst,
-                               IntRegIndex zt, IntRegIndex pg, IntRegIndex rn,
+                               RegIndex zt, RegIndex pg, RegIndex rn,
                                uint64_t imm, bool nonFaulting,
                                bool replicate = false)
     {
@@ -133,8 +133,8 @@ output header {{
     template <template <typename T1, typename T2> class Base>
     StaticInstPtr
     decodeSveContigStoreSSInsts(uint8_t dtype, ExtMachInst machInst,
-                                IntRegIndex zt, IntRegIndex pg, IntRegIndex rn,
-                                IntRegIndex rm)
+                                RegIndex zt, RegIndex pg, RegIndex rn,
+                                RegIndex rm)
     {
         const char* mn = "st1";
         switch (dtype) {
@@ -166,7 +166,7 @@ output header {{
     template <template <typename T1, typename T2> class Base>
     StaticInstPtr
     decodeSveContigStoreSIInsts(uint8_t dtype, ExtMachInst machInst,
-                                IntRegIndex zt, IntRegIndex pg, IntRegIndex rn,
+                                RegIndex zt, RegIndex pg, RegIndex rn,
                                 int8_t imm)
     {
         const char* mn = "st1";
@@ -205,7 +205,7 @@ output decoder {{
     template <class etype>
     StaticInstPtr
     decodeSveStructLoadSIInstsByNReg(uint8_t esize, ExtMachInst machInst,
-            IntRegIndex zt, IntRegIndex pg, IntRegIndex xn,
+            RegIndex zt, RegIndex pg, RegIndex xn,
             int64_t imm, int numregs)
     {
         static const char* nm[5][4] = {
@@ -240,7 +240,7 @@ output decoder {{
 
     StaticInstPtr
     decodeSveStructLoadSIInsts(uint8_t esize, ExtMachInst machInst,
-            IntRegIndex zt, IntRegIndex pg, IntRegIndex xn,
+            RegIndex zt, RegIndex pg, RegIndex xn,
             int64_t imm, int numregs)
     {
         switch (esize) {
@@ -263,7 +263,7 @@ output decoder {{
     template <class etype>
     StaticInstPtr
     decodeSveStructStoreSIInstsByNReg(uint8_t esize, ExtMachInst machInst,
-            IntRegIndex zt, IntRegIndex pg, IntRegIndex xn,
+            RegIndex zt, RegIndex pg, RegIndex xn,
             int64_t imm, int numregs)
     {
         static const char* nm[5][4] = {
@@ -298,7 +298,7 @@ output decoder {{
 
     StaticInstPtr
     decodeSveStructStoreSIInsts(uint8_t esize, ExtMachInst machInst,
-            IntRegIndex zt, IntRegIndex pg, IntRegIndex xn,
+            RegIndex zt, RegIndex pg, RegIndex xn,
             int64_t imm, int numregs)
     {
         switch (esize) {
@@ -321,8 +321,8 @@ output decoder {{
     template <class etype>
     StaticInstPtr
     decodeSveStructLoadSSInstsByNReg(uint8_t esize, ExtMachInst machInst,
-            IntRegIndex zt, IntRegIndex pg, IntRegIndex xn,
-            IntRegIndex xm, int numregs)
+            RegIndex zt, RegIndex pg, RegIndex xn,
+            RegIndex xm, int numregs)
     {
         static const char* nm[5][4] = {
             { nullptr, nullptr, nullptr, nullptr},
@@ -356,8 +356,8 @@ output decoder {{
 
     StaticInstPtr
     decodeSveStructLoadSSInsts(uint8_t esize, ExtMachInst machInst,
-            IntRegIndex zt, IntRegIndex pg, IntRegIndex xn,
-            IntRegIndex xm, int numregs)
+            RegIndex zt, RegIndex pg, RegIndex xn,
+            RegIndex xm, int numregs)
     {
         switch (esize) {
             case 0:
@@ -379,8 +379,8 @@ output decoder {{
     template <class etype>
     StaticInstPtr
     decodeSveStructStoreSSInstsByNReg(uint8_t esize, ExtMachInst machInst,
-            IntRegIndex zt, IntRegIndex pg, IntRegIndex xn,
-            IntRegIndex xm, int numregs)
+            RegIndex zt, RegIndex pg, RegIndex xn,
+            RegIndex xm, int numregs)
     {
         static const char* nm[5][4] = {
             { nullptr, nullptr, nullptr, nullptr},
@@ -414,8 +414,8 @@ output decoder {{
 
     StaticInstPtr
     decodeSveStructStoreSSInsts(uint8_t esize, ExtMachInst machInst,
-            IntRegIndex zt, IntRegIndex pg, IntRegIndex xn,
-            IntRegIndex xm, int numregs)
+            RegIndex zt, RegIndex pg, RegIndex xn,
+            RegIndex xm, int numregs)
     {
         switch (esize) {
             case 0:
@@ -436,7 +436,7 @@ output decoder {{
 
     StaticInstPtr
     decodeSveGatherLoadVIInsts(uint8_t dtype, ExtMachInst machInst,
-                               IntRegIndex zt, IntRegIndex pg, IntRegIndex zn,
+                               RegIndex zt, RegIndex pg, RegIndex zn,
                                uint64_t imm, bool esizeIs32,
                                bool firstFault)
     {
@@ -526,8 +526,8 @@ output decoder {{
 
     StaticInstPtr
     decodeSveGatherLoadSVInsts(uint8_t dtype, ExtMachInst machInst,
-                               IntRegIndex zt, IntRegIndex pg, IntRegIndex rn,
-                               IntRegIndex zm, bool esizeIs32, bool offsetIs32,
+                               RegIndex zt, RegIndex pg, RegIndex rn,
+                               RegIndex zm, bool esizeIs32, bool offsetIs32,
                                bool offsetIsSigned, bool offsetIsScaled,
                                bool firstFault)
     {
@@ -629,8 +629,8 @@ output decoder {{
 
     StaticInstPtr
     decodeSveScatterStoreVIInsts(uint8_t msz, ExtMachInst machInst,
-                                 IntRegIndex zt, IntRegIndex pg,
-                                 IntRegIndex zn, uint64_t imm,
+                                 RegIndex zt, RegIndex pg,
+                                 RegIndex zn, uint64_t imm,
                                  bool esizeIs32)
     {
         const char* mn = "st1";
@@ -686,8 +686,8 @@ output decoder {{
 
     StaticInstPtr
     decodeSveScatterStoreSVInsts(uint8_t msz, ExtMachInst machInst,
-                                 IntRegIndex zt, IntRegIndex pg,
-                                 IntRegIndex rn, IntRegIndex zm,
+                                 RegIndex zt, RegIndex pg,
+                                 RegIndex rn, RegIndex zm,
                                  bool esizeIs32, bool offsetIs32,
                                  bool offsetIsSigned, bool offsetIsScaled)
     {

@@ -67,14 +67,18 @@ GPUComputeDriver::GPUComputeDriver(const Params &p)
 
     // Convert the 3 bit mtype specified in Shader.py to the proper type
     // used for requests.
-    if (MtypeFlags::SHARED & p.m_type)
+    std::bitset<MtypeFlags::NUM_MTYPE_BITS> mtype(p.m_type);
+    if (mtype.test(MtypeFlags::SHARED)) {
         defaultMtype.set(Request::SHARED);
+    }
 
-    if (MtypeFlags::READ_WRITE & p.m_type)
+    if (mtype.test(MtypeFlags::READ_WRITE)) {
         defaultMtype.set(Request::READ_WRITE);
+    }
 
-    if (MtypeFlags::CACHED & p.m_type)
+    if (mtype.test(MtypeFlags::CACHED)) {
         defaultMtype.set(Request::CACHED);
+    }
 }
 
 const char*
@@ -331,6 +335,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                         ldsApeBase(i + 1);
                     break;
                   case GfxVersion::gfx900:
+                  case GfxVersion::gfx902:
                     args->process_apertures[i].scratch_base =
                         scratchApeBaseV9();
                     args->process_apertures[i].lds_base =
@@ -631,6 +636,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                     ape_args->lds_base = ldsApeBase(i + 1);
                     break;
                   case GfxVersion::gfx900:
+                  case GfxVersion::gfx902:
                     ape_args->scratch_base = scratchApeBaseV9();
                     ape_args->lds_base = ldsApeBaseV9();
                     break;
@@ -1017,6 +1023,7 @@ GPUComputeDriver::setMtype(RequestPtr req)
 {
     // If we are a dGPU then set the MTYPE from our VMAs.
     if (isdGPU) {
+        assert(!FullSystem);
         AddrRange range = RangeSize(req->getVaddr(), req->getSize());
         auto vma = gpuVmas.contains(range);
         assert(vma != gpuVmas.end());

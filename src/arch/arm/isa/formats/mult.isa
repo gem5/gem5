@@ -40,10 +40,10 @@ def format ArmMultAndMultAcc() {{
         // ignored.
         const uint32_t op = bits(machInst, 23, 21);
         const bool s = bits(machInst, 20);
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-        const IntRegIndex ra = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex ra = (RegIndex)(uint32_t)bits(machInst, 15, 12);
+        const RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 11, 8);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 3, 0);
         switch (op) {
             case 0x0:
               if (s) {
@@ -97,10 +97,10 @@ def format ArmHalfWordMultAndMultAcc() {{
     {
         const uint32_t op1 = bits(machInst, 22, 21);
         const bool op = bits(machInst, 5);
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-        const IntRegIndex ra = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex ra = (RegIndex)(uint32_t)bits(machInst, 15, 12);
+        const RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 11, 8);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 3, 0);
         switch (op1) {
           case 0x0:
             switch (bits(machInst, 6, 5)) {
@@ -167,10 +167,10 @@ def format Thumb32MulMulAccAndAbsDiff() {{
     {
         const uint32_t op1 = bits(machInst, 22, 20);
         const uint32_t op2 = bits(machInst, 5, 4);
-        const IntRegIndex ra = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const RegIndex ra = (RegIndex)(uint32_t)bits(machInst, 15, 12);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 11, 8);
+        const RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 3, 0);
         if (op1 != 0x1 && bits(op2, 1) != 0) {
             return new Unknown(machInst);
         }
@@ -292,10 +292,10 @@ def format Thumb32LongMulMulAccAndDiv() {{
     {
         const uint32_t op1 = bits(machInst, 22, 20);
         const uint32_t op2 = bits(machInst, 7, 4);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-        const IntRegIndex rdlo = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-        const IntRegIndex rdhi = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex rdlo = (RegIndex)(uint32_t)bits(machInst, 15, 12);
+        const RegIndex rdhi = (RegIndex)(uint32_t)bits(machInst, 11, 8);
+        const RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 3, 0);
         switch (op1) {
           case 0x0:
             if (op2 == 0x0) {
@@ -368,10 +368,10 @@ def format ArmSignedMultiplies() {{
         // This is 7-5 in the manual, but bit 5 is always ignored.
         const uint32_t op2 = bits(machInst, 7, 6);
         const bool aIsF = (bits(machInst, 15, 12) == 0xf);
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
-        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-        const IntRegIndex ra = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        const RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 3, 0);
+        const RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 11, 8);
+        const RegIndex ra = (RegIndex)(uint32_t)bits(machInst, 15, 12);
         const bool m = bits(machInst, 5);
         switch (op1) {
           case 0x0:

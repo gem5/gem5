@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2021 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -54,14 +66,6 @@ class NetDest;
 class SimpleNetwork;
 class Switch;
 
-struct LinkOrder
-{
-    int m_link;
-    int m_value;
-};
-
-bool operator<(const LinkOrder& l1, const LinkOrder& l2);
-
 class PerfectSwitch : public Consumer
 {
   public:
@@ -74,7 +78,10 @@ class PerfectSwitch : public Consumer
     void init(SimpleNetwork *);
     void addInPort(const std::vector<MessageBuffer*>& in);
     void addOutPort(const std::vector<MessageBuffer*>& out,
-                    const NetDest& routing_table_entry);
+                    const NetDest& routing_table_entry,
+                    const PortDirection &dst_inport,
+                    Tick routing_latency,
+                    int link_weight);
 
     int getInLinks() const { return m_in.size(); }
     int getOutLinks() const { return m_out.size(); }
@@ -92,24 +99,36 @@ class PerfectSwitch : public Consumer
     PerfectSwitch& operator=(const PerfectSwitch& obj);
 
     void operateVnet(int vnet);
-    void operateMessageBuffer(MessageBuffer *b, int incoming, int vnet);
+    void operateMessageBuffer(MessageBuffer *b, int vnet);
 
     const SwitchID m_switch_id;
     Switch * const m_switch;
 
-    // vector of queues from the components
+    // Vector of queues associated to each port.
     std::vector<std::vector<MessageBuffer*> > m_in;
-    std::vector<std::vector<MessageBuffer*> > m_out;
 
-    std::vector<NetDest> m_routing_table;
-    std::vector<LinkOrder> m_link_order;
+    // Each output port also has a latency for routing to that port
+    struct OutputPort
+    {
+        Tick latency;
+        std::vector<MessageBuffer*> buffers;
+    };
+    std::vector<OutputPort> m_out;
+
+    // input ports ordered by priority; indexed by vnet first
+    std::vector<std::vector<MessageBuffer*> > m_in_prio;
+    // input ports grouped by priority; indexed by vnet,prio_lv
+    std::vector<std::vector<std::vector<MessageBuffer*>>> m_in_prio_groups;
+
+    void updatePriorityGroups(int vnet, MessageBuffer* buf);
 
     uint32_t m_virtual_networks;
-    int m_round_robin_start;
     int m_wakeups_wo_switch;
 
     SimpleNetwork* m_network_ptr;
     std::vector<int> m_pending_message_count;
+
+    MessageBuffer* inBuffer(int in_port, int vnet) const;
 };
 
 inline std::ostream&

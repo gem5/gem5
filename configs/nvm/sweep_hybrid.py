@@ -117,8 +117,8 @@ MemConfig.config_mem(args, system)
 
 # the following assumes that we are using the native controller
 # with NVM and DRAM interfaces, check to be sure
-if not isinstance(system.mem_ctrls[0], m5.objects.MemCtrl):
-    fatal("This script assumes the controller is a MemCtrl subclass")
+if not isinstance(system.mem_ctrls[0], m5.objects.HeteroMemCtrl):
+    fatal("This script assumes the controller is a HeteroMemCtrl subclass")
 if not isinstance(system.mem_ctrls[0].dram, m5.objects.DRAMInterface):
     fatal("This script assumes the first memory is a DRAMInterface subclass")
 if not isinstance(system.mem_ctrls[0].nvm, m5.objects.NVMInterface):

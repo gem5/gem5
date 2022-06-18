@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 ARM Limited
+// Copyright (c) 2011-2022 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -37,7 +37,7 @@ output header {{
 namespace Aarch64
 {
     StaticInstPtr decodeDataProcImm(ExtMachInst machInst);
-    StaticInstPtr decodeBranchExcSys(ExtMachInst machInst);
+    StaticInstPtr decodeBranchExcSys(const Decoder &dec, ExtMachInst machInst);
     StaticInstPtr decodeLoadsStores(ExtMachInst machInst);
     StaticInstPtr decodeDataProcReg(ExtMachInst machInst);
 
@@ -62,11 +62,11 @@ namespace Aarch64
     StaticInstPtr
     decodeDataProcImm(ExtMachInst machInst)
     {
-        IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 4, 0);
-        IntRegIndex rdsp = makeSP(rd);
-        IntRegIndex rdzr = makeZero(rd);
-        IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 9, 5);
-        IntRegIndex rnsp = makeSP(rn);
+        RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+        RegIndex rdsp = makeSP(rd);
+        RegIndex rdzr = makeZero(rd);
+        RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 9, 5);
+        RegIndex rnsp = makeSP(rn);
 
         uint8_t opc = bits(machInst, 30, 29);
         bool sf = bits(machInst, 31);
@@ -81,9 +81,10 @@ namespace Aarch64
             uint64_t immhi = bits(machInst, 23, 5);
             uint64_t imm = (immlo << 0) | (immhi << 2);
             if (bits(machInst, 31) == 0)
-                return new AdrXImm(machInst, rdzr, INTREG_ZERO, sext<21>(imm));
+                return new AdrXImm(machInst, rdzr, int_reg::Zero,
+                                   sext<21>(imm));
             else
-                return new AdrpXImm(machInst, rdzr, INTREG_ZERO,
+                return new AdrpXImm(machInst, rdzr, int_reg::Zero,
                                     sext<33>(imm << 12));
           }
           case 0x2:
@@ -157,8 +158,8 @@ namespace Aarch64
           }
           case 0x5:
           {
-            IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 4, 0);
-            IntRegIndex rdzr = makeZero(rd);
+            RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+            RegIndex rdzr = makeZero(rd);
             uint32_t imm16 = bits(machInst, 20, 5);
             uint32_t hw = bits(machInst, 22, 21);
             switch (opc) {
@@ -191,7 +192,7 @@ namespace Aarch64
             }
           case 0x7:
           {
-            IntRegIndex rm = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
+            RegIndex rm = (RegIndex)(uint8_t)bits(machInst, 20, 16);
             if (opc || bits(machInst, 21))
                 return new Unknown64(machInst);
             else
@@ -207,7 +208,7 @@ output decoder {{
 namespace Aarch64
 {
     StaticInstPtr
-    decodeBranchExcSys(ExtMachInst machInst)
+    decodeBranchExcSys(const Decoder &dec, ExtMachInst machInst)
     {
         switch (bits(machInst, 30, 29)) {
           case 0x0:
@@ -220,7 +221,7 @@ namespace Aarch64
           }
           case 0x1:
           {
-            IntRegIndex rt = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
+            RegIndex rt = (RegIndex)(uint8_t)bits(machInst, 4, 0);
             if (bits(machInst, 25) == 0) {
                 int64_t imm = sext<19>(bits(machInst, 23, 5)) << 2;
                 if (bits(machInst, 24) == 0)
@@ -287,7 +288,7 @@ namespace Aarch64
                 uint8_t crn = bits(machInst, 15, 12);
                 uint8_t crm = bits(machInst, 11, 8);
                 uint8_t op2 = bits(machInst, 7, 5);
-                IntRegIndex rt = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
+                RegIndex rt = (RegIndex)(uint8_t)bits(machInst, 4, 0);
                 switch (op0) {
                   case 0x0:
                     // early out for TME
@@ -323,23 +324,23 @@ namespace Aarch64
                               case 0x5:
                                 return new SevlInst(machInst);
                               case 0x7:
-                                return new Xpaclri(machInst, INTREG_X30);
+                                return new Xpaclri(machInst, int_reg::X30);
                             }
                             break;
                           case 0x1:
                             switch (op2) {
                               case 0x0:
-                                return new Pacia1716(machInst, INTREG_X17,
-                                                               INTREG_X16);
+                                return new Pacia1716(machInst, int_reg::X17,
+                                                               int_reg::X16);
                               case 0x2:
-                                return new Pacib1716(machInst, INTREG_X17,
-                                                               INTREG_X16);
+                                return new Pacib1716(machInst, int_reg::X17,
+                                                               int_reg::X16);
                               case 0x4:
-                                return new Autia1716(machInst, INTREG_X17,
-                                                               INTREG_X16);
+                                return new Autia1716(machInst, int_reg::X17,
+                                                               int_reg::X16);
                               case 0x6:
-                                return new Autib1716(machInst, INTREG_X17,
-                                                               INTREG_X16);
+                                return new Autib1716(machInst, int_reg::X17,
+                                                               int_reg::X16);
                             }
                             break;
                           case 0x2:
@@ -362,28 +363,28 @@ namespace Aarch64
                             switch (op2) {
                               case 0x0:
                                 return new Paciaz(machInst,
-                                         INTREG_X30, INTREG_ZERO);
+                                         int_reg::X30, int_reg::Zero);
                               case 0x1:
                                 return new Paciasp(machInst,
-                                         INTREG_X30, INTREG_SPX);
+                                         int_reg::X30, int_reg::Spx);
                               case 0x2:
                                 return new Pacibz(machInst,
-                                         INTREG_X30, INTREG_ZERO);
+                                         int_reg::X30, int_reg::Zero);
                               case 0x3:
                                 return new Pacibsp(machInst,
-                                         INTREG_X30, INTREG_SPX);
+                                         int_reg::X30, int_reg::Spx);
                               case 0x4:
                                 return new Autiaz(machInst,
-                                         INTREG_X30, INTREG_ZERO);
+                                         int_reg::X30, int_reg::Zero);
                               case 0x5:
                                 return new Autiasp(machInst,
-                                         INTREG_X30, INTREG_SPX);
+                                         int_reg::X30, int_reg::Spx);
                               case 0x6:
                                 return new Autibz(machInst,
-                                         INTREG_X30, INTREG_ZERO);
+                                         int_reg::X30, int_reg::Zero);
                               case 0x7:
                                 return new Autibsp(machInst,
-                                         INTREG_X30, INTREG_SPX);
+                                         int_reg::X30, int_reg::Spx);
                             }
                             break;
                           case 0x4:
@@ -401,7 +402,17 @@ namespace Aarch64
                           case 0x2:
                             return new Clrex64(machInst);
                           case 0x4:
-                            return new Dsb64(machInst);
+                            switch (bits(crm, 3, 2)) {
+                              case 0x1: // Non-Shareable
+                                return new Dsb64Local(machInst);
+                              case 0x0: // OuterShareable
+                              case 0x2: // InnerShareable
+                              case 0x3: // FullSystem
+                                return new Dsb64Shareable(
+                                    machInst, dec.dvmEnabled);
+                              default:
+                                GEM5_UNREACHABLE;
+                            }
                           case 0x5:
                             return new Dmb64(machInst);
                           case 0x6:
@@ -483,13 +494,15 @@ namespace Aarch64
                     } else if (miscRegInfo[miscReg][MISCREG_IMPLEMENTED]) {
                         if (miscReg == MISCREG_NZCV) {
                             if (read)
-                                return new MrsNZCV64(machInst, rt, (IntRegIndex) miscReg);
+                                return new MrsNZCV64(machInst, rt, miscReg);
                             else
-                                return new MsrNZCV64(machInst, (IntRegIndex) miscReg, rt);
+                                return new MsrNZCV64(machInst, miscReg, rt);
                         }
-                        uint32_t iss = msrMrs64IssBuild(read, op0, op1, crn, crm, op2, rt);
+                        uint32_t iss = msrMrs64IssBuild(read, op0, op1, crn,
+                                                        crm, op2, rt);
                         if (read) {
-                            StaticInstPtr si = new Mrs64(machInst, rt, miscReg, iss);
+                            StaticInstPtr si = new Mrs64(machInst, rt, miscReg,
+                                                         iss);
                             if (miscRegInfo[miscReg][MISCREG_UNVERIFIABLE])
                                 si->setFlag(StaticInst::IsUnverifiable);
                             return si;
@@ -505,6 +518,44 @@ namespace Aarch64
                                 return new Dccivac(machInst, rt, miscReg, iss);
                               case MISCREG_DC_IVAC_Xt:
                                 return new Dcivac(machInst, rt, miscReg, iss);
+                              // 64-bit TLBIs split into "Local"
+                              // and "Shareable"
+                              case MISCREG_TLBI_ALLE3:
+                              case MISCREG_TLBI_ALLE2:
+                              case MISCREG_TLBI_ALLE1:
+                              case MISCREG_TLBI_VMALLS12E1:
+                              case MISCREG_TLBI_VMALLE1:
+                              case MISCREG_TLBI_VAE3_Xt:
+                              case MISCREG_TLBI_VALE3_Xt:
+                              case MISCREG_TLBI_VAE2_Xt:
+                              case MISCREG_TLBI_VALE2_Xt:
+                              case MISCREG_TLBI_VAE1_Xt:
+                              case MISCREG_TLBI_VALE1_Xt:
+                              case MISCREG_TLBI_ASIDE1_Xt:
+                              case MISCREG_TLBI_VAAE1_Xt:
+                              case MISCREG_TLBI_VAALE1_Xt:
+                              case MISCREG_TLBI_IPAS2E1_Xt:
+                              case MISCREG_TLBI_IPAS2LE1_Xt:
+                                return new Tlbi64LocalHub(
+                                  machInst, miscReg, rt, iss);
+                              case MISCREG_TLBI_ALLE3IS:
+                              case MISCREG_TLBI_ALLE2IS:
+                              case MISCREG_TLBI_ALLE1IS:
+                              case MISCREG_TLBI_VMALLS12E1IS:
+                              case MISCREG_TLBI_VMALLE1IS:
+                              case MISCREG_TLBI_VAE3IS_Xt:
+                              case MISCREG_TLBI_VALE3IS_Xt:
+                              case MISCREG_TLBI_VAE2IS_Xt:
+                              case MISCREG_TLBI_VALE2IS_Xt:
+                              case MISCREG_TLBI_VAE1IS_Xt:
+                              case MISCREG_TLBI_VALE1IS_Xt:
+                              case MISCREG_TLBI_ASIDE1IS_Xt:
+                              case MISCREG_TLBI_VAAE1IS_Xt:
+                              case MISCREG_TLBI_VAALE1IS_Xt:
+                              case MISCREG_TLBI_IPAS2E1IS_Xt:
+                              case MISCREG_TLBI_IPAS2LE1IS_Xt:
+                                return new Tlbi64ShareableHub(
+                                  machInst, miscReg, rt, iss, dec.dvmEnabled);
                               default:
                                 return new Msr64(machInst, miscReg, rt, iss);
                             }
@@ -530,8 +581,8 @@ namespace Aarch64
                 uint8_t opc = bits(machInst, 24, 21);
                 uint8_t op2 = bits(machInst, 20, 16);
                 uint8_t op3 = bits(machInst, 15, 12);
-                IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
-                IntRegIndex rm = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
+                RegIndex rn = (RegIndex)(uint8_t)bits(machInst, 9, 5);
+                RegIndex rm = (RegIndex)(uint8_t)bits(machInst, 4, 0);
                 uint8_t op4 = bits(machInst, 4, 0);
                 if (op2 != 0x1f || op3 != 0x0)
                     return new Unknown64(machInst);
@@ -617,10 +668,10 @@ namespace Aarch64
         uint8_t opc  = bits(machInst, 14, 12);
         uint8_t o3  = bits(machInst, 15);
         uint8_t size_ar = bits(machInst, 23, 22)<<0 | bits(machInst, 31, 30)<<2;
-        IntRegIndex rt = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
-        IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
-        IntRegIndex rnsp = makeSP(rn);
-        IntRegIndex rs = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
+        RegIndex rt = (RegIndex)(uint8_t)bits(machInst, 4, 0);
+        RegIndex rn = (RegIndex)(uint8_t)bits(machInst, 9, 5);
+        RegIndex rnsp = makeSP(rn);
+        RegIndex rs = (RegIndex)(uint8_t)bits(machInst, 20, 16);
         uint8_t  A_rt = bits(machInst, 4, 0)<<0 | bits(machInst, 23)<<5;
 
         switch(opc) {
@@ -1174,11 +1225,11 @@ namespace Aarch64
             if (bits(machInst, 26) == 0) {
                 if (bits(machInst, 24) != 0)
                     return new Unknown64(machInst);
-                IntRegIndex rt = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
-                IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
-                IntRegIndex rnsp = makeSP(rn);
-                IntRegIndex rt2 = (IntRegIndex)(uint8_t)bits(machInst, 14, 10);
-                IntRegIndex rs = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
+                RegIndex rt = (RegIndex)(uint8_t)bits(machInst, 4, 0);
+                RegIndex rn = (RegIndex)(uint8_t)bits(machInst, 9, 5);
+                RegIndex rnsp = makeSP(rn);
+                RegIndex rt2 = (RegIndex)(uint8_t)bits(machInst, 14, 10);
+                RegIndex rs = (RegIndex)(uint8_t)bits(machInst, 20, 16);
                 uint8_t opc = (bits(machInst, 15) << 0) |
                               (bits(machInst, 23, 21) << 1);
                 uint8_t size = bits(machInst, 31, 30);
@@ -1382,7 +1433,7 @@ namespace Aarch64
             uint8_t switchVal = (bits(machInst, 26) << 0) |
                                 (bits(machInst, 31, 30) << 1);
             int64_t imm = sext<19>(bits(machInst, 23, 5)) << 2;
-            IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 4, 0);
+            RegIndex rt = (RegIndex)(uint32_t)bits(machInst, 4, 0);
             switch (switchVal) {
               case 0x0:
                 return new LDRWL64_LIT(machInst, rt, imm);
@@ -1420,9 +1471,9 @@ namespace Aarch64
             uint8_t type = bits(machInst, 24, 23);
             int64_t imm = sext<7>(bits(machInst, 21, 15)) * size;
 
-            IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
-            IntRegIndex rt = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
-            IntRegIndex rt2 = (IntRegIndex)(uint8_t)bits(machInst, 14, 10);
+            RegIndex rn = (RegIndex)(uint8_t)bits(machInst, 9, 5);
+            RegIndex rt = (RegIndex)(uint8_t)bits(machInst, 4, 0);
+            RegIndex rt2 = (RegIndex)(uint8_t)bits(machInst, 14, 10);
 
             bool noAlloc = (type == 0);
             bool signExt = !noAlloc && !fp && opc == 1;
@@ -1467,9 +1518,9 @@ namespace Aarch64
                                 (bits(machInst, 31, 30) << 3);
             if (bits(machInst, 24) == 1) {
                 uint64_t imm12 = bits(machInst, 21, 10);
-                IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 4, 0);
-                IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 9, 5);
-                IntRegIndex rnsp = makeSP(rn);
+                RegIndex rt = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+                RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 9, 5);
+                RegIndex rnsp = makeSP(rn);
                 switch (switchVal) {
                   case 0x00:
                     return new STRB64_IMM(machInst, rt, rnsp, imm12);
@@ -1531,11 +1582,11 @@ namespace Aarch64
                     {
                         if ((switchVal & 0x7) == 0x2 &&
                                 bits(machInst, 20, 12) == 0x1fc) {
-                            IntRegIndex rt = (IntRegIndex)(uint32_t)
+                            RegIndex rt = (RegIndex)(uint32_t)
                                 bits(machInst, 4, 0);
-                            IntRegIndex rn = (IntRegIndex)(uint32_t)
+                            RegIndex rn = (RegIndex)(uint32_t)
                                 bits(machInst, 9, 5);
-                            IntRegIndex rnsp = makeSP(rn);
+                            RegIndex rnsp = makeSP(rn);
                             uint8_t size = bits(machInst, 31, 30);
                             switch (size) {
                               case 0x0:
@@ -1556,9 +1607,9 @@ namespace Aarch64
                   case 0x1:
                   case 0x3:
                     {
-                        IntRegIndex rt = (IntRegIndex)(uint32_t)
+                        RegIndex rt = (RegIndex)(uint32_t)
                                            bits(machInst, 4, 0);
-                        IntRegIndex rn = (IntRegIndex)(uint32_t)
+                        RegIndex rn = (RegIndex)(uint32_t)
                                            bits(machInst, 9, 5);
                         uint8_t  s = bits(machInst, 22);
                         uint64_t imm9 = bits(machInst, 20, 12);
@@ -1586,12 +1637,12 @@ namespace Aarch64
                     {
                         if (!bits(machInst, 14))
                             return new Unknown64(machInst);
-                        IntRegIndex rt = (IntRegIndex)(uint32_t)
+                        RegIndex rt = (RegIndex)(uint32_t)
                             bits(machInst, 4, 0);
-                        IntRegIndex rn = (IntRegIndex)(uint32_t)
+                        RegIndex rn = (RegIndex)(uint32_t)
                             bits(machInst, 9, 5);
-                        IntRegIndex rnsp = makeSP(rn);
-                        IntRegIndex rm = (IntRegIndex)(uint32_t)
+                        RegIndex rnsp = makeSP(rn);
+                        RegIndex rm = (RegIndex)(uint32_t)
                             bits(machInst, 20, 16);
                         ArmExtendType type =
                             (ArmExtendType)(uint32_t)bits(machInst, 15, 13);
@@ -1682,11 +1733,11 @@ namespace Aarch64
                 switch (bits(machInst, 11, 10)) {
                   case 0x0:
                   {
-                    IntRegIndex rt =
-                        (IntRegIndex)(uint32_t)bits(machInst, 4, 0);
-                    IntRegIndex rn =
-                        (IntRegIndex)(uint32_t)bits(machInst, 9, 5);
-                    IntRegIndex rnsp = makeSP(rn);
+                    RegIndex rt =
+                        (RegIndex)(uint32_t)bits(machInst, 4, 0);
+                    RegIndex rn =
+                        (RegIndex)(uint32_t)bits(machInst, 9, 5);
+                    RegIndex rnsp = makeSP(rn);
                     uint64_t imm = sext<9>(bits(machInst, 20, 12));
                     switch (switchVal) {
                       case 0x00:
@@ -1746,11 +1797,11 @@ namespace Aarch64
                   // bit 29:27=111, 25:24=00, 21=0, 11:10=01
                   case 0x1:
                   {
-                    IntRegIndex rt =
-                        (IntRegIndex)(uint32_t)bits(machInst, 4, 0);
-                    IntRegIndex rn =
-                        (IntRegIndex)(uint32_t)bits(machInst, 9, 5);
-                    IntRegIndex rnsp = makeSP(rn);
+                    RegIndex rt =
+                        (RegIndex)(uint32_t)bits(machInst, 4, 0);
+                    RegIndex rn =
+                        (RegIndex)(uint32_t)bits(machInst, 9, 5);
+                    RegIndex rnsp = makeSP(rn);
                     uint64_t imm = sext<9>(bits(machInst, 20, 12));
                     switch (switchVal) {
                       case 0x00:
@@ -1807,11 +1858,11 @@ namespace Aarch64
                   }
                   case 0x2:
                   {
-                    IntRegIndex rt =
-                        (IntRegIndex)(uint32_t)bits(machInst, 4, 0);
-                    IntRegIndex rn =
-                        (IntRegIndex)(uint32_t)bits(machInst, 9, 5);
-                    IntRegIndex rnsp = makeSP(rn);
+                    RegIndex rt =
+                        (RegIndex)(uint32_t)bits(machInst, 4, 0);
+                    RegIndex rn =
+                        (RegIndex)(uint32_t)bits(machInst, 9, 5);
+                    RegIndex rnsp = makeSP(rn);
                     uint64_t imm = sext<9>(bits(machInst, 20, 12));
                     switch (switchVal) {
                       case 0x00:
@@ -1846,11 +1897,11 @@ namespace Aarch64
                   }
                   case 0x3:
                   {
-                    IntRegIndex rt =
-                        (IntRegIndex)(uint32_t)bits(machInst, 4, 0);
-                    IntRegIndex rn =
-                        (IntRegIndex)(uint32_t)bits(machInst, 9, 5);
-                    IntRegIndex rnsp = makeSP(rn);
+                    RegIndex rt =
+                        (RegIndex)(uint32_t)bits(machInst, 4, 0);
+                    RegIndex rn =
+                        (RegIndex)(uint32_t)bits(machInst, 9, 5);
+                    RegIndex rnsp = makeSP(rn);
                     uint64_t imm = sext<9>(bits(machInst, 20, 12));
                     switch (switchVal) {
                       case 0x00:
@@ -1936,10 +1987,10 @@ namespace Aarch64
             bool sf = bits(machInst, 31);
             if (!sf && (imm6 & 0x20))
                 return new Unknown64(machInst);
-            IntRegIndex rd = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
-            IntRegIndex rdzr = makeZero(rd);
-            IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
-            IntRegIndex rm = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
+            RegIndex rd = (RegIndex)(uint8_t)bits(machInst, 4, 0);
+            RegIndex rdzr = makeZero(rd);
+            RegIndex rn = (RegIndex)(uint8_t)bits(machInst, 9, 5);
+            RegIndex rm = (RegIndex)(uint8_t)bits(machInst, 20, 16);
 
             switch (switchVal) {
               case 0x0:
@@ -1973,10 +2024,10 @@ namespace Aarch64
                 uint8_t imm6 = bits(machInst, 15, 10);
                 if (!bits(machInst, 31) && bits(imm6, 5))
                     return new Unknown64(machInst);
-                IntRegIndex rd = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
-                IntRegIndex rdzr = makeZero(rd);
-                IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
-                IntRegIndex rm = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
+                RegIndex rd = (RegIndex)(uint8_t)bits(machInst, 4, 0);
+                RegIndex rdzr = makeZero(rd);
+                RegIndex rn = (RegIndex)(uint8_t)bits(machInst, 9, 5);
+                RegIndex rm = (RegIndex)(uint8_t)bits(machInst, 20, 16);
                 switch (switchVal) {
                   case 0x0:
                     return new AddXSReg(machInst, rdzr, rn, rm, imm6, type);
@@ -1995,12 +2046,12 @@ namespace Aarch64
                 ArmExtendType type =
                     (ArmExtendType)(uint8_t)bits(machInst, 15, 13);
                 uint8_t imm3 = bits(machInst, 12, 10);
-                IntRegIndex rd = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
-                IntRegIndex rdsp = makeSP(rd);
-                IntRegIndex rdzr = makeZero(rd);
-                IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
-                IntRegIndex rnsp = makeSP(rn);
-                IntRegIndex rm = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
+                RegIndex rd = (RegIndex)(uint8_t)bits(machInst, 4, 0);
+                RegIndex rdsp = makeSP(rd);
+                RegIndex rdzr = makeZero(rd);
+                RegIndex rn = (RegIndex)(uint8_t)bits(machInst, 9, 5);
+                RegIndex rnsp = makeSP(rn);
+                RegIndex rm = (RegIndex)(uint8_t)bits(machInst, 20, 16);
 
                 switch (switchVal) {
                   case 0x0:
@@ -2020,10 +2071,10 @@ namespace Aarch64
           {
             if (bits(machInst, 21) == 1)
                 return new Unknown64(machInst);
-            IntRegIndex rd = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
-            IntRegIndex rdzr = makeZero(rd);
-            IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
-            IntRegIndex rm = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
+            RegIndex rd = (RegIndex)(uint8_t)bits(machInst, 4, 0);
+            RegIndex rdzr = makeZero(rd);
+            RegIndex rn = (RegIndex)(uint8_t)bits(machInst, 9, 5);
+            RegIndex rm = (RegIndex)(uint8_t)bits(machInst, 20, 16);
             switch (bits(machInst, 23, 22)) {
               case 0x0:
               {
@@ -2053,10 +2104,10 @@ namespace Aarch64
                 ConditionCode cond =
                     (ConditionCode)(uint8_t)bits(machInst, 15, 12);
                 uint8_t flags = bits(machInst, 3, 0);
-                IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
+                RegIndex rn = (RegIndex)(uint8_t)bits(machInst, 9, 5);
                 if (bits(machInst, 11) == 0) {
-                    IntRegIndex rm =
-                        (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
+                    RegIndex rm =
+                        (RegIndex)(uint8_t)bits(machInst, 20, 16);
                     if (bits(machInst, 30) == 0) {
                         return new CcmnReg64(machInst, rn, rm, cond, flags);
                     } else {
@@ -2079,10 +2130,10 @@ namespace Aarch64
                 }
                 uint8_t switchVal = (bits(machInst, 10) << 0) |
                                     (bits(machInst, 30) << 1);
-                IntRegIndex rd = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
-                IntRegIndex rdzr = makeZero(rd);
-                IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
-                IntRegIndex rm = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
+                RegIndex rd = (RegIndex)(uint8_t)bits(machInst, 4, 0);
+                RegIndex rdzr = makeZero(rd);
+                RegIndex rn = (RegIndex)(uint8_t)bits(machInst, 9, 5);
+                RegIndex rm = (RegIndex)(uint8_t)bits(machInst, 20, 16);
                 ConditionCode cond =
                     (ConditionCode)(uint8_t)bits(machInst, 15, 12);
                 switch (switchVal) {
@@ -2163,49 +2214,49 @@ namespace Aarch64
                             case 0x8:
                                 if (rn == 0x1f)
                                     return new Paciza(machInst, rd,
-                                                      INTREG_ZERO);
+                                                      int_reg::Zero);
                                 else
                                     return new Unknown64(machInst);
                             case 0x9:
                                 if (rn == 0x1f)
                                     return new Pacizb(machInst, rd,
-                                                      INTREG_ZERO);
+                                                      int_reg::Zero);
                                 else
                                     return new Unknown64(machInst);
                             case 0xa:
                                 if (rn == 0x1f)
                                     return new Pacdza(machInst, rd,
-                                                      INTREG_ZERO);
+                                                      int_reg::Zero);
                                 else
                                     return new Unknown64(machInst);
                             case 0xb:
                                 if (rn == 0x1f)
                                     return new Pacdzb(machInst, rd,
-                                                      INTREG_ZERO);
+                                                      int_reg::Zero);
                                 else
                                     return new Unknown64(machInst);
                             case 0xc:
                                 if (rn == 0x1f)
                                     return new Autiza(machInst, rd,
-                                                      INTREG_ZERO);
+                                                      int_reg::Zero);
                                 else
                                     return new Unknown64(machInst);
                             case 0xd:
                                 if (rn == 0x1f)
                                     return new Autizb(machInst, rd,
-                                                      INTREG_ZERO);
+                                                      int_reg::Zero);
                                 else
                                     return new Unknown64(machInst);
                             case 0xe:
                                 if (rn == 0x1f)
                                     return new Autdza(machInst, rd,
-                                                      INTREG_ZERO);
+                                                      int_reg::Zero);
                                 else
                                     return new Unknown64(machInst);
                             case 0xf:
                                 if (rn == 0x1f)
                                     return new Autdzb(machInst, rd,
-                                                      INTREG_ZERO);
+                                                      int_reg::Zero);
                                 else
                                     return new Unknown64(machInst);
                             default:
@@ -2259,11 +2310,11 @@ namespace Aarch64
             if (bits(machInst, 30, 29) != 0x0 ||
                     (bits(machInst, 23, 21) != 0 && bits(machInst, 31) == 0))
                 return new Unknown64(machInst);
-            IntRegIndex rd = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
-            IntRegIndex rdzr = makeZero(rd);
-            IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
-            IntRegIndex ra = (IntRegIndex)(uint8_t)bits(machInst, 14, 10);
-            IntRegIndex rm = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
+            RegIndex rd = (RegIndex)(uint8_t)bits(machInst, 4, 0);
+            RegIndex rdzr = makeZero(rd);
+            RegIndex rn = (RegIndex)(uint8_t)bits(machInst, 9, 5);
+            RegIndex ra = (RegIndex)(uint8_t)bits(machInst, 14, 10);
+            RegIndex rm = (RegIndex)(uint8_t)bits(machInst, 20, 16);
             switch (bits(machInst, 23, 21)) {
               case 0x0:
                 if (bits(machInst, 15) == 0)
@@ -2364,10 +2415,10 @@ namespace Aarch64
         if (bits(machInst, 24) == 1) {
             if (bits(machInst, 31) || bits(machInst, 29))
                 return new Unknown64(machInst);
-            IntRegIndex rd    = (IntRegIndex)(uint32_t)bits(machInst, 4, 0);
-            IntRegIndex rn    = (IntRegIndex)(uint32_t)bits(machInst, 9, 5);
-            IntRegIndex rm    = (IntRegIndex)(uint32_t)bits(machInst, 20, 16);
-            IntRegIndex ra    = (IntRegIndex)(uint32_t)bits(machInst, 14, 10);
+            RegIndex rd    = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+            RegIndex rn    = (RegIndex)(uint32_t)bits(machInst, 9, 5);
+            RegIndex rm    = (RegIndex)(uint32_t)bits(machInst, 20, 16);
+            RegIndex ra    = (RegIndex)(uint32_t)bits(machInst, 14, 10);
             uint8_t switchVal = (bits(machInst, 23, 21) << 1) |
                                 (bits(machInst, 15)     << 0);
             switch (switchVal) {
@@ -2397,8 +2448,8 @@ namespace Aarch64
             uint8_t switchVal = bits(machInst, 20, 16);
             uint8_t type      = bits(machInst, 23, 22);
             uint8_t scale     = bits(machInst, 15, 10);
-            IntRegIndex rd    = (IntRegIndex)(uint32_t)bits(machInst, 4, 0);
-            IntRegIndex rn    = (IntRegIndex)(uint32_t)bits(machInst, 9, 5);
+            RegIndex rd    = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+            RegIndex rn    = (RegIndex)(uint32_t)bits(machInst, 9, 5);
             if (bits(machInst, 18, 17) == 3 && scale != 0)
                 return new Unknown64(machInst);
             // 30:24=0011110, 21=0
@@ -2482,8 +2533,8 @@ namespace Aarch64
             // 30=0, 28:24=11110, 21=1
             uint8_t type   = bits(machInst, 23, 22);
             uint8_t imm8   = bits(machInst, 20, 13);
-            IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 4, 0);
-            IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 9, 5);
+            RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+            RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 9, 5);
             switch (bits(machInst, 11, 10)) {
               case 0x0:
                 if (bits(machInst, 12) == 1) {
@@ -2518,7 +2569,7 @@ namespace Aarch64
                     }
                     uint8_t switchVal = (bits(machInst, 4, 3) << 0) |
                                         (bits(machInst, 22) << 2);
-                    IntRegIndex rm = (IntRegIndex)(uint32_t)
+                    RegIndex rm = (RegIndex)(uint32_t)
                                         bits(machInst, 20, 16);
                     // 28:23=000111100, 21=1, 15:10=001000, 2:0=000
                     switch (switchVal) {
@@ -2847,9 +2898,9 @@ namespace Aarch64
                     bits(machInst, 23)) {
                     return new Unknown64(machInst);
                 }
-                IntRegIndex rm = (IntRegIndex)(uint32_t) bits(machInst, 20, 16);
-                IntRegIndex rn = (IntRegIndex)(uint32_t) bits(machInst, 9, 5);
-                uint8_t    imm = (IntRegIndex)(uint32_t) bits(machInst, 3, 0);
+                RegIndex rm = (RegIndex)(uint32_t) bits(machInst, 20, 16);
+                RegIndex rn = (RegIndex)(uint32_t) bits(machInst, 9, 5);
+                uint8_t    imm = (RegIndex)(uint32_t) bits(machInst, 3, 0);
                 ConditionCode cond =
                     (ConditionCode)(uint8_t)(bits(machInst, 15, 12));
                 uint8_t switchVal = (bits(machInst, 4) << 0) |
@@ -2881,9 +2932,9 @@ namespace Aarch64
                         bits(machInst, 23)) {
                     return new Unknown64(machInst);
                 }
-                IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst,  4,  0);
-                IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst,  9,  5);
-                IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 20, 16);
+                RegIndex rd = (RegIndex)(uint32_t)bits(machInst,  4,  0);
+                RegIndex rn = (RegIndex)(uint32_t)bits(machInst,  9,  5);
+                RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 20, 16);
                 uint8_t switchVal = (bits(machInst, 15, 12) << 0) |
                                     (bits(machInst, 22) << 4);
                 switch (switchVal) {
@@ -2932,9 +2983,9 @@ namespace Aarch64
                 if (bits(machInst, 31) || bits(machInst, 29))
                     return new Unknown64(machInst);
                 uint8_t type = bits(machInst, 23, 22);
-                IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst,  4,  0);
-                IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst,  9,  5);
-                IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 20, 16);
+                RegIndex rd = (RegIndex)(uint32_t)bits(machInst,  4,  0);
+                RegIndex rn = (RegIndex)(uint32_t)bits(machInst,  9,  5);
+                RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 20, 16);
                 ConditionCode cond =
                     (ConditionCode)(uint8_t)(bits(machInst, 15, 12));
                 if (type == 0) // FCSEL Sd = if cond then Sn else Sm
@@ -3059,7 +3110,7 @@ def format Aarch64() {{
                 return decodeDataProcImm(machInst);
             else
                 // bit 28:26=101
-                return decodeBranchExcSys(machInst);
+                return decodeBranchExcSys(*this, machInst);
         } else if (bits(machInst, 25) == 0) {
             // bit 27=1, 25=0
             return decodeLoadsStores(machInst);

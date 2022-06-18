@@ -52,7 +52,7 @@ namespace ArmISA
 class SysDC64 : public MiscRegOp64
 {
   protected:
-    IntRegIndex base;
+    RegIndex base;
     MiscRegIndex dest;
     uint64_t imm;
 
@@ -60,7 +60,7 @@ class SysDC64 : public MiscRegOp64
     mutable Addr faultAddr;
 
     SysDC64(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-            IntRegIndex _base, MiscRegIndex _dest, uint64_t _imm)
+            RegIndex _base, MiscRegIndex _dest, uint64_t _imm)
         : MiscRegOp64(mnem, _machInst, __opClass, false),
           base(_base), dest(_dest), imm(_imm), faultAddr(0)
     {}
@@ -116,8 +116,8 @@ class Memory64 : public MightBeMicro64
 
   protected:
 
-    IntRegIndex dest;
-    IntRegIndex base;
+    RegIndex dest;
+    RegIndex base;
     /// True if the base register is SP (used for SP alignment checking).
     bool baseIsSP;
     static const unsigned numMicroops = 3;
@@ -125,7 +125,7 @@ class Memory64 : public MightBeMicro64
     StaticInstPtr *uops;
 
     Memory64(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-             IntRegIndex _dest, IntRegIndex _base)
+             RegIndex _dest, RegIndex _base)
         : MightBeMicro64(mnem, _machInst, __opClass),
           dest(_dest), base(_base), uops(NULL), memAccessFlags(0)
     {
@@ -158,7 +158,7 @@ class MemoryImm64 : public Memory64
     int64_t imm;
 
     MemoryImm64(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                IntRegIndex _dest, IntRegIndex _base, int64_t _imm)
+                RegIndex _dest, RegIndex _base, int64_t _imm)
         : Memory64(mnem, _machInst, __opClass, _dest, _base), imm(_imm)
     {}
 
@@ -169,10 +169,10 @@ class MemoryImm64 : public Memory64
 class MemoryDImm64 : public MemoryImm64
 {
   protected:
-    IntRegIndex dest2;
+    RegIndex dest2;
 
     MemoryDImm64(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                IntRegIndex _dest, IntRegIndex _dest2, IntRegIndex _base,
+                RegIndex _dest, RegIndex _dest2, RegIndex _base,
                 int64_t _imm)
         : MemoryImm64(mnem, _machInst, __opClass, _dest, _base, _imm),
           dest2(_dest2)
@@ -185,11 +185,11 @@ class MemoryDImm64 : public MemoryImm64
 class MemoryDImmEx64 : public MemoryDImm64
 {
   protected:
-    IntRegIndex result;
+    RegIndex result;
 
     MemoryDImmEx64(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                 IntRegIndex _result, IntRegIndex _dest, IntRegIndex _dest2,
-                 IntRegIndex _base, int32_t _imm)
+                 RegIndex _result, RegIndex _dest, RegIndex _dest2,
+                 RegIndex _base, int32_t _imm)
         : MemoryDImm64(mnem, _machInst, __opClass, _dest, _dest2,
                      _base, _imm), result(_result)
     {}
@@ -202,7 +202,7 @@ class MemoryPreIndex64 : public MemoryImm64
 {
   protected:
     MemoryPreIndex64(const char *mnem, ExtMachInst _machInst,
-                     OpClass __opClass, IntRegIndex _dest, IntRegIndex _base,
+                     OpClass __opClass, RegIndex _dest, RegIndex _base,
                      int64_t _imm)
         : MemoryImm64(mnem, _machInst, __opClass, _dest, _base, _imm)
     {}
@@ -215,7 +215,7 @@ class MemoryPostIndex64 : public MemoryImm64
 {
   protected:
     MemoryPostIndex64(const char *mnem, ExtMachInst _machInst,
-                      OpClass __opClass, IntRegIndex _dest, IntRegIndex _base,
+                      OpClass __opClass, RegIndex _dest, RegIndex _base,
                       int64_t _imm)
         : MemoryImm64(mnem, _machInst, __opClass, _dest, _base, _imm)
     {}
@@ -227,13 +227,13 @@ class MemoryPostIndex64 : public MemoryImm64
 class MemoryReg64 : public Memory64
 {
   protected:
-    IntRegIndex offset;
+    RegIndex offset;
     ArmExtendType type;
     uint64_t shiftAmt;
 
     MemoryReg64(const char *mnem, ExtMachInst _machInst,
-                OpClass __opClass, IntRegIndex _dest, IntRegIndex _base,
-                IntRegIndex _offset, ArmExtendType _type,
+                OpClass __opClass, RegIndex _dest, RegIndex _base,
+                RegIndex _offset, ArmExtendType _type,
                 uint64_t _shiftAmt)
         : Memory64(mnem, _machInst, __opClass, _dest, _base),
           offset(_offset), type(_type), shiftAmt(_shiftAmt)
@@ -247,7 +247,7 @@ class MemoryRaw64 : public Memory64
 {
   protected:
     MemoryRaw64(const char *mnem, ExtMachInst _machInst,
-                OpClass __opClass, IntRegIndex _dest, IntRegIndex _base)
+                OpClass __opClass, RegIndex _dest, RegIndex _base)
         : Memory64(mnem, _machInst, __opClass, _dest, _base)
     {}
 
@@ -258,11 +258,11 @@ class MemoryRaw64 : public Memory64
 class MemoryEx64 : public Memory64
 {
   protected:
-    IntRegIndex result;
+    RegIndex result;
 
     MemoryEx64(const char *mnem, ExtMachInst _machInst,
-               OpClass __opClass, IntRegIndex _dest, IntRegIndex _base,
-               IntRegIndex _result)
+               OpClass __opClass, RegIndex _dest, RegIndex _base,
+               RegIndex _result)
         : Memory64(mnem, _machInst, __opClass, _dest, _base), result(_result)
     {}
 
@@ -276,8 +276,8 @@ class MemoryLiteral64 : public Memory64
     int64_t imm;
 
     MemoryLiteral64(const char *mnem, ExtMachInst _machInst,
-                    OpClass __opClass, IntRegIndex _dest, int64_t _imm)
-        : Memory64(mnem, _machInst, __opClass, _dest, INTREG_ZERO), imm(_imm)
+                    OpClass __opClass, RegIndex _dest, int64_t _imm)
+        : Memory64(mnem, _machInst, __opClass, _dest, int_reg::Zero), imm(_imm)
     {}
 
     std::string generateDisassembly(
@@ -287,17 +287,17 @@ class MemoryLiteral64 : public Memory64
 class MemoryAtomicPair64 : public Memory64
 {
   protected:
-    IntRegIndex dest2;
-    IntRegIndex result;
-    IntRegIndex result2;
+    RegIndex dest2;
+    RegIndex result;
+    RegIndex result2;
 
     MemoryAtomicPair64(const char *mnem, ExtMachInst _machInst,
-                       OpClass __opClass, IntRegIndex _dest, IntRegIndex _base,
-                       IntRegIndex _result)
+                       OpClass __opClass, RegIndex _dest, RegIndex _base,
+                       RegIndex _result)
         : Memory64(mnem, _machInst, __opClass, _dest, _base),
-          dest2((IntRegIndex)(_dest + (IntRegIndex)(1))),
+          dest2((RegIndex)(_dest + (RegIndex)(1))),
           result(_result),
-          result2((IntRegIndex)(_result + (IntRegIndex)(1)))
+          result2((RegIndex)(_result + (RegIndex)(1)))
     {}
 
     std::string generateDisassembly(

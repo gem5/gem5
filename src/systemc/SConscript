@@ -25,7 +25,7 @@
 
 Import('*')
 
-if not env['USE_SYSTEMC']:
+if not env['CONF']['USE_SYSTEMC']:
     Return()
 
 env.UseSystemcCheck(warn=True)

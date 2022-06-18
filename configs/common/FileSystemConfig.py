@@ -140,7 +140,7 @@ def config_filesystem(system, options = None):
 
     # Set up /sys/devices/system/cpu
     cpudir = joinpath(sysdir, 'devices', 'system', 'cpu')
-    makedirs(cpudir)
+    makedirs(cpudir, exist_ok=True)
 
     file_append((cpudir, 'online'), '0-%d' % (len(cpus) - 1))
     file_append((cpudir, 'possible'), '0-%d' % (len(cpus) - 1))
@@ -168,7 +168,7 @@ def register_node(cpu_list, mem, node_number):
                            'system', 'node')
 
     nodedir = joinpath(nodebasedir,'node%d' % node_number)
-    makedirs(nodedir)
+    makedirs(nodedir, exist_ok=True)
 
     file_append((nodedir, 'cpumap'), hex_mask(cpu_list))
     file_append((nodedir, 'meminfo'),
@@ -180,10 +180,8 @@ def register_cpu(physical_package_id, core_siblings,
     cpudir = joinpath(m5.options.outdir, 'fs',  'sys', 'devices', 'system',
                       'cpu', 'cpu%d' % core_id)
 
-    if not isdir(joinpath(cpudir, 'topology')):
-        makedirs(joinpath(cpudir, 'topology'))
-    if not isdir(joinpath(cpudir, 'cache')):
-        makedirs(joinpath(cpudir, 'cache'))
+    makedirs(joinpath(cpudir, 'topology'), exist_ok=True)
+    makedirs(joinpath(cpudir, 'cache'))
 
     file_append((cpudir, 'online'), '1')
     file_append((cpudir, 'topology', 'physical_package_id'),
@@ -204,7 +202,7 @@ def register_cache(level, idu_type, size, line_size, assoc, cpus):
         while isdir(joinpath(cachedir, 'index%d' % j)):
             j += 1
         indexdir = joinpath(cachedir, 'index%d' % j)
-        makedirs(indexdir)
+        makedirs(indexdir, exist_ok=True)
 
         file_append((indexdir, 'level'), level)
         file_append((indexdir, 'type'), idu_type)

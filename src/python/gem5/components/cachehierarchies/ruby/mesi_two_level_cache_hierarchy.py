@@ -30,7 +30,6 @@ from ..abstract_two_level_cache_hierarchy import AbstractTwoLevelCacheHierarchy
 from ....coherence_protocol import CoherenceProtocol
 from ....isas import ISA
 from ...boards.abstract_board import AbstractBoard
-from ....runtime import get_runtime_isa
 from ....utils.requires import requires
 
 from .topologies.simple_pt2pt import SimplePt2Pt
@@ -106,7 +105,7 @@ class MESITwoLevelCacheHierarchy(
                 core,
                 self._num_l2_banks,
                 cache_line_size,
-                get_runtime_isa(),
+                board.processor.get_isa(),
                 board.get_clock_domain(),
             )
 
@@ -129,7 +128,7 @@ class MESITwoLevelCacheHierarchy(
             )
 
             # Connect the interrupt ports
-            if get_runtime_isa() == ISA.X86:
+            if board.get_processor().get_isa() == ISA.X86:
                 int_req_port = cache.sequencer.interrupt_out_port
                 int_resp_port = cache.sequencer.in_ports
                 core.connect_interrupt(int_req_port, int_resp_port)

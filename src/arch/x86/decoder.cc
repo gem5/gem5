@@ -181,11 +181,11 @@ Decoder::doFromCacheState()
 Decoder::State
 Decoder::doPrefixState(uint8_t nextByte)
 {
-    uint8_t prefix = Prefixes[nextByte];
+    // The REX and VEX prefixes only exist in 64 bit mode, so we use a
+    // different table for that.
+    const int table_idx = emi.mode.submode == SixtyFourBitMode ? 1 : 0;
+    const uint8_t prefix = Prefixes[table_idx][nextByte];
     State nextState = PrefixState;
-    // REX prefixes are only recognized in 64 bit mode.
-    if (prefix == RexPrefix && emi.mode.submode != SixtyFourBitMode)
-        prefix = 0;
     if (prefix)
         consumeByte();
     switch(prefix) {
@@ -515,7 +515,7 @@ Decoder::doModRMState(uint8_t nextByte)
     State nextState = ErrorState;
     ModRM modRM = nextByte;
     DPRINTF(Decoder, "Found modrm byte %#x.\n", nextByte);
-    if (defOp == 1) {
+    if (emi.addrSize == 2) {
         // Figure out 16 bit displacement size.
         if ((modRM.mod == 0 && modRM.rm == 6) || modRM.mod == 2)
             displacementSize = 2;
@@ -544,8 +544,7 @@ Decoder::doModRMState(uint8_t nextByte)
 
     // If there's an SIB, get that next.
     // There is no SIB in 16 bit mode.
-    if (modRM.rm == 4 && modRM.mod != 3) {
-            // && in 32/64 bit mode)
+    if (modRM.rm == 4 && modRM.mod != 3 && emi.addrSize != 2) {
         nextState = SIBState;
     } else if (displacementSize) {
         nextState = DisplacementState;

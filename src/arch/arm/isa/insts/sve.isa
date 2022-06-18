@@ -43,7 +43,7 @@ output header {{
               template <typename T> class BaseU>
     StaticInstPtr
     decodeSveUnaryPred(unsigned size, unsigned u, ExtMachInst machInst,
-                       IntRegIndex dest, IntRegIndex op1, IntRegIndex gp)
+                       RegIndex dest, RegIndex op1, RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -81,7 +81,7 @@ output header {{
               template <typename T1, typename T2> class BaseU>
     StaticInstPtr
     decodeSveWideningReduc(unsigned size, unsigned u, ExtMachInst machInst,
-                           IntRegIndex dest, IntRegIndex op1, IntRegIndex gp)
+                           RegIndex dest, RegIndex op1, RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -115,7 +115,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveUnaryPredS(unsigned size, ExtMachInst machInst,
-                        IntRegIndex dest, IntRegIndex op1, IntRegIndex gp)
+                        RegIndex dest, RegIndex op1, RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -136,7 +136,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveUnaryPredU(unsigned size, ExtMachInst machInst,
-                        IntRegIndex dest, IntRegIndex op1, IntRegIndex gp)
+                        RegIndex dest, RegIndex op1, RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -159,7 +159,7 @@ output header {{
               template <typename T> class BaseU>
     StaticInstPtr
     decodeSveUnaryPredSmall(unsigned size, unsigned u, ExtMachInst machInst,
-                            IntRegIndex dest, IntRegIndex op1, IntRegIndex gp)
+                            RegIndex dest, RegIndex op1, RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -190,7 +190,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveUnaryPredF(unsigned size, ExtMachInst machInst,
-                        IntRegIndex dest, IntRegIndex op1, IntRegIndex gp)
+                        RegIndex dest, RegIndex op1, RegIndex gp)
     {
         switch (size) {
           case 1:
@@ -209,7 +209,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveUnaryUnpredU(unsigned size, ExtMachInst machInst,
-                          IntRegIndex dest, IntRegIndex op1)
+                          RegIndex dest, RegIndex op1)
     {
         switch (size) {
           case 0:
@@ -230,7 +230,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveUnaryUnpredF(unsigned size, ExtMachInst machInst,
-                          IntRegIndex dest, IntRegIndex op1)
+                          RegIndex dest, RegIndex op1)
     {
         switch (size) {
           case 1:
@@ -250,7 +250,7 @@ output header {{
               template <typename T> class BaseU>
     StaticInstPtr
     decodeSveBinDestrPred(unsigned size, unsigned u, ExtMachInst machInst,
-                          IntRegIndex dest, IntRegIndex op2, IntRegIndex gp)
+                          RegIndex dest, RegIndex op2, RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -287,7 +287,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveBinImmUnpredS(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, IntRegIndex op1, unsigned immediate)
+            RegIndex dest, RegIndex op1, unsigned immediate)
     {
         switch (size) {
           case 0:
@@ -309,7 +309,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveBinImmUnpredU(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, IntRegIndex op1, unsigned immediate)
+            RegIndex dest, RegIndex op1, unsigned immediate)
     {
         switch (size) {
           case 0:
@@ -329,8 +329,8 @@ output header {{
     // SVE instructions, handling unsigned variants only.
     template <template <typename T> class Base>
     StaticInstPtr
-    decodeSveBinImmPredU(unsigned size, ExtMachInst machInst, IntRegIndex dest,
-            unsigned immediate, IntRegIndex gp)
+    decodeSveBinImmPredU(unsigned size, ExtMachInst machInst, RegIndex dest,
+            unsigned immediate, RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -350,8 +350,8 @@ output header {{
     // SVE instructions, handling signed variants only.
     template <template <typename T> class Base>
     StaticInstPtr
-    decodeSveBinImmPredS(unsigned size, ExtMachInst machInst, IntRegIndex dest,
-            unsigned immediate, IntRegIndex gp)
+    decodeSveBinImmPredS(unsigned size, ExtMachInst machInst, RegIndex dest,
+            unsigned immediate, RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -371,8 +371,8 @@ output header {{
     // SVE instructions, handling floating-point variants only.
     template <template <typename T> class Base>
     StaticInstPtr
-    decodeSveBinImmPredF(unsigned size, ExtMachInst machInst, IntRegIndex dest,
-            uint64_t immediate, IntRegIndex gp)
+    decodeSveBinImmPredF(unsigned size, ExtMachInst machInst, RegIndex dest,
+            uint64_t immediate, RegIndex gp)
     {
         switch (size) {
           case 1:
@@ -391,7 +391,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveWideImmUnpredU(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, uint64_t immediate)
+            RegIndex dest, uint64_t immediate)
     {
         switch (size) {
           case 0:
@@ -412,7 +412,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveWideImmUnpredS(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, uint64_t immediate)
+            RegIndex dest, uint64_t immediate)
     {
         switch (size) {
           case 0:
@@ -433,7 +433,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveWideImmUnpredF(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, uint64_t immediate)
+            RegIndex dest, uint64_t immediate)
     {
         switch (size) {
           case 1:
@@ -452,7 +452,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveWideImmPredU(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, uint64_t immediate, IntRegIndex gp,
+            RegIndex dest, uint64_t immediate, RegIndex gp,
             bool isMerging = true)
     {
         switch (size) {
@@ -478,7 +478,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveWideImmPredF(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, uint64_t immediate, IntRegIndex gp)
+            RegIndex dest, uint64_t immediate, RegIndex gp)
     {
         switch (size) {
           case 1:
@@ -497,7 +497,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveBinDestrPredU(unsigned size, ExtMachInst machInst,
-                           IntRegIndex dest, IntRegIndex op2, IntRegIndex gp)
+                           RegIndex dest, RegIndex op2, RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -518,7 +518,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveBinDestrPredS(unsigned size, ExtMachInst machInst,
-                           IntRegIndex dest, IntRegIndex op2, IntRegIndex gp)
+                           RegIndex dest, RegIndex op2, RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -539,7 +539,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveBinDestrPredF(unsigned size, ExtMachInst machInst,
-                           IntRegIndex dest, IntRegIndex op2, IntRegIndex gp)
+                           RegIndex dest, RegIndex op2, RegIndex gp)
     {
         switch (size) {
           case 1:
@@ -558,8 +558,8 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveBinConstrPredU(unsigned size, ExtMachInst machInst,
-                            IntRegIndex dest, IntRegIndex op1, IntRegIndex op2,
-                            IntRegIndex gp, SvePredType predType)
+                            RegIndex dest, RegIndex op1, RegIndex op2,
+                            RegIndex gp, SvePredType predType)
     {
         switch (size) {
           case 0:
@@ -579,7 +579,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveBinUnpred(unsigned size, unsigned u, ExtMachInst machInst,
-                       IntRegIndex dest, IntRegIndex op1, IntRegIndex op2)
+                       RegIndex dest, RegIndex op1, RegIndex op2)
     {
         switch (size) {
           case 0:
@@ -615,8 +615,8 @@ output header {{
     // Unsigned instructions only.
     template <template <typename T> class Base>
     StaticInstPtr
-    decodeSveBinUnpredU(unsigned size, ExtMachInst machInst, IntRegIndex dest,
-            IntRegIndex op1, IntRegIndex op2)
+    decodeSveBinUnpredU(unsigned size, ExtMachInst machInst, RegIndex dest,
+            RegIndex op1, RegIndex op2)
     {
         switch (size) {
           case 0:
@@ -636,8 +636,8 @@ output header {{
     // Signed instructions only.
     template <template <typename T> class Base>
     StaticInstPtr
-    decodeSveBinUnpredS(unsigned size, ExtMachInst machInst, IntRegIndex dest,
-            IntRegIndex op1, IntRegIndex op2)
+    decodeSveBinUnpredS(unsigned size, ExtMachInst machInst, RegIndex dest,
+            RegIndex op1, RegIndex op2)
     {
         switch (size) {
           case 0:
@@ -657,8 +657,8 @@ output header {{
     // floating-point variants only.
     template <template <typename T> class Base>
     StaticInstPtr
-    decodeSveBinUnpredF(unsigned size, ExtMachInst machInst, IntRegIndex dest,
-            IntRegIndex op1, IntRegIndex op2)
+    decodeSveBinUnpredF(unsigned size, ExtMachInst machInst, RegIndex dest,
+            RegIndex op1, RegIndex op2)
     {
         switch (size) {
           case 1:
@@ -677,8 +677,8 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveCmpF(unsigned size, ExtMachInst machInst,
-                  IntRegIndex dest, IntRegIndex op1, IntRegIndex op2,
-                  IntRegIndex gp)
+                  RegIndex dest, RegIndex op1, RegIndex op2,
+                  RegIndex gp)
     {
         switch (size) {
           case 1:
@@ -698,8 +698,8 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveCmpImmF(unsigned size, ExtMachInst machInst,
-                     IntRegIndex dest, IntRegIndex op1, uint64_t imm,
-                     IntRegIndex gp)
+                     RegIndex dest, RegIndex op1, uint64_t imm,
+                     RegIndex gp)
     {
         switch (size) {
           case 1:
@@ -717,8 +717,8 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveTerPred(unsigned size, unsigned u, ExtMachInst machInst,
-                     IntRegIndex dest, IntRegIndex op1, IntRegIndex op2,
-                     IntRegIndex gp)
+                     RegIndex dest, RegIndex op1, RegIndex op2,
+                     RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -755,8 +755,8 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveTerPredWS(unsigned size, ExtMachInst machInst,
-                      IntRegIndex dest, IntRegIndex op1, IntRegIndex op2,
-                      IntRegIndex gp)
+                      RegIndex dest, RegIndex op1, RegIndex op2,
+                      RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -775,8 +775,8 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveTerPredWU(unsigned size, ExtMachInst machInst,
-                      IntRegIndex dest, IntRegIndex op1, IntRegIndex op2,
-                      IntRegIndex gp)
+                      RegIndex dest, RegIndex op1, RegIndex op2,
+                      RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -795,8 +795,8 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveTerPredS(unsigned size, ExtMachInst machInst,
-                      IntRegIndex dest, IntRegIndex op1, IntRegIndex op2,
-                      IntRegIndex gp)
+                      RegIndex dest, RegIndex op1, RegIndex op2,
+                      RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -817,8 +817,8 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveTerPredU(unsigned size, ExtMachInst machInst,
-                      IntRegIndex dest, IntRegIndex op1, IntRegIndex op2,
-                      IntRegIndex gp)
+                      RegIndex dest, RegIndex op1, RegIndex op2,
+                      RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -839,8 +839,8 @@ output header {{
     template <template <typename TS, typename TD> class Base>
     StaticInstPtr
     decodeSveUnaryExtendFromBPredS(unsigned dsize, ExtMachInst machInst,
-                                   IntRegIndex dest, IntRegIndex op1,
-                                   IntRegIndex gp)
+                                   RegIndex dest, RegIndex op1,
+                                   RegIndex gp)
     {
         switch (dsize) {
           case 1:
@@ -858,8 +858,8 @@ output header {{
     template <template <typename TS, typename TD> class Base>
     StaticInstPtr
     decodeSveUnaryExtendFromBPredU(unsigned dsize, ExtMachInst machInst,
-                                   IntRegIndex dest, IntRegIndex op1,
-                                   IntRegIndex gp)
+                                   RegIndex dest, RegIndex op1,
+                                   RegIndex gp)
     {
         switch (dsize) {
           case 1:
@@ -877,8 +877,8 @@ output header {{
     template <template <typename TS, typename TD> class Base>
     StaticInstPtr
     decodeSveUnaryExtendFromHPredS(unsigned dsize, ExtMachInst machInst,
-                                   IntRegIndex dest, IntRegIndex op1,
-                                   IntRegIndex gp)
+                                   RegIndex dest, RegIndex op1,
+                                   RegIndex gp)
     {
         switch (dsize) {
           case 2:
@@ -894,8 +894,8 @@ output header {{
     template <template <typename TS, typename TD> class Base>
     StaticInstPtr
     decodeSveUnaryExtendFromHPredU(unsigned dsize, ExtMachInst machInst,
-                                   IntRegIndex dest, IntRegIndex op1,
-                                   IntRegIndex gp)
+                                   RegIndex dest, RegIndex op1,
+                                   RegIndex gp)
     {
         switch (dsize) {
           case 2:
@@ -911,8 +911,8 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveTerPredF(unsigned size, ExtMachInst machInst,
-                      IntRegIndex dest, IntRegIndex op1, IntRegIndex op2,
-                      IntRegIndex gp)
+                      RegIndex dest, RegIndex op1, RegIndex op2,
+                      RegIndex gp)
     {
         switch (size) {
           case 1:
@@ -931,7 +931,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveTerImmUnpredF(unsigned size, ExtMachInst machInst,
-                           IntRegIndex dest, IntRegIndex op2, uint8_t imm)
+                           RegIndex dest, RegIndex op2, uint8_t imm)
     {
         switch (size) {
           case 1:
@@ -949,7 +949,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSvePtrue(unsigned size, ExtMachInst machInst,
-                   IntRegIndex dest, uint8_t imm)
+                   RegIndex dest, uint8_t imm)
     {
         switch (size) {
           case 0:
@@ -969,7 +969,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSvePredCountS(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, IntRegIndex op1)
+            RegIndex dest, RegIndex op1)
     {
         switch (size) {
             case 0:
@@ -989,7 +989,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSvePredCountU(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, IntRegIndex op1)
+            RegIndex dest, RegIndex op1)
     {
         switch (size) {
             case 0:
@@ -1009,7 +1009,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSvePredCountVS(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, IntRegIndex op1)
+            RegIndex dest, RegIndex op1)
     {
         switch (size) {
             case 1:
@@ -1027,7 +1027,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSvePredCountVU(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, IntRegIndex op1)
+            RegIndex dest, RegIndex op1)
     {
         switch (size) {
             case 1:
@@ -1046,7 +1046,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveTerImmPredU(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, IntRegIndex op1, int64_t imm, IntRegIndex gp)
+            RegIndex dest, RegIndex op1, int64_t imm, RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -1067,7 +1067,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveTerImmPredS(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, IntRegIndex op1, int64_t imm, IntRegIndex gp)
+            RegIndex dest, RegIndex op1, int64_t imm, RegIndex gp)
     {
         switch (size) {
           case 0:
@@ -1088,7 +1088,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveElemIntCountS(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, uint8_t pattern, uint8_t imm4)
+            RegIndex dest, uint8_t pattern, uint8_t imm4)
     {
         switch (size) {
           case 0:
@@ -1109,7 +1109,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveElemIntCountU(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, uint8_t pattern, uint8_t imm4)
+            RegIndex dest, uint8_t pattern, uint8_t imm4)
     {
         switch (size) {
           case 0:
@@ -1130,7 +1130,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveElemIntCountLS(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, uint8_t pattern, uint8_t imm4)
+            RegIndex dest, uint8_t pattern, uint8_t imm4)
     {
         switch (size) {
           case 1:
@@ -1149,7 +1149,7 @@ output header {{
     template <template <typename T> class Base>
     StaticInstPtr
     decodeSveElemIntCountLU(unsigned size, ExtMachInst machInst,
-            IntRegIndex dest, uint8_t pattern, uint8_t imm4)
+            RegIndex dest, uint8_t pattern, uint8_t imm4)
     {
         switch (size) {
           case 1:
@@ -1167,7 +1167,7 @@ output header {{
     template <template <typename T1, typename T2> class Base>
     StaticInstPtr
     decodeSveUnpackS(unsigned size, ExtMachInst machInst,
-                    IntRegIndex dest, IntRegIndex op1)
+                    RegIndex dest, RegIndex op1)
     {
         switch (size) {
           case 1:
@@ -1185,7 +1185,7 @@ output header {{
     template <template <typename T1, typename T2> class Base>
     StaticInstPtr
     decodeSveUnpackU(unsigned size, ExtMachInst machInst,
-                    IntRegIndex dest, IntRegIndex op1)
+                    RegIndex dest, RegIndex op1)
     {
         switch (size) {
           case 1:

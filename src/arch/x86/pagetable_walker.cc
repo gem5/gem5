@@ -53,6 +53,7 @@
 
 #include "arch/x86/faults.hh"
 #include "arch/x86/pagetable.hh"
+#include "arch/x86/regs/misc.hh"
 #include "arch/x86/tlb.hh"
 #include "base/bitfield.hh"
 #include "base/trie.hh"
@@ -298,9 +299,8 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
     bool badNX = pte.nx && mode == BaseMMU::Execute && enableNX;
     switch(state) {
       case LongPML4:
-        DPRINTF(PageTableWalker,
-                "Got long mode PML4 entry %#016x.\n", (uint64_t)pte);
-        nextRead = ((uint64_t)pte & (mask(40) << 12)) + vaddr.longl3 * dataSize;
+        DPRINTF(PageTableWalker, "Got long mode PML4 entry %#016x.\n", pte);
+        nextRead = mbits(pte, 51, 12) + vaddr.longl3 * dataSize;
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = pte.w;
@@ -314,9 +314,8 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         nextState = LongPDP;
         break;
       case LongPDP:
-        DPRINTF(PageTableWalker,
-                "Got long mode PDP entry %#016x.\n", (uint64_t)pte);
-        nextRead = ((uint64_t)pte & (mask(40) << 12)) + vaddr.longl2 * dataSize;
+        DPRINTF(PageTableWalker, "Got long mode PDP entry %#016x.\n", pte);
+        nextRead = mbits(pte, 51, 12) + vaddr.longl2 * dataSize;
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
@@ -329,8 +328,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         nextState = LongPD;
         break;
       case LongPD:
-        DPRINTF(PageTableWalker,
-                "Got long mode PD entry %#016x.\n", (uint64_t)pte);
+        DPRINTF(PageTableWalker, "Got long mode PD entry %#016x.\n", pte);
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
@@ -343,25 +341,23 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         if (!pte.ps) {
             // 4 KB page
             entry.logBytes = 12;
-            nextRead =
-                ((uint64_t)pte & (mask(40) << 12)) + vaddr.longl1 * dataSize;
+            nextRead = mbits(pte, 51, 12) + vaddr.longl1 * dataSize;
             nextState = LongPTE;
             break;
         } else {
             // 2 MB page
             entry.logBytes = 21;
-            entry.paddr = (uint64_t)pte & (mask(31) << 21);
+            entry.paddr = mbits(pte, 51, 21);
             entry.uncacheable = uncacheable;
             entry.global = pte.g;
             entry.patBit = bits(pte, 12);
-            entry.vaddr = entry.vaddr & ~((2 * (1 << 20)) - 1);
+            entry.vaddr = mbits(entry.vaddr, 63, 21);
             doTLBInsert = true;
             doEndWalk = true;
             break;
         }
       case LongPTE:
-        DPRINTF(PageTableWalker,
-                "Got long mode PTE entry %#016x.\n", (uint64_t)pte);
+        DPRINTF(PageTableWalker, "Got long mode PTE entry %#016x.\n", pte);
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
@@ -371,18 +367,18 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             fault = pageFault(pte.p);
             break;
         }
-        entry.paddr = (uint64_t)pte & (mask(40) << 12);
+        entry.paddr = mbits(pte, 51, 12);
         entry.uncacheable = uncacheable;
         entry.global = pte.g;
         entry.patBit = bits(pte, 12);
-        entry.vaddr = entry.vaddr & ~((4 * (1 << 10)) - 1);
+        entry.vaddr = mbits(entry.vaddr, 63, 12);
         doTLBInsert = true;
         doEndWalk = true;
         break;
       case PAEPDP:
         DPRINTF(PageTableWalker,
-                "Got legacy mode PAE PDP entry %#08x.\n", (uint32_t)pte);
-        nextRead = ((uint64_t)pte & (mask(40) << 12)) + vaddr.pael2 * dataSize;
+                "Got legacy mode PAE PDP entry %#08x.\n", pte);
+        nextRead = mbits(pte, 51, 12) + vaddr.pael2 * dataSize;
         if (!pte.p) {
             doEndWalk = true;
             fault = pageFault(pte.p);
@@ -391,8 +387,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         nextState = PAEPD;
         break;
       case PAEPD:
-        DPRINTF(PageTableWalker,
-                "Got legacy mode PAE PD entry %#08x.\n", (uint32_t)pte);
+        DPRINTF(PageTableWalker, "Got legacy mode PAE PD entry %#08x.\n", pte);
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = pte.w;
@@ -405,24 +400,24 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         if (!pte.ps) {
             // 4 KB page
             entry.logBytes = 12;
-            nextRead = ((uint64_t)pte & (mask(40) << 12)) + vaddr.pael1 * dataSize;
+            nextRead = mbits(pte, 51, 12) + vaddr.pael1 * dataSize;
             nextState = PAEPTE;
             break;
         } else {
             // 2 MB page
             entry.logBytes = 21;
-            entry.paddr = (uint64_t)pte & (mask(31) << 21);
+            entry.paddr = mbits(pte, 51, 21);
             entry.uncacheable = uncacheable;
             entry.global = pte.g;
             entry.patBit = bits(pte, 12);
-            entry.vaddr = entry.vaddr & ~((2 * (1 << 20)) - 1);
+            entry.vaddr = mbits(entry.vaddr, 63, 21);
             doTLBInsert = true;
             doEndWalk = true;
             break;
         }
       case PAEPTE:
         DPRINTF(PageTableWalker,
-                "Got legacy mode PAE PTE entry %#08x.\n", (uint32_t)pte);
+                "Got legacy mode PAE PTE entry %#08x.\n", pte);
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
@@ -432,17 +427,16 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             fault = pageFault(pte.p);
             break;
         }
-        entry.paddr = (uint64_t)pte & (mask(40) << 12);
+        entry.paddr = mbits(pte, 51, 12);
         entry.uncacheable = uncacheable;
         entry.global = pte.g;
         entry.patBit = bits(pte, 7);
-        entry.vaddr = entry.vaddr & ~((4 * (1 << 10)) - 1);
+        entry.vaddr = mbits(entry.vaddr, 63, 12);
         doTLBInsert = true;
         doEndWalk = true;
         break;
       case PSEPD:
-        DPRINTF(PageTableWalker,
-                "Got legacy mode PSE PD entry %#08x.\n", (uint32_t)pte);
+        DPRINTF(PageTableWalker, "Got legacy mode PSE PD entry %#08x.\n", pte);
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = pte.w;
@@ -455,25 +449,23 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         if (!pte.ps) {
             // 4 KB page
             entry.logBytes = 12;
-            nextRead =
-                ((uint64_t)pte & (mask(20) << 12)) + vaddr.norml2 * dataSize;
+            nextRead = mbits(pte, 31, 12) + vaddr.norml2 * dataSize;
             nextState = PTE;
             break;
         } else {
             // 4 MB page
             entry.logBytes = 21;
-            entry.paddr = bits(pte, 20, 13) << 32 | bits(pte, 31, 22) << 22;
+            entry.paddr = bits(pte, 20, 13) << 32 | mbits(pte, 31, 22);
             entry.uncacheable = uncacheable;
             entry.global = pte.g;
             entry.patBit = bits(pte, 12);
-            entry.vaddr = entry.vaddr & ~((4 * (1 << 20)) - 1);
+            entry.vaddr = mbits(entry.vaddr, 63, 22);
             doTLBInsert = true;
             doEndWalk = true;
             break;
         }
       case PD:
-        DPRINTF(PageTableWalker,
-                "Got legacy mode PD entry %#08x.\n", (uint32_t)pte);
+        DPRINTF(PageTableWalker, "Got legacy mode PD entry %#08x.\n", pte);
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = pte.w;
@@ -485,12 +477,11 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         }
         // 4 KB page
         entry.logBytes = 12;
-        nextRead = ((uint64_t)pte & (mask(20) << 12)) + vaddr.norml2 * dataSize;
+        nextRead = mbits(pte, 31, 12) + vaddr.norml1 * dataSize;
         nextState = PTE;
         break;
       case PTE:
-        DPRINTF(PageTableWalker,
-                "Got legacy mode PTE entry %#08x.\n", (uint32_t)pte);
+        DPRINTF(PageTableWalker, "Got legacy mode PTE entry %#08x.\n", pte);
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = pte.w;
@@ -500,11 +491,11 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             fault = pageFault(pte.p);
             break;
         }
-        entry.paddr = (uint64_t)pte & (mask(20) << 12);
+        entry.paddr = mbits(pte, 31, 12);
         entry.uncacheable = uncacheable;
         entry.global = pte.g;
         entry.patBit = bits(pte, 7);
-        entry.vaddr = entry.vaddr & ~((4 * (1 << 10)) - 1);
+        entry.vaddr = mbits(entry.vaddr, 31, 12);
         doTLBInsert = true;
         doEndWalk = true;
         break;
@@ -529,7 +520,10 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         // value back to memory.
         if (doWrite) {
             write = oldRead;
-            write->setLE<uint64_t>(pte);
+            if (dataSize == 8)
+                write->setLE<uint64_t>(pte);
+            else
+                write->setLE<uint32_t>(pte);
             write->cmd = MemCmd::WriteReq;
         } else {
             write = NULL;
@@ -551,9 +545,9 @@ void
 Walker::WalkerState::setupWalk(Addr vaddr)
 {
     VAddr addr = vaddr;
-    CR3 cr3 = tc->readMiscRegNoEffect(MISCREG_CR3);
+    CR3 cr3 = tc->readMiscRegNoEffect(misc_reg::Cr3);
     // Check if we're in long mode or not
-    Efer efer = tc->readMiscRegNoEffect(MISCREG_EFER);
+    Efer efer = tc->readMiscRegNoEffect(misc_reg::Efer);
     dataSize = 8;
     Addr topAddr;
     if (efer.lma) {
@@ -563,7 +557,7 @@ Walker::WalkerState::setupWalk(Addr vaddr)
         enableNX = efer.nxe;
     } else {
         // We're in some flavor of legacy mode.
-        CR4 cr4 = tc->readMiscRegNoEffect(MISCREG_CR4);
+        CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
         if (cr4.pae) {
             // Do legacy PAE.
             state = PAEPDP;
@@ -731,7 +725,7 @@ Fault
 Walker::WalkerState::pageFault(bool present)
 {
     DPRINTF(PageTableWalker, "Raising page fault.\n");
-    HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
+    HandyM5Reg m5reg = tc->readMiscRegNoEffect(misc_reg::M5Reg);
     if (mode == BaseMMU::Execute && !enableNX)
         mode = BaseMMU::Read;
     return std::make_shared<PageFault>(entry.vaddr, present, mode,

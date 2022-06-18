@@ -71,9 +71,30 @@ ScxEvsCortexA76<Types>::setResetAddr(int core, Addr addr, bool secure)
 }
 
 template <class Types>
+void
+ScxEvsCortexA76<Types>::requestReset()
+{
+    // Reset all cores.
+    for (auto &poweron_reset : this->poweron_reset) {
+        poweron_reset->signal_out.set_state(0, true);
+        poweron_reset->signal_out.set_state(0, false);
+    }
+    // Reset DSU.
+    this->top_reset.signal_out.set_state(0, true);
+    this->top_reset.signal_out.set_state(0, false);
+    // Reset debug APB.
+    this->dbg_reset.signal_out.set_state(0, true);
+    this->dbg_reset.signal_out.set_state(0, false);
+}
+
+template <class Types>
 ScxEvsCortexA76<Types>::ScxEvsCortexA76(
         const sc_core::sc_module_name &mod_name, const Params &p) :
-    Base(mod_name), amba(Base::amba, p.name + ".amba", -1),
+    Base(mod_name),
+    amba(Base::amba, p.name + ".amba", -1),
+    top_reset(p.name + ".top_reset", 0),
+    dbg_reset(p.name + ".dbg_reset", 0),
+    model_reset(p.name + ".model_reset", -1, this),
     params(p)
 {
     for (int i = 0; i < CoreCount; i++) {
@@ -93,6 +114,10 @@ ScxEvsCortexA76<Types>::ScxEvsCortexA76(
                 new SignalReceiver(csprintf("cntpnsirq[%d]", i)));
         rvbaraddr.emplace_back(new SignalInitiator<uint64_t>(
                     csprintf("rvbaraddr[%d]", i).c_str()));
+        core_reset.emplace_back(
+                new SignalSender(csprintf("core_reset[%d]", i), 0));
+        poweron_reset.emplace_back(
+                new SignalSender(csprintf("poweron_reset[%d]", i), 0));
 
         Base::cnthpirq[i].bind(cnthpirq[i]->signal_in);
         Base::cnthvirq[i].bind(cnthvirq[i]->signal_in);
@@ -104,7 +129,12 @@ ScxEvsCortexA76<Types>::ScxEvsCortexA76(
         Base::vcpumntirq[i].bind(vcpumntirq[i]->signal_in);
         Base::cntpnsirq[i].bind(cntpnsirq[i]->signal_in);
         rvbaraddr[i]->bind(Base::rvbaraddr[i]);
+        core_reset[i]->signal_out.bind(Base::core_reset[i]);
+        poweron_reset[i]->signal_out.bind(Base::poweron_reset[i]);
     }
+
+    top_reset.signal_out.bind(Base::top_reset);
+    dbg_reset.signal_out.bind(Base::dbg_reset);
 
     clockRateControl.bind(this->clock_rate_s);
     periphClockRateControl.bind(this->periph_clock_rate_s);
@@ -156,8 +186,18 @@ ScxEvsCortexA76<Types>::gem5_getPort(const std::string &if_name, int idx)
 {
     if (if_name == "redistributor")
         return *redist.at(idx);
+    else if (if_name == "core_reset")
+        return *core_reset.at(idx);
+    else if (if_name == "poweron_reset")
+        return *poweron_reset.at(idx);
     else if (if_name == "amba")
         return amba;
+    else if (if_name == "top_reset")
+        return top_reset;
+    else if (if_name == "dbg_reset")
+        return dbg_reset;
+    else if (if_name == "model_reset")
+        return model_reset;
     else
         return Base::gem5_getPort(if_name, idx);
 }

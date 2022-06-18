@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2019 ARM Limited
+ * Copyright (c) 2012-2019, 2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -112,6 +112,10 @@ class MemCmd
         StoreCondReq,
         StoreCondFailReq,       // Failed StoreCondReq in MSHR (never sent)
         StoreCondResp,
+        LockedRMWReadReq,
+        LockedRMWReadResp,
+        LockedRMWWriteReq,
+        LockedRMWWriteResp,
         SwapReq,
         SwapResp,
         // MessageReq and MessageResp are deprecated.
@@ -140,6 +144,8 @@ class MemCmd
         HTMReq,
         HTMReqResp,
         HTMAbort,
+        // Tlb shootdown
+        TlbiExtSync,
         NUM_MEM_CMDS
     };
 
@@ -162,6 +168,7 @@ class MemCmd
         IsSWPrefetch,
         IsHWPrefetch,
         IsLlsc,         //!< Alpha/MIPS LL or SC access
+        IsLockedRMW,    //!< x86 locked RMW access
         HasData,        //!< There is an associated payload
         IsError,        //!< Error response
         IsPrint,        //!< Print state matching address (for debugging)
@@ -239,6 +246,7 @@ class MemCmd
      */
     bool hasData() const        { return testCmdAttrib(HasData); }
     bool isLLSC() const         { return testCmdAttrib(IsLlsc); }
+    bool isLockedRMW() const    { return testCmdAttrib(IsLockedRMW); }
     bool isSWPrefetch() const   { return testCmdAttrib(IsSWPrefetch); }
     bool isHWPrefetch() const   { return testCmdAttrib(IsHWPrefetch); }
     bool isPrefetch() const     { return testCmdAttrib(IsSWPrefetch) ||
@@ -607,6 +615,7 @@ class Packet : public Printable
         return resp_cmd.hasData();
     }
     bool isLLSC() const              { return cmd.isLLSC(); }
+    bool isLockedRMW() const         { return cmd.isLockedRMW(); }
     bool isError() const             { return cmd.isError(); }
     bool isPrint() const             { return cmd.isPrint(); }
     bool isFlush() const             { return cmd.isFlush(); }
@@ -976,6 +985,8 @@ class Packet : public Printable
             return MemCmd::SoftPFExReq;
         else if (req->isPrefetch())
             return MemCmd::SoftPFReq;
+        else if (req->isLockedRMW())
+            return MemCmd::LockedRMWReadReq;
         else
             return MemCmd::ReadReq;
     }
@@ -995,6 +1006,8 @@ class Packet : public Printable
               MemCmd::InvalidateReq;
         } else if (req->isCacheClean()) {
             return MemCmd::CleanSharedReq;
+        } else if (req->isLockedRMW()) {
+            return MemCmd::LockedRMWWriteReq;
         } else
             return MemCmd::WriteReq;
     }

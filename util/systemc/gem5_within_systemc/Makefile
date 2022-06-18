@@ -36,14 +36,14 @@
 ARCH = ARM
 VARIANT = opt
 
-SYSTEMC_INC = ./systemc/include
-SYSTEMC_LIB = ./systemc/lib-linux64
+SYSTEMC_INC = /opt/systemc/include
+SYSTEMC_LIB = /opt/systemc/lib-linux64
 
 CXXFLAGS = -I../../../build/$(ARCH) -L../../../build/$(ARCH)
 CXXFLAGS += -I$(SYSTEMC_INC) -L$(SYSTEMC_LIB)
-CXXFLAGS += -std=c++0x
-CXXFLAGS += -g
-LIBS = -lgem5_$(VARIANT) -lsystemc
+CXXFLAGS += -std=c++17
+CXXFLAGS += -g -DTRACING_ON
+LIBS = -lgem5_$(VARIANT) -lsystemc -lpng
 
 ALL = gem5.$(VARIANT).sc
 

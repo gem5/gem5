@@ -33,7 +33,7 @@
 
 Import('*')
 
-if env['PROTOCOL'] == 'None':
+if env['CONF']['PROTOCOL'] == 'None':
     Return()
 
 SimObject('FaultModel.py', sim_objects=['FaultModel'])

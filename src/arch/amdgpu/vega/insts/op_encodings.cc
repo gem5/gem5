@@ -1274,12 +1274,12 @@ namespace VegaISA
 
             reg = extData.SRSRC;
             srcOps.emplace_back(reg, getOperandSize(opNum), true,
-                                  true, false, false);
+                                  isScalarReg(reg), false, false);
             opNum++;
 
             reg = extData.SOFFSET;
             srcOps.emplace_back(reg, getOperandSize(opNum), true,
-                                  true, false, false);
+                                  isScalarReg(reg), false, false);
             opNum++;
         }
 
@@ -1365,12 +1365,12 @@ namespace VegaISA
 
         reg = extData.SRSRC;
         srcOps.emplace_back(reg, getOperandSize(opNum), true,
-                              true, false, false);
+                              isScalarReg(reg), false, false);
         opNum++;
 
         reg = extData.SOFFSET;
         srcOps.emplace_back(reg, getOperandSize(opNum), true,
-                              true, false, false);
+                              isScalarReg(reg), false, false);
         opNum++;
 
         // extData.VDATA moves in the reg list depending on the instruction
@@ -1438,13 +1438,13 @@ namespace VegaISA
 
         reg = extData.SRSRC;
         srcOps.emplace_back(reg, getOperandSize(opNum), true,
-                              true, false, false);
+                              isScalarReg(reg), false, false);
         opNum++;
 
         if (getNumOperands() == 4) {
             reg = extData.SSAMP;
             srcOps.emplace_back(reg, getOperandSize(opNum), true,
-                                  true, false, false);
+                                  isScalarReg(reg), false, false);
             opNum++;
         }
 

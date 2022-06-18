@@ -86,19 +86,23 @@ HWScheduler::registerNewQueue(uint64_t hostReadIndexPointer,
                               uint64_t basePointer,
                               uint64_t queue_id,
                               uint32_t size, int doorbellSize,
-                              GfxVersion gfxVersion)
+                              GfxVersion gfxVersion,
+                              Addr offset, uint64_t rd_idx)
 {
     assert(queue_id < MAX_ACTIVE_QUEUES);
     // Map queue ID to doorbell.
     // We are only using offset to pio base address as doorbell
     // We use the same mapping function used by hsa runtime to do this mapping
-    Addr db_offset = queue_id * doorbellSize;
-    if (dbMap.find(db_offset) != dbMap.end()) {
+    if (!offset) {
+        offset = queue_id * doorbellSize;
+    }
+    if (dbMap.find(offset) != dbMap.end()) {
         panic("Creating an already existing queue (queueID %d)", queue_id);
     }
 
     // Populate doorbell map
-    dbMap[db_offset] = queue_id;
+    dbMap[offset] = queue_id;
+    qidMap[queue_id] = offset;
 
     if (queue_id >= MAX_ACTIVE_QUEUES) {
         panic("Attempting to create a queue (queueID %d)" \
@@ -106,12 +110,18 @@ HWScheduler::registerNewQueue(uint64_t hostReadIndexPointer,
     }
 
     HSAQueueDescriptor* q_desc =
-       new HSAQueueDescriptor(basePointer, db_offset,
+       new HSAQueueDescriptor(basePointer, offset,
                               hostReadIndexPointer, size, gfxVersion);
     AQLRingBuffer* aql_buf =
         new AQLRingBuffer(NUM_DMA_BUFS, hsaPP->name());
+    if (rd_idx > 0) {
+        aql_buf->setRdIdx(rd_idx);
+    }
+    DPRINTF(HSAPacketProcessor, "Setting read index for %#lx to %ld\n",
+                                offset, rd_idx);
+
     QCntxt q_cntxt(q_desc, aql_buf);
-    activeList[dbMap[db_offset]] = q_cntxt;
+    activeList[dbMap[offset]] = q_cntxt;
 
     // Check if this newly created queue can be directly mapped
     // to registered queue list
@@ -120,7 +130,7 @@ HWScheduler::registerNewQueue(uint64_t hostReadIndexPointer,
     schedWakeup();
     DPRINTF(HSAPacketProcessor,
              "%s: offset = %p, qID = %d, is_regd = %s, AL size %d\n",
-             __FUNCTION__, db_offset, queue_id,
+             __FUNCTION__, offset, queue_id,
              (register_q) ? "true" : "false", dbMap.size());
 }
 
@@ -191,7 +201,7 @@ bool
 HWScheduler::contextSwitchQ()
 {
     DPRINTF(HSAPacketProcessor,
-            "Trying to map next queue, @ %s", __FUNCTION__);
+            "Trying to map next queue, @ %s\n", __FUNCTION__);
     // Identify the next queue, if there is nothing to
     // map, return false
     if (!findNextActiveALQ()) {
@@ -325,6 +335,13 @@ HWScheduler::write(Addr db_addr, uint64_t doorbell_reg)
     uint32_t al_idx = dbMap[db_addr];
     // Modify the write pointer
     activeList[al_idx].qDesc->writeIndex = doorbell_reg;
+    // If a queue is unmapped and remapped (common in full system) the qDesc
+    // gets reused. Keep the readIndex up to date so that when the HSA packet
+    // processor gets commands from host, the correct entry is read after
+    // remapping.
+    activeList[al_idx].qDesc->readIndex = doorbell_reg - 1;
+    DPRINTF(HSAPacketProcessor, "queue %d qDesc->writeIndex %d\n",
+            al_idx, activeList[al_idx].qDesc->writeIndex);
     // If this queue is mapped, then start DMA to fetch the
     // AQL packet
     if (regdListMap.find(al_idx) != regdListMap.end()) {
@@ -335,7 +352,8 @@ HWScheduler::write(Addr db_addr, uint64_t doorbell_reg)
 void
 HWScheduler::unregisterQueue(uint64_t queue_id, int doorbellSize)
 {
-    Addr db_offset = queue_id * doorbellSize;
+    assert(qidMap.count(queue_id));
+    Addr db_offset = qidMap[queue_id];
     auto dbmap_iter = dbMap.find(db_offset);
     if (dbmap_iter == dbMap.end()) {
         panic("Destroying a non-existing queue (db_offset %x)",

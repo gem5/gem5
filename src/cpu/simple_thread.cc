@@ -70,20 +70,20 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            Process *_process, BaseMMU *_mmu,
                            BaseISA *_isa, InstDecoder *_decoder)
     : ThreadState(_cpu, _thread_num, _process),
+      regFiles{{
+          {_isa->regClasses().at(IntRegClass)},
+          {_isa->regClasses().at(FloatRegClass)},
+          {_isa->regClasses().at(VecRegClass)},
+          {_isa->regClasses().at(VecElemClass)},
+          {_isa->regClasses().at(VecPredRegClass)},
+          {_isa->regClasses().at(CCRegClass)}
+      }},
       isa(dynamic_cast<TheISA::ISA *>(_isa)),
       predicate(true), memAccPredicate(true),
       comInstEventQueue("instruction-based event queue"),
       system(_sys), mmu(_mmu), decoder(_decoder),
       htmTransactionStarts(0), htmTransactionStops(0)
 {
-    assert(isa);
-    const auto &regClasses = isa->regClasses();
-    intRegs.resize(regClasses.at(IntRegClass).size());
-    floatRegs.resize(regClasses.at(FloatRegClass).size());
-    vecRegs.resize(regClasses.at(VecRegClass).size());
-    vecElemRegs.resize(regClasses.at(VecElemClass).size());
-    vecPredRegs.resize(regClasses.at(VecPredRegClass).size());
-    ccRegs.resize(regClasses.at(CCRegClass).size());
     clearArchRegs();
 }
 

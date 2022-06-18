@@ -115,9 +115,9 @@ FsFreebsd::initState()
 
     // Kernel boot requirements to set up r0, r1 and r2 in ARMv7
     for (auto *tc: system->threads) {
-        tc->setIntReg(0, 0);
-        tc->setIntReg(1, params().machine_type);
-        tc->setIntReg(2, params().dtb_addr);
+        tc->setReg(int_reg::R0, (RegVal)0);
+        tc->setReg(int_reg::R1, params().machine_type);
+        tc->setReg(int_reg::R2, params().dtb_addr);
     }
 }
 

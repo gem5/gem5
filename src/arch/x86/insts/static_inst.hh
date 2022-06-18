@@ -39,6 +39,7 @@
 #define __ARCH_X86_INSTS_STATICINST_HH__
 
 #include "arch/x86/pcstate.hh"
+#include "arch/x86/regs/int.hh"
 #include "arch/x86/types.hh"
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"

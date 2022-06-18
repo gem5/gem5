@@ -40,10 +40,11 @@ Import('*')
 import platform
 host_isa = platform.machine()
 
-if not (env['USE_KVM'] and env['KVM_ISA'] == 'arm'):
+if not (env['CONF']['USE_KVM'] and env['CONF']['KVM_ISA'] == 'arm'):
     Return()
 
-SimObject('KvmGic.py', sim_objects=['MuxingKvmGic'], tags='arm isa')
+SimObject('KvmGic.py',
+    sim_objects=['MuxingKvmGicV2', 'MuxingKvmGicV3'], tags='arm isa')
 Source('gic.cc', tags='arm isa')
 
 SimObject('BaseArmKvmCPU.py', sim_objects=['BaseArmKvmCPU'], tags='arm isa')

@@ -313,10 +313,10 @@ class BaseRemoteGDB
     void descheduleInstCommitEvent(Event *ev);
 
     // Breakpoints.
-    void insertSoftBreak(Addr addr, size_t len);
-    void removeSoftBreak(Addr addr, size_t len);
-    void insertHardBreak(Addr addr, size_t len);
-    void removeHardBreak(Addr addr, size_t len);
+    void insertSoftBreak(Addr addr, size_t kind);
+    void removeSoftBreak(Addr addr, size_t kind);
+    void insertHardBreak(Addr addr, size_t kind);
+    void removeHardBreak(Addr addr, size_t kind);
 
     /*
      * GDB commands.
@@ -401,8 +401,10 @@ class BaseRemoteGDB
     void encodeXferResponse(const std::string &unencoded,
         std::string &encoded, size_t offset, size_t unencoded_length) const;
 
-    // To be implemented by subclasses.
-    virtual bool checkBpLen(size_t len);
+    // checkBpKind checks if a kind of breakpoint is legal. This function should
+    // be implemented by subclasses by arch. The "kind" is considered to be
+    // breakpoint size in some arch.
+    virtual bool checkBpKind(size_t kind);
 
     virtual BaseGdbRegCache *gdbRegs() = 0;
 

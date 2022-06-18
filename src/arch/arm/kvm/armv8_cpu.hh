@@ -97,13 +97,13 @@ class ArmV8KvmCPU : public BaseArmKvmCPU
     /** Mapping between integer registers in gem5 and KVM */
     struct IntRegInfo
     {
-        IntRegInfo(uint64_t _kvm, ArmISA::IntRegIndex _idx, const char *_name)
+        IntRegInfo(uint64_t _kvm, RegIndex _idx, const char *_name)
             : kvm(_kvm), idx(_idx), name(_name) {}
 
         /** Register index in KVM */
         uint64_t kvm;
         /** Register index in gem5 */
-        ArmISA::IntRegIndex idx;
+        RegIndex idx;
         /** Name to use in debug dumps */
         const char *name;
     };

@@ -30,6 +30,8 @@
 #ifndef __MEM_RUBY_COMMON_TYPEDEFINES_HH__
 #define __MEM_RUBY_COMMON_TYPEDEFINES_HH__
 
+#include <string>
+
 namespace gem5
 {
 
@@ -39,6 +41,7 @@ namespace ruby
 typedef unsigned int LinkID;
 typedef unsigned int NodeID;
 typedef unsigned int SwitchID;
+typedef std::string PortDirection;
 
 } // namespace ruby
 } // namespace gem5

@@ -102,15 +102,15 @@ BaseArmKvmCPU::startup()
     struct kvm_vcpu_init target_config;
     memset(&target_config, 0, sizeof(target_config));
 
-    vm.kvmArmPreferredTarget(target_config);
+    vm->kvmArmPreferredTarget(target_config);
     if (!((ArmSystem *)system)->highestELIs64()) {
         target_config.features[0] |= (1 << KVM_ARM_VCPU_EL1_32BIT);
     }
     kvmArmVCpuInit(target_config);
 
-    if (!vm.hasKernelIRQChip())
+    if (!vm->hasKernelIRQChip())
         virtTimerPin = static_cast<ArmSystem *>(system)\
-            ->getGenericTimer()->params().int_virt->get(tc);
+            ->getGenericTimer()->params().int_el1_virt->get(tc);
 }
 
 Tick
@@ -120,14 +120,14 @@ BaseArmKvmCPU::kvmRun(Tick ticks)
     const bool simFIQ(interrupt->checkRaw(INT_FIQ));
     const bool simIRQ(interrupt->checkRaw(INT_IRQ));
 
-    if (!vm.hasKernelIRQChip()) {
+    if (!vm->hasKernelIRQChip()) {
         if (fiqAsserted != simFIQ) {
             DPRINTF(KvmInt, "KVM: Update FIQ state: %i\n", simFIQ);
-            vm.setIRQLine(INTERRUPT_VCPU_FIQ(vcpuID), simFIQ);
+            vm->setIRQLine(INTERRUPT_VCPU_FIQ(vcpuID), simFIQ);
         }
         if (irqAsserted != simIRQ) {
             DPRINTF(KvmInt, "KVM: Update IRQ state: %i\n", simIRQ);
-            vm.setIRQLine(INTERRUPT_VCPU_IRQ(vcpuID), simIRQ);
+            vm->setIRQLine(INTERRUPT_VCPU_IRQ(vcpuID), simIRQ);
         }
     } else {
         warn_if(simFIQ && !fiqAsserted,
@@ -144,7 +144,7 @@ BaseArmKvmCPU::kvmRun(Tick ticks)
 
     Tick kvmRunTicks = BaseKvmCPU::kvmRun(ticks);
 
-    if (!vm.hasKernelIRQChip()) {
+    if (!vm->hasKernelIRQChip()) {
         uint64_t device_irq_level =
             getKvmRunState()->s.regs.device_irq_level;
 
@@ -220,7 +220,8 @@ void
 BaseArmKvmCPU::kvmArmVCpuInit(const struct kvm_vcpu_init &init)
 {
     if (ioctl(KVM_ARM_VCPU_INIT, (void *)&init) == -1)
-        panic("KVM: Failed to initialize vCPU\n");
+        panic("KVM: Failed to initialize vCPU; errno %d (%s)\n",
+            errno, strerror(errno));
 }
 
 bool

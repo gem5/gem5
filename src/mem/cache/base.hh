@@ -1006,12 +1006,12 @@ class BaseCache : public ClockedObject
             @sa Packet::Command */
         statistics::Vector misses;
         /**
-         * Total number of cycles per thread/command spent waiting for a hit.
+         * Total number of ticks per thread/command spent waiting for a hit.
          * Used to calculate the average hit latency.
          */
         statistics::Vector hitLatency;
         /**
-         * Total number of cycles per thread/command spent waiting for a miss.
+         * Total number of ticks per thread/command spent waiting for a miss.
          * Used to calculate the average miss latency.
          */
         statistics::Vector missLatency;
@@ -1027,9 +1027,9 @@ class BaseCache : public ClockedObject
         statistics::Vector mshrMisses;
         /** Number of misses that miss in the MSHRs, per command and thread. */
         statistics::Vector mshrUncacheable;
-        /** Total cycle latency of each MSHR miss, per command and thread. */
+        /** Total tick latency of each MSHR miss, per command and thread. */
         statistics::Vector mshrMissLatency;
-        /** Total cycle latency of each MSHR miss, per command and thread. */
+        /** Total tick latency of each MSHR miss, per command and thread. */
         statistics::Vector mshrUncacheableLatency;
         /** The miss rate in the MSHRs pre command and thread. */
         statistics::Formula mshrMissRate;
@@ -1055,9 +1055,9 @@ class BaseCache : public ClockedObject
         statistics::Formula demandHits;
         /** Number of hit for all accesses. */
         statistics::Formula overallHits;
-        /** Total number of cycles spent waiting for demand hits. */
+        /** Total number of ticks spent waiting for demand hits. */
         statistics::Formula demandHitLatency;
-        /** Total number of cycles spent waiting for all hits. */
+        /** Total number of ticks spent waiting for all hits. */
         statistics::Formula overallHitLatency;
 
         /** Number of misses for demand accesses. */
@@ -1065,9 +1065,9 @@ class BaseCache : public ClockedObject
         /** Number of misses for all accesses. */
         statistics::Formula overallMisses;
 
-        /** Total number of cycles spent waiting for demand misses. */
+        /** Total number of ticks spent waiting for demand misses. */
         statistics::Formula demandMissLatency;
-        /** Total number of cycles spent waiting for all misses. */
+        /** Total number of ticks spent waiting for all misses. */
         statistics::Formula overallMissLatency;
 
         /** The number of demand accesses. */
@@ -1109,12 +1109,12 @@ class BaseCache : public ClockedObject
         /** Total number of misses that miss in the MSHRs. */
         statistics::Formula overallMshrUncacheable;
 
-        /** Total cycle latency of demand MSHR misses. */
+        /** Total tick latency of demand MSHR misses. */
         statistics::Formula demandMshrMissLatency;
-        /** Total cycle latency of overall MSHR misses. */
+        /** Total tick latency of overall MSHR misses. */
         statistics::Formula overallMshrMissLatency;
 
-        /** Total cycle latency of overall MSHR misses. */
+        /** Total tick latency of overall MSHR misses. */
         statistics::Formula overallMshrUncacheableLatency;
 
         /** The demand miss rate in the MSHRs. */

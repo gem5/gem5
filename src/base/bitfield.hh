@@ -408,6 +408,34 @@ ctz64(uint64_t value)
     return value ? __builtin_ctzll(value) : 64;
 }
 
+/**
+ * Count leading zeros in a 32-bit value.
+ *
+ * @param An input value
+ * @return The number of trailing zeros or 32 if the value is zero.
+ *
+ * @ingroup api_bitfield
+ */
+constexpr inline int
+clz32(uint32_t value)
+{
+    return value ? __builtin_clz(value) : 32;
+}
+
+/**
+ * Count leading zeros in a 64-bit value.
+ *
+ * @param An input value
+ * @return The number of trailing zeros or 64 if the value is zero.
+ *
+ * @ingroup api_bitfield
+ */
+constexpr inline int
+clz64(uint64_t value)
+{
+    return value ? __builtin_clzll(value) : 64;
+}
+
 } // namespace gem5
 
 #endif // __BASE_BITFIELD_HH__

@@ -246,7 +246,7 @@ PL330::gem5_getPort(const std::string &if_name, int idx)
             port = suffix[0] - '0';
         } else if (suffix.size() == 2 && isdigit(suffix[0]) &&
                 isdigit(suffix[1])) {
-            port = (suffix[1] - '0') * 10 + (suffix[0] - '0');
+            port = (suffix[0] - '0') * 10 + (suffix[1] - '0');
         }
         if (port != -1 && port < irqPort.size())
             return *irqPort[port].at(idx);

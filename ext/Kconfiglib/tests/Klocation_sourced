@@ -1,0 +1,26 @@
+
+
+config MANY_DEF
+
+choice CHOICE_ONE_DEF
+	bool "one-def choice"
+endchoice
+
+choice CHOICE_TWO_DEF
+	bool "two-def choice 1"
+endchoice
+
+choice CHOICE_TWO_DEF
+	bool "two-def choice 2"
+endchoice
+
+config MENU_HOOK
+	bool
+
+menu "menu"
+endmenu
+
+config COMMENT_HOOK
+	bool
+
+comment "comment"

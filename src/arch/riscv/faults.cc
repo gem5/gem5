@@ -37,7 +37,7 @@
 #include "arch/riscv/utility.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-#include "debug/Fault.hh"
+#include "debug/Faults.hh"
 #include "sim/debug.hh"
 #include "sim/full_system.hh"
 #include "sim/workload.hh"
@@ -59,7 +59,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     auto pc_state = tc->pcState().as<PCState>();
 
-    DPRINTFS(Fault, tc->getCpuPtr(), "Fault (%s) at PC: %s\n",
+    DPRINTFS(Faults, tc->getCpuPtr(), "Fault (%s) at PC: %s\n",
              name(), pc_state);
 
     if (FullSystem) {

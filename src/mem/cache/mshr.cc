@@ -137,7 +137,7 @@ MSHR::TargetList::updateWriteFlags(PacketPtr pkt)
         const Request::FlagsType no_merge_flags =
             Request::UNCACHEABLE | Request::STRICT_ORDER |
             Request::PRIVILEGED | Request::LLSC | Request::MEM_SWAP |
-            Request::MEM_SWAP_COND | Request::SECURE;
+            Request::MEM_SWAP_COND | Request::SECURE | Request::LOCKED_RMW;
         const auto &req_flags = pkt->req->getFlags();
         bool compat_write = !req_flags.isSet(no_merge_flags);
 
@@ -558,19 +558,34 @@ MSHR::extractServiceableTargets(PacketPtr pkt)
         assert((it->source == Target::FromCPU) ||
                (it->source == Target::FromPrefetcher));
         ready_targets.push_back(*it);
-        it = targets.erase(it);
-        while (it != targets.end()) {
-            if (it->source == Target::FromCPU) {
-                it++;
-            } else {
-                assert(it->source == Target::FromSnoop);
-                ready_targets.push_back(*it);
-                it = targets.erase(it);
+        // Leave the Locked RMW Read until the corresponding Locked Write
+        // request comes in
+        if (it->pkt->cmd != MemCmd::LockedRMWReadReq) {
+            it = targets.erase(it);
+            while (it != targets.end()) {
+                if (it->source == Target::FromCPU) {
+                    it++;
+                } else {
+                    assert(it->source == Target::FromSnoop);
+                    ready_targets.push_back(*it);
+                    it = targets.erase(it);
+                }
             }
         }
         ready_targets.populateFlags();
     } else {
-        std::swap(ready_targets, targets);
+        auto it = targets.begin();
+        while (it != targets.end()) {
+            ready_targets.push_back(*it);
+            if (it->pkt->cmd == MemCmd::LockedRMWReadReq) {
+                // Leave the Locked RMW Read until the corresponding Locked
+                // Write comes in. Also don't service any later targets as the
+                // line is now "locked".
+                break;
+            }
+            it = targets.erase(it);
+        }
+        ready_targets.populateFlags();
     }
     targets.populateFlags();
 
@@ -663,6 +678,9 @@ MSHR::promoteReadable()
 void
 MSHR::promoteWritable()
 {
+    if (deferredTargets.empty()) {
+        return;
+    }
     PacketPtr def_tgt_pkt = deferredTargets.front().pkt;
     if (deferredTargets.needsWritable &&
         !(hasPostInvalidate() || hasPostDowngrade()) &&
@@ -762,5 +780,24 @@ MSHR::conflictAddr(const QueueEntry* entry) const
     assert(hasTargets());
     return entry->matchBlockAddr(blkAddr, isSecure);
 }
+
+void
+MSHR::updateLockedRMWReadTarget(PacketPtr pkt)
+{
+    assert(!targets.empty() && targets.front().pkt == pkt);
+    RequestPtr r = std::make_shared<Request>(*(pkt->req));
+    targets.front().pkt = new Packet(r, MemCmd::LockedRMWReadReq);
+}
+
+bool
+MSHR::hasLockedRMWReadTarget()
+{
+    if (!targets.empty() &&
+        targets.front().pkt->cmd == MemCmd::LockedRMWReadReq) {
+        return true;
+    }
+    return false;
+}
+
 
 } // namespace gem5

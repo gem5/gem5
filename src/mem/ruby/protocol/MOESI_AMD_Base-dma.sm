@@ -139,6 +139,7 @@ machine(MachineType:DMA, "DMA Controller")
         out_msg.Len := in_msg.Len;
         out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
+        DPRINTF(ProtocolTrace, "%s\n", out_msg);
       }
     }
   }
@@ -154,6 +155,7 @@ machine(MachineType:DMA, "DMA Controller")
           out_msg.Len := in_msg.Len;
           out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
           out_msg.MessageSize := MessageSizeType:Writeback_Control;
+          DPRINTF(ProtocolTrace, "%s\n", out_msg);
         }
       }
   }

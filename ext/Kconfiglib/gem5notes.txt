@@ -1,0 +1,15 @@
+Two symlinks have been deleted from this kconfig distribution because they
+caused problems with git:
+
+tests/symlink => sub/sub
+examples/kconfiglib.py -> ../kconfiglib.py
+
+To run kconfig's tests, you will likely need to recreate tests/symlink. To
+run the examples, you will need to make sure kconfiglib.py is in the import
+path, either by recreating examples/kconfiglib.py, or by adjusting the module
+search path at the python level.
+
+Also, to avoid adding unnecessary python files to the root of the module search
+path, this change also moves kconfiglib.py into a directory called "import"
+where it lives by itself. The examples/kconfiglib.py symlink would need to
+point to the library in this new location, if recreated.

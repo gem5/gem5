@@ -38,14 +38,8 @@
 Import('*')
 
 # Only build if we have protobuf support
-if env['HAVE_PROTOBUF']:
-    ProtoBuf('inst_dep_record.proto')
-    ProtoBuf('packet.proto')
-    ProtoBuf('inst.proto')
-    Source('protobuf.cc')
-    Source('protoio.cc')
-
-    # protoc relies on the fact that undefined preprocessor symbols are
-    # explanded to 0 but since we use -Wundef they end up generating
-    # warnings.
-    env.Append(CCFLAGS='-DPROTOBUF_INLINE_NOT_IN_HEADERS=0')
+ProtoBuf('inst_dep_record.proto', tags='protobuf')
+ProtoBuf('packet.proto', tags='protobuf')
+ProtoBuf('inst.proto', tags='protobuf')
+Source('protobuf.cc', tags='protobuf')
+Source('protoio.cc', tags='protobuf')

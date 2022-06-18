@@ -40,7 +40,7 @@ from ply import yacc
 #
 ##########################################################################
 
-class Micro_Container(object):
+class MicroContainer:
     def __init__(self, name):
         self.microops = []
         self.name = name
@@ -49,6 +49,8 @@ class Micro_Container(object):
         self.labels = {}
 
     def add_microop(self, mnemonic, microop):
+        microop.mnemonic = mnemonic
+        microop.micropc = len(self.microops)
         self.microops.append(microop)
 
     def __str__(self):
@@ -57,10 +59,10 @@ class Micro_Container(object):
             string += "  %s\n" % microop
         return string
 
-class Combinational_Macroop(Micro_Container):
+class CombinationalMacroop(MicroContainer):
     pass
 
-class Rom_Macroop(object):
+class RomMacroop:
     def __init__(self, name, target):
         self.name = name
         self.target = target
@@ -68,7 +70,7 @@ class Rom_Macroop(object):
     def __str__(self):
         return "%s: %s\n" % (self.name, self.target)
 
-class Rom(Micro_Container):
+class Rom(MicroContainer):
     def __init__(self, name):
         super().__init__(name)
         self.externs = {}
@@ -197,6 +199,7 @@ tokens = reserved + (
 states = (
     ('asm', 'exclusive'),
     ('params', 'exclusive'),
+    ('header', 'exclusive'),
 )
 
 reserved_map = { }
@@ -215,7 +218,7 @@ def t_ANY_MULTILINECOMMENT(t):
 # in the "asm" state since it knows it saw a label and not a mnemonic.
 def t_params_COLON(t):
     r':'
-    t.lexer.begin('asm')
+    t.lexer.pop_state()
     return t
 
 # Parameters are a string of text which don't contain an unescaped statement
@@ -228,7 +231,7 @@ def t_params_PARAMS(t):
         val = mo.group(0)
         return val[1]
     t.value = unescapeParamsRE.sub(unescapeParams, t.value)
-    t.lexer.begin('asm')
+    t.lexer.pop_state()
     return t
 
 # An "ID" in the micro assembler is either a label, directive, or mnemonic
@@ -241,7 +244,11 @@ def t_asm_ID(t):
     # If the ID is really "extern", we shouldn't start looking for parameters
     # yet. The real ID, the label itself, is coming up.
     if t.type != 'EXTERN':
-        t.lexer.begin('params')
+        t.lexer.push_state('params')
+    return t
+
+def t_header_ID(t):
+    r'[A-Za-z_]\w*'
     return t
 
 # If there is a label and you're -not- in the assembler (which would be caught
@@ -249,23 +256,24 @@ def t_asm_ID(t):
 def t_ANY_ID(t):
     r'[A-Za-z_]\w*'
     t.type = reserved_map.get(t.value, 'ID')
+    if t.type == 'MACROOP':
+        t.lexer.push_state('asm')
+        t.lexer.push_state('header')
+    elif t.type == 'ROM':
+        t.lexer.push_state('asm')
+        t.lexer.push_state('header')
     return t
 
 # Braces enter and exit micro assembly
-def t_INITIAL_LBRACE(t):
+def t_header_LBRACE(t):
     r'\{'
-    t.lexer.begin('asm')
+    t.lexer.pop_state()
     return t
 
 def t_asm_RBRACE(t):
     r'\}'
-    t.lexer.begin('INITIAL')
+    t.lexer.pop_state()
     return t
-
-# At the top level, keep track of newlines only for line counting.
-def t_INITIAL_NEWLINE(t):
-    r'\n+'
-    t.lineno += t.value.count('\n')
 
 # In the micro assembler, do line counting but also return a token. The
 # token is needed by the parser to detect the end of a statement.
@@ -279,13 +287,18 @@ def t_asm_NEWLINE(t):
 def t_params_NEWLINE(t):
     r'\n+'
     t.lineno += t.value.count('\n')
-    t.lexer.begin('asm')
+    t.lexer.pop_state()
     return t
 
 def t_params_SEMI(t):
     r';'
-    t.lexer.begin('asm')
+    t.lexer.pop_state()
     return t
+
+# Unless handled specially above, track newlines only for line counting.
+def t_ANY_NEWLINE(t):
+    r'\n+'
+    t.lineno += t.value.count('\n')
 
 # Basic regular expressions to pick out simple tokens
 t_ANY_LPAREN = r'\('
@@ -486,7 +499,7 @@ class MicroAssembler(object):
     def __init__(self, macro_type, microops,
             rom = None, rom_macroop_type = None):
         self.lexer = lex.lex()
-        self.parser = yacc.yacc()
+        self.parser = yacc.yacc(write_tables=False)
         self.parser.macro_type = macro_type
         self.parser.macroops = {}
         self.parser.microops = microops

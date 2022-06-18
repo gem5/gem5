@@ -48,7 +48,7 @@ class PageManage(Enum): vals = ['open', 'open_adaptive', 'close',
 
 class DRAMInterface(MemInterface):
     type = 'DRAMInterface'
-    cxx_header = "mem/mem_interface.hh"
+    cxx_header = "mem/dram_interface.hh"
     cxx_class = 'gem5::memory::DRAMInterface'
 
     # scheduler page policy
@@ -79,11 +79,18 @@ class DRAMInterface(MemInterface):
     # timing behaviour and constraints - all in nanoseconds
 
     # the amount of time in nanoseconds from issuing an activate command
-    # to the data being available in the row buffer for a read/write
-    tRCD = Param.Latency("RAS to CAS delay")
+    # to the data being available in the row buffer for a read
+    tRCD = Param.Latency("RAS to Read CAS delay")
 
-    # the time from issuing a read/write command to seeing the actual data
-    tCL = Param.Latency("CAS latency")
+    # the amount of time in nanoseconds from issuing an activate command
+    # to the data being available in the row buffer for a write
+    tRCD_WR = Param.Latency(Self.tRCD, "RAS to Write CAS delay")
+
+    # the time from issuing a read command to seeing the actual data
+    tCL = Param.Latency("Read CAS latency")
+
+    # the time from issuing a write command to seeing the actual data
+    tCWL = Param.Latency(Self.tCL, "Write CAS latency")
 
     # minimum time between a precharge and subsequent activate
     tRP = Param.Latency("Row precharge time")
@@ -1144,6 +1151,87 @@ class HBM_1000_4H_1x64(HBM_1000_4H_1x128):
 
     # self refresh exit time
     tXS = '65ns'
+
+# A single HBM2 x64 interface (tested with HBMCtrl in gem5)
+# to be used as a single pseudo channel. The timings are based
+# on HBM gen2 specifications. 4H stack, 8Gb per die and total capacity
+# of 4GiB.
+class HBM_2000_4H_1x64(DRAMInterface):
+
+    # 64-bit interface for a single pseudo channel
+    device_bus_width = 64
+
+    # HBM2 supports BL4
+    burst_length = 4
+
+    # size of channel in bytes, 4H stack of 8Gb dies is 4GiB per stack;
+    # with 16 pseudo channels, 256MiB per pseudo channel
+    device_size = "256MiB"
+
+    device_rowbuffer_size = "1KiB"
+
+    # 1x128 configuration
+    devices_per_rank = 1
+
+    ranks_per_channel = 1
+
+    banks_per_rank = 16
+    bank_groups_per_rank = 4
+
+    # 1000 MHz for 2Gbps DDR data rate
+    tCK = "1ns"
+
+    tRP = "14ns"
+
+    tCCD_L = "3ns"
+
+    tRCD = "12ns"
+    tRCD_WR = "6ns"
+    tCL = "18ns"
+    tCWL = "7ns"
+    tRAS = "28ns"
+
+    # BL4 in pseudo channel mode
+    # DDR @ 1000 MHz means 4 * 1ns / 2 = 2ns
+    tBURST = "2ns"
+
+    # value for 2Gb device from JEDEC spec
+    tRFC = "220ns"
+
+    # value for 2Gb device from JEDEC spec
+    tREFI = "3.9us"
+
+    tWR = "14ns"
+    tRTP = "5ns"
+    tWTR = "4ns"
+    tWTR_L = "9ns"
+    tRTW = "18ns"
+
+    #tAAD from RBus
+    tAAD = "1ns"
+
+    # single rank device, set to 0
+    tCS = "0ns"
+
+    tRRD = "4ns"
+    tRRD_L = "6ns"
+
+    # for a single pseudo channel
+    tXAW = "16ns"
+    activation_limit = 4
+
+    # 4tCK
+    tXP = "8ns"
+
+    # start with tRFC + tXP -> 160ns + 8ns = 168ns
+    tXS = "216ns"
+
+    page_policy = 'close_adaptive'
+
+    read_buffer_size = 64
+    write_buffer_size = 64
+
+    two_cycle_activate = True
 
 # A single LPDDR5 x16 interface (one command/address bus)
 # for a single x16 channel with default timings based on

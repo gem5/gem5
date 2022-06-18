@@ -34,5 +34,3 @@ AfterSConsopts(add_protocols_var)
 
 sticky_vars.Add(('NUMBER_BITS_PER_SET', 'Max elements in set (default 64)',
                  64))
-
-export_vars.extend(['PROTOCOL', 'NUMBER_BITS_PER_SET'])

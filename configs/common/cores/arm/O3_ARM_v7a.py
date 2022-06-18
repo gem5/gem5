@@ -99,7 +99,7 @@ class O3_ARM_v7a_BP(BiModeBP):
     RASSize = 16
     instShiftAmt = 2
 
-class O3_ARM_v7a_3(DerivO3CPU):
+class O3_ARM_v7a_3(ArmO3CPU):
     LQEntries = 16
     SQEntries = 16
     LSQDepCheckShift = 0

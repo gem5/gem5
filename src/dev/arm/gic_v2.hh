@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2013, 2015-2020 ARM Limited
+ * Copyright (c) 2010, 2013, 2015-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -59,7 +59,36 @@
 namespace gem5
 {
 
-class GicV2 : public BaseGic, public BaseGicRegisters
+class GicV2Registers
+{
+  public:
+    virtual uint32_t readDistributor(ContextID ctx, Addr daddr) = 0;
+    virtual uint32_t readCpu(ContextID ctx, Addr daddr) = 0;
+
+    virtual void writeDistributor(ContextID ctx, Addr daddr,
+                                  uint32_t data) = 0;
+    virtual void writeCpu(ContextID ctx, Addr daddr, uint32_t data) = 0;
+
+  protected:
+    static void copyDistRegister(GicV2Registers* from,
+                                 GicV2Registers* to,
+                                 ContextID ctx, Addr daddr);
+    static void copyCpuRegister(GicV2Registers* from,
+                                GicV2Registers* to,
+                                ContextID ctx, Addr daddr);
+    static void copyBankedDistRange(System *sys,
+                                    GicV2Registers* from,
+                                    GicV2Registers* to,
+                                    Addr daddr, size_t size);
+    static void clearBankedDistRange(System *sys, GicV2Registers* to,
+                                     Addr daddr, size_t size);
+    static void copyDistRange(GicV2Registers* from,
+                              GicV2Registers* to,
+                              Addr daddr, size_t size);
+    static void clearDistRange(GicV2Registers* to, Addr daddr, size_t size);
+};
+
+class GicV2 : public BaseGic, public GicV2Registers
 {
   protected:
     // distributor memory addresses
@@ -448,7 +477,7 @@ class GicV2 : public BaseGic, public BaseGicRegisters
     /** See if some processor interrupt flags need to be enabled/disabled
      * @param hint which set of interrupts needs to be checked
      */
-    virtual void updateIntState(int hint);
+    void updateIntState(int hint);
 
     /** Update the register that records priority of the highest priority
      *  active interrupt*/
@@ -512,7 +541,9 @@ class GicV2 : public BaseGic, public BaseGicRegisters
 
     bool supportsVersion(GicVersion version) override;
 
-  protected:
+  protected: /** GIC state transfer */
+    void copyGicState(GicV2Registers* from, GicV2Registers* to);
+
     /** Handle a read to the distributor portion of the GIC
      * @param pkt packet to respond to
      */

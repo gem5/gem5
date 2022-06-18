@@ -75,7 +75,11 @@ class X86DemoBoard(X86Board):
              "real-world system. Use with caution.")
 
         memory = SingleChannelDDR3_1600(size="2GB")
-        processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, num_cores=4)
+        processor = SimpleProcessor(
+            cpu_type=CPUTypes.TIMING,
+            isa=ISA.X86,
+            num_cores=4
+        )
         cache_hierarchy = MESITwoLevelCacheHierarchy(
             l1d_size="32kB",
             l1d_assoc=8,

@@ -76,8 +76,8 @@ class TBETable
     // Print cache contents
     void print(std::ostream& out) const;
 
-  private:
-    // Private copy constructor and assignment operator
+  protected:
+    // Protected copy constructor and assignment operator
     TBETable(const TBETable& obj);
     TBETable& operator=(const TBETable& obj);
 

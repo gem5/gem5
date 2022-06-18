@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013, 2016-2018, 2020 ARM Limited
+// Copyright (c) 2011-2013, 2016-2018, 2020-2021 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -172,12 +172,36 @@ let {{
     decoder_output += BasicConstructor64.subst(isbIop)
     exec_output += BasicExecute.subst(isbIop)
 
-    dsbIop = ArmInstObjParams("dsb", "Dsb64", "ArmStaticInst", "",
-                              ['IsReadBarrier', 'IsWriteBarrier',
-                               'IsSerializeAfter'])
-    header_output += BasicDeclare.subst(dsbIop)
-    decoder_output += BasicConstructor64.subst(dsbIop)
-    exec_output += BasicExecute.subst(dsbIop)
+    dsbLocalIop = ArmInstObjParams("dsb", "Dsb64Local", "ArmStaticInst", "",
+                                   ['IsReadBarrier', 'IsWriteBarrier',
+                                   'IsSerializeAfter'])
+    header_output += BasicDeclare.subst(dsbLocalIop)
+    decoder_output += BasicConstructor64.subst(dsbLocalIop)
+    exec_output += BasicExecute.subst(dsbLocalIop)
+
+    dvmCode = '''
+        if (dvmEnabled) {
+            Request::Flags memAccessFlags =
+                Request::STRICT_ORDER|Request::TLBI_SYNC;
+
+            if (!PendingDvm) {
+                memAccessFlags = memAccessFlags | Request::NO_ACCESS;
+            }
+
+            fault = xc->initiateMemMgmtCmd(memAccessFlags);
+
+            PendingDvm = false;
+        }
+    '''
+    dsbShareableIop = ArmInstObjParams("dsb", "Dsb64Shareable", "ArmStaticInst",
+                                       { "code" : "", "dvm_code" : dvmCode },
+                                       ['IsReadBarrier', 'IsWriteBarrier',
+                                        'IsSerializeAfter'])
+    header_output += DvmDeclare.subst(dsbShareableIop)
+    decoder_output += DvmConstructor.subst(dsbShareableIop)
+    exec_output += BasicExecute.subst(dsbShareableIop)
+    exec_output += DvmInitiateAcc.subst(dsbShareableIop)
+    exec_output += DvmCompleteAcc.subst(dsbShareableIop)
 
     dmbIop = ArmInstObjParams("dmb", "Dmb64", "ArmStaticInst", "",
                               ['IsReadBarrier', 'IsWriteBarrier'])

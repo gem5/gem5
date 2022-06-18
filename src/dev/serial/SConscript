@@ -40,7 +40,7 @@
 
 Import('*')
 
-if env['TARGET_ISA'] == 'null':
+if env['CONF']['TARGET_ISA'] == 'null':
     Return()
 
 SimObject('Serial.py', sim_objects=['SerialDevice', 'SerialNullDevice'])

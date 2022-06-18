@@ -111,7 +111,7 @@ PowerProcess::initState()
     // The second doubleword of the descriptor contains the TOC base
     // address for the function
     initVirtMem->readBlob(getStartPC() + 8, &tocBase, sizeof(Addr));
-    tc->setIntReg(TOCPointerReg, gtoh(tocBase, byteOrder));
+    tc->setReg(TOCPointerReg, gtoh(tocBase, byteOrder));
 
     // Fix symbol table entries as they would otherwise point to the
     // function descriptor rather than the actual entry point address
@@ -337,11 +337,11 @@ PowerProcess::argsInit(int pageSize)
     ThreadContext *tc = system->threads[contextIds[0]];
 
     //Set the stack pointer register
-    tc->setIntReg(StackPointerReg, stack_min);
+    tc->setReg(StackPointerReg, stack_min);
 
     //Reset the special-purpose registers
-    for (int i = 0; i < NumIntSpecialRegs; i++)
-        tc->setIntReg(NumIntArchRegs + i, 0);
+    for (int i = int_reg::NumArchRegs; i < int_reg::NumRegs; i++)
+        tc->setReg(RegId(IntRegClass, i), (RegVal)0);
 
     //Set the machine status for a typical userspace
     Msr msr = 0;
@@ -354,7 +354,7 @@ PowerProcess::argsInit(int pageSize)
     msr.dr = 1;
     msr.ri = 1;
     msr.le = isLittleEndian;
-    tc->setIntReg(INTREG_MSR, msr);
+    tc->setReg(int_reg::Msr, msr);
 
     auto pc = tc->pcState().as<PowerISA::PCState>();
     pc.set(getStartPC());

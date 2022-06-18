@@ -125,7 +125,7 @@ def filter_with_config_tags(loaded_library):
     if tags is None:
         tags = tuple()
 
-    filters = list(itertools.chain(tags, final_tags))
+    filters = list(itertools.chain(final_tags, tags))
     string = 'Filtering suites with tags as follows:\n'
     filter_string = '\t\n'.join((str(f) for f in filters))
     log.test_log.trace(string + filter_string)
