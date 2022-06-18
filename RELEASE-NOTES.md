@@ -1,3 +1,11 @@
+# Version 22.0.0.1
+
+**[HOTFIX]** Fixes relative import in "src/python/gem5/components/processors/simple_core.py".
+
+The import `from python.gem5.utils.requires import requires` in v22.0.0.0 of gem5 is incorrect as it causes problems when executing gem5 binaries  in certain directories (`python` isn't necessary included).
+To resolve this, this import has been changed to `from ...utils.requires imports requires`.
+This should work in all supported use-cases.
+
 # Version 22.0.0.0
 
 gem5 version 22.0 has been slightly delayed, but we a have a very strong release!
