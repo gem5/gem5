@@ -1,3 +1,145 @@
+# Version 22.0.0.1
+
+**[HOTFIX]** Fixes relative import in "src/python/gem5/components/processors/simple_core.py".
+
+The import `from python.gem5.utils.requires import requires` in v22.0.0.0 of gem5 is incorrect as it causes problems when executing gem5 binaries  in certain directories (`python` isn't necessary included).
+To resolve this, this import has been changed to `from ...utils.requires imports requires`.
+This should work in all supported use-cases.
+
+# Version 22.0.0.0
+
+gem5 version 22.0 has been slightly delayed, but we a have a very strong release!
+This release has 660 changes from 48 unique contributors.
+While there are not too many big ticket features, the community has done a lot to improve the stablity and add bugfixes to gem5 over this release.
+That said, we have a few cool new features like full system GPU support, a huge number of Arm improvements, and an improved HBM model.
+
+See below for more details!
+
+## New features
+
+- [Arm now models DVM messages for TLBIs and DSBs accurately](https://gem5.atlassian.net/browse/GEM5-1097). This is implemented in the CHI protocol.
+- EL2/EL3 support on by default in ArmSystem
+- HBM controller which supports pseudo channels
+- [Improved Ruby's SimpleNetwork routing](https://gem5.atlassian.net/browse/GEM5-920)
+- Added x86 bare metal workload and better real mode support
+- [Added round-robin arbitration when using multiple prefetchers](https://gem5.atlassian.net/browse/GEM5-1169)
+- [KVM Emulation added for ARM GIGv3](https://gem5.atlassian.net/browse/GEM5-1138)
+- Many improvements to the CHI protocol
+
+## Many RISC-V instructions added
+
+The following RISCV instructions have been added to gem5's RISC-V ISA:
+
+* Zba instructions: add.uw, sh1add, sh1add.uw, sh2add, sh2add.uw, sh3add, sh3add.uw, slli.uw
+* Zbb instructions: andn, orn, xnor, clz, clzw, ctz, ctzw, cpop, cpopw, max, maxu, min, minu, sext.b, sext.h, zext.h, rol, rolw, ror, rori, roriw, rorw, orc.b, rev8
+* Zbc instructions: clmul, clmulh, clmulr
+* Zbs instructions: bclr, bclri, bext, bexti, binv, binvi, bset, bseti
+* Zfh instructions: flh, fsh, fmadd.h, fmsub.h, fnmsub.h, fnmadd.h, fadd.h, fsub.h, fmul.h, fdiv.h, fsqrt.h, fsgnj.h, fsgnjn.h, fsgnjx.h, fmin.h, fmax.h, fcvt.s.h, fcvt.h.s, fcvt.d.h, fcvt.h.d, fcvt.w.h, fcvt.h.w, fcvt.wu.h, fcvt.h.wu
+
+### Improvements to the stdlib automatic resource downloader
+
+The gem5 standard library's downloader has been re-engineered to more efficiently obtain the `resources.json` file.
+It is now cached instead of retrieved on each resource retrieval.
+
+The `resources.json` directory has been moved to a more permament URL at <http://resources.gem5.org/resources.json>.
+
+Tests have also been added to ensure the resources module continues to function correctly.
+
+### gem5 in SystemC support revamped
+
+The gem5 in SystemC has been revamped to accomodate new research needs.
+These changes include stability improvements and bugs fixes.
+The gem5 testing suite has also been expanded to include gem5 in SystemC tests.
+
+### Improved GPU support
+
+Users may now simulate an AMD GPU device in full system mode using the ROCm 4.2 compute stack.
+Until v21.2, gem5 only supported GPU simulation in Syscall-Emulation mode with ROCm 4.0.
+See [`src/gpu-fs/README.md`](https://gem5.googlesource.com/public/gem5-resources/+/refs/heads/stable/src/gpu-fs/) in gem5-resources and example scripts in [`configs/example/gpufs/`](https://gem5.googlesource.com/public/gem5/+/refs/tags/v22.0.0.0/configs/example/gpufs/) for example scripts which run GPU full system simulations.
+
+A [GPU Ruby random tester has been added](https://gem5-review.googlesource.com/c/public/gem5/+/59272) to help validate the correctness of the CPU and GPU Ruby coherence protocols as part of every kokoro check-in.
+This helps validate the correctness of the protocols before new changes are checked in.
+Currently the tester focuses on the protocols used with the GPU, but the ideas are extensible to other protocols.
+The work is based on "Autonomous Data-Race-Free GPU Testing", IISWC 2019, Tuan Ta, Xianwei Zhang, Anthony Gutierrez, and Bradford M. Beckmann.
+
+### An Arm board has been added to the gem5 Standard Library
+
+Via [this change](https://gem5-review.googlesource.com/c/public/gem5/+/58910), an ARM Board, `ArmBoard`, has been added to the gem5 standard library.
+This allows for an ARM system to be run using the gem5 stdlib components.
+
+An example gem5 configuration script using this board can be found in `configs/example/gem5_library/arm-ubuntu-boot-exit.py`.
+
+### `createAddrRanges` now supports NUMA configurations
+
+When the system is configured for NUMA, it has multiple memory ranges, and each memory range is mapped to a corresponding NUMA node. For this, the change enables `createAddrRanges` to map address ranges to only a given HNFs.
+
+Jira ticker here: https://gem5.atlassian.net/browse/GEM5-1187.
+
+## API (user-facing) changes
+
+### CPU model types are no longer simply the model name, but they are specialized for each ISA
+
+For instance, the `O3CPU` is now the `X86O3CPU` and `ArmO3CPU`, etc.
+This requires a number of changes if you have your own CPU models.
+See https://gem5-review.googlesource.com/c/public/gem5/+/52490 for details.
+
+Additionally, this requires changes in any configuration script which inherits from the old CPU types.
+
+In many cases, if there is only a single ISA compiled the old name will still work.
+However, this is not 100% true.
+
+Finally, `CPU_MODELS` is no longer a parameter in `build_opts/`.
+Now, if you want to compile a CPU model for a particular ISA you will have to add a new file for the CPU model in the `arch/` directory.
+
+### Many changes in the CPU and ISA APIs
+
+If you have any specialized CPU models or any ISAs which are not in the mainline, expect many changes when rebasing on this release.
+
+- No longer use read/setIntReg (e.g., see https://gem5-review.googlesource.com/c/public/gem5/+/49766)
+- InvalidRegClass has changed (e.g., see https://gem5-review.googlesource.com/c/public/gem5/+/49745)
+- All of the register classes have changed (e.g., see https://gem5-review.googlesource.com/c/public/gem5/+/49764/)
+- `initiateSpecialMemCmd` renamed to `initiateMemMgmtCmd` to generalize to other command beyond HTM (e.g., DVM/TLBI)
+- `OperandDesc` class added (e.g., see https://gem5-review.googlesource.com/c/public/gem5/+/49731)
+- Many cases of `TheISA` have been removed
+
+## Bug Fixes
+
+- [Fixed RISC-V call/ret instruction decoding](https://gem5-review.googlesource.com/c/public/gem5/+/58209). The fix adds IsReturn` and `IsCall` flags for RISC-V jump instructions by defining a new `JumpConstructor` in "standard.isa". Jira Ticket here: https://gem5.atlassian.net/browse/GEM5-1139.
+- [Fixed x86 Read-Modify-Write behavior in multiple timing cores with classic caches](https://gem5-review.googlesource.com/c/public/gem5/+/55744). Jira Ticket here: https://gem5.atlassian.net/browse/GEM5-1105.
+- [The circular buffer for the O3 LSQ has been fixed](https://gem5-review.googlesource.com/c/public/gem5/+/58649). This issue affected running the O3 CPU with large workloaders. Jira Ticket here: https://gem5.atlassian.net/browse/GEM5-1203.
+- [Removed "memory-leak"-like error in RISC-V lr/sc implementation](https://gem5-review.googlesource.com/c/public/gem5/+/55663). Jira issue here: https://gem5.atlassian.net/browse/GEM5-1170.
+- [Resolved issues with Ruby's memtest](https://gem5-review.googlesource.com/c/public/gem5/+/56811). In gem5 v21.2, If the size of the address range was smaller than the maximum number of outstandnig requests allowed downstream, the tester would get stuck trying to find a unique address. This has been resolved.
+
+## Build-related changes
+
+- Variable in `env` in the SConscript files now requires you to use `env['CONF']` to access them. Anywhere that `env['<VARIABLE>']` appeared should noe be `env['CONF']['<VARIABLE>']`
+- Internal build files are now in a per-target `gem5.build` directory
+- All build variable are per-target and there are no longer any shared variables.
+
+## Other changes
+
+- New bootloader is required for Arm VExpress_GEM5_Foundation platform. See https://gem5.atlassian.net/browse/GEM5-1222 for details.
+- The MemCtrl interface has been updated to use more inheritance to make extending it to other memory types (e.g., HBM pseudo channels) easier.
+
+# Version 21.2.1.1
+
+**[HOTFIX]** In order to ensure v21 of gem5 remains compatible with future changes, the gem5 stdlib downloader has been updated to obtain the resources.json file from <https://resources.gem5.org/resources.json>.
+As this domain is under the gem5 project control, unlike the previous googlesource URL, we can ensure longer-term stability.
+The fix also ensures the downloader can parse plain-text JSON and base64 encoding of the resources.json file.
+
+# Version 21.2.1.0
+
+Version 21.2.1 is a minor gem5 release consisting of bug fixes. The 21.2.1 release:
+
+* Fixes a bug in which [a RCV instruction is wrongly regarded as a branch](https://gem5.atlassian.net/browse/GEM5-1137).
+* Removes outdated and incomplete standard library documentation.
+Users wishing to learn more about the gem5 standard library should consult materials [on the gem5 website](https://www.gem5.org/documentation/gem5-stdlib/overview).
+* Adds a VirtIO entropy device (VirtIORng) to RISC-V.
+Without this, [RISCV Disk images can take considerable time to boot and occasionally do so in error](https://gem5.atlassian.net/browse/GEM5-1151).
+* Removes the 'typing.final' decorator from the standard library.
+'typing.final' was introduced in Python 3.8, but v21.2 of gem5 supports Python 3.6.
+* Fixes the broken NPB stdlib example test.
+
 # Version 21.2.0.0
 
 ## API (user-facing) changes
