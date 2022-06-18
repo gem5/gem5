@@ -69,7 +69,7 @@ build_target () {
     # compilation: https://gem5.atlassian.net/browse/GEM5-753
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --memory="${docker_mem_limit}" --rm \
-        gcr.io/gem5-test/ubuntu-20.04_all-dependencies:v22-0 \
+        gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest \
             bash -c "scons build/${isa}/gem5.opt -j${compile_threads} \
                 || (rm -rf build && scons build/${isa}/gem5.opt -j${compile_threads})"
 }
@@ -79,12 +79,12 @@ unit_test () {
 
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --memory="${docker_mem_limit}" --rm \
-        gcr.io/gem5-test/ubuntu-20.04_all-dependencies:v22-0 \
+        gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest \
             scons build/NULL/unittests.${build} -j${compile_threads}
 }
 
 # Ensure we have the latest docker images.
-docker pull gcr.io/gem5-test/ubuntu-20.04_all-dependencies:v22-0
+docker pull gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest
 
 # Try to build the ISA targets.
 build_target NULL
@@ -102,7 +102,7 @@ unit_test debug
 # Run the gem5 long tests.
 docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}"/tests --memory="${docker_mem_limit}" --rm \
-    gcr.io/gem5-test/ubuntu-20.04_all-dependencies:v22-0 \
+    gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest \
         ./main.py run --length long -j${compile_threads} -t${run_threads} -vv
 
 # Unfortunately, due docker being unable run KVM, we do so separately.
@@ -117,10 +117,10 @@ cd "${gem5_root}/tests"
 cd "${gem5_root}"
 
 # For the GPU tests we compile and run the GPU ISA inside a gcn-gpu container.
-docker pull gcr.io/gem5-test/gcn-gpu:v22-0
+docker pull gcr.io/gem5-test/gcn-gpu:latest
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" --memory="${docker_mem_limit}" \
-    gcr.io/gem5-test/gcn-gpu:v22-0  bash -c \
+    gcr.io/gem5-test/gcn-gpu:latest  bash -c \
     "scons build/${gpu_isa}/gem5.opt -j${compile_threads} \
         || (rm -rf build && scons build/${gpu_isa}/gem5.opt -j${compile_threads})"
 
@@ -134,7 +134,7 @@ mkdir -p tests/testing-results
 # basic GPU functionality is working.
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" --memory="${docker_mem_limit}" \
-    gcr.io/gem5-test/gcn-gpu:v22-0  build/${gpu_isa}/gem5.opt \
+    gcr.io/gem5-test/gcn-gpu:latest  build/${gpu_isa}/gem5.opt \
     configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c square
 
 # get HeteroSync
@@ -146,7 +146,7 @@ wget -qN http://dist.gem5.org/dist/develop/test-progs/heterosync/gcn3/allSyncPri
 # atomics are tested.
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}"  --memory="${docker_mem_limit}" \
-    gcr.io/gem5-test/gcn-gpu:v22-0 build/${gpu_isa}/gem5.opt \
+    gcr.io/gem5-test/gcn-gpu:latest build/${gpu_isa}/gem5.opt \
     configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c \
     allSyncPrims-1kernel --options="sleepMutex 10 16 4"
 
@@ -157,7 +157,7 @@ docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
 # atomics are tested.
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}"  --memory="${docker_mem_limit}" \
-    gcr.io/gem5-test/gcn-gpu:v22-0  build/${gpu_isa}/gem5.opt \
+    gcr.io/gem5-test/gcn-gpu:latest  build/${gpu_isa}/gem5.opt \
     configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c \
     allSyncPrims-1kernel --options="lfTreeBarrUniq 10 16 4"
 
@@ -168,7 +168,7 @@ build_and_run_SST () {
 
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --rm  --memory="${docker_mem_limit}" \
-        gcr.io/gem5-test/sst-env:v22-0 bash -c "\
+        gcr.io/gem5-test/sst-env:latest bash -c "\
 scons build/${isa}/libgem5_${variant}.so -j${compile_threads} --without-tcmalloc; \
 cd ext/sst; \
 make clean; make -j ${compile_threads}; \
@@ -182,7 +182,7 @@ build_and_run_systemc () {
     rm -rf "${gem5_root}/build/ARM"
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --memory="${docker_mem_limit}" --rm \
-        gcr.io/gem5-test/ubuntu-20.04_all-dependencies:v22-0 bash -c "\
+        gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest bash -c "\
 scons -j${compile_threads} build/ARM/gem5.opt; \
 scons --with-cxx-config --without-python --without-tcmalloc USE_SYSTEMC=0 \
     -j${compile_threads} build/ARM/libgem5_opt.so \
@@ -190,7 +190,7 @@ scons --with-cxx-config --without-python --without-tcmalloc USE_SYSTEMC=0 \
 
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --memory="${docker_mem_limit}" --rm \
-        gcr.io/gem5-test/systemc-env:v22-0 bash -c "\
+        gcr.io/gem5-test/systemc-env:latest bash -c "\
 cd util/systemc/gem5_within_systemc; \
 make -j${compile_threads}; \
 ../../../build/ARM/gem5.opt ../../../configs/example/se.py -c \
