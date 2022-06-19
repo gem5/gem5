@@ -254,9 +254,18 @@ namespace VegaISA
             opNum++;
         }
 
-        reg = instData.SDST;
-        dstOps.emplace_back(reg, getOperandSize(opNum), false,
+        /*
+          S_SETPC_B64, S_RFE_B64, S_CBRANCH_JOIN, and S_SET_GPR_IDX_IDX do not
+          use SDST, so don't put anything on dstOps for them.
+        */
+        if ((instData.OP != 0x1D) /* S_SETPC_B64 (29 base 10) */ &&
+            (instData.OP != 0x1F) /* S_RFE_B64 (31 base 10) */ &&
+            (instData.OP != 0x2E) /* S_CBRANCH_JOIN (46 base 10) */ &&
+            (instData.OP != 0x32)) /* S_SET_GPR_IDX_IDX (50 base 10) */ {
+          reg = instData.SDST;
+          dstOps.emplace_back(reg, getOperandSize(opNum), false,
                               isScalarReg(instData.SDST), false, false);
+        }
 
         assert(srcOps.size() == numSrcRegOperands());
         assert(dstOps.size() == numDstRegOperands());
