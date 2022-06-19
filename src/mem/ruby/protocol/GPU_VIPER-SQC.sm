@@ -291,28 +291,42 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
     }
   }
 
+  // added for profiling
+  action(uu_profileDataMiss, "\udm", desc="Profile SQC demand miss"){
+    L1cache.profileDemandMiss();
+  }
+
+  action(uu_profileDataHit, "\udh", desc="Profile SQC demand hit"){
+    L1cache.profileDemandHit();
+  }
+
   // Transitions
 
   // transitions from base
   transition({I, V}, Repl, I) {TagArrayRead, TagArrayWrite} {
-    ic_invCache
+    // since we're evicting something, don't bother classifying as hit/miss
+    ic_invCache;
   }
 
   transition(I, Data, V) {TagArrayRead, TagArrayWrite, DataArrayRead} {
     a_allocate;
-    w_writeCache
+    // don't profile this as a hit/miss since it's a reponse from L2,
+    // so we already counted it
+    w_writeCache;
     l_loadDone;
     pr_popResponseQueue;
   }
 
   transition(I, Fetch) {TagArrayRead, TagArrayWrite} {
     nS_issueRdBlkS;
+    uu_profileDataMiss; // since line wasn't in SQC, we missed
     p_popMandatoryQueue;
   }
 
   // simple hit transitions
   transition(V, Fetch) {TagArrayRead, DataArrayRead} {
     l_loadDone;
+    uu_profileDataHit; // line was in SQC, so we hit
     p_popMandatoryQueue;
   }
 }
