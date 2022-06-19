@@ -248,6 +248,10 @@ namespace VegaISA
 
         // Needed because can't take addr of bitfield
         int reg = instData.SSRC0;
+        /*
+          S_GETPC_B64 does not use SSRC0, so don't put anything on srcOps
+          for it (0x1c is 29 base 10, which is the opcode for S_GETPC_B64).
+         */
         if (instData.OP != 0x1C) {
             srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                   isScalarReg(instData.SSRC0), false, false);
