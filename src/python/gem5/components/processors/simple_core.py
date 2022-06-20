@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from typing import Optional
-from python.gem5.utils.requires import requires
+from ...utils.requires import requires
 from ..processors.abstract_core import AbstractCore
 
 from .cpu_types import CPUTypes

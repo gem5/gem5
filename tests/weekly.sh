@@ -59,7 +59,7 @@ fi
 # Run the gem5 very-long tests.
 docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}"/tests --memory="${docker_mem_limit}" --rm \
-    gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest \
+    gcr.io/gem5-test/ubuntu-20.04_all-dependencies:v22-0 \
         ./main.py run --length very-long -j${threads} -t${threads} -vv
 
 mkdir -p tests/testing-results
@@ -68,7 +68,7 @@ mkdir -p tests/testing-results
 # before pulling gem5 resources, make sure it doesn't exist already
 docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
        "${gem5_root}" --memory="${docker_mem_limit}" \
-       gcr.io/gem5-test/gcn-gpu:latest bash -c \
+       gcr.io/gem5-test/gcn-gpu:v22-0 bash -c \
        "rm -rf ${gem5_root}/gem5-resources"
 # delete Pannotia datasets and output files in case a failed regression run left
 # them around
@@ -100,12 +100,12 @@ git clone https://gem5.googlesource.com/public/gem5-resources \
 
 cd "${gem5_root}/gem5-resources"
 git checkout develop
-#version_tag=$(git tag | grep "v21.2")
-#
-#if [[ ${version_tag} != "" ]]; then
-#       git checkout "${version_tag}"
-#fi
-#
+version_tag=$(git tag | grep "v22.0")
+
+if [[ ${version_tag} != "" ]]; then
+       git checkout "${version_tag}"
+fi
+
 cd "${gem5_root}"
 
 # For the GPU tests we compile and run the GPU ISA inside a gcn-gpu container.
@@ -113,7 +113,7 @@ cd "${gem5_root}"
 # avoid needing to set all of these, we instead build a docker for it, which
 # has all these variables pre-set in its Dockerfile
 # To avoid compiling gem5 multiple times, all GPU benchmarks will use this
-docker pull gcr.io/gem5-test/gcn-gpu:latest
+docker pull gcr.io/gem5-test/gcn-gpu:v22-0
 docker build -t hacc-test-weekly ${gem5_root}/gem5-resources/src/gpu/halo-finder
 
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
@@ -240,7 +240,7 @@ docker run --rm -v ${PWD}:${PWD} \
        "export GEM5_PATH=${gem5_root} ; make gem5-fusion"
 
 # # get input dataset for BC test
-wget http://dist.gem5.org/dist/develop/datasets/pannotia/bc/1k_128k.gr
+wget http://dist.gem5.org/dist/v22-0/datasets/pannotia/bc/1k_128k.gr
 # run BC
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        --memory="${docker_mem_limit}" hacc-test-weekly \
@@ -317,7 +317,7 @@ docker run --rm -v ${gem5_root}:${gem5_root} -w \
        "export GEM5_PATH=${gem5_root} ; make gem5-fusion"
 
 # get PageRank input dataset
-wget http://dist.gem5.org/dist/develop/datasets/pannotia/pagerank/coAuthorsDBLP.graph
+wget http://dist.gem5.org/dist/v22-0/datasets/pannotia/pagerank/coAuthorsDBLP.graph
 # run PageRank (Default)
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        --memory="${docker_mem_limit}" hacc-test-weekly \
