@@ -347,10 +347,10 @@ SelfDebug::init(ThreadContext *tc)
     }
 
     for (int i = 0; i <= dfr.wrps; i++) {
-        WatchPoint wtp = WatchPoint((MiscRegIndex)(MISCREG_DBGWCR0 + i),
-                                    (MiscRegIndex)(MISCREG_DBGWVR0 + i),
+        WatchPoint wtp = WatchPoint((MiscRegIndex)(MISCREG_DBGWCR0_EL1 + i),
+                                    (MiscRegIndex)(MISCREG_DBGWVR0_EL1 + i),
                                     this, (bool)mm_fr2.varange, aarch32);
-        const DBGWCR ctr = tc->readMiscReg(MISCREG_DBGWCR0 + i);
+        const DBGWCR ctr = tc->readMiscReg(MISCREG_DBGWCR0_EL1 + i);
 
         wtp.updateControl(ctr);
         arWatchPoints.push_back(wtp);
