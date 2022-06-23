@@ -1,3 +1,15 @@
+# Copyright (c) 2022 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
 # Copyright (c) 2009 The Hewlett-Packard Development Company
 # All rights reserved.
@@ -64,7 +76,11 @@ class Symbol(PairContainer):
 
     @property
     def desc(self):
-        return self["desc"]
+        # Allow Symbols with no description: return an empty string.
+        if "desc" not in self:
+            return ""
+        else :
+            return self["desc"]
 
     def error(self, message, *args):
         self.location.error(message, *args)
