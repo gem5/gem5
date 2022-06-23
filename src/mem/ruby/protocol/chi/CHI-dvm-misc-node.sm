@@ -162,8 +162,8 @@ machine(MachineType:MiscNode, "CHI Misc Node for handling and distrbuting DVM op
     AllocRequest,           desc="Allocates a TBE for a request. Triggers a retry if table is full";
     AllocRequestWithCredit, desc="Allocates a TBE for a request. Always succeeds. Used when a client is retrying after being denied.";
 
-    SnpResp_I;
-    NCBWrData;
+    SnpResp_I,      desc="";
+    NCBWrData,      desc="";
 
     // Retry handling
     SendRetryAck,   desc="Send RetryAck";
@@ -182,9 +182,9 @@ machine(MachineType:MiscNode, "CHI Misc Node for handling and distrbuting DVM op
     // any queued action and is not expecting responses/data. The transaction
     // is finalized and the next stable state is stored in the cache/directory
     // See the processNextState and makeFinalState functions
-    Final;
+    Final,          desc="";
 
-    null;
+    null,           desc="";
   }
 
   ////////////////////////////////////////////////////////////////////////////
