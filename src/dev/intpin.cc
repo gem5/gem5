@@ -55,11 +55,6 @@ IntSourcePinBase::bind(Port &peer)
     fatal_if(!sink, "Attempt to bind interrupt source pin %s to "
             "incompatible port %s.", name(), peer.name());
     Port::bind(peer);
-
-    if (_state)
-        raise();
-    else
-        lower();
 }
 
 void
