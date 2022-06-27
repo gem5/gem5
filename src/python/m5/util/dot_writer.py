@@ -153,7 +153,7 @@ def dot_create_cluster(simNode, full_path, label):
 
     return pydot.Cluster( \
                          full_path, \
-                         shape = "Mrecord", \
+                         shape = "box", \
                          label = label, \
                          tooltip = "\"" + tooltip + "\"", \
                          style = "\"rounded, filled\"", \
@@ -167,7 +167,7 @@ def dot_create_cluster(simNode, full_path, label):
 def dot_create_node(simNode, full_path, label):
     return pydot.Node( \
                          full_path, \
-                         shape = "Mrecord", \
+                         shape = "box", \
                          label = label, \
                          style = "\"rounded, filled\"", \
                          color = "#000000", \
@@ -274,7 +274,7 @@ def dot_add_clk_domain(c_dom, v_dom):
     full_path = re.sub('\.', '_', str(c_dom))
     return pydot.Cluster( \
                      full_path, \
-                     shape = "Mrecord", \
+                     shape = "box", \
                      label = label, \
                      style = "\"rounded, filled, dashed\"", \
                      color = "#000000", \
