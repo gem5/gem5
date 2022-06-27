@@ -734,7 +734,7 @@ ArmFault::vectorCatch(ThreadContext *tc, const StaticInstPtr &inst)
 {
     SelfDebug *sd = ArmISA::ISA::getSelfDebug(tc);
     VectorCatch* vc = sd->getVectorCatch(tc);
-    if (!vc->isVCMatch()) {
+    if (vc && !vc->isVCMatch()) {
         Fault fault = sd->testVectorCatch(tc, 0x0, this);
         if (fault != NoFault)
             fault->invoke(tc, inst);

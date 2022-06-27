@@ -294,7 +294,7 @@ class SelfDebug
 
   public:
     SelfDebug()
-      : enableTdeTge(false),
+      : softStep(nullptr), vcExcpt(nullptr), enableTdeTge(false),
         mde(false), sdd(false), kde(false), oslk(false)
     {
         softStep = new SoftwareStep(this);
