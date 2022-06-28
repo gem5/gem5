@@ -697,7 +697,9 @@ class SimObject(object, metaclass=MetaSimObject):
         # are also param values get cloned properly.
         self._children = {}
         for key,val in ancestor._children.items():
-            self.add_child(key, val(_memo=memo_dict))
+            newval = val(_memo=memo_dict)
+            if not newval.has_parent():
+              self.add_child(key, newval)
 
         # Inherit parameter values from class using multidict so
         # individual value settings can be overridden but we still
