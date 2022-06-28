@@ -446,6 +446,8 @@ class MMU : public BaseMMU
     bool faultPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
                   Mode mode, const bool is_priv, CachedState &state);
 
+    bool hasUnprivRegime(ExceptionLevel el, CachedState &state);
+
     std::pair<bool, bool> s1PermBits64(
         TlbEntry *te, const RequestPtr &req, Mode mode,
         ThreadContext *tc, CachedState &state, bool r, bool w, bool x);
