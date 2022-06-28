@@ -59,11 +59,13 @@
 
 #include <utility>
 
-#include "params/TlmToGem5Bridge32.hh"
-#include "params/TlmToGem5Bridge64.hh"
+#include "base/trace.hh"
+#include "debug/TlmBridge.hh"
 #include "params/TlmToGem5Bridge128.hh"
 #include "params/TlmToGem5Bridge256.hh"
+#include "params/TlmToGem5Bridge32.hh"
 #include "params/TlmToGem5Bridge512.hh"
+#include "params/TlmToGem5Bridge64.hh"
 #include "sim/core.hh"
 #include "sim/system.hh"
 #include "systemc/ext/core/sc_module_name.hh"
@@ -506,8 +508,8 @@ template <unsigned int BITWIDTH>
 void
 TlmToGem5Bridge<BITWIDTH>::recvRangeChange()
 {
-    SC_REPORT_WARNING("TlmToGem5Bridge",
-                      "received address range change but ignored it");
+    DPRINTF(TlmBridge,
+            "received address range change but ignored it");
 }
 
 template <unsigned int BITWIDTH>
@@ -549,11 +551,11 @@ TlmToGem5Bridge<BITWIDTH>::before_end_of_elaboration()
      * NOTE: The mode may change during execution.
      */
     if (system->isTimingMode()) {
-        SC_REPORT_INFO("TlmToGem5Bridge", "register non-blocking interface");
+        DPRINTF(TlmBridge, "register non-blocking interface");
         socket.register_nb_transport_fw(
                 this, &TlmToGem5Bridge<BITWIDTH>::nb_transport_fw);
     } else if (system->isAtomicMode()) {
-        SC_REPORT_INFO("TlmToGem5Bridge", "register blocking interface");
+        DPRINTF(TlmBridge, "register blocking interface");
         socket.register_b_transport(
                 this, &TlmToGem5Bridge<BITWIDTH>::b_transport);
         socket.register_get_direct_mem_ptr(
