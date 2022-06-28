@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013,2017-2021 Arm Limited
+ * Copyright (c) 2011-2013,2017-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -135,7 +135,8 @@ MiscRegOp64::checkEL1Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
       case MISCREG_DC_ZVA_Xt:
         // In syscall-emulation mode, this test is skipped and DCZVA is always
         // allowed at EL0
-        trap_to_sup =  el == EL0 && !sctlr.dze && FullSystem;
+        trap_to_sup =  el == EL0 && !(EL2Enabled(tc) && hcr.e2h && hcr.tge) &&
+            !sctlr.dze && FullSystem;
         break;
       case MISCREG_DC_CIVAC_Xt:
       case MISCREG_DC_CVAC_Xt:
