@@ -263,7 +263,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         cpus_node.append(cpus_state.sizeCellsProperty())
         # Used by the CLINT driver to set the timer frequency. Value taken from
         # RISC-V kernel docs (Note: freedom-u540 is actually 1MHz)
-        cpus_node.append(FdtPropertyWords("timebase-frequency", [10000000]))
+        cpus_node.append(FdtPropertyWords("timebase-frequency", [100000000]))
 
         for i, core in enumerate(self.get_processor().get_cores()):
             node = FdtNode(f"cpu@{i}")
