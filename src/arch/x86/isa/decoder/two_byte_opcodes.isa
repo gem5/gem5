@@ -133,7 +133,13 @@
                     0x3: Inst::SMSW(Rv);
                     default: Inst::SMSW(Mw);
                 }
-                0x6: Cpl0Inst::LMSW(Ew);
+                0x5: decode MODRM_MOD {
+                    0x3: decode MODRM_RM {
+                        0x0: BasicOperate::SERIALIZE({{/*Nothing*/}},
+                                                         IsSerializeAfter);
+                        }
+                    }
+                0x6: Inst::LMSW(Ew);
                 0x7: decode MODRM_MOD {
                     0x3: decode MODRM_RM {
                         0x0: Cpl0Inst::SWAPGS();
