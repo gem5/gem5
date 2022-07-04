@@ -323,6 +323,17 @@ TEST(BitfieldTest, FindLsbZero)
     EXPECT_EQ(64, findLsbSet(0));
 }
 
+TEST(BitfieldTest, FindLsbGeneralized)
+{
+    static constexpr size_t N{1000};
+    std::bitset<N> bs{0};
+    EXPECT_EQ(findLsbSet(bs), N);
+    for (size_t i{0}; i < N ; ++i) {
+        bs = std::bitset<N>{1} << i;
+        ASSERT_EQ(findLsbSet(bs), i);
+    }
+}
+
 /*
  * The following tests "popCount(X)". popCount counts the number of bits set to
  * one.
