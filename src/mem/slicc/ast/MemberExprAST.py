@@ -27,6 +27,7 @@
 
 from slicc.ast.ExprAST import ExprAST
 
+
 class MemberExprAST(ExprAST):
     def __init__(self, slicc, expr_ast, field):
         super().__init__(slicc)
@@ -41,13 +42,13 @@ class MemberExprAST(ExprAST):
         return_type, gcode = self.expr_ast.inline(True)
         fix = code.nofix()
 
-
         # Check whether return_type is Entry by checking
         # interfaces since entries in protocol files use
         # AbstractCacheEntry as interfaces.
-        if str(return_type) == "TBE" \
-           or ("interface" in return_type and
-            (return_type["interface"] == "AbstractCacheEntry")):
+        if str(return_type) == "TBE" or (
+            "interface" in return_type
+            and (return_type["interface"] == "AbstractCacheEntry")
+        ):
             code("(*$gcode).m_${{self.field}}")
         else:
             code("($gcode).m_${{self.field}}")
@@ -60,11 +61,13 @@ class MemberExprAST(ExprAST):
             return return_type.data_members[self.field].type
         else:
             if "interface" in return_type:
-               interface_type = self.symtab.find(return_type["interface"]);
-               if interface_type != None:
-                   if self.field in interface_type.data_members:
-                       # Return the type of the field
-                       return interface_type.data_members[self.field].type
-        self.error("Invalid object field: " +
-                   "Type '%s' does not have data member %s" % \
-                   (return_type, self.field))
+                interface_type = self.symtab.find(return_type["interface"])
+                if interface_type != None:
+                    if self.field in interface_type.data_members:
+                        # Return the type of the field
+                        return interface_type.data_members[self.field].type
+        self.error(
+            "Invalid object field: "
+            + "Type '%s' does not have data member %s"
+            % (return_type, self.field)
+        )

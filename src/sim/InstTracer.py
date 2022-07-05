@@ -27,8 +27,9 @@
 from m5.SimObject import SimObject
 from m5.params import *
 
+
 class InstTracer(SimObject):
-    type = 'InstTracer'
+    type = "InstTracer"
     cxx_header = "sim/insttracer.hh"
-    cxx_class = 'gem5::Trace::InstTracer'
+    cxx_class = "gem5::Trace::InstTracer"
     abstract = True

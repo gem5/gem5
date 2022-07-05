@@ -50,14 +50,14 @@ from m5.proxy import *
 #   Sram_retention: The SRAMs within the logic blocks are pulled into retention
 #                   state to reduce leakage energy further.
 #   Off: The logic block is power gated and is not consuming any energy.
-class PwrState(Enum): vals = [
-        'UNDEFINED', 'ON', 'CLK_GATED', 'SRAM_RETENTION', 'OFF'
-]
+class PwrState(Enum):
+    vals = ["UNDEFINED", "ON", "CLK_GATED", "SRAM_RETENTION", "OFF"]
+
 
 class PowerState(SimObject):
-    type = 'PowerState'
+    type = "PowerState"
     cxx_header = "sim/power_state.hh"
-    cxx_class = 'gem5::PowerState'
+    cxx_class = "gem5::PowerState"
 
     # Provide initial power state, should ideally get redefined in startup
     # routine
@@ -66,13 +66,15 @@ class PowerState(SimObject):
     # Possible power states this object can be in sorted from the most
     # to the least performant
     possible_states = VectorParam.PwrState(
-        [], "Power states this object can be in")
+        [], "Power states this object can be in"
+    )
 
-    clk_gate_min = Param.Latency('1ns',"Min value of the distribution")
-    clk_gate_max = Param.Latency('1s',"Max value of the distribution")
-    clk_gate_bins = Param.Unsigned('20', "# bins in clk gated distribution")
+    clk_gate_min = Param.Latency("1ns", "Min value of the distribution")
+    clk_gate_max = Param.Latency("1s", "Max value of the distribution")
+    clk_gate_bins = Param.Unsigned("20", "# bins in clk gated distribution")
 
     # The objects which drive the power state of this object. If the list is
     # empty, the object determines its power state independently.
     leaders = VectorParam.PowerState(
-        [], "Objects which drive the power state of this object")
+        [], "Objects which drive the power state of this object"
+    )

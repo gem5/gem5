@@ -34,7 +34,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 microcode = ""
-#let {{
+# let {{
 #    class AAA(Inst):
 #       "GenFault ${new UnimpInstFault}"
 #    class AAD(Inst):
@@ -43,4 +43,4 @@ microcode = ""
 #       "GenFault ${new UnimpInstFault}"
 #    class AAS(Inst):
 #       "GenFault ${new UnimpInstFault}"
-#}};
+# }};

@@ -70,39 +70,39 @@ import argparse
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('-i', '--interval', type=int)
-parser.add_argument('-d', '--directory', default='checkpoint-test')
-parser.add_argument('cmdline', nargs='+', help='gem5 command line')
+parser.add_argument("-i", "--interval", type=int)
+parser.add_argument("-d", "--directory", default="checkpoint-test")
+parser.add_argument("cmdline", nargs="+", help="gem5 command line")
 
 args = parser.parse_args()
 
 interval = args.interval
 
 if os.path.exists(args.directory):
-    print('Error: test directory', args.directory, 'exists')
-    print('       Tester needs to create directory from scratch')
+    print("Error: test directory", args.directory, "exists")
+    print("       Tester needs to create directory from scratch")
     sys.exit(1)
 
 top_dir = args.directory
 os.mkdir(top_dir)
 
-cmd_echo = open(os.path.join(top_dir, 'command'), 'w')
-print(' '.join(sys.argv), file=cmd_echo)
+cmd_echo = open(os.path.join(top_dir, "command"), "w")
+print(" ".join(sys.argv), file=cmd_echo)
 cmd_echo.close()
 
 m5_binary = args.cmdline[0]
 
 args = args.cmdline[1:]
 
-checkpoint_args = ['--take-checkpoints', '%d,%d' % (interval, interval)]
+checkpoint_args = ["--take-checkpoints", "%d,%d" % (interval, interval)]
 
-cptdir = os.path.join(top_dir, 'm5out')
+cptdir = os.path.join(top_dir, "m5out")
 
-print('===> Running initial simulation.')
-subprocess.call([m5_binary] + ['-red', cptdir] + args + checkpoint_args)
+print("===> Running initial simulation.")
+subprocess.call([m5_binary] + ["-red", cptdir] + args + checkpoint_args)
 
 dirs = os.listdir(cptdir)
-expr = re.compile('cpt\.([0-9]*)')
+expr = re.compile("cpt\.([0-9]*)")
 cpts = []
 for dir in dirs:
     match = expr.match(dir)
@@ -116,22 +116,39 @@ cpts.sort()
 # original checkpoint N+1.  Thus the number of tests we can run is one
 # less than tha number of checkpoints.
 for i in range(1, len(cpts)):
-    print('===> Running test %d of %d.' % (i, len(cpts)-1))
-    checkpoint_args = ['--take-checkpoints', '%d,%d' % (cpts[i], interval)]
-    mydir = os.path.join(top_dir, 'test.%d' % i)
-    subprocess.call([m5_binary] + ['-red', mydir] + args + checkpoint_args +
-                    ['--max-checkpoints' , '1', '--checkpoint-dir', cptdir,
-                     '--checkpoint-restore', str(i)])
-    cpt_name = 'cpt.%d' % cpts[i]
-    diff_name = os.path.join(mydir, 'diffout')
-    diffout = open(diff_name, 'w')
-    subprocess.call(['diff', '-ru', '-I', '^##.*',
-                     '%s/%s' % (cptdir, cpt_name),
-                     '%s/%s' % (mydir, cpt_name)], stdout=diffout)
+    print("===> Running test %d of %d." % (i, len(cpts) - 1))
+    checkpoint_args = ["--take-checkpoints", "%d,%d" % (cpts[i], interval)]
+    mydir = os.path.join(top_dir, "test.%d" % i)
+    subprocess.call(
+        [m5_binary]
+        + ["-red", mydir]
+        + args
+        + checkpoint_args
+        + [
+            "--max-checkpoints",
+            "1",
+            "--checkpoint-dir",
+            cptdir,
+            "--checkpoint-restore",
+            str(i),
+        ]
+    )
+    cpt_name = "cpt.%d" % cpts[i]
+    diff_name = os.path.join(mydir, "diffout")
+    diffout = open(diff_name, "w")
+    subprocess.call(
+        [
+            "diff",
+            "-ru",
+            "-I",
+            "^##.*",
+            "%s/%s" % (cptdir, cpt_name),
+            "%s/%s" % (mydir, cpt_name),
+        ],
+        stdout=diffout,
+    )
     diffout.close()
     # print out the diff
     diffout = open(diff_name)
-    print(diffout.read(), end=' ')
+    print(diffout.read(), end=" ")
     diffout.close()
-
-

@@ -35,6 +35,7 @@ from ...utils.requires import requires
 
 from m5.objects import BaseMMU, Port, SubSystem
 
+
 class AbstractCore(SubSystem):
     __metaclass__ = ABCMeta
 
@@ -92,8 +93,9 @@ class AbstractCore(SubSystem):
 
     @abstractmethod
     def connect_interrupt(
-        self, interrupt_requestor: Optional[Port] = None,
-        interrupt_responce: Optional[Port] = None
+        self,
+        interrupt_requestor: Optional[Port] = None,
+        interrupt_responce: Optional[Port] = None,
     ) -> None:
         """ Connect the core interrupts to the interrupt controller
 
@@ -124,29 +126,31 @@ class AbstractCore(SubSystem):
         requires(isa_required=isa)
 
         _isa_string_map = {
-            ISA.X86 : "X86",
-            ISA.ARM : "Arm",
-            ISA.RISCV : "Riscv",
-            ISA.SPARC : "Sparc",
-            ISA.POWER : "Power",
-            ISA.MIPS : "Mips",
+            ISA.X86: "X86",
+            ISA.ARM: "Arm",
+            ISA.RISCV: "Riscv",
+            ISA.SPARC: "Sparc",
+            ISA.POWER: "Power",
+            ISA.MIPS: "Mips",
         }
 
         _cpu_types_string_map = {
-            CPUTypes.ATOMIC : "AtomicSimpleCPU",
-            CPUTypes.O3 : "O3CPU",
-            CPUTypes.TIMING : "TimingSimpleCPU",
-            CPUTypes.KVM : "KvmCPU",
-            CPUTypes.MINOR : "MinorCPU",
+            CPUTypes.ATOMIC: "AtomicSimpleCPU",
+            CPUTypes.O3: "O3CPU",
+            CPUTypes.TIMING: "TimingSimpleCPU",
+            CPUTypes.KVM: "KvmCPU",
+            CPUTypes.MINOR: "MinorCPU",
         }
 
         if isa not in _isa_string_map:
-            raise NotImplementedError(f"ISA '{isa.name}' does not have an"
+            raise NotImplementedError(
+                f"ISA '{isa.name}' does not have an"
                 "entry in `AbstractCore.cpu_simobject_factory._isa_string_map`"
             )
 
         if cpu_type not in _cpu_types_string_map:
-            raise NotImplementedError(f"CPUType '{cpu_type.name}' "
+            raise NotImplementedError(
+                f"CPUType '{cpu_type.name}' "
                 "does not have an entry in "
                 "`AbstractCore.cpu_simobject_factory._cpu_types_string_map`"
             )
@@ -162,19 +166,24 @@ class AbstractCore(SubSystem):
         # : ArmKvmCPU and ArmV8KvmCPU for 32 bit (Armv7l) and 64 bit (Armv8)
         # respectively.
 
-        if isa.name == "ARM" and \
-                cpu_type == CPUTypes.KVM and \
-                platform.architecture()[0] == "64bit":
-            cpu_class_str = f"{_isa_string_map[isa]}V8"\
-                            f"{_cpu_types_string_map[cpu_type]}"
+        if (
+            isa.name == "ARM"
+            and cpu_type == CPUTypes.KVM
+            and platform.architecture()[0] == "64bit"
+        ):
+            cpu_class_str = (
+                f"{_isa_string_map[isa]}V8"
+                f"{_cpu_types_string_map[cpu_type]}"
+            )
         else:
-            cpu_class_str = f"{_isa_string_map[isa]}"\
-                            f"{_cpu_types_string_map[cpu_type]}"
+            cpu_class_str = (
+                f"{_isa_string_map[isa]}" f"{_cpu_types_string_map[cpu_type]}"
+            )
 
         try:
-            to_return_cls = getattr(importlib.import_module(module_str),
-                                    cpu_class_str
-                                   )
+            to_return_cls = getattr(
+                importlib.import_module(module_str), cpu_class_str
+            )
         except ImportError:
             raise Exception(
                 f"Cannot find CPU type '{cpu_type.name}' for '{isa.name}' "

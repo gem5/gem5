@@ -40,19 +40,21 @@ from m5.params import *
 from m5.objects.AbstractMemory import AbstractMemory
 from m5.util.fdthelper import FdtNode, FdtPropertyWords
 
+
 class CfiMemory(AbstractMemory):
-    type = 'CfiMemory'
+    type = "CfiMemory"
     cxx_header = "mem/cfi_mem.hh"
-    cxx_class = 'gem5::memory::CfiMemory'
+    cxx_class = "gem5::memory::CfiMemory"
 
     port = ResponsePort("Response port")
 
-    latency = Param.Latency('30ns', "Request to response latency")
-    latency_var = Param.Latency('0ns', "Request to response latency variance")
+    latency = Param.Latency("30ns", "Request to response latency")
+    latency_var = Param.Latency("0ns", "Request to response latency variance")
     # The memory bandwidth limit default is set to 12.8GB/s which is
     # representative of a x64 DDR3-1600 channel.
-    bandwidth = Param.MemoryBandwidth('12.8GB/s',
-                                      "Combined read and write bandwidth")
+    bandwidth = Param.MemoryBandwidth(
+        "12.8GB/s", "Combined read and write bandwidth"
+    )
 
     vendor_id = Param.UInt16(0, "vendor ID")
     device_id = Param.UInt16(0, "device ID")

@@ -40,14 +40,15 @@ Utilities to parse and modify copyright headers in gem5 source.
 import re
 
 org_alias_map = {
-    'arm': b'ARM Limited',
-    'uc': b'The Regents of the University of California',
+    "arm": b"ARM Limited",
+    "uc": b"The Regents of the University of California",
 }
 
-_update_copyright_year_regexp = re.compile(b'(.*?)([0-9]+)$')
+_update_copyright_year_regexp = re.compile(b"(.*?)([0-9]+)$")
+
 
 def _update_copyright_years(m, cur_year, org_bytes):
-    '''
+    """
     Does e.g.: b'2016, 2018-2019' -> b'2016, 2018-2020'.
 
     :param m: match containing only the years part of the string
@@ -56,7 +57,7 @@ def _update_copyright_years(m, cur_year, org_bytes):
     :type cur_year: int
     :return: the new years part of the string
     :rtype: bytes
-    '''
+    """
     global _update_copyright_year_regexp
     cur_year_bytes = str(cur_year).encode()
     m = _update_copyright_year_regexp.match(m.group(1))
@@ -66,19 +67,19 @@ def _update_copyright_years(m, cur_year, org_bytes):
     if old_year == cur_year:
         new_years_string = old_year_bytes
     elif old_year == cur_year - 1:
-        if len(years_prefix) > 0 and years_prefix[-1:] == b'-':
+        if len(years_prefix) > 0 and years_prefix[-1:] == b"-":
             new_years_string = cur_year_bytes
         else:
-            new_years_string = old_year_bytes + b'-' + cur_year_bytes
+            new_years_string = old_year_bytes + b"-" + cur_year_bytes
     else:
-        new_years_string = old_year_bytes + b', ' + cur_year_bytes
+        new_years_string = old_year_bytes + b", " + cur_year_bytes
     new_years_string = years_prefix + new_years_string
-    return b' Copyright (c) %b %b\n' % (new_years_string, org_bytes)
+    return b" Copyright (c) %b %b\n" % (new_years_string, org_bytes)
+
 
 def update_copyright(data, cur_year, org_bytes):
     update_copyright_regexp = re.compile(
-        b' Copyright \\(c\\) ([0-9,\- ]+) ' + org_bytes + b'\n',
-        re.IGNORECASE
+        b" Copyright \\(c\\) ([0-9,\- ]+) " + org_bytes + b"\n", re.IGNORECASE
     )
     return update_copyright_regexp.sub(
         lambda m: _update_copyright_years(m, cur_year, org_bytes),

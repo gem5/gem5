@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop PUNPCKLBW_MMX_MMX {
     unpack mmx, mmx, mmxm, ext=0, size=1
 };
@@ -123,4 +123,4 @@ def macroop PUNPCKHDQ_MMX_P {
     ldfp ufp1, seg, riprel, disp, dataSize=8
     unpack mmx, mmx, ufp1, ext=1, size=4
 };
-'''
+"""

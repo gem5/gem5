@@ -37,10 +37,12 @@ from m5.objects import *
 from arm_generic import *
 from m5.ticks import fixGlobalFrequency, fromSeconds
 
-root = LinuxArmFSSystem(mem_mode='atomic_noncaching',
-                        machine_type='VExpress_GEM5_V1',
-                        mem_class=SimpleMemory,
-                        cpu_class=ArmV8KvmCPU,
-                        num_cpus=2).create_root()
+root = LinuxArmFSSystem(
+    mem_mode="atomic_noncaching",
+    machine_type="VExpress_GEM5_V1",
+    mem_class=SimpleMemory,
+    cpu_class=ArmV8KvmCPU,
+    num_cpus=2,
+).create_root()
 fixGlobalFrequency()
 root.sim_quantum = fromSeconds(m5.util.convert.anyToLatency("1ms"))

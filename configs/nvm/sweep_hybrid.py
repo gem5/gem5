@@ -41,7 +41,7 @@ from m5.objects import *
 from m5.util import addToPath
 from m5.stats import periodicStatDump
 
-addToPath('../')
+addToPath("../")
 
 from common import ObjectList
 from common import MemConfig
@@ -53,38 +53,60 @@ from common import MemConfig
 
 parser = argparse.ArgumentParser()
 
-hybrid_generators = {
-    "HYBRID" : lambda x: x.createHybrid,
-}
+hybrid_generators = {"HYBRID": lambda x: x.createHybrid}
 
 # Use a single-channel DDR3-1600 x64 (8x8 topology) by default
-parser.add_argument("--nvm-type", default="NVM_2400_1x64",
-                    choices=ObjectList.mem_list.get_names(),
-                    help = "type of memory to use")
+parser.add_argument(
+    "--nvm-type",
+    default="NVM_2400_1x64",
+    choices=ObjectList.mem_list.get_names(),
+    help="type of memory to use",
+)
 
-parser.add_argument("--mem-type", default="DDR4_2400_16x4",
-                    choices=ObjectList.mem_list.get_names(),
-                    help = "type of memory to use")
+parser.add_argument(
+    "--mem-type",
+    default="DDR4_2400_16x4",
+    choices=ObjectList.mem_list.get_names(),
+    help="type of memory to use",
+)
 
-parser.add_argument("--nvm-ranks", "-n", type=int, default=1,
-                    help = "Number of ranks to iterate across")
+parser.add_argument(
+    "--nvm-ranks",
+    "-n",
+    type=int,
+    default=1,
+    help="Number of ranks to iterate across",
+)
 
-parser.add_argument("--mem-ranks", "-r", type=int, default=2,
-                    help = "Number of ranks to iterate across")
+parser.add_argument(
+    "--mem-ranks",
+    "-r",
+    type=int,
+    default=2,
+    help="Number of ranks to iterate across",
+)
 
-parser.add_argument("--rd-perc", type=int, default=100,
-                    help = "Percentage of read commands")
+parser.add_argument(
+    "--rd-perc", type=int, default=100, help="Percentage of read commands"
+)
 
-parser.add_argument("--nvm-perc", type=int, default=100,
-                    help = "Percentage of NVM commands")
+parser.add_argument(
+    "--nvm-perc", type=int, default=100, help="Percentage of NVM commands"
+)
 
-parser.add_argument("--mode", default="HYBRID",
-                    choices=hybrid_generators.keys(),
-                    help = "Hybrid: Random DRAM + NVM traffic")
+parser.add_argument(
+    "--mode",
+    default="HYBRID",
+    choices=hybrid_generators.keys(),
+    help="Hybrid: Random DRAM + NVM traffic",
+)
 
-parser.add_argument("--addr-map",
-                    choices=ObjectList.dram_addr_map_list.get_names(),
-                    default="RoRaBaCoCh", help = "NVM address map policy")
+parser.add_argument(
+    "--addr-map",
+    choices=ObjectList.dram_addr_map_list.get_names(),
+    default="RoRaBaCoCh",
+    help="NVM address map policy",
+)
 
 args = parser.parse_args()
 
@@ -94,16 +116,18 @@ args = parser.parse_args()
 # start with the system itself, using a multi-layer 2.0 GHz
 # crossbar, delivering 64 bytes / 3 cycles (one header cycle)
 # which amounts to 42.7 GByte/s per layer and thus per port
-system = System(membus = IOXBar(width = 32))
-system.clk_domain = SrcClockDomain(clock = '2.0GHz',
-                                   voltage_domain =
-                                   VoltageDomain(voltage = '1V'))
+system = System(membus=IOXBar(width=32))
+system.clk_domain = SrcClockDomain(
+    clock="2.0GHz", voltage_domain=VoltageDomain(voltage="1V")
+)
 
 # set 2 ranges, the first, smaller range for DDR
 # the second, larger (1024) range for NVM
 # the NVM range starts directly after the DRAM range
-system.mem_ranges = [AddrRange('128MB'),
-                     AddrRange(Addr('128MB'), size ='1024MB')]
+system.mem_ranges = [
+    AddrRange("128MB"),
+    AddrRange(Addr("128MB"), size="1024MB"),
+]
 
 # do not worry about reserving space for the backing store
 system.mmap_using_noreserve = True
@@ -144,33 +168,52 @@ period = 250000000
 nbr_banks_dram = system.mem_ctrls[0].dram.banks_per_rank.value
 
 # determine the burst length in bytes
-burst_size_dram = int((system.mem_ctrls[0].dram.devices_per_rank.value *
-                  system.mem_ctrls[0].dram.device_bus_width.value *
-                  system.mem_ctrls[0].dram.burst_length.value) / 8)
+burst_size_dram = int(
+    (
+        system.mem_ctrls[0].dram.devices_per_rank.value
+        * system.mem_ctrls[0].dram.device_bus_width.value
+        * system.mem_ctrls[0].dram.burst_length.value
+    )
+    / 8
+)
 
 # next, get the page size in bytes
-page_size_dram = system.mem_ctrls[0].dram.devices_per_rank.value * \
-    system.mem_ctrls[0].dram.device_rowbuffer_size.value
+page_size_dram = (
+    system.mem_ctrls[0].dram.devices_per_rank.value
+    * system.mem_ctrls[0].dram.device_rowbuffer_size.value
+)
 
 # get the number of regions
 nbr_banks_nvm = system.mem_ctrls[0].nvm.banks_per_rank.value
 
 # determine the burst length in bytes
-burst_size_nvm = int((system.mem_ctrls[0].nvm.devices_per_rank.value *
-                  system.mem_ctrls[0].nvm.device_bus_width.value *
-                  system.mem_ctrls[0].nvm.burst_length.value) / 8)
+burst_size_nvm = int(
+    (
+        system.mem_ctrls[0].nvm.devices_per_rank.value
+        * system.mem_ctrls[0].nvm.device_bus_width.value
+        * system.mem_ctrls[0].nvm.burst_length.value
+    )
+    / 8
+)
 
 
 burst_size = max(burst_size_dram, burst_size_nvm)
 
 # next, get the page size in bytes
-buffer_size_nvm = system.mem_ctrls[0].nvm.devices_per_rank.value * \
-    system.mem_ctrls[0].nvm.device_rowbuffer_size.value
+buffer_size_nvm = (
+    system.mem_ctrls[0].nvm.devices_per_rank.value
+    * system.mem_ctrls[0].nvm.device_rowbuffer_size.value
+)
 
 # match the maximum bandwidth of the memory, the parameter is in seconds
 # and we need it in ticks (ps)
-itt = min(system.mem_ctrls[0].dram.tBURST.value,
-          system.mem_ctrls[0].nvm.tBURST.value) * 1000000000000
+itt = (
+    min(
+        system.mem_ctrls[0].dram.tBURST.value,
+        system.mem_ctrls[0].nvm.tBURST.value,
+    )
+    * 1000000000000
+)
 
 # assume we start at 0 for DRAM
 max_addr_dram = system.mem_ranges[0].end
@@ -198,31 +241,48 @@ system.system_port = system.membus.cpu_side_ports
 periodicStatDump(period)
 
 # run Forrest, run!
-root = Root(full_system = False, system = system)
-root.system.mem_mode = 'timing'
+root = Root(full_system=False, system=system)
+root.system.mem_mode = "timing"
 
 m5.instantiate()
+
 
 def trace():
     addr_map = ObjectList.dram_addr_map_list.get(args.addr_map)
     generator = hybrid_generators[args.mode](system.tgen)
     for stride_size in range(burst_size, max_stride + 1, burst_size):
-        num_seq_pkts_dram = int(math.ceil(float(stride_size) /
-                                          burst_size_dram))
+        num_seq_pkts_dram = int(
+            math.ceil(float(stride_size) / burst_size_dram)
+        )
         num_seq_pkts_nvm = int(math.ceil(float(stride_size) / burst_size_nvm))
-        yield generator(period,
-                        0, max_addr_dram, burst_size_dram,
-                        min_addr_nvm, max_addr_nvm, burst_size_nvm,
-                        int(itt), int(itt),
-                        args.rd_perc, 0,
-                        num_seq_pkts_dram, page_size_dram,
-                        nbr_banks_dram, nbr_banks_dram,
-                        num_seq_pkts_nvm, buffer_size_nvm,
-                        nbr_banks_nvm, nbr_banks_nvm,
-                        addr_map, args.mem_ranks,
-                        args.nvm_ranks, args.nvm_perc)
+        yield generator(
+            period,
+            0,
+            max_addr_dram,
+            burst_size_dram,
+            min_addr_nvm,
+            max_addr_nvm,
+            burst_size_nvm,
+            int(itt),
+            int(itt),
+            args.rd_perc,
+            0,
+            num_seq_pkts_dram,
+            page_size_dram,
+            nbr_banks_dram,
+            nbr_banks_dram,
+            num_seq_pkts_nvm,
+            buffer_size_nvm,
+            nbr_banks_nvm,
+            nbr_banks_nvm,
+            addr_map,
+            args.mem_ranks,
+            args.nvm_ranks,
+            args.nvm_perc,
+        )
 
     yield system.tgen.createExit(0)
+
 
 system.tgen.start(trace())
 

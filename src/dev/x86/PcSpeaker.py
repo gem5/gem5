@@ -28,8 +28,9 @@ from m5.params import *
 from m5.proxy import *
 from m5.objects.Device import BasicPioDevice
 
+
 class PcSpeaker(BasicPioDevice):
-    type = 'PcSpeaker'
-    cxx_class = 'gem5::X86ISA::Speaker'
+    type = "PcSpeaker"
+    cxx_class = "gem5::X86ISA::Speaker"
     cxx_header = "dev/x86/speaker.hh"
-    i8254 = Param.I8254('Timer that drives the speaker')
+    i8254 = Param.I8254("Timer that drives the speaker")

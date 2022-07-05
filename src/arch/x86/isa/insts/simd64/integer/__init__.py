@@ -33,19 +33,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["exit_media_state",
-              "data_transfer",
-              "data_conversion",
-              "data_reordering",
-              "arithmetic",
-              "shift",
-              "compare",
-              "logical",
-              "save_and_restore_state"]
+categories = [
+    "exit_media_state",
+    "data_transfer",
+    "data_conversion",
+    "data_reordering",
+    "arithmetic",
+    "shift",
+    "compare",
+    "logical",
+    "save_and_restore_state",
+]
 
-microcode = '''
+microcode = """
 # 64 bit multimedia instructions
-'''
+"""
 for category in categories:
     exec("from . import %s as cat" % category)
     microcode += cat.microcode

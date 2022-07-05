@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 # FCOM
 # FCOMP
 # FCOMPP
@@ -44,4 +44,4 @@ def macroop FCOMI_R
     compfp st(0), sti
 };
 
-'''
+"""

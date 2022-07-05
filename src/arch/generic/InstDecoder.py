@@ -26,10 +26,11 @@
 from m5.params import *
 from m5.SimObject import SimObject
 
+
 class InstDecoder(SimObject):
-    type = 'InstDecoder'
+    type = "InstDecoder"
     abstract = True
     cxx_header = "arch/generic/decoder.hh"
-    cxx_class = 'gem5::InstDecoder'
+    cxx_class = "gem5::InstDecoder"
 
     isa = Param.BaseISA(NULL, "ISA object for this context")

@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop PEXTRW_R_XMM_I {
     mov2int reg, xmmlm, "IMMEDIATE & mask(3)", size=2, ext=1
     mov2int reg, xmmhm, "IMMEDIATE & mask(3)", size=2, ext=1
@@ -56,4 +56,4 @@ def macroop PINSRW_XMM_P_I {
     mov2fp xmml, t1, "IMMEDIATE & mask(3)", size=2, ext=1
     mov2fp xmmh, t1, "IMMEDIATE & mask(3)", size=2, ext=1
 };
-'''
+"""

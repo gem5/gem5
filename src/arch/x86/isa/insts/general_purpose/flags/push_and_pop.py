@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop PUSHF {
     .adjust_env oszIn64Override
 
@@ -57,4 +57,4 @@ def macroop POPF {
 def macroop POPF_VIRT {
     panic "Virtual mode popf isn't implemented!"
 };
-'''
+"""

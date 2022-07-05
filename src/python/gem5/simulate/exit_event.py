@@ -42,8 +42,8 @@ class ExitEvent(Enum):
     SWITCHCPU = "switchcpu"  # An exit needed to switch CPU cores.
     FAIL = "fail"  # An exit because the simulation has failed.
     CHECKPOINT = "checkpoint"  # An exit to load a checkpoint.
-    MAX_TICK = "max tick" # An exit due to a maximum tick value being met.
-    USER_INTERRUPT = ( # An exit due to a user interrupt (e.g., cntr + c)
+    MAX_TICK = "max tick"  # An exit due to a maximum tick value being met.
+    USER_INTERRUPT = (  # An exit due to a user interrupt (e.g., cntr + c)
         "user interupt"
     )
 

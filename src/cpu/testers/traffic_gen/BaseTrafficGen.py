@@ -42,7 +42,9 @@ from m5.objects.ClockedObject import ClockedObject
 # and are meant to initialize the stream and substream IDs for
 # every memory request, regardless of how the packet has been
 # generated (Random, Linear, Trace etc)
-class StreamGenType(ScopedEnum): vals = [ 'none', 'fixed', 'random' ]
+class StreamGenType(ScopedEnum):
+    vals = ["none", "fixed", "random"]
+
 
 # The traffic generator is a requestor module that generates stimuli for
 # the memory system, based on a collection of simple behaviours that
@@ -52,10 +54,10 @@ class StreamGenType(ScopedEnum): vals = [ 'none', 'fixed', 'random' ]
 # components that are not yet modelled in detail, e.g. a video engine
 # or baseband subsystem in an SoC.
 class BaseTrafficGen(ClockedObject):
-    type = 'BaseTrafficGen'
+    type = "BaseTrafficGen"
     abstract = True
     cxx_header = "cpu/testers/traffic_gen/traffic_gen.hh"
-    cxx_class = 'gem5::BaseTrafficGen'
+    cxx_class = "gem5::BaseTrafficGen"
 
     # Port used for sending requests and receiving responses
     port = RequestPort("This port sends requests and receives responses")
@@ -66,23 +68,27 @@ class BaseTrafficGen(ClockedObject):
     # Should requests respond to back-pressure or not, if true, the
     # rate of the traffic generator will be slowed down if requests
     # are not immediately accepted
-    elastic_req = Param.Bool(False,
-                             "Slow down requests in case of backpressure")
+    elastic_req = Param.Bool(
+        False, "Slow down requests in case of backpressure"
+    )
 
     # Maximum number of requests waiting for response. Set to 0 for an
     # unlimited number of outstanding requests.
-    max_outstanding_reqs = Param.Int(0,
-                            "Maximum number of outstanding requests")
+    max_outstanding_reqs = Param.Int(
+        0, "Maximum number of outstanding requests"
+    )
 
     # Let the user know if we have waited for a retry and not made any
     # progress for a long period of time. The default value is
     # somewhat arbitrary and may well have to be tuned.
-    progress_check = Param.Latency('1ms', "Time before exiting " \
-                                   "due to lack of progress")
+    progress_check = Param.Latency(
+        "1ms", "Time before exiting " "due to lack of progress"
+    )
 
     # Generator type used for applying Stream and/or Substream IDs to requests
-    stream_gen = Param.StreamGenType('none',
-        "Generator for adding Stream and/or Substream ID's to requests")
+    stream_gen = Param.StreamGenType(
+        "none", "Generator for adding Stream and/or Substream ID's to requests"
+    )
 
     # Sources for Stream/Substream IDs to apply to requests
     sids = VectorParam.Unsigned([], "StreamIDs to use")
@@ -96,7 +102,7 @@ class BaseTrafficGen(ClockedObject):
 
     @classmethod
     def memory_mode(cls):
-        return 'timing'
+        return "timing"
 
     @classmethod
     def require_caches(cls):
@@ -109,9 +115,9 @@ class BaseTrafficGen(ClockedObject):
         pass
 
     def connectCachedPorts(self, in_ports):
-        if hasattr(self, '_cached_ports') and (len(self._cached_ports) > 0):
+        if hasattr(self, "_cached_ports") and (len(self._cached_ports) > 0):
             for p in self._cached_ports:
-                exec('self.%s = in_ports' % p)
+                exec("self.%s = in_ports" % p)
         else:
             self.port = in_ports
 
@@ -119,11 +125,12 @@ class BaseTrafficGen(ClockedObject):
         self.connectCachedPorts(cached_in)
 
     def connectBus(self, bus):
-        self.connectAllPorts(bus.cpu_side_ports,
-            bus.cpu_side_ports, bus.mem_side_ports)
+        self.connectAllPorts(
+            bus.cpu_side_ports, bus.cpu_side_ports, bus.mem_side_ports
+        )
 
-    def addPrivateSplitL1Caches(self, ic, dc, iwc = None, dwc = None):
+    def addPrivateSplitL1Caches(self, ic, dc, iwc=None, dwc=None):
         self.dcache = dc
         self.port = dc.cpu_side
-        self._cached_ports = ['dcache.mem_side']
+        self._cached_ports = ["dcache.mem_side"]
         self._uncached_ports = []

@@ -26,15 +26,15 @@
 
 from testlib import *
 
-config_path = joinpath(config.base_dir, 'configs', 'learning_gem5', 'part1')
+config_path = joinpath(config.base_dir, "configs", "learning_gem5", "part1")
 
 # The "quick" simple tests.
 gem5_verify_config(
-    name='simple_test',
-    verifiers = (),
-    config=joinpath(config_path, 'simple.py'),
-    config_args = [],
-    length = constants.quick_tag,
+    name="simple_test",
+    verifiers=(),
+    config=joinpath(config_path, "simple.py"),
+    config_args=[],
+    length=constants.quick_tag,
     valid_isas=(
         constants.vega_x86_tag,
         constants.riscv_tag,
@@ -44,14 +44,14 @@ gem5_verify_config(
 
 # The "quick" two level tests.
 gem5_verify_config(
-    name='two_level_test',
-    verifiers = (),
-    config=joinpath(config_path, 'two_level.py'),
-    config_args = [],
-    length = constants.quick_tag,
+    name="two_level_test",
+    verifiers=(),
+    config=joinpath(config_path, "two_level.py"),
+    config_args=[],
+    length=constants.quick_tag,
     valid_isas=(
         constants.vega_x86_tag,
         constants.riscv_tag,
-        constants.arm_tag
+        constants.arm_tag,
     ),
 )

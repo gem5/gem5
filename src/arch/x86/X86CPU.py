@@ -34,20 +34,25 @@ from m5.objects.X86MMU import X86MMU
 from m5.objects.X86LocalApic import X86LocalApic
 from m5.objects.X86ISA import X86ISA
 
+
 class X86CPU:
     ArchDecoder = X86Decoder
     ArchMMU = X86MMU
     ArchInterrupts = X86LocalApic
     ArchISA = X86ISA
 
+
 class X86AtomicSimpleCPU(BaseAtomicSimpleCPU, X86CPU):
     mmu = X86MMU()
+
 
 class X86NonCachingSimpleCPU(BaseNonCachingSimpleCPU, X86CPU):
     mmu = X86MMU()
 
+
 class X86TimingSimpleCPU(BaseTimingSimpleCPU, X86CPU):
     mmu = X86MMU()
+
 
 class X86O3CPU(BaseO3CPU, X86CPU):
     mmu = X86MMU()

@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 
 #
 # Real mode versions of the load far pointer instructions.
@@ -147,8 +147,8 @@ def macroop LSS_REAL_R_P {
     panic "Real mode LSS doesn't support RIP relative addressing."
 };
 
-'''
-#let {{
+"""
+# let {{
 #    class LDS(Inst):
 #       "GenFault ${new UnimpInstFault}"
 #    class LES(Inst):
@@ -163,4 +163,4 @@ def macroop LSS_REAL_R_P {
 #       "GenFault ${new UnimpInstFault}"
 #    class POP(Inst):
 #       "GenFault ${new UnimpInstFault}"
-#}};
+# }};

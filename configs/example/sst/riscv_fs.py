@@ -33,13 +33,19 @@ from gem5.resources.resource import Resource
 
 import argparse
 
+
 def generateMemNode(state, mem_range):
     node = FdtNode("memory@%x" % int(mem_range.start))
     node.append(FdtPropertyStrings("device_type", ["memory"]))
-    node.append(FdtPropertyWords("reg",
-        state.addrCells(mem_range.start) +
-        state.sizeCells(mem_range.size()) ))
+    node.append(
+        FdtPropertyWords(
+            "reg",
+            state.addrCells(mem_range.start)
+            + state.sizeCells(mem_range.size()),
+        )
+    )
     return node
+
 
 def generateDtb(system):
     """
@@ -47,7 +53,7 @@ def generateDtb(system):
     will be stored, and the name of the DTB file.
     """
     state = FdtState(addr_cells=2, size_cells=2, cpu_cells=1)
-    root = FdtNode('/')
+    root = FdtNode("/")
     root.append(state.addrCellsProperty())
     root.append(state.sizeCellsProperty())
     root.appendCompatible(["riscv-virtio"])
@@ -66,19 +72,22 @@ def generateDtb(system):
 
     fdt = Fdt()
     fdt.add_rootnode(root)
-    fdt.writeDtsFile(path.join(m5.options.outdir, 'device.dts'))
-    fdt.writeDtbFile(path.join(m5.options.outdir, 'device.dtb'))
+    fdt.writeDtsFile(path.join(m5.options.outdir, "device.dts"))
+    fdt.writeDtbFile(path.join(m5.options.outdir, "device.dtb"))
+
 
 def createHiFivePlatform(system):
     # Since the latency from CPU to the bus was set in SST, additional latency
     # is undesirable.
     system.membus = NoncoherentXBar(
-        frontend_latency = 0, forward_latency = 0, response_latency = 0,
-        header_latency = 0, width = 64
+        frontend_latency=0,
+        forward_latency=0,
+        response_latency=0,
+        header_latency=0,
+        width=64,
     )
     system.membus.badaddr_responder = BadAddr()
-    system.membus.default = \
-        system.membus.badaddr_responder.pio
+    system.membus.default = system.membus.badaddr_responder.pio
 
     system.memory_outgoing_bridge = OutgoingRequestBridge()
     system.memory_outgoing_bridge.port = system.membus.mem_side_ports
@@ -88,8 +97,8 @@ def createHiFivePlatform(system):
         cpu.dcache_port = system.membus.cpu_side_ports
 
         cpu.mmu.connectWalkerPorts(
-            system.membus.cpu_side_ports, system.membus.cpu_side_ports)
-
+            system.membus.cpu_side_ports, system.membus.cpu_side_ports
+        )
 
     system.platform = HiFive()
 
@@ -106,7 +115,7 @@ def createHiFivePlatform(system):
     )
 
     system.iobus = IOXBar()
-    system.bridge = Bridge(delay='50ns')
+    system.bridge = Bridge(delay="50ns")
     system.bridge.mem_side_port = system.iobus.cpu_side_ports
     system.bridge.cpu_side_port = system.membus.mem_side_ports
     system.bridge.ranges = system.platform._off_chip_ranges()
@@ -118,10 +127,12 @@ def createHiFivePlatform(system):
 
     system.platform.attachPlic()
 
+
 parser = argparse.ArgumentParser()
-parser.add_argument('--cpu-clock-rate', type=str,
-                     help='CPU clock rate, e.g. 3GHz')
-parser.add_argument('--memory-size', type=str, help='Memory size, e.g. 4GiB')
+parser.add_argument(
+    "--cpu-clock-rate", type=str, help="CPU clock rate, e.g. 3GHz"
+)
+parser.add_argument("--memory-size", type=str, help="Memory size, e.g. 4GiB")
 
 args = parser.parse_args()
 cpu_clock_rate = args.cpu_clock_rate
@@ -140,7 +151,7 @@ system.clk_domain = SrcClockDomain(
 system.mem_ranges = [AddrRange(start=0x80000000, size=memory_size)]
 
 system.cpu = [TimingSimpleCPU(cpu_id=i) for i in range(1)]
-system.mem_mode = 'timing'
+system.mem_mode = "timing"
 
 createHiFivePlatform(system)
 
@@ -150,8 +161,8 @@ generateDtb(system)
 system.workload = RiscvLinux()
 system.workload.addr_check = False
 system.workload.object_file = bbl_path
-system.workload.dtb_filename = path.join(m5.options.outdir, 'device.dtb')
-system.workload.dtb_addr = 0x87e00000
+system.workload.dtb_filename = path.join(m5.options.outdir, "device.dtb")
+system.workload.dtb_addr = 0x87E00000
 kernel_cmd = [
     # specifying Linux kernel boot options
     "console=ttyS0"
@@ -161,5 +172,4 @@ system.workload.command_line = " ".join(kernel_cmd)
 for cpu in system.cpu:
     cpu.createInterruptController()
 
-root = Root(full_system = True, system = system)
-
+root = Root(full_system=True, system=system)

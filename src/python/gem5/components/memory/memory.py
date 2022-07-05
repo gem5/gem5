@@ -42,6 +42,7 @@ def _try_convert(val, cls):
     except:
         raise Exception(f"Could not convert {val} to {cls}")
 
+
 def _isPow2(num):
     log_num = int(log(num, 2))
     if 2 ** log_num != num:
@@ -49,12 +50,14 @@ def _isPow2(num):
     else:
         return True
 
+
 class ChanneledMemory(AbstractMemorySystem):
     """A class to implement multi-channel memory system
 
     This class can take a DRAM Interface as a parameter to model a multi
     channel DDR DRAM memory system.
     """
+
     def __init__(
         self,
         dram_interface_class: Type[DRAMInterface],
@@ -181,5 +184,3 @@ class ChanneledMemory(AbstractMemorySystem):
             )
         self._mem_range = ranges[0]
         self._interleave_addresses()
-
-

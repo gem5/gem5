@@ -34,90 +34,127 @@ from m5.objects.Uart import Uart8250
 
 
 class MmDisk(BasicPioDevice):
-    type = 'MmDisk'
+    type = "MmDisk"
     cxx_header = "dev/sparc/mm_disk.hh"
-    cxx_class = 'gem5::MmDisk'
+    cxx_class = "gem5::MmDisk"
     image = Param.DiskImage("Disk Image")
     pio_addr = 0x1F40000000
 
+
 class DumbTOD(BasicPioDevice):
-    type = 'DumbTOD'
+    type = "DumbTOD"
     cxx_header = "dev/sparc/dtod.hh"
-    cxx_class = 'gem5::DumbTOD'
-    time = Param.Time('01/01/2009', "System time to use ('Now' for real time)")
-    pio_addr = 0xfff0c1fff8
+    cxx_class = "gem5::DumbTOD"
+    time = Param.Time("01/01/2009", "System time to use ('Now' for real time)")
+    pio_addr = 0xFFF0C1FFF8
+
 
 class Iob(PioDevice):
-    type = 'Iob'
+    type = "Iob"
     cxx_header = "dev/sparc/iob.hh"
-    cxx_class = 'gem5::Iob'
+    cxx_class = "gem5::Iob"
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
-    pio_latency = Param.Latency('1ns', "Programed IO latency")
+    pio_latency = Param.Latency("1ns", "Programed IO latency")
 
 
 class T1000(Platform):
-    type = 'T1000'
+    type = "T1000"
     cxx_header = "dev/sparc/t1000.hh"
-    cxx_class = 'gem5::T1000'
+    cxx_class = "gem5::T1000"
 
     fake_clk = IsaFake(pio_addr=0x9600000000, pio_size=0x100000000)
-            #warn_access="Accessing Clock Unit -- Unimplemented!")
+    # warn_access="Accessing Clock Unit -- Unimplemented!")
 
-    fake_membnks = IsaFake(pio_addr=0x9700000000, pio_size=16384,
-            ret_data64=0x0000000000000000, update_data=False)
-            #warn_access="Accessing Memory Banks -- Unimplemented!")
+    fake_membnks = IsaFake(
+        pio_addr=0x9700000000,
+        pio_size=16384,
+        ret_data64=0x0000000000000000,
+        update_data=False,
+    )
+    # warn_access="Accessing Memory Banks -- Unimplemented!")
 
     fake_jbi = IsaFake(pio_addr=0x8000000000, pio_size=0x100000000)
-            #warn_access="Accessing JBI -- Unimplemented!")
+    # warn_access="Accessing JBI -- Unimplemented!")
 
-    fake_l2_1 = IsaFake(pio_addr=0xA900000000, pio_size=0x8,
-            ret_data64=0x0000000000000001, update_data=True)
-            #warn_access="Accessing L2 Cache Banks -- Unimplemented!")
+    fake_l2_1 = IsaFake(
+        pio_addr=0xA900000000,
+        pio_size=0x8,
+        ret_data64=0x0000000000000001,
+        update_data=True,
+    )
+    # warn_access="Accessing L2 Cache Banks -- Unimplemented!")
 
-    fake_l2_2 = IsaFake(pio_addr=0xA900000040, pio_size=0x8,
-            ret_data64=0x0000000000000001, update_data=True)
-            #warn_access="Accessing L2 Cache Banks -- Unimplemented!")
+    fake_l2_2 = IsaFake(
+        pio_addr=0xA900000040,
+        pio_size=0x8,
+        ret_data64=0x0000000000000001,
+        update_data=True,
+    )
+    # warn_access="Accessing L2 Cache Banks -- Unimplemented!")
 
-    fake_l2_3 = IsaFake(pio_addr=0xA900000080, pio_size=0x8,
-            ret_data64=0x0000000000000001, update_data=True)
-            #warn_access="Accessing L2 Cache Banks -- Unimplemented!")
+    fake_l2_3 = IsaFake(
+        pio_addr=0xA900000080,
+        pio_size=0x8,
+        ret_data64=0x0000000000000001,
+        update_data=True,
+    )
+    # warn_access="Accessing L2 Cache Banks -- Unimplemented!")
 
-    fake_l2_4 = IsaFake(pio_addr=0xA9000000C0, pio_size=0x8,
-            ret_data64=0x0000000000000001, update_data=True)
-            #warn_access="Accessing L2 Cache Banks -- Unimplemented!")
+    fake_l2_4 = IsaFake(
+        pio_addr=0xA9000000C0,
+        pio_size=0x8,
+        ret_data64=0x0000000000000001,
+        update_data=True,
+    )
+    # warn_access="Accessing L2 Cache Banks -- Unimplemented!")
 
-    fake_l2esr_1 = IsaFake(pio_addr=0xAB00000000, pio_size=0x8,
-            ret_data64=0x0000000000000000, update_data=True)
-            #warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
+    fake_l2esr_1 = IsaFake(
+        pio_addr=0xAB00000000,
+        pio_size=0x8,
+        ret_data64=0x0000000000000000,
+        update_data=True,
+    )
+    # warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
 
-    fake_l2esr_2 = IsaFake(pio_addr=0xAB00000040, pio_size=0x8,
-            ret_data64=0x0000000000000000, update_data=True)
-            #warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
+    fake_l2esr_2 = IsaFake(
+        pio_addr=0xAB00000040,
+        pio_size=0x8,
+        ret_data64=0x0000000000000000,
+        update_data=True,
+    )
+    # warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
 
-    fake_l2esr_3 = IsaFake(pio_addr=0xAB00000080, pio_size=0x8,
-            ret_data64=0x0000000000000000, update_data=True)
-            #warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
+    fake_l2esr_3 = IsaFake(
+        pio_addr=0xAB00000080,
+        pio_size=0x8,
+        ret_data64=0x0000000000000000,
+        update_data=True,
+    )
+    # warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
 
-    fake_l2esr_4 = IsaFake(pio_addr=0xAB000000C0, pio_size=0x8,
-            ret_data64=0x0000000000000000, update_data=True)
-            #warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
+    fake_l2esr_4 = IsaFake(
+        pio_addr=0xAB000000C0,
+        pio_size=0x8,
+        ret_data64=0x0000000000000000,
+        update_data=True,
+    )
+    # warn_access="Accessing L2 ESR Cache Banks -- Unimplemented!")
 
-    fake_ssi = IsaFake(pio_addr=0xff00000000, pio_size=0x10000000)
-            #warn_access="Accessing SSI -- Unimplemented!")
+    fake_ssi = IsaFake(pio_addr=0xFF00000000, pio_size=0x10000000)
+    # warn_access="Accessing SSI -- Unimplemented!")
 
     hterm = Terminal()
-    hvuart = Uart8250(pio_addr=0xfff0c2c000)
+    hvuart = Uart8250(pio_addr=0xFFF0C2C000)
     htod = DumbTOD()
 
     pterm = Terminal()
-    puart0 = Uart8250(pio_addr=0x1f10000000)
+    puart0 = Uart8250(pio_addr=0x1F10000000)
 
     iob = Iob()
     # Attach I/O devices that are on chip
     def attachOnChipIO(self, bus):
         self.iob.pio = bus.mem_side_ports
         self.htod.pio = bus.mem_side_ports
-
 
     # Attach I/O devices to specified bus object.  Can't do this
     # earlier, since the bus object itself is typically defined at the

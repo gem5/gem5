@@ -32,20 +32,25 @@ from m5.objects.MipsMMU import MipsMMU
 from m5.objects.MipsInterrupts import MipsInterrupts
 from m5.objects.MipsISA import MipsISA
 
+
 class MipsCPU:
     ArchDecoder = MipsDecoder
     ArchMMU = MipsMMU
     ArchInterrupts = MipsInterrupts
     ArchISA = MipsISA
 
+
 class MipsAtomicSimpleCPU(BaseAtomicSimpleCPU, MipsCPU):
     mmu = MipsMMU()
+
 
 class MipsNonCachingSimpleCPU(BaseNonCachingSimpleCPU, MipsCPU):
     mmu = MipsMMU()
 
+
 class MipsTimingSimpleCPU(BaseTimingSimpleCPU, MipsCPU):
     mmu = MipsMMU()
+
 
 class MipsO3CPU(BaseO3CPU, MipsCPU):
     mmu = MipsMMU()

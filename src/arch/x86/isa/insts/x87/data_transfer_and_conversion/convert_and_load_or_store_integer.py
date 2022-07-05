@@ -35,7 +35,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 # fild common case
 def macroop FILD_M {
     ldifp87 ufp1, seg, sib, disp
@@ -67,4 +67,4 @@ def macroop FISTP_P
 };
 
 # FISTTP
-'''
+"""

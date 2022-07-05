@@ -25,7 +25,8 @@
 
 from m5.objects.InstDecoder import InstDecoder
 
+
 class SparcDecoder(InstDecoder):
-    type = 'SparcDecoder'
-    cxx_class = 'gem5::SparcISA::Decoder'
+    type = "SparcDecoder"
+    cxx_class = "gem5::SparcISA::Decoder"
     cxx_header = "arch/sparc/decoder.hh"

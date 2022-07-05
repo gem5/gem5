@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop IRET_REAL {
     .serialize_after
 
@@ -341,10 +341,10 @@ def macroop INT_REAL_I {
 def macroop INT_VIRT_I {
     panic "Virtual mode int3 isn't implemented!"
 };
-'''
-#let {{
+"""
+# let {{
 #    class INT(Inst):
 #       "GenFault ${new UnimpInstFault}"
 #    class INTO(Inst):
 #       "GenFault ${new UnimpInstFault}"
-#}};
+# }};

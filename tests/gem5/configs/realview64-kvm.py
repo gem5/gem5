@@ -36,7 +36,9 @@
 from m5.objects import *
 from arm_generic import *
 
-root = LinuxArmFSSystemUniprocessor(mem_mode='atomic_noncaching',
-                                    machine_type='VExpress_GEM5_V1',
-                                    mem_class=SimpleMemory,
-                                    cpu_class=ArmV8KvmCPU).create_root()
+root = LinuxArmFSSystemUniprocessor(
+    mem_mode="atomic_noncaching",
+    machine_type="VExpress_GEM5_V1",
+    mem_class=SimpleMemory,
+    cpu_class=ArmV8KvmCPU,
+).create_root()

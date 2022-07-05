@@ -48,7 +48,7 @@ from m5.objects import *
 from m5.util import addToPath, fatal, warn
 from m5.util.fdthelper import *
 
-addToPath('../../')
+addToPath("../../")
 
 from ruby import Ruby
 
@@ -89,17 +89,23 @@ from common import Options
 
 # ----------------------- DTB Generation Function ---------------------- #
 
+
 def generateMemNode(state, mem_range):
     node = FdtNode("memory@%x" % int(mem_range.start))
     node.append(FdtPropertyStrings("device_type", ["memory"]))
-    node.append(FdtPropertyWords("reg",
-        state.addrCells(mem_range.start) +
-        state.sizeCells(mem_range.size()) ))
+    node.append(
+        FdtPropertyWords(
+            "reg",
+            state.addrCells(mem_range.start)
+            + state.sizeCells(mem_range.size()),
+        )
+    )
     return node
+
 
 def generateDtb(system):
     state = FdtState(addr_cells=2, size_cells=2, cpu_cells=1)
-    root = FdtNode('/')
+    root = FdtNode("/")
     root.append(state.addrCellsProperty())
     root.append(state.sizeCellsProperty())
     root.appendCompatible(["riscv-virtio"])
@@ -118,20 +124,29 @@ def generateDtb(system):
 
     fdt = Fdt()
     fdt.add_rootnode(root)
-    fdt.writeDtsFile(path.join(m5.options.outdir, 'device.dts'))
-    fdt.writeDtbFile(path.join(m5.options.outdir, 'device.dtb'))
+    fdt.writeDtsFile(path.join(m5.options.outdir, "device.dts"))
+    fdt.writeDtbFile(path.join(m5.options.outdir, "device.dtb"))
+
 
 # ----------------------------- Add Options ---------------------------- #
 parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser)
 Options.addFSOptions(parser)
-parser.add_argument("--bare-metal", action="store_true",
-    help="Provide the raw system without the linux specific bits")
-parser.add_argument("--dtb-filename", action="store", type=str,
-    help="Specifies device tree blob file to use with device-tree-"\
-        "enabled kernels")
-parser.add_argument("--virtio-rng", action="store_true",
-    help="Enable VirtIORng device")
+parser.add_argument(
+    "--bare-metal",
+    action="store_true",
+    help="Provide the raw system without the linux specific bits",
+)
+parser.add_argument(
+    "--dtb-filename",
+    action="store",
+    type=str,
+    help="Specifies device tree blob file to use with device-tree-"
+    "enabled kernels",
+)
+parser.add_argument(
+    "--virtio-rng", action="store_true", help="Enable VirtIORng device"
+)
 
 # ---------------------------- Parse Options --------------------------- #
 args = parser.parse_args()
@@ -145,8 +160,12 @@ np = args.num_cpus
 # ---------------------------- Setup System ---------------------------- #
 # Default Setup
 system = System()
-mdesc = SysConfig(disks=args.disk_image, rootdev=args.root_device,
-                        mem=args.mem_size, os_type=args.os_type)
+mdesc = SysConfig(
+    disks=args.disk_image,
+    rootdev=args.root_device,
+    mem=args.mem_size,
+    os_type=args.os_type,
+)
 system.mem_mode = mem_mode
 system.mem_ranges = [AddrRange(start=0x80000000, size=mdesc.mem())]
 
@@ -177,19 +196,16 @@ if args.disk_image:
         vio=VirtIOBlock(image=image),
         interrupt_id=0x8,
         pio_size=4096,
-        pio_addr=0x10008000
+        pio_addr=0x10008000,
     )
 
 # VirtIORng
 if args.virtio_rng:
     system.platform.rng = RiscvMmioVirtIO(
-        vio=VirtIORng(),
-        interrupt_id=0x8,
-        pio_size=4096,
-        pio_addr=0x10007000
+        vio=VirtIORng(), interrupt_id=0x8, pio_size=4096, pio_addr=0x10007000
     )
 
-system.bridge = Bridge(delay='50ns')
+system.bridge = Bridge(delay="50ns")
 system.bridge.mem_side_port = system.iobus.cpu_side_ports
 system.bridge.cpu_side_port = system.membus.mem_side_ports
 system.bridge.ranges = system.platform._off_chip_ranges()
@@ -205,19 +221,20 @@ system.platform.setNumCores(np)
 system.cache_line_size = args.cacheline_size
 
 # Create a top-level voltage domain
-system.voltage_domain = VoltageDomain(voltage = args.sys_voltage)
+system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
 
 # Create a source clock for the system and set the clock period
-system.clk_domain = SrcClockDomain(clock =  args.sys_clock,
-        voltage_domain = system.voltage_domain)
+system.clk_domain = SrcClockDomain(
+    clock=args.sys_clock, voltage_domain=system.voltage_domain
+)
 
 # Create a CPU voltage domain
 system.cpu_voltage_domain = VoltageDomain()
 
 # Create a source clock for the CPUs and set the clock period
-system.cpu_clk_domain = SrcClockDomain(clock = args.cpu_clock,
-                                            voltage_domain =
-                                            system.cpu_voltage_domain)
+system.cpu_clk_domain = SrcClockDomain(
+    clock=args.cpu_clock, voltage_domain=system.cpu_voltage_domain
+)
 
 system.workload.object_file = args.kernel
 
@@ -227,16 +244,17 @@ if args.script is not None:
 
 system.init_param = args.init_param
 
-system.cpu = [CPUClass(clk_domain=system.cpu_clk_domain, cpu_id=i)
-                for i in range(np)]
+system.cpu = [
+    CPUClass(clk_domain=system.cpu_clk_domain, cpu_id=i) for i in range(np)
+]
 
 if args.caches or args.l2cache:
     # By default the IOCache runs at the system clock
-    system.iocache = IOCache(addr_ranges = system.mem_ranges)
+    system.iocache = IOCache(addr_ranges=system.mem_ranges)
     system.iocache.cpu_side = system.iobus.mem_side_ports
     system.iocache.mem_side = system.membus.cpu_side_ports
 elif not args.external_memory_system:
-    system.iobridge = Bridge(delay='50ns', ranges = system.mem_ranges)
+    system.iobridge = Bridge(delay="50ns", ranges=system.mem_ranges)
     system.iobridge.cpu_side_port = system.iobus.mem_side_ports
     system.iobridge.mem_side_port = system.membus.cpu_side_ports
 
@@ -258,16 +276,16 @@ for i in range(np):
             system.cpu[i].branchPred = bpClass()
         if args.indirect_bp_type:
             IndirectBPClass = ObjectList.indirect_bp_list.get(
-                args.indirect_bp_type)
-            system.cpu[i].branchPred.indirectBranchPred = \
-                IndirectBPClass()
+                args.indirect_bp_type
+            )
+            system.cpu[i].branchPred.indirectBranchPred = IndirectBPClass()
     system.cpu[i].createThreads()
 
 # ----------------------------- PMA Checker ---------------------------- #
 
 uncacheable_range = [
     *system.platform._on_chip_ranges(),
-    *system.platform._off_chip_ranges()
+    *system.platform._off_chip_ranges(),
 ]
 
 # PMA checker can be defined at system-level (system.pma_checker)
@@ -284,26 +302,26 @@ if not args.bare_metal:
     else:
         generateDtb(system)
         system.workload.dtb_filename = path.join(
-            m5.options.outdir, 'device.dtb')
+            m5.options.outdir, "device.dtb"
+        )
 
     # Default DTB address if bbl is bulit with --with-dts option
-    system.workload.dtb_addr = 0x87e00000
+    system.workload.dtb_addr = 0x87E00000
 
-# Linux boot command flags
+    # Linux boot command flags
     if args.command_line:
         system.workload.command_line = args.command_line
     else:
-        kernel_cmd = [
-            "console=ttyS0",
-            "root=/dev/vda",
-            "ro"
-        ]
+        kernel_cmd = ["console=ttyS0", "root=/dev/vda", "ro"]
         system.workload.command_line = " ".join(kernel_cmd)
 
 # ---------------------------- Default Setup --------------------------- #
 
-if args.elastic_trace_en and args.checkpoint_restore == None and \
-    not args.fast_forward:
+if (
+    args.elastic_trace_en
+    and args.checkpoint_restore == None
+    and not args.fast_forward
+):
     CpuConfig.config_etrace(CPUClass, system.cpu, args)
 
 CacheConfig.config_cache(args, system)

@@ -33,7 +33,7 @@ from m5.defines import buildEnv
 from m5.util import addToPath
 import os, argparse, sys
 
-addToPath('../')
+addToPath("../")
 
 from common import Options
 from ruby import Ruby
@@ -46,41 +46,68 @@ Options.addNoISAOptions(parser)
 Ruby.define_options(parser)
 
 # GPU Ruby tester options
-parser.add_argument("--cache-size", default="small",
-                    choices=["small", "large"],
-                    help="Cache sizes to use. Small encourages races between \
+parser.add_argument(
+    "--cache-size",
+    default="small",
+    choices=["small", "large"],
+    help="Cache sizes to use. Small encourages races between \
                         requests and writebacks. Large stresses write-through \
-                        and/or write-back GPU caches.")
-parser.add_argument("--system-size", default="small",
-                    choices=["small", "medium", "large"],
-                    help="This option defines how many CUs, CPUs and cache \
-                        components in the test system.")
-parser.add_argument("--address-range", default="small",
-                    choices=["small", "large"],
-                    help="This option defines the number of atomic \
+                        and/or write-back GPU caches.",
+)
+parser.add_argument(
+    "--system-size",
+    default="small",
+    choices=["small", "medium", "large"],
+    help="This option defines how many CUs, CPUs and cache \
+                        components in the test system.",
+)
+parser.add_argument(
+    "--address-range",
+    default="small",
+    choices=["small", "large"],
+    help="This option defines the number of atomic \
                         locations that affects the working set's size. \
                         A small number of atomic locations encourage more \
                         races among threads. The large option stresses cache \
-                        resources.")
-parser.add_argument("--episode-length", default="short",
-                    choices=["short", "medium", "long"],
-                    help="This option defines the number of LDs and \
+                        resources.",
+)
+parser.add_argument(
+    "--episode-length",
+    default="short",
+    choices=["short", "medium", "long"],
+    help="This option defines the number of LDs and \
                         STs in an episode. The small option encourages races \
                         between the start and end of an episode. The long \
                         option encourages races between LDs and STs in the \
-                        same episode.")
-parser.add_argument("--test-length", type=int, default=1,
-                    help="The number of episodes to be executed by each \
+                        same episode.",
+)
+parser.add_argument(
+    "--test-length",
+    type=int,
+    default=1,
+    help="The number of episodes to be executed by each \
                         wavefront. This determines the maximum number, i.e., \
-                        val X #WFs, of episodes to be executed in the test.")
-parser.add_argument("--debug-tester", action='store_true',
-                    help="This option will turn on DRF checker")
-parser.add_argument("--random-seed", type=int, default=0,
-                    help="Random seed number. Default value (i.e., 0) means \
-                        using runtime-specific value")
+                        val X #WFs, of episodes to be executed in the test.",
+)
+parser.add_argument(
+    "--debug-tester",
+    action="store_true",
+    help="This option will turn on DRF checker",
+)
+parser.add_argument(
+    "--random-seed",
+    type=int,
+    default=0,
+    help="Random seed number. Default value (i.e., 0) means \
+                        using runtime-specific value",
+)
 parser.add_argument("--log-file", type=str, default="gpu-ruby-test.log")
-parser.add_argument("--num-dmas", type=int, default=None,
-                    help="The number of DMA engines to use in tester config.")
+parser.add_argument(
+    "--num-dmas",
+    type=int,
+    default=None,
+    help="The number of DMA engines to use in tester config.",
+)
 
 args = parser.parse_args()
 
@@ -89,21 +116,21 @@ args = parser.parse_args()
 #   0: small cache
 #   1: large cache
 #
-if (args.cache_size == "small"):
-    args.tcp_size="256B"
-    args.tcp_assoc=2
-    args.tcc_size="1kB"
-    args.tcc_assoc=2
-elif (args.cache_size == "large"):
-    args.tcp_size="256kB"
-    args.tcp_assoc=16
-    args.tcc_size="1024kB"
-    args.tcc_assoc=16
+if args.cache_size == "small":
+    args.tcp_size = "256B"
+    args.tcp_assoc = 2
+    args.tcc_size = "1kB"
+    args.tcc_assoc = 2
+elif args.cache_size == "large":
+    args.tcp_size = "256kB"
+    args.tcp_assoc = 16
+    args.tcc_size = "1024kB"
+    args.tcc_assoc = 16
 
 #
 # Set up system size - 3 options
 #
-if (args.system_size == "small"):
+if args.system_size == "small":
     # 1 CU, 1 CPU, 1 SQC, 1 Scalar
     args.wf_size = 1
     args.wavefronts_per_cu = 1
@@ -112,7 +139,7 @@ if (args.system_size == "small"):
     args.cu_per_sqc = 1
     args.cu_per_scalar_cache = 1
     args.num_compute_units = 1
-elif (args.system_size == "medium"):
+elif args.system_size == "medium":
     # 4 CUs, 4 CPUs, 1 SQCs, 1 Scalars
     args.wf_size = 16
     args.wavefronts_per_cu = 4
@@ -121,7 +148,7 @@ elif (args.system_size == "medium"):
     args.cu_per_sqc = 4
     args.cu_per_scalar_cache = 4
     args.num_compute_units = 4
-elif (args.system_size == "large"):
+elif args.system_size == "large":
     # 8 CUs, 4 CPUs, 1 SQCs, 1 Scalars
     args.wf_size = 32
     args.wavefronts_per_cu = 4
@@ -132,11 +159,11 @@ elif (args.system_size == "large"):
     args.num_compute_units = 8
 
 # Number of DMA engines
-if not(args.num_dmas is None):
+if not (args.num_dmas is None):
     n_DMAs = args.num_dmas
     # currently the tester does not support requests returned as
     # aliased, thus we need num_dmas to be 0 for it
-    if not(args.num_dmas == 0):
+    if not (args.num_dmas == 0):
         print("WARNING: num_dmas != 0 not supported with VIPER")
 
 #
@@ -145,11 +172,11 @@ if not(args.num_dmas is None):
 #   level 1: large
 # Each location corresponds to a 4-byte piece of data
 #
-args.mem_size = '1024MB'
-if (args.address_range == "small"):
+args.mem_size = "1024MB"
+if args.address_range == "small":
     num_atomic_locs = 10
     num_regular_locs_per_atomic_loc = 10000
-elif (args.address_range == "large"):
+elif args.address_range == "large":
     num_atomic_locs = 100
     num_regular_locs_per_atomic_loc = 100000
 
@@ -159,11 +186,11 @@ elif (args.address_range == "large"):
 #   1: 100 actions
 #   2: 500 actions
 #
-if (args.episode_length == "short"):
+if args.episode_length == "short":
     eps_length = 10
-elif (args.episode_length == "medium"):
+elif args.episode_length == "medium":
     eps_length = 100
-elif (args.episode_length == "long"):
+elif args.episode_length == "long":
     eps_length = 500
 
 #
@@ -190,29 +217,30 @@ n_WFs = n_CUs * args.wavefronts_per_cu
 max_episodes = args.test_length * n_WFs
 
 # Number of SQC and Scalar caches
-assert(n_CUs % args.cu_per_sqc == 0)
+assert n_CUs % args.cu_per_sqc == 0
 n_SQCs = n_CUs // args.cu_per_sqc
 args.num_sqc = n_SQCs
 
-assert(args.cu_per_scalar_cache != 0)
+assert args.cu_per_scalar_cache != 0
 n_Scalars = n_CUs // args.cu_per_scalar_cache
 args.num_scalar_cache = n_Scalars
 
 #
 # Create GPU Ruby random tester
 #
-tester = ProtocolTester(cus_per_sqc = args.cu_per_sqc,
-                        cus_per_scalar = args.cu_per_scalar_cache,
-                        wavefronts_per_cu = args.wavefronts_per_cu,
-                        workitems_per_wavefront = args.wf_size,
-                        num_atomic_locations = num_atomic_locs,
-                        num_normal_locs_per_atomic = \
-                                          num_regular_locs_per_atomic_loc,
-                        max_num_episodes = max_episodes,
-                        episode_length = eps_length,
-                        debug_tester = args.debug_tester,
-                        random_seed = args.random_seed,
-                        log_file = args.log_file)
+tester = ProtocolTester(
+    cus_per_sqc=args.cu_per_sqc,
+    cus_per_scalar=args.cu_per_scalar_cache,
+    wavefronts_per_cu=args.wavefronts_per_cu,
+    workitems_per_wavefront=args.wf_size,
+    num_atomic_locations=num_atomic_locs,
+    num_normal_locs_per_atomic=num_regular_locs_per_atomic_loc,
+    max_num_episodes=max_episodes,
+    episode_length=eps_length,
+    debug_tester=args.debug_tester,
+    random_seed=args.random_seed,
+    log_file=args.log_file,
+)
 
 #
 # Create a gem5 system. Note that the memory object isn't actually used by the
@@ -220,14 +248,17 @@ tester = ProtocolTester(cus_per_sqc = args.cu_per_sqc,
 # checks. The system doesn't have real CPUs or CUs. It just has a tester that
 # has physical ports to be connected to Ruby
 #
-system = System(cpu = tester,
-                mem_ranges = [AddrRange(args.mem_size)],
-                cache_line_size = args.cacheline_size,
-                mem_mode = 'timing')
+system = System(
+    cpu=tester,
+    mem_ranges=[AddrRange(args.mem_size)],
+    cache_line_size=args.cacheline_size,
+    mem_mode="timing",
+)
 
-system.voltage_domain = VoltageDomain(voltage = args.sys_voltage)
-system.clk_domain = SrcClockDomain(clock = args.sys_clock,
-                                   voltage_domain = system.voltage_domain)
+system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
+system.clk_domain = SrcClockDomain(
+    clock=args.sys_clock, voltage_domain=system.voltage_domain
+)
 
 #
 # Command processor is not needed for the tester since we don't run real
@@ -254,11 +285,14 @@ if n_DMAs > 0:
 # is stored in system.cpu. because there is only ever one
 # tester object, num_cpus is not necessarily equal to the
 # size of system.cpu
-cpu_list = [ system.cpu ] * args.num_cpus
-Ruby.create_system(args, full_system = False,
-                   system = system,
-                   dma_ports = system.dma_devices if n_DMAs > 0 else [],
-                   cpus = cpu_list)
+cpu_list = [system.cpu] * args.num_cpus
+Ruby.create_system(
+    args,
+    full_system=False,
+    system=system,
+    dma_ports=system.dma_devices if n_DMAs > 0 else [],
+    cpus=cpu_list,
+)
 
 #
 # The tester is most effective when randomization is turned on and
@@ -267,7 +301,7 @@ Ruby.create_system(args, full_system = False,
 system.ruby.randomization = True
 
 # Assert that we got the right number of Ruby ports
-assert(len(system.ruby._cpu_ports) == n_CUs + n_SQCs + n_Scalars)
+assert len(system.ruby._cpu_ports) == n_CUs + n_SQCs + n_Scalars
 
 #
 # Attach Ruby ports to the tester in the order:
@@ -290,7 +324,7 @@ for i, ruby_port in enumerate(system.ruby._cpu_ports):
     if i < n_CUs:
         tester.cu_vector_ports = ruby_port.in_ports
         tester.cu_token_ports = ruby_port.gmTokenPort
-        tester.max_cu_tokens = 4*n_WFs
+        tester.max_cu_tokens = 4 * n_WFs
     elif i < (n_CUs + n_SQCs):
         tester.cu_sqc_ports = ruby_port.in_ports
     else:
@@ -305,15 +339,16 @@ for i, ruby_port in enumerate(system.ruby._cpu_ports):
 #
 dma_ports = []
 for i in range(n_DMAs):
-    dma_cntrl = getattr(system, 'dma_cntrl' + str(i))
+    dma_cntrl = getattr(system, "dma_cntrl" + str(i))
     dma_ports.append(dma_cntrl.dma_sequencer.in_ports)
 tester.dma_ports = dma_ports
 
 #
 # Common variables for all types of threads
 #
-thread_clock = SrcClockDomain(clock = '1GHz',
-                              voltage_domain = system.voltage_domain)
+thread_clock = SrcClockDomain(
+    clock="1GHz", voltage_domain=system.voltage_domain
+)
 g_thread_idx = 0
 
 #
@@ -327,10 +362,14 @@ tester.cpu_threads = []
 dma_threads = []
 print("Creating %i DMAs" % n_DMAs)
 for dma_idx in range(n_DMAs):
-    dma_threads.append(DmaThread(thread_id = g_thread_idx,
-                                 num_lanes = 1, clk_domain = thread_clock,
-                                 deadlock_threshold = \
-                                         tester_deadlock_threshold))
+    dma_threads.append(
+        DmaThread(
+            thread_id=g_thread_idx,
+            num_lanes=1,
+            clk_domain=thread_clock,
+            deadlock_threshold=tester_deadlock_threshold,
+        )
+    )
     g_thread_idx += 1
 tester.dma_threads = dma_threads
 
@@ -338,26 +377,31 @@ tester.dma_threads = dma_threads
 # Create GPU wavefronts
 #
 wavefronts = []
-print("Creating %i WFs attached to %i CUs" % \
-                (n_CUs * tester.wavefronts_per_cu, n_CUs))
+print(
+    "Creating %i WFs attached to %i CUs"
+    % (n_CUs * tester.wavefronts_per_cu, n_CUs)
+)
 for cu_idx in range(n_CUs):
     for wf_idx in range(tester.wavefronts_per_cu):
-        wavefronts.append(GpuWavefront(thread_id = g_thread_idx,
-                                         cu_id = cu_idx,
-                                         num_lanes = args.wf_size,
-                                         clk_domain = thread_clock,
-                                         deadlock_threshold = \
-                                                tester_deadlock_threshold))
+        wavefronts.append(
+            GpuWavefront(
+                thread_id=g_thread_idx,
+                cu_id=cu_idx,
+                num_lanes=args.wf_size,
+                clk_domain=thread_clock,
+                deadlock_threshold=tester_deadlock_threshold,
+            )
+        )
         g_thread_idx += 1
 tester.wavefronts = wavefronts
 
 #
 # Run simulation
 #
-root = Root(full_system = False, system = system)
+root = Root(full_system=False, system=system)
 
 # Not much point in this being higher than the L1 latency
-m5.ticks.setGlobalFrequency('1ns')
+m5.ticks.setGlobalFrequency("1ns")
 
 # Instantiate configuration
 m5.instantiate()
@@ -365,5 +409,5 @@ m5.instantiate()
 # Simulate until tester completes
 exit_event = m5.simulate()
 
-print('Exiting tick: ', m5.curTick())
-print('Exiting because ', exit_event.getCause())
+print("Exiting tick: ", m5.curTick())
+print("Exiting because ", exit_event.getCause())

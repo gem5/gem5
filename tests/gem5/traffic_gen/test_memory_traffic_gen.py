@@ -73,13 +73,7 @@ def test_memory(
             "traffic_gen",
             "simple_traffic_run.py",
         ),
-        config_args=[
-            generator,
-            generator_cores,
-            cache,
-            module,
-            memory,
-        ]
+        config_args=[generator, generator_cores, cache, module, memory]
         + list(args),
         valid_isas=(constants.null_tag,),
         protocol=protocol_map[cache],
@@ -132,11 +126,6 @@ def create_dual_core_tests(module, memory_classes):
                     "512MiB",
                 )
 
-create_single_core_tests(
-    "gem5.components.memory",
-    memory_classes,
-)
-create_dual_core_tests(
-    "gem5.components.memory",
-    memory_classes,
-)
+
+create_single_core_tests("gem5.components.memory", memory_classes)
+create_dual_core_tests("gem5.components.memory", memory_classes)

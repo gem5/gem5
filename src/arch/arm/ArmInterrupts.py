@@ -26,7 +26,8 @@
 
 from m5.objects.BaseInterrupts import BaseInterrupts
 
+
 class ArmInterrupts(BaseInterrupts):
-    type = 'ArmInterrupts'
-    cxx_class = 'gem5::ArmISA::Interrupts'
+    type = "ArmInterrupts"
+    cxx_class = "gem5::ArmISA::Interrupts"
     cxx_header = "arch/arm/interrupts.hh"

@@ -31,6 +31,7 @@ from m5.objects import SEWorkload, Process
 
 from typing import Optional, List
 
+
 class SEBinaryWorkload:
     """
     This class is used to enable simple Syscall-Execution (SE) mode execution
@@ -64,7 +65,7 @@ class SEBinaryWorkload:
 
         # We assume this this is in a multiple-inheritance setup with an
         # Abstract board. This function will not work otherwise.
-        assert(isinstance(self,AbstractBoard))
+        assert isinstance(self, AbstractBoard)
 
         # If we are setting a workload of this type, we need to run as a
         # SE-mode simulation.
@@ -77,7 +78,7 @@ class SEBinaryWorkload:
         process.executable = binary_path
         process.cmd = [binary_path] + arguments
         if stdin_file is not None:
-          process.input = stdin_file.get_local_path()
+            process.input = stdin_file.get_local_path()
 
         self.get_processor().get_cores()[0].set_workload(process)
 

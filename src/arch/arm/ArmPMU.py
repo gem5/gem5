@@ -42,6 +42,7 @@ from m5.proxy import *
 from m5.objects.Gic import ArmInterruptPin, ArmPPI
 from m5.util.fdthelper import *
 
+
 class ProbeEvent(object):
     def __init__(self, pmu, _eventId, obj, *listOfNames):
         self.obj = obj
@@ -52,23 +53,27 @@ class ProbeEvent(object):
     def register(self):
         if self.obj:
             for name in self.names:
-                self.pmu.getCCObject().addEventProbe(self.eventId,
-                    self.obj.getCCObject(), name)
+                self.pmu.getCCObject().addEventProbe(
+                    self.eventId, self.obj.getCCObject(), name
+                )
+
 
 class SoftwareIncrement(object):
-    def __init__(self,pmu, _eventId):
+    def __init__(self, pmu, _eventId):
         self.eventId = _eventId
         self.pmu = pmu
 
     def register(self):
         self.pmu.getCCObject().addSoftwareIncrementEvent(self.eventId)
 
+
 ARCH_EVENT_CORE_CYCLES = 0x11
 
+
 class ArmPMU(SimObject):
-    type = 'ArmPMU'
-    cxx_class = 'gem5::ArmISA::PMU'
-    cxx_header = 'arch/arm/pmu.hh'
+    type = "ArmPMU"
+    cxx_class = "gem5::ArmISA::PMU"
+    cxx_header = "arch/arm/pmu.hh"
 
     cxx_exports = [
         PyBindMethod("addEventProbe"),
@@ -78,10 +83,13 @@ class ArmPMU(SimObject):
     _events = None
 
     def addEvent(self, newObject):
-        if not (isinstance(newObject, ProbeEvent)
-            or isinstance(newObject, SoftwareIncrement)):
-            raise TypeError("argument must be of ProbeEvent or "
-                "SoftwareIncrement type")
+        if not (
+            isinstance(newObject, ProbeEvent)
+            or isinstance(newObject, SoftwareIncrement)
+        ):
+            raise TypeError(
+                "argument must be of ProbeEvent or " "SoftwareIncrement type"
+            )
 
         if not self._events:
             self._events = []
@@ -92,15 +100,19 @@ class ArmPMU(SimObject):
     # register deferred event handlers.
     def regProbeListeners(self):
         for event in self._events:
-           event.register()
+            event.register()
 
         self.getCCObject().regProbeListeners()
 
-    def addArchEvents(self,
-                      cpu=None,
-                      itb=None, dtb=None,
-                      icache=None, dcache=None,
-                      l2cache=None):
+    def addArchEvents(
+        self,
+        cpu=None,
+        itb=None,
+        dtb=None,
+        icache=None,
+        dcache=None,
+        l2cache=None,
+    ):
         """Add architected events to the PMU.
 
         This method can be called multiple times with only a subset of
@@ -118,20 +130,20 @@ class ArmPMU(SimObject):
             bpred = None
 
         # 0x00: SW_INCR
-        self.addEvent(SoftwareIncrement(self,0x00))
+        self.addEvent(SoftwareIncrement(self, 0x00))
         # 0x01: L1I_CACHE_REFILL
         # 0x02: L1I_TLB_REFILL,
-        self.addEvent(ProbeEvent(self,0x02, itb, "Refills"))
+        self.addEvent(ProbeEvent(self, 0x02, itb, "Refills"))
         # 0x03: L1D_CACHE_REFILL
         # 0x04: L1D_CACHE
         # 0x05: L1D_TLB_REFILL
-        self.addEvent(ProbeEvent(self,0x05, dtb, "Refills"))
+        self.addEvent(ProbeEvent(self, 0x05, dtb, "Refills"))
         # 0x06: LD_RETIRED
-        self.addEvent(ProbeEvent(self,0x06, cpu, "RetiredLoads"))
+        self.addEvent(ProbeEvent(self, 0x06, cpu, "RetiredLoads"))
         # 0x07: ST_RETIRED
-        self.addEvent(ProbeEvent(self,0x07, cpu, "RetiredStores"))
+        self.addEvent(ProbeEvent(self, 0x07, cpu, "RetiredStores"))
         # 0x08: INST_RETIRED
-        self.addEvent(ProbeEvent(self,0x08, cpu, "RetiredInsts"))
+        self.addEvent(ProbeEvent(self, 0x08, cpu, "RetiredInsts"))
         # 0x09: EXC_TAKEN
         # 0x0A: EXC_RETURN
         # 0x0B: CID_WRITE_RETIRED
@@ -140,15 +152,17 @@ class ArmPMU(SimObject):
         # 0x0E: BR_RETURN_RETIRED
         # 0x0F: UNALIGEND_LDST_RETIRED
         # 0x10: BR_MIS_PRED
-        self.addEvent(ProbeEvent(self,0x10, bpred, "Misses"))
+        self.addEvent(ProbeEvent(self, 0x10, bpred, "Misses"))
         # 0x11: CPU_CYCLES
-        self.addEvent(ProbeEvent(self, ARCH_EVENT_CORE_CYCLES, cpu,
-                                 "ActiveCycles"))
+        self.addEvent(
+            ProbeEvent(self, ARCH_EVENT_CORE_CYCLES, cpu, "ActiveCycles")
+        )
         # 0x12: BR_PRED
-        self.addEvent(ProbeEvent(self,0x12, bpred, "Branches"))
+        self.addEvent(ProbeEvent(self, 0x12, bpred, "Branches"))
         # 0x13: MEM_ACCESS
-        self.addEvent(ProbeEvent(self,0x13, cpu, "RetiredLoads",
-                                 "RetiredStores"))
+        self.addEvent(
+            ProbeEvent(self, 0x13, cpu, "RetiredLoads", "RetiredStores")
+        )
         # 0x14: L1I_CACHE
         # 0x15: L1D_CACHE_WB
         # 0x16: L2D_CACHE
@@ -163,7 +177,7 @@ class ArmPMU(SimObject):
         # 0x1F: L1D_CACHE_ALLOCATE
         # 0x20: L2D_CACHE_ALLOCATE
         # 0x21: BR_RETIRED
-        self.addEvent(ProbeEvent(self,0x21, cpu, "RetiredBranches"))
+        self.addEvent(ProbeEvent(self, 0x21, cpu, "RetiredBranches"))
         # 0x22: BR_MIS_PRED_RETIRED
         # 0x23: STALL_FRONTEND
         # 0x24: STALL_BACKEND
@@ -190,8 +204,10 @@ class ArmPMU(SimObject):
 
         gic = self.platform.unproxy(self).gic
         node.append(
-            FdtPropertyWords("interrupts",
-                self.interrupt.generateFdtProperty(gic)))
+            FdtPropertyWords(
+                "interrupts", self.interrupt.generateFdtProperty(gic)
+            )
+        )
 
         yield node
 

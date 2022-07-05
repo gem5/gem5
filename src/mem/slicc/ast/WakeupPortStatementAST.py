@@ -35,6 +35,7 @@
 
 from slicc.ast.StatementAST import StatementAST
 
+
 class WakeupPortStatementAST(StatementAST):
     def __init__(self, slicc, in_port, address):
         super().__init__(slicc)
@@ -50,6 +51,8 @@ class WakeupPortStatementAST(StatementAST):
 
         in_port_code = self.in_port.var.code
         address_code = self.address.var.code
-        code('''
+        code(
+            """
         wakeUpBuffer(&($in_port_code), $address_code);
-        ''')
+        """
+        )

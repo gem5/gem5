@@ -37,26 +37,30 @@ from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
 
+
 class PS2Device(SimObject):
-    type = 'PS2Device'
+    type = "PS2Device"
     cxx_header = "dev/ps2/device.hh"
     cxx_class = "gem5::ps2::Device"
     abstract = True
 
+
 class PS2Keyboard(PS2Device):
-    type = 'PS2Keyboard'
+    type = "PS2Keyboard"
     cxx_header = "dev/ps2/keyboard.hh"
     cxx_class = "gem5::ps2::PS2Keyboard"
 
     vnc = Param.VncInput(Parent.any, "VNC server providing keyboard input")
 
+
 class PS2Mouse(PS2Device):
-    type = 'PS2Mouse'
+    type = "PS2Mouse"
     cxx_header = "dev/ps2/mouse.hh"
     cxx_class = "gem5::ps2::PS2Mouse"
 
+
 class PS2TouchKit(PS2Device):
-    type = 'PS2TouchKit'
+    type = "PS2TouchKit"
     cxx_header = "dev/ps2/touchkit.hh"
     cxx_class = "gem5::ps2::TouchKit"
 

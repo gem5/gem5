@@ -36,6 +36,7 @@ from m5.objects import Cache, BaseXBar, SystemXBar, BadAddr, Port
 
 from ....utils.override import *
 
+
 class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
     """
     A cache setup where each core has a private L1 data and instruction Cache.
@@ -103,11 +104,13 @@ class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
         ]
         # ITLB Page walk caches
         self.iptw_caches = [
-            MMUCache(size="8KiB") for _ in range(board.get_processor().get_num_cores())
+            MMUCache(size="8KiB")
+            for _ in range(board.get_processor().get_num_cores())
         ]
         # DTLB Page walk caches
         self.dptw_caches = [
-            MMUCache(size="8KiB") for _ in range(board.get_processor().get_num_cores())
+            MMUCache(size="8KiB")
+            for _ in range(board.get_processor().get_num_cores())
         ]
 
         if board.has_coherent_io():

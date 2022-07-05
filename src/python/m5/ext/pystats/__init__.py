@@ -33,11 +33,11 @@ from .timeconversion import TimeConversion
 from .jsonloader import JsonLoader
 
 __all__ = [
-           "Group",
-           "SimStat",
-           "Statistic",
-           "TimeConversion",
-           "StorageType",
-           "JsonSerializable",
-           "JsonLoader",
-          ]
+    "Group",
+    "SimStat",
+    "Statistic",
+    "TimeConversion",
+    "StorageType",
+    "JsonSerializable",
+    "JsonLoader",
+]

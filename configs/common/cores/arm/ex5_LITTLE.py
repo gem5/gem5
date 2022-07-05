@@ -27,69 +27,88 @@
 
 from m5.objects import *
 
-#-----------------------------------------------------------------------
+# -----------------------------------------------------------------------
 #                ex5 LITTLE core (based on the ARM Cortex-A7)
-#-----------------------------------------------------------------------
+# -----------------------------------------------------------------------
 
 # Simple ALU Instructions have a latency of 3
 class ex5_LITTLE_Simple_Int(MinorDefaultIntFU):
-    opList = [ OpDesc(opClass='IntAlu', opLat=4) ]
+    opList = [OpDesc(opClass="IntAlu", opLat=4)]
+
 
 # Complex ALU instructions have a variable latencies
 class ex5_LITTLE_Complex_IntMul(MinorDefaultIntMulFU):
-    opList = [ OpDesc(opClass='IntMult', opLat=7) ]
+    opList = [OpDesc(opClass="IntMult", opLat=7)]
+
 
 class ex5_LITTLE_Complex_IntDiv(MinorDefaultIntDivFU):
-    opList = [ OpDesc(opClass='IntDiv', opLat=9) ]
+    opList = [OpDesc(opClass="IntDiv", opLat=9)]
+
 
 # Floating point and SIMD instructions
 class ex5_LITTLE_FP(MinorDefaultFloatSimdFU):
-    opList = [ OpDesc(opClass='SimdAdd', opLat=6),
-               OpDesc(opClass='SimdAddAcc', opLat=4),
-               OpDesc(opClass='SimdAlu', opLat=4),
-               OpDesc(opClass='SimdCmp', opLat=1),
-               OpDesc(opClass='SimdCvt', opLat=3),
-               OpDesc(opClass='SimdMisc', opLat=3),
-               OpDesc(opClass='SimdMult',opLat=4),
-               OpDesc(opClass='SimdMultAcc',opLat=5),
-               OpDesc(opClass='SimdShift',opLat=3),
-               OpDesc(opClass='SimdShiftAcc', opLat=3),
-               OpDesc(opClass='SimdSqrt', opLat=9),
-               OpDesc(opClass='SimdFloatAdd',opLat=8),
-               OpDesc(opClass='SimdFloatAlu',opLat=6),
-               OpDesc(opClass='SimdFloatCmp', opLat=6),
-               OpDesc(opClass='SimdFloatCvt', opLat=6),
-               OpDesc(opClass='SimdFloatDiv', opLat=20, pipelined=False),
-               OpDesc(opClass='SimdFloatMisc', opLat=6),
-               OpDesc(opClass='SimdFloatMult', opLat=15),
-               OpDesc(opClass='SimdFloatMultAcc',opLat=6),
-               OpDesc(opClass='SimdFloatSqrt', opLat=17),
-               OpDesc(opClass='FloatAdd', opLat=8),
-               OpDesc(opClass='FloatCmp', opLat=6),
-               OpDesc(opClass='FloatCvt', opLat=6),
-               OpDesc(opClass='FloatDiv', opLat=15, pipelined=False),
-               OpDesc(opClass='FloatSqrt', opLat=33),
-               OpDesc(opClass='FloatMult', opLat=6) ]
+    opList = [
+        OpDesc(opClass="SimdAdd", opLat=6),
+        OpDesc(opClass="SimdAddAcc", opLat=4),
+        OpDesc(opClass="SimdAlu", opLat=4),
+        OpDesc(opClass="SimdCmp", opLat=1),
+        OpDesc(opClass="SimdCvt", opLat=3),
+        OpDesc(opClass="SimdMisc", opLat=3),
+        OpDesc(opClass="SimdMult", opLat=4),
+        OpDesc(opClass="SimdMultAcc", opLat=5),
+        OpDesc(opClass="SimdShift", opLat=3),
+        OpDesc(opClass="SimdShiftAcc", opLat=3),
+        OpDesc(opClass="SimdSqrt", opLat=9),
+        OpDesc(opClass="SimdFloatAdd", opLat=8),
+        OpDesc(opClass="SimdFloatAlu", opLat=6),
+        OpDesc(opClass="SimdFloatCmp", opLat=6),
+        OpDesc(opClass="SimdFloatCvt", opLat=6),
+        OpDesc(opClass="SimdFloatDiv", opLat=20, pipelined=False),
+        OpDesc(opClass="SimdFloatMisc", opLat=6),
+        OpDesc(opClass="SimdFloatMult", opLat=15),
+        OpDesc(opClass="SimdFloatMultAcc", opLat=6),
+        OpDesc(opClass="SimdFloatSqrt", opLat=17),
+        OpDesc(opClass="FloatAdd", opLat=8),
+        OpDesc(opClass="FloatCmp", opLat=6),
+        OpDesc(opClass="FloatCvt", opLat=6),
+        OpDesc(opClass="FloatDiv", opLat=15, pipelined=False),
+        OpDesc(opClass="FloatSqrt", opLat=33),
+        OpDesc(opClass="FloatMult", opLat=6),
+    ]
+
 
 # Load/Store Units
 class ex5_LITTLE_MemFU(MinorDefaultMemFU):
-    opList = [ OpDesc(opClass='MemRead',opLat=1),
-               OpDesc(opClass='MemWrite',opLat=1) ]
+    opList = [
+        OpDesc(opClass="MemRead", opLat=1),
+        OpDesc(opClass="MemWrite", opLat=1),
+    ]
+
 
 # Misc Unit
 class ex5_LITTLE_MiscFU(MinorDefaultMiscFU):
-    opList = [ OpDesc(opClass='IprAccess',opLat=1),
-               OpDesc(opClass='InstPrefetch',opLat=1) ]
+    opList = [
+        OpDesc(opClass="IprAccess", opLat=1),
+        OpDesc(opClass="InstPrefetch", opLat=1),
+    ]
+
 
 # Functional Units for this CPU
 class ex5_LITTLE_FUP(MinorFUPool):
-    funcUnits = [ex5_LITTLE_Simple_Int(), ex5_LITTLE_Simple_Int(),
-        ex5_LITTLE_Complex_IntMul(), ex5_LITTLE_Complex_IntDiv(),
-        ex5_LITTLE_FP(), ex5_LITTLE_MemFU(),
-        ex5_LITTLE_MiscFU()]
+    funcUnits = [
+        ex5_LITTLE_Simple_Int(),
+        ex5_LITTLE_Simple_Int(),
+        ex5_LITTLE_Complex_IntMul(),
+        ex5_LITTLE_Complex_IntDiv(),
+        ex5_LITTLE_FP(),
+        ex5_LITTLE_MemFU(),
+        ex5_LITTLE_MiscFU(),
+    ]
+
 
 class ex5_LITTLE(ArmMinorCPU):
     executeFuncUnits = ex5_LITTLE_FUP()
+
 
 class L1Cache(Cache):
     tag_latency = 2
@@ -99,18 +118,21 @@ class L1Cache(Cache):
     # Consider the L2 a victim cache also for clean lines
     writeback_clean = True
 
+
 class L1I(L1Cache):
     mshrs = 2
-    size = '32kB'
+    size = "32kB"
     assoc = 2
     is_read_only = True
     tgts_per_mshr = 20
 
+
 class L1D(L1Cache):
     mshrs = 4
-    size = '32kB'
+    size = "32kB"
     assoc = 4
     write_buffers = 4
+
 
 # L2 Cache
 class L2(Cache):
@@ -119,12 +141,12 @@ class L2(Cache):
     response_latency = 9
     mshrs = 8
     tgts_per_mshr = 12
-    size = '512kB'
+    size = "512kB"
     assoc = 8
     write_buffers = 16
     prefetch_on_access = True
-    clusivity = 'mostly_excl'
+    clusivity = "mostly_excl"
     # Simple stride prefetcher
-    prefetcher = StridePrefetcher(degree=1, latency = 1)
+    prefetcher = StridePrefetcher(degree=1, latency=1)
     tags = BaseSetAssoc()
     replacement_policy = RandomRP()

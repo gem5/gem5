@@ -40,9 +40,10 @@ from m5.params import *
 from m5.objects.BaseMMU import BaseMMU
 from m5.objects.SparcTLB import SparcTLB
 
+
 class SparcMMU(BaseMMU):
-    type = 'SparcMMU'
-    cxx_class = 'gem5::SparcISA::MMU'
-    cxx_header = 'arch/sparc/mmu.hh'
+    type = "SparcMMU"
+    cxx_class = "gem5::SparcISA::MMU"
+    cxx_header = "arch/sparc/mmu.hh"
     itb = SparcTLB(entry_type="instruction")
     dtb = SparcTLB(entry_type="data")

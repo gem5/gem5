@@ -44,6 +44,7 @@ from argparse import ArgumentParser
 # add the args we want to be able to control from the command line
 parser = ArgumentParser()
 
+
 def add_option(*args, **kwargs):
     """Call "add_option" to the global options parser
     """
@@ -53,12 +54,13 @@ def add_option(*args, **kwargs):
 
     parser.add_argument(*args, **kwargs)
 
+
 def parse_args():
     global called_parse_args
     called_parse_args = True
 
     return parser.parse_args()
 
+
 def print_help(*args, **kwargs):
     parser.print_help(*args, **kwargs)
-

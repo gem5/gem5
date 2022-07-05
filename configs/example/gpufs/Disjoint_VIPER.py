@@ -36,7 +36,7 @@ from ruby.GPU_VIPER import *
 from ruby import Ruby
 
 
-class DummySystem():
+class DummySystem:
     def __init__(self, mem_ranges):
 
         self.mem_ctrls = []
@@ -45,7 +45,7 @@ class DummySystem():
 
 class Disjoint_VIPER(RubySystem):
     def __init__(self):
-        if buildEnv['PROTOCOL'] != "GPU_VIPER":
+        if buildEnv["PROTOCOL"] != "GPU_VIPER":
             fatal("This ruby config only supports the GPU_VIPER protocol")
 
         super(Disjoint_VIPER, self).__init__()
@@ -60,29 +60,33 @@ class Disjoint_VIPER(RubySystem):
             self.network_cpu = DisjointSimple(self)
             self.network_gpu = DisjointSimple(self)
 
-
         # Construct CPU controllers
-        cpu_dir_nodes = \
-            construct_dirs(options, system, self, self.network_cpu)
-        (cp_sequencers, cp_cntrl_nodes) = \
-            construct_corepairs(options, system, self, self.network_cpu)
+        cpu_dir_nodes = construct_dirs(options, system, self, self.network_cpu)
+        (cp_sequencers, cp_cntrl_nodes) = construct_corepairs(
+            options, system, self, self.network_cpu
+        )
 
         # Construct GPU controllers
-        (tcp_sequencers, tcp_cntrl_nodes) = \
-            construct_tcps(options, system, self, self.network_gpu)
-        (sqc_sequencers, sqc_cntrl_nodes) = \
-            construct_sqcs(options, system, self, self.network_gpu)
-        (scalar_sequencers, scalar_cntrl_nodes) = \
-            construct_scalars(options, system, self, self.network_gpu)
-        tcc_cntrl_nodes = \
-            construct_tccs(options, system, self, self.network_gpu)
+        (tcp_sequencers, tcp_cntrl_nodes) = construct_tcps(
+            options, system, self, self.network_gpu
+        )
+        (sqc_sequencers, sqc_cntrl_nodes) = construct_sqcs(
+            options, system, self, self.network_gpu
+        )
+        (scalar_sequencers, scalar_cntrl_nodes) = construct_scalars(
+            options, system, self, self.network_gpu
+        )
+        tcc_cntrl_nodes = construct_tccs(
+            options, system, self, self.network_gpu
+        )
 
         # Construct CPU memories
         Ruby.setup_memory_controllers(system, self, cpu_dir_nodes, options)
 
         # Construct GPU memories
-        (gpu_dir_nodes, gpu_mem_ctrls) = \
-            construct_gpudirs(options, system, self, self.network_gpu)
+        (gpu_dir_nodes, gpu_mem_ctrls) = construct_gpudirs(
+            options, system, self, self.network_gpu
+        )
 
         # Configure the directories based on which network they are in
         for cpu_dir_node in cpu_dir_nodes:
@@ -115,11 +119,12 @@ class Disjoint_VIPER(RubySystem):
         dma_cntrls = []
         for i, dma_device in enumerate(dma_devices):
             dma_seq = DMASequencer(version=i, ruby_system=self)
-            dma_cntrl = DMA_Controller(version=i, dma_sequencer=dma_seq,
-                                       ruby_system=self)
+            dma_cntrl = DMA_Controller(
+                version=i, dma_sequencer=dma_seq, ruby_system=self
+            )
 
             # Handle inconsistently named ports on various DMA devices:
-            if not hasattr(dma_device, 'type'):
+            if not hasattr(dma_device, "type"):
                 # IDE doesn't have a .type but seems like everything else does.
                 dma_seq.in_ports = dma_device
             elif dma_device.type in gpu_dma_types:
@@ -127,13 +132,15 @@ class Disjoint_VIPER(RubySystem):
             else:
                 dma_seq.in_ports = dma_device.dma
 
-            if hasattr(dma_device, 'type') and \
-                    dma_device.type in gpu_dma_types:
+            if (
+                hasattr(dma_device, "type")
+                and dma_device.type in gpu_dma_types
+            ):
                 dma_cntrl.requestToDir = MessageBuffer(buffer_size=0)
                 dma_cntrl.requestToDir.out_port = self.network_gpu.in_port
                 dma_cntrl.responseFromDir = MessageBuffer(buffer_size=0)
                 dma_cntrl.responseFromDir.in_port = self.network_gpu.out_port
-                dma_cntrl.mandatoryQueue = MessageBuffer(buffer_size = 0)
+                dma_cntrl.mandatoryQueue = MessageBuffer(buffer_size=0)
 
                 gpu_dma_ctrls.append(dma_cntrl)
             else:
@@ -141,7 +148,7 @@ class Disjoint_VIPER(RubySystem):
                 dma_cntrl.requestToDir.out_port = self.network_cpu.in_port
                 dma_cntrl.responseFromDir = MessageBuffer(buffer_size=0)
                 dma_cntrl.responseFromDir.in_port = self.network_cpu.out_port
-                dma_cntrl.mandatoryQueue = MessageBuffer(buffer_size = 0)
+                dma_cntrl.mandatoryQueue = MessageBuffer(buffer_size=0)
 
                 cpu_dma_ctrls.append(dma_cntrl)
 
@@ -149,31 +156,31 @@ class Disjoint_VIPER(RubySystem):
 
         system.dma_cntrls = dma_cntrls
 
-
         # Collect CPU and GPU controllers into seperate lists
         cpu_cntrls = cpu_dir_nodes + cp_cntrl_nodes + cpu_dma_ctrls
-        gpu_cntrls = tcp_cntrl_nodes + sqc_cntrl_nodes + \
-                scalar_cntrl_nodes + tcc_cntrl_nodes + gpu_dma_ctrls + \
-                gpu_dir_nodes
-
+        gpu_cntrls = (
+            tcp_cntrl_nodes
+            + sqc_cntrl_nodes
+            + scalar_cntrl_nodes
+            + tcc_cntrl_nodes
+            + gpu_dma_ctrls
+            + gpu_dir_nodes
+        )
 
         # Setup number of vnets
         self.number_of_virtual_networks = 11
         self.network_cpu.number_of_virtual_networks = 11
         self.network_gpu.number_of_virtual_networks = 11
 
-
         # Set up the disjoint topology
         self.network_cpu.connectCPU(options, cpu_cntrls)
         self.network_gpu.connectGPU(options, gpu_cntrls)
 
-
         # Create port proxy for connecting system port. System port is used
         # for loading from outside guest, e.g., binaries like vmlinux.
-        system.sys_port_proxy = RubyPortProxy(ruby_system = self)
+        system.sys_port_proxy = RubyPortProxy(ruby_system=self)
         system.sys_port_proxy.pio_request_port = piobus.cpu_side_ports
         system.system_port = system.sys_port_proxy.in_ports
-
 
         # Only CPU sequencers connect to PIO bus. This acts as the "default"
         # destination for unknown address ranges. PCIe requests fall under
@@ -188,9 +195,9 @@ class Disjoint_VIPER(RubySystem):
             if i < options.num_cpus:
                 cp_sequencers[i].pio_response_port = piobus.mem_side_ports
 
-
         # Setup ruby port. Both CPU and GPU are actually connected here.
-        all_sequencers = cp_sequencers + tcp_sequencers + \
-                         sqc_sequencers + scalar_sequencers
+        all_sequencers = (
+            cp_sequencers + tcp_sequencers + sqc_sequencers + scalar_sequencers
+        )
         self._cpu_ports = all_sequencers
         self.num_of_sequencers = len(all_sequencers)

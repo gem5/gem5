@@ -44,8 +44,8 @@ import git_filter_repo
 
 import update_copyright
 
-parser = argparse.ArgumentParser(description=
-"""Update copyright headers on files of a range of commits.
+parser = argparse.ArgumentParser(
+    description="""Update copyright headers on files of a range of commits.
 
 This can be used to easily update copyright headers at once on an entire
 patchset before submitting.
@@ -87,40 +87,41 @@ which is equivalent to the previous invocation.
 """,
     formatter_class=argparse.RawTextHelpFormatter,
 )
-parser.add_argument('start',
-        nargs='?',
-        help="The commit before the last commit to be modified")
-parser.add_argument('org-string',
-        nargs='?',
-        help="Copyright holder name")
-parser.add_argument('-o', '--org', choices=('arm',),
-        help="Alias for known organizations")
+parser.add_argument(
+    "start", nargs="?", help="The commit before the last commit to be modified"
+)
+parser.add_argument("org-string", nargs="?", help="Copyright holder name")
+parser.add_argument(
+    "-o", "--org", choices=("arm",), help="Alias for known organizations"
+)
 args = parser.parse_args()
 
+
 def error(msg):
-    print('error: ' + msg, file=sys.stderr)
+    print("error: " + msg, file=sys.stderr)
     sys.exit(1)
+
 
 # The existing safety checks are too strict, so we just disable them
 # with force, and do our own checks to not overwrite uncommited changes
 # checks.
 # https://github.com/newren/git-filter-repo/issues/159
-if subprocess.call(['git', 'diff', '--staged', '--quiet']):
+if subprocess.call(["git", "diff", "--staged", "--quiet"]):
     error("uncommitted changes")
-if subprocess.call(['git', 'diff', '--quiet']):
+if subprocess.call(["git", "diff", "--quiet"]):
     error("unstaged changes")
 
 # Handle CLI arguments.
 if args.start is None:
     error("the start argument must be given")
-if args.org is None and getattr(args, 'org-string') is None:
+if args.org is None and getattr(args, "org-string") is None:
     error("either --org or org-string must be given")
-if args.org is not None and getattr(args, 'org-string') is not None:
+if args.org is not None and getattr(args, "org-string") is not None:
     error("both --org and org-string given")
 if args.org is not None:
     org_bytes = update_copyright.org_alias_map[args.org]
 else:
-    org_bytes = getattr(args, 'org-string').encode()
+    org_bytes = getattr(args, "org-string").encode()
 
 # Call git_filter_repo.
 # Args deduced from:
@@ -129,13 +130,17 @@ else:
 filter_repo_args = git_filter_repo.FilteringOptions.default_options()
 filter_repo_args.force = True
 filter_repo_args.partial = True
-filter_repo_args.refs = ['{}..HEAD'.format(args.start)]
-filter_repo_args.repack=False
-filter_repo_args.replace_refs='update-no-add'
+filter_repo_args.refs = ["{}..HEAD".format(args.start)]
+filter_repo_args.repack = False
+filter_repo_args.replace_refs = "update-no-add"
+
+
 def blob_callback(blob, callback_metadata, org_bytes):
-    blob.data = update_copyright.update_copyright(blob.data,
-        datetime.datetime.now().year, org_bytes)
+    blob.data = update_copyright.update_copyright(
+        blob.data, datetime.datetime.now().year, org_bytes
+    )
+
+
 git_filter_repo.RepoFilter(
-    filter_repo_args,
-    blob_callback=lambda x, y: blob_callback( x, y, org_bytes)
+    filter_repo_args, blob_callback=lambda x, y: blob_callback(x, y, org_bytes)
 ).run()

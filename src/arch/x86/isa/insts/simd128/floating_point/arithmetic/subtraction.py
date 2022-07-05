@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop SUBSS_XMM_XMM {
     msubf xmml, xmml, xmmlm, size=4, ext=Scalar
 };
@@ -103,4 +103,4 @@ def macroop SUBPD_XMM_P {
     msubf xmml, xmml, ufp1, size=8, ext=0
     msubf xmmh, xmmh, ufp2, size=8, ext=0
 };
-'''
+"""

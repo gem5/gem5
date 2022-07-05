@@ -27,69 +27,78 @@ from m5.params import *
 from m5.objects.SimObject import SimObject
 from m5.objects.Device import PioDevice
 
+
 class QemuFwCfgItem(SimObject):
-    type = 'QemuFwCfgItem'
-    cxx_class = 'gem5::qemu::FwCfgItemFactoryBase'
-    cxx_header = 'dev/qemu/fw_cfg.hh'
+    type = "QemuFwCfgItem"
+    cxx_class = "gem5::qemu::FwCfgItemFactoryBase"
+    cxx_header = "dev/qemu/fw_cfg.hh"
     abstract = True
 
     # The path this item will be listed under in the firmware config directory.
-    arch_specific = Param.Bool(False, 'if this item is archiecture specific')
-    index = Param.Unsigned(0, 'Fixed index, or 0 for automatic')
-    path = Param.String('Path to item in the firmware config directory')
+    arch_specific = Param.Bool(False, "if this item is archiecture specific")
+    index = Param.Unsigned(0, "Fixed index, or 0 for automatic")
+    path = Param.String("Path to item in the firmware config directory")
+
 
 class QemuFwCfgItemFile(QemuFwCfgItem):
-    type = 'QemuFwCfgItemFile'
-    cxx_class = 'gem5::qemu::FwCfgItemFactory<gem5::qemu::FwCfgItemFile>'
-    cxx_template_params = ['class ItemType']
-    cxx_header = 'dev/qemu/fw_cfg.hh'
+    type = "QemuFwCfgItemFile"
+    cxx_class = "gem5::qemu::FwCfgItemFactory<gem5::qemu::FwCfgItemFile>"
+    cxx_template_params = ["class ItemType"]
+    cxx_header = "dev/qemu/fw_cfg.hh"
 
     # The path to the file that will be used to populate this item.
-    file = Param.String('Path to file to export')
+    file = Param.String("Path to file to export")
+
 
 class QemuFwCfgItemString(QemuFwCfgItem):
-    type = 'QemuFwCfgItemString'
-    cxx_class = 'gem5::qemu::FwCfgItemFactory<gem5::qemu::FwCfgItemString>'
-    cxx_template_params = ['class ItemType']
-    cxx_header = 'dev/qemu/fw_cfg.hh'
+    type = "QemuFwCfgItemString"
+    cxx_class = "gem5::qemu::FwCfgItemFactory<gem5::qemu::FwCfgItemString>"
+    cxx_template_params = ["class ItemType"]
+    cxx_header = "dev/qemu/fw_cfg.hh"
 
     # The string which directly populates this item.
-    string = Param.String('String to export')
+    string = Param.String("String to export")
+
 
 class QemuFwCfgItemBytes(QemuFwCfgItem):
-    type = 'QemuFwCfgItemBytes'
-    cxx_class = 'gem5::qemu::FwCfgItemFactory<gem5::qemu::FwCfgItemBytes>'
-    cxx_template_params = ['class ItemType']
-    cxx_header = 'dev/qemu/fw_cfg.hh'
+    type = "QemuFwCfgItemBytes"
+    cxx_class = "gem5::qemu::FwCfgItemFactory<gem5::qemu::FwCfgItemBytes>"
+    cxx_template_params = ["class ItemType"]
+    cxx_header = "dev/qemu/fw_cfg.hh"
 
-    data = VectorParam.UInt8('Bytes to export')
+    data = VectorParam.UInt8("Bytes to export")
+
 
 class QemuFwCfg(PioDevice):
-    type = 'QemuFwCfg'
-    cxx_class = 'gem5::qemu::FwCfg'
-    cxx_header = 'dev/qemu/fw_cfg.hh'
+    type = "QemuFwCfg"
+    cxx_class = "gem5::qemu::FwCfg"
+    cxx_header = "dev/qemu/fw_cfg.hh"
     abstract = True
 
-    items = VectorParam.QemuFwCfgItem([],
-            'Items exported by the firmware config device')
+    items = VectorParam.QemuFwCfgItem(
+        [], "Items exported by the firmware config device"
+    )
+
 
 class QemuFwCfgIo(QemuFwCfg):
-    type = 'QemuFwCfgIo'
-    cxx_class = 'gem5::qemu::FwCfgIo'
-    cxx_header = 'dev/qemu/fw_cfg.hh'
+    type = "QemuFwCfgIo"
+    cxx_class = "gem5::qemu::FwCfgIo"
+    cxx_header = "dev/qemu/fw_cfg.hh"
 
     # The selector register is 16 bits wide, and little endian. The data
     # register must be one port ahead of the selector.
-    selector_addr = Param.Addr('IO port for the selector register')
+    selector_addr = Param.Addr("IO port for the selector register")
+
 
 class QemuFwCfgMmio(QemuFwCfg):
-    type = 'QemuFwCfgMmio'
-    cxx_class = 'gem5::qemu::FwCfgMmio'
-    cxx_header = 'dev/qemu/fw_cfg.hh'
+    type = "QemuFwCfgMmio"
+    cxx_class = "gem5::qemu::FwCfgMmio"
+    cxx_header = "dev/qemu/fw_cfg.hh"
 
     # The selector register is 16 bits wide, and big endian.
-    selector_addr = Param.Addr('Memory address for the selector register')
+    selector_addr = Param.Addr("Memory address for the selector register")
 
     # The data register is 8, 16, 32 or 64 bits wide.
-    data_addr_range = \
-            Param.AddrRange('Memory address range for the data register')
+    data_addr_range = Param.AddrRange(
+        "Memory address range for the data register"
+    )

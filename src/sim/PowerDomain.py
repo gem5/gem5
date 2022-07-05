@@ -44,6 +44,6 @@ from m5.objects.PowerState import PowerState
 # change power state depeding on what the leader objects (CPUs for
 # example) do. The power domain is the link between these.
 class PowerDomain(PowerState):
-    type = 'PowerDomain'
-    cxx_header = 'sim/power_domain.hh'
-    cxx_class = 'gem5::PowerDomain'
+    type = "PowerDomain"
+    cxx_header = "sim/power_domain.hh"
+    cxx_class = "gem5::PowerDomain"

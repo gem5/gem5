@@ -28,9 +28,11 @@
 from slicc.ast.DeclAST import DeclAST
 from slicc.symbols import Transition
 
+
 class TransitionDeclAST(DeclAST):
-    def __init__(self, slicc, request_types, states, events, next_state,
-                 actions):
+    def __init__(
+        self, slicc, request_types, states, events, next_state, actions
+    ):
         super().__init__(slicc)
 
         self.request_types = request_types
@@ -50,24 +52,39 @@ class TransitionDeclAST(DeclAST):
 
         for action in self.actions:
             if action not in machine.actions:
-                self.error("Invalid action: %s is not part of machine: %s" % \
-                           (action, machine))
+                self.error(
+                    "Invalid action: %s is not part of machine: %s"
+                    % (action, machine)
+                )
 
         for request_type in self.request_types:
             if request_type not in machine.request_types:
-                self.error("Invalid protocol access type: " \
-                           "%s is not part of machine: %s" % \
-                           (request_type, machine))
+                self.error(
+                    "Invalid protocol access type: "
+                    "%s is not part of machine: %s" % (request_type, machine)
+                )
 
         for state in self.states:
             if state not in machine.states:
-                self.error("Invalid state: %s is not part of machine: %s" % \
-                           (state, machine))
+                self.error(
+                    "Invalid state: %s is not part of machine: %s"
+                    % (state, machine)
+                )
             next_state = self.next_state or state
             for event in self.events:
                 if event not in machine.events:
-                    self.error("Invalid event: %s is not part of machine: %s" % \
-                               (event, machine))
-                t = Transition(self.symtab, machine, state, event, next_state,
-                               self.actions, self.request_types, self.location)
+                    self.error(
+                        "Invalid event: %s is not part of machine: %s"
+                        % (event, machine)
+                    )
+                t = Transition(
+                    self.symtab,
+                    machine,
+                    state,
+                    event,
+                    next_state,
+                    self.actions,
+                    self.request_types,
+                    self.location,
+                )
                 machine.addTransition(t)

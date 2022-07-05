@@ -28,10 +28,11 @@ from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
 
+
 class BaseIndexingPolicy(SimObject):
-    type = 'BaseIndexingPolicy'
+    type = "BaseIndexingPolicy"
     abstract = True
-    cxx_class = 'gem5::BaseIndexingPolicy'
+    cxx_class = "gem5::BaseIndexingPolicy"
     cxx_header = "mem/cache/tags/indexing_policies/base.hh"
 
     # Get the size from the parent (cache)
@@ -43,12 +44,14 @@ class BaseIndexingPolicy(SimObject):
     # Get the associativity
     assoc = Param.Int(Parent.assoc, "associativity")
 
+
 class SetAssociative(BaseIndexingPolicy):
-    type = 'SetAssociative'
-    cxx_class = 'gem5::SetAssociative'
+    type = "SetAssociative"
+    cxx_class = "gem5::SetAssociative"
     cxx_header = "mem/cache/tags/indexing_policies/set_associative.hh"
 
+
 class SkewedAssociative(BaseIndexingPolicy):
-    type = 'SkewedAssociative'
-    cxx_class = 'gem5::SkewedAssociative'
+    type = "SkewedAssociative"
+    cxx_class = "gem5::SkewedAssociative"
     cxx_header = "mem/cache/tags/indexing_policies/skewed_associative.hh"

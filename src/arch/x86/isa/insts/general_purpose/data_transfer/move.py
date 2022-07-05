@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 
 #
 # Regular moves
@@ -370,8 +370,8 @@ def macroop MOVD_P_XMM {
     stfp xmml, seg, riprel, disp, dataSize=dsz
 };
 
-'''
-#let {{
+"""
+# let {{
 #    class MOVD(Inst):
 #       "GenFault ${new UnimpInstFault}"
-#}};
+# }};

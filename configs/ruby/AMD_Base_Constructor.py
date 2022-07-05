@@ -34,7 +34,7 @@ from m5.defines import buildEnv
 from m5.util import addToPath, convert
 from .CntrlBase import *
 
-addToPath('../')
+addToPath("../")
 
 from topologies.Cluster import Cluster
 
@@ -44,10 +44,12 @@ from topologies.Cluster import Cluster
 class L1Cache(RubyCache):
     latency = 1
     resourceStalls = False
+
     def create(self, size, assoc, options):
         self.size = MemorySize(size)
         self.assoc = assoc
         self.replacement_policy = TreePLRURP()
+
 
 #
 # Note: the L2 Cache latency is not currently used
@@ -55,12 +57,14 @@ class L1Cache(RubyCache):
 class L2Cache(RubyCache):
     latency = 10
     resourceStalls = False
+
     def create(self, size, assoc, options):
         self.size = MemorySize(size)
         self.assoc = assoc
         self.replacement_policy = TreePLRURP()
-class CPCntrl(AMD_Base_Controller, CntrlBase):
 
+
+class CPCntrl(AMD_Base_Controller, CntrlBase):
     def create(self, options, ruby_system, system):
         self.version = self.versionCount()
         self.cntrl_id = self.cntrlCount()
@@ -96,16 +100,20 @@ class CPCntrl(AMD_Base_Controller, CntrlBase):
         if options.recycle_latency:
             self.recycle_latency = options.recycle_latency
 
+
 def define_options(parser):
     parser.add_argument("--cpu-to-dir-latency", type=int, default=15)
 
+
 def construct(options, system, ruby_system):
-    if buildEnv['PROTOCOL'] != 'GPU_VIPER':
-        panic("This script requires VIPER based protocols \
-        to be built.")
+    if buildEnv["PROTOCOL"] != "GPU_VIPER":
+        panic(
+            "This script requires VIPER based protocols \
+        to be built."
+        )
     cpu_sequencers = []
     cpuCluster = None
-    cpuCluster = Cluster(name="CPU Cluster", extBW = 8, intBW=8) # 16 GB/s
+    cpuCluster = Cluster(name="CPU Cluster", extBW=8, intBW=8)  # 16 GB/s
     for i in range((options.num_cpus + 1) // 2):
 
         cp_cntrl = CPCntrl()

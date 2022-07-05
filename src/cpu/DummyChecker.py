@@ -36,7 +36,8 @@
 from m5.params import *
 from m5.objects.CheckerCPU import CheckerCPU
 
+
 class DummyChecker(CheckerCPU):
-    type = 'DummyChecker'
-    cxx_header = 'cpu/dummy_checker.hh'
-    cxx_class = 'gem5::DummyChecker'
+    type = "DummyChecker"
+    cxx_header = "cpu/dummy_checker.hh"
+    cxx_class = "gem5::DummyChecker"

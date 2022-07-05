@@ -38,11 +38,11 @@ from arm_generic import *
 import switcheroo
 
 root = LinuxArmFSSwitcheroo(
-    machine_type='VExpress_GEM5_V1',
+    machine_type="VExpress_GEM5_V1",
     aarch64_kernel=False,
     mem_class=DDR3_1600_8x8,
-    cpu_classes=(AtomicSimpleCPU, TimingSimpleCPU, MinorCPU, DerivO3CPU)
-    ).create_root()
+    cpu_classes=(AtomicSimpleCPU, TimingSimpleCPU, MinorCPU, DerivO3CPU),
+).create_root()
 
 # Setup a custom test method that uses the switcheroo tester that
 # switches between CPU models.

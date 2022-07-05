@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop PMINUB_XMM_XMM {
     mmini xmml, xmml, xmmlm, size=1, ext=0
     mmini xmmh, xmmh, xmmhm, size=1, ext=0
@@ -113,4 +113,4 @@ def macroop PMAXSW_XMM_P {
     mmaxi xmml, xmml, ufp1, size=2, ext=Signed
     mmaxi xmmh, xmmh, ufp2, size=2, ext=Signed
 };
-'''
+"""

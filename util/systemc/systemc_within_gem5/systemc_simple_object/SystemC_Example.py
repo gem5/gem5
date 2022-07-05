@@ -31,21 +31,22 @@ from m5.objects.SystemC import SystemC_ScModule
 # This class is a subclass of sc_module, and all the special magic which makes
 # that work is handled in the base classes.
 class SystemC_Printer(SystemC_ScModule):
-    type = 'SystemC_Printer'
-    cxx_class = 'Printer'
-    cxx_header = 'systemc_simple_object/printer.hh'
+    type = "SystemC_Printer"
+    cxx_class = "Printer"
+    cxx_header = "systemc_simple_object/printer.hh"
     # This parameter will be available in the SystemC_PrinterParams::create
     # function and can be passed to the c++ object's constructor, used to set
     # one of its member variables, as a parameter to one of its methods, etc.
-    prefix = Param.String('', 'Prefix for each word')
+    prefix = Param.String("", "Prefix for each word")
+
 
 # This is a standard gem5 SimObject class with no special accomodation for the
 # fact that one of its parameters is a systemc object.
 class Gem5_Feeder(SimObject):
-    type = 'Gem5_Feeder'
-    cxx_class = 'Feeder'
-    cxx_header = 'systemc_simple_object/feeder.hh'
+    type = "Gem5_Feeder"
+    cxx_class = "Feeder"
+    cxx_header = "systemc_simple_object/feeder.hh"
     # This parameter will be a pointer to an instance of the class above.
-    printer = Param.SystemC_Printer('Printer for our words.')
-    delay = Param.Latency('1ns', 'Time to wait between each word.')
-    strings = VectorParam.String([], 'Words to print.')
+    printer = Param.SystemC_Printer("Printer for our words.")
+    delay = Param.Latency("1ns", "Time to wait between each word.")
+    strings = VectorParam.String([], "Words to print.")

@@ -43,28 +43,33 @@ from m5.SimObject import SimObject
 # the request port (i.e. the memory side) to the response port are
 # currently not modified.
 class AddrMapper(SimObject):
-    type = 'AddrMapper'
-    cxx_header = 'mem/addr_mapper.hh'
-    cxx_class = 'gem5::AddrMapper'
+    type = "AddrMapper"
+    cxx_header = "mem/addr_mapper.hh"
+    cxx_class = "gem5::AddrMapper"
     abstract = True
 
     # one port in each direction
-    mem_side_port = RequestPort("This port sends requests and "
-                                "receives responses")
-    master   = DeprecatedParam(mem_side_port,
-                               '`master` is now called `mem_side_port`')
-    cpu_side_port = ResponsePort("This port receives requests and "
-                                 "sends responses")
-    slave    = DeprecatedParam(cpu_side_port,
-                               '`slave` is now called `cpu_side_port`')
+    mem_side_port = RequestPort(
+        "This port sends requests and " "receives responses"
+    )
+    master = DeprecatedParam(
+        mem_side_port, "`master` is now called `mem_side_port`"
+    )
+    cpu_side_port = ResponsePort(
+        "This port receives requests and " "sends responses"
+    )
+    slave = DeprecatedParam(
+        cpu_side_port, "`slave` is now called `cpu_side_port`"
+    )
+
 
 # Range address mapper that maps a set of original ranges to a set of
 # remapped ranges, where a specific range is of the same size
 # (original and remapped), only with an offset.
 class RangeAddrMapper(AddrMapper):
-    type = 'RangeAddrMapper'
-    cxx_header = 'mem/addr_mapper.hh'
-    cxx_class = 'gem5::RangeAddrMapper'
+    type = "RangeAddrMapper"
+    cxx_header = "mem/addr_mapper.hh"
+    cxx_class = "gem5::RangeAddrMapper"
 
     # These two vectors should be the exact same length and each range
     # should be the exact same size. Each range in original_ranges is
@@ -72,6 +77,8 @@ class RangeAddrMapper(AddrMapper):
     # that the same range can occur multiple times in the remapped
     # ranges for address aliasing.
     original_ranges = VectorParam.AddrRange(
-        "Ranges of memory that should me remapped")
+        "Ranges of memory that should me remapped"
+    )
     remapped_ranges = VectorParam.AddrRange(
-        "Ranges of memory that are being mapped to")
+        "Ranges of memory that are being mapped to"
+    )

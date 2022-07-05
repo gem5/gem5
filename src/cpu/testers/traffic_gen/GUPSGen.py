@@ -29,32 +29,44 @@ from m5.params import *
 from m5.proxy import *
 from m5.objects.ClockedObject import ClockedObject
 
+
 class GUPSGen(ClockedObject):
     """
     This ClockedObject implements the RandomAccess benchmark specified by HPCC
     benchmarks in https://icl.utk.edu/projectsfiles/hpcc/RandomAccess.
     """
-    type = 'GUPSGen'
+
+    type = "GUPSGen"
     cxx_header = "cpu/testers/traffic_gen/gups_gen.hh"
     cxx_class = "gem5::GUPSGen"
 
-    system = Param.System(Parent.any, 'System this generator is a part of')
+    system = Param.System(Parent.any, "System this generator is a part of")
 
-    port = RequestPort('Port that should be connected to other components')
+    port = RequestPort("Port that should be connected to other components")
 
-    start_addr = Param.Addr(0, 'Start address for allocating update table,'
-                            ' should be a multiple of block_size')
+    start_addr = Param.Addr(
+        0,
+        "Start address for allocating update table,"
+        " should be a multiple of block_size",
+    )
 
-    mem_size = Param.MemorySize('Size for allocating update table, based on'
-                            ' randomAccess benchmark specification, this'
-                            ' should be equal to half of total system memory'
-                            ' ,also should be a power of 2')
+    mem_size = Param.MemorySize(
+        "Size for allocating update table, based on"
+        " randomAccess benchmark specification, this"
+        " should be equal to half of total system memory"
+        " ,also should be a power of 2"
+    )
 
-    update_limit = Param.Int(0, 'The number of updates to issue before the'
-                            ' simulation is over')
+    update_limit = Param.Int(
+        0, "The number of updates to issue before the" " simulation is over"
+    )
 
-    request_queue_size = Param.Int(1024, 'Maximum number of parallel'
-                            ' outstanding requests')
+    request_queue_size = Param.Int(
+        1024, "Maximum number of parallel" " outstanding requests"
+    )
 
-    init_memory = Param.Bool(False, 'Whether or not to initialize the memory,'
-                            ' it does not effect the performance')
+    init_memory = Param.Bool(
+        False,
+        "Whether or not to initialize the memory,"
+        " it does not effect the performance",
+    )

@@ -35,23 +35,26 @@ from m5.objects.ClockedObject import ClockedObject
 from m5.objects.AMDGPU import AMDGPUDevice
 from m5.SimObject import SimObject
 
+
 class VegaPagetableWalker(ClockedObject):
-    type = 'VegaPagetableWalker'
-    cxx_class = 'gem5::VegaISA::Walker'
-    cxx_header = 'arch/amdgpu/vega/pagetable_walker.hh'
+    type = "VegaPagetableWalker"
+    cxx_class = "gem5::VegaISA::Walker"
+    cxx_header = "arch/amdgpu/vega/pagetable_walker.hh"
     port = RequestPort("Port for the hardware table walker")
     system = Param.System(Parent.any, "system object")
 
+
 class VegaGPUTLB(ClockedObject):
-    type = 'VegaGPUTLB'
-    cxx_class = 'gem5::VegaISA::GpuTLB'
-    cxx_header = 'arch/amdgpu/vega/tlb.hh'
+    type = "VegaGPUTLB"
+    cxx_class = "gem5::VegaISA::GpuTLB"
+    cxx_header = "arch/amdgpu/vega/tlb.hh"
     size = Param.Int(64, "TLB size (number of entries)")
     assoc = Param.Int(64, "TLB associativity")
 
-    walker = Param.VegaPagetableWalker(VegaPagetableWalker(),
-                                   "page table walker")
-    gpu_device = Param.AMDGPUDevice(NULL, 'GPU Device')
+    walker = Param.VegaPagetableWalker(
+        VegaPagetableWalker(), "page table walker"
+    )
+    gpu_device = Param.AMDGPUDevice(NULL, "GPU Device")
 
     hitLatency = Param.Int(2, "Latency of a TLB hit")
     missLatency1 = Param.Int(5, "Latency #1 of a TLB miss")
@@ -61,14 +64,15 @@ class VegaGPUTLB(ClockedObject):
     mem_side_ports = VectorRequestPort("Port on side closer to memory")
     allocationPolicy = Param.Bool(True, "Allocate on an access")
 
+
 class VegaTLBCoalescer(ClockedObject):
-    type = 'VegaTLBCoalescer'
-    cxx_class = 'gem5::VegaTLBCoalescer'
-    cxx_header = 'arch/amdgpu/vega/tlb_coalescer.hh'
+    type = "VegaTLBCoalescer"
+    cxx_class = "gem5::VegaTLBCoalescer"
+    cxx_header = "arch/amdgpu/vega/tlb_coalescer.hh"
     tlb_level = Param.Int(64, "tlb level")
     maxDownstream = Param.Int(64, "max downstream @ this level")
     probesPerCycle = Param.Int(2, "Number of TLB probes per cycle")
     coalescingWindow = Param.Int(1, "Permit coalescing across that many ticks")
     cpu_side_ports = VectorResponsePort("Port on side closer to CPU/CU")
     mem_side_ports = VectorRequestPort("Port on side closer to memory")
-    disableCoalescing = Param.Bool(False,"Dispable Coalescing")
+    disableCoalescing = Param.Bool(False, "Dispable Coalescing")

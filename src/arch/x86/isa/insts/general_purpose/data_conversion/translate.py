@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop XLAT {
     zexti t1, rax, 7, dataSize=8
     # Here, t1 can be used directly. The value of al is supposed to be treated
@@ -41,4 +41,4 @@ def macroop XLAT {
     # size has to be at least 16 bits, t1 will not be sign extended.
     ld rax, seg, [1, rbx, t1], dataSize=1
 };
-'''
+"""

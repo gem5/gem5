@@ -36,18 +36,19 @@
 import gtk
 
 # All the miscellaneous colours used in the interface
-unknownColour = gtk.gdk.color_parse('magenta')
-blockedColour = gtk.gdk.color_parse('grey')
-bubbleColour = gtk.gdk.color_parse('bisque')
-emptySlotColour = gtk.gdk.color_parse('grey90')
-reservedSlotColour = gtk.gdk.color_parse('cyan')
-errorColour = gtk.gdk.color_parse('blue')
-backgroundColour = gtk.gdk.color_parse('white')
-faultColour = gtk.gdk.color_parse('dark cyan')
-readColour = gtk.gdk.color_parse('red')
-writeColour = gtk.gdk.color_parse('white')
+unknownColour = gtk.gdk.color_parse("magenta")
+blockedColour = gtk.gdk.color_parse("grey")
+bubbleColour = gtk.gdk.color_parse("bisque")
+emptySlotColour = gtk.gdk.color_parse("grey90")
+reservedSlotColour = gtk.gdk.color_parse("cyan")
+errorColour = gtk.gdk.color_parse("blue")
+backgroundColour = gtk.gdk.color_parse("white")
+faultColour = gtk.gdk.color_parse("dark cyan")
+readColour = gtk.gdk.color_parse("red")
+writeColour = gtk.gdk.color_parse("white")
 
-black = gtk.gdk.color_parse('black')
+black = gtk.gdk.color_parse("black")
+
 
 def name_to_colour(name):
     """Convert a colour name to a GdkColor"""
@@ -57,8 +58,25 @@ def name_to_colour(name):
         ret = unknownColour
     return ret
 
-number_colour_code = list(map(name_to_colour, ['black', 'brown', 'red',
-    'orange', 'yellow', 'green', 'blue', 'violet', 'grey', 'white']))
+
+number_colour_code = list(
+    map(
+        name_to_colour,
+        [
+            "black",
+            "brown",
+            "red",
+            "orange",
+            "yellow",
+            "green",
+            "blue",
+            "violet",
+            "grey",
+            "white",
+        ],
+    )
+)
+
 
 def number_to_colour(num):
     """Convert the last decimal digit of an integer into a resistor

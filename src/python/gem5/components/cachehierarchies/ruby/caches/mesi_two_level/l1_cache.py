@@ -29,12 +29,7 @@ from ......isas import ISA
 from ..abstract_l1_cache import AbstractL1Cache
 from ......utils.override import *
 
-from m5.objects import (
-    MessageBuffer,
-    RubyPrefetcher,
-    RubyCache,
-    ClockDomain,
-)
+from m5.objects import MessageBuffer, RubyPrefetcher, RubyCache, ClockDomain
 
 import math
 

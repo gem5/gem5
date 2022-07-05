@@ -30,6 +30,7 @@ from typing import Any, Iterable, Optional, Union, List
 from .jsonserializable import JsonSerializable
 from .storagetype import StorageType
 
+
 class Statistic(ABC, JsonSerializable):
     """
     The abstract base class for all Python statistics.
@@ -41,15 +42,20 @@ class Statistic(ABC, JsonSerializable):
     description: Optional[str]
     datatype: Optional[StorageType]
 
-    def __init__(self, value: Any, type: Optional[str] = None,
-                 unit: Optional[str] = None,
-                 description: Optional[str] = None,
-                 datatype: Optional[StorageType] = None):
+    def __init__(
+        self,
+        value: Any,
+        type: Optional[str] = None,
+        unit: Optional[str] = None,
+        description: Optional[str] = None,
+        datatype: Optional[StorageType] = None,
+    ):
         self.value = value
         self.type = type
         self.unit = unit
         self.description = description
         self.datatype = datatype
+
 
 class Scalar(Statistic):
     """
@@ -58,26 +64,44 @@ class Scalar(Statistic):
 
     value: Union[float, int]
 
-    def __init__(self, value: Any,
-                 unit: Optional[str] = None,
-                 description: Optional[str] = None,
-                 datatype: Optional[StorageType] = None):
-        super().__init__(value=value, type="Scalar", unit=unit,
-                description=description, datatype=datatype)
+    def __init__(
+        self,
+        value: Any,
+        unit: Optional[str] = None,
+        description: Optional[str] = None,
+        datatype: Optional[StorageType] = None,
+    ):
+        super().__init__(
+            value=value,
+            type="Scalar",
+            unit=unit,
+            description=description,
+            datatype=datatype,
+        )
+
 
 class BaseScalarVector(Statistic):
     """
     An abstract base class for classes containing a vector of Scalar values.
     """
-    value: List[Union[int,float]]
 
-    def __init__(self, value: Iterable[Union[int,float]],
-                 type: Optional[str] = None,
-                 unit: Optional[str] = None,
-                 description: Optional[str] = None,
-                 datatype: Optional[StorageType] = None):
-        super().__init__(value=list(value), type=type, unit=unit,
-                description=description, datatype=datatype)
+    value: List[Union[int, float]]
+
+    def __init__(
+        self,
+        value: Iterable[Union[int, float]],
+        type: Optional[str] = None,
+        unit: Optional[str] = None,
+        description: Optional[str] = None,
+        datatype: Optional[StorageType] = None,
+    ):
+        super().__init__(
+            value=list(value),
+            type=type,
+            unit=unit,
+            description=description,
+            datatype=datatype,
+        )
 
     def mean(self) -> float:
         """
@@ -88,10 +112,11 @@ class BaseScalarVector(Statistic):
         float
             The mean value across all bins.
         """
-        assert(self.value != None)
-        assert(isinstance(self.value, List))
+        assert self.value != None
+        assert isinstance(self.value, List)
 
         from statistics import mean as statistics_mean
+
         return statistics_mean(self.value)
 
     def count(self) -> float:
@@ -103,7 +128,7 @@ class BaseScalarVector(Statistic):
         float
             The sum of all bin values.
         """
-        assert(self.value != None)
+        assert self.value != None
         return sum(self.value)
 
 
@@ -127,21 +152,29 @@ class Distribution(BaseScalarVector):
     overflow: Optional[int]
     logs: Optional[float]
 
-    def __init__(self, value: Iterable[int],
-                 min: Union[float, int],
-                 max: Union[float, int],
-                 num_bins: int,
-                 bin_size: Union[float, int],
-                 sum: Optional[int] = None,
-                 sum_squared: Optional[int] = None,
-                 underflow: Optional[int] = None,
-                 overflow: Optional[int] = None,
-                 logs: Optional[float] = None,
-                 unit: Optional[str] = None,
-                 description: Optional[str] = None,
-                 datatype: Optional[StorageType] = None):
-        super().__init__(value=value, type="Distribution", unit=unit,
-                description=description, datatype=datatype)
+    def __init__(
+        self,
+        value: Iterable[int],
+        min: Union[float, int],
+        max: Union[float, int],
+        num_bins: int,
+        bin_size: Union[float, int],
+        sum: Optional[int] = None,
+        sum_squared: Optional[int] = None,
+        underflow: Optional[int] = None,
+        overflow: Optional[int] = None,
+        logs: Optional[float] = None,
+        unit: Optional[str] = None,
+        description: Optional[str] = None,
+        datatype: Optional[StorageType] = None,
+    ):
+        super().__init__(
+            value=value,
+            type="Distribution",
+            unit=unit,
+            description=description,
+            datatype=datatype,
+        )
 
         self.min = min
         self.max = max
@@ -154,8 +187,9 @@ class Distribution(BaseScalarVector):
         self.sum_squared = sum_squared
 
         # These check some basic conditions of a distribution.
-        assert(self.bin_size >= 0)
-        assert(self.num_bins >= 1)
+        assert self.bin_size >= 0
+        assert self.num_bins >= 1
+
 
 class Accumulator(BaseScalarVector):
     """
@@ -167,16 +201,24 @@ class Accumulator(BaseScalarVector):
     max: Union[int, float]
     sum_squared: Optional[int]
 
-    def __init__(self, value: Iterable[Union[int,float]],
-                 count: int,
-                 min: Union[int, float],
-                 max: Union[int, float],
-                 sum_squared: Optional[int] = None,
-                 unit: Optional[str] = None,
-                 description: Optional[str] = None,
-                 datatype: Optional[StorageType] = None):
-        super().__init__(value=value, type="Accumulator", unit=unit,
-                description=description, datatype=datatype)
+    def __init__(
+        self,
+        value: Iterable[Union[int, float]],
+        count: int,
+        min: Union[int, float],
+        max: Union[int, float],
+        sum_squared: Optional[int] = None,
+        unit: Optional[str] = None,
+        description: Optional[str] = None,
+        datatype: Optional[StorageType] = None,
+    ):
+        super().__init__(
+            value=value,
+            type="Accumulator",
+            unit=unit,
+            description=description,
+            datatype=datatype,
+        )
 
         self._count = count
         self.min = min

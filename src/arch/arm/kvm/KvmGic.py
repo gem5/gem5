@@ -38,20 +38,26 @@ from m5.proxy import *
 
 from m5.objects.Gic import GicV2, Gicv3
 
-class MuxingKvmGicV2(GicV2):
-    type = 'MuxingKvmGicV2'
-    cxx_header = "arch/arm/kvm/gic.hh"
-    cxx_class = 'gem5::MuxingKvmGic<gem5::GicV2Types>'
-    cxx_template_params = [ 'class Types' ]
 
-    simulate_gic = Param.Bool(False,
-        "Forcing the simulation to use the gem5 GIC instead of the host GIC")
+class MuxingKvmGicV2(GicV2):
+    type = "MuxingKvmGicV2"
+    cxx_header = "arch/arm/kvm/gic.hh"
+    cxx_class = "gem5::MuxingKvmGic<gem5::GicV2Types>"
+    cxx_template_params = ["class Types"]
+
+    simulate_gic = Param.Bool(
+        False,
+        "Forcing the simulation to use the gem5 GIC instead of the host GIC",
+    )
+
 
 class MuxingKvmGicV3(Gicv3):
-    type = 'MuxingKvmGicV3'
+    type = "MuxingKvmGicV3"
     cxx_header = "arch/arm/kvm/gic.hh"
-    cxx_class = 'gem5::MuxingKvmGic<gem5::GicV3Types>'
-    cxx_template_params = [ 'class Types' ]
+    cxx_class = "gem5::MuxingKvmGic<gem5::GicV3Types>"
+    cxx_template_params = ["class Types"]
 
-    simulate_gic = Param.Bool(False,
-        "Forcing the simulation to use the gem5 GIC instead of the host GIC")
+    simulate_gic = Param.Bool(
+        False,
+        "Forcing the simulation to use the gem5 GIC instead of the host GIC",
+    )

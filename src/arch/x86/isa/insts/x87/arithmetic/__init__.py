@@ -33,18 +33,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["addition",
-              "subtraction",
-              "multiplication",
-              "division",
-              "change_sign",
-              "round",
-              "partial_remainder",
-              "square_root"]
+categories = [
+    "addition",
+    "subtraction",
+    "multiplication",
+    "division",
+    "change_sign",
+    "round",
+    "partial_remainder",
+    "square_root",
+]
 
-microcode = '''
+microcode = """
 # X86 microcode
-'''
+"""
 for category in categories:
     exec("from . import %s as cat" % category)
     microcode += cat.microcode

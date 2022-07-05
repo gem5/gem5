@@ -36,7 +36,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop NOP
 {
     fault "NoFault"
@@ -46,4 +46,4 @@ def macroop HINT_NOP
 {
     fault "NoFault"
 };
-'''
+"""

@@ -56,14 +56,8 @@ isa_str_map = {
 }
 
 static_progs = {
-    constants.vega_x86_tag: (
-        "x86-hello64-static",
-        "x86-hello32-static",
-    ),
-    constants.arm_tag: (
-        "arm-hello64-static",
-        "arm-hello32-static",
-    ),
+    constants.vega_x86_tag: ("x86-hello64-static", "x86-hello32-static"),
+    constants.arm_tag: ("arm-hello64-static", "arm-hello32-static"),
     constants.mips_tag: ("mips-hello",),
     constants.riscv_tag: ("riscv-hello",),
     constants.sparc_tag: ("sparc-hello",),
@@ -112,11 +106,7 @@ def verify_config(isa, binary, cpu, hosts, verifier, input):
         fixtures=(),
         verifiers=(verifier,),
         config=joinpath(
-            config.base_dir,
-            "tests",
-            "gem5",
-            "configs",
-            "simple_binary_run.py",
+            config.base_dir, "tests", "gem5", "configs", "simple_binary_run.py"
         ),
         config_args=[
             binary,
@@ -124,11 +114,13 @@ def verify_config(isa, binary, cpu, hosts, verifier, input):
             "--resource-directory",
             resource_path,
             isa_str_map[isa],
-        ] + input,
+        ]
+        + input,
         valid_isas=(isa,),
         valid_hosts=hosts,
         length=os_length[isa],
     )
+
 
 # Run statically linked hello worlds
 for isa in static_progs:
@@ -140,7 +132,7 @@ for isa in static_progs:
                 cpu,
                 constants.supported_hosts,
                 stdout_verifier,
-                []
+                [],
             )
 
 # Run dynamically linked hello worlds
@@ -153,7 +145,7 @@ for isa in dynamic_progs:
                 cpu,
                 constants.target_host[isa],
                 stdout_verifier,
-                []
+                [],
             )
 
 regex = re.compile(r"1 print this")
@@ -170,5 +162,5 @@ for isa in take_params_progs:
                 cpu,
                 constants.target_host[isa],
                 stdout_verifier,
-                args
+                args,
             )

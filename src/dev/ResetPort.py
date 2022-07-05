@@ -25,8 +25,8 @@
 
 from m5.params import Port, VectorPort
 
-RESET_REQUEST_ROLE = 'Reset Request'
-RESET_RESPONSE_ROLE = 'Reset Response'
+RESET_REQUEST_ROLE = "Reset Request"
+RESET_RESPONSE_ROLE = "Reset Response"
 Port.compat(RESET_REQUEST_ROLE, RESET_RESPONSE_ROLE)
 
 # ResetRequestPort is an artifact request port for reset purpose.
@@ -34,11 +34,13 @@ class ResetRequestPort(Port):
     def __init__(self, desc):
         super().__init__(RESET_REQUEST_ROLE, desc, is_source=True)
 
+
 # ResetResponsePort is an artifact response port for reset purpose.
 # The owner should perform whole reset when receiving a request.
 class ResetResponsePort(Port):
     def __init__(self, desc):
         super().__init__(RESET_RESPONSE_ROLE, desc)
+
 
 # VectorResetRequestPort presents a bank of artifact reset request
 # ports.

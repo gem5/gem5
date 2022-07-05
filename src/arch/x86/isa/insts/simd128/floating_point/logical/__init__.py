@@ -33,13 +33,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["andp",
-              "orp",
-              "exclusive_or"]
+categories = ["andp", "orp", "exclusive_or"]
 
-microcode = '''
+microcode = """
 # SSE instructions
-'''
+"""
 for category in categories:
     exec("from . import %s as cat" % category)
     microcode += cat.microcode

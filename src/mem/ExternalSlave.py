@@ -36,18 +36,26 @@
 from m5.params import *
 from m5.SimObject import SimObject
 
+
 class ExternalSlave(SimObject):
-    type = 'ExternalSlave'
+    type = "ExternalSlave"
     cxx_header = "mem/external_slave.hh"
-    cxx_class = 'gem5::ExternalSlave'
+    cxx_class = "gem5::ExternalSlave"
 
     port = SlavePort("Slave port")
 
-    addr_ranges = VectorParam.AddrRange([], 'Addresses served by'
-        ' this port\'s external agent')
+    addr_ranges = VectorParam.AddrRange(
+        [], "Addresses served by" " this port's external agent"
+    )
 
-    port_type = Param.String('stub', 'Registered external port handler'
-        ' to pass this port to in instantiation')
-    port_data = Param.String('stub', 'A string to pass to the port'
-        ' handler (in a format specific to the handler) to describe how'
-        ' the port should be bound/bindable/discoverable')
+    port_type = Param.String(
+        "stub",
+        "Registered external port handler"
+        " to pass this port to in instantiation",
+    )
+    port_data = Param.String(
+        "stub",
+        "A string to pass to the port"
+        " handler (in a format specific to the handler) to describe how"
+        " the port should be bound/bindable/discoverable",
+    )

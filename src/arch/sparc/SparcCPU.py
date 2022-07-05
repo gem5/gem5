@@ -32,20 +32,25 @@ from m5.objects.SparcMMU import SparcMMU
 from m5.objects.SparcInterrupts import SparcInterrupts
 from m5.objects.SparcISA import SparcISA
 
+
 class SparcCPU:
     ArchDecoder = SparcDecoder
     ArchMMU = SparcMMU
     ArchInterrupts = SparcInterrupts
     ArchISA = SparcISA
 
+
 class SparcAtomicSimpleCPU(BaseAtomicSimpleCPU, SparcCPU):
     mmu = SparcMMU()
+
 
 class SparcNonCachingSimpleCPU(BaseNonCachingSimpleCPU, SparcCPU):
     mmu = SparcMMU()
 
+
 class SparcTimingSimpleCPU(BaseTimingSimpleCPU, SparcCPU):
     mmu = SparcMMU()
+
 
 class SparcO3CPU(BaseO3CPU, SparcCPU):
     mmu = SparcMMU()

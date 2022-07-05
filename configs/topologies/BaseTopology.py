@@ -26,6 +26,7 @@
 
 import m5
 
+
 class BaseTopology(object):
     description = "BaseTopology"
 
@@ -55,12 +56,14 @@ class BaseTopology(object):
             functionality.
         """
 
+
 class SimpleTopology(BaseTopology):
     """ Provides methods needed for the topologies included in Ruby before
         topology changes.
         These topologies are "simple" in the sense that they only use a flat
         list of controllers to construct the topology.
     """
+
     description = "SimpleTopology"
 
     def __init__(self, controllers):

@@ -33,12 +33,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["bit_scan",
-              "bit_test",
-              "bounds",
-              "compare",
-              "set_byte_on_condition",
-              "test"]
+categories = [
+    "bit_scan",
+    "bit_test",
+    "bounds",
+    "compare",
+    "set_byte_on_condition",
+    "test",
+]
 
 microcode = ""
 for category in categories:

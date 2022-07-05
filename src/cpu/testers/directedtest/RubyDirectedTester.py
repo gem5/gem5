@@ -30,36 +30,41 @@ from m5.proxy import *
 
 from m5.objects.ClockedObject import ClockedObject
 
+
 class DirectedGenerator(SimObject):
-    type = 'DirectedGenerator'
+    type = "DirectedGenerator"
     abstract = True
     cxx_header = "cpu/testers/directedtest/DirectedGenerator.hh"
-    cxx_class = 'gem5::DirectedGenerator'
+    cxx_class = "gem5::DirectedGenerator"
 
     num_cpus = Param.Int("num of cpus")
     system = Param.System(Parent.any, "System we belong to")
 
+
 class SeriesRequestGenerator(DirectedGenerator):
-    type = 'SeriesRequestGenerator'
+    type = "SeriesRequestGenerator"
     cxx_header = "cpu/testers/directedtest/SeriesRequestGenerator.hh"
-    cxx_class = 'gem5::SeriesRequestGenerator'
+    cxx_class = "gem5::SeriesRequestGenerator"
 
     addr_increment_size = Param.Int(64, "address increment size")
-    num_series = Param.UInt32(1,
-        "number of different address streams to generate")
+    num_series = Param.UInt32(
+        1, "number of different address streams to generate"
+    )
     percent_writes = Param.Percent(50, "percent of access that are writes")
 
+
 class InvalidateGenerator(DirectedGenerator):
-    type = 'InvalidateGenerator'
+    type = "InvalidateGenerator"
     cxx_header = "cpu/testers/directedtest/InvalidateGenerator.hh"
-    cxx_class = 'gem5::InvalidateGenerator'
+    cxx_class = "gem5::InvalidateGenerator"
 
     addr_increment_size = Param.Int(64, "address increment size")
 
+
 class RubyDirectedTester(ClockedObject):
-    type = 'RubyDirectedTester'
+    type = "RubyDirectedTester"
     cxx_header = "cpu/testers/directedtest/RubyDirectedTester.hh"
-    cxx_class = 'gem5::RubyDirectedTester'
+    cxx_class = "gem5::RubyDirectedTester"
 
     cpuPort = VectorRequestPort("the cpu ports")
     requests_to_complete = Param.Int("checks to complete")

@@ -33,15 +33,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["floating_point_ordered_compare",
-              "floating_point_unordered_compare",
-              "integer_compare",
-              "test",
-              "classify"]
+categories = [
+    "floating_point_ordered_compare",
+    "floating_point_unordered_compare",
+    "integer_compare",
+    "test",
+    "classify",
+]
 
-microcode = '''
+microcode = """
 # X86 microcode
-'''
+"""
 for category in categories:
     exec("from . import %s as cat" % category)
     microcode += cat.microcode

@@ -40,6 +40,7 @@ from m5.proxy import Parent
 from m5.util import fatal
 from m5.util.fdthelper import FdtNode, FdtProperty, FdtPropertyWords, FdtState
 
+
 class SystemCounter(SimObject):
     """
 Shared by both PE-implementations and memory-mapped timers. It provides a
@@ -50,19 +51,23 @@ Reference:
     D11.1.2 - The system counter
     """
 
-    type = 'SystemCounter'
+    type = "SystemCounter"
     cxx_header = "dev/arm/generic_timer.hh"
-    cxx_class = 'gem5::SystemCounter'
+    cxx_class = "gem5::SystemCounter"
 
     # Maximum of 1004 frequency entries, including end marker
-    freqs = VectorParam.UInt32([0x01800000], "Frequencies available for the "
+    freqs = VectorParam.UInt32(
+        [0x01800000],
+        "Frequencies available for the "
         "system counter (in Hz). First element is the base frequency, "
-        "following are alternative lower ones which must be exact divisors")
+        "following are alternative lower ones which must be exact divisors",
+    )
 
     def generateDtb(self):
         if not self.freqs:
             fatal("No counter frequency to expose in DTB")
         return FdtPropertyWords("clock-frequency", [self.freqs[0]])
+
 
 class GenericTimer(SimObject):
     """
@@ -76,9 +81,9 @@ Reference:
     G6.2  - The AArch32 view of the Generic Timer
     """
 
-    type = 'GenericTimer'
+    type = "GenericTimer"
     cxx_header = "dev/arm/generic_timer.hh"
-    cxx_class = 'gem5::GenericTimer'
+    cxx_class = "gem5::GenericTimer"
 
     _freq_in_dtb = False
 
@@ -106,22 +111,27 @@ Reference:
     def generateDeviceTree(self, state):
         node = FdtNode("timer")
 
-        node.appendCompatible(["arm,cortex-a15-timer",
-                               "arm,armv7-timer",
-                               "arm,armv8-timer"])
+        node.appendCompatible(
+            ["arm,cortex-a15-timer", "arm,armv7-timer", "arm,armv8-timer"]
+        )
 
         gic = self._parent.unproxy(self).gic
-        node.append(FdtPropertyWords("interrupts",
-            self.int_el3_phys.generateFdtProperty(gic) +
-            self.int_el1_phys.generateFdtProperty(gic) +
-            self.int_el1_virt.generateFdtProperty(gic) +
-            self.int_el2_ns_phys.generateFdtProperty(gic) +
-            self.int_el2_ns_virt.generateFdtProperty(gic)))
+        node.append(
+            FdtPropertyWords(
+                "interrupts",
+                self.int_el3_phys.generateFdtProperty(gic)
+                + self.int_el1_phys.generateFdtProperty(gic)
+                + self.int_el1_virt.generateFdtProperty(gic)
+                + self.int_el2_ns_phys.generateFdtProperty(gic)
+                + self.int_el2_ns_virt.generateFdtProperty(gic),
+            )
+        )
 
         if self._freq_in_dtb:
             node.append(self.counter.unproxy(self).generateDtb())
 
         yield node
+
 
 class GenericTimerFrame(PioDevice):
     """
@@ -133,9 +143,9 @@ Reference:
     I2.3.2 - The CNTBaseN and CNTEL0BaseN frames
     """
 
-    type = 'GenericTimerFrame'
+    type = "GenericTimerFrame"
     cxx_header = "dev/arm/generic_timer.hh"
-    cxx_class = 'gem5::GenericTimerFrame'
+    cxx_class = "gem5::GenericTimerFrame"
 
     _frame_num = 0
 
@@ -158,11 +168,13 @@ Reference:
 
         reg = state.addrCells(self.cnt_base) + state.sizeCells(0x1000)
         if self.cnt_el0_base.value != MaxAddr:
-            reg.extend(state.addrCells(self.cnt_el0_base)
-                       + state.sizeCells(0x1000))
+            reg.extend(
+                state.addrCells(self.cnt_el0_base) + state.sizeCells(0x1000)
+            )
         node.append(FdtPropertyWords("reg", reg))
 
         return node
+
 
 class GenericTimerMem(PioDevice):
     """
@@ -178,9 +190,9 @@ Reference:
     I2 - System Level Implementation of the Generic Timer
     """
 
-    type = 'GenericTimerMem'
+    type = "GenericTimerMem"
     cxx_header = "dev/arm/generic_timer.hh"
-    cxx_class = 'gem5::GenericTimerMem'
+    cxx_class = "gem5::GenericTimerMem"
 
     _freq_in_dtb = False
 
@@ -194,8 +206,9 @@ Reference:
     frames = VectorParam.GenericTimerFrame([], "Memory-mapped timer frames")
 
     def generateDeviceTree(self, state):
-        node = self.generateBasicPioDeviceNode(state, "timer",
-            self.cnt_ctl_base, 0x1000)
+        node = self.generateBasicPioDeviceNode(
+            state, "timer", self.cnt_ctl_base, 0x1000
+        )
         node.appendCompatible(["arm,armv7-timer-mem"])
         node.append(state.addrCellsProperty())
         node.append(state.sizeCellsProperty())

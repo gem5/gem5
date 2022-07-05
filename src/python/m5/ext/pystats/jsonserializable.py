@@ -30,6 +30,7 @@ from typing import Dict, List, Union, Any, IO
 
 from .storagetype import StorageType
 
+
 class JsonSerializable:
     """
     Classes which inherit from JsonSerializable can be translated into JSON
@@ -61,8 +62,9 @@ class JsonSerializable:
             model_dct[key] = new_value
         return model_dct
 
-    def __process_json_value(self,
-                            value: Any) -> Union[str,int,float,Dict,List,None]:
+    def __process_json_value(
+        self, value: Any
+    ) -> Union[str, int, float, Dict, List, None]:
         """
         Translate values into a value which can be handled by the Python stdlib
         JSON package.
@@ -90,7 +92,6 @@ class JsonSerializable:
             return str(value.name)
 
         return None
-
 
     def dumps(self, **kwargs) -> str:
         """
@@ -126,8 +127,8 @@ class JsonSerializable:
         """
 
         # Setting the default indentation to something readable.
-        if 'indent' not in kwargs:
-            kwargs['indent'] = 4
+        if "indent" not in kwargs:
+            kwargs["indent"] = 4
 
         return json.dumps(obj=self.to_json(), **kwargs)
 
@@ -161,7 +162,7 @@ class JsonSerializable:
         """
 
         # Setting the default indentation to something readable.
-        if 'indent' not in kwargs:
-            kwargs['indent'] = 4
+        if "indent" not in kwargs:
+            kwargs["indent"] = 4
 
         json.dump(obj=self.to_json(), fp=fp, **kwargs)

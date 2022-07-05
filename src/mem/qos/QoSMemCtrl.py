@@ -39,12 +39,14 @@ from m5.objects.ClockedObject import ClockedObject
 from m5.objects.QoSTurnaround import *
 
 # QoS Queue Selection policy used to select packets among same-QoS queues
-class QoSQPolicy(Enum): vals = ["fifo", "lifo", "lrg"]
+class QoSQPolicy(Enum):
+    vals = ["fifo", "lifo", "lrg"]
+
 
 class QoSMemCtrl(ClockedObject):
-    type = 'QoSMemCtrl'
+    type = "QoSMemCtrl"
     cxx_header = "mem/qos/mem_ctrl.hh"
-    cxx_class = 'gem5::memory::qos::MemCtrl'
+    cxx_class = "gem5::memory::qos::MemCtrl"
     abstract = True
 
     system = Param.System(Parent.any, "System that the controller belongs to.")
@@ -55,30 +57,38 @@ class QoSMemCtrl(ClockedObject):
     qos_priorities = Param.Unsigned(1, "QoS priorities")
 
     # QoS scheduler policy: tags request with QoS priority value
-    qos_policy = Param.QoSPolicy(NULL,
-        "Memory Controller Requests QoS arbitration policy")
+    qos_policy = Param.QoSPolicy(
+        NULL, "Memory Controller Requests QoS arbitration policy"
+    )
 
     # Select QoS driven turnaround policy
     # (direction switch triggered by highest priority buffer content)
-    qos_turnaround_policy = Param.QoSTurnaroundPolicy(NULL,
-        "Selects QoS driven turnaround policy")
+    qos_turnaround_policy = Param.QoSTurnaroundPolicy(
+        NULL, "Selects QoS driven turnaround policy"
+    )
 
     # QoS Queue Select policy: selects packets among same priority level
     # (only supported in QoSMemSinkCtrl)
-    qos_q_policy = Param.QoSQPolicy('fifo',
-        "Memory Controller Requests same-QoS selection policy")
+    qos_q_policy = Param.QoSQPolicy(
+        "fifo", "Memory Controller Requests same-QoS selection policy"
+    )
 
     # flag to select QoS syncronised scheduling
     # (calls the scheduler on all requestors at every packet arrival)
-    qos_syncro_scheduler = Param.Bool(False,
-        "Enables QoS syncronized scheduling")
+    qos_syncro_scheduler = Param.Bool(
+        False, "Enables QoS syncronized scheduling"
+    )
 
     # flag to enable QoS priority escalation
-    qos_priority_escalation = Param.Bool(False,
-        "Enables QoS priority escalation")
+    qos_priority_escalation = Param.Bool(
+        False, "Enables QoS priority escalation"
+    )
 
     # Requestor ID to be mapped to service parameters in QoS schedulers
-    qos_requestors = VectorParam.String(['']* 16,
-        "Requestor Names to be mapped to service parameters in QoS scheduler")
-    qos_masters = DeprecatedParam(qos_requestors,
-        '`qos_master` is now called `qos_requestors`')
+    qos_requestors = VectorParam.String(
+        [""] * 16,
+        "Requestor Names to be mapped to service parameters in QoS scheduler",
+    )
+    qos_masters = DeprecatedParam(
+        qos_requestors, "`qos_master` is now called `qos_requestors`"
+    )

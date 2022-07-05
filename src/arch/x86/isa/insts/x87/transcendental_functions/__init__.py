@@ -33,12 +33,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["trigonometric_functions",
-              "logarithmic_functions"]
+categories = ["trigonometric_functions", "logarithmic_functions"]
 
-microcode = '''
+microcode = """
 # X86 microcode
-'''
+"""
 for category in categories:
     exec("from . import %s as cat" % category)
     microcode += cat.microcode

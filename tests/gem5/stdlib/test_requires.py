@@ -52,11 +52,7 @@ for isa in isa_map.keys():
         verifiers=(),
         fixtures=(),
         config=joinpath(
-            config.base_dir,
-            "tests",
-            "gem5",
-            "configs",
-            "requires_check.py",
+            config.base_dir, "tests", "gem5", "configs", "requires_check.py"
         ),
         config_args=["-i", isa],
         valid_isas=(isa_map[isa],),

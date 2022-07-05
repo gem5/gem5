@@ -38,6 +38,7 @@ from m5.params import *
 from m5.proxy import *
 from m5.util.fdthelper import *
 
+
 class Plic(BasicPioDevice):
     """
     This implementation of PLIC is based on
@@ -46,17 +47,21 @@ class Plic(BasicPioDevice):
     0e07-48d0-9602-e437d5367806_sifive_U54MC_rtl_
     full_20G1.03.00_manual.pdf
     """
-    type = 'Plic'
-    cxx_header = 'dev/riscv/plic.hh'
-    cxx_class = 'gem5::Plic'
+
+    type = "Plic"
+    cxx_header = "dev/riscv/plic.hh"
+    cxx_class = "gem5::Plic"
     pio_size = Param.Addr(0x4000000, "PIO Size")
     n_src = Param.Int("Number of interrupt sources")
-    n_contexts = Param.Int("Number of interrupt contexts. Usually the number "
-                           "of threads * 2. One for M mode, one for S mode")
+    n_contexts = Param.Int(
+        "Number of interrupt contexts. Usually the number "
+        "of threads * 2. One for M mode, one for S mode"
+    )
 
     def generateDeviceTree(self, state):
-        node = self.generateBasicPioDeviceNode(state, "plic", self.pio_addr,
-                                               self.pio_size)
+        node = self.generateBasicPioDeviceNode(
+            state, "plic", self.pio_addr, self.pio_size
+        )
 
         int_state = FdtState(addr_cells=0, interrupt_cells=1)
         node.append(int_state.addrCellsProperty())
@@ -71,7 +76,7 @@ class Plic(BasicPioDevice):
         for cpu in cpus:
             phandle = int_state.phandle(cpu)
             int_extended.append(phandle)
-            int_extended.append(0xb)
+            int_extended.append(0xB)
             int_extended.append(phandle)
             int_extended.append(0x9)
 

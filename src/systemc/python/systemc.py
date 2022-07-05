@@ -29,13 +29,16 @@ from _m5.systemc import sc_main
 from _m5.systemc import sc_time
 from _m5.systemc import sc_main_result_code, sc_main_result_str
 
+
 class ScMainResult(object):
     def __init__(self, code, message):
         self.code = code
         self.message = message
 
+
 def sc_main_result():
-    '''Retrieve and return the results of running sc_main'''
+    """Retrieve and return the results of running sc_main"""
     return ScMainResult(sc_main_result_code(), sc_main_result_str())
 
-__all__ = [ 'sc_main', 'sc_time', 'sc_main_result' ]
+
+__all__ = ["sc_main", "sc_time", "sc_main_result"]

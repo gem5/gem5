@@ -43,15 +43,17 @@ from m5.SimObject import SimObject
 from m5.objects.BasicLink import BasicIntLink, BasicExtLink
 from m5.objects.MessageBuffer import MessageBuffer
 
+
 class SimpleExtLink(BasicExtLink):
-    type = 'SimpleExtLink'
+    type = "SimpleExtLink"
     cxx_header = "mem/ruby/network/simple/SimpleLink.hh"
-    cxx_class = 'gem5::ruby::SimpleExtLink'
+    cxx_class = "gem5::ruby::SimpleExtLink"
+
 
 class SimpleIntLink(BasicIntLink):
-    type = 'SimpleIntLink'
+    type = "SimpleIntLink"
     cxx_header = "mem/ruby/network/simple/SimpleLink.hh"
-    cxx_class = 'gem5::ruby::SimpleIntLink'
+    cxx_class = "gem5::ruby::SimpleIntLink"
 
     # Buffers for this internal link.
     # One buffer is allocated per vnet when setup_buffers is called.
@@ -61,14 +63,16 @@ class SimpleIntLink(BasicIntLink):
 
     def setup_buffers(self, network):
         if len(self.buffers) > 0:
-            fatal("User should not manually set links' \
-                   in_buffers or out_buffers")
+            fatal(
+                "User should not manually set links' \
+                   in_buffers or out_buffers"
+            )
 
         # The network needs number_of_virtual_networks buffers per
         # in and out port
         buffers = []
         for i in range(int(network.number_of_virtual_networks)):
-            buffers.append(MessageBuffer(ordered = True))
+            buffers.append(MessageBuffer(ordered=True))
 
         # If physical_vnets_channels is set we adjust the buffer sizes and
         # the max_dequeue_rate in order to achieve the expected thoughput
@@ -80,12 +84,15 @@ class SimpleIntLink(BasicIntLink):
         # for a 1 cy enqueue latency, 2 entries are needed. For any latency,
         # the size should be at least latency+1.
         if len(network.physical_vnets_channels) != 0:
-            assert(len(network.physical_vnets_channels) == \
-                   int(network.number_of_virtual_networks))
+            assert len(network.physical_vnets_channels) == int(
+                network.number_of_virtual_networks
+            )
             for i in range(int(network.number_of_virtual_networks)):
-                buffers[i].buffer_size = \
-                    network.physical_vnets_channels[i] * (self.latency + 1)
-                buffers[i].max_dequeue_rate = \
-                    network.physical_vnets_channels[i]
+                buffers[i].buffer_size = network.physical_vnets_channels[i] * (
+                    self.latency + 1
+                )
+                buffers[i].max_dequeue_rate = network.physical_vnets_channels[
+                    i
+                ]
 
         self.buffers = buffers

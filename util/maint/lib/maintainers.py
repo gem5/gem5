@@ -38,60 +38,76 @@
 import email.utils
 import enum
 import os
-from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, \
-    TextIO, Tuple, Union
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    TextIO,
+    Tuple,
+    Union,
+)
 
 import yaml
 
 PathOrFile = Union[TextIO, str]
 
+
 class FileFormatException(Exception):
     pass
+
 
 class MissingFieldException(FileFormatException):
     pass
 
+
 class IllegalValueException(FileFormatException):
     pass
+
 
 class Status(enum.Enum):
     MAINTAINED = enum.auto()
     ORPHANED = enum.auto()
 
     @classmethod
-    def from_str(cls, key: str) -> 'Status':
-        _status_dict = {
-            'maintained': cls.MAINTAINED,
-            'orphaned': cls.ORPHANED,
-        }
+    def from_str(cls, key: str) -> "Status":
+        _status_dict = {"maintained": cls.MAINTAINED, "orphaned": cls.ORPHANED}
         return _status_dict[key]
 
     def __str__(self) -> str:
-        return {
-            Status.MAINTAINED: 'maintained',
-            Status.ORPHANED: 'orphaned',
-        }[self]
+        return {Status.MAINTAINED: "maintained", Status.ORPHANED: "orphaned"}[
+            self
+        ]
+
 
 class Subsystem(object):
     tag: str
     status: Status
-    maintainers: List[Tuple[str, str]] # Name, email
+    maintainers: List[Tuple[str, str]]  # Name, email
     description: str
 
-    def __init__(self, tag: str,
-                 maintainers: Optional[Sequence[Tuple[str, str]]],
-                 description: str = '',
-                 status: Status = Status.ORPHANED):
+    def __init__(
+        self,
+        tag: str,
+        maintainers: Optional[Sequence[Tuple[str, str]]],
+        description: str = "",
+        status: Status = Status.ORPHANED,
+    ):
         self.tag = tag
         self.status = status
         self.maintainers = list(maintainers) if maintainers is not None else []
-        self.description = description if description is not None else ''
+        self.description = description if description is not None else ""
+
 
 class Maintainers(object):
-    DEFAULT_MAINTAINERS = os.path.join(os.path.dirname(__file__),
-                                       '../../../MAINTAINERS.yaml')
+    DEFAULT_MAINTAINERS = os.path.join(
+        os.path.dirname(__file__), "../../../MAINTAINERS.yaml"
+    )
 
-    _subsystems: Dict[str, Subsystem] # tag -> Subsystem
+    _subsystems: Dict[str, Subsystem]  # tag -> Subsystem
 
     def __init__(self, ydict: Mapping[str, Any]):
         self._subsystems = {}
@@ -99,8 +115,9 @@ class Maintainers(object):
             self._subsystems[tag] = Maintainers._parse_subsystem(tag, maint)
 
     @classmethod
-    def from_file(cls, path_or_file: Optional[PathOrFile] = None) \
-        -> "Maintainers":
+    def from_file(
+        cls, path_or_file: Optional[PathOrFile] = None
+    ) -> "Maintainers":
 
         return cls(Maintainers._load_maintainers_file(path_or_file))
 
@@ -109,14 +126,14 @@ class Maintainers(object):
         return cls(yaml.load(yaml_str, Loader=yaml.SafeLoader))
 
     @classmethod
-    def _load_maintainers_file(cls,
-                               path_or_file: Optional[PathOrFile] = None) \
-                               -> Mapping[str, Any]:
+    def _load_maintainers_file(
+        cls, path_or_file: Optional[PathOrFile] = None
+    ) -> Mapping[str, Any]:
         if path_or_file is None:
             path_or_file = cls.DEFAULT_MAINTAINERS
 
         if isinstance(path_or_file, str):
-            with open(path_or_file, 'r') as fin:
+            with open(path_or_file, "r") as fin:
                 return yaml.load(fin, Loader=yaml.SafeLoader)
         else:
             return yaml.load(path_or_file, Loader=yaml.SafeLoader)
@@ -128,28 +145,36 @@ class Maintainers(object):
                 return ydict[name]
             except KeyError:
                 raise MissingFieldException(
-                    f"{tag}: Required field '{name}' is missing")
+                    f"{tag}: Required field '{name}' is missing"
+                )
 
         maintainers: List[Tuple[str, str]] = []
-        raw_maintainers = ydict.get('maintainers', [])
+        raw_maintainers = ydict.get("maintainers", [])
         if not isinstance(raw_maintainers, Sequence):
             raise IllegalValueException(
-                f"{tag}: Illegal field 'maintainers' isn't a list.")
+                f"{tag}: Illegal field 'maintainers' isn't a list."
+            )
         for maintainer in raw_maintainers:
             name, address = email.utils.parseaddr(maintainer)
-            if name == '' and address == '':
+            if name == "" and address == "":
                 raise IllegalValueException(
-                    f"{tag}: Illegal maintainer field: '{maintainer}'")
+                    f"{tag}: Illegal maintainer field: '{maintainer}'"
+                )
             maintainers.append((name, address))
 
         try:
-            status = Status.from_str(required_field('status'))
+            status = Status.from_str(required_field("status"))
         except KeyError:
             raise IllegalValueException(
-                f"{tag}: Invalid status '{ydict['status']}'")
+                f"{tag}: Invalid status '{ydict['status']}'"
+            )
 
-        return Subsystem(tag, maintainers=maintainers, status=status,
-                         description=ydict.get('desc', ''))
+        return Subsystem(
+            tag,
+            maintainers=maintainers,
+            status=status,
+            description=ydict.get("desc", ""),
+        )
 
     def __iter__(self) -> Iterator[Tuple[str, Subsystem]]:
         return iter(list(self._subsystems.items()))
@@ -157,17 +182,19 @@ class Maintainers(object):
     def __getitem__(self, key: str) -> Subsystem:
         return self._subsystems[key]
 
+
 def _main():
     maintainers = Maintainers.from_file()
     for tag, subsys in maintainers:
-        print(f'{tag}: {subsys.description}')
-        print(f'  Status: {subsys.status}')
-        print(f'  Maintainers:')
+        print(f"{tag}: {subsys.description}")
+        print(f"  Status: {subsys.status}")
+        print(f"  Maintainers:")
         for maint in subsys.maintainers:
-            print(f'    - {maint[0]} <{maint[1]}>')
+            print(f"    - {maint[0]} <{maint[1]}>")
         print()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     _main()
 
 __all__ = [

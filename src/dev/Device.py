@@ -42,59 +42,75 @@ from m5.util.fdthelper import *
 
 from m5.objects.ClockedObject import ClockedObject
 
+
 class PioDevice(ClockedObject):
-    type = 'PioDevice'
+    type = "PioDevice"
     cxx_header = "dev/io_device.hh"
-    cxx_class = 'gem5::PioDevice'
+    cxx_class = "gem5::PioDevice"
     abstract = True
 
     pio = ResponsePort("Programmed I/O port")
     system = Param.System(Parent.any, "System this device is part of")
 
-    def generateBasicPioDeviceNode(self, state, name, pio_addr,
-                                   size, interrupts = None):
+    def generateBasicPioDeviceNode(
+        self, state, name, pio_addr, size, interrupts=None
+    ):
         node = FdtNode("%s@%x" % (name, int(pio_addr)))
-        node.append(FdtPropertyWords("reg",
-            state.addrCells(pio_addr) +
-            state.sizeCells(size) ))
+        node.append(
+            FdtPropertyWords(
+                "reg", state.addrCells(pio_addr) + state.sizeCells(size)
+            )
+        )
 
         if interrupts:
             if any([i.num < 32 for i in interrupts]):
-                raise(("Interrupt number smaller than 32 "+
-                       " in PioDevice %s") % name)
+                raise (
+                    ("Interrupt number smaller than 32 " + " in PioDevice %s")
+                    % name
+                )
 
             gic = self._parent.unproxy(self).gic
 
-            node.append(FdtPropertyWords("interrupts", sum(
-                [ i.generateFdtProperty(gic) for i in interrupts], []) ))
+            node.append(
+                FdtPropertyWords(
+                    "interrupts",
+                    sum([i.generateFdtProperty(gic) for i in interrupts], []),
+                )
+            )
 
         return node
 
+
 class BasicPioDevice(PioDevice):
-    type = 'BasicPioDevice'
+    type = "BasicPioDevice"
     cxx_header = "dev/io_device.hh"
-    cxx_class = 'gem5::BasicPioDevice'
+    cxx_class = "gem5::BasicPioDevice"
     abstract = True
 
     pio_addr = Param.Addr("Device Address")
-    pio_latency = Param.Latency('100ns', "Programmed IO latency")
+    pio_latency = Param.Latency("100ns", "Programmed IO latency")
+
 
 class DmaDevice(PioDevice):
-    type = 'DmaDevice'
+    type = "DmaDevice"
     cxx_header = "dev/dma_device.hh"
-    cxx_class = 'gem5::DmaDevice'
+    cxx_class = "gem5::DmaDevice"
     abstract = True
 
     dma = RequestPort("DMA port")
 
     _iommu = None
 
-    sid = Param.Unsigned(0,
+    sid = Param.Unsigned(
+        0,
         "Stream identifier used by an IOMMU to distinguish amongst "
-        "several devices attached to it")
-    ssid = Param.Unsigned(0,
+        "several devices attached to it",
+    )
+    ssid = Param.Unsigned(
+        0,
         "Substream identifier used by an IOMMU to distinguish amongst "
-        "several devices attached to it")
+        "several devices attached to it",
+    )
 
     def addIommuProperty(self, state, node):
         """
@@ -105,19 +121,24 @@ class DmaDevice(PioDevice):
         a dma device and the iommu.
         """
         if self._iommu is not None:
-            node.append(FdtPropertyWords("iommus",
-                [ state.phandle(self._iommu), self.sid ]))
+            node.append(
+                FdtPropertyWords(
+                    "iommus", [state.phandle(self._iommu), self.sid]
+                )
+            )
+
 
 class DmaVirtDevice(DmaDevice):
-    type = 'DmaVirtDevice'
+    type = "DmaVirtDevice"
     cxx_header = "dev/dma_virt_device.hh"
-    cxx_class = 'gem5::DmaVirtDevice'
+    cxx_class = "gem5::DmaVirtDevice"
     abstract = True
 
+
 class IsaFake(BasicPioDevice):
-    type = 'IsaFake'
+    type = "IsaFake"
     cxx_header = "dev/isa_fake.hh"
-    cxx_class = 'gem5::IsaFake'
+    cxx_class = "gem5::IsaFake"
 
     pio_size = Param.Addr(0x8, "Size of address range")
     ret_data8 = Param.UInt8(0xFF, "Default data to return")
@@ -125,13 +146,16 @@ class IsaFake(BasicPioDevice):
     ret_data32 = Param.UInt32(0xFFFFFFFF, "Default data to return")
     ret_data64 = Param.UInt64(0xFFFFFFFFFFFFFFFF, "Default data to return")
     ret_bad_addr = Param.Bool(False, "Return pkt status bad address on access")
-    update_data = Param.Bool(False, "Update the data that is returned on writes")
+    update_data = Param.Bool(
+        False, "Update the data that is returned on writes"
+    )
     warn_access = Param.String("", "String to print when device is accessed")
-    fake_mem = Param.Bool(False,
-      "Is this device acting like a memory and thus may get a cache line sized req")
+    fake_mem = Param.Bool(
+        False,
+        "Is this device acting like a memory and thus may get a cache line sized req",
+    )
+
 
 class BadAddr(IsaFake):
     pio_addr = 0
     ret_bad_addr = Param.Bool(True, "Return pkt status bad address on access")
-
-

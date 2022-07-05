@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop PXOR_MMX_MMX {
     mxor mmx, mmx, mmxm
 };
@@ -48,4 +48,4 @@ def macroop PXOR_MMX_P {
     ldfp ufp1, seg, riprel, disp, dataSize=8
     mxor mmx, mmx, ufp1
 };
-'''
+"""

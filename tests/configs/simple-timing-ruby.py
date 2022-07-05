@@ -30,7 +30,7 @@ from m5.defines import buildEnv
 from m5.util import addToPath
 import os, argparse, sys
 
-m5.util.addToPath('../configs/')
+m5.util.addToPath("../configs/")
 
 from ruby import Ruby
 from common import Options
@@ -47,38 +47,41 @@ args = parser.parse_args()
 # Set the default cache size and associativity to be very small to encourage
 # races between requests and writebacks.
 #
-args.l1d_size="256B"
-args.l1i_size="256B"
-args.l2_size="512B"
-args.l3_size="1kB"
-args.l1d_assoc=2
-args.l1i_assoc=2
-args.l2_assoc=2
-args.l3_assoc=2
+args.l1d_size = "256B"
+args.l1i_size = "256B"
+args.l2_size = "512B"
+args.l3_size = "1kB"
+args.l1d_assoc = 2
+args.l1i_assoc = 2
+args.l2_assoc = 2
+args.l3_assoc = 2
 
 # this is a uniprocessor only test
 args.num_cpus = 1
 cpu = TimingSimpleCPU(cpu_id=0)
-system = System(cpu = cpu)
+system = System(cpu=cpu)
 
 # Dummy voltage domain for all our clock domains
-system.voltage_domain = VoltageDomain(voltage = args.sys_voltage)
-system.clk_domain = SrcClockDomain(clock = '1GHz',
-                                   voltage_domain = system.voltage_domain)
+system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
+system.clk_domain = SrcClockDomain(
+    clock="1GHz", voltage_domain=system.voltage_domain
+)
 
 # Create a seperate clock domain for components that should run at
 # CPUs frequency
-system.cpu.clk_domain = SrcClockDomain(clock = '2GHz',
-                                       voltage_domain = system.voltage_domain)
+system.cpu.clk_domain = SrcClockDomain(
+    clock="2GHz", voltage_domain=system.voltage_domain
+)
 
-system.mem_ranges = AddrRange('256MB')
+system.mem_ranges = AddrRange("256MB")
 Ruby.create_system(args, False, system)
 
 # Create a separate clock for Ruby
-system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock,
-                                        voltage_domain = system.voltage_domain)
+system.ruby.clk_domain = SrcClockDomain(
+    clock=args.ruby_clock, voltage_domain=system.voltage_domain
+)
 
-assert(len(system.ruby._cpu_ports) == 1)
+assert len(system.ruby._cpu_ports) == 1
 
 # create the interrupt controller
 cpu.createInterruptController()
@@ -90,11 +93,12 @@ cpu.createInterruptController()
 cpu.connectAllPorts(
     system.ruby._cpu_ports[0].in_ports,
     system.ruby._cpu_ports[0].in_ports,
-    system.ruby._cpu_ports[0].interrupt_out_port)
+    system.ruby._cpu_ports[0].interrupt_out_port,
+)
 
 # -----------------------
 # run simulation
 # -----------------------
 
-root = Root(full_system = False, system = system)
-root.system.mem_mode = 'timing'
+root = Root(full_system=False, system=system)
+root.system.mem_mode = "timing"

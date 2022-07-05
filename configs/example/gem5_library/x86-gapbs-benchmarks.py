@@ -79,8 +79,25 @@ benchmark_choices = ["cc", "bc", "tc", "pr", "bfs"]
 
 synthetic_choices = ["0", "1"]
 
-size_choices = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12",
-                "13", "14", "15", "16", "USA-road-d.NY.gr"]
+size_choices = [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "USA-road-d.NY.gr",
+]
 
 parser = argparse.ArgumentParser(
     description="An example configuration script to run the gapbs benchmarks."
@@ -118,8 +135,7 @@ args = parser.parse_args()
 # Setting up all the fixed system parameters here
 # Caches: MESI Two Level Cache Hierarchy
 
-from gem5.components.cachehierarchies.ruby.\
-    mesi_two_level_cache_hierarchy import(
+from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
     MESITwoLevelCacheHierarchy,
 )
 
@@ -173,8 +189,10 @@ board = X86Board(
 
 if args.synthetic == "1":
     if args.size == "USA-road-d.NY.gr":
-        print("fatal: cannot use a real graph with --synthetic 1",
-        file=sys.stderr)
+        print(
+            "fatal: cannot use a real graph with --synthetic 1",
+            file=sys.stderr,
+        )
         exit(-1)
 
     command = "./{} -g {}\n".format(args.benchmark, args.size)
@@ -185,14 +203,10 @@ board.set_kernel_disk_workload(
     # The x86 linux kernel will be automatically downloaded to the
     # `~/.cache/gem5` directory if not already present.
     # gapbs benchamarks was tested with kernel version 4.19.83
-    kernel=Resource(
-        "x86-linux-kernel-4.19.83",
-    ),
+    kernel=Resource("x86-linux-kernel-4.19.83"),
     # The x86-gapbs image will be automatically downloaded to the
     # `~/.cache/gem5` directory if not already present.
-    disk_image=Resource(
-        "x86-gapbs",
-    ),
+    disk_image=Resource("x86-gapbs"),
     readfile_contents=command,
 )
 
@@ -239,8 +253,7 @@ else:
     print("Unexpected termination of simulation before ROI was reached!")
     print(
         "Exiting @ tick {} because {}.".format(
-            m5.curTick(),
-            exit_event.getCause()
+            m5.curTick(), exit_event.getCause()
         )
     )
     exit(-1)
@@ -265,8 +278,7 @@ else:
     print("Unexpected termination of simulation while ROI was being executed!")
     print(
         "Exiting @ tick {} because {}.".format(
-            m5.curTick(),
-            exit_event.getCause()
+            m5.curTick(), exit_event.getCause()
         )
     )
     exit(-1)
@@ -278,13 +290,14 @@ gem5stats = get_simstat(root)
 # We get the number of committed instructions from the timing cores. We then
 # sum and print them at the end.
 
-roi_insts = float(\
-    gem5stats.to_json()\
-    ["system"]["processor"]["cores2"]["core"]["exec_context.thread_0"]\
-    ["numInsts"]["value"]) + float(\
-    gem5stats.to_json()\
-    ["system"]["processor"]["cores3"]["core"]["exec_context.thread_0"]\
-    ["numInsts"]["value"]\
+roi_insts = float(
+    gem5stats.to_json()["system"]["processor"]["cores2"]["core"][
+        "exec_context.thread_0"
+    ]["numInsts"]["value"]
+) + float(
+    gem5stats.to_json()["system"]["processor"]["cores3"]["core"][
+        "exec_context.thread_0"
+    ]["numInsts"]["value"]
 )
 # Since we simulated the ROI in details, therefore, simulation is over at this
 # point.

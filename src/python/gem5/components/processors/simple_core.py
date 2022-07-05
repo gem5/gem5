@@ -33,21 +33,12 @@ from ...isas import ISA
 from ...runtime import get_runtime_isa
 from ...utils.override import overrides
 
-from m5.objects import (
-    BaseMMU,
-    Port,
-    BaseCPU,
-    Process,
-)
+from m5.objects import BaseMMU, Port, BaseCPU, Process
 
 
 class SimpleCore(AbstractCore):
-
     def __init__(
-        self,
-        cpu_type: CPUTypes,
-        core_id: int,
-        isa: Optional[ISA]= None
+        self, cpu_type: CPUTypes, core_id: int, isa: Optional[ISA] = None
     ):
         super().__init__(cpu_type=cpu_type)
         if isa:
@@ -56,9 +47,7 @@ class SimpleCore(AbstractCore):
         else:
             self._isa = get_runtime_isa()
         self.core = AbstractCore.cpu_simobject_factory(
-            isa=self._isa,
-            cpu_type=cpu_type,
-            core_id=core_id
+            isa=self._isa, cpu_type=cpu_type, core_id=core_id
         )
         self.core.createThreads()
 
@@ -102,8 +91,9 @@ class SimpleCore(AbstractCore):
 
     @overrides(AbstractCore)
     def connect_interrupt(
-        self, interrupt_requestor: Optional[Port] = None,
-        interrupt_responce: Optional[Port] = None
+        self,
+        interrupt_requestor: Optional[Port] = None,
+        interrupt_responce: Optional[Port] = None,
     ) -> None:
 
         # TODO: This model assumes that we will only create an interrupt

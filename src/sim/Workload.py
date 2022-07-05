@@ -28,54 +28,65 @@ from m5.SimObject import SimObject
 
 from m5.objects.SimpleMemory import *
 
+
 class Workload(SimObject):
-    type = 'Workload'
+    type = "Workload"
     cxx_header = "sim/workload.hh"
-    cxx_class = 'gem5::Workload'
+    cxx_class = "gem5::Workload"
     abstract = True
 
-    wait_for_remote_gdb = Param.Bool(False,
-        "Wait for a remote GDB connection");
+    wait_for_remote_gdb = Param.Bool(False, "Wait for a remote GDB connection")
+
 
 class StubWorkload(Workload):
-    type = 'StubWorkload'
+    type = "StubWorkload"
     cxx_header = "sim/workload.hh"
-    cxx_class = 'gem5::StubWorkload'
+    cxx_class = "gem5::StubWorkload"
 
-    entry = Param.Addr(0, 'Dummy entry point for this workload.')
-    byte_order = Param.ByteOrder('little',
-            'Dummy byte order for this workload.')
+    entry = Param.Addr(0, "Dummy entry point for this workload.")
+    byte_order = Param.ByteOrder(
+        "little", "Dummy byte order for this workload."
+    )
+
 
 class KernelWorkload(Workload):
-    type = 'KernelWorkload'
+    type = "KernelWorkload"
     cxx_header = "sim/kernel_workload.hh"
-    cxx_class = 'gem5::KernelWorkload'
+    cxx_class = "gem5::KernelWorkload"
 
     object_file = Param.String("", "File that contains the kernel code")
     extras = VectorParam.String([], "Additional object files to load")
-    extras_addrs = VectorParam.Addr([],
-            "Load addresses for additional object files")
+    extras_addrs = VectorParam.Addr(
+        [], "Load addresses for additional object files"
+    )
 
-    addr_check = Param.Bool(True,
-        "whether to bounds check kernel addresses (disable for baremetal)")
-    load_addr_mask = Param.UInt64(0xffffffffffffffff,
-            "Mask to apply to kernel addresses. If zero, "
-            "auto-calculated to be the most restrictive.")
+    addr_check = Param.Bool(
+        True,
+        "whether to bounds check kernel addresses (disable for baremetal)",
+    )
+    load_addr_mask = Param.UInt64(
+        0xFFFFFFFFFFFFFFFF,
+        "Mask to apply to kernel addresses. If zero, "
+        "auto-calculated to be the most restrictive.",
+    )
     load_addr_offset = Param.UInt64(0, "Address to offset the kernel with")
 
     command_line = Param.String("a", "boot flags to pass to the kernel")
 
+
 class SEWorkloadMeta(type(Workload)):
     all_se_workload_classes = []
+
     def __new__(mcls, name, bases, dct):
         cls = super().__new__(mcls, name, bases, dct)
         SEWorkloadMeta.all_se_workload_classes.append(cls)
         return cls
 
+
 class SEWorkload(Workload, metaclass=SEWorkloadMeta):
-    type = 'SEWorkload'
+    type = "SEWorkload"
     cxx_header = "sim/se_workload.hh"
-    cxx_class = 'gem5::SEWorkload'
+    cxx_class = "gem5::SEWorkload"
     abstract = True
 
     @classmethod
@@ -84,18 +95,23 @@ class SEWorkload(Workload, metaclass=SEWorkloadMeta):
 
     @classmethod
     def find_compatible(cls, path):
-        '''List the SE workloads compatible with the binary at path'''
+        """List the SE workloads compatible with the binary at path"""
 
         from _m5 import object_file
+
         obj = object_file.create(path)
-        options = list(filter(lambda wld: wld._is_compatible_with(obj),
-                              SEWorkloadMeta.all_se_workload_classes))
+        options = list(
+            filter(
+                lambda wld: wld._is_compatible_with(obj),
+                SEWorkloadMeta.all_se_workload_classes,
+            )
+        )
 
         return options
 
     @classmethod
     def init_compatible(cls, path, *args, **kwargs):
-        '''Construct the only SE workload compatible with the binary at path'''
+        """Construct the only SE workload compatible with the binary at path"""
 
         options = SEWorkload.find_compatible(path)
 

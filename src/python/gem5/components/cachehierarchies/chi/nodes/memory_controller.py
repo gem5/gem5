@@ -36,9 +36,11 @@ from m5.objects import (
 
 from .abstract_node import TriggerMessageBuffer
 
+
 class MemoryController(Memory_Controller):
     """A controller that connects to memory
     """
+
     _version = 0
 
     @classmethod
@@ -47,10 +49,7 @@ class MemoryController(Memory_Controller):
         return cls._version - 1
 
     def __init__(
-        self,
-        network: RubyNetwork,
-        ranges: List[AddrRange],
-        port: Port
+        self, network: RubyNetwork, ranges: List[AddrRange], port: Port
     ):
         super().__init__()
 
@@ -65,7 +64,7 @@ class MemoryController(Memory_Controller):
     def connectQueues(self, network):
         self.triggerQueue = TriggerMessageBuffer()
         self.responseFromMemory = MessageBuffer()
-        self.requestToMemory = MessageBuffer(ordered = True)
+        self.requestToMemory = MessageBuffer(ordered=True)
         self.reqRdy = TriggerMessageBuffer()
 
         self.reqOut = MessageBuffer()

@@ -29,9 +29,10 @@ import os, sys
 config_path = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.dirname(config_path)
 
+
 class PathSearchFunc(object):
     _sys_paths = None
-    environment_variable = 'M5_PATH'
+    environment_variable = "M5_PATH"
 
     def __init__(self, subdirs, sys_paths=None):
         if isinstance(subdirs, str):
@@ -46,9 +47,9 @@ class PathSearchFunc(object):
         else:
             if self._sys_paths is None:
                 try:
-                    paths = os.environ[self.environment_variable].split(':')
+                    paths = os.environ[self.environment_variable].split(":")
                 except KeyError:
-                    paths = [ '/dist/m5/system', '/n/poolfs/z/dist/m5/system' ]
+                    paths = ["/dist/m5/system", "/n/poolfs/z/dist/m5/system"]
 
                 # expand '~' and '~user' in paths
                 paths = list(map(os.path.expanduser, paths))
@@ -59,8 +60,10 @@ class PathSearchFunc(object):
                 if not paths:
                     raise IOError(
                         "Can't find system files directory, "
-                        "check your {} environment variable"
-                        .format(self.environment_variable))
+                        "check your {} environment variable".format(
+                            self.environment_variable
+                        )
+                    )
 
                 self._sys_paths = list(paths)
 
@@ -69,9 +72,13 @@ class PathSearchFunc(object):
             try:
                 return next(p for p in paths if os.path.exists(p))
             except StopIteration:
-                raise IOError("Can't find file '{}' on {}."
-                        .format(filepath, self.environment_variable))
+                raise IOError(
+                    "Can't find file '{}' on {}.".format(
+                        filepath, self.environment_variable
+                    )
+                )
 
-disk = PathSearchFunc('disks')
-binary = PathSearchFunc('binaries')
-script = PathSearchFunc('boot', sys_paths=[config_root])
+
+disk = PathSearchFunc("disks")
+binary = PathSearchFunc("binaries")
+script = PathSearchFunc("boot", sys_paths=[config_root])

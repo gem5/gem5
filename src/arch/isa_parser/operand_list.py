@@ -40,15 +40,17 @@
 from .util import assignRE, commentRE, stringRE
 from .util import error
 
+
 class OperandList(object):
-    '''Find all the operands in the given code block.  Returns an operand
-    descriptor list (instance of class OperandList).'''
+    """Find all the operands in the given code block.  Returns an operand
+    descriptor list (instance of class OperandList)."""
+
     def __init__(self, parser, code):
         self.items = []
         self.bases = {}
         # delete strings and comments so we don't match on operands inside
         for regEx in (stringRE, commentRE):
-            code = regEx.sub('', code)
+            code = regEx.sub("", code)
 
         # search for operands
         for match in parser.operandsRE().finditer(code):
@@ -62,18 +64,20 @@ class OperandList(object):
                 isElem = True
                 elem_op = (op_base, op_ext)
                 op_base = parser.elemToVector[op_base]
-                op_ext = '' # use the default one
+                op_ext = ""  # use the default one
             # if the token following the operand is an assignment, this is
             # a destination (LHS), else it's a source (RHS)
-            is_dest = (assignRE.match(code, match.end()) != None)
+            is_dest = assignRE.match(code, match.end()) != None
             is_src = not is_dest
 
             # see if we've already seen this one
             op_desc = self.find_base(op_base)
             if op_desc:
-                if op_ext and op_ext != '' and op_desc.ext != op_ext:
-                    error ('Inconsistent extensions for operand %s: %s - %s' \
-                            % (op_base, op_desc.ext, op_ext))
+                if op_ext and op_ext != "" and op_desc.ext != op_ext:
+                    error(
+                        "Inconsistent extensions for operand %s: %s - %s"
+                        % (op_base, op_desc.ext, op_ext)
+                    )
                 op_desc.is_src = op_desc.is_src or is_src
                 op_desc.is_dest = op_desc.is_dest or is_dest
                 if isElem:
@@ -83,16 +87,19 @@ class OperandList(object):
                         (ae_base, ae_ext) = ae
                         if ae_base == elem_base:
                             if ae_ext != elem_ext:
-                                error('Inconsistent extensions for elem'
-                                      ' operand %s' % elem_base)
+                                error(
+                                    "Inconsistent extensions for elem"
+                                    " operand %s" % elem_base
+                                )
                             else:
                                 found = True
                     if not found:
                         op_desc.active_elems.append(elem_op)
             else:
                 # new operand: create new descriptor
-                op_desc = parser.operandNameMap[op_base](parser,
-                    op_full, op_ext, is_src, is_dest)
+                op_desc = parser.operandNameMap[op_base](
+                    parser, op_full, op_ext, is_src, is_dest
+                )
                 # if operand is a vector elem, add the corresponding vector
                 # operand if not already done
                 if isElem:
@@ -152,12 +159,12 @@ class OperandList(object):
     # return a single string that is the concatenation of the (string)
     # values of the specified attribute for all operands
     def concatAttrStrings(self, attr_name):
-        return self.__internalConcatAttrs(attr_name, lambda x: 1, '')
+        return self.__internalConcatAttrs(attr_name, lambda x: 1, "")
 
     # like concatAttrStrings, but only include the values for the operands
     # for which the provided filter function returns true
     def concatSomeAttrStrings(self, filter, attr_name):
-        return self.__internalConcatAttrs(attr_name, filter, '')
+        return self.__internalConcatAttrs(attr_name, filter, "")
 
     # return a single list that is the concatenation of the (list)
     # values of the specified attribute for all operands
@@ -172,15 +179,17 @@ class OperandList(object):
     def sort(self):
         self.items.sort(key=lambda a: a.sort_pri)
 
+
 class SubOperandList(OperandList):
-    '''Find all the operands in the given code block.  Returns an operand
-    descriptor list (instance of class OperandList).'''
+    """Find all the operands in the given code block.  Returns an operand
+    descriptor list (instance of class OperandList)."""
+
     def __init__(self, parser, code, requestor_list):
         self.items = []
         self.bases = {}
         # delete strings and comments so we don't match on operands inside
         for regEx in (stringRE, commentRE):
-            code = regEx.sub('', code)
+            code = regEx.sub("", code)
 
         # search for operands
         for match in parser.operandsRE().finditer(code):
@@ -195,8 +204,10 @@ class SubOperandList(OperandList):
             # find this op in the requestor list
             op_desc = requestor_list.find_base(op_base)
             if not op_desc:
-                error('Found operand %s which is not in the requestor list!'
-                      % op_base)
+                error(
+                    "Found operand %s which is not in the requestor list!"
+                    % op_base
+                )
             else:
                 # See if we've already found this operand
                 op_desc = self.find_base(op_base)
@@ -228,5 +239,7 @@ class SubOperandList(OperandList):
         # Whether this instruction manipulates the whole PC or parts of it.
         # Mixing the two is a bad idea and flagged as an error.
         self.pcPart = None
-        if part: self.pcPart = True
-        if whole: self.pcPart = False
+        if part:
+            self.pcPart = True
+        if whole:
+            self.pcPart = False

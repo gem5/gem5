@@ -46,9 +46,7 @@ from m5.objects import Root
 from gem5.utils.requires import requires
 from gem5.components.boards.riscv_board import RiscvBoard
 from gem5.components.memory import DualChannelDDR4_2400
-from gem5.components.processors.simple_processor import (
-    SimpleProcessor,
-)
+from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.coherence_protocol import CoherenceProtocol
@@ -57,31 +55,25 @@ from gem5.simulate.simulator import Simulator
 
 # This runs a check to ensure the gem5 binary is compiled for RISCV.
 
-requires(
-    isa_required=ISA.RISCV,
-)
+requires(isa_required=ISA.RISCV)
 
 # With RISCV, we use simple caches.
-from gem5.components.cachehierarchies.classic\
-    .private_l1_private_l2_cache_hierarchy import (
+from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
     PrivateL1PrivateL2CacheHierarchy,
 )
+
 # Here we setup the parameters of the l1 and l2 caches.
 cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-    l1d_size="16kB",
-    l1i_size="16kB",
-    l2_size="256kB",
+    l1d_size="16kB", l1i_size="16kB", l2_size="256kB"
 )
 
 # Memory: Dual Channel DDR4 2400 DRAM device.
 
-memory = DualChannelDDR4_2400(size = "3GB")
+memory = DualChannelDDR4_2400(size="3GB")
 
 # Here we setup the processor. We use a simple processor.
 processor = SimpleProcessor(
-    cpu_type=CPUTypes.TIMING,
-    isa=ISA.RISCV,
-    num_cores=2,
+    cpu_type=CPUTypes.TIMING, isa=ISA.RISCV, num_cores=2
 )
 
 # Here we setup the board. The RiscvBoard allows for Full-System RISCV
@@ -105,14 +97,10 @@ board.set_kernel_disk_workload(
     # The RISCV bootloader will be automatically downloaded to the
     # `~/.cache/gem5` directory if not already present.
     # The riscv-ubuntu boot-test was tested with riscv-bootloader-5.10
-    kernel=Resource(
-        "riscv-bootloader-vmlinux-5.10",
-    ),
+    kernel=Resource("riscv-bootloader-vmlinux-5.10"),
     # The RISCV ubuntu image will be automatically downloaded to the
     # `~/.cache/gem5` directory if not already present.
-    disk_image=Resource(
-        "riscv-ubuntu-20.04-img",
-    ),
+    disk_image=Resource("riscv-ubuntu-20.04-img"),
 )
 
 simulator = Simulator(board=board)

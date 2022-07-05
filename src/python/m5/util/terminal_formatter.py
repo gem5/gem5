@@ -26,8 +26,8 @@
 
 import textwrap
 
-class TerminalFormatter:
 
+class TerminalFormatter:
     def __init__(self, max_width=80):
         # text_width holds the actual width we'll be wrapping to.
         # This takes into account the current terminal size.
@@ -35,9 +35,13 @@ class TerminalFormatter:
 
     def __terminal_size(self):
         import fcntl, termios, struct
-        h, w, hp, wp = struct.unpack('HHHH',
-            fcntl.ioctl(0, termios.TIOCGWINSZ,
-            struct.pack('HHHH', 0, 0, 0, 0)))
+
+        h, w, hp, wp = struct.unpack(
+            "HHHH",
+            fcntl.ioctl(
+                0, termios.TIOCGWINSZ, struct.pack("HHHH", 0, 0, 0, 0)
+            ),
+        )
         return w, h
 
     def __get_paragraphs(self, text, flatten=False):
@@ -74,15 +78,17 @@ class TerminalFormatter:
 
         for line in text.splitlines():
             stripped = line.strip()
-            if not stripped: #I.e. a blank line.
+            if not stripped:  # I.e. a blank line.
                 paragraphs.append(
-                        {False: "\n", True: " "}[flatten].join(cur_paragraph))
+                    {False: "\n", True: " "}[flatten].join(cur_paragraph)
+                )
                 cur_paragraph = []
             else:
                 cur_paragraph.append(stripped)
 
         paragraphs.append(
-                {False: "\n", True: " "}[flatten].join(cur_paragraph))
+            {False: "\n", True: " "}[flatten].join(cur_paragraph)
+        )
 
         return paragraphs
 
@@ -115,15 +121,19 @@ class TerminalFormatter:
         paragraphs = self.__get_paragraphs(text, True)
 
         # Wrap and Indent the paragraphs
-        wrapper = textwrap.TextWrapper(width =
-                max((self.__text_width - indent),1))
+        wrapper = textwrap.TextWrapper(
+            width=max((self.__text_width - indent), 1)
+        )
         # The first paragraph is special case due to the inclusion of the label
-        formatted_paragraphs = [' ' * max((indent - len(label)),0) \
-                + label + wrapper.wrap(paragraphs[0])[0]]
+        formatted_paragraphs = [
+            " " * max((indent - len(label)), 0)
+            + label
+            + wrapper.wrap(paragraphs[0])[0]
+        ]
         for paragraph in paragraphs:
             for line in wrapper.wrap(paragraph[1:])[1:]:
-                formatted_paragraphs.append(' ' * indent + line)
-            formatted_paragraphs.append('\n')
+                formatted_paragraphs.append(" " * indent + line)
+            formatted_paragraphs.append("\n")
 
         # Remove the last line break
-        return '\n'.join(formatted_paragraphs[:-1])
+        return "\n".join(formatted_paragraphs[:-1])

@@ -33,11 +33,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop FXCH_R
 {
     movfp ufp1, sti
     movfp sti, st(0)
     movfp st(0), ufp1
 };
-'''
+"""

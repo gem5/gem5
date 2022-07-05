@@ -39,16 +39,18 @@
 from m5.params import *
 from m5.objects.ClockedObject import ClockedObject
 
+
 class AbstractMemory(ClockedObject):
-    type = 'AbstractMemory'
+    type = "AbstractMemory"
     abstract = True
     cxx_header = "mem/abstract_mem.hh"
-    cxx_class = 'gem5::memory::AbstractMemory'
+    cxx_class = "gem5::memory::AbstractMemory"
 
     # A default memory size of 128 MiB (starting at 0) is used to
     # simplify the regressions
-    range = Param.AddrRange('128MiB',
-                            "Address range (potentially interleaved)")
+    range = Param.AddrRange(
+        "128MiB", "Address range (potentially interleaved)"
+    )
     null = Param.Bool(False, "Do not store data, always return zero")
 
     # All memories are passed to the global physical memory, and
@@ -69,5 +71,6 @@ class AbstractMemory(ClockedObject):
 
     # Image file to load into this memory as its initial contents. This is
     # particularly useful for ROMs.
-    image_file = Param.String('',
-            "Image to load into memory as its initial contents")
+    image_file = Param.String(
+        "", "Image to load into memory as its initial contents"
+    )

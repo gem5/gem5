@@ -42,14 +42,15 @@ from os import path
 import m5
 from m5.objects import *
 
-m5.util.addToPath('../..')
+m5.util.addToPath("../..")
 from common import SysPaths
+
 
 class ArmSstSystem(ArmSystem):
     def __init__(self, cpu_clock_rate, **kwargs):
         super(ArmSstSystem, self).__init__(**kwargs)
 
-        self.voltage_domain=VoltageDomain(voltage="1.0V")
+        self.voltage_domain = VoltageDomain(voltage="1.0V")
         self.clk_domain = SrcClockDomain(
             clock=cpu_clock_rate, voltage_domain=Parent.voltage_domain
         )
@@ -62,24 +63,28 @@ class ArmSstSystem(ArmSystem):
         # Since the latency from CPU to the bus was set in SST,
         # additional latency is undesirable.
         self.membus = NoncoherentXBar(
-            frontend_latency=0, forward_latency=0,
-            response_latency=0, header_latency=0, width=64)
+            frontend_latency=0,
+            forward_latency=0,
+            response_latency=0,
+            header_latency=0,
+            width=64,
+        )
 
         self.membus.badaddr_responder = BadAddr()
-        self.membus.default = \
-            self.membus.badaddr_responder.pio
+        self.membus.default = self.membus.badaddr_responder.pio
 
         _my_ranges = [
-            AddrRange(0, size='64MiB'),
-            AddrRange(0x80000000, size='16GiB')
+            AddrRange(0, size="64MiB"),
+            AddrRange(0x80000000, size="16GiB"),
         ]
         self.memory_outgoing_bridge = OutgoingRequestBridge(
-            physical_address_ranges=_my_ranges)
+            physical_address_ranges=_my_ranges
+        )
 
         self.memory_outgoing_bridge.port = self.membus.mem_side_ports
 
         self.cpu = [TimingSimpleCPU(cpu_id=0)]
-        self.mem_mode = 'timing'
+        self.mem_mode = "timing"
 
         for cpu in self.cpu:
             cpu.createThreads()
@@ -87,9 +92,10 @@ class ArmSstSystem(ArmSystem):
             cpu.dcache_port = self.membus.cpu_side_ports
 
             cpu.mmu.connectWalkerPorts(
-                self.membus.cpu_side_ports, self.membus.cpu_side_ports)
+                self.membus.cpu_side_ports, self.membus.cpu_side_ports
+            )
 
-        self.bridge = Bridge(delay='50ns')
+        self.bridge = Bridge(delay="50ns")
         self.bridge.mem_side_port = self.iobus.cpu_side_ports
         self.bridge.cpu_side_port = self.membus.mem_side_ports
 
@@ -106,7 +112,8 @@ class ArmSstSystem(ArmSystem):
             size_in_range = min(mem_size, mem_range.size())
 
             mem_ranges.append(
-                AddrRange(start=mem_range.start, size=size_in_range))
+                AddrRange(start=mem_range.start, size=size_in_range)
+            )
 
             mem_size -= size_in_range
             if mem_size == 0:
@@ -114,13 +121,14 @@ class ArmSstSystem(ArmSystem):
 
         raise ValueError("memory size too big for platform capabilities")
 
+
 def createArmPlatform(system):
     class VExpress_GEM5_V1_SST(VExpress_GEM5_V1):
         bootmem = SubSystem()
 
     system.platform = VExpress_GEM5_V1_SST()
 
-    if hasattr(system.platform.gic, 'cpu_addr'):
+    if hasattr(system.platform.gic, "cpu_addr"):
         system.gic_cpu_addr = system.platform.gic.cpu_addr
 
     system.platform.attachOnChipIO(system.membus, system.bridge)
@@ -128,11 +136,14 @@ def createArmPlatform(system):
 
     system.platform.setupBootLoader(system, SysPaths.binary)
 
+
 parser = argparse.ArgumentParser()
-parser.add_argument('--kernel', help='Path to the Kernel')
-parser.add_argument('--cpu-clock-rate', type=str, help='CPU clock rate, e.g. 3GHz')
-parser.add_argument('--memory-size', type=str, help='Memory size, e.g. 4GiB')
-parser.add_argument('--root-device', type=str, default='/dev/vda')
+parser.add_argument("--kernel", help="Path to the Kernel")
+parser.add_argument(
+    "--cpu-clock-rate", type=str, help="CPU clock rate, e.g. 3GHz"
+)
+parser.add_argument("--memory-size", type=str, help="Memory size, e.g. 4GiB")
+parser.add_argument("--root-device", type=str, default="/dev/vda")
 args = parser.parse_args()
 
 system = ArmSstSystem(args.cpu_clock_rate)
@@ -140,7 +151,7 @@ system = ArmSstSystem(args.cpu_clock_rate)
 # Setup Linux workload
 system.workload = ArmFsLinux()
 system.workload.object_file = args.kernel
-system.workload.dtb_filename = path.join(m5.options.outdir, 'system.dtb')
+system.workload.dtb_filename = path.join(m5.options.outdir, "system.dtb")
 system.workload.addr_check = False
 
 # Create RealView platform

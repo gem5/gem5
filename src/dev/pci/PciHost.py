@@ -39,55 +39,77 @@ from m5.proxy import *
 from m5.objects.Device import PioDevice
 from m5.objects.Platform import Platform
 
+
 class PciHost(PioDevice):
-    type = 'PciHost'
-    cxx_class = 'gem5::PciHost'
+    type = "PciHost"
+    cxx_class = "gem5::PciHost"
     cxx_header = "dev/pci/host.hh"
     abstract = True
 
+
 class GenericPciHost(PciHost):
-    type = 'GenericPciHost'
-    cxx_class = 'gem5::GenericPciHost'
+    type = "GenericPciHost"
+    cxx_class = "gem5::GenericPciHost"
     cxx_header = "dev/pci/host.hh"
 
     platform = Param.Platform(Parent.any, "Platform to use for interrupts")
 
     conf_base = Param.Addr("Config space base address")
     conf_size = Param.Addr("Config space base address")
-    conf_device_bits = Param.UInt8(8, "Number of bits used to as an "
-                                      "offset a devices address space")
+    conf_device_bits = Param.UInt8(
+        8, "Number of bits used to as an " "offset a devices address space"
+    )
 
     pci_pio_base = Param.Addr(0, "Base address for PCI IO accesses")
     pci_mem_base = Param.Addr(0, "Base address for PCI memory accesses")
     pci_dma_base = Param.Addr(0, "Base address for DMA memory accesses")
 
-    def pciFdtAddr(self, bus=0, device=0, function=0, register=0, space=0,
-                   aliased=0, prefetchable=0, relocatable=0, addr=0):
+    def pciFdtAddr(
+        self,
+        bus=0,
+        device=0,
+        function=0,
+        register=0,
+        space=0,
+        aliased=0,
+        prefetchable=0,
+        relocatable=0,
+        addr=0,
+    ):
 
-        busf = bus & 0xff
-        devicef = device & 0x1f
+        busf = bus & 0xFF
+        devicef = device & 0x1F
         functionf = function & 0x7
-        registerf = register & 0xff
+        registerf = register & 0xFF
         spacef = space & 0x3
         aliasedf = aliased & 0x1
         prefetchablef = prefetchable & 0x1
         relocatablef = relocatable & 0x1
 
-        if  busf != bus or \
-            devicef != device or \
-            functionf != function or \
-            registerf != register or \
-            spacef != space or \
-            aliasedf != aliased or \
-            prefetchablef != prefetchable or \
-            relocatablef != relocatable:
+        if (
+            busf != bus
+            or devicef != device
+            or functionf != function
+            or registerf != register
+            or spacef != space
+            or aliasedf != aliased
+            or prefetchablef != prefetchable
+            or relocatablef != relocatable
+        ):
             fatal("One of the fields for the PCI address is out of bounds")
 
-        address = registerf | (functionf << 8) | (devicef << 11) | \
-                (busf << 16) | (spacef << 24) | (aliasedf << 29) | \
-                (prefetchablef << 30) | (relocatablef << 31)
+        address = (
+            registerf
+            | (functionf << 8)
+            | (devicef << 11)
+            | (busf << 16)
+            | (spacef << 24)
+            | (aliasedf << 29)
+            | (prefetchablef << 30)
+            | (relocatablef << 31)
+        )
 
-        low_addr = addr & 0xffffffff
-        high_addr = (addr >> 32) & 0xffffffff
+        low_addr = addr & 0xFFFFFFFF
+        high_addr = (addr >> 32) & 0xFFFFFFFF
 
         return [address, high_addr, low_addr]

@@ -36,7 +36,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop RDMSR
 {
     ld t2, intseg, [8, rcx, t0], "IntAddrPrefixMSR << 3", \
@@ -73,4 +73,4 @@ def macroop RDTSCP
     srli rdx, t1, 32, dataSize=8
     rdval rcx, ctrlRegIdx("misc_reg::TscAux"), dataSize=4
 };
-'''
+"""

@@ -50,14 +50,17 @@ This Python module contains functions used to download, list, and obtain
 information about resources from resources.gem5.org.
 """
 
+
 def _resources_json_version_required() -> str:
     """
     Specifies the version of resources.json to obtain.
     """
     return "develop"
 
+
 def _get_resources_json_uri() -> str:
     return "https://resources.gem5.org/resources.json"
+
 
 def _url_validator(url):
     try:
@@ -66,8 +69,9 @@ def _url_validator(url):
     except:
         return False
 
+
 def _get_resources_json_at_path(path: str, use_caching: bool = True) -> Dict:
-    '''
+    """
     Returns a resource JSON, in the form of a Python Dict. The location
     of the JSON must be specified.
 
@@ -78,7 +82,7 @@ def _get_resources_json_at_path(path: str, use_caching: bool = True) -> Dict:
     :param use_caching: True if a cached file is to be used (up to an hour),
     otherwise the file will be retrieved from the URL regardless. True by
     default. Only valid in cases where a URL is passed.
-    '''
+    """
 
     # If a local valid path is passed, just load it.
     if Path(path).is_file():
@@ -116,9 +120,12 @@ def _get_resources_json_at_path(path: str, use_caching: bool = True) -> Dict:
         # time of the file. This is the most portable solution as other ideas,
         # like "file creation time", are  not always the same concept between
         # operating systems.
-        if not use_caching or not os.path.exists(download_path) or \
-            (time.time() - os.path.getmtime(download_path)) > 3600:
-                    _download(path, download_path)
+        if (
+            not use_caching
+            or not os.path.exists(download_path)
+            or (time.time() - os.path.getmtime(download_path)) > 3600
+        ):
+            _download(path, download_path)
 
     with open(download_path) as f:
         file_contents = f.read()
@@ -134,6 +141,7 @@ def _get_resources_json_at_path(path: str, use_caching: bool = True) -> Dict:
 
     return to_return
 
+
 def _get_resources_json() -> Dict:
     """
     Gets the Resources JSON.
@@ -142,7 +150,7 @@ def _get_resources_json() -> Dict:
     """
 
     path = os.getenv("GEM5_RESOURCE_JSON", _get_resources_json_uri())
-    to_return = _get_resources_json_at_path(path = path)
+    to_return = _get_resources_json_at_path(path=path)
 
     # If the current version pulled is not correct, look up the
     # "previous-versions" field to find the correct one.
@@ -150,16 +158,17 @@ def _get_resources_json() -> Dict:
     if to_return["version"] != version:
         if version in to_return["previous-versions"].keys():
             to_return = _get_resources_json_at_path(
-                path = to_return["previous-versions"][version]
+                path=to_return["previous-versions"][version]
             )
         else:
             # This should never happen, but we thrown an exception to explain
             # that we can't find the version.
             raise Exception(
                 f"Version '{version}' of resources.json cannot be found."
-                )
+            )
 
     return to_return
+
 
 def _get_url_base() -> str:
     """
@@ -217,11 +226,8 @@ def _get_resources(resources_group: Dict) -> Dict[str, Dict]:
 
     return to_return
 
-def _download(
-    url: str,
-    download_to: str,
-    max_attempts: int = 6,
-) -> None:
+
+def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
     """
     Downloads a file.
 
@@ -239,7 +245,6 @@ def _download(
 
     # TODO: This whole setup will only work for single files we can get via
     # wget. We also need to support git clones going forward.
-
 
     attempt = 0
     while True:
@@ -266,7 +271,6 @@ def _download(
                 time.sleep((2 ** attempt) + random.uniform(0, 1))
             else:
                 raise e
-
 
 
 def list_resources() -> List[str]:
@@ -377,14 +381,16 @@ def get_resource(
         else:
             raise Exception(
                 "The resource.json entry for '{}' has a value for the "
-                "'is_zipped' field which is neither a string or a boolean."
-                .format(
+                "'is_zipped' field which is neither a string or a boolean.".format(
                     resource_name
                 )
             )
 
-        run_tar_extract = untar and "is_tar_archive" in resource_json and \
-                          resource_json["is_tar_archive"]
+        run_tar_extract = (
+            untar
+            and "is_tar_archive" in resource_json
+            and resource_json["is_tar_archive"]
+        )
 
         tar_extension = ".tar"
         if run_tar_extract:
@@ -397,8 +403,7 @@ def get_resource(
         # TODO: Might be nice to have some kind of download status bar here.
         # TODO: There might be a case where this should be silenced.
         print(
-            "Resource '{}' was not found locally. Downloading to '{}'..."
-            .format(
+            "Resource '{}' was not found locally. Downloading to '{}'...".format(
                 resource_name, download_dest
             )
         )
@@ -416,7 +421,7 @@ def get_resource(
                     resource_name, download_dest
                 )
             )
-            unzip_to = download_dest[:-len(zip_extension)]
+            unzip_to = download_dest[: -len(zip_extension)]
             with gzip.open(download_dest, "rb") as f:
                 with open(unzip_to, "wb") as o:
                     shutil.copyfileobj(f, o)
@@ -431,7 +436,7 @@ def get_resource(
                 f"Unpacking the the resource '{resource_name}' "
                 f"('{download_dest}')"
             )
-            unpack_to = download_dest[:-len(tar_extension)]
+            unpack_to = download_dest[: -len(tar_extension)]
             with tarfile.open(download_dest) as f:
                 f.extractall(unpack_to)
             os.remove(download_dest)

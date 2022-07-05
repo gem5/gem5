@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop MOVAPS_XMM_M {
     # Check low address.
     ldfp xmmh, seg, sib, "DISPLACEMENT + 8", dataSize=8
@@ -276,4 +276,4 @@ def macroop MOVSD_P_XMM {
 def macroop MOVSD_XMM_XMM {
     movfp xmml, xmmlm, dataSize=8
 };
-'''
+"""

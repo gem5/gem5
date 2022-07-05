@@ -150,8 +150,7 @@ class SwitchableProcessor(AbstractProcessor):
 
         # Switch the CPUs
         m5.switchCpus(
-            self._board,
-            list(zip(current_core_simobj, to_switch_simobj)),
+            self._board, list(zip(current_core_simobj, to_switch_simobj))
         )
 
         # Ensure the current processor is updated.

@@ -29,8 +29,9 @@ from m5.objects import *
 
 from topologies.BaseTopology import SimpleTopology
 
+
 class CrossbarGarnet(SimpleTopology):
-    description='CrossbarGarnet'
+    description = "CrossbarGarnet"
 
     def makeTopology(self, options, network, IntLink, ExtLink, Router):
         # Create one router in Garnet. Internally models a crossbar and
@@ -40,8 +41,10 @@ class CrossbarGarnet(SimpleTopology):
         xbar = Router(router_id=0)
         network.routers = xbar
 
-        ext_links = [ExtLink(link_id=i, ext_node=n, int_node=xbar)
-                        for (i, n) in enumerate(self.nodes)]
+        ext_links = [
+            ExtLink(link_id=i, ext_node=n, int_node=xbar)
+            for (i, n) in enumerate(self.nodes)
+        ]
         network.ext_links = ext_links
 
         int_links = []

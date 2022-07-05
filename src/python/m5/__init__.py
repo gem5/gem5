@@ -46,7 +46,8 @@ if in_gem5:
     from . import objects
     from . import params
     from . import stats
-    if defines.buildEnv['USE_SYSTEMC']:
+
+    if defines.buildEnv["USE_SYSTEMC"]:
         from . import systemc
         from . import tlm
     from . import util
@@ -54,4 +55,3 @@ if in_gem5:
     from .event import *
     from .main import main
     from .simulate import *
-

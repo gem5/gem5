@@ -43,16 +43,18 @@ root = None
 
 import m5
 
+
 def run_test(root):
-        # Called from tests/run.py
+    # Called from tests/run.py
 
-        import sys
-        argv = [
-                sys.argv[0],
-                # Add a specific page policy and specify the number of ranks
-                '-p%s' % page_policy,
-                '-r 2',
-        ]
+    import sys
 
-        # Execute the script we are wrapping
-        run_config('configs/dram/low_power_sweep.py', argv=argv)
+    argv = [
+        sys.argv[0],
+        # Add a specific page policy and specify the number of ranks
+        "-p%s" % page_policy,
+        "-r 2",
+    ]
+
+    # Execute the script we are wrapping
+    run_config("configs/dram/low_power_sweep.py", argv=argv)

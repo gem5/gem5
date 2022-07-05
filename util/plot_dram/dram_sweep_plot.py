@@ -57,10 +57,15 @@ def main():
         print("Usage: ", sys.argv[0], "-u|p|e <simout directory>")
         exit(-1)
 
-    if len(sys.argv[1]) != 2 or sys.argv[1][0] != '-' or \
-            not sys.argv[1][1] in "upe":
-        print("Choose -u (utilisation), -p (total power), or -e " \
-            "(power efficiency)")
+    if (
+        len(sys.argv[1]) != 2
+        or sys.argv[1][0] != "-"
+        or not sys.argv[1][1] in "upe"
+    ):
+        print(
+            "Choose -u (utilisation), -p (total power), or -e "
+            "(power efficiency)"
+        )
         exit(-1)
 
     # Choose the appropriate mode, either utilisation, total power, or
@@ -68,15 +73,15 @@ def main():
     mode = sys.argv[1][1]
 
     try:
-        stats = open(sys.argv[2] + '/stats.txt', 'r')
+        stats = open(sys.argv[2] + "/stats.txt", "r")
     except IOError:
-        print("Failed to open ", sys.argv[2] + '/stats.txt', " for reading")
+        print("Failed to open ", sys.argv[2] + "/stats.txt", " for reading")
         exit(-1)
 
     try:
-        simout = open(sys.argv[2] + '/simout', 'r')
+        simout = open(sys.argv[2] + "/simout", "r")
     except IOError:
-        print("Failed to open ", sys.argv[2] + '/simout', " for reading")
+        print("Failed to open ", sys.argv[2] + "/simout", " for reading")
         exit(-1)
 
     # Get the burst size, number of banks and the maximum stride from
@@ -84,8 +89,10 @@ def main():
     got_sweep = False
 
     for line in simout:
-        match = re.match("DRAM sweep with "
-                         "burst: (\d+), banks: (\d+), max stride: (\d+)", line)
+        match = re.match(
+            "DRAM sweep with " "burst: (\d+), banks: (\d+), max stride: (\d+)",
+            line,
+        )
         if match:
             burst_size = int(match.groups(0)[0])
             banks = int(match.groups(0)[1])
@@ -117,10 +124,11 @@ def main():
             avg_pwr.append(float(match.groups(0)[0]))
     stats.close()
 
-
     # Sanity check
     if not (len(peak_bw) == len(bus_util) and len(bus_util) == len(avg_pwr)):
-        print("Peak bandwidth, bus utilisation, and average power do not match")
+        print(
+            "Peak bandwidth, bus utilisation, and average power do not match"
+        )
         exit(-1)
 
     # Collect the selected metric as our Z-axis, we do this in a 2D
@@ -131,11 +139,11 @@ def main():
     i = 0
 
     for j in range(len(peak_bw)):
-        if mode == 'u':
+        if mode == "u":
             z.append(bus_util[j])
-        elif mode == 'p':
+        elif mode == "p":
             z.append(avg_pwr[j])
-        elif mode == 'e':
+        elif mode == "e":
             # avg_pwr is in mW, peak_bw in MiByte/s, bus_util in percent
             z.append(avg_pwr[j] / (bus_util[j] / 100.0 * peak_bw[j] / 1000.0))
         else:
@@ -156,7 +164,7 @@ def main():
         exit(-1)
 
     fig = plt.figure()
-    ax = fig.gca(projection='3d')
+    ax = fig.gca(projection="3d")
     X = np.arange(burst_size, max_size + 1, burst_size)
     Y = np.arange(1, banks + 1, 1)
     X, Y = np.meshgrid(X, Y)
@@ -165,27 +173,36 @@ def main():
     # stride size in order
     Z = np.array(zs)
 
-    surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.coolwarm,
-                           linewidth=0, antialiased=False)
+    surf = ax.plot_surface(
+        X,
+        Y,
+        Z,
+        rstride=1,
+        cstride=1,
+        cmap=cm.coolwarm,
+        linewidth=0,
+        antialiased=False,
+    )
 
     # Change the tick frequency to 64
     start, end = ax.get_xlim()
     ax.xaxis.set_ticks(np.arange(start, end + 1, 64))
 
-    ax.set_xlabel('Bytes per activate')
-    ax.set_ylabel('Banks')
+    ax.set_xlabel("Bytes per activate")
+    ax.set_ylabel("Banks")
 
-    if mode == 'u':
-        ax.set_zlabel('Utilisation (%)')
-    elif mode == 'p':
-        ax.set_zlabel('Power (mW)')
-    elif mode == 'e':
-        ax.set_zlabel('Power efficiency (mW / GByte / s)')
+    if mode == "u":
+        ax.set_zlabel("Utilisation (%)")
+    elif mode == "p":
+        ax.set_zlabel("Power (mW)")
+    elif mode == "e":
+        ax.set_zlabel("Power efficiency (mW / GByte / s)")
 
     # Add a colorbar
-    fig.colorbar(surf, shrink=0.5, pad=.1, aspect=10)
+    fig.colorbar(surf, shrink=0.5, pad=0.1, aspect=10)
 
     plt.show()
+
 
 if __name__ == "__main__":
     main()

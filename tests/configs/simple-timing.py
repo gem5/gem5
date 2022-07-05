@@ -39,5 +39,6 @@
 from m5.objects import *
 from base_config import *
 
-root = BaseSESystemUniprocessor(mem_mode='timing',
-                                cpu_class=TimingSimpleCPU).create_root()
+root = BaseSESystemUniprocessor(
+    mem_mode="timing", cpu_class=TimingSimpleCPU
+).create_root()

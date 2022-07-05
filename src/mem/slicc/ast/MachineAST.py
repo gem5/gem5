@@ -28,6 +28,7 @@
 from slicc.ast.DeclAST import DeclAST
 from slicc.symbols import StateMachine, Type
 
+
 class MachineAST(DeclAST):
     def __init__(self, slicc, mtype, pairs_ast, config_parameters, decls):
         super().__init__(slicc, pairs_ast)
@@ -41,11 +42,15 @@ class MachineAST(DeclAST):
         return "[Machine: %r]" % self.ident
 
     def files(self, parent=None):
-        s = set(('%s_Controller.cc' % self.ident,
-                 '%s_Controller.hh' % self.ident,
-                 '%s_Controller.py' % self.ident,
-                 '%s_Transitions.cc' % self.ident,
-                 '%s_Wakeup.cc' % self.ident))
+        s = set(
+            (
+                "%s_Controller.cc" % self.ident,
+                "%s_Controller.hh" % self.ident,
+                "%s_Controller.py" % self.ident,
+                "%s_Transitions.cc" % self.ident,
+                "%s_Wakeup.cc" % self.ident,
+            )
+        )
 
         s |= self.decls.files(self.ident)
         return s
@@ -55,8 +60,13 @@ class MachineAST(DeclAST):
         self.symtab.pushFrame()
 
         # Create a new machine
-        machine = StateMachine(self.symtab, self.ident, self.location,
-                               self.pairs, self.config_parameters)
+        machine = StateMachine(
+            self.symtab,
+            self.ident,
+            self.location,
+            self.pairs,
+            self.config_parameters,
+        )
 
         self.symtab.newCurrentMachine(machine)
 

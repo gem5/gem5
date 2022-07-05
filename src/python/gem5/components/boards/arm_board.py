@@ -62,6 +62,7 @@ from ..processors.abstract_processor import AbstractProcessor
 from ..memory.abstract_memory_system import AbstractMemorySystem
 from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
 
+
 class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
     """
     A board capable of full system simulation for ARM instructions. It is based
@@ -77,6 +78,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
     * stage2 walker ports are ignored.
     * This version does not support SECURITY extension.
     """
+
     __metaclass__ = ABCMeta
 
     def __init__(
@@ -86,20 +88,20 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         memory: AbstractMemorySystem,
         cache_hierarchy: AbstractCacheHierarchy,
         platform: VExpress_GEM5_Base = VExpress_GEM5_Foundation(),
-        release: ArmRelease = ArmDefaultRelease()
+        release: ArmRelease = ArmDefaultRelease(),
     ) -> None:
         super().__init__()
         AbstractBoard.__init__(
             self,
-            clk_freq = clk_freq,
-            processor = processor,
-            memory = memory,
-            cache_hierarchy = cache_hierarchy,
+            clk_freq=clk_freq,
+            processor=processor,
+            memory=memory,
+            cache_hierarchy=cache_hierarchy,
         )
 
         # This board requires ARM ISA to work.
 
-        requires(isa_required = ISA.ARM)
+        requires(isa_required=ISA.ARM)
 
         # Setting the voltage domain here.
 
@@ -179,9 +181,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
 
         self.iobridge = Bridge(delay="50ns")
         self.iobridge.mem_side_port = self.iobus.cpu_side_ports
-        self.iobridge.cpu_side_port = (
-            self.cache_hierarchy.get_mem_side_port()
-        )
+        self.iobridge.cpu_side_port = self.cache_hierarchy.get_mem_side_port()
 
         # We either have iocache or dmabridge depending upon the
         # cache_hierarchy. If we have "NoCache", then we use the dmabridge.
@@ -205,9 +205,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
             # beidge in this case. Parameters of this bridge are also taken
             # from the common/example/arm/devices.py file.
 
-            self.dmabridge = Bridge(
-                delay="50ns", ranges=self.mem_ranges
-            )
+            self.dmabridge = Bridge(delay="50ns", ranges=self.mem_ranges)
 
             self.dmabridge.mem_side_port = self.get_dma_ports()[0]
             self.dmabridge.cpu_side_port = self.get_dma_ports()[1]
@@ -271,7 +269,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
     def get_dma_ports(self) -> List[Port]:
         return [
             self.cache_hierarchy.get_cpu_side_port(),
-            self.iobus.mem_side_ports
+            self.iobus.mem_side_ports,
         ]
 
     @overrides(AbstractBoard)
@@ -292,9 +290,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         )
 
         self.pci_devices = [PciVirtIO(vio=VirtIOBlock(image=image))]
-        self.realview.attachPciDevice(
-                self.pci_devices[0], self.iobus
-        )
+        self.realview.attachPciDevice(self.pci_devices[0], self.iobus)
 
         # Now that the disk and workload are set, we can generate the device
         # tree file. We will generate the dtb file everytime the board is
@@ -309,7 +305,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         # Specifying the dtb file location to the workload.
 
         self.workload.dtb_filename = os.path.join(
-                m5.options.outdir, "device.dtb"
+            m5.options.outdir, "device.dtb"
         )
 
         # Calling generateDtb from class ArmSystem to add memory information to
@@ -322,7 +318,8 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         # the kernel file and the bootloader file(s).
 
         self.realview.setupBootLoader(
-                self, self.workload.dtb_filename, self._bootloader)
+            self, self.workload.dtb_filename, self._bootloader
+        )
 
     def _get_memory_ranges(self, mem_size) -> list:
         """
@@ -334,7 +331,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         for mem_range in self.realview._mem_regions:
             size_in_range = min(mem_size, mem_range.size())
             mem_ranges.append(
-                AddrRange(start = mem_range.start, size = size_in_range)
+                AddrRange(start=mem_range.start, size=size_in_range)
             )
 
             mem_size -= size_in_range

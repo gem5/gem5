@@ -36,7 +36,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
     def macroop IN_R_I {
         .adjust_imm trimImm(8)
         limm t1, imm, dataSize=8
@@ -86,4 +86,4 @@ microcode = '''
     def macroop OUT_VIRT_R_R {
         panic "Virtual mode out isn't implemented!"
     };
-'''
+"""

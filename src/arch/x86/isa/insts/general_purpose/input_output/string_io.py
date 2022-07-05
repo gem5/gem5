@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop INS_M_R {
     # Find the constant we need to either add or subtract from rdi
     ruflag t0, 10
@@ -135,4 +135,4 @@ end:
 def macroop OUTS_VIRT_E_R_M {
     panic "Virtual mode outs isn't implemented!"
 };
-'''
+"""

@@ -29,11 +29,7 @@ from gem5.isas import ISA
 
 from .abstract_node import AbstractNode
 
-from m5.objects import (
-    ClockDomain,
-    RubyCache,
-    RubyNetwork,
-)
+from m5.objects import ClockDomain, RubyCache, RubyNetwork
 
 
 class PrivateL1MOESICache(AbstractNode):
@@ -69,7 +65,7 @@ class PrivateL1MOESICache(AbstractNode):
         self.alloc_on_readshared = True
         self.alloc_on_readunique = True
         self.alloc_on_readonce = True
-        self.alloc_on_writeback = False       # Should never happen in an L1
+        self.alloc_on_writeback = False  # Should never happen in an L1
         self.dealloc_on_unique = False
         self.dealloc_on_shared = False
         self.dealloc_backinv_unique = True

@@ -40,5 +40,5 @@ import inspect
 import _m5
 
 for name, module in inspect.getmembers(_m5):
-    if name.startswith('param_') or name.startswith('enum_'):
+    if name.startswith("param_") or name.startswith("enum_"):
         exec("from _m5.%s import *" % name)

@@ -25,12 +25,21 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import re
-from typing import Callable, Dict, Iterator, List, Mapping, Optional, Pattern,\
-                   Union
+from typing import (
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Pattern,
+    Union,
+)
 
 from .jsonserializable import JsonSerializable
 from .statistic import Scalar, Statistic
 from .timeconversion import TimeConversion
+
 
 class Group(JsonSerializable):
     """
@@ -41,10 +50,14 @@ class Group(JsonSerializable):
     type: Optional[str]
     time_conversion: Optional[TimeConversion]
 
-    def __init__(self, type: Optional[str] = None,
-                 time_conversion: Optional[TimeConversion] = None,
-                 **kwargs: Dict[str, Union["Group",Statistic,List["Group"],
-                                           List["Statistic"]]]):
+    def __init__(
+        self,
+        type: Optional[str] = None,
+        time_conversion: Optional[TimeConversion] = None,
+        **kwargs: Dict[
+            str, Union["Group", Statistic, List["Group"], List["Statistic"]]
+        ]
+    ):
         if type is None:
             self.type = "Group"
         else:
@@ -52,11 +65,12 @@ class Group(JsonSerializable):
 
         self.time_conversion = time_conversion
 
-        for key,value in kwargs.items():
+        for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def children(self, predicate: Optional[Callable[[str], bool]] = None
-                 ) -> Iterator[Union["Group", Statistic]]:
+    def children(
+        self, predicate: Optional[Callable[[str], bool]] = None
+    ) -> Iterator[Union["Group", Statistic]]:
         """ Iterate through all of the children, optionally with a predicate
 
         ```
@@ -71,7 +85,8 @@ class Group(JsonSerializable):
         """
         for attr in self.__dict__:
             # Check the provided predicate. If not a match, skip this child
-            if predicate and not predicate(attr): continue
+            if predicate and not predicate(attr):
+                continue
             obj = getattr(self, attr)
             if isinstance(obj, Group) or isinstance(obj, Statistic):
                 yield obj
@@ -100,8 +115,9 @@ class Group(JsonSerializable):
         """
         yield from self.children(lambda _name: _name in name)
 
-    def find_re(self, regex: Union[str, Pattern]
-                ) -> Iterator[Union["Group", Statistic]]:
+    def find_re(
+        self, regex: Union[str, Pattern]
+    ) -> Iterator[Union["Group", Statistic]]:
         """ Find all stats that match the name
 
         This function searches all of the "children" in this group. It yields
@@ -124,6 +140,7 @@ class Group(JsonSerializable):
             pattern = regex
         yield from self.children(lambda _name: bool(pattern.search(_name)))
 
+
 class Vector(Group):
     """
     The Vector class is used to store vector information. However, in gem5
@@ -132,5 +149,6 @@ class Vector(Group):
     accordance to decisions made in relation to
     https://gem5.atlassian.net/browse/GEM5-867.
     """
-    def __init__(self, scalar_map: Mapping[str,Scalar]):
+
+    def __init__(self, scalar_map: Mapping[str, Scalar]):
         super().__init__(type="Vector", time_conversion=None, **scalar_map)

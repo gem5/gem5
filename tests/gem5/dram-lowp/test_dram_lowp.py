@@ -26,26 +26,24 @@
 
 from testlib import *
 
-verifiers = (
-    verifier.MatchStdoutNoPerf(joinpath(getcwd(), 'ref', 'simout')),
-)
+verifiers = (verifier.MatchStdoutNoPerf(joinpath(getcwd(), "ref", "simout")),)
 
 gem5_verify_config(
-    name='test-low_power-close_adaptive',
+    name="test-low_power-close_adaptive",
     fixtures=(),
     verifiers=verifiers,
-    config=joinpath(config.base_dir, 'configs', 'dram','low_power_sweep.py'),
-    config_args=['-p', 'close_adaptive', '-r', '2'],
+    config=joinpath(config.base_dir, "configs", "dram", "low_power_sweep.py"),
+    config_args=["-p", "close_adaptive", "-r", "2"],
     valid_isas=(constants.null_tag,),
     valid_hosts=constants.supported_hosts,
 )
 
 gem5_verify_config(
-    name='test-low_power-open_adaptive',
+    name="test-low_power-open_adaptive",
     fixtures=(),
     verifiers=verifiers,
-    config=joinpath(config.base_dir, 'configs', 'dram','low_power_sweep.py'),
-    config_args=['-p', 'open_adaptive', '-r', '2'],
+    config=joinpath(config.base_dir, "configs", "dram", "low_power_sweep.py"),
+    config_args=["-p", "open_adaptive", "-r", "2"],
     valid_isas=(constants.null_tag,),
     valid_hosts=constants.supported_hosts,
 )

@@ -43,17 +43,20 @@ from m5.SimObject import SimObject
 # Expressions, in evaluation, will have access to the ThreadContext and
 # a StaticInst
 
+
 class TimingExpr(SimObject):
-    type = 'TimingExpr'
-    cxx_header = 'cpu/timing_expr.hh'
-    cxx_class = 'gem5::TimingExpr'
-    abstract = True;
+    type = "TimingExpr"
+    cxx_header = "cpu/timing_expr.hh"
+    cxx_class = "gem5::TimingExpr"
+    abstract = True
+
 
 class TimingExprLiteral(TimingExpr):
     """Literal 64 bit unsigned value"""
-    type = 'TimingExprLiteral'
-    cxx_header = 'cpu/timing_expr.hh'
-    cxx_class = 'gem5::TimingExprLiteral'
+
+    type = "TimingExprLiteral"
+    cxx_header = "cpu/timing_expr.hh"
+    cxx_class = "gem5::TimingExprLiteral"
 
     value = Param.UInt64("literal value")
 
@@ -61,15 +64,19 @@ class TimingExprLiteral(TimingExpr):
         self.value = value
         return self
 
+
 class TimingExpr0(TimingExprLiteral):
     """Convenient 0"""
+
     value = 0
+
 
 class TimingExprSrcReg(TimingExpr):
     """Read a source register from the current inst"""
-    type = 'TimingExprSrcReg'
-    cxx_header = 'cpu/timing_expr.hh'
-    cxx_class = 'gem5::TimingExprSrcReg'
+
+    type = "TimingExprSrcReg"
+    cxx_header = "cpu/timing_expr.hh"
+    cxx_class = "gem5::TimingExprSrcReg"
 
     index = Param.Unsigned("index into inst src regs of the reg to read")
 
@@ -77,11 +84,13 @@ class TimingExprSrcReg(TimingExpr):
         self.index = index
         return self
 
+
 class TimingExprLet(TimingExpr):
     """Block of declarations"""
-    type = 'TimingExprLet'
-    cxx_header = 'cpu/timing_expr.hh'
-    cxx_class = 'gem5::TimingExprLet'
+
+    type = "TimingExprLet"
+    cxx_header = "cpu/timing_expr.hh"
+    cxx_class = "gem5::TimingExprLet"
 
     defns = VectorParam.TimingExpr("expressions for bindings")
     expr = Param.TimingExpr("body expression")
@@ -91,11 +100,13 @@ class TimingExprLet(TimingExpr):
         self.expr = expr
         return self
 
+
 class TimingExprRef(TimingExpr):
     """Value of a bound sub-expression"""
-    type = 'TimingExprRef'
-    cxx_header = 'cpu/timing_expr.hh'
-    cxx_class = 'gem5::TimingExprRef'
+
+    type = "TimingExprRef"
+    cxx_header = "cpu/timing_expr.hh"
+    cxx_class = "gem5::TimingExprRef"
 
     index = Param.Unsigned("expression index")
 
@@ -103,31 +114,38 @@ class TimingExprRef(TimingExpr):
         self.index = index
         return self
 
+
 class TimingExprOp(Enum):
     vals = [
-        'timingExprAdd', 'timingExprSub',
-        'timingExprUMul', 'timingExprUDiv',
-        'timingExprSMul', 'timingExprSDiv',
-        'timingExprUCeilDiv', # Unsigned divide rounding up
-        'timingExprEqual', 'timingExprNotEqual',
-        'timingExprULessThan',
-        'timingExprUGreaterThan',
-        'timingExprSLessThan',
-        'timingExprSGreaterThan',
-        'timingExprInvert',
-        'timingExprNot',
-        'timingExprAnd',
-        'timingExprOr',
-        'timingExprSizeInBits',
-        'timingExprSignExtend32To64',
-        'timingExprAbs'
-        ]
+        "timingExprAdd",
+        "timingExprSub",
+        "timingExprUMul",
+        "timingExprUDiv",
+        "timingExprSMul",
+        "timingExprSDiv",
+        "timingExprUCeilDiv",  # Unsigned divide rounding up
+        "timingExprEqual",
+        "timingExprNotEqual",
+        "timingExprULessThan",
+        "timingExprUGreaterThan",
+        "timingExprSLessThan",
+        "timingExprSGreaterThan",
+        "timingExprInvert",
+        "timingExprNot",
+        "timingExprAnd",
+        "timingExprOr",
+        "timingExprSizeInBits",
+        "timingExprSignExtend32To64",
+        "timingExprAbs",
+    ]
+
 
 class TimingExprUn(TimingExpr):
     """Unary operator"""
-    type = 'TimingExprUn'
-    cxx_header = 'cpu/timing_expr.hh'
-    cxx_class = 'gem5::TimingExprUn'
+
+    type = "TimingExprUn"
+    cxx_header = "cpu/timing_expr.hh"
+    cxx_class = "gem5::TimingExprUn"
 
     op = Param.TimingExprOp("operator")
     arg = Param.TimingExpr("expression")
@@ -137,11 +155,13 @@ class TimingExprUn(TimingExpr):
         self.arg = arg
         return self
 
+
 class TimingExprBin(TimingExpr):
     """Binary operator"""
-    type = 'TimingExprBin'
-    cxx_header = 'cpu/timing_expr.hh'
-    cxx_class = 'gem5::TimingExprBin'
+
+    type = "TimingExprBin"
+    cxx_header = "cpu/timing_expr.hh"
+    cxx_class = "gem5::TimingExprBin"
 
     op = Param.TimingExprOp("operator")
     left = Param.TimingExpr("LHS expression")
@@ -153,11 +173,13 @@ class TimingExprBin(TimingExpr):
         self.right = right
         return self
 
+
 class TimingExprIf(TimingExpr):
     """If-then-else operator"""
-    type = 'TimingExprIf'
-    cxx_header = 'cpu/timing_expr.hh'
-    cxx_class = 'gem5::TimingExprIf'
+
+    type = "TimingExprIf"
+    cxx_header = "cpu/timing_expr.hh"
+    cxx_class = "gem5::TimingExprIf"
 
     cond = Param.TimingExpr("condition expression")
     trueExpr = Param.TimingExpr("true expression")

@@ -40,6 +40,7 @@ import inspect
 import sys
 from textwrap import TextWrapper
 
+
 class ObjectList(object):
     """ Creates a list of objects that are sub-classes of a given class. """
 
@@ -63,16 +64,20 @@ class ObjectList(object):
             sub_cls = self._sub_classes[real_name]
             return sub_cls
         except KeyError:
-            print("{} is not a valid sub-class of {}.".format(name, \
-                self.base_cls))
+            print(
+                "{} is not a valid sub-class of {}.".format(
+                    name, self.base_cls
+                )
+            )
             raise
 
     def print(self):
         """Print a list of available sub-classes and aliases."""
 
         print("Available {} classes:".format(self.base_cls))
-        doc_wrapper = TextWrapper(initial_indent="\t\t",
-            subsequent_indent="\t\t")
+        doc_wrapper = TextWrapper(
+            initial_indent="\t\t", subsequent_indent="\t\t"
+        )
         for name, cls in list(self._sub_classes.items()):
             print("\t{}".format(name))
 
@@ -117,6 +122,7 @@ class ObjectList(object):
         self._aliases = {}
         self._add_aliases(aliases)
 
+
 class CPUList(ObjectList):
     def _is_obj_class(self, cls):
         """Determine if a class is a CPU that can be instantiated"""
@@ -124,8 +130,9 @@ class CPUList(ObjectList):
         # We can't use the normal inspect.isclass because the ParamFactory
         # and ProxyFactory classes have a tendency to confuse it.
         try:
-            return super(CPUList, self)._is_obj_class(cls) and \
-                not issubclass(cls, m5.objects.CheckerCPU)
+            return super(CPUList, self)._is_obj_class(cls) and not issubclass(
+                cls, m5.objects.CheckerCPU
+            )
         except (TypeError, AttributeError):
             return False
 
@@ -134,19 +141,24 @@ class CPUList(ObjectList):
 
         from m5.defines import buildEnv
         from importlib import import_module
-        for package in [ "generic", buildEnv['TARGET_ISA']]:
+
+        for package in ["generic", buildEnv["TARGET_ISA"]]:
             try:
-                package = import_module(".cores." + package,
-                                        package=__name__.rpartition('.')[0])
+                package = import_module(
+                    ".cores." + package, package=__name__.rpartition(".")[0]
+                )
             except ImportError:
                 # No timing models for this ISA
                 continue
 
-            for mod_name, module in \
-                inspect.getmembers(package, inspect.ismodule):
-                for name, cls in inspect.getmembers(module,
-                    self._is_obj_class):
+            for mod_name, module in inspect.getmembers(
+                package, inspect.ismodule
+            ):
+                for name, cls in inspect.getmembers(
+                    module, self._is_obj_class
+                ):
                     self._sub_classes[name] = cls
+
 
 class EnumList(ObjectList):
     """ Creates a list of possible values for a given enum class. """
@@ -160,31 +172,37 @@ class EnumList(ObjectList):
             if not key.startswith("Num_"):
                 self._sub_classes[key] = value
 
-rp_list = ObjectList(getattr(m5.objects, 'BaseReplacementPolicy', None))
-bp_list = ObjectList(getattr(m5.objects, 'BranchPredictor', None))
-cpu_list = CPUList(getattr(m5.objects, 'BaseCPU', None))
-hwp_list = ObjectList(getattr(m5.objects, 'BasePrefetcher', None))
-indirect_bp_list = ObjectList(getattr(m5.objects, 'IndirectPredictor', None))
-mem_list = ObjectList(getattr(m5.objects, 'AbstractMemory', None))
-dram_addr_map_list = EnumList(getattr(m5.internal.params, 'enum_AddrMap',
-                                      None))
+
+rp_list = ObjectList(getattr(m5.objects, "BaseReplacementPolicy", None))
+bp_list = ObjectList(getattr(m5.objects, "BranchPredictor", None))
+cpu_list = CPUList(getattr(m5.objects, "BaseCPU", None))
+hwp_list = ObjectList(getattr(m5.objects, "BasePrefetcher", None))
+indirect_bp_list = ObjectList(getattr(m5.objects, "IndirectPredictor", None))
+mem_list = ObjectList(getattr(m5.objects, "AbstractMemory", None))
+dram_addr_map_list = EnumList(
+    getattr(m5.internal.params, "enum_AddrMap", None)
+)
 
 # Platform aliases. The platforms listed here might not be compiled,
 # we make sure they exist before we add them to the platform list.
-_platform_aliases_all = [
-    ("VExpress_GEM5", "VExpress_GEM5_V1"),
-    ]
-platform_list = ObjectList(getattr(m5.objects, 'Platform', None), \
-    _platform_aliases_all)
+_platform_aliases_all = [("VExpress_GEM5", "VExpress_GEM5_V1")]
+platform_list = ObjectList(
+    getattr(m5.objects, "Platform", None), _platform_aliases_all
+)
+
 
 def _subclass_tester(name):
     sub_class = getattr(m5.objects, name, None)
 
     def tester(cls):
-        return sub_class is not None and cls is not None and \
-            issubclass(cls, sub_class)
+        return (
+            sub_class is not None
+            and cls is not None
+            and issubclass(cls, sub_class)
+        )
 
     return tester
+
 
 is_kvm_cpu = _subclass_tester("BaseKvmCPU")
 is_noncaching_cpu = _subclass_tester("NonCachingSimpleCPU")

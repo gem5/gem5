@@ -33,6 +33,8 @@ from ..boards.mem_mode import MemMode
 from .abstract_processor import AbstractProcessor
 from ..boards.abstract_board import AbstractBoard
 from .gups_generator_core import GUPSGeneratorCore
+
+
 class GUPSGeneratorPAR(AbstractProcessor):
     def __init__(
         self,

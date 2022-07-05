@@ -26,7 +26,8 @@
 
 from m5.objects.BaseInterrupts import BaseInterrupts
 
+
 class SparcInterrupts(BaseInterrupts):
-    type = 'SparcInterrupts'
-    cxx_class = 'gem5::SparcISA::Interrupts'
-    cxx_header = 'arch/sparc/interrupts.hh'
+    type = "SparcInterrupts"
+    cxx_class = "gem5::SparcISA::Interrupts"
+    cxx_header = "arch/sparc/interrupts.hh"

@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop ORPS_XMM_XMM {
     mor xmml, xmml, xmmlm
     mor xmmh, xmmh, xmmhm
@@ -77,4 +77,4 @@ def macroop ORPD_XMM_P {
     mor xmml, xmml, ufp1
     mor xmmh, xmmh, ufp2
 };
-'''
+"""

@@ -42,24 +42,30 @@ from m5.proxy import *
 
 from m5.objects.System import System
 
+
 class RubyPrefetcher(SimObject):
-    type = 'RubyPrefetcher'
-    cxx_class = 'gem5::ruby::RubyPrefetcher'
+    type = "RubyPrefetcher"
+    cxx_class = "gem5::ruby::RubyPrefetcher"
     cxx_header = "mem/ruby/structures/RubyPrefetcher.hh"
 
-    num_streams = Param.UInt32(4,
-        "Number of prefetch streams to be allocated")
-    unit_filter  = Param.UInt32(8,
-        "Number of entries in the unit filter array")
-    nonunit_filter = Param.UInt32(8,
-        "Number of entries in the non-unit filter array")
+    num_streams = Param.UInt32(4, "Number of prefetch streams to be allocated")
+    unit_filter = Param.UInt32(8, "Number of entries in the unit filter array")
+    nonunit_filter = Param.UInt32(
+        8, "Number of entries in the non-unit filter array"
+    )
     train_misses = Param.UInt32(4, "")
     num_startup_pfs = Param.UInt32(1, "")
-    cross_page = Param.Bool(False, """True if prefetched address can be on a
-            page different from the observed address""")
-    page_shift = Param.UInt32(12,
-        "Number of bits to mask to get a page number")
+    cross_page = Param.Bool(
+        False,
+        """True if prefetched address can be on a
+            page different from the observed address""",
+    )
+    page_shift = Param.UInt32(
+        12, "Number of bits to mask to get a page number"
+    )
+
 
 class Prefetcher(RubyPrefetcher):
     """DEPRECATED"""
+
     pass

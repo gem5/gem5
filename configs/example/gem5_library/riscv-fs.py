@@ -42,10 +42,9 @@ Characteristics
 from gem5.components.boards.riscv_board import RiscvBoard
 from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.processors.simple_processor import SimpleProcessor
-from gem5.components.cachehierarchies.classic.\
-    private_l1_private_l2_cache_hierarchy import (
-        PrivateL1PrivateL2CacheHierarchy,
-    )
+from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
+    PrivateL1PrivateL2CacheHierarchy,
+)
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.utils.requires import requires
@@ -80,8 +79,8 @@ board = RiscvBoard(
 
 # Set the Full System workload.
 board.set_kernel_disk_workload(
-                   kernel=Resource("riscv-bootloader-vmlinux-5.10"),
-                   disk_image=Resource("riscv-disk-img"),
+    kernel=Resource("riscv-bootloader-vmlinux-5.10"),
+    disk_image=Resource("riscv-disk-img"),
 )
 
 simulator = Simulator(board=board)

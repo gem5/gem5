@@ -37,25 +37,30 @@ from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
 
+
 class MemChecker(SimObject):
-    type = 'MemChecker'
+    type = "MemChecker"
     cxx_header = "mem/mem_checker.hh"
-    cxx_class = 'gem5::MemChecker'
+    cxx_class = "gem5::MemChecker"
+
 
 class MemCheckerMonitor(SimObject):
-    type = 'MemCheckerMonitor'
+    type = "MemCheckerMonitor"
     cxx_header = "mem/mem_checker_monitor.hh"
-    cxx_class = 'gem5::MemCheckerMonitor'
+    cxx_class = "gem5::MemCheckerMonitor"
 
     # one port in each direction
-    mem_side_port = RequestPort("This port sends requests and receives "
-                                "responses")
-    master   = DeprecatedParam(mem_side_port,"`master` is now called "
-                               "`mem_side_port`")
-    cpu_side_port = ResponsePort("This port receives requests and sends "
-                                 "responses")
-    slave    = DeprecatedParam(cpu_side_port,"`slave` is now called "
-                               "`cpu_side_port`")
+    mem_side_port = RequestPort(
+        "This port sends requests and receives " "responses"
+    )
+    master = DeprecatedParam(
+        mem_side_port, "`master` is now called " "`mem_side_port`"
+    )
+    cpu_side_port = ResponsePort(
+        "This port receives requests and sends " "responses"
+    )
+    slave = DeprecatedParam(
+        cpu_side_port, "`slave` is now called " "`cpu_side_port`"
+    )
     warn_only = Param.Bool(False, "Warn about violations only")
     memchecker = Param.MemChecker("Instance shared with other monitors")
-

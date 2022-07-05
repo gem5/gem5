@@ -31,12 +31,14 @@ import gzip
 
 import sys, re, os
 
+
 class myCP(ConfigParser):
     def __init__(self):
         ConfigParser.__init__(self)
 
     def optionxform(self, optionstr):
         return optionstr
+
 
 def aggregate(output_dir, cpts, no_compress, memory_size):
     merged_config = None
@@ -50,10 +52,10 @@ def aggregate(output_dir, cpts, no_compress, memory_size):
     agg_config_file = open(output_path + "/m5.cpt", "wb+")
 
     if not no_compress:
-        merged_mem = gzip.GzipFile(fileobj= agg_mem_file, mode="wb")
+        merged_mem = gzip.GzipFile(fileobj=agg_mem_file, mode="wb")
 
     max_curtick = 0
-    num_digits = len(str(len(cpts)-1))
+    num_digits = len(str(len(cpts) - 1))
 
     for (i, arg) in enumerate(cpts):
         print(arg)
@@ -69,7 +71,9 @@ def aggregate(output_dir, cpts, no_compress, memory_size):
                 items = config.items(sec)
                 for item in items:
                     if item[0] == "paddr":
-                        merged_config.set(newsec, item[0], int(item[1]) + (page_ptr << 12))
+                        merged_config.set(
+                            newsec, item[0], int(item[1]) + (page_ptr << 12)
+                        )
                         continue
                     merged_config.set(newsec, item[0], item[1])
 
@@ -83,12 +87,12 @@ def aggregate(output_dir, cpts, no_compress, memory_size):
                 if tick > max_curtick:
                     max_curtick = tick
             else:
-                if i == len(cpts)-1:
+                if i == len(cpts) - 1:
                     merged_config.add_section(sec)
                     for item in config.items(sec):
                         merged_config.set(sec, item[0], item[1])
 
-        if i != len(cpts)-1:
+        if i != len(cpts) - 1:
             merged_config.write(agg_config_file)
 
         ### memory stuff
@@ -126,9 +130,13 @@ def aggregate(output_dir, cpts, no_compress, memory_size):
         page_ptr += 1
 
     print("WARNING: ")
-    print("Make sure the simulation using this checkpoint has at least ", end=' ')
+    print(
+        "Make sure the simulation using this checkpoint has at least ", end=" "
+    )
     print(page_ptr, "x 4K of memory")
-    merged_config.set("system.physmem.store0", "range_size", page_ptr * 4 * 1024)
+    merged_config.set(
+        "system.physmem.store0", "range_size", page_ptr * 4 * 1024
+    )
 
     merged_config.add_section("Globals")
     merged_config.set("Globals", "curTick", max_curtick)
@@ -141,14 +149,19 @@ def aggregate(output_dir, cpts, no_compress, memory_size):
     else:
         agg_mem_file.close()
 
+
 if __name__ == "__main__":
     from argparse import ArgumentParser
-    parser = ArgumentParser(usage="%(prog)s [options] <directory names which "\
-                            "hold the checkpoints to be combined>")
-    parser.add_argument("-o", "--output-dir", action="store",
-                        help="Output directory")
+
+    parser = ArgumentParser(
+        usage="%(prog)s [options] <directory names which "
+        "hold the checkpoints to be combined>"
+    )
+    parser.add_argument(
+        "-o", "--output-dir", action="store", help="Output directory"
+    )
     parser.add_argument("-c", "--no-compress", action="store_true")
-    parser.add_argument("--cpts", nargs='+')
+    parser.add_argument("--cpts", nargs="+")
     parser.add_argument("--memory-size", action="store", type=int)
 
     # Assume x86 ISA.  Any other ISAs would need extra stuff in this script
@@ -156,8 +169,14 @@ if __name__ == "__main__":
     options = parser.parse_args()
     print(options.cpts, len(options.cpts))
     if len(options.cpts) <= 1:
-        parser.error("You must specify atleast two checkpoint files that "\
-                     "need to be combined.")
+        parser.error(
+            "You must specify atleast two checkpoint files that "
+            "need to be combined."
+        )
 
-    aggregate(options.output_dir, options.cpts, options.no_compress,
-              options.memory_size)
+    aggregate(
+        options.output_dir,
+        options.cpts,
+        options.no_compress,
+        options.memory_size,
+    )

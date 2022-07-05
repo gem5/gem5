@@ -28,19 +28,24 @@ import m5
 from m5.objects import *
 
 nb_cores = 4
-cpus = [ DerivO3CPU(cpu_id=i) for i in range(nb_cores) ]
+cpus = [DerivO3CPU(cpu_id=i) for i in range(nb_cores)]
 
 import ruby_config
+
 ruby_memory = ruby_config.generate("TwoLevel_SplitL1UnifiedL2.rb", nb_cores)
 
 # system simulated
-system = System(cpu = cpus, physmem = ruby_memory, membus = SystemXBar(),
-                mem_mode = "timing",
-                clk_domain = SrcClockDomain(clock = '1GHz'))
+system = System(
+    cpu=cpus,
+    physmem=ruby_memory,
+    membus=SystemXBar(),
+    mem_mode="timing",
+    clk_domain=SrcClockDomain(clock="1GHz"),
+)
 
 # Create a seperate clock domain for components that should run at
 # CPUs frequency
-system.cpu_clk_domain = SrcClockDomain(clock = '2GHz')
+system.cpu_clk_domain = SrcClockDomain(clock="2GHz")
 
 for cpu in cpus:
     # create the interrupt controller
@@ -59,5 +64,5 @@ system.system_port = system.membus.cpu_side_ports
 # run simulation
 # -----------------------
 
-root = Root(full_system = False, system = system)
-root.system.mem_mode = 'timing'
+root = Root(full_system=False, system=system)
+root.system.mem_mode = "timing"

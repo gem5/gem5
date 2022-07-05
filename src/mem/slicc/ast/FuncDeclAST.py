@@ -28,6 +28,7 @@
 from slicc.ast.DeclAST import DeclAST
 from slicc.symbols import Func, Type
 
+
 class FuncDeclAST(DeclAST):
     def __init__(self, slicc, return_type, ident, formals, pairs, statements):
         super().__init__(slicc, pairs)
@@ -43,7 +44,7 @@ class FuncDeclAST(DeclAST):
     def files(self, parent=None):
         return set()
 
-    def generate(self, parent = None, **kwargs):
+    def generate(self, parent=None, **kwargs):
         types = []
         params = []
         void_type = self.symtab.find("void", Type)
@@ -79,6 +80,7 @@ class FuncDeclAST(DeclAST):
         if parent is None:
             for arg in self.formals:
                 from slicc.ast import FormalParamAST
+
                 if isinstance(arg, FormalParamAST):
                     arg_name = arg.type_ast.ident
                 else:
@@ -86,8 +88,17 @@ class FuncDeclAST(DeclAST):
                 func_name_args += "_" + str(arg_name)
 
         machine = self.state_machine
-        func = Func(self.symtab, func_name_args, self.ident, self.location,
-                    return_type, types, params, str(body), self.pairs)
+        func = Func(
+            self.symtab,
+            func_name_args,
+            self.ident,
+            self.location,
+            return_type,
+            types,
+            params,
+            str(body),
+            self.pairs,
+        )
 
         if parent is not None:
             if not parent.addFunc(func):

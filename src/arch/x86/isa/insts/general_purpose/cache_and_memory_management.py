@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop PREFETCH_M
 {
     ld t0, seg, sib, disp, dataSize=1, prefetch=True
@@ -91,9 +91,9 @@ def macroop CLWB_P
     clwb seg, riprel, disp, dataSize=1
 };
 
-'''
+"""
 
-#let {{
+# let {{
 #    class LFENCE(Inst):
 #       "GenFault ${new UnimpInstFault}"
 #    class SFENCE(Inst):
@@ -104,4 +104,4 @@ def macroop CLWB_P
 #       "GenFault ${new UnimpInstFault}"
 #    class PREFETCHW(Inst):
 #       "GenFault ${new UnimpInstFault}"
-#}};
+# }};

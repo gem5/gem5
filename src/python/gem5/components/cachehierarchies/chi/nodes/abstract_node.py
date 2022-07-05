@@ -33,17 +33,21 @@ from m5.objects import Cache_Controller, MessageBuffer, RubyNetwork
 
 import math
 
+
 class TriggerMessageBuffer(MessageBuffer):
-    '''
+    """
     MessageBuffer for triggering internal controller events.
     These buffers should not be affected by the Ruby tester randomization
     and allow poping messages enqueued in the same cycle.
-    '''
-    randomization = 'disabled'
+    """
+
+    randomization = "disabled"
     allow_zero_latency = True
+
 
 class OrderedTriggerMessageBuffer(TriggerMessageBuffer):
     ordered = True
+
 
 class AbstractNode(Cache_Controller):
     """A node is the abstract unit for caches in the CHI protocol.
@@ -51,6 +55,7 @@ class AbstractNode(Cache_Controller):
     You can extend the AbstractNode to create caches (private or shared) and
     directories with or without data caches.
     """
+
     _version = 0
 
     @classmethod
@@ -128,5 +133,3 @@ class AbstractNode(Cache_Controller):
         self.rspIn.in_port = network.out_port
         self.snpIn.in_port = network.out_port
         self.datIn.in_port = network.out_port
-
-

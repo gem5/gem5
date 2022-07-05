@@ -97,10 +97,18 @@ try:
 except:
     print("Did not find proto definition, attempting to generate")
     from subprocess import call
-    error = call(['protoc', '--python_out=util', '--proto_path=src/proto',
-                  'src/proto/inst_dep_record.proto'])
+
+    error = call(
+        [
+            "protoc",
+            "--python_out=util",
+            "--proto_path=src/proto",
+            "src/proto/inst_dep_record.proto",
+        ]
+    )
     if not error:
         import inst_dep_record_pb2
+
         print("Generated proto definitions for instruction dependency record")
     else:
         print("Failed to import proto definitions")
@@ -108,17 +116,18 @@ except:
 
 DepRecord = inst_dep_record_pb2.InstDepRecord
 
+
 def main():
     if len(sys.argv) != 3:
         print("Usage: ", sys.argv[0], " <ASCII input> <protobuf output>")
         exit(-1)
 
     # Open the file in write mode
-    proto_out = open(sys.argv[2], 'wb')
+    proto_out = open(sys.argv[2], "wb")
 
     # Open the file in read mode
     try:
-        ascii_in = open(sys.argv[1], 'r')
+        ascii_in = open(sys.argv[1], "r")
     except IOError:
         print("Failed to open ", sys.argv[1], " for reading")
         exit(-1)
@@ -138,15 +147,15 @@ def main():
     print("Creating enum name,value lookup from proto")
     enumValues = {}
     for namestr, valdesc in DepRecord.DESCRIPTOR.enum_values_by_name.items():
-        print('\t', namestr, valdesc.number)
+        print("\t", namestr, valdesc.number)
         enumValues[namestr] = valdesc.number
 
     num_records = 0
     # For each line in the ASCII trace, create a packet message and
     # write it to the encoded output
     for line in ascii_in:
-        inst_info_str, rob_dep_str, reg_dep_str = (line.strip()).split(':')
-        inst_info_list = inst_info_str.split(',')
+        inst_info_str, rob_dep_str, reg_dep_str = (line.strip()).split(":")
+        inst_info_list = inst_info_str.split(",")
         dep_record = DepRecord()
 
         dep_record.seq_num = int(inst_info_list[0])
@@ -156,8 +165,12 @@ def main():
         try:
             dep_record.type = enumValues[inst_info_list[3]]
         except KeyError:
-            print("Seq. num", dep_record.seq_num, "has unsupported type", \
-                inst_info_list[3])
+            print(
+                "Seq. num",
+                dep_record.seq_num,
+                "has unsupported type",
+                inst_info_list[3],
+            )
             exit(-1)
 
         if dep_record.type == DepRecord.INVALID:
@@ -178,7 +191,7 @@ def main():
 
         # Parse the register and order dependencies both of which are
         # repeated fields. An empty list is valid.
-        rob_deps = rob_dep_str.strip().split(',')
+        rob_deps = rob_dep_str.strip().split(",")
         for a_dep in rob_deps:
             # if the string is empty, split(',') returns 1 item: ''
             # if the string is ",4", split(',') returns 2 items: '', '4'
@@ -186,7 +199,7 @@ def main():
             if a_dep:
                 dep_record.rob_dep.append(int(a_dep))
 
-        reg_deps = reg_dep_str.split(',')
+        reg_deps = reg_dep_str.split(",")
         for a_dep in reg_deps:
             if a_dep:
                 dep_record.reg_dep.append(int(a_dep))
@@ -198,6 +211,7 @@ def main():
     # We're done
     ascii_in.close()
     proto_out.close()
+
 
 if __name__ == "__main__":
     main()

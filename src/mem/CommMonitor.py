@@ -41,21 +41,25 @@ from m5.SimObject import SimObject
 # The communication monitor will most typically be used in combination
 # with periodic dumping and resetting of stats using schedStatEvent
 class CommMonitor(SimObject):
-    type = 'CommMonitor'
+    type = "CommMonitor"
     cxx_header = "mem/comm_monitor.hh"
-    cxx_class = 'gem5::CommMonitor'
+    cxx_class = "gem5::CommMonitor"
 
     system = Param.System(Parent.any, "System that the monitor belongs to.")
 
     # one port in each direction
-    mem_side_port = RequestPort("This port sends requests and "
-                                "receives responses")
-    master   = DeprecatedParam(mem_side_port,
-                              '`master` is now called `mem_side_port`')
-    cpu_side_port = ResponsePort("This port receives requests and "
-                                 "sends responses")
-    slave    = DeprecatedParam(cpu_side_port,
-                              '`slave` is now called `cpu_side_port`')
+    mem_side_port = RequestPort(
+        "This port sends requests and " "receives responses"
+    )
+    master = DeprecatedParam(
+        mem_side_port, "`master` is now called `mem_side_port`"
+    )
+    cpu_side_port = ResponsePort(
+        "This port receives requests and " "sends responses"
+    )
+    slave = DeprecatedParam(
+        cpu_side_port, "`slave` is now called `cpu_side_port`"
+    )
 
     # control the sample period window length of this monitor
     sample_period = Param.Clock("1ms", "Sample period for histograms")
@@ -65,39 +69,45 @@ class CommMonitor(SimObject):
     # parameters
 
     # histogram of burst length of packets (not using sample period)
-    burst_length_bins = Param.Unsigned('20', "# bins in burst length " \
-                                           "histograms")
-    disable_burst_length_hists = Param.Bool(False, "Disable burst length " \
-                                                "histograms")
+    burst_length_bins = Param.Unsigned(
+        "20", "# bins in burst length " "histograms"
+    )
+    disable_burst_length_hists = Param.Bool(
+        False, "Disable burst length " "histograms"
+    )
 
     # bandwidth per sample period
-    bandwidth_bins = Param.Unsigned('20', "# bins in bandwidth histograms")
+    bandwidth_bins = Param.Unsigned("20", "# bins in bandwidth histograms")
     disable_bandwidth_hists = Param.Bool(False, "Disable bandwidth histograms")
 
     # latency from request to response (not using sample period)
-    latency_bins = Param.Unsigned('20', "# bins in latency histograms")
+    latency_bins = Param.Unsigned("20", "# bins in latency histograms")
     disable_latency_hists = Param.Bool(False, "Disable latency histograms")
 
     # inter transaction time (ITT) distributions in uniformly sized
     # bins up to the maximum, independently for read-to-read,
     # write-to-write and the combined request-to-request that does not
     # separate read and write requests
-    itt_bins = Param.Unsigned('20', "# bins in ITT distributions")
-    itt_max_bin = Param.Latency('100ns', "Max bin of ITT distributions")
+    itt_bins = Param.Unsigned("20", "# bins in ITT distributions")
+    itt_max_bin = Param.Latency("100ns", "Max bin of ITT distributions")
     disable_itt_dists = Param.Bool(False, "Disable ITT distributions")
 
     # outstanding requests (that did not yet get a response) per
     # sample period
-    outstanding_bins = Param.Unsigned('20', "# bins in outstanding " \
-                                          "requests histograms")
-    disable_outstanding_hists = Param.Bool(False, "Disable outstanding " \
-                                               "requests histograms")
+    outstanding_bins = Param.Unsigned(
+        "20", "# bins in outstanding " "requests histograms"
+    )
+    disable_outstanding_hists = Param.Bool(
+        False, "Disable outstanding " "requests histograms"
+    )
 
     # transactions (requests) observed per sample period
-    transaction_bins = Param.Unsigned('20', "# bins in transaction " \
-                                          "count histograms")
-    disable_transaction_hists = Param.Bool(False, "Disable transaction count " \
-                                               "histograms")
+    transaction_bins = Param.Unsigned(
+        "20", "# bins in transaction " "count histograms"
+    )
+    disable_transaction_hists = Param.Bool(
+        False, "Disable transaction count " "histograms"
+    )
 
     # address distributions (heatmaps) with associated address masks
     # to selectively only look at certain bits of the address

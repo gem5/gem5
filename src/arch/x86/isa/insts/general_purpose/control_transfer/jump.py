@@ -34,7 +34,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop JMP_I
 {
     # Make the default data size of jumps 64 bits in 64 bit mode
@@ -187,4 +187,4 @@ def macroop JMP_FAR_REAL_I
     # Put t2 first so it isn't sign extended.
     wrip t2, t0
 };
-'''
+"""

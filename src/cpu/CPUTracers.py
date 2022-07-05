@@ -28,19 +28,21 @@ from m5.SimObject import SimObject
 from m5.params import *
 from m5.objects.InstTracer import InstTracer
 
+
 class ExeTracer(InstTracer):
-    type = 'ExeTracer'
-    cxx_class = 'gem5::Trace::ExeTracer'
+    type = "ExeTracer"
+    cxx_class = "gem5::Trace::ExeTracer"
     cxx_header = "cpu/exetrace.hh"
 
+
 class IntelTrace(InstTracer):
-    type = 'IntelTrace'
-    cxx_class = 'gem5::Trace::IntelTrace'
+    type = "IntelTrace"
+    cxx_class = "gem5::Trace::IntelTrace"
     cxx_header = "cpu/inteltrace.hh"
+
 
 class NativeTrace(ExeTracer):
     abstract = True
-    type = 'NativeTrace'
-    cxx_class = 'gem5::Trace::NativeTrace'
-    cxx_header = 'cpu/nativetrace.hh'
-
+    type = "NativeTrace"
+    cxx_class = "gem5::Trace::NativeTrace"
+    cxx_header = "cpu/nativetrace.hh"

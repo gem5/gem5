@@ -61,8 +61,7 @@ requires(
     kvm_required=True,
 )
 
-from gem5.components.cachehierarchies.ruby.\
-    mesi_two_level_cache_hierarchy import (
+from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
     MESITwoLevelCacheHierarchy,
 )
 
@@ -111,10 +110,12 @@ board = X86Board(
 # then, again, call `m5 exit` to terminate the simulation. After simulation
 # has ended you may inspect `m5out/system.pc.com_1.device` to see the echo
 # output.
-command = "m5 exit;" \
-        + "echo 'This is running on Timing CPU cores.';" \
-        + "sleep 1;" \
-        + "m5 exit;"
+command = (
+    "m5 exit;"
+    + "echo 'This is running on Timing CPU cores.';"
+    + "sleep 1;"
+    + "m5 exit;"
+)
 
 board.set_kernel_disk_workload(
     # The x86 linux kernel will be automatically downloaded to the if not
@@ -133,7 +134,7 @@ simulator = Simulator(
         # exit event. Instead of exiting the simulator, we just want to
         # switch the processor. The 2nd m5 exit after will revert to using
         # default behavior where the simulator run will exit.
-        ExitEvent.EXIT : (func() for func in [processor.switch]),
+        ExitEvent.EXIT: (func() for func in [processor.switch])
     },
 )
 simulator.run()

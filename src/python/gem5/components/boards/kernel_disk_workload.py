@@ -34,6 +34,7 @@ import os
 
 import m5
 
+
 class KernelDiskWorkload:
     """
     The purpose of this abstract class is to enable a full-system boot
@@ -162,7 +163,7 @@ class KernelDiskWorkload:
 
         # We assume this this is in a multiple-inheritance setup with an
         # Abstract board. This function will not work otherwise.
-        assert(isinstance(self,AbstractBoard))
+        assert isinstance(self, AbstractBoard)
 
         # If we are setting a workload of this type, we need to run as a
         # full-system simulation.

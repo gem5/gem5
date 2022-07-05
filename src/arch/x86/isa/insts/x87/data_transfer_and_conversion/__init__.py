@@ -33,16 +33,18 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["load_or_store_floating_point",
-              "convert_and_load_or_store_integer",
-              "convert_and_load_or_store_bcd",
-              "conditional_move",
-              "exchange",
-              "extract"]
+categories = [
+    "load_or_store_floating_point",
+    "convert_and_load_or_store_integer",
+    "convert_and_load_or_store_bcd",
+    "conditional_move",
+    "exchange",
+    "extract",
+]
 
-microcode = '''
+microcode = """
 # X86 microcode
-'''
+"""
 for category in categories:
     exec("from . import %s as cat" % category)
     microcode += cat.microcode

@@ -32,20 +32,25 @@ from m5.objects.PowerMMU import PowerMMU
 from m5.objects.PowerInterrupts import PowerInterrupts
 from m5.objects.PowerISA import PowerISA
 
+
 class PowerCPU:
     ArchDecoder = PowerDecoder
     ArchMMU = PowerMMU
     ArchInterrupts = PowerInterrupts
     ArchISA = PowerISA
 
+
 class PowerAtomicSimpleCPU(BaseAtomicSimpleCPU, PowerCPU):
     mmu = PowerMMU()
+
 
 class PowerNonCachingSimpleCPU(BaseNonCachingSimpleCPU, PowerCPU):
     mmu = PowerMMU()
 
+
 class PowerTimingSimpleCPU(BaseTimingSimpleCPU, PowerCPU):
     mmu = PowerMMU()
+
 
 class PowerO3CPU(BaseO3CPU, PowerCPU):
     mmu = PowerMMU()

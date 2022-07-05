@@ -29,14 +29,16 @@ from m5.proxy import *
 from m5.objects.Device import BasicPioDevice
 from m5.objects.IntPin import VectorIntSinkPin
 
+
 class I82094AA(BasicPioDevice):
-    type = 'I82094AA'
-    cxx_class = 'gem5::X86ISA::I82094AA'
+    type = "I82094AA"
+    cxx_class = "gem5::X86ISA::I82094AA"
     cxx_header = "dev/x86/i82094aa.hh"
 
-    apic_id = Param.Int(1, 'APIC id for this IO APIC')
+    apic_id = Param.Int(1, "APIC id for this IO APIC")
     int_requestor = RequestPort("Port for sending interrupt messages")
-    int_latency = Param.Latency('1ns', \
-            "Latency for an interrupt to propagate through this device.")
+    int_latency = Param.Latency(
+        "1ns", "Latency for an interrupt to propagate through this device."
+    )
 
-    inputs = VectorIntSinkPin('The pins that drive this IO APIC')
+    inputs = VectorIntSinkPin("The pins that drive this IO APIC")

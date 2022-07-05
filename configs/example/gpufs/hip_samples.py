@@ -39,7 +39,7 @@ from common import Options
 from common import GPUTLBOptions
 from ruby import Ruby
 
-samples_runscript = '''\
+samples_runscript = """\
 export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 export HSA_ENABLE_SDMA=0
 export HSA_ENABLE_INTERRUPT=0
@@ -55,25 +55,34 @@ cd /home/gem5/HIP-Examples/HIP-Examples-Applications/{}/
 make clean
 make
 /sbin/m5 exit
-'''
+"""
+
 
 def addSamplesOptions(parser):
-    parser.add_argument("-a", "--app", default=None,
-                        choices=['BinomialOption',
-                                 'BitonicSort',
-                                 'FastWalshTransform',
-                                 'FloydWarshall',
-                                 'HelloWorld',
-                                 'Histogram',
-                                 'MatrixMultiplication',
-                                 'PrefixSum',
-                                 'RecursiveGaussian',
-                                 'SimpleConvolution',
-                                 'dct',
-                                 'dwtHaar1D'],
-                        help="GPU application to run")
-    parser.add_argument("-o", "--opts", default="",
-                        help="GPU application arguments")
+    parser.add_argument(
+        "-a",
+        "--app",
+        default=None,
+        choices=[
+            "BinomialOption",
+            "BitonicSort",
+            "FastWalshTransform",
+            "FloydWarshall",
+            "HelloWorld",
+            "Histogram",
+            "MatrixMultiplication",
+            "PrefixSum",
+            "RecursiveGaussian",
+            "SimpleConvolution",
+            "dct",
+            "dwtHaar1D",
+        ],
+        help="GPU application to run",
+    )
+    parser.add_argument(
+        "-o", "--opts", default="", help="GPU application arguments"
+    )
+
 
 if __name__ == "__m5_main__":
     parser = argparse.ArgumentParser()
@@ -98,12 +107,13 @@ if __name__ == "__m5_main__":
         print("No disk path given. Use %s --disk-image <linux>" % sys.argv[0])
         sys.exit(1)
     elif args.gpu_mmio_trace is None:
-        print("No MMIO trace path. Use %s --gpu-mmio-trace <path>"
-                % sys.argv[0])
+        print(
+            "No MMIO trace path. Use %s --gpu-mmio-trace <path>" % sys.argv[0]
+        )
         sys.exit(1)
 
     _, tempRunscript = tempfile.mkstemp()
-    with open(tempRunscript, 'w') as b64file:
+    with open(tempRunscript, "w") as b64file:
         runscriptStr = samples_runscript.format(args.app, args.app)
         b64file.write(runscriptStr)
 
@@ -112,12 +122,12 @@ if __name__ == "__m5_main__":
 
     # Defaults for Vega10
     args.ruby = True
-    args.cpu_type = 'X86KvmCPU'
+    args.cpu_type = "X86KvmCPU"
     args.num_cpus = 1
-    args.mem_size = '3GB'
+    args.mem_size = "3GB"
     args.dgpu = True
-    args.dgpu_mem_size = '16GB'
-    args.dgpu_start = '0GB'
+    args.dgpu_mem_size = "16GB"
+    args.dgpu_start = "0GB"
     args.checkpoint_restore = 0
     args.disjoint = True
     args.timing_gpu = True

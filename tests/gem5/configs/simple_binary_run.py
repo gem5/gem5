@@ -31,7 +31,7 @@ gem5 while still being functinal.
 """
 
 from gem5.resources.resource import Resource
-from gem5.components.processors.cpu_types import(
+from gem5.components.processors.cpu_types import (
     get_cpu_types_str_set,
     get_cpu_type_from_str,
 )
@@ -49,23 +49,15 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    "resource",
-    type=str,
-    help="The gem5 resource binary to run.",
+    "resource", type=str, help="The gem5 resource binary to run."
 )
 
 parser.add_argument(
-    "cpu",
-    type=str,
-    choices=get_cpu_types_str_set(),
-    help="The CPU type used.",
+    "cpu", type=str, choices=get_cpu_types_str_set(), help="The CPU type used."
 )
 
 parser.add_argument(
-    "isa",
-    type=str,
-    choices=get_isas_str_set(),
-    help="The ISA used",
+    "isa", type=str, choices=get_isas_str_set(), help="The ISA used"
 )
 
 parser.add_argument(
@@ -79,7 +71,7 @@ parser.add_argument(
 parser.add_argument(
     "--arguments",
     type=str,
-    action='append',
+    action="append",
     default=[],
     required=False,
     help="The input arguments for the binary.",
@@ -104,12 +96,8 @@ motherboard = SimpleBoard(
 )
 
 # Set the workload
-binary = Resource(args.resource,
-        resource_directory=args.resource_directory,)
-motherboard.set_se_binary_workload(
-    binary,
-    arguments=args.arguments
-)
+binary = Resource(args.resource, resource_directory=args.resource_directory)
+motherboard.set_se_binary_workload(binary, arguments=args.arguments)
 
 # Run the simulation
 simulator = Simulator(board=motherboard)
@@ -117,7 +105,6 @@ simulator.run()
 
 print(
     "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(),
-        simulator.get_last_exit_event_cause(),
+        simulator.get_current_tick(), simulator.get_last_exit_event_cause()
     )
 )

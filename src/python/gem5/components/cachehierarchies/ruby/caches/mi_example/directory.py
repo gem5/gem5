@@ -28,10 +28,7 @@ from ..abstract_directory import AbstractDirectory
 from ......utils.override import overrides
 
 
-from m5.objects import (
-    MessageBuffer,
-    RubyDirectoryMemory,
-)
+from m5.objects import MessageBuffer, RubyDirectoryMemory
 
 
 class Directory(AbstractDirectory):

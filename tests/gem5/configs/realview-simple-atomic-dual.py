@@ -36,9 +36,11 @@
 from m5.objects import *
 from arm_generic import *
 
-root = LinuxArmFSSystem(aarch64_kernel=False,
-                        machine_type='VExpress_GEM5_V1',
-                        mem_mode='atomic',
-                        mem_class=SimpleMemory,
-                        cpu_class=AtomicSimpleCPU,
-                        num_cpus=2).create_root()
+root = LinuxArmFSSystem(
+    aarch64_kernel=False,
+    machine_type="VExpress_GEM5_V1",
+    mem_mode="atomic",
+    mem_class=SimpleMemory,
+    cpu_class=AtomicSimpleCPU,
+    num_cpus=2,
+).create_root()

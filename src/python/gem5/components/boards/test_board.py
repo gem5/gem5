@@ -24,11 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import (
-    Port,
-    IOXBar,
-    AddrRange,
-)
+from m5.objects import Port, IOXBar, AddrRange
 
 from .mem_mode import MemMode, mem_mode_to_string
 from ...utils.override import overrides

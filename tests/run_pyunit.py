@@ -45,7 +45,7 @@ if __name__ == "__m5_main__":
     import unittest
 
     loader = unittest.TestLoader()
-    tests = loader.discover("pyunit", pattern='pyunit*.py')
+    tests = loader.discover("pyunit", pattern="pyunit*.py")
 
     runner = unittest.runner.TextTestRunner(verbosity=2)
     result = runner.run(tests)
@@ -53,4 +53,3 @@ if __name__ == "__m5_main__":
         sys.exit(0)
     else:
         sys.exit(1)
-

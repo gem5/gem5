@@ -26,7 +26,8 @@
 
 import m5, os, argparse, sys
 from m5.objects import *
-m5.util.addToPath('../configs/')
+
+m5.util.addToPath("../configs/")
 from common.Benchmarks import SysConfig
 from common import FSConfig, SysPaths
 from ruby import Ruby
@@ -40,35 +41,41 @@ args = parser.parse_args()
 
 # Set the default cache size and associativity to be very small to encourage
 # races between requests and writebacks.
-args.l1d_size="32kB"
-args.l1i_size="32kB"
-args.l2_size="4MB"
-args.l1d_assoc=2
-args.l1i_assoc=2
-args.l2_assoc=2
+args.l1d_size = "32kB"
+args.l1i_size = "32kB"
+args.l2_size = "4MB"
+args.l1d_assoc = 2
+args.l1i_assoc = 2
+args.l2_assoc = 2
 args.num_cpus = 2
 
-#the system
-mdesc = SysConfig(disks = ['linux-x86.img'])
-system = FSConfig.makeLinuxX86System('timing', args.num_cpus,
-                                     mdesc=mdesc, Ruby=True)
-system.kernel = SysPaths.binary('x86_64-vmlinux-2.6.22.9')
+# the system
+mdesc = SysConfig(disks=["linux-x86.img"])
+system = FSConfig.makeLinuxX86System(
+    "timing", args.num_cpus, mdesc=mdesc, Ruby=True
+)
+system.kernel = SysPaths.binary("x86_64-vmlinux-2.6.22.9")
 # Dummy voltage domain for all our clock domains
-system.voltage_domain = VoltageDomain(voltage = args.sys_voltage)
+system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
 
-system.kernel = FSConfig.binary('x86_64-vmlinux-2.6.22.9.smp')
-system.clk_domain = SrcClockDomain(clock = '1GHz',
-                                   voltage_domain = system.voltage_domain)
-system.cpu_clk_domain = SrcClockDomain(clock = '2GHz',
-                                       voltage_domain = system.voltage_domain)
-system.cpu = [TimingSimpleCPU(cpu_id=i, clk_domain = system.cpu_clk_domain)
-              for i in range(args.num_cpus)]
+system.kernel = FSConfig.binary("x86_64-vmlinux-2.6.22.9.smp")
+system.clk_domain = SrcClockDomain(
+    clock="1GHz", voltage_domain=system.voltage_domain
+)
+system.cpu_clk_domain = SrcClockDomain(
+    clock="2GHz", voltage_domain=system.voltage_domain
+)
+system.cpu = [
+    TimingSimpleCPU(cpu_id=i, clk_domain=system.cpu_clk_domain)
+    for i in range(args.num_cpus)
+]
 
 Ruby.create_system(args, True, system, system.iobus, system._dma_ports)
 
 # Create a seperate clock domain for Ruby
-system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock,
-                                        voltage_domain = system.voltage_domain)
+system.ruby.clk_domain = SrcClockDomain(
+    clock=args.ruby_clock, voltage_domain=system.voltage_domain
+)
 
 # Connect the ruby io port to the PIO bus,
 # assuming that there is just one such port.
@@ -80,5 +87,5 @@ for (i, cpu) in enumerate(system.cpu):
     # Tie the cpu ports to the correct ruby system ports
     system.ruby._cpu_ports[i].connectCpuPorts(cpu)
 
-root = Root(full_system = True, system = system)
-m5.ticks.setGlobalFrequency('1THz')
+root = Root(full_system=True, system=system)
+m5.ticks.setGlobalFrequency("1THz")

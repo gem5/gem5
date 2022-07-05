@@ -38,16 +38,15 @@ from m5.params import *
 from m5.objects.Device import BasicPioDevice
 from m5.objects.Gic import *
 
-class NoMaliGpuType(Enum): vals = [
-    'T60x',
-    'T62x',
-    'T760',
-    ]
+
+class NoMaliGpuType(Enum):
+    vals = ["T60x", "T62x", "T760"]
+
 
 class NoMaliGpu(PioDevice):
-    type = 'NoMaliGpu'
+    type = "NoMaliGpu"
     cxx_header = "dev/arm/gpu_nomali.hh"
-    cxx_class = 'gem5::NoMaliGpu'
+    cxx_class = "gem5::NoMaliGpu"
 
     pio_addr = Param.Addr("Device base address")
 
@@ -62,15 +61,16 @@ class NoMaliGpu(PioDevice):
     int_job = Param.UInt32("Interrupt number for JOB interrupts")
     int_mmu = Param.UInt32("Interrupt number for MMU interrupts")
 
+
 class CustomNoMaliGpu(NoMaliGpu):
     """Base class for custom NoMali implementation that need to override
     configuration registers. See CustomNoMaliT760 for a usage example.
 
     """
 
-    type = 'CustomNoMaliGpu'
+    type = "CustomNoMaliGpu"
     cxx_header = "dev/arm/gpu_nomali.hh"
-    cxx_class = 'gem5::CustomNoMaliGpu'
+    cxx_class = "gem5::CustomNoMaliGpu"
 
     gpu_id = Param.UInt32("")
     l2_features = Param.UInt32("")
@@ -92,6 +92,7 @@ class CustomNoMaliGpu(NoMaliGpu):
     tiler_present = Param.UInt64("")
     l2_present = Param.UInt64("")
 
+
 class CustomNoMaliT760(CustomNoMaliGpu):
     """Example NoMali T760 r0p0-0 configuration using the defaults from
     the NoMali library.
@@ -104,25 +105,17 @@ class CustomNoMaliT760(CustomNoMaliGpu):
     tiler_features = 0x00000809
     mem_features = 0x00000001
     mmu_features = 0x00002830
-    as_present = 0x000000ff
+    as_present = 0x000000FF
     js_present = 0x00000007
 
     thread_max_threads = 0x00000100
     thread_max_workgroup_size = 0x00000100
     thread_max_barrier_size = 0x00000100
-    thread_features = 0x0a040400
+    thread_features = 0x0A040400
 
-    texture_features = [
-        0x00fe001e,
-        0x0000ffff,
-        0x9f81ffff,
-    ]
-    js_features = [
-        0x0000020e,
-        0x000001fe,
-        0x0000007e,
-    ]
+    texture_features = [0x00FE001E, 0x0000FFFF, 0x9F81FFFF]
+    js_features = [0x0000020E, 0x000001FE, 0x0000007E]
 
-    shader_present = 0x0000000f
+    shader_present = 0x0000000F
     tiler_present = 0x00000001
     l2_present = 0x00000001

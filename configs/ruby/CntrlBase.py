@@ -24,8 +24,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 class CntrlBase:
     _seqs = 0
+
     @classmethod
     def seqCount(cls):
         # Use SeqCount not class since we need global count
@@ -33,6 +35,7 @@ class CntrlBase:
         return CntrlBase._seqs - 1
 
     _cntrls = 0
+
     @classmethod
     def cntrlCount(cls):
         # Use CntlCount not class since we need global count
@@ -40,7 +43,8 @@ class CntrlBase:
         return CntrlBase._cntrls - 1
 
     _version = 0
+
     @classmethod
     def versionCount(cls):
-        cls._version += 1 # Use count for this particular type
+        cls._version += 1  # Use count for this particular type
         return cls._version - 1

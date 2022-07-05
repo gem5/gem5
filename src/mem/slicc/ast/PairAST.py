@@ -26,6 +26,7 @@
 
 from slicc.ast.AST import AST
 
+
 class PairAST(AST):
     def __init__(self, slicc, key, value):
         super().__init__(slicc)
@@ -33,4 +34,4 @@ class PairAST(AST):
         self.value = value
 
     def __repr__(self):
-        return '[%s=%s]' % (self.key, self.value)
+        return "[%s=%s]" % (self.key, self.value)

@@ -24,7 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop CLTS {
     rdcr t1, cr0, dataSize=8
     andi t1, t1, 0xF7, dataSize=1
@@ -81,4 +81,4 @@ def macroop SMSW_P {
     rdip t7, dataSize=asz
     st t1, seg, riprel, disp, dataSize=2
 };
-'''
+"""

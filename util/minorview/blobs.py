@@ -39,7 +39,8 @@
 #
 
 import pygtk
-pygtk.require('2.0')
+
+pygtk.require("2.0")
 import gtk
 import gobject
 import cairo
@@ -52,6 +53,7 @@ from . import colours
 from .colours import backgroundColour, black
 from . import model
 
+
 def centre_size_to_sides(centre, size):
     """Returns a 4-tuple of the relevant ordinates of the left,
     right, top and bottom sides of the described rectangle"""
@@ -63,6 +65,7 @@ def centre_size_to_sides(centre, size):
     bottom = y + half_height
     return (left, right, top, bottom)
 
+
 def box(cr, centre, size):
     """Draw a simple box"""
     (left, right, top, bottom) = centre_size_to_sides(centre, size)
@@ -71,6 +74,7 @@ def box(cr, centre, size):
     cr.line_to(right, bottom)
     cr.line_to(left, bottom)
     cr.close_path()
+
 
 def stroke_and_fill(cr, colour):
     """Stroke with the current colour then fill the same path with the
@@ -83,6 +87,7 @@ def stroke_and_fill(cr, colour):
     cr.set_source_color(colour)
     cr.fill()
     cr.set_line_join(join)
+
 
 def striped_box(cr, centre, size, colours):
     """Fill a rectangle (without outline) striped with the colours given"""
@@ -100,7 +105,7 @@ def striped_box(cr, centre, size, colours):
         x_stripe_width = width / num_colours
         half_x_stripe_width = x_stripe_width / 2.0
         # Left triangle
-        cr.move_to(left,  bottom)
+        cr.move_to(left, bottom)
         cr.line_to(left + half_x_stripe_width, bottom)
         cr.line_to(left + x_stripe_width + half_x_stripe_width, top)
         cr.line_to(left, top)
@@ -110,10 +115,12 @@ def striped_box(cr, centre, size, colours):
             xOffset = x_stripe_width * i
             cr.move_to(left + xOffset - half_x_stripe_width, bottom)
             cr.line_to(left + xOffset + half_x_stripe_width, bottom)
-            cr.line_to(left + xOffset + x_stripe_width +
-                half_x_stripe_width, top)
-            cr.line_to(left + xOffset + x_stripe_width -
-                half_x_stripe_width, top)
+            cr.line_to(
+                left + xOffset + x_stripe_width + half_x_stripe_width, top
+            )
+            cr.line_to(
+                left + xOffset + x_stripe_width - half_x_stripe_width, top
+            )
             stroke_and_fill(cr, colours[i])
         # Right triangle
         cr.move_to((right - x_stripe_width) - half_x_stripe_width, bottom)
@@ -122,24 +129,29 @@ def striped_box(cr, centre, size, colours):
         cr.line_to((right - x_stripe_width) + half_x_stripe_width, top)
         stroke_and_fill(cr, colours[num_colours - 1])
 
+
 def speech_bubble(cr, top_left, size, unit):
     """Draw a speech bubble with 'size'-sized internal space with its
     top left corner at Point(2.0 * unit, 2.0 * unit)"""
+
     def local_arc(centre, angleFrom, angleTo):
-        cr.arc(centre.x, centre.y, unit, angleFrom * math.pi,
-            angleTo * math.pi)
+        cr.arc(
+            centre.x, centre.y, unit, angleFrom * math.pi, angleTo * math.pi
+        )
 
     cr.move_to(*top_left.to_pair())
     cr.rel_line_to(unit * 2.0, unit)
     cr.rel_line_to(size.x, 0.0)
     local_arc(top_left + Point(size.x + unit * 2.0, unit * 2.0), -0.5, 0.0)
     cr.rel_line_to(0.0, size.y)
-    local_arc(top_left + Point(size.x + unit * 2.0, size.y + unit * 2.0),
-        0, 0.5)
+    local_arc(
+        top_left + Point(size.x + unit * 2.0, size.y + unit * 2.0), 0, 0.5
+    )
     cr.rel_line_to(-size.x, 0.0)
     local_arc(top_left + Point(unit * 2.0, size.y + unit * 2.0), 0.5, 1.0)
     cr.rel_line_to(0, -size.y)
     cr.close_path()
+
 
 def open_bottom(cr, centre, size):
     """Draw a box with left, top and right sides"""
@@ -149,6 +161,7 @@ def open_bottom(cr, centre, size):
     cr.line_to(right, top)
     cr.line_to(right, bottom)
 
+
 def fifo(cr, centre, size):
     """Draw just the vertical sides of a box"""
     (left, right, top, bottom) = centre_size_to_sides(centre, size)
@@ -156,6 +169,7 @@ def fifo(cr, centre, size):
     cr.line_to(left, top)
     cr.move_to(right, bottom)
     cr.line_to(right, top)
+
 
 def cross(cr, centre, size):
     """Draw a cross parallel with the axes"""
@@ -166,13 +180,15 @@ def cross(cr, centre, size):
     cr.move_to(x, top)
     cr.line_to(x, bottom)
 
+
 class Blob(object):
     """Blob super class"""
-    def __init__(self, picChar, unit, topLeft, colour, size = Point(1,1)):
+
+    def __init__(self, picChar, unit, topLeft, colour, size=Point(1, 1)):
         self.picChar = picChar
         self.unit = unit
         self.displayName = unit
-        self.nameLoc = 'top'
+        self.nameLoc = "top"
         self.topLeft = topLeft
         self.colour = colour
         self.size = size
@@ -187,43 +203,50 @@ class Blob(object):
         the canvas are within the blob"""
         return None
 
+
 class Block(Blob):
     """Blocks are rectangular blogs colourable with a 2D grid of striped
     blocks.  visualDecoder specifies how event data becomes this coloured
     grid"""
-    def __init__(self, picChar, unit, topLeft=Point(0,0),
+
+    def __init__(
+        self,
+        picChar,
+        unit,
+        topLeft=Point(0, 0),
         colour=colours.black,
-        size=Point(1,1)):
-        super(Block,self).__init__(picChar, unit, topLeft, colour,
-            size = size)
+        size=Point(1, 1),
+    ):
+        super(Block, self).__init__(picChar, unit, topLeft, colour, size=size)
         # {horiz, vert}
-        self.stripDir = 'horiz'
+        self.stripDir = "horiz"
         # {LR, RL}: LR means the first strip will be on the left/top,
         #   RL means the first strip will be on the right/bottom
-        self.stripOrd = 'LR'
+        self.stripOrd = "LR"
         # Number of blank strips if this is a frame
         self.blankStrips = 0
         # {box, fifo, openBottom}
-        self.shape = 'box'
+        self.shape = "box"
         self.visualDecoder = None
 
     def render(self, cr, view, event, select, time):
         # Find the right event, visuals and sizes for things
-        if event is None or self.displayName.startswith('_'):
+        if event is None or self.displayName.startswith("_"):
             event = model.BlobEvent(self.unit, time)
 
         if self.picChar in event.visuals:
             strips = event.visuals[self.picChar].to_striped_block(
-                select & self.dataSelect)
+                select & self.dataSelect
+            )
         else:
             strips = [[[colours.unknownColour]]]
 
-        if self.stripOrd == 'RL':
+        if self.stripOrd == "RL":
             strips.reverse()
 
         if len(strips) == 0:
             strips = [[colours.errorColour]]
-            print('Problem with the colour of event:', event)
+            print("Problem with the colour of event:", event)
 
         num_strips = len(strips)
         strip_proportion = 1.0 / num_strips
@@ -240,11 +263,10 @@ class Block(Blob):
         cr.save()
         cr.scale(*view.pitch.to_pair())
         cr.translate(*self.topLeft.to_pair())
-        cr.translate(*(size - Point(1,1)).scale(0.5).to_pair())
+        cr.translate(*(size - Point(1, 1)).scale(0.5).to_pair())
 
         translated_centre = Point(*cr.user_to_device(0.0, 0.0))
-        translated_size = \
-            Point(*cr.user_to_device_distance(*size.to_pair()))
+        translated_size = Point(*cr.user_to_device_distance(*size.to_pair()))
 
         # The 2D grid is a grid of strips of blocks.  Data [[1,2],[3]]
         # is 2 strips of 2 and 1 blocks respectively.
@@ -255,20 +277,22 @@ class Block(Blob):
         #   from left to right if stripOf == 'LR' or right to left if
         #   stripOrd == 'RL'.
 
-        strip_is_horiz = self.stripDir == 'horiz'
+        strip_is_horiz = self.stripDir == "horiz"
 
         if strip_is_horiz:
-            strip_step_base = Point(1.0,0.0)
-            block_step_base = Point(0.0,1.0)
+            strip_step_base = Point(1.0, 0.0)
+            block_step_base = Point(0.0, 1.0)
         else:
-            strip_step_base = Point(0.0,1.0)
-            block_step_base = Point(1.0,0.0)
+            strip_step_base = Point(0.0, 1.0)
+            block_step_base = Point(1.0, 0.0)
 
-        strip_size = (box_size * (strip_step_base.scale(strip_proportion) +
-            block_step_base))
+        strip_size = box_size * (
+            strip_step_base.scale(strip_proportion) + block_step_base
+        )
         strip_step = strip_size * strip_step_base
-        strip_centre = Point(0,0) - (strip_size *
-            strip_step_base.scale(first_strip_offset))
+        strip_centre = Point(0, 0) - (
+            strip_size * strip_step_base.scale(first_strip_offset)
+        )
 
         cr.set_line_width(view.midLineWidth / view.pitch.x)
 
@@ -278,66 +302,70 @@ class Block(Blob):
             block_proportion = 1.0 / num_blocks
             firstBlockOffset = (num_blocks / 2.0) - 0.5
 
-            block_size = (strip_size *
-                (block_step_base.scale(block_proportion) +
-                strip_step_base))
+            block_size = strip_size * (
+                block_step_base.scale(block_proportion) + strip_step_base
+            )
             block_step = block_size * block_step_base
-            block_centre = (strip_centre + strip_step.scale(strip_index) -
-                (block_size * block_step_base.scale(firstBlockOffset)))
+            block_centre = (
+                strip_centre
+                + strip_step.scale(strip_index)
+                - (block_size * block_step_base.scale(firstBlockOffset))
+            )
 
             for block_index in range(num_blocks):
-                striped_box(cr, block_centre +
-                    block_step.scale(block_index), block_size,
-                    strips[strip_index][block_index])
+                striped_box(
+                    cr,
+                    block_centre + block_step.scale(block_index),
+                    block_size,
+                    strips[strip_index][block_index],
+                )
 
         cr.set_font_size(0.7)
         if self.border > 0.5:
             weight = cairo.FONT_WEIGHT_BOLD
         else:
             weight = cairo.FONT_WEIGHT_NORMAL
-        cr.select_font_face('Helvetica', cairo.FONT_SLANT_NORMAL,
-            weight)
+        cr.select_font_face("Helvetica", cairo.FONT_SLANT_NORMAL, weight)
 
         xb, yb, width, height, dx, dy = cr.text_extents(self.displayName)
 
         text_comfort_space = 0.15
 
-        if self.nameLoc == 'left':
+        if self.nameLoc == "left":
             # Position text vertically along left side, top aligned
             cr.save()
-            cr.rotate(- (math.pi / 2.0))
+            cr.rotate(-(math.pi / 2.0))
             text_point = Point(size.y, size.x).scale(0.5) * Point(-1, -1)
             text_point += Point(max(0, size.y - width), 0)
             text_point += Point(-text_comfort_space, -text_comfort_space)
-        else: # Including top
+        else:  # Including top
             # Position text above the top left hand corner
-            text_point = size.scale(0.5) * Point(-1,-1)
+            text_point = size.scale(0.5) * Point(-1, -1)
             text_point += Point(0.00, -text_comfort_space)
 
-        if (self.displayName != '' and
-            not self.displayName.startswith('_')):
+        if self.displayName != "" and not self.displayName.startswith("_"):
             cr.set_source_color(self.colour)
             cr.move_to(*text_point.to_pair())
             cr.show_text(self.displayName)
 
-        if self.nameLoc == 'left':
+        if self.nameLoc == "left":
             cr.restore()
 
         # Draw the outline shape
         cr.save()
         if strip_is_horiz:
-            cr.rotate(- (math.pi / 2.0))
+            cr.rotate(-(math.pi / 2.0))
             box_size = Point(box_size.y, box_size.x)
 
         if self.stripOrd == "RL":
             cr.rotate(math.pi)
 
-        if self.shape == 'box':
-            box(cr, Point(0,0), box_size)
-        elif self.shape == 'openBottom':
-            open_bottom(cr, Point(0,0), box_size)
-        elif self.shape == 'fifo':
-            fifo(cr, Point(0,0), box_size)
+        if self.shape == "box":
+            box(cr, Point(0, 0), box_size)
+        elif self.shape == "openBottom":
+            open_bottom(cr, Point(0, 0), box_size)
+        elif self.shape == "fifo":
+            fifo(cr, Point(0, 0), box_size)
         cr.restore()
 
         # Restore scale and stroke the outline
@@ -347,18 +375,21 @@ class Block(Blob):
         cr.stroke()
 
         # Return blob size/position
-        if self.unit == '_':
+        if self.unit == "_":
             return None
         else:
             return (translated_centre, translated_size)
 
+
 class Key(Blob):
     """Draw a key to the special (and numeric colours) with swatches of the
     colours half as wide as the key"""
-    def __init__(self, picChar, unit, topLeft, colour=colours.black,
-        size=Point(1,1)):
-        super(Key,self).__init__(picChar, unit, topLeft, colour, size = size)
-        self.colours = 'BBBB'
+
+    def __init__(
+        self, picChar, unit, topLeft, colour=colours.black, size=Point(1, 1)
+    ):
+        super(Key, self).__init__(picChar, unit, topLeft, colour, size=size)
+        self.colours = "BBBB"
         self.displayName = unit
 
     def render(self, cr, view, event, select, time):
@@ -367,17 +398,20 @@ class Key(Blob):
         cr.translate(*self.topLeft.to_pair())
         # cr.translate(*(self.size - Point(1,1)).scale(0.5).to_pair())
         half_width = self.size.x / 2.0
-        cr.translate(*(self.size - Point(1.0 + half_width,1.0)).scale(0.5).
-            to_pair())
+        cr.translate(
+            *(self.size - Point(1.0 + half_width, 1.0)).scale(0.5).to_pair()
+        )
 
         num_colours = len(self.colours)
         cr.set_line_width(view.midLineWidth / view.pitch.x)
 
-        blob_size = (Point(half_width,0.0) +
-            (self.size * Point(0.0,1.0 / num_colours)))
-        blob_step = Point(0.0,1.0) * blob_size
-        first_blob_centre = (Point(0.0,0.0) -
-            blob_step.scale((num_colours / 2.0) - 0.5))
+        blob_size = Point(half_width, 0.0) + (
+            self.size * Point(0.0, 1.0 / num_colours)
+        )
+        blob_step = Point(0.0, 1.0) * blob_size
+        first_blob_centre = Point(0.0, 0.0) - blob_step.scale(
+            (num_colours / 2.0) - 0.5
+        )
 
         cr.set_source_color(self.colour)
         cr.set_line_width(view.thinLineWidth / view.pitch.x)
@@ -387,8 +421,9 @@ class Key(Blob):
         real_blob_size = blob_size.scale(blob_proportion)
 
         cr.set_font_size(0.8 * blob_size.y * blob_proportion)
-        cr.select_font_face('Helvetica', cairo.FONT_SLANT_NORMAL,
-            cairo.FONT_WEIGHT_BOLD)
+        cr.select_font_face(
+            "Helvetica", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD
+        )
 
         for i in range(num_colours):
             centre = first_blob_centre + blob_step.scale(i)
@@ -396,9 +431,8 @@ class Key(Blob):
 
             colour_char = self.colours[i]
             if colour_char.isdigit():
-                cr.set_source_color(colours.number_to_colour(
-                    int(colour_char)))
-                label = '...' + colour_char
+                cr.set_source_color(colours.number_to_colour(int(colour_char)))
+                label = "..." + colour_char
             else:
                 cr.set_source_color(model.special_state_colours[colour_char])
                 label = model.special_state_names[colour_char]
@@ -409,34 +443,46 @@ class Key(Blob):
 
             xb, yb, width, height, dx, dy = cr.text_extents(label)
 
-            text_left = (centre + (Point(0.5,0.0) * blob_size) +
-                Point(0.0, height / 2.0))
+            text_left = (
+                centre
+                + (Point(0.5, 0.0) * blob_size)
+                + Point(0.0, height / 2.0)
+            )
 
             cr.move_to(*text_left.to_pair())
             cr.show_text(label)
 
+
 class Arrow(Blob):
     """Draw a left or right facing arrow"""
-    def __init__(self, unit, topLeft, colour=colours.black,
-        size=Point(1.0,1.0), direc='right'):
-        super(Arrow,self).__init__(unit, unit, topLeft, colour, size = size)
+
+    def __init__(
+        self,
+        unit,
+        topLeft,
+        colour=colours.black,
+        size=Point(1.0, 1.0),
+        direc="right",
+    ):
+        super(Arrow, self).__init__(unit, unit, topLeft, colour, size=size)
         self.direc = direc
 
     def render(self, cr, view, event, select, time):
         cr.save()
         cr.scale(*view.pitch.to_pair())
         cr.translate(*self.topLeft.to_pair())
-        cr.translate(*(self.size - Point(1,1)).scale(0.5).to_pair())
+        cr.translate(*(self.size - Point(1, 1)).scale(0.5).to_pair())
         cr.scale(*self.size.to_pair())
-        (blob_indent_x, blob_indent_y) = \
-            (view.blobIndentFactor / self.size).to_pair()
+        (blob_indent_x, blob_indent_y) = (
+            view.blobIndentFactor / self.size
+        ).to_pair()
         left = -0.5 - blob_indent_x
         right = 0.5 + blob_indent_x
 
         thickness = 0.2
         flare = 0.2
 
-        if self.direc == 'left':
+        if self.direc == "left":
             cr.rotate(math.pi)
 
         cr.move_to(left, -thickness)

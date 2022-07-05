@@ -34,8 +34,8 @@ from m5.objects import *
 
 # Create a config to be used by the traffic generator
 cfg_file_name = "memcheck.cfg"
-cfg_file_path = os.path.dirname(__file__) + "/" +cfg_file_name
-cfg_file = open(cfg_file_path, 'w')
+cfg_file_path = os.path.dirname(__file__) + "/" + cfg_file_name
+cfg_file = open(cfg_file_path, "w")
 
 # Three states, with random, linear and idle behaviours. The random
 # and linear states access memory in the range [0 : 16 Mbyte] with 8
@@ -53,16 +53,18 @@ cfg_file.write("TRANSITION 2 1 0.5\n")
 cfg_file.close()
 
 system = System()
-vd = VoltageDomain(voltage = '1V')
+vd = VoltageDomain(voltage="1V")
 
-system.mem_mode = 'timing'
+system.mem_mode = "timing"
 
-system.cpu = TrafficGen(config_file = cfg_file_path)
+system.cpu = TrafficGen(config_file=cfg_file_path)
 system.target = TLM_Target()
-system.physmem = SimpleMemory() # This must be instanciated, even if not needed
-#system.mem.addr_ranges = [AddrRange('512MB')]
+system.physmem = (
+    SimpleMemory()
+)  # This must be instanciated, even if not needed
+# system.mem.addr_ranges = [AddrRange('512MB')]
 system.transactor = Gem5ToTlmBridge32()
-system.clk_domain = SrcClockDomain(clock = '1.5GHz', voltage_domain = vd)
+system.clk_domain = SrcClockDomain(clock="1.5GHz", voltage_domain=vd)
 
 # Connect everything:
 system.transactor.gem5 = system.cpu.port

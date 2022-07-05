@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop MOVNTQ_M_MMX {
     warn_once "MOVNTQ: Ignoring non-temporal hint, modeling as cacheable!"
     stfp mmx, seg, sib, "DISPLACEMENT", dataSize=8
@@ -50,4 +50,4 @@ def macroop MASKMOVQ_MMX_MMX {
     maskmov ufp1, mmx, mmxm, size=1
     stfp ufp1, ds, [1, t0, rdi], dataSize=8
 };
-'''
+"""

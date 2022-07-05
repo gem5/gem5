@@ -36,23 +36,29 @@ from m5.objects.ArmMMU import ArmMMU
 from m5.objects.ArmInterrupts import ArmInterrupts
 from m5.objects.ArmISA import ArmISA
 
+
 class ArmCPU:
     ArchDecoder = ArmDecoder
     ArchMMU = ArmMMU
     ArchInterrupts = ArmInterrupts
     ArchISA = ArmISA
 
+
 class ArmAtomicSimpleCPU(BaseAtomicSimpleCPU, ArmCPU):
     mmu = ArmMMU()
+
 
 class ArmNonCachingSimpleCPU(BaseNonCachingSimpleCPU, ArmCPU):
     mmu = ArmMMU()
 
+
 class ArmTimingSimpleCPU(BaseTimingSimpleCPU, ArmCPU):
     mmu = ArmMMU()
 
+
 class ArmO3Checker(BaseO3Checker, ArmCPU):
     mmu = ArmMMU()
+
 
 class ArmO3CPU(BaseO3CPU, ArmCPU):
     mmu = ArmMMU()
@@ -66,13 +72,16 @@ class ArmO3CPU(BaseO3CPU, ArmCPU):
     numPhysCCRegs = Self.numPhysIntRegs * 5
 
     def addCheckerCpu(self):
-        self.checker = ArmO3Checker(workload=self.workload,
-                                    exitOnError=False,
-                                    updateOnError=True,
-                                    warnOnlyOnLoadError=True)
+        self.checker = ArmO3Checker(
+            workload=self.workload,
+            exitOnError=False,
+            updateOnError=True,
+            warnOnlyOnLoadError=True,
+        )
         self.checker.mmu.itb.size = self.mmu.itb.size
         self.checker.mmu.dtb.size = self.mmu.dtb.size
         self.checker.cpu_id = self.cpu_id
+
 
 class ArmMinorCPU(BaseMinorCPU, ArmCPU):
     mmu = ArmMMU()

@@ -66,7 +66,8 @@ from m5.objects.XBar import *
 # over them. Yet in this model, we have not made any such assumptions on the
 # address space.
 
+
 class HMCController(NoncoherentXBar):
-    type = 'HMCController'
+    type = "HMCController"
     cxx_header = "mem/hmc_controller.hh"
-    cxx_class = 'gem5::HMCController'
+    cxx_class = "gem5::HMCController"

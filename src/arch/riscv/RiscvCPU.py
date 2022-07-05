@@ -33,23 +33,29 @@ from m5.objects.RiscvMMU import RiscvMMU
 from m5.objects.RiscvInterrupts import RiscvInterrupts
 from m5.objects.RiscvISA import RiscvISA
 
+
 class RiscvCPU:
     ArchDecoder = RiscvDecoder
     ArchMMU = RiscvMMU
     ArchInterrupts = RiscvInterrupts
     ArchISA = RiscvISA
 
+
 class RiscvAtomicSimpleCPU(BaseAtomicSimpleCPU, RiscvCPU):
     mmu = RiscvMMU()
+
 
 class RiscvNonCachingSimpleCPU(BaseNonCachingSimpleCPU, RiscvCPU):
     mmu = RiscvMMU()
 
+
 class RiscvTimingSimpleCPU(BaseTimingSimpleCPU, RiscvCPU):
     mmu = RiscvMMU()
 
+
 class RiscvO3CPU(BaseO3CPU, RiscvCPU):
     mmu = RiscvMMU()
+
 
 class RiscvMinorCPU(BaseMinorCPU, RiscvCPU):
     mmu = RiscvMMU()

@@ -28,7 +28,8 @@ from m5.params import *
 
 from m5.objects.Workload import Workload
 
+
 class SparcFsWorkload(Workload):
-    type = 'SparcFsWorkload'
-    cxx_header = 'arch/sparc/fs_workload.hh'
-    cxx_class = 'gem5::SparcISA::FsWorkload'
+    type = "SparcFsWorkload"
+    cxx_header = "arch/sparc/fs_workload.hh"
+    cxx_class = "gem5::SparcISA::FsWorkload"

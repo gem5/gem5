@@ -42,14 +42,17 @@ from m5.proxy import *
 
 from m5.objects.Serial import SerialDevice
 
-class TerminalDump(ScopedEnum): vals = [
-        "none", "stdoutput", "stderror", "file"]
+
+class TerminalDump(ScopedEnum):
+    vals = ["none", "stdoutput", "stderror", "file"]
+
 
 class Terminal(SerialDevice):
-    type = 'Terminal'
+    type = "Terminal"
     cxx_header = "dev/serial/terminal.hh"
-    cxx_class = 'gem5::Terminal'
+    cxx_class = "gem5::Terminal"
     port = Param.TcpPort(3456, "listen port")
     number = Param.Int(0, "terminal number")
-    outfile = Param.TerminalDump("file",
-        "Selects if and where the terminal is dumping its output")
+    outfile = Param.TerminalDump(
+        "file", "Selects if and where the terminal is dumping its output"
+    )

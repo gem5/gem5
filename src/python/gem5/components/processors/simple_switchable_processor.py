@@ -93,8 +93,7 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
         }
 
         super().__init__(
-            switchable_cores=switchable_cores,
-            starting_cores=self._start_key,
+            switchable_cores=switchable_cores, starting_cores=self._start_key
         )
 
     @overrides(SwitchableProcessor)

@@ -39,15 +39,20 @@
 
 from slicc.util import PairContainer
 
+
 class Symbol(PairContainer):
     def __init__(self, symtab, ident, location, pairs=None):
         super().__init__()
 
         from slicc.util import Location
         from slicc.symbols import SymbolTable
-        if not isinstance(symtab, SymbolTable): raise AttributeError
-        if not isinstance(ident, str): raise AttributeError
-        if not isinstance(location, Location): raise AttributeError
+
+        if not isinstance(symtab, SymbolTable):
+            raise AttributeError
+        if not isinstance(ident, str):
+            raise AttributeError
+        if not isinstance(location, Location):
+            raise AttributeError
 
         self.symtab = symtab
         self.ident = ident
@@ -66,8 +71,12 @@ class Symbol(PairContainer):
 
     def __setitem__(self, key, value):
         if key in self.pairs:
-            self.warning("Pair key '%s' re-defined. new: '%s' old: '%s'",
-                         key, value, self.pairs[key])
+            self.warning(
+                "Pair key '%s' re-defined. new: '%s' old: '%s'",
+                key,
+                value,
+                self.pairs[key],
+            )
         super().__setitem__(key, value)
 
     @property
@@ -79,7 +88,7 @@ class Symbol(PairContainer):
         # Allow Symbols with no description: return an empty string.
         if "desc" not in self:
             return ""
-        else :
+        else:
             return self["desc"]
 
     def error(self, message, *args):
@@ -91,4 +100,5 @@ class Symbol(PairContainer):
     def writeHTMLFiles(self, path):
         pass
 
-__all__ = [ "Symbol" ]
+
+__all__ = ["Symbol"]

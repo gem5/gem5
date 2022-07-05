@@ -27,28 +27,32 @@
 
 from code_formatter import code_formatter
 
+
 class tex_formatter(code_formatter):
     braced = "<>"
     double_braced = "<<>>"
 
+
 def printTexTable(sm, code):
     tex = tex_formatter()
-    tex(r'''
+    tex(
+        r"""
 %& latex
 \documentclass[12pt]{article}
 \usepackage{graphics}
 \begin{document}
 \begin{tabular}{|l||$<<"l" * len(sm.events)>>|} \hline
-''')
+"""
+    )
 
     for event in sm.events:
         code(r" & \rotatebox{90}{$<<event.short>>}")
-    tex(r'\\ \hline \hline')
+    tex(r"\\ \hline \hline")
 
     for state in sm.states:
         state_str = state.short
         for event in sm.events:
-            state_str += ' & '
+            state_str += " & "
             trans = sm.get_transition(state, event)
             if trans:
                 actions = trans.getActionShorthands()
@@ -59,13 +63,15 @@ def printTexTable(sm, code):
                     nextState = ""
                 state_str += actions
                 if nextState and actions:
-                    state_str += '/'
+                    state_str += "/"
                 state_str += nextState
-        tex(r'$0 \\', state_str)
-    tex(r'''
+        tex(r"$0 \\", state_str)
+    tex(
+        r"""
 \hline
 \end{tabular}
 \end{document}
-''')
+"""
+    )
 
     code.append(tex)

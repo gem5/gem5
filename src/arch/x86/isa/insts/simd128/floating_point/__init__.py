@@ -33,16 +33,18 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["data_transfer",
-              "data_conversion",
-              "data_reordering",
-              "arithmetic",
-              "compare",
-              "logical"]
+categories = [
+    "data_transfer",
+    "data_conversion",
+    "data_reordering",
+    "arithmetic",
+    "compare",
+    "logical",
+]
 
-microcode = '''
+microcode = """
 # SSE instructions
-'''
+"""
 for category in categories:
     exec("from . import %s as cat" % category)
     microcode += cat.microcode

@@ -36,16 +36,19 @@ from os.path import isdir
 from shutil import rmtree, copyfile
 from m5.util.convert import toFrequency, toMemorySize
 
+
 def file_append(path, contents):
-    with open(joinpath(*path), 'a') as f:
+    with open(joinpath(*path), "a") as f:
         f.write(str(contents))
         f.flush()
         fsync(f.fileno())
+
 
 def remake_dir(path):
     if isdir(path):
         rmtree(path)
     makedirs(path)
+
 
 # This fakes out a dGPU setup so the runtime operates correctly.  The spoofed
 # system has a single dGPU and a single socket CPU.  Note that more complex
@@ -57,104 +60,111 @@ def remake_dir(path):
 # future.  We might need to scrub through this and extract the appropriate
 # fields from the simulator in the future.
 def createVegaTopology(options):
-    topology_dir = joinpath(m5.options.outdir, \
-        'fs/sys/devices/virtual/kfd/kfd/topology')
+    topology_dir = joinpath(
+        m5.options.outdir, "fs/sys/devices/virtual/kfd/kfd/topology"
+    )
     remake_dir(topology_dir)
 
-    amdgpu_dir = joinpath(m5.options.outdir, \
-        'fs/sys/module/amdgpu/parameters')
+    amdgpu_dir = joinpath(m5.options.outdir, "fs/sys/module/amdgpu/parameters")
     remake_dir(amdgpu_dir)
 
-    pci_ids_dir = joinpath(m5.options.outdir, \
-        'fs/usr/share/hwdata/')
+    pci_ids_dir = joinpath(m5.options.outdir, "fs/usr/share/hwdata/")
     remake_dir(pci_ids_dir)
 
     # Vega reported VM size in GB.  Used to reserve an allocation from CPU
     # to implement SVM (i.e. GPUVM64 pointers and X86 pointers agree)
-    file_append((amdgpu_dir, 'vm_size'), 256)
+    file_append((amdgpu_dir, "vm_size"), 256)
 
     # Ripped from real Vega platform to appease KMT version checks
-    file_append((topology_dir, 'generation_id'), 2)
+    file_append((topology_dir, "generation_id"), 2)
 
     # Set up system properties.  Regiter as ast-rocm server
-    sys_prop = 'platform_oem 35498446626881\n' + \
-               'platform_id 71791775140929\n' + \
-               'platform_rev 2\n'
-    file_append((topology_dir, 'system_properties'), sys_prop)
+    sys_prop = (
+        "platform_oem 35498446626881\n"
+        + "platform_id 71791775140929\n"
+        + "platform_rev 2\n"
+    )
+    file_append((topology_dir, "system_properties"), sys_prop)
 
     # Populate the topology tree
     # Our dGPU system is two nodes.  Node 0 is a CPU and Node 1 is a dGPU
-    node_dir = joinpath(topology_dir, 'nodes/0')
+    node_dir = joinpath(topology_dir, "nodes/0")
     remake_dir(node_dir)
 
     # Register as a CPU
-    file_append((node_dir, 'gpu_id'), 0)
-    file_append((node_dir, 'name'), '')
+    file_append((node_dir, "gpu_id"), 0)
+    file_append((node_dir, "name"), "")
 
     # CPU links.  Only thing that matters is we tell the runtime that GPU is
     # connected through PCIe to CPU socket 0.
     io_links = 1
-    io_dir = joinpath(node_dir, 'io_links/0')
+    io_dir = joinpath(node_dir, "io_links/0")
     remake_dir(io_dir)
-    io_prop = 'type 2\n'                                    + \
-              'version_major 0\n'                           + \
-              'version_minor 0\n'                           + \
-              'node_from 0\n'                               + \
-              'node_to 1\n'                                 + \
-              'weight 20\n'                                 + \
-              'min_latency 0\n'                             + \
-              'max_latency 0\n'                             + \
-              'min_bandwidth 0\n'                           + \
-              'max_bandwidth 0\n'                           + \
-              'recommended_transfer_size 0\n'               + \
-              'flags 13\n'
-    file_append((io_dir, 'properties'), io_prop)
+    io_prop = (
+        "type 2\n"
+        + "version_major 0\n"
+        + "version_minor 0\n"
+        + "node_from 0\n"
+        + "node_to 1\n"
+        + "weight 20\n"
+        + "min_latency 0\n"
+        + "max_latency 0\n"
+        + "min_bandwidth 0\n"
+        + "max_bandwidth 0\n"
+        + "recommended_transfer_size 0\n"
+        + "flags 13\n"
+    )
+    file_append((io_dir, "properties"), io_prop)
 
     # Populate CPU node properties
-    node_prop = 'cpu_cores_count %s\n' % options.num_cpus   + \
-                'simd_count 0\n'                            + \
-                'mem_banks_count 1\n'                       + \
-                'caches_count 0\n'                          + \
-                'io_links_count %s\n' % io_links            + \
-                'cpu_core_id_base 0\n'                      + \
-                'simd_id_base 0\n'                          + \
-                'max_waves_per_simd 0\n'                    + \
-                'lds_size_in_kb 0\n'                        + \
-                'gds_size_in_kb 0\n'                        + \
-                'wave_front_size 64\n'                      + \
-                'array_count 0\n'                           + \
-                'simd_arrays_per_engine 0\n'                + \
-                'cu_per_simd_array 0\n'                     + \
-                'simd_per_cu 0\n'                           + \
-                'max_slots_scratch_cu 0\n'                  + \
-                'vendor_id 0\n'                             + \
-                'device_id 0\n'                             + \
-                'location_id 0\n'                           + \
-                'drm_render_minor 0\n'                      + \
-                'max_engine_clk_ccompute 3400\n'
+    node_prop = (
+        "cpu_cores_count %s\n" % options.num_cpus
+        + "simd_count 0\n"
+        + "mem_banks_count 1\n"
+        + "caches_count 0\n"
+        + "io_links_count %s\n" % io_links
+        + "cpu_core_id_base 0\n"
+        + "simd_id_base 0\n"
+        + "max_waves_per_simd 0\n"
+        + "lds_size_in_kb 0\n"
+        + "gds_size_in_kb 0\n"
+        + "wave_front_size 64\n"
+        + "array_count 0\n"
+        + "simd_arrays_per_engine 0\n"
+        + "cu_per_simd_array 0\n"
+        + "simd_per_cu 0\n"
+        + "max_slots_scratch_cu 0\n"
+        + "vendor_id 0\n"
+        + "device_id 0\n"
+        + "location_id 0\n"
+        + "drm_render_minor 0\n"
+        + "max_engine_clk_ccompute 3400\n"
+    )
 
-    file_append((node_dir, 'properties'), node_prop)
+    file_append((node_dir, "properties"), node_prop)
 
     # CPU memory reporting
-    mem_dir = joinpath(node_dir, 'mem_banks/0')
+    mem_dir = joinpath(node_dir, "mem_banks/0")
     remake_dir(mem_dir)
     # Heap type value taken from real system, heap type values:
     # https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/blob/roc-4.0.x/include/hsakmttypes.h#L317
-    mem_prop = 'heap_type 0\n'                                           + \
-               'size_in_bytes 33704329216\n'                            + \
-               'flags 0\n'                                              + \
-               'width 72\n'                                             + \
-               'mem_clk_max 2400\n'
+    mem_prop = (
+        "heap_type 0\n"
+        + "size_in_bytes 33704329216\n"
+        + "flags 0\n"
+        + "width 72\n"
+        + "mem_clk_max 2400\n"
+    )
 
-    file_append((mem_dir, 'properties'), mem_prop)
+    file_append((mem_dir, "properties"), mem_prop)
 
     # Build the GPU node
-    node_dir = joinpath(topology_dir, 'nodes/1')
+    node_dir = joinpath(topology_dir, "nodes/1")
     remake_dir(node_dir)
 
     # Register as a Vega
-    file_append((node_dir, 'gpu_id'), 22124)
-    file_append((node_dir, 'name'), 'Vega\n')
+    file_append((node_dir, "gpu_id"), 22124)
+    file_append((node_dir, "name"), "Vega\n")
 
     # Should be the same as the render driver filename (dri/renderD<drm_num>)
     drm_num = 128
@@ -166,70 +176,77 @@ def createVegaTopology(options):
     # GPU links.  Only thing that matters is we tell the runtime that GPU is
     # connected through PCIe to CPU socket 0.
     io_links = 1
-    io_dir = joinpath(node_dir, 'io_links/0')
+    io_dir = joinpath(node_dir, "io_links/0")
     remake_dir(io_dir)
-    io_prop = 'type 2\n'                                    + \
-              'version_major 0\n'                           + \
-              'version_minor 0\n'                           + \
-              'node_from 1\n'                               + \
-              'node_to 0\n'                                 + \
-              'weight 20\n'                                 + \
-              'min_latency 0\n'                             + \
-              'max_latency 0\n'                             + \
-              'min_bandwidth 0\n'                           + \
-              'max_bandwidth 0\n'                           + \
-              'recommended_transfer_size 0\n'               + \
-              'flags 1\n'
-    file_append((io_dir, 'properties'), io_prop)
+    io_prop = (
+        "type 2\n"
+        + "version_major 0\n"
+        + "version_minor 0\n"
+        + "node_from 1\n"
+        + "node_to 0\n"
+        + "weight 20\n"
+        + "min_latency 0\n"
+        + "max_latency 0\n"
+        + "min_bandwidth 0\n"
+        + "max_bandwidth 0\n"
+        + "recommended_transfer_size 0\n"
+        + "flags 1\n"
+    )
+    file_append((io_dir, "properties"), io_prop)
 
     # Populate GPU node properties
     cu_scratch = options.simds_per_cu * options.wfs_per_simd
-    node_prop = 'cpu_cores_count 0\n'                       + \
-                'simd_count 256\n'                          + \
-                'mem_banks_count 1\n'                       + \
-                'caches_count %s\n' % caches                + \
-                'io_links_count %s\n' % io_links            + \
-                'cpu_core_id_base 0\n'                      + \
-                'simd_id_base 2147487744\n'                 + \
-                'max_waves_per_simd 10\n'                   + \
-                'lds_size_in_kb 64\n'                       + \
-                'gds_size_in_kb 0\n'                        + \
-                'wave_front_size 64\n'                      + \
-                'array_count 4\n'                           + \
-                'simd_arrays_per_engine 1\n'                + \
-                'cu_per_simd_array 16\n'                    + \
-                'simd_per_cu 4\n'                           + \
-                'max_slots_scratch_cu %s\n' % cu_scratch    + \
-                'vendor_id 4098\n'                          + \
-                'device_id 26720\n'                         + \
-                'location_id 1024\n'                        + \
-                'drm_render_minor %s\n' % drm_num           + \
-                'hive_id 0\n'                               + \
-                'num_sdma_engines 2\n'                      + \
-                'num_sdma_xgmi_engines 0\n'                 + \
-                'max_engine_clk_fcompute 1500\n'            + \
-                'local_mem_size 17163091968\n'              + \
-                'fw_version 421\n'                          + \
-                'capability 238208\n'                       + \
-                'debug_prop 32768\n'                        + \
-                'sdma_fw_version 430\n'                     + \
-                'max_engine_clk_ccompute 3400\n'
+    node_prop = (
+        "cpu_cores_count 0\n"
+        + "simd_count 256\n"
+        + "mem_banks_count 1\n"
+        + "caches_count %s\n" % caches
+        + "io_links_count %s\n" % io_links
+        + "cpu_core_id_base 0\n"
+        + "simd_id_base 2147487744\n"
+        + "max_waves_per_simd 10\n"
+        + "lds_size_in_kb 64\n"
+        + "gds_size_in_kb 0\n"
+        + "wave_front_size 64\n"
+        + "array_count 4\n"
+        + "simd_arrays_per_engine 1\n"
+        + "cu_per_simd_array 16\n"
+        + "simd_per_cu 4\n"
+        + "max_slots_scratch_cu %s\n" % cu_scratch
+        + "vendor_id 4098\n"
+        + "device_id 26720\n"
+        + "location_id 1024\n"
+        + "drm_render_minor %s\n" % drm_num
+        + "hive_id 0\n"
+        + "num_sdma_engines 2\n"
+        + "num_sdma_xgmi_engines 0\n"
+        + "max_engine_clk_fcompute 1500\n"
+        + "local_mem_size 17163091968\n"
+        + "fw_version 421\n"
+        + "capability 238208\n"
+        + "debug_prop 32768\n"
+        + "sdma_fw_version 430\n"
+        + "max_engine_clk_ccompute 3400\n"
+    )
 
-    file_append((node_dir, 'properties'), node_prop)
+    file_append((node_dir, "properties"), node_prop)
 
     # Fiji HBM reporting
     # TODO: Extract size, clk, and width from sim paramters
-    mem_dir = joinpath(node_dir, 'mem_banks/0')
+    mem_dir = joinpath(node_dir, "mem_banks/0")
     remake_dir(mem_dir)
     # Heap type value taken from real system, heap type values:
     # https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/blob/roc-4.0.x/include/hsakmttypes.h#L317
-    mem_prop = 'heap_type 1\n'                              + \
-               'size_in_bytes 17163091968\n'                + \
-               'flags 0\n'                                  + \
-               'width 2048\n'                               + \
-               'mem_clk_max 945\n'
+    mem_prop = (
+        "heap_type 1\n"
+        + "size_in_bytes 17163091968\n"
+        + "flags 0\n"
+        + "width 2048\n"
+        + "mem_clk_max 945\n"
+    )
 
-    file_append((mem_dir, 'properties'), mem_prop)
+    file_append((mem_dir, "properties"), mem_prop)
+
 
 # This fakes out a dGPU setup so the runtime correctly operations.  The spoofed
 # system has a single dGPU and a single socket CPU.  Note that more complex
@@ -241,100 +258,108 @@ def createVegaTopology(options):
 # future.  We might need to scrub through this and extract the appropriate
 # fields from the simulator in the future.
 def createFijiTopology(options):
-    topology_dir = joinpath(m5.options.outdir, \
-        'fs/sys/devices/virtual/kfd/kfd/topology')
+    topology_dir = joinpath(
+        m5.options.outdir, "fs/sys/devices/virtual/kfd/kfd/topology"
+    )
     remake_dir(topology_dir)
 
-    amdgpu_dir = joinpath(m5.options.outdir, \
-        'fs/sys/module/amdgpu/parameters')
+    amdgpu_dir = joinpath(m5.options.outdir, "fs/sys/module/amdgpu/parameters")
     remake_dir(amdgpu_dir)
 
     # Fiji reported VM size in GB.  Used to reserve an allocation from CPU
     # to implement SVM (i.e. GPUVM64 pointers and X86 pointers agree)
-    file_append((amdgpu_dir, 'vm_size'), 256)
+    file_append((amdgpu_dir, "vm_size"), 256)
 
     # Ripped from real Fiji platform to appease KMT version checks
-    file_append((topology_dir, 'generation_id'), 2)
+    file_append((topology_dir, "generation_id"), 2)
 
     # Set up system properties.  Regiter as ast-rocm server
-    sys_prop = 'platform_oem 35498446626881\n' + \
-               'platform_id 71791775140929\n' + \
-               'platform_rev 2\n'
-    file_append((topology_dir, 'system_properties'), sys_prop)
+    sys_prop = (
+        "platform_oem 35498446626881\n"
+        + "platform_id 71791775140929\n"
+        + "platform_rev 2\n"
+    )
+    file_append((topology_dir, "system_properties"), sys_prop)
 
     # Populate the topology tree
     # Our dGPU system is two nodes.  Node 0 is a CPU and Node 1 is a dGPU
-    node_dir = joinpath(topology_dir, 'nodes/0')
+    node_dir = joinpath(topology_dir, "nodes/0")
     remake_dir(node_dir)
 
     # Register as a CPU
-    file_append((node_dir, 'gpu_id'), 0)
-    file_append((node_dir, 'name'), '')
+    file_append((node_dir, "gpu_id"), 0)
+    file_append((node_dir, "name"), "")
 
     # CPU links.  Only thing that matters is we tell the runtime that GPU is
     # connected through PCIe to CPU socket 0.
     io_links = 1
-    io_dir = joinpath(node_dir, 'io_links/0')
+    io_dir = joinpath(node_dir, "io_links/0")
     remake_dir(io_dir)
-    io_prop = 'type 2\n'                                    + \
-              'version_major 0\n'                           + \
-              'version_minor 0\n'                           + \
-              'node_from 0\n'                               + \
-              'node_to 1\n'                                 + \
-              'weight 20\n'                                 + \
-              'min_latency 0\n'                             + \
-              'max_latency 0\n'                             + \
-              'min_bandwidth 0\n'                           + \
-              'max_bandwidth 0\n'                           + \
-              'recommended_transfer_size 0\n'               + \
-              'flags 13\n'
-    file_append((io_dir, 'properties'), io_prop)
+    io_prop = (
+        "type 2\n"
+        + "version_major 0\n"
+        + "version_minor 0\n"
+        + "node_from 0\n"
+        + "node_to 1\n"
+        + "weight 20\n"
+        + "min_latency 0\n"
+        + "max_latency 0\n"
+        + "min_bandwidth 0\n"
+        + "max_bandwidth 0\n"
+        + "recommended_transfer_size 0\n"
+        + "flags 13\n"
+    )
+    file_append((io_dir, "properties"), io_prop)
 
     # Populate CPU node properties
-    node_prop = 'cpu_cores_count %s\n' % options.num_cpus   + \
-                'simd_count 0\n'                            + \
-                'mem_banks_count 1\n'                       + \
-                'caches_count 0\n'                          + \
-                'io_links_count %s\n' % io_links            + \
-                'cpu_core_id_base 0\n'                      + \
-                'simd_id_base 0\n'                          + \
-                'max_waves_per_simd 0\n'                    + \
-                'lds_size_in_kb 0\n'                        + \
-                'gds_size_in_kb 0\n'                        + \
-                'wave_front_size 64\n'                      + \
-                'array_count 0\n'                           + \
-                'simd_arrays_per_engine 0\n'                + \
-                'cu_per_simd_array 0\n'                     + \
-                'simd_per_cu 0\n'                           + \
-                'max_slots_scratch_cu 0\n'                  + \
-                'vendor_id 0\n'                             + \
-                'device_id 0\n'                             + \
-                'location_id 0\n'                           + \
-                'drm_render_minor 0\n'                      + \
-                'max_engine_clk_ccompute 3400\n'
+    node_prop = (
+        "cpu_cores_count %s\n" % options.num_cpus
+        + "simd_count 0\n"
+        + "mem_banks_count 1\n"
+        + "caches_count 0\n"
+        + "io_links_count %s\n" % io_links
+        + "cpu_core_id_base 0\n"
+        + "simd_id_base 0\n"
+        + "max_waves_per_simd 0\n"
+        + "lds_size_in_kb 0\n"
+        + "gds_size_in_kb 0\n"
+        + "wave_front_size 64\n"
+        + "array_count 0\n"
+        + "simd_arrays_per_engine 0\n"
+        + "cu_per_simd_array 0\n"
+        + "simd_per_cu 0\n"
+        + "max_slots_scratch_cu 0\n"
+        + "vendor_id 0\n"
+        + "device_id 0\n"
+        + "location_id 0\n"
+        + "drm_render_minor 0\n"
+        + "max_engine_clk_ccompute 3400\n"
+    )
 
-    file_append((node_dir, 'properties'), node_prop)
+    file_append((node_dir, "properties"), node_prop)
 
     # CPU memory reporting
-    mem_dir = joinpath(node_dir, 'mem_banks/0')
+    mem_dir = joinpath(node_dir, "mem_banks/0")
     remake_dir(mem_dir)
     # Heap type value taken from real system, heap type values:
     # https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/blob/roc-4.0.x/include/hsakmttypes.h#L317
-    mem_prop = 'heap_type 0\n'                              + \
-               'size_in_bytes 33704329216\n'                + \
-               'flags 0\n'                                  + \
-               'width 72\n'                                 + \
-               'mem_clk_max 2400\n'
+    mem_prop = (
+        "heap_type 0\n"
+        + "size_in_bytes 33704329216\n"
+        + "flags 0\n"
+        + "width 72\n"
+        + "mem_clk_max 2400\n"
+    )
 
-    file_append((mem_dir, 'properties'), mem_prop)
+    file_append((mem_dir, "properties"), mem_prop)
 
     # Build the GPU node
-    node_dir = joinpath(topology_dir, 'nodes/1')
+    node_dir = joinpath(topology_dir, "nodes/1")
     remake_dir(node_dir)
 
     # Register as a Fiji
-    file_append((node_dir, 'gpu_id'), 50156)
-    file_append((node_dir, 'name'), 'Fiji\n')
+    file_append((node_dir, "gpu_id"), 50156)
+    file_append((node_dir, "name"), "Fiji\n")
 
     # Should be the same as the render driver filename (dri/renderD<drm_num>)
     drm_num = 128
@@ -346,97 +371,108 @@ def createFijiTopology(options):
     # GPU links.  Only thing that matters is we tell the runtime that GPU is
     # connected through PCIe to CPU socket 0.
     io_links = 1
-    io_dir = joinpath(node_dir, 'io_links/0')
+    io_dir = joinpath(node_dir, "io_links/0")
     remake_dir(io_dir)
-    io_prop = 'type 2\n'                                    + \
-              'version_major 0\n'                           + \
-              'version_minor 0\n'                           + \
-              'node_from 1\n'                               + \
-              'node_to 0\n'                                 + \
-              'weight 20\n'                                 + \
-              'min_latency 0\n'                             + \
-              'max_latency 0\n'                             + \
-              'min_bandwidth 0\n'                           + \
-              'max_bandwidth 0\n'                           + \
-              'recommended_transfer_size 0\n'               + \
-              'flags 1\n'
-    file_append((io_dir, 'properties'), io_prop)
+    io_prop = (
+        "type 2\n"
+        + "version_major 0\n"
+        + "version_minor 0\n"
+        + "node_from 1\n"
+        + "node_to 0\n"
+        + "weight 20\n"
+        + "min_latency 0\n"
+        + "max_latency 0\n"
+        + "min_bandwidth 0\n"
+        + "max_bandwidth 0\n"
+        + "recommended_transfer_size 0\n"
+        + "flags 1\n"
+    )
+    file_append((io_dir, "properties"), io_prop)
 
     # Populate GPU node properties
-    node_prop = 'cpu_cores_count 0\n'                                       + \
-                'simd_count %s\n'                                             \
-                    % (options.num_compute_units * options.simds_per_cu)    + \
-                'mem_banks_count 1\n'                                       + \
-                'caches_count %s\n' % caches                                + \
-                'io_links_count %s\n' % io_links                            + \
-                'cpu_core_id_base 0\n'                                      + \
-                'simd_id_base 2147487744\n'                                 + \
-                'max_waves_per_simd %s\n' % options.wfs_per_simd            + \
-                'lds_size_in_kb %s\n' % int(options.lds_size / 1024)        + \
-                'gds_size_in_kb 0\n'                                        + \
-                'wave_front_size %s\n' % options.wf_size                    + \
-                'array_count 4\n'                           + \
-                'simd_arrays_per_engine %s\n' % options.sa_per_complex      + \
-                'cu_per_simd_array %s\n' % options.cu_per_sa                + \
-                'simd_per_cu %s\n' % options.simds_per_cu                   + \
-                'max_slots_scratch_cu 32\n'                                 + \
-                'vendor_id 4098\n'                                          + \
-                'device_id 29440\n'                                         + \
-                'location_id 512\n'                                         + \
-                'drm_render_minor %s\n' % drm_num                           + \
-                'max_engine_clk_fcompute %s\n'                                \
-                    % int(toFrequency(options.gpu_clock) / 1e6)             + \
-                'local_mem_size 4294967296\n'                               + \
-                'fw_version 730\n'                                          + \
-                'capability 4736\n'                                         + \
-                'max_engine_clk_ccompute %s\n'                                \
-                    % int(toFrequency(options.CPUClock) / 1e6)
+    node_prop = (
+        "cpu_cores_count 0\n"
+        + "simd_count %s\n"
+        % (options.num_compute_units * options.simds_per_cu)
+        + "mem_banks_count 1\n"
+        + "caches_count %s\n" % caches
+        + "io_links_count %s\n" % io_links
+        + "cpu_core_id_base 0\n"
+        + "simd_id_base 2147487744\n"
+        + "max_waves_per_simd %s\n" % options.wfs_per_simd
+        + "lds_size_in_kb %s\n" % int(options.lds_size / 1024)
+        + "gds_size_in_kb 0\n"
+        + "wave_front_size %s\n" % options.wf_size
+        + "array_count 4\n"
+        + "simd_arrays_per_engine %s\n" % options.sa_per_complex
+        + "cu_per_simd_array %s\n" % options.cu_per_sa
+        + "simd_per_cu %s\n" % options.simds_per_cu
+        + "max_slots_scratch_cu 32\n"
+        + "vendor_id 4098\n"
+        + "device_id 29440\n"
+        + "location_id 512\n"
+        + "drm_render_minor %s\n" % drm_num
+        + "max_engine_clk_fcompute %s\n"
+        % int(toFrequency(options.gpu_clock) / 1e6)
+        + "local_mem_size 4294967296\n"
+        + "fw_version 730\n"
+        + "capability 4736\n"
+        + "max_engine_clk_ccompute %s\n"
+        % int(toFrequency(options.CPUClock) / 1e6)
+    )
 
-    file_append((node_dir, 'properties'), node_prop)
+    file_append((node_dir, "properties"), node_prop)
 
     # Fiji HBM reporting
     # TODO: Extract size, clk, and width from sim paramters
-    mem_dir = joinpath(node_dir, 'mem_banks/0')
+    mem_dir = joinpath(node_dir, "mem_banks/0")
     remake_dir(mem_dir)
     # Heap type value taken from real system, heap type values:
     # https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/blob/roc-4.0.x/include/hsakmttypes.h#L317
-    mem_prop = 'heap_type 1\n'                              + \
-               'size_in_bytes 4294967296\n'                 + \
-               'flags 0\n'                                  + \
-               'width 4096\n'                               + \
-               'mem_clk_max 500\n'
+    mem_prop = (
+        "heap_type 1\n"
+        + "size_in_bytes 4294967296\n"
+        + "flags 0\n"
+        + "width 4096\n"
+        + "mem_clk_max 500\n"
+    )
 
-    file_append((mem_dir, 'properties'), mem_prop)
+    file_append((mem_dir, "properties"), mem_prop)
 
 
 def createCarrizoTopology(options):
-    topology_dir = joinpath(m5.options.outdir, \
-        'fs/sys/devices/virtual/kfd/kfd/topology')
+    topology_dir = joinpath(
+        m5.options.outdir, "fs/sys/devices/virtual/kfd/kfd/topology"
+    )
     remake_dir(topology_dir)
 
     # Ripped from real Kaveri platform to appease kmt version checks
     # Set up generation_id
-    file_append((topology_dir, 'generation_id'), 1)
+    file_append((topology_dir, "generation_id"), 1)
 
     # Set up system properties
-    sys_prop = 'platform_oem 2314885673410447169\n' + \
-               'platform_id 35322352389441\n'       + \
-               'platform_rev 1\n'
-    file_append((topology_dir, 'system_properties'), sys_prop)
+    sys_prop = (
+        "platform_oem 2314885673410447169\n"
+        + "platform_id 35322352389441\n"
+        + "platform_rev 1\n"
+    )
+    file_append((topology_dir, "system_properties"), sys_prop)
 
     # Populate the topology tree
     # TODO: Just the bare minimum to pass for now
-    node_dir = joinpath(topology_dir, 'nodes/0')
+    node_dir = joinpath(topology_dir, "nodes/0")
     remake_dir(node_dir)
 
     # must show valid kaveri gpu id or massive meltdown
-    file_append((node_dir, 'gpu_id'), 2765)
+    file_append((node_dir, "gpu_id"), 2765)
 
-    gfx_dict = { "gfx801": {"name": "Carrizo\n", "id": 39028},
-                 "gfx902": {"name": "Raven\n", "id": 5597}}
+    gfx_dict = {
+        "gfx801": {"name": "Carrizo\n", "id": 39028},
+        "gfx902": {"name": "Raven\n", "id": 5597},
+    }
 
     # must have marketing name
-    file_append((node_dir, 'name'), gfx_dict[options.gfx_version]["name"])
+    file_append((node_dir, "name"), gfx_dict[options.gfx_version]["name"])
 
     mem_banks_cnt = 1
 
@@ -447,46 +483,50 @@ def createCarrizoTopology(options):
 
     # populate global node properties
     # NOTE: SIMD count triggers a valid GPU agent creation
-    node_prop = 'cpu_cores_count %s\n' % options.num_cpus                   + \
-                'simd_count %s\n'                                             \
-                    % (options.num_compute_units * options.simds_per_cu)    + \
-                'mem_banks_count %s\n' % mem_banks_cnt                      + \
-                'caches_count 0\n'                                          + \
-                'io_links_count 0\n'                                        + \
-                'cpu_core_id_base 16\n'                                     + \
-                'simd_id_base 2147483648\n'                                 + \
-                'max_waves_per_simd %s\n' % options.wfs_per_simd            + \
-                'lds_size_in_kb %s\n' % int(options.lds_size / 1024)        + \
-                'gds_size_in_kb 0\n'                                        + \
-                'wave_front_size %s\n' % options.wf_size                    + \
-                'array_count 1\n'                                           + \
-                'simd_arrays_per_engine %s\n' % options.sa_per_complex      + \
-                'cu_per_simd_array %s\n' % options.cu_per_sa                + \
-                'simd_per_cu %s\n' % options.simds_per_cu                   + \
-                'max_slots_scratch_cu 32\n'                                 + \
-                'vendor_id 4098\n'                                          + \
-                'device_id %s\n' % device_id                                + \
-                'location_id 8\n'                                           + \
-                'drm_render_minor %s\n' % drm_num                           + \
-                'max_engine_clk_fcompute %s\n'                                \
-                    % int(toFrequency(options.gpu_clock) / 1e6)             + \
-                'local_mem_size 0\n'                                        + \
-                'fw_version 699\n'                                          + \
-                'capability 4738\n'                                         + \
-                'max_engine_clk_ccompute %s\n'                                \
-                    % int(toFrequency(options.CPUClock) / 1e6)
+    node_prop = (
+        "cpu_cores_count %s\n" % options.num_cpus
+        + "simd_count %s\n"
+        % (options.num_compute_units * options.simds_per_cu)
+        + "mem_banks_count %s\n" % mem_banks_cnt
+        + "caches_count 0\n"
+        + "io_links_count 0\n"
+        + "cpu_core_id_base 16\n"
+        + "simd_id_base 2147483648\n"
+        + "max_waves_per_simd %s\n" % options.wfs_per_simd
+        + "lds_size_in_kb %s\n" % int(options.lds_size / 1024)
+        + "gds_size_in_kb 0\n"
+        + "wave_front_size %s\n" % options.wf_size
+        + "array_count 1\n"
+        + "simd_arrays_per_engine %s\n" % options.sa_per_complex
+        + "cu_per_simd_array %s\n" % options.cu_per_sa
+        + "simd_per_cu %s\n" % options.simds_per_cu
+        + "max_slots_scratch_cu 32\n"
+        + "vendor_id 4098\n"
+        + "device_id %s\n" % device_id
+        + "location_id 8\n"
+        + "drm_render_minor %s\n" % drm_num
+        + "max_engine_clk_fcompute %s\n"
+        % int(toFrequency(options.gpu_clock) / 1e6)
+        + "local_mem_size 0\n"
+        + "fw_version 699\n"
+        + "capability 4738\n"
+        + "max_engine_clk_ccompute %s\n"
+        % int(toFrequency(options.CPUClock) / 1e6)
+    )
 
-    file_append((node_dir, 'properties'), node_prop)
+    file_append((node_dir, "properties"), node_prop)
 
     for i in range(mem_banks_cnt):
-        mem_dir = joinpath(node_dir, f'mem_banks/{i}')
+        mem_dir = joinpath(node_dir, f"mem_banks/{i}")
         remake_dir(mem_dir)
 
         # Heap type value taken from real system, heap type values:
         # https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/blob/roc-4.0.x/include/hsakmttypes.h#L317
-        mem_prop = f'heap_type 0\n'                                         + \
-                   f'size_in_bytes {toMemorySize(options.mem_size)}'        + \
-                   f'flags 0\n'                                             + \
-                   f'width 64\n'                                            + \
-                   f'mem_clk_max 1600\n'
-        file_append((mem_dir, 'properties'), mem_prop)
+        mem_prop = (
+            f"heap_type 0\n"
+            + f"size_in_bytes {toMemorySize(options.mem_size)}"
+            + f"flags 0\n"
+            + f"width 64\n"
+            + f"mem_clk_max 1600\n"
+        )
+        file_append((mem_dir, "properties"), mem_prop)

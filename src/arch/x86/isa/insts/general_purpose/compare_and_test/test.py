@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop TEST_M_R
 {
     ld t1, seg, sib, disp
@@ -72,4 +72,4 @@ def macroop TEST_R_I
     limm t1, imm
     and t0, reg, t1, flags=(OF, SF, ZF, PF, CF)
 };
-'''
+"""

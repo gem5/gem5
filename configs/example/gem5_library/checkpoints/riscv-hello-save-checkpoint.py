@@ -64,8 +64,9 @@ cache_hierarchy = NoCache()
 memory = SingleChannelDDR3_1600(size="32MB")
 
 # We use a simple Timing processor with one core.
-processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, isa=ISA.RISCV,
-                            num_cores=1)
+processor = SimpleProcessor(
+    cpu_type=CPUTypes.TIMING, isa=ISA.RISCV, num_cores=1
+)
 
 # The gem5 library simble board which can be used to run simple SE-mode
 # simulations.
@@ -91,14 +92,13 @@ board.set_se_binary_workload(
 )
 
 # Lastly we run the simulation.
-max_ticks = 10**6
+max_ticks = 10 ** 6
 simulator = Simulator(board=board, full_system=False)
-simulator.run(max_ticks = max_ticks)
+simulator.run(max_ticks=max_ticks)
 
 print(
     "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(),
-        simulator.get_last_exit_event_cause(),
+        simulator.get_current_tick(), simulator.get_last_exit_event_cause()
     )
 )
 

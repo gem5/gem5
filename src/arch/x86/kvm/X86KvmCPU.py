@@ -31,10 +31,11 @@ from m5.objects.BaseKvmCPU import BaseKvmCPU
 from m5.objects.X86CPU import X86CPU
 from m5.objects.X86MMU import X86MMU
 
+
 class X86KvmCPU(BaseKvmCPU, X86CPU):
-    type = 'X86KvmCPU'
+    type = "X86KvmCPU"
     cxx_header = "arch/x86/kvm/x86_cpu.hh"
-    cxx_class = 'gem5::X86KvmCPU'
+    cxx_class = "gem5::X86KvmCPU"
 
     mmu = X86MMU()
 

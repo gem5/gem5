@@ -39,11 +39,12 @@ from m5.objects.BaseTLB import BaseTLB
 from m5.params import *
 from m5.SimObject import SimObject
 
+
 class BaseMMU(SimObject):
-    type = 'BaseMMU'
+    type = "BaseMMU"
     abstract = True
     cxx_header = "arch/generic/mmu.hh"
-    cxx_class = 'gem5::BaseMMU'
+    cxx_class = "gem5::BaseMMU"
 
     itb = Param.BaseTLB("Instruction TLB")
     dtb = Param.BaseTLB("Data TLB")

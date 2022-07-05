@@ -27,14 +27,18 @@
 
 from code_formatter import code_formatter
 
+
 def createSymbol(symbol, title):
     code = code_formatter()
-    code('''
+    code(
+        """
 <HTML><BODY><BIG>
 $title: ${{formatShorthand(symbol.short)}} - ${{symbol.desc}}
 </BIG></BODY></HTML>
-''')
+"""
+    )
     return code
+
 
 def formatShorthand(short):
     munged_shorthand = ""
@@ -42,13 +46,13 @@ def formatShorthand(short):
 
     # -- Walk over the string, processing superscript directives
     gen = enumerate(short)
-    for i,c in gen:
-        if c == '!':
+    for i, c in gen:
+        if c == "!":
             # -- Reached logical end of shorthand name
             break
-        elif c == '_':
+        elif c == "_":
             munged_shorthand += " "
-        elif c == '^':
+        elif c == "^":
             # -- Process super/subscript formatting
             mode_is_normal = not mode_is_normal
             if mode_is_normal:
@@ -57,12 +61,12 @@ def formatShorthand(short):
             else:
                 # -- Going to superscript mode
                 munged_shorthand += "<SUP>"
-        elif c == '\\':
+        elif c == "\\":
             # -- Process Symbol character set
             if i + 1 < len(short):
                 # -- Proceed to next char. Yes I know that changing
                 # the loop var is ugly!
-                i,c = next(gen)
+                i, c = next(gen)
                 munged_shorthand += "<B><FONT size=+1>"
                 munged_shorthand += c
                 munged_shorthand += "</FONT></B>"
@@ -79,4 +83,3 @@ def formatShorthand(short):
         munged_shorthand += "</SUP>"
 
     return munged_shorthand
-

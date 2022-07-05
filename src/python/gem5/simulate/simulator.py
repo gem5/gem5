@@ -372,4 +372,3 @@ class Simulator:
         will be saved.
         """
         m5.checkpoint(str(checkpoint_dir))
-

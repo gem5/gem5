@@ -30,10 +30,11 @@ from m5.objects.MemCtrl import *
 
 # HBMCtrl manages two pseudo channels of HBM2
 
+
 class HBMCtrl(MemCtrl):
-    type = 'HBMCtrl'
+    type = "HBMCtrl"
     cxx_header = "mem/hbm_ctrl.hh"
-    cxx_class = 'gem5::memory::HBMCtrl'
+    cxx_class = "gem5::memory::HBMCtrl"
 
     # HBMCtrl uses the SimpleMemCtlr's interface
     # `dram` as the first pseudo channel, the second

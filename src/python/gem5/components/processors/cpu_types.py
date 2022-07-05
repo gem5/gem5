@@ -28,6 +28,7 @@ from enum import Enum
 from typing import Set
 import os
 
+
 class CPUTypes(Enum):
     ATOMIC = "atomic"
     KVM = "kvm"
@@ -35,11 +36,13 @@ class CPUTypes(Enum):
     TIMING = "timing"
     MINOR = "minor"
 
+
 def get_cpu_types_str_set() -> Set[CPUTypes]:
     """
     Returns a set of all the CPU types as strings.
     """
     return {cpu_type.value for cpu_type in CPUTypes}
+
 
 def get_cpu_type_from_str(input: str) -> CPUTypes:
     """
@@ -57,7 +60,7 @@ def get_cpu_type_from_str(input: str) -> CPUTypes:
         if input.lower() == cpu_type.value:
             return cpu_type
 
-    valid_cpu_types_list_str =str()
+    valid_cpu_types_list_str = str()
     for cpu_type_str in get_cpu_types_str_set():
         valid_cpu_types_list_str += f"{os.linesep}{cpu_type_str}"
 

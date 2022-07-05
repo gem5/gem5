@@ -30,6 +30,7 @@ from .abstract_board import AbstractBoard
 
 from m5.objects import System
 
+
 class AbstractSystemBoard(System, AbstractBoard):
 
     """
@@ -37,6 +38,7 @@ class AbstractSystemBoard(System, AbstractBoard):
     """
 
     __metaclass__ = ABCMeta
+
     def __init__(
         self,
         clk_freq: str,

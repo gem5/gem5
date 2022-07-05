@@ -38,10 +38,11 @@ from m5.objects.ArmCPU import ArmCPU
 from m5.objects.ArmMMU import ArmMMU
 from m5.objects.BaseKvmCPU import BaseKvmCPU
 
+
 class BaseArmKvmCPU(BaseKvmCPU, ArmCPU):
-    type = 'BaseArmKvmCPU'
+    type = "BaseArmKvmCPU"
     cxx_header = "arch/arm/kvm/base_cpu.hh"
-    cxx_class = 'gem5::BaseArmKvmCPU'
+    cxx_class = "gem5::BaseArmKvmCPU"
     abstract = True
 
     mmu = ArmMMU()

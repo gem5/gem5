@@ -27,77 +27,105 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+
 def tlb_options(parser):
 
-    #===================================================================
+    # ===================================================================
     # TLB Configuration
-    #===================================================================
+    # ===================================================================
 
     parser.add_argument(
-        "--TLB-config", type=str, default="perCU",
-        help="Options are: perCU (default), mono, 2CU, or perLane")
+        "--TLB-config",
+        type=str,
+        default="perCU",
+        help="Options are: perCU (default), mono, 2CU, or perLane",
+    )
 
-    #===================================================================
+    # ===================================================================
     #   L1 TLB Options (D-TLB, I-TLB, Dispatcher-TLB)
-    #===================================================================
+    # ===================================================================
 
     parser.add_argument("--L1TLBentries", type=int, default="32")
     parser.add_argument("--L1TLBassoc", type=int, default="32")
-    parser.add_argument("--L1AccessLatency", type=int, default="1",
-                        help="latency in gpu cycles")
-    parser.add_argument("--L1MissLatency", type=int, default="750",
-                        help="latency (in gpu cycles) of a page walk, "
-                        "if this is a last level TLB")
+    parser.add_argument(
+        "--L1AccessLatency",
+        type=int,
+        default="1",
+        help="latency in gpu cycles",
+    )
+    parser.add_argument(
+        "--L1MissLatency",
+        type=int,
+        default="750",
+        help="latency (in gpu cycles) of a page walk, "
+        "if this is a last level TLB",
+    )
     parser.add_argument("--L1MaxOutstandingReqs", type=int, default="64")
     parser.add_argument("--L1AccessDistanceStat", action="store_true")
     parser.add_argument("--tot-L1TLB-size", type=int, default="0")
 
-    #===================================================================
+    # ===================================================================
     #   L2 TLB Options
-    #===================================================================
+    # ===================================================================
 
     parser.add_argument("--L2TLBentries", type=int, default="4096")
     parser.add_argument("--L2TLBassoc", type=int, default="32")
-    parser.add_argument("--L2AccessLatency", type=int, default="69",
-                        help="latency in gpu cycles")
-    parser.add_argument("--L2MissLatency", type=int, default="750",
-                        help="latency (in gpu cycles) of a page walk, "
-                        "if this is a last level TLB")
+    parser.add_argument(
+        "--L2AccessLatency",
+        type=int,
+        default="69",
+        help="latency in gpu cycles",
+    )
+    parser.add_argument(
+        "--L2MissLatency",
+        type=int,
+        default="750",
+        help="latency (in gpu cycles) of a page walk, "
+        "if this is a last level TLB",
+    )
     parser.add_argument("--L2MaxOutstandingReqs", type=int, default="64")
     parser.add_argument("--L2AccessDistanceStat", action="store_true")
 
-    #===================================================================
+    # ===================================================================
     #   L3 TLB Options
-    #===================================================================
+    # ===================================================================
 
     parser.add_argument("--L3TLBentries", type=int, default="8192")
     parser.add_argument("--L3TLBassoc", type=int, default="32")
-    parser.add_argument("--L3AccessLatency", type=int, default="150",
-                        help="latency in gpu cycles")
-    parser.add_argument("--L3MissLatency", type=int, default="750",
-                        help="latency (in gpu cycles) of a page walk")
+    parser.add_argument(
+        "--L3AccessLatency",
+        type=int,
+        default="150",
+        help="latency in gpu cycles",
+    )
+    parser.add_argument(
+        "--L3MissLatency",
+        type=int,
+        default="750",
+        help="latency (in gpu cycles) of a page walk",
+    )
     parser.add_argument("--L3MaxOutstandingReqs", type=int, default="64")
     parser.add_argument("--L3AccessDistanceStat", action="store_true")
 
-    #===================================================================
+    # ===================================================================
     #   L1 TLBCoalescer Options
-    #===================================================================
+    # ===================================================================
 
     parser.add_argument("--L1ProbesPerCycle", type=int, default="2")
     parser.add_argument("--L1CoalescingWindow", type=int, default="1")
     parser.add_argument("--L1DisableCoalescing", action="store_true")
 
-    #===================================================================
+    # ===================================================================
     #   L2 TLBCoalescer Options
-    #===================================================================
+    # ===================================================================
 
     parser.add_argument("--L2ProbesPerCycle", type=int, default="2")
     parser.add_argument("--L2CoalescingWindow", type=int, default="1")
     parser.add_argument("--L2DisableCoalescing", action="store_true")
 
-    #===================================================================
+    # ===================================================================
     #   L3 TLBCoalescer Options
-    #===================================================================
+    # ===================================================================
 
     parser.add_argument("--L3ProbesPerCycle", type=int, default="2")
     parser.add_argument("--L3CoalescingWindow", type=int, default="1")

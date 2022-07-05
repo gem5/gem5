@@ -49,11 +49,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    "-n",
-    "--num-cpus",
-    type=int,
-    required=True,
-    help="The number of CPUs.",
+    "-n", "--num-cpus", type=int, required=True, help="The number of CPUs."
 )
 
 parser.add_argument(
@@ -69,7 +65,7 @@ parser.add_argument(
     "-m",
     "--mem-system",
     type=str,
-    choices=("classic", "mi_example",),
+    choices=("classic", "mi_example"),
     required=True,
     help="The memory system.",
 )
@@ -80,7 +76,7 @@ parser.add_argument(
     type=str,
     required=False,
     default="DualChannelDDR3_1600",
-    help="The python class for the memory interface to use"
+    help="The python class for the memory interface to use",
 )
 
 parser.add_argument(
@@ -105,29 +101,25 @@ args = parser.parse_args()
 requires(isa_required=ISA.RISCV)
 
 if args.mem_system == "classic":
-    from gem5.components.cachehierarchies.classic.\
-        private_l1_private_l2_cache_hierarchy import \
-            PrivateL1PrivateL2CacheHierarchy
+    from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
+        PrivateL1PrivateL2CacheHierarchy,
+    )
 
     # Setup the cache hierarchy.
     cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
         l1d_size="32KiB", l1i_size="32KiB", l2_size="512KiB"
     )
 elif args.mem_system == "mi_example":
-    from gem5.components.cachehierarchies.ruby.\
-        mi_example_cache_hierarchy import \
-            MIExampleCacheHierarchy
+    from gem5.components.cachehierarchies.ruby.mi_example_cache_hierarchy import (
+        MIExampleCacheHierarchy,
+    )
 
     # Setup the cache hierarchy.
-    cache_hierarchy = MIExampleCacheHierarchy(
-        size="32KiB", assoc=8
-    )
+    cache_hierarchy = MIExampleCacheHierarchy(size="32KiB", assoc=8)
 
 # Setup the system memory.
 python_module = "gem5.components.memory"
-memory_class = getattr(
-    importlib.import_module(python_module), args.dram_class
-)
+memory_class = getattr(importlib.import_module(python_module), args.dram_class)
 memory = memory_class(size="4GiB")
 
 # Setup a processor.
@@ -147,9 +139,7 @@ else:
     )
 
 processor = SimpleProcessor(
-    cpu_type=cpu_type,
-    isa=ISA.RISCV,
-    num_cores=args.num_cpus,
+    cpu_type=cpu_type, isa=ISA.RISCV, num_cores=args.num_cpus
 )
 
 # Setup the board.
@@ -167,21 +157,19 @@ board.set_kernel_disk_workload(
         resource_directory=args.resource_directory,
     ),
     disk_image=Resource(
-        "riscv-ubuntu-20.04-img",
-        resource_directory=args.resource_directory,
+        "riscv-ubuntu-20.04-img", resource_directory=args.resource_directory
     ),
 )
 
 simulator = Simulator(board=board)
 
 if args.tick_exit:
-    simulator.run(max_ticks = args.tick_exit)
+    simulator.run(max_ticks=args.tick_exit)
 else:
     simulator.run()
 
 print(
     "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(),
-        simulator.get_last_exit_event_cause(),
+        simulator.get_current_tick(), simulator.get_last_exit_event_cause()
     )
 )

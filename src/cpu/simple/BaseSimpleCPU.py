@@ -31,10 +31,11 @@ from m5.objects.BaseCPU import BaseCPU
 from m5.objects.DummyChecker import DummyChecker
 from m5.objects.BranchPredictor import *
 
+
 class BaseSimpleCPU(BaseCPU):
-    type = 'BaseSimpleCPU'
+    type = "BaseSimpleCPU"
     abstract = True
     cxx_header = "cpu/simple/base.hh"
-    cxx_class = 'gem5::BaseSimpleCPU'
+    cxx_class = "gem5::BaseSimpleCPU"
 
     branchPred = Param.BranchPredictor(NULL, "Branch Predictor")

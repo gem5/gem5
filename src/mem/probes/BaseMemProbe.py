@@ -37,12 +37,14 @@ from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
 
+
 class BaseMemProbe(SimObject):
-    type = 'BaseMemProbe'
+    type = "BaseMemProbe"
     abstract = True
     cxx_header = "mem/probes/base.hh"
-    cxx_class = 'gem5::BaseMemProbe'
+    cxx_class = "gem5::BaseMemProbe"
 
-    manager = VectorParam.SimObject(Parent.any,
-                                    "Probe manager(s) to instrument")
+    manager = VectorParam.SimObject(
+        Parent.any, "Probe manager(s) to instrument"
+    )
     probe_name = Param.String("PktRequest", "Memory request probe to use")

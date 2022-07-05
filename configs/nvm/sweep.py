@@ -41,7 +41,7 @@ from m5.objects import *
 from m5.util import addToPath
 from m5.stats import periodicStatDump
 
-addToPath('../')
+addToPath("../")
 
 from common import ObjectList
 from common import MemConfig
@@ -53,28 +53,41 @@ from common import MemConfig
 
 parser = argparse.ArgumentParser()
 
-nvm_generators = {
-    "NVM" : lambda x: x.createNvm,
-}
+nvm_generators = {"NVM": lambda x: x.createNvm}
 
 # Use a single-channel DDR3-1600 x64 (8x8 topology) by default
-parser.add_argument("--nvm-type", default="NVM_2400_1x64",
-                    choices=ObjectList.mem_list.get_names(),
-                    help = "type of memory to use")
+parser.add_argument(
+    "--nvm-type",
+    default="NVM_2400_1x64",
+    choices=ObjectList.mem_list.get_names(),
+    help="type of memory to use",
+)
 
-parser.add_argument("--nvm-ranks", "-r", type=int, default=1,
-                    help = "Number of ranks to iterate across")
+parser.add_argument(
+    "--nvm-ranks",
+    "-r",
+    type=int,
+    default=1,
+    help="Number of ranks to iterate across",
+)
 
-parser.add_argument("--rd_perc", type=int, default=100,
-                    help = "Percentage of read commands")
+parser.add_argument(
+    "--rd_perc", type=int, default=100, help="Percentage of read commands"
+)
 
-parser.add_argument("--mode", default="NVM",
-                    choices=nvm_generators.keys(),
-                    help = "NVM: Random traffic")
+parser.add_argument(
+    "--mode",
+    default="NVM",
+    choices=nvm_generators.keys(),
+    help="NVM: Random traffic",
+)
 
-parser.add_argument("--addr-map",
-                    choices=ObjectList.dram_addr_map_list.get_names(),
-                    default="RoRaBaCoCh", help = "NVM address map policy")
+parser.add_argument(
+    "--addr-map",
+    choices=ObjectList.dram_addr_map_list.get_names(),
+    default="RoRaBaCoCh",
+    help="NVM address map policy",
+)
 
 args = parser.parse_args()
 
@@ -84,13 +97,13 @@ args = parser.parse_args()
 # start with the system itself, using a multi-layer 2.0 GHz
 # crossbar, delivering 64 bytes / 3 cycles (one header cycle)
 # which amounts to 42.7 GByte/s per layer and thus per port
-system = System(membus = IOXBar(width = 32))
-system.clk_domain = SrcClockDomain(clock = '2.0GHz',
-                                   voltage_domain =
-                                   VoltageDomain(voltage = '1V'))
+system = System(membus=IOXBar(width=32))
+system.clk_domain = SrcClockDomain(
+    clock="2.0GHz", voltage_domain=VoltageDomain(voltage="1V")
+)
 
 # we are fine with 256 MB memory for now
-mem_range = AddrRange('512MB')
+mem_range = AddrRange("512MB")
 system.mem_ranges = [mem_range]
 
 # do not worry about reserving space for the backing store
@@ -127,14 +140,21 @@ period = 250000000
 nbr_banks = system.mem_ctrls[0].dram.banks_per_rank.value
 
 # determine the burst length in bytes
-burst_size = int((system.mem_ctrls[0].dram.devices_per_rank.value *
-                  system.mem_ctrls[0].dram.device_bus_width.value *
-                  system.mem_ctrls[0].dram.burst_length.value) / 8)
+burst_size = int(
+    (
+        system.mem_ctrls[0].dram.devices_per_rank.value
+        * system.mem_ctrls[0].dram.device_bus_width.value
+        * system.mem_ctrls[0].dram.burst_length.value
+    )
+    / 8
+)
 
 
 # next, get the page size in bytes
-buffer_size = system.mem_ctrls[0].dram.devices_per_rank.value * \
-    system.mem_ctrls[0].dram.device_rowbuffer_size.value
+buffer_size = (
+    system.mem_ctrls[0].dram.devices_per_rank.value
+    * system.mem_ctrls[0].dram.device_rowbuffer_size.value
+)
 
 # match the maximum bandwidth of the memory, the parameter is in seconds
 # and we need it in ticks (ps)
@@ -164,10 +184,11 @@ system.system_port = system.membus.cpu_side_ports
 periodicStatDump(period)
 
 # run Forrest, run!
-root = Root(full_system = False, system = system)
-root.system.mem_mode = 'timing'
+root = Root(full_system=False, system=system)
+root.system.mem_mode = "timing"
 
 m5.instantiate()
+
 
 def trace():
     addr_map = ObjectList.dram_addr_map_list.get(args.addr_map)
@@ -175,16 +196,30 @@ def trace():
     for stride_size in range(burst_size, max_stride + 1, burst_size):
         for bank in range(1, nbr_banks + 1):
             num_seq_pkts = int(math.ceil(float(stride_size) / burst_size))
-            yield generator(period,
-                            0, max_addr, burst_size, int(itt), int(itt),
-                            args.rd_perc, 0,
-                            num_seq_pkts, buffer_size, nbr_banks, bank,
-                            addr_map, args.dram_ranks)
+            yield generator(
+                period,
+                0,
+                max_addr,
+                burst_size,
+                int(itt),
+                int(itt),
+                args.rd_perc,
+                0,
+                num_seq_pkts,
+                buffer_size,
+                nbr_banks,
+                bank,
+                addr_map,
+                args.dram_ranks,
+            )
     yield system.tgen.createExit(0)
+
 
 system.tgen.start(trace())
 
 m5.simulate()
 
-print("NVM sweep with burst: %d, banks: %d, max stride: %d" %
-    (burst_size, nbr_banks, max_stride))
+print(
+    "NVM sweep with burst: %d, banks: %d, max stride: %d"
+    % (burst_size, nbr_banks, max_stride)
+)

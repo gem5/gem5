@@ -45,9 +45,9 @@ from m5.objects.BaseTrafficGen import *
 # arranging them in graphs. The graph transitions can also be
 # annotated with probabilities, effectively making it a Markov Chain.
 class TrafficGen(BaseTrafficGen):
-    type = 'TrafficGen'
+    type = "TrafficGen"
     cxx_header = "cpu/testers/traffic_gen/traffic_gen.hh"
-    cxx_class = 'gem5::TrafficGen'
+    cxx_class = "gem5::TrafficGen"
 
     # Config file to parse for the state descriptions
     config_file = Param.String("Configuration file describing the behaviour")

@@ -33,16 +33,18 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["initialize",
-              "wait_for_exceptions",
-              "clear_exceptions",
-              "save_and_restore_x87_control_word",
-              "save_x87_status_word",
-              "save_and_restore_x87_environment"]
+categories = [
+    "initialize",
+    "wait_for_exceptions",
+    "clear_exceptions",
+    "save_and_restore_x87_control_word",
+    "save_x87_status_word",
+    "save_and_restore_x87_environment",
+]
 
-microcode = '''
+microcode = """
 # X86 microcode
-'''
+"""
 for category in categories:
     exec("from . import %s as cat" % category)
     microcode += cat.microcode

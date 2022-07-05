@@ -36,7 +36,7 @@ import argparse
 
 parser = argparse.ArgumentParser(
     description="A simple script used to check the behavior of "
-                "`gem5.utils.requires`."
+    "`gem5.utils.requires`."
 )
 
 parser.add_argument(
@@ -46,7 +46,7 @@ parser.add_argument(
     choices=get_isas_str_set(),
     required=True,
     help="The required ISA. A non-zero exit code is returned if the "
-         "requirements are not met." ,
+    "requirements are not met.",
 )
 
 args = parser.parse_args()

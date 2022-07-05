@@ -33,8 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["general_io",
-              "string_io"]
+categories = ["general_io", "string_io"]
 
 microcode = ""
 for category in categories:

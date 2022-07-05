@@ -30,52 +30,59 @@ from m5.proxy import *
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.BasicLink import BasicIntLink, BasicExtLink
 
-class CDCType(Enum): vals = [
-    'LINK_OBJECT',
-    'OBJECT_LINK',
-    ]
+
+class CDCType(Enum):
+    vals = ["LINK_OBJECT", "OBJECT_LINK"]
+
 
 class NetworkLink(ClockedObject):
-    type = 'NetworkLink'
+    type = "NetworkLink"
     cxx_header = "mem/ruby/network/garnet/NetworkLink.hh"
-    cxx_class = 'gem5::ruby::garnet::NetworkLink'
+    cxx_class = "gem5::ruby::garnet::NetworkLink"
 
     link_id = Param.Int(Parent.link_id, "link id")
     link_latency = Param.Cycles(Parent.latency, "link latency")
-    vcs_per_vnet = Param.Int(Parent.vcs_per_vnet,
-                              "virtual channels per virtual network")
-    virt_nets = Param.Int(Parent.number_of_virtual_networks,
-                          "number of virtual networks")
-    supported_vnets = VectorParam.Int(Parent.supported_vnets,
-                                      "Vnets supported")
+    vcs_per_vnet = Param.Int(
+        Parent.vcs_per_vnet, "virtual channels per virtual network"
+    )
+    virt_nets = Param.Int(
+        Parent.number_of_virtual_networks, "number of virtual networks"
+    )
+    supported_vnets = VectorParam.Int(
+        Parent.supported_vnets, "Vnets supported"
+    )
     width = Param.UInt32(Parent.width, "bit-width of the link")
 
+
 class CreditLink(NetworkLink):
-    type = 'CreditLink'
+    type = "CreditLink"
     cxx_header = "mem/ruby/network/garnet/CreditLink.hh"
-    cxx_class = 'gem5::ruby::garnet::CreditLink'
+    cxx_class = "gem5::ruby::garnet::CreditLink"
+
 
 class NetworkBridge(CreditLink):
-    type = 'NetworkBridge'
+    type = "NetworkBridge"
     cxx_header = "mem/ruby/network/garnet/NetworkBridge.hh"
-    cxx_class = 'gem5::ruby::garnet::NetworkBridge'
+    cxx_class = "gem5::ruby::garnet::NetworkBridge"
 
     link = Param.NetworkLink("Associated Network Link")
-    vtype = Param.CDCType('LINK_OBJECT',
-              "Direction of CDC LINK->OBJECT or OBJECT->LINK")
+    vtype = Param.CDCType(
+        "LINK_OBJECT", "Direction of CDC LINK->OBJECT or OBJECT->LINK"
+    )
     serdes_latency = Param.Cycles(1, "Latency of SerDes Unit")
     cdc_latency = Param.Cycles(1, "Latency of CDC Unit")
 
+
 # Interior fixed pipeline links between routers
 class GarnetIntLink(BasicIntLink):
-    type = 'GarnetIntLink'
+    type = "GarnetIntLink"
     cxx_header = "mem/ruby/network/garnet/GarnetLink.hh"
-    cxx_class = 'gem5::ruby::garnet::GarnetIntLink'
+    cxx_class = "gem5::ruby::garnet::GarnetIntLink"
 
     # The internal link includes one forward link (for flit)
     # and one backward flow-control link (for credit)
     network_link = Param.NetworkLink(NetworkLink(), "forward link")
-    credit_link  = Param.CreditLink(CreditLink(), "backward flow-control link")
+    credit_link = Param.CreditLink(CreditLink(), "backward flow-control link")
 
     # The src_cdc and dst_cdc flags are used to enable the
     # clock domain crossing(CDC) at the source and destination
@@ -102,14 +109,16 @@ class GarnetIntLink(BasicIntLink):
     src_cred_bridge = Param.NetworkBridge(NULL, "Credit Bridge at source")
     dst_cred_bridge = Param.NetworkBridge(NULL, "Credit Bridge at dest")
 
-    width = Param.UInt32(Parent.ni_flit_size,
-                          "bit width supported by the router")
+    width = Param.UInt32(
+        Parent.ni_flit_size, "bit width supported by the router"
+    )
+
 
 # Exterior fixed pipeline links between a router and a controller
 class GarnetExtLink(BasicExtLink):
-    type = 'GarnetExtLink'
+    type = "GarnetExtLink"
     cxx_header = "mem/ruby/network/garnet/GarnetLink.hh"
-    cxx_class = 'gem5::ruby::garnet::GarnetExtLink'
+    cxx_class = "gem5::ruby::garnet::GarnetExtLink"
 
     # The external link is bi-directional.
     # It includes two forward links (for flits)
@@ -117,16 +126,16 @@ class GarnetExtLink(BasicExtLink):
     # one per direction
     _nls = []
     # In uni-directional link
-    _nls.append(NetworkLink());
+    _nls.append(NetworkLink())
     # Out uni-directional link
-    _nls.append(NetworkLink());
+    _nls.append(NetworkLink())
     network_links = VectorParam.NetworkLink(_nls, "forward links")
 
     _cls = []
     # In uni-directional link
-    _cls.append(CreditLink());
+    _cls.append(CreditLink())
     # Out uni-directional link
-    _cls.append(CreditLink());
+    _cls.append(CreditLink())
     credit_links = VectorParam.CreditLink(_cls, "backward flow-control links")
 
     # The ext_cdc and intt_cdc flags are used to enable the
@@ -149,15 +158,19 @@ class GarnetExtLink(BasicExtLink):
     # The network bridge encapsulates both the CDC and Ser-Des
     # units in HeteroGarnet. This is automatically enabled when
     # either CDC or Ser-Des is enabled.
-    ext_net_bridge = VectorParam.NetworkBridge([],
-        "Network Bridge at external end")
-    ext_cred_bridge = VectorParam.NetworkBridge([],
-        "Credit Bridge at external end")
-    int_net_bridge = VectorParam.NetworkBridge([],
-        "Network Bridge at internal end")
-    int_cred_bridge = VectorParam.NetworkBridge([],
-        "Credit Bridge at internal end")
+    ext_net_bridge = VectorParam.NetworkBridge(
+        [], "Network Bridge at external end"
+    )
+    ext_cred_bridge = VectorParam.NetworkBridge(
+        [], "Credit Bridge at external end"
+    )
+    int_net_bridge = VectorParam.NetworkBridge(
+        [], "Network Bridge at internal end"
+    )
+    int_cred_bridge = VectorParam.NetworkBridge(
+        [], "Credit Bridge at internal end"
+    )
 
-
-    width = Param.UInt32(Parent.ni_flit_size,
-                          "bit width supported by the router")
+    width = Param.UInt32(
+        Parent.ni_flit_size, "bit width supported by the router"
+    )

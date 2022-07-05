@@ -39,18 +39,20 @@
 from m5.params import *
 from m5.objects.AbstractMemory import *
 
+
 class SimpleMemory(AbstractMemory):
-    type = 'SimpleMemory'
+    type = "SimpleMemory"
     cxx_header = "mem/simple_mem.hh"
-    cxx_class = 'gem5::memory::SimpleMemory'
+    cxx_class = "gem5::memory::SimpleMemory"
 
     port = ResponsePort("This port sends responses and receives requests")
-    latency = Param.Latency('30ns', "Request to response latency")
-    latency_var = Param.Latency('0ns', "Request to response latency variance")
+    latency = Param.Latency("30ns", "Request to response latency")
+    latency_var = Param.Latency("0ns", "Request to response latency variance")
     # The memory bandwidth limit default is set to 12.8GiB/s which is
     # representative of a x64 DDR3-1600 channel.
-    bandwidth = Param.MemoryBandwidth('12.8GiB/s',
-                                      "Combined read and write bandwidth")
+    bandwidth = Param.MemoryBandwidth(
+        "12.8GiB/s", "Combined read and write bandwidth"
+    )
 
     def controller(self):
         # Simple memory doesn't use a MemCtrl

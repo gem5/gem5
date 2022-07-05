@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop FLD_M {
     ldfp87 ufp1, seg, sib, disp
     movfp st(-1), ufp1, spm=-1
@@ -109,4 +109,4 @@ def macroop FST80P_P  {
     pop87
 };
 
-'''
+"""

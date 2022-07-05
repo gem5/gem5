@@ -34,13 +34,15 @@ import json
 import time
 
 import sys
-sys.path.append('..')
+
+sys.path.append("..")
 import maint.lib.maintainers
 
 
 class GerritBotConfig:
-    def __init__(self, config = {}):
+    def __init__(self, config={}):
         self.__dict__.update(config)
+
     @staticmethod
     def DefaultConfig():
         default_config = GerritBotConfig()
@@ -55,8 +57,9 @@ class GerritBotConfig:
 
         # path to the file containing the map each maintainer email address
         # to the one account id (ie, the "_account_id" field of ReviewerInfo)
-        default_config.maintainer_account_ids_file_path = \
+        default_config.maintainer_account_ids_file_path = (
             ".data/maintainer_ids.json"
+        )
 
         # query changes made within 2 days if prev_query_time is not specified
         default_config.default_query_age = "2d"
@@ -67,9 +70,10 @@ class GerritBotConfig:
 
         default_config.api_entry_point = "https://gem5-review.googlesource.com"
         default_config.projects_prefix = "public/gem5"
-        default_config.query_limit = 1000 # at most 1000 new changes per query
-        default_config.request_timeout = 10 # seconds
+        default_config.query_limit = 1000  # at most 1000 new changes per query
+        default_config.request_timeout = 10  # seconds
         return default_config
+
 
 class GerritBot:
     def __init__(self, config):
@@ -78,15 +82,18 @@ class GerritBot:
         self.auth = self.__read_auth_file(self.config.auth_file_path)
 
         # Initalize the Gerrit API Object
-        self.gerrit_api = GerritRestAPI(self.auth,
-                                        self.config.api_entry_point,
-                                        self.config.request_timeout)
+        self.gerrit_api = GerritRestAPI(
+            self.auth, self.config.api_entry_point, self.config.request_timeout
+        )
 
         self.account_id = self.__get_bot_account_id()
         self.maintainers = maint.lib.maintainers.Maintainers.from_file(
-            self.config.maintainers_file_path)
+            self.config.maintainers_file_path
+        )
         self.maintainer_account_ids = self.__read_maintainer_account_id_file(
-            self.maintainers, self.config.maintainer_account_ids_file_path)
+            self.maintainers, self.config.maintainer_account_ids_file_path
+        )
+
     def __read_auth_file(self, auth_file_path):
         username = ""
         password = ""
@@ -104,19 +111,25 @@ class GerritBot:
                 lines = f.readlines()
                 prev_query_time = int(float(lines[0].strip()))
         except FileNotFoundError:
-            print(f"warning: cannot find the time tracker file at "
-                  f"`{file_path}`. Previous query time is set to 0.")
+            print(
+                f"warning: cannot find the time tracker file at "
+                f"`{file_path}`. Previous query time is set to 0."
+            )
         except IndexError:
-            print(f"warning: cannot find the content of the time tracker file "
-                  f"at `{file_path}`. Previous query time is set 0.")
+            print(
+                f"warning: cannot find the content of the time tracker file "
+                f"at `{file_path}`. Previous query time is set 0."
+            )
 
         return prev_query_time
 
     def __update_time_tracker_file(self, file_path, prev_query_time):
         with open(file_path, "w") as f:
             f.write(f"{prev_query_time}\n")
-            f.write(f"# The above time is the result of calling time.time() "
-                    f"in Python.")
+            f.write(
+                f"# The above time is the result of calling time.time() "
+                f"in Python."
+            )
 
     def __read_maintainer_account_id_file(self, maintainers, file_path):
         account_ids = {}
@@ -127,8 +140,9 @@ class GerritBot:
             # create a placeholder file
             with open(file_path, "w") as f:
                 json.dump(account_ids, f)
-        account_ids = self.__update_maintainer_account_id_file(file_path,
-                                                               maintainers)
+        account_ids = self.__update_maintainer_account_id_file(
+            file_path, maintainers
+        )
         return account_ids
 
     def __update_maintainer_account_id_file(self, file_path, maintainers):
@@ -157,8 +171,10 @@ class GerritBot:
         response = self.gerrit_api.query_account(query, 1)
         accounts = Parser.get_json_content(response)
         if len(accounts) == 0:
-            print(f"warn: unable to obtain the account id of "
-                  f"\"{email_address}\"")
+            print(
+                f"warn: unable to obtain the account id of "
+                f'"{email_address}"'
+            )
             print(vars(response))
             return None
         return accounts[0]["_account_id"]
@@ -168,11 +184,14 @@ class GerritBot:
         return account_info._account_id
 
     def __query_new_changes(self, query_age):
-        query = (f"projects:{self.config.projects_prefix} "
-                 f"status:open -is:wip -age:{query_age}")
+        query = (
+            f"projects:{self.config.projects_prefix} "
+            f"status:open -is:wip -age:{query_age}"
+        )
         response = self.gerrit_api.query_changes(
-            query, self.config.query_limit,
-            ["CURRENT_REVISION", "REVIEWER_UPDATES", "DETAILED_ACCOUNTS"]
+            query,
+            self.config.query_limit,
+            ["CURRENT_REVISION", "REVIEWER_UPDATES", "DETAILED_ACCOUNTS"],
         )
 
         if response.status_code >= 300:
@@ -185,34 +204,39 @@ class GerritBot:
         return new_changes
 
     def _pre_run(self):
-        self.prev_query_time = \
-            self.__read_time_tracker_file(self.config.time_tracker_file_path)
+        self.prev_query_time = self.__read_time_tracker_file(
+            self.config.time_tracker_file_path
+        )
         self.curr_time = time.time()
         if self.prev_query_time > 0:
             # adding 10 seconds to the query age to make sure that
             # we won't miss any new changes
-            self.query_age = \
-              convert_time_in_seconds(
-                int(self.curr_time - self.prev_query_time + 10))
+            self.query_age = convert_time_in_seconds(
+                int(self.curr_time - self.prev_query_time + 10)
+            )
         else:
             self.query_age = self.config.default_query_age
 
     def _run(self):
         new_changes = self.__query_new_changes(self.query_age)
         for new_change in new_changes:
-            add_maintainers_to_change(new_change,
-                                      self.maintainers,
-                                      self.maintainer_account_ids,
-                                      self.gerrit_api)
+            add_maintainers_to_change(
+                new_change,
+                self.maintainers,
+                self.maintainer_account_ids,
+                self.gerrit_api,
+            )
 
     def _post_run(self):
-        self.__update_time_tracker_file(self.config.time_tracker_file_path,
-                                        self.curr_time)
+        self.__update_time_tracker_file(
+            self.config.time_tracker_file_path, self.curr_time
+        )
 
     def run(self):
         self._pre_run()
         self._run()
         self._post_run()
+
 
 if __name__ == "__main__":
     default_config = GerritBotConfig.DefaultConfig()

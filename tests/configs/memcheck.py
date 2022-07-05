@@ -48,14 +48,13 @@ require_sim_object("TrafficGen")
 # For some reason, this is implicitly needed by run.py
 root = None
 
+
 def run_test(root):
-        # Called from tests/run.py
+    # Called from tests/run.py
 
-        import sys
-        argv = [
-                sys.argv[0],
-                '-m %d' % maxtick,
-        ]
+    import sys
 
-        # Execute the script we are wrapping
-        run_config('configs/example/memcheck.py', argv=argv)
+    argv = [sys.argv[0], "-m %d" % maxtick]
+
+    # Execute the script we are wrapping
+    run_config("configs/example/memcheck.py", argv=argv)

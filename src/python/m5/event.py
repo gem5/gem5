@@ -47,6 +47,7 @@ from _m5.event import getEventQueue, setEventQueue
 
 mainq = None
 
+
 class EventWrapper(Event):
     """Helper class to wrap callable objects in an Event base class"""
 
@@ -54,8 +55,9 @@ class EventWrapper(Event):
         super().__init__(**kwargs)
 
         if not callable(func):
-            raise RuntimeError("Can't wrap '%s', object is not callable" % \
-                               str(func))
+            raise RuntimeError(
+                "Can't wrap '%s', object is not callable" % str(func)
+            )
 
         self._func = func
 
@@ -63,7 +65,7 @@ class EventWrapper(Event):
         self._func()
 
     def __str__(self):
-        return "EventWrapper(%s)" % (str(self._func), )
+        return "EventWrapper(%s)" % (str(self._func),)
 
 
 class ProgressEvent(Event):
@@ -74,7 +76,7 @@ class ProgressEvent(Event):
         self.eventq.schedule(self, m5.curTick() + self.period)
 
     def __call__(self):
-        print("Progress! Time now %fs" % (m5.curTick()/1e12))
+        print("Progress! Time now %fs" % (m5.curTick() / 1e12))
         self.eventq.schedule(self, m5.curTick() + self.period)
 
 
@@ -83,5 +85,12 @@ def create(func, priority=Event.Default_Pri):
 
     return EventWrapper(func, priority=priority)
 
-__all__ = [ 'Event', 'EventWrapper', 'ProgressEvent', 'SimExit',
-            'mainq', 'create' ]
+
+__all__ = [
+    "Event",
+    "EventWrapper",
+    "ProgressEvent",
+    "SimExit",
+    "mainq",
+    "create",
+]

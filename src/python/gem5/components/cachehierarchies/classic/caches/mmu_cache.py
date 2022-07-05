@@ -28,6 +28,7 @@ from .....utils.override import *
 
 from m5.objects import Cache, BasePrefetcher, StridePrefetcher
 
+
 class MMUCache(Cache):
     """
     A simple Memory Management Unit (MMU) cache with default values.

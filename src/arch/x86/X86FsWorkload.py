@@ -41,31 +41,37 @@ from m5.objects.IntelMP import X86IntelMPFloatingPointer, X86IntelMPConfigTable
 from m5.objects.ACPI import X86ACPIRSDP
 from m5.objects.Workload import KernelWorkload, Workload
 
+
 class X86BareMetalWorkload(Workload):
-    type = 'X86BareMetalWorkload'
-    cxx_header = 'arch/x86/bare_metal/workload.hh'
-    cxx_class = 'gem5::X86ISA::BareMetalWorkload'
+    type = "X86BareMetalWorkload"
+    cxx_header = "arch/x86/bare_metal/workload.hh"
+    cxx_class = "gem5::X86ISA::BareMetalWorkload"
+
 
 class X86FsWorkload(KernelWorkload):
-    type = 'X86FsWorkload'
-    cxx_header = 'arch/x86/fs_workload.hh'
-    cxx_class = 'gem5::X86ISA::FsWorkload'
+    type = "X86FsWorkload"
+    cxx_header = "arch/x86/fs_workload.hh"
+    cxx_class = "gem5::X86ISA::FsWorkload"
 
     smbios_table = Param.X86SMBiosSMBiosTable(
-            X86SMBiosSMBiosTable(), 'table of smbios/dmi information')
+        X86SMBiosSMBiosTable(), "table of smbios/dmi information"
+    )
     intel_mp_pointer = Param.X86IntelMPFloatingPointer(
-            X86IntelMPFloatingPointer(),
-            'intel mp spec floating pointer structure')
+        X86IntelMPFloatingPointer(), "intel mp spec floating pointer structure"
+    )
     intel_mp_table = Param.X86IntelMPConfigTable(
-            X86IntelMPConfigTable(),
-            'intel mp spec configuration table')
+        X86IntelMPConfigTable(), "intel mp spec configuration table"
+    )
     acpi_description_table_pointer = Param.X86ACPIRSDP(
-            X86ACPIRSDP(), 'ACPI root description pointer structure')
+        X86ACPIRSDP(), "ACPI root description pointer structure"
+    )
+
 
 class X86FsLinux(X86FsWorkload):
-    type = 'X86FsLinux'
-    cxx_header = 'arch/x86/linux/fs_workload.hh'
-    cxx_class = 'gem5::X86ISA::FsLinux'
+    type = "X86FsLinux"
+    cxx_header = "arch/x86/linux/fs_workload.hh"
+    cxx_class = "gem5::X86ISA::FsLinux"
 
     e820_table = Param.X86E820Table(
-            X86E820Table(), 'E820 map of physical memory')
+        X86E820Table(), "E820 map of physical memory"
+    )

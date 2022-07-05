@@ -26,11 +26,13 @@
 
 from typing import Optional
 
+
 class TimeConversion:
     """
     A class for specifying a scale factor necessary to translate a simulation
     time measurement (e.g. ticks) into seconds.
     """
+
     scale_factor: float
     description: Optional[str]
 

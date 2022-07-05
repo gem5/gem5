@@ -35,7 +35,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop RCPSS_XMM_XMM {
     mrcp xmml, xmmlm, size=4, ext=Scalar
 };
@@ -70,4 +70,4 @@ def macroop RCPPS_XMM_P {
     mrcp xmml, ufp1, size=4, ext=0
     mrcp xmmh, ufp2, size=4, ext=0
 };
-'''
+"""

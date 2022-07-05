@@ -24,10 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__all__ = [ 'multidict' ]
+__all__ = ["multidict"]
+
 
 class multidict(object):
-    def __init__(self, parent = {}, **kwargs):
+    def __init__(self, parent={}, **kwargs):
         self.local = dict(**kwargs)
         self.parent = parent
         self.deleted = {}
@@ -67,13 +68,13 @@ class multidict(object):
         return len(self.local) + len(self.parent)
 
     def next(self):
-        for key,value in self.local.items():
-            yield key,value
+        for key, value in self.local.items():
+            yield key, value
 
         if self.parent:
-            for key,value in self.parent.next():
+            for key, value in self.parent.next():
                 if key not in self.local and key not in self.deleted:
-                    yield key,value
+                    yield key, value
 
     def has_key(self, key):
         return key in self
@@ -83,11 +84,11 @@ class multidict(object):
             yield item
 
     def keys(self):
-        for key,value in self.next():
+        for key, value in self.next():
             yield key
 
     def values(self):
-        for key,value in self.next():
+        for key, value in self.next():
             yield value
 
     def get(self, key, default=None):
@@ -105,10 +106,10 @@ class multidict(object):
             return default
 
     def _dump(self):
-        print('multidict dump')
+        print("multidict dump")
         node = self
         while isinstance(node, multidict):
-            print('    ', node.local)
+            print("    ", node.local)
             node = node.parent
 
     def _dumpkey(self, key):
@@ -120,52 +121,53 @@ class multidict(object):
             node = node.parent
         print(key, values)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test1 = multidict()
     test2 = multidict(test1)
     test3 = multidict(test2)
     test4 = multidict(test3)
 
-    test1['a'] = 'test1_a'
-    test1['b'] = 'test1_b'
-    test1['c'] = 'test1_c'
-    test1['d'] = 'test1_d'
-    test1['e'] = 'test1_e'
+    test1["a"] = "test1_a"
+    test1["b"] = "test1_b"
+    test1["c"] = "test1_c"
+    test1["d"] = "test1_d"
+    test1["e"] = "test1_e"
 
-    test2['a'] = 'test2_a'
-    del test2['b']
-    test2['c'] = 'test2_c'
-    del test1['a']
+    test2["a"] = "test2_a"
+    del test2["b"]
+    test2["c"] = "test2_c"
+    del test1["a"]
 
-    test2.setdefault('f', multidict)
+    test2.setdefault("f", multidict)
 
-    print('test1>', list(test1.items()))
-    print('test2>', list(test2.items()))
-    #print(test1['a'])
-    print(test1['b'])
-    print(test1['c'])
-    print(test1['d'])
-    print(test1['e'])
+    print("test1>", list(test1.items()))
+    print("test2>", list(test2.items()))
+    # print(test1['a'])
+    print(test1["b"])
+    print(test1["c"])
+    print(test1["d"])
+    print(test1["e"])
 
-    print(test2['a'])
-    #print(test2['b'])
-    print(test2['c'])
-    print(test2['d'])
-    print(test2['e'])
+    print(test2["a"])
+    # print(test2['b'])
+    print(test2["c"])
+    print(test2["d"])
+    print(test2["e"])
 
     for key in test2.keys():
         print(key)
 
-    test2.get('g', 'foo')
-    #test2.get('b')
-    test2.get('b', 'bar')
-    test2.setdefault('b', 'blah')
+    test2.get("g", "foo")
+    # test2.get('b')
+    test2.get("b", "bar")
+    test2.setdefault("b", "blah")
     print(test1)
     print(test2)
     print(repr(test2))
 
     print(len(test2))
 
-    test3['a'] = [ 0, 1, 2, 3 ]
+    test3["a"] = [0, 1, 2, 3]
 
     print(test4)

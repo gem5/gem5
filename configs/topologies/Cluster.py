@@ -26,6 +26,7 @@
 
 from topologies.BaseTopology import BaseTopology
 
+
 class Cluster(BaseTopology):
     """ A cluster is a group of nodes which are all one hop from eachother
         Clusters can also contain other clusters
@@ -42,10 +43,12 @@ class Cluster(BaseTopology):
     def num_int_links(cls):
         cls._num_int_links += 1
         return cls._num_int_links - 1
+
     @classmethod
     def num_ext_links(cls):
         cls._num_ext_links += 1
         return cls._num_ext_links - 1
+
     @classmethod
     def num_routers(cls):
         cls._num_routers += 1
@@ -61,7 +64,7 @@ class Cluster(BaseTopology):
                  super cluster
         """
         self.nodes = []
-        self.router = None # created in makeTopology
+        self.router = None  # created in makeTopology
         self.intBW = intBW
         self.extBW = extBW
         self.intLatency = intLatency
@@ -80,14 +83,19 @@ class Cluster(BaseTopology):
 
         for node in self.nodes:
             if type(node) == Cluster:
-                node.makeTopology(options, network, IntLink,
-                                  ExtLink, Router)
+                node.makeTopology(options, network, IntLink, ExtLink, Router)
 
                 # connect this cluster to the router
-                link_out = IntLink(link_id=self.num_int_links(), src_node=self.router,
-                           dst_node=node.router)
-                link_in = IntLink(link_id=self.num_int_links(), src_node=node.router,
-                                  dst_node=self.router)
+                link_out = IntLink(
+                    link_id=self.num_int_links(),
+                    src_node=self.router,
+                    dst_node=node.router,
+                )
+                link_in = IntLink(
+                    link_id=self.num_int_links(),
+                    src_node=node.router,
+                    dst_node=self.router,
+                )
 
                 if node.extBW:
                     link_out.bandwidth_factor = node.extBW
@@ -111,8 +119,11 @@ class Cluster(BaseTopology):
             else:
                 # node is just a controller,
                 # connect it to the router via a ext_link
-                link = ExtLink(link_id=self.num_ext_links(), ext_node=node,
-                        int_node=self.router)
+                link = ExtLink(
+                    link_id=self.num_ext_links(),
+                    ext_node=node,
+                    int_node=self.router,
+                )
 
                 if self.intBW:
                     link.bandwidth_factor = self.intBW
@@ -122,5 +133,6 @@ class Cluster(BaseTopology):
                 network.ext_links.append(link)
 
     def __len__(self):
-        return len([i for i in self.nodes if type(i) != Cluster]) + \
-               sum([len(i) for i in self.nodes if type(i) == Cluster])
+        return len([i for i in self.nodes if type(i) != Cluster]) + sum(
+            [len(i) for i in self.nodes if type(i) == Cluster]
+        )

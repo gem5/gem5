@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop FDIV1_R
 {
     divfp st(0), st(0), sti
@@ -95,4 +95,4 @@ def macroop FDIVP_P
 # FDIVR
 # FDIVRP
 # FIDIVR
-'''
+"""

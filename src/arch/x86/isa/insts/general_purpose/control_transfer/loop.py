@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop LOOP_I {
     .control_direct
 
@@ -63,4 +63,4 @@ def macroop LOOPE_I {
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
     wripi t1, imm, flags=(CSTRZnEZF,)
 };
-'''
+"""

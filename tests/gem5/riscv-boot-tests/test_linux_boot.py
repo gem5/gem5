@@ -46,7 +46,8 @@ def test_boot(
 ):
 
     name = "{}-cpu_{}-cores_{}_{}_riscv-boot-test".format(
-        cpu, str(num_cpus), cache_type, memory_class)
+        cpu, str(num_cpus), cache_type, memory_class
+    )
 
     verifiers = []
     exit_regex = re.compile(
@@ -56,7 +57,7 @@ def test_boot(
     )
     verifiers.append(verifier.MatchRegex(exit_regex))
 
-    config_args=[
+    config_args = [
         "--cpu",
         cpu,
         "--num-cpus",
@@ -146,7 +147,6 @@ test_boot(
     length=constants.quick_tag,
     to_tick=10000000000,
 )
-
 
 
 test_boot(

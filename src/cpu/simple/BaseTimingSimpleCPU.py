@@ -28,14 +28,15 @@ from m5.params import *
 
 from m5.objects.BaseSimpleCPU import BaseSimpleCPU
 
+
 class BaseTimingSimpleCPU(BaseSimpleCPU):
-    type = 'BaseTimingSimpleCPU'
+    type = "BaseTimingSimpleCPU"
     cxx_header = "cpu/simple/timing.hh"
-    cxx_class = 'gem5::TimingSimpleCPU'
+    cxx_class = "gem5::TimingSimpleCPU"
 
     @classmethod
     def memory_mode(cls):
-        return 'timing'
+        return "timing"
 
     @classmethod
     def support_take_over(cls):

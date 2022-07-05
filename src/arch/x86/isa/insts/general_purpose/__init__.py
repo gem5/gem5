@@ -33,26 +33,28 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["arithmetic",
-              "cache_and_memory_management",
-              "compare_and_test",
-              "control_transfer",
-              "data_conversion",
-              "data_transfer",
-              "flags",
-              "input_output",
-              "load_effective_address",
-              "load_segment_registers",
-              "logical",
-              "no_operation",
-              "rotate_and_shift",
-              "semaphores",
-              "string",
-              "system_calls"]
+categories = [
+    "arithmetic",
+    "cache_and_memory_management",
+    "compare_and_test",
+    "control_transfer",
+    "data_conversion",
+    "data_transfer",
+    "flags",
+    "input_output",
+    "load_effective_address",
+    "load_segment_registers",
+    "logical",
+    "no_operation",
+    "rotate_and_shift",
+    "semaphores",
+    "string",
+    "system_calls",
+]
 
-microcode = '''
+microcode = """
 # Microcode for general purpose instructions
-'''
+"""
 for category in categories:
     exec("from . import %s as cat" % category)
     microcode += cat.microcode

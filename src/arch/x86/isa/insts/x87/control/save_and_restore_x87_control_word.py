@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 
 def macroop FLDCW_M {
     ld t1, seg, sib, disp, dataSize=2
@@ -57,4 +57,4 @@ def macroop FNSTCW_P {
     rdval t1, fcw
     st t1, seg, riprel, disp, dataSize=2
 };
-'''
+"""

@@ -39,9 +39,10 @@ from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
 
+
 class PMAChecker(SimObject):
-    type = 'PMAChecker'
-    cxx_header = 'arch/riscv/pma_checker.hh'
-    cxx_class = 'gem5::PMAChecker'
+    type = "PMAChecker"
+    cxx_header = "arch/riscv/pma_checker.hh"
+    cxx_class = "gem5::PMAChecker"
 
     uncacheable = VectorParam.AddrRange([], "Uncacheable address ranges")

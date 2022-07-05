@@ -39,6 +39,7 @@ from m5.params import *
 from m5.proxy import *
 from m5.util.fdthelper import *
 
+
 class Clint(BasicPioDevice):
     """
     This implementation of CLINT is based on
@@ -47,16 +48,18 @@ class Clint(BasicPioDevice):
     0e07-48d0-9602-e437d5367806_sifive_U54MC_rtl_
     full_20G1.03.00_manual.pdf
     """
-    type = 'Clint'
-    cxx_header = 'dev/riscv/clint.hh'
-    cxx_class = 'gem5::Clint'
-    int_pin = IntSinkPin('Pin to receive RTC signal')
+
+    type = "Clint"
+    cxx_header = "dev/riscv/clint.hh"
+    cxx_class = "gem5::Clint"
+    int_pin = IntSinkPin("Pin to receive RTC signal")
     pio_size = Param.Addr(0xC000, "PIO Size")
     num_threads = Param.Int("Number of threads in the system.")
 
     def generateDeviceTree(self, state):
-        node = self.generateBasicPioDeviceNode(state, "clint", self.pio_addr,
-                                               self.pio_size)
+        node = self.generateBasicPioDeviceNode(
+            state, "clint", self.pio_addr, self.pio_size
+        )
 
         cpus = self.system.unproxy(self).cpu
         int_extended = list()

@@ -42,10 +42,10 @@ from m5.util import fatal, panic
 
 from m5.objects import *
 
-class MyCacheSystem(RubySystem):
 
+class MyCacheSystem(RubySystem):
     def __init__(self):
-        if buildEnv['PROTOCOL'] != 'MSI':
+        if buildEnv["PROTOCOL"] != "MSI":
             fatal("This system assumes MSI from learning gem5!")
 
         super(MyCacheSystem, self).__init__()
@@ -70,22 +70,26 @@ class MyCacheSystem(RubySystem):
         # customized depending on the topology/network requirements.
         # Create one controller for each L1 cache (and the cache mem obj.)
         # Create a single directory controller (Really the memory cntrl)
-        self.controllers = \
-            [L1Cache(system, self, cpu) for cpu in cpus] + \
-            [DirController(self, system.mem_ranges, mem_ctrls)]
+        self.controllers = [L1Cache(system, self, cpu) for cpu in cpus] + [
+            DirController(self, system.mem_ranges, mem_ctrls)
+        ]
 
         # Create one sequencer per CPU. In many systems this is more
         # complicated since you have to create sequencers for DMA controllers
         # and other controllers, too.
-        self.sequencers = [RubySequencer(version = i,
-                                # I/D cache is combined and grab from ctrl
-                                dcache = self.controllers[i].cacheMemory,
-                                clk_domain = self.controllers[i].clk_domain,
-                                ) for i in range(len(cpus))]
+        self.sequencers = [
+            RubySequencer(
+                version=i,
+                # I/D cache is combined and grab from ctrl
+                dcache=self.controllers[i].cacheMemory,
+                clk_domain=self.controllers[i].clk_domain,
+            )
+            for i in range(len(cpus))
+        ]
 
         # We know that we put the controllers in an order such that the first
         # N of them are the L1 caches which need a sequencer pointer
-        for i,c in enumerate(self.controllers[0:len(self.sequencers)]):
+        for i, c in enumerate(self.controllers[0 : len(self.sequencers)]):
             c.sequencer = self.sequencers[i]
 
         self.num_of_sequencers = len(self.sequencers)
@@ -101,16 +105,17 @@ class MyCacheSystem(RubySystem):
         system.system_port = self.sys_port_proxy.in_ports
 
         # Connect the cpu's cache, interrupt, and TLB ports to Ruby
-        for i,cpu in enumerate(cpus):
+        for i, cpu in enumerate(cpus):
             self.sequencers[i].connectCpuPorts(cpu)
 
 
 class L1Cache(L1Cache_Controller):
 
     _version = 0
+
     @classmethod
     def versionCount(cls):
-        cls._version += 1 # Use count for this particular type
+        cls._version += 1  # Use count for this particular type
         return cls._version - 1
 
     def __init__(self, system, ruby_system, cpu):
@@ -121,9 +126,9 @@ class L1Cache(L1Cache_Controller):
 
         self.version = self.versionCount()
         # This is the cache memory object that stores the cache data and tags
-        self.cacheMemory = RubyCache(size = '16kB',
-                               assoc = 8,
-                               start_index_bit = self.getBlockSizeBits(system))
+        self.cacheMemory = RubyCache(
+            size="16kB", assoc=8, start_index_bit=self.getBlockSizeBits(system)
+        )
         self.clk_domain = cpu.clk_domain
         self.send_evictions = self.sendEvicts(cpu)
         self.ruby_system = ruby_system
@@ -131,7 +136,7 @@ class L1Cache(L1Cache_Controller):
 
     def getBlockSizeBits(self, system):
         bits = int(math.log(system.cache_line_size, 2))
-        if 2**bits != system.cache_line_size.value:
+        if 2 ** bits != system.cache_line_size.value:
             panic("Cache line size not a power of 2!")
         return bits
 
@@ -142,8 +147,7 @@ class L1Cache(L1Cache_Controller):
            2. The x86 mwait instruction is built on top of coherence
            3. The local exclusive monitor in ARM systems
         """
-        if type(cpu) is DerivO3CPU or \
-           buildEnv['TARGET_ISA'] in ('x86', 'arm'):
+        if type(cpu) is DerivO3CPU or buildEnv["TARGET_ISA"] in ("x86", "arm"):
             return True
         return False
 
@@ -160,21 +164,23 @@ class L1Cache(L1Cache_Controller):
         # mean the same thing as normal gem5 ports. If a MessageBuffer
         # is a "to" buffer (i.e., out) then you use the "out_port",
         # otherwise, the in_port.
-        self.requestToDir = MessageBuffer(ordered = True)
+        self.requestToDir = MessageBuffer(ordered=True)
         self.requestToDir.out_port = ruby_system.network.in_port
-        self.responseToDirOrSibling = MessageBuffer(ordered = True)
+        self.responseToDirOrSibling = MessageBuffer(ordered=True)
         self.responseToDirOrSibling.out_port = ruby_system.network.in_port
-        self.forwardFromDir = MessageBuffer(ordered = True)
+        self.forwardFromDir = MessageBuffer(ordered=True)
         self.forwardFromDir.in_port = ruby_system.network.out_port
-        self.responseFromDirOrSibling = MessageBuffer(ordered = True)
+        self.responseFromDirOrSibling = MessageBuffer(ordered=True)
         self.responseFromDirOrSibling.in_port = ruby_system.network.out_port
+
 
 class DirController(Directory_Controller):
 
     _version = 0
+
     @classmethod
     def versionCount(cls):
-        cls._version += 1 # Use count for this particular type
+        cls._version += 1  # Use count for this particular type
         return cls._version - 1
 
     def __init__(self, ruby_system, ranges, mem_ctrls):
@@ -192,14 +198,14 @@ class DirController(Directory_Controller):
         self.connectQueues(ruby_system)
 
     def connectQueues(self, ruby_system):
-        self.requestFromCache = MessageBuffer(ordered = True)
+        self.requestFromCache = MessageBuffer(ordered=True)
         self.requestFromCache.in_port = ruby_system.network.out_port
-        self.responseFromCache = MessageBuffer(ordered = True)
+        self.responseFromCache = MessageBuffer(ordered=True)
         self.responseFromCache.in_port = ruby_system.network.out_port
 
-        self.responseToCache = MessageBuffer(ordered = True)
+        self.responseToCache = MessageBuffer(ordered=True)
         self.responseToCache.out_port = ruby_system.network.in_port
-        self.forwardToCache = MessageBuffer(ordered = True)
+        self.forwardToCache = MessageBuffer(ordered=True)
         self.forwardToCache.out_port = ruby_system.network.in_port
 
         # These are other special message buffers. They are used to send
@@ -208,6 +214,7 @@ class DirController(Directory_Controller):
         # above) will be directed through these message buffers.
         self.requestToMemory = MessageBuffer()
         self.responseFromMemory = MessageBuffer()
+
 
 class MyNetwork(SimpleNetwork):
     """A simple point-to-point network. This doesn't not use garnet.
@@ -223,13 +230,14 @@ class MyNetwork(SimpleNetwork):
            together in a point-to-point network.
         """
         # Create one router/switch per controller in the system
-        self.routers = [Switch(router_id = i) for i in range(len(controllers))]
+        self.routers = [Switch(router_id=i) for i in range(len(controllers))]
 
         # Make a link from each controller to the router. The link goes
         # externally to the network.
-        self.ext_links = [SimpleExtLink(link_id=i, ext_node=c,
-                                        int_node=self.routers[i])
-                          for i, c in enumerate(controllers)]
+        self.ext_links = [
+            SimpleExtLink(link_id=i, ext_node=c, int_node=self.routers[i])
+            for i, c in enumerate(controllers)
+        ]
 
         # Make an "internal" link (internal to the network) between every pair
         # of routers.
@@ -237,9 +245,10 @@ class MyNetwork(SimpleNetwork):
         int_links = []
         for ri in self.routers:
             for rj in self.routers:
-                if ri == rj: continue # Don't connect a router to itself!
+                if ri == rj:
+                    continue  # Don't connect a router to itself!
                 link_count += 1
-                int_links.append(SimpleIntLink(link_id = link_count,
-                                                    src_node = ri,
-                                                    dst_node = rj))
+                int_links.append(
+                    SimpleIntLink(link_id=link_count, src_node=ri, dst_node=rj)
+                )
         self.int_links = int_links

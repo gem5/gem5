@@ -32,10 +32,11 @@
 import os
 
 # absolute paths to skip
-skipdirs = [ 'src/unittest', 'src/doxygen' ]
+skipdirs = ["src/unittest", "src/doxygen"]
 
 # suffixes of files to index
-suffixes = [ '.cc', '.hh', '.c', '.h' ]
+suffixes = [".cc", ".hh", ".c", ".h"]
+
 
 def oksuffix(f):
     for s in suffixes:
@@ -43,13 +44,14 @@ def oksuffix(f):
             return True
     return False
 
-file_list = file('cscope.files', 'w')
+
+file_list = file("cscope.files", "w")
 cwd = os.getcwd()
 
-for dirpath,subdirs,files in os.walk(os.path.join(cwd, 'src')):
+for dirpath, subdirs, files in os.walk(os.path.join(cwd, "src")):
     # filter out undesirable subdirectories
-    for i,dir in enumerate(subdirs):
-        if dir == 'SCCS':
+    for i, dir in enumerate(subdirs):
+        if dir == "SCCS":
             del subdirs[i]
             break
 
@@ -61,8 +63,10 @@ for dirpath,subdirs,files in os.walk(os.path.join(cwd, 'src')):
     # find C/C++ sources
     okfiles = [f for f in files if oksuffix(f)]
     if okfiles:
-        print('\n'.join([os.path.join(dirpath, f) for f in okfiles]),
-            file=file_list)
+        print(
+            "\n".join([os.path.join(dirpath, f) for f in okfiles]),
+            file=file_list,
+        )
 
 file_list.close()
 

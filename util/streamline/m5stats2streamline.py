@@ -69,42 +69,60 @@ import zlib
 import argparse
 
 parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    description="""
         Converts gem5 runs to ARM DS-5 Streamline .apc project file.
         (NOTE: Requires gem5 runs to be run with ContextSwitchStatsDump
         enabled and some patches applied to the target Linux kernel.)
 
         APC project generation based on Gator v17 (DS-5 v5.17)
         Subsequent versions should be backward compatible
-        """)
+        """,
+)
 
-parser.add_argument("stat_config_file", metavar="<stat_config.ini>",
-                    help=".ini file that describes which stats to be included \
+parser.add_argument(
+    "stat_config_file",
+    metavar="<stat_config.ini>",
+    help=".ini file that describes which stats to be included \
                     in conversion. Sample .ini files can be found in \
                     util/streamline. NOTE: this is NOT the gem5 config.ini \
-                    file.")
+                    file.",
+)
 
-parser.add_argument("input_path", metavar="<gem5 run folder>",
-                    help="Path to gem5 run folder (must contain config.ini, \
-                    stats.txt[.gz], and system.tasks.txt.)")
+parser.add_argument(
+    "input_path",
+    metavar="<gem5 run folder>",
+    help="Path to gem5 run folder (must contain config.ini, \
+                    stats.txt[.gz], and system.tasks.txt.)",
+)
 
-parser.add_argument("output_path", metavar="<dest .apc folder>",
-                    help="Destination .apc folder path")
+parser.add_argument(
+    "output_path",
+    metavar="<dest .apc folder>",
+    help="Destination .apc folder path",
+)
 
-parser.add_argument("--num-events", action="store", type=int,
-                    default=1000000,
-                    help="Maximum number of scheduling (context switch) \
+parser.add_argument(
+    "--num-events",
+    action="store",
+    type=int,
+    default=1000000,
+    help="Maximum number of scheduling (context switch) \
                     events to be processed. Set to truncate early. \
-                    Default=1000000")
+                    Default=1000000",
+)
 
-parser.add_argument("--gzipped-bmp-not-supported", action="store_true",
-                    help="Do not use gzipped .bmp files for visual annotations. \
+parser.add_argument(
+    "--gzipped-bmp-not-supported",
+    action="store_true",
+    help="Do not use gzipped .bmp files for visual annotations. \
                     This option is only required when using Streamline versions \
-                    older than 5.14")
+                    older than 5.14",
+)
 
-parser.add_argument("--verbose", action="store_true",
-                    help="Enable verbose output")
+parser.add_argument(
+    "--verbose", action="store_true", help="Enable verbose output"
+)
 
 args = parser.parse_args()
 
@@ -168,11 +186,12 @@ process_list = []
 idle_uid = -1
 kernel_uid = -1
 
+
 class Task(object):
     def __init__(self, uid, pid, tgid, task_name, is_process, tick):
-        if pid == 0: # Idle
+        if pid == 0:  # Idle
             self.uid = 0
-        elif pid == -1: # Kernel
+        elif pid == -1:  # Kernel
             self.uid = 0
         else:
             self.uid = uid
@@ -181,12 +200,14 @@ class Task(object):
         self.is_process = is_process
         self.task_name = task_name
         self.children = []
-        self.tick = tick # time this task first appeared
+        self.tick = tick  # time this task first appeared
+
 
 class Event(object):
     def __init__(self, tick, task):
         self.tick = tick
         self.task = task
+
 
 ############################################################
 # Types used in APC Protocol
@@ -195,134 +216,142 @@ class Event(object):
 #  - string
 ############################################################
 
+
 def packed32(x):
     ret = []
     more = True
     while more:
-        b = x & 0x7f
+        b = x & 0x7F
         x = x >> 7
-        if (((x == 0) and ((b & 0x40) == 0)) or \
-            ((x == -1) and ((b & 0x40) != 0))):
+        if ((x == 0) and ((b & 0x40) == 0)) or (
+            (x == -1) and ((b & 0x40) != 0)
+        ):
             more = False
         else:
             b = b | 0x80
         ret.append(b)
     return ret
 
+
 # For historical reasons, 32/64-bit versions of functions are presevered
 def packed64(x):
     return packed32(x)
 
+
 #  variable length packed 4-byte signed value
 def unsigned_packed32(x):
     ret = []
-    if ((x & 0xffffff80) == 0):
-        ret.append(x & 0x7f)
-    elif ((x & 0xffffc000) == 0):
-        ret.append((x | 0x80) & 0xff)
-        ret.append((x >> 7) & 0x7f)
-    elif ((x & 0xffe00000) == 0):
-        ret.append((x | 0x80) & 0xff)
-        ret.append(((x >> 7) | 0x80) & 0xff)
-        ret.append((x >> 14) & 0x7f)
-    elif ((x & 0xf0000000) == 0):
-        ret.append((x | 0x80) & 0xff)
-        ret.append(((x >> 7) | 0x80) & 0xff)
-        ret.append(((x >> 14) | 0x80) & 0xff)
-        ret.append((x >> 21) & 0x7f)
+    if (x & 0xFFFFFF80) == 0:
+        ret.append(x & 0x7F)
+    elif (x & 0xFFFFC000) == 0:
+        ret.append((x | 0x80) & 0xFF)
+        ret.append((x >> 7) & 0x7F)
+    elif (x & 0xFFE00000) == 0:
+        ret.append((x | 0x80) & 0xFF)
+        ret.append(((x >> 7) | 0x80) & 0xFF)
+        ret.append((x >> 14) & 0x7F)
+    elif (x & 0xF0000000) == 0:
+        ret.append((x | 0x80) & 0xFF)
+        ret.append(((x >> 7) | 0x80) & 0xFF)
+        ret.append(((x >> 14) | 0x80) & 0xFF)
+        ret.append((x >> 21) & 0x7F)
     else:
-        ret.append((x | 0x80) & 0xff)
-        ret.append(((x >> 7) | 0x80) & 0xff)
-        ret.append(((x >> 14) | 0x80) & 0xff)
-        ret.append(((x >> 21) | 0x80) & 0xff)
-        ret.append((x >> 28) & 0x0f)
+        ret.append((x | 0x80) & 0xFF)
+        ret.append(((x >> 7) | 0x80) & 0xFF)
+        ret.append(((x >> 14) | 0x80) & 0xFF)
+        ret.append(((x >> 21) | 0x80) & 0xFF)
+        ret.append((x >> 28) & 0x0F)
     return ret
+
 
 #  variable length packed 8-byte signed value
 def unsigned_packed64(x):
     ret = []
-    if ((x & 0xffffffffffffff80) == 0):
-        ret.append(x & 0x7f)
-    elif ((x & 0xffffffffffffc000) == 0):
-        ret.append((x | 0x80) & 0xff)
-        ret.append((x >> 7) & 0x7f)
-    elif ((x & 0xffffffffffe00000) == 0):
-        ret.append((x | 0x80) & 0xff)
-        ret.append(((x >> 7) | 0x80) & 0xff)
-        ret.append((x >> 14) & 0x7f)
-    elif ((x & 0xfffffffff0000000) == 0):
-        ret.append((x | 0x80) & 0xff)
-        ret.append(((x >> 7) | 0x80) & 0xff)
-        ret.append(((x >> 14) | 0x80) & 0xff)
-        ret.append((x >> 21) & 0x7f)
-    elif ((x & 0xfffffff800000000) == 0):
-        ret.append((x | 0x80) & 0xff)
-        ret.append(((x >> 7) | 0x80) & 0xff)
-        ret.append(((x >> 14) | 0x80) & 0xff)
-        ret.append(((x >> 21) | 0x80) & 0xff)
-        ret.append((x >> 28) & 0x7f)
-    elif ((x & 0xfffffc0000000000) == 0):
-        ret.append((x | 0x80) & 0xff)
-        ret.append(((x >> 7) | 0x80) & 0xff)
-        ret.append(((x >> 14) | 0x80) & 0xff)
-        ret.append(((x >> 21) | 0x80) & 0xff)
-        ret.append(((x >> 28) | 0x80) & 0xff)
-        ret.append((x >> 35) & 0x7f)
-    elif ((x & 0xfffe000000000000) == 0):
-        ret.append((x | 0x80) & 0xff)
-        ret.append(((x >> 7) | 0x80) & 0xff)
-        ret.append(((x >> 14) | 0x80) & 0xff)
-        ret.append(((x >> 21) | 0x80) & 0xff)
-        ret.append(((x >> 28) | 0x80) & 0xff)
-        ret.append(((x >> 35) | 0x80) & 0xff)
-        ret.append((x >> 42) & 0x7f)
-    elif ((x & 0xff00000000000000) == 0):
-        ret.append((x | 0x80) & 0xff)
-        ret.append(((x >> 7) | 0x80) & 0xff)
-        ret.append(((x >> 14) | 0x80) & 0xff)
-        ret.append(((x >> 21) | 0x80) & 0xff)
-        ret.append(((x >> 28) | 0x80) & 0xff)
-        ret.append(((x >> 35) | 0x80) & 0xff)
-        ret.append(((x >> 42) | 0x80) & 0xff)
-        ret.append((x >> 49) & 0x7f)
-    elif ((x & 0x8000000000000000) == 0):
-        ret.append((x | 0x80) & 0xff)
-        ret.append(((x >> 7) | 0x80) & 0xff)
-        ret.append(((x >> 14) | 0x80) & 0xff)
-        ret.append(((x >> 21) | 0x80) & 0xff)
-        ret.append(((x >> 28) | 0x80) & 0xff)
-        ret.append(((x >> 35) | 0x80) & 0xff)
-        ret.append(((x >> 42) | 0x80) & 0xff)
-        ret.append(((x >> 49) | 0x80) & 0xff)
-        ret.append((x >> 56) & 0x7f)
+    if (x & 0xFFFFFFFFFFFFFF80) == 0:
+        ret.append(x & 0x7F)
+    elif (x & 0xFFFFFFFFFFFFC000) == 0:
+        ret.append((x | 0x80) & 0xFF)
+        ret.append((x >> 7) & 0x7F)
+    elif (x & 0xFFFFFFFFFFE00000) == 0:
+        ret.append((x | 0x80) & 0xFF)
+        ret.append(((x >> 7) | 0x80) & 0xFF)
+        ret.append((x >> 14) & 0x7F)
+    elif (x & 0xFFFFFFFFF0000000) == 0:
+        ret.append((x | 0x80) & 0xFF)
+        ret.append(((x >> 7) | 0x80) & 0xFF)
+        ret.append(((x >> 14) | 0x80) & 0xFF)
+        ret.append((x >> 21) & 0x7F)
+    elif (x & 0xFFFFFFF800000000) == 0:
+        ret.append((x | 0x80) & 0xFF)
+        ret.append(((x >> 7) | 0x80) & 0xFF)
+        ret.append(((x >> 14) | 0x80) & 0xFF)
+        ret.append(((x >> 21) | 0x80) & 0xFF)
+        ret.append((x >> 28) & 0x7F)
+    elif (x & 0xFFFFFC0000000000) == 0:
+        ret.append((x | 0x80) & 0xFF)
+        ret.append(((x >> 7) | 0x80) & 0xFF)
+        ret.append(((x >> 14) | 0x80) & 0xFF)
+        ret.append(((x >> 21) | 0x80) & 0xFF)
+        ret.append(((x >> 28) | 0x80) & 0xFF)
+        ret.append((x >> 35) & 0x7F)
+    elif (x & 0xFFFE000000000000) == 0:
+        ret.append((x | 0x80) & 0xFF)
+        ret.append(((x >> 7) | 0x80) & 0xFF)
+        ret.append(((x >> 14) | 0x80) & 0xFF)
+        ret.append(((x >> 21) | 0x80) & 0xFF)
+        ret.append(((x >> 28) | 0x80) & 0xFF)
+        ret.append(((x >> 35) | 0x80) & 0xFF)
+        ret.append((x >> 42) & 0x7F)
+    elif (x & 0xFF00000000000000) == 0:
+        ret.append((x | 0x80) & 0xFF)
+        ret.append(((x >> 7) | 0x80) & 0xFF)
+        ret.append(((x >> 14) | 0x80) & 0xFF)
+        ret.append(((x >> 21) | 0x80) & 0xFF)
+        ret.append(((x >> 28) | 0x80) & 0xFF)
+        ret.append(((x >> 35) | 0x80) & 0xFF)
+        ret.append(((x >> 42) | 0x80) & 0xFF)
+        ret.append((x >> 49) & 0x7F)
+    elif (x & 0x8000000000000000) == 0:
+        ret.append((x | 0x80) & 0xFF)
+        ret.append(((x >> 7) | 0x80) & 0xFF)
+        ret.append(((x >> 14) | 0x80) & 0xFF)
+        ret.append(((x >> 21) | 0x80) & 0xFF)
+        ret.append(((x >> 28) | 0x80) & 0xFF)
+        ret.append(((x >> 35) | 0x80) & 0xFF)
+        ret.append(((x >> 42) | 0x80) & 0xFF)
+        ret.append(((x >> 49) | 0x80) & 0xFF)
+        ret.append((x >> 56) & 0x7F)
     else:
-        ret.append((x | 0x80) & 0xff)
-        ret.append(((x >> 7) | 0x80) & 0xff)
-        ret.append(((x >> 14) | 0x80) & 0xff)
-        ret.append(((x >> 21) | 0x80) & 0xff)
-        ret.append(((x >> 28) | 0x80) & 0xff)
-        ret.append(((x >> 35) | 0x80) & 0xff)
-        ret.append(((x >> 42) | 0x80) & 0xff)
-        ret.append(((x >> 49) | 0x80) & 0xff)
-        ret.append(((x >> 56) | 0x80) & 0xff)
-        ret.append((x >> 63) & 0x7f)
+        ret.append((x | 0x80) & 0xFF)
+        ret.append(((x >> 7) | 0x80) & 0xFF)
+        ret.append(((x >> 14) | 0x80) & 0xFF)
+        ret.append(((x >> 21) | 0x80) & 0xFF)
+        ret.append(((x >> 28) | 0x80) & 0xFF)
+        ret.append(((x >> 35) | 0x80) & 0xFF)
+        ret.append(((x >> 42) | 0x80) & 0xFF)
+        ret.append(((x >> 49) | 0x80) & 0xFF)
+        ret.append(((x >> 56) | 0x80) & 0xFF)
+        ret.append((x >> 63) & 0x7F)
     return ret
+
 
 # 4-byte signed little endian
 def int32(x):
     ret = []
-    ret.append(x & 0xff)
-    ret.append((x >> 8) & 0xff)
-    ret.append((x >> 16) & 0xff)
-    ret.append((x >> 24) & 0xff)
+    ret.append(x & 0xFF)
+    ret.append((x >> 8) & 0xFF)
+    ret.append((x >> 16) & 0xFF)
+    ret.append((x >> 24) & 0xFF)
     return ret
+
 
 # 2-byte signed little endian
 def int16(x):
     ret = []
-    ret.append(x & 0xff)
-    ret.append((x >> 8) & 0xff)
+    ret.append(x & 0xFF)
+    ret.append((x >> 8) & 0xFF)
     return ret
+
 
 # a packed32 length followed by the specified number of characters
 def stringList(x):
@@ -332,11 +361,13 @@ def stringList(x):
         ret.append(i)
     return ret
 
+
 def utf8StringList(x):
     ret = []
     for i in x:
         ret.append(ord(i))
     return ret
+
 
 # packed64 time value in nanoseconds relative to the uptime from the
 # Summary message.
@@ -349,13 +380,16 @@ def timestampList(x):
 # Write binary
 ############################################################
 
+
 def writeBinary(outfile, binary_list):
     for i in binary_list:
         outfile.write("%c" % i)
 
+
 ############################################################
 # APC Protocol Frame Types
 ############################################################
+
 
 def addFrameHeader(frame_type, body, core):
     ret = []
@@ -405,10 +439,12 @@ def summaryFrame(timestamp, uptime):
     ret = addFrameHeader(frame_type, body, 0)
     return ret
 
+
 # Backtrace frame
 #  - not implemented yet
 def backtraceFrame():
     pass
+
 
 # Cookie name message
 #  - cookie: packed32
@@ -420,6 +456,7 @@ def cookieNameFrame(cookie, name):
     ret = addFrameHeader(frame_type, body, 0)
     return ret
 
+
 # Thread name message
 #  - timestamp: timestamp
 #  - thread id: packed32
@@ -427,10 +464,15 @@ def cookieNameFrame(cookie, name):
 def threadNameFrame(timestamp, thread_id, name):
     frame_type = "Name"
     packed_code = packed32(2)
-    body = packed_code + timestampList(timestamp) + \
-            packed32(thread_id) + stringList(name)
+    body = (
+        packed_code
+        + timestampList(timestamp)
+        + packed32(thread_id)
+        + stringList(name)
+    )
     ret = addFrameHeader(frame_type, body, 0)
     return ret
+
 
 # Core name message
 #  - name: string
@@ -443,6 +485,7 @@ def coreNameFrame(name, core_id, cpuid):
     ret = addFrameHeader(frame_type, body, 0)
     return ret
 
+
 # IRQ Cookie name message
 #  - cookie: packed32
 #  - name: string
@@ -454,6 +497,7 @@ def irqCookieNameFrame(cookie, name, irq):
     ret = addFrameHeader(frame_type, body, 0)
     return ret
 
+
 # Counter frame message
 #  - timestamp: timestamp
 #  - core: packed32
@@ -461,10 +505,15 @@ def irqCookieNameFrame(cookie, name, irq):
 #  - value: packed64
 def counterFrame(timestamp, core, key, value):
     frame_type = "Counter"
-    body = timestampList(timestamp) + packed32(core) + packed32(key) + \
-            packed64(value)
+    body = (
+        timestampList(timestamp)
+        + packed32(core)
+        + packed32(key)
+        + packed64(value)
+    )
     ret = addFrameHeader(frame_type, body, core)
     return ret
+
 
 # Block Counter frame message
 #  - key: packed32
@@ -475,6 +524,7 @@ def blockCounterFrame(core, key, value):
     ret = addFrameHeader(frame_type, body, core)
     return ret
 
+
 # Annotate frame messages
 #  - core: packed32
 #  - tid: packed32
@@ -483,10 +533,16 @@ def blockCounterFrame(core, key, value):
 #  - body
 def annotateFrame(core, tid, timestamp, size, userspace_body):
     frame_type = "Annotate"
-    body = packed32(core) + packed32(tid) + timestampList(timestamp) + \
-            packed32(size) + userspace_body
+    body = (
+        packed32(core)
+        + packed32(tid)
+        + timestampList(timestamp)
+        + packed32(size)
+        + userspace_body
+    )
     ret = addFrameHeader(frame_type, body, core)
     return ret
+
 
 # Scheduler Trace frame messages
 # Sched Switch
@@ -498,10 +554,17 @@ def annotateFrame(core, tid, timestamp, size, userspace_body):
 #  - state: packed32
 def schedSwitchFrame(core, timestamp, pid, tid, cookie, state):
     frame_type = "Sched Trace"
-    body = packed32(1) + timestampList(timestamp) + packed32(pid) + \
-            packed32(tid) + packed32(cookie) + packed32(state)
+    body = (
+        packed32(1)
+        + timestampList(timestamp)
+        + packed32(pid)
+        + packed32(tid)
+        + packed32(cookie)
+        + packed32(state)
+    )
     ret = addFrameHeader(frame_type, body, core)
     return ret
+
 
 # Sched Thread Exit
 #  - Code: 2
@@ -513,10 +576,12 @@ def schedThreadExitFrame(core, timestamp, pid, tid, cookie, state):
     ret = addFrameHeader(frame_type, body, core)
     return ret
 
+
 # GPU Trace frame messages
 #  - Not implemented yet
 def gpuTraceFrame():
     pass
+
 
 # Idle frame messages
 # Enter Idle
@@ -528,6 +593,7 @@ def enterIdleFrame(timestamp, core):
     body = packed32(1) + timestampList(timestamp) + packed32(core)
     ret = addFrameHeader(frame_type, body, core)
     return ret
+
 
 # Exit Idle
 #  - code: 2
@@ -557,7 +623,7 @@ def parseProcessInfo(task_file):
     for cpu in range(num_cpus):
         event_list.append([])
 
-    uid = 1 # uid 0 is reserved for idle
+    uid = 1  # uid 0 is reserved for idle
 
     # Dummy Tasks for frame buffers and system diagrams
     process = Task(uid, 9999, 9999, "framebuffer", True, 0)
@@ -579,16 +645,18 @@ def parseProcessInfo(task_file):
 
     try:
         if ext == ".gz":
-            process_file = gzip.open(task_file, 'rb')
+            process_file = gzip.open(task_file, "rb")
         else:
-            process_file = open(task_file, 'rb')
+            process_file = open(task_file, "rb")
     except:
         print("ERROR opening task file:", task_file)
         print("Make sure context switch task dumping is enabled in gem5.")
         sys.exit(1)
 
-    process_re = re.compile("tick=(\d+)\s+(\d+)\s+cpu_id=(\d+)\s+" +
-        "next_pid=([-\d]+)\s+next_tgid=([-\d]+)\s+next_task=(.*)")
+    process_re = re.compile(
+        "tick=(\d+)\s+(\d+)\s+cpu_id=(\d+)\s+"
+        + "next_pid=([-\d]+)\s+next_tgid=([-\d]+)\s+next_task=(.*)"
+    )
 
     task_name_failure_warned = False
 
@@ -596,7 +664,7 @@ def parseProcessInfo(task_file):
         match = re.match(process_re, line)
         if match:
             tick = int(match.group(1))
-            if (start_tick < 0):
+            if start_tick < 0:
                 start_tick = tick
             cpu_id = int(match.group(3))
             pid = int(match.group(4))
@@ -607,7 +675,9 @@ def parseProcessInfo(task_file):
                 if task_name == "FailureIn_curTaskName":
                     print("-------------------------------------------------")
                     print("WARNING: Task name not set correctly!")
-                    print("Process/Thread info will not be displayed correctly")
+                    print(
+                        "Process/Thread info will not be displayed correctly"
+                    )
                     print("Perhaps forgot to apply m5struct.patch to kernel?")
                     print("-------------------------------------------------")
                     task_name_failure_warned = True
@@ -629,8 +699,10 @@ def parseProcessInfo(task_file):
                         idle_uid = 0
                     else:
                         # parent process name not known yet
-                        process = Task(uid, tgid, tgid, "_Unknown_", True, tick)
-                if tgid == -1: # kernel
+                        process = Task(
+                            uid, tgid, tgid, "_Unknown_", True, tick
+                        )
+                if tgid == -1:  # kernel
                     kernel_uid = 0
                 uid += 1
                 process_dict[tgid] = process
@@ -639,16 +711,27 @@ def parseProcessInfo(task_file):
                 if tgid == pid:
                     if process_dict[tgid].task_name == "_Unknown_":
                         if args.verbose:
-                            print("new process", \
-                                process_dict[tgid].uid, pid, tgid, task_name)
+                            print(
+                                "new process",
+                                process_dict[tgid].uid,
+                                pid,
+                                tgid,
+                                task_name,
+                            )
                         process_dict[tgid].task_name = task_name
                     if process_dict[tgid].task_name != task_name and tgid != 0:
                         process_dict[tgid].task_name = task_name
 
             if not pid in thread_dict:
                 if args.verbose:
-                    print("new thread", \
-                       uid, process_dict[tgid].uid, pid, tgid, task_name)
+                    print(
+                        "new thread",
+                        uid,
+                        process_dict[tgid].uid,
+                        pid,
+                        tgid,
+                        task_name,
+                    )
                 thread = Task(uid, pid, tgid, task_name, False, tick)
                 uid += 1
                 thread_dict[pid] = thread
@@ -671,15 +754,26 @@ def parseProcessInfo(task_file):
     print("Found %d events." % len(unified_event_list))
 
     for process in process_list:
-        if process.pid > 9990: # fix up framebuffer ticks
+        if process.pid > 9990:  # fix up framebuffer ticks
             process.tick = start_tick
-        print(process.uid, process.pid, process.tgid, \
-            process.task_name, str(process.tick))
+        print(
+            process.uid,
+            process.pid,
+            process.tgid,
+            process.task_name,
+            str(process.tick),
+        )
         for thread in process.children:
             if thread.pid > 9990:
                 thread.tick = start_tick
-            print("\t", thread.uid, thread.pid, thread.tgid, \
-                thread.task_name, str(thread.tick))
+            print(
+                "\t",
+                thread.uid,
+                thread.pid,
+                thread.tgid,
+                thread.task_name,
+                str(thread.tick),
+            )
 
     end_tick = tick
 
@@ -694,12 +788,14 @@ def initOutput(output_path):
     if not os.path.exists(output_path):
         os.mkdir(output_path)
 
+
 def ticksToNs(tick):
     if ticks_in_ns < 0:
         print("ticks_in_ns not set properly!")
         sys.exit(1)
 
     return tick / ticks_in_ns
+
 
 def writeXmlFile(xml, filename):
     f = open(filename, "w")
@@ -765,18 +861,23 @@ class StatsEntry(object):
                 self.per_cpu_name.append(per_cpu_name)
                 print("\t", per_cpu_name)
 
-                self.per_cpu_regex_string.\
-                    append("^" + per_cpu_name + "\s+[\d\.]+")
-                self.per_cpu_regex.append(re.compile("^" + per_cpu_name + \
-                    "\s+([\d\.e\-]+)\s+# (.*)$", re.M))
+                self.per_cpu_regex_string.append(
+                    "^" + per_cpu_name + "\s+[\d\.]+"
+                )
+                self.per_cpu_regex.append(
+                    re.compile(
+                        "^" + per_cpu_name + "\s+([\d\.e\-]+)\s+# (.*)$", re.M
+                    )
+                )
                 self.values.append([])
                 self.per_cpu_found.append(False)
 
-    def append_value(self, val, per_cpu_index = None):
+    def append_value(self, val, per_cpu_index=None):
         if self.per_cpu:
             self.values[per_cpu_index].append(str(val))
         else:
             self.values.append(str(val))
+
 
 # Global stats object that contains the list of stats entries
 # and other utility functions
@@ -788,13 +889,14 @@ class Stats(object):
 
     def register(self, name, group, group_index, per_cpu):
         print("registering stat:", name, "group:", group, group_index)
-        self.stats_list.append(StatsEntry(name, group, group_index, per_cpu, \
-            self.next_key))
+        self.stats_list.append(
+            StatsEntry(name, group, group_index, per_cpu, self.next_key)
+        )
         self.next_key += 1
 
     # Union of all stats to accelerate parsing speed
     def createStatsRegex(self):
-        regex_strings = [];
+        regex_strings = []
         print("\nnum entries in stats_list", len(self.stats_list))
         for entry in self.stats_list:
             if entry.per_cpu:
@@ -803,7 +905,7 @@ class Stats(object):
             else:
                 regex_strings.append(entry.regex_string)
 
-        self.regex = re.compile('|'.join(regex_strings))
+        self.regex = re.compile("|".join(regex_strings))
 
 
 def registerStats(config_file):
@@ -821,19 +923,19 @@ def registerStats(config_file):
 
     stats = Stats()
 
-    per_cpu_stat_groups = config.options('PER_CPU_STATS')
+    per_cpu_stat_groups = config.options("PER_CPU_STATS")
     for group in per_cpu_stat_groups:
         i = 0
-        per_cpu_stats_list = config.get('PER_CPU_STATS', group).split('\n')
+        per_cpu_stats_list = config.get("PER_CPU_STATS", group).split("\n")
         for item in per_cpu_stats_list:
             if item:
                 stats.register(item, group, i, True)
                 i += 1
 
-    per_l2_stat_groups = config.options('PER_L2_STATS')
+    per_l2_stat_groups = config.options("PER_L2_STATS")
     for group in per_l2_stat_groups:
         i = 0
-        per_l2_stats_list = config.get('PER_L2_STATS', group).split('\n')
+        per_l2_stats_list = config.get("PER_L2_STATS", group).split("\n")
         for item in per_l2_stats_list:
             if item:
                 for l2 in range(num_l2):
@@ -844,10 +946,10 @@ def registerStats(config_file):
                     stats.register(name, group, i, False)
                 i += 1
 
-    other_stat_groups = config.options('OTHER_STATS')
+    other_stat_groups = config.options("OTHER_STATS")
     for group in other_stat_groups:
         i = 0
-        other_stats_list = config.get('OTHER_STATS', group).split('\n')
+        other_stats_list = config.get("OTHER_STATS", group).split("\n")
         for item in other_stats_list:
             if item:
                 stats.register(item, group, i, False)
@@ -856,6 +958,7 @@ def registerStats(config_file):
     stats.createStatsRegex()
 
     return stats
+
 
 # Parse and read in gem5 stats file
 # Streamline counters are organized per CPU
@@ -866,10 +969,12 @@ def readGem5Stats(stats, gem5_stats_file):
     print("===============================\n")
     ext = os.path.splitext(gem5_stats_file)[1]
 
-    window_start_regex = \
-        re.compile("^---------- Begin Simulation Statistics ----------")
-    window_end_regex = \
-        re.compile("^---------- End Simulation Statistics   ----------")
+    window_start_regex = re.compile(
+        "^---------- Begin Simulation Statistics ----------"
+    )
+    window_end_regex = re.compile(
+        "^---------- End Simulation Statistics   ----------"
+    )
     final_tick_regex = re.compile("^final_tick\s+(\d+)")
 
     global ticks_in_ns
@@ -888,7 +993,7 @@ def readGem5Stats(stats, gem5_stats_file):
     stats_not_found_list = stats.stats_list[:]
     window_num = 0
 
-    while (True):
+    while True:
         error = False
         try:
             line = f.readline()
@@ -904,10 +1009,12 @@ def readGem5Stats(stats, gem5_stats_file):
         if sim_freq < 0:
             m = sim_freq_regex.match(line)
             if m:
-                sim_freq = int(m.group(1)) # ticks in 1 sec
+                sim_freq = int(m.group(1))  # ticks in 1 sec
                 ticks_in_ns = int(sim_freq / 1e9)
-                print("Simulation frequency found! 1 tick == %e sec\n" \
-                        % (1.0 / sim_freq))
+                print(
+                    "Simulation frequency found! 1 tick == %e sec\n"
+                    % (1.0 / sim_freq)
+                )
 
         # Final tick in gem5 stats: current absolute timestamp
         m = final_tick_regex.match(line)
@@ -917,8 +1024,7 @@ def readGem5Stats(stats, gem5_stats_file):
                 break
             stats.tick_list.append(tick)
 
-
-        if (window_end_regex.match(line) or error):
+        if window_end_regex.match(line) or error:
             if args.verbose:
                 print("new window")
             for stat in stats.stats_list:
@@ -926,18 +1032,28 @@ def readGem5Stats(stats, gem5_stats_file):
                     for i in range(num_cpus):
                         if not stat.per_cpu_found[i]:
                             if not stat.not_found_at_least_once:
-                                print("WARNING: stat not found in window #", \
-                                    window_num, ":", stat.per_cpu_name[i])
-                                print("suppressing further warnings for " + \
-                                    "this stat")
+                                print(
+                                    "WARNING: stat not found in window #",
+                                    window_num,
+                                    ":",
+                                    stat.per_cpu_name[i],
+                                )
+                                print(
+                                    "suppressing further warnings for "
+                                    + "this stat"
+                                )
                                 stat.not_found_at_least_once = True
                             stat.values[i].append(str(0))
                         stat.per_cpu_found[i] = False
                 else:
                     if not stat.found:
                         if not stat.not_found_at_least_once:
-                            print("WARNING: stat not found in window #", \
-                                window_num, ":", stat.name)
+                            print(
+                                "WARNING: stat not found in window #",
+                                window_num,
+                                ":",
+                                stat.name,
+                            )
                             print("suppressing further warnings for this stat")
                             stat.not_found_at_least_once = True
                         stat.values.append(str(0))
@@ -1043,6 +1159,7 @@ def doCapturedXML(output_path, stats):
 
     writeXmlFile(xml, captured_file)
 
+
 # Writes out Streamline cookies (unique IDs per process/thread)
 def writeCookiesThreads(blob):
     thread_list = []
@@ -1056,12 +1173,22 @@ def writeCookiesThreads(blob):
             thread_list.append(thread)
 
     # Threads need to be sorted in timestamp order
-    thread_list.sort(key = lambda x: x.tick)
+    thread_list.sort(key=lambda x: x.tick)
     for thread in thread_list:
-        print("thread", thread.task_name, (ticksToNs(thread.tick)),\
-                thread.tgid, thread.pid)
-        writeBinary(blob, threadNameFrame(ticksToNs(thread.tick),\
-                thread.pid, thread.task_name))
+        print(
+            "thread",
+            thread.task_name,
+            (ticksToNs(thread.tick)),
+            thread.tgid,
+            thread.pid,
+        )
+        writeBinary(
+            blob,
+            threadNameFrame(
+                ticksToNs(thread.tick), thread.pid, thread.task_name
+            ),
+        )
+
 
 # Writes context switch info as Streamline scheduling events
 def writeSchedEvents(blob):
@@ -1086,8 +1213,10 @@ def writeSchedEvents(blob):
             if args.verbose:
                 print(cpu, timestamp, pid, tid, cookie)
 
-            writeBinary(blob,\
-                schedSwitchFrame(cpu, timestamp, pid, tid, cookie, state))
+            writeBinary(
+                blob, schedSwitchFrame(cpu, timestamp, pid, tid, cookie, state)
+            )
+
 
 # Writes selected gem5 statistics as Streamline counters
 def writeCounters(blob, stats):
@@ -1107,11 +1236,26 @@ def writeCounters(blob, stats):
         for stat in stats.stats_list:
             if stat.per_cpu:
                 for i in range(num_cpus):
-                    writeBinary(blob, counterFrame(timestamp_list[n], i, \
-                                    stat.key, int(float(stat.values[i][n]))))
+                    writeBinary(
+                        blob,
+                        counterFrame(
+                            timestamp_list[n],
+                            i,
+                            stat.key,
+                            int(float(stat.values[i][n])),
+                        ),
+                    )
             else:
-                writeBinary(blob, counterFrame(timestamp_list[n], 0, \
-                                    stat.key, int(float(stat.values[n]))))
+                writeBinary(
+                    blob,
+                    counterFrame(
+                        timestamp_list[n],
+                        0,
+                        stat.key,
+                        int(float(stat.values[n])),
+                    ),
+                )
+
 
 # Streamline can display LCD frame buffer dumps (gzipped bmp)
 # This function converts the frame buffer dumps to the Streamline format
@@ -1143,8 +1287,8 @@ def writeVisualAnnotations(blob, input_path, output_path):
             frame_count += 1
 
             userspace_body = []
-            userspace_body += packed32(0x1C) # escape code
-            userspace_body += packed32(0x04) # visual code
+            userspace_body += packed32(0x1C)  # escape code
+            userspace_body += packed32(0x04)  # visual code
 
             text_annotation = "image_" + str(ticksToNs(tick)) + ".bmp.gz"
             userspace_body += int16(len(text_annotation))
@@ -1160,8 +1304,16 @@ def writeVisualAnnotations(blob, input_path, output_path):
             userspace_body += int32(len(bytes_read))
             userspace_body += bytes_read
 
-            writeBinary(blob, annotateFrame(0, annotate_pid, ticksToNs(tick), \
-                                len(userspace_body), userspace_body))
+            writeBinary(
+                blob,
+                annotateFrame(
+                    0,
+                    annotate_pid,
+                    ticksToNs(tick),
+                    len(userspace_body),
+                    userspace_body,
+                ),
+            )
 
     print("\nfound", frame_count, "frames for visual annotation.\n")
 
@@ -1190,7 +1342,6 @@ def createApcProject(input_path, output_path, stats):
     doCapturedXML(output_path, stats)
 
     blob.close()
-
 
 
 #######################
@@ -1226,10 +1377,13 @@ stats = registerStats(stat_config_file)
 # Parse gem5 stats
 ####
 # Check if both stats.txt and stats.txt.gz exist and warn if both exist
-if os.path.exists(input_path + "/stats.txt") and \
-    os.path.exists(input_path + "/stats.txt.gz"):
-    print("WARNING: Both stats.txt.gz and stats.txt exist. \
-            Using stats.txt.gz by default.")
+if os.path.exists(input_path + "/stats.txt") and os.path.exists(
+    input_path + "/stats.txt.gz"
+):
+    print(
+        "WARNING: Both stats.txt.gz and stats.txt exist. \
+            Using stats.txt.gz by default."
+    )
 
 gem5_stats_file = input_path + "/stats.txt.gz"
 if not os.path.exists(gem5_stats_file):

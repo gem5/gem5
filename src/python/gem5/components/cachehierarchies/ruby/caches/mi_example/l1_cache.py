@@ -29,11 +29,7 @@ from .....processors.abstract_core import AbstractCore
 from ......isas import ISA
 from ..abstract_l1_cache import AbstractL1Cache
 
-from m5.objects import (
-    MessageBuffer,
-    RubyCache,
-    ClockDomain,
-)
+from m5.objects import MessageBuffer, RubyCache, ClockDomain
 
 
 class L1Cache(AbstractL1Cache):

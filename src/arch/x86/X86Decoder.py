@@ -25,7 +25,8 @@
 
 from m5.objects.InstDecoder import InstDecoder
 
+
 class X86Decoder(InstDecoder):
-    type = 'X86Decoder'
-    cxx_class = 'gem5::X86ISA::Decoder'
+    type = "X86Decoder"
+    cxx_class = "gem5::X86ISA::Decoder"
     cxx_header = "arch/x86/decoder.hh"

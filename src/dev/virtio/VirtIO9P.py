@@ -39,35 +39,38 @@ from m5.params import *
 from m5.proxy import *
 from m5.objects.VirtIO import VirtIODeviceBase
 
+
 class VirtIO9PBase(VirtIODeviceBase):
-    type = 'VirtIO9PBase'
+    type = "VirtIO9PBase"
     abstract = True
-    cxx_header = 'dev/virtio/fs9p.hh'
-    cxx_class = 'gem5::VirtIO9PBase'
+    cxx_header = "dev/virtio/fs9p.hh"
+    cxx_class = "gem5::VirtIO9PBase"
 
     queueSize = Param.Unsigned(32, "Output queue size (pages)")
     tag = Param.String("gem5", "Mount tag")
 
 
 class VirtIO9PProxy(VirtIO9PBase):
-    type = 'VirtIO9PProxy'
+    type = "VirtIO9PProxy"
     abstract = True
-    cxx_header = 'dev/virtio/fs9p.hh'
-    cxx_class = 'gem5::VirtIO9PProxy'
+    cxx_header = "dev/virtio/fs9p.hh"
+    cxx_class = "gem5::VirtIO9PProxy"
+
 
 class VirtIO9PDiod(VirtIO9PProxy):
-    type = 'VirtIO9PDiod'
-    cxx_header = 'dev/virtio/fs9p.hh'
-    cxx_class = 'gem5::VirtIO9PDiod'
+    type = "VirtIO9PDiod"
+    cxx_header = "dev/virtio/fs9p.hh"
+    cxx_class = "gem5::VirtIO9PDiod"
 
     diod = Param.String("diod", "Path to diod, optionally in PATH")
     root = Param.String("Path to export through diod")
     socketPath = Param.String("Unused socket to diod")
 
+
 class VirtIO9PSocket(VirtIO9PProxy):
-    type = 'VirtIO9PSocket'
-    cxx_header = 'dev/virtio/fs9p.hh'
-    cxx_class = 'gem5::VirtIO9PSocket'
+    type = "VirtIO9PSocket"
+    cxx_header = "dev/virtio/fs9p.hh"
+    cxx_class = "gem5::VirtIO9PSocket"
 
     server = Param.String("127.0.0.1", "9P server address or host name")
     port = Param.String("564", "9P server port")

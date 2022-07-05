@@ -42,6 +42,7 @@ import subprocess
 from .region import *
 from .style import modified_regions
 
+
 class AbstractRepo(object, metaclass=ABCMeta):
     def file_path(self, fname):
         """Get the absolute path to a file relative within the repository. The
@@ -107,6 +108,7 @@ class AbstractRepo(object, metaclass=ABCMeta):
         """
         pass
 
+
 class GitRepo(AbstractRepo):
     def __init__(self):
         self.git = "git"
@@ -115,9 +117,13 @@ class GitRepo(AbstractRepo):
 
     def repo_base(self):
         if self._repo_base is None:
-            self._repo_base = subprocess.check_output(
-                [ self.git, "rev-parse", "--show-toplevel" ]) \
-                .decode().rstrip("\n")
+            self._repo_base = (
+                subprocess.check_output(
+                    [self.git, "rev-parse", "--show-toplevel"]
+                )
+                .decode()
+                .rstrip("\n")
+            )
 
         return self._repo_base
 
@@ -133,7 +139,7 @@ class GitRepo(AbstractRepo):
         return added, modified
 
     def staged_regions(self, fname, context=0):
-        if self.file_status(fname, cached=True) in ("", "A", ):
+        if self.file_status(fname, cached=True) in ("", "A"):
             return all_regions
 
         old = self.file_from_head(self.repo_path(fname)).split("\n")
@@ -142,7 +148,7 @@ class GitRepo(AbstractRepo):
         return modified_regions(old, new, context=context)
 
     def modified_regions(self, fname, context=0):
-        if self.file_status(fname) in ("", "A", ):
+        if self.file_status(fname) in ("", "A"):
             return all_regions
 
         old = self.file_from_head(self.repo_path(fname)).split("\n")
@@ -150,15 +156,19 @@ class GitRepo(AbstractRepo):
 
         return modified_regions(old, new, context=context)
 
-
     def head_revision(self):
         if self._head_revision is not None:
             return self._head_revision
 
         try:
-            self._head_revision = subprocess.check_output(
-                [ self.git, "rev-parse", "--verify", "HEAD" ],
-                stderr=subprocess.PIPE).decode().rstrip("\n")
+            self._head_revision = (
+                subprocess.check_output(
+                    [self.git, "rev-parse", "--verify", "HEAD"],
+                    stderr=subprocess.PIPE,
+                )
+                .decode()
+                .rstrip("\n")
+            )
         except subprocess.CalledProcessError:
             # Assume that the repo is empty and use the semi-magic
             # empty tree revision if git rev-parse returned an error.
@@ -178,27 +188,29 @@ class GitRepo(AbstractRepo):
             return ""
 
     def status(self, filter=None, files=[], cached=False):
-        cmd = [ self.git, "diff-index", "--name-status" ]
+        cmd = [self.git, "diff-index", "--name-status"]
         if cached:
             cmd.append("--cached")
         if filter:
-            cmd += [ "--diff-filter=%s" % filter ]
-        cmd += [ self.head_revision(), "--" ] + files
-        status = subprocess.check_output(cmd).decode('utf-8').rstrip("\n")
+            cmd += ["--diff-filter=%s" % filter]
+        cmd += [self.head_revision(), "--"] + files
+        status = subprocess.check_output(cmd).decode("utf-8").rstrip("\n")
 
         if status:
-            return [ f.split("\t") for f in status.split("\n") ]
+            return [f.split("\t") for f in status.split("\n")]
         else:
             return []
 
     def file_from_index(self, name):
         return subprocess.check_output(
-            [ self.git, "show", ":%s" % (name, ) ]).decode('utf-8')
+            [self.git, "show", ":%s" % (name,)]
+        ).decode("utf-8")
 
     def file_from_head(self, name):
         return subprocess.check_output(
-            [ self.git, "show", "%s:%s" % (self.head_revision(), name) ]) \
-            .decode('utf-8')
+            [self.git, "show", "%s:%s" % (self.head_revision(), name)]
+        ).decode("utf-8")
+
 
 def detect_repo(path="."):
     """Auto-detect the revision control system used for a source code
@@ -211,9 +223,7 @@ def detect_repo(path="."):
 
     """
 
-    _repo_types = (
-        (".git", GitRepo),
-    )
+    _repo_types = ((".git", GitRepo),)
 
     repo_types = []
     for repo_dir, repo_class in _repo_types:

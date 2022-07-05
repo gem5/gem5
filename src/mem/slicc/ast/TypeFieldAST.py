@@ -27,6 +27,7 @@
 
 from slicc.ast.AST import AST
 
+
 class TypeFieldAST(AST):
     def __init__(self, slicc, pairs):
         super().__init__(slicc, pairs)

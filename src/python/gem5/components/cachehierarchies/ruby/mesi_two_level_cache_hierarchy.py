@@ -38,12 +38,7 @@ from .caches.mesi_two_level.l2_cache import L2Cache
 from .caches.mesi_two_level.directory import Directory
 from .caches.mesi_two_level.dma_controller import DMAController
 
-from m5.objects import (
-    RubySystem,
-    RubySequencer,
-    DMASequencer,
-    RubyPortProxy,
-)
+from m5.objects import RubySystem, RubySequencer, DMASequencer, RubyPortProxy
 
 
 class MESITwoLevelCacheHierarchy(
@@ -110,9 +105,7 @@ class MESITwoLevelCacheHierarchy(
             )
 
             cache.sequencer = RubySequencer(
-                version=i,
-                dcache=cache.L1Dcache,
-                clk_domain=cache.clk_domain,
+                version=i, dcache=cache.L1Dcache, clk_domain=cache.clk_domain
             )
 
             if board.has_io_bus():

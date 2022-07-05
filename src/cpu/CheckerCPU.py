@@ -29,17 +29,21 @@ from m5.params import *
 from m5.objects.BaseCPU import BaseCPU
 from m5.SimObject import SimObject
 
+
 class CheckerCPU(BaseCPU):
-    type = 'CheckerCPU'
+    type = "CheckerCPU"
     abstract = True
     cxx_header = "cpu/checker/cpu.hh"
-    cxx_class = 'gem5::CheckerCPU'
+    cxx_class = "gem5::CheckerCPU"
 
     exitOnError = Param.Bool(False, "Exit on an error")
-    updateOnError = Param.Bool(False,
-        "Update the checker with the main CPU's state on an error")
-    warnOnlyOnLoadError = Param.Bool(True,
-        "If a load result is incorrect, only print a warning and do not exit")
+    updateOnError = Param.Bool(
+        False, "Update the checker with the main CPU's state on an error"
+    )
+    warnOnlyOnLoadError = Param.Bool(
+        True,
+        "If a load result is incorrect, only print a warning and do not exit",
+    )
 
     def generateDeviceTree(self, state):
         # The CheckerCPU is not a real CPU and shouldn't generate a DTB

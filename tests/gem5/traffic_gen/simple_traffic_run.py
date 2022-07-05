@@ -70,9 +70,7 @@ def generator_factory(
         from gem5.components.processors.gups_generator import GUPSGenerator
 
         table_size = f"{int(mem_size / 2)}B"
-        return GUPSGenerator(
-            0, table_size, update_limit=1000, clk_freq="2GHz"
-        )
+        return GUPSGenerator(0, table_size, update_limit=1000, clk_freq="2GHz")
     elif generator_class == "GUPSGeneratorEP":
         from gem5.components.processors.gups_generator_ep import (
             GUPSGeneratorEP,
@@ -102,15 +100,13 @@ def cache_factory(cache_class: str):
 
         return NoCache()
     elif cache_class == "PrivateL1":
-        from gem5.components.cachehierarchies\
-            .classic.private_l1_cache_hierarchy import (
+        from gem5.components.cachehierarchies.classic.private_l1_cache_hierarchy import (
             PrivateL1CacheHierarchy,
         )
 
         return PrivateL1CacheHierarchy(l1d_size="32KiB", l1i_size="32KiB")
     elif cache_class == "PrivateL1PrivateL2":
-        from gem5.components.cachehierarchies\
-            .classic.private_l1_private_l2_cache_hierarchy import (
+        from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
             PrivateL1PrivateL2CacheHierarchy,
         )
 
@@ -118,8 +114,7 @@ def cache_factory(cache_class: str):
             l1d_size="32KiB", l1i_size="32KiB", l2_size="256KiB"
         )
     elif cache_class == "MESITwoLevel":
-        from gem5.components.cachehierarchies\
-            .ruby.mesi_two_level_cache_hierarchy import (
+        from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
             MESITwoLevelCacheHierarchy,
         )
 
@@ -166,9 +161,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "mem_module",
-    type=str,
-    help="The python module to import for memory.",
+    "mem_module", type=str, help="The python module to import for memory."
 )
 
 parser.add_argument(

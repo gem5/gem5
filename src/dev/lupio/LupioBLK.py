@@ -29,15 +29,15 @@ from m5.objects.Device import DmaDevice
 from m5.params import Param
 from m5.proxy import Parent
 
+
 class LupioBLK(DmaDevice):
 
-    type = 'LupioBLK'
-    cxx_class='gem5::LupioBLK'
-    cxx_header = 'dev/lupio/lupio_blk.hh'
+    type = "LupioBLK"
+    cxx_class = "gem5::LupioBLK"
+    cxx_header = "dev/lupio/lupio_blk.hh"
     pio_size = Param.Addr(0x1000, "PIO Size")
     image = Param.DiskImage("Disk image")
     pio_addr = Param.Addr("Device Address")
-    latency = Param.Latency('0ns', "DMA Device Latency")
-    platform = Param.Platform(Parent.any,
-                              "Platform this device is part of.")
+    latency = Param.Latency("0ns", "DMA Device Latency")
+    platform = Param.Platform(Parent.any, "Platform this device is part of.")
     int_id = Param.Int("Interrupt ID for the PIC to use")

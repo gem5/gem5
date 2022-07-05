@@ -45,10 +45,7 @@ class SimpleProcessor(AbstractProcessor):
     """
 
     def __init__(
-        self,
-        cpu_type: CPUTypes,
-        num_cores: int,
-        isa: Optional[ISA] = None,
+        self, cpu_type: CPUTypes, num_cores: int, isa: Optional[ISA] = None
     ) -> None:
         """
         param cpu_type: The CPU type for each type in the processor.
@@ -63,9 +60,7 @@ class SimpleProcessor(AbstractProcessor):
         """
         super().__init__(
             cores=self._create_cores(
-                cpu_type=cpu_type,
-                num_cores=num_cores,
-                isa = isa,
+                cpu_type=cpu_type, num_cores=num_cores, isa=isa
             )
         )
 
@@ -76,14 +71,11 @@ class SimpleProcessor(AbstractProcessor):
             self.kvm_vm = KvmVM()
 
     def _create_cores(
-        self,
-        cpu_type: CPUTypes,
-        num_cores: int,
-        isa: Optional[ISA]
+        self, cpu_type: CPUTypes, num_cores: int, isa: Optional[ISA]
     ):
         return [
-            SimpleCore(cpu_type=cpu_type, core_id=i, isa=isa,) \
-                for i in range(num_cores)
+            SimpleCore(cpu_type=cpu_type, core_id=i, isa=isa)
+            for i in range(num_cores)
         ]
 
     @overrides(AbstractProcessor)

@@ -28,6 +28,7 @@
 from slicc.ast.DeclAST import DeclAST
 from slicc.symbols import Var
 
+
 class ObjDeclAST(DeclAST):
     def __init__(self, slicc, type_ast, ident, pairs, rvalue, pointer):
         super().__init__(slicc, pairs)
@@ -40,9 +41,10 @@ class ObjDeclAST(DeclAST):
     def __repr__(self):
         return "[ObjDecl: %r]" % self.ident
 
-    def generate(self, parent = None, **kwargs):
-        if "network" in self and not ("virtual_network" in self or
-                                      "physical_network" in self) :
+    def generate(self, parent=None, **kwargs):
+        if "network" in self and not (
+            "virtual_network" in self or "physical_network" in self
+        ):
             self.error("Network queues require a 'virtual_network' attribute")
 
         type = self.type_ast.type
@@ -63,20 +65,33 @@ class ObjDeclAST(DeclAST):
         # check type if this is a initialization
         init_code = ""
         if self.rvalue:
-            rvalue_type,init_code = self.rvalue.inline(True)
+            rvalue_type, init_code = self.rvalue.inline(True)
             if type != rvalue_type:
-                self.error("Initialization type mismatch '%s' and '%s'" % \
-                           (type, rvalue_type))
+                self.error(
+                    "Initialization type mismatch '%s' and '%s'"
+                    % (type, rvalue_type)
+                )
 
         machine = self.symtab.state_machine
 
-        v = Var(self.symtab, self.ident, self.location, type, c_code,
-                self.pairs, machine)
+        v = Var(
+            self.symtab,
+            self.ident,
+            self.location,
+            type,
+            c_code,
+            self.pairs,
+            machine,
+        )
 
         # Add data member to the parent type
         if parent:
-            if not parent.addDataMember(self.ident, type, self.pairs, init_code):
-                self.error("Duplicate data member: %s:%s" % (parent, self.ident))
+            if not parent.addDataMember(
+                self.ident, type, self.pairs, init_code
+            ):
+                self.error(
+                    "Duplicate data member: %s:%s" % (parent, self.ident)
+                )
 
         elif machine:
             machine.addObject(v)

@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop PACKSSDW_XMM_XMM {
     pack ufp1, xmml, xmmh, ext=Signed, srcSize=4, destSize=2
     pack xmmh, xmmlm, xmmhm, ext=Signed, srcSize=4, destSize=2
@@ -96,4 +96,4 @@ def macroop PACKUSWB_XMM_P {
     pack xmml, xmml, xmmh, ext=0, srcSize=2, destSize=1
     pack xmmh, ufp1, ufp2, ext=0, srcSize=2, destSize=1
 };
-'''
+"""

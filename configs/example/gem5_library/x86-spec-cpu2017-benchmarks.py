@@ -57,7 +57,7 @@ from m5.objects import Root
 from gem5.utils.requires import requires
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.memory import DualChannelDDR4_2400
-from gem5.components.processors.simple_switchable_processor import(
+from gem5.components.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
 )
 from gem5.components.processors.cpu_types import CPUTypes
@@ -81,22 +81,54 @@ requires(
 # More information is available at:
 # https://www.gem5.org/documentation/benchmark_status/gem5-20
 
-benchmark_choices =["500.perlbench_r", "502.gcc_r", "503.bwaves_r",
-                    "505.mcf_r", "507.cactusBSSN_r", "508.namd_r",
-                    "510.parest_r", "511.povray_r", "519.lbm_r",
-                    "520.omnetpp_r", "521.wrf_r", "523.xalancbmk_r",
-                    "525.x264_r", "527.cam4_r", "531.deepsjeng_r",
-                    "538.imagick_r", "541.leela_r", "544.nab_r",
-                    "548.exchange2_r", "549.fotonik3d_r", "554.roms_r",
-                    "557.xz_r", "600.perlbench_s", "602.gcc_s",
-                    "603.bwaves_s", "605.mcf_s", "607.cactusBSSN_s",
-                    "608.namd_s", "610.parest_s", "611.povray_s",
-                    "619.lbm_s", "620.omnetpp_s", "621.wrf_s",
-                    "623.xalancbmk_s", "625.x264_s", "627.cam4_s",
-                    "631.deepsjeng_s", "638.imagick_s", "641.leela_s",
-                    "644.nab_s", "648.exchange2_s", "649.fotonik3d_s",
-                    "654.roms_s", "996.specrand_fs", "997.specrand_fr",
-                    "998.specrand_is", "999.specrand_ir"
+benchmark_choices = [
+    "500.perlbench_r",
+    "502.gcc_r",
+    "503.bwaves_r",
+    "505.mcf_r",
+    "507.cactusBSSN_r",
+    "508.namd_r",
+    "510.parest_r",
+    "511.povray_r",
+    "519.lbm_r",
+    "520.omnetpp_r",
+    "521.wrf_r",
+    "523.xalancbmk_r",
+    "525.x264_r",
+    "527.cam4_r",
+    "531.deepsjeng_r",
+    "538.imagick_r",
+    "541.leela_r",
+    "544.nab_r",
+    "548.exchange2_r",
+    "549.fotonik3d_r",
+    "554.roms_r",
+    "557.xz_r",
+    "600.perlbench_s",
+    "602.gcc_s",
+    "603.bwaves_s",
+    "605.mcf_s",
+    "607.cactusBSSN_s",
+    "608.namd_s",
+    "610.parest_s",
+    "611.povray_s",
+    "619.lbm_s",
+    "620.omnetpp_s",
+    "621.wrf_s",
+    "623.xalancbmk_s",
+    "625.x264_s",
+    "627.cam4_s",
+    "631.deepsjeng_s",
+    "638.imagick_s",
+    "641.leela_s",
+    "644.nab_s",
+    "648.exchange2_s",
+    "649.fotonik3d_s",
+    "654.roms_s",
+    "996.specrand_fs",
+    "997.specrand_fr",
+    "998.specrand_is",
+    "999.specrand_ir",
 ]
 
 # Following are the input size.
@@ -115,34 +147,34 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument(
     "--image",
-    type = str,
-    required = True,
-    help = "Input the full path to the built spec-2017 disk-image."
+    type=str,
+    required=True,
+    help="Input the full path to the built spec-2017 disk-image.",
 )
 
 parser.add_argument(
     "--partition",
-    type = str,
-    required = False,
+    type=str,
+    required=False,
     default=None,
-    help = "Input the root partition of the SPEC disk-image. If the disk is \
-    not partitioned, then pass \"\"."
+    help='Input the root partition of the SPEC disk-image. If the disk is \
+    not partitioned, then pass "".',
 )
 
 parser.add_argument(
     "--benchmark",
-    type = str,
-    required = True,
-    help = "Input the benchmark program to execute.",
+    type=str,
+    required=True,
+    help="Input the benchmark program to execute.",
     choices=benchmark_choices,
 )
 
 parser.add_argument(
     "--size",
-    type = str,
-    required = True,
-    help = "Sumulation size the benchmark program.",
-    choices = size_choices,
+    type=str,
+    required=True,
+    help="Sumulation size the benchmark program.",
+    choices=size_choices,
 )
 
 args = parser.parse_args()
@@ -157,21 +189,20 @@ if not os.path.exists(args.image):
     warn("Disk image not found!")
     print("Instructions on building the disk image can be found at: ")
     print(
-    "https://gem5art.readthedocs.io/en/latest/tutorials/spec-tutorial.html"
+        "https://gem5art.readthedocs.io/en/latest/tutorials/spec-tutorial.html"
     )
     fatal("The disk-image is not found at {}".format(args.image))
 
 # Setting up all the fixed system parameters here
 # Caches: MESI Two Level Cache Hierarchy
 
-from gem5.components.cachehierarchies.ruby.\
-    mesi_two_level_cache_hierarchy import(
+from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
     MESITwoLevelCacheHierarchy,
 )
 
 cache_hierarchy = MESITwoLevelCacheHierarchy(
-    l1d_size = "32kB",
-    l1d_assoc = 8,
+    l1d_size="32kB",
+    l1d_assoc=8,
     l1i_size="32kB",
     l1i_assoc=8,
     l2_size="256kB",
@@ -181,7 +212,7 @@ cache_hierarchy = MESITwoLevelCacheHierarchy(
 # Memory: Dual Channel DDR4 2400 DRAM device.
 # The X86 board only supports 3 GB of main memory.
 
-memory = DualChannelDDR4_2400(size = "3GB")
+memory = DualChannelDDR4_2400(size="3GB")
 
 # Here we setup the processor. This is a special switchable processor in which
 # a starting core type and a switch core type must be specified. Once a
@@ -211,8 +242,8 @@ board = X86Board(
 # m5.options.outdir and the output from the disk-image folder is copied to
 # this folder.
 
-output_dir = "speclogs_" + ''.join(x.strip() for x in time.asctime().split())
-output_dir = output_dir.replace(":","")
+output_dir = "speclogs_" + "".join(x.strip() for x in time.asctime().split())
+output_dir = output_dir.replace(":", "")
 
 # We create this folder if it is absent.
 try:
@@ -242,13 +273,10 @@ board.set_kernel_disk_workload(
     # The x86 linux kernel will be automatically downloaded to the
     # `~/.cache/gem5` directory if not already present.
     # SPEC CPU2017 benchamarks were tested with kernel version 4.19.83
-    kernel=Resource(
-        "x86-linux-kernel-4.19.83",
-    ),
+    kernel=Resource("x86-linux-kernel-4.19.83"),
     # The location of the x86 SPEC CPU 2017 image
     disk_image=CustomDiskImageResource(
-        args.image,
-        disk_root_partition=args.partition,
+        args.image, disk_root_partition=args.partition
     ),
     readfile_contents=command,
 )
@@ -256,7 +284,7 @@ board.set_kernel_disk_workload(
 # We need this for long running processes.
 m5.disableAllListeners()
 
-root = Root(full_system = True, system = board)
+root = Root(full_system=True, system=board)
 
 # sim_quantum must be set when KVM cores are used.
 
@@ -294,8 +322,7 @@ else:
     print("Unexpected termination of simulation before ROI was reached!")
     print(
         "Exiting @ tick {} because {}.".format(
-            m5.curTick(),
-            exit_event.getCause()
+            m5.curTick(), exit_event.getCause()
         )
     )
     exit(-1)
@@ -309,14 +336,14 @@ gem5stats = get_simstat(root)
 # We get the number of committed instructions from the timing
 # cores. We then sum and print them at the end.
 
-roi_insts = float(\
-    json.loads(gem5stats.dumps())\
-    ["system"]["processor"]["cores2"]["core"]["exec_context.thread_0"]\
-    ["numInsts"]["value"]
-) + float(\
-    json.loads(gem5stats.dumps())\
-    ["system"]["processor"]["cores3"]["core"]["exec_context.thread_0"]\
-    ["numInsts"]["value"]\
+roi_insts = float(
+    json.loads(gem5stats.dumps())["system"]["processor"]["cores2"]["core"][
+        "exec_context.thread_0"
+    ]["numInsts"]["value"]
+) + float(
+    json.loads(gem5stats.dumps())["system"]["processor"]["cores3"]["core"][
+        "exec_context.thread_0"
+    ]["numInsts"]["value"]
 )
 
 if exit_event.getCause() == "m5_exit instruction encountered":
@@ -329,8 +356,7 @@ else:
     print("Unexpected termination of simulation while ROI was being executed!")
     print(
         "Exiting @ tick {} because {}.".format(
-            m5.curTick(),
-            exit_event.getCause()
+            m5.curTick(), exit_event.getCause()
         )
     )
     exit(-1)
@@ -347,8 +373,7 @@ else:
     print("Unexpected termination of simulation while copying speclogs!")
     print(
         "Exiting @ tick {} because {}.".format(
-            m5.curTick(),
-            exit_event.getCause()
+            m5.curTick(), exit_event.getCause()
         )
     )
     exit(-1)
@@ -357,8 +382,10 @@ print("Done with the simulation")
 print()
 print("Performance statistics:")
 
-print("Simulated time in ROI: %.2fs" % ((end_tick-start_tick)/1e12))
+print("Simulated time in ROI: %.2fs" % ((end_tick - start_tick) / 1e12))
 print("Instructions executed in ROI: %d" % ((roi_insts)))
-print("Ran a total of", m5.curTick()/1e12, "simulated seconds")
-print("Total wallclock time: %.2fs, %.2f min" % \
-            (time.time()-globalStart, (time.time()-globalStart)/60))
+print("Ran a total of", m5.curTick() / 1e12, "simulated seconds")
+print(
+    "Total wallclock time: %.2fs, %.2f min"
+    % (time.time() - globalStart, (time.time() - globalStart) / 60)
+)

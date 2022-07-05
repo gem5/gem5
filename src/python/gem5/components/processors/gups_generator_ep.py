@@ -34,6 +34,7 @@ from .abstract_processor import AbstractProcessor
 from ..boards.abstract_board import AbstractBoard
 from .gups_generator_core import GUPSGeneratorCore
 
+
 class GUPSGeneratorEP(AbstractProcessor):
     def __init__(
         self,
@@ -85,7 +86,7 @@ class GUPSGeneratorEP(AbstractProcessor):
                 start_addr=start_addr + i * chunk_size,
                 mem_size=table_size,
                 update_limit=update_limit,
-                clk_freq=clk_freq
+                clk_freq=clk_freq,
             )
             for i in range(num_cores)
         ]

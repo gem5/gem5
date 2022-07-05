@@ -32,10 +32,14 @@ from m5.util import warn
 """
 In this package we store generators for simulation exit events.
 """
+
+
 def defaultBehaviorWarning(type, effect):
     warn(
         "As no behavior was set by the user, default behavior is being carried"
-        f" out.\n Type: {type} \n Detail: {effect} \n")
+        f" out.\n Type: {type} \n Detail: {effect} \n"
+    )
+
 
 def default_exit_generator():
     """
@@ -45,7 +49,8 @@ def default_exit_generator():
     defaultBehaviorWarning(
         "default_exit_generator",
         "A default generator for an exit event. It will return True, "
-        "indicating that the Simulator run loop should exit.")
+        "indicating that the Simulator run loop should exit.",
+    )
     while True:
         yield True
 
@@ -60,7 +65,8 @@ def default_switch_generator(processor: AbstractProcessor):
         "default_switch_generator",
         "A default generator for a switch exit event.If the processor is a "
         "SwitchableProcessor, this generator will switch it. Otherwise nothing"
-        " will happen.")
+        " will happen.",
+    )
     is_switchable = isinstance(processor, SwitchableProcessor)
     while True:
         if is_switchable:
@@ -77,7 +83,8 @@ def default_workbegin_generator():
     defaultBehaviorWarning(
         "default_workbegin_generator",
         "A default generator for a workbegin exit event. It will reset the "
-        "simulation statistics.")
+        "simulation statistics.",
+    )
     while True:
         m5.stats.reset()
         yield False
@@ -91,7 +98,8 @@ def default_workend_generator():
     defaultBehaviorWarning(
         "default_workend_generator",
         "A default generator for a workend exit event. It will dump the "
-        "simulation statistics.")
+        "simulation statistics.",
+    )
     while True:
         m5.stats.dump()
         yield False

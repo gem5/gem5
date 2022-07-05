@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop MOVMSKPS_R_XMM {
     limm reg, 0
     movsign reg, xmmlm, size=4, ext=0
@@ -45,4 +45,4 @@ def macroop MOVMSKPD_R_XMM {
     movsign reg, xmmlm, size=8, ext=0
     movsign reg, xmmhm, size=8, ext=1
 };
-'''
+"""

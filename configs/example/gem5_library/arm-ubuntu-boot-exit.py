@@ -54,14 +54,11 @@ from gem5.components.processors.simple_processor import SimpleProcessor
 
 # This runs a check to ensure the gem5 binary is compiled for ARM.
 
-requires(
-    isa_required=ISA.ARM,
-)
+requires(isa_required=ISA.ARM)
 
 # With ARM, we use simple caches.
 
-from gem5.components.cachehierarchies.classic\
-    .private_l1_private_l2_cache_hierarchy import (
+from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
     PrivateL1PrivateL2CacheHierarchy,
 )
 
@@ -69,22 +66,17 @@ from gem5.components.cachehierarchies.classic\
 # Here we setup the parameters of the l1 and l2 caches.
 
 cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-    l1d_size="16kB",
-    l1i_size="16kB",
-    l2_size="256kB",
+    l1d_size="16kB", l1i_size="16kB", l2_size="256kB"
 )
 
 # Memory: Dual Channel DDR4 2400 DRAM device.
 
-memory = DualChannelDDR4_2400(size = "2GB")
+memory = DualChannelDDR4_2400(size="2GB")
 
 # Here we setup the processor. We use a simple TIMING processor. The config
 # script was also tested with ATOMIC processor.
 
-processor = SimpleProcessor(
-    cpu_type=CPUTypes.TIMING,
-    num_cores=2,
-)
+processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, num_cores=2)
 
 # The ArmBoard requires a `release` to be specified. This adds all the
 # extensions or features to the system. We are setting this to Armv8
@@ -105,12 +97,12 @@ platform = VExpress_GEM5_Foundation()
 # Here we setup the board. The ArmBoard allows for Full-System ARM simulations.
 
 board = ArmBoard(
-    clk_freq = "3GHz",
-    processor = processor,
-    memory = memory,
-    cache_hierarchy = cache_hierarchy,
-    release = release,
-    platform = platform
+    clk_freq="3GHz",
+    processor=processor,
+    memory=memory,
+    cache_hierarchy=cache_hierarchy,
+    release=release,
+    platform=platform,
 )
 
 # Here we set the Full System workload.
@@ -119,30 +111,22 @@ board = ArmBoard(
 # kernel, a disk image, and, path to the bootloader.
 
 board.set_kernel_disk_workload(
-
     # The ARM kernel will be automatically downloaded to the `~/.cache/gem5`
     # directory if not already present. The arm-ubuntu-boot-exit was tested
     # with `vmlinux.arm64`
-
-    kernel = Resource("arm64-linux-kernel-5.4.49"),
-
+    kernel=Resource("arm64-linux-kernel-5.4.49"),
     # The ARM ubuntu image will be automatically downloaded to the
     # `~/.cache/gem5` directory if not already present.
-
-    disk_image = Resource("arm64-ubuntu-18.04-img"),
-
+    disk_image=Resource("arm64-ubuntu-18.04-img"),
     # We need to specify the path for the bootloader file.
-
-    bootloader = Resource("arm64-bootloader-foundation"),
-
+    bootloader=Resource("arm64-bootloader-foundation"),
     # For the arm64-ubuntu-18.04.img, we need to specify the readfile content
-
-    readfile_contents = "m5 exit"
+    readfile_contents="m5 exit",
 )
 
 # We define the system with the aforementioned system defined.
 
-simulator = Simulator(board = board)
+simulator = Simulator(board=board)
 
 # Once the system successfully boots, it encounters an
 # `m5_exit instruction encountered`. We stop the simulation then. When the

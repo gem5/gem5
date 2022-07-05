@@ -33,8 +33,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 class Point(object):
     """2D point coordinates/size type"""
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -69,8 +71,9 @@ class Point(object):
         half_size = size.scale(0.5)
         top_left = centre - half_size
         bottom_right = centre + half_size
-        return (top_left.x < self.x and
-            top_left.y < self.y and
-            bottom_right.x > self.x and
-            bottom_right.y > self.y)
-
+        return (
+            top_left.x < self.x
+            and top_left.y < self.y
+            and bottom_right.x > self.x
+            and bottom_right.y > self.y
+        )

@@ -38,11 +38,12 @@ from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
 
+
 class ClockedObject(SimObject):
-    type = 'ClockedObject'
+    type = "ClockedObject"
     abstract = True
     cxx_header = "sim/clocked_object.hh"
-    cxx_class = 'gem5::ClockedObject'
+    cxx_class = "gem5::ClockedObject"
 
     # The clock domain this clocked object belongs to, inheriting the
     # parent's clock domain by default
@@ -52,4 +53,3 @@ class ClockedObject(SimObject):
     power_model = VectorParam.PowerModel([], "Power models")
 
     power_state = Param.PowerState(PowerState(), "Power state")
-

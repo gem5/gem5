@@ -36,8 +36,10 @@
 import m5
 import _m5
 from m5.objects import *
-m5.util.addToPath('../configs/')
+
+m5.util.addToPath("../configs/")
 from common.Caches import *
+
 
 class Sequential:
     """Sequential CPU switcher.
@@ -48,12 +50,13 @@ class Sequential:
     in. base_config.BaseFSSwitcheroo can be used to create such a
     system.
     """
+
     def __init__(self, cpus):
         self.first_cpu = None
         for (cpuno, cpu) in enumerate(cpus):
             if not cpu.switched_out:
                 if self.first_cpu != None:
-                    fatal("More than one CPU is switched in");
+                    fatal("More than one CPU is switched in")
                 self.first_cpu = cpuno
 
         if self.first_cpu == None:
@@ -68,6 +71,7 @@ class Sequential:
 
     def first(self):
         return self.cpus[self.first_cpu]
+
 
 def run_test(root, switcher=None, freq=1000, verbose=False):
     """Test runner for CPU switcheroo tests.
@@ -124,14 +128,19 @@ def run_test(root, switcher=None, freq=1000, verbose=False):
                 print("Next CPU: %s" % type(next_cpu))
             m5.drain()
             if current_cpu != next_cpu:
-                m5.switchCpus(system, [ (current_cpu, next_cpu) ],
-                              verbose=verbose)
+                m5.switchCpus(
+                    system, [(current_cpu, next_cpu)], verbose=verbose
+                )
             else:
-                print("Source CPU and destination CPU are the same,"
-                    " skipping...")
+                print(
+                    "Source CPU and destination CPU are the same,"
+                    " skipping..."
+                )
             current_cpu = next_cpu
-        elif exit_cause == "target called exit()" or \
-                exit_cause == "m5_exit instruction encountered":
+        elif (
+            exit_cause == "target called exit()"
+            or exit_cause == "m5_exit instruction encountered"
+        ):
 
             sys.exit(0)
         else:

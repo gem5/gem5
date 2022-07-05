@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop CMOVZ_R_R
 {
     mov reg, reg, reg, flags=(nCZF,)
@@ -369,4 +369,4 @@ def macroop CMOVNO_R_P
     mov reg, reg, reg, flags=(COF,)
     mov reg, reg, t1, flags=(nCOF,)
 };
-'''
+"""

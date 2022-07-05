@@ -32,29 +32,35 @@ from m5.objects.Device import BasicPioDevice
 from m5.objects.Platform import Platform
 from m5.objects.Uart import Uart8250
 
+
 class MaltaCChip(BasicPioDevice):
-    type = 'MaltaCChip'
+    type = "MaltaCChip"
     cxx_header = "dev/mips/malta_cchip.hh"
-    cxx_class = 'gem5::MaltaCChip'
+    cxx_class = "gem5::MaltaCChip"
     malta = Param.Malta(Parent.any, "Malta")
+
 
 class MaltaIO(BasicPioDevice):
-    type = 'MaltaIO'
+    type = "MaltaIO"
     cxx_header = "dev/mips/malta_io.hh"
-    cxx_class = 'gem5::MaltaIO'
-    time = Param.Time('01/01/2009',
-        "System time to use (0 for actual time, default is 1/1/06)")
-    year_is_bcd = Param.Bool(False,
-            "The RTC should interpret the year as a BCD value")
+    cxx_class = "gem5::MaltaIO"
+    time = Param.Time(
+        "01/01/2009",
+        "System time to use (0 for actual time, default is 1/1/06)",
+    )
+    year_is_bcd = Param.Bool(
+        False, "The RTC should interpret the year as a BCD value"
+    )
     malta = Param.Malta(Parent.any, "Malta")
-    frequency = Param.Frequency('1024Hz', "frequency of interrupts")
+    frequency = Param.Frequency("1024Hz", "frequency of interrupts")
+
 
 class Malta(Platform):
-    type = 'Malta'
+    type = "Malta"
     cxx_header = "dev/mips/malta.hh"
-    cxx_class = 'gem5::Malta'
-    cchip = MaltaCChip(pio_addr=0x801a0000000)
-    io = MaltaIO(pio_addr=0x801fc000000)
+    cxx_class = "gem5::Malta"
+    cchip = MaltaCChip(pio_addr=0x801A0000000)
+    io = MaltaIO(pio_addr=0x801FC000000)
     uart = Uart8250(pio_addr=0xBFD003F8)
 
     # Attach I/O devices to specified bus object.  Can't do this

@@ -28,6 +28,7 @@
 
 from slicc.ast.ExprAST import ExprAST
 
+
 class OodAST(ExprAST):
     def __init__(self, slicc):
         super().__init__(slicc)

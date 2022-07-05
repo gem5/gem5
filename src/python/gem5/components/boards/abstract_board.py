@@ -168,11 +168,13 @@ class AbstractBoard:
         This function is used by the Simulator module to setup the simulation
         correctly.
         """
-        if self._is_fs  == None:
-            raise Exception("The workload for this board not yet to be set. "
-                            "Whether the board is to be executed in FS or SE "
-                            "mode is determined by which 'set workload' "
-                            "function is run.")
+        if self._is_fs == None:
+            raise Exception(
+                "The workload for this board not yet to be set. "
+                "Whether the board is to be executed in FS or SE "
+                "mode is determined by which 'set workload' "
+                "function is run."
+            )
         return self._is_fs
 
     @abstractmethod

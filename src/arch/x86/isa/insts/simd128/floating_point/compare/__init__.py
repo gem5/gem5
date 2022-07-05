@@ -33,13 +33,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["compare_and_write_mask",
-              "compare_and_write_minimum_or_maximum",
-              "compare_and_write_rflags"]
+categories = [
+    "compare_and_write_mask",
+    "compare_and_write_minimum_or_maximum",
+    "compare_and_write_rflags",
+]
 
-microcode = '''
+microcode = """
 # SSE instructions
-'''
+"""
 for category in categories:
     exec("from . import %s as cat" % category)
     microcode += cat.microcode

@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop CVTPS2DQ_XMM_XMM {
     cvtf2i xmml, xmmlm, size=4, ext=4
     cvtf2i xmmh, xmmhm, size=4, ext=4
@@ -119,4 +119,4 @@ def macroop CVTTPD2DQ_XMM_P {
     cvtf2i xmml, ufp2, srcSize=8, destSize=4, ext=2
     lfpimm xmmh, 0
 };
-'''
+"""

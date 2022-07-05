@@ -34,9 +34,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 microcode = ""
-#let {{
+# let {{
 #    class MOVMSKPS(Inst):
 #       "GenFault ${new UnimpInstFault}"
 #    class MOVMSKPD(Inst):
 #       "GenFault ${new UnimpInstFault}"
-#}};
+# }};

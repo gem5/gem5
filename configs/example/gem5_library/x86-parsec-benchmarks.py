@@ -53,7 +53,7 @@ from m5.objects import Root
 from gem5.utils.requires import requires
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.memory import DualChannelDDR4_2400
-from gem5.components.processors.simple_switchable_processor import(
+from gem5.components.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
 )
 from gem5.components.processors.cpu_types import CPUTypes
@@ -66,20 +66,32 @@ from m5.stats.gem5stats import get_simstat
 # We check for the required gem5 build.
 
 requires(
-    isa_required = ISA.X86,
+    isa_required=ISA.X86,
     coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL,
     kvm_required=True,
 )
 
 # Following are the list of benchmark programs for parsec.
 
-benchmark_choices = ["blackscholes", "bodytrack", "canneal", "dedup",
-                     "facesim", "ferret", "fluidanimate", "freqmine",
-                     "raytrace", "streamcluster", "swaptions", "vips", "x264"]
+benchmark_choices = [
+    "blackscholes",
+    "bodytrack",
+    "canneal",
+    "dedup",
+    "facesim",
+    "ferret",
+    "fluidanimate",
+    "freqmine",
+    "raytrace",
+    "streamcluster",
+    "swaptions",
+    "vips",
+    "x264",
+]
 
 # Following are the input size.
 
-size_choices=["simsmall", "simmedium", "simlarge"]
+size_choices = ["simsmall", "simmedium", "simlarge"]
 
 parser = argparse.ArgumentParser(
     description="An example configuration script to run the npb benchmarks."
@@ -89,32 +101,31 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument(
     "--benchmark",
-    type = str,
+    type=str,
     required=True,
-    help = "Input the benchmark program to execute.",
-    choices = benchmark_choices,
+    help="Input the benchmark program to execute.",
+    choices=benchmark_choices,
 )
 
 parser.add_argument(
     "--size",
-    type = str,
+    type=str,
     required=True,
-    help = "Simulation size the benchmark program.",
-    choices = size_choices,
+    help="Simulation size the benchmark program.",
+    choices=size_choices,
 )
 args = parser.parse_args()
 
 # Setting up all the fixed system parameters here
 # Caches: MESI Two Level Cache Hierarchy
 
-from gem5.components.cachehierarchies.ruby.\
-    mesi_two_level_cache_hierarchy import(
+from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
     MESITwoLevelCacheHierarchy,
 )
 
 cache_hierarchy = MESITwoLevelCacheHierarchy(
-    l1d_size = "32kB",
-    l1d_assoc = 8,
+    l1d_size="32kB",
+    l1d_assoc=8,
     l1i_size="32kB",
     l1i_assoc=8,
     l2_size="256kB",
@@ -125,7 +136,7 @@ cache_hierarchy = MESITwoLevelCacheHierarchy(
 # Memory: Dual Channel DDR4 2400 DRAM device.
 # The X86 board only supports 3 GB of main memory.
 
-memory = DualChannelDDR4_2400(size = "3GB")
+memory = DualChannelDDR4_2400(size="3GB")
 
 # Here we setup the processor. This is a special switchable processor in which
 # a starting core type and a switch core type must be specified. Once a
@@ -163,32 +174,31 @@ board = X86Board(
 # properly.
 
 
-command = "cd /home/gem5/parsec-benchmark;".format(args.benchmark) \
-    + "source env.sh;" \
+command = (
+    "cd /home/gem5/parsec-benchmark;".format(args.benchmark)
+    + "source env.sh;"
     + "parsecmgmt -a run -p {} -c gcc-hooks -i {} \
-        -n {};".format(args.benchmark, args.size, "2") \
-    + "sleep 5;" \
-    + "m5 exit;" \
-
+        -n {};".format(
+        args.benchmark, args.size, "2"
+    )
+    + "sleep 5;"
+    + "m5 exit;"
+)
 board.set_kernel_disk_workload(
     # The x86 linux kernel will be automatically downloaded to the
     # `~/.cache/gem5` directory if not already present.
     # PARSEC benchamarks were tested with kernel version 4.19.83
-    kernel=Resource(
-        "x86-linux-kernel-4.19.83",
-    ),
+    kernel=Resource("x86-linux-kernel-4.19.83"),
     # The x86-parsec image will be automatically downloaded to the
     # `~/.cache/gem5` directory if not already present.
-    disk_image=Resource(
-        "x86-parsec",
-    ),
+    disk_image=Resource("x86-parsec"),
     readfile_contents=command,
 )
 
 # We need this for long running processes.
 m5.disableAllListeners()
 
-root = Root(full_system = True, system = board)
+root = Root(full_system=True, system=board)
 
 # sim_quantum must be set if KVM cores are used.
 
@@ -232,8 +242,7 @@ else:
     print("Unexpected termination of simulation before ROI was reached!")
     print(
         "Exiting @ tick {} because {}.".format(
-            m5.curTick(),
-            exit_event.getCause()
+            m5.curTick(), exit_event.getCause()
         )
     )
     exit(-1)
@@ -257,8 +266,7 @@ else:
     print("Unexpected termination of simulation while ROI was being executed!")
     print(
         "Exiting @ tick {} because {}.".format(
-            m5.curTick(),
-            exit_event.getCause()
+            m5.curTick(), exit_event.getCause()
         )
     )
     exit(-1)
@@ -270,13 +278,14 @@ gem5stats = get_simstat(root)
 
 # We get the number of committed instructions from the timing
 # cores. We then sum and print them at the end.
-roi_insts = float(\
-    gem5stats.to_json()\
-    ["system"]["processor"]["cores2"]["core"]["exec_context.thread_0"]\
-    ["numInsts"]["value"]) + float(\
-    gem5stats.to_json()\
-    ["system"]["processor"]["cores3"]["core"]["exec_context.thread_0"]\
-    ["numInsts"]["value"]\
+roi_insts = float(
+    gem5stats.to_json()["system"]["processor"]["cores2"]["core"][
+        "exec_context.thread_0"
+    ]["numInsts"]["value"]
+) + float(
+    gem5stats.to_json()["system"]["processor"]["cores3"]["core"][
+        "exec_context.thread_0"
+    ]["numInsts"]["value"]
 )
 
 # Simulation is over at this point. We acknowledge that all the simulation
@@ -289,8 +298,10 @@ print("Done with the simulation")
 print()
 print("Performance statistics:")
 
-print("Simulated time in ROI: %.2fs" % ((end_tick-start_tick)/1e12))
+print("Simulated time in ROI: %.2fs" % ((end_tick - start_tick) / 1e12))
 print("Instructions executed in ROI: %d" % ((roi_insts)))
-print("Ran a total of", m5.curTick()/1e12, "simulated seconds")
-print("Total wallclock time: %.2fs, %.2f min" % \
-            (time.time()-globalStart, (time.time()-globalStart)/60))
+print("Ran a total of", m5.curTick() / 1e12, "simulated seconds")
+print(
+    "Total wallclock time: %.2fs, %.2f min"
+    % (time.time() - globalStart, (time.time() - globalStart) / 60)
+)

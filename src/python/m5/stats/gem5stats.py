@@ -39,11 +39,13 @@ from m5.ext.pystats.simstat import *
 from m5.ext.pystats.statistic import *
 from m5.ext.pystats.storagetype import *
 
-class JsonOutputVistor():
+
+class JsonOutputVistor:
     """
     This is a helper vistor class used to include a JSON output via the stats
     API (`src/python/m5/stats/__init__.py`).
     """
+
     file: str
     json_args: Dict
 
@@ -77,9 +79,10 @@ class JsonOutputVistor():
             The Root, or List of roots, whose stats are are to be dumped JSON.
         """
 
-        with open(self.file, 'w') as fp:
+        with open(self.file, "w") as fp:
             simstat = get_simstat(root=roots, prepare_stats=False)
             simstat.dump(fp=fp, **self.json_args)
+
 
 def get_stats_group(group: _m5.stats.Group) -> Group:
     """
@@ -113,6 +116,7 @@ def get_stats_group(group: _m5.stats.Group) -> Group:
 
     return Group(**stats_dict)
 
+
 def __get_statistic(statistic: _m5.stats.Info) -> Optional[Statistic]:
     """
     Translates a _m5.stats.Info object into a Statistic object, to process
@@ -130,7 +134,7 @@ def __get_statistic(statistic: _m5.stats.Info) -> Optional[Statistic]:
         cannot be translated.
     """
 
-    assert(isinstance(statistic, _m5.stats.Info))
+    assert isinstance(statistic, _m5.stats.Info)
     statistic.prepare()
 
     if isinstance(statistic, _m5.stats.ScalarInfo):
@@ -146,6 +150,7 @@ def __get_statistic(statistic: _m5.stats.Info) -> Optional[Statistic]:
 
     return None
 
+
 def __get_scaler(statistic: _m5.stats.ScalarInfo) -> Scalar:
     value = statistic.value
     unit = statistic.unit
@@ -154,11 +159,9 @@ def __get_scaler(statistic: _m5.stats.ScalarInfo) -> Scalar:
     datatype = StorageType["f64"]
 
     return Scalar(
-                  value=value,
-                  unit=unit,
-                  description=description,
-                  datatype=datatype,
-                 )
+        value=value, unit=unit, description=description, datatype=datatype
+    )
+
 
 def __get_distribution(statistic: _m5.stats.DistInfo) -> Distribution:
     unit = statistic.unit
@@ -177,20 +180,21 @@ def __get_distribution(statistic: _m5.stats.DistInfo) -> Distribution:
     datatype = StorageType["f64"]
 
     return Distribution(
-                        value=value,
-                        min=min,
-                        max=max,
-                        num_bins=num_bins,
-                        bin_size=bin_size,
-                        sum = sum_val,
-                        sum_squared = sum_squared,
-                        underflow = underflow,
-                        overflow = overflow,
-                        logs = logs,
-                        unit=unit,
-                        description=description,
-                        datatype=datatype,
-                        )
+        value=value,
+        min=min,
+        max=max,
+        num_bins=num_bins,
+        bin_size=bin_size,
+        sum=sum_val,
+        sum_squared=sum_squared,
+        underflow=underflow,
+        overflow=overflow,
+        logs=logs,
+        unit=unit,
+        description=description,
+        datatype=datatype,
+    )
+
 
 def __get_vector(statistic: _m5.stats.VectorInfo) -> Vector:
     to_add = dict()
@@ -212,13 +216,11 @@ def __get_vector(statistic: _m5.stats.VectorInfo) -> Vector:
             index_string = str(index)
 
         to_add[index_string] = Scalar(
-                                      value=value,
-                                      unit=unit,
-                                      description=description,
-                                      datatype=datatype,
-                                      )
+            value=value, unit=unit, description=description, datatype=datatype
+        )
 
     return Vector(scalar_map=to_add)
+
 
 def _prepare_stats(group: _m5.stats.Group):
     """
@@ -234,8 +236,9 @@ def _prepare_stats(group: _m5.stats.Group):
         _prepare_stats(child)
 
 
-def get_simstat(root: Union[SimObject, List[SimObject]],
-                prepare_stats: bool = True) -> SimStat:
+def get_simstat(
+    root: Union[SimObject, List[SimObject]], prepare_stats: bool = True
+) -> SimStat:
     """
     This function will return the SimStat object for a simulation given a
     SimObject (typically a Root SimObject), or list of SimObjects. The returned
@@ -262,7 +265,7 @@ def get_simstat(root: Union[SimObject, List[SimObject]],
     """
     stats_map = {}
     creation_time = datetime.now()
-    time_converstion = None # TODO https://gem5.atlassian.net/browse/GEM5-846
+    time_converstion = None  # TODO https://gem5.atlassian.net/browse/GEM5-846
     final_tick = Root.getInstance().resolveStat("finalTick").value
     sim_ticks = Root.getInstance().resolveStat("simTicks").value
     simulated_begin_time = int(final_tick - sim_ticks)
@@ -284,16 +287,16 @@ def get_simstat(root: Union[SimObject, List[SimObject]],
                 _prepare_stats(r)
             stats_map[r.get_name()] = get_stats_group(r)
         else:
-            raise TypeError("Object (" + str(r) + ") passed is not a "
-                            "SimObject. " + __name__ + " only processes "
-                            "SimObjects, or a list of  SimObjects.")
-
-
+            raise TypeError(
+                "Object (" + str(r) + ") passed is not a "
+                "SimObject. " + __name__ + " only processes "
+                "SimObjects, or a list of  SimObjects."
+            )
 
     return SimStat(
-                   creation_time=creation_time,
-                   time_conversion=time_converstion,
-                   simulated_begin_time=simulated_begin_time,
-                   simulated_end_time=simulated_end_time,
-                   **stats_map,
-                  )
+        creation_time=creation_time,
+        time_conversion=time_converstion,
+        simulated_begin_time=simulated_begin_time,
+        simulated_end_time=simulated_end_time,
+        **stats_map,
+    )

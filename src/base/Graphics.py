@@ -38,4 +38,5 @@ from m5.params import *
 
 # Image Formats:
 # Auto option will let gem5 to choose the image format it prefers.
-class ImageFormat(Enum): vals = ['Auto', 'Bitmap', 'Png']
+class ImageFormat(Enum):
+    vals = ["Auto", "Bitmap", "Png"]

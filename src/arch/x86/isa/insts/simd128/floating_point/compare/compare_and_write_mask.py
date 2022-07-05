@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop CMPPS_XMM_XMM_I {
     mcmpf2r xmml, xmml, xmmlm, size=4, ext="IMMEDIATE & mask(3)"
     mcmpf2r xmmh, xmmh, xmmhm, size=4, ext="IMMEDIATE & mask(3)"
@@ -103,4 +103,4 @@ def macroop CMPSD_XMM_P_I {
     ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
     mcmpf2r xmml, xmml, ufp1, size=8, ext="IMMEDIATE |" + Scalar
 };
-'''
+"""
