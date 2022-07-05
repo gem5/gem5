@@ -445,10 +445,50 @@ decode QUADRANT default Unknown::unknown() {
                     0x00: slli({{
                         Rd = Rs1 << imm;
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0x02: decode FS2 {
+                        0x0: sha256sum0({{
+                            Rd_sw = _rvk_emu_sha256sum0(Rs1_sw);
+                        }});
+                        0x1: sha256sum1({{
+                            Rd_sw = _rvk_emu_sha256sum1(Rs1_sw);
+                        }});
+                        0x2: sha256sig0({{
+                            Rd_sw = _rvk_emu_sha256sig0(Rs1_sw);
+                        }});
+                        0x3: sha256sig1({{
+                            Rd_sw = _rvk_emu_sha256sig1(Rs1_sw);
+                        }});
+                        0x4: sha512sum0({{
+                            Rd_sd = _rvk_emu_sha512sum0(Rs1_sd);
+                        }});
+                        0x5: sha512sum1({{
+                            Rd_sd = _rvk_emu_sha512sum1(Rs1_sd);
+                        }});
+                        0x6: sha512sig0({{
+                            Rd_sd = _rvk_emu_sha512sig0(Rs1_sd);
+                        }});
+                        0x7: sha512sig1({{
+                            Rd_sd = _rvk_emu_sha512sig1(Rs1_sd);
+                        }});
+                        0x8: sm3p0({{
+                            Rd_sw = _rvk_emu_sm3p0(Rs1_sw);
+                        }});
+                        0x9: sm3p1({{
+                            Rd_sw = _rvk_emu_sm3p1(Rs1_sw);
+                        }});
+                    }
                     0x05: bseti({{
                         uint64_t index = imm & (64 - 1);
                         Rd = Rs1 | (UINT64_C(1) << index);
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0x06: decode BIT24 {
+                        0x0: aes64im({{
+                            Rd_sd = _rvk_emu_aes64im(Rs1_sd);
+                        }});
+                        0x1: aes64ks1i({{
+                            Rd_sd = _rvk_emu_aes64ks1i(Rs1_sd, imm);
+                        }}, imm_type = int32_t, imm_code={{ imm = RNUM; }});
+                    }
                     0x09: bclri({{
                         uint64_t index = imm & (64 - 1);
                         Rd = Rs1 & (~(UINT64_C(1) << index));
@@ -774,16 +814,49 @@ decode QUADRANT default Unknown::unknown() {
         }
         0x0c: decode FUNCT3 {
             format ROp {
-                0x0: decode FUNCT7 {
-                    0x0: add({{
-                        Rd = Rs1_sd + Rs2_sd;
+                0x0: decode KFUNCT5 {
+                    0x00: decode BS {
+                        0x0: add({{
+                            Rd = Rs1_sd + Rs2_sd;
+                        }});
+                        0x1: sub({{
+                            Rd = Rs1_sd - Rs2_sd;
+                        }});
+                    }
+                    0x01: decode BS {
+                        0x0: mul({{
+                            Rd = Rs1_sd * Rs2_sd;
+                        }}, IntMultOp);
+                    }
+                    0x18: sm4ed({{
+                        Rd_sd = _rvk_emu_sm4ed(Rs1_sd, Rs2_sd, (uint8_t)BS);
                     }});
-                    0x1: mul({{
-                        Rd = Rs1_sd*Rs2_sd;
-                    }}, IntMultOp);
-                    0x20: sub({{
-                        Rd = Rs1_sd - Rs2_sd;
+                    0x19: decode BS {
+                        0x0: aes64es({{
+                            Rd_sd = _rvk_emu_aes64es(Rs1_sd, Rs2_sd);
+                        }});
+                    }
+                    0x1a: sm4ks({{
+                        Rd_sd = _rvk_emu_sm4ks(Rs1_sd, Rs2_sd, (uint8_t)BS);
                     }});
+                    0x1b: decode BS {
+                        0x0: aes64esm({{
+                            Rd_sd = _rvk_emu_aes64esm(Rs1_sd, Rs2_sd);
+                        }});
+                    }
+                    0x1d: decode BS {
+                        0x0: aes64ds({{
+                            Rd_sd = _rvk_emu_aes64ds(Rs1_sd, Rs2_sd);
+                        }});
+                    }
+                    0x1f: decode BS{
+                        0x0: aes64dsm({{
+                            Rd_sd = _rvk_emu_aes64dsm(Rs1_sd, Rs2_sd);
+                        }});
+                        0x1: aes64ks2({{
+                            Rd_sd = _rvk_emu_aes64ks2(Rs1_sd, Rs2_sd);
+                        }});
+                    }
                 }
                 0x1: decode FUNCT7 {
                     0x0: sll({{
@@ -871,6 +944,9 @@ decode QUADRANT default Unknown::unknown() {
                     0x10: sh1add({{
                         Rd = (Rs1 << 1) + Rs2;
                     }});
+                    0x14: xperm4({{
+                        Rd_sd = _rvk_emu_xperm4_64(Rs1_sd, Rs2_sd);
+                    }});
                 }
                 0x3: decode FUNCT7 {
                     0x0: sltu({{
@@ -920,6 +996,9 @@ decode QUADRANT default Unknown::unknown() {
                     }});
                     0x10: sh2add({{
                         Rd = (Rs1 << 2) + Rs2;
+                    }});
+                    0x14: xperm8({{
+                        Rd_sd = _rvk_emu_xperm8_64(Rs1_sd, Rs2_sd);
                     }});
                     0x20: xnor({{
                         Rd = ~(Rs1 ^ Rs2);
