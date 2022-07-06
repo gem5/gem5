@@ -33,3 +33,5 @@ RUN apt -y update && apt -y upgrade && \
     python3-dev python-is-python3 doxygen libboost-all-dev \
     libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config pip \
     python3-venv black
+
+RUN pip install mypy
