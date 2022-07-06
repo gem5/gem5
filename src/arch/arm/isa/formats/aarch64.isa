@@ -487,9 +487,9 @@ namespace Aarch64
                             read ? "mrs" : "msr",
                             machInst, MiscRegNum64(op0, op1, crn, crm, op2),
                             rt, read, full_mnemonic,
-                            miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]);
+                            lookUpMiscReg[miscReg].info[MISCREG_WARN_NOT_FAIL]);
 
-                    } else if (miscRegInfo[miscReg][MISCREG_IMPLEMENTED]) {
+                    } else if (lookUpMiscReg[miscReg].info[MISCREG_IMPLEMENTED]) {
                         if (miscReg == MISCREG_NZCV) {
                             if (read)
                                 return new MrsNZCV64(machInst, rt, miscReg);
@@ -498,7 +498,7 @@ namespace Aarch64
                         }
                         if (read) {
                             StaticInstPtr si = new Mrs64(machInst, rt, miscReg);
-                            if (miscRegInfo[miscReg][MISCREG_UNVERIFIABLE])
+                            if (lookUpMiscReg[miscReg].info[MISCREG_UNVERIFIABLE])
                                 si->setFlag(StaticInst::IsUnverifiable);
                             return si;
                         } else {
@@ -555,7 +555,7 @@ namespace Aarch64
                                 return new Msr64(machInst, miscReg, rt);
                             }
                         }
-                    } else if (miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]) {
+                    } else if (lookUpMiscReg[miscReg].info[MISCREG_WARN_NOT_FAIL]) {
                         std::string full_mnem = csprintf("%s %s",
                             read ? "mrs" : "msr", miscRegName[miscReg]);
                         return new WarnUnimplemented(read ? "mrs" : "msr",

@@ -1162,10 +1162,12 @@ namespace ArmISA
         uint64_t _res1;  // reserved
         uint64_t _raz;   // read as zero (fixed at 0)
         uint64_t _rao;   // read as one (fixed at 1)
+        std::bitset<NUM_MISCREG_INFOS> info;
       public:
         MiscRegLUTEntry() :
             lower(0), upper(0),
-            _reset(0), _res0(0), _res1(0), _raz(0), _rao(0) {}
+            _reset(0), _res0(0), _res1(0), _raz(0), _rao(0), info(0)
+        {}
         uint64_t reset() const { return _reset; }
         uint64_t res0()  const { return _res0; }
         uint64_t res1()  const { return _res1; }
@@ -1179,7 +1181,6 @@ namespace ArmISA
     class MiscRegLUTEntryInitializer
     {
         struct MiscRegLUTEntry &entry;
-        std::bitset<NUM_MISCREG_INFOS> &info;
         typedef const MiscRegLUTEntryInitializer& chain;
       public:
         chain
@@ -1216,7 +1217,7 @@ namespace ArmISA
         chain
         implemented(bool v = true) const
         {
-            info[MISCREG_IMPLEMENTED] = v;
+            entry.info[MISCREG_IMPLEMENTED] = v;
             return *this;
         }
         chain
@@ -1227,61 +1228,61 @@ namespace ArmISA
         chain
         unverifiable(bool v = true) const
         {
-            info[MISCREG_UNVERIFIABLE] = v;
+            entry.info[MISCREG_UNVERIFIABLE] = v;
             return *this;
         }
         chain
         warnNotFail(bool v = true) const
         {
-            info[MISCREG_WARN_NOT_FAIL] = v;
+            entry.info[MISCREG_WARN_NOT_FAIL] = v;
             return *this;
         }
         chain
         mutex(bool v = true) const
         {
-            info[MISCREG_MUTEX] = v;
+            entry.info[MISCREG_MUTEX] = v;
             return *this;
         }
         chain
         banked(bool v = true) const
         {
-            info[MISCREG_BANKED] = v;
+            entry.info[MISCREG_BANKED] = v;
             return *this;
         }
         chain
         banked64(bool v = true) const
         {
-            info[MISCREG_BANKED64] = v;
+            entry.info[MISCREG_BANKED64] = v;
             return *this;
         }
         chain
         bankedChild(bool v = true) const
         {
-            info[MISCREG_BANKED_CHILD] = v;
+            entry.info[MISCREG_BANKED_CHILD] = v;
             return *this;
         }
         chain
         userNonSecureRead(bool v = true) const
         {
-            info[MISCREG_USR_NS_RD] = v;
+            entry.info[MISCREG_USR_NS_RD] = v;
             return *this;
         }
         chain
         userNonSecureWrite(bool v = true) const
         {
-            info[MISCREG_USR_NS_WR] = v;
+            entry.info[MISCREG_USR_NS_WR] = v;
             return *this;
         }
         chain
         userSecureRead(bool v = true) const
         {
-            info[MISCREG_USR_S_RD] = v;
+            entry.info[MISCREG_USR_S_RD] = v;
             return *this;
         }
         chain
         userSecureWrite(bool v = true) const
         {
-            info[MISCREG_USR_S_WR] = v;
+            entry.info[MISCREG_USR_S_WR] = v;
             return *this;
         }
         chain
@@ -1296,13 +1297,13 @@ namespace ArmISA
         chain
         privNonSecureRead(bool v = true) const
         {
-            info[MISCREG_PRI_NS_RD] = v;
+            entry.info[MISCREG_PRI_NS_RD] = v;
             return *this;
         }
         chain
         privNonSecureWrite(bool v = true) const
         {
-            info[MISCREG_PRI_NS_WR] = v;
+            entry.info[MISCREG_PRI_NS_WR] = v;
             return *this;
         }
         chain
@@ -1315,13 +1316,13 @@ namespace ArmISA
         chain
         privSecureRead(bool v = true) const
         {
-            info[MISCREG_PRI_S_RD] = v;
+            entry.info[MISCREG_PRI_S_RD] = v;
             return *this;
         }
         chain
         privSecureWrite(bool v = true) const
         {
-            info[MISCREG_PRI_S_WR] = v;
+            entry.info[MISCREG_PRI_S_WR] = v;
             return *this;
         }
         chain
@@ -1348,13 +1349,13 @@ namespace ArmISA
         chain
         hypE2HSecureRead(bool v = true) const
         {
-            info[MISCREG_HYP_E2H_S_RD] = v;
+            entry.info[MISCREG_HYP_E2H_S_RD] = v;
             return *this;
         }
         chain
         hypE2HNonSecureRead(bool v = true) const
         {
-            info[MISCREG_HYP_E2H_NS_RD] = v;
+            entry.info[MISCREG_HYP_E2H_NS_RD] = v;
             return *this;
         }
         chain
@@ -1367,13 +1368,13 @@ namespace ArmISA
         chain
         hypE2HSecureWrite(bool v = true) const
         {
-            info[MISCREG_HYP_E2H_S_WR] = v;
+            entry.info[MISCREG_HYP_E2H_S_WR] = v;
             return *this;
         }
         chain
         hypE2HNonSecureWrite(bool v = true) const
         {
-            info[MISCREG_HYP_E2H_NS_WR] = v;
+            entry.info[MISCREG_HYP_E2H_NS_WR] = v;
             return *this;
         }
         chain
@@ -1393,13 +1394,13 @@ namespace ArmISA
         chain
         hypSecureRead(bool v = true) const
         {
-            info[MISCREG_HYP_S_RD] = v;
+            entry.info[MISCREG_HYP_S_RD] = v;
             return *this;
         }
         chain
         hypNonSecureRead(bool v = true) const
         {
-            info[MISCREG_HYP_NS_RD] = v;
+            entry.info[MISCREG_HYP_NS_RD] = v;
             return *this;
         }
         chain
@@ -1413,13 +1414,13 @@ namespace ArmISA
         chain
         hypSecureWrite(bool v = true) const
         {
-            info[MISCREG_HYP_S_WR] = v;
+            entry.info[MISCREG_HYP_S_WR] = v;
             return *this;
         }
         chain
         hypNonSecureWrite(bool v = true) const
         {
-            info[MISCREG_HYP_NS_WR] = v;
+            entry.info[MISCREG_HYP_NS_WR] = v;
             return *this;
         }
         chain
@@ -1449,13 +1450,13 @@ namespace ArmISA
         chain
         monE2HRead(bool v = true) const
         {
-            info[MISCREG_MON_E2H_RD] = v;
+            entry.info[MISCREG_MON_E2H_RD] = v;
             return *this;
         }
         chain
         monE2HWrite(bool v = true) const
         {
-            info[MISCREG_MON_E2H_WR] = v;
+            entry.info[MISCREG_MON_E2H_WR] = v;
             return *this;
         }
         chain
@@ -1469,28 +1470,28 @@ namespace ArmISA
         monSecureRead(bool v = true) const
         {
             monE2HRead(v);
-            info[MISCREG_MON_NS0_RD] = v;
+            entry.info[MISCREG_MON_NS0_RD] = v;
             return *this;
         }
         chain
         monSecureWrite(bool v = true) const
         {
             monE2HWrite(v);
-            info[MISCREG_MON_NS0_WR] = v;
+            entry.info[MISCREG_MON_NS0_WR] = v;
             return *this;
         }
         chain
         monNonSecureRead(bool v = true) const
         {
             monE2HRead(v);
-            info[MISCREG_MON_NS1_RD] = v;
+            entry.info[MISCREG_MON_NS1_RD] = v;
             return *this;
         }
         chain
         monNonSecureWrite(bool v = true) const
         {
             monE2HWrite(v);
-            info[MISCREG_MON_NS1_WR] = v;
+            entry.info[MISCREG_MON_NS1_WR] = v;
             return *this;
         }
         chain
@@ -1590,10 +1591,8 @@ namespace ArmISA
             return *this;
         }
         chain highest(ArmSystem *const sys) const;
-        MiscRegLUTEntryInitializer(struct MiscRegLUTEntry &e,
-                                   std::bitset<NUM_MISCREG_INFOS> &i)
-          : entry(e),
-            info(i)
+        MiscRegLUTEntryInitializer(struct MiscRegLUTEntry &e)
+          : entry(e)
         {
             // force unimplemented registers to be thusly declared
             implemented(1);
@@ -1601,7 +1600,6 @@ namespace ArmISA
     };
 
     extern std::vector<struct MiscRegLUTEntry> lookUpMiscReg;
-    extern std::bitset<NUM_MISCREG_INFOS> miscRegInfo[NUM_MISCREGS];
 
     struct MiscRegNum32
     {

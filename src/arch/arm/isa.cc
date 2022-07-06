@@ -766,8 +766,9 @@ ISA::readMiscReg(int misc_reg)
     }
 
 #ifndef NDEBUG
-    if (!miscRegInfo[misc_reg][MISCREG_IMPLEMENTED]) {
-        if (miscRegInfo[misc_reg][MISCREG_WARN_NOT_FAIL])
+    auto& miscreg_info = lookUpMiscReg[misc_reg].info;
+    if (!miscreg_info[MISCREG_IMPLEMENTED]) {
+        if (miscreg_info[MISCREG_WARN_NOT_FAIL])
             warn("Unimplemented system register %s read.\n",
                  miscRegName[misc_reg]);
         else
@@ -1143,8 +1144,9 @@ ISA::setMiscReg(int misc_reg, RegVal val)
         }
     } else {
 #ifndef NDEBUG
-        if (!miscRegInfo[misc_reg][MISCREG_IMPLEMENTED]) {
-            if (miscRegInfo[misc_reg][MISCREG_WARN_NOT_FAIL])
+        auto& miscreg_info = lookUpMiscReg[misc_reg].info;
+        if (!miscreg_info[MISCREG_IMPLEMENTED]) {
+            if (miscreg_info[MISCREG_WARN_NOT_FAIL])
                 warn("Unimplemented system register %s write with %#x.\n",
                     miscRegName[misc_reg], val);
             else

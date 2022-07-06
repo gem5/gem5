@@ -562,13 +562,14 @@ std::tuple<bool, bool>
 canReadCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
 {
     bool secure = !scr.ns;
-    bool canRead = false;
+    bool can_read = false;
     bool undefined = false;
+    auto& miscreg_info = lookUpMiscReg[reg].info;
 
     switch (cpsr.mode) {
       case MODE_USER:
-        canRead = secure ? miscRegInfo[reg][MISCREG_USR_S_RD] :
-                           miscRegInfo[reg][MISCREG_USR_NS_RD];
+        can_read = secure ? miscreg_info[MISCREG_USR_S_RD] :
+                            miscreg_info[MISCREG_USR_NS_RD];
         break;
       case MODE_FIQ:
       case MODE_IRQ:
@@ -576,15 +577,15 @@ canReadCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
       case MODE_ABORT:
       case MODE_UNDEFINED:
       case MODE_SYSTEM:
-        canRead = secure ? miscRegInfo[reg][MISCREG_PRI_S_RD] :
-                           miscRegInfo[reg][MISCREG_PRI_NS_RD];
+        can_read = secure ? miscreg_info[MISCREG_PRI_S_RD] :
+                            miscreg_info[MISCREG_PRI_NS_RD];
         break;
       case MODE_MON:
-        canRead = secure ? miscRegInfo[reg][MISCREG_MON_NS0_RD] :
-                           miscRegInfo[reg][MISCREG_MON_NS1_RD];
+        can_read = secure ? miscreg_info[MISCREG_MON_NS0_RD] :
+                            miscreg_info[MISCREG_MON_NS1_RD];
         break;
       case MODE_HYP:
-        canRead = miscRegInfo[reg][MISCREG_HYP_NS_RD];
+        can_read = miscreg_info[MISCREG_HYP_NS_RD];
         break;
       default:
         undefined = true;
@@ -600,21 +601,22 @@ canReadCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
     }
 
     // can't do permissions checkes on the root of a banked pair of regs
-    assert(!miscRegInfo[reg][MISCREG_BANKED]);
-    return std::make_tuple(canRead, undefined);
+    assert(!miscreg_info[MISCREG_BANKED]);
+    return std::make_tuple(can_read, undefined);
 }
 
 std::tuple<bool, bool>
 canWriteCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
 {
     bool secure = !scr.ns;
-    bool canWrite = false;
+    bool can_write = false;
     bool undefined = false;
+    const auto& miscreg_info = lookUpMiscReg[reg].info;
 
     switch (cpsr.mode) {
       case MODE_USER:
-        canWrite = secure ? miscRegInfo[reg][MISCREG_USR_S_WR] :
-                            miscRegInfo[reg][MISCREG_USR_NS_WR];
+        can_write = secure ? miscreg_info[MISCREG_USR_S_WR] :
+                             miscreg_info[MISCREG_USR_NS_WR];
         break;
       case MODE_FIQ:
       case MODE_IRQ:
@@ -622,15 +624,15 @@ canWriteCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
       case MODE_ABORT:
       case MODE_UNDEFINED:
       case MODE_SYSTEM:
-        canWrite = secure ? miscRegInfo[reg][MISCREG_PRI_S_WR] :
-                            miscRegInfo[reg][MISCREG_PRI_NS_WR];
+        can_write = secure ? miscreg_info[MISCREG_PRI_S_WR] :
+                             miscreg_info[MISCREG_PRI_NS_WR];
         break;
       case MODE_MON:
-        canWrite = secure ? miscRegInfo[reg][MISCREG_MON_NS0_WR] :
-                            miscRegInfo[reg][MISCREG_MON_NS1_WR];
+        can_write = secure ? miscreg_info[MISCREG_MON_NS0_WR] :
+                             miscreg_info[MISCREG_MON_NS1_WR];
         break;
       case MODE_HYP:
-        canWrite =  miscRegInfo[reg][MISCREG_HYP_NS_WR];
+        can_write =  miscreg_info[MISCREG_HYP_NS_WR];
         break;
       default:
         undefined = true;
@@ -646,8 +648,8 @@ canWriteCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
     }
 
     // can't do permissions checkes on the root of a banked pair of regs
-    assert(!miscRegInfo[reg][MISCREG_BANKED]);
-    return std::make_tuple(canWrite, undefined);
+    assert(!miscreg_info[MISCREG_BANKED]);
+    return std::make_tuple(can_write, undefined);
 }
 
 bool
@@ -673,7 +675,7 @@ int
 snsBankedIndex(MiscRegIndex reg, ThreadContext *tc, bool ns)
 {
     int reg_as_int = static_cast<int>(reg);
-    if (miscRegInfo[reg][MISCREG_BANKED]) {
+    if (lookUpMiscReg[reg].info[MISCREG_BANKED]) {
         reg_as_int += (ArmSystem::haveEL(tc, EL3) &&
                       !ArmSystem::highestELIs64(tc) && !ns) ? 2 : 1;
     }
@@ -703,9 +705,9 @@ preUnflattenMiscReg()
 {
     int reg = -1;
     for (int i = 0 ; i < NUM_MISCREGS; i++){
-        if (miscRegInfo[i][MISCREG_BANKED])
+        if (lookUpMiscReg[i].info[MISCREG_BANKED])
             reg = i;
-        if (miscRegInfo[i][MISCREG_BANKED_CHILD])
+        if (lookUpMiscReg[i].info[MISCREG_BANKED_CHILD])
             unflattenResultMiscReg[i] = reg;
         else
             unflattenResultMiscReg[i] = i;
@@ -742,26 +744,27 @@ canReadAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
 
     bool secure = ArmSystem::haveEL(tc, EL3) && !scr.ns;
     bool el2_host = EL2Enabled(tc) && hcr.e2h;
+    const auto& miscreg_info = lookUpMiscReg[reg].info;
 
     switch (currEL(cpsr)) {
       case EL0:
-        return secure ? miscRegInfo[reg][MISCREG_USR_S_RD] :
-            miscRegInfo[reg][MISCREG_USR_NS_RD];
+        return secure ? miscreg_info[MISCREG_USR_S_RD] :
+            miscreg_info[MISCREG_USR_NS_RD];
       case EL1:
-        return secure ? miscRegInfo[reg][MISCREG_PRI_S_RD] :
-            miscRegInfo[reg][MISCREG_PRI_NS_RD];
+        return secure ? miscreg_info[MISCREG_PRI_S_RD] :
+            miscreg_info[MISCREG_PRI_NS_RD];
       case EL2:
         if (el2_host) {
-            return secure ? miscRegInfo[reg][MISCREG_HYP_E2H_S_RD] :
-                miscRegInfo[reg][MISCREG_HYP_E2H_NS_RD];
+            return secure ? miscreg_info[MISCREG_HYP_E2H_S_RD] :
+                miscreg_info[MISCREG_HYP_E2H_NS_RD];
         } else {
-            return secure ? miscRegInfo[reg][MISCREG_HYP_S_RD] :
-                miscRegInfo[reg][MISCREG_HYP_NS_RD];
+            return secure ? miscreg_info[MISCREG_HYP_S_RD] :
+                miscreg_info[MISCREG_HYP_NS_RD];
         }
       case EL3:
-        return el2_host ? miscRegInfo[reg][MISCREG_MON_E2H_RD] :
-            secure ? miscRegInfo[reg][MISCREG_MON_NS0_RD] :
-            miscRegInfo[reg][MISCREG_MON_NS1_RD];
+        return el2_host ? miscreg_info[MISCREG_MON_E2H_RD] :
+            secure ? miscreg_info[MISCREG_MON_NS0_RD] :
+            miscreg_info[MISCREG_MON_NS1_RD];
       default:
         panic("Invalid exception level");
     }
@@ -778,33 +781,33 @@ canWriteAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
 
     bool secure = ArmSystem::haveEL(tc, EL3) && !scr.ns;
     bool el2_host = EL2Enabled(tc) && hcr.e2h;
+    const auto& miscreg_info = lookUpMiscReg[reg].info;
 
     switch (el) {
       case EL0:
-        return secure ? miscRegInfo[reg][MISCREG_USR_S_WR] :
-            miscRegInfo[reg][MISCREG_USR_NS_WR];
+        return secure ? miscreg_info[MISCREG_USR_S_WR] :
+            miscreg_info[MISCREG_USR_NS_WR];
       case EL1:
-        return secure ? miscRegInfo[reg][MISCREG_PRI_S_WR] :
-            miscRegInfo[reg][MISCREG_PRI_NS_WR];
+        return secure ? miscreg_info[MISCREG_PRI_S_WR] :
+            miscreg_info[MISCREG_PRI_NS_WR];
       case EL2:
         if (el2_host) {
-            return secure ? miscRegInfo[reg][MISCREG_HYP_E2H_S_WR] :
-                miscRegInfo[reg][MISCREG_HYP_E2H_NS_WR];
+            return secure ? miscreg_info[MISCREG_HYP_E2H_S_WR] :
+                miscreg_info[MISCREG_HYP_E2H_NS_WR];
         } else {
-            return secure ? miscRegInfo[reg][MISCREG_HYP_S_WR] :
-                miscRegInfo[reg][MISCREG_HYP_NS_WR];
+            return secure ? miscreg_info[MISCREG_HYP_S_WR] :
+                miscreg_info[MISCREG_HYP_NS_WR];
         }
       case EL3:
-        return el2_host ? miscRegInfo[reg][MISCREG_MON_E2H_WR] :
-            secure ? miscRegInfo[reg][MISCREG_MON_NS0_WR] :
-            miscRegInfo[reg][MISCREG_MON_NS1_WR];
+        return el2_host ? miscreg_info[MISCREG_MON_E2H_WR] :
+            secure ? miscreg_info[MISCREG_MON_NS0_WR] :
+            miscreg_info[MISCREG_MON_NS1_WR];
       default:
         panic("Invalid exception level");
     }
 }
 
 std::vector<struct MiscRegLUTEntry> lookUpMiscReg(NUM_MISCREGS);
-std::bitset<NUM_MISCREG_INFOS> miscRegInfo[NUM_MISCREGS]; // initialized below
 
 namespace {
 

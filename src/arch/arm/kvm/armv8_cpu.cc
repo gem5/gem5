@@ -391,7 +391,7 @@ ArmV8KvmCPU::getSysRegMap() const
         const uint64_t crm(EXTRACT_FIELD(reg, KVM_REG_ARM64_SYSREG_CRM));
         const uint64_t op2(EXTRACT_FIELD(reg, KVM_REG_ARM64_SYSREG_OP2));
         const MiscRegIndex idx(decodeAArch64SysReg(op0, op1, crn, crm, op2));
-        const auto &info(miscRegInfo[idx]);
+        const auto &info(lookUpMiscReg[idx].info);
         const bool writeable(
             info[MISCREG_USR_NS_WR] || info[MISCREG_USR_S_WR] ||
             info[MISCREG_PRI_S_WR] || info[MISCREG_PRI_NS_WR] ||

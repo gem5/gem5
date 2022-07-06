@@ -110,8 +110,7 @@ namespace ArmISA
         const MiscRegLUTEntryInitializer
         InitReg(uint32_t reg)
         {
-            return MiscRegLUTEntryInitializer(lookUpMiscReg[reg],
-                                              miscRegInfo[reg]);
+            return MiscRegLUTEntryInitializer(lookUpMiscReg[reg]);
         }
 
         void initializeMiscRegMetadata();
@@ -342,7 +341,7 @@ namespace ArmISA
                     flat_idx = MISCREG_SPSR;
                     break;
                 }
-            } else if (miscRegInfo[reg][MISCREG_MUTEX]) {
+            } else if (lookUpMiscReg[reg].info[MISCREG_MUTEX]) {
                 // Mutually exclusive CP15 register
                 switch (reg) {
                   case MISCREG_PRRR_MAIR0:
@@ -391,7 +390,7 @@ namespace ArmISA
                     break;
                 }
             } else {
-                if (miscRegInfo[reg][MISCREG_BANKED]) {
+                if (lookUpMiscReg[reg].info[MISCREG_BANKED]) {
                     bool secure_reg = !highestELIs64 && inSecureState();
                     flat_idx += secure_reg ? 2 : 1;
                 } else {
@@ -412,7 +411,7 @@ namespace ArmISA
         snsBankedIndex64(MiscRegIndex reg, bool ns) const
         {
             int reg_as_int = static_cast<int>(reg);
-            if (miscRegInfo[reg][MISCREG_BANKED64]) {
+            if (lookUpMiscReg[reg].info[MISCREG_BANKED64]) {
                 reg_as_int += (release->has(ArmExtension::SECURITY) && !ns) ?
                     2 : 1;
             }
@@ -435,8 +434,8 @@ namespace ArmISA
             int lower = lookUpMiscReg[flat_idx].lower;
             int upper = lookUpMiscReg[flat_idx].upper;
             // upper == 0, which is CPSR, is not MISCREG_BANKED_CHILD (no-op)
-            lower += S && miscRegInfo[lower][MISCREG_BANKED_CHILD];
-            upper += S && miscRegInfo[upper][MISCREG_BANKED_CHILD];
+            lower += S && lookUpMiscReg[lower].info[MISCREG_BANKED_CHILD];
+            upper += S && lookUpMiscReg[upper].info[MISCREG_BANKED_CHILD];
             return std::make_pair(lower, upper);
         }
 

@@ -547,7 +547,7 @@ let {{
             MiscRegIndex misc_index = (MiscRegIndex) xc->tcBase()->
                 flattenRegId(miscRegClass[pre_flat]).index();
 
-            if (!miscRegInfo[misc_index][MISCREG_IMPLEMENTED]) {
+            if (!lookUpMiscReg[misc_index].info[MISCREG_IMPLEMENTED]) {
                     return std::make_shared<UndefinedInstruction>(
                                     machInst, false,
                                     mnemonic);

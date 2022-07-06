@@ -202,34 +202,34 @@ let {{
         const uint32_t crn = bits(machInst, 19, 16);
         const uint32_t opc2 = bits(machInst, 7, 5);
         const uint32_t crm = bits(machInst, 3, 0);
-        const MiscRegIndex miscReg = decodeCP15Reg(crn, opc1, crm, opc2);
+        const MiscRegIndex misc_reg = decodeCP15Reg(crn, opc1, crm, opc2);
         const RegIndex rt = (RegIndex)(uint32_t)bits(machInst, 15, 12);
-        const bool isRead = bits(machInst, 20);
-        uint32_t iss = mcrMrcIssBuild(isRead, crm, rt, crn, opc1, opc2);
+        const bool is_read = bits(machInst, 20);
+        uint32_t iss = mcrMrcIssBuild(is_read, crm, rt, crn, opc1, opc2);
 
-        switch (miscReg) {
+        switch (misc_reg) {
           case MISCREG_NOP:
-            return new McrMrcMiscInst(isRead ? "mrc nop" : "mcr nop",
+            return new McrMrcMiscInst(is_read ? "mrc nop" : "mcr nop",
                                       machInst, iss, MISCREG_NOP);
           case MISCREG_UNKNOWN:
-            return new FailUnimplemented(isRead ? "mrc unkown" : "mcr unkown",
+            return new FailUnimplemented(is_read ? "mrc unkown" : "mcr unkown",
                     machInst,
                     csprintf("miscreg crn:%d opc1:%d crm:%d opc2:%d %s unknown",
-                    crn, opc1, crm, opc2, isRead ? "read" : "write"));
+                    crn, opc1, crm, opc2, is_read ? "read" : "write"));
           case MISCREG_IMPDEF_UNIMPL:
 
-            if (miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]) {
+            if (lookUpMiscReg[misc_reg].info[MISCREG_WARN_NOT_FAIL]) {
                 auto mnemonic =
                     csprintf("miscreg crn:%d opc1:%d crm:%d opc2:%d %s",
-                             crn, opc1, crm, opc2, isRead ? "read" : "write");
+                             crn, opc1, crm, opc2, is_read ? "read" : "write");
 
                 return new WarnUnimplemented(
-                    isRead ? "mrc implementation defined" :
-                             "mcr implementation defined",
+                    is_read ? "mrc implementation defined" :
+                              "mcr implementation defined",
                     machInst, mnemonic + " treated as NOP");
             } else {
                 return new McrMrcImplDefined(
-                    isRead ? "mrc implementation defined" :
+                    is_read ? "mrc implementation defined" :
                              "mcr implementation defined",
                     machInst, iss, MISCREG_IMPDEF_UNIMPL);
             }
@@ -240,13 +240,13 @@ let {{
           case MISCREG_CP15DMB:
             return new Dmb(machInst, iss);
           case MISCREG_DCIMVAC:
-            return new McrDcimvac(machInst, miscReg, rt, iss);
+            return new McrDcimvac(machInst, misc_reg, rt, iss);
           case MISCREG_DCCMVAC:
-            return new McrDccmvac(machInst, miscReg, rt, iss);
+            return new McrDccmvac(machInst, misc_reg, rt, iss);
           case MISCREG_DCCMVAU:
-            return new McrDccmvau(machInst, miscReg, rt, iss);
+            return new McrDccmvau(machInst, misc_reg, rt, iss);
           case MISCREG_DCCIMVAC:
-            return new McrDccimvac(machInst, miscReg, rt, iss);
+            return new McrDccimvac(machInst, misc_reg, rt, iss);
           case MISCREG_TLBIALL:
           case MISCREG_TLBIALLIS:
           case MISCREG_ITLBIALL:
@@ -277,11 +277,12 @@ let {{
           case MISCREG_TLBIALLNSNHIS:
           case MISCREG_TLBIALLH:
           case MISCREG_TLBIALLHIS:
-            return new Tlbi(machInst, miscReg, rt, iss);
+            return new Tlbi(machInst, misc_reg, rt, iss);
           default:
-            if (miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]) {
+            auto& miscreg_info = lookUpMiscReg[misc_reg].info;
+            if (miscreg_info[MISCREG_WARN_NOT_FAIL]) {
                 std::string full_mnem = csprintf("%s %s",
-                    isRead ? "mrc" : "mcr", miscRegName[miscReg]);
+                    is_read ? "mrc" : "mcr", miscRegName[misc_reg]);
                 warn("\\tinstruction '%s' unimplemented\\n", full_mnem);
 
                 // Remove the warn flag and set the implemented flag. This
@@ -290,18 +291,18 @@ let {{
                 // creating the instruction to access an register that isn't
                 // implemented sounds a bit silly, but its required to get
                 // the correct behaviour for hyp traps and undef exceptions.
-                miscRegInfo[miscReg][MISCREG_IMPLEMENTED]   = true;
-                miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL] = false;
+                miscreg_info[MISCREG_IMPLEMENTED]   = true;
+                miscreg_info[MISCREG_WARN_NOT_FAIL] = false;
             }
 
-            if (miscRegInfo[miscReg][MISCREG_IMPLEMENTED]) {
-                if (isRead)
-                    return new Mrc15(machInst, rt, miscReg, iss);
-                return new Mcr15(machInst, miscReg, rt, iss);
+            if (miscreg_info[MISCREG_IMPLEMENTED]) {
+                if (is_read)
+                    return new Mrc15(machInst, rt, misc_reg, iss);
+                return new Mcr15(machInst, misc_reg, rt, iss);
             } else {
-                return new FailUnimplemented(isRead ? "mrc" : "mcr", machInst,
-                    csprintf("%s %s", isRead ? "mrc" : "mcr",
-                        miscRegName[miscReg]));
+                return new FailUnimplemented(is_read ? "mrc" : "mcr", machInst,
+                    csprintf("%s %s", is_read ? "mrc" : "mcr",
+                        miscRegName[misc_reg]));
             }
         }
     }
@@ -325,21 +326,22 @@ let {{
     {
         const uint32_t crm = bits(machInst, 3, 0);
         const uint32_t opc1 = bits(machInst, 7, 4);
-        const MiscRegIndex miscReg = decodeCP15Reg64(crm, opc1);
+        const MiscRegIndex misc_reg = decodeCP15Reg64(crm, opc1);
         const RegIndex rt = (RegIndex) (uint32_t) bits(machInst, 15, 12);
         const RegIndex rt2 = (RegIndex) (uint32_t) bits(machInst, 19, 16);
 
-        const bool isRead = bits(machInst, 20);
+        const bool is_read = bits(machInst, 20);
 
-        switch (miscReg) {
+        switch (misc_reg) {
           case MISCREG_UNKNOWN:
-            return new FailUnimplemented(isRead ? "mrc" : "mcr", machInst,
+            return new FailUnimplemented(is_read ? "mrc" : "mcr", machInst,
                     csprintf("miscreg crm:%d opc1:%d 64-bit %s unknown",
-                    crm, opc1, isRead ? "read" : "write"));
+                    crm, opc1, is_read ? "read" : "write"));
           default:
-            if (miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]) {
+            auto& miscreg_info = lookUpMiscReg[misc_reg].info;
+            if (miscreg_info[MISCREG_WARN_NOT_FAIL]) {
                 std::string full_mnem = csprintf("%s %s",
-                    isRead ? "mrrc" : "mcrr", miscRegName[miscReg]);
+                    is_read ? "mrrc" : "mcrr", miscRegName[misc_reg]);
                 warn("\\tinstruction '%s' unimplemented\\n", full_mnem);
 
                 // Remove the warn flag and set the implemented flag. This
@@ -348,24 +350,24 @@ let {{
                 // creating the instruction to access an register that isn't
                 // implemented sounds a bit silly, but its required to get
                 // the correct behaviour for hyp traps and undef exceptions.
-                miscRegInfo[miscReg][MISCREG_IMPLEMENTED]   = true;
-                miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL] = false;
+                miscreg_info[MISCREG_IMPLEMENTED]   = true;
+                miscreg_info[MISCREG_WARN_NOT_FAIL] = false;
             }
 
-            if (miscRegInfo[miscReg][MISCREG_IMPLEMENTED]) {
-                uint32_t iss = mcrrMrrcIssBuild(isRead, crm, rt, rt2, opc1);
+            if (miscreg_info[MISCREG_IMPLEMENTED]) {
+                uint32_t iss = mcrrMrrcIssBuild(is_read, crm, rt, rt2, opc1);
 
-                if (isRead) {
-                    StaticInstPtr si =  new Mrrc15(machInst, miscReg, rt2, rt, iss);
-                    if (miscRegInfo[miscReg][MISCREG_UNVERIFIABLE])
+                if (is_read) {
+                    StaticInstPtr si =  new Mrrc15(machInst, misc_reg, rt2, rt, iss);
+                    if (miscreg_info[MISCREG_UNVERIFIABLE])
                         si->setFlag(StaticInst::IsUnverifiable);
                     return si;
                 }
-                return new Mcrr15(machInst, rt2, rt, miscReg, iss);
+                return new Mcrr15(machInst, rt2, rt, misc_reg, iss);
             } else {
-                return new FailUnimplemented(isRead ? "mrrc" : "mcrr", machInst,
+                return new FailUnimplemented(is_read ? "mrrc" : "mcrr", machInst,
                     csprintf("%s %s",
-                    isRead ? "mrrc" : "mcrr", miscRegName[miscReg]));
+                    is_read ? "mrrc" : "mcrr", miscRegName[misc_reg]));
             }
         }
     }
