@@ -136,12 +136,10 @@ SharedMemoryServer::ListenSocketEvent::process(int revents)
     int cli_fd = ListenSocket::acceptCloexec(pfd.fd, nullptr, nullptr);
     panic_if(cli_fd < 0, "%s: accept failed: %s", name().c_str(),
              strerror(errno));
-    panic_if(shmServer->clientSocketEvent.get(),
-             "%s: cannot serve two clients at once", name().c_str());
     inform("%s: accept new connection %d", name().c_str(), cli_fd);
-    shmServer->clientSocketEvent.reset(
+    shmServer->clientSocketEvents[cli_fd].reset(
         new ClientSocketEvent(cli_fd, shmServer));
-    pollQueue.schedule(shmServer->clientSocketEvent.get());
+    pollQueue.schedule(shmServer->clientSocketEvents[cli_fd].get());
 }
 
 void
@@ -241,7 +239,7 @@ SharedMemoryServer::ClientSocketEvent::process(int revents)
     // somehow broken. We'll just close the connection and move on.
     inform("%s: closing connection", name().c_str());
     close(pfd.fd);
-    shmServer->clientSocketEvent.reset();
+    shmServer->clientSocketEvents.erase(pfd.fd);
 }
 
 } // namespace memory
