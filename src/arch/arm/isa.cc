@@ -127,8 +127,6 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
     clear();
 }
 
-std::vector<struct ISA::MiscRegLUTEntry> ISA::lookUpMiscReg(NUM_MISCREGS);
-
 void
 ISA::clear()
 {
@@ -2228,18 +2226,6 @@ ISA::addressTranslation(MMU::ArmTranslationType tran_type,
     }
     setMiscRegNoEffect(MISCREG_PAR, par);
     return;
-}
-
-ISA::MiscRegLUTEntryInitializer::chain
-ISA::MiscRegLUTEntryInitializer::highest(ArmSystem *const sys) const
-{
-    switch (FullSystem ? sys->highestEL() : EL1) {
-      case EL0:
-      case EL1: priv(); break;
-      case EL2: hyp(); break;
-      case EL3: mon(); break;
-    }
-    return *this;
 }
 
 template <class XC>

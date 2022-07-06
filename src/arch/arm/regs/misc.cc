@@ -803,6 +803,7 @@ canWriteAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
     }
 }
 
+std::vector<struct MiscRegLUTEntry> lookUpMiscReg(NUM_MISCREGS);
 std::bitset<NUM_MISCREG_INFOS> miscRegInfo[NUM_MISCREGS]; // initialized below
 
 namespace {
@@ -1326,6 +1327,18 @@ encodeAArch64SysReg(MiscRegIndex misc_reg)
     } else {
         panic("Invalid MiscRegIndex: %d\n", misc_reg);
     }
+}
+
+MiscRegLUTEntryInitializer::chain
+MiscRegLUTEntryInitializer::highest(ArmSystem *const sys) const
+{
+    switch (FullSystem ? sys->highestEL() : EL1) {
+      case EL0:
+      case EL1: priv(); break;
+      case EL2: hyp(); break;
+      case EL3: mon(); break;
+    }
+    return *this;
 }
 
 void
