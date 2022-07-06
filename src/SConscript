@@ -48,7 +48,7 @@ import sys
 
 import SCons
 
-from gem5_scons import Transform, warning, error, ToValue, FromValue
+from gem5_scons import Configure, error, FromValue, ToValue, Transform, warning
 from gem5_scons.sources import *
 
 Export(SourceFilter.factories)
@@ -268,7 +268,10 @@ def ProtoBuf(source, tags=None, add_tags=None):
 
 env['PROTOC_GRPC'] = distutils.spawn.find_executable('grpc_cpp_plugin')
 if env['PROTOC_GRPC']:
-    env.Append(LIBS=['grpc++'])
+    with Configure(env) as conf:
+        if (not env['HAVE_PKG_CONFIG'] or
+            not conf.CheckPkgConfig(['grpc++'], '--libs')):
+            env.Append(LIBS=['grpc++'])
 
 def protoc_grpc_emitter(target, source, env):
     root, ext = os.path.splitext(source[0].get_abspath())
