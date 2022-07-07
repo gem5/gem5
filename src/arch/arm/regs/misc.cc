@@ -723,77 +723,26 @@ unflattenMiscReg(int reg)
     return unflattenResultMiscReg[reg];
 }
 
-bool
-canReadAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
-                     ThreadContext *tc)
+Fault
+checkFaultReadAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
+                            ThreadContext *tc, const MiscRegOp64 &inst)
 {
     // Check for SP_EL0 access while SPSEL == 0
     if ((reg == MISCREG_SP_EL0) && (tc->readMiscReg(MISCREG_SPSEL) == 0))
-        return false;
+        return inst.undefined();
 
-    bool secure = ArmSystem::haveEL(tc, EL3) && !scr.ns;
-    bool el2_host = EL2Enabled(tc) && hcr.e2h;
-    const auto& miscreg_info = lookUpMiscReg[reg].info;
-
-    switch (currEL(cpsr)) {
-      case EL0:
-        return secure ? miscreg_info[MISCREG_USR_S_RD] :
-            miscreg_info[MISCREG_USR_NS_RD];
-      case EL1:
-        return secure ? miscreg_info[MISCREG_PRI_S_RD] :
-            miscreg_info[MISCREG_PRI_NS_RD];
-      case EL2:
-        if (el2_host) {
-            return secure ? miscreg_info[MISCREG_HYP_E2H_S_RD] :
-                miscreg_info[MISCREG_HYP_E2H_NS_RD];
-        } else {
-            return secure ? miscreg_info[MISCREG_HYP_S_RD] :
-                miscreg_info[MISCREG_HYP_NS_RD];
-        }
-      case EL3:
-        return el2_host ? miscreg_info[MISCREG_MON_E2H_RD] :
-            secure ? miscreg_info[MISCREG_MON_NS0_RD] :
-            miscreg_info[MISCREG_MON_NS1_RD];
-      default:
-        panic("Invalid exception level");
-    }
+    return lookUpMiscReg[reg].checkFault(tc, inst, currEL(cpsr));
 }
 
-bool
-canWriteAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
-                      ThreadContext *tc)
+Fault
+checkFaultWriteAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
+                             ThreadContext *tc, const MiscRegOp64 &inst)
 {
     // Check for SP_EL0 access while SPSEL == 0
     if ((reg == MISCREG_SP_EL0) && (tc->readMiscReg(MISCREG_SPSEL) == 0))
-        return false;
-    ExceptionLevel el = currEL(cpsr);
+        return inst.undefined();
 
-    bool secure = ArmSystem::haveEL(tc, EL3) && !scr.ns;
-    bool el2_host = EL2Enabled(tc) && hcr.e2h;
-    const auto& miscreg_info = lookUpMiscReg[reg].info;
-
-    switch (el) {
-      case EL0:
-        return secure ? miscreg_info[MISCREG_USR_S_WR] :
-            miscreg_info[MISCREG_USR_NS_WR];
-      case EL1:
-        return secure ? miscreg_info[MISCREG_PRI_S_WR] :
-            miscreg_info[MISCREG_PRI_NS_WR];
-      case EL2:
-        if (el2_host) {
-            return secure ? miscreg_info[MISCREG_HYP_E2H_S_WR] :
-                miscreg_info[MISCREG_HYP_E2H_NS_WR];
-        } else {
-            return secure ? miscreg_info[MISCREG_HYP_S_WR] :
-                miscreg_info[MISCREG_HYP_NS_WR];
-        }
-      case EL3:
-        return el2_host ? miscreg_info[MISCREG_MON_E2H_WR] :
-            secure ? miscreg_info[MISCREG_MON_NS0_WR] :
-            miscreg_info[MISCREG_MON_NS1_WR];
-      default:
-        panic("Invalid exception level");
-    }
+    return lookUpMiscReg[reg].checkFault(tc, inst, currEL(cpsr));
 }
 
 std::vector<struct MiscRegLUTEntry> lookUpMiscReg(NUM_MISCREGS);

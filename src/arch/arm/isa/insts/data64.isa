@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013, 2016-2021 Arm Limited
+// Copyright (c) 2011-2013, 2016-2022 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -312,9 +312,9 @@ let {{
 
     msrMrs64EnabledCheckCode = '''
         // Check for read/write access right
-        if (!can%sAArch64SysReg(flat_idx, Hcr64, Scr64, cpsr, xc->tcBase())) {
-            return std::make_shared<UndefinedInstruction>(machInst, false,
-                                                          mnemonic);
+        if (fault = checkFault%sAArch64SysReg(flat_idx, Hcr64, Scr64, cpsr,
+            xc->tcBase(), *this); fault != NoFault) {
+            return fault;
         }
 
         fault = this->trap(xc->tcBase(), flat_idx, el);
@@ -553,12 +553,9 @@ let {{
                                     mnemonic);
             }
 
-            if (!canWriteAArch64SysReg(misc_index, Hcr64,
-                Scr64, Cpsr, xc->tcBase())) {
-
-                    return std::make_shared<UndefinedInstruction>(
-                                    machInst, 0, EC_TRAPPED_MSR_MRS_64,
-                                    mnemonic);
+            if (fault = checkFaultWriteAArch64SysReg(misc_index, Hcr64,
+                Scr64, Cpsr, xc->tcBase(), *this); fault != NoFault) {
+                    return fault;
             }
 
         '''
