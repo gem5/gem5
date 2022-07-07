@@ -39,6 +39,7 @@
 
 #include <tuple>
 
+#include "arch/arm/insts/misc64.hh"
 #include "arch/arm/isa.hh"
 #include "base/logging.hh"
 #include "cpu/thread_context.hh"
@@ -1329,6 +1330,92 @@ encodeAArch64SysReg(MiscRegIndex misc_reg)
         return it->second;
     } else {
         panic("Invalid MiscRegIndex: %d\n", misc_reg);
+    }
+}
+
+Fault
+MiscRegLUTEntry::checkFault(ThreadContext *tc,
+                            const MiscRegOp64 &inst, ExceptionLevel el)
+{
+    return !inst.miscRead() ? faultWrite[el](*this, tc, inst) :
+                              faultRead[el](*this, tc, inst);
+}
+
+template <MiscRegInfo Sec, MiscRegInfo NonSec>
+Fault
+MiscRegLUTEntry::defaultFault(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    if (isSecureBelowEL3(tc) ? entry.info[Sec] : entry.info[NonSec]) {
+        return NoFault;
+    } else {
+        return inst.undefined();
+    }
+}
+
+Fault
+MiscRegLUTEntry::defaultReadFaultEL2(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    const bool el2_host = EL2Enabled(tc) && hcr.e2h;
+    if (el2_host) {
+        return defaultFault<MISCREG_HYP_E2H_S_RD, MISCREG_HYP_E2H_NS_RD>(
+            entry, tc, inst);
+    } else {
+        return defaultFault<MISCREG_HYP_S_RD, MISCREG_HYP_NS_RD>(
+            entry, tc, inst);
+    }
+}
+
+Fault
+MiscRegLUTEntry::defaultWriteFaultEL2(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    const bool el2_host = EL2Enabled(tc) && hcr.e2h;
+    if (el2_host) {
+        return defaultFault<MISCREG_HYP_E2H_S_WR, MISCREG_HYP_E2H_NS_WR>(
+            entry, tc, inst);
+    } else {
+        return defaultFault<MISCREG_HYP_S_WR, MISCREG_HYP_NS_WR>(
+            entry, tc, inst);
+    }
+}
+
+Fault
+MiscRegLUTEntry::defaultReadFaultEL3(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    const bool el2_host = EL2Enabled(tc) && hcr.e2h;
+    if (el2_host) {
+        if (entry.info[MISCREG_MON_E2H_RD]) {
+            return NoFault;
+        } else {
+            return inst.undefined();
+        }
+    } else {
+        return defaultFault<MISCREG_MON_NS0_RD, MISCREG_MON_NS1_RD>(
+            entry, tc, inst);
+    }
+}
+
+Fault
+MiscRegLUTEntry::defaultWriteFaultEL3(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    const bool el2_host = EL2Enabled(tc) && hcr.e2h;
+    if (el2_host) {
+        if (entry.info[MISCREG_MON_E2H_WR]) {
+            return NoFault;
+        } else {
+            return inst.undefined();
+        }
+    } else {
+        return defaultFault<MISCREG_MON_NS0_WR, MISCREG_MON_NS1_WR>(
+            entry, tc, inst);
     }
 }
 

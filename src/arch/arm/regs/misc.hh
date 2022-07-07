@@ -45,6 +45,7 @@
 #include <tuple>
 
 #include "arch/arm/regs/misc_types.hh"
+#include "arch/arm/types.hh"
 #include "base/compiler.hh"
 #include "cpu/reg_class.hh"
 #include "debug/MiscRegs.hh"
@@ -55,6 +56,7 @@ namespace gem5
 
 class ArmSystem;
 class ThreadContext;
+class MiscRegOp64;
 
 namespace ArmISA
 {
@@ -1163,10 +1165,43 @@ namespace ArmISA
         uint64_t _raz;   // read as zero (fixed at 0)
         uint64_t _rao;   // read as one (fixed at 1)
         std::bitset<NUM_MISCREG_INFOS> info;
+
+        using FaultCB = std::function<
+            Fault(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                  const MiscRegOp64 &inst)
+        >;
+
+        std::array<FaultCB, EL3 + 1> faultRead;
+        std::array<FaultCB, EL3 + 1> faultWrite;
+
+        Fault checkFault(ThreadContext *tc, const MiscRegOp64 &inst,
+            ExceptionLevel el);
+
+      protected:
+        template <MiscRegInfo Sec, MiscRegInfo NonSec>
+        static Fault defaultFault(const MiscRegLUTEntry &entry,
+            ThreadContext *tc, const MiscRegOp64 &inst);
+        static Fault defaultReadFaultEL2(const MiscRegLUTEntry &entry,
+            ThreadContext *tc, const MiscRegOp64 &inst);
+        static Fault defaultWriteFaultEL2(const MiscRegLUTEntry &entry,
+            ThreadContext *tc, const MiscRegOp64 &inst);
+        static Fault defaultReadFaultEL3(const MiscRegLUTEntry &entry,
+            ThreadContext *tc, const MiscRegOp64 &inst);
+        static Fault defaultWriteFaultEL3(const MiscRegLUTEntry &entry,
+            ThreadContext *tc, const MiscRegOp64 &inst);
+
       public:
         MiscRegLUTEntry() :
             lower(0), upper(0),
-            _reset(0), _res0(0), _res1(0), _raz(0), _rao(0), info(0)
+            _reset(0), _res0(0), _res1(0), _raz(0), _rao(0), info(0),
+            faultRead({ defaultFault<MISCREG_USR_S_RD, MISCREG_USR_NS_RD>,
+                        defaultFault<MISCREG_PRI_S_RD, MISCREG_PRI_NS_RD>,
+                        defaultReadFaultEL2,
+                        defaultReadFaultEL3 }),
+            faultWrite({ defaultFault<MISCREG_USR_S_WR, MISCREG_USR_NS_WR>,
+                         defaultFault<MISCREG_PRI_S_WR, MISCREG_PRI_NS_WR>,
+                         defaultWriteFaultEL2,
+                         defaultWriteFaultEL3 })
         {}
         uint64_t reset() const { return _reset; }
         uint64_t res0()  const { return _res0; }
@@ -1591,6 +1626,33 @@ namespace ArmISA
             return *this;
         }
         chain highest(ArmSystem *const sys) const;
+
+        chain
+        faultRead(ExceptionLevel el, MiscRegLUTEntry::FaultCB cb) const
+        {
+            entry.faultRead[el] = cb;
+            return *this;
+        }
+
+        chain
+        faultWrite(ExceptionLevel el, MiscRegLUTEntry::FaultCB cb) const
+        {
+            entry.faultWrite[el] = cb;
+            return *this;
+        }
+
+        chain
+        fault(ExceptionLevel el, MiscRegLUTEntry::FaultCB cb) const
+        {
+            return faultRead(el, cb).faultWrite(el, cb);
+        }
+
+        chain
+        fault(MiscRegLUTEntry::FaultCB cb) const
+        {
+            return fault(EL0, cb).fault(EL1, cb).fault(EL2, cb).fault(EL3, cb);
+        }
+
         MiscRegLUTEntryInitializer(struct MiscRegLUTEntry &e)
           : entry(e)
         {
