@@ -731,18 +731,6 @@ canReadAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
     if ((reg == MISCREG_SP_EL0) && (tc->readMiscReg(MISCREG_SPSEL) == 0))
         return false;
 
-    // Check for RVBAR access
-    if (reg == MISCREG_RVBAR_EL1) {
-        ExceptionLevel highest_el = ArmSystem::highestEL(tc);
-        if (highest_el == EL2 || highest_el == EL3)
-            return false;
-    }
-    if (reg == MISCREG_RVBAR_EL2) {
-        ExceptionLevel highest_el = ArmSystem::highestEL(tc);
-        if (highest_el == EL3)
-            return false;
-    }
-
     bool secure = ArmSystem::haveEL(tc, EL3) && !scr.ns;
     bool el2_host = EL2Enabled(tc) && hcr.e2h;
     const auto& miscreg_info = lookUpMiscReg[reg].info;
@@ -3294,7 +3282,7 @@ ISA::initializeMiscRegMetadata()
       .hypE2H()
       .mapsTo(MISCREG_VBAR_NS);
     InitReg(MISCREG_RVBAR_EL1)
-      .allPrivileges().exceptUserMode().writes(0);
+      .privRead(FullSystem && system->highestEL() == EL1);
     InitReg(MISCREG_ISR_EL1)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_VBAR_EL2)
@@ -3302,7 +3290,7 @@ ISA::initializeMiscRegMetadata()
       .res0(0x7ff)
       .mapsTo(MISCREG_HVBAR);
     InitReg(MISCREG_RVBAR_EL2)
-      .mon().hyp().writes(0);
+      .hypRead(FullSystem && system->highestEL() == EL2);
     InitReg(MISCREG_VBAR_EL3)
       .mon();
     InitReg(MISCREG_RVBAR_EL3)
