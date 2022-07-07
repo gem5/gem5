@@ -509,10 +509,10 @@ decode QUADRANT default Unknown::unknown() {
                         0x02: cpop({{
                             Rd = popCount(Rs1);
                         }});
-                        0x04: sextb({{
+                        0x04: sext_b({{
                             Rd = sext<8>(Rs1_ub);
                         }});
-                        0x05: sexth({{
+                        0x05: sext_h({{
                             Rd = sext<16>(Rs1_uh);
                         }});
                     }
@@ -536,7 +536,7 @@ decode QUADRANT default Unknown::unknown() {
                     0x0: srli({{
                         Rd = Rs1 >> imm;
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
-                    0x5: orcb({{
+                    0x5: orc_b({{
                         Rd = 0;
                         Rd |= (Rs1<7:0> ? UINT64_C(0xff) : 0x0);
                         Rd |= (Rs1<15:8> ? UINT64_C(0xff) : 0x0) << 8;
@@ -589,7 +589,7 @@ decode QUADRANT default Unknown::unknown() {
                     0x0: slliw({{
                         Rd_sd = Rs1_sw << imm;
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
-                    0x1: slliuw({{
+                    0x1: slli_uw({{
                         Rd = ((uint64_t)(Rs1_uw)) << imm;
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
                     0xc: decode FS2 {
@@ -1089,7 +1089,7 @@ decode QUADRANT default Unknown::unknown() {
                     0x1: mulw({{
                         Rd_sd = (int32_t)(Rs1_sw*Rs2_sw);
                     }}, IntMultOp);
-                    0x4: adduw({{
+                    0x4: add_uw({{
                         Rd = Rs1_uw + Rs2;
                     }});
                     0x20: subw({{
@@ -1106,7 +1106,7 @@ decode QUADRANT default Unknown::unknown() {
                     }});
                 }
                 0x2: decode FUNCT7 {
-                    0x10: sh1adduw({{
+                    0x10: sh1add_uw({{
                         Rd = (((uint64_t)Rs1_uw) << 1) + Rs2;
                     }});
                 }
@@ -1121,10 +1121,10 @@ decode QUADRANT default Unknown::unknown() {
                             Rd_sd = Rs1_sw/Rs2_sw;
                         }
                     }}, IntDivOp);
-                    0x4: zexth ({{
+                    0x4: zext_h({{
                         Rd = Rs1_uh;
                     }});
-                    0x10: sh2adduw({{
+                    0x10: sh2add_uw({{
                         Rd = (((uint64_t)Rs1_uw) << 2) + Rs2;
                     }});
                 }
@@ -1158,7 +1158,7 @@ decode QUADRANT default Unknown::unknown() {
                             Rd_sd = Rs1_sw%Rs2_sw;
                         }
                     }}, IntDivOp);
-                    0x10: sh3adduw({{
+                    0x10: sh3add_uw({{
                         Rd = (((uint64_t)Rs1_uw) << 3) + Rs2;
                     }});
                 }
