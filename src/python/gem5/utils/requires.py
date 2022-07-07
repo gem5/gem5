@@ -118,6 +118,6 @@ def requires(
     if kvm_required and not kvm_available:
         raise Exception(
             _get_exception_str(
-                msg="KVM is required but is unavaiable on this system"
+                msg="KVM is required but is unavailable on this system"
             )
         )
