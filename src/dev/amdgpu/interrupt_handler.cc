@@ -88,6 +88,14 @@ AMDGPUInterruptHandler::prepareInterruptCookie(ContextID cntxt_id,
      */
     AMDGPUInterruptCookie *cookie = new AMDGPUInterruptCookie();
     memset(cookie, 0, sizeof(AMDGPUInterruptCookie));
+
+    // Currently only one process is supported and the first pasid from driver
+    // is always 0x8000. In the future this can be obtained from the PM4
+    // MAP_PROCESS packet and may need to be passed to this function.
+    //
+    // On a related note, leave vmid fields alone as they are only used for
+    // memory exceptions. Memory exceptions are not supported on gfx900.
+    cookie->pasid = 0x8000;
     cookie->timestamp_Lo = 0x40;
     cookie->clientId = client_id;
     cookie->sourceId = source_id;
