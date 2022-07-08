@@ -1983,9 +1983,13 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
           case MISCREG_ZCR_EL3:
           case MISCREG_ZCR_EL2:
           case MISCREG_ZCR_EL1:
+            // Set the value here as we need to update the regs before
+            // reading them back in getCurSveVecLenInBits to avoid
+            // setting stale vector lengths in the decoder.
+            setMiscRegNoEffect(idx, newVal);
             tc->getDecoderPtr()->as<Decoder>().setSveLen(
                     (getCurSveVecLenInBits() >> 7) - 1);
-            break;
+            return;
         }
         setMiscRegNoEffect(idx, newVal);
     }
