@@ -727,10 +727,6 @@ Fault
 checkFaultAccessAArch64SysReg(MiscRegIndex reg, CPSR cpsr,
                               ThreadContext *tc, const MiscRegOp64 &inst)
 {
-    // Check for SP_EL0 access while SPSEL == 0
-    if ((reg == MISCREG_SP_EL0) && (tc->readMiscReg(MISCREG_SPSEL) == 0))
-        return inst.undefined();
-
     return lookUpMiscReg[reg].checkFault(tc, inst, currEL(cpsr));
 }
 
@@ -1316,6 +1312,7 @@ MiscRegLUTEntryInitializer::highest(ArmSystem *const sys) const
     return *this;
 }
 
+
 void
 ISA::initializeMiscRegMetadata()
 {
@@ -1352,6 +1349,16 @@ ISA::initializeMiscRegMetadata()
 
     const bool vhe_implemented = release->has(ArmExtension::FEAT_VHE);
     const bool sel2_implemented = release->has(ArmExtension::FEAT_SEL2);
+
+    auto fault_spel0 = [] (const MiscRegLUTEntry &entry,
+        ThreadContext *tc, const MiscRegOp64 &inst) -> Fault
+    {
+        if (tc->readMiscReg(MISCREG_SPSEL) == 0)
+            return inst.undefined();
+        else
+            return NoFault;
+    };
+
     /**
      * Some registers alias with others, and therefore need to be translated.
      * When two mapping registers are given, they are the 32b lower and
@@ -2874,7 +2881,10 @@ ISA::initializeMiscRegMetadata()
       .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_ELR_EL1);
     InitReg(MISCREG_SP_EL0)
-      .allPrivileges().exceptUserMode();
+      .allPrivileges().exceptUserMode()
+      .fault(EL1, fault_spel0)
+      .fault(EL2, fault_spel0)
+      .fault(EL3, fault_spel0);
     InitReg(MISCREG_SPSEL)
       .allPrivileges().exceptUserMode();
     InitReg(MISCREG_CURRENTEL)
