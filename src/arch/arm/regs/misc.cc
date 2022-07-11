@@ -724,19 +724,8 @@ unflattenMiscReg(int reg)
 }
 
 Fault
-checkFaultReadAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
-                            ThreadContext *tc, const MiscRegOp64 &inst)
-{
-    // Check for SP_EL0 access while SPSEL == 0
-    if ((reg == MISCREG_SP_EL0) && (tc->readMiscReg(MISCREG_SPSEL) == 0))
-        return inst.undefined();
-
-    return lookUpMiscReg[reg].checkFault(tc, inst, currEL(cpsr));
-}
-
-Fault
-checkFaultWriteAArch64SysReg(MiscRegIndex reg, HCR hcr, SCR scr, CPSR cpsr,
-                             ThreadContext *tc, const MiscRegOp64 &inst)
+checkFaultAccessAArch64SysReg(MiscRegIndex reg, CPSR cpsr,
+                              ThreadContext *tc, const MiscRegOp64 &inst)
 {
     // Check for SP_EL0 access while SPSEL == 0
     if ((reg == MISCREG_SP_EL0) && (tc->readMiscReg(MISCREG_SPSEL) == 0))

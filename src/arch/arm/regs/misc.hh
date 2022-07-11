@@ -2790,13 +2790,9 @@ namespace ArmISA
     // Generic Timer system registers
     bool AArch32isUndefinedGenericTimer(MiscRegIndex reg, ThreadContext *tc);
 
-    // Checks read access permissions to AArch64 system registers
-    Fault checkFaultReadAArch64SysReg(MiscRegIndex reg, HCR hcr,
-            SCR scr, CPSR cpsr, ThreadContext *tc, const MiscRegOp64 &inst);
-
-    // Checks write access permissions to AArch64 system registers
-    Fault checkFaultWriteAArch64SysReg(MiscRegIndex reg, HCR hcr,
-            SCR scr, CPSR cpsr, ThreadContext *tc, const MiscRegOp64 &inst);
+    // Checks access permissions to AArch64 system registers
+    Fault checkFaultAccessAArch64SysReg(MiscRegIndex reg, CPSR cpsr,
+            ThreadContext *tc, const MiscRegOp64 &inst);
 
     // Uses just the scr.ns bit to pre flatten the misc regs. This is useful
     // for MCR/MRC instructions

@@ -311,8 +311,14 @@ let {{
     ''')
 
     msrMrs64EnabledCheckCode = '''
+        auto pre_flat = (MiscRegIndex)snsBankedIndex64(%s, xc->tcBase());
+        MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->
+            flattenRegId(miscRegClass[pre_flat]).index();
+        CPSR cpsr = Cpsr;
+        ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
+
         // Check for read/write access right
-        if (fault = checkFault%sAArch64SysReg(flat_idx, Hcr64, Scr64, cpsr,
+        if (fault = checkFaultAccessAArch64SysReg(flat_idx, cpsr,
             xc->tcBase(), *this); fault != NoFault) {
             return fault;
         }
@@ -321,24 +327,8 @@ let {{
         if (fault != NoFault) return fault;
     '''
 
-    msr_check_code = '''
-        auto pre_flat = (MiscRegIndex)snsBankedIndex64(dest, xc->tcBase());
-        MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->
-            flattenRegId(miscRegClass[pre_flat]).index();
-        CPSR cpsr = Cpsr;
-        ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
-        %s
-    ''' % (msrMrs64EnabledCheckCode % ('Write'),)
-
-    mrs_check_code = '''
-        auto pre_flat = (MiscRegIndex)snsBankedIndex64(op1, xc->tcBase());
-        MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->
-            flattenRegId(miscRegClass[pre_flat]).index();
-        CPSR cpsr = Cpsr;
-        ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
-        %s
-    ''' % (msrMrs64EnabledCheckCode % ('Read'),)
-
+    msr_check_code = msrMrs64EnabledCheckCode % 'dest'
+    mrs_check_code = msrMrs64EnabledCheckCode % 'op1'
 
     mrsCode = mrs_check_code + '''
         XDest = MiscOp1_ud;
@@ -553,8 +543,8 @@ let {{
                                     mnemonic);
             }
 
-            if (fault = checkFaultWriteAArch64SysReg(misc_index, Hcr64,
-                Scr64, Cpsr, xc->tcBase(), *this); fault != NoFault) {
+            if (fault = checkFaultAccessAArch64SysReg(misc_index,
+                Cpsr, xc->tcBase(), *this); fault != NoFault) {
                     return fault;
             }
 
