@@ -314,17 +314,12 @@ let {{
         auto pre_flat = (MiscRegIndex)snsBankedIndex64(%s, xc->tcBase());
         MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->
             flattenRegId(miscRegClass[pre_flat]).index();
-        CPSR cpsr = Cpsr;
-        ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
 
         // Check for read/write access right
-        if (fault = checkFaultAccessAArch64SysReg(flat_idx, cpsr,
+        if (fault = checkFaultAccessAArch64SysReg(flat_idx, Cpsr,
             xc->tcBase(), *this); fault != NoFault) {
             return fault;
         }
-
-        fault = this->trap(xc->tcBase(), flat_idx, el);
-        if (fault != NoFault) return fault;
     '''
 
     msr_check_code = msrMrs64EnabledCheckCode % 'dest'
@@ -507,6 +502,8 @@ let {{
            faultAddr = EA;
            HCR hcr = Hcr64;
            SCR scr = Scr64;
+           CPSR cpsr = Cpsr;
+           ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
            if (el == EL1 && ArmSystem::haveEL(xc->tcBase(), EL2) &&
                hcr.vm && (scr.ns || !ArmSystem::haveEL(xc->tcBase(), EL3))) {
                memAccessFlags = memAccessFlags | Request::CLEAN;

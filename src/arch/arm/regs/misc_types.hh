@@ -182,6 +182,7 @@ namespace ArmISA
     EndBitUnion(AA64PFR0)
 
     BitUnion32(HDCR)
+        Bitfield<27>   tdcc;
         Bitfield<11>   tdra;
         Bitfield<10>   tdosa;
         Bitfield<9>    tda;

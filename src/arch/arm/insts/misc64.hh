@@ -132,24 +132,8 @@ class MiscRegOp64 : public ArmISA::ArmStaticInst
         _miscRead(misc_read)
     {}
 
-    Fault trap(ThreadContext *tc, ArmISA::MiscRegIndex misc_reg,
-               ArmISA::ExceptionLevel el) const;
-
     uint32_t _iss(const ArmISA::MiscRegNum64 &misc_reg,
             RegIndex int_index) const;
-
-  private:
-    bool checkEL1Trap(ThreadContext *tc, const ArmISA::MiscRegIndex misc_reg,
-                      ArmISA::ExceptionLevel el, ArmISA::ExceptionClass &ec,
-                      uint32_t &immediate) const;
-
-    bool checkEL2Trap(ThreadContext *tc, const ArmISA::MiscRegIndex misc_reg,
-                      ArmISA::ExceptionLevel el, ArmISA::ExceptionClass &ec,
-                      uint32_t &immediate) const;
-
-    bool checkEL3Trap(ThreadContext *tc, const ArmISA::MiscRegIndex misc_reg,
-                      ArmISA::ExceptionLevel el, ArmISA::ExceptionClass &ec,
-                      uint32_t &immediate) const;
 
   public:
     virtual uint32_t iss() const { return 0; }
@@ -229,16 +213,13 @@ class MiscRegImplDefined64 : public MiscRegOp64
     const std::string fullMnemonic;
     const ArmISA::MiscRegNum64 miscReg;
     const RegIndex intReg;
-    const bool warning;
 
   public:
     MiscRegImplDefined64(const char *mnem, ArmISA::ExtMachInst _machInst,
                          ArmISA::MiscRegNum64 &&misc_reg, RegIndex int_reg,
-                         bool misc_read, const std::string full_mnem,
-                         bool _warning) :
+                         bool misc_read, const std::string full_mnem) :
         MiscRegOp64(mnem, _machInst, No_OpClass, misc_read),
-        fullMnemonic(full_mnem), miscReg(misc_reg), intReg(int_reg),
-        warning(_warning)
+        fullMnemonic(full_mnem), miscReg(misc_reg), intReg(int_reg)
     {
         assert(decodeAArch64SysReg(miscReg) == ArmISA::MISCREG_IMPDEF_UNIMPL);
     }

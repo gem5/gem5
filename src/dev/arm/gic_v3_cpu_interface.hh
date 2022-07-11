@@ -204,6 +204,7 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     static const AddrRange GICH_APR;
     static const AddrRange GICH_LR;
 
+  public:
     BitUnion64(ICH_HCR_EL2)
         Bitfield<63, 32> res0_2;
         Bitfield<31, 27> EOIcount;
@@ -224,6 +225,7 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
         Bitfield<0>      En;
     EndBitUnion(ICH_HCR_EL2)
 
+  protected:
     BitUnion64(ICH_LR_EL2)
         Bitfield<63, 62> State;
         Bitfield<61>     HW;

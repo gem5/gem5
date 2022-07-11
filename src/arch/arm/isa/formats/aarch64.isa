@@ -486,8 +486,7 @@ namespace Aarch64
                         return new MiscRegImplDefined64(
                             read ? "mrs" : "msr",
                             machInst, MiscRegNum64(op0, op1, crn, crm, op2),
-                            rt, read, full_mnemonic,
-                            lookUpMiscReg[miscReg].info[MISCREG_WARN_NOT_FAIL]);
+                            rt, read, full_mnemonic);
 
                     } else if (lookUpMiscReg[miscReg].info[MISCREG_IMPLEMENTED]) {
                         if (miscReg == MISCREG_NZCV) {
