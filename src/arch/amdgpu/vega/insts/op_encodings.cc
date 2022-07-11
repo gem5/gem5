@@ -906,7 +906,14 @@ namespace VegaISA
         std::stringstream dis_stream;
         dis_stream << _opcode << " vcc, ";
 
-        dis_stream << opSelectorToRegSym(instData.SRC0) << ", ";
+        if ((instData.SRC0 == REG_SRC_LITERAL) ||
+            (instData.SRC0 == REG_SRC_DPP) ||
+            (instData.SRC0 == REG_SRC_SWDA)) {
+            dis_stream << "0x" << std::hex << std::setfill('0') << std::setw(8)
+                       << _srcLiteral << ", ";
+        } else {
+            dis_stream << opSelectorToRegSym(instData.SRC0) << ", ";
+        }
         dis_stream << "v" << instData.VSRC1;
 
         disassembly = dis_stream.str();
