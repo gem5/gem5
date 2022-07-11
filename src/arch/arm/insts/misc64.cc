@@ -548,13 +548,17 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       case MISCREG_TLBI_IPAS2E1_Xt:
       case MISCREG_TLBI_IPAS2LE1_Xt:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            if (EL2Enabled(tc)) {
+                SCR scr = tc->readMiscReg(MISCREG_SCR);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIIPA tlbiOp(EL1, secure,
-                           static_cast<Addr>(bits(value, 35, 0)) << 12);
+                bool secure = release->has(ArmExtension::SECURITY) &&
+                    !scr.ns && !bits(value, 63);
 
-            tlbiOp(tc);
+                TLBIIPA tlbiOp(EL1, secure,
+                               static_cast<Addr>(bits(value, 35, 0)) << 12);
+
+                tlbiOp(tc);
+            }
             return;
         }
       // AArch64 TLB Invalidate by Intermediate Physical Address,
@@ -562,13 +566,17 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       case MISCREG_TLBI_IPAS2E1IS_Xt:
       case MISCREG_TLBI_IPAS2LE1IS_Xt:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            if (EL2Enabled(tc)) {
+                SCR scr = tc->readMiscReg(MISCREG_SCR);
 
-            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
-            TLBIIPA tlbiOp(EL1, secure,
-                           static_cast<Addr>(bits(value, 35, 0)) << 12);
+                bool secure = release->has(ArmExtension::SECURITY) &&
+                    !scr.ns && !bits(value, 63);
 
-            tlbiOp.broadcast(tc);
+                TLBIIPA tlbiOp(EL1, secure,
+                               static_cast<Addr>(bits(value, 35, 0)) << 12);
+
+                tlbiOp.broadcast(tc);
+            }
             return;
         }
       default:
