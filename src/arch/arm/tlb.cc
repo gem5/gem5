@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016-2021 Arm Limited
+ * Copyright (c) 2010-2013, 2016-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -598,6 +598,7 @@ TLB::_flushMva(Addr mva, uint64_t asn, bool secure_lookup,
                bool ignore_asn, ExceptionLevel target_el, bool in_host,
                TypeTLB entry_type)
 {
+    int x = 0;
     TlbEntry *te;
     Lookup lookup_data;
 
@@ -612,15 +613,17 @@ TLB::_flushMva(Addr mva, uint64_t asn, bool secure_lookup,
     lookup_data.inHost = in_host;
     lookup_data.mode = BaseMMU::Read;
 
-    te = lookup(lookup_data);
-    while (te != NULL) {
-        bool matching_type = (te->type & entry_type);
-        if (matching_type && secure_lookup == !te->nstid) {
-            DPRINTF(TLB, " -  %s\n", te->print());
-            te->valid = false;
-            stats.flushedEntries++;
+    while (x < size) {
+        if (table[x].match(lookup_data)) {
+            te = &table[x];
+            bool matching_type = (te->type & entry_type);
+            if (matching_type && secure_lookup == !te->nstid) {
+                DPRINTF(TLB, " -  %s\n", te->print());
+                te->valid = false;
+                stats.flushedEntries++;
+            }
         }
-        te = lookup(lookup_data);
+        ++x;
     }
 }
 
