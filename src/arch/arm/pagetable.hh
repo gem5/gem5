@@ -186,6 +186,12 @@ struct TlbEntry : public Serializable
     {
         // virtual address
         Addr va = 0;
+        // lookup size:
+        // * != 0 -> this is a range based lookup.
+        //           end_address = va + size
+        // * == 0 -> This is a normal lookup. size should
+        //           be ignored
+        Addr size = 0;
         // context id/address space id to use
         uint16_t asn = 0;
         // if on lookup asn should be ignored
@@ -308,11 +314,24 @@ struct TlbEntry : public Serializable
     }
 
     bool
+    matchAddress(const Lookup &lookup) const
+    {
+        Addr page_addr = vpn << N;
+        if (lookup.size) {
+            // This is a range based loookup
+            return lookup.va <= page_addr + size &&
+                   lookup.va + lookup.size > page_addr;
+        } else {
+            // This is a normal lookup
+            return lookup.va >= page_addr && lookup.va <= page_addr + size;
+        }
+    }
+
+    bool
     match(const Lookup &lookup) const
     {
         bool match = false;
-        Addr v = vpn << N;
-        if (valid && lookup.va >= v && lookup.va <= v + size &&
+        if (valid && matchAddress(lookup) &&
             (lookup.secure == !nstid) && (lookup.hyp == isHyp))
         {
             match = checkELMatch(lookup.targetEL, lookup.inHost);

@@ -89,6 +89,7 @@ class ArmExtension(ScopedEnum):
         # Armv8.4
         "FEAT_SEL2",
         "FEAT_TLBIOS",
+        "FEAT_TLBIRANGE",
         "FEAT_FLAGM",
         "FEAT_IDST",
         # Armv8.5
@@ -183,6 +184,7 @@ class ArmDefaultRelease(Armv8):
         # Armv8.4
         "FEAT_SEL2",
         "FEAT_TLBIOS",
+        "FEAT_TLBIRANGE",
         "FEAT_FLAGM",
         "FEAT_IDST",
         # Armv8.5
@@ -229,6 +231,7 @@ class Armv84(Armv83):
     extensions = Armv83.extensions + [
         "FEAT_SEL2",
         "FEAT_TLBIOS",
+        "FEAT_TLBIRANGE",
         "FEAT_FLAGM",
         "FEAT_IDST",
     ]
