@@ -49,8 +49,6 @@ class AbstractProcessor(SubSystem):
         assert len(set(core.get_isa() for core in cores)) == 1
         self._isa = cores[0].get_isa()
 
-        requires(isa_required=self._isa)
-
         self.cores = cores
 
     def get_num_cores(self) -> int:
