@@ -235,6 +235,11 @@ namespace ArmISA
     EndBitUnion(HSTR)
 
     BitUnion64(HCR)
+        Bitfield<55>     ttlbos;
+        Bitfield<54>     ttlbis;
+        Bitfield<52>     tocu;
+        Bitfield<50>     ticab;
+        Bitfield<49>     tid4;
         Bitfield<47>     fien;
         Bitfield<46>     fwb;
         Bitfield<45>     nv2;
