@@ -265,19 +265,6 @@ mcrrMrrcIssBuild(bool isRead, uint32_t crm, RegIndex rt, RegIndex rt2,
            (opc1 << 16);
 }
 
-static inline uint32_t
-msrMrs64IssBuild(bool isRead, uint32_t op0, uint32_t op1, uint32_t crn,
-                 uint32_t crm, uint32_t op2, RegIndex rt)
-{
-    return isRead |
-        (crm << 1) |
-        (rt << 5) |
-        (crn << 10) |
-        (op1 << 14) |
-        (op2 << 17) |
-        (op0 << 20);
-}
-
 Fault mcrMrc15Trap(const MiscRegIndex miscReg, ExtMachInst machInst,
                    ThreadContext *tc, uint32_t imm);
 bool mcrMrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc,

@@ -317,7 +317,7 @@ let {{
                                                           mnemonic);
         }
 
-        fault = this->trap(xc->tcBase(), flat_idx, el, imm);
+        fault = this->trap(xc->tcBase(), flat_idx, el);
         if (fault != NoFault) return fault;
     '''
 

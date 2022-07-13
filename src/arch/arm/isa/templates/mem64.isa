@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2014, 2017, 2019 ARM Limited
+// Copyright (c) 2011-2014, 2017, 2019, 2022 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -291,7 +291,7 @@ def template DCStore64Declare {{
       public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst, RegIndex _base,
-                       MiscRegIndex _dest, uint64_t _imm);
+                       MiscRegIndex _dest);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
         Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
@@ -308,9 +308,9 @@ def template DCStore64Declare {{
 
 def template DCStore64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _base,
-                                   MiscRegIndex _dest, uint64_t _imm) :
+                                   MiscRegIndex _dest) :
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                        _base, _dest, _imm)
+                        _base, _dest)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;

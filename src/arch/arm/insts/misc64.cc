@@ -91,9 +91,10 @@ UnknownOp64::generateDisassembly(
 
 Fault
 MiscRegOp64::trap(ThreadContext *tc, MiscRegIndex misc_reg,
-                  ExceptionLevel el, uint32_t immediate) const
+                  ExceptionLevel el) const
 {
     ExceptionClass ec = EC_TRAPPED_MSR_MRS_64;
+    uint32_t immediate = iss();
 
     // Check for traps to supervisor (FP/SIMD regs)
     if (el <= EL1 && checkEL1Trap(tc, misc_reg, el, ec, immediate)) {
@@ -800,6 +801,18 @@ MiscRegOp64::checkEL3Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
     return trap_to_mon;
 }
 
+uint32_t
+MiscRegOp64::_iss(const MiscRegNum64 &misc_reg, RegIndex int_index) const
+{
+    return miscRead |
+        (misc_reg.crm << 1) |
+        (int_index << 5) |
+        (misc_reg.crn << 10) |
+        (misc_reg.op1 << 14) |
+        (misc_reg.op2 << 17) |
+        (misc_reg.op0 << 20);
+}
+
 RegVal
 MiscRegImmOp64::miscRegImm() const
 {
@@ -839,6 +852,13 @@ MiscRegRegImmOp64::generateDisassembly(
     return ss.str();
 }
 
+uint32_t
+MiscRegRegImmOp64::iss() const
+{
+    const MiscRegNum64 &misc_reg = encodeAArch64SysReg(dest);
+    return _iss(misc_reg, op1);
+}
+
 std::string
 RegMiscRegImmOp64::generateDisassembly(
     Addr pc, const loader::SymbolTable *symtab) const
@@ -851,6 +871,13 @@ RegMiscRegImmOp64::generateDisassembly(
     return ss.str();
 }
 
+uint32_t
+RegMiscRegImmOp64::iss() const
+{
+    const MiscRegNum64 &misc_reg = encodeAArch64SysReg(op1);
+    return _iss(misc_reg, dest);
+}
+
 Fault
 MiscRegImplDefined64::execute(ExecContext *xc,
                               Trace::InstRecord *traceData) const
@@ -859,7 +886,7 @@ MiscRegImplDefined64::execute(ExecContext *xc,
     const CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
     const ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
 
-    Fault fault = trap(tc, miscReg, el, imm);
+    Fault fault = trap(tc, MISCREG_IMPDEF_UNIMPL, el);
 
     if (fault != NoFault) {
         return fault;
@@ -879,6 +906,12 @@ MiscRegImplDefined64::generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const
 {
     return csprintf("%-10s (implementation defined)", fullMnemonic.c_str());
+}
+
+uint32_t
+MiscRegImplDefined64::iss() const
+{
+    return _iss(miscReg, intReg);
 }
 
 std::string

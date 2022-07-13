@@ -144,7 +144,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,
-            RegIndex _op1, uint64_t _imm);
+            RegIndex _op1);
 
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
@@ -152,9 +152,9 @@ class %(class_name)s : public %(base_class)s
 
 def template MiscRegRegOp64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,
-                                   RegIndex _op1, uint64_t _imm) :
+                                   RegIndex _op1) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                       _dest, _op1, _imm)
+                       _dest, _op1)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
@@ -170,7 +170,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _dest,
-            MiscRegIndex _op1, uint64_t _imm);
+            MiscRegIndex _op1);
 
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
@@ -178,9 +178,9 @@ class %(class_name)s : public %(base_class)s
 
 def template RegMiscRegOp64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _dest,
-                                   MiscRegIndex _op1, uint64_t _imm) :
+                                   MiscRegIndex _op1) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                       _dest, _op1, _imm)
+                       _dest, _op1)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
@@ -244,7 +244,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,
-            RegIndex _op1, uint64_t _imm, bool dvm_enabled);
+            RegIndex _op1, bool dvm_enabled);
 
     Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
     Fault completeAcc(PacketPtr, ExecContext *,
@@ -275,10 +275,9 @@ def template DvmDeclare {{
 
 def template DvmTlbiConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,
-                                   RegIndex _op1, uint64_t _imm,
-                                   bool dvm_enabled) :
+                                   RegIndex _op1, bool dvm_enabled) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                       _dest, _op1, _imm),
+                       _dest, _op1),
         dvmEnabled(dvm_enabled)
     {
         %(set_reg_idx_arr)s;

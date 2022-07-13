@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013,2018, 2021 ARM Limited
+ * Copyright (c) 2011-2013,2018, 2021-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -58,6 +58,12 @@ SysDC64::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 }
 
 
+uint32_t
+SysDC64::iss() const
+{
+    const MiscRegNum64 &misc_reg = encodeAArch64SysReg(dest);
+    return _iss(misc_reg, base);
+}
 
 void
 Memory64::startDisassembly(std::ostream &os) const

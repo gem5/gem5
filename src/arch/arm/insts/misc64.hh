@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013,2017-2019, 2021 Arm Limited
+ * Copyright (c) 2011-2013,2017-2019, 2021-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -133,7 +133,11 @@ class MiscRegOp64 : public ArmISA::ArmStaticInst
     {}
 
     Fault trap(ThreadContext *tc, ArmISA::MiscRegIndex misc_reg,
-               ArmISA::ExceptionLevel el, uint32_t immediate) const;
+               ArmISA::ExceptionLevel el) const;
+
+    uint32_t _iss(const ArmISA::MiscRegNum64 &misc_reg,
+            RegIndex int_index) const;
+
   private:
     bool checkEL1Trap(ThreadContext *tc, const ArmISA::MiscRegIndex misc_reg,
                       ArmISA::ExceptionLevel el, ArmISA::ExceptionClass &ec,
@@ -147,6 +151,8 @@ class MiscRegOp64 : public ArmISA::ArmStaticInst
                       ArmISA::ExceptionLevel el, ArmISA::ExceptionClass &ec,
                       uint32_t &immediate) const;
 
+  public:
+    virtual uint32_t iss() const { return 0; }
 };
 
 class MiscRegImmOp64 : public MiscRegOp64
@@ -178,17 +184,18 @@ class MiscRegRegImmOp64 : public MiscRegOp64
   protected:
     ArmISA::MiscRegIndex dest;
     RegIndex op1;
-    uint32_t imm;
 
     MiscRegRegImmOp64(const char *mnem, ArmISA::ExtMachInst _machInst,
                       OpClass __opClass, ArmISA::MiscRegIndex _dest,
-                      RegIndex _op1, uint32_t _imm) :
+                      RegIndex _op1) :
         MiscRegOp64(mnem, _machInst, __opClass, false),
-        dest(_dest), op1(_op1), imm(_imm)
+        dest(_dest), op1(_op1)
     {}
 
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
+
+    uint32_t iss() const override;
 };
 
 class RegMiscRegImmOp64 : public MiscRegOp64
@@ -196,37 +203,38 @@ class RegMiscRegImmOp64 : public MiscRegOp64
   protected:
     RegIndex dest;
     ArmISA::MiscRegIndex op1;
-    uint32_t imm;
 
     RegMiscRegImmOp64(const char *mnem, ArmISA::ExtMachInst _machInst,
                       OpClass __opClass, RegIndex _dest,
-                      ArmISA::MiscRegIndex _op1, uint32_t _imm) :
+                      ArmISA::MiscRegIndex _op1) :
         MiscRegOp64(mnem, _machInst, __opClass, true),
-        dest(_dest), op1(_op1), imm(_imm)
+        dest(_dest), op1(_op1)
     {}
 
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
+
+    uint32_t iss() const override;
 };
 
 class MiscRegImplDefined64 : public MiscRegOp64
 {
   protected:
     const std::string fullMnemonic;
-    const ArmISA::MiscRegIndex miscReg;
-    const uint32_t imm;
+    const ArmISA::MiscRegNum64 miscReg;
+    const RegIndex intReg;
     const bool warning;
 
   public:
     MiscRegImplDefined64(const char *mnem, ArmISA::ExtMachInst _machInst,
-                         ArmISA::MiscRegIndex misc_reg, bool misc_read,
-                         uint32_t _imm, const std::string full_mnem,
+                         ArmISA::MiscRegNum64 &&misc_reg, RegIndex int_reg,
+                         bool misc_read, const std::string full_mnem,
                          bool _warning) :
         MiscRegOp64(mnem, _machInst, No_OpClass, misc_read),
-        fullMnemonic(full_mnem), miscReg(misc_reg), imm(_imm),
+        fullMnemonic(full_mnem), miscReg(misc_reg), intReg(int_reg),
         warning(_warning)
     {
-        assert(miscReg == ArmISA::MISCREG_IMPDEF_UNIMPL);
+        assert(decodeAArch64SysReg(miscReg) == ArmISA::MISCREG_IMPDEF_UNIMPL);
     }
 
   protected:
@@ -235,6 +243,8 @@ class MiscRegImplDefined64 : public MiscRegOp64
 
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
+
+    uint32_t iss() const override;
 };
 
 class RegNone : public ArmISA::ArmStaticInst
@@ -257,8 +267,8 @@ class TlbiOp64 : public MiscRegRegImmOp64
   protected:
     TlbiOp64(const char *mnem, ArmISA::ExtMachInst _machInst,
              OpClass __opClass, ArmISA::MiscRegIndex _dest,
-             RegIndex _op1, uint32_t _imm) :
-        MiscRegRegImmOp64(mnem, _machInst, __opClass, _dest, _op1, _imm)
+             RegIndex _op1) :
+        MiscRegRegImmOp64(mnem, _machInst, __opClass, _dest, _op1)
     {}
 
     void performTlbi(ExecContext *xc,
