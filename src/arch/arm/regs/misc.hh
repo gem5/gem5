@@ -1136,20 +1136,12 @@ namespace ArmISA
         MISCREG_HYP_NS_WR,
         MISCREG_HYP_S_RD,
         MISCREG_HYP_S_WR,
-        // Hypervisor mode, HCR_EL2.E2H == 1
-        MISCREG_HYP_E2H_NS_RD,
-        MISCREG_HYP_E2H_NS_WR,
-        MISCREG_HYP_E2H_S_RD,
-        MISCREG_HYP_E2H_S_WR,
         // Monitor mode, SCR.NS == 0
         MISCREG_MON_NS0_RD,
         MISCREG_MON_NS0_WR,
         // Monitor mode, SCR.NS == 1
         MISCREG_MON_NS1_RD,
         MISCREG_MON_NS1_WR,
-        // Monitor mode, HCR_EL2.E2H == 1
-        MISCREG_MON_E2H_RD,
-        MISCREG_MON_E2H_WR,
 
         NUM_MISCREG_INFOS
     };
@@ -1181,27 +1173,19 @@ namespace ArmISA
         template <MiscRegInfo Sec, MiscRegInfo NonSec>
         static Fault defaultFault(const MiscRegLUTEntry &entry,
             ThreadContext *tc, const MiscRegOp64 &inst);
-        static Fault defaultReadFaultEL2(const MiscRegLUTEntry &entry,
-            ThreadContext *tc, const MiscRegOp64 &inst);
-        static Fault defaultWriteFaultEL2(const MiscRegLUTEntry &entry,
-            ThreadContext *tc, const MiscRegOp64 &inst);
-        static Fault defaultReadFaultEL3(const MiscRegLUTEntry &entry,
-            ThreadContext *tc, const MiscRegOp64 &inst);
-        static Fault defaultWriteFaultEL3(const MiscRegLUTEntry &entry,
-            ThreadContext *tc, const MiscRegOp64 &inst);
 
       public:
         MiscRegLUTEntry() :
             lower(0), upper(0),
             _reset(0), _res0(0), _res1(0), _raz(0), _rao(0), info(0),
-            faultRead({ defaultFault<MISCREG_USR_S_RD, MISCREG_USR_NS_RD>,
-                        defaultFault<MISCREG_PRI_S_RD, MISCREG_PRI_NS_RD>,
-                        defaultReadFaultEL2,
-                        defaultReadFaultEL3 }),
-            faultWrite({ defaultFault<MISCREG_USR_S_WR, MISCREG_USR_NS_WR>,
-                         defaultFault<MISCREG_PRI_S_WR, MISCREG_PRI_NS_WR>,
-                         defaultWriteFaultEL2,
-                         defaultWriteFaultEL3 })
+            faultRead({defaultFault<MISCREG_USR_S_RD, MISCREG_USR_NS_RD>,
+                       defaultFault<MISCREG_PRI_S_RD, MISCREG_PRI_NS_RD>,
+                       defaultFault<MISCREG_HYP_S_RD, MISCREG_HYP_NS_RD>,
+                       defaultFault<MISCREG_MON_NS0_RD, MISCREG_MON_NS1_RD>}),
+            faultWrite({defaultFault<MISCREG_USR_S_WR, MISCREG_USR_NS_WR>,
+                        defaultFault<MISCREG_PRI_S_WR, MISCREG_PRI_NS_WR>,
+                        defaultFault<MISCREG_HYP_S_WR, MISCREG_HYP_NS_WR>,
+                        defaultFault<MISCREG_MON_NS0_WR, MISCREG_MON_NS1_WR>})
         {}
         uint64_t reset() const { return _reset; }
         uint64_t res0()  const { return _res0; }
@@ -1382,51 +1366,6 @@ namespace ArmISA
             return *this;
         }
         chain
-        hypE2HSecureRead(bool v = true) const
-        {
-            entry.info[MISCREG_HYP_E2H_S_RD] = v;
-            return *this;
-        }
-        chain
-        hypE2HNonSecureRead(bool v = true) const
-        {
-            entry.info[MISCREG_HYP_E2H_NS_RD] = v;
-            return *this;
-        }
-        chain
-        hypE2HRead(bool v = true) const
-        {
-            hypE2HSecureRead(v);
-            hypE2HNonSecureRead(v);
-            return *this;
-        }
-        chain
-        hypE2HSecureWrite(bool v = true) const
-        {
-            entry.info[MISCREG_HYP_E2H_S_WR] = v;
-            return *this;
-        }
-        chain
-        hypE2HNonSecureWrite(bool v = true) const
-        {
-            entry.info[MISCREG_HYP_E2H_NS_WR] = v;
-            return *this;
-        }
-        chain
-        hypE2HWrite(bool v = true) const
-        {
-            hypE2HSecureWrite(v);
-            hypE2HNonSecureWrite(v);
-            return *this;
-        }
-        chain
-        hypE2H(bool v = true) const
-        {
-            hypE2HRead(v);
-            hypE2HWrite(v);
-            return *this;
-        }
-        chain
         hypSecureRead(bool v = true) const
         {
             entry.info[MISCREG_HYP_S_RD] = v;
@@ -1441,7 +1380,6 @@ namespace ArmISA
         chain
         hypRead(bool v = true) const
         {
-            hypE2HRead(v);
             hypSecureRead(v);
             hypNonSecureRead(v);
             return *this;
@@ -1461,7 +1399,6 @@ namespace ArmISA
         chain
         hypWrite(bool v = true) const
         {
-            hypE2HWrite(v);
             hypSecureWrite(v);
             hypNonSecureWrite(v);
             return *this;
@@ -1469,8 +1406,6 @@ namespace ArmISA
         chain
         hypSecure(bool v = true) const
         {
-            hypE2HSecureRead(v);
-            hypE2HSecureWrite(v);
             hypSecureRead(v);
             hypSecureWrite(v);
             return *this;
@@ -1483,49 +1418,26 @@ namespace ArmISA
             return *this;
         }
         chain
-        monE2HRead(bool v = true) const
-        {
-            entry.info[MISCREG_MON_E2H_RD] = v;
-            return *this;
-        }
-        chain
-        monE2HWrite(bool v = true) const
-        {
-            entry.info[MISCREG_MON_E2H_WR] = v;
-            return *this;
-        }
-        chain
-        monE2H(bool v = true) const
-        {
-            monE2HRead(v);
-            monE2HWrite(v);
-            return *this;
-        }
-        chain
         monSecureRead(bool v = true) const
         {
-            monE2HRead(v);
             entry.info[MISCREG_MON_NS0_RD] = v;
             return *this;
         }
         chain
         monSecureWrite(bool v = true) const
         {
-            monE2HWrite(v);
             entry.info[MISCREG_MON_NS0_WR] = v;
             return *this;
         }
         chain
         monNonSecureRead(bool v = true) const
         {
-            monE2HRead(v);
             entry.info[MISCREG_MON_NS1_RD] = v;
             return *this;
         }
         chain
         monNonSecureWrite(bool v = true) const
         {
-            monE2HWrite(v);
             entry.info[MISCREG_MON_NS1_WR] = v;
             return *this;
         }

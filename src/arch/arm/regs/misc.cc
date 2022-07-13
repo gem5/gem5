@@ -1290,69 +1290,28 @@ MiscRegLUTEntry::defaultFault(const MiscRegLUTEntry &entry,
     }
 }
 
-Fault
-MiscRegLUTEntry::defaultReadFaultEL2(const MiscRegLUTEntry &entry,
+static Fault
+defaultFaultE2H_EL2(const MiscRegLUTEntry &entry,
     ThreadContext *tc, const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
-    const bool el2_host = EL2Enabled(tc) && hcr.e2h;
-    if (el2_host) {
-        return defaultFault<MISCREG_HYP_E2H_S_RD, MISCREG_HYP_E2H_NS_RD>(
-            entry, tc, inst);
+    if (hcr.e2h) {
+        return NoFault;
     } else {
-        return defaultFault<MISCREG_HYP_S_RD, MISCREG_HYP_NS_RD>(
-            entry, tc, inst);
+        return inst.undefined();
     }
 }
 
-Fault
-MiscRegLUTEntry::defaultWriteFaultEL2(const MiscRegLUTEntry &entry,
+static Fault
+defaultFaultE2H_EL3(const MiscRegLUTEntry &entry,
     ThreadContext *tc, const MiscRegOp64 &inst)
 {
     const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     const bool el2_host = EL2Enabled(tc) && hcr.e2h;
     if (el2_host) {
-        return defaultFault<MISCREG_HYP_E2H_S_WR, MISCREG_HYP_E2H_NS_WR>(
-            entry, tc, inst);
+        return NoFault;
     } else {
-        return defaultFault<MISCREG_HYP_S_WR, MISCREG_HYP_NS_WR>(
-            entry, tc, inst);
-    }
-}
-
-Fault
-MiscRegLUTEntry::defaultReadFaultEL3(const MiscRegLUTEntry &entry,
-    ThreadContext *tc, const MiscRegOp64 &inst)
-{
-    const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
-    const bool el2_host = EL2Enabled(tc) && hcr.e2h;
-    if (el2_host) {
-        if (entry.info[MISCREG_MON_E2H_RD]) {
-            return NoFault;
-        } else {
-            return inst.undefined();
-        }
-    } else {
-        return defaultFault<MISCREG_MON_NS0_RD, MISCREG_MON_NS1_RD>(
-            entry, tc, inst);
-    }
-}
-
-Fault
-MiscRegLUTEntry::defaultWriteFaultEL3(const MiscRegLUTEntry &entry,
-    ThreadContext *tc, const MiscRegOp64 &inst)
-{
-    const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
-    const bool el2_host = EL2Enabled(tc) && hcr.e2h;
-    if (el2_host) {
-        if (entry.info[MISCREG_MON_E2H_WR]) {
-            return NoFault;
-        } else {
-            return inst.undefined();
-        }
-    } else {
-        return defaultFault<MISCREG_MON_NS0_WR, MISCREG_MON_NS1_WR>(
-            entry, tc, inst);
+        return inst.undefined();
     }
 }
 
@@ -2797,8 +2756,8 @@ ISA::initializeMiscRegMetadata()
                      | (LSMAOE ? 0 : 0x10000000))
       .mapsTo(MISCREG_SCTLR_NS);
     InitReg(MISCREG_SCTLR_EL12)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .res0( 0x20440 | (EnDB   ? 0 :     0x2000)
                      | (IESB   ? 0 :   0x200000)
                      | (EnDA   ? 0 :  0x8000000)
@@ -2815,8 +2774,8 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_CPACR);
     InitReg(MISCREG_CPACR_EL12)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_CPACR_EL1);
     InitReg(MISCREG_SCTLR_EL2)
       .hyp().mon()
@@ -2870,22 +2829,22 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_TTBR0_NS);
     InitReg(MISCREG_TTBR0_EL12)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_TTBR0_EL1);
     InitReg(MISCREG_TTBR1_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_TTBR1_NS);
     InitReg(MISCREG_TTBR1_EL12)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_TTBR1_EL1);
     InitReg(MISCREG_TCR_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_TTBCR_NS);
     InitReg(MISCREG_TCR_EL12)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_TTBCR_NS);
     InitReg(MISCREG_TTBR0_EL2)
       .hyp().mon()
@@ -2916,14 +2875,14 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_SPSR_SVC); // NAM C5.2.17 SPSR_EL1
     InitReg(MISCREG_SPSR_EL12)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_SPSR_SVC);
     InitReg(MISCREG_ELR_EL1)
       .allPrivileges().exceptUserMode();
     InitReg(MISCREG_ELR_EL12)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_ELR_EL1);
     InitReg(MISCREG_SP_EL0)
       .allPrivileges().exceptUserMode();
@@ -2974,21 +2933,21 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_ADFSR_NS);
     InitReg(MISCREG_AFSR0_EL12)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_ADFSR_NS);
     InitReg(MISCREG_AFSR1_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_AIFSR_NS);
     InitReg(MISCREG_AFSR1_EL12)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_AIFSR_NS);
     InitReg(MISCREG_ESR_EL1)
       .allPrivileges().exceptUserMode();
     InitReg(MISCREG_ESR_EL12)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_ESR_EL1);
     InitReg(MISCREG_IFSR32_EL2)
       .hyp().mon()
@@ -3014,8 +2973,8 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_DFAR_NS, MISCREG_IFAR_NS);
     InitReg(MISCREG_FAR_EL12)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_DFAR_NS, MISCREG_IFAR_NS);
     InitReg(MISCREG_FAR_EL2)
       .hyp().mon()
@@ -3199,15 +3158,15 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_PRRR_NS, MISCREG_NMRR_NS);
     InitReg(MISCREG_MAIR_EL12)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_PRRR_NS, MISCREG_NMRR_NS);
     InitReg(MISCREG_AMAIR_EL1)
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_AMAIR0_NS, MISCREG_AMAIR1_NS);
     InitReg(MISCREG_AMAIR_EL12)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_AMAIR0_NS, MISCREG_AMAIR1_NS);
     InitReg(MISCREG_MAIR_EL2)
       .hyp().mon()
@@ -3227,8 +3186,8 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_VBAR_NS);
     InitReg(MISCREG_VBAR_EL12)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_VBAR_NS);
     InitReg(MISCREG_RVBAR_EL1)
       .privRead(FullSystem && system->highestEL() == EL1);
@@ -3250,8 +3209,8 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode()
       .mapsTo(MISCREG_CONTEXTIDR_NS);
     InitReg(MISCREG_CONTEXTIDR_EL12)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_CONTEXTIDR_NS);
     InitReg(MISCREG_TPIDR_EL1)
       .allPrivileges().exceptUserMode()
@@ -3304,31 +3263,31 @@ ISA::initializeMiscRegMetadata()
       .res0(0xffffffff00000000)
       .mapsTo(MISCREG_CNTV_TVAL);
     InitReg(MISCREG_CNTP_CTL_EL02)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .res0(0xfffffffffffffff8)
       .mapsTo(MISCREG_CNTP_CTL_NS);
     InitReg(MISCREG_CNTP_CVAL_EL02)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_CNTP_CVAL_NS);
     InitReg(MISCREG_CNTP_TVAL_EL02)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .res0(0xffffffff00000000)
       .mapsTo(MISCREG_CNTP_TVAL_NS);
     InitReg(MISCREG_CNTV_CTL_EL02)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .res0(0xfffffffffffffff8)
       .mapsTo(MISCREG_CNTV_CTL);
     InitReg(MISCREG_CNTV_CVAL_EL02)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_CNTV_CVAL);
     InitReg(MISCREG_CNTV_TVAL_EL02)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .res0(0xffffffff00000000)
       .mapsTo(MISCREG_CNTV_TVAL);
     InitReg(MISCREG_CNTKCTL_EL1)
@@ -3337,8 +3296,8 @@ ISA::initializeMiscRegMetadata()
       .res0(0xfffffffffffdfc00)
       .mapsTo(MISCREG_CNTKCTL);
     InitReg(MISCREG_CNTKCTL_EL12)
-      .monE2H()
-      .hypE2H()
+      .fault(EL2, defaultFaultE2H_EL2)
+      .fault(EL3, defaultFaultE2H_EL3)
       .res0(0xfffffffffffdfc00)
       .mapsTo(MISCREG_CNTKCTL);
     InitReg(MISCREG_CNTPS_CTL_EL1)
@@ -3967,8 +3926,8 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ZCR_EL2)
         .hyp().mon();
     InitReg(MISCREG_ZCR_EL12)
-        .monE2H()
-        .hypE2H()
+        .fault(EL2, defaultFaultE2H_EL2)
+        .fault(EL3, defaultFaultE2H_EL3)
         .mapsTo(MISCREG_ZCR_EL1);
     InitReg(MISCREG_ZCR_EL1)
         .allPrivileges().exceptUserMode();
