@@ -116,6 +116,8 @@ HWScheduler::registerNewQueue(uint64_t hostReadIndexPointer,
         new AQLRingBuffer(NUM_DMA_BUFS, hsaPP->name());
     if (rd_idx > 0) {
         aql_buf->setRdIdx(rd_idx);
+        aql_buf->setWrIdx(rd_idx);
+        aql_buf->setDispIdx(rd_idx);
     }
     DPRINTF(HSAPacketProcessor, "Setting read index for %#lx to %ld\n",
                                 offset, rd_idx);
@@ -340,8 +342,9 @@ HWScheduler::write(Addr db_addr, uint64_t doorbell_reg)
     // processor gets commands from host, the correct entry is read after
     // remapping.
     activeList[al_idx].qDesc->readIndex = doorbell_reg - 1;
-    DPRINTF(HSAPacketProcessor, "queue %d qDesc->writeIndex %d\n",
-            al_idx, activeList[al_idx].qDesc->writeIndex);
+    DPRINTF(HSAPacketProcessor, "q %d readIndex %d writeIndex %d\n",
+            al_idx, activeList[al_idx].qDesc->readIndex,
+            activeList[al_idx].qDesc->writeIndex);
     // If this queue is mapped, then start DMA to fetch the
     // AQL packet
     if (regdListMap.find(al_idx) != regdListMap.end()) {
@@ -354,6 +357,7 @@ HWScheduler::unregisterQueue(uint64_t queue_id, int doorbellSize)
 {
     assert(qidMap.count(queue_id));
     Addr db_offset = qidMap[queue_id];
+    qidMap.erase(queue_id);
     auto dbmap_iter = dbMap.find(db_offset);
     if (dbmap_iter == dbMap.end()) {
         panic("Destroying a non-existing queue (db_offset %x)",

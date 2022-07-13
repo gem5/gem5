@@ -618,6 +618,18 @@ AQLRingBuffer::setRdIdx(uint64_t value)
     }
 }
 
+void
+AQLRingBuffer::setWrIdx(uint64_t value)
+{
+    _wrIdx = value;
+}
+
+void
+AQLRingBuffer::setDispIdx(uint64_t value)
+{
+    _dispIdx = value;
+}
+
 bool
 AQLRingBuffer::freeEntry(void *pkt)
 {
