@@ -75,7 +75,10 @@ namespace Gcn3ISA
             reg_sym = "flat_scratch_hi";
             break;
           case REG_VCC_LO:
-            reg_sym = "vcc";
+            reg_sym = "vcc_lo";
+            break;
+          case REG_VCC_HI:
+            reg_sym = "vcc_hi";
             break;
           case REG_M0:
             reg_sym = "m0";
