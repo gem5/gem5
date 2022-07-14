@@ -144,6 +144,8 @@ class TCPCntrl(TCP_Controller, CntrlBase):
         self.L1cache.resourceStalls = options.no_resource_stalls
         self.L1cache.create(options)
         self.issue_latency = 1
+        # TCP_Controller inherits this from RubyController
+        self.mandatory_queue_latency = options.mandatory_queue_latency
 
         self.coalescer = VIPERCoalescer()
         self.coalescer.version = self.seqCount()
@@ -376,6 +378,8 @@ def define_options(parser):
                         help="In combination with the number of banks for the "
                         "TCP, this determines how many requests can happen "
                         "per cycle (i.e., the bandwidth)")
+    parser.add_argument("--mandatory_queue_latency", type=int, default=1,
+                        help="Hit latency for TCP")
     parser.add_argument("--TCC_latency", type=int, default=16,
                         help="TCC latency")
     parser.add_argument("--tcc-size", type=str, default='256kB',
