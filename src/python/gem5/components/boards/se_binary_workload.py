@@ -39,7 +39,11 @@ class SEBinaryWorkload:
     AbstractBoard).
     """
 
-    def set_se_binary_workload(self, binary: AbstractResource) -> None:
+    def set_se_binary_workload(
+        self,
+        binary: AbstractResource,
+        exit_on_work_items: bool = True
+    ) -> None:
         """Set up the system to run a specific binary.
 
         **Limitations**
@@ -48,6 +52,8 @@ class SEBinaryWorkload:
           ISA and the simulated ISA are the same.
 
         :param binary: The resource encapsulating the binary to be run.
+        :param exit_on_work_items: Whether the simulation should exit on work
+        items. True by default.
         """
 
         # We assume this this is in a multiple-inheritance setup with an
@@ -63,3 +69,6 @@ class SEBinaryWorkload:
         process = Process()
         process.cmd = [binary.get_local_path()]
         self.get_processor().get_cores()[0].set_workload(process)
+
+        # Set whether to exit on work items for the se_workload
+        self.exit_on_work_items = exit_on_work_items
