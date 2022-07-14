@@ -322,6 +322,9 @@ namespace VegaISA
         GPUStaticInst* decode_OPU_VOP3__V_MIN_U16(MachInst);
         GPUStaticInst* decode_OPU_VOP3__V_MIN_I16(MachInst);
         GPUStaticInst* decode_OPU_VOP3__V_LDEXP_F16(MachInst);
+        GPUStaticInst* decode_OPU_VOP3__V_ADD_U32(MachInst);
+        GPUStaticInst* decode_OPU_VOP3__V_SUB_U32(MachInst);
+        GPUStaticInst* decode_OPU_VOP3__V_SUBREV_U32(MachInst);
         GPUStaticInst* decode_OPU_VOP3__V_NOP(MachInst);
         GPUStaticInst* decode_OPU_VOP3__V_MOV_B32(MachInst);
         GPUStaticInst* decode_OPU_VOP3__V_CVT_I32_F64(MachInst);

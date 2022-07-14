@@ -877,9 +877,9 @@ namespace VegaISA
         &Decoder::decode_OPU_VOP3__V_MIN_U16,
         &Decoder::decode_OPU_VOP3__V_MIN_I16,
         &Decoder::decode_OPU_VOP3__V_LDEXP_F16,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OPU_VOP3__V_ADD_U32,
+        &Decoder::decode_OPU_VOP3__V_SUB_U32,
+        &Decoder::decode_OPU_VOP3__V_SUBREV_U32,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
@@ -6104,6 +6104,24 @@ namespace VegaISA
     {
         return new Inst_VOP3__V_LDEXP_F16(&iFmt->iFmt_VOP3A);
     } // decode_OPU_VOP3__V_LDEXP_F16
+
+    GPUStaticInst*
+    Decoder::decode_OPU_VOP3__V_ADD_U32(MachInst iFmt)
+    {
+        return new Inst_VOP3__V_ADD_U32(&iFmt->iFmt_VOP3A);
+    } // decode_OPU_VOP3__V_ADD_U32
+
+    GPUStaticInst*
+    Decoder::decode_OPU_VOP3__V_SUB_U32(MachInst iFmt)
+    {
+        return new Inst_VOP3__V_SUB_U32(&iFmt->iFmt_VOP3A);
+    } // decode_OPU_VOP3__V_SUB_U32
+
+    GPUStaticInst*
+    Decoder::decode_OPU_VOP3__V_SUBREV_U32(MachInst iFmt)
+    {
+        return new Inst_VOP3__V_SUBREV_U32(&iFmt->iFmt_VOP3A);
+    } // decode_OPU_VOP3__V_SUBREV_U32
 
     GPUStaticInst*
     Decoder::decode_OPU_VOP3__V_NOP(MachInst iFmt)
