@@ -124,12 +124,12 @@ class UnknownOp64 : public ArmISA::ArmStaticInst
 class MiscRegOp64 : public ArmISA::ArmStaticInst
 {
   protected:
-    bool miscRead;
+    bool _miscRead;
 
     MiscRegOp64(const char *mnem, ArmISA::ExtMachInst _machInst,
                 OpClass __opClass, bool misc_read) :
         ArmISA::ArmStaticInst(mnem, _machInst, __opClass),
-        miscRead(misc_read)
+        _miscRead(misc_read)
     {}
 
     Fault trap(ThreadContext *tc, ArmISA::MiscRegIndex misc_reg,
@@ -153,6 +153,8 @@ class MiscRegOp64 : public ArmISA::ArmStaticInst
 
   public:
     virtual uint32_t iss() const { return 0; }
+
+    bool miscRead() const { return _miscRead; }
 };
 
 class MiscRegImmOp64 : public MiscRegOp64

@@ -247,7 +247,7 @@ MiscRegOp64::checkEL2Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
       case MISCREG_AMAIR_EL1:
       case MISCREG_CONTEXTIDR_EL1:
         {
-            bool tvm = miscRead? hcr.trvm: hcr.tvm;
+            bool tvm = _miscRead? hcr.trvm: hcr.tvm;
             trap_to_hyp = EL2Enabled(tc) && (el == EL1) && tvm;
         }
         break;
@@ -804,7 +804,7 @@ MiscRegOp64::checkEL3Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
 uint32_t
 MiscRegOp64::_iss(const MiscRegNum64 &misc_reg, RegIndex int_index) const
 {
-    return miscRead |
+    return _miscRead |
         (misc_reg.crm << 1) |
         (int_index << 5) |
         (misc_reg.crn << 10) |
