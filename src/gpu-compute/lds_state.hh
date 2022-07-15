@@ -102,6 +102,27 @@ class LdsChunk
     }
 
     /**
+     * an atomic operation
+     */
+    template<class T>
+    T
+    atomic(const uint32_t index, AtomicOpFunctorPtr amoOp)
+    {
+        /**
+         * Atomics that are outside the bounds of the LDS
+         * chunk allocated to this WG are dropped.
+         */
+        if (index >= chunk.size()) {
+            return (T)0;
+        }
+        T *p0 = (T *) (&(chunk.at(index)));
+        T tmp = *p0;
+
+       (*amoOp)((uint8_t *)p0);
+        return tmp;
+    }
+
+    /**
      * get the size of this chunk
      */
     std::vector<uint8_t>::size_type
