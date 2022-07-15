@@ -155,6 +155,10 @@ class MiscRegOp64 : public ArmISA::ArmStaticInst
     virtual uint32_t iss() const { return 0; }
 
     bool miscRead() const { return _miscRead; }
+
+    Fault generateTrap(ArmISA::ExceptionLevel el) const;
+    Fault generateTrap(ArmISA::ExceptionLevel el,
+            ArmISA::ExceptionClass ec, uint32_t iss) const;
 };
 
 class MiscRegImmOp64 : public MiscRegOp64
