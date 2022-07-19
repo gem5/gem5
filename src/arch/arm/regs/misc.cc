@@ -1297,12 +1297,19 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                     unsigned op2)
 {
     MiscRegNum64 sys_reg(op0, op1, crn, crm, op2);
+    return decodeAArch64SysReg(sys_reg);
+}
+
+MiscRegIndex
+decodeAArch64SysReg(const MiscRegNum64 &sys_reg)
+{
     auto it = miscRegNumToIdx.find(sys_reg);
     if (it != miscRegNumToIdx.end()) {
         return it->second;
     } else {
         // Check for a pseudo register before returning MISCREG_UNKNOWN
-        if ((op0 == 1 || op0 == 3) && (crn == 11 || crn == 15)) {
+        if ((sys_reg.op0 == 1 || sys_reg.op0 == 3) &&
+            (sys_reg.crn == 11 || sys_reg.crn == 15)) {
             return MISCREG_IMPDEF_UNIMPL;
         } else {
             return MISCREG_UNKNOWN;
