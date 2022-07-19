@@ -148,6 +148,7 @@ PySource('gem5.components.memory', 'gem5/components/memory/simple.py')
 PySource('gem5.components.memory', 'gem5/components/memory/memory.py')
 PySource('gem5.components.memory', 'gem5/components/memory/single_channel.py')
 PySource('gem5.components.memory', 'gem5/components/memory/multi_channel.py')
+PySource('gem5.components.memory', 'gem5/components/memory/hbm.py')
 PySource('gem5.components.memory.dram_interfaces',
     'gem5/components/memory/dram_interfaces/__init__.py')
 PySource('gem5.components.memory.dram_interfaces',

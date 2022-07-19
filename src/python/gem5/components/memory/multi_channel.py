@@ -65,11 +65,3 @@ def DualChannelLPDDR3_1600(
     size: Optional[str] = None,
 ) -> AbstractMemorySystem:
     return ChanneledMemory(LPDDR3_1600_1x32, 2, 64, size=size)
-
-
-def HBM2Stack(
-    size: Optional[str] = None,
-) -> AbstractMemorySystem:
-    if not size:
-        size = "4GiB"
-    return ChanneledMemory(HBM_1000_4H_1x64, 16, 64, size=size)

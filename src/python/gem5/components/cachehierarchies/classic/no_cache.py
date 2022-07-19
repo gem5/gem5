@@ -70,6 +70,9 @@ class NoCache(AbstractClassicCacheHierarchy):
         membus = SystemXBar(width=64)
         membus.badaddr_responder = BadAddr()
         membus.default = membus.badaddr_responder.pio
+        # the max. routing table size needs to be set
+        # to a higher value for HBM2 stack
+        membus.max_routing_table_size = 2048
         return membus
 
     def __init__(
