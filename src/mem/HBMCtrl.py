@@ -46,4 +46,4 @@ class HBMCtrl(MemCtrl):
     min_reads_per_switch = 64
     min_writes_per_switch = 64
 
-    partitioned_q = Param.Bool(True, "split queues for pseudo channels")
+    partitioned_q = Param.Bool(False, "split queues for pseudo channels")
