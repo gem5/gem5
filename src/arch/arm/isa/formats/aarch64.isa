@@ -488,7 +488,7 @@ namespace Aarch64
                             machInst, MiscRegNum64(op0, op1, crn, crm, op2),
                             rt, read, full_mnemonic);
 
-                    } else if (lookUpMiscReg[miscReg].info[MISCREG_IMPLEMENTED]) {
+                    } else {
                         if (miscReg == MISCREG_NZCV) {
                             if (read)
                                 return new MrsNZCV64(machInst, rt, miscReg);
@@ -554,17 +554,6 @@ namespace Aarch64
                                 return new Msr64(machInst, miscReg, rt);
                             }
                         }
-                    } else if (lookUpMiscReg[miscReg].info[MISCREG_WARN_NOT_FAIL]) {
-                        std::string full_mnem = csprintf("%s %s",
-                            read ? "mrs" : "msr", miscRegName[miscReg]);
-                        return new WarnUnimplemented(read ? "mrs" : "msr",
-                                                     machInst, full_mnem);
-                    } else {
-                        return new FailUnimplemented(read ? "mrs" : "msr",
-                                    machInst,
-                                    csprintf("%s %s",
-                                      read ? "mrs" : "msr",
-                                      miscRegName[miscReg]));
                     }
                   }
                   break;
