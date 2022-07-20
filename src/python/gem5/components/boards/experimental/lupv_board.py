@@ -514,7 +514,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
 
     @overrides(KernelDiskWorkload)
     def get_default_kernel_args(self) -> List[str]:
-        return ["earlycon console=ttyLIO0", "root={root_value}", "ro"]
+        return ["console=ttyLIO0", "root={root_value}", "ro"]
 
     @overrides(KernelDiskWorkload)
     def get_disk_device(self) -> str:
