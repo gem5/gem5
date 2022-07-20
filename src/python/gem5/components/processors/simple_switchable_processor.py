@@ -27,7 +27,7 @@
 from ..boards.mem_mode import MemMode
 from ..boards.abstract_board import AbstractBoard
 from ..processors.simple_core import SimpleCore
-from ..processors.cpu_types import CPUTypes
+from ..processors.cpu_types import CPUTypes, get_mem_mode
 from .switchable_processor import SwitchableProcessor
 from ...isas import ISA
 
@@ -72,14 +72,7 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
         self._switch_key = "switch"
         self._current_is_start = True
 
-        if starting_core_type in (CPUTypes.TIMING, CPUTypes.O3):
-            self._mem_mode = MemMode.TIMING
-        elif starting_core_type == CPUTypes.KVM:
-            self._mem_mode = MemMode.ATOMIC_NONCACHING
-        elif starting_core_type == CPUTypes.ATOMIC:
-            self._mem_mode = MemMode.ATOMIC
-        else:
-            raise NotImplementedError
+        self._mem_mode = get_mem_mode(starting_core_type)
 
         switchable_cores = {
             self._start_key: [
