@@ -4435,9 +4435,8 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_CPUMERRSR_EL1)
       .allPrivileges().exceptUserMode();
     InitReg(MISCREG_L2MERRSR_EL1)
-      .unimplemented()
       .warnNotFail()
-      .allPrivileges().exceptUserMode();
+      .fault(faultUnimplemented);
     InitReg(MISCREG_CBAR_EL1)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_CONTEXTIDR_EL2)
@@ -4942,38 +4941,38 @@ ISA::initializeMiscRegMetadata()
 
     // RAS extension (unimplemented)
     InitReg(MISCREG_ERRIDR_EL1)
-      .unimplemented()
-      .warnNotFail();
+      .warnNotFail()
+      .fault(faultUnimplemented);
     InitReg(MISCREG_ERRSELR_EL1)
-      .unimplemented()
-      .warnNotFail();
+      .warnNotFail()
+      .fault(faultUnimplemented);
     InitReg(MISCREG_ERXFR_EL1)
-      .unimplemented()
-      .warnNotFail();
+      .warnNotFail()
+      .fault(faultUnimplemented);
     InitReg(MISCREG_ERXCTLR_EL1)
-      .unimplemented()
-      .warnNotFail();
+      .warnNotFail()
+      .fault(faultUnimplemented);
     InitReg(MISCREG_ERXSTATUS_EL1)
-      .unimplemented()
-      .warnNotFail();
+      .warnNotFail()
+      .fault(faultUnimplemented);
     InitReg(MISCREG_ERXADDR_EL1)
-      .unimplemented()
-      .warnNotFail();
+      .warnNotFail()
+      .fault(faultUnimplemented);
     InitReg(MISCREG_ERXMISC0_EL1)
-      .unimplemented()
-      .warnNotFail();
+      .warnNotFail()
+      .fault(faultUnimplemented);
     InitReg(MISCREG_ERXMISC1_EL1)
-      .unimplemented()
-      .warnNotFail();
+      .warnNotFail()
+      .fault(faultUnimplemented);
     InitReg(MISCREG_DISR_EL1)
-      .unimplemented()
-      .warnNotFail();
+      .warnNotFail()
+      .fault(faultUnimplemented);
     InitReg(MISCREG_VSESR_EL2)
-      .unimplemented()
-      .warnNotFail();
+      .warnNotFail()
+      .fault(faultUnimplemented);
     InitReg(MISCREG_VDISR_EL2)
-      .unimplemented()
-      .warnNotFail();
+      .warnNotFail()
+      .fault(faultUnimplemented);
 
     // Register mappings for some unimplemented registers:
     // ESR_EL1 -> DFSR
