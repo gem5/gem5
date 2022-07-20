@@ -110,7 +110,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         self._excep_code = { 'INT_SOFT_SUPER': 1, 'INT_TIMER_SUPER': 5,
                              'INT_TIMER_MACHINE': 7, 'INT_EXT_SUPER': 9,
                              'INT_EXT_MACHINE': 10 }
-        self._int_ids = { 'TTY': 1, 'BLK': 2, 'RNG': 3}
+        self._int_ids = { 'TTY': 0, 'BLK': 1, 'RNG': 2}
 
         # CLINT
         self.clint = Clint(pio_addr=0x2000000)
