@@ -3937,7 +3937,6 @@ ISA::initializeMiscRegMetadata()
       .faultWrite(EL1, faultPouEL1)
       .writes(1).exceptUserMode();
     InitReg(MISCREG_DC_IVAC_Xt)
-      .warnNotFail()
       .faultWrite(EL1, HCR_TRAP(tpc))
       .writes(1).exceptUserMode();
     InitReg(MISCREG_DC_ISW_Xt)
@@ -3965,7 +3964,6 @@ ISA::initializeMiscRegMetadata()
       .faultWrite(EL1, HCR_TRAP(tsw))
       .writes(1).exceptUserMode();
     InitReg(MISCREG_DC_ZVA_Xt)
-      .warnNotFail()
       .writes(1)
       .faultWrite(EL0, faultDczvaEL0)
       .faultWrite(EL1, HCR_TRAP(tdz));
@@ -3974,17 +3972,14 @@ ISA::initializeMiscRegMetadata()
       .faultWrite(EL1, faultPouEL1)
       .writes(1);
     InitReg(MISCREG_DC_CVAC_Xt)
-      .warnNotFail()
       .faultWrite(EL0, faultCvacEL0)
       .faultWrite(EL1, HCR_TRAP(tpc))
       .writes(1);
     InitReg(MISCREG_DC_CVAU_Xt)
-      .warnNotFail()
       .faultWrite(EL0, faultPouEL0)
       .faultWrite(EL1, faultPouEL1)
       .writes(1);
     InitReg(MISCREG_DC_CIVAC_Xt)
-      .warnNotFail()
       .faultWrite(EL0, faultCvacEL0)
       .faultWrite(EL1, HCR_TRAP(tpc))
       .writes(1);
