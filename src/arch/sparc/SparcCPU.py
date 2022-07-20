@@ -27,6 +27,7 @@ from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
 from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
 from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
 from m5.objects.BaseO3CPU import BaseO3CPU
+from m5.objects.BaseMinorCPU import BaseMinorCPU
 from m5.objects.SparcDecoder import SparcDecoder
 from m5.objects.SparcMMU import SparcMMU
 from m5.objects.SparcInterrupts import SparcInterrupts
@@ -53,4 +54,8 @@ class SparcTimingSimpleCPU(BaseTimingSimpleCPU, SparcCPU):
 
 
 class SparcO3CPU(BaseO3CPU, SparcCPU):
+    mmu = SparcMMU()
+
+
+class SparcMinorCPU(BaseMinorCPU, SparcCPU):
     mmu = SparcMMU()
