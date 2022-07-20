@@ -29,6 +29,7 @@ from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
 from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
 from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
 from m5.objects.BaseO3CPU import BaseO3CPU
+from m5.objects.BaseMinorCPU import BaseMinorCPU
 from m5.objects.X86Decoder import X86Decoder
 from m5.objects.X86MMU import X86MMU
 from m5.objects.X86LocalApic import X86LocalApic
@@ -65,3 +66,7 @@ class X86O3CPU(BaseO3CPU, X86CPU):
     # (it's a side effect of int reg renaming), so they should
     # never be the bottleneck here.
     numPhysCCRegs = Self.numPhysIntRegs * 5
+
+
+class X86MinorCPU(BaseMinorCPU, X86CPU):
+    mmu = X86MMU()
