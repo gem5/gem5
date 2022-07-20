@@ -4627,31 +4627,19 @@ ISA::initializeMiscRegMetadata()
         .hyp().mon()
         .mapsTo(MISCREG_ICH_AP0R0);
     InitReg(MISCREG_ICH_AP0R1_EL2)
-        .hyp().mon()
-        .unimplemented()
         .mapsTo(MISCREG_ICH_AP0R1);
     InitReg(MISCREG_ICH_AP0R2_EL2)
-        .hyp().mon()
-        .unimplemented()
         .mapsTo(MISCREG_ICH_AP0R2);
     InitReg(MISCREG_ICH_AP0R3_EL2)
-        .hyp().mon()
-        .unimplemented()
         .mapsTo(MISCREG_ICH_AP0R3);
     InitReg(MISCREG_ICH_AP1R0_EL2)
         .hyp().mon()
         .mapsTo(MISCREG_ICH_AP1R0);
     InitReg(MISCREG_ICH_AP1R1_EL2)
-        .hyp().mon()
-        .unimplemented()
         .mapsTo(MISCREG_ICH_AP1R1);
     InitReg(MISCREG_ICH_AP1R2_EL2)
-        .hyp().mon()
-        .unimplemented()
         .mapsTo(MISCREG_ICH_AP1R2);
     InitReg(MISCREG_ICH_AP1R3_EL2)
-        .hyp().mon()
-        .unimplemented()
         .mapsTo(MISCREG_ICH_AP1R3);
     InitReg(MISCREG_ICH_HCR_EL2)
         .hyp().mon()
