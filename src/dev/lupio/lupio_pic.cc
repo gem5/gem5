@@ -90,8 +90,8 @@ LupioPIC::lupioPicRead(uint8_t addr)
 {
     uint32_t r = 0;
 
-    int cpu = addr >> LUPIO_PIC_MAX;
-    int reg = (addr >> 2) & (LUPIO_PIC_MAX - 1);
+    int cpu = addr / LUPIO_PIC_MAX;
+    int reg = addr % LUPIO_PIC_MAX;
 
     switch (reg) {
         case LUPIO_PIC_PRIO:
@@ -124,8 +124,8 @@ LupioPIC::lupioPicWrite(uint8_t addr, uint64_t val64)
 {
     uint32_t val = val64;
 
-    int cpu = addr >> LUPIO_PIC_MAX;
-    int reg = (addr >> 2) & (LUPIO_PIC_MAX - 1);
+    int cpu = addr / LUPIO_PIC_MAX;
+    int reg = addr % LUPIO_PIC_MAX;
 
     switch (reg) {
         case LUPIO_PIC_MASK:
