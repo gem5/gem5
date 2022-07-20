@@ -27,6 +27,7 @@ from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
 from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
 from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
 from m5.objects.BaseO3CPU import BaseO3CPU
+from m5.objects.BaseMinorCPU import BaseMinorCPU
 from m5.objects.MipsDecoder import MipsDecoder
 from m5.objects.MipsMMU import MipsMMU
 from m5.objects.MipsInterrupts import MipsInterrupts
@@ -53,4 +54,8 @@ class MipsTimingSimpleCPU(BaseTimingSimpleCPU, MipsCPU):
 
 
 class MipsO3CPU(BaseO3CPU, MipsCPU):
+    mmu = MipsMMU()
+
+
+class MipsMinorCPU(BaseMinorCPU, MipsCPU):
     mmu = MipsMMU()
