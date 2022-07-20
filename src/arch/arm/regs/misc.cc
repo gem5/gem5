@@ -4933,7 +4933,6 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_UNKNOWN);
     InitReg(MISCREG_IMPDEF_UNIMPL)
-      .unimplemented()
       .fault(EL1, faultImpdefUnimplEL1)
       .fault(EL2, faultUnimplemented)
       .fault(EL3, faultUnimplemented)
