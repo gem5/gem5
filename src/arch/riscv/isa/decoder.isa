@@ -1906,7 +1906,7 @@ decode QUADRANT default Unknown::unknown() {
                                             "wfi in user mode or TW enabled",
                                             machInst);
                             }
-                            // don't do anything for now
+                            xc->tcBase()->quiesce();
                         }}, No_OpClass);
                     }
                     0x9: sfence_vma({{
