@@ -147,7 +147,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
 
         # LUPIO RNG
         self.lupio_rng = LupioRNG(
-            pio_addr=0x20005000,
+            pio_addr=0x20003000,
             platform = self.lupv,
             int_id = self._int_ids['RNG']
         )
@@ -156,7 +156,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         self.lupio_rtc = LupioRTC(pio_addr=0x20004000)
 
         #LUPIO SYS
-        self.lupio_sys = LupioSYS(pio_addr= 0x20003000)
+        self.lupio_sys = LupioSYS(pio_addr= 0x20005000)
 
         # LUPIO TMR
         self.lupio_tmr = LupioTMR(
