@@ -3813,8 +3813,8 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_CURRENTEL)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_PAN)
-      .allPrivileges().exceptUserMode()
-      .implemented(release->has(ArmExtension::FEAT_PAN));
+      .allPrivileges(release->has(ArmExtension::FEAT_PAN))
+      .exceptUserMode();
     InitReg(MISCREG_UAO)
       .allPrivileges().exceptUserMode();
     InitReg(MISCREG_NZCV)
@@ -4325,47 +4325,38 @@ ISA::initializeMiscRegMetadata()
       .res0(0xffffffff00000000)
       .mapsTo(MISCREG_CNTHP_TVAL);
     InitReg(MISCREG_CNTHPS_CTL_EL2)
-      .mon()
-      .hypSecure()
-      .res0(0xfffffffffffffff8)
-      .implemented(sel2_implemented);
+      .mon(sel2_implemented)
+      .hypSecure(sel2_implemented)
+      .res0(0xfffffffffffffff8);
     InitReg(MISCREG_CNTHPS_CVAL_EL2)
-      .mon()
-      .hypSecure()
-      .implemented(sel2_implemented);
+      .mon(sel2_implemented)
+      .hypSecure(sel2_implemented);
     InitReg(MISCREG_CNTHPS_TVAL_EL2)
-      .mon()
-      .hypSecure()
-      .res0(0xffffffff00000000)
-      .implemented(sel2_implemented);
+      .mon(sel2_implemented)
+      .hypSecure(sel2_implemented)
+      .res0(0xffffffff00000000);
     InitReg(MISCREG_CNTHV_CTL_EL2)
-      .mon()
+      .mon(vhe_implemented)
       .hyp()
-      .res0(0xfffffffffffffff8)
-      .implemented(vhe_implemented);
+      .res0(0xfffffffffffffff8);
     InitReg(MISCREG_CNTHV_CVAL_EL2)
-      .mon()
-      .hyp()
-      .implemented(vhe_implemented);
+      .mon(vhe_implemented)
+      .hyp(vhe_implemented);
     InitReg(MISCREG_CNTHV_TVAL_EL2)
-      .mon()
-      .hyp()
-      .res0(0xffffffff00000000)
-      .implemented(vhe_implemented);
+      .mon(vhe_implemented)
+      .hyp(vhe_implemented)
+      .res0(0xffffffff00000000);
     InitReg(MISCREG_CNTHVS_CTL_EL2)
-      .mon()
-      .hypSecure()
-      .res0(0xfffffffffffffff8)
-      .implemented(vhe_implemented && sel2_implemented);
+      .mon(vhe_implemented && sel2_implemented)
+      .hypSecure(vhe_implemented && sel2_implemented)
+      .res0(0xfffffffffffffff8);
     InitReg(MISCREG_CNTHVS_CVAL_EL2)
-      .mon()
-      .hypSecure()
-      .implemented(vhe_implemented && sel2_implemented);
+      .mon(vhe_implemented && sel2_implemented)
+      .hypSecure(vhe_implemented && sel2_implemented);
     InitReg(MISCREG_CNTHVS_TVAL_EL2)
-      .mon()
-      .hypSecure()
-      .res0(0xffffffff00000000)
-      .implemented(vhe_implemented && sel2_implemented);
+      .mon(vhe_implemented && sel2_implemented)
+      .hypSecure(vhe_implemented && sel2_implemented)
+      .res0(0xffffffff00000000);
     // ENDIF Armv8.1-VHE
     InitReg(MISCREG_CNTVOFF_EL2)
       .mon()
