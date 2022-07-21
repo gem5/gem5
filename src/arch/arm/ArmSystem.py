@@ -84,6 +84,7 @@ class ArmExtension(ScopedEnum):
         "FEAT_PAuth",
         # Armv8.4
         "FEAT_SEL2",
+        "FEAT_TLBIOS",
         # Armv9.2
         "FEAT_SME",  # Optional in Armv9.2
         # Others
@@ -162,6 +163,7 @@ class ArmDefaultRelease(Armv8):
         "FEAT_PAuth",
         # Armv8.4
         "FEAT_SEL2",
+        "FEAT_TLBIOS",
         # Armv9.2
         "FEAT_SME",
     ]
@@ -192,7 +194,7 @@ class Armv83(Armv82):
 
 
 class Armv84(Armv83):
-    extensions = Armv83.extensions + ["FEAT_SEL2"]
+    extensions = Armv83.extensions + ["FEAT_SEL2", "FEAT_TLBIOS"]
 
 
 class Armv92(Armv84):

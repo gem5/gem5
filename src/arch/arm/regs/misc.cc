@@ -753,6 +753,12 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(1, 0, 7, 8, 3), MISCREG_AT_S1E0W_Xt },
     { MiscRegNum64(1, 0, 7, 10, 2), MISCREG_DC_CSW_Xt },
     { MiscRegNum64(1, 0, 7, 14, 2), MISCREG_DC_CISW_Xt },
+    { MiscRegNum64(1, 0, 8, 1, 0), MISCREG_TLBI_VMALLE1OS },
+    { MiscRegNum64(1, 0, 8, 1, 1), MISCREG_TLBI_VAE1OS_Xt },
+    { MiscRegNum64(1, 0, 8, 1, 2), MISCREG_TLBI_ASIDE1OS_Xt },
+    { MiscRegNum64(1, 0, 8, 1, 3), MISCREG_TLBI_VAAE1OS_Xt },
+    { MiscRegNum64(1, 0, 8, 1, 5), MISCREG_TLBI_VALE1OS_Xt },
+    { MiscRegNum64(1, 0, 8, 1, 7), MISCREG_TLBI_VAALE1OS_Xt },
     { MiscRegNum64(1, 0, 8, 3, 0), MISCREG_TLBI_VMALLE1IS },
     { MiscRegNum64(1, 0, 8, 3, 1), MISCREG_TLBI_VAE1IS_Xt },
     { MiscRegNum64(1, 0, 8, 3, 2), MISCREG_TLBI_ASIDE1IS_Xt },
@@ -778,12 +784,19 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(1, 4, 7, 8, 7), MISCREG_AT_S12E0W_Xt },
     { MiscRegNum64(1, 4, 8, 0, 1), MISCREG_TLBI_IPAS2E1IS_Xt },
     { MiscRegNum64(1, 4, 8, 0, 5), MISCREG_TLBI_IPAS2LE1IS_Xt },
+    { MiscRegNum64(1, 4, 8, 1, 0), MISCREG_TLBI_ALLE2OS },
+    { MiscRegNum64(1, 4, 8, 1, 1), MISCREG_TLBI_VAE2OS_Xt },
+    { MiscRegNum64(1, 4, 8, 1, 4), MISCREG_TLBI_ALLE1OS },
+    { MiscRegNum64(1, 4, 8, 1, 5), MISCREG_TLBI_VALE2OS_Xt },
+    { MiscRegNum64(1, 4, 8, 1, 6), MISCREG_TLBI_VMALLS12E1OS },
     { MiscRegNum64(1, 4, 8, 3, 0), MISCREG_TLBI_ALLE2IS },
     { MiscRegNum64(1, 4, 8, 3, 1), MISCREG_TLBI_VAE2IS_Xt },
     { MiscRegNum64(1, 4, 8, 3, 4), MISCREG_TLBI_ALLE1IS },
     { MiscRegNum64(1, 4, 8, 3, 5), MISCREG_TLBI_VALE2IS_Xt },
     { MiscRegNum64(1, 4, 8, 3, 6), MISCREG_TLBI_VMALLS12E1IS },
+    { MiscRegNum64(1, 4, 8, 4, 0), MISCREG_TLBI_IPAS2E1OS_Xt },
     { MiscRegNum64(1, 4, 8, 4, 1), MISCREG_TLBI_IPAS2E1_Xt },
+    { MiscRegNum64(1, 4, 8, 4, 4), MISCREG_TLBI_IPAS2LE1OS_Xt },
     { MiscRegNum64(1, 4, 8, 4, 5), MISCREG_TLBI_IPAS2LE1_Xt },
     { MiscRegNum64(1, 4, 8, 7, 0), MISCREG_TLBI_ALLE2 },
     { MiscRegNum64(1, 4, 8, 7, 1), MISCREG_TLBI_VAE2_Xt },
@@ -792,6 +805,9 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(1, 4, 8, 7, 6), MISCREG_TLBI_VMALLS12E1 },
     { MiscRegNum64(1, 6, 7, 8, 0), MISCREG_AT_S1E3R_Xt },
     { MiscRegNum64(1, 6, 7, 8, 1), MISCREG_AT_S1E3W_Xt },
+    { MiscRegNum64(1, 6, 8, 1, 0), MISCREG_TLBI_ALLE3OS },
+    { MiscRegNum64(1, 6, 8, 1, 1), MISCREG_TLBI_VAE3OS_Xt },
+    { MiscRegNum64(1, 6, 8, 1, 5), MISCREG_TLBI_VALE3OS_Xt },
     { MiscRegNum64(1, 6, 8, 3, 0), MISCREG_TLBI_ALLE3IS },
     { MiscRegNum64(1, 6, 8, 3, 1), MISCREG_TLBI_VAE3IS_Xt },
     { MiscRegNum64(1, 6, 8, 3, 5), MISCREG_TLBI_VALE3IS_Xt },
@@ -3874,6 +3890,7 @@ ISA::initializeMiscRegMetadata()
           isar0_el1.atomic = release->has(ArmExtension::FEAT_LSE) ? 0x2 : 0x0;
           isar0_el1.rdm = release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0;
           isar0_el1.tme = release->has(ArmExtension::TME) ? 0x1 : 0x0;
+          isar0_el1.tlb = release->has(ArmExtension::FEAT_TLBIOS) ? 0x1 : 0x0;
           return isar0_el1;
       }())
       .faultRead(EL1, HCR_TRAP(tid3))
@@ -4339,6 +4356,24 @@ ISA::initializeMiscRegMetadata()
       .monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_AT_S1E3W_Xt)
       .monSecureWrite().monNonSecureWrite();
+    InitReg(MISCREG_TLBI_VMALLE1OS)
+      .faultWrite(EL1, HCR_TRAP(ttlb))
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_VAE1OS_Xt)
+      .faultWrite(EL1, HCR_TRAP(ttlb))
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_ASIDE1OS_Xt)
+      .faultWrite(EL1, HCR_TRAP(ttlb))
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_VAAE1OS_Xt)
+      .faultWrite(EL1, HCR_TRAP(ttlb))
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_VALE1OS_Xt)
+      .faultWrite(EL1, HCR_TRAP(ttlb))
+      .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_VAALE1OS_Xt)
+      .faultWrite(EL1, HCR_TRAP(ttlb))
+      .writes(1).exceptUserMode();
     InitReg(MISCREG_TLBI_VMALLE1IS)
       .faultWrite(EL1, HCR_TRAP(ttlb))
       .writes(1).exceptUserMode();
@@ -4375,6 +4410,20 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_TLBI_VAALE1_Xt)
       .faultWrite(EL1, HCR_TRAP(ttlb))
       .writes(1).exceptUserMode();
+    InitReg(MISCREG_TLBI_IPAS2E1OS_Xt)
+      .hypWrite().monSecureWrite().monNonSecureWrite();
+    InitReg(MISCREG_TLBI_IPAS2LE1OS_Xt)
+      .hypWrite().monSecureWrite().monNonSecureWrite();
+    InitReg(MISCREG_TLBI_ALLE2OS)
+      .monNonSecureWrite().hypWrite();
+    InitReg(MISCREG_TLBI_VAE2OS_Xt)
+      .monNonSecureWrite().hypWrite();
+    InitReg(MISCREG_TLBI_ALLE1OS)
+      .hypWrite().monSecureWrite().monNonSecureWrite();
+    InitReg(MISCREG_TLBI_VALE2OS_Xt)
+      .monNonSecureWrite().hypWrite();
+    InitReg(MISCREG_TLBI_VMALLS12E1OS)
+      .hypWrite().monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_IPAS2E1IS_Xt)
       .hypWrite().monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_IPAS2LE1IS_Xt)
@@ -4403,6 +4452,12 @@ ISA::initializeMiscRegMetadata()
       .monNonSecureWrite().hypWrite();
     InitReg(MISCREG_TLBI_VMALLS12E1)
       .hypWrite().monSecureWrite().monNonSecureWrite();
+    InitReg(MISCREG_TLBI_ALLE3OS)
+      .monSecureWrite().monNonSecureWrite();
+    InitReg(MISCREG_TLBI_VAE3OS_Xt)
+      .monSecureWrite().monNonSecureWrite();
+    InitReg(MISCREG_TLBI_VALE3OS_Xt)
+      .monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_ALLE3IS)
       .monSecureWrite().monNonSecureWrite();
     InitReg(MISCREG_TLBI_VAE3IS_Xt)
