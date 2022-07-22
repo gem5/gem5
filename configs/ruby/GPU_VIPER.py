@@ -169,6 +169,11 @@ class TCPCntrl(TCP_Controller, CntrlBase):
         self.use_seq_not_coal = False
 
         self.ruby_system = ruby_system
+        if hasattr(options, 'gpu_clock') and hasattr(options, 'gpu_voltage'):
+            self.clk_domain = SrcClockDomain(
+                    clock = options.gpu_clock,
+                    voltage_domain = VoltageDomain(
+                        voltage = options.gpu_voltage))
 
         if options.recycle_latency:
             self.recycle_latency = options.recycle_latency
@@ -235,6 +240,11 @@ class SQCCntrl(SQC_Controller, CntrlBase):
             options.sqc_deadlock_threshold
 
         self.ruby_system = ruby_system
+        if hasattr(options, 'gpu_clock') and hasattr(options, 'gpu_voltage'):
+            self.clk_domain = SrcClockDomain(
+                    clock = options.gpu_clock,
+                    voltage_domain = VoltageDomain(
+                        voltage = options.gpu_voltage))
 
         if options.recycle_latency:
             self.recycle_latency = options.recycle_latency
@@ -274,6 +284,11 @@ class TCCCntrl(TCC_Controller, CntrlBase):
         self.L2cache.resourceStalls = options.no_tcc_resource_stalls
 
         self.ruby_system = ruby_system
+        if hasattr(options, 'gpu_clock') and hasattr(options, 'gpu_voltage'):
+            self.clk_domain = SrcClockDomain(
+                    clock = options.gpu_clock,
+                    voltage_domain = VoltageDomain(
+                        voltage = options.gpu_voltage))
 
         if options.recycle_latency:
             self.recycle_latency = options.recycle_latency
