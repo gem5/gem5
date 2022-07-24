@@ -2044,7 +2044,7 @@ namespace VegaISA
 
         // Store value from hardware to part of the SDST.
         ScalarRegU32 mask = (((1U << size) - 1U) << offset);
-        sdst = (hwreg.rawData() & ~mask);
+        sdst = (hwreg.rawData() & mask) >> offset;
         sdst.write();
     } // execute
     // --- Inst_SOPK__S_SETREG_B32 class methods ---
