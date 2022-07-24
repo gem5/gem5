@@ -88,6 +88,9 @@ class Shader : public ClockedObject
     ApertureRegister _scratchApe;
     Addr shHiddenPrivateBaseVmid;
 
+    // Hardware regs accessed by getreg/setreg instructions, set by queues
+    std::unordered_map<int, uint32_t> hwRegs;
+
     // Number of active Cus attached to this shader
     int _activeCus;
 
@@ -108,6 +111,18 @@ class Shader : public ClockedObject
     SimpleThread *cpuThread;
     ThreadContext *gpuTc;
     BaseCPU *cpuPointer;
+
+    void
+    setHwReg(int regIdx, uint32_t val)
+    {
+        hwRegs[regIdx] = val;
+    }
+
+    uint32_t
+    getHwReg(int regIdx)
+    {
+        return hwRegs[regIdx];
+    }
 
     const ApertureRegister&
     gpuVmApe() const

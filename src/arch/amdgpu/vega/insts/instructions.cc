@@ -36,6 +36,7 @@
 #include "arch/amdgpu/vega/insts/inst_util.hh"
 #include "debug/VEGA.hh"
 #include "debug/GPUSync.hh"
+#include "dev/amdgpu/hwreg_defines.hh"
 #include "gpu-compute/shader.hh"
 
 namespace gem5
@@ -2037,14 +2038,14 @@ namespace VegaISA
         ScalarRegU32 offset = (simm16 >> 6) & 31;
         ScalarRegU32 size = ((simm16 >> 11) & 31) + 1;
 
-        ScalarOperandU32 hwreg(gpuDynInst, hwregId);
+        ScalarRegU32 hwreg =
+            gpuDynInst->computeUnit()->shader->getHwReg(hwregId);
         ScalarOperandU32 sdst(gpuDynInst, instData.SDST);
-        hwreg.read();
         sdst.read();
 
         // Store value from hardware to part of the SDST.
         ScalarRegU32 mask = (((1U << size) - 1U) << offset);
-        sdst = (hwreg.rawData() & mask) >> offset;
+        sdst = (hwreg & mask) >> offset;
         sdst.write();
     } // execute
     // --- Inst_SOPK__S_SETREG_B32 class methods ---
@@ -2072,16 +2073,15 @@ namespace VegaISA
         ScalarRegU32 offset = (simm16 >> 6) & 31;
         ScalarRegU32 size = ((simm16 >> 11) & 31) + 1;
 
-        ScalarOperandU32 hwreg(gpuDynInst, hwregId);
+        ScalarRegU32 hwreg =
+            gpuDynInst->computeUnit()->shader->getHwReg(hwregId);
         ScalarOperandU32 sdst(gpuDynInst, instData.SDST);
-        hwreg.read();
         sdst.read();
 
         // Store value from SDST to part of the hardware register.
         ScalarRegU32 mask = (((1U << size) - 1U) << offset);
-        hwreg = ((hwreg.rawData() & ~mask)
-                        | ((sdst.rawData() << offset) & mask));
-        hwreg.write();
+        hwreg = ((hwreg & ~mask) | ((sdst.rawData() << offset) & mask));
+        gpuDynInst->computeUnit()->shader->setHwReg(hwregId, hwreg);
 
         // set MODE register to control the behavior of single precision
         // floating-point numbers: denormal mode or round mode
@@ -2121,19 +2121,18 @@ namespace VegaISA
         ScalarRegU32 offset = (simm16 >> 6) & 31;
         ScalarRegU32 size = ((simm16 >> 11) & 31) + 1;
 
-        ScalarOperandU32 hwreg(gpuDynInst, hwregId);
+        ScalarRegU32 hwreg =
+            gpuDynInst->computeUnit()->shader->getHwReg(hwregId);
         ScalarRegI32 simm32 = extData.imm_u32;
-        hwreg.read();
 
         // Store value from SIMM32 to part of the hardware register.
         ScalarRegU32 mask = (((1U << size) - 1U) << offset);
-        hwreg = ((hwreg.rawData() & ~mask)
-                        | ((simm32 << offset) & mask));
-        hwreg.write();
+        hwreg = ((hwreg & ~mask) | ((simm32 << offset) & mask));
+        gpuDynInst->computeUnit()->shader->setHwReg(hwregId, hwreg);
 
         // set MODE register to control the behavior of single precision
         // floating-point numbers: denormal mode or round mode
-        if (hwregId==1 && size==2
+        if (hwregId==HW_REG_MODE && size==2
                         && (offset==4 || offset==0)) {
             warn_once("Be cautious that s_setreg_imm32_b32 has no real effect "
                             "on FP modes: %s\n", gpuDynInst->disassemble());

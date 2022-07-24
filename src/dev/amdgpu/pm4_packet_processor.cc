@@ -34,12 +34,14 @@
 
 #include "debug/PM4PacketProcessor.hh"
 #include "dev/amdgpu/amdgpu_device.hh"
+#include "dev/amdgpu/hwreg_defines.hh"
 #include "dev/amdgpu/interrupt_handler.hh"
 #include "dev/amdgpu/pm4_mmio.hh"
 #include "dev/amdgpu/sdma_engine.hh"
 #include "dev/hsa/hw_scheduler.hh"
 #include "enums/GfxVersion.hh"
 #include "gpu-compute/gpu_command_processor.hh"
+#include "gpu-compute/shader.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
@@ -615,6 +617,7 @@ PM4PacketProcessor::mapProcess(PM4Queue *q, PM4MapProcess *pkt)
             pkt->ptBase, pkt->completionSignal);
 
     gpuDevice->getVM().setPageTableBase(vmid, pkt->ptBase);
+    gpuDevice->CP()->shader()->setHwReg(HW_REG_SH_MEM_BASES, pkt->shMemBases);
 
     delete pkt;
     decodeNext(q);
