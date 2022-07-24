@@ -136,10 +136,24 @@ class Shader : public ClockedObject
         return _ldsApe;
     }
 
+    void
+    setLdsApe(Addr base, Addr limit)
+    {
+        _ldsApe.base = base;
+        _ldsApe.limit = limit;
+    }
+
     const ApertureRegister&
     scratchApe() const
     {
         return _scratchApe;
+    }
+
+    void
+    setScratchApe(Addr base, Addr limit)
+    {
+        _scratchApe.base = base;
+        _scratchApe.limit = limit;
     }
 
     bool

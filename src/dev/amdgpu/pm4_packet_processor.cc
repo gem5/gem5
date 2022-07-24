@@ -619,6 +619,16 @@ PM4PacketProcessor::mapProcess(PM4Queue *q, PM4MapProcess *pkt)
     gpuDevice->getVM().setPageTableBase(vmid, pkt->ptBase);
     gpuDevice->CP()->shader()->setHwReg(HW_REG_SH_MEM_BASES, pkt->shMemBases);
 
+    // Setup the apertures that gem5 uses. These values are bits [63:48].
+    Addr lds_base = (Addr)bits(pkt->shMemBases, 31, 16) << 48;
+    Addr scratch_base = (Addr)bits(pkt->shMemBases, 15, 0) << 48;
+
+    // There does not seem to be any register for the limit, but the driver
+    // assumes scratch and LDS have a 4GB aperture, so use that.
+    gpuDevice->CP()->shader()->setLdsApe(lds_base, lds_base + 0xFFFFFFFF);
+    gpuDevice->CP()->shader()->setScratchApe(scratch_base,
+                                             scratch_base + 0xFFFFFFFF);
+
     delete pkt;
     decodeNext(q);
 }
