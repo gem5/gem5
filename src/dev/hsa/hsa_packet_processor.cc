@@ -608,14 +608,6 @@ void
 AQLRingBuffer::setRdIdx(uint64_t value)
 {
     _rdIdx = value;
-
-    // Mark entries below the previous doorbell value as complete. This will
-    // cause the next call to freeEntry on the queue to increment the read
-    // index to the next value which will be written to the doorbell.
-    for (int i = 0; i <= value; ++i) {
-        _aqlComplete[i] = true;
-        DPRINTF(HSAPacketProcessor, "Marking _aqlComplete[%d] true\n", i);
-    }
 }
 
 void
