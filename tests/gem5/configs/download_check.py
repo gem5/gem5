@@ -86,8 +86,10 @@ for id in ids:
     download_path = os.path.join(args.download_directory, id)
     try:
         get_resource(resource_name=id, to_path=download_path)
-    except Exception:
+    except Exception as e:
         errors += f"Failure to download resource '{id}'.{os.linesep}"
+        errors += f"Exception message:{os.linesep}{str(e)}"
+        errors += f"{os.linesep}{os.linesep}"
         continue
 
     if md5(Path(download_path)) != resource_json["md5sum"]:
