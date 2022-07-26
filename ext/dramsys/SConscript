@@ -1,0 +1,100 @@
+# Copyright (c) 2022, Fraunhofer IESE
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its
+#    contributors may be used to endorse or promote products derived from
+#    this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER
+# OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+import os
+
+Import('env')
+
+build_root = Dir('../..').abspath
+src_root = Dir('DRAMSys/DRAMSys/library').srcnode().abspath
+
+# See if we got a cloned DRAMSys repo as a subdirectory and set the
+# HAVE_DRAMSys flag accordingly
+if not os.path.exists(Dir('.').srcnode().abspath + '/DRAMSys'):
+    env['HAVE_DRAMSYS'] = False
+    Return()
+
+env['HAVE_DRAMSYS'] = True
+
+dramsys_files = []
+dramsys_configuration_files = []
+
+dramsys_files.extend(Glob("%s/*.cpp" % f"{src_root}/src/controller"))
+for root, dirs, files in os.walk(f"{src_root}/src/controller", topdown=False):
+    for dir in dirs:
+        dramsys_files.extend(Glob("%s/*.cpp" % os.path.join(root, dir)))
+
+dramsys_files.extend(Glob("%s/*.cpp" % f"{src_root}/src/simulation"))
+for root, dirs, files in os.walk(f"{src_root}/src/simulation", topdown=False):
+    for dir in dirs:
+        dramsys_files.extend(Glob("%s/*.cpp" % os.path.join(root, dir)))
+
+dramsys_files.extend(Glob("%s/*.cpp" % f"{src_root}/src/configuration"))
+for root, dirs, files in os.walk(f"{src_root}/src/configuration", topdown=False):
+    for dir in dirs:
+        dramsys_files.extend(Glob("%s/*.cpp" % os.path.join(root, dir)))
+
+dramsys_files.extend(Glob("%s/*.cpp" % f"{src_root}/src/error"))
+dramsys_files.extend(Glob(f"{src_root}/src/error/ECC/Bit.cpp"))
+dramsys_files.extend(Glob(f"{src_root}/src/error/ECC/ECC.cpp"))
+dramsys_files.extend(Glob(f"{src_root}/src/error/ECC/Word.cpp"))
+
+dramsys_files.extend(Glob("%s/*.cpp" % f"{src_root}/src/common"))
+dramsys_files.extend(Glob("%s/*.cpp" % f"{src_root}/src/common/configuration"))
+dramsys_files.extend(Glob("%s/*.cpp" % f"{src_root}/src/common/configuration/memspec"))
+dramsys_files.extend(Glob("%s/*.c" % f"{src_root}/src/common/third_party/sqlite-amalgamation"))
+
+env.Prepend(CPPPATH=[
+    src_root + "/src",
+    src_root + "/src/common/configuration",
+    src_root + "/src/common/third_party/nlohmann/include",
+])
+
+env.Prepend(CPPDEFINES=[("DRAMSysResourceDirectory", '\\"' + os.getcwd() + '/resources' + '\\"')])
+env.Prepend(CPPDEFINES=[("SYSTEMC_VERSION", 20191203)])
+
+dramsys = env.Clone()
+
+if '-Werror' in dramsys['CCFLAGS']:
+    dramsys['CCFLAGS'].remove('-Werror')
+
+dramsys.Prepend(CPPPATH=[
+    src_root + "/src/common/third_party/sqlite-amalgamation",
+    build_root + "/systemc/ext"
+])
+
+dramsys.Prepend(CPPDEFINES=[("SQLITE_ENABLE_RTREE", "1")])
+
+dramsys_configuration = env.Clone()
+
+dramsys.Library('dramsys', dramsys_files)
+
+env.Append(LIBS=['dramsys', 'dl'])
+env.Append(LIBPATH=[Dir('.')])
