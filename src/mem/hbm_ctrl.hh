@@ -204,13 +204,18 @@ class HBMCtrl : public MemCtrl
   public:
 
     /**
-     * Is there a respondEvent for pseudo channel 1 scheduled?
+     * Is there a respondEvent scheduled?
      *
      * @return true if event is scheduled
      */
-    bool respondEventPC1Scheduled() const
+    bool respondEventScheduled(uint8_t pseudo_channel) const override
     {
-        return respondEventPC1.scheduled();
+        if (pseudo_channel == 0) {
+            return MemCtrl::respondEventScheduled(pseudo_channel);
+        } else {
+            assert(pseudo_channel == 1);
+            return respondEventPC1.scheduled();
+        }
     }
 
     /**

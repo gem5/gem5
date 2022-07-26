@@ -724,7 +724,11 @@ class MemCtrl : public qos::MemCtrl
      *
      * @return true if event is scheduled
      */
-    bool respondEventScheduled() const { return respondEvent.scheduled(); }
+    virtual bool respondEventScheduled(uint8_t pseudo_channel = 0) const
+    {
+        assert(pseudo_channel == 0);
+        return respondEvent.scheduled();
+    }
 
     /**
      * Is there a read/write burst Event scheduled?
