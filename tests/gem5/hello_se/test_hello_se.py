@@ -52,6 +52,7 @@ isa_str_map = {
     constants.mips_tag: "mips",
     constants.riscv_tag: "riscv",
     constants.sparc_tag: "sparc",
+    constants.vega_x86_tag: "x86",
 }
 
 static_progs = {
