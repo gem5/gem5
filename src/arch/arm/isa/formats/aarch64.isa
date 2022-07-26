@@ -459,14 +459,7 @@ namespace Aarch64
                     bool read = l;
                     MiscRegIndex miscReg =
                         decodeAArch64SysReg(op0, op1, crn, crm, op2);
-                    if (read) {
-                        if ((miscReg == MISCREG_DC_CIVAC_Xt) ||
-                            (miscReg == MISCREG_DC_CVAC_Xt) ||
-                            (miscReg == MISCREG_DC_IVAC_Xt)  ||
-                            (miscReg == MISCREG_DC_ZVA_Xt)) {
-                            return new Unknown64(machInst);
-                        }
-                    }
+
                     // Check for invalid registers
                     if (miscReg == MISCREG_UNKNOWN) {
                         auto full_mnemonic =
@@ -489,19 +482,26 @@ namespace Aarch64
                             rt, read, full_mnemonic);
 
                     } else {
-                        if (miscReg == MISCREG_NZCV) {
-                            if (read)
-                                return new MrsNZCV64(machInst, rt, miscReg);
-                            else
-                                return new MsrNZCV64(machInst, miscReg, rt);
-                        }
                         if (read) {
-                            StaticInstPtr si = new Mrs64(machInst, rt, miscReg);
-                            if (lookUpMiscReg[miscReg].info[MISCREG_UNVERIFIABLE])
-                                si->setFlag(StaticInst::IsUnverifiable);
-                            return si;
+                            switch (miscReg) {
+                              case MISCREG_NZCV:
+                                return new MrsNZCV64(machInst, rt, miscReg);
+                              case MISCREG_DC_CIVAC_Xt:
+                              case MISCREG_DC_CVAC_Xt:
+                              case MISCREG_DC_IVAC_Xt:
+                              case MISCREG_DC_ZVA_Xt:
+                                return new Unknown64(machInst);
+                              default: {
+                                StaticInstPtr si = new Mrs64(machInst, rt, miscReg);
+                                if (lookUpMiscReg[miscReg].info[MISCREG_UNVERIFIABLE])
+                                    si->setFlag(StaticInst::IsUnverifiable);
+                                return si;
+                              }
+                            }
                         } else {
                             switch (miscReg) {
+                              case MISCREG_NZCV:
+                                return new MsrNZCV64(machInst, miscReg, rt);
                               case MISCREG_DC_ZVA_Xt:
                                 return new Dczva(machInst, rt, miscReg);
                               case MISCREG_DC_CVAU_Xt:
