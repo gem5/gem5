@@ -1,3 +1,18 @@
+# Version 22.0.0.2
+
+**[HOTFIX]** This hotfix contains a set of critical fixes to be applied to gem5 v22.0.
+This hotfix:
+
+- Fixes the ARM booting of Linux kernels making use of FEAT_PAuth.
+- Removes incorrect `requires` functions in AbstractProcessor and AbstractGeneratorCore.
+These `requires` were causing errors when running generators with any ISA other than NULL.
+- Fixes the standard library's `set_se_binary_workload` function to exit on Exit Events (work items) by default.
+- Connects a previously unconnected PCI port in the example SST RISC-V config to the membus.
+- Updates the SST-gem5 README with the correct download links.
+- Adds a `getAddrRanges` function to the `HBMCtrl`.
+This ensures the XBar connected to the controller can see the address ranges covered by both pseudo channels.
+- Fixes test_download_resources.py so the correct parameter is passed to the download test script.
+
 # Version 22.0.0.1
 
 **[HOTFIX]** Fixes relative import in "src/python/gem5/components/processors/simple_core.py".
