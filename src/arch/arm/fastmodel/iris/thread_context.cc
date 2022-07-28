@@ -533,6 +533,19 @@ ThreadContext::sendFunctional(PacketPtr pkt)
         writeMem(id, addr, data, size);
 }
 
+void
+ThreadContext::readMemWithCurrentMsn(Addr vaddr, size_t size, char *data)
+{
+    readMem(getMemorySpaceId(Iris::CurrentMsn), vaddr, data, size);
+}
+
+void
+ThreadContext::writeMemWithCurrentMsn(Addr vaddr, size_t size,
+                                      const char *data)
+{
+    writeMem(getMemorySpaceId(Iris::CurrentMsn), vaddr, data, size);
+}
+
 ThreadContext::Status
 ThreadContext::status() const
 {

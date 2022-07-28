@@ -720,14 +720,32 @@ BaseRemoteGDB::processCommands(int signum)
     }
 }
 
+bool
+BaseRemoteGDB::readBlob(Addr vaddr, size_t size, char *data)
+{
+    (FullSystem ? TranslatingPortProxy(tc) : SETranslatingPortProxy(tc))
+        .readBlob(vaddr, data, size);
+    return true;
+}
+
+bool
+BaseRemoteGDB::writeBlob(Addr vaddr, size_t size, const char *data)
+{
+    (FullSystem ? TranslatingPortProxy(tc) : SETranslatingPortProxy(tc))
+        .writeBlob(vaddr, data, size);
+    return true;
+}
+
 // Read bytes from kernel address space for debugger.
 bool
 BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
 {
     DPRINTF(GDBRead, "read:  addr=%#x, size=%d", vaddr, size);
 
-    (FullSystem ? TranslatingPortProxy(tc) : SETranslatingPortProxy(tc)).
-        readBlob(vaddr, data, size);
+    bool res = readBlob(vaddr, size, data);
+
+    if (!res)
+        return false;
 
 #if TRACING_ON
     if (debug::GDBRead) {
@@ -756,10 +774,7 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
         } else
             DPRINTFNR("\n");
     }
-    (FullSystem ? TranslatingPortProxy(tc) : SETranslatingPortProxy(tc)).
-        writeBlob(vaddr, data, size);
-
-    return true;
+    return writeBlob(vaddr, size, data);
 }
 
 void

@@ -461,6 +461,8 @@ class ThreadContext : public gem5::ThreadContext
     {
         panic("%s not implemented.", __FUNCTION__);
     }
+    void readMemWithCurrentMsn(Addr vaddr, size_t size, char *data);
+    void writeMemWithCurrentMsn(Addr vaddr, size_t size, const char *data);
 };
 
 } // namespace Iris

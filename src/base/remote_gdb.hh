@@ -293,9 +293,10 @@ class BaseRemoteGDB
     /*
      * The interface to the simulated system.
      */
-    // Machine memory.
-    bool read(Addr addr, size_t size, char *data);
-    bool write(Addr addr, size_t size, const char *data);
+    virtual bool readBlob(Addr vaddr, size_t size, char *data);
+    virtual bool writeBlob(Addr vaddr, size_t size, const char *data);
+    bool read(Addr vaddr, size_t size, char *data);
+    bool write(Addr vaddr, size_t size, const char *data);
 
     template <class T> T read(Addr addr);
     template <class T> void write(Addr addr, T data);

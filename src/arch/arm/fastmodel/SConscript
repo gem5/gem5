@@ -437,3 +437,4 @@ SimObject('FastModel.py', sim_objects=[
     'AmbaToTlmBridge64', 'AmbaFromTlmBridge64'], tags='arm fastmodel')
 Source('amba_to_tlm_bridge.cc', tags='arm fastmodel')
 Source('amba_from_tlm_bridge.cc', tags='arm fastmodel')
+Source('remote_gdb.cc', tags='arm fastmodel')
