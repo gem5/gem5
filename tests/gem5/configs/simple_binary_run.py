@@ -76,6 +76,15 @@ parser.add_argument(
     help="The directory in which resources will be downloaded or exist.",
 )
 
+parser.add_argument(
+    "--arguments",
+    type=str,
+    action='append',
+    default=[],
+    required=False,
+    help="The input arguments for the binary.",
+)
+
 args = parser.parse_args()
 
 # Setup the system.
@@ -96,8 +105,11 @@ motherboard = SimpleBoard(
 
 # Set the workload
 binary = Resource(args.resource,
-        resource_directory=args.resource_directory)
-motherboard.set_se_binary_workload(binary)
+        resource_directory=args.resource_directory,)
+motherboard.set_se_binary_workload(
+    binary,
+    arguments=args.arguments
+)
 
 # Run the simulation
 simulator = Simulator(board=motherboard)

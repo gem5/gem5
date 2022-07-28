@@ -69,6 +69,11 @@ static_progs = {
     constants.sparc_tag: ("sparc-hello",),
 }
 
+take_params_progs = {
+    constants.vega_x86_tag: ("x86-print-this",),
+    constants.riscv_tag: ("riscv-print-this",),
+}
+
 dynamic_progs = {constants.vega_x86_tag: ("x86-hello64-dynamic",)}
 
 cpu_types = {
@@ -100,12 +105,12 @@ regex = re.compile(r"Hello world!")
 stdout_verifier = verifier.MatchRegex(regex)
 
 
-def verify_config(isa, binary, cpu, hosts):
+def verify_config(isa, binary, cpu, hosts, verifier, input):
 
     gem5_verify_config(
         name="test-" + binary + "-" + cpu,
         fixtures=(),
-        verifiers=(stdout_verifier,),
+        verifiers=(verifier,),
         config=joinpath(
             config.base_dir,
             "tests",
@@ -119,7 +124,7 @@ def verify_config(isa, binary, cpu, hosts):
             "--resource-directory",
             resource_path,
             isa_str_map[isa],
-        ],
+        ] + input,
         valid_isas=(isa,),
         valid_hosts=hosts,
         length=os_length[isa],
@@ -129,10 +134,41 @@ def verify_config(isa, binary, cpu, hosts):
 for isa in static_progs:
     for binary in static_progs[isa]:
         for cpu in cpu_types[isa]:
-            verify_config(isa, binary, cpu, constants.supported_hosts)
+            verify_config(
+                isa,
+                binary,
+                cpu,
+                constants.supported_hosts,
+                stdout_verifier,
+                []
+            )
 
 # Run dynamically linked hello worlds
 for isa in dynamic_progs:
     for binary in dynamic_progs[isa]:
         for cpu in cpu_types[isa]:
-            verify_config(isa, binary, cpu, constants.target_host[isa])
+            verify_config(
+                isa,
+                binary,
+                cpu,
+                constants.target_host[isa],
+                stdout_verifier,
+                []
+            )
+
+regex = re.compile(r"1 print this")
+stdout_verifier = verifier.MatchRegex(regex)
+
+args = ["--arguments", "print this", "--arguments", "2000"]
+
+for isa in take_params_progs:
+    for binary in take_params_progs[isa]:
+        for cpu in cpu_types[isa]:
+            verify_config(
+                isa,
+                binary,
+                cpu,
+                constants.target_host[isa],
+                stdout_verifier,
+                args
+            )
