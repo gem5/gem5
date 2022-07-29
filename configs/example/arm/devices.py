@@ -241,10 +241,11 @@ class FastmodelCluster(SubSystem):
             core.createInterruptController()
         self.cpus = [ cpu ]
 
+        self.cpu_hub = SubSystem()
         a2t = AmbaToTlmBridge64(amba=cpu.amba)
         t2g = TlmToGem5Bridge64(tlm=a2t.tlm, gem5=system.membus.cpu_side_ports)
-        system.gic_hub.a2t = a2t
-        system.gic_hub.t2g = t2g
+        self.cpu_hub.a2t = a2t
+        self.cpu_hub.t2g = t2g
 
         system.addCpuCluster(self, num_cpus)
 
