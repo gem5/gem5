@@ -534,12 +534,6 @@ let {{
             MiscRegIndex misc_index = (MiscRegIndex) xc->tcBase()->
                 flattenRegId(miscRegClass[pre_flat]).index();
 
-            if (!lookUpMiscReg[misc_index].info[MISCREG_IMPLEMENTED]) {
-                    return std::make_shared<UndefinedInstruction>(
-                                    machInst, false,
-                                    mnemonic);
-            }
-
             if (fault = checkFaultAccessAArch64SysReg(misc_index,
                 Cpsr, xc->tcBase(), *this); fault != NoFault) {
                     return fault;
