@@ -699,7 +699,7 @@ MMU::s1PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
 }
 
 bool
-MMU::hasUnprivRegime(ExceptionLevel el, CachedState &state)
+MMU::hasUnprivRegime(ExceptionLevel el, bool e2h)
 {
     switch (el) {
       case EL0:
@@ -708,11 +708,17 @@ MMU::hasUnprivRegime(ExceptionLevel el, CachedState &state)
         return true;
       case EL2:
         // EL2&0 or EL2
-        return state.hcr.e2h;
+        return e2h;
       case EL3:
       default:
         return false;
     }
+}
+
+bool
+MMU::hasUnprivRegime(ExceptionLevel el, CachedState &state)
+{
+    return hasUnprivRegime(el, state.hcr.e2h);
 }
 
 bool

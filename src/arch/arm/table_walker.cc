@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2019, 2021 Arm Limited
+ * Copyright (c) 2010, 2012-2019, 2021-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -2296,7 +2296,10 @@ TableWalker::insertPartialTableEntry(LongDescriptor &descriptor)
     te.valid          = true;
     te.longDescFormat = true;
     te.partial        = true;
-    te.global         = false;
+    // The entry is global if there is no address space identifier
+    // to differentiate translation contexts
+    te.global         = !mmu->hasUnprivRegime(
+        currState->el, currState->hcr.e2h);
     te.isHyp          = currState->isHyp;
     te.asid           = currState->asid;
     te.vmid           = currState->vmid;

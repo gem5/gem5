@@ -390,6 +390,8 @@ class MMU : public BaseMMU
      */
     static ExceptionLevel tranTypeEL(CPSR cpsr, ArmTranslationType type);
 
+    static bool hasUnprivRegime(ExceptionLevel el, bool e2h);
+
   public:
     /** Lookup an entry in the TLB
      * @param vpn virtual address
