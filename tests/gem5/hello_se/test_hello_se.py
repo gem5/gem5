@@ -40,7 +40,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-Test file for the util m5 exit assembly instruction.
+Tests which run simple binaries in gem5's SE mode. The stdlib's SimpleBoard
+is used to run these tests.
 """
 from testlib import *
 
