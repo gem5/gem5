@@ -93,7 +93,7 @@ os_length = {
 if config.bin_path:
     resource_path = config.bin_path
 else:
-    resource_path = joinpath(absdirpath(__file__), "..", "resources")
+    resource_path = joinpath(absdirpath(__file__), "..", "..", "resources")
 
 
 regex = re.compile(r"Hello world!")
