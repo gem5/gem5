@@ -53,6 +53,7 @@ def operand_types {{
     'sf' : 'float',
     'df' : 'double',
     'vc' : 'ArmISA::VecRegContainer',
+    'mc' : 'ArmISA::MatRegContainer',
     # For operations that are implemented as a template
     'x' : 'TPElem',
     'xs' : 'TPSElem',
@@ -98,6 +99,10 @@ let {{
     class VecPredReg(VecPredRegOp):
         def __init__(self, idx):
             super().__init__('pc', idx, sort_pri=srtNormal)
+
+    class MatrixReg(MatRegOp):
+        def __init__(self, idx, suffix=''):
+            super().__init__('mc', idx, 'IsMatrix', srtNormal)
 
     class IntRegNPC(IntRegOp):
         @overrideInOperand
@@ -453,6 +458,9 @@ def operands {{
     'Ffr': VecPredReg('PREDREG_FFR'),
     'FfrAux': VecPredReg('PREDREG_FFR'),
     'PUreg0': VecPredReg('PREDREG_UREG0'),
+
+    # SME ZA Register:
+    'ZA': MatrixReg('0'),
 
     #Abstracted control reg operands
     'MiscDest': CntrlReg('dest'),

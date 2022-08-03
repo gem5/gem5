@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2017-2018 ARM Limited
+ * Copyright (c) 2010, 2017-2018, 2022 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -99,6 +99,9 @@ static const OpClass SimdSha256Hash2Op = enums::SimdSha256Hash2;
 static const OpClass SimdShaSigma2Op = enums::SimdShaSigma2;
 static const OpClass SimdShaSigma3Op = enums::SimdShaSigma3;
 static const OpClass SimdPredAluOp = enums::SimdPredAlu;
+static const OpClass MatrixOp = enums::Matrix;
+static const OpClass MatrixMovOp = enums::MatrixMov;
+static const OpClass MatrixOPOp = enums::MatrixOP;
 static const OpClass MemReadOp = enums::MemRead;
 static const OpClass MemWriteOp = enums::MemWrite;
 static const OpClass FloatMemReadOp = enums::FloatMemRead;

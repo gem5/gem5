@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2016, 2018-2019 ARM Limited
+# Copyright (c) 2014, 2016, 2018-2019, 2022 ARM Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -481,6 +481,8 @@ class InstObjParams(object):
                 self.op_class = "FloatAddOp"
             elif "IsVector" in self.flags:
                 self.op_class = "SimdAddOp"
+            elif "IsMatrix" in self.flags:
+                self.op_class = "MatrixOp"
             else:
                 self.op_class = "IntAluOp"
 
@@ -564,6 +566,7 @@ class ISAParser(Grammar):
                 "VecElemOp": VecElemOperandDesc,
                 "VecRegOp": VecRegOperandDesc,
                 "VecPredRegOp": VecPredRegOperandDesc,
+                "MatRegOp": MatRegOperandDesc,
                 "ControlRegOp": ControlRegOperandDesc,
                 "MemOp": MemOperandDesc,
                 "PCStateOp": PCStateOperandDesc,
