@@ -1,7 +1,7 @@
 #! /bin/bash
 
 #
-# Copyright (c) 2015 ARM Limited
+# Copyright (c) 2015, 2022 Arm Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -319,12 +319,18 @@ SW_PID=$!
 
 # block here till switch process starts
 connected $RUN_DIR/log.switch "tcp_iface listening on port" "switch" $SW_PID
-LINE=$(grep -r "tcp_iface listening on port" $RUN_DIR/log.switch)
 
-IFS=' ' read -ra ADDR <<< "$LINE"
 # actual port that switch is listening on may be different
 # from what we specified if the port was busy
-SW_PORT=${ADDR[5]}
+PORT_REGEX="tcp_iface listening on port ([0-9]+)"
+SW_FILE=$(cat $RUN_DIR/log.switch)
+
+if [[ $SW_FILE =~ $PORT_REGEX ]]; then
+    SW_PORT="${BASH_REMATCH[1]}"
+else
+    echo "Unable to find port info from $RUN_DIR/log.switch"
+    abort_func
+fi
 
 # Now launch all the gem5 processes with ssh.
 echo "START $(date)"
