@@ -323,6 +323,7 @@ namespace ArmISA
         SMC_64                  = 0x17,
         TRAPPED_MSR_MRS_64      = 0x18,
         TRAPPED_SVE             = 0x19,
+        TRAPPED_SME             = 0x1D,
         PREFETCH_ABORT_TO_HYP   = 0x20,
         PREFETCH_ABORT_LOWER_EL = 0x20,  // AArch64 alias
         PREFETCH_ABORT_FROM_HYP = 0x21,

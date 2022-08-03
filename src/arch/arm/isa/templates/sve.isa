@@ -36,7 +36,9 @@
 let {{
     sveEnabledCheckCode = '''
         if (FullSystem) {
-            fault = this->checkSveEnabled(xc->tcBase(), Cpsr, Cpacr64);
+            // Check an SVE inst against the appropriate traps/enables based
+            // on the Streaming Mode.
+            fault = this->checkSveSmeEnabled(xc->tcBase(), Cpsr, Cpacr64);
             if (fault != NoFault) {
                 return fault;
             }
