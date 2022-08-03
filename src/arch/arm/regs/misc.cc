@@ -912,7 +912,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 0, 0, 4, 2), MISCREG_RAZ },
     { MiscRegNum64(3, 0, 0, 4, 3), MISCREG_RAZ },
     { MiscRegNum64(3, 0, 0, 4, 4), MISCREG_ID_AA64ZFR0_EL1 },
-    { MiscRegNum64(3, 0, 0, 4, 5), MISCREG_RAZ },
+    { MiscRegNum64(3, 0, 0, 4, 5), MISCREG_ID_AA64SMFR0_EL1 },
     { MiscRegNum64(3, 0, 0, 4, 6), MISCREG_RAZ },
     { MiscRegNum64(3, 0, 0, 4, 7), MISCREG_RAZ },
     { MiscRegNum64(3, 0, 0, 5, 0), MISCREG_ID_AA64DFR0_EL1 },
@@ -943,6 +943,8 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 0, 1, 0, 1), MISCREG_ACTLR_EL1 },
     { MiscRegNum64(3, 0, 1, 0, 2), MISCREG_CPACR_EL1 },
     { MiscRegNum64(3, 0, 1, 2, 0), MISCREG_ZCR_EL1 },
+    { MiscRegNum64(3, 0, 1, 2, 4), MISCREG_SMPRI_EL1 },
+    { MiscRegNum64(3, 0, 1, 2, 6), MISCREG_SMCR_EL1 },
     { MiscRegNum64(3, 0, 2, 0, 0), MISCREG_TTBR0_EL1 },
     { MiscRegNum64(3, 0, 2, 0, 1), MISCREG_TTBR1_EL1 },
     { MiscRegNum64(3, 0, 2, 0, 2), MISCREG_TCR_EL1 },
@@ -981,6 +983,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 0, 9, 14, 2), MISCREG_PMINTENCLR_EL1 },
     { MiscRegNum64(3, 0, 10, 2, 0), MISCREG_MAIR_EL1 },
     { MiscRegNum64(3, 0, 10, 3, 0), MISCREG_AMAIR_EL1 },
+    { MiscRegNum64(3, 0, 10, 5, 3), MISCREG_MPAMSM_EL1 },
     { MiscRegNum64(3, 0, 12, 0, 0), MISCREG_VBAR_EL1 },
     { MiscRegNum64(3, 0, 12, 0, 1), MISCREG_RVBAR_EL1 },
     { MiscRegNum64(3, 0, 12, 1, 0), MISCREG_ISR_EL1 },
@@ -1024,6 +1027,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 0, 15, 1, 4), MISCREG_DL1DATA4_EL1 },
     { MiscRegNum64(3, 1, 0, 0, 0), MISCREG_CCSIDR_EL1 },
     { MiscRegNum64(3, 1, 0, 0, 1), MISCREG_CLIDR_EL1 },
+    { MiscRegNum64(3, 1, 0, 0, 6), MISCREG_SMIDR_EL1 },
     { MiscRegNum64(3, 1, 0, 0, 7), MISCREG_AIDR_EL1 },
     { MiscRegNum64(3, 1, 11, 0, 2), MISCREG_L2CTLR_EL1 },
     { MiscRegNum64(3, 1, 11, 0, 3), MISCREG_L2ECTLR_EL1 },
@@ -1038,6 +1042,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 3, 0, 0, 7), MISCREG_DCZID_EL0 },
     { MiscRegNum64(3, 3, 4, 2, 0), MISCREG_NZCV },
     { MiscRegNum64(3, 3, 4, 2, 1), MISCREG_DAIF },
+    { MiscRegNum64(3, 3, 4, 2, 2), MISCREG_SVCR },
     { MiscRegNum64(3, 3, 4, 4, 0), MISCREG_FPCR },
     { MiscRegNum64(3, 3, 4, 4, 1), MISCREG_FPSR },
     { MiscRegNum64(3, 3, 4, 5, 0), MISCREG_DSPSR_EL0 },
@@ -1057,6 +1062,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 3, 9, 14, 3), MISCREG_PMOVSSET_EL0 },
     { MiscRegNum64(3, 3, 13, 0, 2), MISCREG_TPIDR_EL0 },
     { MiscRegNum64(3, 3, 13, 0, 3), MISCREG_TPIDRRO_EL0 },
+    { MiscRegNum64(3, 3, 13, 0, 5), MISCREG_TPIDR2_EL0 },
     { MiscRegNum64(3, 3, 14, 0, 0), MISCREG_CNTFRQ_EL0 },
     { MiscRegNum64(3, 3, 14, 0, 1), MISCREG_CNTPCT_EL0 },
     { MiscRegNum64(3, 3, 14, 0, 2), MISCREG_CNTVCT_EL0 },
@@ -1087,8 +1093,13 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 4, 1, 1, 1), MISCREG_MDCR_EL2 },
     { MiscRegNum64(3, 4, 1, 1, 2), MISCREG_CPTR_EL2 },
     { MiscRegNum64(3, 4, 1, 1, 3), MISCREG_HSTR_EL2 },
+    { MiscRegNum64(3, 4, 1, 1, 4), MISCREG_HFGRTR_EL2 },
+    { MiscRegNum64(3, 4, 1, 1, 5), MISCREG_HFGWTR_EL2 },
     { MiscRegNum64(3, 4, 1, 1, 7), MISCREG_HACR_EL2 },
     { MiscRegNum64(3, 4, 1, 2, 0), MISCREG_ZCR_EL2 },
+    { MiscRegNum64(3, 4, 1, 2, 2), MISCREG_HCRX_EL2 },
+    { MiscRegNum64(3, 4, 1, 2, 5), MISCREG_SMPRIMAP_EL2 },
+    { MiscRegNum64(3, 4, 1, 2, 6), MISCREG_SMCR_EL2 },
     { MiscRegNum64(3, 4, 2, 0, 0), MISCREG_TTBR0_EL2 },
     { MiscRegNum64(3, 4, 2, 0, 1), MISCREG_TTBR1_EL2 },
     { MiscRegNum64(3, 4, 2, 0, 2), MISCREG_TCR_EL2 },
@@ -1167,6 +1178,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 5, 1, 0, 0), MISCREG_SCTLR_EL12 },
     { MiscRegNum64(3, 5, 1, 0, 2), MISCREG_CPACR_EL12 },
     { MiscRegNum64(3, 5, 1, 2, 0), MISCREG_ZCR_EL12 },
+    { MiscRegNum64(3, 5, 1, 2, 6), MISCREG_SMCR_EL12 },
     { MiscRegNum64(3, 5, 2, 0, 0), MISCREG_TTBR0_EL12 },
     { MiscRegNum64(3, 5, 2, 0, 1), MISCREG_TTBR1_EL12 },
     { MiscRegNum64(3, 5, 2, 0, 2), MISCREG_TCR_EL12 },
@@ -1193,6 +1205,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 6, 1, 1, 1), MISCREG_SDER32_EL3 },
     { MiscRegNum64(3, 6, 1, 1, 2), MISCREG_CPTR_EL3 },
     { MiscRegNum64(3, 6, 1, 2, 0), MISCREG_ZCR_EL3 },
+    { MiscRegNum64(3, 6, 1, 2, 6), MISCREG_SMCR_EL3 },
     { MiscRegNum64(3, 6, 1, 3, 1), MISCREG_MDCR_EL3 },
     { MiscRegNum64(3, 6, 2, 0, 0), MISCREG_TTBR0_EL3 },
     { MiscRegNum64(3, 6, 2, 0, 2), MISCREG_TCR_EL3 },
@@ -4932,6 +4945,30 @@ ISA::initializeMiscRegMetadata()
         .fault(EL3, faultZcrEL3)
         .allPrivileges().exceptUserMode();
 
+    // SME
+    InitReg(MISCREG_ID_AA64SMFR0_EL1)
+        .allPrivileges().exceptUserMode().writes(0);
+    InitReg(MISCREG_SVCR)
+        .allPrivileges();
+    InitReg(MISCREG_SMIDR_EL1)
+        .allPrivileges().exceptUserMode().writes(0);
+    InitReg(MISCREG_SMPRI_EL1)
+        .allPrivileges().exceptUserMode().reads(1);
+    InitReg(MISCREG_SMPRIMAP_EL2)
+        .hyp().mon();
+    InitReg(MISCREG_SMCR_EL3)
+        .mon();
+    InitReg(MISCREG_SMCR_EL2)
+        .hyp().mon();
+    InitReg(MISCREG_SMCR_EL12)
+        .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_SMCR_EL1)
+        .allPrivileges().exceptUserMode();
+    InitReg(MISCREG_TPIDR2_EL0)
+        .allPrivileges();
+    InitReg(MISCREG_MPAMSM_EL1)
+        .allPrivileges().exceptUserMode();
+
     // Dummy registers
     InitReg(MISCREG_NOP)
       .allPrivileges();
@@ -4978,6 +5015,19 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_VDISR_EL2)
       .warnNotFail()
       .fault(faultUnimplemented);
+
+    // HCX extension (unimplemented)
+    InitReg(MISCREG_HCRX_EL2)
+      .unimplemented()
+      .warnNotFail();
+
+    // FGT extension (unimplemented)
+    InitReg(MISCREG_HFGRTR_EL2)
+      .unimplemented()
+      .warnNotFail();
+    InitReg(MISCREG_HFGWTR_EL2)
+      .unimplemented()
+      .warnNotFail();
 
     // Register mappings for some unimplemented registers:
     // ESR_EL1 -> DFSR

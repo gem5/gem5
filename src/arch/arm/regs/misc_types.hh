@@ -416,6 +416,7 @@ namespace ArmISA
         Bitfield<21, 20> cp10;
         Bitfield<21, 20> fpen;  // AArch64
         Bitfield<23, 22> cp11;
+        Bitfield<25, 24> smen; // SME
         Bitfield<25, 24> cp12;
         Bitfield<27, 26> cp13;
         Bitfield<29, 28> rsvd;
@@ -734,10 +735,14 @@ namespace ArmISA
         Bitfield<31> tcpac;
         Bitfield<30> tam;
         Bitfield<28> tta_e2h;
+        Bitfield<25, 24> smen;
         Bitfield<21, 20> fpen;
         Bitfield<20> tta;
         Bitfield<17, 16> zen;
-        Bitfield<13, 12> res1_13_12_el2;
+        Bitfield<13, 13> res1_13_el2;
+        Bitfield<12, 12> res1_12_el2;
+        Bitfield<12> esm;  // SME (CPTR_EL3)
+        Bitfield<12> tsm;  // SME (CPTR_EL2)
         Bitfield<10> tfp;
         Bitfield<9> res1_9_el2;
         Bitfield<8> res1_8_el2;
@@ -749,6 +754,34 @@ namespace ArmISA
     BitUnion64(ZCR)
         Bitfield<3, 0> len;
     EndBitUnion(ZCR)
+
+    BitUnion64(SMCR)
+        Bitfield<63, 32> res0_63_32;
+        Bitfield<31, 31> fa64;
+        Bitfield<30, 9> res0_30_9;
+        Bitfield<8, 4> razwi_8_4;
+        Bitfield<3, 0> len;
+    EndBitUnion(SMCR)
+
+    BitUnion64(SVCR)
+        Bitfield<63, 2> res0_63_2;
+        Bitfield<1, 1> za;
+        Bitfield<0, 0> sm;
+    EndBitUnion(SVCR)
+
+    BitUnion64(SMIDR)
+        Bitfield<63, 32> res0_63_32;
+        Bitfield<31, 24> implementer;
+        Bitfield<23, 16> revision;
+        Bitfield<15, 15> smps;
+        Bitfield<14, 12> res0_14_12;
+        Bitfield<11, 0>  affinity;
+    EndBitUnion(SMIDR)
+
+    BitUnion64(SMPRI)
+        Bitfield<63, 4> res0_63_4;
+        Bitfield<3, 0> priority;
+    EndBitUnion(SMPRI)
 
    BitUnion32(OSL)
         Bitfield<64, 4> res0;

@@ -96,6 +96,9 @@ namespace ArmISA
         /** SVE vector length in quadwords */
         unsigned sveVL;
 
+        /** SME vector length in quadwords */
+        unsigned smeVL;
+
         /** This could be either a FS or a SE release */
         const ArmRelease *release;
 

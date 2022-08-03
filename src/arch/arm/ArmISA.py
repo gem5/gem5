@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2015-2021 ARM Limited
+# Copyright (c) 2012-2013, 2015-2022 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -38,7 +38,7 @@ from m5.proxy import *
 
 from m5.SimObject import SimObject
 from m5.objects.ArmPMU import ArmPMU
-from m5.objects.ArmSystem import SveVectorLength, ArmRelease
+from m5.objects.ArmSystem import SveVectorLength, SmeVectorLength, ArmRelease
 from m5.objects.BaseISA import BaseISA
 
 # Enum for DecoderFlavor
@@ -58,6 +58,8 @@ class ArmDefaultSERelease(ArmRelease):
         "FEAT_FCMA",
         "FEAT_JSCVT",
         "FEAT_PAuth",
+        # Armv9.2
+        "FEAT_SME",
         # Other
         "TME",
     ]
@@ -160,10 +162,13 @@ class ArmISA(BaseISA):
         "Any access to a MISCREG_IMPDEF_UNIMPL register is executed as NOP",
     )
 
-    # This is required because in SE mode a generic System SimObject is
-    # allocated, instead of an ArmSystem
+    # These are required because in SE mode a generic System SimObject
+    # is allocated, instead of an ArmSystem
     sve_vl_se = Param.SveVectorLength(
         1, "SVE vector length in quadwords (128-bit), SE-mode only"
+    )
+    sme_vl_se = Param.SmeVectorLength(
+        1, "SME vector length in quadwords (128-bit), SE-mode only"
     )
 
     # Recurse into subnodes to generate DTB entries. This is mainly needed to

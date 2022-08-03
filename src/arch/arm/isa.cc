@@ -110,6 +110,7 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
         haveLargeAsid64 = system->haveLargeAsid64();
         physAddrRange = system->physAddrRange();
         sveVL = system->sveVL();
+        smeVL = system->smeVL();
 
         release = system->releaseFS();
     } else {
@@ -117,6 +118,7 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
         haveLargeAsid64 = false;
         physAddrRange = 32;  // dummy value
         sveVL = p.sve_vl_se;
+        smeVL = p.sme_vl_se;
 
         release = p.release_se;
     }
@@ -406,6 +408,49 @@ ISA::initID64(const ArmISAParams &p)
         miscRegs[MISCREG_ZCR_EL1] = sveVL - 1;
     }
 
+    // SME
+
+    // Set up the SME SMIDR
+    // [63:32] RES0
+    // [31:24] Implementer - default this to Arm Limited
+    // [23:16] SMCU Revision - set to 0 as we don't model an SMCU
+    // [15]    SMPS - We don't do priorities in gem5, so disable
+    // [14:12] RES0
+    // [11:0]  Affinity - we implement per-CPU SME, so set to 0 (no SMCU)
+    miscRegs[MISCREG_SMIDR_EL1] = 0 | // Affinity
+        0 << 15 |                     // SMPS
+        0x41 << 24;                   // Implementer
+
+    miscRegs[MISCREG_ID_AA64SMFR0_EL1] = 0;
+    miscRegs[MISCREG_ID_AA64SMFR0_EL1] |= 0x1UL << 32; // F32F32
+    // The following BF16F32 is actually not implemented due to a lack
+    // of BF16 support in gem5's fplib. However, as per the SME spec the
+    // _only_ allowed value is 0x1.
+    miscRegs[MISCREG_ID_AA64SMFR0_EL1] |= 0x1UL << 34; // BF16F32
+    miscRegs[MISCREG_ID_AA64SMFR0_EL1] |= 0x1UL << 35; // F16F32
+    miscRegs[MISCREG_ID_AA64SMFR0_EL1] |= 0xFUL << 36; // I8I32
+    miscRegs[MISCREG_ID_AA64SMFR0_EL1] |= 0x1UL << 48; // F64F64
+    miscRegs[MISCREG_ID_AA64SMFR0_EL1] |= 0xFUL << 52; // I16I64
+    miscRegs[MISCREG_ID_AA64SMFR0_EL1] |= 0x0UL << 56; // SMEver
+    miscRegs[MISCREG_ID_AA64SMFR0_EL1] |= 0x1UL << 32; // FA64
+
+    // We want to support FEAT_SME_FA64. Therefore, we enable it in all
+    // SMCR_ELx registers by default. Runtime software might change this
+    // later, but given that gem5 doesn't disable instructions based on
+    // this flag we default to the most representative value.
+    miscRegs[MISCREG_SMCR_EL3] = 0x1 << 31;
+    miscRegs[MISCREG_SMCR_EL2] = 0x1 << 31;
+    miscRegs[MISCREG_SMCR_EL1] = 0x1 << 31;
+
+    // Set the vector default vector length
+    if (release->has(ArmExtension::SECURITY)) {
+        miscRegs[MISCREG_SMCR_EL3] |= ((smeVL - 1) & 0xF);
+    } else if (release->has(ArmExtension::VIRTUALIZATION)) {
+        miscRegs[MISCREG_SMCR_EL2] |= ((smeVL - 1) & 0xF);
+    } else {
+        miscRegs[MISCREG_SMCR_EL1] |= ((smeVL - 1) & 0xF);
+    }
+
     // Enforce consistency with system-level settings...
 
     // EL3
@@ -420,6 +465,10 @@ ISA::initID64(const ArmISAParams &p)
     miscRegs[MISCREG_ID_AA64PFR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64PFR0_EL1], 35, 32,
         release->has(ArmExtension::FEAT_SVE) ? 0x1 : 0x0);
+    // SME
+    miscRegs[MISCREG_ID_AA64PFR1_EL1] = insertBits(
+        miscRegs[MISCREG_ID_AA64PFR1_EL1], 27, 24,
+        release->has(ArmExtension::FEAT_SME) ? 0x1 : 0x0);
     // SecEL2
     miscRegs[MISCREG_ID_AA64PFR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64PFR0_EL1], 39, 36,
@@ -962,6 +1011,10 @@ ISA::readMiscReg(RegIndex idx)
         {
             return miscRegs[MISCREG_CPSR] & 0x800000;
         }
+      case MISCREG_SVCR:
+        {
+            return miscRegs[MISCREG_SVCR];
+        }
       case MISCREG_L2CTLR:
         {
             // mostly unimplemented, just set NumCPUs field from sim and return
@@ -1037,7 +1090,9 @@ ISA::readMiscReg(RegIndex idx)
                     0x0000001000000000 : 0) | // SecEL2
                (gicv3CpuInterface     ? 0x0000000001000000 : 0);
       case MISCREG_ID_AA64PFR1_EL1:
-        return 0; // bits [63:0] RES0 (reserved for future use)
+        return 0x0 |
+               (release->has(ArmExtension::FEAT_SME) ?
+                    0x1 << 24 : 0); // SME
 
       // Generic Timer registers
       case MISCREG_CNTFRQ ... MISCREG_CNTVOFF:
@@ -1188,6 +1243,9 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 if (release->has(ArmExtension::FEAT_SVE)) {
                     cpacrMask.zen = ones;
                 }
+                if (release->has(ArmExtension::FEAT_SME)) {
+                    cpacrMask.smen = ones;
+                }
                 newVal &= cpacrMask;
                 DPRINTF(MiscRegs, "Writing misc reg %s: %#x\n",
                         miscRegName[idx], newVal);
@@ -1205,13 +1263,20 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                     cptrMask.tz = ones;
                     cptrMask.zen = hcr.e2h ? ones : 0;
                 }
+                if (release->has(ArmExtension::FEAT_SME)) {
+                    cptrMask.tsm = ones;
+                    cptrMask.smen = hcr.e2h ? ones : 0;
+                }
                 cptrMask.fpen = hcr.e2h ? ones : 0;
                 newVal &= cptrMask;
                 cptrMask = 0;
-                cptrMask.res1_13_12_el2 = ones;
+                cptrMask.res1_13_el2 = ones;
                 cptrMask.res1_7_0_el2 = ones;
                 if (!release->has(ArmExtension::FEAT_SVE)) {
                     cptrMask.res1_8_el2 = ones;
+                }
+                if (!release->has(ArmExtension::FEAT_SME)) {
+                    cptrMask.res1_12_el2 = ones;
                 }
                 cptrMask.res1_9_el2 = ones;
                 newVal |= cptrMask;
@@ -1228,6 +1293,9 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 cptrMask.tfp = ones;
                 if (release->has(ArmExtension::FEAT_SVE)) {
                     cptrMask.ez = ones;
+                }
+                if (release->has(ArmExtension::FEAT_SME)) {
+                    cptrMask.esm = ones;
                 }
                 newVal &= cptrMask;
                 DPRINTF(MiscRegs, "Writing misc reg %s: %#x\n",
@@ -1917,6 +1985,21 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 idx = MISCREG_CPSR;
             }
             break;
+          case MISCREG_SVCR:
+            {
+                SVCR svcr = miscRegs[MISCREG_SVCR];
+                SVCR newSvcr = newVal;
+
+                // Don't allow other bits to be set
+                svcr.sm = newSvcr.sm;
+                svcr.za = newSvcr.za;
+                newVal = svcr;
+            }
+            break;
+          case MISCREG_SMPRI_EL1:
+            // Only the bottom 4 bits are settable
+            newVal = newVal & 0xF;
+            break;
           case MISCREG_AT_S1E1R_Xt:
             addressTranslation64(MMU::S1E1Tran, BaseMMU::Read, 0, val);
             return;
@@ -1981,6 +2064,16 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             setMiscRegNoEffect(idx, newVal);
             tc->getDecoderPtr()->as<Decoder>().setSveLen(
                     (getCurSveVecLenInBits() >> 7) - 1);
+            return;
+          case MISCREG_SMCR_EL3:
+          case MISCREG_SMCR_EL2:
+          case MISCREG_SMCR_EL1:
+            // Set the value here as we need to update the regs before
+            // reading them back in getCurSmeVecLenInBits (not
+            // implemented yet) to avoid setting stale vector lengths in
+            // the decoder.
+            setMiscRegNoEffect(idx, newVal);
+            // TODO: set the SME vector length
             return;
         }
         setMiscRegNoEffect(idx, newVal);

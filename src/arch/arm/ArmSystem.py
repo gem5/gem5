@@ -49,6 +49,21 @@ class SveVectorLength(UInt8):
     max = 16
 
 
+class SmeVectorLength(UInt8):
+    min = 1
+    max = 16
+
+    def _check(self):
+        super()._check()
+
+        # SME needs to be a whole power of 2. We already know value is
+        # not zero. Hence:
+        if self.value & (self.value - 1) != 0:
+            raise TypeError(
+                "SME vector length is not a power of 2: %d" % self.value
+            )
+
+
 class ArmExtension(ScopedEnum):
     vals = [
         # Armv8.1
@@ -69,6 +84,8 @@ class ArmExtension(ScopedEnum):
         "FEAT_PAuth",
         # Armv8.4
         "FEAT_SEL2",
+        # Armv9.2
+        "FEAT_SME",  # Optional in Armv9.2
         # Others
         "SECURITY",
         "LPAE",
@@ -145,6 +162,8 @@ class ArmDefaultRelease(Armv8):
         "FEAT_PAuth",
         # Armv8.4
         "FEAT_SEL2",
+        # Armv9.2
+        "FEAT_SME",
     ]
 
 
@@ -176,6 +195,10 @@ class Armv84(Armv83):
     extensions = Armv83.extensions + ["FEAT_SEL2"]
 
 
+class Armv92(Armv84):
+    extensions = Armv84.extensions + ["FEAT_SME"]
+
+
 class ArmSystem(System):
     type = "ArmSystem"
     cxx_header = "arch/arm/system.hh"
@@ -204,6 +227,9 @@ class ArmSystem(System):
     )
     sve_vl = Param.SveVectorLength(
         1, "SVE vector length in quadwords (128-bit)"
+    )
+    sme_vl = Param.SveVectorLength(
+        1, "SME vector length in quadwords (128-bit)"
     )
     semihosting = Param.ArmSemihosting(
         NULL,

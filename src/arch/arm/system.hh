@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2015-2021 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2015-2022 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -128,6 +128,9 @@ class ArmSystem : public System
     /** SVE vector length at reset, in quadwords */
     const unsigned _sveVL;
 
+    /** SME vector length at reset, in quadwords */
+    const unsigned _smeVL;
+
     /**
      * True if the Semihosting interface is enabled.
      */
@@ -204,6 +207,9 @@ class ArmSystem : public System
 
     /** Returns the SVE vector length at reset, in quadwords */
     unsigned sveVL() const { return _sveVL; }
+
+    /** Returns the SME vector length at reset, in quadwords */
+    unsigned smeVL() const { return _smeVL; }
 
     /** Returns the supported physical address range in bits if the highest
      * implemented exception level is 64 bits (ARMv8) */

@@ -1062,6 +1062,19 @@ namespace ArmISA
         MISCREG_ZCR_EL12,
         MISCREG_ZCR_EL1,
 
+        // SME
+        MISCREG_ID_AA64SMFR0_EL1,
+        MISCREG_SVCR,
+        MISCREG_SMIDR_EL1,
+        MISCREG_SMPRI_EL1,
+        MISCREG_SMPRIMAP_EL2,
+        MISCREG_SMCR_EL3,
+        MISCREG_SMCR_EL2,
+        MISCREG_SMCR_EL12,
+        MISCREG_SMCR_EL1,
+        MISCREG_TPIDR2_EL0,
+        MISCREG_MPAMSM_EL1,
+
         // NUM_PHYS_MISCREGS specifies the number of actual physical
         // registers, not considering the following pseudo-registers
         // (dummy registers), like MISCREG_UNKNOWN, MISCREG_IMPDEF_UNIMPL.
@@ -1091,6 +1104,13 @@ namespace ArmISA
         MISCREG_DISR_EL1,
         MISCREG_VSESR_EL2,
         MISCREG_VDISR_EL2,
+
+        // HCX extension (unimplemented)
+        MISCREG_HCRX_EL2,
+
+        // FGT extension (unimplemented)
+        MISCREG_HFGRTR_EL2,
+        MISCREG_HFGWTR_EL2,
 
         // PSTATE
         MISCREG_PAN,
@@ -2684,6 +2704,18 @@ namespace ArmISA
         "zcr_el12",
         "zcr_el1",
 
+        "id_aa64smfr0_el1",
+        "svcr",
+        "smidr_el1",
+        "smpri_el1",
+        "smprimap_el2",
+        "smcr_el3",
+        "smcr_el2",
+        "smcr_el12",
+        "smcr_el1",
+        "tpidr2_el0",
+        "mpamsm_el1",
+
         "num_phys_regs",
 
         // Dummy registers
@@ -2702,6 +2734,9 @@ namespace ArmISA
         "disr_el1",
         "vsesr_el2",
         "vdisr_el2",
+        "hcrx_el2",
+        "hfgrtr_el2",
+        "hfgwtr_el2",
 
         // PSTATE
         "pan",
