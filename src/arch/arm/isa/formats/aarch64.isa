@@ -436,6 +436,9 @@ namespace Aarch64
                             // SP
                             return new MsrImm64(
                                 machInst, MISCREG_SPSEL, crm);
+                          case 0x1b:
+                            // SVE SVCR - SMSTART/SMSTOP
+                            return decodeSmeMgmt(machInst);
                           case 0x1e:
                             // DAIFSet
                             return new MsrImmDAIFSet64(
@@ -3073,20 +3076,30 @@ def format Aarch64() {{
         using namespace Aarch64;
         if (bits(machInst, 27) == 0x0) {
             if (bits(machInst, 28) == 0x0) {
-                if (bits(machInst, 26, 25) != 0x2) {
-                    return new Unknown64(machInst);
-                }
-                if (bits(machInst, 31) == 0x0) {
-                    switch (bits(machInst, 30, 29)) {
-                      case 0x0:
-                      case 0x1:
-                      case 0x2:
-                        return decodeSveInt(machInst);
-                      case 0x3:
-                        return decodeSveFp(machInst);
+                if (bits(machInst, 26) == 0x1) {
+                    if (bits(machInst, 31) == 0x0) {
+                        if (bits(machInst, 25) == 0x1) {
+                            return new Unknown64(machInst);
+                        }
+                        switch (bits(machInst, 30, 29)) {
+                            case 0x0:
+                            case 0x1:
+                            case 0x2:
+                            return decodeSveInt(machInst);
+                            case 0x3:
+                            return decodeSveFp(machInst);
+                        }
+                    } else {
+                            return decodeSveMem(machInst);
                     }
                 } else {
-                    return decodeSveMem(machInst);
+                    if ((bits(machInst, 25) == 0x0) && \
+                        (bits(machInst, 31) == 0x1)) {
+                        // bit 31:25=1xx0000
+                        return decodeSmeInst(machInst);
+                    } else {
+                        return new Unknown64(machInst);
+                    }
                 }
             } else if (bits(machInst, 26) == 0)
                 // bit 28:26=100

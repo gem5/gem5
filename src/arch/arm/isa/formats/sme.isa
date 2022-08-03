@@ -1,0 +1,738 @@
+// Copyright (c) 2022 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+output header {{
+namespace Aarch64
+{
+    StaticInstPtr decodeSmeMgmt(ExtMachInst);
+    StaticInstPtr decodeSmeInst(ExtMachInst);
+
+        StaticInstPtr decodeSmeOp32(ExtMachInst);
+            StaticInstPtr decodeSmeOpFp32(ExtMachInst);
+            StaticInstPtr decodeSmeOpBf16(ExtMachInst);
+            StaticInstPtr decodeSmeOpFp16(ExtMachInst);
+            StaticInstPtr decodeSmeOpInt8(ExtMachInst);
+
+        StaticInstPtr decodeSmeOp64(ExtMachInst);
+            StaticInstPtr decodeSmeOpFp64(ExtMachInst);
+            StaticInstPtr decodeSmeOpInt16(ExtMachInst);
+
+        StaticInstPtr decodeSmeMovaInsert(ExtMachInst);
+        StaticInstPtr decodeSmeMovaExtract(ExtMachInst);
+
+        StaticInstPtr decodeSmeMisc(ExtMachInst);
+            StaticInstPtr decodeSmeZero(ExtMachInst);
+
+        StaticInstPtr decodeSmeAddArray(ExtMachInst);
+            StaticInstPtr decodeSmeAddhv(ExtMachInst);
+
+        StaticInstPtr decodeSmeMemory(ExtMachInst);
+            StaticInstPtr decodeSmeLoad(ExtMachInst);
+            StaticInstPtr decodeSmeStore(ExtMachInst);
+            StaticInstPtr decodeSmeLoadStoreArray(ExtMachInst);
+            StaticInstPtr decodeSmeLoadQuadWord(ExtMachInst);
+            StaticInstPtr decodeSmeStoreQuadWord(ExtMachInst);
+}
+}};
+
+output decoder {{
+namespace Aarch64
+{
+    // NOTE: This is called from a different decode tree (aarch64.isa).
+    // For neatness and clarity we keep the code here order to keep all
+    // SME things together.
+    StaticInstPtr
+    decodeSmeMgmt(ExtMachInst machInst)
+    {
+        const uint8_t imm = (uint8_t)bits(machInst, 10, 8);
+
+        if (bits(machInst, 8)) {
+            return new SmeSmstart(machInst, imm);
+        } else {
+            return new SmeSmstop(machInst, imm);
+        }
+    }
+
+    StaticInstPtr
+    decodeSmeInst(ExtMachInst machInst)
+    {
+        // Starting point for decoding: bits 31:25=1xx0000
+
+        const uint8_t op0 = (uint8_t)bits(machInst, 30, 29);
+        const uint8_t op1 = (uint8_t)bits(machInst, 24, 19);
+        const uint8_t op2 = (uint8_t)bits(machInst, 17);
+        const uint8_t op3 = (uint8_t)bits(machInst, 4, 2);
+
+        if ((op0 & 0b10) == 0b00) {
+            if ((op1 & 0b011000) == 0b010000) {
+                if ((op3 & 0b001) == 0b000) {
+                    return decodeSmeOp32(machInst);
+                }
+            }
+
+            if ((op1 & 0b011000) == 0b011000) {
+                if ((op3 & 0b010) == 0b000) {
+                    return decodeSmeOp64(machInst);
+                }
+            }
+        }
+
+        if (op0 == 0b10) {
+            if ((op1 & 0b100111) == 0b000000) {
+                if (op2 == 0b0) {
+                    if ((op3 & 0b100) == 0b000) {
+                        return decodeSmeMovaInsert(machInst);
+                    }
+                }
+
+                if (op2 ==0b1) {
+                    return decodeSmeMovaExtract(machInst);
+                }
+            }
+
+            if ((op1 & 0b100111) == 0b000001) {
+                return decodeSmeMisc(machInst);
+            }
+
+            if ((op1 & 0b100111) == 0b000010) {
+                if ((op3 & 0b010) == 0b000) {
+                    return decodeSmeAddArray(machInst);
+                }
+            }
+        }
+
+        if (op0 == 0b11) {
+            return decodeSmeMemory(machInst);
+        }
+
+        // We should not get here
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeOp32(ExtMachInst machInst)
+    {
+        const uint8_t op0 = (uint8_t)bits(machInst, 29);
+        const uint8_t op1 = (uint8_t)bits(machInst, 24);
+        const uint8_t op2 = (uint8_t)bits(machInst, 21);
+        const uint8_t op3 = (uint8_t)bits(machInst, 3);
+
+        if (op0 == 0) {
+            if (op1 == 0) {
+                if (op2 == 0) {
+                    if (op3 == 0) {
+                        return decodeSmeOpFp32(machInst);
+                    }
+                }
+            }
+
+            if (op1 == 1) {
+                if (op2 == 0) {
+                    if (op3 == 0) {
+                        return decodeSmeOpBf16(machInst);
+                    }
+                }
+
+                if (op2 == 1) {
+                    if (op3 == 0) {
+                        return decodeSmeOpFp16(machInst);
+                    }
+                }
+            }
+        }
+
+        if (op0 == 1) {
+            if (op3 == 0) {
+                return decodeSmeOpInt8(machInst);
+            }
+        }
+
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeOpFp32(ExtMachInst machInst)
+    {
+        const uint32_t S = (uint32_t)bits(machInst, 4, 4);
+
+        const RegIndex Zm = (RegIndex)(uint32_t)(bits(machInst, 20, 16));
+        const RegIndex Zn = (RegIndex)(uint32_t)(bits(machInst, 9, 5));
+        const RegIndex Pn = (RegIndex)(uint32_t)(bits(machInst, 12, 10));
+        const RegIndex Pm = (RegIndex)(uint32_t)(bits(machInst, 15, 13));
+        const RegIndex ZAda = (RegIndex)(uint32_t)(bits(machInst, 1, 0));
+
+        if (S == 0) {
+            return new SmeFmopa<uint32_t, uint32_t>(machInst, ZAda, Zn,
+                                                    Pn, Pm, Zm);
+        } else {
+            return new SmeFmops<uint32_t, uint32_t>(machInst, ZAda, Zn,
+                                                    Pn, Pm, Zm);
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeOpBf16(ExtMachInst machInst)
+    {
+        // The following code is functionally correct for decode, but
+        // remains commented out as the current gem5 fplib implementation
+        // doesn't support BF16, and hence the instructions themselves
+        // remain unimplemented. Once these have been implemented, this code
+        // can be safely uncommented to enable decode for the two BF16 Outer
+        // Product instructions added by FEAT_SME.
+
+        // const uint32_t S = (uint32_t)bits(machInst, 4, 4);
+
+        // const RegIndex Zm = (RegIndex)(uint32_t)(
+        //     bits(machInst, 20, 16));
+        // const RegIndex Zn = (RegIndex)(uint32_t)(
+        //     bits(machInst, 9, 5));
+        // const RegIndex Pn = (RegIndex)(uint32_t)(
+        //     bits(machInst, 12, 10));
+        // const RegIndex Pm = (RegIndex)(uint32_t)(
+        //     bits(machInst, 15, 13));
+        // const RegIndex ZAda = (RegIndex)(uint32_t)(
+        //     bits(machInst, 1, 0));
+
+        // if (S == 0) {
+        //     return new SmeBmopa(machInst);
+        // } else {
+        //     return new SmeBmops(machInst);
+        // }
+
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeOpFp16(ExtMachInst machInst)
+    {
+        const uint32_t S = (uint32_t)bits(machInst, 4, 4);
+
+        const RegIndex Zm = (RegIndex)(uint32_t)(bits(machInst, 20, 16));
+        const RegIndex Zn = (RegIndex)(uint32_t)(bits(machInst, 9, 5));
+        const RegIndex Pn = (RegIndex)(uint32_t)(bits(machInst, 12, 10));
+        const RegIndex Pm = (RegIndex)(uint32_t)(bits(machInst, 15, 13));
+        const RegIndex ZAda = (RegIndex)(uint32_t)(bits(machInst, 1, 0));
+
+        if (S == 0) {
+            return new SmeFmopaWidening<uint16_t, uint32_t>(machInst, ZAda, Zn,
+                                                            Pn, Pm, Zm);
+        } else {
+            return new SmeFmopsWidening<uint16_t, uint32_t>(machInst, ZAda, Zn,
+                                                            Pn, Pm, Zm);
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeOpInt8(ExtMachInst machInst)
+    {
+        const uint32_t u0 = (uint32_t)bits(machInst, 24);
+        const uint32_t u1 = (uint32_t)bits(machInst, 21);
+        const uint32_t S = (uint32_t)bits(machInst, 4);
+
+        const RegIndex Zm = (RegIndex)(uint32_t)(bits(machInst, 20, 16));
+        const RegIndex Zn = (RegIndex)(uint32_t)(bits(machInst, 9, 5));
+        const RegIndex Pn = (RegIndex)(uint32_t)(bits(machInst, 12, 10));
+        const RegIndex Pm = (RegIndex)(uint32_t)(bits(machInst, 15, 13));
+        const RegIndex ZAda = (RegIndex)(uint32_t)(bits(machInst, 1, 0));
+
+        if (u0 == 0) {
+            if (u1 == 0) {
+                if (S == 0) {
+                    return new SmeSmopa<int8_t, int8_t, int32_t>(
+                        machInst, ZAda, Zn, Pn, Pm, Zm);
+                } else {
+                    return new SmeSmops<int8_t, int8_t, int32_t>(
+                        machInst, ZAda, Zn, Pn, Pm, Zm);
+                }
+            } else {
+                if (S == 0) {
+                    return new SmeSumopa<int8_t, uint8_t, int32_t>(
+                        machInst, ZAda, Zn, Pn, Pm, Zm);
+                } else {
+                    return new SmeSumops<int8_t, uint8_t, int32_t>(
+                        machInst, ZAda, Zn, Pn, Pm, Zm);
+                }
+            }
+        } else {
+            if (u1 == 0) {
+                if (S == 0) {
+                    return new SmeUsmopa<uint8_t, int8_t, int32_t>(
+                        machInst, ZAda, Zn, Pn, Pm, Zm);
+                } else {
+                    return new SmeUsmops<uint8_t, int8_t, int32_t>(
+                        machInst, ZAda, Zn, Pn, Pm, Zm);
+                }
+            } else {
+                if (S == 0) {
+                    return new SmeUmopa<uint8_t, uint8_t, int32_t>(
+                        machInst, ZAda, Zn, Pn, Pm, Zm);
+                } else {
+                    return new SmeUmops<uint8_t, uint8_t, int32_t>(
+                        machInst, ZAda, Zn, Pn, Pm, Zm);
+                }
+            }
+        }
+
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeOp64(ExtMachInst machInst)
+    {
+        const uint8_t op0 = (uint8_t)bits(machInst, 29);
+        const uint8_t op1 = (uint8_t)bits(machInst, 24);
+        const uint8_t op2 = (uint8_t)bits(machInst, 21);
+
+        if (op0 == 0) {
+            if (op1 == 0) {
+                if (op2 == 0) {
+                    return decodeSmeOpFp64(machInst);
+                }
+            }
+        }
+
+        if (op0 == 1) {
+            return decodeSmeOpInt16(machInst);
+        }
+
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeOpFp64(ExtMachInst machInst)
+    {
+        const uint32_t S = (uint32_t)bits(machInst, 4, 4);
+
+        const RegIndex Zm = (RegIndex)(uint32_t)(bits(machInst, 20, 16));
+        const RegIndex Zn = (RegIndex)(uint32_t)(bits(machInst, 9, 5));
+        const RegIndex Pn = (RegIndex)(uint32_t)(bits(machInst, 12, 10));
+        const RegIndex Pm = (RegIndex)(uint32_t)(bits(machInst, 15, 13));
+        const RegIndex ZAda = (RegIndex)(uint32_t)(bits(machInst, 2, 0));
+
+        if (S == 0) {
+            return new SmeFmopa<uint64_t, uint64_t>(machInst, ZAda, Zn,
+                                                    Pn, Pm, Zm);
+        } else {
+            return new SmeFmops<uint64_t, uint64_t>(machInst, ZAda, Zn,
+                                                    Pn, Pm, Zm);
+        }
+
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeOpInt16(ExtMachInst machInst)
+    {
+        const uint32_t u0 = (uint32_t)bits(machInst, 24);
+        const uint32_t u1 = (uint32_t)bits(machInst, 21);
+        const uint32_t S = (uint32_t)bits(machInst, 4);
+
+        const RegIndex Zm = (RegIndex)(uint32_t)(bits(machInst, 20, 16));
+        const RegIndex Zn = (RegIndex)(uint32_t)(bits(machInst, 9, 5));
+        const RegIndex Pn = (RegIndex)(uint32_t)(bits(machInst, 12, 10));
+        const RegIndex Pm = (RegIndex)(uint32_t)(bits(machInst, 15, 13));
+        const RegIndex ZAda = (RegIndex)(uint32_t)(bits(machInst, 2, 0));
+
+        if (u0 == 0) {
+            if (u1 == 0) {
+                if (S == 0) {
+                    return new SmeSmopa<int16_t, int16_t, int64_t>(
+                        machInst, ZAda, Zn, Pn, Pm, Zm);
+                } else {
+                    return new SmeSmops<int16_t, int16_t, int64_t>(
+                        machInst, ZAda, Zn, Pn, Pm, Zm);
+                }
+            } else {
+                if (S == 0) {
+                    return new SmeSumopa<int16_t, uint16_t, int64_t>(
+                        machInst, ZAda, Zn, Pn, Pm, Zm);
+                } else {
+                    return new SmeSumops<int16_t, uint16_t, int64_t>(
+                        machInst, ZAda, Zn, Pn, Pm, Zm);
+                }
+            }
+        } else {
+            if (u1 == 0) {
+                if (S == 0) {
+                    return new SmeUsmopa<uint16_t, int16_t, int64_t>(
+                        machInst, ZAda, Zn, Pn, Pm, Zm);
+                } else {
+                    return new SmeUsmops<uint16_t, int16_t, int64_t>(
+                        machInst, ZAda, Zn, Pn, Pm, Zm);
+                }
+            } else {
+                if (S == 0) {
+                    return new SmeUmopa<uint16_t, uint16_t, int64_t>(
+                        machInst, ZAda, Zn, Pn, Pm, Zm);
+                } else {
+                    return new SmeUmops<uint16_t, uint16_t, int64_t>(
+                        machInst, ZAda, Zn, Pn, Pm, Zm);
+                }
+            }
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeMovaInsert(ExtMachInst machInst)
+    {
+        const uint8_t op0 = (uint8_t)bits(machInst, 18);
+
+        if (op0 == 1) {
+            return new Unknown64(machInst);
+        }
+
+        const uint32_t size = (uint32_t)bits(machInst, 23, 22);
+        const uint32_t Q = (uint32_t)bits(machInst, 16, 16);
+
+        const RegIndex Zn = (RegIndex)(uint32_t)(bits(machInst, 9, 5));
+        const RegIndex Ws = (RegIndex)(uint32_t)(
+            bits(machInst, 14, 13) + 12);
+        const RegIndex Pg = (RegIndex)(uint32_t)(bits(machInst, 12, 10));
+        const RegIndex ZAd_imm = (RegIndex)(uint32_t)(
+            bits(machInst, 3, 0));
+        const bool V = (bool)bits(machInst, 15);
+
+        if (Q == 0) {
+            switch (size) {
+              case 0b00:
+                return new SmeMovaInsert<uint8_t>(machInst, ZAd_imm,
+                                                  Zn, Pg, Ws, V);
+              case 0b01:
+                return new SmeMovaInsert<uint16_t>(machInst, ZAd_imm,
+                                                   Zn, Pg, Ws, V);
+              case 0b10:
+                return new SmeMovaInsert<uint32_t>(machInst, ZAd_imm,
+                                                   Zn, Pg, Ws, V);
+              case 0b11:
+                return new SmeMovaInsert<uint64_t>(machInst, ZAd_imm,
+                                                   Zn, Pg, Ws, V);
+              default:
+                break;
+            }
+        }
+
+        if ((Q == 1) && (size == 0b11)) {
+            return new SmeMovaInsert<__uint128_t>(machInst, ZAd_imm,
+                                                  Zn, Pg, Ws, V);
+        }
+
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeMovaExtract(ExtMachInst machInst)
+    {
+        const uint8_t op0 = (uint8_t)bits(machInst, 18);
+        const uint8_t op1 = (uint8_t)bits(machInst, 9);
+
+        if ((op0 == 1) || (op1 == 1)) {
+            return new Unknown64(machInst);
+        }
+
+        const uint32_t size = (uint32_t)bits(machInst, 23, 22);
+        const uint32_t Q = (uint32_t)bits(machInst, 16, 16);
+
+        const RegIndex Zd = (RegIndex)(uint32_t)(bits(machInst, 4, 0));
+        const RegIndex Ws = (RegIndex)(uint32_t)(
+            bits(machInst, 14, 13) + 12);
+        const RegIndex Pg = (RegIndex)(uint32_t)(bits(machInst, 12, 10));
+        const RegIndex ZAn_imm = (RegIndex)(uint32_t)(
+            bits(machInst, 8, 5));
+        const bool V = (bool)bits(machInst, 15);
+
+        if (Q == 0) {
+            switch (size) {
+              case 0b00:
+                return new SmeMovaExtract<uint8_t>(machInst, Zd,
+                                                   ZAn_imm, Pg, Ws, V);
+              case 0b01:
+                return new SmeMovaExtract<uint16_t>(machInst, Zd,
+                                                    ZAn_imm, Pg, Ws, V);
+              case 0b10:
+                return new SmeMovaExtract<uint32_t>(machInst, Zd,
+                                                    ZAn_imm, Pg, Ws, V);
+              case 0b11:
+                return new SmeMovaExtract<uint64_t>(machInst, Zd,
+                                                    ZAn_imm, Pg, Ws, V);
+              default:
+                break;
+            }
+        }
+
+        if ((Q == 1) && (size == 0b11)) {
+           return new SmeMovaExtract<__uint128_t>(machInst, Zd,
+                                                  ZAn_imm, Pg, Ws, V);
+        }
+
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeMisc(ExtMachInst machInst)
+    {
+        const uint32_t op0 = (uint32_t)bits(machInst, 23, 22);
+        const uint32_t op1 = (uint32_t)bits(machInst, 18, 8);
+
+        if (op0 == 0b00) {
+            if (op1 == 0b00000000000) {
+                return decodeSmeZero(machInst);
+            }
+        }
+
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeZero(ExtMachInst machInst)
+    {
+        const uint8_t imm8 = (uint8_t)bits(machInst, 7, 0);
+
+        return new SmeZero<uint64_t>(machInst, imm8);
+    }
+
+    StaticInstPtr
+    decodeSmeAddArray(ExtMachInst machInst)
+    {
+        const uint32_t op0 = (uint32_t)bits(machInst, 23);
+        const uint32_t op1 = (uint32_t)bits(machInst, 18, 17);
+        const uint32_t op2 = (uint32_t)bits(machInst, 4);
+
+        if (op0 == 1) {
+            if (op1 == 0b00) {
+                if (op2 == 0) {
+                    return decodeSmeAddhv(machInst);
+                }
+            }
+        }
+
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeAddhv(ExtMachInst machInst)
+    {
+        const uint32_t V = (uint32_t)bits(machInst, 16, 16);
+        const uint32_t op = (uint32_t)bits(machInst, 22, 22);
+        const uint32_t op2 = (uint32_t)bits(machInst, 2, 0);
+
+        const RegIndex Zn = (RegIndex)(uint32_t)(bits(machInst, 9, 5));
+        const RegIndex Pn = (RegIndex)(uint32_t)(bits(machInst, 12, 10));
+        const RegIndex Pm = (RegIndex)(uint32_t)(bits(machInst, 15, 13));
+        const RegIndex ZAda = (RegIndex)(uint32_t)(bits(machInst, 2, 0));
+
+        if (op == 0) { // 32-bit
+            if (V == 0) {
+                if ((op2 & 0b100) == 0b000) {
+                    return new SmeAddha<int32_t>(machInst, ZAda, Zn, Pn, Pm);
+                }
+            } else {
+                if ((op2 & 0b100) == 0b000) {
+                    return new SmeAddva<int32_t>(machInst, ZAda, Zn, Pn, Pm);
+                }
+            }
+        } else {
+            if (V == 0) {
+                return new SmeAddha<int64_t>(machInst, ZAda, Zn, Pn, Pm);
+            } else {
+                return new SmeAddva<int64_t>(machInst, ZAda, Zn, Pn, Pm);
+            }
+        }
+
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeMemory(ExtMachInst machInst)
+    {
+        const uint8_t op0 = (uint8_t)bits(machInst, 24, 21);
+        const uint8_t op1 = (uint8_t)bits(machInst, 20, 15);
+        const uint8_t op2 = (uint8_t)bits(machInst, 12, 10);
+        const uint8_t op3 = (uint8_t)bits(machInst, 4);
+
+        if ((op0 & 0b1001) == 0b0000) {
+            if (op3 == 0b0) {
+                return decodeSmeLoad(machInst);
+            }
+        }
+
+        if ((op0 & 0b1001) == 0b0001) {
+            if (op3 == 0b0) {
+                return decodeSmeStore(machInst);
+            }
+        }
+
+        if ((op0 & 0b1110) == 0b1000) {
+            if (op1 == 0b000000) {
+                if (op2 == 0b000) {
+                    if (op3 == 0b0) {
+                        return decodeSmeLoadStoreArray(machInst);
+                    }
+                }
+            }
+        }
+
+        if (op0 == 0b1110) {
+            if (op3 == 0b0) {
+                return decodeSmeLoadQuadWord(machInst);
+            }
+        }
+
+        if (op0 == 0b1111) {
+            if (op3 == 0b0) {
+                return decodeSmeStoreQuadWord(machInst);
+            }
+        }
+
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeLoad(ExtMachInst machInst)
+    {
+        const uint8_t msz = (uint8_t)bits(machInst, 23, 22);
+        const bool V = (bool)bits(machInst, 15);
+
+        const RegIndex Rn = makeSP(
+                                (RegIndex)(uint32_t)bits(machInst, 9, 5));
+        const RegIndex Rm = (RegIndex)(uint32_t)(bits(machInst, 20, 16));
+        const RegIndex Rs = (RegIndex)(uint32_t)(
+            bits(machInst, 14, 13) + 12);
+        const uint32_t ZAt_imm = (uint32_t)bits(machInst, 3, 0);
+        const RegIndex Pg = (RegIndex)(uint32_t)(bits(machInst, 12, 10));
+
+        switch(msz)
+        {
+          case 0b00:
+            return new SmeLd1b<uint8_t>(machInst, ZAt_imm, Rn, Pg, Rs, Rm, V);
+          case 0b01:
+            return new SmeLd1h<uint16_t>(machInst, ZAt_imm, Rn, Pg, Rs, Rm, V);
+          case 0b10:
+            return new SmeLd1w<uint32_t>(machInst, ZAt_imm, Rn, Pg, Rs, Rm, V);
+          case 0b11:
+            return new SmeLd1d<uint64_t>(machInst, ZAt_imm, Rn, Pg, Rs, Rm, V);
+          default:
+            break;
+        }
+
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeStore(ExtMachInst machInst)
+    {
+        const uint8_t msz = (uint8_t)bits(machInst, 23, 22);
+        const bool V = (bool)bits(machInst, 15);
+
+        const RegIndex Rn = makeSP(
+                                (RegIndex)(uint32_t)bits(machInst, 9, 5));
+        const RegIndex Rm = (RegIndex)(uint32_t)(bits(machInst, 20, 16));
+        const RegIndex Rs = (RegIndex)(uint32_t)(
+            bits(machInst, 14, 13) + 12);
+        const uint32_t ZAt_imm = (uint32_t)bits(machInst, 3, 0);
+        const RegIndex Pg = (RegIndex)(uint32_t)(bits(machInst, 12, 10));
+
+        switch(msz)
+        {
+          case 0b00:
+            return new SmeSt1b<uint8_t>(machInst, ZAt_imm, Rn, Pg, Rs, Rm, V);
+          case 0b01:
+            return new SmeSt1h<uint16_t>(machInst, ZAt_imm, Rn, Pg, Rs, Rm, V);
+          case 0b10:
+            return new SmeSt1w<uint32_t>(machInst, ZAt_imm, Rn, Pg, Rs, Rm, V);
+          case 0b11:
+            return new SmeSt1d<uint64_t>(machInst, ZAt_imm, Rn, Pg, Rs, Rm, V);
+          default:
+            break;
+        }
+
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeLoadStoreArray(ExtMachInst machInst)
+    {
+        const uint8_t op = (uint8_t)bits(machInst, 21);
+
+        const RegIndex Rn = makeSP(
+                                (RegIndex)(uint32_t)bits(machInst, 9, 5));
+        const RegIndex Rv = (RegIndex)(uint32_t)(
+            bits(machInst, 14, 13) + 12);
+        const uint32_t imm4 = (uint32_t)bits(machInst, 3, 0);
+
+        if (op == 0) {
+            return new SmeLdr(machInst, imm4, Rn, Rv);
+        } else {
+            return new SmeStr(machInst, imm4, Rn, Rv);
+        }
+
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSmeLoadQuadWord(ExtMachInst machInst)
+    {
+        const bool V = (bool)bits(machInst, 15);
+
+        const RegIndex Rn = makeSP(
+                                (RegIndex)(uint32_t)bits(machInst, 9, 5));
+        const RegIndex Rm = (RegIndex)(uint32_t)(bits(machInst, 20, 16));
+        const RegIndex Rs = (RegIndex)(uint32_t)(
+            bits(machInst, 14, 13) + 12);
+        const uint32_t ZAt = (uint32_t)bits(machInst, 3, 0);
+        const RegIndex Pg = (RegIndex)(uint32_t)(bits(machInst, 12, 10));
+
+        return new SmeLd1q<__uint128_t>(machInst, ZAt, Rn, Pg, Rs, Rm, V);
+    }
+
+    StaticInstPtr
+    decodeSmeStoreQuadWord(ExtMachInst machInst)
+    {
+        const bool V = (bool)bits(machInst, 15);
+
+        const RegIndex Rn = makeSP(
+                                (RegIndex)(uint32_t)bits(machInst, 9, 5));
+        const RegIndex Rm = (RegIndex)(uint32_t)(bits(machInst, 20, 16));
+        const RegIndex Rs = (RegIndex)(uint32_t)(
+            bits(machInst, 14, 13) + 12);
+        const uint32_t ZAt = (uint32_t)bits(machInst, 3, 0);
+        const RegIndex Pg = (RegIndex)(uint32_t)(bits(machInst, 12, 10));
+
+        return new SmeSt1q<__uint128_t>(machInst, ZAt, Rn, Pg, Rs, Rm, V);
+    }
+}
+}};

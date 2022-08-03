@@ -57,6 +57,8 @@ def operand_types {{
     # For operations that are implemented as a template
     'x' : 'TPElem',
     'xs' : 'TPSElem',
+    'xs1' : 'TPS1Elem',
+    'xs2' : 'TPS2Elem',
     'xd' : 'TPDElem',
     'pc' : 'ArmISA::VecPredRegContainer',
     'pb' : 'uint8_t'
@@ -451,6 +453,8 @@ def operands {{
 
     # Predicate register operands
     'GpOp': VecPredReg('gp'),
+    'GpOp1': VecPredReg('gp1'),
+    'GpOp2': VecPredReg('gp2'),
     'POp1': VecPredReg('op1'),
     'POp2': VecPredReg('op2'),
     'PDest': VecPredReg('dest'),
@@ -496,6 +500,7 @@ def operands {{
     'LLSCLock': CntrlRegNC('MISCREG_LOCKFLAG'),
     'Dczid' : CntrlRegNC('MISCREG_DCZID_EL0'),
     'PendingDvm': CntrlRegNC('MISCREG_TLBINEEDSYNC'),
+    'Svcr' : CntrlReg('MISCREG_SVCR'),
 
     #Register fields for microops
     'URa' : IntReg('ura'),

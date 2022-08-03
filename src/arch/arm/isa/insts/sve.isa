@@ -1310,6 +1310,34 @@ let {{
             substDict = {'targs' : type, 'class_name' : 'Sve' + Name}
             exec_output += SveOpExecDeclare.subst(substDict);
 
+    # Generates definition for SVE psel predicate selection instructions
+    def svePselInst(name, Name, opClass, types):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<TPElem>(
+                xc->tcBase());
+
+        uint8_t index = ((uint32_t)Op2 + imm) % eCount;
+
+        bool copy = POp1_x[index];
+        if (copy) {
+            for (int i = 0; i < eCount; ++i) {
+                PDest_x[i] = GpOp_x[i];
+            }
+        } else {
+            for (int i = 0; i < eCount; ++i) {
+                PDest_x[i] = false;
+            }
+        }
+        '''
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SvePselOp',
+                {'code': code, 'op_class': opClass}, [])
+        header_output += SvePselOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type, 'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict);
+
     # Generate definition for SVE compare & terminate instructions
     def sveCompTermInst(name, Name, opClass, types, op):
         global header_output, exec_output, decoders
@@ -3096,6 +3124,31 @@ let {{
                     'class_name' : 'Sve' + Name}
             exec_output += SveOpExecDeclare.subst(substDict)
 
+    # Generate definitions for clamp to min/max instructions
+    def sveClampInst(name, Name, opClass, types,
+            decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<TPElem>(
+                xc->tcBase());
+
+        for (int i = 0 ; i < eCount ; ++i) {
+            if (AA64FpDestMerge_x[i] < AA64FpOp2_x[i]) {
+                AA64FpDest_x[i] = AA64FpOp2_x[i];
+            } else if (AA64FpDestMerge_x[i] > AA64FpOp1_x[i]) {
+                AA64FpDest_x[i] = AA64FpOp1_x[i];
+            }
+        }
+        '''
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveClampOp',
+                {'code': code, 'op_class': opClass}, [])
+        header_output += SveClampOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
     fpTypes = ('uint16_t', 'uint32_t', 'uint64_t')
     signedTypes = ('int8_t', 'int16_t', 'int32_t', 'int64_t')
     unsignedTypes = ('uint8_t', 'uint16_t', 'uint32_t', 'uint64_t')
@@ -4071,6 +4124,8 @@ let {{
     svePFirstInst('pfirst', 'Pfirst', 'SimdPredAluOp')
     # PNEXT
     svePNextInst('pnext', 'Pnext', 'SimdPredAluOp', unsignedTypes)
+    # PSEL
+    svePselInst('psel', 'Psel', 'SimdPredAluOp', unsignedTypes)
     # PTEST
     svePredTestInst('ptest', 'Ptest', 'SimdPredAluOp')
     # PTRUE
@@ -4140,6 +4195,10 @@ let {{
             ['uint16_t', 'uint32_t', 'uint64_t'],
             revCode % {'revtype' : 'uint8_t'}, predType=PredType.MERGE,
             srcRegType=SrcRegType.Vector, decoder='Generic')
+    # REVD
+    sveUnaryInst('revd', 'Revd', 'SimdAluOp', ['__uint128_t'],
+            revCode % {'revtype' : 'uint64_t'}, predType=PredType.MERGE,
+            srcRegType=SrcRegType.Vector, decoder='Generic')
     # REVH
     sveUnaryInst('revh', 'Revh', 'SimdAluOp', ['uint32_t', 'uint64_t'],
             revCode % {'revtype' : 'uint16_t'}, predType=PredType.MERGE,
@@ -4160,6 +4219,8 @@ let {{
     sveWideningAssocReducInst('saddv', 'Saddv', 'SimdReduceAddOp',
             ['int8_t, int64_t', 'int16_t, int64_t', 'int32_t, int64_t'],
             addvCode, '0')
+    # SCLAMP
+    sveClampInst('sclamp', 'Sclamp', 'SimdAluOp', signedTypes)
     # SCVTF
     scvtfCode = fpOp % ('fplibFixedToFP<DElement>('
                         'sext<sizeof(SElement) * 8>(srcElem1), 0,'
@@ -4545,6 +4606,8 @@ let {{
             ['uint8_t, uint64_t', 'uint16_t, uint64_t', 'uint32_t, uint64_t',
              'uint64_t, uint64_t'],
             addvCode, '0')
+    # UCLAMP
+    sveClampInst('uclamp', 'Uclamp', 'SimdAluOp', unsignedTypes)
     # UCVTF
     ucvtfCode = fpOp % ('fplibFixedToFP<DElement>(srcElem1, 0, true,'
                         ' FPCRRounding(fpscr), fpscr)')

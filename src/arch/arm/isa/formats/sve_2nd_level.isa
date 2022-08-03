@@ -605,22 +605,43 @@ namespace Aarch64
     {
         uint8_t b23_22 = bits(machInst, 23, 22);
         uint8_t b11 = bits(machInst, 11);
-        if ((b23_22 & 0x2) == 0x0 && b11 == 0x0) {
-            RegIndex rd = makeSP(
-                (RegIndex) (uint8_t) bits(machInst, 4, 0));
-            RegIndex rn = makeSP(
-                (RegIndex) (uint8_t) bits(machInst, 20, 16));
-            uint64_t imm = sext<6>(bits(machInst, 10, 5));
-            if ((b23_22 & 0x1) == 0x0) {
-                return new AddvlXImm(machInst, rd, rn, imm);
-            } else {
-                return new AddplXImm(machInst, rd, rn, imm);
+        if (b11 == 0x0) {
+            if ((b23_22 & 0x2) == 0x0) {
+                RegIndex rd = makeSP(
+                    (RegIndex) (uint8_t) bits(machInst, 4, 0));
+                RegIndex rn = makeSP(
+                    (RegIndex) (uint8_t) bits(machInst, 20, 16));
+                uint64_t imm = sext<6>(bits(machInst, 10, 5));
+                if ((b23_22 & 0x1) == 0x0) {
+                    return new AddvlXImm(machInst, rd, rn, imm);
+                } else {
+                    return new AddplXImm(machInst, rd, rn, imm);
+                }
+            } else if (b23_22 == 0x2) {
+                RegIndex rd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+                uint64_t imm = sext<6>(bits(machInst, 10, 5));
+                if (bits(machInst, 20, 16) == 0x1f) {
+                    return new SveRdvl(machInst, rd, imm);
+                }
             }
-        } else if (b23_22 == 0x2 && b11 == 0x0) {
-            RegIndex rd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
-            uint64_t imm = sext<6>(bits(machInst, 10, 5));
-            if (bits(machInst, 20, 16) == 0x1f) {
-                return new SveRdvl(machInst, rd, imm);
+        } else { // b11 == 1
+            if ((b23_22 & 0x2) == 0x0) {
+                RegIndex rd = makeSP(
+                    (RegIndex) (uint8_t) bits(machInst, 4, 0));
+                RegIndex rn = makeSP(
+                    (RegIndex) (uint8_t) bits(machInst, 20, 16));
+                uint64_t imm = sext<6>(bits(machInst, 10, 5));
+                if ((b23_22 & 0x1) == 0x0) {
+                    return new SmeAddsvl(machInst, rd, rn, imm);
+                } else {
+                    return new SmeAddspl(machInst, rd, rn, imm);
+                }
+            } else if (b23_22 == 0x2) {
+                RegIndex rd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+                uint64_t imm = sext<6>(bits(machInst, 10, 5));
+                if (bits(machInst, 20, 16) == 0x1f) {
+                    return new SmeRdsvl(machInst, rd, imm);
+                }
             }
         }
         return new Unknown64(machInst);
@@ -1199,6 +1220,18 @@ namespace Aarch64
                 RegIndex zm = (RegIndex)(uint8_t) bits(machInst, 9, 5);
                 return decodeSveBinDestrPredU<SveSplice>(size, machInst,
                         zdn, zm, pg);
+            }
+            break;
+          case 0xE:
+            if(!b13) {
+                unsigned size = (unsigned) bits(machInst, 23, 22);
+                RegIndex pg = (RegIndex)(uint8_t) bits(machInst, 12, 10);
+                RegIndex zn = (RegIndex)(uint8_t) bits(machInst, 9, 5);
+                RegIndex zd = (RegIndex)(uint8_t) bits(machInst, 4, 0);
+
+                if (size == 0b00) {
+                    return new SveRevd<__uint128_t>(machInst, zd, zn, pg);
+                }
             }
             break;
         }
@@ -1952,6 +1985,36 @@ namespace Aarch64
     }  // decodeSveIntCmpSca
 
     StaticInstPtr
+    decodeSvePsel(ExtMachInst machInst)
+    {
+        RegIndex Pd = (RegIndex)(uint8_t)bits(machInst, 3, 0);
+        RegIndex Pn = (RegIndex)(uint8_t)bits(machInst, 8, 5);
+        RegIndex Pg = (RegIndex)(uint8_t)bits(machInst, 13, 10);
+        RegIndex Rm = (RegIndex)(0b01100 +
+                         (uint8_t)bits(machInst, 17, 16));
+        uint8_t imm = (uint8_t)bits(machInst, 20, 18);
+        imm += (uint8_t)bits(machInst, 23, 22) << 3;
+
+        const uint8_t size = imm & 0xF;
+
+        if (size == 0) {
+            return new Unknown64(machInst);
+        }
+
+        if (size & 0b0001) {
+            return new SvePsel<uint8_t>(machInst, Pd, Pn, Pg, Rm, imm >> 1);
+        } else if (size & 0b0010) {
+            return new SvePsel<uint16_t>(machInst, Pd, Pn, Pg, Rm, imm >> 2);
+        } else if (size & 0b0100) {
+            return new SvePsel<uint32_t>(machInst, Pd, Pn, Pg, Rm, imm >> 3);
+        } else if (size & 0b1000) {
+            return new SvePsel<uint64_t>(machInst, Pd, Pn, Pg, Rm, imm >> 4);
+        }
+
+        return new Unknown64(machInst);
+    } // decodeSvePsel
+
+    StaticInstPtr
     decodeSveIntWideImmUnpred0(ExtMachInst machInst)
     {
         RegIndex zdn = (RegIndex) (uint8_t) bits(machInst, 4, 0);
@@ -2105,6 +2168,48 @@ namespace Aarch64
         }
         return new Unknown64(machInst);
     }  // decodeSveIntWideImmUnpred
+
+    StaticInstPtr
+    decodeSveClamp(ExtMachInst machInst)
+    {
+        RegIndex zda = (RegIndex)(uint8_t)bits(machInst, 4, 0);
+        RegIndex zn = (RegIndex)(uint8_t)bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex)(uint8_t)bits(machInst, 20, 16);
+
+        switch(bits(machInst, 10)) {
+            case 0:
+                switch(bits(machInst, 23, 22)) {
+                    case 0x0:
+                        return new SveSclamp<int8_t>(machInst, zm, zn, zda);
+                    case 0x1:
+                        return new SveSclamp<int16_t>(machInst, zm, zn, zda);
+                    case 0x2:
+                        return new SveSclamp<int32_t>(machInst, zm, zn, zda);
+                    case 0x3:
+                        return new SveSclamp<int64_t>(machInst, zm, zn, zda);
+                    default:
+                        break;
+                }
+                break;
+            case 1:
+                switch(bits(machInst, 23, 22)) {
+                    case 0x0:
+                        return new SveUclamp<uint8_t>(machInst, zm, zn, zda);
+                    case 0x1:
+                        return new SveUclamp<uint16_t>(machInst, zm, zn, zda);
+                    case 0x2:
+                        return new SveUclamp<uint32_t>(machInst, zm, zn, zda);
+                    case 0x3:
+                        return new SveUclamp<uint64_t>(machInst, zm, zn, zda);
+                    default:
+                        break;
+                }
+            default:
+                break;
+        }
+
+        return new Unknown64(machInst);
+    }
 
     StaticInstPtr
     decodeSveMultiplyAddUnpred(ExtMachInst machInst)

@@ -105,6 +105,9 @@ split decoder;
 ##include "sve.isa"
 ##include "sve_mem.isa"
 
+//SME
+##include "sme.isa"
+
 //m5 Pseudo-ops
 ##include "m5ops.isa"
 

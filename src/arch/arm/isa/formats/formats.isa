@@ -52,6 +52,9 @@
 ##include "sve_top_level.isa"
 ##include "sve_2nd_level.isa"
 
+//Include support for decoding SME instructions (AArch64-only)
+##include "sme.isa"
+
 //Include support for predicated instructions
 ##include "pred.isa"
 

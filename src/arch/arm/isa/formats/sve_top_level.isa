@@ -66,7 +66,9 @@ namespace Aarch64
     StaticInstPtr decodeSvePredGen(ExtMachInst machInst);
     StaticInstPtr decodeSvePredCount(ExtMachInst machInst);
     StaticInstPtr decodeSveIntCmpSca(ExtMachInst machInst);
+    StaticInstPtr decodeSvePsel(ExtMachInst machInst);
     StaticInstPtr decodeSveIntWideImmUnpred(ExtMachInst machInst);
+    StaticInstPtr decodeSveClamp(ExtMachInst machInst);
 
     StaticInstPtr decodeSveMultiplyAddUnpred(ExtMachInst machInst);
     StaticInstPtr decodeSveMultiplyIndexed(ExtMachInst machInst);
@@ -107,6 +109,9 @@ namespace Aarch64
           case 0x0:
             {
                 if (bits(machInst, 14)) {
+                    if (bits(machInst, 15, 11) == 0b11000) {
+                        return decodeSveClamp(machInst);
+                    }
                     return decodeSveIntMulAdd(machInst);
                 } else {
                     uint8_t b_15_13 = (bits(machInst, 15) << 1) |
@@ -210,10 +215,14 @@ namespace Aarch64
           case 0x7:
             {
                 uint8_t b_15_14 = bits(machInst, 15, 14);
+                uint8_t b_4 = bits(machInst, 4, 4);
                 switch (b_15_14) {
                   case 0x0:
                     return decodeSveIntCmpSca(machInst);
                   case 0x1:
+                    if (b_4 == 0) {
+                        return decodeSvePsel(machInst);
+                    }
                     return new Unknown64(machInst);
                   case 0x2:
                     return decodeSvePredCount(machInst);

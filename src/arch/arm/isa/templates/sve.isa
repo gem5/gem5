@@ -800,6 +800,33 @@ class %(class_name)s : public %(base_class)s
 };
 }};
 
+def template SvePselOpDeclare {{
+template <class _Element>
+class %(class_name)s : public %(base_class)s
+{
+  private:
+    %(reg_idx_arr_decl)s;
+
+  protected:
+    typedef _Element Element;
+    typedef _Element TPElem;
+
+  public:
+    %(class_name)s(ExtMachInst machInst,
+                   RegIndex dest, RegIndex op1,
+                   RegIndex gp, RegIndex op2,
+                   uint64_t imm)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                          dest, op1, gp, op2, imm)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+};
+}};
+
 def template SveCompTermOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
@@ -1161,6 +1188,32 @@ class %(class_name)s : public %(base_class)s
                    uint8_t _rot, uint8_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2, _rot, _imm)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+};
+}};
+
+def template SveClampOpDeclare {{
+template <class _Element>
+class %(class_name)s : public %(base_class)s
+{
+  private:
+    %(reg_idx_arr_decl)s;
+
+  protected:
+    typedef _Element Element;
+    typedef _Element TPElem;
+
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst,
+                   RegIndex dest, RegIndex op1, RegIndex op2)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         dest, op1, op2)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;

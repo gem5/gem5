@@ -162,6 +162,24 @@ SveWhileOp::generateDisassembly(
 }
 
 std::string
+SvePselOp::generateDisassembly(Addr pc,
+                                const Loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printVecPredReg(ss, dest);
+    ss << ", ";
+    printVecPredReg(ss, op1);
+    ss << ", ";
+    printVecPredReg(ss, gp);
+    ss << ", ";
+    printIntReg(ss, op2);
+    ss << ", ";
+    ccprintf(ss, "#%d", imm);
+    return ss.str();
+}
+
+std::string
 SveCompTermOp::generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const
 {
@@ -828,6 +846,20 @@ SveComplexIdxOp::generateDisassembly(
     ccprintf(ss, "], #");
     const char* rotstr[4] = {"0", "90", "180", "270"};
     ccprintf(ss, rotstr[rot]);
+    return ss.str();
+}
+
+std::string
+SveClampOp::generateDisassembly(
+        Addr pc, const Loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printVecReg(ss, dest, true);
+    ss << ", ";
+    printVecReg(ss, op1, true);
+    ss << ", ";
+    printVecReg(ss, op2, true);
     return ss.str();
 }
 

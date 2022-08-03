@@ -61,6 +61,7 @@ output header {{
 #include "arch/arm/insts/neon64_mem.hh"
 #include "arch/arm/insts/pred_inst.hh"
 #include "arch/arm/insts/pseudo.hh"
+#include "arch/arm/insts/sme.hh"
 #include "arch/arm/insts/static_inst.hh"
 #include "arch/arm/insts/sve.hh"
 #include "arch/arm/insts/sve_mem.hh"
