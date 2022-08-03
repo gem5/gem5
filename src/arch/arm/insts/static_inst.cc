@@ -1233,5 +1233,13 @@ ArmStaticInst::getCurSveVecLenInBits(ThreadContext *tc)
     return isa->getCurSveVecLenInBits();
 }
 
+unsigned
+ArmStaticInst::getCurSmeVecLenInBits(ThreadContext *tc)
+{
+    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+    return isa->getCurSmeVecLenInBits();
+}
+
+
 } // namespace ArmISA
 } // namespace gem5

@@ -67,6 +67,10 @@ Decoder::Decoder(const ArmDecoderParams &params)
     sveLen = (safe_cast<ISA *>(params.isa)->
             getCurSveVecLenInBitsAtReset() >> 7) - 1;
 
+    // Initialize SME vector length
+    smeLen = (safe_cast<ISA *>(params.isa)
+            ->getCurSmeVecLenInBitsAtReset() >> 7) - 1;
+
     if (dvmEnabled) {
         warn_once(
             "DVM Ops instructions are micro-architecturally "

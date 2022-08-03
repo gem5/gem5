@@ -583,6 +583,21 @@ class ArmStaticInst : public StaticInst
         return getCurSveVecLenInBits(tc) / (8 * sizeof(T));
     }
 
+    static unsigned getCurSmeVecLenInBits(ThreadContext *tc);
+
+    static unsigned
+    getCurSmeVecLenInQWords(ThreadContext *tc)
+    {
+        return getCurSmeVecLenInBits(tc) >> 6;
+    }
+
+    template<typename T>
+    static unsigned
+    getCurSmeVecLen(ThreadContext *tc)
+    {
+        return getCurSmeVecLenInBits(tc) / (8 * sizeof(T));
+    }
+
     inline Fault
     undefined(bool disabled=false) const
     {

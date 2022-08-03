@@ -367,6 +367,10 @@ namespace ArmISA
 
         unsigned getCurSveVecLenInBitsAtReset() const { return sveVL * 128; }
 
+        unsigned getCurSmeVecLenInBits() const;
+
+        unsigned getCurSmeVecLenInBitsAtReset() const { return smeVL * 128; }
+
         template <typename Elem>
         static void
         zeroSveVecRegUpperPart(Elem *v, unsigned eCount)

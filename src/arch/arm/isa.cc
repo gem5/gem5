@@ -1162,6 +1162,8 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
 
         tc->getDecoderPtr()->as<Decoder>().setSveLen(
                 (getCurSveVecLenInBits() >> 7) - 1);
+        tc->getDecoderPtr()->as<Decoder>().setSmeLen(
+                (getCurSmeVecLenInBits() >> 7) - 1);
 
         // Follow slightly different semantics if a CheckerCPU object
         // is connected
@@ -2069,11 +2071,11 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
           case MISCREG_SMCR_EL2:
           case MISCREG_SMCR_EL1:
             // Set the value here as we need to update the regs before
-            // reading them back in getCurSmeVecLenInBits (not
-            // implemented yet) to avoid setting stale vector lengths in
-            // the decoder.
+            // reading them back in getCurSmeVecLenInBits to avoid
+            // setting stale vector lengths in the decoder.
             setMiscRegNoEffect(idx, newVal);
-            // TODO: set the SME vector length
+            tc->getDecoderPtr()->as<Decoder>().setSmeLen(
+                    (getCurSmeVecLenInBits() >> 7) - 1);
             return;
         }
         setMiscRegNoEffect(idx, newVal);
@@ -2161,6 +2163,13 @@ ISA::currEL() const
 unsigned
 ISA::getCurSveVecLenInBits() const
 {
+    SVCR svcr = miscRegs[MISCREG_SVCR];
+    // If we are in Streaming Mode, we should return the Streaming Mode vector
+    // length instead.
+    if (svcr.sm) {
+        return getCurSmeVecLenInBits();
+    }
+
     if (!FullSystem) {
         return sveVL * 128;
     }
@@ -2198,6 +2207,56 @@ ISA::getCurSveVecLenInBits() const
     }
 
     len = std::min(len, sveVL - 1);
+
+    return (len + 1) * 128;
+}
+
+unsigned
+ISA::getCurSmeVecLenInBits() const
+{
+    if (!FullSystem) {
+        return smeVL * 128;
+    }
+
+    panic_if(!tc,
+             "A ThreadContext is needed to determine the SME vector length "
+             "in full-system mode");
+
+    CPSR cpsr = miscRegs[MISCREG_CPSR];
+    ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
+
+    unsigned len = 0;
+
+    if (el == EL1 || (el == EL0 && !ELIsInHost(tc, el))) {
+        len = static_cast<SMCR>(miscRegs[MISCREG_SMCR_EL1]).len;
+    }
+
+    if (el == EL2 || (el == EL0 && ELIsInHost(tc, el))) {
+        len = static_cast<SMCR>(miscRegs[MISCREG_SMCR_EL2]).len;
+    } else if (release->has(ArmExtension::VIRTUALIZATION) && !isSecure(tc) &&
+               (el == EL0 || el == EL1)) {
+        len = std::min(
+            len,
+            static_cast<unsigned>(
+                static_cast<SMCR>(miscRegs[MISCREG_SMCR_EL2]).len));
+    }
+
+    if (el == EL3) {
+        len = static_cast<SMCR>(miscRegs[MISCREG_SMCR_EL3]).len;
+    } else if (release->has(ArmExtension::SECURITY)) {
+        len = std::min(
+            len,
+            static_cast<unsigned>(
+                static_cast<SMCR>(miscRegs[MISCREG_SMCR_EL3]).len));
+    }
+
+    len = std::min(len, smeVL - 1);
+
+    // len + 1 must be a power of 2! Round down to the nearest whole power of
+    // two.
+    static const unsigned LUT[16] = {0, 1, 1, 3, 3, 3, 3, 7,
+                                     7, 7, 7, 7, 7, 7, 7, 15};
+    len = LUT[len];
 
     return (len + 1) * 128;
 }
