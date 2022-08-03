@@ -64,6 +64,7 @@ _start:
         msr	scr_el3, x0
 
         mov	x0, #(1 << 8)			// Disable SVE trap to EL3
+        orr	x0, x0, #(1 << 12)		// Disable SME trap to EL3
         msr	cptr_el3, x0			// Disable copro. traps to EL3
 
         /*
