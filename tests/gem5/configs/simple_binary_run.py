@@ -90,6 +90,15 @@ parser.add_argument(
     help="The input arguments for the binary.",
 )
 
+parser.add_argument(
+    "-n",
+    "--num-cores",
+    type=int,
+    default=1,
+    required=False,
+    help="The number of CPU cores to run.",
+)
+
 args = parser.parse_args()
 
 # Setup the system.
@@ -102,10 +111,11 @@ if args.base_cpu_processor:
             core=SimpleCore.cpu_simobject_factory(
                 cpu_type=get_cpu_type_from_str(args.cpu),
                 isa=get_isa_from_str(args.isa),
-                core_id=0,
+                core_id=i,
             ),
             isa=get_isa_from_str(args.isa),
         )
+        for i in range(args.num_cores)
     ]
 
     processor = BaseCPUProcessor(
@@ -115,7 +125,7 @@ else:
     processor = SimpleProcessor(
         cpu_type=get_cpu_type_from_str(args.cpu),
         isa=get_isa_from_str(args.isa),
-        num_cores=1,
+        num_cores=args.num_cores,
     )
 
 motherboard = SimpleBoard(

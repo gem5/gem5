@@ -40,6 +40,10 @@ class SEBinaryWorkload:
     For this to function correctly the SEBinaryWorkload class should be added
     as a superclass to a board (i.e., something that inherits from
     AbstractBoard).
+
+    **Important Notes:** At present this implementation is limited. A single
+    process is added to all cores as the workload. Therefore, despite allowing
+    for multi-core setups, multi-program workloads are not presently supported.
     """
 
     def set_se_binary_workload(
@@ -52,7 +56,7 @@ class SEBinaryWorkload:
         """Set up the system to run a specific binary.
 
         **Limitations**
-        * Only supports single threaded applications
+        * Only supports single threaded applications.
         * Dynamically linked executables are partially supported when the host
           ISA and the simulated ISA are the same.
 
@@ -80,7 +84,8 @@ class SEBinaryWorkload:
         if stdin_file is not None:
             process.input = stdin_file.get_local_path()
 
-        self.get_processor().get_cores()[0].set_workload(process)
+        for core in self.get_processor().get_cores():
+            core.set_workload(process)
 
         # Set whether to exit on work items for the se_workload
         self.exit_on_work_items = exit_on_work_items
