@@ -30,7 +30,7 @@
 
 import os, subprocess
 
-Import('main')
+Import('env')
 
 elf_files = []
 def ElfFile(filename):
@@ -97,7 +97,7 @@ ElfFile('libelf_convert.c')
 ElfFile('libelf_fsize.c')
 ElfFile('libelf_msize.c')
 
-m4env = main.Clone()
+m4env = env.Clone()
 if m4env['GCC']:
     m4env.Append(CCFLAGS=['-Wno-pointer-sign',
                           '-Wno-unused-but-set-variable',
@@ -146,6 +146,6 @@ m4env.Library('elf', [m4env.SharedObject(f) for f in elf_files])
 m4env.Command(File('native-elf-format.h'), File('native-elf-format'),
               '${SOURCE} > ${TARGET}')
 
-main.Prepend(CPPPATH=Dir('.'))
-main.Append(LIBS=[File('libelf.a')])
-main.Prepend(LIBPATH=[Dir('.')])
+env.Prepend(CPPPATH=Dir('.'))
+env.Append(LIBS=[File('libelf.a')])
+env.Prepend(LIBPATH=[Dir('.')])

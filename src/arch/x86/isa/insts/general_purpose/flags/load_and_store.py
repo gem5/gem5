@@ -35,10 +35,13 @@
 
 microcode = '''
 def macroop SAHF {
-    ruflags ah, dataSize=1
+    ruflags t1, dataSize=8
+    mov t1, t1, ah, dataSize=1
+    wruflags t1, t0, dataSize=8
 };
 
 def macroop LAHF {
-    wruflags ah, t0, dataSize=1
+    rflags t1, dataSize=8
+    andi ah, t1, "CFBit | PFBit | AFBit | ZFBit | SFBit | (1 << 1)", dataSize=1
 };
 '''

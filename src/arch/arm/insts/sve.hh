@@ -60,12 +60,12 @@ const char* svePredTypeToStr(SvePredType pt);
 class SveIndexIIOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
+    RegIndex dest;
     int8_t imm1;
     int8_t imm2;
 
     SveIndexIIOp(const char* mnem, ExtMachInst _machInst,
-            OpClass __opClass, IntRegIndex _dest,
+            OpClass __opClass, RegIndex _dest,
             int8_t _imm1, int8_t _imm2) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), imm1(_imm1), imm2(_imm2)
@@ -77,13 +77,13 @@ class SveIndexIIOp : public ArmStaticInst
 class SveIndexIROp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
+    RegIndex dest;
     int8_t imm1;
-    IntRegIndex op2;
+    RegIndex op2;
 
     SveIndexIROp(const char* mnem, ExtMachInst _machInst,
-            OpClass __opClass, IntRegIndex _dest,
-            int8_t _imm1, IntRegIndex _op2) :
+            OpClass __opClass, RegIndex _dest,
+            int8_t _imm1, RegIndex _op2) :
         ArmStaticInst(mnem, _machInst, __opClass),
           dest(_dest), imm1(_imm1), op2(_op2)
     {}
@@ -94,13 +94,13 @@ class SveIndexIROp : public ArmStaticInst
 class SveIndexRIOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
+    RegIndex dest;
+    RegIndex op1;
     int8_t imm2;
 
     SveIndexRIOp(const char* mnem, ExtMachInst _machInst,
-            OpClass __opClass, IntRegIndex _dest,
-            IntRegIndex _op1, int8_t _imm2) :
+            OpClass __opClass, RegIndex _dest,
+            RegIndex _op1, int8_t _imm2) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), imm2(_imm2)
     {}
@@ -111,13 +111,13 @@ class SveIndexRIOp : public ArmStaticInst
 class SveIndexRROp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
-    IntRegIndex op2;
+    RegIndex dest;
+    RegIndex op1;
+    RegIndex op2;
 
     SveIndexRROp(const char* mnem, ExtMachInst _machInst,
-            OpClass __opClass, IntRegIndex _dest,
-            IntRegIndex _op1, IntRegIndex _op2) :
+            OpClass __opClass, RegIndex _dest,
+            RegIndex _op1, RegIndex _op2) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2)
     {}
@@ -129,13 +129,13 @@ class SveIndexRROp : public ArmStaticInst
 class SvePredCountOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex gp;
+    RegIndex dest;
+    RegIndex gp;
     bool srcIs32b;
     bool destIsVec;
 
     SvePredCountOp(const char* mnem, ExtMachInst _machInst,
-            OpClass __opClass, IntRegIndex _dest, IntRegIndex _gp,
+            OpClass __opClass, RegIndex _dest, RegIndex _gp,
             bool _srcIs32b = false, bool _destIsVec = false) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), gp(_gp),
@@ -149,13 +149,13 @@ class SvePredCountOp : public ArmStaticInst
 class SvePredCountPredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
-    IntRegIndex gp;
+    RegIndex dest;
+    RegIndex op1;
+    RegIndex gp;
 
     SvePredCountPredOp(const char* mnem, ExtMachInst _machInst,
-            OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1,
-            IntRegIndex _gp) :
+            OpClass __opClass, RegIndex _dest, RegIndex _op1,
+            RegIndex _gp) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), gp(_gp)
     {}
@@ -167,11 +167,11 @@ class SvePredCountPredOp : public ArmStaticInst
 class SveWhileOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1, op2;
+    RegIndex dest, op1, op2;
     bool srcIs32b;
 
     SveWhileOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-               IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
+               RegIndex _dest, RegIndex _op1, RegIndex _op2,
                bool _srcIs32b) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), srcIs32b(_srcIs32b)
@@ -184,10 +184,10 @@ class SveWhileOp : public ArmStaticInst
 class SveCompTermOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex op1, op2;
+    RegIndex op1, op2;
 
     SveCompTermOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-                  IntRegIndex _op1, IntRegIndex _op2) :
+                  RegIndex _op1, RegIndex _op2) :
         ArmStaticInst(mnem, _machInst, __opClass),
         op1(_op1), op2(_op2)
     {}
@@ -199,10 +199,10 @@ class SveCompTermOp : public ArmStaticInst
 class SveUnaryPredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1, gp;
+    RegIndex dest, op1, gp;
 
     SveUnaryPredOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _gp) :
+                   RegIndex _dest, RegIndex _op1, RegIndex _gp) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), gp(_gp)
     {}
@@ -215,10 +215,10 @@ class SveUnaryPredOp : public ArmStaticInst
 class SveUnaryUnpredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1;
+    RegIndex dest, op1;
 
     SveUnaryUnpredOp(const char* mnem, ExtMachInst _machInst,
-                     OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1) :
+                     OpClass __opClass, RegIndex _dest, RegIndex _op1) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1)
     {}
@@ -231,11 +231,11 @@ class SveUnaryUnpredOp : public ArmStaticInst
 class SveUnaryWideImmUnpredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
+    RegIndex dest;
     uint64_t imm;
 
     SveUnaryWideImmUnpredOp(const char* mnem, ExtMachInst _machInst,
-                            OpClass __opClass, IntRegIndex _dest,
+                            OpClass __opClass, RegIndex _dest,
                             uint64_t _imm) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), imm(_imm)
@@ -249,15 +249,15 @@ class SveUnaryWideImmUnpredOp : public ArmStaticInst
 class SveUnaryWideImmPredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
+    RegIndex dest;
     uint64_t imm;
-    IntRegIndex gp;
+    RegIndex gp;
 
     bool isMerging;
 
     SveUnaryWideImmPredOp(const char* mnem, ExtMachInst _machInst,
-                          OpClass __opClass, IntRegIndex _dest,
-                          uint64_t _imm, IntRegIndex _gp, bool _isMerging) :
+                          OpClass __opClass, RegIndex _dest,
+                          uint64_t _imm, RegIndex _gp, bool _isMerging) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), imm(_imm), gp(_gp), isMerging(_isMerging)
     {}
@@ -270,11 +270,11 @@ class SveUnaryWideImmPredOp : public ArmStaticInst
 class SveBinImmUnpredConstrOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1;
+    RegIndex dest, op1;
     uint64_t imm;
 
     SveBinImmUnpredConstrOp(const char* mnem, ExtMachInst _machInst,
-            OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1,
+            OpClass __opClass, RegIndex _dest, RegIndex _op1,
             uint64_t _imm) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), imm(_imm)
@@ -288,11 +288,11 @@ class SveBinImmUnpredConstrOp : public ArmStaticInst
 class SveBinImmPredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, gp;
+    RegIndex dest, gp;
     uint64_t imm;
 
     SveBinImmPredOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-                    IntRegIndex _dest, uint64_t _imm, IntRegIndex _gp) :
+                    RegIndex _dest, uint64_t _imm, RegIndex _gp) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), gp(_gp), imm(_imm)
     {}
@@ -305,11 +305,11 @@ class SveBinImmPredOp : public ArmStaticInst
 class SveBinWideImmUnpredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
+    RegIndex dest;
     uint64_t imm;
 
     SveBinWideImmUnpredOp(const char* mnem, ExtMachInst _machInst,
-                          OpClass __opClass, IntRegIndex _dest,
+                          OpClass __opClass, RegIndex _dest,
                           uint64_t _imm) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), imm(_imm)
@@ -323,11 +323,11 @@ class SveBinWideImmUnpredOp : public ArmStaticInst
 class SveBinDestrPredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op2, gp;
+    RegIndex dest, op2, gp;
 
     SveBinDestrPredOp(const char* mnem, ExtMachInst _machInst,
-                      OpClass __opClass, IntRegIndex _dest, IntRegIndex _op2,
-                      IntRegIndex _gp) :
+                      OpClass __opClass, RegIndex _dest, RegIndex _op2,
+                      RegIndex _gp) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op2(_op2), gp(_gp)
     {}
@@ -340,12 +340,12 @@ class SveBinDestrPredOp : public ArmStaticInst
 class SveBinConstrPredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1, op2, gp;
+    RegIndex dest, op1, op2, gp;
     SvePredType predType;
 
     SveBinConstrPredOp(const char* mnem, ExtMachInst _machInst,
-                       OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1,
-                       IntRegIndex _op2, IntRegIndex _gp,
+                       OpClass __opClass, RegIndex _dest, RegIndex _op1,
+                       RegIndex _op2, RegIndex _gp,
                        SvePredType _predType) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), gp(_gp), predType(_predType)
@@ -359,10 +359,10 @@ class SveBinConstrPredOp : public ArmStaticInst
 class SveBinUnpredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1, op2;
+    RegIndex dest, op1, op2;
 
     SveBinUnpredOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2) :
+                   RegIndex _dest, RegIndex _op1, RegIndex _op2) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2)
     {}
@@ -375,12 +375,12 @@ class SveBinUnpredOp : public ArmStaticInst
 class SveBinIdxUnpredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1, op2;
+    RegIndex dest, op1, op2;
     uint8_t index;
 
     SveBinIdxUnpredOp(const char* mnem, ExtMachInst _machInst,
-                      OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1,
-                      IntRegIndex _op2, uint8_t _index) :
+                      OpClass __opClass, RegIndex _dest, RegIndex _op1,
+                      RegIndex _op2, uint8_t _index) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), index(_index)
     {}
@@ -393,12 +393,12 @@ class SveBinIdxUnpredOp : public ArmStaticInst
 class SvePredLogicalOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1, op2, gp;
+    RegIndex dest, op1, op2, gp;
     bool isSel;
 
     SvePredLogicalOp(const char* mnem, ExtMachInst _machInst,
-                     OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1,
-                     IntRegIndex _op2, IntRegIndex _gp, bool _isSel = false) :
+                     OpClass __opClass, RegIndex _dest, RegIndex _op1,
+                     RegIndex _op2, RegIndex _gp, bool _isSel = false) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), gp(_gp), isSel(_isSel)
     {}
@@ -411,11 +411,11 @@ class SvePredLogicalOp : public ArmStaticInst
 class SvePredBinPermOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1, op2;
+    RegIndex dest, op1, op2;
 
     SvePredBinPermOp(const char* mnem, ExtMachInst _machInst,
-                     OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1,
-                     IntRegIndex _op2) :
+                     OpClass __opClass, RegIndex _dest, RegIndex _op1,
+                     RegIndex _op2) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2)
     {}
@@ -428,11 +428,11 @@ class SvePredBinPermOp : public ArmStaticInst
 class SveCmpOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, gp, op1, op2;
+    RegIndex dest, gp, op1, op2;
 
     SveCmpOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-             IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-             IntRegIndex _gp) :
+             RegIndex _dest, RegIndex _op1, RegIndex _op2,
+             RegIndex _gp) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), gp(_gp), op1(_op1), op2(_op2)
     {}
@@ -445,12 +445,12 @@ class SveCmpOp : public ArmStaticInst
 class SveCmpImmOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, gp, op1;
+    RegIndex dest, gp, op1;
     uint64_t imm;
 
     SveCmpImmOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-                IntRegIndex _dest, IntRegIndex _op1, uint64_t _imm,
-                IntRegIndex _gp) :
+                RegIndex _dest, RegIndex _op1, uint64_t _imm,
+                RegIndex _gp) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), gp(_gp), op1(_op1), imm(_imm)
     {}
@@ -463,11 +463,11 @@ class SveCmpImmOp : public ArmStaticInst
 class SveTerPredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1, op2, gp;
+    RegIndex dest, op1, op2, gp;
 
     SveTerPredOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-                 IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                 IntRegIndex _gp) :
+                 RegIndex _dest, RegIndex _op1, RegIndex _op2,
+                 RegIndex _gp) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), gp(_gp)
     {}
@@ -480,11 +480,11 @@ class SveTerPredOp : public ArmStaticInst
 class SveTerImmUnpredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op2;
+    RegIndex dest, op2;
     uint64_t imm;
 
     SveTerImmUnpredOp(const char* mnem, ExtMachInst _machInst,
-                      OpClass __opClass, IntRegIndex _dest, IntRegIndex _op2,
+                      OpClass __opClass, RegIndex _dest, RegIndex _op2,
                       uint64_t _imm) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op2(_op2), imm(_imm)
@@ -498,10 +498,10 @@ class SveTerImmUnpredOp : public ArmStaticInst
 class SveReducOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1, gp;
+    RegIndex dest, op1, gp;
 
     SveReducOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-               IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _gp) :
+               RegIndex _dest, RegIndex _op1, RegIndex _gp) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), gp(_gp)
     {}
@@ -514,10 +514,10 @@ class SveReducOp : public ArmStaticInst
 class SveOrdReducOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1, gp;
+    RegIndex dest, op1, gp;
 
     SveOrdReducOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-               IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _gp) :
+               RegIndex _dest, RegIndex _op1, RegIndex _gp) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), gp(_gp)
     {}
@@ -530,11 +530,11 @@ class SveOrdReducOp : public ArmStaticInst
 class SvePtrueOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
+    RegIndex dest;
     uint8_t imm;
 
     SvePtrueOp(const char* mnem, ExtMachInst _machInst,
-               OpClass __opClass, IntRegIndex _dest, uint8_t _imm) :
+               OpClass __opClass, RegIndex _dest, uint8_t _imm) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), imm(_imm)
     {}
@@ -547,14 +547,14 @@ class SvePtrueOp : public ArmStaticInst
 class SveIntCmpOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1, op2;
-    IntRegIndex gp;
+    RegIndex dest;
+    RegIndex op1, op2;
+    RegIndex gp;
     bool op2IsWide;
 
     SveIntCmpOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-                  IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                  IntRegIndex _gp, bool _op2IsWide = false) :
+                  RegIndex _dest, RegIndex _op1, RegIndex _op2,
+                  RegIndex _gp, bool _op2IsWide = false) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), gp(_gp), op2IsWide(_op2IsWide)
     {}
@@ -566,14 +566,14 @@ class SveIntCmpOp : public ArmStaticInst
 class SveIntCmpImmOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
+    RegIndex dest;
+    RegIndex op1;
     int64_t imm;
-    IntRegIndex gp;
+    RegIndex gp;
 
     SveIntCmpImmOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-                  IntRegIndex _dest, IntRegIndex _op1, int64_t _imm,
-                  IntRegIndex _gp) :
+                  RegIndex _dest, RegIndex _op1, int64_t _imm,
+                  RegIndex _gp) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), imm(_imm), gp(_gp)
     {}
@@ -593,13 +593,13 @@ class SveAdrOp : public ArmStaticInst
     };
 
   protected:
-    IntRegIndex dest, op1, op2;
+    RegIndex dest, op1, op2;
     uint8_t mult;
     SveAdrOffsetFormat offsetFormat;
 
     SveAdrOp(const char* mnem, ExtMachInst _machInst,
-             OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1,
-             IntRegIndex _op2, uint8_t _mult,
+             OpClass __opClass, RegIndex _dest, RegIndex _op1,
+             RegIndex _op2, uint8_t _mult,
              SveAdrOffsetFormat _offsetFormat) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), mult(_mult),
@@ -613,7 +613,7 @@ class SveAdrOp : public ArmStaticInst
 class SveElemCountOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
+    RegIndex dest;
     uint8_t pattern;
     uint8_t imm;
     bool dstIsVec;
@@ -621,7 +621,7 @@ class SveElemCountOp : public ArmStaticInst
     uint8_t esize;
 
     SveElemCountOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-                  IntRegIndex _dest, uint8_t _pattern, uint8_t _imm,
+                  RegIndex _dest, uint8_t _pattern, uint8_t _imm,
                   bool _dstIsVec, bool _dstIs32b) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), pattern(_pattern), imm(_imm), dstIsVec(_dstIsVec),
@@ -635,13 +635,13 @@ class SveElemCountOp : public ArmStaticInst
 class SvePartBrkOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex gp;
-    IntRegIndex op1;
+    RegIndex dest;
+    RegIndex gp;
+    RegIndex op1;
     bool isMerging;
 
     SvePartBrkOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-                  IntRegIndex _dest, IntRegIndex _gp, IntRegIndex _op1,
+                  RegIndex _dest, RegIndex _gp, RegIndex _op1,
                   bool _isMerging) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), gp(_gp), op1(_op1), isMerging(_isMerging)
@@ -654,14 +654,14 @@ class SvePartBrkOp : public ArmStaticInst
 class SvePartBrkPropOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
-    IntRegIndex op2;
-    IntRegIndex gp;
+    RegIndex dest;
+    RegIndex op1;
+    RegIndex op2;
+    RegIndex gp;
 
     SvePartBrkPropOp(const char* mnem, ExtMachInst _machInst,
-                     OpClass __opClass, IntRegIndex _dest,
-                     IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _gp) :
+                     OpClass __opClass, RegIndex _dest,
+                     RegIndex _op1, RegIndex _op2, RegIndex _gp) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), gp(_gp)
     {}
@@ -673,17 +673,17 @@ class SvePartBrkPropOp : public ArmStaticInst
 class SveSelectOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
-    IntRegIndex gp;
+    RegIndex dest;
+    RegIndex op1;
+    RegIndex gp;
     bool conditional;
     bool scalar;
     bool simdFp;
     size_t scalar_width;
 
     SveSelectOp(const char* mnem, ExtMachInst _machInst,
-                      OpClass __opClass, IntRegIndex _dest,
-                      IntRegIndex _op1, IntRegIndex _gp,
+                      OpClass __opClass, RegIndex _dest,
+                      RegIndex _op1, RegIndex _gp,
                       bool _conditional, bool _scalar,
                       bool _simdFp) :
         ArmStaticInst(mnem, _machInst, __opClass),
@@ -698,13 +698,13 @@ class SveSelectOp : public ArmStaticInst
 class SveUnaryPredPredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
-    IntRegIndex gp;
+    RegIndex dest;
+    RegIndex op1;
+    RegIndex gp;
 
     SveUnaryPredPredOp(const char* mnem, ExtMachInst _machInst,
-                       OpClass __opClass, IntRegIndex _dest,
-                       IntRegIndex _op1, IntRegIndex _gp) :
+                       OpClass __opClass, RegIndex _dest,
+                       RegIndex _op1, RegIndex _gp) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), gp(_gp)
     {}
@@ -716,12 +716,12 @@ class SveUnaryPredPredOp : public ArmStaticInst
 class SveTblOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
-    IntRegIndex op2;
+    RegIndex dest;
+    RegIndex op1;
+    RegIndex op2;
 
     SveTblOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-            IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2) :
+            RegIndex _dest, RegIndex _op1, RegIndex _op2) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2)
     {}
@@ -733,11 +733,11 @@ class SveTblOp : public ArmStaticInst
 class SveUnpackOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
+    RegIndex dest;
+    RegIndex op1;
 
     SveUnpackOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-                IntRegIndex _dest, IntRegIndex _op1) :
+                RegIndex _dest, RegIndex _op1) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1)
     {}
@@ -749,11 +749,11 @@ class SveUnpackOp : public ArmStaticInst
 class SvePredTestOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex op1;
-    IntRegIndex gp;
+    RegIndex op1;
+    RegIndex gp;
 
     SvePredTestOp(const char* mnem, ExtMachInst _machInst, OpClass __opClass,
-                IntRegIndex _op1, IntRegIndex _gp) :
+                RegIndex _op1, RegIndex _gp) :
         ArmStaticInst(mnem, _machInst, __opClass),
         op1(_op1), gp(_gp)
     {}
@@ -765,10 +765,10 @@ class SvePredTestOp : public ArmStaticInst
 class SvePredUnaryWImplicitSrcOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
+    RegIndex dest;
 
     SvePredUnaryWImplicitSrcOp(const char* mnem, ExtMachInst _machInst,
-                               OpClass __opClass, IntRegIndex _dest) :
+                               OpClass __opClass, RegIndex _dest) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest)
     {}
@@ -780,12 +780,12 @@ class SvePredUnaryWImplicitSrcOp : public ArmStaticInst
 class SvePredUnaryWImplicitSrcPredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex gp;
+    RegIndex dest;
+    RegIndex gp;
 
     SvePredUnaryWImplicitSrcPredOp(const char* mnem, ExtMachInst _machInst,
-                                   OpClass __opClass, IntRegIndex _dest,
-                                   IntRegIndex _gp) :
+                                   OpClass __opClass, RegIndex _dest,
+                                   RegIndex _gp) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), gp(_gp)
     {}
@@ -797,10 +797,10 @@ class SvePredUnaryWImplicitSrcPredOp : public ArmStaticInst
 class SvePredUnaryWImplicitDstOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex op1;
+    RegIndex op1;
 
     SvePredUnaryWImplicitDstOp(const char* mnem, ExtMachInst _machInst,
-                               OpClass __opClass, IntRegIndex _op1) :
+                               OpClass __opClass, RegIndex _op1) :
         ArmStaticInst(mnem, _machInst, __opClass),
         op1(_op1)
     {}
@@ -824,12 +824,12 @@ class SveWImplicitSrcDstOp : public ArmStaticInst
 class SveBinImmUnpredDestrOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
+    RegIndex dest;
+    RegIndex op1;
     uint64_t imm;
 
     SveBinImmUnpredDestrOp(const char* mnem, ExtMachInst _machInst,
-            OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1,
+            OpClass __opClass, RegIndex _dest, RegIndex _op1,
             uint64_t _imm) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), imm(_imm)
@@ -842,11 +842,11 @@ class SveBinImmUnpredDestrOp : public ArmStaticInst
 class SveBinImmIdxUnpredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1;
+    RegIndex dest, op1;
     uint64_t imm;
 
     SveBinImmIdxUnpredOp(const char* mnem, ExtMachInst _machInst,
-            OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1,
+            OpClass __opClass, RegIndex _dest, RegIndex _op1,
             uint64_t _imm) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), imm(_imm)
@@ -860,11 +860,11 @@ class SveBinImmIdxUnpredOp : public ArmStaticInst
 class SveUnarySca2VecUnpredOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1;
+    RegIndex dest, op1;
     bool simdFp;
 
     SveUnarySca2VecUnpredOp(const char* mnem, ExtMachInst _machInst,
-            OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1,
+            OpClass __opClass, RegIndex _dest, RegIndex _op1,
             bool _simdFp) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), simdFp(_simdFp)
@@ -878,14 +878,14 @@ class SveUnarySca2VecUnpredOp : public ArmStaticInst
 class SveDotProdIdxOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1, op2;
+    RegIndex dest, op1, op2;
     uint64_t imm;
     uint8_t esize;
 
   public:
     SveDotProdIdxOp(const char* mnem, ExtMachInst _machInst,
-            OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1,
-            IntRegIndex _op2, uint64_t _imm) :
+            OpClass __opClass, RegIndex _dest, RegIndex _op1,
+            RegIndex _op2, uint64_t _imm) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), imm(_imm)
     {}
@@ -898,13 +898,13 @@ class SveDotProdIdxOp : public ArmStaticInst
 class SveDotProdOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1, op2;
+    RegIndex dest, op1, op2;
     uint8_t esize;
 
   public:
     SveDotProdOp(const char* mnem, ExtMachInst _machInst,
-            OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1,
-            IntRegIndex _op2) :
+            OpClass __opClass, RegIndex _dest, RegIndex _op1,
+            RegIndex _op2) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2)
     {}
@@ -917,13 +917,13 @@ class SveDotProdOp : public ArmStaticInst
 class SveComplexOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1, op2, gp;
+    RegIndex dest, op1, op2, gp;
     uint8_t rot;
 
   public:
     SveComplexOp(const char* mnem, ExtMachInst _machInst,
-            OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1,
-            IntRegIndex _op2, IntRegIndex _gp, uint8_t _rot) :
+            OpClass __opClass, RegIndex _dest, RegIndex _op1,
+            RegIndex _op2, RegIndex _gp, uint8_t _rot) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), gp(_gp), rot(_rot)
     {}
@@ -936,13 +936,13 @@ class SveComplexOp : public ArmStaticInst
 class SveComplexIdxOp : public ArmStaticInst
 {
   protected:
-    IntRegIndex dest, op1, op2;
+    RegIndex dest, op1, op2;
     uint8_t rot, imm;
 
   public:
     SveComplexIdxOp(const char* mnem, ExtMachInst _machInst,
-            OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1,
-            IntRegIndex _op2, uint8_t _rot, uint8_t _imm) :
+            OpClass __opClass, RegIndex _dest, RegIndex _op1,
+            RegIndex _op2, uint8_t _rot, uint8_t _imm) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), rot(_rot), imm(_imm)
     {}

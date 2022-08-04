@@ -62,7 +62,8 @@ Source('types.cc', tags='x86 isa')
 Source('utility.cc', tags='x86 isa')
 
 SimObject('X86SeWorkload.py', sim_objects=['X86EmuLinux'], tags='x86 isa')
-SimObject('X86FsWorkload.py', sim_objects=['X86FsWorkload', 'X86FsLinux'],
+SimObject('X86FsWorkload.py',
+    sim_objects=['X86BareMetalWorkload', 'X86FsWorkload', 'X86FsLinux'],
     tags='x86 isa')
 SimObject('X86Decoder.py', sim_objects=['X86Decoder'], tags='x86 isa')
 SimObject('X86ISA.py', sim_objects=['X86ISA'], tags='x86 isa')
@@ -71,6 +72,12 @@ SimObject('X86MMU.py', sim_objects=['X86MMU'], tags='x86 isa')
 SimObject('X86NativeTrace.py', sim_objects=['X86NativeTrace'], tags='x86 isa')
 SimObject('X86TLB.py', sim_objects=['X86PagetableWalker', 'X86TLB'],
     tags='x86 isa')
+
+SimObject('X86CPU.py', sim_objects=[], tags='x86 isa')
+SimObject('AtomicSimpleCPU.py', sim_objects=[], tags='x86 isa')
+SimObject('TimingSimpleCPU.py', sim_objects=[], tags='x86 isa')
+SimObject('NonCachingSimpleCPU.py', sim_objects=[], tags='x86 isa')
+SimObject('O3CPU.py', sim_objects=[], tags='x86 isa')
 
 DebugFlag('LocalApic', "Local APIC debugging", tags='x86 isa')
 DebugFlag('X86', "Generic X86 ISA debugging", tags='x86 isa')

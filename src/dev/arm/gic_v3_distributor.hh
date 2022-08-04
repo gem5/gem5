@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 ARM Limited
+ * Copyright (c) 2019-2022 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -272,6 +272,8 @@ class Gicv3Distributor : public Serializable
     uint64_t read(Addr addr, size_t size, bool is_secure_access);
     void write(Addr addr, uint64_t data, size_t size,
                bool is_secure_access);
+
+    void copy(Gicv3Registers *from, Gicv3Registers *to);
 };
 
 } // namespace gem5

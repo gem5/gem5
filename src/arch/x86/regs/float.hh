@@ -43,119 +43,123 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-    enum FloatRegIndex
-    {
-        // MMX/X87 registers
-        FLOATREG_MMX_BASE,
-        FLOATREG_FPR_BASE = FLOATREG_MMX_BASE,
-        FLOATREG_MMX0 = FLOATREG_MMX_BASE,
-        FLOATREG_MMX1,
-        FLOATREG_MMX2,
-        FLOATREG_MMX3,
-        FLOATREG_MMX4,
-        FLOATREG_MMX5,
-        FLOATREG_MMX6,
-        FLOATREG_MMX7,
+namespace float_reg
+{
+enum FloatRegIndex
+{
+    // MMX/X87 registers
+    MmxBase,
+    FprBase = MmxBase,
+    _Mmx0Idx = MmxBase,
+    _Mmx1Idx,
+    _Mmx2Idx,
+    _Mmx3Idx,
+    _Mmx4Idx,
+    _Mmx5Idx,
+    _Mmx6Idx,
+    _Mmx7Idx,
 
-        FLOATREG_FPR0 = FLOATREG_FPR_BASE,
-        FLOATREG_FPR1,
-        FLOATREG_FPR2,
-        FLOATREG_FPR3,
-        FLOATREG_FPR4,
-        FLOATREG_FPR5,
-        FLOATREG_FPR6,
-        FLOATREG_FPR7,
+    _Fpr0Idx = FprBase,
+    _Fpr1Idx,
+    _Fpr2Idx,
+    _Fpr3Idx,
+    _Fpr4Idx,
+    _Fpr5Idx,
+    _Fpr6Idx,
+    _Fpr7Idx,
 
-        FLOATREG_XMM_BASE = FLOATREG_MMX_BASE + NumMMXRegs,
-        FLOATREG_XMM0_LOW = FLOATREG_XMM_BASE,
-        FLOATREG_XMM0_HIGH,
-        FLOATREG_XMM1_LOW,
-        FLOATREG_XMM1_HIGH,
-        FLOATREG_XMM2_LOW,
-        FLOATREG_XMM2_HIGH,
-        FLOATREG_XMM3_LOW,
-        FLOATREG_XMM3_HIGH,
-        FLOATREG_XMM4_LOW,
-        FLOATREG_XMM4_HIGH,
-        FLOATREG_XMM5_LOW,
-        FLOATREG_XMM5_HIGH,
-        FLOATREG_XMM6_LOW,
-        FLOATREG_XMM6_HIGH,
-        FLOATREG_XMM7_LOW,
-        FLOATREG_XMM7_HIGH,
-        FLOATREG_XMM8_LOW,
-        FLOATREG_XMM8_HIGH,
-        FLOATREG_XMM9_LOW,
-        FLOATREG_XMM9_HIGH,
-        FLOATREG_XMM10_LOW,
-        FLOATREG_XMM10_HIGH,
-        FLOATREG_XMM11_LOW,
-        FLOATREG_XMM11_HIGH,
-        FLOATREG_XMM12_LOW,
-        FLOATREG_XMM12_HIGH,
-        FLOATREG_XMM13_LOW,
-        FLOATREG_XMM13_HIGH,
-        FLOATREG_XMM14_LOW,
-        FLOATREG_XMM14_HIGH,
-        FLOATREG_XMM15_LOW,
-        FLOATREG_XMM15_HIGH,
+    XmmBase = MmxBase + NumMMXRegs,
+    _Xmm0LowIdx = XmmBase,
+    _Xmm0HighIdx,
+    _Xmm1LowIdx,
+    _Xmm1HighIdx,
+    _Xmm2LowIdx,
+    _Xmm2HighIdx,
+    _Xmm3LowIdx,
+    _Xmm3HighIdx,
+    _Xmm4LowIdx,
+    _Xmm4HighIdx,
+    _Xmm5LowIdx,
+    _Xmm5HighIdx,
+    _Xmm6LowIdx,
+    _Xmm6HighIdx,
+    _Xmm7LowIdx,
+    _Xmm7HighIdx,
+    _Xmm8LowIdx,
+    _Xmm8HighIdx,
+    _Xmm9LowIdx,
+    _Xmm9HighIdx,
+    _Xmm10LowIdx,
+    _Xmm10HighIdx,
+    _Xmm11LowIdx,
+    _Xmm11HighIdx,
+    _Xmm12LowIdx,
+    _Xmm12HighIdx,
+    _Xmm13LowIdx,
+    _Xmm13HighIdx,
+    _Xmm14LowIdx,
+    _Xmm14HighIdx,
+    _Xmm15LowIdx,
+    _Xmm15HighIdx,
 
-        FLOATREG_MICROFP_BASE = FLOATREG_XMM_BASE + 2 * NumXMMRegs,
-        FLOATREG_MICROFP0 = FLOATREG_MICROFP_BASE,
-        FLOATREG_MICROFP1,
-        FLOATREG_MICROFP2,
-        FLOATREG_MICROFP3,
-        FLOATREG_MICROFP4,
-        FLOATREG_MICROFP5,
-        FLOATREG_MICROFP6,
-        FLOATREG_MICROFP7,
+    MicrofpBase = XmmBase + 2 * NumXMMRegs,
+    _Microfp0Idx = MicrofpBase,
+    _Microfp1Idx,
+    _Microfp2Idx,
+    _Microfp3Idx,
+    _Microfp4Idx,
+    _Microfp5Idx,
+    _Microfp6Idx,
+    _Microfp7Idx,
 
-        NUM_FLOATREGS = FLOATREG_MICROFP_BASE + NumMicroFpRegs
-    };
+    NumRegs = MicrofpBase + NumMicroFpRegs
+};
 
-    static inline FloatRegIndex
-    FLOATREG_MMX(int index)
-    {
-        return (FloatRegIndex)(FLOATREG_MMX_BASE + index);
-    }
+static inline RegId
+mmx(int index)
+{
+    return RegId(FloatRegClass, MmxBase + index);
+}
 
-    static inline FloatRegIndex
-    FLOATREG_FPR(int index)
-    {
-        return (FloatRegIndex)(FLOATREG_FPR_BASE + index);
-    }
+static inline RegId
+fpr(int index)
+{
+    return RegId(FloatRegClass, FprBase + index);
+}
 
-    static inline FloatRegIndex
-    FLOATREG_XMM_LOW(int index)
-    {
-        return (FloatRegIndex)(FLOATREG_XMM_BASE + 2 * index);
-    }
+static inline RegId
+xmm(int index)
+{
+    return RegId(FloatRegClass, XmmBase + index);
+}
 
-    static inline FloatRegIndex
-    FLOATREG_XMM_HIGH(int index)
-    {
-        return (FloatRegIndex)(FLOATREG_XMM_BASE + 2 * index + 1);
-    }
+static inline RegId
+xmmLow(int index)
+{
+    return RegId(FloatRegClass, XmmBase + 2 * index);
+}
 
-    static inline FloatRegIndex
-    FLOATREG_MICROFP(int index)
-    {
-        return (FloatRegIndex)(FLOATREG_MICROFP_BASE + index);
-    }
+static inline RegId
+xmmHigh(int index)
+{
+    return RegId(FloatRegClass, XmmBase + 2 * index + 1);
+}
 
-    static inline FloatRegIndex
-    FLOATREG_STACK(int index, int top)
-    {
-        return FLOATREG_FPR((top + index + 8) % 8);
-    }
+static inline RegId
+microfp(int index)
+{
+    return RegId(FloatRegClass, MicrofpBase + index);
+}
 
-    // Each 128 bit xmm register is broken into two effective 64 bit registers.
-    // Add 8 for the indices that are mapped over the fp stack
-    const int NumFloatRegs =
-        NumMMXRegs + 2 * NumXMMRegs + NumMicroFpRegs + 8;
+static inline RegId
+stack(int index, int top)
+{
+    return fpr((top + index + 8) % 8);
+}
+
+} // namespace float_reg
 
 } // namespace X86ISA
 } // namespace gem5

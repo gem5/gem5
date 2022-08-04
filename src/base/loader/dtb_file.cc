@@ -63,12 +63,15 @@ DtbFile::~DtbFile()
 }
 
 bool
-DtbFile::addBootCmdLine(const char *_args, size_t len)
+DtbFile::addBootData(const char *_cmdline, size_t cmdline_len,
+                     off_t initrd_start, size_t initrd_len)
 {
     const char *root_path = "/";
     const char *node_name = "chosen";
     const char *full_path_node_name = "/chosen";
-    const char *property_name = "bootargs";
+    const char *bootargs_property_name = "bootargs";
+    const char *linux_initrd_start_property_name = "linux,initrd-start";
+    const char *linux_initrd_end_property_name = "linux,initrd-end";
 
     // Make a new buffer that has extra space to add nodes/properties
     int newLen = 2 * length;
@@ -102,13 +105,37 @@ DtbFile::addBootCmdLine(const char *_args, size_t len)
     }
 
     // Set the bootargs property in the /chosen node
-    ret = fdt_setprop((void *)fdt_buf_w_space, offset, property_name,
-                      (const void *)_args, len+1);
+    ret = fdt_setprop((void *)fdt_buf_w_space, offset, bootargs_property_name,
+                      (const void *)_cmdline, cmdline_len+1);
     if (ret < 0) {
         warn("Error setting \"bootargs\" property to flattened device tree, "
              "errno: %d\n", ret);
         delete [] fdt_buf_w_space;
         return false;
+    }
+
+    if (initrd_len != 0) {
+        // Set the linux,initrd-start property in the /chosen node
+        ret = fdt_setprop_u64((void *)fdt_buf_w_space, offset,
+                              linux_initrd_start_property_name,
+                              (uint64_t)initrd_start);
+        if (ret < 0) {
+            warn("Error setting \"linux,initrd-start\" property to flattened "
+                 "device tree, errno: %d\n", ret);
+            delete [] fdt_buf_w_space;
+            return false;
+        }
+
+        // Set the computed linux,initrd-end property in the /chosen node
+        ret = fdt_setprop_u64((void *)fdt_buf_w_space, offset,
+                              linux_initrd_end_property_name,
+                              (uint64_t)initrd_start + initrd_len);
+        if (ret < 0) {
+            warn("Error setting \"linux,initrd-len\" property to flattened "
+                 "device tree, errno: %d\n", ret);
+            delete [] fdt_buf_w_space;
+            return false;
+        }
     }
 
     // Repack the dtb for kernel use

@@ -45,13 +45,13 @@ let {{
     def pacEnabledCode(hint):
         if hint:
             code = """
-                if (!HavePACExt(xc->tcBase())) {
+                if (!HaveExt(xc->tcBase(), ArmExtension::FEAT_PAuth)) {
                     return NoFault;
                 }
                 """
         else:
             code = """
-                if (!HavePACExt(xc->tcBase())) {
+                if (!HaveExt(xc->tcBase(), ArmExtension::FEAT_PAuth)) {
                     return std::make_shared<UndefinedInstruction>(
                         machInst, true);
                 }
@@ -78,7 +78,8 @@ let {{
                                "op2": 'Op164',
                                "op":  opcode }
 
-        iop = ArmInstObjParams(mnem, mnem, templateBase+"Op", code, optArgs)
+        iop = ArmInstObjParams(mnem, mnem.capitalize(),
+                               templateBase+"Op", code, optArgs)
         header_output += eval(templateBase + "Declare").subst(iop)
         decoder_output += eval(templateBase + "Constructor").subst(iop)
         exec_output += BasicExecute.subst(iop)
@@ -94,48 +95,49 @@ let {{
             """
         regoptype = 'RegOp'
 
-        iop = ArmInstObjParams(mnem, mnem, regoptype, code, optArgs)
+        iop = ArmInstObjParams(mnem, mnem.capitalize(),
+                               regoptype, code, optArgs)
         header_output += eval(templateBase + "Declare").subst(iop)
         decoder_output += eval(templateBase + "Constructor").subst(iop)
         exec_output += BasicExecute.subst(iop)
 
 
-    buildPauthObject("Pacda",  "DataX1Reg", 'addPACDA', hint=False)
-    buildPauthObject("Pacdza", "DataX1Reg", 'addPACDA', hint=False)
-    buildPauthObject("Pacdb",  "DataX1Reg", 'addPACDB', hint=False)
-    buildPauthObject("Pacdzb", "DataX1Reg", 'addPACDB', hint=False)
-    buildPauthObject("Pacga",  "DataX2Reg", 'addPACGA', hint=False)
+    buildPauthObject("pacda",  "DataX1Reg", 'addPACDA', hint=False)
+    buildPauthObject("pacdza", "DataX1Reg", 'addPACDA', hint=False)
+    buildPauthObject("pacdb",  "DataX1Reg", 'addPACDB', hint=False)
+    buildPauthObject("pacdzb", "DataX1Reg", 'addPACDB', hint=False)
+    buildPauthObject("pacga",  "DataX2Reg", 'addPACGA', hint=False)
 
-    buildPauthObject("Pacia",     "DataX1Reg", 'addPACIA', hint=False)
-    buildPauthObject("Pacia1716", "DataX1Reg", 'addPACIA', hint=True)
-    buildPauthObject("Paciasp",   "DataX1Reg", 'addPACIA', hint=True)
-    buildPauthObject("Paciaz",    "DataX1Reg", 'addPACIA', hint=True)
-    buildPauthObject("Paciza",    "DataX1Reg", 'addPACIA', hint=False)
+    buildPauthObject("pacia",     "DataX1Reg", 'addPACIA', hint=False)
+    buildPauthObject("pacia1716", "DataX1Reg", 'addPACIA', hint=True)
+    buildPauthObject("paciasp",   "DataX1Reg", 'addPACIA', hint=True)
+    buildPauthObject("paciaz",    "DataX1Reg", 'addPACIA', hint=True)
+    buildPauthObject("paciza",    "DataX1Reg", 'addPACIA', hint=False)
 
-    buildPauthObject("Pacib",     "DataX1Reg", 'addPACIB', hint=False)
-    buildPauthObject("Pacib1716", "DataX1Reg", 'addPACIB', hint=True)
-    buildPauthObject("Pacibsp",   "DataX1Reg", 'addPACIB', hint=True)
-    buildPauthObject("Pacibz",    "DataX1Reg", 'addPACIB', hint=True)
-    buildPauthObject("Pacizb",    "DataX1Reg", 'addPACIB', hint=False)
+    buildPauthObject("pacib",     "DataX1Reg", 'addPACIB', hint=False)
+    buildPauthObject("pacib1716", "DataX1Reg", 'addPACIB', hint=True)
+    buildPauthObject("pacibsp",   "DataX1Reg", 'addPACIB', hint=True)
+    buildPauthObject("pacibz",    "DataX1Reg", 'addPACIB', hint=True)
+    buildPauthObject("pacizb",    "DataX1Reg", 'addPACIB', hint=False)
 
-    buildPauthObject("Autda",     "DataX1Reg", 'authDA', hint=False)
-    buildPauthObject("Autdza",    "DataX1Reg", 'authDA', hint=False)
-    buildPauthObject("Autdb",     "DataX1Reg", 'authDB', hint=False)
-    buildPauthObject("Autdzb",    "DataX1Reg", 'authDB', hint=False)
+    buildPauthObject("autda",     "DataX1Reg", 'authDA', hint=False)
+    buildPauthObject("autdza",    "DataX1Reg", 'authDA', hint=False)
+    buildPauthObject("autdb",     "DataX1Reg", 'authDB', hint=False)
+    buildPauthObject("autdzb",    "DataX1Reg", 'authDB', hint=False)
 
-    buildPauthObject("Autia",     "DataX1Reg", 'authIA', hint=False)
-    buildPauthObject("Autia1716", "DataX1Reg", 'authIA', hint=True)
-    buildPauthObject("Autiasp",   "DataX1Reg", 'authIA', hint=True)
-    buildPauthObject("Autiaz",    "DataX1Reg", 'authIA', hint=True)
-    buildPauthObject("Autiza",    "DataX1Reg", 'authIA', hint=False)
+    buildPauthObject("autia",     "DataX1Reg", 'authIA', hint=False)
+    buildPauthObject("autia1716", "DataX1Reg", 'authIA', hint=True)
+    buildPauthObject("autiasp",   "DataX1Reg", 'authIA', hint=True)
+    buildPauthObject("autiaz",    "DataX1Reg", 'authIA', hint=True)
+    buildPauthObject("autiza",    "DataX1Reg", 'authIA', hint=False)
 
-    buildPauthObject("Autib",     "DataX1Reg", 'authIB', hint=False)
-    buildPauthObject("Autib1716", "DataX1Reg", 'authIB', hint=True)
-    buildPauthObject("Autibsp",   "DataX1Reg", 'authIB', hint=True)
-    buildPauthObject("Autibz",    "DataX1Reg", 'authIB', hint=True)
-    buildPauthObject("Autizb",    "DataX1Reg", 'authIB', hint=False)
+    buildPauthObject("autib",     "DataX1Reg", 'authIB', hint=False)
+    buildPauthObject("autib1716", "DataX1Reg", 'authIB', hint=True)
+    buildPauthObject("autibsp",   "DataX1Reg", 'authIB', hint=True)
+    buildPauthObject("autibz",    "DataX1Reg", 'authIB', hint=True)
+    buildPauthObject("autizb",    "DataX1Reg", 'authIB', hint=False)
 
-    buildXPauthObject("Xpacd", hint=False)
-    buildXPauthObject("Xpaci", hint=False)
-    buildXPauthObject("Xpaclri", hint=True)
+    buildXPauthObject("xpacd", hint=False)
+    buildXPauthObject("xpaci", hint=False)
+    buildXPauthObject("xpaclri", hint=True)
 }};

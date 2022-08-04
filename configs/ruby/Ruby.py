@@ -130,7 +130,7 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
         if len(system.mem_ranges) > 1:
             crossbar = IOXBar()
             crossbars.append(crossbar)
-            dir_cntrl.memory = crossbar.cpu_side_ports
+            dir_cntrl.memory_out_port = crossbar.cpu_side_ports
 
         dir_ranges = []
         for r in system.mem_ranges:
@@ -152,7 +152,7 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
             if crossbar != None:
                 mem_ctrl.port = crossbar.mem_side_ports
             else:
-                mem_ctrl.port = dir_cntrl.memory
+                mem_ctrl.port = dir_cntrl.memory_out_port
 
             # Enable low-power DRAM states if option is set
             if issubclass(mem_type, DRAMInterface):

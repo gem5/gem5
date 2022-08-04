@@ -42,39 +42,39 @@ def operand_types {{
 
 def operands {{
     # General Purpose Integer Reg Operands
-    'Rs': ('IntReg', 'ud', 'RS', 'IsInteger', 1),
-    'Ra': ('IntReg', 'ud', 'RA', 'IsInteger', 2),
-    'Rb': ('IntReg', 'ud', 'RB', 'IsInteger', 3),
-    'Rc': ('IntReg', 'ud', 'RC', 'IsInteger', 4),
-    'Rt': ('IntReg', 'ud', 'RT', 'IsInteger', 5),
+    'Rs': IntRegOp('ud', 'RS', 'IsInteger', 1),
+    'Ra': IntRegOp('ud', 'RA', 'IsInteger', 2),
+    'Rb': IntRegOp('ud', 'RB', 'IsInteger', 3),
+    'Rc': IntRegOp('ud', 'RC', 'IsInteger', 4),
+    'Rt': IntRegOp('ud', 'RT', 'IsInteger', 5),
 
     # General Purpose Floating Point Reg Operands
-    'Fa': ('FloatReg', 'df', 'FRA', 'IsFloating', 1),
-    'Fb': ('FloatReg', 'df', 'FRB', 'IsFloating', 2),
-    'Fc': ('FloatReg', 'df', 'FRC', 'IsFloating', 3),
-    'Fs': ('FloatReg', 'df', 'FRS', 'IsFloating', 4),
-    'Ft': ('FloatReg', 'df', 'FRT', 'IsFloating', 5),
+    'Fa': FloatRegOp('df', 'FRA', 'IsFloating', 1),
+    'Fb': FloatRegOp('df', 'FRB', 'IsFloating', 2),
+    'Fc': FloatRegOp('df', 'FRC', 'IsFloating', 3),
+    'Fs': FloatRegOp('df', 'FRS', 'IsFloating', 4),
+    'Ft': FloatRegOp('df', 'FRT', 'IsFloating', 5),
 
     # Memory Operand
-    'Mem': ('Mem', 'ud', None, (None, 'IsLoad', 'IsStore'), 8),
+    'Mem': MemOp('ud', None, (None, 'IsLoad', 'IsStore'), 8),
 
     # Program counter and next
-    'CIA': ('PCState', 'ud', 'pc', (None, None, 'IsControl'), 9),
-    'NIA': ('PCState', 'ud', 'npc', (None, None, 'IsControl'), 9),
+    'CIA': PCStateOp('ud', 'pc', (None, None, 'IsControl'), 9),
+    'NIA': PCStateOp('ud', 'npc', (None, None, 'IsControl'), 9),
 
     # Control registers
-    'CR': ('IntReg', 'uw', 'INTREG_CR', 'IsInteger', 9),
-    'LR': ('IntReg', 'ud', 'INTREG_LR', 'IsInteger', 9),
-    'CTR': ('IntReg', 'ud', 'INTREG_CTR', 'IsInteger', 9),
-    'TAR': ('IntReg', 'ud', 'INTREG_TAR', 'IsInteger', 9),
-    'XER': ('IntReg', 'uw', 'INTREG_XER', 'IsInteger', 9),
-    'MSR': ('IntReg', 'ud', 'INTREG_MSR', 'IsInteger', 9),
+    'CR': IntRegOp('uw', 'int_reg::Cr', 'IsInteger', 9),
+    'LR': IntRegOp('ud', 'int_reg::Lr', 'IsInteger', 9),
+    'CTR': IntRegOp('ud', 'int_reg::Ctr', 'IsInteger', 9),
+    'TAR': IntRegOp('ud', 'int_reg::Tar', 'IsInteger', 9),
+    'XER': IntRegOp('uw', 'int_reg::Xer', 'IsInteger', 9),
+    'MSR': IntRegOp('ud', 'int_reg::Msr', 'IsInteger', 9),
 
     # Setting as IntReg so things are stored as an integer, not double
-    'FPSCR': ('IntReg', 'uw', 'INTREG_FPSCR', 'IsFloating', 9),
+    'FPSCR': IntRegOp('uw', 'int_reg::Fpscr', 'IsFloating', 9),
 
     # Registers for linked loads and stores
-    'Rsv': ('IntReg', 'uw', 'INTREG_RSV', 'IsInteger', 9),
-    'RsvLen': ('IntReg', 'uw', 'INTREG_RSV_LEN', 'IsInteger', 9),
-    'RsvAddr': ('IntReg', 'ud', 'INTREG_RSV_ADDR', 'IsInteger', 9),
+    'Rsv': IntRegOp('uw', 'int_reg::Rsv', 'IsInteger', 9),
+    'RsvLen': IntRegOp('uw', 'int_reg::RsvLen', 'IsInteger', 9),
+    'RsvAddr': IntRegOp('ud', 'int_reg::RsvAddr', 'IsInteger', 9),
 }};

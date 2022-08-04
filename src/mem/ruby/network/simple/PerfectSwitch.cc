@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020-2021 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -47,17 +59,10 @@ namespace ruby
 
 const int PRIORITY_SWITCH_LIMIT = 128;
 
-// Operator for helper class
-bool
-operator<(const LinkOrder& l1, const LinkOrder& l2)
-{
-    return (l1.m_value < l2.m_value);
-}
-
 PerfectSwitch::PerfectSwitch(SwitchID sid, Switch *sw, uint32_t virt_nets)
-    : Consumer(sw), m_switch_id(sid), m_switch(sw)
+    : Consumer(sw, Switch::PERFECTSWITCH_EV_PRI),
+      m_switch_id(sid), m_switch(sw)
 {
-    m_round_robin_start = 0;
     m_wakeups_wo_switch = 0;
     m_virtual_networks = virt_nets;
 }
@@ -83,151 +88,132 @@ PerfectSwitch::addInPort(const std::vector<MessageBuffer*>& in)
             in[i]->setConsumer(this);
             in[i]->setIncomingLink(port);
             in[i]->setVnet(i);
+            updatePriorityGroups(i, in[i]);
         }
     }
 }
 
 void
-PerfectSwitch::addOutPort(const std::vector<MessageBuffer*>& out,
-                          const NetDest& routing_table_entry)
+PerfectSwitch::updatePriorityGroups(int vnet, MessageBuffer* in_buf)
 {
-    // Setup link order
-    LinkOrder l;
-    l.m_value = 0;
-    l.m_link = m_out.size();
-    m_link_order.push_back(l);
+    while (m_in_prio.size() <= vnet) {
+        m_in_prio.emplace_back();
+        m_in_prio_groups.emplace_back();
+    }
 
-    // Add to routing table
-    m_out.push_back(out);
-    m_routing_table.push_back(routing_table_entry);
+    m_in_prio[vnet].push_back(in_buf);
+
+    std::sort(m_in_prio[vnet].begin(), m_in_prio[vnet].end(),
+        [](const MessageBuffer* i, const MessageBuffer* j)
+        { return i->routingPriority() < j->routingPriority(); });
+
+    // reset groups
+    m_in_prio_groups[vnet].clear();
+    int cur_prio = m_in_prio[vnet].front()->routingPriority();
+    m_in_prio_groups[vnet].emplace_back();
+    for (auto buf : m_in_prio[vnet]) {
+        if (buf->routingPriority() != cur_prio)
+            m_in_prio_groups[vnet].emplace_back();
+        m_in_prio_groups[vnet].back().push_back(buf);
+    }
+}
+
+void
+PerfectSwitch::addOutPort(const std::vector<MessageBuffer*>& out,
+                          const NetDest& routing_table_entry,
+                          const PortDirection &dst_inport,
+                          Tick routing_latency,
+                          int link_weight)
+{
+    // Add to routing unit
+    m_switch->getRoutingUnit().addOutPort(m_out.size(),
+                                          out,
+                                          routing_table_entry,
+                                          dst_inport,
+                                          link_weight);
+    m_out.push_back({routing_latency, out});
 }
 
 PerfectSwitch::~PerfectSwitch()
 {
 }
 
+MessageBuffer*
+PerfectSwitch::inBuffer(int in_port, int vnet) const
+{
+    if (m_in[in_port].size() <= vnet) {
+        return nullptr;
+    }
+    else {
+        return m_in[in_port][vnet];
+    }
+}
+
 void
 PerfectSwitch::operateVnet(int vnet)
 {
-    // This is for round-robin scheduling
-    int incoming = m_round_robin_start;
-    m_round_robin_start++;
-    if (m_round_robin_start >= m_in.size()) {
-        m_round_robin_start = 0;
-    }
+    if (m_pending_message_count[vnet] == 0)
+        return;
 
-    if (m_pending_message_count[vnet] > 0) {
-        // for all input ports, use round robin scheduling
-        for (int counter = 0; counter < m_in.size(); counter++) {
-            // Round robin scheduling
-            incoming++;
-            if (incoming >= m_in.size()) {
-                incoming = 0;
+    for (auto &in : m_in_prio_groups[vnet]) {
+        // first check the port with the oldest message
+        unsigned start_in_port = 0;
+        Tick lowest_tick = MaxTick;
+        for (int i = 0; i < in.size(); ++i) {
+            MessageBuffer *buffer = in[i];
+            if (buffer) {
+                Tick ready_time = buffer->readyTime();
+                if (ready_time < lowest_tick){
+                    lowest_tick = ready_time;
+                    start_in_port = i;
+                }
             }
-
-            // Is there a message waiting?
-            if (m_in[incoming].size() <= vnet) {
-                continue;
-            }
-
-            MessageBuffer *buffer = m_in[incoming][vnet];
-            if (buffer == nullptr) {
-                continue;
-            }
-
-            operateMessageBuffer(buffer, incoming, vnet);
+        }
+        DPRINTF(RubyNetwork, "vnet %d: %d pending msgs. "
+                            "Checking port %d first\n",
+                vnet, m_pending_message_count[vnet], start_in_port);
+        // check all ports starting with the one with the oldest message
+        for (int i = 0; i < in.size(); ++i) {
+            int in_port = (i + start_in_port) % in.size();
+            MessageBuffer *buffer = in[in_port];
+            if (buffer)
+                operateMessageBuffer(buffer, vnet);
         }
     }
 }
 
 void
-PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int incoming,
-                                    int vnet)
+PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int vnet)
 {
     MsgPtr msg_ptr;
     Message *net_msg_ptr = NULL;
 
     // temporary vectors to store the routing results
-    std::vector<LinkID> output_links;
-    std::vector<NetDest> output_link_destinations;
+    static thread_local std::vector<BaseRoutingUnit::RouteInfo> output_links;
+
     Tick current_time = m_switch->clockEdge();
 
     while (buffer->isReady(current_time)) {
-        DPRINTF(RubyNetwork, "incoming: %d\n", incoming);
+        DPRINTF(RubyNetwork, "incoming: %d\n", buffer->getIncomingLink());
 
         // Peek at message
         msg_ptr = buffer->peekMsgPtr();
         net_msg_ptr = msg_ptr.get();
         DPRINTF(RubyNetwork, "Message: %s\n", (*net_msg_ptr));
 
+
         output_links.clear();
-        output_link_destinations.clear();
-        NetDest msg_dsts = net_msg_ptr->getDestination();
-
-        // Unfortunately, the token-protocol sends some
-        // zero-destination messages, so this assert isn't valid
-        // assert(msg_dsts.count() > 0);
-
-        assert(m_link_order.size() == m_routing_table.size());
-        assert(m_link_order.size() == m_out.size());
-
-        if (m_network_ptr->getAdaptiveRouting()) {
-            if (m_network_ptr->isVNetOrdered(vnet)) {
-                // Don't adaptively route
-                for (int out = 0; out < m_out.size(); out++) {
-                    m_link_order[out].m_link = out;
-                    m_link_order[out].m_value = 0;
-                }
-            } else {
-                // Find how clogged each link is
-                for (int out = 0; out < m_out.size(); out++) {
-                    int out_queue_length = 0;
-                    for (int v = 0; v < m_virtual_networks; v++) {
-                        out_queue_length += m_out[out][v]->getSize(current_time);
-                    }
-                    int value =
-                        (out_queue_length << 8) |
-                        random_mt.random(0, 0xff);
-                    m_link_order[out].m_link = out;
-                    m_link_order[out].m_value = value;
-                }
-
-                // Look at the most empty link first
-                sort(m_link_order.begin(), m_link_order.end());
-            }
-        }
-
-        for (int i = 0; i < m_routing_table.size(); i++) {
-            // pick the next link to look at
-            int link = m_link_order[i].m_link;
-            NetDest dst = m_routing_table[link];
-            DPRINTF(RubyNetwork, "dst: %s\n", dst);
-
-            if (!msg_dsts.intersectionIsNotEmpty(dst))
-                continue;
-
-            // Remember what link we're using
-            output_links.push_back(link);
-
-            // Need to remember which destinations need this message in
-            // another vector.  This Set is the intersection of the
-            // routing_table entry and the current destination set.  The
-            // intersection must not be empty, since we are inside "if"
-            output_link_destinations.push_back(msg_dsts.AND(dst));
-
-            // Next, we update the msg_destination not to include
-            // those nodes that were already handled by this link
-            msg_dsts.removeNetDest(dst);
-        }
-
-        assert(msg_dsts.count() == 0);
+        m_switch->getRoutingUnit().route(*net_msg_ptr, vnet,
+                                         m_network_ptr->isVNetOrdered(vnet),
+                                         output_links);
 
         // Check for resources - for all outgoing queues
         bool enough = true;
         for (int i = 0; i < output_links.size(); i++) {
-            int outgoing = output_links[i];
+            int outgoing = output_links[i].m_link_id;
+            OutputPort &out_port = m_out[outgoing];
 
-            if (!m_out[outgoing][vnet]->areNSlotsAvailable(1, current_time))
+            if (!out_port.buffers[vnet]->areNSlotsAvailable(1, current_time))
                 enough = false;
 
             DPRINTF(RubyNetwork, "Checking if node is blocked ..."
@@ -263,7 +249,8 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int incoming,
 
         // Enqueue it - for all outgoing queues
         for (int i=0; i<output_links.size(); i++) {
-            int outgoing = output_links[i];
+            int outgoing = output_links[i].m_link_id;
+            OutputPort &out_port = m_out[outgoing];
 
             if (i > 0) {
                 // create a private copy of the unmodified message
@@ -273,15 +260,15 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int incoming,
             // Change the internal destination set of the message so it
             // knows which destinations this link is responsible for.
             net_msg_ptr = msg_ptr.get();
-            net_msg_ptr->getDestination() = output_link_destinations[i];
+            net_msg_ptr->getDestination() = output_links[i].m_destinations;
 
             // Enqeue msg
             DPRINTF(RubyNetwork, "Enqueuing net msg from "
                     "inport[%d][%d] to outport [%d][%d].\n",
-                    incoming, vnet, outgoing, vnet);
+                    buffer->getIncomingLink(), vnet, outgoing, vnet);
 
-            m_out[outgoing][vnet]->enqueue(msg_ptr, current_time,
-                                           m_switch->cyclesToTicks(Cycles(1)));
+            out_port.buffers[vnet]->enqueue(msg_ptr, current_time,
+                                           out_port.latency);
         }
     }
 }

@@ -161,7 +161,7 @@ parser.add_argument('--fast-forward-pseudo-op', action='store_true',
                     ' m5_switchcpu pseudo-ops will toggle back and forth')
 parser.add_argument("--num-hw-queues", type=int, default=10,
                     help="number of hw queues in packet processor")
-parser.add_argument("--reg-alloc-policy", type=str, default="simple",
+parser.add_argument("--reg-alloc-policy", type=str, default="dynamic",
                     help="register allocation policy (simple/dynamic)")
 
 parser.add_argument("--dgpu", action="store_true", default=False,
@@ -544,6 +544,7 @@ if fast_forward:
     have_kvm_support = 'BaseKvmCPU' in globals()
     if have_kvm_support and buildEnv['TARGET_ISA'] == "x86":
         system.vm = KvmVM()
+        system.m5ops_base = 0xffff0000
         for i in range(len(host_cpu.workload)):
             host_cpu.workload[i].useArchPT = True
             host_cpu.workload[i].kvmInSE = True

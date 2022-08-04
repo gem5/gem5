@@ -25,7 +25,7 @@
 
 Import('*')
 
-if env['USE_SYSTEMC']:
+if env['CONF']['USE_SYSTEMC']:
     Source('messages.cc')
     Source('sc_bit.cc')
     Source('sc_bv_base.cc')

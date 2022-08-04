@@ -70,9 +70,11 @@ class BackingStoreEntry
      * pointers, because PhysicalMemory is responsible for that.
      */
     BackingStoreEntry(AddrRange range, uint8_t* pmem,
-                      bool conf_table_reported, bool in_addr_map, bool kvm_map)
+                      bool conf_table_reported, bool in_addr_map, bool kvm_map,
+                      int shm_fd=-1, off_t shm_offset=0)
         : range(range), pmem(pmem), confTableReported(conf_table_reported),
-          inAddrMap(in_addr_map), kvmMap(kvm_map)
+          inAddrMap(in_addr_map), kvmMap(kvm_map), shmFd(shm_fd),
+          shmOffset(shm_offset)
         {}
 
     /**
@@ -101,6 +103,18 @@ class BackingStoreEntry
       * acceleration.
       */
      bool kvmMap;
+
+     /**
+      * If this backing store is based on a shared memory, this is the fd to
+      * the shared memory. Otherwise, it should be -1.
+      */
+     int shmFd;
+
+     /**
+      * If this backing store is based on a shared memory, this is the offset
+      * of this backing store in the share memory. Otherwise, the value is 0.
+      */
+     off_t shmOffset;
 };
 
 /**
@@ -140,6 +154,9 @@ class PhysicalMemory : public Serializable
     const bool mmapUsingNoReserve;
 
     const std::string sharedBackstore;
+    uint64_t sharedBackstoreSize;
+
+    long pageSize;
 
     // The physical memory used to provide the memory in the simulated
     // system
@@ -173,7 +190,8 @@ class PhysicalMemory : public Serializable
     PhysicalMemory(const std::string& _name,
                    const std::vector<AbstractMemory*>& _memories,
                    bool mmap_using_noreserve,
-                   const std::string& shared_backstore);
+                   const std::string& shared_backstore,
+                   bool auto_unlink_shared_backstore);
 
     /**
      * Unmap all the backing store we have used.

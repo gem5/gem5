@@ -24,7 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from micro_asm import MicroAssembler, Combinational_Macroop, Rom_Macroop, Rom
+from micro_asm import MicroAssembler, CombinationalMacroop, RomMacroop, Rom
 
 class Bah(object):
     def __init__(self):
@@ -50,7 +50,7 @@ microops = {
     "dah": Dah
 }
 
-class TestMacroop(Combinational_Macroop):
+class TestMacroop(CombinationalMacroop):
     def tweak(self):
         microops["bah"] = Bah_Tweaked
     def untweak(self):
@@ -66,7 +66,7 @@ class TestMacroop(Combinational_Macroop):
             "print": self.print_debug
         }
 
-assembler = MicroAssembler(TestMacroop, microops, Rom('main ROM'), Rom_Macroop)
+assembler = MicroAssembler(TestMacroop, microops, Rom('main ROM'), RomMacroop)
 
 testAssembly = '''
 # Single line comment

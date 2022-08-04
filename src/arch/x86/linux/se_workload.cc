@@ -44,6 +44,7 @@
 #include "arch/x86/page_size.hh"
 #include "arch/x86/process.hh"
 #include "arch/x86/regs/int.hh"
+#include "arch/x86/regs/misc.hh"
 #include "arch/x86/se_workload.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
@@ -96,12 +97,14 @@ namespace X86ISA
 EmuLinux::EmuLinux(const Params &p) : SEWorkload(p, PageShift)
 {}
 
-const std::vector<IntRegIndex> EmuLinux::SyscallABI64::ArgumentRegs = {
-    INTREG_RDI, INTREG_RSI, INTREG_RDX, INTREG_R10W, INTREG_R8W, INTREG_R9W
+const std::vector<RegIndex> EmuLinux::SyscallABI64::ArgumentRegs = {
+    int_reg::Rdi, int_reg::Rsi, int_reg::Rdx,
+    int_reg::R10, int_reg::R8, int_reg::R9
 };
 
-const std::vector<IntRegIndex> EmuLinux::SyscallABI32::ArgumentRegs = {
-    INTREG_EBX, INTREG_ECX, INTREG_EDX, INTREG_ESI, INTREG_EDI, INTREG_EBP
+const std::vector<RegIndex> EmuLinux::SyscallABI32::ArgumentRegs = {
+    int_reg::Ebx, int_reg::Ecx, int_reg::Edx,
+    int_reg::Esi, int_reg::Edi, int_reg::Ebp
 };
 
 void
@@ -112,7 +115,7 @@ EmuLinux::syscall(ThreadContext *tc)
     // This will move into the base SEWorkload function at some point.
     process->Process::syscall(tc);
 
-    RegVal rax = tc->readIntReg(INTREG_RAX);
+    RegVal rax = tc->getReg(int_reg::Rax);
     if (dynamic_cast<X86_64Process *>(process)) {
         syscallDescs64.get(rax)->doSyscall(tc);
     } else if (auto *proc32 = dynamic_cast<I386Process *>(process)) {
@@ -152,7 +155,7 @@ void
 EmuLinux::pageFault(ThreadContext *tc)
 {
     Process *p = tc->getProcessPtr();
-    if (!p->fixupFault(tc->readMiscReg(MISCREG_CR2))) {
+    if (!p->fixupFault(tc->readMiscReg(misc_reg::Cr2))) {
         SETranslatingPortProxy proxy(tc);
         // at this point we should have 6 values on the interrupt stack
         int size = 6;
@@ -167,7 +170,7 @@ EmuLinux::pageFault(ThreadContext *tc)
                 "\tcs: %#x\n"
                 "\trip: %#x\n"
                 "\terr_code: %#x\n",
-                tc->readMiscReg(MISCREG_CR2),
+                tc->readMiscReg(misc_reg::Cr2),
                 is[5], is[4], is[3], is[2], is[1], is[0]);
    }
 }

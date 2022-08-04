@@ -36,11 +36,10 @@ FROM ubuntu:18.04
 # 9
 ARG version
 
-RUN apt -y update
-RUN apt -y upgrade
-RUN apt -y install git m4 scons zlib1g zlib1g-dev clang-${version} \
+RUN apt -y update && apt -y upgrade && \
+    apt -y install git m4 scons zlib1g zlib1g-dev clang-${version} \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
-    python3-dev python3 python3-six doxygen make
+    python3-dev python3 doxygen make
 
 RUN apt-get --purge -y remove gcc
 

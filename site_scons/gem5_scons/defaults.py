@@ -46,7 +46,9 @@ def EnvDefaults(env):
     # export TERM so that clang reports errors in color
     use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH',
                      'LIBRARY_PATH', 'PATH', 'PKG_CONFIG_PATH', 'PROTOC',
-                     'PYTHONPATH', 'RANLIB', 'TERM' ])
+                     'PYTHONPATH', 'RANLIB', 'TERM', 'PYTHON_CONFIG',
+                     'CCFLAGS_EXTRA', 'GEM5PY_CCFLAGS_EXTRA',
+                     'GEM5PY_LINKFLAGS_EXTRA', 'LINKFLAGS_EXTRA', 'LANG'])
 
     use_prefixes = [
         "ASAN_",           # address sanitizer symbolizer path and settings
@@ -62,6 +64,21 @@ def EnvDefaults(env):
         if key in use_vars or \
                 any([key.startswith(prefix) for prefix in use_prefixes]):
             env['ENV'][key] = val
+
+    # These variables from the environment override/become SCons variables,
+    # with a default if they weren't in the host environment.
+    var_overrides = {
+        'CC': env['CC'],
+        'CXX': env['CXX'],
+        'PROTOC': 'protoc',
+        'PYTHON_CONFIG': [ 'python3-config', 'python-config' ],
+        'CCFLAGS_EXTRA': '',
+        'GEM5PY_CCFLAGS_EXTRA': '',
+        'GEM5PY_LINKFLAGS_EXTRA': '',
+        'LINKFLAGS_EXTRA': '',
+    }
+    for key,default in var_overrides.items():
+        env[key] = env['ENV'].get(key, default)
 
     # Tell scons to avoid implicit command dependencies to avoid issues
     # with the param wrappes being compiled twice (see

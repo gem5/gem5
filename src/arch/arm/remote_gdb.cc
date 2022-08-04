@@ -168,6 +168,20 @@ namespace gem5
 
 using namespace ArmISA;
 
+namespace
+{
+
+// https://sourceware.org/gdb/current/onlinedocs/gdb/ARM-Breakpoint-Kinds.html
+enum class ArmBpKind
+{
+    THUMB = 2,
+    THUMB_2 = 3,
+    ARM = 4,
+};
+
+} // namespace
+
+
 static bool
 tryTranslate(ThreadContext *tc, Addr addr)
 {
@@ -221,14 +235,16 @@ RemoteGDB::AArch64GdbRegCache::getRegs(ThreadContext *context)
     DPRINTF(GDBAcc, "getRegs in remotegdb \n");
 
     for (int i = 0; i < 31; ++i)
-        r.x[i] = context->readIntReg(INTREG_X0 + i);
-    r.spx = context->readIntReg(INTREG_SPX);
+        r.x[i] = context->getReg(int_reg::x(i));
+    r.spx = context->getReg(int_reg::Spx);
     r.pc = context->pcState().instAddr();
     r.cpsr = context->readMiscRegNoEffect(MISCREG_CPSR);
 
     size_t base = 0;
     for (int i = 0; i < NumVecV8ArchRegs; i++) {
-        auto v = (context->readVecReg(RegId(VecRegClass, i))).as<VecElem>();
+        ArmISA::VecRegContainer vc;
+        context->getReg(RegId(VecRegClass, i), &vc);
+        auto v = vc.as<VecElem>();
         for (size_t j = 0; j < NumVecElemPerNeonVecReg; j++) {
             r.v[base] = v[j];
             base++;
@@ -244,7 +260,7 @@ RemoteGDB::AArch64GdbRegCache::setRegs(ThreadContext *context) const
     DPRINTF(GDBAcc, "setRegs in remotegdb \n");
 
     for (int i = 0; i < 31; ++i)
-        context->setIntReg(INTREG_X0 + i, r.x[i]);
+        context->setReg(int_reg::x(i), r.x[i]);
     auto pc_state = context->pcState().as<PCState>();
     pc_state.set(r.pc);
     context->pcState(pc_state);
@@ -252,12 +268,13 @@ RemoteGDB::AArch64GdbRegCache::setRegs(ThreadContext *context) const
     // Update the stack pointer. This should be done after
     // updating CPSR/PSTATE since that might affect how SPX gets
     // mapped.
-    context->setIntReg(INTREG_SPX, r.spx);
+    context->setReg(int_reg::Spx, r.spx);
 
     size_t base = 0;
     for (int i = 0; i < NumVecV8ArchRegs; i++) {
-        auto v = (context->getWritableVecReg(
-                RegId(VecRegClass, i))).as<VecElem>();
+        auto *vc = static_cast<ArmISA::VecRegContainer *>(
+                context->getWritableReg(RegId(VecRegClass, i)));
+        auto v = vc->as<VecElem>();
         for (size_t j = 0; j < NumVecElemPerNeonVecReg; j++) {
             v[j] = r.v[base];
             base++;
@@ -272,21 +289,21 @@ RemoteGDB::AArch32GdbRegCache::getRegs(ThreadContext *context)
 {
     DPRINTF(GDBAcc, "getRegs in remotegdb \n");
 
-    r.gpr[0] = context->readIntReg(INTREG_R0);
-    r.gpr[1] = context->readIntReg(INTREG_R1);
-    r.gpr[2] = context->readIntReg(INTREG_R2);
-    r.gpr[3] = context->readIntReg(INTREG_R3);
-    r.gpr[4] = context->readIntReg(INTREG_R4);
-    r.gpr[5] = context->readIntReg(INTREG_R5);
-    r.gpr[6] = context->readIntReg(INTREG_R6);
-    r.gpr[7] = context->readIntReg(INTREG_R7);
-    r.gpr[8] = context->readIntReg(INTREG_R8);
-    r.gpr[9] = context->readIntReg(INTREG_R9);
-    r.gpr[10] = context->readIntReg(INTREG_R10);
-    r.gpr[11] = context->readIntReg(INTREG_R11);
-    r.gpr[12] = context->readIntReg(INTREG_R12);
-    r.gpr[13] = context->readIntReg(INTREG_SP);
-    r.gpr[14] = context->readIntReg(INTREG_LR);
+    r.gpr[0] = context->getReg(int_reg::R0);
+    r.gpr[1] = context->getReg(int_reg::R1);
+    r.gpr[2] = context->getReg(int_reg::R2);
+    r.gpr[3] = context->getReg(int_reg::R3);
+    r.gpr[4] = context->getReg(int_reg::R4);
+    r.gpr[5] = context->getReg(int_reg::R5);
+    r.gpr[6] = context->getReg(int_reg::R6);
+    r.gpr[7] = context->getReg(int_reg::R7);
+    r.gpr[8] = context->getReg(int_reg::R8);
+    r.gpr[9] = context->getReg(int_reg::R9);
+    r.gpr[10] = context->getReg(int_reg::R10);
+    r.gpr[11] = context->getReg(int_reg::R11);
+    r.gpr[12] = context->getReg(int_reg::R12);
+    r.gpr[13] = context->getReg(int_reg::Sp);
+    r.gpr[14] = context->getReg(int_reg::Lr);
     r.gpr[15] = context->pcState().instAddr();
     r.cpsr = context->readMiscRegNoEffect(MISCREG_CPSR);
 
@@ -302,21 +319,21 @@ RemoteGDB::AArch32GdbRegCache::setRegs(ThreadContext *context) const
 {
     DPRINTF(GDBAcc, "setRegs in remotegdb \n");
 
-    context->setIntReg(INTREG_R0, r.gpr[0]);
-    context->setIntReg(INTREG_R1, r.gpr[1]);
-    context->setIntReg(INTREG_R2, r.gpr[2]);
-    context->setIntReg(INTREG_R3, r.gpr[3]);
-    context->setIntReg(INTREG_R4, r.gpr[4]);
-    context->setIntReg(INTREG_R5, r.gpr[5]);
-    context->setIntReg(INTREG_R6, r.gpr[6]);
-    context->setIntReg(INTREG_R7, r.gpr[7]);
-    context->setIntReg(INTREG_R8, r.gpr[8]);
-    context->setIntReg(INTREG_R9, r.gpr[9]);
-    context->setIntReg(INTREG_R10, r.gpr[10]);
-    context->setIntReg(INTREG_R11, r.gpr[11]);
-    context->setIntReg(INTREG_R12, r.gpr[12]);
-    context->setIntReg(INTREG_SP, r.gpr[13]);
-    context->setIntReg(INTREG_LR, r.gpr[14]);
+    context->setReg(int_reg::R0, r.gpr[0]);
+    context->setReg(int_reg::R1, r.gpr[1]);
+    context->setReg(int_reg::R2, r.gpr[2]);
+    context->setReg(int_reg::R3, r.gpr[3]);
+    context->setReg(int_reg::R4, r.gpr[4]);
+    context->setReg(int_reg::R5, r.gpr[5]);
+    context->setReg(int_reg::R6, r.gpr[6]);
+    context->setReg(int_reg::R7, r.gpr[7]);
+    context->setReg(int_reg::R8, r.gpr[8]);
+    context->setReg(int_reg::R9, r.gpr[9]);
+    context->setReg(int_reg::R10, r.gpr[10]);
+    context->setReg(int_reg::R11, r.gpr[11]);
+    context->setReg(int_reg::R12, r.gpr[12]);
+    context->setReg(int_reg::Sp, r.gpr[13]);
+    context->setReg(int_reg::Lr, r.gpr[14]);
     PCState pc_state = context->pcState().as<PCState>();
     pc_state.set(r.gpr[15]);
     context->pcState(pc_state);
@@ -362,10 +379,16 @@ RemoteGDB::gdbRegs()
 }
 
 bool
-RemoteGDB::checkBpLen(size_t len)
+RemoteGDB::checkBpKind(size_t kind)
 {
-    // 2 for Thumb ISA, 4 for ARM ISA.
-    return len == 2 || len == 4;
+    switch (ArmBpKind(kind)) {
+      case ArmBpKind::THUMB:
+      case ArmBpKind::THUMB_2:
+      case ArmBpKind::ARM:
+        return true;
+      default:
+        return false;
+    }
 }
 
 } // namespace gem5

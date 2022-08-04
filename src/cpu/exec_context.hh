@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2016-2018, 2020 ARM Limited
+ * Copyright (c) 2014, 2016-2018, 2020-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -73,87 +73,13 @@ namespace gem5
 class ExecContext
 {
   public:
-    /**
-     * @{
-     * @name Integer Register Interfaces
-     *
-     */
 
-    /** Reads an integer register. */
-    virtual RegVal readIntRegOperand(const StaticInst *si, int idx) = 0;
-
-    /** Sets an integer register to a value. */
-    virtual void setIntRegOperand(const StaticInst *si,
-                                  int idx, RegVal val) = 0;
-
-    /** @} */
-
-
-    /**
-     * @{
-     * @name Floating Point Register Interfaces
-     */
-
-    /** Reads a floating point register in its binary format, instead
-     * of by value. */
-    virtual RegVal readFloatRegOperandBits(const StaticInst *si, int idx) = 0;
-
-    /** Sets the bits of a floating point register of single width
-     * to a binary value. */
-    virtual void setFloatRegOperandBits(const StaticInst *si,
-                                        int idx, RegVal val) = 0;
-
-    /** @} */
-
-    /** Vector Register Interfaces. */
-    /** @{ */
-    /** Reads source vector register operand. */
-    virtual const TheISA::VecRegContainer& readVecRegOperand(
-            const StaticInst *si, int idx) const = 0;
-
-    /** Gets destination vector register operand for modification. */
-    virtual TheISA::VecRegContainer& getWritableVecRegOperand(
-            const StaticInst *si, int idx) = 0;
-
-    /** Sets a destination vector register operand to a value. */
-    virtual void setVecRegOperand(const StaticInst *si, int idx,
-            const TheISA::VecRegContainer& val) = 0;
-    /** @} */
-
-    /** Vector Elem Interfaces. */
-    /** @{ */
-    /** Reads an element of a vector register. */
-    virtual RegVal readVecElemOperand(const StaticInst *si, int idx) const = 0;
-
-    /** Sets a vector register to a value. */
-    virtual void setVecElemOperand(
-            const StaticInst *si, int idx, RegVal val) = 0;
-    /** @} */
-
-    /** Predicate registers interface. */
-    /** @{ */
-    /** Reads source predicate register operand. */
-    virtual const TheISA::VecPredRegContainer& readVecPredRegOperand(
-            const StaticInst *si, int idx) const = 0;
-
-    /** Gets destination predicate register operand for modification. */
-    virtual TheISA::VecPredRegContainer& getWritableVecPredRegOperand(
-            const StaticInst *si, int idx) = 0;
-
-    /** Sets a destination predicate register operand to a value. */
-    virtual void setVecPredRegOperand(
-            const StaticInst *si, int idx,
-            const TheISA::VecPredRegContainer& val) = 0;
-    /** @} */
-
-    /**
-     * @{
-     * @name Condition Code Registers
-     */
-    virtual RegVal readCCRegOperand(const StaticInst *si, int idx) = 0;
-    virtual void setCCRegOperand(
-            const StaticInst *si, int idx, RegVal val) = 0;
-    /** @} */
+    virtual RegVal getRegOperand(const StaticInst *si, int idx) = 0;
+    virtual void getRegOperand(const StaticInst *si, int idx, void *val) = 0;
+    virtual void *getWritableRegOperand(const StaticInst *si, int idx) = 0;
+    virtual void setRegOperand(const StaticInst *si, int idx, RegVal val) = 0;
+    virtual void setRegOperand(const StaticInst *si, int idx,
+            const void *val) = 0;
 
     /**
      * @{
@@ -218,10 +144,14 @@ class ExecContext
     }
 
     /**
-     * Initiate an HTM command,
-     * e.g. tell Ruby we're starting/stopping a transaction
+     * Initiate a memory management command with no valid address.
+     * Currently, these instructions need to bypass squashing in the O3 model
+     * Examples include HTM commands and TLBI commands.
+     * e.g. tell Ruby we're starting/stopping a HTM transaction,
+     *      or tell Ruby to issue a TLBI operation
      */
-    virtual Fault initiateHtmCmd(Request::Flags flags) = 0;
+    virtual Fault initiateMemMgmtCmd(Request::Flags flags) = 0;
+
     /**
      * For atomic-mode contexts, perform an atomic memory write operation.
      * For timing-mode contexts, initiate a timing memory write operation.

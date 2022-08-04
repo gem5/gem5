@@ -40,30 +40,34 @@
 
 namespace gem5
 {
-
 namespace X86ISA
 {
-    enum SegmentRegIndex
-    {
-        SEGMENT_REG_ES,
-        SEGMENT_REG_CS,
-        SEGMENT_REG_SS,
-        SEGMENT_REG_DS,
-        SEGMENT_REG_FS,
-        SEGMENT_REG_GS,
-        SEGMENT_REG_HS, // Temporary descriptor
-        SEGMENT_REG_TSL, // Local descriptor table
-        SEGMENT_REG_TSG, // Global descriptor table
-        SEGMENT_REG_LS, // Flat segment
-        SEGMENT_REG_MS, // Emulation memory
-        // These shouldn't be used directly in a load or store since they
-        // are likely accessed in other ways in a real machine. For instance,
-        // they may be loaded into the temporary segment register on demand.
-        SYS_SEGMENT_REG_TR,
-        SYS_SEGMENT_REG_IDTR,
+namespace segment_idx
+{
 
-        NUM_SEGMENTREGS
-    };
+enum
+{
+    Es,
+    Cs,
+    Ss,
+    Ds,
+    Fs,
+    Gs,
+    Hs, // Temporary descriptor
+    Tsl, // Local descriptor table
+    Tsg, // Global descriptor table
+    Ls, // Flat segment
+    Ms, // Emulation memory
+    // These shouldn't be used directly in a load or store since they
+    // are likely accessed in other ways in a real machine. For instance,
+    // they may be loaded into the temporary segment register on demand.
+    Tr,
+    Idtr,
+
+    NumIdxs
+};
+
+} // namespace segment_idx
 } // namespace X86ISA
 } // namespace gem5
 

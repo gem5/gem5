@@ -383,7 +383,7 @@ TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
             }
         } else switch (currState->el) {
           case EL0:
-            if (HaveVirtHostExt(currState->tc) &&
+            if (HaveExt(currState->tc, ArmExtension::FEAT_VHE) &&
                   currState->hcr.tge == 1 && currState->hcr.e2h ==1) {
               currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR_EL2);
               currState->tcr = currState->tc->readMiscReg(MISCREG_TCR_EL2);
@@ -870,7 +870,8 @@ TableWalker::checkVAddrSizeFaultAArch64(Addr addr, int top_bit,
     // 16KB in size. When ARMv8.2-LVA is supported, for the 64KB
     // translation granule size only, the effective minimum value of
     // 52.
-    int in_max = (HaveLVA(currState->tc) && tg == Grain64KB) ? 52 : 48;
+    const bool have_lva = HaveExt(currState->tc, ArmExtension::FEAT_LVA);
+    int in_max = (have_lva && tg == Grain64KB) ? 52 : 48;
     int in_min = 64 - (tg == Grain64KB ? 47 : 48);
 
     return tsz > in_max || tsz < in_min || (low_range ?
@@ -913,7 +914,7 @@ TableWalker::processWalkAArch64()
         {
             Addr ttbr0;
             Addr ttbr1;
-            if (HaveVirtHostExt(currState->tc) &&
+            if (HaveExt(currState->tc, ArmExtension::FEAT_VHE) &&
                     currState->hcr.tge==1 && currState->hcr.e2h == 1) {
                 // VHE code for EL2&0 regime
                 ttbr0 = currState->tc->readMiscReg(MISCREG_TTBR0_EL2);

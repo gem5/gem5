@@ -179,7 +179,7 @@ native_dir = build_dir.Dir('native')
 
 # Bring in the googletest sources.
 native.SConscript(googletest_dir.File('SConscript'),
-        variant_dir=native_dir.Dir('googletest'), exports={ 'main': native })
+        variant_dir=native_dir.Dir('googletest'), exports={ 'env': native })
 
 native.SConscript(src_dir.File('SConscript.native'),
         variant_dir=native_dir, exports={ 'env': native })
@@ -268,6 +268,6 @@ for root, dirs, files in os.walk(abspath(src_dir)):
         # Bring in the googletest sources.
         env.SConscript(googletest_dir.File('SConscript'),
                 variant_dir=abi_dir.Dir('googletest'),
-                exports={ 'main': env })
+                exports='env')
         env.SConscript(src_dir.File('SConscript'),
                        variant_dir=abi_dir, exports='env')

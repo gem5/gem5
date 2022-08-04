@@ -108,7 +108,13 @@ AbstractController::init()
         }
         downstreamDestinations.add(mid);
     }
-
+    // Initialize the addr->upstream machine list.
+    // We do not need to map address -> upstream machine,
+    // so we don't examine the address ranges
+    upstreamDestinations.resize();
+    for (auto abs_cntrl : params().upstream_destinations) {
+        upstreamDestinations.add(abs_cntrl->getMachineID());
+    }
 }
 
 void

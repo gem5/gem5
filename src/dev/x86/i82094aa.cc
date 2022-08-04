@@ -43,8 +43,7 @@ namespace gem5
 {
 
 X86ISA::I82094AA::I82094AA(const Params &p)
-    : BasicPioDevice(p, 20), extIntPic(p.external_int_pic),
-      lowestPriorityOffset(0),
+    : BasicPioDevice(p, 20), lowestPriorityOffset(0),
       intRequestPort(name() + ".int_request", this, this, p.int_latency)
 {
     // This assumes there's only one I/O APIC in the system and since the apic
@@ -179,7 +178,7 @@ X86ISA::I82094AA::readReg(uint8_t offset)
 }
 
 void
-X86ISA::I82094AA::signalInterrupt(int line)
+X86ISA::I82094AA::requestInterrupt(int line)
 {
     DPRINTF(I82094AA, "Received interrupt %d.\n", line);
     assert(line < TableSize);
@@ -187,66 +186,82 @@ X86ISA::I82094AA::signalInterrupt(int line)
     if (entry.mask) {
         DPRINTF(I82094AA, "Entry was masked.\n");
         return;
+    }
+
+    TriggerIntMessage message = 0;
+
+    message.destination = entry.dest;
+    message.deliveryMode = entry.deliveryMode;
+    message.destMode = entry.destMode;
+    message.level = entry.polarity;
+    message.trigger = entry.trigger;
+
+    if (entry.deliveryMode == delivery_mode::ExtInt) {
+        // We need to ask the I8259 for the vector.
+        PacketPtr pkt = buildIntAcknowledgePacket();
+        auto on_completion = [this, message](PacketPtr pkt) {
+            auto msg_copy = message;
+            msg_copy.vector = pkt->getLE<uint8_t>();
+            signalInterrupt(msg_copy);
+            delete pkt;
+        };
+        intRequestPort.sendMessage(pkt, sys->isTimingMode(),
+                on_completion);
     } else {
-        TriggerIntMessage message = 0;
-        message.destination = entry.dest;
-        if (entry.deliveryMode == delivery_mode::ExtInt) {
-            assert(extIntPic);
-            message.vector = extIntPic->getVector();
-        } else {
-            message.vector = entry.vector;
+        message.vector = entry.vector;
+        signalInterrupt(message);
+    }
+}
+
+void
+X86ISA::I82094AA::signalInterrupt(TriggerIntMessage message)
+{
+    std::list<int> apics;
+    int numContexts = sys->threads.size();
+    if (message.destMode == 0) {
+        if (message.deliveryMode == delivery_mode::LowestPriority) {
+            panic("Lowest priority delivery mode from the "
+                    "IO APIC aren't supported in physical "
+                    "destination mode.\n");
         }
-        message.deliveryMode = entry.deliveryMode;
-        message.destMode = entry.destMode;
-        message.level = entry.polarity;
-        message.trigger = entry.trigger;
-        std::list<int> apics;
-        int numContexts = sys->threads.size();
-        if (message.destMode == 0) {
-            if (message.deliveryMode == delivery_mode::LowestPriority) {
-                panic("Lowest priority delivery mode from the "
-                        "IO APIC aren't supported in physical "
-                        "destination mode.\n");
-            }
-            if (message.destination == 0xFF) {
-                for (int i = 0; i < numContexts; i++) {
-                    apics.push_back(i);
-                }
-            } else {
-                apics.push_back(message.destination);
-            }
-        } else {
+        if (message.destination == 0xFF) {
             for (int i = 0; i < numContexts; i++) {
-                BaseInterrupts *base_int = sys->threads[i]->
-                    getCpuPtr()->getInterruptController(0);
-                auto *localApic = dynamic_cast<Interrupts *>(base_int);
-                if ((localApic->readReg(APIC_LOGICAL_DESTINATION) >> 24) &
-                        message.destination) {
-                    apics.push_back(localApic->getInitialApicId());
-                }
+                apics.push_back(i);
             }
-            if (message.deliveryMode == delivery_mode::LowestPriority &&
-                    apics.size()) {
-                // The manual seems to suggest that the chipset just does
-                // something reasonable for these instead of actually using
-                // state from the local APIC. We'll just rotate an offset
-                // through the set of APICs selected above.
-                uint64_t modOffset = lowestPriorityOffset % apics.size();
-                lowestPriorityOffset++;
-                auto apicIt = apics.begin();
-                while (modOffset--) {
-                    apicIt++;
-                    assert(apicIt != apics.end());
-                }
-                int selected = *apicIt;
-                apics.clear();
-                apics.push_back(selected);
+        } else {
+            apics.push_back(message.destination);
+        }
+    } else {
+        for (int i = 0; i < numContexts; i++) {
+            BaseInterrupts *base_int = sys->threads[i]->
+                getCpuPtr()->getInterruptController(0);
+            auto *localApic = dynamic_cast<Interrupts *>(base_int);
+            if ((localApic->readReg(APIC_LOGICAL_DESTINATION) >> 24) &
+                    message.destination) {
+                apics.push_back(localApic->getInitialApicId());
             }
         }
-        for (auto id: apics) {
-            PacketPtr pkt = buildIntTriggerPacket(id, message);
-            intRequestPort.sendMessage(pkt, sys->isTimingMode());
+        if (message.deliveryMode == delivery_mode::LowestPriority &&
+                apics.size()) {
+            // The manual seems to suggest that the chipset just does
+            // something reasonable for these instead of actually using
+            // state from the local APIC. We'll just rotate an offset
+            // through the set of APICs selected above.
+            uint64_t modOffset = lowestPriorityOffset % apics.size();
+            lowestPriorityOffset++;
+            auto apicIt = apics.begin();
+            while (modOffset--) {
+                apicIt++;
+                assert(apicIt != apics.end());
+            }
+            int selected = *apicIt;
+            apics.clear();
+            apics.push_back(selected);
         }
+    }
+    for (auto id: apics) {
+        PacketPtr pkt = buildIntTriggerPacket(id, message);
+        intRequestPort.sendMessage(pkt, sys->isTimingMode());
     }
 }
 
@@ -255,7 +270,7 @@ X86ISA::I82094AA::raiseInterruptPin(int number)
 {
     assert(number < TableSize);
     if (!pinStates[number])
-        signalInterrupt(number);
+        requestInterrupt(number);
     pinStates[number] = true;
 }
 

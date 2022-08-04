@@ -31,7 +31,6 @@ from .caches.l1icache import L1ICache
 from .caches.mmu_cache import MMUCache
 from ...boards.abstract_board import AbstractBoard
 from ....isas import ISA
-from ....runtime import get_runtime_isa
 
 from m5.objects import Cache, BaseXBar, SystemXBar, BadAddr, Port
 
@@ -129,7 +128,7 @@ class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
                 self.iptw_caches[i].cpu_side, self.dptw_caches[i].cpu_side
             )
 
-            if get_runtime_isa() == ISA.X86:
+            if board.get_processor().get_isa() == ISA.X86:
                 int_req_port = self.membus.mem_side_ports
                 int_resp_port = self.membus.cpu_side_ports
                 cpu.connect_interrupt(int_req_port, int_resp_port)

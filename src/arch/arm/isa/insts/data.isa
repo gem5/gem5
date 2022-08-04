@@ -285,14 +285,14 @@ let {{
     buildDataInst("and", "Dest = resTemp = Op1 & secondOp;")
     buildDataInst("eor", "Dest = resTemp = Op1 ^ secondOp;")
     buildDataInst("sub", "Dest = resTemp = Op1 - secondOp;", "sub",
-                  isBranch = "dest == INTREG_PC")
+                  isBranch = "dest == int_reg::Pc")
     buildDataInst("rsb", "Dest = resTemp = secondOp - Op1;", "rsb")
     buildDataInst("add", "Dest = resTemp = Op1 + secondOp;", "add",
-                  isBranch = "dest == INTREG_PC")
+                  isBranch = "dest == int_reg::Pc")
     buildImmDataInst("adr", '''
                                Dest = resTemp = (PC & ~0x3) +
                                (op1 ? secondOp : -secondOp);
-                            ''', isBranch = "dest == INTREG_PC")
+                            ''', isBranch = "dest == int_reg::Pc")
     buildDataInst("adc", "Dest = resTemp = Op1 + secondOp + %s;" % oldC, "add")
     buildDataInst("sbc", "Dest = resTemp = Op1 - secondOp - !%s;" % oldC, "sub")
     buildDataInst("rsc", "Dest = resTemp = secondOp - Op1 - !%s;" % oldC, "rsb")
@@ -303,7 +303,8 @@ let {{
     buildDataInst("orr", "Dest = resTemp = Op1 | secondOp;")
     buildDataInst("orn", "Dest = resTemp = Op1 | ~secondOp;", aiw = False)
     buildDataInst("mov", "Dest = resTemp = secondOp;", regRegAiw = False,
-                  isRasPop = "op2 == INTREG_LR", isBranch = "dest == INTREG_PC")
+                  isRasPop = "op2 == int_reg::Lr",
+                  isBranch = "dest == int_reg::Pc")
     buildDataInst("bic", "Dest = resTemp = Op1 & ~secondOp;")
     buildDataInst("mvn", "Dest = resTemp = ~secondOp;")
     buildDataInst("movt",

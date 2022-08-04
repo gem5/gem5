@@ -28,8 +28,11 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from m5.params import *
+from m5.proxy import *
 from m5.objects.PciDevice import PciDevice
 from m5.objects.PciDevice import PciMemBar, PciMemUpperBar, PciLegacyIoBar
+from m5.objects.Device import DmaDevice, DmaVirtDevice
+from m5.objects.ClockedObject import ClockedObject
 
 # PCI device model for an AMD Vega 10 based GPU. The PCI codes and BARs
 # correspond to a Vega Frontier Edition hardware device. None of the PCI
@@ -71,3 +74,49 @@ class AMDGPUDevice(PciDevice):
     trace_file = Param.String("MMIO trace collected on hardware")
     checkpoint_before_mmios = Param.Bool(False, "Take a checkpoint before the"
                                                 " device begins sending MMIOs")
+
+    # Specific to Vega10: Vega10 has two SDMA engines these do not have any
+    # assigned function and are referenced by ID so they are given the generic
+    # names sdma0, sdma1, ... sdmaN.
+    sdma0 = Param.SDMAEngine("SDMA Engine 0")
+    sdma1 = Param.SDMAEngine("SDMA Engine 1")
+
+    # The cp is needed here to handle certain packets the device may receive.
+    # The config script should not create a new cp here but rather assign the
+    # same cp that is assigned to the Shader SimObject.
+    cp = Param.GPUCommandProcessor(NULL, "Command Processor")
+    pm4_pkt_proc = Param.PM4PacketProcessor("PM4 Packet Processor")
+    memory_manager = Param.AMDGPUMemoryManager("GPU Memory Manager")
+    memories = VectorParam.AbstractMemory([], "All memories in the device")
+    device_ih = Param.AMDGPUInterruptHandler("GPU Interrupt handler")
+
+class SDMAEngine(DmaVirtDevice):
+    type = 'SDMAEngine'
+    cxx_header = "dev/amdgpu/sdma_engine.hh"
+    cxx_class = 'gem5::SDMAEngine'
+
+    gpu_device = Param.AMDGPUDevice(NULL, 'GPU Controller')
+    walker = Param.VegaPagetableWalker("Page table walker")
+
+class PM4PacketProcessor(DmaVirtDevice):
+    type = 'PM4PacketProcessor'
+    cxx_header = "dev/amdgpu/pm4_packet_processor.hh"
+    cxx_class = 'gem5::PM4PacketProcessor'
+
+class AMDGPUMemoryManager(ClockedObject):
+    type = 'AMDGPUMemoryManager'
+    cxx_header = 'dev/amdgpu/memory_manager.hh'
+    cxx_class = 'gem5::AMDGPUMemoryManager'
+
+    port = RequestPort('Memory Port to access VRAM (device memory)')
+    system = Param.System(Parent.any, 'System the dGPU belongs to')
+
+class AMDGPUInterruptHandler(DmaDevice):
+    type = 'AMDGPUInterruptHandler'
+    cxx_header = "dev/amdgpu/interrupt_handler.hh"
+    cxx_class = 'gem5::AMDGPUInterruptHandler'
+
+class AMDGPUSystemHub(DmaDevice):
+    type = 'AMDGPUSystemHub'
+    cxx_class = 'gem5::AMDGPUSystemHub'
+    cxx_header = "dev/amdgpu/system_hub.hh"

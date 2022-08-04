@@ -85,13 +85,12 @@ Source('pc_event.cc')
 SimObject('FuncUnit.py', sim_objects=['OpDesc', 'FUDesc'], enums=['OpClass'])
 SimObject('StaticInstFlags.py', enums=['StaticInstFlags'])
 
-if env['TARGET_ISA'] == 'null':
+if env['CONF']['TARGET_ISA'] == 'null':
     Return()
 
 # Only build the protobuf instructions tracer if we have protobuf support.
-if env['HAVE_PROTOBUF']:
-    SimObject('InstPBTrace.py', sim_objects=['InstPBTrace'])
-    Source('inst_pb_trace.cc')
+SimObject('InstPBTrace.py', sim_objects=['InstPBTrace'], tags='protobuf')
+Source('inst_pb_trace.cc', tags='protobuf')
 
 SimObject('CheckerCPU.py', sim_objects=['CheckerCPU'])
 

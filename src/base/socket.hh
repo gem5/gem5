@@ -62,14 +62,6 @@ class ListenSocket
      */
     static void cleanup();
 
-  private:
-    /* Create a socket, adding SOCK_CLOEXEC if available. */
-    static int socketCloexec(int domain, int type, int protocol);
-    /* Accept a connection, adding SOCK_CLOEXEC if available. */
-    static int acceptCloexec(int sockfd, struct sockaddr *addr,
-                              socklen_t *addrlen);
-
-
   public:
     /**
      * @ingroup api_socket
@@ -84,6 +76,12 @@ class ListenSocket
 
     int getfd() const { return fd; }
     bool islistening() const { return listening; }
+
+    /* Create a socket, adding SOCK_CLOEXEC if available. */
+    static int socketCloexec(int domain, int type, int protocol);
+    /* Accept a connection, adding SOCK_CLOEXEC if available. */
+    static int acceptCloexec(int sockfd, struct sockaddr *addr,
+                              socklen_t *addrlen);
     /** @} */ // end of api_socket
 };
 

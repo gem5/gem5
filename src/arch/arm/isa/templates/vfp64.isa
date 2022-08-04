@@ -37,7 +37,7 @@
 
 def template AA64FpRegRegOpConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                   IntRegIndex _dest, IntRegIndex _op1,
+                                   RegIndex _dest, RegIndex _op1,
                                    VfpMicroMode mode) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                 _dest, _op1, mode)
@@ -49,7 +49,7 @@ def template AA64FpRegRegOpConstructor {{
 
 def template AA64FpRegImmOpConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, uint64_t _imm, VfpMicroMode mode) :
+            RegIndex _dest, uint64_t _imm, VfpMicroMode mode) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                 _dest, _imm, mode)
     {
@@ -59,8 +59,8 @@ def template AA64FpRegImmOpConstructor {{
 }};
 
 def template AA64FpRegRegImmOpConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                                   IntRegIndex _op1, uint64_t _imm,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                                   RegIndex _op1, uint64_t _imm,
                                    VfpMicroMode mode) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm, mode)
@@ -71,8 +71,8 @@ def template AA64FpRegRegImmOpConstructor {{
 }};
 
 def template AA64FpRegRegRegOpConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                                   IntRegIndex _op1, IntRegIndex _op2,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                                   RegIndex _op1, RegIndex _op2,
                                    VfpMicroMode mode) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2, mode)
@@ -91,16 +91,16 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                   IntRegIndex _op3, VfpMicroMode mode=VfpNotAMicroop);
+                   RegIndex _dest, RegIndex _op1, RegIndex _op2,
+                   RegIndex _op3, VfpMicroMode mode=VfpNotAMicroop);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template AA64FpRegRegRegRegOpConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                                   IntRegIndex _op1, IntRegIndex _op2,
-                                   IntRegIndex _op3, VfpMicroMode mode) :
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                                   RegIndex _op1, RegIndex _op2,
+                                   RegIndex _op3, VfpMicroMode mode) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2, _op3, mode)
     {

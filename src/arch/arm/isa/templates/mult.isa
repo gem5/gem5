@@ -43,15 +43,15 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _reg0,
-                   IntRegIndex _reg1, IntRegIndex _reg2);
+    %(class_name)s(ExtMachInst machInst, RegIndex _reg0,
+                   RegIndex _reg1, RegIndex _reg2);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template Mult3Constructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _reg0,
-                                   IntRegIndex _reg1, IntRegIndex _reg2) :
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _reg0,
+                                   RegIndex _reg1, RegIndex _reg2) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _reg0, _reg1, _reg2)
     {
@@ -74,16 +74,16 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst,
-                   IntRegIndex _reg0, IntRegIndex _reg1,
-                   IntRegIndex _reg2, IntRegIndex _reg3);
+                   RegIndex _reg0, RegIndex _reg1,
+                   RegIndex _reg2, RegIndex _reg3);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template Mult4Constructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _reg0,
-                                   IntRegIndex _reg1, IntRegIndex _reg2,
-                                   IntRegIndex _reg3) :
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _reg0,
+                                   RegIndex _reg1, RegIndex _reg2,
+                                   RegIndex _reg3) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _reg0, _reg1, _reg2, _reg3)
     {

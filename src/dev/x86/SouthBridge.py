@@ -32,9 +32,9 @@ from m5.objects.I82094AA import I82094AA
 from m5.objects.I8237 import I8237
 from m5.objects.I8254 import I8254
 from m5.objects.I8259 import I8259
-from m5.objects.Ide import IdeController
 from m5.objects.PciDevice import PciLegacyIoBar, PciIoBar
 from m5.objects.PcSpeaker import PcSpeaker
+from m5.objects.X86Ide import X86IdeController
 from m5.SimObject import SimObject
 
 def x86IOAddress(port):
@@ -63,15 +63,7 @@ class SouthBridge(SimObject):
     io_apic = Param.I82094AA(I82094AA(pio_addr=0xFEC00000), "I/O APIC")
 
     # IDE controller
-    ide = IdeController(disks=[], pci_func=0, pci_dev=4, pci_bus=0)
-    ide.BAR0 = PciLegacyIoBar(addr=0x1f0, size='8B')
-    ide.BAR1 = PciLegacyIoBar(addr=0x3f4, size='3B')
-    ide.BAR2 = PciLegacyIoBar(addr=0x170, size='8B')
-    ide.BAR3 = PciLegacyIoBar(addr=0x374, size='3B')
-    ide.Command = 0
-    ide.ProgIF = 0x80
-    ide.InterruptLine = 14
-    ide.InterruptPin = 1
+    ide = X86IdeController(disks=[], pci_func=0, pci_dev=4, pci_bus=0)
 
     def attachIO(self, bus, dma_ports):
         # Route interrupt signals
@@ -82,10 +74,13 @@ class SouthBridge(SimObject):
         self.pit.int_pin = self.io_apic.inputs[2]
         self.keyboard.keyboard_int_pin = self.io_apic.inputs[1]
         self.keyboard.mouse_int_pin = self.io_apic.inputs[12]
+        self.ide.int_primary = self.pic2.inputs[6]
+        self.ide.int_primary = self.io_apic.inputs[14]
+        self.ide.int_secondary = self.pic2.inputs[7]
+        self.ide.int_secondary = self.io_apic.inputs[15]
         # Tell the devices about each other
         self.pic1.slave = self.pic2
         self.speaker.i8254 = self.pit
-        self.io_apic.external_int_pic = self.pic1
         # Connect to the bus
         self.cmos.pio = bus.mem_side_ports
         self.dma1.pio = bus.mem_side_ports

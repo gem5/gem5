@@ -414,6 +414,25 @@ namespace VegaISA
             }
         }
 
+        template<int N>
+        void
+        initMemRead(GPUDynInstPtr gpuDynInst, Addr offset)
+        {
+            Wavefront *wf = gpuDynInst->wavefront();
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    Addr vaddr = gpuDynInst->addr[lane] + offset;
+                    for (int i = 0; i < N; ++i) {
+                        (reinterpret_cast<VecElemU32*>(
+                            gpuDynInst->d_data))[lane * N + i]
+                            = wf->ldsChunk->read<VecElemU32>(
+                                vaddr + i*sizeof(VecElemU32));
+                    }
+                }
+            }
+        }
+
         template<typename T>
         void
         initDualMemRead(GPUDynInstPtr gpuDynInst, Addr offset0, Addr offset1)
@@ -444,6 +463,25 @@ namespace VegaISA
                     Addr vaddr = gpuDynInst->addr[lane] + offset;
                     wf->ldsChunk->write<T>(vaddr,
                         (reinterpret_cast<T*>(gpuDynInst->d_data))[lane]);
+                }
+            }
+        }
+
+        template<int N>
+        void
+        initMemWrite(GPUDynInstPtr gpuDynInst, Addr offset)
+        {
+            Wavefront *wf = gpuDynInst->wavefront();
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    Addr vaddr = gpuDynInst->addr[lane] + offset;
+                    for (int i = 0; i < N; ++i) {
+                        wf->ldsChunk->write<VecElemU32>(
+                            vaddr + i*sizeof(VecElemU32),
+                            (reinterpret_cast<VecElemU32*>(
+                                gpuDynInst->d_data))[lane * N + i]);
+                    }
                 }
             }
         }
@@ -594,6 +632,7 @@ namespace VegaISA
             Addr stride = 0;
             Addr buf_idx = 0;
             Addr buf_off = 0;
+            Addr buffer_offset = 0;
             BufferRsrcDescriptor rsrc_desc;
 
             std::memcpy((void*)&rsrc_desc, s_rsrc_desc.rawDataPtr(),
@@ -616,42 +655,6 @@ namespace VegaISA
 
                     buf_off = v_off[lane] + inst_offset;
 
-
-                    /**
-                     * Range check behavior causes out of range accesses to
-                     * to be treated differently. Out of range accesses return
-                     * 0 for loads and are ignored for stores. For
-                     * non-formatted accesses, this is done on a per-lane
-                     * basis.
-                     */
-                    if (stride == 0 || !rsrc_desc.swizzleEn) {
-                        if (buf_off + stride * buf_idx >=
-                            rsrc_desc.numRecords - s_offset.rawData()) {
-                            DPRINTF(VEGA, "mubuf out-of-bounds condition 1: "
-                                    "lane = %d, buffer_offset = %llx, "
-                                    "const_stride = %llx, "
-                                    "const_num_records = %llx\n",
-                                    lane, buf_off + stride * buf_idx,
-                                    stride, rsrc_desc.numRecords);
-                            oobMask.set(lane);
-                            continue;
-                        }
-                    }
-
-                    if (stride != 0 && rsrc_desc.swizzleEn) {
-                        if (buf_idx >= rsrc_desc.numRecords ||
-                            buf_off >= stride) {
-                            DPRINTF(VEGA, "mubuf out-of-bounds condition 2: "
-                                    "lane = %d, offset = %llx, "
-                                    "index = %llx, "
-                                    "const_num_records = %llx\n",
-                                    lane, buf_off, buf_idx,
-                                    rsrc_desc.numRecords);
-                            oobMask.set(lane);
-                            continue;
-                        }
-                    }
-
                     if (rsrc_desc.swizzleEn) {
                         Addr idx_stride = 8 << rsrc_desc.idxStride;
                         Addr elem_size = 2 << rsrc_desc.elemSize;
@@ -666,11 +669,49 @@ namespace VegaISA
                                 lane, idx_stride, elem_size, idx_msb, idx_lsb,
                                 off_msb, off_lsb);
 
-                        vaddr += ((idx_msb * stride + off_msb * elem_size)
-                            * idx_stride + idx_lsb * elem_size + off_lsb);
+                        buffer_offset =(idx_msb * stride + off_msb * elem_size)
+                            * idx_stride + idx_lsb * elem_size + off_lsb;
                     } else {
-                        vaddr += buf_off + stride * buf_idx;
+                        buffer_offset = buf_off + stride * buf_idx;
                     }
+
+
+                    /**
+                     * Range check behavior causes out of range accesses to
+                     * to be treated differently. Out of range accesses return
+                     * 0 for loads and are ignored for stores. For
+                     * non-formatted accesses, this is done on a per-lane
+                     * basis.
+                     */
+                    if (rsrc_desc.stride == 0 || !rsrc_desc.swizzleEn) {
+                        if (buffer_offset >=
+                            rsrc_desc.numRecords - s_offset.rawData()) {
+                            DPRINTF(VEGA, "mubuf out-of-bounds condition 1: "
+                                    "lane = %d, buffer_offset = %llx, "
+                                    "const_stride = %llx, "
+                                    "const_num_records = %llx\n",
+                                    lane, buf_off + stride * buf_idx,
+                                    stride, rsrc_desc.numRecords);
+                            oobMask.set(lane);
+                            continue;
+                        }
+                    }
+
+                    if (rsrc_desc.stride != 0 && rsrc_desc.swizzleEn) {
+                        if (buf_idx >= rsrc_desc.numRecords ||
+                            buf_off >= stride) {
+                            DPRINTF(VEGA, "mubuf out-of-bounds condition 2: "
+                                    "lane = %d, offset = %llx, "
+                                    "index = %llx, "
+                                    "const_num_records = %llx\n",
+                                    lane, buf_off, buf_idx,
+                                    rsrc_desc.numRecords);
+                            oobMask.set(lane);
+                            continue;
+                        }
+                    }
+
+                    vaddr += buffer_offset;
 
                     DPRINTF(VEGA, "Calculating mubuf address for lane %d: "
                             "vaddr = %llx, base_addr = %llx, "
@@ -759,55 +800,140 @@ namespace VegaISA
         void
         initMemRead(GPUDynInstPtr gpuDynInst)
         {
-            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+                initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
+            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
+                Wavefront *wf = gpuDynInst->wavefront();
+                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                    if (gpuDynInst->exec_mask[lane]) {
+                        Addr vaddr = gpuDynInst->addr[lane];
+                        (reinterpret_cast<T*>(gpuDynInst->d_data))[lane]
+                            = wf->ldsChunk->read<T>(vaddr);
+                    }
+                }
+            }
         }
 
         template<int N>
         void
         initMemRead(GPUDynInstPtr gpuDynInst)
         {
-            initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::ReadReq);
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+                initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::ReadReq);
+            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
+                Wavefront *wf = gpuDynInst->wavefront();
+                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                    if (gpuDynInst->exec_mask[lane]) {
+                        Addr vaddr = gpuDynInst->addr[lane];
+                        for (int i = 0; i < N; ++i) {
+                            (reinterpret_cast<VecElemU32*>(
+                                gpuDynInst->d_data))[lane * N + i]
+                                = wf->ldsChunk->read<VecElemU32>(
+                                        vaddr + i*sizeof(VecElemU32));
+                        }
+                    }
+                }
+            }
         }
 
         template<typename T>
         void
         initMemWrite(GPUDynInstPtr gpuDynInst)
         {
-            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+                initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
+            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
+                Wavefront *wf = gpuDynInst->wavefront();
+                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                    if (gpuDynInst->exec_mask[lane]) {
+                        Addr vaddr = gpuDynInst->addr[lane];
+                        wf->ldsChunk->write<T>(vaddr,
+                            (reinterpret_cast<T*>(gpuDynInst->d_data))[lane]);
+                    }
+                }
+            }
         }
 
         template<int N>
         void
         initMemWrite(GPUDynInstPtr gpuDynInst)
         {
-            initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::WriteReq);
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+                initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::WriteReq);
+            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
+                Wavefront *wf = gpuDynInst->wavefront();
+                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                    if (gpuDynInst->exec_mask[lane]) {
+                        Addr vaddr = gpuDynInst->addr[lane];
+                        for (int i = 0; i < N; ++i) {
+                            wf->ldsChunk->write<VecElemU32>(
+                                vaddr + i*sizeof(VecElemU32),
+                                (reinterpret_cast<VecElemU32*>(
+                                    gpuDynInst->d_data))[lane * N + i]);
+                        }
+                    }
+                }
+            }
         }
 
         template<typename T>
         void
         initAtomicAccess(GPUDynInstPtr gpuDynInst)
         {
-            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::SwapReq, true);
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+                initMemReqHelper<T, 1>(gpuDynInst, MemCmd::SwapReq, true);
+            } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
+                Wavefront *wf = gpuDynInst->wavefront();
+                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                    if (gpuDynInst->exec_mask[lane]) {
+                        Addr vaddr = gpuDynInst->addr[lane];
+                        auto amo_op =
+                            gpuDynInst->makeAtomicOpFunctor<T>(
+                                &(reinterpret_cast<T*>(
+                                    gpuDynInst->a_data))[lane],
+                                &(reinterpret_cast<T*>(
+                                    gpuDynInst->x_data))[lane]);
+
+                        T tmp = wf->ldsChunk->read<T>(vaddr);
+                        (*amo_op)(reinterpret_cast<uint8_t *>(&tmp));
+                        wf->ldsChunk->write<T>(vaddr, tmp);
+                        (reinterpret_cast<T*>(gpuDynInst->d_data))[lane] = tmp;
+                    }
+                }
+            }
         }
 
         void
         calcAddr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &vaddr,
-                 ScalarRegU32 saddr, ScalarRegU32 offset)
+                 ScalarRegU32 saddr, ScalarRegI32 offset)
         {
+            // Offset is a 13-bit field w/the following meanings:
+            // In Flat instructions, offset is a 12-bit unsigned number
+            // In Global/Scratch instructions, offset is a 13-bit signed number
+            if (isFlat()) {
+                offset = offset & 0xfff;
+            } else {
+                offset = (ScalarRegI32)sext<13>(offset);
+            }
             // If saddr = 0x7f there is no scalar reg to read and address will
             // be a 64-bit address. Otherwise, saddr is the reg index for a
             // scalar reg used as the base address for a 32-bit address.
             if ((saddr == 0x7f && isFlatGlobal()) || isFlat()) {
-                calcAddr64(gpuDynInst, vaddr, offset);
+                calcAddrVgpr(gpuDynInst, vaddr, offset);
             } else {
-                ConstScalarOperandU32 sbase(gpuDynInst, saddr);
+                // Assume we are operating in 64-bit mode and read a pair of
+                // SGPRs for the address base.
+                ConstScalarOperandU64 sbase(gpuDynInst, saddr);
                 sbase.read();
 
-                calcAddr32(gpuDynInst, vaddr, sbase, offset);
+                calcAddrSgpr(gpuDynInst, vaddr, sbase, offset);
             }
 
             if (isFlat()) {
                 gpuDynInst->resolveFlatSegment(gpuDynInst->exec_mask);
+            } else {
+                gpuDynInst->staticInstruction()->executed_as =
+                    enums::SC_GLOBAL;
             }
         }
 
@@ -840,20 +966,23 @@ namespace VegaISA
         void generateGlobalDisassembly();
 
         void
-        calcAddr32(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &vaddr,
-                   ConstScalarOperandU32 &saddr, ScalarRegU32 offset)
+        calcAddrSgpr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &vaddr,
+                     ConstScalarOperandU64 &saddr, ScalarRegI32 offset)
         {
+            // Use SGPR pair as a base address and add VGPR-offset and
+            // instruction offset. The VGPR-offset is always 32-bits so we
+            // mask any upper bits from the vaddr.
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {
                     gpuDynInst->addr.at(lane) =
-                        (vaddr[lane] + saddr.rawData() + offset) & 0xffffffff;
+                        saddr.rawData() + (vaddr[lane] & 0xffffffff) + offset;
                 }
             }
         }
 
         void
-        calcAddr64(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &addr,
-                   ScalarRegU32 offset)
+        calcAddrVgpr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &addr,
+                     ScalarRegI32 offset)
         {
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {

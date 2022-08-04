@@ -328,11 +328,9 @@ MPP_StatisticalCorrector::gUpdate(Addr branch_pc, bool taken, int64_t hist,
                    int nbr, int logs, std::vector<int8_t> & w,
                    StatisticalCorrector::BranchInfo* bi)
 {
-    int percsum = 0;
     for (int i = 0; i < nbr; i++) {
         int64_t bhist = hist & ((int64_t) ((1 << length[i]) - 1));
         int64_t index = gIndex(branch_pc, bhist, logs, nbr, i);
-        percsum += (2 * tab[i][index] + 1);
         ctrUpdate(tab[i][index], taken, scCountersWidth - (i < (nbr - 1)));
     }
 }

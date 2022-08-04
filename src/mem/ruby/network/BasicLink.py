@@ -37,6 +37,10 @@ class BasicLink(SimObject):
     # Width of the link in bytes
     # Only used by simple network.
     # Garnet models this by flit size
+    # For the simple links, the bandwidth factor translates to the
+    # bandwidth multiplier.  The multipiler, in combination with the
+    # endpoint bandwidth multiplier - message size multiplier ratio,
+    # determines the link bandwidth in bytes
     bandwidth_factor = Param.Int("generic bandwidth factor, usually in bytes")
     weight = Param.Int(1, "used to restrict routing in shortest path analysis")
     supported_vnets = VectorParam.Int([], "Vnets supported Default:All([])")

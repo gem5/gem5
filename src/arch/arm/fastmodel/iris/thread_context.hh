@@ -220,7 +220,7 @@ class ThreadContext : public gem5::ThreadContext
     System *getSystemPtr() override { return _cpu->system; }
 
     BaseISA *
-    getIsaPtr() override
+    getIsaPtr() const override
     {
         return _isa;
     }
@@ -279,70 +279,65 @@ class ThreadContext : public gem5::ThreadContext
     //
     // New accessors for new decoder.
     //
-    RegVal readIntReg(RegIndex reg_idx) const override;
+    RegVal getReg(const RegId &reg) const override;
+    void getReg(const RegId &reg, void *val) const override;
+    void *getWritableReg(const RegId &reg) override;
 
-    RegVal
-    readFloatReg(RegIndex reg_idx) const override
+    void setReg(const RegId &reg, RegVal val) override;
+    void setReg(const RegId &reg, const void *val) override;
+
+    virtual RegVal readIntReg(RegIndex reg_idx) const;
+
+    virtual const ArmISA::VecRegContainer &readVecReg(const RegId &reg) const;
+    virtual ArmISA::VecRegContainer &
+    getWritableVecReg(const RegId &reg)
     {
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    const ArmISA::VecRegContainer &readVecReg(const RegId &reg) const override;
-    ArmISA::VecRegContainer &
-    getWritableVecReg(const RegId &reg) override
+    virtual RegVal
+    readVecElem(const RegId &reg) const
     {
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    RegVal
-    readVecElem(const RegId &reg) const override
+    virtual const ArmISA::VecPredRegContainer &
+        readVecPredReg(const RegId &reg) const;
+    virtual ArmISA::VecPredRegContainer &
+    getWritableVecPredReg(const RegId &reg)
     {
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    const ArmISA::VecPredRegContainer &
-        readVecPredReg(const RegId &reg) const override;
-    ArmISA::VecPredRegContainer &
-    getWritableVecPredReg(const RegId &reg) override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-
-    RegVal
-    readCCReg(RegIndex reg_idx) const override
+    virtual RegVal
+    readCCReg(RegIndex reg_idx) const
     {
         return readCCRegFlat(reg_idx);
     }
 
-    void setIntReg(RegIndex reg_idx, RegVal val) override;
+    virtual void setIntReg(RegIndex reg_idx, RegVal val);
 
-    void
-    setFloatReg(RegIndex reg_idx, RegVal val) override
+    virtual void
+    setVecReg(const RegId &reg, const ArmISA::VecRegContainer &val)
     {
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    void
-    setVecReg(const RegId &reg, const ArmISA::VecRegContainer &val) override
+    virtual void
+    setVecElem(const RegId& reg, RegVal val)
     {
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    void
-    setVecElem(const RegId& reg, RegVal val) override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-
-    void
+    virtual void
     setVecPredReg(const RegId &reg,
-                  const ArmISA::VecPredRegContainer &val) override
+                  const ArmISA::VecPredRegContainer &val)
     {
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    void
-    setCCReg(RegIndex reg_idx, RegVal val) override
+    virtual void
+    setCCReg(RegIndex reg_idx, RegVal val)
     {
         setCCRegFlat(reg_idx, val);
     }
@@ -398,59 +393,54 @@ class ThreadContext : public gem5::ThreadContext
      * serialization code to access all registers.
      */
 
-    RegVal readIntRegFlat(RegIndex idx) const override;
-    void setIntRegFlat(RegIndex idx, uint64_t val) override;
+    RegVal getRegFlat(const RegId &reg) const override;
+    void getRegFlat(const RegId &reg, void *val) const override;
+    void *getWritableRegFlat(const RegId &reg) override;
 
-    RegVal
-    readFloatRegFlat(RegIndex idx) const override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
-    void
-    setFloatRegFlat(RegIndex idx, RegVal val) override
-    {
-        panic("%s not implemented.", __FUNCTION__);
-    }
+    void setRegFlat(const RegId &reg, RegVal val) override;
+    void setRegFlat(const RegId &reg, const void *val) override;
 
-    const ArmISA::VecRegContainer &readVecRegFlat(RegIndex idx) const override;
-    ArmISA::VecRegContainer &
-    getWritableVecRegFlat(RegIndex idx) override
+    virtual RegVal readIntRegFlat(RegIndex idx) const;
+    virtual void setIntRegFlat(RegIndex idx, uint64_t val);
+
+    virtual const ArmISA::VecRegContainer &readVecRegFlat(RegIndex idx) const;
+    virtual ArmISA::VecRegContainer &
+    getWritableVecRegFlat(RegIndex idx)
     {
         panic("%s not implemented.", __FUNCTION__);
     }
-    void
-    setVecRegFlat(RegIndex idx, const ArmISA::VecRegContainer &val) override
+    virtual void
+    setVecRegFlat(RegIndex idx, const ArmISA::VecRegContainer &val)
     {
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    RegVal
-    readVecElemFlat(RegIndex idx, const ElemIndex& elemIdx) const override
+    virtual RegVal
+    readVecElemFlat(RegIndex idx) const
     {
         panic("%s not implemented.", __FUNCTION__);
     }
-    void
-    setVecElemFlat(RegIndex idx, const ElemIndex &elemIdx, RegVal val) override
+    virtual void
+    setVecElemFlat(RegIndex idx, RegVal val)
     {
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    const ArmISA::VecPredRegContainer &
-        readVecPredRegFlat(RegIndex idx) const override;
-    ArmISA::VecPredRegContainer &
-    getWritableVecPredRegFlat(RegIndex idx) override
+    virtual ArmISA::VecPredRegContainer readVecPredRegFlat(RegIndex idx) const;
+    virtual ArmISA::VecPredRegContainer &
+    getWritableVecPredRegFlat(RegIndex idx)
     {
         panic("%s not implemented.", __FUNCTION__);
     }
-    void
+    virtual void
     setVecPredRegFlat(RegIndex idx,
-            const ArmISA::VecPredRegContainer &val) override
+            const ArmISA::VecPredRegContainer &val)
     {
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    RegVal readCCRegFlat(RegIndex idx) const override;
-    void setCCRegFlat(RegIndex idx, RegVal val) override;
+    virtual RegVal readCCRegFlat(RegIndex idx) const;
+    virtual void setCCRegFlat(RegIndex idx, RegVal val);
     /** @} */
 
     // hardware transactional memory

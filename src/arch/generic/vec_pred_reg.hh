@@ -44,6 +44,7 @@
 #include <vector>
 
 #include "base/cprintf.hh"
+#include "base/types.hh"
 #include "sim/serialize_handlers.hh"
 
 namespace gem5
@@ -394,7 +395,29 @@ struct ShowParam<VecPredRegContainer<NumBits, Packed>>
 /// Dummy type aliases and constants for architectures that do not implement
 /// vector predicate registers.
 /// @{
-using DummyVecPredRegContainer = VecPredRegContainer<8, false>;
+struct DummyVecPredRegContainer
+{
+    RegVal filler = 0;
+    bool operator == (const DummyVecPredRegContainer &d) const { return true; }
+    bool operator != (const DummyVecPredRegContainer &d) const { return true; }
+    template <typename VecElem>
+    VecElem *as() { return nullptr; }
+};
+template <>
+struct ParseParam<DummyVecPredRegContainer>
+{
+    static bool
+    parse(const std::string &s, DummyVecPredRegContainer &value)
+    {
+        return false;
+    }
+};
+static_assert(sizeof(DummyVecPredRegContainer) == sizeof(RegVal));
+static inline std::ostream &
+operator<<(std::ostream &os, const DummyVecPredRegContainer &d)
+{
+    return os;
+}
 /// @}
 
 } // namespace gem5

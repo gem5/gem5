@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 ARM Limited
+ * Copyright (c) 2021-2022 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -60,9 +60,10 @@ action(AllocateTBE_Request, desc="") {
       assert(in_msg.allowRetry);
       enqueue(retryTriggerOutPort, RetryTriggerMsg, 0) {
         out_msg.addr := in_msg.addr;
+        out_msg.usesTxnId := false;
         out_msg.event := Event:SendRetryAck;
         out_msg.retryDest := in_msg.requestor;
-        retryQueue.emplace(in_msg.addr,in_msg.requestor);
+        retryQueue.emplace(in_msg.addr,false,in_msg.requestor);
       }
     }
   }
@@ -106,6 +107,23 @@ action(AllocateTBE_Snoop, desc="") {
   snpInPort.dequeue(clockEdge());
 }
 
+action(AllocateTBE_DvmSnoop, desc="") {
+  // No retry for snoop requests; just create resource stall
+  check_allocate(storDvmSnpTBEs);
+
+  storDvmSnpTBEs.incrementReserved();
+
+  // Move request to rdy queue
+  peek(snpInPort, CHIRequestMsg) {
+    enqueue(snpRdyOutPort, CHIRequestMsg, allocation_latency) {
+      assert(in_msg.usesTxnId);
+      assert(in_msg.addr == address);
+      out_msg := in_msg;
+    }
+  }
+  snpInPort.dequeue(clockEdge());
+}
+
 action(AllocateTBE_SeqRequest, desc="") {
   // No retry for sequencer requests; just create resource stall
   check_allocate(storTBEs);
@@ -137,6 +155,49 @@ action(AllocateTBE_SeqRequest, desc="") {
         } else {
           out_msg.type := CHIRequestType:Store;
         }
+      } else {
+        error("Invalid RubyRequestType");
+      }
+    }
+  }
+  seqInPort.dequeue(clockEdge());
+}
+
+action(AllocateTBE_SeqDvmRequest, desc="") {
+  // No retry for sequencer requests; just create resource stall
+  check_allocate(storDvmTBEs);
+
+  // reserve a slot for this request
+  storDvmTBEs.incrementReserved();
+
+  // Move request to rdy queue
+  peek(seqInPort, RubyRequest) {
+    enqueue(reqRdyOutPort, CHIRequestMsg, allocation_latency) {
+      // DVM operations do not relate to memory addresses
+      // Use the DVM transaction ID instead
+      out_msg.usesTxnId := true;
+      out_msg.txnId := in_msg.tlbiTransactionUid;
+
+      // TODO - zero these out?
+      out_msg.addr := in_msg.tlbiTransactionUid;
+      out_msg.accAddr := in_msg.tlbiTransactionUid;
+      out_msg.accSize := blockSize;
+      assert(in_msg.Prefetch == PrefetchBit:No);
+      out_msg.is_local_pf := false;
+      out_msg.is_remote_pf := false;
+
+      out_msg.requestor := machineID;
+      out_msg.fwdRequestor := machineID;
+      out_msg.seqReq := in_msg.getRequestPtr();
+      out_msg.isSeqReqValid := true;
+
+
+      if (in_msg.Type == RubyRequestType:TLBI) {
+        out_msg.type := CHIRequestType:DvmTlbi_Initiate;
+      } else if (in_msg.Type == RubyRequestType:TLBI_SYNC) {
+        out_msg.type := CHIRequestType:DvmSync_Initiate;
+      } else if (in_msg.Type == RubyRequestType:TLBI_EXT_SYNC_COMP) {
+        out_msg.type := CHIRequestType:DvmSync_ExternCompleted;
       } else {
         error("Invalid RubyRequestType");
       }
@@ -211,6 +272,14 @@ action(Initiate_Request, desc="") {
   incomingTransactionStart(address, curTransitionEvent(), initial, was_retried);
 }
 
+action(Initiate_Request_DVM, desc="") {
+  peek(reqRdyPort, CHIRequestMsg) {
+    // "address" for DVM = transaction ID
+    TBE tbe := allocateDvmRequestTBE(address, in_msg);
+    set_tbe(tbe);
+  }
+}
+
 action(Initiate_Request_Stale, desc="") {
   State initial := getState(tbe, cache_entry, address);
   bool was_retried := false;
@@ -219,6 +288,17 @@ action(Initiate_Request_Stale, desc="") {
     was_retried := in_msg.allowRetry == false;
   }
   copyCacheAndDir(cache_entry, getDirEntry(address), tbe, initial);
+
+  // usually we consider data locally invalid on RU states even if we
+  // have a copy; so it override it to valid so we can comeback to UD_RU/UC_RU
+  // at the end of this transaction
+  if (tbe.dir_ownerExists && tbe.dir_ownerIsExcl && is_valid(cache_entry)) {
+    // treat the data we got from the cache as valid
+    tbe.dataBlk := cache_entry.DataBlk;
+    tbe.dataBlkValid.fillMask();
+    tbe.dataValid := true;
+  }
+
   incomingTransactionStart(address, curTransitionEvent(), initial, was_retried);
 }
 
@@ -287,6 +367,8 @@ action(RestoreFromHazard, desc="") {
   } else if (hazard_tbe.pendReqType == CHIRequestType:WriteEvictFull) {
     tbe.is_stale := (tbe.dataValid && tbe.dataUnique) == false;
   } else if (hazard_tbe.pendReqType == CHIRequestType:Evict) {
+    tbe.is_stale := tbe.dataValid == false;
+  } else if (hazard_tbe.pendReqType == CHIRequestType:CleanUnique) {
     tbe.is_stale := tbe.dataValid == false;
   }
 
@@ -472,6 +554,15 @@ action(Initiate_ReadOnce_HitUpstream, desc="") {
   }
   tbe.updateDirOnCompAck := false;
   // no need to update or access tags/data on ReadOnce served from upstream
+
+  if (is_invalid(cache_entry)) {
+    // if we receive data, invalidate at the end so it can be dropped
+    tbe.dataToBeInvalid := true;
+  } else if (tbe.dataValid == false) {
+    // possible on UD_RU,UC_RU where cache_entry valid but tbe.dataValid == false
+    // this prevents going to RU if no data is received from snoop
+    tbe.dataValid := true;
+  }
 }
 
 
@@ -575,71 +666,61 @@ action(Initiate_ReadUnique_Hit_InvUpstream, desc="") {
 action(Initiate_CleanUnique, desc="") {
   tbe.actions.push(Event:ReadMissPipe); // TODO need another latency pipe ??
 
+  // invalidates everyone except requestor
+  if (tbe.dir_sharers.count() > 1) {
+    tbe.actions.push(Event:SendSnpCleanInvalidNoReq);
+  }
+  // auto upgrade if HN
+  tbe.dataUnique := tbe.dataUnique || is_HN;
+  // get unique permission
+  if (tbe.dataUnique == false) {
+    tbe.actions.push(Event:SendCleanUnique);
+    tbe.actions.push(Event:CheckUpgrade_FromCU);
+  }
+  // next actions will depend on the data state after snoops+CleanUnique
+  tbe.actions.push(Event:FinishCleanUnique);
+}
+
+action(Initiate_CleanUnique_Stale, desc="") {
   // requestor don't have the line anymore; send response but don't update the
   // directory on CompAck. The requestor knows we are not tracking it and will
   // send a ReadUnique later
-  if (tbe.dir_sharers.isElement(tbe.requestor) == false) {
-    tbe.actions.push(Event:SendCompUCResp);
-    tbe.actions.push(Event:WaitCompAck);
-    tbe.updateDirOnCompAck := false;
-  } else {
-    // invalidates everyone except requestor
-    if (tbe.dir_sharers.count() > 1) {
-      tbe.actions.push(Event:SendSnpCleanInvalidNoReq);
-    }
-    // auto upgrade if HN
-    tbe.dataUnique := tbe.dataUnique || is_HN;
-    // get unique permission
-    if (tbe.dataUnique == false) {
-      tbe.actions.push(Event:SendCleanUnique);
-      tbe.actions.push(Event:CheckUpgrade_FromCU);
-    }
-    // next actions will depend on the data state after snoops+CleanUnique
-    tbe.actions.push(Event:FinishCleanUnique);
-  }
+  tbe.actions.push(Event:SendCompUCRespStale);
+  tbe.actions.push(Event:WaitCompAck);
+  tbe.updateDirOnCompAck := false;
 }
 
 action(Finish_CleanUnique, desc="") {
   // This is should be executed at the end of a transaction
   assert(tbe.actions.empty());
-  tbe.actions.push(Event:SendCompUCResp);
-  tbe.actions.push(Event:WaitCompAck);
 
   // everyone may have been hit by an invalidation so check again
   if (tbe.dir_sharers.isElement(tbe.requestor) == false) {
     tbe.updateDirOnCompAck := false;
     assert(tbe.dataValid == false);
+    assert(tbe.is_stale);
+    tbe.is_stale := false;
+    tbe.actions.push(Event:SendCompUCRespStale);
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.push(Event:TagArrayWrite);
   } else {
     // must be the only one in sharers map
     assert(tbe.dir_sharers.count() == 1);
     assert(tbe.dataUnique);
-
-    // similar to Initiate_MaitainCoherence; writeback if the owner has data as
-    // clean data and we have it dirty and cannot keep it
-    bool fill_pipeline := tbe.dataValid && tbe.dataDirty;
-    bool req_has_dirty := tbe.dir_ownerExists && (tbe.dir_owner == tbe.requestor);
-    if (tbe.dataValid && tbe.dataDirty && tbe.dataToBeInvalid &&
-        (req_has_dirty == false)) {
-      fill_pipeline := false;
-      if (is_HN) {
-        tbe.actions.push(Event:SendWriteNoSnp);
-      } else {
-        tbe.actions.push(Event:SendWriteClean);
-      }
-      tbe.actions.push(Event:WriteBEPipe);
-      tbe.actions.push(Event:SendWBData);
-    }
 
     // needed by UpdateDirState_FromReqResp triggered by the expected CompAck
     tbe.dataMaybeDirtyUpstream := true;
     tbe.requestorToBeExclusiveOwner := true;
     tbe.dir_ownerExists := false;
 
-    if (fill_pipeline) {
-      tbe.actions.push(Event:CheckCacheFill);
-    }
+    tbe.actions.push(Event:SendCompUCResp);
+    tbe.actions.push(Event:WaitCompAck);
+
+    // Ensure we writeback or update the cache if the owner has data as
+    // clean data and we have it dirty.
+    // MaintainCoherence queues the TagArrayWrite
+    tbe.actions.push(Event:MaintainCoherence);
   }
-  tbe.actions.push(Event:TagArrayWrite);
 }
 
 
@@ -770,16 +851,9 @@ action(Initiate_WriteUnique_PartialWrite, desc="") {
 }
 
 action(Initiate_WriteUnique_Forward, desc="") {
-  if (comp_wu) {
-    tbe.actions.push(Event:SendDBIDResp_WU);
-    tbe.actions.pushNB(Event:WriteFEPipe);
-    tbe.actions.pushNB(Event:SendWriteUnique);
-    tbe.actions.pushNB(Event:SendComp_WU);
-  } else {
-    tbe.actions.push(Event:SendCompDBIDResp_WU);
-    tbe.actions.pushNB(Event:WriteFEPipe);
-    tbe.actions.pushNB(Event:SendWriteUnique);
-  }
+  tbe.actions.push(Event:WriteFEPipe);
+  tbe.actions.push(Event:SendWriteUnique);
+  tbe.actions.push(Event:SendCompDBIDResp_WU);
   tbe.actions.push(Event:WriteBEPipe);
   tbe.actions.push(Event:SendWUData);
   tbe.dataToBeInvalid := true;
@@ -817,67 +891,72 @@ action(Initiate_CopyBack_Stale, desc="") {
 
   tbe.actions.pushNB(Event:SendCompDBIDRespStale);
   tbe.actions.pushNB(Event:WriteFEPipe);
+  tbe.actions.push(Event:FinishCopyBack_Stale);
 
+  assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
+}
+
+action(Finish_CopyBack_Stale, desc="") {
   // if it was the last known sharer and we don't have the data do the same
   // the Initiate_Evict
-  if ((is_HN == false) && (tbe.dir_sharers.count() == 1) &&
+  if ((is_HN == false) && (tbe.dir_sharers.count() == 0) &&
       tbe.dir_sharers.isElement(tbe.requestor) && (tbe.dataValid == false)) {
     tbe.actions.push(Event:SendEvict);
-  }
-
-  tbe.dir_sharers.remove(tbe.requestor);
-  assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
-
-  // usually we consider data locally invalid on RU states even if we
-  // have a copy; consider it valid for this transition only so we can
-  // comeback to UD_RU/UC_RU
-  if (is_valid(cache_entry) && (tbe.dataValid == false) &&
-      tbe.dir_ownerExists && tbe.dir_ownerIsExcl) {
-    tbe.dataValid := true;
   }
 }
 
 action(Initiate_Evict, desc="") {
-  tbe.actions.push(Event:SendCompIResp);
-
-  assert(tbe.dir_sharers.isElement(tbe.requestor));
-  assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
-  tbe.dir_sharers.remove(tbe.requestor);
-
-  if ((is_HN == false) && (tbe.dir_sharers.count() == 0) &&
+  if ((is_HN == false) && (tbe.dir_sharers.count() == 1) &&
       (tbe.dataValid == false)) {
-    tbe.actions.push(Event:SendEvict);
+    // last sharer and we also don't have a copy the line, so we also need to
+    // send an eviction downstream
+    if (tbe.dataUnique) {
+      // we need to send a WriteEvictFull so need the upstream data before
+      // we ack the evict
+      tbe.actions.push(Event:SendSnpOnce);
+      tbe.actions.push(Event:SendCompIResp);
+      tbe.actions.push(Event:SendWriteBackOrWriteEvict);
+      tbe.actions.push(Event:WriteBEPipe);
+      tbe.actions.push(Event:SendWBData);
+    } else {
+      tbe.actions.push(Event:SendCompIResp);
+      tbe.actions.push(Event:SendEvict);
+    }
+  } else {
+    tbe.actions.push(Event:SendCompIResp);
   }
-
-  tbe.actions.pushNB(Event:TagArrayWrite);
+  tbe.actions.push(Event:TagArrayWrite);
 }
 
-action(Initiate_MaitainCoherence, desc="") {
+action(Initiate_MaintainCoherence, desc="") {
   // issue a copy back if necessary to maintain coherence for data we are
   // droping. This is should be executed at the end of a transaction
   assert(tbe.actions.empty());
   // go through either the fill or the writeback pipeline
   if (tbe.dataValid && tbe.dataToBeInvalid) {
+    // we don't need to WB if the upstream is SD, because the
+    // owner is responsible for the WB
+    bool has_non_ex_owner := tbe.dir_ownerExists && !tbe.dir_ownerIsExcl;
     if (is_HN) {
-      if (tbe.dataDirty && (tbe.dataMaybeDirtyUpstream == false)) {
+      if (tbe.dataDirty && !has_non_ex_owner) {
         tbe.actions.push(Event:SendWriteNoSnp);
         tbe.actions.push(Event:WriteBEPipe);
         tbe.actions.push(Event:SendWBData);
       }
     } else {
       if (tbe.dir_sharers.isEmpty() && (tbe.dataDirty || tbe.dataUnique)) {
+        assert(!has_non_ex_owner);
         tbe.actions.push(Event:SendWriteBackOrWriteEvict);
         tbe.actions.push(Event:WriteBEPipe);
         tbe.actions.push(Event:SendWBData);
-      } else if ((tbe.dir_sharers.isEmpty() == false) && tbe.dataDirty &&
-                 (tbe.dataMaybeDirtyUpstream == false)) {
+      } else if (tbe.dataDirty && !has_non_ex_owner) {
+        assert(!tbe.dir_sharers.isEmpty());
         tbe.actions.push(Event:SendWriteClean);
         tbe.actions.push(Event:WriteBEPipe);
         tbe.actions.push(Event:SendWBData);
       }
     }
-  }
-  else if (tbe.dataValid) {
+  } else if (tbe.dataValid) {
     tbe.actions.push(Event:CheckCacheFill);
   }
   tbe.actions.push(Event:TagArrayWrite);
@@ -1217,7 +1296,6 @@ action(Send_WriteCleanFull, desc="") {
   assert(tbe.dataValid);
   assert(is_HN == false);
   assert(tbe.dataDirty);
-  assert(tbe.dataMaybeDirtyUpstream == false);
 
   enqueue(reqOutPort, CHIRequestMsg, request_latency) {
     prepareRequest(tbe, CHIRequestType:WriteCleanFull, out_msg);
@@ -1555,6 +1633,12 @@ action(ExpectCompAck, desc="") {
   tbe.expected_req_resp.addExpectedCount(1);
 }
 
+action(ExpectComp, desc="") {
+  assert(is_valid(tbe));
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:Comp);
+  tbe.expected_req_resp.addExpectedCount(1);
+}
+
 action(Receive_ReqDataResp, desc="") {
   assert(is_valid(tbe));
   assert(tbe.expected_req_resp.hasExpected());
@@ -1662,7 +1746,7 @@ action(UpdateDirState_FromReqDataResp, desc="") {
       } else if (in_msg.type == CHIDataType:CBWrData_UD_PD) {
         assert(tbe.dir_ownerExists && tbe.dir_ownerIsExcl && (tbe.dir_owner == in_msg.responder));
         assert(tbe.dir_sharers.isElement(in_msg.responder));
-        if (tbe.pendReqType != CHIRequestType:WriteCleanFull) {
+        if (tbe.reqType != CHIRequestType:WriteCleanFull) {
           tbe.dir_ownerExists := false;
           tbe.dir_ownerIsExcl := false;
           tbe.dir_sharers.remove(in_msg.responder);
@@ -1670,14 +1754,17 @@ action(UpdateDirState_FromReqDataResp, desc="") {
 
       } else if (in_msg.type == CHIDataType:CBWrData_SC) {
         assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != in_msg.responder));
-        tbe.dir_sharers.remove(in_msg.responder);
+        // Do not remove the responder in case of stale WriteCleanFull
+        if (tbe.reqType != CHIRequestType:WriteCleanFull) {
+          tbe.dir_sharers.remove(in_msg.responder);
+        }
 
       } else if (in_msg.type == CHIDataType:CBWrData_SD_PD) {
         assert(tbe.dir_ownerExists && (tbe.dir_ownerIsExcl == false) && (tbe.dir_owner == in_msg.responder));
         assert(tbe.dir_sharers.isElement(in_msg.responder));
         tbe.dir_ownerExists := false;
         tbe.dir_ownerIsExcl := false;
-        if (tbe.pendReqType != CHIRequestType:WriteCleanFull) {
+        if (tbe.reqType != CHIRequestType:WriteCleanFull) {
           tbe.dir_sharers.remove(in_msg.responder);
         }
 
@@ -1824,7 +1911,13 @@ action(UpdateDataState_FromReqDataResp, desc="") {
         assert(tbe.dataUnique);
         tbe.dataDirty := true;
         tbe.dataValid := true;
-        tbe.dataMaybeDirtyUpstream := false;
+        if (tbe.reqType == CHIRequestType:WriteCleanFull) {
+          // upstream data can still be UC if this is a WriteCleanFull
+          assert(tbe.dir_ownerExists && tbe.dir_ownerIsExcl);
+          tbe.dataMaybeDirtyUpstream := true;
+        } else {
+          tbe.dataMaybeDirtyUpstream := false;
+        }
 
       } else if (in_msg.type == CHIDataType:CBWrData_SD_PD) {
         tbe.dataDirty := true;
@@ -1851,7 +1944,12 @@ action(UpdateDataState_FromWUDataResp, desc="") {
     peek(datInPort, CHIDataMsg) {
       assert(in_msg.type == CHIDataType:NCBWrData);
       tbe.dataDirty := true;
-      tbe.dataValid := tbe.accSize == blockSize;
+      if (tbe.reqType == CHIRequestType:WriteUniquePtl) {
+        // we are just updating any valid data we already had
+        tbe.dataValid := tbe.dataValid || (tbe.accSize == blockSize);
+      } else {
+        tbe.dataValid := tbe.accSize == blockSize;
+      }
     }
   }
   printTBEState(tbe);
@@ -2064,6 +2162,16 @@ action(Send_Retry, desc="") {
   }
 }
 
+action(Send_Retry_DVM, desc="") {
+  assert(tbe.pendReqAllowRetry);
+  assert(tbe.rcvdRetryCredit);
+  assert(tbe.rcvdRetryAck);
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequestRetryDVM(tbe, out_msg);
+  }
+  destsWaitingRetry.removeNetDest(tbe.pendReqDest);
+}
+
 action(Receive_RetryAck_Hazard, desc="") {
   TBE hazard_tbe := getHazardTBE(tbe);
   assert(hazard_tbe.pendReqAllowRetry);
@@ -2101,27 +2209,15 @@ action(Send_CompData, desc="") {
   bool is_rd_nsd := tbe.reqType == CHIRequestType:ReadNotSharedDirty;
   bool is_rd_unique := tbe.reqType == CHIRequestType:ReadUnique;
 
+  // if the config allows (or not caching the data) and line has no sharers
+  bool snd_unique_on_rs := (fwd_unique_on_readshared || tbe.dataToBeInvalid)
+                          && tbe.dataUnique && tbe.dir_sharers.isEmpty();
+  // if the request type allows and we won't be caching the data
+  bool snd_dirty_on_rs := is_rd_shared && !is_rd_nsd && tbe.dataToBeInvalid;
+
   if (is_rd_once) {
     tbe.snd_msgType := CHIDataType:CompData_I;
-  } else if (tbe.dataToBeInvalid) {
-    // We will drop the data so propagate it's coherent state upstream
-    if (tbe.dataUnique && tbe.dataDirty) {
-      tbe.snd_msgType := CHIDataType:CompData_UD_PD;
-    } else if (tbe.dataUnique) {
-      tbe.snd_msgType := CHIDataType:CompData_UC;
-    } else if (tbe.dataDirty) {
-      if (is_rd_nsd) {
-        tbe.snd_msgType := CHIDataType:CompData_SC;
-      } else {
-        tbe.snd_msgType := CHIDataType:CompData_SD_PD;
-      }
-    } else {
-      tbe.snd_msgType := CHIDataType:CompData_SC;
-    }
-  } else if (is_rd_unique ||
-             (is_rd_shared && tbe.dataUnique &&
-              fwd_unique_on_readshared && (tbe.dir_ownerExists == false))) {
-    // propagates dirtyness
+  } else if (is_rd_unique || (is_rd_shared && snd_unique_on_rs)) {
     assert(tbe.dataUnique);
     if (tbe.dataDirty) {
       tbe.snd_msgType := CHIDataType:CompData_UD_PD;
@@ -2129,8 +2225,13 @@ action(Send_CompData, desc="") {
       tbe.snd_msgType := CHIDataType:CompData_UC;
     }
   } else if (is_rd_shared) {
-    // still keeping a copy so can send as SC
-    tbe.snd_msgType := CHIDataType:CompData_SC;
+    if (tbe.dataDirty && snd_dirty_on_rs) {
+      tbe.snd_msgType := CHIDataType:CompData_SD_PD;
+    } else {
+      // notice the MaintainCoherence will send WriteClean if the line
+      // is dirty and we won't be caching the data
+      tbe.snd_msgType := CHIDataType:CompData_SC;
+    }
   } else {
     error("Invalid request type");
   }
@@ -2434,6 +2535,13 @@ action(Send_RespSepData, desc="") {
 
 action(Send_CompI, desc="") {
   assert(is_valid(tbe));
+
+  // Used to ack Evict request
+  assert(tbe.dir_sharers.isElement(tbe.requestor));
+  assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
+
+  tbe.dir_sharers.remove(tbe.requestor);
+
   enqueue(rspOutPort, CHIResponseMsg, response_latency) {
     out_msg.addr := address;
     out_msg.type := CHIResponseType:Comp_I;
@@ -2449,6 +2557,19 @@ action(Send_CompUC, desc="") {
     out_msg.type := CHIResponseType:Comp_UC;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+  }
+}
+
+action(Send_CompUC_Stale, desc="") {
+  assert(is_valid(tbe));
+  enqueue(rspOutPort, CHIResponseMsg, response_latency) {
+    out_msg.addr := address;
+    out_msg.type := CHIResponseType:Comp_UC;
+    out_msg.responder := machineID;
+    out_msg.Destination.add(tbe.requestor);
+    // We don't know if this is a stale clean unique or a bug, so flag the
+    // reponse so the requestor can make further checks
+    out_msg.stale := true;
   }
 }
 
@@ -2521,6 +2642,10 @@ action(Send_Comp_WU, desc="") {
 action(Send_SnpRespI, desc="") {
   enqueue(rspOutPort, CHIResponseMsg, response_latency) {
     out_msg.addr := address;
+    if (tbe.is_dvm_tbe || tbe.is_dvm_snp_tbe) {
+      out_msg.usesTxnId := true;
+      out_msg.txnId := tbe.addr;
+    }
     out_msg.type := CHIResponseType:SnpResp_I;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
@@ -2531,6 +2656,7 @@ action(Send_RetryAck, desc="") {
   peek(retryTriggerInPort, RetryTriggerMsg) {
     enqueue(rspOutPort, CHIResponseMsg, response_latency) {
       out_msg.addr := in_msg.addr;
+      out_msg.usesTxnId := in_msg.usesTxnId;
       out_msg.type := CHIResponseType:RetryAck;
       out_msg.responder := machineID;
       out_msg.Destination.add(in_msg.retryDest);
@@ -2542,6 +2668,7 @@ action(Send_PCrdGrant, desc="") {
   peek(retryTriggerInPort, RetryTriggerMsg) {
     enqueue(rspOutPort, CHIResponseMsg, response_latency) {
       out_msg.addr := in_msg.addr;
+      out_msg.usesTxnId := in_msg.usesTxnId;
       out_msg.type := CHIResponseType:PCrdGrant;
       out_msg.responder := machineID;
       out_msg.Destination.add(in_msg.retryDest);
@@ -2549,20 +2676,25 @@ action(Send_PCrdGrant, desc="") {
   }
 }
 
-// Note on CheckUpgrade_FromStore/CheckUpgrade_FromCU/CheckUpgrade_FromRU
+// Note on CheckUpgrade_FromStoreOrRU/CheckUpgrade_FromCU
 // We will always get Comp_UC; but if our data is invalidated before
 // Comp_UC we would need to go to UCE. Since we don't use the UCE state
 // we remain in the transient state and follow-up with ReadUnique.
 // Note this assumes the responder knows we have invalid data when sending
 // us Comp_UC and does not register us as owner.
 
-action(CheckUpgrade_FromStore, desc="") {
+action(CheckUpgrade_FromStoreOrRU, desc="") {
   assert(is_HN == false);
   if (tbe.dataUnique) {
     // success, just send CompAck next
     assert(tbe.dataValid);
   } else {
+    // will need to get data instead
     tbe.actions.pushFront(Event:SendReadUnique);
+    // we must have received an invalidation snoop that marked
+    // the req as stale
+    assert(tbe.is_stale);
+    tbe.is_stale := false;
   }
   tbe.actions.pushFront(Event:SendCompAck);
 }
@@ -2579,17 +2711,6 @@ action(CheckUpgrade_FromCU, desc="") {
   tbe.actions.pushFront(Event:SendCompAck);
 }
 
-action(CheckUpgrade_FromRU, desc="") {
-  assert(is_HN == false);
-  if (tbe.dataUnique) {
-    // success, just send CompAck next
-    assert(tbe.dataValid);
-  } else {
-    // will need to get data instead
-    tbe.actions.pushFront(Event:SendReadUnique);
-  }
-  tbe.actions.pushFront(Event:SendCompAck);
-}
 
 action(Finalize_UpdateCacheFromTBE, desc="") {
   assert(is_valid(tbe));
@@ -2742,6 +2863,37 @@ action(Finalize_DeallocateRequest, desc="") {
   incomingTransactionEnd(address, curTransitionNextState());
 }
 
+action(Finalize_DeallocateDvmRequest, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.actions.empty());
+  wakeupPendingReqs(tbe);
+  wakeupPendingSnps(tbe);
+  wakeupPendingTgrs(tbe);
+
+  // Don't call processRetryQueue() because DVM ops don't interact with the retry queue
+
+  assert(tbe.is_dvm_tbe);
+  deallocateDvmTBE(tbe);
+  unset_tbe();
+}
+
+action(Finalize_DeallocateDvmSnoop, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.actions.empty());
+  wakeupPendingReqs(tbe);
+  wakeupPendingSnps(tbe);
+  wakeupPendingTgrs(tbe);
+
+  // Don't call processRetryQueue() because DVM ops don't interact with the retry queue
+
+  assert(tbe.is_dvm_snp_tbe);
+  deallocateDvmSnoopTBE(tbe);
+  unset_tbe();
+
+  // Last argument = false, so it uses a "unique ID" rather than an address
+  incomingTransactionEnd(address, curTransitionNextState(), false);
+}
+
 action(Pop_ReqRdyQueue, desc="") {
   reqRdyPort.dequeue(clockEdge());
 }
@@ -2773,6 +2925,13 @@ action(Pop_ReplTriggerQueue, desc="") {
 
 action(Pop_RetryTriggerQueue, desc="") {
   retryTriggerInPort.dequeue(clockEdge());
+}
+
+action(Pop_SnpInPort, desc="") {
+  snpInPort.dequeue(clockEdge());
+}
+action(Pop_SeqInPort, desc="") {
+  seqInPort.dequeue(clockEdge());
 }
 
 action(ProcessNextState, desc="") {
@@ -3056,4 +3215,191 @@ action(SnpInvPipe, desc="") {
 action(SnpOncePipe, desc="") {
   assert(is_valid(tbe));
   tbe.delayNextAction := curTick() + cyclesToTicks(snp_latency);
+}
+
+//////////////////////////////////
+// DVM Actions
+
+action(Send_DvmTlbi, desc="") {
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, CHIRequestType:DvmOpNonSync, out_msg);
+    DPRINTF(RubyProtocol, "Sending DvmOpNonSync to %d\n", getMiscNodeMachine());
+
+    out_msg.usesTxnId := true;
+    out_msg.txnId := tbe.addr; // for DVM TBEs addr = txnId
+
+    out_msg.Destination.clear();
+    out_msg.Destination.add(getMiscNodeMachine());
+    out_msg.dataToFwdRequestor := false;
+
+    // Don't set message size, we don't use the data inside the messages
+
+    allowRequestRetry(tbe, out_msg);
+  }
+
+  // TLBIs can be ended early if the MN chooses to send CompDBIDResp.
+  // Otherwise, the MN sends a plain DBIDResp, and then sends a Comp later.
+  // => We add two possible response types, then add 1 to the count
+  // e.g. "expect exactly 1 (CompDBIDResp OR DBIDResp)"
+  clearExpectedReqResp(tbe);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:CompDBIDResp);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:DBIDResp);
+  tbe.expected_req_resp.addExpectedCount(1);
+  // If a plain DBIDResp is recieved, then Comp will be manually expected.
+  // (expect_sep_wu_comp also sort of handles this, but it's WU specific,
+  // and ProcessNextState doesn't respect it).
+
+  // Push a value to the list of pending NonSyncs
+  // The actual value doesn't matter, but we have to pick
+  // a type which already has function signatures
+  // e.g. TriggerQueue has push(Event) specified in SLICC but not push(addr)
+  DPRINTF(RubyProtocol, "Pushing pending nonsync to blocklist %16x\n", tbe.addr);
+  dvmPendingNonSyncsBlockingSync.push(Event:DvmTlbi_Initiate);
+}
+
+// Try to send a DVM Sync, but put it in the pending slot
+// if there are pending Non-Syncs blocking it.
+action(Try_Send_DvmSync, desc="") {
+  if (dvmPendingNonSyncsBlockingSync.empty()){
+    DPRINTF(RubyProtocol, "Nonsync queue is empty so %016x can proceed\n", tbe.addr);
+    tbe.actions.push(Event:DvmSync_Send);
+  } else {
+    assert(!dvmHasPendingSyncOp);
+    DPRINTF(RubyProtocol, "Nonsync queue is not empty so %016x is now pending\n", tbe.addr);
+    dvmHasPendingSyncOp := true;
+    dvmPendingSyncOp := address;
+  }
+}
+
+// Try to send a DVM sync that was put in the pending slot
+// due to pending Non-Syncs blocking it. Those Non-Syncs may not be
+// blocking it anymore.
+action(Try_Send_Pending_DvmSync, desc="") {
+  // Pop an element off the list of pending NonSyncs
+  // It won't necessarily be ours, but that doesn't matter.
+  assert(!dvmPendingNonSyncsBlockingSync.empty());
+  DPRINTF(RubyProtocol, "Popping nonsync from blocklist %16x\n", tbe.addr);
+  dvmPendingNonSyncsBlockingSync.pop();
+
+  if (dvmPendingNonSyncsBlockingSync.empty() && dvmHasPendingSyncOp) {
+    DPRINTF(RubyProtocol, "Blocklist now empty, pending op %16x can proceed\n", dvmPendingSyncOp);
+    TBE syncTBE := getDvmTBE(dvmPendingSyncOp);
+    assert(is_valid(syncTBE));
+    syncTBE.actions.push(Event:DvmSync_Send);
+
+    dvmHasPendingSyncOp := false;
+  }
+}
+
+action(Send_DvmSync, desc="") {
+  enqueue(reqOutPort, CHIRequestMsg, request_latency) {
+    prepareRequest(tbe, CHIRequestType:DvmOpSync, out_msg);
+    DPRINTF(RubyProtocol, "Sending DvmOpSync to %d\n", getMiscNodeMachine());
+
+    out_msg.usesTxnId := true;
+    out_msg.txnId := tbe.addr; // for DVM TBEs addr = txnId
+
+    out_msg.Destination.clear();
+    out_msg.Destination.add(getMiscNodeMachine());
+    out_msg.dataToFwdRequestor := false;
+
+    // Don't set message size, we don't use the data inside the messages
+
+    allowRequestRetry(tbe, out_msg);
+  }
+
+  clearExpectedReqResp(tbe);
+  tbe.expected_req_resp.addExpectedRespType(CHIResponseType:DBIDResp);
+  tbe.expected_req_resp.addExpectedCount(1);
+  // Comp will be expected later
+}
+
+action(Send_DvmTlbi_NCBWrData, desc="") {
+  enqueue(datOutPort, CHIDataMsg, data_latency) {
+    out_msg.addr := tbe.addr;
+    out_msg.type := CHIDataType:NCBWrData;
+
+    out_msg.usesTxnId := true;
+    out_msg.txnId := tbe.addr; // for DVM TBEs addr = txnId
+
+    // Set dataBlk to all 0 - we don't actually use the contents
+    out_msg.dataBlk.clear();
+    // Data should be 8 bytes - this function is (offset, range)
+    out_msg.bitMask.setMask(0, 8);
+
+    out_msg.responder := machineID;
+
+    out_msg.Destination.clear();
+    out_msg.Destination.add(getMiscNodeMachine());
+  }
+}
+
+action(Send_DvmSync_NCBWrData, desc="") {
+  enqueue(datOutPort, CHIDataMsg, data_latency) {
+    out_msg.addr := tbe.addr;
+    out_msg.type := CHIDataType:NCBWrData;
+
+    out_msg.usesTxnId := true;
+    out_msg.txnId := tbe.addr; // for DVM TBEs addr = txnId
+
+    // Set dataBlk to all 0 - we don't actually use the contents
+    out_msg.dataBlk.clear();
+    // Data should be 8 bytes - this function is (offset, range)
+    // I assume the range is in bytes...
+    out_msg.bitMask.setMask(0, 8);
+
+    out_msg.responder := machineID;
+
+    out_msg.Destination.clear();
+    out_msg.Destination.add(getMiscNodeMachine());
+  }
+}
+
+action(DvmTlbi_CompCallback, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.is_dvm_tbe);
+  assert(tbe.reqType == CHIRequestType:DvmTlbi_Initiate);
+  sequencer.unaddressedCallback(tbe.addr, RubyRequestType:TLBI);
+}
+
+action(DvmSync_CompCallback, desc="") {
+  assert(is_valid(tbe));
+  assert(tbe.is_dvm_tbe);
+  assert(tbe.reqType == CHIRequestType:DvmSync_Initiate);
+  sequencer.unaddressedCallback(tbe.addr, RubyRequestType:TLBI_SYNC);
+}
+
+//////////////////////////////////
+// DVM Snoop Actions
+
+action(Initiate_DvmSnoop, desc="") {
+  // DvmSnoop cannot be retried
+  bool was_retried := false;
+  peek(snpRdyPort, CHIRequestMsg) {
+    set_tbe(allocateDvmSnoopTBE(address, in_msg));
+  }
+  // Last argument = false, so it uses a "unique ID" rather than an address
+  // "Incoming" transactions for DVM = time between receiving a Snooped DVM op
+  // and sending the SnpResp_I
+  incomingTransactionStart(address, curTransitionEvent(), State:I, was_retried, false);
+}
+
+action(DvmExtTlbi_EnqueueSnpResp, desc=""){
+  tbe.delayNextAction := curTick() + cyclesToTicks(dvm_ext_tlbi_latency);
+  tbe.actions.push(Event:SendSnpIResp);
+}
+
+action(DvmExtSync_TriggerCallback, desc=""){
+  assert(is_valid(tbe));
+  assert(tbe.is_dvm_snp_tbe);
+  sequencer.unaddressedCallback(tbe.addr, RubyRequestType:TLBI_EXT_SYNC);
+}
+
+action(Profile_OutgoingStart_DVM, desc="") {
+  outgoingTransactionStart(address, curTransitionEvent(), false);
+}
+
+action(Profile_OutgoingEnd_DVM, desc="") {
+  assert(is_valid(tbe));
+  outgoingTransactionEnd(address, tbe.rcvdRetryAck, false);
 }

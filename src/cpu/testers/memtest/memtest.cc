@@ -88,6 +88,7 @@ MemTest::MemTest(const Params &p)
       noResponseEvent([this]{ noResponse(); }, name()),
       port("port", *this),
       retryPkt(nullptr),
+      waitResponse(false),
       size(p.size),
       interval(p.interval),
       percentReads(p.percent_reads),
@@ -96,6 +97,7 @@ MemTest::MemTest(const Params &p)
       requestorId(p.system->getRequestorId(this)),
       blockSize(p.system->cacheLineSize()),
       blockAddrMask(blockSize - 1),
+      sizeBlocks(size / blockSize),
       baseAddr1(p.base_addr_1),
       baseAddr2(p.base_addr_2),
       uncacheAddr(p.uncacheable_base_addr),
@@ -191,6 +193,12 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
         reschedule(noResponseEvent, clockEdge(progressCheck));
     else if (noResponseEvent.scheduled())
         deschedule(noResponseEvent);
+
+    // schedule the next tick
+    if (waitResponse) {
+        waitResponse = false;
+        schedule(tickEvent, clockEdge(interval));
+    }
 }
 MemTest::MemTestStats::MemTestStats(statistics::Group *parent)
       : statistics::Group(parent),
@@ -205,8 +213,9 @@ MemTest::MemTestStats::MemTestStats(statistics::Group *parent)
 void
 MemTest::tick()
 {
-    // we should never tick if we are waiting for a retry
+    // we should never tick if we are waiting for a retry or response
     assert(!retryPkt);
+    assert(!waitResponse);
 
     // create a new request
     unsigned cmd = random_mt.random(0, 100);
@@ -215,6 +224,13 @@ MemTest::tick()
     unsigned base = random_mt.random(0, 1);
     Request::Flags flags;
     Addr paddr;
+
+    // halt until we clear outstanding requests, otherwise it won't be able to
+    // find a new unique address
+    if (outstandingAddrs.size() >= sizeBlocks) {
+        waitResponse = true;
+        return;
+    }
 
     // generate a unique address
     do {

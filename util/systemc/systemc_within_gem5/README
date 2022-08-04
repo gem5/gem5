@@ -26,6 +26,7 @@ Existing examples:
 
 systemc_sc_main - Run code based on an sc_main function.
 systemc_simple_object - Build systemc objects into a gem5 object hierarchy.
+systemc_tlm - Simple LT-Based TLM system
 
 
 Note that these directories all have a systemc_ prefix so that when EXTRAS

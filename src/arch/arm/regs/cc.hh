@@ -38,24 +38,37 @@
 #ifndef __ARCH_ARM_REGS_CC_HH__
 #define __ARCH_ARM_REGS_CC_HH__
 
+#include "cpu/reg_class.hh"
+
 namespace gem5
 {
 
 namespace ArmISA
 {
 
-enum ccRegIndex
+namespace cc_reg
 {
-    CCREG_NZ,
-    CCREG_C,
-    CCREG_V,
-    CCREG_GE,
-    CCREG_FP,
-    CCREG_ZERO,
-    NUM_CCREGS
+
+enum : RegIndex
+{
+    _NzIdx,
+    _CIdx,
+    _VIdx,
+    _GeIdx,
+    _FpIdx,
+    _ZeroIdx,
+    NumRegs
 };
 
-const char * const ccRegName[NUM_CCREGS] = {
+inline constexpr RegId
+    Nz(CCRegClass, _NzIdx),
+    C(CCRegClass, _CIdx),
+    V(CCRegClass, _VIdx),
+    Ge(CCRegClass, _GeIdx),
+    Fp(CCRegClass, _FpIdx),
+    Zero(CCRegClass, _ZeroIdx);
+
+const char * const RegName[NumRegs] = {
     "nz",
     "c",
     "v",
@@ -63,6 +76,8 @@ const char * const ccRegName[NUM_CCREGS] = {
     "fp",
     "zero"
 };
+
+} // namespace cc_reg
 
 enum ConditionCode
 {

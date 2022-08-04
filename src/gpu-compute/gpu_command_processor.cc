@@ -33,10 +33,14 @@
 
 #include <cassert>
 
+#include "arch/amdgpu/vega/pagetable_walker.hh"
 #include "base/chunk_generator.hh"
 #include "debug/GPUCommandProc.hh"
 #include "debug/GPUKernelInfo.hh"
+#include "dev/amdgpu/amdgpu_device.hh"
 #include "gpu-compute/dispatcher.hh"
+#include "mem/abstract_mem.hh"
+#include "mem/packet_access.hh"
 #include "mem/se_translating_port_proxy.hh"
 #include "mem/translating_port_proxy.hh"
 #include "params/GPUCommandProcessor.hh"
@@ -50,7 +54,7 @@ namespace gem5
 
 GPUCommandProcessor::GPUCommandProcessor(const Params &p)
     : DmaVirtDevice(p), dispatcher(*p.dispatcher), _driver(nullptr),
-      hsaPP(p.hsapp)
+      walker(p.walker), hsaPP(p.hsapp)
 {
     assert(hsaPP);
     hsaPP->setDevice(this);
@@ -63,15 +67,32 @@ GPUCommandProcessor::hsaPacketProc()
     return *hsaPP;
 }
 
+/**
+ * Forward the VRAM requestor ID needed for device memory from GPU device.
+ */
+RequestorID
+GPUCommandProcessor::vramRequestorId()
+{
+    return gpuDevice->vramRequestorId();
+}
+
 TranslationGenPtr
 GPUCommandProcessor::translate(Addr vaddr, Addr size)
 {
-    // Grab the process and try to translate the virtual address with it; with
-    // new extensions, it will likely be wrong to just arbitrarily grab context
-    // zero.
-    auto process = sys->threads[0]->getProcessPtr();
+    if (!FullSystem) {
+        // Grab the process and try to translate the virtual address with it;
+        // with new extensions, it will likely be wrong to just arbitrarily
+        // grab context zero.
+        auto process = sys->threads[0]->getProcessPtr();
 
-    return process->pTable->translateRange(vaddr, size);
+        return process->pTable->translateRange(vaddr, size);
+    }
+
+    // In full system use the page tables setup by the kernel driver rather
+    // than the CPU page tables.
+    return TranslationGenPtr(
+        new AMDGPUVM::UserTranslationGen(&gpuDevice->getVM(), walker,
+                                         1 /* vmid */, vaddr, size));
 }
 
 /**
@@ -109,6 +130,27 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
     PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
 
     /**
+     * In full system mode, the page table entry may point to a system page
+     * or a device page. System pages use the proxy as normal, but a device
+     * page needs to be read from device memory. Check what type it is here.
+     */
+    bool is_system_page = true;
+    Addr phys_addr = disp_pkt->kernel_object;
+    if (FullSystem) {
+        /**
+         * Full system currently only supports running on single VMID (one
+         * virtual memory space), i.e., one application running on GPU at a
+         * time. Because of this, for now we know the VMID is always 1. Later
+         * the VMID would have to be passed on to the command processor.
+         */
+        int vmid = 1;
+        unsigned tmp_bytes;
+        walker->startFunctional(gpuDevice->getVM().getPageTableBase(vmid),
+                                phys_addr, tmp_bytes, BaseMMU::Mode::Read,
+                                is_system_page);
+    }
+
+    /**
      * The kernel_object is a pointer to the machine code, whose entry
      * point is an 'amd_kernel_code_t' type, which is included in the
      * kernel binary, and describes various aspects of the kernel. The
@@ -118,8 +160,28 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
      * instructions.
      */
     AMDKernelCode akc;
-    virt_proxy.readBlob(disp_pkt->kernel_object, (uint8_t*)&akc,
-        sizeof(AMDKernelCode));
+    if (is_system_page) {
+        DPRINTF(GPUCommandProc, "kernel_object in system, using proxy\n");
+        virt_proxy.readBlob(disp_pkt->kernel_object, (uint8_t*)&akc,
+            sizeof(AMDKernelCode));
+    } else {
+        assert(FullSystem);
+        DPRINTF(GPUCommandProc, "kernel_object in device, using device mem\n");
+        // Read from GPU memory manager
+        uint8_t raw_akc[sizeof(AMDKernelCode)];
+        for (int i = 0; i < sizeof(AMDKernelCode) / sizeof(uint8_t); ++i) {
+            Addr mmhubAddr = phys_addr + i*sizeof(uint8_t);
+            Request::Flags flags = Request::PHYSICAL;
+            RequestPtr request = std::make_shared<Request>(
+                mmhubAddr, sizeof(uint8_t), flags, walker->getDevRequestor());
+            Packet *readPkt = new Packet(request, MemCmd::ReadReq);
+            readPkt->allocate();
+            system()->getDeviceMemory(readPkt)->access(readPkt);
+            raw_akc[i] = readPkt->getLE<uint8_t>();
+            delete readPkt;
+        }
+        memcpy(&akc, &raw_akc, sizeof(AMDKernelCode));
+    }
 
     DPRINTF(GPUCommandProc, "GPU machine code is %lli bytes from start of the "
         "kernel object\n", akc.kernel_code_entry_byte_offset);
@@ -213,7 +275,17 @@ GPUCommandProcessor::updateHsaSignal(Addr signal_handle, uint64_t signal_value,
 
         DPRINTF(GPUCommandProc, "Calling signal wakeup event on "
                 "signal event value %d\n", *event_val);
-        signalWakeupEvent(*event_val);
+
+        // The mailbox/wakeup signal uses the SE mode proxy port to write
+        // the event value. This is not available in full system mode so
+        // instead we need to issue a DMA write to the address. The value of
+        // *event_val clears the event.
+        if (FullSystem) {
+            auto cb = new DmaVirtCallback<uint64_t>(function, *event_val);
+            dmaWriteVirt(mailbox_addr, sizeof(Addr), cb, &cb->dmaBuffer, 0);
+        } else {
+            signalWakeupEvent(*event_val);
+        }
     }
 }
 
@@ -354,6 +426,13 @@ GPUCommandProcessor::getAddrRanges() const
 {
     AddrRangeList ranges;
     return ranges;
+}
+
+void
+GPUCommandProcessor::setGPUDevice(AMDGPUDevice *gpu_device)
+{
+    gpuDevice = gpu_device;
+    walker->setDevRequestor(gpuDevice->vramRequestorId());
 }
 
 void

@@ -86,7 +86,6 @@ BaseSimpleCPU::BaseSimpleCPU(const BaseSimpleCPUParams &p)
     : BaseCPU(p),
       curThread(0),
       branchPred(p.branchPred),
-      zeroReg(p.isa[0]->regClasses().at(IntRegClass).zeroReg()),
       traceData(NULL),
       _status(Idle)
 {
@@ -310,9 +309,6 @@ BaseSimpleCPU::preExecute()
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
-
-    // maintain $r0 semantics
-    thread->setIntReg(zeroReg, 0);
 
     // resets predicates
     t_info.setPredicate(true);

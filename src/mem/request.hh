@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013,2017-2020 ARM Limited
+ * Copyright (c) 2012-2013,2017-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -237,6 +237,20 @@ class Request
         // This separation is necessary to ensure the disjoint components
         // of the system work correctly together.
 
+        /** The Request is a TLB shootdown */
+        TLBI                        = 0x0000100000000000,
+
+        /** The Request is a TLB shootdown sync */
+        TLBI_SYNC                   = 0x0000200000000000,
+
+        /** The Request tells the CPU model that a
+            remote TLB Sync has been requested */
+        TLBI_EXT_SYNC               = 0x0000400000000000,
+
+        /** The Request tells the interconnect that a
+            remote TLB Sync request has completed */
+        TLBI_EXT_SYNC_COMP          = 0x0000800000000000,
+
         /**
          * These flags are *not* cleared when a Request object is
          * reused (assigned a new address).
@@ -248,6 +262,9 @@ class Request
 
     static const FlagsType HTM_CMD = HTM_START | HTM_COMMIT |
         HTM_CANCEL | HTM_ABORT;
+
+    static const FlagsType TLBI_CMD = TLBI | TLBI_SYNC |
+        TLBI_EXT_SYNC | TLBI_EXT_SYNC_COMP;
 
     /** Requestor Ids that are statically allocated
      * @{*/
@@ -419,6 +436,12 @@ class Request
      */
     uint32_t _substreamId = 0;
 
+    /**
+     * For fullsystem GPU simulation, this determines if a requests
+     * destination is system (host) memory or dGPU (device) memory.
+     */
+    bool _systemReq = 0;
+
     /** The virtual address of the request. */
     Addr _vaddr = MaxAddr;
 
@@ -498,6 +521,22 @@ class Request
     }
 
     ~Request() {}
+
+    /**
+     * Factory method for creating memory management requests, with
+     * unspecified addr and size.
+     */
+    static RequestPtr
+    createMemManagement(Flags flags, RequestorID id)
+    {
+        auto mgmt_req = std::make_shared<Request>();
+        mgmt_req->_flags.set(flags);
+        mgmt_req->_requestorId = id;
+        mgmt_req->_time = curTick();
+
+        assert(mgmt_req->isMemMgmt());
+        return mgmt_req;
+    }
 
     /**
      * Set up Context numbers.
@@ -761,11 +800,26 @@ class Request
     }
 
     void
+    clearFlags(Flags flags)
+    {
+        assert(hasPaddr() || hasVaddr());
+        _flags.clear(flags);
+    }
+
+    void
     setCacheCoherenceFlags(CacheCoherenceFlags extraFlags)
     {
         // TODO: do mem_sync_op requests have valid paddr/vaddr?
         assert(hasPaddr() || hasVaddr());
         _cacheCoherenceFlags.set(extraFlags);
+    }
+
+    void
+    clearCacheCoherenceFlags(CacheCoherenceFlags extraFlags)
+    {
+        // TODO: do mem_sync_op requests have valid paddr/vaddr?
+        assert(hasPaddr() || hasVaddr());
+        _cacheCoherenceFlags.clear(extraFlags);
     }
 
     /** Accessor function for vaddr.*/
@@ -787,6 +841,12 @@ class Request
     requestorId() const
     {
         return _requestorId;
+    }
+
+    void
+    requestorId(RequestorID rid)
+    {
+        _requestorId = rid;
     }
 
     uint32_t
@@ -844,6 +904,10 @@ class Request
         assert(hasContextId());
         return _contextId;
     }
+
+    /* For GPU fullsystem mark this request is not to device memory. */
+    void setSystemReq(bool sysReq) { _systemReq = sysReq; }
+    bool systemReq() const { return _systemReq; }
 
     bool
     hasStreamId() const
@@ -974,6 +1038,18 @@ class Request
         return (isHTMStart() || isHTMCommit() ||
                 isHTMCancel() || isHTMAbort());
     }
+
+    bool isTlbi() const { return _flags.isSet(TLBI); }
+    bool isTlbiSync() const { return _flags.isSet(TLBI_SYNC); }
+    bool isTlbiExtSync() const { return _flags.isSet(TLBI_EXT_SYNC); }
+    bool isTlbiExtSyncComp() const { return _flags.isSet(TLBI_EXT_SYNC_COMP); }
+    bool
+    isTlbiCmd() const
+    {
+        return (isTlbi() || isTlbiSync() ||
+                isTlbiExtSync() || isTlbiExtSyncComp());
+    }
+    bool isMemMgmt() const { return isTlbiCmd() || isHTMCmd(); }
 
     bool
     isAtomic() const

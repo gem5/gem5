@@ -150,100 +150,34 @@ ThreadContext::clearArchRegs()
 }
 
 RegVal
-ThreadContext::readIntRegFlat(RegIndex reg_idx) const
+ThreadContext::getRegFlat(const RegId &reg) const
 {
-    return cpu->readArchIntReg(reg_idx, thread->threadId());
+    return cpu->getArchReg(reg, thread->threadId());
 }
 
-RegVal
-ThreadContext::readFloatRegFlat(RegIndex reg_idx) const
+void *
+ThreadContext::getWritableRegFlat(const RegId &reg)
 {
-    return cpu->readArchFloatReg(reg_idx, thread->threadId());
-}
-
-const TheISA::VecRegContainer&
-ThreadContext::readVecRegFlat(RegIndex reg_id) const
-{
-    return cpu->readArchVecReg(reg_id, thread->threadId());
-}
-
-TheISA::VecRegContainer&
-ThreadContext::getWritableVecRegFlat(RegIndex reg_id)
-{
-    return cpu->getWritableArchVecReg(reg_id, thread->threadId());
-}
-
-RegVal
-ThreadContext::readVecElemFlat(RegIndex idx, const ElemIndex& elemIndex) const
-{
-    return cpu->readArchVecElem(idx, elemIndex, thread->threadId());
-}
-
-const TheISA::VecPredRegContainer&
-ThreadContext::readVecPredRegFlat(RegIndex reg_id) const
-{
-    return cpu->readArchVecPredReg(reg_id, thread->threadId());
-}
-
-TheISA::VecPredRegContainer&
-ThreadContext::getWritableVecPredRegFlat(RegIndex reg_id)
-{
-    return cpu->getWritableArchVecPredReg(reg_id, thread->threadId());
-}
-
-RegVal
-ThreadContext::readCCRegFlat(RegIndex reg_idx) const
-{
-    return cpu->readArchCCReg(reg_idx, thread->threadId());
+    return cpu->getWritableArchReg(reg, thread->threadId());
 }
 
 void
-ThreadContext::setIntRegFlat(RegIndex reg_idx, RegVal val)
+ThreadContext::getRegFlat(const RegId &reg, void *val) const
 {
-    cpu->setArchIntReg(reg_idx, val, thread->threadId());
+    cpu->getArchReg(reg, val, thread->threadId());
+}
 
+void
+ThreadContext::setRegFlat(const RegId &reg, RegVal val)
+{
+    cpu->setArchReg(reg, val, thread->threadId());
     conditionalSquash();
 }
 
 void
-ThreadContext::setFloatRegFlat(RegIndex reg_idx, RegVal val)
+ThreadContext::setRegFlat(const RegId &reg, const void *val)
 {
-    cpu->setArchFloatReg(reg_idx, val, thread->threadId());
-
-    conditionalSquash();
-}
-
-void
-ThreadContext::setVecRegFlat(
-        RegIndex reg_idx, const TheISA::VecRegContainer& val)
-{
-    cpu->setArchVecReg(reg_idx, val, thread->threadId());
-
-    conditionalSquash();
-}
-
-void
-ThreadContext::setVecElemFlat(RegIndex idx,
-        const ElemIndex& elemIndex, RegVal val)
-{
-    cpu->setArchVecElem(idx, elemIndex, val, thread->threadId());
-    conditionalSquash();
-}
-
-void
-ThreadContext::setVecPredRegFlat(RegIndex reg_idx,
-        const TheISA::VecPredRegContainer& val)
-{
-    cpu->setArchVecPredReg(reg_idx, val, thread->threadId());
-
-    conditionalSquash();
-}
-
-void
-ThreadContext::setCCRegFlat(RegIndex reg_idx, RegVal val)
-{
-    cpu->setArchCCReg(reg_idx, val, thread->threadId());
-
+    cpu->setArchReg(reg, val, thread->threadId());
     conditionalSquash();
 }
 

@@ -40,7 +40,7 @@ from testlib import *
 def asm_test(test, #The full path of the test
              cpu_type,
              num_cpus=4,
-             max_tick=10000000000,
+             max_tick=None,
              ruby=False,
              debug_flags=None, # Debug flags passed to gem5
              full_system = False
@@ -58,10 +58,10 @@ def asm_test(test, #The full path of the test
     if not debug_flags is None:
         gem5_args += ['--debug-flags', str(debug_flags)]
 
-    config_args = [
-        '-m', str(max_tick),
-        '--cpu-type', cpu_type,
-    ]
+    config_args = ['--cpu-type', cpu_type]
+
+    if max_tick:
+        config_args += ['-m', str(max_tick) ]
 
     if full_system:
         config_args += [
@@ -214,6 +214,17 @@ binaries = (
     'rv64um-ps-remu',
     'rv64um-ps-remuw',
     'rv64um-ps-remw',
+    'rv64uzfh-ps-fadd',
+    'rv64uzfh-ps-fclass',
+    'rv64uzfh-ps-fcmp',
+    'rv64uzfh-ps-fcvt',
+    'rv64uzfh-ps-fcvt_w',
+    'rv64uzfh-ps-fdiv',
+    'rv64uzfh-ps-fmadd',
+    'rv64uzfh-ps-fmin',
+    'rv64uzfh-ps-ldst',
+    'rv64uzfh-ps-move',
+    'rv64uzfh-ps-recoding',
 )
 
 

@@ -38,6 +38,8 @@
 #ifndef __MEM_CACHE_PREFETCH_MULTI_HH__
 #define __MEM_CACHE_PREFETCH_MULTI_HH__
 
+#include <vector>
+
 #include "mem/cache/prefetch/base.hh"
 
 namespace gem5
@@ -70,7 +72,8 @@ class Multi : public Base
 
   protected:
     /** List of sub-prefetchers ordered by priority. */
-    std::list<Base*> prefetchers;
+    std::vector<Base*> prefetchers;
+    uint8_t lastChosenPf;
 };
 
 } // namespace prefetch

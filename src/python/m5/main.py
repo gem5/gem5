@@ -61,7 +61,6 @@ def _stats_help(option, opt, value, parser):
 
 
 def parse_options():
-    from . import config
     from .options import OptionParser
 
     options = OptionParser(usage=usage, description=brief_copyright)
@@ -154,13 +153,6 @@ def parse_options():
     group("Help Options")
     option("--list-sim-objects", action='store_true', default=False,
         help="List all built-in SimObjects, their params and default values")
-
-    # load the options.py config file to allow people to set their own
-    # default options
-    options_file = config.get('options.py')
-    if options_file:
-        scope = { 'options' : options }
-        exec(compile(open(options_file).read(), options_file, 'exec'), scope)
 
     arguments = options.parse_args()
     return options,arguments
@@ -318,7 +310,7 @@ def main():
 
     verbose = options.verbose - options.quiet
     if verbose >= 0:
-        print("gem5 Simulator System.  http://gem5.org")
+        print("gem5 Simulator System.  https://www.gem5.org")
         print(brief_copyright)
         print()
 

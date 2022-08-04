@@ -70,7 +70,7 @@ def test_boot(
         isa_to_use=constants.x86_tag
     else:
         protocol_to_use=None
-        isa_to_use=constants.gcn3_x86_tag
+        isa_to_use=constants.vega_x86_tag
 
     gem5_verify_config(
         name=name,
@@ -126,6 +126,15 @@ test_boot(
 )
 
 test_boot(
+    cpu="timing",
+    num_cpus=8,
+    mem_system="classic",
+    memory_class="SingleChannelDDR3_2133",
+    to_tick=10000000000,
+    length=constants.quick_tag,
+)
+
+test_boot(
     cpu="atomic",
     num_cpus=4,
     mem_system="classic",
@@ -167,6 +176,15 @@ test_boot(
     cpu="timing",
     num_cpus=1,
     mem_system="mi_example",
+    memory_class="DualChannelDDR3_2133",
+    boot_type="init",
+    length=constants.long_tag,
+)
+
+test_boot(
+    cpu="timing",
+    num_cpus=4,
+    mem_system="classic",
     memory_class="DualChannelDDR3_2133",
     boot_type="init",
     length=constants.long_tag,
@@ -220,19 +238,19 @@ run_map = {
             1: True,
             2: True,
             4: False,  # We already run this in the long (Nightly) tests.
-            8: True,
+            8: False,  # Jira: https://gem5.atlassian.net/browse/GEM5-1217
         },
         "timing": {
             1: True,
-            2: False,  # Timeout
-            4: False,  # Timeout
-            8: False,  # Timeout
+            2: True,
+            4: True,
+            8: False,  # Jira: https://gem5.atlassian.net/browse/GEM5-1217
         },
         "o3": {
             1: False,  # Timeout
-            2: False,  # Not Supported
-            4: False,  # Not Supported
-            8: False,  # Not Supported
+            2: False,  # Timeout
+            4: False,  # Timeout
+            8: False,  # Timeout
         },
     },
     "mi_example": {
@@ -243,10 +261,10 @@ run_map = {
             8: False,  # Not Supported
         },
         "timing": {
-            1: True,
-            2: True,
-            4: True,
-            8: True,
+            1: False,  # MI_Example does not successfully boot with the Timing
+            2: False,  # Jira: https://gem5.atlassian.net/browse/GEM5-1216
+            4: False,
+            8: False,
         },
         "o3": {
             1: False,  # Timeout
@@ -264,7 +282,8 @@ run_map = {
         },
         "timing": {
             1: True,
-            2: True,
+            2: False,  # Disabled due to
+                       # https://gem5.atlassian.net/browse/GEM5-1219.
             4: True,
             8: True,
         },
@@ -289,3 +308,43 @@ for mem_system in run_map:
                     boot_type="systemd",
                     length=constants.very_long_tag,
                     )
+
+# To ensure the O3 CPU is working correctly, we include some "init" tests here.
+# There were not included above as booting to "systemd" takes too long with
+# o3 CPUs
+test_boot(
+    cpu="o3",
+    num_cpus=1,
+    mem_system="classic",
+    memory_class="DualChannelDDR4_2400",
+    boot_type="init",
+    length=constants.very_long_tag,
+)
+
+test_boot(
+    cpu="o3",
+    num_cpus=2,
+    mem_system="classic",
+    memory_class="DualChannelDDR4_2400",
+    boot_type="init",
+    length=constants.very_long_tag,
+)
+
+test_boot(
+    cpu="o3",
+    num_cpus=4,
+    mem_system="classic",
+    memory_class="DualChannelDDR4_2400",
+    boot_type="init",
+    length=constants.very_long_tag,
+)
+
+test_boot(
+    cpu="o3",
+    num_cpus=8,
+    mem_system="classic",
+    memory_class="DualChannelDDR4_2400",
+    boot_type="init",
+    length=constants.very_long_tag,
+)
+

@@ -72,8 +72,8 @@ class ConfigTable;
 
 } // namespace intelmp
 
-void installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
-                    SegDescriptor desc, bool longmode);
+void installSegDesc(ThreadContext *tc, int seg, SegDescriptor desc,
+        bool longmode);
 
 class FsWorkload : public KernelWorkload
 {

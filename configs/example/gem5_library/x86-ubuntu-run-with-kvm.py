@@ -89,6 +89,7 @@ memory = SingleChannelDDR3_1600(size="3GB")
 processor = SimpleSwitchableProcessor(
     starting_core_type=CPUTypes.KVM,
     switch_core_type=CPUTypes.TIMING,
+    isa=ISA.X86,
     num_cores=2,
 )
 

@@ -274,8 +274,11 @@ class DynamicSensitivityEventOrList :
 
     DynamicSensitivityEventOrList(
             Process *p, const sc_core::sc_event_or_list *eol);
+    ~DynamicSensitivityEventOrList();
 
     bool notifyWork(Event *e) override;
+
+    const sc_core::sc_event_or_list *list;
 };
 
 //XXX This sensitivity can't be reused. To reset it, it has to be deleted and
@@ -290,8 +293,11 @@ class DynamicSensitivityEventAndList :
 
     DynamicSensitivityEventAndList(
             Process *p, const sc_core::sc_event_and_list *eal);
+    ~DynamicSensitivityEventAndList();
 
     bool notifyWork(Event *e) override;
+
+    const sc_core::sc_event_and_list *list;
 };
 
 } // namespace sc_gem5

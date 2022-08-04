@@ -59,9 +59,9 @@ SkipFunc::returnFromFuncIn(ThreadContext *tc)
 {
     PCState new_pc = tc->pcState().as<PCState>();
     if (inAArch64(tc)) {
-        new_pc.set(tc->readIntReg(INTREG_X30));
+        new_pc.set(tc->getReg(int_reg::X30));
     } else {
-        new_pc.set(tc->readIntReg(ReturnAddressReg) & ~1ULL);
+        new_pc.set(tc->getReg(ReturnAddressReg) & ~1ULL);
     }
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();
@@ -130,11 +130,11 @@ FsWorkload::initState()
                  "gic_cpu_addr must be set with bootloader");
 
         for (auto *tc: arm_sys->threads) {
-            tc->setIntReg(3, kernelEntry);
+            tc->setReg(int_reg::R3, kernelEntry);
             if (is_gic_v2)
-                tc->setIntReg(4, arm_sys->params().gic_cpu_addr);
+                tc->setReg(int_reg::R4, arm_sys->params().gic_cpu_addr);
             if (getArch() == loader::Arm)
-                tc->setIntReg(5, params().cpu_release_addr);
+                tc->setReg(int_reg::R5, params().cpu_release_addr);
         }
         inform("Using kernel entry physical address at %#x\n", kernelEntry);
     } else {
@@ -144,7 +144,7 @@ FsWorkload::initState()
     }
 }
 
-    loader::ObjectFile *
+loader::ObjectFile *
 FsWorkload::getBootLoader(loader::ObjectFile *const obj)
 {
     if (obj) {

@@ -8,28 +8,68 @@ except ImportError:
 
 import sys
 import os
+import warnings
+import re
+import platform
 
 sys.path.insert(0,"..")
 sys.tracebacklimit = 0
 
 import ply.yacc
 
-def check_expected(result,expected):
-    resultlines = []
+def make_pymodule_path(filename):
+    path = os.path.dirname(filename)
+    file = os.path.basename(filename)
+    mod, ext = os.path.splitext(file)
+
+    if sys.hexversion >= 0x3040000:
+        import importlib.util
+        fullpath = importlib.util.cache_from_source(filename, ext=='.pyc')
+    elif sys.hexversion >= 0x3020000:
+        import imp
+        modname = mod+"."+imp.get_tag()+ext
+        fullpath = os.path.join(path,'__pycache__',modname)
+    else:
+        fullpath = filename
+    return fullpath
+
+def pymodule_out_exists(filename):
+    return os.path.exists(make_pymodule_path(filename))
+
+def pymodule_out_remove(filename):
+    os.remove(make_pymodule_path(filename))
+
+def implementation():
+    if platform.system().startswith("Java"):
+        return "Jython"
+    elif hasattr(sys, "pypy_version_info"):
+        return "PyPy"
+    else:
+        return "CPython"
+
+# Check the output to see if it contains all of a set of expected output lines.
+# This alternate implementation looks weird, but is needed to properly handle
+# some variations in error message order that occurs due to dict hash table
+# randomization that was introduced in Python 3.3
+def check_expected(result, expected):
+    # Normalize 'state n' text to account for randomization effects in Python 3.3
+    expected = re.sub(r' state \d+', 'state <n>', expected)
+    result = re.sub(r' state \d+', 'state <n>', result)
+
+    resultlines = set()
     for line in result.splitlines():
         if line.startswith("WARNING: "):
             line = line[9:]
         elif line.startswith("ERROR: "):
             line = line[7:]
-        resultlines.append(line)
+        resultlines.add(line)
 
-    expectedlines = expected.splitlines()
-    if len(resultlines) != len(expectedlines):
-        return False
-    for rline,eline in zip(resultlines,expectedlines):
-        if not rline.endswith(eline):
-            return False
-    return True
+    # Selectively remove expected lines from the output
+    for eline in expected.splitlines():
+        resultlines = set(line for line in resultlines if not line.endswith(eline))
+
+    # Return True if no result lines remain
+    return not bool(resultlines)
 
 def run_import(module):
     code = "import "+module
@@ -43,10 +83,14 @@ class YaccErrorWarningTests(unittest.TestCase):
         sys.stdout = StringIO.StringIO()
         try:
             os.remove("parsetab.py")
-            os.remove("parsetab.pyc")
+            pymodule_out_remove("parsetab.pyc")
         except OSError:
             pass
         
+        if sys.hexversion >= 0x3020000:
+            warnings.filterwarnings('ignore', category=ResourceWarning)
+        warnings.filterwarnings('ignore', category=DeprecationWarning)
+
     def tearDown(self):
         sys.stderr = sys.__stderr__
         sys.stdout = sys.__stdout__
@@ -148,7 +192,38 @@ class YaccErrorWarningTests(unittest.TestCase):
         self.assert_(check_expected(result,
                                     "yacc_error4.py:62: Illegal rule name 'error'. Already defined as a token\n"
                                     ))
-        
+
+
+    def test_yacc_error5(self):
+        run_import("yacc_error5")
+        result = sys.stdout.getvalue()
+        self.assert_(check_expected(result,
+                                    "Group at 3:10 to 3:12\n"
+                                    "Undefined name 'a'\n"
+                                    "Syntax error at 'b'\n"
+                                    "Syntax error at 4:18 to 4:22\n"
+                                    "Assignment Error at 2:5 to 5:27\n"
+                                    "13\n"
+            ))
+
+    def test_yacc_error6(self):
+        run_import("yacc_error6")
+        result = sys.stdout.getvalue()
+        self.assert_(check_expected(result,
+                                    "a=7\n"
+                                    "Line 3: Syntax error at '*'\n"
+                                    "c=21\n"
+            ))
+
+    def test_yacc_error7(self):
+        run_import("yacc_error7")
+        result = sys.stdout.getvalue()
+        self.assert_(check_expected(result,
+                                    "a=7\n"
+                                    "Line 3: Syntax error at '*'\n"
+                                    "c=21\n"
+            ))
+
     def test_yacc_inf(self):
         self.assertRaises(ply.yacc.YaccError,run_import,"yacc_inf")
         result = sys.stderr.getvalue()
@@ -261,6 +336,7 @@ class YaccErrorWarningTests(unittest.TestCase):
         self.assert_(check_expected(result,
                                     "Generating LALR tables\n"
                                     ))
+
     def test_yacc_sr(self):
         run_import("yacc_sr")
         result = sys.stderr.getvalue()
@@ -274,6 +350,13 @@ class YaccErrorWarningTests(unittest.TestCase):
         result = sys.stderr.getvalue()
         self.assert_(check_expected(result,
                                     "yacc_term1.py:24: Illegal rule name 'NUMBER'. Already defined as a token\n"
+                                    ))
+
+    def test_yacc_unicode_literals(self):
+        run_import("yacc_unicode_literals")
+        result = sys.stderr.getvalue()
+        self.assert_(check_expected(result,
+                                    "Generating LALR tables\n"
                                     ))
 
     def test_yacc_unused(self):
@@ -297,7 +380,6 @@ class YaccErrorWarningTests(unittest.TestCase):
     def test_yacc_uprec(self):
         self.assertRaises(ply.yacc.YaccError,run_import,"yacc_uprec")
         result = sys.stderr.getvalue()
-        print repr(result)
         self.assert_(check_expected(result,
                                     "yacc_uprec.py:37: Nothing known about the precedence of 'UMINUS'\n"
                                     ))
@@ -319,6 +401,52 @@ class YaccErrorWarningTests(unittest.TestCase):
                                     "Precedence rule 'left' defined for unknown symbol '/'\n"
                                     ))
 
+    def test_pkg_test1(self):
+        from pkg_test1 import parser
+        self.assertTrue(os.path.exists('pkg_test1/parsing/parsetab.py'))
+        self.assertTrue(os.path.exists('pkg_test1/parsing/lextab.py'))
+        self.assertTrue(os.path.exists('pkg_test1/parsing/parser.out'))
+        r = parser.parse('3+4+5')
+        self.assertEqual(r, 12)
 
-            
+    def test_pkg_test2(self):
+        from pkg_test2 import parser
+        self.assertTrue(os.path.exists('pkg_test2/parsing/calcparsetab.py'))
+        self.assertTrue(os.path.exists('pkg_test2/parsing/calclextab.py'))
+        self.assertTrue(os.path.exists('pkg_test2/parsing/parser.out'))
+        r = parser.parse('3+4+5')
+        self.assertEqual(r, 12)
+
+    def test_pkg_test3(self):
+        from pkg_test3 import parser
+        self.assertTrue(os.path.exists('pkg_test3/generated/parsetab.py'))
+        self.assertTrue(os.path.exists('pkg_test3/generated/lextab.py'))
+        self.assertTrue(os.path.exists('pkg_test3/generated/parser.out'))
+        r = parser.parse('3+4+5')
+        self.assertEqual(r, 12)
+
+    def test_pkg_test4(self):
+        from pkg_test4 import parser
+        self.assertFalse(os.path.exists('pkg_test4/parsing/parsetab.py'))
+        self.assertFalse(os.path.exists('pkg_test4/parsing/lextab.py'))
+        self.assertFalse(os.path.exists('pkg_test4/parsing/parser.out'))
+        r = parser.parse('3+4+5')
+        self.assertEqual(r, 12)
+
+    def test_pkg_test5(self):
+        from pkg_test5 import parser
+        self.assertTrue(os.path.exists('pkg_test5/parsing/parsetab.py'))
+        self.assertTrue(os.path.exists('pkg_test5/parsing/lextab.py'))
+        self.assertTrue(os.path.exists('pkg_test5/parsing/parser.out'))
+        r = parser.parse('3+4+5')
+        self.assertEqual(r, 12)
+
+    def test_pkg_test6(self):
+        from pkg_test6 import parser
+        self.assertTrue(os.path.exists('pkg_test6/parsing/parsetab.py'))
+        self.assertTrue(os.path.exists('pkg_test6/parsing/lextab.py'))
+        self.assertTrue(os.path.exists('pkg_test6/parsing/parser.out'))
+        r = parser.parse('3+4+5')
+        self.assertEqual(r, 12)
+
 unittest.main()

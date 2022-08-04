@@ -188,13 +188,13 @@ class SourceMeta(type):
         super(SourceMeta, cls).__init__(name, bases, dict)
         cls.all = SourceList()
 
-class SourceFile(object, metaclass=SourceMeta):
-    '''Base object that encapsulates the notion of a source file.
-    This includes, the source node, target node, various manipulations
-    of those.  A source file also specifies a set of tags which
-    describing arbitrary properties of the source file.'''
-
+class SourceItem(object, metaclass=SourceMeta):
+    '''Base object that encapsulates the notion of a source component for
+    gem5. This specifies a set of tags which help group components into groups
+    based on arbitrary properties.'''
     def __init__(self, source, tags=None, add_tags=None, append=None):
+        self.source = source
+
         if tags is None:
             tags='gem5 lib'
         if isinstance(tags, str):
@@ -212,15 +212,23 @@ class SourceFile(object, metaclass=SourceMeta):
 
         self.append = append
 
+        for base in type(self).__mro__:
+            if issubclass(base, SourceItem):
+                base.all.append(self)
+
+class SourceFile(SourceItem):
+    '''Base object that encapsulates the notion of a source file.
+    This includes, the source node, target node, various manipulations
+    of those.'''
+
+    def __init__(self, source, tags=None, add_tags=None, append=None):
+        super().__init__(source, tags=tags, add_tags=add_tags, append=append)
+
         tnode = SCons.Script.File(source)
 
         self.tnode = tnode
         self.filename = str(self.tnode)
         self.snode = tnode.srcnode()
-
-        for base in type(self).__mro__:
-            if issubclass(base, SourceFile):
-                base.all.append(self)
 
     def static(self, env):
         if self.append:
@@ -234,6 +242,7 @@ class SourceFile(object, metaclass=SourceMeta):
             env.Append(**self.append)
         return env.SharedObject(self.tnode)
 
+
 __all__ = ['TagImpliesTool', 'SourceFilter', 'SourceList', 'SourceFile',
-           'with_any_tags', 'with_all_tags', 'with_tag', 'without_tags',
-           'without_tag']
+           'SourceItem', 'with_any_tags', 'with_all_tags', 'with_tag',
+           'without_tags', 'without_tag']

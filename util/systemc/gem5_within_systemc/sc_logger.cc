@@ -77,7 +77,7 @@ class CuttingStreambuf : public std::streambuf
 
 void CuttingStreambuf::outputLine()
 {
-    logger->logMessage((Tick)-1, "gem5", "", line.str());
+    logger->logMessage((gem5::Tick)-1, "gem5", "", line.str());
     line.clear();
     line.str("");
 }

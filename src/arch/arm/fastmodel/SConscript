@@ -36,6 +36,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from itertools import cycle
+import logging
 import shlex
 
 Import('*')
@@ -46,27 +47,27 @@ from gem5_scons import Transform, warning, error
 
 import os.path
 
-if env['USE_ARM_FASTMODEL']:
-    if not env['USE_SYSTEMC']:
+if env['CONF']['USE_ARM_FASTMODEL']:
+    if env['CONF']['USE_SYSTEMC']:
+        env.TagImplies('arm fastmodel', 'arm isa')
+    else:
         warning('ARM Fast Models require systemc support')
-        env['USE_ARM_FASTMODEL'] = False
-        Return()
-
-if not env['USE_ARM_FASTMODEL']:
-    Return()
+        env['CONF']['USE_ARM_FASTMODEL'] = False
 
 
 systemc_home = Dir('#/src/systemc/ext/systemc_home')
 env['ENV']['SYSTEMC_HOME'] = systemc_home.abspath
 
 def extract_var(name):
-    if name not in env:
-        error('Error: %s is not set' % name)
-    print('%s = %s' % (name, env[name]))
+    val = env['CONF'].get(name, None)
+    if val is None:
+        error(f'{name} is not set')
+    if env['CONF']['USE_ARM_FASTMODEL']:
+        print(f'{name} = {val}')
     # Make sure the value of this variable shows up as an environment variable
     # for commands scons runs.
-    env['ENV'][name] = env[name]
-    return env[name]
+    env['ENV'][name] = val
+    return val
 
 pvlib_home, maxcore_home, armlmd_license_file = \
     list(map(extract_var, ('PVLIB_HOME', 'MAXCORE_HOME',
@@ -74,14 +75,21 @@ pvlib_home, maxcore_home, armlmd_license_file = \
 
 pvlib_home = Dir(pvlib_home)
 maxcore_home = Dir(maxcore_home)
-armlmd_license_file = File(armlmd_license_file)
 
-
-pvlib_flavor = env['PVLIB_FLAVOR']
+pvlib_flavor = env['CONF']['PVLIB_FLAVOR']
 pvlib_lib_dir = pvlib_home.Dir('lib').Dir(pvlib_flavor)
 
 simulation_engine_name = 'libMAXCOREInitSimulationEngine.3.so'
-simulation_engine_lib = pvlib_lib_dir.File(simulation_engine_name)
+simulation_engine_lib = env.Command(
+            Dir(env['BUILDDIR']).File(simulation_engine_name),
+            pvlib_lib_dir.File(simulation_engine_name),
+            MakeAction("cp ${SOURCE} ${TARGET}", Transform('COPY')))
+
+arm_singleton_registry_name = 'arm_singleton_registry.so'
+arm_singleton_registry_lib = env.Command(
+            Dir(env['BUILDDIR']).File(arm_singleton_registry_name),
+            pvlib_lib_dir.File(arm_singleton_registry_name),
+            MakeAction("cp ${SOURCE} ${TARGET}", Transform('COPY')))
 
 
 def staticify(env, name):
@@ -95,9 +103,9 @@ def staticify(env, name):
         full_name = Dir(path).File(static_name).get_abspath()
         if os.path.isfile(full_name):
             return File(full_name)
-
+    if env['CONF']['USE_ARM_FASTMODEL']:
+        warning("Failed to find FM static lib: " + name)
     return name
-
 
 # Adjust the build environment to support building in Fast Models.
 
@@ -121,25 +129,39 @@ lib_paths = (
     pvlib_home.Dir('Iris').Dir(pvlib_flavor),
 )
 env.Append(LIBPATH=lib_paths)
-env.Append(RPATH=lib_paths)
 
-fm_libs = (
+# Per ARM's 11.16 release note, a platform build with simgen automatically
+# copies libraries into the build target directory along with the other
+# dependencies. Therefore, we only need to add each simgen result into rpath and
+# no other shared librarires are required here.
+fm_static_libs = (
     'components',
     'pvbus',
     'armctmodel',
     'fmruntime',
     'IrisSupport',
 )
-env.Append(LIBS=list(staticify(env, lib) for lib in fm_libs))
-system_libs = (
-    'atomic',
-    'dl',
-    'rt',
-)
-env.Append(LIBS=system_libs)
+for lib in fm_static_libs:
+    SourceLib(staticify(env, lib), tags='arm fastmodel')
 
+SourceLib('atomic', tags='arm fastmodel')
+SourceLib('dl', tags='arm fastmodel')
+SourceLib('rt', tags='arm fastmodel')
 
 class ProjectFileParser(Grammar):
+    def __init__(self):
+        self.log = logging.getLogger('fm_proj_ply')
+        if GetOption('verbose'):
+            self.log.setLevel(logging.DEBUG)
+
+        self.yacc_kwargs['write_tables'] = False
+
+        self.yacc_kwargs['debuglog'] = self.log
+        self.yacc_kwargs['errorlog'] = self.log
+
+        self.lex_kwargs['debuglog'] = self.log
+        self.lex_kwargs['errorlog'] = self.log
+
     class Param(object):
         def __init__(self, is_object):
             self.is_object = is_object
@@ -246,12 +268,46 @@ class ProjectFileParser(Grammar):
         t[0] = t[1]
 
 
-license_count = int(env['ARMLMD_LICENSE_COUNT'])
+# If fast model is disabled, ARMLMD_LICENSE_COUNT will be 0 which will break
+# the cycle() iterator below. The fast model components won't be built, but
+# they still need to be set up successfully with valid license slots.
+license_count = max(int(env['CONF']['ARMLMD_LICENSE_COUNT']), 1)
 arm_licenses = list((Value(object()) for i in range(license_count)))
 license_cycle = cycle(arm_licenses)
 
+# HACK: Make sure the gic protocol headers are somewhere we can find them.
+# These should start out alongside other headers fast model provides which we
+# are already able to include, but unfortunately they're in the examples
+# directory.
+gicv3_comms_headers = (
+        'gicv3_comms_base.h', 'gicv3_comms_if.h', 'gicv3_comms_sockets.h')
+examples_common_dir = pvlib_home.Dir('examples/SystemCExport/Common')
+gic_protocol_path = 'Protocols/GICv3Comms'
+gic_protocol_dest = Dir(env['BUILDDIR']).Dir(gic_protocol_path)
+gic_protocol_src = examples_common_dir.Dir(gic_protocol_path)
+
+for header in gicv3_comms_headers:
+    Command(gic_protocol_dest.File(header), gic_protocol_src.File(header),
+            Copy('${TARGET}', '${SOURCE}'))
+# Since we are copying the source files to a different directory, Scons's
+# dependency scanner does not pick up the dependency between these files.
+# Specify them manually.
+env.Depends(gic_protocol_dest.File('gicv3_comms_base.h'),
+            gic_protocol_dest.File('gicv3_comms_if.h'))
+env.Depends(gic_protocol_dest.File('gicv3_comms_sockets.h'),
+            gic_protocol_dest.File('gicv3_comms_if.h'))
+
+common_headers = ('lisa_protocol_types.h', 'tlm_has_get_protocol_types.h')
+for header in common_headers:
+    header_target = gic_protocol_dest.Dir('include').File(header)
+    header_src = examples_common_dir.Dir('include').File(header)
+    Command(header_target, header_src, Copy('${TARGET}', '${SOURCE}'))
+
 class ArmFastModelComponent(object):
-    def __init__(self, project_file, *extra_deps):
+    def __init__(self, project_file, *extra_deps, tags=None):
+        if not tags:
+            tags = ['arm fastmodel']
+        self.tags = tags
         project_file = File(project_file)
         project_file_dir = project_file.Dir('.')
 
@@ -262,6 +318,8 @@ class ArmFastModelComponent(object):
         tlc = None
         # Config name.
         config_name = None
+        # simgen_arg
+        simgen_command_line = ''
 
         # Scan for particular properties of the project.
         for param in proj.params:
@@ -270,6 +328,12 @@ class ArmFastModelComponent(object):
                     tlc = param.value
                 elif param.name == 'ACTIVE_CONFIG_LINUX':
                     config_name = param.value
+
+        for param in proj.params:
+            if param.name == config_name:
+                for sub_param in param.params:
+                    if sub_param.name == 'SIMGEN_COMMAND_LINE':
+                        simgen_command_line = sub_param.value
 
         assert tlc is not None and config_name is not None
 
@@ -309,17 +373,26 @@ class ArmFastModelComponent(object):
         self.headerpaths = [gen_dir]
         self.libs = static_lib_nodes + shared_libs
         self.libpaths = [simgen_dir]
-        self.rpaths = [simgen_dir]
+        # Simgen also puts required share library under the project folder.
+        self.rpaths = [simgen_dir, project_file_dir]
         self.log = gen_dir.File('build_%s.log' % tlc)
-        self.simgen_cmd = env.subst('${SIMGEN} -p %s --configuration %s -b ' +
-            '--verbose off --num-build-cpus 100 --build-dir %s >%s') % \
+        self.simgen_cmd = env.subst('${CONF["SIMGEN"]} -p %s '
+            '--configuration %s -b --verbose off --num-build-cpus %d %s '
+            '--build-dir %s >%s') % \
             (shlex.quote(project_file.srcnode().abspath),
              shlex.quote(config_name),
+             GetOption('num_jobs'),
+             simgen_command_line,
              shlex.quote(simgen_dir.abspath),
              shlex.quote(self.log.abspath))
 
         sources = [project_file]
         sources.extend(extra_deps)
+        # The simgen-generated .lisa files may #include these gicv3 files, but
+        # SCons does not detect this dependency since they are generated files.
+        # Add the dependencies manually.
+        sources.extend([gic_protocol_dest.File('gicv3_comms_sockets.h'),
+                        gic_protocol_dest.File('gicv3_comms_base.h')])
         env.Command(lib_nodes + self.headers + [self.log], sources,
                     Action(self.simgen_builder, Transform('SIMGEN')))
         # Distribute simgen actions among ARM license slots. All actions which
@@ -331,11 +404,18 @@ class ArmFastModelComponent(object):
         # but the difference is probably not significant.
         env.SideEffect(next(license_cycle), lib_nodes[0])
 
+        # We need a copy of the simulation engine lib and arm_singleton_registry
+        # (introduced in 11.16) alongside the executable.
+        Depends(lib_nodes[0], simulation_engine_lib)
+        Depends(lib_nodes[0], arm_singleton_registry_lib)
+
     def prepare_env(self, env):
         env.Append(LIBPATH=self.libpaths)
         env.AddLocalRPATH(*self.rpaths)
         env.Append(CPPPATH=self.headerpaths)
-        env.Prepend(LIBS=self.libs)
+        # Put these libraries earlier in the list by setting priority.
+        for lib in self.libs:
+            SourceLib(lib, priority=1, tags=self.tags)
 
     def simgen_builder(self, target, source, env):
         cmd = self.simgen_cmd
@@ -350,31 +430,10 @@ class ArmFastModelComponent(object):
 
 Export('ArmFastModelComponent')
 
-PySource('m5', 'arm_fast_model.py')
-Source('fastmodel.cc')
+PySource('m5', 'arm_fast_model.py', tags='arm fastmodel')
+Source('fastmodel.cc', tags='arm fastmodel')
 
 SimObject('FastModel.py', sim_objects=[
-    'AmbaToTlmBridge64', 'AmbaFromTlmBridge64'])
-Source('amba_to_tlm_bridge.cc')
-Source('amba_from_tlm_bridge.cc')
-
-# HACK: Make sure the gic protocol headers are somewhere we can find them.
-# These should start out alongside other headers fast model provides which we
-# are already able to include, but unfortunately they're in the examples
-# directory.
-gicv3_comms_headers = (
-        'gicv3_comms_base.h', 'gicv3_comms_if.h', 'gicv3_comms_sockets.h')
-examples_common_dir = pvlib_home.Dir('examples/SystemCExport/Common')
-gic_protocol_path = 'Protocols/GICv3Comms'
-gic_protocol_dest = Dir(env['BUILDDIR']).Dir(gic_protocol_path)
-gic_protocol_src = examples_common_dir.Dir(gic_protocol_path)
-
-for header in gicv3_comms_headers:
-    Command(gic_protocol_dest.File(header), gic_protocol_src.File(header),
-            Copy('${TARGET}', '${SOURCE}'))
-
-common_headers = ('lisa_protocol_types.h', 'tlm_has_get_protocol_types.h')
-for header in common_headers:
-    header_target = gic_protocol_dest.Dir('include').File(header)
-    header_src = examples_common_dir.Dir('include').File(header)
-    Command(header_target, header_src, Copy('${TARGET}', '${SOURCE}'))
+    'AmbaToTlmBridge64', 'AmbaFromTlmBridge64'], tags='arm fastmodel')
+Source('amba_to_tlm_bridge.cc', tags='arm fastmodel')
+Source('amba_from_tlm_bridge.cc', tags='arm fastmodel')

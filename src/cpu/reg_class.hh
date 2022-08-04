@@ -41,13 +41,13 @@
 #ifndef __CPU__REG_CLASS_HH__
 #define __CPU__REG_CLASS_HH__
 
-#include <cassert>
 #include <cstddef>
 #include <string>
 
-#include "arch/vecregs.hh"
+#include "base/cprintf.hh"
+#include "base/debug.hh"
+#include "base/intmath.hh"
 #include "base/types.hh"
-#include "config/the_isa.hh"
 
 namespace gem5
 {
@@ -63,7 +63,8 @@ enum RegClassType
     VecElemClass,
     VecPredRegClass,
     CCRegClass,         ///< Condition-code register
-    MiscRegClass        ///< Control (misc) register
+    MiscRegClass,       ///< Control (misc) register
+    InvalidRegClass = -1
 };
 
 class RegId;
@@ -71,38 +72,50 @@ class RegId;
 class RegClassOps
 {
   public:
-    virtual std::string regName(const RegId &id) const = 0;
-};
-
-class DefaultRegClassOps : public RegClassOps
-{
-  public:
-    std::string regName(const RegId &id) const override;
+    /** Print the name of the register specified in id. */
+    virtual std::string regName(const RegId &id) const;
+    /** Print the value of a register pointed to by val of size size. */
+    virtual std::string valString(const void *val, size_t size) const;
 };
 
 class RegClass
 {
   private:
-    size_t _size;
-    const RegIndex _zeroReg;
+    size_t _numRegs;
+    size_t _regBytes;
+    // This is how much to shift an index by to get an offset of a register in
+    // a register file from the register index, which would otherwise need to
+    // be calculated with a multiply.
+    size_t _regShift;
 
-    static inline DefaultRegClassOps defaultOps;
+    static inline RegClassOps defaultOps;
     RegClassOps *_ops = &defaultOps;
+    const debug::Flag &debugFlag;
 
   public:
-    RegClass(size_t new_size, RegIndex new_zero=-1) :
-        _size(new_size), _zeroReg(new_zero)
+    constexpr RegClass(size_t num_regs, const debug::Flag &debug_flag,
+            size_t reg_bytes=sizeof(RegVal)) :
+        _numRegs(num_regs), _regBytes(reg_bytes),
+        _regShift(ceilLog2(reg_bytes)), debugFlag(debug_flag)
     {}
-    RegClass(size_t new_size, RegClassOps &new_ops, RegIndex new_zero=-1) :
-        RegClass(new_size, new_zero)
+    constexpr RegClass(size_t num_regs, RegClassOps &new_ops,
+            const debug::Flag &debug_flag, size_t reg_bytes=sizeof(RegVal)) :
+        RegClass(num_regs, debug_flag, reg_bytes)
     {
         _ops = &new_ops;
     }
 
-    size_t size() const { return _size; }
-    RegIndex zeroReg() const { return _zeroReg; }
+    constexpr size_t numRegs() const { return _numRegs; }
+    constexpr size_t regBytes() const { return _regBytes; }
+    constexpr size_t regShift() const { return _regShift; }
+    constexpr const debug::Flag &debug() const { return debugFlag; }
 
     std::string regName(const RegId &id) const { return _ops->regName(id); }
+    std::string
+    valString(const void *val) const
+    {
+        return _ops->valString(val, regBytes());
+    }
 };
 
 /** Register ID: describe an architectural register with its class and index.
@@ -116,96 +129,72 @@ class RegId
     static const char* regClassStrings[];
     RegClassType regClass;
     RegIndex regIdx;
-    ElemIndex elemIdx;
-    static constexpr size_t Scale = TheISA::NumVecElemPerVecReg;
     int numPinnedWrites;
 
     friend struct std::hash<RegId>;
 
   public:
-    RegId() : RegId(IntRegClass, 0) {}
+    constexpr RegId() : RegId(InvalidRegClass, 0) {}
 
-    RegId(RegClassType reg_class, RegIndex reg_idx)
-        : RegId(reg_class, reg_idx, IllegalElemIndex) {}
+    constexpr RegId(RegClassType reg_class, RegIndex reg_idx)
+        : regClass(reg_class), regIdx(reg_idx), numPinnedWrites(0)
+    {}
 
-    explicit RegId(RegClassType reg_class, RegIndex reg_idx,
-            ElemIndex elem_idx)
-        : regClass(reg_class), regIdx(reg_idx), elemIdx(elem_idx),
-          numPinnedWrites(0)
+    constexpr operator RegIndex() const
     {
-        if (elemIdx == IllegalElemIndex) {
-            panic_if(regClass == VecElemClass,
-                    "Creating vector physical index w/o element index");
-        } else {
-            panic_if(regClass != VecElemClass,
-                    "Creating non-vector physical index w/ element index");
-        }
+        return index();
     }
 
-    bool
+    constexpr bool
     operator==(const RegId& that) const
     {
-        return regClass == that.classValue() && regIdx == that.index() &&
-            elemIdx == that.elemIndex();
+        return regClass == that.classValue() && regIdx == that.index();
     }
 
-    bool operator!=(const RegId& that) const { return !(*this==that); }
+    constexpr bool
+    operator!=(const RegId& that) const
+    {
+        return !(*this==that);
+    }
 
     /** Order operator.
      * The order is required to implement maps with key type RegId
      */
-    bool
+    constexpr bool
     operator<(const RegId& that) const
     {
         return regClass < that.classValue() ||
-            (regClass == that.classValue() && (
-                   regIdx < that.index() ||
-                   (regIdx == that.index() && elemIdx < that.elemIndex())));
+            (regClass == that.classValue() && (regIdx < that.index()));
     }
 
     /**
      * Return true if this register can be renamed
      */
-    bool
+    constexpr bool
     isRenameable() const
     {
-        return regClass != MiscRegClass;
+        return regClass != MiscRegClass && regClass != InvalidRegClass;
     }
 
     /** @return true if it is of the specified class. */
-    bool is(RegClassType reg_class) const { return regClass == reg_class; }
+    constexpr bool
+    is(RegClassType reg_class) const
+    {
+        return regClass == reg_class;
+    }
 
     /** Index accessors */
     /** @{ */
-    RegIndex index() const { return regIdx; }
+    constexpr RegIndex index() const { return regIdx; }
 
-    /** Index flattening.
-     * Required to be able to use a vector for the register mapping.
-     */
-    RegIndex
-    flatIndex() const
-    {
-        switch (regClass) {
-          case IntRegClass:
-          case FloatRegClass:
-          case VecRegClass:
-          case VecPredRegClass:
-          case CCRegClass:
-          case MiscRegClass:
-            return regIdx;
-          case VecElemClass:
-            return Scale * regIdx + elemIdx;
-        }
-        panic("Trying to flatten a register without class!");
-    }
-    /** @} */
-
-    /** Elem accessor */
-    RegIndex elemIndex() const { return elemIdx; }
     /** Class accessor */
-    RegClassType classValue() const { return regClass; }
+    constexpr RegClassType classValue() const { return regClass; }
     /** Return a const char* with the register class name. */
-    const char* className() const { return regClassStrings[regClass]; }
+    constexpr const char*
+    className() const
+    {
+        return regClassStrings[regClass];
+    }
 
     int getNumPinnedWrites() const { return numPinnedWrites; }
     void setNumPinnedWrites(int num_writes) { numPinnedWrites = num_writes; }
@@ -214,6 +203,38 @@ class RegId
     operator<<(std::ostream& os, const RegId& rid)
     {
         return os << rid.className() << "{" << rid.index() << "}";
+    }
+};
+
+template <typename ValueType>
+class TypedRegClassOps : public RegClassOps
+{
+  public:
+    std::string
+    valString(const void *val, size_t size) const override
+    {
+        assert(size == sizeof(ValueType));
+        return csprintf("%s", *(const ValueType *)val);
+    }
+};
+
+template <typename ValueType>
+class VecElemRegClassOps : public TypedRegClassOps<ValueType>
+{
+  protected:
+    size_t elemsPerVec;
+
+  public:
+    explicit VecElemRegClassOps(size_t elems_per_vec) :
+        elemsPerVec(elems_per_vec)
+    {}
+
+    std::string
+    regName(const RegId &id) const override
+    {
+        RegIndex reg_idx = id.index() / elemsPerVec;
+        RegIndex elem_idx = id.index() % elemsPerVec;
+        return csprintf("v%d[%d]", reg_idx, elem_idx);
     }
 };
 
@@ -229,7 +250,7 @@ class PhysRegId : private RegId
     bool pinned;
 
   public:
-    explicit PhysRegId() : RegId(IntRegClass, -1), flatIdx(-1),
+    explicit PhysRegId() : RegId(InvalidRegClass, -1), flatIdx(-1),
                            numPinnedWritesToComplete(0)
     {}
 
@@ -240,19 +261,11 @@ class PhysRegId : private RegId
           numPinnedWritesToComplete(0), pinned(false)
     {}
 
-    /** Vector PhysRegId constructor (w/ elemIndex). */
-    explicit PhysRegId(RegClassType _regClass, RegIndex _regIdx,
-              ElemIndex elem_idx, RegIndex flat_idx)
-        : RegId(_regClass, _regIdx, elem_idx), flatIdx(flat_idx),
-          numPinnedWritesToComplete(0), pinned(false)
-    {}
-
     /** Visible RegId methods */
     /** @{ */
     using RegId::index;
     using RegId::classValue;
     using RegId::className;
-    using RegId::elemIndex;
     using RegId::is;
      /** @} */
     /**
@@ -287,13 +300,6 @@ class PhysRegId : private RegId
 
     /** Flat index accessor */
     const RegIndex& flatIndex() const { return flatIdx; }
-
-    static PhysRegId
-    elemId(PhysRegId* vid, ElemIndex elem)
-    {
-        assert(vid->is(VecRegClass));
-        return PhysRegId(VecElemClass, vid->index(), elem);
-    }
 
     int getNumPinnedWrites() const { return numPinnedWrites; }
 
@@ -344,7 +350,7 @@ struct hash<gem5::RegId>
     operator()(const gem5::RegId& reg_id) const
     {
         // Extract unique integral values for the effective fields of a RegId.
-        const size_t flat_index = static_cast<size_t>(reg_id.flatIndex());
+        const size_t index = static_cast<size_t>(reg_id.index());
         const size_t class_num = static_cast<size_t>(reg_id.regClass);
 
         const size_t shifted_class_num =
@@ -352,7 +358,7 @@ struct hash<gem5::RegId>
 
         // Concatenate the class_num to the end of the flat_index, in order to
         // maximize information retained.
-        const size_t concatenated_hash = flat_index | shifted_class_num;
+        const size_t concatenated_hash = index | shifted_class_num;
 
         // If RegIndex is larger than size_t, then class_num will not be
         // considered by this hash function, so we may wish to perform a

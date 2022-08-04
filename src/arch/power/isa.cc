@@ -41,6 +41,9 @@
 #include "arch/power/regs/int.hh"
 #include "arch/power/regs/misc.hh"
 #include "cpu/thread_context.hh"
+#include "debug/FloatRegs.hh"
+#include "debug/IntRegs.hh"
+#include "debug/MiscRegs.hh"
 #include "params/PowerISA.hh"
 
 namespace gem5
@@ -51,13 +54,13 @@ namespace PowerISA
 
 ISA::ISA(const Params &p) : BaseISA(p)
 {
-    _regClasses.emplace_back(NumIntRegs, NumIntRegs - 1);
-    _regClasses.emplace_back(NumFloatRegs);
-    _regClasses.emplace_back(1);
-    _regClasses.emplace_back(2);
-    _regClasses.emplace_back(1);
-    _regClasses.emplace_back(0);
-    _regClasses.emplace_back(NUM_MISCREGS);
+    _regClasses.emplace_back(int_reg::NumRegs, debug::IntRegs);
+    _regClasses.emplace_back(float_reg::NumRegs, debug::FloatRegs);
+    _regClasses.emplace_back(1, debug::IntRegs);
+    _regClasses.emplace_back(2, debug::IntRegs);
+    _regClasses.emplace_back(1, debug::IntRegs);
+    _regClasses.emplace_back(0, debug::IntRegs);
+    _regClasses.emplace_back(NUM_MISCREGS, debug::MiscRegs);
     clear();
 }
 
@@ -65,12 +68,16 @@ void
 ISA::copyRegsFrom(ThreadContext *src)
 {
     // First loop through the integer registers.
-    for (int i = 0; i < NumIntRegs; ++i)
-        tc->setIntReg(i, src->readIntReg(i));
+    for (int i = 0; i < int_reg::NumRegs; ++i) {
+        RegId reg(IntRegClass, i);
+        tc->setReg(reg, src->getReg(reg));
+    }
 
     // Then loop through the floating point registers.
-    for (int i = 0; i < NumFloatRegs; ++i)
-        tc->setFloatReg(i, src->readFloatReg(i));
+    for (int i = 0; i < float_reg::NumRegs; ++i) {
+        RegId reg(FloatRegClass, i);
+        tc->setReg(reg, src->getReg(reg));
+    }
 
     //TODO Copy misc. registers
 

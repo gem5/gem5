@@ -1538,6 +1538,74 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_SOP2__S_RFE_RESTORE_B64
 
+    class Inst_SOP2__S_MUL_HI_U32 : public Inst_SOP2
+    {
+      public:
+        Inst_SOP2__S_MUL_HI_U32(InFmt_SOP2*);
+        ~Inst_SOP2__S_MUL_HI_U32();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 2; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //ssrc_0
+                return 4;
+              case 1: //ssrc_1
+                return 4;
+              case 2: //sdst
+                return 4;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+    }; // Inst_SOP2__S_MUL_HI_U32
+
+    class Inst_SOP2__S_MUL_HI_I32 : public Inst_SOP2
+    {
+      public:
+        Inst_SOP2__S_MUL_HI_I32(InFmt_SOP2*);
+        ~Inst_SOP2__S_MUL_HI_I32();
+
+        int
+        getNumOperands() override
+        {
+            return numDstRegOperands() + numSrcRegOperands();
+        } // getNumOperands
+
+        int numDstRegOperands() override { return 1; }
+        int numSrcRegOperands() override { return 2; }
+
+        int
+        getOperandSize(int opIdx) override
+        {
+            switch (opIdx) {
+              case 0: //ssrc_0
+                return 4;
+              case 1: //ssrc_1
+                return 4;
+              case 2: //sdst
+                return 4;
+              default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+            }
+        } // getOperandSize
+
+        void execute(GPUDynInstPtr) override;
+    }; // Inst_SOP2__S_MUL_HI_I32
+
     class Inst_SOPK__S_MOVK_I32 : public Inst_SOPK
     {
       public:
@@ -35542,6 +35610,8 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_DS__DS_WRITE_B96
 
     class Inst_DS__DS_WRITE_B128 : public Inst_DS
@@ -35574,6 +35644,8 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_DS__DS_WRITE_B128
 
     class Inst_DS__DS_READ_B96 : public Inst_DS
@@ -35606,6 +35678,8 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_DS__DS_READ_B96
 
     class Inst_DS__DS_READ_B128 : public Inst_DS
@@ -35638,6 +35712,8 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_DS__DS_READ_B128
 
     class Inst_MUBUF__BUFFER_LOAD_FORMAT_X : public Inst_MUBUF

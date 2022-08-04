@@ -234,17 +234,21 @@ def _prepare_stats(group: _m5.stats.Group):
         _prepare_stats(child)
 
 
-def get_simstat(root: Union[Root, List[SimObject]],
+def get_simstat(root: Union[SimObject, List[SimObject]],
                 prepare_stats: bool = True) -> SimStat:
     """
-    This function will return the SimStat object for a simulation. From the
-    SimStat object all stats within the current gem5 simulation are present.
+    This function will return the SimStat object for a simulation given a
+    SimObject (typically a Root SimObject), or list of SimObjects. The returned
+    SimStat object will contain all the stats for all the SimObjects contained
+    within the "root", inclusive of the "root" SimObject/SimObjects.
 
     Parameters
     ----------
-    root: Union[Root, List[Root]]
-        The root, or a list of Simobjects, of the simulation for translation to
-        a SimStat object.
+    root: Union[SimObject, List[SimObject]]
+        A SimObject, or list of SimObjects, of the simulation for translation
+        into a SimStat object. Typically this is the simulation's Root
+        SimObject as this will obtain the entirety of a run's statistics in a
+        single SimStat object.
 
     prepare_stats: bool
         Dictates whether the stats are to be prepared prior to creating the
@@ -269,6 +273,8 @@ def get_simstat(root: Union[Root, List[SimObject]],
 
     for r in root:
         if isinstance(r, Root):
+            # The Root is a special case, we jump directly into adding its
+            # constituent Groups.
             if prepare_stats:
                 _prepare_stats(r)
             for key in r.getStatGroups():
@@ -276,12 +282,11 @@ def get_simstat(root: Union[Root, List[SimObject]],
         elif isinstance(r, SimObject):
             if prepare_stats:
                 _prepare_stats(r)
-            stats_map[r.name] = get_stats_group(r)
+            stats_map[r.get_name()] = get_stats_group(r)
         else:
-            raise TypeError("Object (" + str(r) + ") passed is neither Root "
-                            "nor SimObject. " + __name__ + " only processes "
-                            "Roots, SimObjects, or a list of Roots and/or "
-                            "SimObjects.")
+            raise TypeError("Object (" + str(r) + ") passed is not a "
+                            "SimObject. " + __name__ + " only processes "
+                            "SimObjects, or a list of  SimObjects.")
 
 
 

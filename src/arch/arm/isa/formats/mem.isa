@@ -220,9 +220,9 @@ def format AddrMode3() {{
 def format ArmSyncMem() {{
     decode_block = '''
     {
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-        const IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-        const IntRegIndex rt2 = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex rt = (RegIndex)(uint32_t)bits(machInst, 15, 12);
+        const RegIndex rt2 = (RegIndex)(uint32_t)bits(machInst, 3, 0);
 
         const auto type_L = bits(machInst, 22, 20);
         const auto ex_ord = bits(machInst, 9, 8);
@@ -312,8 +312,8 @@ def format Thumb32SrsRfe() {{
         const bool add = (bits(machInst, 24, 23) == 0x3);
         if (bits(machInst, 20) == 1) {
             // post == add
-            const IntRegIndex rn =
-                (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+            const RegIndex rn =
+                (RegIndex)(uint32_t)bits(machInst, 19, 16);
             if (!add && !wb) {
                 return new %(rfe)s(machInst, rn, RfeOp::DecrementBefore, wb);
             } else if (add && !wb) {
@@ -365,10 +365,10 @@ def format Thumb32LdrStrDExTbh() {{
         const uint32_t op1 = bits(machInst, 24, 23);
         const uint32_t op2 = bits(machInst, 21, 20);
         const uint32_t op3 = bits(machInst, 7, 4);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-        const IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-        const IntRegIndex rt2 = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex rt = (RegIndex)(uint32_t)bits(machInst, 15, 12);
+        const RegIndex rt2 = (RegIndex)(uint32_t)bits(machInst, 11, 8);
+        const RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 3, 0);
         const uint32_t imm8 = bits(machInst, 7, 0);
         if (bits(op1, 1) == 0 && bits(op2, 1) == 0) {
             if (op1 == 0) {
@@ -525,10 +525,10 @@ def format Thumb32LoadWord() {{
             uint32_t op2 = bits(machInst, 11, 6);
             if (HTRN == 0xF) {
                 if (UP) {
-                    return new %(literal_u)s(machInst, RT, INTREG_PC,
+                    return new %(literal_u)s(machInst, RT, int_reg::Pc,
                                              true, IMMED_11_0);
                 } else {
-                    return new %(literal)s(machInst, RT, INTREG_PC,
+                    return new %(literal)s(machInst, RT, int_reg::Pc,
                                            false, IMMED_11_0);
                 }
             } else if (op1 == 0x1) {
@@ -683,9 +683,9 @@ def format LoadByteMemoryHints() {{
     {
         const uint32_t op1 = bits(machInst, 24, 23);
         const uint32_t op2 = bits(machInst, 11, 6);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-        const IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex rt = (RegIndex)(uint32_t)bits(machInst, 15, 12);
+        const RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 3, 0);
         const uint32_t imm12 = bits(machInst, 11, 0);
         const uint32_t imm8 = bits(machInst, 7, 0);
         bool pldw = bits(machInst, 21);
@@ -695,36 +695,36 @@ def format LoadByteMemoryHints() {{
                 const bool add = bits(machInst, 23);
                 if (bits(op1, 1) == 1) {
                     if (add) {
-                        return new %(pli_iulit)s(machInst, INTREG_ZERO,
-                                                 INTREG_PC, true, imm12);
+                        return new %(pli_iulit)s(machInst, int_reg::Zero,
+                                                 int_reg::Pc, true, imm12);
                     } else {
-                        return new %(pli_ilit)s(machInst, INTREG_ZERO,
-                                                INTREG_PC, false, imm12);
+                        return new %(pli_ilit)s(machInst, int_reg::Zero,
+                                                int_reg::Pc, false, imm12);
                     }
                 } else {
                     if (add) {
-                        return new %(pld_iulit)s(machInst, INTREG_ZERO,
-                                                 INTREG_PC, true, imm12);
+                        return new %(pld_iulit)s(machInst, int_reg::Zero,
+                                                 int_reg::Pc, true, imm12);
                     } else {
-                        return new %(pld_ilit)s(machInst, INTREG_ZERO,
-                                                INTREG_PC, false, imm12);
+                        return new %(pld_ilit)s(machInst, int_reg::Zero,
+                                                int_reg::Pc, false, imm12);
                     }
                 }
             } else {
                 if (bits(op1, 1) == 1) {
                     if (bits(machInst, 23)) {
-                        return new %(ldrsb_lit_u)s(machInst, rt, INTREG_PC,
+                        return new %(ldrsb_lit_u)s(machInst, rt, int_reg::Pc,
                                                    true, imm12);
                     } else {
-                        return new %(ldrsb_lit)s(machInst, rt, INTREG_PC,
+                        return new %(ldrsb_lit)s(machInst, rt, int_reg::Pc,
                                                  false, imm12);
                     }
                 } else {
                     if (bits(machInst, 23)) {
-                        return new %(ldrb_lit_u)s(machInst, rt, INTREG_PC,
+                        return new %(ldrb_lit_u)s(machInst, rt, int_reg::Pc,
                                                   true, imm12);
                     } else {
-                        return new %(ldrb_lit)s(machInst, rt, INTREG_PC,
+                        return new %(ldrb_lit)s(machInst, rt, int_reg::Pc,
                                                 false, imm12);
                     }
                 }
@@ -734,42 +734,42 @@ def format LoadByteMemoryHints() {{
               case 0x0:
                 if (op2 == 0x0) {
                     if (pldw) {
-                        return new %(pldw_radd)s(machInst, INTREG_ZERO,
+                        return new %(pldw_radd)s(machInst, int_reg::Zero,
                                                  rn, true, imm2, LSL, rm);
                     } else {
-                        return new %(pld_radd)s(machInst, INTREG_ZERO,
+                        return new %(pld_radd)s(machInst, int_reg::Zero,
                                                 rn, true, imm2, LSL, rm);
                     }
                 } else if (bits(op2, 5, 2) == 0xc) {
                     if (pldw) {
-                        return new %(pldw_isub)s(machInst, INTREG_ZERO,
+                        return new %(pldw_isub)s(machInst, int_reg::Zero,
                                                  rn, false, imm8);
                     } else {
-                        return new %(pld_isub)s(machInst, INTREG_ZERO,
+                        return new %(pld_isub)s(machInst, int_reg::Zero,
                                                 rn, false, imm8);
                     }
                 }
                 break;
               case 0x1:
                 if (pldw) {
-                    return new %(pldw_iadd)s(machInst, INTREG_ZERO,
+                    return new %(pldw_iadd)s(machInst, int_reg::Zero,
                                              rn, true, imm12);
                 } else {
-                    return new %(pld_iadd)s(machInst, INTREG_ZERO,
+                    return new %(pld_iadd)s(machInst, int_reg::Zero,
                                             rn, true, imm12);
                 }
               case 0x2:
                 if (op2 == 0x0) {
-                    return new %(pli_radd)s(machInst, INTREG_ZERO, rn,
+                    return new %(pli_radd)s(machInst, int_reg::Zero, rn,
                                             true, imm2, LSL, rm);
                 } else if (bits(op2, 5, 2) == 0xc) {
-                    return new %(pli_ilit)s(machInst, INTREG_ZERO,
-                                            INTREG_PC, false, imm8);
+                    return new %(pli_ilit)s(machInst, int_reg::Zero,
+                                            int_reg::Pc, false, imm8);
                 }
                 break;
               case 0x3:
-                return new %(pli_iulit)s(machInst, INTREG_ZERO,
-                                        INTREG_PC, true, imm12);
+                return new %(pli_iulit)s(machInst, int_reg::Zero,
+                                        int_reg::Pc, true, imm12);
             }
             return new Unknown(machInst);
         } else {
@@ -880,9 +880,9 @@ def format LoadHalfwordMemoryHints() {{
     {
         const uint32_t op1 = bits(machInst, 24, 23);
         const uint32_t op2 = bits(machInst, 11, 6);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-        const IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex rt = (RegIndex)(uint32_t)bits(machInst, 15, 12);
+        const RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 3, 0);
         const uint32_t imm12 = bits(machInst, 11, 0);
         const uint32_t imm8 = bits(machInst, 7, 0);
         bool pldw = bits(machInst, 21);
@@ -898,18 +898,18 @@ def format LoadHalfwordMemoryHints() {{
             } else {
                 if (bits(op1, 1) == 1) {
                     if (bits(machInst, 23)) {
-                        return new %(ldrsh_lit_u)s(machInst, rt, INTREG_PC,
+                        return new %(ldrsh_lit_u)s(machInst, rt, int_reg::Pc,
                                                    true, imm12);
                     } else {
-                        return new %(ldrsh_lit)s(machInst, rt, INTREG_PC,
+                        return new %(ldrsh_lit)s(machInst, rt, int_reg::Pc,
                                                  false, imm12);
                     }
                 } else {
                     if (bits(machInst, 23)) {
-                        return new %(ldrh_lit_u)s(machInst, rt, INTREG_PC,
+                        return new %(ldrh_lit_u)s(machInst, rt, int_reg::Pc,
                                                   true, imm12);
                     } else {
-                        return new %(ldrh_lit)s(machInst, rt, INTREG_PC,
+                        return new %(ldrh_lit)s(machInst, rt, int_reg::Pc,
                                                 false, imm12);
                     }
                 }
@@ -919,28 +919,28 @@ def format LoadHalfwordMemoryHints() {{
               case 0x0:
                 if (op2 == 0x0) {
                     if (pldw) {
-                        return new %(pldw_radd)s(machInst, INTREG_ZERO,
+                        return new %(pldw_radd)s(machInst, int_reg::Zero,
                                                  rn, true, imm2, LSL, rm);
                     } else {
-                        return new %(pld_radd)s(machInst, INTREG_ZERO,
+                        return new %(pld_radd)s(machInst, int_reg::Zero,
                                                 rn, true, imm2, LSL, rm);
                     }
                 } else if (bits(op2, 5, 2) == 0xc) {
                     if (pldw) {
-                        return new %(pldw_isub)s(machInst, INTREG_ZERO,
+                        return new %(pldw_isub)s(machInst, int_reg::Zero,
                                                  rn, false, imm8);
                     } else {
-                        return new %(pld_isub)s(machInst, INTREG_ZERO,
+                        return new %(pld_isub)s(machInst, int_reg::Zero,
                                                 rn, false, imm8);
                     }
                 }
                 break;
               case 0x1:
                 if (pldw) {
-                    return new %(pldw_iadd)s(machInst, INTREG_ZERO,
+                    return new %(pldw_iadd)s(machInst, int_reg::Zero,
                                              rn, true, imm12);
                 } else {
-                    return new %(pld_iadd)s(machInst, INTREG_ZERO,
+                    return new %(pld_iadd)s(machInst, int_reg::Zero,
                                             rn, true, imm12);
                 }
               case 0x2:
@@ -1123,9 +1123,11 @@ def format Thumb16MemImm() {{
             }
           case 0x9:
             if (load) {
-                return new %(ldr)s(machInst, hrt, INTREG_SP, true, imm8 << 2);
+                return new %(ldr)s(machInst, hrt, int_reg::Sp, true,
+                                   imm8 << 2);
             } else {
-                return new %(str)s(machInst, hrt, INTREG_SP, true, imm8 << 2);
+                return new %(str)s(machInst, hrt, int_reg::Sp, true,
+                                   imm8 << 2);
             }
           default:
             return new Unknown(machInst);
@@ -1148,7 +1150,7 @@ def format Thumb16MemLit() {{
     {
         const uint32_t rt = bits(machInst, 10, 8);
         const uint32_t imm8 = bits(machInst, 7, 0);
-        return new %s(machInst, rt, INTREG_PC, true, imm8 << 2);
+        return new %s(machInst, rt, int_reg::Pc, true, imm8 << 2);
     }
     ''' % loadImmClassName(False, True, False)
 }};

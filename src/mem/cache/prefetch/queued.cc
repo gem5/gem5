@@ -210,6 +210,10 @@ Queued::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
 
         if (!samePage(addr_prio.first, pfi.getAddr())) {
             statsQueued.pfSpanPage += 1;
+
+            if (hasBeenPrefetched(pkt->getAddr(), pkt->isSecure())) {
+                statsQueued.pfUsefulSpanPage += 1;
+            }
         }
 
         bool can_cross_page = (tlb != nullptr);
@@ -272,7 +276,9 @@ Queued::QueuedStats::QueuedStats(statistics::Group *parent)
     ADD_STAT(pfRemovedFull, statistics::units::Count::get(),
              "number of prefetches dropped due to prefetch queue size"),
     ADD_STAT(pfSpanPage, statistics::units::Count::get(),
-             "number of prefetches that crossed the page")
+             "number of prefetches that crossed the page"),
+    ADD_STAT(pfUsefulSpanPage, statistics::units::Count::get(),
+             "number of prefetches that is useful and crossed the page")
 {
 }
 

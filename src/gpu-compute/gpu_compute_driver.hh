@@ -168,7 +168,8 @@ class GPUComputeDriver final : public EmulatedDriver
     {
         SHARED                  = 0,
         READ_WRITE              = 1,
-        CACHED                  = 2
+        CACHED                  = 2,
+        NUM_MTYPE_BITS
     };
 
     Request::CacheCoherenceFlags defaultMtype;

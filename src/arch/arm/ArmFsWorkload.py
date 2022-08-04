@@ -58,6 +58,9 @@ class ArmFsWorkload(KernelWorkload):
     dtb_filename = Param.String("",
         "File that contains the Device Tree Blob. Don't use DTB if empty.")
     dtb_addr = Param.Addr(0, "DTB or ATAGS address")
+    initrd_filename = Param.String("",
+        "File that contains the initial ramdisk. Don't use initrd if empty.")
+    initrd_addr = Param.Addr(0, "initrd/initramfs address")
     cpu_release_addr = Param.Addr(0, "cpu-release-addr property")
 
     machine_type = Param.ArmMachineType('DTOnly',

@@ -39,6 +39,8 @@
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/FloatRegs.hh"
+#include "debug/IntRegs.hh"
 #include "debug/MiscRegs.hh"
 #include "debug/Timer.hh"
 #include "params/SparcISA.hh"
@@ -68,13 +70,13 @@ static const PSTATE PstateMask = buildPstateMask();
 
 ISA::ISA(const Params &p) : BaseISA(p)
 {
-    _regClasses.emplace_back(NumIntRegs, 0);
-    _regClasses.emplace_back(NumFloatRegs);
-    _regClasses.emplace_back(1); // Not applicable for SPARC
-    _regClasses.emplace_back(2); // Not applicable for SPARC
-    _regClasses.emplace_back(1); // Not applicable for SPARC
-    _regClasses.emplace_back(0); // Not applicable for SPARC
-    _regClasses.emplace_back(NumMiscRegs);
+    _regClasses.emplace_back(NumIntRegs, debug::IntRegs);
+    _regClasses.emplace_back(NumFloatRegs, debug::FloatRegs);
+    _regClasses.emplace_back(1, debug::IntRegs); // Not applicable for SPARC
+    _regClasses.emplace_back(2, debug::IntRegs); // Not applicable for SPARC
+    _regClasses.emplace_back(1, debug::IntRegs); // Not applicable for SPARC
+    _regClasses.emplace_back(0, debug::IntRegs); // Not applicable for SPARC
+    _regClasses.emplace_back(NumMiscRegs, debug::MiscRegs);
     clear();
 }
 

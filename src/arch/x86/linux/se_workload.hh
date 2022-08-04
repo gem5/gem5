@@ -40,6 +40,7 @@
 #define __ARCH_X86_LINUX_SE_WORKLOAD_HH__
 
 #include "arch/x86/linux/linux.hh"
+#include "arch/x86/regs/int.hh"
 #include "arch/x86/remote_gdb.hh"
 #include "params/X86EmuLinux.hh"
 #include "sim/process.hh"
@@ -78,13 +79,13 @@ class EmuLinux : public SEWorkload
     struct SyscallABI64 :
         public GenericSyscallABI64, public X86Linux::SyscallABI
     {
-        static const std::vector<IntRegIndex> ArgumentRegs;
+        static const std::vector<RegIndex> ArgumentRegs;
     };
 
     struct SyscallABI32 :
         public GenericSyscallABI32, public X86Linux::SyscallABI
     {
-        static const std::vector<IntRegIndex> ArgumentRegs;
+        static const std::vector<RegIndex> ArgumentRegs;
     };
 
   private:

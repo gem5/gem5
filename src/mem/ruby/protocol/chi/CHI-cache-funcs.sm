@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 ARM Limited
+ * Copyright (c) 2021-2022 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -52,11 +52,19 @@ void unset_cache_entry();
 void set_tbe(TBE b);
 void unset_tbe();
 MachineID mapAddressToDownstreamMachine(Addr addr);
+MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
 void incomingTransactionStart(Addr, Event, State, bool);
 void incomingTransactionEnd(Addr, State);
 void outgoingTransactionStart(Addr, Event);
 void outgoingTransactionEnd(Addr, bool);
+// Overloads for transaction-measuring functions
+// final bool = isAddressed
+// if false, uses a "unaddressed" table with unique IDs
+void incomingTransactionStart(Addr, Event, State, bool, bool);
+void incomingTransactionEnd(Addr, State, bool);
+void outgoingTransactionStart(Addr, Event, bool);
+void outgoingTransactionEnd(Addr, bool, bool);
 Event curTransitionEvent();
 State curTransitionNextState();
 
@@ -72,6 +80,10 @@ void notifyPfComplete(Addr addr) { }
 
 CacheEntry getCacheEntry(Addr addr), return_by_pointer="yes" {
   return static_cast(CacheEntry, "pointer", cache.lookup(addr));
+}
+
+CacheEntry nullCacheEntry(), return_by_pointer="yes" {
+  return OOD;
 }
 
 DirEntry getDirEntry(Addr addr), return_by_pointer = "yes" {
@@ -110,6 +122,22 @@ void setState(TBE tbe, CacheEntry cache_entry, Addr addr, State state) {
   }
 }
 
+TBE nullTBE(), return_by_pointer="yes" {
+  return OOD;
+}
+
+TBE getDvmTBE(Addr txnId), return_by_pointer="yes" {
+  TBE dvm_tbe := dvmTBEs[txnId];
+  if (is_valid(dvm_tbe)) {
+    return dvm_tbe;
+  }
+  TBE dvm_snp_tbe := dvmSnpTBEs[txnId];
+  if (is_valid(dvm_snp_tbe)) {
+    return dvm_snp_tbe;
+  }
+  return OOD;
+}
+
 TBE getCurrentActiveTBE(Addr addr), return_by_pointer="yes" {
   // snoops take precedence over wbs and reqs
   // it's invalid to have a replacement and a req active at the same time
@@ -135,8 +163,15 @@ AccessPermission getAccessPermission(Addr addr) {
   TBE tbe := getCurrentActiveTBE(addr);
   if(is_valid(tbe)) {
     assert(Cache_State_to_permission(tbe.state) == AccessPermission:Busy);
-    if (tbe.expected_req_resp.hasExpected() ||
-        tbe.expected_snp_resp.hasExpected()) {
+    // It's assumed that if all caches are in transient state, the latest data
+    // is 1) within an inflight message, then 2 ) in memory. But with
+    // CleanUnique there may be no inflight messages with data, so it needs
+    // special handling.
+    bool cu_requester_or_responder :=
+      (tbe.reqType == CHIRequestType:CleanUnique) ||
+      (tbe.pendReqType == CHIRequestType:CleanUnique);
+    if ((tbe.expected_req_resp.hasExpected() ||
+        tbe.expected_snp_resp.hasExpected()) && !cu_requester_or_responder) {
       DPRINTF(RubySlicc, "%x %s,%s\n", addr, tbe.state, AccessPermission:Busy);
       return AccessPermission:Busy;
     }
@@ -373,6 +408,8 @@ TBE allocateRequestTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes"
 
   assert(tbe.is_snp_tbe == false);
   assert(tbe.is_repl_tbe == false);
+  assert(tbe.is_dvm_tbe == false);
+  assert(tbe.is_dvm_snp_tbe == false);
   tbe.is_req_tbe := true;
 
   tbe.accAddr := in_msg.accAddr;
@@ -393,6 +430,41 @@ TBE allocateRequestTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes"
   return tbe;
 }
 
+TBE allocateDvmRequestTBE(Addr txnId, CHIRequestMsg in_msg), return_by_pointer="yes" {
+  // We must have reserved resources for this allocation
+  storDvmTBEs.decrementReserved();
+  assert(storDvmTBEs.areNSlotsAvailable(1));
+
+  dvmTBEs.allocate(txnId);
+  TBE tbe := dvmTBEs[txnId];
+
+  // Setting .addr = txnId
+  initializeTBE(tbe, txnId, storDvmTBEs.addEntryToNewSlot());
+
+  assert(tbe.is_snp_tbe == false);
+  assert(tbe.is_repl_tbe == false);
+  assert(tbe.is_req_tbe == false);
+  assert(tbe.is_dvm_snp_tbe == false);
+  tbe.is_dvm_tbe := true;
+
+  // TODO - zero these out?
+  tbe.accAddr := txnId;
+  tbe.accSize := blockSize;
+  tbe.requestor := in_msg.requestor;
+  tbe.reqType := in_msg.type;
+
+  tbe.isSeqReqValid := in_msg.isSeqReqValid;
+  tbe.seqReq := in_msg.seqReq;
+  tbe.is_local_pf := in_msg.is_local_pf;
+  tbe.is_remote_pf := in_msg.is_remote_pf;
+
+  tbe.use_DMT := false;
+  tbe.use_DCT := false;
+
+  tbe.hasUseTimeout := false;
+
+  return tbe;
+}
 
 TBE allocateSnoopTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes" {
   // We must have reserved resources for this allocation
@@ -405,6 +477,8 @@ TBE allocateSnoopTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes" {
 
   assert(tbe.is_req_tbe == false);
   assert(tbe.is_repl_tbe == false);
+  assert(tbe.is_dvm_tbe == false);
+  assert(tbe.is_dvm_snp_tbe == false);
   tbe.is_snp_tbe := true;
 
   tbe.accAddr := addr;
@@ -421,6 +495,35 @@ TBE allocateSnoopTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes" {
   return tbe;
 }
 
+TBE allocateDvmSnoopTBE(Addr txnId, CHIRequestMsg in_msg), return_by_pointer="yes" {
+  // We must have reserved resources for this allocation
+  storDvmSnpTBEs.decrementReserved();
+  assert(storDvmSnpTBEs.areNSlotsAvailable(1));
+
+  dvmSnpTBEs.allocate(txnId);
+  TBE tbe := dvmSnpTBEs[txnId];
+  initializeTBE(tbe, txnId, storDvmSnpTBEs.addEntryToNewSlot());
+
+  assert(tbe.is_req_tbe == false);
+  assert(tbe.is_repl_tbe == false);
+  assert(tbe.is_dvm_tbe == false);
+  assert(tbe.is_snp_tbe == false);
+  tbe.is_dvm_snp_tbe := true;
+
+  // TODO - zero these out?
+  tbe.accAddr := txnId;
+  tbe.accSize := blockSize;
+  tbe.requestor := in_msg.requestor;
+  tbe.fwdRequestor := in_msg.fwdRequestor;
+  tbe.reqType := in_msg.type;
+
+  tbe.snpNeedsData := in_msg.retToSrc;
+
+  tbe.use_DMT := false;
+  tbe.use_DCT := false;
+
+  return tbe;
+}
 
 TBE _allocateReplacementTBE(Addr addr, int storSlot), return_by_pointer="yes" {
   TBE tbe := replTBEs[addr];
@@ -428,6 +531,7 @@ TBE _allocateReplacementTBE(Addr addr, int storSlot), return_by_pointer="yes" {
 
   assert(tbe.is_req_tbe == false);
   assert(tbe.is_snp_tbe == false);
+  assert(tbe.is_dvm_tbe == false);
   tbe.is_repl_tbe := true;
 
   tbe.accAddr := addr;
@@ -552,10 +656,33 @@ void prepareRequestRetry(TBE tbe, CHIRequestMsg & out_msg) {
   out_msg.is_remote_pf := tbe.is_local_pf || tbe.is_remote_pf;
 }
 
+void prepareRequestRetryDVM(TBE tbe, CHIRequestMsg & out_msg) {
+  assert(tbe.pendReqAllowRetry);
+  tbe.pendReqAllowRetry := false;
+  out_msg.allowRetry := false;
+
+  out_msg.addr := tbe.addr;
+  out_msg.usesTxnId := true;
+  out_msg.txnId := tbe.addr;
+  out_msg.requestor := machineID;
+  out_msg.fwdRequestor := tbe.requestor;
+  out_msg.accAddr := tbe.pendReqAccAddr;
+  out_msg.accSize := tbe.pendReqAccSize;
+  out_msg.type := tbe.pendReqType;
+  out_msg.Destination := tbe.pendReqDest;
+  out_msg.dataToFwdRequestor := tbe.pendReqD2OrigReq;
+  out_msg.retToSrc := tbe.pendReqRetToSrc;
+  out_msg.isSeqReqValid := tbe.isSeqReqValid;
+  out_msg.seqReq := tbe.seqReq;
+  out_msg.is_local_pf := false;
+  out_msg.is_remote_pf := tbe.is_local_pf || tbe.is_remote_pf;
+}
+
 void enqueueDoRetry(TBE tbe) {
   if (tbe.rcvdRetryAck && tbe.rcvdRetryCredit) {
     enqueue(retryTriggerOutPort, RetryTriggerMsg, 0) {
       out_msg.addr := tbe.addr;
+      out_msg.usesTxnId := tbe.is_dvm_tbe || tbe.is_dvm_snp_tbe;
       out_msg.event := Event:DoRetry;
     }
     destsWaitingRetry.removeNetDest(tbe.pendReqDest);
@@ -573,6 +700,7 @@ void processRetryQueue() {
     retryQueue.pop();
     enqueue(retryTriggerOutPort, RetryTriggerMsg, 0) {
       out_msg.addr := e.addr;
+      out_msg.usesTxnId := e.usesTxnId;
       out_msg.retryDest := e.retryDest;
       out_msg.event := Event:SendPCrdGrant;
     }
@@ -583,15 +711,17 @@ void printResources() {
   if (unify_repl_TBEs) {
     assert(storReplTBEs.size() == 0);
     assert(storReplTBEs.reserved() == 0);
-    DPRINTF(RubySlicc, "Resources(used/rsvd/max): TBEs=%d/%d/%d snpTBEs=%d/%d/%d replTBEs=%d/%d/%d\n",
+    DPRINTF(RubySlicc, "Resources(used/rsvd/max): TBEs=%d/%d/%d snpTBEs=%d/%d/%d replTBEs=%d/%d/%d dvmTBEs=%d/%d/%d\n",
                   storTBEs.size(), storTBEs.reserved(), storTBEs.capacity(),
                   storSnpTBEs.size(), storSnpTBEs.reserved(), storSnpTBEs.capacity(),
-                  storTBEs.size(), storTBEs.reserved(), storTBEs.capacity());
+                  storTBEs.size(), storTBEs.reserved(), storTBEs.capacity(),
+                  storDvmTBEs.size(), storDvmTBEs.reserved(), storDvmTBEs.capacity());
   } else {
-    DPRINTF(RubySlicc, "Resources(used/rsvd/max): TBEs=%d/%d/%d snpTBEs=%d/%d/%d replTBEs=%d/%d/%d\n",
+    DPRINTF(RubySlicc, "Resources(used/rsvd/max): TBEs=%d/%d/%d snpTBEs=%d/%d/%d replTBEs=%d/%d/%d dvmTBEs=%d/%d/%d\n",
                   storTBEs.size(), storTBEs.reserved(), storTBEs.capacity(),
                   storSnpTBEs.size(), storSnpTBEs.reserved(), storSnpTBEs.capacity(),
-                  storReplTBEs.size(), storReplTBEs.reserved(), storReplTBEs.capacity());
+                  storReplTBEs.size(), storReplTBEs.reserved(), storReplTBEs.capacity(),
+                  storDvmTBEs.size(), storDvmTBEs.reserved(), storDvmTBEs.capacity());
   }
   DPRINTF(RubySlicc, "Resources(in/out size): req=%d/%d rsp=%d/%d dat=%d/%d snp=%d/%d trigger=%d\n",
                 reqIn.getSize(curTick()), reqOut.getSize(curTick()),
@@ -657,6 +787,17 @@ void printTBEState(TBE tbe) {
                       tbe.dataToBeInvalid, tbe.dataToBeSharedClean,
                       tbe.doCacheFill, tbe.pendAction);
   DPRINTF(RubySlicc, "dataBlkValid = %s\n", tbe.dataBlkValid);
+}
+
+void printDvmTBEState(TBE tbe) {
+  DPRINTF(RubySlicc, "STATE: addr=%#x reqType=%d state=%d pendAction=%s isDvmTBE=%d isReplTBE=%d isReqTBE=%d isSnpTBE=%d\n",
+                      tbe.addr, tbe.reqType, tbe.state, tbe.pendAction,
+                      tbe.is_dvm_tbe, tbe.is_repl_tbe, tbe.is_req_tbe, tbe.is_snp_tbe);
+}
+
+MachineID getMiscNodeMachine() {
+  // return the MachineID of the misc node
+  return mapAddressToMachine(intToAddress(0), MachineType:MiscNode);
 }
 
 void copyCacheAndDir(CacheEntry cache_entry, DirEntry dir_entry,
@@ -783,6 +924,20 @@ void deallocateReplacementTBE(TBE tbe) {
     storReplTBEs.removeEntryFromSlot(tbe.storSlot);
   }
   replTBEs.deallocate(tbe.addr);
+}
+
+void deallocateDvmTBE(TBE tbe) {
+  assert(is_valid(tbe));
+  assert(tbe.is_dvm_tbe);
+  storDvmTBEs.removeEntryFromSlot(tbe.storSlot);
+  dvmTBEs.deallocate(tbe.addr);
+}
+
+void deallocateDvmSnoopTBE(TBE tbe) {
+  assert(is_valid(tbe));
+  assert(tbe.is_dvm_snp_tbe);
+  storDvmSnpTBEs.removeEntryFromSlot(tbe.storSlot);
+  dvmSnpTBEs.deallocate(tbe.addr);
 }
 
 void setDataToBeStates(TBE tbe) {
@@ -1037,6 +1192,10 @@ Event reqToEvent(CHIRequestType type, bool is_prefetch) {
     } else {
       return Event:WriteUnique; // all WriteUnique handled the same when ~PoC
     }
+  } else if (type == CHIRequestType:DvmTlbi_Initiate) {
+    return Event:DvmTlbi_Initiate;
+  } else if (type == CHIRequestType:DvmSync_Initiate) {
+    return Event:DvmSync_Initiate;
   } else {
     error("Invalid CHIRequestType");
   }
@@ -1188,6 +1347,14 @@ Event snpToEvent (CHIRequestType type) {
     return Event:SnpOnce;
   } else if (type == CHIRequestType:SnpOnceFwd) {
     return Event:SnpOnceFwd;
+  } else if (type == CHIRequestType:SnpDvmOpSync_P1) {
+    return Event:SnpDvmOpSync_P1;
+  } else if (type == CHIRequestType:SnpDvmOpSync_P2) {
+    return Event:SnpDvmOpSync_P2;
+  } else if (type == CHIRequestType:SnpDvmOpNonSync_P1) {
+    return Event:SnpDvmOpNonSync_P1;
+  } else if (type == CHIRequestType:SnpDvmOpNonSync_P2) {
+    return Event:SnpDvmOpNonSync_P2;
   } else {
     error("Invalid CHIRequestType");
   }

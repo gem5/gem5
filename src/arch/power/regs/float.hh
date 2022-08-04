@@ -35,9 +35,13 @@ namespace gem5
 namespace PowerISA
 {
 
-const int NumFloatArchRegs = 32;
-const int NumFloatRegs = NumFloatArchRegs;
+namespace float_reg
+{
 
+const int NumArchRegs = 32;
+const int NumRegs = NumArchRegs;
+
+} // namespace float_reg
 } // namespace PowerISA
 } // namespace gem5
 

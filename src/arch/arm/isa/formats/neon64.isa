@@ -98,9 +98,9 @@ namespace Aarch64
         uint8_t size = bits(machInst, 23, 22);
         uint8_t opcode = bits(machInst, 15, 11);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
         uint8_t size_q = (size << 1) | q;
         uint8_t sz_q = size_q & 0x3;
@@ -513,9 +513,9 @@ namespace Aarch64
         uint8_t size   = bits(machInst, 23, 22);
         uint8_t opcode = bits(machInst, 15, 11);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
         switch (opcode) {
           case 0x10:
@@ -569,9 +569,9 @@ namespace Aarch64
         uint8_t size = bits(machInst, 23, 22);
         uint8_t opcode = bits(machInst, 15, 12);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
         switch (opcode) {
           case 0x0:
@@ -731,8 +731,8 @@ namespace Aarch64
         uint8_t size = bits(machInst, 23, 22);
         uint8_t opcode = bits(machInst, 16, 12);
 
-        IntRegIndex vd = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
+        RegIndex vd = (RegIndex)(uint8_t)bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex)(uint8_t)bits(machInst, 9, 5);
 
         uint8_t size_q = (size << 1) | q;
         uint8_t sz_q = size_q & 0x3;
@@ -1109,8 +1109,8 @@ namespace Aarch64
         uint8_t size = bits(machInst, 23, 22);
         uint8_t opcode = bits(machInst, 16, 12);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
 
         uint8_t size_q = (size << 1) | q;
         uint8_t sz_q = size_q & 0x3;
@@ -1195,8 +1195,8 @@ namespace Aarch64
         uint8_t imm5 = bits(machInst, 20, 16);
         uint8_t imm4 = bits(machInst, 14, 11);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
 
         uint8_t imm5_pos = findLsbSet(imm5);
         uint8_t index1 = 0, index2 = 0;
@@ -1353,9 +1353,9 @@ namespace Aarch64
         uint8_t opcode = bits(machInst, 15, 12);
         uint8_t H = bits(machInst, 11);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex vm_bf = (IntRegIndex) (uint8_t) bits(machInst, 19, 16);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vm_bf = (RegIndex) (uint8_t) bits(machInst, 19, 16);
 
         uint8_t index = 0;
         uint8_t index_fp = 0;
@@ -1372,7 +1372,7 @@ namespace Aarch64
             index = (H << 1) | L;
             vmh = M;
         }
-        IntRegIndex vm = (IntRegIndex) (uint8_t) (vmh << 4 | vm_bf);
+        RegIndex vm = (RegIndex) (uint8_t) (vmh << 4 | vm_bf);
 
         // Index and 2nd register operand for FP instructions
         vmh = M;
@@ -1381,7 +1381,7 @@ namespace Aarch64
         } else if (L == 0) {
             index_fp = H;
         }
-        IntRegIndex vm_fp = (IntRegIndex) (uint8_t) (vmh << 4 | vm_bf);
+        RegIndex vm_fp = (RegIndex) (uint8_t) (vmh << 4 | vm_bf);
 
         switch (opcode) {
           case 0x0:
@@ -1582,7 +1582,7 @@ namespace Aarch64
         uint8_t cmode = bits(machInst, 15, 12);
         uint8_t o2 = bits(machInst, 11);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
 
         if (o2 == 0x1 || (op == 0x1 && cmode == 0xf && !q))
             return new Unknown64(machInst);
@@ -1698,8 +1698,8 @@ namespace Aarch64
         uint8_t immb = bits(machInst, 18, 16);
         uint8_t opcode = bits(machInst, 15, 11);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
 
         uint8_t immh3 = bits(machInst, 22);
         uint8_t immh3_q = (immh3 << 1) | q;
@@ -1877,9 +1877,9 @@ namespace Aarch64
     {
         uint8_t q = bits(machInst, 30);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
         uint8_t switchVal = bits(machInst, 14, 12);
 
@@ -1938,9 +1938,9 @@ namespace Aarch64
         uint8_t size = bits(machInst, 23, 22);
         uint8_t opcode = bits(machInst, 14, 12);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
         switch (opcode) {
           case 0x1:
@@ -1974,9 +1974,9 @@ namespace Aarch64
         uint8_t op2 = bits(machInst, 23, 22);
         uint8_t imm4 = bits(machInst, 14, 11);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
         if (op2 != 0 || (q == 0x0 && bits(imm4, 3) == 0x1))
             return new Unknown64(machInst);
@@ -1998,9 +1998,9 @@ namespace Aarch64
         uint8_t opcode = bits(machInst, 15, 11);
         uint8_t s = bits(machInst, 11);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
         switch (opcode) {
           case 0x01:
@@ -2142,9 +2142,9 @@ namespace Aarch64
         uint8_t size = bits(machInst, 23, 22);
         uint8_t opcode = bits(machInst, 15, 11);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
         switch (opcode) {
           case 0x10:
@@ -2170,9 +2170,9 @@ namespace Aarch64
 
         uint8_t opcode = bits(machInst, 15, 12);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
         switch (opcode) {
           case 0x9:
@@ -2193,8 +2193,8 @@ namespace Aarch64
         uint8_t size = bits(machInst, 23, 22);
         uint8_t opcode = bits(machInst, 16, 12);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
 
         uint8_t switchVal = opcode | ((u ? 1 : 0) << 5);
         switch (switchVal) {
@@ -2391,8 +2391,8 @@ namespace Aarch64
         uint8_t size = bits(machInst, 23, 22);
         uint8_t opcode = bits(machInst, 16, 12);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
 
         if (!u) {
             if (opcode == 0x1b && size == 0x3)
@@ -2436,8 +2436,8 @@ namespace Aarch64
 
         uint8_t imm5 = bits(machInst, 20, 16);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
 
         uint8_t size = findLsbSet(imm5);
         if (size > 3)
@@ -2459,9 +2459,9 @@ namespace Aarch64
         uint8_t opcode = bits(machInst, 15, 12);
         uint8_t H = bits(machInst, 11);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-        IntRegIndex vm_bf = (IntRegIndex) (uint8_t) bits(machInst, 19, 16);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vm_bf = (RegIndex) (uint8_t) bits(machInst, 19, 16);
 
         uint8_t index = 0;
         uint8_t index_fp = 0;
@@ -2479,7 +2479,7 @@ namespace Aarch64
             index = H;
             vmh = M;
         }
-        IntRegIndex vm = (IntRegIndex) (uint8_t) (vmh << 4 | vm_bf);
+        RegIndex vm = (RegIndex) (uint8_t) (vmh << 4 | vm_bf);
 
         // Index and 2nd register operand for FP instructions
         vmh = M;
@@ -2488,7 +2488,7 @@ namespace Aarch64
         } else if (L == 0) {
             index_fp = H;
         }
-        IntRegIndex vm_fp = (IntRegIndex) (uint8_t) (vmh << 4 | vm_bf);
+        RegIndex vm_fp = (RegIndex) (uint8_t) (vmh << 4 | vm_bf);
 
         uint8_t u_opcode = opcode | u << 4;
 
@@ -2563,8 +2563,8 @@ namespace Aarch64
         uint8_t immb = bits(machInst, 18, 16);
         uint8_t opcode = bits(machInst, 15, 11);
 
-        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-        IntRegIndex vn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
 
         uint8_t immh3 = bits(machInst, 22);
         uint8_t size = findMsbSet(immh);
@@ -2748,9 +2748,9 @@ namespace Aarch64
                 return new Unknown64(machInst);
             }
 
-            IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-            IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-            IntRegIndex rm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+            RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+            RegIndex rn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+            RegIndex rm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
             if (load) {
                 return new VldMult64(machInst, rn, vd, rm, eSize, dataSize,
@@ -2797,9 +2797,9 @@ namespace Aarch64
 
             uint8_t eSize = scale;
 
-            IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-            IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
-            IntRegIndex rm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+            RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+            RegIndex rn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+            RegIndex rm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
 
             if (load) {
                 return new VldSingle64(machInst, rn, vd, rm, eSize, dataSize,

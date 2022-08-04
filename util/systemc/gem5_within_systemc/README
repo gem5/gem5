@@ -32,12 +32,12 @@ normal gem5 (cxx-config not needed, Python needed):
 
 > cd ../../..
 > scons build/ARM/gem5.opt
-> scons --with-cxx-config --without-python USE_SYSTEMC=0 \
+> scons --with-cxx-config --without-python --without-tcmalloc USE_SYSTEMC=0 \
 >       build/ARM/libgem5_opt.so
 > cd util/systemc
 
 Note: For MAC / OSX this command should be used:
-> scons --with-cxx-config --without-python USE_SYSTEMC=0 \
+> scons --with-cxx-config --without-python --without-tcmalloc USE_SYSTEMC=0 \
 >       build/ARM/libgem5_opt.dylib
 
 Set a proper LD_LIBRARY_PATH e.g. for bash:

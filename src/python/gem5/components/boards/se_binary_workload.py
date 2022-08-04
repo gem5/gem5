@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from .abstract_board import AbstractBoard
 from ...resources.resource import AbstractResource
 
 from m5.objects import SEWorkload, Process
@@ -38,7 +39,11 @@ class SEBinaryWorkload:
     AbstractBoard).
     """
 
-    def set_se_binary_workload(self, binary: AbstractResource) -> None:
+    def set_se_binary_workload(
+        self,
+        binary: AbstractResource,
+        exit_on_work_items: bool = True
+    ) -> None:
         """Set up the system to run a specific binary.
 
         **Limitations**
@@ -47,10 +52,23 @@ class SEBinaryWorkload:
           ISA and the simulated ISA are the same.
 
         :param binary: The resource encapsulating the binary to be run.
+        :param exit_on_work_items: Whether the simulation should exit on work
+        items. True by default.
         """
+
+        # We assume this this is in a multiple-inheritance setup with an
+        # Abstract board. This function will not work otherwise.
+        assert(isinstance(self,AbstractBoard))
+
+        # If we are setting a workload of this type, we need to run as a
+        # SE-mode simulation.
+        self._set_fullsystem(False)
 
         self.workload = SEWorkload.init_compatible(binary.get_local_path())
 
         process = Process()
         process.cmd = [binary.get_local_path()]
         self.get_processor().get_cores()[0].set_workload(process)
+
+        # Set whether to exit on work items for the se_workload
+        self.exit_on_work_items = exit_on_work_items

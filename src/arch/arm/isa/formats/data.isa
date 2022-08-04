@@ -38,13 +38,13 @@ def format ArmMiscMedia() {{
     {
         const uint32_t op1 = bits(machInst, 22, 20);
         const uint32_t op2 = bits(machInst, 7, 5);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
-        const IntRegIndex ra = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 3, 0);
+        const RegIndex ra = (RegIndex)(uint32_t)bits(machInst, 15, 12);
         if (op1 == 0 && op2 == 0) {
-            const IntRegIndex rd =
-                (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-            const IntRegIndex rm =
-                (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+            const RegIndex rd =
+                (RegIndex)(uint32_t)bits(machInst, 19, 16);
+            const RegIndex rm =
+                (RegIndex)(uint32_t)bits(machInst, 11, 8);
             if (ra == 0xf) {
                 return new Usad8(machInst, rd, rn, rm);
             } else {
@@ -74,7 +74,7 @@ def format ArmMiscMedia() {{
 
 def format ArmDataProcReg() {{
     pclr = '''
-                    if (%(dest)s == INTREG_PC) {
+                    if (%(dest)s == int_reg::Pc) {
                         return new %(className)ssRegPclr(machInst, %(dest)s,
                                                          %(op1)s, rm, imm5,
                                                          type);
@@ -109,11 +109,11 @@ def format ArmDataProcReg() {{
         if useDest:
             dest = "rd"
         else:
-            dest = "INTREG_ZERO"
+            dest = "int_reg::Zero"
         if useOp1:
             op1 = "rn"
         else:
-            op1 = "INTREG_ZERO"
+            op1 = "int_reg::Zero"
         global instDecode, pclrCode
         substDict = { "className": mnem.capitalize(),
                       "opcode": opcode,
@@ -131,10 +131,10 @@ def format ArmDataProcReg() {{
         const bool setCc = (bits(machInst, 20) == 1);
         const uint32_t imm5 = bits(machInst, 11, 7);
         const ArmShiftType type = (ArmShiftType)(uint32_t)bits(machInst, 6, 5);
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)RD;
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)RN;
-        const IntRegIndex rm = (IntRegIndex)(uint32_t)RM;
-        const IntRegIndex rs = (IntRegIndex)(uint32_t)RS;
+        const RegIndex rd = (RegIndex)(uint32_t)RD;
+        const RegIndex rn = (RegIndex)(uint32_t)RN;
+        const RegIndex rm = (RegIndex)(uint32_t)RM;
+        const RegIndex rs = (RegIndex)(uint32_t)RS;
         switch (OPCODE) {
     '''
     decode_block += instCode(0x0, "and")
@@ -168,20 +168,20 @@ def format ArmPackUnpackSatReverse() {{
         const uint32_t a = bits(machInst, 19, 16);
         const uint32_t op2 = bits(machInst, 7, 5);
         if (bits(op2, 0) == 0) {
-            const IntRegIndex rn =
-                (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
-            const IntRegIndex rd =
-                (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+            const RegIndex rn =
+                (RegIndex)(uint32_t)bits(machInst, 3, 0);
+            const RegIndex rd =
+                (RegIndex)(uint32_t)bits(machInst, 15, 12);
             const uint32_t satImm = bits(machInst, 20, 16);
             const uint32_t imm = bits(machInst, 11, 7);
             const ArmShiftType type =
                 (ArmShiftType)(uint32_t)bits(machInst, 6, 5);
             if (op1 == 0) {
                 if (type) {
-                    return new PkhtbReg(machInst, rd, (IntRegIndex)a,
+                    return new PkhtbReg(machInst, rd, (RegIndex)a,
                                         rn, imm, type);
                 } else {
-                    return new PkhbtReg(machInst, rd, (IntRegIndex)a,
+                    return new PkhbtReg(machInst, rd, (RegIndex)a,
                                         rn, imm, type);
                 }
             } else if (bits(op1, 2, 1) == 1) {
@@ -194,12 +194,12 @@ def format ArmPackUnpackSatReverse() {{
         switch (op1) {
           case 0x0:
             {
-                const IntRegIndex rn =
-                    (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-                const IntRegIndex rd =
-                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-                const IntRegIndex rm =
-                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const RegIndex rn =
+                    (RegIndex)(uint32_t)bits(machInst, 19, 16);
+                const RegIndex rd =
+                    (RegIndex)(uint32_t)bits(machInst, 15, 12);
+                const RegIndex rm =
+                    (RegIndex)(uint32_t)bits(machInst, 3, 0);
                 if (op2 == 0x3) {
                     const uint32_t rotation =
                         (uint32_t)bits(machInst, 11, 10) << 3;
@@ -215,19 +215,19 @@ def format ArmPackUnpackSatReverse() {{
             break;
           case 0x2:
             if (op2 == 0x1) {
-                const IntRegIndex rn =
-                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
-                const IntRegIndex rd =
-                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                const RegIndex rn =
+                    (RegIndex)(uint32_t)bits(machInst, 3, 0);
+                const RegIndex rd =
+                    (RegIndex)(uint32_t)bits(machInst, 15, 12);
                 const uint32_t satImm = bits(machInst, 20, 16);
                 return new Ssat16(machInst, rd, satImm + 1, rn);
             } else if (op2 == 0x3) {
-                const IntRegIndex rn =
-                    (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-                const IntRegIndex rd =
-                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-                const IntRegIndex rm =
-                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const RegIndex rn =
+                    (RegIndex)(uint32_t)bits(machInst, 19, 16);
+                const RegIndex rd =
+                    (RegIndex)(uint32_t)bits(machInst, 15, 12);
+                const RegIndex rm =
+                    (RegIndex)(uint32_t)bits(machInst, 3, 0);
                 const uint32_t rotation =
                     (uint32_t)bits(machInst, 11, 10) << 3;
                 if (a == 0xf) {
@@ -239,16 +239,16 @@ def format ArmPackUnpackSatReverse() {{
             break;
           case 0x3:
             if (op2 == 0x1) {
-                IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-                IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 15, 12);
+                RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 3, 0);
                 return new Rev(machInst, rd, rm);
             } else if (op2 == 0x3) {
-                const IntRegIndex rn =
-                    (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-                const IntRegIndex rd =
-                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-                const IntRegIndex rm =
-                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const RegIndex rn =
+                    (RegIndex)(uint32_t)bits(machInst, 19, 16);
+                const RegIndex rd =
+                    (RegIndex)(uint32_t)bits(machInst, 15, 12);
+                const RegIndex rm =
+                    (RegIndex)(uint32_t)bits(machInst, 3, 0);
                 const uint32_t rotation =
                     (uint32_t)bits(machInst, 11, 10) << 3;
                 if (a == 0xf) {
@@ -257,19 +257,19 @@ def format ArmPackUnpackSatReverse() {{
                     return new Sxtah(machInst, rd, rn, rm, rotation);
                 }
             } else if (op2 == 0x5) {
-                IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-                IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 15, 12);
+                RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 3, 0);
                 return new Rev16(machInst, rd, rm);
             }
             break;
           case 0x4:
             if (op2 == 0x3) {
-                const IntRegIndex rn =
-                    (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-                const IntRegIndex rd =
-                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-                const IntRegIndex rm =
-                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const RegIndex rn =
+                    (RegIndex)(uint32_t)bits(machInst, 19, 16);
+                const RegIndex rd =
+                    (RegIndex)(uint32_t)bits(machInst, 15, 12);
+                const RegIndex rm =
+                    (RegIndex)(uint32_t)bits(machInst, 3, 0);
                 const uint32_t rotation =
                     (uint32_t)bits(machInst, 11, 10) << 3;
                 if (a == 0xf) {
@@ -281,19 +281,19 @@ def format ArmPackUnpackSatReverse() {{
             break;
           case 0x6:
             if (op2 == 0x1) {
-                const IntRegIndex rn =
-                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
-                const IntRegIndex rd =
-                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                const RegIndex rn =
+                    (RegIndex)(uint32_t)bits(machInst, 3, 0);
+                const RegIndex rd =
+                    (RegIndex)(uint32_t)bits(machInst, 15, 12);
                 const uint32_t satImm = bits(machInst, 20, 16);
                 return new Usat16(machInst, rd, satImm, rn);
             } else if (op2 == 0x3) {
-                const IntRegIndex rn =
-                    (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-                const IntRegIndex rd =
-                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-                const IntRegIndex rm =
-                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const RegIndex rn =
+                    (RegIndex)(uint32_t)bits(machInst, 19, 16);
+                const RegIndex rd =
+                    (RegIndex)(uint32_t)bits(machInst, 15, 12);
+                const RegIndex rm =
+                    (RegIndex)(uint32_t)bits(machInst, 3, 0);
                 const uint32_t rotation =
                     (uint32_t)bits(machInst, 11, 10) << 3;
                 if (a == 0xf) {
@@ -305,12 +305,12 @@ def format ArmPackUnpackSatReverse() {{
             break;
           case 0x7:
             {
-                const IntRegIndex rn =
-                    (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-                const IntRegIndex rd =
-                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-                const IntRegIndex rm =
-                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const RegIndex rn =
+                    (RegIndex)(uint32_t)bits(machInst, 19, 16);
+                const RegIndex rd =
+                    (RegIndex)(uint32_t)bits(machInst, 15, 12);
+                const RegIndex rm =
+                    (RegIndex)(uint32_t)bits(machInst, 3, 0);
                 if (op2 == 0x1) {
                     return new Rbit(machInst, rd, rm);
                 } else if (op2 == 0x3) {
@@ -337,9 +337,9 @@ def format ArmParallelAddSubtract() {{
     {
         const uint32_t op1 = bits(machInst, 21, 20);
         const uint32_t op2 = bits(machInst, 7, 5);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 15, 12);
+        const RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 3, 0);
         if (bits(machInst, 22) == 0) {
             switch (op1) {
               case 0x1:
@@ -450,13 +450,13 @@ def format ArmParallelAddSubtract() {{
 
 def format ArmDataProcImm() {{
     pclr = '''
-                if (%(dest)s == INTREG_PC) {
+                if (%(dest)s == int_reg::Pc) {
                     return new %(className)ssImmPclr(machInst, %(dest)s,
                                                      %(op1)s, imm, false);
                 } else
     '''
     adr = '''
-                if (%(op1)s == INTREG_PC) {
+                if (%(op1)s == int_reg::Pc) {
                     return new AdrImm(machInst, %(dest)s, %(add)s,
                                       imm, false);
                 } else
@@ -482,11 +482,11 @@ def format ArmDataProcImm() {{
         if useDest:
             dest = "rd"
         else:
-            dest = "INTREG_ZERO"
+            dest = "int_reg::Zero"
         if useOp1:
             op1 = "rn"
         else:
-            op1 = "INTREG_ZERO"
+            op1 = "int_reg::Zero"
         substDict = { "className": mnem.capitalize(),
                       "opcode": opcode,
                       "dest": dest,
@@ -516,15 +516,15 @@ def format ArmDataProcImm() {{
         const uint32_t rotation = (bits(machInst, 11, 8) << 1);
         const bool rotC = (rotation != 0);
         const uint32_t imm = rotate_imm(unrotated, rotation);
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)RD;
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)RN;
+        const RegIndex rd = (RegIndex)(uint32_t)RD;
+        const RegIndex rn = (RegIndex)(uint32_t)RN;
         switch (OPCODE) {
     '''
     decode_block += instCode(0x0, "and")
     decode_block += instCode(0x1, "eor")
-    decode_block += adrCode(0x2, "sub", add="(IntRegIndex)0")
+    decode_block += adrCode(0x2, "sub", add="(RegIndex)0")
     decode_block += instCode(0x3, "rsb")
-    decode_block += adrCode(0x4, "add", add="(IntRegIndex)1")
+    decode_block += adrCode(0x4, "add", add="(RegIndex)1")
     decode_block += instCode(0x5, "adc")
     decode_block += instCode(0x6, "sbc")
     decode_block += instCode(0x7, "rsc")
@@ -547,9 +547,9 @@ def format ArmDataProcImm() {{
 def format ArmSatAddSub() {{
     decode_block = '''
     {
-        IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-        IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-        IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 19, 16);
+        RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 15, 12);
+        RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 3, 0);
         switch (OPCODE) {
           case 0x8:
             return new QaddRegCc(machInst, rd, rm, rn, 0, LSL);
@@ -570,50 +570,50 @@ def format Thumb32DataProcReg() {{
     decode_block = '''
     {
         const uint32_t op1 = bits(machInst, 23, 20);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 19, 16);
         const uint32_t op2 = bits(machInst, 7, 4);
         if (bits(machInst, 15, 12) != 0xf) {
             return new Unknown(machInst);
         }
         if (bits(op1, 3) != 1) {
             if (op2 == 0) {
-                IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-                IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 11, 8);
+                RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 3, 0);
                 switch (bits(op1, 2, 0)) {
                   case 0x0:
                     return new MovRegReg(machInst, rd,
-                            INTREG_ZERO, rn, rm, LSL);
+                            int_reg::Zero, rn, rm, LSL);
                   case 0x1:
                     return new MovRegRegCc(machInst, rd,
-                            INTREG_ZERO, rn, rm, LSL);
+                            int_reg::Zero, rn, rm, LSL);
                   case 0x2:
                     return new MovRegReg(machInst, rd,
-                            INTREG_ZERO, rn, rm, LSR);
+                            int_reg::Zero, rn, rm, LSR);
                   case 0x3:
                     return new MovRegRegCc(machInst, rd,
-                            INTREG_ZERO, rn, rm, LSR);
+                            int_reg::Zero, rn, rm, LSR);
                   case 0x4:
                     return new MovRegReg(machInst, rd,
-                            INTREG_ZERO, rn, rm, ASR);
+                            int_reg::Zero, rn, rm, ASR);
                   case 0x5:
                     return new MovRegRegCc(machInst, rd,
-                            INTREG_ZERO, rn, rm, ASR);
+                            int_reg::Zero, rn, rm, ASR);
                   case 0x6:
                     return new MovRegReg(machInst, rd,
-                            INTREG_ZERO, rn, rm, ROR);
+                            int_reg::Zero, rn, rm, ROR);
                   case 0x7:
                     return new MovRegRegCc(machInst, rd,
-                            INTREG_ZERO, rn, rm, ROR);
+                            int_reg::Zero, rn, rm, ROR);
                   default:
                     GEM5_UNREACHABLE;
                 }
             } else if (bits(op2, 3) == 0) {
                 return new Unknown(machInst);
             } else {
-                const IntRegIndex rd =
-                    (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-                const IntRegIndex rm =
-                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const RegIndex rd =
+                    (RegIndex)(uint32_t)bits(machInst, 11, 8);
+                const RegIndex rm =
+                    (RegIndex)(uint32_t)bits(machInst, 3, 0);
                 const uint32_t rotation =
                     (uint32_t)bits(machInst, 5, 4) << 3;
                 switch (bits(op1, 2, 0)) {
@@ -659,10 +659,10 @@ def format Thumb32DataProcReg() {{
             }
         } else {
             if (bits(op2, 3) == 0) {
-                const IntRegIndex rd =
-                    (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-                const IntRegIndex rm =
-                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const RegIndex rd =
+                    (RegIndex)(uint32_t)bits(machInst, 11, 8);
+                const RegIndex rm =
+                    (RegIndex)(uint32_t)bits(machInst, 3, 0);
                 if (bits(op2, 2) == 0x0) {
                     const uint32_t op1 = bits(machInst, 22, 20);
                     const uint32_t op2 = bits(machInst, 5, 4);
@@ -785,10 +785,10 @@ def format Thumb32DataProcReg() {{
             } else if (bits(op1, 3, 2) == 0x2 && bits(op2, 3, 2) == 0x2) {
                 const uint32_t op1 = bits(machInst, 22, 20);
                 const uint32_t op2 = bits(machInst, 5, 4);
-                const IntRegIndex rd =
-                    (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-                const IntRegIndex rm =
-                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const RegIndex rd =
+                    (RegIndex)(uint32_t)bits(machInst, 11, 8);
+                const RegIndex rm =
+                    (RegIndex)(uint32_t)bits(machInst, 3, 0);
                 switch (op1) {
                   case 0x0:
                     switch (op2) {
@@ -832,10 +832,10 @@ def format Thumb32DataProcReg() {{
             } else if (bits(op1, 3, 2) == 0x3 && bits(op2, 3, 2) == 0x2) {
                 const uint32_t op1 = bits(machInst, 22, 20);
                 const uint32_t op2 = bits(machInst, 5, 4);
-                const IntRegIndex rd =
-                    (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-                const IntRegIndex rm =
-                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const RegIndex rd =
+                    (RegIndex)(uint32_t)bits(machInst, 11, 8);
+                const RegIndex rm =
+                    (RegIndex)(uint32_t)bits(machInst, 3, 0);
                 switch (op1) {
                   case 0x4:
                     switch (op2) {
@@ -871,28 +871,31 @@ def format Thumb16ShiftAddSubMoveCmp() {{
         const uint32_t imm5 = bits(machInst, 10, 6);
         const uint32_t imm3 = bits(machInst, 8, 6);
         const uint32_t imm8 = bits(machInst, 7, 0);
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 2, 0);
-        const IntRegIndex rd8 = (IntRegIndex)(uint32_t)bits(machInst, 10, 8);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 5, 3);
-        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 8, 6);
+        const RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 2, 0);
+        const RegIndex rd8 = (RegIndex)(uint32_t)bits(machInst, 10, 8);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 5, 3);
+        const RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 8, 6);
         switch (bits(machInst, 13, 11)) {
           case 0x0: // lsl
             if (machInst.itstateMask) {
-                return new MovReg(machInst, rd, INTREG_ZERO, rn, imm5, LSL);
+                return new MovReg(machInst, rd, int_reg::Zero, rn, imm5, LSL);
             } else {
-                return new MovRegCc(machInst, rd, INTREG_ZERO, rn, imm5, LSL);
+                return new MovRegCc(machInst, rd, int_reg::Zero, rn, imm5,
+                                    LSL);
             }
           case 0x1: // lsr
             if (machInst.itstateMask) {
-                return new MovReg(machInst, rd, INTREG_ZERO, rn, imm5, LSR);
+                return new MovReg(machInst, rd, int_reg::Zero, rn, imm5, LSR);
             } else {
-                return new MovRegCc(machInst, rd, INTREG_ZERO, rn, imm5, LSR);
+                return new MovRegCc(machInst, rd, int_reg::Zero, rn, imm5,
+                                    LSR);
             }
           case 0x2: // asr
             if (machInst.itstateMask) {
-                return new MovReg(machInst, rd, INTREG_ZERO, rn, imm5, ASR);
+                return new MovReg(machInst, rd, int_reg::Zero, rn, imm5, ASR);
             } else {
-                return new MovRegCc(machInst, rd, INTREG_ZERO, rn, imm5, ASR);
+                return new MovRegCc(machInst, rd, int_reg::Zero, rn, imm5,
+                                    ASR);
             }
           case 0x3:
             switch (bits(machInst, 10, 9)) {
@@ -925,12 +928,12 @@ def format Thumb16ShiftAddSubMoveCmp() {{
             }
           case 0x4:
             if (machInst.itstateMask) {
-                return new MovImm(machInst, rd8, INTREG_ZERO, imm8, false);
+                return new MovImm(machInst, rd8, int_reg::Zero, imm8, false);
             } else {
-                return new MovImmCc(machInst, rd8, INTREG_ZERO, imm8, false);
+                return new MovImmCc(machInst, rd8, int_reg::Zero, imm8, false);
             }
           case 0x5:
-            return new CmpImmCc(machInst, INTREG_ZERO, rd8, imm8, true);
+            return new CmpImmCc(machInst, int_reg::Zero, rd8, imm8, true);
           case 0x6:
             if (machInst.itstateMask) {
                 return new AddImm(machInst, rd8, rd8, imm8, true);
@@ -953,8 +956,8 @@ def format Thumb16ShiftAddSubMoveCmp() {{
 def format Thumb16DataProcessing() {{
     decode_block = '''
     {
-        const IntRegIndex rdn = (IntRegIndex)(uint32_t)bits(machInst, 2, 0);
-        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 5, 3);
+        const RegIndex rdn = (RegIndex)(uint32_t)bits(machInst, 2, 0);
+        const RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 5, 3);
         switch (bits(machInst, 9, 6)) {
           case 0x0:
             if (machInst.itstateMask) {
@@ -971,26 +974,26 @@ def format Thumb16DataProcessing() {{
           case 0x2: //lsl
             if (machInst.itstateMask) {
                 return new MovRegReg(machInst, rdn,
-                        INTREG_ZERO, rdn, rm, LSL);
+                        int_reg::Zero, rdn, rm, LSL);
             } else {
                 return new MovRegRegCc(machInst, rdn,
-                        INTREG_ZERO, rdn, rm, LSL);
+                        int_reg::Zero, rdn, rm, LSL);
             }
           case 0x3: //lsr
             if (machInst.itstateMask) {
                 return new MovRegReg(machInst, rdn,
-                        INTREG_ZERO, rdn, rm, LSR);
+                        int_reg::Zero, rdn, rm, LSR);
             } else {
                 return new MovRegRegCc(machInst, rdn,
-                        INTREG_ZERO, rdn, rm, LSR);
+                        int_reg::Zero, rdn, rm, LSR);
             }
           case 0x4: //asr
             if (machInst.itstateMask) {
                 return new MovRegReg(machInst, rdn,
-                        INTREG_ZERO, rdn, rm, ASR);
+                        int_reg::Zero, rdn, rm, ASR);
             } else {
                 return new MovRegRegCc(machInst, rdn,
-                        INTREG_ZERO, rdn, rm, ASR);
+                        int_reg::Zero, rdn, rm, ASR);
             }
           case 0x5:
             if (machInst.itstateMask) {
@@ -1007,13 +1010,13 @@ def format Thumb16DataProcessing() {{
           case 0x7: // ror
             if (machInst.itstateMask) {
                 return new MovRegReg(machInst, rdn,
-                        INTREG_ZERO, rdn, rm, ROR);
+                        int_reg::Zero, rdn, rm, ROR);
             } else {
                 return new MovRegRegCc(machInst, rdn,
-                        INTREG_ZERO, rdn, rm, ROR);
+                        int_reg::Zero, rdn, rm, ROR);
             }
           case 0x8:
-            return new TstRegCc(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
+            return new TstRegCc(machInst, int_reg::Zero, rdn, rm, 0, LSL);
           case 0x9:
             if (machInst.itstateMask) {
                 return new RsbImm(machInst, rdn, rm, 0, true);
@@ -1021,9 +1024,9 @@ def format Thumb16DataProcessing() {{
                 return new RsbImmCc(machInst, rdn, rm, 0, true);
             }
           case 0xa:
-            return new CmpRegCc(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
+            return new CmpRegCc(machInst, int_reg::Zero, rdn, rm, 0, LSL);
           case 0xb:
-            return new CmnRegCc(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
+            return new CmnRegCc(machInst, int_reg::Zero, rdn, rm, 0, LSL);
           case 0xc:
             if (machInst.itstateMask) {
                 return new OrrReg(machInst, rdn, rdn, rm, 0, LSL);
@@ -1044,9 +1047,9 @@ def format Thumb16DataProcessing() {{
             }
           case 0xf:
             if (machInst.itstateMask) {
-                return new MvnReg(machInst, rdn, INTREG_ZERO, rm, 0, LSL);
+                return new MvnReg(machInst, rdn, int_reg::Zero, rm, 0, LSL);
             } else {
-                return new MvnRegCc(machInst, rdn, INTREG_ZERO, rm, 0, LSL);
+                return new MvnRegCc(machInst, rdn, int_reg::Zero, rm, 0, LSL);
             }
           default:
             GEM5_UNREACHABLE;
@@ -1058,25 +1061,25 @@ def format Thumb16DataProcessing() {{
 def format Thumb16SpecDataAndBx() {{
     decode_block = '''
     {
-        const IntRegIndex rdn =
-            (IntRegIndex)(uint32_t)(bits(machInst, 2, 0) |
+        const RegIndex rdn =
+            (RegIndex)(uint32_t)(bits(machInst, 2, 0) |
                                     (bits(machInst, 7) << 3));
-        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 6, 3);
+        const RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 6, 3);
         switch (bits(machInst, 9, 8)) {
           case 0x0:
             return new AddReg(machInst, rdn, rdn, rm, 0, LSL);
           case 0x1:
-            return new CmpRegCc(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
+            return new CmpRegCc(machInst, int_reg::Zero, rdn, rm, 0, LSL);
           case 0x2:
-            return new MovReg(machInst, rdn, INTREG_ZERO, rm, 0, LSL);
+            return new MovReg(machInst, rdn, int_reg::Zero, rm, 0, LSL);
           case 0x3:
             if (bits(machInst, 7) == 0) {
                 return new BxReg(machInst,
-                                 (IntRegIndex)(uint32_t)bits(machInst, 6, 3),
+                                 (RegIndex)(uint32_t)bits(machInst, 6, 3),
                                  COND_UC);
             } else {
                 return new BlxReg(machInst,
-                                  (IntRegIndex)(uint32_t)bits(machInst, 6, 3),
+                                  (RegIndex)(uint32_t)bits(machInst, 6, 3),
                                   COND_UC);
             }
           default:
@@ -1089,9 +1092,9 @@ def format Thumb16SpecDataAndBx() {{
 def format Thumb16Adr() {{
     decode_block = '''
     {
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 10, 8);
+        const RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 10, 8);
         const uint32_t imm8 = bits(machInst, 7, 0) << 2;
-        return new AdrImm(machInst, rd, (IntRegIndex)1, imm8, false);
+        return new AdrImm(machInst, rd, (RegIndex)1, imm8, false);
     }
     '''
 }};
@@ -1099,9 +1102,9 @@ def format Thumb16Adr() {{
 def format Thumb16AddSp() {{
     decode_block = '''
     {
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 10, 8);
+        const RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 10, 8);
         const uint32_t imm8 = bits(machInst, 7, 0) << 2;
-        return new AddImm(machInst, rd, INTREG_SP, imm8, true);
+        return new AddImm(machInst, rd, int_reg::Sp, imm8, true);
     }
     '''
 }};
@@ -1115,8 +1118,7 @@ def format ArmMisc() {{
         const uint8_t byteMask = bits(machInst, 19, 16);
         switch (OPCODE) {
           case 0x8:
-            return new MovImm(machInst, (IntRegIndex)(uint32_t)RD,
-                    (IntRegIndex)INTREG_ZERO,
+            return new MovImm(machInst, (RegIndex)RD, int_reg::Zero,
                     bits(machInst, 11, 0) | (bits(machInst, 19, 16) << 12),
                     false);
           case 0x9:
@@ -1158,8 +1160,8 @@ def format ArmMisc() {{
             {
                 const uint32_t timm = (bits(machInst, 19, 16) << 12) |
                                        bits(machInst, 11, 0);
-                return new MovtImm(machInst, (IntRegIndex)(uint32_t)RD,
-                                   (IntRegIndex)(uint32_t)RD, timm, true);
+                return new MovtImm(machInst, (RegIndex)(uint32_t)RD,
+                                   (RegIndex)(uint32_t)RD, timm, true);
             }
           case 0xb:
             return new MsrSpsrImm(machInst, imm, byteMask);
@@ -1176,18 +1178,18 @@ def format Thumb16Misc() {{
         switch (bits(machInst, 11, 8)) {
           case 0x0:
             if (bits(machInst, 7)) {
-                return new SubImm(machInst, INTREG_SP, INTREG_SP,
+                return new SubImm(machInst, int_reg::Sp, int_reg::Sp,
                                    bits(machInst, 6, 0) << 2, true);
             } else {
-                return new AddImm(machInst, INTREG_SP, INTREG_SP,
+                return new AddImm(machInst, int_reg::Sp, int_reg::Sp,
                                    bits(machInst, 6, 0) << 2, true);
             }
           case 0x2:
             {
-                const IntRegIndex rd =
-                    (IntRegIndex)(uint32_t)bits(machInst, 2, 0);
-                const IntRegIndex rm =
-                    (IntRegIndex)(uint32_t)bits(machInst, 5, 3);
+                const RegIndex rd =
+                    (RegIndex)(uint32_t)bits(machInst, 2, 0);
+                const RegIndex rm =
+                    (RegIndex)(uint32_t)bits(machInst, 5, 3);
                 switch (bits(machInst, 7, 6)) {
                   case 0x0:
                     return new Sxth(machInst, rd, 0, rm);
@@ -1206,13 +1208,13 @@ def format Thumb16Misc() {{
             return new Cbz(machInst,
                            (bits(machInst, 9) << 6) |
                            (bits(machInst, 7, 3) << 1),
-                           (IntRegIndex)(uint32_t)bits(machInst, 2, 0));
+                           (RegIndex)(uint32_t)bits(machInst, 2, 0));
           case 0x4:
           case 0x5:
             {
                 const uint32_t m = bits(machInst, 8);
                 const uint32_t regList = bits(machInst, 7, 0) | (m << 14);
-                return new LdmStm(machInst, INTREG_SP, false, false, false,
+                return new LdmStm(machInst, int_reg::Sp, false, false, false,
                                   true, false, regList);
             }
           case 0x6:
@@ -1234,10 +1236,10 @@ def format Thumb16Misc() {{
                 if (op1 == 0x2) {
                     return new Hlt(machInst, bits(machInst, 5, 0));
                 } else {
-                    IntRegIndex rd =
-                        (IntRegIndex)(uint32_t)bits(machInst, 2, 0);
-                    IntRegIndex rm =
-                        (IntRegIndex)(uint32_t)bits(machInst, 5, 3);
+                    RegIndex rd =
+                        (RegIndex)(uint32_t)bits(machInst, 2, 0);
+                    RegIndex rm =
+                        (RegIndex)(uint32_t)bits(machInst, 5, 3);
 
                     switch (op1) {
                       case 0x0:
@@ -1257,13 +1259,13 @@ def format Thumb16Misc() {{
             return new Cbnz(machInst,
                             (bits(machInst, 9) << 6) |
                             (bits(machInst, 7, 3) << 1),
-                            (IntRegIndex)(uint32_t)bits(machInst, 2, 0));
+                            (RegIndex)(uint32_t)bits(machInst, 2, 0));
           case 0xc:
           case 0xd:
             {
                 const uint32_t p = bits(machInst, 8);
                 const uint32_t regList = bits(machInst, 7, 0) | (p << 15);
-                return new LdmStm(machInst, INTREG_SP, true, true, false,
+                return new LdmStm(machInst, int_reg::Sp, true, true, false,
                                   true, true, regList);
             }
           case 0xe:
@@ -1312,8 +1314,8 @@ def format Thumb32DataProcModImm() {{
     {
         const uint32_t op = bits(machInst, 24, 21);
         const bool s = (bits(machInst, 20) == 1);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 11, 8);
         const uint32_t ctrlImm = bits(machInst.instBits, 26) << 3 |
                                  bits(machInst, 14, 12);
         const bool rotC = ctrlImm > 3;
@@ -1321,7 +1323,7 @@ def format Thumb32DataProcModImm() {{
         const uint32_t imm = modified_imm(ctrlImm, dataImm);
         switch (op) {
           case 0x0:
-            if (rd == INTREG_PC) {
+            if (rd == int_reg::Pc) {
                 %(tst)s
             } else {
                 %(and)s
@@ -1329,25 +1331,25 @@ def format Thumb32DataProcModImm() {{
           case 0x1:
             %(bic)s
           case 0x2:
-            if (rn == INTREG_PC) {
+            if (rn == int_reg::Pc) {
                 %(mov)s
             } else {
                 %(orr)s
             }
           case 0x3:
-            if (rn == INTREG_PC) {
+            if (rn == int_reg::Pc) {
                 %(mvn)s
             } else {
                 %(orn)s
             }
           case 0x4:
-            if (rd == INTREG_PC) {
+            if (rd == int_reg::Pc) {
                 %(teq)s
             } else {
                 %(eor)s
             }
           case 0x8:
-            if (rd == INTREG_PC) {
+            if (rd == int_reg::Pc) {
                 %(cmn)s
             } else {
                 %(add)s
@@ -1357,7 +1359,7 @@ def format Thumb32DataProcModImm() {{
           case 0xb:
             %(sbc)s
           case 0xd:
-            if (rd == INTREG_PC) {
+            if (rd == int_reg::Pc) {
                 %(cmp)s
             } else {
                 %(sub)s
@@ -1369,20 +1371,20 @@ def format Thumb32DataProcModImm() {{
         }
     }
     ''' % {
-        "tst" : decInst("Tst", "INTREG_ZERO"),
+        "tst" : decInst("Tst", "int_reg::Zero"),
         "and" : decInst("And"),
         "bic" : decInst("Bic"),
-        "mov" : decInst("Mov", op1="INTREG_ZERO"),
+        "mov" : decInst("Mov", op1="int_reg::Zero"),
         "orr" : decInst("Orr"),
-        "mvn" : decInst("Mvn", op1="INTREG_ZERO"),
+        "mvn" : decInst("Mvn", op1="int_reg::Zero"),
         "orn" : decInst("Orn"),
-        "teq" : decInst("Teq", dest="INTREG_ZERO"),
+        "teq" : decInst("Teq", dest="int_reg::Zero"),
         "eor" : decInst("Eor"),
-        "cmn" : decInst("Cmn", dest="INTREG_ZERO"),
+        "cmn" : decInst("Cmn", dest="int_reg::Zero"),
         "add" : decInst("Add"),
         "adc" : decInst("Adc"),
         "sbc" : decInst("Sbc"),
-        "cmp" : decInst("Cmp", dest="INTREG_ZERO"),
+        "cmp" : decInst("Cmp", dest="int_reg::Zero"),
         "sub" : decInst("Sub"),
         "rsb" : decInst("Rsb")
     }
@@ -1392,8 +1394,8 @@ def format Thumb32DataProcPlainBin() {{
     decode_block = '''
     {
         const uint32_t op = bits(machInst, 24, 20);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 11, 8);
         switch (op) {
           case 0x0:
             {
@@ -1401,7 +1403,7 @@ def format Thumb32DataProcPlainBin() {{
                                      (bits(machInst, 14, 12) << 8) |
                                      (bits(machInst, 26) << 11);
                 if (rn == 0xf) {
-                    return new AdrImm(machInst, rd, (IntRegIndex)1,
+                    return new AdrImm(machInst, rd, (RegIndex)1,
                                       imm, false);
                 } else {
                     return new AddImm(machInst, rd, rn, imm, true);
@@ -1413,7 +1415,7 @@ def format Thumb32DataProcPlainBin() {{
                                      (bits(machInst, 14, 12) << 8) |
                                      (bits(machInst, 26) << 11) |
                                      (bits(machInst, 19, 16) << 12);
-                return new MovImm(machInst, rd, INTREG_ZERO, imm, true);
+                return new MovImm(machInst, rd, int_reg::Zero, imm, true);
             }
           case 0xa:
             {
@@ -1421,7 +1423,7 @@ def format Thumb32DataProcPlainBin() {{
                                      (bits(machInst, 14, 12) << 8) |
                                      (bits(machInst, 26) << 11);
                 if (rn == 0xf) {
-                    return new AdrImm(machInst, rd, (IntRegIndex)0,
+                    return new AdrImm(machInst, rd, (RegIndex)0,
                                       imm, false);
                 } else {
                     return new SubImm(machInst, rd, rn, imm, true);
@@ -1514,15 +1516,15 @@ def format Thumb32DataProcShiftReg() {{
     {
         const uint32_t op = bits(machInst, 24, 21);
         const bool s = (bits(machInst, 20) == 1);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 11, 8);
+        const RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 3, 0);
         const uint32_t amt = (bits(machInst, 14, 12) << 2) |
                               bits(machInst, 7, 6);
         const ArmShiftType type = (ArmShiftType)(uint32_t)bits(machInst, 5, 4);
         switch (op) {
           case 0x0:
-            if (rd == INTREG_PC) {
+            if (rd == int_reg::Pc) {
                 %(tst)s
             } else {
                 %(and)s
@@ -1530,19 +1532,19 @@ def format Thumb32DataProcShiftReg() {{
           case 0x1:
             %(bic)s
           case 0x2:
-            if (rn == INTREG_PC) {
+            if (rn == int_reg::Pc) {
                 %(mov)s
             } else {
                 %(orr)s
             }
           case 0x3:
-            if (rn == INTREG_PC) {
+            if (rn == int_reg::Pc) {
                 %(mvn)s
             } else {
                 %(orn)s
             }
           case 0x4:
-            if (rd == INTREG_PC) {
+            if (rd == int_reg::Pc) {
                 %(teq)s
             } else {
                 %(eor)s
@@ -1554,7 +1556,7 @@ def format Thumb32DataProcShiftReg() {{
                 return new PkhbtReg(machInst, rd, rn, rm, amt, type);
             }
           case 0x8:
-            if (rd == INTREG_PC) {
+            if (rd == int_reg::Pc) {
                 %(cmn)s
             } else {
                 %(add)s
@@ -1564,7 +1566,7 @@ def format Thumb32DataProcShiftReg() {{
           case 0xb:
             %(sbc)s
           case 0xd:
-            if (rd == INTREG_PC) {
+            if (rd == int_reg::Pc) {
                 %(cmp)s
             } else {
                 %(sub)s
@@ -1576,20 +1578,20 @@ def format Thumb32DataProcShiftReg() {{
         }
     }
     ''' % {
-        "tst" : decInst("Tst", "INTREG_ZERO"),
+        "tst" : decInst("Tst", "int_reg::Zero"),
         "and" : decInst("And"),
         "bic" : decInst("Bic"),
-        "mov" : decInst("Mov", op1="INTREG_ZERO"),
+        "mov" : decInst("Mov", op1="int_reg::Zero"),
         "orr" : decInst("Orr"),
-        "mvn" : decInst("Mvn", op1="INTREG_ZERO"),
+        "mvn" : decInst("Mvn", op1="int_reg::Zero"),
         "orn" : decInst("Orn"),
-        "teq" : decInst("Teq", "INTREG_ZERO"),
+        "teq" : decInst("Teq", "int_reg::Zero"),
         "eor" : decInst("Eor"),
-        "cmn" : decInst("Cmn", "INTREG_ZERO"),
+        "cmn" : decInst("Cmn", "int_reg::Zero"),
         "add" : decInst("Add"),
         "adc" : decInst("Adc"),
         "sbc" : decInst("Sbc"),
-        "cmp" : decInst("Cmp", "INTREG_ZERO"),
+        "cmp" : decInst("Cmp", "int_reg::Zero"),
         "sub" : decInst("Sub"),
         "rsb" : decInst("Rsb")
     }

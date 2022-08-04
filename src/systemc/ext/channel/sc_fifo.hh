@@ -53,15 +53,16 @@ class sc_fifo : public sc_fifo_in_if<T>,
     explicit sc_fifo(int size=16) :
             sc_fifo_in_if<T>(), sc_fifo_out_if<T>(),
             sc_prim_channel(sc_gen_unique_name("fifo")),
+            _reader(NULL), _writer(NULL),
             _size(size), _num_free(size), _num_available(0),
-            _readsHappened(false), _writesHappened(false),
-            _reader(NULL), _writer(NULL)
+            _readsHappened(false), _writesHappened(false)
     {}
     explicit sc_fifo(const char *name, int size=16) :
             sc_fifo_in_if<T>(), sc_fifo_out_if<T>(),
-            sc_prim_channel(name), _size(size), _num_free(size),
-            _num_available(0), _readsHappened(false), _writesHappened(false),
-            _reader(NULL), _writer(NULL)
+            sc_prim_channel(name),
+            _reader(NULL), _writer(NULL),
+            _size(size), _num_free(size), _num_available(0),
+            _readsHappened(false), _writesHappened(false)
     {}
     virtual ~sc_fifo() {}
 

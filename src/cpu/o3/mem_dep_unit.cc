@@ -38,7 +38,7 @@
 #include "cpu/o3/inst_queue.hh"
 #include "cpu/o3/limits.hh"
 #include "debug/MemDepUnit.hh"
-#include "params/O3CPU.hh"
+#include "params/BaseO3CPU.hh"
 
 namespace gem5
 {
@@ -54,7 +54,7 @@ int MemDepUnit::MemDepEntry::memdep_erase = 0;
 
 MemDepUnit::MemDepUnit() : iqPtr(NULL), stats(nullptr) {}
 
-MemDepUnit::MemDepUnit(const O3CPUParams &params)
+MemDepUnit::MemDepUnit(const BaseO3CPUParams &params)
     : _name(params.name + ".memdepunit"),
       depPred(params.store_set_clear_period, params.SSITSize,
               params.LFSTSize),
@@ -89,7 +89,7 @@ MemDepUnit::~MemDepUnit()
 }
 
 void
-MemDepUnit::init(const O3CPUParams &params, ThreadID tid, CPU *cpu)
+MemDepUnit::init(const BaseO3CPUParams &params, ThreadID tid, CPU *cpu)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit %i object.\n",tid);
 

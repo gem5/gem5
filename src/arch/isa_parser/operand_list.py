@@ -116,27 +116,16 @@ class OperandList(object):
 
         self.numSrcRegs = len(srcs)
         self.numDestRegs = len(dests)
-        self.numFPDestRegs = sum(r.isFloatReg() for r in dests)
-        self.numIntDestRegs = sum(r.isIntReg() for r in dests)
-        self.numVecDestRegs = sum(r.isVecReg() for r in dests)
-        self.numVecPredDestRegs = sum(r.isVecPredReg() for r in dests)
-        self.numCCDestRegs = sum(r.isCCReg() for r in dests)
-        self.numMiscDestRegs = sum(r.isControlReg() for r in dests)
 
         if len(mem) > 1:
             error("Code block has more than one memory operand")
 
         self.memOperand = mem[0] if mem else None
 
-        # Flags to keep track if one or more operands are to be read/written
-        # conditionally.
-        self.predRead = any(i.hasReadPred() for i in self.items)
-        self.predWrite = any(i.hasWritePred() for i in self.items)
-
         # now make a final pass to finalize op_desc fields that may depend
         # on the register enumeration
         for op_desc in self.items:
-            op_desc.finalize(self.predRead, self.predWrite)
+            op_desc.finalize()
 
     def __len__(self):
         return len(self.items)
@@ -241,8 +230,3 @@ class SubOperandList(OperandList):
         self.pcPart = None
         if part: self.pcPart = True
         if whole: self.pcPart = False
-
-        # Flags to keep track if one or more operands are to be read/written
-        # conditionally.
-        self.predRead = any(i.hasReadPred() for i in self.items)
-        self.predWrite = any(i.hasWritePred() for i in self.items)

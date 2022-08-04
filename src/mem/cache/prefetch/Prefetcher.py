@@ -488,6 +488,8 @@ class STeMSPrefetcher(QueuedPrefetcher):
 
     region_miss_order_buffer_entries = Param.Unsigned(131072,
         "Number of entries of the Region Miss Order Buffer")
+    add_duplicate_entries_to_rmob = Param.Bool(True,
+        "Add duplicate entries to RMOB")
     reconstruction_entries = Param.Unsigned(256,
         "Number of reconstruction entries")
 

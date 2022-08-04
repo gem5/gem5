@@ -1,4 +1,4 @@
-# Copyright (c) 2009-2021 ARM Limited
+# Copyright (c) 2009-2022 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -73,12 +73,14 @@ from m5.objects.CfiMemory import CfiMemory
 # emulation. Use a GIC model that automatically switches between
 # gem5's GIC model and KVM's GIC model if KVM is available.
 try:
-    from m5.objects.KvmGic import MuxingKvmGic
-    kvm_gicv2_class = MuxingKvmGic
+    from m5.objects.KvmGic import MuxingKvmGicV2, MuxingKvmGicV3
+    kvm_gicv2_class = MuxingKvmGicV2
+    kvm_gicv3_class = MuxingKvmGicV3
 except ImportError:
     # KVM support wasn't compiled into gem5. Fallback to a
     # software-only GIC.
     kvm_gicv2_class = Gic400
+    kvm_gicv3_class = Gicv3
     pass
 
 class AmbaPioDevice(BasicPioDevice):
@@ -750,6 +752,8 @@ class RealView(Platform):
         cur_sys.workload.boot_loader = boot_loader
         cur_sys.workload.load_addr_offset = load_offset
         cur_sys.workload.dtb_addr = load_offset + dtb_addr
+        # Use 0x200000 as this is the maximum size allowed for a DTB
+        cur_sys.workload.initrd_addr = cur_sys.workload.dtb_addr + 0x200000
         cur_sys.workload.cpu_release_addr = cur_sys.workload.dtb_addr - 8
 
     def generateDeviceTree(self, state):
@@ -828,10 +832,13 @@ class VExpress_EMM(RealView):
 
     sys_counter = SystemCounter()
     generic_timer = GenericTimer(
-        int_phys_s=ArmPPI(num=29, int_type='IRQ_TYPE_LEVEL_LOW'),
-        int_phys_ns=ArmPPI(num=30, int_type='IRQ_TYPE_LEVEL_LOW'),
-        int_virt=ArmPPI(num=27, int_type='IRQ_TYPE_LEVEL_LOW'),
-        int_hyp=ArmPPI(num=26, int_type='IRQ_TYPE_LEVEL_LOW'))
+        int_el3_phys=ArmPPI(num=29, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el1_phys=ArmPPI(num=30, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el1_virt=ArmPPI(num=27, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el2_ns_phys=ArmPPI(num=26, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el2_ns_virt=ArmPPI(num=28, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el2_s_phys=ArmPPI(num=20, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el2_s_virt=ArmPPI(num=19, int_type='IRQ_TYPE_LEVEL_LOW'))
 
     timer0 = Sp804(int0=ArmSPI(num=34), int1=ArmSPI(num=34),
                    pio_addr=0x1C110000, clock0='1MHz', clock1='1MHz')
@@ -971,8 +978,8 @@ References:
                                         memory map
 
     Interrupts:
-        Arm CoreTile Express A15x2 (V2P-CA15) - ARM DUI 0604E
-        Section 2.8.2 - Test chip interrupts
+        Armv8-A Foundation Platform - User Guide - Version 11.8
+        Document ID: 100961_1180_00_en
 
 Memory map:
    0x00000000-0x03ffffff: Boot memory (CS0)
@@ -1040,12 +1047,14 @@ Memory map:
 Interrupts:
       0- 15: Software generated interrupts (SGIs)
      16- 31: On-chip private peripherals (PPIs)
+        19   : generic_timer (virt sec EL2)
+        20   : generic_timer (phys sec EL2)
         25   : vgic
-        26   : generic_timer (hyp)
-        27   : generic_timer (virt)
-        28   : Reserved (Legacy FIQ)
-        29   : generic_timer (phys, sec)
-        30   : generic_timer (phys, non-sec)
+        26   : generic_timer (phys non-sec EL2)
+        27   : generic_timer (virt EL1)
+        28   : generic_timer (virt non-sec EL2)
+        29   : generic_timer (phys EL3)
+        30   : generic_timer (phys EL1)
         31   : Reserved (Legacy IRQ)
     32- 95: Mother board peripherals (SPIs)
         32   : Watchdog (SP805)
@@ -1121,10 +1130,13 @@ Interrupts:
 
     sys_counter = SystemCounter()
     generic_timer = GenericTimer(
-        int_phys_s=ArmPPI(num=29, int_type='IRQ_TYPE_LEVEL_LOW'),
-        int_phys_ns=ArmPPI(num=30, int_type='IRQ_TYPE_LEVEL_LOW'),
-        int_virt=ArmPPI(num=27, int_type='IRQ_TYPE_LEVEL_LOW'),
-        int_hyp=ArmPPI(num=26, int_type='IRQ_TYPE_LEVEL_LOW'))
+        int_el3_phys=ArmPPI(num=29, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el1_phys=ArmPPI(num=30, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el1_virt=ArmPPI(num=27, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el2_ns_phys=ArmPPI(num=26, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el2_ns_virt=ArmPPI(num=28, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el2_s_phys=ArmPPI(num=20, int_type='IRQ_TYPE_LEVEL_LOW'),
+        int_el2_s_virt=ArmPPI(num=19, int_type='IRQ_TYPE_LEVEL_LOW'))
     generic_timer_mem = GenericTimerMem(cnt_control_base=0x2a430000,
                                         cnt_read_base=0x2a800000,
                                         cnt_ctl_base=0x2a810000,
@@ -1370,6 +1382,7 @@ class VExpress_GEM5_V1_HDLcd(VExpress_GEM5_V1_Base):
 class VExpress_GEM5_V2_Base(VExpress_GEM5_Base):
     gic = Gicv3(dist_addr=0x2c000000, redist_addr=0x2c010000,
                 maint_int=ArmPPI(num=25),
+                gicv4=True,
                 its=Gicv3Its(pio_addr=0x2e010000))
 
     # Limiting to 128 since it will otherwise overlap with PCI space
@@ -1422,9 +1435,9 @@ class VExpress_GEM5_Foundation(VExpress_GEM5_Base):
 
     clcd = Pl111(pio_addr=0x1c1f0000, interrupt=ArmSPI(num=46))
 
-    gic = Gicv3(dist_addr=0x2f000000, redist_addr=0x2f100000,
-                maint_int=ArmPPI(num=25), gicv4=False,
-                its=NULL)
+    gic = kvm_gicv3_class(dist_addr=0x2f000000, redist_addr=0x2f100000,
+                          maint_int=ArmPPI(num=25), gicv4=False,
+                          its=NULL)
 
     pci_host = GenericArmPciHost(
         conf_base=0x40000000, conf_size='256MiB', conf_device_bits=12,
@@ -1440,5 +1453,5 @@ class VExpress_GEM5_Foundation(VExpress_GEM5_Base):
 
     def setupBootLoader(self, cur_sys, loc, boot_loader=None):
         if boot_loader is None:
-            boot_loader = [ loc('boot_v2.arm64') ]
+            boot_loader = [ loc('boot_foundation.arm64') ]
         super().setupBootLoader(cur_sys, boot_loader)

@@ -88,7 +88,7 @@ EmuLinux::syscall(ThreadContext *tc)
     // This will move into the base SEWorkload function at some point.
     process->Process::syscall(tc);
 
-    syscallDescs.get(tc->readIntReg(0))->doSyscall(tc);
+    syscallDescs.get(tc->getReg(int_reg::R0))->doSyscall(tc);
 }
 
 /// Target uname() handler.

@@ -51,5 +51,3 @@ main.Append(PROTOCOL_DIRS=[Dir('.')])
 
 protocol_base = Dir('.')
 Export('protocol_base')
-
-main.Append(SLICC_INCLUDES=['mem/ruby/slicc_interface/RubySlicc_includes.hh'])

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2014, 2016-2020 ARM Limited
+ * Copyright (c) 2009-2014, 2016-2020, 2022 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -84,15 +84,16 @@ isSecure(ThreadContext *tc)
 bool
 isSecureBelowEL3(ThreadContext *tc)
 {
-    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-    return ArmSystem::haveEL(tc, EL3) && scr.ns == 0;
+    return ArmSystem::haveEL(tc, EL3) &&
+        static_cast<SCR>(tc->readMiscRegNoEffect(MISCREG_SCR)).ns == 0;
 }
 
 ExceptionLevel
 debugTargetFrom(ThreadContext *tc, bool secure)
 {
     bool route_to_el2;
-    if (ArmSystem::haveEL(tc, EL2) && (!secure || HaveSecureEL2Ext(tc))) {
+    if (ArmSystem::haveEL(tc, EL2) &&
+        (!secure || HaveExt(tc, ArmExtension::FEAT_SEL2))) {
         if (ELIs32(tc, EL2)) {
             const HCR hcr = tc->readMiscReg(MISCREG_HCR);
             const HDCR hdcr = tc->readMiscRegNoEffect(MISCREG_HDCR);
@@ -199,13 +200,13 @@ getMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
 static RegVal
 getAff2(ArmSystem *arm_sys, ThreadContext *tc)
 {
-    return arm_sys->multiThread ? tc->socketId() << 16 : 0;
+    return arm_sys->multiThread ? tc->socketId() : 0;
 }
 
 static RegVal
 getAff1(ArmSystem *arm_sys, ThreadContext *tc)
 {
-    return arm_sys->multiThread ? tc->cpuId() << 8 : tc->socketId() << 8;
+    return arm_sys->multiThread ? tc->cpuId() : tc->socketId();
 }
 
 static RegVal
@@ -214,64 +215,45 @@ getAff0(ArmSystem *arm_sys, ThreadContext *tc)
     return arm_sys->multiThread ? tc->threadId() : tc->cpuId();
 }
 
-RegVal
+Affinity
 getAffinity(ArmSystem *arm_sys, ThreadContext *tc)
 {
-    return getAff2(arm_sys, tc) | getAff1(arm_sys, tc) | getAff0(arm_sys, tc);
+    Affinity aff = 0;
+    aff.aff0 = getAff0(arm_sys, tc);
+    aff.aff1 = getAff1(arm_sys, tc);
+    aff.aff2 = getAff2(arm_sys, tc);
+    return aff;
 }
 
 bool
-HavePACExt(ThreadContext *tc)
+HaveExt(ThreadContext* tc, ArmExtension ext)
 {
-    AA64ISAR1 id_aa64isar1 = tc->readMiscReg(MISCREG_ID_AA64ISAR1_EL1);
-    return id_aa64isar1.api | id_aa64isar1.apa |
-        id_aa64isar1.gpi | id_aa64isar1.gpa;
-}
-
-bool
-HaveVirtHostExt(ThreadContext *tc)
-{
-    AA64MMFR1 id_aa64mmfr1 = tc->readMiscReg(MISCREG_ID_AA64MMFR1_EL1);
-    return id_aa64mmfr1.vh;
-}
-
-bool
-HaveLVA(ThreadContext *tc)
-{
-    const AA64MMFR2 mm_fr2 = tc->readMiscReg(MISCREG_ID_AA64MMFR2_EL1);
-    return (bool)mm_fr2.varange;
+    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
+    return isa->getRelease()->has(ext);
 }
 
 ExceptionLevel
 s1TranslationRegime(ThreadContext* tc, ExceptionLevel el)
 {
-
-    SCR scr = tc->readMiscReg(MISCREG_SCR);
     if (el != EL0)
         return el;
-    else if (ArmSystem::haveEL(tc, EL3) && ELIs32(tc, EL3) && scr.ns == 0)
+    else if (ArmSystem::haveEL(tc, EL3) && ELIs32(tc, EL3) &&
+             static_cast<SCR>(tc->readMiscRegNoEffect(MISCREG_SCR)).ns == 0)
         return EL3;
-    else if (HaveVirtHostExt(tc) && ELIsInHost(tc, el))
+    else if (HaveExt(tc, ArmExtension::FEAT_VHE) && ELIsInHost(tc, el))
         return EL2;
     else
         return EL1;
 }
 
 bool
-HaveSecureEL2Ext(ThreadContext *tc)
-{
-    AA64PFR0 id_aa64pfr0 = tc->readMiscReg(MISCREG_ID_AA64PFR0_EL1);
-    return id_aa64pfr0.sel2;
-}
-
-bool
 IsSecureEL2Enabled(ThreadContext *tc)
 {
-    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-    if (ArmSystem::haveEL(tc, EL2) && HaveSecureEL2Ext(tc) &&
+    if (ArmSystem::haveEL(tc, EL2) && HaveExt(tc, ArmExtension::FEAT_SEL2) &&
         !ELIs32(tc, EL2)) {
         if (ArmSystem::haveEL(tc, EL3))
-            return !ELIs32(tc, EL3) && scr.eel2;
+            return !ELIs32(tc, EL3) && static_cast<SCR>(
+                tc->readMiscRegNoEffect(MISCREG_SCR_EL3)).eel2;
         else
             return isSecure(tc);
     }
@@ -281,9 +263,10 @@ IsSecureEL2Enabled(ThreadContext *tc)
 bool
 EL2Enabled(ThreadContext *tc)
 {
-    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
     return ArmSystem::haveEL(tc, EL2) &&
-           (!ArmSystem::haveEL(tc, EL3) || scr.ns || IsSecureEL2Enabled(tc));
+           (!ArmSystem::haveEL(tc, EL3) || static_cast<SCR>(
+                tc->readMiscRegNoEffect(MISCREG_SCR_EL3)).ns ||
+            IsSecureEL2Enabled(tc));
 }
 
 bool
@@ -306,7 +289,8 @@ ELIsInHost(ThreadContext *tc, ExceptionLevel el)
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     return (ArmSystem::haveEL(tc, EL2) &&
             (IsSecureEL2Enabled(tc) || !isSecureBelowEL3(tc)) &&
-            HaveVirtHostExt(tc) && !ELIs32(tc, EL2) && hcr.e2h == 1 &&
+            HaveExt(tc, ArmExtension::FEAT_VHE) &&
+            !ELIs32(tc, EL2) && hcr.e2h == 1 &&
             (el == EL2 || (el == EL0 && hcr.tge == 1)));
 }
 
@@ -357,14 +341,15 @@ ELStateUsingAArch32K(ThreadContext *tc, ExceptionLevel el, bool secure)
     } else {
         SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
         bool aarch32_below_el3 = have_el3 && scr.rw == 0 &&
-                            (!secure || !HaveSecureEL2Ext(tc) || !scr.eel2);
+            (!secure || !HaveExt(tc, ArmExtension::FEAT_SEL2) || !scr.eel2);
 
         HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-        bool sec_el2 = HaveSecureEL2Ext(tc) && scr.eel2;
+        bool sec_el2 = HaveExt(tc, ArmExtension::FEAT_SEL2) && scr.eel2;
         bool aarch32_at_el1 = (aarch32_below_el3 ||
                                (have_el2 && (sec_el2 || !secure) &&
-                                hcr.rw == 0 && !(hcr.e2h && hcr.tge &&
-                                                 HaveVirtHostExt(tc))));
+                                hcr.rw == 0 &&
+                                !(hcr.e2h && hcr.tge &&
+                                 HaveExt(tc, ArmExtension::FEAT_VHE))));
 
         // Only know if EL0 using AArch32 from PSTATE
         if (el == EL0 && !aarch32_at_el1) {
@@ -441,7 +426,7 @@ computeAddrTop(ThreadContext *tc, bool selbit, bool is_instr,
           case EL2:
           {
             TCR tcr = tc->readMiscReg(MISCREG_TCR_EL2);
-            if (HaveVirtHostExt(tc) && ELIsInHost(tc, el)) {
+            if (HaveExt(tc, ArmExtension::FEAT_VHE) && ELIsInHost(tc, el)) {
                 tbi = selbit? tcr.tbi1 : tcr.tbi0;
                 tbid = selbit? tcr.tbid1 : tcr.tbid0;
             } else {
@@ -465,6 +450,22 @@ computeAddrTop(ThreadContext *tc, bool selbit, bool is_instr,
     int res = (tbi && (!tbid || !is_instr))? 55: 63;
     return res;
 }
+
+Addr
+maskTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
+               int topbit)
+{
+    if (topbit == 63) {
+        return addr;
+    } else if (bits(addr,55) && (el <= EL1 || ELIsInHost(tc, el))) {
+        uint64_t mask = ((uint64_t)0x1 << topbit) -1;
+        addr = addr | ~mask;
+    } else {
+        addr = bits(addr, topbit, 0);
+    }
+    return addr;  // Nothing to do if this is not a tagged address
+}
+
 Addr
 purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
                  TCR tcr, bool is_instr)
@@ -472,15 +473,7 @@ purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
     bool selbit = bits(addr, 55);
     int topbit = computeAddrTop(tc, selbit, is_instr, tcr, el);
 
-    if (topbit == 63) {
-        return addr;
-    } else if (selbit && (el == EL1 || el == EL0 || ELIsInHost(tc, el))) {
-        uint64_t mask = ((uint64_t)0x1 << topbit) -1;
-        addr = addr | ~mask;
-    } else {
-        addr = bits(addr, topbit, 0);
-    }
-    return addr;  // Nothing to do if this is not a tagged address
+    return maskTaggedAddr(addr, tc, el, topbit);
 }
 
 Addr
@@ -520,7 +513,7 @@ mcrMrc15TrapToHyp(const MiscRegIndex misc_reg, ThreadContext *tc, uint32_t iss,
 {
     bool is_read;
     uint32_t crm;
-    IntRegIndex rt;
+    RegIndex rt;
     uint32_t crn;
     uint32_t opc1;
     uint32_t opc2;
@@ -674,7 +667,7 @@ mcrMrc14TrapToHyp(const MiscRegIndex misc_reg, ThreadContext *tc, uint32_t iss)
 {
     bool is_read;
     uint32_t crm;
-    IntRegIndex rt;
+    RegIndex rt;
     uint32_t crn;
     uint32_t opc1;
     uint32_t opc2;
@@ -739,7 +732,7 @@ mcrrMrrc15TrapToHyp(const MiscRegIndex misc_reg, ThreadContext *tc,
                     uint32_t iss, ExceptionClass *ec)
 {
     uint32_t crm;
-    IntRegIndex rt;
+    RegIndex rt;
     uint32_t crn;
     uint32_t opc1;
     uint32_t opc2;
@@ -1187,18 +1180,18 @@ decodeMrsMsrBankedReg(uint8_t sysM, bool r, bool &isIntReg, int &regIdx,
 
         if (sysM4To3 == 0) {
             mode = MODE_USER;
-            regIdx = intRegInMode(mode, bits(sysM, 2, 0) + 8);
+            regIdx = int_reg::regInMode(mode, bits(sysM, 2, 0) + 8);
         } else if (sysM4To3 == 1) {
             mode = MODE_FIQ;
-            regIdx = intRegInMode(mode, bits(sysM, 2, 0) + 8);
+            regIdx = int_reg::regInMode(mode, bits(sysM, 2, 0) + 8);
         } else if (sysM4To3 == 3) {
             if (bits(sysM, 1) == 0) {
                 mode = MODE_MON;
-                regIdx = intRegInMode(mode, 14 - bits(sysM, 0));
+                regIdx = int_reg::regInMode(mode, 14 - bits(sysM, 0));
             } else {
                 mode = MODE_HYP;
                 if (bits(sysM, 0) == 1) {
-                    regIdx = intRegInMode(mode, 13); // R13 in HYP
+                    regIdx = int_reg::regInMode(mode, 13); // R13 in HYP
                 } else {
                     isIntReg = false;
                     regIdx = MISCREG_ELR_HYP;
@@ -1213,9 +1206,9 @@ decodeMrsMsrBankedReg(uint8_t sysM, bool r, bool &isIntReg, int &regIdx,
                                     ((sysM2 && !sysM1) << 2) |
                                     ((sysM2 && sysM1) << 3) |
                                     (1 << 4));
-            regIdx = intRegInMode(mode, 14 - bits(sysM, 0));
+            regIdx = int_reg::regInMode(mode, 14 - bits(sysM, 0));
             // Don't flatten the register here. This is going to go through
-            // setIntReg() which will do the flattening
+            // setReg() which will do the flattening
             ok &= mode != cpsr.mode;
         }
     }
@@ -1265,7 +1258,8 @@ isUnpriviledgeAccess(ThreadContext *tc)
     bool unpriv_el1 = currEL(tc) == EL1 &&
         !(ArmSystem::haveEL(tc, EL2) &&
             have_nv_ext && hcr.nv == 1 && hcr.nv1 == 1);
-    bool unpriv_el2 = ArmSystem::haveEL(tc, EL2) && HaveVirtHostExt(tc) &&
+    bool unpriv_el2 = ArmSystem::haveEL(tc, EL2) &&
+                      HaveExt(tc, ArmExtension::FEAT_VHE) &&
                       currEL(tc) == EL2 && hcr.e2h == 1 && hcr.tge == 1;
 
     return (unpriv_el1 || unpriv_el2) && !cpsr.uao;
@@ -1344,12 +1338,14 @@ encodePhysAddrRange64(int pa_size)
 void
 syncVecRegsToElems(ThreadContext *tc)
 {
+    int ei = 0;
     for (int ri = 0; ri < NumVecRegs; ri++) {
         RegId reg_id(VecRegClass, ri);
-        const VecRegContainer &reg = tc->readVecReg(reg_id);
-        for (int ei = 0; ei < NumVecElemPerVecReg; ei++) {
-            RegId elem_id(VecElemClass, ri, ei);
-            tc->setVecElem(elem_id, reg.as<VecElem>()[ei]);
+        VecRegContainer reg;
+        tc->getReg(reg_id, &reg);
+        for (int j = 0; j < NumVecElemPerVecReg; j++, ei++) {
+            RegId elem_id(VecElemClass, ei);
+            tc->setReg(elem_id, reg.as<VecElem>()[j]);
         }
     }
 }
@@ -1357,14 +1353,15 @@ syncVecRegsToElems(ThreadContext *tc)
 void
 syncVecElemsToRegs(ThreadContext *tc)
 {
+    int ei = 0;
     for (int ri = 0; ri < NumVecRegs; ri++) {
         VecRegContainer reg;
-        for (int ei = 0; ei < NumVecElemPerVecReg; ei++) {
-            RegId elem_id(VecElemClass, ri, ei);
-            reg.as<VecElem>()[ei] = tc->readVecElem(elem_id);
+        for (int j = 0; j < NumVecElemPerVecReg; j++, ei++) {
+            RegId elem_id(VecElemClass, ei);
+            reg.as<VecElem>()[j] = tc->getReg(elem_id);
         }
         RegId reg_id(VecRegClass, ri);
-        tc->setVecReg(reg_id, reg);
+        tc->setReg(reg_id, &reg);
     }
 }
 

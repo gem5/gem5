@@ -183,15 +183,22 @@ enumeration(RubyRequestType, desc="...", default="RubyRequestType_NULL") {
   HTM_Commit,        desc="hardware memory transaction: commit";
   HTM_Cancel,        desc="hardware memory transaction: cancel";
   HTM_Abort,         desc="hardware memory transaction: abort";
+  TLBI,              desc="TLB Invalidation - Initiation";
+  TLBI_SYNC,         desc="TLB Invalidation Sync operation - Potential initiation";
+  TLBI_EXT_SYNC,      desc="TLB Invalidation Sync operation - External Sync has been requested";
+  TLBI_EXT_SYNC_COMP, desc="TLB Invalidation Sync operation - External Sync has been completed";
 }
 
 bool isWriteRequest(RubyRequestType type);
 bool isDataReadRequest(RubyRequestType type);
 bool isReadRequest(RubyRequestType type);
 bool isHtmCmdRequest(RubyRequestType type);
+bool isTlbiRequest(RubyRequestType type);
 
 // hardware transactional memory
 RubyRequestType htmCmdToRubyRequestType(Packet *pkt);
+
+RubyRequestType tlbiCmdToRubyRequestType(Packet *pkt);
 
 enumeration(HtmCallbackMode, desc="...", default="HtmCallbackMode_NULL") {
   HTM_CMD,          desc="htm command";
@@ -265,6 +272,7 @@ enumeration(MachineType, desc="...", default="MachineType_NULL") {
     RegionBuffer, desc="Region buffer for CPU and GPU";
     Cache,       desc="Generic coherent cache controller";
     Memory,      desc="Memory controller interface";
+    MiscNode,    desc="CHI protocol Misc Node";
     NULL,        desc="null mach type";
 }
 

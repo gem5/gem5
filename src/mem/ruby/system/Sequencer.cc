@@ -79,6 +79,8 @@ Sequencer::Sequencer(const Params &p)
     assert(m_max_outstanding_requests > 0);
     assert(m_deadlock_threshold > 0);
 
+    m_unaddressedTransactionCnt = 0;
+
     m_runningGarnetStandalone = p.garnet_standalone;
 
 
@@ -306,6 +308,42 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType primary_type,
     if (!deadlockCheckEvent.scheduled() &&
         drainState() != DrainState::Draining) {
         schedule(deadlockCheckEvent, clockEdge(m_deadlock_threshold));
+    }
+
+    if (isTlbiCmdRequest(primary_type)) {
+        assert(primary_type == secondary_type);
+
+        switch (primary_type) {
+        case RubyRequestType_TLBI_EXT_SYNC_COMP:
+            // Don't have to store any data on this
+            break;
+        case RubyRequestType_TLBI:
+        case RubyRequestType_TLBI_SYNC:
+            {
+                incrementUnaddressedTransactionCnt();
+
+                // returns pair<inserted element, was inserted>
+                [[maybe_unused]] auto insert_data = \
+                    m_UnaddressedRequestTable.emplace(
+                        getCurrentUnaddressedTransactionID(),
+                        SequencerRequest(
+                            pkt, primary_type, secondary_type, curCycle()));
+
+                // if insert_data.second is false, wasn't inserted
+                assert(insert_data.second &&
+                       "Another TLBI request with the same ID exists");
+
+                DPRINTF(RubySequencer, "Inserting TLBI request %016x\n",
+                        getCurrentUnaddressedTransactionID());
+
+                break;
+            }
+
+        default:
+            panic("Unexpected TLBI RubyRequestType");
+        }
+
+        return RequestStatus_Ready;
     }
 
     Addr line_addr = makeLineAddress(pkt->getAddr());
@@ -656,10 +694,61 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
     }
 }
 
+void
+Sequencer::unaddressedCallback(Addr unaddressedReqId,
+                               RubyRequestType reqType,
+                               const MachineType mach,
+                               const Cycles initialRequestTime,
+                               const Cycles forwardRequestTime,
+                               const Cycles firstResponseTime)
+{
+    DPRINTF(RubySequencer, "unaddressedCallback ID:%08x type:%d\n",
+            unaddressedReqId, reqType);
+
+    switch (reqType) {
+      case RubyRequestType_TLBI_EXT_SYNC:
+      {
+        // This should trigger the CPU to wait for stale translations
+        // and send an EXT_SYNC_COMP once complete.
+
+        // Don't look for the ID in our requestTable.
+        // It won't be there because we didn't request this Sync
+        ruby_stale_translation_callback(unaddressedReqId);
+        break;
+      }
+      case RubyRequestType_TLBI:
+      case RubyRequestType_TLBI_SYNC:
+      {
+        // These signal that a TLBI operation that this core initiated
+        // of the respective type (TLBI or Sync) has finished.
+
+        assert(m_UnaddressedRequestTable.find(unaddressedReqId)
+               != m_UnaddressedRequestTable.end());
+
+        {
+            SequencerRequest &seq_req =
+                m_UnaddressedRequestTable.at(unaddressedReqId);
+            assert(seq_req.m_type == reqType);
+
+            PacketPtr pkt = seq_req.pkt;
+
+            ruby_unaddressed_callback(pkt);
+            testDrainComplete();
+        }
+
+        m_UnaddressedRequestTable.erase(unaddressedReqId);
+        break;
+      }
+      default:
+        panic("Unexpected TLBI RubyRequestType");
+    }
+}
+
 bool
 Sequencer::empty() const
 {
-    return m_RequestTable.empty();
+    return m_RequestTable.empty() &&
+           m_UnaddressedRequestTable.empty();
 }
 
 RequestStatus
@@ -716,6 +805,9 @@ Sequencer::makeRequest(PacketPtr pkt)
             primary_type = RubyRequestType_Locked_RMW_Read;
         }
         secondary_type = RubyRequestType_ST;
+    } else if (pkt->req->isTlbiCmd()) {
+        primary_type = secondary_type = tlbiCmdToRubyRequestType(pkt);
+        DPRINTF(RubySequencer, "Issuing TLBI\n");
     } else {
         //
         // To support SwapReq, we need to check isWrite() first: a SwapReq
@@ -749,7 +841,8 @@ Sequencer::makeRequest(PacketPtr pkt)
     }
 
     // Check if the line is blocked for a Locked_RMW
-    if (m_controller->isBlocked(makeLineAddress(pkt->getAddr())) &&
+    if (!pkt->req->isMemMgmt() &&
+        m_controller->isBlocked(makeLineAddress(pkt->getAddr())) &&
         (primary_type != RubyRequestType_Locked_RMW_Write)) {
         // Return that this request's cache line address aliases with
         // a prior request that locked the cache line. The request cannot
@@ -788,16 +881,45 @@ Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
 
     // check if the packet has data as for example prefetch and flush
     // requests do not
-    std::shared_ptr<RubyRequest> msg =
-        std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
-                                      pkt->getSize(), pc, secondary_type,
-                                      RubyAccessMode_Supervisor, pkt,
-                                      PrefetchBit_No, proc_id, core_id);
+    std::shared_ptr<RubyRequest> msg;
+    if (pkt->req->isMemMgmt()) {
+        msg = std::make_shared<RubyRequest>(clockEdge(),
+                                            pc, secondary_type,
+                                            RubyAccessMode_Supervisor, pkt,
+                                            proc_id, core_id);
 
-    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %#x %s\n",
-            curTick(), m_version, "Seq", "Begin", "", "",
-            printAddress(msg->getPhysicalAddress()),
-            RubyRequestType_to_string(secondary_type));
+        DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s\n",
+                curTick(), m_version, "Seq", "Begin", "", "",
+                RubyRequestType_to_string(secondary_type));
+
+        if (pkt->req->isTlbiCmd()) {
+            msg->m_isTlbi = true;
+            switch (secondary_type) {
+              case RubyRequestType_TLBI_EXT_SYNC_COMP:
+                msg->m_tlbiTransactionUid = pkt->req->getExtraData();
+                break;
+              case RubyRequestType_TLBI:
+              case RubyRequestType_TLBI_SYNC:
+                msg->m_tlbiTransactionUid = \
+                    getCurrentUnaddressedTransactionID();
+                break;
+              default:
+                panic("Unexpected TLBI RubyRequestType");
+            }
+            DPRINTF(RubySequencer, "Issuing TLBI %016x\n",
+                    msg->m_tlbiTransactionUid);
+        }
+    } else {
+        msg = std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
+                                            pkt->getSize(), pc, secondary_type,
+                                            RubyAccessMode_Supervisor, pkt,
+                                            PrefetchBit_No, proc_id, core_id);
+
+        DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %#x %s\n",
+                curTick(), m_version, "Seq", "Begin", "", "",
+                printAddress(msg->getPhysicalAddress()),
+                RubyRequestType_to_string(secondary_type));
+    }
 
     // hardware transactional memory
     // If the request originates in a transaction,
@@ -850,6 +972,29 @@ Sequencer::evictionCallback(Addr address)
 {
     llscClearMonitor(address);
     ruby_eviction_callback(address);
+}
+
+void
+Sequencer::incrementUnaddressedTransactionCnt()
+{
+    m_unaddressedTransactionCnt++;
+    // Limit m_unaddressedTransactionCnt to 32 bits,
+    // top 32 bits should always be zeroed out
+    uint64_t aligned_txid = \
+        m_unaddressedTransactionCnt << RubySystem::getBlockSizeBits();
+
+    if (aligned_txid > 0xFFFFFFFFull) {
+        m_unaddressedTransactionCnt = 0;
+    }
+}
+
+uint64_t
+Sequencer::getCurrentUnaddressedTransactionID() const
+{
+    return (
+        uint64_t(m_version & 0xFFFFFFFF) << 32) |
+        (m_unaddressedTransactionCnt << RubySystem::getBlockSizeBits()
+    );
 }
 
 } // namespace ruby

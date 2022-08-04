@@ -42,6 +42,8 @@
 #ifndef __CPU_O3_FREE_LIST_HH__
 #define __CPU_O3_FREE_LIST_HH__
 
+#include <algorithm>
+#include <array>
 #include <iostream>
 #include <queue>
 
@@ -127,26 +129,7 @@ class UnifiedFreeList
      *  explicitly because Scoreboard is not a SimObject. */
     const std::string _name;
 
-    /** The list of free integer registers. */
-    SimpleFreeList intList;
-
-    /** The list of free floating point registers. */
-    SimpleFreeList floatList;
-
-    /** The following two are exclusive interfaces. */
-    /** @{ */
-    /** The list of free vector registers. */
-    SimpleFreeList vecList;
-
-    /** The list of free vector element registers. */
-    SimpleFreeList vecElemList;
-    /** @} */
-
-    /** The list of free predicate registers. */
-    SimpleFreeList predList;
-
-    /** The list of free condition-code registers. */
-    SimpleFreeList ccList;
+    std::array<SimpleFreeList, CCRegClass + 1> freeLists;
 
     /**
      * The register file object is used only to distinguish integer
@@ -175,173 +158,38 @@ class UnifiedFreeList
     /** Gives the name of the freelist. */
     std::string name() const { return _name; };
 
-    /** Returns a pointer to the condition-code free list */
-    SimpleFreeList *getCCList() { return &ccList; }
-
-    /** Gets a free integer register. */
-    PhysRegIdPtr getIntReg() { return intList.getReg(); }
-
-    /** Gets a free fp register. */
-    PhysRegIdPtr getFloatReg() { return floatList.getReg(); }
-
-    /** Gets a free vector register. */
-    PhysRegIdPtr getVecReg() { return vecList.getReg(); }
-
-    /** Gets a free vector elemenet register. */
-    PhysRegIdPtr getVecElem() { return vecElemList.getReg(); }
-
-    /** Gets a free predicate register. */
-    PhysRegIdPtr getVecPredReg() { return predList.getReg(); }
-
-    /** Gets a free cc register. */
-    PhysRegIdPtr getCCReg() { return ccList.getReg(); }
-
-    /** Adds a register back to the free list. */
-    void addReg(PhysRegIdPtr freed_reg);
+    /** Gets a free register of type type. */
+    PhysRegIdPtr getReg(RegClassType type) { return freeLists[type].getReg(); }
 
     /** Adds a register back to the free list. */
     template<class InputIt>
-    void addRegs(InputIt first, InputIt last);
-
-    /** Adds an integer register back to the free list. */
-    void addIntReg(PhysRegIdPtr freed_reg) { intList.addReg(freed_reg); }
-
-    /** Adds a fp register back to the free list. */
-    void addFloatReg(PhysRegIdPtr freed_reg) { floatList.addReg(freed_reg); }
-
-    /** Adds a vector register back to the free list. */
-    void addVecReg(PhysRegIdPtr freed_reg) { vecList.addReg(freed_reg); }
-
-    /** Adds a vector element register back to the free list. */
-    void addVecElem(PhysRegIdPtr freed_reg) {
-        vecElemList.addReg(freed_reg);
+    void
+    addRegs(InputIt first, InputIt last)
+    {
+        std::for_each(first, last, [this](auto &reg) { addReg(&reg); });
     }
 
-    /** Adds a predicate register back to the free list. */
-    void addVecPredReg(PhysRegIdPtr freed_reg) { predList.addReg(freed_reg); }
+    /** Adds a register back to the free list. */
+    void
+    addReg(PhysRegIdPtr freed_reg)
+    {
+        freeLists[freed_reg->classValue()].addReg(freed_reg);
+    }
 
-    /** Adds a cc register back to the free list. */
-    void addCCReg(PhysRegIdPtr freed_reg) { ccList.addReg(freed_reg); }
+    /** Checks if there are any free registers of type type. */
+    bool
+    hasFreeRegs(RegClassType type) const
+    {
+        return freeLists[type].hasFreeRegs();
+    }
 
-    /** Checks if there are any free integer registers. */
-    bool hasFreeIntRegs() const { return intList.hasFreeRegs(); }
-
-    /** Checks if there are any free fp registers. */
-    bool hasFreeFloatRegs() const { return floatList.hasFreeRegs(); }
-
-    /** Checks if there are any free vector registers. */
-    bool hasFreeVecRegs() const { return vecList.hasFreeRegs(); }
-
-    /** Checks if there are any free vector registers. */
-    bool hasFreeVecElems() const { return vecElemList.hasFreeRegs(); }
-
-    /** Checks if there are any free predicate registers. */
-    bool hasFreeVecPredRegs() const { return predList.hasFreeRegs(); }
-
-    /** Checks if there are any free cc registers. */
-    bool hasFreeCCRegs() const { return ccList.hasFreeRegs(); }
-
-    /** Returns the number of free integer registers. */
-    unsigned numFreeIntRegs() const { return intList.numFreeRegs(); }
-
-    /** Returns the number of free fp registers. */
-    unsigned numFreeFloatRegs() const { return floatList.numFreeRegs(); }
-
-    /** Returns the number of free vector registers. */
-    unsigned numFreeVecRegs() const { return vecList.numFreeRegs(); }
-
-    /** Returns the number of free vector registers. */
-    unsigned numFreeVecElems() const { return vecElemList.numFreeRegs(); }
-
-    /** Returns the number of free predicate registers. */
-    unsigned numFreeVecPredRegs() const { return predList.numFreeRegs(); }
-
-    /** Returns the number of free cc registers. */
-    unsigned numFreeCCRegs() const { return ccList.numFreeRegs(); }
+    /** Returns the number of free registers of type type. */
+    unsigned
+    numFreeRegs(RegClassType type) const
+    {
+        return freeLists[type].numFreeRegs();
+    }
 };
-
-template<class InputIt>
-inline void
-UnifiedFreeList::addRegs(InputIt first, InputIt last)
-{
-    // Are there any registers to add?
-    if (first == last)
-        return;
-
-    panic_if((first != last) &&
-            first->classValue() != (last-1)->classValue(),
-            "Attempt to add mixed type regs: %s and %s",
-            first->className(),
-            (last-1)->className());
-    switch (first->classValue()) {
-        case IntRegClass:
-            intList.addRegs(first, last);
-            break;
-        case FloatRegClass:
-            floatList.addRegs(first, last);
-            break;
-        case VecRegClass:
-            vecList.addRegs(first, last);
-            break;
-        case VecElemClass:
-            vecElemList.addRegs(first, last);
-            break;
-        case VecPredRegClass:
-            predList.addRegs(first, last);
-            break;
-        case CCRegClass:
-            ccList.addRegs(first, last);
-            break;
-        default:
-            panic("Unexpected RegClass (%s)",
-                                   first->className());
-    }
-
-}
-
-inline void
-UnifiedFreeList::addReg(PhysRegIdPtr freed_reg)
-{
-    DPRINTF(FreeList,"Freeing register %i (%s).\n", freed_reg->index(),
-            freed_reg->className());
-    //Might want to add in a check for whether or not this register is
-    //already in there.  A bit vector or something similar would be useful.
-    switch (freed_reg->classValue()) {
-        case IntRegClass:
-            intList.addReg(freed_reg);
-            break;
-        case FloatRegClass:
-            floatList.addReg(freed_reg);
-            break;
-        case VecRegClass:
-            vecList.addReg(freed_reg);
-            break;
-        case VecElemClass:
-            vecElemList.addReg(freed_reg);
-            break;
-        case VecPredRegClass:
-            predList.addReg(freed_reg);
-            break;
-        case CCRegClass:
-            ccList.addReg(freed_reg);
-            break;
-        default:
-            panic("Unexpected RegClass (%s)",
-                                   freed_reg->className());
-    }
-
-    // These assert conditions ensure that the number of free
-    // registers are not more than the # of total Physical  Registers.
-    // If this were false, it would mean that registers
-    // have been freed twice, overflowing the free register
-    // pool and potentially crashing SMT workloads.
-    // ----
-    // Comment out for now so as to not potentially break
-    // CMP and single-threaded workloads
-    // ----
-    // assert(freeIntRegs.size() <= numPhysicalIntRegs);
-    // assert(freeFloatRegs.size() <= numPhysicalFloatRegs);
-}
 
 } // namespace o3
 } // namespace gem5

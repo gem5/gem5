@@ -87,12 +87,12 @@ class BranchImmCond64 : public BranchImm64
 class BranchRegReg64 : public ArmStaticInst
 {
   protected:
-    IntRegIndex op1;
-    IntRegIndex op2;
+    RegIndex op1;
+    RegIndex op2;
 
   public:
     BranchRegReg64(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                IntRegIndex _op1, IntRegIndex _op2) :
+                RegIndex _op1, RegIndex _op2) :
         ArmStaticInst(mnem, _machInst, __opClass), op1(_op1), op2(_op2)
     {}
 
@@ -104,11 +104,11 @@ class BranchRegReg64 : public ArmStaticInst
 class BranchReg64 : public ArmStaticInst
 {
   protected:
-    IntRegIndex op1;
+    RegIndex op1;
 
   public:
     BranchReg64(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                IntRegIndex _op1) :
+                RegIndex _op1) :
         ArmStaticInst(mnem, _machInst, __opClass), op1(_op1)
     {}
 
@@ -121,7 +121,7 @@ class BranchRet64 : public BranchReg64
 {
   public:
     BranchRet64(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                IntRegIndex _op1) :
+                RegIndex _op1) :
         BranchReg64(mnem, _machInst, __opClass, _op1)
     {}
 
@@ -134,7 +134,7 @@ class BranchRetA64 : public BranchRegReg64
 {
   public:
     BranchRetA64(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        BranchRegReg64(mnem, _machInst, __opClass, INTREG_X30, INTREG_SPX)
+        BranchRegReg64(mnem, _machInst, __opClass, int_reg::X30, int_reg::Spx)
     {}
 
     std::string generateDisassembly(
@@ -157,11 +157,11 @@ class BranchEret64 : public ArmStaticInst
 class BranchEretA64 : public ArmStaticInst
 {
   protected:
-    IntRegIndex op1;
+    RegIndex op1;
 
   public:
     BranchEretA64(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-        ArmStaticInst(mnem, _machInst, __opClass), op1(INTREG_SPX)
+        ArmStaticInst(mnem, _machInst, __opClass), op1(int_reg::Spx)
     {}
 
     std::string generateDisassembly(
@@ -172,11 +172,11 @@ class BranchImmReg64 : public ArmStaticInst
 {
   protected:
     int64_t imm;
-    IntRegIndex op1;
+    RegIndex op1;
 
   public:
     BranchImmReg64(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                   int64_t _imm, IntRegIndex _op1) :
+                   int64_t _imm, RegIndex _op1) :
         ArmStaticInst(mnem, _machInst, __opClass), imm(_imm), op1(_op1)
     {}
 
@@ -196,12 +196,12 @@ class BranchImmImmReg64 : public ArmStaticInst
   protected:
     int64_t imm1;
     int64_t imm2;
-    IntRegIndex op1;
+    RegIndex op1;
 
   public:
     BranchImmImmReg64(const char *mnem, ExtMachInst _machInst,
                       OpClass __opClass, int64_t _imm1, int64_t _imm2,
-                      IntRegIndex _op1) :
+                      RegIndex _op1) :
         ArmStaticInst(mnem, _machInst, __opClass),
         imm1(_imm1), imm2(_imm2), op1(_op1)
     {}

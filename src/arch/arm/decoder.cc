@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014,2018 ARM Limited
+ * Copyright (c) 2012-2014,2018, 2021 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -55,7 +55,9 @@ namespace ArmISA
 GenericISA::BasicDecodeCache<Decoder, ExtMachInst> Decoder::defaultCache;
 
 Decoder::Decoder(const ArmDecoderParams &params)
-    : InstDecoder(params, &data), data(0), fpscrLen(0), fpscrStride(0),
+    : InstDecoder(params, &data),
+      dvmEnabled(params.dvm_enabled),
+      data(0), fpscrLen(0), fpscrStride(0),
       decoderFlavor(dynamic_cast<ISA *>(params.isa)->decoderFlavor())
 {
     reset();
@@ -63,6 +65,13 @@ Decoder::Decoder(const ArmDecoderParams &params)
     // Initialize SVE vector length
     sveLen = (dynamic_cast<ISA *>(params.isa)
             ->getCurSveVecLenInBitsAtReset() >> 7) - 1;
+
+    if (dvmEnabled) {
+        warn_once(
+            "DVM Ops instructions are micro-architecturally "
+            "modelled as loads. This will tamper the effective "
+            "number of loads stat\n");
+    }
 }
 
 void

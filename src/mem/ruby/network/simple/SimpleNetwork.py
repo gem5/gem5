@@ -1,3 +1,15 @@
+# Copyright (c) 2021 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2009 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
@@ -27,6 +39,8 @@
 from m5.params import *
 from m5.proxy import *
 
+from m5.util import fatal
+from m5.SimObject import SimObject
 from m5.objects.Network import RubyNetwork
 from m5.objects.BasicRouter import BasicRouter
 from m5.objects.MessageBuffer import MessageBuffer
@@ -36,40 +50,46 @@ class SimpleNetwork(RubyNetwork):
     cxx_header = "mem/ruby/network/simple/SimpleNetwork.hh"
     cxx_class = 'gem5::ruby::SimpleNetwork'
 
-    buffer_size = Param.Int(0,
-        "default buffer size; 0 indicates infinite buffering");
-    endpoint_bandwidth = Param.Int(1000, "bandwidth adjustment factor");
-    adaptive_routing = Param.Bool(False, "enable adaptive routing");
-    int_link_buffers = VectorParam.MessageBuffer("Buffers for int_links")
+    buffer_size = Param.Int(0, "default internal buffer size for links and\
+                                routers; 0 indicates infinite buffering")
+    endpoint_bandwidth = Param.Int(1000, "bandwidth adjustment factor")
+
+    physical_vnets_channels = VectorParam.Int([],
+        "Set to emulate multiple channels for each vnet."
+        "If not set, all vnets share the same physical channel.")
+
+    physical_vnets_bandwidth = VectorParam.Int([],
+        "Assign a different link bandwidth factor for each vnet channels."
+        "Only valid when physical_vnets_channels is set. This overrides the"
+        "bandwidth_factor parameter set for the  individual links.")
 
     def setup_buffers(self):
-        # Note that all SimpleNetwork MessageBuffers are currently ordered
-        network_buffers = []
+        # Setup internal buffers for links and routers
         for link in self.int_links:
-            # The network needs number_of_virtual_networks buffers per
-            # int_link port
-            for i in range(int(self.number_of_virtual_networks)):
-                network_buffers.append(MessageBuffer(ordered = True))
-                network_buffers.append(MessageBuffer(ordered = True))
-        self.int_link_buffers = network_buffers
-
-        # Also add buffers for all router-link connections
+            link.setup_buffers(self)
         for router in self.routers:
-            router_buffers = []
-            # Add message buffers to routers at the end of each
-            # unidirectional internal link
-            for link in self.int_links:
-                if link.dst_node == router:
-                    for i in range(int(self.number_of_virtual_networks)):
-                        router_buffers.append(MessageBuffer(ordered = True))
+            router.setup_buffers(self)
 
-            # Add message buffers to routers for each external link connection
-            for link in self.ext_links:
-                # Routers can only be int_nodes on ext_links
-                if link.int_node in self.routers:
-                    for i in range(int(self.number_of_virtual_networks)):
-                        router_buffers.append(MessageBuffer(ordered = True))
-            router.port_buffers = router_buffers
+
+class BaseRoutingUnit(SimObject):
+    type = 'BaseRoutingUnit'
+    abstract = True
+    cxx_header = 'mem/ruby/network/simple/routing/BaseRoutingUnit.hh'
+    cxx_class = 'gem5::ruby::BaseRoutingUnit'
+
+
+class WeightBased(BaseRoutingUnit):
+    type = 'WeightBased'
+    cxx_header = 'mem/ruby/network/simple/routing/WeightBased.hh'
+    cxx_class = 'gem5::ruby::WeightBased'
+
+    adaptive_routing = Param.Bool(False, "enable adaptive routing")
+
+
+class SwitchPortBuffer(MessageBuffer):
+    """MessageBuffer type used internally by the Switch port buffers"""
+    ordered = True
+    allow_zero_latency = True
 
 class Switch(BasicRouter):
     type = 'Switch'
@@ -78,4 +98,55 @@ class Switch(BasicRouter):
 
     virt_nets = Param.Int(Parent.number_of_virtual_networks,
                           "number of virtual networks")
-    port_buffers = VectorParam.MessageBuffer("Port buffers")
+
+    int_routing_latency = Param.Cycles(BasicRouter.latency,
+                                    "Routing latency to internal links")
+    ext_routing_latency = Param.Cycles(BasicRouter.latency,
+                                    "Routing latency to external links")
+
+    # Internal port buffers used between the PerfectSwitch and
+    # Throttle objects. There is one buffer per virtual network
+    # and per output port.
+    # These are created by setup_buffers and the user should not
+    # set these manually.
+    port_buffers = VectorParam.MessageBuffer([], "Port buffers")
+
+    routing_unit = Param.BaseRoutingUnit(
+                        WeightBased(adaptive_routing = False),
+                        "Routing strategy to be used")
+
+    def setup_buffers(self, network):
+        def vnet_buffer_size(vnet):
+            """
+            Gets the size of the message buffers associated to a vnet
+            If physical_vnets_channels is set we just multiply the size of the
+            buffers as SimpleNetwork does not actually creates multiple phy
+            channels per vnet.
+            """
+            if len(network.physical_vnets_channels) == 0:
+                return network.buffer_size
+            else:
+                return network.buffer_size * \
+                       network.physical_vnets_channels[vnet]
+
+        if len(self.port_buffers) > 0:
+            fatal("User should not manually set routers' port_buffers")
+
+        router_buffers = []
+        # Add message buffers to routers at the end of each
+        # unidirectional internal link
+        for link in network.int_links:
+            if link.dst_node == self:
+                for i in range(int(network.number_of_virtual_networks)):
+                    router_buffers.append(SwitchPortBuffer(
+                                    buffer_size = vnet_buffer_size(i)))
+
+        # Add message buffers to routers for each external link connection
+        for link in network.ext_links:
+            # Routers can only be int_nodes on ext_links
+            if link.int_node == self:
+                for i in range(int(network.number_of_virtual_networks)):
+                    router_buffers.append(SwitchPortBuffer(
+                                    buffer_size = vnet_buffer_size(i)))
+
+        self.port_buffers = router_buffers

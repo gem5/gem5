@@ -1379,7 +1379,7 @@ class HPI_L2(Cache):
     write_buffers = 16
     # prefetcher FIXME
 
-class HPI(MinorCPU):
+class HPI(ArmMinorCPU):
     # Inherit the doc string from the module to avoid repeating it
     # here.
     __doc__ = __doc__

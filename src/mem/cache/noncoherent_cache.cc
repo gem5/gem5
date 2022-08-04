@@ -245,6 +245,9 @@ NoncoherentCache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
     // First offset for critical word first calculations
     const int initial_offset = mshr->getTarget()->pkt->getOffset(blkSize);
 
+    bool from_core = false;
+    bool from_pref = false;
+
     MSHR::TargetList targets = mshr->extractServiceableTargets(pkt);
     for (auto &target: targets) {
         Packet *tgt_pkt = target.pkt;
@@ -253,6 +256,8 @@ NoncoherentCache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
           case MSHR::Target::FromCPU:
             // handle deferred requests comming from a cache or core
             // above
+
+            from_core = true;
 
             Tick completion_time;
             // Here we charge on completion_time the delay of the xbar if the
@@ -292,8 +297,7 @@ NoncoherentCache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
             // attached to this cache
             assert(tgt_pkt->cmd == MemCmd::HardPFReq);
 
-            if (blk)
-                blk->setPrefetched();
+            from_pref = true;
 
             // We have filled the block and the prefetcher does not
             // require responses.
@@ -305,6 +309,10 @@ NoncoherentCache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
             // non-coherent cache
             panic("Illegal target->source enum %d\n", target.source);
         }
+    }
+
+    if (blk && !from_core && from_pref) {
+        blk->setPrefetched();
     }
 
     // Reponses are filling and bring in writable blocks, therefore

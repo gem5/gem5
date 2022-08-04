@@ -38,8 +38,6 @@
 #ifndef __ARCH_NULL_VECREGS_HH__
 #define __ARCH_NULL_VECREGS_HH__
 
-#include <cstdint>
-
 #include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
 
@@ -50,11 +48,7 @@ namespace NullISA
 {
 
 // Not applicable to null
-using VecElem = ::gem5::DummyVecElem;
 using VecRegContainer = ::gem5::DummyVecRegContainer;
-constexpr unsigned NumVecElemPerVecReg = ::gem5::DummyNumVecElemPerVecReg;
-
-// Not applicable to null
 using VecPredRegContainer = ::gem5::DummyVecPredRegContainer;
 
 } // namespace NullISA

@@ -59,7 +59,9 @@ def gem5_verify_config(name,
                        valid_variants=constants.supported_variants,
                        length=constants.supported_lengths[0],
                        valid_hosts=constants.supported_hosts,
-                       protocol=None):
+                       protocol=None,
+                       uses_kvm=False,
+                    ):
     '''
     Helper class to generate common gem5 tests using verifiers.
 
@@ -84,6 +86,9 @@ def gem5_verify_config(name,
 
     :param valid_variants: An iterable with the variant levels that
         this test can be ran for. (E.g. opt, debug)
+
+    :param uses_kvm: States if this verifier uses KVM. If so, the "kvm" tag
+        will be included.
     '''
     fixtures = list(fixtures)
     testsuites = []
@@ -122,6 +127,9 @@ def gem5_verify_config(name,
 
                 # Add the isa and variant to tags list.
                 tags = [isa, opt, length, host]
+
+                if uses_kvm:
+                    tags.append(constants.kvm_tag)
 
                 # Create the gem5 target for the specific architecture and
                 # variant.

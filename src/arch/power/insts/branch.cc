@@ -59,7 +59,7 @@ PCDependentDisassembly::disassemble(
 std::unique_ptr<PCStateBase>
 BranchOp::branchTarget(ThreadContext *tc) const
 {
-    Msr msr = tc->readIntReg(INTREG_MSR);
+    Msr msr = tc->getReg(int_reg::Msr);
     Addr addr;
 
     if (aa)
@@ -108,7 +108,7 @@ BranchOp::generateDisassembly(
 std::unique_ptr<PCStateBase>
 BranchDispCondOp::branchTarget(ThreadContext *tc) const
 {
-    Msr msr = tc->readIntReg(INTREG_MSR);
+    Msr msr = tc->getReg(int_reg::Msr);
     Addr addr;
 
     if (aa)
@@ -160,8 +160,8 @@ BranchDispCondOp::generateDisassembly(
 std::unique_ptr<PCStateBase>
 BranchRegCondOp::branchTarget(ThreadContext *tc) const
 {
-    Msr msr = tc->readIntReg(INTREG_MSR);
-    Addr addr = tc->readIntReg(srcRegIdx(_numSrcRegs - 1).index()) & -4ULL;
+    Msr msr = tc->getReg(int_reg::Msr);
+    Addr addr = tc->getReg(srcRegIdx(_numSrcRegs - 1)) & -4ULL;
     return std::make_unique<PowerISA::PCState>(
             msr.sf ? addr : addr & UINT32_MAX);
 }

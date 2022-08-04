@@ -107,7 +107,7 @@ void
 ArmProcess32::initState()
 {
     Process::initState();
-    argsInit<uint32_t>(PageBytes, INTREG_SP);
+    argsInit<uint32_t>(PageBytes, int_reg::Sp);
     for (auto id: contextIds) {
         ThreadContext *tc = system->threads[id];
         CPACR cpacr = tc->readMiscReg(MISCREG_CPACR);
@@ -126,7 +126,7 @@ void
 ArmProcess64::initState()
 {
     Process::initState();
-    argsInit<uint64_t>(PageBytes, INTREG_SP0);
+    argsInit<uint64_t>(PageBytes, int_reg::Sp0);
     for (auto id: contextIds) {
         ThreadContext *tc = system->threads[id];
         CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
@@ -257,7 +257,7 @@ ArmProcess64::armHwcapImpl() const
 
 template <class IntType>
 void
-ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
+ArmProcess::argsInit(int pageSize, const RegId &spId)
 {
     int intSize = sizeof(IntType);
 
@@ -449,22 +449,22 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
 
     ThreadContext *tc = system->threads[contextIds[0]];
     //Set the stack pointer register
-    tc->setIntReg(spIndex, memState->getStackMin());
+    tc->setReg(spId, memState->getStackMin());
     //A pointer to a function to run when the program exits. We'll set this
     //to zero explicitly to make sure this isn't used.
-    tc->setIntReg(ArgumentReg0, 0);
+    tc->setReg(ArgumentReg0, (RegVal)0);
     //Set argument regs 1 and 2 to argv[0] and envp[0] respectively
     if (argv.size() > 0) {
-        tc->setIntReg(ArgumentReg1, arg_data_base + arg_data_size -
-                                    argv[argv.size() - 1].size() - 1);
+        tc->setReg(ArgumentReg1, arg_data_base + arg_data_size -
+                                 argv[argv.size() - 1].size() - 1);
     } else {
-        tc->setIntReg(ArgumentReg1, 0);
+        tc->setReg(ArgumentReg1, (RegVal)0);
     }
     if (envp.size() > 0) {
-        tc->setIntReg(ArgumentReg2, env_data_base + env_data_size -
-                                    envp[envp.size() - 1].size() - 1);
+        tc->setReg(ArgumentReg2, env_data_base + env_data_size -
+                                 envp[envp.size() - 1].size() - 1);
     } else {
-        tc->setIntReg(ArgumentReg2, 0);
+        tc->setReg(ArgumentReg2, (RegVal)0);
     }
 
     PCState pc;

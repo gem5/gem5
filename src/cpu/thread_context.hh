@@ -142,7 +142,7 @@ class ThreadContext : public PCEventScope
 
     virtual CheckerCPU *getCheckerCpuPtr() = 0;
 
-    virtual BaseISA *getIsaPtr() = 0;
+    virtual BaseISA *getIsaPtr() const = 0;
 
     virtual InstDecoder *getDecoderPtr() = 0;
 
@@ -193,36 +193,79 @@ class ThreadContext : public PCEventScope
     //
     // New accessors for new decoder.
     //
-    virtual RegVal readIntReg(RegIndex reg_idx) const = 0;
+    virtual RegVal getReg(const RegId &reg) const;
+    virtual void getReg(const RegId &reg, void *val) const;
+    virtual void *getWritableReg(const RegId &reg);
 
-    virtual RegVal readFloatReg(RegIndex reg_idx) const = 0;
+    virtual void setReg(const RegId &reg, RegVal val);
+    virtual void setReg(const RegId &reg, const void *val);
 
-    virtual const TheISA::VecRegContainer&
-        readVecReg(const RegId& reg) const = 0;
-    virtual TheISA::VecRegContainer& getWritableVecReg(const RegId& reg) = 0;
+    RegVal
+    readIntReg(RegIndex reg_idx) const
+    {
+        return getReg(RegId(IntRegClass, reg_idx));
+    }
 
-    virtual RegVal readVecElem(const RegId& reg) const = 0;
+    RegVal
+    readFloatReg(RegIndex reg_idx) const
+    {
+        return getReg(RegId(FloatRegClass, reg_idx));
+    }
 
-    virtual const TheISA::VecPredRegContainer& readVecPredReg(
-            const RegId& reg) const = 0;
-    virtual TheISA::VecPredRegContainer& getWritableVecPredReg(
-            const RegId& reg) = 0;
+    TheISA::VecRegContainer
+    readVecReg(const RegId &reg) const
+    {
+        TheISA::VecRegContainer val;
+        getReg(reg, &val);
+        return val;
+    }
+    TheISA::VecRegContainer&
+    getWritableVecReg(const RegId& reg)
+    {
+        return *(TheISA::VecRegContainer *)getWritableReg(reg);
+    }
 
-    virtual RegVal readCCReg(RegIndex reg_idx) const = 0;
+    RegVal
+    readVecElem(const RegId& reg) const
+    {
+        return getReg(reg);
+    }
 
-    virtual void setIntReg(RegIndex reg_idx, RegVal val) = 0;
+    RegVal
+    readCCReg(RegIndex reg_idx) const
+    {
+        return getReg(RegId(CCRegClass, reg_idx));
+    }
 
-    virtual void setFloatReg(RegIndex reg_idx, RegVal val) = 0;
+    void
+    setIntReg(RegIndex reg_idx, RegVal val)
+    {
+        setReg(RegId(IntRegClass, reg_idx), val);
+    }
 
-    virtual void setVecReg(const RegId& reg,
-            const TheISA::VecRegContainer& val) = 0;
+    void
+    setFloatReg(RegIndex reg_idx, RegVal val)
+    {
+        setReg(RegId(FloatRegClass, reg_idx), val);
+    }
 
-    virtual void setVecElem(const RegId& reg, RegVal val) = 0;
+    void
+    setVecReg(const RegId& reg, const TheISA::VecRegContainer &val)
+    {
+        setReg(reg, &val);
+    }
 
-    virtual void setVecPredReg(const RegId& reg,
-            const TheISA::VecPredRegContainer& val) = 0;
+    void
+    setVecElem(const RegId& reg, RegVal val)
+    {
+        setReg(reg, val);
+    }
 
-    virtual void setCCReg(RegIndex reg_idx, RegVal val) = 0;
+    void
+    setCCReg(RegIndex reg_idx, RegVal val)
+    {
+        setReg(RegId(CCRegClass, reg_idx), val);
+    }
 
     virtual const PCStateBase &pcState() const = 0;
 
@@ -272,32 +315,75 @@ class ThreadContext : public PCEventScope
      * serialization code to access all registers.
      */
 
-    virtual RegVal readIntRegFlat(RegIndex idx) const = 0;
-    virtual void setIntRegFlat(RegIndex idx, RegVal val) = 0;
+    virtual RegVal getRegFlat(const RegId &reg) const;
+    virtual void getRegFlat(const RegId &reg, void *val) const = 0;
+    virtual void *getWritableRegFlat(const RegId &reg) = 0;
 
-    virtual RegVal readFloatRegFlat(RegIndex idx) const = 0;
-    virtual void setFloatRegFlat(RegIndex idx, RegVal val) = 0;
+    virtual void setRegFlat(const RegId &reg, RegVal val);
+    virtual void setRegFlat(const RegId &reg, const void *val) = 0;
 
-    virtual const TheISA::VecRegContainer&
-        readVecRegFlat(RegIndex idx) const = 0;
-    virtual TheISA::VecRegContainer& getWritableVecRegFlat(RegIndex idx) = 0;
-    virtual void setVecRegFlat(RegIndex idx,
-            const TheISA::VecRegContainer& val) = 0;
+    RegVal
+    readIntRegFlat(RegIndex idx) const
+    {
+        return getRegFlat(RegId(IntRegClass, idx));
+    }
+    void
+    setIntRegFlat(RegIndex idx, RegVal val)
+    {
+        setRegFlat(RegId(IntRegClass, idx), val);
+    }
 
-    virtual RegVal readVecElemFlat(RegIndex idx,
-            const ElemIndex& elem_idx) const = 0;
-    virtual void setVecElemFlat(RegIndex idx, const ElemIndex& elem_idx,
-            RegVal val) = 0;
+    RegVal
+    readFloatRegFlat(RegIndex idx) const
+    {
+        return getRegFlat(RegId(FloatRegClass, idx));
+    }
+    void
+    setFloatRegFlat(RegIndex idx, RegVal val)
+    {
+        setRegFlat(RegId(FloatRegClass, idx), val);
+    }
 
-    virtual const TheISA::VecPredRegContainer &
-        readVecPredRegFlat(RegIndex idx) const = 0;
-    virtual TheISA::VecPredRegContainer& getWritableVecPredRegFlat(
-            RegIndex idx) = 0;
-    virtual void setVecPredRegFlat(RegIndex idx,
-            const TheISA::VecPredRegContainer& val) = 0;
+    TheISA::VecRegContainer
+    readVecRegFlat(RegIndex idx) const
+    {
+        TheISA::VecRegContainer val;
+        getRegFlat(RegId(VecRegClass, idx), &val);
+        return val;
+    }
+    TheISA::VecRegContainer&
+    getWritableVecRegFlat(RegIndex idx)
+    {
+        return *(TheISA::VecRegContainer *)
+            getWritableRegFlat(RegId(VecRegClass, idx));
+    }
+    void
+    setVecRegFlat(RegIndex idx, const TheISA::VecRegContainer& val)
+    {
+        setRegFlat(RegId(VecRegClass, idx), &val);
+    }
 
-    virtual RegVal readCCRegFlat(RegIndex idx) const = 0;
-    virtual void setCCRegFlat(RegIndex idx, RegVal val) = 0;
+    RegVal
+    readVecElemFlat(RegIndex idx) const
+    {
+        return getRegFlat(RegId(VecElemClass, idx));
+    }
+    void
+    setVecElemFlat(RegIndex idx, RegVal val)
+    {
+        setRegFlat(RegId(VecElemClass, idx), val);
+    }
+
+    RegVal
+    readCCRegFlat(RegIndex idx) const
+    {
+        return getRegFlat(RegId(CCRegClass, idx));
+    }
+    void
+    setCCRegFlat(RegIndex idx, RegVal val)
+    {
+        setRegFlat(RegId(CCRegClass, idx), val);
+    }
     /** @} */
 
     // hardware transactional memory

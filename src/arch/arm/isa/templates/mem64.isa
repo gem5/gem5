@@ -290,7 +290,7 @@ def template DCStore64Declare {{
 
       public:
         /// Constructor.
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _base,
+        %(class_name)s(ExtMachInst machInst, RegIndex _base,
                        MiscRegIndex _dest, uint64_t _imm);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
@@ -307,7 +307,7 @@ def template DCStore64Declare {{
 }};
 
 def template DCStore64Constructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _base,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _base,
                                    MiscRegIndex _dest, uint64_t _imm) :
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         _base, _dest, _imm)
@@ -385,7 +385,7 @@ def template LoadStoreImm64Declare {{
       public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
-                IntRegIndex _dest, IntRegIndex _base, int64_t _imm);
+                RegIndex _dest, RegIndex _base, int64_t _imm);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
         Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
@@ -409,7 +409,7 @@ def template LoadStoreImmU64Declare {{
       public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
-                IntRegIndex _dest, IntRegIndex _base, int64_t _imm,
+                RegIndex _dest, RegIndex _base, int64_t _imm,
                 bool noAlloc = false, bool exclusive = false,
                 bool acrel = false);
 
@@ -435,7 +435,7 @@ def template LoadStoreImmDU64Declare {{
       public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
-                IntRegIndex _dest, IntRegIndex _dest2, IntRegIndex _base,
+                RegIndex _dest, RegIndex _dest2, RegIndex _base,
                 int64_t _imm = 0, bool noAlloc = false, bool exclusive = false,
                 bool acrel = false);
 
@@ -464,8 +464,8 @@ def template StoreImmDEx64Declare {{
       public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
-                IntRegIndex _result, IntRegIndex _dest, IntRegIndex _dest2,
-                IntRegIndex _base, int64_t _imm = 0);
+                RegIndex _result, RegIndex _dest, RegIndex _dest2,
+                RegIndex _base, int64_t _imm = 0);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
         Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
@@ -484,7 +484,7 @@ def template LoadStoreReg64Declare {{
       public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
-                IntRegIndex _dest, IntRegIndex _base, IntRegIndex _offset,
+                RegIndex _dest, RegIndex _base, RegIndex _offset,
                 ArmExtendType _type, uint32_t _shiftAmt);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
@@ -509,7 +509,7 @@ def template LoadStoreRegU64Declare {{
       public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
-                IntRegIndex _dest, IntRegIndex _base, IntRegIndex _offset,
+                RegIndex _dest, RegIndex _base, RegIndex _offset,
                 ArmExtendType _type, uint32_t _shiftAmt,
                 bool noAlloc = false, bool exclusive = false,
                 bool acrel = false);
@@ -535,8 +535,8 @@ def template LoadStoreRaw64Declare {{
 
       public:
         /// Constructor.
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                       IntRegIndex _base);
+        %(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                       RegIndex _base);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
         Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
@@ -559,8 +559,8 @@ def template LoadStoreEx64Declare {{
 
       public:
         /// Constructor.
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                       IntRegIndex _base, IntRegIndex _result);
+        %(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                       RegIndex _base, RegIndex _result);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
         Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
@@ -583,7 +583,7 @@ def template LoadStoreLit64Declare {{
 
       public:
         /// Constructor.
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, int64_t _imm);
+        %(class_name)s(ExtMachInst machInst, RegIndex _dest, int64_t _imm);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
         Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
@@ -606,7 +606,7 @@ def template LoadStoreLitU64Declare {{
 
       public:
         /// Constructor.
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, int64_t _imm,
+        %(class_name)s(ExtMachInst machInst, RegIndex _dest, int64_t _imm,
                 bool noAlloc = false, bool exclusive = false,
                 bool acrel = false);
 
@@ -625,9 +625,9 @@ def template LoadStoreLitU64Declare {{
 
 def template LoadStoreImm64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _base, int64_t _imm) :
+            RegIndex _dest, RegIndex _base, int64_t _imm) :
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                        (IntRegIndex)_dest, (IntRegIndex)_base, _imm)
+                        (RegIndex)_dest, (RegIndex)_base, _imm)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
@@ -645,7 +645,7 @@ def template LoadStoreImm64Constructor {{
 
 def template LoadStoreImmU64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _base, int64_t _imm,
+            RegIndex _dest, RegIndex _base, int64_t _imm,
             bool noAlloc, bool exclusive, bool acrel) :
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         _dest, _base, _imm)
@@ -659,7 +659,7 @@ def template LoadStoreImmU64Constructor {{
 
 def template LoadStoreImmDU64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _dest2, IntRegIndex _base,
+            RegIndex _dest, RegIndex _dest2, RegIndex _base,
             int64_t _imm, bool noAlloc, bool exclusive, bool acrel) :
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         _dest, _dest2, _base, _imm)
@@ -673,8 +673,8 @@ def template LoadStoreImmDU64Constructor {{
 
 def template StoreImmDEx64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _result, IntRegIndex _dest, IntRegIndex _dest2,
-            IntRegIndex _base, int64_t _imm) :
+            RegIndex _result, RegIndex _dest, RegIndex _dest2,
+            RegIndex _base, int64_t _imm) :
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         _result, _dest, _dest2, _base, _imm)
     {
@@ -687,7 +687,7 @@ def template StoreImmDEx64Constructor {{
 
 def template LoadStoreReg64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _base, IntRegIndex _offset,
+            RegIndex _dest, RegIndex _base, RegIndex _offset,
             ArmExtendType _type, uint32_t _shiftAmt) :
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         _dest, _base, _offset, _type, _shiftAmt)
@@ -709,7 +709,7 @@ def template LoadStoreReg64Constructor {{
 
 def template LoadStoreRegU64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _base, IntRegIndex _offset,
+            RegIndex _dest, RegIndex _base, RegIndex _offset,
             ArmExtendType _type, uint32_t _shiftAmt,
             bool noAlloc, bool exclusive, bool acrel) :
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
@@ -724,7 +724,7 @@ def template LoadStoreRegU64Constructor {{
 
 def template LoadStoreRaw64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _base) :
+            RegIndex _dest, RegIndex _base) :
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _base)
     {
         %(set_reg_idx_arr)s;
@@ -734,7 +734,7 @@ def template LoadStoreRaw64Constructor {{
 
 def template LoadStoreEx64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _base, IntRegIndex _result) :
+            RegIndex _dest, RegIndex _base, RegIndex _result) :
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         _dest, _base, _result)
     {
@@ -745,9 +745,9 @@ def template LoadStoreEx64Constructor {{
 
 def template LoadStoreLit64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, int64_t _imm) :
+            RegIndex _dest, int64_t _imm) :
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                 (IntRegIndex)_dest, _imm)
+                 (RegIndex)_dest, _imm)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
@@ -765,10 +765,10 @@ def template LoadStoreLit64Constructor {{
 
 def template LoadStoreLitU64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, int64_t _imm,
+            RegIndex _dest, int64_t _imm,
             bool noAlloc, bool exclusive, bool acrel) :
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                 (IntRegIndex)_dest, _imm)
+                 (RegIndex)_dest, _imm)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
@@ -859,8 +859,8 @@ def template AmoOpDeclare {{
 
       public:
         /// Constructor.
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                       IntRegIndex _base, IntRegIndex _result);
+        %(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                       RegIndex _base, RegIndex _result);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
         Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
@@ -878,7 +878,7 @@ def template AmoOpDeclare {{
 
 def template AmoOpConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _base, IntRegIndex _result) :
+            RegIndex _dest, RegIndex _base, RegIndex _result) :
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                         _dest, _base, _result)
     {
@@ -898,8 +898,8 @@ def template AmoArithmeticOpDeclare {{
       public:
         bool isXZR ;
         /// Constructor.
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                       IntRegIndex _base, IntRegIndex _result);
+        %(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                       RegIndex _base, RegIndex _result);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
         Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
@@ -916,7 +916,7 @@ def template AmoArithmeticOpDeclare {{
 
 def template AmoArithmeticOpConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, IntRegIndex _base, IntRegIndex _result) :
+            RegIndex _dest, RegIndex _base, RegIndex _result) :
          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                           _dest,  _base, _result)
     {

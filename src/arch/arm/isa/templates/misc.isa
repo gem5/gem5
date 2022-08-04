@@ -43,13 +43,13 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest);
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template MrsConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest) :
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _dest) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest)
     {
         %(set_reg_idx_arr)s;
@@ -74,14 +74,14 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest,
                    uint8_t _sysM, bool _r);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template MrsBankedRegConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _dest,
                                    uint8_t _sysM, bool _r) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest),
         byteMask(_sysM), r(_r)
@@ -107,14 +107,14 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _op1,
+    %(class_name)s(ExtMachInst machInst, RegIndex _op1,
                    uint8_t _sysM, bool _r);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template MsrBankedRegConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _op1,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _op1,
                                    uint8_t _sysM, bool _r) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1, _sysM),
         r(_r)
@@ -137,13 +137,13 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _op1, uint8_t mask);
+    %(class_name)s(ExtMachInst machInst, RegIndex _op1, uint8_t mask);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template MsrRegConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _op1,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _op1,
                                    uint8_t mask) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1, mask)
     {
@@ -194,14 +194,14 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, MiscRegIndex _op1,
-                   IntRegIndex _dest, IntRegIndex _dest2, uint32_t imm);
+                   RegIndex _dest, RegIndex _dest2, uint32_t imm);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template MrrcOpConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, MiscRegIndex op1,
-                                   IntRegIndex dest, IntRegIndex dest2,
+                                   RegIndex dest, RegIndex dest2,
                                    uint32_t imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, op1, dest,
                        dest2, imm)
@@ -224,15 +224,15 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _op1, IntRegIndex _op2,
+    %(class_name)s(ExtMachInst machInst, RegIndex _op1, RegIndex _op2,
                    MiscRegIndex _dest, uint32_t imm);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template McrrOpConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex op1,
-                                   IntRegIndex op2, MiscRegIndex dest,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex op1,
+                                   RegIndex op2, MiscRegIndex dest,
                                    uint32_t imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, op1, op2,
                        dest, imm)
@@ -282,14 +282,14 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, uint64_t _imm);
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest, uint64_t _imm);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template RegImmOpConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            IntRegIndex _dest, uint64_t _imm) :
+            RegIndex _dest, uint64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _imm)
     {
         %(set_reg_idx_arr)s;
@@ -310,14 +310,14 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _op1);
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest, RegIndex _op1);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template RegRegOpConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                   IntRegIndex _dest, IntRegIndex _op1) :
+                                   RegIndex _dest, RegIndex _op1) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _op1)
     {
         %(set_reg_idx_arr)s;
@@ -338,15 +338,15 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                   IntRegIndex _op1, IntRegIndex _op2, uint64_t _imm);
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                   RegIndex _op1, RegIndex _op2, uint64_t _imm);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template RegRegRegImmOpConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                                   IntRegIndex _op1, IntRegIndex _op2,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                                   RegIndex _op1, RegIndex _op2,
                                    uint64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2, _imm)
@@ -369,16 +369,16 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                   IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _op3);
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                   RegIndex _op1, RegIndex _op2, RegIndex _op3);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template RegRegRegRegOpConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                                   IntRegIndex _op1, IntRegIndex _op2,
-                                   IntRegIndex _op3) :
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                                   RegIndex _op1, RegIndex _op2,
+                                   RegIndex _op3) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2, _op3)
     {
@@ -400,15 +400,15 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                   IntRegIndex _op1, IntRegIndex _op2);
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                   RegIndex _op1, RegIndex _op2);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template RegRegRegOpConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                                   IntRegIndex _op1, IntRegIndex _op2) :
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                                   RegIndex _op1, RegIndex _op2) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _op2)
     {
@@ -430,15 +430,15 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _op1,
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest, RegIndex _op1,
                    uint64_t _imm);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template RegRegImmOpConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                                   IntRegIndex _op1, uint64_t _imm) :
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                                   RegIndex _op1, uint64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm)
     {
@@ -460,7 +460,7 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, MiscRegIndex _dest, IntRegIndex _op1,
+    %(class_name)s(ExtMachInst machInst, MiscRegIndex _dest, RegIndex _op1,
                    uint64_t _imm);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
@@ -468,7 +468,7 @@ class %(class_name)s : public %(base_class)s
 
 def template MiscRegRegImmOpConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,
-                                   IntRegIndex _op1, uint64_t _imm) :
+                                   RegIndex _op1, uint64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm)
     {
@@ -490,14 +490,14 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, MiscRegIndex _op1,
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest, MiscRegIndex _op1,
                    uint64_t _imm);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template RegMiscRegImmOpConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _dest,
                                    MiscRegIndex _op1, uint64_t _imm) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm)
@@ -520,14 +520,14 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest,
                    uint64_t _imm1, uint64_t _imm2);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template RegImmImmOpConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _dest,
                                    uint64_t _imm1, uint64_t _imm2) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _imm1, _imm2)
@@ -550,7 +550,7 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, IntRegIndex _op1,
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest, RegIndex _op1,
                    uint64_t _imm1, uint64_t _imm2);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
@@ -558,7 +558,7 @@ class %(class_name)s : public %(base_class)s
 
 def template RegRegImmImmOpConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                   IntRegIndex _dest, IntRegIndex _op1,
+                                   RegIndex _dest, RegIndex _op1,
                                    uint64_t _imm1, uint64_t _imm2) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _op1, _imm1, _imm2)
@@ -581,15 +581,15 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                   uint64_t _imm, IntRegIndex _op1);
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                   uint64_t _imm, RegIndex _op1);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template RegImmRegOpConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                                   uint64_t _imm, IntRegIndex _op1) :
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                                   uint64_t _imm, RegIndex _op1) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                        _dest, _imm, _op1)
     {
@@ -611,16 +611,16 @@ class %(class_name)s : public %(base_class)s
 
   public:
     // Constructor
-    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, uint64_t _imm,
-                   IntRegIndex _op1, int32_t _shiftAmt,
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest, uint64_t _imm,
+                   RegIndex _op1, int32_t _shiftAmt,
                    ArmShiftType _shiftType);
     Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
 def template RegImmRegShiftOpConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                                   uint64_t _imm, IntRegIndex _op1,
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                                   uint64_t _imm, RegIndex _op1,
                                    int32_t _shiftAmt,
                                    ArmShiftType _shiftType) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
@@ -645,7 +645,7 @@ def template MiscRegRegImmMemOpDeclare {{
       public:
         // Constructor
         %(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,
-                       IntRegIndex _op1, uint64_t _imm);
+                       RegIndex _op1, uint64_t _imm);
         Fault execute(ExecContext *, Trace::InstRecord *) const override;
         Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,

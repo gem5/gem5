@@ -57,7 +57,7 @@
 namespace gem5
 {
 
-struct O3CPUParams;
+struct BaseO3CPUParams;
 
 namespace o3
 {
@@ -95,7 +95,7 @@ class ROB
      *  @param _cpu   The cpu object pointer.
      *  @param params The cpu params including several ROB-specific parameters.
      */
-    ROB(CPU *_cpu, const O3CPUParams &params);
+    ROB(CPU *_cpu, const BaseO3CPUParams &params);
 
     std::string name() const;
 

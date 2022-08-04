@@ -71,7 +71,20 @@ def addRunFSOptions(parser):
                         help="Take a checkpoint before driver sends MMIOs. "
                         "This is used to switch out of KVM mode and into "
                         "timing mode required to read the VGA ROM on boot.")
-
+    parser.add_argument("--cpu-topology", type=str, default="Crossbar",
+                        help="Network topology to use for CPU side. "
+                        "Check configs/topologies for complete set")
+    parser.add_argument("--gpu-topology", type=str, default="Crossbar",
+                        help="Network topology to use for GPU side. "
+                        "Check configs/topologies for complete set")
+    parser.add_argument("--dgpu-mem-size", action="store", type=str,
+                        default="16GB", help="Specify the dGPU physical memory"
+                        "  size")
+    parser.add_argument("--dgpu-num-dirs", type=int, default=1, help="Set "
+                        "the number of dGPU directories (memory controllers")
+    parser.add_argument("--dgpu-mem-type", default="HBM_1000_4H_1x128",
+                        choices=ObjectList.mem_list.get_names(),
+                        help="type of memory to use")
 
 def runGpuFSSystem(args):
     '''

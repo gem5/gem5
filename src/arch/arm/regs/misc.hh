@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2020 ARM Limited
+ * Copyright (c) 2010-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -90,6 +90,7 @@ namespace ArmISA
         MISCREG_PMXEVTYPER_PMCCFILTR,
         MISCREG_SCTLR_RST,
         MISCREG_SEV_MAILBOX,
+        MISCREG_TLBINEEDSYNC,
 
         // AArch32 CP14 registers (debug/trace/ThumbEE/Jazelle control)
         MISCREG_DBGDIDR,
@@ -1059,7 +1060,7 @@ namespace ArmISA
 
         // NUM_PHYS_MISCREGS specifies the number of actual physical
         // registers, not considering the following pseudo-registers
-        // (dummy registers), like UNKNOWN, CP15_UNIMPL, MISCREG_IMPDEF_UNIMPL.
+        // (dummy registers), like MISCREG_UNKNOWN, MISCREG_IMPDEF_UNIMPL.
         // Checkpointing should use this physical index when
         // saving/restoring register values.
         NUM_PHYS_MISCREGS,
@@ -1067,8 +1068,6 @@ namespace ArmISA
         // Dummy registers
         MISCREG_NOP,
         MISCREG_RAZ,
-        MISCREG_CP14_UNIMPL,
-        MISCREG_CP15_UNIMPL,
         MISCREG_UNKNOWN,
 
         // Implementation defined register: this represent
@@ -1153,12 +1152,113 @@ namespace ArmISA
 
     extern std::bitset<NUM_MISCREG_INFOS> miscRegInfo[NUM_MISCREGS];
 
+    struct MiscRegNum32
+    {
+        MiscRegNum32(unsigned _coproc, unsigned _opc1,
+                     unsigned _crn, unsigned _crm,
+                     unsigned _opc2)
+          : reg64(0), coproc(_coproc), opc1(_opc1), crn(_crn),
+            crm(_crm), opc2(_opc2)
+        {
+            // MCR/MRC CP14 or CP15 register
+            assert(coproc == 0b1110 || coproc == 0b1111);
+            assert(opc1 < 8 && crn < 16 && crm < 16 && opc2 < 8);
+        }
+
+        MiscRegNum32(unsigned _coproc, unsigned _opc1,
+                     unsigned _crm)
+          : reg64(1), coproc(_coproc), opc1(_opc1), crn(0),
+            crm(_crm), opc2(0)
+        {
+            // MCRR/MRRC CP14 or CP15 register
+            assert(coproc == 0b1110 || coproc == 0b1111);
+            assert(opc1 < 16 && crm < 16);
+        }
+
+        MiscRegNum32(const MiscRegNum32& rhs) = default;
+
+        bool
+        operator==(const MiscRegNum32 &other) const
+        {
+            return reg64 == other.reg64 &&
+                coproc == other.coproc &&
+                opc1 == other.opc1 &&
+                crn == other.crn &&
+                crm == other.crm &&
+                opc2 == other.opc2;
+        }
+
+        uint32_t
+        packed() const
+        {
+            return reg64 << 19  |
+                   coproc << 15 |
+                   opc1 << 11   |
+                   crn << 7     |
+                   crm << 3     |
+                   opc2;
+        }
+
+        // 1 if the register is 64bit wide (accessed through MCRR/MRCC)
+        // 0 otherwise. We need this when generating the hash as there
+        // might be collisions between 32 and 64 bit registers
+        const unsigned reg64;
+
+        unsigned coproc;
+        unsigned opc1;
+        unsigned crn;
+        unsigned crm;
+        unsigned opc2;
+    };
+
+    struct MiscRegNum64
+    {
+        MiscRegNum64(unsigned _op0, unsigned _op1,
+                     unsigned _crn, unsigned _crm,
+                     unsigned _op2)
+          : op0(_op0), op1(_op1), crn(_crn),
+            crm(_crm), op2(_op2)
+        {
+            assert(op0 < 4 && op1 < 8 && crn < 16 && crm < 16 && op2 < 8);
+        }
+
+        MiscRegNum64(const MiscRegNum64& rhs) = default;
+
+        bool
+        operator==(const MiscRegNum64 &other) const
+        {
+            return op0 == other.op0 &&
+                op1 == other.op1 &&
+                crn == other.crn &&
+                crm == other.crm &&
+                op2 == other.op2;
+        }
+
+        uint32_t
+        packed() const
+        {
+            return op0 << 14 |
+                   op1 << 11 |
+                   crn << 7  |
+                   crm << 3  |
+                   op2;
+        }
+
+        unsigned op0;
+        unsigned op1;
+        unsigned crn;
+        unsigned crm;
+        unsigned op2;
+    };
+
     // Decodes 32-bit CP14 registers accessible through MCR/MRC instructions
     MiscRegIndex decodeCP14Reg(unsigned crn, unsigned opc1,
                                unsigned crm, unsigned opc2);
     MiscRegIndex decodeAArch64SysReg(unsigned op0, unsigned op1,
                                      unsigned crn, unsigned crm,
                                      unsigned op2);
+    MiscRegNum64 encodeAArch64SysReg(MiscRegIndex misc_reg);
+
     // Whether a particular AArch64 system register is -always- read only.
     bool aarch64SysRegReadOnly(MiscRegIndex miscReg);
 
@@ -1203,6 +1303,7 @@ namespace ArmISA
         "pmxevtyper_pmccfiltr",
         "sctlr_rst",
         "sev_mailbox",
+        "tlbi_needsync",
 
         // AArch32 CP14 registers
         "dbgdidr",
@@ -1352,7 +1453,7 @@ namespace ArmISA
         "actlr_ns",
         "actlr_s",
         "cpacr",
-        "sdrc",
+        "sdcr",
         "scr",
         "sder",
         "nsacr",
@@ -2164,8 +2265,6 @@ namespace ArmISA
         // Dummy registers
         "nop",
         "raz",
-        "cp14_unimpl",
-        "cp15_unimpl",
         "unknown",
         "impl_defined",
         "erridr_el1",
@@ -2285,5 +2384,28 @@ namespace ArmISA
 
 } // namespace ArmISA
 } // namespace gem5
+
+namespace std
+{
+template<>
+struct hash<gem5::ArmISA::MiscRegNum32>
+{
+    size_t
+    operator()(const gem5::ArmISA::MiscRegNum32& reg) const
+    {
+        return reg.packed();
+    }
+};
+
+template<>
+struct hash<gem5::ArmISA::MiscRegNum64>
+{
+    size_t
+    operator()(const gem5::ArmISA::MiscRegNum64& reg) const
+    {
+        return reg.packed();
+    }
+};
+} // namespace std
 
 #endif // __ARCH_ARM_REGS_MISC_HH__

@@ -65,14 +65,14 @@ CxxConfigManager::findObjectType(const std::string &object_name,
     if (!configFile.getParam(object_name, "type", object_type))
         throw Exception(object_name, "Sim object has no 'type' field");
 
-    if (cxx_config_directory.find(object_type) ==
-        cxx_config_directory.end())
+    if (cxxConfigDirectory().find(object_type) ==
+        cxxConfigDirectory().end())
     {
         throw Exception(object_name, csprintf(
             "No sim object type %s is available", object_type));
     }
 
-    const CxxConfigDirectoryEntry *entry = cxx_config_directory[object_type];
+    const CxxConfigDirectoryEntry *entry = cxxConfigDirectory()[object_type];
 
     return *entry;
 }

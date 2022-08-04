@@ -35,24 +35,24 @@
 
 microcode = '''
 def macroop STMXCSR_M {
-    rdval t1, ctrlRegIdx("MISCREG_MXCSR")
+    rdval t1, ctrlRegIdx("misc_reg::Mxcsr")
     st t1, seg, sib, disp
 };
 
 def macroop STMXCSR_P {
-    rdval t1, ctrlRegIdx("MISCREG_MXCSR")
+    rdval t1, ctrlRegIdx("misc_reg::Mxcsr")
     rdip t7
     st t1, seg, riprel, disp
 };
 
 def macroop LDMXCSR_M {
     ld t1, seg, sib, disp
-    wrval ctrlRegIdx("MISCREG_MXCSR"), t1
+    wrval ctrlRegIdx("misc_reg::Mxcsr"), t1
 };
 
 def macroop LDMXCSR_P {
     rdip t7
     ld t1, seg, riprel, disp
-    wrval ctrlRegIdx("MISCREG_MXCSR"), t1
+    wrval ctrlRegIdx("misc_reg::Mxcsr"), t1
 };
 '''

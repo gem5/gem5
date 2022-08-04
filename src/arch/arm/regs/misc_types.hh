@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Arm Limited
+ * Copyright (c) 2010-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -669,7 +669,59 @@ namespace ArmISA
    BitUnion32(ESR)
         Bitfield<31, 26> ec;
         Bitfield<25> il;
-        Bitfield<15, 0> imm16;
+        Bitfield<24, 0> iss;
+
+        // Generic Condition ISS
+        // Used by exception syndromes holding the condition code of
+        // the trapped instruction. TODO: We should really have a
+        // different SubBitUnion per exception type and avoid
+        // such generic sub-fields
+        SubBitUnion(cond_iss, 24, 0)
+            Bitfield<24> cv;
+            Bitfield<23, 20> cond;
+            Bitfield<19, 0> iss;
+        EndSubBitUnion(cond_iss)
+
+        // Data Abort ISS
+        SubBitUnion(data_abort_iss, 24, 0)
+            Bitfield<24> isv;
+            Bitfield<23, 22> sas;
+            Bitfield<21> sse;
+            Bitfield<20, 16> srt;
+            Bitfield<15> sf;
+            Bitfield<14> ar;
+            Bitfield<13> vncr;
+            Bitfield<10> fnv;
+            Bitfield<9> ea;
+            Bitfield<8> cm;
+            Bitfield<7> s1ptw;
+            Bitfield<6> wnr;
+            Bitfield<5, 0> dfsc;
+        EndSubBitUnion(data_abort_iss)
+
+        // Instruction Abort ISS
+        SubBitUnion(instruction_abort_iss, 24, 0)
+            Bitfield<12, 11> set;
+            Bitfield<10> fnv;
+            Bitfield<9> ea;
+            Bitfield<7> s1ptw;
+            Bitfield<5, 0> ifsc;
+        EndSubBitUnion(instruction_abort_iss)
+
+        // Software Step ISS
+        SubBitUnion(software_step_iss, 24, 0)
+            Bitfield<24> isv;
+            Bitfield<6> ex;
+            Bitfield<5, 0> ifsc;
+        EndSubBitUnion(software_step_iss)
+
+        // Watchpoint ISS
+        SubBitUnion(watchpoint_iss, 24, 0)
+            Bitfield<13> vncr;
+            Bitfield<8> cm;
+            Bitfield<6> wnr;
+            Bitfield<5, 0> dfsc;
+        EndSubBitUnion(watchpoint_iss)
    EndBitUnion(ESR)
 
    BitUnion32(CPTR)

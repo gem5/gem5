@@ -1,6 +1,6 @@
 /*
  * Copyright 2014 Google, Inc.
- * Copyright (c) 2010-2013,2015,2017-2018, 2020 ARM Limited
+ * Copyright (c) 2010-2013,2015,2017-2018, 2020-2021 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -53,7 +53,7 @@
 #include "debug/SimpleCPU.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "params/TimingSimpleCPU.hh"
+#include "params/BaseTimingSimpleCPU.hh"
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
@@ -74,7 +74,7 @@ TimingSimpleCPU::TimingCPUPort::TickEvent::schedule(PacketPtr _pkt, Tick t)
     cpu->schedule(this, t);
 }
 
-TimingSimpleCPU::TimingSimpleCPU(const TimingSimpleCPUParams &p)
+TimingSimpleCPU::TimingSimpleCPU(const BaseTimingSimpleCPUParams &p)
     : BaseSimpleCPU(p), fetchTranslation(this), icachePort(this),
       dcachePort(this), ifetch_pkt(NULL), dcache_pkt(NULL), previousCycle(0),
       fetchEvent([this]{ fetch(); }, name())
@@ -826,7 +826,8 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 
     // received a response from the icache: execute the received
     // instruction
-    assert(!pkt || !pkt->isError());
+    panic_if(pkt && pkt->isError(), "Instruction fetch (%s) failed: %s",
+            pkt->getAddrRange().to_string(), pkt->print());
     assert(_status == IcacheWaitResponse);
 
     _status = BaseSimpleCPU::Running;
@@ -950,7 +951,8 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
 
     // received a response from the dcache: complete the load or store
     // instruction
-    assert(!pkt->isError());
+    panic_if(pkt->isError(), "Data access (%s) failed: %s",
+            pkt->getAddrRange().to_string(), pkt->print());
     assert(_status == DcacheWaitResponse || _status == DTBWaitResponse ||
            pkt->req->getFlags().isSet(Request::NO_ACCESS));
 
@@ -1095,13 +1097,30 @@ TimingSimpleCPU::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
     }
 
     // Making it uniform across all CPUs:
-    // The CPUs need to be woken up only on an invalidation packet (when using caches)
-    // or on an incoming write packet (when not using caches)
-    // It is not necessary to wake up the processor on all incoming packets
+    // The CPUs need to be woken up only on an invalidation packet
+    // (when using caches) or on an incoming write packet (when not
+    // using caches) It is not necessary to wake up the processor on
+    // all incoming packets
     if (pkt->isInvalidate() || pkt->isWrite()) {
         for (auto &t_info : cpu->threadInfo) {
             t_info->thread->getIsaPtr()->handleLockedSnoop(pkt,
                     cacheBlockMask);
+        }
+    } else if (pkt->req && pkt->req->isTlbiExtSync()) {
+        // We received a TLBI_EXT_SYNC request.
+        // In a detailed sim we would wait for memory ops to complete,
+        // but in our simple case we just respond immediately
+        auto reply_req = Request::createMemManagement(
+            Request::TLBI_EXT_SYNC_COMP,
+            cpu->dataRequestorId());
+
+        // Extra Data = the transaction ID of the Sync we're completing
+        reply_req->setExtraData(pkt->req->getExtraData());
+        PacketPtr reply_pkt = Packet::createRead(reply_req);
+
+        // TODO - reserve some credit for these responses?
+        if (!sendTimingReq(reply_pkt)) {
+            panic("Couldn't send TLBI_EXT_SYNC_COMP message");
         }
     }
 }
@@ -1214,7 +1233,7 @@ TimingSimpleCPU::printAddr(Addr a)
 }
 
 Fault
-TimingSimpleCPU::initiateHtmCmd(Request::Flags flags)
+TimingSimpleCPU::initiateMemMgmtCmd(Request::Flags flags)
 {
     SimpleExecContext &t_info = *threadInfo[curThread];
     SimpleThread* thread = t_info.thread;
@@ -1234,7 +1253,7 @@ TimingSimpleCPU::initiateHtmCmd(Request::Flags flags)
     req->taskId(taskId());
     req->setInstCount(t_info.numInst);
 
-    assert(req->isHTMCmd());
+    assert(req->isHTMCmd() || req->isTlbiCmd());
 
     // Use the payload as a sanity check,
     // the memory subsystem will clear allocated data
@@ -1244,14 +1263,19 @@ TimingSimpleCPU::initiateHtmCmd(Request::Flags flags)
     memcpy (data, &rc, size);
 
     // debugging output
-    if (req->isHTMStart())
-        DPRINTF(HtmCpu, "HTMstart htmUid=%u\n", t_info.getHtmTransactionUid());
-    else if (req->isHTMCommit())
-        DPRINTF(HtmCpu, "HTMcommit htmUid=%u\n", t_info.getHtmTransactionUid());
-    else if (req->isHTMCancel())
-        DPRINTF(HtmCpu, "HTMcancel htmUid=%u\n", t_info.getHtmTransactionUid());
-    else
-        panic("initiateHtmCmd: unknown CMD");
+    if (req->isHTMCmd()) {
+        if (req->isHTMStart())
+            DPRINTF(HtmCpu, "HTMstart htmUid=%u\n",
+                t_info.getHtmTransactionUid());
+        else if (req->isHTMCommit())
+            DPRINTF(HtmCpu, "HTMcommit htmUid=%u\n",
+                t_info.getHtmTransactionUid());
+        else if (req->isHTMCancel())
+            DPRINTF(HtmCpu, "HTMcancel htmUid=%u\n",
+                t_info.getHtmTransactionUid());
+        else
+            panic("initiateMemMgmtCmd: unknown HTM CMD");
+    }
 
     sendData(req, data, nullptr, true);
 

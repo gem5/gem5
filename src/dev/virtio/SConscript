@@ -37,7 +37,7 @@
 
 Import('*')
 
-if env['TARGET_ISA'] == 'null':
+if env['CONF']['TARGET_ISA'] == 'null':
     Return()
 
 SimObject('VirtIO.py', sim_objects=[

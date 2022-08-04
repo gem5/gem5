@@ -79,7 +79,7 @@ parser.add_argument("--random-seed", type=int, default=0,
                     help="Random seed number. Default value (i.e., 0) means \
                         using runtime-specific value")
 parser.add_argument("--log-file", type=str, default="gpu-ruby-test.log")
-parser.add_argument("--num-dmas", type=int, default=0,
+parser.add_argument("--num-dmas", type=int, default=None,
                     help="The number of DMA engines to use in tester config.")
 
 args = parser.parse_args()
@@ -108,7 +108,7 @@ if (args.system_size == "small"):
     args.wf_size = 1
     args.wavefronts_per_cu = 1
     args.num_cpus = 1
-    args.num_dmas = 1
+    n_DMAs = 1
     args.cu_per_sqc = 1
     args.cu_per_scalar_cache = 1
     args.num_compute_units = 1
@@ -117,7 +117,7 @@ elif (args.system_size == "medium"):
     args.wf_size = 16
     args.wavefronts_per_cu = 4
     args.num_cpus = 4
-    args.num_dmas = 2
+    n_DMAs = 2
     args.cu_per_sqc = 4
     args.cu_per_scalar_cache = 4
     args.num_compute_units = 4
@@ -126,10 +126,18 @@ elif (args.system_size == "large"):
     args.wf_size = 32
     args.wavefronts_per_cu = 4
     args.num_cpus = 4
-    args.num_dmas = 4
+    n_DMAs = 4
     args.cu_per_sqc = 4
     args.cu_per_scalar_cache = 4
     args.num_compute_units = 8
+
+# Number of DMA engines
+if not(args.num_dmas is None):
+    n_DMAs = args.num_dmas
+    # currently the tester does not support requests returned as
+    # aliased, thus we need num_dmas to be 0 for it
+    if not(args.num_dmas == 0):
+        print("WARNING: num_dmas != 0 not supported with VIPER")
 
 #
 # Set address range - 2 options
@@ -172,9 +180,6 @@ tester_deadlock_threshold = 1e9
 
 # For now we're testing only GPU protocol, so we force num_cpus to be 0
 args.num_cpus = 0
-
-# Number of DMA engines
-n_DMAs = args.num_dmas
 
 # Number of CUs
 n_CUs = args.num_compute_units
@@ -234,11 +239,12 @@ args.num_cp = 0
 #
 # Make generic DMA sequencer for Ruby to use
 #
-dma_devices = [TesterDma()] * n_DMAs
-system.piobus = IOXBar()
-for _, dma_device in enumerate(dma_devices):
-    dma_device.pio = system.piobus.mem_side_ports
-system.dma_devices = dma_devices
+if n_DMAs > 0:
+    dma_devices = [TesterDma()] * n_DMAs
+    system.piobus = IOXBar()
+    for _, dma_device in enumerate(dma_devices):
+        dma_device.pio = system.piobus.mem_side_ports
+    system.dma_devices = dma_devices
 
 #
 # Create the Ruby system
@@ -250,7 +256,8 @@ system.dma_devices = dma_devices
 # size of system.cpu
 cpu_list = [ system.cpu ] * args.num_cpus
 Ruby.create_system(args, full_system = False,
-                   system = system, dma_ports = system.dma_devices,
+                   system = system,
+                   dma_ports = system.dma_devices if n_DMAs > 0 else [],
                    cpus = cpu_list)
 
 #
@@ -275,7 +282,10 @@ print("Attaching ruby ports to the tester")
 for i, ruby_port in enumerate(system.ruby._cpu_ports):
     ruby_port.no_retry_on_stall = True
     ruby_port.using_ruby_tester = True
-    ruby_port.mem_request_port = system.piobus.cpu_side_ports
+
+    # piobus is only created if there are DMAs
+    if n_DMAs > 0:
+        ruby_port.mem_request_port = system.piobus.cpu_side_ports
 
     if i < n_CUs:
         tester.cu_vector_ports = ruby_port.in_ports

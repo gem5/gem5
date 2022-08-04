@@ -305,7 +305,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
     walker->pma->check(read->req);
     // Effective privilege mode for pmp checks for page table
     // walks is S mode according to specs
-    fault = walker->pmp->pmpCheck(read->req, mode,
+    fault = walker->pmp->pmpCheck(read->req, BaseMMU::Read,
                     RiscvISA::PrivilegeMode::PRV_S, tc, entry.vaddr);
 
     if (fault == NoFault) {
@@ -357,7 +357,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                         walker->pma->check(read->req);
 
                         fault = walker->pmp->pmpCheck(read->req,
-                                            mode, pmode, tc, entry.vaddr);
+                                            BaseMMU::Write, pmode, tc, entry.vaddr);
 
                     }
                     // perform step 8 only if pmp checks pass
@@ -426,6 +426,10 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         //If we didn't return, we're setting up another read.
         RequestPtr request = std::make_shared<Request>(
             nextRead, oldRead->getSize(), flags, walker->requestorId);
+
+        delete oldRead;
+        oldRead = nullptr;
+
         read = new Packet(request, MemCmd::ReadReq);
         read->allocate();
 
@@ -501,6 +505,8 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
         }
         sendPackets();
     } else {
+        delete pkt;
+
         sendPackets();
     }
     if (inflight == 0 && read == NULL && writes.size() == 0) {

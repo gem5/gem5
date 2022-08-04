@@ -109,7 +109,7 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
 
     // Regular int regs
     for (int i = 0; i < 15; i++) {
-        newState[i] = tc->readIntReg(i);
+        newState[i] = tc->getReg(RegId(IntRegClass, i));
         changed[i] = (oldState[i] != newState[i]);
     }
 
@@ -119,21 +119,23 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
 
     //CPSR
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-    cpsr.nz = tc->readCCReg(CCREG_NZ);
-    cpsr.c = tc->readCCReg(CCREG_C);
-    cpsr.v = tc->readCCReg(CCREG_V);
-    cpsr.ge = tc->readCCReg(CCREG_GE);
+    cpsr.nz = tc->getReg(cc_reg::Nz);
+    cpsr.c = tc->getReg(cc_reg::C);
+    cpsr.v = tc->getReg(cc_reg::V);
+    cpsr.ge = tc->getReg(cc_reg::Ge);
 
     newState[STATE_CPSR] = cpsr;
     changed[STATE_CPSR] = (newState[STATE_CPSR] != oldState[STATE_CPSR]);
 
     for (int i = 0; i < NumVecV7ArchRegs; i++) {
-        auto *vec = tc->readVecReg(RegId(VecRegClass,i)).as<uint64_t>();
+        ArmISA::VecRegContainer vec_container;
+        tc->getReg(RegId(VecRegClass, i), &vec_container);
+        auto *vec = vec_container.as<uint64_t>();
         newState[STATE_F0 + 2*i] = vec[0];
         newState[STATE_F0 + 2*i + 1] = vec[1];
     }
     newState[STATE_FPSCR] = tc->readMiscRegNoEffect(MISCREG_FPSCR) |
-                            tc->readCCReg(CCREG_FP);
+                            tc->getReg(cc_reg::Fp);
 }
 
 void

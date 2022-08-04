@@ -67,10 +67,10 @@ def ConfigFile(env):
         variable = str(target[0])
         # True target is config header file
         target = env.Dir('config').File(variable.lower() + '.hh')
-        val = env[variable]
+        val = env['CONF'][variable]
         if isinstance(val, bool):
             # Force value to 0/1
-            val = int(val)
+            val = str(int(val))
         elif isinstance(val, str):
             val = '"' + val + '"'
 

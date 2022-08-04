@@ -28,14 +28,13 @@ import os
 from typing import List
 
 from ....utils.override import overrides
-from ..abstract_board import AbstractBoard
+from ..abstract_system_board import AbstractSystemBoard
 from ...processors.abstract_processor import AbstractProcessor
 from ...memory.abstract_memory_system import AbstractMemorySystem
 from ...cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
 from ..kernel_disk_workload import KernelDiskWorkload
 from ....resources.resource import AbstractResource
 from ....isas import ISA
-from ....utils.requires import requires
 
 import m5
 from m5.objects import (
@@ -73,7 +72,7 @@ from m5.util.fdthelper import (
     FdtState,
 )
 
-class LupvBoard(AbstractBoard, KernelDiskWorkload):
+class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
     """
     A board capable of full system simulation for RISC-V.
     This board uses a set of LupIO education-friendly devices.
@@ -91,13 +90,17 @@ class LupvBoard(AbstractBoard, KernelDiskWorkload):
         cache_hierarchy: AbstractCacheHierarchy,
     ) -> None:
 
-        requires(isa_required=ISA.RISCV)
         if cache_hierarchy.is_ruby():
             raise EnvironmentError("RiscvBoard is not compatible with Ruby")
 
+        if processor.get_isa() != ISA.RISCV:
+            raise Exception("The LupvBoard requires a processor using the "
+                "RISCV ISA. Current processor "
+                f"ISA: '{processor.get_isa().name}'.")
+
         super().__init__(clk_freq, processor, memory, cache_hierarchy)
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def _setup_board(self) -> None:
 
         self.workload = RiscvLinux()
@@ -242,22 +245,22 @@ class LupvBoard(AbstractBoard, KernelDiskWorkload):
                 uncacheable=uncacheable_range
             )
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def has_dma_ports(self) -> bool:
         return False
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def get_dma_ports(self) -> List[Port]:
         raise NotImplementedError(
             "The LupvBoard does not have DMA Ports. "
             "Use `has_dma_ports()` to check this."
         )
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def has_io_bus(self) -> bool:
         return True
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def get_io_bus(self) -> IOXBar:
         return self.iobus
 
@@ -267,7 +270,7 @@ class LupvBoard(AbstractBoard, KernelDiskWorkload):
     def get_mem_side_coherent_io_port(self) -> Port:
         return self.iobus.mem_side_ports
 
-    @overrides(AbstractBoard)
+    @overrides(AbstractSystemBoard)
     def _setup_memory_ranges(self):
         memory = self.get_memory()
         mem_size = memory.get_size()

@@ -133,17 +133,17 @@ def _do_dot(network, outdir, dotFilename):
 
 
 def do_ruby_dot(root, outdir, dotFilename):
-    if not pydot:
+    RubyNetwork = getattr(m5.objects, 'RubyNetwork', None)
+
+    if not pydot or not RubyNetwork:
         return
 
-    # Generate a graph for all ruby systems
-    networks = []
-    for obj in root.descendants():
-        if isinstance(obj, m5.objects.RubyNetwork):
-            networks.append(obj)
+    # Generate a graph for all ruby networks.
+    def is_ruby_network(obj):
+        return isinstance(obj, RubyNetwork)
 
-    for network in networks:
-        # We assume each ruby system has a single network
+    for network in filter(is_ruby_network, root.descendants()):
+        # We assume each ruby system has a single network.
         rubydotFilename = dotFilename.replace(".dot",
                                 "." + network.get_parent().path() + ".dot")
         _do_dot(network, outdir, rubydotFilename)

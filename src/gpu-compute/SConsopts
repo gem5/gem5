@@ -27,5 +27,3 @@ Import('*')
 
 sticky_vars.Add(BoolVariable('BUILD_GPU', 'Build the compute-GPU model',
                              False))
-
-export_vars.append('BUILD_GPU')

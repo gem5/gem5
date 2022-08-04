@@ -55,7 +55,7 @@ GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
 
-Pipeline::Pipeline(MinorCPU &cpu_, const MinorCPUParams &params) :
+Pipeline::Pipeline(MinorCPU &cpu_, const BaseMinorCPUParams &params) :
     Ticked(cpu_, &(cpu_.BaseCPU::baseStats.numCycles)),
     cpu(cpu_),
     allow_idling(params.enableIdling),

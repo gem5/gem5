@@ -36,11 +36,11 @@
 
 #include <stdlib.h>
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <sstream>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 #include "gmock/gmock.h"
@@ -124,20 +124,6 @@ TEST(ConvertIdentifierNameToWordsTest, WorksWhenNameIsMixture) {
             ConvertIdentifierNameToWords("_Chapter11Section_1_"));
 }
 
-TEST(PointeeOfTest, WorksForSmartPointers) {
-  EXPECT_TRUE(
-      (std::is_same<int, PointeeOf<std::unique_ptr<int>>::type>::value));
-  EXPECT_TRUE(
-      (std::is_same<std::string,
-                    PointeeOf<std::shared_ptr<std::string>>::type>::value));
-}
-
-TEST(PointeeOfTest, WorksForRawPointers) {
-  EXPECT_TRUE((std::is_same<int, PointeeOf<int*>::type>::value));
-  EXPECT_TRUE((std::is_same<const char, PointeeOf<const char*>::type>::value));
-  EXPECT_TRUE((std::is_void<PointeeOf<void*>::type>::value));
-}
-
 TEST(GetRawPointerTest, WorksForSmartPointers) {
   const char* const raw_p1 = new const char('a');  // NOLINT
   const std::unique_ptr<const char> p1(raw_p1);
@@ -173,9 +159,9 @@ TEST(KindOfTest, Integer) {
   EXPECT_EQ(kInteger, GMOCK_KIND_OF_(unsigned int));  // NOLINT
   EXPECT_EQ(kInteger, GMOCK_KIND_OF_(long));  // NOLINT
   EXPECT_EQ(kInteger, GMOCK_KIND_OF_(unsigned long));  // NOLINT
+  EXPECT_EQ(kInteger, GMOCK_KIND_OF_(long long));  // NOLINT
+  EXPECT_EQ(kInteger, GMOCK_KIND_OF_(unsigned long long));  // NOLINT
   EXPECT_EQ(kInteger, GMOCK_KIND_OF_(wchar_t));  // NOLINT
-  EXPECT_EQ(kInteger, GMOCK_KIND_OF_(Int64));  // NOLINT
-  EXPECT_EQ(kInteger, GMOCK_KIND_OF_(UInt64));  // NOLINT
   EXPECT_EQ(kInteger, GMOCK_KIND_OF_(size_t));  // NOLINT
 #if GTEST_OS_LINUX || GTEST_OS_MAC || GTEST_OS_CYGWIN
   // ssize_t is not defined on Windows and possibly some other OSes.
@@ -223,11 +209,12 @@ TEST(LosslessArithmeticConvertibleTest, IntegerToInteger) {
   EXPECT_TRUE((LosslessArithmeticConvertible<unsigned char, int>::value));
 
   // Unsigned => larger unsigned is fine.
-  EXPECT_TRUE(
-      (LosslessArithmeticConvertible<unsigned short, UInt64>::value)); // NOLINT
+  EXPECT_TRUE((LosslessArithmeticConvertible<
+               unsigned short, uint64_t>::value));  // NOLINT
 
   // Signed => unsigned is not fine.
-  EXPECT_FALSE((LosslessArithmeticConvertible<short, UInt64>::value)); // NOLINT
+  EXPECT_FALSE((LosslessArithmeticConvertible<
+                short, uint64_t>::value));  // NOLINT
   EXPECT_FALSE((LosslessArithmeticConvertible<
       signed char, unsigned int>::value));  // NOLINT
 
@@ -243,12 +230,12 @@ TEST(LosslessArithmeticConvertibleTest, IntegerToInteger) {
   EXPECT_FALSE((LosslessArithmeticConvertible<
                 unsigned char, signed char>::value));
   EXPECT_FALSE((LosslessArithmeticConvertible<int, unsigned int>::value));
-  EXPECT_FALSE((LosslessArithmeticConvertible<UInt64, Int64>::value));
+  EXPECT_FALSE((LosslessArithmeticConvertible<uint64_t, int64_t>::value));
 
   // Larger size => smaller size is not fine.
   EXPECT_FALSE((LosslessArithmeticConvertible<long, char>::value));  // NOLINT
   EXPECT_FALSE((LosslessArithmeticConvertible<int, signed char>::value));
-  EXPECT_FALSE((LosslessArithmeticConvertible<Int64, unsigned int>::value));
+  EXPECT_FALSE((LosslessArithmeticConvertible<int64_t, unsigned int>::value));
 }
 
 TEST(LosslessArithmeticConvertibleTest, IntegerToFloatingPoint) {
@@ -267,7 +254,7 @@ TEST(LosslessArithmeticConvertibleTest, FloatingPointToBool) {
 
 TEST(LosslessArithmeticConvertibleTest, FloatingPointToInteger) {
   EXPECT_FALSE((LosslessArithmeticConvertible<float, long>::value));  // NOLINT
-  EXPECT_FALSE((LosslessArithmeticConvertible<double, Int64>::value));
+  EXPECT_FALSE((LosslessArithmeticConvertible<double, int64_t>::value));
   EXPECT_FALSE((LosslessArithmeticConvertible<long double, int>::value));
 }
 
@@ -453,7 +440,8 @@ TEST(LogTest, NoSkippingStackFrameInOptMode) {
   const std::string log = GetCapturedStdout();
 
   std::string expected_trace =
-      (testing::Message() << GTEST_FLAG(stack_trace_depth) << "::").GetString();
+      (testing::Message() << GTEST_FLAG_GET(stack_trace_depth) << "::")
+          .GetString();
   std::string expected_message =
       "\nGMOCK WARNING:\n"
       "Test log.\n"

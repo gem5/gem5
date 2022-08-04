@@ -204,6 +204,15 @@ Kvm::capXSave() const
 #endif
 }
 
+bool
+Kvm::capIRQLineLayout2() const
+{
+#if defined(KVM_CAP_ARM_IRQ_LINE_LAYOUT_2) && defined(KVM_ARM_IRQ_VCPU2_SHIFT)
+    return checkExtension(KVM_CAP_ARM_IRQ_LINE_LAYOUT_2) != 0;
+#else
+    return false;
+#endif
+}
 
 #if defined(__i386__) || defined(__x86_64__)
 bool
@@ -306,12 +315,13 @@ Kvm::createVM()
 
 KvmVM::KvmVM(const KvmVMParams &params)
     : SimObject(params),
-      kvm(new Kvm()), system(nullptr),
+      kvm(new Kvm()), system(params.system),
       vmFD(kvm->createVM()),
       started(false),
       _hasKernelIRQChip(false),
       nextVCPUID(0)
 {
+    system->setKvmVM(this);
     maxMemorySlot = kvm->capNumMemSlots();
     /* If we couldn't determine how memory slots there are, guess 32. */
     if (!maxMemorySlot)
@@ -357,7 +367,6 @@ KvmVM::cpuStartup()
 void
 KvmVM::delayedStartup()
 {
-    assert(system); // set by the system during its construction
     const std::vector<memory::BackingStoreEntry> &memories(
         system->getPhysMem().getBackingStore());
 
@@ -542,18 +551,20 @@ KvmVM::createDevice(uint32_t type, uint32_t flags)
 #endif
 }
 
-void
-KvmVM::setSystem(System *s)
+bool
+KvmVM::validEnvironment() const
 {
-    panic_if(system != nullptr, "setSystem() can only be called once");
-    panic_if(s == nullptr, "setSystem() called with null System*");
-    system = s;
+    for (auto *tc: system->threads) {
+        if (!dynamic_cast<BaseKvmCPU *>(tc->getCpuPtr()))
+            return false;
+    }
+
+    return true;
 }
 
 long
 KvmVM::contextIdToVCpuId(ContextID ctx) const
 {
-    assert(system != nullptr);
     return dynamic_cast<BaseKvmCPU*>
         (system->threads[ctx]->getCpuPtr())->getVCpuID();
 }

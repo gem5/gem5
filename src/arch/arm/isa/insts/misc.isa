@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2013,2017-2020 ARM Limited
+// Copyright (c) 2010-2013,2017-2021 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -290,7 +290,7 @@ let {{
                 // you look at the generated C code you'll find that they are.
                 // However this is safe as DecodedBankedIntReg (which is used
                 // in operands.isa to get the index of DecodedBankedIntReg)
-                // will return INTREG_ZERO if its not a valid integer
+                // will return int_reg::Zero if its not a valid integer
                 // register, so redirecting the write to somewhere we don't
                 // care about.
                 DecodedBankedIntReg = Op1;
@@ -967,7 +967,7 @@ let {{
     exec_output += PredOpExecute.subst(mrc15Iop)
 
 
-    mcr15code = '''
+    mcr15CheckCode = '''
     int preFlatDest = snsBankedIndex(dest, xc->tcBase());
     MiscRegIndex miscReg = (MiscRegIndex)
                        xc->tcBase()->flattenRegId(RegId(MiscRegClass,
@@ -989,6 +989,8 @@ let {{
     if (fault != NoFault) {
         return fault;
     }
+    '''
+    mcr15code = mcr15CheckCode + '''
     MiscNsBankedDest = Op1;
     '''
     mcr15Iop = ArmInstObjParams("mcr", "Mcr15", "MiscRegRegImmOp",
@@ -998,6 +1000,17 @@ let {{
     header_output += MiscRegRegImmOpDeclare.subst(mcr15Iop)
     decoder_output += MiscRegRegImmOpConstructor.subst(mcr15Iop)
     exec_output += PredOpExecute.subst(mcr15Iop)
+
+    mcrTlbiCode = mcr15CheckCode + '''
+    performTlbi(xc, miscReg, Op1);
+    '''
+    mcrTlbiIop = ArmInstObjParams("mcr", "Tlbi", "TlbiOp",
+                                  { "code": mcrTlbiCode,
+                                    "predicate_test": predicateTest },
+                                  ["IsSerializeAfter","IsNonSpeculative"])
+    header_output += MiscRegRegImmOpDeclare.subst(mcrTlbiIop)
+    decoder_output += MiscRegRegImmOpConstructor.subst(mcrTlbiIop)
+    exec_output += PredOpExecute.subst(mcrTlbiIop)
 
 
     mrrc15code = '''
@@ -1110,30 +1123,6 @@ let {{
     decoder_output += BasicConstructor.subst(clrexIop)
     exec_output += PredOpExecute.subst(clrexIop)
 
-    McrDcCheckCode = '''
-        int preFlatDest = snsBankedIndex(dest, xc->tcBase());
-        MiscRegIndex miscReg = (MiscRegIndex) xc->tcBase()->flattenRegId(
-            RegId(MiscRegClass, preFlatDest)).index();
-
-        bool hypTrap = mcrMrc15TrapToHyp(miscReg, xc->tcBase(), imm);
-
-        auto [can_write, undefined] = canWriteCoprocReg(miscReg, Scr, Cpsr,
-                                                        xc->tcBase());
-
-        // if we're in non secure PL1 mode then we can trap regardless
-        // of whether the register is accessible, in other modes we
-        // trap if only if the register IS accessible.
-        if (undefined || (!can_write & !(hypTrap & !inUserMode(Cpsr) &
-                                         !isSecure(xc->tcBase())))) {
-            return std::make_shared<UndefinedInstruction>(machInst, false,
-                                                          mnemonic);
-        }
-        if (hypTrap) {
-            return std::make_shared<HypervisorTrap>(machInst, imm,
-                                                    EC_TRAPPED_CP15_MCR_MRC);
-        }
-    '''
-
     McrDcimvacCode = '''
         const Request::Flags memAccessFlags(Request::INVALIDATE |
                                             Request::DST_POC);
@@ -1141,7 +1130,7 @@ let {{
     '''
     McrDcimvacIop = ArmInstObjParams("mcr", "McrDcimvac",
                                      "MiscRegRegImmOp",
-                                     {"memacc_code": McrDcCheckCode,
+                                     {"memacc_code": mcr15CheckCode,
                                       "postacc_code": "",
                                       "ea_code": McrDcimvacCode,
                                       "predicate_test": predicateTest},
@@ -1159,7 +1148,7 @@ let {{
     '''
     McrDccmvacIop = ArmInstObjParams("mcr", "McrDccmvac",
                                      "MiscRegRegImmOp",
-                                     {"memacc_code": McrDcCheckCode,
+                                     {"memacc_code": mcr15CheckCode,
                                       "postacc_code": "",
                                       "ea_code": McrDccmvacCode,
                                       "predicate_test": predicateTest},
@@ -1177,7 +1166,7 @@ let {{
     '''
     McrDccmvauIop = ArmInstObjParams("mcr", "McrDccmvau",
                                      "MiscRegRegImmOp",
-                                     {"memacc_code": McrDcCheckCode,
+                                     {"memacc_code": mcr15CheckCode,
                                       "postacc_code": "",
                                       "ea_code": McrDccmvauCode,
                                       "predicate_test": predicateTest},
@@ -1196,7 +1185,7 @@ let {{
     '''
     McrDccimvacIop = ArmInstObjParams("mcr", "McrDccimvac",
                                      "MiscRegRegImmOp",
-                                     {"memacc_code": McrDcCheckCode,
+                                     {"memacc_code": mcr15CheckCode,
                                       "postacc_code": "",
                                       "ea_code": McrDccimvacCode,
                                       "predicate_test": predicateTest},

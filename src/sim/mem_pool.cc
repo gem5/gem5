@@ -169,6 +169,7 @@ MemPools::freeMemSize(int pool_id) const
 void
 MemPools::serialize(CheckpointOut &cp) const
 {
+    ScopedCheckpointSection sec(cp, "mempools");
     int num_pools = pools.size();
     SERIALIZE_SCALAR(num_pools);
 
@@ -179,6 +180,10 @@ MemPools::serialize(CheckpointOut &cp) const
 void
 MemPools::unserialize(CheckpointIn &cp)
 {
+    // Delete previous mem_pools
+    pools.clear();
+
+    ScopedCheckpointSection sec(cp, "mempools");
     int num_pools = 0;
     UNSERIALIZE_SCALAR(num_pools);
 

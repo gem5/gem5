@@ -458,7 +458,7 @@ class VfpMacroOp : public PredMacroOp
 {
   public:
     static bool
-    inScalarBank(IntRegIndex idx)
+    inScalarBank(RegIndex idx)
     {
         return (idx % 32) < 8;
     }
@@ -471,10 +471,10 @@ class VfpMacroOp : public PredMacroOp
         PredMacroOp(mnem, _machInst, __opClass), wide(_wide)
     {}
 
-    IntRegIndex addStride(IntRegIndex idx, unsigned stride);
-    void nextIdxs(IntRegIndex &dest, IntRegIndex &op1, IntRegIndex &op2);
-    void nextIdxs(IntRegIndex &dest, IntRegIndex &op1);
-    void nextIdxs(IntRegIndex &dest);
+    RegIndex addStride(RegIndex idx, unsigned stride);
+    void nextIdxs(RegIndex &dest, RegIndex &op1, RegIndex &op2);
+    void nextIdxs(RegIndex &dest, RegIndex &op1);
+    void nextIdxs(RegIndex &dest);
 };
 
 template <typename T>
@@ -901,12 +901,12 @@ class FpOp : public PredOp
 class FpCondCompRegOp : public FpOp
 {
   protected:
-    IntRegIndex op1, op2;
+    RegIndex op1, op2;
     ConditionCode condCode;
     uint8_t defCc;
 
     FpCondCompRegOp(const char *mnem, ExtMachInst _machInst,
-                       OpClass __opClass, IntRegIndex _op1, IntRegIndex _op2,
+                       OpClass __opClass, RegIndex _op1, RegIndex _op2,
                        ConditionCode _condCode, uint8_t _defCc) :
         FpOp(mnem, _machInst, __opClass),
         op1(_op1), op2(_op2), condCode(_condCode), defCc(_defCc)
@@ -919,11 +919,11 @@ class FpCondCompRegOp : public FpOp
 class FpCondSelOp : public FpOp
 {
   protected:
-    IntRegIndex dest, op1, op2;
+    RegIndex dest, op1, op2;
     ConditionCode condCode;
 
     FpCondSelOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
+                RegIndex _dest, RegIndex _op1, RegIndex _op2,
                 ConditionCode _condCode) :
         FpOp(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), condCode(_condCode)
@@ -936,11 +936,11 @@ class FpCondSelOp : public FpOp
 class FpRegRegOp : public FpOp
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
+    RegIndex dest;
+    RegIndex op1;
 
     FpRegRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-               IntRegIndex _dest, IntRegIndex _op1,
+               RegIndex _dest, RegIndex _op1,
                VfpMicroMode mode = VfpNotAMicroop) :
         FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1)
     {
@@ -954,11 +954,11 @@ class FpRegRegOp : public FpOp
 class FpRegImmOp : public FpOp
 {
   protected:
-    IntRegIndex dest;
+    RegIndex dest;
     uint64_t imm;
 
     FpRegImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-               IntRegIndex _dest, uint64_t _imm,
+               RegIndex _dest, uint64_t _imm,
                VfpMicroMode mode = VfpNotAMicroop) :
         FpOp(mnem, _machInst, __opClass), dest(_dest), imm(_imm)
     {
@@ -972,12 +972,12 @@ class FpRegImmOp : public FpOp
 class FpRegRegImmOp : public FpOp
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
+    RegIndex dest;
+    RegIndex op1;
     uint64_t imm;
 
     FpRegRegImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                  IntRegIndex _dest, IntRegIndex _op1,
+                  RegIndex _dest, RegIndex _op1,
                   uint64_t _imm, VfpMicroMode mode = VfpNotAMicroop) :
         FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1), imm(_imm)
     {
@@ -991,12 +991,12 @@ class FpRegRegImmOp : public FpOp
 class FpRegRegRegOp : public FpOp
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
-    IntRegIndex op2;
+    RegIndex dest;
+    RegIndex op1;
+    RegIndex op2;
 
     FpRegRegRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                  IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
+                  RegIndex _dest, RegIndex _op1, RegIndex _op2,
                   VfpMicroMode mode = VfpNotAMicroop) :
         FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1), op2(_op2)
     {
@@ -1010,14 +1010,14 @@ class FpRegRegRegOp : public FpOp
 class FpRegRegRegCondOp : public FpOp
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
-    IntRegIndex op2;
+    RegIndex dest;
+    RegIndex op1;
+    RegIndex op2;
     ConditionCode cond;
 
     FpRegRegRegCondOp(const char *mnem, ExtMachInst _machInst,
-                      OpClass __opClass, IntRegIndex _dest, IntRegIndex _op1,
-                      IntRegIndex _op2, ConditionCode _cond,
+                      OpClass __opClass, RegIndex _dest, RegIndex _op1,
+                      RegIndex _op2, ConditionCode _cond,
                       VfpMicroMode mode = VfpNotAMicroop) :
         FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1), op2(_op2),
         cond(_cond)
@@ -1032,14 +1032,14 @@ class FpRegRegRegCondOp : public FpOp
 class FpRegRegRegRegOp : public FpOp
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
-    IntRegIndex op2;
-    IntRegIndex op3;
+    RegIndex dest;
+    RegIndex op1;
+    RegIndex op2;
+    RegIndex op3;
 
     FpRegRegRegRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                     IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                     IntRegIndex _op3, VfpMicroMode mode = VfpNotAMicroop) :
+                     RegIndex _dest, RegIndex _op1, RegIndex _op2,
+                     RegIndex _op3, VfpMicroMode mode = VfpNotAMicroop) :
         FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1), op2(_op2),
         op3(_op3)
     {
@@ -1053,14 +1053,14 @@ class FpRegRegRegRegOp : public FpOp
 class FpRegRegRegImmOp : public FpOp
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
-    IntRegIndex op2;
+    RegIndex dest;
+    RegIndex op1;
+    RegIndex op2;
     uint64_t imm;
 
     FpRegRegRegImmOp(const char *mnem, ExtMachInst _machInst,
-                     OpClass __opClass, IntRegIndex _dest,
-                     IntRegIndex _op1, IntRegIndex _op2,
+                     OpClass __opClass, RegIndex _dest,
+                     RegIndex _op1, RegIndex _op2,
                      uint64_t _imm, VfpMicroMode mode = VfpNotAMicroop) :
         FpOp(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), imm(_imm)

@@ -93,6 +93,8 @@ def createHiFivePlatform(system):
 
     system.platform = HiFive()
 
+    system.platform.pci_host.pio = system.membus.mem_side_ports
+
     system.platform.rtc = RiscvRTC(frequency=Frequency("100MHz"))
     system.platform.clint.int_pin = system.platform.rtc.int_pin
 

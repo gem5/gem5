@@ -61,6 +61,7 @@
 #include "mem/ruby/network/BasicRouter.hh"
 #include "mem/ruby/network/simple/PerfectSwitch.hh"
 #include "mem/ruby/network/simple/Throttle.hh"
+#include "mem/ruby/network/simple/routing/BaseRoutingUnit.hh"
 #include "mem/ruby/protocol/MessageSizeType.hh"
 #include "params/Switch.hh"
 
@@ -77,6 +78,12 @@ class SimpleNetwork;
 class Switch : public BasicRouter
 {
   public:
+
+    // Makes sure throttle sends messages to the links after the switch is
+    // done forwarding the messages in the same cycle
+    static constexpr Event::Priority PERFECTSWITCH_EV_PRI = Event::Default_Pri;
+    static constexpr Event::Priority THROTTLE_EV_PRI = Event::Default_Pri + 1;
+
     typedef SwitchParams Params;
     Switch(const Params &p);
     ~Switch() = default;
@@ -85,7 +92,9 @@ class Switch : public BasicRouter
     void addInPort(const std::vector<MessageBuffer*>& in);
     void addOutPort(const std::vector<MessageBuffer*>& out,
                     const NetDest& routing_table_entry,
-                    Cycles link_latency, int bw_multiplier);
+                    Cycles link_latency, int link_weight, int bw_multiplier,
+                    bool is_external,
+                    PortDirection dst_inport = "");
 
     void resetStats();
     void collateStats();
@@ -100,6 +109,8 @@ class Switch : public BasicRouter
     bool functionalRead(Packet *, WriteMask&);
     uint32_t functionalWrite(Packet *);
 
+    BaseRoutingUnit& getRoutingUnit() { return m_routing_unit; }
+
   private:
     // Private copy constructor and assignment operator
     Switch(const Switch& obj);
@@ -108,6 +119,11 @@ class Switch : public BasicRouter
     PerfectSwitch perfectSwitch;
     SimpleNetwork* m_network_ptr;
     std::list<Throttle> throttles;
+
+    const Cycles m_int_routing_latency;
+    const Cycles m_ext_routing_latency;
+
+    BaseRoutingUnit &m_routing_unit;
 
     unsigned m_num_connected_buffers;
     std::vector<MessageBuffer*> m_port_buffers;

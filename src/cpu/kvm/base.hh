@@ -157,7 +157,7 @@ class BaseKvmCPU : public BaseCPU
      */
     ThreadContext *tc;
 
-    KvmVM &vm;
+    KvmVM *vm;
 
   protected:
     /**
@@ -444,7 +444,7 @@ class BaseKvmCPU : public BaseCPU
      * this queue when accessing devices. By convention, devices and
      * the VM use the same event queue.
      */
-    EventQueue *deviceEventQueue() { return vm.eventQueue(); }
+    EventQueue *deviceEventQueue() { return vm->eventQueue(); }
 
     /**
      * Update the KVM if the thread context is dirty.
@@ -654,7 +654,7 @@ class BaseKvmCPU : public BaseCPU
     bool kvmStateDirty;
 
     /** KVM internal ID of the vCPU */
-    const long vcpuID;
+    long vcpuID;
 
     /** ID of the vCPU thread */
     pthread_t vcpuThread;

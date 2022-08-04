@@ -56,6 +56,7 @@ class X86KvmCPU : public BaseKvmCPU
     virtual ~X86KvmCPU();
 
     void startup() override;
+    void init() override;
 
     /** @{ */
     void dump() const override;

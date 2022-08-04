@@ -33,8 +33,11 @@ from m5.util import panic
 
 from common.Benchmarks import *
 from common.FSConfig import *
+from common import GPUTLBConfig
 from common import Simulation
 from ruby import Ruby
+
+from example.gpufs.Disjoint_VIPER import *
 
 def makeGpuFSSystem(args):
     # Boot options are standard gem5 options plus:
@@ -54,7 +57,10 @@ def makeGpuFSSystem(args):
 
     # Use the common FSConfig to setup a Linux X86 System
     (TestCPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(args)
-    bm = SysConfig(disks=[args.disk_image], mem=args.mem_size)
+    disks = [args.disk_image]
+    if args.second_disk is not None:
+        disks.extend([args.second_disk])
+    bm = SysConfig(disks=disks, mem=args.mem_size)
     system = makeLinuxX86System(test_mem_mode, args.num_cpus, bm, True,
                                   cmdline=cmdline)
     system.workload.object_file = binary(args.kernel)
@@ -77,45 +83,102 @@ def makeGpuFSSystem(args):
     system.shadow_rom_ranges = [AddrRange(0xc0000, size = Addr('128kB'))]
 
     # Create specified number of CPUs. GPUFS really only needs one.
-    system.cpu = [TestCPUClass(clk_domain=system.cpu_clk_domain, cpu_id=i)
+    system.cpu = [X86KvmCPU(clk_domain=system.cpu_clk_domain, cpu_id=i)
                     for i in range(args.num_cpus)]
-
-    if ObjectList.is_kvm_cpu(TestCPUClass) or \
-        ObjectList.is_kvm_cpu(FutureClass):
-        system.kvm_vm = KvmVM()
+    system.kvm_vm = KvmVM()
 
     # Create AMDGPU and attach to southbridge
     shader = createGPU(system, args)
     connectGPU(system, args)
 
+    # The shader core will be whatever is after the CPU cores are accounted for
+    shader_idx = args.num_cpus
+    system.cpu.append(shader)
+
     # This arbitrary address is something in the X86 I/O hole
     hsapp_gpu_map_paddr = 0xe00000000
+    hsapp_pt_walker = VegaPagetableWalker()
     gpu_hsapp = HSAPacketProcessor(pioAddr=hsapp_gpu_map_paddr,
-                                   numHWQueues=args.num_hw_queues)
+                                   numHWQueues=args.num_hw_queues,
+                                   walker=hsapp_pt_walker)
     dispatcher = GPUDispatcher()
+    cp_pt_walker = VegaPagetableWalker()
     gpu_cmd_proc = GPUCommandProcessor(hsapp=gpu_hsapp,
-                                       dispatcher=dispatcher)
+                                       dispatcher=dispatcher,
+                                       walker=cp_pt_walker)
     shader.dispatcher = dispatcher
     shader.gpu_cmd_proc = gpu_cmd_proc
+
+    system.pc.south_bridge.gpu.cp = gpu_cmd_proc
+
+    # GPU Interrupt Handler
+    device_ih = AMDGPUInterruptHandler()
+    system.pc.south_bridge.gpu.device_ih = device_ih
+
+    # Setup the SDMA engines
+    sdma0_pt_walker = VegaPagetableWalker()
+    sdma1_pt_walker = VegaPagetableWalker()
+
+    sdma0 = SDMAEngine(walker=sdma0_pt_walker)
+    sdma1 = SDMAEngine(walker=sdma1_pt_walker)
+
+    system.pc.south_bridge.gpu.sdma0 = sdma0
+    system.pc.south_bridge.gpu.sdma1 = sdma1
+
+    # Setup PM4 packet processor
+    pm4_pkt_proc = PM4PacketProcessor()
+    system.pc.south_bridge.gpu.pm4_pkt_proc = pm4_pkt_proc
+
+    # GPU data path
+    gpu_mem_mgr = AMDGPUMemoryManager()
+    system.pc.south_bridge.gpu.memory_manager = gpu_mem_mgr
+
+    # CPU data path (SystemHub)
+    system_hub = AMDGPUSystemHub()
+    shader.system_hub = system_hub
 
     # GPU, HSAPP, and GPUCommandProc are DMA devices
     system._dma_ports.append(gpu_hsapp)
     system._dma_ports.append(gpu_cmd_proc)
     system._dma_ports.append(system.pc.south_bridge.gpu)
+    system._dma_ports.append(sdma0)
+    system._dma_ports.append(sdma1)
+    system._dma_ports.append(device_ih)
+    system._dma_ports.append(pm4_pkt_proc)
+    system._dma_ports.append(system_hub)
+    system._dma_ports.append(gpu_mem_mgr)
+    system._dma_ports.append(hsapp_pt_walker)
+    system._dma_ports.append(cp_pt_walker)
+    system._dma_ports.append(sdma0_pt_walker)
+    system._dma_ports.append(sdma1_pt_walker)
 
     gpu_hsapp.pio = system.iobus.mem_side_ports
     gpu_cmd_proc.pio = system.iobus.mem_side_ports
     system.pc.south_bridge.gpu.pio = system.iobus.mem_side_ports
+    sdma0.pio = system.iobus.mem_side_ports
+    sdma1.pio = system.iobus.mem_side_ports
+    device_ih.pio = system.iobus.mem_side_ports
+    pm4_pkt_proc.pio = system.iobus.mem_side_ports
+    system_hub.pio = system.iobus.mem_side_ports
 
-    # Create Ruby system using Ruby.py for now
-    Ruby.create_system(args, True, system, system.iobus,
-                      system._dma_ports)
+    # Full system needs special TLBs for SQC, Scalar, and vector data ports
+    args.full_system = True
+    GPUTLBConfig.config_tlb_hierarchy(args, system, shader_idx,
+                                      system.pc.south_bridge.gpu, True)
+
+    # Create Ruby system using disjoint VIPER topology
+    system.ruby = Disjoint_VIPER()
+    system.ruby.create(args, system, system.iobus, system._dma_ports)
 
     # Create a seperate clock domain for Ruby
     system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock,
                                    voltage_domain = system.voltage_domain)
 
     for (i, cpu) in enumerate(system.cpu):
+        # Break once we reach the shader "CPU"
+        if i == args.num_cpus:
+            break
+
         #
         # Tie the cpu ports to the correct ruby system ports
         #
@@ -125,9 +188,8 @@ def makeGpuFSSystem(args):
 
         system.ruby._cpu_ports[i].connectCpuPorts(cpu)
 
-    # The shader core will be whatever is after the CPU cores are accounted for
-    shader_idx = args.num_cpus
-    system.cpu.append(shader)
+        for j in range(len(system.cpu[i].isa)):
+            system.cpu[i].isa[j].vendor_string = "AuthenticAMD"
 
     gpu_port_idx = len(system.ruby._cpu_ports) \
                    - args.num_compute_units - args.num_sqc \

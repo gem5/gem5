@@ -106,14 +106,14 @@ MemConfig.config_mem(args, system)
 # controller with an NVM interface, check to be sure
 if not isinstance(system.mem_ctrls[0], m5.objects.MemCtrl):
     fatal("This script assumes the controller is a MemCtrl subclass")
-if not isinstance(system.mem_ctrls[0].nvm, m5.objects.NVMInterface):
+if not isinstance(system.mem_ctrls[0].dram, m5.objects.NVMInterface):
     fatal("This script assumes the memory is a NVMInterface class")
 
 # there is no point slowing things down by saving any data
-system.mem_ctrls[0].nvm.null = True
+system.mem_ctrls[0].dram.null = True
 
 # Set the address mapping based on input argument
-system.mem_ctrls[0].nvm.addr_mapping = args.addr_map
+system.mem_ctrls[0].dram.addr_mapping = args.addr_map
 
 # stay in each state for 0.25 ms, long enough to warm things up, and
 # short enough to avoid hitting a refresh
@@ -124,21 +124,21 @@ period = 250000000
 # the DRAM maximum bandwidth to ensure that it is saturated
 
 # get the number of regions
-nbr_banks = system.mem_ctrls[0].nvm.banks_per_rank.value
+nbr_banks = system.mem_ctrls[0].dram.banks_per_rank.value
 
 # determine the burst length in bytes
-burst_size = int((system.mem_ctrls[0].nvm.devices_per_rank.value *
-                  system.mem_ctrls[0].nvm.device_bus_width.value *
-                  system.mem_ctrls[0].nvm.burst_length.value) / 8)
+burst_size = int((system.mem_ctrls[0].dram.devices_per_rank.value *
+                  system.mem_ctrls[0].dram.device_bus_width.value *
+                  system.mem_ctrls[0].dram.burst_length.value) / 8)
 
 
 # next, get the page size in bytes
-buffer_size = system.mem_ctrls[0].nvm.devices_per_rank.value * \
-    system.mem_ctrls[0].nvm.device_rowbuffer_size.value
+buffer_size = system.mem_ctrls[0].dram.devices_per_rank.value * \
+    system.mem_ctrls[0].dram.device_rowbuffer_size.value
 
 # match the maximum bandwidth of the memory, the parameter is in seconds
 # and we need it in ticks (ps)
-itt = system.mem_ctrls[0].nvm.tBURST.value * 1000000000000
+itt = system.mem_ctrls[0].dram.tBURST.value * 1000000000000
 
 # assume we start at 0
 max_addr = mem_range.end
@@ -179,7 +179,7 @@ def trace():
                             0, max_addr, burst_size, int(itt), int(itt),
                             args.rd_perc, 0,
                             num_seq_pkts, buffer_size, nbr_banks, bank,
-                            addr_map, args.nvm_ranks)
+                            addr_map, args.dram_ranks)
     yield system.tgen.createExit(0)
 
 system.tgen.start(trace())

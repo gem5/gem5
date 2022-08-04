@@ -60,6 +60,10 @@ class CHI_HNF(CHI_config.CHI_HNF):
     class NoC_Params(CHI_config.CHI_HNF.NoC_Params):
         router_list = [1, 2, 5, 6]
 
+class CHI_MN(CHI_config.CHI_MN):
+    class NoC_Params(CHI_config.CHI_MN.NoC_Params):
+        router_list = [4]
+
 class CHI_SNF_MainMem(CHI_config.CHI_SNF_MainMem):
     class NoC_Params(CHI_config.CHI_SNF_MainMem.NoC_Params):
         router_list = [0, 4]

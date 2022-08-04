@@ -46,7 +46,7 @@ from testlib import *
 workloads = ('Bubblesort','FloatMM')
 
 valid_isas = {
-    constants.gcn3_x86_tag :
+    constants.vega_x86_tag :
         ('AtomicSimpleCPU', 'TimingSimpleCPU', 'DerivO3CPU'),
     constants.arm_tag:
         ('AtomicSimpleCPU', 'TimingSimpleCPU', 'MinorCPU', 'DerivO3CPU'),
@@ -60,7 +60,7 @@ base_path = joinpath(config.bin_path, 'cpu_tests')
 base_url = config.resource_url + '/test-progs/cpu-tests/bin/'
 
 isa_url = {
-    constants.gcn3_x86_tag : base_url + "x86",
+    constants.vega_x86_tag : base_url + "x86",
     constants.arm_tag : base_url + "arm",
     constants.riscv_tag : base_url + "riscv",
 }

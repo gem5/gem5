@@ -214,8 +214,6 @@ Gem5TopLevelModule::Gem5TopLevelModule(sc_core::sc_module_name name,
 {
     SC_THREAD(run);
 
-    gem5::cxxConfigInit();
-
     /* Pass DPRINTF messages to SystemC */
     gem5::Trace::setDebugLogger(&logger);
 
@@ -237,12 +235,12 @@ Gem5TopLevelModule::Gem5TopLevelModule(sc_core::sc_module_name name,
 
     /* Enable stats */
     gem5::statistics::initSimStats();
-    gem5::statistics::registerHandlers(gem5::CxxConfig::statsReset,
-        gem5::CxxConfig::statsDump);
+    gem5::statistics::registerHandlers(CxxConfig::statsReset,
+        CxxConfig::statsDump);
 
     gem5::Trace::enable();
 
-    config_file = new CxxIniFile();
+    config_file = new gem5::CxxIniFile();
 
     if (!config_file->load(config_filename)) {
         fatal("Gem5TopLevelModule: Can't open config file: %s",
@@ -251,7 +249,7 @@ Gem5TopLevelModule::Gem5TopLevelModule(sc_core::sc_module_name name,
 
     root_manager = new gem5::CxxConfigManager(*config_file);
 
-    gem5::CxxConfig::statsEnable();
+    CxxConfig::statsEnable();
 
     /* Make the root object */
     try {
@@ -285,7 +283,7 @@ Gem5TopLevelModule::run()
     std::cerr << "Exit at tick " << gem5::curTick()
         << ", cause: " << exit_event->getCause() << '\n';
 
-    getEventQueue(0)->dump();
+    gem5::getEventQueue(0)->dump();
 }
 
 void

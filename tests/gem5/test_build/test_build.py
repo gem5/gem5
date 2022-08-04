@@ -31,10 +31,11 @@ import re
 import os
 from testlib import *
 
-common_isas = [constants.gcn3_x86_tag, constants.arm_tag, constants.riscv_tag]
+common_isas = [constants.vega_x86_tag, constants.arm_tag, constants.riscv_tag]
+skipped_isas = {constants.null_tag, constants.all_compiled_tag}
 
 for isa in constants.supported_isas:
-    if isa is constants.null_tag: continue
+    if isa in skipped_isas: continue
 
     for variant in constants.supported_variants:
         if isa in common_isas:

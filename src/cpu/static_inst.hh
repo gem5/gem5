@@ -42,6 +42,7 @@
 #ifndef __CPU_STATIC_INST_HH__
 #define __CPU_STATIC_INST_HH__
 
+#include <array>
 #include <bitset>
 #include <cstdint>
 #include <memory>
@@ -105,51 +106,29 @@ class StaticInst : public RefCounted, public StaticInstFlags
     OpClass _opClass;
 
     /// See numSrcRegs().
-    int8_t _numSrcRegs = 0;
+    uint8_t _numSrcRegs = 0;
 
     /// See numDestRegs().
-    int8_t _numDestRegs = 0;
+    uint8_t _numDestRegs = 0;
 
-    /// The following are used to track physical register usage
-    /// for machines with separate int & FP reg files.
-    //@{
-    int8_t _numFPDestRegs = 0;
-    int8_t _numIntDestRegs = 0;
-    int8_t _numCCDestRegs = 0;
-    //@}
-
-    /** To use in architectures with vector register file. */
-    /** @{ */
-    int8_t _numVecDestRegs = 0;
-    int8_t _numVecElemDestRegs = 0;
-    int8_t _numVecPredDestRegs = 0;
-    /** @} */
+    std::array<uint8_t, MiscRegClass + 1> _numTypedDestRegs = {};
 
   public:
 
     /// @name Register information.
-    /// The sum of numFPDestRegs(), numIntDestRegs(), numVecDestRegs(),
-    /// numVecElemDestRegs() and numVecPredDestRegs() equals numDestRegs().
-    /// The former two functions are used to track physical register usage for
-    /// machines with separate int & FP reg files, the next three are for
-    /// machines with vector and predicate register files.
+    /// The sum of the different numDestRegs([type])-s equals numDestRegs().
+    /// The per-type function is used to track physical register usage.
     //@{
     /// Number of source registers.
-    int8_t numSrcRegs()  const { return _numSrcRegs; }
+    uint8_t numSrcRegs()  const { return _numSrcRegs; }
     /// Number of destination registers.
-    int8_t numDestRegs() const { return _numDestRegs; }
-    /// Number of floating-point destination regs.
-    int8_t numFPDestRegs()  const { return _numFPDestRegs; }
-    /// Number of integer destination regs.
-    int8_t numIntDestRegs() const { return _numIntDestRegs; }
-    /// Number of vector destination regs.
-    int8_t numVecDestRegs() const { return _numVecDestRegs; }
-    /// Number of vector element destination regs.
-    int8_t numVecElemDestRegs() const { return _numVecElemDestRegs; }
-    /// Number of predicate destination regs.
-    int8_t numVecPredDestRegs() const { return _numVecPredDestRegs; }
-    /// Number of coprocesor destination regs.
-    int8_t numCCDestRegs() const { return _numCCDestRegs; }
+    uint8_t numDestRegs() const { return _numDestRegs; }
+    /// Number of destination registers of a particular type.
+    uint8_t
+    numDestRegs(RegClassType type) const
+    {
+        return _numTypedDestRegs[type];
+    }
     //@}
 
     /// @name Flag accessors.

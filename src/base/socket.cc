@@ -155,7 +155,12 @@ ListenSocket::listen(int port, bool reuse)
     if (::listen(fd, 1) == -1) {
         if (errno != EADDRINUSE)
             panic("ListenSocket(listen): listen() failed!");
-
+        // User may decide to retry with a different port later; however, the
+        // socket is already bound to a port and the next bind will surely
+        // fail. We'll close the socket and reset fd to -1 so our user can
+        // retry with a cleaner state.
+        close(fd);
+        fd = -1;
         return false;
     }
 

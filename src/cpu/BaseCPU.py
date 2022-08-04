@@ -56,41 +56,6 @@ from m5.objects.Platform import Platform
 
 default_tracer = ExeTracer()
 
-if buildEnv['TARGET_ISA'] == 'sparc':
-    from m5.objects.SparcMMU import SparcMMU as ArchMMU
-    from m5.objects.SparcInterrupts import SparcInterrupts as ArchInterrupts
-    from m5.objects.SparcISA import SparcISA as ArchISA
-    from m5.objects.SparcDecoder import SparcDecoder as ArchDecoder
-elif buildEnv['TARGET_ISA'] == 'x86':
-    from m5.objects.X86MMU import X86MMU as ArchMMU
-    from m5.objects.X86LocalApic import X86LocalApic as ArchInterrupts
-    from m5.objects.X86ISA import X86ISA as ArchISA
-    from m5.objects.X86Decoder import X86Decoder as ArchDecoder
-elif buildEnv['TARGET_ISA'] == 'mips':
-    from m5.objects.MipsMMU import MipsMMU as ArchMMU
-    from m5.objects.MipsInterrupts import MipsInterrupts as ArchInterrupts
-    from m5.objects.MipsISA import MipsISA as ArchISA
-    from m5.objects.MipsDecoder import MipsDecoder as ArchDecoder
-elif buildEnv['TARGET_ISA'] == 'arm':
-    from m5.objects.ArmMMU import ArmMMU as ArchMMU
-    from m5.objects.ArmInterrupts import ArmInterrupts as ArchInterrupts
-    from m5.objects.ArmISA import ArmISA as ArchISA
-    from m5.objects.ArmDecoder import ArmDecoder as ArchDecoder
-elif buildEnv['TARGET_ISA'] == 'power':
-    from m5.objects.PowerMMU import PowerMMU as ArchMMU
-    from m5.objects.PowerInterrupts import PowerInterrupts as ArchInterrupts
-    from m5.objects.PowerISA import PowerISA as ArchISA
-    from m5.objects.PowerDecoder import PowerDecoder as ArchDecoder
-elif buildEnv['TARGET_ISA'] == 'riscv':
-    from m5.objects.RiscvMMU import RiscvMMU as ArchMMU
-    from m5.objects.RiscvInterrupts import RiscvInterrupts as ArchInterrupts
-    from m5.objects.RiscvISA import RiscvISA as ArchISA
-    from m5.objects.RiscvDecoder import RiscvDecoder as ArchDecoder
-else:
-    print("Don't know what object types to use for ISA %s" %
-            buildEnv['TARGET_ISA'])
-    sys.exit(1)
-
 class BaseCPU(ClockedObject):
     type = 'BaseCPU'
     abstract = True
@@ -155,7 +120,7 @@ class BaseCPU(ClockedObject):
 
     workload = VectorParam.Process([], "processes to run")
 
-    mmu = Param.BaseMMU(ArchMMU(), "CPU memory management unit")
+    mmu = Param.BaseMMU(NULL, "CPU memory management unit")
     interrupts = VectorParam.BaseInterrupts([], "Interrupt Controller")
     isa = VectorParam.BaseISA([], "ISA instance")
     decoder = VectorParam.InstDecoder([], "Decoder instance")
@@ -183,7 +148,8 @@ class BaseCPU(ClockedObject):
     _uncached_interrupt_request_ports = []
 
     def createInterruptController(self):
-        self.interrupts = [ArchInterrupts() for i in range(self.numThreads)]
+        self.interrupts = [
+                self.ArchInterrupts() for i in range(self.numThreads)]
 
     def connectCachedPorts(self, in_ports):
         for p in self._cached_ports:
@@ -217,13 +183,13 @@ class BaseCPU(ClockedObject):
             self._cached_ports += ["itb_walker_cache.mem_side", \
                                    "dtb_walker_cache.mem_side"]
         else:
-            self._cached_ports += ArchMMU.walkerPorts()
+            self._cached_ports += self.ArchMMU.walkerPorts()
 
         # Checker doesn't need its own tlb caches because it does
         # functional accesses only
         if self.checker != NULL:
             self._cached_ports += [ "checker." + port
-                for port in ArchMMU.walkerPorts() ]
+                for port in self.ArchMMU.walkerPorts() ]
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c, iwc=None, dwc=None,
                                   xbar=None):
@@ -238,14 +204,14 @@ class BaseCPU(ClockedObject):
         # If no ISAs have been created, assume that the user wants the
         # default ISA.
         if len(self.isa) == 0:
-            self.isa = list([ ArchISA() for i in range(self.numThreads) ])
+            self.isa = [ self.ArchISA() for i in range(self.numThreads) ]
         else:
             if len(self.isa) != int(self.numThreads):
                 raise RuntimeError("Number of ISA instances doesn't "
                                    "match thread count")
         if len(self.decoder) != 0:
             raise RuntimeError("Decoders should not be set up manually")
-        self.decoder = list([ ArchDecoder(isa=isa) for isa in self.isa ])
+        self.decoder = list([ self.ArchDecoder(isa=isa) for isa in self.isa ])
         if self.checker != NULL:
             self.checker.createThreads()
 
@@ -308,18 +274,18 @@ class BaseCPU(ClockedObject):
         super().__init__(**kwargs)
         self.power_state.possible_states=['ON', 'CLK_GATED', 'OFF']
 
-        self._cached_ports = self._cached_ports + ArchMMU.walkerPorts()
+        self._cached_ports = self._cached_ports + self.ArchMMU.walkerPorts()
 
         # Practically speaking, these ports will exist on the x86 interrupt
         # controller class.
-        if "pio" in ArchInterrupts._ports:
+        if "pio" in self.ArchInterrupts._ports:
             self._uncached_interrupt_response_ports = \
                 self._uncached_interrupt_response_ports + ["interrupts[0].pio"]
-        if "int_responder" in ArchInterrupts._ports:
+        if "int_responder" in self.ArchInterrupts._ports:
             self._uncached_interrupt_response_ports = \
                     self._uncached_interrupt_response_ports + [
                     "interrupts[0].int_responder"]
-        if "int_requestor" in ArchInterrupts._ports:
+        if "int_requestor" in self.ArchInterrupts._ports:
             self._uncached_interrupt_request_ports = \
                     self._uncached_interrupt_request_ports + [
                     "interrupts[0].int_requestor"]

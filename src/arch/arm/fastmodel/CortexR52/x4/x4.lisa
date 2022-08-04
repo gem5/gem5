@@ -45,9 +45,12 @@ component CortexR52x4
         core.flash_m => self.flash;
         core.pvbus_core_m => self.amba;
         self.ext_slave => core.ext_slave_s;
+
+        // Reset signals.
         self.core_reset => core.reset;
         self.poweron_reset => core.cpuporeset;
         self.top_reset => core.topreset;
+        self.dbg_reset => core.presetdbg;
         self.halt => core.cpuhalt;
 
         // Clocks.
@@ -80,6 +83,7 @@ component CortexR52x4
     slave port<Signal> poweron_reset[4];
     slave port<Signal> halt[4];
     slave port<Signal> top_reset;
+    slave port<Signal> dbg_reset;
     slave port<Value_64> cfgvectable[4];
 
     slave port<ExportedClockRateControl> clock_rate_s

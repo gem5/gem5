@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 Arm Limited
+# Copyright (c) 2019-2022 Arm Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -79,6 +79,7 @@ arm_fs_long_tests = [
     'realview-simple-timing-ruby',
     'realview64-simple-timing-ruby',
     'realview64-simple-timing-dual-ruby',
+    'realview64-o3-dual-ruby',
 
 
     # The following tests fail. These are recorded in the GEM5-640
@@ -92,7 +93,7 @@ arm_fs_long_tests = [
     #'realview-simple-timing-dual-ruby',
 ]
 
-tarball = 'aarch-system-20210904.tar.bz2'
+tarball = 'aarch-system-20220505.tar.bz2'
 url = config.resource_url + "/arm/" + tarball
 filepath = os.path.dirname(os.path.abspath(__file__))
 path = joinpath(config.bin_path, 'arm')
@@ -135,7 +136,8 @@ for name in arm_fs_quick_tests:
         valid_isas=(constants.arm_tag,),
         length=constants.quick_tag,
         valid_hosts=valid_hosts,
-        fixtures=(arm_fs_binaries,)
+        fixtures=(arm_fs_binaries,),
+        uses_kvm= name in arm_fs_kvm_tests,
     )
 
 for name in arm_fs_long_tests:
@@ -151,5 +153,6 @@ for name in arm_fs_long_tests:
         config_args=args,
         valid_isas=(constants.arm_tag,),
         length=constants.long_tag,
-        fixtures=(arm_fs_binaries,)
+        fixtures=(arm_fs_binaries,),
+        uses_kvm= name in arm_fs_kvm_tests,
     )

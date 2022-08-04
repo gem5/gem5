@@ -52,16 +52,16 @@ template <typename Element,
 class SveLdStructSS : public PredMacroOp
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex gp;
-    IntRegIndex base;
-    IntRegIndex offset;
+    RegIndex dest;
+    RegIndex gp;
+    RegIndex base;
+    RegIndex offset;
     uint8_t numregs;
 
   public:
     SveLdStructSS(const char* mnem, ExtMachInst machInst, OpClass __opClass,
-            IntRegIndex _dest, IntRegIndex _gp, IntRegIndex _base,
-            IntRegIndex _offset, uint8_t _numregs)
+            RegIndex _dest, RegIndex _gp, RegIndex _base,
+            RegIndex _offset, uint8_t _numregs)
         : PredMacroOp(mnem, machInst, __opClass),
           dest(_dest), gp(_gp), base(_base), offset(_offset), numregs(_numregs)
     {
@@ -71,12 +71,12 @@ class SveLdStructSS : public PredMacroOp
 
         for (int i = 0; i < numregs; ++i) {
             microOps[i] = new MicroopLdMemType<Element>(
-                    mnem, machInst, static_cast<IntRegIndex>(INTRLVREG0 + i),
+                    mnem, machInst, static_cast<RegIndex>(INTRLVREG0 + i),
                     _gp, _base, _offset, _numregs, i);
         }
         for (int i = 0; i < numregs; ++i) {
             microOps[i + numregs] = new MicroopDeIntrlvType<Element>(
-                    mnem, machInst, static_cast<IntRegIndex>((_dest + i) % 32),
+                    mnem, machInst, static_cast<RegIndex>((_dest + i) % 32),
                     _numregs, i, this);
         }
 
@@ -124,16 +124,16 @@ template <typename Element,
 class SveStStructSS : public PredMacroOp
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex gp;
-    IntRegIndex base;
-    IntRegIndex offset;
+    RegIndex dest;
+    RegIndex gp;
+    RegIndex base;
+    RegIndex offset;
     uint8_t numregs;
 
   public:
     SveStStructSS(const char* mnem, ExtMachInst machInst, OpClass __opClass,
-            IntRegIndex _dest, IntRegIndex _gp, IntRegIndex _base,
-            IntRegIndex _offset, uint8_t _numregs)
+            RegIndex _dest, RegIndex _gp, RegIndex _base,
+            RegIndex _offset, uint8_t _numregs)
         : PredMacroOp(mnem, machInst, __opClass),
           dest(_dest), gp(_gp), base(_base), offset(_offset), numregs(_numregs)
     {
@@ -143,13 +143,13 @@ class SveStStructSS : public PredMacroOp
 
         for (int i = 0; i < numregs; ++i) {
             microOps[i] = new MicroopIntrlvType<Element>(
-                    mnem, machInst, static_cast<IntRegIndex>(INTRLVREG0 + i),
+                    mnem, machInst, static_cast<RegIndex>(INTRLVREG0 + i),
                     _dest, _numregs, i, this);
         }
 
         for (int i = 0; i < numregs; ++i) {
             microOps[i + numregs] = new MicroopStMemType<Element>(
-                    mnem, machInst, static_cast<IntRegIndex>(INTRLVREG0 + i),
+                    mnem, machInst, static_cast<RegIndex>(INTRLVREG0 + i),
                     _gp, _base, _offset, _numregs, i);
         }
 
@@ -198,15 +198,15 @@ template <typename Element,
 class SveLdStructSI : public PredMacroOp
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex gp;
-    IntRegIndex base;
+    RegIndex dest;
+    RegIndex gp;
+    RegIndex base;
     int64_t imm;
     uint8_t numregs;
 
   public:
     SveLdStructSI(const char* mnem, ExtMachInst machInst, OpClass __opClass,
-            IntRegIndex _dest, IntRegIndex _gp, IntRegIndex _base,
+            RegIndex _dest, RegIndex _gp, RegIndex _base,
             int64_t _imm, uint8_t _numregs)
         : PredMacroOp(mnem, machInst, __opClass),
           dest(_dest), gp(_gp), base(_base), imm(_imm), numregs(_numregs)
@@ -217,12 +217,12 @@ class SveLdStructSI : public PredMacroOp
 
         for (int i = 0; i < numregs; ++i) {
             microOps[i] = new MicroopLdMemType<Element>(
-                    mnem, machInst, static_cast<IntRegIndex>(INTRLVREG0 + i),
+                    mnem, machInst, static_cast<RegIndex>(INTRLVREG0 + i),
                     _gp, _base, _imm, _numregs, i);
         }
         for (int i = 0; i < numregs; ++i) {
             microOps[i + numregs] = new MicroopDeIntrlvType<Element>(
-                    mnem, machInst, static_cast<IntRegIndex>((_dest + i) % 32),
+                    mnem, machInst, static_cast<RegIndex>((_dest + i) % 32),
                     _numregs, i, this);
         }
 
@@ -271,15 +271,15 @@ template <typename Element,
 class SveStStructSI : public PredMacroOp
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex gp;
-    IntRegIndex base;
+    RegIndex dest;
+    RegIndex gp;
+    RegIndex base;
     int64_t imm;
     uint8_t numregs;
 
   public:
     SveStStructSI(const char* mnem, ExtMachInst machInst, OpClass __opClass,
-            IntRegIndex _dest, IntRegIndex _gp, IntRegIndex _base,
+            RegIndex _dest, RegIndex _gp, RegIndex _base,
             int64_t _imm, uint8_t _numregs)
         : PredMacroOp(mnem, machInst, __opClass),
           dest(_dest), gp(_gp), base(_base), imm(_imm), numregs(_numregs)
@@ -290,13 +290,13 @@ class SveStStructSI : public PredMacroOp
 
         for (int i = 0; i < numregs; ++i) {
             microOps[i] = new MicroopIntrlvType<Element>(
-                    mnem, machInst, static_cast<IntRegIndex>(INTRLVREG0 + i),
+                    mnem, machInst, static_cast<RegIndex>(INTRLVREG0 + i),
                     _dest, _numregs, i, this);
         }
 
         for (int i = 0; i < numregs; ++i) {
             microOps[i + numregs] = new MicroopStMemType<Element>(
-                    mnem, machInst, static_cast<IntRegIndex>(INTRLVREG0 + i),
+                    mnem, machInst, static_cast<RegIndex>(INTRLVREG0 + i),
                     _gp, _base, _imm, _numregs, i);
         }
 
@@ -345,14 +345,14 @@ template <typename RegElemType, typename MemElemType,
 class SveIndexedMemVI : public PredMacroOp
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex gp;
-    IntRegIndex base;
+    RegIndex dest;
+    RegIndex gp;
+    RegIndex base;
     uint64_t imm;
 
   public:
     SveIndexedMemVI(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-                    IntRegIndex _dest, IntRegIndex _gp, IntRegIndex _base,
+                    RegIndex _dest, RegIndex _gp, RegIndex _base,
                     uint64_t _imm, bool firstFault)
         : PredMacroOp(mnem, machInst, __opClass),
           dest(_dest), gp(_gp), base(_base), imm(_imm)
@@ -389,7 +389,7 @@ class SveIndexedMemVI : public PredMacroOp
         for (int i = 0; i < num_elems; i++, uop++) {
             *uop = new MicroopType<RegElemType, MemElemType>(
                 mnem, machInst, __opClass, _dest, _gp,
-                isLoad ? (IntRegIndex) VECREG_UREG0 : _base, _imm, i,
+                isLoad ? (RegIndex) VECREG_UREG0 : _base, _imm, i,
                 num_elems, firstFault);
         }
 
@@ -442,10 +442,10 @@ template <typename RegElemType, typename MemElemType,
 class SveIndexedMemSV : public PredMacroOp
 {
   protected:
-    IntRegIndex dest;
-    IntRegIndex gp;
-    IntRegIndex base;
-    IntRegIndex offset;
+    RegIndex dest;
+    RegIndex gp;
+    RegIndex base;
+    RegIndex offset;
 
     bool offsetIs32;
     bool offsetIsSigned;
@@ -453,8 +453,8 @@ class SveIndexedMemSV : public PredMacroOp
 
   public:
     SveIndexedMemSV(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-                    IntRegIndex _dest, IntRegIndex _gp, IntRegIndex _base,
-                    IntRegIndex _offset, bool _offsetIs32,
+                    RegIndex _dest, RegIndex _gp, RegIndex _base,
+                    RegIndex _offset, bool _offsetIs32,
                     bool _offsetIsSigned, bool _offsetIsScaled,
                     bool firstFault)
         : PredMacroOp(mnem, machInst, __opClass),
@@ -494,7 +494,7 @@ class SveIndexedMemSV : public PredMacroOp
         for (int i = 0; i < num_elems; i++, uop++) {
             *uop = new MicroopType<RegElemType, MemElemType>(
                 mnem, machInst, __opClass, _dest, _gp, _base,
-                isLoad ? (IntRegIndex) VECREG_UREG0 : _offset, _offsetIs32,
+                isLoad ? (RegIndex) VECREG_UREG0 : _offset, _offsetIs32,
                 _offsetIsSigned, _offsetIsScaled, i, num_elems, firstFault);
         }
 

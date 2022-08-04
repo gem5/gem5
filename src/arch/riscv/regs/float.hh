@@ -66,6 +66,17 @@ namespace RiscvISA
 // Generic floating point value type.
 using freg_t = float64_t;
 
+// Extract a 16 bit float packed into a 64 bit value.
+static constexpr uint16_t
+unboxF16(uint64_t v)
+{
+    // The upper 48 bits should all be ones.
+    if (bits(v, 63, 16) == mask(48))
+        return bits(v, 15, 0);
+    else
+        return defaultNaNF16UI;
+}
+
 // Extract a 32 bit float packed into a 64 bit value.
 static constexpr uint32_t
 unboxF32(uint64_t v)
@@ -77,15 +88,19 @@ unboxF32(uint64_t v)
         return defaultNaNF32UI;
 }
 
+static constexpr uint64_t boxF16(uint16_t v) { return mask(63, 16) | v; }
 static constexpr uint64_t boxF32(uint32_t v) { return mask(63, 32) | v; }
 
 // Create fixed size floats from raw bytes or generic floating point values.
+static constexpr float16_t f16(uint16_t v) { return {v}; }
 static constexpr float32_t f32(uint32_t v) { return {v}; }
 static constexpr float64_t f64(uint64_t v) { return {v}; }
+static constexpr float16_t f16(freg_t r) { return {unboxF16(r.v)}; }
 static constexpr float32_t f32(freg_t r) { return {unboxF32(r.v)}; }
 static constexpr float64_t f64(freg_t r) { return r; }
 
 // Create generic floating point values from fixed size floats.
+static constexpr freg_t freg(float16_t f) { return {boxF16(f.v)}; }
 static constexpr freg_t freg(float32_t f) { return {boxF32(f.v)}; }
 static constexpr freg_t freg(float64_t f) { return f; }
 static constexpr freg_t freg(uint_fast16_t f) { return {f}; }

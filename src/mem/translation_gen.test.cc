@@ -31,6 +31,7 @@
 #include <initializer_list>
 #include <list>
 #include <memory>
+#include <ostream>
 #include <vector>
 
 #include "base/cprintf.hh"
@@ -47,8 +48,6 @@ namespace gem5
 // A dummy fault class so we have something to return from failed translations.
 class FaultBase {};
 
-} // namespace gem5
-
 Fault dummyFault1 = std::make_shared<gem5::FaultBase>();
 Fault dummyFault2 = std::make_shared<gem5::FaultBase>();
 
@@ -63,6 +62,8 @@ operator<<(std::ostream &os, const TranslationGen::Range &range)
         ccprintf(os, "%#x=>%#x [%#x]", range.vaddr, range.paddr, range.size);
     return os;
 }
+
+} // namespace gem5
 
 using RangeList = std::list<TranslationGen::Range>;
 

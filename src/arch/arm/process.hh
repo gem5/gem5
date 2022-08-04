@@ -60,7 +60,7 @@ class ArmProcess : public Process
     ArmProcess(const ProcessParams &params, loader::ObjectFile *objFile,
                loader::Arch _arch);
     template<class IntType>
-    void argsInit(int pageSize, ArmISA::IntRegIndex spIndex);
+    void argsInit(int pageSize, const RegId &spId);
 
     template<class IntType>
     IntType

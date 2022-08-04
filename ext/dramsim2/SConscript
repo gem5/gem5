@@ -38,16 +38,16 @@
 
 import os
 
-Import('main')
+Import('env')
 
 # See if we got a cloned DRAMSim2 repo as a subdirectory and set the
 # HAVE_DRAMSIM flag accordingly
 if not os.path.exists(Dir('.').srcnode().abspath + '/DRAMSim2'):
-    main['HAVE_DRAMSIM'] = False
+    env['HAVE_DRAMSIM'] = False
     Return()
 
 # We have got the folder, so add the library and build the wrappers
-main['HAVE_DRAMSIM'] = True
+env['HAVE_DRAMSIM'] = True
 
 # Add the appropriate files. We leave out the trace driven simulator
 dram_files = []
@@ -59,7 +59,7 @@ DRAMFile('AddressMapping.cpp')
 DRAMFile('Bank.cpp')
 DRAMFile('BankState.cpp')
 DRAMFile('BusPacket.cpp')
-DRAMFile('ClockDomain.cpp')
+DRAMFile('ClockDoenv.cpp')
 DRAMFile('CommandQueue.cpp')
 DRAMFile('IniReader.cpp')
 DRAMFile('MemoryController.cpp')
@@ -71,11 +71,11 @@ DRAMFile('Transaction.cpp')
 
 # DRAMSim2 violates some of the warning flags used by gem5, so
 # we explicitly disable them here
-dramenv = main.Clone()
+dramenv = env.Clone()
 dramenv.Append(CCFLAGS=['-Wno-unused-value', '-Wno-error=nonnull-compare'])
 
 # If we are using clang, there are more flags to disable
-if main['CLANG']:
+if env['CLANG']:
     dramenv.Append(CCFLAGS=['-Wno-unused-private-field',
                             '-Wno-tautological-undefined-compare'])
 
@@ -85,6 +85,6 @@ dramenv.Append(CCFLAGS=['-DNO_STORAGE'])
 
 dramenv.Library('dramsim2', [dramenv.SharedObject(f) for f in dram_files])
 
-main.Prepend(CPPPATH=Dir('.'))
-main.Append(LIBS=['dramsim2'])
-main.Prepend(LIBPATH=[Dir('.')])
+env.Prepend(CPPPATH=Dir('.'))
+env.Append(LIBS=['dramsim2'])
+env.Prepend(LIBPATH=[Dir('.')])

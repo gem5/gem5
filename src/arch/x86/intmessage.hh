@@ -88,6 +88,17 @@ namespace X86ISA
         return buildIntPacket(addr, message);
     }
 
+    static inline PacketPtr
+    buildIntAcknowledgePacket()
+    {
+        RequestPtr req = std::make_shared<Request>(
+                PhysAddrIntA, 1, Request::UNCACHEABLE,
+                Request::intRequestorId);
+        PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
+        pkt->allocate();
+        return pkt;
+    }
+
 } // namespace X86ISA
 } // namespace gem5
 

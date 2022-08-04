@@ -264,56 +264,6 @@ namespace X86ISA
         Port &getPort(const std::string &if_name,
                       PortID idx=InvalidPortID) override;
 
-        /**
-         * TLB TranslationState: this currently is a somewhat bastardization of
-         * the usage of SenderState, whereby the receiver of a packet is not
-         * usually supposed to need to look at the contents of the senderState,
-         * you're really only supposed to look at what you pushed on, pop it
-         * off, and send it back.
-         *
-         * However, since there is state that we want to pass to the TLBs using
-         * the send/recv Timing/Functional/etc. APIs, which don't allow for new
-         * arguments, we need a common TLB senderState to pass between TLBs,
-         * both "forwards" and "backwards."
-         *
-         * So, basically, the rule is that any packet received by a TLB port
-         * (cpuside OR memside) must be safely castable to a TranslationState.
-         */
-
-        struct TranslationState : public Packet::SenderState
-        {
-            // TLB mode, read or write
-            Mode tlbMode;
-            // Thread context associated with this req
-            ThreadContext *tc;
-
-            /*
-            * TLB entry to be populated and passed back and filled in
-            * previous TLBs.  Equivalent to the data cache concept of
-            * "data return."
-            */
-            TlbEntry *tlbEntry;
-            // Is this a TLB prefetch request?
-            bool isPrefetch;
-            // When was the req for this translation issued
-            uint64_t issueTime;
-            // Remember where this came from
-            std::vector<ResponsePort*>ports;
-
-            // keep track of #uncoalesced reqs per packet per TLB level;
-            // reqCnt per level >= reqCnt higher level
-            std::vector<int> reqCnt;
-            // TLB level this packet hit in; 0 if it hit in the page table
-            int hitLevel;
-            Packet::SenderState *saved;
-
-            TranslationState(Mode tlb_mode, ThreadContext *_tc,
-                             bool is_prefetch=false,
-                             Packet::SenderState *_saved=nullptr)
-                : tlbMode(tlb_mode), tc(_tc), tlbEntry(nullptr),
-                  isPrefetch(is_prefetch), issueTime(0),
-                  hitLevel(0),saved(_saved) { }
-        };
 
         // maximum number of permitted coalesced requests per cycle
         int maxCoalescedReqs;
@@ -435,8 +385,6 @@ namespace X86ISA
         } stats;
     };
 }
-
-using GpuTranslationState = X86ISA::GpuTLB::TranslationState;
 
 } // namespace gem5
 

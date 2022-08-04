@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 ARM Limited
+ * Copyright (c) 2019, 2022 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -359,6 +359,9 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     Gicv3CPUInterface(Gicv3 * gic, uint32_t cpu_id);
 
     void init();
+
+  public:
+    void copy(Gicv3Registers *from, Gicv3Registers *to);
 
   public: // BaseISADevice
     RegVal readMiscReg(int misc_reg) override;

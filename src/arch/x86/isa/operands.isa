@@ -54,89 +54,132 @@ def operand_types {{
 }};
 
 let {{
-    def intReg(idx, id):
-        return ('IntReg', 'uqw', idx, 'IsInteger', id)
-    def pickedReg(idx, id, size='dataSize'):
-        return ('IntReg', 'uqw', idx, 'IsInteger', id,
-                'pick(xc->readIntRegOperand(this, %(op_idx)s), '
-                '%(reg_idx)s, ' + size + ')')
-    def signedPickedReg(idx, id, size='dataSize'):
-        return ('IntReg', 'uqw', idx, 'IsInteger', id,
-                'signedPick(xc->readIntRegOperand(this, %(op_idx)s), '
-                '%(reg_idx)s, ' + size + ')')
-    def floatReg(idx, id):
-        return ('FloatReg', 'df', idx, 'IsFloating', id)
-    def ccReg(idx, id):
-        return ('CCReg', 'uqw', idx, None, id)
-    def controlReg(idx, id, ctype = 'uqw'):
-        return ('ControlReg', ctype, idx,
+    class IntReg(IntRegOp):
+        @overrideInOperand
+        def regId(self):
+            return f'(({self.reg_spec}) == gem5::X86ISA::int_reg::T0) ? ' \
+                   f'RegId() : RegId({self.reg_class}, {self.reg_spec})'
+        def __init__(self, idx, id, data_size='dataSize', *args, **kwargs):
+            super().__init__('uqw', idx, 'IsInteger', id, *args, **kwargs)
+            self.attrs['data_size'] = data_size
+
+    class PickedReg(IntReg):
+        @overrideInOperand
+        def makeRead(self):
+            return f'{self.base_name} = pick(xc->getRegOperand(' \
+                        f'this, {self.src_reg_idx}), {self.reg_spec}, ' \
+                        f'{self.data_size});\n'
+
+        def __init__(self, idx, id, data_size='dataSize'):
+            super().__init__(idx, id, data_size)
+
+    class SignedPickedReg(IntReg):
+        @overrideInOperand
+        def makeRead(self):
+            return f'{self.base_name} = signedPick(xc->getRegOperand(' \
+                        f'this, {self.src_reg_idx}), {self.reg_spec}, ' \
+                        f'{self.data_size});\n'
+
+        def __init__(self, idx, id, data_size='dataSize'):
+            super().__init__(idx, id, data_size)
+
+    class FloatReg(FloatRegOp):
+        def __init__(self, idx, id):
+            super().__init__('df', idx, 'IsFloating', id)
+
+    class CCReg(CCRegOp):
+        def __init__(self, idx, id):
+            super().__init__('uqw', idx, None, id)
+
+    class CCRegPred(CCRegOp):
+        @overrideInOperand
+        def srcRegId(self):
+            return f'({self.readPredicate}) ? {self.regId()} : RegId()'
+        @overrideInOperand
+        def destRegId(self):
+            return f'({self.writePredicate}) ? {self.regId()} : RegId()'
+        def __init__(self, idx, id, *, read_predicate, write_predicate):
+            super().__init__('uqw', idx, None, id)
+            self.attrs['readPredicate'] = read_predicate
+            self.attrs['writePredicate'] = write_predicate
+
+    class ControlReg(ControlRegOp):
+        def __init__(self, idx, id, ctype='uqw'):
+            super().__init__(ctype, idx,
                 (None, None, ['IsSerializeAfter',
                               'IsSerializing',
                               'IsNonSpeculative']),
                 id)
-    def squashCheckReg(idx, id, check, ctype = 'uqw'):
-        return ('ControlReg', ctype, idx,
-                (None, None, ['((%s) ? ' % check+ \
-                                'IsSquashAfter : IsSerializeAfter)',
-                              'IsSerializing',
-                              'IsNonSpeculative']),
+
+    class SquashCheckReg(ControlRegOp):
+        def __init__(self, idx, id, check, ctype='uqw'):
+            super().__init__(ctype, idx,
+                (None, None,
+                 [f'(({check}) ? IsSquashAfter : IsSerializeAfter)',
+                  'IsSerializing', 'IsNonSpeculative']),
                 id)
-    def squashCReg(idx, id, ctype = 'uqw'):
-        return squashCheckReg(idx, id, 'true', ctype)
-    def squashCSReg(idx, id, ctype = 'uqw'):
-        return squashCheckReg(idx, id, 'dest == X86ISA::SEGMENT_REG_CS', ctype)
-    def squashCR0Reg(idx, id, ctype = 'uqw'):
-        return squashCheckReg(idx, id, 'dest == 0', ctype)
+
+    class SquashCReg(SquashCheckReg):
+        def __init__(self, idx, id, ctype='uqw'):
+            super().__init__(idx, id, 'true', ctype)
+
+    class SquashCSReg(SquashCheckReg):
+        def __init__(self, idx, id, ctype='uqw'):
+            super().__init__(idx, id, 'dest == X86ISA::segment_idx::Cs', ctype)
+
+    class SquashCR0Reg(SquashCheckReg):
+        def __init__(self, idx, id, ctype='uqw'):
+            super().__init__(idx, id, 'dest == 0', ctype)
 }};
 
 def operands {{
-        'SrcReg1':       intReg('src1', 1),
-        'PSrcReg1':      pickedReg('src1', 1),
-        'PMSrcReg1':     pickedReg('src1', 1, 'srcSize'),
-        'SPSrcReg1':     signedPickedReg('src1', 1),
-        'SrcReg2':       intReg('src2', 2),
-        'PSrcReg2':      pickedReg('src2', 2),
-        'SPSrcReg2':     signedPickedReg('src2', 2),
-        'Index':         intReg('index', 3),
-        'Base':          intReg('base', 4),
-        'DestReg':       intReg('dest', 5),
-        'Data':          intReg('data', 6),
-        'PData':         pickedReg('data', 6),
-        'DataLow':       intReg('dataLow', 6),
-        'DataHi':        intReg('dataHi', 6),
-        'ProdLow':       intReg('X86ISA::INTREG_PRODLOW', 7),
-        'ProdHi':        intReg('X86ISA::INTREG_PRODHI', 8),
-        'Quotient':      intReg('X86ISA::INTREG_QUOTIENT', 9),
-        'Remainder':     intReg('X86ISA::INTREG_REMAINDER', 10),
-        'Divisor':       intReg('X86ISA::INTREG_DIVISOR', 11),
-        'DoubleBits':    intReg('X86ISA::INTREG_DOUBLEBITS', 11),
-        'Rax':           intReg('X86ISA::INTREG_RAX', 12),
-        'Rbx':           intReg('X86ISA::INTREG_RBX', 13),
-        'Rcx':           intReg('X86ISA::INTREG_RCX', 14),
-        'Rdx':           intReg('X86ISA::INTREG_RDX', 15),
-        'Rsp':           intReg('X86ISA::INTREG_RSP', 16),
-        'Rbp':           intReg('X86ISA::INTREG_RBP', 17),
-        'Rsi':           intReg('X86ISA::INTREG_RSI', 18),
-        'Rdi':           intReg('X86ISA::INTREG_RDI', 19),
-        'R8':            intReg('X86ISA::INTREG_R8', 20),
-        'R9':            intReg('X86ISA::INTREG_R9', 21),
-        'FpSrcReg1':     floatReg('src1', 22),
-        'FpSrcReg2':     floatReg('src2', 23),
-        'FpDestReg':     floatReg('dest', 24),
-        'FpData':        floatReg('data', 25),
-        'RIP':           ('PCState', 'uqw', 'pc',
+        'SrcReg1':       IntReg('src1', 1),
+        'PSrcReg1':      PickedReg('src1', 1),
+        'PMSrcReg1':     PickedReg('src1', 1, 'srcSize'),
+        'SPSrcReg1':     SignedPickedReg('src1', 1),
+        'SrcReg2':       IntReg('src2', 2),
+        'PSrcReg2':      PickedReg('src2', 2),
+        'SPSrcReg2':     SignedPickedReg('src2', 2),
+        'Index':         IntReg('index', 3),
+        'Base':          IntReg('base', 4),
+        'DestReg':       IntReg('dest', 5),
+        'Data':          IntReg('data', 6),
+        'PData':         PickedReg('data', 6),
+        'DataLow':       IntReg('dataLow', 6),
+        'DataHi':        IntReg('dataHi', 6),
+        'ProdLow':       IntReg('X86ISA::int_reg::Prodlow', 7),
+        'ProdHi':        IntReg('X86ISA::int_reg::Prodhi', 8),
+        'Quotient':      IntReg('X86ISA::int_reg::Quotient', 9),
+        'Remainder':     IntReg('X86ISA::int_reg::Remainder', 10),
+        'Divisor':       IntReg('X86ISA::int_reg::Divisor', 11),
+        'DoubleBits':    IntReg('X86ISA::int_reg::Doublebits', 11),
+        'Rax':           IntReg('X86ISA::int_reg::Rax', 12),
+        'Rbx':           IntReg('X86ISA::int_reg::Rbx', 13),
+        'Rcx':           IntReg('X86ISA::int_reg::Rcx', 14),
+        'Rdx':           IntReg('X86ISA::int_reg::Rdx', 15),
+        'Rsp':           IntReg('X86ISA::int_reg::Rsp', 16),
+        'Rbp':           IntReg('X86ISA::int_reg::Rbp', 17),
+        'Rsi':           IntReg('X86ISA::int_reg::Rsi', 18),
+        'Rdi':           IntReg('X86ISA::int_reg::Rdi', 19),
+        'R8':            IntReg('X86ISA::int_reg::R8', 20),
+        'R9':            IntReg('X86ISA::int_reg::R9', 21),
+        'FpSrcReg1':     FloatReg('src1', 22),
+        'FpSrcReg2':     FloatReg('src2', 23),
+        'FpDestReg':     FloatReg('dest', 24),
+        'FpData':        FloatReg('data', 25),
+        'RIP':           PCStateOp('uqw', 'pc',
                           (None, None, 'IsControl'), 50),
-        'NRIP':          ('PCState', 'uqw', 'npc',
+        'NRIP':          PCStateOp('uqw', 'npc',
                           (None, None, 'IsControl'), 50),
-        'nuIP':          ('PCState', 'uqw', 'nupc',
+        'nuIP':          PCStateOp('uqw', 'nupc',
                           (None, None, 'IsControl'), 50),
         # These registers hold the condition code portion of the flag
         # register. The nccFlagBits version holds the rest.
-        'ccFlagBits':    ccReg('X86ISA::CCREG_ZAPS', 60),
-        'cfofBits':      ccReg('X86ISA::CCREG_CFOF', 61),
-        'dfBit':         ccReg('X86ISA::CCREG_DF', 62),
-        'ecfBit':        ccReg('X86ISA::CCREG_ECF', 63),
-        'ezfBit':        ccReg('X86ISA::CCREG_EZF', 64),
+        'ccFlagBits':    CCReg('X86ISA::cc_reg::Zaps', 60),
+        'cfofBits':      CCReg('X86ISA::cc_reg::Cfof', 61),
+        'dfBit':         CCReg('X86ISA::cc_reg::Df', 62),
+        'ecfBit':        CCReg('X86ISA::cc_reg::Ecf', 63),
+        'ezfBit':        CCReg('X86ISA::cc_reg::Ezf', 64),
 
         # These Pred registers are to be used where reading the portions of
         # condition code registers is possibly optional, depending on how the
@@ -153,67 +196,68 @@ def operands {{
         # would be retained, the write predicate checks if any of the bits
         # are being written.
 
-        'PredccFlagBits': ('CCReg', 'uqw', 'X86ISA::CCREG_ZAPS', None,
-                60, None, None,
-                '(ext & X86ISA::ccFlagMask) != X86ISA::ccFlagMask && '
-                '(ext & X86ISA::ccFlagMask) != 0',
-                '(ext & X86ISA::ccFlagMask) != 0'),
-        'PredcfofBits':   ('CCReg', 'uqw', 'X86ISA::CCREG_CFOF', None,
-                61, None, None,
-                '(ext & X86ISA::cfofMask) != X86ISA::cfofMask && '
-                '(ext & X86ISA::cfofMask) != 0',
-                '(ext & X86ISA::cfofMask) != 0'),
-        'PreddfBit':     ('CCReg', 'uqw', 'X86ISA::CCREG_DF', None,
-                62, None, None, 'false', '(ext & X86ISA::DFBit) != 0'),
-        'PredecfBit':    ('CCReg', 'uqw', 'X86ISA::CCREG_ECF', None,
-                63, None, None, 'false', '(ext & X86ISA::ECFBit) != 0'),
-        'PredezfBit':    ('CCReg', 'uqw', 'X86ISA::CCREG_EZF', None,
-                64, None, None, 'false', '(ext & X86ISA::EZFBit) != 0'),
+        'PredccFlagBits': CCRegPred('X86ISA::cc_reg::Zaps', 60,
+                read_predicate='(ext & X86ISA::CcFlagMask) != '
+                'X86ISA::CcFlagMask && (ext & X86ISA::CcFlagMask) != 0',
+                write_predicate='(ext & X86ISA::CcFlagMask) != 0'),
+        'PredcfofBits':  CCRegPred('X86ISA::cc_reg::Cfof', 61,
+                read_predicate='(ext & X86ISA::CfofMask) '
+                '!= X86ISA::CfofMask && (ext & X86ISA::CfofMask) != 0',
+                write_predicate='(ext & X86ISA::CfofMask) != 0'),
+        'PreddfBit':     CCRegPred('X86ISA::cc_reg::Df', 62,
+                read_predicate='false',
+                write_predicate='(ext & X86ISA::DFBit) != 0'),
+        'PredecfBit':    CCRegPred('X86ISA::cc_reg::Ecf', 63,
+                read_predicate='false',
+                write_predicate='(ext & X86ISA::ECFBit) != 0'),
+        'PredezfBit':    CCRegPred('X86ISA::cc_reg::Ezf', 64,
+                read_predicate='false',
+                write_predicate='(ext & X86ISA::EZFBit) != 0'),
 
         # These register should needs to be more protected so that later
         # instructions don't map their indexes with an old value.
-        'nccFlagBits':   controlReg('X86ISA::MISCREG_RFLAGS', 65),
+        'nccFlagBits':   ControlReg('X86ISA::misc_reg::Rflags', 65),
 
         # Registers related to the state of x87 floating point unit.
-        'TOP':           controlReg('X86ISA::MISCREG_X87_TOP', 66, ctype='ub'),
-        'FSW':           controlReg('X86ISA::MISCREG_FSW', 67, ctype='uw'),
-        'FTW':           controlReg('X86ISA::MISCREG_FTW', 68, ctype='uw'),
-        'FCW':           controlReg('X86ISA::MISCREG_FCW', 69, ctype='uw'),
+        'TOP':           ControlReg('X86ISA::misc_reg::X87Top', 66,
+                ctype='ub'),
+        'FSW':           ControlReg('X86ISA::misc_reg::Fsw', 67, ctype='uw'),
+        'FTW':           ControlReg('X86ISA::misc_reg::Ftw', 68, ctype='uw'),
+        'FCW':           ControlReg('X86ISA::misc_reg::Fcw', 69, ctype='uw'),
 
         # The segment base as used by memory instructions.
-        'SegBase':       controlReg('X86ISA::MISCREG_SEG_EFF_BASE(segment)',
+        'SegBase':       ControlReg('X86ISA::misc_reg::segEffBase(segment)',
                 70),
 
         # Operands to get and set registers indexed by the operands of the
         # original instruction.
-        'ControlDest':   squashCR0Reg('X86ISA::MISCREG_CR(dest)', 100),
-        'ControlSrc1':   controlReg('X86ISA::MISCREG_CR(src1)', 101),
-        'DebugDest':     controlReg('X86ISA::MISCREG_DR(dest)', 102),
-        'DebugSrc1':     controlReg('X86ISA::MISCREG_DR(src1)', 103),
-        'SegBaseDest':   squashCSReg('X86ISA::MISCREG_SEG_BASE(dest)', 104),
-        'SegBaseSrc1':   controlReg('X86ISA::MISCREG_SEG_BASE(src1)', 105),
-        'SegLimitDest':  squashCSReg('X86ISA::MISCREG_SEG_LIMIT(dest)', 106),
-        'SegLimitSrc1':  controlReg('X86ISA::MISCREG_SEG_LIMIT(src1)', 107),
-        'SegSelDest':    controlReg('X86ISA::MISCREG_SEG_SEL(dest)', 108),
-        'SegSelSrc1':    controlReg('X86ISA::MISCREG_SEG_SEL(src1)', 109),
-        'SegAttrDest':   squashCSReg('X86ISA::MISCREG_SEG_ATTR(dest)', 110),
-        'SegAttrSrc1':   controlReg('X86ISA::MISCREG_SEG_ATTR(src1)', 111),
+        'ControlDest':   SquashCR0Reg('X86ISA::misc_reg::cr(dest)', 100),
+        'ControlSrc1':   ControlReg('X86ISA::misc_reg::cr(src1)', 101),
+        'DebugDest':     ControlReg('X86ISA::misc_reg::dr(dest)', 102),
+        'DebugSrc1':     ControlReg('X86ISA::misc_reg::dr(src1)', 103),
+        'SegBaseDest':   SquashCSReg('X86ISA::misc_reg::segBase(dest)', 104),
+        'SegBaseSrc1':   ControlReg('X86ISA::misc_reg::segBase(src1)', 105),
+        'SegLimitDest':  SquashCSReg('X86ISA::misc_reg::segLimit(dest)', 106),
+        'SegLimitSrc1':  ControlReg('X86ISA::misc_reg::segLimit(src1)', 107),
+        'SegSelDest':    ControlReg('X86ISA::misc_reg::segSel(dest)', 108),
+        'SegSelSrc1':    ControlReg('X86ISA::misc_reg::segSel(src1)', 109),
+        'SegAttrDest':   SquashCSReg('X86ISA::misc_reg::segAttr(dest)', 110),
+        'SegAttrSrc1':   ControlReg('X86ISA::misc_reg::segAttr(src1)', 111),
 
         # Operands to access specific control registers directly.
-        'EferOp':        squashCReg('X86ISA::MISCREG_EFER', 200),
-        'CR4Op':         controlReg('X86ISA::MISCREG_CR4', 201),
-        'DR7Op':         controlReg('X86ISA::MISCREG_DR7', 202),
-        'LDTRBase':      controlReg('X86ISA::MISCREG_TSL_BASE', 203),
-        'LDTRLimit':     controlReg('X86ISA::MISCREG_TSL_LIMIT', 204),
-        'LDTRSel':       controlReg('X86ISA::MISCREG_TSL', 205),
-        'GDTRBase':      controlReg('X86ISA::MISCREG_TSG_BASE', 206),
-        'GDTRLimit':     controlReg('X86ISA::MISCREG_TSG_LIMIT', 207),
-        'CSBase':        squashCReg('X86ISA::MISCREG_CS_EFF_BASE', 208),
-        'CSAttr':        squashCReg('X86ISA::MISCREG_CS_ATTR', 209),
-        'MiscRegDest':   controlReg('dest', 210),
-        'MiscRegSrc1':   controlReg('src1', 211),
-        'TscOp':         controlReg('X86ISA::MISCREG_TSC', 212),
-        'M5Reg':         squashCReg('X86ISA::MISCREG_M5_REG', 213),
-        'Mem':           ('Mem', 'uqw', None, \
-                          (None, 'IsLoad', 'IsStore'), 300)
+        'EferOp':        SquashCReg('X86ISA::misc_reg::Efer', 200),
+        'CR4Op':         ControlReg('X86ISA::misc_reg::Cr4', 201),
+        'DR7Op':         ControlReg('X86ISA::misc_reg::Dr7', 202),
+        'LDTRBase':      ControlReg('X86ISA::misc_reg::TslBase', 203),
+        'LDTRLimit':     ControlReg('X86ISA::misc_reg::TslLimit', 204),
+        'LDTRSel':       ControlReg('X86ISA::misc_reg::Tsl', 205),
+        'GDTRBase':      ControlReg('X86ISA::misc_reg::TsgBase', 206),
+        'GDTRLimit':     ControlReg('X86ISA::misc_reg::TsgLimit', 207),
+        'CSBase':        SquashCReg('X86ISA::misc_reg::CsEffBase', 208),
+        'CSAttr':        SquashCReg('X86ISA::misc_reg::CsAttr', 209),
+        'MiscRegDest':   ControlReg('dest', 210),
+        'MiscRegSrc1':   ControlReg('src1', 211),
+        'TscOp':         ControlReg('X86ISA::misc_reg::Tsc', 212),
+        'M5Reg':         SquashCReg('X86ISA::misc_reg::M5Reg', 213),
+        'Mem':           MemOp('uqw', None, (None, 'IsLoad', 'IsStore'), 300)
 }};

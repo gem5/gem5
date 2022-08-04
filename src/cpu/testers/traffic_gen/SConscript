@@ -65,8 +65,7 @@ if env['USE_PYTHON']:
 
 # Only build the traffic generator if we have support for protobuf as the
 # tracing relies on it
-if env['HAVE_PROTOBUF']:
-    SimObject('TrafficGen.py', sim_objects=['TrafficGen'])
-    Source('trace_gen.cc')
-    Source('traffic_gen.cc')
+SimObject('TrafficGen.py', sim_objects=['TrafficGen'], tags='protobuf')
+Source('trace_gen.cc', tags='protobuf')
+Source('traffic_gen.cc', tags='protobuf')
 

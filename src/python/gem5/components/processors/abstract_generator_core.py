@@ -30,6 +30,8 @@ from ...utils.override import overrides
 
 from .cpu_types import CPUTypes
 from .abstract_core import AbstractCore
+from ...isas import ISA
+from ...utils.requires import requires
 
 from typing import Optional
 
@@ -53,6 +55,10 @@ class AbstractGeneratorCore(AbstractCore):
         # Jira issue here: https://gem5.atlassian.net/browse/GEM5-1031
         super().__init__(CPUTypes.TIMING)
         self.port_end = PortTerminator()
+
+    @overrides(AbstractCore)
+    def get_isa(self) -> ISA:
+        return ISA.NULL
 
     @overrides(AbstractCore)
     def connect_icache(self, port: Port) -> None:

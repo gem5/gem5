@@ -47,3 +47,33 @@ def format CondInst(cond, *opTypeSet) {{
     decode_block = '\tif (%s) {\n%s\n\t} else {\n%s\n}\n' % \
         (cond, if_blocks.decode_block, else_blocks.decode_block)
 }};
+
+def format Cpl0CondInst(cond, *opTypeSet) {{
+    blocks = OutputBlocks()
+
+    if_blocks = specializeInst(Name, list(opTypeSet), EmulEnv())
+    blocks.append(if_blocks)
+    else_blocks = specializeInst('UD2', [], EmulEnv())
+    blocks.append(else_blocks)
+
+    (header_output, decoder_output,
+     decode_block, exec_output) = blocks.makeList()
+    decode_block = '''
+        if (%(cond)s) {
+            %(if_block)s
+        } else {
+            %(else_block)s
+        }
+    ''' % {'cond': cond,
+        'if_block': if_blocks.decode_block,
+        'else_block': else_blocks.decode_block
+    }
+    decode_block = '''
+        if (emi.mode.cpl != 0) {
+            return new DecodeFaultInst("%(Name)s", emi,
+                    std::make_shared<GeneralProtection>(0));
+        } else {
+            %(decode_block)s
+        }
+    ''' % {'decode_block': decode_block, 'Name': Name}
+}};

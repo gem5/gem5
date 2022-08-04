@@ -35,6 +35,7 @@
 
 from m5.params import *
 from m5.proxy import *
+from m5.objects.MemCtrl import MemCtrl
 from m5.objects.MemInterface import MemInterface
 from m5.objects.DRAMInterface import AddrMap
 
@@ -43,7 +44,7 @@ from m5.objects.DRAMInterface import AddrMap
 # are modeled without getting into too much detail of the media itself.
 class NVMInterface(MemInterface):
     type = 'NVMInterface'
-    cxx_header = "mem/mem_interface.hh"
+    cxx_header = "mem/nvm_interface.hh"
     cxx_class = 'gem5::memory::NVMInterface'
 
     # NVM DIMM could have write buffer to offload writes
@@ -64,6 +65,16 @@ class NVMInterface(MemInterface):
 
     two_cycle_rdwr = Param.Bool(False,
                      "Two cycles required to send read and write commands")
+
+
+    def controller(self):
+        """
+        Instantiate the memory controller and bind it to
+        the current interface.
+        """
+        controller = MemCtrl()
+        controller.dram = self
+        return controller
 
 # NVM delays and device architecture defined to mimic PCM like memory.
 # Can be configured with DDR4_2400 sharing the channel

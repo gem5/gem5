@@ -33,5 +33,3 @@ def add_isa_lists():
             sorted(set(main.Split('${ALL_GPU_ISAS}')))),
         )
 AfterSConsopts(add_isa_lists)
-
-export_vars.extend(['TARGET_ISA', 'TARGET_GPU_ISA'])

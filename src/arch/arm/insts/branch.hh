@@ -82,11 +82,11 @@ class BranchImmCond : public BranchImm
 class BranchReg : public PredOp
 {
   protected:
-    IntRegIndex op1;
+    RegIndex op1;
 
   public:
     BranchReg(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-              IntRegIndex _op1) :
+              RegIndex _op1) :
         PredOp(mnem, _machInst, __opClass), op1(_op1)
     {}
 
@@ -99,7 +99,7 @@ class BranchRegCond : public BranchReg
 {
   public:
     BranchRegCond(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                  IntRegIndex _op1, ConditionCode _condCode) :
+                  RegIndex _op1, ConditionCode _condCode) :
         BranchReg(mnem, _machInst, __opClass, _op1)
     {
         // Only update if this isn't part of an IT block
@@ -112,12 +112,12 @@ class BranchRegCond : public BranchReg
 class BranchRegReg : public PredOp
 {
   protected:
-    IntRegIndex op1;
-    IntRegIndex op2;
+    RegIndex op1;
+    RegIndex op2;
 
   public:
     BranchRegReg(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                 IntRegIndex _op1, IntRegIndex _op2) :
+                 RegIndex _op1, RegIndex _op2) :
         PredOp(mnem, _machInst, __opClass), op1(_op1), op2(_op2)
     {}
 
@@ -130,11 +130,11 @@ class BranchImmReg : public PredOp
 {
   protected:
     int32_t imm;
-    IntRegIndex op1;
+    RegIndex op1;
 
   public:
     BranchImmReg(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                 int32_t _imm, IntRegIndex _op1) :
+                 int32_t _imm, RegIndex _op1) :
         PredOp(mnem, _machInst, __opClass), imm(_imm), op1(_op1)
     {}
 };

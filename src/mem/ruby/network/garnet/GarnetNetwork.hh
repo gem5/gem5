@@ -153,6 +153,7 @@ class GarnetNetwork : public Network
     }
 
     void update_traffic_distribution(RouteInfo route);
+    int getNextPacketID() { return m_next_packet_id++; }
 
   protected:
     // Configuration
@@ -209,6 +210,7 @@ class GarnetNetwork : public Network
     std::vector<NetworkLink *> m_networklinks; // All flit links in the network
     std::vector<CreditLink *> m_creditlinks; // All credit links in the network
     std::vector<NetworkInterface *> m_nis;   // All NI's in Network
+    int m_next_packet_id; // static vairable for packet id allocation
 };
 
 inline std::ostream&

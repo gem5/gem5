@@ -33,6 +33,7 @@
 
 #include <limits>
 
+#include "arch/amdgpu/common/gpu_translation_state.hh"
 #include "arch/amdgpu/common/tlb.hh"
 #include "base/output.hh"
 #include "debug/GPUDisp.hh"
@@ -111,6 +112,12 @@ ComputeUnit::ComputeUnit(const Params &p) : ClockedObject(p),
     scheduleToExecute(p),
     stats(this, p.n_wf)
 {
+    // This is not currently supported and would require adding more handling
+    // for system vs. device memory requests on the functional paths, so we
+    // fatal immediately in the constructor if this configuration is seen.
+    fatal_if(functionalTLB && FullSystem,
+             "Functional TLB not supported in full-system GPU simulation");
+
     /**
      * This check is necessary because std::bitset only provides conversion
      * to unsigned long or unsigned long long via to_ulong() or to_ullong().
@@ -800,6 +807,12 @@ ComputeUnit::init()
 bool
 ComputeUnit::DataPort::recvTimingResp(PacketPtr pkt)
 {
+    return handleResponse(pkt);
+}
+
+bool
+ComputeUnit::DataPort::handleResponse(PacketPtr pkt)
+{
     // Ruby has completed the memory op. Schedule the mem_resp_event at the
     // appropriate cycle to process the timing memory response
     // This delay represents the pipeline delay
@@ -901,6 +914,12 @@ ComputeUnit::DataPort::recvTimingResp(PacketPtr pkt)
 bool
 ComputeUnit::ScalarDataPort::recvTimingResp(PacketPtr pkt)
 {
+    return handleResponse(pkt);
+}
+
+bool
+ComputeUnit::ScalarDataPort::handleResponse(PacketPtr pkt)
+{
     assert(!pkt->req->isKernel());
 
     // retrieve sender state
@@ -978,8 +997,15 @@ ComputeUnit::DataPort::recvReqRetry()
 bool
 ComputeUnit::SQCPort::recvTimingResp(PacketPtr pkt)
 {
-    computeUnit->fetchStage.processFetchReturn(pkt);
+    computeUnit->handleSQCReturn(pkt);
+
     return true;
+}
+
+void
+ComputeUnit::handleSQCReturn(PacketPtr pkt)
+{
+    fetchStage.processFetchReturn(pkt);
 }
 
 void
@@ -1025,13 +1051,18 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
     // only do some things if actually accessing data
     bool isDataAccess = pkt->isWrite() || pkt->isRead();
 
-    // For dGPUs, real hardware will extract MTYPE from the PTE.  Our model
+    // For dGPUs, real hardware will extract MTYPE from the PTE. SE mode
     // uses x86 pagetables which don't have fields to track GPU MTYPEs.
     // Rather than hacking up the pagetable to add these bits in, we just
     // keep a structure local to our GPUs that are populated in our
     // emulated driver whenever memory is allocated.  Consult that structure
     // here in case we need a memtype override.
-    shader->gpuCmdProc.driver()->setMtype(pkt->req);
+    //
+    // In full system mode these can be extracted from the PTE and assigned
+    // after address translation takes place.
+    if (!FullSystem) {
+        shader->gpuCmdProc.driver()->setMtype(pkt->req);
+    }
 
     // Check write before read for atomic operations
     // since atomic operations should use BaseMMU::Write
@@ -1049,7 +1080,7 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
     PortID tlbPort_index = perLaneTLB ? index : 0;
 
     if (shader->timingSim) {
-        if (debugSegFault) {
+        if (!FullSystem && debugSegFault) {
             Process *p = shader->gpuTc->getProcessPtr();
             Addr vaddr = pkt->req->getVaddr();
             unsigned size = pkt->getSize();
@@ -1233,9 +1264,13 @@ ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst,
     assert(gpuDynInst->isGlobalSeg() ||
            gpuDynInst->executedAs() == enums::SC_GLOBAL);
 
+    // Fences will never be issued to system memory, so we can mark the
+    // requestor as a device memory ID here.
     if (!req) {
         req = std::make_shared<Request>(
-            0, 0, 0, requestorId(), 0, gpuDynInst->wfDynId);
+            0, 0, 0, vramRequestorId(), 0, gpuDynInst->wfDynId);
+    } else {
+        req->requestorId(vramRequestorId());
     }
 
     // all mem sync requests have Paddr == 0
@@ -1327,8 +1362,10 @@ ComputeUnit::DataPort::processMemRespEvent(PacketPtr pkt)
     // The status vector and global memory response for WriteResp packets get
     // handled by the WriteCompleteResp packets.
     if (pkt->cmd == MemCmd::WriteResp) {
-        delete pkt;
-        return;
+        if (!FullSystem || !pkt->req->systemReq()) {
+            delete pkt;
+            return;
+        }
     }
 
     // this is for read, write and atomic
@@ -1536,6 +1573,24 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
             new ComputeUnit::DataPort::SenderState(gpuDynInst, mp_index,
                                                    nullptr);
 
+    // Set VRAM ID for device requests
+    // For now, system vmem requests use functional reads. This is not that
+    // critical to model as the region of interest should always be accessing
+    // device memory. System vmem requests are used by blit kernels to do
+    // memcpys and load code objects into device memory.
+    if (new_pkt->req->systemReq()) {
+        // There will be multiple packets returned for the same gpuDynInst,
+        // so first check if systemReq is not already set and if so, return
+        // the token acquired when the dispatch list is filled as system
+        // requests do not require a GPU coalescer token.
+        if (!gpuDynInst->isSystemReq()) {
+            computeUnit->getTokenManager()->recvTokens(1);
+            gpuDynInst->setSystemReq();
+        }
+    } else {
+        new_pkt->req->requestorId(computeUnit->vramRequestorId());
+    }
+
     // translation is done. Schedule the mem_req_event at the appropriate
     // cycle to send the timing memory request to ruby
     EventFunctionWrapper *mem_req_event =
@@ -1574,7 +1629,11 @@ ComputeUnit::DataPort::processMemReqEvent(PacketPtr pkt)
     GPUDynInstPtr gpuDynInst = sender_state->_gpuDynInst;
     [[maybe_unused]] ComputeUnit *compute_unit = computeUnit;
 
-    if (!(sendTimingReq(pkt))) {
+    if (pkt->req->systemReq()) {
+        assert(compute_unit->shader->systemHub);
+        SystemHubEvent *resp_event = new SystemHubEvent(pkt, this);
+        compute_unit->shader->systemHub->sendRequest(pkt, resp_event);
+    } else if (!(sendTimingReq(pkt))) {
         retries.push_back(std::make_pair(pkt, gpuDynInst));
 
         DPRINTF(GPUPort,
@@ -1603,7 +1662,11 @@ ComputeUnit::ScalarDataPort::MemReqEvent::process()
     GPUDynInstPtr gpuDynInst = sender_state->_gpuDynInst;
     [[maybe_unused]] ComputeUnit *compute_unit = scalarDataPort.computeUnit;
 
-    if (!(scalarDataPort.sendTimingReq(pkt))) {
+    if (pkt->req->systemReq()) {
+        assert(compute_unit->shader->systemHub);
+        SystemHubEvent *resp_event = new SystemHubEvent(pkt, &scalarDataPort);
+        compute_unit->shader->systemHub->sendRequest(pkt, resp_event);
+    } else if (!(scalarDataPort.sendTimingReq(pkt))) {
         scalarDataPort.retries.push_back(pkt);
 
         DPRINTF(GPUPort,
@@ -1704,14 +1767,25 @@ ComputeUnit::ScalarDTLBPort::recvTimingResp(PacketPtr pkt)
     req_pkt->senderState =
         new ComputeUnit::ScalarDataPort::SenderState(gpuDynInst);
 
-    if (!computeUnit->scalarDataPort.sendTimingReq(req_pkt)) {
-        computeUnit->scalarDataPort.retries.push_back(req_pkt);
-        DPRINTF(GPUMem, "send scalar req failed for: %s\n",
-                gpuDynInst->disassemble());
+    // For a system request we want to mark the GPU instruction as a system
+    // load/store so that after the request is issued to system memory we can
+    // return any token acquired for the request. Since tokens are returned
+    // by the coalescer and system requests do not take that path, this needs
+    // to be tracked.
+    //
+    // Device requests change the requestor ID to something in the device
+    // memory Ruby network.
+    if (req_pkt->req->systemReq()) {
+        gpuDynInst->setSystemReq();
     } else {
-        DPRINTF(GPUMem, "send scalar req for: %s\n",
-                gpuDynInst->disassemble());
+        req_pkt->req->requestorId(computeUnit->vramRequestorId());
     }
+
+    ComputeUnit::ScalarDataPort::MemReqEvent *scalar_mem_req_event
+            = new ComputeUnit::ScalarDataPort::MemReqEvent
+                (computeUnit->scalarDataPort, req_pkt);
+    computeUnit->schedule(scalar_mem_req_event, curTick() +
+                          computeUnit->req_tick_latency);
 
     return true;
 }
@@ -2006,6 +2080,15 @@ ComputeUnit::sendToLds(GPUDynInstPtr gpuDynInst)
     newPacket->senderState = new LDSPort::SenderState(gpuDynInst);
 
     return ldsPort.sendTimingReq(newPacket);
+}
+
+/**
+ * Forward the VRAM requestor ID needed for device memory from shader.
+ */
+RequestorID
+ComputeUnit::vramRequestorId()
+{
+    return FullSystem ? shader->vramRequestorId() : requestorId();
 }
 
 /**

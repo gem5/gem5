@@ -25,14 +25,12 @@
 
 Import('*')
 
-if not env['USE_ARM_FASTMODEL']:
-    Return()
-
 SimObject('Iris.py', sim_objects=[
-    'IrisTLB', 'IrisMMU', 'IrisInterrupts', 'IrisISA', 'IrisBaseCPU'])
-Source('cpu.cc')
-Source('interrupts.cc')
-Source('isa.cc')
-Source('tlb.cc')
+    'IrisTLB', 'IrisMMU', 'IrisInterrupts', 'IrisISA', 'IrisBaseCPU'],
+    tags='arm fastmodel')
+Source('cpu.cc', tags='arm fastmodel')
+Source('interrupts.cc', tags='arm fastmodel')
+Source('isa.cc', tags='arm fastmodel')
+Source('tlb.cc', tags='arm fastmodel')
 
-Source('thread_context.cc')
+Source('thread_context.cc', tags='arm fastmodel')

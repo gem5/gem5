@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2013,2016-2018 ARM Limited
+// Copyright (c) 2010-2013,2016-2018, 2021 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -38,9 +38,9 @@
 def format Crc32() {{
     decode_block = '''
     {
-        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        const RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 3, 0);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 15, 12);
 
         uint8_t c_poly = bits(machInst, 9);
         uint8_t sz = bits(machInst, 22, 21);
@@ -94,8 +94,8 @@ def format ArmMsrMrs() {{
     {
         const uint8_t byteMask = bits(machInst, 19, 16);
         const uint8_t sysM     = byteMask | (bits(machInst, 8) << 4);
-        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 3, 0);
+        const RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 15, 12);
         const uint32_t opcode = bits(machInst, 24, 21);
         const bool useImm = bits(machInst, 25);
         const bool r      = bits(machInst, 22);
@@ -159,14 +159,14 @@ let {{
         const uint32_t opc2 = bits(machInst, 7, 5);
         const uint32_t crm = bits(machInst, 3, 0);
         const MiscRegIndex miscReg = decodeCP14Reg(crn, opc1, crm, opc2);
-        const IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        const RegIndex rt = (RegIndex)(uint32_t)bits(machInst, 15, 12);
 
         const bool isRead = bits(machInst, 20);
 
         switch (miscReg) {
           case MISCREG_NOP:
             return new NopInst(machInst);
-          case MISCREG_CP14_UNIMPL:
+          case MISCREG_UNKNOWN:
             return new FailUnimplemented(isRead ? "mrc unknown" : "mcr unknown",
                     machInst,
                     csprintf("miscreg crn:%d opc1:%d crm:%d opc2:%d %s unknown",
@@ -203,7 +203,7 @@ let {{
         const uint32_t opc2 = bits(machInst, 7, 5);
         const uint32_t crm = bits(machInst, 3, 0);
         const MiscRegIndex miscReg = decodeCP15Reg(crn, opc1, crm, opc2);
-        const IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        const RegIndex rt = (RegIndex)(uint32_t)bits(machInst, 15, 12);
         const bool isRead = bits(machInst, 20);
         uint32_t iss = mcrMrcIssBuild(isRead, crm, rt, crn, opc1, opc2);
 
@@ -211,7 +211,7 @@ let {{
           case MISCREG_NOP:
             return new McrMrcMiscInst(isRead ? "mrc nop" : "mcr nop",
                                       machInst, iss, MISCREG_NOP);
-          case MISCREG_CP15_UNIMPL:
+          case MISCREG_UNKNOWN:
             return new FailUnimplemented(isRead ? "mrc unkown" : "mcr unkown",
                     machInst,
                     csprintf("miscreg crn:%d opc1:%d crm:%d opc2:%d %s unknown",
@@ -247,6 +247,37 @@ let {{
             return new McrDccmvau(machInst, miscReg, rt, iss);
           case MISCREG_DCCIMVAC:
             return new McrDccimvac(machInst, miscReg, rt, iss);
+          case MISCREG_TLBIALL:
+          case MISCREG_TLBIALLIS:
+          case MISCREG_ITLBIALL:
+          case MISCREG_DTLBIALL:
+          case MISCREG_TLBIMVA:
+          case MISCREG_TLBIMVAL:
+          case MISCREG_TLBIMVAIS:
+          case MISCREG_TLBIMVALIS:
+          case MISCREG_TLBIASID:
+          case MISCREG_TLBIASIDIS:
+          case MISCREG_TLBIMVAA:
+          case MISCREG_TLBIMVAAL:
+          case MISCREG_TLBIMVAAIS:
+          case MISCREG_TLBIMVAALIS:
+          case MISCREG_TLBIMVAH:
+          case MISCREG_TLBIMVALH:
+          case MISCREG_TLBIMVAHIS:
+          case MISCREG_TLBIMVALHIS:
+          case MISCREG_TLBIIPAS2:
+          case MISCREG_TLBIIPAS2L:
+          case MISCREG_TLBIIPAS2IS:
+          case MISCREG_TLBIIPAS2LIS:
+          case MISCREG_ITLBIMVA:
+          case MISCREG_DTLBIMVA:
+          case MISCREG_ITLBIASID:
+          case MISCREG_DTLBIASID:
+          case MISCREG_TLBIALLNSNH:
+          case MISCREG_TLBIALLNSNHIS:
+          case MISCREG_TLBIALLH:
+          case MISCREG_TLBIALLHIS:
+            return new Tlbi(machInst, miscReg, rt, iss);
           default:
             if (miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]) {
                 std::string full_mnem = csprintf("%s %s",
@@ -295,13 +326,13 @@ let {{
         const uint32_t crm = bits(machInst, 3, 0);
         const uint32_t opc1 = bits(machInst, 7, 4);
         const MiscRegIndex miscReg = decodeCP15Reg64(crm, opc1);
-        const IntRegIndex rt = (IntRegIndex) (uint32_t) bits(machInst, 15, 12);
-        const IntRegIndex rt2 = (IntRegIndex) (uint32_t) bits(machInst, 19, 16);
+        const RegIndex rt = (RegIndex) (uint32_t) bits(machInst, 15, 12);
+        const RegIndex rt2 = (RegIndex) (uint32_t) bits(machInst, 19, 16);
 
         const bool isRead = bits(machInst, 20);
 
         switch (miscReg) {
-          case MISCREG_CP15_UNIMPL:
+          case MISCREG_UNKNOWN:
             return new FailUnimplemented(isRead ? "mrc" : "mcr", machInst,
                     csprintf("miscreg crm:%d opc1:%d 64-bit %s unknown",
                     crm, opc1, isRead ? "read" : "write"));

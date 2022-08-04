@@ -144,7 +144,7 @@ class ArmSemihosting : public SimObject
           public:
             // For 64 bit semihosting, the params are pointer to by X1.
             explicit State(const ThreadContext *tc) :
-                StateBase<uint64_t>(tc, tc->readIntReg(ArmISA::INTREG_X1))
+                StateBase<uint64_t>(tc, tc->getReg(ArmISA::int_reg::X1))
             {}
         };
     };
@@ -158,7 +158,7 @@ class ArmSemihosting : public SimObject
           public:
             // For 32 bit semihosting, the params are pointer to by R1.
             explicit State(const ThreadContext *tc) :
-                StateBase<uint64_t>(tc, tc->readIntReg(ArmISA::INTREG_R1))
+                StateBase<uint64_t>(tc, tc->getReg(ArmISA::int_reg::R1))
             {}
         };
     };
@@ -646,7 +646,7 @@ struct Result<ArmSemihosting::Abi32, ArmSemihosting::RetErrno>
     static void
     store(ThreadContext *tc, const ArmSemihosting::RetErrno &err)
     {
-        tc->setIntReg(ArmISA::INTREG_R0, err.first);
+        tc->setReg(ArmISA::int_reg::R0, err.first);
     }
 };
 
@@ -656,7 +656,7 @@ struct Result<ArmSemihosting::Abi64, ArmSemihosting::RetErrno>
     static void
     store(ThreadContext *tc, const ArmSemihosting::RetErrno &err)
     {
-        tc->setIntReg(ArmISA::INTREG_X0, err.first);
+        tc->setReg(ArmISA::int_reg::X0, err.first);
     }
 };
 

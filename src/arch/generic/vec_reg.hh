@@ -68,16 +68,17 @@
  * ...
  * // Usage example, for a macro op:
  * VecFloat8Add(ExecContext* xd) {
- *    // Request source vector register to the execution context (const as it
- *    // is read only).
- *    const Vec512& vsrc1raw = xc->readVecRegOperand(this, 0);
+ *    // Request source vector register to the execution context.
+ *    Vec512 vsrc1raw;
+ *    xc->getRegOperand(this, 0, &vsrc1raw);
  *    // View it as a vector of floats (we could just specify the first
  *    // template parametre, the second has a default value that works, and the
  *    // last one is derived by the constness of vsrc1raw).
  *    VecRegT<float, 8, true>& vsrc1 = vsrc1raw->as<float, 8>();
  *
  *    // Second source and view
- *    const Vec512& vsrc2raw = xc->readVecRegOperand(this, 1);
+ *    Vec512 vsrc2raw;
+ *    xc->getRegOperand(this, 1, &vsrc2raw);
  *    VecRegT<float, 8, true>& vsrc2 = vsrc2raw->as<float, 8>();
  *
  *    // Destination and view
@@ -103,6 +104,7 @@
 
 #include "base/cprintf.hh"
 #include "base/logging.hh"
+#include "base/types.hh"
 #include "sim/serialize_handlers.hh"
 
 namespace gem5
@@ -263,10 +265,29 @@ struct ShowParam<VecRegContainer<Sz>>
  * vector registers.
  */
 /** @{ */
-using DummyVecElem = uint32_t;
-constexpr unsigned DummyNumVecElemPerVecReg = 2;
-using DummyVecRegContainer =
-    VecRegContainer<DummyNumVecElemPerVecReg * sizeof(DummyVecElem)>;
+struct DummyVecRegContainer
+{
+    RegVal filler = 0;
+    bool operator == (const DummyVecRegContainer &d) const { return true; }
+    bool operator != (const DummyVecRegContainer &d) const { return true; }
+    template <typename VecElem>
+    VecElem *as() { return nullptr; }
+};
+template <>
+struct ParseParam<DummyVecRegContainer>
+{
+    static bool
+    parse(const std::string &s, DummyVecRegContainer &value)
+    {
+        return false;
+    }
+};
+static_assert(sizeof(DummyVecRegContainer) == sizeof(RegVal));
+static inline std::ostream &
+operator<<(std::ostream &os, const DummyVecRegContainer &d)
+{
+    return os;
+}
 /** @} */
 
 } // namespace gem5

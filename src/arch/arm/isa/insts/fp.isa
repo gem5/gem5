@@ -41,8 +41,8 @@ template <class Micro>
 class VfpMacroRegRegOp : public VfpMacroOp
 {
   public:
-    VfpMacroRegRegOp(ExtMachInst _machInst, IntRegIndex _dest,
-                     IntRegIndex _op1, bool _wide) :
+    VfpMacroRegRegOp(ExtMachInst _machInst, RegIndex _dest,
+                     RegIndex _op1, bool _wide) :
         VfpMacroOp("VfpMacroRegRegOp", _machInst, No_OpClass, _wide)
     {
         numMicroops = machInst.fpscrLen + 1;
@@ -63,7 +63,7 @@ class VfpMacroRegRegOp : public VfpMacroOp
 template <class VfpOp>
 StaticInstPtr
 decodeVfpRegRegOp(ExtMachInst machInst,
-        IntRegIndex dest, IntRegIndex op1, bool wide)
+        RegIndex dest, RegIndex op1, bool wide)
 {
     if (machInst.fpscrLen == 0 || VfpMacroOp::inScalarBank(dest)) {
         return new VfpOp(machInst, dest, op1);
@@ -76,7 +76,7 @@ template <class Micro>
 class VfpMacroRegImmOp : public VfpMacroOp
 {
   public:
-    VfpMacroRegImmOp(ExtMachInst _machInst, IntRegIndex _dest, uint64_t _imm,
+    VfpMacroRegImmOp(ExtMachInst _machInst, RegIndex _dest, uint64_t _imm,
                      bool _wide) :
         VfpMacroOp("VfpMacroRegImmOp", _machInst, No_OpClass, _wide)
     {
@@ -97,7 +97,7 @@ class VfpMacroRegImmOp : public VfpMacroOp
 template <class VfpOp>
 StaticInstPtr
 decodeVfpRegImmOp(ExtMachInst machInst,
-        IntRegIndex dest, uint64_t imm, bool wide)
+        RegIndex dest, uint64_t imm, bool wide)
 {
     if (machInst.fpscrLen == 0 || VfpMacroOp::inScalarBank(dest)) {
         return new VfpOp(machInst, dest, imm);
@@ -110,8 +110,8 @@ template <class Micro>
 class VfpMacroRegRegImmOp : public VfpMacroOp
 {
   public:
-    VfpMacroRegRegImmOp(ExtMachInst _machInst, IntRegIndex _dest,
-                        IntRegIndex _op1, uint64_t _imm, bool _wide) :
+    VfpMacroRegRegImmOp(ExtMachInst _machInst, RegIndex _dest,
+                        RegIndex _op1, uint64_t _imm, bool _wide) :
         VfpMacroOp("VfpMacroRegRegImmOp", _machInst, No_OpClass, _wide)
     {
         numMicroops = machInst.fpscrLen + 1;
@@ -130,8 +130,8 @@ class VfpMacroRegRegImmOp : public VfpMacroOp
 
 template <class VfpOp>
 StaticInstPtr
-decodeVfpRegRegImmOp(ExtMachInst machInst, IntRegIndex dest,
-                     IntRegIndex op1, uint64_t imm, bool wide)
+decodeVfpRegRegImmOp(ExtMachInst machInst, RegIndex dest,
+                     RegIndex op1, uint64_t imm, bool wide)
 {
     if (machInst.fpscrLen == 0 || VfpMacroOp::inScalarBank(dest)) {
         return new VfpOp(machInst, dest, op1, imm);
@@ -144,8 +144,8 @@ template <class Micro>
 class VfpMacroRegRegRegOp : public VfpMacroOp
 {
   public:
-    VfpMacroRegRegRegOp(ExtMachInst _machInst, IntRegIndex _dest,
-                        IntRegIndex _op1, IntRegIndex _op2, bool _wide) :
+    VfpMacroRegRegRegOp(ExtMachInst _machInst, RegIndex _dest,
+                        RegIndex _op1, RegIndex _op2, bool _wide) :
         VfpMacroOp("VfpMacroRegRegRegOp", _machInst, No_OpClass, _wide)
     {
         numMicroops = machInst.fpscrLen + 1;
@@ -164,8 +164,8 @@ class VfpMacroRegRegRegOp : public VfpMacroOp
 
 template <class VfpOp>
 StaticInstPtr
-decodeVfpRegRegRegOp(ExtMachInst machInst, IntRegIndex dest,
-                     IntRegIndex op1, IntRegIndex op2, bool wide)
+decodeVfpRegRegRegOp(ExtMachInst machInst, RegIndex dest,
+                     RegIndex op1, RegIndex op2, bool wide)
 {
     if (machInst.fpscrLen == 0 || VfpMacroOp::inScalarBank(dest)) {
         return new VfpOp(machInst, dest, op1, op2);

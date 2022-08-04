@@ -41,16 +41,6 @@ let {{
     from micro_asm import Rom
 
     class X86MicrocodeRom(Rom):
-        def __init__(self, name):
-            super().__init__(name)
-            self.directives = {}
-
-        def add_microop(self, mnemonic, microop):
-            microop.mnemonic = mnemonic
-            microop.micropc = len(self.microops)
-            self.microops.append(microop)
-
-
         def getDeclaration(self):
             declareLabels = \
                 "GEM5_DEPRECATED_NAMESPACE(RomLabels, rom_labels);\n"

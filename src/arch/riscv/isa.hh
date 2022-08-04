@@ -119,4 +119,6 @@ class ISA : public BaseISA
 } // namespace RiscvISA
 } // namespace gem5
 
+std::ostream &operator<<(std::ostream &os, gem5::RiscvISA::PrivilegeMode pm);
+
 #endif // __ARCH_RISCV_ISA_HH__

@@ -33,11 +33,10 @@ FROM ubuntu:20.04
 ARG version
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt -y update
-RUN apt -y upgrade
-RUN apt -y install git m4 scons zlib1g zlib1g-dev libprotobuf-dev \
+RUN apt -y update && apt -y upgrade && \
+    apt -y install git m4 scons zlib1g zlib1g-dev libprotobuf-dev \
     protobuf-compiler libprotoc-dev libgoogle-perftools-dev python3-dev \
-    python3-six python-is-python3 doxygen libboost-all-dev libhdf5-serial-dev \
+    python-is-python3 doxygen libboost-all-dev libhdf5-serial-dev \
     python3-pydot libpng-dev gcc-${version} g++-${version} make
 
 RUN update-alternatives --install \

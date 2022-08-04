@@ -29,9 +29,7 @@ import gem5_scons
 
 with gem5_scons.Configure(main) as conf:
     # Check if the TUN/TAP driver is available.
-    conf.env['HAVE_TUNTAP'] = conf.CheckHeader('linux/if_tun.h', '<>')
+    conf.env['CONF']['HAVE_TUNTAP'] = conf.CheckHeader('linux/if_tun.h', '<>')
 
-if not main['HAVE_TUNTAP']:
+if not main['CONF']['HAVE_TUNTAP']:
     print("Info: Compatible header file <linux/if_tun.h> not found.")
-
-export_vars.append('HAVE_TUNTAP')
