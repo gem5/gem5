@@ -1635,7 +1635,7 @@ class VExpress_GEM5_Foundation(VExpress_GEM5_Base):
         AddrRange(0x0C000000, 0x20000000),
         # External AXI interface (PCI)
         AddrRange(0x40000000, 0x80000000),
-        AddrRange(0x4000000000, 0x800000000),
+        AddrRange(0x4000000000, 0x8000000000),
     ]
 
     sp810_fake = AmbaFake(pio_addr=0x1C020000, ignore_access=True)
