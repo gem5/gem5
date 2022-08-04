@@ -1,0 +1,40 @@
+#!/bin/bash
+
+echo "in tail-sample"
+
+echo "setting up network..."
+ip addr add 127.0.0.1 dev lo
+ip addr add 10.0.0.20/24 dev eth0
+ip link set dev lo up
+ip link set dev eth0 up
+
+# cat /proc/interrupts
+# echo 0 > /sys/class/net/eth0/threaded
+# echo "should be 0, non threaded"
+# cat /sys/class/net/eth0/threaded
+# echo "ping server starting..."
+
+# /sbin/m5 checkpoint
+# /sbin/m5 dumpstats
+# /sbin/m5 resetstats
+
+# ping -c 5 10.0.0.10
+
+# cat /proc/interrupts
+# echo 1 > /sys/class/net/eth0/threaded
+echo "should be 0, threaded"
+cat /sys/class/net/eth0/threaded
+
+# ps -axo pid,class,pri,psr,comm,etime,time,pcpu | grep napi
+# chrt -rp 50 $(ps -axo pid,class,pri,psr,comm | grep napi | head -n 1| awk '{print $1}')
+# echo "should be rt, threaded"
+# ps -axo pid,class,pri,psr,comm,etime,time,pcpu | grep napi
+
+/sbin/m5 checkpoint
+/sbin/m5 dumpstats
+/sbin/m5 resetstats
+
+ping -c 50 -i 0.1 10.0.0.10
+cat /proc/interrupts
+
+m5 exit

@@ -48,6 +48,7 @@
 #include "base/compiler.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
+#include "debug/ArmIRQISA.hh"
 #include "sim/serialize.hh"
 
 namespace gem5
@@ -375,8 +376,27 @@ class SimplePCState : public PCStateWithNext
     void
     advance() override
     {
+        if (this->_pc >= 0xffffffc0080b71d0 &&
+            this->_pc <= 0xffffffc0080b71dc) {
+            DPRINTF(ArmIRQISA,
+                "src/arch/generic/pcstate.hh before pc %x. \n",
+                this->_pc);
+        }
+
         this->_pc = this->_npc;
         this->_npc += InstWidth;
+        // if (this->_pc >= 0xffffffc0080b71d4 &&
+        //      this->_pc <= 0xffffffc0080b71dc) {
+        //     this->_pc = this->_npc;
+        //     this->_npc += InstWidth;
+        //     this->_pc = this->_npc;
+        //     this->_npc += InstWidth;
+        //     this->_pc = this->_npc;
+        //     this->_npc += InstWidth;
+        // }
+        // DPRINTF(ArmIRQISA,
+        //      "src/arch/generic/pcstate.hh after pc %x. \n",
+        //      this->_pc);
     }
 };
 

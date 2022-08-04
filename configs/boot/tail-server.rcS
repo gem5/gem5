@@ -1,0 +1,23 @@
+#!/bin/sh
+SERVER=10.0.0.10
+CLIENT=10.0.0.20
+
+echo "setting up network..."
+ip addr add 127.0.0.1 dev lo
+ip addr add 10.0.0.10/24 dev eth0
+ip link set dev lo up
+ip link set dev eth0 up
+
+echo "server network set done"
+
+# ifconfig lo 127.0.0.1
+# ifconfig eth0 10.0.0.10 txqueuelen 1000
+
+echo -n "signal client to begin..."
+echo "server ready" | nc -c $CLIENT 8000
+echo "done."
+
+ping -c 5 $CLIENT
+
+echo "starting bash..."
+exec /bin/bash

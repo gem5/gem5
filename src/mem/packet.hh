@@ -62,7 +62,7 @@
 #include "mem/htm.hh"
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
-
+// #include "debug/MemoryAccess.hh"
 namespace gem5
 {
 
@@ -364,7 +364,7 @@ class Packet : public Printable
 
     /// A pointer to the original request.
     RequestPtr req;
-
+    // uint8_t hostAddr;
   private:
    /**
     * A pointer to the data being transferred. It can be different
@@ -378,6 +378,7 @@ class Packet : public Printable
     /// The address of the request.  This address could be virtual or
     /// physical, depending on the system configuration.
     Addr addr;
+    uint8_t *hostAddr;
 
     /// True if the request targets the secure memory space.
     bool _isSecure;
@@ -779,6 +780,8 @@ class Packet : public Printable
     void copyError(Packet *pkt) { assert(pkt->isError()); cmd = pkt->cmd; }
 
     Addr getAddr() const { assert(flags.isSet(VALID_ADDR)); return addr; }
+    uint8_t *getHostAddr() const { return hostAddr; }
+    void setHostAddr(uint8_t *_hostAddrFromMem) { hostAddr = _hostAddrFromMem;}
     /**
      * Update the address of this packet mid-transaction. This is used
      * by the address mapper to change an already set address to a new

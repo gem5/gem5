@@ -126,7 +126,7 @@ MemCtrl::startup()
 Tick
 MemCtrl::recvAtomic(PacketPtr pkt)
 {
-    DPRINTF(MemCtrl, "recvAtomic: %s 0x%x\n",
+    DPRINTF(MemCtrl, "src/mem/mem_ctrl.cc recvAtomic: %s 0x%x\n",
                      pkt->cmdString(), pkt->getAddr());
 
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "

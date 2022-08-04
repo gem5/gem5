@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# m5 exit
+echo "just a text."
+
+exec /bin/bash

@@ -39,8 +39,8 @@
  */
 
 #include "mem/protocol/atomic.hh"
-
 #include "base/trace.hh"
+#include "debug/SimplePort.hh"
 
 namespace gem5
 {

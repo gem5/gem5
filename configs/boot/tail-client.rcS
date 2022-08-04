@@ -1,0 +1,38 @@
+#!/bin/sh
+SERVER=10.0.0.10
+CLIENT=10.0.0.20
+
+echo "setting up network..."
+ip addr add 127.0.0.1 dev lo
+ip addr add 10.0.0.20/24 dev eth0
+ip link set dev lo up
+ip link set dev eth0 up
+echo "client network set done"
+# echo "setting up network..."
+# ifconfig lo 127.0.0.1
+# ifconfig eth0 $CLIENT txqueuelen 1000
+
+# echo "0" > /proc/sys/net/ipv4/tcp_timestamps
+# echo "0" > /proc/sys/net/ipv4/tcp_sack
+# echo "5000000 5000000 5000000" > /proc/sys/net/ipv4/tcp_rmem
+# echo "5000000 5000000 5000000" > /proc/sys/net/ipv4/tcp_wmem
+# echo "5000000 5000000 5000000" > /proc/sys/net/ipv4/tcp_mem
+# echo "262143" > /proc/sys/net/core/rmem_max
+# echo "262143" > /proc/sys/net/core/wmem_max
+# echo "262143" > /proc/sys/net/core/rmem_default
+# echo "262143" > /proc/sys/net/core/wmem_default
+# echo "262143" > /proc/sys/net/core/optmem_max
+# echo "100000" > /proc/sys/net/core/netdev_max_backlog
+
+# /sbin/m5 checkpoint
+# /sbin/m5 dumpstats
+# /sbin/m5 resetstats
+
+echo -n "waiting for server..."
+nc -c -l -p 8000
+
+ping -c 5 $SERVER
+
+echo -n "ping client finished, exit..."
+# /sbin/m5 exit
+exec /bin/bash

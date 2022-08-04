@@ -1,0 +1,33 @@
+#!/bin/bash
+
+echo "in tail-sample"
+
+echo "setting up network..."
+ip addr add 127.0.0.1 dev lo
+ip addr add 10.0.0.20/24 dev eth0
+ip link set dev lo up
+ip link set dev eth0 up
+
+echo "should be 0, threaded"
+cat /sys/class/net/eth0/threaded
+
+/sbin/m5 checkpoint
+/sbin/m5 dumpstats
+/sbin/m5 resetstats
+
+cd /tailbench/silo
+
+echo "inside client"
+ls 
+sleep 2
+echo "fire client"
+
+TBENCH_MINSLEEPNS=1000 TBENCH_RANDSEED=$RANDOM \
+    TBENCH_SERVER=10.0.0.10 TBENCH_CLIENT_THREADS=1 \
+    TBENCH_CLIENT=10.0.0.20 TBENCH_CLIENT_PORT=53556 \
+    TBENCH_QPS_WARMUP=6000 TBENCH_QPS=35000 \
+    /tailbench/silo/out-perf.masstree/benchmarks/dbtest_client_networked
+
+cat /proc/interrupts
+
+m5 exit

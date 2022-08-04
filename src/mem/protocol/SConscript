@@ -28,3 +28,5 @@ Import('*')
 Source('atomic.cc')
 Source('functional.cc')
 Source('timing.cc')
+
+DebugFlag('SimplePort')

@@ -43,6 +43,7 @@
 #include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/Drain.hh"
+#include "debug/SimpleMem.hh"
 
 namespace gem5
 {
@@ -77,7 +78,8 @@ SimpleMemory::recvAtomic(PacketPtr pkt)
 {
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
              "is responding");
-
+    DPRINTF(SimpleMem, "src/mem/simple_mem.cc recvAtomic to %#llx.\n",
+            pkt->getAddr());
     access(pkt);
     return getLatency();
 }

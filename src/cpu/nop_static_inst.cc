@@ -51,6 +51,7 @@ class NopStaticInst : public StaticInst
     void
     advancePC(PCStateBase &pc) const override
     {
+        std::cout<<"I am here in nop"<<std::endl;
         pc.advance();
     }
 

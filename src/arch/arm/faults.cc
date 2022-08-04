@@ -759,10 +759,12 @@ ArmStaticInst *
 ArmFault::instrAnnotate(const StaticInstPtr &inst)
 {
     if (inst) {
+        DPRINTF(Faults, "instrAnnotate has inst. \n");
         auto arm_inst = static_cast<ArmStaticInst *>(inst.get());
         arm_inst->annotateFault(this);
         return arm_inst;
     } else {
+        DPRINTF(Faults, "instrAnnotate has nullptr. \n");
         return nullptr;
     }
 }

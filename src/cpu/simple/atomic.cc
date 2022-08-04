@@ -46,6 +46,9 @@
 #include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/utils.hh"
+#include "debug/ArmCPU.hh"
+#include "debug/ArmIRQ.hh"
+#include "debug/ArmIRQMem.hh"
 #include "debug/Drain.hh"
 #include "debug/ExecFaulting.hh"
 #include "debug/SimpleCPU.hh"
@@ -399,6 +402,15 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t *data, unsigned size,
             Packet pkt(req, Packet::makeReadCmd(req));
             pkt.dataStatic(data);
 
+            if (thread->pcState().instAddr() == 0xffffffc0080b71d0) {
+                // Addr write1 = 0xffbd7468;
+                // uint8_t * toWrite = getHostAddr(pkt.getAddr());
+                // uint8_t * toWrite = getHostAddr(write1);
+                DPRINTF(ArmIRQMem, "after pkt.dataStatic(data); list modiyfing,
+                    data: %#x, *data: %#x.\n",
+                    data, *data);
+            }
+
             if (req->isLocalAccess()) {
                 dcache_latency += req->localAccessor(thread->getTC(), &pkt);
             } else {
@@ -411,6 +423,69 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t *data, unsigned size,
             if (req->isLLSC()) {
                 thread->getIsaPtr()->handleLockedRead(req);
             }
+
+            if (thread->pcState().instAddr() == 0xffffffc0080b72a4) {
+                uint64_t printdata = pkt.getUintX(ByteOrder::little);
+                DPRINTF(ArmIRQMem, "read rt_period_active at pc: %#x,
+                        read addr: %#x, size: %#x, data: %#x.\n",
+                        thread->pcState().instAddr(),
+                        pkt.getAddr(), size, printdata);
+                // if (!baseAddrSet) {
+                    // setBaseAddr(pkt.getAddr(),pkt.getHostAddr());
+                    // baseAddrSet=true;
+                // }else{
+                    // try to write sample value
+                    // uint8_t * toWrite = getHostAddr(pkt.getAddr());
+                    // // *toWrite = (uint8_t) 0;
+                // }
+                // pkt->setdata,
+                // with host_addr: 1,0x7f239316bed8,0x7ffffb2826d0.
+                // uint8_t *host_addr = toHostAddr(pkt->getAddr());
+
+            }
+
+            if (!baseAddrSet) {
+                setBaseAddr(pkt.getAddr(),pkt.getHostAddr());
+                baseAddrSet=true;
+            }
+
+            if (thread->pcState().instAddr() >= 0xffffffc0080b71d0 &&
+                thread->pcState().instAddr() <= 0xffffffc0080b71dc) {
+                uint64_t printdata = pkt.getUintX(ByteOrder::little);
+                DPRINTF(ArmIRQMem, "in list add at pc %x, %s. \n",
+                    thread->pcState().instAddr(),
+                    curStaticInst->disassemble(thread->pcState().instAddr()));
+                DPRINTF(ArmIRQMem, "in list add read from: %0x,
+                    host: %0x, size: %#x, data:%0x.\n",
+                    pkt.getAddr(), (void *)getHostAddr(pkt.getAddr()),
+                    size, printdata);
+            }
+
+            // if (thread->pcState().instAddr() ==
+            //      0xffffffc0080b71d0 && baseAddrSet) {
+            //     Addr write1 = 0xffbd7468;
+            //     uint64_t * toWrite1 = (uint64_t *)getHostAddr(write1);
+            //     DPRINTF(ArmIRQMem, "list modiyfing, before read: hostaddr:
+            //              %#x, Local getHostAddr: %#x, data: %#x.\n",
+            //              write1, toWrite1, *toWrite1);
+            //     *toWrite1 = (uint64_t) 0xffffff8001a74280;
+            //     DPRINTF(ArmIRQMem, "list modiyfing, after read: hostaddr:
+            //      %#x, Local getHostAddr: %#x, data: %#x.\n",
+            //         write1, toWrite1, *toWrite1);
+
+            //     Addr write2 = 0x81a74280;
+            //     uint64_t * toWrite2 = (uint64_t *)getHostAddr(write2);
+            //     *toWrite2 = (uint64_t) 0xffffff807fbd7460;
+
+            //     Addr write3 = 0x81a74288;
+            //     uint64_t * toWrite3 = (uint64_t *)getHostAddr(write3);
+            //     *toWrite3 = (uint64_t) 0xffffff807fbd7460;
+
+            //     Addr write4 = 0xffbd7460;
+            //     uint64_t * toWrite4 = (uint64_t *)getHostAddr(write4);
+            //     *toWrite4 = (uint64_t) 0xffffff8001a74280;
+            // }
+
         }
 
         //If there's a fault, return it
@@ -451,7 +526,6 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
         // This must be a cache block cleaning request
         data = zero_array;
     }
-
     // use the CPU's statically allocated write request and packet objects
     const RequestPtr &req = data_write_req;
 
@@ -496,14 +570,31 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
 
             if (do_access && !req->getFlags().isSet(Request::NO_ACCESS)) {
                 Packet pkt(req, Packet::makeWriteCmd(req));
+
                 pkt.dataStatic(data);
+
+                if (thread->pcState().instAddr() >= 0xffffffc0080b71d0 &&
+                    thread->pcState().instAddr() <= 0xffffffc0080b71dc) {
+                    uint64_t* writeAddr = (uint64_t *)getHostAddr(
+                                                    pkt.getAddr());
+                    DPRINTF(ArmIRQMem, "in list 2 add write to: sim addr %0x,
+                        host addr %0x, value: %#x.\n",
+                        pkt.getAddr(), writeAddr, *writeAddr);
+                }
 
                 if (req->isLocalAccess()) {
                     dcache_latency +=
                         req->localAccessor(thread->getTC(), &pkt);
                 } else {
                     dcache_latency += sendPacket(dcachePort, &pkt);
-
+                    if (thread->pcState().instAddr() >= 0xffffffc0080b71d0 &&
+                        thread->pcState().instAddr() <= 0xffffffc0080b71dc) {
+                        uint64_t* writeAddr = (uint64_t *)getHostAddr(
+                                                        pkt.getAddr());
+                        DPRINTF(ArmIRQMem, "in list 1 add write to: sim
+                            addr %0x, host addr %0x, value: %#x.\n",
+                            pkt.getAddr(), writeAddr, *writeAddr);
+                    }
                     // Notify other threads on this CPU of write
                     threadSnoop(&pkt, curThread);
                 }
@@ -514,6 +605,25 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
                     assert(res && curr_frag_id == 0);
                     memcpy(res, pkt.getConstPtr<uint8_t>(), size);
                 }
+
+                if (thread->pcState().instAddr() >= 0xffffffc0080b71d0 &&
+                    thread->pcState().instAddr() <= 0xffffffc0080b71dc) {
+                    uint64_t printdata = pkt.getUintX(ByteOrder::little);
+                    uint64_t* writeAddr = (uint64_t *)getHostAddr(
+                                                    pkt.getAddr());
+                    DPRINTF(ArmIRQMem, "in list add at pc %x, %s. \n",
+                            thread->pcState().instAddr(),
+                            curStaticInst->disassemble(thread->
+                                        pcState().instAddr()));
+                    DPRINTF(ArmIRQMem, "in list add write to: sim addr %0x,
+                        host addr %0x, value: %#x, size: %#x, data:%0x.\n",
+                        pkt.getAddr(), writeAddr, *writeAddr, size, printdata);
+                }
+                // try to write sample value
+                // if (thread->pcState().instAddr() == 0xffffffc0080b71d4) {
+                //     uint8_t * toWrite = getHostAddr(pkt.getAddr());
+                //     *toWrite = (uint8_t) 0;
+                // }
             }
 
             if (res && !req->isSwap()) {
@@ -631,7 +741,6 @@ AtomicSimpleCPU::tick()
     SimpleThread *thread = t_info.thread;
 
     Tick latency = 0;
-
     for (int i = 0; i < width || locked; ++i) {
         baseStats.numCycles++;
         updateCycleCounters(BaseCPU::CPU_STATE_ON);
@@ -683,6 +792,33 @@ AtomicSimpleCPU::tick()
 
             Tick stall_ticks = 0;
             if (curStaticInst) {
+                DPRINTF(ArmCPU, "cur pc %x, %s. \n",
+                    thread->pcState().instAddr(),
+                    curStaticInst->disassemble(thread->pcState().instAddr()));
+                if (thread->pcState().instAddr() == 0xffffffc0080b7138) {
+                    DPRINTF(ArmIRQ, "enqueue_task_rt at pc %x, %s. \n",
+                    thread->pcState().instAddr(),
+                    curStaticInst->disassemble(thread->pcState().instAddr()));
+                }
+                if (thread->pcState().instAddr() == 0xffffffc0080b72a4) {
+                    DPRINTF(ArmIRQ, "check rt_period_active at %x, %s. \n",
+                    thread->pcState().instAddr(),
+                    curStaticInst->disassemble(thread->pcState().instAddr()));
+                }
+
+                // napi_schedule
+                if (thread->pcState().instAddr() == 0xffffffc0086cb920) {
+                    DPRINTF(ArmIRQ, "napi_schedule at pc %x, %s. \n",
+                    thread->pcState().instAddr(),
+                    curStaticInst->disassemble(thread->pcState().instAddr()));
+                }
+                // wake_up_process
+                if (thread->pcState().instAddr() == 0xffffffc0080a59d8) {
+                    DPRINTF(ArmIRQ, "wake_up_process at pc %x, %s. \n",
+                    thread->pcState().instAddr(),
+                    curStaticInst->disassemble(thread->pcState().instAddr()));
+                }
+
                 fault = curStaticInst->execute(&t_info, traceData);
 
                 // keep an instruction count
@@ -770,6 +906,17 @@ void
 AtomicSimpleCPU::printAddr(Addr a)
 {
     dcachePort.printAddr(a);
+}
+
+void
+AtomicSimpleCPU::setBaseAddr(Addr askAddr, uint8_t *resultAddr)
+{
+    baseAddr = (uint8_t *)(resultAddr - askAddr);
+}
+
+uint8_t *
+AtomicSimpleCPU:: getHostAddr(Addr askAddr){
+    return baseAddr+askAddr;
 }
 
 } // namespace gem5

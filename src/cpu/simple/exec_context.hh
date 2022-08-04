@@ -50,6 +50,8 @@
 #include "cpu/simple/base.hh"
 #include "cpu/static_inst_fwd.hh"
 #include "cpu/translation.hh"
+#include "debug/ArmIRQ.hh"
+#include "debug/ArmIRQMem.hh"
 #include "mem/request.hh"
 
 namespace gem5
@@ -295,7 +297,8 @@ class SimpleExecContext : public ExecContext
         execContextStats.numIntRegReads++;
         const RegId& reg = si->srcRegIdx(idx);
         assert(reg.is(IntRegClass));
-        return thread->readIntReg(reg.index());
+        RegVal val = thread->readIntReg(reg.index());
+        return val;
     }
 
     /** Sets an integer register to a value. */
@@ -305,6 +308,12 @@ class SimpleExecContext : public ExecContext
         execContextStats.numIntRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.is(IntRegClass));
+        if (thread->pcState().instAddr() == 0xffffffc0080b72a4) {
+            DPRINTF(ArmIRQMem, "read rt_period_active set reg %d to be:%#x\n",
+            reg.index(), val);
+        }
+        // DPRINTF(ArmIRQMem, "set reg %d, %d to be: %#x\n", idx,
+        // reg.index(), val);
         thread->setIntReg(reg.index(), val);
     }
 

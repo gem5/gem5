@@ -44,6 +44,7 @@
 #include "arch/generic/pcstate.hh"
 #include "base/bitunion.hh"
 #include "base/types.hh"
+#include "debug/ArmIRQISA.hh"
 #include "debug/Decoder.hh"
 
 namespace gem5
@@ -290,10 +291,14 @@ class PCState : public GenericISA::UPCState<4>
     void
     advance() override
     {
+        if (pc() == 0xffffffc0080b71d0) {
+            DPRINTF(ArmIRQISA,
+                "src/arch/arm/pcstate.hh before pc %x. \n",
+                pc());
+        }
         Base::advance();
         flags = nextFlags;
         npc(pc() + (thumb() ? 2 : 4));
-
         if (_nextItstate) {
             _itstate = _nextItstate;
             _nextItstate = 0;

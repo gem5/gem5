@@ -1,0 +1,25 @@
+#!/bin/bash
+
+echo "in tail-sample"
+
+echo "setting up network..."
+ip addr add 127.0.0.1 dev lo
+ip addr add 10.0.0.10/24 dev eth0
+ip link set dev lo up
+ip link set dev eth0 up
+
+cat /proc/interrupts
+echo 1 > /sys/class/net/eth0/threaded
+echo "should be 1, threaded"
+cat /sys/class/net/eth0/threaded
+
+ps -axo pid,class,pri,psr,comm,etime,time,pcpu | grep napi
+chrt -rp 50 $(ps -axo pid,class,pri,psr,comm | grep napi | head -n 1| awk '{print $1}')
+echo "should be rt, threaded"
+ps -axo pid,class,pri,psr,comm,etime,time,pcpu | grep napi
+
+echo "server is up"
+
+# echo -n "ping finished, exit..."
+
+# m5 exit

@@ -53,6 +53,7 @@
 #include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "debug/ArmIRQISA.hh"
 #include "sim/byteswap.hh"
 #include "sim/full_system.hh"
 
@@ -208,6 +209,11 @@ class ArmStaticInst : public StaticInst
     advancePC(ThreadContext *tc) const override
     {
         PCState pc = tc->pcState().as<PCState>();
+        if (tc->pcState().instAddr() == 0xffffffc0080b71d0) {
+            DPRINTF(ArmIRQISA,
+                "src/arch/arm/insts/static_inst.hh before pc %x. \n",
+                tc->pcState().instAddr());
+        }
         pc.advance();
         tc->pcState(pc);
     }

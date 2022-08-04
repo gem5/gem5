@@ -61,6 +61,7 @@
 #include "cpu/smt.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "debug/ArmIRQ.hh"
 #include "debug/Decode.hh"
 #include "debug/ExecFaulting.hh"
 #include "debug/Fetch.hh"
@@ -253,9 +254,13 @@ BaseSimpleCPU::checkForInterrupts()
     SimpleThread* thread = t_info.thread;
     ThreadContext* tc = thread->getTC();
 
+    // Addr instAddr = thread->pcState().instAddr();
+    // Addr fetchPC = (instAddr & decoder->pcMask()) + t_info.fetchOffset;
+    // set up memory request for instruction fetch
+
     if (checkInterrupts(curThread)) {
         Fault interrupt = interrupts[curThread]->getInterrupt();
-
+        DPRINTF(ArmIRQ, "got irq from arm. \n");
         if (interrupt != NoFault) {
             // hardware transactional memory
             // Postpone taking interrupts while executing transactions.
@@ -267,7 +272,6 @@ BaseSimpleCPU::checkForInterrupts()
                     interrupt->name());
                 return;
             }
-
             t_info.fetchOffset = 0;
             interrupts[curThread]->updateIntrInfo();
             interrupt->invoke(tc);
@@ -465,7 +469,6 @@ BaseSimpleCPU::advancePC(const Fault &fault)
     SimpleThread* thread = t_info.thread;
 
     const bool branching = thread->pcState().branching();
-
     //Since we're moving to a new pc, zero out the offset
     t_info.fetchOffset = 0;
     if (fault != NoFault) {
@@ -476,7 +479,20 @@ BaseSimpleCPU::advancePC(const Fault &fault)
         if (curStaticInst) {
             if (curStaticInst->isLastMicroop())
                 curMacroStaticInst = nullStaticInstPtr;
+
+            if (thread->pcState().instAddr() == 0xffffffc0080b71d0) {
+                DPRINTF(ArmIRQ, "simple/base.cc before pc %x, %s. \n",
+                thread->pcState().instAddr(),
+                curStaticInst->disassemble(thread->pcState().instAddr()));
+            }
+            // DPRINTF(ArmIRQ, "simple/base.cc check.\n");
             curStaticInst->advancePC(thread);
+
+            if (thread->pcState().instAddr() == 0xffffffc0080b71d0) {
+                DPRINTF(ArmIRQ, "simple/base.cc after pc %x, %s. \n",
+                thread->pcState().instAddr(),
+                curStaticInst->disassemble(thread->pcState().instAddr()));
+            }
         }
     }
 

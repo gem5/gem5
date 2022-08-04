@@ -1,0 +1,36 @@
+#!/bin/bash
+
+echo "in tail-sample"
+
+echo "setting up network..."
+ip addr add 127.0.0.1 dev lo
+ip addr add 10.0.0.10/24 dev eth0
+ip link set dev lo up
+ip link set dev eth0 up
+
+cat /proc/interrupts
+echo 1 > /sys/class/net/eth0/threaded
+echo "should be 1, threaded"
+cat /sys/class/net/eth0/threaded
+
+ps -axo pid,class,pri,psr,comm,etime,time,pcpu | grep napi
+chrt -f p 44 $(ps -axo pid,class,pri,psr,comm | grep napi | head -n 1| awk '{print $1}')
+echo "should be rt, threaded"
+ps -axo pid,class,pri,psr,comm,etime,time,pcpu | grep napi
+
+echo "server is up"
+
+cd /tailbench/silo
+
+TBENCH_MAXREQS=35000 TBENCH_WARMUPREQS=12000 \
+    TBENCH_NCLIENTS=1 TBENCH_SERVER=10.0.0.10 \
+    /tailbench/silo/out-perf.masstree/benchmarks/dbtest_server_networked \
+    --verbose --bench tpcc \
+    --num-threads 1 --scale-factor 1 \
+    --retry-aborted-transactions \
+    --ops-per-worker 1000000000 --disable-gc
+
+cat /proc/interrupts
+# echo -n "ping finished, exit..."
+
+# m5 exit

@@ -253,6 +253,22 @@ class AtomicSimpleCPU : public BaseSimpleCPU
      * debugging).
      */
     void printAddr(Addr a);
+
+    /**
+     * Transform a gem5 address space address into its physical counterpart
+     * in the host address space.
+     *
+     * @param addr Address in gem5's address space.
+     * @return Pointer to the corresponding memory address of the host.
+     */
+    uint8_t *baseAddr = NULL;
+    bool baseAddrSet = false;
+    void setBaseAddr(Addr askAddr, uint8_t *resultAddr);
+    uint8_t * getBaseAddr(){return baseAddr; }
+    uint8_t * getHostAddr(Addr askAddr);
+    // {
+    //     baseAddr = resultAddr-askAddr;
+    // }
 };
 
 } // namespace gem5

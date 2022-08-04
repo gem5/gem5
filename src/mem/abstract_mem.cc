@@ -65,6 +65,9 @@ AbstractMemory::AbstractMemory(const Params &p) :
     kvmMap(p.kvm_map), _system(NULL),
     stats(*this)
 {
+    DPRINTF(MemoryAccess,
+            "src/mem/abstract_mem.cc AbstractMemory p.range: %x.\n",
+                range.start());
     panic_if(!range.valid() || !range.size(),
              "Memory range %s must be valid with non-zero size.",
              range.to_string());
@@ -110,7 +113,9 @@ AbstractMemory::setBackingStore(uint8_t* pmem_addr)
 
     // The back door can't handle interleaved memory.
     backdoor.ptr(range.interleaved() ? nullptr : pmem_addr);
-
+    DPRINTF(MemoryAccess,
+                "src/mem/abstract_mem.cc setBackingStore: %x,%p,%x.\n",
+                *pmem_addr,(void*)pmem_addr,&pmem_addr);
     pmemAddr = pmem_addr;
 }
 
@@ -393,7 +398,10 @@ AbstractMemory::access(PacketPtr pkt)
     assert(pkt->getAddrRange().isSubset(range));
 
     uint8_t *host_addr = toHostAddr(pkt->getAddr());
-
+    pkt->setHostAddr(host_addr);
+    // DPRINTF(MemoryAccess, "src/mem/abstract_mem.cc try to get
+    //              toHostAddr: %x,%x,%x.\n",
+    //             (void*)pmemAddr,pkt->getAddr(),range.start());
     if (pkt->cmd == MemCmd::SwapReq) {
         if (pkt->isAtomicOp()) {
             if (pmemAddr) {
@@ -443,6 +451,9 @@ AbstractMemory::access(PacketPtr pkt)
             trackLoadLocked(pkt);
         }
         if (pmemAddr) {
+            DPRINTF(MemoryAccess, "src/mem/abstract_mem.cc before pkt->setdata,
+                with host_addr: %x,%p,%x.\n",
+                *host_addr,(void*)host_addr,&host_addr);
             pkt->setData(host_addr);
         }
         TRACE_PACKET(pkt->req->isInstFetch() ? "IFetch" : "Read");
@@ -460,8 +471,8 @@ AbstractMemory::access(PacketPtr pkt)
         if (writeOK(pkt)) {
             if (pmemAddr) {
                 pkt->writeData(host_addr);
-                DPRINTF(MemoryAccess, "%s write due to %s\n",
-                        __func__, pkt->print());
+                DPRINTF(MemoryAccess, "%s write due to %s, masked: %x. \n",
+                        __func__, pkt->print(), pkt->req->isMasked());
             }
             assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Write");

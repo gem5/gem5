@@ -122,3 +122,5 @@ Source('timing_expr.cc')
 SimObject('DummyChecker.py', sim_objects=['DummyChecker'])
 Source('checker/cpu.cc')
 DebugFlag('Checker')
+
+DebugFlag('ArmIRQMem')
