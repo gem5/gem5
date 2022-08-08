@@ -446,10 +446,21 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             return;
         }
       // TLB Invalidate by VA
-      // mcr tlbimval(is) is invalidating all matching entries
-      // regardless of the level of lookup, since in gem5 we cache
-      // in the tlb the last level of lookup only.
       case MISCREG_TLBIMVA:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIMVA tlbiOp(EL1,
+                           secure,
+                           mbits(value, 31, 12),
+                           bits(value, 7, 0),
+                           false);
+
+            tlbiOp(tc);
+            return;
+        }
+      // TLB Invalidate by VA, Last Level
       case MISCREG_TLBIMVAL:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR);
@@ -458,13 +469,28 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             TLBIMVA tlbiOp(EL1,
                            secure,
                            mbits(value, 31, 12),
-                           bits(value, 7,0));
+                           bits(value, 7, 0),
+                           true);
 
             tlbiOp(tc);
             return;
         }
       // TLB Invalidate by VA, Inner Shareable
       case MISCREG_TLBIMVAIS:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIMVA tlbiOp(EL1,
+                           secure,
+                           mbits(value, 31, 12),
+                           bits(value, 7, 0),
+                           false);
+
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // TLB Invalidate by VA, Last Level, Inner Shareable
       case MISCREG_TLBIMVALIS:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR);
@@ -473,7 +499,8 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             TLBIMVA tlbiOp(EL1,
                            secure,
                            mbits(value, 31, 12),
-                           bits(value, 7,0));
+                           bits(value, 7, 0),
+                           true);
 
             tlbiOp.broadcast(tc);
             return;
@@ -486,7 +513,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIASID tlbiOp(EL1,
                             secure,
-                            bits(value, 7,0));
+                            bits(value, 7, 0));
 
             tlbiOp(tc);
             return;
@@ -499,74 +526,123 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIASID tlbiOp(EL1,
                             secure,
-                            bits(value, 7,0));
+                            bits(value, 7, 0));
 
             tlbiOp.broadcast(tc);
             return;
         }
-      // mcr tlbimvaal(is) is invalidating all matching entries
-      // regardless of the level of lookup, since in gem5 we cache
-      // in the tlb the last level of lookup only.
       // TLB Invalidate by VA, All ASID
       case MISCREG_TLBIMVAA:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIMVAA tlbiOp(EL1, secure,
+                            mbits(value, 31, 12), false);
+
+            tlbiOp(tc);
+            return;
+        }
+      // TLB Invalidate by VA, Last Level, All ASID
       case MISCREG_TLBIMVAAL:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIMVAA tlbiOp(EL1, secure,
-                            mbits(value, 31,12));
+                            mbits(value, 31, 12), true);
 
             tlbiOp(tc);
             return;
         }
       // TLB Invalidate by VA, All ASID, Inner Shareable
       case MISCREG_TLBIMVAAIS:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIMVAA tlbiOp(EL1, secure,
+                            mbits(value, 31, 12), false);
+
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // TLB Invalidate by VA, All ASID, Last Level, Inner Shareable
       case MISCREG_TLBIMVAALIS:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIMVAA tlbiOp(EL1, secure,
-                            mbits(value, 31,12));
+                            mbits(value, 31, 12), true);
 
             tlbiOp.broadcast(tc);
             return;
         }
-      // mcr tlbimvalh(is) is invalidating all matching entries
-      // regardless of the level of lookup, since in gem5 we cache
-      // in the tlb the last level of lookup only.
       // TLB Invalidate by VA, Hyp mode
       case MISCREG_TLBIMVAH:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIMVAA tlbiOp(EL2, secure,
+                            mbits(value, 31, 12), false);
+
+            tlbiOp(tc);
+            return;
+        }
+      // TLB Invalidate by VA, Last Level, Hyp mode
       case MISCREG_TLBIMVALH:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIMVAA tlbiOp(EL2, secure,
-                            mbits(value, 31,12));
+                            mbits(value, 31, 12), true);
 
             tlbiOp(tc);
             return;
         }
       // TLB Invalidate by VA, Hyp mode, Inner Shareable
       case MISCREG_TLBIMVAHIS:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIMVAA tlbiOp(EL2, secure,
+                            mbits(value, 31, 12), false);
+
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // TLB Invalidate by VA, Hyp mode, Last Level, Inner Shareable
       case MISCREG_TLBIMVALHIS:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIMVAA tlbiOp(EL2, secure,
-                            mbits(value, 31,12));
+                            mbits(value, 31, 12), true);
 
             tlbiOp.broadcast(tc);
             return;
         }
-      // mcr tlbiipas2l(is) is invalidating all matching entries
-      // regardless of the level of lookup, since in gem5 we cache
-      // in the tlb the last level of lookup only.
       // TLB Invalidate by Intermediate Physical Address, Stage 2
       case MISCREG_TLBIIPAS2:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIIPA tlbiOp(EL1,
+                           secure,
+                           static_cast<Addr>(bits(value, 35, 0)) << 12,
+                           false);
+
+            tlbiOp(tc);
+            return;
+        }
+      // TLB Invalidate by Intermediate Physical Address, Stage 2,
+      // Last Level
       case MISCREG_TLBIIPAS2L:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR);
@@ -574,7 +650,8 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIIPA tlbiOp(EL1,
                            secure,
-                           static_cast<Addr>(bits(value, 35, 0)) << 12);
+                           static_cast<Addr>(bits(value, 35, 0)) << 12,
+                           true);
 
             tlbiOp(tc);
             return;
@@ -582,6 +659,20 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate by Intermediate Physical Address, Stage 2,
       // Inner Shareable
       case MISCREG_TLBIIPAS2IS:
+        {
+            SCR scr = tc->readMiscReg(MISCREG_SCR);
+
+            bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
+            TLBIIPA tlbiOp(EL1,
+                           secure,
+                           static_cast<Addr>(bits(value, 35, 0)) << 12,
+                           false);
+
+            tlbiOp.broadcast(tc);
+            return;
+        }
+      // TLB Invalidate by Intermediate Physical Address, Stage 2,
+      // Last Level, Inner Shareable
       case MISCREG_TLBIIPAS2LIS:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR);
@@ -589,7 +680,8 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIIPA tlbiOp(EL1,
                            secure,
-                           static_cast<Addr>(bits(value, 35, 0)) << 12);
+                           static_cast<Addr>(bits(value, 35, 0)) << 12,
+                           true);
 
             tlbiOp.broadcast(tc);
             return;
@@ -603,7 +695,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             ITLBIMVA tlbiOp(EL1,
                             secure,
                             mbits(value, 31, 12),
-                            bits(value, 7,0));
+                            bits(value, 7, 0));
 
             tlbiOp(tc);
             return;
@@ -617,7 +709,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             DTLBIMVA tlbiOp(EL1,
                             secure,
                             mbits(value, 31, 12),
-                            bits(value, 7,0));
+                            bits(value, 7, 0));
 
             tlbiOp(tc);
             return;
@@ -630,7 +722,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             ITLBIASID tlbiOp(EL1,
                              secure,
-                             bits(value, 7,0));
+                             bits(value, 7, 0));
 
             tlbiOp(tc);
             return;
@@ -643,7 +735,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             DTLBIASID tlbiOp(EL1,
                              secure,
-                             bits(value, 7,0));
+                             bits(value, 7, 0));
 
             tlbiOp(tc);
             return;

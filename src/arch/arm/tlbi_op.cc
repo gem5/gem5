@@ -236,7 +236,7 @@ TLBIMVAA::match(TlbEntry* te, vmid_t vmid) const
     lookup_data.inHost = inHost;
     lookup_data.mode = BaseMMU::Read;
 
-    return te->match(lookup_data);
+    return te->match(lookup_data) && (!lastLevel || !te->partial);
 }
 
 void
@@ -267,7 +267,7 @@ TLBIMVA::match(TlbEntry* te, vmid_t vmid) const
     lookup_data.inHost = inHost;
     lookup_data.mode = BaseMMU::Read;
 
-    return te->match(lookup_data);
+    return te->match(lookup_data) && (!lastLevel || !te->partial);
 }
 
 void
