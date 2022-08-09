@@ -46,7 +46,7 @@ def get_supported_isas() -> Set[ISA]:
         supported_isas.add(get_isa_from_str(buildEnv["TARGET_ISA"]))
 
     for key in get_isas_str_set():
-        if f"USE_{key.upper()}_ISA" in buildEnv:
+        if buildEnv.get(f"USE_{key.upper()}_ISA", False):
             supported_isas.add(get_isa_from_str(key))
 
     return supported_isas
