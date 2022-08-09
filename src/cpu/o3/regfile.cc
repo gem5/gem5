@@ -175,47 +175,5 @@ PhysRegFile::initFreeList(UnifiedFreeList *freeList)
     freeList->addRegs(ccRegIds.begin(), ccRegIds.end());
 }
 
-PhysRegFile::IdRange
-PhysRegFile::getRegIds(RegClassType cls)
-{
-    switch (cls)
-    {
-      case IntRegClass:
-        return std::make_pair(intRegIds.begin(), intRegIds.end());
-      case FloatRegClass:
-        return std::make_pair(floatRegIds.begin(), floatRegIds.end());
-      case VecRegClass:
-        return std::make_pair(vecRegIds.begin(), vecRegIds.end());
-      case VecElemClass:
-        return std::make_pair(vecElemIds.begin(), vecElemIds.end());
-      case VecPredRegClass:
-        return std::make_pair(vecPredRegIds.begin(), vecPredRegIds.end());
-      case CCRegClass:
-        return std::make_pair(ccRegIds.begin(), ccRegIds.end());
-      case MiscRegClass:
-        return std::make_pair(miscRegIds.begin(), miscRegIds.end());
-      case InvalidRegClass:
-        panic("Tried to get register IDs for the invalid class.");
-    }
-    /* There is no way to make an empty iterator */
-    return std::make_pair(PhysIds::iterator(),
-                          PhysIds::iterator());
-}
-
-PhysRegIdPtr
-PhysRegFile::getTrueId(PhysRegIdPtr reg)
-{
-    switch (reg->classValue()) {
-    case VecRegClass:
-        return &vecRegIds[reg->index()];
-    case VecElemClass:
-        return &vecElemIds[reg->index()];
-    default:
-        panic_if(!reg->is(VecElemClass),
-            "Trying to get the register of a %s register", reg->className());
-    }
-    return nullptr;
-}
-
 } // namespace o3
 } // namespace gem5

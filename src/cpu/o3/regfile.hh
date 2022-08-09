@@ -309,20 +309,6 @@ class PhysRegFile
             panic("Unrecognized register class type %d.", type);
         }
     }
-
-    /**
-     * Get the PhysRegIds of the elems of all vector registers.
-     * Auxiliary function to transition from Full vector mode to Elem mode
-     * and to initialise the rename map.
-     */
-    IdRange getRegIds(RegClassType cls);
-
-    /**
-     * Get the true physical register id.
-     * As many parts work with PhysRegIdPtr, we need to be able to produce
-     * the pointer out of just class and register idx.
-     */
-    PhysRegIdPtr getTrueId(PhysRegIdPtr reg);
 };
 
 } // namespace o3
