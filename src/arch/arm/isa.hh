@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2021 ARM Limited
+ * Copyright (c) 2010, 2012-2022 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,6 +45,7 @@
 #include "arch/arm/mmu.hh"
 #include "arch/arm/pcstate.hh"
 #include "arch/arm/regs/int.hh"
+#include "arch/arm/regs/mat.hh"
 #include "arch/arm/regs/misc.hh"
 #include "arch/arm/regs/vec.hh"
 #include "arch/arm/self_debug.hh"

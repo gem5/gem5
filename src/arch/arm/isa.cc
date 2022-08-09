@@ -76,7 +76,6 @@ namespace
 
 /* Not applicable to ARM */
 RegClass floatRegClass(FloatRegClass, FloatRegClassName, 0, debug::FloatRegs);
-RegClass matRegClass(MatRegClass, MatRegClassName, 1, debug::MatRegs);
 
 } // anonymous namespace
 
@@ -560,6 +559,12 @@ ISA::copyRegsFrom(ThreadContext *src)
 
     for (auto &id: vecElemClass)
         tc->setReg(id, src->getReg(id));
+
+    ArmISA::MatRegContainer mc;
+    for (auto &id: matRegClass) {
+        src->getReg(id, &mc);
+        tc->setReg(id, &mc);
+    }
 
     // setMiscReg "with effect" will set the misc register mapping correctly.
     // e.g. updateRegMap(val)

@@ -54,6 +54,7 @@ if env['USE_ARM_ISA']:
           '../../cpu/reg_class.cc',
           '../../sim/bufval.cc', '../../sim/cur_tick.cc',
           'regs/int.cc')
+    GTest('matrix.test', 'matrix.test.cc')
 Source('decoder.cc', tags='arm isa')
 Source('faults.cc', tags='arm isa')
 Source('htm.cc', tags='arm isa')
