@@ -52,6 +52,7 @@ class StaticInstFlags(Enum):
         "IsFloating",  # References FP regs.
         "IsVector",  # References Vector regs.
         "IsVectorElem",  # References Vector reg elems.
+        "IsMatrix",  # References Matrix regs.
         "IsLoad",  # Reads from memory (load or prefetch).
         "IsStore",  # Writes to memory.
         "IsAtomic",  # Does atomic RMW to memory.

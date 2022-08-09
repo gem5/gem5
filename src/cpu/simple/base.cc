@@ -418,6 +418,12 @@ BaseSimpleCPU::postExecute()
         t_info.execContextStats.numVecInsts++;
     }
 
+    //Matrix alu accesses
+    if (curStaticInst->isMatrix()){
+        t_info.execContextStats.numMatAluAccesses++;
+        t_info.execContextStats.numMatInsts++;
+    }
+
     //number of function calls/returns to get window accesses
     if (curStaticInst->isCall() || curStaticInst->isReturn()){
         t_info.execContextStats.numCallsReturns++;

@@ -70,6 +70,10 @@ Scoreboard::findIndex(const RegId& reg, Index &scoreboard_index)
         scoreboard_index = vecPredRegOffset + reg.index();
         ret = true;
         break;
+      case MatRegClass:
+        scoreboard_index = matRegOffset + reg.index();
+        ret = true;
+        break;
       case CCRegClass:
         scoreboard_index = ccRegOffset + reg.index();
         ret = true;

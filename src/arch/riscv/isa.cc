@@ -48,6 +48,7 @@
 #include "cpu/base.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/LLSC.hh"
+#include "debug/MatRegs.hh"
 #include "debug/RiscvMisc.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
@@ -235,6 +236,7 @@ RegClass vecRegClass(VecRegClass, VecRegClassName, 1, debug::IntRegs);
 RegClass vecElemClass(VecElemClass, VecElemClassName, 2, debug::IntRegs);
 RegClass vecPredRegClass(VecPredRegClass, VecPredRegClassName, 1,
         debug::IntRegs);
+RegClass matRegClass(MatRegClass, MatRegClassName, 1, debug::MatRegs);
 RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
 } // anonymous namespace
@@ -247,6 +249,7 @@ ISA::ISA(const Params &p) :
     _regClasses.push_back(&vecRegClass);
     _regClasses.push_back(&vecElemClass);
     _regClasses.push_back(&vecPredRegClass);
+    _regClasses.push_back(&matRegClass);
     _regClasses.push_back(&ccRegClass);
     _regClasses.push_back(&miscRegClass);
 

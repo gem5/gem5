@@ -96,6 +96,8 @@ class SimpleExecContext : public ExecContext
                        "Number of float alu accesses"),
               ADD_STAT(numVecAluAccesses, statistics::units::Count::get(),
                        "Number of vector alu accesses"),
+              ADD_STAT(numMatAluAccesses, statistics::units::Count::get(),
+                       "Number of matrix alu accesses"),
               ADD_STAT(numCallsReturns, statistics::units::Count::get(),
                        "Number of times a function call or return occured"),
               ADD_STAT(numCondCtrlInsts, statistics::units::Count::get(),
@@ -106,6 +108,8 @@ class SimpleExecContext : public ExecContext
                        "Number of float instructions"),
               ADD_STAT(numVecInsts, statistics::units::Count::get(),
                        "Number of vector instructions"),
+              ADD_STAT(numMatInsts, statistics::units::Count::get(),
+                       "Number of matrix instructions"),
               ADD_STAT(numIntRegReads, statistics::units::Count::get(),
                        "Number of times the integer registers were read"),
               ADD_STAT(numIntRegWrites, statistics::units::Count::get(),
@@ -162,6 +166,7 @@ class SimpleExecContext : public ExecContext
                   &numVecRegReads,
                   &numVecRegReads,
                   &numVecPredRegReads,
+                  &numMatRegReads,
                   &numCCRegReads
               },
               numRegWrites{
@@ -170,6 +175,7 @@ class SimpleExecContext : public ExecContext
                   &numVecRegWrites,
                   &numVecRegWrites,
                   &numVecPredRegWrites,
+                  &numMatRegWrites,
                   &numCCRegWrites
               }
         {
@@ -220,6 +226,9 @@ class SimpleExecContext : public ExecContext
         // Number of vector alu accesses
         statistics::Scalar numVecAluAccesses;
 
+        // Number of matrix alu accesses
+        statistics::Scalar numMatAluAccesses;
+
         // Number of function calls/returns
         statistics::Scalar numCallsReturns;
 
@@ -234,6 +243,9 @@ class SimpleExecContext : public ExecContext
 
         // Number of vector instructions
         statistics::Scalar numVecInsts;
+
+        // Number of matrix instructions
+        statistics::Scalar numMatInsts;
 
         // Number of integer register file accesses
         statistics::Scalar numIntRegReads;
@@ -250,6 +262,10 @@ class SimpleExecContext : public ExecContext
         // Number of predicate register file accesses
         mutable statistics::Scalar numVecPredRegReads;
         statistics::Scalar numVecPredRegWrites;
+
+        // Number of matrix register file accesses
+        mutable statistics::Scalar numMatRegReads;
+        statistics::Scalar numMatRegWrites;
 
         // Number of condition code register file accesses
         statistics::Scalar numCCRegReads;

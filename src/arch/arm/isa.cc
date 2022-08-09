@@ -54,6 +54,7 @@
 #include "cpu/reg_class.hh"
 #include "debug/Arm.hh"
 #include "debug/LLSC.hh"
+#include "debug/MatRegs.hh"
 #include "debug/VecPredRegs.hh"
 #include "debug/VecRegs.hh"
 #include "dev/arm/generic_timer.hh"
@@ -75,6 +76,7 @@ namespace
 
 /* Not applicable to ARM */
 RegClass floatRegClass(FloatRegClass, FloatRegClassName, 0, debug::FloatRegs);
+RegClass matRegClass(MatRegClass, MatRegClassName, 1, debug::MatRegs);
 
 } // anonymous namespace
 
@@ -86,6 +88,7 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
     _regClasses.push_back(&vecRegClass);
     _regClasses.push_back(&vecElemClass);
     _regClasses.push_back(&vecPredRegClass);
+    _regClasses.push_back(&matRegClass);
     _regClasses.push_back(&ccRegClass);
     _regClasses.push_back(&miscRegClass);
 

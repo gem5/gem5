@@ -109,6 +109,20 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
         }
     }
 
+    // Then loop through the matrix registers.
+    const auto *mat_class = regClasses.at(MatRegClass);
+    std::vector<uint8_t> mat1(mat_class->regBytes());
+    std::vector<uint8_t> mat2(mat_class->regBytes());
+    for (auto &id: *regClasses.at(MatRegClass)) {
+        one->getReg(id, mat1.data());
+        two->getReg(id, mat2.data());
+        if (mat1 != mat2) {
+            panic("Mat reg idx %d doesn't match, one: %#x, two: %#x",
+                  id.index(), mat_class->valString(mat1.data()),
+                  mat_class->valString(mat2.data()));
+        }
+    }
+
     for (int i = 0; i < regClasses.at(MiscRegClass)->numRegs(); ++i) {
         RegVal t1 = one->readMiscRegNoEffect(i);
         RegVal t2 = two->readMiscRegNoEffect(i);
