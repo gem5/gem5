@@ -201,6 +201,8 @@ PySource('gem5.components.processors',
 PySource('gem5.components.processors',
     'gem5/components/processors/simple_core.py')
 PySource('gem5.components.processors',
+    'gem5/components/processors/base_cpu_core.py')
+PySource('gem5.components.processors',
     'gem5/components/processors/simple_processor.py')
 PySource('gem5.components.processors',
     'gem5/components/processors/simple_switchable_processor.py')
