@@ -80,14 +80,8 @@ processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, num_cores=2)
 
 # The ArmBoard requires a `release` to be specified. This adds all the
 # extensions or features to the system. We are setting this to Armv8
-# (ArmDefaultRelease) in this example config script. However, the ArmBoard
-# currently does not support SECURITY extension.
-
+# (ArmDefaultRelease) in this example config script.
 release = ArmDefaultRelease()
-
-# Removing the SECURITY extension.
-
-release.extensions.remove(release.extensions[2])
 
 # The platform sets up the memory ranges of all the on-chip and off-chip
 # devices present on the ARM system.
