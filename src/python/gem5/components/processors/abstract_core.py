@@ -39,14 +39,8 @@ from m5.objects import BaseMMU, Port, SubSystem
 class AbstractCore(SubSystem):
     __metaclass__ = ABCMeta
 
-    def __init__(self, cpu_type: CPUTypes):
+    def __init__(self):
         super().__init__()
-        if cpu_type == CPUTypes.KVM:
-            requires(kvm_required=True)
-        self._cpu_type = cpu_type
-
-    def get_type(self) -> CPUTypes:
-        return self._cpu_type
 
     @abstractmethod
     def get_isa(self) -> ISA:
@@ -97,7 +91,7 @@ class AbstractCore(SubSystem):
         interrupt_requestor: Optional[Port] = None,
         interrupt_responce: Optional[Port] = None,
     ) -> None:
-        """ Connect the core interrupts to the interrupt controller
+        """Connect the core interrupts to the interrupt controller
 
         This function is usually called from the cache hierarchy since the
         optional ports can be implemented as cache ports.
@@ -106,7 +100,7 @@ class AbstractCore(SubSystem):
 
     @abstractmethod
     def get_mmu(self) -> BaseMMU:
-        """ Return the MMU for this core.
+        """Return the MMU for this core.
 
         This is used in the board to setup system-specific MMU settings.
         """

@@ -32,15 +32,26 @@ from .cpu_types import CPUTypes
 from ...isas import ISA
 from ...runtime import get_runtime_isa
 from ...utils.override import overrides
+from ...utils.requires import requires
 
 from m5.objects import BaseMMU, Port, BaseCPU, Process
 
 
 class SimpleCore(AbstractCore):
+    """
+    A SimpleCore instantiates a core based on the CPUType enum pass. The
+    SimpleCore creates a single SimObject of that type.
+    """
+
     def __init__(
         self, cpu_type: CPUTypes, core_id: int, isa: Optional[ISA] = None
     ):
-        super().__init__(cpu_type=cpu_type)
+        super().__init__()
+
+        self._cpu_type = cpu_type
+        if cpu_type == CPUTypes.KVM:
+            requires(kvm_required=True)
+
         if isa:
             requires(isa_required=isa)
             self._isa = isa
@@ -53,6 +64,9 @@ class SimpleCore(AbstractCore):
 
     def get_simobject(self) -> BaseCPU:
         return self.core
+
+    def get_type(self) -> CPUTypes:
+        return self._cpu_type
 
     @overrides(AbstractCore)
     def get_isa(self) -> ISA:

@@ -41,7 +41,7 @@ from ...utils.override import *
 class SwitchableProcessor(AbstractProcessor):
     """
     This class can be used to setup a switchable processor/processors on a
-    system.
+    system using SimpleCores.
 
     Though this class can be used directly, it is best inherited from. See
     "SimpleSwitchableCPU" for an example of this.

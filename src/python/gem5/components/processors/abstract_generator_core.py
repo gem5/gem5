@@ -48,12 +48,10 @@ class AbstractGeneratorCore(AbstractCore):
 
     def __init__(self):
         """
-        Create an AbstractCore with the CPUType of Timing. Also, setup a
-        dummy generator object to connect to icache
+        Create an AbstractCore. Also, setup a dummy generator object to connect
+        to icache.
         """
-        # TODO: Remove the CPU Type parameter. This not needed.
-        # Jira issue here: https://gem5.atlassian.net/browse/GEM5-1031
-        super().__init__(CPUTypes.TIMING)
+        super().__init__()
         self.port_end = PortTerminator()
 
     @overrides(AbstractCore)

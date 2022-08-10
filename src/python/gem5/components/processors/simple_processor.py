@@ -41,15 +41,15 @@ from typing import Optional
 
 class SimpleProcessor(AbstractProcessor):
     """
-    A SimpeProcessor contains a number of cores of a a single CPUType.
+    A SimpleProcessor contains a number of cores of SimpleCore objects of the
+    same CPUType.
     """
 
     def __init__(
         self, cpu_type: CPUTypes, num_cores: int, isa: Optional[ISA] = None
     ) -> None:
         """
-        param cpu_type: The CPU type for each type in the processor.
-:
+        :param cpu_type: The CPU type for each type in the processor.
         :param num_cores: The number of CPU cores in the processor.
 
         :param isa: The ISA of the processor. This argument is optional. If not
