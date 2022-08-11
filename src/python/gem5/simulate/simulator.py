@@ -283,10 +283,10 @@ class Simulator:
             # (for example, in `get_stats()`).
             self._root = root
 
-            if CPUTypes.KVM in [
-                core.get_type()
+            if any(
+                core.is_kvm_core()
                 for core in self._board.get_processor().get_cores()
-            ]:
+            ):
                 m5.ticks.fixGlobalFrequency()
                 root.sim_quantum = m5.ticks.fromSeconds(0.001)
 

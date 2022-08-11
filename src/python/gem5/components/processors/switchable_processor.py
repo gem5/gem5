@@ -68,12 +68,10 @@ class SwitchableProcessor(AbstractProcessor):
                 core.set_switched_out(core not in self._current_cores)
                 all_cores.append(core)
 
-        self._prepare_kvm = CPUTypes.KVM in [
-            core.get_type() for core in all_cores
-        ]
+        self._prepare_kvm = any(core.is_kvm_core() for core in all_cores)
 
         if self._prepare_kvm:
-            if all_cores[0].get_type() != CPUTypes.KVM:
+            if not all_cores[0].is_kvm_core():
                 raise Exception(
                     "When using KVM, the switchable processor must start "
                     "with the KVM cores."
@@ -98,9 +96,7 @@ class SwitchableProcessor(AbstractProcessor):
 
             # To get the KVM CPUs to run on different host CPUs
             # Specify a different event queue for each CPU
-            kvm_cores = [
-                core for core in self.cores if core.get_type() == CPUTypes.KVM
-            ]
+            kvm_cores = [core for core in self.cores if core.is_kvm_core()]
             for i, core in enumerate(kvm_cores):
                 for obj in core.get_simobject().descendants():
                     obj.eventq_index = 0

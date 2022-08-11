@@ -60,6 +60,18 @@ class BaseCPUCore(AbstractCore):
         return self.core
 
     @overrides(AbstractCore)
+    def is_kvm_core(self) -> bool:
+
+        try:
+            from m5.objects import BaseKvmCPU
+
+            return isinstance(self.core, BaseKvmCPU)
+        except ImportError:
+            # If importing BaseKvmCPU throws an exception then it's because
+            # it's not compiled into the binary. If this is the case then this
+            # can't be a KVM core.
+            return False
+
     def get_isa(self) -> ISA:
         return self._isa
 

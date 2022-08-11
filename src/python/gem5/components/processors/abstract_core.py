@@ -43,6 +43,15 @@ class AbstractCore(SubSystem):
         raise NotImplementedError
 
     @abstractmethod
+    def is_kvm_core(self) -> bool:
+        """
+        KVM cores need setup differently than other cores. Frequently it's
+        useful to know whether a core is a KVM core or not. This function helps
+        with this.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def connect_icache(self, port: Port) -> None:
         """
         This function should connect the response port from the instruction

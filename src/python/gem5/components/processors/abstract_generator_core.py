@@ -55,6 +55,10 @@ class AbstractGeneratorCore(AbstractCore):
         self.port_end = PortTerminator()
 
     @overrides(AbstractCore)
+    def is_kvm_core(self) -> bool:
+        return False
+
+    @overrides(AbstractCore)
     def get_isa(self) -> ISA:
         return ISA.NULL
 
