@@ -971,7 +971,7 @@ std::map<char, BaseRemoteGDB::GdbCommand> BaseRemoteGDB::commandMap = {
     // signal and step
     { 'S', { "KGDB_ASYNC_STEP", &BaseRemoteGDB::cmdAsyncStep } },
     // find out if the thread is alive
-    { 'T', { "KGDB_THREAD_ALIVE", &BaseRemoteGDB::cmdUnsupported } },
+    { 'T', { "KGDB_THREAD_ALIVE", &BaseRemoteGDB::cmdIsThreadAlive } },
     //multi letter command
     { 'v', { "KGDB_MULTI_LETTER", &BaseRemoteGDB::cmdMultiLetter } },
     // target exited
@@ -1101,6 +1101,22 @@ BaseRemoteGDB::cmdSetThread(GdbCommand::Context &ctx)
         throw CmdError("E05");
     }
 
+    send("OK");
+    return true;
+}
+
+bool
+BaseRemoteGDB::cmdIsThreadAlive(GdbCommand::Context &ctx)
+{
+    const char *p = ctx.data;
+    int tid = 0;
+    bool all, any;
+    if (!parseThreadId(&p, all, any, tid))
+        throw CmdError("E01");
+    if (all)
+            throw CmdError("E03");
+    if (threads.find(tid) == threads.end())
+            throw CmdError("E04");
     send("OK");
     return true;
 }

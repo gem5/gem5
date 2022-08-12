@@ -378,6 +378,7 @@ class BaseRemoteGDB
     bool cmdRegR(GdbCommand::Context &ctx);
     bool cmdRegW(GdbCommand::Context &ctx);
     bool cmdSetThread(GdbCommand::Context &ctx);
+    bool cmdIsThreadAlive(GdbCommand::Context &ctx);
     bool cmdMemR(GdbCommand::Context &ctx);
     bool cmdMemW(GdbCommand::Context &ctx);
     bool cmdQueryVar(GdbCommand::Context &ctx);
