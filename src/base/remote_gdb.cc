@@ -192,7 +192,7 @@ class HardBreakpoint : public PCEvent
         DPRINTF(GDBMisc, "handling hardware breakpoint at %#x\n", pc());
 
         if (tc == gdb->tc)
-            gdb->trap(tc->contextId(), SIGTRAP);
+            gdb->trap(tc->contextId(), SIGTRAP,"");
     }
 };
 
@@ -516,7 +516,7 @@ BaseRemoteGDB::selectThreadContext(ContextID id)
 // makes sense to use POSIX errno values, because that is what the
 // gdb/remote.c functions want to return.
 void
-BaseRemoteGDB::trap(ContextID id, int signum)
+BaseRemoteGDB::trap(ContextID id, int signum,const std::string& stopReason)
 {
     if (!attached)
         return;
@@ -536,7 +536,7 @@ BaseRemoteGDB::trap(ContextID id, int signum)
         send("OK");
     } else {
         // Tell remote host that an exception has occurred.
-        send("S%02x", signum);
+        sendTPacket(signum,id,stopReason);
     }
 
     processCommands(signum);
@@ -904,6 +904,21 @@ BaseRemoteGDB::removeHardBreak(Addr addr, size_t kind)
 }
 
 void
+BaseRemoteGDB::sendTPacket(int errnum, ContextID id,
+    const std::string& stopReason)
+{
+    if (!stopReason.empty()){
+        send("T%02xcore:%x;thread:%x;%s;",errnum,id + 1,id + 1,stopReason);
+    }else{
+        send("T%02xcore:%x;thread:%x;",errnum,id + 1,id + 1);
+    }
+}
+void
+BaseRemoteGDB::sendSPacket(int errnum){
+       send("S%02x",errnum);
+}
+
+void
 BaseRemoteGDB::scheduleInstCommitEvent(Event *ev, int delta)
 {
     if (delta == 0 && tc->status() != ThreadContext::Active) {
@@ -1004,7 +1019,7 @@ BaseRemoteGDB::cmdUnsupported(GdbCommand::Context &ctx)
 bool
 BaseRemoteGDB::cmdSignal(GdbCommand::Context &ctx)
 {
-    send("S%02x", ctx.type);
+    sendTPacket(ctx.type,tc->contextId(),"");
     return true;
 }
 

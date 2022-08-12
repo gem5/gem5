@@ -171,7 +171,7 @@ class BaseRemoteGDB
     void replaceThreadContext(ThreadContext *_tc);
     bool selectThreadContext(ContextID id);
 
-    void trap(ContextID id, int signum);
+    void trap(ContextID id, int signum,const std::string& stopReason="");
 
     /** @} */ // end of api_remote_gdb
 
@@ -280,6 +280,7 @@ class BaseRemoteGDB
       protected:
         int _type;
         ContextID _id;
+        std::string _stopReason;
         BaseRemoteGDB *gdb;
 
       public:
@@ -287,8 +288,9 @@ class BaseRemoteGDB
         {}
 
         void type(int t) { _type = t; }
+        void stopReason(std::string s) {_stopReason = s; }
         void id(ContextID id) { _id = id; }
-        void process() { gdb->trap(_id, _type); }
+         void process() { gdb->trap(_id, _type,_stopReason); }
     } trapEvent;
 
     /*
@@ -320,6 +322,8 @@ class BaseRemoteGDB
     void insertHardBreak(Addr addr, size_t kind);
     void removeHardBreak(Addr addr, size_t kind);
 
+    void sendTPacket(int errnum, ContextID id,const std::string& stopReason);
+    void sendSPacket(int errnum);
     /*
      * GDB commands.
      */
