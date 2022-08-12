@@ -60,6 +60,30 @@ class BaseCPUCore(AbstractCore):
         return self.core
 
     @overrides(AbstractCore)
+    def requires_send_evicts(self) -> bool:
+        if self.get_isa() in (ISA.ARM, ISA.X86):
+            # * The x86 `mwait`` instruction is built on top of coherence,
+            #   therefore evictions must be sent from cache to the CPU Core.
+            #
+            # * The local exclusive monitor in ARM systems requires the sending
+            #    of evictions from cache to the CPU Core.
+            return True
+
+        # The O3 model must keep the LSQ coherent with the caches.
+        # The code below will check to see if the current base CPU is of the O3
+        # type for the current ISA target (a bit ugly but it works).
+
+        try:
+            from m5.objects import BaseO3CPU
+
+            return isinstance(self.get_simobject(), BaseO3CPU)
+        except ImportError:
+            # If, for whatever reason, the BaseO3CPU is not importable, then
+            # the current core cannot be an an O3 CPU. We therefore return
+            # False.
+            return False
+
+    @overrides(AbstractCore)
     def is_kvm_core(self) -> bool:
 
         try:

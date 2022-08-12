@@ -69,7 +69,7 @@ class L1Cache(AbstractL1Cache):
         self.l2_select_num_bits = int(math.log(num_l2Caches, 2))
         self.clk_domain = clk_domain
         self.prefetcher = RubyPrefetcher()
-        self.send_evictions = self.sendEvicts(core=core, target_isa=target_isa)
+        self.send_evictions = core.requires_send_evicts()
         self.transitions_per_cycle = 4
         self.enable_prefetch = False
 

@@ -50,7 +50,7 @@ class PrivateL1MOESICache(AbstractNode):
         )
 
         self.clk_domain = clk_domain
-        self.send_evictions = self.sendEvicts(core=core, target_isa=target_isa)
+        self.send_evictions = core.requires_send_evicts()
         self.use_prefetcher = False
 
         # Only applies to home nodes

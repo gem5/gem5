@@ -43,6 +43,16 @@ class AbstractCore(SubSystem):
         raise NotImplementedError
 
     @abstractmethod
+    def requires_send_evicts(self) -> bool:
+        """True if the CPU model or ISA requires sending evictions from caches
+        to the CPU. Scenarios warrant forwarding evictions to the CPU:
+        1. The O3 model must keep the LSQ coherent with the caches
+        2. The x86 mwait instruction is built on top of coherence
+        3. The local exclusive monitor in ARM systems
+        """
+        return False
+
+    @abstractmethod
     def is_kvm_core(self) -> bool:
         """
         KVM cores need setup differently than other cores. Frequently it's

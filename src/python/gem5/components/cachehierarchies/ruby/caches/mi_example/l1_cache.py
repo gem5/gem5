@@ -50,7 +50,7 @@ class L1Cache(AbstractL1Cache):
         )
 
         self.clk_domain = clk_domain
-        self.send_evictions = self.sendEvicts(core=core, target_isa=target_isa)
+        self.send_evictions = core.requires_send_evicts()
 
     @overrides(AbstractL1Cache)
     def connectQueues(self, network):
