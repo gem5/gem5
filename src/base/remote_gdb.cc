@@ -575,6 +575,16 @@ BaseRemoteGDB::trap(ContextID id, int signum,const std::string& stopReason)
     processCommands(signum);
 }
 
+bool
+BaseRemoteGDB::sendMessage(std::string message)
+{
+    if (!attached)
+        return false;
+    DPRINTF(GDBMisc, "passing message %s\n", message);
+    sendOPacket(message);
+    return true;
+}
+
 void
 BaseRemoteGDB::incomingConnection(int revent)
 {

@@ -172,6 +172,7 @@ class BaseRemoteGDB
     bool selectThreadContext(ContextID id);
 
     void trap(ContextID id, int signum,const std::string& stopReason="");
+    bool sendMessage(std::string message);
 
     /** @} */ // end of api_remote_gdb
 

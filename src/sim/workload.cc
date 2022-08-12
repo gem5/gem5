@@ -80,6 +80,14 @@ Workload::trapToGdb(int signal, ContextID ctx_id)
     }
     return false;
 };
+bool
+Workload::sendToGdb(std::string msg){
+     if (gdb)
+        return gdb->sendMessage(msg);
+    else
+        return false;
+ }
+
 
 void
 Workload::startup()

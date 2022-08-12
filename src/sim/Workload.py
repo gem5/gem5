@@ -24,7 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.params import *
-from m5.SimObject import SimObject
+from m5.SimObject import SimObject, cxxMethod
 
 from m5.objects.SimpleMemory import *
 
@@ -36,6 +36,14 @@ class Workload(SimObject):
     abstract = True
 
     wait_for_remote_gdb = Param.Bool(False, "Wait for a remote GDB connection")
+
+    @cxxMethod
+    def sendToGdb(self, message):
+        """send a message to the GDB client
+        Args:
+            message (str): message to send
+        """
+        pass
 
 
 class StubWorkload(Workload):

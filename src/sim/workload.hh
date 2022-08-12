@@ -92,6 +92,7 @@ class Workload : public SimObject
     // Once trapping into GDB is no longer a special case routed through the
     // system object, this helper can be removed.
     bool trapToGdb(int signal, ContextID ctx_id);
+    bool sendToGdb(std::string msg);
 
     virtual void registerThreadContext(ThreadContext *tc);
     virtual void replaceThreadContext(ThreadContext *tc);
