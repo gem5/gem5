@@ -129,7 +129,9 @@
 
 #include "base/remote_gdb.hh"
 
+#include <sys/select.h>
 #include <sys/signal.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #include <cassert>
@@ -575,12 +577,54 @@ uint8_t
 BaseRemoteGDB::getbyte()
 {
     uint8_t b;
-    if (::read(fd, &b, sizeof(b)) == sizeof(b))
-        return b;
-
-    throw BadClient("Couldn't read data from debugger.");
+    while (!try_getbyte(&b,-1));//no timeout
+   return b;
 }
 
+bool
+BaseRemoteGDB::try_getbyte(uint8_t* c,int timeout_ms)
+{
+    if (!c)
+        panic("try_getbyte called with a null pointer as c");
+    int res,retval;
+    //Allow read to fail if it was interrupted by a signal (EINTR).
+    errno = 0;
+    //preparing fd_sets
+    fd_set rfds;
+    FD_ZERO(&rfds);
+    FD_SET(fd, &rfds);
+
+    //setting up a timeout if timeout_ms is positive
+    struct timeval tv;struct timeval* tv_ptr;
+    if (timeout_ms >= 0){
+        tv.tv_sec = timeout_ms/1000;
+        tv.tv_usec = timeout_ms%1000;
+        tv_ptr = &tv;
+    }else{
+        tv_ptr = NULL;
+    }
+    //Using select to check if the FD is ready to be read.
+    while(true){
+        do {
+            errno = 0;
+            retval = ::select(fd + 1, &rfds, NULL, NULL, tv_ptr);
+            if (retval < 0 && errno != EINTR){//error
+                DPRINTF(GDBMisc,"getbyte failed errno=%i retval=%i\n",
+                    errno,retval);
+                throw BadClient("Couldn't read data from debugger.");
+            }
+        //a EINTR error means that the select call was interrupted
+        //by another signal
+        }while (errno == EINTR);
+        if (retval == 0)
+            return false;//timed out
+        //reading (retval>0)
+        res = ::read(fd, c, sizeof(*c));
+        if (res == sizeof(*c))
+            return true;//read successfully
+        //read failed (?) retrying select
+    }
+}
 void
 BaseRemoteGDB::putbyte(uint8_t b)
 {
@@ -650,7 +694,8 @@ BaseRemoteGDB::send(const char *bp)
     uint8_t csum, c;
 
     DPRINTF(GDBSend, "send:  %s\n", bp);
-
+    //removing GDBBadP that could be waiting in the buffer
+    while (try_getbyte(&c,0));
     do {
         p = bp;
         // Start sending a packet
@@ -668,6 +713,8 @@ BaseRemoteGDB::send(const char *bp)
         // Try transmitting over and over again until the other end doesn't
         // send an error back.
         c = getbyte();
+        if ((c & 0x7f) == GDBBadP)
+            DPRINTF(GDBSend, "PacketError\n");
     } while ((c & 0x7f) == GDBBadP);
 }
 

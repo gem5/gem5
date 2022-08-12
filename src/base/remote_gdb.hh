@@ -237,6 +237,7 @@ class BaseRemoteGDB
 
     // Transfer data to/from GDB.
     uint8_t getbyte();
+    bool try_getbyte(uint8_t* c,int timeout=-1);//return true if successful
     void putbyte(uint8_t b);
 
     void recv(std::vector<char> &bp);
