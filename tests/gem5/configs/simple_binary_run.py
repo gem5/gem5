@@ -39,10 +39,16 @@ from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.boards.simple_board import SimpleBoard
 from gem5.components.cachehierarchies.classic.no_cache import NoCache
 from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.components.processors.base_cpu_processor import BaseCPUProcessor
+from gem5.components.processors.simple_core import SimpleCore
+from gem5.components.boards.mem_mode import MemMode
+from gem5.components.processors.cpu_types import CPUTypes
 from gem5.simulate.simulator import Simulator
 from gem5.isas import get_isa_from_str, get_isas_str_set
 
 import argparse
+
+from python.gem5.components.processors.base_cpu_core import BaseCPUCore
 
 parser = argparse.ArgumentParser(
     description="A gem5 script for running simple binaries in SE mode."
@@ -58,6 +64,13 @@ parser.add_argument(
 
 parser.add_argument(
     "isa", type=str, choices=get_isas_str_set(), help="The ISA used"
+)
+
+parser.add_argument(
+    "-b",
+    "--base-cpu-processor",
+    action="store_true",
+    help="Use the BaseCPUProcessor instead of the SimpleProcessor.",
 )
 
 parser.add_argument(
@@ -82,11 +95,28 @@ args = parser.parse_args()
 # Setup the system.
 cache_hierarchy = NoCache()
 memory = SingleChannelDDR3_1600()
-processor = SimpleProcessor(
-    cpu_type=get_cpu_type_from_str(args.cpu),
-    isa=get_isa_from_str(args.isa),
-    num_cores=1,
-)
+
+if args.base_cpu_processor:
+    cores = [
+        BaseCPUCore(
+            core=SimpleCore.cpu_simobject_factory(
+                cpu_type=get_cpu_type_from_str(args.cpu),
+                isa=get_isa_from_str(args.isa),
+                core_id=0,
+            ),
+            isa=get_isa_from_str(args.isa),
+        )
+    ]
+
+    processor = BaseCPUProcessor(
+        cores=cores,
+    )
+else:
+    processor = SimpleProcessor(
+        cpu_type=get_cpu_type_from_str(args.cpu),
+        isa=get_isa_from_str(args.isa),
+        num_cores=1,
+    )
 
 motherboard = SimpleBoard(
     clk_freq="3GHz",

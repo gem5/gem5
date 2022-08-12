@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2022 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,38 +24,46 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from testlib import *
 
-from .base_cpu_processor import BaseCPUProcessor
-from ..processors.simple_core import SimpleCore
+"""
+These tests are designed to test the BaseCPUProcessor. It utilizes the
+tests/gem5/configs/simple_binary_run.py to run a simple SE-mode simualation
+with different configurations of the BaseCPUProcessor.
+"""
 
-from .cpu_types import CPUTypes
-from ...isas import ISA
+gem5_verify_config(
+    name=f"BaseCPUProcessor-x86-hello",
+    verifiers=(),
+    fixtures=(),
+    config=joinpath(
+        config.base_dir, "tests", "gem5", "configs", "simple_binary_run.py"
+    ),
+    config_args=["x86-hello64-static", "timing", "x86", "-b"],
+    valid_isas=(constants.vega_x86_tag,),
+    length=constants.quick_tag,
+)
 
-from typing import Optional
+gem5_verify_config(
+    name=f"BaseCPUProcessor-riscv-hello",
+    verifiers=(),
+    fixtures=(),
+    config=joinpath(
+        config.base_dir, "tests", "gem5", "configs", "simple_binary_run.py"
+    ),
+    config_args=["riscv-hello", "atomic", "riscv", "-b"],
+    valid_isas=(constants.riscv_tag,),
+    length=constants.quick_tag,
+)
 
-
-class SimpleProcessor(BaseCPUProcessor):
-    """
-    A SimpleProcessor contains a number of cores of SimpleCore objects of the
-    same CPUType.
-    """
-
-    def __init__(
-        self, cpu_type: CPUTypes, num_cores: int, isa: Optional[ISA] = None
-    ) -> None:
-        """
-        :param cpu_type: The CPU type for each type in the processor.
-        :param num_cores: The number of CPU cores in the processor.
-
-        :param isa: The ISA of the processor. This argument is optional. If not
-        set the `runtime.get_runtime_isa` is used to determine the ISA at
-        runtime. **WARNING**: This functionality is deprecated. It is
-        recommended you explicitly set your ISA via SimpleProcessor
-        construction.
-        """
-        super().__init__(
-            cores=[
-                SimpleCore(cpu_type=cpu_type, core_id=i, isa=isa)
-                for i in range(num_cores)
-            ]
-        )
+gem5_verify_config(
+    name=f"BaseCPUProcessor-arm-hello",
+    verifiers=(),
+    fixtures=(),
+    config=joinpath(
+        config.base_dir, "tests", "gem5", "configs", "simple_binary_run.py"
+    ),
+    config_args=["arm-hello64-static", "o3", "arm", "-b"],
+    valid_isas=(constants.arm_tag,),
+    length=constants.quick_tag,
+)
