@@ -344,6 +344,30 @@ class BaseRemoteGDB
 
     static std::map<char, GdbCommand> commandMap;
 
+    struct GdbMultiLetterCommand
+    {
+      public:
+        struct Context
+        {
+            const GdbMultiLetterCommand *cmd;
+            std::string cmdTxt;
+            int type;
+            char *data;
+            int len;
+        };
+
+        typedef bool (BaseRemoteGDB::*Func)(Context &ctx);
+
+        const char * const name;
+        const Func func;
+
+        GdbMultiLetterCommand(const char *_name, Func _func) :
+          name(_name), func(_func) {}
+    };
+
+
+    static std::map<std::string, GdbMultiLetterCommand> multiLetterMap;
+
     bool cmdUnsupported(GdbCommand::Context &ctx);
 
     bool cmdSignal(GdbCommand::Context &ctx);
@@ -361,6 +385,13 @@ class BaseRemoteGDB
     bool cmdClrHwBkpt(GdbCommand::Context &ctx);
     bool cmdSetHwBkpt(GdbCommand::Context &ctx);
     bool cmdDumpPageTable(GdbCommand::Context &ctx);
+    bool cmdMultiLetter(GdbCommand::Context &ctx);
+
+    //Multi letter command
+    bool cmdMultiUnsupported(GdbMultiLetterCommand::Context &ctx);
+
+    bool cmdReplyEmpty(GdbMultiLetterCommand::Context &ctx);
+    bool cmdVKill(GdbMultiLetterCommand::Context &ctx);
 
     struct QuerySetCommand
     {

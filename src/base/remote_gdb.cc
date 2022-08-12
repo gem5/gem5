@@ -925,6 +925,8 @@ std::map<char, BaseRemoteGDB::GdbCommand> BaseRemoteGDB::commandMap = {
     { 'S', { "KGDB_ASYNC_STEP", &BaseRemoteGDB::cmdAsyncStep } },
     // find out if the thread is alive
     { 'T', { "KGDB_THREAD_ALIVE", &BaseRemoteGDB::cmdUnsupported } },
+    //multi letter command
+    { 'v', { "KGDB_MULTI_LETTER", &BaseRemoteGDB::cmdMultiLetter } },
     // target exited
     { 'W', { "KGDB_TARGET_EXIT", &BaseRemoteGDB::cmdUnsupported } },
     // write memory
@@ -1102,6 +1104,67 @@ BaseRemoteGDB::cmdMemW(GdbCommand::Context &ctx)
         throw CmdError("E0B");
     send("OK");
     return true;
+}
+
+bool
+BaseRemoteGDB::cmdMultiLetter(GdbCommand::Context &ctx)
+{
+    GdbMultiLetterCommand::Context new_ctx;
+    new_ctx.type = ctx.type;
+    strtok(ctx.data,";?");
+    char* sep = strtok(NULL,";:?");
+
+    int txt_len = (sep != NULL) ? (sep - ctx.data) : strlen(ctx.data);
+    DPRINTF(GDBMisc, "Multi-letter: %s , len=%i\n", ctx.data,txt_len);
+    new_ctx.cmdTxt = std::string(ctx.data,txt_len);
+    new_ctx.data = sep;
+    new_ctx.len = ctx.len - txt_len;
+    try {
+        auto cmd_it = multiLetterMap.find(new_ctx.cmdTxt);
+        if (cmd_it == multiLetterMap.end()) {
+            DPRINTF(GDBMisc, "Unknown command: %s\n", new_ctx.cmdTxt);
+            throw Unsupported();
+        }
+        new_ctx.cmd = &(cmd_it->second);
+
+        return (this->*(new_ctx.cmd->func))(new_ctx);
+    //catching errors: we don't need to catch anything else
+    //as it will be handled by processCommands
+    } catch (CmdError &e) {
+        send(e.error);
+    }
+    return false;
+}
+
+std::map<std::string, BaseRemoteGDB::GdbMultiLetterCommand>
+BaseRemoteGDB::multiLetterMap = {
+    { "MustReplyEmpty", { "KGDB_REPLY_EMPTY", &BaseRemoteGDB::cmdReplyEmpty}},
+    { "Kill", { "KGDB_VKILL", &BaseRemoteGDB::cmdVKill}},
+};
+
+
+bool
+BaseRemoteGDB::cmdReplyEmpty(GdbMultiLetterCommand::Context &ctx)
+{
+    send("");
+    return true;
+}
+
+bool
+BaseRemoteGDB::cmdVKill(GdbMultiLetterCommand::Context &ctx)
+{
+    warn("GDB command for kill received detaching instead");
+    detach();
+    return false;
+}
+
+bool
+BaseRemoteGDB::cmdMultiUnsupported(GdbMultiLetterCommand::Context &ctx)
+{
+    DPRINTF(GDBMisc, "Unsupported Multi name command : %s\n",
+        ctx.cmd->name);
+    DDUMP(GDBMisc, ctx.data, ctx.len);
+    throw Unsupported();
 }
 
 namespace {
