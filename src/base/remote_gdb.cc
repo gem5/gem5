@@ -232,6 +232,39 @@ digit2i(char c)
         return -1;
 }
 
+//convert a hex to a char
+char
+hex2c(char c0,char c1)
+{
+   char temp[3] = {c0,c1,'\0'};
+   return std::stoi(temp,0,16);
+}
+
+//this function will be used in a future patch
+//convert a encoded string to a string
+[[maybe_unused]] std::string
+hexS2string(std::string hex_in)
+{
+   std::string out="";
+   for (unsigned int i = 0; i + 1 < hex_in.length();i += 2){
+       out.push_back(hex2c(hex_in[i],hex_in[i+1]));
+   }
+   return out;
+}
+
+//convert a string to a hex encoded string
+std::string
+string2hexS(std::string in)
+{
+   std::string out = "";
+   for (auto ch : in){
+       char temp[3] = "  ";
+        std::snprintf(temp,3,"%02hhx",ch);
+        out.append(temp);
+   }
+   return out;
+}
+
 // Convert the low 4 bits of an integer into an hex digit.
 char
 i2digit(int n)
@@ -917,7 +950,10 @@ void
 BaseRemoteGDB::sendSPacket(int errnum){
        send("S%02x",errnum);
 }
-
+void
+BaseRemoteGDB::sendOPacket(const std::string message){
+   send("O" + string2hexS(message));
+}
 void
 BaseRemoteGDB::scheduleInstCommitEvent(Event *ev, int delta)
 {

@@ -324,6 +324,8 @@ class BaseRemoteGDB
 
     void sendTPacket(int errnum, ContextID id,const std::string& stopReason);
     void sendSPacket(int errnum);
+    //The OPacket allow to send string to be displayed by the remote GDB
+    void sendOPacket(const std::string message);
     /*
      * GDB commands.
      */
