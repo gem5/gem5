@@ -1299,8 +1299,10 @@ splitAt(std::string str, const char * const delim)
 std::map<std::string, BaseRemoteGDB::QuerySetCommand>
         BaseRemoteGDB::queryMap = {
     { "C", { &BaseRemoteGDB::queryC } },
+    { "Attached", { &BaseRemoteGDB::queryAttached} },
     { "Supported", { &BaseRemoteGDB::querySupported, ";" } },
     { "Xfer", { &BaseRemoteGDB::queryXfer } },
+    { "Symbol", { &BaseRemoteGDB::querySymbol  ,":" } },
     { "fThreadInfo", { &BaseRemoteGDB::queryFThreadInfo } },
     { "sThreadInfo", { &BaseRemoteGDB::querySThreadInfo } },
 };
@@ -1364,6 +1366,25 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
     encodeXferResponse(content, encoded, offset, length);
     send(encoded);
 }
+void
+BaseRemoteGDB::querySymbol(QuerySetCommand::Context &ctx)
+{
+    //The target does not need to look up any (more) symbols.
+    send("OK");
+}
+
+void
+BaseRemoteGDB::queryAttached(QuerySetCommand::Context &ctx)
+{
+    std::string pid="";
+    if (!ctx.args.empty() && !ctx.args[0].empty()){
+         pid=ctx.args[0];
+    }
+    DPRINTF(GDBMisc, "QAttached : pid=%s\n",pid);
+    //The remote server is attached to an existing process.
+    send("1");
+}
+
 
 void
 BaseRemoteGDB::queryFThreadInfo(QuerySetCommand::Context &ctx)
