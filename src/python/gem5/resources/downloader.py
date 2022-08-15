@@ -253,7 +253,33 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
         # number of download attempts has been reached or if a HTTP status code
         # other than 408, 429, or 5xx is received.
         try:
-            urllib.request.urlretrieve(url, download_to)
+            # check to see if user requests a proxy connection
+            use_proxy = os.getenv("GEM5_USE_PROXY")
+            if use_proxy:
+                # If the "use_proxy" variable is specified we setup a socks5
+                # connection.
+
+                import socks
+                import socket
+                import ssl
+
+                IP_ADDR, host_port = use_proxy.split(":")
+                PORT = int(host_port)
+                socks.set_default_proxy(socks.SOCKS5, IP_ADDR, PORT)
+                socket.socket = socks.socksocket
+
+                # base SSL context for https connection
+                ctx = ssl.create_default_context()
+                ctx.check_hostname = False
+                ctx.verify_mode = ssl.CERT_NONE
+
+                # get the file as a bytes blob
+                request = urllib.request.Request(url)
+                with urllib.request.urlopen(request, context=ctx) as fr:
+                    with open(download_to, "wb") as fw:
+                        fw.write(fr.read())
+            else:
+                urllib.request.urlretrieve(url, download_to)
             return
         except HTTPError as e:
             # If the error code retrieved is retryable, we retry using a
@@ -268,9 +294,22 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
                         "not be retrieved. HTTP Status Code retrieved: "
                         f"{e.code}"
                     )
-                time.sleep((2 ** attempt) + random.uniform(0, 1))
+                time.sleep((2**attempt) + random.uniform(0, 1))
             else:
                 raise e
+        except ValueError as e:
+            raise Exception(
+                "Environment variable GEM5_USE_PROXY is set to "
+                f"'{use_proxy}'. The expected form is "
+                "<host>:<port>'."
+            )
+        except ImportError as e:
+            raise Exception(
+                "An import error has occurred. This is likely due "
+                "the Python SOCKS client module not being "
+                "installed. It can be installed with "
+                "`pip install PySocks`."
+            )
 
 
 def list_resources() -> List[str]:
