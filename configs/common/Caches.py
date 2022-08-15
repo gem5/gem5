@@ -59,6 +59,8 @@ class L1_ICache(L1Cache):
     # Writeback clean lines as well
     writeback_clean = True
 
+    # response_latency = 300
+
 class L1_DCache(L1Cache):
     pass
 
