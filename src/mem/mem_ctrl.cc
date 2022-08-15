@@ -92,6 +92,9 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
         fatal("Write buffer low threshold %d must be smaller than the "
               "high threshold %d\n", p.write_low_thresh_perc,
               p.write_high_thresh_perc);
+    if (p.disable_sanity_check) {
+        port.disableSanityCheck();
+    }
 }
 
 void
@@ -1489,6 +1492,12 @@ MemCtrl::MemoryPort::recvTimingReq(PacketPtr pkt)
 {
     // pass it to the memory controller
     return ctrl.recvTimingReq(pkt);
+}
+
+void
+MemCtrl::MemoryPort::disableSanityCheck()
+{
+    queue.disableSanityCheck();
 }
 
 } // namespace memory

@@ -258,6 +258,7 @@ class MemCtrl : public qos::MemCtrl
       public:
 
         MemoryPort(const std::string& name, MemCtrl& _ctrl);
+        void disableSanityCheck();
 
       protected:
 

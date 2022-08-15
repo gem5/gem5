@@ -98,3 +98,4 @@ class MemCtrl(QoSMemCtrl):
     static_backend_latency = Param.Latency("10ns", "Static backend latency")
 
     command_window = Param.Latency("10ns", "Static backend latency")
+    disable_sanity_check = Param.Bool(False, "Disable port resp Q size check")
