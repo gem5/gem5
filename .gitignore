@@ -33,3 +33,4 @@ configs/dram/lowp_sweep.cfg
 .pyenv
 fs_images/
 cpu_tests/benchmarks/bin/arm/
+.idea/

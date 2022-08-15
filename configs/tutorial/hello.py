@@ -2,7 +2,7 @@ import m5
 from m5.objects import *
 
 root = Root(full_system=False)
-root.hello = HelloObject()
+root.hello = MyHelloObject(time_to_wait='2us', number_of_fires=10)
 
 m5.instantiate()
 
