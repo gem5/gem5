@@ -283,12 +283,8 @@ class Simulator:
             # (for example, in `get_stats()`).
             self._root = root
 
-            if any(
-                core.is_kvm_core()
-                for core in self._board.get_processor().get_cores()
-            ):
-                m5.ticks.fixGlobalFrequency()
-                root.sim_quantum = m5.ticks.fromSeconds(0.001)
+            m5.ticks.fixGlobalFrequency()
+            root.sim_quantum = m5.ticks.fromSeconds(0.001)
 
             # m5.instantiate() takes a parameter specifying the path to the
             # checkpoint directory. If the parameter is None, no checkpoint

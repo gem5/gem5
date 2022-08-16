@@ -79,11 +79,6 @@ class SwitchableProcessor(AbstractProcessor):
         )
 
         if self._prepare_kvm:
-            if not self._current_cores[0].is_kvm_core():
-                raise Exception(
-                    "When using KVM, the switchable processor must start "
-                    "with the KVM cores."
-                )
             from m5.objects import KvmVM
 
             self.kvm_vm = KvmVM()
