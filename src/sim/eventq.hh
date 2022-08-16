@@ -46,6 +46,7 @@
 
 #include "base/debug.hh"
 #include "base/flags.hh"
+#include "base/trace.hh"
 #include "base/types.hh"
 #include "base/uncontended_mutex.hh"
 #include "debug/Event.hh"

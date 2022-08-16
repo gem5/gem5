@@ -157,6 +157,7 @@
 #include "mem/translating_port_proxy.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
+#include "sim/sim_events.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -241,7 +242,7 @@ hex2c(char c0,char c1)
 
 //this function will be used in a future patch
 //convert a encoded string to a string
-[[maybe_unused]] std::string
+std::string
 hexS2string(std::string hex_in)
 {
    std::string out="";
@@ -554,7 +555,6 @@ BaseRemoteGDB::trap(ContextID id, GDBSignal sig,const std::string& stopReason)
         return;
 
     if (tc->contextId() != id) {
-
         //prevent thread switch when single stepping
         if (singleStepEvent.scheduled()){
             return;
@@ -564,11 +564,14 @@ BaseRemoteGDB::trap(ContextID id, GDBSignal sig,const std::string& stopReason)
             return;
     }
 
+
     DPRINTF(GDBMisc, "trap: PC=%s\n", tc->pcState());
 
     clearSingleStep();
-
-    if (threadSwitching) {
+    if (stopReason=="monitor_return"){
+        //should wnot send any Tpacket here
+        send("OK");
+    }else if (threadSwitching) {
         threadSwitching = false;
         // Tell GDB the thread switch has completed.
         send("OK");
@@ -1326,6 +1329,7 @@ splitAt(std::string str, const char * const delim)
 std::map<std::string, BaseRemoteGDB::QuerySetCommand>
         BaseRemoteGDB::queryMap = {
     { "C", { &BaseRemoteGDB::queryC } },
+    { "Rcmd", { &BaseRemoteGDB::queryRcmd} },
     { "Attached", { &BaseRemoteGDB::queryAttached} },
     { "Supported", { &BaseRemoteGDB::querySupported, ";" } },
     { "Xfer", { &BaseRemoteGDB::queryXfer } },
@@ -1416,6 +1420,38 @@ BaseRemoteGDB::queryAttached(QuerySetCommand::Context &ctx)
     return true;
 }
 
+class MonitorCallEvent : public GlobalSimLoopExitEvent
+{
+    BaseRemoteGDB& gdb;
+    ContextID id;
+    public:
+    MonitorCallEvent(BaseRemoteGDB& gdb,ContextID id,const std::string &_cause,
+                  int code):
+                  GlobalSimLoopExitEvent(_cause,code), gdb(gdb),id(id)
+                  {};
+    void process() override{
+        GlobalSimLoopExitEvent::process();
+    }
+    void clean() override{
+        //trapping now
+        //this is the only point in time when we can call trap
+        //before any breakpoint triggers
+        gdb.trap(id,GDBSignal::ZERO,"monitor_return");
+        delete this;
+    }
+    ~MonitorCallEvent(){
+        DPRINTF(Event,"MonitorCallEvent destructed\n");;
+    }
+};
+
+bool
+BaseRemoteGDB::queryRcmd(QuerySetCommand::Context &ctx){
+    std::string message=hexS2string(ctx.args[0]);
+    DPRINTF(GDBMisc, "Rcmd Query: %s => %s\n", ctx.args[0],message);
+    //Tick when = curTick();
+    new MonitorCallEvent(*this,tc->contextId(),"GDB_MONITOR:"+ message, 0);
+    return false;
+}
 
 bool
 BaseRemoteGDB::queryFThreadInfo(QuerySetCommand::Context &ctx)
@@ -1444,7 +1480,7 @@ BaseRemoteGDB::cmdQueryVar(GdbCommand::Context &ctx)
 {
     // The query command goes until the first ':', or the end of the string.
     std::string s(ctx.data, ctx.len);
-    auto query_split = splitAt({ ctx.data, (size_t)ctx.len }, ":");
+    auto query_split = splitAt({ ctx.data, (size_t)ctx.len }, ":,");
     const auto &query_str = query_split.first;
 
     // Look up the query command, and report if it isn't found.

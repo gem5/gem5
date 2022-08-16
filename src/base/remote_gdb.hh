@@ -433,6 +433,7 @@ class BaseRemoteGDB
     bool querySupported(QuerySetCommand::Context &ctx);
     bool queryXfer(QuerySetCommand::Context &ctx);
     bool querySymbol(QuerySetCommand::Context &ctx);
+    bool queryRcmd(QuerySetCommand::Context &ctx);
     bool queryAttached(QuerySetCommand::Context &ctx);
 
     size_t threadInfoIdx = 0;
