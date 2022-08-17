@@ -25,13 +25,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+from abc import abstractmethod
 from m5.objects import Port, PortTerminator
 from ...utils.override import overrides
 
-from .cpu_types import CPUTypes
 from .abstract_core import AbstractCore
 from ...isas import ISA
-from ...utils.requires import requires
 
 from typing import Optional
 
@@ -102,3 +101,12 @@ class AbstractGeneratorCore(AbstractCore):
         connect them to walker ports. Just pass here.
         """
         pass
+
+    @abstractmethod
+    def start_traffic(self):
+        """
+        External interface to start generating the trace of addresses.
+        Depending on what SimObject is wrapped by this component this method
+        might need be implemented.
+        """
+        raise NotImplementedError

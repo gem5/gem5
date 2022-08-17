@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Iterator, Any
 from m5.ticks import fromSeconds
 from m5.util.convert import toLatency, toMemoryBandwidth
 from m5.objects import PyTrafficGen, Port
@@ -178,6 +179,7 @@ class ComplexGeneratorCore(AbstractGeneratorCore):
         self._traffic_params = self._traffic_params + [param]
         self._traffic_set = False
 
+    @overrides(AbstractGeneratorCore)
     def start_traffic(self) -> None:
         """
         This function first checks if there are any pending traffics that
@@ -238,6 +240,25 @@ class ComplexGeneratorCore(AbstractGeneratorCore):
                 self._traffic = self._traffic + [traffic]
 
         self._traffic_set = True
+
+    def set_traffic_from_python_generator(
+        self, python_generator: Iterator[Any]
+    ) -> None:
+        """
+        Function to set the traffic from a user defined python generator.
+        The generator should only only assume one input argument (positional)
+        for the actual PyTrafficGen object to create the traffic. This is possible
+        either through using a generator with hardcoded parameters in the
+        function calls to PyTrafficGen methods or by compiling a flexible
+        python generator into a generator object with only one
+        input argument (positional) using functools.partial.
+
+        :param generator: A python generator object that creates traffic
+        patterns through calls to methods of PyTrafficGen.
+        """
+        if not self._traffic_set:
+            self._set_traffic()
+        self._traffic.append(python_generator(self.generator))
 
     def _create_linear_traffic(
         self,

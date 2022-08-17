@@ -26,16 +26,15 @@
 
 
 from typing import Optional
+
 from m5.objects import Addr
 from ...utils.override import overrides
 
-from ..boards.mem_mode import MemMode
-from .abstract_processor import AbstractProcessor
-from ..boards.abstract_board import AbstractBoard
+from .abstract_generator import AbstractGenerator
 from .gups_generator_core import GUPSGeneratorCore
 
 
-class GUPSGenerator(AbstractProcessor):
+class GUPSGenerator(AbstractGenerator):
     def __init__(
         self,
         start_addr: Addr,
@@ -68,12 +67,10 @@ class GUPSGenerator(AbstractProcessor):
             ]
         )
 
-    @overrides(AbstractProcessor)
-    def incorporate_processor(self, board: AbstractBoard) -> None:
-        board.set_mem_mode(MemMode.TIMING)
-
+    @overrides(AbstractGenerator)
     def start_traffic(self):
-        # This function should be implemented so that GUPSGenerator could be
-        # used in the same scripts that use LinearGenerator, RandomGenerator,
-        # and ComplexGenrator
+        """
+        Since GUPSGeneratorCore does not need a call to start_traffic to
+        start generation. This function is just pass.
+        """
         pass

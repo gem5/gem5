@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2022 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,35 +24,44 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-from typing import Optional
 from ...utils.override import overrides
-from .abstract_core import AbstractCore
-from .abstract_generator_core import AbstractGeneratorCore
-from m5.objects import Port, GUPSGen, Addr, SrcClockDomain, VoltageDomain
+from .traffic_generator_core import TrafficGeneratorCore
+
+from .abstract_generator import AbstractGenerator
+
+from typing import List
 
 
-class GUPSGeneratorCore(AbstractGeneratorCore):
+class TrafficGenerator(AbstractGenerator):
     def __init__(
         self,
-        start_addr: Addr,
-        mem_size: str,
-        update_limit: int,
-        clk_freq: Optional[str],
-    ):
-        """
-        Create a GUPSGeneratorCore as the main generator.
-        """
-        super().__init__()
-        self.generator = GUPSGen(
-            start_addr=start_addr, mem_size=mem_size, update_limit=update_limit
+        config_file_list: List[str],
+    ) -> None:
+        super().__init__(
+            cores=self._create_cores(config_file_list=config_file_list)
         )
-        if clk_freq:
-            clock_domain = SrcClockDomain(
-                clock=clk_freq, voltage_domain=VoltageDomain()
-            )
-            self.generator.clk_domain = clock_domain
+        """The traffic generator
 
-    @overrides(AbstractCore)
-    def connect_dcache(self, port: Port) -> None:
-        self.generator.port = port
+        This class defines an external interface to create a list of traffic
+        generator cores that could replace the processing cores in a board.
+
+        :param config_file_list: A list containing the path to configuration
+        file each describing the traffic pattern that should be created by
+        each core of the generator.
+        """
+
+    def _create_cores(
+        self, config_file_list: List[str]
+    ) -> List[TrafficGeneratorCore]:
+        """
+        The helper function to create the cores for the generator, it will use
+        the same inputs as the constructor function.
+        """
+        return [
+            TrafficGeneratorCore(config_file)
+            for config_file in config_file_list
+        ]
+
+    @overrides(AbstractGenerator)
+    def start_traffic(self) -> None:
+        pass

@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2022 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,35 +24,44 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-from typing import Optional
+from abc import abstractmethod
 from ...utils.override import overrides
-from .abstract_core import AbstractCore
+from ..boards.mem_mode import MemMode
 from .abstract_generator_core import AbstractGeneratorCore
-from m5.objects import Port, GUPSGen, Addr, SrcClockDomain, VoltageDomain
+
+from .abstract_processor import AbstractProcessor
+from ..boards.abstract_board import AbstractBoard
+
+from typing import List
 
 
-class GUPSGeneratorCore(AbstractGeneratorCore):
-    def __init__(
-        self,
-        start_addr: Addr,
-        mem_size: str,
-        update_limit: int,
-        clk_freq: Optional[str],
-    ):
+class AbstractGenerator(AbstractProcessor):
+    """The abstract generator
+    It defines the external interface of every generator component.
+    """
+
+    def __init__(self, cores: List[AbstractGeneratorCore]) -> None:
         """
-        Create a GUPSGeneratorCore as the main generator.
+        Create a list of AbstractGeneratorCore (which is an AbstractCore),
+        to pass to the constructor of the AbstractProcessor. Due to the
+        different prototypes for the constructor of different generator types
+        inputs are noted as *args. This way the abstract method _create_cores
+        could be called without AbstractGenerator having to know what the
+        prototype for the constructor of the inheriting class is. It also
+        limits the _create_cores function to only using positional arguments.
+        keyword (optional arguments) are still allowable in the constructor of
+        the inheriting classes.
         """
-        super().__init__()
-        self.generator = GUPSGen(
-            start_addr=start_addr, mem_size=mem_size, update_limit=update_limit
-        )
-        if clk_freq:
-            clock_domain = SrcClockDomain(
-                clock=clk_freq, voltage_domain=VoltageDomain()
-            )
-            self.generator.clk_domain = clock_domain
+        super().__init__(cores=cores)
 
-    @overrides(AbstractCore)
-    def connect_dcache(self, port: Port) -> None:
-        self.generator.port = port
+    @overrides(AbstractProcessor)
+    def incorporate_processor(self, board: AbstractBoard) -> None:
+        board.set_mem_mode(MemMode.TIMING)
+
+    @abstractmethod
+    def start_traffic(self) -> None:
+        """
+        Depending on what the internal generator core for inheriting classes is
+        this method needs to be implemented in detail or implmeneted as pass.
+        """
+        raise NotImplementedError

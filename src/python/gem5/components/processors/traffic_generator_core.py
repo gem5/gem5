@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2022 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,33 +25,30 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from typing import Optional
-from ...utils.override import overrides
+from m5.objects import Port, TrafficGen
+
 from .abstract_core import AbstractCore
 from .abstract_generator_core import AbstractGeneratorCore
-from m5.objects import Port, GUPSGen, Addr, SrcClockDomain, VoltageDomain
+from ...utils.override import overrides
 
 
-class GUPSGeneratorCore(AbstractGeneratorCore):
-    def __init__(
-        self,
-        start_addr: Addr,
-        mem_size: str,
-        update_limit: int,
-        clk_freq: Optional[str],
-    ):
+class TrafficGeneratorCore(AbstractGeneratorCore):
+    """The traffic generator core interface.
+
+    This class defines the interface for a generator core that will create
+    a compound traffic specified by the parameters below. It uses
+    TrafficGen to create the traffic.
+
+    :param config_file: path to the configuration file specifying the
+    pattern of traffic.
+    """
+
+    def __init__(self, config_file: str):
         """
-        Create a GUPSGeneratorCore as the main generator.
+        Create a TrafficGen SimObject as the core of this component.
         """
         super().__init__()
-        self.generator = GUPSGen(
-            start_addr=start_addr, mem_size=mem_size, update_limit=update_limit
-        )
-        if clk_freq:
-            clock_domain = SrcClockDomain(
-                clock=clk_freq, voltage_domain=VoltageDomain()
-            )
-            self.generator.clk_domain = clock_domain
+        self.generator = TrafficGen(config_file=config_file)
 
     @overrides(AbstractCore)
     def connect_dcache(self, port: Port) -> None:
