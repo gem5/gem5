@@ -76,8 +76,6 @@ null_tests = [
         [
             "--abs-max-tick",
             "20000000",
-            "--functional",
-            "10",
             "--network=garnet",
         ],
     ),
