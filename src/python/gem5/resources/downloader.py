@@ -191,10 +191,7 @@ def _get_resources(resources_group: Dict) -> Dict[str, Dict]:
 
     to_return = {}
     for resource in resources_group:
-        # 'artifact' is the old naming, we keep it here for
-        # backwards compatibility, but it can be removed with time:
-        # https://gem5-review.googlesource.com/c/public/gem5-resources/+/51169.
-        if resource["type"] == "artifact" or resource["type"] == "resource":
+        if resource["type"] == "resource":
             # If the type is "resource" then we add it directly to the map
             # after a check that the name is unique.
             if resource["name"] in to_return.keys():
