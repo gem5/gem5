@@ -250,6 +250,11 @@ parser.add_argument(
     help="Count Page Accesses and output in per-CU output files",
 )
 parser.add_argument(
+    "--max-cu-tokens",
+    type=int,
+    help="Number of coalescer tokens per CU",
+)
+parser.add_argument(
     "--TLB-prefetch", type=int, help="prefetch depth for" "TLBs"
 )
 parser.add_argument(
@@ -433,6 +438,7 @@ for i in range(n_cu):
             functionalTLB=args.FunctionalTLB,
             localMemBarrier=args.LocalMemBarrier,
             countPages=args.countPages,
+            max_cu_tokens=args.max_cu_tokens,
             localDataStore=LdsState(
                 banks=args.numLdsBanks,
                 bankConflictPenalty=args.ldsBankConflictPenalty,
