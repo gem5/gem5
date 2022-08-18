@@ -130,7 +130,6 @@
 #include "base/remote_gdb.hh"
 
 #include <sys/select.h>
-#include <sys/signal.h>
 #include <sys/time.h>
 #include <unistd.h>
 
@@ -192,7 +191,7 @@ class HardBreakpoint : public PCEvent
         DPRINTF(GDBMisc, "handling hardware breakpoint at %#x\n", pc());
 
         if (tc == gdb->tc)
-            gdb->trap(tc->contextId(), SIGTRAP,"");
+            gdb->trap(tc->contextId(), GDBSignal::TRAP,"");
     }
 };
 
@@ -549,7 +548,7 @@ BaseRemoteGDB::selectThreadContext(ContextID id)
 // makes sense to use POSIX errno values, because that is what the
 // gdb/remote.c functions want to return.
 void
-BaseRemoteGDB::trap(ContextID id, int signum,const std::string& stopReason)
+BaseRemoteGDB::trap(ContextID id, GDBSignal sig,const std::string& stopReason)
 {
     if (!attached)
         return;
@@ -575,10 +574,10 @@ BaseRemoteGDB::trap(ContextID id, int signum,const std::string& stopReason)
         send("OK");
     } else {
         // Tell remote host that an exception has occurred.
-        sendTPacket(signum,id,stopReason);
+        sendTPacket(sig,id,stopReason);
     }
 
-    processCommands(signum);
+    processCommands(sig);
 }
 
 bool
@@ -613,7 +612,7 @@ BaseRemoteGDB::incomingData(int revent)
     }
 
     if (revent & POLLIN) {
-        scheduleTrapEvent(tc->contextId(),SIGILL,0,"");
+        scheduleTrapEvent(tc->contextId(),GDBSignal::ILL,0,"");
     } else if (revent & POLLNVAL) {
         descheduleInstCommitEvent(&trapEvent);
         scheduleInstCommitEvent(&disconnectEvent, 0);
@@ -766,14 +765,14 @@ BaseRemoteGDB::send(const char *bp)
 }
 
 void
-BaseRemoteGDB::processCommands(int signum)
+BaseRemoteGDB::processCommands(GDBSignal sig)
 {
     // Stick frame regs into our reg cache.
     regCachePtr = gdbRegs();
     regCachePtr->getRegs(tc);
 
     GdbCommand::Context cmd_ctx;
-    cmd_ctx.type = signum;
+    cmd_ctx.type = sig;
     std::vector<char> data;
 
     for (;;) {
@@ -882,7 +881,7 @@ BaseRemoteGDB::singleStep()
 {
     if (!singleStepEvent.scheduled())
         scheduleInstCommitEvent(&singleStepEvent, 1);
-    trap(tc->contextId(), SIGTRAP);
+    trap(tc->contextId(), GDBSignal::TRAP);
 }
 
 void
@@ -951,18 +950,20 @@ BaseRemoteGDB::removeHardBreak(Addr addr, size_t kind)
 }
 
 void
-BaseRemoteGDB::sendTPacket(int errnum, ContextID id,
+BaseRemoteGDB::sendTPacket(GDBSignal sig, ContextID id,
     const std::string& stopReason)
 {
     if (!stopReason.empty()){
-        send("T%02xcore:%x;thread:%x;%s;",errnum,id + 1,id + 1,stopReason);
+        send("T%02xcore:%x;thread:%x;%s;",
+            (uint8_t)sig,id + 1,id + 1,stopReason);
     }else{
-        send("T%02xcore:%x;thread:%x;",errnum,id + 1,id + 1);
+        send("T%02xcore:%x;thread:%x;",
+            (uint8_t)sig,id + 1,id + 1);
     }
 }
 void
-BaseRemoteGDB::sendSPacket(int errnum){
-       send("S%02x",errnum);
+BaseRemoteGDB::sendSPacket(GDBSignal sig){
+       send("S%02x",(uint8_t)sig);
 }
 void
 BaseRemoteGDB::sendOPacket(const std::string message){
@@ -970,12 +971,12 @@ BaseRemoteGDB::sendOPacket(const std::string message){
 }
 
 void
-BaseRemoteGDB::scheduleTrapEvent(ContextID id,int type,int delta,
+BaseRemoteGDB::scheduleTrapEvent(ContextID id,GDBSignal sig,int delta,
     std::string stopReason){
     ThreadContext* _tc = threads[id];
     panic_if(_tc == nullptr, "Unknown context id :%i",id);
     trapEvent.id(id);
-    trapEvent.type(type);
+    trapEvent.type(sig);
     trapEvent.stopReason(stopReason);
     if (!trapEvent.scheduled())
         scheduleInstCommitEvent(&trapEvent,delta,_tc);
@@ -1171,7 +1172,7 @@ BaseRemoteGDB::cmdSetThread(GdbCommand::Context &ctx)
                 throw CmdError("E04");
             // Line up on an instruction boundary in the new thread.
             threadSwitching = true;
-            scheduleTrapEvent(tid,0,0,"");
+            scheduleTrapEvent(tid,GDBSignal::ZERO,0,"");
             return false;
         }
     } else {

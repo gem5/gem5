@@ -391,7 +391,7 @@ System::workItemEnd(uint32_t tid, uint32_t workid)
 }
 
 bool
-System::trapToGdb(int signal, ContextID ctx_id) const
+System::trapToGdb(GDBSignal signal, ContextID ctx_id) const
 {
     return workload->trapToGdb(signal, ctx_id);
 }

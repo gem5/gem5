@@ -72,7 +72,7 @@ Workload::replaceThreadContext(ThreadContext *tc)
 }
 
 bool
-Workload::trapToGdb(int signal, ContextID ctx_id)
+Workload::trapToGdb(GDBSignal signal, ContextID ctx_id)
 {
     if (gdb && gdb->isAttached()) {
         gdb->trap(ctx_id, signal);
