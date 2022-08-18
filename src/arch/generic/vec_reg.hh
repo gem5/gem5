@@ -110,7 +110,7 @@
 namespace gem5
 {
 
-constexpr unsigned MaxVecRegLenInBytes = 4096;
+constexpr unsigned MaxVecRegLenInBytes = 1ULL << 16; // 2^16 bytes
 
 /**
  * Vector Register Abstraction
