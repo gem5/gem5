@@ -555,6 +555,12 @@ BaseRemoteGDB::trap(ContextID id, int signum,const std::string& stopReason)
         return;
 
     if (tc->contextId() != id) {
+
+        //prevent thread switch when single stepping
+        if (singleStepEvent.scheduled()){
+            return;
+        }
+        DPRINTF(GDBMisc, "Finishing thread switch");
         if (!selectThreadContext(id))
             return;
     }
