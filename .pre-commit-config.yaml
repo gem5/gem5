@@ -47,6 +47,8 @@ exclude: |
     src/python/m5/ext/.*
   )$
 
+default_stages: [commit]
+
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v4.3.0
@@ -63,3 +65,18 @@ repos:
   rev: 22.6.0
   hooks:
     - id: black
+- repo: local
+  hooks:
+  - id: gem5-style-checker
+    name: gem5 style checker
+    entry: util/git-pre-commit.py
+    always_run: true
+    exclude: ".*"
+    language: system
+    description: 'The gem5 style checker hook.'
+  - id: gem5-commit-msg-checker
+    name: gem5 commit msg checker
+    entry: ext/git-commit-msg
+    language: system
+    stages: [commit-msg]
+    description: 'The gem5 commit message checker hook.'
