@@ -25,8 +25,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from abc import ABCMeta, abstractmethod
+import inspect
 
 from .mem_mode import MemMode, mem_mode_to_string
+from ...resources.workload import AbstractWorkload
 
 from m5.objects import (
     System,
@@ -176,6 +178,37 @@ class AbstractBoard:
                 "function is run."
             )
         return self._is_fs
+
+    def set_workload(self, workload: AbstractWorkload) -> None:
+        """
+        Set the workload for this board to run.
+
+        This function will take the workload specified and run the correct
+        workload function (e.g., `set_kernel_disk_workload`) with the correct
+        parameters
+
+        :params workload: The workload to be set to this board.
+        """
+
+        try:
+            func = getattr(self, workload.get_function_str())
+        except AttributeError:
+            raise Exception(
+                "This board does not support this workload type. "
+                f"This board does not contain the necessary "
+                f"`{workload.get_function_str()}` function"
+            )
+
+        func_signature = inspect.signature(func)
+        for param_name in workload.get_parameters().keys():
+            if param_name not in func_signature.parameters.keys():
+                raise Exception(
+                    "Workload specifies non-existent parameter "
+                    f"`{param_name}` for function "
+                    f"`{workload.get_function_str()}` "
+                )
+
+        func(**workload.get_parameters())
 
     @abstractmethod
     def _setup_board(self) -> None:

@@ -39,7 +39,7 @@ from pathlib import Path
 import tarfile
 from tempfile import gettempdir
 from urllib.error import HTTPError
-from typing import List, Dict
+from typing import List, Dict, Set, Optional
 
 from .md5_utils import md5_file, md5_dir
 
@@ -182,17 +182,27 @@ def _get_url_base() -> str:
     return ""
 
 
-def _get_resources(resources_group: Dict) -> Dict[str, Dict]:
+def _get_resources(
+    valid_types: Set[str], resources_group: Optional[Dict] = None
+) -> Dict[str, Dict]:
     """
-    A recursive function to get all the resources.
+    A recursive function to get all the workload/resource of the specified type
+    in the resources.json file.
 
-    :returns: A dictionary of resource names to the resource JSON objects.
+    :param valid_types: The type to return (i.e., "resource" or "workload).
+    :param resource_group: Used for recursion: The current resource group being
+    iterated through.
+
+    :returns: A dictionary of artifact names to the resource JSON objects.
     """
+
+    if resources_group is None:
+        resources_group = _get_resources_json()["resources"]
 
     to_return = {}
     for resource in resources_group:
-        if resource["type"] == "resource":
-            # If the type is "resource" then we add it directly to the map
+        if resource["type"] in valid_types:
+            # If the type is valid then we add it directly to the map
             # after a check that the name is unique.
             if resource["name"] in to_return.keys():
                 raise Exception(
@@ -204,7 +214,9 @@ def _get_resources(resources_group: Dict) -> Dict[str, Dict]:
         elif resource["type"] == "group":
             # If it's a group we get recursive. We then check to see if there
             # are any duplication of keys.
-            new_map = _get_resources(resource["contents"])
+            new_map = _get_resources(
+                valid_types=valid_types, resources_group=resource["contents"]
+            )
             intersection = set(new_map.keys()).intersection(to_return.keys())
             if len(intersection) > 0:
                 # Note: if this error is received it's likely an error with
@@ -216,10 +228,6 @@ def _get_resources(resources_group: Dict) -> Dict[str, Dict]:
                     )
                 )
             to_return.update(new_map)
-        else:
-            raise Exception(
-                "Error: Unknown type '{}'.".format(resource["type"])
-            )
 
     return to_return
 
@@ -315,7 +323,26 @@ def list_resources() -> List[str]:
 
     :returns: A list of resources by name.
     """
-    return _get_resources(_get_resources_json()["resources"]).keys()
+    return _get_resources(valid_types={"resource"}).keys()
+
+
+def get_workload_json_obj(workload_name: str) -> Dict:
+    """
+    Get a JSON object of a specified workload.
+
+    :param workload_name: The name of the workload.
+
+    :raises Exception: An exception is raised if the specified workload does
+    not exit.
+    """
+    workload_map = _get_resources(valid_types={"workload"})
+
+    if workload_name not in workload_map:
+        raise Exception(
+            f"Error: Workload with name {workload_name} does not exist"
+        )
+
+    return workload_map[workload_name]
 
 
 def get_resources_json_obj(resource_name: str) -> Dict:
@@ -329,7 +356,7 @@ def get_resources_json_obj(resource_name: str) -> Dict:
     :raises Exception: An exception is raised if the specified resources does
     not exist.
     """
-    resource_map = _get_resources(_get_resources_json()["resources"])
+    resource_map = _get_resources(valid_types={"resource"})
 
     if resource_name not in resource_map:
         raise Exception(
