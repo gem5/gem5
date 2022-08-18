@@ -450,7 +450,6 @@ def format LoadReserved(memacc_code, postacc_code={{ }}, ea_code={{EA = Rs1;}},
 
     header_output += LRSCMicroDeclare.subst(iop)
     decoder_output += LRSCMicroConstructor.subst(iop)
-    decode_block += BasicDecode.subst(iop)
     exec_output += LoadReservedExecute.subst(iop) \
         + LoadReservedInitiateAcc.subst(iop) \
         + LoadReservedCompleteAcc.subst(iop)
@@ -478,7 +477,6 @@ def format StoreCond(memacc_code, postacc_code={{ }}, ea_code={{EA = Rs1;}},
 
     header_output += LRSCMicroDeclare.subst(iop)
     decoder_output += LRSCMicroConstructor.subst(iop)
-    decode_block += BasicDecode.subst(iop)
     exec_output += StoreCondExecute.subst(iop) \
         + StoreCondInitiateAcc.subst(iop) \
         + StoreCondCompleteAcc.subst(iop)
@@ -510,7 +508,6 @@ def format AtomicMemOp(memacc_code, amoop_code, postacc_code={{ }},
 
     header_output += AtomicMemOpRMWDeclare.subst(rmw_iop)
     decoder_output += AtomicMemOpRMWConstructor.subst(rmw_iop)
-    decode_block += BasicDecode.subst(rmw_iop)
     exec_output += AtomicMemOpRMWExecute.subst(rmw_iop) \
                  + AtomicMemOpRMWInitiateAcc.subst(rmw_iop) \
                  + AtomicMemOpRMWCompleteAcc.subst(rmw_iop)
