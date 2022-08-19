@@ -61,11 +61,11 @@ def getCPUClass(cpu_type):
 def setCPUClass(options):
     """Returns two cpu classes and the initial mode of operation.
 
-       Restoring from a checkpoint or fast forwarding through a benchmark
-       can be done using one type of cpu, and then the actual
-       simulation can be carried out using another type. This function
-       returns these two types of cpus and the initial mode of operation
-       depending on the options provided.
+    Restoring from a checkpoint or fast forwarding through a benchmark
+    can be done using one type of cpu, and then the actual
+    simulation can be carried out using another type. This function
+    returns these two types of cpus and the initial mode of operation
+    depending on the options provided.
     """
 
     TmpClass, test_mem_mode = getCPUClass(options.cpu_type)
@@ -300,9 +300,12 @@ def benchCheckpoints(options, maxtick, cptdir):
 def parseSimpointAnalysisFile(options, testsys):
     import re
 
-    simpoint_filename, weight_filename, interval_length, warmup_length = options.take_simpoint_checkpoints.split(
-        ",", 3
-    )
+    (
+        simpoint_filename,
+        weight_filename,
+        interval_length,
+        warmup_length,
+    ) = options.take_simpoint_checkpoints.split(",", 3)
     print("simpoint analysis file:", simpoint_filename)
     print("simpoint weight file:", weight_filename)
     print("interval length:", interval_length)
@@ -496,6 +499,13 @@ def run(options, root, testsys, cpu_class):
     if options.maxinsts:
         for i in range(np):
             testsys.cpu[i].max_insts_any_thread = options.maxinsts
+
+    if options.override_vendor_string is not None:
+        for i in range(len(testsys.cpu)):
+            for j in range(len(testsys.cpu[i].isa)):
+                testsys.cpu[i].isa[
+                    j
+                ].vendor_string = options.override_vendor_string
 
     if cpu_class:
         switch_cpus = [

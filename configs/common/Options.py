@@ -670,6 +670,13 @@ def addCommonOptions(parser):
         "that are present under any of the roots. If not given, dump all "
         "stats. ",
     )
+    parser.add_argument(
+        "--override-vendor-string",
+        action="store",
+        type=str,
+        default=None,
+        help="Override vendor string returned by CPUID instruction in X86.",
+    )
 
 
 def addSEOptions(parser):
