@@ -30,6 +30,7 @@ from .base_cpu_core import BaseCPUCore
 from .cpu_types import CPUTypes
 from ...isas import ISA
 from ...utils.requires import requires
+from ...runtime import get_runtime_isa
 import importlib
 import platform
 
@@ -43,6 +44,15 @@ class SimpleCore(BaseCPUCore):
     def __init__(
         self, cpu_type: CPUTypes, core_id: int, isa: Optional[ISA] = None
     ):
+
+        # If the ISA is not specified, we infer it via the `get_runtime_isa`
+        # function.
+        if isa:
+            requires(isa_required=isa)
+            isa = isa
+        else:
+            isa = get_runtime_isa()
+
         super().__init__(
             core=SimpleCore.cpu_simobject_factory(
                 isa=isa, cpu_type=cpu_type, core_id=core_id
@@ -66,6 +76,8 @@ class SimpleCore(BaseCPUCore):
         :param isa: The target ISA.
         :param core_id: The id of the core to be returned.
         """
+
+        assert isa is not None
         requires(isa_required=isa)
 
         _isa_string_map = {
