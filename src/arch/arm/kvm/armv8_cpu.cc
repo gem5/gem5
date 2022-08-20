@@ -41,6 +41,7 @@
 
 #include "arch/arm/regs/int.hh"
 #include "arch/arm/regs/vec.hh"
+#include "arch/arm/utility.hh"
 #include "debug/KvmContext.hh"
 #include "params/ArmV8KvmCPU.hh"
 
@@ -336,7 +337,9 @@ ArmV8KvmCPU::updateThreadContext()
         KvmFPReg reg;
         DPRINTF(KvmContext, "  Q%i: %s\n", i, getAndFormatOneReg(kvmFPReg(i)));
         getOneReg(kvmFPReg(i), reg.data);
-        auto v = tc->getWritableVecReg(vecRegClass[i]).as<VecElem>();
+        auto *vc = static_cast<ArmISA::VecRegContainer *>(
+            tc->getWritableReg(vecRegClass[i]));
+        auto v = vc->as<VecElem>();
         for (int j = 0; j < FP_REGS_PER_VFP_REG; j++)
             v[j] = reg.s[j].i;
         if (!inAArch64(tc))
