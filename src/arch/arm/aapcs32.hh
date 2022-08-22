@@ -354,8 +354,11 @@ struct Argument<Aapcs32, Composite, typename std::enable_if_t<
             }
 
             if (bytes) {
-                (FullSystem ? TranslatingPortProxy(tc) :
-                    SETranslatingPortProxy(tc)).readBlob(
+                TranslatingPortProxy fs_proxy(tc);
+                SETranslatingPortProxy se_proxy(tc);
+                PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
+
+                virt_proxy.readBlob(
                     state.nsaa, buf, bytes);
 
                 state.stackUsed = true;

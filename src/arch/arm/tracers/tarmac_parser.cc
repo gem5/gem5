@@ -1295,8 +1295,11 @@ TarmacParserRecord::readMemNoEffect(Addr addr, uint8_t *data, unsigned size,
             return false;
         // the translating proxy will perform the virtual to physical
         // translation again
-        (FullSystem ? TranslatingPortProxy(thread) :
-         SETranslatingPortProxy(thread)).readBlob(addr, data, size);
+        TranslatingPortProxy fs_proxy(thread);
+        SETranslatingPortProxy se_proxy(thread);
+        PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
+
+        virt_proxy.readBlob(addr, data, size);
     } else {
         return false;
     }

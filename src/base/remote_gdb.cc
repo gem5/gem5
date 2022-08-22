@@ -723,16 +723,22 @@ BaseRemoteGDB::processCommands(int signum)
 bool
 BaseRemoteGDB::readBlob(Addr vaddr, size_t size, char *data)
 {
-    (FullSystem ? TranslatingPortProxy(tc) : SETranslatingPortProxy(tc))
-        .readBlob(vaddr, data, size);
+    TranslatingPortProxy fs_proxy(tc);
+    SETranslatingPortProxy se_proxy(tc);
+    PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
+
+    virt_proxy.readBlob(vaddr, data, size);
     return true;
 }
 
 bool
 BaseRemoteGDB::writeBlob(Addr vaddr, size_t size, const char *data)
 {
-    (FullSystem ? TranslatingPortProxy(tc) : SETranslatingPortProxy(tc))
-        .writeBlob(vaddr, data, size);
+    TranslatingPortProxy fs_proxy(tc);
+    SETranslatingPortProxy se_proxy(tc);
+    PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
+
+    virt_proxy.writeBlob(vaddr, data, size);
     return true;
 }
 
