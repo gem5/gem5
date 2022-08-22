@@ -146,10 +146,10 @@ def decodeMessage(in_file, message):
 
 def _EncodeVarint32(out_file, value):
     """
-  The encoding of the Varint32 is copied from
-  google.protobuf.internal.encoder and is only repeated here to
-  avoid depending on the internal functions in the library.
-  """
+    The encoding of the Varint32 is copied from
+    google.protobuf.internal.encoder and is only repeated here to
+    avoid depending on the internal functions in the library.
+    """
     bits = value & 0x7F
     value >>= 7
     while value:

@@ -468,4 +468,3 @@ genTraceChild()
 {
     return new SparcTraceChild;
 }
-

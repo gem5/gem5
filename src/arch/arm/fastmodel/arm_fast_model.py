@@ -31,9 +31,9 @@ import _m5.arm_fast_model
 
 def set_armlmd_license_file(force=False):
     """Set the ARMLMD_LICENSE_FILE environment variable. If "force" is
-       False, then it will only be set if it wasn't already set in the
-       environment. The value it's set to is the one gem5 was built with.
-       """
+    False, then it will only be set if it wasn't already set in the
+    environment. The value it's set to is the one gem5 was built with.
+    """
     key = "ARMLMD_LICENSE_FILE"
     license_file = buildEnv[key]
     if force or key not in os.environ:

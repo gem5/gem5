@@ -174,5 +174,3 @@ def format CasAlt(code, postacc_code, mem_flags, *opt_flags) {{
      decode_block) = doCasFormat(code, SwapFuncs, AlternateASIPrivFaultCheck,
          name, Name, flags, ["IsStoreConditional"], postacc_code)
 }};
-
-

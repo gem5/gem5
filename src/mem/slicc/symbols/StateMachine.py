@@ -920,7 +920,7 @@ $c_ident::regStats()
     AbstractController::regStats();
 
     // For each type of controllers, one controller of that type is picked
-    // to aggregate stats of all controllers of that type. 
+    // to aggregate stats of all controllers of that type.
     if (m_version == 0) {
 
         Profiler *profiler = params().ruby_system->getProfiler();

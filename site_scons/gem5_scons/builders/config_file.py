@@ -46,15 +46,16 @@ from gem5_scons import Transform, MakeAction
 #
 ###################################################
 
+
 def ConfigFile(env):
     # This function generates a config header file that #defines the
     # variable symbol to the current variable setting (0 or 1).  The source
     # operands are the name of the variable and a Value node containing the
     # value of the variable.
     def build_config_file(target, source, env):
-        (variable, value) = [s.get_contents().decode('utf-8') for s in source]
-        with open(str(target[0].abspath), 'w') as f:
-            print('#define', variable, value, file=f)
+        (variable, value) = [s.get_contents().decode("utf-8") for s in source]
+        with open(str(target[0].abspath), "w") as f:
+            print("#define", variable, value, file=f)
         return None
 
     # Combine the two functions into a scons Action object.
@@ -66,8 +67,8 @@ def ConfigFile(env):
         # extract variable name from Builder arg
         variable = str(target[0])
         # True target is config header file
-        target = env.Dir('config').File(variable.lower() + '.hh')
-        val = env['CONF'][variable]
+        target = env.Dir("config").File(variable.lower() + ".hh")
+        val = env["CONF"][variable]
         if isinstance(val, bool):
             # Force value to 0/1
             val = str(int(val))
@@ -79,4 +80,4 @@ def ConfigFile(env):
 
     config_builder = env.Builder(emitter=config_emitter, action=config_action)
 
-    env.Append(BUILDERS = { 'ConfigFile' : config_builder })
+    env.Append(BUILDERS={"ConfigFile": config_builder})

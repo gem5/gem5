@@ -54,9 +54,9 @@ class MyCacheSystem(RubySystem):
 
     def setup(self, system, cpus, mem_ctrls):
         """Set up the Ruby cache subsystem. Note: This can't be done in the
-           constructor because many of these items require a pointer to the
-           ruby system (self). This causes infinite recursion in initialize()
-           if we do this in the __init__.
+        constructor because many of these items require a pointer to the
+        ruby system (self). This causes infinite recursion in initialize()
+        if we do this in the __init__.
         """
         # Ruby's global network.
         self.network = MyNetwork(self)
@@ -118,7 +118,7 @@ class L1Cache(L1Cache_Controller):
 
     def __init__(self, system, ruby_system, cpu):
         """CPUs are needed to grab the clock domain and system is needed for
-           the cache block size.
+        the cache block size.
         """
         super(L1Cache, self).__init__()
 
@@ -134,24 +134,23 @@ class L1Cache(L1Cache_Controller):
 
     def getBlockSizeBits(self, system):
         bits = int(math.log(system.cache_line_size, 2))
-        if 2 ** bits != system.cache_line_size.value:
+        if 2**bits != system.cache_line_size.value:
             panic("Cache line size not a power of 2!")
         return bits
 
     def sendEvicts(self, cpu):
         """True if the CPU model or ISA requires sending evictions from caches
-           to the CPU. Two scenarios warrant forwarding evictions to the CPU:
-           1. The O3 model must keep the LSQ coherent with the caches
-           2. The x86 mwait instruction is built on top of coherence
-           3. The local exclusive monitor in ARM systems
+        to the CPU. Two scenarios warrant forwarding evictions to the CPU:
+        1. The O3 model must keep the LSQ coherent with the caches
+        2. The x86 mwait instruction is built on top of coherence
+        3. The local exclusive monitor in ARM systems
         """
         if type(cpu) is DerivO3CPU or buildEnv["TARGET_ISA"] in ("x86", "arm"):
             return True
         return False
 
     def connectQueues(self, ruby_system):
-        """Connect all of the queues for this controller.
-        """
+        """Connect all of the queues for this controller."""
         self.mandatoryQueue = MessageBuffer()
         self.requestFromCache = MessageBuffer(ordered=True)
         self.requestFromCache.out_port = ruby_system.network.in_port
@@ -173,8 +172,7 @@ class DirController(Directory_Controller):
         return cls._version - 1
 
     def __init__(self, ruby_system, ranges, mem_ctrls):
-        """ranges are the memory ranges assigned to this controller.
-        """
+        """ranges are the memory ranges assigned to this controller."""
         if len(mem_ctrls) > 1:
             panic("This cache system can only be connected to one mem ctrl")
         super(DirController, self).__init__()
@@ -203,8 +201,7 @@ class DirController(Directory_Controller):
 
 
 class MyNetwork(SimpleNetwork):
-    """A simple point-to-point network. This doesn't not use garnet.
-    """
+    """A simple point-to-point network. This doesn't not use garnet."""
 
     def __init__(self, ruby_system):
         super(MyNetwork, self).__init__()
@@ -213,7 +210,7 @@ class MyNetwork(SimpleNetwork):
 
     def connectControllers(self, controllers):
         """Connect all of the controllers to routers and connec the routers
-           together in a point-to-point network.
+        together in a point-to-point network.
         """
         # Create one router/switch per controller in the system
         self.routers = [Switch(router_id=i) for i in range(len(controllers))]

@@ -363,4 +363,3 @@ def format FloatPSCompareOp(cond_code1, cond_code2, *flags) {{
     decode_block = BasicDecode.subst(iop)
     exec_output = BasicExecute.subst(iop)
 }};
-

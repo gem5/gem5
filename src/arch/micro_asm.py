@@ -375,7 +375,7 @@ def p_file(t):
 
 
 def p_opt_rom_or_macros_0(t):
-    "opt_rom_or_macros : "
+    "opt_rom_or_macros :"
 
 
 def p_opt_rom_or_macros_1(t):
@@ -392,7 +392,7 @@ def p_rom_or_macros_1(t):
 
 def p_rom_or_macro_0(t):
     """rom_or_macro : rom_block
-                    | macroop_def"""
+    | macroop_def"""
 
 
 # Defines a section of microcode that should go in the current ROM
@@ -466,20 +466,20 @@ def p_statement(t):
 # A statement can be a microop or an assembler directive
 def p_content_of_statement_0(t):
     """content_of_statement : microop
-                            | directive"""
+    | directive"""
     t[0] = t[1]
 
 
 # Ignore empty statements
 def p_content_of_statement_1(t):
-    "content_of_statement : "
+    "content_of_statement :"
     pass
 
 
 # Statements are ended by newlines or a semi colon
 def p_end_of_statement(t):
     """end_of_statement : NEWLINE
-                        | SEMI"""
+    | SEMI"""
     pass
 
 

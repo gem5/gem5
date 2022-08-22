@@ -46,8 +46,8 @@ import importer
 from code_formatter import code_formatter
 
 parser = argparse.ArgumentParser()
-parser.add_argument('modpath', help='module the simobject belongs to')
-parser.add_argument('cxx_config_cc', help='cxx config cc file to generate')
+parser.add_argument("modpath", help="module the simobject belongs to")
+parser.add_argument("cxx_config_cc", help="cxx config cc file to generate")
 
 args = parser.parse_args()
 
@@ -63,22 +63,25 @@ import m5.params
 
 code = code_formatter()
 
-entry_class = 'CxxConfigDirectoryEntry_%s' % sim_object_name
-param_class = '%sCxxConfigParams' % sim_object_name
+entry_class = "CxxConfigDirectoryEntry_%s" % sim_object_name
+param_class = "%sCxxConfigParams" % sim_object_name
+
 
 def cxx_bool(b):
-    return 'true' if b else 'false'
+    return "true" if b else "false"
+
 
 code('#include "params/%s.hh"' % sim_object_name)
 
 for param in sim_object._params.values():
     if isSimObjectClass(param.ptype):
-        code('#include "%s"' % param.ptype._value_dict['cxx_header'])
+        code('#include "%s"' % param.ptype._value_dict["cxx_header"])
         code('#include "params/%s.hh"' % param.ptype.__name__)
     else:
         param.ptype.cxx_ini_predecls(code)
 
-code('''#include "${{sim_object._value_dict['cxx_header']}}"
+code(
+    """#include "${{sim_object._value_dict['cxx_header']}}"
 #include "base/str.hh"
 #include "cxx_config/${sim_object_name}.hh"
 
@@ -87,34 +90,39 @@ namespace gem5
 
 ${param_class}::DirectoryEntry::DirectoryEntry()
 {
-''')
+"""
+)
 code.indent()
 for param in sim_object._params.values():
     is_vector = isinstance(param, m5.params.VectorParamDesc)
     is_simobj = issubclass(param.ptype, m5.SimObject.SimObject)
 
-    code('parameters["%s"] = new ParamDesc("%s", %s, %s);' %
-        (param.name, param.name, cxx_bool(is_vector),
-        cxx_bool(is_simobj)));
+    code(
+        'parameters["%s"] = new ParamDesc("%s", %s, %s);'
+        % (param.name, param.name, cxx_bool(is_vector), cxx_bool(is_simobj))
+    )
 
 for port in sim_object._ports.values():
     is_vector = isinstance(port, m5.params.VectorPort)
-    is_requestor = port.role == 'GEM5 REQUESTOR'
+    is_requestor = port.role == "GEM5 REQUESTOR"
 
-    code('ports["%s"] = new PortDesc("%s", %s, %s);' %
-        (port.name, port.name, cxx_bool(is_vector),
-        cxx_bool(is_requestor)))
+    code(
+        'ports["%s"] = new PortDesc("%s", %s, %s);'
+        % (port.name, port.name, cxx_bool(is_vector), cxx_bool(is_requestor))
+    )
 
 code.dedent()
 
-code('''}
+code(
+    """}
 
 bool
 ${param_class}::setSimObject(const std::string &name, SimObject *simObject)
 {
     bool ret = true;
     if (false) {
-''')
+"""
+)
 
 code.indent()
 for param in sim_object._params.values():
@@ -124,14 +132,17 @@ for param in sim_object._params.values():
     if is_simobj and not is_vector:
         code('} else if (name == "${{param.name}}") {')
         code.indent()
-        code('this->${{param.name}} = '
-            'dynamic_cast<${{param.ptype.cxx_type}}>(simObject);')
-        code('if (simObject && !this->${{param.name}})')
-        code('   ret = false;')
+        code(
+            "this->${{param.name}} = "
+            "dynamic_cast<${{param.ptype.cxx_type}}>(simObject);"
+        )
+        code("if (simObject && !this->${{param.name}})")
+        code("   ret = false;")
         code.dedent()
 code.dedent()
 
-code('''
+code(
+    """
     } else {
         ret = false;
     }
@@ -146,7 +157,8 @@ ${param_class}::setSimObjectVector(const std::string &name,
     bool ret = true;
 
     if (false) {
-''')
+"""
+)
 
 code.indent()
 for param in sim_object._params.values():
@@ -156,23 +168,28 @@ for param in sim_object._params.values():
     if is_simobj and is_vector:
         code('} else if (name == "${{param.name}}") {')
         code.indent()
-        code('this->${{param.name}}.clear();')
-        code('for (auto i = simObjects.begin(); '
-            'ret && i != simObjects.end(); i ++)')
-        code('{')
+        code("this->${{param.name}}.clear();")
+        code(
+            "for (auto i = simObjects.begin(); "
+            "ret && i != simObjects.end(); i ++)"
+        )
+        code("{")
         code.indent()
-        code('${{param.ptype.cxx_type}} object = '
-            'dynamic_cast<${{param.ptype.cxx_type}}>(*i);')
-        code('if (*i && !object)')
-        code('    ret = false;')
-        code('else')
-        code('    this->${{param.name}}.push_back(object);')
+        code(
+            "${{param.ptype.cxx_type}} object = "
+            "dynamic_cast<${{param.ptype.cxx_type}}>(*i);"
+        )
+        code("if (*i && !object)")
+        code("    ret = false;")
+        code("else")
+        code("    this->${{param.name}}.push_back(object);")
         code.dedent()
-        code('}')
+        code("}")
         code.dedent()
 code.dedent()
 
-code('''
+code(
+    """
     } else {
         ret = false;
     }
@@ -193,7 +210,8 @@ ${param_class}::setParam(const std::string &name,
     bool ret = true;
 
     if (false) {
-''')
+"""
+)
 
 code.indent()
 for param in sim_object._params.values():
@@ -203,12 +221,14 @@ for param in sim_object._params.values():
     if not is_simobj and not is_vector:
         code('} else if (name == "${{param.name}}") {')
         code.indent()
-        param.ptype.cxx_ini_parse(code,
-            'value', 'this->%s' % param.name, 'ret =')
+        param.ptype.cxx_ini_parse(
+            code, "value", "this->%s" % param.name, "ret ="
+        )
         code.dedent()
 code.dedent()
 
-code('''
+code(
+    """
     } else {
         ret = false;
     }
@@ -223,7 +243,8 @@ ${param_class}::setParamVector(const std::string &name,
     bool ret = true;
 
     if (false) {
-''')
+"""
+)
 
 code.indent()
 for param in sim_object._params.values():
@@ -233,22 +254,23 @@ for param in sim_object._params.values():
     if not is_simobj and is_vector:
         code('} else if (name == "${{param.name}}") {')
         code.indent()
-        code('${{param.name}}.clear();')
-        code('for (auto i = values.begin(); '
-            'ret && i != values.end(); i ++)')
-        code('{')
+        code("${{param.name}}.clear();")
+        code(
+            "for (auto i = values.begin(); " "ret && i != values.end(); i ++)"
+        )
+        code("{")
         code.indent()
-        code('${{param.ptype.cxx_type}} elem;')
-        param.ptype.cxx_ini_parse(code,
-            '*i', 'elem', 'ret =')
-        code('if (ret)')
-        code('    this->${{param.name}}.push_back(elem);')
+        code("${{param.ptype.cxx_type}} elem;")
+        param.ptype.cxx_ini_parse(code, "*i", "elem", "ret =")
+        code("if (ret)")
+        code("    this->${{param.name}}.push_back(elem);")
         code.dedent()
-        code('}')
+        code("}")
         code.dedent()
 code.dedent()
 
-code('''
+code(
+    """
     } else {
         ret = false;
     }
@@ -263,15 +285,17 @@ ${param_class}::setPortConnectionCount(const std::string &name,
     bool ret = true;
 
     if (false) {
-''')
+"""
+)
 
 code.indent()
 for port in sim_object._ports.values():
     code('} else if (name == "${{port.name}}") {')
-    code('    this->port_${{port.name}}_connection_count = count;')
+    code("    this->port_${{port.name}}_connection_count = count;")
 code.dedent()
 
-code('''
+code(
+    """
     } else {
         ret = false;
     }
@@ -282,18 +306,21 @@ code('''
 SimObject *
 ${param_class}::simObjectCreate()
 {
-''')
+"""
+)
 
 code.indent()
-if hasattr(sim_object, 'abstract') and sim_object.abstract:
-    code('return nullptr;')
+if hasattr(sim_object, "abstract") and sim_object.abstract:
+    code("return nullptr;")
 else:
-    code('return this->create();')
+    code("return this->create();")
 code.dedent()
 
-code('''}
+code(
+    """}
 
 } // namespace gem5
-''')
+"""
+)
 
 code.write(args.cxx_config_cc)

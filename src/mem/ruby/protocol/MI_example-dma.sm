@@ -27,7 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-machine(MachineType:DMA, "DMA Controller") 
+machine(MachineType:DMA, "DMA Controller")
     : DMASequencer * dma_sequencer;
       Cycles request_latency := 6;
 
@@ -134,7 +134,7 @@ machine(MachineType:DMA, "DMA Controller")
     peek(dmaRequestQueue_in, SequencerMsg) {
       enqueue(requestToDir_out, DMARequestMsg, request_latency) {
         out_msg.PhysicalAddress := in_msg.PhysicalAddress;
-        out_msg.LineAddress := in_msg.LineAddress; 
+        out_msg.LineAddress := in_msg.LineAddress;
         out_msg.Type := DMARequestType:READ;
         out_msg.Requestor := machineID;
         out_msg.DataBlk := in_msg.DataBlk;
@@ -149,7 +149,7 @@ machine(MachineType:DMA, "DMA Controller")
     peek(dmaRequestQueue_in, SequencerMsg) {
       enqueue(requestToDir_out, DMARequestMsg, request_latency) {
           out_msg.PhysicalAddress := in_msg.PhysicalAddress;
-          out_msg.LineAddress := in_msg.LineAddress; 
+          out_msg.LineAddress := in_msg.LineAddress;
           out_msg.Type := DMARequestType:WRITE;
           out_msg.Requestor := machineID;
           out_msg.DataBlk := in_msg.DataBlk;

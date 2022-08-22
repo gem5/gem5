@@ -39,7 +39,7 @@ from m5.objects.BaseCPU import BaseCPU
 
 class TraceCPU(BaseCPU):
     """Trace CPU model which replays traces generated in a prior simulation
-     using DerivO3CPU or its derived classes. It interfaces with L1 caches.
+    using DerivO3CPU or its derived classes. It interfaces with L1 caches.
     """
 
     type = "TraceCPU"

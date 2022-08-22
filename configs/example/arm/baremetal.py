@@ -74,7 +74,7 @@ def create_cow_image(name):
 
 
 def create(args):
-    """ Create and configure the system object. """
+    """Create and configure the system object."""
 
     if args.readfile and not os.path.isfile(args.readfile):
         print("Error: Bootscript %s does not exist" % args.readfile)

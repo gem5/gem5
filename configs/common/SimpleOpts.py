@@ -46,8 +46,7 @@ parser = ArgumentParser()
 
 
 def add_option(*args, **kwargs):
-    """Call "add_option" to the global options parser
-    """
+    """Call "add_option" to the global options parser"""
 
     if called_parse_args:
         m5.fatal("Can't add an option after calling SimpleOpts.parse_args")

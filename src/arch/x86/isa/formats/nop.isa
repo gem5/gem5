@@ -84,4 +84,3 @@ def format NopInst(*opt_flags) {{
     decode_block = BasicDecode.subst(iop)
     exec_output = NopExecute.subst(iop)
 }};
-

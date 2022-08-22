@@ -80,7 +80,6 @@ try:
         else:
             return ""
 
-
 except:
     cap_string = null_cap_string
 

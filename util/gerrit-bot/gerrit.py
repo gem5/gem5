@@ -87,13 +87,13 @@ class GerritRestAPI:
     # https://gerrit-review.googlesource.com/Documentation/
     # rest-api-accounts.html#get-account
     def get_account(self, account_id="self"):
-        """ get an account detail from an account_id """
+        """get an account detail from an account_id"""
         return self._get(f"/accounts/{account_id}")
 
     # https://gerrit-review.googlesource.com/Documentation/
     # rest-api-accounts.html#query-account
     def query_account(self, query, limit=None):
-        """ get accounts based on the query """
+        """get accounts based on the query"""
         params = {"q": query}
         if limit:
             params["n"] = str(limit)
@@ -103,7 +103,7 @@ class GerritRestAPI:
     # https://gerrit-review.googlesource.com/Documentation/
     # rest-api-changes.html#list-changes
     def query_changes(self, query, limit=None, optional_field=None):
-        """ query changes with maximum limit returned queries """
+        """query changes with maximum limit returned queries"""
         endpoint = f"/changes/"
         params = {"q": query}
         if limit:
@@ -116,10 +116,10 @@ class GerritRestAPI:
     # https://gerrit-review.googlesource.com/Documentation/
     # rest-api-changes.html#list-reviewers
     def list_reviewers(self, change_id):
-        """ list reviewers of a change """
+        """list reviewers of a change"""
         return self._get(f"/changes/{change_id}/reviewers")
 
     def add_reviewer(self, change_id, reviewer_email):
-        """ add a reviewer using an email address """
+        """add a reviewer using an email address"""
         data = {"reviewer": reviewer_email}
         return self._post(f"/changes/{change_id}/reviewers/", data)

@@ -148,4 +148,3 @@ LupioIPI::write(PacketPtr pkt)
     return pioDelay;
 }
 } // namespace gem5
-

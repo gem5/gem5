@@ -26,16 +26,17 @@
 import array
 import functools
 
+
 def bytesToCppArray(code, symbol, data):
-    '''
+    """
     Output an array of bytes to a code formatter as a c++ array declaration.
-    '''
-    code('const std::uint8_t ${symbol}[] = {')
+    """
+    code("const std::uint8_t ${symbol}[] = {")
     code.indent()
     step = 16
     for i in range(0, len(data), step):
-        x = array.array('B', data[i:i+step])
-        strs = map(lambda i: f'{i},', x)
+        x = array.array("B", data[i : i + step])
+        strs = map(lambda i: f"{i},", x)
         code(functools.reduce(lambda x, y: x + y, strs))
     code.dedent()
-    code('};')
+    code("};")

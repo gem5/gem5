@@ -39,10 +39,10 @@ from style.repo import GitRepo
 
 def _printErrorQuit(error_message):
     """
-        Print an error message, followed my a help message and inform failure.
+    Print an error message, followed my a help message and inform failure.
 
-        @param error_message A message describing the error that caused the
-            failure.
+    @param error_message A message describing the error that caused the
+        failure.
     """
     print(error_message)
 
@@ -90,10 +90,10 @@ e.g.:
 
 def _validateTags(commit_header):
     """
-        Check if all tags in the commit header belong to the list of valid
-        gem5 tags.
+    Check if all tags in the commit header belong to the list of valid
+    gem5 tags.
 
-        @param commit_header The first line of the commit message.
+    @param commit_header The first line of the commit message.
     """
 
     # List of valid tags

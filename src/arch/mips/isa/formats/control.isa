@@ -241,5 +241,3 @@ def format CP1Control(code, *flags) {{
     decode_block = BasicDecode.subst(iop)
     exec_output = CP1Execute.subst(iop)
 }};
-
-

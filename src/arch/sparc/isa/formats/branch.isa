@@ -187,4 +187,3 @@ def format BranchSplit(code=default_branch_code,
          decode_block) = doUncondBranch(name, Name,
              "BranchSplit", code, annul_code, opt_flags)
 }};
-

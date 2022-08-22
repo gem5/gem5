@@ -46,17 +46,18 @@ import importer
 from code_formatter import code_formatter
 
 parser = argparse.ArgumentParser()
-parser.add_argument('modpath', help='module the enum belongs to')
-parser.add_argument('enum_cc', help='enum cc file to generate')
-parser.add_argument('use_python',
-        help='whether python is enabled in gem5 (True or False)')
+parser.add_argument("modpath", help="module the enum belongs to")
+parser.add_argument("enum_cc", help="enum cc file to generate")
+parser.add_argument(
+    "use_python", help="whether python is enabled in gem5 (True or False)"
+)
 
 args = parser.parse_args()
 
 use_python = args.use_python.lower()
-if use_python == 'true':
+if use_python == "true":
     use_python = True
-elif use_python == 'false':
+elif use_python == "false":
     use_python = False
 else:
     print(f'Unrecognized "use_python" value {use_python}', file=sys.stderr)
@@ -75,41 +76,46 @@ wrapper_name = enum.wrapper_name
 file_name = enum.__name__
 name = enum.__name__ if enum.enum_name is None else enum.enum_name
 
-code('''#include "base/compiler.hh"
+code(
+    """#include "base/compiler.hh"
 #include "enums/$file_name.hh"
 
 namespace gem5
 {
 
-''')
+"""
+)
 
 if enum.wrapper_is_struct:
-    code('const char *${wrapper_name}::${name}Strings'
-        '[Num_${name}] =')
+    code("const char *${wrapper_name}::${name}Strings" "[Num_${name}] =")
 else:
     if enum.is_class:
-        code('''\
+        code(
+            """\
 const char *${name}Strings[static_cast<int>(${name}::Num_${name})] =
-''')
+"""
+        )
     else:
-        code('''GEM5_DEPRECATED_NAMESPACE(Enums, enums);
+        code(
+            """GEM5_DEPRECATED_NAMESPACE(Enums, enums);
 namespace enums
-{''')
+{"""
+        )
         code.indent(1)
-        code('const char *${name}Strings[Num_${name}] =')
+        code("const char *${name}Strings[Num_${name}] =")
 
-code('{')
+code("{")
 code.indent(1)
 for val in enum.vals:
     code('"$val",')
 code.dedent(1)
-code('};')
+code("};")
 
 if not enum.wrapper_is_struct and not enum.is_class:
     code.dedent(1)
-    code('} // namespace enums')
+    code("} // namespace enums")
 
-code('} // namespace gem5')
+code("} // namespace gem5")
 
 
 if use_python:
@@ -118,7 +124,8 @@ if use_python:
     enum_name = enum.__name__ if enum.enum_name is None else enum.enum_name
     wrapper_name = enum_name if enum.is_class else enum.wrapper_name
 
-    code('''#include "pybind11/pybind11.h"
+    code(
+        """#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
 #include <sim/init.hh>
@@ -133,7 +140,8 @@ module_init(py::module_ &m_internal)
 {
     py::module_ m = m_internal.def_submodule("enum_${name}");
 
-''')
+"""
+    )
     if enum.is_class:
         code('py::enum_<${enum_name}>(m, "enum_${name}")')
     else:
@@ -145,16 +153,18 @@ module_init(py::module_ &m_internal)
         code('.value("${val}", ${wrapper_name}::${val})')
     code('.value("Num_${name}", ${wrapper_name}::Num_${enum_name})')
     if not enum.is_class:
-        code('.export_values()')
-    code(';')
+        code(".export_values()")
+    code(";")
     code.dedent()
 
-    code('}')
+    code("}")
     code.dedent()
-    code('''
+    code(
+        """
 static EmbeddedPyBind embed_enum("enum_${name}", module_init);
 
 } // namespace gem5
-    ''')
+    """
+    )
 
 code.write(args.enum_cc)

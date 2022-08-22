@@ -1288,4 +1288,3 @@ def template LoadImmConstructor {{
 #endif
     }
 }};
-

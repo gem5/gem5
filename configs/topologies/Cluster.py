@@ -28,10 +28,10 @@ from topologies.BaseTopology import BaseTopology
 
 
 class Cluster(BaseTopology):
-    """ A cluster is a group of nodes which are all one hop from eachother
-        Clusters can also contain other clusters
-        When creating this kind of topology, return a single cluster (usually
-        the root cluster) from create_system in configs/ruby/<protocol>.py
+    """A cluster is a group of nodes which are all one hop from eachother
+    Clusters can also contain other clusters
+    When creating this kind of topology, return a single cluster (usually
+    the root cluster) from create_system in configs/ruby/<protocol>.py
     """
 
     _num_int_links = 0
@@ -55,13 +55,13 @@ class Cluster(BaseTopology):
         return cls._num_routers - 1
 
     def __init__(self, intBW=0, extBW=0, intLatency=0, extLatency=0):
-        """ internalBandwidth is bandwidth of all links within the cluster
-            externalBandwidth is bandwidth from this cluster to any cluster
-                connecting to it.
-            internal/externalLatency are similar
-            **** When creating a cluster with sub-clusters, the sub-cluster
-                 external bandwidth overrides the internal bandwidth of the
-                 super cluster
+        """internalBandwidth is bandwidth of all links within the cluster
+        externalBandwidth is bandwidth from this cluster to any cluster
+            connecting to it.
+        internal/externalLatency are similar
+        **** When creating a cluster with sub-clusters, the sub-cluster
+             external bandwidth overrides the internal bandwidth of the
+             super cluster
         """
         self.nodes = []
         self.router = None  # created in makeTopology
@@ -74,8 +74,7 @@ class Cluster(BaseTopology):
         self.nodes.append(node)
 
     def makeTopology(self, options, network, IntLink, ExtLink, Router):
-        """ Recursively make all of the links and routers
-        """
+        """Recursively make all of the links and routers"""
 
         # make a router to connect all of the nodes
         self.router = Router(router_id=self.num_routers())

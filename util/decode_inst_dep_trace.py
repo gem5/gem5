@@ -206,8 +206,8 @@ def main():
         ascii_out.write(":")
         if packet.reg_dep:
             num_regdeps += (
-                1
-            )  # No. of packets with atleast 1 register dependency
+                1  # No. of packets with atleast 1 register dependency
+            )
             for dep in packet.reg_dep:
                 ascii_out.write(",%s" % dep)
         # New line

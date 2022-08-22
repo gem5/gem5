@@ -50,7 +50,7 @@ from shutil import rmtree, copyfile
 
 
 def hex_mask(terms):
-    dec_mask = reduce(operator.or_, [2 ** i for i in terms], 0)
+    dec_mask = reduce(operator.or_, [2**i for i in terms], 0)
     return "%08x" % dec_mask
 
 
@@ -66,7 +66,7 @@ def replace_tree(path):
 
 
 def config_filesystem(system, options=None):
-    """ This function parses the system object to create the pseudo file system
+    """This function parses the system object to create the pseudo file system
     @param system: The system to create the config for
     @param options: An optional argument which contains an Options.py options
            object. This is useful if when use se.py and will set the L2 cache

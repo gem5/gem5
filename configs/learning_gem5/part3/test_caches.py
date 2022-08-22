@@ -52,11 +52,11 @@ class TestCacheSystem(RubySystem):
 
     def setup(self, system, tester, mem_ctrls):
         """Set up the Ruby cache subsystem. Note: This can't be done in the
-           constructor because many of these items require a pointer to the
-           ruby system (self). This causes infinite recursion in initialize()
-           if we do this in the __init__.
-           Setting up for running the RubyRandomTester is a little different
-           than when we're using CPUs.
+        constructor because many of these items require a pointer to the
+        ruby system (self). This causes infinite recursion in initialize()
+        if we do this in the __init__.
+        Setting up for running the RubyRandomTester is a little different
+        than when we're using CPUs.
         """
         num_testers = tester.num_cpus
 

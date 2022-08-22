@@ -2545,5 +2545,3 @@ decode OPCODE_HI default Unknown::unknown() {
         0x6: CP2Unimpl::sdc2();
     }
 }
-
-

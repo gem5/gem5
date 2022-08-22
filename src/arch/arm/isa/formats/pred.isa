@@ -202,4 +202,3 @@ def format PredImmOp(code, *opt_flags) {{
     decode_block = BasicDecode.subst(iop)
     exec_output = PredOpExecute.subst(iop)
 }};
-

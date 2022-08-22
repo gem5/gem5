@@ -44,7 +44,7 @@ from common.SysPaths import binary, disk
 
 
 class ArmBaremetal(ArmFsWorkload):
-    """ Baremetal workload """
+    """Baremetal workload"""
 
     dtb_addr = 0
 

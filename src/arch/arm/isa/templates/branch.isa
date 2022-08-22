@@ -186,5 +186,3 @@ def template BranchTarget {{
         return std::unique_ptr<PCStateBase>{pc_ptr};
     }
 }};
-
-

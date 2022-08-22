@@ -200,10 +200,10 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
 
 
 def create_topology(controllers, options):
-    """ Called from create_system in configs/ruby/<protocol>.py
-        Must return an object which is a subclass of BaseTopology
-        found in configs/topologies/BaseTopology.py
-        This is a wrapper for the legacy topologies.
+    """Called from create_system in configs/ruby/<protocol>.py
+    Must return an object which is a subclass of BaseTopology
+    found in configs/topologies/BaseTopology.py
+    This is a wrapper for the legacy topologies.
     """
     exec("import topologies.%s as Topo" % options.topology)
     topology = eval("Topo.%s(controllers)" % options.topology)

@@ -72,4 +72,3 @@ enum amdgpu_hwreg
 } // namespace gem5
 
 #endif // __DEV_GPU_HWREG_DEFINES_H__
-

@@ -35,4 +35,5 @@ if __name__ == "__main__":
     sys.path.insert(1, join(base, "../ext/ply"))
 
     import slicc.main
+
     slicc.main.main()

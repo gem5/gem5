@@ -19,10 +19,10 @@
 
 /*****************************************************************************
 
-  sc_unsigned_bitref.h -- Proxy class that is declared in sc_unsigned.h.  
+  sc_unsigned_bitref.h -- Proxy class that is declared in sc_unsigned.h.
 
   Original Author: Ali Dasdan, Synopsys, Inc.
- 
+
  *****************************************************************************/
 
 /*****************************************************************************
@@ -138,7 +138,7 @@ sc_unsigned_bitref::concat_set(const sc_signed &src, int low_i)
 
 void
 sc_unsigned_bitref::concat_set(const sc_unsigned &src, int low_i)
-{       
+{
     if (low_i < src.nbits)
         m_obj_p->set(low_i, src.test(low_i));
     else

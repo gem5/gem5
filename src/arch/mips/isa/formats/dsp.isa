@@ -208,6 +208,3 @@ def format DspHiLoOp(code, *opt_flags) {{
     exec_output = DspHiLoExecute.subst(iop)
 
 }};
-
-
-

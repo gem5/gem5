@@ -166,4 +166,3 @@ def format TwinLoad(code, *opt_flags) {{
             AlternateASIPrivFaultCheck + TwinAlignmentFaultCheck,
             name, Name, "EXT_ASI", opt_flags)
 }};
-

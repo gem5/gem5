@@ -105,7 +105,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
         self.m5ops_base = 0xFFFF0000
 
     def _setup_io_devices(self):
-        """ Sets up the x86 IO devices.
+        """Sets up the x86 IO devices.
 
         Note: This is mostly copy-paste from prior X86 FS setups. Some of it
         may not be documented and there may be bugs.

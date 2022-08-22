@@ -42,11 +42,11 @@ from textwrap import TextWrapper
 
 
 class ObjectList(object):
-    """ Creates a list of objects that are sub-classes of a given class. """
+    """Creates a list of objects that are sub-classes of a given class."""
 
     def _is_obj_class(self, cls):
         """Determine if a class is a a sub class of the provided base class
-           that can be instantiated.
+        that can be instantiated.
         """
 
         # We can't use the normal inspect.isclass because the ParamFactory
@@ -161,10 +161,10 @@ class CPUList(ObjectList):
 
 
 class EnumList(ObjectList):
-    """ Creates a list of possible values for a given enum class. """
+    """Creates a list of possible values for a given enum class."""
 
     def _add_objects(self):
-        """ Add all enum values to the ObjectList """
+        """Add all enum values to the ObjectList"""
         self._sub_classes = {}
         for (key, value) in list(self.base_cls.__members__.items()):
             # All Enums have a value Num_NAME at the end which we

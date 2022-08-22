@@ -92,7 +92,7 @@ board.set_se_binary_workload(
 )
 
 # Lastly we run the simulation.
-max_ticks = 10 ** 6
+max_ticks = 10**6
 simulator = Simulator(board=board, full_system=False)
 simulator.run(max_ticks=max_ticks)
 

@@ -58,7 +58,7 @@ from .util import fatal
 from .util import attrdict
 
 # define a MaxTick parameter, unsigned 64 bit
-MaxTick = 2 ** 64 - 1
+MaxTick = 2**64 - 1
 
 _drain_manager = _m5.drain.DrainManager.instance()
 

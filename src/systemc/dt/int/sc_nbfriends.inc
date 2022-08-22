@@ -53,7 +53,7 @@
 // ----------------------------------------------------------------------------
 //  Naming conventions:
 //  For sc_signed or sc_unsigned number u:
-//    us : u's sign, unb : u's number of bits, 
+//    us : u's sign, unb : u's number of bits,
 //    und : u's number of digits, ud : u's digits array.
 // ----------------------------------------------------------------------------
 
@@ -63,7 +63,7 @@
 
 // Handles cases 3 and 4 and returns the result.
 CLASS_TYPE
-ADD_HELPER(small_type us, int unb, int und, const sc_digit *ud, 
+ADD_HELPER(small_type us, int unb, int und, const sc_digit *ud,
            small_type vs, int vnb, int vnd, const sc_digit *vd)
 {
     und = vec_skip_leading_zeros(und, ud);
@@ -78,7 +78,7 @@ ADD_HELPER(small_type us, int unb, int und, const sc_digit *ud,
 #else
     sc_digit *d = new sc_digit[nd];
 #endif
-    
+
     d[nd - 1] = d[nd - 2] = 0;
 
     // case 3
@@ -98,14 +98,14 @@ ADD_HELPER(small_type us, int unb, int und, const sc_digit *ud,
     } else {
         // case 4
         int cmp_res = vec_cmp(und, ud, vnd, vd);
-        
+
         if (cmp_res == 0) { // u == v
 #ifndef SC_MAX_NBITS
             delete[] d;
 #endif
             return CLASS_TYPE();
         }
-        
+
         if (cmp_res > 0) { // u > v
             if ((und == 1) && (vnd == 1))
                 d[0] = (*ud) - (*vd);
@@ -128,8 +128,8 @@ ADD_HELPER(small_type us, int unb, int und, const sc_digit *ud,
 // ----------------------------------------------------------------------------
 
 // Handles the case 4 and returns the result.
-CLASS_TYPE 
-MUL_HELPER(small_type s, int unb, int und,  const sc_digit *ud, 
+CLASS_TYPE
+MUL_HELPER(small_type s, int unb, int und,  const sc_digit *ud,
            int vnb, int vnd, const sc_digit *vd)
 {
     und = vec_skip_leading_zeros(und, ud);
@@ -137,7 +137,7 @@ MUL_HELPER(small_type s, int unb, int und,  const sc_digit *ud,
 
     int nb = unb + vnb;
     int nd = und + vnd;
-    
+
 #ifdef SC_MAX_NBITS
     test_bound(nb);
     sc_digit d[MAX_NDIGITS];
@@ -146,7 +146,7 @@ MUL_HELPER(small_type s, int unb, int und,  const sc_digit *ud,
 #endif
 
     vec_zero(nd, d);
-        
+
     sc_digit ud0 = (*ud);
     sc_digit vd0 = (*vd);
 
@@ -154,7 +154,7 @@ MUL_HELPER(small_type s, int unb, int und,  const sc_digit *ud,
         vec_copy(und, d, ud);
     } else if ((und == 1) && (ud0 == 1)) {
         vec_copy(vnd, d, vd);
-    } else if ((und == 1) && (vnd == 1) && 
+    } else if ((und == 1) && (vnd == 1) &&
                (ud0 < HALF_DIGIT_RADIX) && (vd0 < HALF_DIGIT_RADIX)) {
         d[0] = ud0 * vd0;
     } else if ((und == 1) && (ud0 < HALF_DIGIT_RADIX)) {
@@ -175,8 +175,8 @@ MUL_HELPER(small_type s, int unb, int und,  const sc_digit *ud,
 // ----------------------------------------------------------------------------
 
 // Handles the cases 3-4 and returns the result.
-CLASS_TYPE 
-DIV_HELPER(small_type s, int unb, int und, const sc_digit *ud, 
+CLASS_TYPE
+DIV_HELPER(small_type s, int unb, int und, const sc_digit *ud,
            int vnb, int vnd, const sc_digit *vd)
 {
     und = vec_skip_leading_zeros(und, ud);
@@ -185,7 +185,7 @@ DIV_HELPER(small_type s, int unb, int und, const sc_digit *ud,
     int cmp_res = vec_cmp(und, ud, vnd, vd);
 
     // u < v => u / v = 0 - case 4
-    if (cmp_res < 0) 
+    if (cmp_res < 0)
         return CLASS_TYPE();
 
     // One extra digit for d is allocated to simplify vec_div_*().
@@ -223,8 +223,8 @@ DIV_HELPER(small_type s, int unb, int und, const sc_digit *ud,
 // ----------------------------------------------------------------------------
 
 // Handles the cases 3-4 and returns the result.
-CLASS_TYPE 
-MOD_HELPER(small_type us, int unb, int und, const sc_digit *ud, 
+CLASS_TYPE
+MOD_HELPER(small_type us, int unb, int und, const sc_digit *ud,
            int vnb, int vnd, const sc_digit *vd)
 {
     und = vec_skip_leading_zeros(und, ud);
@@ -232,7 +232,7 @@ MOD_HELPER(small_type us, int unb, int und, const sc_digit *ud,
 
     int cmp_res = vec_cmp(und, ud, vnd, vd);
     // u = v => u % v = 0 - case 3
-    if (cmp_res == 0) 
+    if (cmp_res == 0)
         return CLASS_TYPE();
 
     sc_digit vd0 = (*vd);
@@ -280,8 +280,8 @@ MOD_HELPER(small_type us, int unb, int und, const sc_digit *ud,
 // ----------------------------------------------------------------------------
 
 // Handles the cases 2-5 and returns the result.
-CLASS_TYPE 
-AND_HELPER(small_type us, int unb, int und, const sc_digit *ud, 
+CLASS_TYPE
+AND_HELPER(small_type us, int unb, int und, const sc_digit *ud,
            small_type vs, int vnb, int vnd, const sc_digit *vd)
 {
     int nb = sc_max(unb, vnb);
@@ -327,7 +327,7 @@ AND_HELPER(small_type us, int unb, int und, const sc_digit *ud,
         if (xs > 0) { // case 2
             while (y < yend)
                 (*d++) = (*x++) & (*y++);
-            while (x++ < xend) 
+            while (x++ < xend)
                 (*d++) = 0;
         } else { // case 3
             sc_digit xcarry = 1;
@@ -372,7 +372,7 @@ AND_HELPER(small_type us, int unb, int und, const sc_digit *ud,
         }
     }
     s = convert_signed_2C_to_SM(nb, nd, dbegin);
-    return CLASS_TYPE(s, nb, nd, dbegin);    
+    return CLASS_TYPE(s, nb, nd, dbegin);
 }
 
 
@@ -381,8 +381,8 @@ AND_HELPER(small_type us, int unb, int und, const sc_digit *ud,
 // ----------------------------------------------------------------------------
 
 // Handles the cases 3-5 and returns the result.
-CLASS_TYPE 
-OR_HELPER(small_type us, int unb, int und, const sc_digit *ud, 
+CLASS_TYPE
+OR_HELPER(small_type us, int unb, int und, const sc_digit *ud,
           small_type vs, int vnb, int vnd, const sc_digit *vd)
 {
     int nb = sc_max(unb, vnb);
@@ -483,8 +483,8 @@ OR_HELPER(small_type us, int unb, int und, const sc_digit *ud,
 // ----------------------------------------------------------------------------
 
 // Handles the cases 3-5 and returns the result.
-CLASS_TYPE 
-XOR_HELPER(small_type us, int unb, int und, const sc_digit *ud, 
+CLASS_TYPE
+XOR_HELPER(small_type us, int unb, int und, const sc_digit *ud,
            small_type vs, int vnb, int vnd, const sc_digit *vd)
 {
     int nb = sc_max(unb, vnb);

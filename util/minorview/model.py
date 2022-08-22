@@ -208,9 +208,13 @@ class Branch(BlobVisualData):
         m = re.match("^(\w+);(\d+)\.(\d+);([0-9a-fA-Fx]+);(.*)$", string)
 
         if m is not None:
-            self.reason, newStreamSeqNum, newPredictionSeqNum, newPC, id = (
-                m.groups()
-            )
+            (
+                self.reason,
+                newStreamSeqNum,
+                newPredictionSeqNum,
+                newPC,
+                id,
+            ) = m.groups()
 
             self.newStreamSeqNum = int(newStreamSeqNum)
             self.newPredictionSeqNum = int(newPredictionSeqNum)
@@ -1151,7 +1155,7 @@ class BlobModel(object):
                     new_line = f.readline()
 
                     if new_line is not None and not line_is_comment(new_line):
-                        line_wo_backslash, = extend_match.groups()
+                        (line_wo_backslash,) = extend_match.groups()
                         ret = line_wo_backslash + new_line
                         extend_match = re.match("^(.*)\\\\$", ret)
                     else:

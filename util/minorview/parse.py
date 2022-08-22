@@ -67,7 +67,7 @@ def list_parser(names):
 
 def map2(f, ls):
     """map to a depth of 2.  That is, given a list of lists, apply
-    f to those innermost elements """
+    f to those innermost elements"""
     return [list(map(f, l)) for l in ls]
 
 
@@ -110,5 +110,5 @@ def parse_indexed_list(string):
 
 def parse_pairs(pairString):
     """parse a string like 'name=value name2=value2' into a
-    dictionary of {'name': 'value', 'name2': 'value2'} """
+    dictionary of {'name': 'value', 'name2': 'value2'}"""
     return dict(parse_pairs_list(pairString))

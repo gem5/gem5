@@ -142,7 +142,7 @@ def get_processes(cmd):
 
 
 def create(args):
-    """ Create and configure the system object. """
+    """Create and configure the system object."""
 
     system = SimpleSeSystem(args)
 

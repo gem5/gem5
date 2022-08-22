@@ -128,7 +128,9 @@ class SingleChannel(AbstractMemorySystem):
         self.mem_ctrl.range = ranges[0]
 
 
-def SingleChannelDDR3_1600(size: Optional[str] = "2048MB",) -> SingleChannel:
+def SingleChannelDDR3_1600(
+    size: Optional[str] = "2048MB",
+) -> SingleChannel:
     """
     A single channel DDR3_1600.
 

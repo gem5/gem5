@@ -76,4 +76,3 @@ instantiated, then the Network Brisge takes over the flit in HeteroGarnet.
     serializing or deserializing the flits
     * Check if CDC is enabled and schedule all the flits according
     to the consumers clock domain.
-

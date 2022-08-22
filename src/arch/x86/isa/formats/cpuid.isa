@@ -85,4 +85,3 @@ def format CPUIDInst(code, *opt_flags) {{
     decode_block = BasicDecode.subst(iop)
     exec_output = CPUIDExecute.subst(iop)
 }};
-

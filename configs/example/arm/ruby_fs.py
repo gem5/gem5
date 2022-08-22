@@ -97,7 +97,7 @@ def config_ruby(system, args):
 
 
 def create(args):
-    """ Create and configure the system object. """
+    """Create and configure the system object."""
 
     if args.script and not os.path.isfile(args.script):
         print("Error: Bootscript %s does not exist" % args.script)

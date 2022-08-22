@@ -162,4 +162,3 @@ def format SetHi(code, *opt_flags) {{
     exec_output = IntOpExecute.subst(iop)
     decode_block = SetHiDecode.subst(iop)
 }};
-

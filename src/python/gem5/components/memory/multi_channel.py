@@ -34,21 +34,27 @@ from .dram_interfaces.lpddr3 import LPDDR3_1600_1x32
 from .dram_interfaces.hbm import HBM_1000_4H_1x64
 
 
-def DualChannelDDR3_1600(size: Optional[str] = None,) -> AbstractMemorySystem:
+def DualChannelDDR3_1600(
+    size: Optional[str] = None,
+) -> AbstractMemorySystem:
     """
     A dual channel memory system using DDR3_1600_8x8 based DIMM
     """
     return ChanneledMemory(DDR3_1600_8x8, 2, 64, size=size)
 
 
-def DualChannelDDR3_2133(size: Optional[str] = None,) -> AbstractMemorySystem:
+def DualChannelDDR3_2133(
+    size: Optional[str] = None,
+) -> AbstractMemorySystem:
     """
     A dual channel memory system using DDR3_2133_8x8 based DIMM
     """
     return ChanneledMemory(DDR3_2133_8x8, 2, 64, size=size)
 
 
-def DualChannelDDR4_2400(size: Optional[str] = None,) -> AbstractMemorySystem:
+def DualChannelDDR4_2400(
+    size: Optional[str] = None,
+) -> AbstractMemorySystem:
     """
     A dual channel memory system using DDR4_2400_8x8 based DIMM
     """
@@ -61,7 +67,9 @@ def DualChannelLPDDR3_1600(
     return ChanneledMemory(LPDDR3_1600_1x32, 2, 64, size=size)
 
 
-def HBM2Stack(size: Optional[str] = None,) -> AbstractMemorySystem:
+def HBM2Stack(
+    size: Optional[str] = None,
+) -> AbstractMemorySystem:
     if not size:
         size = "4GiB"
     return ChanneledMemory(HBM_1000_4H_1x64, 16, 64, size=size)

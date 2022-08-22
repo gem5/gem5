@@ -100,4 +100,3 @@ MultiBitSel::hash(Addr addr, int hash_number) const
 
 } // namespace bloom_filter
 } // namespace gem5
-

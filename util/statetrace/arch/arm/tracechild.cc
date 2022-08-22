@@ -280,4 +280,3 @@ genTraceChild()
 {
     return new ARMTraceChild;
 }
-

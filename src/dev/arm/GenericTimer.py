@@ -43,12 +43,12 @@ from m5.util.fdthelper import FdtNode, FdtProperty, FdtPropertyWords, FdtState
 
 class SystemCounter(SimObject):
     """
-Shared by both PE-implementations and memory-mapped timers. It provides a
-uniform view of system time through its counter value.
+    Shared by both PE-implementations and memory-mapped timers. It provides a
+    uniform view of system time through its counter value.
 
-Reference:
-    Arm ARM (ARM DDI 0487E.a)
-    D11.1.2 - The system counter
+    Reference:
+        Arm ARM (ARM DDI 0487E.a)
+        D11.1.2 - The system counter
     """
 
     type = "SystemCounter"
@@ -71,14 +71,14 @@ Reference:
 
 class GenericTimer(SimObject):
     """
-Architected timers per PE in the system. Each of them provides a physical
-counter, a virtual counter and several timers accessible from different
-exception levels and security states.
+    Architected timers per PE in the system. Each of them provides a physical
+    counter, a virtual counter and several timers accessible from different
+    exception levels and security states.
 
-Reference:
-    Arm ARM (ARM DDI 0487E.a)
-    D11.2 - The AArch64 view of the Generic Timer
-    G6.2  - The AArch32 view of the Generic Timer
+    Reference:
+        Arm ARM (ARM DDI 0487E.a)
+        D11.2 - The AArch64 view of the Generic Timer
+        G6.2  - The AArch32 view of the Generic Timer
     """
 
     type = "GenericTimer"
@@ -135,12 +135,12 @@ Reference:
 
 class GenericTimerFrame(PioDevice):
     """
-Memory-mapped timer frame implementation. Controlled from GenericTimerMem,
-may be used by peripherals without a system register interface.
+    Memory-mapped timer frame implementation. Controlled from GenericTimerMem,
+    may be used by peripherals without a system register interface.
 
-Reference:
-    Arm ARM (ARM DDI 0487E.a)
-    I2.3.2 - The CNTBaseN and CNTEL0BaseN frames
+    Reference:
+        Arm ARM (ARM DDI 0487E.a)
+        I2.3.2 - The CNTBaseN and CNTEL0BaseN frames
     """
 
     type = "GenericTimerFrame"
@@ -178,16 +178,16 @@ Reference:
 
 class GenericTimerMem(PioDevice):
     """
-System level implementation. It provides three main components:
-- Memory-mapped counter module: controls the system timer through the
-  CNTControlBase frame, and provides its value through the CNTReadBase frame
-- Memory-mapped timer control module: controls the memory-mapped timers
-- Memory-mapped timers: implementations of the GenericTimer for system
-  peripherals
+    System level implementation. It provides three main components:
+    - Memory-mapped counter module: controls the system timer through the
+      CNTControlBase frame, and provides its value through the CNTReadBase frame
+    - Memory-mapped timer control module: controls the memory-mapped timers
+    - Memory-mapped timers: implementations of the GenericTimer for system
+      peripherals
 
-Reference:
-    Arm ARM (ARM DDI 0487E.a)
-    I2 - System Level Implementation of the Generic Timer
+    Reference:
+        Arm ARM (ARM DDI 0487E.a)
+        I2 - System Level Implementation of the Generic Timer
     """
 
     type = "GenericTimerMem"

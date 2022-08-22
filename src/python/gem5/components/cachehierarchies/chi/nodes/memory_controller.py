@@ -38,8 +38,7 @@ from .abstract_node import TriggerMessageBuffer
 
 
 class MemoryController(Memory_Controller):
-    """A controller that connects to memory
-    """
+    """A controller that connects to memory"""
 
     _version = 0
 

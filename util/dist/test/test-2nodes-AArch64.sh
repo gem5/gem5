@@ -76,4 +76,3 @@ $GEM5_DIST_SH -n $NNODES                                                     \
                   --script=$BOOT_SCRIPT                                      \
               --cf-args                                                      \
                   $CHKPT_RESTORE
-

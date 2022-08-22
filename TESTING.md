@@ -246,10 +246,9 @@ maintainer (see MAINTAINERS).*
 ## Running Tests in Parallel
 
 Whimsy has support for parallel testing baked in. This system supports
-running multiple suites at the same time on the same computer. To run 
+running multiple suites at the same time on the same computer. To run
 suites in parallel, supply the `-t <number-tests>` flag to the run command.
 
 For example, to run up to three test suites at the same time::
 
     ./main.py run --skip-build -t 3
-

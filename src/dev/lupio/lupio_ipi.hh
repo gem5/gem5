@@ -96,4 +96,3 @@ class LupioIPI : public BasicPioDevice
 } // namespace gem5
 
 #endif // __DEV_LUPIO_LUPIO_IPI_HH
-

@@ -52,9 +52,9 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
         isa: Optional[ISA] = None,
     ) -> None:
         """
-        param starting_core_type: The CPU type for each type in the processor
+        :param starting_core_type: The CPU type for each type in the processor
         to start with (i.e., when the simulation has just started).
-:
+
         :param switch_core_types: The CPU type for each core, to be switched
         to..
 

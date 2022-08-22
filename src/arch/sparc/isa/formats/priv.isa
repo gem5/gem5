@@ -133,4 +133,3 @@ def format HPriv(code, check_tl=false, *opt_flags) {{
             doPrivFormat(code, check_code, name, Name, opt_flags,
                          check_tl=(check_tl != 'false'))
 }};
-

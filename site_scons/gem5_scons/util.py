@@ -46,12 +46,15 @@ import SCons.Script
 
 import m5.util.terminal
 
+
 def ignore_style():
     """Determine whether we should ignore style checks"""
-    return SCons.Script.GetOption('ignore_style') or not sys.stdin.isatty()
+    return SCons.Script.GetOption("ignore_style") or not sys.stdin.isatty()
+
 
 def get_termcap():
-    return m5.util.terminal.get_termcap(SCons.Script.GetOption('use_colors'))
+    return m5.util.terminal.get_termcap(SCons.Script.GetOption("use_colors"))
+
 
 def readCommand(cmd, **kwargs):
     """
@@ -68,13 +71,13 @@ def readCommand(cmd, **kwargs):
     if isinstance(cmd, str):
         cmd = cmd.split()
 
-    no_exception = 'exception' in kwargs
-    exception = kwargs.pop('exception', None)
+    no_exception = "exception" in kwargs
+    exception = kwargs.pop("exception", None)
 
-    kwargs.setdefault('shell', False)
-    kwargs.setdefault('stdout', PIPE)
-    kwargs.setdefault('stderr', STDOUT)
-    kwargs.setdefault('close_fds', True)
+    kwargs.setdefault("shell", False)
+    kwargs.setdefault("stdout", PIPE)
+    kwargs.setdefault("stderr", STDOUT)
+    kwargs.setdefault("close_fds", True)
     try:
         subp = Popen(cmd, **kwargs)
     except Exception as e:
@@ -82,20 +85,23 @@ def readCommand(cmd, **kwargs):
             return -1, exception
         raise
 
-    output = subp.communicate()[0].decode('utf-8')
+    output = subp.communicate()[0].decode("utf-8")
     return output
+
 
 def compareVersions(v1, v2):
     """helper function: compare arrays or strings of version numbers.
     E.g., compare_version((1,3,25), (1,4,1)')
     returns -1, 0, 1 if v1 is <, ==, > v2
     """
+
     def make_version_list(v):
-        if isinstance(v, (list,tuple)):
+        if isinstance(v, (list, tuple)):
             return v
         elif isinstance(v, str):
-            return list(map(lambda x: int(re.match('\d+', x).group()),
-                            v.split('.')))
+            return list(
+                map(lambda x: int(re.match("\d+", x).group()), v.split("."))
+            )
         else:
             raise TypeError()
 
@@ -104,8 +110,10 @@ def compareVersions(v1, v2):
 
     # Compare corresponding elements of lists
     # The shorter list is filled with 0 till the lists have the same length
-    for n1,n2 in itertools.zip_longest(v1, v2, fillvalue=0):
-        if n1 < n2: return -1
-        if n1 > n2: return  1
+    for n1, n2 in itertools.zip_longest(v1, v2, fillvalue=0):
+        if n1 < n2:
+            return -1
+        if n1 > n2:
+            return 1
 
     return 0

@@ -381,8 +381,8 @@ class SLICC(Grammar):
 
     def p_type_member__0(self, p):
         """type_member : obj_decl
-                       | func_decl
-                       | func_def"""
+        | func_decl
+        | func_def"""
         p[0] = p[1]
 
     # Member / Variable declarations
@@ -417,12 +417,12 @@ class SLICC(Grammar):
 
     def p_func_decl__0(self, p):
         """func_decl :  void ident '(' params ')' pairs SEMI
-                | type ident '(' params ')' pairs SEMI"""
+        | type ident '(' params ')' pairs SEMI"""
         p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], None)
 
     def p_func_decl__1(self, p):
         """func_decl :  void ident '(' types ')' pairs SEMI
-                | type ident '(' types ')' pairs SEMI"""
+        | type ident '(' types ')' pairs SEMI"""
         p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], None)
 
     def p_decl__func_def(self, p):
@@ -431,7 +431,7 @@ class SLICC(Grammar):
 
     def p_func_def__0(self, p):
         """func_def : void ident '(' params ')' pairs statements
-            | type ident '(' params ')' pairs statements"""
+        | type ident '(' params ')' pairs statements"""
         p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], p[7])
 
     # Enum fields
@@ -545,7 +545,7 @@ class SLICC(Grammar):
 
     def p_identx__multiple_1(self, p):
         """identx : ident SEMI identx
-                  | ident ',' identx"""
+        | ident ',' identx"""
         p[0] = [p[1]] + p[3]
 
     def p_identx__multiple_2(self, p):
@@ -562,7 +562,7 @@ class SLICC(Grammar):
 
     def p_ident_or_star(self, p):
         """ident_or_star : ident
-                         | STAR"""
+        | STAR"""
         p[0] = p[1]
 
     # Pair and pair lists
@@ -586,8 +586,8 @@ class SLICC(Grammar):
 
     def p_pair__assign(self, p):
         """pair : ident '=' STRING
-                | ident '=' ident
-                | ident '=' NUMBER"""
+        | ident '=' ident
+        | ident '=' NUMBER"""
         p[0] = ast.PairAST(self, p[1], p[3])
 
     def p_pair__literal(self, p):
@@ -757,28 +757,28 @@ class SLICC(Grammar):
 
     def p_expr__binary_op(self, p):
         """expr : expr STAR  expr
-                | expr SLASH expr
-                | expr MOD   expr
-                | expr PLUS  expr
-                | expr DASH  expr
-                | expr LT    expr
-                | expr GT    expr
-                | expr LE    expr
-                | expr GE    expr
-                | expr EQ    expr
-                | expr NE    expr
-                | expr AND   expr
-                | expr OR    expr
-                | expr RIGHTSHIFT expr
-                | expr LEFTSHIFT  expr"""
+        | expr SLASH expr
+        | expr MOD   expr
+        | expr PLUS  expr
+        | expr DASH  expr
+        | expr LT    expr
+        | expr GT    expr
+        | expr LE    expr
+        | expr GE    expr
+        | expr EQ    expr
+        | expr NE    expr
+        | expr AND   expr
+        | expr OR    expr
+        | expr RIGHTSHIFT expr
+        | expr LEFTSHIFT  expr"""
         p[0] = ast.InfixOperatorExprAST(self, p[1], p[2], p[3])
 
     # FIXME - unary not
     def p_expr__unary_op(self, p):
         """expr : NOT expr
-                | INCR expr
-                | DECR expr
-                | DASH expr %prec UMINUS"""
+        | INCR expr
+        | DECR expr
+        | DASH expr %prec UMINUS"""
         p[0] = ast.PrefixOperatorExprAST(self, p[1], p[2])
 
     def p_expr__parens(self, p):

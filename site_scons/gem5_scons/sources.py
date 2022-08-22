@@ -47,8 +47,9 @@ import SCons.Script
 # When specifying a source file of some type, a set of tags can be
 # specified for that file.
 
+
 def tag_implies(env, tag, tag_list):
-    '''
+    """
     Associates a tag X to a list of tags which are implied by X.
 
     For example, assume:
@@ -72,10 +73,10 @@ def tag_implies(env, tag, tag_list):
 
     So that any use of a tag will automatically include its transitive tags
     after being resolved.
-    '''
+    """
 
     env.SetDefault(_tag_implies={})
-    implications = env['_tag_implies']
+    implications = env["_tag_implies"]
 
     if isinstance(tag_list, str):
         tag_list = frozenset([tag_list])
@@ -95,21 +96,23 @@ def tag_implies(env, tag, tag_list):
 
     # Check if another tag depends on this tag. If so, add this tag's
     # implications to that tag.
-    for t,implied in implications.items():
+    for t, implied in implications.items():
         if tag in implied:
             implications[t] |= implications[tag]
 
+
 def TagImpliesTool(env):
-    env.AddMethod(tag_implies, 'TagImplies')
+    env.AddMethod(tag_implies, "TagImplies")
+
 
 def resolve_tags(env, tags):
-    '''
+    """
     Returns the complete set of tags implied (dependencies) by the
     supplied tags.
-    '''
+    """
 
     implications = env.SetDefault(_tag_implies={})
-    implications = env['_tag_implies']
+    implications = env["_tag_implies"]
 
     if isinstance(tags, str):
         tags = frozenset([tags])
@@ -122,53 +125,71 @@ def resolve_tags(env, tags):
             tags |= implications[tag]
     return tags
 
+
 class SourceFilter(object):
     factories = {}
+
     def __init__(self, predicate):
         self.predicate = predicate
 
     def __or__(self, other):
-        return SourceFilter(lambda env, tags: self.predicate(env, tags) or
-                                              other.predicate(env, tags))
+        return SourceFilter(
+            lambda env, tags: self.predicate(env, tags)
+            or other.predicate(env, tags)
+        )
 
     def __and__(self, other):
-        return SourceFilter(lambda env, tags: self.predicate(env, tags) and
-                                              other.predicate(env, tags))
+        return SourceFilter(
+            lambda env, tags: self.predicate(env, tags)
+            and other.predicate(env, tags)
+        )
+
 
 def with_any_tags(*tags):
-    '''Return a list of sources with any of the supplied tags.'''
-    return SourceFilter(lambda env, stags: \
-        len(resolve_tags(env, tags) & stags) > 0)
+    """Return a list of sources with any of the supplied tags."""
+    return SourceFilter(
+        lambda env, stags: len(resolve_tags(env, tags) & stags) > 0
+    )
+
 
 def with_all_tags(*tags):
-    '''Return a list of sources with all of the supplied tags.'''
+    """Return a list of sources with all of the supplied tags."""
     return SourceFilter(lambda env, stags: resolve_tags(env, tags) <= stags)
 
+
 def with_tag(tag):
-    '''Return a list of sources with the supplied tag.'''
+    """Return a list of sources with the supplied tag."""
     return with_any_tags(*[tag])
 
+
 def without_tags(*tags):
-    '''Return a list of sources without any of the supplied tags.'''
-    return SourceFilter(lambda env, stags: \
-        len(resolve_tags(env, tags) & stags) == 0)
+    """Return a list of sources without any of the supplied tags."""
+    return SourceFilter(
+        lambda env, stags: len(resolve_tags(env, tags) & stags) == 0
+    )
+
 
 def without_tag(tag):
-    '''Return a list of sources without the supplied tag.'''
+    """Return a list of sources without the supplied tag."""
     return without_tags(*[tag])
 
-SourceFilter.factories.update({
-    'with_any_tags': with_any_tags,
-    'with_all_tags': with_all_tags,
-    'with_tag': with_tag,
-    'without_tags': without_tags,
-    'without_tag': without_tag,
-})
+
+SourceFilter.factories.update(
+    {
+        "with_any_tags": with_any_tags,
+        "with_all_tags": with_all_tags,
+        "with_tag": with_tag,
+        "without_tags": without_tags,
+        "without_tag": without_tag,
+    }
+)
+
 
 class SourceList(list):
     def apply_filter(self, env, f):
         def match(source):
             return f.predicate(env, resolve_tags(env, source.tags))
+
         return SourceList(filter(match, self))
 
     def __getattr__(self, name):
@@ -179,33 +200,38 @@ class SourceList(list):
         @functools.wraps(func)
         def wrapper(env, *args, **kwargs):
             return self.apply_filter(env, func(*args, **kwargs))
+
         return wrapper
 
+
 class SourceMeta(type):
-    '''Meta class for source files that keeps track of all files of a
-    particular type.'''
+    """Meta class for source files that keeps track of all files of a
+    particular type."""
+
     def __init__(cls, name, bases, dict):
         super(SourceMeta, cls).__init__(name, bases, dict)
         cls.all = SourceList()
 
+
 class SourceItem(object, metaclass=SourceMeta):
-    '''Base object that encapsulates the notion of a source component for
+    """Base object that encapsulates the notion of a source component for
     gem5. This specifies a set of tags which help group components into groups
-    based on arbitrary properties.'''
+    based on arbitrary properties."""
+
     def __init__(self, source, tags=None, add_tags=None, append=None):
         self.source = source
 
         if tags is None:
-            tags='gem5 lib'
+            tags = "gem5 lib"
         if isinstance(tags, str):
-            tags = { tags }
+            tags = {tags}
         if not isinstance(tags, set):
             tags = set(tags)
         self.tags = tags.copy()
 
         if add_tags:
             if isinstance(add_tags, str):
-                add_tags = { add_tags }
+                add_tags = {add_tags}
             if not isinstance(add_tags, set):
                 add_tags = set(add_tags)
             self.tags |= add_tags
@@ -216,10 +242,11 @@ class SourceItem(object, metaclass=SourceMeta):
             if issubclass(base, SourceItem):
                 base.all.append(self)
 
+
 class SourceFile(SourceItem):
-    '''Base object that encapsulates the notion of a source file.
+    """Base object that encapsulates the notion of a source file.
     This includes, the source node, target node, various manipulations
-    of those.'''
+    of those."""
 
     def __init__(self, source, tags=None, add_tags=None, append=None):
         super().__init__(source, tags=tags, add_tags=add_tags, append=append)
@@ -243,6 +270,15 @@ class SourceFile(SourceItem):
         return env.SharedObject(self.tnode)
 
 
-__all__ = ['TagImpliesTool', 'SourceFilter', 'SourceList', 'SourceFile',
-           'SourceItem', 'with_any_tags', 'with_all_tags', 'with_tag',
-           'without_tags', 'without_tag']
+__all__ = [
+    "TagImpliesTool",
+    "SourceFilter",
+    "SourceList",
+    "SourceFile",
+    "SourceItem",
+    "with_any_tags",
+    "with_all_tags",
+    "with_tag",
+    "without_tags",
+    "without_tag",
+]

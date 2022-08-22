@@ -29,7 +29,7 @@ from m5.SimObject import SimObject
 
 class SysBridge(SimObject):
     """Use this bridge to connect the memory systems belonging to two different
-       Systems SimObjects. See the header file for more information."""
+    Systems SimObjects. See the header file for more information."""
 
     type = "SysBridge"
     cxx_header = "mem/sys_bridge.hh"

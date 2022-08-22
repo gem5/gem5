@@ -112,12 +112,11 @@ class Template(object):
 
             operands = SubOperandList(self.parser, compositeCode, d.operands)
 
-            myDict["reg_idx_arr_decl"] = (
-                "RegId srcRegIdxArr[%d]; RegId destRegIdxArr[%d]"
-                % (
-                    d.operands.numSrcRegs + d.srcRegIdxPadding,
-                    d.operands.numDestRegs + d.destRegIdxPadding,
-                )
+            myDict[
+                "reg_idx_arr_decl"
+            ] = "RegId srcRegIdxArr[%d]; RegId destRegIdxArr[%d]" % (
+                d.operands.numSrcRegs + d.srcRegIdxPadding,
+                d.operands.numDestRegs + d.destRegIdxPadding,
             )
 
             # The reinterpret casts are largely because an array with a known
@@ -960,15 +959,15 @@ class ISAParser(Grammar):
     # They are all processed as they are seen.
     def p_def_or_output(self, t):
         """def_or_output : name_decl
-                         | def_format
-                         | def_bitfield
-                         | def_bitfield_struct
-                         | def_template
-                         | def_operand_types
-                         | def_operands
-                         | output
-                         | global_let
-                         | split"""
+        | def_format
+        | def_bitfield
+        | def_bitfield_struct
+        | def_template
+        | def_operand_types
+        | def_operands
+        | output
+        | global_let
+        | split"""
 
     # Utility function used by both invocations of splitting - explicit
     # 'split' keyword and split() function inside "let {{ }};" blocks.
@@ -992,8 +991,8 @@ class ISAParser(Grammar):
 
     def p_output_type(self, t):
         """output_type : DECODER
-                       | HEADER
-                       | EXEC"""
+        | HEADER
+        | EXEC"""
         t[0] = t[1]
 
     # ISA name declaration looks like "namespace <foo>;"
@@ -1175,7 +1174,7 @@ del wrap
 
     def p_param_list_1(self, t):
         """param_list : positional_param_list
-                      | nonpositional_param_list"""
+        | nonpositional_param_list"""
         t[0] = t[1]
 
     def p_positional_param_list_0(self, t):
@@ -1196,7 +1195,7 @@ del wrap
 
     def p_nonpositional_param_list_1(self, t):
         """nonpositional_param_list : keyword_param_list
-                                    | excess_args_param"""
+        | excess_args_param"""
         t[0] = t[1]
 
     def p_keyword_param_list_0(self, t):
@@ -1360,7 +1359,7 @@ StaticInstPtr
         t[0] = ["default:"]
 
     def prep_int_lit_case_label(self, lit):
-        if lit >= 2 ** 32:
+        if lit >= 2**32:
             return "case %#xULL: " % lit
         else:
             return "case %#x: " % lit
@@ -1468,9 +1467,9 @@ StaticInstPtr
     #
     def p_expr_0(self, t):
         """expr : ID
-                | INTLIT
-                | STRLIT
-                | CODELIT"""
+        | INTLIT
+        | STRLIT
+        | CODELIT"""
         t[0] = t[1]
 
     def p_expr_1(self, t):

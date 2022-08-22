@@ -82,4 +82,3 @@ output exec {{
 def format Unknown() {{
     decode_block = 'return new Unknown(machInst);\n'
 }};
-

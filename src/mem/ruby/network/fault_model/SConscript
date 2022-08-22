@@ -38,4 +38,3 @@ if env['CONF']['PROTOCOL'] == 'None':
 
 SimObject('FaultModel.py', sim_objects=['FaultModel'])
 Source('FaultModel.cc')
-

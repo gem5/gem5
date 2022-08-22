@@ -594,7 +594,7 @@ class CheckedIntType(MetaParamValue):
                 )
             if cls.unsigned:
                 cls.min = 0
-                cls.max = 2 ** cls.size - 1
+                cls.max = 2**cls.size - 1
             else:
                 cls.min = -(2 ** (cls.size - 1))
                 cls.max = (2 ** (cls.size - 1)) - 1

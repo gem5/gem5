@@ -122,4 +122,3 @@ def format MwaitInst(code, *opt_flags) {{
     exec_output += MwaitInitiateAcc.subst(iop)
     exec_output += MwaitCompleteAcc.subst(iop)
 }};
-

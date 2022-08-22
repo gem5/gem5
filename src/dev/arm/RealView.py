@@ -339,9 +339,9 @@ class RealViewTemperatureSensor(SimObject):
 class VExpressMCC(SubSystem):
     """ARM V2M-P1 Motherboard Configuration Controller
 
-This subsystem describes a subset of the devices that sit behind the
-motherboard configuration controller on the the ARM Motherboard
-Express (V2M-P1) motherboard. See ARM DUI 0447J for details.
+    This subsystem describes a subset of the devices that sit behind the
+    motherboard configuration controller on the the ARM Motherboard
+    Express (V2M-P1) motherboard. See ARM DUI 0447J for details.
     """
 
     class Osc(RealViewOsc):
@@ -380,9 +380,9 @@ Express (V2M-P1) motherboard. See ARM DUI 0447J for details.
 class CoreTile2A15DCC(SubSystem):
     """ARM CoreTile Express A15x2 Daughterboard Configuration Controller
 
-This subsystem describes a subset of the devices that sit behind the
-daughterboard configuration controller on a CoreTile Express A15x2. See
-ARM DUI 0604E for details.
+    This subsystem describes a subset of the devices that sit behind the
+    daughterboard configuration controller on a CoreTile Express A15x2. See
+    ARM DUI 0604E for details.
     """
 
     class Osc(RealViewOsc):
@@ -491,10 +491,10 @@ class Sp804(AmbaPioDevice):
 
 class Sp805(AmbaIntDevice):
     """
-Arm Watchdog Module (SP805)
-Reference:
-    Arm Watchdog Module (SP805) - Technical Reference Manual - rev. r1p0
-    Doc. ID: ARM DDI 0270B
+    Arm Watchdog Module (SP805)
+    Reference:
+        Arm Watchdog Module (SP805) - Technical Reference Manual - rev. r1p0
+        Doc. ID: ARM DDI 0270B
     """
 
     type = "Sp805"
@@ -746,10 +746,10 @@ class MmioSRAM(ParentMem):
 
 class FVPBasePwrCtrl(BasicPioDevice):
     """
-Based on Fast Models Base_PowerController v11.8
-Reference:
-    Fast Models Reference Manual - Section 7.7.2 - Version 11.8
-    Document ID: 100964_1180_00_en
+    Based on Fast Models Base_PowerController v11.8
+    Reference:
+        Fast Models Reference Manual - Section 7.7.2 - Version 11.8
+        Document ID: 100964_1180_00_en
     """
 
     type = "FVPBasePwrCtrl"
@@ -1100,148 +1100,148 @@ class VExpress_EMM64(VExpress_EMM):
 
 class VExpress_GEM5_Base(RealView):
     """
-The VExpress gem5 memory map is loosely based on a modified
-Versatile Express RS1 memory map.
+    The VExpress gem5 memory map is loosely based on a modified
+    Versatile Express RS1 memory map.
 
-The gem5 platform has been designed to implement a subset of the
-original Versatile Express RS1 memory map. Off-chip peripherals should,
-when possible, adhere to the Versatile Express memory map. Non-PCI
-off-chip devices that are gem5-specific should live in the CS5 memory
-space to avoid conflicts with existing devices that we might want to
-model in the future. Such devices should normally have interrupts in
-the gem5-specific SPI range.
+    The gem5 platform has been designed to implement a subset of the
+    original Versatile Express RS1 memory map. Off-chip peripherals should,
+    when possible, adhere to the Versatile Express memory map. Non-PCI
+    off-chip devices that are gem5-specific should live in the CS5 memory
+    space to avoid conflicts with existing devices that we might want to
+    model in the future. Such devices should normally have interrupts in
+    the gem5-specific SPI range.
 
-On-chip peripherals are loosely modeled after the ARM CoreTile Express
-A15x2 memory and interrupt map. In particular, the GIC and
-Generic Timer have the same interrupt lines and base addresses. Other
-on-chip devices are gem5 specific.
+    On-chip peripherals are loosely modeled after the ARM CoreTile Express
+    A15x2 memory and interrupt map. In particular, the GIC and
+    Generic Timer have the same interrupt lines and base addresses. Other
+    on-chip devices are gem5 specific.
 
-Unlike the original Versatile Express RS2 extended platform, gem5 implements a
-large contigious DRAM space, without aliases or holes, starting at the
-2GiB boundary. This means that PCI memory is limited to 1GiB.
+    Unlike the original Versatile Express RS2 extended platform, gem5 implements a
+    large contigious DRAM space, without aliases or holes, starting at the
+    2GiB boundary. This means that PCI memory is limited to 1GiB.
 
-References:
+    References:
 
-    Technical Reference Manuals:
-        Arm Motherboard Express uATX (V2M-P1) - ARM DUI 0447J
-        Arm CoreTile Express A15x2 (V2P-CA15) - ARM DUI 0604E
+        Technical Reference Manuals:
+            Arm Motherboard Express uATX (V2M-P1) - ARM DUI 0447J
+            Arm CoreTile Express A15x2 (V2P-CA15) - ARM DUI 0604E
 
-    Official Linux device tree specifications:
-        V2M-P1   - arch/arm/boot/dts/vexpress-v2m-rs1.dtsi
-        V2P-CA15 - arch/arm/boot/dts/vexpress-v2p-ca15-tc1.dts
+        Official Linux device tree specifications:
+            V2M-P1   - arch/arm/boot/dts/vexpress-v2m-rs1.dtsi
+            V2P-CA15 - arch/arm/boot/dts/vexpress-v2p-ca15-tc1.dts
+
+        Memory map:
+            Arm CoreTile Express A15x2 (V2P-CA15) - ARM DUI 0604E
+            Daughterboard (global)
+                Section 3.2.1 - Table 3-1 - Daughterboard memory map
+            On-chip
+                Section 3.2.3 - Table 3-2 - Cortex-A15 MPCore on-chip peripheral
+                                            memory map
+
+        Interrupts:
+            Armv8-A Foundation Platform - User Guide - Version 11.8
+            Document ID: 100961_1180_00_en
 
     Memory map:
-        Arm CoreTile Express A15x2 (V2P-CA15) - ARM DUI 0604E
-        Daughterboard (global)
-            Section 3.2.1 - Table 3-1 - Daughterboard memory map
-        On-chip
-            Section 3.2.3 - Table 3-2 - Cortex-A15 MPCore on-chip peripheral
-                                        memory map
+       0x00000000-0x03ffffff: Boot memory (CS0)
+       0x04000000-0x07ffffff: Trusted Memory/Reserved
+            0x04000000-0x0403FFFF: 256kB Trusted SRAM
+            0x06000000-0x07ffffff: 32MB Trusted DRAM
+       0x08000000-0x0bffffff: NOR FLASH0 (CS0 alias)
+       0x0c000000-0x0fffffff: NOR FLASH1 (Off-chip, CS4)
+       0x10000000-0x13ffffff: gem5-specific peripherals (Off-chip, CS5)
+           0x10000000-0x1000ffff: gem5 energy controller
+           0x10010000-0x1001ffff: gem5 pseudo-ops
+           0x10020000-0x1002ffff: gem5 MHU
+
+       0x14000000-0x17ffffff: Reserved (Off-chip, PSRAM, CS1)
+
+       0x18000000-0x1bffffff: Off-chip, Peripherals, CS2
+           0x18000000-0x19ffffff: VRAM
+           0x1a000000-0x1bffffff: Reserved
+
+       0x1c000000-0x1fffffff: Peripheral block 1 (Off-chip, CS3):
+           0x1c010000-0x1c01ffff: realview_io (VE system control regs.)
+           0x1c060000-0x1c06ffff: KMI0 (keyboard)
+           0x1c070000-0x1c07ffff: KMI1 (mouse)
+           0x1c090000-0x1c09ffff: UART0
+           0x1c0a0000-0x1c0affff: UART1
+           0x1c0b0000-0x1c0bffff: UART2
+           0x1c0c0000-0x1c0cffff: UART3
+           0x1c0f0000-0x1c0fffff: Watchdog (SP805)
+           0x1c130000-0x1c13ffff: VirtIO (gem5/FM extension)
+           0x1c140000-0x1c14ffff: VirtIO (gem5/FM extension)
+           0x1c170000-0x1c17ffff: RTC
+
+       0x20000000-0x3fffffff: On-chip peripherals:
+           0x2a430000-0x2a43ffff: System Counter (control)
+           0x2a490000-0x2a49ffff: Trusted Watchdog (SP805)
+           0x2a800000-0x2a800fff: System Counter (read)
+           0x2a810000-0x2a810fff: System Timer (control)
+
+           0x2a820000-0x2a820fff: System Timer (frame 0)
+           0x2a830000-0x2a830fff: System Timer (frame 1)
+
+           0x2b000000-0x2b00ffff: HDLCD
+
+           0x2b060000-0x2b060fff: System Watchdog (SP805)
+
+           0x2b400000-0x2b41ffff: SMMUv3
+
+           0x2c001000-0x2c001fff: GIC (distributor)
+           0x2c002000-0x2c003fff: GIC (CPU interface)
+           0x2c004000-0x2c005fff: vGIC (HV)
+           0x2c006000-0x2c007fff: vGIC (VCPU)
+           0x2c1c0000-0x2c1cffff: GICv2m MSI frame 0
+
+           0x2d000000-0x2d00ffff: GPU (reserved)
+
+           0x2e000000-0x2e007fff: Non-trusted SRAM
+
+           0x2f000000-0x2fffffff: PCI IO space
+           0x30000000-0x3fffffff: PCI config space
+
+       0x40000000-0x7fffffff: Ext. AXI: Used as PCI memory
+
+       0x80000000-X: DRAM
 
     Interrupts:
-        Armv8-A Foundation Platform - User Guide - Version 11.8
-        Document ID: 100961_1180_00_en
-
-Memory map:
-   0x00000000-0x03ffffff: Boot memory (CS0)
-   0x04000000-0x07ffffff: Trusted Memory/Reserved
-        0x04000000-0x0403FFFF: 256kB Trusted SRAM
-        0x06000000-0x07ffffff: 32MB Trusted DRAM
-   0x08000000-0x0bffffff: NOR FLASH0 (CS0 alias)
-   0x0c000000-0x0fffffff: NOR FLASH1 (Off-chip, CS4)
-   0x10000000-0x13ffffff: gem5-specific peripherals (Off-chip, CS5)
-       0x10000000-0x1000ffff: gem5 energy controller
-       0x10010000-0x1001ffff: gem5 pseudo-ops
-       0x10020000-0x1002ffff: gem5 MHU
-
-   0x14000000-0x17ffffff: Reserved (Off-chip, PSRAM, CS1)
-
-   0x18000000-0x1bffffff: Off-chip, Peripherals, CS2
-       0x18000000-0x19ffffff: VRAM
-       0x1a000000-0x1bffffff: Reserved
-
-   0x1c000000-0x1fffffff: Peripheral block 1 (Off-chip, CS3):
-       0x1c010000-0x1c01ffff: realview_io (VE system control regs.)
-       0x1c060000-0x1c06ffff: KMI0 (keyboard)
-       0x1c070000-0x1c07ffff: KMI1 (mouse)
-       0x1c090000-0x1c09ffff: UART0
-       0x1c0a0000-0x1c0affff: UART1
-       0x1c0b0000-0x1c0bffff: UART2
-       0x1c0c0000-0x1c0cffff: UART3
-       0x1c0f0000-0x1c0fffff: Watchdog (SP805)
-       0x1c130000-0x1c13ffff: VirtIO (gem5/FM extension)
-       0x1c140000-0x1c14ffff: VirtIO (gem5/FM extension)
-       0x1c170000-0x1c17ffff: RTC
-
-   0x20000000-0x3fffffff: On-chip peripherals:
-       0x2a430000-0x2a43ffff: System Counter (control)
-       0x2a490000-0x2a49ffff: Trusted Watchdog (SP805)
-       0x2a800000-0x2a800fff: System Counter (read)
-       0x2a810000-0x2a810fff: System Timer (control)
-
-       0x2a820000-0x2a820fff: System Timer (frame 0)
-       0x2a830000-0x2a830fff: System Timer (frame 1)
-
-       0x2b000000-0x2b00ffff: HDLCD
-
-       0x2b060000-0x2b060fff: System Watchdog (SP805)
-
-       0x2b400000-0x2b41ffff: SMMUv3
-
-       0x2c001000-0x2c001fff: GIC (distributor)
-       0x2c002000-0x2c003fff: GIC (CPU interface)
-       0x2c004000-0x2c005fff: vGIC (HV)
-       0x2c006000-0x2c007fff: vGIC (VCPU)
-       0x2c1c0000-0x2c1cffff: GICv2m MSI frame 0
-
-       0x2d000000-0x2d00ffff: GPU (reserved)
-
-       0x2e000000-0x2e007fff: Non-trusted SRAM
-
-       0x2f000000-0x2fffffff: PCI IO space
-       0x30000000-0x3fffffff: PCI config space
-
-   0x40000000-0x7fffffff: Ext. AXI: Used as PCI memory
-
-   0x80000000-X: DRAM
-
-Interrupts:
-      0- 15: Software generated interrupts (SGIs)
-     16- 31: On-chip private peripherals (PPIs)
-        19   : generic_timer (virt sec EL2)
-        20   : generic_timer (phys sec EL2)
-        25   : vgic
-        26   : generic_timer (phys non-sec EL2)
-        27   : generic_timer (virt EL1)
-        28   : generic_timer (virt non-sec EL2)
-        29   : generic_timer (phys EL3)
-        30   : generic_timer (phys EL1)
-        31   : Reserved (Legacy IRQ)
-    32- 95: Mother board peripherals (SPIs)
-        32   : Watchdog (SP805)
-        33   : Reserved (IOFPGA SW int)
-        34-35: Reserved (SP804)
-        36   : RTC
-        37-40: uart0-uart3
-        41-42: Reserved (PL180)
-        43   : Reserved (AACI)
-        44-45: kmi0-kmi1
-        46   : Reserved (CLCD)
-        47   : Reserved (Ethernet)
-        48   : Reserved (USB)
-        56   : Trusted Watchdog (SP805)
-        57   : System timer0 (phys)
-        58   : System timer1 (phys)
-    95-255: On-chip interrupt sources (we use these for
-            gem5-specific devices, SPIs)
-         74    : VirtIO (gem5/FM extension)
-         75    : VirtIO (gem5/FM extension)
-         95    : HDLCD
-         96- 98: GPU (reserved)
-        100-103: PCI
-        130    : System Watchdog (SP805)
-   256-319: MSI frame 0 (gem5-specific, SPIs)
-   320-511: Unused
+          0- 15: Software generated interrupts (SGIs)
+         16- 31: On-chip private peripherals (PPIs)
+            19   : generic_timer (virt sec EL2)
+            20   : generic_timer (phys sec EL2)
+            25   : vgic
+            26   : generic_timer (phys non-sec EL2)
+            27   : generic_timer (virt EL1)
+            28   : generic_timer (virt non-sec EL2)
+            29   : generic_timer (phys EL3)
+            30   : generic_timer (phys EL1)
+            31   : Reserved (Legacy IRQ)
+        32- 95: Mother board peripherals (SPIs)
+            32   : Watchdog (SP805)
+            33   : Reserved (IOFPGA SW int)
+            34-35: Reserved (SP804)
+            36   : RTC
+            37-40: uart0-uart3
+            41-42: Reserved (PL180)
+            43   : Reserved (AACI)
+            44-45: kmi0-kmi1
+            46   : Reserved (CLCD)
+            47   : Reserved (Ethernet)
+            48   : Reserved (USB)
+            56   : Trusted Watchdog (SP805)
+            57   : System timer0 (phys)
+            58   : System timer1 (phys)
+        95-255: On-chip interrupt sources (we use these for
+                gem5-specific devices, SPIs)
+             74    : VirtIO (gem5/FM extension)
+             75    : VirtIO (gem5/FM extension)
+             95    : HDLCD
+             96- 98: GPU (reserved)
+            100-103: PCI
+            130    : System Watchdog (SP805)
+       256-319: MSI frame 0 (gem5-specific, SPIs)
+       320-511: Unused
 
     """
 

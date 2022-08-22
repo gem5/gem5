@@ -88,4 +88,3 @@ def format SyscallInst(code, *opt_flags) {{
     decode_block = BasicDecode.subst(iop)
     exec_output = SyscallExecute.subst(iop)
 }};
-

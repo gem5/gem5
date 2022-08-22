@@ -61,12 +61,12 @@ class ConvertTestSuite(unittest.TestCase):
         self.assertEqual(conv("42PX"), 42e15)
         self.assertEqual(conv("42EX"), 42e18)
 
-        self.assertEqual(conv("42KiX"), 42 * 2 ** 10)
-        self.assertEqual(conv("42MiX"), 42 * 2 ** 20)
-        self.assertEqual(conv("42GiX"), 42 * 2 ** 30)
-        self.assertEqual(conv("42TiX"), 42 * 2 ** 40)
-        self.assertEqual(conv("42PiX"), 42 * 2 ** 50)
-        self.assertEqual(conv("42EiX"), 42 * 2 ** 60)
+        self.assertEqual(conv("42KiX"), 42 * 2**10)
+        self.assertEqual(conv("42MiX"), 42 * 2**20)
+        self.assertEqual(conv("42GiX"), 42 * 2**30)
+        self.assertEqual(conv("42TiX"), 42 * 2**40)
+        self.assertEqual(conv("42PiX"), 42 * 2**50)
+        self.assertEqual(conv("42EiX"), 42 * 2**60)
 
         self.assertRaises(ValueError, conv, "42k")
         self.assertRaises(ValueError, conv, "42KX")
@@ -80,20 +80,20 @@ class ConvertTestSuite(unittest.TestCase):
         def conv(x):
             return convert.toMetricInteger(x, "value", "X")
 
-        self.assertEqual(conv("42"), 42 * 10 ** 0)
-        self.assertEqual(conv("42kX"), 42 * 10 ** 3)
-        self.assertEqual(conv("42MX"), 42 * 10 ** 6)
-        self.assertEqual(conv("42GX"), 42 * 10 ** 9)
-        self.assertEqual(conv("42TX"), 42 * 10 ** 12)
-        self.assertEqual(conv("42PX"), 42 * 10 ** 15)
-        self.assertEqual(conv("42EX"), 42 * 10 ** 18)
+        self.assertEqual(conv("42"), 42 * 10**0)
+        self.assertEqual(conv("42kX"), 42 * 10**3)
+        self.assertEqual(conv("42MX"), 42 * 10**6)
+        self.assertEqual(conv("42GX"), 42 * 10**9)
+        self.assertEqual(conv("42TX"), 42 * 10**12)
+        self.assertEqual(conv("42PX"), 42 * 10**15)
+        self.assertEqual(conv("42EX"), 42 * 10**18)
 
-        self.assertEqual(conv("42KiX"), 42 * 2 ** 10)
-        self.assertEqual(conv("42MiX"), 42 * 2 ** 20)
-        self.assertEqual(conv("42GiX"), 42 * 2 ** 30)
-        self.assertEqual(conv("42TiX"), 42 * 2 ** 40)
-        self.assertEqual(conv("42PiX"), 42 * 2 ** 50)
-        self.assertEqual(conv("42EiX"), 42 * 2 ** 60)
+        self.assertEqual(conv("42KiX"), 42 * 2**10)
+        self.assertEqual(conv("42MiX"), 42 * 2**20)
+        self.assertEqual(conv("42GiX"), 42 * 2**30)
+        self.assertEqual(conv("42TiX"), 42 * 2**40)
+        self.assertEqual(conv("42PiX"), 42 * 2**50)
+        self.assertEqual(conv("42EiX"), 42 * 2**60)
 
         self.assertRaises(ValueError, conv, "42.1")
         self.assertRaises(ValueError, conv, "42.1kX")
@@ -193,8 +193,8 @@ class ConvertTestSuite(unittest.TestCase):
         self.assertEqual(conv("42"), 42.0)
         self.assertEqual(conv("42B/s"), 42.0)
 
-        self.assertEqual(conv("42MB/s"), 42 * 2 ** 20)
-        self.assertEqual(conv("42MiB/s"), 42 * 2 ** 20)
+        self.assertEqual(conv("42MB/s"), 42 * 2**20)
+        self.assertEqual(conv("42MiB/s"), 42 * 2**20)
 
         self.assertRaises(ValueError, conv, "42KB/s")
         self.assertRaises(ValueError, conv, "42Mi")
@@ -205,11 +205,11 @@ class ConvertTestSuite(unittest.TestCase):
         self.assertEqual(conv("42"), 42.0)
         self.assertEqual(conv("42B"), 42.0)
 
-        self.assertEqual(conv("42kB"), 42 * 2 ** 10)
-        self.assertEqual(conv("42MB"), 42 * 2 ** 20)
+        self.assertEqual(conv("42kB"), 42 * 2**10)
+        self.assertEqual(conv("42MB"), 42 * 2**20)
 
-        self.assertEqual(conv("42KiB"), 42 * 2 ** 10)
-        self.assertEqual(conv("42MiB"), 42 * 2 ** 20)
+        self.assertEqual(conv("42KiB"), 42 * 2**10)
+        self.assertEqual(conv("42MiB"), 42 * 2**20)
 
     def test_toIpAddress(self):
         conv = convert.toIpAddress

@@ -865,7 +865,7 @@ class FastModelGIC(BaseGic):
         return [int(r.split("=")[1], 16) for r in redists]
 
     def get_addr_ranges(self):
-        """ Return address ranges that should be served by this GIC """
+        """Return address ranges that should be served by this GIC"""
         sc_gic = self.sc_gic
         gic_frame_size = 0x10000
         # Add range of distributor

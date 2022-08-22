@@ -52,7 +52,7 @@ def define_options(parser):
 
 
 def read_config_file(file):
-    """ Read file as a module and return it """
+    """Read file as a module and return it"""
     import types
     import importlib.machinery
 

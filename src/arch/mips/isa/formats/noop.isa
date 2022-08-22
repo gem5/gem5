@@ -134,4 +134,3 @@ def format BasicOperateWithNopCheck(code, *opt_args) {{
 def format Nop() {{
         decode_block = 'return new Nop(\"\",machInst);\n'
 }};
-

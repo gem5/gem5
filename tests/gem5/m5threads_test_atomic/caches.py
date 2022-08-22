@@ -60,7 +60,7 @@ class L1Cache(PrefetchCache):
 
     def connectCPU(self, cpu):
         """Connect this cache's port to a CPU-side port
-           This must be defined in a subclass"""
+        This must be defined in a subclass"""
         raise NotImplementedError
 
 

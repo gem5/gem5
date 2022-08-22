@@ -30,7 +30,7 @@ from m5.proxy import *
 
 
 class RedirectPath(SimObject):
-    """ Stores paths for filesystem redirection during syscalls. If a path
+    """Stores paths for filesystem redirection during syscalls. If a path
     matches 'appPath', then the syscall is redirected to the first 'hostPath'
     that contains the non-overlapping portion of the path as a valid file. If
      there are no hits, then the syscall is redirected to the first value.

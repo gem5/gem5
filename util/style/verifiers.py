@@ -54,9 +54,9 @@ from .file_types import lang_type
 
 
 def safefix(fix_func):
-    """ Decorator for the fix functions of the Verifier class.
-        This function wraps the fix function and creates a backup file
-        just in case there is an error.
+    """Decorator for the fix functions of the Verifier class.
+    This function wraps the fix function and creates a backup file
+    just in case there is an error.
     """
 
     def safefix_wrapper(*args, **kwargs):
@@ -474,29 +474,29 @@ class BoolCompare(LineVerifier):
 
 
 class StructureBraces(LineVerifier):
-    """ Check if the opening braces of structures are not on the same line of
-        the structure name. This includes classes, structs, enums and unions.
+    """Check if the opening braces of structures are not on the same line of
+    the structure name. This includes classes, structs, enums and unions.
 
-        This verifier matches lines starting in optional indent, followed by
-        an optional typedef and the structure's keyword, followed by any
-        character until the first opening brace is seen. Any extra characters
-        after the opening brace are saved for a recursive check, if needed.
+    This verifier matches lines starting in optional indent, followed by
+    an optional typedef and the structure's keyword, followed by any
+    character until the first opening brace is seen. Any extra characters
+    after the opening brace are saved for a recursive check, if needed.
 
-        This fixes, for example:
-            1) "struct A {"
-            2) "enum{"
-            3) "    class B { // This is a class"
-            4) "union { struct C {"
-        to:
-            1) "struct A\n{"
-            2) "enum\n{"
-            3) "    class B\n    {\n        // This is a class"
-            4) "union\n{\n        struct C\n        {"
+    This fixes, for example:
+        1) "struct A {"
+        2) "enum{"
+        3) "    class B { // This is a class"
+        4) "union { struct C {"
+    to:
+        1) "struct A\n{"
+        2) "enum\n{"
+        3) "    class B\n    {\n        // This is a class"
+        4) "union\n{\n        struct C\n        {"
 
-        @todo Make this work for multi-line structure declarations. e.g.,
+    @todo Make this work for multi-line structure declarations. e.g.,
 
-            class MultiLineClass
-              : public BaseClass {
+        class MultiLineClass
+          : public BaseClass {
     """
 
     languages = set(("C", "C++"))

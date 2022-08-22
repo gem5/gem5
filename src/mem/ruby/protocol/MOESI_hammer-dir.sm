@@ -26,11 +26,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * AMD's contributions to the MOESI hammer protocol do not constitute an 
+ * AMD's contributions to the MOESI hammer protocol do not constitute an
  * endorsement of its similarity to any AMD products.
  */
 
-machine(MachineType:Directory, "AMD Hammer-like protocol") 
+machine(MachineType:Directory, "AMD Hammer-like protocol")
     : DirectoryMemory * directory;
       CacheMemory * probeFilter;
       Cycles from_memory_controller_latency := 2;
@@ -44,7 +44,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
       MessageBuffer * responseFromDir, network="To", virtual_network="4",
             vnet_type="response";
 
-      // For a finite buffered network, note that the DMA response network only 
+      // For a finite buffered network, note that the DMA response network only
       // works at this relatively lower numbered (lower priority) virtual network
       // because the trigger queue decouples cache responses from DMA responses.
       MessageBuffer * dmaResponseFromDir, network="To", virtual_network="1",
@@ -107,7 +107,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
   enumeration(Event, desc="Directory events") {
     GETX,                      desc="A GETX arrives";
     GETS,                      desc="A GETS arrives";
-    PUT,                       desc="A PUT arrives"; 
+    PUT,                       desc="A PUT arrives";
     Unblock,                   desc="An unblock message arrives";
     UnblockS,                   desc="An unblock message arrives";
     UnblockM,                   desc="An unblock message arrives";
@@ -244,7 +244,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
         assert(is_valid(pf_entry) == false);
       }
     }
-    if (state == State:E || state == State:NX || state == State:NO || state == State:S || 
+    if (state == State:E || state == State:NX || state == State:NO || state == State:S ||
         state == State:O) {
       assert(is_valid(tbe) == false);
     }
@@ -456,17 +456,17 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
   }
 
   // Actions
-  
+
   action(r_setMRU, "\rr", desc="manually set the MRU bit for pf entry" ) {
     if (probe_filter_enabled || full_bit_dir_enabled) {
-      assert(is_valid(cache_entry)); 
+      assert(is_valid(cache_entry));
       probeFilter.setMRU(address);
     }
   }
 
   action(auno_assertUnblockerNotOwner, "auno", desc="assert unblocker not owner") {
     if (probe_filter_enabled || full_bit_dir_enabled) {
-      assert(is_valid(cache_entry)); 
+      assert(is_valid(cache_entry));
       peek(unblockNetwork_in, ResponseMsg) {
         assert(cache_entry.Owner != in_msg.Sender);
         if (full_bit_dir_enabled) {
@@ -478,7 +478,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
 
   action(uo_updateOwnerIfPf, "uo", desc="update owner") {
     if (probe_filter_enabled || full_bit_dir_enabled) {
-      assert(is_valid(cache_entry)); 
+      assert(is_valid(cache_entry));
       peek(unblockNetwork_in, ResponseMsg) {
         cache_entry.Owner := in_msg.Sender;
         if (full_bit_dir_enabled) {
@@ -637,7 +637,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
         tbe.Acks := 1;
       }
     }
-  } 
+  }
 
   action(saa_setAcksToAllIfPF, "saa", desc="Non-forwarded request, set the ack amount to all") {
     assert(is_valid(tbe));
@@ -647,7 +647,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
     } else {
       tbe.Acks := 1;
     }
-  }   
+  }
 
   action(m_decrementNumberOfMessages, "m", desc="Decrement the number of messages for which we're waiting") {
     peek(responseToDir_in, ResponseMsg) {
@@ -655,8 +655,8 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
       assert(in_msg.Acks > 0);
       DPRINTF(RubySlicc, "%d\n", tbe.NumPendingMsgs);
       //
-      // Note that cache data responses will have an ack count of 2.  However, 
-      // directory DMA requests must wait for acks from all LLC caches, so 
+      // Note that cache data responses will have an ack count of 2.  However,
+      // directory DMA requests must wait for acks from all LLC caches, so
       // only decrement by 1.
       //
       if ((in_msg.Type == CoherenceResponseType:DATA_SHARED) ||
@@ -763,7 +763,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
         out_msg.LineAddress := address;
         out_msg.Type := DMAResponseType:DATA;
         //
-        // we send the entire data block and rely on the dma controller to 
+        // we send the entire data block and rely on the dma controller to
         // split it up if need be
         //
         out_msg.DataBlk := in_msg.DataBlk;
@@ -781,7 +781,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
         out_msg.LineAddress := address;
         out_msg.Type := DMAResponseType:DATA;
         //
-        // we send the entire data block and rely on the dma controller to 
+        // we send the entire data block and rely on the dma controller to
         // split it up if need be
         //
         out_msg.DataBlk := tbe.DataBlk;
@@ -797,7 +797,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
       out_msg.PhysicalAddress := address;
       out_msg.LineAddress := address;
       out_msg.Type := DMAResponseType:ACK;
-      out_msg.Destination.add(tbe.DmaRequestor); 
+      out_msg.Destination.add(tbe.DmaRequestor);
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
     }
   }
@@ -935,7 +935,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
   action(io_invalidateOwnerRequest, "io", desc="invalidate all copies") {
     if (machineCount(MachineType:L1Cache) > 1) {
       enqueue(forwardNetwork_out, RequestMsg, from_memory_controller_latency) {
-        assert(is_valid(cache_entry)); 
+        assert(is_valid(cache_entry));
         out_msg.addr := address;
         out_msg.Type := CoherenceRequestType:INV;
         out_msg.Requestor := machineID;
@@ -1015,7 +1015,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
         out_msg.MessageSize := MessageSizeType:Request_Control;
         out_msg.InitialRequestTime := zero_time();
         out_msg.ForwardRequestTime := curCycle();
-      }      
+      }
     }
   }
 
@@ -1024,7 +1024,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
     if (probe_filter_enabled || full_bit_dir_enabled) {
       peek(requestQueue_in, RequestMsg) {
         enqueue(forwardNetwork_out, RequestMsg, from_memory_controller_latency) {
-          assert(is_valid(cache_entry)); 
+          assert(is_valid(cache_entry));
           out_msg.addr := address;
           out_msg.Type := in_msg.Type;
           out_msg.Requestor := in_msg.Requestor;
@@ -1034,7 +1034,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
           out_msg.InitialRequestTime := in_msg.InitialRequestTime;
           out_msg.ForwardRequestTime := curCycle();
         }
-      }      
+      }
     } else {
       peek(requestQueue_in, RequestMsg) {
         enqueue(forwardNetwork_out, RequestMsg, from_memory_controller_latency) {
@@ -1099,7 +1099,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
           // itself
           //
           out_msg.Requestor := machineID;
-          out_msg.Destination.broadcast(MachineType:L1Cache); 
+          out_msg.Destination.broadcast(MachineType:L1Cache);
           out_msg.MessageSize := MessageSizeType:Broadcast_Control;
         }
       }
@@ -1118,7 +1118,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
           // itself
           //
           out_msg.Requestor := machineID;
-          out_msg.Destination.broadcast(MachineType:L1Cache); 
+          out_msg.Destination.broadcast(MachineType:L1Cache);
           out_msg.MessageSize := MessageSizeType:Broadcast_Control;
         }
       }
@@ -1132,7 +1132,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
   action(j_popIncomingUnblockQueue, "j", desc="Pop incoming unblock queue") {
     peek(unblockNetwork_in, ResponseMsg) {
         APPEND_TRANSITION_COMMENT(in_msg.Sender);
-    } 
+    }
     unblockNetwork_in.dequeue(clockEdge());
   }
 
@@ -1155,7 +1155,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
   action(zd_stallAndWaitDMARequest, "zd", desc="Stall and wait the dma request queue") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
         APPEND_TRANSITION_COMMENT(in_msg.Requestor);
-    } 
+    }
     stall_and_wait(dmaRequestQueue_in, address);
   }
 
@@ -1184,7 +1184,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
   action(ano_assertNotOwner, "ano", desc="Assert that request is not current owner") {
     if (probe_filter_enabled || full_bit_dir_enabled) {
       peek(requestQueue_in, RequestMsg) {
-        assert(is_valid(cache_entry)); 
+        assert(is_valid(cache_entry));
         assert(cache_entry.Owner != in_msg.Requestor);
       }
     }
@@ -1263,7 +1263,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
   action(z_stallAndWaitRequest, "z", desc="Recycle the request queue") {
     peek(requestQueue_in, RequestMsg) {
         APPEND_TRANSITION_COMMENT(in_msg.Requestor);
-    } 
+    }
     stall_and_wait(requestQueue_in, address);
   }
 
@@ -1467,7 +1467,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
     //
     // note that the PUT requestor may not be the current owner if an invalidate
     // raced with PUT
-    //    
+    //
     a_sendWriteBackAck;
     i_popIncomingRequestQueue;
   }
@@ -1485,9 +1485,9 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
   }
 
   // Blocked transient states
-  transition({NO_B_X, O_B, NO_DR_B_W, NO_DW_B_W, NO_B_W, NO_DR_B_D, 
+  transition({NO_B_X, O_B, NO_DR_B_W, NO_DW_B_W, NO_B_W, NO_DR_B_D,
               NO_DR_B, O_DR_B, O_B_W, O_DR_B_W, NO_DW_W, NO_B_S_W,
-              NO_W, O_W, WB, WB_E_W, WB_O_W, O_R, S_R, NO_R, NO_F_W}, 
+              NO_W, O_W, WB, WB_E_W, WB_O_W, O_R, S_R, NO_R, NO_F_W},
              {GETS, GETX, GETF, PUT, Pf_Replacement}) {
     z_stallAndWaitRequest;
   }
@@ -1508,9 +1508,9 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
     z_stallAndWaitRequest;
   }
 
-  transition({NO_B_X, NO_B, NO_B_S, O_B, NO_DR_B_W, NO_DW_B_W, NO_B_W, NO_DR_B_D, 
+  transition({NO_B_X, NO_B, NO_B_S, O_B, NO_DR_B_W, NO_DW_B_W, NO_B_W, NO_DR_B_D,
               NO_DR_B, O_DR_B, O_B_W, O_DR_B_W, NO_DW_W, NO_B_S_W,
-              NO_W, O_W, WB, WB_E_W, WB_O_W, O_R, S_R, NO_R, NO_F_W}, 
+              NO_W, O_W, WB, WB_E_W, WB_O_W, O_R, S_R, NO_R, NO_F_W},
              {DMA_READ, DMA_WRITE}) {
     zd_stallAndWaitDMARequest;
   }

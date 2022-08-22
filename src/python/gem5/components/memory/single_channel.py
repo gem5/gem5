@@ -68,7 +68,9 @@ def SingleChannelLPDDR3_1600(
     return ChanneledMemory(LPDDR3_1600_1x32, 1, 64, size=size)
 
 
-def SingleChannelHBM(size: Optional[str] = None,) -> AbstractMemorySystem:
+def SingleChannelHBM(
+    size: Optional[str] = None,
+) -> AbstractMemorySystem:
     if not size:
         size = "256MiB"
     return ChanneledMemory(HBM_1000_4H_1x128, 1, 64, size=size)

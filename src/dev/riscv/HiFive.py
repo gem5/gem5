@@ -142,13 +142,11 @@ class HiFive(Platform):
     terminal = Terminal()
 
     def _on_chip_devices(self):
-        """Returns a list of on-chip peripherals
-        """
+        """Returns a list of on-chip peripherals"""
         return [self.clint, self.plic]
 
     def _off_chip_devices(self):
-        """Returns a list of off-chip peripherals
-        """
+        """Returns a list of off-chip peripherals"""
         devices = [self.uart]
         if hasattr(self, "disk"):
             devices.append(self.disk)
@@ -158,7 +156,7 @@ class HiFive(Platform):
 
     def _on_chip_ranges(self):
         """Returns a list of on-chip peripherals
-            address range
+        address range
         """
         return [
             AddrRange(dev.pio_addr, size=dev.pio_size)
@@ -167,7 +165,7 @@ class HiFive(Platform):
 
     def _off_chip_ranges(self):
         """Returns a list of off-chip peripherals
-            address range
+        address range
         """
         return [
             AddrRange(dev.pio_addr, size=dev.pio_size)
@@ -175,8 +173,7 @@ class HiFive(Platform):
         ]
 
     def attachPlic(self):
-        """Count number of PLIC interrupt sources
-        """
+        """Count number of PLIC interrupt sources"""
         plic_srcs = [
             self.uart_int_id,
             self.pci_host.int_base + self.pci_host.int_count,
@@ -188,21 +185,21 @@ class HiFive(Platform):
 
     def attachOnChipIO(self, bus):
         """Attach on-chip IO devices, needs modification
-            to support DMA
+        to support DMA
         """
         for device in self._on_chip_devices():
             device.pio = bus.mem_side_ports
 
     def attachOffChipIO(self, bus):
         """Attach off-chip IO devices, needs modification
-            to support DMA
+        to support DMA
         """
         for device in self._off_chip_devices():
             device.pio = bus.mem_side_ports
 
     def setNumCores(self, num_cpu):
-        """ Sets the PLIC and CLINT to have the right number of threads and
-            contexts. Assumes that the cores have a single hardware thread.
+        """Sets the PLIC and CLINT to have the right number of threads and
+        contexts. Assumes that the cores have a single hardware thread.
         """
         self.plic.n_contexts = num_cpu * 2
         self.clint.num_threads = num_cpu

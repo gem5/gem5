@@ -45,7 +45,7 @@ def _try_convert(val, cls):
 
 def _isPow2(num):
     log_num = int(log(num, 2))
-    if 2 ** log_num != num:
+    if 2**log_num != num:
         return False
     else:
         return True

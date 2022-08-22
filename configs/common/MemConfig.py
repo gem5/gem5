@@ -177,7 +177,7 @@ def config_mem(options, system):
     from m5.util import fatal
 
     intlv_bits = int(math.log(nbr_mem_ctrls, 2))
-    if 2 ** intlv_bits != nbr_mem_ctrls:
+    if 2**intlv_bits != nbr_mem_ctrls:
         fatal("Number of memory channels must be a power of 2")
 
     if opt_mem_type:

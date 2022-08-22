@@ -112,4 +112,3 @@ message Inst {
   }
   repeated MemAccess mem_access = 8;
 }
-

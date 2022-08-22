@@ -1154,4 +1154,3 @@ def format Thumb16MemLit() {{
     }
     ''' % loadImmClassName(False, True, False)
 }};
-

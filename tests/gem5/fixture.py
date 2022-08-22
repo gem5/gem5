@@ -269,8 +269,8 @@ class TestProgram(MakeTarget):
 
 
 class DownloadedProgram(UniqueFixture):
-    """ Like TestProgram, but checks the version in the gem5 binary repository
-        and downloads an updated version if it is needed.
+    """Like TestProgram, but checks the version in the gem5 binary repository
+    and downloads an updated version if it is needed.
     """
 
     def __new__(cls, url, path, filename, gzip_decompress=False):
@@ -349,8 +349,8 @@ class DownloadedProgram(UniqueFixture):
 
 
 class DownloadedArchive(DownloadedProgram):
-    """ Like TestProgram, but checks the version in the gem5 binary repository
-        and downloads an updated version if it is needed.
+    """Like TestProgram, but checks the version in the gem5 binary repository
+    and downloads an updated version if it is needed.
     """
 
     def _extract(self):

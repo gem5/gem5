@@ -211,9 +211,13 @@ def _main():
 
     args = parser.parse_args()
 
-    incoming, outgoing, common, upstream_unknown, feature_unknown = list_changes(
-        args.upstream, args.feature, paths=args.paths
-    )
+    (
+        incoming,
+        outgoing,
+        common,
+        upstream_unknown,
+        feature_unknown,
+    ) = list_changes(args.upstream, args.feature, paths=args.paths)
 
     if incoming:
         print("Incoming changes:")
