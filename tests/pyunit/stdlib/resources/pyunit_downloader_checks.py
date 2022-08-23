@@ -36,10 +36,11 @@ from gem5.resources.downloader import (
 )
 
 
-class MD5FileTestSuite(unittest.TestCase):
+class ResourceDownloaderTestSuite(unittest.TestCase):
     """Test cases for gem5.resources.downloader"""
 
-    def create_temp_resources_json(self) -> str:
+    @classmethod
+    def setUpClass(cls) -> str:
         """
         This creates a simple resource.json temp file for testing purposes.
         """
@@ -84,7 +85,14 @@ class MD5FileTestSuite(unittest.TestCase):
         file = tempfile.NamedTemporaryFile(mode="w", delete=False)
         file.write(file_contents)
         file.close()
-        return file.name
+        cls.file_path = file.name
+
+        os.environ["GEM5_RESOURCE_JSON"] = cls.file_path
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        os.remove(cls.file_path)
+        del os.environ["GEM5_RESOURCE_JSON"]
 
     def verify_json(self, json: Dict) -> None:
         """
@@ -105,27 +113,14 @@ class MD5FileTestSuite(unittest.TestCase):
         # Tests the gem5.resources.downloader._get_resources_json_at_path()
         # function.
 
-        path = self.create_temp_resources_json()
-        json = _get_resources_json_at_path(path=path)
-
+        json = _get_resources_json_at_path(path=self.file_path)
         self.verify_json(json=json)
-
-        # Cleanup the temp file
-        os.remove(path)
 
     def test_get_resources_json(self) -> None:
         # Tests the gem5.resources.downloader._get_resources_json() function.
 
-        path = self.create_temp_resources_json()
-
-        # We set the "GEM5_RESOURCE_JSON" environment variable to allow using
-        # our test temp resources.json.
-        os.environ["GEM5_RESOURCE_JSON"] = path
         json = _get_resources_json()
         self.verify_json(json=json)
-
-        # Cleanup the temp file
-        os.remove(path)
 
     def test_get_resources_json_invalid_url(self) -> None:
         # Tests the gem5.resources.downloader._get_resources_json() function in
@@ -141,3 +136,6 @@ class MD5FileTestSuite(unittest.TestCase):
             f"Resources location '{path}' is not a valid path or URL."
             in str(context.exception)
         )
+
+        # Set back to the old path
+        os.environ["GEM5_RESOURCE_JSON"] = self.file_path
