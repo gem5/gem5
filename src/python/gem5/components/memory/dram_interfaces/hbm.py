@@ -38,7 +38,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Interfaces for LPDDR5 memory devices
+"""Interfaces for HBM memory devices
 
 These memory "interfaces" contain the timing,energy,etc parameters for each
 memory type and are usually based on datasheets for the memory devices.
