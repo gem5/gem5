@@ -33,7 +33,6 @@ import m5
 from gem5.runtime import get_runtime_coherence_protocol
 from gem5.isas import ISA
 from gem5.utils.requires import requires
-from gem5.resources.resource import Resource
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.processors.cpu_types import (
@@ -42,9 +41,14 @@ from gem5.components.processors.cpu_types import (
 )
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.simulate.simulator import Simulator
+from gem5.resources.workload import Workload
 
 import argparse
 import importlib
+
+from python.gem5.components.boards.kernel_disk_workload import (
+    KernelDiskWorkload,
+)
 
 parser = argparse.ArgumentParser(
     description="A script to run the gem5 boot test. This test boots the "
@@ -184,17 +188,12 @@ kernal_args = motherboard.get_default_kernel_args()
 if args.boot_type == "init":
     kernal_args.append("init=/root/exit.sh")
 
-# Set the Full System workload.
-motherboard.set_kernel_disk_workload(
-    kernel=Resource(
-        "x86-linux-kernel-5.4.49", resource_directory=args.resource_directory
-    ),
-    disk_image=Resource(
-        "x86-ubuntu-18.04-img", resource_directory=args.resource_directory
-    ),
-    kernel_args=kernal_args,
+# Set the workload.
+workload = Workload(
+    "x86-ubuntu-18.04-boot", resource_directory=args.resource_directory
 )
-
+workload.set_parameter("kernel_args", kernal_args)
+motherboard.set_workload(workload)
 
 # Begin running of the simulation. This will exit once the Linux system boot
 # is complete.
