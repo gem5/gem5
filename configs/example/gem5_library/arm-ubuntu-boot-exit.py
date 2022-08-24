@@ -44,13 +44,13 @@ scons build/ARM/gem5.opt -j<NUM_CPUS>
 from gem5.isas import ISA
 from m5.objects import ArmDefaultRelease
 from gem5.utils.requires import requires
-from gem5.resources.resource import Resource
 from gem5.simulate.simulator import Simulator
 from m5.objects import VExpress_GEM5_Foundation
 from gem5.components.boards.arm_board import ArmBoard
 from gem5.components.memory import DualChannelDDR4_2400
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.resources.workload import Workload
 
 # This runs a check to ensure the gem5 binary is compiled for ARM.
 
@@ -99,24 +99,10 @@ board = ArmBoard(
     platform=platform,
 )
 
-# Here we set the Full System workload.
+# Here we set a full system workload. The "arm64-ubuntu-20.04-boot" boots
+# Ubuntu 20.04.
 
-# The `set_kernel_disk_workload` function on the ArmBoard accepts an ARM
-# kernel, a disk image, and, path to the bootloader.
-
-board.set_kernel_disk_workload(
-    # The ARM kernel will be automatically downloaded to the `~/.cache/gem5`
-    # directory if not already present. The arm-ubuntu-boot-exit was tested
-    # with `vmlinux.arm64`
-    kernel=Resource("arm64-linux-kernel-5.4.49"),
-    # The ARM ubuntu image will be automatically downloaded to the
-    # `~/.cache/gem5` directory if not already present.
-    disk_image=Resource("arm64-ubuntu-18.04-img"),
-    # We need to specify the path for the bootloader file.
-    bootloader=Resource("arm64-bootloader-foundation"),
-    # For the arm64-ubuntu-18.04.img, we need to specify the readfile content
-    readfile_contents="m5 exit",
-)
+board.set_workload(Workload("arm64-ubuntu-20.04-boot"))
 
 # We define the system with the aforementioned system defined.
 
