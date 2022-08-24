@@ -31,7 +31,7 @@ from .cpu_types import CPUTypes
 
 import m5
 
-from typing import Dict, Any, List
+from typing import Dict, List
 
 from .abstract_processor import AbstractProcessor
 from ..boards.abstract_board import AbstractBoard
@@ -49,8 +49,8 @@ class SwitchableProcessor(AbstractProcessor):
 
     def __init__(
         self,
-        switchable_cores: Dict[Any, List[SimpleCore]],
-        starting_cores: Any,
+        switchable_cores: Dict[str, List[SimpleCore]],
+        starting_cores: str,
     ) -> None:
 
         if starting_cores not in switchable_cores.keys():
@@ -62,16 +62,24 @@ class SwitchableProcessor(AbstractProcessor):
         self._current_cores = switchable_cores[starting_cores]
         self._switchable_cores = switchable_cores
 
-        all_cores = []
-        for core_list in self._switchable_cores.values():
+        # In the stdlib we assume the system processor conforms to a single
+        # ISA target.
+        assert len(set(core.get_isa() for core in self._current_cores)) == 1
+        super().__init__(isa=self._current_cores[0].get_isa())
+
+        for name, core_list in self._switchable_cores.items():
+            # Use the names from the user as the member variables
+            # This makes the stats print more nicely.
+            setattr(self, name, core_list)
             for core in core_list:
                 core.set_switched_out(core not in self._current_cores)
-                all_cores.append(core)
 
-        self._prepare_kvm = any(core.is_kvm_core() for core in all_cores)
+        self._prepare_kvm = any(
+            core.is_kvm_core() for core in self._all_cores()
+        )
 
         if self._prepare_kvm:
-            if not all_cores[0].is_kvm_core():
+            if not self._current_cores[0].is_kvm_core():
                 raise Exception(
                     "When using KVM, the switchable processor must start "
                     "with the KVM cores."
@@ -79,8 +87,6 @@ class SwitchableProcessor(AbstractProcessor):
             from m5.objects import KvmVM
 
             self.kvm_vm = KvmVM()
-
-        super().__init__(cores=all_cores)
 
     @overrides(AbstractProcessor)
     def incorporate_processor(self, board: AbstractBoard) -> None:
@@ -96,7 +102,9 @@ class SwitchableProcessor(AbstractProcessor):
 
             # To get the KVM CPUs to run on different host CPUs
             # Specify a different event queue for each CPU
-            kvm_cores = [core for core in self.cores if core.is_kvm_core()]
+            kvm_cores = [
+                core for core in self._all_cores() if core.is_kvm_core()
+            ]
             for i, core in enumerate(kvm_cores):
                 for obj in core.get_simobject().descendants():
                     obj.eventq_index = 0
@@ -112,7 +120,12 @@ class SwitchableProcessor(AbstractProcessor):
     def get_cores(self) -> List[AbstractCore]:
         return self._current_cores
 
-    def switch_to_processor(self, switchable_core_key: Any):
+    def _all_cores(self):
+        for core_list in self._switchable_cores.values():
+            for core in core_list:
+                yield core
+
+    def switch_to_processor(self, switchable_core_key: str):
 
         # Run various checks.
         if not hasattr(self, "_board"):
