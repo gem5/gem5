@@ -49,9 +49,8 @@ from gem5.components.memory import DualChannelDDR4_2400
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
-from gem5.coherence_protocol import CoherenceProtocol
-from gem5.resources.resource import Resource
 from gem5.simulate.simulator import Simulator
+from gem5.resource.workload import Workload
 
 # This runs a check to ensure the gem5 binary is compiled for RISCV.
 
@@ -85,23 +84,11 @@ board = RiscvBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-# Here we set the Full System workload.
-
-# The `set_kernel_disk_workload` function for the RiscvBoard accepts a
-# RISCV bootloader and a disk image. Once the system successfully boots, it
-# encounters an `m5_exit instruction encountered`. We stop the simulation then.
-# When the simulation has ended you may inspect `m5out/system.pc.com_1.device`
-# to see the stdout.
-
-board.set_kernel_disk_workload(
-    # The RISCV bootloader will be automatically downloaded to the
-    # `~/.cache/gem5` directory if not already present.
-    # The riscv-ubuntu boot-test was tested with riscv-bootloader-5.10
-    kernel=Resource("riscv-bootloader-vmlinux-5.10"),
-    # The RISCV ubuntu image will be automatically downloaded to the
-    # `~/.cache/gem5` directory if not already present.
-    disk_image=Resource("riscv-ubuntu-20.04-img"),
-)
+# Here we a full system workload: "riscv-ubuntu-20.04-boot" which boots
+# Ubuntu 20.04. Once the system successfully boots it encounters an `m5_exit`
+# instruction which stops the simulation. When the simulation has ended you may
+# inspect `m5out/system.pc.com_1.device` to see the stdout.
+board.set_workload(Workload("riscv-ubuntu-20.04-boot"))
 
 simulator = Simulator(board=board)
 simulator.run()
