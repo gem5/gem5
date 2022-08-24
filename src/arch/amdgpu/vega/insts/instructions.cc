@@ -34184,7 +34184,7 @@ namespace VegaISA
         setFlag(MemoryRef);
         setFlag(GroupSegment);
         setFlag(AtomicOr);
-        setFlag(AtomicReturn);
+        setFlag(AtomicNoReturn);
     } // Inst_DS__DS_OR_B32
 
     Inst_DS__DS_OR_B32::~Inst_DS__DS_OR_B32()
@@ -34193,9 +34193,7 @@ namespace VegaISA
 
     // --- description from .arch file ---
     // 32b:
-    // tmp = MEM[ADDR];
     // MEM[ADDR] |= DATA;
-    // RETURN_DATA = tmp.
     void
     Inst_DS__DS_OR_B32::execute(GPUDynInstPtr gpuDynInst)
     {
@@ -34241,16 +34239,6 @@ namespace VegaISA
     void
     Inst_DS__DS_OR_B32::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        VecOperandU32 vdst(gpuDynInst, extData.VDST);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                vdst[lane] = (reinterpret_cast<VecElemU32*>(
-                    gpuDynInst->d_data))[lane];
-            }
-        }
-
-        vdst.write();
     } // completeAcc
 
     // --- Inst_DS__DS_XOR_B32 class methods ---
