@@ -93,8 +93,6 @@ class SwitchableProcessor(AbstractProcessor):
         self._board = board
 
         if self._prepare_kvm:
-            board.kvm_vm = self.kvm_vm
-
             # To get the KVM CPUs to run on different host CPUs
             # Specify a different event queue for each CPU
             kvm_cores = [
