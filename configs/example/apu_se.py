@@ -252,6 +252,7 @@ parser.add_argument(
 parser.add_argument(
     "--max-cu-tokens",
     type=int,
+    default=4,
     help="Number of coalescer tokens per CU",
 )
 parser.add_argument(
