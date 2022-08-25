@@ -41,7 +41,6 @@ from ruby import Ruby
 
 samples_runscript = """\
 export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
-export HSA_ENABLE_SDMA=0
 export HSA_ENABLE_INTERRUPT=0
 dmesg -n3
 dd if=/root/roms/vega10.rom of=/dev/mem bs=1k seek=768 count=128
