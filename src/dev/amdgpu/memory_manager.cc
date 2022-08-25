@@ -82,6 +82,35 @@ AMDGPUMemoryManager::writeRequest(Addr addr, uint8_t *data, int size,
     }
 }
 
+void
+AMDGPUMemoryManager::readRequest(Addr addr, uint8_t *data, int size,
+                                 Request::Flags flag, Event *callback)
+{
+    assert(data);
+    uint8_t *dataPtr = data;
+
+    ChunkGenerator gen(addr, size, cacheLineSize);
+    for (; !gen.done(); gen.next()) {
+        RequestPtr req = std::make_shared<Request>(gen.addr(), gen.size(),
+                                                   flag, _requestorId);
+
+        PacketPtr pkt = Packet::createRead(req);
+        pkt->dataStatic<uint8_t>(dataPtr);
+        dataPtr += gen.size();
+
+        // Only issue the callback on the last request completing
+        pkt->pushSenderState(new GPUMemPort::SenderState(
+                    gen.last() ? callback : nullptr, addr));
+
+        if (!_gpuMemPort.sendTimingReq(pkt)) {
+            DPRINTF(AMDGPUMem, "Request to %#lx needs retry\n", gen.addr());
+            _gpuMemPort.retries.push_back(pkt);
+        } else {
+            DPRINTF(AMDGPUMem, "Read request to %#lx sent\n", gen.addr());
+        }
+    }
+}
+
 bool
 AMDGPUMemoryManager::GPUMemPort::recvTimingResp(PacketPtr pkt)
 {

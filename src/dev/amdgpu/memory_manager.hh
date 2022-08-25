@@ -90,6 +90,19 @@ class AMDGPUMemoryManager : public ClockedObject
                       Request::Flags flag = 0, Event *callback = nullptr);
 
     /**
+     * Read size amount of data from device memory at addr using flags and
+     * callback.
+     *
+     * @param addr Device address to read.
+     * @param data Pointer to data to read into.
+     * @param size Number of bytes to read.
+     * @param flag Additional request flags for read packets.
+     * @param callback Event callback to call after all bytes are read.
+     */
+    void readRequest(Addr addr, uint8_t *data, int size,
+                     Request::Flags flag = 0, Event *callback = nullptr);
+
+    /**
      * Get the requestorID for the memory manager. This ID is used for all
      * packets which should be routed through the device network.
      *
