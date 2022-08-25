@@ -389,7 +389,8 @@ PM4PacketProcessor::mapQueues(PM4Queue *q, PM4MapQueues *pkt)
         SDMAQueueDesc *sdmaMQD = new SDMAQueueDesc();
         memset(sdmaMQD, 0, sizeof(SDMAQueueDesc));
 
-        Addr addr = pkt->mqdAddr;
+        // For SDMA we read the full MQD, so there is no offset calculation.
+        Addr addr = getGARTAddr(pkt->mqdAddr);
 
         auto cb = new DmaVirtCallback<uint32_t>(
             [ = ] (const uint32_t &) {
