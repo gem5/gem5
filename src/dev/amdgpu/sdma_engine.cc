@@ -496,12 +496,10 @@ SDMAEngine::writeReadData(SDMAQueue *q, sdmaWrite *pkt, uint32_t *dmaBuffer)
     // lastly we write read data to the destination address
     if (gpuDevice->getVM().inMMHUB(pkt->dest)) {
         Addr mmhubAddr = pkt->dest - gpuDevice->getVM().getMMHUBBase();
+        auto cb = new EventFunctionWrapper(
+            [ = ]{ writeDone(q, pkt, dmaBuffer); }, name());
         gpuDevice->getMemMgr()->writeRequest(mmhubAddr, (uint8_t *)dmaBuffer,
-                                           bufferSize);
-
-        delete []dmaBuffer;
-        delete pkt;
-        decodeNext(q);
+                                           bufferSize, 0, cb);
     } else {
         // TODO: getGARTAddr?
         pkt->dest = getGARTAddr(pkt->dest);
@@ -595,10 +593,10 @@ SDMAEngine::copyReadData(SDMAQueue *q, sdmaCopy *pkt, uint8_t *dmaBuffer)
             mmhubAddr = tmp_addr - gpuDevice->getVM().getMMHUBBase();
         }
         DPRINTF(SDMAEngine, "Copying to device address %#lx\n", mmhubAddr);
-        gpuDevice->getMemMgr()->writeRequest(mmhubAddr, dmaBuffer, pkt->count);
-
-        delete pkt;
-        decodeNext(q);
+        auto cb = new EventFunctionWrapper(
+            [ = ]{ copyDone(q, pkt, dmaBuffer); }, name());
+        gpuDevice->getMemMgr()->writeRequest(mmhubAddr, dmaBuffer, pkt->count,
+                                             0, cb);
     } else {
         auto cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &) { copyDone(q, pkt, dmaBuffer); });
@@ -823,10 +821,11 @@ SDMAEngine::ptePde(SDMAQueue *q, sdmaPtePde *pkt)
     // Writing generated data to the destination address.
     if (gpuDevice->getVM().inMMHUB(pkt->dest)) {
         Addr mmhubAddr = pkt->dest - gpuDevice->getVM().getMMHUBBase();
+        auto cb = new EventFunctionWrapper(
+            [ = ]{ ptePdeDone(q, pkt, dmaBuffer); }, name());
         gpuDevice->getMemMgr()->writeRequest(mmhubAddr, (uint8_t *)dmaBuffer,
-                                           sizeof(uint64_t) * pkt->count);
-
-        decodeNext(q);
+                                             sizeof(uint64_t) * pkt->count, 0,
+                                             cb);
     } else {
         auto cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &) { ptePdeDone(q, pkt, dmaBuffer); });
