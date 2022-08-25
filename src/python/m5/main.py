@@ -311,6 +311,8 @@ def interact(scope):
     else:
         # Use the Python shell in the standard library if IPython
         # isn't available.
+        import readline  # if this is imported, then the up arrow works
+
         code.InteractiveConsole(scope).interact(banner)
 
 
