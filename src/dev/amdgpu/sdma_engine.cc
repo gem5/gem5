@@ -535,11 +535,35 @@ SDMAEngine::copy(SDMAQueue *q, sdmaCopy *pkt)
     pkt->source = getGARTAddr(pkt->source);
     DPRINTF(SDMAEngine, "GART addr %lx\n", pkt->source);
 
-    // first we have to read needed data from the source address
-    uint8_t *dmaBuffer = new uint8_t[pkt->count];
-    auto cb = new DmaVirtCallback<uint64_t>(
-        [ = ] (const uint64_t &) { copyReadData(q, pkt, dmaBuffer); });
-    dmaReadVirt(pkt->source, pkt->count, cb, (void *)dmaBuffer);
+    // Check if the source is MMHUB. If it is we need to use the GpuMemMgr
+    // to read memory and not dmaReadVirt.
+    auto tgen = translate(pkt->source, 64);
+    auto addr_range = *(tgen->begin());
+    Addr tmp_addr = addr_range.paddr;
+    DPRINTF(SDMAEngine, "Tmp addr %#lx -> %#lx\n", pkt->source, tmp_addr);
+
+    if ((gpuDevice->getVM().inMMHUB(pkt->source) && cur_vmid == 0) ||
+        (gpuDevice->getVM().inMMHUB(tmp_addr) && cur_vmid != 0)) {
+        Addr mmhubAddr = 0;
+        if (cur_vmid == 0) {
+            mmhubAddr = pkt->source - gpuDevice->getVM().getMMHUBBase();
+        } else {
+            mmhubAddr = tmp_addr - gpuDevice->getVM().getMMHUBBase();
+        }
+
+        uint8_t *dmaBuffer = new uint8_t[pkt->count];
+        DPRINTF(SDMAEngine, "Copying from device address %#lx\n", mmhubAddr);
+        auto cb = new EventFunctionWrapper(
+            [ = ]{ copyReadData(q, pkt, dmaBuffer); }, name());
+        gpuDevice->getMemMgr()->readRequest(mmhubAddr, dmaBuffer, pkt->count,
+                                            0, cb);
+    } else {
+        // first we have to read needed data from the source address
+        uint8_t *dmaBuffer = new uint8_t[pkt->count];
+        auto cb = new DmaVirtCallback<uint64_t>(
+            [ = ] (const uint64_t &) { copyReadData(q, pkt, dmaBuffer); });
+        dmaReadVirt(pkt->source, pkt->count, cb, (void *)dmaBuffer);
+    }
 }
 
 /* Completion of data reading for a copy packet. */
@@ -570,7 +594,7 @@ SDMAEngine::copyReadData(SDMAQueue *q, sdmaCopy *pkt, uint8_t *dmaBuffer)
         } else {
             mmhubAddr = tmp_addr - gpuDevice->getVM().getMMHUBBase();
         }
-        DPRINTF(SDMAEngine, "Copying to MMHUB address %#lx\n", mmhubAddr);
+        DPRINTF(SDMAEngine, "Copying to device address %#lx\n", mmhubAddr);
         gpuDevice->getMemMgr()->writeRequest(mmhubAddr, dmaBuffer, pkt->count);
 
         delete pkt;
