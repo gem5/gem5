@@ -33,6 +33,7 @@
 #define __DEV_AMDGPU_MEMORY_MANAGER_HH__
 
 #include <deque>
+#include <unordered_map>
 
 #include "base/callback.hh"
 #include "mem/port.hh"
@@ -46,9 +47,9 @@ class AMDGPUMemoryManager : public ClockedObject
 {
     class GPUMemPort : public MasterPort
     {
-        public:
-        GPUMemPort(const std::string &_name, AMDGPUMemoryManager *_gpuMemMgr)
-            : MasterPort(_name, _gpuMemMgr)
+      public:
+        GPUMemPort(const std::string &_name, AMDGPUMemoryManager &_gpuMemMgr)
+            : MasterPort(_name, &_gpuMemMgr), gpu_mem(_gpuMemMgr)
         {
         }
 
@@ -57,20 +58,34 @@ class AMDGPUMemoryManager : public ClockedObject
 
         struct SenderState : public Packet::SenderState
         {
-            SenderState(Event *callback, Addr addr)
-                : _callback(callback), _addr(addr)
+            SenderState(Event *callback, Addr addr, uint64_t requestId)
+                : _callback(callback), _addr(addr), _requestId(requestId)
             {}
 
             Event *_callback;
             Addr _addr;
+            uint64_t _requestId;
         };
 
         std::deque<PacketPtr> retries;
+        AMDGPUMemoryManager &gpu_mem;
     };
 
     GPUMemPort _gpuMemPort;
     const int cacheLineSize;
     const RequestorID _requestorId;
+
+    struct RequestStatus
+    {
+        RequestStatus() : outstandingChunks(0), sentLastChunk(false)
+        { }
+
+        uint64_t outstandingChunks;
+        bool sentLastChunk;
+    };
+
+    uint64_t requestId = 0;
+    std::unordered_map<uint64_t, RequestStatus> requestStatus;
 
   public:
     AMDGPUMemoryManager(const AMDGPUMemoryManagerParams &p);
