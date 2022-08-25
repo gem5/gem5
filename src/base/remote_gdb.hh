@@ -416,7 +416,7 @@ class BaseRemoteGDB
             Context(const std::string &_name) : name(_name) {}
         };
 
-        using Func = void (BaseRemoteGDB::*)(Context &ctx);
+        using Func = bool (BaseRemoteGDB::*)(Context &ctx);
 
         const char * const argSep;
         const Func func;
@@ -428,15 +428,15 @@ class BaseRemoteGDB
 
     static std::map<std::string, QuerySetCommand> queryMap;
 
-    void queryC(QuerySetCommand::Context &ctx);
-    void querySupported(QuerySetCommand::Context &ctx);
-    void queryXfer(QuerySetCommand::Context &ctx);
-    void querySymbol(QuerySetCommand::Context &ctx);
-    void queryAttached(QuerySetCommand::Context &ctx);
+    bool queryC(QuerySetCommand::Context &ctx);
+    bool querySupported(QuerySetCommand::Context &ctx);
+    bool queryXfer(QuerySetCommand::Context &ctx);
+    bool querySymbol(QuerySetCommand::Context &ctx);
+    bool queryAttached(QuerySetCommand::Context &ctx);
 
     size_t threadInfoIdx = 0;
-    void queryFThreadInfo(QuerySetCommand::Context &ctx);
-    void querySThreadInfo(QuerySetCommand::Context &ctx);
+    bool queryFThreadInfo(QuerySetCommand::Context &ctx);
+    bool querySThreadInfo(QuerySetCommand::Context &ctx);
 
   protected:
     ThreadContext *context() { return tc; }
