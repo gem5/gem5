@@ -102,7 +102,7 @@ class AMDGPUMemoryManager : public ClockedObject
      * @param callback Event callback to call after all bytes are written.
      */
     void writeRequest(Addr addr, uint8_t *data, int size,
-                      Request::Flags flag = 0, Event *callback = nullptr);
+                      Request::Flags flag, Event *callback);
 
     /**
      * Read size amount of data from device memory at addr using flags and
@@ -115,7 +115,7 @@ class AMDGPUMemoryManager : public ClockedObject
      * @param callback Event callback to call after all bytes are read.
      */
     void readRequest(Addr addr, uint8_t *data, int size,
-                     Request::Flags flag = 0, Event *callback = nullptr);
+                     Request::Flags flag, Event *callback);
 
     /**
      * Get the requestorID for the memory manager. This ID is used for all

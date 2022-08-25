@@ -379,7 +379,7 @@ AMDGPUDevice::write(PacketPtr pkt)
     switch (barnum) {
       case FRAMEBUFFER_BAR:
           gpuMemMgr->writeRequest(offset, pkt->getPtr<uint8_t>(),
-                                  pkt->getSize());
+                                  pkt->getSize(), 0, nullptr);
           writeFrame(pkt, offset);
           break;
       case DOORBELL_BAR:
