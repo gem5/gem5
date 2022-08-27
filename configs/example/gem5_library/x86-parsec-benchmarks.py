@@ -279,11 +279,11 @@ gem5stats = get_simstat(root)
 # We get the number of committed instructions from the timing
 # cores. We then sum and print them at the end.
 roi_insts = float(
-    gem5stats.to_json()["system"]["processor"]["cores2"]["core"][
+    gem5stats.to_json()["system"]["processor"]["switch0"]["core"][
         "exec_context.thread_0"
     ]["numInsts"]["value"]
 ) + float(
-    gem5stats.to_json()["system"]["processor"]["cores3"]["core"][
+    gem5stats.to_json()["system"]["processor"]["switch1"]["core"][
         "exec_context.thread_0"
     ]["numInsts"]["value"]
 )
