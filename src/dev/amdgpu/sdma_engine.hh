@@ -156,6 +156,13 @@ class SDMAEngine : public DmaVirtDevice
     TranslationGenPtr translate(Addr vaddr, Addr size) override;
 
     /**
+     * Translate an address in an SDMA packet. Return the device address if
+     * address in the packet is on the device and 0 if the the address in the
+     * packet is on the host/system memory.
+     */
+    Addr getDeviceAddress(Addr raw_addr);
+
+    /**
      * Inherited methods.
      */
     Tick write(PacketPtr pkt) override { return 0; }
