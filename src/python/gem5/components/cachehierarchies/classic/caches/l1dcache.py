@@ -34,6 +34,9 @@ from typing import Type
 class L1DCache(Cache):
     """
     A simple L1 data cache with default values.
+
+    If the cache has a mostly exclusive downstream cache, writeback_clean
+    should be set to True.
     """
 
     def __init__(
@@ -45,7 +48,7 @@ class L1DCache(Cache):
         response_latency: int = 1,
         mshrs: int = 16,
         tgts_per_mshr: int = 20,
-        writeback_clean: bool = True,
+        writeback_clean: bool = False,
         PrefetcherCls: Type[BasePrefetcher] = StridePrefetcher,
     ):
         super().__init__()
