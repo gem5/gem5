@@ -297,8 +297,8 @@ AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
             deviceIH->updateRptr(pkt->getLE<uint32_t>());
             break;
           case RLC: {
-            panic("RLC queues not yet supported. Run with the environment "
-                  "variable HSA_ENABLE_SDMA set to False");
+            SDMAEngine *sdmaEng = getSDMAEngine(offset);
+            sdmaEng->processRLC(offset, pkt->getLE<uint64_t>());
           } break;
           default:
             panic("Write to unkown queue type!");
