@@ -208,6 +208,7 @@ SimpleCache::handleRequest(PacketPtr pkt, int port_id)
     waitingPortId = port_id;
 
     // Schedule an event after cache access latency to actually access
+    // 新建一个事件，模拟1拍后的cache延迟，由accessTiming 处理
     schedule(new EventFunctionWrapper([this, pkt]{ accessTiming(pkt); },
                                       name() + ".accessEvent", true),
              clockEdge(latency));
@@ -283,16 +284,16 @@ SimpleCache::handleFunctional(PacketPtr pkt)
 void
 SimpleCache::accessTiming(PacketPtr pkt)
 {
-    bool hit = accessFunctional(pkt);
+    bool hit = accessFunctional(pkt);   // 查tag/data比对，是否命中
 
     DPRINTF(SimpleCache, "%s for packet: %s\n", hit ? "Hit" : "Miss",
             pkt->print());
 
     if (hit) {
-        // Respond to the CPU side
+        // Respond to the CPU side，命中，返回给cpu
         stats.hits++; // update stats
         DDUMP(SimpleCache, pkt->getConstPtr<uint8_t>(), pkt->getSize());
-        pkt->makeResponse();
+        pkt->makeResponse();    // 把readreq->readresp
         sendResponse(pkt);
     } else {
         stats.misses++; // update stats

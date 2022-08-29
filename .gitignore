@@ -34,3 +34,5 @@ configs/dram/lowp_sweep.cfg
 fs_images/
 cpu_tests/benchmarks/bin/arm/
 .idea/
+.vscode/
+cmake-build-debug/

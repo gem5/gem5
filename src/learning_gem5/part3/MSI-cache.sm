@@ -69,7 +69,7 @@ machine(MachineType:L1Cache, "MSI cache")
             virtual_network="2", vnet_type="response";
 
       // This is all of the incoming requests from the core via the sequencer
-      MessageBuffer * mandatoryQueue;
+      MessageBuffer * mandatoryQueue;   // 强制队列,包括所有core相关的请求
 {
     // Declare the states that this cache will use. These are both stable
     // states (no underscore) and transient states (with underscore). Letters
@@ -151,7 +151,7 @@ machine(MachineType:L1Cache, "MSI cache")
     // The AbstractCacheEntry is defined in
     // src/mem/ruby/slic_interface/AbstractCacheEntry.hh
     // If you want to use any of the functions in the abstract entry declare
-    // them here.
+    // them here. 这里或许可以添加自定义结构
     structure(Entry, desc="Cache entry", interface="AbstractCacheEntry") {
         State CacheState,        desc="cache state";
         DataBlock DataBlk,       desc="Data in the block";
@@ -168,7 +168,7 @@ machine(MachineType:L1Cache, "MSI cache")
 
     // Table of TBE entries. This is defined externally in
     // src/mem/ruby/structures/TBETable.hh. It is templatized on the TBE
-    // structure defined above.
+    // structure defined above. 可以调用这些函数吧，查找，申请一项，是否存在, 就是一个hash, 大小动态申请
     structure(TBETable, external="yes") {
       TBE lookup(Addr);
       void allocate(Addr);
@@ -183,7 +183,7 @@ machine(MachineType:L1Cache, "MSI cache")
     // NOTE: SLICC mangles names with the machine type. Thus, the TBE declared
     //       above will be L1Cache_TBE in C++.
     // We also have to pass through a parameter to the machine to the TBETable.
-    TBETable TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
+    TBETable TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";    // 申请一个TBE_Table对象，数组下标索引
 
     // Declare all of the functions of the AbstractController that we may use
     // in this file.
@@ -195,7 +195,7 @@ machine(MachineType:L1Cache, "MSI cache")
     // These next set/unset functions are used to populate the implicit
     // variables used in actions. This is required when a transition has
     // multiple actions.
-    void set_cache_entry(AbstractCacheEntry a);
+    void set_cache_entry(AbstractCacheEntry a); // 哪里定义的呢？
     void unset_cache_entry();
     void set_tbe(TBE b);
     void unset_tbe();
@@ -204,13 +204,13 @@ machine(MachineType:L1Cache, "MSI cache")
     // where it should be sent. In a real implementation, this might be fixed
     // at design time, but this function gives us flexibility at runtime.
     // For example, if you have multiple memory channels, this function will
-    // tell you which addresses to send to which memory controller.
+    // tell you which addresses to send to which memory controller. 可以更改，根据不同addr+机器类型，确定到底发送给谁！
     MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
     // Convience function to look up the cache entry.
     // Needs a pointer so it will be a reference and can be updated in actions
     Entry getCacheEntry(Addr address), return_by_pointer="yes" {
-        return static_cast(Entry, "pointer", cacheMemory.lookup(address));
+        return static_cast(Entry, "pointer", cacheMemory.lookup(address));  // 获取cacheMemory一行内容并静态转换成自定义Entry结构
     }
 
     /*************************************************************************/
@@ -233,7 +233,7 @@ machine(MachineType:L1Cache, "MSI cache")
     // This is called from the transition to set the ending state.
     // Needs to set both the TBE and the cache entry state.
     // This is also called when transitioning to I so it's possible the TBE and/
-    // or the cache_entry is invalid.
+    // or the cache_entry is invalid. 瞬态到稳态时候需要转换状态，addr无用？
     void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
       if (is_valid(tbe)) { tbe.TBEState := state; }
       if (is_valid(cache_entry)) { cache_entry.CacheState := state; }
@@ -243,7 +243,7 @@ machine(MachineType:L1Cache, "MSI cache")
     // the valid data is. NOTE: L1Cache_State_to_permission is automatically
     // created based on the access permissions in the state_declaration.
     // This is mangled by both the MachineType and the name of the state
-    // declaration ("State" in this case)
+    // declaration ("State" in this case) 访问权限只在functional模式才有用
     AccessPermission getAccessPermission(Addr addr) {
         TBE tbe := TBEs[addr];
         if(is_valid(tbe)) {
@@ -270,7 +270,7 @@ machine(MachineType:L1Cache, "MSI cache")
     void functionalRead(Addr addr, Packet *pkt) {
         TBE tbe := TBEs[addr];
         if(is_valid(tbe)) {
-            testAndRead(addr, tbe.DataBlk, pkt);
+            testAndRead(addr, tbe.DataBlk, pkt);    // 读取tbe/cache 数据块内容到包pkt中
         } else {
             testAndRead(addr, getCacheEntry(addr).DataBlk, pkt);
         }
@@ -298,8 +298,8 @@ machine(MachineType:L1Cache, "MSI cache")
 
     // Output ports. This defines the message types that will flow ocross the
     // output buffers as defined above. These must be "to" networks.
-    // "request_out" is the name we'll use later to send requests.
-    // "RequestMsg" is the message type we will send (see MSI-msg.sm)
+    // "request_out" is the name we'll use later to send requests. 重命名的端口
+    // "RequestMsg" is the message type we will send (see MSI-msg.sm)  发送的请求信息
     // "requestToDir" is the name of the MessageBuffer declared above that
     //      we are sending these requests out of.
     out_port(request_out, RequestMsg, requestToDir);
@@ -325,7 +325,7 @@ machine(MachineType:L1Cache, "MSI cache")
             // the message (of type RequestMsg in this case) at the head.
             // "forward_in" is the port we want to peek into
             // "RequestMsg" is the type of message we expect.
-            peek(response_in, ResponseMsg) {
+            peek(response_in, ResponseMsg) {    // 查到的消息放在in_msg中，类型是ResponseMsg
                 // Grab the entry and tbe if they exist.
                 Entry cache_entry := getCacheEntry(in_msg.addr);
                 TBE tbe := TBEs[in_msg.addr];
@@ -343,10 +343,10 @@ machine(MachineType:L1Cache, "MSI cache")
                     // The InvAck will decrement the acks we're waiting for in
                     // tbe.AcksOutstanding to below 0 if we haven't gotten the
                     // dir resp yet. So, if this is 0 we don't need to wait
-                    assert(in_msg.Acks + tbe.AcksOutstanding >= 0);
+                    assert(in_msg.Acks + tbe.AcksOutstanding >= 0); // 收到的Acks + 目录告诉我们需要等待的Acks
                     if (in_msg.Acks + tbe.AcksOutstanding == 0) {
                         trigger(Event:DataDirNoAcks, in_msg.addr, cache_entry,
-                                tbe);
+                                tbe);   // 4params：触发事件，要操作的地址，cache,tbe
                     } else {
                         // If it's not 0, then we need to wait for more acks
                         // and we'll trigger LastInvAck later.
@@ -390,7 +390,7 @@ machine(MachineType:L1Cache, "MSI cache")
                     // This is a special function that will trigger a
                     // transition (as defined below). It *must* have these
                     // parameters.
-                    trigger(Event:FwdGetS, in_msg.addr, cache_entry, tbe);
+                    trigger(Event:FwdGetS, in_msg.addr, cache_entry, tbe);  // GetS -> FwdGetS
                 } else if (in_msg.Type == CoherenceRequestType:GetM) {
                     trigger(Event:FwdGetM, in_msg.addr, cache_entry, tbe);
                 } else if (in_msg.Type == CoherenceRequestType:Inv) {
@@ -410,14 +410,14 @@ machine(MachineType:L1Cache, "MSI cache")
         if (mandatory_in.isReady(clockEdge())) {
             // Block all requests if there is already an outstanding request
             // that has the same line address. This is unblocked when we
-            // finally respond to the request.
+            // finally respond to the request. 如果有未完成的请求（outstanding）， 就阻塞了
             peek(mandatory_in, RubyRequest, block_on="LineAddress") {
                 // NOTE: Using LineAddress here to promote smaller requests to
                 // full cache block requests.
                 Entry cache_entry := getCacheEntry(in_msg.LineAddress);
                 TBE tbe := TBEs[in_msg.LineAddress];
                 // If there isn't a matching entry and no room in the cache,
-                // then we need to find a victim.
+                // then we need to find a victim. 找不到且没空间了，替换出去一个
                 if (is_invalid(cache_entry) &&
                         cacheMemory.cacheAvail(in_msg.LineAddress) == false ) {
                     // make room for the block
@@ -472,14 +472,14 @@ machine(MachineType:L1Cache, "MSI cache")
         // we're sending the message out of "RequestMsg" is the type of message
         // we're sending "1" is the latency (in cycles) the port waits before
         // sending the message.
-        enqueue(request_out, RequestMsg, 1) {
+        enqueue(request_out, RequestMsg, 1) {   // 特殊变量out_msg,3个参数：发送的缓冲区，类型，延迟
             out_msg.addr := address;
             // This type is defined in MSI-msg.sm for this protocol.
             out_msg.Type := CoherenceRequestType:GetS;
             // The destination may change depending on the address striping
             // across different directories, so query the network.
             out_msg.Destination.add(mapAddressToMachine(address,
-                                    MachineType:Directory));
+                                    MachineType:Directory));    // 添加到NetDest数组中
             // See mem/ruby/protocol/RubySlicc_Exports.sm for possible sizes.
             out_msg.MessageSize := MessageSizeType:Control;
             // Set that the reqeustor is this machine so we get the response.
@@ -516,7 +516,7 @@ machine(MachineType:L1Cache, "MSI cache")
             out_msg.Type := CoherenceRequestType:PutM;
             out_msg.Destination.add(mapAddressToMachine(address,
                                     MachineType:Directory));
-            out_msg.DataBlk := cache_entry.DataBlk;
+            out_msg.DataBlk := cache_entry.DataBlk; // 多了一个data块
             out_msg.MessageSize := MessageSizeType:Data;
             out_msg.Requestor := machineID;
         }
@@ -527,7 +527,7 @@ machine(MachineType:L1Cache, "MSI cache")
         // If we are in both the peek and the enqueue block then we have access
         // to both in_msg and out_msg.
         assert(is_valid(cache_entry));
-        peek(forward_in, RequestMsg) {
+        peek(forward_in, RequestMsg) {  // 查看请求信息确定数据发送给谁
             enqueue(response_out, ResponseMsg, 1) {
                 out_msg.addr := address;
                 out_msg.Type := CoherenceResponseType:Data;
@@ -566,7 +566,7 @@ machine(MachineType:L1Cache, "MSI cache")
 
     action(decrAcks, "da", desc="Decrement the number of acks") {
         assert(is_valid(tbe));
-        tbe.AcksOutstanding := tbe.AcksOutstanding - 1;
+        tbe.AcksOutstanding := tbe.AcksOutstanding - 1; // 当前需要等待的ack减1
         // This annotates the protocol trace
         APPEND_TRANSITION_COMMENT("Acks: ");
         APPEND_TRANSITION_COMMENT(tbe.AcksOutstanding);
@@ -588,7 +588,7 @@ machine(MachineType:L1Cache, "MSI cache")
         cacheMemory.setMRU(cache_entry);
         // Send the data back to the sequencer/CPU. NOTE: False means it was
         // not an "external hit", but hit in this local cache.
-        sequencer.readCallback(address, cache_entry.DataBlk, false);
+        sequencer.readCallback(address, cache_entry.DataBlk, false);    // read回调，之后把从cache数据块中读取数据，false表示本地cache
     }
 
     action(externalLoadHit, "xLh", desc="External load hit (was a miss)") {
@@ -630,7 +630,7 @@ machine(MachineType:L1Cache, "MSI cache")
 
     action(allocateCacheBlock, "a", desc="Allocate a cache block") {
         assert(is_invalid(cache_entry));
-        assert(cacheMemory.cacheAvail(address));
+        assert(cacheMemory.cacheAvail(address));    // 当前way还有空间
         // Create a new entry and update cache_entry to the new entry
         set_cache_entry(cacheMemory.allocate(address, new Entry));
     }
@@ -723,7 +723,7 @@ machine(MachineType:L1Cache, "MSI cache")
     // transition applies. For instance, below. If we are in IS_D, then on any
     // of the following Events (Load, Store, Replacement, Inv) we should stall
     // When there is no third parameter to transition, it means that we want
-    // to stay in the initial state.
+    // to stay in the initial state. 没有第三个参数就保持状态
     transition(IS_D, {Load, Store, Replacement, Inv}) {
         stall;
     }
@@ -731,8 +731,8 @@ machine(MachineType:L1Cache, "MSI cache")
     // Similarly, on either DataDirNoAcks or DataOwner we should go to S
     transition(IS_D, {DataDirNoAcks, DataOwner}, S) {
         writeDataToCache;
-        deallocateTBE;
-        externalLoadHit;
+        deallocateTBE;      // 这个tbe可以删除了, 没有多个ack需要处理了
+        externalLoadHit;    // 从别的地方获取数据了，最后hit
         popResponseQueue;
     }
 
