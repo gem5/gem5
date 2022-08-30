@@ -32,7 +32,7 @@ from .abstract_memory_system import AbstractMemorySystem
 from math import log
 from ...utils.override import overrides
 from m5.objects import AddrRange, DRAMInterface, HBMCtrl, Port
-from typing import Type, Optional, Union
+from typing import Type, Optional, Union, Sequence, Tuple
 from .memory import _try_convert
 from .dram_interfaces.hbm import HBM_2000_4H_1x64
 
@@ -135,6 +135,28 @@ class HighBandwidthMemory(ChanneledMemory):
                 masks=mask_list,
                 intlvMatch=(i << 1) | 1,
             )
+
+    @overrides(ChanneledMemory)
+    def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
+
+        intlv_bits = log(self._num_channels, 2)
+        mask_list = []
+
+        for ib in range(int(intlv_bits)):
+            mask_list.append(1 << int(ib + log(self._intlv_size, 2)))
+        addr_ranges = []
+        for i in range(len(self.mem_ctrl)):
+            addr_ranges.append(
+                AddrRange(
+                    start=self._mem_range.start,
+                    size=self._mem_range.size(),
+                    masks=mask_list,
+                    intlvMatch=i,
+                )
+            )
+        return [
+            (addr_ranges[i], ctrl.port) for i, ctrl in enumerate(self.mem_ctrl)
+        ]
 
 
 def HBM2Stack(
