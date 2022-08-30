@@ -47,7 +47,6 @@ from .exit_event_generators import (
 from .exit_event import ExitEvent
 from ..components.boards.abstract_board import AbstractBoard
 from ..components.processors.switchable_processor import SwitchableProcessor
-from ..components.processors.cpu_types import CPUTypes
 
 
 class Simulator:
@@ -284,7 +283,7 @@ class Simulator:
 
         if not self._instantiated:
             raise Exception(
-                "Cannot obtain simulation statistics prior to inialization."
+                "Cannot obtain simulation statistics prior to initialization."
             )
 
         return m5.stats.gem5stats.get_simstat(self._root)
@@ -440,7 +439,7 @@ class Simulator:
         :param max_ticks: The maximum number of ticks to execute per simulation
         run. If this max_ticks value is met, a MAX_TICK exit event is
         received, if another simulation exit event is met the tick count is
-        reset. This is the **maximum number of ticks per simululation run**.
+        reset. This is the **maximum number of ticks per simulation run**.
         """
 
         # Check to ensure no banned module has been imported.
