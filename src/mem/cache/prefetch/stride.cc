@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Inria
- * Copyright (c) 2012-2013, 2015 ARM Limited
+ * Copyright (c) 2012-2013, 2015, 2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -84,6 +84,7 @@ Stride::Stride(const StridePrefetcherParams &p)
     threshConf(p.confidence_threshold/100.0),
     useRequestorId(p.use_requestor_id),
     degree(p.degree),
+    distance(p.distance),
     pcTableInfo(p.table_assoc, p.table_entries, p.table_indexing_policy,
         p.table_replacement_policy)
 {
@@ -176,7 +177,8 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
                 prefetch_stride = (new_stride < 0) ? -blkSize : blkSize;
             }
 
-            Addr new_addr = pf_addr + d * prefetch_stride;
+            Addr new_addr = pf_addr + distance * prefetch_stride
+                            + d * prefetch_stride;
             addresses.push_back(AddrPriority(new_addr, 0));
         }
     } else {
