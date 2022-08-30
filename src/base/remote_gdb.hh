@@ -173,7 +173,9 @@ class BaseRemoteGDB
 
     void trap(ContextID id, int signum,const std::string& stopReason="");
     bool sendMessage(std::string message);
-
+    //schedule a trap event with these properties
+    void scheduleTrapEvent(ContextID id,int type, int delta,
+      std::string stopReason);
     /** @} */ // end of api_remote_gdb
 
     template <class GDBStub, class ...Args>
@@ -313,7 +315,10 @@ class BaseRemoteGDB
     void setSingleStep();
 
     /// Schedule an event which will be triggered "delta" instructions later.
-    void scheduleInstCommitEvent(Event *ev, int delta);
+    void scheduleInstCommitEvent(Event *ev, int delta,ThreadContext* _tc);
+    void scheduleInstCommitEvent(Event *ev, int delta){
+       scheduleInstCommitEvent(ev, delta,tc);
+    };
     /// Deschedule an instruction count based event.
     void descheduleInstCommitEvent(Event *ev);
 

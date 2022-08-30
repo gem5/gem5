@@ -607,9 +607,7 @@ BaseRemoteGDB::incomingData(int revent)
     }
 
     if (revent & POLLIN) {
-        trapEvent.type(SIGILL);
-        trapEvent.id(tc->contextId());
-        scheduleInstCommitEvent(&trapEvent, 0);
+        scheduleTrapEvent(tc->contextId(),SIGILL,0,"");
     } else if (revent & POLLNVAL) {
         descheduleInstCommitEvent(&trapEvent);
         scheduleInstCommitEvent(&disconnectEvent, 0);
@@ -964,10 +962,23 @@ void
 BaseRemoteGDB::sendOPacket(const std::string message){
    send("O" + string2hexS(message));
 }
+
 void
-BaseRemoteGDB::scheduleInstCommitEvent(Event *ev, int delta)
+BaseRemoteGDB::scheduleTrapEvent(ContextID id,int type,int delta,
+    std::string stopReason){
+    ThreadContext* _tc = threads[id];
+    panic_if(_tc == nullptr, "Unknown context id :%i",id);
+    trapEvent.id(id);
+    trapEvent.type(type);
+    trapEvent.stopReason(stopReason);
+    if (!trapEvent.scheduled())
+        scheduleInstCommitEvent(&trapEvent,delta,_tc);
+}
+
+void
+BaseRemoteGDB::scheduleInstCommitEvent(Event *ev, int delta,ThreadContext* _tc)
 {
-    if (delta == 0 && tc->status() != ThreadContext::Active) {
+    if (delta == 0 && _tc->status() != ThreadContext::Active) {
         // If delta is zero, we're just trying to wait for an instruction
         // boundary. If the CPU is not active, assume we're already at a
         // boundary without waiting for the CPU to eventually wake up.
@@ -975,7 +986,7 @@ BaseRemoteGDB::scheduleInstCommitEvent(Event *ev, int delta)
     } else {
         // Here "ticks" aren't simulator ticks which measure time, they're
         // instructions committed by the CPU.
-        tc->scheduleInstCountEvent(ev, tc->getCurrentInstCount() + delta);
+        _tc->scheduleInstCountEvent(ev, _tc->getCurrentInstCount() + delta);
     }
 }
 
@@ -1154,8 +1165,7 @@ BaseRemoteGDB::cmdSetThread(GdbCommand::Context &ctx)
                 throw CmdError("E04");
             // Line up on an instruction boundary in the new thread.
             threadSwitching = true;
-            trapEvent.id(tid);
-            scheduleInstCommitEvent(&trapEvent, 0);
+            scheduleTrapEvent(tid,0,0,"");
             return false;
         }
     } else {
