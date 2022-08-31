@@ -39,6 +39,7 @@
 
 enumeration(CoherenceRequestType, desc="Types of request messages") {
     GetS,       desc="Request from cache for a block with read permission";
+    TransGetS,  desc="Request from cacheA for a block from cacheB with read permission";
     GetM,       desc="Request from cache for a block with write permission";
     PutS,       desc="Sent to directory when evicting a block in S (clean WB)";
     PutM,       desc="Sent to directory when evicting a block in M";

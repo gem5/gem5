@@ -98,6 +98,7 @@ machine(MachineType:Directory, "Directory protocol")
 
         // Waiting for data from memory
         S_m, AccessPermission:Read_Write, desc="In S waiting for mem";
+        S_m2,AccessPermission:Read_Write, desc="In S waiting for mem new";
         M_m, AccessPermission:Read_Write, desc="Moving to M waiting for mem";
 
         // Waiting for write-ack from memory
@@ -108,6 +109,7 @@ machine(MachineType:Directory, "Directory protocol")
     enumeration(Event, desc="Directory events") {
         // Data requests from the cache
         GetS,         desc="Request for read-only data from cache";
+        TransGetS,    desc="request for read-only data from cacheA, forward to cacheB";
         GetM,         desc="Request for read-write data from cache";
 
         // Writeback requests from the cache
@@ -128,8 +130,8 @@ machine(MachineType:Directory, "Directory protocol")
     // copy the structure into the message we send as a response.
     structure(Entry, desc="...", interface="AbstractCacheEntry", main="false") {
         State DirState,         desc="Directory state";
-        NetDest Sharers,        desc="Sharers for this block";
-        NetDest Owner,          desc="Owner of this block";
+        NetDest Sharers,        desc="Sharers for this block";  // 新加的，所有的shares, NetDest = vector<MachineID>
+        NetDest Owner,          desc="Owner of this block";     // 新加的，块的所有者
     }
 
     Tick clockEdge();
@@ -249,6 +251,8 @@ machine(MachineType:Directory, "Directory protocol")
                     // is no need to pass a TBE into trigger. Also, for the
                     // directory there is no cache entry.
                     trigger(Event:GetS, in_msg.addr);
+                } else if (in_msg.Type == CoherenceRequestType:TransGetS) {
+                    trigger(Event:TransGetS, in_msg.addr);
                 } else if (in_msg.Type == CoherenceRequestType:GetM) {
                     trigger(Event:GetM, in_msg.addr);
                 } else if (in_msg.Type == CoherenceRequestType:PutS) {
@@ -425,6 +429,20 @@ machine(MachineType:Directory, "Directory protocol")
         }
     }
 
+    action(sendDataToReqB, "dB", desc="Send data from memory to reqB.") {
+        peek(memQueue_in, MemoryMsg) {
+            enqueue(response_out, ResponseMsg, 1) {
+                out_msg.addr := address;
+                out_msg.Type := CoherenceResponseType:Data;
+                out_msg.Sender := machineID;
+                out_msg.Destination.add(createMachineID(MachineType:L1Cache, intToID(1)));  // 发送给B！
+                out_msg.DataBlk := in_msg.DataBlk;
+                out_msg.MessageSize := MessageSizeType:Data;
+                out_msg.Acks := 0;
+            }
+        }
+    }
+
     action(sendPutAck, "a", desc="Send the put ack") {
         peek(request_in, RequestMsg) {
             enqueue(forward_out, RequestMsg, 1) {
@@ -466,6 +484,13 @@ machine(MachineType:Directory, "Directory protocol")
         popRequestQueue;
     }
 
+    // 目录收到转发请求，进入特别状态S_m2
+    transition({I, S}, TransGetS, S_m2) {
+        sendMemRead;
+//        addReqToSharers;
+        popRequestQueue;
+    }
+
     transition(I, {PutSNotLast, PutSLast, PutMNonOwner}) {
         sendPutAck;
         popRequestQueue;
@@ -473,6 +498,11 @@ machine(MachineType:Directory, "Directory protocol")
 
     transition(S_m, MemData, S) {
         sendDataToReq;
+        popMemQueue;
+    }
+
+    transition(S_m2, MemData, S) {
+        sendDataToReqB; // 发送给cacheB
         popMemQueue;
     }
 

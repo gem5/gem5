@@ -87,6 +87,8 @@ machine(MachineType:L1Cache, "MSI cache")
         // States moving out of I
         IS_D,   AccessPermission:Invalid,
                     desc="Invalid, moving to S, waiting for data";
+        IS_TD,  AccessPermission:Invalid,
+                    desc="Invalid, moving to S, waiting for translation data";
         IM_AD,  AccessPermission:Invalid,
                     desc="Invalid, moving to M, waiting for acks and data";
         IM_A,   AccessPermission:Busy,
@@ -119,6 +121,7 @@ machine(MachineType:L1Cache, "MSI cache")
     enumeration(Event, desc="Cache events") {
         // From the processor/sequencer/mandatory queue
         Load,           desc="Load from processor";
+        TransLoad,      desc="Load from other processor";
         Store,          desc="Store from processor";
 
         // Internal event (only triggered from processor requests)
@@ -331,7 +334,8 @@ machine(MachineType:L1Cache, "MSI cache")
                 TBE tbe := TBEs[in_msg.addr];
                 // The TBE better exist since this is a response and we need to
                 // be able to check the remaining acks.
-                assert(is_valid(tbe));
+                DPRINTF(RubySlicc, "sender %s, dest %s\n", in_msg.Sender, in_msg.Destination);
+//                assert(is_valid(tbe));
 
                 // If it's from the directory...
                 if (machineIDToMachineType(in_msg.Sender) ==
@@ -343,8 +347,8 @@ machine(MachineType:L1Cache, "MSI cache")
                     // The InvAck will decrement the acks we're waiting for in
                     // tbe.AcksOutstanding to below 0 if we haven't gotten the
                     // dir resp yet. So, if this is 0 we don't need to wait
-                    assert(in_msg.Acks + tbe.AcksOutstanding >= 0); // 收到的Acks + 目录告诉我们需要等待的Acks
-                    if (in_msg.Acks + tbe.AcksOutstanding == 0) {
+//                    assert(in_msg.Acks + tbe.AcksOutstanding >= 0); // 收到的Acks + 目录告诉我们需要等待的Acks
+                    if (in_msg.Acks == 0) {
                         trigger(Event:DataDirNoAcks, in_msg.addr, cache_entry,
                                 tbe);   // 4params：触发事件，要操作的地址，cache,tbe
                     } else {
@@ -429,9 +433,11 @@ machine(MachineType:L1Cache, "MSI cache")
                     TBE victim_tbe := TBEs[addr];
                     trigger(Event:Replacement, addr, victim_entry, victim_tbe);
                 } else {
-                    if (in_msg.Type == RubyRequestType:LD ||
-                            in_msg.Type == RubyRequestType:IFETCH) {
+                    if (in_msg.Type == RubyRequestType:LD) {
                         trigger(Event:Load, in_msg.LineAddress, cache_entry,
+                                tbe);
+                    } else if(in_msg.Type == RubyRequestType:IFETCH){   // 单独对icache处理
+                        trigger(Event:TransLoad, in_msg.LineAddress, cache_entry,
                                 tbe);
                     } else if (in_msg.Type == RubyRequestType:ST) {
                         trigger(Event:Store, in_msg.LineAddress, cache_entry,
@@ -487,6 +493,18 @@ machine(MachineType:L1Cache, "MSI cache")
         }
     }
 
+    // A 发特殊转发请求给目录
+    action(sendTransGetS, "gTS", desc="Send TransGetS to the directory") {
+        enqueue(request_out, RequestMsg, 1) {
+            out_msg.addr  := address;
+            out_msg.Type  := CoherenceRequestType:TransGetS;
+            out_msg.Destination.add(mapAddressToMachine(address,
+                                    MachineType:Directory));
+            out_msg.MessageSize := MessageSizeType:Control;
+            out_msg.Requestor   := machineID;
+        }
+    }
+
     action(sendGetM, "gM", desc="Send GetM to the directory") {
         enqueue(request_out, RequestMsg, 1) {
             out_msg.addr := address;
@@ -538,6 +556,23 @@ machine(MachineType:L1Cache, "MSI cache")
             }
         }
     }
+
+    // B直接把得到消息的数据转发给A
+    action(sendCacheDataToReqA, "cdRA", desc="Send cache data to cache A") {
+//        assert(is_valid(cache_entry));
+        peek(response_in, ResponseMsg) {
+            enqueue(response_out, ResponseMsg, 1) {
+                out_msg.addr := address;
+                out_msg.Type := CoherenceResponseType:Data;
+                out_msg.Destination.add(createMachineID(MachineType:L1Cache, intToID(0)));
+//                out_msg.DataBlk := cache_entry.DataBlk;
+                out_msg.DataBlk := in_msg.DataBlk;
+                out_msg.MessageSize := MessageSizeType:Data;
+                out_msg.Sender := machineID;
+            }
+        }
+    }
+
 
     action(sendCacheDataToDir, "cdD", desc="Send the cache data to the dir") {
         enqueue(response_out, ResponseMsg, 1) {
@@ -712,6 +747,14 @@ machine(MachineType:L1Cache, "MSI cache")
         popMandatoryQueue;
     }
 
+    // A 收到特殊取指请求，发送请求给目录
+    transition(I, TransLoad, IS_TD){
+        allocateCacheBlock;
+        allocateTBE;    // A的TBE没啥用
+        sendTransGetS;
+        popMandatoryQueue;
+    }
+
     transition(I, Store, IM_AD) {
         allocateCacheBlock;
         allocateTBE;
@@ -735,6 +778,24 @@ machine(MachineType:L1Cache, "MSI cache")
         externalLoadHit;    // 从别的地方获取数据了，最后hit
         popResponseQueue;
     }
+
+    // 当A收到B的数据时候，回到S状态
+    transition(IS_TD, DataOwner, S) {
+        writeDataToCache;
+        deallocateTBE;
+        externalLoadHit;
+        popResponseQueue;
+    }
+
+    // 当B收到目录的数据，转发给A, 进入S状态
+    transition({I, S}, DataDirNoAcks, S){
+//        allocateCacheBlock;
+//        writeDataToCache;     // B暂时不把数据写入Cache,因为没有cpu请求，无法驱逐满的cache 行出去
+        sendCacheDataToReqA;
+//        externalLoadHit;
+        popResponseQueue;
+    }
+
 
     transition({IM_AD, IM_A}, {Load, Store, Replacement, FwdGetS, FwdGetM}) {
         stall;
@@ -764,7 +825,8 @@ machine(MachineType:L1Cache, "MSI cache")
         popResponseQueue;
     }
 
-    transition({S, SM_AD, SM_A, M}, Load) {
+    // A之后取指直接命中
+    transition({S, SM_AD, SM_A, M}, {Load, TransLoad}) {
         loadHit;
         popMandatoryQueue;
     }
