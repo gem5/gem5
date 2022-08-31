@@ -34,10 +34,12 @@
 #ifndef __ARCH_RISCV_ISA_HH__
 #define __ARCH_RISCV_ISA_HH__
 
+#include <unordered_map>
 #include <vector>
 
 #include "arch/generic/isa.hh"
 #include "arch/riscv/pcstate.hh"
+#include "arch/riscv/regs/misc.hh"
 #include "arch/riscv/types.hh"
 #include "base/types.hh"
 
@@ -88,6 +90,21 @@ class ISA : public BaseISA
     RegVal readMiscReg(RegIndex idx) override;
     void setMiscRegNoEffect(RegIndex idx, RegVal val) override;
     void setMiscReg(RegIndex idx, RegVal val) override;
+
+    // Derived class could provide knowledge of non-standard CSRs to other
+    // components by overriding the two getCSRxxxMap here and properly
+    // implementing the corresponding read/set function. However, customized
+    // maps should always be compatible with the standard maps.
+    virtual const std::unordered_map<int, CSRMetadata>&
+    getCSRDataMap() const
+    {
+        return CSRData;
+    }
+    virtual const std::unordered_map<int, RegVal>&
+    getCSRMaskMap() const
+    {
+        return CSRMasks;
+    }
 
     bool inUserMode() const override;
     void copyRegsFrom(ThreadContext *src) override;
