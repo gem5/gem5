@@ -33,6 +33,7 @@
 #include <memory>
 
 #include "DRAMSysConfiguration.h"
+#include "mem/abstract_mem.hh"
 #include "params/DRAMSys.hh"
 #include "sim/core.hh"
 #include "simulation/DRAMSysRecordable.h"

@@ -25,17 +25,22 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import m5
-import os
-import configparser
 
-from m5.objects import DRAMSys, AddrRange, Port, MemCtrl, Gem5ToTlmBridge32
+from m5.objects import (
+    DRAMSys,
+    AddrRange,
+    Port,
+    MemCtrl,
+    Gem5ToTlmBridge32,
+    SystemC_Kernel,
+)
 from m5.util.convert import toMemorySize
 
 from ...utils.override import overrides
 from ..boards.abstract_board import AbstractBoard
 from .abstract_memory_system import AbstractMemorySystem
 
-from typing import Optional, Tuple, Sequence, List
+from typing import Tuple, Sequence, List
 
 
 class DRAMSysMem(AbstractMemorySystem):
@@ -60,8 +65,9 @@ class DRAMSysMem(AbstractMemorySystem):
         )
 
         self._size = toMemorySize(size)
-        self._bridge = Gem5ToTlmBridge32()
-        self.dramsys.port = self._bridge.tlm
+        self.bridge = Gem5ToTlmBridge32()
+        self.dramsys.tlm = self.bridge.tlm
+        self.kernel = SystemC_Kernel()
 
     @overrides(AbstractMemorySystem)
     def incorporate_memory(self, board: AbstractBoard) -> None:
@@ -69,7 +75,7 @@ class DRAMSysMem(AbstractMemorySystem):
 
     @overrides(AbstractMemorySystem)
     def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
-        return [(self.dramsys.range, self._bridge.gem5)]
+        return [(self.dramsys.range, self.bridge.gem5)]
 
     @overrides(AbstractMemorySystem)
     def get_memory_controllers(self) -> List[MemCtrl]:
@@ -87,3 +93,60 @@ class DRAMSysMem(AbstractMemorySystem):
                 "range which matches the memory's size."
             )
         self.dramsys.range = ranges[0]
+        self.bridge.addr_ranges = ranges[0]
+
+
+class DRAMSysDDR4_1866(DRAMSysMem):
+    def __init__(self, recordable: bool):
+        """
+        :param recordable: Whether the database recording feature of DRAMSys is enabled.
+        """
+        super().__init__(
+            configuration="ext/dramsys/DRAMSys/DRAMSys/"
+            "library/resources/simulations/ddr4-example.json",
+            size="4GB",
+            resource_directory="ext/dramsys/DRAMSys/DRAMSys/library/resources",
+            recordable=recordable,
+        )
+
+
+class DRAMSysDDR3_1600(DRAMSysMem):
+    def __init__(self, recordable: bool):
+        """
+        :param recordable: Whether the database recording feature of DRAMSys is enabled.
+        """
+        super().__init__(
+            configuration="ext/dramsys/DRAMSys/DRAMSys/"
+            "library/resources/simulations/ddr3-gem5-se.json",
+            size="4GB",
+            resource_directory="ext/dramsys/DRAMSys/DRAMSys/library/resources",
+            recordable=recordable,
+        )
+
+
+class DRAMSysLPDDR4_3200(DRAMSysMem):
+    def __init__(self, recordable: bool):
+        """
+        :param recordable: Whether the database recording feature of DRAMSys is enabled.
+        """
+        super().__init__(
+            configuration="ext/dramsys/DRAMSys/DRAMSys/"
+            "library/resources/simulations/lpddr4-example.json",
+            size="4GB",
+            resource_directory="ext/dramsys/DRAMSys/DRAMSys/library/resources",
+            recordable=recordable,
+        )
+
+
+class DRAMSysHBM2(DRAMSysMem):
+    def __init__(self, recordable: bool):
+        """
+        :param recordable: Whether the database recording feature of DRAMSys is enabled.
+        """
+        super().__init__(
+            configuration="ext/dramsys/DRAMSys/DRAMSys/"
+            "library/resources/simulations/hbm2-example.json",
+            size="4GB",
+            resource_directory="ext/dramsys/DRAMSys/DRAMSys/library/resources",
+            recordable=recordable,
+        )

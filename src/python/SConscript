@@ -170,6 +170,10 @@ PySource('gem5.components.cachehierarchies.ruby.topologies',
 PySource('gem5.components.memory', 'gem5/components/memory/__init__.py')
 PySource('gem5.components.memory', 'gem5/components/memory/abstract_memory_system.py')
 PySource('gem5.components.memory', 'gem5/components/memory/dramsim_3.py')
+
+if env['HAVE_DRAMSYS']:
+    PySource('gem5.components.memory', 'gem5/components/memory/dramsys.py')
+
 PySource('gem5.components.memory', 'gem5/components/memory/simple.py')
 PySource('gem5.components.memory', 'gem5/components/memory/memory.py')
 PySource('gem5.components.memory', 'gem5/components/memory/single_channel.py')

@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2023 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,26 +23,40 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+This script is used for running a traffic generator connected to the
+DRAMSys simulator.
 
-from .single_channel import SingleChannelDDR3_1600
-from .single_channel import SingleChannelDDR3_2133
-from .single_channel import SingleChannelDDR4_2400
-from .single_channel import SingleChannelHBM
-from .single_channel import SingleChannelLPDDR3_1600
-from .multi_channel import DualChannelDDR3_1600
-from .multi_channel import DualChannelDDR3_2133
-from .multi_channel import DualChannelDDR4_2400
-from .multi_channel import DualChannelLPDDR3_1600
-from .hbm import HBM2Stack
+**Important Note**: DRAMSys must be compiled into the gem5 binary to use the
+DRRAMSys simulator. Please consult 'ext/dramsys/README' on how to compile
+correctly. If this is not done correctly this script will run with error.
+"""
+import m5
+from gem5.components.memory import DRAMSysMem
+from gem5.components.boards.test_board import TestBoard
+from gem5.components.processors.linear_generator import LinearGenerator
+from m5.objects import Root
 
-try:
-    from .dramsys import DRAMSysMem
-    from .dramsys import DRAMSysDDR4_1866
-    from .dramsys import DRAMSysDDR3_1600
-    from .dramsys import DRAMSysLPDDR4_3200
-    from .dramsys import DRAMSysHBM2
-except:
-    # In the case that DRAMSys is not compiled into the gem5 binary, importing
-    # DRAMSys components will fail. This try-exception statement is needed to
-    # ignore these imports in this case.
-    pass
+memory = DRAMSysMem(
+    configuration="ext/dramsys/DRAMSys/DRAMSys/"
+    "library/resources/simulations/ddr4-example.json",
+    resource_directory="ext/dramsys/DRAMSys/DRAMSys/library/resources",
+    recordable=True,
+    size="4GB",
+)
+
+generator = LinearGenerator(
+    duration="250us",
+    rate="40GB/s",
+    num_cores=1,
+    max_addr=memory.get_size(),
+)
+board = TestBoard(
+    clk_freq="3GHz", generator=generator, memory=memory, cache_hierarchy=None
+)
+
+root = Root(full_system=False, system=board)
+board._pre_instantiate()
+m5.instantiate()
+generator.start_traffic()
+exit_event = m5.simulate()
