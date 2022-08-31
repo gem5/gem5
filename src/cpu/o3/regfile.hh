@@ -299,7 +299,7 @@ class PhysRegFile
             break;
           case VecPredRegClass:
             DPRINTF(IEW, "RegFile: Setting predicate register %i to %s\n",
-                    idx, vectorRegFile.regClass.valString(val));
+                    idx, vecPredRegFile.regClass.valString(val));
             vecPredRegFile.set(idx, val);
             break;
           case CCRegClass:
