@@ -53,8 +53,7 @@ Walker::startFunctional(Addr base, Addr &addr, unsigned &logBytes,
     Addr vaddr = addr;
     Fault fault = startFunctional(base, vaddr, pte, logBytes, mode);
     isSystem = pte.s;
-    addr = ((pte.ppn << PageShift) & ~mask(logBytes))
-         | (vaddr & mask(logBytes));
+    addr = ((pte.ppn << PageShift) + (vaddr & mask(logBytes)));
 
     return fault;
 }
@@ -182,8 +181,8 @@ Walker::WalkerState::startWalk()
             sendPackets();
         } else {
             // Set physical page address in entry
-            entry.paddr = bits(entry.pte, 47, entry.logBytes);
-            entry.paddr <<= entry.logBytes;
+            entry.paddr = entry.pte.ppn << PageShift;
+            entry.paddr += entry.vaddr & mask(entry.logBytes);
 
             // Insert to TLB
             assert(walker);
@@ -277,7 +276,6 @@ Walker::WalkerState::walkStateMachine(PageTableEntry &pte, Addr &nextRead,
             int fragment = pte.fragment;
             entry.logBytes = PageShift + std::min(9, fragment);
             entry.vaddr <<= PageShift;
-            entry.vaddr = entry.vaddr & ~((1 << entry.logBytes) - 1);
             entry.vaddr = entry.vaddr & ~mask(entry.logBytes);
             doEndWalk = true;
         }

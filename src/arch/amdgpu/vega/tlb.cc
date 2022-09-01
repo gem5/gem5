@@ -447,7 +447,7 @@ GpuTLB::walkerResponse(VegaTlbEntry& entry, PacketPtr pkt)
                                     VegaISA::PageBytes);
 
     Addr page_addr = entry.pte.ppn << VegaISA::PageShift;
-    Addr paddr = insertBits(page_addr, entry.logBytes - 1, 0, entry.vaddr);
+    Addr paddr = page_addr + (entry.vaddr & mask(entry.logBytes));
     pkt->req->setPaddr(paddr);
     pkt->req->setSystemReq(entry.pte.s);
 
@@ -842,7 +842,7 @@ GpuTLB::CpuSidePort::recvFunctional(PacketPtr pkt)
             // page size. Fragment is still used via logBytes to select lower
             // bits from vaddr.
             Addr page_addr = pte.ppn << PageShift;
-            Addr paddr = insertBits(page_addr, logBytes - 1, 0, vaddr);
+            Addr paddr = page_addr + (vaddr & mask(logBytes));
             Addr alignedPaddr = tlb->pageAlign(paddr);
             pkt->req->setPaddr(paddr);
             pkt->req->setSystemReq(pte.s);
