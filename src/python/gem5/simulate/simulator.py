@@ -210,9 +210,19 @@ class Simulator:
 
         :param path: That path in which the file should be output to.
         """
-        if not os.is_path_exists_or_creatable(path):
+        path_path = Path(path)
+        parent = path_path.parent
+
+        if (
+            not parent.is_dir()
+            or not os.access(parent, os.W_OK)
+            or (
+                path_path.exists()
+                and (path_path.is_dir() or not os.access(path_path, os.W_OK))
+            )
+        ):
             raise Exception(
-                f"Path '{path}' is is not a valid text stats output location."
+                f"Specified text stats output path '{path}' is invalid."
             )
         addStatVisitor(path)
 
@@ -224,9 +234,19 @@ class Simulator:
 
         :param path: That path in which the JSON should be output to.
         """
-        if not os.is_path_exists_or_creatable(path):
+        path_path = Path(path)
+        parent = path_path.parent
+
+        if (
+            not parent.is_dir()
+            or not os.access(parent, os.W_OK)
+            or (
+                path_path.exists()
+                and (path_path.is_dir() or not os.access(path_path, os.W_OK))
+            )
+        ):
             raise Exception(
-                f"Path '{path}' is is not a valid JSON output location."
+                f"Specified json stats output path '{path}' is invalid."
             )
         addStatVisitor(f"json://{path}")
 
