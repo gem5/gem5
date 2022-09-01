@@ -71,7 +71,8 @@ build_target () {
         "${gem5_root}" --memory="${docker_mem_limit}" --rm \
         gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest \
             bash -c "scons build/${isa}/gem5.opt -j${compile_threads} \
-                || (rm -rf build && scons build/${isa}/gem5.opt -j${compile_threads})"
+            --ignore-style || (rm -rf build && scons build/${isa}/gem5.opt \
+            -j${compile_threads} --ignore-style)"
 }
 
 unit_test () {
@@ -80,7 +81,8 @@ unit_test () {
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --memory="${docker_mem_limit}" --rm \
         gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest \
-            scons build/NULL/unittests.${build} -j${compile_threads}
+            scons build/NULL/unittests.${build} -j${compile_threads} \
+            --ignore-style
 }
 
 # Ensure we have the latest docker images.
@@ -121,8 +123,9 @@ docker pull gcr.io/gem5-test/gcn-gpu:latest
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" --memory="${docker_mem_limit}" \
     gcr.io/gem5-test/gcn-gpu:latest  bash -c \
-    "scons build/${gpu_isa}/gem5.opt -j${compile_threads} \
-        || (rm -rf build && scons build/${gpu_isa}/gem5.opt -j${compile_threads})"
+    "scons build/${gpu_isa}/gem5.opt -j${compile_threads} --ignore-style \
+        || (rm -rf build && scons build/${gpu_isa}/gem5.opt \
+        -j${compile_threads} --ignore-style)"
 
 # get square
 wget -qN http://dist.gem5.org/dist/develop/test-progs/square/square
@@ -169,7 +172,8 @@ build_and_run_SST () {
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --rm  --memory="${docker_mem_limit}" \
         gcr.io/gem5-test/sst-env:latest bash -c "\
-scons build/${isa}/libgem5_${variant}.so -j${compile_threads} --without-tcmalloc; \
+scons build/${isa}/libgem5_${variant}.so -j${compile_threads} \
+--without-tcmalloc --ignore-style; \
 cd ext/sst; \
 make clean; make -j ${compile_threads}; \
 sst --add-lib-path=./ sst/example.py; \
@@ -183,7 +187,7 @@ build_and_run_systemc () {
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --memory="${docker_mem_limit}" --rm \
         gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest bash -c "\
-scons -j${compile_threads} build/ARM/gem5.opt; \
+scons -j${compile_threads} --ignore-style build/ARM/gem5.opt; \
 scons --with-cxx-config --without-python --without-tcmalloc USE_SYSTEMC=0 \
     -j${compile_threads} build/ARM/libgem5_opt.so \
 "

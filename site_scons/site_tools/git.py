@@ -87,7 +87,24 @@ def install_style_hooks(env):
 
     pre_commit_install = env.Dir("#util").File("pre-commit-install.sh")
 
-    subprocess.call(str(pre_commit_install), shell=True)
+    ret = subprocess.call(str(pre_commit_install), shell=True)
+    if ret != 0:
+        print(
+            "It is strongly recommended you install the pre-commit hooks "
+            "before working with gem5. Do you want to continue compilation "
+            "(y/n)?"
+        )
+        while True:
+            response = input().lower().strip()
+            if response in {"yes", "ye", "y"}:
+                return
+            elif response in {"no", "n"}:
+                sys.exit(1)
+            else:
+                print(
+                    f"Could not parse answer '{response}'. Do you want to "
+                    "continue compilation (y/n)?"
+                )
 
 
 def generate(env):

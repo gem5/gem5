@@ -118,15 +118,16 @@ docker build -t hacc-test-weekly ${gem5_root}/gem5-resources/src/gpu/halo-finder
 
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}" --memory="${docker_mem_limit}" hacc-test-weekly bash -c \
-    "scons build/${gpu_isa}/gem5.opt -j${threads} \
-        || rm -rf build && scons build/${gpu_isa}/gem5.opt -j${threads}"
+    "scons build/${gpu_isa}/gem5.opt -j${threads} --ignore-style \
+        || rm -rf build && scons build/${gpu_isa}/gem5.opt -j${threads} \
+        --ignore-style"
 
 # Some of the apps we test use m5ops (and x86), so compile them for x86
 # Note: setting TERM in the environment is necessary as scons fails for m5ops if
 # it is not set.
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}/util/m5" --memory="${docker_mem_limit}" hacc-test-weekly bash -c \
-    "export TERM=xterm-256color ; scons build/x86/out/m5"
+    "export TERM=xterm-256color ; scons build/x86/out/m5 --ignore-style"
 
 # test LULESH
 # build LULESH

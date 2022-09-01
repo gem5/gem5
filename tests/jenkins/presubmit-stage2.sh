@@ -51,4 +51,4 @@ PRE_COMMIT_HOME=/tmp/pre-commit-cache pre-commit run \
 # Once complete, run the Google Tests
 cd tests
 ./main.py run -j4 -t4 gem5 -vv && scons -C .. --no-compress-debug \
-    build/ARM/unittests.opt
+    --ignore-style build/ARM/unittests.opt
