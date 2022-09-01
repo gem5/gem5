@@ -137,7 +137,12 @@ SDMAEngine::getDeviceAddress(Addr raw_addr)
 TranslationGenPtr
 SDMAEngine::translate(Addr vaddr, Addr size)
 {
-    if (gpuDevice->getVM().inAGP(vaddr)) {
+    if (cur_vmid > 0) {
+        // Only user translation is available to user queues (vmid > 0)
+        return TranslationGenPtr(new AMDGPUVM::UserTranslationGen(
+                                            &gpuDevice->getVM(), walker,
+                                            cur_vmid, vaddr, size));
+    } else if (gpuDevice->getVM().inAGP(vaddr)) {
         // Use AGP translation gen
         return TranslationGenPtr(
             new AMDGPUVM::AGPTranslationGen(&gpuDevice->getVM(), vaddr, size));
