@@ -571,6 +571,8 @@ def run(options, root, testsys, cpu_class):
             if options.checker:
                 repeat_switch_cpus[i].addCheckerCpu()
 
+            repeat_switch_cpus[i].createThreads()
+
         testsys.repeat_switch_cpus = repeat_switch_cpus
 
         if cpu_class:
@@ -629,6 +631,9 @@ def run(options, root, testsys, cpu_class):
             if options.checker:
                 switch_cpus[i].addCheckerCpu()
                 switch_cpus_1[i].addCheckerCpu()
+
+            switch_cpus[i].createThreads()
+            switch_cpus_1[i].createThreads()
 
         testsys.switch_cpus = switch_cpus
         testsys.switch_cpus_1 = switch_cpus_1
