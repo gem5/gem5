@@ -176,6 +176,23 @@ def parse_options():
         "-v", "--verbose", action="count", default=0, help="Increase verbosity"
     )
 
+    # To make gem5 mimic python better. After `-c` we should consume all other
+    # arguments and add those to argv.
+    def collect_args(option, opt_str, value, parser):
+        extra_args = parser.rargs[:]
+        del parser.rargs[:]
+        setattr(parser.values, option.dest, (value, extra_args))
+
+    option(
+        "-c",
+        type=str,
+        help="program passed in as string (terminates option list)",
+        default="",
+        metavar="cmd",
+        action="callback",
+        callback=collect_args,
+    )
+
     # Statistics options
     group("Statistics Options")
     option(
@@ -279,14 +296,6 @@ def parse_options():
         action="store_true",
         default=False,
         help="List all built-in SimObjects, their params and default values",
-    )
-
-    option(
-        "-c",
-        type=str,
-        help="program passed in as string (terminates option list)",
-        default="",
-        metavar="cmd",
     )
 
     arguments = options.parse_args()
@@ -556,8 +565,9 @@ def main():
     sys.argv = arguments
 
     if options.c:
-        filedata = options.c
+        filedata = options.c[0]
         filecode = compile(filedata, "<string>", "exec")
+        sys.argv = ["-c"] + options.c[1]
         scope = {"__name__": "__m5_main__"}
     else:
         sys.path = [os.path.dirname(sys.argv[0])] + sys.path
