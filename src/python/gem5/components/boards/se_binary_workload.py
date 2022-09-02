@@ -26,10 +26,12 @@
 
 from .abstract_board import AbstractBoard
 from ...resources.resource import AbstractResource
+from gem5.utils.simpoint import SimPoint
 
 from m5.objects import SEWorkload, Process
 
 from typing import Optional, List
+from m5.util import warn
 
 
 class SEBinaryWorkload:
@@ -52,6 +54,7 @@ class SEBinaryWorkload:
         exit_on_work_items: bool = True,
         stdin_file: Optional[AbstractResource] = None,
         arguments: List[str] = [],
+        simpoint: SimPoint = None,
     ) -> None:
         """Set up the system to run a specific binary.
 
@@ -60,11 +63,16 @@ class SEBinaryWorkload:
         * Dynamically linked executables are partially supported when the host
           ISA and the simulated ISA are the same.
 
+        **Warning:** SimPoints only works with one core
+
         :param binary: The resource encapsulating the binary to be run.
         :param exit_on_work_items: Whether the simulation should exit on work
         items. True by default.
         :param stdin_file: The input file for the binary
         :param arguments: The input arguments for the binary
+        :param simpoint: The SimPoint object that contains the list of
+        SimPoints starting instructions, the list of weights, and the SimPoints
+        interval
         """
 
         # We assume this this is in a multiple-inheritance setup with an
@@ -86,6 +94,13 @@ class SEBinaryWorkload:
 
         for core in self.get_processor().get_cores():
             core.set_workload(process)
+
+        if simpoint is not None:
+            if self.get_processor().get_num_cores() > 1:
+                warn("SimPoints only works with one core")
+            self.get_processor().get_cores()[0].set_simpoint(
+                inst_starts=simpoint.get_simpoint_start_insts(), init=True
+            )
 
         # Set whether to exit on work items for the se_workload
         self.exit_on_work_items = exit_on_work_items
