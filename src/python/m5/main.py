@@ -281,6 +281,14 @@ def parse_options():
         help="List all built-in SimObjects, their params and default values",
     )
 
+    option(
+        "-c",
+        type=str,
+        help="program passed in as string (terminates option list)",
+        default="",
+        metavar="cmd",
+    )
+
     arguments = options.parse_args()
     return options, arguments
 
@@ -471,7 +479,7 @@ def main():
         print()
 
     # check to make sure we can find the listed script
-    if not arguments or not os.path.isfile(arguments[0]):
+    if not options.c and (not arguments or not os.path.isfile(arguments[0])):
         if arguments and not os.path.isfile(arguments[0]):
             print("Script %s not found" % arguments[0])
 
@@ -546,12 +554,17 @@ def main():
         trace.ignore(ignore)
 
     sys.argv = arguments
-    sys.path = [os.path.dirname(sys.argv[0])] + sys.path
 
-    filename = sys.argv[0]
-    filedata = open(filename, "r").read()
-    filecode = compile(filedata, filename, "exec")
-    scope = {"__file__": filename, "__name__": "__m5_main__"}
+    if options.c:
+        filedata = options.c
+        filecode = compile(filedata, "<string>", "exec")
+        scope = {"__name__": "__m5_main__"}
+    else:
+        sys.path = [os.path.dirname(sys.argv[0])] + sys.path
+        filename = sys.argv[0]
+        filedata = open(filename, "r").read()
+        filecode = compile(filedata, filename, "exec")
+        scope = {"__file__": filename, "__name__": "__m5_main__"}
 
     # if pdb was requested, execfile the thing under pdb, otherwise,
     # just do the execfile normally
