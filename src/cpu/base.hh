@@ -436,7 +436,28 @@ class BaseCPU : public ClockedObject
      * @param insts Number of instructions into the future.
      * @param cause Cause to signal in the exit event.
      */
-    void scheduleInstStop(ThreadID tid, Counter insts, const char *cause);
+    void scheduleInstStop(ThreadID tid, Counter insts, std::string cause);
+
+    /**
+     * Schedule simpoint events using the scheduleInstStop function.
+     *
+     * This is used to raise a SIMPOINT_BEGIN exit event in the gem5 standard
+     * library.
+     *
+     * @param inst_starts A vector of number of instructions to start simpoints
+     */
+
+    void scheduleSimpointsInstStop(std::vector<Counter> inst_starts);
+
+    /**
+     * Schedule an exit event when any threads in the core reach the max_insts
+     * instructions using the scheduleInstStop function.
+     *
+     * This is used to raise a MAX_INSTS exit event in thegem5 standard library
+     *
+     * @param max_insts Number of instructions into the future.
+     */
+    void scheduleInstStopAnyThread(Counter max_insts);
 
     /**
      * Get the number of instructions executed by the specified thread

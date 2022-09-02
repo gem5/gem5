@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from abc import ABCMeta, abstractmethod
-from typing import Optional
+from typing import Optional, List
 
 from ...isas import ISA
 
@@ -120,3 +120,31 @@ class AbstractCore(SubSystem):
         This is used in the board to setup system-specific MMU settings.
         """
         raise NotImplementedError
+
+    @abstractmethod
+    def set_simpoint(self, inst_starts: List[int], init: bool) -> None:
+        """Schedule simpoint exit events for the core.
+
+        This is used to raise SIMPOINT_BEGIN exit events in the gem5 standard
+        library.
+
+        :param inst_starts: a list of SimPoints starting instructions
+        :param init: if it is True, the starting instructions will be scheduled
+        at the init stage of the core, else, the starting insructions will be
+        scheduled during the simulation
+        """
+        raise NotImplementedError("This core type does not support simpoints")
+
+    @abstractmethod
+    def set_inst_stop_any_thread(self, inst: int, init: bool) -> None:
+        """Schedule an exit event when any thread in this core reaches the
+        given number of instructions.
+
+        This is used to raise MAX_INSTS exit event in the gem5 standard library
+
+        :param inst: a number of instructions
+        :param init: if it is True, the exit event will be scheduled at the
+        init stage of the core, else, it will be scheduled during the
+        simulation
+        """
+        raise NotImplementedError("This core type does not support MAX_INSTS")
