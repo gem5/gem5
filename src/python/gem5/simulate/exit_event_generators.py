@@ -28,6 +28,7 @@ import m5.stats
 from ..components.processors.abstract_processor import AbstractProcessor
 from ..components.processors.switchable_processor import SwitchableProcessor
 from m5.util import warn
+from pathlib import Path
 
 """
 In this package we store generators for simulation exit events.
@@ -102,4 +103,43 @@ def default_workend_generator():
     )
     while True:
         m5.stats.dump()
+        yield False
+
+
+def default_simpoint_generator():
+    """
+    A default generator for SimPoints. It will do nothing.
+    The Simulation run loop will continue after executing the behavior of the
+    generator.
+    """
+    defaultBehaviorWarning(
+        "default_simpoint_generator",
+        "A default generator for SimPoints. It will do nothing.",
+    )
+    while True:
+        yield False
+
+
+def dump_reset_generator():
+    """
+    A generator for doing statstic dump and reset. It will reset the simulation
+    statistics and then dump simulation statistics.
+    The Simulation run loop will continue after executing the behavior of the
+    generator.
+    """
+    while True:
+        m5.stats.dump()
+        m5.stats.reset()
+        yield False
+
+
+def save_checkpoint_generator(checkpoint_dir: Path):
+    """
+    A generator for taking a checkpoint. It will take a checkpoint with the
+    input path and the current simulation Ticks.
+    The Simulation run loop will continue after executing the behavior of the
+    generator.
+    """
+    while True:
+        m5.checkpoint((checkpoint_dir / f"cpt.{str(m5.curTick())}").as_posix())
         yield False
