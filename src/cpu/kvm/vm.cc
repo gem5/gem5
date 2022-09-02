@@ -207,7 +207,7 @@ Kvm::capXSave() const
 bool
 Kvm::capIRQLineLayout2() const
 {
-#if defined(KVM_CAP_ARM_IRQ_LINE_LAYOUT_2) && defined(KVM_ARM_IRQ_VCPU2_SHIFT)
+#if defined(KVM_CAP_ARM_IRQ_LINE_LAYOUT_2)
     return checkExtension(KVM_CAP_ARM_IRQ_LINE_LAYOUT_2) != 0;
 #else
     return false;
