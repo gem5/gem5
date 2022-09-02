@@ -32,6 +32,7 @@ from m5.objects import Root
 from m5.util import warn
 
 import os
+import sys
 from pathlib import Path
 from typing import Optional, List, Tuple, Dict, Generator, Union
 
@@ -69,6 +70,16 @@ class Simulator:
 
     This will run a simulation and execute default behavior for exit events.
     """
+
+    # Here we declare the modules which should not be imported into any gem5
+    # standard library run. The key is the module (e.g,
+    # "import common.Options") and the value is the reason, which will be
+    # output in the case this module is imported.
+    # This is checked with the `run` function is executed.
+    _banned_modules = {
+        "common.Options": "The options provided by 'Options' are not "
+        "compatible with the gem5 standard library.",
+    }
 
     def __init__(
         self,
@@ -343,6 +354,15 @@ class Simulator:
         received, if another simulation exit event is met the tick count is
         reset. This is the **maximum number of ticks per simululation run**.
         """
+
+        # Check to ensure no banned module has been imported.
+        for banned_module in self._banned_modules.keys():
+            if banned_module in sys.modules:
+                raise Exception(
+                    f"The banned module '{banned_module}' has been included. "
+                    "Please do not use this in your simulations. "
+                    f"Reason: {self._banned_modules[banned_module]}"
+                )
 
         # We instantiate the board if it has not already been instantiated.
         self._instantiate()
