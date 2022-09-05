@@ -429,9 +429,14 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
         decodeNext(q);
         } break;
       case SDMA_OP_ATOMIC: {
-        q->incRptr(sizeof(sdmaAtomic));
-        warn("SDMA_OP_ATOMIC not implemented");
-        decodeNext(q);
+        DPRINTF(SDMAEngine, "SDMA Atomic packet\n");
+        dmaBuffer = new sdmaAtomic();
+        sdmaAtomicHeader *h = new sdmaAtomicHeader();
+        *h = *(sdmaAtomicHeader *)&header;
+        cb = new DmaVirtCallback<uint64_t>(
+            [ = ] (const uint64_t &)
+                { atomic(q, h, (sdmaAtomic *)dmaBuffer); });
+        dmaReadVirt(q->rptr(), sizeof(sdmaAtomic), cb, dmaBuffer);
         } break;
       case SDMA_OP_CONST_FILL: {
         q->incRptr(sizeof(sdmaConstFill));
@@ -857,6 +862,62 @@ SDMAEngine::ptePdeDone(SDMAQueue *q, sdmaPtePde *pkt, uint64_t *dmaBuffer)
             pkt->dest, pkt->count);
 
     delete []dmaBuffer;
+    delete pkt;
+    decodeNext(q);
+}
+
+void
+SDMAEngine::atomic(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt)
+{
+    q->incRptr(sizeof(sdmaAtomic));
+    DPRINTF(SDMAEngine, "Atomic op %d on addr %#lx, src: %ld, cmp: %ld, loop?"
+            " %d loopInt: %d\n", header->opcode, pkt->addr, pkt->srcData,
+            pkt->cmpData, header->loop, pkt->loopInt);
+
+    // Read the data at pkt->addr
+    uint64_t *dmaBuffer = new uint64_t;
+    auto cb = new DmaVirtCallback<uint64_t>(
+        [ = ] (const uint64_t &)
+            { atomicData(q, header, pkt, dmaBuffer); });
+    dmaReadVirt(pkt->addr, sizeof(uint64_t), cb, (void *)dmaBuffer);
+}
+
+void
+SDMAEngine::atomicData(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
+                       uint64_t *dmaBuffer)
+{
+    DPRINTF(SDMAEngine, "Atomic op %d on addr %#lx got data %#lx\n",
+            header->opcode, pkt->addr, *dmaBuffer);
+
+    if (header->opcode == SDMA_ATOMIC_ADD64) {
+        // Atomic add with return -- dst = dst + src
+        int64_t dst_data = *dmaBuffer;
+        int64_t src_data = pkt->srcData;
+
+        DPRINTF(SDMAEngine, "Atomic ADD_RTN: %ld + %ld = %ld\n", dst_data,
+                src_data, dst_data + src_data);
+
+        // Reuse the dmaBuffer allocated
+        *dmaBuffer = dst_data + src_data;
+
+        auto cb = new DmaVirtCallback<uint64_t>(
+            [ = ] (const uint64_t &)
+                { atomicDone(q, header, pkt, dmaBuffer); });
+        dmaWriteVirt(pkt->addr, sizeof(uint64_t), cb, (void *)dmaBuffer);
+    } else {
+        panic("Unsupported SDMA atomic opcode: %d\n", header->opcode);
+    }
+}
+
+void
+SDMAEngine::atomicDone(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
+                       uint64_t *dmaBuffer)
+{
+    DPRINTF(SDMAEngine, "Atomic op %d op addr %#lx complete (sent %lx)\n",
+            header->opcode, pkt->addr, *dmaBuffer);
+
+    delete dmaBuffer;
+    delete header;
     delete pkt;
     decodeNext(q);
 }

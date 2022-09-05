@@ -285,6 +285,17 @@ static_assert(sizeof(sdmaAtomic) == 28);
 
 typedef struct GEM5_PACKED
 {
+    int unused2 : 16;
+    int loop : 1;
+    int unused1 : 8;
+    int opcode : 7;
+}  sdmaAtomicHeader;
+static_assert(sizeof(sdmaAtomicHeader) == 4);
+
+constexpr unsigned int SDMA_ATOMIC_ADD64 = 47;
+
+typedef struct GEM5_PACKED
+{
     uint64_t dest;
     uint64_t mask;
     uint64_t initValue;

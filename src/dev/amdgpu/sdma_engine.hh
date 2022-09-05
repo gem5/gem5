@@ -218,6 +218,11 @@ class SDMAEngine : public DmaVirtDevice
     bool pollRegMemFunc(uint32_t value, uint32_t reference, uint32_t func);
     void ptePde(SDMAQueue *q, sdmaPtePde *pkt);
     void ptePdeDone(SDMAQueue *q, sdmaPtePde *pkt, uint64_t *dmaBuffer);
+    void atomic(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt);
+    void atomicData(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
+                    uint64_t *dmaBuffer);
+    void atomicDone(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
+                    uint64_t *dmaBuffer);
 
     /**
      * Methods for getting the values of SDMA MMIO registers.
