@@ -77,6 +77,12 @@ AMDGPUInterruptHandler::prepareInterruptCookie(ContextID cntxt_id,
                                                 uint32_t client_id,
                                                 uint32_t source_id)
 {
+    assert(client_id == SOC15_IH_CLIENTID_RLC ||
+           client_id == SOC15_IH_CLIENTID_SDMA0 ||
+           client_id == SOC15_IH_CLIENTID_SDMA1 ||
+           client_id == SOC15_IH_CLIENTID_GRBM_CP);
+    assert(source_id == CP_EOP || source_id == TRAP_ID);
+
     /**
      * Setup the fields in the interrupt cookie (see header file for more
      * detail on the fields). The timestamp here is a bogus value. It seems
