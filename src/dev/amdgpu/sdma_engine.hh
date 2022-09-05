@@ -134,7 +134,7 @@ class SDMAEngine : public DmaVirtDevice
     VegaISA::Walker *walker;
 
     /* processRLC will select the correct queue for the doorbell */
-    std::unordered_map<Addr, int> rlcMap;
+    std::array<Addr, 2> rlcInfo{};
     void processRLC0(Addr wptrOffset);
     void processRLC1(Addr wptrOffset);
 

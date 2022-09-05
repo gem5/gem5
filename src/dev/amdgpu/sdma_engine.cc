@@ -164,7 +164,7 @@ SDMAEngine::registerRLCQueue(Addr doorbell, Addr rb_base)
     // Get first free RLC
     if (!rlc0.valid()) {
         DPRINTF(SDMAEngine, "Doorbell %lx mapped to RLC0\n", doorbell);
-        rlcMap.insert(std::make_pair(doorbell, 0));
+        rlcInfo[0] = doorbell;
         rlc0.valid(true);
         rlc0.base(rb_base);
         rlc0.rptr(0);
@@ -174,7 +174,7 @@ SDMAEngine::registerRLCQueue(Addr doorbell, Addr rb_base)
         rlc0.size(1024*1024);
     } else if (!rlc1.valid()) {
         DPRINTF(SDMAEngine, "Doorbell %lx mapped to RLC1\n", doorbell);
-        rlcMap.insert(std::make_pair(doorbell, 1));
+        rlcInfo[1] = doorbell;
         rlc1.valid(true);
         rlc1.base(rb_base);
         rlc1.rptr(1);
@@ -190,16 +190,15 @@ SDMAEngine::registerRLCQueue(Addr doorbell, Addr rb_base)
 void
 SDMAEngine::unregisterRLCQueue(Addr doorbell)
 {
-    assert(rlcMap.find(doorbell) != rlcMap.end());
-
-    if (rlcMap[doorbell] == 0) {
+    DPRINTF(SDMAEngine, "Unregistering RLC queue at %#lx\n", doorbell);
+    if (rlcInfo[0] == doorbell) {
         rlc0.valid(false);
-        rlcMap.erase(doorbell);
-    } else if (rlcMap[doorbell] == 1) {
+        rlcInfo[0] = 0;
+    } else if (rlcInfo[1] == doorbell) {
         rlc1.valid(false);
-        rlcMap.erase(doorbell);
+        rlcInfo[1] = 0;
     } else {
-        panic("Cannot unregister unknown RLC queue: %d\n", rlcMap[doorbell]);
+        panic("Cannot unregister: no RLC queue at %#lx\n", doorbell);
     }
 }
 
@@ -229,15 +228,12 @@ SDMAEngine::processPage(Addr wptrOffset)
 void
 SDMAEngine::processRLC(Addr doorbellOffset, Addr wptrOffset)
 {
-    assert(rlcMap.find(doorbellOffset) != rlcMap.end());
-
-    if (rlcMap[doorbellOffset] == 0) {
+    if (rlcInfo[0] == doorbellOffset) {
         processRLC0(wptrOffset);
-    } else if (rlcMap[doorbellOffset] == 1) {
+    } else if (rlcInfo[1] == doorbellOffset) {
         processRLC1(wptrOffset);
     } else {
-        panic("Cannot process unknown RLC queue: %d\n",
-               rlcMap[doorbellOffset]);
+        panic("Cannot process: no RLC queue at %#lx\n", doorbellOffset);
     }
 }
 
