@@ -643,6 +643,9 @@ AMDGPUDevice::deallocateAllQueues()
 {
     idMap.erase(idMap.begin(), idMap.end());
     usedVMIDs.erase(usedVMIDs.begin(), usedVMIDs.end());
+
+    sdma0->deallocateRLCQueues();
+    sdma1->deallocateRLCQueues();
 }
 
 void

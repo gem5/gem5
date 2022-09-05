@@ -266,6 +266,7 @@ class SDMAEngine : public DmaVirtDevice
      */
     void registerRLCQueue(Addr doorbell, Addr rb_base);
     void unregisterRLCQueue(Addr doorbell);
+    void deallocateRLCQueues();
 
     int cur_vmid = 0;
 };

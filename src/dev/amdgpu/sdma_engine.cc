@@ -202,6 +202,14 @@ SDMAEngine::unregisterRLCQueue(Addr doorbell)
     }
 }
 
+void
+SDMAEngine::deallocateRLCQueues()
+{
+    for (auto doorbell: rlcInfo) {
+        unregisterRLCQueue(doorbell);
+    }
+}
+
 /* Start decoding packets from the Gfx queue. */
 void
 SDMAEngine::processGfx(Addr wptrOffset)
