@@ -1183,9 +1183,10 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
 
             tlbPort[tlbPort_index].retries.push_back(pkt);
         } else {
-           DPRINTF(GPUTLB,
-                   "CU%d: WF[%d][%d]: Translation for addr %#x sent!\n",
-                   cu_id, gpuDynInst->simdId, gpuDynInst->wfSlotId, tmp_vaddr);
+           DPRINTF(GPUTLB, "CU%d: WF[%d][%d]: Translation for addr %#x from "
+                   "instruction %s sent!\n", cu_id, gpuDynInst->simdId,
+                   gpuDynInst->wfSlotId, tmp_vaddr,
+                   gpuDynInst->disassemble().c_str());
         }
     } else {
         if (pkt->cmd == MemCmd::MemSyncReq) {
