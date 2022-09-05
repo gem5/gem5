@@ -1732,7 +1732,10 @@ namespace VegaISA
         if (isLoad())
             dis_stream << "v" << extData.VDST << ", ";
 
-        dis_stream << "v[" << extData.ADDR << ":" << extData.ADDR + 1 << "]";
+        if (extData.SADDR == 0x7f)
+            dis_stream << "v[" << extData.ADDR << ":" << extData.ADDR+1 << "]";
+        else
+            dis_stream << "v" << extData.ADDR;
 
         if (isStore())
             dis_stream << ", v" << extData.DATA;
@@ -1740,7 +1743,11 @@ namespace VegaISA
         if (extData.SADDR == 0x7f)
             dis_stream << ", off";
         else
-            dis_stream << ", " << extData.SADDR;
+            dis_stream << ", s[" << extData.SADDR << ":" << extData.SADDR+1
+                       << "]";
+
+        if (instData.OFFSET)
+            dis_stream << " offset:" << instData.OFFSET;
 
         disassembly = dis_stream.str();
     }
