@@ -56,6 +56,8 @@ class RiscvStaticInst : public StaticInst
         StaticInst(_mnemonic, __opClass), machInst(_machInst)
     {}
 
+    bool alignmentOk(ExecContext* xc, Addr addr, Addr size) const;
+
   public:
     ExtMachInst machInst;
 

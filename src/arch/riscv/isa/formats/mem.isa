@@ -106,6 +106,9 @@ def template LoadExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
+        if (!alignmentOk(xc, EA, sizeof(Mem))) {
+            return std::make_shared<AddressFault>(EA, LOAD_ADDR_MISALIGNED);
+        }
         {
             Fault fault =
                 readMemAtomicLE(xc, traceData, EA, Mem, memAccessFlags);
@@ -132,6 +135,9 @@ def template LoadInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
+        if (!alignmentOk(xc, EA, sizeof(Mem))) {
+            return std::make_shared<AddressFault>(EA, LOAD_ADDR_MISALIGNED);
+        }
         return initiateMemRead(xc, traceData, EA, Mem, memAccessFlags);
     }
 }};
@@ -166,6 +172,9 @@ def template StoreExecute {{
 
         %(memacc_code)s;
 
+        if (!alignmentOk(xc, EA, sizeof(Mem))) {
+            return std::make_shared<AddressFault>(EA, STORE_ADDR_MISALIGNED);
+        }
         {
             Fault fault =
                 writeMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags,
@@ -194,6 +203,9 @@ def template StoreInitiateAcc {{
 
         %(memacc_code)s;
 
+        if (!alignmentOk(xc, EA, sizeof(Mem))) {
+            return std::make_shared<AddressFault>(EA, STORE_ADDR_MISALIGNED);
+        }
         {
             Fault fault = writeMemTimingLE(xc, traceData, Mem, EA,
                 memAccessFlags, nullptr);

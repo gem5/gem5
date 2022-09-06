@@ -241,6 +241,9 @@ def template LoadReservedExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
+        if (!alignmentOk(xc, EA, sizeof(Mem))) {
+            return std::make_shared<AddressFault>(EA, LOAD_ADDR_MISALIGNED);
+        }
         {
             Fault fault =
                 readMemAtomicLE(xc, traceData, EA, Mem, memAccessFlags);
@@ -268,6 +271,9 @@ def template StoreCondExecute {{
 
         %(memacc_code)s;
 
+        if (!alignmentOk(xc, EA, sizeof(Mem))) {
+            return std::make_shared<AddressFault>(EA, STORE_ADDR_MISALIGNED);
+        }
         {
             Fault fault =
                 writeMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags,
@@ -299,6 +305,9 @@ def template AtomicMemOpRMWExecute {{
 
         assert(amo_op);
 
+        if (!alignmentOk(xc, EA, sizeof(Mem))) {
+            return std::make_shared<AddressFault>(EA, AMO_ADDR_MISALIGNED);
+        }
         {
             Fault fault =
                 amoMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags, amo_op);
@@ -327,6 +336,9 @@ def template LoadReservedInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
+        if (!alignmentOk(xc, EA, sizeof(Mem))) {
+            return std::make_shared<AddressFault>(EA, LOAD_ADDR_MISALIGNED);
+        }
         return initiateMemRead(xc, traceData, EA, Mem, memAccessFlags);
     }
 }};
@@ -343,6 +355,9 @@ def template StoreCondInitiateAcc {{
         %(ea_code)s;
         %(memacc_code)s;
 
+        if (!alignmentOk(xc, EA, sizeof(Mem))) {
+            return std::make_shared<AddressFault>(EA, STORE_ADDR_MISALIGNED);
+        }
         {
             Fault fault = writeMemTimingLE(xc, traceData, Mem, EA,
                 memAccessFlags, nullptr);
@@ -370,6 +385,9 @@ def template AtomicMemOpRMWInitiateAcc {{
 
         assert(amo_op);
 
+        if (!alignmentOk(xc, EA, sizeof(Mem))) {
+            return std::make_shared<AddressFault>(EA, AMO_ADDR_MISALIGNED);
+        }
         return initiateMemAMO(xc, traceData, EA, Mem, memAccessFlags, amo_op);
     }
 }};

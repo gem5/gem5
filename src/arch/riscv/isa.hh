@@ -71,6 +71,7 @@ class ISA : public BaseISA
 {
   protected:
     std::vector<RegVal> miscRegFile;
+    bool checkAlignment;
 
     bool hpmCounterEnabled(int counter) const;
 
@@ -105,6 +106,8 @@ class ISA : public BaseISA
     {
         return CSRMasks;
     }
+
+    bool alignmentCheckEnabled() const { return checkAlignment; }
 
     bool inUserMode() const override;
     void copyRegsFrom(ThreadContext *src) override;
