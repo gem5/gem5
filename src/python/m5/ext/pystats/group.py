@@ -56,7 +56,7 @@ class Group(SerializableStat):
         time_conversion: Optional[TimeConversion] = None,
         **kwargs: Dict[
             str, Union["Group", Statistic, List["Group"], List["Statistic"]]
-        ]
+        ],
     ):
         if type is None:
             self.type = "Group"
@@ -140,6 +140,15 @@ class Group(SerializableStat):
             pattern = regex
         yield from self.children(lambda _name: bool(pattern.search(_name)))
 
+    def _repr_name(self) -> str:
+        return "Group"
+
+    def __repr__(self) -> str:
+        stats_list = []
+        for key in self.__dict__:
+            stats_list.append(key)
+        return f"{self._repr_name()}: {stats_list}"
+
 
 class Vector(Group):
     """
@@ -152,3 +161,6 @@ class Vector(Group):
 
     def __init__(self, scalar_map: Mapping[str, Scalar]):
         super().__init__(type="Vector", time_conversion=None, **scalar_map)
+
+    def _repr_name(self) -> str:
+        return "Vector"

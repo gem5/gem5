@@ -56,6 +56,9 @@ class Statistic(ABC, SerializableStat):
         self.description = description
         self.datatype = datatype
 
+    def __repr__(self):
+        return str(self.value)
+
 
 class Scalar(Statistic):
     """
