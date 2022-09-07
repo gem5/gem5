@@ -27,7 +27,7 @@
 import m5
 import m5.ticks
 from m5.stats import addStatVisitor
-from m5.stats.gem5stats import get_simstat
+from m5.ext.pystats.simstat import SimStat
 from m5.objects import Root
 from m5.util import warn
 
@@ -275,8 +275,20 @@ class Simulator:
         Obtain the current simulation statistics as a Dictionary, conforming
         to a JSON-style schema.
 
-        **Warning:** Will throw an Exception if called before `run()`. The
-        board must be initialized before obtaining statistics
+        :raises Exception: An exception is raised if this function is called
+        before `run()`. The board must be initialized before obtaining
+        statistics.
+        """
+
+        return self.get_simstats().to_json()
+
+    def get_simstats(self) -> SimStat:
+        """
+        Obtains the SimStat of the current simulation.
+
+        :raises Exception: An exception is raised if this function is called
+        before `run()`. The board must be initialized before obtaining
+        statistics.
         """
 
         if not self._instantiated:
@@ -284,7 +296,7 @@ class Simulator:
                 "Cannot obtain simulation statistics prior to inialization."
             )
 
-        return get_simstat(self._root).to_json()
+        return m5.stats.gem5stats.get_simstat(self._root)
 
     def add_text_stats_output(self, path: str) -> None:
         """
