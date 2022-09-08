@@ -1,96 +1,35 @@
-# Copyright (c) 2020 The Regents of the University of California
-# All Rights Reserved.
-#
-# Copyright (c) 2018, Cornell University
+# Copyright (c) 2022 The Regents of the University of California
 # All rights reserved.
 #
-# Redistribution and use in source and binary forms, with or
-# without modification, are permitted provided that the following
-# conditions are met:
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
 #
-# Redistributions of source code must retain the above copyright
-# notice, this list of conditions and the following disclaimer.
-#
-# Redistributions in binary form must reproduce the above
-# copyright notice, this list of conditions and the following
-# disclaimer in the documentation and/or other materials provided
-# with the distribution.
-#
-# Neither the name of Cornell University nor the names of its
-# contributors may be used to endorse or promote products derived
-# from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
-# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
-# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 # SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
-# USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
-# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
 from testlib import *
 
-
-def asm_test(
-    test,  # The full path of the test
-    cpu_type,
-    num_cpus=4,
-    max_tick=None,
-    ruby=False,
-    debug_flags=None,  # Debug flags passed to gem5
-    full_system=False,
-):
-
-    if full_system:
-        config_file = os.path.join(
-            config.base_dir, "configs", "example", "fs.py"
-        )
-    else:
-        config_file = os.path.join(
-            config.base_dir, "configs", "example", "se.py"
-        )
-
-    gem5_args = ["--listener-mode", "off"]
-
-    if not debug_flags is None:
-        gem5_args += ["--debug-flags", str(debug_flags)]
-
-    config_args = ["--cpu-type", cpu_type]
-
-    if max_tick:
-        config_args += ["-m", str(max_tick)]
-
-    if full_system:
-        config_args += ["--caches", "--mem-size", "3072MB", "--kernel", test]
-    else:
-        config_args += [
-            "-n",
-            str(num_cpus),
-            "--ruby" if ruby else "--caches",
-            "--cmd",
-            test,
-        ]
-
-    gem5_verify_config(
-        name="asm-" + os.path.basename(test) + "-" + cpu_type,
-        fixtures=(program,),
-        verifiers=(),
-        gem5_args=gem5_args,
-        config=config_file,
-        config_args=config_args,
-        valid_isas=(constants.riscv_tag,),
-        valid_hosts=constants.supported_hosts,
-    )
-
-
-cpu_types = ("AtomicSimpleCPU", "TimingSimpleCPU", "MinorCPU", "DerivO3CPU")
+if config.bin_path:
+    resource_path = config.bin_path
+else:
+    resource_path = joinpath(absdirpath(__file__), "..", "resources")
 
 # The following lists the RISCV binaries. Those commented out presently result
 # in a test failure. This is outlined in the following Jira issue:
@@ -230,20 +169,29 @@ binaries = (
     "rv64uzfh-ps-recoding",
 )
 
+cpu_types = ("atomic", "timing", "minor", "o3")
 
-if config.bin_path:
-    bin_path = config.bin_path
-else:
-    bin_path = joinpath(absdirpath(__file__), "..", "resources", "asmtest")
-
-urlbase = config.resource_url + "/test-progs/asmtest/bin/"
-
-for cpu in cpu_types:
+for cpu_type in cpu_types:
     for binary in binaries:
-        url = urlbase + binary
-        path = joinpath(bin_path, binary)
-        try:
-            program = DownloadedProgram(url, path, binary)
-        except:
-            continue
-        asm_test(joinpath(bin_path, binary, binary), cpu)
+        gem5_verify_config(
+            name=f"asm-riscv-{binary}-{cpu_type}",
+            verifiers=(),
+            config=joinpath(
+                config.base_dir,
+                "tests",
+                "gem5",
+                "configs",
+                "simple_binary_run.py",
+            ),
+            config_args=[
+                binary,
+                cpu_type,
+                "riscv",
+                "--num-cores",
+                "4",
+                "--resource-directory",
+                resource_path,
+            ],
+            valid_isas=(constants.riscv_tag,),
+            valid_hosts=constants.supported_hosts,
+        )
