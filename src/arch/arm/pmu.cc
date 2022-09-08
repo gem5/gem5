@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014, 2017-2019 ARM Limited
+ * Copyright (c) 2011-2014, 2017-2019, 2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -56,12 +56,13 @@ const RegVal PMU::reg_pmcr_wr_mask = 0x39;
 
 PMU::PMU(const ArmPMUParams &p)
     : SimObject(p), BaseISADevice(),
+      use64bitCounters(p.use64bitCounters),
       reg_pmcnten(0), reg_pmcr(0),
       reg_pmselr(0), reg_pminten(0), reg_pmovsr(0),
       reg_pmceid0(0),reg_pmceid1(0),
       clock_remainder(0),
       maximumCounterCount(p.eventCounters),
-      cycleCounter(*this, maximumCounterCount),
+      cycleCounter(*this, maximumCounterCount, p.use64bitCounters),
       cycleCounterEventId(p.cycleEventId),
       swIncrementEvent(nullptr),
       reg_pmcr_conf(0),
@@ -175,7 +176,7 @@ PMU::regProbeListeners()
     // at this stage all probe configurations are done
     // counters can be configured
     for (uint32_t index = 0; index < maximumCounterCount-1; index++) {
-        counters.emplace_back(*this, index);
+        counters.emplace_back(*this, index, use64bitCounters);
     }
 
     std::shared_ptr<PMUEvent> event = getEvent(cycleCounterEventId);
@@ -685,6 +686,7 @@ PMU::serialize(CheckpointOut &cp) const
 {
     DPRINTF(Checkpoint, "Serializing Arm PMU\n");
 
+    SERIALIZE_SCALAR(use64bitCounters);
     SERIALIZE_SCALAR(reg_pmcr);
     SERIALIZE_SCALAR(reg_pmcnten);
     SERIALIZE_SCALAR(reg_pmselr);
@@ -705,6 +707,7 @@ PMU::unserialize(CheckpointIn &cp)
 {
     DPRINTF(Checkpoint, "Unserializing Arm PMU\n");
 
+    UNSERIALIZE_SCALAR(use64bitCounters);
     UNSERIALIZE_SCALAR(reg_pmcr);
     UNSERIALIZE_SCALAR(reg_pmcnten);
     UNSERIALIZE_SCALAR(reg_pmselr);
