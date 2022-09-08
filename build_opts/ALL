@@ -4,4 +4,4 @@ USE_POWER_ISA = True
 USE_RISCV_ISA = True
 USE_SPARC_ISA = True
 USE_X86_ISA = True
-PROTOCOL = 'MI_example'
+PROTOCOL = 'MESI_Two_Level'
