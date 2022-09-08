@@ -327,6 +327,10 @@ class BaseCache : public ClockedObject
         bool hasBeenPrefetched(Addr addr, bool is_secure) const override
         { return cache.hasBeenPrefetched(addr, is_secure); }
 
+        bool hasBeenPrefetched(Addr addr, bool is_secure,
+                               RequestorID requestor) const override
+        { return cache.hasBeenPrefetched(addr, is_secure, requestor); }
+
         bool inMissQueue(Addr addr, bool is_secure) const override
         { return cache.inMissQueue(addr, is_secure); }
 
@@ -1277,11 +1281,14 @@ class BaseCache : public ClockedObject
 
     bool hasBeenPrefetched(Addr addr, bool is_secure) const {
         CacheBlk *block = tags->findBlock(addr, is_secure);
-        if (block) {
-            return block->wasPrefetched();
-        } else {
-            return false;
-        }
+        return block && block->wasPrefetched();
+    }
+
+    bool hasBeenPrefetched(Addr addr, bool is_secure,
+                           RequestorID requestor) const {
+        CacheBlk *block = tags->findBlock(addr, is_secure);
+        return block && block->wasPrefetched() &&
+               (block->getSrcRequestorId() == requestor);
     }
 
     bool inMissQueue(Addr addr, bool is_secure) const {

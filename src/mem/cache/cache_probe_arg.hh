@@ -59,6 +59,10 @@ struct CacheAccessor
     /** Determine if address has been prefetched */
     virtual bool hasBeenPrefetched(Addr addr, bool is_secure) const = 0;
 
+    /** Determine if address has been prefetched by the requestor */
+    virtual bool hasBeenPrefetched(Addr addr, bool is_secure,
+                                   RequestorID requestor) const = 0;
+
     /** Determine if address is in cache miss queue */
     virtual bool inMissQueue(Addr addr, bool is_secure) const = 0;
 

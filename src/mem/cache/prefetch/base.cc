@@ -244,7 +244,8 @@ Base::probeNotify(const CacheAccessProbeArg &acc, bool miss)
     }
 
     bool has_been_prefetched =
-        acc.cache.hasBeenPrefetched(pkt->getAddr(), pkt->isSecure());
+        acc.cache.hasBeenPrefetched(pkt->getAddr(), pkt->isSecure(),
+                                    requestorId);
     if (has_been_prefetched) {
         usefulPrefetches += 1;
         prefetchStats.pfUseful++;
