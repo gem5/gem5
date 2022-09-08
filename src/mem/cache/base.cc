@@ -773,7 +773,8 @@ BaseCache::updateBlockData(CacheBlk *blk, const PacketPtr cpkt,
     bool has_old_data)
 {
     CacheDataUpdateProbeArg data_update(
-        regenerateBlkAddr(blk), blk->isSecure(), accessor);
+        regenerateBlkAddr(blk), blk->isSecure(),
+        blk->getSrcRequestorId(), accessor);
     if (ppDataUpdate->hasListeners()) {
         if (has_old_data) {
             data_update.oldData = std::vector<uint64_t>(blk->data,
@@ -790,6 +791,7 @@ BaseCache::updateBlockData(CacheBlk *blk, const PacketPtr cpkt,
         if (cpkt) {
             data_update.newData = std::vector<uint64_t>(blk->data,
                 blk->data + (blkSize / sizeof(uint64_t)));
+            data_update.hwPrefetched = blk->wasPrefetched();
         }
         ppDataUpdate->notify(data_update);
     }
@@ -812,7 +814,8 @@ BaseCache::cmpAndSwap(CacheBlk *blk, PacketPtr pkt)
 
     // Get a copy of the old block's contents for the probe before the update
     CacheDataUpdateProbeArg data_update(
-        regenerateBlkAddr(blk), blk->isSecure(), accessor);
+        regenerateBlkAddr(blk), blk->isSecure(), blk->getSrcRequestorId(),
+        accessor);
     if (ppDataUpdate->hasListeners()) {
         data_update.oldData = std::vector<uint64_t>(blk->data,
             blk->data + (blkSize / sizeof(uint64_t)));
@@ -1110,7 +1113,8 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
             // Get a copy of the old block's contents for the probe before
             // the update
             CacheDataUpdateProbeArg data_update(
-                regenerateBlkAddr(blk), blk->isSecure(), accessor);
+                regenerateBlkAddr(blk), blk->isSecure(),
+                blk->getSrcRequestorId(), accessor);
             if (ppDataUpdate->hasListeners()) {
                 data_update.oldData = std::vector<uint64_t>(blk->data,
                     blk->data + (blkSize / sizeof(uint64_t)));
@@ -1129,6 +1133,7 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
             if (ppDataUpdate->hasListeners()) {
                 data_update.newData = std::vector<uint64_t>(blk->data,
                     blk->data + (blkSize / sizeof(uint64_t)));
+                data_update.hwPrefetched = blk->wasPrefetched();
                 ppDataUpdate->notify(data_update);
             }
 

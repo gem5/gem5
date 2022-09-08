@@ -95,17 +95,23 @@ struct CacheDataUpdateProbeArg
     Addr addr;
     /** Whether the block belongs to the secure address space. */
     bool isSecure;
+    /** Block original requestor */
+    const RequestorID requestorID;
     /** The stale data contents. If zero-sized this update is a fill. */
     std::vector<uint64_t> oldData;
     /** The new data contents. If zero-sized this is an invalidation. */
     std::vector<uint64_t> newData;
+    /** Set if the update is from a prefetch or evicting a prefetched
+    *  block that was never used. */
+    bool hwPrefetched;
     /** Accessor for the cache */
     CacheAccessor &accessor;
 
     CacheDataUpdateProbeArg(Addr _addr, bool is_secure,
+                            RequestorID _requestorID,
                             CacheAccessor &_accessor)
-        : addr(_addr), isSecure(is_secure), oldData(), newData(),
-          accessor(_accessor)
+        : addr(_addr), isSecure(is_secure), requestorID(_requestorID),
+          oldData(), newData(), accessor(_accessor)
     {
     }
 };
