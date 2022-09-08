@@ -92,6 +92,13 @@ Base::PrefetchListener::notify(const CacheAccessProbeArg &arg)
     }
 }
 
+void
+Base::PrefetchEvictListener::notify(const EvictionInfo &info)
+{
+    if (info.newData.empty())
+        parent.notifyEvict(info);
+}
+
 Base::Base(const BasePrefetcherParams &p)
     : ClockedObject(p), listeners(), system(nullptr), probeManager(nullptr),
       blkSize(p.block_size), lBlkSize(floorLog2(blkSize)),
@@ -274,6 +281,8 @@ Base::regProbeListeners()
                                                  "Fill", true, false));
         listeners.push_back(new PrefetchListener(*this, probeManager,
                                                  "Hit", false, false));
+        listeners.push_back(new PrefetchEvictListener(*this, probeManager,
+                                                 "Data Update"));
     }
 }
 

@@ -86,7 +86,20 @@ class Base : public ClockedObject
         const bool miss;
     };
 
-    std::vector<PrefetchListener *> listeners;
+    using EvictionInfo = CacheDataUpdateProbeArg;
+
+    class PrefetchEvictListener : public ProbeListenerArgBase<EvictionInfo>
+    {
+      public:
+        PrefetchEvictListener(Base &_parent, ProbeManager *pm,
+                              const std::string &name)
+            : ProbeListenerArgBase(pm, name), parent(_parent) {}
+        void notify(const EvictionInfo &info) override;
+      protected:
+        Base &parent;
+    };
+
+    std::vector<ProbeListener *> listeners;
 
   public:
 
@@ -379,6 +392,10 @@ class Base : public ClockedObject
 
     /** Notify prefetcher of cache fill */
     virtual void notifyFill(const CacheAccessProbeArg &acc)
+    {}
+
+    /** Notify prefetcher of cache eviction */
+    virtual void notifyEvict(const EvictionInfo &info)
     {}
 
     virtual PacketPtr getPacket() = 0;
