@@ -509,7 +509,7 @@ GicV2::writeDistributor(ContextID ctx, Addr daddr, uint32_t data,
         DPRINTF(GIC,
             "gic distributor write GICD_IGROUPR%d (%#x) size %#x value %#x \n",
             ix, daddr, data_sz, data);
-        getIntGroup(ctx, ix) |= data;
+        getIntGroup(ctx, ix) = data;
         return;
     }
 
