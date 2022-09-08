@@ -367,6 +367,28 @@ class AbstractController : public ClockedObject, public Consumer
     void wakeUpAllBuffers();
     bool serviceMemoryQueue();
 
+    /**
+     * Functions needed by CacheAccessor. These are implemented in SLICC,
+     * thus the const& for all args to match the generated code.
+     */
+    virtual bool inCache(const Addr &addr, const bool &is_secure)
+    { fatal("inCache: prefetching not supported"); return false; }
+
+    virtual bool hasBeenPrefetched(const Addr &addr, const bool &is_secure)
+    { fatal("hasBeenPrefetched: prefetching not supported"); return false; }
+
+    virtual bool hasBeenPrefetched(const Addr &addr, const bool &is_secure,
+                                   const RequestorID &requestor)
+    { fatal("hasBeenPrefetched: prefetching not supported"); return false; }
+
+    virtual bool inMissQueue(const Addr &addr, const bool &is_secure)
+    { fatal("inMissQueue: prefetching not supported"); return false; }
+
+    virtual bool coalesce()
+    { fatal("coalesce: prefetching not supported"); return false; }
+
+    friend class RubyPrefetcherProxy;
+
   protected:
     const NodeID m_version;
     MachineID m_machineID;

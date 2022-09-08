@@ -63,6 +63,7 @@ python_class_map = {
     "MessageBuffer": "MessageBuffer",
     "DMASequencer": "DMASequencer",
     "RubyPrefetcher": "RubyPrefetcher",
+    "prefetch::Base": "BasePrefetcher",
     "Cycles": "Cycles",
     "Addr": "Addr",
 }
