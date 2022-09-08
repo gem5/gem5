@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019 ARM Limited
+ * Copyright (c) 2017-2019, 2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -293,8 +293,9 @@ std::string
 TarmacTracerRecordV8::TraceRegEntryV8::formatReg() const
 {
     if (regWidth <= 64) {
-        // Register width is < 64 bit (scalar register).
-        return csprintf("%0*x", regWidth / 4, values[Lo]);
+        // Register width is <= 64 bit (scalar register).
+        const auto regValue = values[Lo] & mask(regWidth);
+        return csprintf("%0*x", regWidth / 4, regValue);
     } else {
 
         // Register width is > 64 bit (vector).  Iterate over every vector
