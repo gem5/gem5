@@ -106,6 +106,8 @@ class ArmCpuCluster(CpuCluster):
         l1i_type,
         l1d_type,
         l2_type,
+        tarmac_gen=False,
+        tarmac_dest=None,
     ):
         super().__init__()
         self._cpu_type = cpu_type
@@ -121,6 +123,12 @@ class ArmCpuCluster(CpuCluster):
         )
 
         self.generate_cpus(cpu_type, num_cpus)
+
+        for cpu in self.cpus:
+            if tarmac_gen:
+                cpu.tracer = TarmacTracer()
+                if tarmac_dest is not None:
+                    cpu.tracer.outfile = tarmac_dest
 
         system.addCpuCluster(self)
 
@@ -177,23 +185,54 @@ class ArmCpuCluster(CpuCluster):
 
 
 class AtomicCluster(ArmCpuCluster):
-    def __init__(self, system, num_cpus, cpu_clock, cpu_voltage="1.0V"):
-        cpu_config = [
-            ObjectList.cpu_list.get("AtomicSimpleCPU"),
-            None,
-            None,
-            None,
-        ]
-        super().__init__(system, num_cpus, cpu_clock, cpu_voltage, *cpu_config)
+    def __init__(
+        self,
+        system,
+        num_cpus,
+        cpu_clock,
+        cpu_voltage="1.0V",
+        tarmac_gen=False,
+        tarmac_dest=None,
+    ):
+        super().__init__(
+            system,
+            num_cpus,
+            cpu_clock,
+            cpu_voltage,
+            cpu_type=ObjectList.cpu_list.get("AtomicSimpleCPU"),
+            l1i_type=None,
+            l1d_type=None,
+            l2_type=None,
+            tarmac_gen=tarmac_gen,
+            tarmac_dest=tarmac_dest,
+        )
 
     def addL1(self):
         pass
 
 
 class KvmCluster(ArmCpuCluster):
-    def __init__(self, system, num_cpus, cpu_clock, cpu_voltage="1.0V"):
-        cpu_config = [ObjectList.cpu_list.get("ArmV8KvmCPU"), None, None, None]
-        super().__init__(system, num_cpus, cpu_clock, cpu_voltage, *cpu_config)
+    def __init__(
+        self,
+        system,
+        num_cpus,
+        cpu_clock,
+        cpu_voltage="1.0V",
+        tarmac_gen=False,
+        tarmac_dest=None,
+    ):
+        super().__init__(
+            system,
+            num_cpus,
+            cpu_clock,
+            cpu_voltage,
+            cpu_type=ObjectList.cpu_list.get("ArmV8KvmCPU"),
+            l1i_type=None,
+            l1d_type=None,
+            l2_type=None,
+            tarmac_gen=tarmac_gen,
+            tarmac_dest=tarmac_dest,
+        )
 
     def addL1(self):
         pass

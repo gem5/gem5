@@ -129,7 +129,13 @@ def create(args):
     # Add CPU clusters to the system
     system.cpu_cluster = [
         devices.ArmCpuCluster(
-            system, args.num_cores, args.cpu_freq, "1.0V", *cpu_types[args.cpu]
+            system,
+            args.num_cores,
+            args.cpu_freq,
+            "1.0V",
+            *cpu_types[args.cpu],
+            tarmac_gen=args.tarmac_gen,
+            tarmac_dest=args.tarmac_dest,
         )
     ]
 
@@ -256,6 +262,17 @@ def main():
         type=str,
         default="2GB",
         help="Specify the physical memory size",
+    )
+    parser.add_argument(
+        "--tarmac-gen",
+        action="store_true",
+        help="Write a Tarmac trace.",
+    )
+    parser.add_argument(
+        "--tarmac-dest",
+        choices=TarmacDump.vals,
+        default="stdoutput",
+        help="Destination for the Tarmac trace output. [Default: stdoutput]",
     )
     parser.add_argument("--checkpoint", action="store_true")
     parser.add_argument("--restore", type=str, default=None)

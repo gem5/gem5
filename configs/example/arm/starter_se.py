@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017, 2023 ARM Limited
+# Copyright (c) 2016-2017, 2022-2023 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -96,7 +96,13 @@ class SimpleSeSystem(System):
         # Add CPUs to the system. A cluster of CPUs typically have
         # private L1 caches and a shared L2 cache.
         self.cpu_cluster = devices.ArmCpuCluster(
-            self, args.num_cores, args.cpu_freq, "1.2V", *cpu_types[args.cpu]
+            self,
+            args.num_cores,
+            args.cpu_freq,
+            "1.2V",
+            *cpu_types[args.cpu],
+            tarmac_gen=args.tarmac_gen,
+            tarmac_dest=args.tarmac_dest,
         )
 
         # Create a cache hierarchy (unless we are simulating a
@@ -214,6 +220,17 @@ def main():
         type=str,
         default="2GB",
         help="Specify the physical memory size",
+    )
+    parser.add_argument(
+        "--tarmac-gen",
+        action="store_true",
+        help="Write a Tarmac trace.",
+    )
+    parser.add_argument(
+        "--tarmac-dest",
+        choices=TarmacDump.vals,
+        default="stdoutput",
+        help="Destination for the Tarmac trace output. [Default: stdoutput]",
     )
 
     args = parser.parse_args()

@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017,2019-2021 ARM Limited
+# Copyright (c) 2016-2017,2019-2022 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -123,7 +123,13 @@ def create(args):
     # Add CPU clusters to the system
     system.cpu_cluster = [
         devices.ArmCpuCluster(
-            system, args.num_cores, args.cpu_freq, "1.0V", *cpu_types[args.cpu]
+            system,
+            args.num_cores,
+            args.cpu_freq,
+            "1.0V",
+            *cpu_types[args.cpu],
+            tarmac_gen=args.tarmac_gen,
+            tarmac_dest=args.tarmac_dest,
         )
     ]
 
@@ -230,6 +236,17 @@ def main():
     )
     parser.add_argument("--checkpoint", action="store_true")
     parser.add_argument("--restore", type=str, default=None)
+    parser.add_argument(
+        "--tarmac-gen",
+        action="store_true",
+        help="Write a Tarmac trace.",
+    )
+    parser.add_argument(
+        "--tarmac-dest",
+        choices=TarmacDump.vals,
+        default="stdoutput",
+        help="Destination for the Tarmac trace output. [Default: stdoutput]",
+    )
     parser.add_argument(
         "--dtb-gen",
         action="store_true",
