@@ -77,10 +77,6 @@ for isa in isa_map.keys():
         length=length_map[isa],
     )
 
-    # Remove this when the muli-isa work is incorporated. `build/ALL/gem5.opt`
-    # must be compilable.
-    continue
-
     if isa != "null":
         # The null isa is not "supported" in a case where other ISAs are
         # present.
