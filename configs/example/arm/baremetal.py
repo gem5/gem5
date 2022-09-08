@@ -142,7 +142,8 @@ def create(args):
     system.auto_reset_addr = True
 
     # Using GICv3
-    system.realview.gic.gicv4 = False
+    if hasattr(system.realview.gic, "gicv4"):
+        system.realview.gic.gicv4 = False
 
     system.highest_el_is_64 = True
 
