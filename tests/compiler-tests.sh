@@ -38,7 +38,8 @@ comprehensive=("gcc-version-11"
                "clang-version-12")
 
 # All build targets in build_opt/ which we want to build using each image.
-builds=("ARM"
+builds=("ALL"
+        "ARM"
         "ARM_MESI_Three_Level"
         "ARM_MESI_Three_Level_HTM"
         "ARM_MOESI_hammer"
