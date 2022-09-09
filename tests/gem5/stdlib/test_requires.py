@@ -58,3 +58,20 @@ for isa in isa_map.keys():
         valid_isas=(isa_map[isa],),
         length=length_map[isa],
     )
+
+    if isa != "null":
+        gem5_verify_config(
+            name=f"requires-isa-{isa}-with-all-compiled",
+            verifiers=(),
+            fixtures=(),
+            config=joinpath(
+                config.base_dir,
+                "tests",
+                "gem5",
+                "configs",
+                "requires_check.py",
+            ),
+            config_args=["-i", isa],
+            valid_isas=(constants.all_compiled_tag,),
+            length=constants.quick_tag,
+        )
