@@ -50,11 +50,11 @@ root.system.mem_ranges = [AddrRange("512MB")]
 
 if args.cpu_type == "DerivO3CPU":
     root.system.cpu = [
-        DerivO3CPU(cpu_id=i) for i in range(int(args.num_cores))
+        SparcDerivO3CPU(cpu_id=i) for i in range(int(args.num_cores))
     ]
 elif args.cpu_type == "TimingSimpleCPU":
     root.system.cpu = [
-        TimingSimpleCPU(cpu_id=i) for i in range(int(args.num_cores))
+        SparcTimingSimpleCPU(cpu_id=i) for i in range(int(args.num_cores))
     ]
 else:
     print("ERROR: CPU Type '" + args.cpu_type + "' not supported")

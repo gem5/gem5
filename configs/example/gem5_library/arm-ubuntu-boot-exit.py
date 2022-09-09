@@ -76,7 +76,7 @@ memory = DualChannelDDR4_2400(size="2GB")
 # Here we setup the processor. We use a simple TIMING processor. The config
 # script was also tested with ATOMIC processor.
 
-processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, num_cores=2)
+processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, num_cores=2, isa=ISA.ARM)
 
 # The ArmBoard requires a `release` to be specified. This adds all the
 # extensions or features to the system. We are setting this to Armv8

@@ -42,18 +42,6 @@ def test_memory(
     memory: str,
     *args,
 ) -> None:
-    protocol_map = {
-        "NoCache": None,
-        "PrivateL1": None,
-        "PrivateL1PrivateL2": None,
-        "MESITwoLevel": "MESI_Two_Level",
-    }
-    tag_map = {
-        "NoCache": constants.quick_tag,
-        "PrivateL1": constants.quick_tag,
-        "PrivateL1PrivateL2": constants.quick_tag,
-        "MESITwoLevel": constants.long_tag,
-    }
 
     name = (
         "test-memory-"
@@ -75,10 +63,9 @@ def test_memory(
         ),
         config_args=[generator, generator_cores, cache, module, memory]
         + list(args),
-        valid_isas=(constants.null_tag,),
-        protocol=protocol_map[cache],
+        valid_isas=(constants.all_compiled_tag,),
         valid_hosts=constants.supported_hosts,
-        length=tag_map[cache],
+        length=constants.quick_tag,
     )
 
 

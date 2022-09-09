@@ -39,9 +39,9 @@ isa_map = {
 length_map = {
     "sparc": constants.long_tag,
     "mips": constants.long_tag,
-    "null": constants.quick_tag,
-    "arm": constants.quick_tag,
-    "x86": constants.quick_tag,
+    "null": constants.long_tag,
+    "arm": constants.long_tag,
+    "x86": constants.long_tag,
     "power": constants.long_tag,
     "riscv": constants.long_tag,
 }

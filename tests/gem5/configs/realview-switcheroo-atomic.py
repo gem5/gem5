@@ -38,7 +38,8 @@ from arm_generic import *
 import switcheroo
 
 root = LinuxArmFSSwitcheroo(
-    mem_class=SimpleMemory, cpu_classes=(AtomicSimpleCPU, AtomicSimpleCPU)
+    mem_class=SimpleMemory,
+    cpu_classes=(ArmAtomicSimpleCPU, ArmAtomicSimpleCPU),
 ).create_root()
 
 # Setup a custom test method that uses the switcheroo tester that

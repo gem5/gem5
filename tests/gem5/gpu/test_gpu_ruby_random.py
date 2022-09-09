@@ -53,7 +53,7 @@ gem5_verify_config(
     config_args=["--test-length", "50000", "--num-dmas", "0"],
     valid_isas=(constants.vega_x86_tag,),
     valid_hosts=constants.supported_hosts,
-    length=constants.quick_tag,
+    length=constants.long_tag,
 )
 
 

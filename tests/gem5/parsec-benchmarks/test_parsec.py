@@ -75,7 +75,7 @@ def test_parsec(
             "--resource-directory",
             resource_path,
         ],
-        valid_isas=(constants.x86_tag,),
+        valid_isas=(constants.all_compiled_tag,),
         valid_hosts=(constants.host_x86_64_tag,),
         length=length,
         uses_kvm=True,

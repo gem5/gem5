@@ -40,7 +40,7 @@ gem5_verify_config(
         config.base_dir, "tests", "gem5", "configs", "simple_binary_run.py"
     ),
     config_args=["x86-hello64-static", "timing", "x86", "-b"],
-    valid_isas=(constants.vega_x86_tag,),
+    valid_isas=(constants.all_compiled_tag,),
     length=constants.quick_tag,
 )
 
@@ -52,7 +52,7 @@ gem5_verify_config(
         config.base_dir, "tests", "gem5", "configs", "simple_binary_run.py"
     ),
     config_args=["riscv-hello", "atomic", "riscv", "-b"],
-    valid_isas=(constants.riscv_tag,),
+    valid_isas=(constants.all_compiled_tag,),
     length=constants.quick_tag,
 )
 
@@ -64,6 +64,6 @@ gem5_verify_config(
         config.base_dir, "tests", "gem5", "configs", "simple_binary_run.py"
     ),
     config_args=["arm-hello64-static", "o3", "arm", "-b"],
-    valid_isas=(constants.arm_tag,),
+    valid_isas=(constants.all_compiled_tag,),
     length=constants.quick_tag,
 )

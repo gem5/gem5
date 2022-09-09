@@ -40,7 +40,7 @@ from m5.proxy import *
 
 m5.util.addToPath("../configs/")
 from common import FSConfig
-from common.Caches import *
+from base_caches import *
 from base_config import *
 from common.cores.arm.O3_ARM_v7a import *
 from common.Benchmarks import SysConfig

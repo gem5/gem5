@@ -39,7 +39,12 @@ import switcheroo
 
 root = LinuxArmFSSwitcheroo(
     mem_class=DDR3_1600_8x8,
-    cpu_classes=(AtomicSimpleCPU, TimingSimpleCPU, MinorCPU, DerivO3CPU),
+    cpu_classes=(
+        ArmAtomicSimpleCPU,
+        ArmTimingSimpleCPU,
+        ArmMinorCPU,
+        ArmDerivO3CPU,
+    ),
 ).create_root()
 
 # Setup a custom test method that uses the switcheroo tester that

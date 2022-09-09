@@ -94,5 +94,5 @@ if have_hdf5():
             "arm",
         ],
         gem5_args=["--stats-file=h5://stats.h5"],
-        valid_isas=(constants.arm_tag,),
+        valid_isas=(constants.all_compiled_tag,),
     )

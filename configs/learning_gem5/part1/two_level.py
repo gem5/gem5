@@ -43,7 +43,6 @@ import m5
 
 # import all of the SimObjects
 from m5.objects import *
-from gem5.isas import ISA
 from gem5.runtime import get_runtime_isa
 
 # Add the common scripts to our path
@@ -55,18 +54,13 @@ from caches import *
 # import the SimpleOpts module
 from common import SimpleOpts
 
-# get ISA for the default binary to run. This is mostly for simple testing
-isa = get_runtime_isa()
-
 # Default to running 'hello', use the compiled ISA to find the binary
 # grab the specific path to the binary
 thispath = os.path.dirname(os.path.realpath(__file__))
 default_binary = os.path.join(
     thispath,
     "../../../",
-    "tests/test-progs/hello/bin/",
-    isa.name.lower(),
-    "linux/hello",
+    "tests/test-progs/hello/bin/x86/linux/hello",
 )
 
 # Binary to execute
@@ -88,7 +82,7 @@ system.mem_mode = "timing"  # Use timing accesses
 system.mem_ranges = [AddrRange("512MB")]  # Create an address range
 
 # Create a simple CPU
-system.cpu = TimingSimpleCPU()
+system.cpu = X86TimingSimpleCPU()
 
 # Create an L1 instruction and data cache
 system.cpu.icache = L1ICache(args)
@@ -117,13 +111,9 @@ system.l2cache.connectMemSideBus(system.membus)
 
 # create the interrupt controller for the CPU
 system.cpu.createInterruptController()
-
-# For x86 only, make sure the interrupts are connected to the memory
-# Note: these are directly connected to the memory bus and are not cached
-if isa == ISA.X86:
-    system.cpu.interrupts[0].pio = system.membus.mem_side_ports
-    system.cpu.interrupts[0].int_requestor = system.membus.cpu_side_ports
-    system.cpu.interrupts[0].int_responder = system.membus.mem_side_ports
+system.cpu.interrupts[0].pio = system.membus.mem_side_ports
+system.cpu.interrupts[0].int_requestor = system.membus.cpu_side_ports
+system.cpu.interrupts[0].int_responder = system.membus.mem_side_ports
 
 # Connect the system up to the membus
 system.system_port = system.membus.cpu_side_ports

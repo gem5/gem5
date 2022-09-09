@@ -41,6 +41,6 @@ root = LinuxArmFSSystem(
     machine_type="VExpress_GEM5_V1",
     mem_mode="atomic",
     mem_class=SimpleMemory,
-    cpu_class=AtomicSimpleCPU,
+    cpu_class=ArmAtomicSimpleCPU,
     num_cpus=2,
 ).create_root()

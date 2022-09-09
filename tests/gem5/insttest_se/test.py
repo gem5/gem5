@@ -62,6 +62,6 @@ for isa in test_progs:
                     resource_path,
                     "sparc",
                 ],
-                valid_isas=(isa,),
+                valid_isas=(constants.all_compiled_tag,),
                 length=constants.long_tag,
             )

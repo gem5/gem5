@@ -47,21 +47,21 @@ workloads = ("Bubblesort", "FloatMM")
 
 valid_isas = {
     constants.vega_x86_tag: (
-        "AtomicSimpleCPU",
-        "TimingSimpleCPU",
-        "DerivO3CPU",
+        "X86AtomicSimpleCPU",
+        "X86TimingSimpleCPU",
+        "X86DerivO3CPU",
     ),
     constants.arm_tag: (
-        "AtomicSimpleCPU",
-        "TimingSimpleCPU",
-        "MinorCPU",
-        "DerivO3CPU",
+        "ArmAtomicSimpleCPU",
+        "ArmTimingSimpleCPU",
+        "ArmMinorCPU",
+        "ArmDerivO3CPU",
     ),
     constants.riscv_tag: (
-        "AtomicSimpleCPU",
-        "TimingSimpleCPU",
-        "MinorCPU",
-        "DerivO3CPU",
+        "RiscvAtomicSimpleCPU",
+        "RiscvTimingSimpleCPU",
+        "RiscvMinorCPU",
+        "RiscvDerivO3CPU",
     ),
 }
 
@@ -92,6 +92,6 @@ for isa in valid_isas:
                 verifiers=verifiers,
                 config=joinpath(getcwd(), "run.py"),
                 config_args=["--cpu={}".format(cpu), binary],
-                valid_isas=(isa,),
+                valid_isas=(constants.all_compiled_tag,),
                 fixtures=[workload_binary],
             )

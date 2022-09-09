@@ -40,7 +40,7 @@ from m5.objects import *
 from m5.proxy import *
 from common import FSConfig
 from common import Options
-from common.Caches import *
+from base_caches import *
 from ruby import Ruby
 
 _have_kvm_support = "BaseKvmCPU" in globals()

@@ -29,8 +29,6 @@ import os
 import argparse
 
 import m5
-from gem5.isas import ISA
-from gem5.runtime import get_runtime_isa
 from m5.objects import *
 
 
@@ -99,27 +97,25 @@ class MySimpleMemory(SimpleMemory):
     latency = "1ns"
 
 
-if get_runtime_isa() == ISA.X86:
-    valid_cpu = {
-        "AtomicSimpleCPU": AtomicSimpleCPU,
-        "TimingSimpleCPU": TimingSimpleCPU,
-        "DerivO3CPU": DerivO3CPU,
-    }
-else:
-    valid_cpu = {
-        "AtomicSimpleCPU": AtomicSimpleCPU,
-        "TimingSimpleCPU": TimingSimpleCPU,
-        "MinorCPU": MinorCPU,
-        "DerivO3CPU": DerivO3CPU,
-    }
+valid_cpu = {
+    "X86AtomicSimpleCPU": X86AtomicSimpleCPU,
+    "X86TimingSimpleCPU": X86TimingSimpleCPU,
+    "X86DerivO3CPU": X86O3CPU,
+    "ArmAtomicSimpleCPU": ArmAtomicSimpleCPU,
+    "ArmTimingSimpleCPU": ArmTimingSimpleCPU,
+    "ArmMinorCPU": ArmMinorCPU,
+    "ArmDerivO3CPU": ArmO3CPU,
+    "RiscvAtomicSimpleCPU": RiscvAtomicSimpleCPU,
+    "RiscvTimingSimpleCPU": RiscvTimingSimpleCPU,
+    "RiscvMinorCPU": RiscvMinorCPU,
+    "RiscvDerivO3CPU": RiscvO3CPU,
+}
 
 valid_mem = {"SimpleMemory": MySimpleMemory, "DDR3_1600_8x8": DDR3_1600_8x8}
 
 parser = argparse.ArgumentParser()
 parser.add_argument("binary", type=str)
-parser.add_argument(
-    "--cpu", choices=valid_cpu.keys(), default="TimingSimpleCPU"
-)
+parser.add_argument("--cpu")
 parser.add_argument("--mem", choices=valid_mem.keys(), default="SimpleMemory")
 
 args = parser.parse_args()
@@ -132,14 +128,22 @@ system.clk_domain = SrcClockDomain()
 system.clk_domain.clock = "1GHz"
 system.clk_domain.voltage_domain = VoltageDomain()
 
-if args.cpu != "AtomicSimpleCPU":
+if args.cpu not in (
+    "X86AtomicSimpleCPU",
+    "ArmAtomicSimpleCPU",
+    "RiscvAtomicSimpleCPU",
+):
     system.mem_mode = "timing"
 
 system.mem_ranges = [AddrRange("512MB")]
 
 system.cpu = valid_cpu[args.cpu]()
 
-if args.cpu == "AtomicSimpleCPU":
+if args.cpu in (
+    "X86AtomicSimpleCPU",
+    "ArmAtomicSimpleCPU",
+    "RiscvAtomicSimpleCPU",
+):
     system.membus = SystemXBar()
     system.cpu.icache_port = system.membus.cpu_side_ports
     system.cpu.dcache_port = system.membus.cpu_side_ports
@@ -157,7 +161,7 @@ else:
     system.l2cache.connectMemSideBus(system.membus)
 
 system.cpu.createInterruptController()
-if get_runtime_isa() == ISA.X86:
+if args.cpu in ("X86AtomicSimpleCPU", "X86TimingSimpleCPU", "X86DerivO3CPU"):
     system.cpu.interrupts[0].pio = system.membus.mem_side_ports
     system.cpu.interrupts[0].int_master = system.membus.cpu_side_ports
     system.cpu.interrupts[0].int_slave = system.membus.mem_side_ports

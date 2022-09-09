@@ -45,7 +45,7 @@ gem5_verify_config(
         config.base_dir, "configs", "example", "gem5_library", "arm-hello.py"
     ),
     config_args=[],
-    valid_isas=(constants.arm_tag,),
+    valid_isas=(constants.all_compiled_tag,),
     valid_hosts=constants.supported_hosts,
     length=constants.quick_tag,
 )
@@ -63,7 +63,7 @@ gem5_verify_config(
         "riscv-hello-save-checkpoint.py",
     ),
     config_args=[],
-    valid_isas=(constants.riscv_tag,),
+    valid_isas=(constants.all_compiled_tag,),
     valid_hosts=constants.supported_hosts,
     length=constants.quick_tag,
 )
@@ -81,7 +81,7 @@ gem5_verify_config(
         "riscv-hello-restore-checkpoint.py",
     ),
     config_args=[],
-    valid_isas=(constants.riscv_tag,),
+    valid_isas=(constants.all_compiled_tag,),
     valid_hosts=constants.supported_hosts,
     length=constants.quick_tag,
 )
@@ -101,7 +101,7 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
             "x86-ubuntu-run-with-kvm.py",
         ),
         config_args=[],
-        valid_isas=(constants.x86_tag,),
+        valid_isas=(constants.all_compiled_tag,),
         valid_hosts=(constants.host_x86_64_tag,),
         length=constants.long_tag,
         uses_kvm=True,
@@ -119,7 +119,7 @@ gem5_verify_config(
         "x86-ubuntu-run.py",
     ),
     config_args=[],
-    valid_isas=(constants.x86_tag,),
+    valid_isas=(constants.all_compiled_tag,),
     valid_hosts=constants.supported_hosts,
     length=constants.long_tag,
 )
@@ -139,7 +139,7 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
             "x86-parsec-benchmarks.py",
         ),
         config_args=["--benchmark", "blackscholes", "--size", "simsmall"],
-        valid_isas=(constants.x86_tag,),
+        valid_isas=(constants.all_compiled_tag,),
         protocol="MESI_Two_Level",
         valid_hosts=(constants.host_x86_64_tag,),
         length=constants.long_tag,
@@ -168,7 +168,7 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
             "--ticks",
             "5000000000",
         ],
-        valid_isas=(constants.x86_tag,),
+        valid_isas=(constants.all_compiled_tag,),
         protocol="MESI_Two_Level",
         valid_hosts=(constants.host_x86_64_tag,),
         length=constants.long_tag,
@@ -190,7 +190,7 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
             "x86-gapbs-benchmarks.py",
         ),
         config_args=["--benchmark", "bfs", "--synthetic", "1", "--size", "1"],
-        valid_isas=(constants.x86_tag,),
+        valid_isas=(constants.all_compiled_tag,),
         protocol="MESI_Two_Level",
         valid_hosts=(constants.host_x86_64_tag,),
         length=constants.long_tag,
@@ -209,7 +209,7 @@ gem5_verify_config(
         "riscv-ubuntu-run.py",
     ),
     config_args=[],
-    valid_isas=(constants.riscv_tag,),
+    valid_isas=(constants.all_compiled_tag,),
     valid_hosts=constants.supported_hosts,
     length=constants.long_tag,
 )
@@ -222,7 +222,7 @@ gem5_verify_config(
         config.base_dir, "configs", "example", "lupv", "run_lupv.py"
     ),
     config_args=["timing", "1", "--max-ticks", "1000000000"],
-    valid_isas=(constants.riscv_tag,),
+    valid_isas=(constants.all_compiled_tag,),
     valid_hosts=constants.supported_hosts,
     length=constants.long_tag,
 )
@@ -239,7 +239,7 @@ gem5_verify_config(
         "arm-ubuntu-boot-exit.py",
     ),
     config_args=[],
-    valid_isas=(constants.arm_tag,),
+    valid_isas=(constants.all_compiled_tag,),
     valid_hosts=constants.supported_hosts,
     length=constants.long_tag,
 )

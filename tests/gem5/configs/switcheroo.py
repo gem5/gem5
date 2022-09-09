@@ -38,7 +38,7 @@ import _m5
 from m5.objects import *
 
 m5.util.addToPath("../configs/")
-from common.Caches import *
+from base_caches import *
 
 
 class Sequential:

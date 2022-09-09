@@ -43,6 +43,6 @@ gem5_verify_config(
     config=os.path.join(os.getcwd(), os.pardir, "run_pyunit.py"),
     verifiers=(),
     config_args=[],
-    valid_isas=(constants.null_tag,),
+    valid_isas=(constants.all_compiled_tag,),
     length=constants.quick_tag,
 )

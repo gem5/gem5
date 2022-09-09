@@ -42,7 +42,6 @@ import m5
 
 # import all of the SimObjects
 from m5.objects import *
-from gem5.runtime import get_runtime_isa
 
 # Needed for running C++ threads
 m5.util.addToPath("../../")
@@ -65,7 +64,7 @@ system.mem_mode = "timing"  # Use timing accesses
 system.mem_ranges = [AddrRange("512MB")]  # Create an address range
 
 # Create a pair of simple CPUs
-system.cpu = [TimingSimpleCPU() for i in range(2)]
+system.cpu = [X86TimingSimpleCPU() for i in range(2)]
 
 # Create a DDR3 memory controller and connect it to the membus
 system.mem_ctrl = MemCtrl()
@@ -80,18 +79,13 @@ for cpu in system.cpu:
 system.caches = MyCacheSystem()
 system.caches.setup(system, system.cpu, [system.mem_ctrl])
 
-# get ISA for the binary to run.
-isa = get_runtime_isa()
-
 # Run application and use the compiled ISA to find the binary
 # grab the specific path to the binary
 thispath = os.path.dirname(os.path.realpath(__file__))
 binary = os.path.join(
     thispath,
     "../../../",
-    "tests/test-progs/threads/bin/",
-    isa.name.lower(),
-    "linux/threads",
+    "tests/test-progs/threads/bin/x86/linux/threads",
 )
 
 # Create a process for a simple "multi-threaded" application

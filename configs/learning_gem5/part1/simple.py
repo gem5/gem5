@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 Jason Power
 # All rights reserved.
 #
@@ -33,6 +32,10 @@ learning_gem5 book for more information about this script.
 IMPORTANT: If you modify this file, it's likely that the Learning gem5 book
            also needs to be updated. For now, email Jason <power.jg@gmail.com>
 
+This script uses the X86 ISA. `simple-arm.py` and `simple-riscv.py` may be
+referenced as examples of scripts which utilize the ARM and RISC-V ISAs
+respectively.
+
 """
 
 # import the m5 (gem5) library created when gem5 is built
@@ -40,8 +43,6 @@ import m5
 
 # import all of the SimObjects
 from m5.objects import *
-from gem5.isas import ISA
-from gem5.runtime import get_runtime_isa
 
 # create the system we are going to simulate
 system = System()
@@ -56,7 +57,9 @@ system.mem_mode = "timing"  # Use timing accesses
 system.mem_ranges = [AddrRange("512MB")]  # Create an address range
 
 # Create a simple CPU
-system.cpu = TimingSimpleCPU()
+# You can use ISA-specific CPU models for different workloads:
+# `RiscvTimingSimpleCPU`, `ArmTimingSimpleCPU`.
+system.cpu = X86TimingSimpleCPU()
 
 # Create a memory bus, a system crossbar, in this case
 system.membus = SystemXBar()
@@ -68,12 +71,12 @@ system.cpu.dcache_port = system.membus.cpu_side_ports
 # create the interrupt controller for the CPU and connect to the membus
 system.cpu.createInterruptController()
 
-# For x86 only, make sure the interrupts are connected to the memory
-# Note: these are directly connected to the memory bus and are not cached
-if get_runtime_isa() == ISA.X86:
-    system.cpu.interrupts[0].pio = system.membus.mem_side_ports
-    system.cpu.interrupts[0].int_requestor = system.membus.cpu_side_ports
-    system.cpu.interrupts[0].int_responder = system.membus.mem_side_ports
+# For X86 only we make sure the interrupts care connect to memory.
+# Note: these are directly connected to the memory bus and are not cached.
+# For other ISA you should remove the following three lines.
+system.cpu.interrupts[0].pio = system.membus.mem_side_ports
+system.cpu.interrupts[0].int_requestor = system.membus.cpu_side_ports
+system.cpu.interrupts[0].int_responder = system.membus.mem_side_ports
 
 # Create a DDR3 memory controller and connect it to the membus
 system.mem_ctrl = MemCtrl()
@@ -84,18 +87,14 @@ system.mem_ctrl.port = system.membus.mem_side_ports
 # Connect the system up to the membus
 system.system_port = system.membus.cpu_side_ports
 
-# get ISA for the binary to run.
-isa = get_runtime_isa()
-
-# Default to running 'hello', use the compiled ISA to find the binary
-# grab the specific path to the binary
+# Here we set the X86 "hello world" binary. With other ISAs you must specify
+# workloads compiled to those ISAs. Other "hello world" binaries for other ISAs
+# can be found in "tests/test-progs/hello".
 thispath = os.path.dirname(os.path.realpath(__file__))
 binary = os.path.join(
     thispath,
     "../../../",
-    "tests/test-progs/hello/bin/",
-    isa.name.lower(),
-    "linux/hello",
+    "tests/test-progs/hello/bin/x86/linux/hello",
 )
 
 system.workload = SEWorkload.init_compatible(binary)

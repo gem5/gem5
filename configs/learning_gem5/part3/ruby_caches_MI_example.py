@@ -41,8 +41,6 @@ import math
 
 from m5.defines import buildEnv
 from m5.util import fatal, panic
-from gem5.isas import ISA
-from gem5.runtime import get_runtime_isa
 
 from m5.objects import *
 
@@ -146,10 +144,10 @@ class L1Cache(L1Cache_Controller):
         1. The O3 model must keep the LSQ coherent with the caches
         2. The x86 mwait instruction is built on top of coherence
         3. The local exclusive monitor in ARM systems
+
+        As this is an X86 simulation we return True.
         """
-        if type(cpu) is DerivO3CPU or get_runtime_isa() in (ISA.X86, ISA.ARM):
-            return True
-        return False
+        return True
 
     def connectQueues(self, ruby_system):
         """Connect all of the queues for this controller."""

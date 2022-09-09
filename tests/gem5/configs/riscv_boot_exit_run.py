@@ -66,7 +66,7 @@ parser.add_argument(
     "-m",
     "--mem-system",
     type=str,
-    choices=("classic", "mi_example"),
+    choices=("classic", "mesi_two_level"),
     required=True,
     help="The memory system.",
 )
@@ -110,13 +110,21 @@ if args.mem_system == "classic":
     cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
         l1d_size="32KiB", l1i_size="32KiB", l2_size="512KiB"
     )
-elif args.mem_system == "mi_example":
-    from gem5.components.cachehierarchies.ruby.mi_example_cache_hierarchy import (
-        MIExampleCacheHierarchy,
+elif args.mem_system == "mesi_two_level":
+    from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
+        MESITwoLevelCacheHierarchy,
     )
 
     # Setup the cache hierarchy.
-    cache_hierarchy = MIExampleCacheHierarchy(size="32KiB", assoc=8)
+    cache_hierarchy = MESITwoLevelCacheHierarchy(
+        l1d_size="16kB",
+        l1d_assoc=8,
+        l1i_size="16kB",
+        l1i_assoc=8,
+        l2_size="256kB",
+        l2_assoc=16,
+        num_l2_banks=1,
+    )
 
 # Setup the system memory.
 python_module = "gem5.components.memory"

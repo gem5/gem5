@@ -192,6 +192,6 @@ for cpu_type in cpu_types:
                 "--resource-directory",
                 resource_path,
             ],
-            valid_isas=(constants.riscv_tag,),
+            valid_isas=(constants.all_compiled_tag,),
             valid_hosts=constants.supported_hosts,
         )
