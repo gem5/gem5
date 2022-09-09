@@ -194,10 +194,8 @@ def run(args):
             m5.checkpoint(os.path.join(cpt_dir))
             print("Checkpoint done.")
         else:
-            print(exit_msg, " @ ", m5.curTick())
+            print(f"{exit_msg} ({event.getCode()}) @ {m5.curTick()}")
             break
-
-    sys.exit(event.getCode())
 
 
 def main():
