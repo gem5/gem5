@@ -900,7 +900,7 @@ action(Finish_CopyBack_Stale, desc="") {
   // if it was the last known sharer and we don't have the data do the same
   // the Initiate_Evict
   if ((is_HN == false) && (tbe.dir_sharers.count() == 0) &&
-      (tbe.dataValid == false)) {
+      tbe.dir_sharers.isElement(tbe.requestor) && (tbe.dataValid == false)) {
     tbe.actions.push(Event:SendEvict);
   }
 }
