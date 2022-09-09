@@ -50,7 +50,7 @@ from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.simulate.simulator import Simulator
-from gem5.resource.workload import Workload
+from gem5.resources.workload import Workload
 
 # This runs a check to ensure the gem5 binary is compiled for RISCV.
 
