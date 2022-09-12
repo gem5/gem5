@@ -127,7 +127,7 @@ docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
 # it is not set.
 docker run --rm -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}/util/m5" --memory="${docker_mem_limit}" hacc-test-weekly bash -c \
-    "export TERM=xterm-256color ; scons build/x86/out/m5 --ignore-style"
+    "export TERM=xterm-256color ; scons build/x86/out/m5"
 
 # test LULESH
 # build LULESH
