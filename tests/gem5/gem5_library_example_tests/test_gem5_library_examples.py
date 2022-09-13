@@ -243,3 +243,20 @@ gem5_verify_config(
     valid_hosts=constants.supported_hosts,
     length=constants.long_tag,
 )
+
+gem5_verify_config(
+    name="test-gem5-library-example-riscvmatched-hello",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "gem5_library",
+        "riscvmatched-hello.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.riscv_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.long_tag,
+)
