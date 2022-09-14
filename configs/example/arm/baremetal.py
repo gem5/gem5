@@ -44,6 +44,7 @@ import m5
 from m5.util import addToPath
 from m5.objects import *
 from m5.options import *
+from gem5.simulate.exit_event import ExitEvent
 import argparse
 
 m5.util.addToPath("../..")
@@ -71,6 +72,18 @@ cpu_types = {
         O3_ARM_v7a.O3_ARM_v7aL2,
     ),
 }
+
+pmu_control_events = {
+    "enable": ExitEvent.PERF_COUNTER_ENABLE,
+    "disable": ExitEvent.PERF_COUNTER_DISABLE,
+    "reset": ExitEvent.PERF_COUNTER_RESET,
+}
+
+pmu_interrupt_events = {
+    "interrupt": ExitEvent.PERF_COUNTER_INTERRUPT,
+}
+
+pmu_stats_events = dict(**pmu_control_events, **pmu_interrupt_events)
 
 
 def create_cow_image(name):
@@ -158,9 +171,22 @@ def create(args):
     system.workload = workload_class(object_file, system)
 
     if args.with_pmu:
+        enabled_pmu_events = set(
+            (*args.pmu_dump_stats_on, *args.pmu_reset_stats_on)
+        )
+        exit_sim_on_control = bool(
+            enabled_pmu_events & set(pmu_control_events.keys())
+        )
+        exit_sim_on_interrupt = bool(
+            enabled_pmu_events & set(pmu_interrupt_events.keys())
+        )
         for cluster in system.cpu_cluster:
             interrupt_numbers = [args.pmu_ppi_number] * len(cluster)
-            cluster.addPMUs(interrupt_numbers)
+            cluster.addPMUs(
+                interrupt_numbers,
+                exit_sim_on_control=exit_sim_on_control,
+                exit_sim_on_interrupt=exit_sim_on_interrupt,
+            )
 
     if args.exit_on_uart_eot:
         for uart in system.realview.uart:
@@ -174,14 +200,35 @@ def run(args):
     if args.checkpoint:
         print(f"Checkpoint directory: {cptdir}")
 
+    pmu_exit_msgs = tuple(evt.value for evt in pmu_stats_events.values())
+    pmu_stats_dump_msgs = tuple(
+        pmu_stats_events[evt].value for evt in set(args.pmu_dump_stats_on)
+    )
+    pmu_stats_reset_msgs = tuple(
+        pmu_stats_events[evt].value for evt in set(args.pmu_reset_stats_on)
+    )
+
     while True:
         event = m5.simulate()
         exit_msg = event.getCause()
-        if exit_msg == "checkpoint":
-            print("Dropping checkpoint at tick %d" % m5.curTick())
+        if exit_msg == ExitEvent.CHECKPOINT.value:
+            print(f"Dropping checkpoint at tick {m5.curTick():d}")
             cpt_dir = os.path.join(m5.options.outdir, "cpt.%d" % m5.curTick())
             m5.checkpoint(os.path.join(cpt_dir))
             print("Checkpoint done.")
+        elif exit_msg in pmu_exit_msgs:
+            if exit_msg in pmu_stats_dump_msgs:
+                print(
+                    f"Dumping stats at tick {m5.curTick():d}, "
+                    f"due to {exit_msg}"
+                )
+                m5.stats.dump()
+            if exit_msg in pmu_stats_reset_msgs:
+                print(
+                    f"Resetting stats at tick {m5.curTick():d}, "
+                    f"due to {exit_msg}"
+                )
+                m5.stats.reset()
         else:
             print(f"{exit_msg} ({event.getCode()}) @ {m5.curTick()}")
             break
@@ -282,6 +329,26 @@ def main():
         default=23,
         help="The number of the PPI to use to connect each PMU to its core. "
         "Must be an integer and a valid PPI number (16 <= int_num <= 31).",
+    )
+    parser.add_argument(
+        "--pmu-dump-stats-on",
+        type=str,
+        default=[],
+        action="append",
+        choices=pmu_stats_events.keys(),
+        help="Specify the PMU events on which to dump the gem5 stats. "
+        "This option may be specified multiple times to enable multiple "
+        "PMU events.",
+    )
+    parser.add_argument(
+        "--pmu-reset-stats-on",
+        type=str,
+        default=[],
+        action="append",
+        choices=pmu_stats_events.keys(),
+        help="Specify the PMU events on which to reset the gem5 stats. "
+        "This option may be specified multiple times to enable multiple "
+        "PMU events.",
     )
     parser.add_argument(
         "--exit-on-uart-eot",

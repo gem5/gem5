@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017, 2019, 2021-2022 Arm Limited
+# Copyright (c) 2016-2017, 2019, 2021-2023 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -147,7 +147,13 @@ class ArmCpuCluster(CpuCluster):
             cpu.connectCachedPorts(self.toL2Bus.cpu_side_ports)
         self.toL2Bus.mem_side_ports = self.l2.cpu_side
 
-    def addPMUs(self, ints, events=[]):
+    def addPMUs(
+        self,
+        ints,
+        events=[],
+        exit_sim_on_control=False,
+        exit_sim_on_interrupt=False,
+    ):
         """
         Instantiates 1 ArmPMU per PE. The method is accepting a list of
         interrupt numbers (ints) used by the PMU and a list of events to
@@ -159,12 +165,21 @@ class ArmCpuCluster(CpuCluster):
         :type ints: List[int]
         :param events: Additional events to be measured by the PMUs
         :type events: List[Union[ProbeEvent, SoftwareIncrement]]
+        :param exit_sim_on_control: If true, exit the sim loop when the PMU is
+            enabled, disabled, or reset.
+        :type exit_on_control: bool
+        :param exit_sim_on_interrupt: If true, exit the sim loop when the PMU
+            triggers an interrupt.
+        :type exit_on_control: bool
+
         """
         assert len(ints) == len(self.cpus)
         for cpu, pint in zip(self.cpus, ints):
             int_cls = ArmPPI if pint < 32 else ArmSPI
             for isa in cpu.isa:
                 isa.pmu = ArmPMU(interrupt=int_cls(num=pint))
+                isa.pmu.exitOnPMUControl = exit_sim_on_control
+                isa.pmu.exitOnPMUInterrupt = exit_sim_on_interrupt
                 isa.pmu.addArchEvents(
                     cpu=cpu,
                     itb=cpu.mmu.itb,
