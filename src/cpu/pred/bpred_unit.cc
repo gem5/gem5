@@ -82,6 +82,8 @@ BPredUnit::BPredUnitStats::BPredUnitStats(statistics::Group *parent)
                "Number of conditional branches incorrect"),
       ADD_STAT(BTBLookups, statistics::units::Count::get(),
                "Number of BTB lookups"),
+      ADD_STAT(BTBUpdates, statistics::units::Count::get(),
+               "Number of BTB updates"),
       ADD_STAT(BTBHits, statistics::units::Count::get(), "Number of BTB hits"),
       ADD_STAT(BTBHitRatio, statistics::units::Ratio::get(), "BTB Hit Ratio",
                BTBHits / BTBLookups),
@@ -479,6 +481,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                         "PC %#x\n", tid, squashed_sn,
                         hist_it->seqNum, hist_it->pc);
 
+                ++stats.BTBUpdates;
                 BTB.update(hist_it->pc, corr_target, tid);
             }
         } else {
