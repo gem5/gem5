@@ -891,7 +891,11 @@ action(Initiate_CopyBack_Stale, desc="") {
 
   tbe.actions.pushNB(Event:SendCompDBIDRespStale);
   tbe.actions.pushNB(Event:WriteFEPipe);
-  tbe.actions.push(Event:FinishCopyBack_Stale);
+
+  // eviction condition should be examined if it is the last sharer
+  if (tbe.dir_sharers.count() == 1) {
+    tbe.actions.push(Event:FinishCopyBack_Stale);
+  }
 
   assert((tbe.dir_ownerExists == false) || (tbe.dir_owner != tbe.requestor));
 }
@@ -900,7 +904,7 @@ action(Finish_CopyBack_Stale, desc="") {
   // if it was the last known sharer and we don't have the data do the same
   // the Initiate_Evict
   if ((is_HN == false) && (tbe.dir_sharers.count() == 0) &&
-      tbe.dir_sharers.isElement(tbe.requestor) && (tbe.dataValid == false)) {
+      (tbe.dataValid == false)) {
     tbe.actions.push(Event:SendEvict);
   }
 }
