@@ -258,6 +258,12 @@ parser.add_argument(
     help="Number of coalescer tokens per CU",
 )
 parser.add_argument(
+    "--vrf_lm_bus_latency",
+    type=int,
+    default=1,
+    help="Latency while accessing shared memory",
+)
+parser.add_argument(
     "--TLB-prefetch", type=int, help="prefetch depth for" "TLBs"
 )
 parser.add_argument(
@@ -442,6 +448,7 @@ for i in range(n_cu):
             localMemBarrier=args.LocalMemBarrier,
             countPages=args.countPages,
             max_cu_tokens=args.max_cu_tokens,
+            vrf_lm_bus_latency=args.vrf_lm_bus_latency,
             localDataStore=LdsState(
                 banks=args.numLdsBanks,
                 bankConflictPenalty=args.ldsBankConflictPenalty,
