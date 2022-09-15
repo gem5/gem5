@@ -36,12 +36,12 @@ from typing import (
     Union,
 )
 
-from .serializable_stat import SerializableStat
+from .abstract_stat import AbstractStat
 from .statistic import Scalar, Statistic
 from .timeconversion import TimeConversion
 
 
-class Group(SerializableStat):
+class Group(AbstractStat):
     """
     Used to create the heirarchical stats structure. A Group object contains a
     map of labeled  Groups, Statistics, Lists of Groups, or List of Statistics.

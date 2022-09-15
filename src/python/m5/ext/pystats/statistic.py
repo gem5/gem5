@@ -27,11 +27,11 @@
 from abc import ABC
 from typing import Any, Iterable, Optional, Union, List
 
-from .serializable_stat import SerializableStat
+from .abstract_stat import AbstractStat
 from .storagetype import StorageType
 
 
-class Statistic(ABC, SerializableStat):
+class Statistic(ABC, AbstractStat):
     """
     The abstract base class for all Python statistics.
     """

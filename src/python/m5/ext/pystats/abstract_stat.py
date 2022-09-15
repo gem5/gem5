@@ -1,4 +1,4 @@
-# Copyright (c) 2020 The Regents of The University of California
+# Copyright (c) 2022 The Regents of The University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,22 +24,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .abstract_stat import AbstractStat
 from .serializable_stat import SerializableStat
-from .group import Group
-from .simstat import SimStat
-from .statistic import Statistic
-from .storagetype import StorageType
-from .timeconversion import TimeConversion
-from .jsonloader import JsonLoader
 
-__all__ = [
-    "AbstractStat",
-    "Group",
-    "SimStat",
-    "Statistic",
-    "TimeConversion",
-    "StorageType",
-    "SerializableStat",
-    "JsonLoader",
-]
+
+class AbstractStat(SerializableStat):
+    """
+    An abstract class which all PyStats inherit from.
+
+    All PyStats are JsonSerializable.
+    """
+
+    pass

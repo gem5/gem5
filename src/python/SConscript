@@ -284,6 +284,7 @@ PySource('m5.ext.pyfdt', 'm5/ext/pyfdt/__init__.py')
 
 PySource('m5.ext.pystats', 'm5/ext/pystats/__init__.py')
 PySource('m5.ext.pystats', 'm5/ext/pystats/serializable_stat.py')
+PySource('m5.ext.pystats', 'm5/ext/pystats/abstract_stat.py')
 PySource('m5.ext.pystats', 'm5/ext/pystats/group.py')
 PySource('m5.ext.pystats', 'm5/ext/pystats/simstat.py')
 PySource('m5.ext.pystats', 'm5/ext/pystats/statistic.py')
