@@ -44,7 +44,7 @@ exclude: |
     build/.*|
     src/systemc/ext/.*|
     src/systemc/tests/.*/.*|
-    src/python/m5/ext/.*|
+    src/python/m5/ext/pyfdt/.*|
     tests/.*/ref/.*
   )$
 

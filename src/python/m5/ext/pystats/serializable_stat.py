@@ -30,6 +30,7 @@ from typing import Dict, List, Union, Any, IO
 
 from .storagetype import StorageType
 
+
 class SerializableStat:
     """
     Classes which inherit from SerializableStat can be serialized as JSON

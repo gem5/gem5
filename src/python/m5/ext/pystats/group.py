@@ -40,6 +40,7 @@ from .serializable_stat import SerializableStat
 from .statistic import Scalar, Statistic
 from .timeconversion import TimeConversion
 
+
 class Group(SerializableStat):
     """
     Used to create the heirarchical stats structure. A Group object contains a
@@ -70,7 +71,7 @@ class Group(SerializableStat):
     def children(
         self, predicate: Optional[Callable[[str], bool]] = None
     ) -> Iterator[Union["Group", Statistic]]:
-        """ Iterate through all of the children, optionally with a predicate
+        """Iterate through all of the children, optionally with a predicate
 
         ```
         >>> system.children(lambda _name: 'cpu' in name)
@@ -91,7 +92,7 @@ class Group(SerializableStat):
                 yield obj
 
     def find(self, name: str) -> Iterator[Union["Group", Statistic]]:
-        """ Find all stats that match the name
+        """Find all stats that match the name
 
         This function searches all of the "children" in this group. It yields
         the set of attributes (children) that have the `name` as a substring.
@@ -117,7 +118,7 @@ class Group(SerializableStat):
     def find_re(
         self, regex: Union[str, Pattern]
     ) -> Iterator[Union["Group", Statistic]]:
-        """ Find all stats that match the name
+        """Find all stats that match the name
 
         This function searches all of the "children" in this group. It yields
         the set of attributes (children) that have the `name` mathing the

@@ -32,6 +32,7 @@ from .group import Group
 from .statistic import Statistic
 from .timeconversion import TimeConversion
 
+
 class SimStat(SerializableStat):
     """
     Contains all the statistics for a given simulation.
