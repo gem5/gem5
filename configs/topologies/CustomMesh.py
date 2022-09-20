@@ -357,7 +357,7 @@ class CustomMesh(SimpleTopology):
         self.distributeNodes(hnf_params, hnf_nodes)
 
         # Place CHI_MN on the mesh
-        self.distributeNodes(options, mn_params, mn_nodes)
+        self.distributeNodes(mn_params, mn_nodes)
 
         # Place CHI_SNF_MainMem on the mesh
         self.distributeNodes(mem_params, mem_nodes)
