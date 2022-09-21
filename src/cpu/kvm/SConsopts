@@ -30,7 +30,7 @@ from gem5_scons import warning
 import gem5_scons
 
 # ISA code can set this to indicate what ISA KVM can target.
-main.SetDefault(KVM_ISA='')
+main['CONF'].setdefault('KVM_ISA', '')
 
 with gem5_scons.Configure(main) as conf:
     # Check if we should enable KVM-based hardware virtualization. The
