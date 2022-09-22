@@ -44,6 +44,12 @@
 namespace Gem5SystemC
 {
 
+struct TlmSenderState : public gem5::Packet::SenderState
+{
+    tlm::tlm_generic_payload &trans;
+    TlmSenderState(tlm::tlm_generic_payload &trans) : trans(trans) {}
+};
+
 class Gem5Extension: public tlm::tlm_extension<Gem5Extension>
 {
   public:

@@ -97,9 +97,29 @@ addPayloadToPacketConversionStep(PayloadToPacketConversionStep step)
     extraPayloadToPacketSteps.push_back(std::move(step));
 }
 
-PacketPtr
+/**
+ * Convert a TLM payload to gem5 packet by copying all the relevant information
+ * to new packet. If the transaction is initiated by gem5 model, we would use
+ * the original packet.
+ * The first return value is the packet pointer.
+ * The second return value is if the packet is newly created.
+ */
+std::pair<PacketPtr, bool>
 payload2packet(RequestorID _id, tlm::tlm_generic_payload &trans)
 {
+    Gem5SystemC::Gem5Extension *extension = nullptr;
+    trans.get_extension(extension);
+
+    // If there is an extension, this transaction was initiated by the gem5
+    // world and we can pipe through the original packet. Otherwise, we
+    // generate a new packet based on the transaction.
+    if (extension != nullptr) {
+        auto pkt = extension->getPacket();
+        // Sync the address which could have changed.
+        pkt->setAddr(trans.get_address());
+        return std::make_pair(pkt, false);
+    }
+
     MemCmd cmd;
     RequestPtr req;
 
@@ -126,7 +146,7 @@ payload2packet(RequestorID _id, tlm::tlm_generic_payload &trans)
             cmd = MemCmd::WriteReq;
             break;
           case tlm::TLM_IGNORE_COMMAND:
-            return nullptr;
+            return std::make_pair(nullptr, false);
           default:
             SC_REPORT_FATAL("TlmToGem5Bridge",
                             "received transaction with unsupported "
@@ -150,7 +170,7 @@ payload2packet(RequestorID _id, tlm::tlm_generic_payload &trans)
         step(pkt, trans);
     }
 
-    return pkt;
+    return std::make_pair(pkt, true);
 }
 
 template <unsigned int BITWIDTH>
@@ -198,21 +218,8 @@ TlmToGem5Bridge<BITWIDTH>::handleBeginReq(tlm::tlm_generic_payload &trans)
 
     trans.acquire();
 
-    PacketPtr pkt = nullptr;
-
-    Gem5SystemC::Gem5Extension *extension = nullptr;
-    trans.get_extension(extension);
-
-    // If there is an extension, this transaction was initiated by the gem5
-    // world and we can pipe through the original packet. Otherwise, we
-    // generate a new packet based on the transaction.
-    if (extension != nullptr) {
-        pkt = extension->getPacket();
-    } else {
-        pkt = payload2packet(_id, trans);
-    }
-
-    auto tlmSenderState = new TlmSenderState(trans);
+    auto [pkt, pkt_created] = payload2packet(_id, trans);
+    auto *tlmSenderState = new Gem5SystemC::TlmSenderState(trans);
     pkt->pushSenderState(tlmSenderState);
 
     // If the packet doesn't need a response, we should send BEGIN_RESP by
@@ -323,18 +330,7 @@ void
 TlmToGem5Bridge<BITWIDTH>::b_transport(tlm::tlm_generic_payload &trans,
                                        sc_core::sc_time &t)
 {
-    Gem5SystemC::Gem5Extension *extension = nullptr;
-    trans.get_extension(extension);
-
-    PacketPtr pkt = nullptr;
-
-    // If there is an extension, this transaction was initiated by the gem5
-    // world and we can pipe through the original packet.
-    if (extension != nullptr) {
-        pkt = extension->getPacket();
-    } else {
-        pkt = payload2packet(_id, trans);
-    }
+    auto [pkt, pkt_created] = payload2packet(_id, trans);
 
     MemBackdoorPtr backdoor = nullptr;
     Tick ticks = bmp.sendAtomicBackdoor(pkt, backdoor);
@@ -352,7 +348,7 @@ TlmToGem5Bridge<BITWIDTH>::b_transport(tlm::tlm_generic_payload &trans,
     // update time
     t += delay;
 
-    if (extension == nullptr)
+    if (pkt_created)
         destroyPacket(pkt);
 
     trans.set_response_status(tlm::TLM_OK_RESPONSE);
@@ -362,19 +358,12 @@ template <unsigned int BITWIDTH>
 unsigned int
 TlmToGem5Bridge<BITWIDTH>::transport_dbg(tlm::tlm_generic_payload &trans)
 {
-    Gem5SystemC::Gem5Extension *extension = nullptr;
-    trans.get_extension(extension);
+    auto [pkt, pkt_created] = payload2packet(_id, trans);
+    if (pkt != nullptr) {
+        bmp.sendFunctional(pkt);
 
-    // If there is an extension, this transaction was initiated by the gem5
-    // world and we can pipe through the original packet.
-    if (extension != nullptr) {
-        bmp.sendFunctional(extension->getPacket());
-    } else {
-        auto pkt = payload2packet(_id, trans);
-        if (pkt) {
-            bmp.sendFunctional(pkt);
+        if (pkt_created)
             destroyPacket(pkt);
-        }
     }
 
     return trans.get_data_length();
@@ -385,19 +374,7 @@ bool
 TlmToGem5Bridge<BITWIDTH>::get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
                                               tlm::tlm_dmi &dmi_data)
 {
-    Gem5SystemC::Gem5Extension *extension = nullptr;
-    trans.get_extension(extension);
-
-    PacketPtr pkt = nullptr;
-
-    // If there is an extension, this transaction was initiated by the gem5
-    // world and we can pipe through the original packet.
-    if (extension != nullptr) {
-        pkt = extension->getPacket();
-    } else {
-        pkt = payload2packet(_id, trans);
-        pkt->req->setFlags(Request::NO_ACCESS);
-    }
+    auto [pkt, pkt_created] = payload2packet(_id, trans);
 
     MemBackdoorPtr backdoor = nullptr;
     bmp.sendAtomicBackdoor(pkt, backdoor);
@@ -423,7 +400,7 @@ TlmToGem5Bridge<BITWIDTH>::get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
         );
     }
 
-    if (extension == nullptr)
+    if (!pkt_created)
         destroyPacket(pkt);
 
     trans.set_response_status(tlm::TLM_OK_RESPONSE);
@@ -455,7 +432,8 @@ TlmToGem5Bridge<BITWIDTH>::recvTimingResp(PacketPtr pkt)
     pkt->payloadDelay = 0;
     pkt->headerDelay = 0;
 
-    auto tlmSenderState = dynamic_cast<TlmSenderState*>(pkt->popSenderState());
+    auto *tlmSenderState =
+        dynamic_cast<Gem5SystemC::TlmSenderState*>(pkt->popSenderState());
     sc_assert(tlmSenderState != nullptr);
 
     auto &trans = tlmSenderState->trans;

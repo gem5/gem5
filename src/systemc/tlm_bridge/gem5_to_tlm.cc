@@ -121,13 +121,29 @@ addPacketToPayloadConversionStep(PacketToPayloadConversionStep step)
 }
 
 /**
- * Convert a gem5 packet to a TLM payload by copying all the relevant
- * information to new tlm payload.
+ * Convert a gem5 packet to TLM payload by copying all the relevant information
+ * to new payload. If the transaction is initiated by TLM model, we would use
+ * the original payload.
+ * The return value is the payload pointer.
  */
 tlm::tlm_generic_payload *
 packet2payload(PacketPtr packet)
 {
-    tlm::tlm_generic_payload *trans = mm.allocate();
+    tlm::tlm_generic_payload *trans = nullptr;
+    auto *tlmSenderState =
+        packet->findNextSenderState<Gem5SystemC::TlmSenderState>();
+
+    // If there is a SenderState, we can pipe through the original transaction.
+    // Otherwise, we generate a new transaction based on the packet.
+    if (tlmSenderState != nullptr) {
+        // Sync the address which could have changed.
+        trans = &tlmSenderState->trans;
+        trans->set_address(packet->getAddr());
+        trans->acquire();
+        return trans;
+    }
+
+    trans = mm.allocate();
     trans->acquire();
 
     trans->set_address(packet->getAddr());

@@ -59,6 +59,7 @@
 #define __SYSTEMC_TLM_BRIDGE_TLM_TO_GEM5_HH__
 
 #include <functional>
+#include <utility>
 
 #include "mem/port.hh"
 #include "params/TlmToGem5BridgeBase.hh"
@@ -78,7 +79,7 @@ using PayloadToPacketConversionStep =
 
 void addPayloadToPacketConversionStep(PayloadToPacketConversionStep step);
 
-gem5::PacketPtr payload2packet(gem5::RequestorID _id,
+std::pair<gem5::PacketPtr, bool> payload2packet(gem5::RequestorID _id,
     tlm::tlm_generic_payload &trans);
 
 class TlmToGem5BridgeBase : public sc_core::sc_module
@@ -91,12 +92,6 @@ template <unsigned int BITWIDTH>
 class TlmToGem5Bridge : public TlmToGem5BridgeBase
 {
   private:
-    struct TlmSenderState : public gem5::Packet::SenderState
-    {
-        tlm::tlm_generic_payload &trans;
-        TlmSenderState(tlm::tlm_generic_payload &trans) : trans(trans) {}
-    };
-
     class BridgeRequestPort : public gem5::RequestPort
     {
       protected:
