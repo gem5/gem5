@@ -219,8 +219,7 @@ TlmToGem5Bridge<BITWIDTH>::handleBeginReq(tlm::tlm_generic_payload &trans)
     trans.acquire();
 
     auto [pkt, pkt_created] = payload2packet(_id, trans);
-    auto *tlmSenderState = new Gem5SystemC::TlmSenderState(trans);
-    pkt->pushSenderState(tlmSenderState);
+    pkt->pushSenderState(new Gem5SystemC::TlmSenderState(trans));
 
     // If the packet doesn't need a response, we should send BEGIN_RESP by
     // ourselves.
@@ -331,6 +330,7 @@ TlmToGem5Bridge<BITWIDTH>::b_transport(tlm::tlm_generic_payload &trans,
                                        sc_core::sc_time &t)
 {
     auto [pkt, pkt_created] = payload2packet(_id, trans);
+    pkt->pushSenderState(new Gem5SystemC::TlmSenderState(trans));
 
     MemBackdoorPtr backdoor = nullptr;
     Tick ticks = bmp.sendAtomicBackdoor(pkt, backdoor);
@@ -348,6 +348,13 @@ TlmToGem5Bridge<BITWIDTH>::b_transport(tlm::tlm_generic_payload &trans,
     // update time
     t += delay;
 
+    gem5::Packet::SenderState *senderState = pkt->popSenderState();
+    sc_assert(
+        nullptr != dynamic_cast<Gem5SystemC::TlmSenderState*>(senderState));
+
+    // clean up
+    delete senderState;
+
     if (pkt_created)
         destroyPacket(pkt);
 
@@ -360,7 +367,16 @@ TlmToGem5Bridge<BITWIDTH>::transport_dbg(tlm::tlm_generic_payload &trans)
 {
     auto [pkt, pkt_created] = payload2packet(_id, trans);
     if (pkt != nullptr) {
+        pkt->pushSenderState(new Gem5SystemC::TlmSenderState(trans));
+
         bmp.sendFunctional(pkt);
+
+        gem5::Packet::SenderState *senderState = pkt->popSenderState();
+        sc_assert(
+            nullptr != dynamic_cast<Gem5SystemC::TlmSenderState*>(senderState));
+
+        // clean up
+        delete senderState;
 
         if (pkt_created)
             destroyPacket(pkt);
@@ -375,6 +391,7 @@ TlmToGem5Bridge<BITWIDTH>::get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
                                               tlm::tlm_dmi &dmi_data)
 {
     auto [pkt, pkt_created] = payload2packet(_id, trans);
+    pkt->pushSenderState(new Gem5SystemC::TlmSenderState(trans));
 
     MemBackdoorPtr backdoor = nullptr;
     bmp.sendAtomicBackdoor(pkt, backdoor);
@@ -399,6 +416,13 @@ TlmToGem5Bridge<BITWIDTH>::get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
             }
         );
     }
+
+    gem5::Packet::SenderState *senderState = pkt->popSenderState();
+    sc_assert(
+        nullptr != dynamic_cast<Gem5SystemC::TlmSenderState*>(senderState));
+
+    // clean up
+    delete senderState;
 
     if (!pkt_created)
         destroyPacket(pkt);
