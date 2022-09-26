@@ -41,6 +41,8 @@ from m5.util.fdthelper import *
 from m5.objects.System import System
 from m5.objects.ArmSemihosting import ArmSemihosting
 
+from typing import Any
+
 
 class SveVectorLength(UInt8):
     min = 1
@@ -107,6 +109,17 @@ class ArmRelease(SimObject):
             return False
         else:
             return True
+
+    @classmethod
+    def for_kvm(cls) -> Any:
+        """
+        Generates an ArmRelease for KVM. It simply extracts EL2/EL3 support
+        from the current cls object
+        """
+        release = cls()
+        release.remove(ArmExtension("SECURITY"))
+        release.remove(ArmExtension("VIRTUALIZATION"))
+        return release
 
 
 class Armv8(ArmRelease):
