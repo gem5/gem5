@@ -435,6 +435,7 @@ def build(options):
 
 def _build_kvm(options, system, cpus):
     system.kvm_vm = KvmVM()
+    system.release = ArmDefaultRelease.for_kvm()
 
     if options.kvm_userspace_gic:
         # We will use the simulated GIC.

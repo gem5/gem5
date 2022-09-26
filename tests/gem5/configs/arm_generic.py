@@ -96,6 +96,7 @@ class LinuxArmSystemBuilder(object):
           system -- System to work on.
         """
         system.kvm_vm = KvmVM()
+        system.release = ArmDefaultRelease.for_kvm()
 
         # Arm KVM regressions will use a simulated GIC. This means that in
         # order to work we need to remove the system interface of the
