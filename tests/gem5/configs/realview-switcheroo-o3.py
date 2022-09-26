@@ -41,7 +41,7 @@ root = LinuxArmFSSwitcheroo(
     aarch64_kernel=False,
     machine_type="VExpress_GEM5_V1",
     mem_class=DDR3_1600_8x8,
-    cpu_classes=(ArmDerivO3CPU, ArmDerivO3CPU),
+    cpu_classes=(ArmO3CPU, ArmO3CPU),
 ).create_root()
 
 # Setup a custom test method that uses the switcheroo tester that
