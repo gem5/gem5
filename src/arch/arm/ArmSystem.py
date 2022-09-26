@@ -1,4 +1,4 @@
-# Copyright (c) 2009, 2012-2013, 2015-2021 ARM Limited
+# Copyright (c) 2009, 2012-2013, 2015-2022 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -90,6 +90,14 @@ class ArmRelease(SimObject):
         """
         if new_ext.value not in [ext.value for ext in self.extensions]:
             self.extensions.append(new_ext)
+
+    def remove(self, ext: ArmExtension) -> None:
+        """
+        Remove the provided extension (ArmExtension) from the system
+        """
+        for curr_ext in list(self.extensions):
+            if curr_ext.value == ext.value:
+                self.extensions.remove(curr_ext)
 
     def has(self, new_ext: ArmExtension) -> bool:
         """
