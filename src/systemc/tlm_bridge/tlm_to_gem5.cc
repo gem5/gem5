@@ -218,7 +218,8 @@ TlmToGem5Bridge<BITWIDTH>::handleBeginReq(tlm::tlm_generic_payload &trans)
 
     trans.acquire();
 
-    auto [pkt, pkt_created] = payload2packet(_id, trans);
+    auto res = payload2packet(_id, trans);
+    auto pkt = res.first;
     pkt->pushSenderState(new Gem5SystemC::TlmSenderState(trans));
 
     // If the packet doesn't need a response, we should send BEGIN_RESP by
