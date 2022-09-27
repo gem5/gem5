@@ -102,6 +102,11 @@ class DefaultResponsePort : public ResponsePort
 
     // Functional protocol.
     void recvFunctional(PacketPtr) override { blowUp(); }
+    void
+    recvMemBackdoorReq(const MemBackdoorReq &, MemBackdoorPtr &) override
+    {
+        blowUp();
+    }
 
     // General.
     AddrRangeList getAddrRanges() const override { return AddrRangeList(); }
@@ -203,6 +208,17 @@ ResponsePort::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
         defaultBackdoorWarned = true;
     }
     return recvAtomic(pkt);
+}
+
+void
+ResponsePort::recvMemBackdoorReq(const MemBackdoorReq &req,
+        MemBackdoorPtr &backdoor)
+{
+    if (!defaultBackdoorWarned) {
+        DPRINTF(ResponsePort,
+                "Port %s doesn't support requesting a back door.", name());
+        defaultBackdoorWarned = true;
+    }
 }
 
 } // namespace gem5

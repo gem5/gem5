@@ -41,6 +41,7 @@
 #ifndef __MEM_GEM5_PROTOCOL_FUNCTIONAL_HH__
 #define __MEM_GEM5_PROTOCOL_FUNCTIONAL_HH__
 
+#include "mem/backdoor.hh"
 #include "mem/packet.hh"
 
 namespace gem5
@@ -66,6 +67,16 @@ class FunctionalRequestProtocol
      * Receive a functional snoop request packet from the peer.
      */
     virtual void recvFunctionalSnoop(PacketPtr pkt) = 0;
+
+    /**
+     * Send a request for a back door to a range of memory.
+     *
+     * @param req An object which describes what back door is being requested.
+     * @param backdoor Can be set to a back door pointer by the target to let
+     *        caller have direct access to the requested range.
+     */
+    void sendMemBackdoorReq(FunctionalResponseProtocol *peer,
+            const MemBackdoorReq &req, MemBackdoorPtr &backdoor);
 };
 
 class FunctionalResponseProtocol
@@ -86,6 +97,16 @@ class FunctionalResponseProtocol
      * Receive a functional request packet from the peer.
      */
     virtual void recvFunctional(PacketPtr pkt) = 0;
+
+    /**
+     * Receive a request for a back door to a range of memory.
+     *
+     * @param req An object which describes what back door is being requested.
+     * @param backdoor Can be set to a back door pointer by the target to let
+     *        caller have direct access to the requested range.
+     */
+    virtual void recvMemBackdoorReq(const MemBackdoorReq &req,
+            MemBackdoorPtr &backdoor) = 0;
 };
 
 } // namespace gem5
