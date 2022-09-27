@@ -89,7 +89,8 @@ std::vector<PayloadToPacketConversionStep> extraPayloadToPacketSteps;
  * tlm payload to gem5 packet. This can be useful when there exists a SystemC
  * extension that carries extra information. For example, SystemC user might
  * define an extension to store stream_id, the user may then add an extra step
- * to set the generated request's stream_id accordingly.
+ * to set the generated request's stream_id accordingly. Steps should be
+ * idempotent.
  */
 void
 addPayloadToPacketConversionStep(PayloadToPacketConversionStep step)
@@ -117,6 +118,10 @@ payload2packet(RequestorID _id, tlm::tlm_generic_payload &trans)
         auto pkt = extension->getPacket();
         // Sync the address which could have changed.
         pkt->setAddr(trans.get_address());
+        // Apply all conversion steps necessary in this specific setup.
+        for (auto &step : extraPayloadToPacketSteps) {
+            step(pkt, trans);
+        }
         return std::make_pair(pkt, false);
     }
 
