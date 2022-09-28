@@ -1,4 +1,4 @@
-# Copyright (c) 2018 ARM Limited
+# Copyright (c) 2018, 2022 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -67,6 +67,10 @@ class TarmacParser(InstTracer):
     )
 
 
+class TarmacDump(ScopedEnum):
+    vals = ["stdoutput", "stderror", "file"]
+
+
 class TarmacTracer(InstTracer):
     type = "TarmacTracer"
     cxx_class = "gem5::trace::TarmacTracer"
@@ -78,4 +82,14 @@ class TarmacTracer(InstTracer):
 
     end_tick = Param.Tick(
         MaxTick, "tracing ends when the tick time gets this value"
+    )
+    outfile = Param.TarmacDump(
+        "stdoutput",
+        "Selects where the tracer is dumping its output"
+        "Current options are:"
+        "1) stdoutput = dump to standard output"
+        "2) stderror = dump to standard error"
+        "3) file = dump to a file. As there is one tracer per CPU,"
+        "this means every CPU will dump its trace to a different file,"
+        "name after the tracer name (e.g. cpu0.tracer, cpu1.tracer)",
     )

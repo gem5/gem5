@@ -374,7 +374,7 @@ template<typename Queue>
 void
 TarmacTracerRecord::flushQueues(Queue& queue)
 {
-    std::ostream &outs = trace::output();
+    std::ostream &outs = tracer.output();
 
     for (const auto &single_entry : queue) {
         single_entry->print(outs);
