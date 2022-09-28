@@ -106,7 +106,7 @@ class %(class_name)s : public %(base_class)s
     %(class_name)s(ExtMachInst machInst,
                    RegIndex _dest, RegIndex _op1,
                    VfpMicroMode mode = VfpNotAMicroop);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -137,7 +137,7 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _dest,
             uint64_t _imm, VfpMicroMode mode = VfpNotAMicroop);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -168,7 +168,7 @@ class %(class_name)s : public %(base_class)s
     %(class_name)s(ExtMachInst machInst,
                    RegIndex _dest, RegIndex _op1,
                    uint64_t _imm, VfpMicroMode mode = VfpNotAMicroop);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -202,7 +202,7 @@ class %(class_name)s : public %(base_class)s
     %(class_name)s(ExtMachInst machInst,
                    RegIndex _dest, RegIndex _op1, RegIndex _op2,
                    VfpMicroMode mode = VfpNotAMicroop);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -237,7 +237,7 @@ class %(class_name)s : public %(base_class)s
                    RegIndex _dest, RegIndex _op1, RegIndex _op2,
                   ConditionCode _cond,
                    VfpMicroMode mode = VfpNotAMicroop);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 

@@ -89,7 +89,7 @@ class SveLdStructSS : public PredMacroOp
     }
 
     Fault
-    execute(ExecContext *, Trace::InstRecord *) const override
+    execute(ExecContext *, trace::InstRecord *) const override
     {
         panic("Execute method called when it shouldn't!");
         return NoFault;
@@ -162,7 +162,7 @@ class SveStStructSS : public PredMacroOp
     }
 
     Fault
-    execute(ExecContext *, Trace::InstRecord *) const override
+    execute(ExecContext *, trace::InstRecord *) const override
     {
         panic("Execute method called when it shouldn't!");
         return NoFault;
@@ -235,7 +235,7 @@ class SveLdStructSI : public PredMacroOp
     }
 
     Fault
-    execute(ExecContext *, Trace::InstRecord *) const override
+    execute(ExecContext *, trace::InstRecord *) const override
     {
         panic("Execute method called when it shouldn't!");
         return NoFault;
@@ -309,7 +309,7 @@ class SveStStructSI : public PredMacroOp
     }
 
     Fault
-    execute(ExecContext *, Trace::InstRecord *) const override
+    execute(ExecContext *, trace::InstRecord *) const override
     {
         panic("Execute method called when it shouldn't!");
         return NoFault;
@@ -409,7 +409,7 @@ class SveIndexedMemVI : public PredMacroOp
     }
 
     Fault
-    execute(ExecContext *, Trace::InstRecord *) const override
+    execute(ExecContext *, trace::InstRecord *) const override
     {
         panic("Execute method called when it shouldn't!");
         return NoFault;
@@ -514,7 +514,7 @@ class SveIndexedMemSV : public PredMacroOp
     }
 
     Fault
-    execute(ExecContext *, Trace::InstRecord *) const override
+    execute(ExecContext *, trace::InstRecord *) const override
     {
         panic("Execute method called when it shouldn't!");
         return NoFault;

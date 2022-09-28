@@ -346,7 +346,7 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
         if (fault == NoFault) {
             // Execute Checker instruction and trace
             if (!unverifiedInst->isUnverifiable()) {
-                Trace::InstRecord *traceData = tracer->getInstRecord(curTick(),
+                trace::InstRecord *traceData = tracer->getInstRecord(curTick(),
                                                            tc,
                                                            curStaticInst,
                                                            pcState(),

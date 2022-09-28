@@ -48,7 +48,7 @@ namespace gem5
 
 using namespace ArmISA;
 
-namespace Trace {
+namespace trace {
 
 TarmacTracerRecordV8::TraceInstEntryV8::TraceInstEntryV8(
     const TarmacContext& tarmCtx,
@@ -313,5 +313,5 @@ TarmacTracerRecordV8::TraceRegEntryV8::formatReg() const
     }
 }
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5

@@ -255,7 +255,7 @@ class BaseCPU : public ClockedObject
   protected:
     std::vector<ThreadContext *> threadContexts;
 
-    Trace::InstTracer * tracer;
+    trace::InstTracer * tracer;
 
   public:
 
@@ -265,7 +265,7 @@ class BaseCPU : public ClockedObject
     static const uint32_t invldPid = std::numeric_limits<uint32_t>::max();
 
     /// Provide access to the tracer pointer
-    Trace::InstTracer * getTracer() { return tracer; }
+    trace::InstTracer * getTracer() { return tracer; }
 
     /// Notify the CPU that the indicated context is now active.
     virtual void activateContext(ThreadID thread_num);

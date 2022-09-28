@@ -64,7 +64,7 @@ output header {{
 // Basic instruction class execute method template.
 def template CP0Execute {{
     Fault %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         %(op_decl)s;
@@ -86,7 +86,7 @@ def template CP0Execute {{
 
 def template CP1Execute {{
     Fault %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         %(op_decl)s;
@@ -108,7 +108,7 @@ def template CP1Execute {{
 // Basic instruction class execute method template.
 def template ControlTLBExecute {{
     Fault %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         %(op_decl)s;

@@ -48,7 +48,7 @@
 namespace gem5
 {
 
-namespace Trace {
+namespace trace {
 
 /**
  * TarmacTracer record for ARMv8 CPUs:
@@ -158,7 +158,7 @@ class TarmacTracerRecordV8 : public TarmacTracerRecord
     void addRegEntry(std::vector<RegPtr>& queue, const TarmacContext& ptr);
 };
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5
 
 #endif // __ARCH_ARM_TRACERS_TARMAC_RECORD_V8_HH__

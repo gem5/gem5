@@ -190,7 +190,7 @@ RegMiscRegImmOp64::iss() const
 
 Fault
 MiscRegImplDefined64::execute(ExecContext *xc,
-                              Trace::InstRecord *traceData) const
+                              trace::InstRecord *traceData) const
 {
     auto tc = xc->tcBase();
     const CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);

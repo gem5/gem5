@@ -36,7 +36,7 @@
 namespace gem5
 {
 
-namespace Trace {
+namespace trace {
 
 class ArmNativeTrace : public NativeTrace
 {
@@ -110,7 +110,7 @@ class ArmNativeTrace : public NativeTrace
     void check(NativeTraceRecord *record);
 };
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5
 
 #endif // __ARCH_ARM_NATIVETRACE_HH__

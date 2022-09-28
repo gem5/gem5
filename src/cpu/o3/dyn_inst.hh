@@ -137,7 +137,7 @@ class DynInst : public ExecContext, public RefCounted
     Fault fault = NoFault;
 
     /** InstRecord that tracks this instructions. */
-    Trace::InstRecord *traceData = nullptr;
+    trace::InstRecord *traceData = nullptr;
 
   protected:
     enum Status

@@ -42,7 +42,7 @@
 def template MicroRegOpExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -86,7 +86,7 @@ def template MicroRegOpDeclare {{
             %(cond_control_flag_init)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 
@@ -109,7 +109,7 @@ def template MicroRegOpBranchDeclare {{
             %(cond_control_flag_init)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::unique_ptr<PCStateBase> branchTarget(
                 const PCStateBase &branchPC) const override;

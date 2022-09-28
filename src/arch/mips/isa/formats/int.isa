@@ -109,7 +109,7 @@ output header {{
 def template HiLoExecute {{
     Fault
     %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -129,7 +129,7 @@ def template HiLoExecute {{
 def template HiLoRsSelExecute {{
     Fault
     %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -153,7 +153,7 @@ def template HiLoRsSelExecute {{
 def template HiLoRdSelExecute {{
     Fault
     %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 

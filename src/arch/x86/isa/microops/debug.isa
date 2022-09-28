@@ -53,14 +53,14 @@ def template MicroDebugFlagsDeclare {{
                 const char *inst_mnem, uint64_t set_flags,
                 GenericISA::M5DebugFault *_fault, uint8_t _cc);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 
 def template MicroDebugFlagsExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-            Trace::InstRecord *trace_data) const
+            trace::InstRecord *trace_data) const
     {
         %(op_decl)s
         %(op_rd)s

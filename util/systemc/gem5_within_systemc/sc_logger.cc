@@ -60,9 +60,9 @@ class CuttingStreambuf : public std::streambuf
     std::ostringstream line;
 
     /** Logger to send complete lines to */
-    gem5::Trace::Logger *logger;
+    gem5::trace::Logger *logger;
 
-    CuttingStreambuf(gem5::Trace::Logger *logger_) : logger(logger_)
+    CuttingStreambuf(gem5::trace::Logger *logger_) : logger(logger_)
     { }
 
     /** Accumulate to line up to \n and then emit */

@@ -58,7 +58,7 @@ class DecodeFaultInst : public X86StaticInst
     {}
 
     Fault
-    execute(ExecContext *tc, Trace::InstRecord *traceData) const override
+    execute(ExecContext *tc, trace::InstRecord *traceData) const override
     {
         return fault;
     }

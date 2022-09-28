@@ -55,7 +55,7 @@ namespace gem5
 
 class ThreadContext;
 
-namespace Trace {
+namespace trace {
 
 class InstRecord
 {
@@ -299,7 +299,7 @@ class InstTracer : public SimObject
                 const StaticInstPtr macroStaticInst=nullptr) = 0;
 };
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5
 
 #endif // __INSTRECORD_HH__

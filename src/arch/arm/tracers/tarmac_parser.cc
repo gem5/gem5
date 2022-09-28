@@ -64,7 +64,7 @@ namespace gem5
 
 using namespace ArmISA;
 
-namespace Trace {
+namespace trace {
 
 // TARMAC Parser static variables
 const int TarmacParserRecord::MaxLineLength;
@@ -745,7 +745,7 @@ TarmacParserRecord::MiscRegMap TarmacParserRecord::miscRegMap = {
 void
 TarmacParserRecord::TarmacParserRecordEvent::process()
 {
-    std::ostream &outs = Trace::output();
+    std::ostream &outs = trace::output();
 
     std::list<ParserRegEntry>::iterator it = destRegRecords.begin(),
                                         end = destRegRecords.end();
@@ -934,7 +934,7 @@ void
 TarmacParserRecord::printMismatchHeader(const StaticInstPtr staticInst,
                                         const PCStateBase &pc)
 {
-    std::ostream &outs = Trace::output();
+    std::ostream &outs = trace::output();
     outs << "\nMismatch between gem5 and TARMAC trace @ " << std::dec
          << curTick() << " ticks\n"
          << "[seq_num: " << std::dec << instRecord.seq_num
@@ -963,7 +963,7 @@ TarmacParserRecord::TarmacParserRecord(Tick _when, ThreadContext *_thread,
 void
 TarmacParserRecord::dump()
 {
-    std::ostream &outs = Trace::output();
+    std::ostream &outs = trace::output();
 
     uint64_t written_data = 0;
     unsigned mem_flags = 3 | ArmISA::MMU::AllowUnaligned;
@@ -1357,5 +1357,5 @@ TarmacParserRecord::iSetStateToStr(ISetState isetstate) const
     }
 }
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5

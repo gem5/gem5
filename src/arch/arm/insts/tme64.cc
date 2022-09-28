@@ -89,14 +89,14 @@ MicroTfence64::MicroTfence64(ExtMachInst machInst)
 
 Fault
 MicroTfence64::execute(
-    ExecContext *xc, Trace::InstRecord *traceData) const
+    ExecContext *xc, trace::InstRecord *traceData) const
 {
     return NoFault;
 }
 
 Fault
 MicroTfence64::initiateAcc(ExecContext *xc,
-                           Trace::InstRecord *traceData) const
+                           trace::InstRecord *traceData) const
 {
     panic("tfence should not have memory semantics");
 
@@ -105,7 +105,7 @@ MicroTfence64::initiateAcc(ExecContext *xc,
 
 Fault
 MicroTfence64::completeAcc(PacketPtr pkt, ExecContext *xc,
-                           Trace::InstRecord *traceData) const
+                           trace::InstRecord *traceData) const
 {
     panic("tfence should not have memory semantics");
 
@@ -134,7 +134,7 @@ Tstart64::Tstart64(ExtMachInst machInst, RegIndex _dest)
 
 Fault
 Tstart64::execute(
-    ExecContext *xc, Trace::InstRecord *traceData) const
+    ExecContext *xc, trace::InstRecord *traceData) const
 {
     panic("TME is not supported with atomic memory");
 
@@ -171,7 +171,7 @@ Tcancel64::Tcancel64(ExtMachInst machInst, uint64_t _imm)
 
 Fault
 Tcancel64::execute(
-    ExecContext *xc, Trace::InstRecord *traceData) const
+    ExecContext *xc, trace::InstRecord *traceData) const
 {
     panic("TME is not supported with atomic memory");
 
@@ -201,7 +201,7 @@ MicroTcommit64::MicroTcommit64(ExtMachInst machInst)
 }
 
 Fault
-MicroTcommit64::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+MicroTcommit64::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     panic("TME is not supported with atomic memory");
 

@@ -40,7 +40,7 @@ def template ControlRegConstructor {{
 
 def template PrivExecute {{
 Fault
-%(class_name)s::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+%(class_name)s::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     %(op_decl)s;
     %(op_rd)s;

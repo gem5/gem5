@@ -53,7 +53,7 @@ namespace Gem5SystemC
 {
 
 /** sc_report logging class */
-class Logger : public gem5::Trace::Logger
+class Logger : public gem5::trace::Logger
 {
   protected:
     /** Stream to offer getOstream.  This will cut messages up newlines and

@@ -48,7 +48,7 @@ output header {{
             }
 
             Fault
-            execute(ExecContext *xc, Trace::InstRecord *traceData) const
+            execute(ExecContext *xc, trace::InstRecord *traceData) const
             {
                 return NoFault;
             }
@@ -71,7 +71,7 @@ output decoder {{
 
 def template NopExecute {{
         Fault %(class_name)s::execute(ExecContext *xc,
-                Trace::InstRecord *traceData) const
+                trace::InstRecord *traceData) const
         {
             // Nothing to see here, move along
             return NoFault;

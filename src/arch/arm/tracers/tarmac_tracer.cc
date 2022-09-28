@@ -45,7 +45,7 @@
 namespace gem5
 {
 
-namespace Trace {
+namespace trace {
 
 std::string
 TarmacContext::tarmacCpuName() const
@@ -95,5 +95,5 @@ TarmacTracer::getInstRecord(Tick when, ThreadContext *tc,
     }
 }
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5

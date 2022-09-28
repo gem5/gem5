@@ -54,10 +54,10 @@ def template SveMemFillSpillOpDeclare {{
             %(constructor)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
 
         void
         annotateFault(ArmISA::ArmFault *fault) override
@@ -88,10 +88,10 @@ def template SveContigMemSSOpDeclare {{
             %(constructor)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
 
         void
         annotateFault(ArmISA::ArmFault *fault) override
@@ -122,10 +122,10 @@ def template SveContigMemSIOpDeclare {{
             %(constructor)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
 
         void
         annotateFault(ArmISA::ArmFault *fault) override
@@ -138,22 +138,22 @@ def template SveContigMemSIOpDeclare {{
 def template SveContigMemExecDeclare {{
     template
     Fault %(class_name)s%(tpl_args)s::execute(ExecContext *,
-        Trace::InstRecord *) const;
+        trace::InstRecord *) const;
 
     template
     Fault %(class_name)s%(tpl_args)s::initiateAcc(ExecContext *,
-        Trace::InstRecord *) const;
+        trace::InstRecord *) const;
 
     template
     Fault %(class_name)s%(tpl_args)s::completeAcc(PacketPtr,
-        ExecContext *, Trace::InstRecord *) const;
+        ExecContext *, trace::InstRecord *) const;
 }};
 
 def template SveContigLoadExecute {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -188,7 +188,7 @@ def template SveContigLoadInitiateAcc {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::initiateAcc(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -215,7 +215,7 @@ def template SveContigLoadCompleteAcc {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::completeAcc(PacketPtr pkt,
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
     {
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
@@ -243,7 +243,7 @@ def template SveContigStoreExecute {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -281,7 +281,7 @@ def template SveContigStoreInitiateAcc {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::initiateAcc(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -315,7 +315,7 @@ def template SveContigStoreCompleteAcc {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::completeAcc(PacketPtr pkt,
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
     {
         return NoFault;
     }
@@ -325,7 +325,7 @@ def template SveLoadAndReplExecute {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -357,7 +357,7 @@ def template SveLoadAndReplInitiateAcc {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::initiateAcc(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -383,7 +383,7 @@ def template SveLoadAndReplCompleteAcc {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::completeAcc(PacketPtr pkt,
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         [[maybe_unused]] bool aarch64 = true;
@@ -454,10 +454,10 @@ def template SveIndexedMemVIMicroopDeclare {{
             }
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
 
         void
         annotateFault(ArmISA::ArmFault *fault) override
@@ -542,10 +542,10 @@ def template SveIndexedMemSVMicroopDeclare {{
             }
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
 
         void
         annotateFault(ArmISA::ArmFault *fault) override
@@ -581,7 +581,7 @@ def template SveGatherLoadMicroopExecute {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -630,7 +630,7 @@ def template SveGatherLoadMicroopInitiateAcc {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::initiateAcc(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -673,7 +673,7 @@ def template SveGatherLoadMicroopCompleteAcc {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::completeAcc(PacketPtr pkt,
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
     {
         [[maybe_unused]] bool aarch64 = true;
 
@@ -698,7 +698,7 @@ def template SveScatterStoreMicroopExecute {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -729,7 +729,7 @@ def template SveScatterStoreMicroopInitiateAcc {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::initiateAcc(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -758,7 +758,7 @@ def template SveScatterStoreMicroopCompleteAcc {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::completeAcc(PacketPtr pkt,
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
     {
         return NoFault;
     }
@@ -786,7 +786,7 @@ def template SveFirstFaultWritebackMicroopDeclare {{
             %(constructor)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::string
         generateDisassembly(Addr pc,
@@ -804,7 +804,7 @@ def template SveFirstFaultWritebackMicroopExecute {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         [[maybe_unused]] bool aarch64 = true;
 
@@ -847,7 +847,7 @@ def template SveGatherLoadCpySrcVecMicroopDeclare {{
             %(constructor)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::string
         generateDisassembly(Addr pc,
@@ -864,7 +864,7 @@ def template SveGatherLoadCpySrcVecMicroopDeclare {{
 def template SveGatherLoadCpySrcVecMicroopExecute {{
     Fault
     SveGatherLoadCpySrcVecMicroop::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         %(op_decl)s;
@@ -916,10 +916,10 @@ def template SveStructMemSIMicroopDeclare {{
             baseIsSP = isSP(_base);
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
 
         void
         annotateFault(ArmISA::ArmFault *fault) override
@@ -970,22 +970,22 @@ def template SveStructMemSIMicroopDeclare {{
 def template SveStructMemExecDeclare {{
     template
     Fault %(class_name)s<%(targs)s>::execute(ExecContext *,
-        Trace::InstRecord *) const;
+        trace::InstRecord *) const;
 
     template
     Fault %(class_name)s<%(targs)s>::initiateAcc(ExecContext *,
-        Trace::InstRecord *) const;
+        trace::InstRecord *) const;
 
     template
     Fault %(class_name)s<%(targs)s>::completeAcc(PacketPtr,
-        ExecContext *, Trace::InstRecord *) const;
+        ExecContext *, trace::InstRecord *) const;
 }};
 
 def template SveStructLoadExecute {{
     template <class Element>
     Fault
     %(class_name)s<Element>::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -1019,7 +1019,7 @@ def template SveStructLoadInitiateAcc {{
     template <class Element>
     Fault
     %(class_name)s<Element>::initiateAcc(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -1046,7 +1046,7 @@ def template SveStructLoadCompleteAcc {{
     template <class Element>
     Fault
     %(class_name)s<Element>::completeAcc(PacketPtr pkt,
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         [[maybe_unused]] bool aarch64 = true;
@@ -1078,7 +1078,7 @@ def template SveStructStoreExecute {{
     template <class Element>
     Fault
     %(class_name)s<Element>::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -1116,7 +1116,7 @@ def template SveStructStoreInitiateAcc {{
     template <class Element>
     Fault
     %(class_name)s<Element>::initiateAcc(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -1150,7 +1150,7 @@ def template SveStructStoreCompleteAcc {{
     template <class Element>
     Fault
     %(class_name)s<Element>::completeAcc(PacketPtr pkt,
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
     {
         return NoFault;
     }
@@ -1193,10 +1193,10 @@ def template SveStructMemSSMicroopDeclare {{
             baseIsSP = isSP(_base);
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
 
         void
         annotateFault(ArmISA::ArmFault *fault) override
@@ -1271,7 +1271,7 @@ def template SveIntrlvMicroopDeclare {{
             %(constructor)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::string
         generateDisassembly(Addr pc,
@@ -1312,7 +1312,7 @@ def template SveDeIntrlvMicroopDeclare {{
             %(constructor)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::string
         generateDisassembly(Addr pc,
@@ -1329,14 +1329,14 @@ def template SveDeIntrlvMicroopDeclare {{
 def template SveIntrlvMicroopExecDeclare {{
     template
     Fault %(class_name)s<%(targs)s>::execute(
-            ExecContext *, Trace::InstRecord *) const;
+            ExecContext *, trace::InstRecord *) const;
 }};
 
 def template SveIntrlvMicroopExecute {{
     template <class Element>
     Fault
     %(class_name)s<Element>::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         %(op_decl)s;

@@ -50,14 +50,14 @@ def template MicroFaultDeclare {{
         %(class_name)s(ExtMachInst mach_inst, const char *inst_mnem,
                 uint64_t set_flags, Fault _fault, uint8_t _cc);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 
 def template MicroFaultExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         %(op_decl)s;
         %(op_rd)s;
@@ -144,7 +144,7 @@ def template MicroFenceOpDeclare {{
                 uint64_t set_flags);
 
         Fault
-        execute(ExecContext *, Trace::InstRecord *) const override
+        execute(ExecContext *, trace::InstRecord *) const override
         {
             return NoFault;
         }

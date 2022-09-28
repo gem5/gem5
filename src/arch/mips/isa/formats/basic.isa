@@ -41,7 +41,7 @@ def template BasicDeclare {{
             /// Constructor.
             %(class_name)s(MachInst machInst);
             Fault execute(ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
         };
 }};
 
@@ -59,7 +59,7 @@ def template BasicConstructor {{
 // Basic instruction class execute method template.
 def template BasicExecute {{
         Fault %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
 

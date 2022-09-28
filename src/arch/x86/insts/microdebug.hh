@@ -49,7 +49,7 @@ class MicroDebug : public X86ISA::X86MicroopBase
     {}
 
     Fault
-    execute(ExecContext *xc, Trace::InstRecord *traceData) const override
+    execute(ExecContext *xc, trace::InstRecord *traceData) const override
     {
         return fault;
     }

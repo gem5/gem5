@@ -40,7 +40,7 @@ from m5.objects.InstTracer import InstTracer
 
 class TarmacParser(InstTracer):
     type = "TarmacParser"
-    cxx_class = "gem5::Trace::TarmacParser"
+    cxx_class = "gem5::trace::TarmacParser"
     cxx_header = "arch/arm/tracers/tarmac_parser.hh"
 
     path_to_trace = Param.String("tarmac.log", "path to TARMAC trace")
@@ -69,7 +69,7 @@ class TarmacParser(InstTracer):
 
 class TarmacTracer(InstTracer):
     type = "TarmacTracer"
-    cxx_class = "gem5::Trace::TarmacTracer"
+    cxx_class = "gem5::trace::TarmacTracer"
     cxx_header = "arch/arm/tracers/tarmac_tracer.hh"
 
     start_tick = Param.Tick(

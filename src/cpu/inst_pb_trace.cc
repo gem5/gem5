@@ -50,7 +50,7 @@
 namespace gem5
 {
 
-namespace Trace {
+namespace trace {
 
 ProtoOutputStream *InstPBTrace::traceStream;
 
@@ -177,5 +177,5 @@ InstPBTrace::traceMem(StaticInstPtr si, Addr a, Addr s, unsigned f)
 
 }
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5

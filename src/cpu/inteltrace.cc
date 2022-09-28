@@ -36,12 +36,12 @@
 namespace gem5
 {
 
-namespace Trace {
+namespace trace {
 
 void
-Trace::IntelTraceRecord::dump()
+IntelTraceRecord::dump()
 {
-    std::ostream &outs = Trace::output();
+    std::ostream &outs = trace::output();
     ccprintf(outs, "%7d ) ", when);
     outs << "0x" << std::hex << pc->instAddr() << ":\t";
     if (staticInst->isLoad()) {
@@ -52,5 +52,5 @@ Trace::IntelTraceRecord::dump()
     outs << std::endl;
 }
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5

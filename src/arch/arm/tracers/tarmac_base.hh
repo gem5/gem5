@@ -60,7 +60,7 @@ namespace gem5
 
 class ThreadContext;
 
-namespace Trace {
+namespace trace {
 
 class TarmacBaseRecord : public InstRecord
 {
@@ -147,7 +147,7 @@ class TarmacBaseRecord : public InstRecord
 };
 
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5
 
 #endif // __ARCH_ARM_TRACERS_TARMAC_BASE_HH__

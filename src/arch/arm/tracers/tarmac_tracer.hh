@@ -55,7 +55,7 @@ namespace gem5
 
 class ThreadContext;
 
-namespace Trace {
+namespace trace {
 
 /**
  * This object type is encapsulating the informations needed by
@@ -129,7 +129,7 @@ class TarmacTracer : public InstTracer
     std::vector<RegPtr> regQueue;
 };
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5
 
 #endif // __ARCH_ARM_TRACERS_TARMAC_TRACER_HH__

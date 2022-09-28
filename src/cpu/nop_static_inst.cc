@@ -43,7 +43,7 @@ class NopStaticInst : public StaticInst
     NopStaticInst() : StaticInst("gem5 nop", No_OpClass) {}
 
     Fault
-    execute(ExecContext *xc, Trace::InstRecord *traceData) const override
+    execute(ExecContext *xc, trace::InstRecord *traceData) const override
     {
         return NoFault;
     }

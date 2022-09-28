@@ -34,7 +34,7 @@
 //
 def template FloatExecute {{
     Fault %(class_name)s::execute(ExecContext *xc,
-        Trace::InstRecord *traceData) const
+        trace::InstRecord *traceData) const
     {
         STATUS status = xc->readMiscReg(MISCREG_STATUS);
         if (status.fs == FPUStatus::OFF)

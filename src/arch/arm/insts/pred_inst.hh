@@ -371,7 +371,7 @@ class PredMacroOp : public PredOp
     }
 
     Fault
-    execute(ExecContext *, Trace::InstRecord *) const override
+    execute(ExecContext *, trace::InstRecord *) const override
     {
         panic("Execute method called when it shouldn't!");
     }

@@ -66,7 +66,7 @@ output decoder {{
 
 def template CPUIDExecute {{
     Fault %(class_name)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         // If the CPUID instruction used a valid function number, this will
         // be set to true. Otherwise, the instruction does nothing.

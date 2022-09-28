@@ -107,7 +107,7 @@ output exec {{
 
 def template ThreadRegisterExecute {{
         Fault %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
             [[maybe_unused]] int64_t data;
@@ -146,7 +146,7 @@ def template ThreadRegisterExecute {{
 
 def template MTExecute{{
         Fault %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
                 %(op_decl)s;

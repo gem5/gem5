@@ -52,7 +52,7 @@ namespace ArmISAInst {
 
 Fault
 Tstart64::initiateAcc(ExecContext *xc,
-                      Trace::InstRecord *traceData) const
+                      trace::InstRecord *traceData) const
 {
     Fault fault = NoFault;
     const uint64_t htm_depth = xc->getHtmTransactionalDepth();
@@ -85,7 +85,7 @@ Tstart64::initiateAcc(ExecContext *xc,
 
 Fault
 Tstart64::completeAcc(PacketPtr pkt, ExecContext *xc,
-                      Trace::InstRecord *traceData) const
+                      trace::InstRecord *traceData) const
 {
     Fault fault = NoFault;
     uint64_t Mem;
@@ -133,7 +133,7 @@ Tstart64::completeAcc(PacketPtr pkt, ExecContext *xc,
 }
 
 Fault
-Ttest64::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+Ttest64::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     Fault fault = NoFault;
     uint64_t Dest64 = 0;
@@ -163,7 +163,7 @@ Ttest64::execute(ExecContext *xc, Trace::InstRecord *traceData) const
 }
 
 Fault
-Tcancel64::initiateAcc(ExecContext *xc, Trace::InstRecord *traceData) const
+Tcancel64::initiateAcc(ExecContext *xc, trace::InstRecord *traceData) const
 {
     Fault fault = NoFault;
 
@@ -182,7 +182,7 @@ Tcancel64::initiateAcc(ExecContext *xc, Trace::InstRecord *traceData) const
 
 Fault
 Tcancel64::completeAcc(PacketPtr pkt, ExecContext *xc,
-                       Trace::InstRecord *traceData) const
+                       trace::InstRecord *traceData) const
 {
     Fault fault = NoFault;
     uint64_t Mem;
@@ -209,7 +209,7 @@ Tcancel64::completeAcc(PacketPtr pkt, ExecContext *xc,
 
 Fault
 MicroTcommit64::initiateAcc(ExecContext *xc,
-                            Trace::InstRecord *traceData) const
+                            trace::InstRecord *traceData) const
 {
     Fault fault = NoFault;
     const uint64_t htm_depth = xc->getHtmTransactionalDepth();
@@ -238,7 +238,7 @@ MicroTcommit64::initiateAcc(ExecContext *xc,
 
 Fault
 MicroTcommit64::completeAcc(PacketPtr pkt, ExecContext *xc,
-                            Trace::InstRecord *traceData) const
+                            trace::InstRecord *traceData) const
 {
     Fault fault = NoFault;
     uint64_t Mem;

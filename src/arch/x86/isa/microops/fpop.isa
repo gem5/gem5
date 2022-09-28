@@ -45,7 +45,7 @@
 def template MicroFpOpExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -82,7 +82,7 @@ def template MicroFpOpDeclare {{
                 uint64_t set_flags, uint8_t data_size, int8_t _spm,
                 Args... args);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 

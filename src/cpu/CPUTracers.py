@@ -31,18 +31,18 @@ from m5.objects.InstTracer import InstTracer
 
 class ExeTracer(InstTracer):
     type = "ExeTracer"
-    cxx_class = "gem5::Trace::ExeTracer"
+    cxx_class = "gem5::trace::ExeTracer"
     cxx_header = "cpu/exetrace.hh"
 
 
 class IntelTrace(InstTracer):
     type = "IntelTrace"
-    cxx_class = "gem5::Trace::IntelTrace"
+    cxx_class = "gem5::trace::IntelTrace"
     cxx_header = "cpu/inteltrace.hh"
 
 
 class NativeTrace(ExeTracer):
     abstract = True
     type = "NativeTrace"
-    cxx_class = "gem5::Trace::NativeTrace"
+    cxx_class = "gem5::trace::NativeTrace"
     cxx_header = "cpu/nativetrace.hh"

@@ -31,5 +31,5 @@ from m5.params import *
 class InstTracer(SimObject):
     type = "InstTracer"
     cxx_header = "sim/insttracer.hh"
-    cxx_class = "gem5::Trace::InstTracer"
+    cxx_class = "gem5::trace::InstTracer"
     abstract = True

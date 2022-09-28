@@ -361,7 +361,7 @@ McrMrcMiscInst::McrMrcMiscInst(const char *_mnemonic, ExtMachInst _machInst,
 }
 
 Fault
-McrMrcMiscInst::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+McrMrcMiscInst::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     return mcrMrc15Trap(miscReg, machInst, xc->tcBase(), iss);
 }
@@ -380,7 +380,7 @@ McrMrcImplDefined::McrMrcImplDefined(const char *_mnemonic,
 {}
 
 Fault
-McrMrcImplDefined::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+McrMrcImplDefined::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     Fault fault = mcrMrc15Trap(miscReg, machInst, xc->tcBase(), iss);
     if (fault != NoFault) {

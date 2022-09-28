@@ -55,7 +55,7 @@ namespace gem5
 
 using namespace ArmISA;
 
-namespace Trace {
+namespace trace {
 
 [[maybe_unused]] static const char *regNames[] = {
     "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
@@ -68,7 +68,7 @@ namespace Trace {
 };
 
 void
-Trace::ArmNativeTrace::ThreadState::update(NativeTrace *parent)
+ArmNativeTrace::ThreadState::update(NativeTrace *parent)
 {
     oldState = state[current];
     current = (current + 1) % 2;
@@ -103,7 +103,7 @@ Trace::ArmNativeTrace::ThreadState::update(NativeTrace *parent)
 }
 
 void
-Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
+ArmNativeTrace::ThreadState::update(ThreadContext *tc)
 {
     oldState = state[current];
     current = (current + 1) % 2;
@@ -141,7 +141,7 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
 }
 
 void
-Trace::ArmNativeTrace::check(NativeTraceRecord *record)
+ArmNativeTrace::check(NativeTraceRecord *record)
 {
     ThreadContext *tc = record->getThread();
     // This area is read only on the target. It can't stop there to tell us
@@ -223,5 +223,5 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
     }
 }
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5

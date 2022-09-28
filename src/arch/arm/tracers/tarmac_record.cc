@@ -47,7 +47,7 @@ namespace gem5
 
 using namespace ArmISA;
 
-namespace Trace {
+namespace trace {
 
 // TARMAC Instruction Record static variables
 uint64_t TarmacTracerRecord::TraceInstEntry::instCount = 0;
@@ -374,7 +374,7 @@ template<typename Queue>
 void
 TarmacTracerRecord::flushQueues(Queue& queue)
 {
-    std::ostream &outs = Trace::output();
+    std::ostream &outs = trace::output();
 
     for (const auto &single_entry : queue) {
         single_entry->print(outs);
@@ -446,5 +446,5 @@ TarmacTracerRecord::TraceRegEntry::print(
                  values[Lo]);                  /* Register value */
 }
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5

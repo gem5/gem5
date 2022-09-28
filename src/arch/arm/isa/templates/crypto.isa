@@ -39,7 +39,7 @@
 // storage/extraction here is fixed as constants.
 def template CryptoPredOpExecute {{
     Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+                                  trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         %(op_decl)s;

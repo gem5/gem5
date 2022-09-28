@@ -49,7 +49,7 @@ def template BrDeclare {{
             %(constructor)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::unique_ptr<PCStateBase>
         branchTarget(const PCStateBase &branch_pc) const override
@@ -84,14 +84,14 @@ def template EretDeclare {{
             %(constructor)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 
 def template SeqOpExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         %(op_decl)s;
         %(op_rd)s;
