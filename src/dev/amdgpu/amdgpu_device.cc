@@ -182,9 +182,8 @@ AMDGPUDevice::readFrame(PacketPtr pkt, Addr offset)
 
     /*
      * Return data for frame reads in priority order: (1) Special addresses
-     * first, ignoring any writes from driver. (2) GART addresses written
-     * to frame_regs in writeFrame. (3) Any other address from device backing
-     * store / abstract memory class functionally.
+     * first, ignoring any writes from driver. (2) Any other address from
+     * device backing store / abstract memory class functionally.
      */
     if (offset == 0xa28000) {
         /*
@@ -198,9 +197,6 @@ AMDGPUDevice::readFrame(PacketPtr pkt, Addr offset)
         }
 
         pkt->setUintX(regs[pkt->getAddr()], ByteOrder::little);
-    } else if (frame_regs.find(offset) != frame_regs.end()) {
-        /* If the driver wrote something, use that value over the trace. */
-        pkt->setUintX(frame_regs[offset], ByteOrder::little);
     } else {
         /*
          * Read the value from device memory. This must be done functionally
@@ -273,12 +269,10 @@ AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
     Addr aperture_offset = offset - aperture;
 
     // Record the value
-    frame_regs[offset] = pkt->getUintX(ByteOrder::little);
     if (aperture == gpuvm.gartBase()) {
-        frame_regs[aperture_offset] = pkt->getLE<uint32_t>();
-        DPRINTF(AMDGPUDevice, "GART translation %p -> %p\n", aperture_offset,
-            bits(frame_regs[aperture_offset], 48, 12));
         gpuvm.gartTable[aperture_offset] = pkt->getLE<uint32_t>();
+        DPRINTF(AMDGPUDevice, "GART translation %p -> %p\n", aperture_offset,
+                gpuvm.gartTable[aperture_offset]);
     }
 }
 
