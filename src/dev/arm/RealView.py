@@ -412,6 +412,32 @@ class CoreTile2A15DCC(SubSystem):
         yield node
 
 
+class SysSecCtrl(BasicPioDevice):
+    """
+    System Security Control registers. Taken from:
+        Arm Neoverse N1 System Development Platform - TRM - Version 0.0
+        Document ID: 101489_0000_02_en
+    """
+
+    type = "SysSecCtrl"
+    cxx_header = "dev/arm/ssc.hh"
+    cxx_class = "gem5::SysSecCtrl"
+
+    ssc_dbgcfg_stat = Param.Unsigned(
+        0x00010000, "Debug authentication configuration status"
+    )
+    ssc_version = Param.Unsigned(0x100417B0, "Version register")
+    ssc_pid0 = Param.Unsigned(0x44, "Peripheral ID0 register")
+    ssc_pid1 = Param.Unsigned(0xB8, "Peripheral ID1 register")
+    ssc_pid2 = Param.Unsigned(0xB, "Peripheral ID2 register")
+    ssc_pid4 = Param.Unsigned(0x4, "Peripheral ID4 register")
+
+    compid0 = Param.Unsigned(0x0D, "Component ID0 register")
+    compid1 = Param.Unsigned(0xF0, "Component ID1 register")
+    compid2 = Param.Unsigned(0x5, "Component ID2 register")
+    compid3 = Param.Unsigned(0xB1, "Component ID3 register")
+
+
 class AmbaFake(AmbaPioDevice):
     type = "AmbaFake"
     cxx_header = "dev/arm/amba_fake.hh"

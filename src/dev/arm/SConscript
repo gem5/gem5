@@ -54,7 +54,7 @@ SimObject('RealView.py', sim_objects=[
     'GenericArmPciHost', 'RealViewCtrl', 'RealViewOsc',
     'RealViewTemperatureSensor', 'AmbaFake', 'Pl011', 'Sp804', 'Sp805',
     'GenericWatchdog', 'CpuLocalTimer', 'PL031', 'Pl050', 'Pl111', 'HDLcd',
-    'FVPBasePwrCtrl', 'RealView'],
+    'FVPBasePwrCtrl', 'RealView', 'SysSecCtrl'],
     enums=['ArmPciIntRouting'], tags='arm isa')
 SimObject('SMMUv3.py', sim_objects=['SMMUv3DeviceInterface', 'SMMUv3'],
     tags='arm isa')
@@ -92,6 +92,7 @@ Source('smmu_v3_ports.cc', tags='arm isa');
 Source('smmu_v3_proc.cc', tags='arm isa');
 Source('smmu_v3_deviceifc.cc', tags='arm isa');
 Source('smmu_v3_transl.cc', tags='arm isa');
+Source('ssc.cc', tags='arm isa');
 Source('timer_sp804.cc', tags='arm isa')
 Source('watchdog_generic.cc', tags='arm isa')
 Source('watchdog_sp805.cc', tags='arm isa')
