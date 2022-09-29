@@ -43,7 +43,7 @@ root = LinuxArmFSSwitcheroo(
         ArmAtomicSimpleCPU,
         ArmTimingSimpleCPU,
         ArmMinorCPU,
-        ArmDerivO3CPU,
+        ArmO3CPU,
     ),
 ).create_root()
 
