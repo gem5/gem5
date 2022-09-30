@@ -25,11 +25,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-This script shows an example of booting an ARM based full system Ubuntu
-disk image using the gem5's standard library. This simulation boots the disk
-image using 2 TIMING CPU cores. The simulation ends when the startup is
-completed successfully (i.e. when an `m5_exit instruction is reached on
-successful boot).
+This script further shows an example of booting an ARM based full system Ubuntu
+disk image. This simulation boots the disk image using 2 TIMING CPU cores. The
+simulation ends when the startup is completed successfully (i.e. when an
+`m5_exit instruction is reached on successful boot).
 
 Usage
 -----
@@ -44,27 +43,26 @@ scons build/ARM/gem5.opt -j<NUM_CPUS>
 from gem5.isas import ISA
 from m5.objects import ArmDefaultRelease
 from gem5.utils.requires import requires
+from gem5.resources.workload import Workload
 from gem5.simulate.simulator import Simulator
 from m5.objects import VExpress_GEM5_Foundation
+from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.arm_board import ArmBoard
 from gem5.components.memory import DualChannelDDR4_2400
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
-from gem5.resources.workload import Workload
 
-# This runs a check to ensure the gem5 binary is compiled for ARM.
+
+# This runs a check to ensure the gem5 binary is compiled for ARM and the
+# protocol is CHI.
 
 requires(isa_required=ISA.ARM)
-
-# With ARM, we use simple caches.
 
 from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
     PrivateL1PrivateL2CacheHierarchy,
 )
 
-
 # Here we setup the parameters of the l1 and l2 caches.
-
 cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
     l1d_size="16kB", l1i_size="16kB", l2_size="256kB"
 )

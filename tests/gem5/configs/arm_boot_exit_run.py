@@ -39,6 +39,7 @@ from gem5.utils.requires import requires
 from gem5.resources.resource import Resource
 from gem5.simulate.simulator import Simulator
 from m5.objects import VExpress_GEM5_Foundation
+from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.arm_board import ArmBoard
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import (
@@ -75,7 +76,7 @@ parser.add_argument(
     "-m",
     "--mem-system",
     type=str,
-    choices=("classic"),
+    choices=("no_cache", "classic", "chi", "mesi_two_level", "mi_example"),
     required=True,
     help="The memory system.",
 )
@@ -110,15 +111,54 @@ args = parser.parse_args()
 # Run a check to ensure the right version of gem5 is being used.
 requires(isa_required=ISA.ARM)
 
-if args.mem_system == "classic":
+if args.mem_system == "no_cache":
+    from gem5.components.cachehierarchies.classic.no_cache import NoCache
+
+    cache_hierarchy = NoCache()
+
+elif args.mem_system == "classic":
     from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
         PrivateL1PrivateL2CacheHierarchy,
     )
 
-    # Setup the cache hierarchy.
     cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
         l1d_size="32KiB", l1i_size="32KiB", l2_size="512KiB"
     )
+
+elif args.mem_system == "chi":
+    requires(coherence_protocol_required=CoherenceProtocol.CHI)
+    from gem5.components.cachehierarchies.chi.private_l1_cache_hierarchy import (
+        PrivateL1CacheHierarchy,
+    )
+
+    cache_hierarchy = PrivateL1CacheHierarchy(
+        size="16kB",
+        assoc=4,
+    )
+
+elif args.mem_system == "mesi_two_level":
+    requires(coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL)
+    from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
+        MESITwoLevelCacheHierarchy,
+    )
+
+    cache_hierarchy = MESITwoLevelCacheHierarchy(
+        l1d_size="32kB",
+        l1d_assoc=8,
+        l1i_size="32kB",
+        l1i_assoc=8,
+        l2_size="256kB",
+        l2_assoc=16,
+        num_l2_banks=2,
+    )
+
+elif args.mem_system == "mi_example":
+    requires(coherence_protocol_required=CoherenceProtocol.MI_EXAMPLE)
+    from gem5.components.cachehierarchies.ruby.mi_example_cache_hierarchy import (
+        MIExampleCacheHierarchy,
+    )
+
+    cache_hierarchy = MIExampleCacheHierarchy(size="32kB", assoc=4)
 else:
     raise NotImplementedError(
         "Memory type '{}' is not supported in the boot tests.".format(
