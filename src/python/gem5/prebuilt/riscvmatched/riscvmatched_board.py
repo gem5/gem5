@@ -104,8 +104,6 @@ class RISCVMatchedBoard(
     Details can be found on page 77, section 7.1 of the datasheet.
 
     Datasheet for inbuilt params can be found here: https://sifive.cdn.prismic.io/sifive/1a82e600-1f93-4f41-b2d8-86ed8b16acba_fu740-c000-manual-v1p6.pdf
-
-    NOTE: FS Mode does not work yet.
     """
 
     def __init__(
@@ -153,7 +151,7 @@ class RISCVMatchedBoard(
 
             # Add the RTC
             self.platform.rtc = RiscvRTC(
-                frequency=Frequency("1MHz")
+                frequency=Frequency("100MHz")
             )  # page 77, section 7.1
             self.platform.clint.int_pin = self.platform.rtc.int_pin
 
