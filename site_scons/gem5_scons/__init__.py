@@ -264,7 +264,7 @@ def parse_build_path(target):
     while path_dirs and path_dirs[-1] != "build":
         variant_dir = path_dirs.pop()
     if not path_dirs:
-        error("No non-leaf 'build' dir found on target path.", t)
+        error("No non-leaf 'build' dir found on target path.", target)
 
     return os.path.join("/", *path_dirs), variant_dir
 
