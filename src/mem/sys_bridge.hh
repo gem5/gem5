@@ -331,6 +331,13 @@ class SysBridge : public SimObject
                     pkt->requestorId());
         }
 
+        void
+        recvMemBackdoorReq(const MemBackdoorReq &req,
+                MemBackdoorPtr &backdoor) override
+        {
+            targetPort->sendMemBackdoorReq(req, backdoor);
+        }
+
         AddrRangeList
         getAddrRanges() const override
         {

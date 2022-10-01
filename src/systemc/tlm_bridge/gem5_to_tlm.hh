@@ -62,6 +62,7 @@
 #include <functional>
 #include <string>
 
+#include "mem/backdoor.hh"
 #include "mem/port.hh"
 #include "params/Gem5ToTlmBridgeBase.hh"
 #include "sim/system.hh"
@@ -116,6 +117,12 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
         recvFunctional(gem5::PacketPtr pkt) override
         {
             return bridge.recvFunctional(pkt);
+        }
+        void
+        recvMemBackdoorReq(const gem5::MemBackdoorReq &req,
+                gem5::MemBackdoorPtr &backdoor) override
+        {
+            bridge.recvMemBackdoorReq(req, backdoor);
         }
         bool
         recvTimingReq(gem5::PacketPtr pkt) override
@@ -179,6 +186,8 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
     gem5::Tick recvAtomicBackdoor(gem5::PacketPtr pkt,
         gem5::MemBackdoorPtr &backdoor);
     void recvFunctional(gem5::PacketPtr packet);
+    void recvMemBackdoorReq(const gem5::MemBackdoorReq &req,
+            gem5::MemBackdoorPtr &backdoor);
     bool recvTimingReq(gem5::PacketPtr packet);
     bool tryTiming(gem5::PacketPtr packet);
     bool recvTimingSnoopResp(gem5::PacketPtr packet);

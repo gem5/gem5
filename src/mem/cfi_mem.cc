@@ -275,6 +275,14 @@ CfiMemory::recvFunctional(PacketPtr pkt)
     pkt->popLabel();
 }
 
+void
+CfiMemory::recvMemBackdoorReq(const MemBackdoorReq &req,
+        MemBackdoorPtr &_backdoor)
+{
+    if (backdoor.ptr())
+        _backdoor = &backdoor;
+}
+
 bool
 CfiMemory::recvTimingReq(PacketPtr pkt)
 {
@@ -484,6 +492,13 @@ void
 CfiMemory::MemoryPort::recvFunctional(PacketPtr pkt)
 {
     mem.recvFunctional(pkt);
+}
+
+void
+CfiMemory::MemoryPort::recvMemBackdoorReq(const MemBackdoorReq &req,
+        MemBackdoorPtr &_backdoor)
+{
+    mem.recvMemBackdoorReq(req, _backdoor);
 }
 
 bool
