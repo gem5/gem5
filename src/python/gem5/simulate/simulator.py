@@ -405,6 +405,10 @@ class Simulator:
             m5.instantiate(self._checkpoint_path)
             self._instantiated = True
 
+            # Let the board know that instantiate has been called so it can do
+            # any final things.
+            self._board._post_instantiate()
+
     def run(self, max_ticks: int = m5.MaxTick) -> None:
         """
         This function will start or continue the simulator run and handle exit

@@ -74,3 +74,7 @@ class AbstractProcessor(SubSystem):
     @abstractmethod
     def incorporate_processor(self, board: AbstractBoard) -> None:
         raise NotImplementedError
+
+    def _post_instantiate(self) -> None:
+        """Called to set up anything needed after m5.instantiate"""
+        pass

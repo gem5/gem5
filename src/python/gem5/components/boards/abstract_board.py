@@ -338,3 +338,10 @@ class AbstractBoard:
 
         # Incorporate the processor into the motherboard.
         self.get_processor().incorporate_processor(self)
+
+    def _post_instantiate(self):
+        """Called to set up anything needed after m5.instantiate"""
+        self.get_processor()._post_instantiate()
+        if self.get_cache_hierarchy():
+            self.get_cache_hierarchy()._post_instantiate()
+        self.get_memory()._post_instantiate()
