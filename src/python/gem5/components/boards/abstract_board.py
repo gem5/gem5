@@ -39,7 +39,7 @@ from m5.objects import (
     VoltageDomain,
 )
 
-from typing import List
+from typing import List, Optional
 
 
 class AbstractBoard:
@@ -68,13 +68,15 @@ class AbstractBoard:
         clk_freq: str,
         processor: "AbstractProcessor",
         memory: "AbstractMemorySystem",
-        cache_hierarchy: "AbstractCacheHierarchy",
+        cache_hierarchy: Optional["AbstractCacheHierarchy"],
     ) -> None:
         """
         :param clk_freq: The clock frequency for this board.
         :param processor: The processor for this board.
         :param memory: The memory for this board.
-        :param cache_hierarchy: The Cachie Hierarchy for this board.
+        :param cache_hierarchy: The Cache Hierarchy for this board.
+                                In some boards caches can be optional. If so,
+                                that board must override `_connect_things`.
         """
 
         if not isinstance(self, System):
@@ -88,7 +90,9 @@ class AbstractBoard:
         # Set the processor, memory, and cache hierarchy.
         self.processor = processor
         self.memory = memory
-        self.cache_hierarchy = cache_hierarchy
+        self._cache_hierarchy = cache_hierarchy
+        if cache_hierarchy is not None:
+            self.cache_hierarchy = cache_hierarchy
 
         # This variable determines whether the board is to be executed in
         # full-system or syscall-emulation mode. This is set when the workload
@@ -119,12 +123,12 @@ class AbstractBoard:
         """
         return self.memory
 
-    def get_cache_hierarchy(self) -> "AbstractCacheHierarchy":
+    def get_cache_hierarchy(self) -> Optional["AbstractCacheHierarchy"]:
         """Get the cache hierarchy connected to the board.
 
         :returns: The cache hierarchy.
         """
-        return self.cache_hierarchy
+        return self._cache_hierarchy
 
     def get_cache_line_size(self) -> int:
         """Get the size of the cache line.
@@ -329,7 +333,8 @@ class AbstractBoard:
         self.get_memory().incorporate_memory(self)
 
         # Incorporate the cache hierarchy for the motherboard.
-        self.get_cache_hierarchy().incorporate_cache(self)
+        if self.get_cache_hierarchy():
+            self.get_cache_hierarchy().incorporate_cache(self)
 
         # Incorporate the processor into the motherboard.
         self.get_processor().incorporate_processor(self)
