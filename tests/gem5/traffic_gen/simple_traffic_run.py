@@ -192,7 +192,7 @@ generator = generator_factory(
 # tasks
 motherboard = TestBoard(
     clk_freq="3GHz",
-    processor=generator,  # We pass the traffic generator as the processor.
+    generator=generator,
     memory=memory,
     cache_hierarchy=cache_hierarchy,
 )

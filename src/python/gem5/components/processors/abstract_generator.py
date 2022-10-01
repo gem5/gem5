@@ -65,3 +65,6 @@ class AbstractGenerator(AbstractProcessor):
         this method needs to be implemented in detail or implmeneted as pass.
         """
         raise NotImplementedError
+
+    def _post_instantiate(self) -> None:
+        self.start_traffic()

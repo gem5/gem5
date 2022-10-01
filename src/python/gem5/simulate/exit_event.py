@@ -87,6 +87,12 @@ class ExitEvent(Enum):
             return ExitEvent.SIMPOINT_BEGIN
         elif exit_string == "a thread reached the max instruction count":
             return ExitEvent.MAX_INSTS
+        elif exit_string.endswith("will terminate the simulation.\n"):
+            # This is for the traffic generator exit event
+            return ExitEvent.EXIT
+        elif exit_string.endswith("is finished updating the memory.\n"):
+            # This is for the gups generator exit event
+            return ExitEvent.EXIT
         raise NotImplementedError(
             "Exit event '{}' not implemented".format(exit_string)
         )
