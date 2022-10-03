@@ -52,6 +52,7 @@ scons build/X86/gem5.opt
 ```
 """
 
+import argparse
 from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
@@ -67,6 +68,18 @@ from gem5.utils.simpoint import SimPoint
 from gem5.simulate.exit_event_generators import (
     save_checkpoint_generator,
 )
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument(
+    "--checkpoint-path",
+    type=str,
+    required=False,
+    default="se_checkpoint_folder/",
+    help="The directory to store the checkpoint.",
+)
+
+args = parser.parse_args()
 
 requires(isa_required=ISA.X86)
 
@@ -109,7 +122,7 @@ board.set_se_binary_workload(
     simpoint=simpoint,
 )
 
-dir = Path("se_checkpoint_folder/")
+dir = Path(args.checkpoint_path)
 dir.mkdir(exist_ok=True)
 
 simulator = Simulator(
