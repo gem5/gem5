@@ -76,7 +76,7 @@ IdeController::IdeController(const Params &p)
     secondary(name() + ".secondary", this, false),
     ioShift(p.io_shift), ctrlOffset(p.ctrl_offset)
 {
-    panic_if(params().disks.size() > 3,
+    panic_if(params().disks.size() > 4,
             "IDE controllers support a maximum of 4 devices attached!");
 
     // Assign the disks to channels
