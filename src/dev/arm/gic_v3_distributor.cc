@@ -60,7 +60,7 @@ const AddrRange Gicv3Distributor::GICD_ICPENDR   (0x0280, 0x0300);
 const AddrRange Gicv3Distributor::GICD_ISACTIVER (0x0300, 0x0380);
 const AddrRange Gicv3Distributor::GICD_ICACTIVER (0x0380, 0x0400);
 const AddrRange Gicv3Distributor::GICD_IPRIORITYR(0x0400, 0x0800);
-const AddrRange Gicv3Distributor::GICD_ITARGETSR (0x0800, 0x0900);
+const AddrRange Gicv3Distributor::GICD_ITARGETSR (0x0800, 0x0c00);
 const AddrRange Gicv3Distributor::GICD_ICFGR     (0x0c00, 0x0d00);
 const AddrRange Gicv3Distributor::GICD_IGRPMODR  (0x0d00, 0x0d80);
 const AddrRange Gicv3Distributor::GICD_NSACR     (0x0e00, 0x0f00);
