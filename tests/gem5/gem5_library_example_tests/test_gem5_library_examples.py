@@ -32,6 +32,11 @@ from testlib import *
 import re
 import os
 
+if config.bin_path:
+    resource_path = config.bin_path
+else:
+    resource_path = joinpath(absdirpath(__file__), "..", "resources")
+
 hello_verifier = verifier.MatchRegex(re.compile(r"Hello world!"))
 save_checkpoint_verifier = verifier.MatchRegex(
     re.compile(r"Done taking a checkpoint")
@@ -62,7 +67,10 @@ gem5_verify_config(
         "checkpoints",
         "riscv-hello-save-checkpoint.py",
     ),
-    config_args=[],
+    config_args=[
+        "--checkpoint-path",
+        joinpath(resource_path, "riscv-hello-checkpoint-save"),
+    ],
     valid_isas=(constants.all_compiled_tag,),
     valid_hosts=constants.supported_hosts,
     length=constants.quick_tag,
