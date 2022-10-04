@@ -127,6 +127,13 @@ services:
             args:
                 - version=12
         image: gcr.io/gem5-test/clang-version-12
+    clang-13:
+        build:
+            context: ubuntu-22.04_clang-version
+            dockerfile: Dockerfile
+            args:
+                - version=13
+        image: gcr.io/gem5-test/clang-version-13
     llvm-gnu-cross-compiler-riscv64:
         build:
             context: llvm-gnu-cross-compiler-riscv64
