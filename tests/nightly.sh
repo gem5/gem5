@@ -115,7 +115,8 @@ docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
 cd "${gem5_root}/tests"
 ./main.py run -j${compile_threads} -vv \
     --exclude-tags ".*" --include-tags kvm --exclude-tags very\-long \
-    --exclude-tags debug --exclude-tags fast --exclude-tags ARM
+    --exclude-tags debug --exclude-tags fast --exclude-tags ARM \
+    --exclude-tags aarch64
 cd "${gem5_root}"
 
 # For the GPU tests we compile and run the GPU ISA inside a gcn-gpu container.
