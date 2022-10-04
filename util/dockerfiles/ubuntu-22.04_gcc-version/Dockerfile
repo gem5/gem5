@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2022 The Regents of the University of California
 # All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,29 +23,25 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
-# At the time of this Dockerfile's creation, Ubuntu 20.04 APT does not
-# distribute gcc-11 by default. A special APT repository is needed. We hope
-# this Dockerfile will merge with ubuntu-20.04_gcc-version once GCC-11 can be
-# installed via APT more easily.
+# Valid version values:
+# 11
+
+ARG version
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt -y update && apt -y upgrade && \
     apt -y install git m4 scons zlib1g zlib1g-dev libprotobuf-dev \
     protobuf-compiler libprotoc-dev libgoogle-perftools-dev python3-dev \
-    python-is-python3 doxygen libboost-all-dev libhdf5-serial-dev \
-    python3-pydot libpng-dev make software-properties-common
-
-RUN add-apt-repository \
-    'deb http://mirrors.kernel.org/ubuntu hirsute main universe'
-RUN apt -y install gcc-11 g++-11
+    doxygen libboost-all-dev libhdf5-serial-dev python3-pydot libpng-dev \
+    gcc-${version} g++-${version} make
 
 RUN update-alternatives --install \
-    /usr/bin/g++ g++ /usr/bin/g++-11 100
+    /usr/bin/g++ g++ /usr/bin/g++-${version} 100
 RUN update-alternatives --install \
-    /usr/bin/gcc gcc /usr/bin/gcc-11 100
+    /usr/bin/gcc gcc /usr/bin/gcc-${version} 100
 RUN update-alternatives --install \
-    /usr/bin/c++ c++ /usr/bin/g++-11 100
+    /usr/bin/c++ c++ /usr/bin/g++-${version} 100
 RUN update-alternatives --install \
-    /usr/bin/cc cc /usr/bin/gcc-11 100
+    /usr/bin/cc cc /usr/bin/gcc-${version} 100

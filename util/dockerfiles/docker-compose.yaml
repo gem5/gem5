@@ -66,7 +66,7 @@ services:
         image: gcr.io/gem5-test/gcc-version-10
     gcc-11:
         build:
-            context: ubuntu-20.04_gcc-version-11
+            context: ubuntu-22.04_gcc-version
             dockerfile: Dockerfile
             args:
                 - version=11
