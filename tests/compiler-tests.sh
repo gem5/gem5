@@ -19,6 +19,7 @@ images=("gcc-version-12"
         "gcc-version-9"
         "gcc-version-8"
         "gcc-version-7"
+        "clang-version-14"
         "clang-version-13"
         "clang-version-12"
         "clang-version-11"
@@ -37,7 +38,7 @@ images=("gcc-version-12"
 # A subset of the above list: these images will build against every target,
 # ignoring builds_per_compiler.
 comprehensive=("gcc-version-12"
-               "clang-version-13")
+               "clang-version-14")
 
 # All build targets in build_opt/ which we want to build using each image.
 builds=("ALL"
