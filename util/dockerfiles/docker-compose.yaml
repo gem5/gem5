@@ -71,6 +71,13 @@ services:
             args:
                 - version=11
         image: gcr.io/gem5-test/gcc-version-11
+    gcc-12:
+        build:
+            context: ubuntu-22.04_gcc-version
+            dockerfile: Dockerfile
+            args:
+                - version=12
+        image: gcr.io/gem5-test/gcc-version-12
     clang-6:
         build:
             context: ubuntu-18.04_clang-version

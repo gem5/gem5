@@ -27,6 +27,7 @@ FROM ubuntu:22.04
 
 # Valid version values:
 # 11
+# 12
 
 ARG version
 

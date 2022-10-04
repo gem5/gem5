@@ -13,7 +13,8 @@ build_dir="${gem5_root}/build"
 docker_mem_limit="18g"
 
 # All Docker images in the gem5 testing GCR which we want to compile with.
-images=("gcc-version-11"
+images=("gcc-version-12"
+        "gcc-version-11"
         "gcc-version-10"
         "gcc-version-9"
         "gcc-version-8"
@@ -34,7 +35,7 @@ images=("gcc-version-11"
 
 # A subset of the above list: these images will build against every target,
 # ignoring builds_per_compiler.
-comprehensive=("gcc-version-11"
+comprehensive=("gcc-version-12"
                "clang-version-12")
 
 # All build targets in build_opt/ which we want to build using each image.
