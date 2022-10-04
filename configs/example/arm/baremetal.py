@@ -52,6 +52,7 @@ from common import SysPaths
 from common import MemConfig
 from common import ObjectList
 from common.cores.arm import HPI
+from common.cores.arm import O3_ARM_v7a
 
 import devices
 import workloads
@@ -63,6 +64,12 @@ cpu_types = {
     "atomic": (AtomicSimpleCPU, None, None, None),
     "minor": (MinorCPU, devices.L1I, devices.L1D, devices.L2),
     "hpi": (HPI.HPI, HPI.HPI_ICache, HPI.HPI_DCache, HPI.HPI_L2),
+    "o3": (
+        O3_ARM_v7a.O3_ARM_v7a_3,
+        O3_ARM_v7a.O3_ARM_v7a_ICache,
+        O3_ARM_v7a.O3_ARM_v7a_DCache,
+        O3_ARM_v7a.O3_ARM_v7aL2,
+    ),
 }
 
 
