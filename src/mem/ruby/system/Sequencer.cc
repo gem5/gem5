@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021 ARM Limited
+ * Copyright (c) 2019-2021,2023 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -1013,7 +1013,8 @@ Sequencer::makeRequest(PacketPtr pkt)
             m_cache_inv_pkt = pkt;
             invL1();
         } else {
-            panic("Unsupported ruby packet type\n");
+            panic("Cannot convert packet [%s] to ruby request\n",
+                  pkt->print());
         }
     }
 
