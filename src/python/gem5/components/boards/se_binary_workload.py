@@ -32,6 +32,7 @@ from m5.objects import SEWorkload, Process
 
 from typing import Optional, List
 from m5.util import warn
+from pathlib import Path
 
 
 class SEBinaryWorkload:
@@ -53,6 +54,8 @@ class SEBinaryWorkload:
         binary: AbstractResource,
         exit_on_work_items: bool = True,
         stdin_file: Optional[AbstractResource] = None,
+        stdout_file: Optional[Path] = None,
+        stderr_file: Optional[Path] = None,
         arguments: List[str] = [],
         simpoint: SimPoint = None,
     ) -> None:
@@ -91,6 +94,10 @@ class SEBinaryWorkload:
         process.cmd = [binary_path] + arguments
         if stdin_file is not None:
             process.input = stdin_file.get_local_path()
+        if stdout_file is not None:
+            process.output = stdout_file.as_posix()
+        if stderr_file is not None:
+            process.errout = stderr_file.as_posix()
 
         for core in self.get_processor().get_cores():
             core.set_workload(process)
