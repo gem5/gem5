@@ -170,7 +170,7 @@ class WriteMask
     {
         assert(mSize == writeMask.mSize);
         for (int i = 0; i < mSize; i++) {
-            mMask[i] = (mMask.at(i)) & (writeMask.mMask.at(i));
+            mMask[i] = (mMask.at(i)) && (writeMask.mMask.at(i));
         }
 
         if (writeMask.mAtomic) {
@@ -184,7 +184,7 @@ class WriteMask
     {
         assert(mSize == writeMask.mSize);
         for (int i = 0; i < mSize; i++) {
-            mMask[i] = (mMask.at(i)) | (writeMask.mMask.at(i));
+            mMask[i] = (mMask.at(i)) || (writeMask.mMask.at(i));
         }
 
         if (writeMask.mAtomic) {

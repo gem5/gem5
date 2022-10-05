@@ -342,7 +342,7 @@ let {{
         ''', flagType="none", buildCc=False)
     buildRegDataInst("qdadd", '''
             int32_t midRes;
-            resTemp = saturateOp<32>(midRes, Op2_sw, Op2_sw) |
+            resTemp = saturateOp<32>(midRes, Op2_sw, Op2_sw) ||
                       saturateOp<32>(midRes, Op1_sw, midRes);
             Dest = midRes;
         ''', flagType="saturate", buildNonCc=False)
@@ -377,7 +377,7 @@ let {{
         ''', flagType="none", buildCc=False)
     buildRegDataInst("qdsub", '''
             int32_t midRes;
-            resTemp = saturateOp<32>(midRes, Op2_sw, Op2_sw) |
+            resTemp = saturateOp<32>(midRes, Op2_sw, Op2_sw) ||
                       saturateOp<32>(midRes, Op1_sw, midRes, true);
             Dest = midRes;
         ''', flagType="saturate", buildNonCc=False)

@@ -300,7 +300,7 @@ Decode::squash(const DynInstPtr &inst, ThreadID tid)
     // Using PCState::branching()  will send execution on the
     // fallthrough and this will not be caught at execution (since
     // branch was correctly predicted taken)
-    toFetch->decodeInfo[tid].branchTaken = inst->readPredTaken() |
+    toFetch->decodeInfo[tid].branchTaken = inst->readPredTaken() ||
                                            inst->isUncondCtrl();
 
     toFetch->decodeInfo[tid].squashInst = inst;
