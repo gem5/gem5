@@ -31,11 +31,16 @@ services:
             context: ubuntu-20.04_all-dependencies
             dockerfile: Dockerfile
         image: gcr.io/gem5-test/ubuntu-20.04_all-dependencies
-    ubuntu-20.04_min-dependencies:
+    ubuntu-22.04_all-dependencies:
         build:
-            context: ubuntu-20.04_min-dependencies
+            context: ubuntu-22.04_all-dependencies
             dockerfile: Dockerfile
-        image: gcr.io/gem5-test/ubuntu-20.04_min-dependencies
+        image: gcr.io/gem5-test/ubuntu-22.04_all-dependencies
+    ubuntu-22.04_min-dependencies:
+        build:
+            context: ubuntu-22.04_min-dependencies
+            dockerfile: Dockerfile
+        image: gcr.io/gem5-test/ubuntu-22.04_min-dependencies
     gcc-7:
         build:
             context: ubuntu-18.04_gcc-version

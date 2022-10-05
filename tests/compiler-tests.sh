@@ -28,11 +28,12 @@ images=("gcc-version-12"
         "clang-version-8"
         "clang-version-7"
         "clang-version-6.0"
-        # The following checks our support for Ubuntu 18.04 and 20.04, for both our
-        # "minimum dependencies" and "all dependencies" docker images.
+        # The following checks our support for Ubuntu 18.04, 20.04, and 22.04.
         "ubuntu-18.04_all-dependencies"
         "ubuntu-20.04_all-dependencies"
-        "ubuntu-20.04_min-dependencies"
+        "ubuntu-22.04_all-dependencies"
+        # Here we test the minimum dependency scenario.
+        "ubuntu-22.04_min-dependencies"
        )
 
 # A subset of the above list: these images will build against every target,
