@@ -46,6 +46,7 @@
 #include <sstream>
 #include <string>
 
+#include "base/compiler.hh"
 #include "base/cprintf.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
@@ -301,7 +302,7 @@ Ip6Hdr::extensionLength() const
     const uint8_t *data = bytes() + IP6_HDR_LEN;
     uint8_t nxt = ip6_nxt;
     int len = 0;
-    int all = plen();
+    GEM5_VAR_USED int all = plen();
 
     while (ip6Extension(nxt)) {
         const Ip6Opt *ext = (const Ip6Opt *)data;
@@ -324,7 +325,7 @@ Ip6Hdr::getExt(uint8_t ext_type) const
     const uint8_t *data = bytes() + IP6_HDR_LEN;
     uint8_t nxt = ip6_nxt;
     Ip6Opt* opt = NULL;
-    int all = plen();
+    GEM5_VAR_USED int all = plen();
 
     while (ip6Extension(nxt)) {
         opt = (Ip6Opt *)data;
@@ -349,7 +350,7 @@ Ip6Hdr::proto() const
 {
     const uint8_t *data = bytes() + IP6_HDR_LEN;
     uint8_t nxt = ip6_nxt;
-    int all = plen();
+    GEM5_VAR_USED int all = plen();
 
     while (ip6Extension(nxt)) {
         const Ip6Opt *ext = (const Ip6Opt *)data;

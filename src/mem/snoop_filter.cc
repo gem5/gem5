@@ -162,11 +162,9 @@ SnoopFilter::finishRequest(bool will_retry, Addr addr, bool is_secure)
     if (reqLookupResult.it != cachedLocations.end()) {
         // since we rely on the caller, do a basic check to ensure
         // that finishRequest is being called following lookupRequest
-        Addr line_addr = (addr & ~(Addr(linesize - 1)));
-        if (is_secure) {
-            line_addr |= LineSecure;
-        }
-        assert(reqLookupResult.it->first == line_addr);
+        assert(reqLookupResult.it->first == \
+                (is_secure ? ((addr & ~(Addr(linesize - 1))) | LineSecure) : \
+                 (addr & ~(Addr(linesize - 1)))));
         if (will_retry) {
             SnoopItem retry_item = reqLookupResult.retryItem;
             // Undo any changes made in lookupRequest to the snoop filter
