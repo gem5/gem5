@@ -27,6 +27,7 @@
 from m5.util import fatal
 from pathlib import Path
 from typing import List, Tuple
+from gem5.resources.resource import Resource, CustomResource
 
 
 class SimPoint:
@@ -38,7 +39,8 @@ class SimPoint:
 
     def __init__(
         self,
-        simpoint_interval: int,
+        simpoint_resource: CustomResource = None,
+        simpoint_interval: int = None,
         simpoint_file_path: Path = None,
         weight_file_path: Path = None,
         simpoint_list: List[int] = None,
@@ -67,6 +69,24 @@ class SimPoint:
         (sorted by SimPoints in ascending order) is strongly suggested.
         The warmup_list only works correctly with sorted simpoint_list.
         """
+
+        # initalize input if you're passing in a CustomResource
+        if simpoint_resource is not None:
+            simpoint_directory = str(simpoint_resource.get_local_path())
+
+            simpoint_file_path = Path(simpoint_directory + "/simpoint.simpt")
+            weight_file_path = Path(simpoint_directory + "/simpoint.weight")
+            simpoint_interval = (
+                simpoint_resource.get_metadata()
+                .get("additional_metadata")
+                .get("simpoint_interval")
+            )
+            warmup_interval = (
+                simpoint_resource.get_metadata()
+                .get("additional_metadata")
+                .get("warmup_interval")
+            )
+
         self._simpoint_interval = simpoint_interval
 
         if simpoint_file_path is None or weight_file_path is None:

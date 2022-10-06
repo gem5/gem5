@@ -25,17 +25,17 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-This configuation script shows an example of how to restore a checkpoint that
+This configuration script shows an example of how to restore a checkpoint that
 was taken for SimPoints in the
 configs/example/gem5_library/checkpoints/simpoints-se-checkpoint.py.
 The SimPoints, SimPoints interval length, and the warmup instruction length
 are passed into the SimPoint module, so the SimPoint object will store and
 calculate the warmup instruction length for each SimPoints based on the
-avaliable instructions before reaching the start of the SimPoint. With the
+available instructions before reaching the start of the SimPoint. With the
 Simulator module, exit event will be generated to stop when the warmup session
 ends and the SimPoints interval ends.
 
-This scipt builds a more complex board than the board used for taking
+This script builds a more complex board than the board used for taking
 checkpoint.
 
 Usage
@@ -49,9 +49,9 @@ scons build/X86/gem5.opt
 ./build/X86/gem5.opt \
     configs/example/gem5_library/checkpoints/simpoints-se-restore.py
 ```
+
 """
 
-import imp
 from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
@@ -64,8 +64,8 @@ from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.resources.resource import Resource
+from gem5.resources.workload import Workload
 
-from gem5.utils.simpoint import SimPoint
 from pathlib import Path
 from m5.stats import reset, dump
 
@@ -96,18 +96,7 @@ board = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-simpoint = SimPoint(
-    simpoint_list=[2, 3, 5, 15],
-    weight_list=[0.1, 0.2, 0.4, 0.3],
-    simpoint_interval=1000000,
-    warmup_interval=1000000,
-)
-
-board.set_se_simpoint_workload(
-    binary=Resource("x86-print-this"),
-    arguments=["print this", 15000],
-    simpoint=simpoint,
-)
+board.set_workload(Workload("x86-print-this-15000-with-simpoints"))
 
 # Here we obtain the checkpoints from gem5 resources, but these are generated
 # from `configs/example/gem5_library/checkpoints/simpoints-se-checkpoint.py`.If

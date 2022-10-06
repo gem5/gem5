@@ -25,15 +25,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-This configuation script shows an example of how to take checkpoints for
-SimPoints using the gem5 stdlib. SimPoints, SimPoints interval length,
-SimPoints weights, and the warmup instruction length are passed into the gem5
-SimPoint module. The gem5 SimPoint module will calculate where to take
-checkpoints based of the SimPoints, SimPoints interval length, and the warmup
-instruction length. In SE mode, when you pass in a SimPoint object to the
-set_se_binary_workload, it will schedule exit events for SimPoints in the init
-stage of the core. With the Simulator module and the exit event generator,
-checkpoints will be taken for the SimPoints.
+This configuration script shows an example of how to take checkpoints for
+SimPoints using the gem5 stdlib. Simpoints are set via a Workload and the
+gem5 SimPoint module will calculate where to take checkpoints based of the
+SimPoints, SimPoints interval length, and the warmup instruction length.
 
 This scipt builds a simple board with the gem5 stdlib with no cache and a
 simple memory structure to take checkpoints. Some of the components, such as
@@ -53,6 +48,7 @@ scons build/X86/gem5.opt
 """
 
 import argparse
+
 from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
@@ -61,15 +57,20 @@ from gem5.components.memory.single_channel import SingleChannelDDR3_1600
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
-from gem5.resources.resource import Resource
+from gem5.resources.workload import Workload
 from pathlib import Path
 from gem5.components.cachehierarchies.classic.no_cache import NoCache
-from gem5.utils.simpoint import SimPoint
 from gem5.simulate.exit_event_generators import (
     save_checkpoint_generator,
 )
 
-parser = argparse.ArgumentParser()
+requires(isa_required=ISA.X86)
+
+parser = argparse.ArgumentParser(
+    description="An example simpoint workload file path"
+)
+
+# The lone arguments is a file path to a directory to store the checkpoints.
 
 parser.add_argument(
     "--checkpoint-path",
@@ -80,8 +81,6 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
-
-requires(isa_required=ISA.X86)
 
 # When taking a checkpoint, the cache state is not saved, so the cache
 # hierarchy can be changed completely when restoring from a checkpoint.
@@ -109,18 +108,7 @@ board = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-simpoint = SimPoint(
-    simpoint_list=[2, 3, 5, 15],
-    weight_list=[0.1, 0.2, 0.4, 0.3],
-    simpoint_interval=1000000,
-    warmup_interval=1000000,
-)
-
-board.set_se_simpoint_workload(
-    binary=Resource("x86-print-this"),
-    arguments=["print this", 15000],
-    simpoint=simpoint,
-)
+board.set_workload(Workload("x86-print-this-15000-with-simpoints"))
 
 dir = Path(args.checkpoint_path)
 dir.mkdir(exist_ok=True)
