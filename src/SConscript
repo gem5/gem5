@@ -250,9 +250,10 @@ def protoc_emitter(target, source, env):
     root, ext = os.path.splitext(source[0].get_abspath())
     return [root + '.pb.cc', root + '.pb.h'], source
 
-protoc_action = MakeAction('${PROTOC} --cpp_out ${BUILDDIR} '
-        '--proto_path ${BUILDDIR} --proto_path ${SOURCE.dir} '
-        '${SOURCE.get_abspath()}',
+# To understand these variables and attributes, see:
+# https://scons.org/doc/production/HTML/scons-man.html#variable_substitution
+protoc_action = MakeAction('${PROTOC} --cpp_out ${TARGET.dir.abspath} '
+        '--proto_path ${SOURCE.dir.abspath} ${SOURCE.abspath}',
         Transform("PROTOC"))
 protobuf_builder = Builder(action=protoc_action, emitter=protoc_emitter,
         src_suffix='.proto')
