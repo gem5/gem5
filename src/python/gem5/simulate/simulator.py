@@ -37,11 +37,12 @@ from pathlib import Path
 from typing import Optional, List, Tuple, Dict, Generator, Union
 
 from .exit_event_generators import (
-    default_exit_generator,
-    default_switch_generator,
-    default_workbegin_generator,
-    default_workend_generator,
-    default_simpoint_generator,
+    warn_default_decorator,
+    exit_generator,
+    switch_generator,
+    save_checkpoint_generator,
+    reset_stats_generator,
+    dump_stats_generator,
 )
 from .exit_event import ExitEvent
 from ..components.boards.abstract_board import AbstractBoard
@@ -147,14 +148,16 @@ class Simulator:
         Each exit event has a default behavior if none is specified by the
         user. These are as follows:
 
-            * ExitEvent.EXIT:  default_exit_list
-            * ExitEvent.CHECKPOINT: default_exit_list
-            * ExitEvent.FAIL : default_exit_list
-            * ExitEvent.SWITCHCPU: default_switch_list
-            * ExitEvent.WORKBEGIN: default_workbegin_list
-            * ExitEvent.WORKEND: default_workend_list
-            * ExitEvent.USER_INTERRUPT: default_exit_generator
-            * ExitEvent.MAX_TICK: default_exit_generator()
+            * ExitEvent.EXIT:  exit simulation
+            * ExitEvent.CHECKPOINT: take a checkpoint
+            * ExitEvent.FAIL : exit simulation
+            * ExitEvent.SWITCHCPU: call `switch` on the processor
+            * ExitEvent.WORKBEGIN: reset stats
+            * ExitEvent.WORKEND: exit simulation
+            * ExitEvent.USER_INTERRUPT: exit simulation
+            * ExitEvent.MAX_TICK: exit simulation
+            * ExitEvent.SIMPOINT_BEGIN: reset stats
+            * ExitEvent.MAX_INSTS: exit simulation
 
         These generators can be found in the `exit_event_generator.py` module.
 
@@ -169,19 +172,40 @@ class Simulator:
         # We specify a dictionary here outlining the default behavior for each
         # exit event. Each exit event is mapped to a generator.
         self._default_on_exit_dict = {
-            ExitEvent.EXIT: default_exit_generator(),
-            # TODO: Something else should be done here for CHECKPOINT
-            ExitEvent.CHECKPOINT: default_exit_generator(),
-            ExitEvent.FAIL: default_exit_generator(),
-            ExitEvent.SWITCHCPU: default_switch_generator(
-                processor=board.get_processor()
-            ),
-            ExitEvent.WORKBEGIN: default_workbegin_generator(),
-            ExitEvent.WORKEND: default_workend_generator(),
-            ExitEvent.USER_INTERRUPT: default_exit_generator(),
-            ExitEvent.MAX_TICK: default_exit_generator(),
-            ExitEvent.SIMPOINT_BEGIN: default_simpoint_generator(),
-            ExitEvent.MAX_INSTS: default_simpoint_generator(),
+            ExitEvent.EXIT: exit_generator(),
+            ExitEvent.CHECKPOINT: warn_default_decorator(
+                save_checkpoint_generator,
+                "checkpoint",
+                "creating a checkpoint and continuing",
+            )(),
+            ExitEvent.FAIL: exit_generator(),
+            ExitEvent.SWITCHCPU: warn_default_decorator(
+                switch_generator,
+                "switch CPU",
+                "switching the CPU type of the processor and continuing",
+            )(processor=board.get_processor()),
+            ExitEvent.WORKBEGIN: warn_default_decorator(
+                reset_stats_generator,
+                "work begin",
+                "resetting the stats and continuing",
+            )(),
+            ExitEvent.WORKEND: warn_default_decorator(
+                dump_stats_generator,
+                "work end",
+                "dumping the stats and continuing",
+            )(),
+            ExitEvent.USER_INTERRUPT: exit_generator(),
+            ExitEvent.MAX_TICK: exit_generator(),
+            ExitEvent.SIMPOINT_BEGIN: warn_default_decorator(
+                reset_stats_generator,
+                "simpoint begin",
+                "resetting the stats and continuing",
+            )(),
+            ExitEvent.MAX_INSTS: warn_default_decorator(
+                exit_generator,
+                "max instructions",
+                "exiting the simulation",
+            )(),
         }
 
         if on_exit_event:

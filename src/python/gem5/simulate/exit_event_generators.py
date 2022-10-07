@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Generator, Optional
 import m5.stats
 from ..components.processors.abstract_processor import AbstractProcessor
 from ..components.processors.switchable_processor import SwitchableProcessor
@@ -35,89 +36,43 @@ In this package we store generators for simulation exit events.
 """
 
 
-def defaultBehaviorWarning(type, effect):
-    warn(
-        "As no behavior was set by the user, default behavior is being carried"
-        f" out.\n Type: {type} \n Detail: {effect} \n"
-    )
+def warn_default_decorator(gen: Generator, type: str, effect: str):
+    """A decortator for generators which will print a warning that it is a
+    default generator.
+    """
+
+    def wrapped_generator(*args, **kw_args):
+        warn(
+            f"No behavior was set by the user for {type}."
+            f" Default behavior is {effect}."
+        )
+        for value in gen(*args, **kw_args):
+            yield value
+
+    return wrapped_generator
 
 
-def default_exit_generator():
+def exit_generator():
     """
     A default generator for an exit event. It will return True, indicating that
     the Simulator run loop should exit.
     """
-    defaultBehaviorWarning(
-        "default_exit_generator",
-        "A default generator for an exit event. It will return True, "
-        "indicating that the Simulator run loop should exit.",
-    )
     while True:
         yield True
 
 
-def default_switch_generator(processor: AbstractProcessor):
+def switch_generator(processor: AbstractProcessor):
     """
     A default generator for a switch exit event. If the processor is a
     SwitchableProcessor, this generator will switch it. Otherwise nothing will
     happen.
     """
-    defaultBehaviorWarning(
-        "default_switch_generator",
-        "A default generator for a switch exit event.If the processor is a "
-        "SwitchableProcessor, this generator will switch it. Otherwise nothing"
-        " will happen.",
-    )
     is_switchable = isinstance(processor, SwitchableProcessor)
     while True:
         if is_switchable:
             yield processor.switch()
         else:
             yield False
-
-
-def default_workbegin_generator():
-    """
-    A default generator for a workbegin exit event. It will reset the
-    simulation statistics.
-    """
-    defaultBehaviorWarning(
-        "default_workbegin_generator",
-        "A default generator for a workbegin exit event. It will reset the "
-        "simulation statistics.",
-    )
-    while True:
-        m5.stats.reset()
-        yield False
-
-
-def default_workend_generator():
-    """
-    A default generator for a workend exit event. It will dump the simulation
-    statistics.
-    """
-    defaultBehaviorWarning(
-        "default_workend_generator",
-        "A default generator for a workend exit event. It will dump the "
-        "simulation statistics.",
-    )
-    while True:
-        m5.stats.dump()
-        yield False
-
-
-def default_simpoint_generator():
-    """
-    A default generator for SimPoints. It will do nothing.
-    The Simulation run loop will continue after executing the behavior of the
-    generator.
-    """
-    defaultBehaviorWarning(
-        "default_simpoint_generator",
-        "A default generator for SimPoints. It will do nothing.",
-    )
-    while True:
-        yield False
 
 
 def dump_reset_generator():
@@ -133,13 +88,45 @@ def dump_reset_generator():
         yield False
 
 
-def save_checkpoint_generator(checkpoint_dir: Path):
+def save_checkpoint_generator(checkpoint_dir: Optional[Path] = None):
     """
     A generator for taking a checkpoint. It will take a checkpoint with the
     input path and the current simulation Ticks.
     The Simulation run loop will continue after executing the behavior of the
     generator.
     """
+    if not checkpoint_dir:
+        from m5 import options
+
+        checkpoint_dir = Path(options.outdir)
     while True:
         m5.checkpoint((checkpoint_dir / f"cpt.{str(m5.curTick())}").as_posix())
+        yield False
+
+
+def reset_stats_generator():
+    """
+    This generator resets the stats every time it is called. It does not dump
+    the stats before resetting them.
+    """
+    while True:
+        m5.stats.reset()
+        yield False
+
+
+def dump_stats_generator():
+    """
+    This generator dumps the stats every time it is called.
+    """
+    while True:
+        m5.stats.dump()
+        yield False
+
+
+def skip_generator():
+    """
+    This generator does nothing when on the exit event.
+    The simulation will continue after this generator.
+    """
+    while True:
         yield False
