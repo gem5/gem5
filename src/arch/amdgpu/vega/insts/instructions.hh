@@ -42691,6 +42691,8 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_FLAT__FLAT_ATOMIC_SMAX
 
     class Inst_FLAT__FLAT_ATOMIC_UMAX : public Inst_FLAT
