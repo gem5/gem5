@@ -69,7 +69,7 @@ build_target () {
     # compilation: https://gem5.atlassian.net/browse/GEM5-753
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --memory="${docker_mem_limit}" --rm \
-        gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest \
+        gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest \
             bash -c "scons build/${isa}/gem5.opt -j${compile_threads} \
             --ignore-style || (rm -rf build && scons build/${isa}/gem5.opt \
             -j${compile_threads} --ignore-style)"
@@ -80,13 +80,13 @@ unit_test () {
 
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --memory="${docker_mem_limit}" --rm \
-        gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest \
+        gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest \
             scons build/ALL/unittests.${build} -j${compile_threads} \
             --ignore-style
 }
 
 # Ensure we have the latest docker images.
-docker pull gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest
+docker pull gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
 
 # Try to build the ISA targets.
 build_target NULL
@@ -104,7 +104,7 @@ unit_test debug
 # Run the gem5 long tests.
 docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
     "${gem5_root}"/tests --memory="${docker_mem_limit}" --rm \
-    gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest \
+    gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest \
         ./main.py run --length long -j${compile_threads} -t${run_threads} -vv
 
 # Unfortunately, due docker being unable run KVM, we do so separately.
@@ -187,7 +187,7 @@ build_and_run_systemc () {
     rm -rf "${gem5_root}/build/ARM"
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --memory="${docker_mem_limit}" --rm \
-        gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest bash -c "\
+        gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest bash -c "\
 scons -j${compile_threads} --ignore-style build/ARM/gem5.opt; \
 scons --with-cxx-config --without-python --without-tcmalloc USE_SYSTEMC=0 \
     -j${compile_threads} build/ARM/libgem5_opt.so \
