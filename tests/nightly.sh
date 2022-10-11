@@ -81,7 +81,7 @@ unit_test () {
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --memory="${docker_mem_limit}" --rm \
         gcr.io/gem5-test/ubuntu-20.04_all-dependencies:latest \
-            scons build/NULL/unittests.${build} -j${compile_threads} \
+            scons build/ALL/unittests.${build} -j${compile_threads} \
             --ignore-style
 }
 
