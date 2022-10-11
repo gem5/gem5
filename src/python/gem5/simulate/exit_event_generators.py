@@ -28,6 +28,7 @@ from typing import Generator, Optional
 import m5.stats
 from ..components.processors.abstract_processor import AbstractProcessor
 from ..components.processors.switchable_processor import SwitchableProcessor
+from ..utils.simpoint import SimPoint
 from m5.util import warn
 from pathlib import Path
 
@@ -130,3 +131,39 @@ def skip_generator():
     """
     while True:
         yield False
+
+
+def simpoints_save_checkpoint_generator(
+    checkpoint_dir: Path, simpoint: SimPoint
+):
+    """
+    A generator for taking multiple checkpoints for SimPoints. It will save the
+    checkpoints in the checkpoint_dir path with the SimPoints' index.
+    The Simulation run loop will continue after executing the behavior of the
+    generator until all the SimPoints in the simpoint_list has taken a
+    checkpoint.
+    """
+    simpoint_list = simpoint.get_simpoint_start_insts()
+    count = 0
+    last_start = -1
+    while True:
+        m5.checkpoint((checkpoint_dir / f"cpt.SimPoint{count}").as_posix())
+        last_start = simpoint_list[count]
+        count += 1
+        # When the next SimPoint starting instruction is the same as the last
+        # one, it will take a checkpoint for it with index+1. Because of there
+        # are cases that the warmup length is larger than multiple SimPoints
+        # starting instructions, then they might cause duplicates in the
+        # simpoint_start_ints.
+        while (
+            count < len(simpoint_list) and last_start == simpoint_list[count]
+        ):
+            m5.checkpoint((checkpoint_dir / f"cpt.SimPoint{count}").as_posix())
+            last_start = simpoint_list[count]
+            count += 1
+        # When there are remaining SimPoints in the list, let the Simulation
+        # loop continues, otherwise, exit the Simulation loop.
+        if count < len(simpoint_list):
+            yield False
+        else:
+            yield True

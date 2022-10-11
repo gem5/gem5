@@ -126,7 +126,8 @@ class AbstractCore(SubSystem):
         """Schedule simpoint exit events for the core.
 
         This is used to raise SIMPOINT_BEGIN exit events in the gem5 standard
-        library.
+        library. Duplicate instruction counts in the inst_starts list will not
+        be scheduled.
 
         :param inst_starts: a list of SimPoints starting instructions
         :param init: if it is True, the starting instructions will be scheduled

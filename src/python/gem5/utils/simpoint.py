@@ -139,16 +139,14 @@ class SimPoint:
         instruction length is the gap between the starting instruction of a
         SimPoint and the ending instruction of the last SimPoint.
         """
-        last = 0
         warmup_list = []
         for index, start_inst in enumerate(self._simpoint_start_insts):
-            warmup_inst = start_inst - warmup_interval - last
+            warmup_inst = start_inst - warmup_interval
             if warmup_inst < 0:
-                warmup_inst = start_inst - last
+                warmup_inst = start_inst
             else:
                 warmup_inst = warmup_interval
             warmup_list.append(warmup_inst)
-            last = start_inst + self._simpoint_interval
             # change the starting instruction of a SimPoint to include the
             # warmup instruction length
             self._simpoint_start_insts[index] = start_inst - warmup_inst
