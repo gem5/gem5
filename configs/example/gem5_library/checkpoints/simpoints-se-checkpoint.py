@@ -116,7 +116,7 @@ simpoint = SimPoint(
     warmup_interval=1000000,
 )
 
-board.set_se_binary_workload(
+board.set_se_simpoint_workload(
     binary=Resource("x86-print-this"),
     arguments=["print this", 15000],
     simpoint=simpoint,

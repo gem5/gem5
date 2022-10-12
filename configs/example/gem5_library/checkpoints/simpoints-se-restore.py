@@ -103,8 +103,10 @@ simpoint = SimPoint(
     warmup_interval=1000000,
 )
 
-board.set_se_binary_workload(
-    binary=Resource("x86-print-this"), arguments=["print this", 15000]
+board.set_se_simpoint_workload(
+    binary=Resource("x86-print-this"),
+    arguments=["print this", 15000],
+    simpoint=simpoint,
 )
 
 # Here we obtain the checkpoints from gem5 resources, but these are generated
