@@ -725,7 +725,7 @@ SelfDebug::testVectorCatch(ThreadContext *tc, Addr addr,
     if (do_debug) {
         if (enableTdeTge) {
             return std::make_shared<HypervisorTrap>(0, 0x22,
-                                        EC_PREFETCH_ABORT_TO_HYP);
+                                        ExceptionClass::PREFETCH_ABORT_TO_HYP);
         } else {
             return std::make_shared<PrefetchAbort>(addr,
                                        ArmFault::DebugEvent, false,

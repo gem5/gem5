@@ -502,7 +502,7 @@ Fault
 mcrMrc15Trap(const MiscRegIndex misc_reg, ExtMachInst mach_inst,
              ThreadContext *tc, uint32_t imm)
 {
-    ExceptionClass ec = EC_TRAPPED_CP15_MCR_MRC;
+    ExceptionClass ec = ExceptionClass::TRAPPED_CP15_MCR_MRC;
     if (mcrMrc15TrapToHyp(misc_reg, tc, imm, &ec))
         return std::make_shared<HypervisorTrap>(mach_inst, imm, ec);
     return AArch64AArch32SystemAccessTrap(misc_reg, mach_inst, tc, imm, ec);
@@ -722,7 +722,7 @@ Fault
 mcrrMrrc15Trap(const MiscRegIndex misc_reg, ExtMachInst mach_inst,
                ThreadContext *tc, uint32_t imm)
 {
-    ExceptionClass ec = EC_TRAPPED_CP15_MCRR_MRRC;
+    ExceptionClass ec = ExceptionClass::TRAPPED_CP15_MCRR_MRRC;
     if (mcrrMrrc15TrapToHyp(misc_reg, tc, imm, &ec))
         return std::make_shared<HypervisorTrap>(mach_inst, imm, ec);
     return AArch64AArch32SystemAccessTrap(misc_reg, mach_inst, tc, imm, ec);
@@ -852,7 +852,7 @@ isGenericTimerCommonEL0HypTrap(const MiscRegIndex misc_reg, ThreadContext *tc,
         // As per the architecture, this hyp trap should have uncategorized
         // exception class
         if (ec)
-            *ec = EC_UNKNOWN;
+            *ec = ExceptionClass::UNKNOWN;
         return true;
     }
     return false;

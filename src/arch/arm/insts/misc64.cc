@@ -104,7 +104,7 @@ MiscRegOp64::_iss(const MiscRegNum64 &misc_reg, RegIndex int_index) const
 Fault
 MiscRegOp64::generateTrap(ExceptionLevel el) const
 {
-    return generateTrap(el, EC_TRAPPED_MSR_MRS_64, iss());
+    return generateTrap(el, ExceptionClass::TRAPPED_MSR_MRS_64, iss());
 }
 
 Fault

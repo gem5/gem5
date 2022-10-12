@@ -1311,18 +1311,23 @@ faultFpcrEL0(const MiscRegLUTEntry &entry, ThreadContext *tc,
     const bool in_host = hcr.e2h && hcr.tge;
     if (!(el2_enabled && in_host) && cpacr.fpen != 0b11) {
         if (el2_enabled && hcr.tge) {
-            return inst.generateTrap(EL2, EC_UNKNOWN, inst.iss());
+            return inst.generateTrap(EL2, ExceptionClass::UNKNOWN, inst.iss());
         } else {
-            return inst.generateTrap(EL1, EC_TRAPPED_SIMD_FP, 0x1E00000);
+            return inst.generateTrap(EL1,
+                ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
         }
     } else if (el2_enabled && in_host && cptr_el2.fpen != 0b11) {
-        return inst.generateTrap(EL2, EC_TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL2,
+            ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
     } else if (el2_enabled && hcr.e2h && ((cptr_el2.fpen & 0b1) == 0b0)) {
-        return inst.generateTrap(EL2, EC_TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL2,
+            ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
     } else if (el2_enabled && !hcr.e2h && cptr_el2.tfp) {
-        return inst.generateTrap(EL2, EC_TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL2,
+            ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
     } else if (ArmSystem::haveEL(tc, EL3) && cptr_el3.tfp) {
-        return inst.generateTrap(EL3, EC_TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL3,
+            ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
     } else {
         return NoFault;
     }
@@ -1339,13 +1344,17 @@ faultFpcrEL1(const MiscRegLUTEntry &entry, ThreadContext *tc,
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const bool el2_enabled = EL2Enabled(tc);
     if ((cpacr.fpen & 0b1) == 0b0) {
-        return inst.generateTrap(EL1, EC_TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL1,
+            ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
     } else if (el2_enabled && !hcr.e2h && cptr_el2.tfp) {
-        return inst.generateTrap(EL2, EC_TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL2,
+            ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
     } else if (el2_enabled && hcr.e2h && ((cptr_el2.fpen & 0b1) == 0b0)) {
-        return inst.generateTrap(EL2, EC_TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL2,
+            ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
     } else if (ArmSystem::haveEL(tc, EL3) && cptr_el3.tfp) {
-        return inst.generateTrap(EL3, EC_TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL3,
+            ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
     } else {
         return NoFault;
     }
@@ -1360,11 +1369,14 @@ faultFpcrEL2(const MiscRegLUTEntry &entry, ThreadContext *tc,
 
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     if (!hcr.e2h && cptr_el2.tfp) {
-        return inst.generateTrap(EL2, EC_TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL2,
+            ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
     } else if (hcr.e2h && ((cptr_el2.fpen & 0b1) == 0b0)) {
-        return inst.generateTrap(EL2, EC_TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL2,
+            ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
     } else if (ArmSystem::haveEL(tc, EL3) && cptr_el3.tfp) {
-        return inst.generateTrap(EL3, EC_TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL3,
+            ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
     } else {
         return NoFault;
     }
@@ -1376,7 +1388,8 @@ faultFpcrEL3(const MiscRegLUTEntry &entry,
 {
     const CPTR cptr_el3 = tc->readMiscReg(MISCREG_CPTR_EL3);
     if (cptr_el3.tfp) {
-        return inst.generateTrap(EL3, EC_TRAPPED_SIMD_FP, 0x1E00000);
+        return inst.generateTrap(EL3,
+            ExceptionClass::TRAPPED_SIMD_FP, 0x1E00000);
     } else {
         return NoFault;
     }
@@ -1562,13 +1575,13 @@ faultZcrEL1(const MiscRegLUTEntry &entry,
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const bool el2_enabled = EL2Enabled(tc);
     if (!(cpacr_el1.zen & 0x1)) {
-        return inst.generateTrap(EL1, EC_TRAPPED_SVE, 0);
+        return inst.generateTrap(EL1, ExceptionClass::TRAPPED_SVE, 0);
     } else if (el2_enabled && !hcr.e2h && cptr_el2.tz) {
-        return inst.generateTrap(EL2, EC_TRAPPED_SVE, 0);
+        return inst.generateTrap(EL2, ExceptionClass::TRAPPED_SVE, 0);
     } else if (el2_enabled && hcr.e2h && !(cptr_el2.zen & 0x1)) {
-        return inst.generateTrap(EL2, EC_TRAPPED_SVE, 0);
+        return inst.generateTrap(EL2, ExceptionClass::TRAPPED_SVE, 0);
     } else if (ArmSystem::haveEL(tc, EL3) && !cptr_el3.ez) {
-        return inst.generateTrap(EL3, EC_TRAPPED_SVE, 0);
+        return inst.generateTrap(EL3, ExceptionClass::TRAPPED_SVE, 0);
     } else {
         return NoFault;
     }
@@ -1583,11 +1596,11 @@ faultZcrEL2(const MiscRegLUTEntry &entry,
 
     const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     if (!hcr.e2h && cptr_el2.tz) {
-        return inst.generateTrap(EL2, EC_TRAPPED_SVE, 0);
+        return inst.generateTrap(EL2, ExceptionClass::TRAPPED_SVE, 0);
     } else if (hcr.e2h && !(cptr_el2.zen & 0x1)) {
-        return inst.generateTrap(EL2, EC_TRAPPED_SVE, 0);
+        return inst.generateTrap(EL2, ExceptionClass::TRAPPED_SVE, 0);
     } else if (ArmSystem::haveEL(tc, EL3) && !cptr_el3.ez) {
-        return inst.generateTrap(EL3, EC_TRAPPED_SVE, 0);
+        return inst.generateTrap(EL3, ExceptionClass::TRAPPED_SVE, 0);
     } else {
         return NoFault;
     }
@@ -1599,7 +1612,7 @@ faultZcrEL3(const MiscRegLUTEntry &entry,
 {
     const CPTR cptr_el3 = tc->readMiscReg(MISCREG_CPTR_EL3);
     if (!cptr_el3.ez) {
-        return inst.generateTrap(EL3, EC_TRAPPED_SVE, 0);
+        return inst.generateTrap(EL3, ExceptionClass::TRAPPED_SVE, 0);
     } else {
         return NoFault;
     }

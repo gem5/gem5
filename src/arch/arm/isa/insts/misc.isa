@@ -96,8 +96,9 @@ let {{
 
     if ((cpsr.mode != MODE_USER) && FullSystem) {
         if (EL2Enabled(xc->tcBase()) && (cpsr.mode != MODE_HYP) && hcr.tsc) {
-            fault = std::make_shared<HypervisorTrap>(machInst, 0,
-                                                     EC_SMC_TO_HYP);
+            fault = std::make_shared<HypervisorTrap>(
+                machInst, 0,
+                ExceptionClass::SMC_TO_HYP);
         } else {
             if (scr.scd) {
                 fault = disabledFault();
@@ -898,8 +899,9 @@ let {{
                                                       mnemonic);
     }
     if (mcrMrc14TrapToHyp((MiscRegIndex) op1, xc->tcBase(), imm)) {
-        return std::make_shared<HypervisorTrap>(machInst, imm,
-                                                EC_TRAPPED_CP14_MCR_MRC);
+        return std::make_shared<HypervisorTrap>(
+            machInst, imm,
+            ExceptionClass::TRAPPED_CP14_MCR_MRC);
     }
     Dest = MiscOp1;
     '''
@@ -922,8 +924,9 @@ let {{
                                                       mnemonic);
     }
     if (mcrMrc14TrapToHyp(miscReg, xc->tcBase(), imm)) {
-        return std::make_shared<HypervisorTrap>(machInst, imm,
-                                                EC_TRAPPED_CP14_MCR_MRC);
+        return std::make_shared<HypervisorTrap>(
+            machInst, imm,
+            ExceptionClass::TRAPPED_CP14_MCR_MRC);
     }
     MiscDest = Op1;
     '''
@@ -1197,7 +1200,7 @@ let {{
         if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15ISB,
             xc->tcBase(), imm)) {
             return std::make_shared<HypervisorTrap>(machInst, imm,
-                EC_TRAPPED_CP15_MCR_MRC);
+                ExceptionClass::TRAPPED_CP15_MCR_MRC);
         }
     '''
     isbIop = ArmInstObjParams("isb", "Isb", "ImmOp",
@@ -1213,7 +1216,7 @@ let {{
         if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15DSB,
             xc->tcBase(), imm)) {
             return std::make_shared<HypervisorTrap>(machInst, imm,
-                EC_TRAPPED_CP15_MCR_MRC);
+                ExceptionClass::TRAPPED_CP15_MCR_MRC);
         }
     '''
     dsbIop = ArmInstObjParams("dsb", "Dsb", "ImmOp",
@@ -1230,7 +1233,7 @@ let {{
         if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15DMB,
             xc->tcBase(), imm)) {
             return std::make_shared<HypervisorTrap>(machInst, imm,
-                EC_TRAPPED_CP15_MCR_MRC);
+                ExceptionClass::TRAPPED_CP15_MCR_MRC);
         }
     '''
     dmbIop = ArmInstObjParams("dmb", "Dmb", "ImmOp",

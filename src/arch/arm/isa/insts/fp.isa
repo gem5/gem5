@@ -225,7 +225,7 @@ let {{
         }
         if (hypTrap) {
             return std::make_shared<HypervisorTrap>(machInst, imm,
-                EC_TRAPPED_CP10_MRC_VMRS);
+                ExceptionClass::TRAPPED_CP10_MRC_VMRS);
         }
     }
     Dest = MiscOp1;

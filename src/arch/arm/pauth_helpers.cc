@@ -121,9 +121,11 @@ ArmISA::trapPACUse(ThreadContext *tc, ExceptionLevel target_el)
 
     switch (target_el) {
        case EL2:
-            return std::make_shared<HypervisorTrap>(0x0, 0, EC_TRAPPED_PAC);
+            return std::make_shared<HypervisorTrap>(
+                0x0, 0, ExceptionClass::TRAPPED_PAC);
        case EL3:
-            return std::make_shared<SecureMonitorTrap>(0x0, 0, EC_TRAPPED_PAC);
+            return std::make_shared<SecureMonitorTrap>(
+                0x0, 0, ExceptionClass::TRAPPED_PAC);
        default:
             return NoFault;
     }
