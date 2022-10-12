@@ -669,7 +669,7 @@ AArch32isUndefinedGenericTimer(MiscRegIndex reg, ThreadContext *tc)
 int
 snsBankedIndex(MiscRegIndex reg, ThreadContext *tc)
 {
-    SCR scr = tc->readMiscReg(MISCREG_SCR);
+    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
     return snsBankedIndex(reg, tc, scr.ns);
 }
 
@@ -688,7 +688,7 @@ int
 snsBankedIndex64(MiscRegIndex reg, ThreadContext *tc)
 {
     auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-    SCR scr = tc->readMiscReg(MISCREG_SCR);
+    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
     return isa->snsBankedIndex64(reg, scr.ns);
 }
 

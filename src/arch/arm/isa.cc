@@ -796,7 +796,7 @@ ISA::readMiscReg(RegIndex idx)
 
             // Security Extensions may limit the readability of CPACR
             if (release->has(ArmExtension::SECURITY)) {
-                scr = readMiscRegNoEffect(MISCREG_SCR);
+                scr = readMiscRegNoEffect(MISCREG_SCR_EL3);
                 cpsr = readMiscRegNoEffect(MISCREG_CPSR);
                 if (scr.ns && (cpsr.mode != MODE_MON) && ELIs32(tc, EL3)) {
                     NSACR nsacr = readMiscRegNoEffect(MISCREG_NSACR);
@@ -822,7 +822,7 @@ ISA::readMiscReg(RegIndex idx)
       case MISCREG_REVIDR:  // not implemented, so alias MIDR
       case MISCREG_MIDR:
         cpsr = readMiscRegNoEffect(MISCREG_CPSR);
-        scr  = readMiscRegNoEffect(MISCREG_SCR);
+        scr  = readMiscRegNoEffect(MISCREG_SCR_EL3);
         if ((cpsr.mode == MODE_HYP) || isSecure(tc)) {
             return readMiscRegNoEffect(idx);
         } else {
@@ -978,14 +978,6 @@ ISA::readMiscReg(RegIndex idx)
       case MISCREG_DBGDSCRint:
         return readMiscRegNoEffect(MISCREG_DBGDSCRint);
       case MISCREG_ISR:
-        {
-            auto ic = dynamic_cast<ArmISA::Interrupts *>(
-                    tc->getCpuPtr()->getInterruptController(tc->threadId()));
-            return ic->getISR(
-                readMiscRegNoEffect(MISCREG_HCR),
-                readMiscRegNoEffect(MISCREG_CPSR),
-                readMiscRegNoEffect(MISCREG_SCR));
-        }
       case MISCREG_ISR_EL1:
         {
             auto ic = dynamic_cast<ArmISA::Interrupts *>(
@@ -1170,7 +1162,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
 
                 // Security Extensions may limit the writability of CPACR
                 if (release->has(ArmExtension::SECURITY)) {
-                    scr = readMiscRegNoEffect(MISCREG_SCR);
+                    scr = readMiscRegNoEffect(MISCREG_SCR_EL3);
                     CPSR cpsr = readMiscRegNoEffect(MISCREG_CPSR);
                     if (scr.ns && (cpsr.mode != MODE_MON) && ELIs32(tc, EL3)) {
                         NSACR nsacr = readMiscRegNoEffect(MISCREG_NSACR);
@@ -1645,7 +1637,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
           case MISCREG_SCTLR:
             {
                 DPRINTF(MiscRegs, "Writing SCTLR: %#x\n", newVal);
-                scr = readMiscRegNoEffect(MISCREG_SCR);
+                scr = readMiscRegNoEffect(MISCREG_SCR_EL3);
 
                 MiscRegIndex sctlr_idx;
                 if (release->has(ArmExtension::SECURITY) &&
@@ -2189,7 +2181,7 @@ ISA::addressTranslation(MMU::ArmTranslationType tran_type,
     if (fault == NoFault) {
         Addr paddr = req->getPaddr();
         TTBCR ttbcr = readMiscRegNoEffect(MISCREG_TTBCR);
-        HCR hcr = readMiscRegNoEffect(MISCREG_HCR);
+        HCR hcr = readMiscRegNoEffect(MISCREG_HCR_EL2);
 
         uint8_t max_paddr_bit = 0;
         if (release->has(ArmExtension::LPAE) &&

@@ -514,7 +514,7 @@ ArmFault::invoke32(ThreadContext *tc, const StaticInstPtr &inst)
         return;
 
     SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
-    SCR scr = tc->readMiscReg(MISCREG_SCR);
+    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
     CPSR saved_cpsr = tc->readMiscReg(MISCREG_CPSR);
     saved_cpsr.nz = tc->getReg(cc_reg::Nz);
     saved_cpsr.c = tc->getReg(cc_reg::C);
@@ -533,10 +533,10 @@ ArmFault::invoke32(ThreadContext *tc, const StaticInstPtr &inst)
 
     // Ensure Secure state if initially in Monitor mode
     if (have_security && saved_cpsr.mode == MODE_MON) {
-        SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR);
+        SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
         if (scr.ns) {
             scr.ns = 0;
-            tc->setMiscRegNoEffect(MISCREG_SCR, scr);
+            tc->setMiscRegNoEffect(MISCREG_SCR_EL3, scr);
         }
     }
 
@@ -827,7 +827,7 @@ UndefinedInstruction::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 bool
 UndefinedInstruction::routeToHyp(ThreadContext *tc) const
 {
-    HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
+    HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     return fromEL == EL2 ||
            (EL2Enabled(tc) && (fromEL == EL0) && hcr.tge);
 }
@@ -883,7 +883,7 @@ SupervisorCall::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 bool
 SupervisorCall::routeToHyp(ThreadContext *tc) const
 {
-    HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
+    HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     return fromEL == EL2 ||
            (EL2Enabled(tc) && fromEL == EL0 && hcr.tge);
 }
@@ -1212,7 +1212,7 @@ bool
 AbortFault<T>::abortDisable(ThreadContext *tc)
 {
     if (ArmSystem::haveEL(tc, EL3)) {
-        SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR);
+        SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
         return (!scr.ns || scr.aw);
     }
     return true;
@@ -1302,12 +1302,7 @@ PrefetchAbort::iss() const
 bool
 PrefetchAbort::routeToMonitor(ThreadContext *tc) const
 {
-    SCR scr = 0;
-    if (from64)
-        scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
-    else
-        scr = tc->readMiscRegNoEffect(MISCREG_SCR);
-
+    SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
     return scr.ea && !isMMUFault();
 }
 
@@ -1316,7 +1311,7 @@ PrefetchAbort::routeToHyp(ThreadContext *tc) const
 {
     bool toHyp;
 
-    HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
+    HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     HDCR hdcr = tc->readMiscRegNoEffect(MISCREG_HDCR);
 
     toHyp = fromEL == EL2;
@@ -1364,12 +1359,7 @@ DataAbort::il(ThreadContext *tc) const
 bool
 DataAbort::routeToMonitor(ThreadContext *tc) const
 {
-    SCR scr = 0;
-    if (from64)
-        scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
-    else
-        scr = tc->readMiscRegNoEffect(MISCREG_SCR);
-
+    SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
     return scr.ea && !isMMUFault();
 }
 
@@ -1378,7 +1368,7 @@ DataAbort::routeToHyp(ThreadContext *tc) const
 {
     bool toHyp;
 
-    HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
+    HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     HDCR hdcr = tc->readMiscRegNoEffect(MISCREG_HDCR);
 
     bool amo = hcr.amo;
@@ -1467,27 +1457,23 @@ void
 VirtualDataAbort::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
     AbortFault<VirtualDataAbort>::invoke(tc, inst);
-    HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR);
+    HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     hcr.va = 0;
-    tc->setMiscRegNoEffect(MISCREG_HCR, hcr);
+    tc->setMiscRegNoEffect(MISCREG_HCR_EL2, hcr);
 }
 
 bool
 Interrupt::routeToMonitor(ThreadContext *tc) const
 {
     assert(ArmSystem::haveEL(tc, EL3));
-    SCR scr = 0;
-    if (from64)
-        scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
-    else
-        scr = tc->readMiscRegNoEffect(MISCREG_SCR);
+    SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
     return scr.irq;
 }
 
 bool
 Interrupt::routeToHyp(ThreadContext *tc) const
 {
-    HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
+    HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     return fromEL == EL2 ||
            (EL2Enabled(tc) && fromEL <= EL1 && (hcr.tge || hcr.imo));
 }
@@ -1496,7 +1482,7 @@ bool
 Interrupt::abortDisable(ThreadContext *tc)
 {
     if (ArmSystem::haveEL(tc, EL3)) {
-        SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR);
+        SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
         return (!scr.ns || scr.aw);
     }
     return true;
@@ -1509,18 +1495,14 @@ bool
 FastInterrupt::routeToMonitor(ThreadContext *tc) const
 {
     assert(ArmSystem::haveEL(tc, EL3));
-    SCR scr = 0;
-    if (from64)
-        scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
-    else
-        scr = tc->readMiscRegNoEffect(MISCREG_SCR);
+    SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
     return scr.fiq;
 }
 
 bool
 FastInterrupt::routeToHyp(ThreadContext *tc) const
 {
-    HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR);
+    HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     return fromEL == EL2 ||
            (EL2Enabled(tc) && fromEL <= EL1 && (hcr.tge || hcr.fmo));
 }
@@ -1529,7 +1511,7 @@ bool
 FastInterrupt::abortDisable(ThreadContext *tc)
 {
     if (ArmSystem::haveEL(tc, EL3)) {
-        SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR);
+        SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
         return (!scr.ns || scr.aw);
     }
     return true;
@@ -1541,7 +1523,7 @@ FastInterrupt::fiqDisable(ThreadContext *tc)
     if (ArmSystem::haveEL(tc, EL2)) {
         return true;
     } else if (ArmSystem::haveEL(tc, EL3)) {
-        SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR);
+        SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
         return (!scr.ns || scr.fw);
     }
     return true;

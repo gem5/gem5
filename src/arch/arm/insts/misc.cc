@@ -408,7 +408,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
     switch (dest_idx) {
       case MISCREG_TLBIALL: // TLBI all entries, EL0&1,
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIALL tlbiOp(EL1, secure);
@@ -418,7 +418,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate All, Inner Shareable
       case MISCREG_TLBIALLIS:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIALL tlbiOp(EL1, secure);
@@ -428,7 +428,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // Instruction TLB Invalidate All
       case MISCREG_ITLBIALL:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             ITLBIALL tlbiOp(EL1, secure);
@@ -438,7 +438,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // Data TLB Invalidate All
       case MISCREG_DTLBIALL:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             DTLBIALL tlbiOp(EL1, secure);
@@ -448,7 +448,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate by VA
       case MISCREG_TLBIMVA:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIMVA tlbiOp(EL1,
@@ -463,7 +463,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate by VA, Last Level
       case MISCREG_TLBIMVAL:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIMVA tlbiOp(EL1,
@@ -478,7 +478,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate by VA, Inner Shareable
       case MISCREG_TLBIMVAIS:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIMVA tlbiOp(EL1,
@@ -493,7 +493,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate by VA, Last Level, Inner Shareable
       case MISCREG_TLBIMVALIS:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIMVA tlbiOp(EL1,
@@ -508,7 +508,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate by ASID match
       case MISCREG_TLBIASID:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIASID tlbiOp(EL1,
@@ -521,7 +521,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate by ASID match, Inner Shareable
       case MISCREG_TLBIASIDIS:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIASID tlbiOp(EL1,
@@ -534,7 +534,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate by VA, All ASID
       case MISCREG_TLBIMVAA:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIMVAA tlbiOp(EL1, secure,
@@ -546,7 +546,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate by VA, Last Level, All ASID
       case MISCREG_TLBIMVAAL:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIMVAA tlbiOp(EL1, secure,
@@ -558,7 +558,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate by VA, All ASID, Inner Shareable
       case MISCREG_TLBIMVAAIS:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIMVAA tlbiOp(EL1, secure,
@@ -570,7 +570,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate by VA, All ASID, Last Level, Inner Shareable
       case MISCREG_TLBIMVAALIS:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIMVAA tlbiOp(EL1, secure,
@@ -582,7 +582,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate by VA, Hyp mode
       case MISCREG_TLBIMVAH:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIMVAA tlbiOp(EL2, secure,
@@ -594,7 +594,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate by VA, Last Level, Hyp mode
       case MISCREG_TLBIMVALH:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIMVAA tlbiOp(EL2, secure,
@@ -606,7 +606,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate by VA, Hyp mode, Inner Shareable
       case MISCREG_TLBIMVAHIS:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIMVAA tlbiOp(EL2, secure,
@@ -618,7 +618,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate by VA, Hyp mode, Last Level, Inner Shareable
       case MISCREG_TLBIMVALHIS:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIMVAA tlbiOp(EL2, secure,
@@ -630,7 +630,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // TLB Invalidate by Intermediate Physical Address, Stage 2
       case MISCREG_TLBIIPAS2:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIIPA tlbiOp(EL1,
@@ -645,7 +645,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // Last Level
       case MISCREG_TLBIIPAS2L:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIIPA tlbiOp(EL1,
@@ -660,7 +660,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // Inner Shareable
       case MISCREG_TLBIIPAS2IS:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIIPA tlbiOp(EL1,
@@ -675,7 +675,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // Last Level, Inner Shareable
       case MISCREG_TLBIIPAS2LIS:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             TLBIIPA tlbiOp(EL1,
@@ -689,7 +689,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // Instruction TLB Invalidate by VA
       case MISCREG_ITLBIMVA:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             ITLBIMVA tlbiOp(EL1,
@@ -703,7 +703,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // Data TLB Invalidate by VA
       case MISCREG_DTLBIMVA:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             DTLBIMVA tlbiOp(EL1,
@@ -717,7 +717,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // Instruction TLB Invalidate by ASID match
       case MISCREG_ITLBIASID:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             ITLBIASID tlbiOp(EL1,
@@ -730,7 +730,7 @@ TlbiOp::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) const
       // Data TLB Invalidate by ASID match
       case MISCREG_DTLBIASID:
         {
-            SCR scr = tc->readMiscReg(MISCREG_SCR);
+            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
             bool secure = release->has(ArmExtension::SECURITY) && !scr.ns;
             DTLBIASID tlbiOp(EL1,

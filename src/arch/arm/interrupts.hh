@@ -133,7 +133,7 @@ class Interrupts : public BaseInterrupts
     bool
     checkInterrupts() const override
     {
-        HCR  hcr  = tc->readMiscReg(MISCREG_HCR);
+        HCR  hcr  = tc->readMiscReg(MISCREG_HCR_EL2);
 
         if (!(intStatus || hcr.va || hcr.vi || hcr.vf))
             return false;
@@ -236,7 +236,7 @@ class Interrupts : public BaseInterrupts
     {
         assert(checkInterrupts());
 
-        HCR  hcr  = tc->readMiscReg(MISCREG_HCR);
+        HCR  hcr  = tc->readMiscReg(MISCREG_HCR_EL2);
         CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
 
         bool no_vhe = !HaveExt(tc, ArmExtension::FEAT_VHE);

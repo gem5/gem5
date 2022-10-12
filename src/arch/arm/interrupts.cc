@@ -50,17 +50,10 @@ ArmISA::Interrupts::takeInt(InterruptTypes int_type) const
     bool highest_el_is_64 = ArmSystem::highestELIs64(tc);
 
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-    SCR scr;
-    HCR hcr;
-    hcr = tc->readMiscReg(MISCREG_HCR);
+    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);;
+    HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     ExceptionLevel el = currEL(tc);
     bool cpsr_mask_bit, scr_routing_bit, scr_fwaw_bit, hcr_mask_override_bit;
-
-    if (!highest_el_is_64)
-        scr = tc->readMiscReg(MISCREG_SCR);
-    else
-        scr = tc->readMiscReg(MISCREG_SCR_EL3);
-
     bool is_secure = isSecure(tc);
 
     switch(int_type) {

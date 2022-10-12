@@ -86,7 +86,7 @@ bool
 isSecureBelowEL3(ThreadContext *tc)
 {
     return ArmSystem::haveEL(tc, EL3) &&
-        static_cast<SCR>(tc->readMiscRegNoEffect(MISCREG_SCR)).ns == 0;
+        static_cast<SCR>(tc->readMiscRegNoEffect(MISCREG_SCR_EL3)).ns == 0;
 }
 
 ExceptionLevel
@@ -95,16 +95,10 @@ debugTargetFrom(ThreadContext *tc, bool secure)
     bool route_to_el2;
     if (ArmSystem::haveEL(tc, EL2) &&
         (!secure || HaveExt(tc, ArmExtension::FEAT_SEL2))) {
-        if (ELIs32(tc, EL2)) {
-            const HCR hcr = tc->readMiscReg(MISCREG_HCR);
-            const HDCR hdcr = tc->readMiscRegNoEffect(MISCREG_HDCR);
-            route_to_el2 = (hdcr.tde == 1 || hcr.tge == 1);
-        } else {
-            const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-            const HDCR mdcr = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
-            route_to_el2 = (mdcr.tde == 1 || hcr.tge == 1);
-        }
-    }else{
+        const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+        const HDCR mdcr = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
+        route_to_el2 = (mdcr.tde == 1 || hcr.tge == 1);
+    } else {
         route_to_el2 = false;
     }
     ExceptionLevel target;
@@ -239,7 +233,8 @@ s1TranslationRegime(ThreadContext* tc, ExceptionLevel el)
     if (el != EL0)
         return el;
     else if (ArmSystem::haveEL(tc, EL3) && ELIs32(tc, EL3) &&
-             static_cast<SCR>(tc->readMiscRegNoEffect(MISCREG_SCR)).ns == 0)
+             static_cast<SCR>(
+                tc->readMiscRegNoEffect(MISCREG_SCR_EL3)).ns == 0)
         return EL3;
     else if (HaveExt(tc, ArmExtension::FEAT_VHE) && ELIsInHost(tc, el))
         return EL2;
@@ -520,7 +515,7 @@ mcrMrc15TrapToHyp(const MiscRegIndex misc_reg, ThreadContext *tc, uint32_t iss,
     uint32_t opc2;
     bool trap_to_hyp = false;
 
-    const HCR hcr = tc->readMiscReg(MISCREG_HCR);
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const HDCR hdcr = tc->readMiscReg(MISCREG_HDCR);
     const HSTR hstr = tc->readMiscReg(MISCREG_HSTR);
     const HCPTR hcptr = tc->readMiscReg(MISCREG_HCPTR);
@@ -673,7 +668,7 @@ mcrMrc14TrapToHyp(const MiscRegIndex misc_reg, ThreadContext *tc, uint32_t iss)
     uint32_t opc1;
     uint32_t opc2;
 
-    const HCR hcr = tc->readMiscReg(MISCREG_HCR);
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const HDCR hdcr = tc->readMiscReg(MISCREG_HDCR);
     const HSTR hstr = tc->readMiscReg(MISCREG_HSTR);
     const HCPTR hcptr = tc->readMiscReg(MISCREG_HCPTR);
@@ -740,7 +735,7 @@ mcrrMrrc15TrapToHyp(const MiscRegIndex misc_reg, ThreadContext *tc,
     bool is_read;
     bool trap_to_hyp = false;
 
-    const HCR hcr = tc->readMiscReg(MISCREG_HCR);
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const HSTR hstr = tc->readMiscReg(MISCREG_HSTR);
 
     if (EL2Enabled(tc) && (currEL(tc) < EL2)) {
