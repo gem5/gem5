@@ -151,3 +151,8 @@ services:
             context: llvm-gnu-cross-compiler-riscv64
             dockerfile: Dockerfile
         image: gcr.io/gem5-test/llvm-gnu-cross-compiler-riscv64
+    gem5-all-min-dependencies:
+        build:
+            context: gem5-all-min-dependencies
+            dockerfile: Dockerfile
+        image: gcr.io/gem5-test/gem5-all-min-dependencies
