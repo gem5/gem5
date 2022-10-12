@@ -441,9 +441,9 @@ void
 ThreadContext::readMem(
     iris::MemorySpaceId space, Addr addr, void *p, size_t size)
 {
-    iris::r0master::MemoryReadResult r;
+    iris::MemoryReadResult r;
     auto err = call().memory_read(_instId, r, space, addr, 1, size);
-    panic_if(err != iris::r0master::E_ok, "readMem failed.");
+    panic_if(err != iris::E_ok, "readMem failed.");
     std::memcpy(p, r.data.data(), size);
 }
 
@@ -455,7 +455,7 @@ ThreadContext::writeMem(
     std::memcpy(data.data(), p, size);
     iris::MemoryWriteResult r;
     auto err = call().memory_write(_instId, r, space, addr, 1, size, data);
-    panic_if(err != iris::r0master::E_ok, "writeMem failed.");
+    panic_if(err != iris::E_ok, "writeMem failed.");
 }
 
 bool
