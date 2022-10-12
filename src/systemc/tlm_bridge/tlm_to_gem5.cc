@@ -398,6 +398,8 @@ TlmToGem5Bridge<BITWIDTH>::get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
 {
     auto [pkt, pkt_created] = payload2packet(_id, trans);
     pkt->pushSenderState(new Gem5SystemC::TlmSenderState(trans));
+    if (pkt_created)
+        pkt->req->setFlags(Request::NO_ACCESS);
 
     MemBackdoorPtr backdoor = nullptr;
     bmp.sendAtomicBackdoor(pkt, backdoor);
