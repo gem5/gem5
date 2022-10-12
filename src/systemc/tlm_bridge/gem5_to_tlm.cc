@@ -194,6 +194,24 @@ packet2payload(PacketPtr packet)
     return trans;
 }
 
+void
+setPacketResponse(PacketPtr pkt, tlm::tlm_generic_payload &trans)
+{
+    pkt->makeResponse();
+
+    auto resp = trans.get_response_status();
+    switch (resp) {
+      case tlm::TLM_OK_RESPONSE:
+        break;
+      case tlm::TLM_COMMAND_ERROR_RESPONSE:
+        pkt->setBadCommand();
+        break;
+      default:
+        pkt->setBadAddress();
+        break;
+    }
+}
+
 template <unsigned int BITWIDTH>
 void
 Gem5ToTlmBridge<BITWIDTH>::pec(
@@ -225,7 +243,7 @@ Gem5ToTlmBridge<BITWIDTH>::pec(
         // we make a response packet before sending it back to the initiator
         // side gem5 module.
         if (packet->needsResponse()) {
-            packet->makeResponse();
+            setPacketResponse(packet, trans);
         }
         if (packet->isResponse()) {
             need_retry = !bridgeResponsePort.sendTimingResp(packet);
@@ -296,7 +314,7 @@ Gem5ToTlmBridge<BITWIDTH>::recvAtomic(PacketPtr packet)
     }
 
     if (packet->needsResponse())
-        packet->makeResponse();
+        setPacketResponse(packet, *trans);
 
     trans->release();
 
@@ -328,6 +346,7 @@ Gem5ToTlmBridge<BITWIDTH>::recvAtomicBackdoor(
         backdoor = getBackdoor(*trans);
     }
 
+    // Always set success response in Backdoor case.
     if (packet->needsResponse())
         packet->makeResponse();
 

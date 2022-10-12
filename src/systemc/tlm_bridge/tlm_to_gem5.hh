@@ -141,8 +141,6 @@ class TlmToGem5Bridge : public TlmToGem5BridgeBase
 
     void destroyPacket(gem5::PacketPtr pkt);
 
-    void checkTransaction(tlm::tlm_generic_payload &trans);
-
     void invalidateDmi(const gem5::MemBackdoor &backdoor);
 
   protected:

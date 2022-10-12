@@ -178,6 +178,18 @@ payload2packet(RequestorID _id, tlm::tlm_generic_payload &trans)
     return std::make_pair(pkt, true);
 }
 
+void
+setPayloadResponse(tlm::tlm_generic_payload &trans, PacketPtr pkt)
+{
+    if (!pkt->isError()) {
+        trans.set_response_status(tlm::TLM_OK_RESPONSE);
+    } else if (pkt->isRead() || pkt->isWrite()) {
+        trans.set_response_status(tlm::TLM_COMMAND_ERROR_RESPONSE);
+    } else {
+        trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
+    }
+}
+
 template <unsigned int BITWIDTH>
 void
 TlmToGem5Bridge<BITWIDTH>::sendEndReq(tlm::tlm_generic_payload &trans)
@@ -195,9 +207,15 @@ void
 TlmToGem5Bridge<BITWIDTH>::sendBeginResp(tlm::tlm_generic_payload &trans,
                                          sc_core::sc_time &delay)
 {
-    tlm::tlm_phase phase = tlm::BEGIN_RESP;
+    Gem5SystemC::Gem5Extension *extension = nullptr;
+    trans.get_extension(extension);
+    panic_if(extension == nullptr,
+             "Missing gem5 extension when sending BEGIN_RESP");
+    auto pkt = extension->getPacket();
 
-    trans.set_response_status(tlm::TLM_OK_RESPONSE);
+    setPayloadResponse(trans, pkt);
+
+    tlm::tlm_phase phase = tlm::BEGIN_RESP;
 
     auto status = socket->nb_transport_bw(trans, phase, delay);
 
@@ -252,8 +270,6 @@ TlmToGem5Bridge<BITWIDTH>::handleEndResp(tlm::tlm_generic_payload &trans)
 
     responseInProgress = false;
 
-    checkTransaction(trans);
-
     if (needToSendRetry) {
         bmp.sendRetryResp();
         needToSendRetry = false;
@@ -265,18 +281,6 @@ void
 TlmToGem5Bridge<BITWIDTH>::destroyPacket(PacketPtr pkt)
 {
     delete pkt;
-}
-
-template <unsigned int BITWIDTH>
-void
-TlmToGem5Bridge<BITWIDTH>::checkTransaction(tlm::tlm_generic_payload &trans)
-{
-    if (trans.is_response_error()) {
-        std::stringstream ss;
-        ss << "Transaction returned with error, response status = "
-           << trans.get_response_string();
-        SC_REPORT_ERROR("TLM-2", ss.str().c_str());
-    }
 }
 
 template <unsigned int BITWIDTH>
@@ -362,10 +366,10 @@ TlmToGem5Bridge<BITWIDTH>::b_transport(tlm::tlm_generic_payload &trans,
     // clean up
     delete senderState;
 
+    setPayloadResponse(trans, pkt);
+
     if (pkt_created)
         destroyPacket(pkt);
-
-    trans.set_response_status(tlm::TLM_OK_RESPONSE);
 }
 
 template <unsigned int BITWIDTH>
@@ -437,10 +441,10 @@ TlmToGem5Bridge<BITWIDTH>::get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
     // clean up
     delete senderState;
 
+    setPayloadResponse(trans, pkt);
+
     if (pkt_created)
         destroyPacket(pkt);
-
-    trans.set_response_status(tlm::TLM_OK_RESPONSE);
 
     return backdoor != nullptr;
 }
