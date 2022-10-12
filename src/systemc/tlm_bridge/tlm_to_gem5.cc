@@ -430,7 +430,7 @@ TlmToGem5Bridge<BITWIDTH>::get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
     // clean up
     delete senderState;
 
-    if (!pkt_created)
+    if (pkt_created)
         destroyPacket(pkt);
 
     trans.set_response_status(tlm::TLM_OK_RESPONSE);
