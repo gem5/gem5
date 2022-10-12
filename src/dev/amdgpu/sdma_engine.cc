@@ -33,6 +33,8 @@
 
 #include "arch/amdgpu/vega/pagetable_walker.hh"
 #include "arch/generic/mmu.hh"
+#include "debug/SDMAData.hh"
+#include "debug/SDMAEngine.hh"
 #include "dev/amdgpu/interrupt_handler.hh"
 #include "dev/amdgpu/sdma_commands.hh"
 #include "dev/amdgpu/sdma_mmio.hh"
@@ -601,13 +603,16 @@ void
 SDMAEngine::copyReadData(SDMAQueue *q, sdmaCopy *pkt, uint8_t *dmaBuffer)
 {
     // lastly we write read data to the destination address
-    DPRINTF(SDMAEngine, "Copy packet data:\n");
-    uint64_t *dmaBuffer64 = new uint64_t[pkt->count/8];
-    memcpy(dmaBuffer64, dmaBuffer, pkt->count);
+    uint64_t *dmaBuffer64 = reinterpret_cast<uint64_t *>(dmaBuffer);
+
+    DPRINTF(SDMAEngine, "Copy packet last/first qwords:\n");
+    DPRINTF(SDMAEngine, "First: %016lx\n", dmaBuffer64[0]);
+    DPRINTF(SDMAEngine, "Last:  %016lx\n", dmaBuffer64[(pkt->count/8)-1]);
+
+    DPRINTF(SDMAData, "Copy packet data:\n");
     for (int i = 0; i < pkt->count/8; ++i) {
-        DPRINTF(SDMAEngine, "%016lx\n", dmaBuffer64[i]);
+        DPRINTF(SDMAData, "%016lx\n", dmaBuffer64[i]);
     }
-    delete [] dmaBuffer64;
 
     Addr device_addr = getDeviceAddress(pkt->dest);
     // Write read data to the destination address then call the copyDone method

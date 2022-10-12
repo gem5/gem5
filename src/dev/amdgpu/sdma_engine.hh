@@ -33,7 +33,6 @@
 #define __DEV_AMDGPU_SDMA_ENGINE_HH__
 
 #include "base/bitunion.hh"
-#include "debug/SDMAEngine.hh"
 #include "dev/amdgpu/amdgpu_device.hh"
 #include "dev/amdgpu/sdma_packets.hh"
 #include "dev/dma_virt_device.hh"
