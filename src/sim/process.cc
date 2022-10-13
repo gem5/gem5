@@ -520,7 +520,7 @@ Process::absolutePath(const std::string &filename, bool host_filesystem)
     }
 
     // Add a trailing '/' if the current working directory did not have one.
-    normalize(path_base);
+    path_base = normalize(path_base);
 
     // Append the filename onto the current working path.
     auto absolute_path = path_base + filename;
