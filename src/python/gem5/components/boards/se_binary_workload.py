@@ -57,6 +57,7 @@ class SEBinaryWorkload:
         stdout_file: Optional[Path] = None,
         stderr_file: Optional[Path] = None,
         arguments: List[str] = [],
+        checkpoint: Optional[Union[Path, AbstractResource]] = None,
     ) -> None:
         """Set up the system to run a specific binary.
 
@@ -70,6 +71,8 @@ class SEBinaryWorkload:
         items. True by default.
         :param stdin_file: The input file for the binary
         :param arguments: The input arguments for the binary
+        :param checkpoint: The checkpoint directory. Used to restore the
+        simulation to that checkpoint.
         """
 
         # We assume this this is in a multiple-inheritance setup with an
@@ -99,11 +102,25 @@ class SEBinaryWorkload:
         # Set whether to exit on work items for the se_workload
         self.exit_on_work_items = exit_on_work_items
 
+        # Here we set `self._checkpoint_dir`. This is then used by the
+        # Simulator module to setup checkpoints.
+        if checkpoint:
+            if isinstance(checkpoint, Path):
+                self._checkpoint = checkpoint
+            elif isinstance(checkpoint, AbstractResource):
+                self._checkpoint_dir = Path(checkpoint.get_local_path())
+            else:
+                raise Exception(
+                    "The checkpoint_dir must be None, Path, or "
+                    "AbstractResource."
+                )
+
     def set_se_simpoint_workload(
         self,
         binary: AbstractResource,
         arguments: List[str] = [],
         simpoint: Union[AbstractResource, SimPoint] = None,
+        checkpoint: Optional[Union[Path, AbstractResource]] = None,
     ) -> None:
         """Set up the system to run a SimPoint workload.
 
@@ -119,6 +136,8 @@ class SEBinaryWorkload:
         :param simpoint: The SimPoint object or Resource that contains the list of
         SimPoints starting instructions, the list of weights, and the SimPoints
         interval
+        :param checkpoint: The checkpoint directory. Used to restore the
+        simulation to that checkpoint.
         """
 
         # convert input to SimPoint if necessary
@@ -139,6 +158,7 @@ class SEBinaryWorkload:
         self.set_se_binary_workload(
             binary=binary,
             arguments=arguments,
+            checkpoint=checkpoint,
         )
 
     def get_simpoint(self) -> SimPoint:

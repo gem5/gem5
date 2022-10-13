@@ -84,25 +84,18 @@ board = SimpleBoard(
 # program compiled to the RISCV ISA. The `Resource` class will automatically
 # download the binary from the gem5 Resources cloud bucket if it's not already
 # present.
-board.set_se_binary_workload(
-    # the workload should be the same as the save-checkpoint script
-    Resource("riscv-hello")
-)
-
-# Getting the pre-taken checkpoint from gem5-resources. This checkpoint
+# We get the pre-taken checkpoint from gem5-resources. This checkpoint
 # was taken from running this gem5 configuration script,
 # configs/example/gem5_library/checkpoints/riscv-hello-save-checkpoint.py
-checkpoint_resource = Resource("riscv-hello-example-checkpoint-v22-1")
+board.set_se_binary_workload(
+    # the workload should be the same as the save-checkpoint script
+    Resource("riscv-hello"),
+    checkpoint=Resource("riscv-hello-example-checkpoint-v22-1"),
+)
 
-# Now we restore the checkpoint by passing the path to the checkpoint to
-# the Simulator object. The checkpoint_path could be a string containing
-# the path to the checkpoint folder. However, here, we use gem5 resources
-# to automatically download the checkpoint folder, and use .get_local_path()
-# to obtain the path to that folder.
-checkpoint_path = checkpoint_resource.get_local_path()
-print("Restore a checkpoint at", checkpoint_path)
 simulator = Simulator(
-    board=board, full_system=False, checkpoint_path=checkpoint_path
+    board=board,
+    full_system=False,
 )
 simulator.run()
 

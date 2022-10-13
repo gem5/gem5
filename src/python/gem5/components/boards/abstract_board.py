@@ -100,6 +100,11 @@ class AbstractBoard:
         # determined by which kind of workload is set.
         self._is_fs = None
 
+        # This variable is used to record the checkpoint directory which is
+        # set when declaring the board's workload and then used by the
+        # Simulator module.
+        self._checkpoint = None
+
         # Setup the board and memory system's memory ranges.
         self._setup_memory_ranges()
 

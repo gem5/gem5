@@ -96,16 +96,12 @@ board = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-board.set_workload(Workload("x86-print-this-15000-with-simpoints"))
-
-# Here we obtain the checkpoints from gem5 resources, but these are generated
-# from `configs/example/gem5_library/checkpoints/simpoints-se-checkpoint.py`.If
-# run prior to this script the `dir = Path("se_checkpoint_folder")` line may be
-# used. The resource is pulled so we may run this script as a test.
-# dir = Path("se_checkpoint_folder")
-dir = Path(Resource("simpoints-se-checkpoints-v22-1").get_local_path())
-subfolder = [int(str(name).rsplit(".", 1)[1]) for name in dir.iterdir()]
-dir = Path(dir / f"cpt.{min(subfolder)}").as_posix()
+# Here we obtain the workloadfrom gem5 resources, the checkpoint in this
+# workload was generated from
+# `configs/example/gem5_library/checkpoints/simpoints-se-checkpoint.py`.
+board.set_workload(
+    Workload("x86-print-this-15000-with-simpoints-and-checkpoint")
+)
 
 
 def max_inst():
@@ -128,7 +124,6 @@ def max_inst():
 
 simulator = Simulator(
     board=board,
-    checkpoint_path=dir,
     on_exit_event={ExitEvent.MAX_INSTS: max_inst()},
 )
 
