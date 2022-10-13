@@ -129,7 +129,9 @@ def max_inst():
             print("end of warmup, starting to simulate SimPoint")
             warmed_up = True
             # Schedule a MAX_INSTS exit event during the simulation
-            simulator.schedule_max_insts(simpoint.get_simpoint_interval())
+            simulator.schedule_max_insts(
+                board.get_simpoint().get_simpoint_interval()
+            )
             dump()
             reset()
             yield False
@@ -146,5 +148,5 @@ simulator = Simulator(
 # is greater than 0.
 # In here, it schedules an exit event for the first SimPoint's warmup
 # instructions
-simulator.schedule_max_insts(simpoint.get_warmup_list()[0], True)
+simulator.schedule_max_insts(board.get_simpoint().get_warmup_list()[0], True)
 simulator.run()

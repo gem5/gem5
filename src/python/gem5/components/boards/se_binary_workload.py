@@ -123,15 +123,16 @@ class SEBinaryWorkload:
 
         # convert input to SimPoint if necessary
         if isinstance(simpoint, AbstractResource):
-            simpoint_object = SimPoint(simpoint)
+            self._simpoint_object = SimPoint(simpoint)
         else:
             assert isinstance(simpoint, SimPoint)
-            simpoint_object = simpoint
+            self._simpoint_object = simpoint
 
         if self.get_processor().get_num_cores() > 1:
             warn("SimPoints only works with one core")
         self.get_processor().get_cores()[0].set_simpoint(
-            inst_starts=simpoint_object.get_simpoint_start_insts(), init=True
+            inst_starts=self._simpoint_object.get_simpoint_start_insts(),
+            init=True,
         )
 
         # Call set_se_binary_workload after SimPoint setup is complete
@@ -139,3 +140,12 @@ class SEBinaryWorkload:
             binary=binary,
             arguments=arguments,
         )
+
+    def get_simpoint(self) -> SimPoint:
+        """
+        Returns the SimPoint object set. If no SimPoint object has been set an
+        exception is thrown.
+        """
+        if getattr(self, "_simpoint_object", None):
+            return self._simpoint_object
+        raise Exception("This board does not have a simpoint set.")
