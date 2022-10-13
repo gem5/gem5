@@ -285,6 +285,7 @@ TlmToGem5Bridge<BITWIDTH>::invalidateDmi(const gem5::MemBackdoor &backdoor)
 {
     socket->invalidate_direct_mem_ptr(
             backdoor.range().start(), backdoor.range().end());
+    requestedBackdoors.erase(const_cast<gem5::MemBackdoorPtr>(&backdoor));
 }
 
 template <unsigned int BITWIDTH>
@@ -417,12 +418,16 @@ TlmToGem5Bridge<BITWIDTH>::get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
             access = (access_t)(access | tlm::tlm_dmi::DMI_ACCESS_WRITE);
         dmi_data.set_granted_access(access);
 
-        backdoor->addInvalidationCallback(
-            [this](const MemBackdoor &backdoor)
-            {
-                invalidateDmi(backdoor);
-            }
-        );
+        // We only need to register the callback at the first time.
+        if (requestedBackdoors.find(backdoor) == requestedBackdoors.end()) {
+            backdoor->addInvalidationCallback(
+                [this](const MemBackdoor &backdoor)
+                {
+                    invalidateDmi(backdoor);
+                }
+            );
+            requestedBackdoors.emplace(backdoor);
+        }
     }
 
     gem5::Packet::SenderState *senderState = pkt->popSenderState();

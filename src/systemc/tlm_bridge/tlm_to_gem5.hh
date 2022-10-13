@@ -59,6 +59,7 @@
 #define __SYSTEMC_TLM_BRIDGE_TLM_TO_GEM5_HH__
 
 #include <functional>
+#include <unordered_set>
 #include <utility>
 
 #include "mem/port.hh"
@@ -121,6 +122,8 @@ class TlmToGem5Bridge : public TlmToGem5BridgeBase
     bool needToSendRetry;
 
     bool responseInProgress;
+
+    std::unordered_set<gem5::MemBackdoorPtr> requestedBackdoors;
 
     BridgeRequestPort bmp;
     tlm_utils::simple_target_socket<
