@@ -81,8 +81,9 @@ Gicv3CPUInterface::resetHppi(uint32_t intid)
 }
 
 void
-Gicv3CPUInterface::setThreadContext(ThreadContext *tc)
+Gicv3CPUInterface::setThreadContext(ThreadContext *_tc)
 {
+    tc = _tc;
     maintenanceInterrupt = gic->params().maint_int->get(tc);
     fatal_if(maintenanceInterrupt->num() >= redistributor->irqPending.size(),
         "Invalid maintenance interrupt number\n");

@@ -71,6 +71,7 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     uint32_t cpuId;
 
     ArmInterruptPin *maintenanceInterrupt;
+    ThreadContext *tc;
 
     BitUnion64(ICC_CTLR_EL1)
         Bitfield<63, 20> res0_3;
