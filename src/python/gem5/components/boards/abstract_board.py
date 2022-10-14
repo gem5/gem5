@@ -31,6 +31,7 @@ from .mem_mode import MemMode, mem_mode_to_string
 from ...resources.workload import AbstractWorkload
 
 from m5.objects import (
+    AddrRange,
     System,
     Port,
     IOXBar,
@@ -39,7 +40,7 @@ from m5.objects import (
     VoltageDomain,
 )
 
-from typing import List, Optional
+from typing import List, Optional, Sequence, Tuple
 
 
 class AbstractBoard:
@@ -127,6 +128,14 @@ class AbstractBoard:
         :returns: The memory system.
         """
         return self.memory
+
+    def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
+        """Get the memory ports exposed on this board
+
+        Note: The ports should be returned such that the address ranges are
+        in ascending order.
+        """
+        return self.get_memory().get_mem_ports()
 
     def get_cache_hierarchy(self) -> Optional["AbstractCacheHierarchy"]:
         """Get the cache hierarchy connected to the board.

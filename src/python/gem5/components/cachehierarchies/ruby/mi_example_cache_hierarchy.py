@@ -118,7 +118,7 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
 
         # Create the directory controllers
         self._directory_controllers = []
-        for range, port in board.get_memory().get_mem_ports():
+        for range, port in board.get_mem_ports():
             dir = Directory(
                 self.ruby_system.network,
                 board.get_cache_line_size(),

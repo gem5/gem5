@@ -147,7 +147,7 @@ class MESITwoLevelCacheHierarchy(
 
         self._directory_controllers = [
             Directory(self.ruby_system.network, cache_line_size, range, port)
-            for range, port in board.get_memory().get_mem_ports()
+            for range, port in board.get_mem_ports()
         ]
         # TODO: Make this prettier: The problem is not being able to proxy
         # the ruby system correctly
