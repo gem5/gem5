@@ -322,5 +322,5 @@ gem5_verify_config(
     config_args=[],
     valid_isas=(constants.riscv_tag,),
     valid_hosts=constants.supported_hosts,
-    length=constants.long_tag,
+    length=constants.very_long_tag,
 )
