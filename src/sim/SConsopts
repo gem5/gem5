@@ -31,7 +31,7 @@ import gem5_scons
 
 with gem5_scons.Configure(main) as conf:
     if conf.CheckLibWithHeader([None, 'execinfo'], 'execinfo.h', 'C',
-            'char temp; backtrace_symbols_fd((void *)&temp, 0, 0);'):
+            'backtrace_symbols_fd((void *)1, 0, 0);'):
         conf.env['BACKTRACE_IMPL'] = 'glibc'
     else:
         conf.env['BACKTRACE_IMPL'] = 'none'
