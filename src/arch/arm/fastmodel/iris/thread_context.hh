@@ -286,8 +286,10 @@ class ThreadContext : public gem5::ThreadContext
     void setReg(const RegId &reg, RegVal val) override;
     void setReg(const RegId &reg, const void *val) override;
 
+    iris::ResourceId getIntRegRscId(RegIndex int_reg) const;
     virtual RegVal readIntReg(RegIndex reg_idx) const;
 
+    iris::ResourceId getVecRegRscId(RegIndex vec_reg) const;
     virtual const ArmISA::VecRegContainer &readVecReg(const RegId &reg) const;
     virtual ArmISA::VecRegContainer &
     getWritableVecReg(const RegId &reg)
@@ -301,6 +303,7 @@ class ThreadContext : public gem5::ThreadContext
         panic("%s not implemented.", __FUNCTION__);
     }
 
+    iris::ResourceId getVecPredRegRscId(RegIndex vec_reg) const;
     virtual const ArmISA::VecPredRegContainer &
         readVecPredReg(const RegId &reg) const;
     virtual ArmISA::VecPredRegContainer &
@@ -347,6 +350,7 @@ class ThreadContext : public gem5::ThreadContext
     const PCStateBase &pcState() const override;
     void pcState(const PCStateBase &val) override;
 
+    iris::ResourceId getMiscRegRscId(RegIndex misc_reg) const;
     RegVal readMiscRegNoEffect(RegIndex misc_reg) const override;
     RegVal
     readMiscReg(RegIndex misc_reg) override
@@ -387,6 +391,7 @@ class ThreadContext : public gem5::ThreadContext
      * serialization code to access all registers.
      */
 
+    iris::ResourceId getIntRegFlatRscId(RegIndex int_reg) const;
     virtual RegVal readIntRegFlat(RegIndex idx) const;
     virtual void setIntRegFlat(RegIndex idx, uint64_t val);
 
@@ -426,6 +431,7 @@ class ThreadContext : public gem5::ThreadContext
         panic("%s not implemented.", __FUNCTION__);
     }
 
+    iris::ResourceId getCCRegFlatRscId(RegIndex cc_reg) const;
     virtual RegVal readCCRegFlat(RegIndex idx) const;
     virtual void setCCRegFlat(RegIndex idx, RegVal val);
     /** @} */
