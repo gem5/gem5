@@ -361,7 +361,23 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 311, "proess_vm_writev" },
     { 312, "kcmp" },
     { 313, "finit_module" },
-    { 318, "getrandom", getrandomFunc<X86Linux64> }
+    { 318, "getrandom", getrandomFunc<X86Linux64> },
+    { 319, "memfd_create" },
+    { 320, "kexec_file_load" },
+    { 321, "bpf" },
+    { 322, "execveat" },
+    { 323, "userfaultfd" },
+    { 324, "membarrier" },
+    { 325, "mlock2" },
+    { 326, "copy_file_range" },
+    { 327, "preadv2" },
+    { 328, "pwritev2" },
+    { 329, "pkey_mprotect" },
+    { 330, "pkey_alloc" },
+    { 331, "pkey_free" },
+    { 332, "statx" },
+    { 333, "io_pgetevents" },
+    { 334, "rseq" }
 };
 
 } // namespace X86ISA
