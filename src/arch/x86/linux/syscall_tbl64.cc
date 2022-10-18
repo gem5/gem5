@@ -377,7 +377,7 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 331, "pkey_free" },
     { 332, "statx" },
     { 333, "io_pgetevents" },
-    { 334, "rseq" }
+    { 334, "rseq", ignoreFunc }
 };
 
 } // namespace X86ISA
