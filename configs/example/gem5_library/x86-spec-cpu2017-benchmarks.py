@@ -64,6 +64,8 @@ from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.resources.resource import Resource, CustomDiskImageResource
+from gem5.simulate.simulator import Simulator
+from gem5.simulate.exit_event import ExitEvent
 
 from m5.stats.gem5stats import get_simstat
 from m5.util import warn
@@ -281,17 +283,23 @@ board.set_kernel_disk_workload(
     readfile_contents=command,
 )
 
-# We need this for long running processes.
-m5.disableAllListeners()
 
-root = Root(full_system=True, system=board)
+def handle_exit():
+    print("Done bootling Linux")
+    print("Resetting stats at the start of ROI!")
+    m5.stats.reset()
+    yield False  # E.g., continue the simulation.
+    print("Dump stats at the end of the ROI!")
+    m5.stats.dump()
+    yield True  # Stop the simulation. We're done.
 
-# sim_quantum must be set when KVM cores are used.
 
-root.sim_quantum = int(1e9)
-
-board._pre_instantiate()
-m5.instantiate()
+simulator = Simulator(
+    board=board,
+    on_exit_event={
+        ExitEvent.EXIT: handle_exit(),
+    },
+)
 
 # We maintain the wall clock time.
 
@@ -300,92 +308,21 @@ globalStart = time.time()
 print("Running the simulation")
 print("Using KVM cpu")
 
-start_tick = m5.curTick()
-end_tick = m5.curTick()
 m5.stats.reset()
 
-exit_event = m5.simulate()
+# We start the simulation
+simulator.run()
 
-if exit_event.getCause() == "m5_exit instruction encountered":
-    # We have completed booting the OS using KVM cpu
-    # Reached the start of ROI
-
-    print("Done booting Linux")
-    print("Resetting stats at the start of ROI!")
-
-    m5.stats.reset()
-    start_tick = m5.curTick()
-
-    # We switch to timing cpu for detailed simulation.
-
-    processor.switch()
-else:
-    print("Unexpected termination of simulation before ROI was reached!")
-    print(
-        "Exiting @ tick {} because {}.".format(
-            m5.curTick(), exit_event.getCause()
-        )
-    )
-    exit(-1)
-
-# Simulate the ROI
-exit_event = m5.simulate()
-
-# Reached the end of ROI
-gem5stats = get_simstat(root)
-
-# We get the number of committed instructions from the timing
-# cores. We then sum and print them at the end.
-
-roi_insts = float(
-    json.loads(gem5stats.dumps())["system"]["processor"]["cores2"]["core"][
-        "exec_context.thread_0"
-    ]["numInsts"]["value"]
-) + float(
-    json.loads(gem5stats.dumps())["system"]["processor"]["cores3"]["core"][
-        "exec_context.thread_0"
-    ]["numInsts"]["value"]
-)
-
-if exit_event.getCause() == "m5_exit instruction encountered":
-    print("Dump stats at the end of the ROI!")
-    m5.stats.dump()
-    end_tick = m5.curTick()
-    m5.stats.reset()
-
-else:
-    print("Unexpected termination of simulation while ROI was being executed!")
-    print(
-        "Exiting @ tick {} because {}.".format(
-            m5.curTick(), exit_event.getCause()
-        )
-    )
-    exit(-1)
-
-# We need to copy back the contents of the `speclogs' directory to
-# m5.options.outdir
-
-exit_event = m5.simulate()
-
-if exit_event.getCause() == "m5_exit instruction encountered":
-    print("Output logs copied!")
-
-else:
-    print("Unexpected termination of simulation while copying speclogs!")
-    print(
-        "Exiting @ tick {} because {}.".format(
-            m5.curTick(), exit_event.getCause()
-        )
-    )
-    exit(-1)
+# We print the final simulation statistics.
 
 print("Done with the simulation")
 print()
 print("Performance statistics:")
 
-print("Simulated time in ROI: %.2fs" % ((end_tick - start_tick) / 1e12))
-print("Instructions executed in ROI: %d" % ((roi_insts)))
-print("Ran a total of", m5.curTick() / 1e12, "simulated seconds")
+print("Simulated time in ROI: " + ((str(simulator.get_roi_ticks()[0]))))
+print(
+    "Ran a total of", simulator.get_current_tick() / 1e12, "simulated seconds"
+)
 print(
     "Total wallclock time: %.2fs, %.2f min"
     % (time.time() - globalStart, (time.time() - globalStart) / 60)
