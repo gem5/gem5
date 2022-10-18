@@ -87,7 +87,7 @@ class Simulator:
         board: AbstractBoard,
         full_system: Optional[bool] = None,
         on_exit_event: Optional[
-            Dict[Union[str, ExitEvent], Generator[Optional[bool], None, None]]
+            Dict[ExitEvent, Generator[Optional[bool], None, None]]
         ] = None,
         expected_execution_order: Optional[List[ExitEvent]] = None,
         checkpoint_path: Optional[Path] = None,
