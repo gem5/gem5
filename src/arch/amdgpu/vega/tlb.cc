@@ -158,24 +158,7 @@ GpuTLB::insert(Addr vpn, VegaTlbEntry &entry)
 {
     VegaTlbEntry *newEntry = nullptr;
 
-    /**
-     * vpn holds the virtual page address assuming native page size.
-     * However, we need to check the entry size as Vega supports
-     * flexible page sizes of arbitrary size. The set will assume
-     * native page size but the vpn needs to be fixed up to consider
-     * the flexible page size.
-     */
-    Addr real_vpn = vpn & ~(entry.size() - 1);
-
-    /**
-     * Also fix up the ppn as this is used in the math later to compute paddr.
-     */
-    Addr real_ppn = entry.paddr & ~(entry.size() - 1);
-
-    int set = (real_vpn >> VegaISA::PageShift) & setMask;
-
-    DPRINTF(GPUTLB, "Inserted %#lx -> %#lx of size %#lx into set %d\n",
-            real_vpn, real_ppn, entry.size(), set);
+    int set = (entry.vaddr >> VegaISA::PageShift) & setMask;
 
     if (!freeList[set].empty()) {
         newEntry = freeList[set].front();
@@ -186,9 +169,10 @@ GpuTLB::insert(Addr vpn, VegaTlbEntry &entry)
     }
 
     *newEntry = entry;
-    newEntry->vaddr = real_vpn;
-    newEntry->paddr = real_ppn;
     entryList[set].push_front(newEntry);
+
+    DPRINTF(GPUTLB, "Inserted %#lx -> %#lx of size %#lx into set %d\n",
+            newEntry->vaddr, newEntry->paddr, entry.size(), set);
 
     return newEntry;
 }
@@ -524,7 +508,7 @@ GpuTLB::handleTranslationReturn(Addr virt_page_addr,
 
     pagingProtectionChecks(pkt, local_entry, mode);
     int page_size = local_entry->size();
-    Addr paddr = local_entry->paddr | (vaddr & (page_size - 1));
+    Addr paddr = local_entry->paddr + (vaddr & (page_size - 1));
     DPRINTF(GPUTLB, "Translated %#x -> %#x.\n", vaddr, paddr);
 
     // Since this packet will be sent through the cpu side port, it must be
@@ -767,7 +751,7 @@ GpuTLB::handleFuncTranslationReturn(PacketPtr pkt, tlbOutcome tlb_outcome)
         pagingProtectionChecks(pkt, local_entry, mode);
 
     int page_size = local_entry->size();
-    Addr paddr = local_entry->paddr | (vaddr & (page_size - 1));
+    Addr paddr = local_entry->paddr + (vaddr & (page_size - 1));
     DPRINTF(GPUTLB, "Translated %#x -> %#x.\n", vaddr, paddr);
 
     pkt->req->setPaddr(paddr);

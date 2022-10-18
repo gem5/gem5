@@ -162,13 +162,6 @@ VegaTLBCoalescer::updatePhysAddresses(PacketPtr pkt)
     int page_size = tlb_entry.size();
     bool uncacheable = tlb_entry.uncacheable();
     int first_hit_level = sender_state->hitLevel;
-
-    // Get the physical page address of the translated request
-    // Using the page_size specified in the TLBEntry allows us
-    // to support different page sizes.
-    Addr phys_page_paddr = pkt->req->getPaddr();
-    phys_page_paddr &= ~(page_size - 1);
-
     bool is_system = pkt->req->systemReq();
 
     for (int i = 0; i < issuedTranslationsTable[virt_page_addr].size(); ++i) {
@@ -190,8 +183,8 @@ VegaTLBCoalescer::updatePhysAddresses(PacketPtr pkt)
          * page offsets.
          */
         if (i) {
-            Addr paddr = phys_page_paddr;
-            paddr |= (local_pkt->req->getVaddr() & (page_size - 1));
+            Addr paddr = first_entry_paddr
+                       + (local_pkt->req->getVaddr() & (page_size - 1));
             local_pkt->req->setPaddr(paddr);
 
             if (uncacheable)
