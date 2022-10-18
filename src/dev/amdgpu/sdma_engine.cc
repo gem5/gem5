@@ -589,8 +589,22 @@ SDMAEngine::copy(SDMAQueue *q, sdmaCopy *pkt)
         DPRINTF(SDMAEngine, "Copying from device address %#lx\n", device_addr);
         auto cb = new EventFunctionWrapper(
             [ = ]{ copyReadData(q, pkt, dmaBuffer); }, name());
-        gpuDevice->getMemMgr()->readRequest(device_addr, dmaBuffer, pkt->count,
-                                            0, cb);
+
+        // Copy the minimum page size at a time in case the physical addresses
+        // are not contiguous.
+        ChunkGenerator gen(pkt->source, pkt->count, AMDGPU_MMHUB_PAGE_SIZE);
+        for (; !gen.done(); gen.next()) {
+            Addr chunk_addr = getDeviceAddress(gen.addr());
+            assert(chunk_addr);
+
+            DPRINTF(SDMAEngine, "Copying chunk of %d bytes from %#lx (%#lx)\n",
+                    gen.size(), gen.addr(), chunk_addr);
+
+            gpuDevice->getMemMgr()->readRequest(chunk_addr, dmaBuffer,
+                                                gen.size(), 0,
+                                                gen.last() ? cb : nullptr);
+            dmaBuffer += gen.size();
+        }
     } else {
         auto cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &) { copyReadData(q, pkt, dmaBuffer); });
@@ -620,8 +634,23 @@ SDMAEngine::copyReadData(SDMAQueue *q, sdmaCopy *pkt, uint8_t *dmaBuffer)
         DPRINTF(SDMAEngine, "Copying to device address %#lx\n", device_addr);
         auto cb = new EventFunctionWrapper(
             [ = ]{ copyDone(q, pkt, dmaBuffer); }, name());
-        gpuDevice->getMemMgr()->writeRequest(device_addr, dmaBuffer,
-                                             pkt->count, 0, cb);
+
+        // Copy the minimum page size at a time in case the physical addresses
+        // are not contiguous.
+        ChunkGenerator gen(pkt->dest, pkt->count, AMDGPU_MMHUB_PAGE_SIZE);
+        for (; !gen.done(); gen.next()) {
+            Addr chunk_addr = getDeviceAddress(gen.addr());
+            assert(chunk_addr);
+
+            DPRINTF(SDMAEngine, "Copying chunk of %d bytes to %#lx (%#lx)\n",
+                    gen.size(), gen.addr(), chunk_addr);
+
+            gpuDevice->getMemMgr()->writeRequest(chunk_addr, dmaBuffer,
+                                                 gen.size(), 0,
+                                                 gen.last() ? cb : nullptr);
+
+            dmaBuffer += gen.size();
+        }
     } else {
         auto cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &) { copyDone(q, pkt, dmaBuffer); });
