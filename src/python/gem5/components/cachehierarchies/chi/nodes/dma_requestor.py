@@ -67,4 +67,6 @@ class DMARequestor(AbstractNode):
         self.number_of_TBEs = 16
         self.number_of_repl_TBEs = 1
         self.number_of_snoop_TBEs = 1  # Should never receive snoops
+        self.number_of_DVM_TBEs = 1  # should not receive any dvm
+        self.number_of_DVM_snoop_TBEs = 1  # should not receive any dvm
         self.unify_repl_TBEs = False
