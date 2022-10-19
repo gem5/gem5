@@ -251,20 +251,15 @@ class Simulator:
             simpoint_start_insts, self._instantiated
         )
 
-    def schedule_max_insts(
-        self, inst: int, schedule_at_init: bool = False
-    ) -> None:
+    def schedule_max_insts(self, inst: int) -> None:
         """
-        Schedule a MAX_INSTS exit event when any thread in the current core
-        reaches the given number of instructions
+        Schedule a MAX_INSTS exit event when any thread in any core reaches the
+        given number of instructions.
 
-        :param insts: a number of instructions
-        :param schedule_at_init: if it is True, schedule the event in the init
-        stage of the core, else, schedule the event during the simulation
+        :param insts: a number of instructions to run to.
         """
-        self._board.get_processor().get_cores()[0].set_inst_stop_any_thread(
-            inst, schedule_at_init
-        )
+        for core in self._board.get_processor().get_cores():
+            core._set_inst_stop_any_thread(inst, self._instantiated)
 
     def get_stats(self) -> Dict:
         """

@@ -132,5 +132,5 @@ simulator = Simulator(
 # is greater than 0.
 # In here, it schedules an exit event for the first SimPoint's warmup
 # instructions
-simulator.schedule_max_insts(board.get_simpoint().get_warmup_list()[0], True)
+simulator.schedule_max_insts(board.get_simpoint().get_warmup_list()[0])
 simulator.run()

@@ -140,15 +140,18 @@ class AbstractCore(SubSystem):
         raise NotImplementedError("This core type does not support simpoints")
 
     @abstractmethod
-    def set_inst_stop_any_thread(self, inst: int, init: bool) -> None:
+    def _set_inst_stop_any_thread(
+        self, inst: int, board_initialized: bool
+    ) -> None:
         """Schedule an exit event when any thread in this core reaches the
-        given number of instructions.
+        given number of instructions. This is called through the simulator
+        module and should not be called directly.
 
         This is used to raise MAX_INSTS exit event in the gem5 standard library
 
         :param inst: a number of instructions
-        :param init: if it is True, the exit event will be scheduled at the
-        init stage of the core, else, it will be scheduled during the
-        simulation
+        :param board_initialized: True if the board has already been
+        initialized, otherwise False. This parameter is necessary as the
+        instruction stop is setup differently dependent on this.
         """
         raise NotImplementedError("This core type does not support MAX_INSTS")

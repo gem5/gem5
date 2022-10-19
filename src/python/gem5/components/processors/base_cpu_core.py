@@ -162,8 +162,10 @@ class BaseCPUCore(AbstractCore):
             self.core.simpoint_start_insts = sorted(set(inst_starts))
 
     @overrides(AbstractCore)
-    def set_inst_stop_any_thread(self, inst: int, init: bool) -> None:
-        if init:
-            self.core.max_insts_any_thread = inst
-        else:
+    def _set_inst_stop_any_thread(
+        self, inst: int, board_initialized: bool
+    ) -> None:
+        if board_initialized:
             self.core.scheduleInstStopAnyThread(inst)
+        else:
+            self.core.max_insts_any_thread = inst
