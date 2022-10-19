@@ -122,17 +122,20 @@ class AbstractCore(SubSystem):
         raise NotImplementedError
 
     @abstractmethod
-    def set_simpoint(self, inst_starts: List[int], init: bool) -> None:
+    def _set_simpoint(
+        self, inst_starts: List[int], board_initialized: bool
+    ) -> None:
         """Schedule simpoint exit events for the core.
 
         This is used to raise SIMPOINT_BEGIN exit events in the gem5 standard
-        library. Duplicate instruction counts in the inst_starts list will not
+        library. This is called through the set_workload functions and should
+        not be called directly. Duplicate instruction counts in the inst_starts list will not
         be scheduled.
 
         :param inst_starts: a list of SimPoints starting instructions
-        :param init: if it is True, the starting instructions will be scheduled
-        at the init stage of the core, else, the starting insructions will be
-        scheduled during the simulation
+        :param board_initialized: True if the board has already been
+        initialized, otherwise False. This parameter is necessary as simpoints
+        are setup differently dependent on this.
         """
         raise NotImplementedError("This core type does not support simpoints")
 

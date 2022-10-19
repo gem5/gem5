@@ -149,9 +149,9 @@ class SEBinaryWorkload:
 
         if self.get_processor().get_num_cores() > 1:
             warn("SimPoints only works with one core")
-        self.get_processor().get_cores()[0].set_simpoint(
+        self.get_processor().get_cores()[0]._set_simpoint(
             inst_starts=self._simpoint_object.get_simpoint_start_insts(),
-            init=True,
+            board_initialized=False,
         )
 
         # Call set_se_binary_workload after SimPoint setup is complete

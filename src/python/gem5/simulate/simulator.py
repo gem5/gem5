@@ -236,9 +236,7 @@ class Simulator:
 
         self._checkpoint_path = checkpoint_path
 
-    def schedule_simpoint(
-        self, simpoint_start_insts: List[int], schedule_at_init: bool = False
-    ) -> None:
+    def schedule_simpoint(self, simpoint_start_insts: List[int]) -> None:
         """
         Schedule SIMPOINT_BEGIN exit events
 
@@ -246,13 +244,11 @@ class Simulator:
 
         :param simpoint_start_insts: a list of number of instructions
         indicating the starting point of the simpoints
-        :param schedule_at_init: if it is True, schedule the events in the init
-        stage of the core, else, schedule the events during the simulation
         """
         if self._board.get_processor().get_num_cores() > 1:
             warn("SimPoints only work with one core")
         self._board.get_processor().get_cores()[0].set_simpoint(
-            simpoint_start_insts, schedule_at_init
+            simpoint_start_insts, self._instantiated
         )
 
     def schedule_max_insts(

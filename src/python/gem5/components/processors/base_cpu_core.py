@@ -153,11 +153,13 @@ class BaseCPUCore(AbstractCore):
         return self.core.mmu
 
     @overrides(AbstractCore)
-    def set_simpoint(self, inst_starts: List[int], init: bool) -> None:
-        if init:
-            self.core.simpoint_start_insts = sorted(set(inst_starts))
-        else:
+    def _set_simpoint(
+        self, inst_starts: List[int], board_initialized: bool
+    ) -> None:
+        if board_initialized:
             self.core.scheduleSimpointsInstStop(sorted(set(inst_starts)))
+        else:
+            self.core.simpoint_start_insts = sorted(set(inst_starts))
 
     @overrides(AbstractCore)
     def set_inst_stop_any_thread(self, inst: int, init: bool) -> None:
