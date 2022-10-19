@@ -276,6 +276,8 @@ _re_type = type(re.compile(""))
 
 
 def _iterable_regex(regex):
+    if not regex:
+        return ()  # If no regex we return an empty tuple.
     if isinstance(regex, _re_type) or isinstance(regex, str):
         regex = (regex,)
     return regex
