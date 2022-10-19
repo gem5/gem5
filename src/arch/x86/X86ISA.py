@@ -43,5 +43,5 @@ class X86ISA(BaseISA):
     cxx_header = "arch/x86/isa.hh"
 
     vendor_string = Param.String(
-        "M5 Simulator", "Vendor string for CPUID instruction"
+        "AuthenticAMD", "Vendor string for CPUID instruction"
     )
