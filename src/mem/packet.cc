@@ -214,6 +214,10 @@ MemCmd::commandInfo[] =
     { {IsResponse, IsError}, InvalidCmd, "InvalidDestError" },
     /* BadAddressError   -- memory address invalid */
     { {IsResponse, IsError}, InvalidCmd, "BadAddressError" },
+    /* ReadError -- packet dest unable to fulfill read command */
+    { {IsRead, IsResponse, IsError}, InvalidCmd, "ReadError" },
+    /* WriteError -- packet dest unable to fulfill write command */
+    { {IsWrite, IsResponse, IsError}, InvalidCmd, "WriteError" },
     /* FunctionalReadError */
     { {IsRead, IsResponse, IsError}, InvalidCmd, "FunctionalReadError" },
     /* FunctionalWriteError */

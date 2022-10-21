@@ -133,6 +133,8 @@ class MemCmd
         // compatibility
         InvalidDestError,  // packet dest field invalid
         BadAddressError,   // memory address invalid
+        ReadError,         // packet dest unable to fulfill read command
+        WriteError,        // packet dest unable to fulfill write command
         FunctionalReadError, // unable to fulfill functional read
         FunctionalWriteError, // unable to fulfill functional write
         // Fake simulator-only commands
@@ -783,6 +785,19 @@ class Packet : public Printable
     {
         assert(isResponse());
         cmd = MemCmd::BadAddressError;
+    }
+
+    // Command error conditions. The request is sent to target but the target
+    // cannot make it.
+    void
+    setBadCommand()
+    {
+        assert(isResponse());
+        if (isWrite()) {
+            cmd = MemCmd::WriteError;
+        } else {
+            cmd = MemCmd::ReadError;
+        }
     }
 
     void copyError(Packet *pkt) { assert(pkt->isError()); cmd = pkt->cmd; }
