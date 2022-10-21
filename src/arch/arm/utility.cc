@@ -123,8 +123,8 @@ inAArch64(ThreadContext *tc)
 ExceptionLevel
 currEL(const ThreadContext *tc)
 {
-    return static_cast<ArmISA::ISA *>(
-        const_cast<ThreadContext *>(tc)->getIsaPtr())->currEL();
+    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
+    return opModeToEL((OperatingMode)(uint8_t)cpsr.mode);
 }
 
 bool
