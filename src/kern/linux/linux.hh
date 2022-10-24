@@ -309,6 +309,7 @@ class Linux : public OperatingSystem
     static const unsigned TGT_CLONE_FS              = 0x00000200;
     static const unsigned TGT_CLONE_FILES           = 0x00000400;
     static const unsigned TGT_CLONE_SIGHAND         = 0x00000800;
+    static const unsigned TGT_CLONE_PIDFD           = 0x00001000;
     static const unsigned TGT_CLONE_PTRACE          = 0x00002000;
     static const unsigned TGT_CLONE_VFORK           = 0x00004000;
     static const unsigned TGT_CLONE_PARENT          = 0x00008000;
