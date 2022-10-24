@@ -93,6 +93,7 @@ Source('inst_pb_trace.cc', tags='protobuf')
 SimObject('CheckerCPU.py', sim_objects=['CheckerCPU'])
 
 SimObject('BaseCPU.py', sim_objects=['BaseCPU'])
+SimObject('CpuCluster.py', sim_objects=['CpuCluster'])
 SimObject('CPUTracers.py', sim_objects=[
     'ExeTracer', 'IntelTrace', 'NativeTrace'])
 SimObject('TimingExpr.py', sim_objects=[
