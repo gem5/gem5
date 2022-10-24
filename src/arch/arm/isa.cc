@@ -523,13 +523,6 @@ ISA::setupThreadContext()
         return;
 
     selfDebug->init(tc);
-
-    Gicv3 *gicv3 = dynamic_cast<Gicv3 *>(system->getGIC());
-    if (!gicv3)
-        return;
-
-    if (!gicv3CpuInterface)
-        gicv3CpuInterface.reset(gicv3->getCPUInterface(tc->contextId()));
 }
 
 void
@@ -2005,7 +1998,15 @@ ISA::getGenericTimer()
 BaseISADevice &
 ISA::getGICv3CPUInterface()
 {
-    panic_if(!gicv3CpuInterface, "GICV3 cpu interface is not registered!");
+    if (gicv3CpuInterface)
+        return *gicv3CpuInterface.get();
+
+    assert(system);
+    Gicv3 *gicv3 = dynamic_cast<Gicv3 *>(system->getGIC());
+    panic_if(!gicv3, "The system does not have a GICv3 irq controller\n");
+
+    gicv3CpuInterface.reset(gicv3->getCPUInterface(tc->contextId()));
+
     return *gicv3CpuInterface.get();
 }
 
