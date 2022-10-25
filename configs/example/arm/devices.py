@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017, 2019, 2021 Arm Limited
+# Copyright (c) 2016-2017, 2019, 2021-2022 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -95,7 +95,7 @@ class MemBus(SystemXBar):
     default = Self.badaddr_responder.pio
 
 
-class CpuCluster(SubSystem):
+class ArmCpuCluster(CpuCluster):
     def __init__(
         self,
         system,
@@ -107,7 +107,7 @@ class CpuCluster(SubSystem):
         l1d_type,
         l2_type,
     ):
-        super(CpuCluster, self).__init__()
+        super().__init__()
         self._cpu_type = cpu_type
         self._l1i_type = l1i_type
         self._l1d_type = l1d_type
@@ -120,24 +120,9 @@ class CpuCluster(SubSystem):
             clock=cpu_clock, voltage_domain=self.voltage_domain
         )
 
-        self.cpus = [
-            self._cpu_type(
-                cpu_id=system.numCpus() + idx, clk_domain=self.clk_domain
-            )
-            for idx in range(num_cpus)
-        ]
+        self.generate_cpus(cpu_type, num_cpus)
 
-        for cpu in self.cpus:
-            cpu.createThreads()
-            cpu.createInterruptController()
-            cpu.socket_id = system.numCpuClusters()
-        system.addCpuCluster(self, num_cpus)
-
-    def requireCaches(self):
-        return self._cpu_type.require_caches()
-
-    def memoryMode(self):
-        return self._cpu_type.memory_mode()
+        system.addCpuCluster(self)
 
     def addL1(self):
         for cpu in self.cpus:
@@ -191,7 +176,7 @@ class CpuCluster(SubSystem):
                 cpu.connectCachedPorts(bus.cpu_side_ports)
 
 
-class AtomicCluster(CpuCluster):
+class AtomicCluster(ArmCpuCluster):
     def __init__(self, system, num_cpus, cpu_clock, cpu_voltage="1.0V"):
         cpu_config = [
             ObjectList.cpu_list.get("AtomicSimpleCPU"),
@@ -199,28 +184,24 @@ class AtomicCluster(CpuCluster):
             None,
             None,
         ]
-        super(AtomicCluster, self).__init__(
-            system, num_cpus, cpu_clock, cpu_voltage, *cpu_config
-        )
+        super().__init__(system, num_cpus, cpu_clock, cpu_voltage, *cpu_config)
 
     def addL1(self):
         pass
 
 
-class KvmCluster(CpuCluster):
+class KvmCluster(ArmCpuCluster):
     def __init__(self, system, num_cpus, cpu_clock, cpu_voltage="1.0V"):
         cpu_config = [ObjectList.cpu_list.get("ArmV8KvmCPU"), None, None, None]
-        super(KvmCluster, self).__init__(
-            system, num_cpus, cpu_clock, cpu_voltage, *cpu_config
-        )
+        super().__init__(system, num_cpus, cpu_clock, cpu_voltage, *cpu_config)
 
     def addL1(self):
         pass
 
 
-class FastmodelCluster(SubSystem):
+class FastmodelCluster(CpuCluster):
     def __init__(self, system, num_cpus, cpu_clock, cpu_voltage="1.0V"):
-        super(FastmodelCluster, self).__init__()
+        super().__init__()
 
         # Setup GIC
         gic = system.realview.gic
@@ -285,12 +266,12 @@ class FastmodelCluster(SubSystem):
         self.cpu_hub.a2t = a2t
         self.cpu_hub.t2g = t2g
 
-        system.addCpuCluster(self, num_cpus)
+        system.addCpuCluster(self)
 
-    def requireCaches(self):
+    def require_caches(self):
         return False
 
-    def memoryMode(self):
+    def memory_mode(self):
         return "atomic_noncaching"
 
     def addL1(self):
@@ -330,7 +311,6 @@ class BaseSimpleSystem(ArmSystem):
         self.mem_ranges = self.getMemRanges(int(Addr(mem_size)))
 
         self._clusters = []
-        self._num_cpus = 0
 
     def getMemRanges(self, mem_size):
         """
@@ -357,14 +337,8 @@ class BaseSimpleSystem(ArmSystem):
     def numCpuClusters(self):
         return len(self._clusters)
 
-    def addCpuCluster(self, cpu_cluster, num_cpus):
-        assert cpu_cluster not in self._clusters
-        assert num_cpus > 0
+    def addCpuCluster(self, cpu_cluster):
         self._clusters.append(cpu_cluster)
-        self._num_cpus += num_cpus
-
-    def numCpus(self):
-        return self._num_cpus
 
     def addCaches(self, need_caches, last_cache_level):
         if not need_caches:

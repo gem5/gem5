@@ -102,14 +102,14 @@ class SimpleSeSystem(System):
         # Create a cache hierarchy (unless we are simulating a
         # functional CPU in atomic memory mode) for the CPU cluster
         # and connect it to the shared memory bus.
-        if self.cpu_cluster.memoryMode() == "timing":
+        if self.cpu_cluster.memory_mode() == "timing":
             self.cpu_cluster.addL1()
             self.cpu_cluster.addL2(self.cpu_cluster.clk_domain)
         self.cpu_cluster.connectMemSide(self.membus)
 
         # Tell gem5 about the memory mode used by the CPUs we are
         # simulating.
-        self.mem_mode = self.cpu_cluster.memoryMode()
+        self.mem_mode = self.cpu_cluster.memory_mode()
 
     def numCpuClusters(self):
         return len(self._clusters)

@@ -115,7 +115,7 @@ def create(args):
 
     # Add CPU clusters to the system
     system.cpu_cluster = [
-        devices.CpuCluster(
+        devices.ArmCpuCluster(
             system,
             args.num_cpus,
             args.cpu_freq,
