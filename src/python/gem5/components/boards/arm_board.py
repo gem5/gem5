@@ -153,9 +153,6 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         # We now need to setup the dma_ports.
         self._dma_ports = None
 
-        # An else part is not required as for CHI protocol, the dma_ports has
-        # to be set to []
-
         # RealView sets up most of the on-chip and off-chip devices and GIC
         # for the ARM board. These devices' information is also used to
         # generate the dtb file. We then connect the I/O devices to the
@@ -188,19 +185,9 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         else:
             raise ValueError("Memory size too big for platform capabilities")
 
-        # the image is initially set to None as a sanity check. This is
-        # overwritten in the method _setup_pci_devices.
-        self._image = None
-
-        # Calling _setup_pci_devices. DMA ports has to be setup beforehand. PCI
-        # devices has to be setup before adding disk to board as the dma_ports
-        # has to be correctly setup before incorporating ruby caches. The issue
-        # is that the dma_controllers can only be created correctly when we
-        # have the dma_ports for the PCI device. The current order of function
-        # calls is:
-        # ArmBoard                AbstractBoard          KernelDiskWorkload
-        # _setup_pci_devices() -> incorporate_cache() -> _add_disk_to_board()
-        self._setup_pci_devices()
+        # The PCI Devices. PCI devices can be added via the `_add_pci_device`
+        # function.
+        self._pci_devices = []
 
     def _setup_io_devices(self) -> None:
         """
@@ -323,51 +310,64 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
     def connect_system_port(self, port: Port) -> None:
         self.system_port = port
 
-    @overrides(KernelDiskWorkload)
-    def get_disk_device(self):
-        return "/dev/vda"
+    @overrides(AbstractBoard)
+    def _pre_instantiate(self):
+        super()._pre_instantiate()
 
-    def _setup_pci_devices(self):
+        # Add the PCI devices.
+        self.pci_devices = self._pci_devices
 
-        # We define the image. The _image has to be None initially.
-        assert self._image is None
-
-        self._image = CowDiskImage(
-            child=RawDiskImage(read_only=True), read_only=False
-        )
-
-        self.pci_devices = [PciVirtIO(vio=VirtIOBlock(image=self._image))]
-
-        for device in self.pci_devices:
-            self.realview.attachPciDevice(
-                device, self.iobus, dma_ports=self.get_dma_ports()
-            )
-
-    @overrides(KernelDiskWorkload)
-    def _add_disk_to_board(self, disk_image: AbstractResource):
-
-        assert self._image is not None
-
-        # Now that the disk and workload are set, we can generate the device
-        # tree file. We will generate the dtb file everytime the board is
-        # boot-up.
-        self._image.child.image_file = disk_image.get_local_path()
-
-        # Specifying the dtb file location to the workload.
-        self.workload.dtb_filename = os.path.join(
-            m5.options.outdir, "device.dtb"
-        )
+        # The workload needs to know the dtb_file.
+        self.workload.dtb_filename = self._get_dtb_filename()
 
         # Calling generateDtb from class ArmSystem to add memory information to
         # the dtb file.
-        self.generateDtb(self.workload.dtb_filename)
+        self.generateDtb(self._get_dtb_filename())
 
         # Finally we need to setup the bootloader for the ArmBoard. An ARM
         # system requires three inputs to simulate a full system: a disk image,
         # the kernel file and the bootloader file(s).
         self.realview.setupBootLoader(
-            self, self.workload.dtb_filename, self._bootloader
+            self, self._get_dtb_filename(), self._bootloader
         )
+
+    def _get_dtb_filename(self) -> str:
+        """Returns the dtb file location.
+
+        **Note**: This may be the _expected_ file location when generated. A
+        file may not exist at this location when this function is called."""
+
+        return os.path.join(m5.options.outdir, "device.dtb")
+
+    def _add_pci_device(self, pci_device: PciVirtIO) -> None:
+        """Attaches the PCI Device to the board. All devices will be added to
+        `self.pci_device` as a pre-instantiation setup.
+
+        :param pci_device: The PCI Device to add.
+        """
+        self._pci_devices.append(pci_device)
+
+        # For every PCI device, we need to get its dma_port so that we
+        # can setup dma_controllers correctly.
+        self.realview.attachPciDevice(
+            pci_device, self.iobus, dma_ports=self.get_dma_ports()
+        )
+
+    @overrides(KernelDiskWorkload)
+    def get_disk_device(self):
+        return "/dev/vda"
+
+    @overrides(KernelDiskWorkload)
+    def _add_disk_to_board(self, disk_image: AbstractResource):
+
+        self._image = CowDiskImage(
+            child=RawDiskImage(
+                read_only=True, image_file=disk_image.get_local_path()
+            ),
+            read_only=False,
+        )
+
+        self._add_pci_device(PciVirtIO(vio=VirtIOBlock(image=self._image)))
 
     @overrides(AbstractBoard)
     def _setup_memory_ranges(self) -> None:
