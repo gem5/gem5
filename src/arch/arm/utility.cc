@@ -626,19 +626,11 @@ mcrMrc15TrapToHyp(const MiscRegIndex misc_reg, ThreadContext *tc, uint32_t iss,
                 break;
               // GICv3 regs
               case MISCREG_ICC_SGI0R:
-                {
-                    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-                    if (isa->haveGICv3CpuIfc())
-                        trap_to_hyp = hcr.fmo;
-                }
+                trap_to_hyp = hcr.fmo;
                 break;
               case MISCREG_ICC_SGI1R:
               case MISCREG_ICC_ASGI1R:
-                {
-                    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-                    if (isa->haveGICv3CpuIfc())
-                        trap_to_hyp = hcr.imo;
-                }
+                trap_to_hyp = hcr.imo;
                 break;
               case MISCREG_CNTFRQ ... MISCREG_CNTV_TVAL:
                 // CNTFRQ may be trapped only on reads

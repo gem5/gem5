@@ -1619,12 +1619,24 @@ faultZcrEL3(const MiscRegLUTEntry &entry,
 }
 
 Fault
+faultGicv3(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    auto gic = static_cast<ArmSystem*>(tc->getSystemPtr())->getGIC();
+    if (!gic->supportsVersion(BaseGic::GicVersion::GIC_V3)) {
+        return inst.undefined();
+    } else {
+        return NoFault;
+    }
+}
+
+Fault
 faultIccSgiEL1(const MiscRegLUTEntry &entry,
     ThreadContext *tc, const MiscRegOp64 &inst)
 {
-    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-    if (!isa->haveGICv3CpuIfc())
-        return inst.undefined();
+    if (auto fault = faultGicv3(entry, tc, inst); fault != NoFault) {
+        return fault;
+    }
 
     const Gicv3CPUInterface::ICH_HCR_EL2 ich_hcr =
         tc->readMiscReg(MISCREG_ICH_HCR_EL2);
@@ -1643,9 +1655,9 @@ Fault
 faultIccSgiEL2(const MiscRegLUTEntry &entry,
     ThreadContext *tc, const MiscRegOp64 &inst)
 {
-    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-    if (!isa->haveGICv3CpuIfc())
-        return inst.undefined();
+    if (auto fault = faultGicv3(entry, tc, inst); fault != NoFault) {
+        return fault;
+    }
 
     const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
     if (ArmSystem::haveEL(tc, EL3) && scr.irq && scr.fiq) {
