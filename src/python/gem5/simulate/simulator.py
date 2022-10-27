@@ -377,6 +377,11 @@ class Simulator:
         """
 
         if not self._instantiated:
+
+            # Before anything else we run the AbstractBoard's
+            # `_pre_instantiate` function.
+            self._board._pre_instantiate()
+
             root = Root(
                 full_system=self._full_system
                 if self._full_system is not None

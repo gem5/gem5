@@ -44,6 +44,7 @@ from m5.objects import (
     ArmDefaultRelease,
     VExpress_GEM5_Base,
     VExpress_GEM5_Foundation,
+    SimObject,
 )
 
 import os
@@ -388,3 +389,12 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
             "rw",
             "mem=%s" % self.get_memory().get_size(),
         ]
+
+    @overrides(SimObject)
+    def createCCObject(self):
+        """We override this function as it is called in `m5.instantiate`. This
+        means we can insert a check to ensure the `_connect_things` function
+        has been run.
+        """
+        super()._connect_things_check()
+        super().createCCObject()

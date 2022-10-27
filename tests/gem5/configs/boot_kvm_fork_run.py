@@ -211,7 +211,7 @@ root.sim_quantum = int(1e9)
 
 # Disable the gdb ports. Required for forking.
 m5.disableAllListeners()
-
+motherboard._pre_instantiate()
 m5.instantiate()
 
 # Simulate the inital boot with the starting KVM cpu

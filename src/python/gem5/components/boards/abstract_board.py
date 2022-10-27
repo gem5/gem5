@@ -112,8 +112,9 @@ class AbstractBoard:
         # Setup board properties unique to the board being constructed.
         self._setup_board()
 
-        # Connect the memory, processor, and cache hierarchy.
-        self._connect_things()
+        # A private variable to record whether `_connect_things` has been
+        # been called.
+        self._connect_things_called = False
 
     def get_processor(self) -> "AbstractProcessor":
         """Get the processor connected to the board.
@@ -341,7 +342,14 @@ class AbstractBoard:
         * The processor is incorporated after the cache hierarchy due to a bug
         noted here: https://gem5.atlassian.net/browse/GEM5-1113. Until this
         bug is fixed, this ordering must be maintained.
+        * Once this function is called `_connect_things_called` *must* be set
+        to `True`.
         """
+
+        if self._connect_things_called:
+            raise Exception(
+                "The `_connect_things` function has already been called."
+            )
 
         # Incorporate the memory into the motherboard.
         self.get_memory().incorporate_memory(self)
@@ -353,9 +361,49 @@ class AbstractBoard:
         # Incorporate the processor into the motherboard.
         self.get_processor().incorporate_processor(self)
 
+        self._connect_things_called = True
+
     def _post_instantiate(self):
         """Called to set up anything needed after m5.instantiate"""
         self.get_processor()._post_instantiate()
         if self.get_cache_hierarchy():
             self.get_cache_hierarchy()._post_instantiate()
         self.get_memory()._post_instantiate()
+
+    def _pre_instantiate(self):
+        """To be called immediately before m5.instantiate. This is where
+        `_connect_things` is executed by default."""
+
+        # Connect the memory, processor, and cache hierarchy.
+        self._connect_things()
+
+    def _connect_things_check(self):
+        """
+        Here we check that connect things has been called and throw an
+        Exception if it has not.
+
+        Since v22.1 `_connect_things` function has
+        been moved from the AbstractBoard constructor to the
+        `_pre_instantation` function. Users who have used the gem5 stdlib
+        components (i.e., boards which inherit from AbstractBoard) and the
+        Simulator module should notice no change. Those who do not use the
+        Simulator module and instead called `m5.instantiate` directly must
+        call `AbstractBoard._pre_instantation` prior so `_connect_things` is
+        called. In order to avoid confusion, this check has been incorporated
+        and the Exception thrown explains the fix needed to convert old scripts
+        to function with v22.1.
+
+        This function is called in `AbstractSystemBoard.createCCObject` and
+        ArmBoard.createCCObject`. Both these functions override
+        `SimObject.createCCObject`. We can not do that here as AbstractBoard
+        does not inherit form System.
+        """
+        if not self._connect_things_called:
+            raise Exception(
+                """
+AbstractBoard's `_connect_things` function has not been called. This is likely
+due to not running a board outside of the gem5 Standard Library Simulator
+module. If this is the case, this can be resolved by calling
+`<AbstractBoard>._pre_instantiate()` prior to `m5.instantiate()`.
+"""
+            )

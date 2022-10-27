@@ -290,6 +290,7 @@ root = Root(full_system=True, system=board)
 
 root.sim_quantum = int(1e9)
 
+board._pre_instantiate()
 m5.instantiate()
 
 # We maintain the wall clock time.
