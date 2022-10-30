@@ -375,16 +375,16 @@ class PM4Queue
     Addr _offset;
     bool _processing;
     bool _ib;
-    PM4MapQueues *_pkt;
+    const PM4MapQueues _pkt;
   public:
     PM4Queue() : _id(0), q(nullptr), _wptr(0), _offset(0), _processing(false),
-        _ib(false), _pkt(nullptr) {}
+        _ib(false), _pkt() {}
     PM4Queue(int id, QueueDesc *queue, Addr offset) :
         _id(id), q(queue), _wptr(queue->rptr), _ibWptr(0), _offset(offset),
-        _processing(false), _ib(false), _pkt(nullptr) {}
+        _processing(false), _ib(false), _pkt() {}
     PM4Queue(int id, QueueDesc *queue, Addr offset, PM4MapQueues *pkt) :
         _id(id), q(queue), _wptr(queue->rptr), _ibWptr(0), _offset(offset),
-        _processing(false), _ib(false), _pkt(pkt) {}
+        _processing(false), _ib(false), _pkt(*pkt) {}
 
     QueueDesc *getMQD() { return q; }
     int id() { return _id; }
@@ -466,10 +466,10 @@ class PM4Queue
     void offset(Addr value) { _offset = value; }
     void processing(bool value) { _processing = value; }
     void ib(bool value) { _ib = value; }
-    uint32_t me() { if (_pkt) return _pkt->me; else return 0; }
-    uint32_t pipe() { if (_pkt) return _pkt->pipe; else return 0; }
-    uint32_t queue() { if (_pkt) return _pkt->queueSlot; else return 0; }
-    bool privileged() { assert(_pkt); return _pkt->queueSel == 0 ? 1 : 0; }
+    uint32_t me() { return _pkt.me + 1; }
+    uint32_t pipe() { return _pkt.pipe; }
+    uint32_t queue() { return _pkt.queueSlot; }
+    bool privileged() { return _pkt.queueSel == 0 ? 1 : 0; }
 };
 
 } // namespace gem5

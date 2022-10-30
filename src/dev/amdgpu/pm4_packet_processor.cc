@@ -116,14 +116,14 @@ void
 PM4PacketProcessor::mapKiq(Addr offset)
 {
     DPRINTF(PM4PacketProcessor, "Mapping KIQ\n");
-    newQueue((QueueDesc *)&kiq, offset);
+    newQueue((QueueDesc *)&kiq, offset, &kiq_pkt);
 }
 
 void
 PM4PacketProcessor::mapPq(Addr offset)
 {
     DPRINTF(PM4PacketProcessor, "Mapping PQ\n");
-    newQueue((QueueDesc *)&pq, offset);
+    newQueue((QueueDesc *)&pq, offset, &pq_pkt);
 }
 
 void
@@ -146,8 +146,9 @@ PM4PacketProcessor::newQueue(QueueDesc *mqd, Addr offset,
                   : QueueType::Compute;
     gpuDevice->setDoorbellType(offset, qt);
 
-    DPRINTF(PM4PacketProcessor, "New PM4 queue %d, base: %p offset: %p\n",
-            id, q->base(), q->offset());
+    DPRINTF(PM4PacketProcessor, "New PM4 queue %d, base: %p offset: %p, me: "
+            "%d, pipe %d queue: %d\n", id, q->base(), q->offset(), q->me(),
+            q->pipe(), q->queue());
 }
 
 void
@@ -490,14 +491,16 @@ PM4PacketProcessor::releaseMemDone(PM4Queue *q, PM4ReleaseMem *pkt, Addr addr)
     DPRINTF(PM4PacketProcessor, "PM4 release_mem wrote %d to %p\n",
             pkt->dataLo, addr);
     if (pkt->intSelect == 2) {
-        DPRINTF(PM4PacketProcessor, "PM4 interrupt, ctx: %d, me: %d, pipe: "
-                "%d, queueSlot:%d\n", pkt->intCtxId, q->me(), q->pipe(),
-                q->queue());
-        // Rearranging the queue field of PM4MapQueues as the interrupt RingId
-        // format specified in PM4ReleaseMem pkt.
-        uint32_t ringId = (q->me() << 6) | (q->pipe() << 4) | q->queue();
+        DPRINTF(PM4PacketProcessor, "PM4 interrupt, id: %d ctx: %d, me: %d, "
+                "pipe: %d, queueSlot:%d\n", q->id(), pkt->intCtxId, q->me(),
+                q->pipe(), q->queue());
+
+        uint8_t ringId = 0;
+        if (q->id() != 0) {
+            ringId = (q->queue() << 4) | (q->me() << 2) | q->pipe();
+        }
         gpuDevice->getIH()->prepareInterruptCookie(pkt->intCtxId, ringId,
-            SOC15_IH_CLIENTID_GRBM_CP, CP_EOP);
+                                            SOC15_IH_CLIENTID_GRBM_CP, CP_EOP);
         gpuDevice->getIH()->submitInterruptCookie();
     }
 
