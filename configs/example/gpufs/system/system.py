@@ -204,6 +204,15 @@ def makeGpuFSSystem(args):
         for j in range(len(system.cpu[i].isa)):
             system.cpu[i].isa[j].vendor_string = "AuthenticAMD"
 
+    if args.host_parallel:
+        # To get the KVM CPUs to run on different host CPUs, specify a
+        # different event queue for each CPU.  The last CPU is a GPU
+        # shader and should be skipped.
+        for i, cpu in enumerate(system.cpu[:-1]):
+            for obj in cpu.descendants():
+                obj.eventq_index = 0
+            cpu.eventq_index = i + 1
+
     gpu_port_idx = (
         len(system.ruby._cpu_ports)
         - args.num_compute_units

@@ -133,6 +133,11 @@ def runGpuFSSystem(args):
     that should not be changed by the user.
     """
 
+    # GPUFS is primarily designed to use the X86 KVM CPU. This model needs to
+    # use multiple event queues when more than one CPU is simulated. Force it
+    # on if that is the case.
+    args.host_parallel = True if args.num_cpus > 1 else False
+
     # These are used by the protocols. They should not be set by the user.
     n_cu = args.num_compute_units
     args.num_sqc = int(math.ceil(float(n_cu) / args.cu_per_sqc))
@@ -148,6 +153,9 @@ def runGpuFSSystem(args):
         time_sync_enable=True,
         time_sync_period="1000us",
     )
+
+    if args.host_parallel:
+        root.sim_quantum = int(1e8)
 
     if args.script is not None:
         system.readfile = args.script
