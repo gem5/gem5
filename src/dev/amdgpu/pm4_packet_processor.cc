@@ -202,9 +202,7 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
       case IT_NOP: {
         DPRINTF(PM4PacketProcessor, "PM4 nop, count %p\n", header.count);
         DPRINTF(PM4PacketProcessor, "rptr %p wptr %p\n", q->rptr(), q->wptr());
-        if (header.count == 0x3fff) {
-            q->fastforwardRptr();
-        } else {
+        if (header.count != 0x3fff) {
             q->incRptr((header.count + 1) * sizeof(uint32_t));
         }
         decodeNext(q);
