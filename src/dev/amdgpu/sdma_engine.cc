@@ -713,11 +713,16 @@ SDMAEngine::trap(SDMAQueue *q, sdmaTrap *pkt)
 {
     q->incRptr(sizeof(sdmaTrap));
 
-    DPRINTF(SDMAEngine, "Trap contextId: %p rbRptr: %p ibOffset: %p\n",
-            pkt->contextId, pkt->rbRptr, pkt->ibOffset);
+    DPRINTF(SDMAEngine, "Trap contextId: %p\n", pkt->intrContext);
 
-    gpuDevice->getIH()->prepareInterruptCookie(pkt->contextId, 0,
-            getIHClientId(), TRAP_ID);
+    uint32_t ring_id = 0;
+    assert(page.processing() ^ gfx.processing());
+    if (page.processing()) {
+        ring_id = 3;
+    }
+
+    gpuDevice->getIH()->prepareInterruptCookie(pkt->intrContext, ring_id,
+                                               getIHClientId(), TRAP_ID);
     gpuDevice->getIH()->submitInterruptCookie();
 
     delete pkt;
