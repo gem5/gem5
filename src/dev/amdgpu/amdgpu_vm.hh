@@ -165,7 +165,7 @@ class AMDGPUVM : public Serializable
      * Copy of GART table. Typically resides in device memory, however we use
      * a copy in gem5 to simplify the interface.
      */
-    std::unordered_map<uint64_t, uint32_t> gartTable;
+    std::unordered_map<uint64_t, uint64_t> gartTable;
 
     void readMMIO(PacketPtr pkt, Addr offset);
     void writeMMIO(PacketPtr pkt, Addr offset);
