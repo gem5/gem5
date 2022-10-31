@@ -275,7 +275,7 @@ gem5_verify_config(
 )
 
 gem5_verify_config(
-    name="test-gem5-library-example-arm-ubuntu-boot-test",
+    name="test-gem5-library-example-arm-ubuntu-run-test",
     fixtures=(),
     verifiers=(),
     config=joinpath(
@@ -283,7 +283,7 @@ gem5_verify_config(
         "configs",
         "example",
         "gem5_library",
-        "arm-ubuntu-boot-exit.py",
+        "arm-ubuntu-run.py",
     ),
     config_args=[],
     valid_isas=(constants.all_compiled_tag,),

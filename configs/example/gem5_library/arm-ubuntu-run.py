@@ -35,7 +35,7 @@ Usage
 
 ```
 scons build/ARM/gem5.opt -j<NUM_CPUS>
-./build/ARM/gem5.opt configs/example/gem5_library/arm-ubuntu-boot-exit.py
+./build/ARM/gem5.opt configs/example/gem5_library/arm-ubuntu-run.py
 ```
 
 """
