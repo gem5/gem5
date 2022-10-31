@@ -4664,37 +4664,53 @@ ISA::initializeMiscRegMetadata()
         .hyp().mon()
         .mapsTo(MISCREG_ICH_VMCR);
     InitReg(MISCREG_ICH_LR0_EL2)
-        .hyp().mon();
+        .hyp().mon()
+        .mapsTo(MISCREG_ICH_LR0, MISCREG_ICH_LRC0);
     InitReg(MISCREG_ICH_LR1_EL2)
-        .hyp().mon();
+        .hyp().mon()
+        .mapsTo(MISCREG_ICH_LR1, MISCREG_ICH_LRC1);
     InitReg(MISCREG_ICH_LR2_EL2)
-        .hyp().mon();
+        .hyp().mon()
+        .mapsTo(MISCREG_ICH_LR2, MISCREG_ICH_LRC2);
     InitReg(MISCREG_ICH_LR3_EL2)
-        .hyp().mon();
+        .hyp().mon()
+        .mapsTo(MISCREG_ICH_LR3, MISCREG_ICH_LRC3);
     InitReg(MISCREG_ICH_LR4_EL2)
-        .hyp().mon();
+        .hyp().mon()
+        .mapsTo(MISCREG_ICH_LR4, MISCREG_ICH_LRC4);
     InitReg(MISCREG_ICH_LR5_EL2)
-        .hyp().mon();
+        .hyp().mon()
+        .mapsTo(MISCREG_ICH_LR5, MISCREG_ICH_LRC5);
     InitReg(MISCREG_ICH_LR6_EL2)
-        .hyp().mon();
+        .hyp().mon()
+        .mapsTo(MISCREG_ICH_LR6, MISCREG_ICH_LRC6);
     InitReg(MISCREG_ICH_LR7_EL2)
-        .hyp().mon();
+        .hyp().mon()
+        .mapsTo(MISCREG_ICH_LR7, MISCREG_ICH_LRC7);
     InitReg(MISCREG_ICH_LR8_EL2)
-        .hyp().mon();
+        .hyp().mon()
+        .mapsTo(MISCREG_ICH_LR8, MISCREG_ICH_LRC8);
     InitReg(MISCREG_ICH_LR9_EL2)
-        .hyp().mon();
+        .hyp().mon()
+        .mapsTo(MISCREG_ICH_LR9, MISCREG_ICH_LRC9);
     InitReg(MISCREG_ICH_LR10_EL2)
-        .hyp().mon();
+        .hyp().mon()
+        .mapsTo(MISCREG_ICH_LR10, MISCREG_ICH_LRC10);
     InitReg(MISCREG_ICH_LR11_EL2)
-        .hyp().mon();
+        .hyp().mon()
+        .mapsTo(MISCREG_ICH_LR11, MISCREG_ICH_LRC11);
     InitReg(MISCREG_ICH_LR12_EL2)
-        .hyp().mon();
+        .hyp().mon()
+        .mapsTo(MISCREG_ICH_LR12, MISCREG_ICH_LRC12);
     InitReg(MISCREG_ICH_LR13_EL2)
-        .hyp().mon();
+        .hyp().mon()
+        .mapsTo(MISCREG_ICH_LR13, MISCREG_ICH_LRC13);
     InitReg(MISCREG_ICH_LR14_EL2)
-        .hyp().mon();
+        .hyp().mon()
+        .mapsTo(MISCREG_ICH_LR14, MISCREG_ICH_LRC14);
     InitReg(MISCREG_ICH_LR15_EL2)
-        .hyp().mon();
+        .hyp().mon()
+        .mapsTo(MISCREG_ICH_LR15, MISCREG_ICH_LRC15);
 
     // GICv3 AArch32
     InitReg(MISCREG_ICC_AP0R0)
@@ -4851,52 +4867,36 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ICH_LR15)
         .hyp().mon();
     InitReg(MISCREG_ICH_LRC0)
-        .mapsTo(MISCREG_ICH_LR0)
         .hyp().mon();
     InitReg(MISCREG_ICH_LRC1)
-        .mapsTo(MISCREG_ICH_LR1)
         .hyp().mon();
     InitReg(MISCREG_ICH_LRC2)
-        .mapsTo(MISCREG_ICH_LR2)
         .hyp().mon();
     InitReg(MISCREG_ICH_LRC3)
-        .mapsTo(MISCREG_ICH_LR3)
         .hyp().mon();
     InitReg(MISCREG_ICH_LRC4)
-        .mapsTo(MISCREG_ICH_LR4)
         .hyp().mon();
     InitReg(MISCREG_ICH_LRC5)
-        .mapsTo(MISCREG_ICH_LR5)
         .hyp().mon();
     InitReg(MISCREG_ICH_LRC6)
-        .mapsTo(MISCREG_ICH_LR6)
         .hyp().mon();
     InitReg(MISCREG_ICH_LRC7)
-        .mapsTo(MISCREG_ICH_LR7)
         .hyp().mon();
     InitReg(MISCREG_ICH_LRC8)
-        .mapsTo(MISCREG_ICH_LR8)
         .hyp().mon();
     InitReg(MISCREG_ICH_LRC9)
-        .mapsTo(MISCREG_ICH_LR9)
         .hyp().mon();
     InitReg(MISCREG_ICH_LRC10)
-        .mapsTo(MISCREG_ICH_LR10)
         .hyp().mon();
     InitReg(MISCREG_ICH_LRC11)
-        .mapsTo(MISCREG_ICH_LR11)
         .hyp().mon();
     InitReg(MISCREG_ICH_LRC12)
-        .mapsTo(MISCREG_ICH_LR12)
         .hyp().mon();
     InitReg(MISCREG_ICH_LRC13)
-        .mapsTo(MISCREG_ICH_LR13)
         .hyp().mon();
     InitReg(MISCREG_ICH_LRC14)
-        .mapsTo(MISCREG_ICH_LR14)
         .hyp().mon();
     InitReg(MISCREG_ICH_LRC15)
-        .mapsTo(MISCREG_ICH_LR15)
         .hyp().mon();
 
     // SVE
