@@ -4612,32 +4612,38 @@ ISA::initializeMiscRegMetadata()
         .hyp().mon()
         .mapsTo(MISCREG_ICC_HSRE);
     InitReg(MISCREG_ICC_CTLR_EL3)
-        .allPrivileges().exceptUserMode()
+        .mon()
         .mapsTo(MISCREG_ICC_MCTLR);
     InitReg(MISCREG_ICC_SRE_EL3)
-        .allPrivileges().exceptUserMode()
+        .mon()
         .mapsTo(MISCREG_ICC_MSRE);
     InitReg(MISCREG_ICC_IGRPEN1_EL3)
-        .allPrivileges().exceptUserMode()
+        .mon()
         .mapsTo(MISCREG_ICC_MGRPEN1);
 
     InitReg(MISCREG_ICH_AP0R0_EL2)
         .hyp().mon()
         .mapsTo(MISCREG_ICH_AP0R0);
     InitReg(MISCREG_ICH_AP0R1_EL2)
+        .hyp().mon()
         .mapsTo(MISCREG_ICH_AP0R1);
     InitReg(MISCREG_ICH_AP0R2_EL2)
+        .hyp().mon()
         .mapsTo(MISCREG_ICH_AP0R2);
     InitReg(MISCREG_ICH_AP0R3_EL2)
+        .hyp().mon()
         .mapsTo(MISCREG_ICH_AP0R3);
     InitReg(MISCREG_ICH_AP1R0_EL2)
         .hyp().mon()
         .mapsTo(MISCREG_ICH_AP1R0);
     InitReg(MISCREG_ICH_AP1R1_EL2)
+        .hyp().mon()
         .mapsTo(MISCREG_ICH_AP1R1);
     InitReg(MISCREG_ICH_AP1R2_EL2)
+        .hyp().mon()
         .mapsTo(MISCREG_ICH_AP1R2);
     InitReg(MISCREG_ICH_AP1R3_EL2)
+        .hyp().mon()
         .mapsTo(MISCREG_ICH_AP1R3);
     InitReg(MISCREG_ICH_HCR_EL2)
         .hyp().mon()
@@ -4658,53 +4664,37 @@ ISA::initializeMiscRegMetadata()
         .hyp().mon()
         .mapsTo(MISCREG_ICH_VMCR);
     InitReg(MISCREG_ICH_LR0_EL2)
-        .hyp().mon()
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
     InitReg(MISCREG_ICH_LR1_EL2)
-        .hyp().mon()
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
     InitReg(MISCREG_ICH_LR2_EL2)
-        .hyp().mon()
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
     InitReg(MISCREG_ICH_LR3_EL2)
-        .hyp().mon()
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
     InitReg(MISCREG_ICH_LR4_EL2)
-        .hyp().mon()
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
     InitReg(MISCREG_ICH_LR5_EL2)
-        .hyp().mon()
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
     InitReg(MISCREG_ICH_LR6_EL2)
-        .hyp().mon()
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
     InitReg(MISCREG_ICH_LR7_EL2)
-        .hyp().mon()
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
     InitReg(MISCREG_ICH_LR8_EL2)
-        .hyp().mon()
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
     InitReg(MISCREG_ICH_LR9_EL2)
-        .hyp().mon()
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
     InitReg(MISCREG_ICH_LR10_EL2)
-        .hyp().mon()
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
     InitReg(MISCREG_ICH_LR11_EL2)
-        .hyp().mon()
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
     InitReg(MISCREG_ICH_LR12_EL2)
-        .hyp().mon()
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
     InitReg(MISCREG_ICH_LR13_EL2)
-        .hyp().mon()
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
     InitReg(MISCREG_ICH_LR14_EL2)
-        .hyp().mon()
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
     InitReg(MISCREG_ICH_LR15_EL2)
-        .hyp().mon()
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
 
     // GICv3 AArch32
     InitReg(MISCREG_ICC_AP0R0)
@@ -4766,7 +4756,7 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ICC_HPPIR1)
         .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ICC_HSRE)
-        .allPrivileges().exceptUserMode();
+        .hyp().mon();
     InitReg(MISCREG_ICC_IAR0)
         .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ICC_IAR1)
@@ -4780,11 +4770,11 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ICC_IGRPEN1_S)
         .allPrivileges().exceptUserMode();
     InitReg(MISCREG_ICC_MCTLR)
-        .allPrivileges().exceptUserMode();
+        .mon();
     InitReg(MISCREG_ICC_MGRPEN1)
-        .allPrivileges().exceptUserMode();
+        .mon();
     InitReg(MISCREG_ICC_MSRE)
-        .allPrivileges().exceptUserMode();
+        .mon();
     InitReg(MISCREG_ICC_PMR)
         .allPrivileges().exceptUserMode();
     InitReg(MISCREG_ICC_RPR)
