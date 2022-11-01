@@ -302,8 +302,8 @@ raw_term()
     memcpy(&saved_ios, &ios, sizeof(struct termios));
 
     ios.c_iflag &= ~(ISTRIP|ICRNL|IGNCR|ICRNL|IXOFF|IXON);
-    ios.c_oflag &= ~(OPOST);
-    ios.c_oflag &= (ONLCR);
+    ios.c_oflag |= OPOST;
+    ios.c_oflag |= ONLCR;
     ios.c_lflag &= ~(ISIG|ICANON|ECHO);
     ios.c_cc[VMIN] = 1;
     ios.c_cc[VTIME] = 0;
