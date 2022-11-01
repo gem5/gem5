@@ -185,32 +185,8 @@ test_boot(
 
 test_boot(
     cpu="atomic",
-    num_cpus=1,
-    mem_system="classic",
-    memory_class="SingleChannelDDR3_1600",
-    length=constants.long_tag,
-)
-
-test_boot(
-    cpu="timing",
-    num_cpus=1,
-    mem_system="classic",
-    memory_class="SingleChannelDDR3_2133",
-    length=constants.long_tag,
-)
-
-test_boot(
-    cpu="o3",
-    num_cpus=1,
-    mem_system="classic",
-    memory_class="DualChannelDDR3_1600",
-    length=constants.long_tag,
-)
-
-test_boot(
-    cpu="timing",
     num_cpus=4,
-    mem_system="classic",
+    mem_system="no_cache",
     memory_class="HBM2Stack",
     length=constants.long_tag,
 )
@@ -218,39 +194,7 @@ test_boot(
 test_boot(
     cpu="timing",
     num_cpus=2,
-    mem_system="classic",
-    memory_class="DualChannelDDR4_2400",
-    length=constants.long_tag,
-)
-
-test_boot(
-    cpu="timing",
-    num_cpus=2,
-    mem_system="no_cache",
-    memory_class="DualChannelDDR4_2400",
-    length=constants.long_tag,
-)
-
-test_boot(
-    cpu="timing",
-    num_cpus=2,
     mem_system="chi",
-    memory_class="DualChannelDDR4_2400",
-    length=constants.long_tag,
-)
-
-test_boot(
-    cpu="timing",
-    num_cpus=2,
-    mem_system="mesi_two_level",
-    memory_class="DualChannelDDR4_2400",
-    length=constants.long_tag,
-)
-
-test_boot(
-    cpu="timing",
-    num_cpus=2,
-    mem_system="mi_example",
     memory_class="DualChannelDDR4_2400",
     length=constants.long_tag,
 )
