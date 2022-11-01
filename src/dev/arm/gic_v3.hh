@@ -206,6 +206,8 @@ class Gicv3 : public BaseGic, public Gicv3Registers
 
     void postInt(uint32_t cpu, ArmISA::InterruptTypes int_type);
 
+    void update();
+
   protected: // GIC state transfer
     void copyGicState(Gicv3Registers* from, Gicv3Registers* to);
 

@@ -286,6 +286,12 @@ Gicv3::postInt(uint32_t cpu, ArmISA::InterruptTypes int_type)
     ArmSystem::callClearStandByWfi(tc);
 }
 
+void
+Gicv3::update()
+{
+    distributor->update();
+}
+
 bool
 Gicv3::supportsVersion(GicVersion version)
 {
