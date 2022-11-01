@@ -494,4 +494,4 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
 
     @overrides(KernelDiskWorkload)
     def get_default_kernel_args(self) -> List[str]:
-        return ["console=ttyS0", "root={root_value}", "ro"]
+        return ["console=ttyS0", "root={root_value}", "rw"]

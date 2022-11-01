@@ -566,7 +566,7 @@ class RISCVMatchedBoard(
 
     @overrides(KernelDiskWorkload)
     def get_default_kernel_args(self) -> List[str]:
-        return ["console=ttyS0", "root={root_value}", "ro"]
+        return ["console=ttyS0", "root={root_value}", "rw"]
 
     @overrides(KernelDiskWorkload)
     def set_kernel_disk_workload(
