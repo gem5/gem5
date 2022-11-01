@@ -45,7 +45,7 @@ namespace PowerISA
 class SEWorkload : public gem5::SEWorkload
 {
   public:
-    using Params = PowerSEWorkloadParams;
+    PARAMS(PowerSEWorkload);
     SEWorkload(const Params &p, Addr page_shift) :
         gem5::SEWorkload(p, page_shift)
     {}
@@ -54,7 +54,8 @@ class SEWorkload : public gem5::SEWorkload
     setSystem(System *sys) override
     {
         gem5::SEWorkload::setSystem(sys);
-        gdb = BaseRemoteGDB::build<RemoteGDB>(system);
+        gdb = BaseRemoteGDB::build<RemoteGDB>(
+                params().remote_gdb_port, system);
     }
 
     loader::Arch getArch() const override { return loader::Power; }

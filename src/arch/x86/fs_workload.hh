@@ -78,7 +78,7 @@ void installSegDesc(ThreadContext *tc, int seg, SegDescriptor desc,
 class FsWorkload : public KernelWorkload
 {
   public:
-    using Params = X86FsWorkloadParams;
+    PARAMS(X86FsWorkload);
     FsWorkload(const Params &p);
 
   public:
@@ -88,7 +88,8 @@ class FsWorkload : public KernelWorkload
     setSystem(System *sys) override
     {
         KernelWorkload::setSystem(sys);
-        gdb = BaseRemoteGDB::build<RemoteGDB>(system);
+        gdb = BaseRemoteGDB::build<RemoteGDB>(
+                params().remote_gdb_port, system);
     }
 
     ByteOrder byteOrder() const override { return ByteOrder::little; }

@@ -174,12 +174,6 @@ Gem5Control::clearDebugFlag(const char *flag)
     ::gem5::clearDebugFlag(flag);
 }
 
-void
-Gem5Control::setRemoteGDBPort(unsigned int port)
-{
-    ::gem5::setRemoteGDBPort(port);
-}
-
 Gem5System *
 Gem5Control::makeSystem(const std::string &system_name,
     const std::string &instance_name)

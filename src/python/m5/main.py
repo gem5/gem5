@@ -519,8 +519,6 @@ def main():
     if not options.allow_remote_connections:
         m5.listenersLoopbackOnly()
 
-    # set debugging options
-    debug.setRemoteGDBPort(options.remote_gdb_port)
     for when in options.debug_break:
         debug.schedBreak(int(when))
 

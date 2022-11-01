@@ -180,9 +180,8 @@ class BaseRemoteGDB
 
     template <class GDBStub, class ...Args>
     static BaseRemoteGDB *
-    build(Args... args)
+    build(int port, Args... args)
     {
-        int port = getRemoteGDBPort();
         if (port)
             return new GDBStub(args..., port);
         else

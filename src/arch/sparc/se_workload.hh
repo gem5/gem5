@@ -35,6 +35,7 @@
 #include "arch/sparc/remote_gdb.hh"
 #include "base/loader/object_file.hh"
 #include "cpu/thread_context.hh"
+#include "params/SparcSEWorkload.hh"
 #include "sim/se_workload.hh"
 #include "sim/syscall_abi.hh"
 
@@ -47,13 +48,15 @@ namespace SparcISA
 class SEWorkload : public gem5::SEWorkload
 {
   public:
+    PARAMS(SparcSEWorkload);
     using gem5::SEWorkload::SEWorkload;
 
     void
     setSystem(System *sys) override
     {
         gem5::SEWorkload::setSystem(sys);
-        gdb = BaseRemoteGDB::build<RemoteGDB>(system);
+        gdb = BaseRemoteGDB::build<RemoteGDB>(
+                params().remote_gdb_port, system);
     }
 
     virtual void handleTrap(ThreadContext *tc, int trapNum);

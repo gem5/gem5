@@ -86,7 +86,6 @@ pybind_init_debug(py::module_ &m_native)
         .def("allFlags", &debug::allFlags, py::return_value_policy::reference)
 
         .def("schedBreak", &schedBreak)
-        .def("setRemoteGDBPort", &setRemoteGDBPort)
         ;
 
     py::class_<debug::Flag> c_flag(m_debug, "Flag");
