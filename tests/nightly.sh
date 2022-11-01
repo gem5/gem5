@@ -61,20 +61,6 @@ if [[ "$gpu_isa" != "GCN3_X86" ]] && [[ "$gpu_isa" != "VEGA_X86" ]]; then
     exit 1
 fi
 
-build_target () {
-    isa=$1
-
-    # Try to build. If not, delete the build directory and try again.
-    # SCons is not perfect, and occasionally does not catch a necessary
-    # compilation: https://gem5.atlassian.net/browse/GEM5-753
-    docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
-        "${gem5_root}" --memory="${docker_mem_limit}" --rm \
-        gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest \
-            bash -c "scons build/${isa}/gem5.opt -j${compile_threads} \
-            --ignore-style || (rm -rf build && scons build/${isa}/gem5.opt \
-            -j${compile_threads} --ignore-style)"
-}
-
 unit_test () {
     build=$1
 
@@ -87,15 +73,6 @@ unit_test () {
 
 # Ensure we have the latest docker images.
 docker pull gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-
-# Try to build the ISA targets.
-build_target NULL
-build_target RISCV
-build_target X86
-build_target ARM
-build_target SPARC
-build_target MIPS
-build_target POWER
 
 # Run the unit tests.
 unit_test opt
