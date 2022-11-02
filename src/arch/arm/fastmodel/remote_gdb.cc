@@ -27,13 +27,42 @@
 #include "arch/arm/fastmodel/remote_gdb.hh"
 
 #include "arch/arm/fastmodel/iris/thread_context.hh"
+#include "arch/arm/utility.hh"
+#include "base/trace.hh"
+#include "debug/GDBAcc.hh"
 
 namespace gem5 {
 
+using namespace ArmISA;
+
 namespace fastmodel {
 
+void
+FastmodelRemoteGDB::AArch64GdbRegCache::setRegs(ThreadContext *context) const
+{
+    DPRINTF(GDBAcc, "setRegs in remotegdb \n");
+
+    for (int i = 0; i < 31; ++i)
+        context->setReg(int_reg::x(i), r.x[i]);
+    auto pc_state = context->pcState().as<PCState>();
+    pc_state.set(r.pc);
+    context->pcState(pc_state);
+    context->setMiscRegNoEffect(MISCREG_CPSR, r.cpsr);
+    // Update the stack pointer. This should be done after
+    // updating CPSR/PSTATE since that might affect how SPX gets
+    // mapped.
+    context->setReg(int_reg::Spx, r.spx);
+
+    // Remove the vector registers update in FastmodelRemoteGDB since it's not
+    // implemented in iris::ThreadContext.
+    warn("Skip update vector registers in remotegdb\n");
+
+    context->setMiscRegNoEffect(MISCREG_FPSR, r.fpsr);
+    context->setMiscRegNoEffect(MISCREG_FPCR, r.fpcr);
+}
+
 FastmodelRemoteGDB::FastmodelRemoteGDB(System *_system, int port)
-    : gem5::ArmISA::RemoteGDB(_system, port)
+    : gem5::ArmISA::RemoteGDB(_system, port), regCache64(this)
 {
 }
 
@@ -55,6 +84,15 @@ FastmodelRemoteGDB::writeBlob(Addr vaddr, size_t size, const char *data)
              "FastmodelRemoteGdb can only work on Iris::ThreadContext");
     tc->writeMemWithCurrentMsn(vaddr, size, data);
     return true;
+}
+
+BaseGdbRegCache*
+FastmodelRemoteGDB::gdbRegs()
+{
+    if (inAArch64(context()))
+        return &regCache64;
+    else
+        return &regCache32;
 }
 
 }  // namespace fastmodel
