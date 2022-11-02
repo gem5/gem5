@@ -56,47 +56,50 @@ SharedMemoryServer::SharedMemoryServer(const SharedMemoryServerParams& params)
       system(params.system), serverFd(-1)
 {
     fatal_if(system == nullptr, "Requires a system to share memory from!");
-    // Ensure the unix socket path to use is not occupied. Also, if there's
-    // actually anything to be removed, warn the user something might be off.
-    if (unlink(unixSocketPath.c_str()) == 0) {
-        warn(
-            "The server path %s was occupied and will be replaced. Please "
-            "make sure there is no other server using the same path.",
-            unixSocketPath.c_str());
-    }
     // Create a new unix socket.
     serverFd = ListenSocket::socketCloexec(AF_UNIX, SOCK_STREAM, 0);
-    panic_if(serverFd < 0, "%s: cannot create unix socket: %s", name().c_str(),
+    panic_if(serverFd < 0, "%s: cannot create unix socket: %s", name(),
              strerror(errno));
     // Bind to the specified path.
     sockaddr_un serv_addr = {};
     serv_addr.sun_family = AF_UNIX;
     strncpy(serv_addr.sun_path, unixSocketPath.c_str(),
             sizeof(serv_addr.sun_path) - 1);
-    warn_if(strlen(serv_addr.sun_path) != unixSocketPath.size(),
-            "%s: unix socket path truncated, expect '%s' but get '%s'",
-            name().c_str(), unixSocketPath.c_str(), serv_addr.sun_path);
+    // If the target path is truncated, warn the user that the actual path is
+    // different and update the target path.
+    if (strlen(serv_addr.sun_path) != unixSocketPath.size()) {
+        warn("%s: unix socket path truncated, expect '%s' but get '%s'",
+             name(), unixSocketPath, serv_addr.sun_path);
+        unixSocketPath = serv_addr.sun_path;
+    }
+    // Ensure the unix socket path to use is not occupied. Also, if there's
+    // actually anything to be removed, warn the user something might be off.
+    bool old_sock_removed = unlink(unixSocketPath.c_str()) == 0;
+    warn_if(old_sock_removed,
+            "%s: the server path %s was occupied and will be replaced. Please "
+            "make sure there is no other server using the same path.",
+            name(), unixSocketPath);
     int bind_retv = bind(serverFd, reinterpret_cast<sockaddr*>(&serv_addr),
                          sizeof(serv_addr));
-    fatal_if(bind_retv != 0, "%s: cannot bind unix socket: %s", name().c_str(),
+    fatal_if(bind_retv != 0, "%s: cannot bind unix socket: %s", name(),
              strerror(errno));
     // Start listening.
     int listen_retv = listen(serverFd, 1);
-    fatal_if(listen_retv != 0, "%s: listen failed: %s", name().c_str(),
+    fatal_if(listen_retv != 0, "%s: listen failed: %s", name(),
              strerror(errno));
     listenSocketEvent.reset(new ListenSocketEvent(serverFd, this));
     pollQueue.schedule(listenSocketEvent.get());
-    inform("%s: listening at %s", name().c_str(), unixSocketPath.c_str());
+    inform("%s: listening at %s", name(), unixSocketPath);
 }
 
 SharedMemoryServer::~SharedMemoryServer()
 {
     int unlink_retv = unlink(unixSocketPath.c_str());
-    warn_if(unlink_retv != 0, "%s: cannot unlink unix socket: %s",
-            name().c_str(), strerror(errno));
+    warn_if(unlink_retv != 0, "%s: cannot unlink unix socket: %s", name(),
+            strerror(errno));
     int close_retv = close(serverFd);
-    warn_if(close_retv != 0, "%s: cannot close unix socket: %s",
-            name().c_str(), strerror(errno));
+    warn_if(close_retv != 0, "%s: cannot close unix socket: %s", name(),
+            strerror(errno));
 }
 
 SharedMemoryServer::BaseShmPollEvent::BaseShmPollEvent(
@@ -121,7 +124,7 @@ SharedMemoryServer::BaseShmPollEvent::tryReadAll(void* buffer, size_t size)
         if (retv >= 0) {
             offset += retv;
         } else if (errno != EINTR) {
-            warn("%s: recv failed: %s", name().c_str(), strerror(errno));
+            warn("%s: recv failed: %s", name(), strerror(errno));
             return false;
         }
     }
@@ -132,11 +135,10 @@ void
 SharedMemoryServer::ListenSocketEvent::process(int revents)
 {
     panic_if(revents & (POLLERR | POLLNVAL), "%s: listen socket is broken",
-             name().c_str());
+             name());
     int cli_fd = ListenSocket::acceptCloexec(pfd.fd, nullptr, nullptr);
-    panic_if(cli_fd < 0, "%s: accept failed: %s", name().c_str(),
-             strerror(errno));
-    inform("%s: accept new connection %d", name().c_str(), cli_fd);
+    panic_if(cli_fd < 0, "%s: accept failed: %s", name(), strerror(errno));
+    inform("%s: accept new connection %d", name(), cli_fd);
     shmServer->clientSocketEvents[cli_fd].reset(
         new ClientSocketEvent(cli_fd, shmServer));
     pollQueue.schedule(shmServer->clientSocketEvents[cli_fd].get());
@@ -163,7 +165,7 @@ SharedMemoryServer::ClientSocketEvent::process(int revents)
             break;
         }
         if (req_type != RequestType::kGetPhysRange) {
-            warn("%s: receive unknown request: %d", name().c_str(),
+            warn("%s: receive unknown request: %d", name(),
                  static_cast<int>(req_type));
             break;
         }
@@ -171,8 +173,7 @@ SharedMemoryServer::ClientSocketEvent::process(int revents)
             break;
         }
         AddrRange range(request.start, request.end);
-        inform("%s: receive request: %s", name().c_str(),
-               range.to_string().c_str());
+        inform("%s: receive request: %s", name(), range.to_string());
 
         // Identify the backing store.
         const auto& stores = shmServer->system->getPhysMem().getBackingStore();
@@ -181,13 +182,12 @@ SharedMemoryServer::ClientSocketEvent::process(int revents)
                 return entry.shmFd >= 0 && range.isSubset(entry.range);
             });
         if (it == stores.end()) {
-            warn("%s: cannot find backing store for %s", name().c_str(),
-                 range.to_string().c_str());
+            warn("%s: cannot find backing store for %s", name(),
+                 range.to_string());
             break;
         }
         inform("%s: find shared backing store for %s at %s, shm=%d:%lld",
-               name().c_str(), range.to_string().c_str(),
-               it->range.to_string().c_str(), it->shmFd,
+               name(), range.to_string(), it->range.to_string(), it->shmFd,
                (unsigned long long)it->shmOffset);
 
         // Populate response message.
@@ -222,22 +222,22 @@ SharedMemoryServer::ClientSocketEvent::process(int revents)
         // Send the response.
         int retv = sendmsg(pfd.fd, &msg, 0);
         if (retv < 0) {
-            warn("%s: sendmsg failed: %s", name().c_str(), strerror(errno));
+            warn("%s: sendmsg failed: %s", name(), strerror(errno));
             break;
         }
         if (retv != sizeof(response)) {
-            warn("%s: failed to send all response at once", name().c_str());
+            warn("%s: failed to send all response at once", name());
             break;
         }
 
         // Request done.
-        inform("%s: request done", name().c_str());
+        inform("%s: request done", name());
         return;
     } while (false);
 
     // If we ever reach here, our client either close the connection or is
     // somehow broken. We'll just close the connection and move on.
-    inform("%s: closing connection", name().c_str());
+    inform("%s: closing connection", name());
     close(pfd.fd);
     shmServer->clientSocketEvents.erase(pfd.fd);
 }
