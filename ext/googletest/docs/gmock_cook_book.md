@@ -392,8 +392,7 @@ Old macros and their new equivalents:
 If a mock method has no `EXPECT_CALL` spec but is called, we say that it's an
 "uninteresting call", and the default action (which can be specified using
 `ON_CALL()`) of the method will be taken. Currently, an uninteresting call will
-also by default cause gMock to print a warning. (In the future, we might remove
-this warning by default.)
+also by default cause gMock to print a warning.
 
 However, sometimes you may want to ignore these uninteresting calls, and
 sometimes you may want to treat them as errors. gMock lets you make the decision
@@ -1084,7 +1083,7 @@ using ::testing::Lt;
 ```
 
 says that `Blah` will be called with arguments `x`, `y`, and `z` where `x < y <
-z`. Note that in this example, it wasn't necessary specify the positional
+z`. Note that in this example, it wasn't necessary to specify the positional
 matchers.
 
 As a convenience and example, gMock provides some matchers for 2-tuples,
@@ -1300,23 +1299,27 @@ What if you have a pointer to pointer? You guessed it - you can use nested
 `Pointee(Pointee(Lt(3)))` matches a pointer that points to a pointer that points
 to a number less than 3 (what a mouthful...).
 
-### Testing a Certain Property of an Object
+### Defining a Custom Matcher Class {#CustomMatcherClass}
 
-Sometimes you want to specify that an object argument has a certain property,
-but there is no existing matcher that does this. If you want good error
-messages, you should [define a matcher](#NewMatchers). If you want to do it
-quick and dirty, you could get away with writing an ordinary function.
+Most matchers can be simply defined using [the MATCHER* macros](#NewMatchers),
+which are terse and flexible, and produce good error messages. However, these
+macros are not very explicit about the interfaces they create and are not always
+suitable, especially for matchers that will be widely reused.
 
-Let's say you have a mock function that takes an object of type `Foo`, which has
-an `int bar()` method and an `int baz()` method, and you want to constrain that
-the argument's `bar()` value plus its `baz()` value is a given number. Here's
-how you can define a matcher to do it:
+For more advanced cases, you may need to define your own matcher class. A custom
+matcher allows you to test a specific invariant property of that object. Let's
+take a look at how to do so.
+
+Imagine you have a mock function that takes an object of type `Foo`, which has
+an `int bar()` method and an `int baz()` method. You want to constrain that the
+argument's `bar()` value plus its `baz()` value is a given number. (This is an
+invariant.) Here's how we can write and use a matcher class to do so:
 
 ```cpp
-using ::testing::Matcher;
-
 class BarPlusBazEqMatcher {
  public:
+  using is_gtest_matcher = void;
+
   explicit BarPlusBazEqMatcher(int expected_sum)
       : expected_sum_(expected_sum) {}
 
@@ -1325,23 +1328,24 @@ class BarPlusBazEqMatcher {
     return (foo.bar() + foo.baz()) == expected_sum_;
   }
 
-  void DescribeTo(std::ostream& os) const {
-    os << "bar() + baz() equals " << expected_sum_;
+  void DescribeTo(std::ostream* os) const {
+    *os << "bar() + baz() equals " << expected_sum_;
   }
 
-  void DescribeNegationTo(std::ostream& os) const {
-    os << "bar() + baz() does not equal " << expected_sum_;
+  void DescribeNegationTo(std::ostream* os) const {
+    *os << "bar() + baz() does not equal " << expected_sum_;
   }
  private:
   const int expected_sum_;
 };
 
-Matcher<const Foo&> BarPlusBazEq(int expected_sum) {
+::testing::Matcher<const Foo&> BarPlusBazEq(int expected_sum) {
   return BarPlusBazEqMatcher(expected_sum);
 }
 
 ...
-  EXPECT_CALL(..., DoThis(BarPlusBazEq(5)))...;
+  Foo foo;
+  EXPECT_CALL(foo, BarPlusBazEq(5))...;
 ```
 
 ### Matching Containers
@@ -1452,7 +1456,7 @@ the pointer is copied. When the last matcher that references the implementation
 object dies, the implementation object will be deleted.
 
 Therefore, if you have some complex matcher that you want to use again and
-again, there is no need to build it everytime. Just assign it to a matcher
+again, there is no need to build it every time. Just assign it to a matcher
 variable and use that variable repeatedly! For example,
 
 ```cpp
@@ -1754,7 +1758,7 @@ specifies the following DAG (where `s1` is `A -> B`, and `s2` is `A -> C -> D`):
        |
   A ---|
        |
-        +---> C ---> D
+       +---> C ---> D
 ```
 
 This means that A must occur before B and C, and C must occur before D. There's
@@ -1980,6 +1984,7 @@ If the mock method also needs to return a value as well, you can chain
 
 ```cpp
 using ::testing::_;
+using ::testing::DoAll;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 
@@ -2033,10 +2038,7 @@ class MockRolodex : public Rolodex {
 }
 ...
   MockRolodex rolodex;
-  vector<string> names;
-  names.push_back("George");
-  names.push_back("John");
-  names.push_back("Thomas");
+  vector<string> names = {"George", "John", "Thomas"};
   EXPECT_CALL(rolodex, GetNames(_))
       .WillOnce(SetArrayArgument<0>(names.begin(), names.end()));
 ```
@@ -2604,7 +2606,7 @@ efficient. When the last action that references the implementation object dies,
 the implementation object will be deleted.
 
 If you have some complex action that you want to use again and again, you may
-not have to build it from scratch everytime. If the action doesn't have an
+not have to build it from scratch every time. If the action doesn't have an
 internal state (i.e. if it always does the same thing no matter how many times
 it has been called), you can assign it to an action variable and use that
 variable repeatedly. For example:
@@ -3809,22 +3811,19 @@ Cardinality EvenNumber() {
       .Times(EvenNumber());
 ```
 
-### Writing New Actions Quickly {#QuickNewActions}
+### Writing New Actions {#QuickNewActions}
 
 If the built-in actions don't work for you, you can easily define your own one.
-Just define a functor class with a (possibly templated) call operator, matching
-the signature of your action.
+All you need is a call operator with a signature compatible with the mocked
+function. So you can use a lambda:
 
-```cpp
-struct Increment {
-  template <typename T>
-  T operator()(T* arg) {
-    return ++(*arg);
-  }
-}
+```
+MockFunction<int(int)> mock;
+EXPECT_CALL(mock, Call).WillOnce([](const int input) { return input * 7; });
+EXPECT_EQ(14, mock.AsStdFunction()(2));
 ```
 
-The same approach works with stateful functors (or any callable, really):
+Or a struct with a call operator (even a templated one):
 
 ```
 struct MultiplyBy {
@@ -3832,11 +3831,53 @@ struct MultiplyBy {
   T operator()(T arg) { return arg * multiplier; }
 
   int multiplier;
-}
+};
 
 // Then use:
 // EXPECT_CALL(...).WillOnce(MultiplyBy{7});
 ```
+
+It's also fine for the callable to take no arguments, ignoring the arguments
+supplied to the mock function:
+
+```
+MockFunction<int(int)> mock;
+EXPECT_CALL(mock, Call).WillOnce([] { return 17; });
+EXPECT_EQ(17, mock.AsStdFunction()(0));
+```
+
+When used with `WillOnce`, the callable can assume it will be called at most
+once and is allowed to be a move-only type:
+
+```
+// An action that contains move-only types and has an &&-qualified operator,
+// demanding in the type system that it be called at most once. This can be
+// used with WillOnce, but the compiler will reject it if handed to
+// WillRepeatedly.
+struct MoveOnlyAction {
+  std::unique_ptr<int> move_only_state;
+  std::unique_ptr<int> operator()() && { return std::move(move_only_state); }
+};
+
+MockFunction<std::unique_ptr<int>()> mock;
+EXPECT_CALL(mock, Call).WillOnce(MoveOnlyAction{std::make_unique<int>(17)});
+EXPECT_THAT(mock.AsStdFunction()(), Pointee(Eq(17)));
+```
+
+More generally, to use with a mock function whose signature is `R(Args...)` the
+object can be anything convertible to `OnceAction<R(Args...)>` or
+`Action<R(Args...)`>. The difference between the two is that `OnceAction` has
+weaker requirements (`Action` requires a copy-constructible input that can be
+called repeatedly whereas `OnceAction` requires only move-constructible and
+supports `&&`-qualified call operators), but can be used only with `WillOnce`.
+`OnceAction` is typically relevant only when supporting move-only types or
+actions that want a type-system guarantee that they will be called at most once.
+
+Typically the `OnceAction` and `Action` templates need not be referenced
+directly in your actions: a struct or class with a call operator is sufficient,
+as in the examples above. But fancier polymorphic actions that need to know the
+specific return type of the mock function can define templated conversion
+operators to make that possible. See `gmock-actions.h` for examples.
 
 #### Legacy macro-based Actions
 
@@ -4191,7 +4232,7 @@ This implementation class does *not* need to inherit from any particular class.
 What matters is that it must have a `Perform()` method template. This method
 template takes the mock function's arguments as a tuple in a **single**
 argument, and returns the result of the action. It can be either `const` or not,
-but must be invokable with exactly one template argument, which is the result
+but must be invocable with exactly one template argument, which is the result
 type. In other words, you must be able to call `Perform<R>(args)` where `R` is
 the mock function's return type and `args` is its arguments in a tuple.
 

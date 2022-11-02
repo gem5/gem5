@@ -31,7 +31,7 @@
 
 import re
 from xml.dom import minidom, Node
-import gtest_test_utils
+from googletest.test import gtest_test_utils
 
 GTEST_DEFAULT_OUTPUT_FILE = 'test_detail.xml'
 
@@ -170,6 +170,10 @@ class GTestXMLTestCase(gtest_test_utils.TestCase):
     *  The stack traces are removed.
     """
 
+    if element.tagName == 'testcase':
+      source_file = element.getAttributeNode('file')
+      if source_file:
+        source_file.value = re.sub(r'^.*[/\\](.*)', '\\1', source_file.value)
     if element.tagName in ('testsuites', 'testsuite', 'testcase'):
       timestamp = element.getAttributeNode('timestamp')
       timestamp.value = re.sub(r'^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d\d\d$',

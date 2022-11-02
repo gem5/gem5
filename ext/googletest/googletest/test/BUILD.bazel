@@ -30,7 +30,6 @@
 #
 # Bazel BUILD for The Google C++ Testing Framework (Google Test)
 
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_test")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 licenses(["notice"])
@@ -175,6 +174,10 @@ py_test(
     name = "gtest_help_test",
     size = "small",
     srcs = ["gtest_help_test.py"],
+    args = select({
+        "//:has_absl": ["--has_absl_flags"],
+        "//conditions:default": [],
+    }),
     data = [":gtest_help_test_"],
     deps = [":gtest_test_utils"],
 )

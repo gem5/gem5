@@ -17,7 +17,7 @@ See [Supported Platforms](platforms.md) for more information about platforms
 compatible with GoogleTest.
 
 If you don't already have Bazel installed, see the
-[Bazel installation guide](https://docs.bazel.build/versions/master/install.html).
+[Bazel installation guide](https://docs.bazel.build/versions/main/install.html).
 
 {: .callout .note}
 Note: The terminal commands in this tutorial show a Unix shell prompt, but the
@@ -26,7 +26,7 @@ commands work on the Windows command line as well.
 ## Set up a Bazel workspace
 
 A
-[Bazel workspace](https://docs.bazel.build/versions/master/build-ref.html#workspace)
+[Bazel workspace](https://docs.bazel.build/versions/main/build-ref.html#workspace)
 is a directory on your filesystem that you use to manage source files for the
 software you want to build. Each workspace directory has a text file named
 `WORKSPACE` which may be empty, or may contain references to external
@@ -40,9 +40,9 @@ $ mkdir my_workspace && cd my_workspace
 
 Next, you’ll create the `WORKSPACE` file to specify dependencies. A common and
 recommended way to depend on GoogleTest is to use a
-[Bazel external dependency](https://docs.bazel.build/versions/master/external.html)
+[Bazel external dependency](https://docs.bazel.build/versions/main/external.html)
 via the
-[`http_archive` rule](https://docs.bazel.build/versions/master/repo/http.html#http_archive).
+[`http_archive` rule](https://docs.bazel.build/versions/main/repo/http.html#http_archive).
 To do this, in the root directory of your workspace (`my_workspace/`), create a
 file named `WORKSPACE` with the following contents:
 
@@ -61,18 +61,6 @@ as a ZIP archive from GitHub. In the above example,
 `609281088cfefc76f9d0ce82e1ff6c30cc3591e5` is the Git commit hash of the
 GoogleTest version to use; we recommend updating the hash often to point to the
 latest version.
-
-Bazel also needs a dependency on the
-[`rules_cc` repository](https://github.com/bazelbuild/rules_cc) to build C++
-code, so add the following to the `WORKSPACE` file:
-
-```
-http_archive(
-  name = "rules_cc",
-  urls = ["https://github.com/bazelbuild/rules_cc/archive/40548a2974f1aea06215272d9c2b47a14a24e556.zip"],
-  strip_prefix = "rules_cc-40548a2974f1aea06215272d9c2b47a14a24e556",
-)
-```
 
 Now you're ready to build C++ code that uses GoogleTest.
 
@@ -104,8 +92,6 @@ To build the code, create a file named `BUILD` in the same directory with the
 following contents:
 
 ```
-load("@rules_cc//cc:defs.bzl", "cc_test")
-
 cc_test(
   name = "hello_test",
   size = "small",
@@ -118,7 +104,7 @@ This `cc_test` rule declares the C++ test binary you want to build, and links to
 GoogleTest (`//:gtest_main`) using the prefix you specified in the `WORKSPACE`
 file (`@com_google_googletest`). For more information about Bazel `BUILD` files,
 see the
-[Bazel C++ Tutorial](https://docs.bazel.build/versions/master/tutorial/cpp.html).
+[Bazel C++ Tutorial](https://docs.bazel.build/versions/main/tutorial/cpp.html).
 
 Now you can build and run your test:
 

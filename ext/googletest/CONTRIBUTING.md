@@ -21,8 +21,8 @@ accept your pull requests.
 
 ## Are you a Googler?
 
-If you are a Googler, please make an attempt to submit an internal change rather
-than a GitHub Pull Request. If you are not able to submit an internal change a
+If you are a Googler, please make an attempt to submit an internal contribution
+rather than a GitHub Pull Request. If you are not able to submit internally, a
 PR is acceptable as an alternative.
 
 ## Contributing A Patch
@@ -36,7 +36,8 @@ PR is acceptable as an alternative.
     This ensures that work isn't being duplicated and communicating your plan
     early also generally leads to better patches.
 4.  If your proposed change is accepted, and you haven't already done so, sign a
-    Contributor License Agreement (see details above).
+    Contributor License Agreement
+    ([see details above](#contributor-license-agreements)).
 5.  Fork the desired repo, develop and test your code changes.
 6.  Ensure that your code adheres to the existing style in the sample to which
     you are contributing.
