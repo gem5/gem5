@@ -348,6 +348,29 @@ ISA::readMiscReg(RegIndex idx)
             else
                 return mbits(val, 63, 1);
         }
+      case MISCREG_STATUS:
+        {
+            // Updating the SD bit.
+            // . Per RISC-V ISA Manual, vol II, section 3.1.6.6, page 26,
+            // the SD bit is a read-only bit indicating whether any of
+            // FS, VS, and XS fields being in the respective dirty state.
+            // . Per section 3.1.6, page 20, the SD bit is the most
+            // significant bit of the MSTATUS CSR for both RV32 and RV64.
+            // . Per section 3.1.6.6, page 29, the explicit formula for
+            // updating the SD is,
+            //   SD = ((FS==DIRTY) | (XS==DIRTY) | (VS==DIRTY))
+            // . Ideally, we want to update the SD after every relevant
+            // instruction, however, lazily updating the Status register
+            // upon its read produces the same effect as well.
+            STATUS status = readMiscRegNoEffect(idx);
+            uint64_t sd_bit = \
+                (status.xs == 3) || (status.fs == 3) || (status.vs == 3);
+            // We assume RV64 here, updating the SD bit at index 63.
+            status.sd = sd_bit;
+            setMiscRegNoEffect(idx, status);
+
+            return readMiscRegNoEffect(idx);
+        }
       default:
         // Try reading HPM counters
         // As a placeholder, all HPM counters are just cycle counters
