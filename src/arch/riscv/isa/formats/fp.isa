@@ -40,6 +40,9 @@ def template FloatExecute {{
         if (status.fs == FPUStatus::OFF)
             return std::make_shared<IllegalInstFault>("FPU is off", machInst);
 
+        status.fs = FPUStatus::DIRTY;
+        xc->setMiscReg(MISCREG_STATUS, status);
+
         %(op_decl)s;
         %(op_rd)s;
 
