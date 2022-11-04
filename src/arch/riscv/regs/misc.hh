@@ -562,6 +562,7 @@ BitUnion64(STATUS)
     Bitfield<16, 15> xs;
     Bitfield<14, 13> fs;
     Bitfield<12, 11> mpp;
+    Bitfield<10, 9> vs;
     Bitfield<8> spp;
     Bitfield<7> mpie;
     Bitfield<5> spie;
@@ -612,6 +613,7 @@ const RegVal STATUS_MPRV_MASK = 1ULL << 17;
 const RegVal STATUS_XS_MASK = 3ULL << 15;
 const RegVal STATUS_FS_MASK = 3ULL << FS_OFFSET;
 const RegVal STATUS_MPP_MASK = 3ULL << 11;
+const RegVal STATUS_VS_MASK = 3ULL << 9;
 const RegVal STATUS_SPP_MASK = 1ULL << 8;
 const RegVal STATUS_MPIE_MASK = 1ULL << 7;
 const RegVal STATUS_SPIE_MASK = 1ULL << 5;
@@ -624,21 +626,21 @@ const RegVal MSTATUS_MASK = STATUS_SD_MASK | STATUS_SXL_MASK |
                             STATUS_TW_MASK | STATUS_TVM_MASK |
                             STATUS_MXR_MASK | STATUS_SUM_MASK |
                             STATUS_MPRV_MASK | STATUS_XS_MASK |
-                            STATUS_FS_MASK | STATUS_MPP_MASK |
-                            STATUS_SPP_MASK | STATUS_MPIE_MASK |
-                            STATUS_SPIE_MASK | STATUS_UPIE_MASK |
-                            STATUS_MIE_MASK | STATUS_SIE_MASK |
-                            STATUS_UIE_MASK;
+                            STATUS_FS_MASK | STATUS_VS_MASK |
+                            STATUS_MPP_MASK | STATUS_SPP_MASK |
+                            STATUS_MPIE_MASK | STATUS_SPIE_MASK |
+                            STATUS_UPIE_MASK | STATUS_MIE_MASK |
+                            STATUS_SIE_MASK | STATUS_UIE_MASK;
 const RegVal SSTATUS_MASK = STATUS_SD_MASK | STATUS_UXL_MASK |
                             STATUS_MXR_MASK | STATUS_SUM_MASK |
                             STATUS_XS_MASK | STATUS_FS_MASK |
-                            STATUS_SPP_MASK | STATUS_SPIE_MASK |
-                            STATUS_UPIE_MASK | STATUS_SIE_MASK |
-                            STATUS_UIE_MASK;
+                            STATUS_VS_MASK | STATUS_SPP_MASK |
+                            STATUS_SPIE_MASK | STATUS_UPIE_MASK |
+                            STATUS_SIE_MASK | STATUS_UIE_MASK;
 const RegVal USTATUS_MASK = STATUS_SD_MASK | STATUS_MXR_MASK |
                             STATUS_SUM_MASK | STATUS_XS_MASK |
-                            STATUS_FS_MASK | STATUS_UPIE_MASK |
-                            STATUS_UIE_MASK;
+                            STATUS_FS_MASK | STATUS_VS_MASK |
+                            STATUS_UPIE_MASK | STATUS_UIE_MASK;
 
 const RegVal MEI_MASK = 1ULL << 11;
 const RegVal SEI_MASK = 1ULL << 9;
