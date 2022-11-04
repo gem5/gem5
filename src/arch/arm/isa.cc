@@ -530,9 +530,6 @@ ISA::setupThreadContext()
 
     if (!gicv3CpuInterface)
         gicv3CpuInterface.reset(gicv3->getCPUInterface(tc->contextId()));
-
-    gicv3CpuInterface->setISA(this);
-    gicv3CpuInterface->setThreadContext(tc);
 }
 
 void
