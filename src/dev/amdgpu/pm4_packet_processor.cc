@@ -441,12 +441,17 @@ void
 PM4PacketProcessor::processSDMAMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
     SDMAQueueDesc *mqd, uint16_t vmid)
 {
+    uint32_t rlc_size = 4UL << bits(mqd->sdmax_rlcx_rb_cntl, 6, 1);
+    Addr rptr_wb_addr = mqd->sdmax_rlcx_rb_rptr_addr_hi;
+    rptr_wb_addr <<= 32;
+    rptr_wb_addr |= mqd->sdmax_rlcx_rb_rptr_addr_lo;
+
     DPRINTF(PM4PacketProcessor, "SDMAMQD: rb base: %#lx rptr: %#x/%#x wptr: "
-            "%#x/%#x ib: %#x/%#x size: %d ctrl: %#x\n", mqd->rb_base,
-            mqd->sdmax_rlcx_rb_rptr, mqd->sdmax_rlcx_rb_rptr_hi,
+            "%#x/%#x ib: %#x/%#x size: %d ctrl: %#x rptr wb addr: %#lx\n",
+            mqd->rb_base, mqd->sdmax_rlcx_rb_rptr, mqd->sdmax_rlcx_rb_rptr_hi,
             mqd->sdmax_rlcx_rb_wptr, mqd->sdmax_rlcx_rb_wptr_hi,
             mqd->sdmax_rlcx_ib_base_lo, mqd->sdmax_rlcx_ib_base_hi,
-            mqd->sdmax_rlcx_ib_size, mqd->sdmax_rlcx_rb_cntl);
+            rlc_size, mqd->sdmax_rlcx_rb_cntl, rptr_wb_addr);
 
     // Engine 2 points to SDMA0 while engine 3 points to SDMA1
     assert(pkt->engineSel == 2 || pkt->engineSel == 3);
@@ -454,7 +459,8 @@ PM4PacketProcessor::processSDMAMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
 
     // Register RLC queue with SDMA
     sdma_eng->registerRLCQueue(pkt->doorbellOffset << 2,
-                               mqd->rb_base << 8);
+                               mqd->rb_base << 8, rlc_size,
+                               rptr_wb_addr);
 
     // Register doorbell with GPU device
     gpuDevice->setSDMAEngine(pkt->doorbellOffset << 2, sdma_eng);

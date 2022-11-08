@@ -161,7 +161,8 @@ SDMAEngine::translate(Addr vaddr, Addr size)
 }
 
 void
-SDMAEngine::registerRLCQueue(Addr doorbell, Addr rb_base)
+SDMAEngine::registerRLCQueue(Addr doorbell, Addr rb_base, uint32_t size,
+                             Addr rptr_wb_addr)
 {
     // Get first free RLC
     if (!rlc0.valid()) {
@@ -171,19 +172,19 @@ SDMAEngine::registerRLCQueue(Addr doorbell, Addr rb_base)
         rlc0.base(rb_base);
         rlc0.rptr(0);
         rlc0.wptr(0);
+        rlc0.rptrWbAddr(rptr_wb_addr);
         rlc0.processing(false);
-        // TODO: size - I think pull from MQD 2^rb_cntrl[6:1]-1
-        rlc0.size(1024*1024);
+        rlc0.size(size);
     } else if (!rlc1.valid()) {
         DPRINTF(SDMAEngine, "Doorbell %lx mapped to RLC1\n", doorbell);
         rlcInfo[1] = doorbell;
         rlc1.valid(true);
         rlc1.base(rb_base);
-        rlc1.rptr(1);
-        rlc1.wptr(1);
+        rlc1.rptr(0);
+        rlc1.wptr(0);
+        rlc1.rptrWbAddr(rptr_wb_addr);
         rlc1.processing(false);
-        // TODO: size - I think pull from MQD 2^rb_cntrl[6:1]-1
-        rlc1.size(1024*1024);
+        rlc1.size(size);
     } else {
         panic("No free RLCs. Check they are properly unmapped.");
     }
@@ -291,6 +292,17 @@ SDMAEngine::decodeNext(SDMAQueue *q)
                 { decodeHeader(q, header); });
         dmaReadVirt(q->rptr(), sizeof(uint32_t), cb, &cb->dmaBuffer);
     } else {
+        // The driver expects the rptr to be written back to host memory
+        // periodically. In simulation, we writeback rptr after each burst of
+        // packets from a doorbell, rather than using the cycle count which
+        // is not accurate in all simulation settings (e.g., KVM).
+        DPRINTF(SDMAEngine, "Writing rptr %#lx back to host addr %#lx\n",
+                q->globalRptr(), q->rptrWbAddr());
+        if (q->rptrWbAddr()) {
+            auto cb = new DmaVirtCallback<uint64_t>(
+                [ = ](const uint64_t &) { }, q->globalRptr());
+            dmaWriteVirt(q->rptrWbAddr(), sizeof(Addr), cb, &cb->dmaBuffer);
+        }
         q->processing(false);
         if (q->parent()) {
             DPRINTF(SDMAEngine, "SDMA switching queues\n");
@@ -1158,6 +1170,7 @@ SDMAEngine::setGfxRptrLo(uint32_t data)
 {
     gfxRptr = insertBits(gfxRptr, 31, 0, 0);
     gfxRptr |= data;
+    gfx.rptrWbAddr(getGARTAddr(gfxRptr));
 }
 
 void
@@ -1165,6 +1178,7 @@ SDMAEngine::setGfxRptrHi(uint32_t data)
 {
     gfxRptr = insertBits(gfxRptr, 63, 32, 0);
     gfxRptr |= ((uint64_t)data) << 32;
+    gfx.rptrWbAddr(getGARTAddr(gfxRptr));
 }
 
 void
@@ -1236,6 +1250,7 @@ SDMAEngine::setPageRptrLo(uint32_t data)
 {
     pageRptr = insertBits(pageRptr, 31, 0, 0);
     pageRptr |= data;
+    page.rptrWbAddr(getGARTAddr(pageRptr));
 }
 
 void
@@ -1243,6 +1258,7 @@ SDMAEngine::setPageRptrHi(uint32_t data)
 {
     pageRptr = insertBits(pageRptr, 63, 32, 0);
     pageRptr |= ((uint64_t)data) << 32;
+    page.rptrWbAddr(getGARTAddr(pageRptr));
 }
 
 void
