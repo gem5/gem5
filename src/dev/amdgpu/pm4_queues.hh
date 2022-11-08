@@ -396,14 +396,14 @@ class PM4Queue
     rptr()
     {
         if (ib()) return q->ibBase + q->ibRptr;
-        else return q->base + q->rptr;
+        else return q->base + (q->rptr % size());
     }
 
     Addr
     wptr()
     {
         if (ib()) return q->ibBase + _ibWptr;
-        else return q->base + _wptr;
+        else return q->base + (_wptr % size());
     }
 
     Addr
@@ -470,6 +470,9 @@ class PM4Queue
     uint32_t pipe() { return _pkt.pipe; }
     uint32_t queue() { return _pkt.queueSlot; }
     bool privileged() { return _pkt.queueSel == 0 ? 1 : 0; }
+
+    // Same computation as processMQD. See comment there for details.
+    uint64_t size() { return 4UL << ((q->hqd_pq_control & 0x3f) + 1); }
 };
 
 } // namespace gem5

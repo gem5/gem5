@@ -171,6 +171,7 @@ class PM4PacketProcessor : public DmaVirtDevice
     void setHqdPqRptrReportAddrHi(uint32_t data);
     void setHqdPqWptrPollAddr(uint32_t data);
     void setHqdPqWptrPollAddrHi(uint32_t data);
+    void setHqdPqControl(uint32_t data);
     void setHqdIbCtrl(uint32_t data);
     void setRbVmid(uint32_t data);
     void setRbCntl(uint32_t data);

@@ -147,8 +147,8 @@ PM4PacketProcessor::newQueue(QueueDesc *mqd, Addr offset,
     gpuDevice->setDoorbellType(offset, qt);
 
     DPRINTF(PM4PacketProcessor, "New PM4 queue %d, base: %p offset: %p, me: "
-            "%d, pipe %d queue: %d\n", id, q->base(), q->offset(), q->me(),
-            q->pipe(), q->queue());
+            "%d, pipe %d queue: %d size: %d\n", id, q->base(), q->offset(),
+            q->me(), q->pipe(), q->queue(), q->size());
 }
 
 void
@@ -784,6 +784,9 @@ PM4PacketProcessor::writeMMIO(PacketPtr pkt, Addr mmio_offset)
       case mmCP_HQD_PQ_WPTR_POLL_ADDR_HI:
         setHqdPqWptrPollAddrHi(pkt->getLE<uint32_t>());
         break;
+      case mmCP_HQD_PQ_CONTROL:
+        setHqdPqControl(pkt->getLE<uint32_t>());
+        break;
       case mmCP_HQD_IB_CONTROL:
         setHqdIbCtrl(pkt->getLE<uint32_t>());
         break;
@@ -903,6 +906,12 @@ void
 PM4PacketProcessor::setHqdPqWptrPollAddrHi(uint32_t data)
 {
     kiq.hqd_pq_wptr_poll_addr_hi = data;
+}
+
+void
+PM4PacketProcessor::setHqdPqControl(uint32_t data)
+{
+    kiq.hqd_pq_control = data;
 }
 
 void
