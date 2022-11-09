@@ -1553,7 +1553,7 @@ namespace VegaISA
     void
     Inst_SOPK__S_MOVK_I32::execute(GPUDynInstPtr gpuDynInst)
     {
-        ScalarRegI32 simm16 = (ScalarRegI32)instData.SIMM16;
+        ScalarRegI32 simm16 = (ScalarRegI32)sext<16>(instData.SIMM16);
         ScalarOperandI32 sdst(gpuDynInst, instData.SDST);
 
         sdst = simm16;
@@ -1579,7 +1579,7 @@ namespace VegaISA
     void
     Inst_SOPK__S_CMOVK_I32::execute(GPUDynInstPtr gpuDynInst)
     {
-        ScalarRegI32 simm16 = (ScalarRegI32)instData.SIMM16;
+        ScalarRegI32 simm16 = (ScalarRegI32)sext<16>(instData.SIMM16);
         ScalarOperandI32 sdst(gpuDynInst, instData.SDST);
         ConstScalarOperandU32 scc(gpuDynInst, REG_SCC);
 
@@ -1607,7 +1607,7 @@ namespace VegaISA
     void
     Inst_SOPK__S_CMPK_EQ_I32::execute(GPUDynInstPtr gpuDynInst)
     {
-        ScalarRegI32 simm16 = (ScalarRegI32)instData.SIMM16;
+        ScalarRegI32 simm16 = (ScalarRegI32)sext<16>(instData.SIMM16);
         ConstScalarOperandI32 src(gpuDynInst, instData.SDST);
         ScalarOperandU32 scc(gpuDynInst, REG_SCC);
 
@@ -1634,7 +1634,7 @@ namespace VegaISA
     void
     Inst_SOPK__S_CMPK_LG_I32::execute(GPUDynInstPtr gpuDynInst)
     {
-        ScalarRegI32 simm16 = (ScalarRegI32)instData.SIMM16;
+        ScalarRegI32 simm16 = (ScalarRegI32)sext<16>(instData.SIMM16);
         ConstScalarOperandI32 src(gpuDynInst, instData.SDST);
         ScalarOperandU32 scc(gpuDynInst, REG_SCC);
 
@@ -1661,7 +1661,7 @@ namespace VegaISA
     void
     Inst_SOPK__S_CMPK_GT_I32::execute(GPUDynInstPtr gpuDynInst)
     {
-        ScalarRegI32 simm16 = (ScalarRegI32)instData.SIMM16;
+        ScalarRegI32 simm16 = (ScalarRegI32)sext<16>(instData.SIMM16);
         ConstScalarOperandI32 src(gpuDynInst, instData.SDST);
         ScalarOperandU32 scc(gpuDynInst, REG_SCC);
 
@@ -1688,7 +1688,7 @@ namespace VegaISA
     void
     Inst_SOPK__S_CMPK_GE_I32::execute(GPUDynInstPtr gpuDynInst)
     {
-        ScalarRegI32 simm16 = (ScalarRegI32)instData.SIMM16;
+        ScalarRegI32 simm16 = (ScalarRegI32)sext<16>(instData.SIMM16);
         ConstScalarOperandI32 src(gpuDynInst, instData.SDST);
         ScalarOperandU32 scc(gpuDynInst, REG_SCC);
 
@@ -1715,7 +1715,7 @@ namespace VegaISA
     void
     Inst_SOPK__S_CMPK_LT_I32::execute(GPUDynInstPtr gpuDynInst)
     {
-        ScalarRegI32 simm16 = (ScalarRegI32)instData.SIMM16;
+        ScalarRegI32 simm16 = (ScalarRegI32)sext<16>(instData.SIMM16);
         ConstScalarOperandI32 src(gpuDynInst, instData.SDST);
         ScalarOperandU32 scc(gpuDynInst, REG_SCC);
 
@@ -1742,7 +1742,7 @@ namespace VegaISA
     void
     Inst_SOPK__S_CMPK_LE_I32::execute(GPUDynInstPtr gpuDynInst)
     {
-        ScalarRegI32 simm16 = (ScalarRegI32)instData.SIMM16;
+        ScalarRegI32 simm16 = (ScalarRegI32)sext<16>(instData.SIMM16);
         ConstScalarOperandI32 src(gpuDynInst, instData.SDST);
         ScalarOperandU32 scc(gpuDynInst, REG_SCC);
 
@@ -1939,7 +1939,7 @@ namespace VegaISA
 
         src.read();
 
-        sdst = src.rawData() + (ScalarRegI32)simm16;
+        sdst = src.rawData() + (ScalarRegI32)sext<16>(simm16);
         scc = (bits(src.rawData(), 31) == bits(simm16, 15)
             && bits(src.rawData(), 31) != bits(sdst.rawData(), 31)) ? 1 : 0;
 
@@ -1969,7 +1969,7 @@ namespace VegaISA
 
         src.read();
 
-        sdst = src.rawData() * (ScalarRegI32)simm16;
+        sdst = src.rawData() * (ScalarRegI32)sext<16>(simm16);
 
         sdst.write();
     } // execute
