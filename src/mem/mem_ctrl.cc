@@ -72,7 +72,6 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
     writeLowThreshold(writeBufferSize * p.write_low_thresh_perc / 100.0),
     minWritesPerSwitch(p.min_writes_per_switch),
     minReadsPerSwitch(p.min_reads_per_switch),
-    writesThisTime(0), readsThisTime(0),
     memSchedPolicy(p.mem_sched_policy),
     frontendLatency(p.static_frontend_latency),
     backendLatency(p.static_backend_latency),
@@ -277,6 +276,8 @@ MemCtrl::addToReadQueue(PacketPtr pkt,
             logRequest(MemCtrl::READ, pkt->requestorId(),
                        pkt->qosValue(), mem_pkt->addr, 1);
 
+            mem_intr->readQueueSize++;
+
             // Update stats
             stats.avgRdQLen = totalReadQueueSize + respQueue.size();
         }
@@ -348,6 +349,8 @@ MemCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pkt_count,
             // log packet
             logRequest(MemCtrl::WRITE, pkt->requestorId(),
                        pkt->qosValue(), mem_pkt->addr, 1);
+
+            mem_intr->writeQueueSize++;
 
             assert(totalWriteQueueSize == isInWriteQueue.size());
 
@@ -575,6 +578,9 @@ MemCtrl::chooseNext(MemPacketQueue& queue, Tick extra_col_delay,
             // check if there is a packet going to a free rank
             for (auto i = queue.begin(); i != queue.end(); ++i) {
                 MemPacket* mem_pkt = *i;
+                if (mem_pkt->pseudoChannel != mem_intr->pseudoChannel) {
+                    continue;
+                }
                 if (packetReady(mem_pkt, mem_intr)) {
                     ret = i;
                     break;
@@ -761,28 +767,28 @@ MemCtrl::verifyMultiCmd(Tick cmd_tick, Tick max_cmds_per_burst,
 }
 
 bool
-MemCtrl::inReadBusState(bool next_state) const
+MemCtrl::inReadBusState(bool next_state, const MemInterface* mem_intr) const
 {
     // check the bus state
     if (next_state) {
         // use busStateNext to get the state that will be used
         // for the next burst
-        return (busStateNext == MemCtrl::READ);
+        return (mem_intr->busStateNext == MemCtrl::READ);
     } else {
-        return (busState == MemCtrl::READ);
+        return (mem_intr->busState == MemCtrl::READ);
     }
 }
 
 bool
-MemCtrl::inWriteBusState(bool next_state) const
+MemCtrl::inWriteBusState(bool next_state, const MemInterface* mem_intr) const
 {
     // check the bus state
     if (next_state) {
         // use busStateNext to get the state that will be used
         // for the next burst
-        return (busStateNext == MemCtrl::WRITE);
+        return (mem_intr->busStateNext == MemCtrl::WRITE);
     } else {
-        return (busState == MemCtrl::WRITE);
+        return (mem_intr->busState == MemCtrl::WRITE);
     }
 }
 
@@ -813,13 +819,13 @@ MemCtrl::doBurstAccess(MemPacket* mem_pkt, MemInterface* mem_intr)
 
     // Update the common bus stats
     if (mem_pkt->isRead()) {
-        ++readsThisTime;
+        ++(mem_intr->readsThisTime);
         // Update latency stats
         stats.requestorReadTotalLat[mem_pkt->requestorId()] +=
             mem_pkt->readyTime - mem_pkt->entryTime;
         stats.requestorReadBytes[mem_pkt->requestorId()] += mem_pkt->size;
     } else {
-        ++writesThisTime;
+        ++(mem_intr->writesThisTime);
         stats.requestorWriteBytes[mem_pkt->requestorId()] += mem_pkt->size;
         stats.requestorWriteTotalLat[mem_pkt->requestorId()] +=
             mem_pkt->readyTime - mem_pkt->entryTime;
@@ -836,8 +842,8 @@ MemCtrl::memBusy(MemInterface* mem_intr) {
     // Default to busy status and update based on interface specifics
     // Default state of unused interface is 'true'
     bool mem_busy = true;
-    bool all_writes_nvm = mem_intr->numWritesQueued == totalWriteQueueSize;
-    bool read_queue_empty = totalReadQueueSize == 0;
+    bool all_writes_nvm = mem_intr->numWritesQueued == mem_intr->writeQueueSize;
+    bool read_queue_empty = mem_intr->readQueueSize == 0;
     mem_busy = mem_intr->isBusy(read_queue_empty, all_writes_nvm);
     if (mem_busy) {
         // if all ranks are refreshing wait for them to finish
@@ -884,27 +890,27 @@ MemCtrl::processNextReqEvent(MemInterface* mem_intr,
     }
 
     // detect bus state change
-    bool switched_cmd_type = (busState != busStateNext);
+    bool switched_cmd_type = (mem_intr->busState != mem_intr->busStateNext);
     // record stats
-    recordTurnaroundStats();
+    recordTurnaroundStats(mem_intr->busState, mem_intr->busStateNext);
 
     DPRINTF(MemCtrl, "QoS Turnarounds selected state %s %s\n",
-            (busState==MemCtrl::READ)?"READ":"WRITE",
+            (mem_intr->busState==MemCtrl::READ)?"READ":"WRITE",
             switched_cmd_type?"[turnaround triggered]":"");
 
     if (switched_cmd_type) {
-        if (busState == MemCtrl::READ) {
+        if (mem_intr->busState == MemCtrl::READ) {
             DPRINTF(MemCtrl,
-                    "Switching to writes after %d reads with %d reads "
-                    "waiting\n", readsThisTime, totalReadQueueSize);
-            stats.rdPerTurnAround.sample(readsThisTime);
-            readsThisTime = 0;
+            "Switching to writes after %d reads with %d reads "
+            "waiting\n", mem_intr->readsThisTime, mem_intr->readQueueSize);
+            stats.rdPerTurnAround.sample(mem_intr->readsThisTime);
+            mem_intr->readsThisTime = 0;
         } else {
             DPRINTF(MemCtrl,
-                    "Switching to reads after %d writes with %d writes "
-                    "waiting\n", writesThisTime, totalWriteQueueSize);
-            stats.wrPerTurnAround.sample(writesThisTime);
-            writesThisTime = 0;
+            "Switching to reads after %d writes with %d writes "
+            "waiting\n", mem_intr->writesThisTime, mem_intr->writeQueueSize);
+            stats.wrPerTurnAround.sample(mem_intr->writesThisTime);
+            mem_intr->writesThisTime = 0;
         }
     }
 
@@ -916,7 +922,7 @@ MemCtrl::processNextReqEvent(MemInterface* mem_intr,
     }
 
     // updates current state
-    busState = busStateNext;
+    mem_intr->busState = mem_intr->busStateNext;
 
     nonDetermReads(mem_intr);
 
@@ -925,18 +931,18 @@ MemCtrl::processNextReqEvent(MemInterface* mem_intr,
     }
 
     // when we get here it is either a read or a write
-    if (busState == READ) {
+    if (mem_intr->busState == READ) {
 
         // track if we should switch or not
         bool switch_to_writes = false;
 
-        if (totalReadQueueSize == 0) {
+        if (mem_intr->readQueueSize == 0) {
             // In the case there is no read request to go next,
             // trigger writes if we have passed the low threshold (or
             // if we are draining)
-            if (!(totalWriteQueueSize == 0) &&
+            if (!(mem_intr->writeQueueSize == 0) &&
                 (drainState() == DrainState::Draining ||
-                 totalWriteQueueSize > writeLowThreshold)) {
+                 mem_intr->writeQueueSize > writeLowThreshold)) {
 
                 DPRINTF(MemCtrl,
                         "Switching to writes due to read queue empty\n");
@@ -1011,6 +1017,7 @@ MemCtrl::processNextReqEvent(MemInterface* mem_intr,
                         mem_pkt->qosValue(), mem_pkt->getAddr(), 1,
                         mem_pkt->readyTime - mem_pkt->entryTime);
 
+            mem_intr->readQueueSize--;
 
             // Insert into response queue. It will be sent back to the
             // requestor at its readyTime
@@ -1029,8 +1036,9 @@ MemCtrl::processNextReqEvent(MemInterface* mem_intr,
             // there are no other writes that can issue
             // Also ensure that we've issued a minimum defined number
             // of reads before switching, or have emptied the readQ
-            if ((totalWriteQueueSize > writeHighThreshold) &&
-               (readsThisTime >= minReadsPerSwitch || totalReadQueueSize == 0)
+            if ((mem_intr->writeQueueSize > writeHighThreshold) &&
+               (mem_intr->readsThisTime >= minReadsPerSwitch ||
+               mem_intr->readQueueSize == 0)
                && !(nvmWriteBlock(mem_intr))) {
                 switch_to_writes = true;
             }
@@ -1045,7 +1053,7 @@ MemCtrl::processNextReqEvent(MemInterface* mem_intr,
         // draining), or because the writes hit the hight threshold
         if (switch_to_writes) {
             // transition to writing
-            busStateNext = WRITE;
+            mem_intr->busStateNext = WRITE;
         }
     } else {
 
@@ -1099,6 +1107,7 @@ MemCtrl::processNextReqEvent(MemInterface* mem_intr,
                     mem_pkt->qosValue(), mem_pkt->getAddr(), 1,
                     mem_pkt->readyTime - mem_pkt->entryTime);
 
+        mem_intr->writeQueueSize--;
 
         // remove the request from the queue - the iterator is no longer valid
         writeQueue[mem_pkt->qosValue()].erase(to_write);
@@ -1112,15 +1121,15 @@ MemCtrl::processNextReqEvent(MemInterface* mem_intr,
         // If we are interfacing to NVM and have filled the writeRespQueue,
         // with only NVM writes in Q, then switch to reads
         bool below_threshold =
-            totalWriteQueueSize + minWritesPerSwitch < writeLowThreshold;
+            mem_intr->writeQueueSize + minWritesPerSwitch < writeLowThreshold;
 
-        if (totalWriteQueueSize == 0 ||
+        if (mem_intr->writeQueueSize == 0 ||
             (below_threshold && drainState() != DrainState::Draining) ||
-            (totalReadQueueSize && writesThisTime >= minWritesPerSwitch) ||
-            (totalReadQueueSize && (nvmWriteBlock(mem_intr)))) {
+            (mem_intr->readQueueSize && mem_intr->writesThisTime >= minWritesPerSwitch) ||
+            (mem_intr->readQueueSize && (nvmWriteBlock(mem_intr)))) {
 
             // turn the bus back around for reads again
-            busStateNext = MemCtrl::READ;
+            mem_intr->busStateNext = MemCtrl::READ;
 
             // note that the we switch back to reads also in the idle
             // case, which eventually will check for any draining and
@@ -1133,7 +1142,7 @@ MemCtrl::processNextReqEvent(MemInterface* mem_intr,
     if (!next_req_event.scheduled())
         schedule(next_req_event, std::max(mem_intr->nextReqTime, curTick()));
 
-    if (retry_wr_req && totalWriteQueueSize < writeBufferSize) {
+    if (retry_wr_req && mem_intr->writeQueueSize < writeBufferSize) {
         retry_wr_req = false;
         port.sendRetryReq();
     }
@@ -1418,9 +1427,8 @@ MemCtrl::drain()
 {
     // if there is anything in any of our internal queues, keep track
     // of that as well
-    if (totalWriteQueueSize || totalReadQueueSize || !respQueue.empty() ||
+    if (totalWriteQueueSize || totalReadQueueSize || !respQEmpty() ||
           !allIntfDrained()) {
-
         DPRINTF(Drain, "Memory controller not drained, write: %d, read: %d,"
                 " resp: %d\n", totalWriteQueueSize, totalReadQueueSize,
                 respQueue.size());

@@ -217,7 +217,7 @@ MemSinkCtrl::processNextReqEvent()
     busStateNext = selectNextBusState();
 
     // Record turnaround stats and update current state direction
-    recordTurnaroundStats();
+    recordTurnaroundStats(busState, busStateNext);
 
     // Set current bus state
     setCurrentBusState();

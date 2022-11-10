@@ -144,7 +144,6 @@ class HBMCtrl : public MemCtrl
      */
     bool readQueueFullPC0(unsigned int pkt_count) const;
     bool readQueueFullPC1(unsigned int pkt_count) const;
-    bool readQueueFull(unsigned int pkt_count) const;
 
     /**
      * Check if the write queue partition of both pseudo
