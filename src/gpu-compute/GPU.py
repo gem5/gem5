@@ -178,6 +178,19 @@ class ComputeUnit(ClockedObject):
         "TCP and cu as well as TCP data array "
         "access. Specified in GPU clock cycles",
     )
+    scalar_mem_req_latency = Param.Int(
+        50,
+        "Latency for scalar requests from the cu to ruby. "
+        "Represents the pipeline to reach the TCP "
+        "and specified in GPU clock cycles",
+    )
+    scalar_mem_resp_latency = Param.Int(
+        50,
+        "Latency for scalar responses from ruby to the "
+        "cu. Represents the pipeline between the "
+        "TCP and cu as well as TCP data array "
+        "access. Specified in GPU clock cycles",
+    )
     system = Param.System(Parent.any, "system object")
     cu_id = Param.Int("CU id")
     vrf_to_coalescer_bus_width = Param.Int(

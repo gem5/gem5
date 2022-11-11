@@ -276,6 +276,21 @@ parser.add_argument(
     help="Latency for responses from ruby to the cu.",
 )
 parser.add_argument(
+    "--scalar-mem-req-latency",
+    type=int,
+    default=50,
+    help="Latency for scalar requests from the cu to ruby.",
+)
+parser.add_argument(
+    "--scalar-mem-resp-latency",
+    type=int,
+    # Set to 0 as the scalar cache response path does not model
+    # response latency yet and this parameter is currently not used
+    default=0,
+    help="Latency for scalar responses from ruby to the cu.",
+)
+
+parser.add_argument(
     "--TLB-prefetch", type=int, help="prefetch depth for" "TLBs"
 )
 parser.add_argument(
@@ -463,6 +478,8 @@ for i in range(n_cu):
             vrf_lm_bus_latency=args.vrf_lm_bus_latency,
             mem_req_latency=args.mem_req_latency,
             mem_resp_latency=args.mem_resp_latency,
+            scalar_mem_req_latency=args.scalar_mem_req_latency,
+            scalar_mem_resp_latency=args.scalar_mem_resp_latency,
             localDataStore=LdsState(
                 banks=args.numLdsBanks,
                 bankConflictPenalty=args.ldsBankConflictPenalty,
