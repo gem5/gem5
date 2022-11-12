@@ -45,7 +45,7 @@ class L2Cache(AbstractL2Cache):
             start_index_bit=self.getIndexBit(num_l2Caches),
         )
 
-        self.transitions_per_cycle = "4"
+        self.transitions_per_cycle = 4
 
     def getIndexBit(self, num_l2caches):
         l2_bits = int(math.log(num_l2caches, 2))
