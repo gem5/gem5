@@ -31,7 +31,7 @@ from m5.objects.ArmInterrupts import ArmInterrupts
 from m5.objects.ArmISA import ArmISA
 from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
 from m5.objects.ResetPort import ResetResponsePort
-from m5.objects.IntPin import IntSinkPin, VectorIntSinkPin
+from m5.objects.IntPin import IntSourcePin, IntSinkPin, VectorIntSinkPin
 from m5.objects.Iris import IrisBaseCPU
 from m5.objects.SystemC import SystemC_ScModule
 
@@ -56,6 +56,9 @@ class FastModelCortexR52(IrisBaseCPU):
         "processor logic, including debug logic."
     )
     halt = IntSinkPin("Raising this signal will put the core into halt mode.")
+    standbywfi = IntSourcePin(
+        "This signal indicates if a core is in WFI state."
+    )
 
     CFGEND = Param.Bool(
         False,
