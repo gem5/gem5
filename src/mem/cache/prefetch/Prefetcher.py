@@ -1,4 +1,4 @@
-# Copyright (c) 2012, 2014, 2019, 2023 ARM Limited
+# Copyright (c) 2012, 2014, 2019, 2023-2024 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -79,7 +79,7 @@ class BasePrefetcher(ClockedObject):
         "Notify the hardware prefetcher on every access (not just misses)",
     )
     prefetch_on_pf_hit = Param.Bool(
-        False,
+        True,
         "Notify the hardware prefetcher on hit on prefetched lines",
     )
     use_virtual_addresses = Param.Bool(
