@@ -44,7 +44,36 @@ struct RegABI64 : public GenericSyscallABI64
     static const std::vector<RegId> ArgumentRegs;
 };
 
+struct RegABI32 : public GenericSyscallABI32
+{
+    static const std::vector<RegId> ArgumentRegs;
+};
+
 } // namespace RiscvISA
+
+namespace guest_abi
+{
+
+// This method will be used if the size of argument type of function is
+// greater than 4 for Riscv 32.
+template <typename ABI, typename Arg>
+struct Argument<ABI, Arg,
+    typename std::enable_if_t<
+        std::is_base_of_v<RiscvISA::RegABI32, ABI> &&
+        std::is_integral_v<Arg> &&
+        ABI::template IsWideV<Arg>>>
+{
+    static Arg
+    get(ThreadContext *tc, typename ABI::State &state)
+    {
+        panic_if(state >= ABI::ArgumentRegs.size(),
+                "Ran out of syscall argument registers.");
+        return bits(tc->getReg(ABI::ArgumentRegs[state++]), 31, 0);
+    }
+};
+
+}
+
 } // namespace gem5
 
 #endif // __ARCH_RISCV_REG_ABI_HH__
