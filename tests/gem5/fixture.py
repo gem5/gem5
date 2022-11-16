@@ -174,8 +174,7 @@ class SConsFixture(UniqueFixture):
             )
             log.test_log.message("%s" % (", ".join(self.targets)))
             log.test_log.message(
-                "You may want to run with only a single ISA"
-                "(--isa=), use --skip-build, or use 'rerun'."
+                "You may want to use --skip-build, or use 'rerun'."
             )
 
         command.extend(self.targets)
