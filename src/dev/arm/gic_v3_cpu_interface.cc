@@ -55,19 +55,15 @@ using namespace ArmISA;
 const uint8_t Gicv3CPUInterface::GIC_MIN_BPR;
 const uint8_t Gicv3CPUInterface::GIC_MIN_BPR_NS;
 
-Gicv3CPUInterface::Gicv3CPUInterface(Gicv3 * gic, ThreadContext *_tc)
+Gicv3CPUInterface::Gicv3CPUInterface(Gicv3 * gic, uint32_t cpu_id)
     : BaseISADevice(),
       gic(gic),
       redistributor(nullptr),
       distributor(nullptr),
-      tc(_tc),
-      maintenanceInterrupt(gic->params().maint_int->get(tc)),
-      cpuId(tc->contextId())
+      cpuId(cpu_id)
 {
     hppi.prio = 0xff;
     hppi.intid = Gicv3::INTID_SPURIOUS;
-
-    setISA(static_cast<ISA*>(tc->getIsaPtr()));
 }
 
 void
@@ -82,6 +78,15 @@ Gicv3CPUInterface::resetHppi(uint32_t intid)
 {
     if (intid == hppi.intid)
         hppi.prio = 0xff;
+}
+
+void
+Gicv3CPUInterface::setThreadContext(ThreadContext *_tc)
+{
+    tc = _tc;
+    maintenanceInterrupt = gic->params().maint_int->get(tc);
+    fatal_if(maintenanceInterrupt->num() >= redistributor->irqPending.size(),
+        "Invalid maintenance interrupt number\n");
 }
 
 bool
