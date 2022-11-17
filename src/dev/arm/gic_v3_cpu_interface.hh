@@ -68,10 +68,10 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     Gicv3 * gic;
     Gicv3Redistributor * redistributor;
     Gicv3Distributor * distributor;
-
-    ThreadContext *tc;
-    ArmInterruptPin *maintenanceInterrupt;
     uint32_t cpuId;
+
+    ArmInterruptPin *maintenanceInterrupt;
+    ThreadContext *tc;
 
     BitUnion64(ICC_CTLR_EL1)
         Bitfield<63, 20> res0_3;
@@ -359,7 +359,7 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     void setBankedMiscReg(ArmISA::MiscRegIndex misc_reg, RegVal val) const;
   public:
 
-    Gicv3CPUInterface(Gicv3 * gic, ThreadContext *tc);
+    Gicv3CPUInterface(Gicv3 * gic, uint32_t cpu_id);
 
     void init();
 
@@ -369,6 +369,7 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
   public: // BaseISADevice
     RegVal readMiscReg(int misc_reg) override;
     void setMiscReg(int misc_reg, RegVal val) override;
+    void setThreadContext(ThreadContext *tc) override;
 };
 
 } // namespace gem5
