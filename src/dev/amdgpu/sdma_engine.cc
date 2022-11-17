@@ -55,11 +55,15 @@ SDMAEngine::SDMAEngine(const SDMAEngineParams &p)
     gfxIb.parent(&gfx);
     gfx.valid(true);
     gfxIb.valid(true);
+    gfx.queueType(SDMAGfx);
+    gfxIb.queueType(SDMAGfx);
 
     page.ib(&pageIb);
     pageIb.parent(&page);
     page.valid(true);
     pageIb.valid(true);
+    page.queueType(SDMAPage);
+    pageIb.queueType(SDMAPage);
 
     rlc0.ib(&rlc0Ib);
     rlc0Ib.parent(&rlc0);
@@ -727,11 +731,7 @@ SDMAEngine::trap(SDMAQueue *q, sdmaTrap *pkt)
 
     DPRINTF(SDMAEngine, "Trap contextId: %p\n", pkt->intrContext);
 
-    uint32_t ring_id = 0;
-    assert(page.processing() ^ gfx.processing());
-    if (page.processing()) {
-        ring_id = 3;
-    }
+    uint32_t ring_id = (q->queueType() == SDMAPage) ? 3 : 0;
 
     gpuDevice->getIH()->prepareInterruptCookie(pkt->intrContext, ring_id,
                                                getIHClientId(), TRAP_ID);

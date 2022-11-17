@@ -64,9 +64,10 @@ class SDMAEngine : public DmaVirtDevice
         bool _processing;
         SDMAQueue *_parent;
         SDMAQueue *_ib;
+        SDMAType _type;
       public:
         SDMAQueue() : _rptr(0), _wptr(0), _valid(false), _processing(false),
-            _parent(nullptr), _ib(nullptr) {}
+            _parent(nullptr), _ib(nullptr), _type(SDMAGfx) {}
 
         Addr base() { return _base; }
         Addr rptr() { return _base + _rptr; }
@@ -80,6 +81,7 @@ class SDMAEngine : public DmaVirtDevice
         bool processing() { return _processing; }
         SDMAQueue* parent() { return _parent; }
         SDMAQueue* ib() { return _ib; }
+        SDMAType queueType() { return _type; }
 
         void base(Addr value) { _base = value; }
 
@@ -111,6 +113,7 @@ class SDMAEngine : public DmaVirtDevice
         void processing(bool value) { _processing = value; }
         void parent(SDMAQueue* q) { _parent = q; }
         void ib(SDMAQueue* ib) { _ib = ib; }
+        void queueType(SDMAType type) { _type = type; }
     };
 
     /* SDMA Engine ID */
