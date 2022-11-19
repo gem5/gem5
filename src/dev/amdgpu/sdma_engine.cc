@@ -165,30 +165,40 @@ SDMAEngine::translate(Addr vaddr, Addr size)
 }
 
 void
-SDMAEngine::registerRLCQueue(Addr doorbell, Addr rb_base, uint32_t size,
-                             Addr rptr_wb_addr)
+SDMAEngine::registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd)
 {
+    uint32_t rlc_size = 4UL << bits(mqd->sdmax_rlcx_rb_cntl, 6, 1);
+    Addr rptr_wb_addr = mqd->sdmax_rlcx_rb_rptr_addr_hi;
+    rptr_wb_addr <<= 32;
+    rptr_wb_addr |= mqd->sdmax_rlcx_rb_rptr_addr_lo;
+
     // Get first free RLC
     if (!rlc0.valid()) {
         DPRINTF(SDMAEngine, "Doorbell %lx mapped to RLC0\n", doorbell);
         rlcInfo[0] = doorbell;
         rlc0.valid(true);
-        rlc0.base(rb_base);
+        rlc0.base(mqd->rb_base << 8);
+        rlc0.size(rlc_size);
         rlc0.rptr(0);
-        rlc0.wptr(0);
+        rlc0.incRptr(mqd->rptr);
+        rlc0.setWptr(mqd->wptr);
         rlc0.rptrWbAddr(rptr_wb_addr);
         rlc0.processing(false);
-        rlc0.size(size);
+        rlc0.setMQD(mqd);
+        rlc0.setMQDAddr(mqdAddr);
     } else if (!rlc1.valid()) {
         DPRINTF(SDMAEngine, "Doorbell %lx mapped to RLC1\n", doorbell);
         rlcInfo[1] = doorbell;
         rlc1.valid(true);
-        rlc1.base(rb_base);
+        rlc1.base(mqd->rb_base << 8);
+        rlc1.size(rlc_size);
         rlc1.rptr(0);
-        rlc1.wptr(0);
+        rlc1.incRptr(mqd->rptr);
+        rlc1.setWptr(mqd->wptr);
         rlc1.rptrWbAddr(rptr_wb_addr);
         rlc1.processing(false);
-        rlc1.size(size);
+        rlc1.setMQD(mqd);
+        rlc1.setMQDAddr(mqdAddr);
     } else {
         panic("No free RLCs. Check they are properly unmapped.");
     }
@@ -199,9 +209,37 @@ SDMAEngine::unregisterRLCQueue(Addr doorbell)
 {
     DPRINTF(SDMAEngine, "Unregistering RLC queue at %#lx\n", doorbell);
     if (rlcInfo[0] == doorbell) {
+        SDMAQueueDesc *mqd = rlc0.getMQD();
+        if (mqd) {
+            DPRINTF(SDMAEngine, "Writing RLC0 SDMAMQD back to %#lx\n",
+                    rlc0.getMQDAddr());
+
+            mqd->rptr = rlc0.globalRptr();
+            mqd->wptr = rlc0.getWptr();
+
+            auto cb = new DmaVirtCallback<uint32_t>(
+                [ = ] (const uint32_t &) { });
+            dmaWriteVirt(rlc0.getMQDAddr(), sizeof(SDMAQueueDesc), cb, mqd);
+        } else {
+            warn("RLC0 SDMAMQD address invalid\n");
+        }
         rlc0.valid(false);
         rlcInfo[0] = 0;
     } else if (rlcInfo[1] == doorbell) {
+        SDMAQueueDesc *mqd = rlc1.getMQD();
+        if (mqd) {
+            DPRINTF(SDMAEngine, "Writing RLC1 SDMAMQD back to %#lx\n",
+                    rlc1.getMQDAddr());
+
+            mqd->rptr = rlc1.globalRptr();
+            mqd->wptr = rlc1.getWptr();
+
+            auto cb = new DmaVirtCallback<uint32_t>(
+                [ = ] (const uint32_t &) { });
+            dmaWriteVirt(rlc1.getMQDAddr(), sizeof(SDMAQueueDesc), cb, mqd);
+        } else {
+            warn("RLC1 SDMAMQD address invalid\n");
+        }
         rlc1.valid(false);
         rlcInfo[1] = 0;
     } else {
@@ -213,7 +251,9 @@ void
 SDMAEngine::deallocateRLCQueues()
 {
     for (auto doorbell: rlcInfo) {
-        unregisterRLCQueue(doorbell);
+        if (doorbell) {
+            unregisterRLCQueue(doorbell);
+        }
     }
 }
 

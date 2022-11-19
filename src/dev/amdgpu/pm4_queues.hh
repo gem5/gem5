@@ -33,6 +33,8 @@
 #ifndef __DEV_AMDGPU_PM4_QUEUES_HH__
 #define __DEV_AMDGPU_PM4_QUEUES_HH__
 
+#include "dev/amdgpu/pm4_defines.hh"
+
 namespace gem5
 {
 
@@ -201,10 +203,24 @@ typedef struct GEM5_PACKED
         };
         uint64_t rb_base;
     };
-    uint32_t sdmax_rlcx_rb_rptr;
-    uint32_t sdmax_rlcx_rb_rptr_hi;
-    uint32_t sdmax_rlcx_rb_wptr;
-    uint32_t sdmax_rlcx_rb_wptr_hi;
+    union
+    {
+        struct
+        {
+            uint32_t sdmax_rlcx_rb_rptr;
+            uint32_t sdmax_rlcx_rb_rptr_hi;
+        };
+        uint64_t rptr;
+    };
+    union
+    {
+        struct
+        {
+            uint32_t sdmax_rlcx_rb_wptr;
+            uint32_t sdmax_rlcx_rb_wptr_hi;
+        };
+        uint64_t wptr;
+    };
     uint32_t sdmax_rlcx_rb_wptr_poll_cntl;
     uint32_t sdmax_rlcx_rb_rptr_addr_hi;
     uint32_t sdmax_rlcx_rb_rptr_addr_lo;

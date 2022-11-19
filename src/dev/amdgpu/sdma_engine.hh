@@ -34,6 +34,7 @@
 
 #include "base/bitunion.hh"
 #include "dev/amdgpu/amdgpu_device.hh"
+#include "dev/amdgpu/pm4_queues.hh"
 #include "dev/amdgpu/sdma_packets.hh"
 #include "dev/dma_virt_device.hh"
 #include "params/SDMAEngine.hh"
@@ -65,9 +66,11 @@ class SDMAEngine : public DmaVirtDevice
         SDMAQueue *_parent;
         SDMAQueue *_ib;
         SDMAType _type;
+        SDMAQueueDesc *_mqd;
+        Addr _mqd_addr = 0;
       public:
         SDMAQueue() : _rptr(0), _wptr(0), _valid(false), _processing(false),
-            _parent(nullptr), _ib(nullptr), _type(SDMAGfx) {}
+            _parent(nullptr), _ib(nullptr), _type(SDMAGfx), _mqd(nullptr) {}
 
         Addr base() { return _base; }
         Addr rptr() { return _base + _rptr; }
@@ -82,6 +85,8 @@ class SDMAEngine : public DmaVirtDevice
         SDMAQueue* parent() { return _parent; }
         SDMAQueue* ib() { return _ib; }
         SDMAType queueType() { return _type; }
+        SDMAQueueDesc* getMQD() { return _mqd; }
+        Addr getMQDAddr() { return _mqd_addr; }
 
         void base(Addr value) { _base = value; }
 
@@ -114,6 +119,8 @@ class SDMAEngine : public DmaVirtDevice
         void parent(SDMAQueue* q) { _parent = q; }
         void ib(SDMAQueue* ib) { _ib = ib; }
         void queueType(SDMAType type) { _type = type; }
+        void setMQD(SDMAQueueDesc *mqd) { _mqd = mqd; }
+        void setMQDAddr(Addr mqdAddr) { _mqd_addr = mqdAddr; }
     };
 
     /* SDMA Engine ID */
@@ -280,8 +287,7 @@ class SDMAEngine : public DmaVirtDevice
     /**
      * Methods for RLC queues
      */
-    void registerRLCQueue(Addr doorbell, Addr rb_base, uint32_t size,
-                          Addr rptr_wb_addr);
+    void registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd);
     void unregisterRLCQueue(Addr doorbell);
     void deallocateRLCQueues();
 

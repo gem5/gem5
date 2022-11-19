@@ -458,9 +458,7 @@ PM4PacketProcessor::processSDMAMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
     SDMAEngine *sdma_eng = gpuDevice->getSDMAById(pkt->engineSel - 2);
 
     // Register RLC queue with SDMA
-    sdma_eng->registerRLCQueue(pkt->doorbellOffset << 2,
-                               mqd->rb_base << 8, rlc_size,
-                               rptr_wb_addr);
+    sdma_eng->registerRLCQueue(pkt->doorbellOffset << 2, addr, mqd);
 
     // Register doorbell with GPU device
     gpuDevice->setSDMAEngine(pkt->doorbellOffset << 2, sdma_eng);
