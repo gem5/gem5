@@ -38,9 +38,7 @@ scons build/RISCV/gem5.opt
 ```
 """
 
-from python.gem5.prebuilt.riscvmatched.riscvmatched_board import (
-    RISCVMatchedBoard,
-)
+from gem5.prebuilt.riscvmatched.riscvmatched_board import RISCVMatchedBoard
 from gem5.utils.requires import requires
 from gem5.isas import ISA
 from gem5.simulate.simulator import Simulator
