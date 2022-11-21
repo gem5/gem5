@@ -25,8 +25,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-This gem5 configuration script runs a full system Ubuntu image, Linux
-kernel and calls m5 exit after the kernel is loaded.
+This gem5 configuration script runs the RISCVMatchedBoard in FS mode with a
+an Ubuntu 20.04 image and calls m5 exit after the simulation has booted the OS.
 
 Usage
 ---
@@ -34,8 +34,7 @@ Usage
 ```
 scons build/RISCV/gem5.opt
 
-./build/RISCV/gem5.opt \
-    configs/example/gem5_library/riscvmatched-fs.py
+./build/RISCV/gem5.opt configs/example/gem5_library/riscvmatched-fs.py
 ```
 """
 
