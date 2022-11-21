@@ -44,7 +44,22 @@ from gem5.isas import ISA
 from gem5.simulate.simulator import Simulator
 from gem5.resources.workload import Workload
 
+import argparse
+
 requires(isa_required=ISA.RISCV)
+
+parser = argparse.ArgumentParser(
+    description="A script which uses the RISCVMatchedBoard in FS mode."
+)
+
+parser.add_argument(
+    "-i",
+    "--to-init",
+    action="store_true",
+    help="Exit the simulation after the Linux Kernel boot.",
+)
+
+args = parser.parse_args()
 
 # instantiate the riscv matched board with default parameters
 board = RISCVMatchedBoard(
@@ -57,7 +72,16 @@ board = RISCVMatchedBoard(
 # Ubuntu 20.04. Once the system successfully boots it encounters an `m5_exit`
 # instruction which stops the simulation. When the simulation has ended you may
 # inspect `m5out/system.pc.com_1.device` to see the stdout.
-board.set_workload(Workload("riscv-ubuntu-20.04-boot"))
+#
+# In the case where the `-i` flag is passed, we add the kernel argument
+# `init=/root/exit.sh`. This means the simulation will exit after the Linux
+# Kernel has booted.
+workload = Workload("riscv-ubuntu-20.04-boot")
+kernel_args = board.get_default_kernel_args()
+if args.to_init:
+    kernel_args.append("init=/root/exit.sh")
+workload.set_parameter("kernel_args", kernel_args)
+board.set_workload(workload)
 
 simulator = Simulator(board=board)
 simulator.run()
