@@ -69,7 +69,7 @@ RUN git clone -b rocm-4.0.0 \
 
 WORKDIR /ROCclr
 # The patch allows us to avoid building blit kernels on-the-fly in gem5
-RUN wget -q -O - dist.gem5.org/dist/develop/rocm_patches/ROCclr.patch | git apply -v
+RUN wget -q -O - dist.gem5.org/dist/v22-1/rocm_patches/ROCclr.patch | git apply -v
 
 WORKDIR /ROCclr/build
 RUN cmake -DOPENCL_DIR="/ROCm-OpenCL-Runtime" \
