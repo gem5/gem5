@@ -89,6 +89,10 @@ docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
 # removes all those part of the 'very-long' (weekly) tests, or for compilation
 # to '.debug' or '.fast'. We also remove ARM targets as our Jenkins is an X86
 # system. Users wishing to run this script elsewhere should be aware of this.
+# Note: we delete the build directory here. It was build in the
+# "ubuntu-22.04_all-dependencies" docker image which may not be compatible with
+# the host environment.
+rm -rf "${gem5_root}/build"
 cd "${gem5_root}/tests"
 ./main.py run -j${compile_threads} -vv \
     --exclude-tags ".*" --include-tags kvm --exclude-tags very\-long \
