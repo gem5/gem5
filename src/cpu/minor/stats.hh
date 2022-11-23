@@ -68,9 +68,6 @@ struct MinorStats : public statistics::Group
     /** Number of ops discarded before committing */
     statistics::Scalar numDiscardedOps;
 
-    /** Number of times fetch was asked to suspend by Execute */
-    statistics::Scalar numFetchSuspends;
-
     /** Number of cycles in quiescent state */
     statistics::Scalar quiesceCycles;
 
