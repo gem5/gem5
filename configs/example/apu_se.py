@@ -757,6 +757,11 @@ if fast_forward:
         (cpu_list[i], future_cpu_list[i]) for i in range(args.num_cpus)
     ]
 
+# Other CPU strings cause bad addresses in ROCm. Revert back to M5 Simulator.
+for (i, cpu) in enumerate(cpu_list):
+    for j in range(len(cpu)):
+        cpu.isa[j].vendor_string = "M5 Simulator"
+
 # Full list of processing cores in the system.
 cpu_list = cpu_list + [shader] + cp_list
 
