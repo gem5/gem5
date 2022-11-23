@@ -231,10 +231,10 @@ Gem5ToTlmBridge<BITWIDTH>::pec(
         }
     }
     if (phase == tlm::BEGIN_RESP) {
-        auto &extension = Gem5SystemC::Gem5Extension::getExtension(trans);
-        auto packet = extension.getPacket();
+        PacketPtr packet = packetMap[&trans];
 
         sc_assert(!blockingResponse);
+        sc_assert(packet);
 
         bool need_retry = false;
 
@@ -258,6 +258,7 @@ Gem5ToTlmBridge<BITWIDTH>::pec(
                 sc_core::sc_time delay = sc_core::SC_ZERO_TIME;
                 socket->nb_transport_fw(trans, fw_phase, delay);
                 // Release the transaction with all the extensions.
+                packetMap.erase(&trans);
                 trans.release();
             }
         }
@@ -433,11 +434,13 @@ Gem5ToTlmBridge<BITWIDTH>::recvTimingReq(PacketPtr packet)
         sc_assert(phase == tlm::BEGIN_REQ);
         // Accepted but is now blocking until END_REQ (exclusion rule).
         blockingRequest = trans;
+        packetMap.emplace(trans, packet);
     } else if (status == tlm::TLM_UPDATED) {
         // The Timing annotation must be honored:
         sc_assert(phase == tlm::END_REQ || phase == tlm::BEGIN_RESP);
         // Accepted but is now blocking until END_REQ (exclusion rule).
         blockingRequest = trans;
+        packetMap.emplace(trans, packet);
         auto cb = [this, trans, phase]() { pec(*trans, phase); };
         auto event = new EventFunctionWrapper(
                 cb, "pec", true, getPriorityOfTlmPhase(phase));
@@ -477,8 +480,8 @@ Gem5ToTlmBridge<BITWIDTH>::recvRespRetry()
 
     tlm::tlm_generic_payload *trans = blockingResponse;
     blockingResponse = nullptr;
-    PacketPtr packet =
-        Gem5SystemC::Gem5Extension::getExtension(trans).getPacket();
+    PacketPtr packet = packetMap[blockingResponse];
+    sc_assert(packet);
 
     bool need_retry = !bridgeResponsePort.sendTimingResp(packet);
 
@@ -488,6 +491,7 @@ Gem5ToTlmBridge<BITWIDTH>::recvRespRetry()
     tlm::tlm_phase phase = tlm::END_RESP;
     socket->nb_transport_fw(*trans, phase, delay);
     // Release transaction with all the extensions
+    packetMap.erase(trans);
     trans->release();
 }
 

@@ -61,6 +61,7 @@
 
 #include <functional>
 #include <string>
+#include <unordered_map>
 
 #include "mem/backdoor.hh"
 #include "mem/port.hh"
@@ -172,6 +173,12 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
      * the response channel
      */
     tlm::tlm_generic_payload *blockingResponse;
+
+    /**
+     * A map to record the association between payload and packet. This helps us
+     * could get the correct packet when handling nonblocking interfaces.
+     */
+    std::unordered_map<tlm::tlm_generic_payload *, gem5::PacketPtr> packetMap;
 
     gem5::AddrRangeList addrRanges;
 
