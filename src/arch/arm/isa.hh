@@ -116,6 +116,7 @@ namespace ArmISA
 
         BaseISADevice &getGenericTimer();
         BaseISADevice &getGICv3CPUInterface();
+        BaseISADevice *getGICv3CPUInterface(ThreadContext *tc);
 
         RegVal miscRegs[NUM_MISCREGS];
         const RegId *intRegMap;

@@ -55,15 +55,19 @@ using namespace ArmISA;
 const uint8_t Gicv3CPUInterface::GIC_MIN_BPR;
 const uint8_t Gicv3CPUInterface::GIC_MIN_BPR_NS;
 
-Gicv3CPUInterface::Gicv3CPUInterface(Gicv3 * gic, uint32_t cpu_id)
+Gicv3CPUInterface::Gicv3CPUInterface(Gicv3 * gic, ThreadContext *_tc)
     : BaseISADevice(),
       gic(gic),
       redistributor(nullptr),
       distributor(nullptr),
-      cpuId(cpu_id)
+      tc(_tc),
+      maintenanceInterrupt(gic->params().maint_int->get(tc)),
+      cpuId(tc->contextId())
 {
     hppi.prio = 0xff;
     hppi.intid = Gicv3::INTID_SPURIOUS;
+
+    setISA(static_cast<ISA*>(tc->getIsaPtr()));
 }
 
 void
