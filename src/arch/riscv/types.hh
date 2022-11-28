@@ -43,6 +43,7 @@
 #define __ARCH_RISCV_TYPES_HH__
 
 #include "arch/riscv/pcstate.hh"
+#include "base/bitunion.hh"
 
 namespace gem5
 {
@@ -51,7 +52,13 @@ namespace RiscvISA
 {
 
 typedef uint32_t MachInst;
-typedef uint64_t ExtMachInst;
+
+// This should be further extend someday when we start to support 64b+ inst.
+// For now, we should be safe using the msbs to store extra information.
+BitUnion64(ExtMachInst)
+    // Decoder state
+    Bitfield<63, 62> rv_type;
+EndBitUnion(ExtMachInst)
 
 } // namespace RiscvISA
 } // namespace gem5

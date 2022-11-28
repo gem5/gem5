@@ -44,7 +44,7 @@ def template ImmDeclare {{
 
       public:
         /// Constructor.
-        %(class_name)s(MachInst machInst);
+        %(class_name)s(ExtMachInst machInst);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
         std::string generateDisassembly(Addr pc,
             const loader::SymbolTable *symtab) const override;
@@ -52,7 +52,7 @@ def template ImmDeclare {{
 }};
 
 def template ImmConstructor {{
-    %(class_name)s::%(class_name)s(MachInst machInst)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
         %(set_reg_idx_arr)s;
@@ -168,7 +168,7 @@ def template BranchDeclare {{
 
       public:
         /// Constructor.
-        %(class_name)s(MachInst machInst);
+        %(class_name)s(ExtMachInst machInst);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::string
@@ -198,7 +198,9 @@ def template BranchExecute {{
     %(class_name)s::branchTarget(const PCStateBase &branch_pc) const
     {
         auto &rpc = branch_pc.as<RiscvISA::PCState>();
-        return std::make_unique<PCState>(rpc.pc() + imm);
+        std::unique_ptr<PCState> npc(dynamic_cast<PCState*>(rpc.clone()));
+        npc->set(rpc.pc() + imm);
+        return npc;
     }
 
     std::string
@@ -226,7 +228,7 @@ def template JumpDeclare {{
 
       public:
         /// Constructor.
-        %(class_name)s(MachInst machInst);
+        %(class_name)s(ExtMachInst machInst);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::string
@@ -241,7 +243,7 @@ def template JumpDeclare {{
 }};
 
 def template JumpConstructor {{
-    %(class_name)s::%(class_name)s(MachInst machInst)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
         %(set_reg_idx_arr)s;

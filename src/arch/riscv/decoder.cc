@@ -111,6 +111,7 @@ Decoder::decode(PCStateBase &_next_pc)
         next_pc.compressed(false);
     }
 
+    emi.rv_type = static_cast<int>(next_pc.rvType());
     return decode(emi, next_pc.instAddr());
 }
 

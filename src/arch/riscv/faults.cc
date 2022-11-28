@@ -135,10 +135,9 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         }
 
         // Set fault cause, privilege, and return PC
-        // Interrupt is indicated on the MSB of cause (bit 63 in RV64)
         uint64_t _cause = _code;
         if (isInterrupt()) {
-           _cause |= (1L << 63);
+           _cause |= CAUSE_INTERRUPT_MASKS[pc_state.rvType()];
         }
         tc->setMiscReg(cause, _cause);
         tc->setMiscReg(epc, tc->pcState().instAddr());
@@ -177,8 +176,10 @@ Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
     // Advance the PC to the implementation-defined reset vector
     auto workload = dynamic_cast<Workload *>(tc->getSystemPtr()->workload);
-    PCState pc(workload->getEntry());
-    tc->pcState(pc);
+    std::unique_ptr<PCState> new_pc(dynamic_cast<PCState *>(
+        tc->getIsaPtr()->newPCState(workload->getEntry())));
+    panic_if(!new_pc, "Failed create new PCState from ISA pointer");
+    tc->pcState(*new_pc);
 }
 
 void

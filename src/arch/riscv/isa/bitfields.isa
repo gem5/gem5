@@ -32,6 +32,7 @@
 //
 // Bitfield definitions.
 //
+def bitfield RVTYPE rv_type;
 
 def bitfield QUADRANT <1:0>;
 def bitfield OPCODE <6:2>;

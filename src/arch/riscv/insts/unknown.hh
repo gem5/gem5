@@ -53,7 +53,7 @@ namespace RiscvISA
 class Unknown : public RiscvStaticInst
 {
   public:
-    Unknown(MachInst _machInst)
+    Unknown(ExtMachInst _machInst)
         : RiscvStaticInst("unknown", _machInst, No_OpClass)
     {}
 

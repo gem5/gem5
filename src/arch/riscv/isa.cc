@@ -204,7 +204,7 @@ RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 } // anonymous namespace
 
 ISA::ISA(const Params &p) :
-    BaseISA(p), checkAlignment(p.check_alignment)
+    BaseISA(p), rv_type(p.riscv_type), checkAlignment(p.check_alignment)
 {
     _regClasses.push_back(&intRegClass);
     _regClasses.push_back(&floatRegClass);
@@ -243,12 +243,24 @@ void ISA::clear()
     std::fill(miscRegFile.begin(), miscRegFile.end(), 0);
 
     miscRegFile[MISCREG_PRV] = PRV_M;
-    miscRegFile[MISCREG_ISA] = (2ULL << MXL_OFFSET) | 0x14112D;
     miscRegFile[MISCREG_VENDORID] = 0;
     miscRegFile[MISCREG_ARCHID] = 0;
     miscRegFile[MISCREG_IMPID] = 0;
-    miscRegFile[MISCREG_STATUS] = (2ULL << UXL_OFFSET) | (2ULL << SXL_OFFSET) |
-                                  (1ULL << FS_OFFSET);
+    // rv_type dependent init.
+    switch (rv_type) {
+        case RV32:
+            miscRegFile[MISCREG_ISA] = (1ULL << MXL_OFFSETS[RV32]) | 0x14112D;
+            miscRegFile[MISCREG_STATUS] = (1ULL << FS_OFFSET);
+            break;
+        case RV64:
+            miscRegFile[MISCREG_ISA] = (2ULL << MXL_OFFSETS[RV64]) | 0x14112D;
+            miscRegFile[MISCREG_STATUS] = (2ULL << UXL_OFFSET) |
+                                          (2ULL << SXL_OFFSET) |
+                                          (1ULL << FS_OFFSET);
+            break;
+        default:
+            panic("%s: Unknown rv_type: %d", name(), (int)rv_type);
+    }
     miscRegFile[MISCREG_MCOUNTEREN] = 0x7;
     miscRegFile[MISCREG_SCOUNTEREN] = 0x7;
     // don't set it to zero; software may try to determine the supported
@@ -365,8 +377,18 @@ ISA::readMiscReg(RegIndex idx)
             STATUS status = readMiscRegNoEffect(idx);
             uint64_t sd_bit = \
                 (status.xs == 3) || (status.fs == 3) || (status.vs == 3);
-            // We assume RV64 here, updating the SD bit at index 63.
-            status.sd = sd_bit;
+            // For RV32, the SD bit is at index 31
+            // For RV64, the SD bit is at index 63.
+            switch (rv_type) {
+                case RV32:
+                    status.rv32_sd = sd_bit;
+                    break;
+                case RV64:
+                    status.rv64_sd = sd_bit;
+                    break;
+                default:
+                    panic("%s: Unknown rv_type: %d", name(), (int)rv_type);
+            }
             setMiscRegNoEffect(idx, status);
 
             return readMiscRegNoEffect(idx);
@@ -506,10 +528,12 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             break;
           case MISCREG_STATUS:
             {
-                // SXL and UXL are hard-wired to 64 bit
-                auto cur = readMiscRegNoEffect(idx);
-                val &= ~(STATUS_SXL_MASK | STATUS_UXL_MASK);
-                val |= cur & (STATUS_SXL_MASK | STATUS_UXL_MASK);
+                if (rv_type != RV32) {
+                    // SXL and UXL are hard-wired to 64 bit
+                    auto cur = readMiscRegNoEffect(idx);
+                    val &= ~(STATUS_SXL_MASK | STATUS_UXL_MASK);
+                    val |= cur & (STATUS_SXL_MASK | STATUS_UXL_MASK);
+                }
                 setMiscRegNoEffect(idx, val);
             }
             break;

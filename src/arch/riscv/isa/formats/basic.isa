@@ -39,7 +39,7 @@ def template BasicDeclare {{
 
       public:
         /// Constructor.
-        %(class_name)s(MachInst machInst);
+        %(class_name)s(ExtMachInst machInst);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
         using %(base_class)s::generateDisassembly;
     };
@@ -47,7 +47,7 @@ def template BasicDeclare {{
 
 // Basic instruction class constructor template.
 def template BasicConstructor {{
-    %(class_name)s::%(class_name)s(MachInst machInst)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
         %(set_reg_idx_arr)s;
