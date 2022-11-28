@@ -2201,28 +2201,28 @@ decode QUADRANT default Unknown::unknown() {
             }
             format CSROp {
                 0x1: csrrw({{
-                    Rd = data;
-                    data = Rs1;
+                    Rd = rvSext(data);
+                    data = rvZext(Rs1);
                 }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
                 0x2: csrrs({{
-                    Rd = data;
-                    data |= Rs1;
+                    Rd = rvSext(data);
+                    data = rvZext(data | Rs1);
                 }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
                 0x3: csrrc({{
-                    Rd = data;
-                    data &= ~Rs1;
+                    Rd = rvSext(data);
+                    data = rvZext(data & ~Rs1);
                 }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
                 0x5: csrrwi({{
-                    Rd = data;
-                    data = uimm;
+                    Rd = rvSext(data);
+                    data = rvZext(uimm);
                 }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
                 0x6: csrrsi({{
-                    Rd = data;
-                    data |= uimm;
+                    Rd = rvSext(data);
+                    data = rvZext(data | uimm);
                 }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
                 0x7: csrrci({{
-                    Rd = data;
-                    data &= ~uimm;
+                    Rd = rvSext(data);
+                    data = rvZext(data & ~uimm);
                 }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
             }
         }

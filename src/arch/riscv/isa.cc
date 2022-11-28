@@ -148,9 +148,9 @@ namespace RiscvISA
     [MISCREG_MCAUSE]        = "MCAUSE",
     [MISCREG_MTVAL]         = "MTVAL",
     [MISCREG_PMPCFG0]       = "PMPCFG0",
-    // pmpcfg1 rv32 only
+    [MISCREG_PMPCFG1]       = "PMPCFG1",   // pmpcfg1 is rv32 only
     [MISCREG_PMPCFG2]       = "PMPCFG2",
-    // pmpcfg3 rv32 only
+    [MISCREG_PMPCFG3]       = "PMPCFG3",   // pmpcfg3 is rv32 only
     [MISCREG_PMPADDR00]     = "PMPADDR00",
     [MISCREG_PMPADDR01]     = "PMPADDR01",
     [MISCREG_PMPADDR02]     = "PMPADDR02",
@@ -189,6 +189,42 @@ namespace RiscvISA
     [MISCREG_NMIVEC]        = "NMIVEC",
     [MISCREG_NMIE]          = "NMIE",
     [MISCREG_NMIP]          = "NMIP",
+
+    // following are rv32 only registers
+    [MISCREG_MSTATUSH]      = "MSTATUSH",
+
+    [MISCREG_CYCLEH]         = "CYCLEH",
+    [MISCREG_TIMEH]          = "TIMEH",
+    [MISCREG_INSTRETH]       = "INSTRETH",
+    [MISCREG_HPMCOUNTER03H]  = "HPMCOUNTER03H",
+    [MISCREG_HPMCOUNTER04H]  = "HPMCOUNTER04H",
+    [MISCREG_HPMCOUNTER05H]  = "HPMCOUNTER05H",
+    [MISCREG_HPMCOUNTER06H]  = "HPMCOUNTER06H",
+    [MISCREG_HPMCOUNTER07H]  = "HPMCOUNTER07H",
+    [MISCREG_HPMCOUNTER08H]  = "HPMCOUNTER08H",
+    [MISCREG_HPMCOUNTER09H]  = "HPMCOUNTER09H",
+    [MISCREG_HPMCOUNTER10H]  = "HPMCOUNTER10H",
+    [MISCREG_HPMCOUNTER11H]  = "HPMCOUNTER11H",
+    [MISCREG_HPMCOUNTER12H]  = "HPMCOUNTER12H",
+    [MISCREG_HPMCOUNTER13H]  = "HPMCOUNTER13H",
+    [MISCREG_HPMCOUNTER14H]  = "HPMCOUNTER14H",
+    [MISCREG_HPMCOUNTER15H]  = "HPMCOUNTER15H",
+    [MISCREG_HPMCOUNTER16H]  = "HPMCOUNTER16H",
+    [MISCREG_HPMCOUNTER17H]  = "HPMCOUNTER17H",
+    [MISCREG_HPMCOUNTER18H]  = "HPMCOUNTER18H",
+    [MISCREG_HPMCOUNTER19H]  = "HPMCOUNTER19H",
+    [MISCREG_HPMCOUNTER20H]  = "HPMCOUNTER20H",
+    [MISCREG_HPMCOUNTER21H]  = "HPMCOUNTER21H",
+    [MISCREG_HPMCOUNTER22H]  = "HPMCOUNTER22H",
+    [MISCREG_HPMCOUNTER23H]  = "HPMCOUNTER23H",
+    [MISCREG_HPMCOUNTER24H]  = "HPMCOUNTER24H",
+    [MISCREG_HPMCOUNTER25H]  = "HPMCOUNTER25H",
+    [MISCREG_HPMCOUNTER26H]  = "HPMCOUNTER26H",
+    [MISCREG_HPMCOUNTER27H]  = "HPMCOUNTER27H",
+    [MISCREG_HPMCOUNTER28H]  = "HPMCOUNTER28H",
+    [MISCREG_HPMCOUNTER29H]  = "HPMCOUNTER29H",
+    [MISCREG_HPMCOUNTER30H]  = "HPMCOUNTER30H",
+    [MISCREG_HPMCOUNTER31H]  = "HPMCOUNTER31H",
 }};
 
 namespace
@@ -273,7 +309,13 @@ void ISA::clear()
 bool
 ISA::hpmCounterEnabled(int misc_reg) const
 {
-    int hpmcounter = misc_reg - MISCREG_CYCLE;
+    int hpmcounter = 0;
+    if (misc_reg >= MISCREG_CYCLEH) {
+        hpmcounter = misc_reg - MISCREG_CYCLEH;
+    } else {
+        hpmcounter = misc_reg - MISCREG_CYCLE;
+    }
+
     if (hpmcounter < 0 || hpmcounter > 31)
         panic("Illegal HPM counter %d\n", hpmcounter);
     int counteren;
@@ -313,7 +355,16 @@ ISA::readMiscReg(RegIndex idx)
         if (hpmCounterEnabled(MISCREG_CYCLE)) {
             DPRINTF(RiscvMisc, "Cycle counter at: %llu.\n",
                     tc->getCpuPtr()->curCycle());
-            return tc->getCpuPtr()->curCycle();
+            return static_cast<RegVal>(tc->getCpuPtr()->curCycle());
+        } else {
+            warn("Cycle counter disabled.\n");
+            return 0;
+        }
+      case MISCREG_CYCLEH:
+        if (hpmCounterEnabled(MISCREG_CYCLEH)) {
+            DPRINTF(RiscvMisc, "Cycle counter at: %llu.\n",
+                    tc->getCpuPtr()->curCycle());
+            return bits<RegVal>(tc->getCpuPtr()->curCycle(), 63, 32);
         } else {
             warn("Cycle counter disabled.\n");
             return 0;
@@ -327,11 +378,29 @@ ISA::readMiscReg(RegIndex idx)
             warn("Wall clock disabled.\n");
             return 0;
         }
+      case MISCREG_TIMEH:
+        if (hpmCounterEnabled(MISCREG_TIMEH)) {
+            DPRINTF(RiscvMisc, "Wall-clock counter at: %llu.\n",
+                    std::time(nullptr));
+            return readMiscRegNoEffect(MISCREG_TIMEH);
+        } else {
+            warn("Wall clock disabled.\n");
+            return 0;
+        }
       case MISCREG_INSTRET:
         if (hpmCounterEnabled(MISCREG_INSTRET)) {
             DPRINTF(RiscvMisc, "Instruction counter at: %llu.\n",
                     tc->getCpuPtr()->totalInsts());
-            return tc->getCpuPtr()->totalInsts();
+            return static_cast<RegVal>(tc->getCpuPtr()->totalInsts());
+        } else {
+            warn("Instruction counter disabled.\n");
+            return 0;
+        }
+      case MISCREG_INSTRETH:
+        if (hpmCounterEnabled(MISCREG_INSTRETH)) {
+            DPRINTF(RiscvMisc, "Instruction counter at: %llu.\n",
+                    tc->getCpuPtr()->totalInsts());
+            return bits<RegVal>(tc->getCpuPtr()->totalInsts(), 63, 32);
         } else {
             warn("Instruction counter disabled.\n");
             return 0;
@@ -406,6 +475,16 @@ ISA::readMiscReg(RegIndex idx)
                 warn("HPM counter %d disabled.\n", idx - MISCREG_CYCLE);
                 return 0;
             }
+        } else if (idx >= MISCREG_HPMCOUNTER03H &&
+                idx <= MISCREG_HPMCOUNTER31H) {
+            if (hpmCounterEnabled(idx)) {
+                DPRINTF(RiscvMisc, "HPM counter %d: %llu.\n",
+                        idx - MISCREG_CYCLE, tc->getCpuPtr()->curCycle());
+                return bits<RegVal>(tc->getCpuPtr()->curCycle(), 63, 32);
+            } else {
+                warn("HPM counter %d disabled.\n", idx - MISCREG_CYCLE);
+                return 0;
+            }
         }
         return readMiscRegNoEffect(idx);
     }
@@ -437,10 +516,24 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
           // for 8 PMP entries.
 
           case MISCREG_PMPCFG0:
+          case MISCREG_PMPCFG1:
           case MISCREG_PMPCFG2:
+          case MISCREG_PMPCFG3:
             {
                 // PMP registers should only be modified in M mode
                 assert(readMiscRegNoEffect(MISCREG_PRV) == PRV_M);
+
+                int regSize = 0;
+                switch (rv_type) {
+                    case RV32:
+                        regSize = 4;
+                    break;
+                    case RV64:
+                        regSize = 8;
+                    break;
+                    default:
+                        panic("%s: Unknown rv_type: %d", name(), (int)rv_type);
+                }
 
                 // Specs do not seem to mention what should be
                 // configured first, cfg or address regs!
@@ -448,7 +541,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 // pmp addr regs are written (with the assumption
                 // that cfg regs are already written)
 
-                for (int i=0; i < sizeof(val); i++) {
+                for (int i=0; i < regSize; i++) {
 
                     uint8_t cfg_val = (val >> (8*i)) & 0xff;
                     auto mmu = dynamic_cast<RiscvISA::MMU *>
@@ -456,10 +549,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
 
                     // Form pmp_index using the index i and
                     // PMPCFG register number
-                    // Note: MISCREG_PMPCFG2 - MISCREG_PMPCFG0 = 1
-                    // 8*(idx-MISCREG_PMPCFG0) will be useful
-                    // if a system contains more than 16 PMP entries
-                    uint32_t pmp_index = i+(8*(idx-MISCREG_PMPCFG0));
+                    uint32_t pmp_index = i+(4*(idx-MISCREG_PMPCFG0));
                     mmu->getPMP()->pmpUpdateCfg(pmp_index,cfg_val);
                 }
 

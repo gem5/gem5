@@ -338,6 +338,14 @@ def template CSRExecute {{
 
         RegIndex midx = csr_data_it->second.physIndex;
         const std::string& csrName = csr_data_it->second.name;
+        if ((csr_data_it->second.rvTypes & (1 << machInst.rv_type)) == 0) {
+            return std::make_shared<IllegalInstFault>(
+                    csprintf("%s is not support in mode %d\n",
+                             csrName,
+                             machInst.rv_type),
+                    machInst);
+        }
+
         auto mask_it = csr_masks.find(csr);
         RegVal maskVal = (mask_it == csr_masks.end()) ? mask(64)
                                                       : mask_it->second;
@@ -373,6 +381,7 @@ def template CSRExecute {{
         } else {
             olddata = xc->readMiscReg(midx);
         }
+        olddata = rvZext(olddata);
         auto olddata_all = olddata;
 
         olddata &= maskVal;
