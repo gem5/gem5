@@ -67,7 +67,7 @@ class MinorOpClassSet(SimObject):
     cxx_class = "gem5::MinorOpClassSet"
 
     opClasses = VectorParam.MinorOpClass(
-        [], "op classes to be matched." "  An empty list means any class"
+        [], "op classes to be matched.  An empty list means any class"
     )
 
 
@@ -83,13 +83,13 @@ class MinorFUTiming(SimObject):
         " (ext_mach_inst & mask) == match",
     )
     suppress = Param.Bool(
-        False, "if true, this inst. is not executed by" " this FU"
+        False, "if true, this inst. is not executed by this FU"
     )
     extraCommitLat = Param.Cycles(
-        0, "extra cycles to stall commit for" " this inst."
+        0, "extra cycles to stall commit for this inst."
     )
     extraCommitLatExpr = Param.TimingExpr(
-        NULL, "extra cycles as a" " run-time evaluated expression"
+        NULL, "extra cycles as a run-time evaluated expression"
     )
     extraAssumedLat = Param.Cycles(
         0,
@@ -109,7 +109,7 @@ class MinorFUTiming(SimObject):
         " class",
     )
     description = Param.String(
-        "", "description string of the decoding/inst." " class"
+        "", "description string of the decoding/inst class"
     )
 
 
@@ -129,11 +129,11 @@ class MinorFU(SimObject):
 
     opClasses = Param.MinorOpClassSet(
         MinorOpClassSet(),
-        "type of operations" " allowed on this functional unit",
+        "type of operations allowed on this functional unit",
     )
     opLat = Param.Cycles(1, "latency in cycles")
     issueLat = Param.Cycles(
-        1, "cycles until another instruction can be" " issued"
+        1, "cycles until another instruction can be issued"
     )
     timings = VectorParam.MinorFUTiming([], "extra decoding rules")
 

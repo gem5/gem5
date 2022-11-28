@@ -50,7 +50,7 @@ class FastModelCortexA76(IrisBaseCPU):
 
     redistributor = Gicv3CommsTargetSocket("GIC communication target")
     core_reset = IntSinkPin(
-        "Raising this signal will put the core into " "reset mode."
+        "Raising this signal will put the core into reset mode."
     )
     poweron_reset = IntSinkPin(
         "Power on reset. Initializes all the "

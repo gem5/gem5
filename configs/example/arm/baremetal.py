@@ -242,25 +242,25 @@ def main():
         "--semi-stdin",
         type=str,
         default="stdin",
-        help="Standard input for semihosting " "(default: gem5's stdin)",
+        help="Standard input for semihosting (default: gem5's stdin)",
     )
     parser.add_argument(
         "--semi-stdout",
         type=str,
         default="stdout",
-        help="Standard output for semihosting " "(default: gem5's stdout)",
+        help="Standard output for semihosting (default: gem5's stdout)",
     )
     parser.add_argument(
         "--semi-stderr",
         type=str,
         default="stderr",
-        help="Standard error for semihosting " "(default: gem5's stderr)",
+        help="Standard error for semihosting (default: gem5's stderr)",
     )
     parser.add_argument(
         "--semi-path",
         type=str,
         default="",
-        help=("Search path for files to be loaded through " "Arm Semihosting"),
+        help=("Search path for files to be loaded through Arm Semihosting"),
     )
     parser.add_argument(
         "args",

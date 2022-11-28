@@ -217,7 +217,7 @@ def addNoISAOptions(parser):
         "--maxtime",
         type=float,
         default=None,
-        help="Run to the specified absolute simulated time in " "seconds",
+        help="Run to the specified absolute simulated time in seconds",
     )
     parser.add_argument(
         "-P",
@@ -691,7 +691,7 @@ def addSEOptions(parser):
         "-o",
         "--options",
         default="",
-        help="""The options to pass to the binary, use " "
+        help="""The options to pass to the binary, use
                               around the entire string""",
     )
     parser.add_argument(

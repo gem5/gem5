@@ -51,7 +51,7 @@ import sw
 def addOptions(parser):
     # Options for distributed simulation (i.e. dist-gem5)
     parser.add_argument(
-        "--dist", action="store_true", help="Distributed gem5" " simulation."
+        "--dist", action="store_true", help="Distributed gem5 simulation."
     )
     parser.add_argument(
         "--is-switch",
@@ -71,14 +71,14 @@ def addOptions(parser):
         default=0,
         action="store",
         type=int,
-        help="Number of gem5 processes within the dist gem5" " run.",
+        help="Number of gem5 processes within the dist gem5 run.",
     )
     parser.add_argument(
         "--dist-server-name",
         default="127.0.0.1",
         action="store",
         type=str,
-        help="Name of the message server host\nDEFAULT:" " localhost",
+        help="Name of the message server host\nDEFAULT: localhost",
     )
     parser.add_argument(
         "--dist-server-port",

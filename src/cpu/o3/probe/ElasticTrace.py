@@ -44,10 +44,10 @@ class ElasticTrace(ProbeListenerObject):
     # Trace files for the following params are created in the output directory.
     # User is forced to provide these when an instance of this class is created.
     instFetchTraceFile = Param.String(
-        desc="Protobuf trace file name for " "instruction fetch tracing"
+        desc="Protobuf trace file name for instruction fetch tracing"
     )
     dataDepTraceFile = Param.String(
-        desc="Protobuf trace file name for " "data dependency tracing"
+        desc="Protobuf trace file name for data dependency tracing"
     )
     # The dependency window size param must be equal to or greater than the
     # number of entries in the O3CPU ROB, a typical value is 3 times ROB size
@@ -66,5 +66,5 @@ class ElasticTrace(ProbeListenerObject):
     )
     # Whether to trace virtual addresses for memory accesses
     traceVirtAddr = Param.Bool(
-        False, "Set to true if virtual addresses are " "to be traced."
+        False, "Set to true if virtual addresses are to be traced."
     )

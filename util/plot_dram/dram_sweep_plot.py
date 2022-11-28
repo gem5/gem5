@@ -90,7 +90,7 @@ def main():
 
     for line in simout:
         match = re.match(
-            "DRAM sweep with " "burst: (\d+), banks: (\d+), max stride: (\d+)",
+            "DRAM sweep with burst: (\d+), banks: (\d+), max stride: (\d+)",
             line,
         )
         if match:

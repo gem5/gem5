@@ -94,7 +94,7 @@ def upgrader(cpt):
         else:
             if cpt.items(sec):
                 raise ValueError(
-                    "Unexpected populated ISA section in old " "checkpoint"
+                    "Unexpected populated ISA section in old checkpoint"
                 )
 
         for (key, value) in options:

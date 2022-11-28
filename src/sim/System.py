@@ -77,7 +77,7 @@ class System(SimObject):
     # mmap). By enabling this flag, we accommodate cases where a large
     # (but sparse) memory is simulated.
     mmap_using_noreserve = Param.Bool(
-        False, "mmap the backing store " "without reserving swap"
+        False, "mmap the backing store without reserving swap"
     )
 
     # The memory ranges are to be populated when creating the system
@@ -89,7 +89,7 @@ class System(SimObject):
 
     # The ranges backed by a shadowed ROM
     shadow_rom_ranges = VectorParam.AddrRange(
-        [], "Ranges  backed by a " "shadowed ROM"
+        [], "Ranges  backed by a shadowed ROM"
     )
 
     shared_backstore = Param.String(

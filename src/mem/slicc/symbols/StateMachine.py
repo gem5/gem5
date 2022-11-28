@@ -184,7 +184,7 @@ class StateMachine(Symbol):
         if type_ident == "%s_TBE" % self.ident:
             if self.TBEType != None:
                 self.error(
-                    "Multiple Transaction Buffer types in a " "single machine."
+                    "Multiple Transaction Buffer types in a single machine."
                 )
             self.TBEType = type
 

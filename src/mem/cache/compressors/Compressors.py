@@ -232,7 +232,7 @@ class FrequentValuesCompressor(BaseCacheCompressor):
     )
     check_saturation = Param.Bool(
         False,
-        "Whether the counters should be " "manipulated in case of saturation.",
+        "Whether the counters should be manipulated in case of saturation.",
     )
 
     vft_assoc = Param.Int(16, "Associativity of the VFT.")

@@ -57,7 +57,7 @@ parser.add_argument(
     help="Number of GPU Command Processors (CP)",
 )
 parser.add_argument(
-    "--simds-per-cu", type=int, default=4, help="SIMD units" "per CU"
+    "--simds-per-cu", type=int, default=4, help="SIMD unitsper CU"
 )
 parser.add_argument(
     "--wf-size", type=int, default=64, help="Wavefront size(in workitems)"
@@ -66,7 +66,7 @@ parser.add_argument(
     "--wfs-per-simd",
     type=int,
     default=10,
-    help="Number of " "WF slots per SIMD",
+    help="Number of WF slots per SIMD",
 )
 
 # Add the ruby specific and protocol specific options

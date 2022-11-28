@@ -85,7 +85,7 @@ parser.add_argument(
     "--cu-per-sqc",
     type=int,
     default=4,
-    help="number of CUs" "sharing an SQC (icache, and thus icache TLB)",
+    help="number of CUssharing an SQC (icache, and thus icache TLB)",
 )
 parser.add_argument(
     "--cu-per-scalar-cache",
@@ -94,7 +94,7 @@ parser.add_argument(
     help="Number of CUs sharing a scalar cache",
 )
 parser.add_argument(
-    "--simds-per-cu", type=int, default=4, help="SIMD units" "per CU"
+    "--simds-per-cu", type=int, default=4, help="SIMD unitsper CU"
 )
 parser.add_argument(
     "--cu-per-sa",
@@ -140,13 +140,13 @@ parser.add_argument(
     "--glbmem-wr-bus-width",
     type=int,
     default=32,
-    help="VGPR to Coalescer (Global Memory) data bus width " "in bytes",
+    help="VGPR to Coalescer (Global Memory) data bus width in bytes",
 )
 parser.add_argument(
     "--glbmem-rd-bus-width",
     type=int,
     default=32,
-    help="Coalescer to VGPR (Global Memory) data bus width in " "bytes",
+    help="Coalescer to VGPR (Global Memory) data bus width in bytes",
 )
 # Currently we only support 1 local memory pipe
 parser.add_argument(
@@ -166,7 +166,7 @@ parser.add_argument(
     "--wfs-per-simd",
     type=int,
     default=10,
-    help="Number of " "WF slots per SIMD",
+    help="Number of WF slots per SIMD",
 )
 
 parser.add_argument(
@@ -290,13 +290,11 @@ parser.add_argument(
     help="Latency for scalar responses from ruby to the cu.",
 )
 
-parser.add_argument(
-    "--TLB-prefetch", type=int, help="prefetch depth for" "TLBs"
-)
+parser.add_argument("--TLB-prefetch", type=int, help="prefetch depth for TLBs")
 parser.add_argument(
     "--pf-type",
     type=str,
-    help="type of prefetch: " "PF_CU, PF_WF, PF_PHASE, PF_STRIDE",
+    help="type of prefetch: PF_CU, PF_WF, PF_PHASE, PF_STRIDE",
 )
 parser.add_argument("--pf-stride", type=int, help="set prefetch stride")
 parser.add_argument(
@@ -369,7 +367,7 @@ parser.add_argument(
     type=str,
     default="gfx801",
     choices=GfxVersion.vals,
-    help="Gfx version for gpu" "Note: gfx902 is not fully supported by ROCm",
+    help="Gfx version for gpuNote: gfx902 is not fully supported by ROCm",
 )
 
 Ruby.define_options(parser)

@@ -170,7 +170,7 @@ class SConsFixture(UniqueFixture):
             )
         else:
             log.test_log.message(
-                "Building the following targets." " This may take a while."
+                "Building the following targets. This may take a while."
             )
             log.test_log.message("%s" % (", ".join(self.targets)))
             log.test_log.message(
@@ -391,7 +391,7 @@ class DownloadedArchive(DownloadedProgram):
             except (urllib.error.URLError, socket.timeout):
                 # Problem checking the server, use the old files.
                 log.test_log.debug(
-                    "Could not contact server. " "Binaries may be old."
+                    "Could not contact server. Binaries may be old."
                 )
                 return
             # If the server version is more recent, download it

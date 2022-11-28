@@ -53,7 +53,7 @@ def config_ds3(mem_type: str, num_chnls: int) -> Tuple[str, str]:
         )
     elif os.path.isfile(input_file):
         raise Exception(
-            "The configuration file '" + input_file + "' cannot " " be found."
+            "The configuration file '" + input_file + "' cannot  be found."
         )
 
     output_file = "/tmp/" + mem_type + "_chnls" + str(num_chnls) + ".ini"

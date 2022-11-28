@@ -45,7 +45,7 @@ class ExternalSlave(SimObject):
     port = SlavePort("Slave port")
 
     addr_ranges = VectorParam.AddrRange(
-        [], "Addresses served by" " this port's external agent"
+        [], "Addresses served by this port's external agent"
     )
 
     port_type = Param.String(

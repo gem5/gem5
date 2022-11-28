@@ -88,7 +88,7 @@ class ArmPMU(SimObject):
             or isinstance(newObject, SoftwareIncrement)
         ):
             raise TypeError(
-                "argument must be of ProbeEvent or " "SoftwareIncrement type"
+                "argument must be of ProbeEvent or SoftwareIncrement type"
             )
 
         if not self._events:

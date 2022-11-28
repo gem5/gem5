@@ -38,7 +38,7 @@ class RubyTester(ClockedObject):
 
     num_cpus = Param.Int("number of cpus / RubyPorts")
     cpuInstDataPort = VectorRequestPort(
-        "cpu combo ports to inst & " "data caches"
+        "cpu combo ports to inst & data caches"
     )
     cpuInstPort = VectorRequestPort("cpu ports to only inst caches")
     cpuDataPort = VectorRequestPort("cpu ports to only data caches")

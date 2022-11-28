@@ -107,7 +107,7 @@ class EtherSwitch(SimObject):
 
     dump = Param.EtherDump(NULL, "dump object")
     fabric_speed = Param.NetworkBandwidth(
-        "10Gbps", "switch fabric speed in " "bits per second"
+        "10Gbps", "switch fabric speed in bits per second"
     )
     interface = VectorEtherInt("Ethernet Interface")
     output_buffer_size = Param.MemorySize(

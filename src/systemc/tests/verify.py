@@ -148,7 +148,7 @@ class RunPhase(TestPhaseBase):
             "--timeout",
             type=int,
             metavar="SECONDS",
-            help="Time limit for each run in seconds, " "0 to disable.",
+            help="Time limit for each run in seconds, 0 to disable.",
             default=60,
         )
         parser.add_argument(
@@ -604,7 +604,7 @@ filter_opts = parser.add_mutually_exclusive_group()
 filter_opts.add_argument(
     "--filter",
     default="True",
-    help="Python expression which filters tests based " "on their properties",
+    help="Python expression which filters tests based on their properties",
 )
 filter_opts.add_argument(
     "--filter-file",

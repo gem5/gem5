@@ -179,14 +179,14 @@ def _main():
         "-u",
         type=str,
         default="origin/master",
-        help="Upstream branch for comparison. " "Default: %(default)s",
+        help="Upstream branch for comparison. Default: %(default)s",
     )
     parser.add_argument(
         "--feature",
         "-f",
         type=str,
         default="HEAD",
-        help="Feature branch for comparison. " "Default: %(default)s",
+        help="Feature branch for comparison. Default: %(default)s",
     )
     parser.add_argument(
         "--show-unknown",
@@ -199,7 +199,7 @@ def _main():
     parser.add_argument(
         "--deep-search",
         action="store_true",
-        help="Use a deep search to find incorrectly " "rebased changes",
+        help="Use a deep search to find incorrectly rebased changes",
     )
     parser.add_argument(
         "paths",

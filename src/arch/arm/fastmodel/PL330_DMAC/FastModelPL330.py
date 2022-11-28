@@ -87,7 +87,7 @@ class FastModelPL330(SystemC_ScModule):
     cache_lines = Param.UInt32(1, "number of cache lines")
     max_channels = Param.UInt32(8, "virtual channels")
     controller_nsecure = Param.Bool(
-        False, "Controller non-secure at reset " "(boot_manager_ns)"
+        False, "Controller non-secure at reset (boot_manager_ns)"
     )
     irq_nsecure = Param.UInt32(0, "Interrupts non-secure at reset")
     periph_nsecure = Param.Bool(False, "Peripherals non-secure at reset")

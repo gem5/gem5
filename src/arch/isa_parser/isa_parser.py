@@ -133,7 +133,7 @@ class Template(object):
             """
 
             pcstate_decl = (
-                f"{self.parser.namespace}::PCState " "__parserAutoPCState;\n"
+                f"{self.parser.namespace}::PCState __parserAutoPCState;\n"
             )
             myDict["op_decl"] = operands.concatAttrStrings("op_decl")
             if operands.readPC or operands.setPC:
@@ -1098,7 +1098,7 @@ del wrap
     # 'def [signed] bitfield <ID> [<first>:<last>]'
     # This generates a preprocessor macro in the output file.
     def p_def_bitfield_0(self, t):
-        "def_bitfield : DEF opt_signed " "BITFIELD ID LESS INTLIT COLON INTLIT GREATER SEMI"
+        "def_bitfield : DEF opt_signed BITFIELD ID LESS INTLIT COLON INTLIT GREATER SEMI"
         expr = "bits(machInst, %2d, %2d)" % (t[6], t[8])
         if t[2] == "signed":
             expr = "sext<%d>(%s)" % (t[6] - t[8] + 1, expr)

@@ -87,7 +87,7 @@ namespace gem5
 )
 
 if enum.wrapper_is_struct:
-    code("const char *${wrapper_name}::${name}Strings" "[Num_${name}] =")
+    code("const char *${wrapper_name}::${name}Strings[Num_${name}] =")
 else:
     if enum.is_class:
         code(

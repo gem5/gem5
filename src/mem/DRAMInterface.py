@@ -57,7 +57,7 @@ class DRAMInterface(MemInterface):
 
     # enforce a limit on the number of accesses per row
     max_accesses_per_row = Param.Unsigned(
-        16, "Max accesses per row before " "closing"
+        16, "Max accesses per row before closing"
     )
 
     # default to 0 bank groups per rank, indicating bank group architecture
@@ -139,7 +139,7 @@ class DRAMInterface(MemInterface):
     # write-to-read, same rank turnaround penalty for same bank group
     tWTR_L = Param.Latency(
         Self.tWTR,
-        "Write to read, same rank switching " "time, same bank group",
+        "Write to read, same rank switching time, same bank group",
     )
 
     # minimum precharge to precharge delay time

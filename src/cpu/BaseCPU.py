@@ -228,7 +228,7 @@ class BaseCPU(ClockedObject):
         else:
             if len(self.isa) != int(self.numThreads):
                 raise RuntimeError(
-                    "Number of ISA instances doesn't " "match thread count"
+                    "Number of ISA instances doesn't match thread count"
                 )
         if len(self.decoder) != 0:
             raise RuntimeError("Decoders should not be set up manually")

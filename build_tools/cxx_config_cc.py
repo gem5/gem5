@@ -255,9 +255,7 @@ for param in sim_object._params.values():
         code('} else if (name == "${{param.name}}") {')
         code.indent()
         code("${{param.name}}.clear();")
-        code(
-            "for (auto i = values.begin(); " "ret && i != values.end(); i ++)"
-        )
+        code("for (auto i = values.begin(); ret && i != values.end(); i ++)")
         code("{")
         code.indent()
         code("${{param.ptype.cxx_type}} elem;")

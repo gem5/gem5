@@ -478,7 +478,7 @@ def cxxMethod(*args, **kwargs):
         args, varargs, keywords, defaults = inspect.getargspec(func)
         if varargs or keywords:
             raise ValueError(
-                "Wrapped methods must not contain variable " "arguments"
+                "Wrapped methods must not contain variable arguments"
             )
 
         # Create tuples of (argument, default)
@@ -571,7 +571,7 @@ class SimObjectCliWrapper(object):
                     setattr(sim_object, key, val)
                 else:
                     raise SimObjectCliWrapperException(
-                        "tried to set or unsettable" "object parameter: " + key
+                        "tried to set or unsettableobject parameter: " + key
                     )
             else:
                 raise SimObjectCliWrapperException(

@@ -58,11 +58,11 @@ class GUPSGen(ClockedObject):
     )
 
     update_limit = Param.Int(
-        0, "The number of updates to issue before the" " simulation is over"
+        0, "The number of updates to issue before the simulation is over"
     )
 
     request_queue_size = Param.Int(
-        1024, "Maximum number of parallel" " outstanding requests"
+        1024, "Maximum number of parallel outstanding requests"
     )
 
     init_memory = Param.Bool(
