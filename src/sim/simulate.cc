@@ -180,8 +180,8 @@ struct DescheduleDeleter
 };
 
 /** Simulate for num_cycles additional cycles.  If num_cycles is -1
- * (the default), do not limit simulation; some other event must
- * terminate the loop.  Exported to Python.
+ * (the default), we simulate to MAX_TICKS unless the max ticks has been set
+ * via the 'set_max_tick' function prior. This function is exported to Python.
  * @return The SimLoopExitEvent that caused the loop to exit.
  */
 GlobalSimLoopExitEvent *global_exit_event= nullptr;
@@ -191,8 +191,6 @@ simulate(Tick num_cycles)
     if (global_exit_event)//cleaning last global exit event
         global_exit_event->clean();
     std::unique_ptr<GlobalSyncEvent, DescheduleDeleter> quantum_event;
-    const Tick exit_tick = num_cycles < MaxTick - curTick() ?
-                                        curTick() + num_cycles : MaxTick;
 
     inform("Entering event queue @ %d.  Starting simulation...\n", curTick());
 
@@ -200,11 +198,22 @@ simulate(Tick num_cycles)
         simulatorThreads.reset(new SimulatorThreads(numMainEventQueues));
 
     if (!simulate_limit_event) {
-        simulate_limit_event = new GlobalSimLoopExitEvent(
-            mainEventQueue[0]->getCurTick(),
-            "simulate() limit reached", 0);
+        // If the simulate_limit_event is not set, we set it to MaxTick.
+        set_max_tick(MaxTick);
     }
-    simulate_limit_event->reschedule(exit_tick);
+
+    if (num_cycles != -1) {
+        // If the user has specified an exit event after X cycles, do so here.
+        // Note: This will override any prior set max_tick behaviour (such as
+        // that above when it is set to MAxTick).
+        const Tick max_tick = num_cycles < MaxTick - curTick() ?
+                                    curTick() + num_cycles : MaxTick;
+
+        // This is kept to `set_max_tick` instead of `schedule_tick_exit` to
+        // preserve backwards functionality. It may be better to deprecate this
+        // behaviour at some point in favor of `schedule_tick_exit`.
+        set_max_tick(max_tick);
+    }
 
     if (numMainEventQueues > 1) {
         fatal_if(simQuantum == 0,
@@ -232,6 +241,34 @@ simulate(Tick num_cycles)
     assert(global_exit_event);
 
     return global_exit_event;
+}
+
+void set_max_tick(Tick tick)
+{
+    if (!simulate_limit_event) {
+        simulate_limit_event = new GlobalSimLoopExitEvent(
+            mainEventQueue[0]->getCurTick(),
+            "simulate() limit reached", 0);
+    }
+    simulate_limit_event->reschedule(tick);
+}
+
+
+Tick get_max_tick()
+{
+    if (!simulate_limit_event) {
+        /* If the GlobalSimLoopExitEvent has not been setup, the maximum tick
+         * is `MaxTick` as declared in "src/base/types.hh".
+         */
+        return MaxTick;
+    }
+
+    return simulate_limit_event->when();
+}
+
+void schedule_tick_exit(Tick tick, std::string exit_string)
+{
+    new GlobalSimLoopExitEvent(tick, exit_string, 0);
 }
 
 void
