@@ -45,7 +45,37 @@ namespace gem5
 
 class GlobalSimLoopExitEvent;
 
-GlobalSimLoopExitEvent *simulate(Tick num_cycles = MaxTick);
+GlobalSimLoopExitEvent *simulate(Tick num_cycles = -1);
+
+/**
+ * @brief Set the maximum tick.
+ *
+ * This function will schedule, or reschedule, the maximum tick for the
+ * simulation.
+ *
+ * This will setup the GlobalSimLoopExitEvent if it does not already exist.
+ *
+ * @param tick The maximum tick.
+ */
+void set_max_tick(Tick tick);
+
+/**
+ * @brief Get the maximum simulation tick.
+ *
+ *
+ * @returns The maximum simulation tick.
+ */
+Tick get_max_tick();
+
+/**
+ * @brief Schedule an exit event at a particular tick.
+ *
+ * Schedule a tick with a particular exit string.
+ *
+ * @param tick The tick at which the simulation loop should exit.
+ * @param exit_string The exit string explaining the exit.
+ */
+void schedule_tick_exit(Tick tick, std::string exit_string);
 
 /**
  * Terminate helper threads when running in parallel mode.

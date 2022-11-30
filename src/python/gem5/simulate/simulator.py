@@ -157,6 +157,7 @@ class Simulator:
             * ExitEvent.WORKEND: exit simulation
             * ExitEvent.USER_INTERRUPT: exit simulation
             * ExitEvent.MAX_TICK: exit simulation
+            * ExitEvent.SCHEDULED_TICK: exit simulation
             * ExitEvent.SIMPOINT_BEGIN: reset stats
             * ExitEvent.MAX_INSTS: exit simulation
 
@@ -197,6 +198,7 @@ class Simulator:
             )(),
             ExitEvent.USER_INTERRUPT: exit_generator(),
             ExitEvent.MAX_TICK: exit_generator(),
+            ExitEvent.SCHEDULED_TICK: exit_generator(),
             ExitEvent.SIMPOINT_BEGIN: warn_default_decorator(
                 reset_stats_generator,
                 "simpoint begin",
