@@ -503,9 +503,6 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 void
 ArmFault::invoke32(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    if (vectorCatch(tc, inst))
-        return;
-
     // ARMv7 (ARM ARM issue C B1.9)
     bool have_security = ArmSystem::haveEL(tc, EL3);
 
@@ -727,20 +724,6 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
     // Save exception syndrome
     if ((nextMode() != MODE_IRQ) && (nextMode() != MODE_FIQ))
         setSyndrome(tc, getSyndromeReg64());
-}
-
-bool
-ArmFault::vectorCatch(ThreadContext *tc, const StaticInstPtr &inst)
-{
-    SelfDebug *sd = ArmISA::ISA::getSelfDebug(tc);
-    VectorCatch* vc = sd->getVectorCatch(tc);
-    if (vc && !vc->isVCMatch()) {
-        Fault fault = sd->testVectorCatch(tc, 0x0, this);
-        if (fault != NoFault)
-            fault->invoke(tc, inst);
-        return true;
-    }
-    return false;
 }
 
 ArmStaticInst *
