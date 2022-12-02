@@ -85,6 +85,7 @@ motherboard = TestBoard(
 )
 root = Root(full_system=False, system=motherboard)
 
+motherboard._pre_instantiate()
 m5.instantiate()
 
 generator.start_traffic()
