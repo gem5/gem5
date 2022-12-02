@@ -1,3 +1,121 @@
+# Version 22.1.0.0
+
+This release has 500 contributions from 48 unique contributors and marks our second major release of 2022.
+This release incorporates several new features, improvements, and bug fixes for the computer architecture reserach community.
+
+See below for more details!
+
+## New features and improvements
+
+- The gem5 binary can now be compiled to include multiple ISA targets.
+A compilation of gem5 which includes all gem5 ISAs can be created using: `scons build/ALL/gem5.opt`.
+This will use the Ruby `MESI_Two_Level` cache coherence protocol by default, to use other protocols: `scons build/ALL/gem5.opt PROTOCOL=<other protocol>`.
+The classic cache system may continue to be used regardless as to which Ruby cache coherence protocol is compiled.
+- The `m5` Python module now includes functions to set exit events are particular simululation ticks:
+    - *setMaxTick(tick)* : Used to to specify the maximum simulation tick.
+    - *getMaxTick()* : Used to obtain the maximum simulation tick value.
+    - *getTicksUntilMax()*: Used to get the number of ticks remaining until the maximum tick is reached.
+    - *scheduleTickExitFromCurrent(tick)* : Used to schedule an exit exit event a specified number of ticks in the future.
+    - *scheduleTickExitAbsolute(tick)* : Used to schedule an exit event as a specified tick.
+- We now include the `RiscvMatched` board as part of the gem5 stdlib.
+This board is modeled after the [HiFive Unmatched board](https://www.sifive.com/boards/hifive-unmatched) and may be used to emulate its behavior.
+See "configs/example/gem5_library/riscv-matched-fs.py" and "configs/example/gem5_library/riscv-matched-hello.py" for examples using this board.
+- An API for [SimPoints](https://doi.org/10.1145/885651.781076) has been added.
+SimPoints can substantially improve gem5 Simulation time by only simulating representative parts of a simulation then extrapolating statistical data accordingly.
+Examples of using SimPoints with gem5 can be found in "configs/example/gem5_library/checkpoints/simpoints-se-checkpoint.py" and "configs/example/gem5_library/checkpoints/simpoints-se-restore.py".
+- "Workloads" have been introduced to gem5.
+Workloads have been incorporated into the gem5 Standard library.
+They can be used specify the software to be run on a simulated system that come complete with input parameters and any other dependencies necessary to run a simuation on the target hardware.
+At the level of the gem5 configuration script a user may specify a workload via a board's `set_workload` function.
+For example, `set_workload(Workload("x86-ubuntu-18.04-boot"))` sets the board to use the "x86-ubuntu-18.04-boot" workload.
+This workload specifies a boot consisting of the Linux 5.4.49 kernel then booting an Ubunutu 18.04 disk image, to exit upon booting.
+Workloads are agnostic to underlying gem5 design and, via the gem5-resources infrastructure, will automatically retrieve all necessary kernels, disk-images, etc., necessary to execute.
+Examples of using gem5 Workloads can be found in "configs/example/gem5_library/x86-ubuntu-ruby.py" and "configs/example/gem5_library/riscv-ubuntu-run.py".
+- To aid gem5 developers, we have incorporated [pre-commit](https://pre-commit.com) checks into gem5.
+These checks automatically enforce the gem5 style guide on Python files and a subset of other requirements (such as line length) on altered code prior to a `git commit`.
+Users may install pre-commit by running `./util/pre-commit-install.sh`.
+Passing these checks is a requirement to submit code to gem5 so installation is strongly advised.
+- A multiprocessing module has been added.
+This allows for multiple simulations to be run from a single gem5 execution via a single gem5 configuration script.
+Example of usage found [in this commit message](https://gem5-review.googlesource.com/c/public/gem5/+/63432).
+**Note: This feature is still in development.
+While functional, it'll be subject to subtantial changes in future releases of gem5**.
+- The stdlib's `ArmBoard` now supports Ruby caches.
+- Due to numerious fixes and improvements, Ubuntu 22.04 can be booted as a gem5 workload, both in FS and SE mode.
+- Substantial improvements have been made to gem5's GDB capabilities.
+- The `HBM2Stack` has been added to the gem5 stdlib as a memory component.
+- The `MinorCPU` has been fully incorporated into the gem5 Standard Library.
+- We now allow for full-system simulation of GPU applications.
+The introduction of GPU FS mode allows for the same use-cases as SE mode but reduces the requirement of specific host environments or usage of a Docker container.
+The GPU FS mode also has improved simulated speed by functionally simulating memory copies, and provides an easier update path for gem5 developers.
+An X86 host and KVM are required to run GPU FS mode.
+
+## API (user facing) changes
+
+- The default CPU Vendor String has been updated to `HygonGenuine`.
+This is due to newer versions of GLIBC being more strict about checking current system's supported features.
+The previous value, `M5 Simulator`, is not recognized as a valid vendor string and therefore GLIBC returns an error.
+- [The stdlib's `_connect_things` funciton call has been moved from the `AbstractBoard`'s constructor to be run as board pre-instantiation process](https://gem5-review.googlesource.com/c/public/gem5/+/65051).
+This is to overcome instances where stdlib components (memory, processor, and cache hierarhcy) require Board information known only after its construction.
+**This change breaks cases where a user utilizes the stdlib `AbstractBoard` but does not use the stdlib `Simulator` module. This can be fixed by adding the `_pre_instantiate` function before `m5.instantiate`**.
+An exception has been added which explains this fix, if this error occurs.
+- The setting of checkpoints has been moved from the stdlib's "set_workload" functions to the `Simulator` module.
+Setting of checkpoints via the stdlib's "set_workload" functions is now deprecated and will be removed in future releases of gem5.
+- The gem5 namespace `Trace` has been renamed `trace` to conform to the gem5 style guide.
+- Due to the allowing of multiple ISAs per gem5 build, the `TARGET_ISA`  variable has been replaced with `USE_$(ISA)` variables.
+For example, if a build contains both the X86 and ARM ISAs the `USE_X86` and `USE_ARM` variables will be set.
+
+## Big Fixes
+
+- Several compounding bugs were causing bugs with floating point operations within gem5 simulations.
+These have been fixed.
+- Certain emulated syscalls were behaving incorrectly when using RISC-V due to incorrect `open(2)` flag values.
+These values have been fixed.
+- The GIVv3 List register mapping has been fixed.
+- Access permissions for GICv3 cpu registers have been fixed.
+- In previous releases of gem5 the `sim_quantum` value was set for all cores when using the Standard Library.
+This caused issues when setting exit events at a particular tick as it resulted in the exit being off by `sim_quantum`.
+As such, the `sim_quantum` value is only when using KVM cores.
+- PCI ranges in `VExpress_GEM5_Foundation` fixed.
+- The `SwitchableProcessor` processor has been fixed to allow switching to a KVM core.
+Previously the `SwitchableProcessor` only allowed a user to switch from a KVM core to a non-KVM core.
+- The Standard Library has been fixed to permit multicore simulations in SE mode.
+- [A bug was fixed in the rcr X86 instruction](https://gem5.atlassian.net/browse/GEM5-1265).
+
+## Build related changes
+
+- gem5 can now be compiled with Scons 4 build system.
+- gem5 can now be compiled with Clang version 14 (minimum Clang version 6).
+- gem5 can now be compiled with GCC Version 12 (minimum GCC version 7).
+
+
+## Other minor updates
+
+- The gem5 stdlib examples in "configs/example/gem5_library" have been updated to, where appropriate, use the stdlib's Simulator module.
+These example configurations can be used for reference as to how `Simulator` module may be utilized in gem5.
+- Granulated SGPR computation has been added for gfx9 gpu-compute.
+- The stdlib statistics have been improved:
+    - A `get_simstats` function has been added to access statistics from the `Simulator` module.
+    - Statistics can be printed: `print(simstats.board.core.some_integer)`.
+- GDB ports are now specified for each workload, as opposed to per-simulation run.
+- The `m5` utility has been expanded to include "workbegin" and "workend" annotations.
+This can be added with `m5 workbegin` and `m5 workend`.
+- A `PrivateL1SharedL2CacheHierarchy` has been added to the Standard Library.
+- A `GEM5_USE_PROXY` environment variable has been added.
+This allows users to specify a socks5 proxy server to use when obtaining gem5 resources and the resources.json file.
+It uses the format `<host>:<port>`.
+- The fastmodel support has been improved to function with Linux Kernel 5.x.
+- The `set_se_binary_workload` function now allows for the passing of input parameters to a binary workload.
+- A functional CHI cache hierarchy has been added to the gem5 Standard Library: "src/python/gem5/components/cachehierarchies/chi/private_l1_cache_hierarchy.py".
+- The RISC-V K extension has been added.
+It includes the following instructions:
+  - Zbkx: xperm8, xperm4
+  - Zknd: aes64ds, aes64dsm, aes64im, aes64ks1i, aes64ks2
+  - Zkne: aes64es, aes64esm, aes64ks1i, aes64ks2
+  - Zknh: sha256sig0, sha256sig1, sha256sum0, sha256sum1, sha512sig0, sha512sig1, sha512sum0, sha512sum1
+  - Zksed: sm4ed, sm4ks
+  - Zksh: sm3p0, sm3p1
+
 # Version 22.0.0.1
 
 **[HOTFIX]** Fixes relative import in "src/python/gem5/components/processors/simple_core.py".
