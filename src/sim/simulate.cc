@@ -266,11 +266,6 @@ Tick get_max_tick()
     return simulate_limit_event->when();
 }
 
-void schedule_tick_exit(Tick tick, std::string exit_string)
-{
-    new GlobalSimLoopExitEvent(tick, exit_string, 0);
-}
-
 void
 terminateEventQueueThreads()
 {

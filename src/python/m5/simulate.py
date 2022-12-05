@@ -259,7 +259,7 @@ def scheduleTickExitAbsolute(
     """
     if tick <= curTick():
         warn("Tick exit scheduled for the past. This will not be triggered.")
-    _m5.event.scheduleTickExit(tick=tick, exit_string=exit_string)
+    _m5.event.exitSimLoop(exit_string, 0, tick, 0, False)
 
 
 def drain():
