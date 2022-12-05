@@ -55,6 +55,7 @@
 
 #include <vector>
 
+#include "base/gtest/logging.hh"
 #include "dev/reg_bank.hh"
 
 using namespace gem5;
@@ -63,6 +64,9 @@ using namespace gem5;
 using testing::ElementsAre;
 // This version is needed with enough elements, empirically more than 10.
 using testing::ElementsAreArray;
+
+using testing::AllOf;
+using testing::HasSubstr;
 
 
 /*
@@ -1009,6 +1013,41 @@ TEST_F(RegisterBankTest, AddRegistersSize)
     EXPECT_EQ(emptyBank.size(), 4);
     emptyBank.addRegisters({reg1, reg2});
     EXPECT_EQ(emptyBank.size(), 12);
+}
+
+TEST_F(RegisterBankTest, AddRegistersWithOffsetChecks)
+{
+    emptyBank.addRegister({0x12345});
+    EXPECT_EQ(emptyBank.size(), 0);
+    emptyBank.addRegister({0x12345, reg0});
+    EXPECT_EQ(emptyBank.size(), 4);
+    emptyBank.addRegister({0x12349});
+    EXPECT_EQ(emptyBank.size(), 4);
+
+    emptyBank.addRegisters({{0x12349, reg1}, {0x1234d}, {0x1234d, reg2}});
+    EXPECT_EQ(emptyBank.size(), 12);
+}
+
+TEST_F(RegisterBankTest, BadRegisterOffsetDeath)
+{
+    gtestLogOutput.str("");
+    EXPECT_ANY_THROW(emptyBank.addRegisters({{0xabcd, reg0}, reg1}));
+
+    std::string actual = gtestLogOutput.str();
+    EXPECT_THAT(actual, HasSubstr("empty.reg0"));
+    EXPECT_THAT(actual, HasSubstr("to be 0xabcd"));
+    EXPECT_THAT(actual, HasSubstr("is 0x12345"));
+}
+
+TEST_F(RegisterBankTest, BadBankOffsetDeath)
+{
+    gtestLogOutput.str("");
+    EXPECT_ANY_THROW(emptyBank.addRegisters({{0xabcd}, reg0}));
+
+    std::string actual = gtestLogOutput.str();
+    EXPECT_THAT(actual, HasSubstr("empty "));
+    EXPECT_THAT(actual, HasSubstr("to be 0xabcd"));
+    EXPECT_THAT(actual, HasSubstr("is 0x12345"));
 }
 
 // Reads.

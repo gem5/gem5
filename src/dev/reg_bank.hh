@@ -37,6 +37,7 @@
 #include <initializer_list>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <sstream>
 #include <utility>
 
@@ -84,6 +85,9 @@
  * entire device, with the address from accesses passed into read or write
  * unmodified.
  *
+ * The base(), size() and name() methods can be used to access each of those
+ * read only properties of the RegisterBank instance.
+ *
  * To add actual registers to the RegisterBank (discussed below), you can use
  * either the addRegister method which adds a single register, or addRegisters
  * which adds an initializer list of them all at once. The register will be
@@ -91,8 +95,19 @@
  * existing registers. The size of the bank is automatically accumulated as
  * registers are added.
  *
- * The base(), size() and name() methods can be used to access each of those
- * read only properties of the RegisterBank instance.
+ * When adding a lot of registers, you might accidentally add an extra,
+ * or accidentally skip one in a long list. Because the offset is handled
+ * automatically, some of your registers might end up shifted higher or lower
+ * than you expect. To help mitigate this, you can set what offset you expect
+ * a register to have by specifying it as an offset, register pair.
+ *
+ * addRegisters({{0x1000, reg0}, reg1, reg2});
+ *
+ * If the register would end up at a different offset, gem5 will panic. You
+ * can also leave off the register if you want to just check the offset, for
+ * instance between groups of registers.
+ *
+ * addRegisters({reg0, reg1, reg2, 0x100c})
  *
  * While the RegisterBank itself doesn't have any data in it directly and so
  * has no endianness, it's very likely all the registers within it will have
@@ -805,19 +820,52 @@ class RegisterBank : public RegisterBankBase
 
     virtual ~RegisterBank() {}
 
-    void
-    addRegisters(
-            std::initializer_list<std::reference_wrapper<RegisterBase>> regs)
+    class RegisterAdder
     {
-        panic_if(regs.size() == 0, "Adding an empty list of registers to %s?",
-                 name());
-        for (auto &reg: regs) {
-            _offsetMap.emplace(_base + _size, reg);
-            _size += reg.get().size();
+      private:
+        std::optional<Addr> offset;
+        std::optional<RegisterBase *> reg;
+
+      public:
+        // Nothing special to do for this register.
+        RegisterAdder(RegisterBase &new_reg) : reg(&new_reg) {}
+        // Ensure that this register is added at a particular offset.
+        RegisterAdder(Addr new_offset, RegisterBase &new_reg) :
+            offset(new_offset), reg(&new_reg)
+        {}
+        // No register, just check that the offset is what we expect.
+        RegisterAdder(Addr new_offset) : offset(new_offset) {}
+
+        friend class RegisterBank;
+    };
+
+    void
+    addRegisters(std::initializer_list<RegisterAdder> adders)
+    {
+        panic_if(std::empty(adders),
+                "Adding an empty list of registers to %s?", name());
+        for (auto &adder: adders) {
+            const Addr offset = _base + _size;
+
+            if (adder.reg) {
+                auto *reg = adder.reg.value();
+                if (adder.offset && adder.offset.value() != offset) {
+                    panic(
+                        "Expected offset of register %s.%s to be %#x, is %#x.",
+                        name(), reg->name(), adder.offset.value(), offset);
+                }
+                _offsetMap.emplace(offset, *reg);
+                _size += reg->size();
+            } else if (adder.offset) {
+                if (adder.offset.value() != offset) {
+                    panic("Expected current offset of %s to be %#x, is %#x.",
+                        name(), adder.offset.value(), offset);
+                }
+            }
         }
     }
 
-    void addRegister(RegisterBase &reg) { addRegisters({reg}); }
+    void addRegister(RegisterAdder reg) { addRegisters({reg}); }
 
     Addr base() const { return _base; }
     Addr size() const { return _size; }
