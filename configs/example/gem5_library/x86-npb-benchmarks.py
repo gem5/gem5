@@ -237,12 +237,11 @@ def handle_workbegin():
 # marked by `workend`.
 
 # We exepect that ROI ends with `workend` or `simulate() limit reached`.
-# Otherwise the simulation ended unexpectedly.
 def handle_workend():
     print("Dump stats at the end of the ROI!")
 
     m5.stats.dump()
-    yield False
+    yield True
 
 
 simulator = Simulator(
