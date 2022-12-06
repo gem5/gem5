@@ -211,7 +211,7 @@ board.set_kernel_disk_workload(
 )
 
 
-def handle_exit():
+def handle_workbegin():
     print("Done booting Linux")
     print("Resetting stats at the start of ROI!")
     m5.stats.reset()
@@ -219,6 +219,9 @@ def handle_exit():
     start_tick = m5.curTick()
     processor.switch()
     yield False  # E.g., continue the simulation.
+
+
+def handle_workend():
     print("Dump stats at the end of the ROI!")
     m5.stats.dump()
     yield True  # Stop the simulation. We're done.
@@ -227,7 +230,8 @@ def handle_exit():
 simulator = Simulator(
     board=board,
     on_exit_event={
-        ExitEvent.EXIT: handle_exit(),
+        ExitEvent.WORKBEGIN: handle_workbegin(),
+        ExitEvent.WORKEND: handle_workend(),
     },
 )
 
