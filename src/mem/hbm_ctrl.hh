@@ -259,6 +259,8 @@ class HBMCtrl : public MemCtrl
     Tick recvAtomic(PacketPtr pkt) override;
     Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor) override;
     void recvFunctional(PacketPtr pkt) override;
+    void recvMemBackdoorReq(const MemBackdoorReq &req,
+            MemBackdoorPtr &_backdoor) override;
     bool recvTimingReq(PacketPtr pkt) override;
 
 };
