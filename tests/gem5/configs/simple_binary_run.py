@@ -1,4 +1,5 @@
 # Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2022 Google Inc
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -44,11 +45,22 @@ from gem5.components.processors.simple_core import SimpleCore
 from gem5.components.boards.mem_mode import MemMode
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.simulate.simulator import Simulator
-from gem5.isas import get_isa_from_str, get_isas_str_set
+from gem5.isas import get_isa_from_str, get_isas_str_set, ISA
+
+from m5.util import fatal
 
 import argparse
+import importlib
 
 from python.gem5.components.processors.base_cpu_core import BaseCPUCore
+
+cpu_types_string_map = {
+    CPUTypes.ATOMIC: "AtomicSimpleCPU",
+    CPUTypes.O3: "O3CPU",
+    CPUTypes.TIMING: "TimingSimpleCPU",
+    CPUTypes.KVM: "KvmCPU",
+    CPUTypes.MINOR: "MinorCPU",
+}
 
 parser = argparse.ArgumentParser(
     description="A gem5 script for running simple binaries in SE mode."
@@ -71,6 +83,12 @@ parser.add_argument(
     "--base-cpu-processor",
     action="store_true",
     help="Use the BaseCPUProcessor instead of the SimpleProcessor.",
+)
+
+parser.add_argument(
+    "--riscv-32bits",
+    action="store_true",
+    help="Use 32 bits core of Riscv CPU",
 )
 
 parser.add_argument(
@@ -105,26 +123,43 @@ args = parser.parse_args()
 cache_hierarchy = NoCache()
 memory = SingleChannelDDR3_1600()
 
+isa_enum = get_isa_from_str(args.isa)
+cpu_enum = get_cpu_type_from_str(args.cpu)
+
+if isa_enum == ISA.RISCV and args.riscv_32bits and not args.base_cpu_processor:
+    fatal("To use Riscv 32 CPU, the base_cpu_processor must be specify!")
+
 if args.base_cpu_processor:
-    cores = [
-        BaseCPUCore(
-            core=SimpleCore.cpu_simobject_factory(
-                cpu_type=get_cpu_type_from_str(args.cpu),
-                isa=get_isa_from_str(args.isa),
-                core_id=i,
-            ),
-            isa=get_isa_from_str(args.isa),
+
+    if isa_enum == ISA.RISCV and args.riscv_32bits:
+        m5_objects = importlib.import_module("m5.objects")
+        cpu_class = getattr(
+            m5_objects, f"Riscv32{cpu_types_string_map[cpu_enum]}"
         )
-        for i in range(args.num_cores)
-    ]
+        cores = [
+            BaseCPUCore(core=cpu_class(cpu_id=i), isa=isa_enum)
+            for i in range(args.num_cores)
+        ]
+    else:
+        cores = [
+            BaseCPUCore(
+                core=SimpleCore.cpu_simobject_factory(
+                    cpu_type=cpu_enum,
+                    isa=isa_enum,
+                    core_id=i,
+                ),
+                isa=isa_enum,
+            )
+            for i in range(args.num_cores)
+        ]
 
     processor = BaseCPUProcessor(
         cores=cores,
     )
 else:
     processor = SimpleProcessor(
-        cpu_type=get_cpu_type_from_str(args.cpu),
-        isa=get_isa_from_str(args.isa),
+        cpu_type=cpu_enum,
+        isa=isa_enum,
         num_cores=args.num_cores,
     )
 
