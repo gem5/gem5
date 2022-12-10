@@ -27,6 +27,7 @@
 from .....utils.override import *
 
 from m5.objects import Cache, BasePrefetcher, StridePrefetcher
+from m5.objects.ReplacementPolicies import *
 
 from typing import Type
 
@@ -58,3 +59,5 @@ class L2Cache(Cache):
         self.tgts_per_mshr = tgts_per_mshr
         self.writeback_clean = writeback_clean
         self.prefetcher = PrefetcherCls()
+        #self.replacement_policy = MJRP()
+        self.replacement_policy = LRURP()
