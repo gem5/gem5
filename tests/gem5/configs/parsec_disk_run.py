@@ -214,11 +214,6 @@ board.set_kernel_disk_workload(
     readfile_contents=command,
 )
 
-print("Running with ISA: " + get_runtime_isa().name)
-print("Running with protocol: " + get_runtime_coherence_protocol().name)
-print()
-
-
 # Here we define some custom workbegin/workend exit event generators. Here we
 # want to switch to detailed CPUs at the beginning of the ROI, then continue to
 # the end of of the ROI. Then we exit the simulation.
