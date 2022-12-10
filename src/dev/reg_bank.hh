@@ -117,6 +117,11 @@
  * RegisterBankLE and RegisterBankBE aliases to make it a little easier to
  * refer to one or the other version.
  *
+ * A RegisterBank also has a reset() method which will (by default) call the
+ * reset() method on each register within it. This method is virtual, and so
+ * can be overridden if something additional or different needs to be done to
+ * reset the hardware model.
+ *
  *
  * == Register interface ==
  *
@@ -144,6 +149,12 @@
  * doesn't need to be serialized (for instance if it has a fixed value) then
  * it still has to implement these methods, but they don't have to actually do
  * anything.
+ *
+ * Each register also has a "reset" method, which will reset the register as
+ * if its containing device is being reset. By default, this will just restore
+ * the initial value of the register, but can be overridden to implement
+ * additional behavior like resetting other aspects of the device which are
+ * controlled by the value of the register.
  *
  *
  * == Basic Register types ==
@@ -360,6 +371,9 @@ class RegisterBank : public RegisterBankBase
         // Methods for implementing serialization for checkpoints.
         virtual void serialize(std::ostream &os) const = 0;
         virtual bool unserialize(const std::string &s) = 0;
+
+        // Reset the register.
+        virtual void reset() = 0;
     };
 
     // Filler registers which return a fixed pattern.
@@ -388,6 +402,9 @@ class RegisterBank : public RegisterBankBase
 
         void serialize(std::ostream &os) const override {}
         bool unserialize(const std::string &s) override { return true; }
+
+        // Resetting a read only register doesn't need to do anything.
+        void reset() override {}
     };
 
     // Register which reads as all zeroes.
@@ -453,6 +470,10 @@ class RegisterBank : public RegisterBankBase
         void serialize(std::ostream &os) const override {}
         bool unserialize(const std::string &s) override { return true; }
 
+        // Assume since the buffer is managed externally, it will be reset
+        // externally.
+        void reset() override {}
+
       protected:
         /**
          * This method exists so that derived classes that need to initialize
@@ -516,6 +537,8 @@ class RegisterBank : public RegisterBankBase
 
             return true;
         }
+
+        void reset() override { buffer = std::array<uint8_t, BufBytes>{}; }
     };
 
     template <typename Data, ByteOrder RegByteOrder=BankByteOrder>
@@ -534,6 +557,7 @@ class RegisterBank : public RegisterBankBase
 
       private:
         Data _data = {};
+        Data _resetData = {};
         Data _writeMask = mask(sizeof(Data) * 8);
 
         ReadFunc _reader = defaultReader;
@@ -602,11 +626,13 @@ class RegisterBank : public RegisterBankBase
 
         // Constructor and move constructor with an initial data value.
         constexpr Register(const std::string &new_name, const Data &new_data) :
-            RegisterBase(new_name, sizeof(Data)), _data(new_data)
+            RegisterBase(new_name, sizeof(Data)), _data(new_data),
+            _resetData(new_data)
         {}
         constexpr Register(const std::string &new_name,
                            const Data &&new_data) :
-            RegisterBase(new_name, sizeof(Data)), _data(new_data)
+            RegisterBase(new_name, sizeof(Data)), _data(new_data),
+            _resetData(new_data)
         {}
 
         // Set which bits of the register are writeable.
@@ -789,6 +815,9 @@ class RegisterBank : public RegisterBankBase
         {
             return ParseParam<Data>::parse(s, get());
         }
+
+        // Reset our data to its initial value.
+        void reset() override { get() = _resetData; }
     };
 
   private:
@@ -983,6 +1012,14 @@ class RegisterBank : public RegisterBankBase
                 return;
             }
         }
+    }
+
+    // By default, reset all the registers in the bank.
+    virtual void
+    reset()
+    {
+        for (auto &[offset, reg]: _offsetMap)
+            reg.get().reset();
     }
 };
 
