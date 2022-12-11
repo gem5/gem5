@@ -60,14 +60,30 @@ static uint64_t get_pc_signature(uint64_t pc, bool is_hit)
 MJRP::MJRP(const Params& p) : Base(p)
 {
     sampled_cache.init();
-    etr_counters.init(LLC_NUM_SETS, LLC_NUM_WAYS);
+    counters.init(LLC_NUM_SETS, LLC_NUM_WAYS);
 }
 
 void MJRP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 {
-    // Reset last touch timestamp
-    std::static_pointer_cast<MJReplData>(replacement_data)->lastTouchTick =
-        Tick(0);
+    auto set = std::static_pointer_cast<MJReplData>(replacement_data)->set;
+    auto way = std::static_pointer_cast<MJReplData>(replacement_data)->way;
+
+    if (sampled_cache.is_set_to_sample(set))
+    {
+        auto fullAddr =
+            std::static_pointer_cast<MJReplData>(replacement_data)->blkAddr;
+        auto sampled_set = sampled_cache.get_set(fullAddr);
+        auto sampled_tag = sampled_cache.get_tag(fullAddr);
+        auto sampled_way = sampled_cache.is_present(sampled_tag, sampled_set);
+        if (sampled_way == -1)
+            return;
+        auto& entry = sampled_cache.at(sampled_set, sampled_way);
+        if (!entry.valid)
+            return;
+        entry.valid = false;
+        rdp.set_value_of(entry.last_pc_signature, MAX_RD);
+        counters.set_estimated_time_remaining(set, way, INF_ETR);
+    }
 }
 
 void MJRP::touch(
@@ -84,127 +100,130 @@ void MJRP::touch(const std::shared_ptr<ReplacementData>& replacement_data,
     uint64_t ip = 0;
     if (pkt->req->hasPC())
         ip = pkt->req->getPC();
-    auto fullAddr = pkt->getAddr();
+    auto fullAddr = pkt->getAddr() == 0 ? castedData->blkAddr : pkt->getAddr();
     auto set = castedData->set;
     auto way = castedData->way;
     uint16_t pcSignature = get_pc_signature(ip, true);
-    castedData->generatingPCSignature = pcSignature;
+    castedData->generatingPC = ip;
     if (sampled_cache.is_set_to_sample(set))
     {
         auto sampled_set = sampled_cache.get_set(fullAddr);
         auto sampled_tag = sampled_cache.get_tag(fullAddr);
         auto sampled_way = sampled_cache.is_present(sampled_tag, sampled_set);
-        if (sampled_way == -1)
-            goto out;
-
-        auto& entry = sampled_cache.at(sampled_set, sampled_way);
-        auto last_sig = entry.last_pc_signature;
-        auto last_access_timestamp = entry.last_access_timestamp;
-        auto sset_timestamp = etr_counters.get_set_timestamp(sampled_set);
-        int diff = abs(last_access_timestamp - sset_timestamp);
-
-        if (diff <= 127)
+        if (sampled_way != -1)
         {
-            int rdp_value = rdp.get_value_of(pcSignature);
-            int new_val = 0;
+            auto& entry = sampled_cache.at(sampled_set, sampled_way);
+            auto last_sig = entry.last_pc_signature;
+            auto last_access_timestamp = entry.last_access_timestamp;
+            auto sset_timestamp = counters.get_set_timestamp(set);
+            int diff = abs(last_access_timestamp - sset_timestamp);
 
-            if (rdp_value == std::numeric_limits<uint8_t>::max())
-                new_val = diff;
-            else
-                new_val = rdp_value + (rdp_value > diff)
-                              ? std::min(1, diff / 16)
-                              : -std::min(1, diff / 16);
+            if (diff <= 127)
+            {
+                int rdp_value = rdp.get_value_of(last_sig);
+                int new_val = 0;
+                if (rdp_value == std::numeric_limits<uint8_t>::max())
+                    new_val = diff;
+                else
+                    new_val = rdp_value + ((rdp_value > diff)
+                                               ? std::min(1, diff / 16)
+                                               : -std::min(1, diff / 16));
 
-            rdp.set_value_of(pcSignature, new_val);
-            sampled_cache.at(sampled_set, sampled_way).valid = false;
+                rdp.set_value_of(last_sig, new_val);
+                sampled_cache.at(sampled_set, sampled_way).valid = false;
+            }
         }
 
-        int lru_way = -1;
-        int lru_rd = -1;
-        for (int w = 0; w < SAMPLED_CACHE_WAYS; w++)
+        int penalized_block = -1;
+        int reuse_distance = -1;
+        for (int i = 0; i < SAMPLED_CACHE_WAYS; i++)
         {
-            if (!sampled_cache.at(sampled_set, w).valid)
+            if (!sampled_cache.at(sampled_set, i).valid)
             {
-                lru_way = w;
-                lru_rd = INF_RD + 1;
+                penalized_block = i;
+                reuse_distance = INF_RD + 1;
                 continue;
             }
 
             uint64_t last_timestamp =
-                sampled_cache.at(sampled_set, w).last_access_timestamp;
-            int set_timestamp = etr_counters.get_set_timestamp(sampled_set);
+                sampled_cache.at(sampled_set, i).last_access_timestamp;
+            int set_timestamp = counters.get_set_timestamp(set);
             int diff = 0;
             if (set_timestamp > last_timestamp)
-                diff = set_timestamp > last_timestamp;
+                diff = set_timestamp - last_timestamp;
             else
             {
-                diff = set_timestamp + (1 << TIMESTAMP_BITS);
+                diff = set_timestamp + (1 << TIMESTAMP_WIDTH);
                 diff -= last_timestamp;
             }
             if (diff > INF_RD)
             {
-                lru_way = w;
-                lru_rd = INF_RD + 1;
-                penalize_block(sampled_set, w);
+                penalized_block = i;
+                reuse_distance = INF_RD + 1;
+                penalize_block(sampled_set, i);
             }
-            else if (diff > lru_rd)
+            else if (diff > reuse_distance)
             {
-                lru_way = w;
-                lru_rd = diff;
+                penalized_block = i;
+                reuse_distance = diff;
             }
         }
-        penalize_block(sampled_set, lru_way);
+        penalize_block(sampled_set, penalized_block);
 
-        for (int w = 0; w < SAMPLED_CACHE_WAYS; w++)
+        auto& invalidEntry = sampled_cache.get_invalid_entry(sampled_set);
+        if (!invalidEntry.valid)
         {
-            auto& tmpEntry = sampled_cache.at(sampled_set, w);
-            if (!tmpEntry.valid)
-            {
-                tmpEntry.valid = true;
-                tmpEntry.last_pc_signature = pcSignature;
-                tmpEntry.tag = sampled_tag;
-                tmpEntry.last_access_timestamp =
-                    etr_counters.get_set_timestamp(set);
-                break;
-            }
+            invalidEntry.valid = true;
+            invalidEntry.last_pc_signature = pcSignature;
+            invalidEntry.tag = sampled_tag;
+            invalidEntry.last_access_timestamp =
+                counters.get_set_timestamp(set);
         }
-        etr_counters.increment_timestamp(sampled_set);
+        counters.progress_set_clock(set);
     }
-out:
 
-    if (etr_counters.get_current_set_clock(set) == GRANULARITY)
+    counters.set_current_set_clock(set,
+                                   counters.get_current_set_clock(set) + 1);
+    if (counters.get_current_set_clock(set) == MAX_ETR_CLOCK)
     {
-        for (int w = 0; w < LLC_NUM_WAYS; w++)
+        for (int i = 0; i < LLC_NUM_WAYS; i++)
         {
-            if ((uint32_t)w != way &&
-                abs(etr_counters.get_estimated_time_remaining(set, w)) <
-                    INF_ETR)
-                etr_counters.downgrade(set, w);
+            if (i == way)
+                continue;
+            /* WE ONLY AGE NON-SCANNING LINES. Those are the lines that we
+             * denote as not being accessed again, and they priorizied as
+             * choices for eviction. */
+            if (std::abs(counters.get_estimated_time_remaining(set, i)) <
+                INF_ETR)
+                counters.decrement_estimated_time_remaining(set, i);
         }
-        etr_counters.reset_set_clock(set);
+        /* Every (eight = MAX_ETR_CLOCK) set accesses, the set’s clock is reset
+         * to 0, and every line in the set is aged. */
+        counters.reset_set_clock(set);
     }
-    etr_counters.set_current_set_clock(
-        set, etr_counters.get_current_set_clock(set) + 1);
 
-    if (way < LLC_NUM_WAYS)
+    /*
+     * On insertion and promotion, a line’s ETR is initialized with its
+     * predicted reuse distance obtained from the RDP "Mockingjay tracks
+     * coarse-grained reuse distances (and corresponding ETRs), which are
+     * obtained by dividing the precise value by a constant factor f, where f
+     * is set to 8 in our evaluation" This ensures that non-scanning lines' ETR
+     * values are effectively decrement every 8 accesses by 1.
+     */
+    if (rdp.get_value_of(pcSignature) == std::numeric_limits<uint8_t>::max())
     {
-        if (rdp.get_value_of(pcSignature) ==
-            std::numeric_limits<uint8_t>::max())
-        {
-            etr_counters.set_estimated_time_remaining(set, way, 0);
-        }
+        counters.set_estimated_time_remaining(set, way, 0);
+    }
+    else
+    {
+        if (rdp.get_value_of(pcSignature) > MAX_RD)
+            counters.set_estimated_time_remaining(set, way, INF_ETR);
         else
-        {
-            if (rdp.get_value_of(pcSignature) > MAX_RD)
-                etr_counters.set_estimated_time_remaining(set, way, INF_ETR);
-            else
-                etr_counters.set_estimated_time_remaining(
-                    set, way, rdp.get_value_of(pcSignature) / GRANULARITY);
-        }
+            counters.set_estimated_time_remaining(
+                set, way, rdp.get_value_of(pcSignature) / CONSTANT_FACTOR_F);
     }
 
     warn("EXIT TOUCH\n");
-    return;
 }
 
 void MJRP::reset(
@@ -217,11 +236,8 @@ void MJRP::reset(const std::shared_ptr<ReplacementData>& replacement_data,
                  const PacketPtr pkt)
 {
     warn("ENTER RESET\n");
-    std::static_pointer_cast<MJReplData>(replacement_data)->lastTouchTick =
-        curTick();
-    std::static_pointer_cast<MJReplData>(replacement_data)
-        ->generatingPCSignature =
-        pkt->req->hasPC() ? get_pc_signature(pkt->req->getPC(), false) : 0;
+    std::static_pointer_cast<MJReplData>(replacement_data)->generatingPC =
+        pkt->req->hasPC() ? pkt->req->getPC() : 0;
     std::static_pointer_cast<MJReplData>(replacement_data)->blkAddr =
         pkt->getAddr();
 
@@ -233,119 +249,123 @@ void MJRP::reset(const std::shared_ptr<ReplacementData>& replacement_data,
     auto set = castedData->set;
     auto way = castedData->way;
     uint16_t pcSignature = get_pc_signature(ip, false);
-    castedData->generatingPCSignature = pcSignature;
+    castedData->generatingPC = ip;
     if (sampled_cache.is_set_to_sample(set))
     {
         auto sampled_set = sampled_cache.get_set(fullAddr);
         auto sampled_tag = sampled_cache.get_tag(fullAddr);
         auto sampled_way = sampled_cache.is_present(sampled_tag, sampled_set);
-        if (sampled_way == -1)
-            goto out;
-
-        auto& entry = sampled_cache.at(sampled_set, sampled_way);
-        auto last_sig = entry.last_pc_signature;
-        auto last_access_timestamp = entry.last_access_timestamp;
-        int diff = abs(last_access_timestamp -
-                       etr_counters.get_set_timestamp(sampled_set));
-
-        if (diff <= 127)
+        if (sampled_way != -1)
         {
-            int rdp_value = rdp.get_value_of(pcSignature);
-            int new_val = 0;
+            auto& entry = sampled_cache.at(sampled_set, sampled_way);
+            auto last_sig = entry.last_pc_signature;
+            auto last_access_timestamp = entry.last_access_timestamp;
+            auto sset_timestamp = counters.get_set_timestamp(set);
+            int diff = abs(last_access_timestamp - sset_timestamp);
 
-            if (rdp_value == std::numeric_limits<uint8_t>::max())
-                new_val = diff;
-            else
-                new_val = rdp_value + (rdp_value > diff)
-                              ? std::min(1, diff / 16)
-                              : -std::min(1, diff / 16);
+            if (diff <= 127)
+            {
+                int rdp_value = rdp.get_value_of(last_sig);
+                int new_val = 0;
+                if (rdp_value == std::numeric_limits<uint8_t>::max())
+                    new_val = diff;
+                else
+                    new_val = rdp_value + ((rdp_value > diff)
+                                               ? std::min(1, diff / 16)
+                                               : -std::min(1, diff / 16));
 
-            rdp.set_value_of(pcSignature, new_val);
-            sampled_cache.at(sampled_set, sampled_way).valid = false;
+                rdp.set_value_of(last_sig, new_val);
+                sampled_cache.at(sampled_set, sampled_way).valid = false;
+            }
         }
 
-        int lru_way = -1;
-        int lru_rd = -1;
-        for (int w = 0; w < SAMPLED_CACHE_WAYS; w++)
+        int penalized_block = -1;
+        int reuse_distance = -1;
+        for (int i = 0; i < SAMPLED_CACHE_WAYS; i++)
         {
-            if (!sampled_cache.at(sampled_set, w).valid)
+            if (!sampled_cache.at(sampled_set, i).valid)
             {
-                lru_way = w;
-                lru_rd = INF_RD + 1;
+                penalized_block = i;
+                reuse_distance = INF_RD + 1;
                 continue;
             }
 
             uint64_t last_timestamp =
-                sampled_cache.at(sampled_set, w).last_access_timestamp;
-            int set_timestamp = etr_counters.get_set_timestamp(sampled_set);
+                sampled_cache.at(sampled_set, i).last_access_timestamp;
+            int set_timestamp = counters.get_set_timestamp(set);
             int diff = 0;
             if (set_timestamp > last_timestamp)
-                diff = set_timestamp > last_timestamp;
+                diff = set_timestamp - last_timestamp;
             else
             {
-                diff = set_timestamp + (1 << TIMESTAMP_BITS);
+                diff = set_timestamp + (1 << TIMESTAMP_WIDTH);
                 diff -= last_timestamp;
             }
             if (diff > INF_RD)
             {
-                lru_way = w;
-                lru_rd = INF_RD + 1;
-                penalize_block(sampled_set, w);
+                penalized_block = i;
+                reuse_distance = INF_RD + 1;
+                penalize_block(sampled_set, i);
             }
-            else if (diff > lru_rd)
+            else if (diff > reuse_distance)
             {
-                lru_way = w;
-                lru_rd = diff;
+                penalized_block = i;
+                reuse_distance = diff;
             }
         }
-        penalize_block(sampled_set, lru_way);
+        penalize_block(sampled_set, penalized_block);
 
-        for (int w = 0; w < SAMPLED_CACHE_WAYS; w++)
+        auto& invalidEntry = sampled_cache.get_invalid_entry(sampled_set);
+        if (!invalidEntry.valid)
         {
-            auto& tmpEntry = sampled_cache.at(sampled_set, w);
-            if (!tmpEntry.valid)
-            {
-                tmpEntry.valid = true;
-                tmpEntry.last_pc_signature = pcSignature;
-                tmpEntry.tag = sampled_tag;
-                tmpEntry.last_access_timestamp =
-                    etr_counters.get_set_timestamp(set);
-                break;
-            }
+            invalidEntry.valid = true;
+            invalidEntry.last_pc_signature = pcSignature;
+            invalidEntry.tag = sampled_tag;
+            invalidEntry.last_access_timestamp =
+                counters.get_set_timestamp(set);
         }
-        etr_counters.increment_timestamp(sampled_set);
+        counters.progress_set_clock(set);
     }
-out:
 
-    if (etr_counters.get_current_set_clock(set) == GRANULARITY)
+    counters.set_current_set_clock(set,
+                                   counters.get_current_set_clock(set) + 1);
+    if (counters.get_current_set_clock(set) == MAX_ETR_CLOCK)
     {
-        for (int w = 0; w < LLC_NUM_WAYS; w++)
+        for (int i = 0; i < LLC_NUM_WAYS; i++)
         {
-            if ((uint32_t)w != way &&
-                abs(etr_counters.get_estimated_time_remaining(set, w)) <
-                    INF_ETR)
-                etr_counters.downgrade(set, w);
+            if (i == way)
+                continue;
+            /* WE ONLY AGE NON-SCANNING LINES. Those are the lines that we
+             * denote as not being accessed again, and they priorizied as
+             * choices for eviction. */
+            if (std::abs(counters.get_estimated_time_remaining(set, i)) <
+                INF_ETR)
+                counters.decrement_estimated_time_remaining(set, i);
         }
-        etr_counters.reset_set_clock(set);
+        /* Every (eight = MAX_ETR_CLOCK) set accesses, the set’s clock is reset
+         * to 0, and every line in the set is aged. */
+        counters.reset_set_clock(set);
     }
-    etr_counters.set_current_set_clock(
-        set, etr_counters.get_current_set_clock(set) + 1);
 
-    if (way < LLC_NUM_WAYS)
+    /*
+     * On insertion and promotion, a line’s ETR is initialized with its
+     * predicted reuse distance obtained from the RDP "Mockingjay tracks
+     * coarse-grained reuse distances (and corresponding ETRs), which are
+     * obtained by dividing the precise value by a constant factor f, where f
+     * is set to 8 in our evaluation" This ensures that non-scanning lines' ETR
+     * values are effectively decrement every 8 accesses by 1.
+     */
+    if (rdp.get_value_of(pcSignature) == std::numeric_limits<uint8_t>::max())
     {
-        if (rdp.get_value_of(pcSignature) ==
-            std::numeric_limits<uint8_t>::max())
-        {
-            etr_counters.set_estimated_time_remaining(set, way, 0);
-        }
+        counters.set_estimated_time_remaining(set, way, 0);
+    }
+    else
+    {
+        if (rdp.get_value_of(pcSignature) > MAX_RD)
+            counters.set_estimated_time_remaining(set, way, INF_ETR);
         else
-        {
-            if (rdp.get_value_of(pcSignature) > MAX_RD)
-                etr_counters.set_estimated_time_remaining(set, way, INF_ETR);
-            else
-                etr_counters.set_estimated_time_remaining(
-                    set, way, rdp.get_value_of(pcSignature) / GRANULARITY);
-        }
+            counters.set_estimated_time_remaining(
+                set, way, rdp.get_value_of(pcSignature) / CONSTANT_FACTOR_F);
     }
 
     warn("EXIT RESET\n");
@@ -358,9 +378,11 @@ MJRP::getVictim(const ReplacementCandidates& candidates) const
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
 
-    uint32_t way_to_evict = etr_counters.way_to_evict(candidates[0]->getSet());
+    auto ret = counters.way_to_evict(candidates[0]->getSet());
+    uint32_t way_to_evict = ret.first;
+    uint32_t etr = ret.second;
+
     ReplaceableEntry* victim = candidates[0];
-    ReplaceableEntry* lruCandidate = candidates[0];
     for (const auto& candidate : candidates)
     {
         // Update victim entry if necessary
@@ -369,25 +391,22 @@ MJRP::getVictim(const ReplacementCandidates& candidates) const
             victim = candidate;
         }
 
-        if (std::static_pointer_cast<MJReplData>(candidate->replacementData)
-                ->lastTouchTick <
-            std::static_pointer_cast<MJReplData>(victim->replacementData)
-                ->lastTouchTick)
-        {
-            lruCandidate = candidate;
-        }
-
         std::static_pointer_cast<MJReplData>(candidate->replacementData)->way =
             candidate->getWay();
         std::static_pointer_cast<MJReplData>(candidate->replacementData)->set =
             candidate->getSet();
     }
 
-    if (victim->getWay() != way_to_evict)
-    {
-        victim = lruCandidate;
-        warn("PICKING LRU\n");
-    }
+    uint64_t pc_signature = get_pc_signature(
+        std::static_pointer_cast<MJReplData>(victim->replacementData)
+            ->generatingPC,
+        false);
+
+    if (rdp.get_value_of(pc_signature) !=
+            std::numeric_limits<uint8_t>::max() &&
+        (rdp.get_value_of(pc_signature) > MAX_RD ||
+         rdp.get_value_of(pc_signature) / CONSTANT_FACTOR_F > etr))
+        return nullptr;
 
     warn("EXIT VICTIM\n");
     return victim;
