@@ -135,7 +135,7 @@ for compiler in ${images[@]}; do
                 docker run --rm -v "${gem5_root}":"/gem5" -u $UID:$GID \
                     -w /gem5 --memory="${docker_mem_limit}" $repo_name \
                     /usr/bin/env python3 /usr/bin/scons --ignore-style \
-                    "${build_out}" "${build_args}"
+                    "${build_out} ${build_args}"
             }>"${build_stdout}" 2>"${build_stderr}"
             result=$?
 
