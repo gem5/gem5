@@ -37,7 +37,6 @@
 #include "arch/arm/fastmodel/protocol/exported_clock_rate_control.hh"
 #include "arch/arm/fastmodel/protocol/signal_interrupt.hh"
 #include "dev/intpin.hh"
-#include "dev/reset_port.hh"
 #include "mem/port_proxy.hh"
 #include "params/FastModelScxEvsCortexR52x1.hh"
 #include "params/FastModelScxEvsCortexR52x2.hh"
@@ -47,6 +46,7 @@
 #include "scx_evs_CortexR52x2.h"
 #include "scx_evs_CortexR52x3.h"
 #include "scx_evs_CortexR52x4.h"
+#include "sim/signal.hh"
 #include "systemc/ext/core/sc_event.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/tlm_port_wrapper.hh"
@@ -127,7 +127,7 @@ class ScxEvsCortexR52 : public Types::Base, public Iris::BaseCpuEvs
 
     SignalSender dbg_reset;
 
-    ResetResponsePort<ScxEvsCortexR52> model_reset;
+    SignalSinkPort<bool> model_reset;
 
     CortexR52Cluster *gem5CpuCluster;
 
@@ -147,22 +147,6 @@ class ScxEvsCortexR52 : public Types::Base, public Iris::BaseCpuEvs
     lowerInterruptPin(int num)
     {
         this->signalInterrupt->spi(num, false);
-    }
-
-    void
-    requestReset()
-    {
-        // Reset all cores.
-        for (auto &core_pin : corePins) {
-            core_pin->poweron_reset.signal_out.set_state(0, true);
-            core_pin->poweron_reset.signal_out.set_state(0, false);
-        }
-        // Reset L2 system.
-        this->top_reset.signal_out.set_state(0, true);
-        this->top_reset.signal_out.set_state(0, false);
-        // Reset debug APB.
-        this->dbg_reset.signal_out.set_state(0, true);
-        this->dbg_reset.signal_out.set_state(0, false);
     }
 
     Port &gem5_getPort(const std::string &if_name, int idx) override;

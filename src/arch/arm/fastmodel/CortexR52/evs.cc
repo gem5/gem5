@@ -101,9 +101,19 @@ ScxEvsCortexR52<Types>::ScxEvsCortexR52(
     ext_slave(Base::ext_slave, p.name + ".ext_slave", -1),
     top_reset(p.name + ".top_reset", 0),
     dbg_reset(p.name + ".dbg_reset", 0),
-    model_reset(p.name + ".model_reset", -1, this),
+    model_reset(p.name + ".model_reset"),
     params(p)
 {
+    model_reset.onChange([this](const bool &new_val) {
+        // Set reset for all cores.
+        for (auto &core_pin : corePins)
+            core_pin->poweron_reset.signal_out.set_state(0, new_val);
+        // Set reset for L2 system.
+        top_reset.signal_out.set_state(0, new_val);
+        // Set reset for debug APB.
+        dbg_reset.signal_out.set_state(0, new_val);
+    });
+
     for (int i = 0; i < CoreCount; i++)
         corePins.emplace_back(new CorePins(this, i));
 

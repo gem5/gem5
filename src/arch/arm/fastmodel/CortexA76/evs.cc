@@ -71,32 +71,25 @@ ScxEvsCortexA76<Types>::setResetAddr(int core, Addr addr, bool secure)
 }
 
 template <class Types>
-void
-ScxEvsCortexA76<Types>::requestReset()
-{
-    // Reset all cores.
-    for (auto &poweron_reset : this->poweron_reset) {
-        poweron_reset->signal_out.set_state(0, true);
-        poweron_reset->signal_out.set_state(0, false);
-    }
-    // Reset DSU.
-    this->top_reset.signal_out.set_state(0, true);
-    this->top_reset.signal_out.set_state(0, false);
-    // Reset debug APB.
-    this->dbg_reset.signal_out.set_state(0, true);
-    this->dbg_reset.signal_out.set_state(0, false);
-}
-
-template <class Types>
 ScxEvsCortexA76<Types>::ScxEvsCortexA76(
         const sc_core::sc_module_name &mod_name, const Params &p) :
     Base(mod_name),
     amba(Base::amba, p.name + ".amba", -1),
     top_reset(p.name + ".top_reset", 0),
     dbg_reset(p.name + ".dbg_reset", 0),
-    model_reset(p.name + ".model_reset", -1, this),
+    model_reset(p.name + ".model_reset"),
     params(p)
 {
+    model_reset.onChange([this](const bool &new_val) {
+        // Set reset for all cores.
+        for (auto &poweron_reset : poweron_reset)
+            poweron_reset->signal_out.set_state(0, new_val);
+        // Set reset for DSU.
+        top_reset.signal_out.set_state(0, new_val);
+        // Set reset for debug APB.
+        dbg_reset.signal_out.set_state(0, new_val);
+    });
+
     for (int i = 0; i < CoreCount; i++) {
         redist.emplace_back(new TlmGicTarget(this->redistributor[i],
                     csprintf("%s.redistributor[%d]", name(), i), i));
