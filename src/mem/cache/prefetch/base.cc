@@ -103,7 +103,7 @@ Base::Base(const BasePrefetcherParams &p)
       prefetchOnPfHit(p.prefetch_on_pf_hit),
       useVirtualAddresses(p.use_virtual_addresses),
       prefetchStats(this), issuedPrefetches(0),
-      usefulPrefetches(0), tlb(nullptr)
+      usefulPrefetches(0), mmu(nullptr)
 {
 }
 
@@ -299,10 +299,10 @@ Base::addEventProbe(SimObject *obj, const char *name)
 }
 
 void
-Base::addTLB(BaseTLB *t)
+Base::addMMU(BaseMMU *m)
 {
-    fatal_if(tlb != nullptr, "Only one TLB can be registered");
-    tlb = t;
+    fatal_if(mmu != nullptr, "Only one MMU can be registered");
+    mmu = m;
 }
 
 } // namespace prefetch

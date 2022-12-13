@@ -78,13 +78,13 @@ Queued::DeferredPacket::createPkt(Addr paddr, unsigned blk_size,
 }
 
 void
-Queued::DeferredPacket::startTranslation(BaseTLB *tlb)
+Queued::DeferredPacket::startTranslation(BaseMMU *mmu)
 {
     assert(translationRequest != nullptr);
     if (!ongoingTranslation) {
         ongoingTranslation = true;
         // Prefetchers only operate in Timing mode
-        tlb->translateTiming(translationRequest, tc, this, BaseMMU::Read);
+        mmu->translateTiming(translationRequest, tc, this, BaseMMU::Read);
     }
 }
 
@@ -216,7 +216,7 @@ Queued::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
             }
         }
 
-        bool can_cross_page = (tlb != nullptr);
+        bool can_cross_page = (mmu != nullptr);
         if (can_cross_page || samePage(addr_prio.first, pfi.getAddr())) {
             PrefetchInfo new_pfi(pfi,addr_prio.first);
             statsQueued.pfIdentified++;
@@ -293,7 +293,7 @@ Queued::processMissingTranslations(unsigned max)
         // Increase the iterator first because dp.startTranslation can end up
         // calling finishTranslation, which will erase "it"
         it++;
-        dp.startTranslation(tlb);
+        dp.startTranslation(mmu);
         count += 1;
     }
 }
@@ -311,7 +311,7 @@ Queued::translationComplete(DeferredPacket *dp, bool failed)
     assert(it != pfqMissingTranslation.end());
     if (!failed) {
         DPRINTF(HWPrefetch, "%s Translation of vaddr %#x succeeded: "
-                "paddr %#x \n", tlb->name(),
+                "paddr %#x \n", mmu->name(),
                 it->translationRequest->getVaddr(),
                 it->translationRequest->getPaddr());
         Addr target_paddr = it->translationRequest->getPaddr();
@@ -329,7 +329,7 @@ Queued::translationComplete(DeferredPacket *dp, bool failed)
         }
     } else {
         DPRINTF(HWPrefetch, "%s Translation of vaddr %#x failed, dropping "
-                "prefetch request %#x \n", tlb->name(),
+                "prefetch request %#x \n", mmu->name(),
                 it->translationRequest->getVaddr());
     }
     pfqMissingTranslation.erase(it);

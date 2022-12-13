@@ -364,8 +364,8 @@ class Base : public ClockedObject
     /** Total prefetches that has been useful */
     uint64_t usefulPrefetches;
 
-    /** Registered tlb for address translations */
-    BaseTLB * tlb;
+    /** Registered mmu for address translations */
+    BaseMMU * mmu;
 
   public:
     Base(const BasePrefetcherParams &p);
@@ -437,12 +437,12 @@ class Base : public ClockedObject
     void addEventProbe(SimObject *obj, const char *name);
 
     /**
-     * Add a BaseTLB object to be used whenever a translation is needed.
+     * Add a BaseMMU object to be used whenever a translation is needed.
      * This is generally required when the prefetcher is allowed to generate
      * page crossing references and/or uses virtual addresses for training.
-     * @param tlb pointer to the BaseTLB object to add
+     * @param mmu pointer to the BaseMMU object to add
      */
-    void addTLB(BaseTLB *tlb);
+    void addMMU(BaseMMU *mmu);
 };
 
 } // namespace prefetch

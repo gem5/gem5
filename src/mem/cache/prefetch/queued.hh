@@ -134,10 +134,10 @@ class Queued : public Base
                             ThreadContext *tc, BaseMMU::Mode mode) override;
 
         /**
-         * Issues the translation request to the provided TLB
-         * @param tlb the tlb that has to translate the address
+         * Issues the translation request to the provided MMU
+         * @param mmu the mmu that has to translate the address
          */
-        void startTranslation(BaseTLB *tlb);
+        void startTranslation(BaseMMU *mmu);
     };
 
     std::list<DeferredPacket> pfq;
