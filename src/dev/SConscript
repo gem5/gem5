@@ -36,7 +36,6 @@ Source('dma_device.cc')
 Source('dma_virt_device.cc')
 
 SimObject('IntPin.py', sim_objects=[])
-Source('intpin.cc')
 
 SimObject('ResetPort.py', sim_objects=[])
 Source('reset_port.cc')

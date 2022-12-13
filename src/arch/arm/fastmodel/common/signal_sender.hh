@@ -50,11 +50,11 @@ class SignalSender : public IntSinkPinBase
     SignalSender(const std::string &_name, PortID _id) :
         IntSinkPinBase(_name, _id, 0),
         signal_out((_name + ".sig").c_str())
-    {}
-
-  private:
-    void raiseOnDevice() override { signal_out.set_state(id, true); }
-    void lowerOnDevice() override { signal_out.set_state(id, false); }
+    {
+        onChange([this](const bool &new_val) {
+            signal_out.set_state(id, new_val);
+        });
+    }
 };
 
 } // namespace fastmodel
