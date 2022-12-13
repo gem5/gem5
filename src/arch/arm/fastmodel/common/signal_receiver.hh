@@ -87,7 +87,7 @@ class SignalReceiver : public amba_pv::signal_slave_base<bool>
 class SignalReceiverInt : public SignalReceiver
 {
   public:
-    using IntPin = IntSourcePin<SignalReceiverInt>;
+    using IntPin = SignalSourcePort<bool>;
 
     explicit SignalReceiverInt(const std::string &name)
         : SignalReceiver(name)
@@ -95,7 +95,7 @@ class SignalReceiverInt : public SignalReceiver
         onChange([this](bool status) {
             for (auto &signal : signalOut) {
                 if (signal && signal->isConnected())
-                    status ? signal->raise() : signal->lower();
+                    signal->set(status);
             }
         });
     }
@@ -108,7 +108,7 @@ class SignalReceiverInt : public SignalReceiver
         }
         if (!signalOut[idx]) {
             signalOut[idx] = std::make_unique<IntPin>(
-                csprintf("%s.signalOut[%d]", get_name(), idx), idx, this);
+                csprintf("%s.signalOut[%d]", get_name(), idx), idx);
         }
         return *signalOut[idx];
     }
