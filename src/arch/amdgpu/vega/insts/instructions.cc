@@ -1302,6 +1302,21 @@ namespace VegaISA
 
         sdst = (src0.rawData() >> bits(src1.rawData(), 4, 0))
             & ((1 << bits(src1.rawData(), 22, 16)) - 1);
+
+        // Above extracted a signed int of size src1[22:16] bits which needs
+        // to be signed-extended. Check if the MSB of our src1[22:16]-bit
+        // integer is 1, and sign extend it is.
+        //
+        // Note: The description in the Vega ISA manual does not mention to
+        // sign-extend the result. An update description can be found in the
+        // more recent RDNA3 manual here:
+        // https://developer.amd.com/wp-content/resources/
+        //      RDNA3_Shader_ISA_December2022.pdf
+        if (sdst.rawData() >> (bits(src1.rawData(), 22, 16) - 1)) {
+            sdst = sdst.rawData()
+                 | (0xffffffff << bits(src1.rawData(), 22, 16));
+        }
+
         scc = sdst.rawData() ? 1 : 0;
 
         sdst.write();
@@ -1373,6 +1388,14 @@ namespace VegaISA
 
         sdst = (src0.rawData() >> bits(src1.rawData(), 5, 0))
             & ((1 << bits(src1.rawData(), 22, 16)) - 1);
+
+        // Above extracted a signed int of size src1[22:16] bits which needs
+        // to be signed-extended. Check if the MSB of our src1[22:16]-bit
+        // integer is 1, and sign extend it is.
+        if (sdst.rawData() >> (bits(src1.rawData(), 22, 16) - 1)) {
+            sdst = sdst.rawData()
+                 | 0xffffffffffffffff << bits(src1.rawData(), 22, 16);
+        }
         scc = sdst.rawData() ? 1 : 0;
 
         sdst.write();
@@ -30544,6 +30567,13 @@ namespace VegaISA
             if (wf->execMask(lane)) {
                 vdst[lane] = (src0[lane] >> bits(src1[lane], 4, 0))
                     & ((1 << bits(src2[lane], 4, 0)) - 1);
+
+                // Above extracted a signed int of size src2 bits which needs
+                // to be signed-extended. Check if the MSB of our src2-bit
+                // integer is 1, and sign extend it is.
+                if (vdst[lane] >> (bits(src2[lane], 4, 0) - 1)) {
+                    vdst[lane] |= 0xffffffff << bits(src2[lane], 4, 0);
+                }
             }
         }
 
