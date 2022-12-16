@@ -6844,15 +6844,41 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
-        ConstVecOperandU32 src1(gpuDynInst, instData.VSRC1);
+        VecOperandU32 src1(gpuDynInst, instData.VSRC1);
         VecOperandU32 vdst(gpuDynInst, instData.VDST);
 
         src0.readSrc();
         src1.read();
 
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (wf->execMask(lane)) {
-                vdst[lane] = src0[lane] & src1[lane];
+        if (isDPPInst()) {
+            VecOperandU32 src0_dpp(gpuDynInst, extData.iFmt_VOP_DPP.SRC0);
+            src0_dpp.read();
+
+            DPRINTF(VEGA, "Handling V_AND_B32 SRC DPP. SRC0: register v[%d], "
+                    "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, "
+                    "SRC1_ABS: %d, SRC1_NEG: %d, BC: %d, "
+                    "BANK_MASK: %d, ROW_MASK: %d\n", extData.iFmt_VOP_DPP.SRC0,
+                    extData.iFmt_VOP_DPP.DPP_CTRL,
+                    extData.iFmt_VOP_DPP.SRC0_ABS,
+                    extData.iFmt_VOP_DPP.SRC0_NEG,
+                    extData.iFmt_VOP_DPP.SRC1_ABS,
+                    extData.iFmt_VOP_DPP.SRC1_NEG,
+                    extData.iFmt_VOP_DPP.BC,
+                    extData.iFmt_VOP_DPP.BANK_MASK,
+                    extData.iFmt_VOP_DPP.ROW_MASK);
+
+            processDPP(gpuDynInst, extData.iFmt_VOP_DPP, src0_dpp, src1);
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = src0_dpp[lane] & src1[lane];
+                }
+            }
+        } else {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = src0[lane] & src1[lane];
+                }
             }
         }
 
