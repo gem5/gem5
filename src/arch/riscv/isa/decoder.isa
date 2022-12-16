@@ -47,7 +47,7 @@ decode QUADRANT default Unknown::unknown() {
                   CIMM8<7:6> << 4 |
                   CIMM8<5:2> << 6;
         }}, {{
-            if (machInst == 0)
+            if (imm == 0)
                 return std::make_shared<IllegalInstFault>("zero instruction",
                                                            machInst);
             Rp2 = rvSext(sp + imm);
@@ -147,91 +147,71 @@ decode QUADRANT default Unknown::unknown() {
         }
     }
     0x1: decode COPCODE {
-        format CIOp {
-            0x0: c_addi({{
-                imm = CIMM5;
-                if (CIMM1 > 0)
-                    imm |= ~((uint64_t)0x1F);
-            }}, {{
-                if ((RC1 == 0) != (imm == 0)) {
-                    if (RC1 == 0) {
-                        return std::make_shared<IllegalInstFault>(
-                                "source reg x0", machInst);
-                    } else { // imm == 0
-                        return std::make_shared<IllegalInstFault>(
-                                "immediate = 0", machInst);
-                    }
+        0x0: CIOp::c_addi({{
+            imm = sext<6>(CIMM5 | (CIMM1 << 5));
+        }}, {{
+            if ((RC1 == 0) != (imm == 0)) {
+                if (RC1 == 0) {
+                    return std::make_shared<IllegalInstFault>(
+                            "source reg x0", machInst);
+                } else { // imm == 0
+                    return std::make_shared<IllegalInstFault>(
+                            "immediate = 0", machInst);
                 }
-                Rc1_sd = rvSext(Rc1_sd + imm);
-            }});
-            0x1: decode RVTYPE {
-                0x0: c_jal({{
-                    imm = sext<12>((CJUMPIMM3TO1 << 1) |
-                                   (CJUMPIMM4TO4 << 4) |
-                                   (CJUMPIMM5TO5 << 5) |
-                                   (CJUMPIMM6TO6 << 6) |
-                                   (CJUMPIMM7TO7 << 7) |
-                                   (CJUMPIMM9TO8 << 8) |
-                                   (CJUMPIMM10TO10 << 10) |
-                                   (CJUMPIMMSIGN << 11));
-                }}, {{
-                    ra_sw = NPC_uw;
-                    NPC_uw = PC_uw + imm;
-                }});
-                0x1: c_addiw({{
-                    imm = CIMM5;
-                    if (CIMM1 > 0)
-                        imm |= ~((uint64_t)0x1F);
-                }}, {{
-                    if (RC1 == 0) {
-                        return std::make_shared<IllegalInstFault>(
-                                "source reg x0", machInst);
-                    }
-                    Rc1_sw = (int32_t)(Rc1_sw + imm);
-                }});
             }
-            0x2: c_li({{
-                imm = CIMM5;
-                if (CIMM1 > 0)
-                    imm |= ~((uint64_t)0x1F);
+            Rc1_sd = rvSext(Rc1_sd + imm);
+        }});
+        0x1: decode RVTYPE {
+            0x0: CJOp::c_jal({{
+                ra_sw = NPC_uw;
+                NPC_uw = PC_uw + imm;
+            }}, IsDirectControl, IsUncondControl, IsCall);
+            0x1: CIOp::c_addiw({{
+                imm = sext<6>(CIMM5 | (CIMM1 << 5));
             }}, {{
                 if (RC1 == 0) {
                     return std::make_shared<IllegalInstFault>(
                             "source reg x0", machInst);
                 }
+                Rc1_sw = (int32_t)(Rc1_sw + imm);
+            }});
+        }
+        0x2: CIOp::c_li({{
+            imm = sext<6>(CIMM5 | (CIMM1 << 5));
+        }}, {{
+            if (RC1 == 0) {
+                return std::make_shared<IllegalInstFault>(
+                        "source reg x0", machInst);
+            }
+            Rc1_sd = imm;
+        }});
+        0x3: decode RC1 {
+            0x2: CIOp::c_addi16sp({{
+                imm = sext<10>((CIMM5<4:4> << 4) |
+                               (CIMM5<0:0> << 5) |
+                               (CIMM5<3:3> << 6) |
+                               (CIMM5<2:1> << 7) |
+                               (CIMM1 << 9));
+            }}, {{
+                if (imm == 0) {
+                    return std::make_shared<IllegalInstFault>(
+                            "immediate = 0", machInst);
+                }
+                sp_sd = rvSext(sp_sd + imm);
+            }});
+            default: CIOp::c_lui({{
+                imm = sext<6>(CIMM5 | (CIMM1 << 5)) << 12;
+            }}, {{
+                if (RC1 == 0 || RC1 == 2) {
+                    return std::make_shared<IllegalInstFault>(
+                            "source reg x0", machInst);
+                }
+                if (imm == 0) {
+                    return std::make_shared<IllegalInstFault>(
+                            "immediate = 0", machInst);
+                }
                 Rc1_sd = imm;
             }});
-            0x3: decode RC1 {
-                0x2: c_addi16sp({{
-                    imm = CIMM5<4:4> << 4 |
-                          CIMM5<0:0> << 5 |
-                          CIMM5<3:3> << 6 |
-                          CIMM5<2:1> << 7;
-                    if (CIMM1 > 0)
-                        imm |= ~((int64_t)0x1FF);
-                }}, {{
-                    if (imm == 0) {
-                        return std::make_shared<IllegalInstFault>(
-                                "immediate = 0", machInst);
-                    }
-                    sp_sd = rvSext(sp_sd + imm);
-                }});
-                default: c_lui({{
-                    imm = CIMM5 << 12;
-                    if (CIMM1 > 0)
-                        imm |= ~((uint64_t)0x1FFFF);
-                }}, {{
-                    if (RC1 == 0 || RC1 == 2) {
-                        return std::make_shared<IllegalInstFault>(
-                                "source reg x0", machInst);
-                    }
-                    if (imm == 0) {
-                        return std::make_shared<IllegalInstFault>(
-                                "immediate = 0", machInst);
-                    }
-                    Rc1_sd = imm;
-                }});
-            }
         }
         0x4: decode CFUNCT2HIGH {
             format CIOp {
@@ -418,7 +398,7 @@ decode QUADRANT default Unknown::unknown() {
                         }
                         ra = rvSext(NPC);
                         NPC = rvZext(Rc1);
-                    }}, IsIndirectControl, IsUncondControl);
+                    }}, IsIndirectControl, IsUncondControl, IsCall);
                     default: CompressedROp::c_add({{
                         Rc1_sd = rvSext(Rc1_sd + Rc2_sd);
                     }});
