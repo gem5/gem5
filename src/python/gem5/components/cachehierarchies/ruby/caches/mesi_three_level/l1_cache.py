@@ -68,14 +68,14 @@ class L1Cache(L0Cache_Controller):
         self.Icache = RubyCache(
             size=l1i_size,
             assoc=l1i_assoc,
-            start_index_bit=self.getBlockSizeBits(),
+            start_index_bit=self.getBlockSizeBits(cache_line_size.value),
             is_icache=True,
             replacement_policy=LRURP(),
         )
         self.Dcache = RubyCache(
             size=l1d_size,
             assoc=l1d_assoc,
-            start_index_bit=self.getBlockSizeBits(),
+            start_index_bit=self.getBlockSizeBits(cache_line_size.value),
             is_icache=False,
             replacement_policy=LRURP(),
         )
@@ -88,12 +88,11 @@ class L1Cache(L0Cache_Controller):
         self.response_latency = 2
 
         self.version = self.versionCount()
-        self._cache_line_size = cache_line_size
         self.connectQueues(network)
 
-    def getBlockSizeBits(self):
-        bits = int(math.log(self._cache_line_size, 2))
-        if 2**bits != self._cache_line_size.value:
+    def getBlockSizeBits(self, cache_line_size):
+        bits = int(math.log(cache_line_size, 2))
+        if 2**bits != cache_line_size:
             raise Exception("Cache line size is not a power of 2!")
         return bits
 

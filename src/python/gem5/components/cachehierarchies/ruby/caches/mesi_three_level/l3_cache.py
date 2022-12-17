@@ -54,7 +54,7 @@ class L3Cache(L2Cache_Controller):
         self.L2cache = RubyCache(
             size=l3_size,
             assoc=l3_assoc,
-            start_index_bit=self.getIndexBit(num_l3Caches),
+            start_index_bit=self.getIndexBit(num_l3Caches, cache_line_size),
         )
 
         self.transitions_per_cycle = 4
@@ -64,12 +64,11 @@ class L3Cache(L2Cache_Controller):
         self.to_l1_latency = 1
 
         self.version = self.versionCount()
-        self._cache_line_size = cache_line_size
         self.connectQueues(network)
 
-    def getIndexBit(self, num_l3caches):
-        l3_bits = int(math.log(num_l3caches, 2))
-        bits = int(math.log(self._cache_line_size, 2)) + l3_bits
+    def getIndexBit(self, num_l3Caches, cache_line_size):
+        l3_bits = int(math.log(num_l3Caches, 2))
+        bits = int(math.log(cache_line_size, 2)) + l3_bits
         return bits
 
     def connectQueues(self, network):

@@ -25,16 +25,26 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from ......utils.override import overrides
-from ..abstract_dma_controller import AbstractDMAController
 
-from m5.objects import MessageBuffer
+from m5.objects import MessageBuffer, DMA_Controller
 
 
-class DMAController(AbstractDMAController):
-    def __init__(self, network, cache_line_size):
-        super().__init__(network, cache_line_size)
+class DMAController(DMA_Controller):
+    _version = 0
 
-    @overrides(AbstractDMAController)
+    @classmethod
+    def _get_version(cls):
+        cls._version += 1
+        return cls._version - 1
+
+    def __init__(self, dma_sequencer, ruby_system):
+        super().__init__(
+            version=self._get_version(),
+            dma_sequencer=dma_sequencer,
+            ruby_system=ruby_system,
+        )
+        self.connectQueues(self.ruby_system.network)
+
     def connectQueues(self, network):
         self.mandatoryQueue = MessageBuffer()
         self.responseFromDir = MessageBuffer(ordered=True)

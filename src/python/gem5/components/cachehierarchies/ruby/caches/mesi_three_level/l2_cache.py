@@ -67,7 +67,7 @@ class L2Cache(L1Cache_Controller):
         self.cache = RubyCache(
             size=l2_size,
             assoc=l2_assoc,
-            start_index_bit=self.getBlockSizeBits(),
+            start_index_bit=self.getBlockSizeBits(cache_line_size.value),
             is_icache=False,
         )
         # l2_select_num_bits is ruby backend terminology.
@@ -86,8 +86,13 @@ class L2Cache(L1Cache_Controller):
         self.to_l2_latency = 1
 
         self.version = self.versionCount()
-        self._cache_line_size = cache_line_size
         self.connectQueues(network)
+
+    def getBlockSizeBits(self, cache_line_size):
+        bits = int(math.log(cache_line_size, 2))
+        if 2**bits != cache_line_size:
+            raise Exception("Cache line size is not a power of 2!")
+        return bits
 
     def connectQueues(self, network):
         self.mandatoryQueue = MessageBuffer()
