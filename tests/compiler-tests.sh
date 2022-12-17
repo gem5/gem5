@@ -76,7 +76,13 @@ builds_per_compiler=1
 base_url="gcr.io/gem5-test"
 
 # Arguments passed into scons on every build target test.
-build_args="$@"
+if [ $# -eq 0 ];then
+    # If none is sepcified by the user we pass "-j1" (compile on one thread).
+    # If `build_args` is left as an empty string, this script will fail.
+    build_args="-j1"
+else
+    build_args="$@"
+fi
 
 # Testing directory variables
 mkdir -p "${build_dir}" # Create the build directory if it doesn't exist.
@@ -135,7 +141,7 @@ for compiler in ${images[@]}; do
                 docker run --rm -v "${gem5_root}":"/gem5" -u $UID:$GID \
                     -w /gem5 --memory="${docker_mem_limit}" $repo_name \
                     /usr/bin/env python3 /usr/bin/scons --ignore-style \
-                    "${build_out} ${build_args}"
+                    "${build_out}" "${build_args}"
             }>"${build_stdout}" 2>"${build_stderr}"
             result=$?
 
