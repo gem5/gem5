@@ -318,9 +318,9 @@ class GenericSatCounter
      *
      * @ingroup api_sat_counter
      */
-    uint8_t saturate()
+    T saturate()
     {
-        const uint8_t diff = maxVal - counter;
+        const T diff = maxVal - counter;
         counter = maxVal;
         return diff;
     }
