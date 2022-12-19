@@ -250,9 +250,14 @@ def template JumpConstructor {{
         %(constructor)s;
         %(imm_code)s;
         if (QUADRANT != 0x3) {
-            // Handle "c_jr" instruction, set "IsReturn" flag if RC1 is 1 or 5
-            if (CFUNCT1 == 0 && (RC1 == 1 || RC1 == 5))
-                flags[IsReturn] = true;
+            if (COPCODE == 4) {
+                // Handle "c_jr" instruction, set "IsReturn" flag if RC1 is 1 or 5
+                if (CFUNCT1 == 0 && (RC1 == 1 || RC1 == 5))
+                    flags[IsReturn] = true;
+                // Handle "c_jalr" instruction, set IsReturn if RC1 != ra
+                if (CFUNCT1 == 1 && RC1 == 5)
+                    flags[IsReturn] = true;
+            }
         } else {
             bool rd_link = (RD == 1 || RD == 5);
             bool rs1_link = (RS1 == 1 || RS1 == 5);
