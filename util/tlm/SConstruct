@@ -51,11 +51,12 @@ shlibsuffix = env['SHLIBSUFFIX']
 env.Append(CPPPATH=[gem5_root + '/build/' + gem5_arch,
                     gem5_root + '/util/systemc/gem5_within_systemc',
                     gem5_root + '/ext/systemc/src',
+                    gem5_root + '/ext',
                     '#src',
                     '#examples/common',
                     ])
 
-env.Append(CXXFLAGS=['-std=c++14',
+env.Append(CXXFLAGS=['-std=c++17',
                      '-DSC_INCLUDE_DYNAMIC_PROCESSES',
                      '-DTRACING_ON',
                      ])
