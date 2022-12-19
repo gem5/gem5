@@ -74,15 +74,14 @@ deps += SConscript('examples/common/SConscript',
 
 # the SystemC SConscript makes certain assumptions, we need to fulfill these
 # assumptions before calling the SConscript.
-main = env
 sys.path.append(gem5_root + '/src/python')
 AddOption('--no-colors', dest='use_colors', action='store_false',
           help="Don't add color to abbreviated scons output")
 
-main.SConsignFile('build/systemc/sconsign')
+env.SConsignFile('build/systemc/sconsign')
 SConscript(gem5_root + '/ext/systemc/SConscript',
            variant_dir='build/systemc',
-           exports='main')
+           exports='env')
 
 # By adding libraries as dependencies instead of using LIBS, we avoid that
 # the user needs to set the LD_LIBRARY_PATH
