@@ -72,8 +72,6 @@ Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
     }
     instance = this;
 
-    gem5::cxxConfigInit();
-
     // register the systemc slave and master port handler
     gem5::ExternalSlave::registerHandler("tlm_slave",
         new SCSlavePortHandler(*this));
