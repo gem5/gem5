@@ -1018,8 +1018,8 @@ class RegisterBank : public RegisterBankBase
     virtual void
     reset()
     {
-        for (auto &[offset, reg]: _offsetMap)
-            reg.get().reset();
+        for (auto &it: _offsetMap)
+            it.second.get().reset();
     }
 };
 
