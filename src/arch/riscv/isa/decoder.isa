@@ -48,7 +48,7 @@ decode QUADRANT default Unknown::unknown() {
                   CIMM8<5:2> << 6;
         }}, {{
             if (imm == 0)
-                return std::make_shared<IllegalInstFault>("zero instruction",
+                return std::make_shared<IllegalInstFault>("immediate = 0",
                                                            machInst);
             Rp2 = rvSext(sp + imm);
         }}, uint64_t);
