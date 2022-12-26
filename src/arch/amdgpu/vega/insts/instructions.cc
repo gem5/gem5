@@ -35636,8 +35636,50 @@ namespace VegaISA
     void
     Inst_DS__DS_READ_I8::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decLGKMInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(
+                gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
+        ConstVecOperandU32 addr(gpuDynInst, extData.ADDR);
+
+        addr.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
     } // execute
+
+    void
+    Inst_DS__DS_READ_I8::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        Addr offset0 = instData.OFFSET0;
+        Addr offset1 = instData.OFFSET1;
+        Addr offset = (offset1 << 8) | offset0;
+
+        initMemRead<VecElemI8>(gpuDynInst, offset);
+    } // initiateAcc
+
+    void
+    Inst_DS__DS_READ_I8::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU32 vdst(gpuDynInst, extData.VDST);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                vdst[lane] = (VecElemU32)sext<8>((reinterpret_cast<VecElemI8*>(
+                    gpuDynInst->d_data))[lane]);
+            }
+        }
+
+        vdst.write();
+    } // completeAcc
     // --- Inst_DS__DS_READ_U8 class methods ---
 
     Inst_DS__DS_READ_U8::Inst_DS__DS_READ_U8(InFmt_DS *iFmt)

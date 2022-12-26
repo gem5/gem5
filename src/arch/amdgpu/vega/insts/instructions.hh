@@ -32848,6 +32848,8 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_DS__DS_READ_I8
 
     class Inst_DS__DS_READ_U8 : public Inst_DS
