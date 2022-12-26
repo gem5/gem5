@@ -31211,6 +31211,8 @@ namespace VegaISA
             }
         } // getOperandSize
 
+        void initiateAcc(GPUDynInstPtr gpuDynInst) override;
+        void completeAcc(GPUDynInstPtr gpuDynInst) override;
         void execute(GPUDynInstPtr) override;
     }; // Inst_DS__DS_ADD_U32
 

@@ -34071,6 +34071,10 @@ namespace VegaISA
     Inst_DS__DS_ADD_U32::Inst_DS__DS_ADD_U32(InFmt_DS *iFmt)
         : Inst_DS(iFmt, "ds_add_u32")
     {
+        setFlag(MemoryRef);
+        setFlag(GroupSegment);
+        setFlag(AtomicAdd);
+        setFlag(AtomicNoReturn);
     } // Inst_DS__DS_ADD_U32
 
     Inst_DS__DS_ADD_U32::~Inst_DS__DS_ADD_U32()
@@ -34079,14 +34083,53 @@ namespace VegaISA
 
     // --- description from .arch file ---
     // 32b:
-    // tmp = MEM[ADDR];
     // MEM[ADDR] += DATA;
-    // RETURN_DATA = tmp.
     void
     Inst_DS__DS_ADD_U32::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decLGKMInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(
+                gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
+        ConstVecOperandU32 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU32 data(gpuDynInst, extData.DATA0);
+
+        addr.read();
+        data.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
+                    = data[lane];
+            }
+        }
+
+        gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
     } // execute
+
+    void
+    Inst_DS__DS_ADD_U32::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        Addr offset0 = instData.OFFSET0;
+        Addr offset1 = instData.OFFSET1;
+        Addr offset = (offset1 << 8) | offset0;
+
+        initAtomicAccess<VecElemU32>(gpuDynInst, offset);
+    } // initiateAcc
+
+    void
+    Inst_DS__DS_ADD_U32::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+    } // completeAcc
     // --- Inst_DS__DS_SUB_U32 class methods ---
 
     Inst_DS__DS_SUB_U32::Inst_DS__DS_SUB_U32(InFmt_DS *iFmt)
