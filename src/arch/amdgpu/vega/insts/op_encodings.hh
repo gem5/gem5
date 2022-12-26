@@ -925,7 +925,7 @@ namespace VegaISA
         }
 
         void
-        calcAddr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &vaddr,
+        calcAddr(GPUDynInstPtr gpuDynInst, ScalarRegU32 vaddr,
                  ScalarRegU32 saddr, ScalarRegI32 offset)
         {
             // Offset is a 13-bit field w/the following meanings:
@@ -940,14 +940,20 @@ namespace VegaISA
             // be a 64-bit address. Otherwise, saddr is the reg index for a
             // scalar reg used as the base address for a 32-bit address.
             if ((saddr == 0x7f && isFlatGlobal()) || isFlat()) {
-                calcAddrVgpr(gpuDynInst, vaddr, offset);
+                ConstVecOperandU64 vbase(gpuDynInst, vaddr);
+                vbase.read();
+
+                calcAddrVgpr(gpuDynInst, vbase, offset);
             } else {
                 // Assume we are operating in 64-bit mode and read a pair of
                 // SGPRs for the address base.
                 ConstScalarOperandU64 sbase(gpuDynInst, saddr);
                 sbase.read();
 
-                calcAddrSgpr(gpuDynInst, vaddr, sbase, offset);
+                ConstVecOperandU32 voffset(gpuDynInst, vaddr);
+                voffset.read();
+
+                calcAddrSgpr(gpuDynInst, voffset, sbase, offset);
             }
 
             if (isFlat()) {
@@ -974,6 +980,12 @@ namespace VegaISA
             }
         }
 
+        bool
+        vgprIsOffset()
+        {
+            return (extData.SADDR != 0x7f);
+        }
+
         // first instruction DWORD
         InFmt_FLAT instData;
         // second instruction DWORD
@@ -987,7 +999,7 @@ namespace VegaISA
         void generateGlobalDisassembly();
 
         void
-        calcAddrSgpr(GPUDynInstPtr gpuDynInst, ConstVecOperandU64 &vaddr,
+        calcAddrSgpr(GPUDynInstPtr gpuDynInst, ConstVecOperandU32 &vaddr,
                      ConstScalarOperandU64 &saddr, ScalarRegI32 offset)
         {
             // Use SGPR pair as a base address and add VGPR-offset and

@@ -41892,7 +41892,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_dst or saddr
                 return isFlat() ? 1 : 8;
               case 2: //vgpr_dst
@@ -41929,7 +41929,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_dst or saddr
                 return isFlat() ? 1 : 8;
               case 2: //vgpr_dst
@@ -41966,7 +41966,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_dst or saddr
                 return isFlat() ? 2 : 8;
               case 2: //vgpr_dst
@@ -42003,7 +42003,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_dst or saddr
                 return isFlat() ? 2 : 8;
               case 2: //vgpr_dst
@@ -42040,7 +42040,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_dst or saddr
                 return isFlat() ? 4 : 8;
               case 2: //vgpr_dst
@@ -42077,7 +42077,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_dst or saddr
                 return isFlat() ? 8 : 8;
               case 2: //vgpr_dst
@@ -42114,7 +42114,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_dst or saddr
                 return isFlat() ? 12 : 8;
               case 2: //vgpr_dst
@@ -42151,7 +42151,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_dst or saddr
                 return isFlat() ? 16 : 8;
               case 2: //vgpr_dst
@@ -42188,7 +42188,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 1;
               case 2: //saddr
@@ -42225,7 +42225,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 2;
               case 2: //saddr
@@ -42262,7 +42262,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 4;
               case 2: //saddr
@@ -42299,7 +42299,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 8;
               case 2: //saddr
@@ -42336,7 +42336,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 12;
               case 2: //saddr
@@ -42373,7 +42373,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 16;
               case 2: //saddr
@@ -42410,7 +42410,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 4;
               case 2: //vgpr_dst or saddr
@@ -42449,7 +42449,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 8;
               case 2: //vgpr_dst or saddr
@@ -42488,7 +42488,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 4;
               case 2: //vgpr_dst or saddr
@@ -42527,7 +42527,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 4;
               case 2: //vgpr_dst or saddr
@@ -42564,7 +42564,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 4;
               case 2: //vgpr_dst or saddr
@@ -42601,7 +42601,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 4;
               case 2: //vgpr_dst or saddr
@@ -42638,7 +42638,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 4;
               case 2: //vgpr_dst or saddr
@@ -42675,7 +42675,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 4;
               case 2: //vgpr_dst or saddr
@@ -42712,7 +42712,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 4;
               case 2: //vgpr_dst or saddr
@@ -42749,7 +42749,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 4;
               case 2: //vgpr_dst or saddr
@@ -42786,7 +42786,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 4;
               case 2: //vgpr_dst or saddr
@@ -42823,7 +42823,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 4;
               case 2: //vgpr_dst or saddr
@@ -42860,7 +42860,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 4;
               case 2: //vgpr_dst or saddr
@@ -42897,7 +42897,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 8;
               case 2: //vgpr_dst or saddr
@@ -42934,7 +42934,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 16;
               case 2: //vgpr_dst or saddr
@@ -42973,7 +42973,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 8;
               case 2: //vgpr_dst or saddr
@@ -43012,7 +43012,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 8;
               case 2: //vgpr_dst or saddr
@@ -43049,7 +43049,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 8;
               case 2: //vgpr_dst or saddr
@@ -43086,7 +43086,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 8;
               case 2: //vgpr_dst or saddr
@@ -43123,7 +43123,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 8;
               case 2: //vgpr_dst or saddr
@@ -43160,7 +43160,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 8;
               case 2: //vgpr_dst or saddr
@@ -43197,7 +43197,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 8;
               case 2: //vgpr_dst or saddr
@@ -43234,7 +43234,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 8;
               case 2: //vgpr_dst or saddr
@@ -43271,7 +43271,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 8;
               case 2: //vgpr_dst or saddr
@@ -43308,7 +43308,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 8;
               case 2: //vgpr_dst or saddr
@@ -43345,7 +43345,7 @@ namespace VegaISA
         {
             switch (opIdx) {
               case 0: //vgpr_addr
-                return 8;
+                return vgprIsOffset() ? 4 : 8;
               case 1: //vgpr_src
                 return 8;
               case 2: //vgpr_dst or saddr

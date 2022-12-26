@@ -43831,11 +43831,7 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
-
-        addr.read();
-
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         issueRequestHelper(gpuDynInst);
     } // execute
@@ -43919,11 +43915,7 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
-
-        addr.read();
-
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         issueRequestHelper(gpuDynInst);
     } // execute
@@ -44008,11 +44000,7 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
-
-        addr.read();
-
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         issueRequestHelper(gpuDynInst);
     } // execute
@@ -44067,11 +44055,7 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
-
-        addr.read();
-
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         issueRequestHelper(gpuDynInst);
     } // execute
@@ -44126,11 +44110,7 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
-
-        addr.read();
-
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         issueRequestHelper(gpuDynInst);
     } // execute
@@ -44194,11 +44174,7 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
-
-        addr.read();
-
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         issueRequestHelper(gpuDynInst);
     } // execute
@@ -44266,13 +44242,11 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
         ConstVecOperandU8 data(gpuDynInst, extData.DATA);
 
-        addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -44325,13 +44299,11 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
         ConstVecOperandU16 data(gpuDynInst, extData.DATA);
 
-        addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -44384,13 +44356,11 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
         ConstVecOperandU32 data(gpuDynInst, extData.DATA);
 
-        addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -44444,13 +44414,11 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
         ConstVecOperandU64 data(gpuDynInst, extData.DATA);
 
-        addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -44504,17 +44472,15 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
         ConstVecOperandU32 data0(gpuDynInst, extData.DATA);
         ConstVecOperandU32 data1(gpuDynInst, extData.DATA + 1);
         ConstVecOperandU32 data2(gpuDynInst, extData.DATA + 2);
 
-        addr.read();
         data0.read();
         data1.read();
         data2.read();
 
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -44572,19 +44538,17 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
         ConstVecOperandU32 data0(gpuDynInst, extData.DATA);
         ConstVecOperandU32 data1(gpuDynInst, extData.DATA + 1);
         ConstVecOperandU32 data2(gpuDynInst, extData.DATA + 2);
         ConstVecOperandU32 data3(gpuDynInst, extData.DATA + 3);
 
-        addr.read();
         data0.read();
         data1.read();
         data2.read();
         data3.read();
 
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -44650,13 +44614,11 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
         ConstVecOperandU32 data(gpuDynInst, extData.DATA);
 
-        addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -44732,15 +44694,13 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
         ConstVecOperandU32 data(gpuDynInst, extData.DATA);
         ConstVecOperandU32 cmp(gpuDynInst, extData.DATA + 1);
 
-        addr.read();
         data.read();
         cmp.read();
 
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -44814,13 +44774,11 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
         ConstVecOperandU32 data(gpuDynInst, extData.DATA);
 
-        addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -45204,15 +45162,13 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
         ConstVecOperandU64 data(gpuDynInst, extData.DATA);
         ConstVecOperandU64 cmp(gpuDynInst, extData.DATA + 2);
 
-        addr.read();
         data.read();
         cmp.read();
 
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -45287,13 +45243,11 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
         ConstVecOperandU64 data(gpuDynInst, extData.DATA);
 
-        addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
