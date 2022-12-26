@@ -34755,6 +34755,10 @@ namespace VegaISA
         : Inst_DS(iFmt, "ds_add_f32")
     {
         setFlag(F32);
+        setFlag(MemoryRef);
+        setFlag(GroupSegment);
+        setFlag(AtomicAdd);
+        setFlag(AtomicNoReturn);
     } // Inst_DS__DS_ADD_F32
 
     Inst_DS__DS_ADD_F32::~Inst_DS__DS_ADD_F32()
@@ -34763,15 +34767,54 @@ namespace VegaISA
 
     // --- description from .arch file ---
     // 32b:
-    // tmp = MEM[ADDR];
     // MEM[ADDR] += DATA;
-    // RETURN_DATA = tmp.
     // Floating point add that handles NaN/INF/denormal values.
     void
     Inst_DS__DS_ADD_F32::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decLGKMInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(
+                gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
+        ConstVecOperandU32 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandF32 data(gpuDynInst, extData.DATA0);
+
+        addr.read();
+        data.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemF32*>(gpuDynInst->a_data))[lane]
+                    = data[lane];
+            }
+        }
+
+        gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
     } // execute
+
+    void
+    Inst_DS__DS_ADD_F32::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        Addr offset0 = instData.OFFSET0;
+        Addr offset1 = instData.OFFSET1;
+        Addr offset = (offset1 << 8) | offset0;
+
+        initAtomicAccess<VecElemF32>(gpuDynInst, offset);
+    } // initiateAcc
+
+    void
+    Inst_DS__DS_ADD_F32::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+    } // completeAcc
     // --- Inst_DS__DS_WRITE_B8 class methods ---
 
     Inst_DS__DS_WRITE_B8::Inst_DS__DS_WRITE_B8(InFmt_DS *iFmt)
