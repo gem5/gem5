@@ -33553,7 +33553,9 @@ namespace VegaISA
             switch (opIdx) {
               case 0: //vgpr_a
                 return 4;
-              case 1: //vgpr_d1
+              case 1: //vgpr_d0
+                return 8;
+              case 2: //vgpr_d1
                 return 8;
               default:
                 fatal("op idx %i out of bounds\n", opIdx);
