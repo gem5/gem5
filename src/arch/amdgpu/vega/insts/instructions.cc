@@ -36595,8 +36595,52 @@ namespace VegaISA
     void
     Inst_DS__DS_WRITE2ST64_B64::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decLGKMInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(
+                gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
+        ConstVecOperandU32 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU64 data0(gpuDynInst, extData.DATA0);
+        ConstVecOperandU64 data1(gpuDynInst, extData.DATA1);
+
+        addr.read();
+        data0.read();
+        data1.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU64*>(
+                    gpuDynInst->d_data))[lane * 2] = data0[lane];
+                (reinterpret_cast<VecElemU64*>(
+                    gpuDynInst->d_data))[lane * 2 + 1] = data1[lane];
+            }
+        }
+
+        gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
     } // execute
+
+    void
+    Inst_DS__DS_WRITE2ST64_B64::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        Addr offset0 = instData.OFFSET0 * 8 * 64;
+        Addr offset1 = instData.OFFSET1 * 8 * 64;
+
+        initDualMemWrite<VecElemU64>(gpuDynInst, offset0, offset1);
+    }
+
+    void
+    Inst_DS__DS_WRITE2ST64_B64::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+    }
     // --- Inst_DS__DS_CMPST_B64 class methods ---
 
     Inst_DS__DS_CMPST_B64::Inst_DS__DS_CMPST_B64(InFmt_DS *iFmt)

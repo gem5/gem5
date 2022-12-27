@@ -33572,6 +33572,8 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_DS__DS_WRITE2ST64_B64
 
     class Inst_DS__DS_CMPST_B64 : public Inst_DS
