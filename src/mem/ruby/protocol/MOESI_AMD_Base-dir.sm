@@ -161,6 +161,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
     uint64_t probe_id,        desc="probe id for lifetime profiling";
     WriteMask writeMask,    desc="outstanding write through mask";
     int Len,            desc="Length of memory request for DMA";
+    bool isGLCSet,      desc="Bypass L1 Cache";
+    bool isSLCSet,      desc="Bypass L1 and L2 Cache";
   }
 
   structure(TBETable, external="yes") {
@@ -483,6 +485,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
       out_msg.ProbeRequestStartTime := tbe.ProbeRequestStartTime;
       out_msg.OriginalResponder := tbe.LastSender;
       out_msg.L3Hit := tbe.L3Hit;
+      out_msg.isGLCSet := tbe.isGLCSet;
+      out_msg.isSLCSet := tbe.isSLCSet;
       DPRINTF(RubySlicc, "%s\n", out_msg);
     }
   }
@@ -512,6 +516,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.ForwardRequestTime := tbe.ForwardRequestTime;
         out_msg.ProbeRequestStartTime := tbe.ProbeRequestStartTime;
         out_msg.OriginalResponder := tbe.LastSender;
+        out_msg.isGLCSet := tbe.isGLCSet;
+        out_msg.isSLCSet := tbe.isSLCSet;
         if(tbe.atomicData){
           out_msg.WTRequestor := tbe.WTRequestor;
         }
@@ -540,6 +546,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.InitialRequestTime := tbe.InitialRequestTime;
         out_msg.ForwardRequestTime := curCycle();
         out_msg.ProbeRequestStartTime := tbe.ProbeRequestStartTime;
+        out_msg.isGLCSet := tbe.isGLCSet;
+        out_msg.isSLCSet := tbe.isSLCSet;
         DPRINTF(RubySlicc, "%s\n", out_msg);
       }
   }
@@ -557,6 +565,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.ForwardRequestTime := curCycle();
         out_msg.ProbeRequestStartTime := curCycle();
         out_msg.instSeqNum := in_msg.instSeqNum;
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
       }
     }
   }
@@ -569,6 +579,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.Sender := machineID;
         out_msg.MessageSize := MessageSizeType:Writeback_Data;
         out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
       }
     }
   }
@@ -624,6 +636,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
           out_msg.Type := MemoryRequestType:MEMORY_READ;
           out_msg.Sender := machineID;
           out_msg.MessageSize := MessageSizeType:Request_Control;
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
         }
       }
     }
@@ -739,6 +753,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
           out_msg.MessageSize := MessageSizeType:Control;
           out_msg.Destination := probe_dests;
           tbe.NumPendingAcks := out_msg.Destination.count();
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
           DPRINTF(RubySlicc, "%s\n", out_msg);
           APPEND_TRANSITION_COMMENT(" dc: Acks remaining: ");
           APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
@@ -842,6 +858,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
           out_msg.ReturnData := true;
           out_msg.MessageSize := MessageSizeType:Control;
           out_msg.Destination := probe_dests;
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
           tbe.NumPendingAcks := out_msg.Destination.count();
           DPRINTF(RubySlicc, "%s\n", (out_msg));
           APPEND_TRANSITION_COMMENT(" sc: Acks remaining: ");
@@ -897,6 +915,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
           out_msg.ReturnData := false;
           out_msg.MessageSize := MessageSizeType:Control;
           out_msg.Destination := probe_dests;
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
           tbe.NumPendingAcks := out_msg.Destination.count();
           APPEND_TRANSITION_COMMENT(" ic: Acks remaining: ");
           APPEND_TRANSITION_COMMENT(tbe.NumPendingAcks);
@@ -923,6 +943,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.Sender := machineID;
         out_msg.MessageSize := MessageSizeType:Writeback_Data;
         out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
       }
       if (tbe.Dirty == false) {
           // have to update the TBE, too, because of how this
@@ -985,6 +1007,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
       tbe.NumPendingAcks := 0;
       tbe.Cached := in_msg.ForceShared;
       tbe.InitialRequestTime := in_msg.InitialRequestTime;
+      tbe.isGLCSet := in_msg.isGLCSet;
+      tbe.isSLCSet := in_msg.isSLCSet;
     }
   }
 
@@ -1004,6 +1028,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.Sender := machineID;
         out_msg.MessageSize := MessageSizeType:Writeback_Data;
         out_msg.DataBlk := tbe.DataBlk;
+        out_msg.isGLCSet := tbe.isGLCSet;
+        out_msg.isSLCSet := tbe.isSLCSet;
         DPRINTF(ProtocolTrace, "%s\n", out_msg);
       }
     }
@@ -1104,6 +1130,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
             out_msg.Sender := machineID;
             out_msg.MessageSize := MessageSizeType:Writeback_Data;
             out_msg.DataBlk := victim_entry.DataBlk;
+            out_msg.isGLCSet := in_msg.isGLCSet;
+            out_msg.isSLCSet := in_msg.isSLCSet;
           }
           L3CacheMemory.deallocate(victim);
         }
@@ -1136,6 +1164,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
             out_msg.Sender := machineID;
             out_msg.MessageSize := MessageSizeType:Writeback_Data;
             out_msg.DataBlk := victim_entry.DataBlk;
+            out_msg.isGLCSet := tbe.isGLCSet;
+            out_msg.isSLCSet := tbe.isSLCSet;
           }
           L3CacheMemory.deallocate(victim);
         }

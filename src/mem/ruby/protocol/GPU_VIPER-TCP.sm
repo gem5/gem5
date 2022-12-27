@@ -60,6 +60,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   enumeration(Event, desc="TCP Events") {
     // Core initiated
     Load,           desc="Load";
+    LoadBypassEvict, desc="Bypass L1 on a load. Evict if cache block already allocated";
     Store,          desc="Store to L1 (L1 is dirty)";
     StoreThrough,   desc="Store directly to L2(L1 is clean)";
     Atomic,         desc="Atomic";
@@ -256,8 +257,10 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
         Entry cache_entry := getCacheEntry(in_msg.addr);
         TBE tbe := TBEs.lookup(in_msg.addr);
         if (in_msg.Type == CoherenceResponseType:TDSysResp) {
-          // disable L1 cache
-          if (disableL1) {
+          if (disableL1 || in_msg.isGLCSet || in_msg.isSLCSet) {
+              // If L1 is disabled or requests have GLC or SLC flag set,
+              // then, the requests should not cache in the L1. The response
+              // from L2/global memory should bypass the cache
 	          trigger(Event:Bypass, in_msg.addr, cache_entry, tbe);
           } else {
             if (is_valid(cache_entry) || L1cache.cacheAvail(in_msg.addr)) {
@@ -284,13 +287,23 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
         TBE tbe := TBEs.lookup(in_msg.LineAddress);
         DPRINTF(RubySlicc, "%s\n", in_msg);
         if (in_msg.Type == RubyRequestType:LD) {
-          trigger(Event:Load, in_msg.LineAddress, cache_entry, tbe);
+          if ((in_msg.isGLCSet || in_msg.isSLCSet) && is_valid(cache_entry)) {
+            // Read rquests with GLC or SLC bit set should not cache in the L1.
+            // They need to bypass the L1 and go to the L2. If an entry exists
+            // in the L1, it needs to be evicted
+            trigger(Event:LoadBypassEvict, in_msg.LineAddress, cache_entry, tbe);
+          }
+          else {
+            trigger(Event:Load, in_msg.LineAddress, cache_entry, tbe);
+          }
         } else if (in_msg.Type == RubyRequestType:ATOMIC ||
                    in_msg.Type == RubyRequestType:ATOMIC_RETURN ||
                    in_msg.Type == RubyRequestType:ATOMIC_NO_RETURN) {
           trigger(Event:Atomic, in_msg.LineAddress, cache_entry, tbe);
         } else if (in_msg.Type == RubyRequestType:ST) {
-          if(disableL1) {
+          if(disableL1 || in_msg.isGLCSet || in_msg.isSLCSet) {
+            // Write requests with GLC or SLC bit set, or when L1 is disabled,
+            // should not cache in the L1. They need to perform a store through
             trigger(Event:StoreThrough, in_msg.LineAddress, cache_entry, tbe);
           } else {
             if (is_valid(cache_entry) || L1cache.cacheAvail(in_msg.LineAddress)) {
@@ -330,6 +343,10 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
                               TCC_select_low_bit, TCC_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Request_Control;
       out_msg.InitialRequestTime := curCycle();
+      peek(mandatoryQueue_in, RubyRequest) {
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
+      }
     }
   }
 
@@ -375,6 +392,8 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
                               TCC_select_low_bit, TCC_select_num_bits));
           out_msg.MessageSize := MessageSizeType:Request_Control;
           out_msg.InitialRequestTime := curCycle();
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
         }
       }
     }
@@ -401,6 +420,8 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
       // forward inst sequence number to lower TCC
       peek(mandatoryQueue_in, RubyRequest) {
         out_msg.instSeqNum := in_msg.instSeqNum;
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
       }
     }
   }
@@ -418,6 +439,11 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
         out_msg.Type := CoherenceRequestType:Atomic;
         out_msg.InitialRequestTime := curCycle();
         out_msg.Shared := false;
+        peek(mandatoryQueue_in, RubyRequest) {
+          out_msg.instSeqNum := in_msg.instSeqNum;
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
+        }
       }
     }
   }
@@ -582,6 +608,17 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     uu_profileDataHit;
     p_popMandatoryQueue;
   }
+
+// Transition to be called when a load request with GLC or SLC flag set arrives
+// at L1. This transition invalidates any existing entry and forwards the
+// request to L2.
+  transition(V, LoadBypassEvict, I) {TagArrayRead, TagArrayWrite} {
+    uu_profileDataMiss;
+    inv_invDone;
+    ic_invCache;
+    n_issueRdBlk;
+    p_popMandatoryQueue;
+}
 
   transition({V, I}, Atomic, A) {TagArrayRead, TagArrayWrite} {
     t_allocateTBE;

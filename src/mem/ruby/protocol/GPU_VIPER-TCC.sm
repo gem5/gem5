@@ -56,8 +56,10 @@ machine(MachineType:TCC, "TCC Cache")
   enumeration(Event, desc="TCC Events") {
     // Requests coming from the Cores
     RdBlk,                  desc="RdBlk event";
+    RdBypassEvict,          desc="Bypass L2 on reads. Evict if cache block already allocated";
     WrVicBlk,               desc="L1 Write Through";
     WrVicBlkBack,           desc="L1 Write Through(dirty cache)";
+    WrVicBlkEvict,          desc="L1 Write Through(dirty cache) and evict";
     Atomic,                 desc="Atomic Op";
     AtomicDone,             desc="AtomicOps Complete";
     AtomicNotDone,          desc="AtomicOps not Complete";
@@ -68,6 +70,7 @@ machine(MachineType:TCC, "TCC Cache")
     PrbInv,                 desc="Invalidating probe";
     // Coming from Memory Controller
     WBAck,                  desc="writethrough ack from memory";
+    Bypass,                 desc="Bypass the entire L2 cache";
   }
 
   // STATES
@@ -107,6 +110,8 @@ machine(MachineType:TCC, "TCC Cache")
     NetDest Destination, desc="Data destination";
     int numAtomics,     desc="number remaining atomics";
     int atomicDoneCnt,  desc="number AtomicDones triggered";
+    bool isGLCSet,      desc="Bypass L1 Cache";
+    bool isSLCSet,      desc="Bypass L1 and L2 Cache";
   }
 
   structure(TBETable, external="yes") {
@@ -173,7 +178,6 @@ machine(MachineType:TCC, "TCC Cache")
 
   int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
-
     TBE tbe := TBEs.lookup(addr);
     if(is_valid(tbe)) {
       num_functional_writes := num_functional_writes +
@@ -279,7 +283,11 @@ machine(MachineType:TCC, "TCC Cache")
       peek(responseFromNB_in, ResponseMsg, block_on="addr") {
         TBE tbe := TBEs.lookup(in_msg.addr);
         Entry cache_entry := getCacheEntry(in_msg.addr);
-        if (in_msg.Type == CoherenceResponseType:NBSysResp) {
+        if (in_msg.isSLCSet) {
+            // If the SLC bit is set, the response needs to bypass the cache
+            // and should not be allocated an entry.
+            trigger(Event:Bypass, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceResponseType:NBSysResp) {
           if(presentOrAvail(in_msg.addr)) {
             trigger(Event:Data, in_msg.addr, cache_entry, tbe);
           } else {
@@ -313,7 +321,18 @@ machine(MachineType:TCC, "TCC Cache")
         TBE tbe := TBEs.lookup(in_msg.addr);
         Entry cache_entry := getCacheEntry(in_msg.addr);
         if (in_msg.Type == CoherenceRequestType:WriteThrough) {
-            if(WB) {
+            if (in_msg.isSLCSet) {
+                // The request should bypass the cache if SLC bit is set.
+                // If the cache entry exists already, then evict it.
+                // Else, perform a normal cache access.
+                // The cache entry is allocated only on response and bypass is
+                // handled there
+                if(presentOrAvail(in_msg.addr)) {
+                    trigger(Event:WrVicBlkEvict, in_msg.addr, cache_entry, tbe);
+                } else {
+                    trigger(Event:WrVicBlk, in_msg.addr, cache_entry, tbe);
+                }
+            } else if(WB) {
                 if(presentOrAvail(in_msg.addr)) {
                     trigger(Event:WrVicBlkBack, in_msg.addr, cache_entry, tbe);
                 } else {
@@ -326,7 +345,13 @@ machine(MachineType:TCC, "TCC Cache")
         } else if (in_msg.Type == CoherenceRequestType:Atomic) {
           trigger(Event:Atomic, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:RdBlk) {
-          trigger(Event:RdBlk, in_msg.addr, cache_entry, tbe);
+          if (in_msg.isSLCSet) {
+            // If SLC bit is set, the request needs to go directly to memory.
+            // If a cache block already exists, then evict it.
+            trigger(Event:RdBypassEvict, in_msg.addr, cache_entry, tbe);
+          } else {
+            trigger(Event:RdBlk, in_msg.addr, cache_entry, tbe);
+          }
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg);
           error("Unexpected Response Message to Core");
@@ -354,6 +379,8 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.MessageSize := MessageSizeType:Response_Data;
         out_msg.Dirty := false;
         out_msg.State := CoherenceState:Shared;
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
         DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
@@ -371,15 +398,46 @@ machine(MachineType:TCC, "TCC Cache")
       out_msg.Dirty := false;
       out_msg.State := CoherenceState:Shared;
       DPRINTF(RubySlicc, "%s\n", out_msg);
+      peek(responseFromNB_in, ResponseMsg) {
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
+      }
     }
     enqueue(unblockToNB_out, UnblockMsg, 1) {
       out_msg.addr := address;
       out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
+      peek(responseFromNB_in, ResponseMsg) {
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
+      }
       DPRINTF(RubySlicc, "%s\n", out_msg);
     }
   }
 
+  action(rb_bypassDone, "rb", desc="bypass L2 of read access") {
+    peek(responseFromNB_in, ResponseMsg) {
+        enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
+          out_msg.addr := address;
+          out_msg.Type := CoherenceResponseType:TDSysResp;
+          out_msg.Sender := machineID;
+          out_msg.Destination := tbe.Destination;
+          out_msg.DataBlk := in_msg.DataBlk;
+          out_msg.MessageSize := MessageSizeType:Response_Data;
+          out_msg.Dirty := false;
+          out_msg.State := CoherenceState:Shared;
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
+          DPRINTF(RubySlicc, "%s\n", out_msg);
+        }
+        enqueue(unblockToNB_out, UnblockMsg, 1) {
+          out_msg.addr := address;
+          out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+          out_msg.MessageSize := MessageSizeType:Unblock_Control;
+          DPRINTF(RubySlicc, "%s\n", out_msg);
+        }
+    }
+  }
 
   action(rd_requestData, "r", desc="Miss in L2, pass on") {
     if(tbe.Destination.count()==1){
@@ -391,6 +449,8 @@ machine(MachineType:TCC, "TCC Cache")
           out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
           out_msg.Shared := false; // unneeded for this request
           out_msg.MessageSize := in_msg.MessageSize;
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
           DPRINTF(RubySlicc, "%s\n", out_msg);
         }
       }
@@ -407,6 +467,9 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.Sender := machineID;
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
         out_msg.instSeqNum := in_msg.instSeqNum;
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
+
       }
     }
   }
@@ -421,6 +484,9 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.Sender := machineID;
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
         out_msg.instSeqNum := in_msg.instSeqNum;
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
+
       }
     }
   }
@@ -434,6 +500,9 @@ machine(MachineType:TCC, "TCC Cache")
           out_msg.Sender := machineID;
           out_msg.MessageSize := in_msg.MessageSize;
           out_msg.DataBlk := in_msg.DataBlk;
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
+
         }
     }
   }
@@ -466,6 +535,8 @@ machine(MachineType:TCC, "TCC Cache")
       peek(coreRequestNetwork_in, CPURequestMsg) {
         if(in_msg.Type == CoherenceRequestType:RdBlk || in_msg.Type == CoherenceRequestType:Atomic){
           tbe.Destination.add(in_msg.Requestor);
+          tbe.isGLCSet := in_msg.isGLCSet;
+          tbe.isSLCSet := in_msg.isSLCSet;
         }
       }
     }
@@ -505,6 +576,8 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.writeMask.orMask(in_msg.writeMask);
         out_msg.instSeqNum := in_msg.instSeqNum;
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
       }
     }
   }
@@ -520,6 +593,10 @@ machine(MachineType:TCC, "TCC Cache")
       out_msg.Dirty := true;
       out_msg.DataBlk := cache_entry.DataBlk;
       out_msg.writeMask.orMask(cache_entry.writeMask);
+      peek(coreRequestNetwork_in, CPURequestMsg) {
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
+      }
     }
   }
 
@@ -534,6 +611,8 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.Type := CoherenceRequestType:Atomic;
         out_msg.Dirty := true;
         out_msg.writeMask.orMask(in_msg.writeMask);
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
       }
     }
   }
@@ -549,6 +628,10 @@ machine(MachineType:TCC, "TCC Cache")
       out_msg.Ntsl := true;
       out_msg.State := CoherenceState:NA;
       out_msg.MessageSize := MessageSizeType:Response_Control;
+      peek(probeNetwork_in, NBProbeRequestMsg) {
+        out_msg.isGLCSet := in_msg.isGLCSet;
+        out_msg.isSLCSet := in_msg.isSLCSet;
+      }
     }
   }
   action(ut_updateTag, "ut", desc="update Tag (i.e. set MRU)") {
@@ -592,6 +675,10 @@ machine(MachineType:TCC, "TCC Cache")
         tbe.atomicDoneCnt := tbe.atomicDoneCnt + 1;
         out_msg.addr := address;
         out_msg.Type := TriggerType:AtomicDone;
+        peek(responseFromNB_in, ResponseMsg) {
+          out_msg.isGLCSet := in_msg.isGLCSet;
+          out_msg.isSLCSet := in_msg.isSLCSet;
+        }
       }
     }
   }
@@ -657,6 +744,54 @@ machine(MachineType:TCC, "TCC Cache")
     t_allocateTBE;
     rd_requestData;
     p_popRequestQueue;
+  }
+
+  transition(I, RdBypassEvict) {TagArrayRead} {
+    p_profileMiss;
+    t_allocateTBE;
+    rd_requestData;
+    p_popRequestQueue;
+  }
+
+// Transition to be called when a read request with SLC flag set arrives at
+// entry in state W. It evicts and invalidates the cache entry before
+// forwarding the request to global memory
+  transition(W, RdBypassEvict, I) {TagArrayRead} {
+    p_profileMiss;
+    t_allocateTBE;
+    wb_writeBack;
+    i_invL2;
+    rd_requestData;
+    p_popRequestQueue;
+  }
+
+// Transition to be called when a read request with SLC flag set arrives at
+// entry in state M. It evicts and invalidates the cache entry before
+// forwarding the request to global memory to main memory
+  transition(M, RdBypassEvict, I) {TagArrayRead} {
+    p_profileMiss;
+    t_allocateTBE;
+    wb_writeBack;
+    i_invL2;
+    rd_requestData;
+    p_popRequestQueue;
+  }
+
+// Transition to be called when a read request with SLC flag set arrives at
+// entry in state V. It invalidates the cache entry before forwarding the
+// request to global memory.
+  transition(V, RdBypassEvict, I) {TagArrayRead} {
+    p_profileMiss;
+    t_allocateTBE;
+    i_invL2;
+    rd_requestData;
+    p_popRequestQueue;
+  }
+
+// Transition to be called when a read request with SLC flag arrives at entry
+// in transient state. The request stalls until the pending transition is complete.
+  transition({WI, IV}, RdBypassEvict)  {
+    st_stallAndWaitRequest;
   }
 
   transition(V, Atomic, A) {TagArrayRead} {
@@ -730,6 +865,31 @@ transition(I, Atomic, A) {TagArrayRead} {
     p_popRequestQueue;
   }
 
+// Transition to be called when a write request with SLC bit set arrives at an
+// entry with state V. The entry has to be evicted and invalidated before the
+// request is forwarded to global memory
+  transition(V, WrVicBlkEvict, I) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
+    p_profileMiss;
+    ut_updateTag;
+    t_allocateTBE;
+    wt_writeThrough;
+    i_invL2;
+    p_popRequestQueue;
+  }
+
+// Transition to be called when a write request with SLC bit set arrives at an
+// entry with state W. The entry has to be evicted and invalidated before the
+// request is forwarded to global memory.
+  transition(W, WrVicBlkEvict, I) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
+    p_profileMiss;
+    ut_updateTag;
+    wdb_writeDirtyBytes;
+    t_allocateTBE;
+    wb_writeBack;
+    i_invL2;
+    p_popRequestQueue;
+  }
+
   transition({W, M}, L2_Repl, WI) {TagArrayRead, DataArrayRead} {
     t_allocateTBE;
     wb_writeBack;
@@ -762,6 +922,16 @@ transition(I, Atomic, A) {TagArrayRead} {
   transition({A, IV, WI}, PrbInv) {
     pi_sendProbeResponseInv;
     pp_popProbeQueue;
+  }
+
+// Transition to be called when the response for a request with SLC bit set
+// arrives. The request has to be forwarded to the core that needs it while
+// making sure no entry is allocated.
+  transition(I, Bypass, I) {
+    rb_bypassDone;
+    pr_popResponseQueue;
+    wada_wakeUpAllDependentsAddr;
+    dt_deallocateTBE;
   }
 
   transition(IV, Data, V) {TagArrayRead, TagArrayWrite, DataArrayWrite} {

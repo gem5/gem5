@@ -1071,6 +1071,17 @@ class Request
 
     bool isAcquire() const { return _cacheCoherenceFlags.isSet(ACQUIRE); }
 
+
+    /**
+     * Accessor functions for the cache bypass flags. The cache bypass
+     * can specify which levels in the hierarchy to bypass. If GLC_BIT
+     * is set, the requests are globally coherent and bypass TCP.
+     * If SLC_BIT is set, then the requests are system level coherent
+     * and bypass both TCP and TCC.
+     */
+    bool isGLCSet() const {return _cacheCoherenceFlags.isSet(GLC_BIT); }
+    bool isSLCSet() const {return _cacheCoherenceFlags.isSet(SLC_BIT); }
+
     /**
      * Accessor functions for the memory space configuration flags and used by
      * GPU ISAs such as the Heterogeneous System Architecture (HSA). Note that
