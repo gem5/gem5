@@ -40,5 +40,6 @@ from m5.objects import *
 from base_config import *
 
 nb_cores = 4
-root = BaseSESystem(mem_mode='timing', cpu_class=TimingSimpleCPU,
-                    num_cpus=nb_cores).create_root()
+root = BaseSESystem(
+    mem_mode="timing", cpu_class=TimingSimpleCPU, num_cpus=nb_cores
+).create_root()

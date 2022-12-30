@@ -36,8 +36,10 @@
 from m5.objects import *
 from arm_generic import *
 
-root = LinuxArmFSSystemUniprocessor(aarch64_kernel=False,
-                                    machine_type='VExpress_GEM5_V1',
-                                    mem_mode='timing',
-                                    mem_class=DDR3_1600_8x8,
-                                    cpu_class=MinorCPU).create_root()
+root = LinuxArmFSSystemUniprocessor(
+    aarch64_kernel=False,
+    machine_type="VExpress_GEM5_V1",
+    mem_mode="timing",
+    mem_class=DDR3_1600_8x8,
+    cpu_class=ArmMinorCPU,
+).create_root()

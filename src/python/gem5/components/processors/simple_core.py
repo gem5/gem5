@@ -26,97 +26,124 @@
 
 from typing import Optional
 from ...utils.requires import requires
-from ..processors.abstract_core import AbstractCore
-
+from .base_cpu_core import BaseCPUCore
 from .cpu_types import CPUTypes
 from ...isas import ISA
+from ...utils.requires import requires
 from ...runtime import get_runtime_isa
-from ...utils.override import overrides
-
-from m5.objects import (
-    BaseMMU,
-    Port,
-    BaseCPU,
-    Process,
-)
+import importlib
+import platform
 
 
-class SimpleCore(AbstractCore):
+class SimpleCore(BaseCPUCore):
+    """
+    A SimpleCore instantiates a core based on the CPUType enum pass. The
+    SimpleCore creates a single SimObject of that type.
+    """
 
     def __init__(
-        self,
-        cpu_type: CPUTypes,
-        core_id: int,
-        isa: Optional[ISA]= None
+        self, cpu_type: CPUTypes, core_id: int, isa: Optional[ISA] = None
     ):
-        super().__init__(cpu_type=cpu_type)
+
+        # If the ISA is not specified, we infer it via the `get_runtime_isa`
+        # function.
         if isa:
             requires(isa_required=isa)
-            self._isa = isa
+            isa = isa
         else:
-            self._isa = get_runtime_isa()
-        self.core = AbstractCore.cpu_simobject_factory(
-            isa=self._isa,
-            cpu_type=cpu_type,
-            core_id=core_id
+            isa = get_runtime_isa()
+
+        super().__init__(
+            core=SimpleCore.cpu_simobject_factory(
+                isa=isa, cpu_type=cpu_type, core_id=core_id
+            ),
+            isa=isa,
         )
-        self.core.createThreads()
 
-    def get_simobject(self) -> BaseCPU:
-        return self.core
+        self._cpu_type = cpu_type
 
-    @overrides(AbstractCore)
-    def get_isa(self) -> ISA:
-        return self._isa
+    def get_type(self) -> CPUTypes:
+        return self._cpu_type
 
-    @overrides(AbstractCore)
-    def connect_icache(self, port: Port) -> None:
-        self.core.icache_port = port
+    @classmethod
+    def cpu_simobject_factory(cls, cpu_type: CPUTypes, isa: ISA, core_id: int):
+        """
+        A factory used to return the SimObject core object given the cpu type,
+        and ISA target. An exception will be thrown if there is an
+        incompatibility.
 
-    @overrides(AbstractCore)
-    def connect_dcache(self, port: Port) -> None:
-        self.core.dcache_port = port
+        :param cpu_type: The target CPU type.
+        :param isa: The target ISA.
+        :param core_id: The id of the core to be returned.
+        """
 
-    @overrides(AbstractCore)
-    def connect_walker_ports(self, port1: Port, port2: Port) -> None:
-        if self.get_isa() == ISA.ARM:
+        assert isa is not None
+        requires(isa_required=isa)
 
-            # Unlike X86 and RISCV MMU, the ARM MMU has two L1 TLB walker ports
-            # named `walker` and `stage2_walker` for both data and instruction.
-            # The gem5 standard library currently supports one TLB walker port
-            # per cache level. Therefore, we are explicitly setting the walker
-            # ports and not setting the stage2_walker ports for ARM systems.
+        _isa_string_map = {
+            ISA.X86: "X86",
+            ISA.ARM: "Arm",
+            ISA.RISCV: "Riscv",
+            ISA.SPARC: "Sparc",
+            ISA.POWER: "Power",
+            ISA.MIPS: "Mips",
+        }
 
-            self.core.mmu.itb_walker.port = port1
-            self.core.mmu.dtb_walker.port = port2
+        _cpu_types_string_map = {
+            CPUTypes.ATOMIC: "AtomicSimpleCPU",
+            CPUTypes.O3: "O3CPU",
+            CPUTypes.TIMING: "TimingSimpleCPU",
+            CPUTypes.KVM: "KvmCPU",
+            CPUTypes.MINOR: "MinorCPU",
+        }
+
+        if isa not in _isa_string_map:
+            raise NotImplementedError(
+                f"ISA '{isa.name}' does not have an"
+                "entry in `AbstractCore.cpu_simobject_factory._isa_string_map`"
+            )
+
+        if cpu_type not in _cpu_types_string_map:
+            raise NotImplementedError(
+                f"CPUType '{cpu_type.name}' "
+                "does not have an entry in "
+                "`AbstractCore.cpu_simobject_factory._cpu_types_string_map`"
+            )
+
+        if cpu_type == CPUTypes.KVM:
+            # For some reason, the KVM CPU is under "m5.objects" not the
+            # "m5.objects.{ISA}CPU".
+            module_str = f"m5.objects"
         else:
-            self.core.mmu.connectWalkerPorts(port1, port2)
+            module_str = f"m5.objects.{_isa_string_map[isa]}CPU"
 
-    @overrides(AbstractCore)
-    def set_workload(self, process: Process) -> None:
-        self.core.workload = process
+        # GEM5 compiles two versions of KVM for ARM depending upon the host CPU
+        # : ArmKvmCPU and ArmV8KvmCPU for 32 bit (Armv7l) and 64 bit (Armv8)
+        # respectively.
 
-    @overrides(AbstractCore)
-    def set_switched_out(self, value: bool) -> None:
-        self.core.switched_out = value
+        if (
+            isa.name == "ARM"
+            and cpu_type == CPUTypes.KVM
+            and platform.architecture()[0] == "64bit"
+        ):
+            cpu_class_str = (
+                f"{_isa_string_map[isa]}V8"
+                f"{_cpu_types_string_map[cpu_type]}"
+            )
+        else:
+            cpu_class_str = (
+                f"{_isa_string_map[isa]}" f"{_cpu_types_string_map[cpu_type]}"
+            )
 
-    @overrides(AbstractCore)
-    def connect_interrupt(
-        self, interrupt_requestor: Optional[Port] = None,
-        interrupt_responce: Optional[Port] = None
-    ) -> None:
+        try:
+            to_return_cls = getattr(
+                importlib.import_module(module_str), cpu_class_str
+            )
+        except ImportError:
+            raise Exception(
+                f"Cannot find CPU type '{cpu_type.name}' for '{isa.name}' "
+                "ISA. Please ensure you have compiled the correct version of "
+                "gem5."
+            )
 
-        # TODO: This model assumes that we will only create an interrupt
-        # controller as we require it. Not sure how true this is in all cases.
-        self.core.createInterruptController()
-
-        if self.get_isa() == ISA.X86:
-            if interrupt_requestor != None:
-                self.core.interrupts[0].pio = interrupt_requestor
-                self.core.interrupts[0].int_responder = interrupt_requestor
-            if interrupt_responce != None:
-                self.core.interrupts[0].int_requestor = interrupt_responce
-
-    @overrides(AbstractCore)
-    def get_mmu(self) -> BaseMMU:
-        return self.core.mmu
+        return to_return_cls(cpu_id=core_id)

@@ -30,7 +30,7 @@ from m5.defines import buildEnv
 from m5.util import addToPath
 import os, argparse, sys
 
-m5.util.addToPath('../configs/')
+m5.util.addToPath("../configs/")
 
 from common import Options
 from ruby import Ruby
@@ -47,34 +47,34 @@ args = parser.parse_args()
 # Set the default cache size and associativity to be very small to encourage
 # races between requests and writebacks.
 #
-args.l1d_size="256B"
-args.l1i_size="256B"
-args.l2_size="512B"
-args.l3_size="1kB"
-args.l1d_assoc=2
-args.l1i_assoc=2
-args.l2_assoc=2
-args.l3_assoc=2
+args.l1d_size = "256B"
+args.l1i_size = "256B"
+args.l2_size = "512B"
+args.l3_size = "1kB"
+args.l1d_assoc = 2
+args.l1i_assoc = 2
+args.l2_assoc = 2
+args.l3_assoc = 2
 
 nb_cores = 4
-cpus = [ TimingSimpleCPU(cpu_id=i) for i in range(nb_cores) ]
+cpus = [TimingSimpleCPU(cpu_id=i) for i in range(nb_cores)]
 
 # overwrite the num_cpus to equal nb_cores
 args.num_cpus = nb_cores
 
 # system simulated
-system = System(cpu = cpus, clk_domain = SrcClockDomain(clock = '1GHz'))
+system = System(cpu=cpus, clk_domain=SrcClockDomain(clock="1GHz"))
 
 # Create a seperate clock domain for components that should run at
 # CPUs frequency
-system.cpu.clk_domain = SrcClockDomain(clock = '2GHz')
+system.cpu.clk_domain = SrcClockDomain(clock="2GHz")
 
 Ruby.create_system(args, False, system)
 
 # Create a separate clock domain for Ruby
-system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock)
+system.ruby.clk_domain = SrcClockDomain(clock=args.ruby_clock)
 
-assert(args.num_cpus == len(system.ruby._cpu_ports))
+assert args.num_cpus == len(system.ruby._cpu_ports)
 
 for (i, cpu) in enumerate(system.cpu):
     # create the interrupt controller
@@ -86,11 +86,12 @@ for (i, cpu) in enumerate(system.cpu):
     cpu.connectAllPorts(
         system.ruby._cpu_ports[i].in_ports,
         system.ruby._cpu_ports[i].in_ports,
-        system.ruby._cpu_ports[i].interrupt_out_port)
+        system.ruby._cpu_ports[i].interrupt_out_port,
+    )
 
 # -----------------------
 # run simulation
 # -----------------------
 
-root = Root( full_system=False, system = system )
-root.system.mem_mode = 'timing'
+root = Root(full_system=False, system=system)
+root.system.mem_mode = "timing"

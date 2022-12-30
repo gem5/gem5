@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop HSUBPS_XMM_XMM {
     shuffle ufp1, xmml, xmmh, ext=((0 << 0) | (2 << 2)), size=4
     shuffle ufp2, xmml, xmmh, ext=((1 << 0) | (3 << 2)), size=4
@@ -81,4 +81,4 @@ def macroop HSUBPD_XMM_P {
     msubf xmml, xmml, xmmh, size=8, ext=Scalar
     msubf xmmh, ufp1, ufp2, size=8, ext=Scalar
 };
-'''
+"""

@@ -50,14 +50,14 @@ def template MicroFaultDeclare {{
         %(class_name)s(ExtMachInst mach_inst, const char *inst_mnem,
                 uint64_t set_flags, Fault _fault, uint8_t _cc);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 
 def template MicroFaultExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         %(op_decl)s;
         %(op_rd)s;
@@ -134,7 +134,7 @@ let {{
 }};
 
 def template MicroFenceOpDeclare {{
-    class %(class_name)s : public X86ISA::X86MicroopBase
+    class %(class_name)s : public %(base_class)s
     {
       private:
         %(reg_idx_arr_decl)s;
@@ -144,7 +144,7 @@ def template MicroFenceOpDeclare {{
                 uint64_t set_flags);
 
         Fault
-        execute(ExecContext *, Trace::InstRecord *) const override
+        execute(ExecContext *, trace::InstRecord *) const override
         {
             return NoFault;
         }
@@ -190,4 +190,95 @@ let {{
             {"code" : ""})
     header_output += MicroFenceOpDeclare.subst(iop)
     decoder_output += MicroFenceOpConstructor.subst(iop)
+    # exec_output += BasicExecute.subst(iop)
+}};
+
+let {{
+    class SfenceOp(X86Microop):
+        def __init__(self):
+            self.className = "Sfence"
+            self.mnemonic = "sfence"
+            self.instFlags = "| (1ULL << StaticInst::IsWriteBarrier)"
+
+        def getAllocator(self, microFlags):
+            allocString = '''
+                    (StaticInstPtr)(new %(class_name)s(machInst,
+                        macrocodeBlock, %(flags)s))
+            '''
+            allocator = allocString % {
+                "class_name" : self.className,
+                "mnemonic" : self.mnemonic,
+                "flags" : self.microFlagsText(microFlags) + self.instFlags}
+            return allocator
+
+    microopClasses["sfence"] = SfenceOp
+}};
+
+let {{
+    # Build up the all register version of this micro op
+    iop = InstObjParams("sfence", "Sfence", 'X86MicroopBase',
+            {"code" : ""})
+    header_output += MicroFenceOpDeclare.subst(iop)
+    decoder_output += MicroFenceOpConstructor.subst(iop)
+    # exec_output += BasicExecute.subst(iop)
+}};
+
+let {{
+    class LfenceOp(X86Microop):
+        def __init__(self):
+            self.className = "Lfence"
+            self.mnemonic = "lfence"
+            self.instFlags = "| (1ULL << StaticInst::IsReadBarrier)"
+
+        def getAllocator(self, microFlags):
+            allocString = '''
+                    (StaticInstPtr)(new %(class_name)s(machInst,
+                        macrocodeBlock, %(flags)s))
+            '''
+            allocator = allocString % {
+                "class_name" : self.className,
+                "mnemonic" : self.mnemonic,
+                "flags" : self.microFlagsText(microFlags) + self.instFlags}
+            return allocator
+
+    microopClasses["lfence"] = LfenceOp
+}};
+
+let {{
+    # Build up the all register version of this micro op
+    iop = InstObjParams("lfence", "Lfence", 'X86MicroopBase',
+            {"code" : ""})
+    header_output += MicroFenceOpDeclare.subst(iop)
+    decoder_output += MicroFenceOpConstructor.subst(iop)
+    # exec_output += BasicExecute.subst(iop)
+}};
+
+let {{
+    class SerializeOp(X86Microop):
+        def __init__(self):
+            self.className = "Serialize"
+            self.mnemonic = "serialize"
+            self.instFlags = "| (1ULL << StaticInst::IsSerializeAfter)"
+
+        def getAllocator(self, microFlags):
+            allocString = '''
+                    (StaticInstPtr)(new %(class_name)s(machInst,
+                        macrocodeBlock, %(flags)s))
+            '''
+            allocator = allocString % {
+                "class_name" : self.className,
+                "mnemonic" : self.mnemonic,
+                "flags" : self.microFlagsText(microFlags) + self.instFlags}
+            return allocator
+
+    microopClasses["serialize"] = SerializeOp
+}};
+
+let {{
+    # Build up the all register version of this micro op
+    iop = InstObjParams("serialize", "Serialize", 'X86MicroopBase',
+            {"code" : ""})
+    header_output += MicroFenceOpDeclare.subst(iop)
+    decoder_output += MicroFenceOpConstructor.subst(iop)
+    # exec_output += BasicExecute.subst(iop)
 }};

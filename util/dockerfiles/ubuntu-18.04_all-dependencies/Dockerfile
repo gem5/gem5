@@ -33,7 +33,7 @@ RUN apt -y update && apt -y upgrade && \
     libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config \
     python3-pip python3-venv
 
-RUN pip3 install mypy
+RUN pip3 install black mypy pre-commit
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python2 1

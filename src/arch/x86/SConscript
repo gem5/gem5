@@ -40,6 +40,9 @@
 
 Import('*')
 
+if env['USE_X86_ISA']:
+    env.TagImplies('x86 isa', 'gem5 lib')
+
 Source('cpuid.cc', tags='x86 isa')
 Source('decoder.cc', tags='x86 isa')
 Source('decoder_tables.cc', tags='x86 isa')
@@ -74,10 +77,6 @@ SimObject('X86TLB.py', sim_objects=['X86PagetableWalker', 'X86TLB'],
     tags='x86 isa')
 
 SimObject('X86CPU.py', sim_objects=[], tags='x86 isa')
-SimObject('AtomicSimpleCPU.py', sim_objects=[], tags='x86 isa')
-SimObject('TimingSimpleCPU.py', sim_objects=[], tags='x86 isa')
-SimObject('NonCachingSimpleCPU.py', sim_objects=[], tags='x86 isa')
-SimObject('O3CPU.py', sim_objects=[], tags='x86 isa')
 
 DebugFlag('LocalApic', "Local APIC debugging", tags='x86 isa')
 DebugFlag('X86', "Generic X86 ISA debugging", tags='x86 isa')

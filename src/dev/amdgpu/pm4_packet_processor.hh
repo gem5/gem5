@@ -54,8 +54,10 @@ class PM4PacketProcessor : public DmaVirtDevice
     AMDGPUDevice *gpuDevice;
     /* First graphics queue */
     PrimaryQueue pq;
+    PM4MapQueues pq_pkt;
     /* First compute queue */
     QueueDesc kiq;
+    PM4MapQueues kiq_pkt;
 
     /* All PM4 queues, indexed by VMID */
     std::unordered_map<uint16_t, PM4Queue *> queues;
@@ -169,6 +171,7 @@ class PM4PacketProcessor : public DmaVirtDevice
     void setHqdPqRptrReportAddrHi(uint32_t data);
     void setHqdPqWptrPollAddr(uint32_t data);
     void setHqdPqWptrPollAddrHi(uint32_t data);
+    void setHqdPqControl(uint32_t data);
     void setHqdIbCtrl(uint32_t data);
     void setRbVmid(uint32_t data);
     void setRbCntl(uint32_t data);

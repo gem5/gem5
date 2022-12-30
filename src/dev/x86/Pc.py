@@ -35,9 +35,11 @@ from m5.objects.Uart import Uart8250
 from m5.objects.PciHost import GenericPciHost
 from m5.objects.XBar import IOXBar
 
+
 def x86IOAddress(port):
     IO_address_space_base = 0x8000000000000000
-    return IO_address_space_base + port;
+    return IO_address_space_base + port
+
 
 class PcPciHost(GenericPciHost):
     conf_base = 0xC000000000000000
@@ -45,10 +47,11 @@ class PcPciHost(GenericPciHost):
 
     pci_pio_base = 0x8000000000000000
 
+
 class Pc(Platform):
-    type = 'Pc'
+    type = "Pc"
     cxx_header = "dev/x86/pc.hh"
-    cxx_class = 'gem5::Pc'
+    cxx_class = "gem5::Pc"
     system = Param.System(Parent.any, "system")
 
     south_bridge = Param.SouthBridge(SouthBridge(), "Southbridge")
@@ -56,29 +59,35 @@ class Pc(Platform):
 
     # Serial port and terminal
     com_1 = Uart8250()
-    com_1.pio_addr = x86IOAddress(0x3f8)
+    com_1.pio_addr = x86IOAddress(0x3F8)
     com_1.device = Terminal()
 
     # Devices to catch access to non-existant serial ports.
-    fake_com_2 = IsaFake(pio_addr=x86IOAddress(0x2f8), pio_size=8)
-    fake_com_3 = IsaFake(pio_addr=x86IOAddress(0x3e8), pio_size=8)
-    fake_com_4 = IsaFake(pio_addr=x86IOAddress(0x2e8), pio_size=8)
+    fake_com_2 = IsaFake(pio_addr=x86IOAddress(0x2F8), pio_size=8)
+    fake_com_3 = IsaFake(pio_addr=x86IOAddress(0x3E8), pio_size=8)
+    fake_com_4 = IsaFake(pio_addr=x86IOAddress(0x2E8), pio_size=8)
 
     # A device to catch accesses to the non-existant floppy controller.
-    fake_floppy = IsaFake(pio_addr=x86IOAddress(0x3f2), pio_size=2)
+    fake_floppy = IsaFake(pio_addr=x86IOAddress(0x3F2), pio_size=2)
 
     # A bus for accesses not claimed by a specific device.
     default_bus = IOXBar()
 
     # A device to handle accesses to unclaimed IO ports.
-    empty_isa = IsaFake(pio_addr=x86IOAddress(0), pio_size='64KiB',
-                        ret_data8=0, ret_data16=0, ret_data32=0, ret_data64=0,
-                        pio=default_bus.mem_side_ports)
+    empty_isa = IsaFake(
+        pio_addr=x86IOAddress(0),
+        pio_size="64KiB",
+        ret_data8=0,
+        ret_data16=0,
+        ret_data32=0,
+        ret_data64=0,
+        pio=default_bus.mem_side_ports,
+    )
 
     # A device to handle any other type of unclaimed access.
     bad_addr = BadAddr(pio=default_bus.default)
 
-    def attachIO(self, bus, dma_ports = []):
+    def attachIO(self, bus, dma_ports=[]):
         self.south_bridge.attachIO(bus, dma_ports)
         self.com_1.pio = bus.mem_side_ports
         self.fake_com_2.pio = bus.mem_side_ports

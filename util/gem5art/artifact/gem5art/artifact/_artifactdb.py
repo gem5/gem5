@@ -388,7 +388,7 @@ class ArtifactFileDB(ArtifactDB):
         if count >= limit:
             return
         for artifact in self._uuid_artifact_map.values():
-            #https://docs.python.org/3/library/stdtypes.html#frozenset.issubset
+            # https://docs.python.org/3/library/stdtypes.html#frozenset.issubset
             if attr.items() <= artifact.items():
                 yield artifact
 

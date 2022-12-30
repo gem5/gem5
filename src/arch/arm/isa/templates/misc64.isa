@@ -45,7 +45,7 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst,uint64_t _imm);
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -69,7 +69,7 @@ class %(class_name)s : public %(base_class)s
     %(class_name)s(ExtMachInst machInst,
                    RegIndex _dest, RegIndex _op1,
                    uint64_t _imm1, uint64_t _imm2);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -95,7 +95,7 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _dest, RegIndex _op1,
                    RegIndex _op2, uint64_t _imm);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -121,7 +121,7 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, MiscRegIndex _dest, uint64_t _imm);
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -144,17 +144,17 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,
-            RegIndex _op1, uint64_t _imm);
+            RegIndex _op1);
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
 def template MiscRegRegOp64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,
-                                   RegIndex _op1, uint64_t _imm) :
+                                   RegIndex _op1) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                       _dest, _op1, _imm)
+                       _dest, _op1)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
@@ -170,17 +170,17 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _dest,
-            MiscRegIndex _op1, uint64_t _imm);
+            MiscRegIndex _op1);
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
 def template RegMiscRegOp64Constructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _dest,
-                                   MiscRegIndex _op1, uint64_t _imm) :
+                                   MiscRegIndex _op1) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                       _dest, _op1, _imm)
+                       _dest, _op1)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
@@ -197,7 +197,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _dest);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -221,7 +221,7 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _dest);
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, trace::InstRecord *) const;
 };
 }};
 
@@ -244,12 +244,12 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,
-            RegIndex _op1, uint64_t _imm, bool dvm_enabled);
+            RegIndex _op1, bool dvm_enabled);
 
-    Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+    Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
     Fault completeAcc(PacketPtr, ExecContext *,
-                      Trace::InstRecord *) const override;
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+                      trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -266,19 +266,18 @@ def template DvmDeclare {{
       public:
         /// Constructor.
         %(class_name)s(ExtMachInst machInst, bool dvm_enabled);
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 
 def template DvmTlbiConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst, MiscRegIndex _dest,
-                                   RegIndex _op1, uint64_t _imm,
-                                   bool dvm_enabled) :
+                                   RegIndex _op1, bool dvm_enabled) :
         %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                       _dest, _op1, _imm),
+                       _dest, _op1),
         dvmEnabled(dvm_enabled)
     {
         %(set_reg_idx_arr)s;
@@ -307,7 +306,7 @@ def template DvmConstructor {{
 def template DvmInitiateAcc {{
     Fault
     %(class_name)s::initiateAcc(ExecContext *xc,
-                                Trace::InstRecord *traceData) const
+                                trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -327,7 +326,7 @@ def template DvmInitiateAcc {{
 def template DvmCompleteAcc {{
     Fault
     %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-                                Trace::InstRecord *traceData) const
+                                trace::InstRecord *traceData) const
     {
         return NoFault;
     }

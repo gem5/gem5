@@ -28,6 +28,7 @@
 
 from slicc.ast.StatementAST import StatementAST
 
+
 class CheckNextCycleAST(StatementAST):
     def __init__(self, slicc):
         super().__init__(slicc)

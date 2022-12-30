@@ -31,6 +31,7 @@
 #define __ARCH_POWER_REGS_INT_HH__
 
 #include "cpu/reg_class.hh"
+#include "debug/IntRegs.hh"
 
 namespace gem5
 {
@@ -92,50 +93,58 @@ enum : RegIndex
     NumRegs
 };
 
-inline constexpr RegId
-    R0(IntRegClass, _R0Idx),
-    R1(IntRegClass, _R1Idx),
-    R2(IntRegClass, _R2Idx),
-    R3(IntRegClass, _R3Idx),
-    R4(IntRegClass, _R4Idx),
-    R5(IntRegClass, _R5Idx),
-    R6(IntRegClass, _R6Idx),
-    R7(IntRegClass, _R7Idx),
-    R8(IntRegClass, _R8Idx),
-    R9(IntRegClass, _R9Idx),
-    R10(IntRegClass, _R10Idx),
-    R11(IntRegClass, _R11Idx),
-    R12(IntRegClass, _R12Idx),
-    R13(IntRegClass, _R13Idx),
-    R14(IntRegClass, _R14Idx),
-    R15(IntRegClass, _R15Idx),
-    R16(IntRegClass, _R16Idx),
-    R17(IntRegClass, _R17Idx),
-    R18(IntRegClass, _R18Idx),
-    R19(IntRegClass, _R19Idx),
-    R20(IntRegClass, _R20Idx),
-    R21(IntRegClass, _R21Idx),
-    R22(IntRegClass, _R22Idx),
-    R23(IntRegClass, _R23Idx),
-    R24(IntRegClass, _R24Idx),
-    R25(IntRegClass, _R25Idx),
-    R26(IntRegClass, _R26Idx),
-    R27(IntRegClass, _R27Idx),
-    R28(IntRegClass, _R28Idx),
-    R29(IntRegClass, _R29Idx),
-    R30(IntRegClass, _R30Idx),
-    R31(IntRegClass, _R31Idx),
+} // namespace int_reg
 
-    Cr(IntRegClass, _CrIdx),
-    Xer(IntRegClass, _XerIdx),
-    Lr(IntRegClass, _LrIdx),
-    Ctr(IntRegClass, _CtrIdx),
-    Tar(IntRegClass, _TarIdx),
-    Fpscr(IntRegClass, _FpscrIdx),
-    Msr(IntRegClass, _MsrIdx),
-    Rsv(IntRegClass, _RsvIdx),
-    RsvLen(IntRegClass, _RsvLenIdx),
-    RsvAddr(IntRegClass, _RsvAddrIdx);
+inline constexpr RegClass intRegClass(IntRegClass, IntRegClassName,
+        int_reg::NumRegs, debug::IntRegs);
+
+namespace int_reg
+{
+
+inline constexpr RegId
+    R0 = intRegClass[_R0Idx],
+    R1 = intRegClass[_R1Idx],
+    R2 = intRegClass[_R2Idx],
+    R3 = intRegClass[_R3Idx],
+    R4 = intRegClass[_R4Idx],
+    R5 = intRegClass[_R5Idx],
+    R6 = intRegClass[_R6Idx],
+    R7 = intRegClass[_R7Idx],
+    R8 = intRegClass[_R8Idx],
+    R9 = intRegClass[_R9Idx],
+    R10 = intRegClass[_R10Idx],
+    R11 = intRegClass[_R11Idx],
+    R12 = intRegClass[_R12Idx],
+    R13 = intRegClass[_R13Idx],
+    R14 = intRegClass[_R14Idx],
+    R15 = intRegClass[_R15Idx],
+    R16 = intRegClass[_R16Idx],
+    R17 = intRegClass[_R17Idx],
+    R18 = intRegClass[_R18Idx],
+    R19 = intRegClass[_R19Idx],
+    R20 = intRegClass[_R20Idx],
+    R21 = intRegClass[_R21Idx],
+    R22 = intRegClass[_R22Idx],
+    R23 = intRegClass[_R23Idx],
+    R24 = intRegClass[_R24Idx],
+    R25 = intRegClass[_R25Idx],
+    R26 = intRegClass[_R26Idx],
+    R27 = intRegClass[_R27Idx],
+    R28 = intRegClass[_R28Idx],
+    R29 = intRegClass[_R29Idx],
+    R30 = intRegClass[_R30Idx],
+    R31 = intRegClass[_R31Idx],
+
+    Cr = intRegClass[_CrIdx],
+    Xer = intRegClass[_XerIdx],
+    Lr = intRegClass[_LrIdx],
+    Ctr = intRegClass[_CtrIdx],
+    Tar = intRegClass[_TarIdx],
+    Fpscr = intRegClass[_FpscrIdx],
+    Msr = intRegClass[_MsrIdx],
+    Rsv = intRegClass[_RsvIdx],
+    RsvLen = intRegClass[_RsvLenIdx],
+    RsvAddr = intRegClass[_RsvAddrIdx];
 
 } // namespace int_reg
 

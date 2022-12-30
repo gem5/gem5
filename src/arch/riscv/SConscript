@@ -43,6 +43,9 @@
 
 Import('*')
 
+if env['USE_RISCV_ISA']:
+    env.TagImplies('riscv isa', 'gem5 lib')
+
 Source('decoder.cc', tags='riscv isa')
 Source('faults.cc', tags='riscv isa')
 Source('isa.cc', tags='riscv isa')
@@ -75,11 +78,6 @@ SimObject('RiscvTLB.py', sim_objects=['RiscvPagetableWalker', 'RiscvTLB'],
     tags='riscv isa')
 
 SimObject('RiscvCPU.py', sim_objects=[], tags='riscv isa')
-SimObject('AtomicSimpleCPU.py', sim_objects=[], tags='riscv isa')
-SimObject('TimingSimpleCPU.py', sim_objects=[], tags='riscv isa')
-SimObject('NonCachingSimpleCPU.py', sim_objects=[], tags='riscv isa')
-SimObject('O3CPU.py', sim_objects=[], tags='riscv isa')
-SimObject('MinorCPU.py', sim_objects=[], tags='riscv isa')
 
 DebugFlag('RiscvMisc', tags='riscv isa')
 DebugFlag('PMP', tags='riscv isa')

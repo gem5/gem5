@@ -29,6 +29,9 @@
 #ifndef __ARCH_POWER_REGS_FLOAT_HH__
 #define __ARCH_POWER_REGS_FLOAT_HH__
 
+#include "cpu/reg_class.hh"
+#include "debug/FloatRegs.hh"
+
 namespace gem5
 {
 
@@ -42,6 +45,10 @@ const int NumArchRegs = 32;
 const int NumRegs = NumArchRegs;
 
 } // namespace float_reg
+
+inline constexpr RegClass floatRegClass(FloatRegClass, FloatRegClassName,
+        float_reg::NumRegs, debug::FloatRegs);
+
 } // namespace PowerISA
 } // namespace gem5
 

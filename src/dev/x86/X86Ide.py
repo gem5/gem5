@@ -29,21 +29,22 @@ from m5.objects.Ide import IdeController
 from m5.objects.IntPin import IntSourcePin
 from m5.objects.PciDevice import PciLegacyIoBar
 
+
 class X86IdeController(IdeController):
-    type = 'X86IdeController'
+    type = "X86IdeController"
     cxx_header = "dev/x86/ide_ctrl.hh"
-    cxx_class = 'gem5::X86IdeController'
+    cxx_class = "gem5::X86IdeController"
 
     VendorID = 0x8086
     DeviceID = 0x7111
     ProgIF = 0x80
-    InterruptLine = 0xff
+    InterruptLine = 0xFF
     InterruptPin = 0x01
 
-    BAR0 = PciLegacyIoBar(addr=0x1f0, size='8B')
-    BAR1 = PciLegacyIoBar(addr=0x3f4, size='3B')
-    BAR2 = PciLegacyIoBar(addr=0x170, size='8B')
-    BAR3 = PciLegacyIoBar(addr=0x374, size='3B')
+    BAR0 = PciLegacyIoBar(addr=0x1F0, size="8B")
+    BAR1 = PciLegacyIoBar(addr=0x3F4, size="3B")
+    BAR2 = PciLegacyIoBar(addr=0x170, size="8B")
+    BAR3 = PciLegacyIoBar(addr=0x374, size="3B")
 
-    int_primary = IntSourcePin('Interrupt for the primary channel')
-    int_secondary = IntSourcePin('Interrupt for the secondary channel')
+    int_primary = IntSourcePin("Interrupt for the primary channel")
+    int_secondary = IntSourcePin("Interrupt for the secondary channel")

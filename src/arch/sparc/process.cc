@@ -83,17 +83,17 @@ SparcProcess::initState()
      */
 
     // No windows contain info from other programs
-    tc->setIntReg(INTREG_OTHERWIN, 0);
+    tc->setReg(int_reg::Otherwin, (RegVal)0);
     // There are no windows to pop
-    tc->setIntReg(INTREG_CANRESTORE, 0);
+    tc->setReg(int_reg::Canrestore, (RegVal)0);
     // All windows are available to save into
-    tc->setIntReg(INTREG_CANSAVE, NWindows - 2);
+    tc->setReg(int_reg::Cansave, NWindows - 2);
     // All windows are "clean"
-    tc->setIntReg(INTREG_CLEANWIN, NWindows);
+    tc->setReg(int_reg::Cleanwin, NWindows);
     // Start with register window 0
     tc->setMiscReg(MISCREG_CWP, 0);
     // Always use spill and fill traps 0
-    tc->setIntReg(INTREG_WSTATE, 0);
+    tc->setReg(int_reg::Wstate, (RegVal)0);
     // Set the trap level to 0
     tc->setMiscRegNoEffect(MISCREG_TL, 0);
     // Set the ASI register to something fixed
@@ -358,13 +358,13 @@ SparcProcess::argsInit(int pageSize)
     ThreadContext *tc = system->threads[contextIds[0]];
     // Set up the thread context to start running the process
     // assert(NumArgumentRegs >= 2);
-    // tc->setIntReg(ArgumentReg[0], argc);
-    // tc->setIntReg(ArgumentReg[1], argv_array_base);
-    tc->setIntReg(StackPointerReg, memState->getStackMin() - StackBias);
+    // tc->setReg(ArgumentReg[0], argc);
+    // tc->setReg(ArgumentReg[1], argv_array_base);
+    tc->setReg(StackPointerReg, memState->getStackMin() - StackBias);
 
     // %g1 is a pointer to a function that should be run at exit. Since we
     // don't have anything like that, it should be set to 0.
-    tc->setIntReg(1, 0);
+    tc->setReg(int_reg::G1, (RegVal)0);
 
     tc->pcState(getStartPC());
 

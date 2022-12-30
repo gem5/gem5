@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop STMXCSR_M {
     rdval t1, ctrlRegIdx("misc_reg::Mxcsr")
     st t1, seg, sib, disp
@@ -55,4 +55,4 @@ def macroop LDMXCSR_P {
     ld t1, seg, riprel, disp
     wrval ctrlRegIdx("misc_reg::Mxcsr"), t1
 };
-'''
+"""

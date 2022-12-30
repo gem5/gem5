@@ -3008,5 +3008,3 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
 
   // END TRANSITIONS
 }
-
-

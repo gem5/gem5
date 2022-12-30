@@ -43,7 +43,7 @@
 // Execute method for macroops.
 def template MacroExecPanic {{
     Fault
-    execute(ExecContext *, Trace::InstRecord *) const override
+    execute(ExecContext *, trace::InstRecord *) const override
     {
         panic("Tried to execute macroop directly!");
         return NoFault;
@@ -61,7 +61,7 @@ output header {{
         {}
 
         Fault
-        execute(ExecContext *, Trace::InstRecord *) const override
+        execute(ExecContext *, trace::InstRecord *) const override
         {
             panic("Tried to execute macroop directly!");
         }

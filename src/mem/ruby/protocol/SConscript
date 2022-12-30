@@ -118,4 +118,3 @@ for f in nodes:
         # for it to contain a single SimObject with the same name.
         assert(filename.endswith('_Controller.py'))
         SimObject(f, sim_objects=[os.path.splitext(filename)[0]])
-

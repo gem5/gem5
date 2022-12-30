@@ -25,7 +25,8 @@
 
 from m5.objects.InstDecoder import InstDecoder
 
+
 class RiscvDecoder(InstDecoder):
-    type = 'RiscvDecoder'
-    cxx_class = 'gem5::RiscvISA::Decoder'
+    type = "RiscvDecoder"
+    cxx_class = "gem5::RiscvISA::Decoder"
     cxx_header = "arch/riscv/decoder.hh"

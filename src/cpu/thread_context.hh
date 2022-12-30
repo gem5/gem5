@@ -48,9 +48,7 @@
 #include "arch/generic/htm.hh"
 #include "arch/generic/isa.hh"
 #include "arch/generic/pcstate.hh"
-#include "arch/vecregs.hh"
 #include "base/types.hh"
-#include "config/the_isa.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/reg_class.hh"
 
@@ -59,10 +57,6 @@ namespace gem5
 
 // @todo: Figure out a more architecture independent way to obtain the ITB and
 // DTB pointers.
-namespace TheISA
-{
-    class Decoder;
-}
 class BaseCPU;
 class BaseMMU;
 class BaseTLB;
@@ -194,78 +188,11 @@ class ThreadContext : public PCEventScope
     // New accessors for new decoder.
     //
     virtual RegVal getReg(const RegId &reg) const;
-    virtual void getReg(const RegId &reg, void *val) const;
-    virtual void *getWritableReg(const RegId &reg);
+    virtual void getReg(const RegId &reg, void *val) const = 0;
+    virtual void *getWritableReg(const RegId &reg) = 0;
 
     virtual void setReg(const RegId &reg, RegVal val);
-    virtual void setReg(const RegId &reg, const void *val);
-
-    RegVal
-    readIntReg(RegIndex reg_idx) const
-    {
-        return getReg(RegId(IntRegClass, reg_idx));
-    }
-
-    RegVal
-    readFloatReg(RegIndex reg_idx) const
-    {
-        return getReg(RegId(FloatRegClass, reg_idx));
-    }
-
-    TheISA::VecRegContainer
-    readVecReg(const RegId &reg) const
-    {
-        TheISA::VecRegContainer val;
-        getReg(reg, &val);
-        return val;
-    }
-    TheISA::VecRegContainer&
-    getWritableVecReg(const RegId& reg)
-    {
-        return *(TheISA::VecRegContainer *)getWritableReg(reg);
-    }
-
-    RegVal
-    readVecElem(const RegId& reg) const
-    {
-        return getReg(reg);
-    }
-
-    RegVal
-    readCCReg(RegIndex reg_idx) const
-    {
-        return getReg(RegId(CCRegClass, reg_idx));
-    }
-
-    void
-    setIntReg(RegIndex reg_idx, RegVal val)
-    {
-        setReg(RegId(IntRegClass, reg_idx), val);
-    }
-
-    void
-    setFloatReg(RegIndex reg_idx, RegVal val)
-    {
-        setReg(RegId(FloatRegClass, reg_idx), val);
-    }
-
-    void
-    setVecReg(const RegId& reg, const TheISA::VecRegContainer &val)
-    {
-        setReg(reg, &val);
-    }
-
-    void
-    setVecElem(const RegId& reg, RegVal val)
-    {
-        setReg(reg, val);
-    }
-
-    void
-    setCCReg(RegIndex reg_idx, RegVal val)
-    {
-        setReg(RegId(CCRegClass, reg_idx), val);
-    }
+    virtual void setReg(const RegId &reg, const void *val) = 0;
 
     virtual const PCStateBase &pcState() const = 0;
 
@@ -287,8 +214,6 @@ class ThreadContext : public PCEventScope
 
     virtual void setMiscReg(RegIndex misc_reg, RegVal val) = 0;
 
-    virtual RegId flattenRegId(const RegId& reg_id) const = 0;
-
     // Also not necessarily the best location for these two.  Hopefully will go
     // away once we decide upon where st cond failures goes.
     virtual unsigned readStCondFailures() const = 0;
@@ -302,89 +227,6 @@ class ThreadContext : public PCEventScope
 
     /** function to compare two thread contexts (for debugging) */
     static void compare(ThreadContext *one, ThreadContext *two);
-
-    /** @{ */
-    /**
-     * Flat register interfaces
-     *
-     * Some architectures have different registers visible in
-     * different modes. Such architectures "flatten" a register (see
-     * flattenRegId()) to map it into the
-     * gem5 register file. This interface provides a flat interface to
-     * the underlying register file, which allows for example
-     * serialization code to access all registers.
-     */
-
-    virtual RegVal getRegFlat(const RegId &reg) const;
-    virtual void getRegFlat(const RegId &reg, void *val) const = 0;
-    virtual void *getWritableRegFlat(const RegId &reg) = 0;
-
-    virtual void setRegFlat(const RegId &reg, RegVal val);
-    virtual void setRegFlat(const RegId &reg, const void *val) = 0;
-
-    RegVal
-    readIntRegFlat(RegIndex idx) const
-    {
-        return getRegFlat(RegId(IntRegClass, idx));
-    }
-    void
-    setIntRegFlat(RegIndex idx, RegVal val)
-    {
-        setRegFlat(RegId(IntRegClass, idx), val);
-    }
-
-    RegVal
-    readFloatRegFlat(RegIndex idx) const
-    {
-        return getRegFlat(RegId(FloatRegClass, idx));
-    }
-    void
-    setFloatRegFlat(RegIndex idx, RegVal val)
-    {
-        setRegFlat(RegId(FloatRegClass, idx), val);
-    }
-
-    TheISA::VecRegContainer
-    readVecRegFlat(RegIndex idx) const
-    {
-        TheISA::VecRegContainer val;
-        getRegFlat(RegId(VecRegClass, idx), &val);
-        return val;
-    }
-    TheISA::VecRegContainer&
-    getWritableVecRegFlat(RegIndex idx)
-    {
-        return *(TheISA::VecRegContainer *)
-            getWritableRegFlat(RegId(VecRegClass, idx));
-    }
-    void
-    setVecRegFlat(RegIndex idx, const TheISA::VecRegContainer& val)
-    {
-        setRegFlat(RegId(VecRegClass, idx), &val);
-    }
-
-    RegVal
-    readVecElemFlat(RegIndex idx) const
-    {
-        return getRegFlat(RegId(VecElemClass, idx));
-    }
-    void
-    setVecElemFlat(RegIndex idx, RegVal val)
-    {
-        setRegFlat(RegId(VecElemClass, idx), val);
-    }
-
-    RegVal
-    readCCRegFlat(RegIndex idx) const
-    {
-        return getRegFlat(RegId(CCRegClass, idx));
-    }
-    void
-    setCCRegFlat(RegIndex idx, RegVal val)
-    {
-        setRegFlat(RegId(CCRegClass, idx), val);
-    }
-    /** @} */
 
     // hardware transactional memory
     virtual void htmAbortTransaction(uint64_t htm_uid,

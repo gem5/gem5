@@ -29,8 +29,9 @@ from m5.params import *
 
 from m5.objects.InstTracer import InstTracer
 
+
 class InstPBTrace(InstTracer):
-    type = 'InstPBTrace'
-    cxx_class = 'gem5::Trace::InstPBTrace'
-    cxx_header = 'cpu/inst_pb_trace.hh'
+    type = "InstPBTrace"
+    cxx_class = "gem5::trace::InstPBTrace"
+    cxx_header = "cpu/inst_pb_trace.hh"
     file_name = Param.String("Instruction trace output file")

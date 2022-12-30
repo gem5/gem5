@@ -36,25 +36,31 @@
 from m5.params import *
 from m5.objects.ClockedObject import ClockedObject
 
+
 class MemDelay(ClockedObject):
-    type = 'MemDelay'
-    cxx_header = 'mem/mem_delay.hh'
-    cxx_class = 'gem5::MemDelay'
+    type = "MemDelay"
+    cxx_header = "mem/mem_delay.hh"
+    cxx_class = "gem5::MemDelay"
     abstract = True
 
-    mem_side_port = RequestPort("This port sends requests and "
-                                            "receives responses")
-    master   = DeprecatedParam(mem_side_port,
-                                '`master` is now called `mem_side_port`')
-    cpu_side_port = ResponsePort("This port receives requests and "
-                                                "sends responses")
-    slave    = DeprecatedParam(cpu_side_port,
-                                '`slave` is now called `cpu_side_port`')
+    mem_side_port = RequestPort(
+        "This port sends requests and " "receives responses"
+    )
+    master = DeprecatedParam(
+        mem_side_port, "`master` is now called `mem_side_port`"
+    )
+    cpu_side_port = ResponsePort(
+        "This port receives requests and " "sends responses"
+    )
+    slave = DeprecatedParam(
+        cpu_side_port, "`slave` is now called `cpu_side_port`"
+    )
+
 
 class SimpleMemDelay(MemDelay):
-    type = 'SimpleMemDelay'
-    cxx_header = 'mem/mem_delay.hh'
-    cxx_class = 'gem5::SimpleMemDelay'
+    type = "SimpleMemDelay"
+    cxx_header = "mem/mem_delay.hh"
+    cxx_class = "gem5::SimpleMemDelay"
 
     read_req = Param.Latency("0t", "Read request delay")
     read_resp = Param.Latency("0t", "Read response delay")

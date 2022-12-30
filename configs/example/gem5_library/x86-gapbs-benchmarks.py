@@ -64,8 +64,8 @@ from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.resources.resource import Resource
-
-from m5.stats.gem5stats import get_simstat
+from gem5.simulate.simulator import Simulator
+from gem5.simulate.exit_event import ExitEvent
 
 requires(
     isa_required=ISA.X86,
@@ -79,8 +79,25 @@ benchmark_choices = ["cc", "bc", "tc", "pr", "bfs"]
 
 synthetic_choices = ["0", "1"]
 
-size_choices = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12",
-                "13", "14", "15", "16", "USA-road-d.NY.gr"]
+size_choices = [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "USA-road-d.NY.gr",
+]
 
 parser = argparse.ArgumentParser(
     description="An example configuration script to run the gapbs benchmarks."
@@ -118,8 +135,7 @@ args = parser.parse_args()
 # Setting up all the fixed system parameters here
 # Caches: MESI Two Level Cache Hierarchy
 
-from gem5.components.cachehierarchies.ruby.\
-    mesi_two_level_cache_hierarchy import(
+from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
     MESITwoLevelCacheHierarchy,
 )
 
@@ -173,8 +189,10 @@ board = X86Board(
 
 if args.synthetic == "1":
     if args.size == "USA-road-d.NY.gr":
-        print("fatal: cannot use a real graph with --synthetic 1",
-        file=sys.stderr)
+        print(
+            "fatal: cannot use a real graph with --synthetic 1",
+            file=sys.stderr,
+        )
         exit(-1)
 
     command = "./{} -g {}\n".format(args.benchmark, args.size)
@@ -185,24 +203,37 @@ board.set_kernel_disk_workload(
     # The x86 linux kernel will be automatically downloaded to the
     # `~/.cache/gem5` directory if not already present.
     # gapbs benchamarks was tested with kernel version 4.19.83
-    kernel=Resource(
-        "x86-linux-kernel-4.19.83",
-    ),
+    kernel=Resource("x86-linux-kernel-4.19.83"),
     # The x86-gapbs image will be automatically downloaded to the
     # `~/.cache/gem5` directory if not already present.
-    disk_image=Resource(
-        "x86-gapbs",
-    ),
+    disk_image=Resource("x86-gapbs"),
     readfile_contents=command,
 )
 
-root = Root(full_system=True, system=board)
 
-# sim_quantum must be set when KVM cores are used.
+def handle_workbegin():
+    print("Done booting Linux")
+    print("Resetting stats at the start of ROI!")
+    m5.stats.reset()
+    global start_tick
+    start_tick = m5.curTick()
+    processor.switch()
+    yield False  # E.g., continue the simulation.
 
-root.sim_quantum = int(1e9)
 
-m5.instantiate()
+def handle_workend():
+    print("Dump stats at the end of the ROI!")
+    m5.stats.dump()
+    yield True  # Stop the simulation. We're done.
+
+
+simulator = Simulator(
+    board=board,
+    on_exit_event={
+        ExitEvent.WORKBEGIN: handle_workbegin(),
+        ExitEvent.WORKEND: handle_workend(),
+    },
+)
 
 # We maintain the wall clock time.
 
@@ -217,75 +248,8 @@ print("Using KVM cpu")
 # the first ROI annotation in details. The X86Board currently does not support
 #  `work items started count reached`.
 
-exit_event = m5.simulate()
-
-# The first exit_event ends with a `workbegin` cause. This means that the
-# system started successfully and the execution on the program started. The
-# ROI begin is encountered.
-
-if exit_event.getCause() == "workbegin":
-
-    print("Done booting Linux")
-    print("Resetting stats at the start of ROI!")
-
-    m5.stats.reset()
-    start_tick = m5.curTick()
-
-    # We have completed up to this step using KVM cpu. Now we switch to timing
-    # cpu for detailed simulation.
-
-    processor.switch()
-else:
-    print("Unexpected termination of simulation before ROI was reached!")
-    print(
-        "Exiting @ tick {} because {}.".format(
-            m5.curTick(),
-            exit_event.getCause()
-        )
-    )
-    exit(-1)
-
-# The next exit_event is to simulate the ROI. It should be exited with a cause
-# marked by `workend`. This implies that the first annotation is successfully
-# completed.
-
-exit_event = m5.simulate()
-
-# Reached the end of first ROI.
-# We dump the stats here.
-
-# We exepect that ROI ends with `workend`. Otherwise the simulation ended
-# unexpectedly.
-if exit_event.getCause() == "workend":
-    print("Dump stats at the end of the ROI!")
-
-    m5.stats.dump()
-    end_tick = m5.curTick()
-else:
-    print("Unexpected termination of simulation while ROI was being executed!")
-    print(
-        "Exiting @ tick {} because {}.".format(
-            m5.curTick(),
-            exit_event.getCause()
-        )
-    )
-    exit(-1)
-
-# We get simInsts using get_simstat and output it in the final print statement.
-
-gem5stats = get_simstat(root)
-
-# We get the number of committed instructions from the timing cores. We then
-# sum and print them at the end.
-
-roi_insts = float(\
-    gem5stats.to_json()\
-    ["system"]["processor"]["cores2"]["core"]["exec_context.thread_0"]\
-    ["numInsts"]["value"]) + float(\
-    gem5stats.to_json()\
-    ["system"]["processor"]["cores3"]["core"]["exec_context.thread_0"]\
-    ["numInsts"]["value"]\
-)
+simulator.run()
+end_tick = m5.curTick()
 # Since we simulated the ROI in details, therefore, simulation is over at this
 # point.
 
@@ -299,8 +263,9 @@ print()
 print("Performance statistics:")
 
 print("Simulated time in ROI: %.2fs" % ((end_tick - start_tick) / 1e12))
-print("Instructions executed in ROI: %d" % ((roi_insts)))
-print("Ran a total of", m5.curTick() / 1e12, "simulated seconds")
+print(
+    "Ran a total of", simulator.get_current_tick() / 1e12, "simulated seconds"
+)
 print(
     "Total wallclock time: %.2fs, %.2f min"
     % (time.time() - globalStart, (time.time() - globalStart) / 60)

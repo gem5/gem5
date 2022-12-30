@@ -31,40 +31,55 @@ from m5.SimObject import *
 from m5.objects.IndexingPolicies import *
 from m5.objects.ReplacementPolicies import *
 
+
 class BaseCacheCompressor(SimObject):
-    type = 'BaseCacheCompressor'
+    type = "BaseCacheCompressor"
     abstract = True
-    cxx_class = 'gem5::compression::Base'
+    cxx_class = "gem5::compression::Base"
     cxx_header = "mem/cache/compressors/base.hh"
 
     block_size = Param.Int(Parent.cache_line_size, "Block size in bytes")
-    chunk_size_bits = Param.Unsigned(32,
-        "Size of a parsing data chunk (in bits)")
-    size_threshold_percentage = Param.Percent(50,
+    chunk_size_bits = Param.Unsigned(
+        32, "Size of a parsing data chunk (in bits)"
+    )
+    size_threshold_percentage = Param.Percent(
+        50,
         "Minimum percentage of the block size, a compressed block must "
-        "achieve to be stored in compressed format")
+        "achieve to be stored in compressed format",
+    )
 
-    comp_chunks_per_cycle = Param.Unsigned(1,
-        "Number of chunks that can be compressed in parallel per cycle.")
-    comp_extra_latency = Param.Cycles(1, "Number of extra cycles required "
-        "to finish compression (e.g., due to shifting and packaging).")
-    decomp_chunks_per_cycle = Param.Unsigned(1,
-        "Number of chunks that can be decompressed in parallel per cycle.")
-    decomp_extra_latency = Param.Cycles(1, "Number of extra cycles required "
-        "to finish decompression (e.g., due to shifting and packaging).")
+    comp_chunks_per_cycle = Param.Unsigned(
+        1, "Number of chunks that can be compressed in parallel per cycle."
+    )
+    comp_extra_latency = Param.Cycles(
+        1,
+        "Number of extra cycles required "
+        "to finish compression (e.g., due to shifting and packaging).",
+    )
+    decomp_chunks_per_cycle = Param.Unsigned(
+        1, "Number of chunks that can be decompressed in parallel per cycle."
+    )
+    decomp_extra_latency = Param.Cycles(
+        1,
+        "Number of extra cycles required "
+        "to finish decompression (e.g., due to shifting and packaging).",
+    )
+
 
 class BaseDictionaryCompressor(BaseCacheCompressor):
-    type = 'BaseDictionaryCompressor'
+    type = "BaseDictionaryCompressor"
     abstract = True
-    cxx_class = 'gem5::compression::BaseDictionaryCompressor'
+    cxx_class = "gem5::compression::BaseDictionaryCompressor"
     cxx_header = "mem/cache/compressors/dictionary_compressor.hh"
 
-    dictionary_size = Param.Int(Parent.cache_line_size,
-        "Number of dictionary entries")
+    dictionary_size = Param.Int(
+        Parent.cache_line_size, "Number of dictionary entries"
+    )
+
 
 class Base64Delta8(BaseDictionaryCompressor):
-    type = 'Base64Delta8'
-    cxx_class = 'gem5::compression::Base64Delta8'
+    type = "Base64Delta8"
+    cxx_class = "gem5::compression::Base64Delta8"
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
     chunk_size_bits = 64
@@ -74,10 +89,11 @@ class Base64Delta8(BaseDictionaryCompressor):
     comp_extra_latency = 0
     decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
     decomp_extra_latency = 0
+
 
 class Base64Delta16(BaseDictionaryCompressor):
-    type = 'Base64Delta16'
-    cxx_class = 'gem5::compression::Base64Delta16'
+    type = "Base64Delta16"
+    cxx_class = "gem5::compression::Base64Delta16"
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
     chunk_size_bits = 64
@@ -87,10 +103,11 @@ class Base64Delta16(BaseDictionaryCompressor):
     comp_extra_latency = 0
     decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
     decomp_extra_latency = 0
+
 
 class Base64Delta32(BaseDictionaryCompressor):
-    type = 'Base64Delta32'
-    cxx_class = 'gem5::compression::Base64Delta32'
+    type = "Base64Delta32"
+    cxx_class = "gem5::compression::Base64Delta32"
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
     chunk_size_bits = 64
@@ -101,9 +118,10 @@ class Base64Delta32(BaseDictionaryCompressor):
     decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
     decomp_extra_latency = 0
 
+
 class Base32Delta8(BaseDictionaryCompressor):
-    type = 'Base32Delta8'
-    cxx_class = 'gem5::compression::Base32Delta8'
+    type = "Base32Delta8"
+    cxx_class = "gem5::compression::Base32Delta8"
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
     chunk_size_bits = 32
@@ -113,10 +131,11 @@ class Base32Delta8(BaseDictionaryCompressor):
     comp_extra_latency = 0
     decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
     decomp_extra_latency = 0
+
 
 class Base32Delta16(BaseDictionaryCompressor):
-    type = 'Base32Delta16'
-    cxx_class = 'gem5::compression::Base32Delta16'
+    type = "Base32Delta16"
+    cxx_class = "gem5::compression::Base32Delta16"
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
     chunk_size_bits = 32
@@ -127,9 +146,10 @@ class Base32Delta16(BaseDictionaryCompressor):
     decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
     decomp_extra_latency = 0
 
+
 class Base16Delta8(BaseDictionaryCompressor):
-    type = 'Base16Delta8'
-    cxx_class = 'gem5::compression::Base16Delta8'
+    type = "Base16Delta8"
+    cxx_class = "gem5::compression::Base16Delta8"
     cxx_header = "mem/cache/compressors/base_delta.hh"
 
     chunk_size_bits = 16
@@ -140,9 +160,10 @@ class Base16Delta8(BaseDictionaryCompressor):
     decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
     decomp_extra_latency = 0
 
+
 class CPack(BaseDictionaryCompressor):
-    type = 'CPack'
-    cxx_class = 'gem5::compression::CPack'
+    type = "CPack"
+    cxx_class = "gem5::compression::CPack"
     cxx_header = "mem/cache/compressors/cpack.hh"
 
     comp_chunks_per_cycle = 2
@@ -151,9 +172,10 @@ class CPack(BaseDictionaryCompressor):
     decomp_chunks_per_cycle = 2
     decomp_extra_latency = 1
 
+
 class FPC(BaseDictionaryCompressor):
-    type = 'FPC'
-    cxx_class = 'gem5::compression::FPC'
+    type = "FPC"
+    cxx_class = "gem5::compression::FPC"
     cxx_header = "mem/cache/compressors/fpc.hh"
 
     comp_chunks_per_cycle = 8
@@ -166,9 +188,10 @@ class FPC(BaseDictionaryCompressor):
 
     zero_run_bits = Param.Int(3, "Number of bits of the zero run bit field")
 
+
 class FPCD(BaseDictionaryCompressor):
-    type = 'FPCD'
-    cxx_class = 'gem5::compression::FPCD'
+    type = "FPCD"
+    cxx_class = "gem5::compression::FPCD"
     cxx_header = "mem/cache/compressors/fpcd.hh"
 
     # Accounts for checking all patterns, selecting patterns, and shifting
@@ -181,50 +204,71 @@ class FPCD(BaseDictionaryCompressor):
 
     dictionary_size = 2
 
+
 class FrequentValuesCompressor(BaseCacheCompressor):
-    type = 'FrequentValuesCompressor'
-    cxx_class = 'gem5::compression::FrequentValues'
+    type = "FrequentValuesCompressor"
+    cxx_class = "gem5::compression::FrequentValues"
     cxx_header = "mem/cache/compressors/frequent_values.hh"
 
     chunk_size_bits = 32
-    code_generation_ticks = Param.Unsigned(10000, "Number of elapsed " \
-        "ticks until the samples are analyzed and their codes are generated.")
+    code_generation_ticks = Param.Unsigned(
+        10000,
+        "Number of elapsed "
+        "ticks until the samples are analyzed and their codes are generated.",
+    )
     # @todo The width of a counter width is determined by the maximum
     # number of times a given value appears in the cache - i.e.,
     # log2(cache_size/chunk_size_bits))".
     counter_bits = Param.Unsigned(18, "Number of bits per frequency counter.")
-    max_code_length = Param.Unsigned(18, "Maximum number of bits in a "
-        "codeword. If 0, table indices are not encoded.")
-    num_samples = Param.Unsigned(100000, "Number of samples that must be " \
-        "taken before compression is effectively used.")
-    check_saturation = Param.Bool(False, "Whether the counters should be " \
-        "manipulated in case of saturation.")
+    max_code_length = Param.Unsigned(
+        18,
+        "Maximum number of bits in a "
+        "codeword. If 0, table indices are not encoded.",
+    )
+    num_samples = Param.Unsigned(
+        100000,
+        "Number of samples that must be "
+        "taken before compression is effectively used.",
+    )
+    check_saturation = Param.Bool(
+        False,
+        "Whether the counters should be " "manipulated in case of saturation.",
+    )
 
     vft_assoc = Param.Int(16, "Associativity of the VFT.")
     vft_entries = Param.MemorySize("1024", "Number of entries of the VFT.")
     vft_indexing_policy = Param.BaseIndexingPolicy(
-        SetAssociative(entry_size = 1, assoc = Parent.vft_assoc,
-        size = Parent.vft_entries), "Indexing policy of the VFT.")
-    vft_replacement_policy = Param.BaseReplacementPolicy(LFURP(),
-        "Replacement policy of the VFT.")
+        SetAssociative(
+            entry_size=1, assoc=Parent.vft_assoc, size=Parent.vft_entries
+        ),
+        "Indexing policy of the VFT.",
+    )
+    vft_replacement_policy = Param.BaseReplacementPolicy(
+        LFURP(), "Replacement policy of the VFT."
+    )
 
     comp_chunks_per_cycle = 1
     comp_extra_latency = 1
     decomp_chunks_per_cycle = 1
     decomp_extra_latency = 0
 
+
 class MultiCompressor(BaseCacheCompressor):
-    type = 'MultiCompressor'
-    cxx_class = 'gem5::compression::Multi'
+    type = "MultiCompressor"
+    cxx_class = "gem5::compression::Multi"
     cxx_header = "mem/cache/compressors/multi.hh"
 
     # Dummy default compressor list. This might not be an optimal choice,
     # since these compressors have many overlapping patterns
-    compressors = VectorParam.BaseCacheCompressor([CPack(), FPCD()],
-        "Array of compressors")
-    encoding_in_tags = Param.Bool(False, "If set the bits to inform which "
+    compressors = VectorParam.BaseCacheCompressor(
+        [CPack(), FPCD()], "Array of compressors"
+    )
+    encoding_in_tags = Param.Bool(
+        False,
+        "If set the bits to inform which "
         "sub-compressor compressed some data are added to its corresponding "
-        "tag entry.")
+        "tag entry.",
+    )
 
     # Use the sub-compressors' latencies
     comp_chunks_per_cycle = 0
@@ -237,9 +281,10 @@ class MultiCompressor(BaseCacheCompressor):
     # which sub-compressor should be used to decompress the data
     decomp_extra_latency = 1
 
+
 class PerfectCompressor(BaseCacheCompressor):
-    type = 'PerfectCompressor'
-    cxx_class = 'gem5::compression::Perfect'
+    type = "PerfectCompressor"
+    cxx_class = "gem5::compression::Perfect"
     cxx_header = "mem/cache/compressors/perfect.hh"
 
     chunk_size_bits = 64
@@ -252,9 +297,10 @@ class PerfectCompressor(BaseCacheCompressor):
     decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
     decomp_extra_latency = 0
 
+
 class RepeatedQwordsCompressor(BaseDictionaryCompressor):
-    type = 'RepeatedQwordsCompressor'
-    cxx_class = 'gem5::compression::RepeatedQwords'
+    type = "RepeatedQwordsCompressor"
+    cxx_class = "gem5::compression::RepeatedQwords"
     cxx_header = "mem/cache/compressors/repeated_qwords.hh"
 
     chunk_size_bits = 64
@@ -265,9 +311,10 @@ class RepeatedQwordsCompressor(BaseDictionaryCompressor):
     decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
     decomp_extra_latency = 0
 
+
 class ZeroCompressor(BaseDictionaryCompressor):
-    type = 'ZeroCompressor'
-    cxx_class = 'gem5::compression::Zero'
+    type = "ZeroCompressor"
+    cxx_class = "gem5::compression::Zero"
     cxx_header = "mem/cache/compressors/zero.hh"
 
     chunk_size_bits = 64
@@ -277,6 +324,7 @@ class ZeroCompressor(BaseDictionaryCompressor):
     comp_extra_latency = 0
     decomp_chunks_per_cycle = 8 * Self.block_size / Self.chunk_size_bits
     decomp_extra_latency = 0
+
 
 class BDI(MultiCompressor):
     compressors = [
@@ -293,4 +341,4 @@ class BDI(MultiCompressor):
     # By default assume that the encoding is stored in the tags, and is
     # retrieved and decoded while (and ends before) the data is being read.
     decomp_extra_latency = 0
-    encoding_in_tags=True
+    encoding_in_tags = True

@@ -61,7 +61,7 @@ output header {{
 // Dsp instruction class execute method template.
 def template DspExecute {{
         Fault %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
 
@@ -95,7 +95,7 @@ def template DspExecute {{
 // DspHiLo instruction class execute method template.
 def template DspHiLoExecute {{
         Fault %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
 
@@ -147,7 +147,7 @@ output exec {{
     bool
     isDspEnabled(ExecContext *xc)
     {
-        return !FullSystem || bits(xc->readMiscReg(MISCREG_STATUS), 24);
+        return !FullSystem || bits(xc->readMiscReg(misc_reg::Status), 24);
     }
 }};
 
@@ -155,7 +155,7 @@ output exec {{
     bool
     isDspPresent(ExecContext *xc)
     {
-        return !FullSystem || bits(xc->readMiscReg(MISCREG_CONFIG3), 10);
+        return !FullSystem || bits(xc->readMiscReg(misc_reg::Config3), 10);
     }
 }};
 
@@ -208,6 +208,3 @@ def format DspHiLoOp(code, *opt_flags) {{
     exec_output = DspHiLoExecute.subst(iop)
 
 }};
-
-
-

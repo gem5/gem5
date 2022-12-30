@@ -1,2 +1,2 @@
-TARGET_ISA = 'sparc'
+USE_SPARC_ISA = True
 PROTOCOL = 'MI_example'

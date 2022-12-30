@@ -45,7 +45,7 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, int32_t _imm,
                    ConditionCode _condCode);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
     std::unique_ptr<PCStateBase> branchTarget(
             const PCStateBase &branch_pc) const override;
 
@@ -82,7 +82,7 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _op1,
                    ConditionCode _condCode);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -115,10 +115,10 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _op1, RegIndex _op2);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
-    Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+    Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
     Fault completeAcc(PacketPtr, ExecContext *,
-                      Trace::InstRecord *) const override;
+                      trace::InstRecord *) const override;
 };
 }};
 
@@ -149,7 +149,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, int32_t imm, RegIndex _op1);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
     std::unique_ptr<PCStateBase> branchTarget(
             const PCStateBase &branch_pc) const override;
 
@@ -186,5 +186,3 @@ def template BranchTarget {{
         return std::unique_ptr<PCStateBase>{pc_ptr};
     }
 }};
-
-

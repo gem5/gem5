@@ -319,7 +319,10 @@ def config_embedded_python(env):
         if conf.TryAction(f'@{python_config} --embed')[0]:
             cmd.append('--embed')
 
-    def flag_filter(env, cmd_output):
+    def flag_filter(env, cmd_output, unique=True):
+        # Since this function does not use the `unique` param, one should not
+        # pass any value to this param.
+        assert(unique==True)
         flags = cmd_output.split()
         prefixes = ('-l', '-L', '-I')
         is_useful = lambda x: any(x.startswith(prefix) for prefix in prefixes)
@@ -417,7 +420,6 @@ for variant_path in variant_paths:
                     conf.CheckLinkFlag('-Wl,--threads')
                     conf.CheckLinkFlag(
                             '-Wl,--thread-count=%d' % GetOption('num_jobs'))
-
     else:
         error('\n'.join((
               "Don't know what compiler options to use for your compiler.",

@@ -126,7 +126,7 @@ def template CBasicDeclare {{
       public:
         /// Constructor.
         %(class_name)s(MachInst machInst);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
         std::string generateDisassembly(
                 Addr pc, const loader::SymbolTable *symtab) const override;
     };
@@ -136,7 +136,7 @@ def template CBasicDeclare {{
 def template CBasicExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-        Trace::InstRecord *traceData) const
+        trace::InstRecord *traceData) const
     {
         %(op_decl)s;
         %(op_rd)s;

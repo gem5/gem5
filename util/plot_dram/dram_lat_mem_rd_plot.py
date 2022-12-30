@@ -56,15 +56,15 @@ def main():
         exit(-1)
 
     try:
-        stats = open(sys.argv[1] + '/stats.txt', 'r')
+        stats = open(sys.argv[1] + "/stats.txt", "r")
     except IOError:
-        print("Failed to open ", sys.argv[1] + '/stats.txt', " for reading")
+        print("Failed to open ", sys.argv[1] + "/stats.txt", " for reading")
         exit(-1)
 
     try:
-        simout = open(sys.argv[1] + '/simout', 'r')
+        simout = open(sys.argv[1] + "/simout", "r")
     except IOError:
-        print("Failed to open ", sys.argv[1] + '/simout', " for reading")
+        print("Failed to open ", sys.argv[1] + "/simout", " for reading")
         exit(-1)
 
     # Get the address ranges
@@ -116,8 +116,10 @@ def main():
 
     # Sanity check
     if not (len(ranges) == len(final_rd_lat)):
-        print("Address ranges (%d) and read latency (%d) do not match" % \
-            (len(ranges), len(final_rd_lat)))
+        print(
+            "Address ranges (%d) and read latency (%d) do not match"
+            % (len(ranges), len(final_rd_lat))
+        )
         exit(-1)
 
     for (r, l) in zip(ranges, final_rd_lat):
@@ -134,9 +136,9 @@ def main():
     xticks_labels = []
     for x in xticks_locations:
         if x < 1024:
-            xticks_labels.append('%d kB' % x)
+            xticks_labels.append("%d kB" % x)
         else:
-            xticks_labels.append('%d MB' % (x / 1024))
+            xticks_labels.append("%d MB" % (x / 1024))
     plt.xticks(xticks_locations, xticks_labels, rotation=-45)
 
     plt.minorticks_off()
@@ -144,6 +146,7 @@ def main():
     plt.ylabel("Latency (ns)")
     plt.grid(True)
     plt.show()
+
 
 if __name__ == "__main__":
     main()

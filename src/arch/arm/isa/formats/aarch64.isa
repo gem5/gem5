@@ -459,14 +459,7 @@ namespace Aarch64
                     bool read = l;
                     MiscRegIndex miscReg =
                         decodeAArch64SysReg(op0, op1, crn, crm, op2);
-                    if (read) {
-                        if ((miscReg == MISCREG_DC_CIVAC_Xt) ||
-                            (miscReg == MISCREG_DC_CVAC_Xt) ||
-                            (miscReg == MISCREG_DC_IVAC_Xt)  ||
-                            (miscReg == MISCREG_DC_ZVA_Xt)) {
-                            return new Unknown64(machInst);
-                        }
-                    }
+
                     // Check for invalid registers
                     if (miscReg == MISCREG_UNKNOWN) {
                         auto full_mnemonic =
@@ -483,41 +476,42 @@ namespace Aarch64
                                      read ? "mrs" : "msr",
                                      op0, op1, crn, crm, op2);
 
-                        uint32_t iss = msrMrs64IssBuild(
-                            read, op0, op1, crn, crm, op2, rt);
-
                         return new MiscRegImplDefined64(
                             read ? "mrs" : "msr",
-                            machInst, miscReg, read, iss, full_mnemonic,
-                            miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]);
+                            machInst, MiscRegNum64(op0, op1, crn, crm, op2),
+                            rt, read, full_mnemonic);
 
-                    } else if (miscRegInfo[miscReg][MISCREG_IMPLEMENTED]) {
-                        if (miscReg == MISCREG_NZCV) {
-                            if (read)
-                                return new MrsNZCV64(machInst, rt, miscReg);
-                            else
-                                return new MsrNZCV64(machInst, miscReg, rt);
-                        }
-                        uint32_t iss = msrMrs64IssBuild(read, op0, op1, crn,
-                                                        crm, op2, rt);
+                    } else {
                         if (read) {
-                            StaticInstPtr si = new Mrs64(machInst, rt, miscReg,
-                                                         iss);
-                            if (miscRegInfo[miscReg][MISCREG_UNVERIFIABLE])
-                                si->setFlag(StaticInst::IsUnverifiable);
-                            return si;
+                            switch (miscReg) {
+                              case MISCREG_NZCV:
+                                return new MrsNZCV64(machInst, rt, miscReg);
+                              case MISCREG_DC_CIVAC_Xt:
+                              case MISCREG_DC_CVAC_Xt:
+                              case MISCREG_DC_IVAC_Xt:
+                              case MISCREG_DC_ZVA_Xt:
+                                return new Unknown64(machInst);
+                              default: {
+                                StaticInstPtr si = new Mrs64(machInst, rt, miscReg);
+                                if (lookUpMiscReg[miscReg].info[MISCREG_UNVERIFIABLE])
+                                    si->setFlag(StaticInst::IsUnverifiable);
+                                return si;
+                              }
+                            }
                         } else {
                             switch (miscReg) {
+                              case MISCREG_NZCV:
+                                return new MsrNZCV64(machInst, miscReg, rt);
                               case MISCREG_DC_ZVA_Xt:
-                                return new Dczva(machInst, rt, miscReg, iss);
+                                return new Dczva(machInst, rt, miscReg);
                               case MISCREG_DC_CVAU_Xt:
-                                return new Dccvau(machInst, rt, miscReg, iss);
+                                return new Dccvau(machInst, rt, miscReg);
                               case MISCREG_DC_CVAC_Xt:
-                                return new Dccvac(machInst, rt, miscReg, iss);
+                                return new Dccvac(machInst, rt, miscReg);
                               case MISCREG_DC_CIVAC_Xt:
-                                return new Dccivac(machInst, rt, miscReg, iss);
+                                return new Dccivac(machInst, rt, miscReg);
                               case MISCREG_DC_IVAC_Xt:
-                                return new Dcivac(machInst, rt, miscReg, iss);
+                                return new Dcivac(machInst, rt, miscReg);
                               // 64-bit TLBIs split into "Local"
                               // and "Shareable"
                               case MISCREG_TLBI_ALLE3:
@@ -537,7 +531,7 @@ namespace Aarch64
                               case MISCREG_TLBI_IPAS2E1_Xt:
                               case MISCREG_TLBI_IPAS2LE1_Xt:
                                 return new Tlbi64LocalHub(
-                                  machInst, miscReg, rt, iss);
+                                  machInst, miscReg, rt);
                               case MISCREG_TLBI_ALLE3IS:
                               case MISCREG_TLBI_ALLE2IS:
                               case MISCREG_TLBI_ALLE1IS:
@@ -555,22 +549,11 @@ namespace Aarch64
                               case MISCREG_TLBI_IPAS2E1IS_Xt:
                               case MISCREG_TLBI_IPAS2LE1IS_Xt:
                                 return new Tlbi64ShareableHub(
-                                  machInst, miscReg, rt, iss, dec.dvmEnabled);
+                                  machInst, miscReg, rt, dec.dvmEnabled);
                               default:
-                                return new Msr64(machInst, miscReg, rt, iss);
+                                return new Msr64(machInst, miscReg, rt);
                             }
                         }
-                    } else if (miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]) {
-                        std::string full_mnem = csprintf("%s %s",
-                            read ? "mrs" : "msr", miscRegName[miscReg]);
-                        return new WarnUnimplemented(read ? "mrs" : "msr",
-                                                     machInst, full_mnem);
-                    } else {
-                        return new FailUnimplemented(read ? "mrs" : "msr",
-                                    machInst,
-                                    csprintf("%s %s",
-                                      read ? "mrs" : "msr",
-                                      miscRegName[miscReg]));
                     }
                   }
                   break;

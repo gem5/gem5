@@ -31,6 +31,7 @@
 from slicc.ast.StatementAST import StatementAST
 from slicc.symbols import Var
 
+
 class DeferEnqueueingStatementAST(StatementAST):
     def __init__(self, slicc, queue_name, type_ast, statements):
         super().__init__(slicc)
@@ -40,8 +41,11 @@ class DeferEnqueueingStatementAST(StatementAST):
         self.statements = statements
 
     def __repr__(self):
-        return "[DeferEnqueueingStatementAst: %s %s %s]" % \
-               (self.queue_name, self.type_ast.ident, self.statements)
+        return "[DeferEnqueueingStatementAst: %s %s %s]" % (
+            self.queue_name,
+            self.type_ast.ident,
+            self.statements,
+        )
 
     def generate(self, code, return_type, **kwargs):
         code("{")
@@ -51,20 +55,30 @@ class DeferEnqueueingStatementAST(StatementAST):
         msg_type = self.type_ast.type
 
         # Add new local var to symbol table
-        v = Var(self.symtab, "out_msg", self.location, msg_type, "*out_msg",
-                self.pairs)
+        v = Var(
+            self.symtab,
+            "out_msg",
+            self.location,
+            msg_type,
+            "*out_msg",
+            self.pairs,
+        )
         self.symtab.newSymbol(v)
 
         # Declare message
-        code("std::shared_ptr<${{msg_type.c_ident}}> out_msg = "\
-             "std::make_shared<${{msg_type.c_ident}}>(clockEdge());")
+        code(
+            "std::shared_ptr<${{msg_type.c_ident}}> out_msg = "
+            "std::make_shared<${{msg_type.c_ident}}>(clockEdge());"
+        )
 
         # The other statements
         t = self.statements.generate(code, None)
         self.queue_name.assertType("OutPort")
 
-        code("(${{self.queue_name.var.code}}).deferEnqueueingMessage(addr, "\
-             "out_msg);")
+        code(
+            "(${{self.queue_name.var.code}}).deferEnqueueingMessage(addr, "
+            "out_msg);"
+        )
 
         # End scope
         self.symtab.popFrame()

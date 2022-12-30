@@ -38,13 +38,13 @@ from m5.proxy import *
 from m5.SimObject import SimObject
 from m5.objects.IntPin import IntSourcePin
 
+
 class RiscvRTC(SimObject):
-    type = 'RiscvRTC'
-    cxx_class='gem5::RiscvRTC'
+    type = "RiscvRTC"
+    cxx_class = "gem5::RiscvRTC"
     cxx_header = "dev/riscv/rtc.hh"
-    time = Param.Time('01/01/2012',
-        "System time to use")
-    int_pin = IntSourcePin('Pin to signal RTC interrupts to')
+    time = Param.Time("01/01/2012", "System time to use")
+    int_pin = IntSourcePin("Pin to signal RTC interrupts to")
     # The default 1MHz setting is taken from SiFive's U54MC
     # core complex. Set to other frequencies if necessary.
     frequency = Param.Frequency("1MHz", "RTC Frequency")

@@ -28,9 +28,6 @@
 
 Import('*')
 
-if env['CONF']['TARGET_ISA'] == 'null':
-    Return()
-
 Source('linux/events.cc')
 Source('linux/linux.cc')
 Source('linux/helpers.cc')

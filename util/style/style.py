@@ -47,9 +47,9 @@ import sys
 from .region import *
 
 tabsize = 8
-lead = re.compile(r'^([ \t]+)')
-trail = re.compile(r'([ \t]+)$')
-any_control = re.compile(r'\b(if|while|for)([ \t]*)\(')
+lead = re.compile(r"^([ \t]+)")
+trail = re.compile(r"([ \t]+)$")
+any_control = re.compile(r"\b(if|while|for)([ \t]*)\(")
 
 
 class UserInterface(object, metaclass=ABCMeta):
@@ -70,6 +70,7 @@ class UserInterface(object, metaclass=ABCMeta):
     def write(self, string):
         pass
 
+
 class StdioUI(UserInterface):
     def _prompt(self, prompt, results, default):
         return input(prompt) or default
@@ -77,23 +78,30 @@ class StdioUI(UserInterface):
     def write(self, string):
         sys.stdout.write(string)
 
+
 def _re_ignore(expr):
     """Helper function to create regular expression ignore file
     matcher functions"""
 
     rex = re.compile(expr)
+
     def match_re(fname):
         return rex.match(fname)
+
     return match_re
+
 
 def _re_only(expr):
     """Helper function to create regular expressions to only keep
     matcher functions"""
 
     rex = re.compile(expr)
+
     def match_re(fname):
         return not rex.match(fname)
+
     return match_re
+
 
 # This list contains a list of functions that are called to determine
 # if a file should be excluded from the style matching rules or
@@ -109,9 +117,12 @@ style_ignores = [
     _re_ignore("^tests/test-progs/hello/bin/"),
     # Only include Scons files and those with extensions that suggest source
     # code
-    _re_only("^((.*\/)?(SConscript|SConstruct)|"
-             ".*\.(c|h|cc|hh|cpp|hpp|py|isa|proto))$")
+    _re_only(
+        "^((.*\/)?(SConscript|SConstruct)|"
+        ".*\.(c|h|cc|hh|cpp|hpp|isa|proto))$"
+    ),
 ]
+
 
 def check_ignores(fname):
     """Check if a file name matches any of the ignore rules"""
@@ -128,12 +139,13 @@ def normalized_len(line):
 
     count = 0
     for c in line:
-        if c == '\t':
+        if c == "\t":
             count += tabsize - count % tabsize
         else:
             count += 1
 
     return count
+
 
 def modified_regions(old, new, context=0):
     regions = Regions()

@@ -45,34 +45,43 @@ from style.region import all_regions
 from style.style import StdioUI
 from style import repo
 
-verifier_names = dict([
-    (c.__name__, c) for c in style.verifiers.all_verifiers ])
+verifier_names = dict([(c.__name__, c) for c in style.verifiers.all_verifiers])
 
-def verify(filename, regions=all_regions, verbose=False, verifiers=None,
-           auto_fix=False):
+
+def verify(
+    filename,
+    regions=all_regions,
+    verbose=False,
+    verifiers=None,
+    auto_fix=False,
+):
     ui = StdioUI()
-    opts = {
-        "fix_all" : auto_fix,
-    }
+    opts = {"fix_all": auto_fix}
     base = os.path.join(os.path.dirname(__file__), "..")
     if verifiers is None:
         verifiers = style.verifiers.all_verifiers
 
     if verbose:
         print("Verifying %s[%s]..." % (filename, regions))
-    for verifier in [ v(ui, opts, base=base) for v in verifiers ]:
+    for verifier in [v(ui, opts, base=base) for v in verifiers]:
         if verbose:
-            print("Applying %s (%s)" % (
-                verifier.test_name, verifier.__class__.__name__))
+            print(
+                "Applying %s (%s)"
+                % (verifier.test_name, verifier.__class__.__name__)
+            )
         if verifier.apply(filename, regions=regions):
             return False
     return True
 
+
 def detect_repo():
     repo_classes = repo.detect_repo()
     if not repo_classes:
-        print("Error: Failed to detect repository type, no " \
-            "known repository type found.", file=sys.stderr)
+        print(
+            "Error: Failed to detect repository type, no "
+            "known repository type found.",
+            file=sys.stderr,
+        )
         sys.exit(1)
     elif len(repo_classes) > 1:
         print("Error: Detected multiple repository types.", file=sys.stderr)
@@ -80,55 +89,77 @@ def detect_repo():
     else:
         return repo_classes[0]()
 
-repo_types = {
-    "auto" : detect_repo,
-    "none" : lambda : None,
-    "git" : repo.GitRepo,
-}
 
-if __name__ == '__main__':
+repo_types = {"auto": detect_repo, "none": lambda: None, "git": repo.GitRepo}
+
+if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
         description="Check a file for gem5 style violations",
         epilog="""If no files are specified, the style checker tries to
         determine the list of modified and added files from the version
-        control system and checks those."""
+        control system and checks those.""",
     )
 
-    parser.add_argument("--verbose", "-v", action="count",
-                        help="Produce verbose output")
+    parser.add_argument(
+        "--verbose", "-v", action="count", help="Produce verbose output"
+    )
 
-    parser.add_argument("--fix", "-f", action="store_true",
-                        help="Automatically fix style violations.")
+    parser.add_argument(
+        "--fix",
+        "-f",
+        action="store_true",
+        help="Automatically fix style violations.",
+    )
 
-    parser.add_argument("--modifications", "-m", action="store_true",
-                        help="""Apply the style checker to modified regions
-                        instead of whole files""")
+    parser.add_argument(
+        "--modifications",
+        "-m",
+        action="store_true",
+        help="""Apply the style checker to modified regions
+                        instead of whole files""",
+    )
 
-    parser.add_argument("--repo-type", choices=repo_types, default="auto",
-                        help="Repository type to use to detect changes")
+    parser.add_argument(
+        "--repo-type",
+        choices=repo_types,
+        default="auto",
+        help="Repository type to use to detect changes",
+    )
 
-    parser.add_argument("--checker", "-c", choices=verifier_names, default=[],
-                        action="append",
-                        help="""Style checkers to run. Can be specified
-                        multiple times.""")
+    parser.add_argument(
+        "--checker",
+        "-c",
+        choices=verifier_names,
+        default=[],
+        action="append",
+        help="""Style checkers to run. Can be specified
+                        multiple times.""",
+    )
 
-    parser.add_argument("files", metavar="FILE", nargs="*",
-                        type=str,
-                        help="Source file(s) to inspect")
+    parser.add_argument(
+        "files",
+        metavar="FILE",
+        nargs="*",
+        type=str,
+        help="Source file(s) to inspect",
+    )
 
     args = parser.parse_args()
 
     repo = repo_types[args.repo_type]()
 
-    verifiers = [ verifier_names[name] for name in args.checker ] \
-                if args.checker else None
+    verifiers = (
+        [verifier_names[name] for name in args.checker]
+        if args.checker
+        else None
+    )
 
     files = args.files
     if not files and repo:
         added, modified = repo.staged_files()
-        files = [ repo.file_path(f) for f in added + modified ]
+        files = [repo.file_path(f) for f in added + modified]
 
     for filename in files:
         if args.modifications and repo and repo.in_repo(filename):
@@ -136,8 +167,11 @@ if __name__ == '__main__':
         else:
             regions = all_regions
 
-        if not verify(filename, regions=regions,
-                      verbose=args.verbose,
-                      verifiers=verifiers,
-                      auto_fix=args.fix):
+        if not verify(
+            filename,
+            regions=regions,
+            verbose=args.verbose,
+            verifiers=verifiers,
+            auto_fix=args.fix,
+        ):
             sys.exit(1)

@@ -27,9 +27,10 @@
 from m5.objects.Device import BasicPioDevice
 from m5.params import Param
 
+
 class LupioRTC(BasicPioDevice):
-    type = 'LupioRTC'
-    cxx_class='gem5::LupioRTC'
-    cxx_header = 'dev/lupio/lupio_rtc.hh'
-    time = Param.Time('01/01/2020', "Initial system time to use")
+    type = "LupioRTC"
+    cxx_class = "gem5::LupioRTC"
+    cxx_header = "dev/lupio/lupio_rtc.hh"
+    time = Param.Time("01/01/2020", "Initial system time to use")
     pio_size = Param.Addr(0x1000, "PIO Size")

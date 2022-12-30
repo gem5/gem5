@@ -46,8 +46,8 @@ import importer
 from code_formatter import code_formatter
 
 parser = argparse.ArgumentParser()
-parser.add_argument('modpath', help='module the simobject belongs to')
-parser.add_argument('cxx_config_hh', help='cxx config header file to generate')
+parser.add_argument("modpath", help="module the simobject belongs to")
+parser.add_argument("cxx_config_hh", help="cxx config header file to generate")
 
 args = parser.parse_args()
 
@@ -60,10 +60,11 @@ sim_object = getattr(module, sim_object_name)
 
 code = code_formatter()
 
-entry_class = 'CxxConfigDirectoryEntry_%s' % sim_object_name
-param_class = '%sCxxConfigParams' % sim_object_name
+entry_class = "CxxConfigDirectoryEntry_%s" % sim_object_name
+param_class = "%sCxxConfigParams" % sim_object_name
 
-code('''#include "params/${sim_object_name}.hh"
+code(
+    """#include "params/${sim_object_name}.hh"
 
 #include "sim/cxx_config.hh"
 
@@ -110,6 +111,7 @@ class ${param_class} : public CxxConfigParams, public ${sim_object_name}Params
 };
 
 } // namespace gem5
-''')
+"""
+)
 
 code.write(args.cxx_config_hh)

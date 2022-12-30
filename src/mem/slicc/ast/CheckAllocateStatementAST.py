@@ -27,6 +27,7 @@
 
 from slicc.ast.StatementAST import StatementAST
 
+
 class CheckAllocateStatementAST(StatementAST):
     def __init__(self, slicc, variable):
         super().__init__(slicc)

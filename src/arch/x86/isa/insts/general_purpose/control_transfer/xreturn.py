@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop RET_NEAR
 {
     # Make the default data size of rets 64 bits in 64 bit mode
@@ -157,4 +157,4 @@ processDescriptor:
 #end:
 #    fault "NoFault"
 };
-'''
+"""

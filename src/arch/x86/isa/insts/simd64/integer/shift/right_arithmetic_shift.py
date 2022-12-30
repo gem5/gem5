@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop PSRAW_MMX_MMX {
     msra mmx, mmx, mmxm, size=2, ext=0
 };
@@ -71,4 +71,4 @@ def macroop PSRAD_MMX_P {
 def macroop PSRAD_MMX_I {
     msrai mmx, mmx, imm, size=4, ext=0
 };
-'''
+"""

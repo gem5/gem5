@@ -107,6 +107,7 @@ class flit
         }
     }
 
+    bool functionalRead(Packet *pkt, WriteMask &mask);
     bool functionalWrite(Packet *pkt);
 
     virtual flit* serialize(int ser_id, int parts, uint32_t bWidth);

@@ -112,10 +112,7 @@ class RandomGeneratorCore(AbstractGeneratorCore):
         )
         yield self.generator.createExit(0)
 
+    @overrides(AbstractGeneratorCore)
     def start_traffic(self) -> None:
-        """
-        A call to this function will start generating the traffic, this call
-        should happen before m5.simulate() and after m5.instantiate().
-        """
         self._set_traffic()
         self.generator.start(self._traffic)

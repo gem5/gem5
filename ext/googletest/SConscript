@@ -52,6 +52,6 @@ gmock_all = genv.Object(gmock_src.File('gmock-all.cc'))
 gtest_main = genv.StaticLibrary(target='libgtest', source=[
         gtest_all, gmock_all, gtest_src.File('gtest_main.cc')])
 
-env['GTEST_LIBS'] = ['libgtest', 'pthread']
+env['GTEST_LIBS'] = [gtest_main[0], 'pthread']
 env['GTEST_CPPFLAGS'] = [
     '-pthread', '-DUSE_GMOCK', '-Wno-undef', '-isystem', gtest_include.abspath]

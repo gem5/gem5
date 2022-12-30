@@ -50,7 +50,7 @@ namespace gem5
 
 using namespace ArmISA;
 
-namespace Trace {
+namespace trace {
 
 TarmacBaseRecord::TarmacBaseRecord(Tick _when, ThreadContext *_thread,
                                    const StaticInstPtr _staticInst,
@@ -118,5 +118,5 @@ TarmacBaseRecord::pcToISetState(const PCStateBase &pc)
     return isetstate;
 }
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5

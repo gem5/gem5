@@ -56,4 +56,3 @@ DebugFlag('HWPrefetchQueue')
 # it explicitly even above and beyond CacheAll.
 CompoundFlag('CacheAll', ['Cache', 'CacheComp', 'CachePort', 'CacheRepl',
                           'CacheVerbose', 'HWPrefetch', 'MSHR'])
-

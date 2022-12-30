@@ -37,9 +37,6 @@
 
 Import('*')
 
-if env['CONF']['TARGET_ISA'] == 'null':
-    Return()
-
 SimObject('PS2.py', sim_objects=[
     'PS2Device', 'PS2Keyboard', 'PS2Mouse', 'PS2TouchKit'])
 Source('device.cc')

@@ -45,8 +45,9 @@ import sys
 
 util_dir = os.path.dirname(os.path.realpath(__file__))
 # Make sure the proto definitions are up to date.
-subprocess.check_call(['make', '--quiet', '-C', util_dir, 'packet_pb2.py'])
+subprocess.check_call(["make", "--quiet", "-C", util_dir, "packet_pb2.py"])
 import packet_pb2
+
 
 def main():
     if len(sys.argv) != 3:
@@ -57,7 +58,7 @@ def main():
     proto_in = protolib.openFileRd(sys.argv[1])
 
     try:
-        ascii_out = open(sys.argv[2], 'w')
+        ascii_out = open(sys.argv[2], "w")
     except IOError:
         print("Failed to open ", sys.argv[2], " for writing")
         exit(-1)
@@ -79,7 +80,7 @@ def main():
     print("Tick frequency:", header.tick_freq)
 
     for id_string in header.id_strings:
-        print('Master id %d: %s' % (id_string.key, id_string.value))
+        print("Master id %d: %s" % (id_string.key, id_string.value))
 
     print("Parsing packets")
 
@@ -90,25 +91,29 @@ def main():
     while protolib.decodeMessage(proto_in, packet):
         num_packets += 1
         # ReadReq is 1 and WriteReq is 4 in src/mem/packet.hh Command enum
-        cmd = 'r' if packet.cmd == 1 else ('w' if packet.cmd == 4 else 'u')
-        if packet.HasField('pkt_id'):
-            ascii_out.write('%s,' % (packet.pkt_id))
-        if packet.HasField('flags'):
-            ascii_out.write('%s,%s,%s,%s,%s' % (cmd, packet.addr, packet.size,
-                            packet.flags, packet.tick))
+        cmd = "r" if packet.cmd == 1 else ("w" if packet.cmd == 4 else "u")
+        if packet.HasField("pkt_id"):
+            ascii_out.write("%s," % (packet.pkt_id))
+        if packet.HasField("flags"):
+            ascii_out.write(
+                "%s,%s,%s,%s,%s"
+                % (cmd, packet.addr, packet.size, packet.flags, packet.tick)
+            )
         else:
-            ascii_out.write('%s,%s,%s,%s' % (cmd, packet.addr, packet.size,
-                                           packet.tick))
-        if packet.HasField('pc'):
-            ascii_out.write(',%s\n' % (packet.pc))
+            ascii_out.write(
+                "%s,%s,%s,%s" % (cmd, packet.addr, packet.size, packet.tick)
+            )
+        if packet.HasField("pc"):
+            ascii_out.write(",%s\n" % (packet.pc))
         else:
-            ascii_out.write('\n')
+            ascii_out.write("\n")
 
     print("Parsed packets:", num_packets)
 
     # We're done
     ascii_out.close()
     proto_in.close()
+
 
 if __name__ == "__main__":
     main()

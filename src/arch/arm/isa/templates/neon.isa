@@ -74,7 +74,7 @@ class %(class_name)s : public %(base_class)s
         }
     }
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -105,7 +105,7 @@ class %(class_name)s : public %(base_class)s
         }
     }
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -135,7 +135,7 @@ class %(class_name)s : public %(base_class)s
         }
     }
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -163,7 +163,7 @@ class %(class_name)s : public %(base_class)s
         }
     }
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -193,14 +193,14 @@ class %(class_name)s : public %(base_class)s
         }
     }
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
 def template NeonExecDeclare {{
     template
     Fault %(class_name)s<%(targs)s>::execute(
-            ExecContext *, Trace::InstRecord *) const;
+            ExecContext *, trace::InstRecord *) const;
 }};
 
 output header {{
@@ -233,7 +233,7 @@ def template NeonEqualRegExecute {{
     template <class Element>
     Fault
     %(class_name)s<Element>::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         %(op_decl)s;
@@ -285,7 +285,7 @@ def template NeonUnequalRegExecute {{
     template <class Element>
     Fault
     %(class_name)s<Element>::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         typedef typename bigger_type_t<Element>::type BigElement;
         Fault fault = NoFault;

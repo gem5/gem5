@@ -37,3 +37,5 @@ Source('gem5_to_tlm.cc')
 Source('sc_ext.cc')
 Source('sc_mm.cc')
 Source('tlm_to_gem5.cc')
+
+DebugFlag('TlmBridge')

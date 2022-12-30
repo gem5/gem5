@@ -28,45 +28,61 @@
 from slicc.symbols.Symbol import Symbol
 from slicc.symbols.State import WildcardState
 
+
 class Transition(Symbol):
-    def __init__(self, table, machine, state, event, nextState, actions,
-                 request_types, location):
+    def __init__(
+        self,
+        table,
+        machine,
+        state,
+        event,
+        nextState,
+        actions,
+        request_types,
+        location,
+    ):
         ident = "%s|%s" % (state, event)
         super().__init__(table, ident, location)
 
         self.state = machine.states[state]
         self.event = machine.events[event]
-        if nextState == '*':
+        if nextState == "*":
             # check to make sure there is a getNextState function declared
             found = False
             for func in machine.functions:
-                if func.c_ident == 'getNextState_Addr':
+                if func.c_ident == "getNextState_Addr":
                     found = True
                     break
             if not found:
-                fatal("Machine uses a wildcard transition without getNextState defined")
-            self.nextState = WildcardState(machine.symtab,
-                                           '*', location)
+                fatal(
+                    "Machine uses a wildcard transition without getNextState defined"
+                )
+            self.nextState = WildcardState(machine.symtab, "*", location)
         else:
             self.nextState = machine.states[nextState]
-        self.actions = [ machine.actions[a] for a in actions ]
-        self.request_types = [ machine.request_types[s] for s in request_types ]
+        self.actions = [machine.actions[a] for a in actions]
+        self.request_types = [machine.request_types[s] for s in request_types]
         self.resources = {}
 
         for action in self.actions:
-            for var,value in action.resources.items():
+            for var, value in action.resources.items():
                 num = int(value)
                 if var in self.resources:
                     num += int(value)
                 self.resources[var] = str(num)
 
     def __repr__(self):
-      return "[Transition: (%r, %r) -> %r, %r]" % \
-             (self.state, self.event, self.nextState, self.actions)
+        return "[Transition: (%r, %r) -> %r, %r]" % (
+            self.state,
+            self.event,
+            self.nextState,
+            self.actions,
+        )
 
     def getActionShorthands(self):
         assert self.actions
 
-        return ''.join(a.short for a in self.actions)
+        return "".join(a.short for a in self.actions)
 
-__all__ = [ "Transition" ]
+
+__all__ = ["Transition"]

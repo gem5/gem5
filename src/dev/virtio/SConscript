@@ -37,9 +37,6 @@
 
 Import('*')
 
-if env['CONF']['TARGET_ISA'] == 'null':
-    Return()
-
 SimObject('VirtIO.py', sim_objects=[
     'VirtIODeviceBase', 'VirtIODummyDevice', 'PciVirtIO'])
 SimObject('VirtIOConsole.py', sim_objects=['VirtIOConsole'])

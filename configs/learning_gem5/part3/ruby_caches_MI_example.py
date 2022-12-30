@@ -44,19 +44,19 @@ from m5.util import fatal, panic
 
 from m5.objects import *
 
-class MyCacheSystem(RubySystem):
 
+class MyCacheSystem(RubySystem):
     def __init__(self):
-        if buildEnv['PROTOCOL'] != 'MI_example':
+        if buildEnv["PROTOCOL"] != "MI_example":
             fatal("This system assumes MI_example!")
 
         super(MyCacheSystem, self).__init__()
 
     def setup(self, system, cpus, mem_ctrls):
         """Set up the Ruby cache subsystem. Note: This can't be done in the
-           constructor because many of these items require a pointer to the
-           ruby system (self). This causes infinite recursion in initialize()
-           if we do this in the __init__.
+        constructor because many of these items require a pointer to the
+        ruby system (self). This causes infinite recursion in initialize()
+        if we do this in the __init__.
         """
         # Ruby's global network.
         self.network = MyNetwork(self)
@@ -70,20 +70,24 @@ class MyCacheSystem(RubySystem):
         # customized depending on the topology/network requirements.
         # Create one controller for each L1 cache (and the cache mem obj.)
         # Create a single directory controller (Really the memory cntrl)
-        self.controllers = \
-            [L1Cache(system, self, cpu) for cpu in cpus] + \
-            [DirController(self, system.mem_ranges, mem_ctrls)]
+        self.controllers = [L1Cache(system, self, cpu) for cpu in cpus] + [
+            DirController(self, system.mem_ranges, mem_ctrls)
+        ]
 
         # Create one sequencer per CPU. In many systems this is more
         # complicated since you have to create sequencers for DMA controllers
         # and other controllers, too.
-        self.sequencers = [RubySequencer(version = i,
-                                # I/D cache is combined and grab from ctrl
-                                dcache = self.controllers[i].cacheMemory,
-                                clk_domain = self.controllers[i].clk_domain,
-                                ) for i in range(len(cpus))]
+        self.sequencers = [
+            RubySequencer(
+                version=i,
+                # I/D cache is combined and grab from ctrl
+                dcache=self.controllers[i].cacheMemory,
+                clk_domain=self.controllers[i].clk_domain,
+            )
+            for i in range(len(cpus))
+        ]
 
-        for i,c in enumerate(self.controllers[0:len(cpus)]):
+        for i, c in enumerate(self.controllers[0 : len(cpus)]):
             c.sequencer = self.sequencers[i]
 
         self.num_of_sequencers = len(self.sequencers)
@@ -99,28 +103,30 @@ class MyCacheSystem(RubySystem):
         system.system_port = self.sys_port_proxy.in_ports
 
         # Connect the cpu's cache, interrupt, and TLB ports to Ruby
-        for i,cpu in enumerate(cpus):
+        for i, cpu in enumerate(cpus):
             self.sequencers[i].connectCpuPorts(cpu)
+
 
 class L1Cache(L1Cache_Controller):
 
     _version = 0
+
     @classmethod
     def versionCount(cls):
-        cls._version += 1 # Use count for this particular type
+        cls._version += 1  # Use count for this particular type
         return cls._version - 1
 
     def __init__(self, system, ruby_system, cpu):
         """CPUs are needed to grab the clock domain and system is needed for
-           the cache block size.
+        the cache block size.
         """
         super(L1Cache, self).__init__()
 
         self.version = self.versionCount()
         # This is the cache memory object that stores the cache data and tags
-        self.cacheMemory = RubyCache(size = '16kB',
-                               assoc = 8,
-                               start_index_bit = self.getBlockSizeBits(system))
+        self.cacheMemory = RubyCache(
+            size="16kB", assoc=8, start_index_bit=self.getBlockSizeBits(system)
+        )
         self.clk_domain = cpu.clk_domain
         self.send_evictions = self.sendEvicts(cpu)
         self.ruby_system = ruby_system
@@ -134,40 +140,39 @@ class L1Cache(L1Cache_Controller):
 
     def sendEvicts(self, cpu):
         """True if the CPU model or ISA requires sending evictions from caches
-           to the CPU. Two scenarios warrant forwarding evictions to the CPU:
-           1. The O3 model must keep the LSQ coherent with the caches
-           2. The x86 mwait instruction is built on top of coherence
-           3. The local exclusive monitor in ARM systems
+        to the CPU. Two scenarios warrant forwarding evictions to the CPU:
+        1. The O3 model must keep the LSQ coherent with the caches
+        2. The x86 mwait instruction is built on top of coherence
+        3. The local exclusive monitor in ARM systems
+
+        As this is an X86 simulation we return True.
         """
-        if type(cpu) is DerivO3CPU or \
-           buildEnv['TARGET_ISA'] in ('x86', 'arm'):
-            return True
-        return False
+        return True
 
     def connectQueues(self, ruby_system):
-        """Connect all of the queues for this controller.
-        """
+        """Connect all of the queues for this controller."""
         self.mandatoryQueue = MessageBuffer()
-        self.requestFromCache = MessageBuffer(ordered = True)
+        self.requestFromCache = MessageBuffer(ordered=True)
         self.requestFromCache.out_port = ruby_system.network.in_port
-        self.responseFromCache = MessageBuffer(ordered = True)
+        self.responseFromCache = MessageBuffer(ordered=True)
         self.responseFromCache.out_port = ruby_system.network.in_port
-        self.forwardToCache = MessageBuffer(ordered = True)
+        self.forwardToCache = MessageBuffer(ordered=True)
         self.forwardToCache.in_port = ruby_system.network.out_port
-        self.responseToCache = MessageBuffer(ordered = True)
+        self.responseToCache = MessageBuffer(ordered=True)
         self.responseToCache.in_port = ruby_system.network.out_port
+
 
 class DirController(Directory_Controller):
 
     _version = 0
+
     @classmethod
     def versionCount(cls):
-        cls._version += 1 # Use count for this particular type
+        cls._version += 1  # Use count for this particular type
         return cls._version - 1
 
     def __init__(self, ruby_system, ranges, mem_ctrls):
-        """ranges are the memory ranges assigned to this controller.
-        """
+        """ranges are the memory ranges assigned to this controller."""
         if len(mem_ctrls) > 1:
             panic("This cache system can only be connected to one mem ctrl")
         super(DirController, self).__init__()
@@ -180,23 +185,23 @@ class DirController(Directory_Controller):
         self.connectQueues(ruby_system)
 
     def connectQueues(self, ruby_system):
-        self.requestToDir = MessageBuffer(ordered = True)
+        self.requestToDir = MessageBuffer(ordered=True)
         self.requestToDir.in_port = ruby_system.network.out_port
-        self.dmaRequestToDir = MessageBuffer(ordered = True)
+        self.dmaRequestToDir = MessageBuffer(ordered=True)
         self.dmaRequestToDir.in_port = ruby_system.network.out_port
 
         self.responseFromDir = MessageBuffer()
         self.responseFromDir.out_port = ruby_system.network.in_port
-        self.dmaResponseFromDir = MessageBuffer(ordered = True)
+        self.dmaResponseFromDir = MessageBuffer(ordered=True)
         self.dmaResponseFromDir.out_port = ruby_system.network.in_port
         self.forwardFromDir = MessageBuffer()
         self.forwardFromDir.out_port = ruby_system.network.in_port
         self.requestToMemory = MessageBuffer()
         self.responseFromMemory = MessageBuffer()
 
+
 class MyNetwork(SimpleNetwork):
-    """A simple point-to-point network. This doesn't not use garnet.
-    """
+    """A simple point-to-point network. This doesn't not use garnet."""
 
     def __init__(self, ruby_system):
         super(MyNetwork, self).__init__()
@@ -205,25 +210,28 @@ class MyNetwork(SimpleNetwork):
 
     def connectControllers(self, controllers):
         """Connect all of the controllers to routers and connec the routers
-           together in a point-to-point network.
+        together in a point-to-point network.
         """
         # Create one router/switch per controller in the system
-        self.routers = [Switch(router_id = i) for i in range(len(controllers))]
+        self.routers = [Switch(router_id=i) for i in range(len(controllers))]
 
         # Make a link from each controller to the router. The link goes
         # externally to the network.
-        self.ext_links = [SimpleExtLink(link_id=i, ext_node=c,
-                                        int_node=self.routers[i])
-                          for i, c in enumerate(controllers)]
+        self.ext_links = [
+            SimpleExtLink(link_id=i, ext_node=c, int_node=self.routers[i])
+            for i, c in enumerate(controllers)
+        ]
 
         # Make an "internal" link (internal to the network) between every pair
         # of routers.
         link_count = 0
-        self.int_links = []
+        int_links = []
         for ri in self.routers:
             for rj in self.routers:
-                if ri == rj: continue # Don't connect a router to itself!
+                if ri == rj:
+                    continue  # Don't connect a router to itself!
                 link_count += 1
-                self.int_links.append(SimpleIntLink(link_id = link_count,
-                                                    src_node = ri,
-                                                    dst_node = rj))
+                int_links.append(
+                    SimpleIntLink(link_id=link_count, src_node=ri, dst_node=rj)
+                )
+        self.int_links = int_links

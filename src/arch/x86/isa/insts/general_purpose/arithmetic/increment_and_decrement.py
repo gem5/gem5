@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop INC_R
 {
     addi reg, reg, 1, flags=(OF, SF, ZF, AF, PF)
@@ -111,4 +111,4 @@ def macroop DEC_LOCKED_P
     stul t1, seg, riprel, disp
     mfence
 };
-'''
+"""

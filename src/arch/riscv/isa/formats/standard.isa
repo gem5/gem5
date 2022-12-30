@@ -45,7 +45,7 @@ def template ImmDeclare {{
       public:
         /// Constructor.
         %(class_name)s(MachInst machInst);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
         std::string generateDisassembly(Addr pc,
             const loader::SymbolTable *symtab) const override;
     };
@@ -64,7 +64,7 @@ def template ImmConstructor {{
 def template ImmExecute {{
     Fault
     %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, trace::InstRecord *traceData) const
     {
         %(op_decl)s;
         %(op_rd)s;
@@ -90,7 +90,7 @@ def template ImmExecute {{
 def template CILuiExecute {{
     Fault
     %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, trace::InstRecord *traceData) const
     {
         %(op_decl)s;
         %(op_rd)s;
@@ -118,7 +118,7 @@ def template CILuiExecute {{
 def template FenceExecute {{
     Fault
     %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, trace::InstRecord *traceData) const
     {
         %(op_decl)s;
         %(op_rd)s;
@@ -169,7 +169,7 @@ def template BranchDeclare {{
       public:
         /// Constructor.
         %(class_name)s(MachInst machInst);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::string
         generateDisassembly(
@@ -185,7 +185,7 @@ def template BranchDeclare {{
 def template BranchExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-        Trace::InstRecord *traceData) const
+        trace::InstRecord *traceData) const
     {
         %(op_decl)s;
         %(op_rd)s;
@@ -227,7 +227,7 @@ def template JumpDeclare {{
       public:
         /// Constructor.
         %(class_name)s(MachInst machInst);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::string
         generateDisassembly(
@@ -286,7 +286,7 @@ def template JumpConstructor {{
 def template JumpExecute {{
     Fault
     %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, trace::InstRecord *traceData) const
     {
         %(op_decl)s;
         %(op_rd)s;
@@ -299,8 +299,7 @@ def template JumpExecute {{
     %(class_name)s::branchTarget(ThreadContext *tc) const
     {
         PCStateBase *pc_ptr = tc->pcState().clone();
-        pc_ptr->as<PCState>().set(
-                (tc->readIntReg(srcRegIdx(0).index()) + imm) & ~0x1);
+        pc_ptr->as<PCState>().set((tc->getReg(srcRegIdx(0)) + imm) & ~0x1);
         return std::unique_ptr<PCStateBase>{pc_ptr};
     }
 
@@ -322,12 +321,24 @@ def template JumpExecute {{
 def template CSRExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-        Trace::InstRecord *traceData) const
+        trace::InstRecord *traceData) const
     {
-        if (!valid) {
+        // We assume a riscv instruction is always run with a riscv ISA.
+        auto isa = static_cast<RiscvISA::ISA*>(xc->tcBase()->getIsaPtr());
+        auto& csr_data = isa->getCSRDataMap();
+        auto& csr_masks = isa->getCSRMaskMap();
+
+        auto csr_data_it = csr_data.find(csr);
+        if (csr_data_it == csr_data.end()) {
             return std::make_shared<IllegalInstFault>(
                     csprintf("Illegal CSR index %#x\n", csr), machInst);
         }
+
+        RegIndex midx = csr_data_it->second.physIndex;
+        const std::string& csrName = csr_data_it->second.name;
+        auto mask_it = csr_masks.find(csr);
+        RegVal maskVal = (mask_it == csr_masks.end()) ? mask(64)
+                                                      : mask_it->second;
 
         %(op_decl)s;
         %(op_rd)s;

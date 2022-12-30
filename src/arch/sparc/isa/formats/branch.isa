@@ -31,7 +31,7 @@
 
 def template JumpExecute {{
         Fault %(class_name)s::execute(ExecContext *xc,
-                Trace::InstRecord *traceData) const
+                trace::InstRecord *traceData) const
         {
             // Attempt to execute the instruction
             Fault fault = NoFault;
@@ -53,7 +53,7 @@ def template JumpExecute {{
 def template BranchExecute {{
         Fault
         %(class_name)s::execute(ExecContext *xc,
-                Trace::InstRecord *traceData) const
+                trace::InstRecord *traceData) const
         {
             // Attempt to execute the instruction
             Fault fault = NoFault;
@@ -187,4 +187,3 @@ def format BranchSplit(code=default_branch_code,
          decode_block) = doUncondBranch(name, Name,
              "BranchSplit", code, annul_code, opt_flags)
 }};
-

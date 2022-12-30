@@ -1,4 +1,4 @@
-# Copyright (c) 2018 ARM Limited
+# Copyright (c) 2018, 2022 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -37,38 +37,59 @@ from m5.SimObject import SimObject
 from m5.params import *
 from m5.objects.InstTracer import InstTracer
 
+
 class TarmacParser(InstTracer):
-    type = 'TarmacParser'
-    cxx_class = 'gem5::Trace::TarmacParser'
+    type = "TarmacParser"
+    cxx_class = "gem5::trace::TarmacParser"
     cxx_header = "arch/arm/tracers/tarmac_parser.hh"
 
     path_to_trace = Param.String("tarmac.log", "path to TARMAC trace")
 
     start_pc = Param.Int(
-        0x0, "tracing starts when the PC gets this value; ignored if 0x0")
+        0x0, "tracing starts when the PC gets this value; ignored if 0x0"
+    )
 
-    exit_on_diff = Param.Bool(False,
-        "stop simulation after first mismatch is detected")
+    exit_on_diff = Param.Bool(
+        False, "stop simulation after first mismatch is detected"
+    )
 
-    exit_on_insn_diff = Param.Bool(False,
-        "stop simulation after first mismatch on PC or opcode is detected")
+    exit_on_insn_diff = Param.Bool(
+        False,
+        "stop simulation after first mismatch on PC or opcode is detected",
+    )
 
-    mem_wr_check = Param.Bool(False,
-        "enable check of memory write accesses")
+    mem_wr_check = Param.Bool(False, "enable check of memory write accesses")
 
-    cpu_id = Param.Bool(False,
-        "true if trace format includes the CPU id")
+    cpu_id = Param.Bool(False, "true if trace format includes the CPU id")
 
-    ignore_mem_addr = Param.AddrRange(AddrRange(0, size=0),
-        "Range of unverifiable memory addresses")
+    ignore_mem_addr = Param.AddrRange(
+        AddrRange(0, size=0), "Range of unverifiable memory addresses"
+    )
+
+
+class TarmacDump(ScopedEnum):
+    vals = ["stdoutput", "stderror", "file"]
+
 
 class TarmacTracer(InstTracer):
-    type = 'TarmacTracer'
-    cxx_class = 'gem5::Trace::TarmacTracer'
+    type = "TarmacTracer"
+    cxx_class = "gem5::trace::TarmacTracer"
     cxx_header = "arch/arm/tracers/tarmac_tracer.hh"
 
-    start_tick = Param.Tick(0,
-        "tracing starts when the tick time gets this value")
+    start_tick = Param.Tick(
+        0, "tracing starts when the tick time gets this value"
+    )
 
-    end_tick = Param.Tick(MaxTick,
-        "tracing ends when the tick time gets this value")
+    end_tick = Param.Tick(
+        MaxTick, "tracing ends when the tick time gets this value"
+    )
+    outfile = Param.TarmacDump(
+        "stdoutput",
+        "Selects where the tracer is dumping its output"
+        "Current options are:"
+        "1) stdoutput = dump to standard output"
+        "2) stderror = dump to standard error"
+        "3) file = dump to a file. As there is one tracer per CPU,"
+        "this means every CPU will dump its trace to a different file,"
+        "name after the tracer name (e.g. cpu0.tracer, cpu1.tracer)",
+    )

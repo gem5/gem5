@@ -54,21 +54,23 @@ from .file_types import lang_type
 
 
 def safefix(fix_func):
-    """ Decorator for the fix functions of the Verifier class.
-        This function wraps the fix function and creates a backup file
-        just in case there is an error.
+    """Decorator for the fix functions of the Verifier class.
+    This function wraps the fix function and creates a backup file
+    just in case there is an error.
     """
+
     def safefix_wrapper(*args, **kwargs):
         # Check to be sure that this is decorating a function we expect:
         # a class method with filename as the first argument (after self)
-        assert(os.path.exists(args[1]))
+        assert os.path.exists(args[1])
         self = args[0]
-        assert(is_verifier(self.__class__))
+        assert is_verifier(self.__class__)
         filename = args[1]
 
         # Now, Let's make a backup file.
         from shutil import copyfile
-        backup_name = filename+'.bak'
+
+        backup_name = filename + ".bak"
         copyfile(filename, backup_name)
 
         # Try to apply the fix. If it fails, then we revert the file
@@ -85,6 +87,7 @@ def safefix(fix_func):
             os.remove(backup_name)
 
     return safefix_wrapper
+
 
 def _modified_regions(old, new):
     try:
@@ -117,21 +120,20 @@ class Verifier(object, metaclass=ABCMeta):
 
     """
 
-
     def __init__(self, ui, opts, base=None):
         self.ui = ui
         self.base = base
 
         # opt_name must be defined as a class attribute of derived classes.
         # Check test-specific opts first as these have precedence.
-        self.opt_fix = opts.get('fix_' + self.opt_name, False)
-        self.opt_ignore = opts.get('ignore_' + self.opt_name, False)
-        self.opt_skip = opts.get('skip_' + self.opt_name, False)
+        self.opt_fix = opts.get("fix_" + self.opt_name, False)
+        self.opt_ignore = opts.get("ignore_" + self.opt_name, False)
+        self.opt_skip = opts.get("skip_" + self.opt_name, False)
         # If no test-specific opts were set, then set based on "-all" opts.
         if not (self.opt_fix or self.opt_ignore or self.opt_skip):
-            self.opt_fix = opts.get('fix_all', False)
-            self.opt_ignore = opts.get('ignore_all', False)
-            self.opt_skip = opts.get('skip_all', False)
+            self.opt_fix = opts.get("fix_all", False)
+            self.opt_ignore = opts.get("ignore_all", False)
+            self.opt_skip = opts.get("skip_all", False)
 
     def normalize_filename(self, name):
         abs_name = os.path.abspath(name)
@@ -145,7 +147,7 @@ class Verifier(object, metaclass=ABCMeta):
         try:
             f = open(filename, mode)
         except OSError as msg:
-            print('could not open file {}: {}'.format(filename, msg))
+            print("could not open file {}: {}".format(filename, msg))
             return None
 
         return f
@@ -177,12 +179,13 @@ class Verifier(object, metaclass=ABCMeta):
                 if self.opt_fix:
                     self.fix(filename, regions)
                 else:
-                    result = self.ui.prompt("(a)bort, (i)gnore, or (f)ix?",
-                                            'aif', 'a')
-                    if result == 'f':
+                    result = self.ui.prompt(
+                        "(a)bort, (i)gnore, or (f)ix?", "aif", "a"
+                    )
+                    if result == "f":
                         self.fix(filename, regions)
-                    elif result == 'a':
-                        return True # abort
+                    elif result == "a":
+                        return True  # abort
 
         return False
 
@@ -221,25 +224,28 @@ class Verifier(object, metaclass=ABCMeta):
         """
         pass
 
+
 class LineVerifier(Verifier):
     def check(self, filename, regions=all_regions, fobj=None, silent=False):
         close = False
         if fobj is None:
-            fobj = self.open(filename, 'rb')
+            fobj = self.open(filename, "rb")
             close = True
 
         lang = lang_type(filename)
         assert lang in self.languages
 
         errors = 0
-        for num,line in enumerate(fobj):
+        for num, line in enumerate(fobj):
             if num not in regions:
                 continue
-            s_line = line.decode('utf-8').rstrip('\n')
+            s_line = line.decode("utf-8").rstrip("\n")
             if not self.check_line(s_line, language=lang):
                 if not silent:
-                    self.ui.write("invalid %s in %s:%d\n" % \
-                                  (self.test_name, filename, num + 1))
+                    self.ui.write(
+                        "invalid %s in %s:%d\n"
+                        % (self.test_name, filename, num + 1)
+                    )
                     if self.ui.verbose:
                         self.ui.write(">>%s<<\n" % s_line[:-1])
                 errors += 1
@@ -249,7 +255,7 @@ class LineVerifier(Verifier):
 
     @safefix
     def fix(self, filename, regions=all_regions):
-        f = self.open(filename, 'r+')
+        f = self.open(filename, "r+")
 
         lang = lang_type(filename)
         assert lang in self.languages
@@ -259,8 +265,8 @@ class LineVerifier(Verifier):
         f.seek(0)
         f.truncate()
 
-        for i,line in enumerate(lines):
-            line = line.rstrip('\n')
+        for i, line in enumerate(lines):
+            line = line.rstrip("\n")
             if i in regions:
                 line = self.fix_line(line, language=lang)
 
@@ -277,6 +283,7 @@ class LineVerifier(Verifier):
     def fix_line(self, line, **kwargs):
         pass
 
+
 class Whitespace(LineVerifier):
     """Check whitespace.
 
@@ -285,16 +292,16 @@ class Whitespace(LineVerifier):
     - No trailing whitespace
     """
 
-    languages = set(('C', 'C++', 'swig', 'python', 'asm', 'isa', 'scons',
-                     'make', 'dts'))
-    trail_only = set(('make', 'dts'))
+    languages = set(
+        ("C", "C++", "swig", "python", "asm", "isa", "scons", "make", "dts")
+    )
+    trail_only = set(("make", "dts"))
 
-    test_name = 'whitespace'
-    opt_name = 'white'
+    test_name = "whitespace"
+    opt_name = "white"
 
-    _lead = re.compile(r'^([ \t]+)')
-    _trail = re.compile(r'([ \t]+)$')
-
+    _lead = re.compile(r"^([ \t]+)")
+    _trail = re.compile(r"([ \t]+)$")
 
     def skip_lead(self, language):
         return language in Whitespace.trail_only
@@ -302,7 +309,7 @@ class Whitespace(LineVerifier):
     def check_line(self, line, language):
         if not self.skip_lead(language):
             match = Whitespace._lead.search(line)
-            if match and match.group(1).find('\t') != -1:
+            if match and match.group(1).find("\t") != -1:
                 return False
 
         match = Whitespace._trail.search(line)
@@ -313,13 +320,14 @@ class Whitespace(LineVerifier):
 
     def fix_line(self, line, language):
         if not self.skip_lead(language) and Whitespace._lead.search(line):
-            newline = ''
-            for i,c in enumerate(line):
-                if c == ' ':
-                    newline += ' '
-                elif c == '\t':
-                    newline += ' ' * (style.tabsize - \
-                                      len(newline) % style.tabsize)
+            newline = ""
+            for i, c in enumerate(line):
+                if c == " ":
+                    newline += " "
+                elif c == "\t":
+                    newline += " " * (
+                        style.tabsize - len(newline) % style.tabsize
+                    )
                 else:
                     newline += line[i:]
                     break
@@ -333,8 +341,8 @@ class SortedIncludes(Verifier):
     """Check for proper sorting of include statements"""
 
     languages = sort_includes.default_languages
-    test_name = 'include file order'
-    opt_name = 'include'
+    test_name = "include file order"
+    opt_name = "include"
 
     def __init__(self, *args, **kwargs):
         super(SortedIncludes, self).__init__(*args, **kwargs)
@@ -343,11 +351,11 @@ class SortedIncludes(Verifier):
     def check(self, filename, regions=all_regions, fobj=None, silent=False):
         close = False
         if fobj is None:
-            fobj = self.open(filename, 'rb')
+            fobj = self.open(filename, "rb")
             close = True
         norm_fname = self.normalize_filename(filename)
 
-        old = [ l.decode('utf-8').rstrip('\n') for l in fobj ]
+        old = [l.decode("utf-8").rstrip("\n") for l in fobj]
         if close:
             fobj.close()
 
@@ -361,10 +369,11 @@ class SortedIncludes(Verifier):
 
         if modified:
             if not silent:
-                self.ui.write("invalid sorting of includes in %s. Note: If "
-                              "there is more than one empty line under the "
-                              "#include region, please reduce it to one.\n"
-                              % (filename))
+                self.ui.write(
+                    "invalid sorting of includes in %s. Note: If "
+                    "there is more than one empty line under the "
+                    "#include region, please reduce it to one.\n" % (filename)
+                )
                 if self.ui.verbose:
                     for start, end in modified.regions:
                         self.ui.write("bad region [%d, %d)\n" % (start, end))
@@ -374,46 +383,46 @@ class SortedIncludes(Verifier):
 
     @safefix
     def fix(self, filename, regions=all_regions):
-        f = self.open(filename, 'r+')
+        f = self.open(filename, "r+")
         norm_fname = self.normalize_filename(filename)
 
         old = f.readlines()
-        lines = [ l.rstrip('\n') for l in old ]
+        lines = [l.rstrip("\n") for l in old]
         language = lang_type(filename, lines[0])
         sort_lines = list(self.sort_includes(lines, norm_fname, language))
-        new = ''.join(line + '\n' for line in sort_lines)
+        new = "".join(line + "\n" for line in sort_lines)
 
         f.seek(0)
         f.truncate()
 
-        for i,line in enumerate(sort_lines):
+        for i, line in enumerate(sort_lines):
             f.write(line)
-            f.write('\n')
+            f.write("\n")
         f.close()
 
 
 class ControlSpace(LineVerifier):
     """Check for exactly one space after if/while/for"""
 
-    languages = set(('C', 'C++'))
-    test_name = 'spacing after if/while/for'
-    opt_name = 'control'
+    languages = set(("C", "C++"))
+    test_name = "spacing after if/while/for"
+    opt_name = "control"
 
-    _any_control = re.compile(r'\b(if|while|for)([ \t]*)\(')
+    _any_control = re.compile(r"\b(if|while|for)([ \t]*)\(")
 
     def check_line(self, line, **kwargs):
         match = ControlSpace._any_control.search(line)
         return not (match and match.group(2) != " ")
 
     def fix_line(self, line, **kwargs):
-        new_line = ControlSpace._any_control.sub(r'\1 (', line)
+        new_line = ControlSpace._any_control.sub(r"\1 (", line)
         return new_line
 
 
 class LineLength(LineVerifier):
-    languages = set(('C', 'C++', 'swig', 'python', 'asm', 'isa', 'scons'))
-    test_name = 'line length'
-    opt_name = 'length'
+    languages = set(("C", "C++", "swig", "python", "asm", "isa", "scons"))
+    test_name = "line length"
+    opt_name = "length"
 
     def check_line(self, line, **kwargs):
         return style.normalized_len(line) <= 79
@@ -424,26 +433,29 @@ class LineLength(LineVerifier):
     def fix_line(self, line):
         pass
 
-class ControlCharacters(LineVerifier):
-    languages = set(('C', 'C++', 'swig', 'python', 'asm', 'isa', 'scons'))
-    test_name = 'control character'
-    opt_name = 'ascii'
 
-    invalid = "".join([chr(i) for i in range(0, 0x20) \
-        if chr(i) not in ('\n', '\t')])
+class ControlCharacters(LineVerifier):
+    languages = set(("C", "C++", "swig", "python", "asm", "isa", "scons"))
+    test_name = "control character"
+    opt_name = "ascii"
+
+    invalid = "".join(
+        [chr(i) for i in range(0, 0x20) if chr(i) not in ("\n", "\t")]
+    )
 
     def check_line(self, line, **kwargs):
         return self.fix_line(line) == line
 
     def fix_line(self, line, **kwargs):
-        return ''.join(c for c in line if c not in ControlCharacters.invalid)
+        return "".join(c for c in line if c not in ControlCharacters.invalid)
+
 
 class BoolCompare(LineVerifier):
-    languages = set(('C', 'C++', 'python'))
-    test_name = 'boolean comparison'
-    opt_name = 'boolcomp'
+    languages = set(("C", "C++", "python"))
+    test_name = "boolean comparison"
+    opt_name = "boolcomp"
 
-    regex = re.compile(r'\s*==\s*([Tt]rue|[Ff]alse)\b')
+    regex = re.compile(r"\s*==\s*([Tt]rue|[Ff]alse)\b")
 
     def check_line(self, line, **kwargs):
         return self.regex.search(line) == None
@@ -451,81 +463,100 @@ class BoolCompare(LineVerifier):
     def fix_line(self, line, **kwargs):
         match = self.regex.search(line)
         if match:
-            if match.group(1) in ('true', 'True'):
-                line = self.regex.sub('', line)
+            if match.group(1) in ("true", "True"):
+                line = self.regex.sub("", line)
             else:
-                self.ui.write("Warning: cannot automatically fix "
-                              "comparisons with false/False.\n")
+                self.ui.write(
+                    "Warning: cannot automatically fix "
+                    "comparisons with false/False.\n"
+                )
         return line
 
+
 class StructureBraces(LineVerifier):
-    """ Check if the opening braces of structures are not on the same line of
-        the structure name. This includes classes, structs, enums and unions.
+    """Check if the opening braces of structures are not on the same line of
+    the structure name. This includes classes, structs, enums and unions.
 
-        This verifier matches lines starting in optional indent, followed by
-        an optional typedef and the structure's keyword, followed by any
-        character until the first opening brace is seen. Any extra characters
-        after the opening brace are saved for a recursive check, if needed.
+    This verifier matches lines starting in optional indent, followed by
+    an optional typedef and the structure's keyword, followed by any
+    character until the first opening brace is seen. Any extra characters
+    after the opening brace are saved for a recursive check, if needed.
 
-        This fixes, for example:
-            1) "struct A {"
-            2) "enum{"
-            3) "    class B { // This is a class"
-            4) "union { struct C {"
-        to:
-            1) "struct A\n{"
-            2) "enum\n{"
-            3) "    class B\n    {\n        // This is a class"
-            4) "union\n{\n        struct C\n        {"
+    This fixes, for example:
+        1) "struct A {"
+        2) "enum{"
+        3) "    class B { // This is a class"
+        4) "union { struct C {"
+    to:
+        1) "struct A\n{"
+        2) "enum\n{"
+        3) "    class B\n    {\n        // This is a class"
+        4) "union\n{\n        struct C\n        {"
 
-        @todo Make this work for multi-line structure declarations. e.g.,
+    @todo Make this work for multi-line structure declarations. e.g.,
 
-            class MultiLineClass
-              : public BaseClass {
+        class MultiLineClass
+          : public BaseClass {
     """
 
-    languages = set(('C', 'C++'))
-    test_name = 'structure opening brace position'
-    opt_name = 'structurebrace'
+    languages = set(("C", "C++"))
+    test_name = "structure opening brace position"
+    opt_name = "structurebrace"
 
     # Matches the indentation of the line
-    regex_indentation = '(?P<indentation>\s*)'
+    regex_indentation = "(?P<indentation>\s*)"
     # Matches an optional "typedef" before the keyword
-    regex_typedef = '(?P<typedef>(typedef\s+)?)'
+    regex_typedef = "(?P<typedef>(typedef\s+)?)"
     # Matches the structure's keyword
-    regex_keyword = '(?P<keyword>class|struct|enum|union)'
+    regex_keyword = "(?P<keyword>class|struct|enum|union)"
     # A negative lookahead to avoid incorrect matches with variable's names
     # e.g., "classifications = {" should not be fixed here.
-    regex_avoid = '(?![^\{\s])'
+    regex_avoid = "(?![^\{\s])"
     # Matches anything after the keyword and before the opening brace.
     # e.g., structure name, base type, type of inheritance, etc
-    regex_name = '(?P<name>[^\{]*)'
+    regex_name = "(?P<name>[^\{]*)"
     # Matches anything after the opening brace, which should be
     # parsed recursively
-    regex_extra = '(?P<extra>.*)$'
-    regex = re.compile(r'^' + regex_indentation + regex_typedef +
-        regex_keyword + regex_avoid + regex_name + '\{' + regex_extra)
+    regex_extra = "(?P<extra>.*)$"
+    regex = re.compile(
+        r"^"
+        + regex_indentation
+        + regex_typedef
+        + regex_keyword
+        + regex_avoid
+        + regex_name
+        + "\{"
+        + regex_extra
+    )
 
     def check_line(self, line, **kwargs):
-        return (self.regex.search(line) == None) or \
-            (line.count('{') == line.count('};'))
+        return (self.regex.search(line) == None) or (
+            line.count("{") == line.count("};")
+        )
 
     def fix_line(self, line, **kwargs):
         match = self.regex.search(line)
 
         if match:
             # Move the opening brace to the next line
-            match_indentation = match.group('indentation')
-            match_typedef = match.group('typedef')
-            match_keyword = match.group('keyword')
-            match_name = match.group('name').rstrip()
-            match_extra = match.group('extra').lstrip()
-            line = match_indentation + match_typedef + match_keyword + \
-                match_name + "\n" + match_indentation + "{"
+            match_indentation = match.group("indentation")
+            match_typedef = match.group("typedef")
+            match_keyword = match.group("keyword")
+            match_name = match.group("name").rstrip()
+            match_extra = match.group("extra").lstrip()
+            line = (
+                match_indentation
+                + match_typedef
+                + match_keyword
+                + match_name
+                + "\n"
+                + match_indentation
+                + "{"
+            )
 
             # The opening brace should be alone in its own line, so move any
             # extra contents to the next line
-            if match_extra != '':
+            if match_extra != "":
                 # Check if the extra line obeys the opening brace rule
                 # (in case there are nested declarations)
                 line_extra = match_indentation + "    " + match_extra
@@ -535,12 +566,18 @@ class StructureBraces(LineVerifier):
 
         return line
 
+
 def is_verifier(cls):
     """Determine if a class is a Verifier that can be instantiated"""
 
-    return inspect.isclass(cls) and issubclass(cls, Verifier) and \
-        not inspect.isabstract(cls)
+    return (
+        inspect.isclass(cls)
+        and issubclass(cls, Verifier)
+        and not inspect.isabstract(cls)
+    )
+
 
 # list of all verifier classes
-all_verifiers = [ v for n, v in \
-                  inspect.getmembers(sys.modules[__name__], is_verifier) ]
+all_verifiers = [
+    v for n, v in inspect.getmembers(sys.modules[__name__], is_verifier)
+]

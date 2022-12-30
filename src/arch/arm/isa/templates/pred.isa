@@ -58,7 +58,7 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _dest,
             RegIndex _op1, uint32_t _imm, bool _rotC=true);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -99,7 +99,7 @@ class %(class_name)s : public %(base_class)s
     %(class_name)s(ExtMachInst machInst, RegIndex _dest,
             RegIndex _op1, RegIndex _op2,
             int32_t _shiftAmt, ArmShiftType _shiftType);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -146,7 +146,7 @@ class %(class_name)s : public %(base_class)s
     %(class_name)s(ExtMachInst machInst, RegIndex _dest,
             RegIndex _op1, RegIndex _op2, RegIndex _shift,
             ArmShiftType _shiftType);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -171,7 +171,7 @@ def template DataRegRegConstructor {{
 def template PredOpExecute {{
     Fault
     %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         uint64_t resTemp = 0;
@@ -195,7 +195,7 @@ def template PredOpExecute {{
 def template QuiescePredOpExecute {{
     Fault
     %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         uint64_t resTemp = 0;
@@ -221,7 +221,7 @@ def template QuiescePredOpExecute {{
 def template QuiescePredOpExecuteWithFixup {{
     Fault
     %(class_name)s::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         uint64_t resTemp = 0;

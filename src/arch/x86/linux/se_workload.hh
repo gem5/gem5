@@ -57,7 +57,7 @@ namespace X86ISA
 class EmuLinux : public SEWorkload
 {
   public:
-    using Params = X86EmuLinuxParams;
+    PARAMS(X86EmuLinux);
 
     EmuLinux(const Params &p);
 
@@ -65,7 +65,8 @@ class EmuLinux : public SEWorkload
     setSystem(System *sys) override
     {
         SEWorkload::setSystem(sys);
-        gdb = BaseRemoteGDB::build<RemoteGDB>(system);
+        gdb = BaseRemoteGDB::build<RemoteGDB>(
+                params().remote_gdb_port, system);
     }
 
     loader::Arch getArch() const override { return loader::X86_64; }
@@ -79,13 +80,13 @@ class EmuLinux : public SEWorkload
     struct SyscallABI64 :
         public GenericSyscallABI64, public X86Linux::SyscallABI
     {
-        static const std::vector<RegIndex> ArgumentRegs;
+        static const std::vector<RegId> ArgumentRegs;
     };
 
     struct SyscallABI32 :
         public GenericSyscallABI32, public X86Linux::SyscallABI
     {
-        static const std::vector<RegIndex> ArgumentRegs;
+        static const std::vector<RegId> ArgumentRegs;
     };
 
   private:

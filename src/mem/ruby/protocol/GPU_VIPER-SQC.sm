@@ -277,7 +277,13 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
     responseToSQC_in.dequeue(clockEdge());
   }
 
-  action(l_loadDone, "l", desc="local load done") {
+  action(l_loadDoneHit, "ldh", desc="local load done (hits in SQC)") {
+    assert(is_valid(cache_entry));
+    sequencer.readCallback(address, cache_entry.DataBlk, true, MachineType:L1Cache);
+    APPEND_TRANSITION_COMMENT(cache_entry.DataBlk);
+  }
+
+  action(l_loadDoneMiss, "ldm", desc="local load done (misses in SQC)") {
     assert(is_valid(cache_entry));
     sequencer.readCallback(address, cache_entry.DataBlk, false, MachineType:L1Cache);
     APPEND_TRANSITION_COMMENT(cache_entry.DataBlk);
@@ -291,28 +297,42 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
     }
   }
 
+  // added for profiling
+  action(uu_profileDataMiss, "\udm", desc="Profile SQC demand miss"){
+    L1cache.profileDemandMiss();
+  }
+
+  action(uu_profileDataHit, "\udh", desc="Profile SQC demand hit"){
+    L1cache.profileDemandHit();
+  }
+
   // Transitions
 
   // transitions from base
   transition({I, V}, Repl, I) {TagArrayRead, TagArrayWrite} {
-    ic_invCache
+    // since we're evicting something, don't bother classifying as hit/miss
+    ic_invCache;
   }
 
   transition(I, Data, V) {TagArrayRead, TagArrayWrite, DataArrayRead} {
     a_allocate;
-    w_writeCache
-    l_loadDone;
+    // don't profile this as a hit/miss since it's a reponse from L2,
+    // so we already counted it
+    w_writeCache;
+    l_loadDoneMiss;
     pr_popResponseQueue;
   }
 
   transition(I, Fetch) {TagArrayRead, TagArrayWrite} {
     nS_issueRdBlkS;
+    uu_profileDataMiss; // since line wasn't in SQC, we missed
     p_popMandatoryQueue;
   }
 
   // simple hit transitions
   transition(V, Fetch) {TagArrayRead, DataArrayRead} {
-    l_loadDone;
+    l_loadDoneHit;
+    uu_profileDataHit; // line was in SQC, so we hit
     p_popMandatoryQueue;
   }
 }

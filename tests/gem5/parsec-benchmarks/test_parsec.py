@@ -51,23 +51,13 @@ def test_parsec(
         return
 
     gem5_verify_config(
-        name="{}-boot-cpu_{}-detailed-cpu_{}-cores_{}_{}_{}_parsec-test"\
-            .format(
-                boot_cpu,
-                detailed_cpu,
-                str(num_cpus),
-                mem_system,
-                benchmark,
-                size,
-            ),
+        name="{}-boot-cpu_{}-detailed-cpu_{}-cores_{}_{}_{}_parsec-test".format(
+            boot_cpu, detailed_cpu, str(num_cpus), mem_system, benchmark, size
+        ),
         verifiers=(),
         fixtures=(),
         config=joinpath(
-            config.base_dir,
-            "tests",
-            "gem5",
-            "configs",
-            "parsec_disk_run.py",
+            config.base_dir, "tests", "gem5", "configs", "parsec_disk_run.py"
         ),
         config_args=[
             "--cpu",
@@ -85,7 +75,7 @@ def test_parsec(
             "--resource-directory",
             resource_path,
         ],
-        valid_isas=(constants.x86_tag,),
+        valid_isas=(constants.all_compiled_tag,),
         valid_hosts=(constants.host_x86_64_tag,),
         length=length,
         uses_kvm=True,
@@ -112,7 +102,7 @@ test_parsec(
     length=constants.very_long_tag,
 )
 
-#test_parsec(
+# test_parsec(
 #    boot_cpu="kvm",
 #    detailed_cpu="timing",
 #    num_cpus=1,
@@ -120,7 +110,7 @@ test_parsec(
 #    benchmark="bodytrack",
 #    size="simsmall",
 #    length=constants.very_long_tag,
-#)
+# )
 
 test_parsec(
     boot_cpu="kvm",
@@ -132,7 +122,7 @@ test_parsec(
     length=constants.very_long_tag,
 )
 
-#test_parsec(
+# test_parsec(
 #    boot_cpu="kvm",
 #    detailed_cpu="kvm",
 #    num_cpus=8,
@@ -140,7 +130,7 @@ test_parsec(
 #    benchmark="dedup",
 #    size="simsmall",
 #    length=constants.very_long_tag,
-#)
+# )
 
 test_parsec(
     boot_cpu="kvm",
@@ -152,7 +142,7 @@ test_parsec(
     length=constants.very_long_tag,
 )
 
-#test_parsec(
+# test_parsec(
 #    boot_cpu="kvm",
 #    detailed_cpu="timing",
 #    num_cpus=1,
@@ -160,7 +150,7 @@ test_parsec(
 #    benchmark="ferret",
 #    size="simsmall",
 #    length=constants.very_long_tag,
-#)
+# )
 
 test_parsec(
     boot_cpu="kvm",
@@ -172,7 +162,7 @@ test_parsec(
     length=constants.very_long_tag,
 )
 
-#test_parsec(
+# test_parsec(
 #    boot_cpu="kvm",
 #    detailed_cpu="kvm",
 #    num_cpus=8,
@@ -180,7 +170,7 @@ test_parsec(
 #    benchmark="freqmine",
 #    size="simsmall",
 #    length=constants.very_long_tag,
-#)
+# )
 
 
 test_parsec(
@@ -193,7 +183,7 @@ test_parsec(
     length=constants.very_long_tag,
 )
 
-#test_parsec(
+# test_parsec(
 #    boot_cpu="kvm",
 #    detailed_cpu="timing",
 #    num_cpus=1,
@@ -201,7 +191,7 @@ test_parsec(
 #    benchmark="streamcluster",
 #    size="simsmall",
 #    length=constants.very_long_tag,
-#)
+# )
 
 test_parsec(
     boot_cpu="kvm",
@@ -213,7 +203,7 @@ test_parsec(
     length=constants.very_long_tag,
 )
 
-#test_parsec(
+# test_parsec(
 #    boot_cpu="kvm",
 #    detailed_cpu="kvm",
 #    num_cpus=8,
@@ -221,9 +211,9 @@ test_parsec(
 #    benchmark="vips",
 #    size="simsmall",
 #    length=constants.very_long_tag,
-#)
+# )
 
-#test_parsec(
+# test_parsec(
 #    boot_cpu="kvm",
 #    detailed_cpu="timing",
 #    num_cpus=1,
@@ -231,4 +221,4 @@ test_parsec(
 #    benchmark="x264",
 #    size="simsmall",
 #    length=constants.very_long_tag,
-#)
+# )

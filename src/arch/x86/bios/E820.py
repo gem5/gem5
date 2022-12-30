@@ -36,18 +36,20 @@
 from m5.params import *
 from m5.SimObject import SimObject
 
-class X86E820Entry(SimObject):
-    type = 'X86E820Entry'
-    cxx_class = 'gem5::X86ISA::E820Entry'
-    cxx_header = 'arch/x86/bios/e820.hh'
 
-    addr = Param.Addr(0, 'address of the beginning of the region')
-    size = Param.MemorySize('0B', 'size of the region')
-    range_type = Param.UInt64('type of the region')
+class X86E820Entry(SimObject):
+    type = "X86E820Entry"
+    cxx_class = "gem5::X86ISA::E820Entry"
+    cxx_header = "arch/x86/bios/e820.hh"
+
+    addr = Param.Addr(0, "address of the beginning of the region")
+    size = Param.MemorySize("0B", "size of the region")
+    range_type = Param.UInt64("type of the region")
+
 
 class X86E820Table(SimObject):
-    type = 'X86E820Table'
-    cxx_class = 'gem5::X86ISA::E820Table'
-    cxx_header = 'arch/x86/bios/e820.hh'
+    type = "X86E820Table"
+    cxx_class = "gem5::X86ISA::E820Table"
+    cxx_header = "arch/x86/bios/e820.hh"
 
-    entries = VectorParam.X86E820Entry('entries for the e820 table')
+    entries = VectorParam.X86E820Entry("entries for the e820 table")

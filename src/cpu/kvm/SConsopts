@@ -28,39 +28,29 @@ Import('*')
 from gem5_scons import warning
 
 import gem5_scons
-host_isa = None
-try:
-    import platform
-    host_isa = platform.machine()
-except:
-    pass
+
+# ISA code can set this to indicate what ISA KVM can target.
+main['CONF'].setdefault('KVM_ISA', '')
 
 with gem5_scons.Configure(main) as conf:
-    # Check if we should enable KVM-based hardware virtualization. The API
-    # we rely on exists since version 2.6.36 of the kernel, but somehow
-    # the KVM_API_VERSION does not reflect the change. We test for one of
-    # the types as a fall back.
-    # The default value of KVM_ISA should serialize to a string in the
-    # C++ header and test False in Scons/Python.
-    conf.env['CONF']['KVM_ISA'] = ''
+    # Check if we should enable KVM-based hardware virtualization. The
+    # API we rely on exists since version 2.6.36 of the kernel, but
+    # somehow the KVM_API_VERSION does not reflect the change. We test
+    # for one of the types as a fall back.
+
+    main['CONF']['HAVE_KVM'] = False
+
     if not conf.CheckHeader('linux/kvm.h', '<>'):
-        print("Info: Compatible header file <linux/kvm.h> not found, "
-              "disabling KVM support.")
+        warning("Info: Compatible header file <linux/kvm.h> not found, "
+                "disabling KVM support.")
     elif not conf.CheckLibWithHeader([None, 'rt'], [ 'time.h', 'signal.h' ],
             'C', 'timer_create(CLOCK_MONOTONIC, NULL, NULL);'):
         warning("Cannot enable KVM, host doesn't support POSIX timers")
-    elif host_isa == 'x86_64':
-        if conf.CheckTypeSize('struct kvm_xsave',
-                '#include <linux/kvm.h>') != 0:
-            conf.env['CONF']['KVM_ISA'] = 'x86'
-        else:
-            warning("KVM on x86 requires xsave support in kernel headers.")
-    elif host_isa in ('armv7l', 'aarch64'):
-        conf.env['CONF']['KVM_ISA'] = 'arm'
     else:
-        warning("Failed to determine host ISA.")
+        # Generic support is available. We'll let the ISAs figure out if
+        # it's really supported.
+        conf.env['CONF']['HAVE_KVM'] = True
 
-    if conf.env['CONF']['KVM_ISA']:
         # Check if the exclude_host attribute is available. We want this to
         # get accurate instruction counts in KVM.
         conf.env['CONF']['HAVE_PERF_ATTR_EXCLUDE_HOST'] = conf.CheckMember(
@@ -71,9 +61,13 @@ with gem5_scons.Configure(main) as conf:
             warning("perf_event headers lack support for the exclude_host "
                     "attribute. KVM instruction counts will be inaccurate.")
 
-if main['CONF']['KVM_ISA']:
-    sticky_vars.Add(BoolVariable('USE_KVM',
-                'Enable hardware virtualized (KVM) CPU models', True))
-else:
-    main['CONF']['USE_KVM'] = False
-    warning("Can not enable KVM, host seems to lack KVM support")
+
+def create_use_kvm_var():
+    if main['CONF']['HAVE_KVM'] and main['CONF']['KVM_ISA']:
+        sticky_vars.Add(BoolVariable('USE_KVM',
+                    'Enable hardware virtualized (KVM) CPU models', True))
+    else:
+        main['CONF']['USE_KVM'] = False
+        warning("Cannot enable KVM, host seems to lack KVM support")
+
+AfterSConsopts(create_use_kvm_var)

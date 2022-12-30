@@ -37,7 +37,7 @@ namespace gem5
 
 class ThreadContext;
 
-namespace Trace {
+namespace trace {
 
 class X86NativeTrace : public NativeTrace
 {
@@ -87,7 +87,7 @@ class X86NativeTrace : public NativeTrace
     void check(NativeTraceRecord *record);
 };
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5
 
 #endif // __ARCH_X86_NATIVETRACE_HH__

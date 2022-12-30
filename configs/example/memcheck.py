@@ -44,20 +44,30 @@ import m5
 from m5.objects import *
 
 parser = argparse.ArgumentParser(
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter
+)
 
 
-parser.add_argument("-a", "--atomic", action="store_true",
-                    help="Use atomic (non-timing) mode")
-parser.add_argument("-b", "--blocking", action="store_true",
-                    help="Use blocking caches")
-parser.add_argument("-m", "--maxtick", type=int, default=m5.MaxTick,
-                    metavar="T",
-                    help="Stop after T ticks")
-parser.add_argument("-p", "--prefetchers", action="store_true",
-                    help="Use prefetchers")
-parser.add_argument("-s", "--stridepref", action="store_true",
-                    help="Use strided prefetchers")
+parser.add_argument(
+    "-a", "--atomic", action="store_true", help="Use atomic (non-timing) mode"
+)
+parser.add_argument(
+    "-b", "--blocking", action="store_true", help="Use blocking caches"
+)
+parser.add_argument(
+    "-m",
+    "--maxtick",
+    type=int,
+    default=m5.MaxTick,
+    metavar="T",
+    help="Stop after T ticks",
+)
+parser.add_argument(
+    "-p", "--prefetchers", action="store_true", help="Use prefetchers"
+)
+parser.add_argument(
+    "-s", "--stridepref", action="store_true", help="Use strided prefetchers"
+)
 
 # This example script has a lot in common with the memtest.py in that
 # it is designed to stress tests the memory system. However, this
@@ -89,107 +99,134 @@ parser.add_argument("-s", "--stridepref", action="store_true",
 # and linear address streams to ensure that the prefetchers will
 # trigger. By default prefetchers are off.
 
-parser.add_argument("-c", "--caches", type=str, default="3:2",
-                    help="Colon-separated cache hierarchy specification, "
-                    "see script comments for details ")
-parser.add_argument("-t", "--testers", type=str, default="1:0:2",
-                    help="Colon-separated tester hierarchy specification, "
-                    "see script comments for details ")
-parser.add_argument("-r", "--random", action="store_true",
-                    help="Generate a random tree topology")
-parser.add_argument("--sys-clock", action="store", type=str,
-                    default='1GHz',
-                    help = """Top-level clock for blocks running at system
-                  speed""")
+parser.add_argument(
+    "-c",
+    "--caches",
+    type=str,
+    default="3:2",
+    help="Colon-separated cache hierarchy specification, "
+    "see script comments for details ",
+)
+parser.add_argument(
+    "-t",
+    "--testers",
+    type=str,
+    default="1:0:2",
+    help="Colon-separated tester hierarchy specification, "
+    "see script comments for details ",
+)
+parser.add_argument(
+    "-r",
+    "--random",
+    action="store_true",
+    help="Generate a random tree topology",
+)
+parser.add_argument(
+    "--sys-clock",
+    action="store",
+    type=str,
+    default="1GHz",
+    help="""Top-level clock for blocks running at system
+                  speed""",
+)
 
 args = parser.parse_args()
 
 # Start by parsing the command line args and do some basic sanity
 # checking
 if args.random:
-     # Generate a tree with a valid number of testers
-     tree_depth = random.randint(1, 4)
-     cachespec = [random.randint(1, 3) for i in range(tree_depth)]
-     testerspec = [random.randint(1, 3) for i in range(tree_depth + 1)]
-     print("Generated random tree -c", ':'.join(map(str, cachespec)),
-         "-t", ':'.join(map(str, testerspec)))
+    # Generate a tree with a valid number of testers
+    tree_depth = random.randint(1, 4)
+    cachespec = [random.randint(1, 3) for i in range(tree_depth)]
+    testerspec = [random.randint(1, 3) for i in range(tree_depth + 1)]
+    print(
+        "Generated random tree -c",
+        ":".join(map(str, cachespec)),
+        "-t",
+        ":".join(map(str, testerspec)),
+    )
 else:
-     try:
-          cachespec = [int(x) for x in args.caches.split(':')]
-          testerspec = [int(x) for x in args.testers.split(':')]
-     except:
-          print("Error: Unable to parse caches or testers option")
-          sys.exit(1)
+    try:
+        cachespec = [int(x) for x in args.caches.split(":")]
+        testerspec = [int(x) for x in args.testers.split(":")]
+    except:
+        print("Error: Unable to parse caches or testers option")
+        sys.exit(1)
 
-     if len(cachespec) < 1:
-          print("Error: Must have at least one level of caches")
-          sys.exit(1)
+    if len(cachespec) < 1:
+        print("Error: Must have at least one level of caches")
+        sys.exit(1)
 
-     if len(cachespec) != len(testerspec) - 1:
-          print("Error: Testers must have one element more than caches")
-          sys.exit(1)
+    if len(cachespec) != len(testerspec) - 1:
+        print("Error: Testers must have one element more than caches")
+        sys.exit(1)
 
-     if testerspec[-1] == 0:
-          print("Error: Must have testers at the uppermost level")
-          sys.exit(1)
+    if testerspec[-1] == 0:
+        print("Error: Must have testers at the uppermost level")
+        sys.exit(1)
 
-     for t in testerspec:
-          if t < 0:
-               print("Error: Cannot have a negative number of testers")
-               sys.exit(1)
+    for t in testerspec:
+        if t < 0:
+            print("Error: Cannot have a negative number of testers")
+            sys.exit(1)
 
-     for c in cachespec:
-          if c < 1:
-               print("Error: Must have 1 or more caches at each level")
-               sys.exit(1)
+    for c in cachespec:
+        if c < 1:
+            print("Error: Must have 1 or more caches at each level")
+            sys.exit(1)
 
 # Determine the tester multiplier for each level as the string
 # elements are per subsystem and it fans out
 multiplier = [1]
 for c in cachespec:
-     if c < 1:
-          print("Error: Must have at least one cache per level")
-     multiplier.append(multiplier[-1] * c)
+    if c < 1:
+        print("Error: Must have at least one cache per level")
+    multiplier.append(multiplier[-1] * c)
 
 numtesters = 0
 for t, m in zip(testerspec, multiplier):
-     numtesters += t * m
+    numtesters += t * m
 
 # Define a prototype L1 cache that we scale for all successive levels
-proto_l1 = Cache(size = '32kB', assoc = 4,
-                 tag_latency = 1, data_latency = 1, response_latency = 1,
-                 tgts_per_mshr = 8)
+proto_l1 = Cache(
+    size="32kB",
+    assoc=4,
+    tag_latency=1,
+    data_latency=1,
+    response_latency=1,
+    tgts_per_mshr=8,
+)
 
 if args.blocking:
-     proto_l1.mshrs = 1
+    proto_l1.mshrs = 1
 else:
-     proto_l1.mshrs = 4
+    proto_l1.mshrs = 4
 
 if args.prefetchers:
-     proto_l1.prefetcher = TaggedPrefetcher()
+    proto_l1.prefetcher = TaggedPrefetcher()
 elif args.stridepref:
-     proto_l1.prefetcher = StridePrefetcher()
+    proto_l1.prefetcher = StridePrefetcher()
 
 cache_proto = [proto_l1]
 
 # Now add additional cache levels (if any) by scaling L1 params, the
 # first element is Ln, and the last element L1
 for scale in cachespec[:-1]:
-     # Clone previous level and update params
-     prev = cache_proto[0]
-     next = prev()
-     next.size = prev.size * scale
-     next.tag_latency = prev.tag_latency * 10
-     next.data_latency = prev.data_latency * 10
-     next.response_latency = prev.response_latency * 10
-     next.assoc = prev.assoc * scale
-     next.mshrs = prev.mshrs * scale
-     cache_proto.insert(0, next)
+    # Clone previous level and update params
+    prev = cache_proto[0]
+    next = prev()
+    next.size = prev.size * scale
+    next.tag_latency = prev.tag_latency * 10
+    next.data_latency = prev.data_latency * 10
+    next.response_latency = prev.response_latency * 10
+    next.assoc = prev.assoc * scale
+    next.mshrs = prev.mshrs * scale
+    cache_proto.insert(0, next)
 
 # Create a config to be used by all the traffic generators
 cfg_file_name = "memcheck.cfg"
-cfg_file_path = os.path.dirname(__file__) + "/" +cfg_file_name
-cfg_file = open(cfg_file_path, 'w')
+cfg_file_path = os.path.dirname(__file__) + "/" + cfg_file_name
+cfg_file = open(cfg_file_path, "w")
 
 # Three states, with random, linear and idle behaviours. The random
 # and linear states access memory in the range [0 : 16 Mbyte] with 8
@@ -207,15 +244,16 @@ cfg_file.write("TRANSITION 2 1 0.5\n")
 cfg_file.close()
 
 # Make a prototype for the tester to be used throughout
-proto_tester = TrafficGen(config_file = cfg_file_path)
+proto_tester = TrafficGen(config_file=cfg_file_path)
 
 # Set up the system along with a DRAM controller
-system = System(physmem = MemCtrl(dram = DDR3_1600_8x8()))
+system = System(physmem=MemCtrl(dram=DDR3_1600_8x8()))
 
-system.voltage_domain = VoltageDomain(voltage = '1V')
+system.voltage_domain = VoltageDomain(voltage="1V")
 
-system.clk_domain = SrcClockDomain(clock =  args.sys_clock,
-                        voltage_domain = system.voltage_domain)
+system.clk_domain = SrcClockDomain(
+    clock=args.sys_clock, voltage_domain=system.voltage_domain
+)
 
 system.memchecker = MemChecker()
 
@@ -225,79 +263,82 @@ next_subsys_index = [0] * (len(cachespec) + 1)
 # Recursive function to create a sub-tree of the cache and tester
 # hierarchy
 def make_cache_level(ncaches, prototypes, level, next_cache):
-     global next_subsys_index, proto_l1, testerspec, proto_tester
+    global next_subsys_index, proto_l1, testerspec, proto_tester
 
-     index = next_subsys_index[level]
-     next_subsys_index[level] += 1
+    index = next_subsys_index[level]
+    next_subsys_index[level] += 1
 
-     # Create a subsystem to contain the crossbar and caches, and
-     # any testers
-     subsys = SubSystem()
-     setattr(system, 'l%dsubsys%d' % (level, index), subsys)
+    # Create a subsystem to contain the crossbar and caches, and
+    # any testers
+    subsys = SubSystem()
+    setattr(system, "l%dsubsys%d" % (level, index), subsys)
 
-     # The levels are indexing backwards through the list
-     ntesters = testerspec[len(cachespec) - level]
+    # The levels are indexing backwards through the list
+    ntesters = testerspec[len(cachespec) - level]
 
-     testers = [proto_tester() for i in range(ntesters)]
-     checkers = [MemCheckerMonitor(memchecker = system.memchecker) \
-                      for i in range(ntesters)]
-     if ntesters:
-          subsys.tester = testers
-          subsys.checkers = checkers
+    testers = [proto_tester() for i in range(ntesters)]
+    checkers = [
+        MemCheckerMonitor(memchecker=system.memchecker)
+        for i in range(ntesters)
+    ]
+    if ntesters:
+        subsys.tester = testers
+        subsys.checkers = checkers
 
-     if level != 0:
-          # Create a crossbar and add it to the subsystem, note that
-          # we do this even with a single element on this level
-          xbar = L2XBar(width = 32)
-          subsys.xbar = xbar
-          if next_cache:
-               xbar.mem_side_ports = next_cache.cpu_side
+    if level != 0:
+        # Create a crossbar and add it to the subsystem, note that
+        # we do this even with a single element on this level
+        xbar = L2XBar(width=32)
+        subsys.xbar = xbar
+        if next_cache:
+            xbar.mem_side_ports = next_cache.cpu_side
 
-          # Create and connect the caches, both the ones fanning out
-          # to create the tree, and the ones used to connect testers
-          # on this level
-          tree_caches = [prototypes[0]() for i in range(ncaches[0])]
-          tester_caches = [proto_l1() for i in range(ntesters)]
+        # Create and connect the caches, both the ones fanning out
+        # to create the tree, and the ones used to connect testers
+        # on this level
+        tree_caches = [prototypes[0]() for i in range(ncaches[0])]
+        tester_caches = [proto_l1() for i in range(ntesters)]
 
-          subsys.cache = tester_caches + tree_caches
-          for cache in tree_caches:
-               cache.mem_side = xbar.cpu_side_ports
-               make_cache_level(ncaches[1:], prototypes[1:], level - 1, cache)
-          for tester, checker, cache in zip(testers, checkers, tester_caches):
-               tester.port = checker.cpu_side_port
-               checker.mem_side_port = cache.cpu_side
-               cache.mem_side = xbar.cpu_side_ports
-     else:
-          if not next_cache:
-               print("Error: No next-level cache at top level")
-               sys.exit(1)
+        subsys.cache = tester_caches + tree_caches
+        for cache in tree_caches:
+            cache.mem_side = xbar.cpu_side_ports
+            make_cache_level(ncaches[1:], prototypes[1:], level - 1, cache)
+        for tester, checker, cache in zip(testers, checkers, tester_caches):
+            tester.port = checker.cpu_side_port
+            checker.mem_side_port = cache.cpu_side
+            cache.mem_side = xbar.cpu_side_ports
+    else:
+        if not next_cache:
+            print("Error: No next-level cache at top level")
+            sys.exit(1)
 
-          if ntesters > 1:
-               # Create a crossbar and add it to the subsystem
-               xbar = L2XBar(width = 32)
-               subsys.xbar = xbar
-               xbar.mem_side_ports = next_cache.cpu_side
-               for tester, checker in zip(testers, checkers):
-                    tester.port = checker.cpu_side_port
-                    checker.mem_side_port = xbar.cpu_side_ports
-          else:
-               # Single tester
-               testers[0].port = checkers[0].cpu_side_port
-               checkers[0].mem_side_port = next_cache.cpu_side
+        if ntesters > 1:
+            # Create a crossbar and add it to the subsystem
+            xbar = L2XBar(width=32)
+            subsys.xbar = xbar
+            xbar.mem_side_ports = next_cache.cpu_side
+            for tester, checker in zip(testers, checkers):
+                tester.port = checker.cpu_side_port
+                checker.mem_side_port = xbar.cpu_side_ports
+        else:
+            # Single tester
+            testers[0].port = checkers[0].cpu_side_port
+            checkers[0].mem_side_port = next_cache.cpu_side
+
 
 # Top level call to create the cache hierarchy, bottom up
 make_cache_level(cachespec, cache_proto, len(cachespec), None)
 
 # Connect the lowest level crossbar to the memory
-last_subsys = getattr(system, 'l%dsubsys0' % len(cachespec))
+last_subsys = getattr(system, "l%dsubsys0" % len(cachespec))
 last_subsys.xbar.mem_side_ports = system.physmem.port
 last_subsys.xbar.point_of_coherency = True
 
-root = Root(full_system = False, system = system)
+root = Root(full_system=False, system=system)
 if args.atomic:
-    root.system.mem_mode = 'atomic'
+    root.system.mem_mode = "atomic"
 else:
-    root.system.mem_mode = 'timing'
+    root.system.mem_mode = "timing"
 
 # The system port is never used in the tester so merely connect it
 # to avoid problems
@@ -309,4 +350,4 @@ m5.instantiate()
 # Simulate until program terminates
 exit_event = m5.simulate(args.maxtick)
 
-print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())
+print("Exiting @ tick", m5.curTick(), "because", exit_event.getCause())

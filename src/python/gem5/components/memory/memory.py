@@ -42,12 +42,14 @@ def _try_convert(val, cls):
     except:
         raise Exception(f"Could not convert {val} to {cls}")
 
+
 def _isPow2(num):
     log_num = int(log(num, 2))
-    if 2 ** log_num != num:
+    if 2**log_num != num:
         return False
     else:
         return True
+
 
 class ChanneledMemory(AbstractMemorySystem):
     """A class to implement multi-channel memory system
@@ -55,6 +57,7 @@ class ChanneledMemory(AbstractMemorySystem):
     This class can take a DRAM Interface as a parameter to model a multi
     channel DDR DRAM memory system.
     """
+
     def __init__(
         self,
         dram_interface_class: Type[DRAMInterface],
@@ -104,12 +107,16 @@ class ChanneledMemory(AbstractMemorySystem):
         else:
             self._size = self._get_dram_size(num_channels, self._dram_class)
 
+        self._create_mem_interfaces_controller()
+
+    def _create_mem_interfaces_controller(self):
         self._dram = [
             self._dram_class(addr_mapping=self._addr_mapping)
-            for _ in range(num_channels)
+            for _ in range(self._num_channels)
         ]
+
         self.mem_ctrl = [
-            MemCtrl(dram=self._dram[i]) for i in range(num_channels)
+            MemCtrl(dram=self._dram[i]) for i in range(self._num_channels)
         ]
 
     def _get_dram_size(self, num_channels: int, dram: DRAMInterface) -> int:
@@ -181,5 +188,3 @@ class ChanneledMemory(AbstractMemorySystem):
             )
         self._mem_range = ranges[0]
         self._interleave_addresses()
-
-

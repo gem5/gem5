@@ -36,6 +36,6 @@
 from m5.objects import *
 from x86_generic import *
 
-root = LinuxX86FSSystemUniprocessor(mem_mode='atomic',
-                                    mem_class=SimpleMemory,
-                                    cpu_class=AtomicSimpleCPU).create_root()
+root = LinuxX86FSSystemUniprocessor(
+    mem_mode="atomic", mem_class=SimpleMemory, cpu_class=AtomicSimpleCPU
+).create_root()

@@ -37,12 +37,7 @@ from ....utils.override import overrides
 from ....utils.requires import requires
 
 
-from m5.objects import (
-    RubySystem,
-    RubySequencer,
-    DMASequencer,
-    RubyPortProxy,
-)
+from m5.objects import RubySystem, RubySequencer, DMASequencer, RubyPortProxy
 
 
 class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
@@ -51,11 +46,7 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
     simple point-to-point topology.
     """
 
-    def __init__(
-        self,
-        size: str,
-        assoc: str,
-    ):
+    def __init__(self, size: str, assoc: str):
         """
         :param size: The size of each cache in the heirarchy.
         :param assoc: The associativity of each cache.
@@ -127,7 +118,7 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
 
         # Create the directory controllers
         self._directory_controllers = []
-        for range, port in board.get_memory().get_mem_ports():
+        for range, port in board.get_mem_ports():
             dir = Directory(
                 self.ruby_system.network,
                 board.get_cache_line_size(),

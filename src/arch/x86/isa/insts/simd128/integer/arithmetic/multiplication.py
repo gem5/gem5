@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop PMULHW_XMM_XMM {
     mmuli xmml, xmml, xmmlm, size=2, ext = Signed + "|" + MultHi
     mmuli xmmh, xmmh, xmmhm, size=2, ext = Signed + "|" + MultHi
@@ -113,4 +113,4 @@ def macroop PMULUDQ_XMM_P {
     mmuli xmml, xmml, ufp1, srcSize=4, destSize=8, ext=Scalar
     mmuli xmmh, xmmh, ufp2, srcSize=4, destSize=8, ext=Scalar
 };
-'''
+"""

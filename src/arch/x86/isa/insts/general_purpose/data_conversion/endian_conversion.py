@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop BSWAP_D_R
 {
     roli reg, reg, 8, dataSize=2
@@ -55,4 +55,4 @@ def macroop BSWAP_Q_R
     roli t2, t2, 8, dataSize=2
     or reg, t1, t2, dataSize=8
 };
-'''
+"""

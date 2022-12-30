@@ -29,14 +29,25 @@
 #ifndef __ARCH_SPARC_REGS_FLOAT_HH__
 #define __ARCH_SPARC_REGS_FLOAT_HH__
 
+#include "cpu/reg_class.hh"
+#include "debug/FloatRegs.hh"
+
 namespace gem5
 {
 
 namespace SparcISA
 {
 
-const int NumFloatRegs = 64;
-const int NumFloatArchRegs = NumFloatRegs;
+namespace float_reg
+{
+
+const int NumRegs = 64;
+const int NumArchRegs = NumRegs;
+
+} // namespace float_reg
+
+inline constexpr RegClass floatRegClass(FloatRegClass, FloatRegClassName,
+        float_reg::NumRegs, debug::FloatRegs);
 
 } // namespace SparcISA
 } // namespace gem5

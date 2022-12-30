@@ -41,6 +41,7 @@
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/interrupts.hh"
+#include "arch/arm/isa.hh"
 #include "arch/arm/mmu.hh"
 #include "arch/arm/page_size.hh"
 #include "arch/arm/regs/cc.hh"
@@ -85,7 +86,7 @@ bool
 isSecureBelowEL3(ThreadContext *tc)
 {
     return ArmSystem::haveEL(tc, EL3) &&
-        static_cast<SCR>(tc->readMiscRegNoEffect(MISCREG_SCR)).ns == 0;
+        static_cast<SCR>(tc->readMiscRegNoEffect(MISCREG_SCR_EL3)).ns == 0;
 }
 
 ExceptionLevel
@@ -94,16 +95,10 @@ debugTargetFrom(ThreadContext *tc, bool secure)
     bool route_to_el2;
     if (ArmSystem::haveEL(tc, EL2) &&
         (!secure || HaveExt(tc, ArmExtension::FEAT_SEL2))) {
-        if (ELIs32(tc, EL2)) {
-            const HCR hcr = tc->readMiscReg(MISCREG_HCR);
-            const HDCR hdcr = tc->readMiscRegNoEffect(MISCREG_HDCR);
-            route_to_el2 = (hdcr.tde == 1 || hcr.tge == 1);
-        } else {
-            const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-            const HDCR mdcr = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
-            route_to_el2 = (mdcr.tde == 1 || hcr.tge == 1);
-        }
-    }else{
+        const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+        const HDCR mdcr = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
+        route_to_el2 = (mdcr.tde == 1 || hcr.tge == 1);
+    } else {
         route_to_el2 = false;
     }
     ExceptionLevel target;
@@ -128,8 +123,8 @@ inAArch64(ThreadContext *tc)
 ExceptionLevel
 currEL(const ThreadContext *tc)
 {
-    return static_cast<ArmISA::ISA *>(
-        const_cast<ThreadContext *>(tc)->getIsaPtr())->currEL();
+    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
+    return opModeToEL((OperatingMode)(uint8_t)cpsr.mode);
 }
 
 bool
@@ -238,7 +233,8 @@ s1TranslationRegime(ThreadContext* tc, ExceptionLevel el)
     if (el != EL0)
         return el;
     else if (ArmSystem::haveEL(tc, EL3) && ELIs32(tc, EL3) &&
-             static_cast<SCR>(tc->readMiscRegNoEffect(MISCREG_SCR)).ns == 0)
+             static_cast<SCR>(
+                tc->readMiscRegNoEffect(MISCREG_SCR_EL3)).ns == 0)
         return EL3;
     else if (HaveExt(tc, ArmExtension::FEAT_VHE) && ELIsInHost(tc, el))
         return EL2;
@@ -501,7 +497,7 @@ Fault
 mcrMrc15Trap(const MiscRegIndex misc_reg, ExtMachInst mach_inst,
              ThreadContext *tc, uint32_t imm)
 {
-    ExceptionClass ec = EC_TRAPPED_CP15_MCR_MRC;
+    ExceptionClass ec = ExceptionClass::TRAPPED_CP15_MCR_MRC;
     if (mcrMrc15TrapToHyp(misc_reg, tc, imm, &ec))
         return std::make_shared<HypervisorTrap>(mach_inst, imm, ec);
     return AArch64AArch32SystemAccessTrap(misc_reg, mach_inst, tc, imm, ec);
@@ -519,7 +515,7 @@ mcrMrc15TrapToHyp(const MiscRegIndex misc_reg, ThreadContext *tc, uint32_t iss,
     uint32_t opc2;
     bool trap_to_hyp = false;
 
-    const HCR hcr = tc->readMiscReg(MISCREG_HCR);
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const HDCR hdcr = tc->readMiscReg(MISCREG_HDCR);
     const HSTR hstr = tc->readMiscReg(MISCREG_HSTR);
     const HCPTR hcptr = tc->readMiscReg(MISCREG_HCPTR);
@@ -630,19 +626,11 @@ mcrMrc15TrapToHyp(const MiscRegIndex misc_reg, ThreadContext *tc, uint32_t iss,
                 break;
               // GICv3 regs
               case MISCREG_ICC_SGI0R:
-                {
-                    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-                    if (isa->haveGICv3CpuIfc())
-                        trap_to_hyp = hcr.fmo;
-                }
+                trap_to_hyp = hcr.fmo;
                 break;
               case MISCREG_ICC_SGI1R:
               case MISCREG_ICC_ASGI1R:
-                {
-                    auto *isa = static_cast<ArmISA::ISA *>(tc->getIsaPtr());
-                    if (isa->haveGICv3CpuIfc())
-                        trap_to_hyp = hcr.imo;
-                }
+                trap_to_hyp = hcr.imo;
                 break;
               case MISCREG_CNTFRQ ... MISCREG_CNTV_TVAL:
                 // CNTFRQ may be trapped only on reads
@@ -672,7 +660,7 @@ mcrMrc14TrapToHyp(const MiscRegIndex misc_reg, ThreadContext *tc, uint32_t iss)
     uint32_t opc1;
     uint32_t opc2;
 
-    const HCR hcr = tc->readMiscReg(MISCREG_HCR);
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const HDCR hdcr = tc->readMiscReg(MISCREG_HDCR);
     const HSTR hstr = tc->readMiscReg(MISCREG_HSTR);
     const HCPTR hcptr = tc->readMiscReg(MISCREG_HCPTR);
@@ -721,7 +709,7 @@ Fault
 mcrrMrrc15Trap(const MiscRegIndex misc_reg, ExtMachInst mach_inst,
                ThreadContext *tc, uint32_t imm)
 {
-    ExceptionClass ec = EC_TRAPPED_CP15_MCRR_MRRC;
+    ExceptionClass ec = ExceptionClass::TRAPPED_CP15_MCRR_MRRC;
     if (mcrrMrrc15TrapToHyp(misc_reg, tc, imm, &ec))
         return std::make_shared<HypervisorTrap>(mach_inst, imm, ec);
     return AArch64AArch32SystemAccessTrap(misc_reg, mach_inst, tc, imm, ec);
@@ -739,7 +727,7 @@ mcrrMrrc15TrapToHyp(const MiscRegIndex misc_reg, ThreadContext *tc,
     bool is_read;
     bool trap_to_hyp = false;
 
-    const HCR hcr = tc->readMiscReg(MISCREG_HCR);
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
     const HSTR hstr = tc->readMiscReg(MISCREG_HSTR);
 
     if (EL2Enabled(tc) && (currEL(tc) < EL2)) {
@@ -851,7 +839,7 @@ isGenericTimerCommonEL0HypTrap(const MiscRegIndex misc_reg, ThreadContext *tc,
         // As per the architecture, this hyp trap should have uncategorized
         // exception class
         if (ec)
-            *ec = EC_UNKNOWN;
+            *ec = ExceptionClass::UNKNOWN;
         return true;
     }
     return false;
@@ -1340,13 +1328,10 @@ syncVecRegsToElems(ThreadContext *tc)
 {
     int ei = 0;
     for (int ri = 0; ri < NumVecRegs; ri++) {
-        RegId reg_id(VecRegClass, ri);
         VecRegContainer reg;
-        tc->getReg(reg_id, &reg);
-        for (int j = 0; j < NumVecElemPerVecReg; j++, ei++) {
-            RegId elem_id(VecElemClass, ei);
-            tc->setReg(elem_id, reg.as<VecElem>()[j]);
-        }
+        tc->getReg(vecRegClass[ri], &reg);
+        for (int j = 0; j < NumVecElemPerVecReg; j++, ei++)
+            tc->setReg(vecElemClass[ei], reg.as<VecElem>()[j]);
     }
 }
 
@@ -1357,11 +1342,10 @@ syncVecElemsToRegs(ThreadContext *tc)
     for (int ri = 0; ri < NumVecRegs; ri++) {
         VecRegContainer reg;
         for (int j = 0; j < NumVecElemPerVecReg; j++, ei++) {
-            RegId elem_id(VecElemClass, ei);
+            RegId elem_id = vecElemClass[ei];
             reg.as<VecElem>()[j] = tc->getReg(elem_id);
         }
-        RegId reg_id(VecRegClass, ri);
-        tc->setReg(reg_id, &reg);
+        tc->setReg(vecRegClass[ri], &reg);
     }
 }
 

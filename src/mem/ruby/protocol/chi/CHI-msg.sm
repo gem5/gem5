@@ -247,5 +247,3 @@ structure(CHIDataMsg, desc="", interface="Message") {
     return testAndWrite(addr, dataBlk, pkt);
   }
 }
-
-

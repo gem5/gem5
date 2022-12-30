@@ -27,6 +27,7 @@
 from slicc.ast.DeclAST import DeclAST
 from slicc.symbols import Func, Type
 
+
 class StateDeclAST(DeclAST):
     def __init__(self, slicc, type_ast, pairs, states):
         super().__init__(slicc, pairs)
@@ -52,8 +53,9 @@ class StateDeclAST(DeclAST):
         ident = str(self.type_ast)
 
         # Make the new type
-        t = Type(self.symtab, ident, self.location, self.pairs,
-                 self.state_machine)
+        t = Type(
+            self.symtab, ident, self.location, self.pairs, self.state_machine
+        )
         self.symtab.newSymbol(t)
 
         # Add all of the states of the type to it
@@ -63,19 +65,33 @@ class StateDeclAST(DeclAST):
         # Add the implicit State_to_string method - FIXME, this is a bit dirty
         func_id = "%s_to_string" % t.c_ident
 
-        pairs = { "external" : "yes" }
-        func = Func(self.symtab, func_id + "_" +
-                    t.ident, func_id, self.location,
-                    self.symtab.find("std::string", Type), [ t ], [], "",
-                    pairs)
+        pairs = {"external": "yes"}
+        func = Func(
+            self.symtab,
+            func_id + "_" + t.ident,
+            func_id,
+            self.location,
+            self.symtab.find("std::string", Type),
+            [t],
+            [],
+            "",
+            pairs,
+        )
         self.symtab.newSymbol(func)
 
         # Add the State_to_permission method
         func_id = "%s_to_permission" % t.c_ident
 
-        pairs = { "external" : "yes" }
-        func = Func(self.symtab, func_id + "_" +
-                    t.ident, func_id, self.location,
-                    self.symtab.find("AccessPermission", Type), [ t ], [], "",
-                    pairs)
+        pairs = {"external": "yes"}
+        func = Func(
+            self.symtab,
+            func_id + "_" + t.ident,
+            func_id,
+            self.location,
+            self.symtab.find("AccessPermission", Type),
+            [t],
+            [],
+            "",
+            pairs,
+        )
         self.symtab.newSymbol(func)

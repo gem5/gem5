@@ -54,6 +54,8 @@
 #include <vector>
 
 #include "base/bitfield.hh"
+#include "cpu/reg_class.hh"
+#include "debug/FloatRegs.hh"
 
 namespace gem5
 {
@@ -105,9 +107,98 @@ static constexpr freg_t freg(float32_t f) { return {boxF32(f.v)}; }
 static constexpr freg_t freg(float64_t f) { return f; }
 static constexpr freg_t freg(uint_fast16_t f) { return {f}; }
 
-const int NumFloatRegs = 32;
+namespace float_reg
+{
 
-const std::vector<std::string> FloatRegNames = {
+enum : RegIndex
+{
+    _Ft0Idx,
+    _Ft1Idx,
+    _Ft2Idx,
+    _Ft3Idx,
+    _Ft4Idx,
+    _Ft5Idx,
+    _Ft6Idx,
+    _Ft7Idx,
+
+    _Fs0Idx,
+    _Fs1Idx,
+
+    _Fa0Idx,
+    _Fa1Idx,
+    _Fa2Idx,
+    _Fa3Idx,
+    _Fa4Idx,
+    _Fa5Idx,
+    _Fa6Idx,
+    _Fa7Idx,
+
+    _Fs2Idx,
+    _Fs3Idx,
+    _Fs4Idx,
+    _Fs5Idx,
+    _Fs6Idx,
+    _Fs7Idx,
+    _Fs8Idx,
+    _Fs9Idx,
+    _Fs10Idx,
+    _Fs11Idx,
+
+    _Ft8Idx,
+    _Ft9Idx,
+    _Ft10Idx,
+    _Ft11Idx,
+
+    NumRegs
+};
+
+} // namespace float_reg
+
+inline constexpr RegClass floatRegClass(FloatRegClass, FloatRegClassName,
+        float_reg::NumRegs, debug::FloatRegs);
+
+namespace float_reg
+{
+
+inline constexpr RegId
+    Ft0 = floatRegClass[_Ft0Idx],
+    Ft1 = floatRegClass[_Ft1Idx],
+    Ft2 = floatRegClass[_Ft2Idx],
+    Ft3 = floatRegClass[_Ft3Idx],
+    Ft4 = floatRegClass[_Ft4Idx],
+    Ft5 = floatRegClass[_Ft5Idx],
+    Ft6 = floatRegClass[_Ft6Idx],
+    Ft7 = floatRegClass[_Ft7Idx],
+
+    Fs0 = floatRegClass[_Fs0Idx],
+    Fs1 = floatRegClass[_Fs1Idx],
+
+    Fa0 = floatRegClass[_Fa0Idx],
+    Fa1 = floatRegClass[_Fa1Idx],
+    Fa2 = floatRegClass[_Fa2Idx],
+    Fa3 = floatRegClass[_Fa3Idx],
+    Fa4 = floatRegClass[_Fa4Idx],
+    Fa5 = floatRegClass[_Fa5Idx],
+    Fa6 = floatRegClass[_Fa6Idx],
+    Fa7 = floatRegClass[_Fa7Idx],
+
+    Fs2 = floatRegClass[_Fs2Idx],
+    Fs3 = floatRegClass[_Fs3Idx],
+    Fs4 = floatRegClass[_Fs4Idx],
+    Fs5 = floatRegClass[_Fs5Idx],
+    Fs6 = floatRegClass[_Fs6Idx],
+    Fs7 = floatRegClass[_Fs7Idx],
+    Fs8 = floatRegClass[_Fs8Idx],
+    Fs9 = floatRegClass[_Fs9Idx],
+    Fs10 = floatRegClass[_Fs10Idx],
+    Fs11 = floatRegClass[_Fs11Idx],
+
+    Ft8 = floatRegClass[_Ft8Idx],
+    Ft9 = floatRegClass[_Ft9Idx],
+    Ft10 = floatRegClass[_Ft10Idx],
+    Ft11 = floatRegClass[_Ft11Idx];
+
+const std::vector<std::string> RegNames = {
     "ft0", "ft1", "ft2", "ft3",
     "ft4", "ft5", "ft6", "ft7",
     "fs0", "fs1", "fa0", "fa1",
@@ -117,6 +208,8 @@ const std::vector<std::string> FloatRegNames = {
     "fs8", "fs9", "fs10", "fs11",
     "ft8", "ft9", "ft10", "ft11"
 };
+
+} // namespace float_reg
 
 } // namespace RiscvISA
 } // namespace gem5

@@ -48,7 +48,7 @@ import sys
 
 import SCons
 
-from gem5_scons import Transform, warning, error, ToValue, FromValue
+from gem5_scons import Configure, error, FromValue, ToValue, Transform, warning
 from gem5_scons.sources import *
 
 Export(SourceFilter.factories)
@@ -250,9 +250,10 @@ def protoc_emitter(target, source, env):
     root, ext = os.path.splitext(source[0].get_abspath())
     return [root + '.pb.cc', root + '.pb.h'], source
 
-protoc_action = MakeAction('${PROTOC} --cpp_out ${BUILDDIR} '
-        '--proto_path ${BUILDDIR} --proto_path ${SOURCE.dir} '
-        '${SOURCE.get_abspath()}',
+# To understand these variables and attributes, see:
+# https://scons.org/doc/production/HTML/scons-man.html#variable_substitution
+protoc_action = MakeAction('${PROTOC} --cpp_out ${TARGET.dir.abspath} '
+        '--proto_path ${SOURCE.dir.abspath} ${SOURCE.abspath}',
         Transform("PROTOC"))
 protobuf_builder = Builder(action=protoc_action, emitter=protoc_emitter,
         src_suffix='.proto')
@@ -268,7 +269,10 @@ def ProtoBuf(source, tags=None, add_tags=None):
 
 env['PROTOC_GRPC'] = distutils.spawn.find_executable('grpc_cpp_plugin')
 if env['PROTOC_GRPC']:
-    env.Append(LIBS=['grpc++'])
+    with Configure(env) as conf:
+        if (not env['HAVE_PKG_CONFIG'] or
+            not conf.CheckPkgConfig(['grpc++'], '--libs')):
+            env.Append(LIBS=['grpc++'])
 
 def protoc_grpc_emitter(target, source, env):
     root, ext = os.path.splitext(source[0].get_abspath())
@@ -558,30 +562,6 @@ for extra_dir in extras_dir_list:
 
 for opt in env['CONF'].keys():
     env.ConfigFile(opt)
-
-def makeTheISA(source, target, env):
-    isas = sorted(set(env.Split('${ALL_ISAS}')))
-    target_isa = env['CONF']['TARGET_ISA']
-    is_null_isa = '1' if (target_isa.lower() == 'null') else '0'
-
-    def namespace(isa):
-        return isa[0].upper() + isa[1:].lower() + 'ISA'
-
-
-    code = code_formatter()
-    code('''\
-#ifndef __CONFIG_THE_ISA_HH__
-#define __CONFIG_THE_ISA_HH__
-
-#define IS_NULL_ISA ${{is_null_isa}}
-#define TheISA ${{namespace(target_isa)}}
-
-#endif // __CONFIG_THE_ISA_HH__''')
-
-    code.write(str(target[0]))
-
-env.Command('config/the_isa.hh', [],
-            MakeAction(makeTheISA, Transform("CFG ISA", 0)))
 
 def makeTheGPUISA(source, target, env):
     gpu_isa = env['CONF']['TARGET_GPU_ISA']

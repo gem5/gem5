@@ -28,14 +28,16 @@ from pathlib import Path
 import hashlib
 from _hashlib import HASH as Hash
 
-def _md5_update_from_file(filename:  Path, hash: Hash) -> Hash:
+
+def _md5_update_from_file(filename: Path, hash: Hash) -> Hash:
     assert filename.is_file()
     with open(str(filename), "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hash.update(chunk)
     return hash
 
-def _md5_update_from_dir(directory:  Path, hash: Hash) -> Hash:
+
+def _md5_update_from_dir(directory: Path, hash: Hash) -> Hash:
     assert directory.is_dir()
     for path in sorted(directory.iterdir(), key=lambda p: str(p).lower()):
         hash.update(path.name.encode())
@@ -44,6 +46,7 @@ def _md5_update_from_dir(directory:  Path, hash: Hash) -> Hash:
         elif path.is_dir():
             hash = _md5_update_from_dir(path, hash)
     return hash
+
 
 def md5(path: Path) -> str:
     """
@@ -60,13 +63,15 @@ def md5(path: Path) -> str:
     else:
         raise Exception(f"Path '{path}' is not a valid file or directory.")
 
-def md5_file(filename:  Path) -> str:
+
+def md5_file(filename: Path) -> str:
     """
     Gives the md5 hash of a file
 
     :filename: The file in which the md5 is to be calculated.
     """
     return str(_md5_update_from_file(filename, hashlib.md5()).hexdigest())
+
 
 def md5_dir(directory: Path) -> str:
     """

@@ -121,8 +121,8 @@ sc_signed_bitref::operator ^= (bool b)
 
 // #### OPTIMIZE
 void
-sc_signed_bitref::concat_set(int64 src, int low_i)  
-{    
+sc_signed_bitref::concat_set(int64 src, int low_i)
+{
     bool value = 1 & ((low_i < 64) ? (src >> low_i) : (src >> 63));
     m_obj_p->set(low_i, value);
 }
@@ -134,7 +134,7 @@ sc_signed_bitref::concat_set(const sc_signed &src, int low_i)
         m_obj_p->set(low_i, src.test(low_i));
     else
         m_obj_p->set(low_i, src < 0);
-}       
+}
 
 void
 sc_signed_bitref::concat_set(const sc_unsigned &src, int low_i)

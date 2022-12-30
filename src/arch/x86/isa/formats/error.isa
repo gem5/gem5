@@ -54,4 +54,3 @@ def format M5InternalError(error_message) {{
     iop.message = error_message
     decode_block = ErrorDecode.subst(iop)
 }};
-

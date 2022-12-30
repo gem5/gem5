@@ -1,4 +1,4 @@
-# Copyright (c) 2021 ARM Limited
+# Copyright (c) 2021,2022 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -41,23 +41,32 @@ from m5.params import *
 from m5.objects import *
 
 from m5.defines import buildEnv
-if buildEnv['PROTOCOL'] == 'CHI':
+
+if buildEnv["PROTOCOL"] == "CHI":
     import ruby.CHI_config as CHI
 
 from topologies.BaseTopology import SimpleTopology
 
+
 class CustomMesh(SimpleTopology):
-    description = 'CustomMesh'
+    description = "CustomMesh"
 
     def __init__(self, controllers):
         self.nodes = controllers
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # _makeMesh
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
-    def _makeMesh(self, IntLink, link_latency, num_rows, num_columns,
-                  cross_links, cross_link_latency):
+    def _makeMesh(
+        self,
+        IntLink,
+        link_latency,
+        num_rows,
+        num_columns,
+        cross_links,
+        cross_link_latency,
+    ):
 
         # East->West, West->East, North->South, South->North
         # XY routing weights
@@ -66,99 +75,124 @@ class CustomMesh(SimpleTopology):
         # East output to West input links
         for row in range(num_rows):
             for col in range(num_columns):
-                if (col + 1 < num_columns):
+                if col + 1 < num_columns:
                     east_out = col + (row * num_columns)
                     west_in = (col + 1) + (row * num_columns)
-                    llat = cross_link_latency \
-                                if (east_out, west_in) in cross_links \
-                                else link_latency
-                    self._int_links.append(\
-                                IntLink(link_id=self._link_count,
-                                        src_node=self._routers[east_out],
-                                        dst_node=self._routers[west_in],
-                                        dst_inport="West",
-                                        latency = llat,
-                                        weight=link_weights[0]))
+                    llat = (
+                        cross_link_latency
+                        if (east_out, west_in) in cross_links
+                        else link_latency
+                    )
+                    self._int_links.append(
+                        IntLink(
+                            link_id=self._link_count,
+                            src_node=self._routers[east_out],
+                            dst_node=self._routers[west_in],
+                            dst_inport="West",
+                            latency=llat,
+                            weight=link_weights[0],
+                        )
+                    )
                     self._link_count += 1
 
         # West output to East input links
         for row in range(num_rows):
             for col in range(num_columns):
-                if (col + 1 < num_columns):
+                if col + 1 < num_columns:
                     east_in = col + (row * num_columns)
                     west_out = (col + 1) + (row * num_columns)
-                    llat = cross_link_latency \
-                                if (west_out, east_in) in cross_links \
-                                else link_latency
-                    self._int_links.append(\
-                                IntLink(link_id=self._link_count,
-                                        src_node=self._routers[west_out],
-                                        dst_node=self._routers[east_in],
-                                        dst_inport="East",
-                                        latency = llat,
-                                        weight=link_weights[1]))
+                    llat = (
+                        cross_link_latency
+                        if (west_out, east_in) in cross_links
+                        else link_latency
+                    )
+                    self._int_links.append(
+                        IntLink(
+                            link_id=self._link_count,
+                            src_node=self._routers[west_out],
+                            dst_node=self._routers[east_in],
+                            dst_inport="East",
+                            latency=llat,
+                            weight=link_weights[1],
+                        )
+                    )
                     self._link_count += 1
 
         # North output to South input links
         for col in range(num_columns):
             for row in range(num_rows):
-                if (row + 1 < num_rows):
+                if row + 1 < num_rows:
                     north_out = col + (row * num_columns)
                     south_in = col + ((row + 1) * num_columns)
-                    llat = cross_link_latency \
-                            if (north_out, south_in) in cross_links \
-                            else link_latency
-                    self._int_links.append(\
-                                IntLink(link_id=self._link_count,
-                                        src_node=self._routers[north_out],
-                                        dst_node=self._routers[south_in],
-                                        dst_inport="South",
-                                        latency = llat,
-                                        weight=link_weights[2]))
+                    llat = (
+                        cross_link_latency
+                        if (north_out, south_in) in cross_links
+                        else link_latency
+                    )
+                    self._int_links.append(
+                        IntLink(
+                            link_id=self._link_count,
+                            src_node=self._routers[north_out],
+                            dst_node=self._routers[south_in],
+                            dst_inport="South",
+                            latency=llat,
+                            weight=link_weights[2],
+                        )
+                    )
                     self._link_count += 1
 
         # South output to North input links
         for col in range(num_columns):
             for row in range(num_rows):
-                if (row + 1 < num_rows):
+                if row + 1 < num_rows:
                     north_in = col + (row * num_columns)
                     south_out = col + ((row + 1) * num_columns)
-                    llat = cross_link_latency \
-                            if (south_out, north_in) in cross_links \
-                            else link_latency
-                    self._int_links.append(\
-                                IntLink(link_id=self._link_count,
-                                        src_node=self._routers[south_out],
-                                        dst_node=self._routers[north_in],
-                                        dst_inport="North",
-                                        latency = llat,
-                                        weight=link_weights[3]))
+                    llat = (
+                        cross_link_latency
+                        if (south_out, north_in) in cross_links
+                        else link_latency
+                    )
+                    self._int_links.append(
+                        IntLink(
+                            link_id=self._link_count,
+                            src_node=self._routers[south_out],
+                            dst_node=self._routers[north_in],
+                            dst_inport="North",
+                            latency=llat,
+                            weight=link_weights[3],
+                        )
+                    )
                     self._link_count += 1
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # distributeNodes
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     def _createRNFRouter(self, mesh_router):
         # Create a zero-latency router bridging node controllers
         # and the mesh router
-        node_router = self._Router(router_id = len(self._routers),
-                                    latency = 0)
+        node_router = self._Router(router_id=len(self._routers), latency=0)
         self._routers.append(node_router)
 
         # connect node_router <-> mesh router
-        self._int_links.append(self._IntLink( \
-                                    link_id = self._link_count,
-                                    src_node = node_router,
-                                    dst_node = mesh_router,
-                            latency = self._router_link_latency))
+        self._int_links.append(
+            self._IntLink(
+                link_id=self._link_count,
+                src_node=node_router,
+                dst_node=mesh_router,
+                latency=self._router_link_latency,
+            )
+        )
         self._link_count += 1
 
-        self._int_links.append(self._IntLink( \
-                                    link_id = self._link_count,
-                                    src_node = mesh_router,
-                                    dst_node = node_router,
-                            latency = self._router_link_latency))
+        self._int_links.append(
+            self._IntLink(
+                link_id=self._link_count,
+                src_node=mesh_router,
+                dst_node=node_router,
+                latency=self._router_link_latency,
+            )
+        )
         self._link_count += 1
 
         return node_router
@@ -172,7 +206,9 @@ class CustomMesh(SimpleTopology):
 
         if num_nodes_per_router:
             # evenly distribute nodes to all listed routers
-            assert(len(router_idx_list)*num_nodes_per_router == len(node_list))
+            assert len(router_idx_list) * num_nodes_per_router == len(
+                node_list
+            )
 
             for idx, node in enumerate(node_list):
                 mesh_router_idx = router_idx_list[idx // num_nodes_per_router]
@@ -187,11 +223,14 @@ class CustomMesh(SimpleTopology):
                 # connect all ctrls in the node to node_router
                 ctrls = node.getNetworkSideControllers()
                 for c in ctrls:
-                    self._ext_links.append(self._ExtLink(
-                                    link_id = self._link_count,
-                                    ext_node = c,
-                                    int_node = router,
-                                    latency = self._node_link_latency))
+                    self._ext_links.append(
+                        self._ExtLink(
+                            link_id=self._link_count,
+                            ext_node=c,
+                            int_node=router,
+                            latency=self._node_link_latency,
+                        )
+                    )
                     self._link_count += 1
         else:
             # try to circulate all nodes to all routers, some routers may be
@@ -205,20 +244,23 @@ class CustomMesh(SimpleTopology):
                     router = self._createRNFRouter(router)
                 ctrls = node.getNetworkSideControllers()
                 for c in ctrls:
-                    self._ext_links.append(self._ExtLink( \
-                                                 link_id = self._link_count,
-                                                 ext_node = c,
-                                                 int_node = router,
-                                            latency = self._node_link_latency))
+                    self._ext_links.append(
+                        self._ExtLink(
+                            link_id=self._link_count,
+                            ext_node=c,
+                            int_node=router,
+                            latency=self._node_link_latency,
+                        )
+                    )
                     self._link_count += 1
                 idx = (idx + 1) % len(router_idx_list)
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # makeTopology
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     def makeTopology(self, options, network, IntLink, ExtLink, Router):
-        assert(buildEnv['PROTOCOL'] == 'CHI')
+        assert buildEnv["PROTOCOL"] == "CHI"
 
         num_rows = options.num_rows
         num_cols = options.num_cols
@@ -228,7 +270,7 @@ class CustomMesh(SimpleTopology):
         self._ExtLink = ExtLink
         self._Router = Router
 
-        if hasattr(options, 'router_link_latency'):
+        if hasattr(options, "router_link_latency"):
             self._router_link_latency = options.router_link_latency
             self._node_link_latency = options.node_link_latency
         else:
@@ -256,7 +298,7 @@ class CustomMesh(SimpleTopology):
         rni_io_params = None
 
         def check_same(val, curr):
-            assert(curr == None or curr == val)
+            assert curr == None or curr == val
             return val
 
         for n in self.nodes:
@@ -282,20 +324,31 @@ class CustomMesh(SimpleTopology):
                 rni_io_nodes.append(n)
                 rni_io_params = check_same(type(n).NoC_Params, rni_io_params)
             else:
-                fatal('topologies.CustomMesh: {} not supported'
-                            .format(n.__class__.__name__))
+                fatal(
+                    "topologies.CustomMesh: {} not supported".format(
+                        n.__class__.__name__
+                    )
+                )
 
         # Create all mesh routers
-        self._routers = [Router(router_id=i, latency = options.router_latency)\
-                                    for i in range(num_mesh_routers)]
+        self._routers = [
+            Router(router_id=i, latency=options.router_latency)
+            for i in range(num_mesh_routers)
+        ]
 
         self._link_count = 0
         self._int_links = []
         self._ext_links = []
 
         # Create all the mesh internal links.
-        self._makeMesh(IntLink, self._router_link_latency, num_rows, num_cols,
-                       options.cross_links, options.cross_link_latency)
+        self._makeMesh(
+            IntLink,
+            self._router_link_latency,
+            num_rows,
+            num_cols,
+            options.cross_links,
+            options.cross_link_latency,
+        )
 
         # Place CHI_RNF on the mesh
         self.distributeNodes(rnf_params, rnf_nodes)
@@ -304,7 +357,7 @@ class CustomMesh(SimpleTopology):
         self.distributeNodes(hnf_params, hnf_nodes)
 
         # Place CHI_MN on the mesh
-        self.distributeNodes(options, mn_params, mn_nodes)
+        self.distributeNodes(mn_params, mn_nodes)
 
         # Place CHI_SNF_MainMem on the mesh
         self.distributeNodes(mem_params, mem_nodes)
@@ -319,15 +372,19 @@ class CustomMesh(SimpleTopology):
         # Set up
         network.int_links = self._int_links
         network.ext_links = self._ext_links
+        # fix Routers being set as link child
+        for r in self._routers:
+            if r.has_parent():
+                r.get_parent().clear_child(r.get_name())
         network.routers = self._routers
 
-        pairing = getattr(options, 'pairing', None)
+        pairing = getattr(options, "pairing", None)
         if pairing != None:
             self._autoPairHNFandSNF(hnf_list, mem_ctrls, pairing)
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # _autoPair
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     def _autoPairHNFandSNF(self, cache_ctrls, mem_ctrls, pairing):
         # Use the pairing defined by the configuration to reassign the
         # memory ranges
@@ -337,49 +394,57 @@ class CustomMesh(SimpleTopology):
         print(pairing)
 
         all_cache = []
-        for c in cache_ctrls: all_cache.extend(c.getNetworkSideControllers())
+        for c in cache_ctrls:
+            all_cache.extend(c.getNetworkSideControllers())
         all_mem = []
-        for c in mem_ctrls: all_mem.extend(c.getNetworkSideControllers())
+        for c in mem_ctrls:
+            all_mem.extend(c.getNetworkSideControllers())
 
         # checks and maps index from pairing map to component
-        assert(len(pairing) == len(all_cache))
+        assert len(pairing) == len(all_cache)
 
-        def _tolist(val): return val if isinstance(val, list) else [val]
+        def _tolist(val):
+            return val if isinstance(val, list) else [val]
 
-        for m in all_mem: m._pairing = []
+        for m in all_mem:
+            m._pairing = []
 
         pairing_check = max(1, len(all_mem) / len(all_cache))
-        for cidx,c in enumerate(all_cache):
+        for cidx, c in enumerate(all_cache):
             c._pairing = []
             for midx in _tolist(pairing[cidx]):
                 c._pairing.append(all_mem[midx])
                 if c not in all_mem[midx]._pairing:
                     all_mem[midx]._pairing.append(c)
-            assert(len(c._pairing) == pairing_check)
+            assert len(c._pairing) == pairing_check
             if pair_debug:
                 print(c.path())
                 for r in c.addr_ranges:
                     print("%s" % r)
                 for p in c._pairing:
-                    print("\t"+p.path())
+                    print("\t" + p.path())
                     for r in p.addr_ranges:
                         print("\t%s" % r)
 
         # all must be paired
-        for c in all_cache: assert(len(c._pairing) > 0)
-        for m in all_mem: assert(len(m._pairing) > 0)
+        for c in all_cache:
+            assert len(c._pairing) > 0
+        for m in all_mem:
+            assert len(m._pairing) > 0
 
         # only support a single range for the main memory controllers
         tgt_range_start = all_mem[0].addr_ranges[0].start.value
         for mem in all_mem:
             for r in mem.addr_ranges:
                 if r.start.value != tgt_range_start:
-                    fatal('topologies.CustomMesh: not supporting pairing of '\
-                          'main memory with multiple ranges')
+                    fatal(
+                        "topologies.CustomMesh: not supporting pairing of "
+                        "main memory with multiple ranges"
+                    )
 
         # reassign ranges for a 1 -> N paring
         def _rerange(src_cntrls, tgt_cntrls, fix_tgt_peer):
-            assert(len(tgt_cntrls) >= len(src_cntrls))
+            assert len(tgt_cntrls) >= len(src_cntrls)
 
             def _rangeToBit(addr_ranges):
                 bit = None
@@ -387,14 +452,14 @@ class CustomMesh(SimpleTopology):
                     if bit == None:
                         bit = r.intlvMatch
                     else:
-                        assert(bit == r.intlvMatch)
+                        assert bit == r.intlvMatch
                 return bit
 
             def _getPeer(cntrl):
                 return cntrl.memory_out_port.peer.simobj
 
             sorted_src = list(src_cntrls)
-            sorted_src.sort(key = lambda x: _rangeToBit(x.addr_ranges))
+            sorted_src.sort(key=lambda x: _rangeToBit(x.addr_ranges))
 
             # paired controllers need to have seq. interleaving match values
             intlvMatch = 0
@@ -414,17 +479,16 @@ class CustomMesh(SimpleTopology):
                     new_src_mask = []
                     for m in src_range.masks:
                         # TODO should mask all the way to the max range size
-                        new_src_mask.append(m | (m*2) | (m*4) |
-                                                  (m*8) | (m*16))
+                        new_src_mask.append(
+                            m | (m * 2) | (m * 4) | (m * 8) | (m * 16)
+                        )
                     for tgt in src._pairing:
                         paired = False
                         for tgt_range in tgt.addr_ranges:
-                            if tgt_range.start.value == \
-                               src_range.start.value:
+                            if tgt_range.start.value == src_range.start.value:
                                 src_range.masks = new_src_mask
                                 new_tgt_mask = []
-                                lsbs = len(tgt_range.masks) - \
-                                       len(new_src_mask)
+                                lsbs = len(tgt_range.masks) - len(new_src_mask)
                                 for i in range(lsbs):
                                     new_tgt_mask.append(tgt_range.masks[i])
                                 for m in new_src_mask:
@@ -434,9 +498,13 @@ class CustomMesh(SimpleTopology):
                                     _getPeer(tgt).range.masks = new_tgt_mask
                                 paired = True
                         if not paired:
-                            fatal('topologies.CustomMesh: could not ' \
-                                    'reassign ranges {} {}'.format(
-                                    src.path(), tgt.path()))
+                            fatal(
+                                "topologies.CustomMesh: could not "
+                                "reassign ranges {} {}".format(
+                                    src.path(), tgt.path()
+                                )
+                            )
+
         if len(all_mem) >= len(all_cache):
             _rerange(all_cache, all_mem, True)
         else:
@@ -444,14 +512,12 @@ class CustomMesh(SimpleTopology):
 
         if pair_debug:
             print("")
-            for cidx,c in enumerate(all_cache):
-                assert(len(c._pairing) == pairing_check)
+            for cidx, c in enumerate(all_cache):
+                assert len(c._pairing) == pairing_check
                 print(c.path())
                 for r in c.addr_ranges:
                     print("%s" % r)
                 for p in c._pairing:
-                    print("\t"+p.path())
+                    print("\t" + p.path())
                     for r in p.addr_ranges:
                         print("\t%s" % r)
-
-

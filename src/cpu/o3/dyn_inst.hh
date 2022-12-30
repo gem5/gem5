@@ -50,7 +50,6 @@
 
 #include "base/refcnt.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/exetrace.hh"
@@ -138,7 +137,7 @@ class DynInst : public ExecContext, public RefCounted
     Fault fault = NoFault;
 
     /** InstRecord that tracks this instructions. */
-    Trace::InstRecord *traceData = nullptr;
+    trace::InstRecord *traceData = nullptr;
 
   protected:
     enum Status
@@ -713,10 +712,10 @@ class DynInst : public ExecContext, public RefCounted
     /** @{ */
     template<typename T>
     void
-    setResult(T &&t)
+    setResult(const RegClass &reg_class, T &&t)
     {
         if (instFlags[RecordResult]) {
-            instResult.emplace(std::forward<T>(t));
+            instResult.emplace(reg_class, std::forward<T>(t));
         }
     }
     /** @} */
@@ -1078,38 +1077,19 @@ class DynInst : public ExecContext, public RefCounted
         for (int idx = 0; idx < numDestRegs(); idx++) {
             PhysRegIdPtr prev_phys_reg = prevDestIdx(idx);
             const RegId& original_dest_reg = staticInst->destRegIdx(idx);
-            switch (original_dest_reg.classValue()) {
-              case IntRegClass:
-              case FloatRegClass:
-              case CCRegClass:
+            const auto bytes = original_dest_reg.regClass().regBytes();
+
+            // Registers which aren't renamed don't need to be forwarded.
+            if (!original_dest_reg.isRenameable())
+                continue;
+
+            if (bytes == sizeof(RegVal)) {
                 setRegOperand(staticInst.get(), idx,
                         cpu->getReg(prev_phys_reg));
-                break;
-              case VecRegClass:
-                {
-                    TheISA::VecRegContainer val;
-                    cpu->getReg(prev_phys_reg, &val);
-                    setRegOperand(staticInst.get(), idx, &val);
-                }
-                break;
-              case VecElemClass:
-                setRegOperand(staticInst.get(), idx,
-                        cpu->getReg(prev_phys_reg));
-                break;
-              case VecPredRegClass:
-                {
-                    TheISA::VecPredRegContainer val;
-                    cpu->getReg(prev_phys_reg, &val);
-                    setRegOperand(staticInst.get(), idx, &val);
-                }
-                break;
-              case InvalidRegClass:
-              case MiscRegClass:
-                // no need to forward misc reg values
-                break;
-              default:
-                panic("Unknown register class: %d",
-                        (int)original_dest_reg.classValue());
+            } else {
+                uint8_t val[original_dest_reg.regClass().regBytes()];
+                cpu->getReg(prev_phys_reg, val);
+                setRegOperand(staticInst.get(), idx, val);
             }
         }
     }
@@ -1163,7 +1143,7 @@ class DynInst : public ExecContext, public RefCounted
         if (reg->is(InvalidRegClass))
             return;
         cpu->setReg(reg, val);
-        setResult(val);
+        setResult(reg->regClass(), val);
     }
 
     void
@@ -1173,7 +1153,7 @@ class DynInst : public ExecContext, public RefCounted
         if (reg->is(InvalidRegClass))
             return;
         cpu->setReg(reg, val);
-        //TODO setResult
+        setResult(reg->regClass(), val);
     }
 };
 

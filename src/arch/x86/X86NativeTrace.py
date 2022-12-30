@@ -29,7 +29,8 @@ from m5.params import *
 
 from m5.objects.CPUTracers import NativeTrace
 
+
 class X86NativeTrace(NativeTrace):
-    type = 'X86NativeTrace'
-    cxx_class = 'gem5::Trace::X86NativeTrace'
-    cxx_header = 'arch/x86/nativetrace.hh'
+    type = "X86NativeTrace"
+    cxx_class = "gem5::trace::X86NativeTrace"
+    cxx_header = "arch/x86/nativetrace.hh"

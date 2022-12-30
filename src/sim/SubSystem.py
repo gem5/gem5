@@ -45,9 +45,9 @@ from m5.params import *
 # any naming conflicts.
 #
 class SubSystem(SimObject):
-    type = 'SubSystem'
+    type = "SubSystem"
     cxx_header = "sim/sub_system.hh"
-    cxx_class = 'gem5::SubSystem'
+    cxx_class = "gem5::SubSystem"
     abstract = False
 
     # Thermal domain associated to this object, inheriting the parent's

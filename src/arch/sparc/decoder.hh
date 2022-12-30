@@ -39,21 +39,21 @@
 namespace gem5
 {
 
+class BaseISA;
+
 namespace SparcISA
 {
 
-class ISA;
 class Decoder : public InstDecoder
 {
   protected:
     // The extended machine instruction being generated
     ExtMachInst emi;
     uint32_t machInst;
-    RegVal asi;
+    RegVal asi = 0;
 
   public:
-    Decoder(const SparcDecoderParams &p) : InstDecoder(p, &machInst), asi(0)
-    {}
+    Decoder(const SparcDecoderParams &p) : InstDecoder(p, &machInst) {}
 
     // Use this to give data to the predecoder. This should be used
     // when there is control flow.

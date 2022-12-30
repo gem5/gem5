@@ -48,8 +48,11 @@ import slicc.ast as ast
 import slicc.util as util
 from slicc.symbols import SymbolTable
 
+
 class SLICC(Grammar):
-    def __init__(self, filename, base_dir, verbose=False, traceback=False, **kwargs):
+    def __init__(
+        self, filename, base_dir, verbose=False, traceback=False, **kwargs
+    ):
         self.protocol = None
         self.traceback = traceback
         self.verbose = verbose
@@ -64,12 +67,13 @@ class SLICC(Grammar):
             raise
 
     def currentLocation(self):
-        return util.Location(self.current_source, self.current_line,
-                             no_warning=not self.verbose)
+        return util.Location(
+            self.current_source, self.current_line, no_warning=not self.verbose
+        )
 
     def codeFormatter(self, *args, **kwargs):
         code = code_formatter(*args, **kwargs)
-        code['protocol'] = self.protocol
+        code["protocol"] = self.protocol
         return code
 
     def process(self):
@@ -82,128 +86,150 @@ class SLICC(Grammar):
         self.symtab.writeHTMLFiles(html_path)
 
     def files(self):
-        f = set(['Types.hh'])
+        f = set(["Types.hh"])
 
         f |= self.decl_list.files()
 
         return f
 
-    t_ignore = '\t '
+    t_ignore = "\t "
 
     # C or C++ comment (ignore)
     def t_c_comment(self, t):
-        r'/\*(.|\n)*?\*/'
-        t.lexer.lineno += t.value.count('\n')
+        r"/\*(.|\n)*?\*/"
+        t.lexer.lineno += t.value.count("\n")
 
     def t_cpp_comment(self, t):
-        r'//.*'
+        r"//.*"
 
     # Define a rule so we can track line numbers
     def t_newline(self, t):
-        r'\n+'
+        r"\n+"
         t.lexer.lineno += len(t.value)
 
     reserved = {
-        'protocol' : 'PROTOCOL',
-        'include' : 'INCLUDE',
-        'global' : 'GLOBAL',
-        'machine' : 'MACHINE',
-        'in_port' : 'IN_PORT',
-        'out_port' : 'OUT_PORT',
-        'action' : 'ACTION',
-        'transition' : 'TRANS',
-        'structure' : 'STRUCT',
-        'external_type' : 'EXTERN_TYPE',
-        'enumeration' : 'ENUM',
-        'state_declaration' : 'STATE_DECL',
-        'peek' : 'PEEK',
-        'stall_and_wait' : 'STALL_AND_WAIT',
-        'wakeup_port' : 'WAKEUP_PORT',
-        'enqueue' : 'ENQUEUE',
-        'check_allocate' : 'CHECK_ALLOCATE',
-        'check_next_cycle' : 'CHECK_NEXT_CYCLE',
-        'check_stop_slots' : 'CHECK_STOP_SLOTS',
-        'check_on_cache_probe' : 'CHECK_PROBE',
-        'static_cast' : 'STATIC_CAST',
-        'if' : 'IF',
-        'is_valid' : 'IS_VALID',
-        'is_invalid' : 'IS_INVALID',
-        'else' : 'ELSE',
-        'return' : 'RETURN',
-        'void' : 'VOID',
-        'new' : 'NEW',
-        'OOD' : 'OOD',
-        'defer_enqueueing' : 'DEFER_ENQUEUEING',
+        "protocol": "PROTOCOL",
+        "include": "INCLUDE",
+        "global": "GLOBAL",
+        "machine": "MACHINE",
+        "in_port": "IN_PORT",
+        "out_port": "OUT_PORT",
+        "action": "ACTION",
+        "transition": "TRANS",
+        "structure": "STRUCT",
+        "external_type": "EXTERN_TYPE",
+        "enumeration": "ENUM",
+        "state_declaration": "STATE_DECL",
+        "peek": "PEEK",
+        "stall_and_wait": "STALL_AND_WAIT",
+        "wakeup_port": "WAKEUP_PORT",
+        "enqueue": "ENQUEUE",
+        "check_allocate": "CHECK_ALLOCATE",
+        "check_next_cycle": "CHECK_NEXT_CYCLE",
+        "check_stop_slots": "CHECK_STOP_SLOTS",
+        "check_on_cache_probe": "CHECK_PROBE",
+        "static_cast": "STATIC_CAST",
+        "if": "IF",
+        "is_valid": "IS_VALID",
+        "is_invalid": "IS_INVALID",
+        "else": "ELSE",
+        "return": "RETURN",
+        "void": "VOID",
+        "new": "NEW",
+        "OOD": "OOD",
+        "defer_enqueueing": "DEFER_ENQUEUEING",
     }
 
-    literals = ':[]{}(),='
+    literals = ":[]{}(),="
 
-    tokens = [ 'EQ', 'NE', 'LT', 'GT', 'LE', 'GE',
-               'LEFTSHIFT', 'RIGHTSHIFT',
-               'NOT', 'AND', 'OR',
-               'PLUS', 'DASH', 'STAR', 'SLASH', 'MOD',
-               'INCR', 'DECR',
-               'DOUBLE_COLON', 'SEMI',
-               'ASSIGN', 'DOT',
-               'IDENT', 'LIT_BOOL', 'FLOATNUMBER', 'NUMBER', 'STRING',
-               'AMP', 'CONST' ]
+    tokens = [
+        "EQ",
+        "NE",
+        "LT",
+        "GT",
+        "LE",
+        "GE",
+        "LEFTSHIFT",
+        "RIGHTSHIFT",
+        "NOT",
+        "AND",
+        "OR",
+        "PLUS",
+        "DASH",
+        "STAR",
+        "SLASH",
+        "MOD",
+        "INCR",
+        "DECR",
+        "DOUBLE_COLON",
+        "SEMI",
+        "ASSIGN",
+        "DOT",
+        "IDENT",
+        "LIT_BOOL",
+        "FLOATNUMBER",
+        "NUMBER",
+        "STRING",
+        "AMP",
+        "CONST",
+    ]
     tokens += reserved.values()
 
-    t_EQ = r'=='
-    t_NE = r'!='
-    t_LT = r'<'
-    t_GT = r'>'
-    t_LE = r'<='
-    t_GE = r'>='
-    t_LEFTSHIFT = r'<<'
-    t_RIGHTSHIFT = r'>>'
-    t_NOT = r'!'
-    t_AND = r'&&'
-    t_OR = r'\|\|'
-    t_PLUS = r'\+'
-    t_DASH = r'-'
-    t_STAR = r'\*'
-    t_AMP = r'&'
-    t_CONST = r'const'
-    t_SLASH = r'/'
-    t_MOD = r'%'
-    t_DOUBLE_COLON = r'::'
-    t_SEMI = r';'
-    t_ASSIGN = r':='
-    t_DOT = r'\.'
-    t_INCR = r'\+\+'
-    t_DECR = r'--'
+    t_EQ = r"=="
+    t_NE = r"!="
+    t_LT = r"<"
+    t_GT = r">"
+    t_LE = r"<="
+    t_GE = r">="
+    t_LEFTSHIFT = r"<<"
+    t_RIGHTSHIFT = r">>"
+    t_NOT = r"!"
+    t_AND = r"&&"
+    t_OR = r"\|\|"
+    t_PLUS = r"\+"
+    t_DASH = r"-"
+    t_STAR = r"\*"
+    t_AMP = r"&"
+    t_CONST = r"const"
+    t_SLASH = r"/"
+    t_MOD = r"%"
+    t_DOUBLE_COLON = r"::"
+    t_SEMI = r";"
+    t_ASSIGN = r":="
+    t_DOT = r"\."
+    t_INCR = r"\+\+"
+    t_DECR = r"--"
 
     precedence = (
-        ('left', 'INCR', 'DECR'),
-        ('left', 'OR'),
-        ('left', 'AND'),
-        ('left', 'EQ', 'NE'),
-        ('left', 'LT', 'GT', 'LE', 'GE'),
-        ('left', 'RIGHTSHIFT', 'LEFTSHIFT'),
-        ('left', 'PLUS', 'DASH'),
-        ('left', 'STAR', 'SLASH', 'MOD'),
-        ('right', 'NOT', 'UMINUS'),
+        ("left", "INCR", "DECR"),
+        ("left", "OR"),
+        ("left", "AND"),
+        ("left", "EQ", "NE"),
+        ("left", "LT", "GT", "LE", "GE"),
+        ("left", "RIGHTSHIFT", "LEFTSHIFT"),
+        ("left", "PLUS", "DASH"),
+        ("left", "STAR", "SLASH", "MOD"),
+        ("right", "NOT", "UMINUS"),
     )
 
     def t_IDENT(self, t):
-        r'[a-zA-Z_][a-zA-Z_0-9]*'
-        if t.value == 'true':
-            t.type = 'LIT_BOOL'
+        r"[a-zA-Z_][a-zA-Z_0-9]*"
+        if t.value == "true":
+            t.type = "LIT_BOOL"
             t.value = True
             return t
 
-        if t.value == 'false':
-            t.type = 'LIT_BOOL'
+        if t.value == "false":
+            t.type = "LIT_BOOL"
             t.value = False
             return t
 
         # Check for reserved words
-        t.type = self.reserved.get(t.value, 'IDENT')
+        t.type = self.reserved.get(t.value, "IDENT")
         return t
 
     def t_FLOATNUMBER(self, t):
-        '[0-9]+[.][0-9]+'
+        "[0-9]+[.][0-9]+"
         try:
             t.value = float(t.value)
         except ValueError:
@@ -211,7 +237,7 @@ class SLICC(Grammar):
         return t
 
     def t_NUMBER(self, t):
-        r'[0-9]+'
+        r"[0-9]+"
         try:
             t.value = int(t.value)
         except ValueError:
@@ -220,13 +246,13 @@ class SLICC(Grammar):
 
     def t_STRING1(self, t):
         r'\"[^"\n]*\"'
-        t.type = 'STRING'
+        t.type = "STRING"
         t.value = t.value[1:-1]
         return t
 
     def t_STRING2(self, t):
         r"\'[^'\n]*\'"
-        t.type = 'STRING'
+        t.type = "STRING"
         t.value = t.value[1:-1]
         return t
 
@@ -248,7 +274,7 @@ class SLICC(Grammar):
         elif p[1] is None:
             decls = []
         else:
-            decls = [ p[1] ]
+            decls = [p[1]]
         p[0] = decls + p[2]
 
     def p_declsx__none(self, p):
@@ -258,8 +284,10 @@ class SLICC(Grammar):
     def p_decl__protocol(self, p):
         "decl : PROTOCOL STRING SEMI"
         if self.protocol:
-            msg = "Protocol can only be set once! Error at %s:%s\n" % \
-                (self.current_source, self.current_line)
+            msg = "Protocol can only be set once! Error at %s:%s\n" % (
+                self.current_source,
+                self.current_line,
+            )
             raise ParseError(msg)
         self.protocol = p[2]
         p[0] = None
@@ -337,7 +365,7 @@ class SLICC(Grammar):
     # Type fields
     def p_obj_decls__list(self, p):
         "obj_decls : obj_decl obj_decls"
-        p[0] = [ p[1] ] + p[2]
+        p[0] = [p[1]] + p[2]
 
     def p_obj_decls__empty(self, p):
         "obj_decls : empty"
@@ -345,7 +373,7 @@ class SLICC(Grammar):
 
     def p_type_members__list(self, p):
         "type_members : type_member type_members"
-        p[0] = [ p[1] ] + p[2]
+        p[0] = [p[1]] + p[2]
 
     def p_type_members__empty(self, p):
         "type_members : empty"
@@ -353,8 +381,8 @@ class SLICC(Grammar):
 
     def p_type_member__0(self, p):
         """type_member : obj_decl
-                       | func_decl
-                       | func_def"""
+        | func_decl
+        | func_def"""
         p[0] = p[1]
 
     # Member / Variable declarations
@@ -372,13 +400,15 @@ class SLICC(Grammar):
 
     def p_obj_decl__2(self, p):
         "obj_decl : type ident ASSIGN expr SEMI"
-        p[0] = ast.ObjDeclAST(self, p[1], p[2], ast.PairListAST(self), p[4],
-                False)
+        p[0] = ast.ObjDeclAST(
+            self, p[1], p[2], ast.PairListAST(self), p[4], False
+        )
 
     def p_obj_decl__3(self, p):
         "obj_decl : type STAR ident ASSIGN expr SEMI"
-        p[0] = ast.ObjDeclAST(self, p[1], p[3], ast.PairListAST(self), p[5],
-                True)
+        p[0] = ast.ObjDeclAST(
+            self, p[1], p[3], ast.PairListAST(self), p[5], True
+        )
 
     # Function definition and declaration
     def p_decl__func_decl(self, p):
@@ -387,12 +417,12 @@ class SLICC(Grammar):
 
     def p_func_decl__0(self, p):
         """func_decl :  void ident '(' params ')' pairs SEMI
-                | type ident '(' params ')' pairs SEMI"""
+        | type ident '(' params ')' pairs SEMI"""
         p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], None)
 
     def p_func_decl__1(self, p):
         """func_decl :  void ident '(' types ')' pairs SEMI
-                | type ident '(' types ')' pairs SEMI"""
+        | type ident '(' types ')' pairs SEMI"""
         p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], None)
 
     def p_decl__func_def(self, p):
@@ -401,13 +431,13 @@ class SLICC(Grammar):
 
     def p_func_def__0(self, p):
         """func_def : void ident '(' params ')' pairs statements
-            | type ident '(' params ')' pairs statements"""
+        | type ident '(' params ')' pairs statements"""
         p[0] = ast.FuncDeclAST(self, p[1], p[2], p[4], p[6], p[7])
 
     # Enum fields
     def p_type_enums__list(self, p):
         "type_enums : type_enum type_enums"
-        p[0] = [ p[1] ] + p[2]
+        p[0] = [p[1]] + p[2]
 
     def p_type_enums__empty(self, p):
         "type_enums : empty"
@@ -420,7 +450,7 @@ class SLICC(Grammar):
     # States
     def p_type_states__list(self, p):
         "type_states : type_state type_states"
-        p[0] = [ p[1] ] + p[2]
+        p[0] = [p[1]] + p[2]
 
     def p_type_states__empty(self, p):
         "type_states : empty"
@@ -433,11 +463,11 @@ class SLICC(Grammar):
     # Formal Param
     def p_params__many(self, p):
         "params : param ',' params"
-        p[0] = [ p[1] ] + p[3]
+        p[0] = [p[1]] + p[3]
 
     def p_params__one(self, p):
         "params : param"
-        p[0] = [ p[1] ]
+        p[0] = [p[1]]
 
     def p_params__none(self, p):
         "params : empty"
@@ -478,11 +508,11 @@ class SLICC(Grammar):
     # Type
     def p_types__multiple(self, p):
         "types : type ',' types"
-        p[0] = [ p[1] ] + p[3]
+        p[0] = [p[1]] + p[3]
 
     def p_types__one(self, p):
         "types : type"
-        p[0] = [ p[1] ]
+        p[0] = [p[1]]
 
     def p_types__empty(self, p):
         "types : empty"
@@ -490,7 +520,7 @@ class SLICC(Grammar):
 
     def p_typestr__multi(self, p):
         "typestr : typestr DOUBLE_COLON ident"
-        p[0] = '%s::%s' % (p[1], p[3])
+        p[0] = "%s::%s" % (p[1], p[3])
 
     def p_typestr__single(self, p):
         "typestr : ident"
@@ -511,20 +541,20 @@ class SLICC(Grammar):
 
     def p_idents__bare(self, p):
         "idents : ident"
-        p[0] = [ p[1] ]
+        p[0] = [p[1]]
 
     def p_identx__multiple_1(self, p):
         """identx : ident SEMI identx
-                  | ident ',' identx"""
-        p[0] = [ p[1] ] + p[3]
+        | ident ',' identx"""
+        p[0] = [p[1]] + p[3]
 
     def p_identx__multiple_2(self, p):
         "identx : ident identx"
-        p[0] = [ p[1] ] + p[2]
+        p[0] = [p[1]] + p[2]
 
     def p_identx__single(self, p):
         "identx : empty"
-        p[0] = [ ]
+        p[0] = []
 
     def p_ident(self, p):
         "ident : IDENT"
@@ -532,7 +562,7 @@ class SLICC(Grammar):
 
     def p_ident_or_star(self, p):
         """ident_or_star : ident
-                         | STAR"""
+        | STAR"""
         p[0] = p[1]
 
     # Pair and pair lists
@@ -556,8 +586,8 @@ class SLICC(Grammar):
 
     def p_pair__assign(self, p):
         """pair : ident '=' STRING
-                | ident '=' ident
-                | ident '=' NUMBER"""
+        | ident '=' ident
+        | ident '=' NUMBER"""
         p[0] = ast.PairAST(self, p[1], p[3])
 
     def p_pair__literal(self, p):
@@ -575,22 +605,22 @@ class SLICC(Grammar):
 
     def p_statements_inner__many(self, p):
         "statements_inner : statement statements_inner"
-        p[0] = [ p[1] ] + p[2]
+        p[0] = [p[1]] + p[2]
 
     def p_statements_inner__one(self, p):
         "statements_inner : statement"
-        p[0] = [ p[1] ]
+        p[0] = [p[1]]
 
     def p_exprs__multiple(self, p):
         "exprs : expr ',' exprs"
-        p[0] = [ p[1] ] + p[3]
+        p[0] = [p[1]] + p[3]
 
     def p_exprs__one(self, p):
         "exprs : expr"
-        p[0] = [ p[1] ]
+        p[0] = [p[1]]
 
     def p_exprs__empty(self, p):
-        "exprs : empty"""
+        "exprs : empty" ""
         p[0] = []
 
     def p_statement__expression(self, p):
@@ -659,8 +689,9 @@ class SLICC(Grammar):
 
     def p_statement__if_else_if(self, p):
         "if_statement : IF '(' expr ')' statements ELSE if_statement"
-        p[0] = ast.IfStatementAST(self, p[3], p[5],
-                                  ast.StatementListAST(self, p[7]))
+        p[0] = ast.IfStatementAST(
+            self, p[3], p[5], ast.StatementListAST(self, p[7])
+        )
 
     def p_expr__static_cast(self, p):
         "aexpr : STATIC_CAST '(' type ',' expr ')'"
@@ -704,18 +735,21 @@ class SLICC(Grammar):
 
     def p_expr__member_method_call(self, p):
         "aexpr : aexpr DOT ident '(' exprs ')'"
-        p[0] = ast.MemberMethodCallExprAST(self, p[1],
-                    ast.FuncCallExprAST(self, p[3], p[5]))
+        p[0] = ast.MemberMethodCallExprAST(
+            self, p[1], ast.FuncCallExprAST(self, p[3], p[5])
+        )
 
     def p_expr__member_method_call_lookup(self, p):
         "aexpr : aexpr '[' exprs ']'"
-        p[0] = ast.MemberMethodCallExprAST(self, p[1],
-                    ast.FuncCallExprAST(self, "lookup", p[3]))
+        p[0] = ast.MemberMethodCallExprAST(
+            self, p[1], ast.FuncCallExprAST(self, "lookup", p[3])
+        )
 
     def p_expr__class_method_call(self, p):
         "aexpr : type DOUBLE_COLON ident '(' exprs ')'"
-        p[0] = ast.ClassMethodCallExprAST(self, p[1],
-                    ast.FuncCallExprAST(self, p[3], p[5]))
+        p[0] = ast.ClassMethodCallExprAST(
+            self, p[1], ast.FuncCallExprAST(self, p[3], p[5])
+        )
 
     def p_expr__aexpr(self, p):
         "expr : aexpr"
@@ -723,28 +757,28 @@ class SLICC(Grammar):
 
     def p_expr__binary_op(self, p):
         """expr : expr STAR  expr
-                | expr SLASH expr
-                | expr MOD   expr
-                | expr PLUS  expr
-                | expr DASH  expr
-                | expr LT    expr
-                | expr GT    expr
-                | expr LE    expr
-                | expr GE    expr
-                | expr EQ    expr
-                | expr NE    expr
-                | expr AND   expr
-                | expr OR    expr
-                | expr RIGHTSHIFT expr
-                | expr LEFTSHIFT  expr"""
+        | expr SLASH expr
+        | expr MOD   expr
+        | expr PLUS  expr
+        | expr DASH  expr
+        | expr LT    expr
+        | expr GT    expr
+        | expr LE    expr
+        | expr GE    expr
+        | expr EQ    expr
+        | expr NE    expr
+        | expr AND   expr
+        | expr OR    expr
+        | expr RIGHTSHIFT expr
+        | expr LEFTSHIFT  expr"""
         p[0] = ast.InfixOperatorExprAST(self, p[1], p[2], p[3])
 
     # FIXME - unary not
     def p_expr__unary_op(self, p):
         """expr : NOT expr
-                | INCR expr
-                | DECR expr
-                | DASH expr %prec UMINUS"""
+        | INCR expr
+        | DECR expr
+        | DASH expr %prec UMINUS"""
         p[0] = ast.PrefixOperatorExprAST(self, p[1], p[2])
 
     def p_expr__parens(self, p):

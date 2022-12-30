@@ -30,7 +30,7 @@ import sys
 
 Import('*')
 
-if env['CONF']['TARGET_ISA'] != 'null':
+if not env['CONF']['USE_NULL_ISA']:
     SimObject('FUPool.py', sim_objects=['FUPool'])
     SimObject('FuncUnitConfig.py', sim_objects=[])
     SimObject('BaseO3CPU.py', sim_objects=['BaseO3CPU'], enums=[
@@ -76,3 +76,7 @@ if env['CONF']['TARGET_ISA'] != 'null':
 
     SimObject('BaseO3Checker.py', sim_objects=['BaseO3Checker'])
     Source('checker.cc')
+
+    # For backwards compatibility
+    SimObject('O3CPU.py', sim_objects=[])
+    SimObject('O3Checker.py', sim_objects=[])

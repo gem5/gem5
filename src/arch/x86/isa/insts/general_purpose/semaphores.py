@@ -34,7 +34,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop CMPXCHG_R_R {
     sub t0, rax, reg, flags=(OF, SF, ZF, AF, PF, CF)
     mov reg, reg, regm, flags=(CZF,)
@@ -123,12 +123,12 @@ def macroop XADD_R_R {
     mov reg, reg, t2
 };
 
-'''
+"""
 
 # Despite the name, this microcode sequence implements both
 # cmpxchg8b and cmpxchg16b, depending on the dynamic value
 # of dataSize.
-cmpxchg8bCode = '''
+cmpxchg8bCode = """
 def macroop CMPXCHG8B_%(suffix)s {
     .adjust_env clampOsz
     %(rdip)s
@@ -153,26 +153,42 @@ doneComparing:
     stsplit%(ul)s (t2, t3), seg, [1, t0, t1], disp=0
     %(mfence)s
 };
-'''
+"""
 
-microcode += cmpxchg8bCode % {"rdip": "", "sib": "sib",
-                              "l": "", "ul": "",
-                              "mfence": "",
-                              "suffix": "M"}
-microcode += cmpxchg8bCode % {"rdip": "rdip t7", "sib": "riprel",
-                              "l": "", "ul": "",
-                              "mfence": "",
-                              "suffix": "P"}
-microcode += cmpxchg8bCode % {"rdip": "", "sib": "sib",
-                              "l": "l", "ul": "ul",
-                              "mfence": "mfence",
-                              "suffix": "LOCKED_M"}
-microcode += cmpxchg8bCode % {"rdip": "rdip t7", "sib": "riprel",
-                              "l": "l", "ul": "ul",
-                              "mfence": "mfence",
-                              "suffix": "LOCKED_P"}
+microcode += cmpxchg8bCode % {
+    "rdip": "",
+    "sib": "sib",
+    "l": "",
+    "ul": "",
+    "mfence": "",
+    "suffix": "M",
+}
+microcode += cmpxchg8bCode % {
+    "rdip": "rdip t7",
+    "sib": "riprel",
+    "l": "",
+    "ul": "",
+    "mfence": "",
+    "suffix": "P",
+}
+microcode += cmpxchg8bCode % {
+    "rdip": "",
+    "sib": "sib",
+    "l": "l",
+    "ul": "ul",
+    "mfence": "mfence",
+    "suffix": "LOCKED_M",
+}
+microcode += cmpxchg8bCode % {
+    "rdip": "rdip t7",
+    "sib": "riprel",
+    "l": "l",
+    "ul": "ul",
+    "mfence": "mfence",
+    "suffix": "LOCKED_P",
+}
 
-#let {{
+# let {{
 #    class XCHG(Inst):
 #       "GenFault ${new UnimpInstFault}"
-#}};
+# }};

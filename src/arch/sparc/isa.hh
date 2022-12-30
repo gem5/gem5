@@ -34,6 +34,7 @@
 
 #include "arch/generic/isa.hh"
 #include "arch/sparc/pcstate.hh"
+#include "arch/sparc/regs/float.hh"
 #include "arch/sparc/regs/int.hh"
 #include "arch/sparc/regs/misc.hh"
 #include "arch/sparc/sparc_traits.hh"
@@ -154,7 +155,7 @@ class ISA : public BaseISA
         CurrentGlobalsOffset = 0,
         CurrentWindowOffset = CurrentGlobalsOffset + NumGlobalRegs,
         MicroIntOffset = CurrentWindowOffset + NumWindowedRegs,
-        NextGlobalsOffset = MicroIntOffset + NumMicroIntRegs,
+        NextGlobalsOffset = MicroIntOffset + int_reg::NumMicroRegs,
         NextWindowOffset = NextGlobalsOffset + NumGlobalRegs,
         PreviousGlobalsOffset = NextWindowOffset + NumWindowedRegs,
         PreviousWindowOffset = PreviousGlobalsOffset + NumGlobalRegs,
@@ -167,7 +168,9 @@ class ISA : public BaseISA
     void reloadRegMap();
 
   public:
-    void clear();
+    const RegIndex &mapIntRegId(RegIndex idx) const { return intRegMap[idx]; }
+
+    void clear() override;
 
     PCStateBase *
     newPCState(Addr new_inst_addr=0) const override
@@ -185,47 +188,11 @@ class ISA : public BaseISA
 
   public:
 
-    RegVal readMiscRegNoEffect(int miscReg) const;
-    RegVal readMiscReg(int miscReg);
+    RegVal readMiscRegNoEffect(RegIndex idx) const override;
+    RegVal readMiscReg(RegIndex idx) override;
 
-    void setMiscRegNoEffect(int miscReg, RegVal val);
-    void setMiscReg(int miscReg, RegVal val);
-
-    RegId
-    flattenRegId(const RegId& regId) const
-    {
-        switch (regId.classValue()) {
-          case IntRegClass:
-            return RegId(IntRegClass, flattenIntIndex(regId.index()));
-          case FloatRegClass:
-            return RegId(FloatRegClass, flattenFloatIndex(regId.index()));
-          case CCRegClass:
-            return RegId(CCRegClass, flattenCCIndex(regId.index()));
-          case MiscRegClass:
-            return RegId(MiscRegClass, flattenMiscIndex(regId.index()));
-          default:
-            break;
-        }
-        return regId;
-    }
-
-    int
-    flattenIntIndex(int reg) const
-    {
-        assert(reg < TotalInstIntRegs);
-        RegIndex flatIndex = intRegMap[reg];
-        assert(flatIndex < NumIntRegs);
-        return flatIndex;
-    }
-
-    int flattenFloatIndex(int reg) const { return reg; }
-    int flattenVecIndex(int reg) const { return reg; }
-    int flattenVecElemIndex(int reg) const { return reg; }
-    int flattenVecPredIndex(int reg) const { return reg; }
-
-    // dummy
-    int flattenCCIndex(int reg) const { return reg; }
-    int flattenMiscIndex(int reg) const { return reg; }
+    void setMiscRegNoEffect(RegIndex idx, RegVal val) override;
+    void setMiscReg(RegIndex idx, RegVal val) override;
 
     uint64_t
     getExecutingAsid() const override

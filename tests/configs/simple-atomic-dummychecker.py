@@ -36,6 +36,6 @@
 from m5.objects import *
 from base_config import *
 
-root = BaseSESystemUniprocessor(mem_mode='atomic',
-                                cpu_class=AtomicSimpleCPU,
-                                checker=True).create_root()
+root = BaseSESystemUniprocessor(
+    mem_mode="atomic", cpu_class=AtomicSimpleCPU, checker=True
+).create_root()

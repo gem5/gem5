@@ -1,0 +1,40 @@
+{
+  "simulated_begin_time": 0,
+  "simulated_end_time": 4923405,
+  "system": {
+    "processor": {
+      "cores0": {
+        "generator": {
+          "totalReadLat": {
+            "value": 80478448.0
+          },
+          "totalWriteLat": {
+            "value": 1534192.0
+          },
+          "totalBytesRead": {
+            "value": 4000.0
+          },
+          "totalBytesWritten": {
+            "value": 4000.0
+          }
+        }
+      },
+      "cores1": {
+        "generator": {
+          "totalReadLat": {
+            "value": 81391012.0
+          },
+          "totalWriteLat": {
+            "value": 996400.0
+          },
+          "totalBytesRead": {
+            "value": 3976.0
+          },
+          "totalBytesWritten": {
+            "value": 2272.0
+          }
+        }
+      }
+    }
+  }
+}

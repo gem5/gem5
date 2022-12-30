@@ -51,27 +51,32 @@ from gem5_scons import Transform, MakeAction
 #
 ###################################################
 
+
 def SwitchingHeaders(env):
     def build_switching_header(target, source, env):
         path = str(target[0])
         subdir = str(source[0])
         dp, fp = os.path.split(path)
-        dp = os.path.relpath(os.path.realpath(dp),
-                             os.path.realpath(env['BUILDDIR']))
-        with open(path, 'w') as hdr:
+        dp = os.path.relpath(
+            os.path.realpath(dp), os.path.realpath(env["BUILDDIR"])
+        )
+        with open(path, "w") as hdr:
             print('#include "%s/%s/%s"' % (dp, subdir, fp), file=hdr)
 
-    switching_header_action = MakeAction(build_switching_header,
-                                         Transform('GENERATE'))
+    switching_header_action = MakeAction(
+        build_switching_header, Transform("GENERATE")
+    )
 
-    switching_header_builder = env.Builder(action=switching_header_action,
-                                           source_factory=env.Value,
-                                           single_source=True)
+    switching_header_builder = env.Builder(
+        action=switching_header_action,
+        source_factory=env.Value,
+        single_source=True,
+    )
 
-    env.Append(BUILDERS = { 'SwitchingHeader': switching_header_builder })
+    env.Append(BUILDERS={"SwitchingHeader": switching_header_builder})
 
     def switching_headers(self, headers, source):
         for header in headers:
             self.SwitchingHeader(header, source)
 
-    env.AddMethod(switching_headers, 'SwitchingHeaders')
+    env.AddMethod(switching_headers, "SwitchingHeaders")

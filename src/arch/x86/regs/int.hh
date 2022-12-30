@@ -35,13 +35,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_X86_INTREGS_HH__
-#define __ARCH_X86_INTREGS_HH__
+#ifndef __ARCH_X86_REGS_INT_HH__
+#define __ARCH_X86_REGS_INT_HH__
 
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
 #include "base/logging.hh"
 #include "cpu/reg_class.hh"
+#include "debug/IntRegs.hh"
 
 namespace gem5
 {
@@ -99,30 +100,58 @@ enum : RegIndex
     NumRegs
 };
 
+} // namespace int_reg
+
+class FlatIntRegClassOps : public RegClassOps
+{
+    std::string regName(const RegId &id) const override;
+};
+
+inline constexpr FlatIntRegClassOps flatIntRegClassOps;
+
+inline constexpr RegClass flatIntRegClass =
+    RegClass(IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs).
+    ops(flatIntRegClassOps);
+
+class IntRegClassOps : public FlatIntRegClassOps
+{
+    RegId flatten(const BaseISA &isa, const RegId &id) const override;
+};
+
+inline constexpr IntRegClassOps intRegClassOps;
+
+inline constexpr RegClass intRegClass =
+    RegClass(IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs).
+    ops(intRegClassOps).
+    needsFlattening();
+
+namespace int_reg
+{
+
 inline constexpr RegId
-    Rax(IntRegClass, _RaxIdx),
-    Rcx(IntRegClass, _RcxIdx),
-    Rdx(IntRegClass, _RdxIdx),
-    Rbx(IntRegClass, _RbxIdx),
-    Rsp(IntRegClass, _RspIdx),
-    Rbp(IntRegClass, _RbpIdx),
-    Rsi(IntRegClass, _RsiIdx),
-    Rdi(IntRegClass, _RdiIdx),
-    R8(IntRegClass, _R8Idx),
-    R9(IntRegClass, _R9Idx),
-    R10(IntRegClass, _R10Idx),
-    R11(IntRegClass, _R11Idx),
-    R12(IntRegClass, _R12Idx),
-    R13(IntRegClass, _R13Idx),
-    R14(IntRegClass, _R14Idx),
-    R15(IntRegClass, _R15Idx),
-    T0(IntRegClass, _T0Idx),
-    Prodlow(IntRegClass, _ProdlowIdx),
-    Prodhi(IntRegClass, _ProdhiIdx),
-    Quotient(IntRegClass, _QuotientIdx),
-    Remainder(IntRegClass, _RemainderIdx),
-    Divisor(IntRegClass, _DivisorIdx),
-    Doublebits(IntRegClass, _DoublebitsIdx);
+    Rax = intRegClass[_RaxIdx],
+    Rcx = intRegClass[_RcxIdx],
+    Rdx = intRegClass[_RdxIdx],
+    Rbx = intRegClass[_RbxIdx],
+    Rsp = intRegClass[_RspIdx],
+    Rbp = intRegClass[_RbpIdx],
+    Rsi = intRegClass[_RsiIdx],
+    Rdi = intRegClass[_RdiIdx],
+    R8 = intRegClass[_R8Idx],
+    R9 = intRegClass[_R9Idx],
+    R10 = intRegClass[_R10Idx],
+    R11 = intRegClass[_R11Idx],
+    R12 = intRegClass[_R12Idx],
+    R13 = intRegClass[_R13Idx],
+    R14 = intRegClass[_R14Idx],
+    R15 = intRegClass[_R15Idx],
+    T0 = intRegClass[_T0Idx],
+    Prodlow = intRegClass[_ProdlowIdx],
+    Prodhi = intRegClass[_ProdhiIdx],
+    Quotient = intRegClass[_QuotientIdx],
+    Remainder = intRegClass[_RemainderIdx],
+    Divisor = intRegClass[_DivisorIdx],
+    Doublebits = intRegClass[_DoublebitsIdx];
 
 // Aliases for other register sizes.
 inline constexpr auto
@@ -151,7 +180,7 @@ inline constexpr RegIndex IntFoldBit = 1 << 6;
 inline static constexpr RegId
 intRegMicro(int index)
 {
-    return RegId(IntRegClass, int_reg::MicroBegin + index);
+    return intRegClass[int_reg::MicroBegin + index];
 }
 
 inline static constexpr RegId
@@ -159,10 +188,10 @@ intRegFolded(RegIndex index, RegIndex foldBit)
 {
     if ((index & 0x1C) == 4 && foldBit)
         index = (index - 4) | foldBit;
-    return RegId(IntRegClass, index);
+    return intRegClass[index];
 }
 
 } // namespace X86ISA
 } // namespace gem5
 
-#endif // __ARCH_X86_INTREGS_HH__
+#endif // __ARCH_X86_REGS_INT_HH__

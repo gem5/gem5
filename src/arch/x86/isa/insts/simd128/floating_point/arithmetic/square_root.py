@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop SQRTSS_XMM_XMM {
     msqrt xmml, xmmlm, size=4, ext=Scalar
 };
@@ -103,4 +103,4 @@ def macroop SQRTPD_XMM_P {
     msqrt xmml, ufp1, size=8, ext=0
     msqrt xmmh, ufp2, size=8, ext=0
 };
-'''
+"""

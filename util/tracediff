@@ -146,6 +146,3 @@ $fullcmd = "$FindBin::Bin/rundiff '$cmd1' '$cmd2' 2>&1 > tracediff-$$.out";
 
 print "Executing $fullcmd\n";
 system($fullcmd);
-
-
-

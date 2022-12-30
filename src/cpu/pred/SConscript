@@ -28,9 +28,6 @@
 
 Import('*')
 
-if env['CONF']['TARGET_ISA'] == 'null':
-    Return()
-
 SimObject('BranchPredictor.py', sim_objects=[
     'IndirectPredictor', 'SimpleIndirectPredictor', 'BranchPredictor',
     'LocalBP', 'TournamentBP', 'BiModeBP', 'TAGEBase', 'TAGE', 'LoopPredictor',

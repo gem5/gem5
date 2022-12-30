@@ -27,14 +27,13 @@
 
 from typing import Optional
 from m5.objects import Addr
-from ..boards.mem_mode import MemMode
 from ...utils.override import overrides
 from m5.util.convert import toMemorySize
-from .abstract_processor import AbstractProcessor
-from ..boards.abstract_board import AbstractBoard
+from .abstract_generator import AbstractGenerator
 from .gups_generator_core import GUPSGeneratorCore
 
-class GUPSGeneratorEP(AbstractProcessor):
+
+class GUPSGeneratorEP(AbstractGenerator):
     def __init__(
         self,
         num_cores: int,
@@ -72,7 +71,7 @@ class GUPSGeneratorEP(AbstractProcessor):
         start_addr: Addr,
         mem_size: str,
         update_limit: int,
-        clk_freq: Optional[str],
+        clk_freq: str,
     ):
         """
         Helper function to create cores.
@@ -85,17 +84,15 @@ class GUPSGeneratorEP(AbstractProcessor):
                 start_addr=start_addr + i * chunk_size,
                 mem_size=table_size,
                 update_limit=update_limit,
-                clk_freq=clk_freq
+                clk_freq=clk_freq,
             )
             for i in range(num_cores)
         ]
 
-    @overrides(AbstractProcessor)
-    def incorporate_processor(self, board: AbstractBoard) -> None:
-        board.set_mem_mode(MemMode.TIMING)
-
+    @overrides(AbstractGenerator)
     def start_traffic(self):
-        # This function should be implemented so that GUPSGeneratorEP could be
-        # used in the same scripts that use LinearGenerator, RandomGenerator,
-        # and ComplexGenrator
+        """
+        Since GUPSGeneratorCore does not need a call to start_traffic to
+        start generation. This function is just pass.
+        """
         pass

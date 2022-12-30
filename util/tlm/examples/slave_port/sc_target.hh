@@ -98,4 +98,3 @@ struct Target: sc_module
 };
 
 #endif //__SIM_SC_TARGET_HH__
-

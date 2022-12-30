@@ -33,12 +33,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["load_0_1_or_pi",
-              "load_logarithm"]
+categories = ["load_0_1_or_pi", "load_logarithm"]
 
-microcode = '''
+microcode = """
 # X86 microcode
-'''
+"""
 for category in categories:
     exec("from . import %s as cat" % category)
     microcode += cat.microcode

@@ -37,8 +37,10 @@ from m5.objects import *
 from arm_generic import *
 from common.cores.arm.O3_ARM_v7a import O3_ARM_v7a_3
 
-root = LinuxArmFSSystemUniprocessor(aarch64_kernel=False,
-                                    machine_type='VExpress_GEM5_V1',
-                                    mem_mode='timing',
-                                    mem_class=DDR3_1600_8x8,
-                                    cpu_class=O3_ARM_v7a_3).create_root()
+root = LinuxArmFSSystemUniprocessor(
+    aarch64_kernel=False,
+    machine_type="VExpress_GEM5_V1",
+    mem_mode="timing",
+    mem_class=DDR3_1600_8x8,
+    cpu_class=O3_ARM_v7a_3,
+).create_root()

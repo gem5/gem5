@@ -248,15 +248,28 @@ namespace VegaISA
 
         // Needed because can't take addr of bitfield
         int reg = instData.SSRC0;
+        /*
+          S_GETPC_B64 does not use SSRC0, so don't put anything on srcOps
+          for it (0x1c is 29 base 10, which is the opcode for S_GETPC_B64).
+         */
         if (instData.OP != 0x1C) {
             srcOps.emplace_back(reg, getOperandSize(opNum), true,
                                   isScalarReg(instData.SSRC0), false, false);
             opNum++;
         }
 
-        reg = instData.SDST;
-        dstOps.emplace_back(reg, getOperandSize(opNum), false,
+        /*
+          S_SETPC_B64, S_RFE_B64, S_CBRANCH_JOIN, and S_SET_GPR_IDX_IDX do not
+          use SDST, so don't put anything on dstOps for them.
+        */
+        if ((instData.OP != 0x1D) /* S_SETPC_B64 (29 base 10) */ &&
+            (instData.OP != 0x1F) /* S_RFE_B64 (31 base 10) */ &&
+            (instData.OP != 0x2E) /* S_CBRANCH_JOIN (46 base 10) */ &&
+            (instData.OP != 0x32)) /* S_SET_GPR_IDX_IDX (50 base 10) */ {
+          reg = instData.SDST;
+          dstOps.emplace_back(reg, getOperandSize(opNum), false,
                               isScalarReg(instData.SDST), false, false);
+        }
 
         assert(srcOps.size() == numSrcRegOperands());
         assert(dstOps.size() == numDstRegOperands());
@@ -759,8 +772,21 @@ namespace VegaISA
 
         if (numDstRegOperands()) {
             reg = instData.VDST;
-            dstOps.emplace_back(reg, getOperandSize(opNum), false,
-                                  false, true, false);
+            /*
+              The v_readfirstlane_b32 instruction (op = 2) is a special case
+              VOP1 instruction which has a scalar register as the destination.
+              (See section 6.6.2 "Special Cases" in the Vega ISA manual)
+
+              Therefore we change the dest op to be scalar reg = true and
+              vector reg = false in reserve of all other instructions.
+             */
+            if (instData.OP == 2) {
+                dstOps.emplace_back(reg, getOperandSize(opNum), false,
+                                      true, false, false);
+            } else {
+                dstOps.emplace_back(reg, getOperandSize(opNum), false,
+                                      false, true, false);
+            }
         }
 
         assert(srcOps.size() == numSrcRegOperands());
@@ -893,7 +919,14 @@ namespace VegaISA
         std::stringstream dis_stream;
         dis_stream << _opcode << " vcc, ";
 
-        dis_stream << opSelectorToRegSym(instData.SRC0) << ", ";
+        if ((instData.SRC0 == REG_SRC_LITERAL) ||
+            (instData.SRC0 == REG_SRC_DPP) ||
+            (instData.SRC0 == REG_SRC_SWDA)) {
+            dis_stream << "0x" << std::hex << std::setfill('0') << std::setw(8)
+                       << _srcLiteral << ", ";
+        } else {
+            dis_stream << opSelectorToRegSym(instData.SRC0) << ", ";
+        }
         dis_stream << "v" << instData.VSRC1;
 
         disassembly = dis_stream.str();
@@ -1699,7 +1732,10 @@ namespace VegaISA
         if (isLoad())
             dis_stream << "v" << extData.VDST << ", ";
 
-        dis_stream << "v[" << extData.ADDR << ":" << extData.ADDR + 1 << "]";
+        if (extData.SADDR == 0x7f)
+            dis_stream << "v[" << extData.ADDR << ":" << extData.ADDR+1 << "]";
+        else
+            dis_stream << "v" << extData.ADDR;
 
         if (isStore())
             dis_stream << ", v" << extData.DATA;
@@ -1707,7 +1743,11 @@ namespace VegaISA
         if (extData.SADDR == 0x7f)
             dis_stream << ", off";
         else
-            dis_stream << ", " << extData.SADDR;
+            dis_stream << ", s[" << extData.SADDR << ":" << extData.SADDR+1
+                       << "]";
+
+        if (instData.OFFSET)
+            dis_stream << " offset:" << instData.OFFSET;
 
         disassembly = dis_stream.str();
     }

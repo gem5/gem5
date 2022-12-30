@@ -32,10 +32,13 @@ set of statistics.
 """
 
 import m5
+
 import argparse
 import importlib
+from pathlib import Path
 
 from m5.objects import Root, MemorySize
+from m5.stats.gem5stats import get_simstat
 from gem5.components.boards.test_board import TestBoard
 
 
@@ -70,9 +73,7 @@ def generator_factory(
         from gem5.components.processors.gups_generator import GUPSGenerator
 
         table_size = f"{int(mem_size / 2)}B"
-        return GUPSGenerator(
-            0, table_size, update_limit=1000, clk_freq="2GHz"
-        )
+        return GUPSGenerator(0, table_size, update_limit=1000, clk_freq="2GHz")
     elif generator_class == "GUPSGeneratorEP":
         from gem5.components.processors.gups_generator_ep import (
             GUPSGeneratorEP,
@@ -102,15 +103,13 @@ def cache_factory(cache_class: str):
 
         return NoCache()
     elif cache_class == "PrivateL1":
-        from gem5.components.cachehierarchies\
-            .classic.private_l1_cache_hierarchy import (
+        from gem5.components.cachehierarchies.classic.private_l1_cache_hierarchy import (
             PrivateL1CacheHierarchy,
         )
 
         return PrivateL1CacheHierarchy(l1d_size="32KiB", l1i_size="32KiB")
     elif cache_class == "PrivateL1PrivateL2":
-        from gem5.components.cachehierarchies\
-            .classic.private_l1_private_l2_cache_hierarchy import (
+        from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
             PrivateL1PrivateL2CacheHierarchy,
         )
 
@@ -118,8 +117,7 @@ def cache_factory(cache_class: str):
             l1d_size="32KiB", l1i_size="32KiB", l2_size="256KiB"
         )
     elif cache_class == "MESITwoLevel":
-        from gem5.components.cachehierarchies\
-            .ruby.mesi_two_level_cache_hierarchy import (
+        from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
             MESITwoLevelCacheHierarchy,
         )
 
@@ -166,9 +164,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "mem_module",
-    type=str,
-    help="The python module to import for memory.",
+    "mem_module", type=str, help="The python module to import for memory."
 )
 
 parser.add_argument(
@@ -180,7 +176,6 @@ parser.add_argument(
     nargs="*",
     help="The arguments needed to instantiate the memory class.",
 )
-
 
 args = parser.parse_args()
 
@@ -199,13 +194,14 @@ generator = generator_factory(
 # tasks
 motherboard = TestBoard(
     clk_freq="3GHz",
-    processor=generator,  # We pass the traffic generator as the processor.
+    generator=generator,
     memory=memory,
     cache_hierarchy=cache_hierarchy,
 )
 
 root = Root(full_system=False, system=motherboard)
 
+motherboard._pre_instantiate()
 m5.instantiate()
 
 generator.start_traffic()
@@ -214,3 +210,8 @@ exit_event = m5.simulate()
 print(
     "Exiting @ tick {} because {}.".format(m5.curTick(), exit_event.getCause())
 )
+
+simstats = get_simstat(root, prepare_stats=True)
+json_output = Path(m5.options.outdir) / "output.json"
+with open(json_output, "w") as stats_file:
+    simstats.dump(stats_file, indent=2)

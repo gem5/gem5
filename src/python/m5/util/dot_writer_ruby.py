@@ -38,6 +38,7 @@
 import os
 import m5
 from m5.util import warn
+
 try:
     import pydot
 except:
@@ -47,46 +48,58 @@ except:
 def _dot_rgb_to_html(r, g, b):
     return "#%.2x%.2x%.2x" % (r, g, b)
 
+
 def _dot_create_router_node(full_path, label):
-    return pydot.Node( \
-                         full_path, \
-                         shape = "Mrecord", \
-                         label = label, \
-                         style = "\"rounded, filled\"", \
-                         color = "#000000", \
-                         fillcolor = _dot_rgb_to_html(204, 230, 252), \
-                         fontname = "Arial", \
-                         fontsize = "14", \
-                         fontcolor = "#000000" \
-                         )
+    return pydot.Node(
+        full_path,
+        shape="Mrecord",
+        label=label,
+        style='"rounded, filled"',
+        color="#000000",
+        fillcolor=_dot_rgb_to_html(204, 230, 252),
+        fontname="Arial",
+        fontsize="14",
+        fontcolor="#000000",
+    )
+
 
 def _dot_create_ctrl_node(full_path, label):
-    return pydot.Node( \
-                         full_path, \
-                         shape = "Mrecord", \
-                         label = label, \
-                         style = "\"rounded, filled\"", \
-                         color = "#000000", \
-                         fillcolor = _dot_rgb_to_html(229, 188, 208), \
-                         fontname = "Arial", \
-                         fontsize = "14", \
-                         fontcolor = "#000000" \
-                         )
+    return pydot.Node(
+        full_path,
+        shape="Mrecord",
+        label=label,
+        style='"rounded, filled"',
+        color="#000000",
+        fillcolor=_dot_rgb_to_html(229, 188, 208),
+        fontname="Arial",
+        fontsize="14",
+        fontcolor="#000000",
+    )
+
+
+def _dot_create_int_edge(src, dst):
+    return pydot.Edge(src, dst, weight=0.5, color="#042d50", dir="forward")
+
+
+def _dot_create_ext_edge(src, dst):
+    return pydot.Edge(src, dst, weight=1.0, color="#381526", dir="both")
 
 
 def _dot_create(network, callgraph):
     for r in network.routers:
-        callgraph.add_node(_dot_create_router_node(r.path(),
-            'R %d' % r.router_id))
+        callgraph.add_node(
+            _dot_create_router_node(r.path(), "R %d" % r.router_id)
+        )
 
     # One link for each direction but draw one edge only
     connected = dict()
     for link in network.int_links:
-        if (link.src_node.path() in connected) and \
-           (connected[link.src_node.path()] == link.dst_node.path()):
-           continue
+        if (link.src_node.path() in connected) and (
+            connected[link.src_node.path()] == link.dst_node.path()
+        ):
+            continue
         callgraph.add_edge(
-            pydot.Edge(link.src_node.path(), link.dst_node.path())
+            _dot_create_int_edge(link.src_node.path(), link.dst_node.path())
         )
         connected[link.dst_node.path()] = link.src_node.path()
 
@@ -95,45 +108,45 @@ def _dot_create(network, callgraph):
     rpaths = [link.ext_node.path()[::-1] for link in network.ext_links]
     preffix = os.path.commonprefix(paths)
     suffix = os.path.commonprefix(rpaths)[::-1]
+
     def strip_right(text, suffix):
         if not text.endswith(suffix):
             return text
-        return text[:len(text)-len(suffix)]
+        return text[: len(text) - len(suffix)]
+
     def strip_left(text, prefix):
         if not text.startswith(prefix):
             return text
-        return text[len(prefix):]
-
+        return text[len(prefix) :]
 
     for link in network.ext_links:
         ctrl = link.ext_node
         label = strip_right(strip_left(ctrl.path(), preffix), suffix)
-        if hasattr(ctrl, '_node_type'):
-            label += ' (' + ctrl._node_type + ')'
-        callgraph.add_node(
-            _dot_create_ctrl_node(ctrl.path(), label)
-        )
+        if hasattr(ctrl, "_node_type"):
+            label += " (" + ctrl._node_type + ")"
+        callgraph.add_node(_dot_create_ctrl_node(ctrl.path(), label))
 
         callgraph.add_edge(
-            pydot.Edge(link.ext_node.path(), link.int_node.path())
+            _dot_create_ext_edge(link.ext_node.path(), link.int_node.path())
         )
 
+
 def _do_dot(network, outdir, dotFilename):
-    callgraph = pydot.Dot(graph_type='graph', rankdir='LR')
+    callgraph = pydot.Dot(graph_type="graph", rankdir="LR")
     _dot_create(network, callgraph)
     dot_filename = os.path.join(outdir, dotFilename)
     callgraph.write(dot_filename)
     try:
         # dot crashes if the figure is extremely wide.
         # So avoid terminating simulation unnecessarily
-        callgraph.write_svg(dot_filename + ".svg", prog='neato')
-        callgraph.write_pdf(dot_filename + ".pdf", prog='neato')
+        callgraph.write_svg(dot_filename + ".svg", prog="neato")
+        callgraph.write_pdf(dot_filename + ".pdf", prog="neato")
     except:
         warn("failed to generate dot output from %s", dot_filename)
 
 
 def do_ruby_dot(root, outdir, dotFilename):
-    RubyNetwork = getattr(m5.objects, 'RubyNetwork', None)
+    RubyNetwork = getattr(m5.objects, "RubyNetwork", None)
 
     if not pydot or not RubyNetwork:
         return
@@ -144,6 +157,7 @@ def do_ruby_dot(root, outdir, dotFilename):
 
     for network in filter(is_ruby_network, root.descendants()):
         # We assume each ruby system has a single network.
-        rubydotFilename = dotFilename.replace(".dot",
-                                "." + network.get_parent().path() + ".dot")
+        rubydotFilename = dotFilename.replace(
+            ".dot", "." + network.get_parent().path() + ".dot"
+        )
         _do_dot(network, outdir, rubydotFilename)

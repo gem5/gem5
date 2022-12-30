@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop BOUND_R_M {
     ld t1, seg, sib, disp, dataSize="env.dataSize * 2"
     srli t2, t1, "env.dataSize * 8"
@@ -46,4 +46,4 @@ def macroop BOUND_R_M {
 def macroop BOUND_R_P {
     fault "std::make_shared<UnimpInstFault>()"
 };
-'''
+"""

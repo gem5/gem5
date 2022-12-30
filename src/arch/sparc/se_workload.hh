@@ -35,6 +35,7 @@
 #include "arch/sparc/remote_gdb.hh"
 #include "base/loader/object_file.hh"
 #include "cpu/thread_context.hh"
+#include "params/SparcSEWorkload.hh"
 #include "sim/se_workload.hh"
 #include "sim/syscall_abi.hh"
 
@@ -47,13 +48,15 @@ namespace SparcISA
 class SEWorkload : public gem5::SEWorkload
 {
   public:
+    PARAMS(SparcSEWorkload);
     using gem5::SEWorkload::SEWorkload;
 
     void
     setSystem(System *sys) override
     {
         gem5::SEWorkload::setSystem(sys);
-        gdb = BaseRemoteGDB::build<RemoteGDB>(system);
+        gdb = BaseRemoteGDB::build<RemoteGDB>(
+                params().remote_gdb_port, system);
     }
 
     virtual void handleTrap(ThreadContext *tc, int trapNum);
@@ -63,7 +66,7 @@ class SEWorkload : public gem5::SEWorkload
 
     struct BaseSyscallABI
     {
-        static const std::vector<int> ArgumentRegs;
+        static const std::vector<RegId> ArgumentRegs;
     };
 
     struct SyscallABI32 : public GenericSyscallABI32,
@@ -94,7 +97,7 @@ struct Result<ABI, SyscallReturn,
         // and put the return value itself in the standard return value reg.
         SparcISA::PSTATE pstate =
             tc->readMiscRegNoEffect(SparcISA::MISCREG_PSTATE);
-        SparcISA::CCR ccr = tc->readIntReg(SparcISA::INTREG_CCR);
+        SparcISA::CCR ccr = tc->getReg(SparcISA::int_reg::Ccr);
         RegVal val;
         if (ret.successful()) {
             ccr.xcc.c = ccr.icc.c = 0;
@@ -103,12 +106,12 @@ struct Result<ABI, SyscallReturn,
             ccr.xcc.c = ccr.icc.c = 1;
             val = ret.errnoValue();
         }
-        tc->setIntReg(SparcISA::INTREG_CCR, ccr);
+        tc->setReg(SparcISA::int_reg::Ccr, ccr);
         if (pstate.am)
             val = bits(val, 31, 0);
-        tc->setIntReg(SparcISA::ReturnValueReg, val);
+        tc->setReg(SparcISA::ReturnValueReg, val);
         if (ret.count() == 2)
-            tc->setIntReg(SparcISA::SyscallPseudoReturnReg, ret.value2());
+            tc->setReg(SparcISA::SyscallPseudoReturnReg, ret.value2());
     }
 };
 

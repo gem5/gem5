@@ -39,77 +39,108 @@ from m5.params import *
 from m5.proxy import *
 from m5.util.fdthelper import *
 
+
 class MhuDoorbell(Doorbell):
-    type = 'MhuDoorbell'
+    type = "MhuDoorbell"
     abstract = True
     cxx_header = "dev/arm/css/mhu.hh"
-    cxx_class = 'gem5::MhuDoorbell'
+    cxx_class = "gem5::MhuDoorbell"
+
 
 class Scp2ApDoorbell(MhuDoorbell):
-    type = 'Scp2ApDoorbell'
+    type = "Scp2ApDoorbell"
     cxx_header = "dev/arm/css/mhu.hh"
-    cxx_class = 'gem5::Scp2ApDoorbell'
+    cxx_class = "gem5::Scp2ApDoorbell"
 
     interrupt = Param.ArmInterruptPin("Interrupt Pin")
 
+
 class Ap2ScpDoorbell(MhuDoorbell):
-    type = 'Ap2ScpDoorbell'
+    type = "Ap2ScpDoorbell"
     cxx_header = "dev/arm/css/mhu.hh"
-    cxx_class = 'gem5::Ap2ScpDoorbell'
+    cxx_class = "gem5::Ap2ScpDoorbell"
+
 
 # Message Handling Unit
 class MHU(BasicPioDevice):
-    type = 'MHU'
+    type = "MHU"
     cxx_header = "dev/arm/css/mhu.hh"
-    cxx_class = 'gem5::MHU'
+    cxx_class = "gem5::MHU"
     pio_size = Param.Unsigned(0x1000, "MHU pio size")
 
     lowp_scp2ap = Param.Scp2ApDoorbell(
         "Low Priority doorbell channel for communications "
         "from the System Control Processor (SCP) to the "
-        "Application Processor (AP)")
+        "Application Processor (AP)"
+    )
     highp_scp2ap = Param.Scp2ApDoorbell(
         "High Priority doorbell channel for communications "
         "from the System Control Processor (SCP) to the "
-        "Application Processor (AP)")
+        "Application Processor (AP)"
+    )
     sec_scp2ap = Param.Scp2ApDoorbell(
         "Secure doorbell channel for communications "
         "from the System Control Processor (SCP) to the "
-        "Application Processor (AP)")
+        "Application Processor (AP)"
+    )
 
     lowp_ap2scp = Param.Ap2ScpDoorbell(
         "Low Priority doorbell channel for communications "
         "from the Application Processor (AP) to the "
-        "System Control Processor (SCP)")
+        "System Control Processor (SCP)"
+    )
     highp_ap2scp = Param.Ap2ScpDoorbell(
         "High Priority doorbell channel for communications "
         "from the Application Processor (AP) to the "
-        "System Control Processor (SCP)")
+        "System Control Processor (SCP)"
+    )
     sec_ap2scp = Param.Ap2ScpDoorbell(
         "Secure doorbell channel for communications "
         "from the Application Processor (AP) to the "
-        "System Control Processor (SCP)")
+        "System Control Processor (SCP)"
+    )
 
     scp = Param.Scp(Parent.any, "System Control Processor")
 
     def generateDeviceTree(self, state):
         node = FdtNode("mailbox@%x" % int(self.pio_addr))
         node.appendCompatible(["arm,mhu", "arm,primecell"])
-        node.append(FdtPropertyWords("reg",
-            state.addrCells(self.pio_addr) +
-            state.sizeCells(self.pio_size) ))
+        node.append(
+            FdtPropertyWords(
+                "reg",
+                state.addrCells(self.pio_addr)
+                + state.sizeCells(self.pio_size),
+            )
+        )
         node.append(FdtPropertyWords("#mbox-cells", 1))
 
-        node.append(FdtPropertyWords("interrupts", [
-            0, int(self.lowp_scp2ap.interrupt.num) - 32, 1,
-            0, int(self.highp_scp2ap.interrupt.num) - 32, 1,
-            0, int(self.sec_scp2ap.interrupt.num) - 32, 1,
-        ]))
+        node.append(
+            FdtPropertyWords(
+                "interrupts",
+                [
+                    0,
+                    int(self.lowp_scp2ap.interrupt.num) - 32,
+                    1,
+                    0,
+                    int(self.highp_scp2ap.interrupt.num) - 32,
+                    1,
+                    0,
+                    int(self.sec_scp2ap.interrupt.num) - 32,
+                    1,
+                ],
+            )
+        )
 
         realview = self._parent.unproxy(self)
-        node.append(FdtPropertyWords("clocks",
-            [state.phandle(realview.mcc.osc_peripheral),
-            state.phandle(realview.dcc.osc_smb)]))
+        node.append(
+            FdtPropertyWords(
+                "clocks",
+                [
+                    state.phandle(realview.mcc.osc_peripheral),
+                    state.phandle(realview.dcc.osc_smb),
+                ],
+            )
+        )
         node.append(FdtPropertyStrings("clock-names", ["apb_pclk"]))
 
         node.appendPhandle(self)

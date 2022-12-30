@@ -37,7 +37,7 @@
 
 Import('*')
 
-if env['CONF']['TARGET_ISA'] != 'null':
+if not env['CONF']['USE_NULL_ISA']:
     SimObject('SimpleTrace.py', sim_objects=['SimpleTrace'])
     Source('simple_trace.cc')
     DebugFlag('SimpleTrace')

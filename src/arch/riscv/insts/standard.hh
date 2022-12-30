@@ -92,30 +92,11 @@ class CSROp : public RiscvStaticInst
     uint64_t csr;
     uint64_t uimm;
 
-    bool valid = false;
-    RegIndex midx = 0;
-    std::string csrName;
-    uint64_t maskVal = 0;
-
     /// Constructor
     CSROp(const char *mnem, MachInst _machInst, OpClass __opClass)
         : RiscvStaticInst(mnem, _machInst, __opClass),
             csr(FUNCT12), uimm(CSRIMM)
     {
-        auto csr_data_it = CSRData.find(csr);
-        if (csr_data_it == CSRData.end()) {
-            valid = false;
-        } else {
-            valid = true;
-            midx = csr_data_it->second.physIndex;
-            csrName = csr_data_it->second.name;
-            auto mask_it = CSRMasks.find(csr);
-            if (mask_it == CSRMasks.end())
-                maskVal = mask(64);
-            else
-                maskVal = mask_it->second;
-        }
-
         if (csr == CSR_SATP) {
             flags[IsSquashAfter] = true;
         }

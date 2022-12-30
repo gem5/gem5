@@ -28,12 +28,13 @@ from m5.params import *
 
 from m5.objects.ClockedObject import ClockedObject
 
+
 class BasicRouter(ClockedObject):
-    type = 'BasicRouter'
+    type = "BasicRouter"
     cxx_header = "mem/ruby/network/BasicRouter.hh"
-    cxx_class = 'gem5::ruby::BasicRouter'
+    cxx_class = "gem5::ruby::BasicRouter"
 
     router_id = Param.Int("ID in relation to other routers")
 
     # only used by garnet
-    latency   = Param.Cycles(1, "number of cycles inside router")
+    latency = Param.Cycles(1, "number of cycles inside router")

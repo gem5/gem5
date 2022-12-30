@@ -45,6 +45,8 @@
 
 #include "arch/arm/insts/static_inst.hh"
 #include "arch/arm/mmu.hh"
+#include "arch/arm/regs/int.hh"
+#include "arch/arm/regs/vec.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "mem/packet.hh"
@@ -62,7 +64,7 @@ namespace gem5
 
 using namespace ArmISA;
 
-namespace Trace {
+namespace trace {
 
 // TARMAC Parser static variables
 const int TarmacParserRecord::MaxLineLength;
@@ -743,7 +745,7 @@ TarmacParserRecord::MiscRegMap TarmacParserRecord::miscRegMap = {
 void
 TarmacParserRecord::TarmacParserRecordEvent::process()
 {
-    std::ostream &outs = Trace::output();
+    std::ostream &outs = trace::output();
 
     std::list<ParserRegEntry>::iterator it = destRegRecords.begin(),
                                         end = destRegRecords.end();
@@ -755,31 +757,28 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
         switch (it->type) {
           case REG_R:
           case REG_X:
-            values.push_back(thread->getReg(RegId(IntRegClass, it->index)));
+            values.push_back(thread->getReg(intRegClass[it->index]));
             break;
           case REG_S:
             if (instRecord.isetstate == ISET_A64) {
                 ArmISA::VecRegContainer vc;
-                thread->getReg(RegId(VecRegClass, it->index), &vc);
+                thread->getReg(vecRegClass[it->index], &vc);
                 auto vv = vc.as<uint32_t>();
                 values.push_back(vv[0]);
             } else {
-                const VecElem elem = thread->getReg(
-                    RegId(VecElemClass, it->index));
+                const VecElem elem = thread->getReg(vecElemClass[it->index]);
                 values.push_back(elem);
             }
             break;
           case REG_D:
             if (instRecord.isetstate == ISET_A64) {
                 ArmISA::VecRegContainer vc;
-                thread->getReg(RegId(VecRegClass, it->index), &vc);
+                thread->getReg(vecRegClass[it->index], &vc);
                 auto vv = vc.as<uint64_t>();
                 values.push_back(vv[0]);
             } else {
-                const VecElem w0 = thread->getReg(
-                    RegId(VecElemClass, it->index));
-                const VecElem w1 = thread->getReg(
-                    RegId(VecElemClass, it->index + 1));
+                const VecElem w0 = thread->getReg(vecElemClass[it->index]);
+                const VecElem w1 = thread->getReg(vecElemClass[it->index + 1]);
 
                 values.push_back((uint64_t)(w1) << 32 | w0);
             }
@@ -787,7 +786,7 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
           case REG_P:
             {
                 ArmISA::VecPredRegContainer pc;
-                thread->getReg(RegId(VecPredRegClass, it->index), &pc);
+                thread->getReg(vecPredRegClass[it->index], &pc);
                 auto pv = pc.as<uint8_t>();
                 uint64_t p = 0;
                 for (int i = maxVectorLength * 8; i > 0; ) {
@@ -799,19 +798,15 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
           case REG_Q:
             if (instRecord.isetstate == ISET_A64) {
                 ArmISA::VecRegContainer vc;
-                thread->getReg(RegId(VecRegClass, it->index), &vc);
+                thread->getReg(vecRegClass[it->index], &vc);
                 auto vv = vc.as<uint64_t>();
                 values.push_back(vv[0]);
                 values.push_back(vv[1]);
             } else {
-                const VecElem w0 = thread->getReg(
-                    RegId(VecElemClass, it->index));
-                const VecElem w1 = thread->getReg(
-                    RegId(VecElemClass, it->index + 1));
-                const VecElem w2 = thread->getReg(
-                    RegId(VecElemClass, it->index + 2));
-                const VecElem w3 = thread->getReg(
-                    RegId(VecElemClass, it->index + 3));
+                const VecElem w0 = thread->getReg(vecElemClass[it->index]);
+                const VecElem w1 = thread->getReg(vecElemClass[it->index + 1]);
+                const VecElem w2 = thread->getReg(vecElemClass[it->index + 2]);
+                const VecElem w3 = thread->getReg(vecElemClass[it->index + 3]);
 
                 values.push_back((uint64_t)(w1) << 32 | w0);
                 values.push_back((uint64_t)(w3) << 32 | w2);
@@ -821,7 +816,7 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
             {
                 int8_t i = maxVectorLength;
                 ArmISA::VecRegContainer vc;
-                thread->getReg(RegId(VecRegClass, it->index), &vc);
+                thread->getReg(vecRegClass[it->index], &vc);
                 auto vv = vc.as<uint64_t>();
                 while (i > 0) {
                     values.push_back(vv[--i]);
@@ -939,7 +934,7 @@ void
 TarmacParserRecord::printMismatchHeader(const StaticInstPtr staticInst,
                                         const PCStateBase &pc)
 {
-    std::ostream &outs = Trace::output();
+    std::ostream &outs = trace::output();
     outs << "\nMismatch between gem5 and TARMAC trace @ " << std::dec
          << curTick() << " ticks\n"
          << "[seq_num: " << std::dec << instRecord.seq_num
@@ -968,7 +963,7 @@ TarmacParserRecord::TarmacParserRecord(Tick _when, ThreadContext *_thread,
 void
 TarmacParserRecord::dump()
 {
-    std::ostream &outs = Trace::output();
+    std::ostream &outs = trace::output();
 
     uint64_t written_data = 0;
     unsigned mem_flags = 3 | ArmISA::MMU::AllowUnaligned;
@@ -1300,8 +1295,11 @@ TarmacParserRecord::readMemNoEffect(Addr addr, uint8_t *data, unsigned size,
             return false;
         // the translating proxy will perform the virtual to physical
         // translation again
-        (FullSystem ? TranslatingPortProxy(thread) :
-         SETranslatingPortProxy(thread)).readBlob(addr, data, size);
+        TranslatingPortProxy fs_proxy(thread);
+        SETranslatingPortProxy se_proxy(thread);
+        PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
+
+        virt_proxy.readBlob(addr, data, size);
     } else {
         return false;
     }
@@ -1359,5 +1357,5 @@ TarmacParserRecord::iSetStateToStr(ISetState isetstate) const
     }
 }
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5

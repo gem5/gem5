@@ -37,7 +37,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor.
     %(class_name)s(ExtMachInst machInst);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -54,8 +54,8 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor.
     %(class_name)s(ExtMachInst machInst);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
-    GEM5_NO_INLINE Fault doFpOp(ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+    GEM5_NO_INLINE Fault doFpOp(ExecContext *, trace::InstRecord *) const;
 };
 }};
 
@@ -72,7 +72,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor.
     %(class_name)s(const char *mnemonic, ExtMachInst machInst);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -100,7 +100,7 @@ def template BasicConstructorWithMnemonic {{
 def template BasicExecute {{
 Fault
 %(class_name)s::execute(ExecContext *xc,
-        Trace::InstRecord *traceData) const
+        trace::InstRecord *traceData) const
 {
     Fault fault = NoFault;
 
@@ -119,7 +119,7 @@ Fault
 def template FpExecute {{
 Fault
 %(class_name)s::execute(ExecContext *xc,
-        Trace::InstRecord *traceData) const
+        trace::InstRecord *traceData) const
 {
     Fault fault = NoFault;
 
@@ -137,7 +137,7 @@ Fault
 
 def template DoFpOpExecute {{
 Fault
-%(class_name)s::doFpOp(ExecContext *xc, Trace::InstRecord *traceData) const
+%(class_name)s::doFpOp(ExecContext *xc, trace::InstRecord *traceData) const
 {
     Fault fault = NoFault;
     %(op_decl)s;

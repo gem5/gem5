@@ -46,17 +46,18 @@ import importer
 from code_formatter import code_formatter
 
 parser = argparse.ArgumentParser()
-parser.add_argument('modpath', help='module the simobject belongs to')
-parser.add_argument('param_cc', help='parameter cc file to generate')
-parser.add_argument('use_python',
-        help='whether python is enabled in gem5 (True or False)')
+parser.add_argument("modpath", help="module the simobject belongs to")
+parser.add_argument("param_cc", help="parameter cc file to generate")
+parser.add_argument(
+    "use_python", help="whether python is enabled in gem5 (True or False)"
+)
 
 args = parser.parse_args()
 
 use_python = args.use_python.lower()
-if use_python == 'true':
+if use_python == "true":
     use_python = True
-elif use_python == 'false':
+elif use_python == "false":
     use_python = False
 else:
     print(f'Unrecognized "use_python" value {use_python}', file=sys.stderr)
@@ -64,7 +65,7 @@ else:
 
 basename = os.path.basename(args.param_cc)
 no_ext = os.path.splitext(basename)[0]
-sim_object_name = '_'.join(no_ext.split('_')[1:])
+sim_object_name = "_".join(no_ext.split("_")[1:])
 
 importer.install()
 module = importlib.import_module(args.modpath)
@@ -80,14 +81,16 @@ py_class_name = sim_object.pybind_class
 # the object itself, not including inherited params (which
 # will also be inherited from the base class's param struct
 # here). Sort the params based on their key
-params = list(map(lambda k_v: k_v[1],
-                  sorted(sim_object._params.local.items())))
+params = list(
+    map(lambda k_v: k_v[1], sorted(sim_object._params.local.items()))
+)
 ports = sim_object._ports.local
 
 # only include pybind if python is enabled in the build
 if use_python:
 
-    code('''#include "pybind11/pybind11.h"
+    code(
+        """#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
 #include <type_traits>
@@ -99,9 +102,11 @@ if use_python:
 
 #include "${{sim_object.cxx_header}}"
 
-''')
+"""
+    )
 else:
-    code('''
+    code(
+        """
 #include <type_traits>
 
 #include "base/compiler.hh"
@@ -109,13 +114,15 @@ else:
 
 #include "${{sim_object.cxx_header}}"
 
-''')
+"""
+    )
 # only include the python params code if python is enabled.
 if use_python:
     for param in params:
         param.pybind_predecls(code)
 
-    code('''namespace py = pybind11;
+    code(
+        """namespace py = pybind11;
 
 namespace gem5
 {
@@ -124,39 +131,48 @@ static void
 module_init(py::module_ &m_internal)
 {
 py::module_ m = m_internal.def_submodule("param_${sim_object}");
-''')
+"""
+    )
     code.indent()
     if sim_object._base:
-        code('py::class_<${sim_object}Params, ' \
-             '${{sim_object._base.type}}Params, ' \
-             'std::unique_ptr<${{sim_object}}Params, py::nodelete>>(' \
-             'm, "${sim_object}Params")')
+        code(
+            "py::class_<${sim_object}Params, "
+            "${{sim_object._base.type}}Params, "
+            "std::unique_ptr<${{sim_object}}Params, py::nodelete>>("
+            'm, "${sim_object}Params")'
+        )
     else:
-        code('py::class_<${sim_object}Params, ' \
-            'std::unique_ptr<${sim_object}Params, py::nodelete>>(' \
-            'm, "${sim_object}Params")')
+        code(
+            "py::class_<${sim_object}Params, "
+            "std::unique_ptr<${sim_object}Params, py::nodelete>>("
+            'm, "${sim_object}Params")'
+        )
 
     code.indent()
-    if not hasattr(sim_object, 'abstract') or not sim_object.abstract:
-        code('.def(py::init<>())')
+    if not hasattr(sim_object, "abstract") or not sim_object.abstract:
+        code(".def(py::init<>())")
         code('.def("create", &${sim_object}Params::create)')
 
-    param_exports = sim_object.cxx_param_exports + [
-        PyBindProperty(k)
-        for k, v in sorted(sim_object._params.local.items())
-    ] + [
-        PyBindProperty(f"port_{port.name}_connection_count")
-        for port in ports.values()
-    ]
+    param_exports = (
+        sim_object.cxx_param_exports
+        + [
+            PyBindProperty(k)
+            for k, v in sorted(sim_object._params.local.items())
+        ]
+        + [
+            PyBindProperty(f"port_{port.name}_connection_count")
+            for port in ports.values()
+        ]
+    )
     for exp in param_exports:
         exp.export(code, f"{sim_object}Params")
 
-    code(';')
+    code(";")
     code()
     code.dedent()
 
     bases = []
-    if 'cxx_base' in sim_object._value_dict:
+    if "cxx_base" in sim_object._value_dict:
         # If the c++ base class implied by python inheritance was
         # overridden, use that value.
         if sim_object.cxx_base:
@@ -170,32 +186,39 @@ py::module_ m = m_internal.def_submodule("param_${sim_object}");
 
     if bases:
         base_str = ", ".join(bases)
-        code('py::class_<${{sim_object.cxx_class}}, ${base_str}, ' \
-            'std::unique_ptr<${{sim_object.cxx_class}}, py::nodelete>>(' \
-            'm, "${py_class_name}")')
+        code(
+            "py::class_<${{sim_object.cxx_class}}, ${base_str}, "
+            "std::unique_ptr<${{sim_object.cxx_class}}, py::nodelete>>("
+            'm, "${py_class_name}")'
+        )
     else:
-        code('py::class_<${{sim_object.cxx_class}}, ' \
-            'std::unique_ptr<${{sim_object.cxx_class}}, py::nodelete>>(' \
-            'm, "${py_class_name}")')
+        code(
+            "py::class_<${{sim_object.cxx_class}}, "
+            "std::unique_ptr<${{sim_object.cxx_class}}, py::nodelete>>("
+            'm, "${py_class_name}")'
+        )
     code.indent()
     for exp in sim_object.cxx_exports:
         exp.export(code, sim_object.cxx_class)
-    code(';')
+    code(";")
     code.dedent()
     code()
     code.dedent()
-    code('}')
+    code("}")
     code()
-    code('static EmbeddedPyBind '
-         'embed_obj("${0}", module_init, "${1}");',
-        sim_object, sim_object._base.type if sim_object._base else "")
+    code(
+        "static EmbeddedPyBind " 'embed_obj("${0}", module_init, "${1}");',
+        sim_object,
+        sim_object._base.type if sim_object._base else "",
+    )
     code()
-    code('} // namespace gem5')
+    code("} // namespace gem5")
 
 # include the create() methods whether or not python is enabled.
-if not hasattr(sim_object, 'abstract') or not sim_object.abstract:
-    if 'type' in sim_object.__dict__:
-        code('''
+if not hasattr(sim_object, "abstract") or not sim_object.abstract:
+    if "type" in sim_object.__dict__:
+        code(
+            """
 namespace gem5
 {
 
@@ -268,6 +291,7 @@ Dummy${sim_object}Shunt<${{sim_object.cxx_class}}>::Params::create() const
 }
 
 } // namespace gem5
-''')
+"""
+        )
 
 code.write(args.param_cc)

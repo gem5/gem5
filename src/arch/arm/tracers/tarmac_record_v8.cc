@@ -48,7 +48,7 @@ namespace gem5
 
 using namespace ArmISA;
 
-namespace Trace {
+namespace trace {
 
 TarmacTracerRecordV8::TraceInstEntryV8::TraceInstEntryV8(
     const TarmacContext& tarmCtx,
@@ -90,22 +90,19 @@ TarmacTracerRecordV8::TraceRegEntryV8::TraceRegEntryV8(
 }
 
 void
-TarmacTracerRecordV8::TraceRegEntryV8::updateInt(
-    const TarmacContext& tarmCtx,
-    RegIndex regRelIdx
-)
+TarmacTracerRecordV8::TraceRegEntryV8::updateInt(const TarmacContext& tarmCtx)
 {
     // Do not trace pseudo register accesses: invalid
     // register entry.
-    if (regRelIdx > int_reg::NumArchRegs) {
+    if (regId.index() > int_reg::NumArchRegs) {
         regValid = false;
         return;
     }
 
-    TraceRegEntry::updateInt(tarmCtx, regRelIdx);
+    TraceRegEntry::updateInt(tarmCtx);
 
-    if ((regRelIdx != int_reg::Pc) || (regRelIdx != StackPointerReg) ||
-        (regRelIdx != FramePointerReg) || (regRelIdx != ReturnAddressReg)) {
+    if ((regId != int_reg::Pc) || (regId != StackPointerReg) ||
+        (regId != FramePointerReg) || (regId != ReturnAddressReg)) {
 
         const auto* arm_inst = static_cast<const ArmStaticInst*>(
             tarmCtx.staticInst.get()
@@ -113,33 +110,27 @@ TarmacTracerRecordV8::TraceRegEntryV8::updateInt(
 
         regWidth = (arm_inst->getIntWidth());
         if (regWidth == 32) {
-            regName = "W" + std::to_string(regRelIdx);
+            regName = "W" + std::to_string(regId.index());
         } else {
-            regName = "X" + std::to_string(regRelIdx);
+            regName = "X" + std::to_string(regId.index());
         }
     }
 }
 
 void
-TarmacTracerRecordV8::TraceRegEntryV8::updateMisc(
-    const TarmacContext& tarmCtx,
-    RegIndex regRelIdx
-)
+TarmacTracerRecordV8::TraceRegEntryV8::updateMisc(const TarmacContext& tarmCtx)
 {
-    TraceRegEntry::updateMisc(tarmCtx, regRelIdx);
+    TraceRegEntry::updateMisc(tarmCtx);
     // System registers are 32bit wide
     regWidth = 32;
 }
 
 void
-TarmacTracerRecordV8::TraceRegEntryV8::updateVec(
-    const TarmacContext& tarmCtx,
-    RegIndex regRelIdx
-)
+TarmacTracerRecordV8::TraceRegEntryV8::updateVec(const TarmacContext& tarmCtx)
 {
     auto thread = tarmCtx.thread;
     ArmISA::VecRegContainer vec_container;
-    thread->getReg(RegId(regClass, regRelIdx), &vec_container);
+    thread->getReg(regId, &vec_container);
     auto vv = vec_container.as<VecElem>();
 
     regWidth = ArmStaticInst::getCurSveVecLenInBits(thread);
@@ -153,18 +144,15 @@ TarmacTracerRecordV8::TraceRegEntryV8::updateVec(
     }
 
     regValid = true;
-    regName = "Z" + std::to_string(regRelIdx);
+    regName = "Z" + std::to_string(regId.index());
 }
 
 void
-TarmacTracerRecordV8::TraceRegEntryV8::updatePred(
-    const TarmacContext& tarmCtx,
-    RegIndex regRelIdx
-)
+TarmacTracerRecordV8::TraceRegEntryV8::updatePred(const TarmacContext& tarmCtx)
 {
     auto thread = tarmCtx.thread;
     ArmISA::VecPredRegContainer pred_container;
-    thread->getReg(RegId(regClass, regRelIdx), &pred_container);
+    thread->getReg(regId, &pred_container);
 
     // Predicate registers are always 1/8 the size of related vector
     // registers. (getCurSveVecLenInBits(thread) / 8)
@@ -181,7 +169,7 @@ TarmacTracerRecordV8::TraceRegEntryV8::updatePred(
     }
 
     regValid = true;
-    regName = "P" + std::to_string(regRelIdx);
+    regName = "P" + std::to_string(regId.index());
 }
 
 void
@@ -325,5 +313,5 @@ TarmacTracerRecordV8::TraceRegEntryV8::formatReg() const
     }
 }
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5

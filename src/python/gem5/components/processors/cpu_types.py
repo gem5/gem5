@@ -24,9 +24,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from ..boards.mem_mode import MemMode
+
 from enum import Enum
 from typing import Set
 import os
+
 
 class CPUTypes(Enum):
     ATOMIC = "atomic"
@@ -35,11 +38,13 @@ class CPUTypes(Enum):
     TIMING = "timing"
     MINOR = "minor"
 
-def get_cpu_types_str_set() -> Set[CPUTypes]:
+
+def get_cpu_types_str_set() -> Set[str]:
     """
     Returns a set of all the CPU types as strings.
     """
     return {cpu_type.value for cpu_type in CPUTypes}
+
 
 def get_cpu_type_from_str(input: str) -> CPUTypes:
     """
@@ -57,7 +62,7 @@ def get_cpu_type_from_str(input: str) -> CPUTypes:
         if input.lower() == cpu_type.value:
             return cpu_type
 
-    valid_cpu_types_list_str =str()
+    valid_cpu_types_list_str = str()
     for cpu_type_str in get_cpu_types_str_set():
         valid_cpu_types_list_str += f"{os.linesep}{cpu_type_str}"
 
@@ -65,3 +70,21 @@ def get_cpu_type_from_str(input: str) -> CPUTypes:
         f"CPU type '{input}' does not correspond to a known CPU type. "
         f"Known CPU Types:{valid_cpu_types_list_str}"
     )
+
+
+def get_mem_mode(input: CPUTypes) -> MemMode:
+    """
+    Returns the correct memory mode to be set for a given CPUType.
+
+    :param input: The CPUType to check.
+    """
+
+    cpu_mem_mode_map = {
+        CPUTypes.TIMING: MemMode.TIMING,
+        CPUTypes.O3: MemMode.TIMING,
+        CPUTypes.MINOR: MemMode.TIMING,
+        CPUTypes.KVM: MemMode.ATOMIC_NONCACHING,
+        CPUTypes.ATOMIC: MemMode.ATOMIC,
+    }
+
+    return cpu_mem_mode_map[input]

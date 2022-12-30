@@ -96,8 +96,11 @@ KvmKernelGic::setIntState(unsigned type, unsigned vcpu, unsigned irq,
 
     static const bool vcpu2_enabled = vm.kvm->capIRQLineLayout2();
     uint32_t kvm_vcpu = (vcpu_index << KVM_ARM_IRQ_VCPU_SHIFT);
+
+#if defined(KVM_ARM_IRQ_VCPU2_SHIFT)
     if (vcpu2_enabled)
         kvm_vcpu |= vcpu2_index << KVM_ARM_IRQ_VCPU2_SHIFT;
+#endif
 
     panic_if((!vcpu2_enabled && vcpu2_index) || kvm_vcpu > 0xffff,
               "VCPU out of range");

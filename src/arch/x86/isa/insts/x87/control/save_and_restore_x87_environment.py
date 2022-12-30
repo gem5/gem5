@@ -88,22 +88,32 @@ fnstenvTemplate = """
     wrval fcw, t2
 """
 
-microcode = '''
+microcode = (
+    """
 def macroop FLDENV_M {
-''' + fldenvTemplate % { "mode" : "sib" } + '''
+"""
+    + fldenvTemplate % {"mode": "sib"}
+    + """
 };
 
 def macroop FLDENV_P {
     rdip t7
-''' + fldenvTemplate % { "mode" : "riprel" } + '''
+"""
+    + fldenvTemplate % {"mode": "riprel"}
+    + """
 };
 
 def macroop FNSTENV_M {
-''' + fnstenvTemplate % { "mode" : "sib" } + '''
+"""
+    + fnstenvTemplate % {"mode": "sib"}
+    + """
 };
 
 def macroop FNSTENV_P {
     rdip t7
-''' + fnstenvTemplate % { "mode" : "riprel" } + '''
+"""
+    + fnstenvTemplate % {"mode": "riprel"}
+    + """
 };
-'''
+"""
+)

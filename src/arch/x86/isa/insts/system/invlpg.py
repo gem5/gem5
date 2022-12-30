@@ -36,7 +36,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop INVLPG_M {
     .serialize_after
     tia seg, sib, disp
@@ -47,4 +47,4 @@ def macroop INVLPG_P {
     rdip t7
     tia seg, riprel, disp
 };
-'''
+"""

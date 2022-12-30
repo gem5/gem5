@@ -84,4 +84,3 @@ class A9SCU : public BasicPioDevice
 } // namespace gem5
 
 #endif // __DEV_ARM_A9SCU_HH__
-

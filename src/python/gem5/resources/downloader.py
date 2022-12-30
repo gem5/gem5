@@ -39,7 +39,7 @@ from pathlib import Path
 import tarfile
 from tempfile import gettempdir
 from urllib.error import HTTPError
-from typing import List, Dict
+from typing import List, Dict, Set, Optional
 
 from .md5_utils import md5_file, md5_dir
 
@@ -50,14 +50,17 @@ This Python module contains functions used to download, list, and obtain
 information about resources from resources.gem5.org.
 """
 
+
 def _resources_json_version_required() -> str:
     """
     Specifies the version of resources.json to obtain.
     """
-    return "22.0"
+    return "22.1"
+
 
 def _get_resources_json_uri() -> str:
     return "https://resources.gem5.org/resources.json"
+
 
 def _url_validator(url):
     try:
@@ -66,8 +69,9 @@ def _url_validator(url):
     except:
         return False
 
+
 def _get_resources_json_at_path(path: str, use_caching: bool = True) -> Dict:
-    '''
+    """
     Returns a resource JSON, in the form of a Python Dict. The location
     of the JSON must be specified.
 
@@ -78,7 +82,7 @@ def _get_resources_json_at_path(path: str, use_caching: bool = True) -> Dict:
     :param use_caching: True if a cached file is to be used (up to an hour),
     otherwise the file will be retrieved from the URL regardless. True by
     default. Only valid in cases where a URL is passed.
-    '''
+    """
 
     # If a local valid path is passed, just load it.
     if Path(path).is_file():
@@ -116,9 +120,12 @@ def _get_resources_json_at_path(path: str, use_caching: bool = True) -> Dict:
         # time of the file. This is the most portable solution as other ideas,
         # like "file creation time", are  not always the same concept between
         # operating systems.
-        if not use_caching or not os.path.exists(download_path) or \
-            (time.time() - os.path.getmtime(download_path)) > 3600:
-                    _download(path, download_path)
+        if (
+            not use_caching
+            or not os.path.exists(download_path)
+            or (time.time() - os.path.getmtime(download_path)) > 3600
+        ):
+            _download(path, download_path)
 
     with open(download_path) as f:
         file_contents = f.read()
@@ -134,6 +141,7 @@ def _get_resources_json_at_path(path: str, use_caching: bool = True) -> Dict:
 
     return to_return
 
+
 def _get_resources_json() -> Dict:
     """
     Gets the Resources JSON.
@@ -142,7 +150,7 @@ def _get_resources_json() -> Dict:
     """
 
     path = os.getenv("GEM5_RESOURCE_JSON", _get_resources_json_uri())
-    to_return = _get_resources_json_at_path(path = path)
+    to_return = _get_resources_json_at_path(path=path)
 
     # If the current version pulled is not correct, look up the
     # "previous-versions" field to find the correct one.
@@ -150,16 +158,17 @@ def _get_resources_json() -> Dict:
     if to_return["version"] != version:
         if version in to_return["previous-versions"].keys():
             to_return = _get_resources_json_at_path(
-                path = to_return["previous-versions"][version]
+                path=to_return["previous-versions"][version]
             )
         else:
             # This should never happen, but we thrown an exception to explain
             # that we can't find the version.
             raise Exception(
                 f"Version '{version}' of resources.json cannot be found."
-                )
+            )
 
     return to_return
+
 
 def _get_url_base() -> str:
     """
@@ -173,20 +182,27 @@ def _get_url_base() -> str:
     return ""
 
 
-def _get_resources(resources_group: Dict) -> Dict[str, Dict]:
+def _get_resources(
+    valid_types: Set[str], resources_group: Optional[Dict] = None
+) -> Dict[str, Dict]:
     """
-    A recursive function to get all the resources.
+    A recursive function to get all the workload/resource of the specified type
+    in the resources.json file.
 
-    :returns: A dictionary of resource names to the resource JSON objects.
+    :param valid_types: The type to return (i.e., "resource" or "workload).
+    :param resource_group: Used for recursion: The current resource group being
+    iterated through.
+
+    :returns: A dictionary of artifact names to the resource JSON objects.
     """
+
+    if resources_group is None:
+        resources_group = _get_resources_json()["resources"]
 
     to_return = {}
     for resource in resources_group:
-        # 'artifact' is the old naming, we keep it here for
-        # backwards compatibility, but it can be removed with time:
-        # https://gem5-review.googlesource.com/c/public/gem5-resources/+/51169.
-        if resource["type"] == "artifact" or resource["type"] == "resource":
-            # If the type is "resource" then we add it directly to the map
+        if resource["type"] in valid_types:
+            # If the type is valid then we add it directly to the map
             # after a check that the name is unique.
             if resource["name"] in to_return.keys():
                 raise Exception(
@@ -198,7 +214,9 @@ def _get_resources(resources_group: Dict) -> Dict[str, Dict]:
         elif resource["type"] == "group":
             # If it's a group we get recursive. We then check to see if there
             # are any duplication of keys.
-            new_map = _get_resources(resource["contents"])
+            new_map = _get_resources(
+                valid_types=valid_types, resources_group=resource["contents"]
+            )
             intersection = set(new_map.keys()).intersection(to_return.keys())
             if len(intersection) > 0:
                 # Note: if this error is received it's likely an error with
@@ -210,18 +228,11 @@ def _get_resources(resources_group: Dict) -> Dict[str, Dict]:
                     )
                 )
             to_return.update(new_map)
-        else:
-            raise Exception(
-                "Error: Unknown type '{}'.".format(resource["type"])
-            )
 
     return to_return
 
-def _download(
-    url: str,
-    download_to: str,
-    max_attempts: int = 6,
-) -> None:
+
+def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
     """
     Downloads a file.
 
@@ -240,7 +251,6 @@ def _download(
     # TODO: This whole setup will only work for single files we can get via
     # wget. We also need to support git clones going forward.
 
-
     attempt = 0
     while True:
         # The loop will be broken on a successful download, via a `return`, or
@@ -248,7 +258,33 @@ def _download(
         # number of download attempts has been reached or if a HTTP status code
         # other than 408, 429, or 5xx is received.
         try:
-            urllib.request.urlretrieve(url, download_to)
+            # check to see if user requests a proxy connection
+            use_proxy = os.getenv("GEM5_USE_PROXY")
+            if use_proxy:
+                # If the "use_proxy" variable is specified we setup a socks5
+                # connection.
+
+                import socks
+                import socket
+                import ssl
+
+                IP_ADDR, host_port = use_proxy.split(":")
+                PORT = int(host_port)
+                socks.set_default_proxy(socks.SOCKS5, IP_ADDR, PORT)
+                socket.socket = socks.socksocket
+
+                # base SSL context for https connection
+                ctx = ssl.create_default_context()
+                ctx.check_hostname = False
+                ctx.verify_mode = ssl.CERT_NONE
+
+                # get the file as a bytes blob
+                request = urllib.request.Request(url)
+                with urllib.request.urlopen(request, context=ctx) as fr:
+                    with open(download_to, "wb") as fw:
+                        fw.write(fr.read())
+            else:
+                urllib.request.urlretrieve(url, download_to)
             return
         except HTTPError as e:
             # If the error code retrieved is retryable, we retry using a
@@ -263,10 +299,22 @@ def _download(
                         "not be retrieved. HTTP Status Code retrieved: "
                         f"{e.code}"
                     )
-                time.sleep((2 ** attempt) + random.uniform(0, 1))
+                time.sleep((2**attempt) + random.uniform(0, 1))
             else:
                 raise e
-
+        except ValueError as e:
+            raise Exception(
+                "Environment variable GEM5_USE_PROXY is set to "
+                f"'{use_proxy}'. The expected form is "
+                "<host>:<port>'."
+            )
+        except ImportError as e:
+            raise Exception(
+                "An import error has occurred. This is likely due "
+                "the Python SOCKS client module not being "
+                "installed. It can be installed with "
+                "`pip install PySocks`."
+            )
 
 
 def list_resources() -> List[str]:
@@ -275,7 +323,26 @@ def list_resources() -> List[str]:
 
     :returns: A list of resources by name.
     """
-    return _get_resources(_get_resources_json()["resources"]).keys()
+    return _get_resources(valid_types={"resource"}).keys()
+
+
+def get_workload_json_obj(workload_name: str) -> Dict:
+    """
+    Get a JSON object of a specified workload.
+
+    :param workload_name: The name of the workload.
+
+    :raises Exception: An exception is raised if the specified workload does
+    not exit.
+    """
+    workload_map = _get_resources(valid_types={"workload"})
+
+    if workload_name not in workload_map:
+        raise Exception(
+            f"Error: Workload with name {workload_name} does not exist"
+        )
+
+    return workload_map[workload_name]
 
 
 def get_resources_json_obj(resource_name: str) -> Dict:
@@ -289,7 +356,7 @@ def get_resources_json_obj(resource_name: str) -> Dict:
     :raises Exception: An exception is raised if the specified resources does
     not exist.
     """
-    resource_map = _get_resources(_get_resources_json()["resources"])
+    resource_map = _get_resources(valid_types={"resource"})
 
     if resource_name not in resource_map:
         raise Exception(
@@ -377,14 +444,16 @@ def get_resource(
         else:
             raise Exception(
                 "The resource.json entry for '{}' has a value for the "
-                "'is_zipped' field which is neither a string or a boolean."
-                .format(
+                "'is_zipped' field which is neither a string or a boolean.".format(
                     resource_name
                 )
             )
 
-        run_tar_extract = untar and "is_tar_archive" in resource_json and \
-                          resource_json["is_tar_archive"]
+        run_tar_extract = (
+            untar
+            and "is_tar_archive" in resource_json
+            and resource_json["is_tar_archive"]
+        )
 
         tar_extension = ".tar"
         if run_tar_extract:
@@ -397,8 +466,7 @@ def get_resource(
         # TODO: Might be nice to have some kind of download status bar here.
         # TODO: There might be a case where this should be silenced.
         print(
-            "Resource '{}' was not found locally. Downloading to '{}'..."
-            .format(
+            "Resource '{}' was not found locally. Downloading to '{}'...".format(
                 resource_name, download_dest
             )
         )
@@ -416,7 +484,7 @@ def get_resource(
                     resource_name, download_dest
                 )
             )
-            unzip_to = download_dest[:-len(zip_extension)]
+            unzip_to = download_dest[: -len(zip_extension)]
             with gzip.open(download_dest, "rb") as f:
                 with open(unzip_to, "wb") as o:
                     shutil.copyfileobj(f, o)
@@ -431,7 +499,30 @@ def get_resource(
                 f"Unpacking the the resource '{resource_name}' "
                 f"('{download_dest}')"
             )
-            unpack_to = download_dest[:-len(tar_extension)]
+            unpack_to = download_dest[: -len(tar_extension)]
             with tarfile.open(download_dest) as f:
-                f.extractall(unpack_to)
+
+                def is_within_directory(directory, target):
+
+                    abs_directory = os.path.abspath(directory)
+                    abs_target = os.path.abspath(target)
+
+                    prefix = os.path.commonprefix([abs_directory, abs_target])
+
+                    return prefix == abs_directory
+
+                def safe_extract(
+                    tar, path=".", members=None, *, numeric_owner=False
+                ):
+
+                    for member in tar.getmembers():
+                        member_path = os.path.join(path, member.name)
+                        if not is_within_directory(path, member_path):
+                            raise Exception(
+                                "Attempted Path Traversal in Tar File"
+                            )
+
+                    tar.extractall(path, members, numeric_owner=numeric_owner)
+
+                safe_extract(f, unpack_to)
             os.remove(download_dest)

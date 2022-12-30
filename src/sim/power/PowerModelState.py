@@ -38,15 +38,12 @@ from m5.params import *
 
 # Represents a power model for a simobj
 class PowerModelState(SimObject):
-    type = 'PowerModelState'
+    type = "PowerModelState"
     cxx_header = "sim/power/power_model.hh"
-    cxx_class = 'gem5::PowerModelState'
+    cxx_class = "gem5::PowerModelState"
     abstract = True
 
     cxx_exports = [
         PyBindMethod("getDynamicPower"),
         PyBindMethod("getStaticPower"),
     ]
-
-
-

@@ -504,6 +504,27 @@ namespace VegaISA
             }
         }
 
+        template<typename T>
+        void
+        initAtomicAccess(GPUDynInstPtr gpuDynInst, Addr offset)
+        {
+            Wavefront *wf = gpuDynInst->wavefront();
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    Addr vaddr = gpuDynInst->addr[lane] + offset;
+
+                    AtomicOpFunctorPtr amo_op =
+                        gpuDynInst->makeAtomicOpFunctor<T>(
+                        &(reinterpret_cast<T*>(gpuDynInst->a_data))[lane],
+                        &(reinterpret_cast<T*>(gpuDynInst->x_data))[lane]);
+
+                    (reinterpret_cast<T*>(gpuDynInst->d_data))[lane]
+                        = wf->ldsChunk->atomic<T>(vaddr, std::move(amo_op));
+                }
+            }
+        }
+
         void
         calcAddr(GPUDynInstPtr gpuDynInst, ConstVecOperandU32 &addr)
         {

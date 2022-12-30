@@ -33,14 +33,16 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["move",
-              "move_with_duplication",
-              "move_non_temporal",
-              "move_mask"]
+categories = [
+    "move",
+    "move_with_duplication",
+    "move_non_temporal",
+    "move_mask",
+]
 
-microcode = '''
+microcode = """
 # SSE instructions
-'''
+"""
 for category in categories:
     exec("from . import %s as cat" % category)
     microcode += cat.microcode

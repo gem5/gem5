@@ -30,29 +30,29 @@ from testlib import *
 # think more about this. Maybe we should have another parameter to
 # gem5_verify_config...
 
-config_path = joinpath(config.base_dir, 'configs', 'learning_gem5', 'part3')
-ref_path = joinpath(getcwd(), 'ref')
+config_path = joinpath(config.base_dir, "configs", "learning_gem5", "part3")
+ref_path = joinpath(getcwd(), "ref")
 
 gem5_verify_config(
-    name='simple_ruby_test',
-    verifiers = (verifier.MatchStdoutNoPerf(joinpath(ref_path, 'threads')),),
-    config=joinpath(config_path, 'simple_ruby.py'),
-    config_args = [],
-    protocol = 'MSI',
+    name="simple_ruby_test",
+    verifiers=(verifier.MatchStdoutNoPerf(joinpath(ref_path, "threads")),),
+    config=joinpath(config_path, "simple_ruby.py"),
+    config_args=[],
+    protocol="MSI",
     # Currently only x86 has the threads test
-    valid_isas=(constants.x86_tag,),
+    valid_isas=(constants.all_compiled_tag,),
     # dynamically linked
-    valid_hosts=constants.target_host[constants.x86_tag],
+    valid_hosts=(constants.x86_tag,),
     length=constants.long_tag,
 )
 
 gem5_verify_config(
-    name='ruby_test_test',
-    verifiers = (verifier.MatchStdout(joinpath(ref_path, 'test')),),
-    config=joinpath(config_path, 'ruby_test.py'),
-    config_args = [],
-    protocol = 'MSI',
+    name="ruby_test_test",
+    verifiers=(verifier.MatchStdout(joinpath(ref_path, "test")),),
+    config=joinpath(config_path, "ruby_test.py"),
+    config_args=[],
+    protocol="MSI",
     # Currently only x86 has the threads test
-    valid_isas=(constants.x86_tag,),
+    valid_isas=(constants.all_compiled_tag,),
     length=constants.long_tag,
 )

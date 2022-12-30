@@ -26,17 +26,21 @@
 from m5.params import *
 from m5.SimObject import SimObject
 
+
 class SysBridge(SimObject):
-    '''Use this bridge to connect the memory systems belonging to two different
-       Systems SimObjects. See the header file for more information.'''
-    type = 'SysBridge'
+    """Use this bridge to connect the memory systems belonging to two different
+    Systems SimObjects. See the header file for more information."""
+
+    type = "SysBridge"
     cxx_header = "mem/sys_bridge.hh"
-    cxx_class = 'gem5::SysBridge'
+    cxx_class = "gem5::SysBridge"
 
     source = Param.System("Source System")
     target = Param.System("Target System")
 
     target_port = RequestPort(
-            "A port which sends requests to a target system.")
+        "A port which sends requests to a target system."
+    )
     source_port = ResponsePort(
-            "A port which sends responses to a source system")
+        "A port which sends responses to a source system"
+    )

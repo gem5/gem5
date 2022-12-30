@@ -43,6 +43,7 @@ scons build/RISCV/gem5.opt
 ```
 """
 
+import argparse
 from gem5.isas import ISA
 from gem5.utils.requires import requires
 from gem5.resources.resource import Resource
@@ -52,6 +53,18 @@ from gem5.components.boards.simple_board import SimpleBoard
 from gem5.components.cachehierarchies.classic.no_cache import NoCache
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.simulate.simulator import Simulator
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument(
+    "--checkpoint-path",
+    type=str,
+    required=False,
+    default="riscv-hello-checkpoint/",
+    help="The directory to store the checkpoint.",
+)
+
+args = parser.parse_args()
 
 # This check ensures the gem5 binary is compiled to the RISCV ISA target.
 # If not, an exception will be thrown.
@@ -64,8 +77,9 @@ cache_hierarchy = NoCache()
 memory = SingleChannelDDR3_1600(size="32MB")
 
 # We use a simple Timing processor with one core.
-processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, isa=ISA.RISCV,
-                            num_cores=1)
+processor = SimpleProcessor(
+    cpu_type=CPUTypes.TIMING, isa=ISA.RISCV, num_cores=1
+)
 
 # The gem5 library simble board which can be used to run simple SE-mode
 # simulations.
@@ -93,16 +107,14 @@ board.set_se_binary_workload(
 # Lastly we run the simulation.
 max_ticks = 10**6
 simulator = Simulator(board=board, full_system=False)
-simulator.run(max_ticks = max_ticks)
+simulator.run(max_ticks=max_ticks)
 
 print(
     "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(),
-        simulator.get_last_exit_event_cause(),
+        simulator.get_current_tick(), simulator.get_last_exit_event_cause()
     )
 )
 
-checkpoint_path = "riscv-hello-checkpoint/"
-print("Taking a checkpoint at", checkpoint_path)
-simulator.save_checkpoint(checkpoint_path)
+print("Taking a checkpoint at", args.checkpoint_path)
+simulator.save_checkpoint(args.checkpoint_path)
 print("Done taking a checkpoint")

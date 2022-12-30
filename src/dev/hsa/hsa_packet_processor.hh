@@ -235,6 +235,8 @@ class AQLRingBuffer
      void incDispIdx(uint64_t value) { _dispIdx += value; }
      uint64_t compltnPending() { return (_dispIdx - _rdIdx); }
      void setRdIdx(uint64_t value);
+     void setWrIdx(uint64_t value);
+     void setDispIdx(uint64_t value);
 };
 
 struct QCntxt

@@ -1,5 +1,6 @@
 // -*- mode:c++ -*-
 
+// Copyright (c) 2020 ARM Limited
 // Copyright (c) 2020 Metempsy Technology Consulting
 // All rights reserved
 //
@@ -113,15 +114,12 @@ namespace ArmISA
   Fault
   addPACIB(ThreadContext* tc, uint64_t X, uint64_t Y, uint64_t* out);
 
-  //  Strip()
-  //    =======
-  //      Strip() returns a 64-bit value containing A, but replacing the
+  // stripPAC returns a 64-bit value containing A, but replacing the
   // pointer authentication code field bits with the extension of the
   // address bits. This can apply to either instructions or data, where,
   // as the use of tagged pointers is distinct, it might be
   // handled differently.
-
-  Fault
+  void
   stripPAC(ThreadContext* tc, uint64_t A, bool data, uint64_t* out);
 
 } // namespace ArmISA

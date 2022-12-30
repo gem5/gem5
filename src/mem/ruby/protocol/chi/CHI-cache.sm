@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 ARM Limited
+ * Copyright (c) 2021-2022 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -344,10 +344,10 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     PCrdGrant_PoC_Hazard,    desc="";
 
     // Events triggered by incoming DVM messages
-    SnpDvmOpSync_P1;
-    SnpDvmOpSync_P2;
-    SnpDvmOpNonSync_P1;
-    SnpDvmOpNonSync_P2;
+    SnpDvmOpSync_P1,         desc="";
+    SnpDvmOpSync_P2,         desc="";
+    SnpDvmOpNonSync_P1,      desc="";
+    SnpDvmOpNonSync_P2,      desc="";
 
     // Events triggered by incoming data response messages
     // See CHIDataType in CHi-msg.sm for descriptions

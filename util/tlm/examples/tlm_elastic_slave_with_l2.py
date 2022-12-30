@@ -33,7 +33,7 @@ import m5
 from m5.objects import *
 from m5.util import addToPath, fatal
 
-addToPath('../../../configs/common/')
+addToPath("../../../configs/common/")
 
 from Caches import *
 
@@ -71,26 +71,30 @@ from Caches import *
 # Create a system with a Crossbar and an Elastic Trace Player as CPU:
 
 # Setup System:
-system = System(cpu=TraceCPU(cpu_id=0),
-                mem_mode='timing',
-                mem_ranges = [AddrRange('1024MB')],
-                cache_line_size = 64)
+system = System(
+    cpu=TraceCPU(cpu_id=0),
+    mem_mode="timing",
+    mem_ranges=[AddrRange("1024MB")],
+    cache_line_size=64,
+)
 
 # Create a top-level voltage domain:
 system.voltage_domain = VoltageDomain()
 
 # Create a source clock for the system. This is used as the clock period for
 # xbar and memory:
-system.clk_domain = SrcClockDomain(clock =  '1GHz',
-        voltage_domain = system.voltage_domain)
+system.clk_domain = SrcClockDomain(
+    clock="1GHz", voltage_domain=system.voltage_domain
+)
 
 # Create a CPU voltage domain:
 system.cpu_voltage_domain = VoltageDomain()
 
 # Create a separate clock domain for the CPUs. In case of Trace CPUs this clock
 # is actually used only by the caches connected to the CPU:
-system.cpu_clk_domain = SrcClockDomain(clock = '1GHz',
-        voltage_domain = system.cpu_voltage_domain)
+system.cpu_clk_domain = SrcClockDomain(
+    clock="1GHz", voltage_domain=system.cpu_voltage_domain
+)
 
 # Setup CPU and its L1 caches:
 system.cpu.createInterruptController()
@@ -100,17 +104,19 @@ system.cpu.icache.cpu_side = system.cpu.icache_port
 system.cpu.dcache.cpu_side = system.cpu.dcache_port
 
 # Assign input trace files to the eTraceCPU:
-system.cpu.instTraceFile="system.cpu.traceListener.inst.gz"
-system.cpu.dataTraceFile="system.cpu.traceListener.data.gz"
+system.cpu.instTraceFile = "system.cpu.traceListener.inst.gz"
+system.cpu.dataTraceFile = "system.cpu.traceListener.data.gz"
 
 # Setting up L1 BUS:
 system.tol2bus = L2XBar()
 system.l2cache = L2Cache(size="1MB")
-system.physmem = SimpleMemory() # This must be instantiated, even if not needed
+system.physmem = (
+    SimpleMemory()
+)  # This must be instantiated, even if not needed
 
 # Create a external TLM port:
 system.tlm = ExternalSlave()
-system.tlm.addr_ranges = [AddrRange('4096MB')]
+system.tlm.addr_ranges = [AddrRange("4096MB")]
 system.tlm.port_type = "tlm_slave"
 system.tlm.port_data = "transactor1"
 
@@ -124,7 +130,7 @@ system.l2cache.mem_side = system.membus.slave
 system.membus.master = system.tlm.port
 
 # Start the simulation:
-root = Root(full_system = False, system = system)
-root.system.mem_mode = 'timing'
+root = Root(full_system=False, system=system)
+root.system.mem_mode = "timing"
 m5.instantiate()
-m5.simulate() # Simulation time specified later on commandline
+m5.simulate()  # Simulation time specified later on commandline

@@ -39,9 +39,6 @@
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-#include "debug/FloatRegs.hh"
-#include "debug/IntRegs.hh"
-#include "debug/MiscRegs.hh"
 #include "debug/Timer.hh"
 #include "params/SparcISA.hh"
 
@@ -68,15 +65,28 @@ buildPstateMask()
 
 static const PSTATE PstateMask = buildPstateMask();
 
+namespace
+{
+
+/* Not applicable for SPARC */
+RegClass vecRegClass(VecRegClass, VecRegClassName, 1, debug::IntRegs);
+RegClass vecElemClass(VecElemClass, VecElemClassName, 2, debug::IntRegs);
+RegClass vecPredRegClass(VecPredRegClass, VecPredRegClassName, 1,
+        debug::IntRegs);
+RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
+
+} // anonymous namespace
+
 ISA::ISA(const Params &p) : BaseISA(p)
 {
-    _regClasses.emplace_back(NumIntRegs, debug::IntRegs);
-    _regClasses.emplace_back(NumFloatRegs, debug::FloatRegs);
-    _regClasses.emplace_back(1, debug::IntRegs); // Not applicable for SPARC
-    _regClasses.emplace_back(2, debug::IntRegs); // Not applicable for SPARC
-    _regClasses.emplace_back(1, debug::IntRegs); // Not applicable for SPARC
-    _regClasses.emplace_back(0, debug::IntRegs); // Not applicable for SPARC
-    _regClasses.emplace_back(NumMiscRegs, debug::MiscRegs);
+    _regClasses.push_back(&flatIntRegClass);
+    _regClasses.push_back(&floatRegClass);
+    _regClasses.push_back(&vecRegClass);
+    _regClasses.push_back(&vecElemClass);
+    _regClasses.push_back(&vecPredRegClass);
+    _regClasses.push_back(&ccRegClass);
+    _regClasses.push_back(&miscRegClass);
+
     clear();
 }
 
@@ -226,19 +236,26 @@ ISA::copyRegsFrom(ThreadContext *src)
         src->setMiscReg(MISCREG_GL, x);
         tc->setMiscReg(MISCREG_GL, x);
         // Skip %g0 which is always zero.
-        for (int y = 1; y < 8; y++)
-            tc->setIntReg(y, src->readIntReg(y));
+        for (int y = 1; y < 8; y++) {
+            RegId reg = intRegClass[y];
+            tc->setReg(reg, src->getReg(reg));
+        }
     }
     // Locals and ins. Outs are all also ins.
     for (int x = 0; x < NWindows; ++x) {
          src->setMiscReg(MISCREG_CWP, x);
          tc->setMiscReg(MISCREG_CWP, x);
-         for (int y = 16; y < 32; y++)
-             tc->setIntReg(y, src->readIntReg(y));
+         for (int y = 16; y < 32; y++) {
+             RegId reg = intRegClass[y];
+             tc->setReg(reg, src->getReg(reg));
+         }
     }
     // Microcode reg and pseudo int regs (misc regs in the integer regfile).
-    for (int y = NumIntArchRegs; y < NumIntArchRegs + NumMicroIntRegs; ++y)
-        tc->setIntReg(y, src->readIntReg(y));
+    for (int y = int_reg::NumArchRegs;
+            y < int_reg::NumArchRegs + int_reg::NumMicroRegs; ++y) {
+        RegId reg = intRegClass[y];
+        tc->setReg(reg, src->getReg(reg));
+    }
 
     // Restore src's GL, CWP
     src->setMiscReg(MISCREG_GL, old_gl);
@@ -246,8 +263,9 @@ ISA::copyRegsFrom(ThreadContext *src)
 
 
     // Then loop through the floating point registers.
-    for (int i = 0; i < SparcISA::NumFloatArchRegs; ++i) {
-        tc->setFloatReg(i, src->readFloatReg(i));
+    for (int i = 0; i < SparcISA::float_reg::NumArchRegs; ++i) {
+        RegId reg = floatRegClass[i];
+        tc->setReg(reg, src->getReg(reg));
     }
 
     // Copy misc. registers
@@ -263,7 +281,7 @@ ISA::reloadRegMap()
     installGlobals(gl, CurrentGlobalsOffset);
     installWindow(cwp, CurrentWindowOffset);
     // Microcode registers.
-    for (int i = 0; i < NumMicroIntRegs; i++)
+    for (int i = 0; i < int_reg::NumMicroRegs; i++)
         intRegMap[MicroIntOffset + i] = i + TotalGlobals + NWindows * 16;
     installGlobals(gl, NextGlobalsOffset);
     installWindow(cwp - 1, NextWindowOffset);
@@ -274,7 +292,7 @@ ISA::reloadRegMap()
 void
 ISA::installWindow(int cwp, int offset)
 {
-    assert(offset >= 0 && offset + NumWindowedRegs <= NumIntRegs);
+    assert(offset >= 0 && offset + NumWindowedRegs <= int_reg::NumRegs);
     RegIndex *mapChunk = intRegMap + offset;
     for (int i = 0; i < NumWindowedRegs; i++)
         mapChunk[i] = TotalGlobals +
@@ -284,7 +302,7 @@ ISA::installWindow(int cwp, int offset)
 void
 ISA::installGlobals(int gl, int offset)
 {
-    assert(offset >= 0 && offset + NumGlobalRegs <= NumIntRegs);
+    assert(offset >= 0 && offset + NumGlobalRegs <= int_reg::NumRegs);
     RegIndex *mapChunk = intRegMap + offset;
     mapChunk[0] = 0;
     for (int i = 1; i < NumGlobalRegs; i++)
@@ -355,17 +373,17 @@ ISA::clear()
 }
 
 RegVal
-ISA::readMiscRegNoEffect(int miscReg) const
+ISA::readMiscRegNoEffect(RegIndex idx) const
 {
 
-  // The three miscRegs are moved up from the switch statement
+  // The three idxs are moved up from the switch statement
   // due to more frequent calls.
 
-  if (miscReg == MISCREG_GL)
+  if (idx == MISCREG_GL)
     return gl;
-  if (miscReg == MISCREG_CWP)
+  if (idx == MISCREG_CWP)
     return cwp;
-  if (miscReg == MISCREG_TLB_DATA) {
+  if (idx == MISCREG_TLB_DATA) {
     /* Package up all the data for the tlb:
      * 6666555555555544444444443333333333222222222211111111110000000000
      * 3210987654321098765432109876543210987654321098765432109876543210
@@ -387,7 +405,7 @@ ISA::readMiscRegNoEffect(int miscReg) const
                 (uint64_t)secContext << 48;
   }
 
-    switch (miscReg) {
+    switch (idx) {
       // case MISCREG_TLB_DATA:
       //  [original contents see above]
       // case MISCREG_Y:
@@ -511,14 +529,14 @@ ISA::readMiscRegNoEffect(int miscReg) const
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
         return nres_error_tail;
       default:
-        panic("Miscellaneous register %d not implemented\n", miscReg);
+        panic("Miscellaneous register %d not implemented\n", idx);
     }
 }
 
 RegVal
-ISA::readMiscReg(int miscReg)
+ISA::readMiscReg(RegIndex idx)
 {
-    switch (miscReg) {
+    switch (idx) {
         // tick and stick are aliased to each other in niagra
         // well store the tick data in stick and the interrupt bit in tick
       case MISCREG_STICK:
@@ -558,15 +576,15 @@ ISA::readMiscReg(int miscReg)
       case MISCREG_QUEUE_NRES_ERROR_HEAD:
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
       case MISCREG_HPSTATE:
-        return readFSReg(miscReg);
+        return readFSReg(idx);
     }
-    return readMiscRegNoEffect(miscReg);
+    return readMiscRegNoEffect(idx);
 }
 
 void
-ISA::setMiscRegNoEffect(int miscReg, RegVal val)
+ISA::setMiscRegNoEffect(RegIndex idx, RegVal val)
 {
-    switch (miscReg) {
+    switch (idx) {
 //      case MISCREG_Y:
 //        y = val;
 //        break;
@@ -740,16 +758,16 @@ ISA::setMiscRegNoEffect(int miscReg, RegVal val)
         nres_error_tail = val;
         break;
       default:
-        panic("Miscellaneous register %d not implemented\n", miscReg);
+        panic("Miscellaneous register %d not implemented\n", idx);
     }
 }
 
 void
-ISA::setMiscReg(int miscReg, RegVal val)
+ISA::setMiscReg(RegIndex idx, RegVal val)
 {
     RegVal new_val = val;
 
-    switch (miscReg) {
+    switch (idx) {
       case MISCREG_ASI:
         tc->getDecoderPtr()->as<Decoder>().setContext(val);
         break;
@@ -814,10 +832,10 @@ ISA::setMiscReg(int miscReg, RegVal val)
       case MISCREG_QUEUE_NRES_ERROR_HEAD:
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
       case MISCREG_HPSTATE:
-        setFSReg(miscReg, val);
+        setFSReg(idx, val);
         return;
     }
-    setMiscRegNoEffect(miscReg, new_val);
+    setMiscRegNoEffect(idx, new_val);
 }
 
 void

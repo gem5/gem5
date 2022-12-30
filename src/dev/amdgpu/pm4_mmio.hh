@@ -60,6 +60,7 @@ namespace gem5
 #define mmCP_HQD_PQ_RPTR_REPORT_ADDR_HI                               0x1251
 #define mmCP_HQD_PQ_WPTR_POLL_ADDR                                    0x1252
 #define mmCP_HQD_PQ_WPTR_POLL_ADDR_HI                                 0x1253
+#define mmCP_HQD_PQ_CONTROL                                           0x1256
 #define mmCP_HQD_IB_CONTROL                                           0x125a
 #define mmCP_HQD_PQ_WPTR_LO                                           0x127b
 #define mmCP_HQD_PQ_WPTR_HI                                           0x127c

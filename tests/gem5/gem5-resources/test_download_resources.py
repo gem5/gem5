@@ -41,6 +41,6 @@ gem5_verify_config(
         config.base_dir, "tests", "gem5", "configs", "download_check.py"
     ),
     config_args=["--download-directory", resource_path],
-    valid_isas=(constants.null_tag,),
+    valid_isas=(constants.all_compiled_tag,),
     length=constants.very_long_tag,
 )

@@ -53,88 +53,37 @@ namespace PowerISA
 class ISA : public BaseISA
 {
   protected:
-    RegVal dummy;
     RegVal miscRegs[NUM_MISCREGS];
 
   public:
-    void clear() {}
-
     PCStateBase *
     newPCState(Addr new_inst_addr=0) const override
     {
         return new PCState(new_inst_addr);
     }
 
-  public:
     RegVal
-    readMiscRegNoEffect(int misc_reg) const
+    readMiscRegNoEffect(RegIndex idx) const override
     {
         fatal("Power does not currently have any misc regs defined\n");
-        return dummy;
     }
 
     RegVal
-    readMiscReg(int misc_reg)
-    {
-        fatal("Power does not currently have any misc regs defined\n");
-        return dummy;
-    }
-
-    void
-    setMiscRegNoEffect(int misc_reg, RegVal val)
+    readMiscReg(RegIndex idx) override
     {
         fatal("Power does not currently have any misc regs defined\n");
     }
 
     void
-    setMiscReg(int misc_reg, RegVal val)
+    setMiscRegNoEffect(RegIndex idx, RegVal val) override
     {
         fatal("Power does not currently have any misc regs defined\n");
     }
 
-    RegId flattenRegId(const RegId& regId) const { return regId; }
-
-    int
-    flattenIntIndex(int reg) const
+    void
+    setMiscReg(RegIndex idx, RegVal val) override
     {
-        return reg;
-    }
-
-    int
-    flattenFloatIndex(int reg) const
-    {
-        return reg;
-    }
-
-    int
-    flattenVecIndex(int reg) const
-    {
-        return reg;
-    }
-
-    int
-    flattenVecElemIndex(int reg) const
-    {
-        return reg;
-    }
-
-    int
-    flattenVecPredIndex(int reg) const
-    {
-        return reg;
-    }
-
-    // dummy
-    int
-    flattenCCIndex(int reg) const
-    {
-        return reg;
-    }
-
-    int
-    flattenMiscIndex(int reg) const
-    {
-        return reg;
+        fatal("Power does not currently have any misc regs defined\n");
     }
 
     bool

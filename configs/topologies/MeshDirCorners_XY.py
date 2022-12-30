@@ -35,8 +35,9 @@ from topologies.BaseTopology import SimpleTopology
 # One L1 (and L2, depending on the protocol) are connected to each router.
 # XY routing is enforced (using link weights) to guarantee deadlock freedom.
 
+
 class MeshDirCorners_XY(SimpleTopology):
-    description='MeshDirCorners_XY'
+    description = "MeshDirCorners_XY"
 
     def __init__(self, controllers):
         self.nodes = controllers
@@ -49,37 +50,40 @@ class MeshDirCorners_XY(SimpleTopology):
 
         # default values for link latency and router latency.
         # Can be over-ridden on a per link/router basis
-        link_latency = options.link_latency # used by simple and garnet
-        router_latency = options.router_latency # only used by garnet
-
+        link_latency = options.link_latency  # used by simple and garnet
+        router_latency = options.router_latency  # only used by garnet
 
         # First determine which nodes are cache cntrls vs. dirs vs. dma
         cache_nodes = []
         dir_nodes = []
         dma_nodes = []
         for node in nodes:
-            if node.type == 'L1Cache_Controller' or \
-            node.type == 'L2Cache_Controller':
+            if (
+                node.type == "L1Cache_Controller"
+                or node.type == "L2Cache_Controller"
+            ):
                 cache_nodes.append(node)
-            elif node.type == 'Directory_Controller':
+            elif node.type == "Directory_Controller":
                 dir_nodes.append(node)
-            elif node.type == 'DMA_Controller':
+            elif node.type == "DMA_Controller":
                 dma_nodes.append(node)
 
         # Obviously the number or rows must be <= the number of routers
         # and evenly divisible.  Also the number of caches must be a
         # multiple of the number of routers and the number of directories
         # must be four.
-        assert(num_rows > 0 and num_rows <= num_routers)
+        assert num_rows > 0 and num_rows <= num_routers
         num_columns = int(num_routers / num_rows)
-        assert(num_columns * num_rows == num_routers)
+        assert num_columns * num_rows == num_routers
         caches_per_router, remainder = divmod(len(cache_nodes), num_routers)
-        assert(remainder == 0)
-        assert(len(dir_nodes) == 4)
+        assert remainder == 0
+        assert len(dir_nodes) == 4
 
         # Create the routers in the mesh
-        routers = [Router(router_id=i, latency = router_latency) \
-            for i in range(num_routers)]
+        routers = [
+            Router(router_id=i, latency=router_latency)
+            for i in range(num_routers)
+        ]
         network.routers = routers
 
         # link counter to set unique link ids
@@ -89,24 +93,26 @@ class MeshDirCorners_XY(SimpleTopology):
         ext_links = []
         for (i, n) in enumerate(cache_nodes):
             cntrl_level, router_id = divmod(i, num_routers)
-            assert(cntrl_level < caches_per_router)
-            ext_links.append(ExtLink(link_id=link_count, ext_node=n,
-                                    int_node=routers[router_id],
-                                    latency = link_latency))
+            assert cntrl_level < caches_per_router
+            ext_links.append(
+                ExtLink(
+                    link_id=link_count,
+                    ext_node=n,
+                    int_node=routers[router_id],
+                    latency=link_latency,
+                )
+            )
             link_count += 1
 
         # NUMA Node for each quadrant
         # With odd columns or rows, the nodes will be unequal
-        numa_nodes = [ [], [], [], []]
+        numa_nodes = [[], [], [], []]
         for i in range(num_routers):
-            if i % num_columns < num_columns / 2  and \
-               i < num_routers / 2:
+            if i % num_columns < num_columns / 2 and i < num_routers / 2:
                 numa_nodes[0].append(i)
-            elif i % num_columns >= num_columns / 2  and \
-               i < num_routers / 2:
+            elif i % num_columns >= num_columns / 2 and i < num_routers / 2:
                 numa_nodes[1].append(i)
-            elif i % num_columns < num_columns / 2  and \
-               i >= num_routers / 2:
+            elif i % num_columns < num_columns / 2 and i >= num_routers / 2:
                 numa_nodes[2].append(i)
             else:
                 numa_nodes[3].append(i)
@@ -117,29 +123,54 @@ class MeshDirCorners_XY(SimpleTopology):
                 num_numa_nodes += 1
 
         # Connect the dir nodes to the corners.
-        ext_links.append(ExtLink(link_id=link_count, ext_node=dir_nodes[0],
-                                int_node=routers[0],
-                                latency = link_latency))
+        ext_links.append(
+            ExtLink(
+                link_id=link_count,
+                ext_node=dir_nodes[0],
+                int_node=routers[0],
+                latency=link_latency,
+            )
+        )
         link_count += 1
-        ext_links.append(ExtLink(link_id=link_count, ext_node=dir_nodes[1],
-                                int_node=routers[num_columns - 1],
-                                latency = link_latency))
+        ext_links.append(
+            ExtLink(
+                link_id=link_count,
+                ext_node=dir_nodes[1],
+                int_node=routers[num_columns - 1],
+                latency=link_latency,
+            )
+        )
         link_count += 1
-        ext_links.append(ExtLink(link_id=link_count, ext_node=dir_nodes[2],
-                                int_node=routers[num_routers - num_columns],
-                                latency = link_latency))
+        ext_links.append(
+            ExtLink(
+                link_id=link_count,
+                ext_node=dir_nodes[2],
+                int_node=routers[num_routers - num_columns],
+                latency=link_latency,
+            )
+        )
         link_count += 1
-        ext_links.append(ExtLink(link_id=link_count, ext_node=dir_nodes[3],
-                                int_node=routers[num_routers - 1],
-                                latency = link_latency))
+        ext_links.append(
+            ExtLink(
+                link_id=link_count,
+                ext_node=dir_nodes[3],
+                int_node=routers[num_routers - 1],
+                latency=link_latency,
+            )
+        )
         link_count += 1
 
         # Connect the dma nodes to router 0.  These should only be DMA nodes.
         for (i, node) in enumerate(dma_nodes):
-            assert(node.type == 'DMA_Controller')
-            ext_links.append(ExtLink(link_id=link_count, ext_node=node,
-                                     int_node=routers[0],
-                                     latency = link_latency))
+            assert node.type == "DMA_Controller"
+            ext_links.append(
+                ExtLink(
+                    link_id=link_count,
+                    ext_node=node,
+                    int_node=routers[0],
+                    latency=link_latency,
+                )
+            )
 
         network.ext_links = ext_links
 
@@ -149,63 +180,78 @@ class MeshDirCorners_XY(SimpleTopology):
         # East output to West input links (weight = 1)
         for row in range(num_rows):
             for col in range(num_columns):
-                if (col + 1 < num_columns):
+                if col + 1 < num_columns:
                     east_out = col + (row * num_columns)
                     west_in = (col + 1) + (row * num_columns)
-                    int_links.append(IntLink(link_id=link_count,
-                                             src_node=routers[east_out],
-                                             dst_node=routers[west_in],
-                                             src_outport="East",
-                                             dst_inport="West",
-                                             latency = link_latency,
-                                             weight=1))
+                    int_links.append(
+                        IntLink(
+                            link_id=link_count,
+                            src_node=routers[east_out],
+                            dst_node=routers[west_in],
+                            src_outport="East",
+                            dst_inport="West",
+                            latency=link_latency,
+                            weight=1,
+                        )
+                    )
                     link_count += 1
 
         # West output to East input links (weight = 1)
         for row in range(num_rows):
             for col in range(num_columns):
-                if (col + 1 < num_columns):
+                if col + 1 < num_columns:
                     east_in = col + (row * num_columns)
                     west_out = (col + 1) + (row * num_columns)
-                    int_links.append(IntLink(link_id=link_count,
-                                             src_node=routers[west_out],
-                                             dst_node=routers[east_in],
-                                             src_outport="West",
-                                             dst_inport="East",
-                                             latency = link_latency,
-                                             weight=1))
+                    int_links.append(
+                        IntLink(
+                            link_id=link_count,
+                            src_node=routers[west_out],
+                            dst_node=routers[east_in],
+                            src_outport="West",
+                            dst_inport="East",
+                            latency=link_latency,
+                            weight=1,
+                        )
+                    )
                     link_count += 1
 
         # North output to South input links (weight = 2)
         for col in range(num_columns):
             for row in range(num_rows):
-                if (row + 1 < num_rows):
+                if row + 1 < num_rows:
                     north_out = col + (row * num_columns)
                     south_in = col + ((row + 1) * num_columns)
-                    int_links.append(IntLink(link_id=link_count,
-                                             src_node=routers[north_out],
-                                             dst_node=routers[south_in],
-                                             src_outport="North",
-                                             dst_inport="South",
-                                             latency = link_latency,
-                                             weight=2))
+                    int_links.append(
+                        IntLink(
+                            link_id=link_count,
+                            src_node=routers[north_out],
+                            dst_node=routers[south_in],
+                            src_outport="North",
+                            dst_inport="South",
+                            latency=link_latency,
+                            weight=2,
+                        )
+                    )
                     link_count += 1
 
         # South output to North input links (weight = 2)
         for col in range(num_columns):
             for row in range(num_rows):
-                if (row + 1 < num_rows):
+                if row + 1 < num_rows:
                     north_in = col + (row * num_columns)
                     south_out = col + ((row + 1) * num_columns)
-                    int_links.append(IntLink(link_id=link_count,
-                                             src_node=routers[south_out],
-                                             dst_node=routers[north_in],
-                                             src_outport="South",
-                                             dst_inport="North",
-                                             latency = link_latency,
-                                             weight=2))
+                    int_links.append(
+                        IntLink(
+                            link_id=link_count,
+                            src_node=routers[south_out],
+                            dst_node=routers[north_in],
+                            src_outport="South",
+                            dst_inport="North",
+                            latency=link_latency,
+                            weight=2,
+                        )
+                    )
                     link_count += 1
-
 
         network.int_links = int_links
 
@@ -214,7 +260,7 @@ class MeshDirCorners_XY(SimpleTopology):
         i = 0
         for n in numa_nodes:
             if n:
-                FileSystemConfig.register_node(n,
-                    MemorySize(options.mem_size) // num_numa_nodes, i)
+                FileSystemConfig.register_node(
+                    n, MemorySize(options.mem_size) // num_numa_nodes, i
+                )
             i += 1
-

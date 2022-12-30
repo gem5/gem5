@@ -44,42 +44,48 @@ from m5.objects.BaseISA import BaseISA
 from m5.objects.BaseTLB import BaseTLB
 from m5.objects.BaseMMU import BaseMMU
 
+
 class IrisTLB(BaseTLB):
-    type = 'IrisTLB'
-    cxx_class = 'gem5::Iris::TLB'
-    cxx_header = 'arch/arm/fastmodel/iris/tlb.hh'
+    type = "IrisTLB"
+    cxx_class = "gem5::Iris::TLB"
+    cxx_header = "arch/arm/fastmodel/iris/tlb.hh"
+
 
 class IrisMMU(BaseMMU):
-    type = 'IrisMMU'
-    cxx_class = 'gem5::Iris::MMU'
-    cxx_header = 'arch/arm/fastmodel/iris/mmu.hh'
+    type = "IrisMMU"
+    cxx_class = "gem5::Iris::MMU"
+    cxx_header = "arch/arm/fastmodel/iris/mmu.hh"
     itb = IrisTLB(entry_type="instruction")
     dtb = IrisTLB(entry_type="data")
 
+
 class IrisInterrupts(BaseInterrupts):
-    type = 'IrisInterrupts'
-    cxx_class = 'gem5::Iris::Interrupts'
-    cxx_header = 'arch/arm/fastmodel/iris/interrupts.hh'
+    type = "IrisInterrupts"
+    cxx_class = "gem5::Iris::Interrupts"
+    cxx_header = "arch/arm/fastmodel/iris/interrupts.hh"
+
 
 class IrisISA(BaseISA):
-    type = 'IrisISA'
-    cxx_class = 'gem5::Iris::ISA'
-    cxx_header = 'arch/arm/fastmodel/iris/isa.hh'
+    type = "IrisISA"
+    cxx_class = "gem5::Iris::ISA"
+    cxx_header = "arch/arm/fastmodel/iris/isa.hh"
 
-class IrisCPU():
+
+class IrisCPU:
     ArchMMU = IrisMMU
     ArchInterrupts = IrisInterrupts
     ArchISA = IrisISA
 
+
 class IrisBaseCPU(BaseCPU, IrisCPU):
-    type = 'IrisBaseCPU'
+    type = "IrisBaseCPU"
     abstract = True
-    cxx_class = 'gem5::Iris::BaseCPU'
-    cxx_header = 'arch/arm/fastmodel/iris/cpu.hh'
+    cxx_class = "gem5::Iris::BaseCPU"
+    cxx_header = "arch/arm/fastmodel/iris/cpu.hh"
 
     @classmethod
     def memory_mode(cls):
-        return 'atomic_noncaching'
+        return "atomic_noncaching"
 
     @classmethod
     def require_caches(cls):
@@ -87,18 +93,20 @@ class IrisBaseCPU(BaseCPU, IrisCPU):
 
     @classmethod
     def support_take_over(cls):
-        #TODO Make this work.
+        # TODO Make this work.
         return False
 
     evs = Param.SystemC_ScModule(
-            "Fast model exported virtual subsystem holding cores")
+        "Fast model exported virtual subsystem holding cores"
+    )
     thread_paths = VectorParam.String(
-            "Sub-paths to elements in the EVS which support a thread context")
+        "Sub-paths to elements in the EVS which support a thread context"
+    )
 
     mmu = IrisMMU()
 
     def createThreads(self):
         if len(self.isa) == 0:
-            self.isa = [ IrisISA() for i in range(self.numThreads) ]
+            self.isa = [IrisISA() for i in range(self.numThreads)]
         else:
-            assert(len(self.isa) == int(self.numThreads))
+            assert len(self.isa) == int(self.numThreads)

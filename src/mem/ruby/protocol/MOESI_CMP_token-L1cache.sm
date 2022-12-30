@@ -51,7 +51,7 @@ machine(MachineType:L1Cache, "Token protocol")
 
    // Message Queues
    // From this node's L1 cache TO the network
- 
+
    // a local L1 -> this L2 bank
    MessageBuffer * responseFromL1Cache, network="To", virtual_network="4",
         vnet_type="response";
@@ -60,7 +60,7 @@ machine(MachineType:L1Cache, "Token protocol")
    // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
    MessageBuffer * requestFromL1Cache, network="To", virtual_network="1",
         vnet_type="request";
- 
+
    // To this node's L1 cache FROM the network
 
    // a L2 bank -> this L1

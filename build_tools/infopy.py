@@ -42,8 +42,8 @@ import sys
 from code_formatter import code_formatter
 
 parser = argparse.ArgumentParser()
-parser.add_argument('info_py', help='info.py file path')
-parser.add_argument('files', help='file to include in info.py', nargs='*')
+parser.add_argument("info_py", help="info.py file path")
+parser.add_argument("files", help="file to include in info.py", nargs="*")
 
 args = parser.parse_args()
 
@@ -52,8 +52,8 @@ code = code_formatter()
 
 for source in args.files:
     src = os.path.basename(source)
-    with open(source, 'r') as f:
-        data = ''.join(f)
-    code('${src} = ${{repr(data)}}')
+    with open(source, "r") as f:
+        data = "".join(f)
+    code("${src} = ${{repr(data)}}")
 
 code.write(args.info_py)

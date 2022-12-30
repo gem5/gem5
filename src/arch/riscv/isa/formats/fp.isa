@@ -34,11 +34,14 @@
 //
 def template FloatExecute {{
     Fault %(class_name)s::execute(ExecContext *xc,
-        Trace::InstRecord *traceData) const
+        trace::InstRecord *traceData) const
     {
         STATUS status = xc->readMiscReg(MISCREG_STATUS);
         if (status.fs == FPUStatus::OFF)
             return std::make_shared<IllegalInstFault>("FPU is off", machInst);
+
+        status.fs = FPUStatus::DIRTY;
+        xc->setMiscReg(MISCREG_STATUS, status);
 
         %(op_decl)s;
         %(op_rd)s;

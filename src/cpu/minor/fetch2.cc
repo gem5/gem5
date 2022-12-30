@@ -486,10 +486,8 @@ Fetch2::evaluate()
                 /* Output MinorTrace instruction info for
                  *  pre-microop decomposition macroops */
                 if (debug::MinorTrace && !dyn_inst->isFault() &&
-                    dyn_inst->staticInst->isMacroop())
-                {
-                    dyn_inst->minorTraceInst(*this,
-                            cpu.threads[0]->getIsaPtr()->regClasses());
+                    dyn_inst->staticInst->isMacroop()) {
+                    dyn_inst->minorTraceInst(*this);
                 }
             }
 

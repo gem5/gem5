@@ -1180,5 +1180,3 @@ machine(MachineType:RegionDir, "Region Directory for AMD_Base-like protocol")
   }
 
 }
-
-

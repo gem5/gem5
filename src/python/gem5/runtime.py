@@ -35,6 +35,7 @@ from .isas import ISA, get_isa_from_str, get_isas_str_set
 from .coherence_protocol import CoherenceProtocol
 from typing import Set
 
+
 def get_supported_isas() -> Set[ISA]:
     """
     Returns the set of all the ISAs compiled into the current binary.
@@ -45,11 +46,10 @@ def get_supported_isas() -> Set[ISA]:
         supported_isas.add(get_isa_from_str(buildEnv["TARGET_ISA"]))
 
     for key in get_isas_str_set():
-        if f"USE_{key.upper()}_ISA" in buildEnv:
+        if buildEnv.get(f"USE_{key.upper()}_ISA", False):
             supported_isas.add(get_isa_from_str(key))
 
     return supported_isas
-
 
 
 def get_runtime_isa() -> ISA:
@@ -68,8 +68,10 @@ def get_runtime_isa() -> ISA:
     :returns: The target ISA.
     """
 
-    warn("The `get_runtime_isa` function is deprecated. Please migrate away "
-         "from using this function.")
+    warn(
+        "The `get_runtime_isa` function is deprecated. Please migrate away "
+        "from using this function."
+    )
 
     if "TARGET_ISA" in buildEnv.keys():
         return get_isa_from_str(buildEnv["TARGET_ISA"])
@@ -79,9 +81,12 @@ def get_runtime_isa() -> ISA:
     if len(supported_isas) == 1:
         return next(iter(supported_isas))
 
-    raise Exception("Cannot determine the the runtime ISA. Either the "
-                    "'TARGET_ISA' parameter must be set or the binary only "
-                    "compiled to one ISA.")
+    raise Exception(
+        "Cannot determine the the runtime ISA. Either the "
+        "'TARGET_ISA' parameter must be set or the binary only "
+        "compiled to one ISA."
+    )
+
 
 def get_runtime_coherence_protocol() -> CoherenceProtocol:
     """Gets the cache coherence protocol.

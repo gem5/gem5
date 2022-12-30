@@ -58,7 +58,7 @@ let {{
         @overrideInOperand
         def regId(self):
             return f'(({self.reg_spec}) == gem5::X86ISA::int_reg::T0) ? ' \
-                   f'RegId() : RegId({self.reg_class}, {self.reg_spec})'
+                   f'RegId() : {self.reg_class}[{self.reg_spec}]'
         def __init__(self, idx, id, data_size='dataSize', *args, **kwargs):
             super().__init__('uqw', idx, 'IsInteger', id, *args, **kwargs)
             self.attrs['data_size'] = data_size

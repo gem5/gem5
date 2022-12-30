@@ -29,20 +29,20 @@ import os
 from testlib.configuration import constants
 from gem5.suite import *
 
-'''
+"""
 As the filename begins with `test_`, it will be added to the TestLib testsuite
 when `../main.py` is run.
 
 The purpose of this file is to ensure the pyunit tests are executed as part
 of a typical TestLib execution. These have been added as part of the "quick"
 tests and will run with NULL/gem5.*
-'''
+"""
 
 gem5_verify_config(
-        name="pyunit-tests",
-        config=os.path.join(os.getcwd(), os.pardir, 'run_pyunit.py'),
-        verifiers=(),
-        config_args=[],
-        valid_isas=(constants.null_tag,),
-        length = constants.quick_tag,
+    name="pyunit-tests",
+    config=os.path.join(os.getcwd(), os.pardir, "run_pyunit.py"),
+    verifiers=(),
+    config_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    length=constants.quick_tag,
 )

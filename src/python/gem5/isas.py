@@ -32,6 +32,7 @@ import os
 from enum import Enum
 from typing import Set
 
+
 class ISA(Enum):
     """
     The ISA Enums which may be used in the gem5 stdlib to specify ISAs.
@@ -46,6 +47,7 @@ class ISA(Enum):
         ...
     ```
     """
+
     X86 = "x86"
     RISCV = "riscv"
     ARM = "arm"
@@ -54,11 +56,13 @@ class ISA(Enum):
     SPARC = "sparc"
     NULL = "null"
 
-def get_isas_str_set() -> Set[ISA]:
+
+def get_isas_str_set() -> Set[str]:
     """
     Returns a set of all the ISA as strings.
     """
     return {isa.value for isa in ISA}
+
 
 def get_isa_from_str(input: str) -> ISA:
     """
@@ -76,8 +80,8 @@ def get_isa_from_str(input: str) -> ISA:
         if input.lower() == isa.value:
             return isa
 
-    valid_isas_str_list =str()
-    for isa_str in get_isa_from_str():
+    valid_isas_str_list = str()
+    for isa_str in get_isas_str_set():
         valid_isas_str_list += f"{os.linesep}{isa_str}"
 
     raise Exception(

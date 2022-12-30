@@ -96,8 +96,9 @@ let {{
 
     if ((cpsr.mode != MODE_USER) && FullSystem) {
         if (EL2Enabled(xc->tcBase()) && (cpsr.mode != MODE_HYP) && hcr.tsc) {
-            fault = std::make_shared<HypervisorTrap>(machInst, 0,
-                                                     EC_SMC_TO_HYP);
+            fault = std::make_shared<HypervisorTrap>(
+                machInst, 0,
+                ExceptionClass::SMC_TO_HYP);
         } else {
             if (scr.scd) {
                 fault = disabledFault();
@@ -889,8 +890,8 @@ let {{
     exec_output += PredOpExecute.subst(bfiIop)
 
     mrc14code = '''
-    MiscRegIndex miscReg = (MiscRegIndex) xc->tcBase()->flattenRegId(
-                               RegId(MiscRegClass, op1)).index();
+    auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+    auto miscReg = (MiscRegIndex)isa->flattenMiscIndex(op1);
     auto [can_read, undefined] = canReadCoprocReg(miscReg, Scr, Cpsr,
                                                   xc->tcBase());
     if (!can_read || undefined) {
@@ -898,8 +899,9 @@ let {{
                                                       mnemonic);
     }
     if (mcrMrc14TrapToHyp((MiscRegIndex) op1, xc->tcBase(), imm)) {
-        return std::make_shared<HypervisorTrap>(machInst, imm,
-                                                EC_TRAPPED_CP14_MCR_MRC);
+        return std::make_shared<HypervisorTrap>(
+            machInst, imm,
+            ExceptionClass::TRAPPED_CP14_MCR_MRC);
     }
     Dest = MiscOp1;
     '''
@@ -913,8 +915,8 @@ let {{
 
 
     mcr14code = '''
-    MiscRegIndex miscReg = (MiscRegIndex) xc->tcBase()->flattenRegId(
-                               RegId(MiscRegClass, dest)).index();
+    auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+    auto miscReg = (MiscRegIndex)isa->flattenMiscIndex(dest);
     auto [can_write, undefined] = canWriteCoprocReg(miscReg, Scr, Cpsr,
                                                     xc->tcBase());
     if (undefined || !can_write) {
@@ -922,8 +924,9 @@ let {{
                                                       mnemonic);
     }
     if (mcrMrc14TrapToHyp(miscReg, xc->tcBase(), imm)) {
-        return std::make_shared<HypervisorTrap>(machInst, imm,
-                                                EC_TRAPPED_CP14_MCR_MRC);
+        return std::make_shared<HypervisorTrap>(
+            machInst, imm,
+            ExceptionClass::TRAPPED_CP14_MCR_MRC);
     }
     MiscDest = Op1;
     '''
@@ -937,9 +940,8 @@ let {{
 
     mrc15code = '''
     int preFlatOp1 = snsBankedIndex(op1, xc->tcBase());
-    MiscRegIndex miscReg = (MiscRegIndex)
-                           xc->tcBase()->flattenRegId(RegId(MiscRegClass,
-                                                      preFlatOp1)).index();
+    auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+    auto miscReg = (MiscRegIndex)isa->flattenMiscIndex(preFlatOp1);
 
     Fault fault = mcrMrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 
@@ -969,9 +971,8 @@ let {{
 
     mcr15CheckCode = '''
     int preFlatDest = snsBankedIndex(dest, xc->tcBase());
-    MiscRegIndex miscReg = (MiscRegIndex)
-                       xc->tcBase()->flattenRegId(RegId(MiscRegClass,
-                                                  preFlatDest)).index();
+    auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+    auto miscReg = (MiscRegIndex)isa->flattenMiscIndex(preFlatDest);
 
     Fault fault = mcrMrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 
@@ -1015,9 +1016,8 @@ let {{
 
     mrrc15code = '''
     int preFlatOp1 = snsBankedIndex(op1, xc->tcBase());
-    MiscRegIndex miscReg = (MiscRegIndex)
-                           xc->tcBase()->flattenRegId(RegId(MiscRegClass,
-                                                      preFlatOp1)).index();
+    auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+    auto miscReg = (MiscRegIndex)isa->flattenMiscIndex(preFlatOp1);
 
     Fault fault = mcrrMrrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 
@@ -1047,9 +1047,8 @@ let {{
 
     mcrr15code = '''
     int preFlatDest = snsBankedIndex(dest, xc->tcBase());
-    MiscRegIndex miscReg = (MiscRegIndex)
-                           xc->tcBase()->flattenRegId(RegId(MiscRegClass,
-                                                      preFlatDest)).index();
+    auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+    auto miscReg = (MiscRegIndex)isa->flattenMiscIndex(preFlatDest);
 
     Fault fault = mcrrMrrc15Trap(miscReg, machInst, xc->tcBase(), imm);
 
@@ -1201,7 +1200,7 @@ let {{
         if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15ISB,
             xc->tcBase(), imm)) {
             return std::make_shared<HypervisorTrap>(machInst, imm,
-                EC_TRAPPED_CP15_MCR_MRC);
+                ExceptionClass::TRAPPED_CP15_MCR_MRC);
         }
     '''
     isbIop = ArmInstObjParams("isb", "Isb", "ImmOp",
@@ -1217,7 +1216,7 @@ let {{
         if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15DSB,
             xc->tcBase(), imm)) {
             return std::make_shared<HypervisorTrap>(machInst, imm,
-                EC_TRAPPED_CP15_MCR_MRC);
+                ExceptionClass::TRAPPED_CP15_MCR_MRC);
         }
     '''
     dsbIop = ArmInstObjParams("dsb", "Dsb", "ImmOp",
@@ -1234,7 +1233,7 @@ let {{
         if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15DMB,
             xc->tcBase(), imm)) {
             return std::make_shared<HypervisorTrap>(machInst, imm,
-                EC_TRAPPED_CP15_MCR_MRC);
+                ExceptionClass::TRAPPED_CP15_MCR_MRC);
         }
     '''
     dmbIop = ArmInstObjParams("dmb", "Dmb", "ImmOp",

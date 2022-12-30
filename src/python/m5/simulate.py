@@ -54,7 +54,7 @@ from . import params
 from m5.util.dot_writer import do_dot, do_dvfs_dot
 from m5.util.dot_writer_ruby import do_ruby_dot
 
-from .util import fatal
+from .util import fatal, warn
 from .util import attrdict
 
 # define a MaxTick parameter, unsigned 64 bit
@@ -62,7 +62,7 @@ MaxTick = 2**64 - 1
 
 _drain_manager = _m5.drain.DrainManager.instance()
 
-_instantiated = False # Has m5.instantiate() been called?
+_instantiated = False  # Has m5.instantiate() been called?
 
 # The final call to instantiate the SimObject graph and initialize the
 # system.
@@ -85,13 +85,15 @@ def instantiate(ckpt_dir=None):
 
     # Make sure SimObject-valued params are in the configuration
     # hierarchy so we catch them with future descendants() walks
-    for obj in root.descendants(): obj.adoptOrphanParams()
+    for obj in root.descendants():
+        obj.adoptOrphanParams()
 
     # Unproxy in sorted order for determinism
-    for obj in root.descendants(): obj.unproxyParams()
+    for obj in root.descendants():
+        obj.unproxyParams()
 
     if options.dump_config:
-        ini_file = open(os.path.join(options.outdir, options.dump_config), 'w')
+        ini_file = open(os.path.join(options.outdir, options.dump_config), "w")
         # Print ini sections in sorted order for easier diffing
         for obj in sorted(root.descendants(), key=lambda o: o.path()):
             obj.print_ini(ini_file)
@@ -100,8 +102,10 @@ def instantiate(ckpt_dir=None):
     if options.json_config:
         try:
             import json
+
             json_file = open(
-                os.path.join(options.outdir, options.json_config), 'w')
+                os.path.join(options.outdir, options.json_config), "w"
+            )
             d = root.get_config_as_dict()
             json.dump(d, json_file, indent=4)
             json_file.close()
@@ -116,21 +120,26 @@ def instantiate(ckpt_dir=None):
     stats.initSimStats()
 
     # Create the C++ sim objects and connect ports
-    for obj in root.descendants(): obj.createCCObject()
-    for obj in root.descendants(): obj.connectPorts()
+    for obj in root.descendants():
+        obj.createCCObject()
+    for obj in root.descendants():
+        obj.connectPorts()
 
     # Do a second pass to finish initializing the sim objects
-    for obj in root.descendants(): obj.init()
+    for obj in root.descendants():
+        obj.init()
 
     # Do a third pass to initialize statistics
     stats._bindStatHierarchy(root)
     root.regStats()
 
     # Do a fourth pass to initialize probe points
-    for obj in root.descendants(): obj.regProbePoints()
+    for obj in root.descendants():
+        obj.regProbePoints()
 
     # Do a fifth pass to connect probe listeners
-    for obj in root.descendants(): obj.regProbeListeners()
+    for obj in root.descendants():
+        obj.regProbeListeners()
 
     # We want to generate the DVFS diagram for the system. This can only be
     # done once all of the CPP objects have been created and initialised so
@@ -145,15 +154,20 @@ def instantiate(ckpt_dir=None):
     if ckpt_dir:
         _drain_manager.preCheckpointRestore()
         ckpt = _m5.core.getCheckpoint(ckpt_dir)
-        for obj in root.descendants(): obj.loadState(ckpt)
+        for obj in root.descendants():
+            obj.loadState(ckpt)
     else:
-        for obj in root.descendants(): obj.initState()
+        for obj in root.descendants():
+            obj.initState()
 
     # Check to see if any of the stat events are in the past after resuming from
     # a checkpoint, If so, this call will shift them to be at a valid time.
     updateStatEvents()
 
+
 need_startup = True
+
+
 def simulate(*args, **kwargs):
     global need_startup
     global _instantiated
@@ -163,7 +177,8 @@ def simulate(*args, **kwargs):
 
     if need_startup:
         root = objects.Root.getInstance()
-        for obj in root.descendants(): obj.startup()
+        for obj in root.descendants():
+            obj.startup()
         need_startup = False
 
         # Python exit handlers happen in reverse order.
@@ -189,6 +204,64 @@ def simulate(*args, **kwargs):
 
     return sim_out
 
+
+def setMaxTick(tick: int) -> None:
+    """Sets the maximum tick the simulation may run to. When when using the
+    stdlib simulator module, reaching this max tick triggers a
+    `ExitEvent.MAX_TICK` exit event.
+
+    :param tick: the maximum tick (absolute, not relative to the current tick).
+    """
+    if tick <= curTick():
+        warn("Max tick scheduled for the past. This will not be triggered.")
+    _m5.event.setMaxTick(tick=tick)
+
+
+def getMaxTick() -> int:
+    """Returns the current maximum tick."""
+    return _m5.event.getMaxTick()
+
+
+def getTicksUntilMax() -> int:
+    """Returns the current number of ticks until the maximum tick."""
+    return getMaxTick() - curTick()
+
+
+def scheduleTickExitFromCurrent(
+    ticks: int, exit_string: str = "Tick exit reached"
+) -> None:
+    """Schedules a tick exit event from the current tick. I.e., if ticks == 100
+    then an exit event will be scheduled at tick `curTick() + 100`.
+
+    The default `exit_string` value is used by the stdlib Simulator module to
+    declare this exit event as `ExitEvent.SCHEDULED_TICK`.
+
+    :param ticks: The simulation ticks, from `curTick()` to schedule the exit
+    event.
+    :param exit_string: The exit string to return when the exit event is
+    triggered.
+    """
+    scheduleTickExitAbsolute(tick=ticks + curTick(), exit_string=exit_string)
+
+
+def scheduleTickExitAbsolute(
+    tick: int, exit_string: str = "Tick exit reached"
+) -> None:
+    """Schedules a tick exit event using absolute ticks. I.e., if tick == 100
+    then an exit event will be scheduled at tick 100.
+
+    The default `exit_string` value is used by the stdlib Simulator module to
+    declare this exit event as `ExitEvent.SCHEDULED_TICK`.
+
+    :param tick: The absolute simulation tick to schedule the exit event.
+    :param exit_string: The exit string to return when the exit event is
+    triggered.
+    """
+    if tick <= curTick():
+        warn("Tick exit scheduled for the past. This will not be triggered.")
+    _m5.event.exitSimLoop(exit_string, 0, tick, 0, False)
+
+
 def drain():
     """Drain the simulator in preparation of a checkpoint or memory mode
     switch.
@@ -212,7 +285,7 @@ def drain():
         # WARNING: if a valid exit event occurs while draining, it
         # will not get returned to the user script
         exit_event = _m5.event.simulate()
-        while exit_event.getCause() != 'Finished drain':
+        while exit_event.getCause() != "Finished drain":
             exit_event = simulate()
 
         return False
@@ -224,13 +297,16 @@ def drain():
 
     assert _drain_manager.isDrained(), "Drain state inconsistent"
 
+
 def memWriteback(root):
     for obj in root.descendants():
         obj.memWriteback()
 
+
 def memInvalidate(root):
     for obj in root.descendants():
         obj.memInvalidate()
+
 
 def checkpoint(dir):
     root = objects.Root.getInstance()
@@ -242,14 +318,18 @@ def checkpoint(dir):
     print("Writing checkpoint")
     _m5.core.serializeAll(dir)
 
+
 def _changeMemoryMode(system, mode):
     if not isinstance(system, (objects.Root, objects.System)):
-        raise TypeError("Parameter of type '%s'.  Must be type %s or %s." % \
-              (type(system), objects.Root, objects.System))
+        raise TypeError(
+            "Parameter of type '%s'.  Must be type %s or %s."
+            % (type(system), objects.Root, objects.System)
+        )
     if system.getMemoryMode() != mode:
         system.setMemoryMode(mode)
     else:
         print("System already in target mode. Memory mode unchanged.")
+
 
 def switchCpus(system, cpuList, verbose=True):
     """Switch CPUs in a system.
@@ -283,21 +363,25 @@ def switchCpus(system, cpuList, verbose=True):
             raise TypeError("%s is not of type BaseCPU" % new_cpu)
         if new_cpu in old_cpu_set:
             raise RuntimeError(
-                "New CPU (%s) is in the list of old CPUs." % (old_cpu,))
+                "New CPU (%s) is in the list of old CPUs." % (old_cpu,)
+            )
         if not new_cpu.switchedOut():
             raise RuntimeError("New CPU (%s) is already active." % (new_cpu,))
         if not new_cpu.support_take_over():
             raise RuntimeError(
-                "New CPU (%s) does not support CPU handover." % (old_cpu,))
+                "New CPU (%s) does not support CPU handover." % (old_cpu,)
+            )
         if new_cpu.memory_mode() != memory_mode_name:
             raise RuntimeError(
-                "%s and %s require different memory modes." % (new_cpu,
-                                                               new_cpus[0]))
+                "%s and %s require different memory modes."
+                % (new_cpu, new_cpus[0])
+            )
         if old_cpu.switchedOut():
             raise RuntimeError("Old CPU (%s) is inactive." % (new_cpu,))
         if not old_cpu.support_take_over():
             raise RuntimeError(
-                "Old CPU (%s) does not support CPU handover." % (old_cpu,))
+                "Old CPU (%s) does not support CPU handover." % (old_cpu,)
+            )
 
     MemoryMode = params.allEnums["MemoryMode"]
     try:
@@ -326,11 +410,15 @@ def switchCpus(system, cpuList, verbose=True):
     for old_cpu, new_cpu in cpuList:
         new_cpu.takeOverFrom(old_cpu)
 
+
 def notifyFork(root):
     for obj in root.descendants():
         obj.notifyFork()
 
+
 fork_count = 0
+
+
 def fork(simout="%(parent)s.f%(fork_seq)i"):
     """Fork the simulator.
 
@@ -353,6 +441,7 @@ def fork(simout="%(parent)s.f%(fork_seq)i"):
       pid of the child process or 0 if running in the child.
     """
     from m5 import options
+
     global fork_count
 
     if not _m5.core.listenersDisabled():
@@ -375,15 +464,16 @@ def fork(simout="%(parent)s.f%(fork_seq)i"):
         # Setup a new output directory
         parent = options.outdir
         options.outdir = simout % {
-                "parent" : parent,
-                "fork_seq" : fork_count,
-                "pid" : os.getpid(),
-                }
+            "parent": parent,
+            "fork_seq": fork_count,
+            "pid": os.getpid(),
+        }
         _m5.core.setOutputDir(options.outdir)
     else:
         fork_count += 1
 
     return pid
+
 
 from _m5.core import disableAllListeners, listenersDisabled
 from _m5.core import listenersLoopbackOnly

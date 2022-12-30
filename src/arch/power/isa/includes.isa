@@ -57,6 +57,7 @@ output decoder {{
 
 #include "arch/power/decoder.hh"
 #include "arch/power/faults.hh"
+#include "arch/power/regs/float.hh"
 #include "arch/power/regs/int.hh"
 #include "base/loader/symtab.hh"
 #include "base/cprintf.hh"
@@ -73,6 +74,7 @@ output exec {{
 
 #include "arch/generic/memhelpers.hh"
 #include "arch/power/faults.hh"
+#include "arch/power/regs/float.hh"
 #include "arch/power/regs/int.hh"
 #include "arch/power/regs/misc.hh"
 #include "base/condcodes.hh"

@@ -70,7 +70,7 @@ let {{
         @overrideInOperand
         def regId(self):
             return f'(({self.reg_spec}) == 0) ? RegId() : ' \
-                   f'RegId({self.reg_class}, {self.reg_spec})'
+                   f'{self.reg_class}[{self.reg_spec}]'
 }};
 
 def operands {{
@@ -81,10 +81,12 @@ def operands {{
     'Rd':               IntReg('udw', 'RD', 'IsInteger', 1),
     # The Rd from the previous window
     'Rd_prev':          IntReg('udw',
-            'RD + NumIntArchRegs + NumMicroIntRegs', 'IsInteger', 2),
+            'RD + int_reg::NumArchRegs + int_reg::NumMicroRegs',
+            'IsInteger', 2),
     # The Rd from the next window
     'Rd_next':          IntReg('udw',
-            'RD + 2 * NumIntArchRegs + NumMicroIntRegs', 'IsInteger', 3),
+            'RD + 2 * int_reg::NumArchRegs + int_reg::NumMicroRegs',
+            'IsInteger', 3),
     # For microcoded twin load instructions, RdTwin appears in the "code"
     # for the instruction is replaced by RdLow or RdHigh by the format
     # before it's processed by the iop.
@@ -95,7 +97,7 @@ def operands {{
     'Rs1':              IntReg('udw', 'RS1', 'IsInteger', 6),
     'Rs2':              IntReg('udw', 'RS2', 'IsInteger', 7),
     # A microcode register. Right now, this is the only one.
-    'uReg0':            IntReg('udw', 'INTREG_UREG0', 'IsInteger', 8),
+    'uReg0':            IntReg('udw', 'int_reg::Ureg0', 'IsInteger', 8),
     # Because double and quad precision register numbers are decoded
     # differently, they get different operands. The single precision versions
     # have an s post pended to their name.
@@ -142,25 +144,16 @@ def operands {{
     'NNPC':             PCStateOp('udw', 'nnpc',
                                   (None, None, 'IsControl'), 30),
     # Registers which are used explicitly in instructions
-    'R0':               IntReg('udw', '0', None, 6),
-    'R1':               IntReg('udw', '1', None, 7),
     'R15':              IntReg('udw', '15', 'IsInteger', 8),
-    'R16':              IntReg('udw', '16', None, 9),
-    'O0':               IntReg('udw', 'INTREG_O0', 'IsInteger', 10),
-    'O1':               IntReg('udw', 'INTREG_O1', 'IsInteger', 11),
-    'O2':               IntReg('udw', 'INTREG_O2', 'IsInteger', 12),
-    'O3':               IntReg('udw', 'INTREG_O3', 'IsInteger', 13),
-    'O4':               IntReg('udw', 'INTREG_O4', 'IsInteger', 14),
-    'O5':               IntReg('udw', 'INTREG_O5', 'IsInteger', 15),
 
     # Control registers
-    'Y':                IntReg('udw', 'INTREG_Y', None, 40),
-    'Ccr':              IntReg('udw', 'INTREG_CCR', None, 41),
+    'Y':                IntReg('udw', 'int_reg::Y', None, 40),
+    'Ccr':              IntReg('udw', 'int_reg::Ccr', None, 41),
     'Asi':              ControlRegOp('udw', 'MISCREG_ASI', None, 42),
     'Fprs':             ControlRegOp('udw', 'MISCREG_FPRS', None, 43),
     'Pcr':              ControlRegOp('udw', 'MISCREG_PCR', None, 44),
     'Pic':              ControlRegOp('udw', 'MISCREG_PIC', None, 45),
-    'Gsr':              IntReg('udw', 'INTREG_GSR', None, 46),
+    'Gsr':              IntReg('udw', 'int_reg::Gsr', None, 46),
     'Softint':          ControlRegOp('udw', 'MISCREG_SOFTINT', None, 47),
     'SoftintSet':       ControlRegOp('udw', 'MISCREG_SOFTINT_SET', None, 48),
     'SoftintClr':       ControlRegOp('udw', 'MISCREG_SOFTINT_CLR', None, 49),
@@ -181,11 +174,11 @@ def operands {{
             (None, None, ['IsSerializeAfter',
                           'IsSerializing',
                           'IsNonSpeculative']), 62),
-    'Cansave':          IntReg('udw', 'INTREG_CANSAVE', None, 63),
-    'Canrestore':       IntReg('udw', 'INTREG_CANRESTORE', None, 64),
-    'Cleanwin':         IntReg('udw', 'INTREG_CLEANWIN', None, 65),
-    'Otherwin':         IntReg('udw', 'INTREG_OTHERWIN', None, 66),
-    'Wstate':           IntReg('udw', 'INTREG_WSTATE', None, 67),
+    'Cansave':          IntReg('udw', 'int_reg::Cansave', None, 63),
+    'Canrestore':       IntReg('udw', 'int_reg::Canrestore', None, 64),
+    'Cleanwin':         IntReg('udw', 'int_reg::Cleanwin', None, 65),
+    'Otherwin':         IntReg('udw', 'int_reg::Otherwin', None, 66),
+    'Wstate':           IntReg('udw', 'int_reg::Wstate', None, 67),
     'Gl':               ControlRegOp('udw', 'MISCREG_GL', None, 68),
 
     'Hpstate':          ControlRegOp('hpstate', 'MISCREG_HPSTATE', None, 69),

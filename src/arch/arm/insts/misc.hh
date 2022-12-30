@@ -414,7 +414,7 @@ class McrMrcMiscInst : public ArmISA::ArmStaticInst
                    uint64_t _iss, ArmISA::MiscRegIndex _miscReg);
 
     Fault execute(ExecContext *xc,
-                  Trace::InstRecord *traceData) const override;
+                  trace::InstRecord *traceData) const override;
 
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
@@ -432,7 +432,7 @@ class McrMrcImplDefined : public McrMrcMiscInst
                       uint64_t _iss, ArmISA::MiscRegIndex _miscReg);
 
     Fault execute(ExecContext *xc,
-                  Trace::InstRecord *traceData) const override;
+                  trace::InstRecord *traceData) const override;
 
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;

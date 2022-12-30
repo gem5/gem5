@@ -60,6 +60,7 @@ output decoder {{
 #include <algorithm>
 
 #include "arch/sparc/decoder.hh"
+#include "arch/sparc/regs/float.hh"
 #include "base/cprintf.hh"
 #include "base/fenv.hh"
 #include "base/loader/symtab.hh"
@@ -79,6 +80,7 @@ output exec {{
 #include "arch/generic/memhelpers.hh"
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/pseudo_inst_abi.hh"
+#include "arch/sparc/regs/float.hh"
 #include "base/fenv.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"

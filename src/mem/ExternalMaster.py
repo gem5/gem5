@@ -37,17 +37,24 @@ from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
 
+
 class ExternalMaster(SimObject):
-    type = 'ExternalMaster'
+    type = "ExternalMaster"
     cxx_header = "mem/external_master.hh"
-    cxx_class = 'gem5::ExternalMaster'
+    cxx_class = "gem5::ExternalMaster"
 
     port = RequestPort("Master port")
 
-    port_type = Param.String('stub', 'Registered external port handler'
-        ' to pass this port to in instantiation')
-    port_data = Param.String('stub', 'A string to pass to the port'
-        ' handler (in a format specific to the handler) to describe how'
-        ' the port should be bound/bindable/discoverable')
+    port_type = Param.String(
+        "stub",
+        "Registered external port handler"
+        " to pass this port to in instantiation",
+    )
+    port_data = Param.String(
+        "stub",
+        "A string to pass to the port"
+        " handler (in a format specific to the handler) to describe how"
+        " the port should be bound/bindable/discoverable",
+    )
 
-    system = Param.System(Parent.any, 'System this external port belongs to')
+    system = Param.System(Parent.any, "System this external port belongs to")

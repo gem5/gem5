@@ -24,9 +24,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
+"""
 Test file for the m5threads atomic test
-'''
+"""
 from testlib import *
 
 cpu_types = (
@@ -38,26 +38,31 @@ cpu_types = (
     # 'TimingSimpleCPU',
 )
 
-base_path = joinpath(config.bin_path, 'pthreads', 'sparc64')
+base_path = joinpath(config.bin_path, "pthreads", "sparc64")
 
-binary = 'test_atomic'
-url = config.resource_url + '/test-progs/pthreads/sparc64/' + binary
+binary = "test_atomic"
+url = config.resource_url + "/test-progs/pthreads/sparc64/" + binary
 test_atomic = DownloadedProgram(url, base_path, binary)
 
 verifiers = (
-    verifier.MatchStdoutNoPerf(joinpath(getcwd(), 'ref/sparc64/simout')),
+    verifier.MatchStdoutNoPerf(joinpath(getcwd(), "ref/sparc64/simout")),
 )
 
 for cpu in cpu_types:
     gem5_verify_config(
-        name='test-atomic-' + cpu,
+        name="test-atomic-" + cpu,
         verifiers=verifiers,
         fixtures=(test_atomic,),
-        config=joinpath(getcwd(), 'atomic_system.py'),
-        config_args=['--cpu-type', cpu,
-                     '--num-cores', '8',
-                     '--cmd', joinpath(base_path, binary)],
+        config=joinpath(getcwd(), "atomic_system.py"),
+        config_args=[
+            "--cpu-type",
+            cpu,
+            "--num-cores",
+            "8",
+            "--cmd",
+            joinpath(base_path, binary),
+        ],
         valid_isas=(constants.sparc_tag,),
         valid_hosts=constants.supported_hosts,
-        length = constants.long_tag,
+        length=constants.long_tag,
     )

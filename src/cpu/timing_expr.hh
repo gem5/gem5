@@ -55,7 +55,6 @@
 #include "params/TimingExprIf.hh"
 #include "params/TimingExprLet.hh"
 #include "params/TimingExprLiteral.hh"
-#include "params/TimingExprReadIntReg.hh"
 #include "params/TimingExprRef.hh"
 #include "params/TimingExprSrcReg.hh"
 #include "params/TimingExprUn.hh"
@@ -119,19 +118,6 @@ class TimingExprSrcReg : public TimingExpr
     TimingExprSrcReg(const TimingExprSrcRegParams &params) :
         TimingExpr(params),
         index(params.index)
-    { }
-
-    uint64_t eval(TimingExprEvalContext &context);
-};
-
-class TimingExprReadIntReg : public TimingExpr
-{
-  public:
-    TimingExpr *reg;
-
-    TimingExprReadIntReg(const TimingExprReadIntRegParams &params) :
-        TimingExpr(params),
-        reg(params.reg)
     { }
 
     uint64_t eval(TimingExprEvalContext &context);

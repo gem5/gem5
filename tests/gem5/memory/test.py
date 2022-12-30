@@ -24,67 +24,102 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
+"""
 Test file for simple memory test
 TODO: Add stats checking
-'''
+"""
 
 from testlib import *
 
 gem5_verify_config(
-    name='simple_mem_default',
-    verifiers=(), # No need for verfiers this will return non-zero on fail
-    config=joinpath(getcwd(), 'simple-run.py'),
-    config_args = [],
+    name="simple_mem_default",
+    verifiers=(),  # No need for verfiers this will return non-zero on fail
+    config=joinpath(getcwd(), "simple-run.py"),
+    config_args=[],
     valid_isas=(constants.null_tag,),
+    length=constants.long_tag,
 )
 
 simple_mem_params = [
-        ('inf-bandwidth', {'bandwidth': '0GB/s'}),
-        ('low-latency', {'latency': '1ns'}),
-        ('high-latency', {'latency': '1us'}),
-        ('low-bandwidth', {'bandwidth': '1MB/s'}),
-        ('high-var', {'latency_var': '100ns'})
-        ]
+    ("inf-bandwidth", {"bandwidth": "0GB/s"}),
+    ("low-latency", {"latency": "1ns"}),
+    ("high-latency", {"latency": "1us"}),
+    ("low-bandwidth", {"bandwidth": "1MB/s"}),
+    ("high-var", {"latency_var": "100ns"}),
+]
 
 
 for name, params in simple_mem_params:
-    args = ['--' + key + '=' + val for key,val in params.items()]
+    args = ["--" + key + "=" + val for key, val in params.items()]
 
     gem5_verify_config(
-        name='simple_mem_' + name,
-        verifiers=(), # No need for verfiers this will return non-zero on fail
-        config=joinpath(getcwd(), 'simple-run.py'),
-        config_args = args,
+        name="simple_mem_" + name,
+        verifiers=(),  # No need for verfiers this will return non-zero on fail
+        config=joinpath(getcwd(), "simple-run.py"),
+        config_args=args,
         valid_isas=(constants.null_tag,),
-        ) # This tests for validity as well as performance
+        length=constants.long_tag,
+    )  # This tests for validity as well as performance
 
 gem5_verify_config(
-    name='memtest',
-    verifiers=(), # No need for verfiers this will return non-zero on fail
-    config=joinpath(getcwd(), 'memtest-run.py'),
-    config_args = [],
+    name="memtest",
+    verifiers=(),  # No need for verfiers this will return non-zero on fail
+    config=joinpath(getcwd(), "memtest-run.py"),
+    config_args=[],
     valid_isas=(constants.null_tag,),
+    length=constants.long_tag,
 )
 
 null_tests = [
-    ('garnet_synth_traffic', None, ['--sim-cycles', '5000000']),
-    ('memcheck', None, ['--maxtick', '2000000000', '--prefetchers']),
-    ('ruby_mem_test-garnet', 'ruby_mem_test',
-        ['--abs-max-tick', '20000000', '--functional', '10', \
-         '--network=garnet']),
-    ('ruby_mem_test-simple', 'ruby_mem_test',
-        ['--abs-max-tick', '20000000', '--functional', '10', \
-         '--network=simple']),
-    ('ruby_mem_test-simple-extra', 'ruby_mem_test',
-        ['--abs-max-tick', '20000000', '--functional', '10', \
-         '--network=simple', '--simple-physical-channels']),
-    ('ruby_mem_test-simple-extra-multicore', 'ruby_mem_test',
-        ['--abs-max-tick', '20000000', '--functional', '10', \
-         '--network=simple', '--simple-physical-channels',
-         '--num-cpus=4']),
-    ('ruby_random_test', None, ['--maxloads', '5000']),
-    ('ruby_direct_test', None, ['--requests', '50000']),
+    ("garnet_synth_traffic", None, ["--sim-cycles", "5000000"]),
+    ("memcheck", None, ["--maxtick", "2000000000", "--prefetchers"]),
+    (
+        "ruby_mem_test-garnet",
+        "ruby_mem_test",
+        [
+            "--abs-max-tick",
+            "20000000",
+            "--network=garnet",
+        ],
+    ),
+    (
+        "ruby_mem_test-simple",
+        "ruby_mem_test",
+        [
+            "--abs-max-tick",
+            "20000000",
+            "--functional",
+            "10",
+            "--network=simple",
+        ],
+    ),
+    (
+        "ruby_mem_test-simple-extra",
+        "ruby_mem_test",
+        [
+            "--abs-max-tick",
+            "20000000",
+            "--functional",
+            "10",
+            "--network=simple",
+            "--simple-physical-channels",
+        ],
+    ),
+    (
+        "ruby_mem_test-simple-extra-multicore",
+        "ruby_mem_test",
+        [
+            "--abs-max-tick",
+            "20000000",
+            "--functional",
+            "10",
+            "--network=simple",
+            "--simple-physical-channels",
+            "--num-cpus=4",
+        ],
+    ),
+    ("ruby_random_test", None, ["--maxloads", "5000"]),
+    ("ruby_direct_test", None, ["--requests", "50000"]),
 ]
 
 for test_name, basename_noext, args in null_tests:
@@ -94,9 +129,11 @@ for test_name, basename_noext, args in null_tests:
         name=test_name,
         fixtures=(),
         verifiers=(),
-        config=joinpath(config.base_dir, 'configs',
-            'example', basename_noext + '.py'),
+        config=joinpath(
+            config.base_dir, "configs", "example", basename_noext + ".py"
+        ),
         config_args=args,
         valid_isas=(constants.null_tag,),
         valid_hosts=constants.supported_hosts,
+        length=constants.long_tag,
     )

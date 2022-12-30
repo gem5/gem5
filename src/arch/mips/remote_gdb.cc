@@ -173,16 +173,18 @@ RemoteGDB::MipsGdbRegCache::getRegs(ThreadContext *context)
 {
     DPRINTF(GDBAcc, "getregs in remotegdb \n");
 
-    for (int i = 0; i < 32; i++) r.gpr[i] = context->readIntReg(i);
-    r.sr = context->readMiscRegNoEffect(MISCREG_STATUS);
-    r.lo = context->readIntReg(INTREG_LO);
-    r.hi = context->readIntReg(INTREG_HI);
-    r.badvaddr = context->readMiscRegNoEffect(MISCREG_BADVADDR);
-    r.cause = context->readMiscRegNoEffect(MISCREG_CAUSE);
+    for (int i = 0; i < 32; i++)
+        r.gpr[i] = context->getReg(intRegClass[i]);
+    r.sr = context->readMiscRegNoEffect(misc_reg::Status);
+    r.lo = context->getReg(int_reg::Lo);
+    r.hi = context->getReg(int_reg::Hi);
+    r.badvaddr = context->readMiscRegNoEffect(misc_reg::Badvaddr);
+    r.cause = context->readMiscRegNoEffect(misc_reg::Cause);
     r.pc = context->pcState().instAddr();
-    for (int i = 0; i < 32; i++) r.fpr[i] = context->readFloatReg(i);
-    r.fsr = context->readFloatReg(FLOATREG_FCCR);
-    r.fir = context->readFloatReg(FLOATREG_FIR);
+    for (int i = 0; i < 32; i++)
+        r.fpr[i] = context->getReg(floatRegClass[i]);
+    r.fsr = context->getReg(float_reg::Fccr);
+    r.fir = context->getReg(float_reg::Fir);
 }
 
 void
@@ -190,16 +192,18 @@ RemoteGDB::MipsGdbRegCache::setRegs(ThreadContext *context) const
 {
     DPRINTF(GDBAcc, "setregs in remotegdb \n");
 
-    for (int i = 1; i < 32; i++) context->setIntReg(i, r.gpr[i]);
-    context->setMiscRegNoEffect(MISCREG_STATUS, r.sr);
-    context->setIntReg(INTREG_LO, r.lo);
-    context->setIntReg(INTREG_HI, r.hi);
-    context->setMiscRegNoEffect(MISCREG_BADVADDR, r.badvaddr);
-    context->setMiscRegNoEffect(MISCREG_CAUSE, r.cause);
+    for (int i = 1; i < 32; i++)
+        context->setReg(intRegClass[i], r.gpr[i]);
+    context->setMiscRegNoEffect(misc_reg::Status, r.sr);
+    context->setReg(int_reg::Lo, r.lo);
+    context->setReg(int_reg::Hi, r.hi);
+    context->setMiscRegNoEffect(misc_reg::Badvaddr, r.badvaddr);
+    context->setMiscRegNoEffect(misc_reg::Cause, r.cause);
     context->pcState(r.pc);
-    for (int i = 0; i < 32; i++) context->setFloatReg(i, r.fpr[i]);
-    context->setFloatReg(FLOATREG_FCCR, r.fsr);
-    context->setFloatReg(FLOATREG_FIR, r.fir);
+    for (int i = 0; i < 32; i++)
+        context->setReg(floatRegClass[i], r.fpr[i]);
+    context->setReg(float_reg::Fccr, r.fsr);
+    context->setReg(float_reg::Fir, r.fir);
 }
 
 BaseGdbRegCache*

@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 
 # FSTSW
 
@@ -52,4 +52,4 @@ def macroop FNSTSW_P {
     rdval t1, fsw
     st t1, seg, riprel, disp, dataSize=2
 };
-'''
+"""

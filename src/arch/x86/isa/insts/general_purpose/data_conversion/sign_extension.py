@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop CDQE_R {
     sexti reg, reg, "env.dataSize * 4 - 1"
 };
@@ -44,4 +44,4 @@ def macroop CQO_R_R {
     mov regm, regm, reg
     srai regm, regm, "env.dataSize * 8 - 1"
 };
-'''
+"""

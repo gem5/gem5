@@ -64,24 +64,20 @@ def test_boot(
 
     if mem_system == "mesi_two_level":
         protocol_to_use = None
-        isa_to_use=constants.x86_tag
+        isa_to_use = constants.all_compiled_tag
     elif mem_system == "mi_example":
         protocol_to_use = "MI_example"
-        isa_to_use=constants.x86_tag
+        isa_to_use = constants.x86_tag
     else:
-        protocol_to_use=None
-        isa_to_use=constants.vega_x86_tag
+        protocol_to_use = None
+        isa_to_use = constants.all_compiled_tag
 
     gem5_verify_config(
         name=name,
         verifiers=verifiers,
         fixtures=(),
         config=joinpath(
-            config.base_dir,
-            "tests",
-            "gem5",
-            "configs",
-            "x86_boot_exit_run.py",
+            config.base_dir, "tests", "gem5", "configs", "x86_boot_exit_run.py"
         ),
         config_args=[
             "--cpu",
@@ -112,7 +108,7 @@ test_boot(
     num_cpus=1,
     mem_system="classic",
     memory_class="SingleChannelDDR3_1600",
-    to_tick=10000000000, #Simulates 1/100th of a second.
+    to_tick=10000000000,  # Simulates 1/100th of a second.
     length=constants.quick_tag,
 )
 
@@ -154,39 +150,13 @@ test_boot(
 
 #### The long (Nightly) tests ####
 
-test_boot(
-    cpu="atomic",
-    num_cpus=1,
-    mem_system="classic",
-    memory_class="SingleChannelHBM",
-    boot_type="init",
-    length=constants.long_tag,
-)
 
 test_boot(
     cpu="timing",
     num_cpus=1,
     mem_system="mesi_two_level",
     memory_class="DualChannelDDR3_1600",
-    boot_type="init",
-    length=constants.long_tag,
-)
-
-test_boot(
-    cpu="timing",
-    num_cpus=1,
-    mem_system="mi_example",
-    memory_class="DualChannelDDR3_2133",
-    boot_type="init",
-    length=constants.long_tag,
-)
-
-test_boot(
-    cpu="timing",
-    num_cpus=4,
-    mem_system="classic",
-    memory_class="DualChannelDDR3_2133",
-    boot_type="init",
+    boot_type="systemd",
     length=constants.long_tag,
 )
 
@@ -204,23 +174,15 @@ test_boot(
 # https://gem5.atlassian.net/browse/GEM5-1120, this test has been disabled
 # until the exact error causing the Nightly tests to timeout is established.
 
-#test_boot(
+# test_boot(
 #    cpu="o3",
 #    num_cpus=2,
 #    mem_system="mesi_two_level",
 #    memory_class="DualChannelDDR4_2400"
 #    boot_type="init",
 #    length=constants.long_tag,
-#)
+# )
 
-test_boot(
-    cpu="atomic",
-    num_cpus=4,
-    mem_system="classic",
-    memory_class="HBM2Stack",
-    boot_type="systemd",
-    length=constants.long_tag,
-)
 
 #### The very-long (Weekly) tests ####
 
@@ -283,7 +245,7 @@ run_map = {
         "timing": {
             1: True,
             2: False,  # Disabled due to
-                       # https://gem5.atlassian.net/browse/GEM5-1219.
+            # https://gem5.atlassian.net/browse/GEM5-1219.
             4: True,
             8: True,
         },
@@ -307,7 +269,7 @@ for mem_system in run_map:
                     memory_class="DualChannelDDR4_2400",
                     boot_type="systemd",
                     length=constants.very_long_tag,
-                    )
+                )
 
 # To ensure the O3 CPU is working correctly, we include some "init" tests here.
 # There were not included above as booting to "systemd" takes too long with
@@ -347,4 +309,3 @@ test_boot(
     boot_type="init",
     length=constants.very_long_tag,
 )
-

@@ -104,6 +104,7 @@ AmbaToTlmBridge64::bTransport(amba_pv::amba_pv_transaction &trans,
                               sc_core::sc_time &t)
 {
     maybeSetupAtomicExtension(trans);
+    setupControlExtension(trans);
     return initiatorProxy->b_transport(trans, t);
 }
 
@@ -160,13 +161,41 @@ AmbaToTlmBridge64::maybeSetupAtomicExtension(
     trans.set_data_ptr(dummy_buffer);
 
     // The return value would store in the extension. We don't need to specify
-    // need_return here.
+    // returnRequired here.
     atomic_ex = new Gem5SystemC::AtomicExtension(
         std::make_shared<FarAtomicOpFunctor>(fa), false);
     if (trans.has_mm())
         trans.set_auto_extension(atomic_ex);
     else
         trans.set_extension(atomic_ex);
+}
+
+void
+AmbaToTlmBridge64::setupControlExtension(amba_pv::amba_pv_transaction &trans)
+{
+    Gem5SystemC::ControlExtension *control_ex = nullptr;
+    trans.get_extension(control_ex);
+    if (control_ex) {
+        return;
+    }
+
+    amba_pv::amba_pv_extension *amba_ex = nullptr;
+    trans.get_extension(amba_ex);
+    if (!amba_ex) {
+        return;
+    }
+
+    control_ex = new Gem5SystemC::ControlExtension();
+
+    control_ex->setPrivileged(amba_ex->is_privileged());
+    control_ex->setSecure(!amba_ex->is_non_secure());
+    control_ex->setInstruction(amba_ex->is_instruction());
+
+    if (trans.has_mm()) {
+        trans.set_auto_extension(control_ex);
+    } else {
+        trans.set_extension(control_ex);
+    }
 }
 
 } // namespace fastmodel

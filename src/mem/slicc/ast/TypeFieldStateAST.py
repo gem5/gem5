@@ -27,6 +27,7 @@
 from slicc.ast.TypeFieldAST import TypeFieldAST
 from slicc.symbols import Event, State
 
+
 class TypeFieldStateAST(TypeFieldAST):
     def __init__(self, slicc, field_id, perm_ast, pairs_ast):
         super().__init__(slicc, pairs_ast)
@@ -57,5 +58,3 @@ class TypeFieldStateAST(TypeFieldAST):
         machine.addState(s)
 
         type.statePermPairAdd(s, self.perm_ast.value)
-
-

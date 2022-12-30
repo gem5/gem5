@@ -26,12 +26,8 @@
 
 from .abstract_node import AbstractNode
 
-from m5.objects import (
-    ClockDomain,
-    NULL,
-    RubyCache,
-    RubyNetwork,
-)
+from m5.objects import ClockDomain, NULL, RubyCache, RubyNetwork
+
 
 class SimpleDirectory(AbstractNode):
     """A directory or home node (HNF)
@@ -39,6 +35,7 @@ class SimpleDirectory(AbstractNode):
     This simple directory has no cache. It forwards all requests as directly
     as possible.
     """
+
     def __init__(
         self,
         network: RubyNetwork,
@@ -49,10 +46,7 @@ class SimpleDirectory(AbstractNode):
 
         # Dummy cache
         self.cache = RubyCache(
-            dataAccessLatency = 0,
-            tagAccessLatency = 1,
-            size = "128",
-            assoc = 1
+            dataAccessLatency=0, tagAccessLatency=1, size="128", assoc=1
         )
 
         self.clk_domain = clk_domain
@@ -87,4 +81,6 @@ class SimpleDirectory(AbstractNode):
         self.number_of_TBEs = 32
         self.number_of_repl_TBEs = 32
         self.number_of_snoop_TBEs = 1
+        self.number_of_DVM_TBEs = 1  # should not receive any dvm
+        self.number_of_DVM_snoop_TBEs = 1  # should not receive any dvm
         self.unify_repl_TBEs = False

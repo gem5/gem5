@@ -29,15 +29,16 @@ from m5.objects import *
 
 from topologies.BaseTopology import SimpleTopology
 
+
 class Crossbar(SimpleTopology):
-    description='Crossbar'
+    description = "Crossbar"
 
     def makeTopology(self, options, network, IntLink, ExtLink, Router):
 
         # default values for link latency and router latency.
         # Can be over-ridden on a per link/router basis
-        link_latency = options.link_latency # used by simple and garnet
-        router_latency = options.router_latency # only used by garnet
+        link_latency = options.link_latency  # used by simple and garnet
+        router_latency = options.router_latency  # only used by garnet
 
         # Create an individual router for each controller plus one more for
         # the centralized crossbar.  The large numbers of routers are needed
@@ -45,30 +46,46 @@ class Crossbar(SimpleTopology):
         # simple network, but internal links do.
         # For garnet, one router suffices, use CrossbarGarnet.py
 
-        routers = [Router(router_id=i) for i in range(len(self.nodes)+1)]
-        xbar = routers[len(self.nodes)] # the crossbar router is the last router created
+        routers = [Router(router_id=i) for i in range(len(self.nodes) + 1)]
+        xbar = routers[
+            len(self.nodes)
+        ]  # the crossbar router is the last router created
         network.routers = routers
 
-        ext_links = [ExtLink(link_id=i, ext_node=n, int_node=routers[i],
-                             latency = link_latency)
-                        for (i, n) in enumerate(self.nodes)]
+        ext_links = [
+            ExtLink(
+                link_id=i,
+                ext_node=n,
+                int_node=routers[i],
+                latency=link_latency,
+            )
+            for (i, n) in enumerate(self.nodes)
+        ]
         network.ext_links = ext_links
 
         link_count = len(self.nodes)
 
         int_links = []
         for i in range(len(self.nodes)):
-            int_links.append(IntLink(link_id=(link_count+i),
-                                     src_node=routers[i],
-                                     dst_node=xbar,
-                                     latency = link_latency))
+            int_links.append(
+                IntLink(
+                    link_id=(link_count + i),
+                    src_node=routers[i],
+                    dst_node=xbar,
+                    latency=link_latency,
+                )
+            )
 
         link_count += len(self.nodes)
 
         for i in range(len(self.nodes)):
-            int_links.append(IntLink(link_id=(link_count+i),
-                                     src_node=xbar,
-                                     dst_node=routers[i],
-                                     latency = link_latency))
+            int_links.append(
+                IntLink(
+                    link_id=(link_count + i),
+                    src_node=xbar,
+                    dst_node=routers[i],
+                    latency=link_latency,
+                )
+            )
 
         network.int_links = int_links

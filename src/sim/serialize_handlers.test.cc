@@ -224,9 +224,15 @@ TEST(SerializeTest, ParseParamChar)
     EXPECT_FALSE(parser.parse("false", value));
 
     // 8-bit values
-    EXPECT_FALSE(parser.parse("255", value));
-    EXPECT_TRUE(parser.parse("-128", value));
-    EXPECT_EQ(char(-128), value);
+     if constexpr (std::is_signed_v<char>) {
+        EXPECT_FALSE(parser.parse("255", value));
+        EXPECT_TRUE(parser.parse("-128", value));
+        EXPECT_EQ(char(-128), value);
+    } else {
+        EXPECT_FALSE(parser.parse("256", value));
+        EXPECT_TRUE(parser.parse("255", value));
+        EXPECT_EQ(char(255), value);
+    }
 
     // 16-bit values
     EXPECT_FALSE(parser.parse("1000", value));

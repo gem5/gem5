@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop MOVD_MMX_R {
     mov2fp mmx, regm, srcSize=dsz, destSize=8
 };
@@ -81,6 +81,6 @@ def macroop MOVQ_P_MMX {
     rdip t7
     stfp mmx, seg, riprel, disp, dataSize=8
 };
-'''
+"""
 # MOVDQ2Q
 # MOVQ2DQ

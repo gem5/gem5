@@ -33,12 +33,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["call",
-              "conditional_jump",
-              "interrupts_and_exceptions",
-              "jump",
-              "loop",
-              "xreturn"]
+categories = [
+    "call",
+    "conditional_jump",
+    "interrupts_and_exceptions",
+    "jump",
+    "loop",
+    "xreturn",
+]
 
 microcode = ""
 for category in categories:

@@ -35,22 +35,23 @@
 
 import re
 
+
 def list_parser(names):
     """Parse a list of elements, some of which might be one-level sublists
     within parentheses, into a a list of lists of those elements.  For
     example: list_parser('(a,b),c') -> [['a', 'b'], 'c']"""
-    elems = re.split(',', names)
+    elems = re.split(",", names)
     ret = []
     accum = []
     for elem in elems:
-        if re.search('^\((.*)\)$', elem):
-            accum.append(re.sub('^\((.*)\)', '\\1', elem))
+        if re.search("^\((.*)\)$", elem):
+            accum.append(re.sub("^\((.*)\)", "\\1", elem))
             ret.append(accum)
             accum = []
-        elif re.search('^\(', elem):
-            accum.append(re.sub('^\(', '', elem))
-        elif re.search('\)$', elem):
-            accum.append(re.sub('\)$', '', elem))
+        elif re.search("^\(", elem):
+            accum.append(re.sub("^\(", "", elem))
+        elif re.search("\)$", elem):
+            accum.append(re.sub("\)$", "", elem))
             ret.append(accum)
             accum = []
         elif len(accum) != 0:
@@ -59,20 +60,24 @@ def list_parser(names):
             ret.append([elem])
 
     if len(accum) > 0:
-        print('Non matching brackets in', names)
+        print("Non matching brackets in", names)
 
     return ret
 
+
 def map2(f, ls):
     """map to a depth of 2.  That is, given a list of lists, apply
-    f to those innermost elements """
+    f to those innermost elements"""
     return [list(map(f, l)) for l in ls]
 
+
 def remove_trailing_ws(line):
-    return re.sub('\s*$', '', line)
+    return re.sub("\s*$", "", line)
+
 
 def remove_leading_and_trailing_ws(line):
-    return re.sub('\s*$', '', re.sub('^\s*', '', line))
+    return re.sub("\s*$", "", re.sub("^\s*", "", line))
+
 
 def parse_pairs_list(pairString):
     """parse a string like 'name=value name2=value2' into a
@@ -82,11 +87,12 @@ def parse_pairs_list(pairString):
     for pair in pairs:
         name, rest, value = pair.groups()
         if value is not None:
-            value = re.sub('^"(.*)"$', '\\1', value)
+            value = re.sub('^"(.*)"$', "\\1", value)
             ret.append((name, value))
         else:
-            ret.append((name, ''))
+            ret.append((name, ""))
     return ret
+
 
 def parse_indexed_list(string):
     """parse a string of the form "(index,value),(index,value)..."
@@ -101,7 +107,8 @@ def parse_indexed_list(string):
 
     return ret
 
+
 def parse_pairs(pairString):
     """parse a string like 'name=value name2=value2' into a
-    dictionary of {'name': 'value', 'name2': 'value2'} """
+    dictionary of {'name': 'value', 'name2': 'value2'}"""
     return dict(parse_pairs_list(pairString))

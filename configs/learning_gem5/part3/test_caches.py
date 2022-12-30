@@ -42,21 +42,21 @@ from m5.objects import *
 
 from msi_caches import L1Cache, DirController, MyNetwork
 
-class TestCacheSystem(RubySystem):
 
+class TestCacheSystem(RubySystem):
     def __init__(self):
-        if buildEnv['PROTOCOL'] != 'MSI':
+        if buildEnv["PROTOCOL"] != "MSI":
             fatal("This system assumes MSI from learning gem5!")
 
         super(TestCacheSystem, self).__init__()
 
     def setup(self, system, tester, mem_ctrls):
         """Set up the Ruby cache subsystem. Note: This can't be done in the
-           constructor because many of these items require a pointer to the
-           ruby system (self). This causes infinite recursion in initialize()
-           if we do this in the __init__.
-           Setting up for running the RubyRandomTester is a little different
-           than when we're using CPUs.
+        constructor because many of these items require a pointer to the
+        ruby system (self). This causes infinite recursion in initialize()
+        if we do this in the __init__.
+        Setting up for running the RubyRandomTester is a little different
+        than when we're using CPUs.
         """
         num_testers = tester.num_cpus
 
@@ -67,17 +67,21 @@ class TestCacheSystem(RubySystem):
         self.number_of_virtual_networks = 3
         self.network.number_of_virtual_networks = 3
 
-        self.controllers = \
-            [L1Cache(system, self, self) for i in range(num_testers)] + \
-            [DirController(self, system.mem_ranges, mem_ctrls)]
+        self.controllers = [
+            L1Cache(system, self, self) for i in range(num_testers)
+        ] + [DirController(self, system.mem_ranges, mem_ctrls)]
 
-        self.sequencers = [RubySequencer(version = i,
-                              # I/D cache is combined and grab from ctrl
-                              dcache = self.controllers[i].cacheMemory,
-                              clk_domain = self.clk_domain,
-                              ) for i in range(num_testers)]
+        self.sequencers = [
+            RubySequencer(
+                version=i,
+                # I/D cache is combined and grab from ctrl
+                dcache=self.controllers[i].cacheMemory,
+                clk_domain=self.clk_domain,
+            )
+            for i in range(num_testers)
+        ]
 
-        for i,c in enumerate(self.controllers[0:len(self.sequencers)]):
+        for i, c in enumerate(self.controllers[0 : len(self.sequencers)]):
             c.sequencer = self.sequencers[i]
 
         self.num_of_sequencers = len(self.sequencers)

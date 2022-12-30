@@ -53,7 +53,7 @@ struct Result<SparcPseudoInstABI, T>
         // This assumes that all pseudo ops have their return value set
         // by the pseudo op instruction. This may need to be revisited if we
         // modify the pseudo op ABI in util/m5/m5op_x86.S
-        tc->setIntReg(SparcISA::INTREG_O0, ret);
+        tc->setReg(SparcISA::int_reg::O0, ret);
     }
 };
 
@@ -64,7 +64,7 @@ struct Argument<SparcPseudoInstABI, uint64_t>
     get(ThreadContext *tc, SparcPseudoInstABI::State &state)
     {
         panic_if(state >= 6, "Too many psuedo inst arguments.");
-        return tc->readIntReg(SparcISA::INTREG_O0 + state++);
+        return tc->getReg(SparcISA::int_reg::o(state++));
     }
 };
 

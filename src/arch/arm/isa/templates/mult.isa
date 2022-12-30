@@ -45,7 +45,7 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _reg0,
                    RegIndex _reg1, RegIndex _reg2);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -76,7 +76,7 @@ class %(class_name)s : public %(base_class)s
     %(class_name)s(ExtMachInst machInst,
                    RegIndex _reg0, RegIndex _reg1,
                    RegIndex _reg2, RegIndex _reg3);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 

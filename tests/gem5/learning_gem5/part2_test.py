@@ -26,45 +26,43 @@
 
 from testlib import *
 
-config_path = joinpath(config.base_dir, 'configs', 'learning_gem5', 'part2')
-ref_path = joinpath(getcwd(), 'ref')
+config_path = joinpath(config.base_dir, "configs", "learning_gem5", "part2")
+ref_path = joinpath(getcwd(), "ref")
 get_verifier = lambda file: verifier.MatchStdout(joinpath(ref_path, file))
 
 gem5_verify_config(
-    name='run_simple_test',
-    verifiers = (get_verifier('simple'),),
-    config=joinpath(config_path, 'run_simple.py'),
-    config_args = [],
-    valid_isas=(constants.null_tag,),
+    name="run_simple_test",
+    verifiers=(get_verifier("simple"),),
+    config=joinpath(config_path, "run_simple.py"),
+    config_args=[],
+    valid_isas=(constants.all_compiled_tag,),
 )
 
 gem5_verify_config(
-    name='hello_goodbye_test',
-    verifiers =(get_verifier('hello_goodbye'),),
-    config=joinpath(config_path, 'hello_goodbye.py'),
-    config_args = [],
-    valid_isas=(constants.null_tag,),
+    name="hello_goodbye_test",
+    verifiers=(get_verifier("hello_goodbye"),),
+    config=joinpath(config_path, "hello_goodbye.py"),
+    config_args=[],
+    valid_isas=(constants.all_compiled_tag,),
 )
 
 gem5_verify_config(
-    name='simple_memobj_test',
-    verifiers =(verifier.MatchStdoutNoPerf(joinpath(ref_path, 'hello')),),
-    config=joinpath(config_path, 'simple_memobj.py'),
-    config_args = [],
+    name="simple_memobj_test",
+    verifiers=(verifier.MatchStdoutNoPerf(joinpath(ref_path, "hello")),),
+    config=joinpath(config_path, "simple_memobj.py"),
+    config_args=[],
     # note: by default the above script uses x86
-    valid_isas=(constants.vega_x86_tag,),
+    valid_isas=(constants.all_compiled_tag,),
 )
 
 gem5_verify_config(
-    name='simple_cache_test',
-    verifiers =(verifier.MatchStdoutNoPerf(joinpath(ref_path, 'hello')),),
-    config=joinpath(config_path, 'simple_cache.py'),
-    config_args = [],
+    name="simple_cache_test",
+    verifiers=(verifier.MatchStdoutNoPerf(joinpath(ref_path, "hello")),),
+    config=joinpath(config_path, "simple_cache.py"),
+    config_args=[],
     # note: by default the above script uses x86
-    valid_isas=(constants.vega_x86_tag,),
+    valid_isas=(constants.all_compiled_tag,),
 )
 
 # Note: for simple memobj and simple cache I want to use the traffic generator
 # as well as the scripts above.
-
-

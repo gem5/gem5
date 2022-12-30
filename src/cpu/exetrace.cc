@@ -44,7 +44,6 @@
 #include <sstream>
 
 #include "base/loader/symtab.hh"
-#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
@@ -55,10 +54,10 @@
 namespace gem5
 {
 
-namespace Trace {
+namespace trace {
 
 void
-Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
+ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
 {
     std::stringstream outs;
 
@@ -115,18 +114,11 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
             outs << "Predicated False";
         }
 
-        if (debug::ExecResult && data_status != DataInvalid) {
-            switch (data_status) {
-              case DataVec:
-                ccprintf(outs, " D=%s", *data.as_vec);
-                break;
-              case DataVecPred:
-                ccprintf(outs, " D=%s", *data.as_pred);
-                break;
-              default:
-                ccprintf(outs, " D=%#018x", data.as_int);
-                break;
-            }
+        if (debug::ExecResult && dataStatus != DataInvalid) {
+            if (dataStatus == DataReg)
+                ccprintf(outs, " D=%s", data.asReg.asString());
+            else
+                ccprintf(outs, " D=%#018x", data.asInt);
         }
 
         if (debug::ExecEffAddr && getMemValid())
@@ -150,13 +142,13 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     //
     outs << std::endl;
 
-    Trace::getDebugLogger()->dprintf_flag(
+    trace::getDebugLogger()->dprintf_flag(
         when, thread->getCpuPtr()->name(), "ExecEnable", "%s",
         outs.str().c_str());
 }
 
 void
-Trace::ExeTracerRecord::dump()
+ExeTracerRecord::dump()
 {
     /*
      * The behavior this check tries to achieve is that if ExecMacro is on,
@@ -178,5 +170,5 @@ Trace::ExeTracerRecord::dump()
     }
 }
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5

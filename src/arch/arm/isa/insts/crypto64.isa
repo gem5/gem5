@@ -167,4 +167,3 @@ let {{
     cryptoRegRegRegInst("sha256su1", "SHA256SU164", "SimdShaSigma3Op",
                         sha2_enabled, sha256_su1Code)
 }};
-

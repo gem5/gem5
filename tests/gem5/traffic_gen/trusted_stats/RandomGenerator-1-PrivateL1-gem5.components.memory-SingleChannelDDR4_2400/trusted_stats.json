@@ -1,0 +1,24 @@
+{
+  "simulated_begin_time": 0,
+  "simulated_end_time": 250015069,
+  "system": {
+    "processor": {
+      "cores": {
+        "generator": {
+          "totalReadLatency": {
+            "value": 4262131078.0
+          },
+          "totalWriteLatency": {
+            "value": 0.0
+          },
+          "bytesRead": {
+            "value": 2600704.0
+          },
+          "bytesWritten": {
+            "value": 0.0
+          }
+        }
+      }
+    }
+  }
+}

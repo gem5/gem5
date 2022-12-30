@@ -43,7 +43,7 @@ namespace gem5
 {
 
 AMDGPUMemoryManager::AMDGPUMemoryManager(const AMDGPUMemoryManagerParams &p)
-    : ClockedObject(p), _gpuMemPort(csprintf("%s-port", name()), this),
+    : ClockedObject(p), _gpuMemPort(csprintf("%s-port", name()), *this),
       cacheLineSize(p.system->cacheLineSize()),
       _requestorId(p.system->getRequestorId(this))
 {
@@ -54,6 +54,14 @@ AMDGPUMemoryManager::writeRequest(Addr addr, uint8_t *data, int size,
                                Request::Flags flag, Event *callback)
 {
     assert(data);
+
+    // Requests may return out of order, so we should track how many chunks
+    // are outstanding and if the last chunk was sent. Give each status struct
+    // a unique ID so that DMAs to the same address may occur at the same time
+    requestStatus.emplace(std::piecewise_construct,
+                          std::forward_as_tuple(requestId), std::tuple<>{});
+
+    DPRINTF(AMDGPUMem, "Created status for write request %ld\n", requestId);
 
     ChunkGenerator gen(addr, size, cacheLineSize);
     for (; !gen.done(); gen.next()) {
@@ -66,11 +74,11 @@ AMDGPUMemoryManager::writeRequest(Addr addr, uint8_t *data, int size,
                     gen.size());
         pkt->dataDynamic<uint8_t>(dataPtr);
 
-        // We only want to issue the callback on the last request completing.
+        pkt->pushSenderState(
+                new GPUMemPort::SenderState(callback, addr, requestId));
+        requestStatus.at(requestId).outstandingChunks++;
         if (gen.last()) {
-            pkt->pushSenderState(new GPUMemPort::SenderState(callback, addr));
-        } else {
-            pkt->pushSenderState(new GPUMemPort::SenderState(nullptr, addr));
+            requestStatus.at(requestId).sentLastChunk = true;
         }
 
         if (!_gpuMemPort.sendTimingReq(pkt)) {
@@ -80,6 +88,50 @@ AMDGPUMemoryManager::writeRequest(Addr addr, uint8_t *data, int size,
             DPRINTF(AMDGPUMem, "Write request to %#lx sent\n", gen.addr());
         }
     }
+
+    requestId++;
+}
+
+void
+AMDGPUMemoryManager::readRequest(Addr addr, uint8_t *data, int size,
+                                 Request::Flags flag, Event *callback)
+{
+    assert(data);
+    uint8_t *dataPtr = data;
+
+    // Requests may return out of order, so we should track how many chunks
+    // are outstanding and if the last chunk was sent. Give each status struct
+    // a unique ID so that DMAs to the same address may occur at the same time
+    requestStatus.emplace(std::piecewise_construct,
+                          std::forward_as_tuple(requestId), std::tuple<>{});
+
+    DPRINTF(AMDGPUMem, "Created status for read request %ld\n", requestId);
+
+    ChunkGenerator gen(addr, size, cacheLineSize);
+    for (; !gen.done(); gen.next()) {
+        RequestPtr req = std::make_shared<Request>(gen.addr(), gen.size(),
+                                                   flag, _requestorId);
+
+        PacketPtr pkt = Packet::createRead(req);
+        pkt->dataStatic<uint8_t>(dataPtr);
+        dataPtr += gen.size();
+
+        pkt->pushSenderState(
+                new GPUMemPort::SenderState(callback, addr, requestId));
+        requestStatus.at(requestId).outstandingChunks++;
+        if (gen.last()) {
+            requestStatus.at(requestId).sentLastChunk = true;
+        }
+
+        if (!_gpuMemPort.sendTimingReq(pkt)) {
+            DPRINTF(AMDGPUMem, "Request to %#lx needs retry\n", gen.addr());
+            _gpuMemPort.retries.push_back(pkt);
+        } else {
+            DPRINTF(AMDGPUMem, "Read request to %#lx sent\n", gen.addr());
+        }
+    }
+
+    requestId++;
 }
 
 bool
@@ -89,12 +141,29 @@ AMDGPUMemoryManager::GPUMemPort::recvTimingResp(PacketPtr pkt)
     [[maybe_unused]] SenderState *sender_state =
         safe_cast<SenderState*>(pkt->senderState);
 
-    DPRINTF(AMDGPUMem, "Recveived Response for %#x\n", sender_state->_addr);
+    // Check if all chunks have completed, the last chunk was sent, and there
+    // is a callback, call the callback now.
+    assert(gpu_mem.requestStatus.count(sender_state->_requestId));
+    auto& status = gpu_mem.requestStatus.at(sender_state->_requestId);
 
-    // Check if there is a callback event and if so call it
-    if (sender_state->_callback) {
-        sender_state->_callback->process();
-        delete sender_state->_callback;
+    assert(status.outstandingChunks != 0);
+    status.outstandingChunks--;
+    DPRINTF(AMDGPUMem, "Received Response for %#x. %d chunks remain, sent "
+            "last = %d, requestId = %ld\n", sender_state->_addr,
+            status.outstandingChunks, status.sentLastChunk,
+            sender_state->_requestId);
+
+    if (!status.outstandingChunks && status.sentLastChunk) {
+        // Call and free the callback if there is one
+        if (sender_state->_callback) {
+            DPRINTF(AMDGPUMem, "Calling callback for request %ld\n",
+                    sender_state->_requestId);
+            sender_state->_callback->process();
+            delete sender_state->_callback;
+        }
+        DPRINTF(AMDGPUMem, "Deleting status for request %ld\n",
+                sender_state->_requestId);
+        gpu_mem.requestStatus.erase(sender_state->_requestId);
     }
 
     delete pkt->senderState;

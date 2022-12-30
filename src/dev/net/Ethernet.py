@@ -42,130 +42,149 @@ from m5.params import *
 from m5.proxy import *
 from m5.objects.PciDevice import PciDevice, PciIoBar, PciMemBar
 
-ETHERNET_ROLE = 'ETHERNET'
+ETHERNET_ROLE = "ETHERNET"
 Port.compat(ETHERNET_ROLE, ETHERNET_ROLE)
+
 
 class EtherInt(Port):
     def __init__(self, desc):
         super().__init__(ETHERNET_ROLE, desc)
 
+
 class VectorEtherInt(VectorPort):
     def __init__(self, desc):
         super().__init__(ETHERNET_ROLE, desc)
 
+
 class EtherLink(SimObject):
-    type = 'EtherLink'
+    type = "EtherLink"
     cxx_header = "dev/net/etherlink.hh"
-    cxx_class = 'gem5::EtherLink'
+    cxx_class = "gem5::EtherLink"
 
     int0 = EtherInt("interface 0")
     int1 = EtherInt("interface 1")
-    delay = Param.Latency('0us', "packet transmit delay")
-    delay_var = Param.Latency('0ns', "packet transmit delay variability")
-    speed = Param.NetworkBandwidth('1Gbps', "link speed")
+    delay = Param.Latency("0us", "packet transmit delay")
+    delay_var = Param.Latency("0ns", "packet transmit delay variability")
+    speed = Param.NetworkBandwidth("1Gbps", "link speed")
     dump = Param.EtherDump(NULL, "dump object")
+
 
 class DistEtherLink(SimObject):
-    type = 'DistEtherLink'
+    type = "DistEtherLink"
     cxx_header = "dev/net/dist_etherlink.hh"
-    cxx_class = 'gem5::DistEtherLink'
+    cxx_class = "gem5::DistEtherLink"
 
     int0 = EtherInt("interface 0")
-    delay = Param.Latency('0us', "packet transmit delay")
-    delay_var = Param.Latency('0ns', "packet transmit delay variability")
-    speed = Param.NetworkBandwidth('1Gbps', "link speed")
+    delay = Param.Latency("0us", "packet transmit delay")
+    delay_var = Param.Latency("0ns", "packet transmit delay variability")
+    speed = Param.NetworkBandwidth("1Gbps", "link speed")
     dump = Param.EtherDump(NULL, "dump object")
-    dist_rank = Param.UInt32('0', "Rank of this gem5 process (dist run)")
-    dist_size = Param.UInt32('1', "Number of gem5 processes (dist run)")
-    sync_start = Param.Latency('5200000000000t', "first dist sync barrier")
-    sync_repeat = Param.Latency('10us', "dist sync barrier repeat")
-    server_name = Param.String('localhost', "Message server name")
-    server_port = Param.UInt32('2200', "Message server port")
+    dist_rank = Param.UInt32("0", "Rank of this gem5 process (dist run)")
+    dist_size = Param.UInt32("1", "Number of gem5 processes (dist run)")
+    sync_start = Param.Latency("5200000000000t", "first dist sync barrier")
+    sync_repeat = Param.Latency("10us", "dist sync barrier repeat")
+    server_name = Param.String("localhost", "Message server name")
+    server_port = Param.UInt32("2200", "Message server port")
     is_switch = Param.Bool(False, "true if this a link in etherswitch")
     dist_sync_on_pseudo_op = Param.Bool(False, "Start sync with pseudo_op")
-    num_nodes = Param.UInt32('2', "Number of simulate nodes")
+    num_nodes = Param.UInt32("2", "Number of simulate nodes")
+
 
 class EtherBus(SimObject):
-    type = 'EtherBus'
+    type = "EtherBus"
     cxx_header = "dev/net/etherbus.hh"
-    cxx_class = 'gem5::EtherBus'
+    cxx_class = "gem5::EtherBus"
 
     loopback = Param.Bool(True, "send packet back to the sending interface")
     dump = Param.EtherDump(NULL, "dump object")
-    speed = Param.NetworkBandwidth('100Mbps', "bus speed in bits per second")
+    speed = Param.NetworkBandwidth("100Mbps", "bus speed in bits per second")
+
 
 class EtherSwitch(SimObject):
-    type = 'EtherSwitch'
+    type = "EtherSwitch"
     cxx_header = "dev/net/etherswitch.hh"
-    cxx_class = 'gem5::EtherSwitch'
+    cxx_class = "gem5::EtherSwitch"
 
     dump = Param.EtherDump(NULL, "dump object")
-    fabric_speed = Param.NetworkBandwidth('10Gbps', "switch fabric speed in "
-                                          "bits per second")
+    fabric_speed = Param.NetworkBandwidth(
+        "10Gbps", "switch fabric speed in " "bits per second"
+    )
     interface = VectorEtherInt("Ethernet Interface")
-    output_buffer_size = Param.MemorySize('1MiB',
-                                          "size of output port buffers")
-    delay = Param.Latency('0us', "packet transmit delay")
-    delay_var = Param.Latency('0ns', "packet transmit delay variability")
-    time_to_live = Param.Latency('10ms', "time to live of MAC address maping")
+    output_buffer_size = Param.MemorySize(
+        "1MiB", "size of output port buffers"
+    )
+    delay = Param.Latency("0us", "packet transmit delay")
+    delay_var = Param.Latency("0ns", "packet transmit delay variability")
+    time_to_live = Param.Latency("10ms", "time to live of MAC address maping")
+
 
 class EtherTapBase(SimObject):
-    type = 'EtherTapBase'
+    type = "EtherTapBase"
     abstract = True
     cxx_header = "dev/net/ethertap.hh"
-    cxx_class = 'gem5::EtherTapBase'
+    cxx_class = "gem5::EtherTapBase"
 
     bufsz = Param.Int(10000, "tap buffer size")
     dump = Param.EtherDump(NULL, "dump object")
     tap = EtherInt("Ethernet interface to connect to gem5's network")
 
-if buildEnv['HAVE_TUNTAP']:
-    class EtherTap(EtherTapBase):
-        type = 'EtherTap'
-        cxx_header = "dev/net/ethertap.hh"
-        cxx_class = 'gem5::EtherTap'
 
-        tun_clone_device = Param.String('/dev/net/tun',
-                                        "Path to the tun clone device node")
-        tap_device_name = Param.String('gem5-tap', "Tap device name")
+if buildEnv["HAVE_TUNTAP"]:
+
+    class EtherTap(EtherTapBase):
+        type = "EtherTap"
+        cxx_header = "dev/net/ethertap.hh"
+        cxx_class = "gem5::EtherTap"
+
+        tun_clone_device = Param.String(
+            "/dev/net/tun", "Path to the tun clone device node"
+        )
+        tap_device_name = Param.String("gem5-tap", "Tap device name")
+
 
 class EtherTapStub(EtherTapBase):
-    type = 'EtherTapStub'
+    type = "EtherTapStub"
     cxx_header = "dev/net/ethertap.hh"
-    cxx_class = 'gem5::EtherTapStub'
+    cxx_class = "gem5::EtherTapStub"
 
     port = Param.UInt16(3500, "Port helper should send packets to")
 
+
 class EtherDump(SimObject):
-    type = 'EtherDump'
+    type = "EtherDump"
     cxx_header = "dev/net/etherdump.hh"
-    cxx_class = 'gem5::EtherDump'
+    cxx_class = "gem5::EtherDump"
 
     file = Param.String("dump file")
     maxlen = Param.Int(96, "max portion of packet data to dump")
 
+
 class EtherDevice(PciDevice):
-    type = 'EtherDevice'
+    type = "EtherDevice"
     abstract = True
     cxx_header = "dev/net/etherdevice.hh"
-    cxx_class = 'gem5::EtherDevice'
+    cxx_class = "gem5::EtherDevice"
 
     interface = EtherInt("Ethernet Interface")
 
+
 class IGbE(EtherDevice):
     # Base class for two IGbE adapters listed above
-    type = 'IGbE'
+    type = "IGbE"
     cxx_header = "dev/net/i8254xGBe.hh"
-    cxx_class = 'gem5::IGbE'
+    cxx_class = "gem5::IGbE"
 
-    hardware_address = Param.EthernetAddr(NextEthernetAddr,
-        "Ethernet Hardware Address")
-    rx_fifo_size = Param.MemorySize('384KiB', "Size of the rx FIFO")
-    tx_fifo_size = Param.MemorySize('384KiB', "Size of the tx FIFO")
-    rx_desc_cache_size = Param.Int(64,
-        "Number of enteries in the rx descriptor cache")
-    tx_desc_cache_size = Param.Int(64,
-        "Number of enteries in the rx descriptor cache")
+    hardware_address = Param.EthernetAddr(
+        NextEthernetAddr, "Ethernet Hardware Address"
+    )
+    rx_fifo_size = Param.MemorySize("384KiB", "Size of the rx FIFO")
+    tx_fifo_size = Param.MemorySize("384KiB", "Size of the tx FIFO")
+    rx_desc_cache_size = Param.Int(
+        64, "Number of enteries in the rx descriptor cache"
+    )
+    tx_desc_cache_size = Param.Int(
+        64, "Number of enteries in the rx descriptor cache"
+    )
     VendorID = 0x8086
     SubsystemID = 0x1008
     SubsystemVendorID = 0x8086
@@ -173,19 +192,20 @@ class IGbE(EtherDevice):
     SubClassCode = 0x00
     ClassCode = 0x02
     ProgIF = 0x00
-    BAR0 = PciMemBar(size='128KiB')
+    BAR0 = PciMemBar(size="128KiB")
     MaximumLatency = 0x00
-    MinimumGrant = 0xff
-    InterruptLine = 0x1e
+    MinimumGrant = 0xFF
+    InterruptLine = 0x1E
     InterruptPin = 0x01
-    wb_delay = Param.Latency('10ns', "delay before desc writeback occurs")
-    fetch_delay = Param.Latency('10ns', "delay before desc fetch occurs")
-    fetch_comp_delay = Param.Latency('10ns', "delay after desc fetch occurs")
-    wb_comp_delay = Param.Latency('10ns', "delay after desc wb occurs")
-    tx_read_delay = Param.Latency('0ns', "delay after tx dma read")
-    rx_write_delay = Param.Latency('0ns', "delay after rx dma read")
+    wb_delay = Param.Latency("10ns", "delay before desc writeback occurs")
+    fetch_delay = Param.Latency("10ns", "delay before desc fetch occurs")
+    fetch_comp_delay = Param.Latency("10ns", "delay after desc fetch occurs")
+    wb_comp_delay = Param.Latency("10ns", "delay after desc wb occurs")
+    tx_read_delay = Param.Latency("0ns", "delay after tx dma read")
+    rx_write_delay = Param.Latency("0ns", "delay after rx dma read")
     phy_pid = Param.UInt16("Phy PID that corresponds to device ID")
     phy_epid = Param.UInt16("Phy EPID that corresponds to device ID")
+
 
 class IGbE_e1000(IGbE):
     # Older Intel 8254x based gigabit ethernet adapter
@@ -194,6 +214,7 @@ class IGbE_e1000(IGbE):
     phy_pid = 0x02A8
     phy_epid = 0x0380
 
+
 class IGbE_igb(IGbE):
     # Newer Intel 8257x based gigabit ethernet adapter
     # Uses Intel igb driver and in theory supports packet splitting and LRO
@@ -201,35 +222,38 @@ class IGbE_igb(IGbE):
     phy_pid = 0x0141
     phy_epid = 0x0CC0
 
+
 class EtherDevBase(EtherDevice):
-    type = 'EtherDevBase'
+    type = "EtherDevBase"
     abstract = True
     cxx_header = "dev/net/etherdevice.hh"
-    cxx_class = 'gem5::EtherDevBase'
+    cxx_class = "gem5::EtherDevBase"
 
-    hardware_address = Param.EthernetAddr(NextEthernetAddr,
-        "Ethernet Hardware Address")
+    hardware_address = Param.EthernetAddr(
+        NextEthernetAddr, "Ethernet Hardware Address"
+    )
 
-    dma_read_delay = Param.Latency('0us', "fixed delay for dma reads")
-    dma_read_factor = Param.Latency('0us', "multiplier for dma reads")
-    dma_write_delay = Param.Latency('0us', "fixed delay for dma writes")
-    dma_write_factor = Param.Latency('0us', "multiplier for dma writes")
+    dma_read_delay = Param.Latency("0us", "fixed delay for dma reads")
+    dma_read_factor = Param.Latency("0us", "multiplier for dma reads")
+    dma_write_delay = Param.Latency("0us", "fixed delay for dma writes")
+    dma_write_factor = Param.Latency("0us", "multiplier for dma writes")
 
-    rx_delay = Param.Latency('1us', "Receive Delay")
-    tx_delay = Param.Latency('1us', "Transmit Delay")
-    rx_fifo_size = Param.MemorySize('512KiB', "max size of rx fifo")
-    tx_fifo_size = Param.MemorySize('512KiB', "max size of tx fifo")
+    rx_delay = Param.Latency("1us", "Receive Delay")
+    tx_delay = Param.Latency("1us", "Transmit Delay")
+    rx_fifo_size = Param.MemorySize("512KiB", "max size of rx fifo")
+    tx_fifo_size = Param.MemorySize("512KiB", "max size of tx fifo")
 
     rx_filter = Param.Bool(True, "Enable Receive Filter")
-    intr_delay = Param.Latency('10us', "Interrupt propagation delay")
+    intr_delay = Param.Latency("10us", "Interrupt propagation delay")
     rx_thread = Param.Bool(False, "dedicated kernel thread for transmit")
     tx_thread = Param.Bool(False, "dedicated kernel threads for receive")
     rss = Param.Bool(False, "Receive Side Scaling")
 
+
 class NSGigE(EtherDevBase):
-    type = 'NSGigE'
+    type = "NSGigE"
     cxx_header = "dev/net/ns_gige.hh"
-    cxx_class = 'gem5::NSGigE'
+    cxx_class = "gem5::NSGigE"
 
     dma_data_free = Param.Bool(False, "DMA of Data is free")
     dma_desc_free = Param.Bool(False, "DMA of Descriptors is free")
@@ -241,30 +265,30 @@ class NSGigE(EtherDevBase):
     SubClassCode = 0x00
     ClassCode = 0x02
     ProgIF = 0x00
-    BARs = (PciIoBar(size='256B'), PciMemBar(size='4KiB'))
+    BARs = (PciIoBar(size="256B"), PciMemBar(size="4KiB"))
     MaximumLatency = 0x34
-    MinimumGrant = 0xb0
-    InterruptLine = 0x1e
+    MinimumGrant = 0xB0
+    InterruptLine = 0x1E
     InterruptPin = 0x01
 
 
-
 class Sinic(EtherDevBase):
-    type = 'Sinic'
-    cxx_class = 'gem5::sinic::Device'
+    type = "Sinic"
+    cxx_class = "gem5::sinic::Device"
     cxx_header = "dev/net/sinic.hh"
 
-    rx_max_copy = Param.MemorySize('1514B', "rx max copy")
-    tx_max_copy = Param.MemorySize('16KiB', "tx max copy")
+    rx_max_copy = Param.MemorySize("1514B", "rx max copy")
+    tx_max_copy = Param.MemorySize("16KiB", "tx max copy")
     rx_max_intr = Param.UInt32(10, "max rx packets per interrupt")
-    rx_fifo_threshold = Param.MemorySize('384KiB', "rx fifo high threshold")
-    rx_fifo_low_mark = Param.MemorySize('128KiB', "rx fifo low threshold")
-    tx_fifo_high_mark = Param.MemorySize('384KiB', "tx fifo high threshold")
-    tx_fifo_threshold = Param.MemorySize('128KiB', "tx fifo low threshold")
+    rx_fifo_threshold = Param.MemorySize("384KiB", "rx fifo high threshold")
+    rx_fifo_low_mark = Param.MemorySize("128KiB", "rx fifo low threshold")
+    tx_fifo_high_mark = Param.MemorySize("384KiB", "tx fifo high threshold")
+    tx_fifo_threshold = Param.MemorySize("128KiB", "tx fifo low threshold")
     virtual_count = Param.UInt32(1, "Virtualized SINIC")
     zero_copy_size = Param.UInt32(64, "Bytes to copy if below threshold")
-    zero_copy_threshold = Param.UInt32(256,
-        "Only zero copy above this threshold")
+    zero_copy_threshold = Param.UInt32(
+        256, "Only zero copy above this threshold"
+    )
     zero_copy = Param.Bool(False, "Zero copy receive")
     delay_copy = Param.Bool(False, "Delayed copy transmit")
     virtual_addr = Param.Bool(False, "Virtual addressing")
@@ -275,8 +299,8 @@ class Sinic(EtherDevBase):
     SubClassCode = 0x00
     ClassCode = 0x02
     ProgIF = 0x00
-    BARs = PciMemBar(size='64KiB')
+    BARs = PciMemBar(size="64KiB")
     MaximumLatency = 0x34
-    MinimumGrant = 0xb0
-    InterruptLine = 0x1e
+    MinimumGrant = 0xB0
+    InterruptLine = 0x1E
     InterruptPin = 0x01

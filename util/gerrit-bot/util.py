@@ -27,7 +27,7 @@
 
 # Utility functions
 def parse_commit_subject(subject):
-    parsed_subject = subject.split(":", maxsplit = 1)
+    parsed_subject = subject.split(":", maxsplit=1)
 
     # If the subject does not have a colon, it either does not have tags
     # or does not have a message. In this case, we assume that the subject
@@ -35,10 +35,11 @@ def parse_commit_subject(subject):
     if len(parsed_subject) <= 1:
         return [], parsed_subject[0]
 
-    tags = [ tag.strip() for tag in parsed_subject[0].split(",") ]
+    tags = [tag.strip() for tag in parsed_subject[0].split(",")]
     message = parsed_subject[1]
 
     return tags, message
+
 
 # Convert time in seconds to a plausible unit
 def convert_time_in_seconds(delta):
@@ -53,10 +54,13 @@ def convert_time_in_seconds(delta):
 
     return f"{time}{time_unit}"
 
+
 # End of Utility functions
 
-def add_maintainers_to_change(change, maintainers, maintainers_account_ids,
-                              gerrit_api):
+
+def add_maintainers_to_change(
+    change, maintainers, maintainers_account_ids, gerrit_api
+):
     tags, message = parse_commit_subject(change["subject"])
     change_id = change["id"]
     maintainer_emails = set()
@@ -73,8 +77,12 @@ def add_maintainers_to_change(change, maintainers, maintainers_account_ids,
             for name, email in maintainers[tag].maintainers:
                 maintainer_emails.add(email)
         except KeyError:
-            print((f"warning: `change-{change_id}` has an unknown tag: "
-                   f"`{tag}`"))
+            print(
+                (
+                    f"warning: `change-{change_id}` has an unknown tag: "
+                    f"`{tag}`"
+                )
+            )
     for email in maintainer_emails:
         if email in avoid_emails:
             continue

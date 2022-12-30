@@ -619,7 +619,7 @@ std::pair<bool, bool>
 MMU::s1PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
                   ThreadContext *tc, CachedState &state, bool r, bool w, bool x)
 {
-    bool grant = false, grant_read = true;
+    bool grant = false, grant_read = true, grant_write = true, grant_exec = true;
 
     const uint8_t ap  = te->ap & 0b11;  // 2-bit access protection field
     const bool is_priv = state.isPriv && !(req->getFlags() & UserMode);
@@ -627,11 +627,6 @@ MMU::s1PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
     bool wxn = state.sctlr.wxn;
     uint8_t xn =  te->xn;
     uint8_t pxn = te->pxn;
-
-    if (ArmSystem::haveEL(tc, EL3) && state.isSecure &&
-        te->ns && state.scr.sif) {
-        xn = true;
-    }
 
     DPRINTF(TLBVerbose, "Checking S1 permissions: ap:%d, xn:%d, pxn:%d, r:%d, "
                         "w:%d, x:%d, is_priv: %d, wxn: %d\n", ap, xn,
@@ -642,99 +637,88 @@ MMU::s1PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
     }
 
     ExceptionLevel regime = !is_priv ? EL0 : state.aarch64EL;
-    switch (regime) {
-      case EL0:
-        {
-            grant_read = ap & 0x1;
-            uint8_t perm = (ap << 2)  | (xn << 1) | pxn;
-            switch (perm) {
-              case 0:
-              case 1:
-              case 8:
-              case 9:
-                grant = x;
-                break;
-              case 4:
-              case 5:
-                grant = r || w || (x && !wxn);
-                break;
-              case 6:
-              case 7:
-                grant = r || w;
-                break;
-              case 12:
-              case 13:
-                grant = r || x;
-                break;
-              case 14:
-              case 15:
-                grant = r;
-                break;
-              default:
-                grant = false;
-            }
+    if (hasUnprivRegime(regime, state)) {
+        bool pr = false;
+        bool pw = false;
+        bool ur = false;
+        bool uw = false;
+        // Apply leaf permissions
+        switch (ap) {
+          case 0b00: // Privileged access
+            pr = 1; pw = 1; ur = 0; uw = 0;
+            break;
+          case 0b01: // No effect
+            pr = 1; pw = 1; ur = 1; uw = 1;
+            break;
+          case 0b10: // Read-only, privileged access
+            pr = 1; pw = 0; ur = 0; uw = 0;
+            break;
+          case 0b11: // Read-only
+            pr = 1; pw = 0; ur = 1; uw = 0;
+            break;
         }
-        break;
-      case EL1:
-        {
-            uint8_t perm = (ap << 2)  | (xn << 1) | pxn;
-            switch (perm) {
-              case 0:
-              case 2:
-                grant = r || w || (x && !wxn);
-                break;
-              case 1:
-              case 3:
-              case 4:
-              case 5:
-              case 6:
-              case 7:
-                // regions that are writeable at EL0 should not be
-                // executable at EL1
-                grant = r || w;
-                break;
-              case 8:
-              case 10:
-              case 12:
-              case 14:
-                grant = r || x;
-                break;
-              case 9:
-              case 11:
-              case 13:
-              case 15:
-                grant = r;
-                break;
-              default:
-                grant = false;
-            }
+
+        // Locations writable by unprivileged cannot be executed by privileged
+        const bool px = !(pxn || uw);
+        const bool ux = !xn;
+
+        grant_read = is_priv ? pr : ur;
+        grant_write = is_priv ? pw : uw;
+        grant_exec = is_priv ? px : ux;
+    } else {
+        switch (bits(ap, 1)) {
+          case 0b0: // No effect
+            grant_read = 1; grant_write = 1;
+            break;
+          case 0b1: // Read-Only
+            grant_read = 1; grant_write = 0;
+            break;
         }
-        break;
-      case EL2:
-      case EL3:
-        {
-            uint8_t perm = (ap & 0x2) | xn;
-            switch (perm) {
-              case 0:
-                grant = r || w || (x && !wxn);
-                break;
-              case 1:
-                grant = r || w;
-                break;
-              case 2:
-                grant = r || x;
-                break;
-              case 3:
-                grant = r;
-                break;
-              default:
-                grant = false;
-            }
-        }
-        break;
+        grant_exec = !xn;
+    }
+
+    // Do not allow execution from writable location
+    // if wxn is set
+    grant_exec = grant_exec && !(wxn && grant_write);
+
+    if (ArmSystem::haveEL(tc, EL3) && state.isSecure && te->ns) {
+        grant_exec = grant_exec && !state.scr.sif;
+    }
+
+    if (x) {
+        grant = grant_exec;
+    } else if (req->isAtomic()) {
+        grant = grant_read && grant_write;
+    } else if (w) {
+        grant = grant_write;
+    } else {
+        grant = grant_read;
     }
 
     return std::make_pair(grant, grant_read);
+}
+
+bool
+MMU::hasUnprivRegime(ExceptionLevel el, bool e2h)
+{
+    switch (el) {
+      case EL0:
+      case EL1:
+        // EL1&0
+        return true;
+      case EL2:
+        // EL2&0 or EL2
+        return e2h;
+      case EL3:
+      default:
+        return false;
+    }
+}
+
+bool
+MMU::hasUnprivRegime(ExceptionLevel el, CachedState &state)
+{
+    return hasUnprivRegime(el, state.hcr.e2h);
 }
 
 bool
@@ -1332,7 +1316,7 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
                                  !isSecure));
         ttbcr  = tc->readMiscReg(snsBankedIndex(MISCREG_TTBCR, tc,
                                  !isSecure));
-        scr    = tc->readMiscReg(MISCREG_SCR);
+        scr    = tc->readMiscReg(MISCREG_SCR_EL3);
         isPriv = cpsr.mode != MODE_USER;
         if (longDescFormatInUse(tc)) {
             uint64_t ttbr_asid = tc->readMiscReg(
@@ -1351,7 +1335,7 @@ MMU::CachedState::updateMiscReg(ThreadContext *tc,
                                !isSecure));
         dacr = tc->readMiscReg(snsBankedIndex(MISCREG_DACR, tc,
                                !isSecure));
-        hcr  = tc->readMiscReg(MISCREG_HCR);
+        hcr  = tc->readMiscReg(MISCREG_HCR_EL2);
 
         if (mmu->release()->has(ArmExtension::VIRTUALIZATION)) {
             vmid   = bits(tc->readMiscReg(MISCREG_VTTBR), 55, 48);

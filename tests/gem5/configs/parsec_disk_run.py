@@ -43,7 +43,7 @@ from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
 )
-from gem5.components.processors.cpu_types import(
+from gem5.components.processors.cpu_types import (
     get_cpu_types_str_set,
     get_cpu_type_from_str,
 )
@@ -148,19 +148,15 @@ args = parser.parse_args()
 
 if args.mem_system == "classic":
 
-    from gem5.components.cachehierarchies.classic.\
-        private_l1_private_l2_cache_hierarchy import (
+    from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
         PrivateL1PrivateL2CacheHierarchy,
     )
 
     cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-        l1d_size="32kB",
-        l1i_size="32kB",
-        l2_size="256kB",
+        l1d_size="32kB", l1i_size="32kB", l2_size="256kB"
     )
 elif args.mem_system == "mesi_two_level":
-    from gem5.components.cachehierarchies.ruby.\
-        mesi_two_level_cache_hierarchy import (
+    from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
         MESITwoLevelCacheHierarchy,
     )
 
@@ -210,20 +206,13 @@ command = (
 
 board.set_kernel_disk_workload(
     kernel=Resource(
-        "x86-linux-kernel-5.4.49",
-        resource_directory=args.resource_directory,
+        "x86-linux-kernel-5.4.49", resource_directory=args.resource_directory
     ),
     disk_image=Resource(
-        "x86-parsec",
-        resource_directory=args.resource_directory,
+        "x86-parsec", resource_directory=args.resource_directory
     ),
     readfile_contents=command,
 )
-
-print("Running with ISA: " + get_runtime_isa().name)
-print("Running with protocol: " + get_runtime_coherence_protocol().name)
-print()
-
 
 # Here we define some custom workbegin/workend exit event generators. Here we
 # want to switch to detailed CPUs at the beginning of the ROI, then continue to
@@ -232,13 +221,15 @@ def workbegin():
     processor.switch()
     yield False
 
+
 def workend():
     yield True
+
 
 simulator = Simulator(
     board=board,
     on_exit_event={
-        ExitEvent.WORKBEGIN : workbegin(),
+        ExitEvent.WORKBEGIN: workbegin(),
         ExitEvent.WORKEND: workend(),
     },
 )

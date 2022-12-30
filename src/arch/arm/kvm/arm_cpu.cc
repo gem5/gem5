@@ -664,7 +664,7 @@ ArmKvmCPU::updateKvmStateCore()
     for (const KvmIntRegInfo *ri(kvmIntRegs);
          ri->idx != init_reg::NumRegs; ++ri) {
 
-        uint64_t value = tc->getRegFlat(RegId(IntRegClass, ri->idx));
+        uint64_t value = tc->getReg(flatIntRegClass[ri->idx]);
         DPRINTF(KvmContext, "kvm(%s) := 0x%x\n", ri->name, value);
         setOneReg(ri->id, value);
     }
@@ -772,9 +772,8 @@ ArmKvmCPU::updateKvmStateVFP(uint64_t id, bool show_warnings)
         const unsigned idx_base = idx << 1;
         const unsigned idx_hi = idx_base + 1;
         const unsigned idx_lo = idx_base + 0;
-        uint64_t value =
-            ((uint64_t)tc->getRegFlat(RegId(FloatRegClass, idx_hi)) << 32) |
-            tc->getRegFlat(RegId(FloatRegClass, idx_lo));
+        uint64_t value = (tc->getReg(floatRegClass[idx_hi]) << 32) |
+            tc->getReg(floatRegClass[idx_lo]);
 
         setOneReg(id, value);
     } else if (regIsVfpCtrl(id)) {
@@ -804,7 +803,7 @@ ArmKvmCPU::updateTCStateCore()
     for (const KvmIntRegInfo *ri(kvmIntRegs);
          ri->idx != int_reg::NumRegs; ++ri) {
 
-        tc->setRegFlat(RegId(IntRegClass, ri->idx), getOneRegU32(ri->id));
+        tc->setReg(intRegClass[ri->idx], getOneRegU32(ri->id));
     }
 
     for (const KvmCoreMiscRegInfo *ri(kvmCoreMiscRegs);
@@ -915,9 +914,8 @@ ArmKvmCPU::updateTCStateVFP(uint64_t id, bool show_warnings)
         const unsigned idx_lo = idx_base + 0;
         uint64_t value = getOneRegU64(id);
 
-        tc->setRegFlat(RegId(FloatRegClass, idx_hi),
-                (value >> 32) & 0xFFFFFFFF);
-        tc->setRegFlat(RegId(FloatRegClass, idx_lo), value & 0xFFFFFFFF);
+        tc->setReg(floatRegClass[idx_hi], (value >> 32) & 0xFFFFFFFF);
+        tc->setReg(floatRegClass[idx_lo], value & 0xFFFFFFFF);
     } else if (regIsVfpCtrl(id)) {
         MiscRegIndex idx = decodeVFPCtrlReg(id);
         if (idx == NUM_MISCREGS) {

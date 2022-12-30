@@ -46,19 +46,21 @@ from code_formatter import code_formatter
 
 import SCons.Node.Python
 
+
 def build_blob(target, source, env):
-    '''
+    """
     Embed an arbitrary blob into the gem5 executable,
     and make it accessible to C++ as a byte array.
-    '''
+    """
 
-    with open(str(source[0]), 'rb') as f:
+    with open(str(source[0]), "rb") as f:
         data = f.read()
     symbol = str(source[1])
     cc, hh = target
 
     hh_code = code_formatter()
-    hh_code('''\
+    hh_code(
+        """\
 #include <cstddef>
 #include <cstdint>
 
@@ -72,13 +74,15 @@ extern const std::uint8_t ${symbol}[];
 
 } // namespace Blobs
 } // namespace gem5
-''')
+"""
+    )
     hh_code.write(str(hh))
 
-    include_path = os.path.relpath(hh.abspath, env['BUILDDIR'])
+    include_path = os.path.relpath(hh.abspath, env["BUILDDIR"])
 
     cc_code = code_formatter()
-    cc_code('''\
+    cc_code(
+        """\
 #include "${include_path}"
 
 namespace gem5
@@ -87,22 +91,28 @@ namespace Blobs
 {
 
 const std::size_t ${symbol}_len = ${{len(data)}};
-''')
+"""
+    )
     bytesToCppArray(cc_code, symbol, data)
-    cc_code('''
+    cc_code(
+        """
 } // namespace Blobs
 } // namespace gem5
-''')
+"""
+    )
     cc_code.write(str(cc))
+
 
 blob_action = MakeAction(build_blob, Transform("EMBED BLOB"))
 
+
 def blob_emitter(target, source, env):
     symbol = str(target[0])
-    cc_file = env.File(symbol + '.cc')
-    hh_file = env.File(symbol + '.hh')
+    cc_file = env.File(symbol + ".cc")
+    hh_file = env.File(symbol + ".hh")
     return [cc_file, hh_file], [source, SCons.Node.Python.Value(symbol)]
+
 
 def Blob(env):
     blob_builder = env.Builder(action=blob_action, emitter=blob_emitter)
-    env.Append(BUILDERS={'Blob': blob_builder})
+    env.Append(BUILDERS={"Blob": blob_builder})

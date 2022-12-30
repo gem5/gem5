@@ -36,7 +36,7 @@ import argparse
 
 parser = argparse.ArgumentParser(
     description="A simple script used to check the output of "
-                "`gem5.runtime.get_runtime_isa`"
+    "`gem5.runtime.get_runtime_isa`"
 )
 
 parser.add_argument(
@@ -46,7 +46,7 @@ parser.add_argument(
     choices=get_isas_str_set(),
     required=True,
     help="The expected ISA. If not returned by `get_runtime_isa`, a "
-         "non-zero exit code will be returned by the script" ,
+    "non-zero exit code will be returned by the script",
 )
 
 args = parser.parse_args()

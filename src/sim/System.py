@@ -45,13 +45,15 @@ from m5.objects.DVFSHandler import *
 from m5.objects.SimpleMemory import *
 from m5.objects.Workload import StubWorkload
 
-class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing',
-                                'atomic_noncaching']
+
+class MemoryMode(Enum):
+    vals = ["invalid", "atomic", "timing", "atomic_noncaching"]
+
 
 class System(SimObject):
-    type = 'System'
+    type = "System"
     cxx_header = "sim/system.hh"
-    cxx_class = 'gem5::System'
+    cxx_class = "gem5::System"
 
     system_port = RequestPort("System port")
 
@@ -60,65 +62,87 @@ class System(SimObject):
         PyBindMethod("setMemoryMode"),
     ]
 
-    memories = VectorParam.AbstractMemory(Self.all,
-                                          "All memories in the system")
-    mem_mode = Param.MemoryMode('atomic', "The mode the memory system is in")
+    memories = VectorParam.AbstractMemory(
+        Self.all, "All memories in the system"
+    )
+    mem_mode = Param.MemoryMode("atomic", "The mode the memory system is in")
 
     thermal_model = Param.ThermalModel(NULL, "Thermal model")
-    thermal_components = VectorParam.SimObject([],
-            "A collection of all thermal components in the system.")
+    thermal_components = VectorParam.SimObject(
+        [], "A collection of all thermal components in the system."
+    )
 
     # When reserving memory on the host, we have the option of
     # reserving swap space or not (by passing MAP_NORESERVE to
     # mmap). By enabling this flag, we accommodate cases where a large
     # (but sparse) memory is simulated.
-    mmap_using_noreserve = Param.Bool(False, "mmap the backing store " \
-                                          "without reserving swap")
+    mmap_using_noreserve = Param.Bool(
+        False, "mmap the backing store " "without reserving swap"
+    )
 
     # The memory ranges are to be populated when creating the system
     # such that these can be passed from the I/O subsystem through an
     # I/O bridge or cache
-    mem_ranges = VectorParam.AddrRange([], "Ranges that constitute main memory")
+    mem_ranges = VectorParam.AddrRange(
+        [], "Ranges that constitute main memory"
+    )
 
     # The ranges backed by a shadowed ROM
-    shadow_rom_ranges = VectorParam.AddrRange([], "Ranges  backed by a " \
-                                                  "shadowed ROM")
+    shadow_rom_ranges = VectorParam.AddrRange(
+        [], "Ranges  backed by a " "shadowed ROM"
+    )
 
-    shared_backstore = Param.String("", "backstore's shmem segment filename, "
+    shared_backstore = Param.String(
+        "",
+        "backstore's shmem segment filename, "
         "use to directly address the backstore from another host-OS process. "
-        "Leave this empty to unset the MAP_SHARED flag.")
-    auto_unlink_shared_backstore = Param.Bool(False, "Automatically remove the "
+        "Leave this empty to unset the MAP_SHARED flag.",
+    )
+    auto_unlink_shared_backstore = Param.Bool(
+        False,
+        "Automatically remove the "
         "shmem segment file upon destruction. This is used only if "
-        "shared_backstore is non-empty.")
+        "shared_backstore is non-empty.",
+    )
 
     cache_line_size = Param.Unsigned(64, "Cache line size in bytes")
 
     redirect_paths = VectorParam.RedirectPath([], "Path redirections")
 
-    exit_on_work_items = Param.Bool(False, "Exit from the simulation loop when "
-                                    "encountering work item annotations.")
+    exit_on_work_items = Param.Bool(
+        False,
+        "Exit from the simulation loop when "
+        "encountering work item annotations.",
+    )
     work_item_id = Param.Int(-1, "specific work item id")
     num_work_ids = Param.Int(16, "Number of distinct work item types")
-    work_begin_cpu_id_exit = Param.Int(-1,
-        "work started on specific id, now exit simulation")
-    work_begin_ckpt_count = Param.Counter(0,
-        "create checkpoint when work items begin count value is reached")
-    work_begin_exit_count = Param.Counter(0,
-        "exit simulation when work items begin count value is reached")
-    work_end_ckpt_count = Param.Counter(0,
-        "create checkpoint when work items end count value is reached")
-    work_end_exit_count = Param.Counter(0,
-        "exit simulation when work items end count value is reached")
-    work_cpus_ckpt_count = Param.Counter(0,
-        "create checkpoint when active cpu count value is reached")
+    work_begin_cpu_id_exit = Param.Int(
+        -1, "work started on specific id, now exit simulation"
+    )
+    work_begin_ckpt_count = Param.Counter(
+        0, "create checkpoint when work items begin count value is reached"
+    )
+    work_begin_exit_count = Param.Counter(
+        0, "exit simulation when work items begin count value is reached"
+    )
+    work_end_ckpt_count = Param.Counter(
+        0, "create checkpoint when work items end count value is reached"
+    )
+    work_end_exit_count = Param.Counter(
+        0, "exit simulation when work items end count value is reached"
+    )
+    work_cpus_ckpt_count = Param.Counter(
+        0, "create checkpoint when active cpu count value is reached"
+    )
 
     workload = Param.Workload(StubWorkload(), "Workload to run on this system")
     init_param = Param.UInt64(0, "numerical value to pass into simulator")
     readfile = Param.String("", "file to read startup script from")
     symbolfile = Param.String("", "file to get the symbols from")
 
-    multi_thread = Param.Bool(False,
-            "Supports multi-threaded CPUs? Impacts Thread/Context IDs")
+    multi_thread = Param.Bool(
+        False, "Supports multi-threaded CPUs? Impacts Thread/Context IDs"
+    )
 
     # Dynamic voltage and frequency handler for the system, disabled by default
     # Provide list of domains that need to be controlled by the handler
@@ -126,5 +150,8 @@ class System(SimObject):
 
     # SE mode doesn't use the ISA System subclasses, and so we need to set an
     # ISA specific value in this class directly.
-    m5ops_base = Param.Addr(0, "Base of the 64KiB PA range used for "
-       "memory-mapped m5ops. Set to 0 to disable.")
+    m5ops_base = Param.Addr(
+        0,
+        "Base of the 64KiB PA range used for "
+        "memory-mapped m5ops. Set to 0 to disable.",
+    )

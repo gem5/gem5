@@ -55,7 +55,7 @@ namespace gem5
 
 class ThreadContext;
 
-namespace Trace {
+namespace trace {
 
 /**
  * This in an instruction tracer that records the flow of instructions through
@@ -136,7 +136,7 @@ class InstPBTrace : public InstTracer
     friend class InstPBTraceRecord;
 };
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5
 
 #endif // __CPU_INST_PB_TRACE_HH__

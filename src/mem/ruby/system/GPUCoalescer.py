@@ -32,23 +32,28 @@ from m5.proxy import *
 
 from m5.objects.Sequencer import *
 
+
 class RubyGPUCoalescer(RubyPort):
-   type = 'RubyGPUCoalescer'
-   abstract = True
-   cxx_class = 'gem5::ruby::GPUCoalescer'
-   cxx_header = "mem/ruby/system/GPUCoalescer.hh"
+    type = "RubyGPUCoalescer"
+    abstract = True
+    cxx_class = "gem5::ruby::GPUCoalescer"
+    cxx_header = "mem/ruby/system/GPUCoalescer.hh"
 
-   # max_outstanding_requests = (wave front slots) x (wave front size)
-   max_outstanding_requests = Param.Int(40*64,
-                                "max requests (incl. prefetches) outstanding")
-   max_coalesces_per_cycle = Param.Int(1, "max instructions that can be " \
-                                "coalesced in a single cycle")
+    # max_outstanding_requests = (wave front slots) x (wave front size)
+    max_outstanding_requests = Param.Int(
+        40 * 64, "max requests (incl. prefetches) outstanding"
+    )
+    max_coalesces_per_cycle = Param.Int(
+        1, "max instructions that can be " "coalesced in a single cycle"
+    )
 
-   icache = Param.RubyCache("")
-   dcache = Param.RubyCache("")
-   deadlock_threshold = Param.Cycles(500000,
-       "max outstanding cycles for a request before " \
-       "deadlock/livelock declared")
-   garnet_standalone = Param.Bool(False, "")
+    icache = Param.RubyCache("")
+    dcache = Param.RubyCache("")
+    deadlock_threshold = Param.Cycles(
+        500000,
+        "max outstanding cycles for a request before "
+        "deadlock/livelock declared",
+    )
+    garnet_standalone = Param.Bool(False, "")
 
-   gmTokenPort = ResponsePort("Port to the CU for sharing tokens")
+    gmTokenPort = ResponsePort("Port to the CU for sharing tokens")

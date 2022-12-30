@@ -36,7 +36,10 @@ import argparse
 import m5
 from m5.objects import *
 from m5.util import *
-addToPath('../')
+from gem5.runtime import get_runtime_isa
+
+addToPath("../")
+
 from common import MemConfig
 from common import HMC
 
@@ -48,10 +51,10 @@ options = parser.parse_args()
 # create the system we are going to simulate
 system = System()
 # use timing mode for the interaction between requestor-responder ports
-system.mem_mode = 'timing'
+system.mem_mode = "timing"
 # set the clock frequency of the system
-clk = '1GHz'
-vd = VoltageDomain(voltage='1V')
+clk = "1GHz"
+vd = VoltageDomain(voltage="1V")
 system.clk_domain = SrcClockDomain(clock=clk, voltage_domain=vd)
 # create a simple CPU
 system.cpu = TimingSimpleCPU()
@@ -66,9 +69,9 @@ system.cpu.createInterruptController()
 # functional-only port to allow the system to read and write memory.
 system.system_port = system.membus.cpu_side_ports
 # get ISA for the binary to run.
-isa = str(m5.defines.buildEnv['TARGET_ISA']).lower()
+isa = get_runtime_isa()
 # run 'hello' and use the compiled ISA to find the binary
-binary = 'tests/test-progs/hello/bin/' + isa + '/linux/hello'
+binary = "tests/test-progs/hello/bin/" + isa.name.lower() + "/linux/hello"
 # create a process for a simple "Hello World" application
 process = Process()
 # cmd is a list which begins with the executable (like argv)

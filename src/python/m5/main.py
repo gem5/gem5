@@ -42,14 +42,17 @@ import os
 import socket
 import sys
 
-__all__ = [ 'options', 'arguments', 'main' ]
+__all__ = ["options", "arguments", "main"]
 
-usage="%prog [gem5 options] script.py [script options]"
-brief_copyright=\
+usage = "%prog [gem5 options] script.py [script options]"
+brief_copyright = (
     "gem5 is copyrighted software; use the --copyright option for details."
+)
+
 
 def _stats_help(option, opt, value, parser):
     import m5
+
     print("A stat file can either be specified as a URI or a plain")
     print("path. When specified as a path, gem5 uses the default text ")
     print("format.")
@@ -67,95 +70,237 @@ def parse_options():
     option = options.add_option
     group = options.set_group
 
-    listener_modes = ( "on", "off", "auto" )
+    listener_modes = ("on", "off", "auto")
 
     # Help options
-    option('-B', "--build-info", action="store_true", default=False,
-        help="Show build information")
-    option('-C', "--copyright", action="store_true", default=False,
-        help="Show full copyright information")
-    option('-R', "--readme", action="store_true", default=False,
-        help="Show the readme")
+    option(
+        "-B",
+        "--build-info",
+        action="store_true",
+        default=False,
+        help="Show build information",
+    )
+    option(
+        "-C",
+        "--copyright",
+        action="store_true",
+        default=False,
+        help="Show full copyright information",
+    )
+    option(
+        "-R",
+        "--readme",
+        action="store_true",
+        default=False,
+        help="Show the readme",
+    )
 
     # Options for configuring the base simulator
-    option('-d', "--outdir", metavar="DIR", default="m5out",
-        help="Set the output directory to DIR [Default: %default]")
-    option('-r', "--redirect-stdout", action="store_true", default=False,
-        help="Redirect stdout (& stderr, without -e) to file")
-    option('-e', "--redirect-stderr", action="store_true", default=False,
-        help="Redirect stderr to file")
-    option("--silent-redirect", action="store_true", default=False,
-        help="Suppress printing a message when redirecting stdout or stderr")
-    option("--stdout-file", metavar="FILE", default="simout",
-        help="Filename for -r redirection [Default: %default]")
-    option("--stderr-file", metavar="FILE", default="simerr",
-        help="Filename for -e redirection [Default: %default]")
-    option("--listener-mode", metavar="{on,off,auto}",
-        choices=listener_modes, default="auto",
-        help="Port (e.g., gdb) listener mode (auto: Enable if running " \
-        "interactively) [Default: %default]")
-    option("--allow-remote-connections", action="store_true", default=False,
+    option(
+        "-d",
+        "--outdir",
+        metavar="DIR",
+        default="m5out",
+        help="Set the output directory to DIR [Default: %default]",
+    )
+    option(
+        "-r",
+        "--redirect-stdout",
+        action="store_true",
+        default=False,
+        help="Redirect stdout (& stderr, without -e) to file",
+    )
+    option(
+        "-e",
+        "--redirect-stderr",
+        action="store_true",
+        default=False,
+        help="Redirect stderr to file",
+    )
+    option(
+        "--silent-redirect",
+        action="store_true",
+        default=False,
+        help="Suppress printing a message when redirecting stdout or stderr",
+    )
+    option(
+        "--stdout-file",
+        metavar="FILE",
+        default="simout",
+        help="Filename for -r redirection [Default: %default]",
+    )
+    option(
+        "--stderr-file",
+        metavar="FILE",
+        default="simerr",
+        help="Filename for -e redirection [Default: %default]",
+    )
+    option(
+        "--listener-mode",
+        metavar="{on,off,auto}",
+        choices=listener_modes,
+        default="auto",
+        help="Port (e.g., gdb) listener mode (auto: Enable if running "
+        "interactively) [Default: %default]",
+    )
+    option(
+        "--allow-remote-connections",
+        action="store_true",
+        default=False,
         help="Port listeners will accept connections from anywhere (0.0.0.0). "
-        "Default is only localhost.")
-    option('-i', "--interactive", action="store_true", default=False,
-        help="Invoke the interactive interpreter after running the script")
-    option("--pdb", action="store_true", default=False,
-        help="Invoke the python debugger before running the script")
-    option('-p', "--path", metavar="PATH[:PATH]", action='append', split=':',
-        help="Prepend PATH to the system path when invoking the script")
-    option('-q', "--quiet", action="count", default=0,
-        help="Reduce verbosity")
-    option('-v', "--verbose", action="count", default=0,
-        help="Increase verbosity")
+        "Default is only localhost.",
+    )
+    option(
+        "-i",
+        "--interactive",
+        action="store_true",
+        default=False,
+        help="Invoke the interactive interpreter after running the script",
+    )
+    option(
+        "--pdb",
+        action="store_true",
+        default=False,
+        help="Invoke the python debugger before running the script",
+    )
+    option(
+        "-p",
+        "--path",
+        metavar="PATH[:PATH]",
+        action="append",
+        split=":",
+        help="Prepend PATH to the system path when invoking the script",
+    )
+    option("-q", "--quiet", action="count", default=0, help="Reduce verbosity")
+    option(
+        "-v", "--verbose", action="count", default=0, help="Increase verbosity"
+    )
+
+    # To make gem5 mimic python better. After `-c` we should consume all other
+    # arguments and add those to argv.
+    def collect_args(option, opt_str, value, parser):
+        extra_args = parser.rargs[:]
+        del parser.rargs[:]
+        setattr(parser.values, option.dest, (value, extra_args))
+
+    option(
+        "-c",
+        type=str,
+        help="program passed in as string (terminates option list)",
+        default="",
+        metavar="cmd",
+        action="callback",
+        callback=collect_args,
+    )
 
     # Statistics options
     group("Statistics Options")
-    option("--stats-file", metavar="FILE", default="stats.txt",
-        help="Sets the output file for statistics [Default: %default]")
-    option("--stats-help",
-           action="callback", callback=_stats_help,
-           help="Display documentation for available stat visitors")
+    option(
+        "--stats-file",
+        metavar="FILE",
+        default="stats.txt",
+        help="Sets the output file for statistics [Default: %default]",
+    )
+    option(
+        "--stats-help",
+        action="callback",
+        callback=_stats_help,
+        help="Display documentation for available stat visitors",
+    )
 
     # Configuration Options
     group("Configuration Options")
-    option("--dump-config", metavar="FILE", default="config.ini",
-        help="Dump configuration output file [Default: %default]")
-    option("--json-config", metavar="FILE", default="config.json",
-        help="Create JSON output of the configuration [Default: %default]")
-    option("--dot-config", metavar="FILE", default="config.dot",
-        help="Create DOT & pdf outputs of the configuration [Default: %default]")
-    option("--dot-dvfs-config", metavar="FILE", default=None,
-        help="Create DOT & pdf outputs of the DVFS configuration" + \
-             " [Default: %default]")
+    option(
+        "--dump-config",
+        metavar="FILE",
+        default="config.ini",
+        help="Dump configuration output file [Default: %default]",
+    )
+    option(
+        "--json-config",
+        metavar="FILE",
+        default="config.json",
+        help="Create JSON output of the configuration [Default: %default]",
+    )
+    option(
+        "--dot-config",
+        metavar="FILE",
+        default="config.dot",
+        help="Create DOT & pdf outputs of the configuration [Default: %default]",
+    )
+    option(
+        "--dot-dvfs-config",
+        metavar="FILE",
+        default=None,
+        help="Create DOT & pdf outputs of the DVFS configuration"
+        + " [Default: %default]",
+    )
 
     # Debugging options
     group("Debugging Options")
-    option("--debug-break", metavar="TICK[,TICK]", action='append', split=',',
-        help="Create breakpoint(s) at TICK(s) " \
-             "(kills process if no debugger attached)")
-    option("--debug-help", action='store_true',
-        help="Print help on debug flags")
-    option("--debug-flags", metavar="FLAG[,FLAG]", action='append', split=',',
-        help="Sets the flags for debug output (-FLAG disables a flag)")
-    option("--debug-start", metavar="TICK", type='int',
-        help="Start debug output at TICK")
-    option("--debug-end", metavar="TICK", type='int',
-        help="End debug output at TICK")
-    option("--debug-file", metavar="FILE", default="cout",
+    option(
+        "--debug-break",
+        metavar="TICK[,TICK]",
+        action="append",
+        split=",",
+        help="Create breakpoint(s) at TICK(s) "
+        "(kills process if no debugger attached)",
+    )
+    option(
+        "--debug-help", action="store_true", help="Print help on debug flags"
+    )
+    option(
+        "--debug-flags",
+        metavar="FLAG[,FLAG]",
+        action="append",
+        split=",",
+        help="Sets the flags for debug output (-FLAG disables a flag)",
+    )
+    option(
+        "--debug-start",
+        metavar="TICK",
+        type="int",
+        help="Start debug output at TICK",
+    )
+    option(
+        "--debug-end",
+        metavar="TICK",
+        type="int",
+        help="End debug output at TICK",
+    )
+    option(
+        "--debug-file",
+        metavar="FILE",
+        default="cout",
         help="Sets the output file for debug. Append '.gz' to the name for it"
-              " to be compressed automatically [Default: %default]")
-    option("--debug-ignore", metavar="EXPR", action='append', split=':',
-        help="Ignore EXPR sim objects")
-    option("--remote-gdb-port", type='int', default=7000,
-        help="Remote gdb base port (set to 0 to disable listening)")
+        " to be compressed automatically [Default: %default]",
+    )
+    option(
+        "--debug-ignore",
+        metavar="EXPR",
+        action="append",
+        split=":",
+        help="Ignore EXPR sim objects",
+    )
+    option(
+        "--remote-gdb-port",
+        type="int",
+        default=7000,
+        help="Remote gdb base port (set to 0 to disable listening)",
+    )
 
     # Help options
     group("Help Options")
-    option("--list-sim-objects", action='store_true', default=False,
-        help="List all built-in SimObjects, their params and default values")
+    option(
+        "--list-sim-objects",
+        action="store_true",
+        default=False,
+        help="List all built-in SimObjects, their params and default values",
+    )
 
     arguments = options.parse_args()
-    return options,arguments
+    return options, arguments
+
 
 def interact(scope):
     banner = "gem5 Interactive Console"
@@ -172,8 +317,9 @@ def interact(scope):
         cfg = Config()
         cfg.PromptManager.in_template = prompt_in1
         cfg.PromptManager.out_template = prompt_out
-        ipshell = InteractiveShellEmbed(config=cfg, user_ns=scope,
-                                        banner1=banner)
+        ipshell = InteractiveShellEmbed(
+            config=cfg, user_ns=scope, banner1=banner
+        )
     except ImportError:
         pass
 
@@ -182,6 +328,8 @@ def interact(scope):
     else:
         # Use the Python shell in the standard library if IPython
         # isn't available.
+        import readline  # if this is imported, then the up arrow works
+
         code.InteractiveConsole(scope).interact(banner)
 
 
@@ -192,6 +340,7 @@ def _check_tracing():
         return
 
     fatal("Tracing is not enabled.  Compile with TRACING_ON")
+
 
 def main():
     import m5
@@ -235,29 +384,29 @@ def main():
 
     # Now redirect stdout/stderr as desired
     if options.redirect_stdout:
-        redir_fd = os.open(stdout_file, os. O_WRONLY | os.O_CREAT | os.O_TRUNC)
+        redir_fd = os.open(stdout_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
         os.dup2(redir_fd, sys.stdout.fileno())
         if not options.redirect_stderr:
             os.dup2(redir_fd, sys.stderr.fileno())
 
     if options.redirect_stderr:
-        redir_fd = os.open(stderr_file, os. O_WRONLY | os.O_CREAT | os.O_TRUNC)
+        redir_fd = os.open(stderr_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
         os.dup2(redir_fd, sys.stderr.fileno())
 
     done = False
 
     if options.build_info:
         done = True
-        print('Build information:')
+        print("Build information:")
         print()
-        print('gem5 version %s' % defines.gem5Version)
-        print('compiled %s' % defines.compileDate)
-        print('build options:')
+        print("gem5 version %s" % defines.gem5Version)
+        print("compiled %s" % defines.compileDate)
+        print("build options:")
         keys = list(defines.buildEnv.keys())
         keys.sort()
         for key in keys:
             val = defines.buildEnv[key]
-            print('    %s = %s' % (key, val))
+            print("    %s = %s" % (key, val))
         print()
 
     if options.copyright:
@@ -267,7 +416,7 @@ def main():
 
     if options.readme:
         done = True
-        print('Readme:')
+        print("Readme:")
         print()
         print(info.README)
         print()
@@ -279,6 +428,7 @@ def main():
 
     if options.list_sim_objects:
         from . import SimObject
+
         done = True
         print("SimObjects:")
         objects = list(SimObject.allClasses.keys())
@@ -291,13 +441,19 @@ def main():
             params.sort()
             for pname in params:
                 param = obj._params[pname]
-                default = getattr(param, 'default', '')
+                default = getattr(param, "default", "")
                 print(terminal_formatter.format_output(pname, indent=8))
                 if default:
-                    print(terminal_formatter.format_output(
-                        str(default), label="default: ", indent=21))
-                print(terminal_formatter.format_output(
-                    param.desc, label="desc: ", indent=21))
+                    print(
+                        terminal_formatter.format_output(
+                            str(default), label="default: ", indent=21
+                        )
+                    )
+                print(
+                    terminal_formatter.format_output(
+                        param.desc, label="desc: ", indent=21
+                    )
+                )
                 print()
             print()
 
@@ -317,18 +473,22 @@ def main():
         print("gem5 version %s" % _m5.core.gem5Version)
         print("gem5 compiled %s" % _m5.core.compileDate)
 
-        print("gem5 started %s" %
-              datetime.datetime.now().strftime("%b %e %Y %X"))
-        print("gem5 executing on %s, pid %d" %
-              (socket.gethostname(), os.getpid()))
+        print(
+            "gem5 started %s" % datetime.datetime.now().strftime("%b %e %Y %X")
+        )
+        print(
+            "gem5 executing on %s, pid %d"
+            % (socket.gethostname(), os.getpid())
+        )
 
         # in Python 3 pipes.quote() is moved to shlex.quote()
         import pipes
+
         print("command line:", " ".join(map(pipes.quote, sys.argv)))
         print()
 
     # check to make sure we can find the listed script
-    if not arguments or not os.path.isfile(arguments[0]):
+    if not options.c and (not arguments or not os.path.isfile(arguments[0])):
         if arguments and not os.path.isfile(arguments[0]):
             print("Script %s not found" % arguments[0])
 
@@ -359,8 +519,6 @@ def main():
     if not options.allow_remote_connections:
         m5.listenersLoopbackOnly()
 
-    # set debugging options
-    debug.setRemoteGDBPort(options.remote_gdb_port)
     for when in options.debug_break:
         debug.schedBreak(int(when))
 
@@ -371,7 +529,7 @@ def main():
         off_flags = []
         for flag in options.debug_flags:
             off = False
-            if flag.startswith('-'):
+            if flag.startswith("-"):
                 flag = flag[1:]
                 off = True
 
@@ -403,13 +561,18 @@ def main():
         trace.ignore(ignore)
 
     sys.argv = arguments
-    sys.path = [ os.path.dirname(sys.argv[0]) ] + sys.path
 
-    filename = sys.argv[0]
-    filedata = open(filename, 'r').read()
-    filecode = compile(filedata, filename, 'exec')
-    scope = { '__file__' : filename,
-              '__name__' : '__m5_main__' }
+    if options.c:
+        filedata = options.c[0]
+        filecode = compile(filedata, "<string>", "exec")
+        sys.argv = ["-c"] + options.c[1]
+        scope = {"__name__": "__m5_main__"}
+    else:
+        sys.path = [os.path.dirname(sys.argv[0])] + sys.path
+        filename = sys.argv[0]
+        filedata = open(filename, "r").read()
+        filecode = compile(filedata, filename, "exec")
+        scope = {"__file__": filename, "__name__": "__m5_main__"}
 
     # if pdb was requested, execfile the thing under pdb, otherwise,
     # just do the execfile normally
@@ -421,7 +584,7 @@ def main():
         try:
             pdb.run(filecode, scope)
         except SystemExit:
-            print("The program exited via sys.exit(). Exit status: ", end=' ')
+            print("The program exited via sys.exit(). Exit status: ", end=" ")
             print(sys.exc_info()[1])
         except:
             traceback.print_exc()
@@ -429,7 +592,7 @@ def main():
             t = sys.exc_info()[2]
             while t.tb_next is not None:
                 t = t.tb_next
-                pdb.interaction(t.tb_frame,t)
+                pdb.interaction(t.tb_frame, t)
     else:
         exec(filecode, scope)
 

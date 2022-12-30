@@ -49,7 +49,7 @@ output header {{
             flags[IsNonSpeculative] = true;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::string generateDisassembly(
                 Addr pc, const loader::SymbolTable *symtab) const override;
@@ -68,7 +68,7 @@ output decoder {{
 
 output exec {{
     Fault
-    Unknown::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+    Unknown::execute(ExecContext *xc, trace::InstRecord *traceData) const
     {
         return std::make_shared<ReservedInstructionFault>();
     }
@@ -77,4 +77,3 @@ output exec {{
 def format Unknown() {{
     decode_block = 'return new Unknown(machInst);\n'
 }};
-

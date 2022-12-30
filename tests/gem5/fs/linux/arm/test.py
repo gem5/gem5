@@ -33,9 +33,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
+"""
 Arm FS simulation tests
-'''
+"""
 
 from os.path import join as joinpath
 
@@ -43,45 +43,36 @@ from testlib import *
 
 import re
 
-arm_fs_kvm_tests = [
-    'realview64-kvm',
-    'realview64-kvm-dual',
-]
+arm_fs_kvm_tests = ["realview64-kvm", "realview64-kvm-dual"]
 
 arm_fs_quick_tests = [
-    'realview64-simple-atomic',
-    'realview64-simple-atomic-dual',
-    'realview64-simple-atomic-checkpoint',
-    'realview64-simple-timing',
-    'realview64-simple-timing-dual',
-    'realview64-switcheroo-atomic',
-    'realview64-switcheroo-timing',
+    "realview64-simple-atomic",
+    "realview64-simple-atomic-dual",
+    "realview64-simple-atomic-checkpoint",
+    "realview64-simple-timing",
+    "realview64-simple-timing-dual",
+    "realview64-switcheroo-atomic",
+    "realview64-switcheroo-timing",
 ] + arm_fs_kvm_tests
 
 arm_fs_long_tests = [
-    'realview-simple-atomic',
-    'realview-simple-atomic-checkpoint',
-    'realview-simple-timing',
-    'realview-switcheroo-atomic',
-    'realview-switcheroo-timing',
-    'realview-o3',
-    'realview-minor',
-    'realview-switcheroo-noncaching-timing',
-    'realview-switcheroo-o3',
-    'realview-switcheroo-full',
-    'realview64-o3',
-    'realview64-o3-checker',
-    'realview64-o3-dual',
-    'realview64-minor',
-    'realview64-minor-dual',
-    'realview64-switcheroo-o3',
-    'realview64-switcheroo-full',
-    'realview-simple-timing-ruby',
-    'realview64-simple-timing-ruby',
-    'realview64-simple-timing-dual-ruby',
-    'realview64-o3-dual-ruby',
-
-
+    "realview-simple-atomic",
+    "realview-simple-atomic-checkpoint",
+    "realview-simple-timing",
+    "realview-switcheroo-atomic",
+    "realview-switcheroo-timing",
+    "realview-o3",
+    "realview-minor",
+    "realview-switcheroo-noncaching-timing",
+    "realview-switcheroo-o3",
+    "realview-switcheroo-full",
+    "realview64-o3",
+    "realview64-o3-checker",
+    "realview64-o3-dual",
+    "realview64-minor",
+    "realview64-minor-dual",
+    "realview64-switcheroo-o3",
+    "realview64-switcheroo-full",
     # The following tests fail. These are recorded in the GEM5-640
     # Jira issue.
     #
@@ -93,23 +84,37 @@ arm_fs_long_tests = [
     #'realview-simple-timing-dual-ruby',
 ]
 
-tarball = 'aarch-system-20220505.tar.bz2'
+# These tests are Ruby-based and Ruby does not support multiple ISAs
+arm_fs_long_tests_arm_target = [
+    "realview-simple-timing-ruby",
+    "realview64-simple-timing-ruby",
+    "realview64-simple-timing-dual-ruby",
+    "realview64-o3-dual-ruby",
+]
+
+tarball = "aarch-system-20220707.tar.bz2"
 url = config.resource_url + "/arm/" + tarball
 filepath = os.path.dirname(os.path.abspath(__file__))
-path = joinpath(config.bin_path, 'arm')
+path = joinpath(config.bin_path, "arm")
 arm_fs_binaries = DownloadedArchive(url, path, tarball)
+
 
 def support_kvm():
     return os.access("/dev/kvm", os.R_OK | os.W_OK)
 
+
 def verifier_list(name):
-    verifiers=[]
+    verifiers = []
     if "dual" in name:
-        verifiers.append(verifier.MatchFileRegex(
-            re.compile(r'.*CPU1: Booted secondary processor.*'),
-            ["system.terminal"]))
+        verifiers.append(
+            verifier.MatchFileRegex(
+                re.compile(r".*CPU1: Booted secondary processor.*"),
+                ["system.terminal"],
+            )
+        )
 
     return verifiers
+
 
 for name in arm_fs_quick_tests:
     if name in arm_fs_kvm_tests:
@@ -124,35 +129,52 @@ for name in arm_fs_quick_tests:
         valid_hosts = constants.supported_hosts
 
     args = [
-        joinpath(config.base_dir, 'tests', 'gem5', 'configs', name + '.py'),
+        joinpath(config.base_dir, "tests", "gem5", "configs", name + ".py"),
         path,
-        config.base_dir
+        config.base_dir,
     ]
     gem5_verify_config(
         name=name,
-        verifiers=verifier_list(name), # Add basic stat verifiers
-        config=joinpath(filepath, 'run.py'),
+        verifiers=verifier_list(name),  # Add basic stat verifiers
+        config=joinpath(filepath, "run.py"),
         config_args=args,
-        valid_isas=(constants.arm_tag,),
+        valid_isas=(constants.all_compiled_tag,),
         length=constants.quick_tag,
         valid_hosts=valid_hosts,
         fixtures=(arm_fs_binaries,),
-        uses_kvm= name in arm_fs_kvm_tests,
+        uses_kvm=name in arm_fs_kvm_tests,
     )
 
 for name in arm_fs_long_tests:
     args = [
-        joinpath(config.base_dir, 'tests', 'gem5', 'configs', name + '.py'),
+        joinpath(config.base_dir, "tests", "gem5", "configs", name + ".py"),
         path,
-        config.base_dir
+        config.base_dir,
     ]
     gem5_verify_config(
         name=name,
-        verifiers=verifier_list(name), # TODO: Add basic stat verifiers
-        config=joinpath(filepath, 'run.py'),
+        verifiers=verifier_list(name),  # TODO: Add basic stat verifiers
+        config=joinpath(filepath, "run.py"),
+        config_args=args,
+        valid_isas=(constants.all_compiled_tag,),
+        length=constants.long_tag,
+        fixtures=(arm_fs_binaries,),
+        uses_kvm=name in arm_fs_kvm_tests,
+    )
+
+for name in arm_fs_long_tests_arm_target:
+    args = [
+        joinpath(config.base_dir, "tests", "gem5", "configs", name + ".py"),
+        path,
+        config.base_dir,
+    ]
+    gem5_verify_config(
+        name=name,
+        verifiers=verifier_list(name),  # TODO: Add basic stat verifiers
+        config=joinpath(filepath, "run.py"),
         config_args=args,
         valid_isas=(constants.arm_tag,),
         length=constants.long_tag,
         fixtures=(arm_fs_binaries,),
-        uses_kvm= name in arm_fs_kvm_tests,
+        uses_kvm=name in arm_fs_kvm_tests,
     )

@@ -24,31 +24,67 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 class _neg_inf(object):
-    '''This object always compares less than any other object'''
-    def __repr__(self): return '<neg_inf>'
-    def __lt__(self, other): return type(self) != type(other)
-    def __le__(self, other): return True
-    def __gt__(self, other): return False
-    def __ge__(self, other): return type(self) == type(other)
-    def __eq__(self, other): return type(self) == type(other)
-    def __ne__(self, other): return type(self) != type(other)
+    """This object always compares less than any other object"""
+
+    def __repr__(self):
+        return "<neg_inf>"
+
+    def __lt__(self, other):
+        return type(self) != type(other)
+
+    def __le__(self, other):
+        return True
+
+    def __gt__(self, other):
+        return False
+
+    def __ge__(self, other):
+        return type(self) == type(other)
+
+    def __eq__(self, other):
+        return type(self) == type(other)
+
+    def __ne__(self, other):
+        return type(self) != type(other)
+
+
 neg_inf = _neg_inf()
 
+
 class _pos_inf(object):
-    '''This object always compares greater than any other object'''
-    def __repr__(self): return '<pos_inf>'
-    def __lt__(self, other): return False
-    def __le__(self, other): return type(self) == type(other)
-    def __gt__(self, other): return type(self) != type(other)
-    def __ge__(self, other): return True
-    def __eq__(self, other): return type(self) == type(other)
-    def __ne__(self, other): return type(self) != type(other)
+    """This object always compares greater than any other object"""
+
+    def __repr__(self):
+        return "<pos_inf>"
+
+    def __lt__(self, other):
+        return False
+
+    def __le__(self, other):
+        return type(self) == type(other)
+
+    def __gt__(self, other):
+        return type(self) != type(other)
+
+    def __ge__(self, other):
+        return True
+
+    def __eq__(self, other):
+        return type(self) == type(other)
+
+    def __ne__(self, other):
+        return type(self) != type(other)
+
+
 pos_inf = _pos_inf()
 
+
 class Region(tuple):
-    '''A region (range) of [start, end).
-    This includes utility functions to compare overlap of regions.'''
+    """A region (range) of [start, end).
+    This includes utility functions to compare overlap of regions."""
+
     def __new__(cls, *args):
         if len(args) == 1:
             arg = args[0]
@@ -58,12 +94,13 @@ class Region(tuple):
 
         if len(args) != 2:
             raise AttributeError(
-                "Only one or two arguments allowed, %d provided" % (alen, ))
+                "Only one or two arguments allowed, %d provided" % (alen,)
+            )
 
         return tuple.__new__(cls, args)
 
     def __repr__(self):
-        return 'Region(%s, %s)' % (self[0], self[1])
+        return "Region(%s, %s)" % (self[0], self[1])
 
     @property
     def start(self):
@@ -74,17 +111,17 @@ class Region(tuple):
         return self[1]
 
     def __contains__(self, other):
-        '''other is
+        """other is
         region: True if self and other is fully contained within self.
-        pos: True if other is within the region'''
+        pos: True if other is within the region"""
         if isinstance(other, tuple):
             return self[0] <= other[0] and self[1] >= other[1]
         return self[0] <= other and other < self[1]
 
     def __eq__(self, other):
-        '''other is
+        """other is
         region: True if self and other are identical.
-        pos: True if other is within the region'''
+        pos: True if other is within the region"""
         if isinstance(other, tuple):
             return self[0] == other[0] and self[1] == other[1]
         return self[0] <= other and other < self[1]
@@ -93,9 +130,9 @@ class Region(tuple):
     # @param other is a region.
     # @return if self and other are not identical.
     def __ne__(self, other):
-        '''other is
+        """other is
         region: true if they are not identical
-        pos: True if other is not in the region'''
+        pos: True if other is not in the region"""
         if isinstance(other, tuple):
             return self[0] != other[0] or self[1] != other[1]
         return other < self[0] or self[1] <= other
@@ -138,10 +175,12 @@ class Region(tuple):
             return self[1] >= other[1]
         return self[1] > other
 
+
 class Regions(object):
-    '''A set of regions (ranges).  Basically a region with holes.
+    """A set of regions (ranges).  Basically a region with holes.
     Includes utility functions to merge regions and figure out if
-    something is in one of the regions.'''
+    something is in one of the regions."""
+
     def __init__(self, *args):
         self.regions = []
         self.extend(*args)
@@ -228,22 +267,23 @@ class Regions(object):
         return result
 
     def __repr__(self):
-        return 'Regions(%s)' % ([(r[0], r[1]) for r in self.regions], )
+        return "Regions(%s)" % ([(r[0], r[1]) for r in self.regions],)
+
 
 all_regions = Regions(Region(neg_inf, pos_inf))
 
-if __name__ == '__main__':
-    x = Regions(*((i, i + 1) for i in range(0,30,2)))
-    y = Regions(*((i, i + 4) for i in range(0,30,5)))
-    z = Region(6,7)
-    n = Region(9,10)
+if __name__ == "__main__":
+    x = Regions(*((i, i + 1) for i in range(0, 30, 2)))
+    y = Regions(*((i, i + 4) for i in range(0, 30, 5)))
+    z = Region(6, 7)
+    n = Region(9, 10)
 
     def test(left, right):
         print("%s == %s: %s" % (left, right, left == right))
         print("%s != %s: %s" % (left, right, left != right))
-        print("%s <  %s: %s" % (left, right, left <  right))
+        print("%s <  %s: %s" % (left, right, left < right))
         print("%s <= %s: %s" % (left, right, left <= right))
-        print("%s >  %s: %s" % (left, right, left >  right))
+        print("%s >  %s: %s" % (left, right, left > right))
         print("%s >= %s: %s" % (left, right, left >= right))
         print("\n")
 

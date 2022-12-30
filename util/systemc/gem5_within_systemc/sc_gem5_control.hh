@@ -142,10 +142,6 @@ class Gem5Control
     virtual void setDebugFlag(const char *flag);
     virtual void clearDebugFlag(const char *flag);
 
-    /** Choose a base port number for GDB to connect to the model
-     *  (0 disables connections) */
-    virtual void setRemoteGDBPort(unsigned int port);
-
     /* Register an action to happen at the end of elaboration */
     virtual void registerEndOfElaboration(void (*func)());
 

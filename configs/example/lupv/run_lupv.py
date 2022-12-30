@@ -49,8 +49,7 @@ import argparse
 # Run a check to ensure the right version of gem5 is being used.
 requires(isa_required=ISA.RISCV)
 
-from gem5.components.cachehierarchies.classic.\
-    private_l1_private_l2_cache_hierarchy import (
+from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
     PrivateL1PrivateL2CacheHierarchy,
 )
 
@@ -108,6 +107,7 @@ board.set_kernel_disk_workload(
 print("Running with ISA: " + processor.get_isa().name)
 print()
 root = Root(full_system=True, system=board)
+board._pre_instantiate()
 m5.instantiate()
 print("Beginning simulation!")
 

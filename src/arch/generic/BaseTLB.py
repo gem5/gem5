@@ -40,6 +40,7 @@
 from m5.params import *
 from m5.SimObject import SimObject
 
+
 class TypeTLB(ScopedEnum):
     """
     instruction: TLB contains instruction entries only
@@ -53,25 +54,25 @@ class TypeTLB(ScopedEnum):
 
     bool has_data = tlb->type() & TypeTLB::data;
     """
-    map = {
-        'instruction' : 0x1,
-        'data' : 0x2,
-        'unified' : 0x3,
-    }
+
+    map = {"instruction": 0x1, "data": 0x2, "unified": 0x3}
+
 
 class BaseTLB(SimObject):
-    type = 'BaseTLB'
+    type = "BaseTLB"
     abstract = True
     cxx_header = "arch/generic/tlb.hh"
-    cxx_class = 'gem5::BaseTLB'
+    cxx_class = "gem5::BaseTLB"
 
     # Ports to connect with other TLB levels
-    cpu_side_ports  = VectorResponsePort("Ports closer to the CPU side")
-    slave     = DeprecatedParam(cpu_side_ports,
-                    '`slave` is now called `cpu_side_ports`')
+    cpu_side_ports = VectorResponsePort("Ports closer to the CPU side")
+    slave = DeprecatedParam(
+        cpu_side_ports, "`slave` is now called `cpu_side_ports`"
+    )
     mem_side_port = RequestPort("Port closer to memory side")
-    master   = DeprecatedParam(mem_side_port,
-                    '`master` is now called `mem_side_port`')
+    master = DeprecatedParam(
+        mem_side_port, "`master` is now called `mem_side_port`"
+    )
 
     entry_type = Param.TypeTLB("Instruction/Data/Unified TLB entries")
 

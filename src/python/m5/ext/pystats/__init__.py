@@ -24,7 +24,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .jsonserializable import JsonSerializable
+from .abstract_stat import AbstractStat
+from .serializable_stat import SerializableStat
 from .group import Group
 from .simstat import SimStat
 from .statistic import Statistic
@@ -33,11 +34,12 @@ from .timeconversion import TimeConversion
 from .jsonloader import JsonLoader
 
 __all__ = [
-           "Group",
-           "SimStat",
-           "Statistic",
-           "TimeConversion",
-           "StorageType",
-           "JsonSerializable",
-           "JsonLoader",
-          ]
+    "AbstractStat",
+    "Group",
+    "SimStat",
+    "Statistic",
+    "TimeConversion",
+    "StorageType",
+    "SerializableStat",
+    "JsonLoader",
+]

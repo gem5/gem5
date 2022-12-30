@@ -36,6 +36,7 @@
 from m5.params import *
 from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
 
+
 class BaseNonCachingSimpleCPU(BaseAtomicSimpleCPU):
     """Simple CPU model based on the atomic CPU. Unlike the atomic CPU,
     this model causes the memory system to bypass caches and is
@@ -45,15 +46,15 @@ class BaseNonCachingSimpleCPU(BaseAtomicSimpleCPU):
 
     """
 
-    type = 'BaseNonCachingSimpleCPU'
+    type = "BaseNonCachingSimpleCPU"
     cxx_header = "cpu/simple/noncaching.hh"
-    cxx_class = 'gem5::NonCachingSimpleCPU'
+    cxx_class = "gem5::NonCachingSimpleCPU"
 
     numThreads = 1
 
     @classmethod
     def memory_mode(cls):
-        return 'atomic_noncaching'
+        return "atomic_noncaching"
 
     @classmethod
     def support_take_over(cls):

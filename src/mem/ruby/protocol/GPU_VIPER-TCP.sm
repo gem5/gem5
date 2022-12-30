@@ -453,7 +453,16 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     responseToTCP_in.dequeue(clockEdge());
   }
 
-  action(l_loadDone, "l", desc="local load done") {
+  action(l_loadDoneHit, "ldh", desc="local load done (hits in TCP)") {
+    assert(is_valid(cache_entry));
+    if (use_seq_not_coal) {
+      sequencer.readCallback(address, cache_entry.DataBlk, true, MachineType:L1Cache);
+    } else {
+      coalescer.readCallback(address, MachineType:L1Cache, cache_entry.DataBlk);
+    }
+  }
+
+  action(l_loadDoneMiss, "ldm", desc="local load done (misses in TCP)") {
     assert(is_valid(cache_entry));
     if (use_seq_not_coal) {
       sequencer.readCallback(address, cache_entry.DataBlk, false, MachineType:L1Cache);
@@ -467,7 +476,18 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     coalescer.atomicCallback(address, MachineType:L1Cache, cache_entry.DataBlk);
   }
 
-  action(s_storeDone, "s", desc="local store done") {
+  action(s_storeDoneHit, "sdh", desc="local store done (hits in TCP)") {
+    assert(is_valid(cache_entry));
+
+    if (use_seq_not_coal) {
+      sequencer.writeCallback(address, cache_entry.DataBlk, true, MachineType:L1Cache);
+    } else {
+      coalescer.writeCallback(address, MachineType:L1Cache, cache_entry.DataBlk);
+    }
+    cache_entry.Dirty := true;
+  }
+
+  action(s_storeDoneMiss, "sdm", desc="local store done (misses in TCP)") {
     assert(is_valid(cache_entry));
 
     if (use_seq_not_coal) {
@@ -557,7 +577,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   }
 
   transition(V, Load) {TagArrayRead, DataArrayRead} {
-    l_loadDone;
+    l_loadDoneHit;
     mru_updateMRU;
     uu_profileDataHit;
     p_popMandatoryQueue;
@@ -573,7 +593,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   transition(I, StoreThrough) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
     a_allocate;
     dw_dirtyWrite;
-    s_storeDone;
+    s_storeDoneMiss;
     uu_profileDataMiss;
     wt_writeThrough;
     ic_invCache;
@@ -582,7 +602,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
 
   transition(V, StoreThrough, I) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
     dw_dirtyWrite;
-    s_storeDone;
+    s_storeDoneHit;
     uu_profileDataHit;
     wt_writeThrough;
     ic_invCache;
@@ -592,7 +612,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   transition(I, TCC_Ack, V) {TagArrayRead, TagArrayWrite, DataArrayRead, DataArrayWrite} {
     a_allocate;
     w_writeCache;
-    l_loadDone;
+    l_loadDoneMiss;
     pr_popResponseQueue;
   }
 
@@ -618,7 +638,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
 
   transition(V, TCC_Ack, V) {TagArrayRead, DataArrayRead, DataArrayWrite} {
     w_writeCache;
-    l_loadDone;
+    l_loadDoneHit;
     pr_popResponseQueue;
   }
 

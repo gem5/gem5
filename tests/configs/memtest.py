@@ -26,29 +26,30 @@
 
 import m5
 from m5.objects import *
-m5.util.addToPath('../configs/')
+
+m5.util.addToPath("../configs/")
 from common.Caches import *
 
-#MAX CORES IS 8 with the fals sharing method
+# MAX CORES IS 8 with the fals sharing method
 nb_cores = 8
-cpus = [ MemTest() for i in range(nb_cores) ]
+cpus = [MemTest() for i in range(nb_cores)]
 
 # system simulated
-system = System(cpu = cpus,
-                physmem = SimpleMemory(),
-                membus = SystemXBar())
+system = System(cpu=cpus, physmem=SimpleMemory(), membus=SystemXBar())
 # Dummy voltage domain for all our clock domains
 system.voltage_domain = VoltageDomain()
-system.clk_domain = SrcClockDomain(clock = '1GHz',
-                                   voltage_domain = system.voltage_domain)
+system.clk_domain = SrcClockDomain(
+    clock="1GHz", voltage_domain=system.voltage_domain
+)
 
 # Create a seperate clock domain for components that should run at
 # CPUs frequency
-system.cpu_clk_domain = SrcClockDomain(clock = '2GHz',
-                                       voltage_domain = system.voltage_domain)
+system.cpu_clk_domain = SrcClockDomain(
+    clock="2GHz", voltage_domain=system.voltage_domain
+)
 
-system.toL2Bus = L2XBar(clk_domain = system.cpu_clk_domain)
-system.l2c = L2Cache(clk_domain = system.cpu_clk_domain, size='64kB', assoc=8)
+system.toL2Bus = L2XBar(clk_domain=system.cpu_clk_domain)
+system.l2c = L2Cache(clk_domain=system.cpu_clk_domain, size="64kB", assoc=8)
 system.l2c.cpu_side = system.toL2Bus.mem_side_ports
 
 # connect l2c to membus
@@ -58,7 +59,7 @@ system.l2c.mem_side = system.membus.cpu_side_ports
 for cpu in cpus:
     # All cpus are associated with cpu_clk_domain
     cpu.clk_domain = system.cpu_clk_domain
-    cpu.l1c = L1Cache(size = '32kB', assoc = 4)
+    cpu.l1c = L1Cache(size="32kB", assoc=4)
     cpu.l1c.cpu_side = cpu.port
     cpu.l1c.mem_side = system.toL2Bus.cpu_side_ports
 
@@ -72,6 +73,5 @@ system.physmem.port = system.membus.mem_side_ports
 # run simulation
 # -----------------------
 
-root = Root( full_system = False, system = system )
-root.system.mem_mode = 'timing'
-
+root = Root(full_system=False, system=system)
+root.system.mem_mode = "timing"

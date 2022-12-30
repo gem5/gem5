@@ -174,12 +174,6 @@ Gem5Control::clearDebugFlag(const char *flag)
     ::gem5::clearDebugFlag(flag);
 }
 
-void
-Gem5Control::setRemoteGDBPort(unsigned int port)
-{
-    ::gem5::setRemoteGDBPort(port);
-}
-
 Gem5System *
 Gem5Control::makeSystem(const std::string &system_name,
     const std::string &instance_name)
@@ -215,7 +209,7 @@ Gem5TopLevelModule::Gem5TopLevelModule(sc_core::sc_module_name name,
     SC_THREAD(run);
 
     /* Pass DPRINTF messages to SystemC */
-    gem5::Trace::setDebugLogger(&logger);
+    gem5::trace::setDebugLogger(&logger);
 
     /* @todo need this as an option */
     Gem5SystemC::setTickFrequency();
@@ -238,7 +232,7 @@ Gem5TopLevelModule::Gem5TopLevelModule(sc_core::sc_module_name name,
     gem5::statistics::registerHandlers(CxxConfig::statsReset,
         CxxConfig::statsDump);
 
-    gem5::Trace::enable();
+    gem5::trace::enable();
 
     config_file = new gem5::CxxIniFile();
 

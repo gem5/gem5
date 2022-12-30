@@ -42,7 +42,7 @@
 def template PanicExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-                            Trace::InstRecord *traceData) const
+                            trace::InstRecord *traceData) const
     {
         panic("Execute function executed when it shouldn't be!\n");
         return NoFault;
@@ -52,7 +52,7 @@ def template PanicExecute {{
 def template PanicInitiateAcc {{
     Fault
     %(class_name)s::initiateAcc(ExecContext *xc,
-                                Trace::InstRecord *traceData) const
+                                trace::InstRecord *traceData) const
     {
         panic("InitiateAcc function executed when it shouldn't be!\n");
         return NoFault;
@@ -62,7 +62,7 @@ def template PanicInitiateAcc {{
 def template PanicCompleteAcc {{
     Fault
     %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-                                Trace::InstRecord *traceData) const
+                                trace::InstRecord *traceData) const
     {
         panic("CompleteAcc function executed when it shouldn't be!\n");
         return NoFault;
@@ -73,7 +73,7 @@ def template PanicCompleteAcc {{
 def template SwapExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-                            Trace::InstRecord *traceData) const
+                            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -109,7 +109,7 @@ def template SwapExecute {{
 def template SwapInitiateAcc {{
     Fault
     %(class_name)s::initiateAcc(ExecContext *xc,
-                                Trace::InstRecord *traceData) const
+                                trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -137,7 +137,7 @@ def template SwapInitiateAcc {{
 def template SwapCompleteAcc {{
     Fault
     %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-                                Trace::InstRecord *traceData) const
+                                trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -163,7 +163,7 @@ def template SwapCompleteAcc {{
 def template LoadExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-                            Trace::InstRecord *traceData) const
+                            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -194,7 +194,7 @@ def template NeonLoadExecute {{
     template <class Element>
     Fault
     %(class_name)s<Element>::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -230,7 +230,7 @@ def template NeonLoadExecute {{
 def template StoreExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-                            Trace::InstRecord *traceData) const
+                            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -264,7 +264,7 @@ def template NeonStoreExecute {{
     template <class Element>
     Fault
     %(class_name)s<Element>::execute(
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -303,7 +303,7 @@ def template NeonStoreExecute {{
 def template StoreExExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-                            Trace::InstRecord *traceData) const
+                            trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -342,7 +342,7 @@ def template StoreExExecute {{
 def template StoreExInitiateAcc {{
     Fault
     %(class_name)s::initiateAcc(ExecContext *xc,
-                                Trace::InstRecord *traceData) const
+                                trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -371,7 +371,7 @@ def template StoreExInitiateAcc {{
 def template StoreInitiateAcc {{
     Fault
     %(class_name)s::initiateAcc(ExecContext *xc,
-                                Trace::InstRecord *traceData) const
+                                trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -401,7 +401,7 @@ def template NeonStoreInitiateAcc {{
     template <class Element>
     Fault
     %(class_name)s<Element>::initiateAcc(
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -434,7 +434,7 @@ def template NeonStoreInitiateAcc {{
 def template LoadInitiateAcc {{
     Fault
     %(class_name)s::initiateAcc(ExecContext *xc,
-                                Trace::InstRecord *traceData) const
+                                trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -460,7 +460,7 @@ def template NeonLoadInitiateAcc {{
     template <class Element>
     Fault
     %(class_name)s<Element>::initiateAcc(
-            ExecContext *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -487,7 +487,7 @@ def template NeonLoadInitiateAcc {{
 def template LoadCompleteAcc {{
     Fault
     %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-                                Trace::InstRecord *traceData) const
+                                trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -515,7 +515,7 @@ def template NeonLoadCompleteAcc {{
     template <class Element>
     Fault
     %(class_name)s<Element>::completeAcc(
-            PacketPtr pkt, ExecContext *xc, Trace::InstRecord *traceData) const
+            PacketPtr pkt, ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -543,7 +543,7 @@ def template NeonLoadCompleteAcc {{
 def template StoreCompleteAcc {{
     Fault
     %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-                                Trace::InstRecord *traceData) const
+                                trace::InstRecord *traceData) const
     {
         return NoFault;
     }
@@ -553,7 +553,7 @@ def template NeonStoreCompleteAcc {{
     template <class Element>
     Fault
     %(class_name)s<Element>::completeAcc(
-            PacketPtr pkt, ExecContext *xc, Trace::InstRecord *traceData) const
+            PacketPtr pkt, ExecContext *xc, trace::InstRecord *traceData) const
     {
         return NoFault;
     }
@@ -562,7 +562,7 @@ def template NeonStoreCompleteAcc {{
 def template StoreExCompleteAcc {{
     Fault
     %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-                                Trace::InstRecord *traceData) const
+                                trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -596,10 +596,10 @@ def template RfeDeclare {{
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _base, int _mode, bool _wb);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
     };
 }};
 
@@ -617,10 +617,10 @@ def template SrsDeclare {{
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _regMode, int _mode, bool _wb);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
     };
 }};
 
@@ -638,10 +638,10 @@ def template SwapDeclare {{
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _dest, uint32_t _op1, uint32_t _base);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
     };
 }};
 
@@ -660,10 +660,10 @@ def template LoadStoreDImmDeclare {{
                 uint32_t _dest, uint32_t _dest2,
                 uint32_t _base, bool _add, int32_t _imm);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
     };
 }};
 
@@ -682,10 +682,10 @@ def template StoreExDImmDeclare {{
                 uint32_t _result, uint32_t _dest, uint32_t _dest2,
                 uint32_t _base, bool _add, int32_t _imm);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
     };
 }};
 
@@ -703,10 +703,10 @@ def template LoadStoreImmDeclare {{
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _dest, uint32_t _base, bool _add, int32_t _imm);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
 
         void
         annotateFault(ArmISA::ArmFault *fault) override
@@ -731,10 +731,10 @@ def template StoreExImmDeclare {{
                 uint32_t _result, uint32_t _dest, uint32_t _base,
                 bool _add, int32_t _imm);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
     };
 }};
 
@@ -755,10 +755,10 @@ def template StoreDRegDeclare {{
                 int32_t _shiftAmt, uint32_t _shiftType,
                 uint32_t _index);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
     };
 }};
 
@@ -778,10 +778,10 @@ def template StoreRegDeclare {{
                 int32_t _shiftAmt, uint32_t _shiftType,
                 uint32_t _index);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
 
         void
         annotateFault(ArmISA::ArmFault *fault) override
@@ -808,10 +808,10 @@ def template LoadDRegDeclare {{
                 int32_t _shiftAmt, uint32_t _shiftType,
                 uint32_t _index);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
     };
 }};
 
@@ -831,10 +831,10 @@ def template LoadRegDeclare {{
                 int32_t _shiftAmt, uint32_t _shiftType,
                 uint32_t _index);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
 
         void
         annotateFault(ArmISA::ArmFault *fault) override
@@ -858,10 +858,10 @@ def template LoadImmDeclare {{
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _dest, uint32_t _base, bool _add, int32_t _imm);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
 
         void
         annotateFault(ArmISA::ArmFault *fault) override
@@ -1288,4 +1288,3 @@ def template LoadImmConstructor {{
 #endif
     }
 }};
-

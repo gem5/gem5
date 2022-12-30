@@ -39,8 +39,8 @@ import switcheroo
 
 root = LinuxArmFSSwitcheroo(
     mem_class=DDR3_1600_8x8,
-    cpu_classes=(TimingSimpleCPU, TimingSimpleCPU)
-    ).create_root()
+    cpu_classes=(ArmTimingSimpleCPU, ArmTimingSimpleCPU),
+).create_root()
 
 # Setup a custom test method that uses the switcheroo tester that
 # switches between CPU models.

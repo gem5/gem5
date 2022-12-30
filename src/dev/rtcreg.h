@@ -52,4 +52,3 @@ static const int RTC_STAT_REGB = 0x0B;
 
 static const int RTC_STAT_REGC = 0x0C;
 static const int RTC_STAT_REGD = 0x0D;
-

@@ -26,8 +26,14 @@
 
 from .abstract_board import AbstractBoard
 from ...resources.resource import AbstractResource
+from gem5.utils.simpoint import SimPoint
 
 from m5.objects import SEWorkload, Process
+
+from typing import Optional, List, Union
+from m5.util import warn
+from pathlib import Path
+
 
 class SEBinaryWorkload:
     """
@@ -37,38 +43,129 @@ class SEBinaryWorkload:
     For this to function correctly the SEBinaryWorkload class should be added
     as a superclass to a board (i.e., something that inherits from
     AbstractBoard).
+
+    **Important Notes:** At present this implementation is limited. A single
+    process is added to all cores as the workload. Therefore, despite allowing
+    for multi-core setups, multi-program workloads are not presently supported.
     """
 
     def set_se_binary_workload(
         self,
         binary: AbstractResource,
-        exit_on_work_items: bool = True
+        exit_on_work_items: bool = True,
+        stdin_file: Optional[AbstractResource] = None,
+        stdout_file: Optional[Path] = None,
+        stderr_file: Optional[Path] = None,
+        arguments: List[str] = [],
+        checkpoint: Optional[Union[Path, AbstractResource]] = None,
     ) -> None:
         """Set up the system to run a specific binary.
 
         **Limitations**
-        * Only supports single threaded applications
+        * Only supports single threaded applications.
         * Dynamically linked executables are partially supported when the host
           ISA and the simulated ISA are the same.
 
         :param binary: The resource encapsulating the binary to be run.
         :param exit_on_work_items: Whether the simulation should exit on work
         items. True by default.
+        :param stdin_file: The input file for the binary
+        :param arguments: The input arguments for the binary
+        :param checkpoint: The checkpoint directory. Used to restore the
+        simulation to that checkpoint.
         """
 
         # We assume this this is in a multiple-inheritance setup with an
         # Abstract board. This function will not work otherwise.
-        assert(isinstance(self,AbstractBoard))
+        assert isinstance(self, AbstractBoard)
 
         # If we are setting a workload of this type, we need to run as a
         # SE-mode simulation.
         self._set_fullsystem(False)
 
-        self.workload = SEWorkload.init_compatible(binary.get_local_path())
+        binary_path = binary.get_local_path()
+        self.workload = SEWorkload.init_compatible(binary_path)
 
         process = Process()
-        process.cmd = [binary.get_local_path()]
-        self.get_processor().get_cores()[0].set_workload(process)
+        process.executable = binary_path
+        process.cmd = [binary_path] + arguments
+        if stdin_file is not None:
+            process.input = stdin_file.get_local_path()
+        if stdout_file is not None:
+            process.output = stdout_file.as_posix()
+        if stderr_file is not None:
+            process.errout = stderr_file.as_posix()
+
+        for core in self.get_processor().get_cores():
+            core.set_workload(process)
 
         # Set whether to exit on work items for the se_workload
         self.exit_on_work_items = exit_on_work_items
+
+        # Here we set `self._checkpoint_dir`. This is then used by the
+        # Simulator module to setup checkpoints.
+        if checkpoint:
+            if isinstance(checkpoint, Path):
+                self._checkpoint = checkpoint
+            elif isinstance(checkpoint, AbstractResource):
+                self._checkpoint_dir = Path(checkpoint.get_local_path())
+            else:
+                raise Exception(
+                    "The checkpoint_dir must be None, Path, or "
+                    "AbstractResource."
+                )
+
+    def set_se_simpoint_workload(
+        self,
+        binary: AbstractResource,
+        arguments: List[str] = [],
+        simpoint: Union[AbstractResource, SimPoint] = None,
+        checkpoint: Optional[Union[Path, AbstractResource]] = None,
+    ) -> None:
+        """Set up the system to run a SimPoint workload.
+
+        **Limitations**
+        * Only supports single threaded applications.
+        * Dynamically linked executables are partially supported when the host
+          ISA and the simulated ISA are the same.
+
+        **Warning:** SimPoints only works with one core
+
+        :param binary: The resource encapsulating the binary to be run.
+        :param arguments: The input arguments for the binary
+        :param simpoint: The SimPoint object or Resource that contains the list of
+        SimPoints starting instructions, the list of weights, and the SimPoints
+        interval
+        :param checkpoint: The checkpoint directory. Used to restore the
+        simulation to that checkpoint.
+        """
+
+        # convert input to SimPoint if necessary
+        if isinstance(simpoint, AbstractResource):
+            self._simpoint_object = SimPoint(simpoint)
+        else:
+            assert isinstance(simpoint, SimPoint)
+            self._simpoint_object = simpoint
+
+        if self.get_processor().get_num_cores() > 1:
+            warn("SimPoints only works with one core")
+        self.get_processor().get_cores()[0]._set_simpoint(
+            inst_starts=self._simpoint_object.get_simpoint_start_insts(),
+            board_initialized=False,
+        )
+
+        # Call set_se_binary_workload after SimPoint setup is complete
+        self.set_se_binary_workload(
+            binary=binary,
+            arguments=arguments,
+            checkpoint=checkpoint,
+        )
+
+    def get_simpoint(self) -> SimPoint:
+        """
+        Returns the SimPoint object set. If no SimPoint object has been set an
+        exception is thrown.
+        """
+        if getattr(self, "_simpoint_object", None):
+            return self._simpoint_object
+        raise Exception("This board does not have a simpoint set.")

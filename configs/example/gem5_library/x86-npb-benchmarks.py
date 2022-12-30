@@ -54,19 +54,21 @@ from m5.objects import Root
 from gem5.utils.requires import requires
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.memory import DualChannelDDR4_2400
-from gem5.components.processors.simple_switchable_processor import(
+from gem5.components.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
 )
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.resources.resource import Resource
+from gem5.simulate.simulator import Simulator
+from gem5.simulate.simulator import ExitEvent
 
 from m5.stats.gem5stats import get_simstat
 from m5.util import warn
 
 requires(
-    isa_required = ISA.X86,
+    isa_required=ISA.X86,
     coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL,
     kvm_required=True,
 )
@@ -93,25 +95,25 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument(
     "--benchmark",
-    type = str,
+    type=str,
     required=True,
-    help = "Input the benchmark program to execute.",
-    choices = benchmark_choices,
+    help="Input the benchmark program to execute.",
+    choices=benchmark_choices,
 )
 
 parser.add_argument(
     "--size",
-    type = str,
+    type=str,
     required=True,
-    help = "Input the class of the program to simulate.",
-    choices = size_choices,
+    help="Input the class of the program to simulate.",
+    choices=size_choices,
 )
 
 parser.add_argument(
     "--ticks",
-    type = int,
-    help = "Optionally put the maximum number of ticks to execute during the "\
-        "ROI. It accepts an integer value."
+    type=int,
+    help="Optionally put the maximum number of ticks to execute during the "
+    "ROI. It accepts an integer value.",
 )
 
 args = parser.parse_args()
@@ -121,28 +123,31 @@ args = parser.parse_args()
 # We warn the user here.
 
 if args.benchmark == "mg" and args.size == "C":
-    warn("mg.C uses 3.3 GB of memory. Currently we are simulating 3 GB\
-    of main memory in the system.")
+    warn(
+        "mg.C uses 3.3 GB of memory. Currently we are simulating 3 GB\
+    of main memory in the system."
+    )
 
 # The simulation will fail in the case of `ft` with class C. We warn the user
 # here.
 elif args.benchmark == "ft" and args.size == "C":
-    warn("There is not enough memory for ft.C. Currently we are\
-    simulating 3 GB of main memory in the system.")
+    warn(
+        "There is not enough memory for ft.C. Currently we are\
+    simulating 3 GB of main memory in the system."
+    )
 
 # Checking for the maximum number of instructions, if provided by the user.
 
 # Setting up all the fixed system parameters here
 # Caches: MESI Two Level Cache Hierarchy
 
-from gem5.components.cachehierarchies.ruby.\
-    mesi_two_level_cache_hierarchy import(
+from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
     MESITwoLevelCacheHierarchy,
 )
 
 cache_hierarchy = MESITwoLevelCacheHierarchy(
-    l1d_size = "32kB",
-    l1d_assoc = 8,
+    l1d_size="32kB",
+    l1d_assoc=8,
     l1i_size="32kB",
     l1i_assoc=8,
     l2_size="256kB",
@@ -152,7 +157,7 @@ cache_hierarchy = MESITwoLevelCacheHierarchy(
 # Memory: Dual Channel DDR4 2400 DRAM device.
 # The X86 board only supports 3 GB of main memory.
 
-memory = DualChannelDDR4_2400(size = "3GB")
+memory = DualChannelDDR4_2400(size="3GB")
 
 # Here we setup the processor. This is a special switchable processor in which
 # a starting core type and a switch core type must be specified. Once a
@@ -189,35 +194,63 @@ board = X86Board(
 # Also, we sleep the system for some time so that the output is printed
 # properly.
 
-command="/home/gem5/NPB3.3-OMP/bin/{}.{}.x;".format(args.benchmark,args.size)\
-    + "sleep 5;" \
+command = (
+    "/home/gem5/NPB3.3-OMP/bin/{}.{}.x;".format(args.benchmark, args.size)
+    + "sleep 5;"
     + "m5 exit;"
+)
 
 board.set_kernel_disk_workload(
     # The x86 linux kernel will be automatically downloaded to the
     # `~/.cache/gem5` directory if not already present.
     # npb benchamarks was tested with kernel version 4.19.83
-    kernel=Resource(
-        "x86-linux-kernel-4.19.83",
-    ),
+    kernel=Resource("x86-linux-kernel-4.19.83"),
     # The x86-npb image will be automatically downloaded to the
     # `~/.cache/gem5` directory if not already present.
-    disk_image=Resource(
-        "x86-npb",
-    ),
+    disk_image=Resource("x86-npb"),
     readfile_contents=command,
 )
 
-# We need this for long running processes.
-m5.disableAllListeners()
+# The first exit_event ends with a `workbegin` cause. This means that the
+# system started successfully and the execution on the program started.
+def handle_workbegin():
+    print("Done booting Linux")
+    print("Resetting stats at the start of ROI!")
 
-root = Root(full_system = True, system = board)
+    m5.stats.reset()
 
-# sim_quantum must be set when KVM cores are used.
+    # We have completed up to this step using KVM cpu. Now we switch to timing
+    # cpu for detailed simulation.
 
-root.sim_quantum = int(1e9)
+    # # Next, we need to check if the user passed a value for --ticks. If yes,
+    # then we limit out execution to this number of ticks during the ROI.
+    # Otherwise, we simulate until the ROI ends.
+    processor.switch()
+    if args.ticks:
+        # schedule an exit event for this amount of ticks in the future.
+        # The simulation will then continue.
+        m5.scheduleTickExitFromCurrent(args.ticks)
+    yield False
 
-m5.instantiate()
+
+# The next exit_event is to simulate the ROI. It should be exited with a cause
+# marked by `workend`.
+
+# We exepect that ROI ends with `workend` or `simulate() limit reached`.
+def handle_workend():
+    print("Dump stats at the end of the ROI!")
+
+    m5.stats.dump()
+    yield True
+
+
+simulator = Simulator(
+    board=board,
+    on_exit_event={
+        ExitEvent.WORKBEGIN: handle_workbegin(),
+        ExitEvent.WORKEND: handle_workend(),
+    },
+)
 
 # We maintain the wall clock time.
 
@@ -227,95 +260,11 @@ print("Running the simulation")
 print("Using KVM cpu")
 
 # We start the simulation.
-
-exit_event = m5.simulate()
-
-# The first exit_event ends with a `workbegin` cause. This means that the
-# system started successfully and the execution on the program started.
-
-if exit_event.getCause() == "workbegin":
-
-    print("Done booting Linux")
-    print("Resetting stats at the start of ROI!")
-
-    m5.stats.reset()
-    start_tick = m5.curTick()
-
-    # We have completed up to this step using KVM cpu. Now we switch to timing
-    # cpu for detailed simulation.
-
-    processor.switch()
-else:
-    # `workbegin` call was never encountered.
-
-    print("Unexpected termination of simulation before ROI was reached!")
-    print(
-        "Exiting @ tick {} because {}.".format(
-            m5.curTick(),
-            exit_event.getCause()
-        )
-    )
-    exit(-1)
-
-# The next exit_event is to simulate the ROI. It should be exited with a cause
-# marked by `workend`.
-
-# Next, we need to check if the user passed a value for --ticks. If yes,
-# then we limit out execution to this number of ticks during the ROI.
-# Otherwise, we simulate until the ROI ends.
-if args.ticks:
-    exit_event = m5.simulate(args.ticks)
-else:
-    exit_event = m5.simulate()
-
-
-# Reached the end of ROI.
-# We dump the stats here.
-
-# We exepect that ROI ends with `workend` or `simulate() limit reached`.
-# Otherwise the simulation ended unexpectedly.
-if exit_event.getCause() == "workend":
-    print("Dump stats at the end of the ROI!")
-
-    m5.stats.dump()
-    end_tick = m5.curTick()
-elif exit_event.getCause() == "simulate() limit reached" and \
-    args.ticks is not None:
-    print("Dump stats at the end of {} ticks in the ROI".format(args.ticks))
-
-    m5.stats.dump()
-    end_tick = m5.curTick()
-else:
-    print("Unexpected termination of simulation while ROI was being executed!")
-    print(
-        "Exiting @ tick {} because {}.".format(
-            m5.curTick(),
-            exit_event.getCause()
-        )
-    )
-    exit(-1)
+simulator.run()
 
 # We need to note that the benchmark is not executed completely till this
 # point, but, the ROI has. We collect the essential statistics here before
 # resuming the simulation again.
-
-# We get simInsts using get_simstat and output it in the final
-# print statement.
-
-gem5stats = get_simstat(root)
-
-# We get the number of committed instructions from the timing
-# cores. We then sum and print them at the end.
-
-roi_insts = float(\
-    gem5stats.to_json()\
-    ["system"]["processor"]["cores2"]["core"]["exec_context.thread_0"]\
-    ["numInsts"]["value"]
-) + float(\
-    gem5stats.to_json()\
-    ["system"]["processor"]["cores3"]["core"]["exec_context.thread_0"]\
-    ["numInsts"]["value"]\
-)
 
 # Simulation is over at this point. We acknowledge that all the simulation
 # events were successful.
@@ -326,8 +275,17 @@ print("Done with the simulation")
 print()
 print("Performance statistics:")
 
-print("Simulated time in ROI: %.2fs" % ((end_tick-start_tick)/1e12))
-print("Instructions executed in ROI: %d" % ((roi_insts)))
-print("Ran a total of", m5.curTick()/1e12, "simulated seconds")
-print("Total wallclock time: %.2fs, %.2f min" % \
-            (time.time()-globalStart, (time.time()-globalStart)/60))
+# manually calculate ROI time if ticks arg is used in case the
+# entire ROI wasn't simulated
+if args.ticks:
+    print(f"Simulated time in ROI (to tick): {args.ticks/ 1e12}s")
+else:
+    print(f"Simulated time in ROI: {simulator.get_roi_ticks()[0] / 1e12}s")
+
+print(
+    f"Ran a total of {simulator.get_current_tick() / 1e12} simulated seconds"
+)
+print(
+    "Total wallclock time: %.2fs, %.2f min"
+    % (time.time() - globalStart, (time.time() - globalStart) / 60)
+)

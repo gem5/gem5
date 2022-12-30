@@ -32,7 +32,7 @@
 def template TrapExecute {{
         Fault
         %(class_name)s::execute(ExecContext *xc,
-                Trace::InstRecord *traceData) const
+                trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
             %(op_decl)s;
@@ -45,7 +45,7 @@ def template TrapExecute {{
 def template FpUnimplExecute {{
         Fault
         %(class_name)s::execute(ExecContext *xc,
-                Trace::InstRecord *traceData) const
+                trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
             %(op_decl)s;

@@ -1381,7 +1381,7 @@ DRAMInterface::Rank::processRefreshEvent()
             // or have outstanding ACT,RD/WR,Auto-PRE sequence scheduled
             // should have outstanding precharge or read response event
             assert(prechargeEvent.scheduled() ||
-                   dram.ctrl->respondEventScheduled());
+                   dram.ctrl->respondEventScheduled(dram.pseudoChannel));
             // will start refresh when pwrState transitions to IDLE
         }
 

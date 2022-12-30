@@ -29,25 +29,33 @@ from m5.proxy import *
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.SimpleMemory import *
 
-class RubySystem(ClockedObject):
-    type = 'RubySystem'
-    cxx_header = "mem/ruby/system/RubySystem.hh"
-    cxx_class = 'gem5::ruby::RubySystem'
 
-    randomization = Param.Bool(False,
+class RubySystem(ClockedObject):
+    type = "RubySystem"
+    cxx_header = "mem/ruby/system/RubySystem.hh"
+    cxx_class = "gem5::ruby::RubySystem"
+
+    randomization = Param.Bool(
+        False,
         "insert random delays on message enqueue times (if True, all message \
          buffers are enforced to have randomization; otherwise, a message \
-         buffer set its own flag to enable/disable randomization)");
-    block_size_bytes = Param.UInt32(64,
-        "default cache block size; must be a power of two");
-    memory_size_bits = Param.UInt32(64,
-        "number of bits that a memory address requires");
+         buffer set its own flag to enable/disable randomization)",
+    )
+    block_size_bytes = Param.UInt32(
+        64, "default cache block size; must be a power of two"
+    )
+    memory_size_bits = Param.UInt32(
+        64, "number of bits that a memory address requires"
+    )
 
     phys_mem = Param.SimpleMemory(NULL, "")
     system = Param.System(Parent.any, "system object")
 
-    access_backing_store = Param.Bool(False, "Use phys_mem as the functional \
-        store and only use ruby for timing.")
+    access_backing_store = Param.Bool(
+        False,
+        "Use phys_mem as the functional \
+        store and only use ruby for timing.",
+    )
 
     # Profiler related configuration variables
     hot_lines = Param.Bool(False, "")

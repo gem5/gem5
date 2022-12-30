@@ -64,7 +64,7 @@ template <class RetryEntry>
 class MN_TBEStorage
 {
   public:
-    MN_TBEStorage(Stats::Group *parent,
+    MN_TBEStorage(statistics::Group *parent,
                   std::initializer_list<TBEStorage *> _partitions)
       : m_stats(parent),
         partitions(_partitions)

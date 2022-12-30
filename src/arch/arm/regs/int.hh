@@ -46,6 +46,7 @@
 #include "arch/arm/types.hh"
 #include "base/logging.hh"
 #include "cpu/reg_class.hh"
+#include "debug/IntRegs.hh"
 #include "sim/core.hh"
 
 namespace gem5
@@ -160,94 +161,114 @@ enum : RegIndex
     _X31Idx
 };
 
+} // namespace int_reg
+
+class IntRegClassOps : public RegClassOps
+{
+    RegId flatten(const BaseISA &isa, const RegId &id) const override;
+};
+
+inline constexpr IntRegClassOps intRegClassOps;
+
+inline constexpr RegClass intRegClass =
+    RegClass(IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs).
+    ops(intRegClassOps).
+    needsFlattening();
+
+inline constexpr RegClass flatIntRegClass =
+    RegClass(IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs);
+
+namespace int_reg
+{
+
 inline constexpr RegId
     /* All the unique register indices. */
-    R0(IntRegClass, _R0Idx),
-    R1(IntRegClass, _R1Idx),
-    R2(IntRegClass, _R2Idx),
-    R3(IntRegClass, _R3Idx),
-    R4(IntRegClass, _R4Idx),
-    R5(IntRegClass, _R5Idx),
-    R6(IntRegClass, _R6Idx),
-    R7(IntRegClass, _R7Idx),
-    R8(IntRegClass, _R8Idx),
-    R9(IntRegClass, _R9Idx),
-    R10(IntRegClass, _R10Idx),
-    R11(IntRegClass, _R11Idx),
-    R12(IntRegClass, _R12Idx),
-    R13(IntRegClass, _R13Idx),
-    R14(IntRegClass, _R14Idx),
-    R15(IntRegClass, _R15Idx),
+    R0 = intRegClass[_R0Idx],
+    R1 = intRegClass[_R1Idx],
+    R2 = intRegClass[_R2Idx],
+    R3 = intRegClass[_R3Idx],
+    R4 = intRegClass[_R4Idx],
+    R5 = intRegClass[_R5Idx],
+    R6 = intRegClass[_R6Idx],
+    R7 = intRegClass[_R7Idx],
+    R8 = intRegClass[_R8Idx],
+    R9 = intRegClass[_R9Idx],
+    R10 = intRegClass[_R10Idx],
+    R11 = intRegClass[_R11Idx],
+    R12 = intRegClass[_R12Idx],
+    R13 = intRegClass[_R13Idx],
+    R14 = intRegClass[_R14Idx],
+    R15 = intRegClass[_R15Idx],
 
-    R13Svc(IntRegClass, _R13SvcIdx),
-    R14Svc(IntRegClass, _R14SvcIdx),
+    R13Svc = intRegClass[_R13SvcIdx],
+    R14Svc = intRegClass[_R14SvcIdx],
 
-    R13Mon(IntRegClass, _R13MonIdx),
-    R14Mon(IntRegClass, _R14MonIdx),
+    R13Mon = intRegClass[_R13MonIdx],
+    R14Mon = intRegClass[_R14MonIdx],
 
-    R13Hyp(IntRegClass, _R13HypIdx),
+    R13Hyp = intRegClass[_R13HypIdx],
 
-    R13Abt(IntRegClass, _R13AbtIdx),
-    R14Abt(IntRegClass, _R14AbtIdx),
+    R13Abt = intRegClass[_R13AbtIdx],
+    R14Abt = intRegClass[_R14AbtIdx],
 
-    R13Und(IntRegClass, _R13UndIdx),
-    R14Und(IntRegClass, _R14UndIdx),
+    R13Und = intRegClass[_R13UndIdx],
+    R14Und = intRegClass[_R14UndIdx],
 
-    R13Irq(IntRegClass, _R13IrqIdx),
-    R14Irq(IntRegClass, _R14IrqIdx),
+    R13Irq = intRegClass[_R13IrqIdx],
+    R14Irq = intRegClass[_R14IrqIdx],
 
-    R8Fiq(IntRegClass, _R8FiqIdx),
-    R9Fiq(IntRegClass, _R9FiqIdx),
-    R10Fiq(IntRegClass, _R10FiqIdx),
-    R11Fiq(IntRegClass, _R11FiqIdx),
-    R12Fiq(IntRegClass, _R12FiqIdx),
-    R13Fiq(IntRegClass, _R13FiqIdx),
-    R14Fiq(IntRegClass, _R14FiqIdx),
+    R8Fiq = intRegClass[_R8FiqIdx],
+    R9Fiq = intRegClass[_R9FiqIdx],
+    R10Fiq = intRegClass[_R10FiqIdx],
+    R11Fiq = intRegClass[_R11FiqIdx],
+    R12Fiq = intRegClass[_R12FiqIdx],
+    R13Fiq = intRegClass[_R13FiqIdx],
+    R14Fiq = intRegClass[_R14FiqIdx],
 
-    Zero(IntRegClass, _ZeroIdx),
-    Ureg0(IntRegClass, _Ureg0Idx),
-    Ureg1(IntRegClass, _Ureg1Idx),
-    Ureg2(IntRegClass, _Ureg2Idx),
+    Zero = intRegClass[_ZeroIdx],
+    Ureg0 = intRegClass[_Ureg0Idx],
+    Ureg1 = intRegClass[_Ureg1Idx],
+    Ureg2 = intRegClass[_Ureg2Idx],
 
-    Sp0(IntRegClass, _Sp0Idx),
-    Sp1(IntRegClass, _Sp1Idx),
-    Sp2(IntRegClass, _Sp2Idx),
-    Sp3(IntRegClass, _Sp3Idx),
+    Sp0 = intRegClass[_Sp0Idx],
+    Sp1 = intRegClass[_Sp1Idx],
+    Sp2 = intRegClass[_Sp2Idx],
+    Sp3 = intRegClass[_Sp3Idx],
 
-    Spx(IntRegClass, _SpxIdx),
+    Spx = intRegClass[_SpxIdx],
 
-    X0(IntRegClass, _X0Idx),
-    X1(IntRegClass, _X1Idx),
-    X2(IntRegClass, _X2Idx),
-    X3(IntRegClass, _X3Idx),
-    X4(IntRegClass, _X4Idx),
-    X5(IntRegClass, _X5Idx),
-    X6(IntRegClass, _X6Idx),
-    X7(IntRegClass, _X7Idx),
-    X8(IntRegClass, _X8Idx),
-    X9(IntRegClass, _X9Idx),
-    X10(IntRegClass, _X10Idx),
-    X11(IntRegClass, _X11Idx),
-    X12(IntRegClass, _X12Idx),
-    X13(IntRegClass, _X13Idx),
-    X14(IntRegClass, _X14Idx),
-    X15(IntRegClass, _X15Idx),
-    X16(IntRegClass, _X16Idx),
-    X17(IntRegClass, _X17Idx),
-    X18(IntRegClass, _X18Idx),
-    X19(IntRegClass, _X19Idx),
-    X20(IntRegClass, _X20Idx),
-    X21(IntRegClass, _X21Idx),
-    X22(IntRegClass, _X22Idx),
-    X23(IntRegClass, _X23Idx),
-    X24(IntRegClass, _X24Idx),
-    X25(IntRegClass, _X25Idx),
-    X26(IntRegClass, _X26Idx),
-    X27(IntRegClass, _X27Idx),
-    X28(IntRegClass, _X28Idx),
-    X29(IntRegClass, _X29Idx),
-    X30(IntRegClass, _X30Idx),
-    X31(IntRegClass, _X31Idx);
+    X0 = intRegClass[_X0Idx],
+    X1 = intRegClass[_X1Idx],
+    X2 = intRegClass[_X2Idx],
+    X3 = intRegClass[_X3Idx],
+    X4 = intRegClass[_X4Idx],
+    X5 = intRegClass[_X5Idx],
+    X6 = intRegClass[_X6Idx],
+    X7 = intRegClass[_X7Idx],
+    X8 = intRegClass[_X8Idx],
+    X9 = intRegClass[_X9Idx],
+    X10 = intRegClass[_X10Idx],
+    X11 = intRegClass[_X11Idx],
+    X12 = intRegClass[_X12Idx],
+    X13 = intRegClass[_X13Idx],
+    X14 = intRegClass[_X14Idx],
+    X15 = intRegClass[_X15Idx],
+    X16 = intRegClass[_X16Idx],
+    X17 = intRegClass[_X17Idx],
+    X18 = intRegClass[_X18Idx],
+    X19 = intRegClass[_X19Idx],
+    X20 = intRegClass[_X20Idx],
+    X21 = intRegClass[_X21Idx],
+    X22 = intRegClass[_X22Idx],
+    X23 = intRegClass[_X23Idx],
+    X24 = intRegClass[_X24Idx],
+    X25 = intRegClass[_X25Idx],
+    X26 = intRegClass[_X26Idx],
+    X27 = intRegClass[_X27Idx],
+    X28 = intRegClass[_X28Idx],
+    X29 = intRegClass[_X29Idx],
+    X30 = intRegClass[_X30Idx],
+    X31 = intRegClass[_X31Idx];
 
 inline constexpr auto
     &Sp = R13,
@@ -424,7 +445,7 @@ static inline RegId
 x(unsigned index)
 {
     assert(index < NumArchRegs);
-    return RegId(IntRegClass, _X0Idx + index);
+    return intRegClass[_X0Idx + index];
 }
 
 const RegMap RegUsrMap = {
@@ -550,7 +571,7 @@ regInMode(OperatingMode mode, int reg)
 
 } // namespace int_reg
 
-static inline int
+static inline const RegId &
 flattenIntRegModeIndex(int reg)
 {
     int mode = reg / int_reg::regsPerMode;

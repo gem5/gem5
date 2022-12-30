@@ -57,10 +57,12 @@ import m5, os, re
 from m5.SimObject import isRoot, isSimObjectVector
 from m5.params import PortRef, isNullPointer
 from m5.util import warn
+
 try:
     import pydot
 except:
     pydot = False
+
 
 def simnode_children(simNode):
     for child in simNode._children.values():
@@ -73,15 +75,16 @@ def simnode_children(simNode):
         else:
             yield child
 
+
 # need to create all nodes (components) before creating edges (memory channels)
 def dot_create_nodes(simNode, callgraph):
     if isRoot(simNode):
         label = "root"
     else:
         label = simNode._name
-    full_path = re.sub('\.', '_', simNode.path())
+    full_path = re.sub("\.", "_", simNode.path())
     # add class name under the label
-    label = "\"" + label + " \\n: " + simNode.__class__.__name__ + "\""
+    label = '"' + label + " \\n: " + simNode.__class__.__name__ + '"'
 
     # each component is a sub-graph (cluster)
     cluster = dot_create_cluster(simNode, full_path, label)
@@ -100,12 +103,13 @@ def dot_create_nodes(simNode, callgraph):
 
     callgraph.add_subgraph(cluster)
 
+
 # create all edges according to memory hierarchy
 def dot_create_edges(simNode, callgraph):
     for port_name in simNode._ports.keys():
         port = simNode._port_refs.get(port_name, None)
         if port != None:
-            full_path = re.sub('\.', '_', simNode.path())
+            full_path = re.sub("\.", "_", simNode.path())
             full_port_name = full_path + "_" + port_name
             port_node = dot_create_node(simNode, full_port_name, port_name)
             # create edges
@@ -121,23 +125,24 @@ def dot_create_edges(simNode, callgraph):
     for child in simnode_children(simNode):
         dot_create_edges(child, callgraph)
 
+
 def dot_add_edge(simNode, callgraph, full_port_name, port):
     peer = port.peer
-    full_peer_path = re.sub('\.', '_', peer.simobj.path())
+    full_peer_path = re.sub("\.", "_", peer.simobj.path())
     full_peer_port_name = full_peer_path + "_" + peer.name
 
     # Each edge is encountered twice, once for each peer. We only want one
     # edge, so we'll arbitrarily chose which peer "wins" based on their names.
     if full_peer_port_name < full_port_name:
         dir_type = {
-            (False, False) : 'both',
-            (True,  False) : 'forward',
-            (False, True)  : 'back',
-            (True,  True)  : 'none'
-        }[ (port.is_source,
-            peer.is_source) ]
+            (False, False): "both",
+            (True, False): "forward",
+            (False, True): "back",
+            (True, True): "none",
+        }[(port.is_source, peer.is_source)]
         edge = pydot.Edge(full_port_name, full_peer_port_name, dir=dir_type)
         callgraph.add_edge(edge)
+
 
 def dot_create_cluster(simNode, full_path, label):
     # get the parameter values of the node and use them as a tooltip
@@ -146,36 +151,45 @@ def dot_create_cluster(simNode, full_path, label):
         value = simNode._values.get(param)
         if value != None:
             # parameter name = value in HTML friendly format
-            ini_strings.append(str(param) + "&#61;" +
-                               simNode._values[param].ini_str())
+            ini_strings.append(
+                str(param) + "&#61;" + simNode._values[param].ini_str()
+            )
     # join all the parameters with an HTML newline
+    # Pydot limit line length to 16384.
+    # Account for the quotes added later around the tooltip string
     tooltip = "&#10;\\".join(ini_strings)
+    max_tooltip_length = 16384 - 2
+    if len(tooltip) > max_tooltip_length:
+        truncated = "... (truncated)"
+        tooltip = tooltip[: max_tooltip_length - len(truncated)] + truncated
 
-    return pydot.Cluster( \
-                         full_path, \
-                         shape = "Mrecord", \
-                         label = label, \
-                         tooltip = "\"" + tooltip + "\"", \
-                         style = "\"rounded, filled\"", \
-                         color = "#000000", \
-                         fillcolor = dot_gen_colour(simNode), \
-                         fontname = "Arial", \
-                         fontsize = "14", \
-                         fontcolor = "#000000" \
-                         )
+    return pydot.Cluster(
+        full_path,
+        shape="box",
+        label=label,
+        tooltip='"' + tooltip + '"',
+        style='"rounded, filled"',
+        color="#000000",
+        fillcolor=dot_gen_colour(simNode),
+        fontname="Arial",
+        fontsize="14",
+        fontcolor="#000000",
+    )
+
 
 def dot_create_node(simNode, full_path, label):
-    return pydot.Node( \
-                         full_path, \
-                         shape = "Mrecord", \
-                         label = label, \
-                         style = "\"rounded, filled\"", \
-                         color = "#000000", \
-                         fillcolor = dot_gen_colour(simNode, True), \
-                         fontname = "Arial", \
-                         fontsize = "14", \
-                         fontcolor = "#000000" \
-                         )
+    return pydot.Node(
+        full_path,
+        shape="box",
+        label=label,
+        style='"rounded, filled"',
+        color="#000000",
+        fillcolor=dot_gen_colour(simNode, True),
+        fontname="Arial",
+        fontsize="14",
+        fontcolor="#000000",
+    )
+
 
 # an enumerator for different kinds of node types, at the moment we
 # discern the majority of node types, with the caches being the
@@ -188,17 +202,20 @@ class NodeType:
     DEV = 4
     OTHER = 5
 
+
 # based on the sim object, determine the node type
 def get_node_type(simNode):
     if isinstance(simNode, m5.objects.System):
         return NodeType.SYS
     # NULL ISA has no BaseCPU or PioDevice, so check if these names
     # exists before using them
-    elif 'BaseCPU' in dir(m5.objects) and \
-            isinstance(simNode, m5.objects.BaseCPU):
+    elif "BaseCPU" in dir(m5.objects) and isinstance(
+        simNode, m5.objects.BaseCPU
+    ):
         return NodeType.CPU
-    elif 'PioDevice' in dir(m5.objects) and \
-            isinstance(simNode, m5.objects.PioDevice):
+    elif "PioDevice" in dir(m5.objects) and isinstance(
+        simNode, m5.objects.PioDevice
+    ):
         return NodeType.DEV
     elif isinstance(simNode, m5.objects.BaseXBar):
         return NodeType.XBAR
@@ -206,6 +223,7 @@ def get_node_type(simNode):
         return NodeType.MEM
     else:
         return NodeType.OTHER
+
 
 # based on the node type, determine the colour as an RGB tuple, the
 # palette is rather arbitrary at this point (some coherent natural
@@ -225,9 +243,10 @@ def get_type_colour(nodeType):
         # use a relatively gray shade
         return (186, 182, 174)
 
+
 # generate colour for a node, either corresponding to a sim object or a
 # port
-def dot_gen_colour(simNode, isPort = False):
+def dot_gen_colour(simNode, isPort=False):
     # determine the type of the current node, and also its parent, if
     # the node is not the same type as the parent then we use the base
     # colour for its type
@@ -263,35 +282,38 @@ def dot_gen_colour(simNode, isPort = False):
 
     return dot_rgb_to_html(r, g, b)
 
+
 def dot_rgb_to_html(r, g, b):
     return "#%.2x%.2x%.2x" % (int(r), int(g), int(b))
+
 
 # We need to create all of the clock domains. We abuse the alpha channel to get
 # the correct domain colouring.
 def dot_add_clk_domain(c_dom, v_dom):
-    label = "\"" + str(c_dom) + "\ :\ " + str(v_dom) + "\""
-    label = re.sub('\.', '_', str(label))
-    full_path = re.sub('\.', '_', str(c_dom))
-    return pydot.Cluster( \
-                     full_path, \
-                     shape = "Mrecord", \
-                     label = label, \
-                     style = "\"rounded, filled, dashed\"", \
-                     color = "#000000", \
-                     fillcolor = "#AFC8AF8F", \
-                     fontname = "Arial", \
-                     fontsize = "14", \
-                     fontcolor = "#000000" \
-                     )
+    label = '"' + str(c_dom) + "\ :\ " + str(v_dom) + '"'
+    label = re.sub("\.", "_", str(label))
+    full_path = re.sub("\.", "_", str(c_dom))
+    return pydot.Cluster(
+        full_path,
+        shape="box",
+        label=label,
+        style='"rounded, filled, dashed"',
+        color="#000000",
+        fillcolor="#AFC8AF8F",
+        fontname="Arial",
+        fontsize="14",
+        fontcolor="#000000",
+    )
+
 
 def dot_create_dvfs_nodes(simNode, callgraph, domain=None):
     if isRoot(simNode):
         label = "root"
     else:
         label = simNode._name
-    full_path = re.sub('\.', '_', simNode.path())
+    full_path = re.sub("\.", "_", simNode.path())
     # add class name under the label
-    label = "\"" + label + " \\n: " + simNode.__class__.__name__ + "\""
+    label = '"' + label + " \\n: " + simNode.__class__.__name__ + '"'
 
     # each component is a sub-graph (cluster)
     cluster = dot_create_cluster(simNode, full_path, label)
@@ -310,12 +332,12 @@ def dot_create_dvfs_nodes(simNode, callgraph, domain=None):
     # recurse to children
     for child in simnode_children(simNode):
         try:
-            c_dom = child.__getattr__('clk_domain')
-            v_dom = c_dom.__getattr__('voltage_domain')
+            c_dom = child.__getattr__("clk_domain")
+            v_dom = c_dom.__getattr__("voltage_domain")
         except AttributeError:
             # Just re-use the domain from above
             c_dom = domain
-            v_dom = c_dom.__getattr__('voltage_domain')
+            v_dom = c_dom.__getattr__("voltage_domain")
             pass
 
         if c_dom == domain or c_dom == None:
@@ -333,16 +355,19 @@ def dot_create_dvfs_nodes(simNode, callgraph, domain=None):
 
     callgraph.add_subgraph(cluster)
 
+
 def do_dot(root, outdir, dotFilename):
     if not pydot:
-        warn("No dot file generated. " +
-             "Please install pydot to generate the dot file and pdf.")
+        warn(
+            "No dot file generated. "
+            + "Please install pydot to generate the dot file and pdf."
+        )
         return
     # * use ranksep > 1.0 for for vertical separation between nodes
     # especially useful if you need to annotate edges using e.g. visio
     # which accepts svg format
     # * no need for hoizontal separation as nothing moves horizonally
-    callgraph = pydot.Dot(graph_type='digraph', ranksep='1.3')
+    callgraph = pydot.Dot(graph_type="digraph", ranksep="1.3")
     dot_create_nodes(root, callgraph)
     dot_create_edges(root, callgraph)
     dot_filename = os.path.join(outdir, dotFilename)
@@ -355,16 +380,19 @@ def do_dot(root, outdir, dotFilename):
     except:
         warn("failed to generate dot output from %s", dot_filename)
 
+
 def do_dvfs_dot(root, outdir, dotFilename):
     if not pydot:
-        warn("No dot file generated. " +
-             "Please install pydot to generate the dot file and pdf.")
+        warn(
+            "No dot file generated. "
+            + "Please install pydot to generate the dot file and pdf."
+        )
         return
 
     # There is a chance that we are unable to resolve the clock or
     # voltage domains. If so, we fail silently.
     try:
-        dvfsgraph = pydot.Dot(graph_type='digraph', ranksep='1.3')
+        dvfsgraph = pydot.Dot(graph_type="digraph", ranksep="1.3")
         dot_create_dvfs_nodes(root, dvfsgraph)
         dot_create_edges(root, dvfsgraph)
         dot_filename = os.path.join(outdir, dotFilename)

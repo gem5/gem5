@@ -43,20 +43,25 @@ from m5.SimObject import SimObject
 
 from m5.objects.ClockedObject import ClockedObject
 
+
 class BaseXBar(ClockedObject):
-    type = 'BaseXBar'
+    type = "BaseXBar"
     abstract = True
     cxx_header = "mem/xbar.hh"
-    cxx_class = 'gem5::BaseXBar'
+    cxx_class = "gem5::BaseXBar"
 
-    cpu_side_ports = VectorResponsePort("Vector port for connecting "
-                                                "mem side ports")
-    slave    = DeprecatedParam(cpu_side_ports,
-                                '`slave` is now called `cpu_side_ports`')
-    mem_side_ports = VectorRequestPort("Vector port for connecting "
-                                                "cpu side ports")
-    master   = DeprecatedParam(mem_side_ports,
-                                '`master` is now called `mem_side_ports`')
+    cpu_side_ports = VectorResponsePort(
+        "Vector port for connecting " "mem side ports"
+    )
+    slave = DeprecatedParam(
+        cpu_side_ports, "`slave` is now called `cpu_side_ports`"
+    )
+    mem_side_ports = VectorRequestPort(
+        "Vector port for connecting " "cpu side ports"
+    )
+    master = DeprecatedParam(
+        mem_side_ports, "`master` is now called `mem_side_ports`"
+    )
 
     # Latencies governing the time taken for the variuos paths a
     # packet has through the crossbar. Note that the crossbar itself
@@ -92,18 +97,21 @@ class BaseXBar(ClockedObject):
     # ports. The default range is always checked first, thus creating
     # a two-level hierarchical lookup. This is useful e.g. for the PCI
     # xbar configuration.
-    use_default_range = Param.Bool(False, "Perform address mapping for " \
-                                       "the default port")
+    use_default_range = Param.Bool(
+        False, "Perform address mapping for " "the default port"
+    )
+
 
 class NoncoherentXBar(BaseXBar):
-    type = 'NoncoherentXBar'
+    type = "NoncoherentXBar"
     cxx_header = "mem/noncoherent_xbar.hh"
-    cxx_class = 'gem5::NoncoherentXBar'
+    cxx_class = "gem5::NoncoherentXBar"
+
 
 class CoherentXBar(BaseXBar):
-    type = 'CoherentXBar'
+    type = "CoherentXBar"
     cxx_header = "mem/coherent_xbar.hh"
-    cxx_class = 'gem5::CoherentXBar'
+    cxx_class = "gem5::CoherentXBar"
 
     # The coherent crossbar additionally has snoop responses that are
     # forwarded after a specific latency.
@@ -121,19 +129,22 @@ class CoherentXBar(BaseXBar):
     # Determine how this crossbar handles packets where caches have
     # already committed to responding, by establishing if the crossbar
     # is the point of coherency or not.
-    point_of_coherency = Param.Bool(False, "Consider this crossbar the " \
-                                    "point of coherency")
+    point_of_coherency = Param.Bool(
+        False, "Consider this crossbar the " "point of coherency"
+    )
 
     # Specify whether this crossbar is the point of unification.
-    point_of_unification = Param.Bool(False, "Consider this crossbar the " \
-                                      "point of unification")
+    point_of_unification = Param.Bool(
+        False, "Consider this crossbar the " "point of unification"
+    )
 
     system = Param.System(Parent.any, "System that the crossbar belongs to.")
 
+
 class SnoopFilter(SimObject):
-    type = 'SnoopFilter'
+    type = "SnoopFilter"
     cxx_header = "mem/snoop_filter.hh"
-    cxx_class = 'gem5::SnoopFilter'
+    cxx_class = "gem5::SnoopFilter"
 
     # Lookup latency of the snoop filter, added to requests that pass
     # through a coherent crossbar.
@@ -142,7 +153,8 @@ class SnoopFilter(SimObject):
     system = Param.System(Parent.any, "System that the crossbar belongs to.")
 
     # Sanity check on max capacity to track, adjust if needed.
-    max_capacity = Param.MemorySize('8MiB', "Maximum capacity of snoop filter")
+    max_capacity = Param.MemorySize("8MiB", "Maximum capacity of snoop filter")
+
 
 # We use a coherent crossbar to connect multiple requestors to the L2
 # caches. Normally this crossbar would be part of the cache itself.
@@ -160,12 +172,13 @@ class L2XBar(CoherentXBar):
     # Use a snoop-filter by default, and set the latency to zero as
     # the lookup is assumed to overlap with the frontend latency of
     # the crossbar
-    snoop_filter = SnoopFilter(lookup_latency = 0)
+    snoop_filter = SnoopFilter(lookup_latency=0)
 
     # This specialisation of the coherent crossbar is to be considered
     # the point of unification, it connects the dcache and the icache
     # to the first level of unified cache.
     point_of_unification = True
+
 
 # One of the key coherent crossbar instances is the system
 # interconnect, tying together the CPU clusters, GPUs, and any I/O
@@ -182,7 +195,7 @@ class SystemXBar(CoherentXBar):
     snoop_response_latency = 4
 
     # Use a snoop-filter by default
-    snoop_filter = SnoopFilter(lookup_latency = 1)
+    snoop_filter = SnoopFilter(lookup_latency=1)
 
     # This specialisation of the coherent crossbar is to be considered
     # the point of coherency, as there are no (coherent) downstream
@@ -195,6 +208,7 @@ class SystemXBar(CoherentXBar):
     # without caches where the SystemXBar is also the point of
     # unification.
     point_of_unification = True
+
 
 # In addition to the system interconnect, we typically also have one
 # or more on-chip I/O crossbars. Note that at some point we might want

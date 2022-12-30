@@ -70,4 +70,3 @@ FROM stage1
 RUN mkdir -p /riscv/
 COPY --from=stage2 /riscv/_install/ /riscv/_install
 ENV PATH=/riscv/_install/bin:$PATH
-

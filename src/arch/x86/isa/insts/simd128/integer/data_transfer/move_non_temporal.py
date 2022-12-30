@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop MOVNTDQ_M_XMM {
     warn_once "MOVNTDQ: Ignoring non-temporal hint, modeling as cacheable!"
     cda seg, sib, "DISPLACEMENT + 8", dataSize=8
@@ -57,4 +57,4 @@ def macroop MASKMOVDQU_XMM_XMM {
     stfp ufp1, ds, [1, t0, rdi], dataSize=8
     stfp ufp2, ds, [1, t0, rdi], 8, dataSize=8
 };
-'''
+"""

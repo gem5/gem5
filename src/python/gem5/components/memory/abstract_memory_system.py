@@ -71,3 +71,7 @@ class AbstractMemorySystem(SubSystem):
         will be raised.
         """
         raise NotImplementedError
+
+    def _post_instantiate(self) -> None:
+        """Called to set up anything needed after m5.instantiate"""
+        pass

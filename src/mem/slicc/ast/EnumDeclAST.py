@@ -28,6 +28,7 @@
 from slicc.ast.DeclAST import DeclAST
 from slicc.symbols import Func, Type
 
+
 class EnumDeclAST(DeclAST):
     def __init__(self, slicc, type_ast, pairs, fields):
         super().__init__(slicc, pairs)
@@ -53,8 +54,9 @@ class EnumDeclAST(DeclAST):
         ident = str(self.type_ast)
 
         # Make the new type
-        t = Type(self.symtab, ident, self.location, self.pairs,
-                 self.state_machine)
+        t = Type(
+            self.symtab, ident, self.location, self.pairs, self.state_machine
+        )
         self.symtab.newSymbol(t)
 
         # Add all of the fields of the type to it
@@ -64,9 +66,16 @@ class EnumDeclAST(DeclAST):
         # Add the implicit State_to_string method - FIXME, this is a bit dirty
         func_id = "%s_to_string" % t.c_ident
 
-        pairs = { "external" : "yes" }
-        func = Func(self.symtab, func_id + "_" + t.c_ident,
-                    func_id, self.location,
-                    self.symtab.find("std::string", Type), [ t ], [], "",
-                    pairs)
+        pairs = {"external": "yes"}
+        func = Func(
+            self.symtab,
+            func_id + "_" + t.c_ident,
+            func_id,
+            self.location,
+            self.symtab.find("std::string", Type),
+            [t],
+            [],
+            "",
+            pairs,
+        )
         self.symtab.newSymbol(func)

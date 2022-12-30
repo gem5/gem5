@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop PSLLW_XMM_XMM {
     msll xmmh, xmmh, xmmlm, size=2, ext=0
     msll xmml, xmml, xmmlm, size=2, ext=0
@@ -141,4 +141,4 @@ pslldq_less_8:
 pslldq_end:
     fault "NoFault"
 };
-'''
+"""

@@ -25,34 +25,27 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from ...utils.override import overrides
-from ..boards.mem_mode import MemMode
+from m5.util import warn
+from .base_cpu_processor import BaseCPUProcessor
 from ..processors.simple_core import SimpleCore
 
-from m5.util import warn
-
-from .abstract_processor import AbstractProcessor
 from .cpu_types import CPUTypes
 from ...isas import ISA
-from ..boards.abstract_board import AbstractBoard
 
 from typing import Optional
 
 
-class SimpleProcessor(AbstractProcessor):
+class SimpleProcessor(BaseCPUProcessor):
     """
-    A SimpeProcessor contains a number of cores of a a single CPUType.
+    A SimpleProcessor contains a number of cores of SimpleCore objects of the
+    same CPUType.
     """
 
     def __init__(
-        self,
-        cpu_type: CPUTypes,
-        num_cores: int,
-        isa: Optional[ISA] = None,
+        self, cpu_type: CPUTypes, num_cores: int, isa: Optional[ISA] = None
     ) -> None:
         """
-        param cpu_type: The CPU type for each type in the processor.
-:
+        :param cpu_type: The CPU type for each type in the processor.
         :param num_cores: The number of CPU cores in the processor.
 
         :param isa: The ISA of the processor. This argument is optional. If not
@@ -61,57 +54,17 @@ class SimpleProcessor(AbstractProcessor):
         recommended you explicitly set your ISA via SimpleProcessor
         construction.
         """
-        super().__init__(
-            cores=self._create_cores(
-                cpu_type=cpu_type,
-                num_cores=num_cores,
-                isa = isa,
+        if not isa:
+            warn(
+                "An ISA for the SimpleProcessor was not set. This will "
+                "result in usage of `runtime.get_runtime_isa` to obtain the "
+                "ISA. This function is deprecated and will be removed in "
+                "future releases of gem5. Please explicitly state the ISA "
+                "via the processor constructor."
             )
-        )
-
-        self._cpu_type = cpu_type
-        if self._cpu_type == CPUTypes.KVM:
-            from m5.objects import KvmVM
-
-            self.kvm_vm = KvmVM()
-
-    def _create_cores(
-        self,
-        cpu_type: CPUTypes,
-        num_cores: int,
-        isa: Optional[ISA]
-    ):
-        return [
-            SimpleCore(cpu_type=cpu_type, core_id=i, isa=isa,) \
+        super().__init__(
+            cores=[
+                SimpleCore(cpu_type=cpu_type, core_id=i, isa=isa)
                 for i in range(num_cores)
-        ]
-
-    @overrides(AbstractProcessor)
-    def incorporate_processor(self, board: AbstractBoard) -> None:
-        if self._cpu_type == CPUTypes.KVM:
-            board.kvm_vm = self.kvm_vm
-
-        # Set the memory mode.
-        if self._cpu_type in (CPUTypes.TIMING, CPUTypes.O3, CPUTypes.MINOR):
-            board.set_mem_mode(MemMode.TIMING)
-        elif self._cpu_type == CPUTypes.KVM:
-            board.set_mem_mode(MemMode.ATOMIC_NONCACHING)
-        elif self._cpu_type == CPUTypes.ATOMIC:
-            if board.get_cache_hierarchy().is_ruby():
-                warn(
-                    "Using an atomic core with Ruby will result in "
-                    "'atomic_noncaching' memory mode. This will skip caching "
-                    "completely."
-                )
-            else:
-                board.set_mem_mode(MemMode.ATOMIC)
-        else:
-            raise NotImplementedError
-
-        if self._cpu_type == CPUTypes.KVM:
-            # To get the KVM CPUs to run on different host CPUs
-            # Specify a different event queue for each CPU
-            for i, core in enumerate(self.cores):
-                for obj in core.get_simobject().descendants():
-                    obj.eventq_index = 0
-                core.get_simobject().eventq_index = i + 1
+            ]
+        )

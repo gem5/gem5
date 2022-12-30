@@ -39,6 +39,7 @@
 #define __ARCH_ARM_REGS_CC_HH__
 
 #include "cpu/reg_class.hh"
+#include "debug/CCRegs.hh"
 
 namespace gem5
 {
@@ -60,13 +61,21 @@ enum : RegIndex
     NumRegs
 };
 
+} // namespace cc_reg
+
+inline constexpr RegClass ccRegClass(CCRegClass, CCRegClassName,
+        cc_reg::NumRegs, debug::CCRegs);
+
+namespace cc_reg
+{
+
 inline constexpr RegId
-    Nz(CCRegClass, _NzIdx),
-    C(CCRegClass, _CIdx),
-    V(CCRegClass, _VIdx),
-    Ge(CCRegClass, _GeIdx),
-    Fp(CCRegClass, _FpIdx),
-    Zero(CCRegClass, _ZeroIdx);
+    Nz = ccRegClass[_NzIdx],
+    C = ccRegClass[_CIdx],
+    V = ccRegClass[_VIdx],
+    Ge = ccRegClass[_GeIdx],
+    Fp = ccRegClass[_FpIdx],
+    Zero = ccRegClass[_ZeroIdx];
 
 const char * const RegName[NumRegs] = {
     "nz",

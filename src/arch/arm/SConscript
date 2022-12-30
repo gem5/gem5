@@ -40,14 +40,20 @@
 
 Import('*')
 
+if env['USE_ARM_ISA']:
+    env.TagImplies('arm isa', 'gem5 lib')
+
 # The GTest function does not have a 'tags' parameter. We therefore apply this
 # guard to ensure this test is only built when ARM is compiled.
 #
 # Note: This will need reconfigured for multi-isa. E.g., if this is
 # incorporated: https://gem5-review.googlesource.com/c/public/gem5/+/52491
-if env['TARGET_ISA'] == 'arm':
-    GTest('aapcs64.test', 'aapcs64.test.cc', '../../base/debug.cc')
-
+if env['USE_ARM_ISA']:
+    GTest('aapcs64.test', 'aapcs64.test.cc',
+          '../../base/debug.cc',
+          '../../cpu/reg_class.cc',
+          '../../sim/bufval.cc', '../../sim/cur_tick.cc',
+          'regs/int.cc')
 Source('decoder.cc', tags='arm isa')
 Source('faults.cc', tags='arm isa')
 Source('htm.cc', tags='arm isa')
@@ -81,6 +87,7 @@ Source('linux/fs_workload.cc', tags='arm isa')
 Source('freebsd/fs_workload.cc', tags='arm isa')
 Source('freebsd/se_workload.cc', tags='arm isa')
 Source('fs_workload.cc', tags='arm isa')
+Source('regs/int.cc', tags='arm isa')
 Source('regs/misc.cc', tags='arm isa')
 Source('mmu.cc', tags='arm isa')
 Source('nativetrace.cc', tags='arm isa')
@@ -120,12 +127,6 @@ SimObject('ArmTLB.py', sim_objects=['ArmTLB'], enums=['ArmLookupLevel'],
 SimObject('ArmPMU.py', sim_objects=['ArmPMU'], tags='arm isa')
 
 SimObject('ArmCPU.py', sim_objects=[], tags='arm isa')
-SimObject('AtomicSimpleCPU.py', sim_objects=[], tags='arm isa')
-SimObject('TimingSimpleCPU.py', sim_objects=[], tags='arm isa')
-SimObject('NonCachingSimpleCPU.py', sim_objects=[], tags='arm isa')
-SimObject('O3CPU.py', sim_objects=[], tags='arm isa')
-SimObject('O3Checker.py', sim_objects=[], tags='arm isa')
-SimObject('MinorCPU.py', sim_objects=[], tags='arm isa')
 
 DebugFlag('Arm', tags='arm isa')
 DebugFlag('ArmTme', 'Transactional Memory Extension', tags='arm isa')

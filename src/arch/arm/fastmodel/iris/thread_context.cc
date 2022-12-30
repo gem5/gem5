@@ -46,6 +46,7 @@
 
 #include "arch/arm/fastmodel/iris/cpu.hh"
 #include "arch/arm/fastmodel/iris/memory_spaces.hh"
+#include "arch/arm/regs/vec.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
 #include "base/logging.hh"
@@ -532,6 +533,19 @@ ThreadContext::sendFunctional(PacketPtr pkt)
         writeMem(id, addr, data, size);
 }
 
+void
+ThreadContext::readMemWithCurrentMsn(Addr vaddr, size_t size, char *data)
+{
+    readMem(getMemorySpaceId(Iris::CurrentMsn), vaddr, data, size);
+}
+
+void
+ThreadContext::writeMemWithCurrentMsn(Addr vaddr, size_t size,
+                                      const char *data)
+{
+    writeMem(getMemorySpaceId(Iris::CurrentMsn), vaddr, data, size);
+}
+
 ThreadContext::Status
 ThreadContext::status() const
 {
@@ -590,11 +604,24 @@ ThreadContext::pcState(const PCStateBase &val)
     call().resource_write(_instId, result, pcRscId, pc);
 }
 
+iris::ResourceId
+ThreadContext::getMiscRegRscId(RegIndex misc_reg) const
+{
+    iris::ResourceId rsc_id = iris::IRIS_UINT64_MAX;
+    if (misc_reg < miscRegIds.size())
+        rsc_id = miscRegIds.at(misc_reg);
+
+    panic_if(rsc_id == iris::IRIS_UINT64_MAX,
+             "Misc reg %s is not supported by fast model.",
+             ArmISA::miscRegClass[misc_reg]);
+    return rsc_id;
+}
+
 RegVal
 ThreadContext::readMiscRegNoEffect(RegIndex misc_reg) const
 {
     iris::ResourceReadResult result;
-    call().resource_read(_instId, result, miscRegIds.at(misc_reg));
+    call().resource_read(_instId, result, getMiscRegRscId(misc_reg));
     return result.data.at(0);
 }
 
@@ -602,7 +629,7 @@ void
 ThreadContext::setMiscRegNoEffect(RegIndex misc_reg, const RegVal val)
 {
     iris::ResourceWriteResult result;
-    call().resource_write(_instId, result, miscRegIds.at(misc_reg), val);
+    call().resource_write(_instId, result, getMiscRegRscId(misc_reg), val);
 }
 
 RegVal
@@ -623,30 +650,52 @@ void
 ThreadContext::getReg(const RegId &reg, void *val) const
 {
     const RegIndex idx = reg.index();
+    const bool flat = reg.regClass().isFlat();
     const RegClassType type = reg.classValue();
-    switch (type) {
-      case IntRegClass:
-        *(RegVal *)val = readIntReg(idx);
-        break;
-      case FloatRegClass:
-        *(RegVal *)val = readFloatReg(idx);
-        break;
-      case VecRegClass:
-        *(ArmISA::VecRegContainer *)val = readVecReg(reg);
-        break;
-      case VecElemClass:
-        *(RegVal *)val = readVecElem(reg);
-        break;
-      case VecPredRegClass:
-        *(ArmISA::VecPredRegContainer *)val = readVecPredReg(reg);
-        break;
-      case CCRegClass:
-        *(RegVal *)val = readCCReg(idx);
-        break;
-      case MiscRegClass:
-        panic("MiscRegs should not be read with getReg.");
-      default:
-        panic("Unrecognized register class type %d.", type);
+    if (flat) {
+        switch (type) {
+          case IntRegClass:
+            *(RegVal *)val = readIntRegFlat(idx);
+            break;
+          case VecRegClass:
+            *(ArmISA::VecRegContainer *)val = readVecRegFlat(idx);
+            break;
+          case VecElemClass:
+            *(RegVal *)val = readVecElemFlat(idx);
+            break;
+          case VecPredRegClass:
+            *(ArmISA::VecPredRegContainer *)val = readVecPredRegFlat(idx);
+            break;
+          case CCRegClass:
+            *(RegVal *)val = readCCRegFlat(idx);
+            break;
+          case MiscRegClass:
+            panic("MiscRegs should not be read with getReg.");
+          default:
+            panic("Unrecognized register class type %d.", type);
+        }
+    } else {
+        switch (type) {
+          case IntRegClass:
+            *(RegVal *)val = readIntReg(idx);
+            break;
+          case VecRegClass:
+            *(ArmISA::VecRegContainer *)val = readVecReg(reg);
+            break;
+          case VecElemClass:
+            *(RegVal *)val = readVecElem(reg);
+            break;
+          case VecPredRegClass:
+            *(ArmISA::VecPredRegContainer *)val = readVecPredReg(reg);
+            break;
+          case CCRegClass:
+            *(RegVal *)val = readCCReg(idx);
+            break;
+          case MiscRegClass:
+            panic("MiscRegs should not be read with getReg.");
+          default:
+            panic("Unrecognized register class type %d.", type);
+        }
     }
 }
 
@@ -654,155 +703,119 @@ void
 ThreadContext::setReg(const RegId &reg, const void *val)
 {
     const RegIndex idx = reg.index();
+    const bool flat = reg.regClass().isFlat();
     const RegClassType type = reg.classValue();
-    switch (type) {
-      case IntRegClass:
-        setIntReg(idx, *(RegVal *)val);
-        break;
-      case FloatRegClass:
-        setFloatReg(idx, *(RegVal *)val);
-        break;
-      case VecRegClass:
-        setVecReg(reg, *(ArmISA::VecRegContainer *)val);
-        break;
-      case VecElemClass:
-        setVecElem(reg, *(RegVal *)val);
-        break;
-      case VecPredRegClass:
-        setVecPredReg(reg, *(ArmISA::VecPredRegContainer *)val);
-        break;
-      case CCRegClass:
-        setCCReg(idx, *(RegVal *)val);
-        break;
-      case MiscRegClass:
-        panic("MiscRegs should not be read with getReg.");
-      default:
-        panic("Unrecognized register class type %d.", type);
+    if (flat) {
+        switch (type) {
+          case IntRegClass:
+            setIntRegFlat(idx, *(RegVal *)val);
+            break;
+          case VecRegClass:
+            setVecRegFlat(idx, *(ArmISA::VecRegContainer *)val);
+            break;
+          case VecElemClass:
+            setVecElemFlat(idx, *(RegVal *)val);
+            break;
+          case VecPredRegClass:
+            setVecPredRegFlat(idx, *(ArmISA::VecPredRegContainer *)val);
+            break;
+          case CCRegClass:
+            setCCRegFlat(idx, *(RegVal *)val);
+            break;
+          case MiscRegClass:
+            panic("MiscRegs should not be read with getReg.");
+          default:
+            panic("Unrecognized register class type %d.", type);
+        }
+    } else {
+        switch (type) {
+          case IntRegClass:
+            setIntReg(idx, *(RegVal *)val);
+            break;
+          case VecRegClass:
+            setVecReg(reg, *(ArmISA::VecRegContainer *)val);
+            break;
+          case VecElemClass:
+            setVecElem(reg, *(RegVal *)val);
+            break;
+          case VecPredRegClass:
+            setVecPredReg(reg, *(ArmISA::VecPredRegContainer *)val);
+            break;
+          case CCRegClass:
+            setCCReg(idx, *(RegVal *)val);
+            break;
+          case MiscRegClass:
+            panic("MiscRegs should not be read with getReg.");
+          default:
+            panic("Unrecognized register class type %d.", type);
+        }
     }
 }
 
 void *
 ThreadContext::getWritableReg(const RegId &reg)
 {
-    const RegClassType type = reg.classValue();
-    switch (type) {
-      case VecRegClass:
-        return &getWritableVecReg(reg);
-      case VecPredRegClass:
-        return &getWritableVecPredReg(reg);
-      default:
-        panic("Unrecognized register class type %d.", type);
-    }
-}
-
-RegVal
-ThreadContext::getRegFlat(const RegId &reg) const
-{
-    RegVal val;
-    getRegFlat(reg, &val);
-    return val;
-}
-
-void
-ThreadContext::setRegFlat(const RegId &reg, RegVal val)
-{
-    setRegFlat(reg, &val);
-}
-
-void
-ThreadContext::getRegFlat(const RegId &reg, void *val) const
-{
     const RegIndex idx = reg.index();
+    const bool flat = reg.regClass().isFlat();
     const RegClassType type = reg.classValue();
-    switch (type) {
-      case IntRegClass:
-        *(RegVal *)val = readIntRegFlat(idx);
-        break;
-      case VecRegClass:
-        *(ArmISA::VecRegContainer *)val = readVecRegFlat(idx);
-        break;
-      case VecElemClass:
-        *(RegVal *)val = readVecElemFlat(idx);
-        break;
-      case VecPredRegClass:
-        *(ArmISA::VecPredRegContainer *)val = readVecPredRegFlat(idx);
-        break;
-      case CCRegClass:
-        *(RegVal *)val = readCCRegFlat(idx);
-        break;
-      case MiscRegClass:
-        panic("MiscRegs should not be read with getReg.");
-      default:
-        panic("Unrecognized register class type %d.", type);
+    if (flat) {
+        switch (type) {
+          case VecRegClass:
+            return &getWritableVecRegFlat(idx);
+          case VecPredRegClass:
+            return &getWritableVecPredRegFlat(idx);
+          default:
+            panic("Unrecognized register class type %d.", type);
+        }
+    } else {
+        switch (type) {
+          case VecRegClass:
+            return &getWritableVecReg(reg);
+          case VecPredRegClass:
+            return &getWritableVecPredReg(reg);
+          default:
+            panic("Unrecognized register class type %d.", type);
+        }
     }
 }
 
-void
-ThreadContext::setRegFlat(const RegId &reg, const void *val)
+iris::ResourceId
+ThreadContext::getIntRegRscId(RegIndex int_reg) const
 {
-    const RegIndex idx = reg.index();
-    const RegClassType type = reg.classValue();
-    switch (type) {
-      case IntRegClass:
-        setIntRegFlat(idx, *(RegVal *)val);
-        break;
-      case VecRegClass:
-        setVecRegFlat(idx, *(ArmISA::VecRegContainer *)val);
-        break;
-      case VecElemClass:
-        setVecElemFlat(idx, *(RegVal *)val);
-        break;
-      case VecPredRegClass:
-        setVecPredRegFlat(idx, *(ArmISA::VecPredRegContainer *)val);
-        break;
-      case CCRegClass:
-        setCCRegFlat(idx, *(RegVal *)val);
-        break;
-      case MiscRegClass:
-        panic("MiscRegs should not be read with getReg.");
-      default:
-        panic("Unrecognized register class type %d.", type);
-    }
-}
+    ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
+    auto &regIds = cpsr.width ? intReg32Ids : intReg64Ids;
+    iris::ResourceId rsc_id = iris::IRIS_UINT64_MAX;
+    if (int_reg < regIds.size())
+        rsc_id = regIds.at(int_reg);
 
-void *
-ThreadContext::getWritableRegFlat(const RegId &reg)
-{
-    const RegIndex idx = reg.index();
-    const RegClassType type = reg.classValue();
-    switch (type) {
-      case VecRegClass:
-        return &getWritableVecRegFlat(idx);
-      case VecPredRegClass:
-        return &getWritableVecPredRegFlat(idx);
-      default:
-        panic("Unrecognized register class type %d.", type);
-    }
+    panic_if(rsc_id == iris::IRIS_UINT64_MAX,
+             "Int reg %s is not supported by fast model.",
+             ArmISA::intRegClass[int_reg]);
+    return rsc_id;
 }
 
 RegVal
 ThreadContext::readIntReg(RegIndex reg_idx) const
 {
-    ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
-
     iris::ResourceReadResult result;
-    if (cpsr.width)
-        call().resource_read(_instId, result, intReg32Ids.at(reg_idx));
-    else
-        call().resource_read(_instId, result, intReg64Ids.at(reg_idx));
+    call().resource_read(_instId, result, getIntRegRscId(reg_idx));
     return result.data.at(0);
 }
 
 void
 ThreadContext::setIntReg(RegIndex reg_idx, RegVal val)
 {
-    ArmISA::CPSR cpsr = readMiscRegNoEffect(ArmISA::MISCREG_CPSR);
-
     iris::ResourceWriteResult result;
-    if (cpsr.width)
-        call().resource_write(_instId, result, intReg32Ids.at(reg_idx), val);
-    else
-        call().resource_write(_instId, result, intReg64Ids.at(reg_idx), val);
+    call().resource_write(_instId, result, getIntRegRscId(reg_idx), val);
+}
+
+iris::ResourceId
+ThreadContext::getIntRegFlatRscId(RegIndex int_reg) const
+{
+    iris::ResourceId rsc_id = iris::IRIS_UINT64_MAX;
+    if (int_reg < flattenedIntIds.size())
+        rsc_id = flattenedIntIds.at(int_reg);
+    return rsc_id;
 }
 
 /*
@@ -812,45 +825,63 @@ ThreadContext::setIntReg(RegIndex reg_idx, RegVal val)
 RegVal
 ThreadContext::readIntRegFlat(RegIndex idx) const
 {
-    if (idx >= flattenedIntIds.size())
-        return 0;
-    iris::ResourceId res_id = flattenedIntIds.at(idx);
-    if (res_id == iris::IRIS_UINT64_MAX)
+    auto rsc_id = getIntRegFlatRscId(idx);
+    if (rsc_id == iris::IRIS_UINT64_MAX)
         return 0;
     iris::ResourceReadResult result;
-    call().resource_read(_instId, result, res_id);
+    call().resource_read(_instId, result, rsc_id);
     return result.data.at(0);
 }
 
 void
 ThreadContext::setIntRegFlat(RegIndex idx, uint64_t val)
 {
-    iris::ResourceId res_id =
-        (idx >= flattenedIntIds.size()) ? iris::IRIS_UINT64_MAX :
-        flattenedIntIds.at(idx);
-    panic_if(res_id == iris::IRIS_UINT64_MAX,
-            "Int reg %d is not supported by fast model.", idx);
+    auto rsc_id = getIntRegFlatRscId(idx);
+    panic_if(rsc_id == iris::IRIS_UINT64_MAX,
+             "Int reg %s is not supported by fast model.",
+             ArmISA::intRegClass[idx]);
     iris::ResourceWriteResult result;
-    call().resource_write(_instId, result, flattenedIntIds.at(idx), val);
+    call().resource_write(_instId, result, rsc_id, val);
+}
+
+iris::ResourceId
+ThreadContext::getCCRegFlatRscId(RegIndex cc_reg) const
+{
+    iris::ResourceId rsc_id = iris::IRIS_UINT64_MAX;
+    if (cc_reg < ccRegIds.size())
+        rsc_id = ccRegIds.at(cc_reg);
+    return rsc_id;
 }
 
 RegVal
 ThreadContext::readCCRegFlat(RegIndex idx) const
 {
-    if (idx >= ccRegIds.size())
+    auto rsc_id = getCCRegFlatRscId(idx);
+    if (rsc_id == iris::IRIS_UINT64_MAX)
         return 0;
     iris::ResourceReadResult result;
-    call().resource_read(_instId, result, ccRegIds.at(idx));
+    call().resource_read(_instId, result, rsc_id);
     return result.data.at(0);
 }
 
 void
 ThreadContext::setCCRegFlat(RegIndex idx, RegVal val)
 {
-    panic_if(idx >= ccRegIds.size(),
-            "CC reg %d is not supported by fast model.", idx);
+    auto rsc_id = getCCRegFlatRscId(idx);
+    panic_if(rsc_id == iris::IRIS_UINT64_MAX,
+             "CC reg %s is not supported by fast model.",
+             ArmISA::ccRegClass[idx]);
     iris::ResourceWriteResult result;
-    call().resource_write(_instId, result, ccRegIds.at(idx), val);
+    call().resource_write(_instId, result, rsc_id, val);
+}
+
+iris::ResourceId
+ThreadContext::getVecRegRscId(RegIndex vec_reg) const
+{
+    iris::ResourceId rsc_id = iris::IRIS_UINT64_MAX;
+    if (vec_reg < vecRegIds.size())
+        rsc_id = vecRegIds.at(vec_reg);
+    return rsc_id;
 }
 
 const ArmISA::VecRegContainer &
@@ -863,11 +894,12 @@ ThreadContext::readVecReg(const RegId &reg_id) const
     // Ignore accesses to registers which aren't architected. gem5 defines a
     // few extra registers which it uses internally in the implementation of
     // some instructions.
-    if (idx >= vecRegIds.size())
+    auto rsc_id = getVecRegRscId(reg_id);
+    if (rsc_id == iris::IRIS_UINT64_MAX)
         return reg;
 
     iris::ResourceReadResult result;
-    call().resource_read(_instId, result, vecRegIds.at(idx));
+    call().resource_read(_instId, result, rsc_id);
     size_t data_size = result.data.size() * (sizeof(*result.data.data()));
     size_t size = std::min(data_size, reg.size());
     memcpy(reg.as<uint8_t>(), (void *)result.data.data(), size);
@@ -878,7 +910,16 @@ ThreadContext::readVecReg(const RegId &reg_id) const
 const ArmISA::VecRegContainer &
 ThreadContext::readVecRegFlat(RegIndex idx) const
 {
-    return readVecReg(RegId(VecRegClass, idx));
+    return readVecReg(ArmISA::vecRegClass[idx]);
+}
+
+iris::ResourceId
+ThreadContext::getVecPredRegRscId(RegIndex vec_reg) const
+{
+    iris::ResourceId rsc_id = iris::IRIS_UINT64_MAX;
+    if (vec_reg < vecPredRegIds.size())
+        rsc_id = vecPredRegIds.at(vec_reg);
+    return rsc_id;
 }
 
 const ArmISA::VecPredRegContainer &
@@ -889,11 +930,12 @@ ThreadContext::readVecPredReg(const RegId &reg_id) const
     ArmISA::VecPredRegContainer &reg = vecPredRegs.at(idx);
     reg.reset();
 
-    if (idx >= vecPredRegIds.size())
+    auto rsc_id = getVecPredRegRscId(reg_id);
+    if (rsc_id == iris::IRIS_UINT64_MAX)
         return reg;
 
     iris::ResourceReadResult result;
-    call().resource_read(_instId, result, vecPredRegIds.at(idx));
+    call().resource_read(_instId, result, rsc_id);
 
     size_t offset = 0;
     size_t num_bits = reg.NUM_BITS;
@@ -913,7 +955,7 @@ ThreadContext::readVecPredReg(const RegId &reg_id) const
 ArmISA::VecPredRegContainer
 ThreadContext::readVecPredRegFlat(RegIndex idx) const
 {
-    return readVecPredReg(RegId(VecPredRegClass, idx));
+    return readVecPredReg(ArmISA::vecPredRegClass[idx]);
 }
 
 } // namespace Iris

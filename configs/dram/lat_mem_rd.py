@@ -42,11 +42,11 @@ from m5.objects import *
 from m5.util import addToPath
 from m5.stats import periodicStatDump
 
-addToPath('../')
+addToPath("../")
 from common import ObjectList
 from common import MemConfig
 
-addToPath('../../util')
+addToPath("../../util")
 import protolib
 
 # this script is helpful to observe the memory latency for various
@@ -61,8 +61,15 @@ try:
 except:
     print("Did not find packet proto definitions, attempting to generate")
     from subprocess import call
-    error = call(['protoc', '--python_out=configs/dram',
-                  '--proto_path=src/proto', 'src/proto/packet.proto'])
+
+    error = call(
+        [
+            "protoc",
+            "--python_out=configs/dram",
+            "--proto_path=src/proto",
+            "src/proto/packet.proto",
+        ]
+    )
     if not error:
         print("Generated packet proto definitions")
 
@@ -79,24 +86,34 @@ except:
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--mem-type", default="DDR3_1600_8x8",
-                    choices=ObjectList.mem_list.get_names(),
-                    help = "type of memory to use")
-parser.add_argument("--mem-size", action="store", type=str,
-                    default="16MB",
-                    help="Specify the memory size")
-parser.add_argument("--reuse-trace", action="store_true",
-                    help="Prevent generation of traces and reuse existing")
+parser.add_argument(
+    "--mem-type",
+    default="DDR3_1600_8x8",
+    choices=ObjectList.mem_list.get_names(),
+    help="type of memory to use",
+)
+parser.add_argument(
+    "--mem-size",
+    action="store",
+    type=str,
+    default="16MB",
+    help="Specify the memory size",
+)
+parser.add_argument(
+    "--reuse-trace",
+    action="store_true",
+    help="Prevent generation of traces and reuse existing",
+)
 
 args = parser.parse_args()
 
 # start by creating the system itself, using a multi-layer 2.0 GHz
 # crossbar, delivering 64 bytes / 3 cycles (one header cycle) which
 # amounts to 42.7 GByte/s per layer and thus per port
-system = System(membus = SystemXBar(width = 32))
-system.clk_domain = SrcClockDomain(clock = '2.0GHz',
-                                   voltage_domain =
-                                   VoltageDomain(voltage = '1V'))
+system = System(membus=SystemXBar(width=32))
+system.clk_domain = SrcClockDomain(
+    clock="2.0GHz", voltage_domain=VoltageDomain(voltage="1V")
+)
 
 mem_range = AddrRange(args.mem_size)
 system.mem_ranges = [mem_range]
@@ -122,12 +139,12 @@ for ctrl in system.mem_ctrls:
     if isinstance(ctrl, m5.objects.MemCtrl):
         # make the DRAM refresh interval sufficiently infinite to avoid
         # latency spikes
-        ctrl.tREFI = '100s'
+        ctrl.tREFI = "100s"
 
 # use the same concept as the utilisation sweep, and print the config
 # so that we can later read it in
 cfg_file_name = os.path.join(m5.options.outdir, "lat_mem_rd.cfg")
-cfg_file = open(cfg_file_name, 'w')
+cfg_file = open(cfg_file_name, "w")
 
 # set an appropriate burst length in bytes
 burst_size = 64
@@ -136,6 +153,7 @@ system.cache_line_size = burst_size
 # lazy version to check if an integer is a power of two
 def is_pow2(num):
     return num != 0 and ((num & (num - 1)) == 0)
+
 
 # assume we start every range at 0
 max_range = int(mem_range.end)
@@ -164,7 +182,7 @@ itt = 150 * 1000
 # the actual measurement
 def create_trace(filename, max_addr, burst_size, itt):
     try:
-        proto_out = gzip.open(filename, 'wb')
+        proto_out = gzip.open(filename, "wb")
     except IOError:
         print("Failed to open ", filename, " for writing")
         exit(-1)
@@ -184,6 +202,7 @@ def create_trace(filename, max_addr, burst_size, itt):
     addrs = list(range(0, max_addr, burst_size))
 
     import random
+
     random.shuffle(addrs)
 
     tick = 0
@@ -202,6 +221,7 @@ def create_trace(filename, max_addr, burst_size, itt):
 
     proto_out.close()
 
+
 # this will take a while, so keep the user informed
 print("Generating traces, please wait...")
 
@@ -211,22 +231,23 @@ period = int(itt * (max_range / burst_size))
 
 # now we create the states for each range
 for r in ranges:
-    filename = os.path.join(m5.options.outdir,
-                            'lat_mem_rd%d.trc.gz' % nxt_range)
+    filename = os.path.join(
+        m5.options.outdir, "lat_mem_rd%d.trc.gz" % nxt_range
+    )
 
     if not args.reuse_trace:
         # create the actual random trace for this range
         create_trace(filename, r, burst_size, itt)
 
     # the warming state
-    cfg_file.write("STATE %d %d TRACE %s 0\n" %
-                   (nxt_state, period, filename))
+    cfg_file.write("STATE %d %d TRACE %s 0\n" % (nxt_state, period, filename))
     nxt_state = nxt_state + 1
 
     # the measuring states
     for i in range(iterations):
-        cfg_file.write("STATE %d %d TRACE %s 0\n" %
-                       (nxt_state, period, filename))
+        cfg_file.write(
+            "STATE %d %d TRACE %s 0\n" % (nxt_state, period, filename)
+        )
         nxt_state = nxt_state + 1
 
     nxt_range = nxt_range + 1
@@ -242,8 +263,7 @@ cfg_file.write("TRANSITION %d %d 1\n" % (nxt_state - 1, nxt_state - 1))
 cfg_file.close()
 
 # create a traffic generator, and point it to the file we just created
-system.tgen = TrafficGen(config_file = cfg_file_name,
-                         progress_check = '10s')
+system.tgen = TrafficGen(config_file=cfg_file_name, progress_check="10s")
 
 # add a communication monitor
 system.monitor = CommMonitor()
@@ -267,19 +287,20 @@ class L3Cache(Cache):
     tgts_per_mshr = 12
     write_buffers = 16
 
+
 # note that everything is in the same clock domain, 2.0 GHz as
 # specified above
-system.l1cache = L1_DCache(size = '64kB')
+system.l1cache = L1_DCache(size="64kB")
 system.monitor.mem_side_port = system.l1cache.cpu_side
 
-system.l2cache = L2Cache(size = '512kB', writeback_clean = True)
+system.l2cache = L2Cache(size="512kB", writeback_clean=True)
 system.l2cache.xbar = L2XBar()
 system.l1cache.mem_side = system.l2cache.xbar.cpu_side_ports
 system.l2cache.cpu_side = system.l2cache.xbar.mem_side_ports
 
 # make the L3 mostly exclusive, and correspondingly ensure that the L2
 # writes back also clean lines to the L3
-system.l3cache = L3Cache(size = '4MB', clusivity = 'mostly_excl')
+system.l3cache = L3Cache(size="4MB", clusivity="mostly_excl")
 system.l3cache.xbar = L2XBar()
 system.l2cache.mem_side = system.l3cache.xbar.cpu_side_ports
 system.l3cache.cpu_side = system.l3cache.xbar.mem_side_ports
@@ -292,8 +313,8 @@ system.system_port = system.membus.cpu_side_ports
 periodicStatDump(period)
 
 # run Forrest, run!
-root = Root(full_system = False, system = system)
-root.system.mem_mode = 'timing'
+root = Root(full_system=False, system=system)
+root.system.mem_mode = "timing"
 
 m5.instantiate()
 m5.simulate(nxt_state * period)

@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop CLD {
     ruflags t1, dataSize=8
     limm t2, "~((uint64_t)DFBit)", dataSize=8
@@ -175,4 +175,4 @@ def macroop CLI_REAL {
 def macroop CLI_VIRT {
     panic "Virtual mode cli isn't implemented!"
 };
-'''
+"""

@@ -27,11 +27,12 @@
 from m5.objects.Device import BasicPioDevice
 from m5.params import Param
 
+
 class LupioPIC(BasicPioDevice):
 
-    type = 'LupioPIC'
-    cxx_class='gem5::LupioPIC'
-    cxx_header = 'dev/lupio/lupio_pic.hh'
+    type = "LupioPIC"
+    cxx_class = "gem5::LupioPIC"
+    cxx_header = "dev/lupio/lupio_pic.hh"
     pio_size = Param.Addr(0x1000, "PIO Size")
     n_src = Param.Int("Number of interrupt sources")
     num_threads = Param.Int("Number of threads")

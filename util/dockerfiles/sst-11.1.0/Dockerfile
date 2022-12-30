@@ -62,4 +62,3 @@ RUN ./configure --prefix=$SST_CORE_HOME --with-python=/usr/bin/python3-config \
 # Setting the environmental variables
 ENV PATH=$PATH:$SST_CORE_HOME/bin
 ENV PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$SST_CORE_HOME/lib/pkgconfig/
-

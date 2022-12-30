@@ -46,7 +46,6 @@
 #include <string>
 
 #include "base/refcnt.hh"
-#include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/null_static_inst.hh"
 #include "cpu/reg_class.hh"
@@ -347,7 +346,7 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
         if (fault == NoFault) {
             // Execute Checker instruction and trace
             if (!unverifiedInst->isUnverifiable()) {
-                Trace::InstRecord *traceData = tracer->getInstRecord(curTick(),
+                trace::InstRecord *traceData = tracer->getInstRecord(curTick(),
                                                            tc,
                                                            curStaticInst,
                                                            pcState(),
@@ -466,24 +465,22 @@ Checker<DynInstPtr>::validateExecution(const DynInstPtr &inst)
     InstResult inst_val;
     int idx = -1;
     bool result_mismatch = false;
-    bool scalar_mismatch = false;
 
     if (inst->isUnverifiable()) {
         // Unverifiable instructions assume they were executed
         // properly by the CPU. Grab the result from the
         // instruction and write it to the register.
-        copyResult(inst, InstResult((RegVal)0), idx);
+        copyResult(inst, InstResult(), idx);
     } else if (inst->numDestRegs() > 0 && !result.empty()) {
         DPRINTF(Checker, "Dest regs %d, number of checker dest regs %d\n",
                          inst->numDestRegs(), result.size());
         for (int i = 0; i < inst->numDestRegs() && !result.empty(); i++) {
             checker_val = result.front();
             result.pop();
-            inst_val = inst->popResult(InstResult((RegVal)0));
+            inst_val = inst->popResult();
             if (checker_val != inst_val) {
                 result_mismatch = true;
                 idx = i;
-                scalar_mismatch = checker_val.is<RegVal>();
             }
         }
     } // Checker CPU checks all the saved results in the dyninst passed by
@@ -493,12 +490,9 @@ Checker<DynInstPtr>::validateExecution(const DynInstPtr &inst)
       // this is ok and not a bug.  May be worthwhile to try and correct this.
 
     if (result_mismatch) {
-        if (scalar_mismatch) {
-            warn("%lli: Instruction results (%i) do not match! (Values may"
-                 " not actually be integers) Inst: %#x, checker: %#x",
-                 curTick(), idx, inst_val.asNoAssert<RegVal>(),
-                 checker_val.as<RegVal>());
-        }
+        warn("%lli: Instruction results (%i) do not match!  Inst: %s, "
+             "checker: %s",
+             curTick(), idx, inst_val.asString(), checker_val.asString());
 
         // It's useful to verify load values from memory, but in MP
         // systems the value obtained at execute may be different than
@@ -580,56 +574,30 @@ Checker<DynInstPtr>::copyResult(
     // so do the fix-up then start with the next dest reg;
     if (start_idx >= 0) {
         const RegId& idx = inst->destRegIdx(start_idx);
-        switch (idx.classValue()) {
-          case InvalidRegClass:
-            break;
-          case IntRegClass:
-          case FloatRegClass:
-          case VecElemClass:
-          case CCRegClass:
-            thread->setReg(idx, mismatch_val.as<RegVal>());
-            break;
-          case VecRegClass:
-            {
-                auto val = mismatch_val.as<TheISA::VecRegContainer>();
-                thread->setReg(idx, &val);
-            }
-            break;
-          case MiscRegClass:
-            thread->setMiscReg(idx.index(), mismatch_val.as<RegVal>());
-            break;
-          default:
-            panic("Unknown register class: %d", (int)idx.classValue());
-        }
+
+        if (idx.classValue() == InvalidRegClass)
+            ; // Do nothing.
+        else if (idx.classValue() == MiscRegClass)
+            thread->setMiscReg(idx.index(), mismatch_val.asRegVal());
+        else if (mismatch_val.isBlob())
+            thread->setReg(idx, mismatch_val.asBlob());
+        else
+            thread->setReg(idx, mismatch_val.asRegVal());
     }
     start_idx++;
     InstResult res;
     for (int i = start_idx; i < inst->numDestRegs(); i++) {
         const RegId& idx = inst->destRegIdx(i);
         res = inst->popResult();
-        switch (idx.classValue()) {
-          case InvalidRegClass:
-            break;
-          case IntRegClass:
-          case FloatRegClass:
-          case VecElemClass:
-          case CCRegClass:
-            thread->setReg(idx, res.as<RegVal>());
-            break;
-          case VecRegClass:
-            {
-                auto val = res.as<TheISA::VecRegContainer>();
-                thread->setReg(idx, &val);
-            }
-            break;
-          case MiscRegClass:
-            // Try to get the proper misc register index for ARM here...
+
+        if (idx.classValue() == InvalidRegClass)
+            ; // Do nothing.
+        else if (idx.classValue() == MiscRegClass)
             thread->setMiscReg(idx.index(), 0);
-            break;
-            // else Register is out of range...
-          default:
-            panic("Unknown register class: %d", (int)idx.classValue());
-        }
+        else if (res.isBlob())
+            thread->setReg(idx, res.asBlob());
+        else
+            thread->setReg(idx, res.asRegVal());
     }
 }
 

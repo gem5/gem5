@@ -39,15 +39,16 @@ from m5.params import *
 from m5.objects.QoSMemCtrl import *
 from m5.objects.QoSMemSinkInterface import *
 
+
 class QoSMemSinkCtrl(QoSMemCtrl):
-    type = 'QoSMemSinkCtrl'
+    type = "QoSMemSinkCtrl"
     cxx_header = "mem/qos/mem_sink.hh"
-    cxx_class = 'gem5::memory::qos::MemSinkCtrl'
+    cxx_class = "gem5::memory::qos::MemSinkCtrl"
     port = ResponsePort("Response ports")
 
-
-    interface = Param.QoSMemSinkInterface(QoSMemSinkInterface(),
-                "Interface to memory")
+    interface = Param.QoSMemSinkInterface(
+        QoSMemSinkInterface(), "Interface to memory"
+    )
 
     # the basic configuration of the controller architecture, note
     # that each entry corresponds to a burst for the specific DRAM

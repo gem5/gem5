@@ -46,8 +46,8 @@ import importer
 from code_formatter import code_formatter
 
 parser = argparse.ArgumentParser()
-parser.add_argument('modpath', help='module the enum belongs to')
-parser.add_argument('enum_hh', help='enum header file to generate')
+parser.add_argument("modpath", help="module the enum belongs to")
+parser.add_argument("enum_hh", help="enum header file to generate")
 
 args = parser.parse_args()
 
@@ -64,53 +64,61 @@ code = code_formatter()
 # Note that we wrap the enum in a class/struct to act as a namespace,
 # so that the enum strings can be brief w/o worrying about collisions.
 wrapper_name = enum.wrapper_name
-wrapper = 'struct' if enum.wrapper_is_struct else 'namespace'
+wrapper = "struct" if enum.wrapper_is_struct else "namespace"
 name = enum.__name__ if enum.enum_name is None else enum.enum_name
-idem_macro = '__ENUM__%s__%s__' % (wrapper_name, name)
+idem_macro = "__ENUM__%s__%s__" % (wrapper_name, name)
 
-code('''\
+code(
+    """\
 #ifndef $idem_macro
 #define $idem_macro
 
 namespace gem5
 {
-''')
+"""
+)
 if enum.is_class:
-    code('''\
+    code(
+        """\
 enum class $name
 {
-''')
+"""
+    )
 else:
-    code('''\
+    code(
+        """\
 $wrapper $wrapper_name {
 enum $name
 {
-''')
+"""
+    )
     code.indent(1)
 code.indent(1)
 for val in enum.vals:
-    code('$val = ${{enum.map[val]}},')
-code('Num_$name = ${{len(enum.vals)}}')
+    code("$val = ${{enum.map[val]}},")
+code("Num_$name = ${{len(enum.vals)}}")
 code.dedent(1)
-code('};')
+code("};")
 
 if enum.is_class:
-    code('''\
+    code(
+        """\
 extern const char *${name}Strings[static_cast<int>(${name}::Num_${name})];
-''')
+"""
+    )
 elif enum.wrapper_is_struct:
-    code('static const char *${name}Strings[Num_${name}];')
+    code("static const char *${name}Strings[Num_${name}];")
 else:
-    code('extern const char *${name}Strings[Num_${name}];')
+    code("extern const char *${name}Strings[Num_${name}];")
 
 if not enum.is_class:
     code.dedent(1)
-    code('}; // $wrapper_name')
+    code("}; // $wrapper_name")
 
 code()
-code('} // namespace gem5')
+code("} // namespace gem5")
 
 code()
-code('#endif // $idem_macro')
+code("#endif // $idem_macro")
 
 code.write(args.enum_hh)

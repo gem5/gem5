@@ -240,9 +240,10 @@ class multi_passthrough_target_socket :
             multi_binds = get_hierarch_bind()->get_multi_binds();
 
         // Complete binding only if there has been a real bind.
-        bool unbound = (binders.size() == 1 && m_export_callback_created);
+        bool locally_unbound =
+            (binders.size() == 1 && m_export_callback_created);
         // No call to get_base_interface has consumed the export - ignore.
-        if (unbound)
+        if (locally_unbound && !m_hierarch_bind)
             return;
 
         // Iterate over all binders.

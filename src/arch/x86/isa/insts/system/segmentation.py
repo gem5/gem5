@@ -34,7 +34,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop LGDT_M
 {
     .serialize_after
@@ -340,4 +340,4 @@ def macroop SWAPGS
     wrbase gs, t1, dataSize=8
     wrval kernel_gs_base, t2, dataSize=8
 };
-'''
+"""

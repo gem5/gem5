@@ -81,4 +81,3 @@ class PS2Mouse : public Device
 } // namespace gem5
 
 #endif // __DEV_PS2_MOUSE_hH__
-

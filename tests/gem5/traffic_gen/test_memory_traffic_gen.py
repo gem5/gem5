@@ -31,6 +31,8 @@ TODO: At present all the Single Channel memory components are tested. This
       should be expanded to included DRAMSIM3 memory systems.
 """
 
+import os
+
 from testlib import *
 
 
@@ -42,18 +44,6 @@ def test_memory(
     memory: str,
     *args,
 ) -> None:
-    protocol_map = {
-        "NoCache": None,
-        "PrivateL1": None,
-        "PrivateL1PrivateL2": None,
-        "MESITwoLevel": "MESI_Two_Level",
-    }
-    tag_map = {
-        "NoCache": constants.quick_tag,
-        "PrivateL1": constants.quick_tag,
-        "PrivateL1PrivateL2": constants.quick_tag,
-        "MESITwoLevel": constants.long_tag,
-    }
 
     name = (
         "test-memory-"
@@ -62,10 +52,21 @@ def test_memory(
     for arg in args:
         name += "-" + arg
 
+    stats_verifier = verifier.MatchJSONStats(
+        os.path.join(
+            os.path.dirname(__file__),
+            "trusted_stats",
+            f"{generator}-{generator_cores}-{cache}-{module}-{memory}",
+            "trusted_stats.json",
+        ),
+        "output.json",
+        True,
+    )
+
     gem5_verify_config(
         name=name,
         fixtures=(),
-        verifiers=(),
+        verifiers=(stats_verifier,),
         config=joinpath(
             config.base_dir,
             "tests",
@@ -73,18 +74,12 @@ def test_memory(
             "traffic_gen",
             "simple_traffic_run.py",
         ),
-        config_args=[
-            generator,
-            generator_cores,
-            cache,
-            module,
-            memory,
-        ]
+        config_args=[generator, generator_cores, cache, module]
+        + [memory]
         + list(args),
-        valid_isas=(constants.null_tag,),
-        protocol=protocol_map[cache],
+        valid_isas=(constants.all_compiled_tag,),
         valid_hosts=constants.supported_hosts,
-        length=tag_map[cache],
+        length=constants.quick_tag,
     )
 
 
@@ -132,11 +127,6 @@ def create_dual_core_tests(module, memory_classes):
                     "512MiB",
                 )
 
-create_single_core_tests(
-    "gem5.components.memory",
-    memory_classes,
-)
-create_dual_core_tests(
-    "gem5.components.memory",
-    memory_classes,
-)
+
+create_single_core_tests("gem5.components.memory", memory_classes)
+create_dual_core_tests("gem5.components.memory", memory_classes)

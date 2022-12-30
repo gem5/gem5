@@ -34,6 +34,7 @@
 #include <utility>
 
 #include "arch/arm/regs/int.hh"
+#include "arch/arm/regs/vec.hh"
 #include "arch/arm/utility.hh"
 #include "base/intmath.hh"
 #include "cpu/thread_context.hh"
@@ -201,7 +202,7 @@ struct Argument<Aapcs64, Float, typename std::enable_if_t<
     get(ThreadContext *tc, Aapcs64::State &state)
     {
         if (state.nsrn <= state.MAX_SRN) {
-            RegId id(VecRegClass, state.nsrn++);
+            RegId id = ArmISA::vecRegClass[state.nsrn++];
             ArmISA::VecRegContainer vc;
             tc->getReg(id, &vc);
             return vc.as<Float>()[0];
@@ -218,7 +219,7 @@ struct Result<Aapcs64, Float, typename std::enable_if_t<
     static void
     store(ThreadContext *tc, const Float &f)
     {
-        RegId id(VecRegClass, 0);
+        RegId id = ArmISA::vecRegClass[0];
         ArmISA::VecRegContainer reg;
         tc->getReg(id, &reg);
         reg.as<Float>()[0] = f;
@@ -241,7 +242,7 @@ struct Argument<Aapcs64, Integer, typename std::enable_if_t<
     get(ThreadContext *tc, Aapcs64::State &state)
     {
         if (state.ngrn <= state.MAX_GRN)
-            return tc->getReg(RegId(IntRegClass, state.ngrn++));
+            return tc->getReg(ArmISA::intRegClass[state.ngrn++]);
 
         // Max out ngrn since we've effectively saturated it.
         state.ngrn = state.MAX_GRN + 1;
@@ -262,8 +263,8 @@ struct Argument<Aapcs64, Integer, typename std::enable_if_t<
             state.ngrn++;
 
         if (sizeof(Integer) == 16 && state.ngrn + 1 <= state.MAX_GRN) {
-            Integer low = tc->getReg(RegId(IntRegClass, state.ngrn++));
-            Integer high = tc->getReg(RegId(IntRegClass, state.ngrn++));
+            Integer low = tc->getReg(ArmISA::intRegClass[state.ngrn++]);
+            Integer high = tc->getReg(ArmISA::intRegClass[state.ngrn++]);
             high = high << 64;
             return high | low;
         }
@@ -382,7 +383,7 @@ struct Argument<Aapcs64, Composite, typename std::enable_if_t<
         if (state.ngrn + regs - 1 <= state.MAX_GRN) {
             alignas(alignof(Composite)) uint8_t buf[bytes];
             for (int i = 0; i < regs; i++) {
-                Chunk val = tc->getReg(RegId(IntRegClass, state.ngrn++));
+                Chunk val = tc->getReg(ArmISA::intRegClass[state.ngrn++]);
                 val = htog(val, ArmISA::byteOrder(tc));
                 size_t to_copy = std::min<size_t>(bytes, chunk_size);
                 memcpy(buf + i * chunk_size, &val, to_copy);

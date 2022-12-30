@@ -327,4 +327,3 @@ Java_gem5_Ops_work_1end(JNIEnv *env, jobject obj,
 {
     getDispatchTable(env, obj)->m5_work_end(j_workid, j_threadid);
 }
-

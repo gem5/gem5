@@ -33,12 +33,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["ascii_adjust",
-              "bcd_adjust",
-              "endian_conversion",
-              "extract_sign_mask",
-              "sign_extension",
-              "translate"]
+categories = [
+    "ascii_adjust",
+    "bcd_adjust",
+    "endian_conversion",
+    "extract_sign_mask",
+    "sign_extension",
+    "translate",
+]
 
 microcode = ""
 for category in categories:

@@ -43,7 +43,7 @@ using namespace gem5;
 // that getDebugLogger() returns a cerr-based logger, and all tests after
 // that test should assume that this logger is returned
 std::stringstream ss;
-Trace::OstreamLogger main_logger(ss);
+trace::OstreamLogger main_logger(ss);
 
 // Instantiate the mock class to have a valid curTick of 0
 GTestTickHandler tickHandler;
@@ -70,7 +70,7 @@ getString(std::ostream &os)
 
 /** @return The logger's ostream as a std::string. */
 std::string
-getString(Trace::Logger *logger)
+getString(trace::Logger *logger)
 {
     return getString(logger->getOstream());
 }
@@ -79,7 +79,7 @@ getString(Trace::Logger *logger)
 TEST(TraceTest, LogSimpleMessage)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
     logger.logMessage(Tick(100), "", "", "Test message");
     ASSERT_EQ(getString(&logger), "    100: Test message");
@@ -89,7 +89,7 @@ TEST(TraceTest, LogSimpleMessage)
 TEST(TraceTest, LogMessageName)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
     logger.logMessage(Tick(100), "Foo", "", "Test message");
     ASSERT_EQ(getString(&logger), "    100: Foo: Test message");
@@ -99,7 +99,7 @@ TEST(TraceTest, LogMessageName)
 TEST(TraceTest, LogMessageMaxTick)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
     logger.logMessage(MaxTick, "Foo", "", "Test message");
     ASSERT_EQ(getString(&logger), "Foo: Test message");
@@ -109,7 +109,7 @@ TEST(TraceTest, LogMessageMaxTick)
 TEST(TraceTest, LogMessageFlagDisabled)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
     logger.logMessage(Tick(100), "Foo", "Bar", "Test message");
     ASSERT_EQ(getString(&logger), "    100: Foo: Test message");
@@ -122,12 +122,12 @@ TEST(TraceTest, LogMessageFlagDisabled)
 TEST(TraceTest, LogMessageTickDisabledAndEnableDisable)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
     logger.logMessage(Tick(100), "Foo", "", "Test message");
     ASSERT_EQ(getString(&logger), "    100: Foo: Test message");
 
-    Trace::enable();
+    trace::enable();
     EXPECT_TRUE(debug::changeFlag("FmtTicksOff", true));
 
     logger.logMessage(Tick(200), "Foo", "", "Test message");
@@ -138,7 +138,7 @@ TEST(TraceTest, LogMessageTickDisabledAndEnableDisable)
 #endif
 
     debug::changeFlag("FmtTicksOff", false);
-    Trace::disable();
+    trace::disable();
 
     logger.logMessage(Tick(300), "Foo", "", "Test message");
     ASSERT_EQ(getString(&logger), "    300: Foo: Test message");
@@ -151,8 +151,8 @@ TEST(TraceTest, LogMessageTickDisabledAndEnableDisable)
 TEST(TraceTest, LogMessageFlagEnabled)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
-    Trace::enable();
+    trace::OstreamLogger logger(ss);
+    trace::enable();
     EXPECT_TRUE(debug::changeFlag("FmtFlag", true));
 
     logger.logMessage(Tick(100), "Foo", "Bar", "Test message");
@@ -163,14 +163,14 @@ TEST(TraceTest, LogMessageFlagEnabled)
 #endif
 
     debug::changeFlag("FmtFlag", false);
-    Trace::disable();
+    trace::disable();
 }
 
 /** Test that log messages are not displayed for ignored objects (single). */
 TEST(TraceTest, LogMessageIgnoreOne)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
     ObjectMatch ignore_foo("Foo");
     ObjectMatch ignore_bar("Bar");
@@ -194,7 +194,7 @@ TEST(TraceTest, LogMessageIgnoreOne)
 TEST(TraceTest, LogMessageIgnoreMultiple)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
     ObjectMatch ignore_foo("Foo");
     ObjectMatch ignore_bar("Bar");
@@ -225,7 +225,7 @@ TEST(TraceTest, LogMessageIgnoreMultiple)
 TEST(TraceTest, DumpIgnored)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
     ObjectMatch ignore_foo("Foo");
     logger.setIgnore(ignore_foo);
@@ -244,9 +244,9 @@ TEST(TraceTest, DumpIgnored)
 TEST(TraceTest, DumpSimple)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
-    Trace::enable();
+    trace::enable();
     EXPECT_TRUE(debug::changeFlag("FmtFlag", true));
     std::string message = "Test message";
     logger.dump(Tick(100), "Foo", message.c_str(), message.size(), "Bar");
@@ -272,7 +272,7 @@ TEST(TraceTest, DumpSimple)
         " Test message\n");
 #endif
     debug::changeFlag("FmtFlag", false);
-    Trace::disable();
+    trace::disable();
 }
 
 /**
@@ -282,7 +282,7 @@ TEST(TraceTest, DumpSimple)
 TEST(TraceTest, DumpMultiLine)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
     std::string message =
         "This is a very long line that will span over multiple lines";
@@ -304,7 +304,7 @@ TEST(TraceTest, DumpMultiLine)
  */
 TEST(TraceTest, DISABLED_GetNullLogger)
 {
-    Trace::Logger *logger = Trace::getDebugLogger();
+    trace::Logger *logger = trace::getDebugLogger();
     ASSERT_FALSE(logger == nullptr);
 
     gtestLogOutput.str("");
@@ -318,27 +318,27 @@ TEST(TraceTest, SetGetLogger)
     // NOTE: From now on getDebugLogger will use main_logger to avoid
     // having to check cerr. This assumes that tests are run in the order
     // they appear from line 1 to the last line of this file.
-    Trace::setDebugLogger(&main_logger);
+    trace::setDebugLogger(&main_logger);
 
     // Set message with local variable, and retrieve the string with
     // the debug-logger getter
     main_logger.logMessage(Tick(100), "Foo", "", "Test message");
-    auto logger_from_getter = Trace::getDebugLogger();
+    auto logger_from_getter = trace::getDebugLogger();
     ASSERT_EQ(getString(logger_from_getter), "    100: Foo: Test message");
 }
 
 /** Test that output() gets the ostream of the current debug logger. */
 TEST(TraceTest, Output)
 {
-    Trace::getDebugLogger()->logMessage(Tick(100), "Foo", "", "Test message");
-    ASSERT_EQ(getString(Trace::output()), "    100: Foo: Test message");
+    trace::getDebugLogger()->logMessage(Tick(100), "Foo", "", "Test message");
+    ASSERT_EQ(getString(trace::output()), "    100: Foo: Test message");
 }
 
 /** Test dprintf_flag with ignored name. */
 TEST(TraceTest, DprintfFlagIgnore)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
     ObjectMatch ignore_foo("Foo");
     logger.setIgnore(ignore_foo);
@@ -350,7 +350,7 @@ TEST(TraceTest, DprintfFlagIgnore)
 TEST(TraceTest, DprintfFlagZeroArgs)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
     logger.dprintf_flag(Tick(100), "Foo", "", "Test message");
     ASSERT_EQ(getString(&logger), "    100: Foo: Test message");
@@ -360,7 +360,7 @@ TEST(TraceTest, DprintfFlagZeroArgs)
 TEST(TraceTest, DprintfFlagOneArg)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
     logger.dprintf_flag(Tick(100), "Foo", "", "Test %s", "message");
     ASSERT_EQ(getString(&logger), "    100: Foo: Test message");
@@ -370,7 +370,7 @@ TEST(TraceTest, DprintfFlagOneArg)
 TEST(TraceTest, DprintfFlagMultipleArgs)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
     logger.dprintf_flag(Tick(100), "Foo", "", "Test %s %c %d %x",
         "message", 'A', 217, 0x30);
@@ -381,9 +381,9 @@ TEST(TraceTest, DprintfFlagMultipleArgs)
 TEST(TraceTest, DprintfFlagEnabled)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
-    Trace::enable();
+    trace::enable();
     EXPECT_TRUE(debug::changeFlag("FmtFlag", true));
     logger.dprintf_flag(Tick(100), "Foo", "Bar", "Test %s", "message");
 #if TRACING_ON
@@ -392,14 +392,14 @@ TEST(TraceTest, DprintfFlagEnabled)
     ASSERT_EQ(getString(&logger), "    100: Foo: Test message");
 #endif
     debug::changeFlag("FmtFlag", false);
-    Trace::disable();
+    trace::disable();
 }
 
 /** Test dprintf with ignored name. */
 TEST(TraceTest, DprintfIgnore)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
     ObjectMatch ignore_foo("Foo");
     logger.setIgnore(ignore_foo);
@@ -411,22 +411,22 @@ TEST(TraceTest, DprintfIgnore)
 TEST(TraceTest, DprintfEnabled)
 {
     std::stringstream ss;
-    Trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger(ss);
 
-    Trace::enable();
+    trace::enable();
     EXPECT_TRUE(debug::changeFlag("FmtFlag", true));
     logger.dprintf(Tick(100), "Foo", "Test %s", "message");
     ASSERT_EQ(getString(&logger), "    100: Foo: Test message");
     debug::changeFlag("FmtFlag", false);
-    Trace::disable();
+    trace::disable();
 }
 
 /** Test that dprintf is just a flagless wrapper for dprintf_flag. */
 TEST(TraceTest, DprintfWrapper)
 {
     std::stringstream ss, ss_flag;
-    Trace::OstreamLogger logger(ss);
-    Trace::OstreamLogger logger_flag(ss_flag);
+    trace::OstreamLogger logger(ss);
+    trace::OstreamLogger logger_flag(ss_flag);
 
     logger.dprintf(Tick(100), "Foo", "Test %s %c %d %x",
         "message", 'A', 217, 0x30);
@@ -442,23 +442,23 @@ TEST(TraceTest, MacroDDUMP)
     std::string message = "Test message";
 
     // Flag enabled
-    Trace::enable();
+    trace::enable();
     EXPECT_TRUE(debug::changeFlag("TraceTestDebugFlag", true));
     EXPECT_TRUE(debug::changeFlag("FmtFlag", true));
     DDUMP(TraceTestDebugFlag, message.c_str(), message.size());
 #if TRACING_ON
-    ASSERT_EQ(getString(Trace::output()),
+    ASSERT_EQ(getString(trace::output()),
         "      0: TraceTestDebugFlag: Foo: 00000000  "
         "54 65 73 74 20 6d 65 73  73 61 67 65               Test message\n");
 #else
-    ASSERT_EQ(getString(Trace::output()), "");
+    ASSERT_EQ(getString(trace::output()), "");
 #endif
 
     // Flag disabled
-    Trace::disable();
+    trace::disable();
     EXPECT_TRUE(debug::changeFlag("TraceTestDebugFlag", false));
     DDUMP(TraceTestDebugFlag, message.c_str(), message.size());
-    ASSERT_EQ(getString(Trace::output()), "");
+    ASSERT_EQ(getString(trace::output()), "");
 }
 
 /** Test DPRINTF with tracing on. */
@@ -467,22 +467,22 @@ TEST(TraceTest, MacroDPRINTF)
     StringWrap name("Foo");
 
     // Flag enabled
-    Trace::enable();
+    trace::enable();
     EXPECT_TRUE(debug::changeFlag("TraceTestDebugFlag", true));
     EXPECT_TRUE(debug::changeFlag("FmtFlag", true));
     DPRINTF(TraceTestDebugFlag, "Test message");
 #if TRACING_ON
-    ASSERT_EQ(getString(Trace::output()),
+    ASSERT_EQ(getString(trace::output()),
         "      0: TraceTestDebugFlag: Foo: Test message");
 #else
-    ASSERT_EQ(getString(Trace::output()), "");
+    ASSERT_EQ(getString(trace::output()), "");
 #endif
 
     // Flag disabled
-    Trace::disable();
+    trace::disable();
     EXPECT_TRUE(debug::changeFlag("TraceTestDebugFlag", false));
     DPRINTF(TraceTestDebugFlag, "Test message");
-    ASSERT_EQ(getString(Trace::output()), "");
+    ASSERT_EQ(getString(trace::output()), "");
 }
 
 /** Test DPRINTFS with tracing on. */
@@ -494,21 +494,21 @@ TEST(TraceTest, MacroDPRINTFS)
 #endif
 
     // Flag enabled
-    Trace::enable();
+    trace::enable();
     EXPECT_TRUE(debug::changeFlag("TraceTestDebugFlag", true));
     EXPECT_TRUE(debug::changeFlag("FmtFlag", true));
 #if TRACING_ON
     DPRINTFS(TraceTestDebugFlag, named_ptr, "Test message");
-    ASSERT_EQ(getString(Trace::output()),
+    ASSERT_EQ(getString(trace::output()),
         "      0: TraceTestDebugFlag: Foo: Test message");
 #endif
 
     // Flag disabled
-    Trace::disable();
+    trace::disable();
     EXPECT_TRUE(debug::changeFlag("TraceTestDebugFlag", false));
 #if TRACING_ON
     DPRINTFS(TraceTestDebugFlag, named_ptr, "Test message");
-    ASSERT_EQ(getString(Trace::output()), "");
+    ASSERT_EQ(getString(trace::output()), "");
 #endif
 }
 
@@ -516,21 +516,21 @@ TEST(TraceTest, MacroDPRINTFS)
 TEST(TraceTest, MacroDPRINTFR)
 {
     // Flag enabled
-    Trace::enable();
+    trace::enable();
     EXPECT_TRUE(debug::changeFlag("TraceTestDebugFlag", true));
     EXPECT_TRUE(debug::changeFlag("FmtFlag", true));
     DPRINTFR(TraceTestDebugFlag, "Test message");
 #if TRACING_ON
-    ASSERT_EQ(getString(Trace::output()), "TraceTestDebugFlag: Test message");
+    ASSERT_EQ(getString(trace::output()), "TraceTestDebugFlag: Test message");
 #else
-    ASSERT_EQ(getString(Trace::output()), "");
+    ASSERT_EQ(getString(trace::output()), "");
 #endif
 
     // Flag disabled
-    Trace::disable();
+    trace::disable();
     EXPECT_TRUE(debug::changeFlag("TraceTestDebugFlag", false));
     DPRINTFR(TraceTestDebugFlag, "Test message");
-    ASSERT_EQ(getString(Trace::output()), "");
+    ASSERT_EQ(getString(trace::output()), "");
 }
 
 /** Test DPRINTFN with tracing on. */
@@ -539,9 +539,9 @@ TEST(TraceTest, MacroDPRINTFN)
     StringWrap name("Foo");
     DPRINTFN("Test message");
 #if TRACING_ON
-    ASSERT_EQ(getString(Trace::output()), "      0: Foo: Test message");
+    ASSERT_EQ(getString(trace::output()), "      0: Foo: Test message");
 #else
-    ASSERT_EQ(getString(Trace::output()), "");
+    ASSERT_EQ(getString(trace::output()), "");
 #endif
 }
 
@@ -550,9 +550,9 @@ TEST(TraceTest, MacroDPRINTFNR)
 {
     DPRINTFNR("Test message");
 #if TRACING_ON
-    ASSERT_EQ(getString(Trace::output()), "Test message");
+    ASSERT_EQ(getString(trace::output()), "Test message");
 #else
-    ASSERT_EQ(getString(Trace::output()), "");
+    ASSERT_EQ(getString(trace::output()), "");
 #endif
 }
 
@@ -562,25 +562,25 @@ TEST(TraceTest, MacroDPRINTF_UNCONDITIONAL)
     StringWrap name("Foo");
 
     // Flag enabled
-    Trace::enable();
+    trace::enable();
     EXPECT_TRUE(debug::changeFlag("TraceTestDebugFlag", true));
     EXPECT_TRUE(debug::changeFlag("FmtFlag", true));
     DPRINTF_UNCONDITIONAL(TraceTestDebugFlag, "Test message");
 #if TRACING_ON
-    ASSERT_EQ(getString(Trace::output()),
+    ASSERT_EQ(getString(trace::output()),
         "      0: TraceTestDebugFlag: Foo: Test message");
 #else
-    ASSERT_EQ(getString(Trace::output()), "");
+    ASSERT_EQ(getString(trace::output()), "");
 #endif
 
     // Flag disabled
-    Trace::disable();
+    trace::disable();
     EXPECT_TRUE(debug::changeFlag("TraceTestDebugFlag", false));
     DPRINTF_UNCONDITIONAL(TraceTestDebugFlag, "Test message");
 #if TRACING_ON
-    ASSERT_EQ(getString(Trace::output()), "      0: Foo: Test message");
+    ASSERT_EQ(getString(trace::output()), "      0: Foo: Test message");
 #else
-    ASSERT_EQ(getString(Trace::output()), "");
+    ASSERT_EQ(getString(trace::output()), "");
 #endif
 }
 
@@ -591,20 +591,20 @@ TEST(TraceTest, MacroDPRINTF_UNCONDITIONAL)
 TEST(TraceTest, GlobalName)
 {
     // Flag enabled
-    Trace::enable();
+    trace::enable();
     EXPECT_TRUE(debug::changeFlag("TraceTestDebugFlag", true));
     EXPECT_TRUE(debug::changeFlag("FmtFlag", true));
     DPRINTF(TraceTestDebugFlag, "Test message");
 #if TRACING_ON
-    ASSERT_EQ(getString(Trace::output()),
+    ASSERT_EQ(getString(trace::output()),
         "      0: TraceTestDebugFlag: global: Test message");
 #else
-    ASSERT_EQ(getString(Trace::output()), "");
+    ASSERT_EQ(getString(trace::output()), "");
 #endif
 
     // Flag disabled
-    Trace::disable();
+    trace::disable();
     EXPECT_TRUE(debug::changeFlag("TraceTestDebugFlag", false));
     DPRINTF(TraceTestDebugFlag, "Test message");
-    ASSERT_EQ(getString(Trace::output()), "");
+    ASSERT_EQ(getString(trace::output()), "");
 }

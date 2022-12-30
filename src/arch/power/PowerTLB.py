@@ -31,8 +31,9 @@ from m5.params import *
 
 from m5.objects.BaseTLB import BaseTLB
 
+
 class PowerTLB(BaseTLB):
-    type = 'PowerTLB'
-    cxx_class = 'gem5::PowerISA::TLB'
-    cxx_header = 'arch/power/tlb.hh'
+    type = "PowerTLB"
+    cxx_class = "gem5::PowerISA::TLB"
+    cxx_header = "arch/power/tlb.hh"
     size = Param.Int(64, "TLB size")

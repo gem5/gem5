@@ -29,10 +29,12 @@ from abc import abstractmethod
 from .abstract_board import AbstractBoard
 from ...resources.resource import AbstractResource
 
-from typing import List, Optional
+from typing import List, Optional, Union
 import os
+from pathlib import Path
 
 import m5
+
 
 class KernelDiskWorkload:
     """
@@ -139,6 +141,7 @@ class KernelDiskWorkload:
         readfile_contents: Optional[str] = None,
         kernel_args: Optional[List[str]] = None,
         exit_on_work_items: bool = True,
+        checkpoint: Optional[Union[Path, AbstractResource]] = None,
     ) -> None:
         """
         This function allows the setting of a full-system run with a Kernel
@@ -158,11 +161,13 @@ class KernelDiskWorkload:
         passed to the kernel. By default set to `get_default_kernel_args()`.
         :param exit_on_work_items: Whether the simulation should exit on work
         items. True by default.
+        :param checkpoint: The checkpoint directory. Used to restore the
+        simulation to that checkpoint.
         """
 
         # We assume this this is in a multiple-inheritance setup with an
         # Abstract board. This function will not work otherwise.
-        assert(isinstance(self,AbstractBoard))
+        assert isinstance(self, AbstractBoard)
 
         # If we are setting a workload of this type, we need to run as a
         # full-system simulation.
@@ -201,3 +206,17 @@ class KernelDiskWorkload:
 
         # Set whether to exit on work items.
         self.exit_on_work_items = exit_on_work_items
+
+        # Here we set `self._checkpoint_dir`. This is then used by the
+        # Simulator module to setup checkpoints.
+        if checkpoint:
+            if isinstance(checkpoint, Path):
+                self._checkpoint = checkpoint
+            elif isinstance(checkpoint, AbstractResource):
+                self._checkpoint = Path(checkpoint.get_local_path())
+            else:
+                # The checkpoint_dir must be None, Path, Or AbstractResource.
+                raise Exception(
+                    "Checkpoints must be passed as a Path or an "
+                    "AbstractResource."
+                )

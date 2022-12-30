@@ -71,7 +71,7 @@ output decoder {{
 
 def template NopExecute {{
     Fault %(class_name)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         return NoFault;
     }
@@ -84,4 +84,3 @@ def format NopInst(*opt_flags) {{
     decode_block = BasicDecode.subst(iop)
     exec_output = NopExecute.subst(iop)
 }};
-

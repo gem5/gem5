@@ -25,5 +25,5 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 for module in __spec__.loader_state:
-    if module.startswith('m5.objects.'):
+    if module.startswith("m5.objects."):
         exec("from %s import *" % module)

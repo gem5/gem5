@@ -68,4 +68,3 @@ if env['USE_PYTHON']:
 SimObject('TrafficGen.py', sim_objects=['TrafficGen'], tags='protobuf')
 Source('trace_gen.cc', tags='protobuf')
 Source('traffic_gen.cc', tags='protobuf')
-

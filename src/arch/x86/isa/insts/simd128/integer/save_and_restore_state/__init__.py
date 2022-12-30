@@ -33,12 +33,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["save_and_restore_state",
-              "save_and_restore_control_and_status"]
+categories = ["save_and_restore_state", "save_and_restore_control_and_status"]
 
-microcode = '''
+microcode = """
 # 128 bit multimedia and scientific instructions
-'''
+"""
 for category in categories:
     exec("from . import %s as cat" % category)
     microcode += cat.microcode

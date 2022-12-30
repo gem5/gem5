@@ -41,9 +41,6 @@
 #include "arch/power/regs/int.hh"
 #include "arch/power/regs/misc.hh"
 #include "cpu/thread_context.hh"
-#include "debug/FloatRegs.hh"
-#include "debug/IntRegs.hh"
-#include "debug/MiscRegs.hh"
 #include "params/PowerISA.hh"
 
 namespace gem5
@@ -52,15 +49,26 @@ namespace gem5
 namespace PowerISA
 {
 
+namespace
+{
+
+RegClass vecRegClass(VecRegClass, VecRegClassName, 1, debug::IntRegs);
+RegClass vecElemClass(VecElemClass, VecElemClassName, 2, debug::IntRegs);
+RegClass vecPredRegClass(VecPredRegClass, VecPredRegClassName, 1,
+        debug::IntRegs);
+RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
+
+} // anonymous namespace
+
 ISA::ISA(const Params &p) : BaseISA(p)
 {
-    _regClasses.emplace_back(int_reg::NumRegs, debug::IntRegs);
-    _regClasses.emplace_back(float_reg::NumRegs, debug::FloatRegs);
-    _regClasses.emplace_back(1, debug::IntRegs);
-    _regClasses.emplace_back(2, debug::IntRegs);
-    _regClasses.emplace_back(1, debug::IntRegs);
-    _regClasses.emplace_back(0, debug::IntRegs);
-    _regClasses.emplace_back(NUM_MISCREGS, debug::MiscRegs);
+    _regClasses.push_back(&intRegClass);
+    _regClasses.push_back(&floatRegClass);
+    _regClasses.push_back(&vecRegClass);
+    _regClasses.push_back(&vecElemClass);
+    _regClasses.push_back(&vecPredRegClass);
+    _regClasses.push_back(&ccRegClass);
+    _regClasses.push_back(&miscRegClass);
     clear();
 }
 
@@ -68,16 +76,12 @@ void
 ISA::copyRegsFrom(ThreadContext *src)
 {
     // First loop through the integer registers.
-    for (int i = 0; i < int_reg::NumRegs; ++i) {
-        RegId reg(IntRegClass, i);
-        tc->setReg(reg, src->getReg(reg));
-    }
+    for (auto &id: intRegClass)
+        tc->setReg(id, src->getReg(id));
 
     // Then loop through the floating point registers.
-    for (int i = 0; i < float_reg::NumRegs; ++i) {
-        RegId reg(FloatRegClass, i);
-        tc->setReg(reg, src->getReg(reg));
-    }
+    for (auto &id: floatRegClass)
+        tc->setReg(id, src->getReg(id));
 
     //TODO Copy misc. registers
 

@@ -26,6 +26,7 @@
 
 from slicc.ast.ExprAST import ExprAST
 
+
 class StaticCastAST(ExprAST):
     def __init__(self, slicc, type_ast, type_modifier, expr_ast):
         super().__init__(slicc)
@@ -40,19 +41,23 @@ class StaticCastAST(ExprAST):
     def generate(self, code, **kwargs):
         actual_type, ecode = self.expr_ast.inline(True)
         if self.type_modifier == "pointer":
-            code('static_cast<${{self.type_ast.type.c_ident}} *>($ecode)')
+            code("static_cast<${{self.type_ast.type.c_ident}} *>($ecode)")
         else:
-            code('static_cast<${{self.type_ast.type.c_ident}} &>($ecode)')
+            code("static_cast<${{self.type_ast.type.c_ident}} &>($ecode)")
 
         if not "interface" in self.type_ast.type:
-            self.expr_ast.error("static cast only premitted for those types " \
-                                "that implement inherit an interface")
+            self.expr_ast.error(
+                "static cast only premitted for those types "
+                "that implement inherit an interface"
+            )
 
         # The interface type should match
         if str(actual_type) != str(self.type_ast.type["interface"]):
-            self.expr_ast.error("static cast miss-match, type is '%s'," \
-                                "but inherited type is '%s'",
-                                actual_type, self.type_ast.type["interface"])
+            self.expr_ast.error(
+                "static cast miss-match, type is '%s',"
+                "but inherited type is '%s'",
+                actual_type,
+                self.type_ast.type["interface"],
+            )
 
         return self.type_ast.type
-

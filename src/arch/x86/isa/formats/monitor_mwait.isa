@@ -51,16 +51,16 @@ def template MwaitDeclare {{
       public:
         // Constructor.
         %(class_name)s(ExtMachInst machInst);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
     };
 }};
 
 def template MwaitInitiateAcc {{
     Fault %(class_name)s::initiateAcc(ExecContext * xc,
-            Trace::InstRecord * traceData) const
+            trace::InstRecord * traceData) const
     {
         unsigned s = 0x8;        //size
         unsigned f = 0;          //flags
@@ -71,7 +71,7 @@ def template MwaitInitiateAcc {{
 
 def template MwaitCompleteAcc {{
     Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         MicroHalt hltObj(machInst, mnemonic, 0x0);
         if(xc->mwait(pkt)) {
@@ -122,4 +122,3 @@ def format MwaitInst(code, *opt_flags) {{
     exec_output += MwaitInitiateAcc.subst(iop)
     exec_output += MwaitCompleteAcc.subst(iop)
 }};
-

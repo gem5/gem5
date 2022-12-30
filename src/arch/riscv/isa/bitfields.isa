@@ -123,3 +123,9 @@ def bitfield CIMM1 <12>;
 
 // Pseudo instructions
 def bitfield M5FUNC <31:25>;
+
+// Cryptography instructions
+def bitfield BIT24         <24>;
+def bitfield RNUM       <23:20>;
+def bitfield KFUNCT5    <29:25>;
+def bitfield BS         <31:30>;

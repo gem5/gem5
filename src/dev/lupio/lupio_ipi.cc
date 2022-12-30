@@ -42,23 +42,49 @@ LupioIPI::LupioIPI(const Params &params) :
     intType(params.int_type),
     nThread(params.num_threads)
 {
-    word.resize(nThread, 0);
+    mask.resize(nThread, 0);
+    pending.resize(nThread, 0);
 
     DPRINTF(LupioIPI, "LupioIPI initalized--number of CPUs: %d\n", nThread);
+}
+
+void
+LupioIPI::lupioIPIUpdateIRQ()
+{
+    for (int cpu = 0; cpu < nThread; cpu++) {
+        auto tc = system->threads[cpu];
+
+        if (mask[cpu] & pending[cpu]) {
+            tc->getCpuPtr()->postInterrupt(tc->threadId(), intType, 0);
+        } else {
+            tc->getCpuPtr()->clearInterrupt(tc->threadId(), intType, 0);
+        }
+    }
 }
 
 uint64_t
 LupioIPI::lupioIPIRead(uint8_t addr, int size)
 {
-    int cpu = addr >> 2;
     uint32_t r = 0;
-    // Reading automatically lowers corresponding IRQ
-    r = word[cpu];
 
-    auto tc = system->threads[cpu];
-    tc->getCpuPtr()->clearInterrupt(tc->threadId(), intType, 0);
-    // Also reset value after reading
-    word[cpu] = 0;
+    int cpu = addr / LUPIO_IPI_MAX;
+    int reg = addr % LUPIO_IPI_MAX;
+
+    switch (reg) {
+      case LUPIO_IPI_MASK:
+        r = mask[cpu];
+        DPRINTF(LupioIPI, "Read IPI_MASK[%d]: %#x\n", cpu, r);
+        break;
+      case LUPIO_IPI_PEND:
+        r = pending[cpu];
+        DPRINTF(LupioIPI, "Read IPI_PEND[%d]: %#x\n", cpu, r);
+        break;
+
+      default:
+        panic("Unexpected read to LupioIPI device at address %#llx!",
+              addr);
+            break;
+    }
 
     return r;
 }
@@ -66,15 +92,28 @@ LupioIPI::lupioIPIRead(uint8_t addr, int size)
 void
 LupioIPI::lupioIPIWrite(uint8_t addr, uint64_t val64, int size)
 {
-    int cpu = addr >> 2;;
     uint32_t val = val64;
 
-    word[cpu] = val;
+    int cpu = addr / LUPIO_IPI_MAX;
+    int reg = addr % LUPIO_IPI_MAX;
 
-    // Raise IRQ
-    auto tc = system->threads[cpu];
+    switch (reg) {
+      case LUPIO_IPI_MASK:
+        mask[cpu] = val;
+        DPRINTF(LupioIPI, "Write IPI_MASK[%d]: %#x\n", cpu, mask[cpu]);
+        lupioIPIUpdateIRQ();
+        break;
+      case LUPIO_IPI_PEND:
+        pending[cpu] = val;
+        DPRINTF(LupioIPI, "Write IPI_PEND[%d]: %#x\n", cpu, pending[cpu]);
+        lupioIPIUpdateIRQ();
+        break;
 
-    tc->getCpuPtr()->postInterrupt(tc->threadId(), intType, 0);
+      default:
+        panic("Unexpected write to LupioIPI device at address %#llx!",
+              addr);
+            break;
+    }
 }
 
 Tick
@@ -109,4 +148,3 @@ LupioIPI::write(PacketPtr pkt)
     return pioDelay;
 }
 } // namespace gem5
-

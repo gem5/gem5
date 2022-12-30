@@ -59,13 +59,7 @@ TimingExprEvalContext::TimingExprEvalContext(const StaticInstPtr &inst_,
 uint64_t
 TimingExprSrcReg::eval(TimingExprEvalContext &context)
 {
-    return context.inst->srcRegIdx(index).index();
-}
-
-uint64_t
-TimingExprReadIntReg::eval(TimingExprEvalContext &context)
-{
-    return context.thread->readIntReg(reg->eval(context));
+    return context.thread->getReg(context.inst->srcRegIdx(index));
 }
 
 uint64_t

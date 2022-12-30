@@ -40,8 +40,6 @@
 namespace gem5
 {
 
-using namespace RiscvISA;
-
 PlicIntDevice::PlicIntDevice(const Params &params) :
     BasicPioDevice(params, params.pio_size),
     system(params.system),

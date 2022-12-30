@@ -49,9 +49,9 @@ from gem5.components.processors.simple_switchable_processor import (
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.coherence_protocol import CoherenceProtocol
-from gem5.resources.resource import Resource
 from gem5.simulate.simulator import Simulator
 from gem5.simulate.exit_event import ExitEvent
+from gem5.resources.workload import Workload
 
 # This runs a check to ensure the gem5 binary is compiled to X86 and to the
 # MESI Two Level coherence protocol.
@@ -61,8 +61,7 @@ requires(
     kvm_required=True,
 )
 
-from gem5.components.cachehierarchies.ruby.\
-    mesi_two_level_cache_hierarchy import (
+from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
     MESITwoLevelCacheHierarchy,
 )
 
@@ -111,20 +110,16 @@ board = X86Board(
 # then, again, call `m5 exit` to terminate the simulation. After simulation
 # has ended you may inspect `m5out/system.pc.com_1.device` to see the echo
 # output.
-command = "m5 exit;" \
-        + "echo 'This is running on Timing CPU cores.';" \
-        + "sleep 1;" \
-        + "m5 exit;"
-
-board.set_kernel_disk_workload(
-    # The x86 linux kernel will be automatically downloaded to the if not
-    # already present.
-    kernel=Resource("x86-linux-kernel-5.4.49"),
-    # The x86 ubuntu image will be automatically downloaded to the if not
-    # already present.
-    disk_image=Resource("x86-ubuntu-18.04-img"),
-    readfile_contents=command,
+command = (
+    "m5 exit;"
+    + "echo 'This is running on Timing CPU cores.';"
+    + "sleep 1;"
+    + "m5 exit;"
 )
+
+workload = Workload("x86-ubuntu-18.04-boot")
+workload.set_parameter("readfile_contents", command)
+board.set_workload(workload)
 
 simulator = Simulator(
     board=board,
@@ -133,7 +128,7 @@ simulator = Simulator(
         # exit event. Instead of exiting the simulator, we just want to
         # switch the processor. The 2nd m5 exit after will revert to using
         # default behavior where the simulator run will exit.
-        ExitEvent.EXIT : (func() for func in [processor.switch]),
+        ExitEvent.EXIT: (func() for func in [processor.switch])
     },
 )
 simulator.run()

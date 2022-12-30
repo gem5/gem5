@@ -36,53 +36,62 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
+"""
 Test file containing simple workloads to run on CPU models.
 Each test takes ~10 seconds to run.
-'''
+"""
 
 from testlib import *
 
-workloads = ('Bubblesort','FloatMM')
+workloads = ("Bubblesort", "FloatMM")
 
 valid_isas = {
-    constants.vega_x86_tag :
-        ('AtomicSimpleCPU', 'TimingSimpleCPU', 'DerivO3CPU'),
-    constants.arm_tag:
-        ('AtomicSimpleCPU', 'TimingSimpleCPU', 'MinorCPU', 'DerivO3CPU'),
-    constants.riscv_tag:
-        ('AtomicSimpleCPU', 'TimingSimpleCPU', 'MinorCPU', 'DerivO3CPU'),
+    constants.vega_x86_tag: (
+        "X86AtomicSimpleCPU",
+        "X86TimingSimpleCPU",
+        "X86DerivO3CPU",
+    ),
+    constants.arm_tag: (
+        "ArmAtomicSimpleCPU",
+        "ArmTimingSimpleCPU",
+        "ArmMinorCPU",
+        "ArmDerivO3CPU",
+    ),
+    constants.riscv_tag: (
+        "RiscvAtomicSimpleCPU",
+        "RiscvTimingSimpleCPU",
+        "RiscvMinorCPU",
+        "RiscvDerivO3CPU",
+    ),
 }
 
 
-base_path = joinpath(config.bin_path, 'cpu_tests')
+base_path = joinpath(config.bin_path, "cpu_tests")
 
-base_url = config.resource_url + '/test-progs/cpu-tests/bin/'
+base_url = config.resource_url + "/test-progs/cpu-tests/bin/"
 
 isa_url = {
-    constants.vega_x86_tag : base_url + "x86",
-    constants.arm_tag : base_url + "arm",
-    constants.riscv_tag : base_url + "riscv",
+    constants.vega_x86_tag: base_url + "x86",
+    constants.arm_tag: base_url + "arm",
+    constants.riscv_tag: base_url + "riscv",
 }
 
 for isa in valid_isas:
     path = joinpath(base_path, isa.lower())
     for workload in workloads:
-        ref_path = joinpath(getcwd(), 'ref', workload)
-        verifiers = (
-                verifier.MatchStdout(ref_path),
-        )
+        ref_path = joinpath(getcwd(), "ref", workload)
+        verifiers = (verifier.MatchStdout(ref_path),)
 
-        url = isa_url[isa] + '/' + workload
+        url = isa_url[isa] + "/" + workload
         workload_binary = DownloadedProgram(url, path, workload)
         binary = joinpath(workload_binary.path, workload)
 
         for cpu in valid_isas[isa]:
             gem5_verify_config(
-                  name='cpu_test_{}_{}'.format(cpu,workload),
-                  verifiers=verifiers,
-                  config=joinpath(getcwd(), 'run.py'),
-                  config_args=['--cpu={}'.format(cpu), binary],
-                  valid_isas=(isa,),
-                  fixtures=[workload_binary]
+                name="cpu_test_{}_{}".format(cpu, workload),
+                verifiers=verifiers,
+                config=joinpath(getcwd(), "run.py"),
+                config_args=["--cpu={}".format(cpu), binary],
+                valid_isas=(constants.all_compiled_tag,),
+                fixtures=[workload_binary],
             )

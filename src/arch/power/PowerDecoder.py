@@ -25,7 +25,8 @@
 
 from m5.objects.InstDecoder import InstDecoder
 
+
 class PowerDecoder(InstDecoder):
-    type = 'PowerDecoder'
-    cxx_class = 'gem5::PowerISA::Decoder'
+    type = "PowerDecoder"
+    cxx_class = "gem5::PowerISA::Decoder"
     cxx_header = "arch/power/decoder.hh"

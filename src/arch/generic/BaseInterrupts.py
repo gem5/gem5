@@ -26,8 +26,9 @@
 from m5.params import *
 from m5.SimObject import SimObject
 
+
 class BaseInterrupts(SimObject):
-    type = 'BaseInterrupts'
+    type = "BaseInterrupts"
     abstract = True
     cxx_header = "arch/generic/interrupts.hh"
-    cxx_class = 'gem5::BaseInterrupts'
+    cxx_class = "gem5::BaseInterrupts"

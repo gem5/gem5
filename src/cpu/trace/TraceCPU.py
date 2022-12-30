@@ -36,23 +36,25 @@
 from m5.params import *
 from m5.objects.BaseCPU import BaseCPU
 
+
 class TraceCPU(BaseCPU):
     """Trace CPU model which replays traces generated in a prior simulation
-     using DerivO3CPU or its derived classes. It interfaces with L1 caches.
+    using DerivO3CPU or its derived classes. It interfaces with L1 caches.
     """
-    type = 'TraceCPU'
+
+    type = "TraceCPU"
     cxx_header = "cpu/trace/trace_cpu.hh"
-    cxx_class = 'gem5::TraceCPU'
+    cxx_class = "gem5::TraceCPU"
 
     @classmethod
     def memory_mode(cls):
-        return 'timing'
+        return "timing"
 
     @classmethod
     def require_caches(cls):
         return True
 
-    def addPMU(self, pmu = None):
+    def addPMU(self, pmu=None):
         pass
 
     @classmethod
@@ -61,26 +63,32 @@ class TraceCPU(BaseCPU):
 
     instTraceFile = Param.String("", "Instruction trace file")
     dataTraceFile = Param.String("", "Data dependency trace file")
-    sizeStoreBuffer = Param.Unsigned(16, "Number of entries in the store "\
-        "buffer")
+    sizeStoreBuffer = Param.Unsigned(
+        16, "Number of entries in the store " "buffer"
+    )
     sizeLoadBuffer = Param.Unsigned(16, "Number of entries in the load buffer")
-    sizeROB =  Param.Unsigned(40, "Number of entries in the re-order buffer")
+    sizeROB = Param.Unsigned(40, "Number of entries in the re-order buffer")
 
     # Frequency multiplier used to effectively scale the Trace CPU frequency
     # either up or down. Note that the Trace CPU's clock domain must also be
     # changed when frequency is scaled. A default value of 1.0 means the same
     # frequency as was used for generating the traces.
-    freqMultiplier = Param.Float(1.0, "Multiplier scale the Trace CPU "\
-                                 "frequency up or down")
+    freqMultiplier = Param.Float(
+        1.0, "Multiplier scale the Trace CPU " "frequency up or down"
+    )
 
     # Enable exiting when any one Trace CPU completes execution which is set to
     # false by default
-    enableEarlyExit = Param.Bool(False, "Exit when any one Trace CPU "\
-                                 "completes execution")
+    enableEarlyExit = Param.Bool(
+        False, "Exit when any one Trace CPU " "completes execution"
+    )
 
     # If progress msg interval is set to a non-zero value, it is treated as
     # the interval of committed instructions at which an info message is
     # printed.
-    progressMsgInterval = Param.Unsigned(0, "Interval of committed "\
-                                         "instructions at which to print a"\
-                                         " progress msg")
+    progressMsgInterval = Param.Unsigned(
+        0,
+        "Interval of committed "
+        "instructions at which to print a"
+        " progress msg",
+    )

@@ -35,45 +35,45 @@
 
 # duplicate banked registers into new per-cpu arrays.
 def upgrader(cpt):
-    if cpt.get('root', 'isa', fallback='') == 'arm':
+    if cpt.get("root", "isa", fallback="") == "arm":
         for sec in cpt.sections():
             import re
 
-            if not re.search('\.gic$', sec):
+            if not re.search("\.gic$", sec):
                 continue
-            cpuEnabled  = cpt.get(sec, 'cpuEnabled' ).split()
+            cpuEnabled = cpt.get(sec, "cpuEnabled").split()
 
-            intEnabled  = cpt.get(sec, 'intEnabled' ).split()
-            pendingInt  = cpt.get(sec, 'pendingInt' ).split()
-            activeInt   = cpt.get(sec, 'activeInt'  ).split()
-            intPriority = cpt.get(sec, 'intPriority').split()
-            cpuTarget   = cpt.get(sec, 'cpuTarget'  ).split()
+            intEnabled = cpt.get(sec, "intEnabled").split()
+            pendingInt = cpt.get(sec, "pendingInt").split()
+            activeInt = cpt.get(sec, "activeInt").split()
+            intPriority = cpt.get(sec, "intPriority").split()
+            cpuTarget = cpt.get(sec, "cpuTarget").split()
 
             b_intEnabled = intEnabled[0]
             b_pendingInt = pendingInt[0]
-            b_activeInt  = activeInt[0]
+            b_activeInt = activeInt[0]
 
             del intEnabled[0]
             del pendingInt[0]
             del activeInt[0]
-            del intPriority[0:32] # unused; overlapped with bankedIntPriority
+            del intPriority[0:32]  # unused; overlapped with bankedIntPriority
             del cpuTarget[0:32]
 
-            cpt.set(sec, 'intEnabled', ' '.join(intEnabled))
-            cpt.set(sec, 'pendingInt', ' '.join(pendingInt))
-            cpt.set(sec, 'activeInt',  ' '.join(activeInt))
-            cpt.set(sec, 'intPriority',' '.join(intPriority))
-            cpt.set(sec, 'cpuTarget',  ' '.join(cpuTarget))
+            cpt.set(sec, "intEnabled", " ".join(intEnabled))
+            cpt.set(sec, "pendingInt", " ".join(pendingInt))
+            cpt.set(sec, "activeInt", " ".join(activeInt))
+            cpt.set(sec, "intPriority", " ".join(intPriority))
+            cpt.set(sec, "cpuTarget", " ".join(cpuTarget))
 
-            b_intPriority = cpt.get(sec, '*bankedIntPriority').split()
-            cpt.remove_option(sec, '*bankedIntPriority')
+            b_intPriority = cpt.get(sec, "*bankedIntPriority").split()
+            cpt.remove_option(sec, "*bankedIntPriority")
 
             for cpu in range(255):
-                if cpuEnabled[cpu] == 'true':
-                    intPriority = b_intPriority[cpu*32 : (cpu+1)*32]
+                if cpuEnabled[cpu] == "true":
+                    intPriority = b_intPriority[cpu * 32 : (cpu + 1) * 32]
                     new_sec = "%s.bankedRegs%u" % (sec, cpu)
                     cpt.add_section(new_sec)
-                    cpt.set(new_sec, 'intEnabled', b_intEnabled)
-                    cpt.set(new_sec, 'pendingInt', b_pendingInt)
-                    cpt.set(new_sec, 'activeInt',  b_activeInt)
-                    cpt.set(new_sec, 'intPriority',' '.join(intPriority))
+                    cpt.set(new_sec, "intEnabled", b_intEnabled)
+                    cpt.set(new_sec, "pendingInt", b_pendingInt)
+                    cpt.set(new_sec, "activeInt", b_activeInt)
+                    cpt.set(new_sec, "intPriority", " ".join(intPriority))

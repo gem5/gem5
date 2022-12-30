@@ -37,6 +37,7 @@
 #include "arch/x86/cpuid.hh"
 #include "arch/x86/faults.hh"
 #include "arch/x86/interrupts.hh"
+#include "arch/x86/regs/float.hh"
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/msr.hh"
 #include "arch/x86/utility.hh"

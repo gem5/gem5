@@ -38,12 +38,14 @@ from m5.proxy import *
 
 from m5.SimObject import SimObject
 
-class KvmVM(SimObject):
-    type = 'KvmVM'
-    cxx_header = "cpu/kvm/vm.hh"
-    cxx_class = 'gem5::KvmVM'
 
-    coalescedMMIO = \
-      VectorParam.AddrRange([], "memory ranges for coalesced MMIO")
+class KvmVM(SimObject):
+    type = "KvmVM"
+    cxx_header = "cpu/kvm/vm.hh"
+    cxx_class = "gem5::KvmVM"
+
+    coalescedMMIO = VectorParam.AddrRange(
+        [], "memory ranges for coalesced MMIO"
+    )
 
     system = Param.System(Parent.any, "system this VM belongs to")

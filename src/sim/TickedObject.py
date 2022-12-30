@@ -35,8 +35,9 @@
 
 from m5.objects.ClockedObject import ClockedObject
 
+
 class TickedObject(ClockedObject):
-    type = 'TickedObject'
+    type = "TickedObject"
     abstract = True
     cxx_header = "sim/ticked_object.hh"
-    cxx_class = 'gem5::TickedObject'
+    cxx_class = "gem5::TickedObject"

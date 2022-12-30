@@ -52,10 +52,11 @@ class LupioIPI : public BasicPioDevice
     // Register map
     enum
     {
-        LUPIO_IPI_WORD,
+        LUPIO_IPI_MASK = 0x0,
+        LUPIO_IPI_PEND = 0x4,
 
         // Max offset
-        LUPIO_IPI_MAX,
+        LUPIO_IPI_MAX = 0x8,
     };
 
     uint32_t nThread;
@@ -63,7 +64,8 @@ class LupioIPI : public BasicPioDevice
      * Set of registers corresponding to each CPU for sending
      * inter-processor interrupts
      */
-    std::vector<uint32_t> word;
+    std::vector<uint32_t> mask;
+    std::vector<uint32_t> pending;
 
     /**
      * Function to return the value in the word register of the corresponding
@@ -75,6 +77,10 @@ class LupioIPI : public BasicPioDevice
      * raise the IRQ
      */
     void lupioIPIWrite(const uint8_t addr, uint64_t val64, int size);
+    /**
+     * Function to post and clear interrupts
+     **/
+    void lupioIPIUpdateIRQ();
 
   public:
     PARAMS(LupioIPI);
@@ -90,4 +96,3 @@ class LupioIPI : public BasicPioDevice
 } // namespace gem5
 
 #endif // __DEV_LUPIO_LUPIO_IPI_HH
-

@@ -48,15 +48,18 @@ import re
 # Used to make nested code blocks look pretty.
 #
 def indent(s):
-    return re.sub(r'(?m)^(?!#)', '  ', s)
+    return re.sub(r"(?m)^(?!#)", "  ", s)
+
 
 # Regular expression object to match C++ strings
 stringRE = re.compile(r'"([^"\\]|\\.)*"')
 
 # Regular expression object to match C++ comments
 # (used in findOperands())
-commentRE = re.compile(r'(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?',
-        re.DOTALL | re.MULTILINE)
+commentRE = re.compile(
+    r"(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?",
+    re.DOTALL | re.MULTILINE,
+)
 
 # Regular expression object to match assignment statements (used in
 # findOperands()).  If the code immediately following the first
@@ -65,7 +68,7 @@ commentRE = re.compile(r'(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?',
 # destination.  basically we're looking for an '=' that's not '=='.
 # The heinous tangle before that handles the case where the operand
 # has an array subscript.
-assignRE = re.compile(r'(\[[^\]]+\])?\s*=(?!=)', re.MULTILINE)
+assignRE = re.compile(r"(\[[^\]]+\])?\s*=(?!=)", re.MULTILINE)
 
 #
 # Munge a somewhat arbitrarily formatted piece of Python code
@@ -84,15 +87,18 @@ assignRE = re.compile(r'(\[[^\]]+\])?\s*=(?!=)', re.MULTILINE)
 # We don't want to do this if (1) the code block is empty or (2) the
 # first line of the block doesn't have any whitespace at the front.
 
+
 def fixPythonIndentation(s):
     # get rid of blank lines first
-    s = re.sub(r'(?m)^\s*\n', '', s);
-    if (s != '' and re.match(r'[ \t]', s[0])):
-        s = 'if 1:\n' + s
+    s = re.sub(r"(?m)^\s*\n", "", s)
+    if s != "" and re.match(r"[ \t]", s[0]):
+        s = "if 1:\n" + s
     return s
+
 
 class ISAParserError(Exception):
     """Exception class for parser errors"""
+
     def __init__(self, first, second=None):
         if second is None:
             self.lineno = 0
@@ -104,14 +110,17 @@ class ISAParserError(Exception):
     def __str__(self):
         return self.string
 
+
 def error(*args):
     raise ISAParserError(*args)
 
-def protectNonSubstPercents(s):
-    '''Protect any non-dict-substitution '%'s in a format string
-    (i.e. those not followed by '(')'''
 
-    return re.sub(r'%(?!\()', '%%', s)
+def protectNonSubstPercents(s):
+    """Protect any non-dict-substitution '%'s in a format string
+    (i.e. those not followed by '(')"""
+
+    return re.sub(r"%(?!\()", "%%", s)
+
 
 ##############
 # Stack: a simple stack object.  Used for both formats (formatStack)
@@ -119,15 +128,17 @@ def protectNonSubstPercents(s):
 # stack-like syntax and enable initialization with an argument list
 # (as opposed to an argument that's a list).
 
+
 class Stack(list):
     def __init__(self, *items):
         list.__init__(self, items)
 
     def push(self, item):
-        self.append(item);
+        self.append(item)
 
     def top(self):
         return self[-1]
+
 
 # Format a file include stack backtrace as a string
 def backtrace(filename_stack):
@@ -142,6 +153,7 @@ def backtrace(filename_stack):
 #     it.  This class lets us tie filenames with the line numbers with a
 #     minimum of disruption to existing increment code.
 #
+
 
 class LineTracker(object):
     def __init__(self, filename, lineno=1):

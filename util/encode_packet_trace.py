@@ -62,8 +62,15 @@ try:
 except:
     print("Did not find packet proto definitions, attempting to generate")
     from subprocess import call
-    error = call(['protoc', '--python_out=util', '--proto_path=src/proto',
-                  'src/proto/packet.proto'])
+
+    error = call(
+        [
+            "protoc",
+            "--python_out=util",
+            "--proto_path=src/proto",
+            "src/proto/packet.proto",
+        ]
+    )
     if not error:
         print("Generated packet proto definitions")
 
@@ -78,19 +85,20 @@ except:
         print("Failed to import packet proto definitions")
         exit(-1)
 
+
 def main():
     if len(sys.argv) != 3:
         print("Usage: ", sys.argv[0], " <ASCII input> <protobuf output>")
         exit(-1)
 
     try:
-        ascii_in = open(sys.argv[1], 'r')
+        ascii_in = open(sys.argv[1], "r")
     except IOError:
         print("Failed to open ", sys.argv[1], " for reading")
         exit(-1)
 
     try:
-        proto_out = open(sys.argv[2], 'wb')
+        proto_out = open(sys.argv[2], "wb")
     except IOError:
         print("Failed to open ", sys.argv[2], " for writing")
         exit(-1)
@@ -109,11 +117,11 @@ def main():
     # For each line in the ASCII trace, create a packet message and
     # write it to the encoded output
     for line in ascii_in:
-        cmd, addr, size, tick = line.split(',')
+        cmd, addr, size, tick = line.split(",")
         packet = packet_pb2.Packet()
         packet.tick = int(tick)
         # ReadReq is 1 and WriteReq is 4 in src/mem/packet.hh Command enum
-        packet.cmd = 1 if cmd == 'r' else 4
+        packet.cmd = 1 if cmd == "r" else 4
         packet.addr = int(addr)
         packet.size = int(size)
         protolib.encodeMessage(proto_out, packet)
@@ -121,6 +129,7 @@ def main():
     # We're done
     ascii_in.close()
     proto_out.close()
+
 
 if __name__ == "__main__":
     main()

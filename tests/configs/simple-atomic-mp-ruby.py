@@ -28,18 +28,23 @@ import m5
 from m5.objects import *
 
 nb_cores = 4
-cpus = [ AtomicSimpleCPU(cpu_id=i) for i in range(nb_cores) ]
+cpus = [AtomicSimpleCPU(cpu_id=i) for i in range(nb_cores)]
 
 import ruby_config
+
 ruby_memory = ruby_config.generate("TwoLevel_SplitL1UnifiedL2.rb", nb_cores)
 
 # system simulated
-system = System(cpu = cpus, physmem = ruby_memory, membus = SystemXBar(),
-                clk_domain = SrcClockDomain(clock = '1GHz'))
+system = System(
+    cpu=cpus,
+    physmem=ruby_memory,
+    membus=SystemXBar(),
+    clk_domain=SrcClockDomain(clock="1GHz"),
+)
 
 # Create a seperate clock domain for components that should run at
 # CPUs frequency
-system.cpu.clk_domain = SrcClockDomain(clock = '2GHz')
+system.cpu.clk_domain = SrcClockDomain(clock="2GHz")
 
 # add L1 caches
 for cpu in cpus:
@@ -57,5 +62,5 @@ system.system_port = system.membus.cpu_side_ports
 # run simulation
 # -----------------------
 
-root = Root(full_system = False, system = system)
-root.system.mem_mode = 'atomic'
+root = Root(full_system=False, system=system)
+root.system.mem_mode = "atomic"

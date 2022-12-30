@@ -173,7 +173,7 @@ class MinorDynInst : public RefCounted
     InstId id;
 
     /** Trace information for this instruction's execution */
-    Trace::InstRecord *traceData = nullptr;
+    trace::InstRecord *traceData = nullptr;
 
     /** The fetch address of this instruction */
     std::unique_ptr<PCStateBase> pc;
@@ -269,8 +269,7 @@ class MinorDynInst : public RefCounted
 
     /** Print (possibly verbose) instruction information for
      *  MinorTrace using the given Named object's name */
-    void minorTraceInst(const Named &named_object,
-            const BaseISA::RegClasses &reg_classes) const;
+    void minorTraceInst(const Named &named_object) const;
 
     /** ReportIF interface */
     void reportData(std::ostream &os) const;

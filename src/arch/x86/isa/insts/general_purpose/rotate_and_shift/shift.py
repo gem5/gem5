@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop SAL_R_I
 {
     slli reg, reg, imm, flags=(CF,OF,SF,ZF,PF)
@@ -305,4 +305,4 @@ def macroop SAR_P_R
     sra t1, t1, reg, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, riprel, disp
 };
-'''
+"""

@@ -28,9 +28,13 @@ from .....utils.override import *
 
 from m5.objects import Cache, BasePrefetcher, StridePrefetcher
 
+
 class MMUCache(Cache):
     """
     A simple Memory Management Unit (MMU) cache with default values.
+
+    If the cache does not have a downstream cache or the downstream cache
+    is mostly inclusive as usual, writeback_clean should be set to False.
     """
 
     def __init__(

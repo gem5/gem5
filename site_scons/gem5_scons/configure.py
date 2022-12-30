@@ -44,39 +44,41 @@ import os
 import SCons.Script
 import SCons.Util
 
+
 def CheckCxxFlag(context, flag, autoadd=True):
     context.Message("Checking for compiler %s support... " % flag)
-    last_cxxflags = context.env['CXXFLAGS']
+    last_cxxflags = context.env["CXXFLAGS"]
     context.env.Append(CXXFLAGS=[flag])
-    pre_werror = context.env['CXXFLAGS']
-    context.env.Append(CXXFLAGS=['-Werror'])
-    ret = context.TryCompile('// CheckCxxFlag DO NOTHING', '.cc')
-    context.env['CXXFLAGS'] = pre_werror
+    pre_werror = context.env["CXXFLAGS"]
+    context.env.Append(CXXFLAGS=["-Werror"])
+    ret = context.TryCompile("// CheckCxxFlag DO NOTHING", ".cc")
+    context.env["CXXFLAGS"] = pre_werror
     if not (ret and autoadd):
-        context.env['CXXFLAGS'] = last_cxxflags
+        context.env["CXXFLAGS"] = last_cxxflags
     context.Result(ret)
     return ret
 
+
 def CheckLinkFlag(context, flag, autoadd=True, set_for_shared=True):
     context.Message("Checking for linker %s support... " % flag)
-    last_linkflags = context.env['LINKFLAGS']
+    last_linkflags = context.env["LINKFLAGS"]
     context.env.Append(LINKFLAGS=[flag])
-    pre_werror = context.env['LINKFLAGS']
-    context.env.Append(LINKFLAGS=['-Werror'])
-    ret = context.TryLink('int main(int, char *[]) { return 0; }', '.cc')
-    context.env['LINKFLAGS'] = pre_werror
+    pre_werror = context.env["LINKFLAGS"]
+    context.env.Append(LINKFLAGS=["-Werror"])
+    ret = context.TryLink("int main(int, char *[]) { return 0; }", ".cc")
+    context.env["LINKFLAGS"] = pre_werror
     if not (ret and autoadd):
-        context.env['LINKFLAGS'] = last_linkflags
-    if (ret and set_for_shared):
-        assert(autoadd)
+        context.env["LINKFLAGS"] = last_linkflags
+    if ret and set_for_shared:
+        assert autoadd
         context.env.Append(SHLINKFLAGS=[flag])
     context.Result(ret)
     return ret
 
+
 # Add a custom Check function to test for structure members.
 def CheckMember(context, include, decl, member, include_quotes="<>"):
-    context.Message("Checking for member %s in %s..." %
-                    (member, decl))
+    context.Message("Checking for member %s in %s..." % (member, decl))
     text = """
 #include %(header)s
 int main(){
@@ -84,18 +86,21 @@ int main(){
   (void)test.%(member)s;
   return 0;
 };
-""" % { "header" : include_quotes[0] + include + include_quotes[1],
-        "decl" : decl,
-        "member" : member,
-        }
+""" % {
+        "header": include_quotes[0] + include + include_quotes[1],
+        "decl": decl,
+        "member": member,
+    }
 
     ret = context.TryCompile(text, extension=".cc")
     context.Result(ret)
     return ret
 
+
 def CheckPythonLib(context):
-    context.Message('Checking Python version... ')
-    ret = context.TryRun(r"""
+    context.Message("Checking Python version... ")
+    ret = context.TryRun(
+        r"""
 #include <pybind11/embed.h>
 
 int
@@ -107,21 +112,24 @@ main(int argc, char **argv) {
         "sys.stdout.write('%i.%i.%i' % (vi.major, vi.minor, vi.micro));\n");
     return 0;
 }
-    """, extension=".cc")
+    """,
+        extension=".cc",
+    )
     context.Result(ret[1] if ret[0] == 1 else 0)
     if ret[0] == 0:
         return None
     else:
         return tuple(map(int, ret[1].split(".")))
 
+
 def CheckPkgConfig(context, pkgs, *args):
     if not SCons.Util.is_List(pkgs):
         pkgs = [pkgs]
-    assert(pkgs)
+    assert pkgs
 
     for pkg in pkgs:
-        context.Message('Checking for pkg-config package %s... ' % pkg)
-        ret = context.TryAction('pkg-config %s' % pkg)[0]
+        context.Message("Checking for pkg-config package %s... " % pkg)
+        ret = context.TryAction("pkg-config %s" % pkg)[0]
         if not ret:
             context.Result(ret)
             continue
@@ -129,7 +137,7 @@ def CheckPkgConfig(context, pkgs, *args):
         if len(args) == 0:
             break
 
-        cmd = ' '.join(['pkg-config'] + list(args) + [pkg])
+        cmd = " ".join(["pkg-config"] + list(args) + [pkg])
         try:
             context.env.ParseConfig(cmd)
             ret = 1
@@ -141,20 +149,25 @@ def CheckPkgConfig(context, pkgs, *args):
 
     return ret
 
+
 @contextlib.contextmanager
 def Configure(env, *args, **kwargs):
-    kwargs.setdefault('conf_dir',
-            os.path.join(env['GEM5BUILD'], 'scons_config'))
-    kwargs.setdefault('log_file',
-            os.path.join(env['GEM5BUILD'], 'scons_config.log'))
-    kwargs.setdefault('custom_tests', {})
-    kwargs['custom_tests'].update({
-            'CheckCxxFlag' : CheckCxxFlag,
-            'CheckLinkFlag' : CheckLinkFlag,
-            'CheckMember' : CheckMember,
-            'CheckPkgConfig' : CheckPkgConfig,
-            'CheckPythonLib' : CheckPythonLib,
-    })
+    kwargs.setdefault(
+        "conf_dir", os.path.join(env["GEM5BUILD"], "scons_config")
+    )
+    kwargs.setdefault(
+        "log_file", os.path.join(env["GEM5BUILD"], "scons_config.log")
+    )
+    kwargs.setdefault("custom_tests", {})
+    kwargs["custom_tests"].update(
+        {
+            "CheckCxxFlag": CheckCxxFlag,
+            "CheckLinkFlag": CheckLinkFlag,
+            "CheckMember": CheckMember,
+            "CheckPkgConfig": CheckPkgConfig,
+            "CheckPythonLib": CheckPythonLib,
+        }
+    )
     conf = SCons.Script.Configure(env, *args, **kwargs)
 
     # Recent versions of scons substitute a "Null" object for Configure()
@@ -163,14 +176,17 @@ def Configure(env, *args, **kwargs):
     # breaking all our configuration checks.  We replace it with our own
     # more optimistic null object that returns True instead.
     if not conf:
+
         def NullCheck(*args, **kwargs):
             return True
 
         class NullConf:
             def __init__(self, env):
                 self.env = env
+
             def Finish(self):
                 return self.env
+
             def __getattr__(self, mname):
                 return NullCheck
 

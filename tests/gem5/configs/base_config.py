@@ -40,10 +40,11 @@ from m5.objects import *
 from m5.proxy import *
 from common import FSConfig
 from common import Options
-from common.Caches import *
+from base_caches import *
 from ruby import Ruby
 
-_have_kvm_support = 'BaseKvmCPU' in globals()
+_have_kvm_support = "BaseKvmCPU" in globals()
+
 
 class BaseSystem(object, metaclass=ABCMeta):
     """Base system builder.
@@ -54,9 +55,17 @@ class BaseSystem(object, metaclass=ABCMeta):
     the initialization process.
     """
 
-    def __init__(self, mem_mode='timing', mem_class=SimpleMemory,
-                 cpu_class=TimingSimpleCPU, num_cpus=1, num_threads=1,
-                 checker=False, mem_size=None, use_ruby=False):
+    def __init__(
+        self,
+        mem_mode="timing",
+        mem_class=SimpleMemory,
+        cpu_class=TimingSimpleCPU,
+        num_cpus=1,
+        num_threads=1,
+        checker=False,
+        mem_size=None,
+        use_ruby=False,
+    ):
         """Initialize a simple base system.
 
         Keyword Arguments:
@@ -78,10 +87,14 @@ class BaseSystem(object, metaclass=ABCMeta):
 
     def create_cpus(self, cpu_clk_domain):
         """Return a list of CPU objects to add to a system."""
-        cpus = [ self.cpu_class(clk_domain=cpu_clk_domain,
-                                numThreads=self.num_threads,
-                                cpu_id=i)
-                 for i in range(self.num_cpus) ]
+        cpus = [
+            self.cpu_class(
+                clk_domain=cpu_clk_domain,
+                numThreads=self.num_threads,
+                cpu_id=i,
+            )
+            for i in range(self.num_cpus)
+        ]
         if self.checker:
             for c in cpus:
                 c.addCheckerCpu()
@@ -93,8 +106,9 @@ class BaseSystem(object, metaclass=ABCMeta):
         Arguments:
           cpu -- CPU instance to work on.
         """
-        cpu.addPrivateSplitL1Caches(L1_ICache(size='32kB', assoc=1),
-                                    L1_DCache(size='32kB', assoc=4))
+        cpu.addPrivateSplitL1Caches(
+            L1_ICache(size="32kB", assoc=1), L1_DCache(size="32kB", assoc=4)
+        )
 
     def create_caches_shared(self, system):
         """Add shared caches to a system.
@@ -106,8 +120,9 @@ class BaseSystem(object, metaclass=ABCMeta):
           A bus that CPUs should use to connect to the shared cache.
         """
         system.toL2Bus = L2XBar(clk_domain=system.cpu_clk_domain)
-        system.l2c = L2Cache(clk_domain=system.cpu_clk_domain,
-                             size='4MB', assoc=8)
+        system.l2c = L2Cache(
+            clk_domain=system.cpu_clk_domain, size="4MB", assoc=8
+        )
         system.l2c.cpu_side = system.toL2Bus.mem_side_ports
         system.l2c.mem_side = system.membus.cpu_side_ports
         return system.toL2Bus
@@ -123,9 +138,11 @@ class BaseSystem(object, metaclass=ABCMeta):
             self.create_caches_private(cpu)
             cpu.createInterruptController()
             cached_bus = sha_bus if sha_bus != None else system.membus
-            cpu.connectAllPorts(cached_bus.cpu_side_ports,
-                                system.membus.cpu_side_ports,
-                                system.membus.mem_side_ports)
+            cpu.connectAllPorts(
+                cached_bus.cpu_side_ports,
+                system.membus.cpu_side_ports,
+                system.membus.mem_side_ports,
+            )
 
     def init_kvm_cpus(self, cpus):
         """
@@ -173,23 +190,24 @@ class BaseSystem(object, metaclass=ABCMeta):
 
             # Set the default cache size and associativity to be very
             # small to encourage races between requests and writebacks.
-            args.l1d_size="32kB"
-            args.l1i_size="32kB"
-            args.l2_size="4MB"
-            args.l1d_assoc=4
-            args.l1i_assoc=2
-            args.l2_assoc=8
+            args.l1d_size = "32kB"
+            args.l1i_size = "32kB"
+            args.l2_size = "4MB"
+            args.l1d_assoc = 4
+            args.l1i_assoc = 2
+            args.l2_assoc = 8
             args.num_cpus = self.num_cpus
             args.num_dirs = 2
 
-            bootmem = getattr(system, '_bootmem', None)
-            Ruby.create_system(args, True, system, system.iobus,
-                               system._dma_ports, bootmem)
+            bootmem = getattr(system, "_bootmem", None)
+            Ruby.create_system(
+                args, True, system, system.iobus, system._dma_ports, bootmem
+            )
 
             # Create a seperate clock domain for Ruby
             system.ruby.clk_domain = SrcClockDomain(
-                clock = args.ruby_clock,
-                voltage_domain = system.voltage_domain)
+                clock=args.ruby_clock, voltage_domain=system.voltage_domain
+            )
             for i, cpu in enumerate(system.cpu):
                 if not cpu.switched_out:
                     cpu.createInterruptController()
@@ -199,25 +217,26 @@ class BaseSystem(object, metaclass=ABCMeta):
             for cpu in system.cpu:
                 self.init_cpu(system, cpu, sha_bus)
 
-        if _have_kvm_support and \
-                any([isinstance(c, BaseKvmCPU) for c in system.cpu]):
+        if _have_kvm_support and any(
+            [isinstance(c, BaseKvmCPU) for c in system.cpu]
+        ):
             self.init_kvm(system)
             self.init_kvm_cpus(system.cpu)
 
-    def create_clk_src(self,system):
+    def create_clk_src(self, system):
         # Create system clock domain. This provides clock value to every
         # clocked object that lies beneath it unless explicitly overwritten
         # by a different clock domain.
         system.voltage_domain = VoltageDomain()
-        system.clk_domain = SrcClockDomain(clock = '1GHz',
-                                           voltage_domain =
-                                           system.voltage_domain)
+        system.clk_domain = SrcClockDomain(
+            clock="1GHz", voltage_domain=system.voltage_domain
+        )
 
         # Create a seperate clock domain for components that should
         # run at CPUs frequency
-        system.cpu_clk_domain = SrcClockDomain(clock = '2GHz',
-                                               voltage_domain =
-                                               system.voltage_domain)
+        system.cpu_clk_domain = SrcClockDomain(
+            clock="2GHz", voltage_domain=system.voltage_domain
+        )
 
     @abstractmethod
     def create_system(self):
@@ -229,6 +248,7 @@ class BaseSystem(object, metaclass=ABCMeta):
         """Create and return a simulation root using the system
         defined by this class."""
         pass
+
 
 class BaseSESystem(BaseSystem):
     """Basic syscall-emulation builder."""
@@ -245,10 +265,12 @@ class BaseSESystem(BaseSystem):
             mem_ctrl.dram = self.mem_class()
         else:
             mem_ctrl = self.mem_class()
-        system = System(physmem = mem_ctrl,
-                        membus = SystemXBar(),
-                        mem_mode = self.mem_mode,
-                        multi_thread = (self.num_threads > 1))
+        system = System(
+            physmem=mem_ctrl,
+            membus=SystemXBar(),
+            mem_mode=self.mem_mode,
+            multi_thread=(self.num_threads > 1),
+        )
         if not self.use_ruby:
             system.system_port = system.membus.cpu_side_ports
         system.physmem.port = system.membus.mem_side_ports
@@ -257,8 +279,9 @@ class BaseSESystem(BaseSystem):
 
     def create_root(self):
         system = self.create_system()
-        m5.ticks.setGlobalFrequency('1THz')
+        m5.ticks.setGlobalFrequency("1THz")
         return Root(full_system=False, system=system)
+
 
 class BaseSESystemUniprocessor(BaseSESystem):
     """Basic syscall-emulation builder for uniprocessor systems.
@@ -274,12 +297,15 @@ class BaseSESystemUniprocessor(BaseSESystem):
         # The atomic SE configurations do not use caches
         if self.mem_mode == "timing":
             # @todo We might want to revisit these rather enthusiastic L1 sizes
-            cpu.addTwoLevelCacheHierarchy(L1_ICache(size='128kB'),
-                                          L1_DCache(size='256kB'),
-                                          L2Cache(size='2MB'))
+            cpu.addTwoLevelCacheHierarchy(
+                L1_ICache(size="128kB"),
+                L1_DCache(size="256kB"),
+                L2Cache(size="2MB"),
+            )
 
     def create_caches_shared(self, system):
         return None
+
 
 class BaseFSSystem(BaseSystem):
     """Basic full system builder."""
@@ -301,12 +327,13 @@ class BaseFSSystem(BaseSystem):
                 mem_ctrls = []
                 for r in system.mem_ranges:
                     mem_ctrl = MemCtrl()
-                    mem_ctrl.dram = self.mem_class(range = r)
+                    mem_ctrl.dram = self.mem_class(range=r)
                     mem_ctrls.append(mem_ctrl)
                 system.physmem = mem_ctrls
             else:
-                system.physmem = [self.mem_class(range = r)
-                                  for r in system.mem_ranges]
+                system.physmem = [
+                    self.mem_class(range=r) for r in system.mem_ranges
+                ]
             for i in range(len(system.physmem)):
                 system.physmem[i].port = system.membus.mem_side_ports
 
@@ -317,8 +344,9 @@ class BaseFSSystem(BaseSystem):
 
     def create_root(self):
         system = self.create_system()
-        m5.ticks.setGlobalFrequency('1THz')
+        m5.ticks.setGlobalFrequency("1THz")
         return Root(full_system=True, system=system)
+
 
 class BaseFSSystemUniprocessor(BaseFSSystem):
     """Basic full system builder for uniprocessor systems.
@@ -331,12 +359,15 @@ class BaseFSSystemUniprocessor(BaseFSSystem):
         super(BaseFSSystemUniprocessor, self).__init__(**kwargs)
 
     def create_caches_private(self, cpu):
-        cpu.addTwoLevelCacheHierarchy(L1_ICache(size='32kB', assoc=1),
-                                      L1_DCache(size='32kB', assoc=4),
-                                      L2Cache(size='4MB', assoc=8))
+        cpu.addTwoLevelCacheHierarchy(
+            L1_ICache(size="32kB", assoc=1),
+            L1_DCache(size="32kB", assoc=4),
+            L2Cache(size="4MB", assoc=8),
+        )
 
     def create_caches_shared(self, system):
         return None
+
 
 class BaseFSSwitcheroo(BaseFSSystem):
     """Uniprocessor system prepared for CPU switching"""
@@ -346,9 +377,9 @@ class BaseFSSwitcheroo(BaseFSSystem):
         self.cpu_classes = tuple(cpu_classes)
 
     def create_cpus(self, cpu_clk_domain):
-        cpus = [ cclass(clk_domain = cpu_clk_domain,
-                        cpu_id=0,
-                        switched_out=True)
-                 for cclass in self.cpu_classes ]
+        cpus = [
+            cclass(clk_domain=cpu_clk_domain, cpu_id=0, switched_out=True)
+            for cclass in self.cpu_classes
+        ]
         cpus[0].switched_out = False
         return cpus

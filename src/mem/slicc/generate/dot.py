@@ -25,16 +25,18 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 def printDotty(sm, code):
-    code('digraph ${{sm.getIdent()}} {')
+    code("digraph ${{sm.getIdent()}} {")
     code.indent()
     for t in sm.transitions:
         # Don't print ignored transitions
         if t.getActionShorthands() in ("--", "z"):
             continue
 
-        code('${{t.getStateShorthand()}} -> ${{t.getNextStateShorthand()}')
-        code('    [label="${{t.getEventShorthand()}}/${{t.getActionShorthands()}}"')
+        code("${{t.getStateShorthand()}} -> ${{t.getNextStateShorthand()}")
+        code(
+            '    [label="${{t.getEventShorthand()}}/${{t.getActionShorthands()}}"'
+        )
     code.dedent()
-    code('}')
-
+    code("}")

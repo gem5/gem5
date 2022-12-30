@@ -22,3 +22,7 @@ ecd1e05f5725832c2d5dfdc53f4c4100bf763284
 c3bd8eb1214cbebbc92c7958b80aa06913bce3ba
 488ded0c8d9e43deef531ad174937982b41f8e4b
 26e888965d08486aeed7ebb3ef934ceb1a38cd6f
+
+# A commit which ran Python Black on all Python files.
+# https://gem5-review.googlesource.com/c/public/gem5/+/47024
+787204c92d876dd81357b75aede52d8ef5e053d3

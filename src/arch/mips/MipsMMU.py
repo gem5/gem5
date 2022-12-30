@@ -38,9 +38,10 @@
 from m5.objects.BaseMMU import BaseMMU
 from m5.objects.MipsTLB import MipsTLB
 
+
 class MipsMMU(BaseMMU):
-    type = 'MipsMMU'
-    cxx_class = 'gem5::MipsISA::MMU'
-    cxx_header = 'arch/mips/mmu.hh'
+    type = "MipsMMU"
+    cxx_class = "gem5::MipsISA::MMU"
+    cxx_header = "arch/mips/mmu.hh"
     itb = MipsTLB(entry_type="instruction")
     dtb = MipsTLB(entry_type="data")

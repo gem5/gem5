@@ -129,7 +129,9 @@
 
 #include "base/remote_gdb.hh"
 
+#include <sys/select.h>
 #include <sys/signal.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #include <cassert>
@@ -190,7 +192,7 @@ class HardBreakpoint : public PCEvent
         DPRINTF(GDBMisc, "handling hardware breakpoint at %#x\n", pc());
 
         if (tc == gdb->tc)
-            gdb->trap(tc->contextId(), SIGTRAP);
+            gdb->trap(tc->contextId(), SIGTRAP,"");
     }
 };
 
@@ -228,6 +230,39 @@ digit2i(char c)
         return (c - 'A' + 10);
     else
         return -1;
+}
+
+//convert a hex to a char
+char
+hex2c(char c0,char c1)
+{
+   char temp[3] = {c0,c1,'\0'};
+   return std::stoi(temp,0,16);
+}
+
+//this function will be used in a future patch
+//convert a encoded string to a string
+[[maybe_unused]] std::string
+hexS2string(std::string hex_in)
+{
+   std::string out="";
+   for (unsigned int i = 0; i + 1 < hex_in.length();i += 2){
+       out.push_back(hex2c(hex_in[i],hex_in[i+1]));
+   }
+   return out;
+}
+
+//convert a string to a hex encoded string
+std::string
+string2hexS(std::string in)
+{
+   std::string out = "";
+   for (auto ch : in){
+       char temp[3] = "  ";
+        std::snprintf(temp,3,"%02hhx",ch);
+        out.append(temp);
+   }
+   return out;
 }
 
 // Convert the low 4 bits of an integer into an hex digit.
@@ -514,12 +549,18 @@ BaseRemoteGDB::selectThreadContext(ContextID id)
 // makes sense to use POSIX errno values, because that is what the
 // gdb/remote.c functions want to return.
 void
-BaseRemoteGDB::trap(ContextID id, int signum)
+BaseRemoteGDB::trap(ContextID id, int signum,const std::string& stopReason)
 {
     if (!attached)
         return;
 
     if (tc->contextId() != id) {
+
+        //prevent thread switch when single stepping
+        if (singleStepEvent.scheduled()){
+            return;
+        }
+        DPRINTF(GDBMisc, "Finishing thread switch");
         if (!selectThreadContext(id))
             return;
     }
@@ -534,10 +575,20 @@ BaseRemoteGDB::trap(ContextID id, int signum)
         send("OK");
     } else {
         // Tell remote host that an exception has occurred.
-        send("S%02x", signum);
+        sendTPacket(signum,id,stopReason);
     }
 
     processCommands(signum);
+}
+
+bool
+BaseRemoteGDB::sendMessage(std::string message)
+{
+    if (!attached)
+        return false;
+    DPRINTF(GDBMisc, "passing message %s\n", message);
+    sendOPacket(message);
+    return true;
 }
 
 void
@@ -562,9 +613,7 @@ BaseRemoteGDB::incomingData(int revent)
     }
 
     if (revent & POLLIN) {
-        trapEvent.type(SIGILL);
-        trapEvent.id(tc->contextId());
-        scheduleInstCommitEvent(&trapEvent, 0);
+        scheduleTrapEvent(tc->contextId(),SIGILL,0,"");
     } else if (revent & POLLNVAL) {
         descheduleInstCommitEvent(&trapEvent);
         scheduleInstCommitEvent(&disconnectEvent, 0);
@@ -575,12 +624,54 @@ uint8_t
 BaseRemoteGDB::getbyte()
 {
     uint8_t b;
-    if (::read(fd, &b, sizeof(b)) == sizeof(b))
-        return b;
-
-    throw BadClient("Couldn't read data from debugger.");
+    while (!try_getbyte(&b,-1));//no timeout
+   return b;
 }
 
+bool
+BaseRemoteGDB::try_getbyte(uint8_t* c,int timeout_ms)
+{
+    if (!c)
+        panic("try_getbyte called with a null pointer as c");
+    int res,retval;
+    //Allow read to fail if it was interrupted by a signal (EINTR).
+    errno = 0;
+    //preparing fd_sets
+    fd_set rfds;
+    FD_ZERO(&rfds);
+    FD_SET(fd, &rfds);
+
+    //setting up a timeout if timeout_ms is positive
+    struct timeval tv;struct timeval* tv_ptr;
+    if (timeout_ms >= 0){
+        tv.tv_sec = timeout_ms/1000;
+        tv.tv_usec = timeout_ms%1000;
+        tv_ptr = &tv;
+    }else{
+        tv_ptr = NULL;
+    }
+    //Using select to check if the FD is ready to be read.
+    while(true){
+        do {
+            errno = 0;
+            retval = ::select(fd + 1, &rfds, NULL, NULL, tv_ptr);
+            if (retval < 0 && errno != EINTR){//error
+                DPRINTF(GDBMisc,"getbyte failed errno=%i retval=%i\n",
+                    errno,retval);
+                throw BadClient("Couldn't read data from debugger.");
+            }
+        //a EINTR error means that the select call was interrupted
+        //by another signal
+        }while (errno == EINTR);
+        if (retval == 0)
+            return false;//timed out
+        //reading (retval>0)
+        res = ::read(fd, c, sizeof(*c));
+        if (res == sizeof(*c))
+            return true;//read successfully
+        //read failed (?) retrying select
+    }
+}
 void
 BaseRemoteGDB::putbyte(uint8_t b)
 {
@@ -650,7 +741,8 @@ BaseRemoteGDB::send(const char *bp)
     uint8_t csum, c;
 
     DPRINTF(GDBSend, "send:  %s\n", bp);
-
+    //removing GDBBadP that could be waiting in the buffer
+    while (try_getbyte(&c,0));
     do {
         p = bp;
         // Start sending a packet
@@ -668,6 +760,8 @@ BaseRemoteGDB::send(const char *bp)
         // Try transmitting over and over again until the other end doesn't
         // send an error back.
         c = getbyte();
+        if ((c & 0x7f) == GDBBadP)
+            DPRINTF(GDBSend, "PacketError\n");
     } while ((c & 0x7f) == GDBBadP);
 }
 
@@ -720,14 +814,38 @@ BaseRemoteGDB::processCommands(int signum)
     }
 }
 
+bool
+BaseRemoteGDB::readBlob(Addr vaddr, size_t size, char *data)
+{
+    TranslatingPortProxy fs_proxy(tc);
+    SETranslatingPortProxy se_proxy(tc);
+    PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
+
+    virt_proxy.readBlob(vaddr, data, size);
+    return true;
+}
+
+bool
+BaseRemoteGDB::writeBlob(Addr vaddr, size_t size, const char *data)
+{
+    TranslatingPortProxy fs_proxy(tc);
+    SETranslatingPortProxy se_proxy(tc);
+    PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
+
+    virt_proxy.writeBlob(vaddr, data, size);
+    return true;
+}
+
 // Read bytes from kernel address space for debugger.
 bool
 BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
 {
     DPRINTF(GDBRead, "read:  addr=%#x, size=%d", vaddr, size);
 
-    (FullSystem ? TranslatingPortProxy(tc) : SETranslatingPortProxy(tc)).
-        readBlob(vaddr, data, size);
+    bool res = readBlob(vaddr, size, data);
+
+    if (!res)
+        return false;
 
 #if TRACING_ON
     if (debug::GDBRead) {
@@ -756,10 +874,7 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
         } else
             DPRINTFNR("\n");
     }
-    (FullSystem ? TranslatingPortProxy(tc) : SETranslatingPortProxy(tc)).
-        writeBlob(vaddr, data, size);
-
-    return true;
+    return writeBlob(vaddr, size, data);
 }
 
 void
@@ -836,9 +951,40 @@ BaseRemoteGDB::removeHardBreak(Addr addr, size_t kind)
 }
 
 void
-BaseRemoteGDB::scheduleInstCommitEvent(Event *ev, int delta)
+BaseRemoteGDB::sendTPacket(int errnum, ContextID id,
+    const std::string& stopReason)
 {
-    if (delta == 0 && tc->status() != ThreadContext::Active) {
+    if (!stopReason.empty()){
+        send("T%02xcore:%x;thread:%x;%s;",errnum,id + 1,id + 1,stopReason);
+    }else{
+        send("T%02xcore:%x;thread:%x;",errnum,id + 1,id + 1);
+    }
+}
+void
+BaseRemoteGDB::sendSPacket(int errnum){
+       send("S%02x",errnum);
+}
+void
+BaseRemoteGDB::sendOPacket(const std::string message){
+   send("O" + string2hexS(message));
+}
+
+void
+BaseRemoteGDB::scheduleTrapEvent(ContextID id,int type,int delta,
+    std::string stopReason){
+    ThreadContext* _tc = threads[id];
+    panic_if(_tc == nullptr, "Unknown context id :%i",id);
+    trapEvent.id(id);
+    trapEvent.type(type);
+    trapEvent.stopReason(stopReason);
+    if (!trapEvent.scheduled())
+        scheduleInstCommitEvent(&trapEvent,delta,_tc);
+}
+
+void
+BaseRemoteGDB::scheduleInstCommitEvent(Event *ev, int delta,ThreadContext* _tc)
+{
+    if (delta == 0 && _tc->status() != ThreadContext::Active) {
         // If delta is zero, we're just trying to wait for an instruction
         // boundary. If the CPU is not active, assume we're already at a
         // boundary without waiting for the CPU to eventually wake up.
@@ -846,7 +992,7 @@ BaseRemoteGDB::scheduleInstCommitEvent(Event *ev, int delta)
     } else {
         // Here "ticks" aren't simulator ticks which measure time, they're
         // instructions committed by the CPU.
-        tc->scheduleInstCountEvent(ev, tc->getCurrentInstCount() + delta);
+        _tc->scheduleInstCountEvent(ev, _tc->getCurrentInstCount() + delta);
     }
 }
 
@@ -903,7 +1049,9 @@ std::map<char, BaseRemoteGDB::GdbCommand> BaseRemoteGDB::commandMap = {
     // signal and step
     { 'S', { "KGDB_ASYNC_STEP", &BaseRemoteGDB::cmdAsyncStep } },
     // find out if the thread is alive
-    { 'T', { "KGDB_THREAD_ALIVE", &BaseRemoteGDB::cmdUnsupported } },
+    { 'T', { "KGDB_THREAD_ALIVE", &BaseRemoteGDB::cmdIsThreadAlive } },
+    //multi letter command
+    { 'v', { "KGDB_MULTI_LETTER", &BaseRemoteGDB::cmdMultiLetter } },
     // target exited
     { 'W', { "KGDB_TARGET_EXIT", &BaseRemoteGDB::cmdUnsupported } },
     // write memory
@@ -934,7 +1082,7 @@ BaseRemoteGDB::cmdUnsupported(GdbCommand::Context &ctx)
 bool
 BaseRemoteGDB::cmdSignal(GdbCommand::Context &ctx)
 {
-    send("S%02x", ctx.type);
+    sendTPacket(ctx.type,tc->contextId(),"");
     return true;
 }
 
@@ -1023,14 +1171,29 @@ BaseRemoteGDB::cmdSetThread(GdbCommand::Context &ctx)
                 throw CmdError("E04");
             // Line up on an instruction boundary in the new thread.
             threadSwitching = true;
-            trapEvent.id(tid);
-            scheduleInstCommitEvent(&trapEvent, 0);
+            scheduleTrapEvent(tid,0,0,"");
             return false;
         }
     } else {
         throw CmdError("E05");
     }
 
+    send("OK");
+    return true;
+}
+
+bool
+BaseRemoteGDB::cmdIsThreadAlive(GdbCommand::Context &ctx)
+{
+    const char *p = ctx.data;
+    int tid = 0;
+    bool all, any;
+    if (!parseThreadId(&p, all, any, tid))
+        throw CmdError("E01");
+    if (all)
+            throw CmdError("E03");
+    if (threads.find(tid) == threads.end())
+            throw CmdError("E04");
     send("OK");
     return true;
 }
@@ -1083,6 +1246,67 @@ BaseRemoteGDB::cmdMemW(GdbCommand::Context &ctx)
     return true;
 }
 
+bool
+BaseRemoteGDB::cmdMultiLetter(GdbCommand::Context &ctx)
+{
+    GdbMultiLetterCommand::Context new_ctx;
+    new_ctx.type = ctx.type;
+    strtok(ctx.data,";?");
+    char* sep = strtok(NULL,";:?");
+
+    int txt_len = (sep != NULL) ? (sep - ctx.data) : strlen(ctx.data);
+    DPRINTF(GDBMisc, "Multi-letter: %s , len=%i\n", ctx.data,txt_len);
+    new_ctx.cmdTxt = std::string(ctx.data,txt_len);
+    new_ctx.data = sep;
+    new_ctx.len = ctx.len - txt_len;
+    try {
+        auto cmd_it = multiLetterMap.find(new_ctx.cmdTxt);
+        if (cmd_it == multiLetterMap.end()) {
+            DPRINTF(GDBMisc, "Unknown command: %s\n", new_ctx.cmdTxt);
+            throw Unsupported();
+        }
+        new_ctx.cmd = &(cmd_it->second);
+
+        return (this->*(new_ctx.cmd->func))(new_ctx);
+    //catching errors: we don't need to catch anything else
+    //as it will be handled by processCommands
+    } catch (CmdError &e) {
+        send(e.error);
+    }
+    return false;
+}
+
+std::map<std::string, BaseRemoteGDB::GdbMultiLetterCommand>
+BaseRemoteGDB::multiLetterMap = {
+    { "MustReplyEmpty", { "KGDB_REPLY_EMPTY", &BaseRemoteGDB::cmdReplyEmpty}},
+    { "Kill", { "KGDB_VKILL", &BaseRemoteGDB::cmdVKill}},
+};
+
+
+bool
+BaseRemoteGDB::cmdReplyEmpty(GdbMultiLetterCommand::Context &ctx)
+{
+    send("");
+    return true;
+}
+
+bool
+BaseRemoteGDB::cmdVKill(GdbMultiLetterCommand::Context &ctx)
+{
+    warn("GDB command for kill received detaching instead");
+    detach();
+    return false;
+}
+
+bool
+BaseRemoteGDB::cmdMultiUnsupported(GdbMultiLetterCommand::Context &ctx)
+{
+    DPRINTF(GDBMisc, "Unsupported Multi name command : %s\n",
+        ctx.cmd->name);
+    DDUMP(GDBMisc, ctx.data, ctx.len);
+    throw Unsupported();
+}
+
 namespace {
 
 std::pair<std::string, std::string>
@@ -1101,8 +1325,10 @@ splitAt(std::string str, const char * const delim)
 std::map<std::string, BaseRemoteGDB::QuerySetCommand>
         BaseRemoteGDB::queryMap = {
     { "C", { &BaseRemoteGDB::queryC } },
+    { "Attached", { &BaseRemoteGDB::queryAttached} },
     { "Supported", { &BaseRemoteGDB::querySupported, ";" } },
     { "Xfer", { &BaseRemoteGDB::queryXfer } },
+    { "Symbol", { &BaseRemoteGDB::querySymbol  ,":" } },
     { "fThreadInfo", { &BaseRemoteGDB::queryFThreadInfo } },
     { "sThreadInfo", { &BaseRemoteGDB::querySThreadInfo } },
 };
@@ -1166,6 +1392,25 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
     encodeXferResponse(content, encoded, offset, length);
     send(encoded);
 }
+void
+BaseRemoteGDB::querySymbol(QuerySetCommand::Context &ctx)
+{
+    //The target does not need to look up any (more) symbols.
+    send("OK");
+}
+
+void
+BaseRemoteGDB::queryAttached(QuerySetCommand::Context &ctx)
+{
+    std::string pid="";
+    if (!ctx.args.empty() && !ctx.args[0].empty()){
+         pid=ctx.args[0];
+    }
+    DPRINTF(GDBMisc, "QAttached : pid=%s\n",pid);
+    //The remote server is attached to an existing process.
+    send("1");
+}
+
 
 void
 BaseRemoteGDB::queryFThreadInfo(QuerySetCommand::Context &ctx)

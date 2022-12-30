@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop CALL_NEAR_I
 {
     # Make the default data size of calls 64 bits in 64 bit mode
@@ -163,8 +163,8 @@ def macroop CALL_FAR_REAL_M {
 def macroop CALL_FAR_REAL_P {
     panic "Far call in real mode doesn't support RIP addressing."
 };
-'''
-#let {{
+"""
+# let {{
 #    class CALL(Inst):
 #       "GenFault ${new UnimpInstFault}"
-#}};
+# }};

@@ -28,6 +28,9 @@
 
 Import('*')
 
+if env['USE_SPARC_ISA']:
+    env.TagImplies('sparc isa', 'gem5 lib')
+
 Source('asi.cc', tags='sparc isa')
 Source('decoder.cc', tags='sparc isa')
 Source('faults.cc', tags='sparc isa')
@@ -38,6 +41,7 @@ Source('linux/syscalls.cc', tags='sparc isa')
 Source('nativetrace.cc', tags='sparc isa')
 Source('pagetable.cc', tags='sparc isa')
 Source('process.cc', tags='sparc isa')
+Source('regs/int.cc', tags='sparc isa')
 Source('remote_gdb.cc', tags='sparc isa')
 Source('se_workload.cc', tags='sparc isa')
 Source('tlb.cc', tags='sparc isa')
@@ -57,10 +61,6 @@ SimObject('SparcSeWorkload.py', sim_objects=[
 SimObject('SparcTLB.py', sim_objects=['SparcTLB'], tags='sparc isa')
 
 SimObject('SparcCPU.py', sim_objects=[], tags='sparc isa')
-SimObject('AtomicSimpleCPU.py', sim_objects=[], tags='sparc isa')
-SimObject('TimingSimpleCPU.py', sim_objects=[], tags='sparc isa')
-SimObject('NonCachingSimpleCPU.py', sim_objects=[], tags='sparc isa')
-SimObject('O3CPU.py', sim_objects=[], tags='sparc isa')
 
 DebugFlag('Sparc', "Generic SPARC ISA stuff", tags='sparc isa')
 DebugFlag('RegisterWindows', "Register window manipulation", tags='sparc isa')

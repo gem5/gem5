@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013,2017-2019, 2021 ARM Limited
+ * Copyright (c) 2011-2013,2017-2019, 2021-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -54,19 +54,20 @@ class SysDC64 : public MiscRegOp64
   protected:
     RegIndex base;
     MiscRegIndex dest;
-    uint64_t imm;
 
     // This is used for fault handling only
     mutable Addr faultAddr;
 
     SysDC64(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-            RegIndex _base, MiscRegIndex _dest, uint64_t _imm)
+            RegIndex _base, MiscRegIndex _dest)
         : MiscRegOp64(mnem, _machInst, __opClass, false),
-          base(_base), dest(_dest), imm(_imm), faultAddr(0)
+          base(_base), dest(_dest), faultAddr(0)
     {}
 
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
+
+    uint32_t iss() const override;
 };
 
 class MightBeMicro64 : public ArmStaticInst

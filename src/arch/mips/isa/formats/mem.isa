@@ -136,10 +136,10 @@ def template LoadStoreDeclare {{
         /// Constructor.
         %(class_name)s(ExtMachInst machInst);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(Packet *, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
     };
 }};
 
@@ -155,7 +155,7 @@ def template LoadStoreConstructor {{
 
 def template LoadExecute {{
     Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+                                  trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -187,7 +187,7 @@ def template LoadExecute {{
 
 def template LoadInitiateAcc {{
     Fault %(class_name)s::initiateAcc(ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+                                      trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -213,7 +213,7 @@ def template LoadInitiateAcc {{
 
 def template LoadCompleteAcc {{
     Fault %(class_name)s::completeAcc(Packet *pkt, ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+                                      trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -243,7 +243,7 @@ def template LoadCompleteAcc {{
 
 def template StoreExecute {{
     Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+                                  trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -277,7 +277,7 @@ def template StoreExecute {{
 
 def template StoreFPExecute {{
     Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+                                  trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -312,7 +312,7 @@ def template StoreFPExecute {{
 
 def template StoreCondExecute {{
     Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+                                  trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -346,7 +346,7 @@ def template StoreCondExecute {{
 
 def template StoreInitiateAcc {{
     Fault %(class_name)s::initiateAcc(ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+                                      trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -373,7 +373,7 @@ def template StoreInitiateAcc {{
 def template StoreCompleteAcc {{
     Fault %(class_name)s::completeAcc(Packet *pkt,
                                       ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+                                      trace::InstRecord *traceData) const
     {
         return NoFault;
     }
@@ -382,7 +382,7 @@ def template StoreCompleteAcc {{
 def template StoreCondCompleteAcc {{
     Fault %(class_name)s::completeAcc(Packet *pkt,
                                       ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+                                      trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -405,7 +405,7 @@ def template StoreCondCompleteAcc {{
 
 def template MiscExecute {{
     Fault %(class_name)s::execute(ExecContext *xc,
-                                  Trace::InstRecord *traceData) const
+                                  trace::InstRecord *traceData) const
     {
         [[maybe_unused]] Addr EA = 0;
         Fault fault = NoFault;
@@ -425,7 +425,7 @@ def template MiscExecute {{
 
 def template MiscInitiateAcc {{
     Fault %(class_name)s::initiateAcc(ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+                                      trace::InstRecord *traceData) const
     {
         panic("Misc instruction does not support split access method!");
         return NoFault;
@@ -435,7 +435,7 @@ def template MiscInitiateAcc {{
 
 def template MiscCompleteAcc {{
     Fault %(class_name)s::completeAcc(Packet *pkt, ExecContext *xc,
-                                      Trace::InstRecord *traceData) const
+                                      trace::InstRecord *traceData) const
     {
         panic("Misc instruction does not support split access method!");
 

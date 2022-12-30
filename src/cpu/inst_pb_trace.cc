@@ -39,7 +39,6 @@
 
 #include "base/callback.hh"
 #include "base/output.hh"
-#include "config/the_isa.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "debug/ExecEnable.hh"
@@ -51,7 +50,7 @@
 namespace gem5
 {
 
-namespace Trace {
+namespace trace {
 
 ProtoOutputStream *InstPBTrace::traceStream;
 
@@ -178,5 +177,5 @@ InstPBTrace::traceMem(StaticInstPtr si, Addr a, Addr s, unsigned f)
 
 }
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5

@@ -49,10 +49,11 @@
 namespace gem5
 {
 
+class BaseISA;
+
 namespace X86ISA
 {
 
-class ISA;
 class Decoder : public InstDecoder
 {
   private:

@@ -97,8 +97,14 @@ TLB::evictLRU()
 }
 
 TlbEntry *
-TLB::insert(Addr vpn, const TlbEntry &entry)
+TLB::insert(Addr vpn, const TlbEntry &entry, uint64_t pcid)
 {
+    //Adding pcid to the page address so
+    //that multiple processes using the same
+    //tlb do not conflict when using the same
+    //virtual addresses
+    vpn = concAddrPcid(vpn, pcid);
+
     // If somebody beat us to it, just use that existing entry.
     TlbEntry *newEntry = trie.lookup(vpn);
     if (newEntry) {
@@ -115,8 +121,14 @@ TLB::insert(Addr vpn, const TlbEntry &entry)
     *newEntry = entry;
     newEntry->lruSeq = nextSeq();
     newEntry->vaddr = vpn;
-    newEntry->trieHandle =
-    trie.insert(vpn, TlbEntryTrie::MaxBits - entry.logBytes, newEntry);
+    if (FullSystem) {
+        newEntry->trieHandle =
+        trie.insert(vpn, TlbEntryTrie::MaxBits-entry.logBytes, newEntry);
+    }
+    else {
+        newEntry->trieHandle =
+        trie.insert(vpn, TlbEntryTrie::MaxBits, newEntry);
+    }
     return newEntry;
 }
 
@@ -390,7 +402,22 @@ TLB::translate(const RequestPtr &req,
         if (m5Reg.paging) {
             DPRINTF(TLB, "Paging enabled.\n");
             // The vaddr already has the segment base applied.
-            TlbEntry *entry = lookup(vaddr);
+
+            //Appending the pcid (last 12 bits of CR3) to the
+            //page aligned vaddr if pcide is set
+            CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
+            Addr pageAlignedVaddr = vaddr & (~mask(X86ISA::PageShift));
+            CR3 cr3 = tc->readMiscRegNoEffect(misc_reg::Cr3);
+            uint64_t pcid;
+
+            if (cr4.pcide)
+                pcid = cr3.pcid;
+            else
+                pcid = 0x000;
+
+            pageAlignedVaddr = concAddrPcid(pageAlignedVaddr, pcid);
+            TlbEntry *entry = lookup(pageAlignedVaddr);
+
             if (mode == BaseMMU::Read) {
                 stats.rdAccesses++;
             } else {
@@ -412,7 +439,7 @@ TLB::translate(const RequestPtr &req,
                         delayedResponse = true;
                         return fault;
                     }
-                    entry = lookup(vaddr);
+                    entry = lookup(pageAlignedVaddr);
                     assert(entry);
                 } else {
                     Process *p = tc->getProcessPtr();
@@ -428,7 +455,8 @@ TLB::translate(const RequestPtr &req,
                         entry = insert(alignedVaddr, TlbEntry(
                                 p->pTable->pid(), alignedVaddr, pte->paddr,
                                 pte->flags & EmulationPageTable::Uncacheable,
-                                pte->flags & EmulationPageTable::ReadOnly));
+                                pte->flags & EmulationPageTable::ReadOnly),
+                                pcid);
                     }
                     DPRINTF(TLB, "Miss was serviced.\n");
                 }

@@ -26,8 +26,9 @@
 from m5.params import *
 from m5.SimObject import SimObject
 
+
 class BaseISA(SimObject):
-    type = 'BaseISA'
+    type = "BaseISA"
     abstract = True
     cxx_header = "arch/generic/isa.hh"
-    cxx_class = 'gem5::BaseISA'
+    cxx_class = "gem5::BaseISA"

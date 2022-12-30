@@ -50,7 +50,7 @@ class Unknown : public SparcStaticInst
     {}
 
     Fault
-    execute(ExecContext *, Trace::InstRecord *) const override
+    execute(ExecContext *, trace::InstRecord *) const override
     {
         return std::make_shared<IllegalInstruction>();
     }

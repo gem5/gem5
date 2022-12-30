@@ -33,9 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["load_and_store",
-              "push_and_pop",
-              "set_and_clear"]
+categories = ["load_and_store", "push_and_pop", "set_and_clear"]
 
 microcode = ""
 for category in categories:

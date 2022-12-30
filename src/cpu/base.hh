@@ -44,13 +44,6 @@
 
 #include <vector>
 
-// Before we do anything else, check if this build is the NULL ISA,
-// and if so stop here
-#include "config/the_isa.hh"
-
-#if IS_NULL_ISA
-#error Including BaseCPU in a system without CPU support
-#else
 #include "arch/generic/interrupts.hh"
 #include "base/statistics.hh"
 #include "debug/Mwait.hh"
@@ -262,7 +255,7 @@ class BaseCPU : public ClockedObject
   protected:
     std::vector<ThreadContext *> threadContexts;
 
-    Trace::InstTracer * tracer;
+    trace::InstTracer * tracer;
 
   public:
 
@@ -272,7 +265,7 @@ class BaseCPU : public ClockedObject
     static const uint32_t invldPid = std::numeric_limits<uint32_t>::max();
 
     /// Provide access to the tracer pointer
-    Trace::InstTracer * getTracer() { return tracer; }
+    trace::InstTracer * getTracer() { return tracer; }
 
     /// Notify the CPU that the indicated context is now active.
     virtual void activateContext(ThreadID thread_num);
@@ -443,7 +436,28 @@ class BaseCPU : public ClockedObject
      * @param insts Number of instructions into the future.
      * @param cause Cause to signal in the exit event.
      */
-    void scheduleInstStop(ThreadID tid, Counter insts, const char *cause);
+    void scheduleInstStop(ThreadID tid, Counter insts, std::string cause);
+
+    /**
+     * Schedule simpoint events using the scheduleInstStop function.
+     *
+     * This is used to raise a SIMPOINT_BEGIN exit event in the gem5 standard
+     * library.
+     *
+     * @param inst_starts A vector of number of instructions to start simpoints
+     */
+
+    void scheduleSimpointsInstStop(std::vector<Counter> inst_starts);
+
+    /**
+     * Schedule an exit event when any threads in the core reach the max_insts
+     * instructions using the scheduleInstStop function.
+     *
+     * This is used to raise a MAX_INSTS exit event in thegem5 standard library
+     *
+     * @param max_insts Number of instructions into the future.
+     */
+    void scheduleInstStopAnyThread(Counter max_insts);
 
     /**
      * Get the number of instructions executed by the specified thread
@@ -649,7 +663,5 @@ class BaseCPU : public ClockedObject
 };
 
 } // namespace gem5
-
-#endif // !IS_NULL_ISA
 
 #endif // __CPU_BASE_HH__

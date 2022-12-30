@@ -191,6 +191,7 @@ class BPredUnit : public SimObject
     void
     BTBUpdate(Addr instPC, const PCStateBase &target)
     {
+        ++stats.BTBUpdates;
         BTB.update(instPC, target, 0);
     }
 
@@ -314,6 +315,8 @@ class BPredUnit : public SimObject
         statistics::Scalar condIncorrect;
         /** Stat for number of BTB lookups. */
         statistics::Scalar BTBLookups;
+        /** Stat for number of BTB updates. */
+        statistics::Scalar BTBUpdates;
         /** Stat for number of BTB hits. */
         statistics::Scalar BTBHits;
         /** Stat for the ratio between BTB hits and BTB lookups. */

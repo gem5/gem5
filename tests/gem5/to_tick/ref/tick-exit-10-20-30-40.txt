@@ -1,0 +1,6 @@
+Global frequency set at 1000000000000 ticks per second
+Exiting at: 10
+Exiting at: 20
+Exiting at: 30
+Exiting at: 40
+Hello world!

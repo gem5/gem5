@@ -41,12 +41,16 @@ import os
 from m5.SimObject import SimObject
 from m5.util import fatal
 
+
 class FdtProperty(pyfdt.FdtProperty):
     """Create a property without values."""
+
     pass
+
 
 class FdtPropertyWords(pyfdt.FdtPropertyWords):
     """Create a property with word (32-bit unsigned) values."""
+
     def __init__(self, name, words):
         if type(words) != list:
             words = [words]
@@ -55,14 +59,18 @@ class FdtPropertyWords(pyfdt.FdtPropertyWords):
         words = [int(w, base=0) if type(w) == str else int(w) for w in words]
         super().__init__(name, words)
 
+
 class FdtPropertyStrings(pyfdt.FdtPropertyStrings):
     """Create a property with string values."""
 
     def __init__(self, name, strings):
         if type(strings) == str:
             strings = [strings]
-        strings = [str(string) for string in strings] # Make all values strings
+        strings = [
+            str(string) for string in strings
+        ]  # Make all values strings
         super().__init__(name, strings)
+
 
 class FdtPropertyBytes(pyfdt.FdtPropertyBytes):
     """Create a property with integer (8-bit signed) values."""
@@ -72,9 +80,11 @@ class FdtPropertyBytes(pyfdt.FdtPropertyBytes):
             values = [values]
         # Make sure all values are ints (use automatic base detection if the
         # type is str)
-        values = [int(v, base=0)
-                   if isinstance(v, str) else int(v) for v in values]
+        values = [
+            int(v, base=0) if isinstance(v, str) else int(v) for v in values
+        ]
         super().__init__(name, values)
+
 
 class FdtState(object):
     """Class for maintaining state while recursively generating a flattened
@@ -88,10 +98,10 @@ class FdtState(object):
         """Instantiate values of this state. The state can only be initialized
         once."""
 
-        self.addr_cells = kwargs.pop('addr_cells', 0)
-        self.size_cells = kwargs.pop('size_cells', 0)
-        self.cpu_cells = kwargs.pop('cpu_cells', 0)
-        self.interrupt_cells = kwargs.pop('interrupt_cells', 0)
+        self.addr_cells = kwargs.pop("addr_cells", 0)
+        self.size_cells = kwargs.pop("size_cells", 0)
+        self.cpu_cells = kwargs.pop("cpu_cells", 0)
+        self.interrupt_cells = kwargs.pop("interrupt_cells", 0)
 
     def phandle(self, obj):
         """Return a unique phandle number for a key. The key can be a SimObject
@@ -104,7 +114,7 @@ class FdtState(object):
             try:
                 key = str(obj)
             except ValueError:
-                raise ValueError('Phandle keys must be castable to str')
+                raise ValueError("Phandle keys must be castable to str")
 
         if not key in FdtState.phandles:
             FdtState.phandle_counter += 1
@@ -123,7 +133,9 @@ class FdtState(object):
         if (value >> (32 * cells)) != 0:
             fatal("Value %d doesn't fit in %d cells" % (value, cells))
 
-        return [(value >> 32*(x-1)) & 0xFFFFFFFF for x in range(cells, 0, -1)]
+        return [
+            (value >> 32 * (x - 1)) & 0xFFFFFFFF for x in range(cells, 0, -1)
+        ]
 
     def addrCells(self, addr):
         """Format an integer type according to the address_cells value of this
@@ -166,7 +178,9 @@ class FdtState(object):
 
 class FdtNop(pyfdt.FdtNop):
     """Create an empty node."""
+
     pass
+
 
 class FdtNode(pyfdt.FdtNode):
     def __init__(self, name, obj=None):
@@ -180,7 +194,7 @@ class FdtNode(pyfdt.FdtNode):
         """Change the behavior of the normal append to override if a node with
         the same name already exists or merge if the name exists and is a node
         type. Can also take a list of subnodes, that each get appended."""
-        if not hasattr(subnodes, '__iter__'):
+        if not hasattr(subnodes, "__iter__"):
             subnodes = [subnodes]
 
         for subnode in subnodes:
@@ -193,8 +207,9 @@ class FdtNode(pyfdt.FdtNode):
             except ValueError:
                 item = None
 
-            if isinstance(item,  pyfdt.FdtNode) and \
-               isinstance(subnode,  pyfdt.FdtNode):
+            if isinstance(item, pyfdt.FdtNode) and isinstance(
+                subnode, pyfdt.FdtNode
+            ):
                 item.merge(subnode)
                 subnode = item
 
@@ -210,7 +225,7 @@ class FdtNode(pyfdt.FdtNode):
         strings."""
         if isinstance(compatible, str):
             compatible = [compatible]
-        self.append(FdtPropertyStrings('compatible', compatible))
+        self.append(FdtPropertyStrings("compatible", compatible))
 
     def appendPhandle(self, obj):
         """Append a phandle property to this node with the phandle of the
@@ -220,6 +235,7 @@ class FdtNode(pyfdt.FdtNode):
 
         phandle = state.phandle(obj)
         self.append(FdtPropertyWords("phandle", [phandle]))
+
 
 class Fdt(pyfdt.Fdt):
     def sortNodes(self, node):
@@ -251,7 +267,7 @@ class Fdt(pyfdt.Fdt):
         """Convert the device tree to DTB and write to a file."""
         filename = os.path.realpath(filename)
         try:
-            with open(filename, 'wb') as f:
+            with open(filename, "wb") as f:
                 f.write(self.to_dtb())
             return filename
         except IOError:
@@ -261,7 +277,7 @@ class Fdt(pyfdt.Fdt):
         """Convert the device tree to DTS and write to a file."""
         filename = os.path.realpath(filename)
         try:
-            with open(filename, 'w') as f:
+            with open(filename, "w") as f:
                 f.write(self.to_dts())
             return filename
         except IOError:

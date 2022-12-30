@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop SAHF {
     ruflags t1, dataSize=8
     mov t1, t1, ah, dataSize=1
@@ -44,4 +44,4 @@ def macroop LAHF {
     rflags t1, dataSize=8
     andi ah, t1, "CFBit | PFBit | AFBit | ZFBit | SFBit | (1 << 1)", dataSize=1
 };
-'''
+"""

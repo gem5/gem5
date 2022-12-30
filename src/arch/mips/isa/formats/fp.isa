@@ -98,7 +98,7 @@ output exec {{
     template <class T>
     bool
     fpNanOperands(FPOp *inst, ExecContext *xc, const T &src_type,
-                  Trace::InstRecord *traceData)
+                  trace::InstRecord *traceData)
     {
         uint64_t mips_nan = 0;
         assert(sizeof(T) == 4);
@@ -109,7 +109,7 @@ output exec {{
             if (isNan(&src_bits, 32) ) {
                 mips_nan = MIPS32_QNAN;
                 xc->setRegOperand(inst, 0, mips_nan);
-                if (traceData) { traceData->setData(mips_nan); }
+                if (traceData) { traceData->setData(floatRegClass, mips_nan); }
                 return true;
             }
         }
@@ -119,7 +119,7 @@ output exec {{
     template <class T>
     bool
     fpInvalidOp(FPOp *inst, ExecContext *cpu, const T dest_val,
-                Trace::InstRecord *traceData)
+                trace::InstRecord *traceData)
     {
         uint64_t mips_nan = 0;
         T src_op = dest_val;
@@ -132,15 +132,14 @@ output exec {{
             cpu->setRegOperand(inst, 0, mips_nan);
 
             //Read FCSR from FloatRegFile
-            uint32_t fcsr_bits =
-                cpu->tcBase()->readFloatReg(FLOATREG_FCSR);
+            uint32_t fcsr_bits = cpu->tcBase()->getReg(float_reg::Fcsr);
 
             uint32_t new_fcsr = genInvalidVector(fcsr_bits);
 
             //Write FCSR from FloatRegFile
-            cpu->tcBase()->setFloatReg(FLOATREG_FCSR, new_fcsr);
+            cpu->tcBase()->setReg(float_reg::Fcsr, new_fcsr);
 
-            if (traceData) { traceData->setData(mips_nan); }
+            if (traceData) { traceData->setData(floatRegClass, mips_nan); }
             return true;
         }
 
@@ -151,19 +150,19 @@ output exec {{
     fpResetCauseBits(ExecContext *cpu)
     {
         //Read FCSR from FloatRegFile
-        uint32_t fcsr = cpu->tcBase()->readFloatReg(FLOATREG_FCSR);
+        uint32_t fcsr = cpu->tcBase()->getReg(float_reg::Fcsr);
 
         // TODO: Use utility function here
         fcsr = bits(fcsr, 31, 18) << 18 | bits(fcsr, 11, 0);
 
         //Write FCSR from FloatRegFile
-        cpu->tcBase()->setFloatReg(FLOATREG_FCSR, fcsr);
+        cpu->tcBase()->setReg(float_reg::Fcsr, fcsr);
     }
 }};
 
 def template FloatingPointExecute {{
     Fault %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -364,4 +363,3 @@ def format FloatPSCompareOp(cond_code1, cond_code2, *flags) {{
     decode_block = BasicDecode.subst(iop)
     exec_output = BasicExecute.subst(iop)
 }};
-

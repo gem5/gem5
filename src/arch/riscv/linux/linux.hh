@@ -94,20 +94,20 @@ class RiscvLinux64 : public RiscvLinux, public OpenFlagTable<RiscvLinux64>
     static constexpr int TGT_O_TRUNC        = 0x000200; //!< O_TRUNC
     static constexpr int TGT_O_APPEND       = 0x000400; //!< O_APPEND
     static constexpr int TGT_O_NONBLOCK     = 0x000800; //!< O_NONBLOCK
-    static constexpr int TGT_O_SYNC         = 0x001000; //!< O_SYNC
+    static constexpr int TGT_O_SYNC         = 0x101000; //!< O_SYNC
     static constexpr int TGT_FSYNC          = 0x001000; //!< FSYNC
-    static constexpr int TGT_FASYNC         = 0x008000; //!< FASYNC
+    static constexpr int TGT_FASYNC         = 0x002000; //!< FASYNC
     // The following are not present in riscv64-unknown-elf <fcntl.h>
-    static constexpr int TGT_O_DSYNC        = 0x010000; //!< O_DSYNC
-    static constexpr int TGT_O_CLOEXEC      = 0x040000; //!< O_CLOEXEC
+    static constexpr int TGT_O_DSYNC        = 0x001000; //!< O_DSYNC
+    static constexpr int TGT_O_CLOEXEC      = 0x080000; //!< O_CLOEXEC
     static constexpr int TGT_O_NOINHERIT    = 0x040000; //!< O_NOINHERIT
-    static constexpr int TGT_O_DIRECT       = 0x080000; //!< O_DIRECT
-    static constexpr int TGT_O_NOFOLLOW     = 0x100000; //!< O_NOFOLLOW
-    static constexpr int TGT_O_DIRECTORY    = 0x200000; //!< O_DIRECTORY
+    static constexpr int TGT_O_DIRECT       = 0x004000; //!< O_DIRECT
+    static constexpr int TGT_O_NOFOLLOW     = 0x020000; //!< O_NOFOLLOW
+    static constexpr int TGT_O_DIRECTORY    = 0x010000; //!< O_DIRECTORY
     // The following are not defined by riscv64-unknown-elf
-    static constexpr int TGT_O_LARGEFILE    = 0x020000; //!< O_LARGEFILE
-    static constexpr int TGT_O_NOATIME      = 0x800000; //!< O_NOATIME
-    static constexpr int TGT_O_PATH         = 0x400000; //!< O_PATH
+    static constexpr int TGT_O_LARGEFILE    = 0x000000; //!< O_LARGEFILE
+    static constexpr int TGT_O_NOATIME      = 0x040000; //!< O_NOATIME
+    static constexpr int TGT_O_PATH         = 0x200000; //!< O_PATH
     //@}
 
     // Only defined in riscv-unknown-elf for proxy kernel and not linux kernel
@@ -203,9 +203,9 @@ class RiscvLinux64 : public RiscvLinux, public OpenFlagTable<RiscvLinux64>
     {
         ctc->getIsaPtr()->copyRegsFrom(ptc);
         if (flags & TGT_CLONE_SETTLS)
-            ctc->setIntReg(RiscvISA::ThreadPointerReg, tls);
+            ctc->setReg(RiscvISA::ThreadPointerReg, tls);
         if (stack)
-            ctc->setIntReg(RiscvISA::StackPointerReg, stack);
+            ctc->setReg(RiscvISA::StackPointerReg, stack);
     }
 };
 
@@ -372,7 +372,7 @@ class RiscvLinux32 : public RiscvLinux, public OpenFlagTable<RiscvLinux32>
     {
         ctc->getIsaPtr()->copyRegsFrom(ptc);
         if (stack)
-            ctc->setIntReg(RiscvISA::StackPointerReg, stack);
+            ctc->setReg(RiscvISA::StackPointerReg, stack);
     }
 };
 

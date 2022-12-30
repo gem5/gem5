@@ -35,32 +35,38 @@ from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import addToPath, fatal
 
-addToPath('../')
+addToPath("../")
 
 from common import Simulation
 from common import Options
+
 
 def build_switch(args):
     # instantiate an EtherSwitch
     switch = EtherSwitch()
     # instantiate distEtherLinks to connect switch ports
     # to other gem5 instances
-    switch.portlink = [DistEtherLink(speed = args.ethernet_linkspeed,
-                                      delay = args.ethernet_linkdelay,
-                                      dist_rank = args.dist_rank,
-                                      dist_size = args.dist_size,
-                                      server_name = args.dist_server_name,
-                                      server_port = args.dist_server_port,
-                                      sync_start = args.dist_sync_start,
-                                      sync_repeat = args.dist_sync_repeat,
-                                      is_switch = True,
-                                      num_nodes = args.dist_size)
-                       for i in range(args.dist_size)]
+    switch.portlink = [
+        DistEtherLink(
+            speed=args.ethernet_linkspeed,
+            delay=args.ethernet_linkdelay,
+            dist_rank=args.dist_rank,
+            dist_size=args.dist_size,
+            server_name=args.dist_server_name,
+            server_port=args.dist_server_port,
+            sync_start=args.dist_sync_start,
+            sync_repeat=args.dist_sync_repeat,
+            is_switch=True,
+            num_nodes=args.dist_size,
+        )
+        for i in range(args.dist_size)
+    ]
 
     for (i, link) in enumerate(switch.portlink):
         link.int0 = switch.interface[i]
 
     return switch
+
 
 def main():
     # Add options
@@ -70,8 +76,9 @@ def main():
     args = parser.parse_args()
 
     system = build_switch(args)
-    root = Root(full_system = True, system = system)
+    root = Root(full_system=True, system=system)
     Simulation.run(args, root, None, None)
+
 
 if __name__ == "__m5_main__":
     main()

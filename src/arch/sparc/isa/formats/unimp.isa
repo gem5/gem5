@@ -40,4 +40,3 @@ def format WarnUnimpl() {{
     iop = InstObjParams(name, 'WarnUnimplemented')
     decode_block = BasicDecodeWithMnemonic.subst(iop)
 }};
-

@@ -45,29 +45,31 @@ import sys
 from .file_types import *
 
 cpp_c_headers = {
-    'assert.h' : 'cassert',
-    'ctype.h'  : 'cctype',
-    'errno.h'  : 'cerrno',
-    'float.h'  : 'cfloat',
-    'limits.h' : 'climits',
-    'locale.h' : 'clocale',
-    'math.h'   : 'cmath',
-    'setjmp.h' : 'csetjmp',
-    'signal.h' : 'csignal',
-    'stdarg.h' : 'cstdarg',
-    'stddef.h' : 'cstddef',
-    'stdio.h'  : 'cstdio',
-    'stdlib.h' : 'cstdlib',
-    'string.h' : 'cstring',
-    'time.h'   : 'ctime',
-    'wchar.h'  : 'cwchar',
-    'wctype.h' : 'cwctype',
+    "assert.h": "cassert",
+    "ctype.h": "cctype",
+    "errno.h": "cerrno",
+    "float.h": "cfloat",
+    "limits.h": "climits",
+    "locale.h": "clocale",
+    "math.h": "cmath",
+    "setjmp.h": "csetjmp",
+    "signal.h": "csignal",
+    "stdarg.h": "cstdarg",
+    "stddef.h": "cstddef",
+    "stdio.h": "cstdio",
+    "stdlib.h": "cstdlib",
+    "string.h": "cstring",
+    "time.h": "ctime",
+    "wchar.h": "cwchar",
+    "wctype.h": "cwctype",
 }
 
 include_re = re.compile(r'([#%])(include|import).*[<"](.*)[">]')
+
+
 def include_key(line):
-    '''Mark directories with a leading space so directories
-    are sorted before files'''
+    """Mark directories with a leading space so directories
+    are sorted before files"""
 
     match = include_re.match(line)
     assert match, line
@@ -75,15 +77,15 @@ def include_key(line):
     include = match.group(3)
 
     # Everything but the file part needs to have a space prepended
-    parts = include.split('/')
-    if len(parts) == 2 and parts[0] == 'dnet':
+    parts = include.split("/")
+    if len(parts) == 2 and parts[0] == "dnet":
         # Don't sort the dnet includes with respect to each other, but
         # make them sorted with respect to non dnet includes.  Python
         # guarantees that sorting is stable, so just clear the
         # basename part of the filename.
-        parts[1] = ' '
-    parts[0:-1] = [ ' ' + s for s in parts[0:-1] ]
-    key = '/'.join(parts)
+        parts[1] = " "
+    parts[0:-1] = [" " + s for s in parts[0:-1]]
+    key = "/".join(parts)
 
     return key
 
@@ -92,13 +94,14 @@ def _include_matcher(keyword="#include", delim="<>"):
     """Match an include statement and return a (keyword, file, extra)
     duple, or a touple of None values if there isn't a match."""
 
-    rex = re.compile(r'^(%s)\s*%s(.*)%s(.*)$' % (keyword, delim[0], delim[1]))
+    rex = re.compile(r"^(%s)\s*%s(.*)%s(.*)$" % (keyword, delim[0], delim[1]))
 
     def matcher(context, line):
         m = rex.match(line)
-        return m.groups() if m else (None, ) * 3
+        return m.groups() if m else (None,) * 3
 
     return matcher
+
 
 def _include_matcher_fname(fname, **kwargs):
     """Match an include of a specific file name. Any keyword arguments
@@ -113,7 +116,7 @@ def _include_matcher_fname(fname, **kwargs):
         if fname and rex.match(fname):
             return (keyword, fname, extra)
         else:
-            return (None, ) * 3
+            return (None,) * 3
 
     return matcher
 
@@ -124,15 +127,12 @@ def _include_matcher_main():
 
     base_matcher = _include_matcher(delim='""')
     rex = re.compile(r"^src/(.*)\.([^.]+)$")
-    header_map = {
-        "c" : "h",
-        "cc" : "hh",
-        "cpp" : "hh",
-        }
+    header_map = {"c": "h", "cc": "hh", "cpp": "hh"}
+
     def matcher(context, line):
         m = rex.match(context["filename"])
         if not m:
-            return (None, ) * 3
+            return (None,) * 3
         base, ext = m.groups()
         (keyword, fname, extra) = base_matcher(context, line)
         try:
@@ -141,9 +141,10 @@ def _include_matcher_main():
         except KeyError:
             pass
 
-        return (None, ) * 3
+        return (None,) * 3
 
     return matcher
+
 
 class SortIncludes(object):
     # different types of includes for different sorting of headers
@@ -153,32 +154,35 @@ class SortIncludes(object):
     # <*.(hh|hxx|hpp|H)> - C++ Headers (directories before files)
     # "*"                - M5 headers (directories before files)
     includes_re = (
-        ('main', '""', _include_matcher_main()),
-        ('python', '<>', _include_matcher_fname("^Python\.h$")),
-        ('pybind', '""', _include_matcher_fname("^pybind11/.*\.h$",
-                                                delim='""')),
-        ('m5shared', '<>', _include_matcher_fname("^gem5/")),
-        ('c', '<>', _include_matcher_fname("^.*\.h$")),
-        ('stl', '<>', _include_matcher_fname("^\w+$")),
-        ('cc', '<>', _include_matcher_fname("^.*\.(hh|hxx|hpp|H)$")),
-        ('m5header', '""', _include_matcher_fname("^.*\.h{1,2}$", delim='""')),
-        ('swig0', '<>', _include_matcher(keyword="%import")),
-        ('swig1', '<>', _include_matcher(keyword="%include")),
-        ('swig2', '""', _include_matcher(keyword="%import", delim='""')),
-        ('swig3', '""', _include_matcher(keyword="%include", delim='""')),
-        )
+        ("main", '""', _include_matcher_main()),
+        ("python", "<>", _include_matcher_fname("^Python\.h$")),
+        (
+            "pybind",
+            '""',
+            _include_matcher_fname("^pybind11/.*\.h$", delim='""'),
+        ),
+        ("m5shared", "<>", _include_matcher_fname("^gem5/")),
+        ("c", "<>", _include_matcher_fname("^.*\.h$")),
+        ("stl", "<>", _include_matcher_fname("^\w+$")),
+        ("cc", "<>", _include_matcher_fname("^.*\.(hh|hxx|hpp|H)$")),
+        ("m5header", '""', _include_matcher_fname("^.*\.h{1,2}$", delim='""')),
+        ("swig0", "<>", _include_matcher(keyword="%import")),
+        ("swig1", "<>", _include_matcher(keyword="%include")),
+        ("swig2", '""', _include_matcher(keyword="%import", delim='""')),
+        ("swig3", '""', _include_matcher(keyword="%include", delim='""')),
+    )
 
     block_order = (
-        ('python', ),
-        ('pybind', ),
-        ('main', ),
-        ('c', ),
-        ('stl', ),
-        ('cc', ),
-        ('m5shared', ),
-        ('m5header', ),
-        ('swig0', 'swig1', 'swig2', 'swig3', ),
-        )
+        ("python",),
+        ("pybind",),
+        ("main",),
+        ("c",),
+        ("stl",),
+        ("cc",),
+        ("m5shared",),
+        ("m5header",),
+        ("swig0", "swig1", "swig2", "swig3"),
+    )
 
     def __init__(self):
         self.block_priority = {}
@@ -219,10 +223,7 @@ class SortIncludes(object):
     def __call__(self, lines, filename, language):
         self.reset()
 
-        context = {
-            "filename" : filename,
-            "language" : language,
-            }
+        context = {"filename": filename, "language": language}
 
         def match_line(line):
             if not line:
@@ -233,14 +234,16 @@ class SortIncludes(object):
                 if keyword:
                     # if we've got a match, clean up the #include line,
                     # fix up stl headers and store it in the proper category
-                    if include_type == 'c' and language == 'C++':
+                    if include_type == "c" and language == "C++":
                         stl_inc = cpp_c_headers.get(include, None)
                         if stl_inc:
                             include = stl_inc
-                            include_type = 'stl'
+                            include_type = "stl"
 
-                    return (include_type,
-                            keyword + ' ' + ldelim + include + rdelim + extra)
+                    return (
+                        include_type,
+                        keyword + " " + ldelim + include + rdelim + extra,
+                    )
 
             return (None, line)
 
@@ -251,7 +254,7 @@ class SortIncludes(object):
                 try:
                     self.includes[include_type].append(line)
                 except KeyError:
-                    self.includes[include_type] = [ line ]
+                    self.includes[include_type] = [line]
 
                 processing_includes = True
             elif processing_includes and not line.strip():
@@ -265,7 +268,7 @@ class SortIncludes(object):
                 # current l.
                 for include in self.dump_includes():
                     yield include
-                yield ''
+                yield ""
                 yield line
             else:
                 # We are not in an include block, so just emit the line
@@ -276,47 +279,68 @@ class SortIncludes(object):
             for include in self.dump_includes():
                 yield include
 
+
 # default language types to try to apply our sorting rules to
-default_languages = frozenset(('C', 'C++', 'isa', 'python', 'scons', 'swig'))
+default_languages = frozenset(("C", "C++", "isa", "python", "scons", "swig"))
+
 
 def options():
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-d', '--dir_ignore', metavar="DIR[,DIR]", type=str,
-        default=','.join(default_dir_ignore),
-        help="ignore directories")
+        "-d",
+        "--dir_ignore",
+        metavar="DIR[,DIR]",
+        type=str,
+        default=",".join(default_dir_ignore),
+        help="ignore directories",
+    )
     parser.add_argument(
-        '-f', '--file_ignore', metavar="FILE[,FILE]", type=str,
-        default=','.join(default_file_ignore),
-        help="ignore files")
+        "-f",
+        "--file_ignore",
+        metavar="FILE[,FILE]",
+        type=str,
+        default=",".join(default_file_ignore),
+        help="ignore files",
+    )
     parser.add_argument(
-        '-l', '--languages', metavar="LANG[,LANG]", type=str,
-        default=','.join(default_languages),
-        help="languages")
+        "-l",
+        "--languages",
+        metavar="LANG[,LANG]",
+        type=str,
+        default=",".join(default_languages),
+        help="languages",
+    )
     parser.add_argument(
-        '-n', '--dry-run', action='store_true',
-        help="don't overwrite files")
-    parser.add_argument('bases', nargs='*')
+        "-n", "--dry-run", action="store_true", help="don't overwrite files"
+    )
+    parser.add_argument("bases", nargs="*")
 
     return parser
+
 
 def parse_args(parser):
     args = parser.parse_args()
 
-    args.dir_ignore = frozenset(args.dir_ignore.split(','))
-    args.file_ignore = frozenset(args.file_ignore.split(','))
-    args.languages = frozenset(args.languages.split(','))
+    args.dir_ignore = frozenset(args.dir_ignore.split(","))
+    args.file_ignore = frozenset(args.file_ignore.split(","))
+    args.languages = frozenset(args.languages.split(","))
 
     return args
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parser = options()
     args = parse_args(parser)
 
     for base in args.bases:
-        for filename,language in find_files(base, languages=args.languages,
-                file_ignore=args.file_ignore, dir_ignore=args.dir_ignore):
+        for filename, language in find_files(
+            base,
+            languages=args.languages,
+            file_ignore=args.file_ignore,
+            dir_ignore=args.dir_ignore,
+        ):
             if args.dry_run:
                 print("{}: {}".format(filename, language))
             else:

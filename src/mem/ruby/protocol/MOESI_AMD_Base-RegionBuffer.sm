@@ -1371,4 +1371,3 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
   }
 
 }
-

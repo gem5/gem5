@@ -49,8 +49,10 @@ from m5.defines import buildEnv
 from m5.objects import *
 from m5.params import NULL
 from m5.util import addToPath, fatal, warn
+from gem5.isas import ISA
+from gem5.runtime import get_runtime_isa
 
-addToPath('../')
+addToPath("../")
 
 from ruby import Ruby
 
@@ -64,6 +66,7 @@ from common.FileSystemConfig import config_filesystem
 from common.Caches import *
 from common.cpu2000 import *
 
+
 def get_processes(args):
     """Interprets provided args and returns a list of processes"""
 
@@ -73,25 +76,25 @@ def get_processes(args):
     errouts = []
     pargs = []
 
-    workloads = args.cmd.split(';')
+    workloads = args.cmd.split(";")
     if args.input != "":
-        inputs = args.input.split(';')
+        inputs = args.input.split(";")
     if args.output != "":
-        outputs = args.output.split(';')
+        outputs = args.output.split(";")
     if args.errout != "":
-        errouts = args.errout.split(';')
+        errouts = args.errout.split(";")
     if args.options != "":
-        pargs = args.options.split(';')
+        pargs = args.options.split(";")
 
     idx = 0
     for wrkld in workloads:
-        process = Process(pid = 100 + idx)
+        process = Process(pid=100 + idx)
         process.executable = wrkld
         process.cwd = os.getcwd()
         process.gid = os.getgid()
 
         if args.env:
-            with open(args.env, 'r') as f:
+            with open(args.env, "r") as f:
                 process.env = [line.rstrip() for line in f]
 
         if len(pargs) > idx:
@@ -110,7 +113,7 @@ def get_processes(args):
         idx += 1
 
     if args.smt:
-        assert(args.cpu_type == "DerivO3CPU")
+        assert args.cpu_type == "DerivO3CPU"
         return multiprocesses, idx
     else:
         return multiprocesses, 1
@@ -120,7 +123,7 @@ parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser)
 Options.addSEOptions(parser)
 
-if '--ruby' in sys.argv:
+if "--ruby" in sys.argv:
     Ruby.define_options(parser)
 
 args = parser.parse_args()
@@ -136,17 +139,25 @@ if args.bench:
 
     for app in apps:
         try:
-            if buildEnv['TARGET_ISA'] == 'arm':
-                exec("workload = %s('arm_%s', 'linux', '%s')" % (
-                        app, args.arm_iset, args.spec_input))
+            if get_runtime_isa() == ISA.ARM:
+                exec(
+                    "workload = %s('arm_%s', 'linux', '%s')"
+                    % (app, args.arm_iset, args.spec_input)
+                )
             else:
-                exec("workload = %s(buildEnv['TARGET_ISA', 'linux', '%s')" % (
-                        app, args.spec_input))
+                # TARGET_ISA has been removed, but this is missing a ], so it
+                # has incorrect syntax and wasn't being used anyway.
+                exec(
+                    "workload = %s(buildEnv['TARGET_ISA', 'linux', '%s')"
+                    % (app, args.spec_input)
+                )
             multiprocesses.append(workload.makeProcess())
         except:
-            print("Unable to find workload for %s: %s" %
-                  (buildEnv['TARGET_ISA'], app),
-                  file=sys.stderr)
+            print(
+                "Unable to find workload for %s: %s"
+                % (get_runtime_isa().name(), app),
+                file=sys.stderr,
+            )
             sys.exit(1)
 elif args.cmd:
     multiprocesses, numThreads = get_processes(args)
@@ -164,28 +175,31 @@ if args.smt and args.num_cpus > 1:
 
 np = args.num_cpus
 mp0_path = multiprocesses[0].executable
-system = System(cpu = [CPUClass(cpu_id=i) for i in range(np)],
-                mem_mode = test_mem_mode,
-                mem_ranges = [AddrRange(args.mem_size)],
-                cache_line_size = args.cacheline_size)
+system = System(
+    cpu=[CPUClass(cpu_id=i) for i in range(np)],
+    mem_mode=test_mem_mode,
+    mem_ranges=[AddrRange(args.mem_size)],
+    cache_line_size=args.cacheline_size,
+)
 
 if numThreads > 1:
     system.multi_thread = True
 
 # Create a top-level voltage domain
-system.voltage_domain = VoltageDomain(voltage = args.sys_voltage)
+system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
 
 # Create a source clock for the system and set the clock period
-system.clk_domain = SrcClockDomain(clock =  args.sys_clock,
-                                   voltage_domain = system.voltage_domain)
+system.clk_domain = SrcClockDomain(
+    clock=args.sys_clock, voltage_domain=system.voltage_domain
+)
 
 # Create a CPU voltage domain
 system.cpu_voltage_domain = VoltageDomain()
 
 # Create a separate clock domain for the CPUs
-system.cpu_clk_domain = SrcClockDomain(clock = args.cpu_clock,
-                                       voltage_domain =
-                                       system.cpu_voltage_domain)
+system.cpu_clk_domain = SrcClockDomain(
+    clock=args.cpu_clock, voltage_domain=system.cpu_voltage_domain
+)
 
 # If elastic tracing is enabled, then configure the cpu and attach the elastic
 # trace probe
@@ -198,9 +212,9 @@ for cpu in system.cpu:
     cpu.clk_domain = system.cpu_clk_domain
 
 if ObjectList.is_kvm_cpu(CPUClass) or ObjectList.is_kvm_cpu(FutureClass):
-    if buildEnv['TARGET_ISA'] == 'x86':
+    if buildEnv["USE_X86_ISA"]:
         system.kvm_vm = KvmVM()
-        system.m5ops_base = 0xffff0000
+        system.m5ops_base = 0xFFFF0000
         for process in multiprocesses:
             process.useArchPT = True
             process.kvmInSE = True
@@ -233,18 +247,20 @@ for i in range(np):
         system.cpu[i].branchPred = bpClass()
 
     if args.indirect_bp_type:
-        indirectBPClass = \
-            ObjectList.indirect_bp_list.get(args.indirect_bp_type)
+        indirectBPClass = ObjectList.indirect_bp_list.get(
+            args.indirect_bp_type
+        )
         system.cpu[i].branchPred.indirectBranchPred = indirectBPClass()
 
     system.cpu[i].createThreads()
 
 if args.ruby:
     Ruby.create_system(args, False, system)
-    assert(args.num_cpus == len(system.ruby._cpu_ports))
+    assert args.num_cpus == len(system.ruby._cpu_ports)
 
-    system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock,
-                                        voltage_domain = system.voltage_domain)
+    system.ruby.clk_domain = SrcClockDomain(
+        clock=args.ruby_clock, voltage_domain=system.voltage_domain
+    )
     for i in range(np):
         ruby_port = system.ruby._cpu_ports[i]
 
@@ -268,5 +284,5 @@ system.workload = SEWorkload.init_compatible(mp0_path)
 if args.wait_gdb:
     system.workload.wait_for_remote_gdb = True
 
-root = Root(full_system = False, system = system)
+root = Root(full_system=False, system=system)
 Simulation.run(args, root, system, FutureClass)

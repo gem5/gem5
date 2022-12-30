@@ -40,6 +40,7 @@
 #include "dev/amdgpu/sdma_engine.hh"
 #include "dev/hsa/hw_scheduler.hh"
 #include "gpu-compute/gpu_command_processor.hh"
+#include "gpu-compute/shader.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
@@ -179,17 +180,16 @@ AMDGPUDevice::readFrame(PacketPtr pkt, Addr offset)
 {
     DPRINTF(AMDGPUDevice, "Read framebuffer address %#lx\n", offset);
 
-    /* Try MMIO trace for frame writes first. */
-    mmioReader.readFromTrace(pkt, FRAMEBUFFER_BAR, offset);
-
-    /* If the driver wrote something, use that value over the trace. */
-    if (frame_regs.find(offset) != frame_regs.end()) {
-        pkt->setUintX(frame_regs[offset], ByteOrder::little);
-    }
-
-    /* Handle special counter addresses in framebuffer. */
+    /*
+     * Return data for frame reads in priority order: (1) Special addresses
+     * first, ignoring any writes from driver. (2) Any other address from
+     * device backing store / abstract memory class functionally.
+     */
     if (offset == 0xa28000) {
-        /* Counter addresses expect the read to return previous value + 1. */
+        /*
+         * Handle special counter addresses in framebuffer. These counter
+         * addresses expect the read to return previous value + 1.
+         */
         if (regs.find(pkt->getAddr()) == regs.end()) {
             regs[pkt->getAddr()] = 1;
         } else {
@@ -197,6 +197,22 @@ AMDGPUDevice::readFrame(PacketPtr pkt, Addr offset)
         }
 
         pkt->setUintX(regs[pkt->getAddr()], ByteOrder::little);
+    } else {
+        /*
+         * Read the value from device memory. This must be done functionally
+         * because this method is called by the PCIDevice::read method which
+         * is a non-timing read.
+         */
+        RequestPtr req = std::make_shared<Request>(offset, pkt->getSize(), 0,
+                                                   vramRequestorId());
+        PacketPtr readPkt = Packet::createRead(req);
+        uint8_t *dataPtr = new uint8_t[pkt->getSize()];
+        readPkt->dataDynamic(dataPtr);
+
+        auto system = cp->shader()->gpuCmdProc.system();
+        system->getDeviceMemory(readPkt)->access(readPkt);
+
+        pkt->setUintX(readPkt->getUintX(ByteOrder::little), ByteOrder::little);
     }
 }
 
@@ -253,12 +269,10 @@ AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
     Addr aperture_offset = offset - aperture;
 
     // Record the value
-    frame_regs[offset] = pkt->getUintX(ByteOrder::little);
     if (aperture == gpuvm.gartBase()) {
-        frame_regs[aperture_offset] = pkt->getLE<uint32_t>();
+        gpuvm.gartTable[aperture_offset] = pkt->getUintX(ByteOrder::little);
         DPRINTF(AMDGPUDevice, "GART translation %p -> %p\n", aperture_offset,
-            bits(frame_regs[aperture_offset], 48, 12));
-        gpuvm.gartTable[aperture_offset] = pkt->getLE<uint32_t>();
+                gpuvm.gartTable[aperture_offset]);
     }
 }
 
@@ -297,8 +311,8 @@ AMDGPUDevice::writeDoorbell(PacketPtr pkt, Addr offset)
             deviceIH->updateRptr(pkt->getLE<uint32_t>());
             break;
           case RLC: {
-            panic("RLC queues not yet supported. Run with the environment "
-                  "variable HSA_ENABLE_SDMA set to False");
+            SDMAEngine *sdmaEng = getSDMAEngine(offset);
+            sdmaEng->processRLC(offset, pkt->getLE<uint64_t>());
           } break;
           default:
             panic("Write to unkown queue type!");
@@ -379,7 +393,7 @@ AMDGPUDevice::write(PacketPtr pkt)
     switch (barnum) {
       case FRAMEBUFFER_BAR:
           gpuMemMgr->writeRequest(offset, pkt->getPtr<uint8_t>(),
-                                  pkt->getSize());
+                                  pkt->getSize(), 0, nullptr);
           writeFrame(pkt, offset);
           break;
       case DOORBELL_BAR:
@@ -623,6 +637,9 @@ AMDGPUDevice::deallocateAllQueues()
 {
     idMap.erase(idMap.begin(), idMap.end());
     usedVMIDs.erase(usedVMIDs.begin(), usedVMIDs.end());
+
+    sdma0->deallocateRLCQueues();
+    sdma1->deallocateRLCQueues();
 }
 
 void

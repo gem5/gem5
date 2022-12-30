@@ -31,10 +31,11 @@ from m5.objects.ClockedObject import ClockedObject
 from m5.params import *
 from m5.proxy import *
 
+
 class ProtocolTester(ClockedObject):
-    type = 'ProtocolTester'
+    type = "ProtocolTester"
     cxx_header = "cpu/testers/gpu_ruby_test/protocol_tester.hh"
-    cxx_class = 'gem5::ProtocolTester'
+    cxx_class = "gem5::ProtocolTester"
 
     cpu_ports = VectorRequestPort("Ports for CPUs")
     dma_ports = VectorRequestPort("Ports for DMAs")
@@ -49,23 +50,30 @@ class ProtocolTester(ClockedObject):
     wavefronts_per_cu = Param.Int(1, "Number of wavefronts per CU")
     workitems_per_wavefront = Param.Int(64, "Number of workitems per wf")
 
-    max_cu_tokens = Param.Int(4, "Maximum number of tokens, i.e., the number"
-                                 " of instructions that can be uncoalesced"
-                                 " before back-pressure occurs from the"
-                                 " coalescer.")
+    max_cu_tokens = Param.Int(
+        4,
+        "Maximum number of tokens, i.e., the number"
+        " of instructions that can be uncoalesced"
+        " before back-pressure occurs from the"
+        " coalescer.",
+    )
 
     cpu_threads = VectorParam.CpuThread("All cpus")
     dma_threads = VectorParam.DmaThread("All DMAs")
     wavefronts = VectorParam.GpuWavefront("All wavefronts")
 
     num_atomic_locations = Param.Int(2, "Number of atomic locations")
-    num_normal_locs_per_atomic = Param.Int(1000, \
-                                "Number of normal locations per atomic")
+    num_normal_locs_per_atomic = Param.Int(
+        1000, "Number of normal locations per atomic"
+    )
 
     episode_length = Param.Int(10, "Number of actions per episode")
     max_num_episodes = Param.Int(20, "Maximum number of episodes")
     debug_tester = Param.Bool(False, "Are we debugging the tester?")
-    random_seed = Param.Int(0, "Random seed number. Default value (0) means \
-                                using runtime-specific value.")
+    random_seed = Param.Int(
+        0,
+        "Random seed number. Default value (0) means \
+                                using runtime-specific value.",
+    )
     log_file = Param.String("Log file's name")
     system = Param.System(Parent.any, "System we belong to")

@@ -104,6 +104,7 @@ class OutputUnit : public Consumer
         return m_vc_per_vnet;
     }
 
+    bool functionalRead(Packet *pkt, WriteMask &mask);
     uint32_t functionalWrite(Packet *pkt);
 
   private:

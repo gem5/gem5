@@ -45,11 +45,11 @@ def template MemDeclare {{
             /// Constructor.
             %(class_name)s(ExtMachInst machInst);
 
-            Fault execute(ExecContext *, Trace::InstRecord *) const override;
+            Fault execute(ExecContext *, trace::InstRecord *) const override;
             Fault initiateAcc(ExecContext *,
-                              Trace::InstRecord *) const override;
+                              trace::InstRecord *) const override;
             Fault completeAcc(PacketPtr, ExecContext *,
-                              Trace::InstRecord *) const override;
+                              trace::InstRecord *) const override;
         };
 }};
 
@@ -166,4 +166,3 @@ def format TwinLoad(code, *opt_flags) {{
             AlternateASIPrivFaultCheck + TwinAlignmentFaultCheck,
             name, Name, "EXT_ASI", opt_flags)
 }};
-

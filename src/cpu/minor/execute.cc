@@ -783,8 +783,7 @@ Execute::issue(ThreadID thread_id)
             /* Generate MinorTrace's MinorInst lines.  Do this at commit
              *  to allow better instruction annotation? */
             if (debug::MinorTrace && !inst->isBubble()) {
-                inst->minorTraceInst(*this,
-                        cpu.threads[0]->getIsaPtr()->regClasses());
+                inst->minorTraceInst(*this);
             }
 
             /* Mark up barriers in the LSQ */
@@ -883,6 +882,39 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
     cpu.stats.numOps++;
     cpu.stats.committedInstType[inst->id.threadId]
                                [inst->staticInst->opClass()]++;
+
+    /** Add a count for every control instruction */
+    if (inst->staticInst->isControl()) {
+        if (inst->staticInst->isReturn()) {
+            cpu.stats.committedControl[inst->id.threadId]
+                        [gem5::StaticInstFlags::Flags::IsReturn]++;
+        }
+        if (inst->staticInst->isCall()) {
+            cpu.stats.committedControl[inst->id.threadId]
+                        [gem5::StaticInstFlags::Flags::IsCall]++;
+        }
+        if (inst->staticInst->isDirectCtrl()) {
+            cpu.stats.committedControl[inst->id.threadId]
+                        [gem5::StaticInstFlags::Flags::IsDirectControl]++;
+        }
+        if (inst->staticInst->isIndirectCtrl()) {
+            cpu.stats.committedControl[inst->id.threadId]
+                        [gem5::StaticInstFlags::Flags::IsIndirectControl]++;
+        }
+        if (inst->staticInst->isCondCtrl()) {
+            cpu.stats.committedControl[inst->id.threadId]
+                        [gem5::StaticInstFlags::Flags::IsCondControl]++;
+        }
+        if (inst->staticInst->isUncondCtrl()) {
+            cpu.stats.committedControl[inst->id.threadId]
+                        [gem5::StaticInstFlags::Flags::IsUncondControl]++;
+
+        }
+        cpu.stats.committedControl[inst->id.threadId]
+                        [gem5::StaticInstFlags::Flags::IsControl]++;
+    }
+
+
 
     /* Set the CP SeqNum to the numOps commit number */
     if (inst->traceData)

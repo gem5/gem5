@@ -42,12 +42,14 @@
 #include "mem/ruby/system/Sequencer.hh"
 
 #include "arch/x86/ldstflags.hh"
+#include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/str.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/LLSC.hh"
 #include "debug/MemoryAccess.hh"
 #include "debug/ProtocolTrace.hh"
+#include "debug/RubyHitMiss.hh"
 #include "debug/RubySequencer.hh"
 #include "debug/RubyStats.hh"
 #include "mem/packet.hh"
@@ -228,7 +230,7 @@ Sequencer::wakeup()
     Cycles current_time = curCycle();
 
     // Check across all outstanding requests
-    int total_outstanding = 0;
+    GEM5_VAR_USED int total_outstanding = 0;
 
     for (const auto &table_entry : m_RequestTable) {
         for (const auto &seq_req : table_entry.second) {
@@ -629,6 +631,10 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
         Addr line_addr = makeLineAddress(request_address);
         llscLoadLinked(line_addr);
     }
+
+    DPRINTF(RubyHitMiss, "Cache %s at %#x\n",
+                         externalHit ? "miss" : "hit",
+                         printAddress(request_address));
 
     // update the data unless it is a non-data-carrying flush
     if (RubySystem::getWarmupEnabled()) {

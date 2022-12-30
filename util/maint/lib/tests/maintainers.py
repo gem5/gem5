@@ -71,6 +71,7 @@ key:
   maintainers:
 """
 
+
 class StatusTestSuite(unittest.TestCase):
     """Test cases for maintainers.Status"""
 
@@ -84,23 +85,27 @@ class StatusTestSuite(unittest.TestCase):
             assert value == Status.from_str(name)
             assert str(value) == name
 
+
 class MaintainersTestSuite(unittest.TestCase):
     """Test cases for Maintainers"""
 
     def test_parser_valid(self):
         maint = Maintainers.from_yaml(YAML_VALID)
 
-        subsys = maint['maintained']
+        subsys = maint["maintained"]
         self.assertEqual(subsys.status, Status.MAINTAINED)
-        self.assertEqual(subsys.description, '')
-        self.assertEqual(subsys.maintainers, [
-            ('John Doe', 'john.doe@test.gem5.org'),
-            ('Jane Doe', 'jane.doe@test.gem5.org'),
-        ])
+        self.assertEqual(subsys.description, "")
+        self.assertEqual(
+            subsys.maintainers,
+            [
+                ("John Doe", "john.doe@test.gem5.org"),
+                ("Jane Doe", "jane.doe@test.gem5.org"),
+            ],
+        )
 
-        subsys = maint['orphaned']
+        subsys = maint["orphaned"]
         self.assertEqual(subsys.status, Status.ORPHANED)
-        self.assertEqual(subsys.description, 'Abandoned')
+        self.assertEqual(subsys.description, "Abandoned")
         self.assertEqual(subsys.maintainers, [])
 
     def test_parser_invalid(self):
@@ -113,5 +118,6 @@ class MaintainersTestSuite(unittest.TestCase):
         with self.assertRaises(IllegalValueException):
             Maintainers.from_yaml(YAML_MAINTAINERS_NOT_LIST)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

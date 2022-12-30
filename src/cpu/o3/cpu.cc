@@ -42,7 +42,6 @@
 
 #include "cpu/o3/cpu.hh"
 
-#include "config/the_isa.hh"
 #include "cpu/activity.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/checker/thread_context.hh"
@@ -194,19 +193,19 @@ CPU::CPU(const BaseO3CPUParams &params)
     const auto &regClasses = params.isa[0]->regClasses();
 
     assert(params.numPhysIntRegs >=
-            numThreads * regClasses.at(IntRegClass).numRegs());
+            numThreads * regClasses.at(IntRegClass)->numRegs());
     assert(params.numPhysFloatRegs >=
-            numThreads * regClasses.at(FloatRegClass).numRegs());
+            numThreads * regClasses.at(FloatRegClass)->numRegs());
     assert(params.numPhysVecRegs >=
-            numThreads * regClasses.at(VecRegClass).numRegs());
+            numThreads * regClasses.at(VecRegClass)->numRegs());
     assert(params.numPhysVecPredRegs >=
-            numThreads * regClasses.at(VecPredRegClass).numRegs());
+            numThreads * regClasses.at(VecPredRegClass)->numRegs());
     assert(params.numPhysCCRegs >=
-            numThreads * regClasses.at(CCRegClass).numRegs());
+            numThreads * regClasses.at(CCRegClass)->numRegs());
 
     // Just make this a warning and go ahead anyway, to keep from having to
     // add checks everywhere.
-    warn_if(regClasses.at(CCRegClass).numRegs() == 0 &&
+    warn_if(regClasses.at(CCRegClass)->numRegs() == 0 &&
             params.numPhysCCRegs != 0,
             "Non-zero number of physical CC regs specified, even though\n"
             "    ISA does not use them.");
@@ -216,7 +215,7 @@ CPU::CPU(const BaseO3CPUParams &params)
 
     // Setup the rename map for whichever stages need it.
     for (ThreadID tid = 0; tid < numThreads; tid++) {
-        isa[tid] = dynamic_cast<TheISA::ISA *>(params.isa[tid]);
+        isa[tid] = params.isa[tid];
         commitRenameMap[tid].init(regClasses, &regFile, &freeList);
         renameMap[tid].init(regClasses, &regFile, &freeList);
     }
@@ -226,14 +225,12 @@ CPU::CPU(const BaseO3CPUParams &params)
     for (ThreadID tid = 0; tid < active_threads; tid++) {
         for (auto type = (RegClassType)0; type <= CCRegClass;
                 type = (RegClassType)(type + 1)) {
-            for (RegIndex ridx = 0; ridx < regClasses.at(type).numRegs();
-                    ++ridx) {
+            for (auto &id: *regClasses.at(type)) {
                 // Note that we can't use the rename() method because we don't
                 // want special treatment for the zero register at this point
-                RegId rid = RegId(type, ridx);
                 PhysRegIdPtr phys_reg = freeList.getReg(type);
-                renameMap[tid].setEntry(rid, phys_reg);
-                commitRenameMap[tid].setEntry(rid, phys_reg);
+                renameMap[tid].setEntry(id, phys_reg);
+                commitRenameMap[tid].setEntry(id, phys_reg);
             }
         }
     }
@@ -694,9 +691,9 @@ CPU::insertThread(ThreadID tid)
 
     for (auto type = (RegClassType)0; type <= CCRegClass;
             type = (RegClassType)(type + 1)) {
-        for (RegIndex idx = 0; idx < regClasses.at(type).numRegs(); idx++) {
+        for (auto &id: *regClasses.at(type)) {
             PhysRegIdPtr phys_reg = freeList.getReg(type);
-            renameMap[tid].setEntry(RegId(type, idx), phys_reg);
+            renameMap[tid].setEntry(id, phys_reg);
             scoreboard.setReg(phys_reg);
         }
     }
@@ -1159,35 +1156,40 @@ CPU::setReg(PhysRegIdPtr phys_reg, const void *val)
 RegVal
 CPU::getArchReg(const RegId &reg, ThreadID tid)
 {
-    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(reg);
+    const RegId flat = reg.flatten(*isa[tid]);
+    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(flat);
     return regFile.getReg(phys_reg);
 }
 
 void
 CPU::getArchReg(const RegId &reg, void *val, ThreadID tid)
 {
-    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(reg);
+    const RegId flat = reg.flatten(*isa[tid]);
+    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(flat);
     regFile.getReg(phys_reg, val);
 }
 
 void *
 CPU::getWritableArchReg(const RegId &reg, ThreadID tid)
 {
-    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(reg);
+    const RegId flat = reg.flatten(*isa[tid]);
+    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(flat);
     return regFile.getWritableReg(phys_reg);
 }
 
 void
 CPU::setArchReg(const RegId &reg, RegVal val, ThreadID tid)
 {
-    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(reg);
+    const RegId flat = reg.flatten(*isa[tid]);
+    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(flat);
     regFile.setReg(phys_reg, val);
 }
 
 void
 CPU::setArchReg(const RegId &reg, const void *val, ThreadID tid)
 {
-    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(reg);
+    const RegId flat = reg.flatten(*isa[tid]);
+    PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(flat);
     regFile.setReg(phys_reg, val);
 }
 

@@ -57,11 +57,7 @@ gem5_verify_config(
     verifiers=[a],
     fixtures=(),
     config=joinpath(
-        config.base_dir,
-        "tests",
-        "gem5",
-        "configs",
-        "simple_binary_run.py",
+        config.base_dir, "tests", "gem5", "configs", "simple_binary_run.py"
     ),
     config_args=[
         "x86-m5-exit",
@@ -70,5 +66,5 @@ gem5_verify_config(
         resource_path,
         "x86",
     ],
-    valid_isas=(constants.vega_x86_tag,),
+    valid_isas=(constants.all_compiled_tag,),
 )

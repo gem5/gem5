@@ -29,6 +29,7 @@
 from slicc.ast.ExprAST import ExprAST
 from slicc.symbols import Type, Var
 
+
 class VarExprAST(ExprAST):
     def __init__(self, slicc, var):
         super().__init__(slicc)
@@ -52,13 +53,18 @@ class VarExprAST(ExprAST):
         expected_type = self.symtab.find(type_ident, Type)
 
         if not expected_type:
-            self.error("There must be a type '%s' declared in this scope",
-                       type_ident)
+            self.error(
+                "There must be a type '%s' declared in this scope", type_ident
+            )
 
         if self.var.type != expected_type:
-            self.error("Incorrect type: " + \
-                       "'%s' is expected to be type '%s' not '%s'",
-                       self.var.ident, expected_type, self.var.type)
+            self.error(
+                "Incorrect type: "
+                + "'%s' is expected to be type '%s' not '%s'",
+                self.var.ident,
+                expected_type,
+                self.var.type,
+            )
 
     def generate(self, code, **kwargs):
         fix = code.nofix()

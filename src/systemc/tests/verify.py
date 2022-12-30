@@ -40,25 +40,23 @@ import sys
 
 script_path = os.path.abspath(inspect.getfile(inspect.currentframe()))
 script_dir = os.path.dirname(script_path)
-config_path = os.path.join(script_dir, 'config.py')
+config_path = os.path.join(script_dir, "config.py")
 # Parent directories if checked out as part of gem5.
 systemc_dir = os.path.dirname(script_dir)
 src_dir = os.path.dirname(systemc_dir)
 checkout_dir = os.path.dirname(src_dir)
 
-systemc_rel_path = 'systemc'
-tests_rel_path = os.path.join(systemc_rel_path, 'tests')
-json_rel_path = os.path.join(tests_rel_path, 'tests.json')
-
+systemc_rel_path = "systemc"
+tests_rel_path = os.path.join(systemc_rel_path, "tests")
+json_rel_path = os.path.join(tests_rel_path, "tests.json")
 
 
 def scons(*args):
-    args = ['scons', '--with-systemc-tests'] + list(args)
+    args = ["scons", "--with-systemc-tests"] + list(args)
     subprocess.check_call(args)
 
 
-
-class Test():
+class Test:
     def __init__(self, target, suffix, build_dir, props):
         self.target = target
         self.suffix = suffix
@@ -79,33 +77,34 @@ class Test():
         return os.path.join(script_dir, self.path)
 
     def expected_returncode_file(self):
-        return os.path.join(self.src_dir(), 'expected_returncode')
+        return os.path.join(self.src_dir(), "expected_returncode")
 
     def golden_dir(self):
-        return os.path.join(self.src_dir(), 'golden')
+        return os.path.join(self.src_dir(), "golden")
 
     def bin(self):
-        return '.'.join([self.name, self.suffix])
+        return ".".join([self.name, self.suffix])
 
     def full_path(self):
         return os.path.join(self.dir(), self.bin())
 
     def m5out_dir(self):
-        return os.path.join(self.dir(), 'm5out.' + self.suffix)
+        return os.path.join(self.dir(), "m5out." + self.suffix)
 
     def returncode_file(self):
-        return os.path.join(self.m5out_dir(), 'returncode')
-
+        return os.path.join(self.m5out_dir(), "returncode")
 
 
 test_phase_classes = {}
 
+
 class TestPhaseMeta(type):
     def __init__(cls, name, bases, d):
-        if not d.pop('abstract', False):
-            test_phase_classes[d['name']] = cls
+        if not d.pop("abstract", False):
+            test_phase_classes[d["name"]] = cls
 
         super().__init__(name, bases, d)
+
 
 class TestPhaseBase(metaclass=TestPhaseMeta):
     abstract = True
@@ -117,53 +116,70 @@ class TestPhaseBase(metaclass=TestPhaseMeta):
     def __lt__(self, other):
         return self.number < other.number
 
+
 class CompilePhase(TestPhaseBase):
-    name = 'compile'
+    name = "compile"
     number = 1
 
     def run(self, tests):
         targets = list([test.full_path() for test in tests])
 
         parser = argparse.ArgumentParser()
-        parser.add_argument('-j', type=int, default=0)
+        parser.add_argument("-j", type=int, default=0)
         args, leftovers = parser.parse_known_args(self.args)
         if args.j == 0:
-            self.args = ('-j', str(self.main_args.j)) + self.args
+            self.args = ("-j", str(self.main_args.j)) + self.args
 
-        scons_args = [ '--directory', self.main_args.scons_dir,
-                       'USE_SYSTEMC=1' ] + list(self.args) + targets
+        scons_args = (
+            ["--directory", self.main_args.scons_dir, "USE_SYSTEMC=1"]
+            + list(self.args)
+            + targets
+        )
         scons(*scons_args)
 
+
 class RunPhase(TestPhaseBase):
-    name = 'execute'
+    name = "execute"
     number = 2
 
     def run(self, tests):
         parser = argparse.ArgumentParser()
-        parser.add_argument('--timeout', type=int, metavar='SECONDS',
-                            help='Time limit for each run in seconds, '
-                            '0 to disable.',
-                            default=60)
-        parser.add_argument('-j', type=int, default=0,
-                help='How many tests to run in parallel.')
+        parser.add_argument(
+            "--timeout",
+            type=int,
+            metavar="SECONDS",
+            help="Time limit for each run in seconds, " "0 to disable.",
+            default=60,
+        )
+        parser.add_argument(
+            "-j",
+            type=int,
+            default=0,
+            help="How many tests to run in parallel.",
+        )
         args = parser.parse_args(self.args)
 
         timeout_cmd = [
-            'timeout',
-            '--kill-after', str(args.timeout * 2),
-            str(args.timeout)
+            "timeout",
+            "--kill-after",
+            str(args.timeout * 2),
+            str(args.timeout),
         ]
+
         def run_test(test):
             cmd = []
             if args.timeout:
                 cmd.extend(timeout_cmd)
-            cmd.extend([
-                os.path.abspath(test.full_path()),
-                '-rd', os.path.abspath(test.m5out_dir()),
-                '--listener-mode=off',
-                '--quiet',
-                os.path.abspath(config_path),
-            ])
+            cmd.extend(
+                [
+                    os.path.abspath(test.full_path()),
+                    "-rd",
+                    os.path.abspath(test.m5out_dir()),
+                    "--listener-mode=off",
+                    "--quiet",
+                    os.path.abspath(config_path),
+                ]
+            )
             # Ensure the output directory exists.
             if not os.path.exists(test.m5out_dir()):
                 os.makedirs(test.m5out_dir())
@@ -173,8 +189,8 @@ class RunPhase(TestPhaseBase):
                 returncode = error.returncode
             else:
                 returncode = 0
-            with open(test.returncode_file(), 'w') as rc:
-                rc.write('%d\n' % returncode)
+            with open(test.returncode_file(), "w") as rc:
+                rc.write("%d\n" % returncode)
 
         j = self.main_args.j if args.j == 0 else args.j
 
@@ -187,7 +203,8 @@ class RunPhase(TestPhaseBase):
             tp.close()
             tp.join()
 
-class Checker():
+
+class Checker:
     def __init__(self, ref, test, tag):
         self.ref = ref
         self.test = test
@@ -197,18 +214,24 @@ class Checker():
         with open(self.test) as test_f, open(self.ref) as ref_f:
             return test_f.read() == ref_f.read()
 
+
 def tagged_filt(tag, num):
-    return (r'\n{}: \({}{}\) .*\n(In file: .*\n)?'
-            r'(In process: [\w.]* @ .*\n)?').format(tag, tag[0], num)
+    return (
+        r"\n{}: \({}{}\) .*\n(In file: .*\n)?" r"(In process: [\w.]* @ .*\n)?"
+    ).format(tag, tag[0], num)
+
 
 def error_filt(num):
-    return tagged_filt('Error', num)
+    return tagged_filt("Error", num)
+
 
 def warning_filt(num):
-    return tagged_filt('Warning', num)
+    return tagged_filt("Warning", num)
+
 
 def info_filt(num):
-    return tagged_filt('Info', num)
+    return tagged_filt("Info", num)
+
 
 class DiffingChecker(Checker):
     def __init__(self, ref, test, tag, out_dir):
@@ -219,20 +242,22 @@ class DiffingChecker(Checker):
         return False
 
     def do_diff(self, ref_lines, test_lines, ref_file, test_file):
-        return difflib.unified_diff(ref_lines, test_lines,
-                                    fromfile=ref_file, tofile=test_file)
+        return difflib.unified_diff(
+            ref_lines, test_lines, fromfile=ref_file, tofile=test_file
+        )
 
     def diffing_check(self, ref_lines, test_lines):
         test_file = os.path.basename(self.test)
         ref_file = os.path.basename(self.ref)
 
-        diff_file = '.'.join([ref_file, 'diff'])
+        diff_file = ".".join([ref_file, "diff"])
         diff_path = os.path.join(self.out_dir, diff_file)
         if test_lines != ref_lines:
-            flag = 'wb' if self.is_bytes_mode() else 'w'
+            flag = "wb" if self.is_bytes_mode() else "w"
             with open(diff_file, flag) as diff_f:
-                for line in self.do_diff(ref_lines, test_lines,
-                                         ref_file, test_file):
+                for line in self.do_diff(
+                    ref_lines, test_lines, ref_file, test_file
+                ):
                     diff_f.write(line)
             return False
         else:
@@ -240,11 +265,12 @@ class DiffingChecker(Checker):
                 os.unlink(diff_path)
             return True
 
+
 class LogChecker(DiffingChecker):
     def merge_filts(*filts):
-        filts = map(lambda f: '(' + f + ')', filts)
-        filts = '|'.join(filts)
-        return re.compile(filts.encode('utf-8'), flags=re.MULTILINE)
+        filts = map(lambda f: "(" + f + ")", filts)
+        filts = "|".join(filts)
+        return re.compile(filts.encode("utf-8"), flags=re.MULTILINE)
 
     def is_bytes_mode(self):
         return True
@@ -252,22 +278,24 @@ class LogChecker(DiffingChecker):
     def do_diff(self, ref_lines, test_lines, ref_file, test_file):
         return difflib.diff_bytes(
             difflib.unified_diff,
-            ref_lines, test_lines,
-            fromfile=ref_file.encode('utf-8'),
-            tofile=test_file.encode('utf-8'))
+            ref_lines,
+            test_lines,
+            fromfile=ref_file.encode("utf-8"),
+            tofile=test_file.encode("utf-8"),
+        )
 
     # The reporting mechanism will print the actual filename when running in
     # gem5, and the "golden" output will say "<removed by verify.py>". We want
     # to strip out both versions to make comparing the output sensible.
-    in_file_filt = r'^In file: ((<removed by verify\.pl>)|([a-zA-Z0-9.:_/]*))$'
+    in_file_filt = r"^In file: ((<removed by verify\.pl>)|([a-zA-Z0-9.:_/]*))$"
 
     ref_filt = merge_filts(
-        r'^\nInfo: /OSCI/SystemC: Simulation stopped by user.\n',
-        r'^SystemC Simulation\n',
-        r'^\nInfo: \(I804\) /IEEE_Std_1666/deprecated: ' +
-        r'You can turn off(.*\n){7}',
-        r'^\nInfo: \(I804\) /IEEE_Std_1666/deprecated: \n' +
-        r'    sc_clock\(const char(.*\n){3}',
+        r"^\nInfo: /OSCI/SystemC: Simulation stopped by user.\n",
+        r"^SystemC Simulation\n",
+        r"^\nInfo: \(I804\) /IEEE_Std_1666/deprecated: "
+        + r"You can turn off(.*\n){7}",
+        r"^\nInfo: \(I804\) /IEEE_Std_1666/deprecated: \n"
+        + r"    sc_clock\(const char(.*\n){3}",
         warning_filt(540),
         warning_filt(571),
         info_filt(804),
@@ -275,29 +303,31 @@ class LogChecker(DiffingChecker):
         in_file_filt,
     )
     test_filt = merge_filts(
-        r'^/.*:\d+: ',
-        r'^Global frequency set at \d* ticks per second\n',
-        r'.*info: Entering event queue @ \d*\.  Starting simulation\.\.\.\n',
-        r'.*warn: Ignoring request to set stack size\.\n',
-        r'^.*warn: No dot file generated. Please install pydot ' +
-        r'to generate the dot file and pdf.\n',
+        r"^/.*:\d+: ",
+        r"^Global frequency set at \d* ticks per second\n",
+        r".*info: Entering event queue @ \d*\.  Starting simulation\.\.\.\n",
+        r".*warn: Ignoring request to set stack size\.\n",
+        r"^.*warn: No dot file generated. Please install pydot "
+        + r"to generate the dot file and pdf.\n",
         info_filt(804),
         in_file_filt,
     )
 
     def apply_filters(self, data, filts):
-        re.sub(filt, b'', data)
+        re.sub(filt, b"", data)
 
     def check(self):
-        with open(self.test, 'rb') as test_f, open(self.ref, 'rb') as ref_f:
-            test = re.sub(self.test_filt, b'', test_f.read())
-            ref = re.sub(self.ref_filt, b'', ref_f.read())
-            return self.diffing_check(ref.splitlines(True),
-                                      test.splitlines(True))
+        with open(self.test, "rb") as test_f, open(self.ref, "rb") as ref_f:
+            test = re.sub(self.test_filt, b"", test_f.read())
+            ref = re.sub(self.ref_filt, b"", ref_f.read())
+            return self.diffing_check(
+                ref.splitlines(True), test.splitlines(True)
+            )
+
 
 class VcdChecker(DiffingChecker):
     def check(self):
-        with open (self.test) as test_f, open(self.ref) as ref_f:
+        with open(self.test) as test_f, open(self.ref) as ref_f:
             ref = ref_f.read().splitlines(True)
             test = test_f.read().splitlines(True)
             # Strip off the first seven lines of the test output which are
@@ -306,19 +336,21 @@ class VcdChecker(DiffingChecker):
 
             return self.diffing_check(ref, test)
 
-class GoldenDir():
+
+class GoldenDir:
     def __init__(self, path, platform):
         self.path = path
         self.platform = platform
 
         contents = os.listdir(path)
-        suffix = '.' + platform
+        suffix = "." + platform
         suffixed = filter(lambda c: c.endswith(suffix), contents)
-        bases = map(lambda t: t[:-len(platform)], suffixed)
+        bases = map(lambda t: t[: -len(platform)], suffixed)
         common = filter(lambda t: not t.startswith(tuple(bases)), contents)
 
         self.entries = {}
-        class Entry():
+
+        class Entry:
             def __init__(self, e_path):
                 self.used = False
                 self.path = os.path.join(path, e_path)
@@ -331,13 +363,14 @@ class GoldenDir():
 
     def entry(self, name):
         def match(n):
-            return (n == name) or n.startswith(name + '.')
-        matches = { n: e for n, e in self.entries.items() if match(n) }
+            return (n == name) or n.startswith(name + ".")
+
+        matches = {n: e for n, e in self.entries.items() if match(n)}
 
         for match in matches.values():
             match.use()
 
-        platform_name = '.'.join([ name, self.platform ])
+        platform_name = ".".join([name, self.platform])
         if platform_name in matches:
             return matches[platform_name].path
         if name in matches:
@@ -360,8 +393,9 @@ class GoldenDir():
                 i += 1
         return sources
 
+
 class VerifyPhase(TestPhaseBase):
-    name = 'verify'
+    name = "verify"
     number = 3
 
     def reset_status(self):
@@ -371,58 +405,70 @@ class VerifyPhase(TestPhaseBase):
     def passed(self, test):
         self._passed.append(test)
 
-    def failed(self, test, cause, note=''):
-        test.set_prop('note', note)
+    def failed(self, test, cause, note=""):
+        test.set_prop("note", note)
         self._failed.setdefault(cause, []).append(test)
 
     def print_status(self):
         total_passed = len(self._passed)
         total_failed = sum(map(len, self._failed.values()))
         print()
-        print('Passed: {passed:4} - Failed: {failed:4}'.format(
-                  passed=total_passed, failed=total_failed))
+        print(
+            "Passed: {passed:4} - Failed: {failed:4}".format(
+                passed=total_passed, failed=total_failed
+            )
+        )
 
     def write_result_file(self, path):
         results = {
-            'passed': list(map(lambda t: t.props, self._passed)),
-            'failed': {
+            "passed": list(map(lambda t: t.props, self._passed)),
+            "failed": {
                 cause: list(map(lambda t: t.props, tests))
                 for cause, tests in self._failed.items()
-            }
+            },
         }
-        with open(path, 'w') as rf:
+        with open(path, "w") as rf:
             json.dump(results, rf)
 
     def print_results(self):
         print()
-        print('Passed:')
-        for path in sorted(list([ t.path for t in self._passed ])):
-            print('    ', path)
+        print("Passed:")
+        for path in sorted(list([t.path for t in self._passed])):
+            print("    ", path)
 
         print()
-        print('Failed:')
+        print("Failed:")
 
         causes = []
         for cause, tests in sorted(self._failed.items()):
-            block = '  ' + cause.capitalize() + ':\n'
+            block = "  " + cause.capitalize() + ":\n"
             for test in sorted(tests, key=lambda t: t.path):
-                block += '    ' + test.path
+                block += "    " + test.path
                 if test.note:
-                    block += ' - ' + test.note
-                block += '\n'
+                    block += " - " + test.note
+                block += "\n"
             causes.append(block)
 
-        print('\n'.join(causes))
+        print("\n".join(causes))
 
     def run(self, tests):
         parser = argparse.ArgumentParser()
         result_opts = parser.add_mutually_exclusive_group()
-        result_opts.add_argument('--result-file', action='store_true',
-                help='Create a results.json file in the current directory.')
-        result_opts.add_argument('--result-file-at', metavar='PATH',
-                help='Create a results json file at the given path.')
-        parser.add_argument('--no-print-results', action='store_true',
-                help='Don\'t print a list of tests that passed or failed')
+        result_opts.add_argument(
+            "--result-file",
+            action="store_true",
+            help="Create a results.json file in the current directory.",
+        )
+        result_opts.add_argument(
+            "--result-file-at",
+            metavar="PATH",
+            help="Create a results json file at the given path.",
+        )
+        parser.add_argument(
+            "--no-print-results",
+            action="store_true",
+            help="Don't print a list of tests that passed or failed",
+        )
         args = parser.parse_args(self.args)
 
         self.reset_status()
@@ -434,7 +480,7 @@ class VerifyPhase(TestPhaseBase):
             if os.path.exists(test.full_path()):
                 self.passed(test)
             else:
-                self.failed(test, 'compile failed')
+                self.failed(test, "compile failed")
 
         for test in runnable:
             with open(test.returncode_file()) as rc:
@@ -446,53 +492,54 @@ class VerifyPhase(TestPhaseBase):
                     expected_returncode = int(erc.read())
 
             if returncode == 124:
-                self.failed(test, 'time out')
+                self.failed(test, "time out")
                 continue
             elif returncode != expected_returncode:
                 if expected_returncode == 0:
-                    self.failed(test, 'abort')
+                    self.failed(test, "abort")
                 else:
-                    self.failed(test, 'missed abort')
+                    self.failed(test, "missed abort")
                 continue
 
             out_dir = test.m5out_dir()
 
-            Diff = collections.namedtuple(
-                    'Diff', 'ref, test, tag, ref_filter')
+            Diff = collections.namedtuple("Diff", "ref, test, tag, ref_filter")
 
             diffs = []
 
-            gd = GoldenDir(test.golden_dir(), 'linux64')
+            gd = GoldenDir(test.golden_dir(), "linux64")
 
             missing = []
-            log_file = '.'.join([test.name, 'log'])
+            log_file = ".".join([test.name, "log"])
             log_path = gd.entry(log_file)
-            simout_path = os.path.join(out_dir, 'simout')
+            simout_path = os.path.join(out_dir, "simout")
             if not os.path.exists(simout_path):
-                missing.append('log output')
+                missing.append("log output")
             elif log_path:
-                diffs.append(LogChecker(log_path, simout_path,
-                                        log_file, out_dir))
+                diffs.append(
+                    LogChecker(log_path, simout_path, log_file, out_dir)
+                )
 
             for name in gd.unused():
                 test_path = os.path.join(out_dir, name)
                 ref_path = gd.entry(name)
                 if not os.path.exists(test_path):
                     missing.append(name)
-                elif name.endswith('.vcd'):
-                    diffs.append(VcdChecker(ref_path, test_path,
-                                            name, out_dir))
+                elif name.endswith(".vcd"):
+                    diffs.append(
+                        VcdChecker(ref_path, test_path, name, out_dir)
+                    )
                 else:
                     diffs.append(Checker(ref_path, test_path, name))
 
             if missing:
-                self.failed(test, 'missing output', ' '.join(missing))
+                self.failed(test, "missing output", " ".join(missing))
                 continue
 
             failed_diffs = list(filter(lambda d: not d.check(), diffs))
             if failed_diffs:
                 tags = map(lambda d: d.tag, failed_diffs)
-                self.failed(test, 'failed diffs', ' '.join(tags))
+                self.failed(test, "failed diffs", " ".join(tags))
                 continue
 
             self.passed(test)
@@ -504,7 +551,7 @@ class VerifyPhase(TestPhaseBase):
 
         result_path = None
         if args.result_file:
-            result_path = os.path.join(os.getcwd(), 'results.json')
+            result_path = os.path.join(os.getcwd(), "results.json")
         elif args.result_file_at:
             result_path = args.result_file_at
 
@@ -512,51 +559,79 @@ class VerifyPhase(TestPhaseBase):
             self.write_result_file(result_path)
 
 
-parser = argparse.ArgumentParser(description='SystemC test utility')
+parser = argparse.ArgumentParser(description="SystemC test utility")
 
-parser.add_argument('build_dir', metavar='BUILD_DIR',
-                    help='The build directory (ie. build/ARM).')
+parser.add_argument(
+    "build_dir",
+    metavar="BUILD_DIR",
+    help="The build directory (ie. build/ARM).",
+)
 
-parser.add_argument('--update-json', action='store_true',
-                    help='Update the json manifest of tests.')
+parser.add_argument(
+    "--update-json",
+    action="store_true",
+    help="Update the json manifest of tests.",
+)
 
-parser.add_argument('--flavor', choices=['debug', 'opt', 'fast'],
-                    default='opt',
-                    help='Flavor of binary to test.')
+parser.add_argument(
+    "--flavor",
+    choices=["debug", "opt", "fast"],
+    default="opt",
+    help="Flavor of binary to test.",
+)
 
-parser.add_argument('--list', action='store_true',
-                    help='List the available tests')
+parser.add_argument(
+    "--list", action="store_true", help="List the available tests"
+)
 
-parser.add_argument('-j', type=int, default=1,
-                    help='Default level of parallelism, can be overriden '
-                    'for individual stages')
+parser.add_argument(
+    "-j",
+    type=int,
+    default=1,
+    help="Default level of parallelism, can be overriden "
+    "for individual stages",
+)
 
-parser.add_argument('-C', '--scons-dir', metavar='SCONS_DIR',
-                    default=checkout_dir,
-                    help='Directory to run scons from')
+parser.add_argument(
+    "-C",
+    "--scons-dir",
+    metavar="SCONS_DIR",
+    default=checkout_dir,
+    help="Directory to run scons from",
+)
 
 filter_opts = parser.add_mutually_exclusive_group()
-filter_opts.add_argument('--filter', default='True',
-                         help='Python expression which filters tests based '
-                         'on their properties')
-filter_opts.add_argument('--filter-file', default=None,
-                         type=argparse.FileType('r'),
-                         help='Same as --filter, but read from a file')
+filter_opts.add_argument(
+    "--filter",
+    default="True",
+    help="Python expression which filters tests based " "on their properties",
+)
+filter_opts.add_argument(
+    "--filter-file",
+    default=None,
+    type=argparse.FileType("r"),
+    help="Same as --filter, but read from a file",
+)
+
 
 def collect_phases(args):
-    phase_groups = [list(g) for k, g in
-                    itertools.groupby(args, lambda x: x != '--phase') if k]
+    phase_groups = [
+        list(g)
+        for k, g in itertools.groupby(args, lambda x: x != "--phase")
+        if k
+    ]
     main_args = parser.parse_args(phase_groups[0][1:])
     phases = []
     names = []
     for group in phase_groups[1:]:
         name = group[0]
         if name in names:
-            raise RuntimeException('Phase %s specified more than once' % name)
+            raise RuntimeException("Phase %s specified more than once" % name)
         phase = test_phase_classes[name]
         phases.append(phase(main_args, *group[1:]))
     phases.sort()
     return main_args, phases
+
 
 main_args, phases = collect_phases(sys.argv)
 
@@ -564,45 +639,47 @@ if len(phases) == 0:
     phases = [
         CompilePhase(main_args),
         RunPhase(main_args),
-        VerifyPhase(main_args)
+        VerifyPhase(main_args),
     ]
-
 
 
 json_path = os.path.join(main_args.build_dir, json_rel_path)
 
 if main_args.update_json:
-    scons('--directory', main_args.scons_dir, os.path.join(json_path))
+    scons("--directory", main_args.scons_dir, os.path.join(json_path))
 
 with open(json_path) as f:
     test_data = json.load(f)
 
     if main_args.filter_file:
         f = main_args.filter_file
-        filt = compile(f.read(), f.name, 'eval')
+        filt = compile(f.read(), f.name, "eval")
     else:
-        filt = compile(main_args.filter, '<string>', 'eval')
+        filt = compile(main_args.filter, "<string>", "eval")
 
     filtered_tests = {
-        target: props for (target, props) in
-                    test_data.items() if eval(filt, dict(props))
+        target: props
+        for (target, props) in test_data.items()
+        if eval(filt, dict(props))
     }
 
     if len(filtered_tests) == 0:
-        print('All tests were filtered out.')
+        print("All tests were filtered out.")
         exit()
 
     if main_args.list:
         for target, props in sorted(filtered_tests.items()):
-            print('%s.%s' % (target, main_args.flavor))
+            print("%s.%s" % (target, main_args.flavor))
             for key, val in props.items():
-                print('    %s: %s' % (key, val))
-        print('Total tests: %d' % len(filtered_tests))
+                print("    %s: %s" % (key, val))
+        print("Total tests: %d" % len(filtered_tests))
     else:
-        tests_to_run = list([
-            Test(target, main_args.flavor, main_args.build_dir, props) for
-                target, props in sorted(filtered_tests.items())
-        ])
+        tests_to_run = list(
+            [
+                Test(target, main_args.flavor, main_args.build_dir, props)
+                for target, props in sorted(filtered_tests.items())
+            ]
+        )
 
         for phase in phases:
             phase.run(tests_to_run)

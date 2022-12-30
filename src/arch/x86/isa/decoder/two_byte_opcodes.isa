@@ -133,7 +133,13 @@
                     0x3: Inst::SMSW(Rv);
                     default: Inst::SMSW(Mw);
                 }
-                0x6: Cpl0Inst::LMSW(Ew);
+                0x5: decode MODRM_MOD {
+                    0x3: decode MODRM_RM {
+                        0x0: BasicOperate::SERIALIZE({{/*Nothing*/}},
+                                                         IsSerializeAfter);
+                        }
+                    }
+                0x6: Inst::LMSW(Ew);
                 0x7: decode MODRM_MOD {
                     0x3: decode MODRM_RM {
                         0x0: Cpl0Inst::SWAPGS();
@@ -151,8 +157,10 @@
             // instructions.
             //0x04: loadall_or_reset_or_hang();
             0x4: BasicOperate::gem5Op({{
+                uint64_t result;
                 bool recognized = pseudo_inst::pseudoInst<X86PseudoInstABI>(
-                        xc->tcBase(), IMMEDIATE);
+                        xc->tcBase(), IMMEDIATE, result);
+                Rax = result;
                 if (!recognized)
                     fault = std::make_shared<InvalidOpcode>();
             }}, IsNonSpeculative);

@@ -53,7 +53,7 @@ output header {{
             flags[IsNonSpeculative] = true;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::string generateDisassembly(
                 Addr pc, const loader::SymbolTable *symtab) const override;
@@ -84,7 +84,7 @@ output header {{
             flags[IsNonSpeculative] = true;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::string generateDisassembly(
                 Addr pc, const loader::SymbolTable *symtab) const override;
@@ -110,7 +110,7 @@ output decoder {{
 output exec {{
     Fault
     FailUnimplemented::execute(ExecContext *xc,
-                               Trace::InstRecord *traceData) const
+                               trace::InstRecord *traceData) const
     {
         panic("attempt to execute unimplemented instruction '%s' "
               "(inst 0x%08x, opcode 0x%x, binary:%s)", mnemonic, machInst, PO,
@@ -120,7 +120,7 @@ output exec {{
 
     Fault
     WarnUnimplemented::execute(ExecContext *xc,
-                               Trace::InstRecord *traceData) const
+                               trace::InstRecord *traceData) const
     {
         if (!warned) {
             warn("\tinstruction '%s' unimplemented\n", mnemonic);
@@ -141,4 +141,3 @@ def format WarnUnimpl() {{
     iop = InstObjParams(name, 'WarnUnimplemented')
     decode_block = BasicDecodeWithMnemonic.subst(iop)
 }};
-

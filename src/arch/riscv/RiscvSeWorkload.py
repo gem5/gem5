@@ -27,18 +27,22 @@ from m5.params import *
 
 from m5.objects.Workload import SEWorkload
 
+
 class RiscvSEWorkload(SEWorkload):
-    type = 'RiscvSEWorkload'
+    type = "RiscvSEWorkload"
     cxx_header = "arch/riscv/se_workload.hh"
-    cxx_class = 'gem5::RiscvISA::SEWorkload'
+    cxx_class = "gem5::RiscvISA::SEWorkload"
     abstract = True
 
+
 class RiscvEmuLinux(RiscvSEWorkload):
-    type = 'RiscvEmuLinux'
+    type = "RiscvEmuLinux"
     cxx_header = "arch/riscv/linux/se_workload.hh"
-    cxx_class = 'gem5::RiscvISA::EmuLinux'
+    cxx_class = "gem5::RiscvISA::EmuLinux"
 
     @classmethod
     def _is_compatible_with(cls, obj):
-        return obj.get_arch() in ('riscv64', 'riscv32') and \
-                obj.get_op_sys() in ('linux', 'unknown')
+        return obj.get_arch() in (
+            "riscv64",
+            "riscv32",
+        ) and obj.get_op_sys() in ("linux", "unknown")

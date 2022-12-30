@@ -29,7 +29,8 @@
 
 from m5.objects.BaseInterrupts import BaseInterrupts
 
+
 class RiscvInterrupts(BaseInterrupts):
-    type = 'RiscvInterrupts'
-    cxx_class = 'gem5::RiscvISA::Interrupts'
-    cxx_header = 'arch/riscv/interrupts.hh'
+    type = "RiscvInterrupts"
+    cxx_class = "gem5::RiscvISA::Interrupts"
+    cxx_header = "arch/riscv/interrupts.hh"

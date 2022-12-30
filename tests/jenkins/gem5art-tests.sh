@@ -43,14 +43,6 @@ mkdir -p .pyenv
 python3 -m venv .pyenv
 source .pyenv/bin/activate
 
-# The 20.04_all-dependencies image has a slightly outdated version of pip which
-# causes problems when trying to install the celery package. The error
-# is `invalid command 'bdist_wheel'`, which can be resolved by upgrading pip
-# prior to installing the modules. More information on this error is found
-# here:
-# https://stackoverflow.com/questions/34819221/why-is-python-setup-py-saying-invalid-command-bdist-wheel-on-travis-ci
- pip install --upgrade pip
-
 # Install the packages
 pip install -e util/gem5art/artifact
 pip install -e util/gem5art/run

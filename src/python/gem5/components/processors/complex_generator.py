@@ -25,18 +25,15 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from ...utils.override import overrides
-from ..boards.mem_mode import MemMode
 from .complex_generator_core import ComplexGeneratorCore
+from .abstract_generator import AbstractGenerator
 
-from .abstract_processor import AbstractProcessor
-from ..boards.abstract_board import AbstractBoard
+from typing import Iterator, List, Any
 
 
-class ComplexGenerator(AbstractProcessor):
+class ComplexGenerator(AbstractGenerator):
     def __init__(self, num_cores: int = 1) -> None:
-        super().__init__(
-            cores=[ComplexGeneratorCore() for i in range(num_cores)]
-        )
+        super().__init__(cores=self._create_cores(num_cores=num_cores))
         """The complex generator
 
         This class defines an external interface to create a list of complex
@@ -45,9 +42,11 @@ class ComplexGenerator(AbstractProcessor):
         :param num_cores: The number of complex generator cores to create.
         """
 
-    @overrides(AbstractProcessor)
-    def incorporate_processor(self, board: AbstractBoard) -> None:
-        board.set_mem_mode(MemMode.TIMING)
+    def _create_cores(self, num_cores: int) -> List[ComplexGeneratorCore]:
+        """
+        Create a list of ComplexGeneratorCore.
+        """
+        return [ComplexGeneratorCore() for _ in range(num_cores)]
 
     def add_linear(
         self,
@@ -127,6 +126,19 @@ class ComplexGenerator(AbstractProcessor):
                 data_limit,
             )
 
+    def set_traffic_from_python_generator(
+        self, generator: Iterator[Any]
+    ) -> None:
+        """
+        Sets the traffic pattern defined by generator argument.
+
+        :param generator: A python generator object that creates traffic
+        patterns through calls to methods of PyTrafficGen.
+        """
+        for core in self.cores:
+            core.set_traffic_from_python_generator(generator)
+
+    @overrides(AbstractGenerator)
     def start_traffic(self) -> None:
         """
         This function will start the traffic at the top of the traffic list. It

@@ -28,7 +28,7 @@
 
 Import('*')
 
-if env['CONF']['TARGET_ISA'] != 'null':
+if not env['CONF']['USE_NULL_ISA']:
     SimObject('BaseAtomicSimpleCPU.py', sim_objects=['BaseAtomicSimpleCPU'])
     Source('atomic.cc')
 
@@ -46,3 +46,8 @@ if env['CONF']['TARGET_ISA'] != 'null':
 
     Source('base.cc')
     SimObject('BaseSimpleCPU.py', sim_objects=['BaseSimpleCPU'])
+
+    # For backwards compatibility
+    SimObject('AtomicSimpleCPU.py', sim_objects=[])
+    SimObject('NonCachingSimpleCPU.py', sim_objects=[])
+    SimObject('TimingSimpleCPU.py', sim_objects=[])

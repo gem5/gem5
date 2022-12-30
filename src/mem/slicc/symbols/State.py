@@ -27,16 +27,21 @@
 
 from slicc.symbols.Symbol import Symbol
 
+
 class State(Symbol):
     def __repr__(self):
         return "[State: %s]" % self.ident
+
     def isWildcard(self):
         return False
+
 
 class WildcardState(State):
     def __repr__(self):
         return "[State: *]"
+
     def isWildcard(self):
         return True
 
-__all__ = [ "State" ]
+
+__all__ = ["State"]

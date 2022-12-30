@@ -31,6 +31,7 @@ from .group import Group, Vector
 import json
 from typing import IO, Union
 
+
 class JsonLoader(json.JSONDecoder):
     """
     Subclass of JSONDecoder that overrides 'object_hook'. Converts JSON object
@@ -49,26 +50,26 @@ class JsonLoader(json.JSONDecoder):
     def __init__(self):
         super().__init__(self, object_hook=self.__json_to_simstat)
 
-    def __json_to_simstat(self, d: dict) -> Union[SimStat,Statistic,Group]:
-        if 'type' in d:
-            if d['type'] == 'Scalar':
-                d.pop('type', None)
+    def __json_to_simstat(self, d: dict) -> Union[SimStat, Statistic, Group]:
+        if "type" in d:
+            if d["type"] == "Scalar":
+                d.pop("type", None)
                 return Scalar(**d)
 
-            elif d['type'] == 'Distribution':
-                d.pop('type', None)
+            elif d["type"] == "Distribution":
+                d.pop("type", None)
                 return Distribution(**d)
 
-            elif d['type'] == 'Accumulator':
-                d.pop('type', None)
+            elif d["type"] == "Accumulator":
+                d.pop("type", None)
                 return Accumulator(**d)
 
-            elif d['type'] == 'Group':
+            elif d["type"] == "Group":
                 return Group(**d)
 
-            elif d['type'] == 'Vector':
-                d.pop('type', None)
-                d.pop('time_conversion', None)
+            elif d["type"] == "Vector":
+                d.pop("type", None)
+                d.pop("time_conversion", None)
                 return Vector(d)
 
             else:
@@ -77,6 +78,7 @@ class JsonLoader(json.JSONDecoder):
                 )
         else:
             return SimStat(**d)
+
 
 def load(json_file: IO) -> SimStat:
     """
@@ -95,4 +97,3 @@ def load(json_file: IO) -> SimStat:
 
     simstat_object = json.load(json_file, cls=JsonLoader)
     return simstat_object
-

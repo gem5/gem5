@@ -41,12 +41,8 @@ def SingleChannelDDR3_1600(
     """
     A single channel memory system using DDR3_1600_8x8 based DIMM
     """
-    return ChanneledMemory(
-        DDR3_1600_8x8,
-        1,
-        64,
-        size=size,
-    )
+    return ChanneledMemory(DDR3_1600_8x8, 1, 64, size=size)
+
 
 def SingleChannelDDR3_2133(
     size: Optional[str] = None,
@@ -54,12 +50,8 @@ def SingleChannelDDR3_2133(
     """
     A single channel memory system using DDR3_2133_8x8 based DIMM
     """
-    return ChanneledMemory(
-        DDR3_2133_8x8,
-        1,
-        64,
-        size=size,
-    )
+    return ChanneledMemory(DDR3_2133_8x8, 1, 64, size=size)
+
 
 def SingleChannelDDR4_2400(
     size: Optional[str] = None,
@@ -67,31 +59,18 @@ def SingleChannelDDR4_2400(
     """
     A single channel memory system using DDR4_2400_8x8 based DIMM
     """
-    return ChanneledMemory(
-        DDR4_2400_8x8,
-        1,
-        64,
-        size=size,
-    )
+    return ChanneledMemory(DDR4_2400_8x8, 1, 64, size=size)
+
 
 def SingleChannelLPDDR3_1600(
     size: Optional[str] = None,
 ) -> AbstractMemorySystem:
-    return ChanneledMemory(
-        LPDDR3_1600_1x32,
-        1,
-        64,
-        size=size,
-    )
+    return ChanneledMemory(LPDDR3_1600_1x32, 1, 64, size=size)
+
 
 def SingleChannelHBM(
     size: Optional[str] = None,
 ) -> AbstractMemorySystem:
     if not size:
         size = "256MiB"
-    return ChanneledMemory(
-        HBM_1000_4H_1x128,
-        1,
-        64,
-        size=size
-    )
+    return ChanneledMemory(HBM_1000_4H_1x128, 1, 64, size=size)

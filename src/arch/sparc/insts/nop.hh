@@ -56,7 +56,7 @@ class Nop : public SparcStaticInst
     }
 
     Fault
-    execute(ExecContext *xc, Trace::InstRecord *traceData) const override
+    execute(ExecContext *xc, trace::InstRecord *traceData) const override
     {
         return NoFault;
     }

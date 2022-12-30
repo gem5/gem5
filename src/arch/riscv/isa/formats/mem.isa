@@ -44,10 +44,10 @@ def template LoadStoreDeclare {{
         /// Constructor.
         %(class_name)s(ExtMachInst machInst);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
     };
 }};
 
@@ -98,7 +98,7 @@ def LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
 def template LoadExecute {{
     Fault
     %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, trace::InstRecord *traceData) const
     {
         Addr EA;
 
@@ -106,6 +106,9 @@ def template LoadExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
+        if (!alignmentOk(xc, EA, sizeof(Mem))) {
+            return std::make_shared<AddressFault>(EA, LOAD_ADDR_MISALIGNED);
+        }
         {
             Fault fault =
                 readMemAtomicLE(xc, traceData, EA, Mem, memAccessFlags);
@@ -124,7 +127,7 @@ def template LoadExecute {{
 def template LoadInitiateAcc {{
     Fault
     %(class_name)s::initiateAcc(ExecContext *xc,
-        Trace::InstRecord *traceData) const
+        trace::InstRecord *traceData) const
     {
         Addr EA;
 
@@ -132,6 +135,9 @@ def template LoadInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
+        if (!alignmentOk(xc, EA, sizeof(Mem))) {
+            return std::make_shared<AddressFault>(EA, LOAD_ADDR_MISALIGNED);
+        }
         return initiateMemRead(xc, traceData, EA, Mem, memAccessFlags);
     }
 }};
@@ -139,7 +145,7 @@ def template LoadInitiateAcc {{
 def template LoadCompleteAcc {{
     Fault
     %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-        Trace::InstRecord *traceData) const
+        trace::InstRecord *traceData) const
     {
         %(op_decl)s;
         %(op_rd)s;
@@ -156,7 +162,7 @@ def template LoadCompleteAcc {{
 def template StoreExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-        Trace::InstRecord *traceData) const
+        trace::InstRecord *traceData) const
     {
         Addr EA;
 
@@ -166,6 +172,9 @@ def template StoreExecute {{
 
         %(memacc_code)s;
 
+        if (!alignmentOk(xc, EA, sizeof(Mem))) {
+            return std::make_shared<AddressFault>(EA, STORE_ADDR_MISALIGNED);
+        }
         {
             Fault fault =
                 writeMemAtomicLE(xc, traceData, Mem, EA, memAccessFlags,
@@ -184,7 +193,7 @@ def template StoreExecute {{
 def template StoreInitiateAcc {{
     Fault
     %(class_name)s::initiateAcc(ExecContext *xc,
-        Trace::InstRecord *traceData) const
+        trace::InstRecord *traceData) const
     {
         Addr EA;
 
@@ -194,6 +203,9 @@ def template StoreInitiateAcc {{
 
         %(memacc_code)s;
 
+        if (!alignmentOk(xc, EA, sizeof(Mem))) {
+            return std::make_shared<AddressFault>(EA, STORE_ADDR_MISALIGNED);
+        }
         {
             Fault fault = writeMemTimingLE(xc, traceData, Mem, EA,
                 memAccessFlags, nullptr);
@@ -210,7 +222,7 @@ def template StoreInitiateAcc {{
 def template StoreCompleteAcc {{
     Fault
     %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-        Trace::InstRecord *traceData) const
+        trace::InstRecord *traceData) const
     {
         return NoFault;
     }

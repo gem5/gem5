@@ -53,10 +53,10 @@ def template MicroMemDeclare {{
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb, bool _up,
                        uint8_t _imm);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
     };
 }};
 
@@ -90,10 +90,10 @@ def template MicroMemPairDeclare {{
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _dreg1, RegIndex _dreg2, RegIndex _base,
                        bool _up, uint8_t _imm);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
     };
 }};
 
@@ -145,10 +145,10 @@ def template MicroNeonMemDeclare {{
             }
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
     };
 }};
 
@@ -169,7 +169,7 @@ def template MicroSetPCCPSRDeclare {{
                        RegIndex _ura,
                        RegIndex _urb,
                        RegIndex _urc);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 
@@ -202,19 +202,19 @@ def template MicroSetPCCPSRConstructor {{
 def template MicroNeonMemExecDeclare {{
     template
     Fault %(class_name)s<%(targs)s>::execute(
-            ExecContext *, Trace::InstRecord *) const;
+            ExecContext *, trace::InstRecord *) const;
     template
     Fault %(class_name)s<%(targs)s>::initiateAcc(
-            ExecContext *, Trace::InstRecord *) const;
+            ExecContext *, trace::InstRecord *) const;
     template
     Fault %(class_name)s<%(targs)s>::completeAcc(PacketPtr,
-            ExecContext *, Trace::InstRecord *) const;
+            ExecContext *, trace::InstRecord *) const;
 }};
 
 def template MicroNeonExecDeclare {{
     template
     Fault %(class_name)s<%(targs)s>::execute(
-            ExecContext *, Trace::InstRecord *) const;
+            ExecContext *, trace::InstRecord *) const;
 }};
 
 ////////////////////////////////////////////////////////////////////
@@ -244,14 +244,14 @@ def template MicroNeonMixDeclare {{
             }
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 
 def template MicroNeonMixExecute {{
     template <class Element>
     Fault %(class_name)s<Element>::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         uint64_t resTemp = 0;
@@ -299,7 +299,7 @@ def template MicroNeonMixLaneDeclare {{
             }
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 
@@ -317,7 +317,7 @@ def template MicroIntMovDeclare {{
       public:
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 def template MicroIntMovConstructor {{
@@ -352,7 +352,7 @@ def template MicroIntImmDeclare {{
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb,
                        int32_t _imm);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 
@@ -397,7 +397,7 @@ def template MicroIntRegDeclare {{
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb, RegIndex _urc,
                        int32_t _shiftAmt, ArmShiftType _shiftType);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 
@@ -423,7 +423,7 @@ def template MicroIntXERegDeclare {{
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb, RegIndex _urc,
                        ArmExtendType _type, uint32_t _shiftAmt);
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 

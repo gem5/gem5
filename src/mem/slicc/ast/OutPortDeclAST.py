@@ -30,6 +30,7 @@ from slicc.ast.TypeAST import TypeAST
 from slicc.symbols import Var
 from slicc.symbols import Type
 
+
 class OutPortDeclAST(DeclAST):
     def __init__(self, slicc, ident, msg_type, var_expr, pairs):
         super().__init__(slicc, pairs)
@@ -47,14 +48,23 @@ class OutPortDeclAST(DeclAST):
 
         queue_type = self.var_expr.generate(code)
         if not queue_type.isOutPort:
-            self.error("The outport queue's type must have the 'outport' " +
-                       "attribute.  Type '%s' does not have this attribute.",
-                       (queue_type))
+            self.error(
+                "The outport queue's type must have the 'outport' "
+                + "attribute.  Type '%s' does not have this attribute.",
+                (queue_type),
+            )
 
         if not self.symtab.find(self.msg_type.ident, Type):
-            self.error("The message type '%s' does not exist.",
-                       self.msg_type.ident)
+            self.error(
+                "The message type '%s' does not exist.", self.msg_type.ident
+            )
 
-        var = Var(self.symtab, self.ident, self.location, self.queue_type.type,
-                  str(code), self.pairs)
+        var = Var(
+            self.symtab,
+            self.ident,
+            self.location,
+            self.queue_type.type,
+            str(code),
+            self.pairs,
+        )
         self.symtab.newSymbol(var)

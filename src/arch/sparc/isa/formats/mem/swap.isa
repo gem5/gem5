@@ -27,7 +27,7 @@
 // This template provides the execute functions for a swap
 def template SwapExecute {{
         Fault %(class_name)s::execute(ExecContext *xc,
-                Trace::InstRecord *traceData) const
+                trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
             // This is to support the conditional store in cas instructions.
@@ -65,7 +65,7 @@ def template SwapExecute {{
 
 def template SwapInitiateAcc {{
         Fault %(class_name)s::initiateAcc(ExecContext * xc,
-                Trace::InstRecord * traceData) const
+                trace::InstRecord * traceData) const
         {
             Fault fault = NoFault;
             Addr EA;
@@ -93,7 +93,7 @@ def template SwapInitiateAcc {{
 
 def template SwapCompleteAcc {{
         Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext * xc,
-                Trace::InstRecord * traceData) const
+                trace::InstRecord * traceData) const
         {
             Fault fault = NoFault;
             %(op_decl)s;
@@ -174,5 +174,3 @@ def format CasAlt(code, postacc_code, mem_flags, *opt_flags) {{
      decode_block) = doCasFormat(code, SwapFuncs, AlternateASIPrivFaultCheck,
          name, Name, flags, ["IsStoreConditional"], postacc_code)
 }};
-
-

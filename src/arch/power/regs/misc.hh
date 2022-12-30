@@ -31,6 +31,8 @@
 #define __ARCH_POWER_MISCREGS_HH__
 
 #include "base/bitunion.hh"
+#include "cpu/reg_class.hh"
+#include "debug/MiscRegs.hh"
 
 namespace gem5
 {
@@ -45,6 +47,9 @@ enum MiscRegIndex
 
 const char * const miscRegName[NUM_MISCREGS] = {
 };
+
+inline constexpr RegClass miscRegClass(MiscRegClass, MiscRegClassName,
+        NUM_MISCREGS, debug::MiscRegs);
 
 BitUnion32(Cr)
     SubBitUnion(cr0, 31, 28)

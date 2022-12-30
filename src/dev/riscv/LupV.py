@@ -27,9 +27,10 @@
 from m5.objects.Platform import Platform
 from m5.params import Param
 
+
 class LupV(Platform):
-    type = 'LupV'
+    type = "LupV"
     cxx_header = "dev/riscv/lupv.hh"
-    cxx_class = 'gem5::LupV'
+    cxx_class = "gem5::LupV"
     pic = Param.LupioPIC("PIC")
     uart_int_id = Param.Int("Interrupt ID to be used if the PLIC is used here")

@@ -34,7 +34,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 # movntps is basically the same as movaps, excepting the caching hint and
 # ordering constraints
 # We are ignoring the non-temporal hint.
@@ -70,4 +70,4 @@ def macroop MOVNTPD_P_XMM {
     stfp xmml, seg, riprel, "DISPLACEMENT", dataSize=8
     stfp xmmh, seg, riprel, "DISPLACEMENT + 8", dataSize=8
 };
-'''
+"""

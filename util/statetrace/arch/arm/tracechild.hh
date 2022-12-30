@@ -117,4 +117,3 @@ class ARMTraceChild : public TraceChild
 };
 
 #endif
-

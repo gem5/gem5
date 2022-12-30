@@ -36,13 +36,15 @@
 from m5.params import *
 from m5.SimObject import SimObject
 
+
 class SerialDevice(SimObject):
-    type = 'SerialDevice'
+    type = "SerialDevice"
     abstract = True
     cxx_header = "dev/serial/serial.hh"
-    cxx_class = 'gem5::SerialDevice'
+    cxx_class = "gem5::SerialDevice"
+
 
 class SerialNullDevice(SerialDevice):
-    type = 'SerialNullDevice'
+    type = "SerialNullDevice"
     cxx_header = "dev/serial/serial.hh"
-    cxx_class = 'gem5::SerialNullDevice'
+    cxx_class = "gem5::SerialNullDevice"

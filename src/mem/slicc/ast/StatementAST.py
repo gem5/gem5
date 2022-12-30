@@ -26,6 +26,7 @@
 
 from slicc.ast.AST import AST
 
+
 class StatementAST(AST):
     def __init__(self, slicc, pairs=None):
         super().__init__(slicc, pairs)

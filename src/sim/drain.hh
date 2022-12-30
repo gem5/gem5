@@ -118,11 +118,11 @@ class DrainManager
     /**
      * Run state fixups before a checkpoint restore operation.
      *
-     * This is called before restoring the checkpoint and to make 
+     * This is called before restoring the checkpoint and to make
      * sure that everything has been set to drained.
      *
-     * When restoring from a checkpoint, this function should be called 
-     * first before calling the resume() function. And also before 
+     * When restoring from a checkpoint, this function should be called
+     * first before calling the resume() function. And also before
      * calling loadstate() on any object.
      *
      * The drain state of an object isn't stored in a checkpoint since

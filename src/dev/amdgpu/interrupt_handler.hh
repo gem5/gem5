@@ -57,11 +57,13 @@ enum soc15_ih_clientid
 {
     SOC15_IH_CLIENTID_RLC       = 0x07,
     SOC15_IH_CLIENTID_SDMA0     = 0x08,
-    SOC15_IH_CLIENTID_SDMA1     = 0x09
+    SOC15_IH_CLIENTID_SDMA1     = 0x09,
+    SOC15_IH_CLIENTID_GRBM_CP   = 0x14
 };
 
 enum ihSourceId
 {
+    CP_EOP                      = 181,
     TRAP_ID                     = 224
 };
 

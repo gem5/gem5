@@ -124,9 +124,9 @@ typedef struct GEM5_PACKED
     uint32_t reserved2 : 2;
     uint32_t vmid : 4;
     uint32_t reserved3 : 1;
-    uint32_t me : 1;
-    uint32_t pipe : 2;
     uint32_t queueSlot : 3;
+    uint32_t pipe : 2;
+    uint32_t me : 1;
     uint32_t reserved6 : 2;
     uint32_t queueType : 3;
     uint32_t allocFormat : 2;

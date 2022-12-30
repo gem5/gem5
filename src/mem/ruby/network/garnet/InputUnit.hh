@@ -152,7 +152,9 @@ class InputUnit : public Consumer
     double get_buf_write_activity(unsigned int vnet) const
     { return m_num_buffer_writes[vnet]; }
 
+    bool functionalRead(Packet *pkt, WriteMask &mask);
     uint32_t functionalWrite(Packet *pkt);
+
     void resetStats();
 
   private:

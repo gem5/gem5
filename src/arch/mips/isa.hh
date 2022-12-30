@@ -77,7 +77,7 @@ namespace MipsISA
         std::vector<BankType> bankType;
 
       public:
-        void clear();
+        void clear() override;
 
         PCStateBase *
         newPCState(Addr new_inst_addr=0) const override
@@ -98,18 +98,37 @@ namespace MipsISA
         //////////////////////////////////////////////////////////
         //@TODO: MIPS MT's register view automatically connects
         //       Status to TCStatus depending on current thread
-        void updateCP0ReadView(int misc_reg, ThreadID tid) { }
-        RegVal readMiscRegNoEffect(int misc_reg, ThreadID tid = 0) const;
+        void updateCP0ReadView(RegIndex idx, ThreadID tid) { }
+        RegVal readMiscRegNoEffect(RegIndex idx, ThreadID tid) const;
+        RegVal
+        readMiscRegNoEffect(RegIndex idx) const override
+        {
+            return readMiscRegNoEffect(idx, 0);
+        }
 
-        //template <class TC>
-        RegVal readMiscReg(int misc_reg, ThreadID tid = 0);
+        RegVal readMiscReg(RegIndex idx, ThreadID tid);
+        RegVal
+        readMiscReg(RegIndex idx) override
+        {
+            return readMiscReg(idx, 0);
+        }
 
-        RegVal filterCP0Write(int misc_reg, int reg_sel, RegVal val);
-        void setRegMask(int misc_reg, RegVal val, ThreadID tid = 0);
-        void setMiscRegNoEffect(int misc_reg, RegVal val, ThreadID tid=0);
+        RegVal filterCP0Write(RegIndex idx, int reg_sel, RegVal val);
+        void setRegMask(RegIndex idx, RegVal val, ThreadID tid = 0);
 
-        //template <class TC>
-        void setMiscReg(int misc_reg, RegVal val, ThreadID tid=0);
+        void setMiscRegNoEffect(RegIndex idx, RegVal val, ThreadID tid);
+        void
+        setMiscRegNoEffect(RegIndex idx, RegVal val) override
+        {
+            setMiscRegNoEffect(idx, val, 0);
+        }
+
+        void setMiscReg(RegIndex idx, RegVal val, ThreadID tid);
+        void
+        setMiscReg(RegIndex idx, RegVal val) override
+        {
+            setMiscReg(idx, val, 0);
+        }
 
         //////////////////////////////////////////////////////////
         //
@@ -137,27 +156,16 @@ namespace MipsISA
         // and if necessary alert the CPU
         void updateCPU(BaseCPU *cpu);
 
-        static std::string miscRegNames[MISCREG_NUMREGS];
+        static std::string miscRegNames[misc_reg::NumRegs];
 
       public:
         ISA(const Params &p);
 
-        RegId flattenRegId(const RegId& regId) const { return regId; }
-
-        int flattenIntIndex(int reg) const { return reg; }
-        int flattenFloatIndex(int reg) const { return reg; }
-        int flattenVecIndex(int reg) const { return reg; }
-        int flattenVecElemIndex(int reg) const { return reg; }
-        int flattenVecPredIndex(int reg) const { return reg; }
-        // dummy
-        int flattenCCIndex(int reg) const { return reg; }
-        int flattenMiscIndex(int reg) const { return reg; }
-
         bool
         inUserMode() const override
         {
-            RegVal Stat = readMiscRegNoEffect(MISCREG_STATUS);
-            RegVal Dbg = readMiscRegNoEffect(MISCREG_DEBUG);
+            RegVal Stat = readMiscRegNoEffect(misc_reg::Status);
+            RegVal Dbg = readMiscRegNoEffect(misc_reg::Debug);
 
             if (// EXL, ERL or CU0 set, CP0 accessible
                 (Stat & 0x10000006) == 0 &&

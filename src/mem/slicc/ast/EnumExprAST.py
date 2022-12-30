@@ -27,6 +27,7 @@
 
 from slicc.ast.ExprAST import ExprAST
 
+
 class EnumExprAST(ExprAST):
     def __init__(self, slicc, type_ast, value):
         super().__init__(slicc)
@@ -42,12 +43,15 @@ class EnumExprAST(ExprAST):
 
     def generate(self, code, **kwargs):
         fix = code.nofix()
-        code('${{self.type_ast.type.c_ident}}_${{self.value}}')
+        code("${{self.type_ast.type.c_ident}}_${{self.value}}")
         code.fix(fix)
 
         # Make sure the enumeration value exists
         if self.value not in self.type_ast.type.enums:
-            self.error("Type '%s' does not have enumeration '%s'",
-                       self.type_ast, self.value)
+            self.error(
+                "Type '%s' does not have enumeration '%s'",
+                self.type_ast,
+                self.value,
+            )
 
         return self.type_ast.type

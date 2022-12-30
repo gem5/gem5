@@ -38,10 +38,11 @@ from m5.params import *
 from m5.proxy import *
 from m5.util.fdthelper import *
 
+
 class PlicIntDevice(BasicPioDevice):
-    type = 'PlicIntDevice'
-    cxx_header = 'dev/riscv/plic_device.hh'
-    cxx_class = 'gem5::PlicIntDevice'
+    type = "PlicIntDevice"
+    cxx_header = "dev/riscv/plic_device.hh"
+    cxx_class = "gem5::PlicIntDevice"
     abstract = True
 
     platform = Param.Platform(Parent.any, "Platform")
@@ -49,8 +50,9 @@ class PlicIntDevice(BasicPioDevice):
     interrupt_id = Param.Int("PLIC Interrupt ID")
 
     def generatePlicDeviceNode(self, state, name):
-        node = self.generateBasicPioDeviceNode(state, name,
-                self.pio_addr, self.pio_size)
+        node = self.generateBasicPioDeviceNode(
+            state, name, self.pio_addr, self.pio_size
+        )
 
         plic = self.platform.unproxy(self).plic
 

@@ -24,7 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-intCodeTemplate = '''
+intCodeTemplate = """
 def rom
 {
     # This vectors the CPU into an interrupt handler in long mode.
@@ -174,30 +174,33 @@ def rom
 
     eret
 };
-'''
+"""
 
-microcode = \
-intCodeTemplate % {\
-    "startLabel" : "longModeInterrupt",
-    "gateCheckType" : "IntGateCheck",
-    "errorCodeSize" : 0,
-    "errorCodeCode" : ""
-} + \
-intCodeTemplate % {\
-    "startLabel" : "longModeSoftInterrupt",
-    "gateCheckType" : "SoftIntGateCheck",
-    "errorCodeSize" : 0,
-    "errorCodeCode" : ""
-} + \
-intCodeTemplate % {\
-    "startLabel" : "longModeInterruptWithError",
-    "gateCheckType" : "IntGateCheck",
-    "errorCodeSize" : 8,
-    "errorCodeCode" : '''
+microcode = (
+    intCodeTemplate
+    % {
+        "startLabel": "longModeInterrupt",
+        "gateCheckType": "IntGateCheck",
+        "errorCodeSize": 0,
+        "errorCodeCode": "",
+    }
+    + intCodeTemplate
+    % {
+        "startLabel": "longModeSoftInterrupt",
+        "gateCheckType": "SoftIntGateCheck",
+        "errorCodeSize": 0,
+        "errorCodeCode": "",
+    }
+    + intCodeTemplate
+    % {
+        "startLabel": "longModeInterruptWithError",
+        "gateCheckType": "IntGateCheck",
+        "errorCodeSize": 8,
+        "errorCodeCode": """
     st t15, hs, [1, t0, t6], dataSize=8, addressSize=8
-    '''
-} + \
-'''
+    """,
+    }
+    + """
 def rom
 {
     # This vectors the CPU into an interrupt handler in legacy mode.
@@ -266,4 +269,5 @@ def rom
 
     eret
 };
-'''
+"""
+)

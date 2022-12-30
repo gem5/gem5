@@ -35,10 +35,12 @@
 
 from abc import *
 
+
 class PyBindExport(object, metaclass=ABCMeta):
     @abstractmethod
     def export(self, code, cname):
         pass
+
 
 class PyBindProperty(PyBindExport):
     def __init__(self, name, cxx_name=None, writable=True):
@@ -50,14 +52,21 @@ class PyBindProperty(PyBindExport):
         export = "def_readwrite" if self.writable else "def_readonly"
         code('.${export}("${{self.name}}", &${cname}::${{self.cxx_name}})')
 
+
 class PyBindMethod(PyBindExport):
-    def __init__(self, name, cxx_name=None, args=None,
-                 return_value_policy=None, static=False):
+    def __init__(
+        self,
+        name,
+        cxx_name=None,
+        args=None,
+        return_value_policy=None,
+        static=False,
+    ):
         self.name = name
         self.cxx_name = cxx_name if cxx_name else name
         self.args = args
         self.return_value_policy = return_value_policy
-        self.method_def = 'def_static' if static else 'def'
+        self.method_def = "def_static" if static else "def"
 
     def _conv_arg(self, value):
         if isinstance(value, bool):
@@ -68,18 +77,23 @@ class PyBindMethod(PyBindExport):
             raise TypeError("Unsupported PyBind default value type")
 
     def export(self, code, cname):
-        arguments = [ '"${{self.name}}"', '&${cname}::${{self.cxx_name}}' ]
+        arguments = ['"${{self.name}}"', "&${cname}::${{self.cxx_name}}"]
         if self.return_value_policy:
-            arguments.append('pybind11::return_value_policy::'
-                             '${{self.return_value_policy}}')
+            arguments.append(
+                "pybind11::return_value_policy::"
+                "${{self.return_value_policy}}"
+            )
         if self.args:
+
             def get_arg_decl(arg):
                 if isinstance(arg, tuple):
                     name, default = arg
                     return 'py::arg("%s") = %s' % (
-                        name, self._conv_arg(default))
+                        name,
+                        self._conv_arg(default),
+                    )
                 else:
                     return 'py::arg("%s")' % arg
 
-            arguments.extend(list([ get_arg_decl(a) for a in self.args ]))
-        code('.' + self.method_def + '(' + ', '.join(arguments) + ')')
+            arguments.extend(list([get_arg_decl(a) for a in self.args]))
+        code("." + self.method_def + "(" + ", ".join(arguments) + ")")

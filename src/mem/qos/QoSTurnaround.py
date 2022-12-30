@@ -35,14 +35,15 @@
 
 from m5.SimObject import SimObject
 
-#QoS Turnaround policy used to select bus state - READ or WRITE
+# QoS Turnaround policy used to select bus state - READ or WRITE
 class QoSTurnaroundPolicy(SimObject):
-    type = 'QoSTurnaroundPolicy'
+    type = "QoSTurnaroundPolicy"
     cxx_header = "mem/qos/turnaround_policy.hh"
-    cxx_class = 'gem5::memory::qos::TurnaroundPolicy'
+    cxx_class = "gem5::memory::qos::TurnaroundPolicy"
     abstract = True
 
+
 class QoSTurnaroundPolicyIdeal(QoSTurnaroundPolicy):
-    type = 'QoSTurnaroundPolicyIdeal'
+    type = "QoSTurnaroundPolicyIdeal"
     cxx_header = "mem/qos/turnaround_policy_ideal.hh"
-    cxx_class = 'gem5::memory::qos::TurnaroundPolicyIdeal'
+    cxx_class = "gem5::memory::qos::TurnaroundPolicyIdeal"

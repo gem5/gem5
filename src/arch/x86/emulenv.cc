@@ -52,8 +52,8 @@ void EmulEnv::doModRM(const ExtMachInst & machInst)
     //Use the SIB byte for addressing if the modrm byte calls for it.
     if (machInst.modRM.rm == 4 && machInst.addrSize != 2) {
         scale = 1 << machInst.sib.scale;
-        index = RegId(IntRegClass, machInst.sib.index | (machInst.rex.x << 3));
-        base = RegId(IntRegClass, machInst.sib.base | (machInst.rex.b << 3));
+        index = intRegClass[machInst.sib.index | (machInst.rex.x << 3)];
+        base = intRegClass[machInst.sib.base | (machInst.rex.b << 3)];
         //In this special case, we don't use a base. The displacement also
         //changes, but that's managed by the decoder.
         if (machInst.sib.base == (RegIndex)int_reg::Rbp &&
@@ -72,8 +72,7 @@ void EmulEnv::doModRM(const ExtMachInst & machInst)
                 } else {
                     base = int_reg::Rbp;
                 }
-                index = RegId(IntRegClass,
-                        (rm % 2) ? int_reg::Rdi : int_reg::Rsi);
+                index = intRegClass[(rm % 2) ? int_reg::Rdi : int_reg::Rsi];
             } else {
                 scale = 0;
                 switch (rm) {
@@ -95,8 +94,7 @@ void EmulEnv::doModRM(const ExtMachInst & machInst)
             }
         } else {
             scale = 0;
-            base = RegId(IntRegClass,
-                    machInst.modRM.rm | (machInst.rex.b << 3));
+            base = intRegClass[machInst.modRM.rm | (machInst.rex.b << 3)];
             if (machInst.modRM.mod == 0 && machInst.modRM.rm == 5) {
                 //Since we need to use a different encoding of this
                 //instruction anyway, just ignore the base in those cases

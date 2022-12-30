@@ -1,3 +1,15 @@
+# Copyright (c) 2022 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
 # Copyright (c) 2009 The Hewlett-Packard Development Company
 # All rights reserved.
@@ -27,15 +39,20 @@
 
 from slicc.util import PairContainer
 
+
 class Symbol(PairContainer):
     def __init__(self, symtab, ident, location, pairs=None):
         super().__init__()
 
         from slicc.util import Location
         from slicc.symbols import SymbolTable
-        if not isinstance(symtab, SymbolTable): raise AttributeError
-        if not isinstance(ident, str): raise AttributeError
-        if not isinstance(location, Location): raise AttributeError
+
+        if not isinstance(symtab, SymbolTable):
+            raise AttributeError
+        if not isinstance(ident, str):
+            raise AttributeError
+        if not isinstance(location, Location):
+            raise AttributeError
 
         self.symtab = symtab
         self.ident = ident
@@ -54,8 +71,12 @@ class Symbol(PairContainer):
 
     def __setitem__(self, key, value):
         if key in self.pairs:
-            self.warning("Pair key '%s' re-defined. new: '%s' old: '%s'",
-                         key, value, self.pairs[key])
+            self.warning(
+                "Pair key '%s' re-defined. new: '%s' old: '%s'",
+                key,
+                value,
+                self.pairs[key],
+            )
         super().__setitem__(key, value)
 
     @property
@@ -64,7 +85,11 @@ class Symbol(PairContainer):
 
     @property
     def desc(self):
-        return self["desc"]
+        # Allow Symbols with no description: return an empty string.
+        if "desc" not in self:
+            return ""
+        else:
+            return self["desc"]
 
     def error(self, message, *args):
         self.location.error(message, *args)
@@ -75,4 +100,5 @@ class Symbol(PairContainer):
     def writeHTMLFiles(self, path):
         pass
 
-__all__ = [ "Symbol" ]
+
+__all__ = ["Symbol"]

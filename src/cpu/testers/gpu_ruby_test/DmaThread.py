@@ -32,7 +32,8 @@ from m5.proxy import *
 
 from m5.objects.TesterThread import TesterThread
 
+
 class DmaThread(TesterThread):
-    type = 'DmaThread'
+    type = "DmaThread"
     cxx_header = "cpu/testers/gpu_ruby_test/dma_thread.hh"
-    cxx_class = 'gem5::DmaThread'
+    cxx_class = "gem5::DmaThread"

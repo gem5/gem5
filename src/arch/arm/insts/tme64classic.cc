@@ -47,7 +47,7 @@ namespace ArmISAInst {
 
 Fault
 Tstart64::initiateAcc(ExecContext *xc,
-                      Trace::InstRecord *traceData) const
+                      trace::InstRecord *traceData) const
 {
     return std::make_shared<UndefinedInstruction>(machInst,
                                                   false,
@@ -56,7 +56,7 @@ Tstart64::initiateAcc(ExecContext *xc,
 
 Fault
 Tstart64::completeAcc(PacketPtr pkt, ExecContext *xc,
-                      Trace::InstRecord *traceData) const
+                      trace::InstRecord *traceData) const
 {
     return std::make_shared<UndefinedInstruction>(machInst,
                                                   false,
@@ -65,7 +65,7 @@ Tstart64::completeAcc(PacketPtr pkt, ExecContext *xc,
 
 Fault
 Ttest64::execute(
-    ExecContext *xc, Trace::InstRecord *traceData) const
+    ExecContext *xc, trace::InstRecord *traceData) const
 {
     return std::make_shared<UndefinedInstruction>(machInst,
                                                   false,
@@ -74,7 +74,7 @@ Ttest64::execute(
 
 Fault
 Tcancel64::initiateAcc(ExecContext *xc,
-                       Trace::InstRecord *traceData) const
+                       trace::InstRecord *traceData) const
 {
     return std::make_shared<UndefinedInstruction>(machInst,
                                                   false,
@@ -83,7 +83,7 @@ Tcancel64::initiateAcc(ExecContext *xc,
 
 Fault
 Tcancel64::completeAcc(PacketPtr pkt, ExecContext *xc,
-                       Trace::InstRecord *traceData) const
+                       trace::InstRecord *traceData) const
 {
     return std::make_shared<UndefinedInstruction>(machInst,
                                                   false,
@@ -92,7 +92,7 @@ Tcancel64::completeAcc(PacketPtr pkt, ExecContext *xc,
 
 Fault
 MicroTcommit64::initiateAcc(ExecContext *xc,
-                            Trace::InstRecord *traceData) const
+                            trace::InstRecord *traceData) const
 {
     return std::make_shared<UndefinedInstruction>(machInst,
                                                   false,
@@ -101,7 +101,7 @@ MicroTcommit64::initiateAcc(ExecContext *xc,
 
 Fault
 MicroTcommit64::completeAcc(PacketPtr pkt, ExecContext *xc,
-                            Trace::InstRecord *traceData) const
+                            trace::InstRecord *traceData) const
 {
     return std::make_shared<UndefinedInstruction>(machInst,
                                                   false,

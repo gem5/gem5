@@ -85,8 +85,10 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
         )
 
         if self.get_processor().get_isa() != ISA.X86:
-            raise Exception("The X86Board requires a processor using the X86 "
-                f"ISA. Current processor ISA: '{processor.get_isa().name}'.")
+            raise Exception(
+                "The X86Board requires a processor using the X86 "
+                f"ISA. Current processor ISA: '{processor.get_isa().name}'."
+            )
 
     @overrides(AbstractSystemBoard)
     def _setup_board(self) -> None:
@@ -100,10 +102,10 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
         # Set up all of the I/O.
         self._setup_io_devices()
 
-        self.m5ops_base = 0xffff0000
+        self.m5ops_base = 0xFFFF0000
 
     def _setup_io_devices(self):
-        """ Sets up the x86 IO devices.
+        """Sets up the x86 IO devices.
 
         Note: This is mostly copy-paste from prior X86 FS setups. Some of it
         may not be documented and there may be bugs.

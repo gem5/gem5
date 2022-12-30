@@ -28,7 +28,8 @@ from m5.params import *
 from m5.proxy import *
 from m5.objects.Device import BasicPioDevice
 
+
 class I8237(BasicPioDevice):
-    type = 'I8237'
-    cxx_class = 'gem5::X86ISA::I8237'
+    type = "I8237"
+    cxx_class = "gem5::X86ISA::I8237"
     cxx_header = "dev/x86/i8237.hh"

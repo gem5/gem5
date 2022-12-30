@@ -64,17 +64,18 @@ class TempdirFixture(Fixture):
     def __init__(self):
         self.path = None
         super(TempdirFixture, self).__init__(
-                name=constants.tempdir_fixture_name)
+            name=constants.tempdir_fixture_name
+        )
 
     def setup(self, testitem):
-        self.path = tempfile.mkdtemp(prefix='gem5out')
+        self.path = tempfile.mkdtemp(prefix="gem5out")
 
     def post_test_procedure(self, testitem):
         suiteUID = testitem.metadata.uid.suite
         testUID = testitem.metadata.name
-        testing_result_folder = os.path.join(config.result_path,
-                                             "SuiteUID:" + suiteUID,
-                                             "TestUID:" + testUID)
+        testing_result_folder = os.path.join(
+            config.result_path, "SuiteUID:" + suiteUID, "TestUID:" + testUID
+        )
 
         # Copy the output files of the run from /tmp to testing-results
         # We want to wipe the entire result folder for this test first. Why?
@@ -90,8 +91,9 @@ class TempdirFixture(Fixture):
         if testitem.result == Result.Passed:
             shutil.rmtree(self.path)
 
+
 class UniqueFixture(Fixture):
-    '''
+    """
     Base class for fixtures that generate a target in the
     filesystem. If the same fixture is used by more than one
     test/suite, rather than creating a copy of the fixture, it returns
@@ -101,7 +103,8 @@ class UniqueFixture(Fixture):
 
     :param target: The absolute path of the target in the filesystem.
 
-    '''
+    """
+
     fixtures = {}
 
     def __new__(cls, target):
@@ -116,7 +119,7 @@ class UniqueFixture(Fixture):
 
     def __init__(self, *args, **kwargs):
         with self.lock:
-            if hasattr(self, '_init_done'):
+            if hasattr(self, "_init_done"):
                 return
             super(UniqueFixture, self).__init__(self, **kwargs)
             self._init(*args, **kwargs)
@@ -124,21 +127,21 @@ class UniqueFixture(Fixture):
 
     def setup(self, testitem):
         with self.lock:
-            if hasattr(self, '_setup_done'):
+            if hasattr(self, "_setup_done"):
                 return
             self._setup_done = True
             self._setup(testitem)
 
 
 class SConsFixture(UniqueFixture):
-    '''
+    """
     Fixture will wait until all SCons targets are collected and tests are
     about to be ran, then will invocate a single instance of SCons for all
     targets.
 
     :param directory: The directory which scons will -C (cd) into before
         executing. If None is provided, will choose the config base_dir.
-    '''
+    """
 
     def __new__(cls, target):
         obj = super(SConsFixture, cls).__new__(cls, target)
@@ -149,38 +152,44 @@ class SConsFixture(UniqueFixture):
             return
 
         command = [
-            'scons', '-C', self.directory,
-            '-j', str(config.threads),
-            '--ignore-style',
-            '--no-compress-debug'
+            "scons",
+            "-C",
+            self.directory,
+            "-j",
+            str(config.threads),
+            "--ignore-style",
+            "--no-compress-debug",
         ]
 
         if not self.targets:
             log.test_log.warn(
-                'No SCons targets specified, this will'
-                ' build the default all target.\n'
-                'This is likely unintended, and you'
-                ' may wish to kill testlib and reconfigure.')
+                "No SCons targets specified, this will"
+                " build the default all target.\n"
+                "This is likely unintended, and you"
+                " may wish to kill testlib and reconfigure."
+            )
         else:
             log.test_log.message(
-                    'Building the following targets.'
-                    ' This may take a while.')
-            log.test_log.message('%s' % (', '.join(self.targets)))
+                "Building the following targets." " This may take a while."
+            )
+            log.test_log.message("%s" % (", ".join(self.targets)))
             log.test_log.message(
-                    "You may want to run with only a single ISA"
-                    "(--isa=), use --skip-build, or use 'rerun'.")
+                "You may want to run with only a single ISA"
+                "(--isa=), use --skip-build, or use 'rerun'."
+            )
 
         command.extend(self.targets)
         if self.options:
             command.extend(self.options)
         log_call(log.test_log, command, time=None, stderr=sys.stderr)
 
+
 class Gem5Fixture(SConsFixture):
     def __new__(cls, isa, variant, protocol=None):
         target_dir = joinpath(config.build_dir, isa.upper())
         if protocol:
-            target_dir += '_' + protocol
-        target = joinpath(target_dir, 'gem5.%s' % variant)
+            target_dir += "_" + protocol
+        target = joinpath(target_dir, "gem5.%s" % variant)
         obj = super(Gem5Fixture, cls).__new__(cls, target)
         return obj
 
@@ -193,43 +202,42 @@ class Gem5Fixture(SConsFixture):
 
         self.options = []
         if protocol:
-            self.options = [ '--default=' + isa.upper(),
-                             'PROTOCOL=' + protocol ]
+            self.options = ["--default=" + isa.upper(), "PROTOCOL=" + protocol]
         self.set_global()
+
 
 class MakeFixture(Fixture):
     def __init__(self, directory, *args, **kwargs):
-        name = 'make -C %s' % directory
-        super(MakeFixture, self).__init__(build_once=True, lazy_init=False,
-                                          name=name,
-                                          *args, **kwargs)
+        name = "make -C %s" % directory
+        super(MakeFixture, self).__init__(
+            build_once=True, lazy_init=False, name=name, *args, **kwargs
+        )
         self.targets = []
         self.directory = directory
 
     def setup(self):
         super(MakeFixture, self).setup()
         targets = set(self.required_by)
-        command = ['make', '-C', self.directory]
+        command = ["make", "-C", self.directory]
         command.extend([target.target for target in targets])
         log_call(log.test_log, command, time=None, stderr=sys.stderr)
 
 
 class MakeTarget(Fixture):
     def __init__(self, target, make_fixture=None, *args, **kwargs):
-        '''
+        """
         :param make_fixture: The make invocation we will be attached to.
         Since we don't have a single global instance of make in gem5 like we do
         scons we need to know what invocation to attach to. If none given,
         creates its own.
-        '''
+        """
         super(MakeTarget, self).__init__(name=target, *args, **kwargs)
         self.target = self.name
 
         if make_fixture is None:
             make_fixture = MakeFixture(
-                    absdirpath(target),
-                    lazy_init=True,
-                    build_once=False)
+                absdirpath(target), lazy_init=True, build_once=False
+            )
 
         self.make_fixture = make_fixture
 
@@ -241,11 +249,12 @@ class MakeTarget(Fixture):
         self.make_fixture.setup()
         return self
 
+
 class TestProgram(MakeTarget):
     def __init__(self, program, isa, os, recompile=False):
         make_dir = joinpath(config.bin_dir, program)
         make_fixture = MakeFixture(make_dir)
-        target = joinpath('bin', isa, os, program)
+        target = joinpath("bin", isa, os, program)
         super(TestProgram, self).__init__(target, make_fixture)
         self.path = joinpath(make_dir, target)
         self.recompile = recompile
@@ -258,9 +267,10 @@ class TestProgram(MakeTarget):
         elif not os.path.exists(self.path):
             super(MakeTarget, self).setup()
 
+
 class DownloadedProgram(UniqueFixture):
-    """ Like TestProgram, but checks the version in the gem5 binary repository
-        and downloads an updated version if it is needed.
+    """Like TestProgram, but checks the version in the gem5 binary repository
+    and downloads an updated version if it is needed.
     """
 
     def __new__(cls, url, path, filename, gzip_decompress=False):
@@ -288,6 +298,7 @@ class DownloadedProgram(UniqueFixture):
 
     def _download(self):
         import errno
+
         log.test_log.debug("Downloading " + self.url + " to " + self.path)
         if not os.path.exists(self.path):
             try:
@@ -299,8 +310,8 @@ class DownloadedProgram(UniqueFixture):
             gzipped_filename = self.filename + ".gz"
             urllib.request.urlretrieve(self.url, gzipped_filename)
 
-            with open(self.filename, 'wb') as outfile:
-                with gzip.open(gzipped_filename, 'r') as infile:
+            with open(self.filename, "wb") as outfile:
+                with gzip.open(gzipped_filename, "r") as infile:
                     shutil.copyfileobj(infile, outfile)
 
             os.remove(gzipped_filename)
@@ -309,13 +320,15 @@ class DownloadedProgram(UniqueFixture):
 
     def _getremotetime(self):
         import datetime, time
-        import _strptime # Needed for python threading bug
+        import _strptime  # Needed for python threading bug
 
         u = urllib.request.urlopen(self.url, timeout=10)
 
-        return time.mktime(datetime.datetime.strptime( \
-                    u.info()["Last-Modified"],
-                    "%a, %d %b %Y %X GMT").timetuple())
+        return time.mktime(
+            datetime.datetime.strptime(
+                u.info()["Last-Modified"], "%a, %d %b %Y %X GMT"
+            ).timetuple()
+        )
 
     def _setup(self, testitem):
         # Check to see if there is a file downloaded
@@ -326,21 +339,46 @@ class DownloadedProgram(UniqueFixture):
                 t = self._getremotetime()
             except (urllib.error.URLError, socket.timeout):
                 # Problem checking the server, use the old files.
-                log.test_log.debug("Could not contact server. Binaries may be old.")
+                log.test_log.debug(
+                    "Could not contact server. Binaries may be old."
+                )
                 return
             # If the server version is more recent, download it
             if t > os.path.getmtime(self.filename):
                 self._download()
 
+
 class DownloadedArchive(DownloadedProgram):
-    """ Like TestProgram, but checks the version in the gem5 binary repository
-        and downloads an updated version if it is needed.
+    """Like TestProgram, but checks the version in the gem5 binary repository
+    and downloads an updated version if it is needed.
     """
 
     def _extract(self):
         import tarfile
+
         with tarfile.open(self.filename) as tf:
-            tf.extractall(self.path)
+
+            def is_within_directory(directory, target):
+
+                abs_directory = os.path.abspath(directory)
+                abs_target = os.path.abspath(target)
+
+                prefix = os.path.commonprefix([abs_directory, abs_target])
+
+                return prefix == abs_directory
+
+            def safe_extract(
+                tar, path=".", members=None, *, numeric_owner=False
+            ):
+
+                for member in tar.getmembers():
+                    member_path = os.path.join(path, member.name)
+                    if not is_within_directory(path, member_path):
+                        raise Exception("Attempted Path Traversal in Tar File")
+
+                tar.extractall(path, members, numeric_owner=numeric_owner)
+
+            safe_extract(tf, self.path)
 
     def _setup(self, testitem):
         # Check to see if there is a file downloaded
@@ -352,8 +390,9 @@ class DownloadedArchive(DownloadedProgram):
                 t = self._getremotetime()
             except (urllib.error.URLError, socket.timeout):
                 # Problem checking the server, use the old files.
-                log.test_log.debug("Could not contact server. "
-                                   "Binaries may be old.")
+                log.test_log.debug(
+                    "Could not contact server. " "Binaries may be old."
+                )
                 return
             # If the server version is more recent, download it
             if t > os.path.getmtime(self.filename):

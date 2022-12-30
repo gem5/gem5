@@ -82,6 +82,9 @@ struct MinorStats : public statistics::Group
     /** Number of instructions by type (OpClass) */
     statistics::Vector2d committedInstType;
 
+    /** Number of branches commited */
+    statistics::Vector2d committedControl;
+
 };
 
 } // namespace minor

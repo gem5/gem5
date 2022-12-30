@@ -82,7 +82,7 @@ EmuLinux::syscall(ThreadContext *tc)
     // This will move into the base SEWorkload function at some point.
     process->Process::syscall(tc);
 
-    syscallDescs.get(tc->readIntReg(2))->doSyscall(tc);
+    syscallDescs.get(tc->getReg(int_reg::V0))->doSyscall(tc);
 }
 
 /// Target uname() handler.
@@ -153,7 +153,7 @@ sys_setsysinfoFunc(SyscallDesc *desc, ThreadContext *tc, unsigned op,
 static SyscallReturn
 setThreadAreaFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> addr)
 {
-    tc->setMiscRegNoEffect(MISCREG_TP_VALUE, addr);
+    tc->setMiscRegNoEffect(misc_reg::TpValue, addr);
     return 0;
 }
 

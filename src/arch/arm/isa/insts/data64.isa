@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013, 2016-2021 Arm Limited
+// Copyright (c) 2011-2013, 2016-2022 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -311,34 +311,19 @@ let {{
     ''')
 
     msrMrs64EnabledCheckCode = '''
-        // Check for read/write access right
-        if (!can%sAArch64SysReg(flat_idx, Hcr64, Scr64, cpsr, xc->tcBase())) {
-            return std::make_shared<UndefinedInstruction>(machInst, false,
-                                                          mnemonic);
-        }
+        auto pre_flat = (MiscRegIndex)snsBankedIndex64(%s, xc->tcBase());
+        auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+        auto flat_idx = (MiscRegIndex)isa->flattenMiscIndex(pre_flat);
 
-        fault = this->trap(xc->tcBase(), flat_idx, el, imm);
-        if (fault != NoFault) return fault;
+        // Check for read/write access right
+        if (fault = checkFaultAccessAArch64SysReg(flat_idx, Cpsr,
+            xc->tcBase(), *this); fault != NoFault) {
+            return fault;
+        }
     '''
 
-    msr_check_code = '''
-        auto pre_flat = (MiscRegIndex)snsBankedIndex64(dest, xc->tcBase());
-        MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->
-            flattenRegId(RegId(MiscRegClass, pre_flat)).index();
-        CPSR cpsr = Cpsr;
-        ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
-        %s
-    ''' % (msrMrs64EnabledCheckCode % ('Write'),)
-
-    mrs_check_code = '''
-        auto pre_flat = (MiscRegIndex)snsBankedIndex64(op1, xc->tcBase());
-        MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->
-            flattenRegId(RegId(MiscRegClass, pre_flat)).index();
-        CPSR cpsr = Cpsr;
-        ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
-        %s
-    ''' % (msrMrs64EnabledCheckCode % ('Read'),)
-
+    msr_check_code = msrMrs64EnabledCheckCode % 'dest'
+    mrs_check_code = msrMrs64EnabledCheckCode % 'op1'
 
     mrsCode = mrs_check_code + '''
         XDest = MiscOp1_ud;
@@ -517,6 +502,8 @@ let {{
            faultAddr = EA;
            HCR hcr = Hcr64;
            SCR scr = Scr64;
+           CPSR cpsr = Cpsr;
+           ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
            if (el == EL1 && ArmSystem::haveEL(xc->tcBase(), EL2) &&
                hcr.vm && (scr.ns || !ArmSystem::haveEL(xc->tcBase(), EL3))) {
                memAccessFlags = memAccessFlags | Request::CLEAN;
@@ -544,21 +531,12 @@ let {{
         msrImmPermission = '''
             auto pre_flat =
                 (MiscRegIndex)snsBankedIndex64(dest, xc->tcBase());
-            MiscRegIndex misc_index = (MiscRegIndex) xc->tcBase()->
-                flattenRegId(RegId(MiscRegClass, pre_flat)).index();
+            auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+            auto misc_index = (MiscRegIndex)isa->flattenMiscIndex(pre_flat);
 
-            if (!miscRegInfo[misc_index][MISCREG_IMPLEMENTED]) {
-                    return std::make_shared<UndefinedInstruction>(
-                                    machInst, false,
-                                    mnemonic);
-            }
-
-            if (!canWriteAArch64SysReg(misc_index, Hcr64,
-                Scr64, Cpsr, xc->tcBase())) {
-
-                    return std::make_shared<UndefinedInstruction>(
-                                    machInst, 0, EC_TRAPPED_MSR_MRS_64,
-                                    mnemonic);
+            if (fault = checkFaultAccessAArch64SysReg(misc_index,
+                Cpsr, xc->tcBase(), *this); fault != NoFault) {
+                    return fault;
             }
 
         '''

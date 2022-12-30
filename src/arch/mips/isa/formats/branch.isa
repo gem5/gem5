@@ -326,7 +326,3 @@ def format Jump(code, *opt_flags) {{
     decode_block = BasicDecode.subst(iop)
     exec_output = BasicExecute.subst(iop)
 }};
-
-
-
-

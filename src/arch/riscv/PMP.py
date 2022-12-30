@@ -28,10 +28,10 @@ from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
 
+
 class PMP(SimObject):
-    type = 'PMP'
-    cxx_header = 'arch/riscv/pmp.hh'
-    cxx_class = 'gem5::PMP'
+    type = "PMP"
+    cxx_header = "arch/riscv/pmp.hh"
+    cxx_class = "gem5::PMP"
 
     pmp_entries = Param.Int(16, "Maximum PMP Entries Supported")
-

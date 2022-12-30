@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop FMUL1_R
 {
     mulfp st(0), sti, st(0)
@@ -92,4 +92,4 @@ def macroop FMULP_P
 };
 
 # FIMUL
-'''
+"""

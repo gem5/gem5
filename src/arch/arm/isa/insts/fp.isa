@@ -213,7 +213,8 @@ let {{
     if (!isSecure(xc->tcBase()) && (cpsr.mode != MODE_HYP)) {
         HCR hcr = Hcr;
         bool hypTrap = false;
-        switch(xc->tcBase()->flattenRegId(RegId(MiscRegClass, op1)).index()) {
+        auto *isa = static_cast<ArmISA::ISA *>(xc->tcBase()->getIsaPtr());
+        switch (isa->flattenMiscIndex(op1)) {
           case MISCREG_FPSID:
             hypTrap = hcr.tid0;
             break;
@@ -224,7 +225,7 @@ let {{
         }
         if (hypTrap) {
             return std::make_shared<HypervisorTrap>(machInst, imm,
-                EC_TRAPPED_CP10_MRC_VMRS);
+                ExceptionClass::TRAPPED_CP10_MRC_VMRS);
         }
     }
     Dest = MiscOp1;

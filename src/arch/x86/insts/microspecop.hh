@@ -49,7 +49,7 @@ class MicroHalt : public InstOperands<X86MicroopBase>
     {}
 
     Fault
-    execute(ExecContext *xc, Trace::InstRecord *) const override
+    execute(ExecContext *xc, trace::InstRecord *) const override
     {
         xc->tcBase()->suspend();
         return NoFault;

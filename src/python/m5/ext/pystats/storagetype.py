@@ -27,6 +27,7 @@
 from enum import Enum
 from typing import Dict
 
+
 class StorageType(Enum):
     """
     An enum used to declare what C++ data type was used to store a value.
@@ -34,6 +35,7 @@ class StorageType(Enum):
 
     E.g. 's64' indicates a 64 bit signed integer
     """
+
     u32: str = "u32"
     u64: str = "u64"
     s32: str = "s32"

@@ -45,7 +45,7 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _dest,
                    RegIndex _op1, uint64_t _imm);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -72,7 +72,7 @@ class %(class_name)s : public %(base_class)s
     %(class_name)s(ExtMachInst machInst, RegIndex _dest,
                    RegIndex _op1, RegIndex _op2,
                    int32_t _shiftAmt, ArmShiftType _shiftType);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -100,7 +100,7 @@ class %(class_name)s : public %(base_class)s
     %(class_name)s(ExtMachInst machInst, RegIndex _dest,
             RegIndex _op1, RegIndex _op2,
             ArmExtendType _extendType, int32_t _shiftAmt);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -126,7 +126,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _dest, RegIndex _op1);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -150,7 +150,7 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _dest,
                    RegIndex _op1, RegIndex _op2);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -175,7 +175,7 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _dest,
                    RegIndex _op1, RegIndex _op2, uint64_t _imm);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -201,7 +201,7 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _dest,
                    RegIndex _op1, RegIndex _op2, RegIndex _op3);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -227,7 +227,7 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _op1,
                    uint64_t _imm, ConditionCode _condCode, uint8_t _defCc);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -253,7 +253,7 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(ExtMachInst machInst, RegIndex _op1,
                    RegIndex _op2, ConditionCode _condCode, uint8_t _defCc);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 
@@ -280,7 +280,7 @@ class %(class_name)s : public %(base_class)s
     %(class_name)s(ExtMachInst machInst, RegIndex _dest,
                    RegIndex _op1, RegIndex _op2,
                    ConditionCode _condCode);
-    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
 

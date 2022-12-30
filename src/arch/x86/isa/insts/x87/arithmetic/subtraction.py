@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop FSUB1_R
 {
     subfp st(0), st(0), sti
@@ -99,4 +99,4 @@ def macroop FSUBRP_R
 # FISUB
 # FSUBR
 # FISUBR
-'''
+"""

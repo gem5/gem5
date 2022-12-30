@@ -51,7 +51,6 @@
 
 #include "arch/generic/pcstate.hh"
 #include "base/statistics.hh"
-#include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/commit.hh"
 #include "cpu/o3/decode.hh"
@@ -442,7 +441,7 @@ class CPU : public BaseCPU
     /** Integer Register Scoreboard */
     Scoreboard scoreboard;
 
-    std::vector<TheISA::ISA *> isa;
+    std::vector<BaseISA *> isa;
 
   public:
     /** Enum to give each stage a specific index, so when calling

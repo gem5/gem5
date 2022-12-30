@@ -28,11 +28,12 @@ from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
 
+
 class Platform(SimObject):
-    type = 'Platform'
+    type = "Platform"
     abstract = True
     cxx_header = "dev/platform.hh"
-    cxx_class = 'gem5::Platform'
+    cxx_class = "gem5::Platform"
 
     system = Param.System(Parent.any, "system")
 

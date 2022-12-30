@@ -64,6 +64,7 @@ DebugFlag('ExecAsid', 'Format: Include ASID in trace')
 DebugFlag('ExecFlags', 'Format: Include instruction flags in trace')
 DebugFlag('Fetch')
 DebugFlag('HtmCpu', 'Hardware Transactional Memory (CPU side)')
+DebugFlag('InvalidReg')
 DebugFlag('O3PipeView')
 DebugFlag('PCEvent')
 DebugFlag('Quiesce')
@@ -85,9 +86,6 @@ Source('pc_event.cc')
 SimObject('FuncUnit.py', sim_objects=['OpDesc', 'FUDesc'], enums=['OpClass'])
 SimObject('StaticInstFlags.py', enums=['StaticInstFlags'])
 
-if env['CONF']['TARGET_ISA'] == 'null':
-    Return()
-
 # Only build the protobuf instructions tracer if we have protobuf support.
 SimObject('InstPBTrace.py', sim_objects=['InstPBTrace'], tags='protobuf')
 Source('inst_pb_trace.cc', tags='protobuf')
@@ -98,9 +96,8 @@ SimObject('BaseCPU.py', sim_objects=['BaseCPU'])
 SimObject('CPUTracers.py', sim_objects=[
     'ExeTracer', 'IntelTrace', 'NativeTrace'])
 SimObject('TimingExpr.py', sim_objects=[
-    'TimingExpr', 'TimingExprLiteral', 'TimingExprSrcReg',
-    'TimingExprReadIntReg', 'TimingExprLet', 'TimingExprRef', 'TimingExprUn',
-    'TimingExprBin', 'TimingExprIf'],
+    'TimingExpr', 'TimingExprLiteral', 'TimingExprSrcReg', 'TimingExprLet',
+    'TimingExprRef', 'TimingExprUn', 'TimingExprBin', 'TimingExprIf'],
     enums=['TimingExprOp'])
 
 Source('activity.cc')

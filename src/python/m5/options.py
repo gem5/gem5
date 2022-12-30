@@ -29,11 +29,15 @@ import sys
 
 from optparse import *
 
-class nodefault(object): pass
+
+class nodefault(object):
+    pass
+
 
 class splitter(object):
     def __init__(self, split):
         self.split = split
+
     def __call__(self, option, opt_str, value, parser):
         values = value.split(self.split)
         dest = getattr(parser.values, option.dest)
@@ -42,9 +46,10 @@ class splitter(object):
         else:
             dest.extend(values)
 
+
 class OptionParser(dict):
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault('formatter', optparse.TitledHelpFormatter())
+        kwargs.setdefault("formatter", optparse.TitledHelpFormatter())
         self._optparse = optparse.OptionParser(*args, **kwargs)
         self._optparse.disable_interspersed_args()
 
@@ -57,24 +62,24 @@ class OptionParser(dict):
         return self._optparse.set_defaults(*args, **kwargs)
 
     def set_group(self, *args, **kwargs):
-        '''set the current option group'''
+        """set the current option group"""
         if not args and not kwargs:
             self._group = self._optparse
         else:
             self._group = self._optparse.add_option_group(*args, **kwargs)
 
     def add_option(self, *args, **kwargs):
-        '''add an option to the current option group, or global none set'''
+        """add an option to the current option group, or global none set"""
 
         # if action=split, but allows the option arguments
         # themselves to be lists separated by the split variable'''
 
-        if kwargs.get('action', None) == 'append' and 'split' in kwargs:
-            split = kwargs.pop('split')
-            kwargs['default'] = []
-            kwargs['type'] = 'string'
-            kwargs['action'] = 'callback'
-            kwargs['callback'] = splitter(split)
+        if kwargs.get("action", None) == "append" and "split" in kwargs:
+            split = kwargs.pop("split")
+            kwargs["default"] = []
+            kwargs["type"] = "string"
+            kwargs["action"] = "callback"
+            kwargs["callback"] = splitter(split)
 
         option = self._group.add_option(*args, **kwargs)
         dest = option.dest
@@ -84,12 +89,12 @@ class OptionParser(dict):
         return option
 
     def bool_option(self, name, default, help):
-        '''add a boolean option called --name and --no-name.
-        Display help depending on which is the default'''
+        """add a boolean option called --name and --no-name.
+        Display help depending on which is the default"""
 
-        tname = '--%s' % name
-        fname = '--no-%s' % name
-        dest = name.replace('-', '_')
+        tname = "--%s" % name
+        fname = "--no-%s" % name
+        dest = name.replace("-", "_")
         if default:
             thelp = optparse.SUPPRESS_HELP
             fhelp = help
@@ -97,15 +102,17 @@ class OptionParser(dict):
             thelp = help
             fhelp = optparse.SUPPRESS_HELP
 
-        topt = self.add_option(tname, action="store_true", default=default,
-                               help=thelp)
-        fopt = self.add_option(fname, action="store_false", dest=dest,
-                               help=fhelp)
+        topt = self.add_option(
+            tname, action="store_true", default=default, help=thelp
+        )
+        fopt = self.add_option(
+            fname, action="store_false", dest=dest, help=fhelp
+        )
 
-        return topt,fopt
+        return topt, fopt
 
     def __getattr__(self, attr):
-        if attr.startswith('_'):
+        if attr.startswith("_"):
             return super().__getattribute__(attr)
 
         if attr in self:
@@ -114,10 +121,10 @@ class OptionParser(dict):
         return super().__getattribute__(attr)
 
     def __setattr__(self, attr, value):
-        if attr.startswith('_'):
+        if attr.startswith("_"):
             super().__setattr__(attr, value)
         elif attr in self._allopts:
-            defaults = { attr : value }
+            defaults = {attr: value}
             self.set_defaults(**defaults)
             if attr in self:
                 self[attr] = value
@@ -125,9 +132,9 @@ class OptionParser(dict):
             super().__setattr__(attr, value)
 
     def parse_args(self):
-        opts,args = self._optparse.parse_args()
+        opts, args = self._optparse.parse_args()
 
-        for key,val in opts.__dict__.items():
+        for key, val in opts.__dict__.items():
             if val is not None or key not in self:
                 self[key] = val
 
@@ -137,4 +144,3 @@ class OptionParser(dict):
         self._optparse.print_help()
         if exitcode is not None:
             sys.exit(exitcode)
-

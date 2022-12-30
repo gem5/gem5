@@ -39,14 +39,9 @@ import os
 
 import m5
 
-_exit_normal = (
-    "target called exit()",
-    "m5_exit instruction encountered",
-    )
+_exit_normal = ("target called exit()", "m5_exit instruction encountered")
 
-_exit_limit = (
-    "simulate() limit reached",
-    )
+_exit_limit = ("simulate() limit reached",)
 
 _exitcode_done = 0
 _exitcode_fail = 1
@@ -81,6 +76,7 @@ def _run_step(name, restore=None, interval=0.5):
         print("Test failed: Unknown exit cause: %s" % cause)
         sys.exit(_exitcode_fail)
 
+
 def run_test(root, interval=0.5, max_checkpoints=5):
     """
     Run the simulated system for a fixed amount of time and take a
@@ -96,12 +92,11 @@ def run_test(root, interval=0.5, max_checkpoints=5):
         # Create a checkpoint from a separate child process. This enables
         # us to get back to a (mostly) pristine state and restart
         # simulation from the checkpoint.
-        p = Process(target=_run_step,
-                    args=(cpt_name, ),
-                    kwargs={
-                "restore" : restore,
-                "interval" : interval,
-                })
+        p = Process(
+            target=_run_step,
+            args=(cpt_name,),
+            kwargs={"restore": restore, "interval": interval},
+        )
         p.start()
 
         # Wait for the child to return
@@ -115,8 +110,10 @@ def run_test(root, interval=0.5, max_checkpoints=5):
                 print("Test done.", file=sys.stderr)
                 sys.exit(0)
             else:
-                print("Test done, but no checkpoint was created.",
-                    file=sys.stderr)
+                print(
+                    "Test done, but no checkpoint was created.",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
         elif p.exitcode == _exitcode_checkpoint:
             checkpointed = True

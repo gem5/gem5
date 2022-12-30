@@ -61,13 +61,13 @@ class LupioPIC : public BasicPioDevice
   private:
     enum
     {
-        LUPIO_PIC_PRIO,
-        LUPIO_PIC_MASK,
-        LUPIO_PIC_PEND,
-        LUPIO_PIC_ENAB,
+        LUPIO_PIC_PRIO = 0x0,
+        LUPIO_PIC_MASK = 0x4,
+        LUPIO_PIC_PEND = 0x8,
+        LUPIO_PIC_ENAB = 0xC,
 
         // Max offset
-        LUPIO_PIC_MAX,
+        LUPIO_PIC_MAX = 0x10,
     };
 
     uint32_t pending = 0;

@@ -1,0 +1,24 @@
+{
+  "simulated_begin_time": 0,
+  "simulated_end_time": 8350309,
+  "system": {
+    "processor": {
+      "cores": {
+        "generator": {
+          "totalReadLat": {
+            "value": 115620241.0
+          },
+          "totalWriteLat": {
+            "value": 25519547.0
+          },
+          "totalBytesRead": {
+            "value": 8000.0
+          },
+          "totalBytesWritten": {
+            "value": 8000.0
+          }
+        }
+      }
+    }
+  }
+}

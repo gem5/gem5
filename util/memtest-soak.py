@@ -47,15 +47,21 @@ parser = argparse.ArgumentParser()
 # of ticks. Both the iteration count and the ticks for each run can be
 # set on the command line.
 
-parser.add_argument('-c', '--count', type=int, default=100)
-parser.add_argument('-t', '--ticks', type=int, default=100000000000)
-parser.add_argument('binary')
+parser.add_argument("-c", "--count", type=int, default=100)
+parser.add_argument("-t", "--ticks", type=int, default=100000000000)
+parser.add_argument("binary")
 
 args = parser.parse_args()
 
 for i in range(args.count):
-    status = subprocess.call([args.binary, 'configs/example/memtest.py',
-                              '-r', '-m %d' % (args.ticks)])
+    status = subprocess.call(
+        [
+            args.binary,
+            "configs/example/memtest.py",
+            "-r",
+            "-m %d" % (args.ticks),
+        ]
+    )
     if status != 0:
         print("Error: memtest run failed\n")
         sys.exit(1)

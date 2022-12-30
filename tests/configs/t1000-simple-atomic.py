@@ -26,20 +26,23 @@
 
 import m5
 from m5.objects import *
-m5.util.addToPath('../configs/')
+
+m5.util.addToPath("../configs/")
 from common import FSConfig
 
 try:
-    system = FSConfig.makeSparcSystem('atomic')
+    system = FSConfig.makeSparcSystem("atomic")
 except IOError as e:
     skip_test(reason=str(e))
 
 system.voltage_domain = VoltageDomain()
-system.clk_domain = SrcClockDomain(clock = '1GHz',
-                                   voltage_domain = system.voltage_domain)
-system.cpu_clk_domain = SrcClockDomain(clock = '1GHz',
-                                       voltage_domain = system.voltage_domain)
-cpu = AtomicSimpleCPU(cpu_id=0, clk_domain = system.cpu_clk_domain)
+system.clk_domain = SrcClockDomain(
+    clock="1GHz", voltage_domain=system.voltage_domain
+)
+system.cpu_clk_domain = SrcClockDomain(
+    clock="1GHz", voltage_domain=system.voltage_domain
+)
+cpu = AtomicSimpleCPU(cpu_id=0, clk_domain=system.cpu_clk_domain)
 system.cpu = cpu
 # create the interrupt controller
 cpu.createInterruptController()
@@ -47,11 +50,10 @@ cpu.connectBus(system.membus)
 
 # create the memory controllers and connect them, stick with
 # the physmem name to avoid bumping all the reference stats
-system.physmem = [SimpleMemory(range = r)
-                  for r in system.mem_ranges]
+system.physmem = [SimpleMemory(range=r) for r in system.mem_ranges]
 for i in range(len(system.physmem)):
     system.physmem[i].port = system.membus.mem_side_ports
 
 root = Root(full_system=True, system=system)
 
-m5.ticks.setGlobalFrequency('2GHz')
+m5.ticks.setGlobalFrequency("2GHz")

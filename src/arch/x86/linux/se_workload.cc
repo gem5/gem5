@@ -97,12 +97,12 @@ namespace X86ISA
 EmuLinux::EmuLinux(const Params &p) : SEWorkload(p, PageShift)
 {}
 
-const std::vector<RegIndex> EmuLinux::SyscallABI64::ArgumentRegs = {
+const std::vector<RegId> EmuLinux::SyscallABI64::ArgumentRegs = {
     int_reg::Rdi, int_reg::Rsi, int_reg::Rdx,
     int_reg::R10, int_reg::R8, int_reg::R9
 };
 
-const std::vector<RegIndex> EmuLinux::SyscallABI32::ArgumentRegs = {
+const std::vector<RegId> EmuLinux::SyscallABI32::ArgumentRegs = {
     int_reg::Ebx, int_reg::Ecx, int_reg::Edx,
     int_reg::Esi, int_reg::Edi, int_reg::Ebp
 };

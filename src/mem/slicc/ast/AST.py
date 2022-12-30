@@ -27,6 +27,7 @@
 
 from slicc.util import PairContainer, Location
 
+
 class AST(PairContainer):
     def __init__(self, slicc, pairs=None):
         self.slicc = slicc
@@ -53,7 +54,9 @@ class AST(PairContainer):
         if args:
             message = message % args
         code = self.slicc.codeFormatter()
-        code('''
+        code(
+            """
 panic("Runtime Error at ${{self.location}}: %s.\\n", $message);
-''')
+"""
+        )
         return code

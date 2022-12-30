@@ -51,4 +51,3 @@
 
 // Include the branch format
 ##include "branch.isa"
-

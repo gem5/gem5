@@ -331,11 +331,11 @@ AMDGPUVM::UserTranslationGen::translate(Range &range) const
     DPRINTF(AMDGPUDevice, "User tl base %#lx start %#lx walker %p\n",
             base, start, walker);
 
-    bool dummy;
+    bool system_bit;
     unsigned logBytes;
     Addr paddr = range.vaddr;
     Fault fault = walker->startFunctional(base, paddr, logBytes,
-                                          BaseMMU::Mode::Read, dummy);
+                                          BaseMMU::Mode::Read, system_bit);
     if (fault != NoFault) {
         fatal("User translation fault");
     }
@@ -343,9 +343,17 @@ AMDGPUVM::UserTranslationGen::translate(Range &range) const
     // GPU page size is variable. Use logBytes to determine size.
     const Addr page_size = 1 << logBytes;
     Addr next = roundUp(range.vaddr, page_size);
-    if (next == range.vaddr)
+    if (next == range.vaddr) {
         // We don't know the size of the next page, use default.
         next += AMDGPU_USER_PAGE_SIZE;
+    }
+
+    // If we are not in system/host memory, change the address to the MMHUB
+    // aperture. This is mapped to the same backing memory as device memory.
+    if (!system_bit) {
+        paddr += vm->getMMHUBBase();
+        assert(vm->inMMHUB(paddr));
+    }
 
     range.size = std::min(range.size, next - range.vaddr);
     range.paddr = paddr;

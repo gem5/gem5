@@ -27,7 +27,8 @@
 from m5.params import *
 from m5.objects.CheckerCPU import CheckerCPU
 
+
 class BaseO3Checker(CheckerCPU):
-    type = 'BaseO3Checker'
-    cxx_class = 'gem5::o3::Checker'
-    cxx_header = 'cpu/o3/checker.hh'
+    type = "BaseO3Checker"
+    cxx_class = "gem5::o3::Checker"
+    cxx_header = "cpu/o3/checker.hh"

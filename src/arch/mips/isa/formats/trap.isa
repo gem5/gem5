@@ -75,7 +75,7 @@ output decoder {{
 def template TrapExecute {{
     // Edit This Template When Traps Are Implemented
     Fault %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, trace::InstRecord *traceData) const
     {
         //Write the resulting state to the execution context
         %(op_wb)s;

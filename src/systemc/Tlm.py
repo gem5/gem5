@@ -25,11 +25,14 @@
 
 from m5.params import Port, VectorPort
 
+
 def TLM_TARGET_ROLE(width):
-    return 'TLM TARGET %d' % width
+    return "TLM TARGET %d" % width
+
 
 def TLM_INITIATOR_ROLE(width):
-    return 'TLM INITIATOR %d' % width
+    return "TLM INITIATOR %d" % width
+
 
 class TlmTargetSocket(Port):
     def __init__(self, width, desc):
@@ -39,6 +42,7 @@ class TlmTargetSocket(Port):
 
         super().__init__(my_role, desc)
 
+
 class VectorTlmTargetSocket(VectorPort):
     def __init__(self, width, desc):
         my_role = TLM_TARGET_ROLE(width)
@@ -47,6 +51,7 @@ class VectorTlmTargetSocket(VectorPort):
 
         super().__init__(my_role, desc)
 
+
 class TlmInitiatorSocket(Port):
     def __init__(self, width, desc):
         my_role = TLM_INITIATOR_ROLE(width)
@@ -54,6 +59,7 @@ class TlmInitiatorSocket(Port):
         Port.compat(my_role, peer_role)
 
         super().__init__(my_role, desc, is_source=True)
+
 
 class VectorTlmInitiatorSocket(VectorPort):
     def __init__(self, width, desc):

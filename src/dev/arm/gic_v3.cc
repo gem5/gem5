@@ -147,7 +147,7 @@ Gicv3::init()
 
     for (int i = 0; i < threads; i++) {
         redistributors[i] = new Gicv3Redistributor(this, i);
-        cpuInterfaces[i] = new Gicv3CPUInterface(this, i);
+        cpuInterfaces[i] = new Gicv3CPUInterface(this, sys->threads[i]);
     }
 
     distRange = RangeSize(params().dist_addr,

@@ -136,6 +136,37 @@ rebasing and git, see the [git book].
 
 [git book]: https://git-scm.com/book/en/v2/Git-Branching-Rebasing
 
+
+Setting up pre-commit
+---------------------
+
+To help ensure the gem5 style guide is maintained, we use [pre-commit](
+https://pre-commit.com) to run checks on changes to be contributed.
+
+To setup pre-commit, run the following in your gem5 directory to install the
+pre-commit and commit message hooks.
+
+```sh
+pip install pre-commit
+pre-commit install -t pre-commit -t commit-msg
+```
+
+The hooks are also automatically installed when gem5 is compiled.
+
+When you run a `git commit` command the pre-commit hook will run checks on your
+committed code. The commit will be blocked if a check fails.
+
+The same checks are run as part of Gerrit's CI tests (those required to obtain
+a Verified label, necessary for a change to be accepted to the develop branch).
+Therefore setting up pre-commit in your local gem5 development environment is
+recommended.
+
+You can automatically format files to pass the pre-commit tests by running:
+
+```sh
+pre-commit run --files <files to format>
+```
+
 Requirements for change descriptions
 ------------------------------------
 To help reviewers and future contributors more easily understand and track

@@ -54,7 +54,7 @@ output header {{
         std::string generateDisassembly(
                 Addr pc, const loader::SymbolTable *symtab) const override;
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 
@@ -80,7 +80,7 @@ output decoder {{
 
 output exec {{
     Fault
-    Nop::execute(ExecContext *, Trace::InstRecord *) const
+    Nop::execute(ExecContext *, trace::InstRecord *) const
     {
         return NoFault;
     }
@@ -134,4 +134,3 @@ def format BasicOperateWithNopCheck(code, *opt_args) {{
 def format Nop() {{
         decode_block = 'return new Nop(\"\",machInst);\n'
 }};
-

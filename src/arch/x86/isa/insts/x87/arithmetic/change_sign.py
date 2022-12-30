@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 
 def macroop FABS {
     absfp st(0), st(0), SetStatus=True
@@ -42,4 +42,4 @@ def macroop FABS {
 def macroop FCHS {
     chsfp st(0), st(0), SetStatus=True
 };
-'''
+"""

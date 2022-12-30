@@ -28,11 +28,12 @@ from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
 
+
 class BloomFilterBase(SimObject):
-    type = 'BloomFilterBase'
+    type = "BloomFilterBase"
     abstract = True
     cxx_header = "base/filters/base.hh"
-    cxx_class = 'gem5::bloom_filter::Base'
+    cxx_class = "gem5::bloom_filter::Base"
 
     size = Param.Int(4096, "Number of entries in the filter")
 
@@ -43,19 +44,25 @@ class BloomFilterBase(SimObject):
     num_bits = Param.Int(1, "Number of bits in a filter entry")
     threshold = Param.Int(1, "Value at which an entry is considered as set")
 
+
 class BloomFilterBlock(BloomFilterBase):
-    type = 'BloomFilterBlock'
-    cxx_class = 'gem5::bloom_filter::Block'
+    type = "BloomFilterBlock"
+    cxx_class = "gem5::bloom_filter::Block"
     cxx_header = "base/filters/block_bloom_filter.hh"
 
-    masks_lsbs = VectorParam.Unsigned([Self.offset_bits,
-        2 * Self.offset_bits], "Position of the LSB of each mask")
-    masks_sizes = VectorParam.Unsigned([Self.offset_bits, Self.offset_bits],
-        "Size, in number of bits, of each mask")
+    masks_lsbs = VectorParam.Unsigned(
+        [Self.offset_bits, 2 * Self.offset_bits],
+        "Position of the LSB of each mask",
+    )
+    masks_sizes = VectorParam.Unsigned(
+        [Self.offset_bits, Self.offset_bits],
+        "Size, in number of bits, of each mask",
+    )
+
 
 class BloomFilterMultiBitSel(BloomFilterBase):
-    type = 'BloomFilterMultiBitSel'
-    cxx_class = 'gem5::bloom_filter::MultiBitSel'
+    type = "BloomFilterMultiBitSel"
+    cxx_class = "gem5::bloom_filter::MultiBitSel"
     cxx_header = "base/filters/multi_bit_sel_bloom_filter.hh"
 
     num_hashes = Param.Int(4, "Number of hashes")
@@ -63,19 +70,22 @@ class BloomFilterMultiBitSel(BloomFilterBase):
     skip_bits = Param.Int(2, "Offset from block number")
     is_parallel = Param.Bool(False, "Whether hashing is done in parallel")
 
+
 class BloomFilterBulk(BloomFilterMultiBitSel):
-    type = 'BloomFilterBulk'
-    cxx_class = 'gem5::bloom_filter::Bulk'
+    type = "BloomFilterBulk"
+    cxx_class = "gem5::bloom_filter::Bulk"
     cxx_header = "base/filters/bulk_bloom_filter.hh"
 
+
 class BloomFilterH3(BloomFilterMultiBitSel):
-    type = 'BloomFilterH3'
-    cxx_class = 'gem5::bloom_filter::H3'
+    type = "BloomFilterH3"
+    cxx_class = "gem5::bloom_filter::H3"
     cxx_header = "base/filters/h3_bloom_filter.hh"
 
+
 class BloomFilterMulti(BloomFilterBase):
-    type = 'BloomFilterMulti'
-    cxx_class = 'gem5::bloom_filter::Multi'
+    type = "BloomFilterMulti"
+    cxx_class = "gem5::bloom_filter::Multi"
     cxx_header = "base/filters/multi_bloom_filter.hh"
 
     # The base filter should not be used, since this filter is the combination
@@ -83,17 +93,21 @@ class BloomFilterMulti(BloomFilterBase):
     size = 1
 
     # By default there are two sub-filters that hash sequential bitfields
-    filters = VectorParam.BloomFilterBase([
-        BloomFilterBlock(size = 4096, masks_lsbs = [6, 12]),
-        BloomFilterBlock(size = 1024, masks_lsbs = [18, 24])],
-        "Sub-filters to be combined")
+    filters = VectorParam.BloomFilterBase(
+        [
+            BloomFilterBlock(size=4096, masks_lsbs=[6, 12]),
+            BloomFilterBlock(size=1024, masks_lsbs=[18, 24]),
+        ],
+        "Sub-filters to be combined",
+    )
 
     # By default match this with the number of sub-filters
     threshold = 2
 
+
 class BloomFilterPerfect(BloomFilterBase):
-    type = 'BloomFilterPerfect'
-    cxx_class = 'gem5::bloom_filter::Perfect'
+    type = "BloomFilterPerfect"
+    cxx_class = "gem5::bloom_filter::Perfect"
     cxx_header = "base/filters/perfect_bloom_filter.hh"
 
     # The base filter is not needed. Use a dummy value.

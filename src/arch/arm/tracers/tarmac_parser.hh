@@ -62,7 +62,7 @@
 namespace gem5
 {
 
-namespace Trace {
+namespace trace {
 
 class TarmacParserRecord : public TarmacBaseRecord
 {
@@ -300,7 +300,7 @@ class TarmacParser : public InstTracer
     bool macroopInProgress;
 };
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5
 
 #endif // __ARCH_ARM_TRACERS_TARMAC_PARSER_HH__

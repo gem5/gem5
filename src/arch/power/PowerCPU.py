@@ -27,10 +27,12 @@ from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
 from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
 from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
 from m5.objects.BaseO3CPU import BaseO3CPU
+from m5.objects.BaseMinorCPU import BaseMinorCPU
 from m5.objects.PowerDecoder import PowerDecoder
 from m5.objects.PowerMMU import PowerMMU
 from m5.objects.PowerInterrupts import PowerInterrupts
 from m5.objects.PowerISA import PowerISA
+
 
 class PowerCPU:
     ArchDecoder = PowerDecoder
@@ -38,14 +40,22 @@ class PowerCPU:
     ArchInterrupts = PowerInterrupts
     ArchISA = PowerISA
 
+
 class PowerAtomicSimpleCPU(BaseAtomicSimpleCPU, PowerCPU):
     mmu = PowerMMU()
+
 
 class PowerNonCachingSimpleCPU(BaseNonCachingSimpleCPU, PowerCPU):
     mmu = PowerMMU()
 
+
 class PowerTimingSimpleCPU(BaseTimingSimpleCPU, PowerCPU):
     mmu = PowerMMU()
 
+
 class PowerO3CPU(BaseO3CPU, PowerCPU):
+    mmu = PowerMMU()
+
+
+class PowerMinorCPU(BaseMinorCPU, PowerCPU):
     mmu = PowerMMU()

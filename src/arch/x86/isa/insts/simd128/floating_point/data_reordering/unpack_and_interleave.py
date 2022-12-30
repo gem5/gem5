@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop UNPCKLPS_XMM_XMM {
     unpack xmmh, xmml, xmmlm, ext=1, size=4
     unpack xmml, xmml, xmmlm, ext=0, size=4
@@ -104,4 +104,4 @@ def macroop UNPCKHPD_XMM_P {
     movfp xmml, xmmh
     movfp xmmh, ufp1
 };
-'''
+"""

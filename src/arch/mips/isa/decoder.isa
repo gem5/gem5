@@ -382,86 +382,85 @@ decode OPCODE_HI default Unknown::unknown() {
                     // Decode MIPS MT MFTR instruction into sub-instructions
                     0x8: decode MT_U {
                         0x0: mftc0({{
-                            data = readRegOtherThread(xc, RegId(MiscRegClass,
-                                                            (RT << 3 | SEL)));
+                            data = readRegOtherThread(xc,
+                                    miscRegClass[RT << 3 | SEL]);
                         }});
                         0x1: decode SEL {
                             0x0: mftgpr({{
-                                data = readRegOtherThread(xc,
-                                                    RegId(IntRegClass, RT));
+                                data = readRegOtherThread(xc, intRegClass[RT]);
                             }});
                             0x1: decode RT {
                                 0x0: mftlo_dsp0({{
                                     data = readRegOtherThread(xc,
-                                           RegId(IntRegClass, INTREG_DSP_LO0));
+                                            int_reg::DspLo0);
                                 }});
                                 0x1: mfthi_dsp0({{
                                     data = readRegOtherThread(xc,
-                                           RegId(IntRegClass, INTREG_DSP_HI0));
+                                            int_reg::DspHi0);
                                 }});
                                 0x2: mftacx_dsp0({{
                                     data = readRegOtherThread(xc,
-                                          RegId(IntRegClass, INTREG_DSP_ACX0));
+                                            int_reg::DspAcx0);
                                 }});
                                 0x4: mftlo_dsp1({{
                                     data = readRegOtherThread(xc,
-                                           RegId(IntRegClass, INTREG_DSP_LO1));
+                                            int_reg::DspLo1);
                                 }});
                                 0x5: mfthi_dsp1({{
                                     data = readRegOtherThread(xc,
-                                           RegId(IntRegClass, INTREG_DSP_HI1));
+                                            int_reg::DspHi1);
                                 }});
                                 0x6: mftacx_dsp1({{
                                     data = readRegOtherThread(xc,
-                                          RegId(IntRegClass, INTREG_DSP_ACX1));
+                                            int_reg::DspAcx1);
                                 }});
                                 0x8: mftlo_dsp2({{
                                     data = readRegOtherThread(xc,
-                                           RegId(IntRegClass, INTREG_DSP_LO2));
+                                            int_reg::DspLo2);
                                 }});
                                 0x9: mfthi_dsp2({{
                                     data = readRegOtherThread(xc,
-                                           RegId(IntRegClass, INTREG_DSP_HI2));
+                                            int_reg::DspHi2);
                                 }});
                                 0x10: mftacx_dsp2({{
                                     data = readRegOtherThread(xc,
-                                          RegId(IntRegClass, INTREG_DSP_ACX2));
+                                            int_reg::DspAcx2);
                                 }});
                                 0x12: mftlo_dsp3({{
                                     data = readRegOtherThread(xc,
-                                           RegId(IntRegClass, INTREG_DSP_LO3));
+                                            int_reg::DspLo3);
                                 }});
                                 0x13: mfthi_dsp3({{
                                     data = readRegOtherThread(xc,
-                                           RegId(IntRegClass, INTREG_DSP_HI3));
+                                            int_reg::DspHi3);
                                 }});
                                 0x14: mftacx_dsp3({{
                                     data = readRegOtherThread(xc,
-                                          RegId(IntRegClass, INTREG_DSP_ACX3));
+                                            int_reg::DspAcx3);
                                 }});
                                 0x16: mftdsp({{
                                     data = readRegOtherThread(xc,
-                                       RegId(IntRegClass, INTREG_DSP_CONTROL));
+                                            int_reg::DspControl);
                                 }});
                                 default: CP0Unimpl::unknown();
                             }
                             0x2: decode MT_H {
                                 0x0: mftc1({{
                                     data = readRegOtherThread(xc,
-                                                     RegId(FloatRegClass, RT));
+                                            floatRegClass[RT]);
                                 }});
                                 0x1: mfthc1({{
                                     data = readRegOtherThread(xc,
-                                                     RegId(FloatRegClass, RT));
+                                            floatRegClass[RT]);
                                 }});
                             }
                             0x3: cftc1({{
                                 uint32_t fcsr_val = readRegOtherThread(xc,
-                                          RegId(FloatRegClass, FLOATREG_FCSR));
+                                        float_reg::Fcsr);
                                 switch (RT) {
                                   case 0:
                                     data = readRegOtherThread(xc,
-                                            RegId(MiscRegClass, FLOATREG_FIR));
+                                            float_reg::Fir);
                                     break;
                                   case 25:
                                     data = (fcsr_val & 0xFE000000 >> 24) |
@@ -491,62 +490,61 @@ decode OPCODE_HI default Unknown::unknown() {
                     // Decode MIPS MT MTTR instruction into sub-instructions
                     0xC: decode MT_U {
                         0x0: mttc0({{ setRegOtherThread(xc,
-                                     RegId(MiscRegClass, (RD << 3 | SEL)), Rt);
+                                     miscRegClass[RD << 3 | SEL], Rt);
                                    }});
                         0x1: decode SEL {
                             0x0: mttgpr({{ setRegOtherThread(xc,
-                                                   RegId(IntRegClass, RD), Rt);
+                                                 intRegClass[RD], Rt);
                             }});
                             0x1: decode RT {
                                 0x0: mttlo_dsp0({{ setRegOtherThread(xc,
-                                       RegId(IntRegClass, INTREG_DSP_LO0), Rt);
+                                                 int_reg::DspLo0, Rt);
                                 }});
                                 0x1: mtthi_dsp0({{ setRegOtherThread(xc,
-                                       RegId(IntRegClass, INTREG_DSP_HI0), Rt);
+                                                 int_reg::DspHi0, Rt);
                                 }});
                                 0x2: mttacx_dsp0({{ setRegOtherThread(xc,
-                                      RegId(IntRegClass, INTREG_DSP_ACX0), Rt);
+                                                 int_reg::DspAcx0, Rt);
                                 }});
                                 0x4: mttlo_dsp1({{ setRegOtherThread(xc,
-                                       RegId(IntRegClass, INTREG_DSP_LO1), Rt);
+                                                 int_reg::DspLo1, Rt);
                                 }});
                                 0x5: mtthi_dsp1({{ setRegOtherThread(xc,
-                                       RegId(IntRegClass, INTREG_DSP_HI1), Rt);
+                                                 int_reg::DspHi1, Rt);
                                 }});
                                 0x6: mttacx_dsp1({{ setRegOtherThread(xc,
-                                      RegId(IntRegClass, INTREG_DSP_ACX1), Rt);
+                                                 int_reg::DspAcx1, Rt);
                                 }});
                                 0x8: mttlo_dsp2({{ setRegOtherThread(xc,
-                                       RegId(IntRegClass, INTREG_DSP_LO2), Rt);
+                                                 int_reg::DspLo2, Rt);
                                 }});
                                 0x9: mtthi_dsp2({{ setRegOtherThread(xc,
-                                       RegId(IntRegClass, INTREG_DSP_HI2), Rt);
+                                                 int_reg::DspHi2, Rt);
                                 }});
                                 0x10: mttacx_dsp2({{ setRegOtherThread(xc,
-                                      RegId(IntRegClass, INTREG_DSP_ACX2), Rt);
+                                                  int_reg::DspAcx2, Rt);
                                 }});
                                 0x12: mttlo_dsp3({{ setRegOtherThread(xc,
-                                       RegId(IntRegClass, INTREG_DSP_LO3), Rt);
+                                                  int_reg::DspLo3, Rt);
                                 }});
                                 0x13: mtthi_dsp3({{ setRegOtherThread(xc,
-                                       RegId(IntRegClass, INTREG_DSP_HI3), Rt);
+                                                  int_reg::DspHi3, Rt);
                                 }});
                                 0x14: mttacx_dsp3({{ setRegOtherThread(xc,
-                                      RegId(IntRegClass, INTREG_DSP_ACX3), Rt);
+                                                  int_reg::DspAcx3, Rt);
                                 }});
                                 0x16: mttdsp({{ setRegOtherThread(xc,
-                                   RegId(IntRegClass, INTREG_DSP_CONTROL), Rt);
+                                                  int_reg::DspControl, Rt);
                                 }});
                                 default: CP0Unimpl::unknown();
 
                             }
                             0x2: mttc1({{
                                 uint64_t data = readRegOtherThread(xc,
-                                                     RegId(FloatRegClass, RD));
+                                        floatRegClass[RD]);
                                 data = insertBits(data, MT_H ? 63 : 31,
                                                   MT_H ? 32 : 0, Rt);
-                                setRegOtherThread(xc, RegId(FloatRegClass, RD),
-                                                      data);
+                                setRegOtherThread(xc, floatRegClass[RD], data);
                             }});
                             0x3: cttc1({{
                                 uint32_t data;
@@ -582,8 +580,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                             "Access to Floating Control "
                                             "S""tatus Register", FS);
                                 }
-                                setRegOtherThread(xc,
-                                    RegId(FloatRegClass, FLOATREG_FCSR), data);
+                                setRegOtherThread(xc, float_reg::Fcsr, data);
                             }});
                             default: CP0Unimpl::unknown();
                         }
@@ -2548,5 +2545,3 @@ decode OPCODE_HI default Unknown::unknown() {
         0x6: CP2Unimpl::sdc2();
     }
 }
-
-

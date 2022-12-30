@@ -30,6 +30,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 #include "base/pollevent.hh"
 #include "params/SharedMemoryServer.hh"
@@ -86,7 +87,8 @@ class SharedMemoryServer : public SimObject
 
     int serverFd;
     std::unique_ptr<ListenSocketEvent> listenSocketEvent;
-    std::unique_ptr<ClientSocketEvent> clientSocketEvent;
+    std::unordered_map<int, std::unique_ptr<ClientSocketEvent>>
+        clientSocketEvents;
 };
 
 } // namespace memory

@@ -31,7 +31,7 @@ from m5.defines import buildEnv
 from m5.util import addToPath
 import os, argparse, sys
 
-m5.util.addToPath('../configs/')
+m5.util.addToPath("../configs/")
 
 from ruby import Ruby
 from common import Options
@@ -48,69 +48,75 @@ args = parser.parse_args()
 # Set the default cache size and associativity to be very small to encourage
 # races between requests and writebacks.
 #
-args.l1d_size="256B"
-args.l1i_size="256B"
-args.l2_size="512B"
-args.l3_size="1kB"
-args.l1d_assoc=2
-args.l1i_assoc=2
-args.l2_assoc=2
-args.l3_assoc=2
-args.ports=32
+args.l1d_size = "256B"
+args.l1i_size = "256B"
+args.l2_size = "512B"
+args.l3_size = "1kB"
+args.l1d_assoc = 2
+args.l1i_assoc = 2
+args.l2_assoc = 2
+args.l3_assoc = 2
+args.ports = 32
 
-#MAX CORES IS 8 with the fals sharing method
+# MAX CORES IS 8 with the fals sharing method
 nb_cores = 8
 
 # ruby does not support atomic, functional, or uncacheable accesses
-cpus = [ MemTest(percent_functional=50,
-                 percent_uncacheable=0, suppress_func_errors=True) \
-         for i in range(nb_cores) ]
+cpus = [
+    MemTest(
+        percent_functional=50, percent_uncacheable=0, suppress_func_errors=True
+    )
+    for i in range(nb_cores)
+]
 
 # overwrite args.num_cpus with the nb_cores value
 args.num_cpus = nb_cores
 
 # system simulated
-system = System(cpu = cpus)
+system = System(cpu=cpus)
 # Dummy voltage domain for all our clock domains
 system.voltage_domain = VoltageDomain()
-system.clk_domain = SrcClockDomain(clock = '1GHz',
-                                   voltage_domain = system.voltage_domain)
+system.clk_domain = SrcClockDomain(
+    clock="1GHz", voltage_domain=system.voltage_domain
+)
 
 # Create a seperate clock domain for components that should run at
 # CPUs frequency
-system.cpu_clk_domain = SrcClockDomain(clock = '2GHz',
-                                       voltage_domain = system.voltage_domain)
+system.cpu_clk_domain = SrcClockDomain(
+    clock="2GHz", voltage_domain=system.voltage_domain
+)
 
 # All cpus are associated with cpu_clk_domain
 for cpu in cpus:
     cpu.clk_domain = system.cpu_clk_domain
 
-system.mem_ranges = AddrRange('256MB')
+system.mem_ranges = AddrRange("256MB")
 
 Ruby.create_system(args, False, system)
 
 # Create a separate clock domain for Ruby
-system.ruby.clk_domain = SrcClockDomain(clock = args.ruby_clock,
-                                        voltage_domain = system.voltage_domain)
+system.ruby.clk_domain = SrcClockDomain(
+    clock=args.ruby_clock, voltage_domain=system.voltage_domain
+)
 
-assert(len(cpus) == len(system.ruby._cpu_ports))
+assert len(cpus) == len(system.ruby._cpu_ports)
 
 for (i, ruby_port) in enumerate(system.ruby._cpu_ports):
-     #
-     # Tie the cpu port to the ruby cpu ports and
-     # physmem, respectively
-     #
-     cpus[i].port = ruby_port.in_ports
+    #
+    # Tie the cpu port to the ruby cpu ports and
+    # physmem, respectively
+    #
+    cpus[i].port = ruby_port.in_ports
 
-     #
-     # Since the memtester is incredibly bursty, increase the deadlock
-     # threshold to 1 million cycles
-     #
-     ruby_port.deadlock_threshold = 1000000
+    #
+    # Since the memtester is incredibly bursty, increase the deadlock
+    # threshold to 1 million cycles
+    #
+    ruby_port.deadlock_threshold = 1000000
 
 # -----------------------
 # run simulation
 # -----------------------
 
-root = Root(full_system = False, system = system)
-root.system.mem_mode = 'timing'
+root = Root(full_system=False, system=system)
+root.system.mem_mode = "timing"

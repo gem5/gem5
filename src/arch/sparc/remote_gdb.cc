@@ -177,15 +177,15 @@ RemoteGDB::SPARCGdbRegCache::getRegs(ThreadContext *context)
 {
     DPRINTF(GDBAcc, "getRegs in remotegdb \n");
     for (int i = 0; i < 32; i++)
-        r.gpr[i] = htobe((uint32_t)context->readIntReg(i));
+        r.gpr[i] = htobe((uint32_t)context->getReg(intRegClass[i]));
     auto &pc = context->pcState().as<SparcISA::PCState>();
     r.pc = htobe((uint32_t)pc.pc());
     r.npc = htobe((uint32_t)pc.npc());
-    r.y = htobe((uint32_t)context->readIntReg(INTREG_Y));
+    r.y = htobe((uint32_t)context->getReg(int_reg::Y));
     PSTATE pstate = context->readMiscReg(MISCREG_PSTATE);
     r.psr = htobe((uint32_t)pstate);
     r.fsr = htobe((uint32_t)context->readMiscReg(MISCREG_FSR));
-    r.csr = htobe((uint32_t)context->readIntReg(INTREG_CCR));
+    r.csr = htobe((uint32_t)context->getReg(int_reg::Ccr));
 }
 
 void
@@ -193,7 +193,7 @@ RemoteGDB::SPARC64GdbRegCache::getRegs(ThreadContext *context)
 {
     DPRINTF(GDBAcc, "getRegs in remotegdb \n");
     for (int i = 0; i < 32; i++)
-        r.gpr[i] = htobe(context->readIntReg(i));
+        r.gpr[i] = htobe(context->getReg(intRegClass[i]));
     for (int i = 0; i < 32; i++)
         r.fpr[i] = 0;
     auto &pc = context->pcState().as<SparcISA::PCState>();
@@ -201,20 +201,20 @@ RemoteGDB::SPARC64GdbRegCache::getRegs(ThreadContext *context)
     r.npc = htobe(pc.npc());
     r.fsr = htobe(context->readMiscReg(MISCREG_FSR));
     r.fprs = htobe(context->readMiscReg(MISCREG_FPRS));
-    r.y = htobe(context->readIntReg(INTREG_Y));
+    r.y = htobe(context->getReg(int_reg::Y));
     PSTATE pstate = context->readMiscReg(MISCREG_PSTATE);
     r.state = htobe(
         context->readMiscReg(MISCREG_CWP) |
         pstate << 8 |
         context->readMiscReg(MISCREG_ASI) << 24 |
-        context->readIntReg(INTREG_CCR) << 32);
+        context->getReg(int_reg::Ccr) << 32);
 }
 
 void
 RemoteGDB::SPARCGdbRegCache::setRegs(ThreadContext *context) const
 {
     for (int i = 0; i < 32; i++)
-        context->setIntReg(i, r.gpr[i]);
+        context->setReg(intRegClass[i], r.gpr[i]);
     PCState pc;
     pc.pc(r.pc);
     pc.npc(r.npc);
@@ -231,7 +231,7 @@ void
 RemoteGDB::SPARC64GdbRegCache::setRegs(ThreadContext *context) const
 {
     for (int i = 0; i < 32; i++)
-        context->setIntReg(i, r.gpr[i]);
+        context->setReg(intRegClass[i], r.gpr[i]);
     PCState pc;
     pc.pc(r.pc);
     pc.npc(r.npc);

@@ -39,176 +39,177 @@ import unittest
 
 from m5.util import convert
 
+
 def _ip(*args):
     return (args[0] << 24) | (args[1] << 16) | (args[2] << 8) | args[3]
+
 
 class ConvertTestSuite(unittest.TestCase):
     """Test cases for unit conversion"""
 
     def test_toMetricFloat(self):
         def conv(x):
-            return convert.toMetricFloat(x, 'value', 'X')
+            return convert.toMetricFloat(x, "value", "X")
 
-        self.assertEqual(conv('42'),  42e0)
-        self.assertEqual(conv('42.5'),  42.5e0)
-        self.assertEqual(conv('42kX'), 42e3)
-        self.assertEqual(conv('42.5kX'), 42.5e3)
-        self.assertEqual(conv('42MX'), 42e6)
-        self.assertEqual(conv('42GX'), 42e9)
-        self.assertEqual(conv('42TX'), 42e12)
-        self.assertEqual(conv('42PX'), 42e15)
-        self.assertEqual(conv('42EX'), 42e18)
+        self.assertEqual(conv("42"), 42e0)
+        self.assertEqual(conv("42.5"), 42.5e0)
+        self.assertEqual(conv("42kX"), 42e3)
+        self.assertEqual(conv("42.5kX"), 42.5e3)
+        self.assertEqual(conv("42MX"), 42e6)
+        self.assertEqual(conv("42GX"), 42e9)
+        self.assertEqual(conv("42TX"), 42e12)
+        self.assertEqual(conv("42PX"), 42e15)
+        self.assertEqual(conv("42EX"), 42e18)
 
-        self.assertEqual(conv('42KiX'), 42 * 2**10)
-        self.assertEqual(conv('42MiX'), 42 * 2**20)
-        self.assertEqual(conv('42GiX'), 42 * 2**30)
-        self.assertEqual(conv('42TiX'), 42 * 2**40)
-        self.assertEqual(conv('42PiX'), 42 * 2**50)
-        self.assertEqual(conv('42EiX'), 42 * 2**60)
+        self.assertEqual(conv("42KiX"), 42 * 2**10)
+        self.assertEqual(conv("42MiX"), 42 * 2**20)
+        self.assertEqual(conv("42GiX"), 42 * 2**30)
+        self.assertEqual(conv("42TiX"), 42 * 2**40)
+        self.assertEqual(conv("42PiX"), 42 * 2**50)
+        self.assertEqual(conv("42EiX"), 42 * 2**60)
 
-        self.assertRaises(ValueError, conv, '42k')
-        self.assertRaises(ValueError, conv, '42KX')
-        self.assertRaises(ValueError, conv, '42kiX')
+        self.assertRaises(ValueError, conv, "42k")
+        self.assertRaises(ValueError, conv, "42KX")
+        self.assertRaises(ValueError, conv, "42kiX")
 
-        self.assertEqual(convert.toMetricFloat('42'), 42)
+        self.assertEqual(convert.toMetricFloat("42"), 42)
         # Prefixes not allowed without a unit
-        self.assertRaises(ValueError, convert.toMetricFloat, '42k')
+        self.assertRaises(ValueError, convert.toMetricFloat, "42k")
 
     def test_toMetricInteger(self):
         def conv(x):
-            return convert.toMetricInteger(x, 'value', 'X')
+            return convert.toMetricInteger(x, "value", "X")
 
-        self.assertEqual(conv('42'),  42 * 10**0)
-        self.assertEqual(conv('42kX'), 42 * 10**3)
-        self.assertEqual(conv('42MX'), 42 * 10**6)
-        self.assertEqual(conv('42GX'), 42 * 10**9)
-        self.assertEqual(conv('42TX'), 42 * 10**12)
-        self.assertEqual(conv('42PX'), 42 * 10**15)
-        self.assertEqual(conv('42EX'), 42 * 10**18)
+        self.assertEqual(conv("42"), 42 * 10**0)
+        self.assertEqual(conv("42kX"), 42 * 10**3)
+        self.assertEqual(conv("42MX"), 42 * 10**6)
+        self.assertEqual(conv("42GX"), 42 * 10**9)
+        self.assertEqual(conv("42TX"), 42 * 10**12)
+        self.assertEqual(conv("42PX"), 42 * 10**15)
+        self.assertEqual(conv("42EX"), 42 * 10**18)
 
-        self.assertEqual(conv('42KiX'), 42 * 2**10)
-        self.assertEqual(conv('42MiX'), 42 * 2**20)
-        self.assertEqual(conv('42GiX'), 42 * 2**30)
-        self.assertEqual(conv('42TiX'), 42 * 2**40)
-        self.assertEqual(conv('42PiX'), 42 * 2**50)
-        self.assertEqual(conv('42EiX'), 42 * 2**60)
+        self.assertEqual(conv("42KiX"), 42 * 2**10)
+        self.assertEqual(conv("42MiX"), 42 * 2**20)
+        self.assertEqual(conv("42GiX"), 42 * 2**30)
+        self.assertEqual(conv("42TiX"), 42 * 2**40)
+        self.assertEqual(conv("42PiX"), 42 * 2**50)
+        self.assertEqual(conv("42EiX"), 42 * 2**60)
 
-        self.assertRaises(ValueError, conv, '42.1')
-        self.assertRaises(ValueError, conv, '42.1kX')
+        self.assertRaises(ValueError, conv, "42.1")
+        self.assertRaises(ValueError, conv, "42.1kX")
 
-        self.assertRaises(ValueError, conv, '42k')
-        self.assertRaises(ValueError, conv, '42KX')
-        self.assertRaises(ValueError, conv, '42kiX')
+        self.assertRaises(ValueError, conv, "42k")
+        self.assertRaises(ValueError, conv, "42KX")
+        self.assertRaises(ValueError, conv, "42kiX")
 
-        self.assertEqual(convert.toMetricInteger('42'), 42)
+        self.assertEqual(convert.toMetricInteger("42"), 42)
 
         # Prefixes not allowed without a unit
-        self.assertRaises(ValueError, convert.toMetricInteger, '42k')
+        self.assertRaises(ValueError, convert.toMetricInteger, "42k")
 
     def test_toBool(self):
         conv = convert.toBool
 
-        self.assertEqual(conv('TRUE'), True)
-        self.assertEqual(conv('true'), True)
-        self.assertEqual(conv('t'), True)
-        self.assertEqual(conv('yes'), True)
-        self.assertEqual(conv('y'), True)
-        self.assertEqual(conv('1'), True)
+        self.assertEqual(conv("TRUE"), True)
+        self.assertEqual(conv("true"), True)
+        self.assertEqual(conv("t"), True)
+        self.assertEqual(conv("yes"), True)
+        self.assertEqual(conv("y"), True)
+        self.assertEqual(conv("1"), True)
 
-        self.assertEqual(conv('FALSE'), False)
-        self.assertEqual(conv('false'), False)
-        self.assertEqual(conv('f'), False)
-        self.assertEqual(conv('no'), False)
-        self.assertEqual(conv('n'), False)
-        self.assertEqual(conv('0'), False)
+        self.assertEqual(conv("FALSE"), False)
+        self.assertEqual(conv("false"), False)
+        self.assertEqual(conv("f"), False)
+        self.assertEqual(conv("no"), False)
+        self.assertEqual(conv("n"), False)
+        self.assertEqual(conv("0"), False)
 
-        self.assertRaises(ValueError, conv, 'not a bool')
-        self.assertRaises(ValueError, conv, '2')
+        self.assertRaises(ValueError, conv, "not a bool")
+        self.assertRaises(ValueError, conv, "2")
 
     def test_toFrequency(self):
         conv = convert.toFrequency
 
-        self.assertEqual(conv('42'), 42.0)
-        self.assertEqual(conv('42Hz'), 42)
-        self.assertEqual(conv('42kHz'), 42e3)
+        self.assertEqual(conv("42"), 42.0)
+        self.assertEqual(conv("42Hz"), 42)
+        self.assertEqual(conv("42kHz"), 42e3)
 
         # Prefixes need a unit
-        self.assertRaises(ValueError, conv, '42k')
+        self.assertRaises(ValueError, conv, "42k")
         # Seconds isn't a valid unit unless using anyToFrequency.
-        self.assertRaises(ValueError, conv, '42s')
+        self.assertRaises(ValueError, conv, "42s")
 
     def test_toLatency(self):
         conv = convert.toLatency
 
-        self.assertEqual(conv('42'), 42.0)
-        self.assertEqual(conv('42s'), 42.0)
+        self.assertEqual(conv("42"), 42.0)
+        self.assertEqual(conv("42s"), 42.0)
 
         # We allow prefixes for seconds.
-        self.assertEqual(conv('42ks'), 42e3)
+        self.assertEqual(conv("42ks"), 42e3)
 
         # Prefixe need a unit
-        self.assertRaises(ValueError, conv, '42k')
+        self.assertRaises(ValueError, conv, "42k")
         # Hz shouldn't be converted unless using anyToLatency
-        self.assertRaises(ValueError, conv, '42Hz')
+        self.assertRaises(ValueError, conv, "42Hz")
 
     def test_anyToLatency(self):
         conv = convert.anyToLatency
 
-        self.assertEqual(conv('42s'), 42.0)
+        self.assertEqual(conv("42s"), 42.0)
 
         # We currently allow prefixes for seconds.
-        self.assertEqual(conv('42ks'), 42e3)
+        self.assertEqual(conv("42ks"), 42e3)
 
-        self.assertEqual(conv('10Hz'), 0.1)
-        self.assertEqual(conv('1kHz'), 1e-3)
+        self.assertEqual(conv("10Hz"), 0.1)
+        self.assertEqual(conv("1kHz"), 1e-3)
 
-        self.assertRaises(ValueError, conv, '42k')
-        self.assertRaises(ValueError, conv, '42')
+        self.assertRaises(ValueError, conv, "42k")
+        self.assertRaises(ValueError, conv, "42")
 
     def test_anyToFrequency(self):
         conv = convert.anyToFrequency
 
-        self.assertEqual(conv('42kHz'), 42e3)
+        self.assertEqual(conv("42kHz"), 42e3)
 
-        self.assertEqual(conv('0.1s'), 10.0)
-        self.assertEqual(conv('1ms'), 1000.0)
+        self.assertEqual(conv("0.1s"), 10.0)
+        self.assertEqual(conv("1ms"), 1000.0)
 
-        self.assertRaises(ValueError, conv, '42k')
-        self.assertRaises(ValueError, conv, '42')
+        self.assertRaises(ValueError, conv, "42k")
+        self.assertRaises(ValueError, conv, "42")
 
     def test_toNetworkBandwidth(self):
         conv = convert.toNetworkBandwidth
 
-        self.assertEqual(conv('42'), 42.0)
-        self.assertEqual(conv('42bps'), 42.0)
-        self.assertEqual(conv('42kbps'), 42e3)
+        self.assertEqual(conv("42"), 42.0)
+        self.assertEqual(conv("42bps"), 42.0)
+        self.assertEqual(conv("42kbps"), 42e3)
 
-        self.assertRaises(ValueError, conv, '42Kbps')
+        self.assertRaises(ValueError, conv, "42Kbps")
 
     def test_toMemoryBandwidth(self):
         conv = convert.toMemoryBandwidth
 
-        self.assertEqual(conv('42'), 42.0)
-        self.assertEqual(conv('42B/s'), 42.0)
+        self.assertEqual(conv("42"), 42.0)
+        self.assertEqual(conv("42B/s"), 42.0)
 
-        self.assertEqual(conv('42MB/s'), 42 * 2 ** 20)
-        self.assertEqual(conv('42MiB/s'), 42 * 2 ** 20)
+        self.assertEqual(conv("42MB/s"), 42 * 2**20)
+        self.assertEqual(conv("42MiB/s"), 42 * 2**20)
 
-        self.assertRaises(ValueError, conv, '42KB/s')
-        self.assertRaises(ValueError, conv, '42Mi')
+        self.assertRaises(ValueError, conv, "42KB/s")
+        self.assertRaises(ValueError, conv, "42Mi")
 
     def test_toMemorySize(self):
         conv = convert.toMemorySize
 
-        self.assertEqual(conv('42'), 42.0)
-        self.assertEqual(conv('42B'), 42.0)
+        self.assertEqual(conv("42"), 42.0)
+        self.assertEqual(conv("42B"), 42.0)
 
-        self.assertEqual(conv('42kB'), 42 * 2**10)
-        self.assertEqual(conv('42MB'), 42 * 2**20)
+        self.assertEqual(conv("42kB"), 42 * 2**10)
+        self.assertEqual(conv("42MB"), 42 * 2**20)
 
-        self.assertEqual(conv('42KiB'), 42 * 2**10)
-        self.assertEqual(conv('42MiB'), 42 * 2**20)
-
+        self.assertEqual(conv("42KiB"), 42 * 2**10)
+        self.assertEqual(conv("42MiB"), 42 * 2**20)
 
     def test_toIpAddress(self):
         conv = convert.toIpAddress
@@ -225,12 +226,10 @@ class ConvertTestSuite(unittest.TestCase):
         conv = convert.toIpNetmask
 
         self.assertEqual(conv("1.2.3.4/24"), (_ip(1, 2, 3, 4), 24))
-        self.assertEqual(conv("1.2.3.4/255.255.255.0"),
-                         (_ip(1, 2, 3, 4), 24))
+        self.assertEqual(conv("1.2.3.4/255.255.255.0"), (_ip(1, 2, 3, 4), 24))
 
         self.assertEqual(conv("1.2.3.4/0"), (_ip(1, 2, 3, 4), 0))
-        self.assertEqual(conv("1.2.3.4/0.0.0.0"),
-                         (_ip(1, 2, 3, 4), 0))
+        self.assertEqual(conv("1.2.3.4/0.0.0.0"), (_ip(1, 2, 3, 4), 0))
 
         self.assertRaises(ValueError, conv, "0.0.0.0")
         self.assertRaises(ValueError, conv, "0.0.0.0/")
@@ -248,23 +247,23 @@ class ConvertTestSuite(unittest.TestCase):
     def test_toVoltage(self):
         conv = convert.toVoltage
 
-        self.assertEqual(conv('42'), 42)
-        self.assertEqual(conv('42V'), 42)
-        self.assertEqual(conv('42kV'), 42e3)
+        self.assertEqual(conv("42"), 42)
+        self.assertEqual(conv("42V"), 42)
+        self.assertEqual(conv("42kV"), 42e3)
 
     def test_toCurrent(self):
         conv = convert.toCurrent
 
-        self.assertEqual(conv('42'), 42)
-        self.assertEqual(conv('42A'), 42)
-        self.assertEqual(conv('42kA'), 42e3)
+        self.assertEqual(conv("42"), 42)
+        self.assertEqual(conv("42A"), 42)
+        self.assertEqual(conv("42kA"), 42e3)
 
     def test_toEnergy(self):
         conv = convert.toEnergy
 
-        self.assertEqual(conv('42'), 42)
-        self.assertEqual(conv('42J'), 42)
-        self.assertEqual(conv('42kJ'), 42e3)
+        self.assertEqual(conv("42"), 42)
+        self.assertEqual(conv("42J"), 42)
+        self.assertEqual(conv("42kJ"), 42e3)
 
     def test_temperature(self):
         conv = convert.toTemperature

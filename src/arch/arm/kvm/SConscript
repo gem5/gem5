@@ -37,22 +37,20 @@
 
 Import('*')
 
-import platform
-host_isa = platform.machine()
-
-if not (env['CONF']['USE_KVM'] and env['CONF']['KVM_ISA'] == 'arm'):
-    Return()
+if env['CONF']['KVM_ISA'] == 'arm':
+    import platform
+    host_isa = platform.machine()
+    env.TagImplies(f'{host_isa} kvm', 'arm kvm')
 
 SimObject('KvmGic.py',
-    sim_objects=['MuxingKvmGicV2', 'MuxingKvmGicV3'], tags='arm isa')
-Source('gic.cc', tags='arm isa')
+    sim_objects=['MuxingKvmGicV2', 'MuxingKvmGicV3'], tags='arm kvm')
+Source('gic.cc', tags='arm kvm')
 
-SimObject('BaseArmKvmCPU.py', sim_objects=['BaseArmKvmCPU'], tags='arm isa')
-Source('base_cpu.cc', tags='arm isa')
+SimObject('BaseArmKvmCPU.py', sim_objects=['BaseArmKvmCPU'], tags='arm kvm')
+Source('base_cpu.cc', tags='arm kvm')
 
-if host_isa == "armv7l":
-    SimObject('ArmKvmCPU.py', sim_objects=['ArmKvmCPU'], tags='arm isa')
-    Source('arm_cpu.cc', tags='arm isa')
-elif host_isa == "aarch64":
-    SimObject('ArmV8KvmCPU.py', sim_objects=['ArmV8KvmCPU'], tags='arm isa')
-    Source('armv8_cpu.cc', tags='arm isa')
+SimObject('ArmKvmCPU.py', sim_objects=['ArmKvmCPU'], tags='armv71 kvm')
+Source('arm_cpu.cc', tags='armv71 kvm')
+
+SimObject('ArmV8KvmCPU.py', sim_objects=['ArmV8KvmCPU'], tags='aarch64 kvm')
+Source('armv8_cpu.cc', tags='aarch64 kvm')

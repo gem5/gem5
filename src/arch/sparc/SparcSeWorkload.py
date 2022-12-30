@@ -27,18 +27,22 @@ from m5.params import *
 
 from m5.objects.Workload import SEWorkload
 
+
 class SparcSEWorkload(SEWorkload):
-    type = 'SparcSEWorkload'
+    type = "SparcSEWorkload"
     cxx_header = "arch/sparc/se_workload.hh"
-    cxx_class = 'gem5::SparcISA::SEWorkload'
+    cxx_class = "gem5::SparcISA::SEWorkload"
     abstract = True
 
+
 class SparcEmuLinux(SparcSEWorkload):
-    type = 'SparcEmuLinux'
+    type = "SparcEmuLinux"
     cxx_header = "arch/sparc/linux/se_workload.hh"
-    cxx_class = 'gem5::SparcISA::EmuLinux'
+    cxx_class = "gem5::SparcISA::EmuLinux"
 
     @classmethod
     def _is_compatible_with(cls, obj):
-        return obj.get_arch() in ('sparc64', 'sparc32') and \
-                obj.get_op_sys() in ('linux', 'unknown')
+        return obj.get_arch() in (
+            "sparc64",
+            "sparc32",
+        ) and obj.get_op_sys() in ("linux", "unknown")

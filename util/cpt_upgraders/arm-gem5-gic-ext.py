@@ -33,12 +33,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 def upgrader(cpt):
     """The gem5 GIC extensions change the size of many GIC data
     structures. Resize them to match the new GIC."""
 
     import re
-    if cpt.get('root', 'isa', fallback='') != 'arm':
+
+    if cpt.get("root", "isa", fallback="") != "arm":
         return
 
     old_cpu_max = 8
@@ -46,29 +48,27 @@ def upgrader(cpt):
     sgi_max = 16
     ppi_max = 16
     per_cpu_regs = (
-        ("iccrpr", [ "0xff", ]),
-        ("cpuEnabled", [ "false", ]),
-        ("cpuPriority", [ "0xff", ]),
-        ("cpuBpr", [ "0", ]),
-        ("cpuHighestInt", [ "1023", ]),
-        ("cpuPpiPending", [ "0", ]),
-        ("cpuPpiActive", [ "0", ] ),
-        ("interrupt_time", [ "0", ]),
-        ("*bankedIntPriority", ["0", ] * (sgi_max + ppi_max)),
+        ("iccrpr", ["0xff"]),
+        ("cpuEnabled", ["false"]),
+        ("cpuPriority", ["0xff"]),
+        ("cpuBpr", ["0"]),
+        ("cpuHighestInt", ["1023"]),
+        ("cpuPpiPending", ["0"]),
+        ("cpuPpiActive", ["0"]),
+        ("interrupt_time", ["0"]),
+        ("*bankedIntPriority", ["0"] * (sgi_max + ppi_max)),
     )
-    new_per_cpu_regs = (
-        ("cpuSgiPendingExt", "0"),
-        ("cpuSgiActiveExt", "0"),
-    )
+    new_per_cpu_regs = (("cpuSgiPendingExt", "0"), ("cpuSgiActiveExt", "0"))
 
     for sec in cpt.sections():
-        if re.search('.*\.gic$', sec):
+        if re.search(".*\.gic$", sec):
             for reg, default in per_cpu_regs:
                 value = cpt.get(sec, reg).split(" ")
-                assert len(value) / len(default) == old_cpu_max, \
-                    "GIC register size mismatch"
-                value += [ " ".join(default), ] * (new_cpu_max - old_cpu_max)
+                assert (
+                    len(value) / len(default) == old_cpu_max
+                ), "GIC register size mismatch"
+                value += [" ".join(default)] * (new_cpu_max - old_cpu_max)
                 cpt.set(sec, reg, " ".join(value))
 
             for reg, default in new_per_cpu_regs:
-                cpt.set(sec, reg, " ".join([ default, ] * new_cpu_max))
+                cpt.set(sec, reg, " ".join([default] * new_cpu_max))

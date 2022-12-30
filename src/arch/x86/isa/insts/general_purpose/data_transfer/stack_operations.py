@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop POP_R {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
@@ -202,4 +202,4 @@ skipLoop:
     sub rsp, rsp, t2, dataSize=ssz
     mov rbp, rbp, t6
 };
-'''
+"""

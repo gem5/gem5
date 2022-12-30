@@ -42,10 +42,11 @@
 namespace gem5
 {
 
+class BaseISA;
+
 namespace RiscvISA
 {
 
-class ISA;
 class Decoder : public InstDecoder
 {
   private:

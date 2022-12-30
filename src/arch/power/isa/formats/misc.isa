@@ -33,7 +33,7 @@
 
 def template MiscOpExecute {{
     Fault %(class_name)s::execute(
-        ExecContext *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         %(op_decl)s;

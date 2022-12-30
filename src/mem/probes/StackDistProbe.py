@@ -37,26 +37,31 @@ from m5.params import *
 from m5.proxy import *
 from m5.objects.BaseMemProbe import BaseMemProbe
 
+
 class StackDistProbe(BaseMemProbe):
-    type = 'StackDistProbe'
+    type = "StackDistProbe"
     cxx_header = "mem/probes/stack_dist.hh"
-    cxx_class = 'gem5::StackDistProbe'
+    cxx_class = "gem5::StackDistProbe"
 
-    system = Param.System(Parent.any,
-                          "System to use when determining system cache "
-                          "line size")
+    system = Param.System(
+        Parent.any, "System to use when determining system cache " "line size"
+    )
 
-    line_size = Param.Unsigned(Parent.cache_line_size,
-                               "Cache line size in bytes (must be larger or "
-                               "equal to the system's line size)")
+    line_size = Param.Unsigned(
+        Parent.cache_line_size,
+        "Cache line size in bytes (must be larger or "
+        "equal to the system's line size)",
+    )
 
     # enable verification stack
-    verify = Param.Bool(False, "Verify behaviuor with reference implementation")
+    verify = Param.Bool(
+        False, "Verify behaviuor with reference implementation"
+    )
 
     # linear histogram bins and enable/disable
-    linear_hist_bins = Param.Unsigned('16', "Bins in linear histograms")
+    linear_hist_bins = Param.Unsigned("16", "Bins in linear histograms")
     disable_linear_hists = Param.Bool(False, "Disable linear histograms")
 
     # logarithmic histogram bins and enable/disable
-    log_hist_bins = Param.Unsigned('32', "Bins in logarithmic histograms")
+    log_hist_bins = Param.Unsigned("32", "Bins in logarithmic histograms")
     disable_log_hists = Param.Bool(False, "Disable logarithmic histograms")

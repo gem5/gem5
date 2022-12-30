@@ -27,8 +27,9 @@
 from m5.objects.Device import BasicPioDevice
 from m5.params import Param
 
+
 class LupioSYS(BasicPioDevice):
-    type = 'LupioSYS'
-    cxx_class='gem5::LupioSYS'
-    cxx_header = 'dev/lupio/lupio_sys.hh'
+    type = "LupioSYS"
+    cxx_class = "gem5::LupioSYS"
+    cxx_header = "dev/lupio/lupio_sys.hh"
     pio_size = Param.Addr(0x1000, "PIO Size")

@@ -90,7 +90,7 @@ let {{
 
         code = pacEnabledCode(hint) + """
             uint64_t res;
-            fault = stripPAC(xc->tcBase(), XDest, data, &res);
+            stripPAC(xc->tcBase(), XDest, data, &res);
             XDest = res;
             """
         regoptype = 'RegOp'

@@ -1,0 +1,4 @@
+Global frequency set at 1000000000000 ticks per second
+Current Tick: 250
+Current Max Tick: 250
+Ticks until max: 0

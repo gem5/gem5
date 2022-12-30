@@ -39,7 +39,7 @@
 namespace gem5
 {
 
-namespace Trace {
+namespace trace {
 
 void
 X86NativeTrace::ThreadState::update(NativeTrace *parent)
@@ -188,5 +188,5 @@ X86NativeTrace::check(NativeTraceRecord *record)
     checkXMM(15, mState.xmm, nState.xmm);
 }
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5

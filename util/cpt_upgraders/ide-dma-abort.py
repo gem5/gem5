@@ -5,4 +5,5 @@ def upgrader(cpt):
         if cpt.has_option(sec, "curSector"):
             cpt.set(sec, "dmaAborted", "false")
 
+
 legacy_version = 7

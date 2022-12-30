@@ -410,5 +410,3 @@ subtley broken, when used to target a different ABI. To build these objects
 correctly, we would need to use a proper cross build environment for their
 corresponding languages. Something like this could likely be set up using a
 tool like buildroot.
-
-

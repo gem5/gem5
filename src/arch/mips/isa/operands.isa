@@ -44,7 +44,7 @@ let {{
         @overrideInOperand
         def regId(self):
             return f'(({self.reg_spec}) == 0) ? RegId() : ' \
-                   f'RegId({self.reg_class}, {self.reg_spec})'
+                   f'{self.reg_class}[{self.reg_spec}]'
 }};
 
 def operands {{
@@ -60,29 +60,29 @@ def operands {{
     'R31': IntReg('uw', '31', 'IsInteger', 4),
 
     #Special Integer Reg operands
-    'LO0':  IntReg('uw', 'INTREG_LO', 'IsInteger', 6),
-    'HI0':  IntReg('uw', 'INTREG_HI', 'IsInteger', 7),
+    'LO0':  IntReg('uw', 'int_reg::Lo', 'IsInteger', 6),
+    'HI0':  IntReg('uw', 'int_reg::Hi', 'IsInteger', 7),
 
     #Bitfield-dependent HI/LO Register Access
-    'LO_RD_SEL': IntReg('uw', 'INTREG_DSP_LO0 + ACDST*3', None, 6),
-    'HI_RD_SEL': IntReg('uw', 'INTREG_DSP_HI0 + ACDST*3', None, 7),
-    'LO_RS_SEL': IntReg('uw', 'INTREG_DSP_LO0 + ACSRC*3', None, 6),
-    'HI_RS_SEL': IntReg('uw', 'INTREG_DSP_HI0 + ACSRC*3', None, 7),
+    'LO_RD_SEL': IntReg('uw', 'int_reg::DspLo0 + ACDST*3', None, 6),
+    'HI_RD_SEL': IntReg('uw', 'int_reg::DspHi0 + ACDST*3', None, 7),
+    'LO_RS_SEL': IntReg('uw', 'int_reg::DspLo0 + ACSRC*3', None, 6),
+    'HI_RS_SEL': IntReg('uw', 'int_reg::DspHi0 + ACSRC*3', None, 7),
 
     #DSP Special Purpose Integer Operands
-    'DSPControl': IntReg('uw', 'INTREG_DSP_CONTROL', None, 8),
-    'DSPLo0': IntReg('uw', 'INTREG_LO', None, 1),
-    'DSPHi0': IntReg('uw', 'INTREG_HI', None, 1),
-    'DSPACX0': IntReg('uw', 'INTREG_DSP_ACX0', None, 1),
-    'DSPLo1': IntReg('uw', 'INTREG_DSP_LO1', None, 1),
-    'DSPHi1': IntReg('uw', 'INTREG_DSP_HI1', None, 1),
-    'DSPACX1': IntReg('uw', 'INTREG_DSP_ACX1', None, 1),
-    'DSPLo2': IntReg('uw', 'INTREG_DSP_LO2', None, 1),
-    'DSPHi2': IntReg('uw', 'INTREG_DSP_HI2', None, 1),
-    'DSPACX2': IntReg('uw', 'INTREG_DSP_ACX2', None, 1),
-    'DSPLo3': IntReg('uw', 'INTREG_DSP_LO3', None, 1),
-    'DSPHi3': IntReg('uw', 'INTREG_DSP_HI3', None, 1),
-    'DSPACX3': IntReg('uw', 'INTREG_DSP_ACX3', None, 1),
+    'DSPControl': IntReg('uw', 'int_reg::DspControl', None, 8),
+    'DSPLo0': IntReg('uw', 'int_reg::Lo', None, 1),
+    'DSPHi0': IntReg('uw', 'int_reg::Hi', None, 1),
+    'DSPACX0': IntReg('uw', 'int_reg::DspAcx0', None, 1),
+    'DSPLo1': IntReg('uw', 'int_reg::DspLo1', None, 1),
+    'DSPHi1': IntReg('uw', 'int_reg::DspHi1', None, 1),
+    'DSPACX1': IntReg('uw', 'int_reg::DspAcx1', None, 1),
+    'DSPLo2': IntReg('uw', 'int_reg::DspLo2', None, 1),
+    'DSPHi2': IntReg('uw', 'int_reg::DspHi2', None, 1),
+    'DSPACX2': IntReg('uw', 'int_reg::DspAcx2', None, 1),
+    'DSPLo3': IntReg('uw', 'int_reg::DspLo3', None, 1),
+    'DSPHi3': IntReg('uw', 'int_reg::DspHi3', None, 1),
+    'DSPACX3': IntReg('uw', 'int_reg::DspAcx3', None, 1),
 
     #Floating Point Reg Operands
     'Fd': FloatRegOp('sf', 'FD', 'IsFloating', 1),
@@ -91,11 +91,11 @@ def operands {{
     'Fr': FloatRegOp('sf', 'FR', 'IsFloating', 3),
 
     #Special Purpose Floating Point Control Reg Operands
-    'FIR':  FloatRegOp('uw', 'FLOATREG_FIR', 'IsFloating', 1),
-    'FCCR': FloatRegOp('uw', 'FLOATREG_FCCR', 'IsFloating', 2),
-    'FEXR': FloatRegOp('uw', 'FLOATREG_FEXR', 'IsFloating', 3),
-    'FENR': FloatRegOp('uw', 'FLOATREG_FENR', 'IsFloating', 3),
-    'FCSR': FloatRegOp('uw', 'FLOATREG_FCSR', 'IsFloating', 3),
+    'FIR':  FloatRegOp('uw', 'float_reg::Fir', 'IsFloating', 1),
+    'FCCR': FloatRegOp('uw', 'float_reg::Fccr', 'IsFloating', 2),
+    'FEXR': FloatRegOp('uw', 'float_reg::Fexr', 'IsFloating', 3),
+    'FENR': FloatRegOp('uw', 'float_reg::Fenr', 'IsFloating', 3),
+    'FCSR': FloatRegOp('uw', 'float_reg::Fcsr', 'IsFloating', 3),
 
     #Operands For Paired Singles FP Operations
     'Fd1': FloatRegOp('sf', 'FD', 'IsFloating', 4),
@@ -108,48 +108,48 @@ def operands {{
     'Fr2': FloatRegOp('sf', 'FR+1', 'IsFloating', 7),
 
     #Status Control Reg
-    'Status': ControlRegOp('uw', 'MISCREG_STATUS', None, 1),
+    'Status': ControlRegOp('uw', 'misc_reg::Status', None, 1),
 
     #LL Flag
-    'LLFlag': ControlRegOp('uw', 'MISCREG_LLFLAG', None, 1),
+    'LLFlag': ControlRegOp('uw', 'misc_reg::Llflag', None, 1),
 
     #Thread pointer value for SE mode
-    'TpValue': ControlRegOp('ud', 'MISCREG_TP_VALUE', None, 1),
+    'TpValue': ControlRegOp('ud', 'misc_reg::TpValue', None, 1),
 
     # Index Register
-    'Index': ControlRegOp('uw','MISCREG_INDEX',None,1),
+    'Index': ControlRegOp('uw','misc_reg::Index',None,1),
 
 
     'CP0_RD_SEL': ControlRegOp('uw', '(RD << 3 | SEL)', None, 1),
 
     #MT Control Regs
-    'MVPConf0': ControlRegOp('uw', 'MISCREG_MVP_CONF0', None, 1),
-    'MVPControl': ControlRegOp('uw', 'MISCREG_MVP_CONTROL', None, 1),
-    'TCBind': ControlRegOp('uw', 'MISCREG_TC_BIND', None, 1),
-    'TCStatus': ControlRegOp('uw', 'MISCREG_TC_STATUS', None, 1),
-    'TCRestart': ControlRegOp('uw', 'MISCREG_TC_RESTART', None, 1),
-    'VPEConf0': ControlRegOp('uw', 'MISCREG_VPE_CONF0', None, 1),
-    'VPEControl': ControlRegOp('uw', 'MISCREG_VPE_CONTROL', None, 1),
-    'YQMask': ControlRegOp('uw', 'MISCREG_YQMASK', None, 1),
+    'MVPConf0': ControlRegOp('uw', 'misc_reg::MvpConf0', None, 1),
+    'MVPControl': ControlRegOp('uw', 'misc_reg::MvpControl', None, 1),
+    'TCBind': ControlRegOp('uw', 'misc_reg::TcBind', None, 1),
+    'TCStatus': ControlRegOp('uw', 'misc_reg::TcStatus', None, 1),
+    'TCRestart': ControlRegOp('uw', 'misc_reg::TcRestart', None, 1),
+    'VPEConf0': ControlRegOp('uw', 'misc_reg::VpeConf0', None, 1),
+    'VPEControl': ControlRegOp('uw', 'misc_reg::VpeControl', None, 1),
+    'YQMask': ControlRegOp('uw', 'misc_reg::Yqmask', None, 1),
 
     #CP0 Control Regs
-    'EntryHi': ControlRegOp('uw', 'MISCREG_ENTRYHI',None,1),
-    'EntryLo0': ControlRegOp('uw', 'MISCREG_ENTRYLO0',None,1),
-    'EntryLo1': ControlRegOp('uw', 'MISCREG_ENTRYLO1',None,1),
-    'PageMask': ControlRegOp('uw', 'MISCREG_PAGEMASK',None,1),
-    'Random': ControlRegOp('uw', 'MISCREG_CP0_RANDOM',None,1),
-    'ErrorEPC': ControlRegOp('uw', 'MISCREG_ERROR_EPC',None,1),
-    'EPC': ControlRegOp('uw', 'MISCREG_EPC',None,1),
-    'DEPC': ControlRegOp('uw', 'MISCREG_DEPC',None,1),
-    'IntCtl': ControlRegOp('uw', 'MISCREG_INTCTL',None,1),
-    'SRSCtl': ControlRegOp('uw', 'MISCREG_SRSCTL',None,1),
-    'Config': ControlRegOp('uw', 'MISCREG_CONFIG',None,1),
-    'Config3': ControlRegOp('uw', 'MISCREG_CONFIG3',None,1),
-    'Config1': ControlRegOp('uw', 'MISCREG_CONFIG1',None,1),
-    'Config2': ControlRegOp('uw', 'MISCREG_CONFIG2',None,1),
-    'PageGrain': ControlRegOp('uw', 'MISCREG_PAGEGRAIN',None,1),
-    'Debug': ControlRegOp('uw', 'MISCREG_DEBUG',None,1),
-    'Cause': ControlRegOp('uw', 'MISCREG_CAUSE',None,1),
+    'EntryHi': ControlRegOp('uw', 'misc_reg::Entryhi',None,1),
+    'EntryLo0': ControlRegOp('uw', 'misc_reg::Entrylo0',None,1),
+    'EntryLo1': ControlRegOp('uw', 'misc_reg::Entrylo1',None,1),
+    'PageMask': ControlRegOp('uw', 'misc_reg::Pagemask',None,1),
+    'Random': ControlRegOp('uw', 'misc_reg::Cp0Random',None,1),
+    'ErrorEPC': ControlRegOp('uw', 'misc_reg::ErrorEpc',None,1),
+    'EPC': ControlRegOp('uw', 'misc_reg::Epc',None,1),
+    'DEPC': ControlRegOp('uw', 'misc_reg::Depc',None,1),
+    'IntCtl': ControlRegOp('uw', 'misc_reg::Intctl',None,1),
+    'SRSCtl': ControlRegOp('uw', 'misc_reg::Srsctl',None,1),
+    'Config': ControlRegOp('uw', 'misc_reg::Config',None,1),
+    'Config3': ControlRegOp('uw', 'misc_reg::Config3',None,1),
+    'Config1': ControlRegOp('uw', 'misc_reg::Config1',None,1),
+    'Config2': ControlRegOp('uw', 'misc_reg::Config2',None,1),
+    'PageGrain': ControlRegOp('uw', 'misc_reg::Pagegrain',None,1),
+    'Debug': ControlRegOp('uw', 'misc_reg::Debug',None,1),
+    'Cause': ControlRegOp('uw', 'misc_reg::Cause',None,1),
 
     #Memory Operand
     'Mem': MemOp('uw', None, (None, 'IsLoad', 'IsStore'), 4),

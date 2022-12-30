@@ -30,10 +30,14 @@
 #ifndef __ARCH_MIPS_REGS_MISC_HH__
 #define __ARCH_MIPS_REGS_MISC_HH__
 
+#include "cpu/reg_class.hh"
+#include "debug/MiscRegs.hh"
+
 namespace gem5
 {
-
 namespace MipsISA
+{
+namespace misc_reg
 {
 
 // Enumerate names for 'Control' Registers in the CPU
@@ -43,156 +47,161 @@ namespace MipsISA
 // The first set of names classify the CP0 names as Register Banks
 // for easy indexing when using the 'RD + SEL' index combination
 // in CP0 instructions.
-enum MiscRegIndex
+enum : RegIndex
 {
-    MISCREG_INDEX = 0,       //Bank 0: 0 - 3
-    MISCREG_MVP_CONTROL,
-    MISCREG_MVP_CONF0,
-    MISCREG_MVP_CONF1,
+    Index = 0,       //Bank 0: 0 - 3
+    MvpControl,
+    MvpConf0,
+    MvpConf1,
 
-    MISCREG_CP0_RANDOM = 8,      //Bank 1: 8 - 15
-    MISCREG_VPE_CONTROL,
-    MISCREG_VPE_CONF0,
-    MISCREG_VPE_CONF1,
-    MISCREG_YQMASK,
-    MISCREG_VPE_SCHEDULE,
-    MISCREG_VPE_SCHEFBACK,
-    MISCREG_VPE_OPT,
+    Cp0Random = 8,      //Bank 1: 8 - 15
+    VpeControl,
+    VpeConf0,
+    VpeConf1,
+    Yqmask,
+    VpeSchedule,
+    VpeSchefback,
+    VpeOpt,
 
-    MISCREG_ENTRYLO0 = 16,   //Bank 2: 16 - 23
-    MISCREG_TC_STATUS,
-    MISCREG_TC_BIND,
-    MISCREG_TC_RESTART,
-    MISCREG_TC_HALT,
-    MISCREG_TC_CONTEXT,
-    MISCREG_TC_SCHEDULE,
-    MISCREG_TC_SCHEFBACK,
+    Entrylo0 = 16,   //Bank 2: 16 - 23
+    TcStatus,
+    TcBind,
+    TcRestart,
+    TcHalt,
+    TcContext,
+    TcSchedule,
+    TcSchefback,
 
-    MISCREG_ENTRYLO1 = 24,   // Bank 3: 24
+    Entrylo1 = 24,   // Bank 3: 24
 
-    MISCREG_CONTEXT = 32,    // Bank 4: 32 - 33
-    MISCREG_CONTEXT_CONFIG,
+    Context = 32,    // Bank 4: 32 - 33
+    ContextConfig,
 
-    MISCREG_PAGEMASK = 40, //Bank 5: 40 - 41
-    MISCREG_PAGEGRAIN = 41,
+    Pagemask = 40, //Bank 5: 40 - 41
+    Pagegrain = 41,
 
-    MISCREG_WIRED = 48,          //Bank 6:48-55
-    MISCREG_SRS_CONF0,
-    MISCREG_SRS_CONF1,
-    MISCREG_SRS_CONF2,
-    MISCREG_SRS_CONF3,
-    MISCREG_SRS_CONF4,
+    Wired = 48,          //Bank 6:48-55
+    SrsConf0,
+    SrsConf1,
+    SrsConf2,
+    SrsConf3,
+    SrsConf4,
 
-    MISCREG_HWRENA = 56,         //Bank 7: 56-63
+    Hwrena = 56,         //Bank 7: 56-63
 
-    MISCREG_BADVADDR = 64,       //Bank 8: 64-71
+    Badvaddr = 64,       //Bank 8: 64-71
 
-    MISCREG_COUNT = 72,          //Bank 9: 72-79
+    Count = 72,          //Bank 9: 72-79
 
-    MISCREG_ENTRYHI = 80,        //Bank 10: 80-87
+    Entryhi = 80,        //Bank 10: 80-87
 
-    MISCREG_COMPARE = 88,        //Bank 11: 88-95
+    Compare = 88,        //Bank 11: 88-95
 
-    MISCREG_STATUS = 96,         //Bank 12: 96-103
-    MISCREG_INTCTL,
-    MISCREG_SRSCTL,
-    MISCREG_SRSMAP,
+    Status = 96,         //Bank 12: 96-103
+    Intctl,
+    Srsctl,
+    Srsmap,
 
-    MISCREG_CAUSE = 104,         //Bank 13: 104-111
+    Cause = 104,         //Bank 13: 104-111
 
-    MISCREG_EPC = 112,           //Bank 14: 112-119
+    Epc = 112,           //Bank 14: 112-119
 
-    MISCREG_PRID = 120,          //Bank 15: 120-127,
-    MISCREG_EBASE,
+    Prid = 120,          //Bank 15: 120-127,
+    Ebase,
 
-    MISCREG_CONFIG = 128,        //Bank 16: 128-135
-    MISCREG_CONFIG1,
-    MISCREG_CONFIG2,
-    MISCREG_CONFIG3,
-    MISCREG_CONFIG4,
-    MISCREG_CONFIG5,
-    MISCREG_CONFIG6,
-    MISCREG_CONFIG7,
+    Config = 128,        //Bank 16: 128-135
+    Config1,
+    Config2,
+    Config3,
+    Config4,
+    Config5,
+    Config6,
+    Config7,
 
 
-    MISCREG_LLADDR = 136,        //Bank 17: 136-143
+    Lladdr = 136,        //Bank 17: 136-143
 
-    MISCREG_WATCHLO0 = 144,      //Bank 18: 144-151
-    MISCREG_WATCHLO1,
-    MISCREG_WATCHLO2,
-    MISCREG_WATCHLO3,
-    MISCREG_WATCHLO4,
-    MISCREG_WATCHLO5,
-    MISCREG_WATCHLO6,
-    MISCREG_WATCHLO7,
+    Watchlo0 = 144,      //Bank 18: 144-151
+    Watchlo1,
+    Watchlo2,
+    Watchlo3,
+    Watchlo4,
+    Watchlo5,
+    Watchlo6,
+    Watchlo7,
 
-    MISCREG_WATCHHI0 = 152,     //Bank 19: 152-159
-    MISCREG_WATCHHI1,
-    MISCREG_WATCHHI2,
-    MISCREG_WATCHHI3,
-    MISCREG_WATCHHI4,
-    MISCREG_WATCHHI5,
-    MISCREG_WATCHHI6,
-    MISCREG_WATCHHI7,
+    Watchhi0 = 152,     //Bank 19: 152-159
+    Watchhi1,
+    Watchhi2,
+    Watchhi3,
+    Watchhi4,
+    Watchhi5,
+    Watchhi6,
+    Watchhi7,
 
-    MISCREG_XCCONTEXT64 = 160, //Bank 20: 160-167
+    Xccontext64 = 160, //Bank 20: 160-167
 
                        //Bank 21: 168-175
 
                        //Bank 22: 176-183
 
-    MISCREG_DEBUG = 184,       //Bank 23: 184-191
-    MISCREG_TRACE_CONTROL1,
-    MISCREG_TRACE_CONTROL2,
-    MISCREG_USER_TRACE_DATA,
-    MISCREG_TRACE_BPC,
+    Debug = 184,       //Bank 23: 184-191
+    TraceControl1,
+    TraceControl2,
+    UserTraceData,
+    TraceBpc,
 
-    MISCREG_DEPC = 192,        //Bank 24: 192-199
+    Depc = 192,        //Bank 24: 192-199
 
-    MISCREG_PERFCNT0 = 200,    //Bank 25: 200-207
-    MISCREG_PERFCNT1,
-    MISCREG_PERFCNT2,
-    MISCREG_PERFCNT3,
-    MISCREG_PERFCNT4,
-    MISCREG_PERFCNT5,
-    MISCREG_PERFCNT6,
-    MISCREG_PERFCNT7,
+    Perfcnt0 = 200,    //Bank 25: 200-207
+    Perfcnt1,
+    Perfcnt2,
+    Perfcnt3,
+    Perfcnt4,
+    Perfcnt5,
+    Perfcnt6,
+    Perfcnt7,
 
-    MISCREG_ERRCTL = 208,      //Bank 26: 208-215
+    Errctl = 208,      //Bank 26: 208-215
 
-    MISCREG_CACHEERR0 = 216,   //Bank 27: 216-223
-    MISCREG_CACHEERR1,
-    MISCREG_CACHEERR2,
-    MISCREG_CACHEERR3,
+    Cacheerr0 = 216,   //Bank 27: 216-223
+    Cacheerr1,
+    Cacheerr2,
+    Cacheerr3,
 
-    MISCREG_TAGLO0 = 224,      //Bank 28: 224-231
-    MISCREG_DATALO1,
-    MISCREG_TAGLO2,
-    MISCREG_DATALO3,
-    MISCREG_TAGLO4,
-    MISCREG_DATALO5,
-    MISCREG_TAGLO6,
-    MISCREG_DATALO7,
+    Taglo0 = 224,      //Bank 28: 224-231
+    Datalo1,
+    Taglo2,
+    Datalo3,
+    Taglo4,
+    Datalo5,
+    Taglo6,
+    Datalo7,
 
-    MISCREG_TAGHI0 = 232,      //Bank 29: 232-239
-    MISCREG_DATAHI1,
-    MISCREG_TAGHI2,
-    MISCREG_DATAHI3,
-    MISCREG_TAGHI4,
-    MISCREG_DATAHI5,
-    MISCREG_TAGHI6,
-    MISCREG_DATAHI7,
+    Taghi0 = 232,      //Bank 29: 232-239
+    Datahi1,
+    Taghi2,
+    Datahi3,
+    Taghi4,
+    Datahi5,
+    Taghi6,
+    Datahi7,
 
 
-    MISCREG_ERROR_EPC = 240,    //Bank 30: 240-247
+    ErrorEpc = 240,    //Bank 30: 240-247
 
-    MISCREG_DESAVE = 248,       //Bank 31: 248-256
+    Desave = 248,       //Bank 31: 248-256
 
-    MISCREG_LLFLAG = 257,
-    MISCREG_TP_VALUE,
+    Llflag = 257,
+    TpValue,
 
-    MISCREG_NUMREGS
+    NumRegs
 };
+
+} // namespace misc_reg
+
+inline constexpr RegClass miscRegClass(MiscRegClass, MiscRegClassName,
+        misc_reg::NumRegs, debug::MiscRegs);
 
 } // namespace MipsISA
 } // namespace gem5

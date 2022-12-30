@@ -1,2 +1,2 @@
-TARGET_ISA = 'x86'
+USE_X86_ISA = True
 PROTOCOL = 'MI_example'

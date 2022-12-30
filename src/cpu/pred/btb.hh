@@ -32,7 +32,6 @@
 #include "arch/generic/pcstate.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
-#include "config/the_isa.hh"
 
 namespace gem5
 {

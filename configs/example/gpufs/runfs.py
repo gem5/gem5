@@ -37,7 +37,7 @@ from m5.objects import *
 from m5.util import addToPath
 
 # gem5 options and objects
-addToPath('../../')
+addToPath("../../")
 from ruby import Ruby
 from common import Simulation
 from common import ObjectList
@@ -51,58 +51,111 @@ from system.system import makeGpuFSSystem
 
 
 def addRunFSOptions(parser):
-    parser.add_argument("--script", default=None,
-                        help="Script to execute in the simulated system")
-    parser.add_argument("--host-parallel", default=False,
-                        action="store_true",
-                        help="Run multiple host threads in KVM mode")
-    parser.add_argument("--restore-dir", type=str, default=None,
-                        help="Directory to restore checkpoints from")
-    parser.add_argument("--disk-image", default="",
-                        help="The boot disk image to mount (/dev/sda)")
-    parser.add_argument("--second-disk", default=None,
-                        help="The second disk image to mount (/dev/sdb)")
+    parser.add_argument(
+        "--script",
+        default=None,
+        help="Script to execute in the simulated system",
+    )
+    parser.add_argument(
+        "--host-parallel",
+        default=False,
+        action="store_true",
+        help="Run multiple host threads in KVM mode",
+    )
+    parser.add_argument(
+        "--restore-dir",
+        type=str,
+        default=None,
+        help="Directory to restore checkpoints from",
+    )
+    parser.add_argument(
+        "--disk-image",
+        default="",
+        help="The boot disk image to mount (/dev/sda)",
+    )
+    parser.add_argument(
+        "--second-disk",
+        default=None,
+        help="The second disk image to mount (/dev/sdb)",
+    )
     parser.add_argument("--kernel", default=None, help="Linux kernel to boot")
     parser.add_argument("--gpu-rom", default=None, help="GPU BIOS to load")
-    parser.add_argument("--gpu-mmio-trace", default=None,
-                        help="GPU MMIO trace to load")
-    parser.add_argument("--checkpoint-before-mmios", default=False,
-                        action="store_true",
-                        help="Take a checkpoint before driver sends MMIOs. "
-                        "This is used to switch out of KVM mode and into "
-                        "timing mode required to read the VGA ROM on boot.")
-    parser.add_argument("--cpu-topology", type=str, default="Crossbar",
-                        help="Network topology to use for CPU side. "
-                        "Check configs/topologies for complete set")
-    parser.add_argument("--gpu-topology", type=str, default="Crossbar",
-                        help="Network topology to use for GPU side. "
-                        "Check configs/topologies for complete set")
-    parser.add_argument("--dgpu-mem-size", action="store", type=str,
-                        default="16GB", help="Specify the dGPU physical memory"
-                        "  size")
-    parser.add_argument("--dgpu-num-dirs", type=int, default=1, help="Set "
-                        "the number of dGPU directories (memory controllers")
-    parser.add_argument("--dgpu-mem-type", default="HBM_1000_4H_1x128",
-                        choices=ObjectList.mem_list.get_names(),
-                        help="type of memory to use")
+    parser.add_argument(
+        "--gpu-mmio-trace", default=None, help="GPU MMIO trace to load"
+    )
+    parser.add_argument(
+        "--checkpoint-before-mmios",
+        default=False,
+        action="store_true",
+        help="Take a checkpoint before driver sends MMIOs. "
+        "This is used to switch out of KVM mode and into "
+        "timing mode required to read the VGA ROM on boot.",
+    )
+    parser.add_argument(
+        "--cpu-topology",
+        type=str,
+        default="Crossbar",
+        help="Network topology to use for CPU side. "
+        "Check configs/topologies for complete set",
+    )
+    parser.add_argument(
+        "--gpu-topology",
+        type=str,
+        default="Crossbar",
+        help="Network topology to use for GPU side. "
+        "Check configs/topologies for complete set",
+    )
+    parser.add_argument(
+        "--dgpu-mem-size",
+        action="store",
+        type=str,
+        default="16GB",
+        help="Specify the dGPU physical memory" "  size",
+    )
+    parser.add_argument(
+        "--dgpu-num-dirs",
+        type=int,
+        default=1,
+        help="Set " "the number of dGPU directories (memory controllers",
+    )
+    parser.add_argument(
+        "--dgpu-mem-type",
+        default="HBM_1000_4H_1x128",
+        choices=ObjectList.mem_list.get_names(),
+        help="type of memory to use",
+    )
+
 
 def runGpuFSSystem(args):
-    '''
+    """
     This function can be called by higher level scripts designed to simulate
     specific devices. As a result the scripts typically hard code some args
     that should not be changed by the user.
-    '''
+    """
+
+    # GPUFS is primarily designed to use the X86 KVM CPU. This model needs to
+    # use multiple event queues when more than one CPU is simulated. Force it
+    # on if that is the case.
+    args.host_parallel = True if args.num_cpus > 1 else False
 
     # These are used by the protocols. They should not be set by the user.
     n_cu = args.num_compute_units
     args.num_sqc = int(math.ceil(float(n_cu) / args.cu_per_sqc))
-    args.num_scalar_cache = \
-            int(math.ceil(float(n_cu) / args.cu_per_scalar_cache))
+    args.num_scalar_cache = int(
+        math.ceil(float(n_cu) / args.cu_per_scalar_cache)
+    )
 
     system = makeGpuFSSystem(args)
 
-    root = Root(full_system = True, system = system,
-                time_sync_enable = True, time_sync_period = '1000us')
+    root = Root(
+        full_system=True,
+        system=system,
+        time_sync_enable=True,
+        time_sync_period="1000us",
+    )
+
+    if args.host_parallel:
+        root.sim_quantum = int(1e8)
 
     if args.script is not None:
         system.readfile = args.script
@@ -112,7 +165,6 @@ def runGpuFSSystem(args):
     else:
         m5.instantiate(args.restore_dir)
 
-
     print("Running the simulation")
     sim_ticks = args.abs_max_tick
 
@@ -120,20 +172,24 @@ def runGpuFSSystem(args):
 
     # Keep executing while there is something to do
     while True:
-        if exit_event.getCause() == "m5_exit instruction encountered" or \
-            exit_event.getCause() == "user interrupt received" or \
-            exit_event.getCause() == "simulate() limit reached":
+        if (
+            exit_event.getCause() == "m5_exit instruction encountered"
+            or exit_event.getCause() == "user interrupt received"
+            or exit_event.getCause() == "simulate() limit reached"
+        ):
             break
         elif "checkpoint" in exit_event.getCause():
-            assert(args.checkpoint_dir is not None)
+            assert args.checkpoint_dir is not None
             m5.checkpoint(args.checkpoint_dir)
             break
         else:
-            print('Unknown exit event: %s. Continuing...'
-                    % exit_event.getCause())
+            print(
+                "Unknown exit event: %s. Continuing..." % exit_event.getCause()
+            )
 
-    print('Exiting @ tick %i because %s' %
-          (m5.curTick(), exit_event.getCause()))
+    print(
+        "Exiting @ tick %i because %s" % (m5.curTick(), exit_event.getCause())
+    )
 
 
 if __name__ == "__m5_main__":

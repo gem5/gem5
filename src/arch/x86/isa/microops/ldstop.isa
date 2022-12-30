@@ -47,7 +47,7 @@
 
 def template MicroLeaExecute {{
     Fault %(class_name)s::execute(ExecContext *xc,
-          Trace::InstRecord *traceData) const
+          trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         Addr EA;
@@ -84,7 +84,7 @@ def template MicroLeaDeclare {{
             %(constructor)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 
@@ -93,7 +93,7 @@ def template MicroLeaDeclare {{
 def template MicroLoadExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         Addr EA;
@@ -122,7 +122,7 @@ def template MicroLoadExecute {{
 def template MicroLoadInitiateAcc {{
     Fault
     %(class_name)s::initiateAcc(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         Addr EA;
@@ -141,7 +141,7 @@ def template MicroLoadInitiateAcc {{
 def template MicroLoadCompleteAcc {{
     Fault
     %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -165,7 +165,7 @@ def template MicroLoadCompleteAcc {{
 def template MicroStoreExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -192,7 +192,7 @@ def template MicroStoreExecute {{
 def template MicroStoreInitiateAcc {{
     Fault
     %(class_name)s::initiateAcc(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -215,7 +215,7 @@ def template MicroStoreInitiateAcc {{
 def template MicroStoreCompleteAcc {{
     Fault
     %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         %(op_decl)s;
         %(op_rd)s;
@@ -244,10 +244,10 @@ def template MicroLdStOpDeclare {{
         }
 
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
     };
 }};
 
@@ -268,10 +268,10 @@ def template MicroLdStSplitOpDeclare {{
                 uint8_t data_size, uint8_t address_size,
                 Request::FlagsType mem_flags);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
-                          Trace::InstRecord *) const override;
+                          trace::InstRecord *) const override;
     };
 }};
 

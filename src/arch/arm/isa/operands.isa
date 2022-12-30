@@ -103,7 +103,7 @@ let {{
         @overrideInOperand
         def regId(self):
             return f'gem5::ArmISA::couldBeZero({self.reg_spec}) ? RegId() : ' \
-                   f'RegId({self.reg_class}, {self.reg_spec})'
+                   f'{self.reg_class}[{self.reg_spec}]'
         def __init__(self, idx, ctype='uw', id=srtNormal):
             super().__init__(ctype, idx, 'IsInteger', id)
 
@@ -123,7 +123,7 @@ let {{
             else
                 xc->setRegOperand(this, {self.dest_reg_idx}, {self.base_name});
             if (traceData)
-                traceData->setData({self.base_name});
+                traceData->setData({self.reg_class}, {self.base_name});
             '''
 
     class PIntReg(IntReg):
@@ -148,7 +148,7 @@ let {{
             else
                 xc->setRegOperand(this, {self.dest_reg_idx}, {self.base_name});
             if (traceData)
-                traceData->setData({self.base_name});
+                traceData->setData({self.reg_class}, {self.base_name});
             '''
 
     class IntRegAIWPC(IntReg):
@@ -165,14 +165,14 @@ let {{
                 xc->setRegOperand(this, {self.dest_reg_idx}, {self.base_name});
             {"}"}
             if (traceData)
-                traceData->setData({self.base_name});
+                traceData->setData({self.reg_class}, {self.base_name});
             '''
 
     class IntReg64(IntRegOp):
         @overrideInOperand
         def regId(self):
             return f'gem5::ArmISA::couldBeZero({self.reg_spec}) ? RegId() : ' \
-                   f'RegId({self.reg_class}, {self.reg_spec})'
+                   f'{self.reg_class}[{self.reg_spec}]'
         @overrideInOperand
         def makeRead(self):
             '''aarch64 read'''
@@ -186,7 +186,7 @@ let {{
             xc->setRegOperand(this, {self.dest_reg_idx}, {self.base_name} &
                 mask(intWidth));
             if (traceData)
-                traceData->setData({self.base_name});
+                traceData->setData({self.reg_class}, {self.base_name});
             '''
         def __init__(self, idx, id=srtNormal):
             super().__init__('ud', idx, 'IsInteger', id)
@@ -205,7 +205,7 @@ let {{
             xc->setRegOperand(this, {self.dest_reg_idx}, {self.base_name} &
                     mask(aarch64 ? 64 : 32));
             if (traceData)
-                traceData->setData({self.base_name});
+                traceData->setData({self.reg_class}, {self.base_name});
             '''
 
     class IntRegW64(IntReg64):
@@ -222,7 +222,7 @@ let {{
             xc->setRegOperand(this, {self.dest_reg_idx}, {self.base_name} &
                     mask(32));
             if (traceData)
-                traceData->setData({self.base_name});
+                traceData->setData({self.reg_class}, {self.base_name});
             '''
 
     class CCReg(CCRegOp):
@@ -248,7 +248,7 @@ let {{
             xc->setMiscReg(snsBankedIndex(dest, xc->tcBase()),
                            {self.base_name});
             if (traceData)
-                traceData->setData({self.base_name});
+                traceData->setData({self.reg_class}, {self.base_name});
             '''
         def __init__(self, idx, id=srtNormal, ctype='uw'):
             super().__init__(idx, id, ctype, (None, None, 'IsControl'))

@@ -157,8 +157,11 @@ that can be used in the predicate assertion macro
 example:
 
 ```c++
-EXPECT_PRED_FORMAT2(testing::FloatLE, val1, val2);
-EXPECT_PRED_FORMAT2(testing::DoubleLE, val1, val2);
+using ::testing::FloatLE;
+using ::testing::DoubleLE;
+...
+EXPECT_PRED_FORMAT2(FloatLE, val1, val2);
+EXPECT_PRED_FORMAT2(DoubleLE, val1, val2);
 ```
 
 The above code verifies that `val1` is less than, or approximately equal to,
@@ -202,10 +205,9 @@ You can call the function
 
 to assert that types `T1` and `T2` are the same. The function does nothing if
 the assertion is satisfied. If the types are different, the function call will
-fail to compile, the compiler error message will say that
-`T1 and T2 are not the same type` and most likely (depending on the compiler)
-show you the actual values of `T1` and `T2`. This is mainly useful inside
-template code.
+fail to compile, the compiler error message will say that `T1 and T2 are not the
+same type` and most likely (depending on the compiler) show you the actual
+values of `T1` and `T2`. This is mainly useful inside template code.
 
 **Caveat**: When used inside a member function of a class template or a function
 template, `StaticAssertTypeEq<T1, T2>()` is effective only if the function is
@@ -383,10 +385,10 @@ EXPECT_TRUE(IsCorrectBarIntVector(bar_ints))
 ## Death Tests
 
 In many applications, there are assertions that can cause application failure if
-a condition is not met. These sanity checks, which ensure that the program is in
-a known good state, are there to fail at the earliest possible time after some
-program state is corrupted. If the assertion checks the wrong condition, then
-the program may proceed in an erroneous state, which could lead to memory
+a condition is not met. These consistency checks, which ensure that the program
+is in a known good state, are there to fail at the earliest possible time after
+some program state is corrupted. If the assertion checks the wrong condition,
+then the program may proceed in an erroneous state, which could lead to memory
 corruption, security holes, or worse. Hence it is vitally important to test that
 such assertion statements work as expected.
 
@@ -480,9 +482,11 @@ TEST_F(FooDeathTest, DoesThat) {
 
 ### Regular Expression Syntax
 
-On POSIX systems (e.g. Linux, Cygwin, and Mac), googletest uses the
+When built with Bazel and using Abseil, googletest uses the
+[RE2](https://github.com/google/re2/wiki/Syntax) syntax. Otherwise, for POSIX
+systems (Linux, Cygwin, Mac), googletest uses the
 [POSIX extended regular expression](http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap09.html#tag_09_04)
-syntax. To learn about this syntax, you may want to read this
+syntax. To learn about POSIX syntax, you may want to read this
 [Wikipedia entry](http://en.wikipedia.org/wiki/Regular_expression#POSIX_Extended_Regular_Expressions).
 
 On Windows, googletest uses its own simple regular expression implementation. It
@@ -558,7 +562,7 @@ The automated testing framework does not set the style flag. You can choose a
 particular style of death tests by setting the flag programmatically:
 
 ```c++
-testing::FLAGS_gtest_death_test_style="threadsafe"
+GTEST_FLAG_SET(death_test_style, "threadsafe")
 ```
 
 You can do this in `main()` to set the style for all death tests in the binary,
@@ -568,12 +572,12 @@ restored afterwards, so you need not do that yourself. For example:
 ```c++
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
-  testing::FLAGS_gtest_death_test_style = "fast";
+  GTEST_FLAG_SET(death_test_style, "fast");
   return RUN_ALL_TESTS();
 }
 
 TEST(MyDeathTest, TestOne) {
-  testing::FLAGS_gtest_death_test_style = "threadsafe";
+  GTEST_FLAG_SET(death_test_style, "threadsafe");
   // This test is run in the "threadsafe" style:
   ASSERT_DEATH(ThisShouldDie(), "");
 }
@@ -610,15 +614,14 @@ Despite the improved thread safety afforded by the "threadsafe" style of death
 test, thread problems such as deadlock are still possible in the presence of
 handlers registered with `pthread_atfork(3)`.
 
-
 ## Using Assertions in Sub-routines
 
 {: .callout .note}
 Note: If you want to put a series of test assertions in a subroutine to check
 for a complex condition, consider using
-[a custom GMock matcher](gmock_cook_book.md#NewMatchers)
-instead. This lets you provide a more readable error message in case of failure
-and avoid all of the issues described below.
+[a custom GMock matcher](gmock_cook_book.md#NewMatchers) instead. This lets you
+provide a more readable error message in case of failure and avoid all of the
+issues described below.
 
 ### Adding Traces to Assertions
 
@@ -631,6 +634,7 @@ the `SCOPED_TRACE` macro or the `ScopedTrace` utility:
 ```c++
 SCOPED_TRACE(message);
 ```
+
 ```c++
 ScopedTrace trace("file_path", line_number, message);
 ```
@@ -837,7 +841,7 @@ will output XML like this:
 
 ```xml
   ...
-    <testcase name="MinAndMaxWidgets" status="run" time="0.006" classname="WidgetUsageTest" MaximumWidgets="12" MinimumWidgets="9" />
+    <testcase name="MinAndMaxWidgets" file="test.cpp" line="1" status="run" time="0.006" classname="WidgetUsageTest" MaximumWidgets="12" MinimumWidgets="9" />
   ...
 ```
 
@@ -888,6 +892,12 @@ preceding or following another. Also, the tests must either not modify the state
 of any shared resource, or, if they do modify the state, they must restore the
 state to its original value before passing control to the next test.
 
+Note that `SetUpTestSuite()` may be called multiple times for a test fixture
+class that has derived classes, so you should not expect code in the function
+body to be run only once. Also, derived classes still have access to shared
+resources defined as static members, so careful consideration is needed when
+managing shared resources to avoid memory leaks.
+
 Here's an example of per-test-suite set-up and tear-down:
 
 ```c++
@@ -897,7 +907,10 @@ class FooTest : public testing::Test {
   // Called before the first test in this test suite.
   // Can be omitted if not needed.
   static void SetUpTestSuite() {
-    shared_resource_ = new ...;
+    // Avoid reallocating static objects if called in subclasses of FooTest.
+    if (shared_resource_ == nullptr) {
+      shared_resource_ = new ...;
+    }
   }
 
   // Per-test-suite tear-down.
@@ -1302,6 +1315,7 @@ First, define a fixture class template, as we did with typed tests:
 ```c++
 template <typename T>
 class FooTest : public testing::Test {
+  void DoSomethingInteresting();
   ...
 };
 ```
@@ -1319,6 +1333,9 @@ this as many times as you want:
 TYPED_TEST_P(FooTest, DoesBlah) {
   // Inside a test, refer to TypeParam to get the type parameter.
   TypeParam n = 0;
+
+  // You will need to use `this` explicitly to refer to fixture members.
+  this->DoSomethingInteresting()
   ...
 }
 
@@ -1481,8 +1498,8 @@ In frameworks that report a failure by throwing an exception, you could catch
 the exception and assert on it. But googletest doesn't use exceptions, so how do
 we test that a piece of code generates an expected failure?
 
-`"gtest/gtest-spi.h"` contains some constructs to do this. After #including this header,
-you can use
+`"gtest/gtest-spi.h"` contains some constructs to do this.
+After #including this header, you can use
 
 ```c++
   EXPECT_FATAL_FAILURE(statement, substring);
@@ -1586,12 +1603,14 @@ void RegisterMyTests(const std::vector<int>& values) {
 }
 ...
 int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
   std::vector<int> values_to_test = LoadValuesFromConfig();
   RegisterMyTests(values_to_test);
   ...
   return RUN_ALL_TESTS();
 }
 ```
+
 ## Getting the Current Test's Name
 
 Sometimes a function may need to know the name of the currently running test.
@@ -1816,8 +1835,7 @@ By default, a googletest program runs all tests the user has defined. In some
 cases (e.g. iterative test development & execution) it may be desirable stop
 test execution upon first failure (trading improved latency for completeness).
 If `GTEST_FAIL_FAST` environment variable or `--gtest_fail_fast` flag is set,
-the test runner will stop execution as soon as the first test failure is
-found.
+the test runner will stop execution as soon as the first test failure is found.
 
 #### Temporarily Disabling Tests
 
@@ -1911,6 +1929,58 @@ time.
 If you combine this with `--gtest_repeat=N`, googletest will pick a different
 random seed and re-shuffle the tests in each iteration.
 
+### Distributing Test Functions to Multiple Machines
+
+If you have more than one machine you can use to run a test program, you might
+want to run the test functions in parallel and get the result faster. We call
+this technique *sharding*, where each machine is called a *shard*.
+
+GoogleTest is compatible with test sharding. To take advantage of this feature,
+your test runner (not part of GoogleTest) needs to do the following:
+
+1.  Allocate a number of machines (shards) to run the tests.
+1.  On each shard, set the `GTEST_TOTAL_SHARDS` environment variable to the total
+    number of shards. It must be the same for all shards.
+1.  On each shard, set the `GTEST_SHARD_INDEX` environment variable to the index
+    of the shard. Different shards must be assigned different indices, which
+    must be in the range `[0, GTEST_TOTAL_SHARDS - 1]`.
+1.  Run the same test program on all shards. When GoogleTest sees the above two
+    environment variables, it will select a subset of the test functions to run.
+    Across all shards, each test function in the program will be run exactly
+    once.
+1.  Wait for all shards to finish, then collect and report the results.
+
+Your project may have tests that were written without GoogleTest and thus don't
+understand this protocol. In order for your test runner to figure out which test
+supports sharding, it can set the environment variable `GTEST_SHARD_STATUS_FILE`
+to a non-existent file path. If a test program supports sharding, it will create
+this file to acknowledge that fact; otherwise it will not create it. The actual
+contents of the file are not important at this time, although we may put some
+useful information in it in the future.
+
+Here's an example to make it clear. Suppose you have a test program `foo_test`
+that contains the following 5 test functions:
+
+```
+TEST(A, V)
+TEST(A, W)
+TEST(B, X)
+TEST(B, Y)
+TEST(B, Z)
+```
+
+Suppose you have 3 machines at your disposal. To run the test functions in
+parallel, you would set `GTEST_TOTAL_SHARDS` to 3 on all machines, and set
+`GTEST_SHARD_INDEX` to 0, 1, and 2 on the machines respectively. Then you would
+run the same `foo_test` on each machine.
+
+GoogleTest reserves the right to change how the work is distributed across the
+shards, but here's one possible scenario:
+
+*   Machine #0 runs `A.V` and `B.X`.
+*   Machine #1 runs `A.W` and `B.Y`.
+*   Machine #2 runs `B.Z`.
+
 ### Controlling Test Output
 
 #### Colored Terminal Output
@@ -1965,8 +2035,6 @@ text because, for example, you don't have an UTF-8 compatible output medium, run
 the test program with `--gtest_print_utf8=0` or set the `GTEST_PRINT_UTF8`
 environment variable to `0`.
 
-
-
 #### Generating an XML Report
 
 googletest can emit a detailed XML report to a file in addition to its normal
@@ -2020,15 +2088,15 @@ could generate this report:
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites tests="3" failures="1" errors="0" time="0.035" timestamp="2011-10-31T18:52:42" name="AllTests">
   <testsuite name="MathTest" tests="2" failures="1" errors="0" time="0.015">
-    <testcase name="Addition" status="run" time="0.007" classname="">
+    <testcase name="Addition" file="test.cpp" line="1" status="run" time="0.007" classname="">
       <failure message="Value of: add(1, 1)&#x0A;  Actual: 3&#x0A;Expected: 2" type="">...</failure>
       <failure message="Value of: add(1, -1)&#x0A;  Actual: 1&#x0A;Expected: 0" type="">...</failure>
     </testcase>
-    <testcase name="Subtraction" status="run" time="0.005" classname="">
+    <testcase name="Subtraction" file="test.cpp" line="2" status="run" time="0.005" classname="">
     </testcase>
   </testsuite>
   <testsuite name="LogicTest" tests="1" failures="0" errors="0" time="0.005">
-    <testcase name="NonContradiction" status="run" time="0.005" classname="">
+    <testcase name="NonContradiction" file="test.cpp" line="3" status="run" time="0.005" classname="">
     </testcase>
   </testsuite>
 </testsuites>
@@ -2045,6 +2113,9 @@ Things to note:
 
 *   The `timestamp` attribute records the local date and time of the test
     execution.
+
+*   The `file` and `line` attributes record the source file location, where the
+    test was defined.
 
 *   Each `<failure>` element corresponds to a single failed googletest
     assertion.
@@ -2085,6 +2156,8 @@ The report format conforms to the following JSON Schema:
       "type": "object",
       "properties": {
         "name": { "type": "string" },
+        "file": { "type": "string" },
+        "line": { "type": "integer" },
         "status": {
           "type": "string",
           "enum": ["RUN", "NOTRUN"]
@@ -2162,6 +2235,8 @@ message TestCase {
 
 message TestInfo {
   string name = 1;
+  string file = 6;
+  int32 line = 7;
   enum Status {
     RUN = 0;
     NOTRUN = 1;
@@ -2205,6 +2280,8 @@ could generate this report:
       "testsuite": [
         {
           "name": "Addition",
+          "file": "test.cpp",
+          "line": 1,
           "status": "RUN",
           "time": "0.007s",
           "classname": "",
@@ -2221,6 +2298,8 @@ could generate this report:
         },
         {
           "name": "Subtraction",
+          "file": "test.cpp",
+          "line": 2,
           "status": "RUN",
           "time": "0.005s",
           "classname": ""
@@ -2236,6 +2315,8 @@ could generate this report:
       "testsuite": [
         {
           "name": "NonContradiction",
+          "file": "test.cpp",
+          "line": 3,
           "status": "RUN",
           "time": "0.005s",
           "classname": ""
@@ -2253,12 +2334,11 @@ IMPORTANT: The exact format of the JSON document is subject to change.
 
 #### Detecting Test Premature Exit
 
-Google Test implements the _premature-exit-file_ protocol for test runners
-to catch any kind of unexpected exits of test programs. Upon start,
-Google Test creates the file which will be automatically deleted after
-all work has been finished. Then, the test runner can check if this file
-exists. In case the file remains undeleted, the inspected test has exited
-prematurely.
+Google Test implements the _premature-exit-file_ protocol for test runners to
+catch any kind of unexpected exits of test programs. Upon start, Google Test
+creates the file which will be automatically deleted after all work has been
+finished. Then, the test runner can check if this file exists. In case the file
+remains undeleted, the inspected test has exited prematurely.
 
 This feature is enabled only if the `TEST_PREMATURE_EXIT_FILE` environment
 variable has been set.

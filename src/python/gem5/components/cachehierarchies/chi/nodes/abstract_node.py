@@ -33,17 +33,21 @@ from m5.objects import Cache_Controller, MessageBuffer, RubyNetwork
 
 import math
 
+
 class TriggerMessageBuffer(MessageBuffer):
-    '''
+    """
     MessageBuffer for triggering internal controller events.
     These buffers should not be affected by the Ruby tester randomization
     and allow poping messages enqueued in the same cycle.
-    '''
-    randomization = 'disabled'
+    """
+
+    randomization = "disabled"
     allow_zero_latency = True
+
 
 class OrderedTriggerMessageBuffer(TriggerMessageBuffer):
     ordered = True
+
 
 class AbstractNode(Cache_Controller):
     """A node is the abstract unit for caches in the CHI protocol.
@@ -51,6 +55,7 @@ class AbstractNode(Cache_Controller):
     You can extend the AbstractNode to create caches (private or shared) and
     directories with or without data caches.
     """
+
     _version = 0
 
     @classmethod
@@ -72,7 +77,7 @@ class AbstractNode(Cache_Controller):
         # triggers. To limit the controller performance, tweak other
         # params such as: input port buffer size, cache banks, and output
         # port latency
-        self.transitions_per_cycle = 128
+        self.transitions_per_cycle = 1024
         # This should be set to true in the data cache controller to enable
         # timeouts on unique lines when a store conditional fails
         self.sc_lock_enabled = False
@@ -84,20 +89,9 @@ class AbstractNode(Cache_Controller):
 
     def getBlockSizeBits(self):
         bits = int(math.log(self._cache_line_size, 2))
-        if 2 ** bits != self._cache_line_size.value:
+        if 2**bits != self._cache_line_size.value:
             raise Exception("Cache line size not a power of 2!")
         return bits
-
-    def sendEvicts(self, core: AbstractCore, target_isa: ISA):
-        """True if the CPU model or ISA requires sending evictions from caches
-        to the CPU. Scenarios warrant forwarding evictions to the CPU:
-        1. The O3 model must keep the LSQ coherent with the caches
-        2. The x86 mwait instruction is built on top of coherence
-        3. The local exclusive monitor in ARM systems
-        """
-        if core.get_type() is CPUTypes.O3 or target_isa in (ISA.X86, ISA.ARM):
-            return True
-        return False
 
     def connectQueues(self, network: RubyNetwork):
         """Connect all of the queues for this controller.
@@ -128,5 +122,3 @@ class AbstractNode(Cache_Controller):
         self.rspIn.in_port = network.out_port
         self.snpIn.in_port = network.out_port
         self.datIn.in_port = network.out_port
-
-

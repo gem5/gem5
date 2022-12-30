@@ -34,14 +34,18 @@ from .Ruby import create_topology, create_directories
 #
 # Declare caches used by the protocol
 #
-class L1Cache(RubyCache): pass
+class L1Cache(RubyCache):
+    pass
+
 
 def define_options(parser):
     return
 
-def create_system(options, full_system, system, dma_ports, bootmem,
-                  ruby_system, cpus):
-    if buildEnv['PROTOCOL'] != 'Garnet_standalone':
+
+def create_system(
+    options, full_system, system, dma_ports, bootmem, ruby_system, cpus
+):
+    if buildEnv["PROTOCOL"] != "Garnet_standalone":
         panic("This script requires Garnet_standalone protocol to be built.")
 
     cpu_sequencers = []
@@ -49,7 +53,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
     #
     # The Garnet_standalone protocol does not support fs nor dma
     #
-    assert(dma_ports == [])
+    assert dma_ports == []
 
     #
     # The ruby network creation expects the list of nodes in the system to be
@@ -69,19 +73,18 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         # Only one cache exists for this protocol, so by default use the L1D
         # config parameters.
         #
-        cache = L1Cache(size = options.l1d_size,
-                        assoc = options.l1d_assoc)
+        cache = L1Cache(size=options.l1d_size, assoc=options.l1d_assoc)
 
         #
         # Only one unified L1 cache exists.  Can cache instructions and data.
         #
-        l1_cntrl = L1Cache_Controller(version = i,
-                                      cacheMemory = cache,
-                                      ruby_system = ruby_system)
+        l1_cntrl = L1Cache_Controller(
+            version=i, cacheMemory=cache, ruby_system=ruby_system
+        )
 
-        cpu_seq = RubySequencer(dcache = cache,
-                                garnet_standalone = True,
-                                ruby_system = ruby_system)
+        cpu_seq = RubySequencer(
+            dcache=cache, garnet_standalone=True, ruby_system=ruby_system
+        )
 
         l1_cntrl.sequencer = cpu_seq
         exec("ruby_system.l1_cntrl%d = l1_cntrl" % i)
@@ -97,7 +100,8 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         l1_cntrl.forwardFromCache = MessageBuffer()
 
     mem_dir_cntrl_nodes, rom_dir_cntrl_node = create_directories(
-        options, bootmem, ruby_system, system)
+        options, bootmem, ruby_system, system
+    )
     dir_cntrl_nodes = mem_dir_cntrl_nodes[:]
     if rom_dir_cntrl_node is not None:
         dir_cntrl_nodes.append(rom_dir_cntrl_node)
@@ -106,7 +110,6 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         dir_cntrl.requestToDir = MessageBuffer()
         dir_cntrl.forwardToDir = MessageBuffer()
         dir_cntrl.responseToDir = MessageBuffer()
-
 
     all_cntrls = l1_cntrl_nodes + dir_cntrl_nodes
     ruby_system.network.number_of_virtual_networks = 3

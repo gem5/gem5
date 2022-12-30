@@ -29,11 +29,7 @@ from .....processors.abstract_core import AbstractCore
 from ......isas import ISA
 from ..abstract_l1_cache import AbstractL1Cache
 
-from m5.objects import (
-    MessageBuffer,
-    RubyCache,
-    ClockDomain,
-)
+from m5.objects import MessageBuffer, RubyCache, ClockDomain
 
 
 class L1Cache(AbstractL1Cache):
@@ -54,7 +50,7 @@ class L1Cache(AbstractL1Cache):
         )
 
         self.clk_domain = clk_domain
-        self.send_evictions = self.sendEvicts(core=core, target_isa=target_isa)
+        self.send_evictions = core.requires_send_evicts()
 
     @overrides(AbstractL1Cache)
     def connectQueues(self, network):

@@ -25,30 +25,40 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from abc import ABCMeta, abstractmethod
-from typing import Optional
-import importlib
-import platform
+from typing import Optional, List
 
-from .cpu_types import CPUTypes
 from ...isas import ISA
-from ...utils.requires import requires
 
 from m5.objects import BaseMMU, Port, SubSystem
+
 
 class AbstractCore(SubSystem):
     __metaclass__ = ABCMeta
 
-    def __init__(self, cpu_type: CPUTypes):
+    def __init__(self):
         super().__init__()
-        if cpu_type == CPUTypes.KVM:
-            requires(kvm_required=True)
-        self._cpu_type = cpu_type
-
-    def get_type(self) -> CPUTypes:
-        return self._cpu_type
 
     @abstractmethod
     def get_isa(self) -> ISA:
+        raise NotImplementedError
+
+    @abstractmethod
+    def requires_send_evicts(self) -> bool:
+        """True if the CPU model or ISA requires sending evictions from caches
+        to the CPU. Scenarios warrant forwarding evictions to the CPU:
+        1. The O3 model must keep the LSQ coherent with the caches
+        2. The x86 mwait instruction is built on top of coherence
+        3. The local exclusive monitor in ARM systems
+        """
+        return False
+
+    @abstractmethod
+    def is_kvm_core(self) -> bool:
+        """
+        KVM cores need setup differently than other cores. Frequently it's
+        useful to know whether a core is a KVM core or not. This function helps
+        with this.
+        """
         raise NotImplementedError
 
     @abstractmethod
@@ -92,10 +102,11 @@ class AbstractCore(SubSystem):
 
     @abstractmethod
     def connect_interrupt(
-        self, interrupt_requestor: Optional[Port] = None,
-        interrupt_responce: Optional[Port] = None
+        self,
+        interrupt_requestor: Optional[Port] = None,
+        interrupt_responce: Optional[Port] = None,
     ) -> None:
-        """ Connect the core interrupts to the interrupt controller
+        """Connect the core interrupts to the interrupt controller
 
         This function is usually called from the cache hierarchy since the
         optional ports can be implemented as cache ports.
@@ -104,82 +115,43 @@ class AbstractCore(SubSystem):
 
     @abstractmethod
     def get_mmu(self) -> BaseMMU:
-        """ Return the MMU for this core.
+        """Return the MMU for this core.
 
         This is used in the board to setup system-specific MMU settings.
         """
         raise NotImplementedError
 
-    @classmethod
-    def cpu_simobject_factory(cls, cpu_type: CPUTypes, isa: ISA, core_id: int):
+    @abstractmethod
+    def _set_simpoint(
+        self, inst_starts: List[int], board_initialized: bool
+    ) -> None:
+        """Schedule simpoint exit events for the core.
+
+        This is used to raise SIMPOINT_BEGIN exit events in the gem5 standard
+        library. This is called through the set_workload functions and should
+        not be called directly. Duplicate instruction counts in the inst_starts list will not
+        be scheduled.
+
+        :param inst_starts: a list of SimPoints starting instructions
+        :param board_initialized: True if the board has already been
+        initialized, otherwise False. This parameter is necessary as simpoints
+        are setup differently dependent on this.
         """
-        A factory used to return the SimObject core object given the cpu type,
-        and ISA target. An exception will be thrown if there is an
-        incompatibility.
+        raise NotImplementedError("This core type does not support simpoints")
 
-        :param cpu_type: The target CPU type.
-        :param isa: The target ISA.
-        :param core_id: The id of the core to be returned.
+    @abstractmethod
+    def _set_inst_stop_any_thread(
+        self, inst: int, board_initialized: bool
+    ) -> None:
+        """Schedule an exit event when any thread in this core reaches the
+        given number of instructions. This is called through the simulator
+        module and should not be called directly.
+
+        This is used to raise MAX_INSTS exit event in the gem5 standard library
+
+        :param inst: a number of instructions
+        :param board_initialized: True if the board has already been
+        initialized, otherwise False. This parameter is necessary as the
+        instruction stop is setup differently dependent on this.
         """
-        requires(isa_required=isa)
-
-        _isa_string_map = {
-            ISA.X86 : "X86",
-            ISA.ARM : "Arm",
-            ISA.RISCV : "Riscv",
-            ISA.SPARC : "Sparc",
-            ISA.POWER : "Power",
-            ISA.MIPS : "Mips",
-        }
-
-        _cpu_types_string_map = {
-            CPUTypes.ATOMIC : "AtomicSimpleCPU",
-            CPUTypes.O3 : "O3CPU",
-            CPUTypes.TIMING : "TimingSimpleCPU",
-            CPUTypes.KVM : "KvmCPU",
-            CPUTypes.MINOR : "MinorCPU",
-        }
-
-        if isa not in _isa_string_map:
-            raise NotImplementedError(f"ISA '{isa.name}' does not have an"
-                "entry in `AbstractCore.cpu_simobject_factory._isa_string_map`"
-            )
-
-        if cpu_type not in _cpu_types_string_map:
-            raise NotImplementedError(f"CPUType '{cpu_type.name}' "
-                "does not have an entry in "
-                "`AbstractCore.cpu_simobject_factory._cpu_types_string_map`"
-            )
-
-        if cpu_type == CPUTypes.KVM:
-            # For some reason, the KVM CPU is under "m5.objects" not the
-            # "m5.objects.{ISA}CPU".
-            module_str = f"m5.objects"
-        else:
-            module_str = f"m5.objects.{_isa_string_map[isa]}CPU"
-
-        # GEM5 compiles two versions of KVM for ARM depending upon the host CPU
-        # : ArmKvmCPU and ArmV8KvmCPU for 32 bit (Armv7l) and 64 bit (Armv8)
-        # respectively.
-
-        if isa.name == "ARM" and \
-                cpu_type == CPUTypes.KVM and \
-                platform.architecture()[0] == "64bit":
-            cpu_class_str = f"{_isa_string_map[isa]}V8"\
-                            f"{_cpu_types_string_map[cpu_type]}"
-        else:
-            cpu_class_str = f"{_isa_string_map[isa]}"\
-                            f"{_cpu_types_string_map[cpu_type]}"
-
-        try:
-            to_return_cls = getattr(importlib.import_module(module_str),
-                                    cpu_class_str
-                                   )
-        except ImportError:
-            raise Exception(
-                f"Cannot find CPU type '{cpu_type.name}' for '{isa.name}' "
-                "ISA. Please ensure you have compiled the correct version of "
-                "gem5."
-            )
-
-        return to_return_cls(cpu_id=core_id)
+        raise NotImplementedError("This core type does not support MAX_INSTS")

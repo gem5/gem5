@@ -31,8 +31,9 @@ from m5.params import *
 
 from m5.objects.BaseTLB import BaseTLB
 
+
 class MipsTLB(BaseTLB):
-    type = 'MipsTLB'
-    cxx_class = 'gem5::MipsISA::TLB'
-    cxx_header = 'arch/mips/tlb.hh'
+    type = "MipsTLB"
+    cxx_class = "gem5::MipsISA::TLB"
+    cxx_header = "arch/mips/tlb.hh"
     size = Param.Int(64, "TLB size")

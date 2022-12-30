@@ -30,10 +30,11 @@ import requests
 from types import SimpleNamespace
 from urllib.parse import urljoin
 
+
 class GerritResponseParser:
     @staticmethod
     def get_json_content(response):
-        assert(isinstance(response, requests.Response))
+        assert isinstance(response, requests.Response)
 
         # If the status code is not in the 200s range, it doesn't have content.
         if response.status_code >= 300:
@@ -64,31 +65,36 @@ class GerritRestAPI:
         self.timeout = timeout
 
     # helper methods for sending GET and POST requests
-    def _get(self, endpoint, params = None):
+    def _get(self, endpoint, params=None):
         request_url = urljoin(self.api_entry_point, endpoint)
-        return requests.get(request_url,
-                            params = params,
-                            timeout = self.timeout,
-                            auth = (self.username, self.password))
+        return requests.get(
+            request_url,
+            params=params,
+            timeout=self.timeout,
+            auth=(self.username, self.password),
+        )
+
     def _post(self, endpoint, json_content):
         request_url = urljoin(self.api_entry_point, endpoint)
-        return requests.post(request_url,
-                             json = json_content,
-                             timeout = self.timeout,
-                             auth = (self.username, self.password))
+        return requests.post(
+            request_url,
+            json=json_content,
+            timeout=self.timeout,
+            auth=(self.username, self.password),
+        )
 
     # --------------- Account Endpoints ---------------
     # https://gerrit-review.googlesource.com/Documentation/
     # rest-api-accounts.html#get-account
     def get_account(self, account_id="self"):
-        """ get an account detail from an account_id """
+        """get an account detail from an account_id"""
         return self._get(f"/accounts/{account_id}")
 
     # https://gerrit-review.googlesource.com/Documentation/
     # rest-api-accounts.html#query-account
-    def query_account(self, query, limit = None):
-        """ get accounts based on the query """
-        params = { "q": query }
+    def query_account(self, query, limit=None):
+        """get accounts based on the query"""
+        params = {"q": query}
         if limit:
             params["n"] = str(limit)
         return self._get(f"/accounts/", params)
@@ -97,9 +103,9 @@ class GerritRestAPI:
     # https://gerrit-review.googlesource.com/Documentation/
     # rest-api-changes.html#list-changes
     def query_changes(self, query, limit=None, optional_field=None):
-        """ query changes with maximum limit returned queries """
+        """query changes with maximum limit returned queries"""
         endpoint = f"/changes/"
-        params = { "q": query }
+        params = {"q": query}
         if limit:
             params["n"] = str(limit)
         if optional_field:
@@ -110,9 +116,10 @@ class GerritRestAPI:
     # https://gerrit-review.googlesource.com/Documentation/
     # rest-api-changes.html#list-reviewers
     def list_reviewers(self, change_id):
-        """ list reviewers of a change """
+        """list reviewers of a change"""
         return self._get(f"/changes/{change_id}/reviewers")
+
     def add_reviewer(self, change_id, reviewer_email):
-        """ add a reviewer using an email address """
+        """add a reviewer using an email address"""
         data = {"reviewer": reviewer_email}
         return self._post(f"/changes/{change_id}/reviewers/", data)

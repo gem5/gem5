@@ -390,6 +390,8 @@ class MMU : public BaseMMU
      */
     static ExceptionLevel tranTypeEL(CPSR cpsr, ArmTranslationType type);
 
+    static bool hasUnprivRegime(ExceptionLevel el, bool e2h);
+
   public:
     /** Lookup an entry in the TLB
      * @param vpn virtual address
@@ -445,6 +447,8 @@ class MMU : public BaseMMU
 
     bool faultPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
                   Mode mode, const bool is_priv, CachedState &state);
+
+    bool hasUnprivRegime(ExceptionLevel el, CachedState &state);
 
     std::pair<bool, bool> s1PermBits64(
         TlbEntry *te, const RequestPtr &req, Mode mode,

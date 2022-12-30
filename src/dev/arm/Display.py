@@ -37,10 +37,11 @@ from m5.params import *
 from m5.SimObject import SimObject
 from m5.util.fdthelper import *
 
+
 class Display(SimObject):
-    type = 'Display'
+    type = "Display"
     cxx_header = "dev/arm/display.hh"
-    cxx_class = 'gem5::Display'
+    cxx_class = "gem5::Display"
     clock_frequency = Param.Unsigned("clock-frequency property")
     hactive = Param.Unsigned("hactive property")
     vactive = Param.Unsigned("vactive property")
@@ -64,37 +65,34 @@ class Display(SimObject):
         # timing node
         timing_node = FdtNode(self.timingNode())
 
-        timing_node.append(FdtPropertyWords(
-            "clock-frequency", [self.clock_frequency]))
-        timing_node.append(FdtPropertyWords(
-            "hactive", [self.hactive]))
-        timing_node.append(FdtPropertyWords(
-            "vactive", [self.vactive]))
-        timing_node.append(FdtPropertyWords(
-            "hfront-porch", [self.hfront_porch]))
-        timing_node.append(FdtPropertyWords(
-            "hback-porch", [self.hback_porch]))
-        timing_node.append(FdtPropertyWords(
-            "hsync-len", [self.hsync_len]))
-        timing_node.append(FdtPropertyWords(
-            "vfront-porch", [self.vfront_porch]))
-        timing_node.append(FdtPropertyWords(
-            "vback-porch", [self.vback_porch]))
-        timing_node.append(FdtPropertyWords(
-            "vsync-len", [self.vsync_len]))
+        timing_node.append(
+            FdtPropertyWords("clock-frequency", [self.clock_frequency])
+        )
+        timing_node.append(FdtPropertyWords("hactive", [self.hactive]))
+        timing_node.append(FdtPropertyWords("vactive", [self.vactive]))
+        timing_node.append(
+            FdtPropertyWords("hfront-porch", [self.hfront_porch])
+        )
+        timing_node.append(FdtPropertyWords("hback-porch", [self.hback_porch]))
+        timing_node.append(FdtPropertyWords("hsync-len", [self.hsync_len]))
+        timing_node.append(
+            FdtPropertyWords("vfront-porch", [self.vfront_porch])
+        )
+        timing_node.append(FdtPropertyWords("vback-porch", [self.vback_porch]))
+        timing_node.append(FdtPropertyWords("vsync-len", [self.vsync_len]))
 
         timing_node.appendPhandle(self.timingNode())
 
         # display timing node
         dispt_node = FdtNode("display-timings")
-        dispt_node.append(FdtPropertyWords("native-mode",
-            state.phandle(self.timingNode())))
+        dispt_node.append(
+            FdtPropertyWords("native-mode", state.phandle(self.timingNode()))
+        )
         dispt_node.append(timing_node)
 
         # endpoint node
         endpoint_node = FdtNode("endpoint")
-        endpoint_node.appendPhandle(
-            self.endpointPhandle())
+        endpoint_node.appendPhandle(self.endpointPhandle())
 
         # Assign node so that it can be retrieved
         self._endpoint_node = endpoint_node
@@ -110,6 +108,7 @@ class Display(SimObject):
         node.append(port_node)
 
         yield node
+
 
 class Display1080p(Display):
     clock_frequency = 148500000

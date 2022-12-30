@@ -71,6 +71,7 @@
 import gzip
 import struct
 
+
 def openFileRd(in_file):
     """
     This opens the file passed as argument for reading using an appropriate
@@ -81,7 +82,7 @@ def openFileRd(in_file):
         # First see if this file is gzipped
         try:
             # Opening the file works even if it is not a gzip file
-            proto_in = gzip.open(in_file, 'rb')
+            proto_in = gzip.open(in_file, "rb")
 
             # Force a check of the magic number by seeking in the
             # file. If we do not do it here the error will occur when
@@ -89,11 +90,12 @@ def openFileRd(in_file):
             proto_in.seek(1)
             proto_in.seek(0)
         except IOError:
-            proto_in = open(in_file, 'rb')
+            proto_in = open(in_file, "rb")
     except IOError:
         print("Failed to open ", in_file, " for reading")
         exit(-1)
     return proto_in
+
 
 def _DecodeVarint32(in_file):
     """
@@ -106,24 +108,25 @@ def _DecodeVarint32(in_file):
     shift = 0
     pos = 0
     # Use a 32-bit mask
-    mask = 0xffffffff
+    mask = 0xFFFFFFFF
     while 1:
         c = in_file.read(1)
         if len(c) == 0:
             return (0, 0)
-        b = struct.unpack('<B', c)[0]
-        result |= ((b & 0x7f) << shift)
+        b = struct.unpack("<B", c)[0]
+        result |= (b & 0x7F) << shift
         pos += 1
         if not (b & 0x80):
-            if result > 0x7fffffffffffffff:
-                result -= (1 << 64)
+            if result > 0x7FFFFFFFFFFFFFFF:
+                result -= 1 << 64
                 result |= ~mask
             else:
                 result &= mask
             return (result, pos)
         shift += 7
         if shift >= 64:
-            raise IOError('Too many bytes when decoding varint.')
+            raise IOError("Too many bytes when decoding varint.")
+
 
 def decodeMessage(in_file, message):
     """
@@ -140,19 +143,21 @@ def decodeMessage(in_file, message):
     except IOError:
         return False
 
+
 def _EncodeVarint32(out_file, value):
-  """
-  The encoding of the Varint32 is copied from
-  google.protobuf.internal.encoder and is only repeated here to
-  avoid depending on the internal functions in the library.
-  """
-  bits = value & 0x7f
-  value >>= 7
-  while value:
-    out_file.write(struct.pack('<B', 0x80 | bits))
-    bits = value & 0x7f
+    """
+    The encoding of the Varint32 is copied from
+    google.protobuf.internal.encoder and is only repeated here to
+    avoid depending on the internal functions in the library.
+    """
+    bits = value & 0x7F
     value >>= 7
-  out_file.write(struct.pack('<B', bits))
+    while value:
+        out_file.write(struct.pack("<B", 0x80 | bits))
+        bits = value & 0x7F
+        value >>= 7
+    out_file.write(struct.pack("<B", bits))
+
 
 def encodeMessage(out_file, message):
     """

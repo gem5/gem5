@@ -32,20 +32,23 @@ from m5.params import *
 from m5.objects.System import System
 from m5.objects.Workload import Workload, KernelWorkload
 
+
 class RiscvBareMetal(Workload):
-    type = 'RiscvBareMetal'
-    cxx_class = 'gem5::RiscvISA::BareMetal'
-    cxx_header = 'arch/riscv/bare_metal/fs_workload.hh'
+    type = "RiscvBareMetal"
+    cxx_class = "gem5::RiscvISA::BareMetal"
+    cxx_header = "arch/riscv/bare_metal/fs_workload.hh"
 
     bootloader = Param.String("File, that contains the bootloader code")
     bare_metal = Param.Bool(True, "Using Bare Metal Application?")
-    reset_vect = Param.Addr(0x0, 'Reset vector')
+    reset_vect = Param.Addr(0x0, "Reset vector")
+
 
 class RiscvLinux(KernelWorkload):
-    type = 'RiscvLinux'
-    cxx_class = 'gem5::RiscvISA::FsLinux'
-    cxx_header = 'arch/riscv/linux/fs_workload.hh'
+    type = "RiscvLinux"
+    cxx_class = "gem5::RiscvISA::FsLinux"
+    cxx_header = "arch/riscv/linux/fs_workload.hh"
 
-    dtb_filename = Param.String("",
-        "File that contains the Device Tree Blob. Don't use DTB if empty.")
-    dtb_addr = Param.Addr(0x87e00000, "DTB address")
+    dtb_filename = Param.String(
+        "", "File that contains the Device Tree Blob. Don't use DTB if empty."
+    )
+    dtb_addr = Param.Addr(0x87E00000, "DTB address")

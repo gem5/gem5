@@ -36,9 +36,10 @@
 from m5.objects import *
 from arm_generic import *
 
-root = LinuxArmFSSystem(mem_mode='timing',
-                        mem_class=DDR3_1600_8x8,
-                        cpu_class=TimingSimpleCPU,
-                        num_cpus=2,
-                        use_ruby=True).create_root()
-
+root = LinuxArmFSSystem(
+    mem_mode="timing",
+    mem_class=DDR3_1600_8x8,
+    cpu_class=ArmTimingSimpleCPU,
+    num_cpus=2,
+    use_ruby=True,
+).create_root()

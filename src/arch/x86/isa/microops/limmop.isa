@@ -42,7 +42,7 @@
 def template MicroLimmOpExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         %(op_decl)s;
         %(op_rd)s;
@@ -70,7 +70,7 @@ def template MicroLimmOpDeclare {{
         %(constructor)s;
     }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 

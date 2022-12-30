@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop SCAS_M {
     # Find the constant we need to either add or subtract from rdi
     ruflag t0, 10
@@ -94,4 +94,4 @@ end:
     fault "NoFault"
 };
 
-'''
+"""

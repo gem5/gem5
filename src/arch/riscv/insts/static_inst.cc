@@ -29,6 +29,7 @@
 
 #include "arch/riscv/insts/static_inst.hh"
 
+#include "arch/riscv/isa.hh"
 #include "arch/riscv/pcstate.hh"
 #include "arch/riscv/types.hh"
 #include "cpu/static_inst.hh"
@@ -38,6 +39,19 @@ namespace gem5
 
 namespace RiscvISA
 {
+
+bool
+RiscvStaticInst::alignmentOk(ExecContext* xc, Addr addr, Addr size) const
+{
+    if (addr % size == 0) {
+        return true;
+    }
+    // Even if it's not aligned, we're still fine if the check is not enabled.
+    // We perform the check first because detecting whether the check itself is
+    // enabled involves multiple indirect references and is quite slow.
+    auto *isa = static_cast<ISA*>(xc->tcBase()->getIsaPtr());
+    return !isa->alignmentCheckEnabled();
+}
 
 void
 RiscvMicroInst::advancePC(PCStateBase &pcState) const

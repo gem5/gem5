@@ -27,6 +27,7 @@
 
 from slicc.ast.ExprAST import ExprAST
 
+
 class NewExprAST(ExprAST):
     def __init__(self, slicc, type_ast):
         super().__init__(slicc)

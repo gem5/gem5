@@ -368,7 +368,6 @@ machine(MachineType:L1Cache, "MI Example L1 Cache")
     peek(responseNetwork_in, ResponseMsg) {
       assert(is_valid(cache_entry));
       DPRINTF(RubySlicc,"%s\n", cache_entry.DataBlk);
-      cacheMemory.setMRU(cache_entry);
       sequencer.readCallback(address, cache_entry.DataBlk, true,
                              machineIDToMachineType(in_msg.Sender));
     }
@@ -385,7 +384,6 @@ machine(MachineType:L1Cache, "MI Example L1 Cache")
     peek(responseNetwork_in, ResponseMsg) {
       assert(is_valid(cache_entry));
       DPRINTF(RubySlicc,"%s\n", cache_entry.DataBlk);
-      cacheMemory.setMRU(cache_entry);
       sequencer.writeCallback(address, cache_entry.DataBlk, true,
                               machineIDToMachineType(in_msg.Sender));
     }

@@ -43,7 +43,6 @@
 
 #include <vector>
 
-#include "arch/vecregs.hh"
 #include "cpu/o3/dyn_inst.hh"
 #include "cpu/reg_class.hh"
 #include "debug/Rename.hh"
@@ -114,7 +113,7 @@ UnifiedRenameMap::init(const BaseISA::RegClasses &regClasses,
     regFile = _regFile;
 
     for (int i = 0; i < renameMaps.size(); i++)
-        renameMaps[i].init(regClasses.at(i), &(freeList->freeLists[i]));
+        renameMaps[i].init(*regClasses.at(i), &(freeList->freeLists[i]));
 }
 
 bool

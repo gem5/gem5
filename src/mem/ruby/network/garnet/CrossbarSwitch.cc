@@ -91,6 +91,17 @@ CrossbarSwitch::wakeup()
     }
 }
 
+bool
+CrossbarSwitch::functionalRead(Packet *pkt, WriteMask &mask)
+{
+    bool read = false;
+    for (auto& switch_buffer : switchBuffers) {
+        if (switch_buffer.functionalRead(pkt, mask))
+            read = true;
+   }
+   return read;
+}
+
 uint32_t
 CrossbarSwitch::functionalWrite(Packet *pkt)
 {

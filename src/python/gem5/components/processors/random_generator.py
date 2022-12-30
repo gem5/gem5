@@ -28,13 +28,13 @@ from ...utils.override import overrides
 from ..boards.mem_mode import MemMode
 from .random_generator_core import RandomGeneratorCore
 
-from .abstract_processor import AbstractProcessor
+from .abstract_generator import AbstractGenerator
 from ..boards.abstract_board import AbstractBoard
 
 from typing import List
 
 
-class RandomGenerator(AbstractProcessor):
+class RandomGenerator(AbstractGenerator):
     def __init__(
         self,
         num_cores: int = 1,
@@ -81,14 +81,14 @@ class RandomGenerator(AbstractProcessor):
 
     def _create_cores(
         self,
-        num_cores,
-        duration,
-        rate,
-        block_size,
-        min_addr,
-        max_addr,
-        rd_perc,
-        data_limit,
+        num_cores: int,
+        duration: str,
+        rate: str,
+        block_size: int,
+        min_addr: int,
+        max_addr: int,
+        rd_perc: int,
+        data_limit: int,
     ) -> List[RandomGeneratorCore]:
         """
         The helper function to create the cores for the generator, it will use
@@ -104,13 +104,10 @@ class RandomGenerator(AbstractProcessor):
                 rd_perc=rd_perc,
                 data_limit=data_limit,
             )
-            for i in range(num_cores)
+            for _ in range(num_cores)
         ]
 
-    @overrides(AbstractProcessor)
-    def incorporate_processor(self, board: AbstractBoard) -> None:
-        board.set_mem_mode(MemMode.TIMING)
-
+    @overrides(AbstractGenerator)
     def start_traffic(self) -> None:
         """
         This function will start the assigned traffic to this generator.

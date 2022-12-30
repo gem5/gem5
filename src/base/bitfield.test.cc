@@ -456,4 +456,3 @@ TEST(BitfieldTest, CountLeadingZero64AllZeros)
     uint64_t value = 0;
     EXPECT_EQ(64, clz64(value));
 }
-

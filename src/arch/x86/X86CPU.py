@@ -29,10 +29,14 @@ from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
 from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
 from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
 from m5.objects.BaseO3CPU import BaseO3CPU
+from m5.objects.BaseMinorCPU import BaseMinorCPU
+from m5.objects.FuncUnit import *
+from m5.objects.FUPool import *
 from m5.objects.X86Decoder import X86Decoder
 from m5.objects.X86MMU import X86MMU
 from m5.objects.X86LocalApic import X86LocalApic
 from m5.objects.X86ISA import X86ISA
+
 
 class X86CPU:
     ArchDecoder = X86Decoder
@@ -40,14 +44,46 @@ class X86CPU:
     ArchInterrupts = X86LocalApic
     ArchISA = X86ISA
 
+
 class X86AtomicSimpleCPU(BaseAtomicSimpleCPU, X86CPU):
     mmu = X86MMU()
+
 
 class X86NonCachingSimpleCPU(BaseNonCachingSimpleCPU, X86CPU):
     mmu = X86MMU()
 
+
 class X86TimingSimpleCPU(BaseTimingSimpleCPU, X86CPU):
     mmu = X86MMU()
+
+
+class X86IntMultDiv(IntMultDiv):
+    # DIV and IDIV instructions in x86 are implemented using a loop which
+    # issues division microops.  The latency of these microops should really be
+    # one (or a small number) cycle each since each of these computes one bit
+    # of the quotient.
+    opList = [
+        OpDesc(opClass="IntMult", opLat=3),
+        OpDesc(opClass="IntDiv", opLat=1, pipelined=False),
+    ]
+
+    count = 2
+
+
+class DefaultX86FUPool(FUPool):
+    FUList = [
+        IntALU(),
+        X86IntMultDiv(),
+        FP_ALU(),
+        FP_MultDiv(),
+        ReadPort(),
+        SIMD_Unit(),
+        PredALU(),
+        WritePort(),
+        RdWrPort(),
+        IprPort(),
+    ]
+
 
 class X86O3CPU(BaseO3CPU, X86CPU):
     mmu = X86MMU()
@@ -60,3 +96,13 @@ class X86O3CPU(BaseO3CPU, X86CPU):
     # (it's a side effect of int reg renaming), so they should
     # never be the bottleneck here.
     numPhysCCRegs = Self.numPhysIntRegs * 5
+
+    # DIV and IDIV instructions in x86 are implemented using a loop which
+    # issues division microops.  The latency of these microops should really be
+    # one (or a small number) cycle each since each of these computes one bit
+    # of the quotient.
+    fuPool = DefaultX86FUPool()
+
+
+class X86MinorCPU(BaseMinorCPU, X86CPU):
+    mmu = X86MMU()

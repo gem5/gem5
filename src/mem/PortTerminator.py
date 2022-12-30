@@ -28,12 +28,15 @@
 from m5.params import *
 from m5.SimObject import SimObject
 
-class PortTerminator(SimObject):
-    type = 'PortTerminator'
-    cxx_header = "mem/port_terminator.hh"
-    cxx_class = 'gem5::PortTerminator'
 
-    req_ports = VectorRequestPort("Vector port for connecting terminating "
-                                                "response ports.")
-    resp_ports = VectorResponsePort("Vector port for terminating "
-                                                "request ports.")
+class PortTerminator(SimObject):
+    type = "PortTerminator"
+    cxx_header = "mem/port_terminator.hh"
+    cxx_class = "gem5::PortTerminator"
+
+    req_ports = VectorRequestPort(
+        "Vector port for connecting terminating " "response ports."
+    )
+    resp_ports = VectorResponsePort(
+        "Vector port for terminating " "request ports."
+    )

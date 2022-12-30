@@ -504,8 +504,22 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
     }
     if (doEndWalk) {
         if (doTLBInsert)
-            if (!functional)
-                walker->tlb->insert(entry.vaddr, entry);
+            if (!functional) {
+
+                // Check if PCIDE is set in CR4
+                CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
+                if (cr4.pcide){
+                    CR3 cr3 = tc->readMiscRegNoEffect(misc_reg::Cr3);
+                    walker->tlb->insert(entry.vaddr, entry, cr3.pcid);
+                }
+                else{
+                    // The current PCID is always 000H if PCIDE
+                    // is not set [sec 4.10.1 of Intel's Software
+                    // Developer Manual]
+                    walker->tlb->insert(entry.vaddr, entry, 0x000);
+                }
+            }
+
         endWalk();
     } else {
         PacketPtr oldRead = read;
@@ -546,6 +560,7 @@ Walker::WalkerState::setupWalk(Addr vaddr)
 {
     VAddr addr = vaddr;
     CR3 cr3 = tc->readMiscRegNoEffect(misc_reg::Cr3);
+    CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
     // Check if we're in long mode or not
     Efer efer = tc->readMiscRegNoEffect(misc_reg::Efer);
     dataSize = 8;
@@ -557,7 +572,6 @@ Walker::WalkerState::setupWalk(Addr vaddr)
         enableNX = efer.nxe;
     } else {
         // We're in some flavor of legacy mode.
-        CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
         if (cr4.pae) {
             // Do legacy PAE.
             state = PAEPDP;
@@ -581,7 +595,10 @@ Walker::WalkerState::setupWalk(Addr vaddr)
     entry.vaddr = vaddr;
 
     Request::Flags flags = Request::PHYSICAL;
-    if (cr3.pcd)
+
+    // PCD can't be used if CR4.PCIDE=1 [sec 2.5
+    // of Intel's Software Developer's manual]
+    if (!cr4.pcide && cr3.pcd)
         flags.set(Request::UNCACHEABLE);
 
     RequestPtr request = std::make_shared<Request>(

@@ -34,6 +34,7 @@ from ..boards.abstract_board import AbstractBoard
 from .abstract_memory_system import AbstractMemorySystem
 from m5.objects import AddrRange, MemCtrl, Port, SimpleMemory
 
+
 class SingleChannelSimpleMemory(AbstractMemorySystem):
     """A class to implement single channel memory system using SimpleMemory
 

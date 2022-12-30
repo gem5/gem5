@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013,2016-2018 ARM Limited
+ * Copyright (c) 2010-2013,2016-2018, 2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -398,12 +398,7 @@ class ArmStaticInst : public StaticInst
         xc->pcState(pc);
     }
 
-    inline Fault
-    disabledFault() const
-    {
-        return std::make_shared<UndefinedInstruction>(machInst, false,
-                                                      mnemonic, true);
-    }
+    inline Fault disabledFault() const { return undefined(true); }
 
     // Utility function used by checkForWFxTrap32 and checkForWFxTrap64
     // Returns true if processor has to trap a WFI/WFE instruction.
@@ -586,6 +581,13 @@ class ArmStaticInst : public StaticInst
     getCurSveVecLen(ThreadContext *tc)
     {
         return getCurSveVecLenInBits(tc) / (8 * sizeof(T));
+    }
+
+    inline Fault
+    undefined(bool disabled=false) const
+    {
+        return std::make_shared<UndefinedInstruction>(
+            machInst, false, mnemonic, disabled);
     }
 };
 

@@ -89,6 +89,9 @@ PySource('gem5.components.cachehierarchies.classic',
 PySource('gem5.components.cachehierarchies.classic',
     'gem5/components/cachehierarchies/classic/'
     'private_l1_private_l2_cache_hierarchy.py')
+PySource('gem5.components.cachehierarchies.classic',
+    'gem5/components/cachehierarchies/classic/'
+    'private_l1_shared_l2_cache_hierarchy.py')
 PySource('gem5.components.cachehierarchies.classic.caches',
     'gem5/components/cachehierarchies/classic/caches/__init__.py')
 PySource('gem5.components.cachehierarchies.classic.caches',
@@ -148,6 +151,7 @@ PySource('gem5.components.memory', 'gem5/components/memory/simple.py')
 PySource('gem5.components.memory', 'gem5/components/memory/memory.py')
 PySource('gem5.components.memory', 'gem5/components/memory/single_channel.py')
 PySource('gem5.components.memory', 'gem5/components/memory/multi_channel.py')
+PySource('gem5.components.memory', 'gem5/components/memory/hbm.py')
 PySource('gem5.components.memory.dram_interfaces',
     'gem5/components/memory/dram_interfaces/__init__.py')
 PySource('gem5.components.memory.dram_interfaces',
@@ -175,6 +179,8 @@ PySource('gem5.components.processors',
 PySource('gem5.components.processors',
     'gem5/components/processors/abstract_generator_core.py')
 PySource('gem5.components.processors',
+    'gem5/components/processors/abstract_generator.py')
+PySource('gem5.components.processors',
     'gem5/components/processors/abstract_processor.py')
 PySource('gem5.components.processors',
     'gem5/components/processors/complex_generator_core.py')
@@ -201,22 +207,50 @@ PySource('gem5.components.processors',
 PySource('gem5.components.processors',
     'gem5/components/processors/simple_core.py')
 PySource('gem5.components.processors',
+    'gem5/components/processors/base_cpu_core.py')
+PySource('gem5.components.processors',
     'gem5/components/processors/simple_processor.py')
+PySource('gem5.components.processors',
+    'gem5/components/processors/base_cpu_processor.py')
 PySource('gem5.components.processors',
     'gem5/components/processors/simple_switchable_processor.py')
 PySource('gem5.components.processors',
     'gem5/components/processors/switchable_processor.py')
+PySource('gem5.utils', 'gem5/utils/simpoint.py')
+PySource('gem5.components.processors',
+    'gem5/components/processors/traffic_generator_core.py')
+PySource('gem5.components.processors',
+    'gem5/components/processors/traffic_generator.py')
 PySource('gem5.prebuilt', 'gem5/prebuilt/__init__.py')
 PySource('gem5.prebuilt.demo', 'gem5/prebuilt/demo/__init__.py')
 PySource('gem5.prebuilt.demo', 'gem5/prebuilt/demo/x86_demo_board.py')
+PySource('gem5.prebuilt.riscvmatched',
+    'gem5/prebuilt/riscvmatched/__init__.py')
+PySource('gem5.prebuilt.riscvmatched',
+    'gem5/prebuilt/riscvmatched/riscvmatched_board.py')
+PySource('gem5.prebuilt.riscvmatched',
+    'gem5/prebuilt/riscvmatched/riscvmatched_cache.py')
+PySource('gem5.prebuilt.riscvmatched',
+    'gem5/prebuilt/riscvmatched/riscvmatched_processor.py')
+PySource('gem5.prebuilt.riscvmatched',
+    'gem5/prebuilt/riscvmatched/riscvmatched_core.py')
 PySource('gem5.resources', 'gem5/resources/__init__.py')
 PySource('gem5.resources', 'gem5/resources/downloader.py')
 PySource('gem5.resources', 'gem5/resources/md5_utils.py')
 PySource('gem5.resources', 'gem5/resources/resource.py')
+PySource('gem5.resources', 'gem5/resources/workload.py')
 PySource('gem5.utils', 'gem5/utils/__init__.py')
 PySource('gem5.utils', 'gem5/utils/filelock.py')
 PySource('gem5.utils', 'gem5/utils/override.py')
 PySource('gem5.utils', 'gem5/utils/requires.py')
+PySource('gem5.utils.multiprocessing',
+    'gem5/utils/multiprocessing/__init__.py')
+PySource('gem5.utils.multiprocessing',
+    'gem5/utils/multiprocessing/_command_line.py')
+PySource('gem5.utils.multiprocessing',
+    'gem5/utils/multiprocessing/context.py')
+PySource('gem5.utils.multiprocessing',
+    'gem5/utils/multiprocessing/popen_spawn_gem5.py')
 
 PySource('', 'importer.py')
 PySource('m5', 'm5/__init__.py')
@@ -251,7 +285,8 @@ PySource('m5.ext.pyfdt', 'm5/ext/pyfdt/pyfdt.py')
 PySource('m5.ext.pyfdt', 'm5/ext/pyfdt/__init__.py')
 
 PySource('m5.ext.pystats', 'm5/ext/pystats/__init__.py')
-PySource('m5.ext.pystats', 'm5/ext/pystats/jsonserializable.py')
+PySource('m5.ext.pystats', 'm5/ext/pystats/serializable_stat.py')
+PySource('m5.ext.pystats', 'm5/ext/pystats/abstract_stat.py')
 PySource('m5.ext.pystats', 'm5/ext/pystats/group.py')
 PySource('m5.ext.pystats', 'm5/ext/pystats/simstat.py')
 PySource('m5.ext.pystats', 'm5/ext/pystats/statistic.py')

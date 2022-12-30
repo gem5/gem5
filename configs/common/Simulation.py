@@ -49,27 +49,28 @@ from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import *
 
-addToPath('../common')
+addToPath("../common")
+
 
 def getCPUClass(cpu_type):
     """Returns the required cpu class and the mode of operation."""
     cls = ObjectList.cpu_list.get(cpu_type)
     return cls, cls.memory_mode()
 
+
 def setCPUClass(options):
     """Returns two cpu classes and the initial mode of operation.
 
-       Restoring from a checkpoint or fast forwarding through a benchmark
-       can be done using one type of cpu, and then the actual
-       simulation can be carried out using another type. This function
-       returns these two types of cpus and the initial mode of operation
-       depending on the options provided.
+    Restoring from a checkpoint or fast forwarding through a benchmark
+    can be done using one type of cpu, and then the actual
+    simulation can be carried out using another type. This function
+    returns these two types of cpus and the initial mode of operation
+    depending on the options provided.
     """
 
     TmpClass, test_mem_mode = getCPUClass(options.cpu_type)
     CPUClass = None
-    if TmpClass.require_caches() and \
-            not options.caches and not options.ruby:
+    if TmpClass.require_caches() and not options.caches and not options.ruby:
         fatal("%s must be used with caches" % options.cpu_type)
 
     if options.checkpoint_restore != None:
@@ -79,19 +80,21 @@ def setCPUClass(options):
     elif options.fast_forward:
         CPUClass = TmpClass
         TmpClass = AtomicSimpleCPU
-        test_mem_mode = 'atomic'
+        test_mem_mode = "atomic"
 
     # Ruby only supports atomic accesses in noncaching mode
-    if test_mem_mode == 'atomic' and options.ruby:
+    if test_mem_mode == "atomic" and options.ruby:
         warn("Memory mode will be changed to atomic_noncaching")
-        test_mem_mode = 'atomic_noncaching'
+        test_mem_mode = "atomic_noncaching"
 
     return (TmpClass, test_mem_mode, CPUClass)
+
 
 def setMemClass(options):
     """Returns a memory controller class."""
 
     return ObjectList.mem_list.get(options.mem_type)
+
 
 def setWorkCountOptions(system, options):
     if options.work_item_id != None:
@@ -110,6 +113,7 @@ def setWorkCountOptions(system, options):
         system.work_begin_ckpt_count = options.work_begin_checkpoint_count
     if options.work_cpus_checkpoint_count != None:
         system.work_cpus_ckpt_count = options.work_cpus_checkpoint_count
+
 
 def findCptDir(options, cptdir, testsys):
     """Figures out the directory from which the checkpointed state is read.
@@ -137,7 +141,7 @@ def findCptDir(options, cptdir, testsys):
         if options.simpoint:
             # assume workload 0 has the simpoint
             if testsys.cpu[0].workload[0].simpoint == 0:
-                fatal('Unable to find simpoint')
+                fatal("Unable to find simpoint")
             inst += int(testsys.cpu[0].workload[0].simpoint)
 
         checkpoint_dir = joinpath(cptdir, "cpt.%s.%s" % (options.bench, inst))
@@ -148,8 +152,10 @@ def findCptDir(options, cptdir, testsys):
         # Restore from SimPoint checkpoints
         # Assumes that the checkpoint dir names are formatted as follows:
         dirs = listdir(cptdir)
-        expr = re.compile('cpt\.simpoint_(\d+)_inst_(\d+)' +
-                    '_weight_([\d\.e\-]+)_interval_(\d+)_warmup_(\d+)')
+        expr = re.compile(
+            "cpt\.simpoint_(\d+)_inst_(\d+)"
+            + "_weight_([\d\.e\-]+)_interval_(\d+)_warmup_(\d+)"
+        )
         cpts = []
         for dir in dirs:
             match = expr.match(dir)
@@ -159,7 +165,7 @@ def findCptDir(options, cptdir, testsys):
 
         cpt_num = options.checkpoint_restore
         if cpt_num > len(cpts):
-            fatal('Checkpoint %d not found', cpt_num)
+            fatal("Checkpoint %d not found", cpt_num)
         checkpoint_dir = joinpath(cptdir, cpts[cpt_num - 1])
         match = expr.match(cpts[cpt_num - 1])
         if match:
@@ -176,29 +182,32 @@ def findCptDir(options, cptdir, testsys):
         if testsys.switch_cpus != None:
             testsys.switch_cpus[0].simpoint_start_insts = simpoint_start_insts
 
-        print("Resuming from SimPoint", end=' ')
-        print("#%d, start_inst:%d, weight:%f, interval:%d, warmup:%d" %
-            (index, start_inst, weight_inst, interval_length, warmup_length))
+        print("Resuming from SimPoint", end=" ")
+        print(
+            "#%d, start_inst:%d, weight:%f, interval:%d, warmup:%d"
+            % (index, start_inst, weight_inst, interval_length, warmup_length)
+        )
 
     else:
         dirs = listdir(cptdir)
-        expr = re.compile('cpt\.([0-9]+)')
+        expr = re.compile("cpt\.([0-9]+)")
         cpts = []
         for dir in dirs:
             match = expr.match(dir)
             if match:
                 cpts.append(match.group(1))
 
-        cpts.sort(key = lambda a: int(a))
+        cpts.sort(key=lambda a: int(a))
 
         cpt_num = options.checkpoint_restore
         if cpt_num > len(cpts):
-            fatal('Checkpoint %d not found', cpt_num)
+            fatal("Checkpoint %d not found", cpt_num)
 
         cpt_starttick = int(cpts[cpt_num - 1])
         checkpoint_dir = joinpath(cptdir, "cpt.%s" % cpts[cpt_num - 1])
 
     return cpt_starttick, checkpoint_dir
+
 
 def scriptCheckpoints(options, maxtick, cptdir):
     if options.at_instruction or options.simpoint:
@@ -219,8 +228,11 @@ def scriptCheckpoints(options, maxtick, cptdir):
             exit_cause = exit_event.getCause()
 
         if exit_cause == "a thread reached the max instruction count":
-            m5.checkpoint(joinpath(cptdir, "cpt.%s.%d" % \
-                    (options.bench, checkpoint_inst)))
+            m5.checkpoint(
+                joinpath(
+                    cptdir, "cpt.%s.%d" % (options.bench, checkpoint_inst)
+                )
+            )
             print("Checkpoint written.")
 
     else:
@@ -242,8 +254,10 @@ def scriptCheckpoints(options, maxtick, cptdir):
         sim_ticks = when
         max_checkpoints = options.max_checkpoints
 
-        while num_checkpoints < max_checkpoints and \
-                exit_cause == "simulate() limit reached":
+        while (
+            num_checkpoints < max_checkpoints
+            and exit_cause == "simulate() limit reached"
+        ):
             if (sim_ticks + period) > maxtick:
                 exit_event = m5.simulate(maxtick - sim_ticks)
                 exit_cause = exit_event.getCause()
@@ -259,6 +273,7 @@ def scriptCheckpoints(options, maxtick, cptdir):
                     num_checkpoints += 1
 
     return exit_event
+
 
 def benchCheckpoints(options, maxtick, cptdir):
     exit_event = m5.simulate(maxtick - m5.curTick())
@@ -279,13 +294,18 @@ def benchCheckpoints(options, maxtick, cptdir):
 
     return exit_event
 
+
 # Set up environment for taking SimPoint checkpoints
 # Expecting SimPoint files generated by SimPoint 3.2
 def parseSimpointAnalysisFile(options, testsys):
     import re
 
-    simpoint_filename, weight_filename, interval_length, warmup_length = \
-        options.take_simpoint_checkpoints.split(",", 3)
+    (
+        simpoint_filename,
+        weight_filename,
+        interval_length,
+        warmup_length,
+    ) = options.take_simpoint_checkpoints.split(",", 3)
     print("simpoint analysis file:", simpoint_filename)
     print("simpoint weight file:", weight_filename)
     print("interval length:", interval_length)
@@ -309,20 +329,19 @@ def parseSimpointAnalysisFile(options, testsys):
         if m:
             interval = int(m.group(1))
         else:
-            fatal('unrecognized line in simpoint file!')
+            fatal("unrecognized line in simpoint file!")
 
         line = weight_file.readline()
         if not line:
-            fatal('not enough lines in simpoint weight file!')
+            fatal("not enough lines in simpoint weight file!")
         m = re.match("([0-9\.e\-]+)\s+(\d+)", line)
         if m:
             weight = float(m.group(1))
         else:
-            fatal('unrecognized line in simpoint weight file!')
+            fatal("unrecognized line in simpoint weight file!")
 
-        if (interval * interval_length - warmup_length > 0):
-            starting_inst_count = \
-                interval * interval_length - warmup_length
+        if interval * interval_length - warmup_length > 0:
+            starting_inst_count = interval * interval_length - warmup_length
             actual_warmup_length = warmup_length
         else:
             # Not enough room for proper warmup
@@ -330,21 +349,27 @@ def parseSimpointAnalysisFile(options, testsys):
             starting_inst_count = 0
             actual_warmup_length = interval * interval_length
 
-        simpoints.append((interval, weight, starting_inst_count,
-            actual_warmup_length))
+        simpoints.append(
+            (interval, weight, starting_inst_count, actual_warmup_length)
+        )
 
     # Sort SimPoints by starting inst count
     simpoints.sort(key=lambda obj: obj[2])
     for s in simpoints:
         interval, weight, starting_inst_count, actual_warmup_length = s
-        print(str(interval), str(weight), starting_inst_count,
-            actual_warmup_length)
+        print(
+            str(interval),
+            str(weight),
+            starting_inst_count,
+            actual_warmup_length,
+        )
         simpoint_start_insts.append(starting_inst_count)
 
     print("Total # of simpoints:", len(simpoints))
     testsys.cpu[0].simpoint_start_insts = simpoint_start_insts
 
     return (simpoints, interval_length)
+
 
 def takeSimpointCheckpoints(simpoints, interval_length, cptdir):
     num_checkpoints = 0
@@ -369,21 +394,33 @@ def takeSimpointCheckpoints(simpoints, interval_length, cptdir):
             code = exit_event.getCode()
 
         if exit_cause == "simpoint starting point found":
-            m5.checkpoint(joinpath(cptdir,
-                "cpt.simpoint_%02d_inst_%d_weight_%f_interval_%d_warmup_%d"
-                % (index, starting_inst_count, weight, interval_length,
-                actual_warmup_length)))
-            print("Checkpoint #%d written. start inst:%d weight:%f" %
-                (num_checkpoints, starting_inst_count, weight))
+            m5.checkpoint(
+                joinpath(
+                    cptdir,
+                    "cpt.simpoint_%02d_inst_%d_weight_%f_interval_%d_warmup_%d"
+                    % (
+                        index,
+                        starting_inst_count,
+                        weight,
+                        interval_length,
+                        actual_warmup_length,
+                    ),
+                )
+            )
+            print(
+                "Checkpoint #%d written. start inst:%d weight:%f"
+                % (num_checkpoints, starting_inst_count, weight)
+            )
             num_checkpoints += 1
             last_chkpnt_inst_count = starting_inst_count
         else:
             break
         index += 1
 
-    print('Exiting @ tick %i because %s' % (m5.curTick(), exit_cause))
+    print("Exiting @ tick %i because %s" % (m5.curTick(), exit_cause))
     print("%d checkpoints taken" % num_checkpoints)
     sys.exit(code)
+
 
 def restoreSimpointCheckpoint():
     exit_event = m5.simulate()
@@ -401,8 +438,9 @@ def restoreSimpointCheckpoint():
             print("Done running SimPoint!")
             sys.exit(exit_event.getCode())
 
-    print('Exiting @ tick %i because %s' % (m5.curTick(), exit_cause))
+    print("Exiting @ tick %i because %s" % (m5.curTick(), exit_cause))
     sys.exit(exit_event.getCode())
+
 
 def repeatSwitch(testsys, repeat_switch_cpu_list, maxtick, switch_freq):
     print("starting switch loop")
@@ -423,6 +461,7 @@ def repeatSwitch(testsys, repeat_switch_cpu_list, maxtick, switch_freq):
         if (maxtick - m5.curTick()) <= switch_freq:
             exit_event = m5.simulate(maxtick - m5.curTick())
             return exit_event
+
 
 def run(options, root, testsys, cpu_class):
     if options.checkpoint_dir:
@@ -461,9 +500,17 @@ def run(options, root, testsys, cpu_class):
         for i in range(np):
             testsys.cpu[i].max_insts_any_thread = options.maxinsts
 
+    if options.override_vendor_string is not None:
+        for i in range(len(testsys.cpu)):
+            for j in range(len(testsys.cpu[i].isa)):
+                testsys.cpu[i].isa[
+                    j
+                ].vendor_string = options.override_vendor_string
+
     if cpu_class:
-        switch_cpus = [cpu_class(switched_out=True, cpu_id=(i))
-                       for i in range(np)]
+        switch_cpus = [
+            cpu_class(switched_out=True, cpu_id=(i)) for i in range(np)
+        ]
 
         for i in range(np):
             if options.fast_forward:
@@ -471,8 +518,7 @@ def run(options, root, testsys, cpu_class):
             switch_cpus[i].system = testsys
             switch_cpus[i].workload = testsys.cpu[i].workload
             switch_cpus[i].clk_domain = testsys.cpu[i].clk_domain
-            switch_cpus[i].progress_interval = \
-                testsys.cpu[i].progress_interval
+            switch_cpus[i].progress_interval = testsys.cpu[i].progress_interval
             switch_cpus[i].isa = testsys.cpu[i].isa
             # simulation period
             if options.maxinsts:
@@ -485,9 +531,11 @@ def run(options, root, testsys, cpu_class):
                 switch_cpus[i].branchPred = bpClass()
             if options.indirect_bp_type:
                 IndirectBPClass = ObjectList.indirect_bp_list.get(
-                    options.indirect_bp_type)
-                switch_cpus[i].branchPred.indirectBranchPred = \
-                    IndirectBPClass()
+                    options.indirect_bp_type
+                )
+                switch_cpus[
+                    i
+                ].branchPred.indirectBranchPred = IndirectBPClass()
             switch_cpus[i].createThreads()
 
         # If elastic tracing is enabled attach the elastic trace probe
@@ -500,16 +548,16 @@ def run(options, root, testsys, cpu_class):
 
     if options.repeat_switch:
         switch_class = getCPUClass(options.cpu_type)[0]
-        if switch_class.require_caches() and \
-                not options.caches:
+        if switch_class.require_caches() and not options.caches:
             print("%s: Must be used with caches" % str(switch_class))
             sys.exit(1)
         if not switch_class.support_take_over():
             print("%s: CPU switching not supported" % str(switch_class))
             sys.exit(1)
 
-        repeat_switch_cpus = [switch_class(switched_out=True, \
-                                               cpu_id=(i)) for i in range(np)]
+        repeat_switch_cpus = [
+            switch_class(switched_out=True, cpu_id=(i)) for i in range(np)
+        ]
 
         for i in range(np):
             repeat_switch_cpus[i].system = testsys
@@ -523,24 +571,30 @@ def run(options, root, testsys, cpu_class):
             if options.checker:
                 repeat_switch_cpus[i].addCheckerCpu()
 
+            repeat_switch_cpus[i].createThreads()
+
         testsys.repeat_switch_cpus = repeat_switch_cpus
 
         if cpu_class:
-            repeat_switch_cpu_list = [(switch_cpus[i], repeat_switch_cpus[i])
-                                      for i in range(np)]
+            repeat_switch_cpu_list = [
+                (switch_cpus[i], repeat_switch_cpus[i]) for i in range(np)
+            ]
         else:
-            repeat_switch_cpu_list = [(testsys.cpu[i], repeat_switch_cpus[i])
-                                      for i in range(np)]
+            repeat_switch_cpu_list = [
+                (testsys.cpu[i], repeat_switch_cpus[i]) for i in range(np)
+            ]
 
     if options.standard_switch:
-        switch_cpus = [TimingSimpleCPU(switched_out=True, cpu_id=(i))
-                       for i in range(np)]
-        switch_cpus_1 = [DerivO3CPU(switched_out=True, cpu_id=(i))
-                        for i in range(np)]
+        switch_cpus = [
+            TimingSimpleCPU(switched_out=True, cpu_id=(i)) for i in range(np)
+        ]
+        switch_cpus_1 = [
+            DerivO3CPU(switched_out=True, cpu_id=(i)) for i in range(np)
+        ]
 
         for i in range(np):
-            switch_cpus[i].system =  testsys
-            switch_cpus_1[i].system =  testsys
+            switch_cpus[i].system = testsys
+            switch_cpus_1[i].system = testsys
             switch_cpus[i].workload = testsys.cpu[i].workload
             switch_cpus_1[i].workload = testsys.cpu[i].workload
             switch_cpus[i].clk_domain = testsys.cpu[i].clk_domain
@@ -557,16 +611,17 @@ def run(options, root, testsys, cpu_class):
             # Fast forward to a simpoint (warning: time consuming)
             elif options.simpoint:
                 if testsys.cpu[i].workload[0].simpoint == 0:
-                    fatal('simpoint not found')
-                testsys.cpu[i].max_insts_any_thread = \
+                    fatal("simpoint not found")
+                testsys.cpu[i].max_insts_any_thread = (
                     testsys.cpu[i].workload[0].simpoint
+                )
             # No distance specified, just switch
             else:
                 testsys.cpu[i].max_insts_any_thread = 1
 
             # warmup period
             if options.warmup_insts:
-                switch_cpus[i].max_insts_any_thread =  options.warmup_insts
+                switch_cpus[i].max_insts_any_thread = options.warmup_insts
 
             # simulation period
             if options.maxinsts:
@@ -577,25 +632,29 @@ def run(options, root, testsys, cpu_class):
                 switch_cpus[i].addCheckerCpu()
                 switch_cpus_1[i].addCheckerCpu()
 
+            switch_cpus[i].createThreads()
+            switch_cpus_1[i].createThreads()
+
         testsys.switch_cpus = switch_cpus
         testsys.switch_cpus_1 = switch_cpus_1
-        switch_cpu_list = [
-            (testsys.cpu[i], switch_cpus[i]) for i in range(np)
-        ]
+        switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in range(np)]
         switch_cpu_list1 = [
             (switch_cpus[i], switch_cpus_1[i]) for i in range(np)
         ]
 
     # set the checkpoint in the cpu before m5.instantiate is called
-    if options.take_checkpoints != None and \
-           (options.simpoint or options.at_instruction):
+    if options.take_checkpoints != None and (
+        options.simpoint or options.at_instruction
+    ):
         offset = int(options.take_checkpoints)
         # Set an instruction break point
         if options.simpoint:
             for i in range(np):
                 if testsys.cpu[i].workload[0].simpoint == 0:
-                    fatal('no simpoint for testsys.cpu[%d].workload[0]', i)
-                checkpoint_inst = int(testsys.cpu[i].workload[0].simpoint) + offset
+                    fatal("no simpoint for testsys.cpu[%d].workload[0]", i)
+                checkpoint_inst = (
+                    int(testsys.cpu[i].workload[0].simpoint) + offset
+                )
                 testsys.cpu[i].max_insts_any_thread = checkpoint_inst
                 # used for output below
                 options.take_checkpoints = checkpoint_inst
@@ -607,7 +666,9 @@ def run(options, root, testsys, cpu_class):
                 testsys.cpu[i].max_insts_any_thread = offset
 
     if options.take_simpoint_checkpoints != None:
-        simpoints, interval_length = parseSimpointAnalysisFile(options, testsys)
+        simpoints, interval_length = parseSimpointAnalysisFile(
+            options, testsys
+        )
 
     checkpoint_dir = None
     if options.checkpoint_restore:
@@ -640,31 +701,43 @@ def run(options, root, testsys, cpu_class):
             # the ticks per simulated second
             maxtick_from_rel += cpt_starttick
             if options.at_instruction or options.simpoint:
-                warn("Relative max tick specified with --at-instruction or" \
-                     " --simpoint\n      These options don't specify the " \
-                     "checkpoint start tick, so assuming\n      you mean " \
-                     "absolute max tick")
+                warn(
+                    "Relative max tick specified with --at-instruction or"
+                    " --simpoint\n      These options don't specify the "
+                    "checkpoint start tick, so assuming\n      you mean "
+                    "absolute max tick"
+                )
         explicit_maxticks += 1
     if options.maxtime:
         maxtick_from_maxtime = m5.ticks.fromSeconds(options.maxtime)
         explicit_maxticks += 1
     if explicit_maxticks > 1:
-        warn("Specified multiple of --abs-max-tick, --rel-max-tick, --maxtime."\
-             " Using least")
+        warn(
+            "Specified multiple of --abs-max-tick, --rel-max-tick, --maxtime."
+            " Using least"
+        )
     maxtick = min([maxtick_from_abs, maxtick_from_rel, maxtick_from_maxtime])
 
     if options.checkpoint_restore != None and maxtick < cpt_starttick:
-        fatal("Bad maxtick (%d) specified: " \
-              "Checkpoint starts starts from tick: %d", maxtick, cpt_starttick)
+        fatal(
+            "Bad maxtick (%d) specified: "
+            "Checkpoint starts starts from tick: %d",
+            maxtick,
+            cpt_starttick,
+        )
 
     if options.standard_switch or cpu_class:
         if options.standard_switch:
-            print("Switch at instruction count:%s" %
-                    str(testsys.cpu[0].max_insts_any_thread))
+            print(
+                "Switch at instruction count:%s"
+                % str(testsys.cpu[0].max_insts_any_thread)
+            )
             exit_event = m5.simulate()
         elif cpu_class and options.fast_forward:
-            print("Switch at instruction count:%s" %
-                    str(testsys.cpu[0].max_insts_any_thread))
+            print(
+                "Switch at instruction count:%s"
+                % str(testsys.cpu[0].max_insts_any_thread)
+            )
             exit_event = m5.simulate()
         else:
             print("Switch at curTick count:%s" % str(10000))
@@ -674,32 +747,37 @@ def run(options, root, testsys, cpu_class):
         m5.switchCpus(testsys, switch_cpu_list)
 
         if options.standard_switch:
-            print("Switch at instruction count:%d" %
-                    (testsys.switch_cpus[0].max_insts_any_thread))
+            print(
+                "Switch at instruction count:%d"
+                % (testsys.switch_cpus[0].max_insts_any_thread)
+            )
 
-            #warmup instruction count may have already been set
+            # warmup instruction count may have already been set
             if options.warmup_insts:
                 exit_event = m5.simulate()
             else:
                 exit_event = m5.simulate(options.standard_switch)
             print("Switching CPUS @ tick %s" % (m5.curTick()))
-            print("Simulation ends instruction count:%d" %
-                    (testsys.switch_cpus_1[0].max_insts_any_thread))
+            print(
+                "Simulation ends instruction count:%d"
+                % (testsys.switch_cpus_1[0].max_insts_any_thread)
+            )
             m5.switchCpus(testsys, switch_cpu_list1)
 
     # If we're taking and restoring checkpoints, use checkpoint_dir
     # option only for finding the checkpoints to restore from.  This
     # lets us test checkpointing by restoring from one set of
     # checkpoints, generating a second set, and then comparing them.
-    if (options.take_checkpoints or options.take_simpoint_checkpoints) \
-        and options.checkpoint_restore:
+    if (
+        options.take_checkpoints or options.take_simpoint_checkpoints
+    ) and options.checkpoint_restore:
 
         if m5.options.outdir:
             cptdir = m5.options.outdir
         else:
             cptdir = getcwd()
 
-    if options.take_checkpoints != None :
+    if options.take_checkpoints != None:
         # Checkpoints being taken via the command line at <when> and at
         # subsequent periods of <period>.  Checkpoint instructions
         # received from the benchmark running are ignored and skipped in
@@ -722,13 +800,15 @@ def run(options, root, testsys, cpu_class):
         # If checkpoints are being taken, then the checkpoint instruction
         # will occur in the benchmark code it self.
         if options.repeat_switch and maxtick > options.repeat_switch:
-            exit_event = repeatSwitch(testsys, repeat_switch_cpu_list,
-                                      maxtick, options.repeat_switch)
+            exit_event = repeatSwitch(
+                testsys, repeat_switch_cpu_list, maxtick, options.repeat_switch
+            )
         else:
             exit_event = benchCheckpoints(options, maxtick, cptdir)
 
-    print('Exiting @ tick %i because %s' %
-          (m5.curTick(), exit_event.getCause()))
+    print(
+        "Exiting @ tick %i because %s" % (m5.curTick(), exit_event.getCause())
+    )
     if options.checkpoint_at_end:
         m5.checkpoint(joinpath(cptdir, "cpt.%d"))
 

@@ -39,6 +39,9 @@
 
 #include <linux/kvm.h>
 
+#include "arch/arm/regs/int.hh"
+#include "arch/arm/regs/vec.hh"
+#include "arch/arm/utility.hh"
 #include "debug/KvmContext.hh"
 #include "params/ArmV8KvmCPU.hh"
 
@@ -249,7 +252,7 @@ ArmV8KvmCPU::updateKvmState()
     }
 
     for (const auto &ri : intRegMap) {
-        const uint64_t value = tc->getReg(RegId(IntRegClass, ri.idx));
+        const uint64_t value = tc->getReg(intRegClass[ri.idx]);
         DPRINTF(KvmContext, "  %s := 0x%x\n", ri.name, value);
         setOneReg(ri.kvm, value);
     }
@@ -259,7 +262,7 @@ ArmV8KvmCPU::updateKvmState()
         if (!inAArch64(tc))
             syncVecElemsToRegs(tc);
         ArmISA::VecRegContainer vc;
-        tc->getReg(RegId(VecRegClass, i), &vc);
+        tc->getReg(vecRegClass[i], &vc);
         auto v = vc.as<VecElem>();
         for (int j = 0; j < FP_REGS_PER_VFP_REG; j++)
             reg.s[j].i = v[j];
@@ -320,21 +323,23 @@ ArmV8KvmCPU::updateThreadContext()
         if (inAArch64(tc)) {
             tc->setReg(int_reg::x(i), value);
         } else {
-            tc->setRegFlat(int_reg::x(i), value);
+            tc->setReg(flatIntRegClass[i], value);
         }
     }
 
     for (const auto &ri : intRegMap) {
         const auto value(getOneRegU64(ri.kvm));
         DPRINTF(KvmContext, "  %s := 0x%x\n", ri.name, value);
-        tc->setReg(RegId(IntRegClass, ri.idx), value);
+        tc->setReg(intRegClass[ri.idx], value);
     }
 
     for (int i = 0; i < NUM_QREGS; ++i) {
         KvmFPReg reg;
         DPRINTF(KvmContext, "  Q%i: %s\n", i, getAndFormatOneReg(kvmFPReg(i)));
         getOneReg(kvmFPReg(i), reg.data);
-        auto v = tc->getWritableVecReg(RegId(VecRegClass, i)).as<VecElem>();
+        auto *vc = static_cast<ArmISA::VecRegContainer *>(
+            tc->getWritableReg(vecRegClass[i]));
+        auto v = vc->as<VecElem>();
         for (int j = 0; j < FP_REGS_PER_VFP_REG; j++)
             v[j] = reg.s[j].i;
         if (!inAArch64(tc))
@@ -389,7 +394,7 @@ ArmV8KvmCPU::getSysRegMap() const
         const uint64_t crm(EXTRACT_FIELD(reg, KVM_REG_ARM64_SYSREG_CRM));
         const uint64_t op2(EXTRACT_FIELD(reg, KVM_REG_ARM64_SYSREG_OP2));
         const MiscRegIndex idx(decodeAArch64SysReg(op0, op1, crn, crm, op2));
-        const auto &info(miscRegInfo[idx]);
+        const auto &info(lookUpMiscReg[idx].info);
         const bool writeable(
             info[MISCREG_USR_NS_WR] || info[MISCREG_USR_S_WR] ||
             info[MISCREG_PRI_S_WR] || info[MISCREG_PRI_NS_WR] ||

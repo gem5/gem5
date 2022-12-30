@@ -42,7 +42,7 @@
 def template MicroRegOpExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -86,7 +86,7 @@ def template MicroRegOpDeclare {{
             %(cond_control_flag_init)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
     };
 }};
 
@@ -109,7 +109,7 @@ def template MicroRegOpBranchDeclare {{
             %(cond_control_flag_init)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::unique_ptr<PCStateBase> branchTarget(
                 const PCStateBase &branchPC) const override;
@@ -898,8 +898,9 @@ let {{
                 uint64_t top = flags.cf << (dataSize * 8 - realShiftAmt);
                 if (realShiftAmt > 1)
                     top |= PSrcReg1 << (dataSize * 8 - realShiftAmt + 1);
-                uint64_t bottom =
-                    bits(PSrcReg1, dataSize * 8 - 1, realShiftAmt);
+                uint64_t bottom = 0;
+                if (realShiftAmt != dataSize * 8)
+                    bottom = bits(PSrcReg1, dataSize * 8 - 1, realShiftAmt);
                 DestReg = merge(DestReg, dest, top | bottom, dataSize);
             } else
                 DestReg = merge(DestReg, dest, DestReg, dataSize);

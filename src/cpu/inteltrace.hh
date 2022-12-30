@@ -40,7 +40,7 @@
 namespace gem5
 {
 
-namespace Trace {
+namespace trace {
 
 class IntelTraceRecord : public InstRecord
 {
@@ -75,7 +75,7 @@ class IntelTrace : public InstTracer
     }
 };
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5
 
 #endif // __CPU_INTELTRACE_HH__

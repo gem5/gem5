@@ -51,7 +51,7 @@ output header {{
             flags[IsNonSpeculative] = true;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::string generateDisassembly(
                 Addr pc, const loader::SymbolTable *symtab) const override;
@@ -70,7 +70,7 @@ output decoder {{
 
 output exec {{
     Fault
-    Unknown::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+    Unknown::execute(ExecContext *xc, trace::InstRecord *traceData) const
     {
         inform("attempt to execute unknown instruction at %s"
                "(inst 0x%08x, opcode 0x%x, binary: %s)",
@@ -82,4 +82,3 @@ output exec {{
 def format Unknown() {{
     decode_block = 'return new Unknown(machInst);\n'
 }};
-

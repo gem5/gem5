@@ -49,20 +49,22 @@ from .fixture import TempdirFixture, Gem5Fixture, VariableFixture
 
 from . import verifier
 
-def gem5_verify_config(name,
-                       config,
-                       config_args,
-                       verifiers,
-                       gem5_args=tuple(),
-                       fixtures=[],
-                       valid_isas=constants.supported_isas,
-                       valid_variants=constants.supported_variants,
-                       length=constants.supported_lengths[0],
-                       valid_hosts=constants.supported_hosts,
-                       protocol=None,
-                       uses_kvm=False,
-                    ):
-    '''
+
+def gem5_verify_config(
+    name,
+    config,
+    config_args,
+    verifiers,
+    gem5_args=tuple(),
+    fixtures=[],
+    valid_isas=constants.supported_isas,
+    valid_variants=constants.supported_variants,
+    length=constants.supported_lengths[0],
+    valid_hosts=constants.supported_hosts,
+    protocol=None,
+    uses_kvm=False,
+):
+    """
     Helper class to generate common gem5 tests using verifiers.
 
     The generated TestSuite will run gem5 with the provided config and
@@ -89,7 +91,7 @@ def gem5_verify_config(name,
 
     :param uses_kvm: States if this verifier uses KVM. If so, the "kvm" tag
         will be included.
-    '''
+    """
     fixtures = list(fixtures)
     testsuites = []
 
@@ -100,24 +102,24 @@ def gem5_verify_config(name,
                 # Create a tempdir fixture to be shared throughout the test.
                 tempdir = TempdirFixture()
                 gem5_returncode = VariableFixture(
-                        name=constants.gem5_returncode_fixture_name)
+                    name=constants.gem5_returncode_fixture_name
+                )
 
                 # Common name of this generated testcase.
-                _name = '{given_name}-{isa}-{host}-{opt}'.format(
-                        given_name=name,
-                        isa=isa,
-                        host=host,
-                        opt=opt)
+                _name = "{given_name}-{isa}-{host}-{opt}".format(
+                    given_name=name, isa=isa, host=host, opt=opt
+                )
                 if protocol:
-                    _name += '-'+protocol
+                    _name += "-" + protocol
 
                 # Create the running of gem5 subtest.  NOTE: We specifically
                 # create this test before our verifiers so this is listed
                 # first.
                 tests = []
                 gem5_execution = TestFunction(
-                        _create_test_run_gem5(config, config_args, gem5_args),
-                        name=_name)
+                    _create_test_run_gem5(config, config_args, gem5_args),
+                    name=_name,
+                )
                 tests.append(gem5_execution)
 
                 # Create copies of the verifier subtests for this isa and
@@ -140,20 +142,21 @@ def gem5_verify_config(name,
 
                 # Finally construct the self contained TestSuite out of our
                 # tests.
-                testsuites.append(TestSuite(
-                    name=_name,
-                    fixtures=_fixtures,
-                    tags=tags,
-                    tests=tests))
+                testsuites.append(
+                    TestSuite(
+                        name=_name, fixtures=_fixtures, tags=tags, tests=tests
+                    )
+                )
     return testsuites
+
 
 def _create_test_run_gem5(config, config_args, gem5_args):
     def test_run_gem5(params):
-        '''
+        """
         Simple \'test\' which runs gem5 and saves the result into a tempdir.
 
         NOTE: Requires fixtures: tempdir, gem5
-        '''
+        """
         fixtures = params.fixtures
 
         if gem5_args is None:
@@ -176,16 +179,21 @@ def _create_test_run_gem5(config, config_args, gem5_args):
         gem5 = fixtures[constants.gem5_binary_fixture_name].path
         command = [
             gem5,
-            '-d', # Set redirect dir to tempdir.
+            "-d",  # Set redirect dir to tempdir.
             tempdir,
-            '-re', # TODO: Change to const. Redirect stdout and stderr
-            '--silent-redirect',
+            "-re",  # TODO: Change to const. Redirect stdout and stderr
+            "--silent-redirect",
         ]
         command.extend(_gem5_args)
         command.append(config)
         # Config_args should set up the program args.
         command.extend(config_args)
-        log_call(params.log, command, time=params.time,
-            stdout=sys.stdout, stderr=sys.stderr)
+        log_call(
+            params.log,
+            command,
+            time=params.time,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+        )
 
     return test_run_gem5

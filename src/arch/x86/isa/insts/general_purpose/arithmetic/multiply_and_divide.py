@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 
 #
 # Byte version of one operand unsigned multiply.
@@ -201,21 +201,21 @@ def macroop IMUL_R_P_I
     mulel reg
     muleh t0
 };
-'''
+"""
 
-pcRel = '''
+pcRel = """
     rdip t7
     ld %s, seg, riprel, disp
-'''
-sibRel = '''
+"""
+sibRel = """
     ld %s, seg, sib, disp
-'''
+"""
 
 #
 # One byte version of unsigned division
 #
 
-divcode = '''
+divcode = """
 def macroop DIV_B_%(suffix)s
 {
     %(readOp1)s
@@ -237,13 +237,13 @@ divLoopTop:
     divq rax, dataSize=1
     divr ah, dataSize=1
 };
-'''
+"""
 
 #
 # Unsigned division
 #
 
-divcode += '''
+divcode += """
 def macroop DIV_%(suffix)s
 {
     %(readOp1)s
@@ -268,13 +268,13 @@ divLoopTop:
     divq rax
     divr rdx
 };
-'''
+"""
 
 #
 # One byte version of signed division
 #
 
-divcode += '''
+divcode += """
 def macroop IDIV_B_%(suffix)s
 {
     # Negate dividend
@@ -345,13 +345,13 @@ divLoopTop:
     # Otherwise put the one that wasn't negated (at least here) in rax.
     mov rax, rax, t5, (nCECF,), dataSize=1
 };
-'''
+"""
 
 #
 # Signed division
 #
 
-divcode += '''
+divcode += """
 def macroop IDIV_%(suffix)s
 {
     # Negate dividend
@@ -424,11 +424,8 @@ divLoopTop:
     # Otherwise put the one that wasn't negated (at least here) in rax.
     mov rax, rax, t5, (nCECF,)
 };
-'''
+"""
 
-microcode += divcode % {"suffix": "R",
-                        "readOp1": "", "op1": "reg"}
-microcode += divcode % {"suffix": "M",
-                        "readOp1": sibRel % "t2", "op1": "t2"}
-microcode += divcode % {"suffix": "P",
-                        "readOp1": pcRel % "t2", "op1": "t2"}
+microcode += divcode % {"suffix": "R", "readOp1": "", "op1": "reg"}
+microcode += divcode % {"suffix": "M", "readOp1": sibRel % "t2", "op1": "t2"}
+microcode += divcode % {"suffix": "P", "readOp1": pcRel % "t2", "op1": "t2"}

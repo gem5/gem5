@@ -46,8 +46,8 @@ import importer
 from code_formatter import code_formatter
 
 parser = argparse.ArgumentParser()
-parser.add_argument('modpath', help='module the simobject belongs to')
-parser.add_argument('param_hh', help='parameter header file to generate')
+parser.add_argument("modpath", help="module the simobject belongs to")
+parser.add_argument("param_hh", help="parameter header file to generate")
 
 args = parser.parse_args()
 
@@ -67,8 +67,9 @@ code = code_formatter()
 # the object itself, not including inherited params (which
 # will also be inherited from the base class's param struct
 # here). Sort the params based on their key
-params = list(map(lambda k_v: k_v[1],
-    sorted(sim_object._params.local.items())))
+params = list(
+    map(lambda k_v: k_v[1], sorted(sim_object._params.local.items()))
+)
 ports = sim_object._ports.local
 try:
     ptypes = [p.ptype for p in params]
@@ -79,41 +80,44 @@ except:
 
 warned_about_nested_templates = False
 
+
 class CxxClass(object):
     def __init__(self, sig, template_params=[]):
         # Split the signature into its constituent parts. This could
         # potentially be done with regular expressions, but
         # it's simple enough to pick appart a class signature
         # manually.
-        parts = sig.split('<', 1)
+        parts = sig.split("<", 1)
         base = parts[0]
         t_args = []
         if len(parts) > 1:
             # The signature had template arguments.
-            text = parts[1].rstrip(' \t\n>')
-            arg = ''
+            text = parts[1].rstrip(" \t\n>")
+            arg = ""
             # Keep track of nesting to avoid splitting on ","s embedded
             # in the arguments themselves.
             depth = 0
             for c in text:
-                if c == '<':
+                if c == "<":
                     depth = depth + 1
                     if depth > 0 and not warned_about_nested_templates:
                         warned_about_nested_templates = True
-                        print('Nested template argument in cxx_class.'
-                              ' This feature is largely untested and '
-                              ' may not work.')
-                elif c == '>':
+                        print(
+                            "Nested template argument in cxx_class."
+                            " This feature is largely untested and "
+                            " may not work."
+                        )
+                elif c == ">":
                     depth = depth - 1
-                elif c == ',' and depth == 0:
+                elif c == "," and depth == 0:
                     t_args.append(arg.strip())
-                    arg = ''
+                    arg = ""
                 else:
                     arg = arg + c
             if arg:
                 t_args.append(arg.strip())
         # Split the non-template part on :: boundaries.
-        class_path = base.split('::')
+        class_path = base.split("::")
 
         # The namespaces are everything except the last part of the class path.
         self.namespaces = class_path[:-1]
@@ -125,7 +129,7 @@ class CxxClass(object):
         # Iterate through the template arguments and their values. This
         # will likely break if parameter packs are used.
         for arg, param in zip(t_args, template_params):
-            type_keys = ('class', 'typename')
+            type_keys = ("class", "typename")
             # If a parameter is a type, parse it recursively. Otherwise
             # assume it's a constant, and store it verbatim.
             if any(param.strip().startswith(kw) for kw in type_keys):
@@ -140,21 +144,24 @@ class CxxClass(object):
                 arg.declare(code)
         # Re-open the target namespace.
         for ns in self.namespaces:
-            code('namespace $ns {')
+            code("namespace $ns {")
         # If this is a class template...
         if self.template_params:
             code('template <${{", ".join(self.template_params)}}>')
         # The actual class declaration.
-        code('class ${{self.name}};')
+        code("class ${{self.name}};")
         # Close the target namespaces.
         for ns in reversed(self.namespaces):
-            code('} // namespace $ns')
+            code("} // namespace $ns")
 
-code('''\
+
+code(
+    """\
 #ifndef __PARAMS__${sim_object}__
 #define __PARAMS__${sim_object}__
 
-''')
+"""
+)
 
 
 # The base SimObject has a couple of params that get
@@ -162,10 +169,12 @@ code('''\
 # the normal Param mechanism; we slip them in here (needed
 # predecls now, actual declarations below)
 if sim_object == SimObject:
-    code('''#include <string>''')
+    code("""#include <string>""")
 
-cxx_class = CxxClass(sim_object._value_dict['cxx_class'],
-                     sim_object._value_dict['cxx_template_params'])
+cxx_class = CxxClass(
+    sim_object._value_dict["cxx_class"],
+    sim_object._value_dict["cxx_template_params"],
+)
 
 # A forward class declaration is sufficient since we are just
 # declaring a pointer.
@@ -186,27 +195,29 @@ for ptype in ptypes:
         code('#include "enums/${{ptype.__name__}}.hh"')
         code()
 
-code('namespace gem5')
-code('{')
-code('')
+code("namespace gem5")
+code("{")
+code("")
 
 # now generate the actual param struct
 code("struct ${sim_object}Params")
 if sim_object._base:
     code("    : public ${{sim_object._base.type}}Params")
 code("{")
-if not hasattr(sim_object, 'abstract') or not sim_object.abstract:
-    if 'type' in sim_object.__dict__:
+if not hasattr(sim_object, "abstract") or not sim_object.abstract:
+    if "type" in sim_object.__dict__:
         code("    ${{sim_object.cxx_type}} create() const;")
 
 code.indent()
 if sim_object == SimObject:
-    code('''
+    code(
+        """
 SimObjectParams() {}
 virtual ~SimObjectParams() {}
 
 std::string name;
-    ''')
+    """
+    )
 
 for param in params:
     param.cxx_decl(code)
@@ -214,11 +225,11 @@ for port in ports.values():
     port.cxx_decl(code)
 
 code.dedent()
-code('};')
+code("};")
 code()
-code('} // namespace gem5')
+code("} // namespace gem5")
 
 code()
-code('#endif // __PARAMS__${sim_object}__')
+code("#endif // __PARAMS__${sim_object}__")
 
 code.write(args.param_hh)

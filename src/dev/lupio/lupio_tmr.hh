@@ -54,13 +54,13 @@ class LupioTMR : public BasicPioDevice
     // Register map
     enum
     {
-        LUPIO_TMR_TIME,
-        LUPIO_TMR_LOAD,
-        LUPIO_TMR_CTRL,
-        LUPIO_TMR_STAT,
+        LUPIO_TMR_TIME = 0x0,
+        LUPIO_TMR_LOAD = 0x4,
+        LUPIO_TMR_CTRL = 0x8,
+        LUPIO_TMR_STAT = 0xC,
 
         // Max offset
-        LUPIO_TMR_MAX,
+        LUPIO_TMR_MAX = 0x10,
     };
 
     struct LupioTimer

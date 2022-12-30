@@ -27,16 +27,17 @@
 
 from slicc.ast.AST import AST
 
+
 class DeclListAST(AST):
     def __init__(self, slicc, decls):
         super().__init__(slicc)
 
         if not isinstance(decls, (list, tuple)):
-            decls = [ decls ]
+            decls = [decls]
         self.decls = decls
 
     def __repr__(self):
-        return "[DeclListAST: %s]" % (', '.join(repr(d) for d in self.decls))
+        return "[DeclListAST: %s]" % (", ".join(repr(d) for d in self.decls))
 
     def files(self, parent=None):
         s = set()

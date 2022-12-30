@@ -36,7 +36,7 @@
 Import('*')
 
 SimObject('TarmacTrace.py', sim_objects=['TarmacParser', 'TarmacTracer'],
-        tags='arm isa')
+        enums=['TarmacDump'], tags='arm isa')
 Source('tarmac_base.cc', tags='arm isa')
 Source('tarmac_parser.cc', tags='arm isa')
 Source('tarmac_tracer.cc', tags='arm isa')

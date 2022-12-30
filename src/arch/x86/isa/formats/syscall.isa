@@ -71,7 +71,7 @@ output decoder {{
 
 def template SyscallExecute {{
     Fault %(class_name)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
+            trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
         %(op_decl)s;
@@ -88,4 +88,3 @@ def format SyscallInst(code, *opt_flags) {{
     decode_block = BasicDecode.subst(iop)
     exec_output = SyscallExecute.subst(iop)
 }};
-

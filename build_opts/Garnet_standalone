@@ -1,2 +1,2 @@
-TARGET_ISA = 'null'
+USE_NULL_ISA = True
 PROTOCOL = 'Garnet_standalone'

@@ -31,6 +31,8 @@
 
 #include "base/bitunion.hh"
 #include "base/types.hh"
+#include "cpu/reg_class.hh"
+#include "debug/MiscRegs.hh"
 
 namespace gem5
 {
@@ -171,6 +173,9 @@ struct STS
 
 
 const int NumMiscRegs = MISCREG_NUMMISCREGS;
+
+inline constexpr RegClass miscRegClass(MiscRegClass, MiscRegClassName,
+        NumMiscRegs, debug::MiscRegs);
 
 } // namespace SparcISA
 } // namespace gem5

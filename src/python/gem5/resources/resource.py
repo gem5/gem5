@@ -80,6 +80,7 @@ class CustomResource(AbstractResource):
         """
         super().__init__(local_path=local_path, metadata=metadata)
 
+
 class CustomDiskImageResource(CustomResource):
     """
     A custom disk image gem5 resource. It can be used to specify a custom,
@@ -110,6 +111,7 @@ class CustomDiskImageResource(CustomResource):
             metadata.update(disk_root_partition_dict)
 
         super().__init__(local_path=local_path, metadata=metadata)
+
 
 class Resource(AbstractResource):
     """
@@ -163,14 +165,13 @@ class Resource(AbstractResource):
         to_path = os.path.join(resource_directory, resource_name)
 
         super().__init__(
-                    local_path=to_path,
-                    metadata=get_resources_json_obj(resource_name))
+            local_path=to_path, metadata=get_resources_json_obj(resource_name)
+        )
         get_resource(
             resource_name=resource_name,
             to_path=to_path,
-            download_md5_mismatch=download_md5_mismatch
+            download_md5_mismatch=download_md5_mismatch,
         )
-
 
     def _get_default_resource_dir(cls) -> str:
         """
@@ -188,14 +189,16 @@ class Resource(AbstractResource):
         ]
 
         for path in test_list:
-            if os.path.exists(path): # If the path already exists...
-                if os.path.isdir(path): # Check to see the path is a directory.
-                    return path # If so, the path is valid and can be used.
-            else: # If the path does not exist, try to create it.
+            if os.path.exists(path):  # If the path already exists...
+                if os.path.isdir(
+                    path
+                ):  # Check to see the path is a directory.
+                    return path  # If so, the path is valid and can be used.
+            else:  # If the path does not exist, try to create it.
                 try:
                     os.makedirs(path, exist_ok=False)
                     return path
                 except OSError:
-                    continue # If the path cannot be created, then try another.
+                    continue  # If the path cannot be created, then try another.
 
         raise Exception("Cannot find a valid location to download resources")

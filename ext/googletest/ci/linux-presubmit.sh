@@ -31,8 +31,8 @@
 
 set -euox pipefail
 
-readonly LINUX_LATEST_CONTAINER="gcr.io/google.com/absl-177019/linux_hybrid-latest:20210525"
-readonly LINUX_GCC_FLOOR_CONTAINER="gcr.io/google.com/absl-177019/linux_gcc-floor:20201015"
+readonly LINUX_LATEST_CONTAINER="gcr.io/google.com/absl-177019/linux_hybrid-latest:20220217"
+readonly LINUX_GCC_FLOOR_CONTAINER="gcr.io/google.com/absl-177019/linux_gcc-floor:20220621"
 
 if [[ -z ${GTEST_ROOT:-} ]]; then
   GTEST_ROOT="$(realpath $(dirname ${0})/..)"
@@ -76,7 +76,9 @@ time docker run \
     /usr/local/bin/bazel test ... \
       --copt="-Wall" \
       --copt="-Werror" \
+      --copt="-Wuninitialized" \
       --copt="-Wno-error=pragmas" \
+      --distdir="/bazel-distdir" \
       --keep_going \
       --show_timestamps \
       --test_output=errors
@@ -94,6 +96,7 @@ for std in ${STD}; do
       /usr/local/bin/bazel test ... \
         --copt="-Wall" \
         --copt="-Werror" \
+        --copt="-Wuninitialized" \
         --define="absl=${absl}" \
         --distdir="/bazel-distdir" \
         --keep_going \
@@ -116,6 +119,7 @@ for std in ${STD}; do
         --copt="--gcc-toolchain=/usr/local" \
         --copt="-Wall" \
         --copt="-Werror" \
+        --copt="-Wuninitialized" \
         --define="absl=${absl}" \
         --distdir="/bazel-distdir" \
         --keep_going \

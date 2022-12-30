@@ -37,11 +37,13 @@ from abc import ABCMeta, abstractmethod
 import m5
 from m5.objects import *
 from m5.proxy import *
-m5.util.addToPath('../configs/')
+
+m5.util.addToPath("../configs/")
 from common.Benchmarks import SysConfig
 from common import FSConfig, SysPaths
 from common.Caches import *
 from base_config import *
+
 
 class LinuxX86SystemBuilder(object):
     """Mix-in that implements create_system.
@@ -50,21 +52,22 @@ class LinuxX86SystemBuilder(object):
     X86-specific create_system method to a class deriving from one of
     the generic base systems.
     """
+
     def __init__(self):
         pass
 
     def create_system(self):
-        mdesc = SysConfig(disks = ['linux-x86.img'])
-        system = FSConfig.makeLinuxX86System(self.mem_mode,
-                                             numCPUs=self.num_cpus,
-                                             mdesc=mdesc)
-        system.kernel = SysPaths.binary('x86_64-vmlinux-2.6.22.9')
+        mdesc = SysConfig(disks=["linux-x86.img"])
+        system = FSConfig.makeLinuxX86System(
+            self.mem_mode, numCPUs=self.num_cpus, mdesc=mdesc
+        )
+        system.kernel = SysPaths.binary("x86_64-vmlinux-2.6.22.9")
 
         self.init_system(system)
         return system
 
-class LinuxX86FSSystem(LinuxX86SystemBuilder,
-                       BaseFSSystem):
+
+class LinuxX86FSSystem(LinuxX86SystemBuilder, BaseFSSystem):
     """Basic X86 full system builder."""
 
     def __init__(self, **kwargs):
@@ -80,13 +83,17 @@ class LinuxX86FSSystem(LinuxX86SystemBuilder,
         LinuxX86SystemBuilder.__init__(self)
 
     def create_caches_private(self, cpu):
-        cpu.addPrivateSplitL1Caches(L1_ICache(size='32kB', assoc=1),
-                                    L1_DCache(size='32kB', assoc=4),
-                                    PageTableWalkerCache(),
-                                    PageTableWalkerCache())
+        cpu.addPrivateSplitL1Caches(
+            L1_ICache(size="32kB", assoc=1),
+            L1_DCache(size="32kB", assoc=4),
+            PageTableWalkerCache(),
+            PageTableWalkerCache(),
+        )
 
-class LinuxX86FSSystemUniprocessor(LinuxX86SystemBuilder,
-                                   BaseFSSystemUniprocessor):
+
+class LinuxX86FSSystemUniprocessor(
+    LinuxX86SystemBuilder, BaseFSSystemUniprocessor
+):
     """Basic X86 full system builder for uniprocessor systems.
 
     Note: This class is a specialization of the X86FSSystem and is
@@ -99,11 +106,13 @@ class LinuxX86FSSystemUniprocessor(LinuxX86SystemBuilder,
         LinuxX86SystemBuilder.__init__(self)
 
     def create_caches_private(self, cpu):
-        cpu.addTwoLevelCacheHierarchy(L1_ICache(size='32kB', assoc=1),
-                                      L1_DCache(size='32kB', assoc=4),
-                                      L2Cache(size='4MB', assoc=8),
-                                      PageTableWalkerCache(),
-                                      PageTableWalkerCache())
+        cpu.addTwoLevelCacheHierarchy(
+            L1_ICache(size="32kB", assoc=1),
+            L1_DCache(size="32kB", assoc=4),
+            L2Cache(size="4MB", assoc=8),
+            PageTableWalkerCache(),
+            PageTableWalkerCache(),
+        )
 
 
 class LinuxX86FSSwitcheroo(LinuxX86SystemBuilder, BaseFSSwitcheroo):

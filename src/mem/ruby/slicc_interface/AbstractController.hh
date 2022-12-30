@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017,2019-2021 ARM Limited
+ * Copyright (c) 2017,2019-2022 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -405,9 +405,8 @@ class AbstractController : public ClockedObject, public Consumer
     /** The address range to which the controller responds on the CPU side. */
     const AddrRangeList addrRanges;
 
-    typedef std::unordered_map<MachineType, MachineID> AddrMapEntry;
-
-    AddrRangeMap<AddrMapEntry, 3> downstreamAddrMap;
+    std::unordered_map<MachineType, AddrRangeMap<MachineID, 3>>
+      downstreamAddrMap;
 
     NetDest downstreamDestinations;
     NetDest upstreamDestinations;

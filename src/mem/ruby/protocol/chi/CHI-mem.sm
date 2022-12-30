@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 ARM Limited
+ * Copyright (c) 2021,2022 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -119,6 +119,7 @@ machine(MachineType:Memory, "Memory controller interface") :
     Trigger_ReceiveDone, desc="";
     Trigger_SendRetry, desc="";
     Trigger_SendPCrdGrant, desc="";
+    Trigger_SendMemoryRead, desc="";
   }
 
 
@@ -551,6 +552,14 @@ machine(MachineType:Memory, "Memory controller interface") :
     }
   }
 
+  action(triggerSendMemoryRead, "tsmr", desc="Trigger sendMemoryRead") {
+    assert(is_valid(tbe));
+    enqueue(triggerOutPort, TriggerMsg, 0) {
+      out_msg.addr := address;
+      out_msg.event := Event:Trigger_SendMemoryRead;
+    }
+  }
+
   action(sendMemoryRead, "smr", desc="Send request to memory") {
     assert(is_valid(tbe));
     enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
@@ -698,16 +707,21 @@ machine(MachineType:Memory, "Memory controller interface") :
   transition(READY, ReadNoSnp, READING_MEM) {
     allocateTBE;
     initializeFromReqTBE;
-    sendMemoryRead;
+    triggerSendMemoryRead;
     popReqInQueue;
   }
 
   transition(READY, ReadNoSnpSep, READING_MEM) {
     allocateTBE;
     initializeFromReqTBE;
-    sendMemoryRead;
+    triggerSendMemoryRead;
     sendReadReceipt;
     popReqInQueue;
+  }
+
+  transition(READING_MEM, Trigger_SendMemoryRead) {
+    sendMemoryRead;
+    popTriggerQueue;
   }
 
   transition(READING_MEM, MemoryData, SENDING_NET_DATA) {
@@ -763,7 +777,7 @@ machine(MachineType:Memory, "Memory controller interface") :
 
   // Notice we only use this here and call wakeUp when leaving this state
   transition({READING_MEM,WAITING_NET_DATA,SENDING_NET_DATA},
-             {ReadNoSnp, ReadNoSnpSep, WriteNoSnpPtl}) {
+             {ReadNoSnp, ReadNoSnpSep, WriteNoSnpPtl, WriteNoSnp}) {
     stallRequestQueue;
   }
 

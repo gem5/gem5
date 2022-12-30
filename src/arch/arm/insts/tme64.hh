@@ -106,9 +106,9 @@ class Tstart64 : public TmeRegNone64
   public:
     Tstart64(ArmISA::ExtMachInst, RegIndex);
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
-    Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-    Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, trace::InstRecord *) const;
+    Fault initiateAcc(ExecContext *, trace::InstRecord *) const;
+    Fault completeAcc(PacketPtr, ExecContext *, trace::InstRecord *) const;
 };
 
 class Ttest64 : public TmeRegNone64
@@ -119,7 +119,7 @@ class Ttest64 : public TmeRegNone64
   public:
     Ttest64(ArmISA::ExtMachInst, RegIndex);
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, trace::InstRecord *) const;
 };
 
 class Tcancel64 : public TmeImmOp64
@@ -127,9 +127,9 @@ class Tcancel64 : public TmeImmOp64
   public:
     Tcancel64(ArmISA::ExtMachInst, uint64_t);
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
-    Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-    Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, trace::InstRecord *) const;
+    Fault initiateAcc(ExecContext *, trace::InstRecord *) const;
+    Fault completeAcc(PacketPtr, ExecContext *, trace::InstRecord *) const;
 };
 
 class MicroTfence64 : public MicroTmeBasic64
@@ -137,9 +137,9 @@ class MicroTfence64 : public MicroTmeBasic64
   public:
     MicroTfence64(ArmISA::ExtMachInst);
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
-    Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-    Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, trace::InstRecord *) const;
+    Fault initiateAcc(ExecContext *, trace::InstRecord *) const;
+    Fault completeAcc(PacketPtr, ExecContext *, trace::InstRecord *) const;
 };
 
 class MicroTcommit64 : public MicroTmeBasic64
@@ -147,9 +147,9 @@ class MicroTcommit64 : public MicroTmeBasic64
   public:
     MicroTcommit64(ArmISA::ExtMachInst);
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
-    Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-    Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, trace::InstRecord *) const;
+    Fault initiateAcc(ExecContext *, trace::InstRecord *) const;
+    Fault completeAcc(PacketPtr, ExecContext *, trace::InstRecord *) const;
 };
 
 

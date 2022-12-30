@@ -33,14 +33,16 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["pack_with_saturation",
-              "unpack_and_interleave",
-              "extract_and_insert",
-              "shuffle"]
+categories = [
+    "pack_with_saturation",
+    "unpack_and_interleave",
+    "extract_and_insert",
+    "shuffle",
+]
 
-microcode = '''
+microcode = """
 # 128 bit multimedia and scientific instructions
-'''
+"""
 for category in categories:
     exec("from . import %s as cat" % category)
     microcode += cat.microcode

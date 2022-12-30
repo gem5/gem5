@@ -77,6 +77,12 @@ AMDGPUInterruptHandler::prepareInterruptCookie(ContextID cntxt_id,
                                                 uint32_t client_id,
                                                 uint32_t source_id)
 {
+    assert(client_id == SOC15_IH_CLIENTID_RLC ||
+           client_id == SOC15_IH_CLIENTID_SDMA0 ||
+           client_id == SOC15_IH_CLIENTID_SDMA1 ||
+           client_id == SOC15_IH_CLIENTID_GRBM_CP);
+    assert(source_id == CP_EOP || source_id == TRAP_ID);
+
     /**
      * Setup the fields in the interrupt cookie (see header file for more
      * detail on the fields). The timestamp here is a bogus value. It seems
@@ -88,6 +94,14 @@ AMDGPUInterruptHandler::prepareInterruptCookie(ContextID cntxt_id,
      */
     AMDGPUInterruptCookie *cookie = new AMDGPUInterruptCookie();
     memset(cookie, 0, sizeof(AMDGPUInterruptCookie));
+
+    // Currently only one process is supported and the first pasid from driver
+    // is always 0x8000. In the future this can be obtained from the PM4
+    // MAP_PROCESS packet and may need to be passed to this function.
+    //
+    // On a related note, leave vmid fields alone as they are only used for
+    // memory exceptions. Memory exceptions are not supported on gfx900.
+    cookie->pasid = 0x8000;
     cookie->timestamp_Lo = 0x40;
     cookie->clientId = client_id;
     cookie->sourceId = source_id;
@@ -188,15 +202,14 @@ AMDGPUInterruptHandler::setCntl(const uint32_t &data)
 void
 AMDGPUInterruptHandler::setBase(const uint32_t &data)
 {
-    regs.IH_Base = data << 8;
-    regs.baseAddr |= regs.IH_Base;
+    regs.baseAddr = data;
+    regs.baseAddr <<= 8;
 }
 
 void
 AMDGPUInterruptHandler::setBaseHi(const uint32_t &data)
 {
-    regs.IH_Base_Hi = data;
-    regs.baseAddr |= ((uint64_t)regs.IH_Base_Hi) << 32;
+    regs.baseAddr |= static_cast<uint64_t>(data) << 40;
 }
 
 void

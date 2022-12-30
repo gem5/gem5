@@ -43,20 +43,22 @@ from m5.objects.MemInterface import *
 
 # Enum for the page policy, either open, open_adaptive, close, or
 # close_adaptive.
-class PageManage(Enum): vals = ['open', 'open_adaptive', 'close',
-                                'close_adaptive']
+class PageManage(Enum):
+    vals = ["open", "open_adaptive", "close", "close_adaptive"]
+
 
 class DRAMInterface(MemInterface):
-    type = 'DRAMInterface'
+    type = "DRAMInterface"
     cxx_header = "mem/dram_interface.hh"
-    cxx_class = 'gem5::memory::DRAMInterface'
+    cxx_class = "gem5::memory::DRAMInterface"
 
     # scheduler page policy
-    page_policy = Param.PageManage('open_adaptive', "Page management policy")
+    page_policy = Param.PageManage("open_adaptive", "Page management policy")
 
     # enforce a limit on the number of accesses per row
-    max_accesses_per_row = Param.Unsigned(16, "Max accesses per row before "
-                                          "closing");
+    max_accesses_per_row = Param.Unsigned(
+        16, "Max accesses per row before " "closing"
+    )
 
     # default to 0 bank groups per rank, indicating bank group architecture
     # is not used
@@ -123,8 +125,9 @@ class DRAMInterface(MemInterface):
     # only utilized with bank group architectures; set to 0 for default case
     # This will be used to enable different same bank group delays
     # for writes versus reads
-    tCCD_L_WR = Param.Latency(Self.tCCD_L,
-      "Same bank group Write to Write delay")
+    tCCD_L_WR = Param.Latency(
+        Self.tCCD_L, "Same bank group Write to Write delay"
+    )
 
     # time taken to complete one refresh cycle (N rows in all banks)
     tRFC = Param.Latency("Refresh cycle time")
@@ -134,18 +137,22 @@ class DRAMInterface(MemInterface):
     tREFI = Param.Latency("Refresh command interval")
 
     # write-to-read, same rank turnaround penalty for same bank group
-    tWTR_L = Param.Latency(Self.tWTR, "Write to read, same rank switching "
-                           "time, same bank group")
+    tWTR_L = Param.Latency(
+        Self.tWTR,
+        "Write to read, same rank switching " "time, same bank group",
+    )
 
     # minimum precharge to precharge delay time
     tPPD = Param.Latency("0ns", "PRE to PRE delay")
 
     # maximum delay between two-cycle ACT command phases
-    tAAD = Param.Latency(Self.tCK,
-                         "Maximum delay between two-cycle ACT commands")
+    tAAD = Param.Latency(
+        Self.tCK, "Maximum delay between two-cycle ACT commands"
+    )
 
-    two_cycle_activate = Param.Bool(False,
-                         "Two cycles required to send activate")
+    two_cycle_activate = Param.Bool(
+        False, "Two cycles required to send activate"
+    )
 
     # minimum row activate to row activate delay time
     tRRD = Param.Latency("ACT to ACT delay")
@@ -272,12 +279,13 @@ class DRAMInterface(MemInterface):
         controller.dram = self
         return controller
 
+
 # A single DDR3-1600 x64 channel (one command and address bus), with
 # timings based on a DDR3-1600 4 Gbit datasheet (Micron MT41J512M8) in
 # an 8x8 configuration.
 class DDR3_1600_8x8(DRAMInterface):
     # size of device in bytes
-    device_size = '512MiB'
+    device_size = "512MiB"
 
     # 8x8 configuration, 8 devices each with an 8-bit interface
     device_bus_width = 8
@@ -286,7 +294,7 @@ class DDR3_1600_8x8(DRAMInterface):
     burst_length = 8
 
     # Each device has a page (row buffer) size of 1 Kbyte (1K columns x8)
-    device_rowbuffer_size = '1KiB'
+    device_rowbuffer_size = "1KiB"
 
     # 8x8 configuration, so 8 devices
     devices_per_rank = 8
@@ -298,55 +306,56 @@ class DDR3_1600_8x8(DRAMInterface):
     banks_per_rank = 8
 
     # 800 MHz
-    tCK = '1.25ns'
+    tCK = "1.25ns"
 
     # 8 beats across an x64 interface translates to 4 clocks @ 800 MHz
-    tBURST = '5ns'
+    tBURST = "5ns"
 
     # DDR3-1600 11-11-11
-    tRCD = '13.75ns'
-    tCL = '13.75ns'
-    tRP = '13.75ns'
-    tRAS = '35ns'
-    tRRD = '6ns'
-    tXAW = '30ns'
+    tRCD = "13.75ns"
+    tCL = "13.75ns"
+    tRP = "13.75ns"
+    tRAS = "35ns"
+    tRRD = "6ns"
+    tXAW = "30ns"
     activation_limit = 4
-    tRFC = '260ns'
+    tRFC = "260ns"
 
-    tWR = '15ns'
-
-    # Greater of 4 CK or 7.5 ns
-    tWTR = '7.5ns'
+    tWR = "15ns"
 
     # Greater of 4 CK or 7.5 ns
-    tRTP = '7.5ns'
+    tWTR = "7.5ns"
+
+    # Greater of 4 CK or 7.5 ns
+    tRTP = "7.5ns"
 
     # Default same rank rd-to-wr bus turnaround to 2 CK, @800 MHz = 2.5 ns
-    tRTW = '2.5ns'
+    tRTW = "2.5ns"
 
     # Default different rank bus delay to 2 CK, @800 MHz = 2.5 ns
-    tCS = '2.5ns'
+    tCS = "2.5ns"
 
     # <=85C, half for >85C
-    tREFI = '7.8us'
+    tREFI = "7.8us"
 
     # active powerdown and precharge powerdown exit time
-    tXP = '6ns'
+    tXP = "6ns"
 
     # self refresh exit time
-    tXS = '270ns'
+    tXS = "270ns"
 
     # Current values from datasheet Die Rev E,J
-    IDD0 = '55mA'
-    IDD2N = '32mA'
-    IDD3N = '38mA'
-    IDD4W = '125mA'
-    IDD4R = '157mA'
-    IDD5 = '235mA'
-    IDD3P1 = '38mA'
-    IDD2P1 = '32mA'
-    IDD6 = '20mA'
-    VDD = '1.5V'
+    IDD0 = "55mA"
+    IDD2N = "32mA"
+    IDD3N = "38mA"
+    IDD4W = "125mA"
+    IDD4R = "157mA"
+    IDD5 = "235mA"
+    IDD3P1 = "38mA"
+    IDD2P1 = "32mA"
+    IDD6 = "20mA"
+    VDD = "1.5V"
+
 
 # A single HMC-2500 x32 model based on:
 # [1] DRAMSpec: a high-level DRAM bank modelling tool
@@ -373,7 +382,7 @@ class DDR3_1600_8x8(DRAMInterface):
 class HMC_2500_1x32(DDR3_1600_8x8):
     # size of device
     # two banks per device with each bank 4MiB [2]
-    device_size = '8MiB'
+    device_size = "8MiB"
 
     # 1x32 configuration, 1 device with 32 TSVs [2]
     device_bus_width = 32
@@ -382,7 +391,7 @@ class HMC_2500_1x32(DDR3_1600_8x8):
     burst_length = 8
 
     # Each device has a page (row buffer) size of 256 bytes [2]
-    device_rowbuffer_size = '256B'
+    device_rowbuffer_size = "256B"
 
     # 1x32 configuration, so 1 device [2]
     devices_per_rank = 1
@@ -396,45 +405,45 @@ class HMC_2500_1x32(DDR3_1600_8x8):
     banks_per_rank = 2
 
     # 1250 MHz [2]
-    tCK = '0.8ns'
+    tCK = "0.8ns"
 
     # 8 beats across an x32 interface translates to 4 clocks @ 1250 MHz
-    tBURST = '3.2ns'
+    tBURST = "3.2ns"
 
     # Values using DRAMSpec HMC model [1]
-    tRCD = '10.2ns'
-    tCL = '9.9ns'
-    tRP = '7.7ns'
-    tRAS = '21.6ns'
+    tRCD = "10.2ns"
+    tCL = "9.9ns"
+    tRP = "7.7ns"
+    tRAS = "21.6ns"
 
     # tRRD depends on the power supply network for each vendor.
     # We assume a tRRD of a double bank approach to be equal to 4 clock
     # cycles (Assumption)
-    tRRD = '3.2ns'
+    tRRD = "3.2ns"
 
     # activation limit is set to 0 since there are only 2 banks per vault
     # layer.
     activation_limit = 0
 
     # Values using DRAMSpec HMC model [1]
-    tRFC = '59ns'
-    tWR = '8ns'
-    tRTP = '4.9ns'
+    tRFC = "59ns"
+    tWR = "8ns"
+    tRTP = "4.9ns"
 
     # Default different rank bus delay assumed to 1 CK for TSVs, @1250 MHz =
     # 0.8 ns (Assumption)
-    tCS = '0.8ns'
+    tCS = "0.8ns"
 
     # Value using DRAMSpec HMC model [1]
-    tREFI = '3.9us'
+    tREFI = "3.9us"
 
     # The default page policy in the vault controllers is simple closed page
     # [2] nevertheless 'close' policy opens and closes the row multiple times
     # for bursts largers than 32Bytes. For this reason we use 'close_adaptive'
-    page_policy = 'close_adaptive'
+    page_policy = "close_adaptive"
 
     # RoCoRaBaCh resembles the default address mapping in HMC
-    addr_mapping = 'RoCoRaBaCh'
+    addr_mapping = "RoCoRaBaCh"
 
     # These parameters do not directly correlate with buffer_size in real
     # hardware. Nevertheless, their value has been tuned to achieve a
@@ -447,11 +456,14 @@ class HMC_2500_1x32(DDR3_1600_8x8):
         Instantiate the memory controller and bind it to
         the current interface.
         """
-        controller = MemCtrl(min_writes_per_switch = 8,
-            static_backend_latency = '4ns',
-            static_frontend_latency = '4ns')
+        controller = MemCtrl(
+            min_writes_per_switch=8,
+            static_backend_latency="4ns",
+            static_frontend_latency="4ns",
+        )
         controller.dram = self
         return controller
+
 
 # A single DDR3-2133 x64 channel refining a selected subset of the
 # options for the DDR-1600 configuration, based on the same DDR3-1600
@@ -459,30 +471,31 @@ class HMC_2500_1x32(DDR3_1600_8x8):
 # consistent across the two configurations.
 class DDR3_2133_8x8(DDR3_1600_8x8):
     # 1066 MHz
-    tCK = '0.938ns'
+    tCK = "0.938ns"
 
     # 8 beats across an x64 interface translates to 4 clocks @ 1066 MHz
-    tBURST = '3.752ns'
+    tBURST = "3.752ns"
 
     # DDR3-2133 14-14-14
-    tRCD = '13.09ns'
-    tCL = '13.09ns'
-    tRP = '13.09ns'
-    tRAS = '33ns'
-    tRRD = '5ns'
-    tXAW = '25ns'
+    tRCD = "13.09ns"
+    tCL = "13.09ns"
+    tRP = "13.09ns"
+    tRAS = "33ns"
+    tRRD = "5ns"
+    tXAW = "25ns"
 
     # Current values from datasheet
-    IDD0 = '70mA'
-    IDD2N = '37mA'
-    IDD3N = '44mA'
-    IDD4W = '157mA'
-    IDD4R = '191mA'
-    IDD5 = '250mA'
-    IDD3P1 = '44mA'
-    IDD2P1 = '43mA'
-    IDD6 ='20mA'
-    VDD = '1.5V'
+    IDD0 = "70mA"
+    IDD2N = "37mA"
+    IDD3N = "44mA"
+    IDD4W = "157mA"
+    IDD4R = "191mA"
+    IDD5 = "250mA"
+    IDD3P1 = "44mA"
+    IDD2P1 = "43mA"
+    IDD6 = "20mA"
+    VDD = "1.5V"
+
 
 # A single DDR4-2400 x64 channel (one command and address bus), with
 # timings based on a DDR4-2400 8 Gbit datasheet (Micron MT40A2G4)
@@ -491,7 +504,7 @@ class DDR3_2133_8x8(DDR3_1600_8x8):
 # 16 devices/rank * 2 ranks/channel * 1GiB/device = 32GiB/channel
 class DDR4_2400_16x4(DRAMInterface):
     # size of device
-    device_size = '1GiB'
+    device_size = "1GiB"
 
     # 16x4 configuration, 16 devices each with a 4-bit interface
     device_bus_width = 4
@@ -500,7 +513,7 @@ class DDR4_2400_16x4(DRAMInterface):
     burst_length = 8
 
     # Each device has a page (row buffer) size of 512 byte (1K columns x4)
-    device_rowbuffer_size = '512B'
+    device_rowbuffer_size = "512B"
 
     # 16x4 configuration, so 16 devices
     devices_per_rank = 16
@@ -523,77 +536,78 @@ class DDR4_2400_16x4(DRAMInterface):
     read_buffer_size = 64
 
     # 1200 MHz
-    tCK = '0.833ns'
+    tCK = "0.833ns"
 
     # 8 beats across an x64 interface translates to 4 clocks @ 1200 MHz
     # tBURST is equivalent to the CAS-to-CAS delay (tCCD)
     # With bank group architectures, tBURST represents the CAS-to-CAS
     # delay for bursts to different bank groups (tCCD_S)
-    tBURST = '3.332ns'
+    tBURST = "3.332ns"
 
     # @2400 data rate, tCCD_L is 6 CK
     # CAS-to-CAS delay for bursts to the same bank group
     # tBURST is equivalent to tCCD_S; no explicit parameter required
     # for CAS-to-CAS delay for bursts to different bank groups
-    tCCD_L = '5ns';
+    tCCD_L = "5ns"
 
     # DDR4-2400 17-17-17
-    tRCD = '14.16ns'
-    tCL = '14.16ns'
-    tRP = '14.16ns'
-    tRAS = '32ns'
+    tRCD = "14.16ns"
+    tCL = "14.16ns"
+    tRP = "14.16ns"
+    tRAS = "32ns"
 
     # RRD_S (different bank group) for 512B page is MAX(4 CK, 3.3ns)
-    tRRD = '3.332ns'
+    tRRD = "3.332ns"
 
     # RRD_L (same bank group) for 512B page is MAX(4 CK, 4.9ns)
-    tRRD_L = '4.9ns';
+    tRRD_L = "4.9ns"
 
     # tFAW for 512B page is MAX(16 CK, 13ns)
-    tXAW = '13.328ns'
+    tXAW = "13.328ns"
     activation_limit = 4
     # tRFC is 350ns
-    tRFC = '350ns'
+    tRFC = "350ns"
 
-    tWR = '15ns'
+    tWR = "15ns"
 
     # Here using the average of WTR_S and WTR_L
-    tWTR = '5ns'
+    tWTR = "5ns"
 
     # Greater of 4 CK or 7.5 ns
-    tRTP = '7.5ns'
+    tRTP = "7.5ns"
 
     # Default same rank rd-to-wr bus turnaround to 2 CK, @1200 MHz = 1.666 ns
-    tRTW = '1.666ns'
+    tRTW = "1.666ns"
 
     # Default different rank bus delay to 2 CK, @1200 MHz = 1.666 ns
-    tCS = '1.666ns'
+    tCS = "1.666ns"
 
     # <=85C, half for >85C
-    tREFI = '7.8us'
+    tREFI = "7.8us"
 
     # active powerdown and precharge powerdown exit time
-    tXP = '6ns'
+    tXP = "6ns"
 
     # self refresh exit time
     # exit delay to ACT, PRE, PREALL, REF, SREF Enter, and PD Enter is:
     # tRFC + 10ns = 340ns
-    tXS = '340ns'
+    tXS = "340ns"
 
     # Current values from datasheet
-    IDD0 = '43mA'
-    IDD02 = '3mA'
-    IDD2N = '34mA'
-    IDD3N = '38mA'
-    IDD3N2 = '3mA'
-    IDD4W = '103mA'
-    IDD4R = '110mA'
-    IDD5 = '250mA'
-    IDD3P1 = '32mA'
-    IDD2P1 = '25mA'
-    IDD6 = '30mA'
-    VDD = '1.2V'
-    VDD2 = '2.5V'
+    IDD0 = "43mA"
+    IDD02 = "3mA"
+    IDD2N = "34mA"
+    IDD3N = "38mA"
+    IDD3N2 = "3mA"
+    IDD4W = "103mA"
+    IDD4R = "110mA"
+    IDD5 = "250mA"
+    IDD3P1 = "32mA"
+    IDD2P1 = "25mA"
+    IDD6 = "30mA"
+    VDD = "1.2V"
+    VDD2 = "2.5V"
+
 
 # A single DDR4-2400 x64 channel (one command and address bus), with
 # timings based on a DDR4-2400 8 Gbit datasheet (Micron MT40A1G8)
@@ -605,22 +619,23 @@ class DDR4_2400_8x8(DDR4_2400_16x4):
     device_bus_width = 8
 
     # Each device has a page (row buffer) size of 1 Kbyte (1K columns x8)
-    device_rowbuffer_size = '1KiB'
+    device_rowbuffer_size = "1KiB"
 
     # 8x8 configuration, so 8 devices
     devices_per_rank = 8
 
     # RRD_L (same bank group) for 1K page is MAX(4 CK, 4.9ns)
-    tRRD_L = '4.9ns';
+    tRRD_L = "4.9ns"
 
-    tXAW = '21ns'
+    tXAW = "21ns"
 
     # Current values from datasheet
-    IDD0 = '48mA'
-    IDD3N = '43mA'
-    IDD4W = '123mA'
-    IDD4R = '135mA'
-    IDD3P1 = '37mA'
+    IDD0 = "48mA"
+    IDD3N = "43mA"
+    IDD4W = "123mA"
+    IDD4R = "135mA"
+    IDD3P1 = "37mA"
+
 
 # A single DDR4-2400 x64 channel (one command and address bus), with
 # timings based on a DDR4-2400 8 Gbit datasheet (Micron MT40A512M16)
@@ -632,7 +647,7 @@ class DDR4_2400_4x16(DDR4_2400_16x4):
     device_bus_width = 16
 
     # Each device has a page (row buffer) size of 2 Kbyte (1K columns x16)
-    device_rowbuffer_size = '2KiB'
+    device_rowbuffer_size = "2KiB"
 
     # 4x16 configuration, so 4 devices
     devices_per_rank = 4
@@ -650,22 +665,23 @@ class DDR4_2400_4x16(DDR4_2400_16x4):
     banks_per_rank = 8
 
     # RRD_S (different bank group) for 2K page is MAX(4 CK, 5.3ns)
-    tRRD = '5.3ns'
+    tRRD = "5.3ns"
 
     # RRD_L (same bank group) for 2K page is MAX(4 CK, 6.4ns)
-    tRRD_L = '6.4ns';
+    tRRD_L = "6.4ns"
 
-    tXAW = '30ns'
+    tXAW = "30ns"
 
     # Current values from datasheet
-    IDD0 = '80mA'
-    IDD02 = '4mA'
-    IDD2N = '34mA'
-    IDD3N = '47mA'
-    IDD4W = '228mA'
-    IDD4R = '243mA'
-    IDD5 = '280mA'
-    IDD3P1 = '41mA'
+    IDD0 = "80mA"
+    IDD02 = "4mA"
+    IDD2N = "34mA"
+    IDD3N = "47mA"
+    IDD4W = "228mA"
+    IDD4R = "243mA"
+    IDD5 = "280mA"
+    IDD3P1 = "41mA"
+
 
 # A single LPDDR2-S4 x32 interface (one command/address bus), with
 # default timings based on a LPDDR2-1066 4 Gbit part (Micron MT42L128M32D1)
@@ -675,7 +691,7 @@ class LPDDR2_S4_1066_1x32(DRAMInterface):
     dll = False
 
     # size of device
-    device_size = '512MiB'
+    device_size = "512MiB"
 
     # 1x32 configuration, 1 device with a 32-bit interface
     device_bus_width = 32
@@ -685,7 +701,7 @@ class LPDDR2_S4_1066_1x32(DRAMInterface):
 
     # Each device has a page (row buffer) size of 1KB
     # (this depends on the memory density)
-    device_rowbuffer_size = '1KiB'
+    device_rowbuffer_size = "1KiB"
 
     # 1x32 configuration, so 1 device
     devices_per_rank = 1
@@ -697,75 +713,76 @@ class LPDDR2_S4_1066_1x32(DRAMInterface):
     banks_per_rank = 8
 
     # 533 MHz
-    tCK = '1.876ns'
+    tCK = "1.876ns"
 
     # Fixed at 15 ns
-    tRCD = '15ns'
+    tRCD = "15ns"
 
     # 8 CK read latency, 4 CK write latency @ 533 MHz, 1.876 ns cycle time
-    tCL = '15ns'
+    tCL = "15ns"
 
     # Pre-charge one bank 15 ns (all banks 18 ns)
-    tRP = '15ns'
+    tRP = "15ns"
 
-    tRAS = '42ns'
-    tWR = '15ns'
+    tRAS = "42ns"
+    tWR = "15ns"
 
-    tRTP = '7.5ns'
+    tRTP = "7.5ns"
 
     # 8 beats across an x32 DDR interface translates to 4 clocks @ 533 MHz.
     # Note this is a BL8 DDR device.
     # Requests larger than 32 bytes are broken down into multiple requests
     # in the controller
-    tBURST = '7.5ns'
+    tBURST = "7.5ns"
 
     # LPDDR2-S4, 4 Gbit
-    tRFC = '130ns'
-    tREFI = '3.9us'
+    tRFC = "130ns"
+    tREFI = "3.9us"
 
     # active powerdown and precharge powerdown exit time
-    tXP = '7.5ns'
+    tXP = "7.5ns"
 
     # self refresh exit time
-    tXS = '140ns'
+    tXS = "140ns"
 
     # Irrespective of speed grade, tWTR is 7.5 ns
-    tWTR = '7.5ns'
+    tWTR = "7.5ns"
 
     # Default same rank rd-to-wr bus turnaround to 2 CK, @533 MHz = 3.75 ns
-    tRTW = '3.75ns'
+    tRTW = "3.75ns"
 
     # Default different rank bus delay to 2 CK, @533 MHz = 3.75 ns
-    tCS = '3.75ns'
+    tCS = "3.75ns"
 
     # Activate to activate irrespective of density and speed grade
-    tRRD = '10.0ns'
+    tRRD = "10.0ns"
 
     # Irrespective of density, tFAW is 50 ns
-    tXAW = '50ns'
+    tXAW = "50ns"
     activation_limit = 4
 
     # Current values from datasheet
-    IDD0 = '15mA'
-    IDD02 = '70mA'
-    IDD2N = '2mA'
-    IDD2N2 = '30mA'
-    IDD3N = '2.5mA'
-    IDD3N2 = '30mA'
-    IDD4W = '10mA'
-    IDD4W2 = '190mA'
-    IDD4R = '3mA'
-    IDD4R2 = '220mA'
-    IDD5 = '40mA'
-    IDD52 = '150mA'
-    IDD3P1 = '1.2mA'
-    IDD3P12 = '8mA'
-    IDD2P1 = '0.6mA'
-    IDD2P12 = '0.8mA'
-    IDD6 = '1mA'
-    IDD62 = '3.2mA'
-    VDD = '1.8V'
-    VDD2 = '1.2V'
+    IDD0 = "15mA"
+    IDD02 = "70mA"
+    IDD2N = "2mA"
+    IDD2N2 = "30mA"
+    IDD3N = "2.5mA"
+    IDD3N2 = "30mA"
+    IDD4W = "10mA"
+    IDD4W2 = "190mA"
+    IDD4R = "3mA"
+    IDD4R2 = "220mA"
+    IDD5 = "40mA"
+    IDD52 = "150mA"
+    IDD3P1 = "1.2mA"
+    IDD3P12 = "8mA"
+    IDD2P1 = "0.6mA"
+    IDD2P12 = "0.8mA"
+    IDD6 = "1mA"
+    IDD62 = "3.2mA"
+    VDD = "1.8V"
+    VDD2 = "1.2V"
+
 
 # A single WideIO x128 interface (one command and address bus), with
 # default timings based on an estimated WIO-200 8 Gbit part.
@@ -774,7 +791,7 @@ class WideIO_200_1x128(DRAMInterface):
     dll = False
 
     # size of device
-    device_size = '1024MiB'
+    device_size = "1024MiB"
 
     # 1x128 configuration, 1 device with a 128-bit interface
     device_bus_width = 128
@@ -784,7 +801,7 @@ class WideIO_200_1x128(DRAMInterface):
 
     # Each device has a page (row buffer) size of 4KB
     # (this depends on the memory density)
-    device_rowbuffer_size = '4KiB'
+    device_rowbuffer_size = "4KiB"
 
     # 1x128 configuration, so 1 device
     devices_per_rank = 1
@@ -796,44 +813,45 @@ class WideIO_200_1x128(DRAMInterface):
     banks_per_rank = 4
 
     # 200 MHz
-    tCK = '5ns'
+    tCK = "5ns"
 
     # WIO-200
-    tRCD = '18ns'
-    tCL = '18ns'
-    tRP = '18ns'
-    tRAS = '42ns'
-    tWR = '15ns'
+    tRCD = "18ns"
+    tCL = "18ns"
+    tRP = "18ns"
+    tRAS = "42ns"
+    tWR = "15ns"
     # Read to precharge is same as the burst
-    tRTP = '20ns'
+    tRTP = "20ns"
 
     # 4 beats across an x128 SDR interface translates to 4 clocks @ 200 MHz.
     # Note this is a BL4 SDR device.
-    tBURST = '20ns'
+    tBURST = "20ns"
 
     # WIO 8 Gb
-    tRFC = '210ns'
+    tRFC = "210ns"
 
     # WIO 8 Gb, <=85C, half for >85C
-    tREFI = '3.9us'
+    tREFI = "3.9us"
 
     # Greater of 2 CK or 15 ns, 2 CK @ 200 MHz = 10 ns
-    tWTR = '15ns'
+    tWTR = "15ns"
 
     # Default same rank rd-to-wr bus turnaround to 2 CK, @200 MHz = 10 ns
-    tRTW = '10ns'
+    tRTW = "10ns"
 
     # Default different rank bus delay to 2 CK, @200 MHz = 10 ns
-    tCS = '10ns'
+    tCS = "10ns"
 
     # Activate to activate irrespective of density and speed grade
-    tRRD = '10.0ns'
+    tRRD = "10.0ns"
 
     # Two instead of four activation window
-    tXAW = '50ns'
+    tXAW = "50ns"
     activation_limit = 2
 
     # The WideIO specification does not provide current information
+
 
 # A single LPDDR3 x32 interface (one command/address bus), with
 # default timings based on a LPDDR3-1600 4 Gbit part (Micron
@@ -843,7 +861,7 @@ class LPDDR3_1600_1x32(DRAMInterface):
     dll = False
 
     # size of device
-    device_size = '512MiB'
+    device_size = "512MiB"
 
     # 1x32 configuration, 1 device with a 32-bit interface
     device_bus_width = 32
@@ -852,7 +870,7 @@ class LPDDR3_1600_1x32(DRAMInterface):
     burst_length = 8
 
     # Each device has a page (row buffer) size of 4KB
-    device_rowbuffer_size = '4KiB'
+    device_rowbuffer_size = "4KiB"
 
     # 1x32 configuration, so 1 device
     devices_per_rank = 1
@@ -865,82 +883,83 @@ class LPDDR3_1600_1x32(DRAMInterface):
     banks_per_rank = 8
 
     # 800 MHz
-    tCK = '1.25ns'
+    tCK = "1.25ns"
 
-    tRCD = '18ns'
+    tRCD = "18ns"
 
     # 12 CK read latency, 6 CK write latency @ 800 MHz, 1.25 ns cycle time
-    tCL = '15ns'
+    tCL = "15ns"
 
-    tRAS = '42ns'
-    tWR = '15ns'
+    tRAS = "42ns"
+    tWR = "15ns"
 
     # Greater of 4 CK or 7.5 ns, 4 CK @ 800 MHz = 5 ns
-    tRTP = '7.5ns'
+    tRTP = "7.5ns"
 
     # Pre-charge one bank 18 ns (all banks 21 ns)
-    tRP = '18ns'
+    tRP = "18ns"
 
     # 8 beats across a x32 DDR interface translates to 4 clocks @ 800 MHz.
     # Note this is a BL8 DDR device.
     # Requests larger than 32 bytes are broken down into multiple requests
     # in the controller
-    tBURST = '5ns'
+    tBURST = "5ns"
 
     # LPDDR3, 4 Gb
-    tRFC = '130ns'
-    tREFI = '3.9us'
+    tRFC = "130ns"
+    tREFI = "3.9us"
 
     # active powerdown and precharge powerdown exit time
-    tXP = '7.5ns'
+    tXP = "7.5ns"
 
     # self refresh exit time
-    tXS = '140ns'
+    tXS = "140ns"
 
     # Irrespective of speed grade, tWTR is 7.5 ns
-    tWTR = '7.5ns'
+    tWTR = "7.5ns"
 
     # Default same rank rd-to-wr bus turnaround to 2 CK, @800 MHz = 2.5 ns
-    tRTW = '2.5ns'
+    tRTW = "2.5ns"
 
     # Default different rank bus delay to 2 CK, @800 MHz = 2.5 ns
-    tCS = '2.5ns'
+    tCS = "2.5ns"
 
     # Activate to activate irrespective of density and speed grade
-    tRRD = '10.0ns'
+    tRRD = "10.0ns"
 
     # Irrespective of size, tFAW is 50 ns
-    tXAW = '50ns'
+    tXAW = "50ns"
     activation_limit = 4
 
     # Current values from datasheet
-    IDD0 = '8mA'
-    IDD02 = '60mA'
-    IDD2N = '0.8mA'
-    IDD2N2 = '26mA'
-    IDD3N = '2mA'
-    IDD3N2 = '34mA'
-    IDD4W = '2mA'
-    IDD4W2 = '190mA'
-    IDD4R = '2mA'
-    IDD4R2 = '230mA'
-    IDD5 = '28mA'
-    IDD52 = '150mA'
-    IDD3P1 = '1.4mA'
-    IDD3P12 = '11mA'
-    IDD2P1 = '0.8mA'
-    IDD2P12 = '1.8mA'
-    IDD6 = '0.5mA'
-    IDD62 = '1.8mA'
-    VDD = '1.8V'
-    VDD2 = '1.2V'
+    IDD0 = "8mA"
+    IDD02 = "60mA"
+    IDD2N = "0.8mA"
+    IDD2N2 = "26mA"
+    IDD3N = "2mA"
+    IDD3N2 = "34mA"
+    IDD4W = "2mA"
+    IDD4W2 = "190mA"
+    IDD4R = "2mA"
+    IDD4R2 = "230mA"
+    IDD5 = "28mA"
+    IDD52 = "150mA"
+    IDD3P1 = "1.4mA"
+    IDD3P12 = "11mA"
+    IDD2P1 = "0.8mA"
+    IDD2P12 = "1.8mA"
+    IDD6 = "0.5mA"
+    IDD62 = "1.8mA"
+    VDD = "1.8V"
+    VDD2 = "1.2V"
+
 
 # A single GDDR5 x64 interface, with
 # default timings based on a GDDR5-4000 1 Gbit part (SK Hynix
 # H5GQ1H24AFR) in a 2x32 configuration.
 class GDDR5_4000_2x32(DRAMInterface):
     # size of device
-    device_size = '128MiB'
+    device_size = "128MiB"
 
     # 2x32 configuration, 1 device with a 32-bit interface
     device_bus_width = 32
@@ -949,7 +968,7 @@ class GDDR5_4000_2x32(DRAMInterface):
     burst_length = 8
 
     # Each device has a page (row buffer) size of 2Kbits (256Bytes)
-    device_rowbuffer_size = '256B'
+    device_rowbuffer_size = "256B"
 
     # 2x32 configuration, so 2 devices
     devices_per_rank = 2
@@ -964,7 +983,7 @@ class GDDR5_4000_2x32(DRAMInterface):
     banks_per_rank = 16
 
     # 1000 MHz
-    tCK = '1ns'
+    tCK = "1ns"
 
     # 8 beats across an x64 interface translates to 2 clocks @ 1000 MHz
     # Data bus runs @2000 Mhz => DDR ( data runs at 4000 MHz )
@@ -972,49 +991,50 @@ class GDDR5_4000_2x32(DRAMInterface):
     # tBURST is equivalent to the CAS-to-CAS delay (tCCD)
     # With bank group architectures, tBURST represents the CAS-to-CAS
     # delay for bursts to different bank groups (tCCD_S)
-    tBURST = '2ns'
+    tBURST = "2ns"
 
     # @1000MHz data rate, tCCD_L is 3 CK
     # CAS-to-CAS delay for bursts to the same bank group
     # tBURST is equivalent to tCCD_S; no explicit parameter required
     # for CAS-to-CAS delay for bursts to different bank groups
-    tCCD_L = '3ns';
+    tCCD_L = "3ns"
 
-    tRCD = '12ns'
+    tRCD = "12ns"
 
     # tCL is not directly found in datasheet and assumed equal tRCD
-    tCL = '12ns'
+    tCL = "12ns"
 
-    tRP = '12ns'
-    tRAS = '28ns'
+    tRP = "12ns"
+    tRAS = "28ns"
 
     # RRD_S (different bank group)
     # RRD_S is 5.5 ns in datasheet.
     # rounded to the next multiple of tCK
-    tRRD = '6ns'
+    tRRD = "6ns"
 
     # RRD_L (same bank group)
     # RRD_L is 5.5 ns in datasheet.
     # rounded to the next multiple of tCK
-    tRRD_L = '6ns'
+    tRRD_L = "6ns"
 
-    tXAW = '23ns'
+    tXAW = "23ns"
 
     # tXAW < 4 x tRRD.
     # Therefore, activation limit is set to 0
     activation_limit = 0
 
-    tRFC = '65ns'
-    tWR = '12ns'
+    tRFC = "65ns"
+    tWR = "12ns"
 
     # Here using the average of WTR_S and WTR_L
-    tWTR = '5ns'
+    tWTR = "5ns"
 
     # Read-to-Precharge 2 CK
-    tRTP = '2ns'
+    tRTP = "2ns"
 
     # Assume 2 cycles
-    tRTW = '2ns'
+    tRTW = "2ns"
+
 
 # A single HBM x128 interface (one command and address bus), with
 # default timings based on data publically released
@@ -1037,9 +1057,9 @@ class HBM_1000_4H_1x128(DRAMInterface):
 
     # size of channel in bytes, 4H stack of 2Gb dies is 1GiB per stack;
     # with 8 channels, 128MiB per channel
-    device_size = '128MiB'
+    device_size = "128MiB"
 
-    device_rowbuffer_size = '2KiB'
+    device_rowbuffer_size = "2KiB"
 
     # 1x128 configuration
     devices_per_rank = 1
@@ -1059,50 +1079,51 @@ class HBM_1000_4H_1x128(DRAMInterface):
     bank_groups_per_rank = 0
 
     # 500 MHz for 1Gbps DDR data rate
-    tCK = '2ns'
+    tCK = "2ns"
 
     # use values from IDD measurement in JEDEC spec
     # use tRP value for tRCD and tCL similar to other classes
-    tRP = '15ns'
-    tRCD = '15ns'
-    tCL = '15ns'
-    tRAS = '33ns'
+    tRP = "15ns"
+    tRCD = "15ns"
+    tCL = "15ns"
+    tRAS = "33ns"
 
     # BL2 and BL4 supported, default to BL4
     # DDR @ 500 MHz means 4 * 2ns / 2 = 4ns
-    tBURST = '4ns'
+    tBURST = "4ns"
 
     # value for 2Gb device from JEDEC spec
-    tRFC = '160ns'
+    tRFC = "160ns"
 
     # value for 2Gb device from JEDEC spec
-    tREFI = '3.9us'
+    tREFI = "3.9us"
 
     # extrapolate the following from LPDDR configs, using ns values
     # to minimize burst length, prefetch differences
-    tWR = '18ns'
-    tRTP = '7.5ns'
-    tWTR = '10ns'
+    tWR = "18ns"
+    tRTP = "7.5ns"
+    tWTR = "10ns"
 
     # start with 2 cycles turnaround, similar to other memory classes
     # could be more with variations across the stack
-    tRTW = '4ns'
+    tRTW = "4ns"
 
     # single rank device, set to 0
-    tCS = '0ns'
+    tCS = "0ns"
 
     # from MemCon example, tRRD is 4ns with 2ns tCK
-    tRRD = '4ns'
+    tRRD = "4ns"
 
     # from MemCon example, tFAW is 30ns with 2ns tCK
-    tXAW = '30ns'
+    tXAW = "30ns"
     activation_limit = 4
 
     # 4tCK
-    tXP = '8ns'
+    tXP = "8ns"
 
     # start with tRFC + tXP -> 160ns + 8ns = 168ns
-    tXS = '168ns'
+    tXS = "168ns"
+
 
 # A single HBM x64 interface (one command and address bus), with
 # default timings based on HBM gen1 and data publically released
@@ -1126,11 +1147,11 @@ class HBM_1000_4H_1x64(HBM_1000_4H_1x128):
 
     # size of channel in bytes, 4H stack of 8Gb dies is 4GiB per stack;
     # with 16 channels, 256MiB per channel
-    device_size = '256MiB'
+    device_size = "256MiB"
 
     # page size is halved with pseudo-channel; maintaining the same same number
     # of rows per pseudo-channel with 2X banks across 2 channels
-    device_rowbuffer_size = '1KiB'
+    device_rowbuffer_size = "1KiB"
 
     # HBM has 8 or 16 banks depending on capacity
     # Starting with 4Gb dies, 16 banks are defined
@@ -1138,19 +1159,20 @@ class HBM_1000_4H_1x64(HBM_1000_4H_1x128):
 
     # reset tRFC for larger, 8Gb device
     # use HBM1 4Gb value as a starting point
-    tRFC = '260ns'
+    tRFC = "260ns"
 
     # start with tRFC + tXP -> 160ns + 8ns = 168ns
-    tXS = '268ns'
+    tXS = "268ns"
     # Default different rank bus delay to 2 CK, @1000 MHz = 2 ns
-    tCS = '2ns'
-    tREFI = '3.9us'
+    tCS = "2ns"
+    tREFI = "3.9us"
 
     # active powerdown and precharge powerdown exit time
-    tXP = '10ns'
+    tXP = "10ns"
 
     # self refresh exit time
-    tXS = '65ns'
+    tXS = "65ns"
+
 
 # A single HBM2 x64 interface (tested with HBMCtrl in gem5)
 # to be used as a single pseudo channel. The timings are based
@@ -1207,7 +1229,7 @@ class HBM_2000_4H_1x64(DRAMInterface):
     tWTR_L = "9ns"
     tRTW = "18ns"
 
-    #tAAD from RBus
+    # tAAD from RBus
     tAAD = "1ns"
 
     # single rank device, set to 0
@@ -1226,12 +1248,13 @@ class HBM_2000_4H_1x64(DRAMInterface):
     # start with tRFC + tXP -> 160ns + 8ns = 168ns
     tXS = "216ns"
 
-    page_policy = 'close_adaptive'
+    page_policy = "close_adaptive"
 
     read_buffer_size = 64
     write_buffer_size = 64
 
     two_cycle_activate = True
+
 
 # A single LPDDR5 x16 interface (one command/address bus)
 # for a single x16 channel with default timings based on
@@ -1245,7 +1268,7 @@ class LPDDR5_5500_1x16_BG_BL32(DRAMInterface):
     read_buffer_size = 64
 
     # Set page policy to better suit DMC Huxley
-    page_policy = 'close_adaptive'
+    page_policy = "close_adaptive"
 
     # 16-bit channel interface
     device_bus_width = 16
@@ -1256,10 +1279,10 @@ class LPDDR5_5500_1x16_BG_BL32(DRAMInterface):
     burst_length = 32
 
     # size of device in bytes
-    device_size = '1GiB'
+    device_size = "1GiB"
 
     # 2KiB page with BG mode
-    device_rowbuffer_size = '2KiB'
+    device_rowbuffer_size = "2KiB"
 
     # Use a 1x16 configuration
     devices_per_rank = 1
@@ -1277,75 +1300,75 @@ class LPDDR5_5500_1x16_BG_BL32(DRAMInterface):
     bank_groups_per_rank = 4
 
     # 5.5Gb/s DDR with 4:1 WCK:CK ratio for 687.5 MHz CK
-    tCK = '1.455ns'
+    tCK = "1.455ns"
 
     # Greater of 2 CK or 18ns
-    tRCD = '18ns'
+    tRCD = "18ns"
 
     # Base RL is 16 CK @ 687.5 MHz = 23.28ns
-    tCL = '23.280ns'
+    tCL = "23.280ns"
 
     # Greater of 2 CK or 18ns
-    tRP = '18ns'
+    tRP = "18ns"
 
     # Greater of 3 CK or 42ns
-    tRAS = '42ns'
+    tRAS = "42ns"
 
     # Greater of 3 CK or 34ns
-    tWR = '34ns'
+    tWR = "34ns"
 
     # active powerdown and precharge powerdown exit time
     # Greater of 3 CK or 7ns
-    tXP = '7ns'
+    tXP = "7ns"
 
     # self refresh exit time (tRFCab + 7.5ns)
-    tXS = '217.5ns'
+    tXS = "217.5ns"
 
     # Greater of 2 CK or 7.5 ns minus 2 CK
-    tRTP = '4.59ns'
+    tRTP = "4.59ns"
 
     # With BG architecture, burst of 32 transferred in two 16-beat
     # sub-bursts, with a 16-beat gap in between.
     # Each 16-beat sub-burst is 8 WCK @2.75 GHz or 2 CK @ 687.5 MHz
     # tBURST is the delay to transfer the Bstof32 =  6 CK @ 687.5 MHz
-    tBURST = '8.73ns'
+    tBURST = "8.73ns"
     # can interleave a Bstof32 from another bank group at tBURST_MIN
     # 16-beats is 8 WCK @2.75 GHz or 2 CK @ 687.5 MHz
-    tBURST_MIN = '2.91ns'
+    tBURST_MIN = "2.91ns"
     # tBURST_MAX is the maximum burst delay for same bank group timing
     # this is 8 CK @ 687.5 MHz
-    tBURST_MAX = '11.64ns'
+    tBURST_MAX = "11.64ns"
 
     # 8 CK @ 687.5 MHz
     tCCD_L = "11.64ns"
 
     # LPDDR5, 8 Gbit/channel for 280ns tRFCab
-    tRFC = '210ns'
-    tREFI = '3.9us'
+    tRFC = "210ns"
+    tREFI = "3.9us"
 
     # Greater of 4 CK or 6.25 ns
-    tWTR = '6.25ns'
+    tWTR = "6.25ns"
     # Greater of 4 CK or 12 ns
-    tWTR_L = '12ns'
+    tWTR_L = "12ns"
 
     # Required RD-to-WR timing is RL+ BL/n + tWCKDQ0/tCK - WL
     # tWCKDQ0/tCK will be 1 CK for most cases
     # For gem5 RL = WL and BL/n is already accounted for with tBURST
     # Result is and additional 1 CK is required
-    tRTW = '1.455ns'
+    tRTW = "1.455ns"
 
     # Default different rank bus delay to 2 CK, @687.5 MHz = 2.91 ns
-    tCS = '2.91ns'
+    tCS = "2.91ns"
 
     # 2 CK
-    tPPD = '2.91ns'
+    tPPD = "2.91ns"
 
     # Greater of 2 CK or 5 ns
-    tRRD = '5ns'
-    tRRD_L = '5ns'
+    tRRD = "5ns"
+    tRRD_L = "5ns"
 
     # With Bank Group Arch mode tFAW is 20 ns
-    tXAW = '20ns'
+    tXAW = "20ns"
     activation_limit = 4
 
     # at 5Gbps, 4:1 WCK to CK ratio required
@@ -1356,9 +1379,10 @@ class LPDDR5_5500_1x16_BG_BL32(DRAMInterface):
     # 2 command phases can be sent back-to-back or
     # with a gap up to tAAD = 8 CK
     two_cycle_activate = True
-    tAAD = '11.640ns'
+    tAAD = "11.640ns"
 
     data_clock_sync = True
+
 
 # A single LPDDR5 x16 interface (one command/address bus)
 # for a single x16 channel with default timings based on
@@ -1373,10 +1397,10 @@ class LPDDR5_5500_1x16_BG_BL16(LPDDR5_5500_1x16_BG_BL32):
     burst_length = 16
 
     # For Bstof16 with BG arch, 2 CK @ 687.5 MHz with 4:1 clock ratio
-    tBURST = '2.91ns'
-    tBURST_MIN = '2.91ns'
+    tBURST = "2.91ns"
+    tBURST_MIN = "2.91ns"
     # For Bstof16 with BG arch, 4 CK @ 687.5 MHz with 4:1 clock ratio
-    tBURST_MAX = '5.82ns'
+    tBURST_MAX = "5.82ns"
 
     # 4 CK @ 687.5 MHz
     tCCD_L = "5.82ns"
@@ -1390,7 +1414,7 @@ class LPDDR5_5500_1x16_BG_BL16(LPDDR5_5500_1x16_BG_BL32):
 class LPDDR5_5500_1x16_8B_BL32(LPDDR5_5500_1x16_BG_BL32):
 
     # 4KiB page with 8B mode
-    device_rowbuffer_size = '4KiB'
+    device_rowbuffer_size = "4KiB"
 
     # LPDDR5 supports configurable bank options
     # 8B  : BL32, all frequencies
@@ -1401,24 +1425,25 @@ class LPDDR5_5500_1x16_8B_BL32(LPDDR5_5500_1x16_BG_BL32):
     bank_groups_per_rank = 0
 
     # For Bstof32 with 8B mode, 4 CK @ 687.5 MHz with 4:1 clock ratio
-    tBURST = '5.82ns'
-    tBURST_MIN = '5.82ns'
-    tBURST_MAX = '5.82ns'
+    tBURST = "5.82ns"
+    tBURST_MIN = "5.82ns"
+    tBURST_MAX = "5.82ns"
 
     # Greater of 4 CK or 12 ns
-    tWTR = '12ns'
+    tWTR = "12ns"
 
     # Greater of 2 CK or 10 ns
-    tRRD = '10ns'
+    tRRD = "10ns"
 
     # With 8B mode tFAW is 40 ns
-    tXAW = '40ns'
+    tXAW = "40ns"
     activation_limit = 4
 
     # Reset BG arch timing for 8B mode
     tCCD_L = "0ns"
     tRRD_L = "0ns"
     tWTR_L = "0ns"
+
 
 # A single LPDDR5 x16 interface (one command/address bus)
 # for a single x16 channel with default timings based on
@@ -1429,22 +1454,22 @@ class LPDDR5_5500_1x16_8B_BL32(LPDDR5_5500_1x16_BG_BL32):
 class LPDDR5_6400_1x16_BG_BL32(LPDDR5_5500_1x16_BG_BL32):
 
     # 5.5Gb/s DDR with 4:1 WCK:CK ratio for 687.5 MHz CK
-    tCK = '1.25ns'
+    tCK = "1.25ns"
 
     # Base RL is 17 CK @ 800 MHz = 21.25ns
-    tCL = '21.25ns'
+    tCL = "21.25ns"
 
     # With BG architecture, burst of 32 transferred in two 16-beat
     # sub-bursts, with a 16-beat gap in between.
     # Each 16-beat sub-burst is 8 WCK @3.2 GHz or 2 CK @ 800 MHz
     # tBURST is the delay to transfer the Bstof32 =  6 CK @ 800 MHz
-    tBURST = '7.5ns'
+    tBURST = "7.5ns"
     # can interleave a Bstof32 from another bank group at tBURST_MIN
     # 16-beats is 8 WCK @2.3 GHz or 2 CK @ 800 MHz
-    tBURST_MIN = '2.5ns'
+    tBURST_MIN = "2.5ns"
     # tBURST_MAX is the maximum burst delay for same bank group timing
     # this is 8 CK @ 800 MHz
-    tBURST_MAX = '10ns'
+    tBURST_MAX = "10ns"
 
     # 8 CK @ 800 MHz
     tCCD_L = "10ns"
@@ -1453,17 +1478,18 @@ class LPDDR5_6400_1x16_BG_BL32(LPDDR5_5500_1x16_BG_BL32):
     # tWCKDQ0/tCK will be 1 CK for most cases
     # For gem5 RL = WL and BL/n is already accounted for with tBURST
     # Result is and additional 1 CK is required
-    tRTW = '1.25ns'
+    tRTW = "1.25ns"
 
     # Default different rank bus delay to 2 CK, @687.5 MHz = 2.5 ns
-    tCS = '2.5ns'
+    tCS = "2.5ns"
 
     # 2 CK
-    tPPD = '2.5ns'
+    tPPD = "2.5ns"
 
     # 2 command phases can be sent back-to-back or
     # with a gap up to tAAD = 8 CK
-    tAAD = '10ns'
+    tAAD = "10ns"
+
 
 # A single LPDDR5 x16 interface (one command/address bus)
 # for a single x16 channel with default timings based on initial
@@ -1478,10 +1504,10 @@ class LPDDR5_6400_1x16_BG_BL16(LPDDR5_6400_1x16_BG_BL32):
     burst_length = 16
 
     # For Bstof16 with BG arch, 2 CK @ 800 MHz with 4:1 clock ratio
-    tBURST = '2.5ns'
-    tBURST_MIN = '2.5ns'
+    tBURST = "2.5ns"
+    tBURST_MIN = "2.5ns"
     # For Bstof16 with BG arch, 4 CK @ 800 MHz with 4:1 clock ratio
-    tBURST_MAX = '5ns'
+    tBURST_MAX = "5ns"
 
     # 4 CK @ 800 MHz
     tCCD_L = "5ns"
@@ -1495,7 +1521,7 @@ class LPDDR5_6400_1x16_BG_BL16(LPDDR5_6400_1x16_BG_BL32):
 class LPDDR5_6400_1x16_8B_BL32(LPDDR5_6400_1x16_BG_BL32):
 
     # 4KiB page with 8B mode
-    device_rowbuffer_size = '4KiB'
+    device_rowbuffer_size = "4KiB"
 
     # LPDDR5 supports configurable bank options
     # 8B  : BL32, all frequencies
@@ -1506,18 +1532,18 @@ class LPDDR5_6400_1x16_8B_BL32(LPDDR5_6400_1x16_BG_BL32):
     bank_groups_per_rank = 0
 
     # For Bstof32 with 8B mode, 4 CK @ 800 MHz with 4:1 clock ratio
-    tBURST = '5ns'
-    tBURST_MIN = '5ns'
-    tBURST_MAX = '5ns'
+    tBURST = "5ns"
+    tBURST_MIN = "5ns"
+    tBURST_MAX = "5ns"
 
     # Greater of 4 CK or 12 ns
-    tWTR = '12ns'
+    tWTR = "12ns"
 
     # Greater of 2 CK or 10 ns
-    tRRD = '10ns'
+    tRRD = "10ns"
 
     # With 8B mode tFAW is 40 ns
-    tXAW = '40ns'
+    tXAW = "40ns"
     activation_limit = 4
 
     # Reset BG arch timing for 8B mode

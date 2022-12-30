@@ -34,7 +34,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import pygtk
-pygtk.require('2.0')
+
+pygtk.require("2.0")
 import gtk
 import gobject
 import cairo
@@ -47,8 +48,10 @@ from . import model
 from .model import Id, BlobModel, BlobDataSelect, special_state_chars
 from . import blobs
 
+
 class BlobView(object):
     """The canvas view of the pipeline"""
+
     def __init__(self, model):
         # A unit blob will appear at size blobSize inside a space of
         #   size pitch.
@@ -62,7 +65,7 @@ class BlobView(object):
         self.midLineWidth = 6.0
         # The scale from the units of pitch to device units (nominally
         #   pixels for 1.0 to 1.0
-        self.masterScale = Point(1.0,1.0)
+        self.masterScale = Point(1.0, 1.0)
         self.model = model
         self.fillColour = colours.emptySlotColour
         self.timeIndex = 0
@@ -82,9 +85,11 @@ class BlobView(object):
         self.overlays = []
 
         self.da = gtk.DrawingArea()
+
         def draw(arg1, arg2):
             self.redraw()
-        self.da.connect('expose_event', draw)
+
+        self.da.connect("expose_event", draw)
 
         # Handy offsets from the blob size
         self.blobIndent = (self.pitch - self.blobSize).scale(0.5)
@@ -99,7 +104,8 @@ class BlobView(object):
         surface = cairo.ImageSurface(
             cairo.FORMAT_ARGB32,
             self.da.get_allocation().width,
-            self.da.get_allocation().height)
+            self.da.get_allocation().height,
+        )
         cr = gtk.gdk.CairoContext(cairo.Context(surface))
         self.draw_to_cr(cr)
         surface.write_to_png(filename)
@@ -113,16 +119,16 @@ class BlobView(object):
         cr.scale(*self.masterScale.to_pair())
         cr.translate(*self.origin.to_pair())
 
-        positions = [] # {}
+        positions = []  # {}
 
         # Draw each blob
         for blob in self.model.blobs:
             blob_event = self.model.find_unit_event_by_time(
-                blob.unit, self.time)
+                blob.unit, self.time
+            )
 
             cr.save()
-            pos = blob.render(cr, self, blob_event, self.dataSelect,
-                self.time)
+            pos = blob.render(cr, self, blob_event, self.dataSelect, self.time)
             cr.restore()
             if pos is not None:
                 (centre, size) = pos
@@ -141,7 +147,8 @@ class BlobView(object):
         buffer = cairo.ImageSurface(
             cairo.FORMAT_ARGB32,
             self.da.get_allocation().width,
-            self.da.get_allocation().height)
+            self.da.get_allocation().height,
+        )
 
         cr = gtk.gdk.CairoContext(cairo.Context(buffer))
         positions = self.draw_to_cr(cr)
@@ -173,17 +180,21 @@ class BlobView(object):
     def get_pic_size(self):
         """Return the size of ASCII-art picture of the pipeline scaled by
         the blob pitch"""
-        return (self.origin + self.pitch *
-            (self.model.picSize + Point(1.0,1.0)))
+        return self.origin + self.pitch * (
+            self.model.picSize + Point(1.0, 1.0)
+        )
 
     def set_da_size(self):
         """Set the DrawingArea size after scaling"""
-        self.da.set_size_request(10 , int(self.initialHeight))
+        self.da.set_size_request(10, int(self.initialHeight))
+
 
 class BlobController(object):
     """The controller bar for the viewer"""
-    def __init__(self, model, view,
-        defaultEventFile="", defaultPictureFile=""):
+
+    def __init__(
+        self, model, view, defaultEventFile="", defaultPictureFile=""
+    ):
         self.model = model
         self.view = view
         self.playTimer = None
@@ -209,17 +220,17 @@ class BlobController(object):
 
         self.timeEntry = gtk.Entry()
 
-        t = gtk.ToggleButton('T')
+        t = gtk.ToggleButton("T")
         t.set_active(False)
-        s = gtk.ToggleButton('S')
+        s = gtk.ToggleButton("S")
         s.set_active(True)
-        p = gtk.ToggleButton('P')
+        p = gtk.ToggleButton("P")
         p.set_active(True)
-        l = gtk.ToggleButton('L')
+        l = gtk.ToggleButton("L")
         l.set_active(True)
-        f = gtk.ToggleButton('F')
+        f = gtk.ToggleButton("F")
         f.set_active(True)
-        e = gtk.ToggleButton('E')
+        e = gtk.ToggleButton("E")
         e.set_active(True)
 
         # Should really generate this from above
@@ -228,35 +239,38 @@ class BlobController(object):
         self.bar = gtk.VBox()
         self.bar.set_homogeneous(False)
 
-        row1 = make_bar([
-            (gtk.Button('Start'), 'clicked', self.time_start),
-            (gtk.Button('End'), 'clicked', self.time_end),
-            (gtk.Button('Back'), 'clicked', self.time_back),
-            (gtk.Button('Forward'), 'clicked', self.time_forward),
-            (gtk.Button('Play'), 'clicked', self.time_play),
-            (gtk.Button('Stop'), 'clicked', self.time_stop),
-            (self.timeEntry, 'activate', self.time_set),
-            (gtk.Label('Visible ids:'), None, None),
-            (t, 'clicked', self.toggle_id('T')),
-            (gtk.Label('/'), None, None),
-            (s, 'clicked', self.toggle_id('S')),
-            (gtk.Label('.'), None, None),
-            (p, 'clicked', self.toggle_id('P')),
-            (gtk.Label('/'), None, None),
-            (l, 'clicked', self.toggle_id('L')),
-            (gtk.Label('/'), None, None),
-            (f, 'clicked', self.toggle_id('F')),
-            (gtk.Label('.'), None, None),
-            (e, 'clicked', self.toggle_id('E')),
-            (self.filenameEntry, 'activate', self.load_events),
-            (gtk.Button('Reload'), 'clicked', self.load_events)
-            ])
+        row1 = make_bar(
+            [
+                (gtk.Button("Start"), "clicked", self.time_start),
+                (gtk.Button("End"), "clicked", self.time_end),
+                (gtk.Button("Back"), "clicked", self.time_back),
+                (gtk.Button("Forward"), "clicked", self.time_forward),
+                (gtk.Button("Play"), "clicked", self.time_play),
+                (gtk.Button("Stop"), "clicked", self.time_stop),
+                (self.timeEntry, "activate", self.time_set),
+                (gtk.Label("Visible ids:"), None, None),
+                (t, "clicked", self.toggle_id("T")),
+                (gtk.Label("/"), None, None),
+                (s, "clicked", self.toggle_id("S")),
+                (gtk.Label("."), None, None),
+                (p, "clicked", self.toggle_id("P")),
+                (gtk.Label("/"), None, None),
+                (l, "clicked", self.toggle_id("L")),
+                (gtk.Label("/"), None, None),
+                (f, "clicked", self.toggle_id("F")),
+                (gtk.Label("."), None, None),
+                (e, "clicked", self.toggle_id("E")),
+                (self.filenameEntry, "activate", self.load_events),
+                (gtk.Button("Reload"), "clicked", self.load_events),
+            ]
+        )
 
         self.bar.pack_start(row1, False, True, 0)
         self.set_time_index(0)
 
     def toggle_id(self, id):
         """One of the sequence number selector buttons has been toggled"""
+
         def toggle(button):
             if button.get_active():
                 self.view.dataSelect.ids.add(id)
@@ -268,6 +282,7 @@ class BlobController(object):
                 self.view.dataSelect.ids.add(id)
                 button.set_active(True)
             self.view.redraw()
+
         return toggle
 
     def set_time_index(self, time):
@@ -292,8 +307,9 @@ class BlobController(object):
 
     def time_forward(self, button):
         """Step forward pressed"""
-        self.set_time_index(min(self.view.timeIndex + 1,
-            len(self.model.times) - 1))
+        self.set_time_index(
+            min(self.view.timeIndex + 1, len(self.model.times) - 1)
+        )
         self.view.redraw()
         gtk.gdk.flush()
 
@@ -311,8 +327,10 @@ class BlobController(object):
 
     def time_step(self):
         """Time step while playing"""
-        if not self.playTimer \
-            or self.view.timeIndex == len(self.model.times) - 1:
+        if (
+            not self.playTimer
+            or self.view.timeIndex == len(self.model.times) - 1
+        ):
             self.time_stop(None)
             return False
         else:
@@ -332,14 +350,20 @@ class BlobController(object):
 
     def load_events(self, button):
         """Reload events file"""
-        self.model.load_events(self.filenameEntry.get_text(),
-            startTime=self.startTime, endTime=self.endTime)
-        self.set_time_index(min(len(self.model.times) - 1,
-            self.view.timeIndex))
+        self.model.load_events(
+            self.filenameEntry.get_text(),
+            startTime=self.startTime,
+            endTime=self.endTime,
+        )
+        self.set_time_index(
+            min(len(self.model.times) - 1, self.view.timeIndex)
+        )
         self.view.redraw()
+
 
 class Overlay(object):
     """An Overlay is a speech bubble explaining the data in a blob"""
+
     def __init__(self, model, view, point, blob):
         self.model = model
         self.view = view
@@ -348,8 +372,9 @@ class Overlay(object):
 
     def find_event(self):
         """Find the event for a changing time and a fixed blob"""
-        return self.model.find_unit_event_by_time(self.blob.unit,
-            self.view.time)
+        return self.model.find_unit_event_by_time(
+            self.blob.unit, self.view.time
+        )
 
     def show(self, cr):
         """Draw the overlay"""
@@ -358,12 +383,11 @@ class Overlay(object):
         if event is None:
             return
 
-        insts = event.find_ided_objects(self.model, self.blob.picChar,
-            False)
+        insts = event.find_ided_objects(self.model, self.blob.picChar, False)
 
         cr.set_line_width(self.view.thinLineWidth)
-        cr.translate(*(Point(0.0,0.0) - self.view.origin).to_pair())
-        cr.scale(*(Point(1.0,1.0) / self.view.masterScale).to_pair())
+        cr.translate(*(Point(0.0, 0.0) - self.view.origin).to_pair())
+        cr.scale(*(Point(1.0, 1.0) / self.view.masterScale).to_pair())
 
         # Get formatted data from the insts to format into a table
         lines = list(inst.table_line() for inst in insts)
@@ -403,7 +427,7 @@ class Overlay(object):
         cr.set_source_color(colours.black)
         cr.stroke()
 
-        text_point += Point(1.0,1.0).scale(2.0 * text_size)
+        text_point += Point(1.0, 1.0).scale(2.0 * text_size)
 
         id_size = Point(id_width, text_size)
 
@@ -412,8 +436,12 @@ class Overlay(object):
             row_point = text_point
             inst = insts[i]
             line = lines[i]
-            blobs.striped_box(cr, row_point + id_size.scale(0.5),
-                id_size, inst.id.to_striped_block(self.view.dataSelect))
+            blobs.striped_box(
+                cr,
+                row_point + id_size.scale(0.5),
+                id_size,
+                inst.id.to_striped_block(self.view.dataSelect),
+            )
             cr.set_source_color(colours.black)
 
             row_point += Point(1.0, 0.0).scale(id_width)
@@ -427,8 +455,10 @@ class Overlay(object):
 
             text_point += text_step
 
+
 class BlobWindow(object):
     """The top-level window and its mouse control"""
+
     def __init__(self, model, view, controller):
         self.model = model
         self.view = view
@@ -469,18 +499,17 @@ class BlobWindow(object):
         self.window.add(self.vbox)
 
         def show_event(picChar, event):
-            print('**** Comments for', event.unit, \
-                'at time', self.view.time)
+            print("**** Comments for", event.unit, "at time", self.view.time)
             for name, value in event.pairs.items():
-                print(name, '=', value)
+                print(name, "=", value)
             for comment in event.comments:
                 print(comment)
             if picChar in event.visuals:
                 # blocks = event.visuals[picChar].elems()
-                print('**** Colour data')
+                print("**** Colour data")
                 objs = event.find_ided_objects(self.model, picChar, True)
                 for obj in objs:
-                    print(' '.join(obj.table_line()))
+                    print(" ".join(obj.table_line()))
 
         def clicked_da(da, b):
             point = Point(b.x, b.y)
@@ -488,12 +517,14 @@ class BlobWindow(object):
             overlay = None
             for blob, centre, size in self.view.positions:
                 if point.is_within_box((centre, size)):
-                    event = self.model.find_unit_event_by_time(blob.unit,
-                        self.view.time)
+                    event = self.model.find_unit_event_by_time(
+                        blob.unit, self.view.time
+                    )
                     if event is not None:
                         if overlay is None:
-                            overlay = Overlay(self.model, self.view, point,
-                                blob)
+                            overlay = Overlay(
+                                self.model, self.view, point, blob
+                            )
                         show_event(blob.picChar, event)
             if overlay is not None:
                 self.view.overlays = [overlay]
@@ -505,8 +536,8 @@ class BlobWindow(object):
         # Set initial size and event callbacks
         self.view.set_da_size()
         self.view.da.add_events(gtk.gdk.BUTTON_PRESS_MASK)
-        self.view.da.connect('button-press-event', clicked_da)
-        self.window.connect('destroy', lambda widget: gtk.main_quit())
+        self.view.da.connect("button-press-event", clicked_da)
+        self.window.connect("destroy", lambda widget: gtk.main_quit())
 
         def resize(window, event):
             """Resize DrawingArea to match new window size"""
@@ -517,6 +548,6 @@ class BlobWindow(object):
             self.view.masterScale = Point(daScale, daScale)
             self.view.overlays = []
 
-        self.view.da.connect('configure-event', resize)
+        self.view.da.connect("configure-event", resize)
 
         self.window.show_all()

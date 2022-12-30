@@ -46,7 +46,7 @@ let {{
         @overrideInOperand
         def regId(self):
             return f'(({self.reg_spec}) == 0) ? RegId() : ' \
-                   f'RegId({self.reg_class}, {self.reg_spec})'
+                   f'{self.reg_class}[{self.reg_spec}]'
 }};
 
 def operands {{

@@ -275,9 +275,7 @@ BaseCPU::init()
     // Set up instruction-count-based termination events, if any. This needs
     // to happen after threadContexts has been constructed.
     if (params().max_insts_any_thread != 0) {
-        const char *cause = "a thread reached the max instruction count";
-        for (ThreadID tid = 0; tid < numThreads; ++tid)
-            scheduleInstStop(tid, params().max_insts_any_thread, cause);
+        scheduleInstStopAnyThread(params().max_insts_any_thread);
     }
 
     // Set up instruction-count-based termination events for SimPoints
@@ -285,13 +283,11 @@ BaseCPU::init()
     // Simulation.py is responsible to take the necessary actions upon
     // exitting the simulation loop.
     if (!params().simpoint_start_insts.empty()) {
-        const char *cause = "simpoint starting point found";
-        for (size_t i = 0; i < params().simpoint_start_insts.size(); ++i)
-            scheduleInstStop(0, params().simpoint_start_insts[i], cause);
+        scheduleSimpointsInstStop(params().simpoint_start_insts);
     }
 
     if (params().max_insts_all_threads != 0) {
-        const char *cause = "all threads reached the max instruction count";
+        std::string cause = "all threads reached the max instruction count";
 
         // allocate & initialize shared downcounter: each event will
         // decrement this when triggered; simulation will terminate
@@ -661,7 +657,7 @@ BaseCPU::unserialize(CheckpointIn &cp)
 }
 
 void
-BaseCPU::scheduleInstStop(ThreadID tid, Counter insts, const char *cause)
+BaseCPU::scheduleInstStop(ThreadID tid, Counter insts, std::string cause)
 {
     const Tick now(getCurrentInstCount(tid));
     Event *event(new LocalSimLoopExitEvent(cause, 0));
@@ -727,6 +723,23 @@ BaseCPU::traceFunctionsInternal(Addr pc)
     }
 }
 
+void
+BaseCPU::scheduleSimpointsInstStop(std::vector<Counter> inst_starts)
+{
+    std::string cause = "simpoint starting point found";
+    for (size_t i = 0; i < inst_starts.size(); ++i) {
+        scheduleInstStop(0, inst_starts[i], cause);
+    }
+}
+
+void
+BaseCPU::scheduleInstStopAnyThread(Counter max_insts)
+{
+    std::string cause = "a thread reached the max instruction count";
+    for (ThreadID tid = 0; tid < numThreads; ++tid) {
+        scheduleInstStop(tid, max_insts, cause);
+    }
+}
 
 BaseCPU::GlobalStats::GlobalStats(statistics::Group *parent)
     : statistics::Group(parent),

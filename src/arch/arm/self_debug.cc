@@ -82,8 +82,6 @@ SelfDebug::testBreakPoints(ThreadContext *tc, Addr vaddr)
 
     to32 = targetAArch32(tc);
 
-    init(tc);
-
     if (!isDebugEnabled(tc))
         return NoFault;
 
@@ -127,8 +125,6 @@ SelfDebug::testWatchPoints(ThreadContext *tc, Addr vaddr, bool write,
 {
     setAArch32(tc);
     to32 = targetAArch32(tc);
-    if (!initialized)
-        init(tc);
     if (!isDebugEnabled(tc) || !mde)
         return NoFault;
 
@@ -330,8 +326,6 @@ BrkPoint::test(ThreadContext *tc, Addr pc, ExceptionLevel el, DBGBCR ctr,
 void
 SelfDebug::init(ThreadContext *tc)
 {
-    if (initialized)
-        return;
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
     aarch32 = cpsr.width == 1;
 
@@ -353,16 +347,14 @@ SelfDebug::init(ThreadContext *tc)
     }
 
     for (int i = 0; i <= dfr.wrps; i++) {
-        WatchPoint wtp = WatchPoint((MiscRegIndex)(MISCREG_DBGWCR0 + i),
-                                    (MiscRegIndex)(MISCREG_DBGWVR0 + i),
+        WatchPoint wtp = WatchPoint((MiscRegIndex)(MISCREG_DBGWCR0_EL1 + i),
+                                    (MiscRegIndex)(MISCREG_DBGWVR0_EL1 + i),
                                     this, (bool)mm_fr2.varange, aarch32);
-        const DBGWCR ctr = tc->readMiscReg(MISCREG_DBGWCR0 + i);
+        const DBGWCR ctr = tc->readMiscReg(MISCREG_DBGWCR0_EL1 + i);
 
         wtp.updateControl(ctr);
         arWatchPoints.push_back(wtp);
     }
-
-    initialized = true;
 
     RegVal oslar_el1 = tc->readMiscReg(MISCREG_OSLAR_EL1);
     updateOSLock(oslar_el1);
@@ -721,8 +713,6 @@ SelfDebug::testVectorCatch(ThreadContext *tc, Addr addr,
 
     setAArch32(tc);
     to32 = targetAArch32(tc);
-    if (!initialized)
-        init(tc);
     if (!isDebugEnabled(tc) || !mde || !aarch32)
         return NoFault;
 
@@ -735,7 +725,7 @@ SelfDebug::testVectorCatch(ThreadContext *tc, Addr addr,
     if (do_debug) {
         if (enableTdeTge) {
             return std::make_shared<HypervisorTrap>(0, 0x22,
-                                        EC_PREFETCH_ABORT_TO_HYP);
+                                        ExceptionClass::PREFETCH_ABORT_TO_HYP);
         } else {
             return std::make_shared<PrefetchAbort>(addr,
                                        ArmFault::DebugEvent, false,

@@ -30,11 +30,12 @@ from m5.objects.Device import BasicPioDevice
 from m5.objects.IntPin import IntSourcePin
 from m5.objects.Iris import IrisBaseCPU
 
-class FastModelResetControllerExample(BasicPioDevice):
-    type = 'FastModelResetControllerExample'
-    cxx_class = 'gem5::fastmodel::ResetControllerExample'
-    cxx_header = 'arch/arm/fastmodel/reset_controller/example.hh'
 
-    cpu = Param.IrisBaseCPU('target cpu')
-    reset = IntSourcePin('reset pin')
-    halt = IntSourcePin('halt pin')
+class FastModelResetControllerExample(BasicPioDevice):
+    type = "FastModelResetControllerExample"
+    cxx_class = "gem5::fastmodel::ResetControllerExample"
+    cxx_header = "arch/arm/fastmodel/reset_controller/example.hh"
+
+    cpu = Param.IrisBaseCPU("target cpu")
+    reset = IntSourcePin("reset pin")
+    halt = IntSourcePin("halt pin")

@@ -25,7 +25,8 @@
 
 from m5.objects.InstDecoder import InstDecoder
 
+
 class MipsDecoder(InstDecoder):
-    type = 'MipsDecoder'
-    cxx_class = 'gem5::MipsISA::Decoder'
+    type = "MipsDecoder"
+    cxx_class = "gem5::MipsISA::Decoder"
     cxx_header = "arch/mips/decoder.hh"

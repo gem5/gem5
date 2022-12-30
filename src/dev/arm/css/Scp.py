@@ -36,8 +36,9 @@
 from m5.objects.ClockedObject import ClockedObject
 from m5.params import *
 
+
 class Scp(ClockedObject):
-    type = 'Scp'
+    type = "Scp"
     abstract = True
     cxx_header = "dev/arm/css/scp.hh"
-    cxx_class = 'gem5::Scp'
+    cxx_class = "gem5::Scp"

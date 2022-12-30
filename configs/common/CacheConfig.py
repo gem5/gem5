@@ -42,8 +42,12 @@
 
 import m5
 from m5.objects import *
+from gem5.isas import ISA
+from gem5.runtime import get_runtime_isa
+
 from common.Caches import *
 from common import ObjectList
+
 
 def _get_hwp(hwp_option):
     if hwp_option == None:
@@ -52,22 +56,24 @@ def _get_hwp(hwp_option):
     hwpClass = ObjectList.hwp_list.get(hwp_option)
     return hwpClass()
 
+
 def _get_cache_opts(level, options):
     opts = {}
 
-    size_attr = '{}_size'.format(level)
+    size_attr = "{}_size".format(level)
     if hasattr(options, size_attr):
-        opts['size'] = getattr(options, size_attr)
+        opts["size"] = getattr(options, size_attr)
 
-    assoc_attr = '{}_assoc'.format(level)
+    assoc_attr = "{}_assoc".format(level)
     if hasattr(options, assoc_attr):
-        opts['assoc'] = getattr(options, assoc_attr)
+        opts["assoc"] = getattr(options, assoc_attr)
 
-    prefetcher_attr = '{}_hwp_type'.format(level)
+    prefetcher_attr = "{}_hwp_type".format(level)
     if hasattr(options, prefetcher_attr):
-        opts['prefetcher'] = _get_hwp(getattr(options, prefetcher_attr))
+        opts["prefetcher"] = _get_hwp(getattr(options, prefetcher_attr))
 
     return opts
+
 
 def config_cache(options, system):
     if options.external_memory_system and (options.caches or options.l2cache):
@@ -84,10 +90,12 @@ def config_cache(options, system):
             print("O3_ARM_v7a_3 is unavailable. Did you compile the O3 model?")
             sys.exit(1)
 
-        dcache_class, icache_class, l2_cache_class, walk_cache_class = \
-            core.O3_ARM_v7a_DCache, core.O3_ARM_v7a_ICache, \
-            core.O3_ARM_v7aL2, \
-            None
+        dcache_class, icache_class, l2_cache_class, walk_cache_class = (
+            core.O3_ARM_v7a_DCache,
+            core.O3_ARM_v7a_ICache,
+            core.O3_ARM_v7aL2,
+            None,
+        )
     elif options.cpu_type == "HPI":
         try:
             import cores.arm.HPI as core
@@ -95,13 +103,21 @@ def config_cache(options, system):
             print("HPI is unavailable.")
             sys.exit(1)
 
-        dcache_class, icache_class, l2_cache_class, walk_cache_class = \
-            core.HPI_DCache, core.HPI_ICache, core.HPI_L2, None
+        dcache_class, icache_class, l2_cache_class, walk_cache_class = (
+            core.HPI_DCache,
+            core.HPI_ICache,
+            core.HPI_L2,
+            None,
+        )
     else:
-        dcache_class, icache_class, l2_cache_class, walk_cache_class = \
-            L1_DCache, L1_ICache, L2Cache, None
+        dcache_class, icache_class, l2_cache_class, walk_cache_class = (
+            L1_DCache,
+            L1_ICache,
+            L2Cache,
+            None,
+        )
 
-        if buildEnv['TARGET_ISA'] in ['x86', 'riscv']:
+        if get_runtime_isa() in [ISA.X86, ISA.RISCV]:
             walk_cache_class = PageTableWalkerCache
 
     # Set the cache line size of the system
@@ -118,10 +134,11 @@ def config_cache(options, system):
         # Provide a clock for the L2 and the L1-to-L2 bus here as they
         # are not connected using addTwoLevelCacheHierarchy. Use the
         # same clock as the CPUs.
-        system.l2 = l2_cache_class(clk_domain=system.cpu_clk_domain,
-                                   **_get_cache_opts('l2', options))
+        system.l2 = l2_cache_class(
+            clk_domain=system.cpu_clk_domain, **_get_cache_opts("l2", options)
+        )
 
-        system.tol2bus = L2XBar(clk_domain = system.cpu_clk_domain)
+        system.tol2bus = L2XBar(clk_domain=system.cpu_clk_domain)
         system.l2.cpu_side = system.tol2bus.mem_side_ports
         system.l2.mem_side = system.membus.cpu_side_ports
 
@@ -130,8 +147,8 @@ def config_cache(options, system):
 
     for i in range(options.num_cpus):
         if options.caches:
-            icache = icache_class(**_get_cache_opts('l1i', options))
-            dcache = dcache_class(**_get_cache_opts('l1d', options))
+            icache = icache_class(**_get_cache_opts("l1i", options))
+            dcache = dcache_class(**_get_cache_opts("l1d", options))
 
             # If we have a walker cache specified, instantiate two
             # instances here
@@ -159,8 +176,9 @@ def config_cache(options, system):
 
             # When connecting the caches, the clock is also inherited
             # from the CPU in question
-            system.cpu[i].addPrivateSplitL1Caches(icache, dcache,
-                                                  iwalkcache, dwalkcache)
+            system.cpu[i].addPrivateSplitL1Caches(
+                icache, dcache, iwalkcache, dwalkcache
+            )
 
             if options.memchecker:
                 # The mem_side ports of the caches haven't been connected yet.
@@ -174,29 +192,35 @@ def config_cache(options, system):
             # on these names.  For simplicity, we would advise configuring
             # it to use this naming scheme; if this isn't possible, change
             # the names below.
-            if buildEnv['TARGET_ISA'] in ['x86', 'arm', 'riscv']:
+            if get_runtime_isa() in [ISA.X86, ISA.ARM, ISA.RISCV]:
                 system.cpu[i].addPrivateSplitL1Caches(
-                        ExternalCache("cpu%d.icache" % i),
-                        ExternalCache("cpu%d.dcache" % i),
-                        ExternalCache("cpu%d.itb_walker_cache" % i),
-                        ExternalCache("cpu%d.dtb_walker_cache" % i))
+                    ExternalCache("cpu%d.icache" % i),
+                    ExternalCache("cpu%d.dcache" % i),
+                    ExternalCache("cpu%d.itb_walker_cache" % i),
+                    ExternalCache("cpu%d.dtb_walker_cache" % i),
+                )
             else:
                 system.cpu[i].addPrivateSplitL1Caches(
-                        ExternalCache("cpu%d.icache" % i),
-                        ExternalCache("cpu%d.dcache" % i))
+                    ExternalCache("cpu%d.icache" % i),
+                    ExternalCache("cpu%d.dcache" % i),
+                )
 
         system.cpu[i].createInterruptController()
         if options.l2cache:
             system.cpu[i].connectAllPorts(
                 system.tol2bus.cpu_side_ports,
-                system.membus.cpu_side_ports, system.membus.mem_side_ports)
+                system.membus.cpu_side_ports,
+                system.membus.mem_side_ports,
+            )
         elif options.external_memory_system:
             system.cpu[i].connectUncachedPorts(
-                system.membus.cpu_side_ports, system.membus.mem_side_ports)
+                system.membus.cpu_side_ports, system.membus.mem_side_ports
+            )
         else:
             system.cpu[i].connectBus(system.membus)
 
     return system
+
 
 # ExternalSlave provides a "port", but when that port connects to a cache,
 # the connecting CPU SimObject wants to refer to its "cpu_side".
@@ -204,17 +228,20 @@ def config_cache(options, system):
 # eliminating distracting changes elsewhere in the config code.
 class ExternalCache(ExternalSlave):
     def __getattr__(cls, attr):
-        if (attr == "cpu_side"):
+        if attr == "cpu_side":
             attr = "port"
         return super(ExternalSlave, cls).__getattr__(attr)
 
     def __setattr__(cls, attr, value):
-        if (attr == "cpu_side"):
+        if attr == "cpu_side":
             attr = "port"
         return super(ExternalSlave, cls).__setattr__(attr, value)
 
+
 def ExternalCacheFactory(port_type):
     def make(name):
-        return ExternalCache(port_data=name, port_type=port_type,
-                             addr_ranges=[AllMemory])
+        return ExternalCache(
+            port_data=name, port_type=port_type, addr_ranges=[AllMemory]
+        )
+
     return make

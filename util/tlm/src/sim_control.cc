@@ -80,7 +80,7 @@ Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
     gem5::ExternalMaster::registerHandler("tlm_master",
         new SCMasterPortHandler(*this));
 
-    gem5::Trace::setDebugLogger(&logger);
+    gem5::trace::setDebugLogger(&logger);
 
     Gem5SystemC::setTickFrequency();
     assert(sc_core::sc_get_time_resolution()
@@ -93,7 +93,7 @@ Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
     gem5::statistics::registerHandlers(CxxConfig::statsReset,
         CxxConfig::statsDump);
 
-    gem5::Trace::enable();
+    gem5::trace::enable();
 
     gem5::CxxConfigFileBase* conf = new gem5::CxxIniFile();
 

@@ -60,10 +60,6 @@ void takeCheckpoint(Tick when);
  */
 void eventqDump();
 
-int getRemoteGDBPort();
-// Remote gdb base port.  0 disables remote gdb.
-void setRemoteGDBPort(int port);
-
 } // namespace gem5
 
 #endif // __SIM_DEBUG_HH__

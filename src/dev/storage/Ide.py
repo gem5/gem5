@@ -28,20 +28,24 @@ from m5.SimObject import SimObject
 from m5.params import *
 from m5.objects.PciDevice import PciDevice, PciIoBar
 
-class IdeID(Enum): vals = ['device0', 'device1']
+
+class IdeID(Enum):
+    vals = ["device0", "device1"]
+
 
 class IdeDisk(SimObject):
-    type = 'IdeDisk'
+    type = "IdeDisk"
     cxx_header = "dev/storage/ide_disk.hh"
-    cxx_class = 'gem5::IdeDisk'
-    delay = Param.Latency('1us', "Fixed disk delay in microseconds")
-    driveID = Param.IdeID('device0', "Drive ID")
+    cxx_class = "gem5::IdeDisk"
+    delay = Param.Latency("1us", "Fixed disk delay in microseconds")
+    driveID = Param.IdeID("device0", "Drive ID")
     image = Param.DiskImage("Disk image")
 
+
 class IdeController(PciDevice):
-    type = 'IdeController'
+    type = "IdeController"
     cxx_header = "dev/storage/ide_ctrl.hh"
-    cxx_class = 'gem5::IdeController'
+    cxx_class = "gem5::IdeController"
     disks = VectorParam.IdeDisk("IDE disks attached to this controller")
 
     VendorID = 0x8086
@@ -52,17 +56,17 @@ class IdeController(PciDevice):
     ClassCode = 0x01
     SubClassCode = 0x01
     ProgIF = 0x85
-    InterruptLine = 0x1f
+    InterruptLine = 0x1F
     InterruptPin = 0x01
 
     # Primary
-    BAR0 = PciIoBar(size='8B')
-    BAR1 = PciIoBar(size='4B')
+    BAR0 = PciIoBar(size="8B")
+    BAR1 = PciIoBar(size="4B")
     # Secondary
-    BAR2 = PciIoBar(size='8B')
-    BAR3 = PciIoBar(size='4B')
+    BAR2 = PciIoBar(size="8B")
+    BAR3 = PciIoBar(size="4B")
     # DMA
-    BAR4 = PciIoBar(size='16B')
+    BAR4 = PciIoBar(size="16B")
 
-    io_shift = Param.UInt32(0x0, "IO port shift");
+    io_shift = Param.UInt32(0x0, "IO port shift")
     ctrl_offset = Param.UInt32(0x0, "IDE disk control offset")

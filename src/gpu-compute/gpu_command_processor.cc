@@ -118,6 +118,7 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
 {
     static int dynamic_task_id = 0;
     _hsa_dispatch_packet_t *disp_pkt = (_hsa_dispatch_packet_t*)raw_pkt;
+    assert(!(disp_pkt->kernel_object & (system()->cacheLineSize() - 1)));
 
     /**
      * we need to read a pointer in the application's address
@@ -150,6 +151,10 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
                                 is_system_page);
     }
 
+    DPRINTF(GPUCommandProc, "kernobj vaddr %#lx paddr %#lx size %d s:%d\n",
+            disp_pkt->kernel_object, phys_addr, sizeof(AMDKernelCode),
+            is_system_page);
+
     /**
      * The kernel_object is a pointer to the machine code, whose entry
      * point is an 'amd_kernel_code_t' type, which is included in the
@@ -167,20 +172,27 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
     } else {
         assert(FullSystem);
         DPRINTF(GPUCommandProc, "kernel_object in device, using device mem\n");
-        // Read from GPU memory manager
-        uint8_t raw_akc[sizeof(AMDKernelCode)];
-        for (int i = 0; i < sizeof(AMDKernelCode) / sizeof(uint8_t); ++i) {
-            Addr mmhubAddr = phys_addr + i*sizeof(uint8_t);
+
+        // Read from GPU memory manager one cache line at a time to prevent
+        // rare cases where the AKC spans two memory pages.
+        ChunkGenerator gen(disp_pkt->kernel_object, sizeof(AMDKernelCode),
+                           system()->cacheLineSize());
+        for (; !gen.done(); gen.next()) {
+            Addr chunk_addr = gen.addr();
+            int vmid = 1;
+            unsigned dummy;
+            walker->startFunctional(gpuDevice->getVM().getPageTableBase(vmid),
+                                    chunk_addr, dummy, BaseMMU::Mode::Read,
+                                    is_system_page);
+
             Request::Flags flags = Request::PHYSICAL;
-            RequestPtr request = std::make_shared<Request>(
-                mmhubAddr, sizeof(uint8_t), flags, walker->getDevRequestor());
+            RequestPtr request = std::make_shared<Request>(chunk_addr,
+                system()->cacheLineSize(), flags, walker->getDevRequestor());
             Packet *readPkt = new Packet(request, MemCmd::ReadReq);
-            readPkt->allocate();
+            readPkt->dataStatic((uint8_t *)&akc + gen.complete());
             system()->getDeviceMemory(readPkt)->access(readPkt);
-            raw_akc[i] = readPkt->getLE<uint8_t>();
             delete readPkt;
         }
-        memcpy(&akc, &raw_akc, sizeof(AMDKernelCode));
     }
 
     DPRINTF(GPUCommandProc, "GPU machine code is %lli bytes from start of the "

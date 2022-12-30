@@ -242,6 +242,21 @@ class X86Linux64 : public X86Linux, public OpenFlagTable<X86Linux64>
         uint64_t mem_unit;  /* Memory unit size in bytes */
     };
 
+    struct tgt_clone_args
+    {
+        uint64_t flags;
+        uint64_t pidfd;
+        uint64_t child_tid;
+        uint64_t parent_tid;
+        uint64_t exit_signal;
+        uint64_t stack;
+        uint64_t stack_size;
+        uint64_t tls;
+        uint64_t set_tid;
+        uint64_t set_tid_size;
+        uint64_t cgroup;
+    };
+
 };
 
 class X86Linux32 : public X86Linux, public OpenFlagTable<X86Linux32>

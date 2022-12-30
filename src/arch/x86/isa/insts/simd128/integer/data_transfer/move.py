@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop MOVQ_XMM_XMM {
     movfp xmml, xmmlm
     lfpimm xmmh, 0
@@ -132,4 +132,4 @@ def macroop LDDQU_XMM_P {
     ldfp xmml, seg, sib, "DISPLACEMENT", dataSize=8
     ldfp xmmh, seg, sib, "DISPLACEMENT + 8", dataSize=8
 };
-'''
+"""

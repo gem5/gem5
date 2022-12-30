@@ -80,6 +80,7 @@ class flitBuffer
         m_buffer.push_back(flt);
     }
 
+    bool functionalRead(Packet *pkt, WriteMask &mask);
     uint32_t functionalWrite(Packet *pkt);
 
   private:

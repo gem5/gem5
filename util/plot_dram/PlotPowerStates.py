@@ -34,7 +34,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import matplotlib
-matplotlib.use('Agg')
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 import numpy as np
@@ -55,52 +56,56 @@ stackWidth = 18.0
 barWidth = 0.5
 plotFontSize = 18
 
-States = ['IDLE', 'ACT', 'REF', 'ACT_PDN', 'PRE_PDN', 'SREF']
+States = ["IDLE", "ACT", "REF", "ACT_PDN", "PRE_PDN", "SREF"]
 
-EnergyStates = ['ACT_E',
-'PRE_E',
-'READ_E',
-'REF_E',
-'ACT_BACK_E',
-'PRE_BACK_E',
-'ACT_PDN_E',
-'PRE_PDN_E',
-'SREF_E']
+EnergyStates = [
+    "ACT_E",
+    "PRE_E",
+    "READ_E",
+    "REF_E",
+    "ACT_BACK_E",
+    "PRE_BACK_E",
+    "ACT_PDN_E",
+    "PRE_PDN_E",
+    "SREF_E",
+]
 
 StackColors = {
-'IDLE' : 'black',       # time spent in states
-'ACT' : 'lightskyblue',
-'REF' : 'limegreen',
-'ACT_PDN' : 'crimson',
-'PRE_PDN' : 'orange',
-'SREF' : 'gold',
-'ACT_E' : 'lightskyblue',  # energy of states
-'PRE_E' : 'black',
-'READ_E' : 'white',
-'REF_E' : 'limegreen',
-'ACT_BACK_E' : 'lightgray',
-'PRE_BACK_E' : 'gray',
-'ACT_PDN_E' : 'crimson',
-'PRE_PDN_E' : 'orange',
-'SREF_E' : 'gold'
+    "IDLE": "black",  # time spent in states
+    "ACT": "lightskyblue",
+    "REF": "limegreen",
+    "ACT_PDN": "crimson",
+    "PRE_PDN": "orange",
+    "SREF": "gold",
+    "ACT_E": "lightskyblue",  # energy of states
+    "PRE_E": "black",
+    "READ_E": "white",
+    "REF_E": "limegreen",
+    "ACT_BACK_E": "lightgray",
+    "PRE_BACK_E": "gray",
+    "ACT_PDN_E": "crimson",
+    "PRE_PDN_E": "orange",
+    "SREF_E": "gold",
 }
 
 StatToKey = {
-'system.mem_ctrls_0.actEnergy'          : 'ACT_E',
-'system.mem_ctrls_0.preEnergy'          : 'PRE_E',
-'system.mem_ctrls_0.readEnergy'         : 'READ_E',
-'system.mem_ctrls_0.refreshEnergy'      : 'REF_E',
-'system.mem_ctrls_0.actBackEnergy'      : 'ACT_BACK_E',
-'system.mem_ctrls_0.preBackEnergy'      : 'PRE_BACK_E',
-'system.mem_ctrls_0.actPowerDownEnergy' : 'ACT_PDN_E',
-'system.mem_ctrls_0.prePowerDownEnergy' : 'PRE_PDN_E',
-'system.mem_ctrls_0.selfRefreshEnergy'  : 'SREF_E'
+    "system.mem_ctrls_0.actEnergy": "ACT_E",
+    "system.mem_ctrls_0.preEnergy": "PRE_E",
+    "system.mem_ctrls_0.readEnergy": "READ_E",
+    "system.mem_ctrls_0.refreshEnergy": "REF_E",
+    "system.mem_ctrls_0.actBackEnergy": "ACT_BACK_E",
+    "system.mem_ctrls_0.preBackEnergy": "PRE_BACK_E",
+    "system.mem_ctrls_0.actPowerDownEnergy": "ACT_PDN_E",
+    "system.mem_ctrls_0.prePowerDownEnergy": "PRE_PDN_E",
+    "system.mem_ctrls_0.selfRefreshEnergy": "SREF_E",
 }
 # Skipping write energy, the example script issues 100% reads by default
 # 'system.mem_ctrls_0.writeEnergy' : "WRITE"
 
-def plotLowPStates(plot_dir, stats_fname, bank_util_list, seqbytes_list,
-                   delay_list):
+
+def plotLowPStates(
+    plot_dir, stats_fname, bank_util_list, seqbytes_list, delay_list
+):
     """
     plotLowPStates generates plots by parsing statistics output by the DRAM
     sweep simulation described in the the configs/dram/low_power_sweep.py
@@ -122,7 +127,7 @@ def plotLowPStates(plot_dir, stats_fname, bank_util_list, seqbytes_list,
     @param delay_list: list of itt max multipliers (e.g. [1, 20, 200])
 
     """
-    stats_file = open(stats_fname, 'r')
+    stats_file = open(stats_fname, "r")
 
     global bankUtilValues
     bankUtilValues = bank_util_list
@@ -136,7 +141,7 @@ def plotLowPStates(plot_dir, stats_fname, bank_util_list, seqbytes_list,
 
     # throw away the first two lines of the stats file
     stats_file.readline()
-    stats_file.readline() # the 'Begin' line
+    stats_file.readline()  # the 'Begin' line
 
     #######################################
     # Parse stats file and gather results
@@ -147,24 +152,25 @@ def plotLowPStates(plot_dir, stats_fname, bank_util_list, seqbytes_list,
             for seq_bytes in seqBytesValues:
 
                 for line in stats_file:
-                    if 'Begin' in line:
+                    if "Begin" in line:
                         break
 
                     if len(line.strip()) == 0:
                         continue
 
                     #### state time values ####
-                    if 'system.mem_ctrls_0.memoryStateTime' in line:
+                    if "system.mem_ctrls_0.memoryStateTime" in line:
                         # remove leading and trailing white spaces
                         line = line.strip()
                         # Example format:
                         # 'system.mem_ctrls_0.memoryStateTime::ACT    1000000'
                         statistic, stime = line.split()[0:2]
                         # Now grab the state, i.e. 'ACT'
-                        state = statistic.split('::')[1]
+                        state = statistic.split("::")[1]
                         # store the value of the stat in the results dict
-                        results[delay][bank_util][seq_bytes][state] = \
-                            int(stime)
+                        results[delay][bank_util][seq_bytes][state] = int(
+                            stime
+                        )
                     #### state energy values ####
                     elif line.strip().split()[0] in list(StatToKey.keys()):
                         # Example format:
@@ -177,15 +183,15 @@ def plotLowPStates(plot_dir, stats_fname, bank_util_list, seqbytes_list,
 
     # To add last traffic gen idle period stats to the results dict
     for line in stats_file:
-        if 'system.mem_ctrls_0.memoryStateTime' in line:
-            line = line.strip() # remove leading and trailing white spaces
+        if "system.mem_ctrls_0.memoryStateTime" in line:
+            line = line.strip()  # remove leading and trailing white spaces
             # Example format:
             # 'system.mem_ctrls_0.memoryStateTime::ACT    1000000'
             statistic, stime = line.split()[0:2]
             # Now grab the state energy, .e.g 'ACT'
-            state = statistic.split('::')[1]
+            state = statistic.split("::")[1]
             idleResults[state] = int(stime)
-            if state == 'ACT_PDN':
+            if state == "ACT_PDN":
                 break
 
     ########################################
@@ -193,14 +199,24 @@ def plotLowPStates(plot_dir, stats_fname, bank_util_list, seqbytes_list,
     ########################################
     # one plot per delay value
     for delay in delayValues:
-        plot_path = plot_dir + delay + '-'
+        plot_path = plot_dir + delay + "-"
 
-        plotStackedStates(delay, States, 'IDLE', stateTimePlotName(plot_path),
-                          'Time (ps) spent in a power state')
-        plotStackedStates(delay, EnergyStates, 'ACT_E',
-                          stateEnergyPlotName(plot_path),
-                          'Energy (pJ) of a power state')
+        plotStackedStates(
+            delay,
+            States,
+            "IDLE",
+            stateTimePlotName(plot_path),
+            "Time (ps) spent in a power state",
+        )
+        plotStackedStates(
+            delay,
+            EnergyStates,
+            "ACT_E",
+            stateEnergyPlotName(plot_path),
+            "Energy (pJ) of a power state",
+        )
     plotIdle(plot_dir)
+
 
 def plotIdle(plot_dir):
     """
@@ -213,14 +229,15 @@ def plotIdle(plot_dir):
     ind = np.arange(len(States))
     l1 = ax.bar(ind, [idleResults[x] for x in States], width)
 
-    ax.xaxis.set_ticks(ind + width/2)
+    ax.xaxis.set_ticks(ind + width / 2)
     ax.xaxis.set_ticklabels(States)
-    ax.set_ylabel('Time (ps) spent in a power state')
+    ax.set_ylabel("Time (ps) spent in a power state")
     fig.suptitle("Idle 50 us")
 
     print("saving plot:", idlePlotName(plot_dir))
-    plt.savefig(idlePlotName(plot_dir), format='eps')
+    plt.savefig(idlePlotName(plot_dir), format="eps")
     plt.close(fig)
+
 
 def plotStackedStates(delay, states_list, bottom_state, plot_name, ylabel_str):
     """
@@ -237,7 +254,7 @@ def plotStackedStates(delay, states_list, bottom_state, plot_name, ylabel_str):
     fig.set_figheight(stackHeight)
     fig.set_figwidth(stackWidth)
     width = barWidth
-    plt.rcParams.update({'font.size': plotFontSize})
+    plt.rcParams.update({"font.size": plotFontSize})
 
     # Get the number of seq_bytes values
     N = len(seqBytesValues)
@@ -251,50 +268,62 @@ def plotStackedStates(delay, states_list, bottom_state, plot_name, ylabel_str):
         # Must have a bottom of the stack first
         state = bottom_state
 
-        l_states[state] = [results[delay][bank_util][x][state] \
-            for x in seqBytesValues]
-        p_states[state] = ax[sub_idx].bar(ind, l_states[state], width,
-                                          color=StackColors[state])
+        l_states[state] = [
+            results[delay][bank_util][x][state] for x in seqBytesValues
+        ]
+        p_states[state] = ax[sub_idx].bar(
+            ind, l_states[state], width, color=StackColors[state]
+        )
 
         time_sum = l_states[state]
         for state in states_list[1:]:
-            l_states[state] = [results[delay][bank_util][x][state] \
-                for x in seqBytesValues]
+            l_states[state] = [
+                results[delay][bank_util][x][state] for x in seqBytesValues
+            ]
             # Now add on top of the bottom = sum of values up until now
-            p_states[state] = ax[sub_idx].bar(ind, l_states[state], width,
-                                              color=StackColors[state],
-                                              bottom=time_sum)
+            p_states[state] = ax[sub_idx].bar(
+                ind,
+                l_states[state],
+                width,
+                color=StackColors[state],
+                bottom=time_sum,
+            )
             # Now add the bit of the stack that we just ploted to the bottom
             # resulting in a new bottom for the next iteration
-            time_sum = [prev_sum + new_s for prev_sum, new_s in \
-                zip(time_sum, l_states[state])]
+            time_sum = [
+                prev_sum + new_s
+                for prev_sum, new_s in zip(time_sum, l_states[state])
+            ]
 
-        ax[sub_idx].set_title('Bank util %s' % bank_util)
-        ax[sub_idx].xaxis.set_ticks(ind + width/2.)
+        ax[sub_idx].set_title("Bank util %s" % bank_util)
+        ax[sub_idx].xaxis.set_ticks(ind + width / 2.0)
         ax[sub_idx].xaxis.set_ticklabels(seqBytesValues, rotation=45)
-        ax[sub_idx].set_xlabel('Seq. bytes')
+        ax[sub_idx].set_xlabel("Seq. bytes")
         if bank_util == bankUtilValues[0]:
             ax[sub_idx].set_ylabel(ylabel_str)
 
-    myFontSize='small'
+    myFontSize = "small"
     fontP = FontProperties()
     fontP.set_size(myFontSize)
-    fig.legend([p_states[x] for x in states_list], states_list,
-               prop=fontP)
+    fig.legend([p_states[x] for x in states_list], states_list, prop=fontP)
 
-    plt.savefig(plot_name,  format='eps', bbox_inches='tight')
+    plt.savefig(plot_name, format="eps", bbox_inches="tight")
     print("saving plot:", plot_name)
     plt.close(fig)
 
+
 # These plat name functions are also called in the main script
 def idlePlotName(plot_dir):
-    return (plot_dir + 'idle.eps')
+    return plot_dir + "idle.eps"
+
 
 def stateTimePlotName(plot_dir):
-    return (plot_dir + 'state-time.eps')
+    return plot_dir + "state-time.eps"
+
 
 def stateEnergyPlotName(plot_dir):
-    return (plot_dir + 'state-energy.eps')
+    return plot_dir + "state-energy.eps"
+
 
 def initResults():
     for delay in delayValues:

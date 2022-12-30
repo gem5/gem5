@@ -1,7 +1,7 @@
 #! /bin/bash
 
 #
-# Copyright (c) 2015 ARM Limited
+# Copyright (c) 2015, 2022 Arm Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -44,11 +44,10 @@
 
 GEM5_DIR=$(pwd)/$(dirname $0)/../../..
 
-IMG=$M5_PATH/disks/aarch64-ubuntu-trusty-headless.img
-VMLINUX=$M5_PATH/binaries/vmlinux.aarch64.20140821
-DTB=$M5_PATH/binaries/vexpress.aarch64.20140821.dtb
+IMG=$M5_PATH/disks/ubuntu-18.04-arm64-docker.img
+VMLINUX=$M5_PATH/binaries/vmlinux.arm64
 
-FS_CONFIG=$GEM5_DIR/configs/example/fs.py
+FS_CONFIG=$GEM5_DIR/configs/example/arm/dist_bigLITTLE.py
 SW_CONFIG=$GEM5_DIR/configs/dist/sw.py
 GEM5_EXE=$GEM5_DIR/build/ARM/gem5.opt
 
@@ -60,20 +59,19 @@ DEBUG_FLAGS="--debug-flags=DistEthernet"
 
 NNODES=2
 
-$GEM5_DIST_SH -n $NNODES                                                     \
-              -x $GEM5_EXE                                                   \
-              -s $SW_CONFIG                                                  \
-              -f $FS_CONFIG                                                  \
-              --m5-args                                                      \
-                 $DEBUG_FLAGS                                                \
-              --fs-args                                                      \
-                  --cpu-type=atomic                                          \
-		  --num-cpus=1                                               \
-                  --machine-type=VExpress_EMM64                              \
-                  --disk-image=$IMG                                          \
-                  --kernel=$VMLINUX                                          \
-                  --dtb-filename=$DTB                                        \
-                  --script=$BOOT_SCRIPT                                      \
-              --cf-args                                                      \
+$GEM5_DIST_SH -n $NNODES                                  \
+              -x $GEM5_EXE                                \
+              -s $SW_CONFIG                               \
+              -f $FS_CONFIG                               \
+              --m5-args                                   \
+                 $DEBUG_FLAGS                             \
+              --fs-args                                   \
+                  --cpu-type=atomic                       \
+                  --little-cpus=1                         \
+                  --big-cpus=1                            \
+                  --machine-type=VExpress_GEM5_Foundation \
+                  --disk=$IMG                             \
+                  --kernel=$VMLINUX                       \
+                  --bootscript=$BOOT_SCRIPT               \
+              --cf-args                                   \
                   $CHKPT_RESTORE
-

@@ -109,7 +109,7 @@ namespace X86ISA {
                 break;
               case FamilyModelSteppingBrandFeatures:
                 result = CpuidResult(0x00020f51, 0x00000405,
-                                     0xebd3fbff, 0x00000001);
+                                     0xebd3fbff, 0x00020001);
                 break;
               case NameString1:
               case NameString2:

@@ -29,86 +29,79 @@
 
 from m5.params import *
 
+
 class GPUStaticInstFlags(Enum):
-    wrapper_name = 'GPUStaticInstFlags'
+    wrapper_name = "GPUStaticInstFlags"
     wrapper_is_struct = True
-    enum_name = 'Flags'
+    enum_name = "Flags"
 
     vals = [
         # Op types
-        'ALU',               # ALU op
-        'Branch',            # Branch instruction
-        'CondBranch',        # Conditinal Branch instruction
-        'Nop',               # No-op (no effect at all)
-        'Return',            # Subroutine return instruction
-        'EndOfKernel',       # Kernel termination instruction
-        'KernelLaunch',      # Kernel launch inst
-        'UnconditionalJump', #
-        'SpecialOp',         # Special op
-        'Waitcnt',           # Is a waitcnt instruction
-        'Sleep',             # Is a sleep instruction
-
+        "ALU",  # ALU op
+        "Branch",  # Branch instruction
+        "CondBranch",  # Conditinal Branch instruction
+        "Nop",  # No-op (no effect at all)
+        "Return",  # Subroutine return instruction
+        "EndOfKernel",  # Kernel termination instruction
+        "KernelLaunch",  # Kernel launch inst
+        "UnconditionalJump",  #
+        "SpecialOp",  # Special op
+        "Waitcnt",  # Is a waitcnt instruction
+        "Sleep",  # Is a sleep instruction
         # Memory ops
-        'MemBarrier',        # Barrier instruction
-        'MemSync',           # Synchronizing instruction
-        'MemoryRef',         # References memory (load, store, or atomic)
-        'Flat',              # Flat memory op
-        'FlatGlobal',        # Global memory op
-        'Load',              # Reads from memory
-        'Store',             # Writes to memory
-
+        "MemBarrier",  # Barrier instruction
+        "MemSync",  # Synchronizing instruction
+        "MemoryRef",  # References memory (load, store, or atomic)
+        "Flat",  # Flat memory op
+        "FlatGlobal",  # Global memory op
+        "Load",  # Reads from memory
+        "Store",  # Writes to memory
         # Atomic ops
-        'AtomicReturn',      # Atomic instruction that returns data
-        'AtomicNoReturn',    # Atomic instruction that doesn't return data
-
+        "AtomicReturn",  # Atomic instruction that returns data
+        "AtomicNoReturn",  # Atomic instruction that doesn't return data
         # Instruction attributes
-        'Scalar',            # A scalar (not vector) operation
-        'ReadsSCC',          # The instruction reads SCC
-        'WritesSCC',         # The instruction writes SCC
-        'ReadsVCC',          # The instruction reads VCC
-        'WritesVCC',         # The instruction writes VCC
-        'ReadsEXEC',         # The instruction reads Exec Mask
-        'WritesEXEC',        # The instruction writes Exec Mask
-        'ReadsMode',         # The instruction reads Mode register
-        'WritesMode',        # The instruction writes Mode register
-        'IgnoreExec',        # The instruction ignores the Exec Mask
-        'IsSDWA',            # The instruction is a SDWA instruction
-        'IsDPP',             # The instruction is a DPP instruction
-
+        "Scalar",  # A scalar (not vector) operation
+        "ReadsSCC",  # The instruction reads SCC
+        "WritesSCC",  # The instruction writes SCC
+        "ReadsVCC",  # The instruction reads VCC
+        "WritesVCC",  # The instruction writes VCC
+        "ReadsEXEC",  # The instruction reads Exec Mask
+        "WritesEXEC",  # The instruction writes Exec Mask
+        "ReadsMode",  # The instruction reads Mode register
+        "WritesMode",  # The instruction writes Mode register
+        "IgnoreExec",  # The instruction ignores the Exec Mask
+        "IsSDWA",  # The instruction is a SDWA instruction
+        "IsDPP",  # The instruction is a DPP instruction
         # Atomic OP types
-        'AtomicAnd',
-        'AtomicOr',
-        'AtomicXor',
-        'AtomicCAS',
-        'AtomicExch',
-        'AtomicAdd',
-        'AtomicSub',
-        'AtomicInc',
-        'AtomicDec',
-        'AtomicMax',
-        'AtomicMin',
-
+        "AtomicAnd",
+        "AtomicOr",
+        "AtomicXor",
+        "AtomicCAS",
+        "AtomicExch",
+        "AtomicAdd",
+        "AtomicSub",
+        "AtomicInc",
+        "AtomicDec",
+        "AtomicMax",
+        "AtomicMin",
         # Segment access flags
-        'ArgSegment',        # Accesses the arg segment
-        'GlobalSegment',     # Accesses global memory
-        'GroupSegment',      # Accesses local memory (LDS), aka shared memory
-        'KernArgSegment',    # Accesses the kernel argument segment
-        'PrivateSegment',    # Accesses the private segment
-        'ReadOnlySegment',   # Accesses read only memory
-        'SpillSegment',      # Accesses the spill segment
-        'NoSegment',         # Does not have an associated segment
-
+        "ArgSegment",  # Accesses the arg segment
+        "GlobalSegment",  # Accesses global memory
+        "GroupSegment",  # Accesses local memory (LDS), aka shared memory
+        "KernArgSegment",  # Accesses the kernel argument segment
+        "PrivateSegment",  # Accesses the private segment
+        "ReadOnlySegment",  # Accesses read only memory
+        "SpillSegment",  # Accesses the spill segment
+        "NoSegment",  # Does not have an associated segment
         # Coherence flags
-        'GloballyCoherent',  # Coherent with other work-items on same device
-        'SystemCoherent',    # Coherent with a different device, or the host
-
+        "GloballyCoherent",  # Coherent with other work-items on same device
+        "SystemCoherent",  # Coherent with a different device, or the host
         # Floating-point flags
-        'F16',               # F16 operation
-        'F32',               # F32 operation
-        'F64',               # F64 operation
-
+        "F16",  # F16 operation
+        "F32",  # F32 operation
+        "F64",  # F64 operation
         # MAC, MAD, FMA
-        'FMA',               # FMA
-        'MAC',               # MAC
-        'MAD'                # MAD
-        ]
+        "FMA",  # FMA
+        "MAC",  # MAC
+        "MAD",  # MAD
+    ]

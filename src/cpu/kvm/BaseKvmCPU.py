@@ -40,10 +40,11 @@ from m5.proxy import *
 from m5.objects.BaseCPU import BaseCPU
 from m5.objects.KvmVM import KvmVM
 
+
 class BaseKvmCPU(BaseCPU):
-    type = 'BaseKvmCPU'
+    type = "BaseKvmCPU"
     cxx_header = "cpu/kvm/base.hh"
-    cxx_class = 'gem5::BaseKvmCPU'
+    cxx_class = "gem5::BaseKvmCPU"
     abstract = True
 
     @cxxMethod
@@ -53,7 +54,7 @@ class BaseKvmCPU(BaseCPU):
 
     @classmethod
     def memory_mode(cls):
-        return 'atomic_noncaching'
+        return "atomic_noncaching"
 
     @classmethod
     def require_caches(cls):
@@ -64,9 +65,12 @@ class BaseKvmCPU(BaseCPU):
         return True
 
     useCoalescedMMIO = Param.Bool(False, "Use coalesced MMIO (EXPERIMENTAL)")
-    usePerfOverflow = Param.Bool(False, "Use perf event overflow counters (EXPERIMENTAL)")
-    alwaysSyncTC = Param.Bool(False,
-                              "Always sync thread contexts on entry/exit")
+    usePerfOverflow = Param.Bool(
+        False, "Use perf event overflow counters (EXPERIMENTAL)"
+    )
+    alwaysSyncTC = Param.Bool(
+        False, "Always sync thread contexts on entry/exit"
+    )
 
     hostFreq = Param.Clock("2GHz", "Host clock frequency")
     hostFactor = Param.Float(1.0, "Cycle scale factor")

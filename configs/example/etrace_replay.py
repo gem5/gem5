@@ -39,7 +39,7 @@ import argparse
 
 from m5.util import addToPath, fatal
 
-addToPath('../')
+addToPath("../")
 
 from common import Options
 from common import Simulation
@@ -50,9 +50,11 @@ from common.Caches import *
 parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser)
 
-if '--ruby' in sys.argv:
-    print("This script does not support Ruby configuration, mainly"
-    " because Trace CPU has been tested only with classic memory system")
+if "--ruby" in sys.argv:
+    print(
+        "This script does not support Ruby configuration, mainly"
+        " because Trace CPU has been tested only with classic memory system"
+    )
     sys.exit(1)
 
 args = parser.parse_args()
@@ -60,8 +62,10 @@ args = parser.parse_args()
 numThreads = 1
 
 if args.cpu_type != "TraceCPU":
-    fatal("This is a script for elastic trace replay simulation, use "\
-            "--cpu-type=TraceCPU\n");
+    fatal(
+        "This is a script for elastic trace replay simulation, use "
+        "--cpu-type=TraceCPU\n"
+    )
 
 if args.num_cpus > 1:
     fatal("This script does not support multi-processor trace replay.\n")
@@ -71,27 +75,30 @@ if args.num_cpus > 1:
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(args)
 CPUClass.numThreads = numThreads
 
-system = System(cpu = CPUClass(cpu_id=0),
-                mem_mode = test_mem_mode,
-                mem_ranges = [AddrRange(args.mem_size)],
-                cache_line_size = args.cacheline_size)
+system = System(
+    cpu=CPUClass(cpu_id=0),
+    mem_mode=test_mem_mode,
+    mem_ranges=[AddrRange(args.mem_size)],
+    cache_line_size=args.cacheline_size,
+)
 
 # Create a top-level voltage domain
-system.voltage_domain = VoltageDomain(voltage = args.sys_voltage)
+system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
 
 # Create a source clock for the system. This is used as the clock period for
 # xbar and memory
-system.clk_domain = SrcClockDomain(clock =  args.sys_clock,
-                                   voltage_domain = system.voltage_domain)
+system.clk_domain = SrcClockDomain(
+    clock=args.sys_clock, voltage_domain=system.voltage_domain
+)
 
 # Create a CPU voltage domain
 system.cpu_voltage_domain = VoltageDomain()
 
 # Create a separate clock domain for the CPUs. In case of Trace CPUs this clock
 # is actually used only by the caches connected to the CPU.
-system.cpu_clk_domain = SrcClockDomain(clock = args.cpu_clock,
-                                       voltage_domain =
-                                       system.cpu_voltage_domain)
+system.cpu_clk_domain = SrcClockDomain(
+    clock=args.cpu_clock, voltage_domain=system.cpu_voltage_domain
+)
 
 # All cpus belong to a common cpu_clk_domain, therefore running at a common
 # frequency.
@@ -104,8 +111,8 @@ for cpu in system.cpu:
     cpu.createThreads()
 
 # Assign input trace files to the Trace CPU
-system.cpu.instTraceFile=args.inst_trace_file
-system.cpu.dataTraceFile=args.data_trace_file
+system.cpu.instTraceFile = args.inst_trace_file
+system.cpu.dataTraceFile = args.data_trace_file
 
 # Configure the classic memory system args
 MemClass = Simulation.setMemClass(args)
@@ -114,5 +121,5 @@ system.system_port = system.membus.cpu_side_ports
 CacheConfig.config_cache(args, system)
 MemConfig.config_mem(args, system)
 
-root = Root(full_system = False, system = system)
+root = Root(full_system=False, system=system)
 Simulation.run(args, root, system, FutureClass)

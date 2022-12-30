@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014, 2016-2020 ARM Limited
+ * Copyright (c) 2010-2014, 2016-2020,2022 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -656,14 +656,14 @@ ArmStaticInst::advSIMDFPAccessTrap64(ExceptionLevel el) const
 {
     switch (el) {
       case EL1:
-        return std::make_shared<SupervisorTrap>(machInst, 0x1E00000,
-                                                EC_TRAPPED_SIMD_FP);
+        return std::make_shared<SupervisorTrap>(
+            machInst, 0x1E00000, ExceptionClass::TRAPPED_SIMD_FP);
       case EL2:
-        return std::make_shared<HypervisorTrap>(machInst, 0x1E00000,
-                                                EC_TRAPPED_SIMD_FP);
+        return std::make_shared<HypervisorTrap>(
+            machInst, 0x1E00000, ExceptionClass::TRAPPED_SIMD_FP);
       case EL3:
-        return std::make_shared<SecureMonitorTrap>(machInst, 0x1E00000,
-                                                   EC_TRAPPED_SIMD_FP);
+        return std::make_shared<SecureMonitorTrap>(
+            machInst, 0x1E00000, ExceptionClass::TRAPPED_SIMD_FP);
 
       default:
         panic("Illegal EL in advSIMDFPAccessTrap64\n");
@@ -715,8 +715,9 @@ ArmStaticInst::checkFPAdvSIMDEnabled64(ThreadContext *tc,
                                        CPSR cpsr, CPACR cpacr) const
 {
     const ExceptionLevel el = currEL(tc);
-    if ((el == EL0 && cpacr.fpen != 0x3) ||
-        (el == EL1 && !(cpacr.fpen & 0x1)))
+    if (((el == EL0 && cpacr.fpen != 0x3) ||
+        (el == EL1 && !(cpacr.fpen & 0x1))) &&
+        !ELIsInHost(tc, el))
         return advSIMDFPAccessTrap64(EL1);
 
     return checkFPAdvSIMDTrap64(tc, cpsr);
@@ -780,11 +781,11 @@ ArmStaticInst::checkAdvSIMDOrFPEnabled32(ThreadContext *tc,
             if (cur_el == EL2) {
                 return std::make_shared<UndefinedInstruction>(
                     machInst, iss,
-                    EC_TRAPPED_HCPTR, mnemonic);
+                    ExceptionClass::TRAPPED_HCPTR, mnemonic);
             } else {
                 return std::make_shared<HypervisorTrap>(
                     machInst, iss,
-                    EC_TRAPPED_HCPTR);
+                    ExceptionClass::TRAPPED_HCPTR);
             }
 
         }
@@ -851,13 +852,15 @@ ArmStaticInst::checkForWFxTrap32(ThreadContext *tc,
           case EL1:
             return std::make_shared<UndefinedInstruction>(
                 machInst, iss,
-                EC_TRAPPED_WFI_WFE, mnemonic);
+                ExceptionClass::TRAPPED_WFI_WFE, mnemonic);
           case EL2:
-            return std::make_shared<HypervisorTrap>(machInst, iss,
-                                                    EC_TRAPPED_WFI_WFE);
+            return std::make_shared<HypervisorTrap>(
+                machInst, iss,
+                ExceptionClass::TRAPPED_WFI_WFE);
           case EL3:
-            return std::make_shared<SecureMonitorTrap>(machInst, iss,
-                                                       EC_TRAPPED_WFI_WFE);
+            return std::make_shared<SecureMonitorTrap>(
+                machInst, iss,
+                ExceptionClass::TRAPPED_WFI_WFE);
           default:
             panic("Unrecognized Exception Level: %d\n", targetEL);
         }
@@ -882,14 +885,17 @@ ArmStaticInst::checkForWFxTrap64(ThreadContext *tc,
                               0x1E00000;  /* WFI Instruction syndrome */
         switch (targetEL) {
           case EL1:
-            return std::make_shared<SupervisorTrap>(machInst, iss,
-                                                    EC_TRAPPED_WFI_WFE);
+            return std::make_shared<SupervisorTrap>(
+                machInst, iss,
+                ExceptionClass::TRAPPED_WFI_WFE);
           case EL2:
-            return std::make_shared<HypervisorTrap>(machInst, iss,
-                                                    EC_TRAPPED_WFI_WFE);
+            return std::make_shared<HypervisorTrap>(
+                machInst, iss,
+                ExceptionClass::TRAPPED_WFI_WFE);
           case EL3:
-            return std::make_shared<SecureMonitorTrap>(machInst, iss,
-                                                       EC_TRAPPED_WFI_WFE);
+            return std::make_shared<SecureMonitorTrap>(
+                machInst, iss,
+                ExceptionClass::TRAPPED_WFI_WFE);
           default:
             panic("Unrecognized Exception Level: %d\n", targetEL);
         }
@@ -971,7 +977,7 @@ ArmStaticInst::undefinedFault32(ThreadContext *tc,
         // ArmFault class.
         return std::make_shared<UndefinedInstruction>(
             machInst, 0,
-            EC_UNKNOWN, mnemonic);
+            ExceptionClass::UNKNOWN, mnemonic);
     }
 }
 
@@ -982,11 +988,14 @@ ArmStaticInst::undefinedFault64(ThreadContext *tc,
     switch (pstateEL) {
       case EL0:
       case EL1:
-        return std::make_shared<SupervisorTrap>(machInst, 0, EC_UNKNOWN);
+        return std::make_shared<SupervisorTrap>(
+            machInst, 0, ExceptionClass::UNKNOWN);
       case EL2:
-        return std::make_shared<HypervisorTrap>(machInst, 0, EC_UNKNOWN);
+        return std::make_shared<HypervisorTrap>(
+            machInst, 0, ExceptionClass::UNKNOWN);
       case EL3:
-        return std::make_shared<SecureMonitorTrap>(machInst, 0, EC_UNKNOWN);
+        return std::make_shared<SecureMonitorTrap>(
+            machInst, 0, ExceptionClass::UNKNOWN);
       default:
         panic("Unrecognized Exception Level: %d\n", pstateEL);
         break;
@@ -1000,12 +1009,14 @@ ArmStaticInst::sveAccessTrap(ExceptionLevel el) const
 {
     switch (el) {
       case EL1:
-        return std::make_shared<SupervisorTrap>(machInst, 0, EC_TRAPPED_SVE);
+        return std::make_shared<SupervisorTrap>(
+            machInst, 0, ExceptionClass::TRAPPED_SVE);
       case EL2:
-        return std::make_shared<HypervisorTrap>(machInst, 0, EC_TRAPPED_SVE);
+        return std::make_shared<HypervisorTrap>(
+            machInst, 0, ExceptionClass::TRAPPED_SVE);
       case EL3:
-        return std::make_shared<SecureMonitorTrap>(machInst, 0,
-                                                   EC_TRAPPED_SVE);
+        return std::make_shared<SecureMonitorTrap>(
+            machInst, 0, ExceptionClass::TRAPPED_SVE);
 
       default:
         panic("Illegal EL in sveAccessTrap\n");

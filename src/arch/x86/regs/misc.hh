@@ -42,6 +42,8 @@
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
 #include "base/logging.hh"
+#include "cpu/reg_class.hh"
+#include "debug/MiscRegs.hh"
 
 //These get defined in some system headers (at least termbits.h). That confuses
 //things here significantly.
@@ -536,6 +538,9 @@ segAttr(int index)
 
 } // namespace misc_reg
 
+inline constexpr RegClass miscRegClass(MiscRegClass, MiscRegClassName,
+        misc_reg::NumRegs, debug::MiscRegs);
+
 /**
  * A type to describe the condition code bits of the RFLAGS register,
  * plus two flags, EZF and ECF, which are only visible to microcode.
@@ -616,12 +621,14 @@ BitUnion64(CR3)
                            // Base Address
     Bitfield<31, 5> paePdtb; // PAE Addressing Page-Directory-Table
                              // Base Address
+    Bitfield<11, 0> pcid; // Process-Context Identifier
     Bitfield<4> pcd; // Page-Level Cache Disable
     Bitfield<3> pwt; // Page-Level Writethrough
 EndBitUnion(CR3)
 
 BitUnion64(CR4)
     Bitfield<18> osxsave; // Enable XSAVE and Proc Extended States
+    Bitfield<17> pcide; // PCID Enable
     Bitfield<16> fsgsbase; // Enable RDFSBASE, RDGSBASE, WRFSBASE,
                            // WRGSBASE instructions
     Bitfield<10> osxmmexcpt; // Operating System Unmasked

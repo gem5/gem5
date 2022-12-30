@@ -34,8 +34,8 @@ from m5.objects.Tlm import TlmTargetSocket
 # This class is a subclass of sc_module, and all the special magic which makes
 # that work is handled in the base classes.
 class TLM_Target(SystemC_ScModule):
-    type = 'TLM_Target'
-    cxx_class = 'Target'
-    cxx_header = 'systemc_gem5_tlm/sc_tlm_target.hh'
-    tlm = TlmTargetSocket(32, 'TLM target socket')
+    type = "TLM_Target"
+    cxx_class = "Target"
+    cxx_header = "systemc_gem5_tlm/sc_tlm_target.hh"
+    tlm = TlmTargetSocket(32, "TLM target socket")
     system = Param.System(Parent.any, "system")

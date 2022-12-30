@@ -40,7 +40,7 @@ def template SetHiDecode {{
 
 def template IntOpExecute {{
         Fault %(class_name)s::execute(ExecContext *xc,
-                Trace::InstRecord *traceData) const
+                trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
 
@@ -162,4 +162,3 @@ def format SetHi(code, *opt_flags) {{
     exec_output = IntOpExecute.subst(iop)
     decode_block = SetHiDecode.subst(iop)
 }};
-

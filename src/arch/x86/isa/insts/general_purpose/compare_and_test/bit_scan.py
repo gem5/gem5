@@ -36,7 +36,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop BSR_R_R {
     # Determine if the input was zero, and also move it to a temp reg.
     mov t1, t1, t0, dataSize=8
@@ -365,4 +365,4 @@ def macroop POPCNT_R_P {
     ld t1, seg, riprel, disp
     popcnt reg, t1, reg, dataSize=8
 };
-'''
+"""

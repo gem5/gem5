@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016-2021 Arm Limited
+ * Copyright (c) 2010-2013, 2016-2022 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -315,19 +315,13 @@ TLB::flushAll()
 }
 
 void
-TLB::flush(const TLBIALL& tlbi_op)
+TLB::flush(const TLBIOp& tlbi_op)
 {
-    DPRINTF(TLB, "Flushing all TLB entries (%s lookup)\n",
-            (tlbi_op.secureLookup ? "secure" : "non-secure"));
     int x = 0;
     TlbEntry *te;
     while (x < size) {
         te = &table[x];
-        const bool el_match = te->checkELMatch(
-            tlbi_op.targetEL, tlbi_op.inHost);
-        if (te->valid && tlbi_op.secureLookup == !te->nstid &&
-            (te->vmid == vmid || tlbi_op.el2Enabled) && el_match) {
-
+        if (tlbi_op.match(te, vmid)) {
             DPRINTF(TLB, " -  %s\n", te->print());
             te->valid = false;
             stats.flushedEntries++;
@@ -336,292 +330,6 @@ TLB::flush(const TLBIALL& tlbi_op)
     }
 
     stats.flushTlb++;
-}
-
-void
-TLB::flush(const ITLBIALL& tlbi_op)
-{
-    DPRINTF(TLB, "Flushing all ITLB entries (%s lookup)\n",
-            (tlbi_op.secureLookup ? "secure" : "non-secure"));
-    int x = 0;
-    TlbEntry *te;
-    while (x < size) {
-        te = &table[x];
-        const bool el_match = te->checkELMatch(
-            tlbi_op.targetEL, tlbi_op.inHost);
-        if (te->type & TypeTLB::instruction && te->valid &&
-            tlbi_op.secureLookup == !te->nstid &&
-            (te->vmid == vmid || tlbi_op.el2Enabled) && el_match) {
-
-            DPRINTF(TLB, " -  %s\n", te->print());
-            te->valid = false;
-            stats.flushedEntries++;
-        }
-        ++x;
-    }
-
-    stats.flushTlb++;
-}
-
-void
-TLB::flush(const DTLBIALL& tlbi_op)
-{
-    DPRINTF(TLB, "Flushing all DTLB entries (%s lookup)\n",
-            (tlbi_op.secureLookup ? "secure" : "non-secure"));
-    int x = 0;
-    TlbEntry *te;
-    while (x < size) {
-        te = &table[x];
-        const bool el_match = te->checkELMatch(
-            tlbi_op.targetEL, tlbi_op.inHost);
-        if (te->type & TypeTLB::data && te->valid &&
-            tlbi_op.secureLookup == !te->nstid &&
-            (te->vmid == vmid || tlbi_op.el2Enabled) && el_match) {
-
-            DPRINTF(TLB, " -  %s\n", te->print());
-            te->valid = false;
-            stats.flushedEntries++;
-        }
-        ++x;
-    }
-
-    stats.flushTlb++;
-}
-
-void
-TLB::flush(const TLBIALLEL &tlbi_op)
-{
-    DPRINTF(TLB, "Flushing all TLB entries (%s lookup)\n",
-            (tlbi_op.secureLookup ? "secure" : "non-secure"));
-    int x = 0;
-    TlbEntry *te;
-    while (x < size) {
-        te = &table[x];
-        const bool el_match = te->checkELMatch(
-            tlbi_op.targetEL, tlbi_op.inHost);
-        if (te->valid && tlbi_op.secureLookup == !te->nstid && el_match) {
-
-            DPRINTF(TLB, " -  %s\n", te->print());
-            te->valid = false;
-            stats.flushedEntries++;
-        }
-        ++x;
-    }
-
-    stats.flushTlb++;
-}
-
-void
-TLB::flush(const TLBIVMALL &tlbi_op)
-{
-    DPRINTF(TLB, "Flushing all TLB entries (%s lookup)\n",
-            (tlbi_op.secureLookup ? "secure" : "non-secure"));
-    int x = 0;
-    TlbEntry *te;
-    while (x < size) {
-        te = &table[x];
-        const bool el_match = te->checkELMatch(
-            tlbi_op.targetEL, tlbi_op.inHost);
-
-        const bool vmid_match =
-            te->vmid == vmid ||
-            !tlbi_op.el2Enabled ||
-            (!tlbi_op.stage2Flush() && tlbi_op.inHost);
-
-        if (te->valid && tlbi_op.secureLookup == !te->nstid &&
-            el_match && vmid_match) {
-
-            DPRINTF(TLB, " -  %s\n", te->print());
-            te->valid = false;
-            stats.flushedEntries++;
-        }
-        ++x;
-    }
-
-    stats.flushTlb++;
-}
-
-void
-TLB::flush(const TLBIALLN &tlbi_op)
-{
-    bool hyp = tlbi_op.targetEL == EL2;
-
-    DPRINTF(TLB, "Flushing all NS TLB entries (%s lookup)\n",
-            (hyp ? "hyp" : "non-hyp"));
-    int x = 0;
-    TlbEntry *te;
-    while (x < size) {
-        te = &table[x];
-        const bool el_match = te->checkELMatch(tlbi_op.targetEL, false);
-
-        if (te->valid && te->nstid && te->isHyp == hyp && el_match) {
-
-            DPRINTF(TLB, " -  %s\n", te->print());
-            stats.flushedEntries++;
-            te->valid = false;
-        }
-        ++x;
-    }
-
-    stats.flushTlb++;
-}
-
-void
-TLB::flush(const TLBIMVA &tlbi_op)
-{
-    DPRINTF(TLB, "Flushing TLB entries with mva: %#x, asid: %#x "
-            "(%s lookup)\n", tlbi_op.addr, tlbi_op.asid,
-            (tlbi_op.secureLookup ? "secure" : "non-secure"));
-    _flushMva(tlbi_op.addr, tlbi_op.asid, tlbi_op.secureLookup, false,
-        tlbi_op.targetEL, tlbi_op.inHost, TypeTLB::unified);
-    stats.flushTlbMvaAsid++;
-}
-
-void
-TLB::flush(const ITLBIMVA &tlbi_op)
-{
-    DPRINTF(TLB, "Flushing ITLB entries with mva: %#x, asid: %#x "
-            "(%s lookup)\n", tlbi_op.addr, tlbi_op.asid,
-            (tlbi_op.secureLookup ? "secure" : "non-secure"));
-    _flushMva(tlbi_op.addr, tlbi_op.asid, tlbi_op.secureLookup, false,
-        tlbi_op.targetEL, tlbi_op.inHost, TypeTLB::instruction);
-    stats.flushTlbMvaAsid++;
-}
-
-void
-TLB::flush(const DTLBIMVA &tlbi_op)
-{
-    DPRINTF(TLB, "Flushing DTLB entries with mva: %#x, asid: %#x "
-            "(%s lookup)\n", tlbi_op.addr, tlbi_op.asid,
-            (tlbi_op.secureLookup ? "secure" : "non-secure"));
-    _flushMva(tlbi_op.addr, tlbi_op.asid, tlbi_op.secureLookup, false,
-        tlbi_op.targetEL, tlbi_op.inHost, TypeTLB::data);
-    stats.flushTlbMvaAsid++;
-}
-
-void
-TLB::flush(const TLBIASID &tlbi_op)
-{
-    DPRINTF(TLB, "Flushing TLB entries with asid: %#x (%s lookup)\n",
-            tlbi_op.asid, (tlbi_op.secureLookup ? "secure" : "non-secure"));
-
-    int x = 0 ;
-    TlbEntry *te;
-
-    while (x < size) {
-        te = &table[x];
-
-        const bool el_match = te->checkELMatch(
-            tlbi_op.targetEL, tlbi_op.inHost);
-
-        const bool vmid_match =
-            te->vmid == vmid || !tlbi_op.el2Enabled || tlbi_op.inHost;
-
-        if (te->valid && te->asid == tlbi_op.asid &&
-            tlbi_op.secureLookup == !te->nstid &&
-            vmid_match && el_match) {
-
-            te->valid = false;
-            DPRINTF(TLB, " -  %s\n", te->print());
-            stats.flushedEntries++;
-        }
-        ++x;
-    }
-    stats.flushTlbAsid++;
-}
-
-void
-TLB::flush(const ITLBIASID &tlbi_op)
-{
-    DPRINTF(TLB, "Flushing ITLB entries with asid: %#x (%s lookup)\n",
-            tlbi_op.asid, (tlbi_op.secureLookup ? "secure" : "non-secure"));
-
-    int x = 0 ;
-    TlbEntry *te;
-
-    while (x < size) {
-        te = &table[x];
-        if (te->type & TypeTLB::instruction &&
-            te->valid && te->asid == tlbi_op.asid &&
-            tlbi_op.secureLookup == !te->nstid &&
-            (te->vmid == vmid || tlbi_op.el2Enabled) &&
-            te->checkELMatch(tlbi_op.targetEL, tlbi_op.inHost)) {
-
-            te->valid = false;
-            DPRINTF(TLB, " -  %s\n", te->print());
-            stats.flushedEntries++;
-        }
-        ++x;
-    }
-    stats.flushTlbAsid++;
-}
-
-void
-TLB::flush(const DTLBIASID &tlbi_op)
-{
-    DPRINTF(TLB, "Flushing DTLB entries with asid: %#x (%s lookup)\n",
-            tlbi_op.asid, (tlbi_op.secureLookup ? "secure" : "non-secure"));
-
-    int x = 0 ;
-    TlbEntry *te;
-
-    while (x < size) {
-        te = &table[x];
-        if (te->type & TypeTLB::data &&
-            te->valid && te->asid == tlbi_op.asid &&
-            tlbi_op.secureLookup == !te->nstid &&
-            (te->vmid == vmid || tlbi_op.el2Enabled) &&
-            te->checkELMatch(tlbi_op.targetEL, tlbi_op.inHost)) {
-
-            te->valid = false;
-            DPRINTF(TLB, " -  %s\n", te->print());
-            stats.flushedEntries++;
-        }
-        ++x;
-    }
-    stats.flushTlbAsid++;
-}
-
-void
-TLB::flush(const TLBIMVAA &tlbi_op) {
-
-    DPRINTF(TLB, "Flushing TLB entries with mva: %#x (%s lookup)\n",
-            tlbi_op.addr,
-            (tlbi_op.secureLookup ? "secure" : "non-secure"));
-    _flushMva(tlbi_op.addr, 0xbeef, tlbi_op.secureLookup, true,
-        tlbi_op.targetEL, tlbi_op.inHost, TypeTLB::unified);
-    stats.flushTlbMva++;
-}
-
-void
-TLB::_flushMva(Addr mva, uint64_t asn, bool secure_lookup,
-               bool ignore_asn, ExceptionLevel target_el, bool in_host,
-               TypeTLB entry_type)
-{
-    TlbEntry *te;
-    Lookup lookup_data;
-
-    lookup_data.va = sext<56>(mva);
-    lookup_data.asn = asn;
-    lookup_data.ignoreAsn = ignore_asn;
-    lookup_data.vmid = vmid;
-    lookup_data.hyp = target_el == EL2;
-    lookup_data.secure = secure_lookup;
-    lookup_data.functional = true;
-    lookup_data.targetEL = target_el;
-    lookup_data.inHost = in_host;
-    lookup_data.mode = BaseMMU::Read;
-
-    te = lookup(lookup_data);
-    while (te != NULL) {
-        bool matching_type = (te->type & entry_type);
-        if (matching_type && secure_lookup == !te->nstid) {
-            DPRINTF(TLB, " -  %s\n", te->print());
-            te->valid = false;
-            stats.flushedEntries++;
-        }
-        te = lookup(lookup_data);
-    }
 }
 
 void
@@ -642,13 +350,7 @@ TLB::TlbStats::TlbStats(TLB &parent)
     ADD_STAT(inserts, statistics::units::Count::get(),
              "Number of times an entry is inserted into the TLB"),
     ADD_STAT(flushTlb, statistics::units::Count::get(),
-             "Number of times complete TLB was flushed"),
-    ADD_STAT(flushTlbMva, statistics::units::Count::get(),
-             "Number of times TLB was flushed by MVA"),
-    ADD_STAT(flushTlbMvaAsid, statistics::units::Count::get(),
-             "Number of times TLB was flushed by MVA & ASID"),
-    ADD_STAT(flushTlbAsid, statistics::units::Count::get(),
-             "Number of times TLB was flushed by ASID"),
+             "Number of times a TLB invalidation was requested"),
     ADD_STAT(flushedEntries, statistics::units::Count::get(),
              "Number of entries that have been flushed from TLB"),
     ADD_STAT(readAccesses, statistics::units::Count::get(), "Read accesses",

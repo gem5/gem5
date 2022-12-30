@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop MULSS_XMM_XMM {
     mmulf xmml, xmml, xmmlm, size=4, ext=Scalar
 };
@@ -103,4 +103,4 @@ def macroop MULPD_XMM_P {
     mmulf xmml, xmml, ufp1, size=8, ext=0
     mmulf xmmh, xmmh, ufp2, size=8, ext=0
 };
-'''
+"""

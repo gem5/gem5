@@ -282,7 +282,6 @@ class SelfDebug
     SoftwareStep * softStep;
     VectorCatch * vcExcpt;
 
-    bool initialized;
     bool enableTdeTge; // MDCR_EL2.TDE || HCR_EL2.TGE
 
     bool mde; // MDSCR_EL1.MDE, DBGDSCRext.MDBGen
@@ -295,7 +294,7 @@ class SelfDebug
 
   public:
     SelfDebug()
-      : initialized(false), enableTdeTge(false),
+      : softStep(nullptr), vcExcpt(nullptr), enableTdeTge(false),
         mde(false), sdd(false), kde(false), oslk(false)
     {
         softStep = new SoftwareStep(this);
@@ -449,8 +448,6 @@ class SelfDebug
     VectorCatch*
     getVectorCatch(ThreadContext *tc)
     {
-        if (!initialized)
-            init(tc);
         return vcExcpt;
     }
 

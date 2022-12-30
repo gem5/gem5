@@ -52,34 +52,38 @@ import SCons.Script
 
 termcap = get_termcap()
 
+
 def strip_build_path(path, env):
     path = str(path)
-    build_base = 'build/'
-    variant_base = env['BUILDROOT'] + os.path.sep
+    build_base = "build/"
+    variant_base = env["BUILDROOT"] + os.path.sep
     if path.startswith(variant_base):
-        path = path[len(variant_base):]
+        path = path[len(variant_base) :]
     elif path.startswith(build_base):
-        path = path[len(build_base):]
+        path = path[len(build_base) :]
     return path
 
+
 def TempFileSpawn(scons_env):
-    old_pspawn = scons_env['PSPAWN']
-    old_spawn = scons_env['SPAWN']
+    old_pspawn = scons_env["PSPAWN"]
+    old_spawn = scons_env["SPAWN"]
 
     def wrapper(old, sh, esc, cmd, sh_args, *py_args):
         with tempfile.NamedTemporaryFile() as temp:
-            temp.write(' '.join(sh_args).encode())
+            temp.write(" ".join(sh_args).encode())
             temp.flush()
             sh_args = [sh, esc(temp.name)]
             return old(sh, esc, sh, sh_args, *py_args)
 
     def new_pspawn(sh, esc, cmd, args, sh_env, stdout, stderr):
         return wrapper(old_pspawn, sh, esc, cmd, args, sh_env, stdout, stderr)
+
     def new_spawn(sh, esc, cmd, args, sh_env):
         return wrapper(old_spawn, sh, esc, cmd, args, sh_env)
 
-    scons_env['PSPAWN'] = new_pspawn
-    scons_env['SPAWN'] = new_spawn
+    scons_env["PSPAWN"] = new_pspawn
+    scons_env["SPAWN"] = new_spawn
+
 
 # Generate a string of the form:
 #   common/path/prefix/src1, src2 -> tgt1, tgt2
@@ -93,23 +97,32 @@ class Transform(object):
     tgts_color = termcap.Yellow + termcap.Bold
 
     def __init__(self, tool, max_sources=99):
-        self.format = self.tool_color + (" [%8s] " % tool) \
-                      + self.pfx_color + "%s" \
-                      + self.srcs_color + "%s" \
-                      + self.arrow_color + " -> " \
-                      + self.tgts_color + "%s" \
-                      + termcap.Normal
+        self.format = (
+            self.tool_color
+            + (" [%8s] " % tool)
+            + self.pfx_color
+            + "%s"
+            + self.srcs_color
+            + "%s"
+            + self.arrow_color
+            + " -> "
+            + self.tgts_color
+            + "%s"
+            + termcap.Normal
+        )
         self.max_sources = max_sources
 
     def __call__(self, target, source, env, for_signature=None):
         # truncate source list according to max_sources param
-        source = source[0:self.max_sources]
+        source = source[0 : self.max_sources]
+
         def strip(f):
             return strip_build_path(str(f), env)
+
         if len(source) > 0:
             srcs = list(map(strip, source))
         else:
-            srcs = ['']
+            srcs = [""]
         tgts = list(map(strip, target))
         # surprisingly, os.path.commonprefix is a dumb char-by-char string
         # operation that has nothing to do with paths.
@@ -137,19 +150,22 @@ class Transform(object):
                     if sep_idx != -1:
                         com_pfx = com_pfx[0:sep_idx]
                     else:
-                        com_pfx = ''
+                        com_pfx = ""
                 elif src0_len > com_pfx_len and srcs[0][com_pfx_len] == ".":
                     # still splitting at file extension: ok
                     pass
                 else:
                     # probably a fluke; ignore it
-                    com_pfx = ''
+                    com_pfx = ""
         # recalculate length in case com_pfx was modified
         com_pfx_len = len(com_pfx)
+
         def fmt(files):
             f = list(map(lambda s: s[com_pfx_len:], files))
-            return ', '.join(f)
+            return ", ".join(f)
+
         return self.format % (com_pfx, fmt(srcs), fmt(tgts))
+
 
 # The width warning and error messages should be wrapped at.
 text_width = None
@@ -162,6 +178,7 @@ if not sys.stdout.isatty():
 if text_width is None:
     try:
         import shutil
+
         text_width = shutil.get_terminal_size().columns
     except:
         pass
@@ -170,6 +187,7 @@ if text_width is None:
 if text_width is None:
     try:
         import curses
+
         try:
             _, text_width = curses.initscr().getmaxyx()
         finally:
@@ -181,21 +199,22 @@ if text_width is None:
 if text_width is None:
     text_width = 80
 
+
 def print_message(prefix, color, message, **kwargs):
     prefix_len = len(prefix)
     if text_width > prefix_len:
         wrap_width = text_width - prefix_len
-        padding = ' ' * prefix_len
+        padding = " " * prefix_len
 
         # First split on newlines.
-        lines = message.split('\n')
+        lines = message.split("\n")
         # Then wrap each line to the required width.
         wrapped_lines = []
         for line in lines:
             wrapped_lines.extend(textwrap.wrap(line, wrap_width))
         # Finally add the prefix and padding on extra lines, and glue it all
         # back together.
-        message = prefix + ('\n' + padding).join(wrapped_lines)
+        message = prefix + ("\n" + padding).join(wrapped_lines)
     else:
         # We have very small terminal, indent formatting doesn't help.
         message = prefix + message
@@ -205,27 +224,36 @@ def print_message(prefix, color, message, **kwargs):
     print(message, **kwargs)
     return message
 
+
 all_warnings = []
+
+
 def summarize_warnings():
     if not all_warnings:
         return
-    print(termcap.Yellow + termcap.Bold +
-            '*** Summary of Warnings ***' +
-            termcap.Normal)
+    print(
+        termcap.Yellow
+        + termcap.Bold
+        + "*** Summary of Warnings ***"
+        + termcap.Normal
+    )
     list(map(print, all_warnings))
 
+
 def warning(*args, **kwargs):
-    message = ' '.join(args)
-    printed = print_message('Warning: ', termcap.Yellow, message, **kwargs)
+    message = " ".join(args)
+    printed = print_message("Warning: ", termcap.Yellow, message, **kwargs)
     all_warnings.append(printed)
 
+
 def error(*args, **kwargs):
-    message = ' '.join(args)
-    print_message('Error: ', termcap.Red, message, **kwargs)
+    message = " ".join(args)
+    print_message("Error: ", termcap.Red, message, **kwargs)
     SCons.Script.Exit(1)
 
+
 def parse_build_path(target):
-    path_dirs = target.split('/')
+    path_dirs = target.split("/")
 
     # Pop off the target file.
     path_dirs.pop()
@@ -233,40 +261,55 @@ def parse_build_path(target):
     # Search backwards for the "build" directory. Whatever was just before it
     # was the name of the variant.
     variant_dir = path_dirs.pop()
-    while path_dirs and path_dirs[-1] != 'build':
+    while path_dirs and path_dirs[-1] != "build":
         variant_dir = path_dirs.pop()
     if not path_dirs:
-        error("No non-leaf 'build' dir found on target path.", t)
+        error("No non-leaf 'build' dir found on target path.", target)
 
-    return os.path.join('/', *path_dirs), variant_dir
+    return os.path.join("/", *path_dirs), variant_dir
+
 
 # The MakeAction wrapper, and a SCons tool to set up the *COMSTR variables.
-if SCons.Script.GetOption('verbose'):
+if SCons.Script.GetOption("verbose"):
+
     def MakeAction(action, string, *args, **kwargs):
         return SCons.Script.Action(action, *args, **kwargs)
 
     def MakeActionTool(env):
         pass
+
 else:
     MakeAction = SCons.Script.Action
 
     def MakeActionTool(env):
-        env['CCCOMSTR']        = Transform("CC")
-        env['CXXCOMSTR']       = Transform("CXX")
-        env['ASCOMSTR']        = Transform("AS")
-        env['ARCOMSTR']        = Transform("AR", 0)
-        env['LINKCOMSTR']      = Transform("LINK", 0)
-        env['SHLINKCOMSTR']    = Transform("SHLINK", 0)
-        env['RANLIBCOMSTR']    = Transform("RANLIB", 0)
-        env['M4COMSTR']        = Transform("M4")
-        env['SHCCCOMSTR']      = Transform("SHCC")
-        env['SHCXXCOMSTR']     = Transform("SHCXX")
+        env["CCCOMSTR"] = Transform("CC")
+        env["CXXCOMSTR"] = Transform("CXX")
+        env["ASCOMSTR"] = Transform("AS")
+        env["ARCOMSTR"] = Transform("AR", 0)
+        env["LINKCOMSTR"] = Transform("LINK", 0)
+        env["SHLINKCOMSTR"] = Transform("SHLINK", 0)
+        env["RANLIBCOMSTR"] = Transform("RANLIB", 0)
+        env["M4COMSTR"] = Transform("M4")
+        env["SHCCCOMSTR"] = Transform("SHCC")
+        env["SHCXXCOMSTR"] = Transform("SHCXX")
+
 
 def ToValue(obj):
     return SCons.Node.Python.Value(pickle.dumps(obj))
 
+
 def FromValue(node):
     return pickle.loads(node.read())
 
-__all__ = ['Configure', 'EnvDefaults', 'Transform', 'warning', 'error',
-           'MakeAction', 'MakeActionTool', 'ToValue', 'FromValue']
+
+__all__ = [
+    "Configure",
+    "EnvDefaults",
+    "Transform",
+    "warning",
+    "error",
+    "MakeAction",
+    "MakeActionTool",
+    "ToValue",
+    "FromValue",
+]

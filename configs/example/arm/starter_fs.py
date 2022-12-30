@@ -45,7 +45,7 @@ from m5.objects import *
 from m5.options import *
 import argparse
 
-m5.util.addToPath('../..')
+m5.util.addToPath("../..")
 
 from common import SysPaths
 from common import ObjectList
@@ -55,37 +55,37 @@ from common.cores.arm import O3_ARM_v7a, HPI
 import devices
 
 
-default_kernel = 'vmlinux.arm64'
-default_disk = 'linaro-minimal-aarch64.img'
-default_root_device = '/dev/vda1'
+default_kernel = "vmlinux.arm64"
+default_disk = "linaro-minimal-aarch64.img"
+default_root_device = "/dev/vda1"
 
 
 # Pre-defined CPU configurations. Each tuple must be ordered as : (cpu_class,
 # l1_icache_class, l1_dcache_class, l2_Cache_class). Any of
 # the cache class may be 'None' if the particular cache is not present.
 cpu_types = {
-    "atomic" : (AtomicSimpleCPU, None, None, None),
-    "minor" : (MinorCPU,
-               devices.L1I, devices.L1D,
-               devices.L2),
-    "hpi" : (HPI.HPI,
-             HPI.HPI_ICache, HPI.HPI_DCache,
-             HPI.HPI_L2),
-    "o3" : (O3_ARM_v7a.O3_ARM_v7a_3,
-            O3_ARM_v7a.O3_ARM_v7a_ICache, O3_ARM_v7a.O3_ARM_v7a_DCache,
-            O3_ARM_v7a.O3_ARM_v7aL2),
+    "atomic": (AtomicSimpleCPU, None, None, None),
+    "minor": (MinorCPU, devices.L1I, devices.L1D, devices.L2),
+    "hpi": (HPI.HPI, HPI.HPI_ICache, HPI.HPI_DCache, HPI.HPI_L2),
+    "o3": (
+        O3_ARM_v7a.O3_ARM_v7a_3,
+        O3_ARM_v7a.O3_ARM_v7a_ICache,
+        O3_ARM_v7a.O3_ARM_v7a_DCache,
+        O3_ARM_v7a.O3_ARM_v7aL2,
+    ),
 }
+
 
 def create_cow_image(name):
     """Helper function to create a Copy-on-Write disk image"""
     image = CowDiskImage()
     image.child.image_file = SysPaths.disk(name)
 
-    return image;
+    return image
 
 
 def create(args):
-    ''' Create and configure the system object. '''
+    """Create and configure the system object."""
 
     if args.script and not os.path.isfile(args.script):
         print("Error: Bootscript %s does not exist" % args.script)
@@ -96,13 +96,13 @@ def create(args):
     # Only simulate caches when using a timing CPU (e.g., the HPI model)
     want_caches = True if mem_mode == "timing" else False
 
-    system = devices.SimpleSystem(want_caches,
-                                  args.mem_size,
-                                  mem_mode=mem_mode,
-                                  workload=ArmFsLinux(
-                                      object_file=
-                                      SysPaths.binary(args.kernel)),
-                                  readfile=args.script)
+    system = devices.SimpleSystem(
+        want_caches,
+        args.mem_size,
+        mem_mode=mem_mode,
+        workload=ArmFsLinux(object_file=SysPaths.binary(args.kernel)),
+        readfile=args.script,
+    )
 
     MemConfig.config_mem(args, system)
 
@@ -114,7 +114,7 @@ def create(args):
         # disk. Attach the disk image using gem5's Copy-on-Write
         # functionality to avoid writing changes to the stored copy of
         # the disk image.
-        PciVirtIO(vio=VirtIOBlock(image=create_cow_image(args.disk_image))),
+        PciVirtIO(vio=VirtIOBlock(image=create_cow_image(args.disk_image)))
     ]
 
     # Attach the PCI devices to the system. The helper method in the
@@ -128,10 +128,9 @@ def create(args):
 
     # Add CPU clusters to the system
     system.cpu_cluster = [
-        devices.CpuCluster(system,
-                           args.num_cores,
-                           args.cpu_freq, "1.0V",
-                           *cpu_types[args.cpu]),
+        devices.CpuCluster(
+            system, args.num_cores, args.cpu_freq, "1.0V", *cpu_types[args.cpu]
+        )
     ]
 
     # Create a cache hierarchy for the cluster. We are assuming that
@@ -146,8 +145,9 @@ def create(args):
         system.workload.dtb_filename = args.dtb
     else:
         # No DTB specified: autogenerate DTB
-        system.workload.dtb_filename = \
-            os.path.join(m5.options.outdir, 'system.dtb')
+        system.workload.dtb_filename = os.path.join(
+            m5.options.outdir, "system.dtb"
+        )
         system.generateDtb(system.workload.dtb_filename)
 
     if args.initrd:
@@ -197,40 +197,70 @@ def run(args):
 def main():
     parser = argparse.ArgumentParser(epilog=__doc__)
 
-    parser.add_argument("--dtb", type=str, default=None,
-                        help="DTB file to load")
-    parser.add_argument("--kernel", type=str, default=default_kernel,
-                        help="Linux kernel")
-    parser.add_argument("--initrd", type=str, default=None,
-                        help="initrd/initramfs file to load")
-    parser.add_argument("--disk-image", type=str,
-                        default=default_disk,
-                        help="Disk to instantiate")
-    parser.add_argument("--root-device", type=str,
-                        default=default_root_device,
-                        help="OS device name for root partition (default: {})"
-                             .format(default_root_device))
-    parser.add_argument("--script", type=str, default="",
-                        help = "Linux bootscript")
-    parser.add_argument("--cpu", type=str, choices=list(cpu_types.keys()),
-                        default="atomic",
-                        help="CPU model to use")
+    parser.add_argument(
+        "--dtb", type=str, default=None, help="DTB file to load"
+    )
+    parser.add_argument(
+        "--kernel", type=str, default=default_kernel, help="Linux kernel"
+    )
+    parser.add_argument(
+        "--initrd",
+        type=str,
+        default=None,
+        help="initrd/initramfs file to load",
+    )
+    parser.add_argument(
+        "--disk-image",
+        type=str,
+        default=default_disk,
+        help="Disk to instantiate",
+    )
+    parser.add_argument(
+        "--root-device",
+        type=str,
+        default=default_root_device,
+        help="OS device name for root partition (default: {})".format(
+            default_root_device
+        ),
+    )
+    parser.add_argument(
+        "--script", type=str, default="", help="Linux bootscript"
+    )
+    parser.add_argument(
+        "--cpu",
+        type=str,
+        choices=list(cpu_types.keys()),
+        default="atomic",
+        help="CPU model to use",
+    )
     parser.add_argument("--cpu-freq", type=str, default="4GHz")
-    parser.add_argument("--num-cores", type=int, default=1,
-                        help="Number of CPU cores")
-    parser.add_argument("--mem-type", default="DDR3_1600_8x8",
-                        choices=ObjectList.mem_list.get_names(),
-                        help = "type of memory to use")
-    parser.add_argument("--mem-channels", type=int, default=1,
-                        help = "number of memory channels")
-    parser.add_argument("--mem-ranks", type=int, default=None,
-                        help = "number of memory ranks per channel")
-    parser.add_argument("--mem-size", action="store", type=str,
-                        default="2GB",
-                        help="Specify the physical memory size")
+    parser.add_argument(
+        "--num-cores", type=int, default=1, help="Number of CPU cores"
+    )
+    parser.add_argument(
+        "--mem-type",
+        default="DDR3_1600_8x8",
+        choices=ObjectList.mem_list.get_names(),
+        help="type of memory to use",
+    )
+    parser.add_argument(
+        "--mem-channels", type=int, default=1, help="number of memory channels"
+    )
+    parser.add_argument(
+        "--mem-ranks",
+        type=int,
+        default=None,
+        help="number of memory ranks per channel",
+    )
+    parser.add_argument(
+        "--mem-size",
+        action="store",
+        type=str,
+        default="2GB",
+        help="Specify the physical memory size",
+    )
     parser.add_argument("--checkpoint", action="store_true")
     parser.add_argument("--restore", type=str, default=None)
-
 
     args = parser.parse_args()
 

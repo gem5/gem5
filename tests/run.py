@@ -47,6 +47,7 @@ import os
 
 import m5
 
+
 def skip_test(reason=""):
     """Signal that a test should be skipped and optionally print why.
 
@@ -57,6 +58,7 @@ def skip_test(reason=""):
     if reason:
         print("Skipping test: %s" % reason)
     sys.exit(2)
+
 
 def has_sim_object(name):
     """Test if a SimObject exists in the simulator.
@@ -72,6 +74,7 @@ def has_sim_object(name):
         return issubclass(cls, m5.objects.SimObject)
     except AttributeError:
         return False
+
 
 def require_sim_object(name, fatal=False):
     """Test if a SimObject exists and abort/skip test if not.
@@ -121,6 +124,7 @@ def require_file(path, fatal=False, mode=os.F_OK):
         else:
             skip_test(msg)
 
+
 def require_kvm(kvm_dev="/dev/kvm", fatal=False):
     """Test if KVM is available.
 
@@ -133,6 +137,7 @@ def require_kvm(kvm_dev="/dev/kvm", fatal=False):
     require_sim_object("BaseKvmCPU", fatal=fatal)
     require_file(kvm_dev, fatal=fatal, mode=os.R_OK | os.W_OK)
 
+
 def run_test(root):
     """Default run_test implementations. Scripts can override it."""
 
@@ -141,37 +146,41 @@ def run_test(root):
 
     # simulate until program terminates
     exit_event = m5.simulate(maxtick)
-    print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())
+    print("Exiting @ tick", m5.curTick(), "because", exit_event.getCause())
+
 
 # Since we're in batch mode, dont allow tcp socket connections
 m5.disableAllListeners()
 
 # single "path" arg encodes everything we need to know about test
-(category, mode, name, isa, opsys, config) = sys.argv[1].split('/')[-6:]
+(category, mode, name, isa, opsys, config) = sys.argv[1].split("/")[-6:]
 
 # find path to directory containing this file
 tests_root = os.path.dirname(__file__)
-test_progs = os.environ.get('M5_TEST_PROGS', '/dist/m5/regression/test-progs')
+test_progs = os.environ.get("M5_TEST_PROGS", "/dist/m5/regression/test-progs")
 if not os.path.isdir(test_progs):
-    test_progs = joinpath(tests_root, 'test-progs')
+    test_progs = joinpath(tests_root, "test-progs")
 
 # generate path to binary file
 def binpath(app, file=None):
     # executable has same name as app unless specified otherwise
     if not file:
         file = app
-    return joinpath(test_progs, app, 'bin', isa, opsys, file)
+    return joinpath(test_progs, app, "bin", isa, opsys, file)
+
 
 # generate path to input file
 def inputpath(app, file=None):
     # input file has same name as app unless specified otherwise
     if not file:
         file = app
-    return joinpath(test_progs, app, 'input', file)
+    return joinpath(test_progs, app, "input", file)
+
 
 def srcpath(path):
     """Path to file in gem5's source tree"""
     return joinpath(os.path.dirname(__file__), "..", path)
+
 
 def run_config(config, argv=None):
     """Execute a configuration script that is external to the test system"""
@@ -179,11 +188,8 @@ def run_config(config, argv=None):
     src_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
     abs_path = joinpath(src_root, config)
 
-    code = compile(open(abs_path, 'r').read(), abs_path, 'exec')
-    scope = {
-        '__file__' : config,
-        '__name__' : '__m5_main__',
-    }
+    code = compile(open(abs_path, "r").read(), abs_path, "exec")
+    scope = {"__file__": config, "__name__": "__m5_main__"}
 
     # Set the working directory in case we are executing from
     # outside gem5's source tree
@@ -191,23 +197,28 @@ def run_config(config, argv=None):
 
     # gem5 normally adds the script's directory to the path to make
     # script-relative imports work.
-    sys.path = [ os.path.dirname(abs_path), ] + sys.path
+    sys.path = [os.path.dirname(abs_path)] + sys.path
 
     if argv is None:
-        sys.argv = [ config, ]
+        sys.argv = [config]
     else:
         sys.argv = argv
     exec(code, scope)
 
+
 # build configuration
-sys.path.append(joinpath(tests_root, 'configs'))
+sys.path.append(joinpath(tests_root, "configs"))
 test_filename = config
 # for ruby configurations, remove the protocol name from the test filename
-if re.search('-ruby', test_filename):
-    test_filename = test_filename.split('-ruby')[0]+'-ruby'
-exec(compile( \
-    open(joinpath(tests_root, 'configs', test_filename + '.py')).read(), \
-    joinpath(tests_root, 'configs', test_filename + '.py'), 'exec'))
+if re.search("-ruby", test_filename):
+    test_filename = test_filename.split("-ruby")[0] + "-ruby"
+exec(
+    compile(
+        open(joinpath(tests_root, "configs", test_filename + ".py")).read(),
+        joinpath(tests_root, "configs", test_filename + ".py"),
+        "exec",
+    )
+)
 
 # set default maxtick... script can override
 # -1 means run forever
@@ -215,9 +226,13 @@ maxtick = m5.MaxTick
 
 # tweak configuration for specific test
 sys.path.append(joinpath(tests_root, category, mode, name))
-exec(compile( \
-    open(joinpath(tests_root, category, mode, name, 'test.py')).read(), \
-    joinpath(tests_root, category, mode, name, 'test.py'), 'exec'))
+exec(
+    compile(
+        open(joinpath(tests_root, category, mode, name, "test.py")).read(),
+        joinpath(tests_root, category, mode, name, "test.py"),
+        "exec",
+    )
+)
 
 # Initialize all CPUs in a system
 def initCPUs(sys):
@@ -236,13 +251,14 @@ def initCPUs(sys):
 
     # The CPU can either be a list of CPUs or a single object.
     if isinstance(sys.cpu, list):
-        [ initCPU(cpu) for cpu in sys.cpu ]
+        [initCPU(cpu) for cpu in sys.cpu]
     else:
         initCPU(sys.cpu)
 
+
 # We might be creating a single system or a dual system. Try
 # initializing the CPUs in all known system attributes.
-for sysattr in [ "system", "testsys", "drivesys" ]:
+for sysattr in ["system", "testsys", "drivesys"]:
     if hasattr(root, sysattr):
         initCPUs(getattr(root, sysattr))
 

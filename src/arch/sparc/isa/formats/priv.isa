@@ -40,7 +40,7 @@ def template ControlRegConstructor {{
 
 def template PrivExecute {{
 Fault
-%(class_name)s::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+%(class_name)s::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     %(op_decl)s;
     %(op_rd)s;
@@ -133,4 +133,3 @@ def format HPriv(code, check_tl=false, *opt_flags) {{
             doPrivFormat(code, check_code, name, Name, opt_flags,
                          check_tl=(check_tl != 'false'))
 }};
-

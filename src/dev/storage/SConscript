@@ -40,9 +40,6 @@
 
 Import('*')
 
-if env['CONF']['TARGET_ISA'] == 'null':
-    Return()
-
 # Controllers
 SimObject('Ide.py', sim_objects=['IdeDisk', 'IdeController'], enums=['IdeID'])
 

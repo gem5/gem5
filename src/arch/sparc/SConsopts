@@ -1,7 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
-# All rights reserved.
+# Copyright 2021 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -27,5 +24,5 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Import('*')
-
-main.Append(ALL_ISAS=['sparc'])
+sticky_vars.Add(BoolVariable('USE_SPARC_ISA', 'Enable SPARC ISA support',
+    False))

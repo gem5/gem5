@@ -30,6 +30,7 @@ from m5.SimObject import SimObject
 from m5.params import *
 from m5.util import fatal
 
+
 class Root(SimObject):
 
     _the_instance = None
@@ -53,11 +54,11 @@ class Root(SimObject):
         return Root._the_instance
 
     def path(self):
-        return 'root'
+        return "root"
 
-    type = 'Root'
+    type = "Root"
     cxx_header = "sim/root.hh"
-    cxx_class = 'gem5::Root'
+    cxx_class = "gem5::Root"
 
     # By default, root sim object and hence all other sim objects schedule
     # event on the eventq with index 0.
@@ -72,5 +73,6 @@ class Root(SimObject):
     # Time syncing prevents the simulation from running faster than real time.
     time_sync_enable = Param.Bool(False, "whether time syncing is enabled")
     time_sync_period = Param.Clock("100ms", "how often to sync with real time")
-    time_sync_spin_threshold = \
-            Param.Clock("100us", "when less than this much time is left, spin")
+    time_sync_spin_threshold = Param.Clock(
+        "100us", "when less than this much time is left, spin"
+    )

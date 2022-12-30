@@ -34,6 +34,7 @@
 
 #include "arch/generic/isa.hh"
 #include "arch/x86/pcstate.hh"
+#include "arch/x86/regs/ccr.hh"
 #include "arch/x86/regs/float.hh"
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/misc.hh"
@@ -59,7 +60,7 @@ class ISA : public BaseISA
     std::string vendorString;
 
   public:
-    void clear();
+    void clear() override;
 
     PCStateBase *
     newPCState(Addr new_inst_addr=0) const override
@@ -71,47 +72,11 @@ class ISA : public BaseISA
 
     ISA(const Params &p);
 
-    RegVal readMiscRegNoEffect(int miscReg) const;
-    RegVal readMiscReg(int miscReg);
+    RegVal readMiscRegNoEffect(RegIndex idx) const override;
+    RegVal readMiscReg(RegIndex idx) override;
 
-    void setMiscRegNoEffect(int miscReg, RegVal val);
-    void setMiscReg(int miscReg, RegVal val);
-
-    RegId
-    flattenRegId(const RegId& regId) const
-    {
-        switch (regId.classValue()) {
-          case IntRegClass:
-            return RegId(IntRegClass, flattenIntIndex(regId.index()));
-          case FloatRegClass:
-            return RegId(FloatRegClass, flattenFloatIndex(regId.index()));
-          case CCRegClass:
-            return RegId(CCRegClass, flattenCCIndex(regId.index()));
-          case MiscRegClass:
-            return RegId(MiscRegClass, flattenMiscIndex(regId.index()));
-          default:
-            break;
-        }
-        return regId;
-    }
-
-    int flattenIntIndex(int reg) const { return reg & ~IntFoldBit; }
-
-    int
-    flattenFloatIndex(int reg) const
-    {
-        if (reg >= float_reg::NumRegs) {
-            reg = float_reg::stack(reg - float_reg::NumRegs,
-                                   regVal[misc_reg::X87Top]);
-        }
-        return reg;
-    }
-
-    int flattenVecIndex(int reg) const { return reg; }
-    int flattenVecElemIndex(int reg) const { return reg; }
-    int flattenVecPredIndex(int reg) const { return reg; }
-    int flattenCCIndex(int reg) const { return reg; }
-    int flattenMiscIndex(int reg) const { return reg; }
+    void setMiscRegNoEffect(RegIndex idx, RegVal val) override;
+    void setMiscReg(RegIndex idx, RegVal val) override;
 
     bool
     inUserMode() const override

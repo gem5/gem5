@@ -51,23 +51,44 @@ from minorview.model import BlobModel
 from minorview.view import BlobView, BlobController, BlobWindow
 from minorview.point import Point
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Minor visualiser')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Minor visualiser")
 
-    parser.add_argument('--picture', metavar='picture-file',
-        default=minorviewDir + '/minorview/minor.pic',
-        help='markup file containing blob information '
-            + '(default: <minorview-path>/minor.pic)')
-    parser.add_argument('--prefix', metavar='name', default='system.cpu',
-        help='name prefix in trace for CPU to be visualised (default: '
-            + 'system.cpu)')
-    parser.add_argument('--start-time', metavar='time', type=int, default=0,
-        help='time of first event to load from file')
-    parser.add_argument('--end-time', metavar='time', type=int, default=None,
-        help='time of last event to load from file')
-    parser.add_argument('--mini-views', action='store_true', default=False,
-        help='show tiny views of the next 10 time steps')
-    parser.add_argument('eventFile', metavar='event-file', default='ev')
+    parser.add_argument(
+        "--picture",
+        metavar="picture-file",
+        default=minorviewDir + "/minorview/minor.pic",
+        help="markup file containing blob information "
+        + "(default: <minorview-path>/minor.pic)",
+    )
+    parser.add_argument(
+        "--prefix",
+        metavar="name",
+        default="system.cpu",
+        help="name prefix in trace for CPU to be visualised (default: "
+        + "system.cpu)",
+    )
+    parser.add_argument(
+        "--start-time",
+        metavar="time",
+        type=int,
+        default=0,
+        help="time of first event to load from file",
+    )
+    parser.add_argument(
+        "--end-time",
+        metavar="time",
+        type=int,
+        default=None,
+        help="time of last event to load from file",
+    )
+    parser.add_argument(
+        "--mini-views",
+        action="store_true",
+        default=False,
+        help="show tiny views of the next 10 time steps",
+    )
+    parser.add_argument("eventFile", metavar="event-file", default="ev")
 
     args = parser.parse_args(sys.argv[1:])
 
@@ -76,13 +97,16 @@ if __name__ == '__main__':
     if args.picture and os.access(args.picture, os.O_RDONLY):
         model.load_picture(args.picture)
     else:
-        parser.error('Can\'t read picture file: ' + args.picture)
+        parser.error("Can't read picture file: " + args.picture)
 
     # Make the key objects
     view = BlobView(model)
-    controller = BlobController(model, view,
+    controller = BlobController(
+        model,
+        view,
         defaultEventFile=args.eventFile,
-        defaultPictureFile=args.picture)
+        defaultPictureFile=args.picture,
+    )
     window = BlobWindow(model, view, controller)
     window.add_control_bar(controller.bar)
 
@@ -96,10 +120,11 @@ if __name__ == '__main__':
     if args.eventFile and os.access(args.eventFile, os.O_RDONLY):
         controller.startTime = args.start_time
         controller.endTime = args.end_time
-        model.load_events(args.eventFile, startTime=args.start_time,
-            endTime=args.end_time)
+        model.load_events(
+            args.eventFile, startTime=args.start_time, endTime=args.end_time
+        )
         controller.set_time_index(0)
     else:
-        parser.error('Can\'t read event file: ' + args.eventFile)
+        parser.error("Can't read event file: " + args.eventFile)
 
     gtk.main()

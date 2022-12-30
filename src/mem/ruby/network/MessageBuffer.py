@@ -45,31 +45,45 @@ from m5.SimObject import SimObject
 # RubySystem and the param is set to 'ruby_system' (default). 'disabled'
 # completely prevents randomization.
 class MessageRandomization(ScopedEnum):
-    vals = ['disabled', 'enabled', 'ruby_system']
+    vals = ["disabled", "enabled", "ruby_system"]
+
 
 class MessageBuffer(SimObject):
-    type = 'MessageBuffer'
-    cxx_class = 'gem5::ruby::MessageBuffer'
+    type = "MessageBuffer"
+    cxx_class = "gem5::ruby::MessageBuffer"
     cxx_header = "mem/ruby/network/MessageBuffer.hh"
 
     ordered = Param.Bool(False, "Whether the buffer is ordered")
-    buffer_size = Param.Unsigned(0, "Maximum number of entries to buffer \
-                                     (0 allows infinite entries)")
-    randomization = Param.MessageRandomization('ruby_system',
-                                       "Randomization parameter")
-    allow_zero_latency = Param.Bool(False, "Allows messages to be enqueued \
+    buffer_size = Param.Unsigned(
+        0,
+        "Maximum number of entries to buffer \
+                                     (0 allows infinite entries)",
+    )
+    randomization = Param.MessageRandomization(
+        "ruby_system", "Randomization parameter"
+    )
+    allow_zero_latency = Param.Bool(
+        False,
+        "Allows messages to be enqueued \
                                             with zero latency. This is useful \
                                             for internall trigger queues and \
                                             should not be used if this msg. \
-                                            buffer connects different objects")
+                                            buffer connects different objects",
+    )
 
     out_port = RequestPort("Request port to MessageBuffer receiver")
-    master = DeprecatedParam(out_port, '`master` is now called `out_port`')
+    master = DeprecatedParam(out_port, "`master` is now called `out_port`")
     in_port = ResponsePort("Response port from MessageBuffer sender")
-    slave = DeprecatedParam(in_port, '`slave` is now called `in_port`')
-    max_dequeue_rate = Param.Unsigned(0, "Maximum number of messages that can \
+    slave = DeprecatedParam(in_port, "`slave` is now called `in_port`")
+    max_dequeue_rate = Param.Unsigned(
+        0,
+        "Maximum number of messages that can \
                                           be dequeued per cycle \
-                                    (0 allows dequeueing all ready messages)")
-    routing_priority = Param.Int(0, "Buffer priority when messages are \
+                                    (0 allows dequeueing all ready messages)",
+    )
+    routing_priority = Param.Int(
+        0,
+        "Buffer priority when messages are \
                                      consumed by the network. Smaller value \
-                                     means higher priority")
+                                     means higher priority",
+    )

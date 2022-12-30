@@ -60,7 +60,5 @@ setup(
         "Source": "https://gem5.googlesource.com/",
         "Documentation": "https://www.gem5.org/documentation/gem5art",
     },
-    scripts=[
-        "bin/gem5art-getruns",
-    ],
+    scripts=["bin/gem5art-getruns"],
 )

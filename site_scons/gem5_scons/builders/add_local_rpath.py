@@ -43,26 +43,23 @@ import sys
 
 import SCons.Node.FS
 
+
 def AddLocalRPATH(env):
     def add_local_rpath(env, *targets):
-        '''Set up an RPATH for a library which lives in the build directory.
+        """Set up an RPATH for a library which lives in the build directory.
 
         The construction environment variable BIN_RPATH_PREFIX should be set
         to the relative path of the build directory starting from the location
-        of the binary.'''
+        of the binary."""
         for target in targets:
             target = env.Entry(target)
             if not isinstance(target, SCons.Node.FS.Dir):
                 target = target.dir
-            relpath = os.path.relpath(target.abspath, env['BUILDDIR'])
-            components = [
-                '\\$$ORIGIN',
-                '${BIN_RPATH_PREFIX}',
-                relpath
-            ]
+            relpath = os.path.relpath(target.abspath, env["BUILDDIR"])
+            components = ["\\$$ORIGIN", "${BIN_RPATH_PREFIX}", relpath]
             env.Append(RPATH=[env.Literal(os.path.join(*components))])
 
     if sys.platform != "darwin":
-        env.Append(LINKFLAGS=env.Split('-z origin'))
+        env.Append(LINKFLAGS=env.Split("-z origin"))
 
-    env.AddMethod(add_local_rpath, 'AddLocalRPATH')
+    env.AddMethod(add_local_rpath, "AddLocalRPATH")

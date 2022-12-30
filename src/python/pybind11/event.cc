@@ -107,6 +107,8 @@ pybind_init_event(py::module_ &m_native)
 
     m.def("simulate", &simulate,
           py::arg("ticks") = MaxTick);
+    m.def("setMaxTick", &set_max_tick, py::arg("tick"));
+    m.def("getMaxTick", &get_max_tick, py::return_value_policy::copy);
     m.def("terminateEventQueueThreads", &terminateEventQueueThreads);
     m.def("exitSimLoop", &exitSimLoop);
     m.def("getEventQueue", []() { return curEventQueue(); },

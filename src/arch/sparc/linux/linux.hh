@@ -221,24 +221,26 @@ class SparcLinux : public Linux, public OpenFlagTable<SparcLinux>
               uint64_t stack, uint64_t tls)
     {
         ctc->getIsaPtr()->copyRegsFrom(ptc);
-        ctc->setIntReg(SparcISA::INTREG_OTHERWIN, 0);
-        ctc->setIntReg(SparcISA::INTREG_CANRESTORE, 0);
-        ctc->setIntReg(SparcISA::INTREG_CANSAVE, SparcISA::NWindows - 2);
-        ctc->setIntReg(SparcISA::INTREG_CLEANWIN, SparcISA::NWindows);
-        ctc->setMiscReg(SparcISA::MISCREG_CWP, 0);
-        ctc->setIntReg(SparcISA::INTREG_WSTATE, 0);
-        ctc->setMiscRegNoEffect(SparcISA::MISCREG_TL, 0);
+        ctc->setReg(SparcISA::int_reg::Otherwin, (RegVal)0);
+        ctc->setReg(SparcISA::int_reg::Canrestore, (RegVal)0);
+        ctc->setReg(SparcISA::int_reg::Cansave, SparcISA::NWindows - 2);
+        ctc->setReg(SparcISA::int_reg::Cleanwin, SparcISA::NWindows);
+        ctc->setMiscReg(SparcISA::MISCREG_CWP, (RegVal)0);
+        ctc->setReg(SparcISA::int_reg::Wstate, (RegVal)0);
+        ctc->setMiscRegNoEffect(SparcISA::MISCREG_TL, (RegVal)0);
         ctc->setMiscReg(SparcISA::MISCREG_ASI, SparcISA::ASI_PRIMARY);
-        for (int y = 8; y < 32; y++)
-            ctc->setIntReg(y, ptc->readIntReg(y));
+        for (int y = 8; y < 32; y++) {
+            RegId reg = SparcISA::intRegClass[y];
+            ctc->setReg(reg, ptc->getReg(reg));
+        }
 
         if (stack)
-            ctc->setIntReg(SparcISA::StackPointerReg, stack);
+            ctc->setReg(SparcISA::StackPointerReg, stack);
 
         // Set these extra values. Since "clone" doesn't return two values,
         // we can set these and they won't be clobbered by the syscall ABI.
-        ptc->setIntReg(SparcISA::SyscallPseudoReturnReg, 0);
-        ctc->setIntReg(SparcISA::SyscallPseudoReturnReg, 1);
+        ptc->setReg(SparcISA::SyscallPseudoReturnReg, (RegVal)0);
+        ctc->setReg(SparcISA::SyscallPseudoReturnReg, 1);
     }
 };
 

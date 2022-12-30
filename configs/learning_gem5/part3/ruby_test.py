@@ -36,6 +36,7 @@ IMPORTANT: If you modify this file, it's likely that the Learning gem5 book
 
 # import the m5 (gem5) library created when gem5 is built
 import m5
+
 # import all of the SimObjects
 from m5.objects import *
 
@@ -46,17 +47,17 @@ system = System()
 
 # Set the clock frequency of the system (and all of its children)
 system.clk_domain = SrcClockDomain()
-system.clk_domain.clock = '1GHz'
+system.clk_domain.clock = "1GHz"
 system.clk_domain.voltage_domain = VoltageDomain()
 
 # Set up the system
-system.mem_mode = 'timing'               # Use timing accesses
-system.mem_ranges = [AddrRange('512MB')] # Create an address range
+system.mem_mode = "timing"  # Use timing accesses
+system.mem_ranges = [AddrRange("512MB")]  # Create an address range
 
 # Create the tester
-system.tester = RubyTester(checks_to_complete = 100,
-                           wakeup_frequency = 10,
-                           num_cpus = 2)
+system.tester = RubyTester(
+    checks_to_complete=100, wakeup_frequency=10, num_cpus=2
+)
 
 # Create a simple memory controller and connect it to the membus
 system.mem_ctrl = SimpleMemory(latency="50ns", bandwidth="0GB/s")
@@ -67,16 +68,16 @@ system.caches = TestCacheSystem()
 system.caches.setup(system, system.tester, [system.mem_ctrl])
 
 # set up the root SimObject and start the simulation
-root = Root(full_system = False, system = system)
+root = Root(full_system=False, system=system)
 
 # Not much point in this being higher than the L1 latency
-m5.ticks.setGlobalFrequency('1ns')
+m5.ticks.setGlobalFrequency("1ns")
 
 # instantiate all of the objects we've created above
 m5.instantiate()
 
 print("Beginning simulation!")
 exit_event = m5.simulate()
-print('Exiting @ tick {} because {}'.format(
-         m5.curTick(), exit_event.getCause())
-     )
+print(
+    "Exiting @ tick {} because {}".format(m5.curTick(), exit_event.getCause())
+)

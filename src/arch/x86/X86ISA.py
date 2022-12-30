@@ -36,10 +36,21 @@
 from m5.objects.BaseISA import BaseISA
 from m5.params import *
 
+
 class X86ISA(BaseISA):
-    type = 'X86ISA'
-    cxx_class = 'gem5::X86ISA::ISA'
+    type = "X86ISA"
+    cxx_class = "gem5::X86ISA::ISA"
     cxx_header = "arch/x86/isa.hh"
 
-    vendor_string = Param.String("M5 Simulator",
-                                 "Vendor string for CPUID instruction")
+    # Here we set the default vector string to "HygonGenuine". Previously this
+    # "M5 Simulator" but due to stricter checks in newer versions of GLIBC,
+    # the CPUID is checked for the required features. As "M5 Simulator" is not
+    # genuine CPUID, an error is returned. This change
+    # https://gem5-review.googlesource.com/c/public/gem5/+/64831 changed this
+    # to "GenuineAMD" but due to issues with booting the Linux Kernel using
+    # this vector string (highlighted here:
+    # https://gem5.atlassian.net/browse/GEM5-1300) we opted to use
+    # "HygonGenuine" instead.
+    vendor_string = Param.String(
+        "HygonGenuine", "Vendor string for CPUID instruction"
+    )

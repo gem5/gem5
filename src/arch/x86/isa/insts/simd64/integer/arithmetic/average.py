@@ -33,7 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-microcode = '''
+microcode = """
 def macroop PAVGB_MMX_MMX {
     mavg mmx, mmx, mmxm, size=1, ext=0
 };
@@ -64,4 +64,4 @@ def macroop PAVGW_MMX_P {
     mavg mmx, mmx, ufp1, size=2, ext=0
 };
 # PAVGUSB
-'''
+"""

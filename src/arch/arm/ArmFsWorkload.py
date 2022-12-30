@@ -38,47 +38,57 @@ from m5.options import *
 from m5.SimObject import *
 from m5.objects.Workload import KernelWorkload
 
+
 class ArmMachineType(Enum):
-    map = {
-        'VExpress_EMM' : 2272,
-        'VExpress_EMM64' : 2272,
-        'DTOnly' : -1,
-    }
+    map = {"VExpress_EMM": 2272, "VExpress_EMM64": 2272, "DTOnly": -1}
+
 
 class ArmFsWorkload(KernelWorkload):
-    type = 'ArmFsWorkload'
+    type = "ArmFsWorkload"
     cxx_header = "arch/arm/fs_workload.hh"
-    cxx_class = 'gem5::ArmISA::FsWorkload'
+    cxx_class = "gem5::ArmISA::FsWorkload"
 
-    boot_loader = VectorParam.String([],
+    boot_loader = VectorParam.String(
+        [],
         "File that contains the boot loader code. Zero or more files may be "
         "specified. The first boot loader that matches the kernel's "
-        "architecture will be used.")
+        "architecture will be used.",
+    )
 
-    dtb_filename = Param.String("",
-        "File that contains the Device Tree Blob. Don't use DTB if empty.")
+    dtb_filename = Param.String(
+        "", "File that contains the Device Tree Blob. Don't use DTB if empty."
+    )
     dtb_addr = Param.Addr(0, "DTB or ATAGS address")
-    initrd_filename = Param.String("",
-        "File that contains the initial ramdisk. Don't use initrd if empty.")
+    initrd_filename = Param.String(
+        "",
+        "File that contains the initial ramdisk. Don't use initrd if empty.",
+    )
     initrd_addr = Param.Addr(0, "initrd/initramfs address")
     cpu_release_addr = Param.Addr(0, "cpu-release-addr property")
 
-    machine_type = Param.ArmMachineType('DTOnly',
-        "Machine id from http://www.arm.linux.org.uk/developer/machines/")
-    early_kernel_symbols = Param.Bool(False,
-        "enable early kernel symbol tables before MMU")
-    enable_context_switch_stats_dump = Param.Bool(False,
-        "enable stats/task info dumping at context switch boundaries")
+    machine_type = Param.ArmMachineType(
+        "DTOnly",
+        "Machine id from http://www.arm.linux.org.uk/developer/machines/",
+    )
+    early_kernel_symbols = Param.Bool(
+        False, "enable early kernel symbol tables before MMU"
+    )
+    enable_context_switch_stats_dump = Param.Bool(
+        False, "enable stats/task info dumping at context switch boundaries"
+    )
 
-    panic_on_panic = Param.Bool(False, "Trigger a gem5 panic if the " \
-                                    "guest kernel panics")
-    panic_on_oops = Param.Bool(False, "Trigger a gem5 panic if the " \
-                                   "guest kernel oopses")
+    panic_on_panic = Param.Bool(
+        False, "Trigger a gem5 panic if the " "guest kernel panics"
+    )
+    panic_on_oops = Param.Bool(
+        False, "Trigger a gem5 panic if the " "guest kernel oopses"
+    )
+
 
 class ArmFsLinux(ArmFsWorkload):
-    type = 'ArmFsLinux'
+    type = "ArmFsLinux"
     cxx_header = "arch/arm/linux/fs_workload.hh"
-    cxx_class = 'gem5::ArmISA::FsLinux'
+    cxx_class = "gem5::ArmISA::FsLinux"
 
     load_addr_mask = 0
 
@@ -87,7 +97,8 @@ class ArmFsLinux(ArmFsWorkload):
         """Dump dmesg from the simulated kernel to standard out"""
         pass
 
+
 class ArmFsFreebsd(ArmFsWorkload):
-    type = 'ArmFsFreebsd'
+    type = "ArmFsFreebsd"
     cxx_header = "arch/arm/freebsd/fs_workload.hh"
-    cxx_class = 'gem5::ArmISA::FsFreebsd'
+    cxx_class = "gem5::ArmISA::FsFreebsd"

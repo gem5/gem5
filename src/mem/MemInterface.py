@@ -49,13 +49,15 @@ from m5.objects.AbstractMemory import AbstractMemory
 # suitable for an open-page policy, optimising for sequential accesses
 # hitting in the open row. For a closed-page policy, RoCoRaBaCh
 # maximises parallelism.
-class AddrMap(Enum): vals = ['RoRaBaChCo', 'RoRaBaCoCh', 'RoCoRaBaCh']
+class AddrMap(Enum):
+    vals = ["RoRaBaChCo", "RoRaBaCoCh", "RoCoRaBaCh"]
+
 
 class MemInterface(AbstractMemory):
-    type = 'MemInterface'
+    type = "MemInterface"
     abstract = True
     cxx_header = "mem/mem_interface.hh"
-    cxx_class = 'gem5::memory::MemInterface'
+    cxx_class = "gem5::memory::MemInterface"
 
     # Allow the interface to set required controller buffer sizes
     # each entry corresponds to a burst for the specific memory channel
@@ -65,16 +67,18 @@ class MemInterface(AbstractMemory):
     read_buffer_size = Param.Unsigned(32, "Number of read queue entries")
 
     # scheduler, address map
-    addr_mapping = Param.AddrMap('RoRaBaCoCh', "Address mapping policy")
+    addr_mapping = Param.AddrMap("RoRaBaCoCh", "Address mapping policy")
 
     # size of memory device in Bytes
     device_size = Param.MemorySize("Size of memory device")
     # the physical organisation of the memory
-    device_bus_width = Param.Unsigned("data bus width in bits for each "\
-                                      "memory device/chip")
+    device_bus_width = Param.Unsigned(
+        "data bus width in bits for each " "memory device/chip"
+    )
     burst_length = Param.Unsigned("Burst lenght (BL) in beats")
-    device_rowbuffer_size = Param.MemorySize("Page (row buffer) size per "\
-                                           "device/chip")
+    device_rowbuffer_size = Param.MemorySize(
+        "Page (row buffer) size per " "device/chip"
+    )
     devices_per_rank = Param.Unsigned("Number of devices/chips per rank")
     ranks_per_channel = Param.Unsigned("Number of ranks per channel")
     banks_per_rank = Param.Unsigned("Number of banks per rank")
@@ -91,8 +95,9 @@ class MemInterface(AbstractMemory):
     # This parameter has to account for burst length.
     # Read/Write requests with data size larger than one full burst are broken
     # down into multiple requests in the controller
-    tBURST = Param.Latency("Burst duration "
-                           "(typically burst length / 2 cycles)")
+    tBURST = Param.Latency(
+        "Burst duration " "(typically burst length / 2 cycles)"
+    )
 
     # write-to-read, same rank turnaround penalty
     tWTR = Param.Latency("Write to read, same rank switching time")

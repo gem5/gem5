@@ -51,7 +51,7 @@ const std::string &name();
 namespace gem5
 {
 
-namespace Trace {
+namespace trace {
 
 /** Debug logging base class.  Handles formatting and outputting
  *  time/name/message messages */
@@ -138,7 +138,7 @@ void setDebugLogger(Logger *logger);
 void enable();
 void disable();
 
-} // namespace Trace
+} // namespace trace
 
 // This silly little class allows us to wrap a string in a functor
 // object so that we can give a name() that DPRINTF will like
@@ -179,48 +179,48 @@ struct StringWrap
 
 #define DDUMP(x, data, count) do {               \
     if (GEM5_UNLIKELY(TRACING_ON && ::gem5::debug::x))     \
-        ::gem5::Trace::getDebugLogger()->dump(           \
+        ::gem5::trace::getDebugLogger()->dump(           \
             ::gem5::curTick(), name(), data, count, #x); \
 } while (0)
 
 #define DPRINTF(x, ...) do {                     \
     if (GEM5_UNLIKELY(TRACING_ON && ::gem5::debug::x)) {   \
-        ::gem5::Trace::getDebugLogger()->dprintf_flag(   \
+        ::gem5::trace::getDebugLogger()->dprintf_flag(   \
             ::gem5::curTick(), name(), #x, __VA_ARGS__); \
     }                                            \
 } while (0)
 
 #define DPRINTFS(x, s, ...) do {                        \
     if (GEM5_UNLIKELY(TRACING_ON && ::gem5::debug::x)) {          \
-        ::gem5::Trace::getDebugLogger()->dprintf_flag(          \
+        ::gem5::trace::getDebugLogger()->dprintf_flag(          \
                 ::gem5::curTick(), (s)->name(), #x, __VA_ARGS__); \
     }                                                   \
 } while (0)
 
 #define DPRINTFR(x, ...) do {                          \
     if (GEM5_UNLIKELY(TRACING_ON && ::gem5::debug::x)) {         \
-        ::gem5::Trace::getDebugLogger()->dprintf_flag(         \
+        ::gem5::trace::getDebugLogger()->dprintf_flag(         \
             (::gem5::Tick)-1, std::string(), #x, __VA_ARGS__); \
     }                                                  \
 } while (0)
 
 #define DPRINTFV(x, ...) do {                          \
     if (GEM5_UNLIKELY(TRACING_ON && (x))) {              \
-        ::gem5::Trace::getDebugLogger()->dprintf_flag(         \
+        ::gem5::trace::getDebugLogger()->dprintf_flag(         \
             ::gem5::curTick(), name(), x.name(), __VA_ARGS__); \
     }                                                  \
 } while (0)
 
 #define DPRINTFN(...) do {                                                \
     if (TRACING_ON) {                                                     \
-        ::gem5::Trace::getDebugLogger()->dprintf( \
+        ::gem5::trace::getDebugLogger()->dprintf( \
             ::gem5::curTick(), name(), __VA_ARGS__); \
     }                                                                     \
 } while (0)
 
 #define DPRINTFNR(...) do {                                          \
     if (TRACING_ON) {                                                \
-        ::gem5::Trace::getDebugLogger()->dprintf( \
+        ::gem5::trace::getDebugLogger()->dprintf( \
             (::gem5::Tick)-1, "", __VA_ARGS__); \
     }                                                                \
 } while (0)
@@ -229,7 +229,7 @@ struct StringWrap
     GEM5_DEPRECATED_MACRO_STMT(DPRINTF_UNCONDITIONAL,      \
     do {                                                   \
         if (TRACING_ON) {                                  \
-            ::gem5::Trace::getDebugLogger()->dprintf_flag(         \
+            ::gem5::trace::getDebugLogger()->dprintf_flag(         \
                 ::gem5::curTick(), name(), #x, __VA_ARGS__);       \
         }                                                  \
     } while (0),                                           \

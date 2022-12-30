@@ -68,9 +68,10 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     Gicv3 * gic;
     Gicv3Redistributor * redistributor;
     Gicv3Distributor * distributor;
-    uint32_t cpuId;
 
+    ThreadContext *tc;
     ArmInterruptPin *maintenanceInterrupt;
+    uint32_t cpuId;
 
     BitUnion64(ICC_CTLR_EL1)
         Bitfield<63, 20> res0_3;
@@ -204,6 +205,7 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     static const AddrRange GICH_APR;
     static const AddrRange GICH_LR;
 
+  public:
     BitUnion64(ICH_HCR_EL2)
         Bitfield<63, 32> res0_2;
         Bitfield<31, 27> EOIcount;
@@ -224,6 +226,7 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
         Bitfield<0>      En;
     EndBitUnion(ICH_HCR_EL2)
 
+  protected:
     BitUnion64(ICH_LR_EL2)
         Bitfield<63, 62> State;
         Bitfield<61>     HW;
@@ -356,7 +359,7 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     void setBankedMiscReg(ArmISA::MiscRegIndex misc_reg, RegVal val) const;
   public:
 
-    Gicv3CPUInterface(Gicv3 * gic, uint32_t cpu_id);
+    Gicv3CPUInterface(Gicv3 * gic, ThreadContext *tc);
 
     void init();
 

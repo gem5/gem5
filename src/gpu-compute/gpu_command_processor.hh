@@ -220,10 +220,6 @@ class GPUCommandProcessor : public DmaVirtDevice
                     task->amdQueue.compute_tmpring_size_wavesize * 1024,
                     task->privMemPerItem());
 
-            // Currently this is not supported in GPU full system
-            fatal_if(FullSystem,
-                     "Runtime dynamic scratch allocation not supported");
-
             updateHsaSignal(task->amdQueue.queue_inactive_signal.handle, 1,
                             [ = ] (const uint64_t &dma_buffer)
                                 { WaitScratchDmaEvent(task, dma_buffer); });
@@ -273,7 +269,15 @@ class GPUCommandProcessor : public DmaVirtDevice
             auto cb = new DmaVirtCallback<uint64_t>(
                 [ = ] (const uint64_t &dma_buffer)
                 { WaitScratchDmaEvent(task, dma_buffer); } );
-            dmaReadVirt(value_addr, sizeof(Addr), cb, &cb->dmaBuffer);
+
+            /**
+             * Delay for a large amount of ticks to give the CPU time to
+             * setup the scratch space. The delay should be non-zero to since
+             * this method calls back itself and can cause an infinite loop
+             * in the event queue if the allocation is not completed by the
+             * first time this is called.
+             */
+            dmaReadVirt(value_addr, sizeof(Addr), cb, &cb->dmaBuffer, 1e9);
         }
     }
 };

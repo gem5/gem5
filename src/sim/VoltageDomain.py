@@ -36,10 +36,11 @@
 from m5.SimObject import SimObject
 from m5.params import *
 
+
 class VoltageDomain(SimObject):
-    type = 'VoltageDomain'
+    type = "VoltageDomain"
     cxx_header = "sim/voltage_domain.hh"
-    cxx_class = 'gem5::VoltageDomain'
+    cxx_class = "gem5::VoltageDomain"
 
     # Single or list of voltages for the voltage domain.  If only a single
     # voltage is specified, it is used for all different frequencies.
@@ -47,4 +48,4 @@ class VoltageDomain(SimObject):
     # domain (src/sim/ClockDomain.py) must match.  Voltages must be specified in
     # descending order. We use a default voltage of 1V to avoid forcing users to
     # set it even if they are not interested in using the functionality
-    voltage = VectorParam.Voltage('1V', "Operational voltage(s)")
+    voltage = VectorParam.Voltage("1V", "Operational voltage(s)")

@@ -41,7 +41,9 @@
 #include "arch/arm/nativetrace.hh"
 
 #include "arch/arm/regs/cc.hh"
+#include "arch/arm/regs/int.hh"
 #include "arch/arm/regs/misc.hh"
+#include "arch/arm/regs/vec.hh"
 #include "base/compiler.hh"
 #include "cpu/thread_context.hh"
 #include "debug/ExecRegDelta.hh"
@@ -53,7 +55,7 @@ namespace gem5
 
 using namespace ArmISA;
 
-namespace Trace {
+namespace trace {
 
 [[maybe_unused]] static const char *regNames[] = {
     "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
@@ -66,7 +68,7 @@ namespace Trace {
 };
 
 void
-Trace::ArmNativeTrace::ThreadState::update(NativeTrace *parent)
+ArmNativeTrace::ThreadState::update(NativeTrace *parent)
 {
     oldState = state[current];
     current = (current + 1) % 2;
@@ -101,7 +103,7 @@ Trace::ArmNativeTrace::ThreadState::update(NativeTrace *parent)
 }
 
 void
-Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
+ArmNativeTrace::ThreadState::update(ThreadContext *tc)
 {
     oldState = state[current];
     current = (current + 1) % 2;
@@ -109,7 +111,7 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
 
     // Regular int regs
     for (int i = 0; i < 15; i++) {
-        newState[i] = tc->getReg(RegId(IntRegClass, i));
+        newState[i] = tc->getReg(intRegClass[i]);
         changed[i] = (oldState[i] != newState[i]);
     }
 
@@ -129,7 +131,7 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
 
     for (int i = 0; i < NumVecV7ArchRegs; i++) {
         ArmISA::VecRegContainer vec_container;
-        tc->getReg(RegId(VecRegClass, i), &vec_container);
+        tc->getReg(vecRegClass[i], &vec_container);
         auto *vec = vec_container.as<uint64_t>();
         newState[STATE_F0 + 2*i] = vec[0];
         newState[STATE_F0 + 2*i + 1] = vec[1];
@@ -139,7 +141,7 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
 }
 
 void
-Trace::ArmNativeTrace::check(NativeTraceRecord *record)
+ArmNativeTrace::check(NativeTraceRecord *record)
 {
     ThreadContext *tc = record->getThread();
     // This area is read only on the target. It can't stop there to tell us
@@ -221,5 +223,5 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
     }
 }
 
-} // namespace Trace
+} // namespace trace
 } // namespace gem5
