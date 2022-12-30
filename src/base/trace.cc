@@ -38,7 +38,6 @@
 
 #include "base/atomicio.hh"
 #include "base/logging.hh"
-#include "base/output.hh"
 #include "base/str.hh"
 #include "debug/FmtFlag.hh"
 #include "debug/FmtStackTrace.hh"
