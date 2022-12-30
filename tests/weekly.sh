@@ -37,7 +37,7 @@ docker_mem_limit="24g"
 
 # The docker tag to use (varies between develop, and versions on the staging
 # branch)
-tag="v22-1"
+tag="latest"
 
 # We assume the first two arguments are the number of threads followed by the
 # GPU ISA to test. These default to 1 and GCN3_X86 is no argument is given.

@@ -37,7 +37,7 @@ docker_mem_limit="18g"
 
 # The docker tag to use (varies between develop, and versions on the staging
 # branch)
-tag="v22-1"
+tag="latest"
 
 # The first argument is the number of threads to be used for compilation. If no
 # argument is given we default to one.
