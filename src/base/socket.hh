@@ -31,9 +31,43 @@
 
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/un.h>
+
+#include <string>
 
 namespace gem5
 {
+
+/**
+ * @brief Wrapper around sockaddr_un, so that it can be used for both file
+ * based unix sockets as well as abstract unix sockets.
+ */
+struct UnixSocketAddr
+{
+    /**
+     * @brief Builds UnixSocketAddr from the given path.
+     * @pre: `path` either represents a file based unix socket, or an abstract
+     *       unix socket. If `path` represents an abstract socket, it should
+     *       start with the character '@', and it should not have any null
+     *       bytes in the name.
+     * @param path: Pathname, where the socket should be instantiated.
+     * @return UnixSocketAddr
+     */
+    static UnixSocketAddr build(const std::string &path);
+
+    sockaddr_un addr;
+    // Size of `sockaddr_un addr`. This is equal to sizeof(sockaddr_un) if
+    // `addr` represents a normal file based unix socket. For abstract sockets
+    // however, the size could be different. Because all sizeof(sun_path) is
+    // used to represent the name of an abstract socket, addrSize for abstract
+    // sockets only count the number of characters actually used by sun_path,
+    // excluding any trailing null bytes.
+    size_t addrSize;
+    bool isAbstract;
+    // Formatted string for file based sockets look the same as addr.sun_path.
+    // For abstract sockets however, all null bytes are replaced with @
+    std::string formattedPath;
+};
 
 class ListenSocket
 {

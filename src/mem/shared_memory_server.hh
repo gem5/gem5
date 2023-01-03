@@ -33,6 +33,7 @@
 #include <unordered_map>
 
 #include "base/pollevent.hh"
+#include "base/socket.hh"
 #include "params/SharedMemoryServer.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
@@ -82,7 +83,7 @@ class SharedMemoryServer : public SimObject
         void process(int revent) override;
     };
 
-    std::string unixSocketPath;
+    UnixSocketAddr sockAddr;
     System* system;
 
     int serverFd;
