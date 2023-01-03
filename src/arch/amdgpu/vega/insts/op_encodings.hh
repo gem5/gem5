@@ -1007,8 +1007,9 @@ namespace VegaISA
             // mask any upper bits from the vaddr.
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {
+                    ScalarRegI32 voffset = vaddr[lane];
                     gpuDynInst->addr.at(lane) =
-                        saddr.rawData() + (vaddr[lane] & 0xffffffff) + offset;
+                        saddr.rawData() + voffset + offset;
                 }
             }
         }
