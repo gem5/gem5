@@ -23,8 +23,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import functools
-
 from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
 from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
 from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
@@ -41,13 +39,6 @@ class RiscvCPU:
     ArchMMU = RiscvMMU
     ArchInterrupts = RiscvInterrupts
     ArchISA = RiscvISA
-
-
-class Riscv32CPU:
-    ArchDecoder = RiscvDecoder
-    ArchMMU = RiscvMMU
-    ArchInterrupts = RiscvInterrupts
-    ArchISA = functools.partial(RiscvISA, riscv_type="RV32")
 
 
 class RiscvAtomicSimpleCPU(BaseAtomicSimpleCPU, RiscvCPU):
@@ -67,24 +58,4 @@ class RiscvO3CPU(BaseO3CPU, RiscvCPU):
 
 
 class RiscvMinorCPU(BaseMinorCPU, RiscvCPU):
-    mmu = RiscvMMU()
-
-
-class Riscv32AtomicSimpleCPU(BaseAtomicSimpleCPU, Riscv32CPU):
-    mmu = RiscvMMU()
-
-
-class Riscv32NonCachingSimpleCPU(BaseNonCachingSimpleCPU, Riscv32CPU):
-    mmu = RiscvMMU()
-
-
-class Riscv32TimingSimpleCPU(BaseTimingSimpleCPU, Riscv32CPU):
-    mmu = RiscvMMU()
-
-
-class Riscv32O3CPU(BaseO3CPU, Riscv32CPU):
-    mmu = RiscvMMU()
-
-
-class Riscv32MinorCPU(BaseMinorCPU, Riscv32CPU):
     mmu = RiscvMMU()
