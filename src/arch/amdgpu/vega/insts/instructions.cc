@@ -34877,6 +34877,68 @@ namespace VegaISA
     Inst_DS__DS_WRITE_B8::completeAcc(GPUDynInstPtr gpuDynInst)
     {
     } // completeAcc
+    // --- Inst_DS__DS_WRITE_B8_D16_HI class methods ---
+
+    Inst_DS__DS_WRITE_B8_D16_HI::Inst_DS__DS_WRITE_B8_D16_HI(InFmt_DS *iFmt)
+        : Inst_DS(iFmt, "ds_write_b8_d16_hi")
+    {
+        setFlag(MemoryRef);
+        setFlag(Store);
+    } // Inst_DS__DS_WRITE_B8_D16_HI
+
+    Inst_DS__DS_WRITE_B8_D16_HI::~Inst_DS__DS_WRITE_B8_D16_HI()
+    {
+    } // ~Inst_DS__DS_WRITE_B8_D16_HI
+
+    // --- description from .arch file ---
+    // MEM[ADDR] = DATA[23:16].
+    // Byte write in to high word.
+    void
+    Inst_DS__DS_WRITE_B8_D16_HI::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decLGKMInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(
+                gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
+        ConstVecOperandU32 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU8 data(gpuDynInst, extData.DATA0);
+
+        addr.read();
+        data.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU8*>(gpuDynInst->d_data))[lane]
+                    = bits(data[lane], 23, 16);
+            }
+        }
+
+        gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
+    } // execute
+
+    void
+    Inst_DS__DS_WRITE_B8_D16_HI::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        Addr offset0 = instData.OFFSET0;
+        Addr offset1 = instData.OFFSET1;
+        Addr offset = (offset1 << 8) | offset0;
+
+        initMemWrite<VecElemU8>(gpuDynInst, offset);
+    } // initiateAcc
+
+    void
+    Inst_DS__DS_WRITE_B8_D16_HI::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+    } // completeAcc
     // --- Inst_DS__DS_WRITE_B16 class methods ---
 
     Inst_DS__DS_WRITE_B16::Inst_DS__DS_WRITE_B16(InFmt_DS *iFmt)
