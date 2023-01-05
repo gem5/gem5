@@ -168,8 +168,6 @@ structure(NBProbeRequestMsg, desc="...", interface="Message") {
   MachineID Requestor,          desc="Requestor id for 3-hop requests";
   bool NoAckNeeded, default="false", desc="For short circuting acks";
   int ProgramCounter,           desc="PC that accesses to this block";
-  bool isGLCSet,                desc="Bypass L1 Cache";
-  bool isSLCSet,                desc="Bypass L1 and L2 Caches";
 
   bool functionalRead(Packet *pkt) {
     return false;

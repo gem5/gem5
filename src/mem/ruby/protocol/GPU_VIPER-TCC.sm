@@ -283,7 +283,13 @@ machine(MachineType:TCC, "TCC Cache")
       peek(responseFromNB_in, ResponseMsg, block_on="addr") {
         TBE tbe := TBEs.lookup(in_msg.addr);
         Entry cache_entry := getCacheEntry(in_msg.addr);
-        if (in_msg.isSLCSet) {
+        bool is_slc_set := false;
+
+        if (!is_invalid(tbe)) {
+            is_slc_set := tbe.isSLCSet;
+        }
+
+        if (is_slc_set) {
             // If the SLC bit is set, the response needs to bypass the cache
             // and should not be allocated an entry.
             trigger(Event:Bypass, in_msg.addr, cache_entry, tbe);
@@ -343,6 +349,10 @@ machine(MachineType:TCC, "TCC Cache")
                 trigger(Event:WrVicBlk, in_msg.addr, cache_entry, tbe);
             }
         } else if (in_msg.Type == CoherenceRequestType:Atomic) {
+          // Currently the Atomic requests do not have GLC/SLC bit handing
+          // support. The assert ensures that the requests do not have
+          // these set, and therefore do not expect to bypass the cache
+          assert(!in_msg.isSLCSet);
           trigger(Event:Atomic, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:RdBlk) {
           if (in_msg.isSLCSet) {
@@ -399,8 +409,8 @@ machine(MachineType:TCC, "TCC Cache")
       out_msg.State := CoherenceState:Shared;
       DPRINTF(RubySlicc, "%s\n", out_msg);
       peek(responseFromNB_in, ResponseMsg) {
-        out_msg.isGLCSet := in_msg.isGLCSet;
-        out_msg.isSLCSet := in_msg.isSLCSet;
+        out_msg.isGLCSet := tbe.isGLCSet;
+        out_msg.isSLCSet := tbe.isSLCSet;
       }
     }
     enqueue(unblockToNB_out, UnblockMsg, 1) {
@@ -408,8 +418,8 @@ machine(MachineType:TCC, "TCC Cache")
       out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
       peek(responseFromNB_in, ResponseMsg) {
-        out_msg.isGLCSet := in_msg.isGLCSet;
-        out_msg.isSLCSet := in_msg.isSLCSet;
+        out_msg.isGLCSet := tbe.isGLCSet;
+        out_msg.isSLCSet := tbe.isSLCSet;
       }
       DPRINTF(RubySlicc, "%s\n", out_msg);
     }
@@ -426,8 +436,8 @@ machine(MachineType:TCC, "TCC Cache")
           out_msg.MessageSize := MessageSizeType:Response_Data;
           out_msg.Dirty := false;
           out_msg.State := CoherenceState:Shared;
-          out_msg.isGLCSet := in_msg.isGLCSet;
-          out_msg.isSLCSet := in_msg.isSLCSet;
+          out_msg.isGLCSet := tbe.isGLCSet;
+          out_msg.isSLCSet := tbe.isSLCSet;
           DPRINTF(RubySlicc, "%s\n", out_msg);
         }
         enqueue(unblockToNB_out, UnblockMsg, 1) {
@@ -449,8 +459,8 @@ machine(MachineType:TCC, "TCC Cache")
           out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
           out_msg.Shared := false; // unneeded for this request
           out_msg.MessageSize := in_msg.MessageSize;
-          out_msg.isGLCSet := in_msg.isGLCSet;
-          out_msg.isSLCSet := in_msg.isSLCSet;
+          out_msg.isGLCSet := tbe.isGLCSet;
+          out_msg.isSLCSet := tbe.isSLCSet;
           DPRINTF(RubySlicc, "%s\n", out_msg);
         }
       }
@@ -467,9 +477,6 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.Sender := machineID;
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
         out_msg.instSeqNum := in_msg.instSeqNum;
-        out_msg.isGLCSet := in_msg.isGLCSet;
-        out_msg.isSLCSet := in_msg.isSLCSet;
-
       }
     }
   }
@@ -484,9 +491,6 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.Sender := machineID;
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
         out_msg.instSeqNum := in_msg.instSeqNum;
-        out_msg.isGLCSet := in_msg.isGLCSet;
-        out_msg.isSLCSet := in_msg.isSLCSet;
-
       }
     }
   }
@@ -500,9 +504,8 @@ machine(MachineType:TCC, "TCC Cache")
           out_msg.Sender := machineID;
           out_msg.MessageSize := in_msg.MessageSize;
           out_msg.DataBlk := in_msg.DataBlk;
-          out_msg.isGLCSet := in_msg.isGLCSet;
-          out_msg.isSLCSet := in_msg.isSLCSet;
-
+          out_msg.isGLCSet := tbe.isGLCSet;
+          out_msg.isSLCSet := tbe.isSLCSet;
         }
     }
   }
@@ -535,9 +538,9 @@ machine(MachineType:TCC, "TCC Cache")
       peek(coreRequestNetwork_in, CPURequestMsg) {
         if(in_msg.Type == CoherenceRequestType:RdBlk || in_msg.Type == CoherenceRequestType:Atomic){
           tbe.Destination.add(in_msg.Requestor);
-          tbe.isGLCSet := in_msg.isGLCSet;
-          tbe.isSLCSet := in_msg.isSLCSet;
         }
+        tbe.isGLCSet := in_msg.isGLCSet;
+        tbe.isSLCSet := in_msg.isSLCSet;
       }
     }
   }
@@ -576,8 +579,6 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.writeMask.orMask(in_msg.writeMask);
         out_msg.instSeqNum := in_msg.instSeqNum;
-        out_msg.isGLCSet := in_msg.isGLCSet;
-        out_msg.isSLCSet := in_msg.isSLCSet;
       }
     }
   }
@@ -593,10 +594,6 @@ machine(MachineType:TCC, "TCC Cache")
       out_msg.Dirty := true;
       out_msg.DataBlk := cache_entry.DataBlk;
       out_msg.writeMask.orMask(cache_entry.writeMask);
-      peek(coreRequestNetwork_in, CPURequestMsg) {
-        out_msg.isGLCSet := in_msg.isGLCSet;
-        out_msg.isSLCSet := in_msg.isSLCSet;
-      }
     }
   }
 
@@ -611,8 +608,6 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.Type := CoherenceRequestType:Atomic;
         out_msg.Dirty := true;
         out_msg.writeMask.orMask(in_msg.writeMask);
-        out_msg.isGLCSet := in_msg.isGLCSet;
-        out_msg.isSLCSet := in_msg.isSLCSet;
       }
     }
   }
@@ -628,10 +623,6 @@ machine(MachineType:TCC, "TCC Cache")
       out_msg.Ntsl := true;
       out_msg.State := CoherenceState:NA;
       out_msg.MessageSize := MessageSizeType:Response_Control;
-      peek(probeNetwork_in, NBProbeRequestMsg) {
-        out_msg.isGLCSet := in_msg.isGLCSet;
-        out_msg.isSLCSet := in_msg.isSLCSet;
-      }
     }
   }
   action(ut_updateTag, "ut", desc="update Tag (i.e. set MRU)") {
@@ -676,8 +667,8 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.addr := address;
         out_msg.Type := TriggerType:AtomicDone;
         peek(responseFromNB_in, ResponseMsg) {
-          out_msg.isGLCSet := in_msg.isGLCSet;
-          out_msg.isSLCSet := in_msg.isSLCSet;
+          out_msg.isGLCSet := tbe.isGLCSet;
+          out_msg.isSLCSet := tbe.isSLCSet;
         }
       }
     }
