@@ -721,6 +721,7 @@ machine(MachineType:TCC, "TCC Cache")
     p_profileHit;
     t_allocateTBE;
     wb_writeBack;
+    p_popRequestQueue;
   }
 
   transition(I, RdBlk, IV) {TagArrayRead} {
@@ -815,6 +816,7 @@ transition(I, Atomic, A) {TagArrayRead} {
     p_profileHit;
     t_allocateTBE;
     wb_writeBack;
+    p_popRequestQueue;
   }
 
   transition(I, WrVicBlk) {TagArrayRead} {
