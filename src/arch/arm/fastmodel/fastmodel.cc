@@ -37,15 +37,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/logging.hh"
 #include "python/pybind11/pybind.hh"
 #include "scx/scx.h"
 #include "sim/init.hh"
+#include "systemc/utils/report.hh"
 
 namespace gem5
 {
 
 namespace
 {
+
+void
+fastmodel_sc_report_handler(
+     const sc_core::sc_report &report, const sc_core::sc_actions &actions)
+{
+    const char *msg = report.get_msg();
+    if (!msg)
+        return;
+
+    panic_if(
+        strstr(msg, "Simulation code-translation cache failed to gain DMI") ||
+            strstr(msg, "I-side given unusable DMI"),
+        "DMI warning from fastmodel, "
+        "aborting simulation instead of running slowly.");
+}
 
 void
 arm_fast_model_pybind(pybind11::module_ &m_internal)
@@ -118,6 +135,12 @@ arm_fast_model_pybind(pybind11::module_ &m_internal)
              static_cast<sg::ticks_t (*)(sg::Tag<sg::ticks_t> *)>(
                  &scx::scx_get_min_sync_latency))
         ;
+
+    // submodule for gem5-specific functions
+    auto gem5 = arm_fast_model.def_submodule("gem5");
+    gem5.def("enable_exit_on_dmi_warning_handler", []() {
+            sc_gem5::addExtraSystemCReportHandler(fastmodel_sc_report_handler);
+        });
 }
 EmbeddedPyBind embed_("arm_fast_model", &arm_fast_model_pybind);
 
