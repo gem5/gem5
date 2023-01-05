@@ -68,6 +68,31 @@ sc_core::sc_actions reportCatchActions = sc_core::SC_DISPLAY;
 sc_core::sc_report_handler_proc reportHandlerProc =
     &sc_core::sc_report_handler::default_handler;
 
+namespace
+{
+
+std::list<sc_core::sc_report_handler_proc> extraReportHandlerProcs;
+
+} // anonymous namespace
+
+const std::list<sc_core::sc_report_handler_proc> &
+getExtraSystemCReportHandlers()
+{
+    return extraReportHandlerProcs;
+}
+
+void
+addExtraSystemCReportHandler(sc_core::sc_report_handler_proc proc)
+{
+    extraReportHandlerProcs.push_back(proc);
+}
+
+void
+removeExtraSystemCReportHandler(sc_core::sc_report_handler_proc proc)
+{
+    extraReportHandlerProcs.remove(proc);
+}
+
 std::unique_ptr<sc_core::sc_report> globalReportCache;
 
 bool reportWarningsAsErrors = false;
