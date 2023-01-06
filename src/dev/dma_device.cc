@@ -57,7 +57,7 @@ namespace gem5
 
 DmaPort::DmaPort(ClockedObject *dev, System *s,
                  uint32_t sid, uint32_t ssid)
-    : RequestPort(dev->name() + ".dma", dev),
+    : RequestPort(dev->name() + ".dma"),
       device(dev), sys(s), requestorId(s->getRequestorId(dev)),
       sendEvent([this]{ sendDma(); }, dev->name()),
       defaultSid(sid), defaultSSid(ssid), cacheLineSize(s->cacheLineSize())

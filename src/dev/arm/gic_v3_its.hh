@@ -94,7 +94,7 @@ class Gicv3Its : public BasicPioDevice
 
       public:
         DataPort(const std::string &_name, Gicv3Its &_its) :
-            RequestPort(_name, &_its),
+            RequestPort(_name),
             its(_its)
         {}
 

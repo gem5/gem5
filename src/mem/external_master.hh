@@ -75,7 +75,7 @@ class ExternalMaster : public SimObject
       public:
         ExternalPort(const std::string &name_,
             ExternalMaster &owner_) :
-            RequestPort(name_, &owner_), owner(owner_)
+            RequestPort(name_), owner(owner_)
         { }
 
         ~ExternalPort() { }

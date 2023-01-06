@@ -59,7 +59,7 @@ class Walker : public ClockedObject
     {
       public:
         WalkerPort(const std::string &_name, Walker * _walker) :
-            RequestPort(_name, _walker), walker(_walker)
+            RequestPort(_name), walker(_walker)
         {}
 
       protected:

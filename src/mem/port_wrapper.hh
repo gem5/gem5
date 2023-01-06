@@ -80,8 +80,7 @@ class RequestPortWrapper : public RequestPort
     using RecvTimingRespCallback = std::function<bool(PacketPtr)>;
     using RecvReqRetryCallback = std::function<void()>;
 
-    RequestPortWrapper(const std::string& name, SimObject* _owner,
-                       PortID id = InvalidPortID);
+    RequestPortWrapper(const std::string& name, PortID id = InvalidPortID);
 
     void recvRangeChange() override;
 
@@ -120,8 +119,7 @@ class ResponsePortWrapper : public ResponsePort
 
     using RecvRespRetryCallback = std::function<void()>;
 
-    ResponsePortWrapper(const std::string& name, SimObject* _owner,
-                        PortID id = InvalidPortID);
+    ResponsePortWrapper(const std::string& name, PortID id = InvalidPortID);
 
     AddrRangeList getAddrRanges() const override;
 

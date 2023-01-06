@@ -1460,7 +1460,7 @@ MemCtrl::getAddrRanges()
 
 MemCtrl::MemoryPort::
 MemoryPort(const std::string& name, MemCtrl& _ctrl)
-    : QueuedResponsePort(name, &_ctrl, queue), queue(_ctrl, *this, true),
+    : QueuedResponsePort(name, queue), queue(_ctrl, *this, true),
       ctrl(_ctrl)
 { }
 

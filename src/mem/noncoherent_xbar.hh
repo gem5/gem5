@@ -96,7 +96,7 @@ class NoncoherentXBar : public BaseXBar
 
         NoncoherentXBarResponsePort(const std::string &_name,
                                 NoncoherentXBar &_xbar, PortID _id)
-            : QueuedResponsePort(_name, &_xbar, queue, _id), xbar(_xbar),
+            : QueuedResponsePort(_name, queue, _id), xbar(_xbar),
               queue(_xbar, *this)
         { }
 
@@ -156,7 +156,7 @@ class NoncoherentXBar : public BaseXBar
 
         NoncoherentXBarRequestPort(const std::string &_name,
                                  NoncoherentXBar &_xbar, PortID _id)
-            : RequestPort(_name, &_xbar, _id), xbar(_xbar)
+            : RequestPort(_name, _id), xbar(_xbar)
         { }
 
       protected:

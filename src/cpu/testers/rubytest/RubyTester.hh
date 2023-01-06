@@ -76,7 +76,7 @@ class RubyTester : public ClockedObject
 
         CpuPort(const std::string &_name, RubyTester *_tester, PortID _id,
                 PortID _index)
-            : RequestPort(_name, _tester, _id), tester(_tester),
+            : RequestPort(_name, _id), tester(_tester),
               globalIdx(_index)
         {}
 

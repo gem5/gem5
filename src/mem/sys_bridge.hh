@@ -130,9 +130,9 @@ class SysBridge : public SimObject
         SysBridgeSourcePort *sourcePort;
 
       public:
-        SysBridgeTargetPort(const std::string &_name, SimObject *owner,
+        SysBridgeTargetPort(const std::string &_name,
                 SysBridgeSourcePort *source_port, RequestorID _id) :
-            RequestPort(_name, owner), BridgingPort(_id),
+            RequestPort(_name), BridgingPort(_id),
             sourcePort(source_port)
         {
             DPRINTF(SysBridge, "Target side requestor ID = %s.\n", _id);
@@ -223,9 +223,9 @@ class SysBridge : public SimObject
         SysBridgeTargetPort *targetPort;
 
       public:
-        SysBridgeSourcePort(const std::string &_name, SimObject *owner,
+        SysBridgeSourcePort(const std::string &_name,
                 SysBridgeTargetPort *target_port, RequestorID _id) :
-            ResponsePort(_name, owner), BridgingPort(_id),
+            ResponsePort(_name), BridgingPort(_id),
             targetPort(target_port)
         {
             DPRINTF(SysBridge, "Source side requestor ID = %s.\n", _id);

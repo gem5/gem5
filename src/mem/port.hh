@@ -480,9 +480,7 @@ class ResponsePort : public Port, public AtomicResponseProtocol,
 class [[deprecated]] SlavePort : public ResponsePort
 {
   public:
-    SlavePort(const std::string& name, SimObject* _owner,
-              PortID id=InvalidPortID) : ResponsePort(name, _owner, id)
-              {}
+    using ResponsePort::ResponsePort;
 };
 
 inline Tick

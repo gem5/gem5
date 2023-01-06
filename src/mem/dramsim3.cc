@@ -357,7 +357,7 @@ DRAMsim3::drain()
 
 DRAMsim3::MemoryPort::MemoryPort(const std::string& _name,
                                  DRAMsim3& _memory)
-    : ResponsePort(_name, &_memory), mem(_memory)
+    : ResponsePort(_name), mem(_memory)
 { }
 
 AddrRangeList

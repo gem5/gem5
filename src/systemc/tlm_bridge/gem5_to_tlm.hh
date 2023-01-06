@@ -145,7 +145,7 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
       public:
         BridgeResponsePort(const std::string &name_,
                         Gem5ToTlmBridge<BITWIDTH> &bridge_) :
-            ResponsePort(name_, nullptr), bridge(bridge_)
+            ResponsePort(name_), bridge(bridge_)
         {}
     };
 

@@ -64,7 +64,7 @@ class DefaultRequestPort : public RequestPort
     }
 
   public:
-    DefaultRequestPort() : RequestPort("default_request_port", nullptr) {}
+    DefaultRequestPort() : RequestPort("default_request_port") {}
 
     // Atomic protocol.
     Tick recvAtomicSnoop(PacketPtr) override { blowUp(); }
@@ -89,7 +89,7 @@ class DefaultResponsePort : public ResponsePort
     }
 
   public:
-    DefaultResponsePort() : ResponsePort("default_response_port", nullptr) {}
+    DefaultResponsePort() : ResponsePort("default_response_port") {}
 
     // Atomic protocol.
     Tick recvAtomic(PacketPtr) override { blowUp(); }

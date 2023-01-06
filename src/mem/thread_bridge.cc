@@ -40,7 +40,7 @@ ThreadBridge::ThreadBridge(const ThreadBridgeParams &p)
 
 ThreadBridge::IncomingPort::IncomingPort(const std::string &name,
                                          ThreadBridge &device)
-    : ResponsePort(name, &device), device_(device)
+    : ResponsePort(name), device_(device)
 {
 }
 
@@ -94,7 +94,7 @@ ThreadBridge::IncomingPort::recvMemBackdoorReq(const MemBackdoorReq &req,
 
 ThreadBridge::OutgoingPort::OutgoingPort(const std::string &name,
                                          ThreadBridge &device)
-    : RequestPort(name, &device), device_(device)
+    : RequestPort(name), device_(device)
 {
 }
 

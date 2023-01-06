@@ -352,7 +352,7 @@ MemSinkCtrl::MemSinkCtrlStats::MemSinkCtrlStats(statistics::Group *parent)
 
 MemSinkCtrl::MemoryPort::MemoryPort(const std::string& n,
                                     MemSinkCtrl& m)
-  : QueuedResponsePort(n, &m, queue, true),
+  : QueuedResponsePort(n, queue, true),
    mem(m), queue(mem, *this, true)
 {}
 

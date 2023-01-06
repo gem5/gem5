@@ -124,7 +124,7 @@ class TLBCoalescer : public ClockedObject
       public:
         CpuSidePort(const std::string &_name, TLBCoalescer *tlb_coalescer,
                     PortID _index)
-            : ResponsePort(_name, tlb_coalescer), coalescer(tlb_coalescer),
+            : ResponsePort(_name), coalescer(tlb_coalescer),
               index(_index) { }
 
       protected:

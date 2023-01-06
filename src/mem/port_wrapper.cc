@@ -30,9 +30,8 @@
 namespace gem5
 {
 
-RequestPortWrapper::RequestPortWrapper(const std::string& name,
-                                       SimObject* _owner, PortID id)
-    : RequestPort(name, _owner, id)
+RequestPortWrapper::RequestPortWrapper(const std::string& name, PortID id)
+    : RequestPort(name, id)
 {
 }
 
@@ -74,9 +73,8 @@ RequestPortWrapper::setTimingCallbacks(RecvTimingRespCallback resp_cb,
     recvReqRetryCb = std::move(retry_cb);
 }
 
-ResponsePortWrapper::ResponsePortWrapper(const std::string& name,
-                                         SimObject* _owner, PortID id)
-    : ResponsePort(name, _owner, id)
+ResponsePortWrapper::ResponsePortWrapper(const std::string& name, PortID id)
+    : ResponsePort(name, id)
 {
 }
 

@@ -87,8 +87,8 @@ class System : public SimObject, public PCEventScope
         /**
          * Create a system port with a name and an owner.
          */
-        SystemPort(const std::string &_name, SimObject *_owner)
-            : RequestPort(_name, _owner)
+        SystemPort(const std::string &_name)
+            : RequestPort(_name)
         { }
 
         bool

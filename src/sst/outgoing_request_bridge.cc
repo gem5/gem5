@@ -52,7 +52,7 @@ OutgoingRequestBridge::~OutgoingRequestBridge()
 OutgoingRequestBridge::
 OutgoingRequestPort::OutgoingRequestPort(const std::string &name_,
                                          OutgoingRequestBridge* owner_) :
-    ResponsePort(name_, owner_)
+    ResponsePort(name_)
 {
     owner = owner_;
 }

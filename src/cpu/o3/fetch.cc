@@ -76,7 +76,7 @@ namespace o3
 {
 
 Fetch::IcachePort::IcachePort(Fetch *_fetch, CPU *_cpu) :
-        RequestPort(_cpu->name() + ".icache_port", _cpu), fetch(_fetch)
+        RequestPort(_cpu->name() + ".icache_port"), fetch(_fetch)
 {}
 
 

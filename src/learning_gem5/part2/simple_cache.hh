@@ -74,7 +74,7 @@ class SimpleCache : public ClockedObject
          * Constructor. Just calls the superclass constructor.
          */
         CPUSidePort(const std::string& name, int id, SimpleCache *owner) :
-            ResponsePort(name, owner), id(id), owner(owner), needRetry(false),
+            ResponsePort(name), id(id), owner(owner), needRetry(false),
             blockedPacket(nullptr)
         { }
 
@@ -154,7 +154,7 @@ class SimpleCache : public ClockedObject
          * Constructor. Just calls the superclass constructor.
          */
         MemSidePort(const std::string& name, SimpleCache *owner) :
-            RequestPort(name, owner), owner(owner), blockedPacket(nullptr)
+            RequestPort(name), owner(owner), blockedPacket(nullptr)
         { }
 
         /**

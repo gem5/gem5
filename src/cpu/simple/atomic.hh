@@ -117,8 +117,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
       public:
 
-        AtomicCPUPort(const std::string &_name, BaseSimpleCPU* _cpu)
-            : RequestPort(_name, _cpu)
+        AtomicCPUPort(const std::string &_name)
+            : RequestPort(_name)
         { }
 
       protected:
@@ -142,7 +142,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
       public:
         AtomicCPUDPort(const std::string &_name, BaseSimpleCPU *_cpu)
-            : AtomicCPUPort(_name, _cpu), cpu(_cpu)
+            : AtomicCPUPort(_name), cpu(_cpu)
         {
             cacheBlockMask = ~(cpu->cacheLineSize() - 1);
         }
