@@ -376,6 +376,8 @@ class SharedLib(TopLevelBase):
     def declare(self, env):
         objs = self.srcs_to_objs(env, self.sources(env))
 
+        env = env.Clone()
+
         libs = self.libs(env)
         # Higher priority libraries should be earlier in the list.
         libs.sort(key=lambda l: l.priority, reverse=True)
