@@ -25,7 +25,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from .abstract_board import AbstractBoard
-from ...resources.resource import AbstractResource
+from ...resources.resource import (
+    FileResource,
+    AbstractResource,
+    BinaryResource,
+    CheckpointResource,
+    SimpointResource,
+)
 from gem5.utils.simpoint import SimPoint
 
 from m5.objects import SEWorkload, Process
@@ -51,13 +57,13 @@ class SEBinaryWorkload:
 
     def set_se_binary_workload(
         self,
-        binary: AbstractResource,
+        binary: BinaryResource,
         exit_on_work_items: bool = True,
-        stdin_file: Optional[AbstractResource] = None,
+        stdin_file: Optional[FileResource] = None,
         stdout_file: Optional[Path] = None,
         stderr_file: Optional[Path] = None,
         arguments: List[str] = [],
-        checkpoint: Optional[Union[Path, AbstractResource]] = None,
+        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
     ) -> None:
         """Set up the system to run a specific binary.
 
@@ -117,10 +123,10 @@ class SEBinaryWorkload:
 
     def set_se_simpoint_workload(
         self,
-        binary: AbstractResource,
+        binary: BinaryResource,
         arguments: List[str] = [],
-        simpoint: Union[AbstractResource, SimPoint] = None,
-        checkpoint: Optional[Union[Path, AbstractResource]] = None,
+        simpoint: Union[SimpointResource, SimPoint] = None,
+        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
     ) -> None:
         """Set up the system to run a SimPoint workload.
 
@@ -141,7 +147,7 @@ class SEBinaryWorkload:
         """
 
         # convert input to SimPoint if necessary
-        if isinstance(simpoint, AbstractResource):
+        if isinstance(simpoint, SimpointResource):
             self._simpoint_object = SimPoint(simpoint)
         else:
             assert isinstance(simpoint, SimPoint)

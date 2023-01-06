@@ -323,7 +323,11 @@ def list_resources() -> List[str]:
 
     :returns: A list of resources by name.
     """
-    return _get_resources(valid_types={"resource"}).keys()
+    from .resource import _get_resource_json_type_map
+
+    return _get_resources(
+        valid_types=_get_resource_json_type_map.keys()
+    ).keys()
 
 
 def get_workload_json_obj(workload_name: str) -> Dict:
@@ -356,7 +360,11 @@ def get_resources_json_obj(resource_name: str) -> Dict:
     :raises Exception: An exception is raised if the specified resources does
     not exist.
     """
-    resource_map = _get_resources(valid_types={"resource"})
+    from .resource import _get_resource_json_type_map
+
+    resource_map = _get_resources(
+        valid_types=_get_resource_json_type_map.keys()
+    )
 
     if resource_name not in resource_map:
         raise Exception(

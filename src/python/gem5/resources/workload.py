@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from .downloader import get_workload_json_obj
-from .resource import Resource
+from .resource import obtain_resource
 
 from typing import Dict, Any, Optional
 
@@ -209,7 +209,7 @@ class Workload(AbstractWorkload):
                 assert isinstance(key, str)
                 value = workload_json["resources"][key]
                 assert isinstance(value, str)
-                params[key] = Resource(
+                params[key] = obtain_resource(
                     value, resource_directory=resource_directory
                 )
 

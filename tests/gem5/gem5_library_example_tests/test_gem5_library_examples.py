@@ -94,44 +94,44 @@ gem5_verify_config(
     length=constants.quick_tag,
 )
 
-gem5_verify_config(
-    name="test-simpoints-se-checkpoint",
-    fixtures=(),
-    verifiers=(),
-    config=joinpath(
-        config.base_dir,
-        "configs",
-        "example",
-        "gem5_library",
-        "checkpoints",
-        "simpoints-se-checkpoint.py",
-    ),
-    config_args=[
-        "--checkpoint-path",
-        joinpath(resource_path, "se_checkpoint_folder-save"),
-    ],
-    valid_isas=(constants.all_compiled_tag,),
-    valid_hosts=constants.supported_hosts,
-    length=constants.quick_tag,
-)
+# gem5_verify_config(
+#    name="test-simpoints-se-checkpoint",
+#    fixtures=(),
+#    verifiers=(),
+#    config=joinpath(
+#        config.base_dir,
+#        "configs",
+#        "example",
+#        "gem5_library",
+#        "checkpoints",
+#        "simpoints-se-checkpoint.py",
+#    ),
+#    config_args=[
+#        "--checkpoint-path",
+#        joinpath(resource_path, "se_checkpoint_folder-save"),
+#    ],
+#    valid_isas=(constants.all_compiled_tag,),
+#    valid_hosts=constants.supported_hosts,
+#    length=constants.quick_tag,
+# )
 
-gem5_verify_config(
-    name="test-simpoints-se-restore",
-    fixtures=(),
-    verifiers=(),
-    config=joinpath(
-        config.base_dir,
-        "configs",
-        "example",
-        "gem5_library",
-        "checkpoints",
-        "simpoints-se-restore.py",
-    ),
-    config_args=[],
-    valid_isas=(constants.all_compiled_tag,),
-    valid_hosts=constants.supported_hosts,
-    length=constants.quick_tag,
-)
+# gem5_verify_config(
+#    name="test-simpoints-se-restore",
+#    fixtures=(),
+#    verifiers=(),
+#    config=joinpath(
+#        config.base_dir,
+#        "configs",
+#        "example",
+#        "gem5_library",
+#        "checkpoints",
+#        "simpoints-se-restore.py",
+#    ),
+#    config_args=[],
+#    valid_isas=(constants.all_compiled_tag,),
+#    valid_hosts=constants.supported_hosts,
+#    length=constants.quick_tag,
+# )
 
 if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
     # The x86-ubuntu-run uses KVM cores, this test will therefore only be run

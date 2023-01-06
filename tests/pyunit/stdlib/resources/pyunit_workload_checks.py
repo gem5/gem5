@@ -29,7 +29,11 @@ import tempfile
 import os
 
 from gem5.resources.workload import Workload, CustomWorkload
-from gem5.resources.resource import Resource
+from gem5.resources.resource import (
+    BinaryResource,
+    DiskImageResource,
+    obtain_resource,
+)
 from gem5.resources.downloader import _resources_json_version_required
 
 from typing import Dict
@@ -50,7 +54,7 @@ class CustomWorkloadTestSuite(unittest.TestCase):
         "previous-versions" : {},
         "resources": [
         {
-            "type" : "resource",
+            "type" : "binary",
             "name" : "x86-hello64-static",
             "documentation" : "A 'Hello World!' binary.",
             "architecture" : "X86",
@@ -73,7 +77,7 @@ class CustomWorkloadTestSuite(unittest.TestCase):
         cls.custom_workload = CustomWorkload(
             function="set_se_binary_workload",
             parameters={
-                "binary": Resource("x86-hello64-static"),
+                "binary": obtain_resource("x86-hello64-static"),
                 "arguments": ["hello", 6],
             },
         )
@@ -100,7 +104,7 @@ class CustomWorkloadTestSuite(unittest.TestCase):
         self.assertEquals(2, len(parameters))
 
         self.assertTrue("binary" in parameters)
-        self.assertTrue(isinstance(parameters["binary"], Resource))
+        self.assertTrue(isinstance(parameters["binary"], BinaryResource))
 
         self.assertTrue("arguments" in parameters)
         self.assertTrue(isinstance(parameters["arguments"], list))
@@ -156,7 +160,7 @@ class WorkloadTestSuite(unittest.TestCase):
         "previous-versions" : {},
         "resources": [
         {
-            "type" : "resource",
+            "type" : "kernel",
             "name" : "x86-linux-kernel-5.2.3",
             "documentation" : "The linux kernel (v5.2.3), compiled to X86.",
             "architecture" : "X86",
@@ -166,7 +170,7 @@ class WorkloadTestSuite(unittest.TestCase):
             "source" : "src/linux-kernel"
         },
         {
-            "type" : "resource",
+            "type" : "disk-image",
             "name" : "x86-ubuntu-18.04-img",
             "documentation" : "A disk image containing Ubuntu 18.04 for x86..",
             "architecture" : "X86",
@@ -174,9 +178,7 @@ class WorkloadTestSuite(unittest.TestCase):
             "md5sum" : "90e363abf0ddf22eefa2c7c5c9391c49",
             "url" : "{url_base}/images/x86/ubuntu-18-04/x86-ubuntu.img.gz",
             "source" : "src/x86-ubuntu",
-            "additional_metadata" : {
-                "root_partition": "1"
-            }
+            "root_partition": "1"
         },
         {
             "type" : "workload",
@@ -226,10 +228,12 @@ class WorkloadTestSuite(unittest.TestCase):
         self.assertEqual(3, len(parameters))
 
         self.assertTrue("kernel" in parameters)
-        self.assertTrue(isinstance(parameters["kernel"], Resource))
+        self.assertTrue(isinstance(parameters["kernel"], BinaryResource))
 
         self.assertTrue("disk_image" in parameters)
-        self.assertTrue(isinstance(parameters["disk_image"], Resource))
+        self.assertTrue(
+            isinstance(parameters["disk_image"], DiskImageResource)
+        )
 
         self.assertTrue("readfile_contents" in parameters)
         self.assertTrue(

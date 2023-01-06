@@ -1,0 +1,99 @@
+
+{
+    "version" : "develop",
+    "url_base" : "http://dist.gem5.org/dist/v22-1",
+    "previous-versions" : {
+        "develop" : "https://gem5.googlesource.com/public/gem5-resources/+/refs/heads/develop/resources.json?format=TEXT",
+        "21.2" : "http://resources.gem5.org/prev-resources-json/resources-21-2.json"
+    },
+    "resources": [
+        {
+            "type" : "kernel",
+            "name" : "kernel-example",
+            "documentation" : "kernel-example documentation.",
+            "architecture" : "RISCV",
+            "is_zipped" : false,
+            "md5sum" : "60a53c7d47d7057436bf4b9df707a841",
+            "url" : "{url_base}/kernels/x86/static/vmlinux-5.4.49",
+            "source" : "src/linux-kernel"
+        },
+        {
+            "type" : "disk-image",
+            "name" : "disk-image-example",
+            "documentation" : "disk-image documentation.",
+            "architecture" : "X86",
+            "is_zipped" : true,
+            "md5sum" : "90e363abf0ddf22eefa2c7c5c9391c49",
+            "url" : "{url_base}/images/x86/ubuntu-18-04/x86-ubuntu.img.gz",
+            "source" : "src/x86-ubuntu",
+            "root_partition": "1"
+        },
+        {
+            "type" : "binary",
+            "name" : "binary-example",
+            "documentation" : "binary-example documentation.",
+            "architecture" : "ARM",
+            "is_zipped" :  false,
+            "md5sum" : "71b2cb004fe2cda4556f0b1a38638af6",
+            "url" : "{url_base}/test-progs/hello/bin/arm/linux/hello64-static",
+            "source" : "src/simple"
+        },
+        {
+            "type" : "bootloader",
+            "name" : "bootloader-example",
+            "documentation" : "bootloader documentation.",
+            "is_zipped" :  false,
+            "md5sum" : "71b2cb004fe2cda4556f0b1a38638af6",
+            "url" : "{url_base}/test-progs/hello/bin/arm/linux/hello64-static"
+        },
+        {
+            "type" : "checkpoint",
+            "name" : "checkpoint-example",
+            "documentation" : "checkpoint-example documentation.",
+            "architecture": "RISCV",
+            "is_zipped" : false,
+            "md5sum" : "3a57c1bb1077176c4587b8a3bf4f8ace",
+            "source" : null,
+            "is_tar_archive" : true,
+            "url": "{url_base}/checkpoints/riscv-hello-example-checkpoint.tar"
+        },
+        {
+            "type" : "git",
+            "name" : "git-example",
+            "documentation" : null,
+            "is_zipped" :  false,
+            "is_tar_archive" : true,
+            "md5sum" : "71b2cb004fe2cda4556f0b1a38638af6",
+            "url": "{url_base}/checkpoints/riscv-hello-example-checkpoint.tar"
+        },
+        {
+            "type" : "file",
+            "name" : "file-example",
+            "documentation" : null,
+            "is_zipped" :  false,
+            "md5sum" : "71b2cb004fe2cda4556f0b1a38638af6",
+            "url": "{url_base}/checkpoints/riscv-hello-example-checkpoint.tar",
+            "source" : null
+        },
+        {
+            "type" : "directory",
+            "name" : "directory-example",
+            "documentation" : "directory-example documentation.",
+            "is_zipped" : false,
+            "md5sum" : "3a57c1bb1077176c4587b8a3bf4f8ace",
+            "source" : null,
+            "is_tar_archive" : true,
+            "url": "{url_base}/checkpoints/riscv-hello-example-checkpoint.tar"
+        },
+        {
+            "type" : "simpoint",
+            "name" : "simpoint-example",
+            "documentation" : "simpoint documentation.",
+            "is_zipped" : false,
+            "md5sum" : "3a57c1bb1077176c4587b8a3bf4f8ace",
+            "source" : null,
+            "is_tar_archive" : true,
+            "url": "{url_base}/checkpoints/riscv-hello-example-checkpoint.tar"
+         }
+    ]
+}
