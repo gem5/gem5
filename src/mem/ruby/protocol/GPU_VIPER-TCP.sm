@@ -614,7 +614,6 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
 // request to L2.
   transition(V, LoadBypassEvict, I) {TagArrayRead, TagArrayWrite} {
     uu_profileDataMiss;
-    inv_invDone;
     ic_invCache;
     n_issueRdBlk;
     p_popMandatoryQueue;
