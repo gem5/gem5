@@ -70,13 +70,14 @@ mkdir -p tests/testing-results
 
 # GPU weekly tests start here
 # before pulling gem5 resources, make sure it doesn't exist already
-docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
+docker run -u $UID:$GID --rm --volume "${gem5_root}":"${gem5_root}" -w \
        "${gem5_root}" --memory="${docker_mem_limit}" \
        gcr.io/gem5-test/gcn-gpu:${tag} bash -c \
        "rm -rf ${gem5_root}/gem5-resources"
-# delete Pannotia datasets and output files in case a failed regression run left
-# them around
-rm -f coAuthorsDBLP.graph 1k_128k.gr result.out
+
+# delete m5out, Pannotia datasets, and output files in case a failed regression
+# run left them around
+rm -rf ${gem5_root}/m5out coAuthorsDBLP.graph 1k_128k.gr result.out
 
 # Pull gem5 resources to the root of the gem5 directory -- currently the
 # pre-built binares for LULESH are out-of-date and won't run correctly with
@@ -382,6 +383,9 @@ docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
 docker run --rm --volume "${gem5_root}":"${gem5_root}" -w \
        "${gem5_root}" --memory="${docker_mem_limit}" hacc-test-weekly bash -c \
        "rm -rf ${gem5_root}/gem5-resources"
+
+# Delete the gem5 m5out folder we created
+rm -rf ${gem5_root}/m5out
 
 # delete Pannotia datasets we downloaded and output files it created
 rm -f coAuthorsDBLP.graph 1k_128k.gr result.out
