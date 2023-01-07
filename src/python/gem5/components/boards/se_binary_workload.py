@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from .abstract_board import AbstractBoard
+
 from ...resources.resource import (
     FileResource,
     AbstractResource,
@@ -33,6 +34,8 @@ from ...resources.resource import (
     SimpointResource,
     SimpointDirectoryResource,
 )
+
+from gem5.utils.looppoint import LoopPoint
 
 from m5.objects import SEWorkload, Process
 
@@ -170,3 +173,47 @@ class SEBinaryWorkload:
         if getattr(self, "_simpoint_resource", None):
             return self._simpoint_resource
         raise Exception("This board does not have a simpoint set.")
+
+    def set_se_looppoint_workload(
+        self,
+        binary: AbstractResource,
+        arguments: List[str] = [],
+        looppoint: Optional[Union[AbstractResource, LoopPoint]] = None,
+        checkpoint: Optional[Union[Path, AbstractResource]] = None,
+    ) -> None:
+        """Set up the system to run a LoopPoint workload.
+
+        **Limitations**
+        * Dynamically linked executables are partially supported when the host
+          ISA and the simulated ISA are the same.
+
+        :param binary: The resource encapsulating the binary to be run.
+        :param arguments: The input arguments for the binary
+        :param looppoint: The LoopPoint object that contain all the information
+        gather from the LoopPoint files and a LoopPointManager that will raise
+        exit events for LoopPoints
+        """
+
+        if isinstance(looppoint, AbstractResource):
+            self._looppoint_object = LoopPoint(looppoint)
+        else:
+            assert isinstance(looppoint, LoopPoint)
+            self._looppoint_object = looppoint
+
+        self._looppoint_object.setup_processor(self.get_processor())
+
+        # Call set_se_binary_workload after LoopPoint setup is complete
+        self.set_se_binary_workload(
+            binary=binary,
+            arguments=arguments,
+            checkpoint=checkpoint,
+        )
+
+    def get_looppoint(self) -> LoopPoint:
+        """
+        Returns the LoopPoint object set. If no LoopPoint object has been set
+        an exception is thrown.
+        """
+        if getattr(self, "_looppoint_object", None):
+            return self._looppoint_object
+        raise Exception("This board does not have a looppoint set.")
