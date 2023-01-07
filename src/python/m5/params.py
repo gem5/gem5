@@ -854,6 +854,46 @@ class Addr(CheckedInt):
         return "0x%x" % int(val)
 
 
+class PcCountPair(ParamValue):
+    # This parameter stores a Program Counter address and the a count value for
+    # the Program Counter address
+    cxx_type = "PcCountPair"
+    cmd_line_settable = True
+
+    def __init__(self, _pc, _count):
+        self.pc = _pc
+        self.count = _count
+
+    def get_pc(self):
+        return self.pc
+
+    def get_count(self):
+        return self.count
+
+    def getValue(self):
+        #  convert Python PcCountPair into C++ PcCountPair
+        from _m5.pc import PcCountPair
+
+        return PcCountPair(self.pc, self.count)
+
+    def __str__(self):
+        return "(%i,%i)" % (self.pc, self.count)
+
+    def __eq__(self, other):
+        return self.pc == other.get_pc() and self.count == other.get_count()
+
+    def __hash__(self):
+        return hash((int(self.pc), int(self.count)))
+
+    @classmethod
+    def cxx_predecls(cls, code):
+        code('#include "cpu/probes/pc_count_pair.hh"')
+
+    @classmethod
+    def pybind_predecls(cls, code):
+        code('#include "cpu/probes/pc_count_pair.hh"')
+
+
 class AddrRange(ParamValue):
     cxx_type = "AddrRange"
 
@@ -2426,4 +2466,5 @@ __all__ = [
     "VectorMasterPort",
     "VectorSlavePort",
     "DeprecatedParam",
+    "PcCountPair",
 ]
