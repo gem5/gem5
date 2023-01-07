@@ -29,7 +29,8 @@ from typing import Optional, List
 
 from ...isas import ISA
 
-from m5.objects import BaseMMU, Port, SubSystem
+from m5.objects import BaseMMU, Port, SubSystem, PcCountTrackerManager
+from m5.params import PcCountPair
 
 
 class AbstractCore(SubSystem):
@@ -155,3 +156,9 @@ class AbstractCore(SubSystem):
         instruction stop is setup differently dependent on this.
         """
         raise NotImplementedError("This core type does not support MAX_INSTS")
+
+    @abstractmethod
+    def add_pc_tracker_probe(
+        self, target_pair: List[PcCountPair], manager: PcCountTrackerManager
+    ) -> None:
+        raise NotImplementedError
