@@ -261,7 +261,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
               // If L1 is disabled or requests have GLC or SLC flag set,
               // then, the requests should not cache in the L1. The response
               // from L2/global memory should bypass the cache
-	          trigger(Event:Bypass, in_msg.addr, cache_entry, tbe);
+              trigger(Event:Bypass, in_msg.addr, cache_entry, tbe);
           } else {
             if (is_valid(cache_entry) || L1cache.cacheAvail(in_msg.addr)) {
               trigger(Event:TCC_Ack, in_msg.addr, cache_entry, tbe);
@@ -288,7 +288,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
         DPRINTF(RubySlicc, "%s\n", in_msg);
         if (in_msg.Type == RubyRequestType:LD) {
           if ((in_msg.isGLCSet || in_msg.isSLCSet) && is_valid(cache_entry)) {
-            // Read rquests with GLC or SLC bit set should not cache in the L1.
+            // Read requests with GLC or SLC bit set should not cache in the L1.
             // They need to bypass the L1 and go to the L2. If an entry exists
             // in the L1, it needs to be evicted
             trigger(Event:LoadBypassEvict, in_msg.LineAddress, cache_entry, tbe);
@@ -609,15 +609,15 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     p_popMandatoryQueue;
   }
 
-// Transition to be called when a load request with GLC or SLC flag set arrives
-// at L1. This transition invalidates any existing entry and forwards the
-// request to L2.
+  // Transition to be called when a load request with GLC or SLC flag set arrives
+  // at L1. This transition invalidates any existing entry and forwards the
+  // request to L2.
   transition(V, LoadBypassEvict, I) {TagArrayRead, TagArrayWrite} {
     uu_profileDataMiss;
     ic_invCache;
     n_issueRdBlk;
     p_popMandatoryQueue;
-}
+  }
 
   transition({V, I}, Atomic, A) {TagArrayRead, TagArrayWrite} {
     t_allocateTBE;
