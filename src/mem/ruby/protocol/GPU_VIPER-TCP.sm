@@ -619,6 +619,15 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     p_popMandatoryQueue;
   }
 
+  // Transition to be called when a load request with GLC or SLC flag set arrives
+  // at L1. Since the entry is invalid, there isn't anything to forward to L2,
+  // so just issue read.
+  transition(I, LoadBypassEvict) {TagArrayRead, TagArrayWrite} {
+    uu_profileDataMiss;
+    n_issueRdBlk;
+    p_popMandatoryQueue;
+  }
+
   transition({V, I}, Atomic, A) {TagArrayRead, TagArrayWrite} {
     t_allocateTBE;
     mru_updateMRU;
