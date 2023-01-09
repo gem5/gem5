@@ -1078,7 +1078,9 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
         fatal("pkt is not a read nor a write\n");
     }
 
-    stats.tlbCycles -= curTick();
+    if (!functionalTLB) {
+        stats.tlbCycles -= curTick();
+    }
     ++stats.tlbRequests;
 
     PortID tlbPort_index = perLaneTLB ? index : 0;
