@@ -381,26 +381,16 @@ class Event : public EventBase, public Serializable
     /**
      * Managed event scheduled and being held in the event queue.
      */
-    void acquire()
-    {
-        if (flags.isSet(Event::Managed))
-            acquireImpl();
-    }
+    void acquire();
 
     /**
      * Managed event removed from the event queue.
      */
-    void release() {
-        if (flags.isSet(Event::Managed))
-            releaseImpl();
-    }
+    void release();
 
-    virtual void acquireImpl() {}
+    virtual void acquireImpl();
 
-    virtual void releaseImpl() {
-        if (!scheduled())
-            delete this;
-    }
+    virtual void releaseImpl();
 
     /** @} */
 

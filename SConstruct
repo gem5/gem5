@@ -447,10 +447,6 @@ for variant_path in variant_paths:
             error('gcc version 7 or newer required.\n'
                   'Installed version:', env['CXXVERSION'])
 
-        with gem5_scons.Configure(env) as conf:
-            # This warning has a false positive in the systemc in g++ 11.1.
-            conf.CheckCxxFlag('-Wno-free-nonheap-object')
-
         # Add the appropriate Link-Time Optimization (LTO) flags if
         # `--with-lto` is set.
         if GetOption('with_lto'):

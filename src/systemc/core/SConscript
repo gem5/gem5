@@ -40,6 +40,7 @@ if env['CONF']['USE_SYSTEMC']:
     Source('port.cc')
     Source('process.cc')
     Source('sched_event.cc')
+    Source('scheduler.cc')
     Source('sensitivity.cc')
     Source('time.cc')
 
@@ -75,7 +76,4 @@ if env['CONF']['USE_SYSTEMC']:
     # Disable the false positive warning for the event members of the scheduler.
     with gem5_scons.Configure(env) as conf:
         flag = '-Wno-free-nonheap-object'
-        append = {}
-        if conf.CheckCxxFlag(flag, autoadd=False):
-            append['CCFLAGS'] = [flag]
-        Source('scheduler.cc', append=append)
+        conf.CheckLinkFlag(flag)
