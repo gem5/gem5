@@ -270,6 +270,12 @@
  * is an alternative form of update which also takes a custom bitmask, if you
  * need to update bits other than the normally writeable ones.
  *
+ * Similarly, you can set a "resetter" handler which is responsible for
+ * resetting the register. It takes a reference to the current Register, and
+ * no other parameters. The "initialValue" accessor can retrieve the value the
+ * register was constructed with. The register is simply set to this value
+ * in the default resetter implementation.
+ *
  * = Read only bits =
  *
  * Often registers have bits which are fixed and not affected by writes. To
@@ -554,6 +560,7 @@ class RegisterBank : public RegisterBankBase
         using WriteFunc = std::function<void (This &reg, const Data &value)>;
         using PartialWriteFunc = std::function<
             void (This &reg, const Data &value, int first, int last)>;
+        using ResetFunc = std::function<void (This &reg)>;
 
       private:
         Data _data = {};
@@ -564,6 +571,7 @@ class RegisterBank : public RegisterBankBase
         WriteFunc _writer = defaultWriter;
         PartialWriteFunc _partialWriter = defaultPartialWriter;
         PartialReadFunc _partialReader = defaultPartialReader;
+        ResetFunc _resetter = defaultResetter;
 
       protected:
         static Data defaultReader(This &reg) { return reg.get(); }
@@ -585,6 +593,12 @@ class RegisterBank : public RegisterBankBase
         {
             reg._writer(reg, writeWithMask<Data>(reg._reader(reg), value,
                                                  mask(first, last)));
+        }
+
+        static void
+        defaultResetter(This &reg)
+        {
+            reg.get() = reg.initialValue();
         }
 
         constexpr Data
@@ -721,6 +735,30 @@ class RegisterBank : public RegisterBankBase
             return partialWriter(wrapper);
         }
 
+        // Set the callables which handle resetting.
+        //
+        // The default resetter restores the initial value used in the
+        // constructor.
+        constexpr This &
+        resetter(const ResetFunc &new_resetter)
+        {
+            _resetter = new_resetter;
+            return *this;
+        }
+        template <class Parent, class... Args>
+        constexpr This &
+        resetter(Parent *parent, void (Parent::*nr)(Args... args))
+        {
+            auto wrapper = [parent, nr](Args&&... args) {
+                return (parent->*nr)(std::forward<Args>(args)...);
+            };
+            return resetter(wrapper);
+        }
+
+        // An accessor which returns the initial value as set in the
+        // constructor. This is intended to be used in a resetter function.
+        const Data &initialValue() const { return _resetData; }
+
 
         /*
          * Interface for accessing the register's state, for use by the
@@ -817,7 +855,7 @@ class RegisterBank : public RegisterBankBase
         }
 
         // Reset our data to its initial value.
-        void reset() override { get() = _resetData; }
+        void reset() override { _resetter(*this); }
     };
 
   private:

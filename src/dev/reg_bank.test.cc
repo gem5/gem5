@@ -868,6 +868,56 @@ TEST_F(TypedRegisterTest, PartialWriterReaderWriter)
     EXPECT_EQ(write_value, 0x0344);
 }
 
+// Use the default resetter for a register.
+TEST_F(TypedRegisterTest, DefaultResetter)
+{
+    BackingType initial_value = reg.get();
+
+    reg.get() = initial_value + 1;
+    EXPECT_EQ(reg.get(), initial_value + 1);
+
+    reg.reset();
+
+    EXPECT_EQ(reg.get(), initial_value);
+}
+
+// Set a custom resetter for a register.
+TEST_F(TypedRegisterTest, Resetter)
+{
+    RegisterBankLE::Register<BackingType> *reg_ptr = nullptr;
+
+    reg.resetter([&reg_ptr](auto &r) {
+        reg_ptr = &r;
+    });
+
+    reg.reset();
+
+    EXPECT_EQ(reg_ptr, &reg);
+}
+
+// Set a custom resetter for a register which is a class method.
+TEST_F(TypedRegisterTest, ResetterMF)
+{
+    using Reg = RegisterBankLE::Register<BackingType>;
+
+    struct ResetStruct
+    {
+        Reg *reg_ptr = nullptr;
+
+        void
+        resetter(Reg &r)
+        {
+            reg_ptr = &r;
+        }
+    } reset_struct;
+
+    reg.resetter(&reset_struct, &ResetStruct::resetter);
+
+    reg.reset();
+
+    EXPECT_EQ(reset_struct.reg_ptr, &reg);
+}
+
 TEST_F(TypedRegisterTest, Serialize)
 {
     std::ostringstream os;
