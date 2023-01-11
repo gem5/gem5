@@ -347,6 +347,14 @@ Bridge::BridgeResponsePort::recvAtomic(PacketPtr pkt)
     return delay * bridge.clockPeriod() + memSidePort.sendAtomic(pkt);
 }
 
+Tick
+Bridge::BridgeResponsePort::recvAtomicBackdoor(
+    PacketPtr pkt, MemBackdoorPtr &backdoor)
+{
+    return delay * bridge.clockPeriod() + memSidePort.sendAtomicBackdoor(
+        pkt, backdoor);
+}
+
 void
 Bridge::BridgeResponsePort::recvFunctional(PacketPtr pkt)
 {
@@ -369,6 +377,13 @@ Bridge::BridgeResponsePort::recvFunctional(PacketPtr pkt)
 
     // fall through if pkt still not satisfied
     memSidePort.sendFunctional(pkt);
+}
+
+void
+Bridge::BridgeResponsePort::recvMemBackdoorReq(
+    const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
+{
+    memSidePort.sendMemBackdoorReq(req, backdoor);
 }
 
 bool
