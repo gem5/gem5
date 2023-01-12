@@ -26,6 +26,7 @@
 from m5.params import *
 from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
 from m5.objects.IntPin import IntSourcePin
+from m5.objects.ResetPort import ResetResponsePort
 from m5.objects.SystemC import SystemC_ScModule
 
 
@@ -196,6 +197,8 @@ class FastModelPL330(SystemC_ScModule):
     dma = AmbaInitiatorSocket(64, "Memory accesses")
     pio_s = AmbaTargetSocket(64, "Register accesses (secure)")
     pio_ns = AmbaTargetSocket(64, "Register accesses (non-secure)")
+
+    reset_in = ResetResponsePort("System reset")
 
     # irq_abort_master_port
     # irq_master_port
