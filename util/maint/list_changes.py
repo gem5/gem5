@@ -178,7 +178,7 @@ def _main():
         "--upstream",
         "-u",
         type=str,
-        default="origin/master",
+        default="origin/develop",
         help="Upstream branch for comparison. Default: %(default)s",
     )
     parser.add_argument(
