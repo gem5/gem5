@@ -44,7 +44,6 @@
 #include "base/compiler.hh"
 #include "base/fiber.hh"
 
-GEM5_DEPRECATED_NAMESPACE(m5, gem5);
 namespace gem5
 {
 
