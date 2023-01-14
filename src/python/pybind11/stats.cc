@@ -83,7 +83,6 @@ cast_stat_info(const statistics::Info *info)
 #undef TRY_CAST
 }
 
-GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
 

@@ -75,7 +75,6 @@ namespace gem5
         UNIT_UNSPECIFIED, statistics::units::Unspecified::get(), \
         "Use statistics::units::Unspecified::get()")
 
-GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
 
