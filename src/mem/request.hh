@@ -74,7 +74,6 @@ namespace gem5
  * doesn't cause a problem with stats and is large enough to realistic
  * benchmarks (Linux/Android boot, BBench, etc.)
  */
-GEM5_DEPRECATED_NAMESPACE(ContextSwitchTaskId, context_switch_task_id);
 namespace context_switch_task_id
 {
     enum TaskId
