@@ -42,7 +42,6 @@ namespace gem5
 
 class BaseCPU;
 
-GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
 

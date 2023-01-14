@@ -68,7 +68,6 @@ struct FarAtomicOpFunctor : public AtomicOpFunctor
 
 }
 
-GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
 
