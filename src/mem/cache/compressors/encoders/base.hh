@@ -36,7 +36,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
 GEM5_DEPRECATED_NAMESPACE(Encoder, encoder);
