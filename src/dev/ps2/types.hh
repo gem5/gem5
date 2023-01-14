@@ -53,7 +53,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(Ps2, ps2);
 namespace ps2
 {
 
@@ -70,7 +69,6 @@ enum
     Reset              = 0xFF,
 };
 
-GEM5_DEPRECATED_NAMESPACE(Keyboard, keyboard);
 namespace keyboard
 {
 
@@ -93,7 +91,6 @@ extern const std::vector<uint8_t> ID;
 
 } // namespace keyboard
 
-GEM5_DEPRECATED_NAMESPACE(Mouse, mouse);
 namespace mouse
 {
 

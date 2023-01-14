@@ -35,7 +35,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(iGbReg, igbreg);
 namespace igbreg
 {
 
@@ -239,7 +238,6 @@ struct TxDesc
     uint64_t d2;
 };
 
-GEM5_DEPRECATED_NAMESPACE(TxdOp, txd_op);
 namespace txd_op
 {
 
