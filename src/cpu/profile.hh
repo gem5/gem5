@@ -43,7 +43,6 @@ namespace gem5
 class ThreadContext;
 class FunctionProfile;
 
-GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
     class SymbolTable;

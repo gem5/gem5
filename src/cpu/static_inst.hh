@@ -66,7 +66,6 @@ class Packet;
 class ExecContext;
 class ThreadContext;
 
-GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
 class SymbolTable;
