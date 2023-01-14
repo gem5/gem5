@@ -86,7 +86,6 @@ struct ProbeListenerObjectParams;
  * common instrumentation interface for devices such as PMUs that have
  * different implementations in different ISAs.
  */
-GEM5_DEPRECATED_NAMESPACE(ProbePoints, probing);
 namespace probing
 {
 /* Note: This is only here for documentation purposes, new probe
