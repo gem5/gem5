@@ -65,7 +65,6 @@ namespace gem5
 class BaseCache;
 struct BasePrefetcherParams;
 
-GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
 

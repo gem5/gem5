@@ -50,7 +50,6 @@ namespace gem5
 
 struct SignaturePathPrefetcherV2Params;
 
-GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
 

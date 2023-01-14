@@ -53,7 +53,6 @@ namespace gem5
 
 struct QueuedPrefetcherParams;
 
-GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
 

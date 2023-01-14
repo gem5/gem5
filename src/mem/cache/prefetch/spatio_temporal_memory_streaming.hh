@@ -53,7 +53,6 @@ namespace gem5
 
 struct STeMSPrefetcherParams;
 
-GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
 
