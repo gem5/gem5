@@ -109,7 +109,6 @@ namespace statistics
  *   - The new unit is significant enough to be not included in Count unit.
  *     (e.g. Cycle unit, Tick unit)
  */
-GEM5_DEPRECATED_NAMESPACE(Units, units);
 namespace units
 {
 
