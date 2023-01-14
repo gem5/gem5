@@ -54,7 +54,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(Net, networking);
 namespace networking
 {
 
