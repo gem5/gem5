@@ -51,7 +51,6 @@ struct SHiPRPParams;
 struct SHiPMemRPParams;
 struct SHiPPCRPParams;
 
-GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
 {
 
