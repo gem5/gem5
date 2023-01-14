@@ -38,7 +38,6 @@ namespace gem5
 
 namespace compression
 {
-GEM5_DEPRECATED_NAMESPACE(Encoder, encoder);
 namespace encoder
 {
 
