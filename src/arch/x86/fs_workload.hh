@@ -63,7 +63,6 @@ class SMBiosTable;
 
 } // namespace smbios
 
-GEM5_DEPRECATED_NAMESPACE(IntelMP, intelmp);
 namespace intelmp
 {
 

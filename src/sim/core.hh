@@ -46,12 +46,10 @@ namespace gem5
 
 /// These are variables that are set based on the simulator frequency
 ///@{
-GEM5_DEPRECATED_NAMESPACE(SimClock, sim_clock);
 namespace sim_clock
 {
 extern Tick Frequency; ///< The number of ticks that equal one second
 
-GEM5_DEPRECATED_NAMESPACE(Float, as_float);
 namespace as_float
 {
 
@@ -81,7 +79,6 @@ extern double GHz; ///< GHz
  *
  * @{
  */
-GEM5_DEPRECATED_NAMESPACE(Int, as_int);
 namespace as_int
 {
 extern Tick s;  ///< second

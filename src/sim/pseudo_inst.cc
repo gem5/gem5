@@ -76,7 +76,6 @@ namespace gem5
 
 using namespace statistics;
 
-GEM5_DEPRECATED_NAMESPACE(PseudoInst, pseudo_inst);
 namespace pseudo_inst
 {
 

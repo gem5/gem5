@@ -41,13 +41,11 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(SimClock, sim_clock);
 namespace sim_clock
 {
 /// The simulated frequency of curTick(). (In ticks per second)
 Tick Frequency;
 
-GEM5_DEPRECATED_NAMESPACE(Float, as_float);
 namespace as_float
 {
 double s;
@@ -62,7 +60,6 @@ double MHz;
 double GHz;
 } // namespace as_float
 
-GEM5_DEPRECATED_NAMESPACE(Int, as_int);
 namespace as_int
 {
 Tick s;
