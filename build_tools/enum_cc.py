@@ -97,8 +97,7 @@ const char *${name}Strings[static_cast<int>(${name}::Num_${name})] =
         )
     else:
         code(
-            """GEM5_DEPRECATED_NAMESPACE(Enums, enums);
-namespace enums
+            """namespace enums
 {"""
         )
         code.indent(1)
