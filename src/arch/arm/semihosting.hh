@@ -599,7 +599,6 @@ class ArmSemihosting : public SimObject
 std::ostream &operator << (
         std::ostream &os, const ArmSemihosting::InPlaceArg &ipa);
 
-GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
 namespace guest_abi
 {
 
