@@ -71,7 +71,8 @@ struct FarAtomicOpFunctor : public AtomicOpFunctor
 namespace fastmodel
 {
 
-AmbaToTlmBridge64::AmbaToTlmBridge64(const sc_core::sc_module_name& name) :
+AmbaToTlmBridge64::AmbaToTlmBridge64(const AmbaToTlmBridge64Params &params,
+                                     const sc_core::sc_module_name& name) :
     amba_pv::amba_pv_to_tlm_bridge<64>(name),
     targetProxy("target_proxy"),
     initiatorProxy("initiator_proxy"),
@@ -198,11 +199,4 @@ AmbaToTlmBridge64::setupControlExtension(amba_pv::amba_pv_transaction &trans)
 }
 
 } // namespace fastmodel
-
-fastmodel::AmbaToTlmBridge64 *
-AmbaToTlmBridge64Params::create() const
-{
-    return new fastmodel::AmbaToTlmBridge64(name.c_str());
-}
-
 } // namespace gem5

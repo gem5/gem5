@@ -33,6 +33,7 @@
 #include "amba_pv.h"
 #pragma GCC diagnostic pop
 #include "arch/arm/fastmodel/amba_ports.hh"
+#include "params/AmbaToTlmBridge64.hh"
 #include "systemc/tlm_port_wrapper.hh"
 
 namespace gem5
@@ -46,7 +47,11 @@ namespace fastmodel
 class AmbaToTlmBridge64 : public amba_pv::amba_pv_to_tlm_bridge<64>
 {
   public:
-    AmbaToTlmBridge64(const sc_core::sc_module_name &name);
+    AmbaToTlmBridge64(const AmbaToTlmBridge64Params &params,
+                      const sc_core::sc_module_name &name);
+    AmbaToTlmBridge64(const AmbaToTlmBridge64Params &params) :
+      AmbaToTlmBridge64(params, params.name.c_str())
+    {}
 
     gem5::Port &gem5_getPort(const std::string &if_name, int idx=-1) override;
 
