@@ -199,7 +199,7 @@ class SvePselOp : public ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 /// Compare and terminate loop SVE instruction.
@@ -989,7 +989,7 @@ class SveClampOp : public ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 

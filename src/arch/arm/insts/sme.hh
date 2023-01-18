@@ -63,7 +63,7 @@ class SmeAddOp : public ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // Used for the SME ADDSPL/ADDSVL instructions
@@ -82,7 +82,7 @@ class SmeAddVlOp : public ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // Used for SME LD1x/ST1x instrucions
@@ -105,7 +105,7 @@ class SmeLd1xSt1xOp : public ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // Used for SME LDR/STR instructions
@@ -124,7 +124,7 @@ class SmeLdrStrOp : public ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // Used for SME MOVA (Tile to Vector)
@@ -145,7 +145,7 @@ class SmeMovExtractOp : public ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // Used for SME MOVA (Vector to Tile)
@@ -166,7 +166,7 @@ class SmeMovInsertOp : public ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // Used for SME output product instructions
@@ -187,7 +187,7 @@ class SmeOPOp : public ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // Used for the SME RDSVL instruction
@@ -204,7 +204,7 @@ class SmeRdsvlOp : public ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 // Used for SME ZERO
@@ -220,7 +220,7 @@ class SmeZeroOp : public ArmStaticInst
     {}
 
     std::string generateDisassembly(
-            Addr pc, const Loader::SymbolTable *symtab) const override;
+            Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace ArmISA

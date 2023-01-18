@@ -163,7 +163,7 @@ SveWhileOp::generateDisassembly(
 
 std::string
 SvePselOp::generateDisassembly(Addr pc,
-                                const Loader::SymbolTable *symtab) const
+                               const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -851,7 +851,7 @@ SveComplexIdxOp::generateDisassembly(
 
 std::string
 SveClampOp::generateDisassembly(
-        Addr pc, const Loader::SymbolTable *symtab) const
+        Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
