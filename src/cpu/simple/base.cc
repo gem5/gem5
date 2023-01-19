@@ -388,7 +388,7 @@ BaseSimpleCPU::postExecute()
     Addr instAddr = threadContexts[curThread]->pcState().instAddr();
 
     if (curStaticInst->isMemRef()) {
-        t_info.execContextStats.numMemRefs++;
+        executeStats[t_info.thread->threadId()]->numMemRefs++;
     }
 
     if (curStaticInst->isLoad()) {
@@ -402,19 +402,19 @@ BaseSimpleCPU::postExecute()
     /* Power model statistics */
     //integer alu accesses
     if (curStaticInst->isInteger()){
-        t_info.execContextStats.numIntAluAccesses++;
+        executeStats[t_info.thread->threadId()]->numIntAluAccesses++;
         t_info.execContextStats.numIntInsts++;
     }
 
     //float alu accesses
     if (curStaticInst->isFloating()){
-        t_info.execContextStats.numFpAluAccesses++;
+        executeStats[t_info.thread->threadId()]->numFpAluAccesses++;
         t_info.execContextStats.numFpInsts++;
     }
 
     //vector alu accesses
     if (curStaticInst->isVector()){
-        t_info.execContextStats.numVecAluAccesses++;
+        executeStats[t_info.thread->threadId()]->numVecAluAccesses++;
         t_info.execContextStats.numVecInsts++;
     }
 

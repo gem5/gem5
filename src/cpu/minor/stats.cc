@@ -49,9 +49,6 @@ MinorStats::MinorStats(BaseCPU *base_cpu)
              "Number of instructions committed"),
     ADD_STAT(numOps, statistics::units::Count::get(),
              "Number of ops (including micro ops) committed"),
-    ADD_STAT(numDiscardedOps, statistics::units::Count::get(),
-             "Number of ops (including micro ops) which were discarded before "
-             "commit"),
     ADD_STAT(quiesceCycles, statistics::units::Cycle::get(),
              "Total number of cycles that CPU has spent quiesced or waiting "
              "for an interrupt"),
