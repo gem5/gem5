@@ -154,8 +154,13 @@ def _get_resources_json() -> Dict:
 
     # If the current version pulled is not correct, look up the
     # "previous-versions" field to find the correct one.
+    # If the resource JSON file does not have a "version" field or it's
+    # null/None, then we will use this resource JSON file (this is usefull for
+    # testing purposes).
     version = _resources_json_version_required()
-    if to_return["version"] != version:
+    json_version = None if "version" not in to_return else to_return["version"]
+
+    if json_version and json_version != version:
         if version in to_return["previous-versions"].keys():
             to_return = _get_resources_json_at_path(
                 path=to_return["previous-versions"][version]
