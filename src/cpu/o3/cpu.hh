@@ -581,19 +581,6 @@ class CPU : public BaseCPU
         /** Stat for total number of cycles the CPU spends descheduled due to a
          * quiesce operation or waiting for an interrupt. */
         statistics::Scalar quiesceCycles;
-        /** Stat for the number of committed instructions per thread. */
-        statistics::Vector committedInsts;
-        /** Stat for the number of committed ops (including micro ops) per
-         *  thread. */
-        statistics::Vector committedOps;
-        /** Stat for the CPI per thread. */
-        statistics::Formula cpi;
-        /** Stat for the total CPI. */
-        statistics::Formula totalCpi;
-        /** Stat for the IPC per thread. */
-        statistics::Formula ipc;
-        /** Stat for the total IPC. */
-        statistics::Formula totalIpc;
 
     } cpuStats;
 

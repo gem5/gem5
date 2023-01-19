@@ -758,6 +758,10 @@ class BaseCPU : public ClockedObject
         statistics::Scalar numInsts;
         statistics::Scalar numOps;
 
+        /* Number of instructions committed that are not NOP or prefetches */
+        statistics::Scalar numInstsNotNOP;
+        statistics::Scalar numOpsNotNOP;
+
         /* CPI/IPC for total cycle counts and macro insts */
         statistics::Formula cpi;
         statistics::Formula ipc;
