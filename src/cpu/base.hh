@@ -716,6 +716,19 @@ class BaseCPU : public ClockedObject
     {
         ExecuteCPUStats(statistics::Group *parent, int thread_id);
 
+        /* Stat for total number of executed instructions */
+        statistics::Scalar numInsts;
+        /* Number of executed nops */
+        statistics::Scalar numNop;
+        /* Number of executed branches */
+        statistics::Scalar numBranches;
+        /* Stat for total number of executed load instructions */
+        statistics::Scalar numLoadInsts;
+        /* Number of executed store instructions */
+        statistics::Formula numStoreInsts;
+        /* Number of instructions executed per cycle */
+        statistics::Formula instRate;
+
         /* Number of cycles stalled for D-cache responses */
         statistics::Scalar dcacheStallCycles;
 

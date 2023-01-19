@@ -455,25 +455,11 @@ class IEW
         {
             ExecutedInstStats(CPU *cpu);
 
-            /** Stat for total number of executed instructions. */
-            statistics::Scalar numInsts;
-            /** Stat for total number of executed load instructions. */
-            statistics::Vector numLoadInsts;
             /** Stat for total number of squashed instructions skipped at
              *  execute. */
             statistics::Scalar numSquashedInsts;
             /** Number of executed software prefetches. */
             statistics::Vector numSwp;
-            /** Number of executed nops. */
-            statistics::Vector numNop;
-            /** Number of executed meomory references. */
-            statistics::Vector numRefs;
-            /** Number of executed branches. */
-            statistics::Vector numBranches;
-            /** Number of executed store instructions. */
-            statistics::Formula numStoreInsts;
-            /** Number of instructions executed per cycle. */
-            statistics::Formula numRate;
         } executedInstStats;
 
         /** Number of instructions sent to commit. */
