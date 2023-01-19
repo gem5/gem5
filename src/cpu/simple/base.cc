@@ -403,19 +403,19 @@ BaseSimpleCPU::postExecute()
     //integer alu accesses
     if (curStaticInst->isInteger()){
         executeStats[t_info.thread->threadId()]->numIntAluAccesses++;
-        t_info.execContextStats.numIntInsts++;
+        commitStats[t_info.thread->threadId()]->numIntInsts++;
     }
 
     //float alu accesses
     if (curStaticInst->isFloating()){
         executeStats[t_info.thread->threadId()]->numFpAluAccesses++;
-        t_info.execContextStats.numFpInsts++;
+        commitStats[t_info.thread->threadId()]->numFpInsts++;
     }
 
     //vector alu accesses
     if (curStaticInst->isVector()){
         executeStats[t_info.thread->threadId()]->numVecAluAccesses++;
-        t_info.execContextStats.numVecInsts++;
+        commitStats[t_info.thread->threadId()]->numVecInsts++;
     }
 
     //Matrix alu accesses
@@ -429,22 +429,19 @@ BaseSimpleCPU::postExecute()
         t_info.execContextStats.numCallsReturns++;
     }
 
-    //the number of branch predictions that will be made
-    if (curStaticInst->isCondCtrl()){
-        t_info.execContextStats.numCondCtrlInsts++;
-    }
-
     //result bus acceses
     if (curStaticInst->isLoad()){
-        t_info.execContextStats.numLoadInsts++;
+        commitStats[t_info.thread->threadId()]->numLoadInsts++;
     }
 
     if (curStaticInst->isStore() || curStaticInst->isAtomic()){
-        t_info.execContextStats.numStoreInsts++;
+        commitStats[t_info.thread->threadId()]->numStoreInsts++;
     }
     /* End power model statistics */
 
-    t_info.execContextStats.statExecutedInstType[curStaticInst->opClass()]++;
+    commitStats[t_info.thread->threadId()]
+        ->committedInstType[curStaticInst->opClass()]++;
+    commitStats[t_info.thread->threadId()]->updateComCtrlStats(curStaticInst);
 
     if (FullSystem)
         traceFunctions(instAddr);

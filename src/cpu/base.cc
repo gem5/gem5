@@ -194,9 +194,11 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
     // create a stat group object for each thread on this core
     fetchStats.reserve(numThreads);
     executeStats.reserve(numThreads);
+    commitStats.reserve(numThreads);
     for (int i = 0; i < numThreads; i++) {
         fetchStats.emplace_back(new FetchCPUStats(this, i));
         executeStats.emplace_back(new ExecuteCPUStats(this, i));
+        commitStats.emplace_back(new CommitCPUStats(this, i));
     }
 }
 
@@ -920,6 +922,74 @@ ExecuteCPUStats::ExecuteCPUStats(statistics::Group *parent, int thread_id)
                 .prereq(numVecRegReads);
     numVecRegWrites
                 .prereq(numVecRegWrites);
+}
+
+BaseCPU::
+CommitCPUStats::CommitCPUStats(statistics::Group *parent, int thread_id)
+    : statistics::Group(parent, csprintf("commitStats%i", thread_id).c_str()),
+    ADD_STAT(numMemRefs, statistics::units::Count::get(),
+            "Number of memory references committed"),
+    ADD_STAT(numFpInsts, statistics::units::Count::get(),
+            "Number of float instructions"),
+    ADD_STAT(numIntInsts, statistics::units::Count::get(),
+            "Number of integer instructions"),
+    ADD_STAT(numLoadInsts, statistics::units::Count::get(),
+            "Number of load instructions"),
+    ADD_STAT(numStoreInsts, statistics::units::Count::get(),
+            "Number of store instructions"),
+    ADD_STAT(numVecInsts, statistics::units::Count::get(),
+            "Number of vector instructions"),
+    ADD_STAT(committedInstType, statistics::units::Count::get(),
+            "Class of committed instruction."),
+    ADD_STAT(committedControl, statistics::units::Count::get(),
+             "Class of control type instructions committed")
+{
+    committedInstType
+        .init(enums::Num_OpClass)
+        .flags(statistics::total | statistics::pdf | statistics::dist);
+
+    for (unsigned i = 0; i < Num_OpClasses; ++i) {
+        committedInstType.subname(i, enums::OpClassStrings[i]);
+    }
+
+    committedControl
+        .init(StaticInstFlags::Flags::Num_Flags)
+        .flags(statistics::nozero);
+
+    for (unsigned i = 0; i < StaticInstFlags::Flags::Num_Flags; i++) {
+        committedControl.subname(i, StaticInstFlags::FlagsStrings[i]);
+    }
+}
+
+
+void
+BaseCPU::
+CommitCPUStats::updateComCtrlStats(const StaticInstPtr staticInst)
+{
+    /* Add a count for every control instruction type */
+    if (staticInst->isControl()) {
+        if (staticInst->isReturn()) {
+            committedControl[gem5::StaticInstFlags::Flags::IsReturn]++;
+        }
+        if (staticInst->isCall()) {
+            committedControl[gem5::StaticInstFlags::Flags::IsCall]++;
+        }
+        if (staticInst->isDirectCtrl()) {
+            committedControl[gem5::StaticInstFlags::Flags::IsDirectControl]++;
+        }
+        if (staticInst->isIndirectCtrl()) {
+            committedControl
+                [gem5::StaticInstFlags::Flags::IsIndirectControl]++;
+        }
+        if (staticInst->isCondCtrl()) {
+            committedControl[gem5::StaticInstFlags::Flags::IsCondControl]++;
+        }
+        if (staticInst->isUncondCtrl()) {
+            committedControl[gem5::StaticInstFlags::Flags::IsUncondControl]++;
+        }
+        committedControl[gem5::StaticInstFlags::Flags::IsControl]++;
+    }
+
 }
 
 } // namespace gem5

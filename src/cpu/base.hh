@@ -738,8 +738,40 @@ class BaseCPU : public ClockedObject
         statistics::Scalar numDiscardedOps;
     };
 
+    struct CommitCPUStats: public statistics::Group
+    {
+        CommitCPUStats(statistics::Group *parent, int thread_id);
+
+        /* Number of committed memory references. */
+        statistics::Scalar numMemRefs;
+
+        /* Number of float instructions */
+        statistics::Scalar numFpInsts;
+
+        /* Number of int instructions */
+        statistics::Scalar numIntInsts;
+
+        /* number of load instructions */
+        statistics::Scalar numLoadInsts;
+
+        /* Number of store instructions */
+        statistics::Scalar numStoreInsts;
+
+        /* Number of vector instructions */
+        statistics::Scalar numVecInsts;
+
+        /* Number of instructions committed by type (OpClass) */
+        statistics::Vector committedInstType;
+
+        /* number of control instructions committed by control inst type */
+        statistics::Vector committedControl;
+        void updateComCtrlStats(const StaticInstPtr staticInst);
+
+    };
+
     std::vector<std::unique_ptr<FetchCPUStats>> fetchStats;
     std::vector<std::unique_ptr<ExecuteCPUStats>> executeStats;
+    std::vector<std::unique_ptr<CommitCPUStats>> commitStats;
 };
 
 } // namespace gem5
