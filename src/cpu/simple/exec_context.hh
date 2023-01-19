@@ -86,10 +86,6 @@ class SimpleExecContext : public ExecContext
             : statistics::Group(cpu,
                            csprintf("exec_context.thread_%i",
                                     thread->threadId()).c_str()),
-              ADD_STAT(numInsts, statistics::units::Count::get(),
-                       "Number of instructions committed"),
-              ADD_STAT(numOps, statistics::units::Count::get(),
-                       "Number of ops (including micro ops) committed"),
               ADD_STAT(numMatAluAccesses, statistics::units::Count::get(),
                        "Number of matrix alu accesses"),
               ADD_STAT(numCallsReturns, statistics::units::Count::get(),
@@ -139,10 +135,6 @@ class SimpleExecContext : public ExecContext
             numBranchMispred
                 .prereq(numBranchMispred);
         }
-
-        // Number of simulated instructions
-        statistics::Scalar numInsts;
-        statistics::Scalar numOps;
 
         // Number of matrix alu accesses
         statistics::Scalar numMatAluAccesses;

@@ -59,18 +59,8 @@ struct MinorStats : public statistics::Group
 {
     MinorStats(BaseCPU *parent);
 
-    /** Number of simulated instructions */
-    statistics::Scalar numInsts;
-
-    /** Number of simulated insts and microops */
-    statistics::Scalar numOps;
-
     /** Number of cycles in quiescent state */
     statistics::Scalar quiesceCycles;
-
-    /** CPI/IPC for total cycle counts and macro insts */
-    statistics::Formula cpi;
-    statistics::Formula ipc;
 
 };
 

@@ -198,7 +198,11 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
     for (int i = 0; i < numThreads; i++) {
         fetchStats.emplace_back(new FetchCPUStats(this, i));
         executeStats.emplace_back(new ExecuteCPUStats(this, i));
-        commitStats.emplace_back(new CommitCPUStats(this, i));
+        // create commitStat object for thread i and set ipc, cpi formulas
+        CommitCPUStats* commitStatptr = new CommitCPUStats(this, i);
+        commitStatptr->ipc = commitStatptr->numInsts / baseStats.numCycles;
+        commitStatptr->cpi = baseStats.numCycles / commitStatptr->numInsts;
+        commitStats.emplace_back(commitStatptr);
     }
 }
 
@@ -392,13 +396,28 @@ BaseCPU::probeInstCommit(const StaticInstPtr &inst, Addr pc)
 BaseCPU::
 BaseCPUStats::BaseCPUStats(statistics::Group *parent)
     : statistics::Group(parent),
+      ADD_STAT(numInsts, statistics::units::Count::get(),
+               "Number of instructions committed (core level)"),
+      ADD_STAT(numOps, statistics::units::Count::get(),
+               "Number of ops (including micro ops) committed (core level)"),
       ADD_STAT(numCycles, statistics::units::Cycle::get(),
                "Number of cpu cycles simulated"),
+      ADD_STAT(cpi, statistics::units::Rate<
+                statistics::units::Cycle, statistics::units::Count>::get(),
+               "CPI: cycles per instruction (core level)"),
+      ADD_STAT(ipc, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Cycle>::get(),
+               "IPC: instructions per cycle (core level)"),
       ADD_STAT(numWorkItemsStarted, statistics::units::Count::get(),
                "Number of work items this cpu started"),
       ADD_STAT(numWorkItemsCompleted, statistics::units::Count::get(),
                "Number of work items this cpu completed")
 {
+    cpi.precision(6);
+    cpi = numCycles / numInsts;
+
+    ipc.precision(6);
+    ipc = numInsts / numCycles;
 }
 
 void
@@ -839,6 +858,10 @@ BaseCPU::GlobalStats::GlobalStats(statistics::Group *parent)
 BaseCPU::
 FetchCPUStats::FetchCPUStats(statistics::Group *parent, int thread_id)
     : statistics::Group(parent, csprintf("fetchStats%i", thread_id).c_str()),
+    ADD_STAT(numInsts, statistics::units::Count::get(),
+             "Number of instructions fetched (thread level)"),
+    ADD_STAT(numOps, statistics::units::Count::get(),
+             "Number of ops (including micro ops) fetched (thread level)"),
     ADD_STAT(numBranches, statistics::units::Count::get(),
              "Number of branches fetched"),
     ADD_STAT(numFetchSuspends, statistics::units::Count::get(),
@@ -927,6 +950,16 @@ ExecuteCPUStats::ExecuteCPUStats(statistics::Group *parent, int thread_id)
 BaseCPU::
 CommitCPUStats::CommitCPUStats(statistics::Group *parent, int thread_id)
     : statistics::Group(parent, csprintf("commitStats%i", thread_id).c_str()),
+    ADD_STAT(numInsts, statistics::units::Count::get(),
+             "Number of instructions committed (thread level)"),
+    ADD_STAT(numOps, statistics::units::Count::get(),
+             "Number of ops (including micro ops) committed (thread level)"),
+    ADD_STAT(cpi, statistics::units::Rate<
+                statistics::units::Cycle, statistics::units::Count>::get(),
+             "CPI: cycles per instruction (thread level)"),
+    ADD_STAT(ipc, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Cycle>::get(),
+             "IPC: instructions per cycle (thread level)"),
     ADD_STAT(numMemRefs, statistics::units::Count::get(),
             "Number of memory references committed"),
     ADD_STAT(numFpInsts, statistics::units::Count::get(),
@@ -944,6 +977,9 @@ CommitCPUStats::CommitCPUStats(statistics::Group *parent, int thread_id)
     ADD_STAT(committedControl, statistics::units::Count::get(),
              "Class of control type instructions committed")
 {
+    cpi.precision(6);
+    ipc.precision(6);
+
     committedInstType
         .init(enums::Num_OpClass)
         .flags(statistics::total | statistics::pdf | statistics::dist);
