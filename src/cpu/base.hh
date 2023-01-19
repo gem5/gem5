@@ -695,8 +695,17 @@ class BaseCPU : public ClockedObject
         /* Total number of operations fetched */
         statistics::Scalar numOps;
 
+        /* Number of instruction fetched per cycle. */
+        statistics::Formula fetchRate;
+
         /* Total number of branches fetched */
         statistics::Scalar numBranches;
+
+        /* Number of branch fetches per cycle. */
+        statistics::Formula branchRate;
+
+        /* Number of cycles stalled due to an icache miss */
+        statistics::Scalar icacheStallCycles;
 
         /* Number of times fetch was asked to suspend by Execute */
         statistics::Scalar numFetchSuspends;
