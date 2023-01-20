@@ -66,7 +66,7 @@ class AbstractResource:
 
     def __init__(
         self,
-        local_path: str,
+        local_path: Optional[str] = None,
         documentation: Optional[str] = None,
         source: Optional[str] = None,
     ):
@@ -80,7 +80,7 @@ class AbstractResource:
         may be found. Not a required parameter. By default is None.
         """
 
-        if not os.path.exists(local_path):
+        if local_path and not os.path.exists(local_path):
             raise Exception(
                 f"Local path specified for resource, '{local_path}', does not "
                 "exist."
@@ -90,7 +90,7 @@ class AbstractResource:
         self._documentation = documentation
         self._source = source
 
-    def get_local_path(self) -> str:
+    def get_local_path(self) -> Optional[str]:
         """Returns the local path of the resource."""
         return self._local_path
 
@@ -322,44 +322,48 @@ def obtain_resource(
     thrown. True by default.
     """
 
-    # If the `resource_directory` parameter is not set via this function, we
-    # check the "GEM5_RESOURCE_DIR" environment variable. If this too is not
-    # set we call `_get_default_resource_dir()` to determine where the
-    # resource directory is, or should be, located.
-    if resource_directory == None:
-        resource_directory = os.getenv(
-            "GEM5_RESOURCE_DIR", _get_default_resource_dir()
-        )
-
-    # Small checks here to ensure the resource directory is valid.
-    if os.path.exists(resource_directory):
-        if not os.path.isdir(resource_directory):
-            raise Exception(
-                "gem5 resource directory, "
-                "'{}', exists but is not a directory".format(
-                    resource_directory
-                )
-            )
-    else:
-        # `exist_ok=True` here as, occasionally, if multiple instance of
-        # gem5 are started simultaneously, a race condition can exist to
-        # create the resource directory. Without `exit_ok=True`, threads
-        # which lose this race will thrown a `FileExistsError` exception.
-        # `exit_ok=True` ensures no exception is thrown.
-        os.makedirs(resource_directory, exist_ok=True)
-
-    # This is the path to which the resource is to be stored.
-    to_path = os.path.join(resource_directory, resource_name)
-
-    # Download the resource if it does not already exist.
-    get_resource(
-        resource_name=resource_name,
-        to_path=os.path.join(resource_directory, resource_name),
-        download_md5_mismatch=download_md5_mismatch,
-    )
-
     # Obtain the JSON resource entry for this resource
     resource_json = get_resources_json_obj(resource_name)
+
+    to_path = None
+    # If the "url" field is specified, the resoruce must be downloaded.
+    if "url" in resource_json and resource_json["url"]:
+
+        # If the `resource_directory` parameter is not set via this function, we
+        # check the "GEM5_RESOURCE_DIR" environment variable. If this too is not
+        # set we call `_get_default_resource_dir()` to determine where the
+        # resource directory is, or should be, located.
+        if resource_directory == None:
+            resource_directory = os.getenv(
+                "GEM5_RESOURCE_DIR", _get_default_resource_dir()
+            )
+
+        # Small checks here to ensure the resource directory is valid.
+        if os.path.exists(resource_directory):
+            if not os.path.isdir(resource_directory):
+                raise Exception(
+                    "gem5 resource directory, "
+                    "'{}', exists but is not a directory".format(
+                        resource_directory
+                    )
+                )
+        else:
+            # `exist_ok=True` here as, occasionally, if multiple instance of
+            # gem5 are started simultaneously, a race condition can exist to
+            # create the resource directory. Without `exit_ok=True`, threads
+            # which lose this race will thrown a `FileExistsError` exception.
+            # `exit_ok=True` ensures no exception is thrown.
+            os.makedirs(resource_directory, exist_ok=True)
+
+        # This is the path to which the resource is to be stored.
+        to_path = os.path.join(resource_directory, resource_name)
+
+        # Download the resource if it does not already exist.
+        get_resource(
+            resource_name=resource_name,
+            to_path=os.path.join(resource_directory, resource_name),
+            download_md5_mismatch=download_md5_mismatch,
+        )
 
     # Obtain the type from the JSON. From this we will determine what subclass
     # of `AbstractResource` we are to create and return.
