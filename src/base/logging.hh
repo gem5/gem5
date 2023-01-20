@@ -43,7 +43,6 @@
 
 #include <cassert>
 #include <sstream>
-#include <tuple>
 #include <utility>
 
 #include "base/compiler.hh"
@@ -289,24 +288,10 @@ class Logger
 #define NDEBUG_DEFINED 0
 #endif
 
-template <typename ...Args>
-inline std::string
-_assertMsg(const std::string &format, Args... args)
-{
-    return std::string(": ") + csprintf(format, args...);
-}
-
-inline const char *
-_assertMsg()
-{
-    return "";
-}
-
 /**
  * The assert macro will function like a normal assert, but will use panic
  * instead of straight abort(). This allows to perform some cleaning up in
- * ExitLogger::exit() before calling abort(). This macro will not check its
- * condition in fast builds, but it must still be valid code.
+ * ExitLogger::exit() before calling abort().
  *
  * @param cond Condition that is checked; if false -> panic
  * @param ...  Printf-based format string with arguments, extends printout.
@@ -315,11 +300,17 @@ _assertMsg()
  *
  * @ingroup api_logger
  */
-#define gem5_assert(cond, ...) \
-    do { \
-        if (GEM5_UNLIKELY(!NDEBUG_DEFINED && !static_cast<bool>(cond))) { \
-            panic("assert(" #cond ") failed%s", _assertMsg(__VA_ARGS__)); \
-        } \
+#define gem5_assert(cond, ...)                                      \
+    do {                                                            \
+        GEM5_UNLIKELY(NDEBUG_DEFINED || static_cast<bool>(cond)) ?  \
+        void(0) :                                                   \
+        [](const auto&... args) {                                   \
+            auto msg = [&]{                                         \
+                if constexpr (sizeof...(args) == 0) return "";      \
+                else return std::string(": ") + csprintf(args...);  \
+            };                                                      \
+            panic("assert(" #cond ") failed%s", msg());             \
+        }(__VA_ARGS__);                                             \
     } while (0)
 /** @} */ // end of api_logger
 
