@@ -31,8 +31,8 @@ from ...resources.resource import (
     BinaryResource,
     CheckpointResource,
     SimpointResource,
+    SimpointDirectoryResource,
 )
-from gem5.utils.simpoint import SimPoint
 
 from m5.objects import SEWorkload, Process
 
@@ -125,7 +125,7 @@ class SEBinaryWorkload:
         self,
         binary: BinaryResource,
         arguments: List[str] = [],
-        simpoint: Union[SimpointResource, SimPoint] = None,
+        simpoint: SimpointResource = None,
         checkpoint: Optional[Union[Path, CheckpointResource]] = None,
     ) -> None:
         """Set up the system to run a SimPoint workload.
@@ -135,28 +135,23 @@ class SEBinaryWorkload:
         * Dynamically linked executables are partially supported when the host
           ISA and the simulated ISA are the same.
 
-        **Warning:** SimPoints only works with one core
+        **Warning:** Simpoints only works with one core
 
         :param binary: The resource encapsulating the binary to be run.
         :param arguments: The input arguments for the binary
-        :param simpoint: The SimPoint object or Resource that contains the list of
+        :param simpoint: The SimpointResource that contains the list of
         SimPoints starting instructions, the list of weights, and the SimPoints
         interval
         :param checkpoint: The checkpoint directory. Used to restore the
         simulation to that checkpoint.
         """
 
-        # convert input to SimPoint if necessary
-        if isinstance(simpoint, SimpointResource):
-            self._simpoint_object = SimPoint(simpoint)
-        else:
-            assert isinstance(simpoint, SimPoint)
-            self._simpoint_object = simpoint
+        self._simpoint_resource = simpoint
 
         if self.get_processor().get_num_cores() > 1:
             warn("SimPoints only works with one core")
         self.get_processor().get_cores()[0]._set_simpoint(
-            inst_starts=self._simpoint_object.get_simpoint_start_insts(),
+            inst_starts=self._simpoint_resource.get_simpoint_start_insts(),
             board_initialized=False,
         )
 
@@ -167,11 +162,11 @@ class SEBinaryWorkload:
             checkpoint=checkpoint,
         )
 
-    def get_simpoint(self) -> SimPoint:
+    def get_simpoint(self) -> SimpointResource:
         """
-        Returns the SimPoint object set. If no SimPoint object has been set an
-        exception is thrown.
+        Returns the SimpointResorce object set. If no SimpointResource object
+        has been set an exception is thrown.
         """
-        if getattr(self, "_simpoint_object", None):
-            return self._simpoint_object
+        if getattr(self, "_simpoint_resource", None):
+            return self._simpoint_resource
         raise Exception("This board does not have a simpoint set.")

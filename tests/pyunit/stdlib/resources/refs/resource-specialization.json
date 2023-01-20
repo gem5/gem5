@@ -86,14 +86,28 @@
             "url": "{url_base}/checkpoints/riscv-hello-example-checkpoint.tar"
         },
         {
-            "type" : "simpoint",
-            "name" : "simpoint-example",
-            "documentation" : "simpoint documentation.",
+            "type": "simpoint-directory",
+            "name": "simpoint-directory-example",
+            "documentation": "simpoint directory documentation.",
             "is_zipped" : false,
-            "md5sum" : "3a57c1bb1077176c4587b8a3bf4f8ace",
+            "md5sum" : "3fcffe3956c8a95e3fb82e232e2b41fb",
             "source" : null,
             "is_tar_archive" : true,
-            "url": "{url_base}/checkpoints/riscv-hello-example-checkpoint.tar"
-         }
+            "url": "{url_base}/simpoints/x86-print-this-15000-simpoints-20221013.tar",
+            "simpoint_interval": 1000000,
+            "warmup_interval": 1000000,
+            "simpoint_file": "simpoint.simpt",
+            "weight_file": "simpoint.weight",
+            "workload_name": "Example Workload"
+        },
+        {
+            "type": "simpoint",
+            "name": "simpoint-example",
+            "documentation": "simpoint documentation.",
+            "simpoint_interval": 1000000,
+            "warmup_interval": 23445,
+            "simpoint_list" : [2,3,4,15],
+            "weight_list" : [0.1, 0.2, 0.4, 0.3]
+        }
     ]
 }

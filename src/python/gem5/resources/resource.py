@@ -27,13 +27,13 @@
 from abc import ABCMeta
 import os
 from pathlib import Path
-from m5.util import warn
+from m5.util import warn, fatal
 
 from .downloader import get_resource, get_resources_json_obj
 
 from ..isas import ISA, get_isa_from_str
 
-from typing import Optional, Dict, Union, Type
+from typing import Optional, Dict, Union, Type, Tuple, List
 
 """
 Resources are items needed to run a simulation, such as a disk image, kernel,
@@ -72,7 +72,7 @@ class AbstractResource:
     ):
         """
         :param local_path: The path on the host system where this resource is
-        located
+        located.
         :param documentation: Documentation describing this resource. Not a
         required parameter. By default is None.
         :param source: The source (as in "source code") for this resource. This
@@ -280,21 +280,204 @@ class CheckpointResource(DirectoryResource):
         )
 
 
-class SimpointResource(DirectoryResource):
-    """A simpoint resource."""
+class SimpointResource(AbstractResource):
+    """A simpoint resource. This resource stores all information required to
+    perform a Simpoint creation and restore. It contains the Simpoint, the
+    Simpoint interval, the weight for each Simpoint, the full warmup length,
+    and the warmup length for each Simpoint.
+    """
 
     def __init__(
         self,
-        local_path: str,
+        simpoint_interval: int = None,
+        simpoint_list: List[int] = None,
+        weight_list: List[float] = None,
+        warmup_interval: int = 0,
+        workload_name: Optional[str] = None,
         documentation: Optional[str] = None,
         source: Optional[str] = None,
+        local_path: Optional[str] = None,
         **kwargs,
     ):
+        """
+        :param simpoint_interval: The simpoint interval.
+        :param simpoint_list: The simpoint list.
+        :param weight_list: The weight list.
+        :param warmup_interval: The warmup interval. Default to zero (a value
+        of zero means effectively not set).
+        :param workload_name: Simpoints are typically associated with a
+        particular workload due to their dependency on chosen input parameters.
+        This field helps backtrack to that resource if required. This should
+        relate to a workload "name" field in the resource.json file.
+        """
+
         super().__init__(
             local_path=local_path,
             documentation=documentation,
             source=source,
         )
+
+        self._weight_list = weight_list
+        self._simpoint_list = simpoint_list
+        self._simpoint_interval = simpoint_interval
+        self._warmup_interval = warmup_interval
+        self._workload_name = workload_name
+
+        self._simpoint_start_insts = list(
+            inst * simpoint_interval for inst in self.get_simpoint_list()
+        )
+
+        if self._warmup_interval != 0:
+            self._warmup_list = self._set_warmup_list()
+        else:
+            self._warmup_list = [0] * len(self.get_simpoint_start_insts)
+
+    def get_simpoint_list(self) -> List[int]:
+        """Returns the a list containing all the Simpoints for the workload."""
+        return self._simpoint_list
+
+    def get_simpoint_start_insts(self) -> List[int]:
+        """Returns a lst containing all the Simpoint starting instrunction
+        points for the workload. This was calculated by multiplying the
+        Simpoint with the Simpoint interval when it was generated."""
+        return self._simpoint_start_insts
+
+    def get_warmup_interval(self) -> int:
+        """Returns the instruction length of the warmup interval."""
+        return self._warmup_interval
+
+    def get_weight_list(self) -> List[float]:
+        """Returns the list that contains the weight for each Simpoint. The
+        order of the weights matches that of the list returned by
+        `get_simpoint_list(). I.e. `get_weight_list()[3]` is the weight for
+        simpoint `get_simpoint_list()[3]`."""
+        return self._weight_list
+
+    def get_simpoint_interval(self) -> int:
+        """Returns the Simpoint interval value."""
+        return self._simpoint_interval
+
+    def get_warmup_list(self) -> List[int]:
+        """Returns the a list containing the warmup length for each Simpoint.
+        Each warmup length in this list corresponds to the Simpoint at the same
+        index in `get_simpoint_list()`. I.e., `get_warmup_list()[4]` is the
+        warmup length for Simpoint `get_simpoint_list()[4]`."""
+        return self._warmup_list
+
+    def get_workload_name(self) -> Optional[str]:
+        """Return the workload name this Simpoint is associated with."""
+        return self._workload_name
+
+    def _set_warmup_list(self) -> List[int]:
+        """
+        This function uses the warmup_interval, fits it into the
+        simpoint_start_insts, and outputs a list of warmup instruction lengths
+        for each SimPoint.
+
+        The warmup instruction length is calculated using the starting
+        instruction of a SimPoint to minus the warmup_interval and the ending
+        instruction of the last SimPoint. If it is less than 0, then the warmup
+        instruction length is the gap between the starting instruction of a
+        SimPoint and the ending instruction of the last SimPoint.
+        """
+        warmup_list = []
+        for index, start_inst in enumerate(self.get_simpoint_start_insts()):
+            warmup_inst = start_inst - self.get_warmup_interval()
+            if warmup_inst < 0:
+                warmup_inst = start_inst
+            else:
+                warmup_inst = self.get_warmup_interval()
+            warmup_list.append(warmup_inst)
+            # change the starting instruction of a SimPoint to include the
+            # warmup instruction length
+            self._simpoint_start_insts[index] = start_inst - warmup_inst
+        return warmup_list
+
+
+class SimpointDirectoryResource(SimpointResource):
+    """A Simpoint diretory resource. This Simpoint Resource assumes the
+    existance of a directory containing a simpoint file and a weight file."""
+
+    def __init__(
+        self,
+        local_path: str,
+        simpoint_file: str,
+        weight_file: str,
+        simpoint_interval: int,
+        warmup_interval: int,
+        workload_name: Optional[str] = None,
+        documentation: Optional[str] = None,
+        source: Optional[str] = None,
+        **kwargs,
+    ):
+        """
+        :param simpoint_file: The Simpoint file. This file is a list of
+        Simpoints, each on its own line. It should map 1-to-1 to the weights
+        file.
+        :param weight_file: The Simpoint weights file. This file is a list of
+        weights, each on its own line.
+        """
+        self._simpoint_file = simpoint_file
+        self._weight_file = weight_file
+
+        # This is a little hack. The functions `get_simpoint_file` and
+        # `get_weight_file` use the local path, so we set it here despite it
+        # also being set in the `AbstractResource` constructor. This isn't
+        # elegant but does not harm.
+        self._local_path = local_path
+        (
+            simpoint_list,
+            weight_list,
+        ) = self._get_weights_and_simpoints_from_file()
+
+        super().__init__(
+            simpoint_interval=simpoint_interval,
+            simpoint_list=simpoint_list,
+            weight_list=weight_list,
+            warmup_interval=warmup_interval,
+            workload_name=workload_name,
+            local_path=local_path,
+            documentation=documentation,
+            source=source,
+        )
+
+    def get_simpoint_file(self) -> Path:
+        """Return the Simpoint File path."""
+        return Path(Path(self._local_path) / self._simpoint_file)
+
+    def get_weight_file(self) -> Path:
+        """Returns the Weight File path."""
+        return Path(Path(self._local_path) / self._weight_file)
+
+    def _get_weights_and_simpoints_from_file(
+        self,
+    ) -> Tuple[List[int], List[int]]:
+        """This is a helper function to extract the weights and simpoints from
+        the files.
+        """
+        simpoint_weight_pair = []
+        with open(self.get_simpoint_file()) as simpoint_file, open(
+            self.get_weight_file()
+        ) as weight_file:
+            while True:
+                line = simpoint_file.readline()
+                if not line:
+                    break
+                interval = int(line.split(" ", 1)[0])
+                line = weight_file.readline()
+                if not line:
+                    fatal("not engough weights")
+                weight = float(line.split(" ", 1)[0])
+                simpoint_weight_pair.append((interval, weight))
+        simpoint_weight_pair.sort(key=lambda obj: obj[0])
+        # use simpoint to sort
+
+        weight_list = []
+        simpoint_list = []
+        for simpoint, weight in simpoint_weight_pair:
+            simpoint_list.append(simpoint)
+            weight_list.append(weight)
+        return simpoint_list, weight_list
 
 
 def obtain_resource(
@@ -529,5 +712,6 @@ _get_resource_json_type_map = {
     "file": FileResource,
     "directory": DirectoryResource,
     "simpoint": SimpointResource,
+    "simpoint-directory": SimpointDirectoryResource,
     "resource": Resource,
 }

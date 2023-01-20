@@ -24,10 +24,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import fatal
+from m5.util import fatal, warn
 from pathlib import Path
 from typing import List, Tuple
-from gem5.resources.resource import Resource, CustomResource
+from gem5.resources.resource import SimpointResource
 
 
 class SimPoint:
@@ -39,7 +39,7 @@ class SimPoint:
 
     def __init__(
         self,
-        simpoint_resource: CustomResource = None,
+        simpoint_resource: SimpointResource = None,
         simpoint_interval: int = None,
         simpoint_file_path: Path = None,
         weight_file_path: Path = None,
@@ -70,12 +70,19 @@ class SimPoint:
         The warmup_list only works correctly with sorted simpoint_list.
         """
 
+        warn(
+            "This `SimPoint` class has been deprecated in favor of "
+            "`SimpointResource` and `SimpointDirectory` resource which may be "
+            "found in `gem5.resources.resource`. Please utilize these. This "
+            "`SimPoint` class will be removed in future releases of gem5."
+        )
+
         # initalize input if you're passing in a CustomResource
         if simpoint_resource is not None:
             simpoint_directory = str(simpoint_resource.get_local_path())
 
-            simpoint_file_path = Path(simpoint_directory + "/simpoint.simpt")
-            weight_file_path = Path(simpoint_directory + "/simpoint.weight")
+            simpoint_file_path = simpoint_directory.get_simpoint_file()
+            weight_file_path = simpoint_resource.get_weight_file()
             simpoint_interval = (
                 simpoint_resource.get_metadata()
                 .get("additional_metadata")

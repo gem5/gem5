@@ -26,6 +26,7 @@
 
 import os
 import unittest
+from pathlib import Path
 
 from gem5.resources.resource import *
 from gem5.isas import ISA
@@ -155,6 +156,40 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertIsNone(resource.get_documentation())
         self.assertIsNone(resource.get_source())
 
+    def test_simpoint_directory_resource(self) -> None:
+        """Tests the loading of a Simpoint directory resource."""
+        resource = obtain_resource(
+            resource_name="simpoint-directory-example",
+            resource_directory=self.get_resource_dir(),
+        )
+
+        self.assertIsInstance(resource, SimpointDirectoryResource)
+
+        self.assertEquals(
+            "simpoint directory documentation.", resource.get_documentation()
+        )
+        self.assertIsNone(resource.get_source())
+
+        self.assertEquals(1000000, resource.get_simpoint_interval())
+        self.assertEquals(1000000, resource.get_warmup_interval())
+        self.assertEquals(
+            Path(
+                Path(self.get_resource_dir())
+                / "simpoint-directory-example"
+                / "simpoint.simpt"
+            ),
+            resource.get_simpoint_file(),
+        )
+        self.assertEquals(
+            Path(
+                Path(self.get_resource_dir())
+                / "simpoint-directory-example"
+                / "simpoint.weight"
+            ),
+            resource.get_weight_file(),
+        )
+        self.assertEquals("Example Workload", resource.get_workload_name())
+
     def test_simpoint_resource(self) -> None:
         """Tests the loading of a Simpoint resource."""
         resource = obtain_resource(
@@ -168,6 +203,12 @@ class ResourceSpecializationSuite(unittest.TestCase):
             "simpoint documentation.", resource.get_documentation()
         )
         self.assertIsNone(resource.get_source())
+        self.assertIsNone(resource.get_local_path())
+
+        self.assertEquals(1000000, resource.get_simpoint_interval())
+        self.assertEquals(23445, resource.get_warmup_interval())
+        self.assertEquals([2, 3, 4, 15], resource.get_simpoint_list())
+        self.assertEquals([0.1, 0.2, 0.4, 0.3], resource.get_weight_list())
 
     def test_file_resource(self) -> None:
         """Tests the loading of a FileResource."""

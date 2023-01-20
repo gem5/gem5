@@ -28,7 +28,7 @@ from typing import Generator, Optional
 import m5.stats
 from ..components.processors.abstract_processor import AbstractProcessor
 from ..components.processors.switchable_processor import SwitchableProcessor
-from ..utils.simpoint import SimPoint
+from ..resources.resource import SimpointResource
 from m5.util import warn
 from pathlib import Path
 
@@ -134,7 +134,7 @@ def skip_generator():
 
 
 def simpoints_save_checkpoint_generator(
-    checkpoint_dir: Path, simpoint: SimPoint
+    checkpoint_dir: Path, simpoint: SimpointResource
 ):
     """
     A generator for taking multiple checkpoints for SimPoints. It will save the
