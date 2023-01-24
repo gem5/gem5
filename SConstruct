@@ -290,6 +290,17 @@ main['CLANG'] = CXX_version and CXX_version.find('clang') >= 0
 if main['GCC'] + main['CLANG'] > 1:
     error('Two compilers enabled at once?')
 
+# Find the gem5 binary target architecture (usually host architecture). The
+# "Target: <target>" is consistent accross gcc and clang at the time of
+# writting this.
+bin_target_arch = readCommand([main['CXX'], '--verbose'], exception=False)
+main["BIN_TARGET_ARCH"] = (
+    "x86_64"
+    if bin_target_arch.find("Target: x86_64") != -1
+    else "aarch64"
+    if bin_target_arch.find("Target: aarch64") != -1
+    else "unknown"
+)
 
 ########################################################################
 #
@@ -516,6 +527,35 @@ for variant_path in variant_paths:
             env.Append(CCFLAGS=['-fsanitize=%s' % sanitizers,
                                  '-fno-omit-frame-pointer'],
                         LINKFLAGS='-fsanitize=%s' % sanitizers)
+            if main["BIN_TARGET_ARCH"] == "x86_64":
+                # Sanitizers can enlarge binary size drammatically, north of
+                # 2GB.  This can prevent successful linkage due to symbol
+                # relocation outside from the 2GB region allocated by the small
+                # x86_64 code model that is enabled by default (32-bit relative
+                # offset limitation).  Switching to the medium model in x86_64
+                # enables 64-bit relative offset for large objects (>64KB by
+                # default) while sticking to 32-bit relative addressing for
+                # code and smaller objects. Note this comes at a potential
+                # performance cost so it should not be enabled in all cases.
+                # This should still be a very happy medium for
+                # non-perf-critical sanitized builds.
+                env.Append(CCFLAGS='-mcmodel=medium')
+                env.Append(LINKFLAGS='-mcmodel=medium')
+            elif main["BIN_TARGET_ARCH"] == "aarch64":
+                # aarch64 default code model is small but with different
+                # constrains than for x86_64. With aarch64, the small code
+                # model enables 4GB distance between symbols. This is
+                # sufficient for the largest ALL/gem5.debug target with all
+                # sanitizers enabled at the time of writting this. Note that
+                # the next aarch64 code model is "large" which prevents dynamic
+                # linkage so it should be avoided when possible.
+                pass
+            else:
+                warning(
+                    "Unknown code model options for your architecture. "
+                    "Linkage might fail for larger binaries "
+                    "(e.g., ALL/gem5.debug with sanitizers enabled)."
+                )
         else:
             warning("Don't know how to enable %s sanitizer(s) for your "
                     "compiler." % sanitizers)
