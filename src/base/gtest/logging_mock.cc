@@ -36,14 +36,6 @@ namespace gem5
 
 namespace {
 
-// This custom exception type will help prevent fatal exceptions from being
-// caught by other code in gem5 and let them escape to the gtest framework.
-// Unfortunately that results in a somewhat confusing message about an unknown
-// exception being thrown after the panic/fatal message has been printed, but
-// there will at least be some indication what went wrong.
-struct GTestException
-{};
-
 class GTestLogger : public Logger
 {
   public:
