@@ -464,7 +464,8 @@ BaseCache::recvTimingReq(PacketPtr pkt)
 
     if (prefetcher) {
         // track time of availability of next prefetch, if any
-        Tick next_pf_time = prefetcher->nextPrefetchReadyTime();
+        Tick next_pf_time = std::max(
+                            prefetcher->nextPrefetchReadyTime(), clockEdge());
         if (next_pf_time != MaxTick) {
             schedMemSideSendEvent(next_pf_time);
         }
