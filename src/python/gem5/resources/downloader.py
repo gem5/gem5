@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2021-2023 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,7 @@ from urllib.error import HTTPError
 from typing import List, Dict, Set, Optional
 
 from .md5_utils import md5_file, md5_dir
+from ..utils.progress_bar import tqdm, progress_hook
 
 from ..utils.filelock import FileLock
 
@@ -286,10 +287,26 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
                 # get the file as a bytes blob
                 request = urllib.request.Request(url)
                 with urllib.request.urlopen(request, context=ctx) as fr:
-                    with open(download_to, "wb") as fw:
-                        fw.write(fr.read())
+                    with tqdm.wrapattr(
+                        open(download_to, "wb"),
+                        "write",
+                        miniters=1,
+                        desc="Downloading {download_to}",
+                        total=getattr(fr, "length", None),
+                    ) as fw:
+                        for chunk in fr:
+                            fw.write(chunk)
             else:
-                urllib.request.urlretrieve(url, download_to)
+                with tqdm(
+                    unit="B",
+                    unit_scale=True,
+                    unit_divisor=1024,
+                    miniters=1,
+                    desc=f"Downloading {download_to}",
+                ) as t:
+                    urllib.request.urlretrieve(
+                        url, download_to, reporthook=progress_hook(t)
+                    )
             return
         except HTTPError as e:
             # If the error code retrieved is retryable, we retry using a
