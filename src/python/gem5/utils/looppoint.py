@@ -34,6 +34,8 @@ from m5.objects import PcCountTrackerManager
 import csv
 import re
 import json
+import m5
+import os
 
 
 class LoopPoint:
@@ -106,14 +108,16 @@ class LoopPoint:
             self._json_file[rid]["simulation"]["end"]["relative"] = int(temp)
 
     def output_json_file(
-        self, input_indent: int = 4, filename: str = "outdir.json"
+        self,
+        input_indent: int = 4,
+        filepath: str = os.path.join(m5.options.outdir, "outdir.json"),
     ) -> Dict[int, Dict]:
         """
         This function is used to output the _json_file into a json file
         :param input_indent: the indent value of the json file
-        :param filename: the name of the output file
+        :param filepath: the path of the output file
         """
-        with open(filename, "w") as file:
+        with open(filepath, "w") as file:
             json.dump(self._json_file, file, indent=input_indent)
 
     def get_current_region(self) -> int:
