@@ -46,7 +46,9 @@
 
 #include "base/debug.hh"
 #include "base/flags.hh"
+#include "base/named.hh"
 #include "base/trace.hh"
+#include "base/type_traits.hh"
 #include "base/types.hh"
 #include "base/uncontended_mutex.hh"
 #include "debug/Event.hh"
@@ -1071,37 +1073,63 @@ class EventManager
     void setCurTick(Tick newVal) { eventq->setCurTick(newVal); }
 };
 
-template <class T, void (T::* F)()>
-class EventWrapper : public Event
+/**
+ * @brief Wrap a member function inside MemberEventWrapper to use it as an
+ * event callback. This wrapper should be prefered over EventFunctionWrapper
+ * for better performance and type safety.
+ *
+ * Wrapping a function *process* member of a class *klass* can be done by
+ * adding a member variable of the following type:
+ * MemberEventWrapper<&klass::process>.
+ *
+ * It is required that klass::process takes no explicit argument and returns no
+ * value as these could not be handled by the event scheduler.
+ *
+ * @tparam F Pointer to the member function wrapped in this event.
+ */
+template <auto F>
+class MemberEventWrapper final: public Event, public Named
 {
-  private:
-    T *object;
+    using CLASS = MemberFunctionClass_t<F>;
+    static_assert(std::is_same_v<void, MemberFunctionReturn_t<F>>);
+    static_assert(std::is_same_v<MemberFunctionArgsTuple_t<F>, std::tuple<>>);
 
-  public:
-    EventWrapper(T *obj, bool del = false, Priority p = Default_Pri)
-        : Event(p), object(obj)
+public:
+    MemberEventWrapper(CLASS *object,
+                       bool del = false,
+                       Priority p = Default_Pri):
+        Event(p),
+        Named(object->name() + ".wrapped_event"),
+        mObject(object)
     {
-        if (del)
-            setFlags(AutoDelete);
+        gem5_assert(mObject);
+        if (del) setFlags(AutoDelete);
     }
 
-    EventWrapper(T &obj, bool del = false, Priority p = Default_Pri)
-        : Event(p), object(&obj)
-    {
-        if (del)
-            setFlags(AutoDelete);
+    /**
+     * @brief Construct a new MemberEventWrapper object
+     *
+     * @param object instance of the object to call the wrapped member func on
+     * @param del if true, flag this event as AutoDelete
+     * @param p priority of this event
+     */
+    MemberEventWrapper(CLASS &object,
+                       bool del = false,
+                       Priority p = Default_Pri):
+        MemberEventWrapper(&object, del, p)
+    {}
+
+    void process() override {
+        (mObject->*F)();
     }
 
-    void process() { (object->*F)(); }
-
-    const std::string
-    name() const
-    {
-        return object->name() + ".wrapped_event";
-    }
-
-    const char *description() const { return "EventWrapped"; }
+    const char *description() const override { return "EventWrapped"; }
+private:
+    CLASS *mObject;
 };
+
+template <class T, void (T::* F)()>
+using EventWrapper = MemberEventWrapper<F>;
 
 class EventFunctionWrapper : public Event
 {
