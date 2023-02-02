@@ -86,8 +86,13 @@ class RequestPort: public Port, public AtomicRequestProtocol,
     SimObject &owner;
 
   public:
+    [[deprecated("RequestPort ownership is deprecated. "
+                 "Owner should now be registered in derived classes.")]]
     RequestPort(const std::string& name, SimObject* _owner,
-               PortID id=InvalidPortID);
+                PortID id=InvalidPortID);
+
+    RequestPort(const std::string& name, PortID id=InvalidPortID);
+
     virtual ~RequestPort();
 
     /**
@@ -266,9 +271,7 @@ class RequestPort: public Port, public AtomicRequestProtocol,
 class [[deprecated]] MasterPort : public RequestPort
 {
   public:
-    MasterPort(const std::string& name, SimObject* _owner,
-               PortID id=InvalidPortID) : RequestPort(name, _owner, id)
-               {}
+    using RequestPort::RequestPort;
 };
 
 /**
@@ -294,8 +297,13 @@ class ResponsePort : public Port, public AtomicResponseProtocol,
     SimObject& owner;
 
   public:
+    [[deprecated("ResponsePort ownership is deprecated. "
+                 "Owner should now be registered in derived classes.")]]
     ResponsePort(const std::string& name, SimObject* _owner,
-              PortID id=InvalidPortID);
+                 PortID id=InvalidPortID);
+
+    ResponsePort(const std::string& name, PortID id=InvalidPortID);
+
     virtual ~ResponsePort();
 
     /**
