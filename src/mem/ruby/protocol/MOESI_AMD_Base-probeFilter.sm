@@ -1103,7 +1103,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   }
 
   action(pm_popMemQueue, "pm", desc="pop mem queue") {
-    memQueue_in.dequeue(clockEdge());
+    dequeueMemRespQueue();
   }
 
   action(pt_popTriggerQueue, "pt", desc="pop trigger queue") {

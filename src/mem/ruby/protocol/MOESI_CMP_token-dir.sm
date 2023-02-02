@@ -821,7 +821,7 @@ machine(MachineType:Directory, "Token protocol")
   }
 
   action(l_popMemQueue, "q", desc="Pop off-chip request queue") {
-    memQueue_in.dequeue(clockEdge());
+    dequeueMemRespQueue();
   }
 
   action(r_bounceResponse, "r", desc="Bounce response to starving processor") {
