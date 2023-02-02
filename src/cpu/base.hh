@@ -55,6 +55,7 @@
 #include "sim/insttracer.hh"
 #include "sim/probe/pmu.hh"
 #include "sim/probe/probe.hh"
+#include "sim/signal.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -160,6 +161,8 @@ class BaseCPU : public ClockedObject
      * constructed from regStats since we merge it into the root
      * group. */
     static std::unique_ptr<GlobalStats> globalStats;
+
+    SignalSinkPort<bool> modelResetPort;
 
   public:
 
@@ -336,6 +339,19 @@ class BaseCPU : public ClockedObject
      * @param cpu CPU to initialize read state from.
      */
     virtual void takeOverFrom(BaseCPU *cpu);
+
+    /**
+     * Set the reset of the CPU to be either asserted or deasserted.
+     *
+     * When asserted, the CPU should be stopped and waiting. When deasserted,
+     * the CPU should start running again, unless some other condition would
+     * also prevent it. At the point the reset is deasserted, it should be
+     * reinitialized as defined by the ISA it's running and any other relevant
+     * part of its configuration (reset address, etc).
+     *
+     * @param state The new state of the reset signal to this CPU.
+     */
+    virtual void setReset(bool state);
 
     /**
      * Flush all TLBs in the CPU.

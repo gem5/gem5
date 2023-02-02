@@ -53,6 +53,7 @@ from m5.objects.CPUTracers import ExeTracer
 from m5.objects.SubSystem import SubSystem
 from m5.objects.ClockDomain import *
 from m5.objects.Platform import Platform
+from m5.objects.ResetPort import ResetResponsePort
 
 default_tracer = ExeTracer()
 
@@ -152,6 +153,8 @@ class BaseCPU(ClockedObject):
         "Leave the CPU switched out after startup (used when switching "
         "between CPU models)",
     )
+
+    model_reset = ResetResponsePort("Generic reset for the CPU")
 
     tracer = Param.InstTracer(default_tracer, "Instruction tracer")
 

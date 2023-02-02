@@ -47,6 +47,8 @@
 #include <sstream>
 #include <string>
 
+#include "arch/generic/decoder.hh"
+#include "arch/generic/isa.hh"
 #include "arch/generic/tlb.hh"
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
@@ -130,6 +132,7 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
       _dataRequestorId(p.system->getRequestorId(this, "data")),
       _taskId(context_switch_task_id::Unknown), _pid(invldPid),
       _switchedOut(p.switched_out), _cacheLineSize(p.system->cacheLineSize()),
+      modelResetPort(p.name + ".model_reset"),
       interrupts(p.interrupts), numThreads(p.numThreads), system(p.system),
       previousCycle(0), previousState(CPU_STATE_SLEEP),
       functionTraceStream(nullptr), currentFunctionStart(0),
@@ -178,6 +181,10 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
         fatal("Number of ISAs (%i) assigned to the CPU does not equal number "
               "of threads (%i).\n", params().isa.size(), numThreads);
     }
+
+    modelResetPort.onChange([this](const bool &new_val) {
+        setReset(new_val);
+    });
 }
 
 void
@@ -413,6 +420,8 @@ BaseCPU::getPort(const std::string &if_name, PortID idx)
         return getDataPort();
     else if (if_name == "icache_port")
         return getInstPort();
+    else if (if_name == "model_reset")
+        return modelResetPort;
     else
         return ClockedObject::getPort(if_name, idx);
 }
@@ -479,6 +488,12 @@ BaseCPU::findContext(ThreadContext *tc)
 void
 BaseCPU::activateContext(ThreadID thread_num)
 {
+    if (modelResetPort.state()) {
+        DPRINTF(Thread, "CPU in reset, not activating context %d\n",
+                threadContexts[thread_num]->contextId());
+        return;
+    }
+
     DPRINTF(Thread, "activate contextId %d\n",
             threadContexts[thread_num]->contextId());
     // Squash enter power gating event while cpu gets activated
@@ -602,6 +617,32 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     // we are switching to.
     getInstPort().takeOverFrom(&oldCPU->getInstPort());
     getDataPort().takeOverFrom(&oldCPU->getDataPort());
+
+    // Switch over the reset line as well, if necessary.
+    if (oldCPU->modelResetPort.isConnected())
+        modelResetPort.takeOverFrom(&oldCPU->modelResetPort);
+}
+
+void
+BaseCPU::setReset(bool state)
+{
+    for (auto tc: threadContexts) {
+        if (state) {
+            // As we enter reset, stop execution.
+            tc->quiesce();
+        } else {
+            // As we leave reset, first reset thread state,
+            tc->getIsaPtr()->resetThread();
+            // reset the decoder in case it had partially decoded something,
+            tc->getDecoderPtr()->reset();
+            // flush the TLBs,
+            tc->getMMUPtr()->flushAll();
+            // Clear any interrupts,
+            interrupts[tc->threadId()]->clearAll();
+            // and finally reenable execution.
+            tc->activate();
+        }
+    }
 }
 
 void
