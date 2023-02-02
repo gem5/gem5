@@ -59,11 +59,6 @@ BareMetal::initState()
 {
     Workload::initState();
 
-    for (auto *tc: system->threads) {
-        RiscvISA::Reset().invoke(tc);
-        tc->activate();
-    }
-
     warn_if(!bootloader->buildImage().write(system->physProxy),
             "Could not load sections to memory.");
 
