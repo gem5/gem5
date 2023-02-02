@@ -60,7 +60,7 @@ MemSinkCtrl::MemSinkCtrl(const QoSMemSinkCtrlParams &p)
     readBufferSize(p.read_buffer_size),
     writeBufferSize(p.write_buffer_size), port(name() + ".port", *this),
     interface(p.interface),
-    retryRdReq(false), retryWrReq(false), nextRequest(0), nextReqEvent(this),
+    retryRdReq(false), retryWrReq(false), nextRequest(0), nextReqEvent(*this),
     stats(this)
 {
     // Resize read and write queue to allocate space

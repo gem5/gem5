@@ -953,15 +953,15 @@ ISA::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(hstick_cmp);
 
     if (tick_cmp) {
-        tickCompare = new TickCompareEvent(this);
+        tickCompare = new TickCompareEvent(*this);
         schedule(tickCompare, tick_cmp);
     }
     if (stick_cmp)  {
-        sTickCompare = new STickCompareEvent(this);
+        sTickCompare = new STickCompareEvent(*this);
         schedule(sTickCompare, stick_cmp);
     }
     if (hstick_cmp)  {
-        hSTickCompare = new HSTickCompareEvent(this);
+        hSTickCompare = new HSTickCompareEvent(*this);
         schedule(hSTickCompare, hstick_cmp);
     }
 }

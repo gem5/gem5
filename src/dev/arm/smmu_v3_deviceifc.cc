@@ -78,7 +78,7 @@ SMMUv3DeviceInterface::SMMUv3DeviceInterface(
     deviceNeedsRetry(false),
     atsDeviceNeedsRetry(false),
     sendDeviceRetryEvent(*this),
-    atsSendDeviceRetryEvent(this)
+    atsSendDeviceRetryEvent(*this)
 {}
 
 void

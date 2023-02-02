@@ -393,7 +393,7 @@ std::map<Addr, HardBreakpoint *> hardBreakMap;
 BaseRemoteGDB::BaseRemoteGDB(System *_system, int _port) :
         incomingConnectionEvent(nullptr), incomingDataEvent(nullptr),
         _port(_port), fd(-1), sys(_system),
-        connectEvent(this), disconnectEvent(this), trapEvent(this),
+        connectEvent(*this), disconnectEvent(*this), trapEvent(this),
         singleStepEvent(*this)
 {}
 

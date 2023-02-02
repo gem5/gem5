@@ -56,7 +56,7 @@ void Kernel::status(sc_core::sc_status s) { _status = s; }
 
 Kernel::Kernel(const Params &params, int) :
     gem5::SimObject(params),
-    t0Event(this, false, gem5::EventBase::Default_Pri - 1)
+    t0Event(*this, false, gem5::EventBase::Default_Pri - 1)
 {
     // Install ourselves as the scheduler's event manager.
     ::sc_gem5::scheduler.setEventQueue(eventQueue());
