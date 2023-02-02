@@ -43,6 +43,7 @@
 #include <vector>
 
 #include "arch/generic/pcstate.hh"
+#include "base/logging.hh"
 #include "cpu/reg_class.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
@@ -82,6 +83,8 @@ class BaseISA : public SimObject
     virtual uint64_t getExecutingAsid() const { return 0; }
     virtual bool inUserMode() const = 0;
     virtual void copyRegsFrom(ThreadContext *src) = 0;
+
+    virtual void resetThread() { panic("Thread reset not implemented."); }
 
     const RegClasses &regClasses() const { return _regClasses; }
 
