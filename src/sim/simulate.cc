@@ -43,7 +43,6 @@
 #include "sim/simulate.hh"
 
 #include <atomic>
-#include <mutex>
 #include <thread>
 
 #include "base/logging.hh"
@@ -274,28 +273,6 @@ terminateEventQueueThreads()
 
 
 /**
- * Test and clear the global async_event flag, such that each time the
- * flag is cleared, only one thread returns true (and thus is assigned
- * to handle the corresponding async event(s)).
- */
-static bool
-testAndClearAsyncEvent()
-{
-    static std::mutex mutex;
-
-    bool was_set = false;
-    mutex.lock();
-
-    if (async_event) {
-        was_set = true;
-        async_event = false;
-    }
-
-    mutex.unlock();
-    return was_set;
-}
-
-/**
  * The main per-thread simulation loop. This loop is executed by all
  * simulation threads (the main thread and the subordinate threads) in
  * parallel.
@@ -307,6 +284,8 @@ doSimLoop(EventQueue *eventq)
     curEventQueue(eventq);
     eventq->handleAsyncInsertions();
 
+    bool mainQueue = eventq == getEventQueue(0);
+
     while (1) {
         // there should always be at least one event (the SimLoopExitEvent
         // we just scheduled) in the queue
@@ -314,7 +293,8 @@ doSimLoop(EventQueue *eventq)
         assert(curTick() <= eventq->nextTick() &&
                "event scheduled in the past");
 
-        if (async_event && testAndClearAsyncEvent()) {
+        if (mainQueue && async_event) {
+            async_event = false;
             // Take the event queue lock in case any of the service
             // routines want to schedule new events.
             std::lock_guard<EventQueue> lock(*eventq);
