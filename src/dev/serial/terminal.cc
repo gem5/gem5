@@ -87,6 +87,10 @@ Terminal::ListenEvent::ListenEvent(Terminal *t, int fd, int e)
 void
 Terminal::ListenEvent::process(int revent)
 {
+    // As a consequence of being called from the PollQueue, we might
+    // have been called from a different thread. Migrate to "our"
+    // thread.
+    EventQueue::ScopedMigration migrate(term->eventQueue());
     term->accept();
 }
 
