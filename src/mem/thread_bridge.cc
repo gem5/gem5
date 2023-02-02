@@ -64,12 +64,6 @@ ThreadBridge::IncomingPort::recvRespRetry()
 
 // AtomicResponseProtocol
 Tick
-ThreadBridge::IncomingPort::recvAtomicBackdoor(PacketPtr pkt,
-                                               MemBackdoorPtr &backdoor)
-{
-    panic("ThreadBridge only supports atomic/functional access.");
-}
-Tick
 ThreadBridge::IncomingPort::recvAtomic(PacketPtr pkt)
 {
     EventQueue::ScopedMigration migrate(device_.eventQueue());
@@ -82,14 +76,6 @@ ThreadBridge::IncomingPort::recvFunctional(PacketPtr pkt)
 {
     EventQueue::ScopedMigration migrate(device_.eventQueue());
     device_.out_port_.sendFunctional(pkt);
-}
-
-void
-ThreadBridge::IncomingPort::recvMemBackdoorReq(const MemBackdoorReq &req,
-                                               MemBackdoorPtr &backdoor)
-{
-    EventQueue::ScopedMigration migrate(device_.eventQueue());
-    device_.out_port_.sendMemBackdoorReq(req, backdoor);
 }
 
 ThreadBridge::OutgoingPort::OutgoingPort(const std::string &name,
