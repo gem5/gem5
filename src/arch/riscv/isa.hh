@@ -127,6 +127,8 @@ class ISA : public BaseISA
 
     void globalClearExclusive() override;
 
+    void resetThread() override;
+
     RiscvType rvType() const { return rv_type; }
 };
 

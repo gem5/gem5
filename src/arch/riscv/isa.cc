@@ -34,6 +34,7 @@
 #include <set>
 #include <sstream>
 
+#include "arch/riscv/faults.hh"
 #include "arch/riscv/interrupts.hh"
 #include "arch/riscv/mmu.hh"
 #include "arch/riscv/pagetable.hh"
@@ -721,6 +722,12 @@ void
 ISA::globalClearExclusive()
 {
     tc->getCpuPtr()->wakeup(tc->threadId());
+}
+
+void
+ISA::resetThread()
+{
+    Reset().invoke(tc);
 }
 
 } // namespace RiscvISA
