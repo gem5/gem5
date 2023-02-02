@@ -42,6 +42,7 @@ from m5.SimObject import SimObject
 from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
 from m5.objects.Gic import BaseGic
 from m5.objects.IntPin import VectorIntSourcePin
+from m5.objects.ResetPort import ResetResponsePort
 from m5.objects.SystemC import SystemC_ScModule
 
 GICV3_COMMS_TARGET_ROLE = "GICV3 COMMS TARGET"
@@ -849,6 +850,9 @@ class FastModelGIC(BaseGic):
     )
 
     wake_request = VectorIntSourcePin("GIC wake request initiator")
+
+    reset = ResetResponsePort("Reset")
+    po_reset = ResetResponsePort("Power on reset")
 
     # Used for DTB autogeneration
     _state = FdtState(addr_cells=2, size_cells=2, interrupt_cells=3)
