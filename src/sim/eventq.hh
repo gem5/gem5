@@ -1129,7 +1129,8 @@ private:
 };
 
 template <class T, void (T::* F)()>
-using EventWrapper = MemberEventWrapper<F>;
+using EventWrapper [[deprecated("Use MemberEventWrapper instead")]]
+    = MemberEventWrapper<F>;
 
 class EventFunctionWrapper : public Event
 {
