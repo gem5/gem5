@@ -199,8 +199,7 @@ SMMUProcess::doBroadcastSignal(SMMUSignal &sig)
 void
 SMMUProcess::scheduleWakeup(Tick when)
 {
-    auto *ep = new EventWrapper<
-        SMMUProcess, &SMMUProcess::wakeup> (this, true);
+    auto *ep = new MemberEventWrapper<&SMMUProcess::wakeup> (this, true);
 
     smmu.schedule(ep, when);
 }

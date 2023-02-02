@@ -222,9 +222,7 @@ class MemSinkCtrl : public MemCtrl
     void processNextReqEvent();
 
     /** Event wrapper to schedule next request handler function */
-    EventWrapper<
-        MemSinkCtrl,
-        &MemSinkCtrl::processNextReqEvent> nextReqEvent;
+    MemberEventWrapper<&MemSinkCtrl::processNextReqEvent> nextReqEvent;
 
     /**
      * Check if the read queue has room for more entries
