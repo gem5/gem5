@@ -77,7 +77,8 @@ AmbaToTlmBridge64::AmbaToTlmBridge64(const AmbaToTlmBridge64Params &params,
     targetProxy("target_proxy"),
     initiatorProxy("initiator_proxy"),
     tlmWrapper(initiatorProxy, std::string(name) + ".tlm", -1),
-    ambaWrapper(amba_pv_s, std::string(name) + ".amba", -1)
+    ambaWrapper(amba_pv_s, std::string(name) + ".amba", -1),
+    setStreamId(params.set_stream_id)
 {
     targetProxy.register_b_transport(this, &AmbaToTlmBridge64::bTransport);
     targetProxy.register_get_direct_mem_ptr(
@@ -190,6 +191,10 @@ AmbaToTlmBridge64::setupControlExtension(amba_pv::amba_pv_transaction &trans)
     control_ex->setPrivileged(amba_ex->is_privileged());
     control_ex->setSecure(!amba_ex->is_non_secure());
     control_ex->setInstruction(amba_ex->is_instruction());
+
+    if (setStreamId) {
+        control_ex->setStreamId(amba_ex->get_id());
+    }
 
     if (trans.has_mm()) {
         trans.set_auto_extension(control_ex);
