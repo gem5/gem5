@@ -2196,8 +2196,6 @@ ISA::initializeMiscRegMetadata()
       .bankedChild();
     InitReg(MISCREG_PMXEVTYPER_PMCCFILTR)
       .mutex();
-    InitReg(MISCREG_SCTLR_RST)
-      .allPrivileges();
     InitReg(MISCREG_SEV_MAILBOX)
       .allPrivileges();
     InitReg(MISCREG_TLBINEEDSYNC)

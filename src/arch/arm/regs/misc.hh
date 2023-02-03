@@ -93,7 +93,6 @@ namespace ArmISA
         MISCREG_NMRR_MAIR1_NS,
         MISCREG_NMRR_MAIR1_S,
         MISCREG_PMXEVTYPER_PMCCFILTR,
-        MISCREG_SCTLR_RST,
         MISCREG_SEV_MAILBOX,
         MISCREG_TLBINEEDSYNC,
 
@@ -1752,7 +1751,6 @@ namespace ArmISA
         "nmrr_mair1_ns",
         "nmrr_mair1_s",
         "pmxevtyper_pmccfiltr",
-        "sctlr_rst",
         "sev_mailbox",
         "tlbi_needsync",
 

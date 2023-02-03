@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2022 Arm Limited
+ * Copyright (c) 2010-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -91,8 +91,6 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
     _regClasses.push_back(&ccRegClass);
     _regClasses.push_back(&miscRegClass);
 
-    miscRegs[MISCREG_SCTLR_RST] = 0;
-
     // Hook up a dummy device if we haven't been configured with a
     // real PMU. By using a dummy device, we don't need to check that
     // the PMU exist every time we try to access a PMU register.
@@ -140,7 +138,6 @@ ISA::clear()
         getMMUPtr(tc)->invalidateMiscReg();
     }
 
-    SCTLR sctlr_rst = miscRegs[MISCREG_SCTLR_RST];
     for (auto idx = 0; idx < NUM_MISCREGS; idx++) {
         miscRegs[idx] = lookUpMiscReg[idx].reset();
     }
@@ -221,11 +218,11 @@ ISA::clear()
     }
 
     // Initialize AArch32 state...
-    clear32(p, sctlr_rst);
+    clear32(p);
 }
 
 void
-ISA::clear32(const ArmISAParams &p, const SCTLR &sctlr_rst)
+ISA::clear32(const ArmISAParams &p)
 {
     CPSR cpsr = 0;
     cpsr.mode = MODE_USER;
@@ -238,9 +235,6 @@ ISA::clear32(const ArmISAParams &p, const SCTLR &sctlr_rst)
     updateRegMap(cpsr);
 
     SCTLR sctlr = 0;
-    sctlr.te = (bool) sctlr_rst.te;
-    sctlr.nmfi = (bool) sctlr_rst.nmfi;
-    sctlr.v = (bool) sctlr_rst.v;
     sctlr.u = 1;
     sctlr.xp = 1;
     sctlr.rao2 = 1;
@@ -249,7 +243,6 @@ ISA::clear32(const ArmISAParams &p, const SCTLR &sctlr_rst)
     sctlr.uci = 1;
     sctlr.dze = 1;
     miscRegs[MISCREG_SCTLR_NS] = sctlr;
-    miscRegs[MISCREG_SCTLR_RST] = sctlr_rst;
     miscRegs[MISCREG_HCPTR] = 0;
 
     miscRegs[MISCREG_CPACR] = 0;
@@ -2082,6 +2075,20 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
         }
         setMiscRegNoEffect(idx, newVal);
     }
+}
+
+RegVal
+ISA::readMiscRegReset(RegIndex idx) const
+{
+    int flat_idx = flattenMiscIndex(idx);
+    return lookUpMiscReg[flat_idx].reset();
+}
+
+void
+ISA::setMiscRegReset(RegIndex idx, RegVal val)
+{
+    int flat_idx = flattenMiscIndex(idx);
+    InitReg(flat_idx).reset(val);
 }
 
 BaseISADevice &
