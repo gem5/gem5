@@ -3579,10 +3579,12 @@ ISA::initializeMiscRegMetadata()
       .mapsTo(MISCREG_ID_ISAR6);
     InitReg(MISCREG_MVFR0_EL1)
       .faultRead(EL1, HCR_TRAP(tid3))
-      .allPrivileges().exceptUserMode().writes(0);
+      .allPrivileges().exceptUserMode().writes(0)
+      .mapsTo(MISCREG_MVFR0);
     InitReg(MISCREG_MVFR1_EL1)
       .faultRead(EL1, HCR_TRAP(tid3))
-      .allPrivileges().exceptUserMode().writes(0);
+      .allPrivileges().exceptUserMode().writes(0)
+      .mapsTo(MISCREG_MVFR1);
     InitReg(MISCREG_MVFR2_EL1)
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0);
