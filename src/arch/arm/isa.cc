@@ -864,12 +864,11 @@ ISA::readMiscReg(RegIndex idx)
       case MISCREG_ID_AFR0: // not implemented, so alias MIDR
       case MISCREG_REVIDR:  // not implemented, so alias MIDR
       case MISCREG_MIDR:
-        cpsr = readMiscRegNoEffect(MISCREG_CPSR);
-        scr  = readMiscRegNoEffect(MISCREG_SCR_EL3);
-        if ((cpsr.mode == MODE_HYP) || isSecure(tc)) {
-            return readMiscRegNoEffect(idx);
-        } else {
+      case MISCREG_MIDR_EL1:
+        if (currEL() == EL1 && EL2Enabled(tc)) {
             return readMiscRegNoEffect(MISCREG_VPIDR);
+        } else {
+            return readMiscRegNoEffect(idx);
         }
         break;
       case MISCREG_JOSCR: // Jazelle trivial implementation, RAZ/WI
