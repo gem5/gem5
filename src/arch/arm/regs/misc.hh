@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2022 Arm Limited
+ * Copyright (c) 2010-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1228,6 +1228,12 @@ namespace ArmISA
         {
             entry.lower = l;
             entry.upper = u;
+            return *this;
+        }
+        chain
+        reset(uint64_t res_val) const
+        {
+            entry._reset = res_val;
             return *this;
         }
         chain
