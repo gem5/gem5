@@ -141,7 +141,9 @@ ISA::clear()
     }
 
     SCTLR sctlr_rst = miscRegs[MISCREG_SCTLR_RST];
-    memset(miscRegs, 0, sizeof(miscRegs));
+    for (auto idx = 0; idx < NUM_MISCREGS; idx++) {
+        miscRegs[idx] = lookUpMiscReg[idx].reset();
+    }
 
     initID32(p);
 
