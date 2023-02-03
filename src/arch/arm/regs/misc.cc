@@ -45,6 +45,7 @@
 #include "cpu/thread_context.hh"
 #include "dev/arm/gic_v3_cpu_interface.hh"
 #include "sim/full_system.hh"
+#include "params/ArmISA.hh"
 
 namespace gem5
 {
@@ -2116,6 +2117,17 @@ ISA::initializeMiscRegMetadata()
     const bool vhe_implemented = release->has(ArmExtension::FEAT_VHE);
     const bool sel2_implemented = release->has(ArmExtension::FEAT_SEL2);
 
+    const Params &p(params());
+
+    uint32_t midr;
+    if (p.midr != 0x0)
+        midr = p.midr;
+    else if (highestELIs64)
+        // Cortex-A57 TRM r0p0 MIDR
+        midr = 0x410fd070;
+    else
+        // Cortex-A15 TRM r0p0 MIDR
+        midr = 0x410fc0f0;
 
     /**
      * Some registers alias with others, and therefore need to be translated.
@@ -2465,6 +2477,7 @@ ISA::initializeMiscRegMetadata()
 
     // AArch32 CP15 registers
     InitReg(MISCREG_MIDR)
+      .reset(midr)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_CTR)
       .allPrivileges().exceptUserMode().writes(0);
@@ -2488,28 +2501,60 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ID_AFR0)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_MMFR0)
+      .reset(p.id_mmfr0)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_MMFR1)
+      .reset(p.id_mmfr1)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_MMFR2)
+      .reset(p.id_mmfr2)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_MMFR3)
+      .reset(p.id_mmfr3)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_MMFR4)
+      .reset(p.id_mmfr4)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_ISAR0)
+      .reset(p.id_isar0)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_ISAR1)
+      .reset(p.id_isar1)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_ISAR2)
+      .reset(p.id_isar2)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_ISAR3)
+      .reset(p.id_isar3)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_ISAR4)
+      .reset(p.id_isar4)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_ISAR5)
+      .reset([p,release=release] () {
+        ISAR5 isar5 = p.id_isar5;
+        if (release->has(ArmExtension::CRYPTO)) {
+            isar5.crc32 = 1;
+            isar5.sha2 = 1;
+            isar5.sha1 = 1;
+            isar5.aes = 2;
+        } else {
+            isar5.crc32 = 0;
+            isar5.sha2 = 0;
+            isar5.sha1 = 0;
+            isar5.aes = 0;
+        }
+        isar5.rdm = release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0;
+        isar5.vcma = release->has(ArmExtension::FEAT_FCMA) ? 0x1 : 0x0;
+        return isar5;
+      }())
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_ISAR6)
+      .reset([p,release=release] () {
+        ISAR6 isar6 = p.id_isar6;
+        isar6.jscvt = release->has(ArmExtension::FEAT_JSCVT) ? 0x1 : 0x0;
+        return isar6;
+      }())
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_CCSIDR)
       .allPrivileges().exceptUserMode().writes(0);
@@ -2527,6 +2572,7 @@ ISA::initializeMiscRegMetadata()
       .bankedChild()
       .secure().exceptUserMode();
     InitReg(MISCREG_VPIDR)
+      .reset(midr)
       .hyp().monNonSecure();
     InitReg(MISCREG_VMPIDR)
       .hyp().monNonSecure();

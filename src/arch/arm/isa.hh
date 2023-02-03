@@ -172,7 +172,6 @@ namespace ArmISA
       protected:
         void clear32(const ArmISAParams &p);
         void clear64(const ArmISAParams &p);
-        void initID32(const ArmISAParams &p);
         void initID64(const ArmISAParams &p);
 
         void addressTranslation(MMU::ArmTranslationType tran_type,

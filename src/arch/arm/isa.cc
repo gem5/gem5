@@ -142,8 +142,6 @@ ISA::clear()
         miscRegs[idx] = lookUpMiscReg[idx].reset();
     }
 
-    initID32(p);
-
     // We always initialize AArch64 ID registers even
     // if we are in AArch32. This is done since if we
     // are in SE mode we don't know if our ArmProcess is
@@ -255,57 +253,6 @@ ISA::clear64(const ArmISAParams &p)
         // Always non-secure
         miscRegs[MISCREG_SCR_EL3] = 1;
     }
-}
-
-void
-ISA::initID32(const ArmISAParams &p)
-{
-    // Initialize configurable default values
-
-    uint32_t midr;
-    if (p.midr != 0x0)
-        midr = p.midr;
-    else if (highestELIs64)
-        // Cortex-A57 TRM r0p0 MIDR
-        midr = 0x410fd070;
-    else
-        // Cortex-A15 TRM r0p0 MIDR
-        midr = 0x410fc0f0;
-
-    miscRegs[MISCREG_MIDR] = midr;
-    miscRegs[MISCREG_VPIDR] = midr;
-
-    miscRegs[MISCREG_ID_ISAR0] = p.id_isar0;
-    miscRegs[MISCREG_ID_ISAR1] = p.id_isar1;
-    miscRegs[MISCREG_ID_ISAR2] = p.id_isar2;
-    miscRegs[MISCREG_ID_ISAR3] = p.id_isar3;
-    miscRegs[MISCREG_ID_ISAR4] = p.id_isar4;
-
-    miscRegs[MISCREG_ID_MMFR0] = p.id_mmfr0;
-    miscRegs[MISCREG_ID_MMFR1] = p.id_mmfr1;
-    miscRegs[MISCREG_ID_MMFR2] = p.id_mmfr2;
-    miscRegs[MISCREG_ID_MMFR3] = p.id_mmfr3;
-    miscRegs[MISCREG_ID_MMFR4] = p.id_mmfr4;
-
-    ISAR5 isar5 = p.id_isar5;
-    if (release->has(ArmExtension::CRYPTO)) {
-        isar5.crc32 = 1;
-        isar5.sha2 = 1;
-        isar5.sha1 = 1;
-        isar5.aes = 2;
-    } else {
-        isar5.crc32 = 0;
-        isar5.sha2 = 0;
-        isar5.sha1 = 0;
-        isar5.aes = 0;
-    }
-    isar5.rdm = release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0;
-    isar5.vcma = release->has(ArmExtension::FEAT_FCMA) ? 0x1 : 0x0;
-    miscRegs[MISCREG_ID_ISAR5] = isar5;
-
-    ISAR6 isar6 = p.id_isar6;
-    isar6.jscvt = release->has(ArmExtension::FEAT_JSCVT) ? 0x1 : 0x0;
-    miscRegs[MISCREG_ID_ISAR6] = isar6;
 }
 
 void
