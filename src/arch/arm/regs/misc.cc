@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015-2022 Arm Limited
+ * Copyright (c) 2010-2013, 2015-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -2155,8 +2155,31 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_FPSCR)
       .allPrivileges();
     InitReg(MISCREG_MVFR1)
+      .reset([] () {
+        MVFR1 mvfr1 = 0;
+        mvfr1.flushToZero = 1;
+        mvfr1.defaultNaN = 1;
+        mvfr1.advSimdLoadStore = 1;
+        mvfr1.advSimdInteger = 1;
+        mvfr1.advSimdSinglePrecision = 1;
+        mvfr1.advSimdHalfPrecision = 1;
+        mvfr1.vfpHalfPrecision = 1;
+        return mvfr1;
+      }())
       .allPrivileges();
     InitReg(MISCREG_MVFR0)
+      .reset([] () {
+        MVFR0 mvfr0 = 0;
+        mvfr0.advSimdRegisters = 2;
+        mvfr0.singlePrecision = 2;
+        mvfr0.doublePrecision = 2;
+        mvfr0.vfpExceptionTrapping = 0;
+        mvfr0.divide = 1;
+        mvfr0.squareRoot = 1;
+        mvfr0.shortVectors = 1;
+        mvfr0.roundingModes = 1;
+        return mvfr0;
+      }())
       .allPrivileges();
     InitReg(MISCREG_FPEXC)
       .allPrivileges();
@@ -2197,6 +2220,7 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_PMXEVTYPER_PMCCFILTR)
       .mutex();
     InitReg(MISCREG_SEV_MAILBOX)
+      .reset(1) // Start with an event in the mailbox
       .allPrivileges();
     InitReg(MISCREG_TLBINEEDSYNC)
       .allPrivileges().exceptUserMode();
@@ -2447,6 +2471,7 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_TCMTR)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_TLBTR)
+      .reset(1) // Separate Instruction and Data TLBs
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_MPIDR)
       .allPrivileges().exceptUserMode().writes(0);
@@ -2870,6 +2895,19 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_PRRR_NS)
       .bankedChild()
+      .reset(
+        (1 << 19) | // 19
+        (0 << 18) | // 18
+        (0 << 17) | // 17
+        (1 << 16) | // 16
+        (2 << 14) | // 15:14
+        (0 << 12) | // 13:12
+        (2 << 10) | // 11:10
+        (2 << 8)  | // 9:8
+        (2 << 6)  | // 7:6
+        (2 << 4)  | // 5:4
+        (1 << 2)  | // 3:2
+        0)
       .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_PRRR_S)
@@ -2888,6 +2926,22 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_NMRR_NS)
       .bankedChild()
+      .reset(
+        (1 << 30) | // 31:30
+        (0 << 26) | // 27:26
+        (0 << 24) | // 25:24
+        (3 << 22) | // 23:22
+        (2 << 20) | // 21:20
+        (0 << 18) | // 19:18
+        (0 << 16) | // 17:16
+        (1 << 14) | // 15:14
+        (0 << 12) | // 13:12
+        (2 << 10) | // 11:10
+        (0 << 8)  | // 9:8
+        (3 << 6)  | // 7:6
+        (2 << 4)  | // 5:4
+        (0 << 2)  | // 3:2
+        0)
       .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_NMRR_S)

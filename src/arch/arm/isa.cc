@@ -150,67 +150,6 @@ ISA::clear()
     // AArch32 or AArch64
     initID64(p);
 
-    // Start with an event in the mailbox
-    miscRegs[MISCREG_SEV_MAILBOX] = 1;
-
-    // Separate Instruction and Data TLBs
-    miscRegs[MISCREG_TLBTR] = 1;
-
-    MVFR0 mvfr0 = 0;
-    mvfr0.advSimdRegisters = 2;
-    mvfr0.singlePrecision = 2;
-    mvfr0.doublePrecision = 2;
-    mvfr0.vfpExceptionTrapping = 0;
-    mvfr0.divide = 1;
-    mvfr0.squareRoot = 1;
-    mvfr0.shortVectors = 1;
-    mvfr0.roundingModes = 1;
-    miscRegs[MISCREG_MVFR0] = mvfr0;
-
-    MVFR1 mvfr1 = 0;
-    mvfr1.flushToZero = 1;
-    mvfr1.defaultNaN = 1;
-    mvfr1.advSimdLoadStore = 1;
-    mvfr1.advSimdInteger = 1;
-    mvfr1.advSimdSinglePrecision = 1;
-    mvfr1.advSimdHalfPrecision = 1;
-    mvfr1.vfpHalfPrecision = 1;
-    miscRegs[MISCREG_MVFR1] = mvfr1;
-
-    // Reset values of PRRR and NMRR are implementation dependent
-
-    // @todo: PRRR and NMRR in secure state?
-    miscRegs[MISCREG_PRRR_NS] =
-        (1 << 19) | // 19
-        (0 << 18) | // 18
-        (0 << 17) | // 17
-        (1 << 16) | // 16
-        (2 << 14) | // 15:14
-        (0 << 12) | // 13:12
-        (2 << 10) | // 11:10
-        (2 << 8)  | // 9:8
-        (2 << 6)  | // 7:6
-        (2 << 4)  | // 5:4
-        (1 << 2)  | // 3:2
-        0;          // 1:0
-
-    miscRegs[MISCREG_NMRR_NS] =
-        (1 << 30) | // 31:30
-        (0 << 26) | // 27:26
-        (0 << 24) | // 25:24
-        (3 << 22) | // 23:22
-        (2 << 20) | // 21:20
-        (0 << 18) | // 19:18
-        (0 << 16) | // 17:16
-        (1 << 14) | // 15:14
-        (0 << 12) | // 13:12
-        (2 << 10) | // 11:10
-        (0 << 8)  | // 9:8
-        (3 << 6)  | // 7:6
-        (2 << 4)  | // 5:4
-        (0 << 2)  | // 3:2
-        0;          // 1:0
-
     if (FullSystem && system->highestELIs64()) {
         // Initialize AArch64 state
         clear64(p);
