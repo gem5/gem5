@@ -334,7 +334,6 @@ ISA::initID32(const ArmISAParams &p)
         midr = 0x410fc0f0;
 
     miscRegs[MISCREG_MIDR] = midr;
-    miscRegs[MISCREG_MIDR_EL1] = midr;
     miscRegs[MISCREG_VPIDR] = midr;
 
     miscRegs[MISCREG_ID_ISAR0] = p.id_isar0;

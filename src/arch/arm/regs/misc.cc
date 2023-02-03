@@ -3507,7 +3507,8 @@ ISA::initializeMiscRegMetadata()
 
     // AArch64 registers (Op0=1,3);
     InitReg(MISCREG_MIDR_EL1)
-      .allPrivileges().exceptUserMode().writes(0);
+      .allPrivileges().exceptUserMode().writes(0)
+      .mapsTo(MISCREG_MIDR);
     InitReg(MISCREG_MPIDR_EL1)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_REVIDR_EL1)
