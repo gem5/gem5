@@ -55,7 +55,7 @@ from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
 from pathlib import Path
-from gem5.utils.looppoint import LoopPointRestore
+from gem5.utils.resource import LooppointJsonLoader
 from m5.stats import reset, dump
 
 requires(isa_required=ISA.X86)
@@ -113,7 +113,7 @@ board = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-looppoint = LoopPointRestore(
+looppoint = LooppointJsonLoader(
     looppoint_file=Path(
         obtain_resource(
             "x86-matrix-multiply-omp-100-8-looppoint"

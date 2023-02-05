@@ -240,7 +240,6 @@ PySource('gem5.components.processors',
 PySource('gem5.components.processors',
     'gem5/components/processors/switchable_processor.py')
 PySource('gem5.utils', 'gem5/utils/simpoint.py')
-PySource('gem5.utils', 'gem5/utils/looppoint.py')
 PySource('gem5.components.processors',
     'gem5/components/processors/traffic_generator_core.py')
 PySource('gem5.components.processors',
@@ -263,6 +262,7 @@ PySource('gem5.resources', 'gem5/resources/downloader.py')
 PySource('gem5.resources', 'gem5/resources/md5_utils.py')
 PySource('gem5.resources', 'gem5/resources/resource.py')
 PySource('gem5.resources', 'gem5/resources/workload.py')
+PySource('gem5.resources', 'gem5/resources/looppoint.py')
 PySource('gem5.utils', 'gem5/utils/__init__.py')
 PySource('gem5.utils', 'gem5/utils/filelock.py')
 PySource('gem5.utils', 'gem5/utils/override.py')

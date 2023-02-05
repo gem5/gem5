@@ -35,7 +35,7 @@ from ...resources.resource import (
     SimpointDirectoryResource,
 )
 
-from gem5.utils.looppoint import LoopPoint
+from gem5.resources.looppoint import Looppoint
 
 from m5.objects import SEWorkload, Process
 
@@ -177,9 +177,10 @@ class SEBinaryWorkload:
     def set_se_looppoint_workload(
         self,
         binary: AbstractResource,
+        looppoint: Looppoint,
         arguments: List[str] = [],
-        looppoint: Optional[Union[AbstractResource, LoopPoint]] = None,
         checkpoint: Optional[Union[Path, AbstractResource]] = None,
+        region_id: Optional[Union[int, str]] = None,
     ) -> None:
         """Set up the system to run a LoopPoint workload.
 
@@ -188,18 +189,18 @@ class SEBinaryWorkload:
           ISA and the simulated ISA are the same.
 
         :param binary: The resource encapsulating the binary to be run.
-        :param arguments: The input arguments for the binary
         :param looppoint: The LoopPoint object that contain all the information
         gather from the LoopPoint files and a LoopPointManager that will raise
         exit events for LoopPoints
+        :param arguments: The input arguments for the binary
+        :param region_id: If set, will only load the Looppoint region
+        corresponding to that ID.
         """
 
-        if isinstance(looppoint, AbstractResource):
-            self._looppoint_object = LoopPoint(looppoint)
-        else:
-            assert isinstance(looppoint, LoopPoint)
-            self._looppoint_object = looppoint
-
+        assert isinstance(looppoint, Looppoint)
+        self._looppoint_object = looppoint
+        if region_id:
+            self._looppoint_object.set_target_region_id(region_id=region_id)
         self._looppoint_object.setup_processor(self.get_processor())
 
         # Call set_se_binary_workload after LoopPoint setup is complete
@@ -209,7 +210,7 @@ class SEBinaryWorkload:
             checkpoint=checkpoint,
         )
 
-    def get_looppoint(self) -> LoopPoint:
+    def get_looppoint(self) -> Looppoint:
         """
         Returns the LoopPoint object set. If no LoopPoint object has been set
         an exception is thrown.

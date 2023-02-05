@@ -29,7 +29,7 @@ import m5.stats
 from ..components.processors.abstract_processor import AbstractProcessor
 from ..components.processors.switchable_processor import SwitchableProcessor
 from ..resources.resource import SimpointResource
-from gem5.utils.looppoint import LoopPoint
+from gem5.resources.looppoint import Looppoint
 from m5.util import warn
 from pathlib import Path
 
@@ -172,7 +172,7 @@ def simpoints_save_checkpoint_generator(
 
 def looppoint_save_checkpoint_generator(
     checkpoint_dir: Path,
-    looppoint: LoopPoint,
+    looppoint: Looppoint,
     update_relatives: bool = True,
     exit_when_empty: bool = True,
 ):
@@ -203,7 +203,7 @@ def looppoint_save_checkpoint_generator(
         # will return an integer greater than 0. By significant PC Count pair,
         # it means the PC Count pair that indicates where to take the
         # checkpoint at. This is determined in the LoopPoint module.
-        if region != -1:
+        if region:
             if update_relatives:
                 looppoint.update_relatives_counts()
             m5.checkpoint((checkpoint_dir / f"cpt.Region{region}").as_posix())
