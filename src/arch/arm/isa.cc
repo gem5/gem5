@@ -131,8 +131,6 @@ ISA::ISA(const Params &p) : BaseISA(p), system(NULL),
 void
 ISA::clear()
 {
-    const Params &p(params());
-
     // Invalidate cached copies of miscregs in the TLBs
     if (tc) {
         getMMUPtr(tc)->invalidateMiscReg();
@@ -142,111 +140,7 @@ ISA::clear()
         miscRegs[idx] = lookUpMiscReg[idx].reset();
     }
 
-    if (FullSystem && system->highestELIs64()) {
-        // Initialize AArch64 state
-        clear64(p);
-        return;
-    }
-
-    // Initialize AArch32 state...
-    clear32(p);
-}
-
-void
-ISA::clear32(const ArmISAParams &p)
-{
-    CPSR cpsr = 0;
-    cpsr.mode = MODE_USER;
-
-    if (FullSystem) {
-        miscRegs[MISCREG_MVBAR] = system->resetAddr();
-    }
-
-    miscRegs[MISCREG_CPSR] = cpsr;
-    updateRegMap(cpsr);
-
-    SCTLR sctlr = 0;
-    sctlr.u = 1;
-    sctlr.xp = 1;
-    sctlr.rao2 = 1;
-    sctlr.rao3 = 1;
-    sctlr.rao4 = 0xf;  // SCTLR[6:3]
-    sctlr.uci = 1;
-    sctlr.dze = 1;
-    miscRegs[MISCREG_SCTLR_NS] = sctlr;
-    miscRegs[MISCREG_HCPTR] = 0;
-
-    miscRegs[MISCREG_CPACR] = 0;
-
-    miscRegs[MISCREG_FPSID] = p.fpsid;
-
-    if (release->has(ArmExtension::LPAE)) {
-        TTBCR ttbcr = miscRegs[MISCREG_TTBCR_NS];
-        ttbcr.eae = 0;
-        miscRegs[MISCREG_TTBCR_NS] = ttbcr;
-        // Enforce consistency with system-level settings
-        miscRegs[MISCREG_ID_MMFR0] = (miscRegs[MISCREG_ID_MMFR0] & ~0xf) | 0x5;
-    }
-
-    if (release->has(ArmExtension::SECURITY)) {
-        miscRegs[MISCREG_SCTLR_S] = sctlr;
-        miscRegs[MISCREG_SCR] = 0;
-        miscRegs[MISCREG_VBAR_S] = 0;
-    } else {
-        // we're always non-secure
-        miscRegs[MISCREG_SCR] = 1;
-    }
-
-    //XXX We need to initialize the rest of the state.
-}
-
-void
-ISA::clear64(const ArmISAParams &p)
-{
-    CPSR cpsr = 0;
-    Addr rvbar = system->resetAddr();
-    switch (system->highestEL()) {
-        // Set initial EL to highest implemented EL using associated stack
-        // pointer (SP_ELx); set RVBAR_ELx to implementation defined reset
-        // value
-      case EL3:
-        cpsr.mode = MODE_EL3H;
-        miscRegs[MISCREG_RVBAR_EL3] = rvbar;
-        break;
-      case EL2:
-        cpsr.mode = MODE_EL2H;
-        miscRegs[MISCREG_RVBAR_EL2] = rvbar;
-        break;
-      case EL1:
-        cpsr.mode = MODE_EL1H;
-        miscRegs[MISCREG_RVBAR_EL1] = rvbar;
-        break;
-      default:
-        panic("Invalid highest implemented exception level");
-        break;
-    }
-
-    // Initialize rest of CPSR
-    cpsr.daif = 0xf;  // Mask all interrupts
-    cpsr.ss = 0;
-    cpsr.il = 0;
-    miscRegs[MISCREG_CPSR] = cpsr;
-    updateRegMap(cpsr);
-
-    // Initialize other control registers
-    miscRegs[MISCREG_MPIDR_EL1] = 0x80000000;
-    if (release->has(ArmExtension::SECURITY)) {
-        miscRegs[MISCREG_SCTLR_EL3] = 0x30c50830;
-        miscRegs[MISCREG_SCR_EL3]   = 0x00000030;  // RES1 fields
-    } else if (release->has(ArmExtension::VIRTUALIZATION)) {
-        // also  MISCREG_SCTLR_EL2 (by mapping)
-        miscRegs[MISCREG_HSCTLR] = 0x30c50830;
-    } else {
-        // also  MISCREG_SCTLR_EL1 (by mapping)
-        miscRegs[MISCREG_SCTLR_NS] = 0x30d00800 | 0x00050030; // RES1 | init
-        // Always non-secure
-        miscRegs[MISCREG_SCR_EL3] = 1;
-    }
+    updateRegMap(miscRegs[MISCREG_CPSR]);
 }
 
 void

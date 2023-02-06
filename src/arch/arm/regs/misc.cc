@@ -2079,6 +2079,38 @@ MiscRegLUTEntryInitializer::highest(ArmSystem *const sys) const
     return *this;
 }
 
+static CPSR
+resetCPSR(ArmSystem *system)
+{
+    CPSR cpsr = 0;
+    if (!FullSystem) {
+        cpsr.mode = MODE_USER;
+    } else {
+        switch (system->highestEL()) {
+            // Set initial EL to highest implemented EL using associated stack
+            // pointer (SP_ELx); set RVBAR_ELx to implementation defined reset
+            // value
+          case EL3:
+            cpsr.mode = MODE_EL3H;
+            break;
+          case EL2:
+            cpsr.mode = MODE_EL2H;
+            break;
+          case EL1:
+            cpsr.mode = MODE_EL1H;
+            break;
+          default:
+            panic("Invalid highest implemented exception level");
+            break;
+        }
+
+        // Initialize rest of CPSR
+        cpsr.daif = 0xf;  // Mask all interrupts
+        cpsr.ss = 0;
+        cpsr.il = 0;
+    }
+    return cpsr;
+}
 
 void
 ISA::initializeMiscRegMetadata()
@@ -2143,6 +2175,7 @@ ISA::initializeMiscRegMetadata()
      */
 
     InitReg(MISCREG_CPSR)
+      .reset(resetCPSR(system))
       .allPrivileges();
     InitReg(MISCREG_SPSR)
       .allPrivileges();
@@ -2163,6 +2196,7 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ELR_HYP)
       .allPrivileges();
     InitReg(MISCREG_FPSID)
+      .reset(p.fpsid)
       .allPrivileges();
     InitReg(MISCREG_FPSCR)
       .allPrivileges();
@@ -2487,6 +2521,7 @@ ISA::initializeMiscRegMetadata()
       .reset(1) // Separate Instruction and Data TLBs
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_MPIDR)
+      .reset(0x80000000)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_REVIDR)
       .unimplemented()
@@ -2502,7 +2537,12 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ID_AFR0)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_MMFR0)
-      .reset(p.id_mmfr0)
+      .reset([p,release=release](){
+          RegVal mmfr0 = p.id_mmfr0;
+          if (release->has(ArmExtension::LPAE))
+              mmfr0 = (mmfr0 & ~0xf) | 0x5;
+          return mmfr0;
+      }())
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_MMFR1)
       .reset(p.id_mmfr1)
@@ -2585,11 +2625,37 @@ ISA::initializeMiscRegMetadata()
       .res1(0x00400800 | (SPAN   ? 0 : 0x800000)
                        | (LSMAOE ? 0 :     0x10)
                        | (nTLSMD ? 0 :      0x8));
+
+    auto sctlr_reset = [aarch64=highestELIs64] ()
+    {
+        SCTLR sctlr = 0;
+        if (aarch64) {
+            sctlr.afe = 1;
+            sctlr.tre = 1;
+            sctlr.span = 1;
+            sctlr.uwxn = 1;
+            sctlr.ntwe = 1;
+            sctlr.ntwi = 1;
+            sctlr.cp15ben = 1;
+            sctlr.sa0 = 1;
+        } else {
+            sctlr.u = 1;
+            sctlr.xp = 1;
+            sctlr.uci = 1;
+            sctlr.dze = 1;
+            sctlr.rao2 = 1;
+            sctlr.rao3 = 1;
+            sctlr.rao4 = 0xf;
+        }
+        return sctlr;
+    }();
     InitReg(MISCREG_SCTLR_NS)
+      .reset(sctlr_reset)
       .bankedChild()
       .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_SCTLR_S)
+      .reset(sctlr_reset)
       .bankedChild()
       .secure().exceptUserMode();
     InitReg(MISCREG_ACTLR)
@@ -2606,6 +2672,7 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_SDCR)
       .mon();
     InitReg(MISCREG_SCR)
+      .reset(release->has(ArmExtension::SECURITY) ? 0 : 1)
       .mon().secure().exceptUserMode()
       .res0(0xff40)  // [31:16], [6]
       .res1(0x0030); // [5:4]
@@ -2614,6 +2681,7 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_NSACR)
       .allPrivileges().hypWrite(0).privNonSecureWrite(0).exceptUserMode();
     InitReg(MISCREG_HSCTLR)
+      .reset(0x30c50830)
       .hyp().monNonSecure()
       .res0(0x0512c7c0 | (EnDB   ? 0 :     0x2000)
                        | (IESB   ? 0 :   0x200000)
@@ -3043,6 +3111,7 @@ ISA::initializeMiscRegMetadata()
       .bankedChild()
       .secure().exceptUserMode();
     InitReg(MISCREG_MVBAR)
+      .reset(FullSystem ? system->resetAddr() : 0)
       .mon().secure()
       .hypRead(FullSystem && system->highestEL() == EL2)
       .privRead(FullSystem && system->highestEL() == EL1)
@@ -3925,6 +3994,7 @@ ISA::initializeMiscRegMetadata()
       .hyp().mon()
       .mapsTo(MISCREG_HACR);
     InitReg(MISCREG_SCTLR_EL3)
+      .reset(0x30c50830)
       .mon()
       .res0(0x0512c7c0 | (EnDB   ? 0 :     0x2000)
                        | (IESB   ? 0 :   0x200000)
@@ -4369,6 +4439,8 @@ ISA::initializeMiscRegMetadata()
       .fault(EL3, defaultFaultE2H_EL3)
       .mapsTo(MISCREG_VBAR_NS);
     InitReg(MISCREG_RVBAR_EL1)
+      .reset(FullSystem && system->highestEL() == EL1 ?
+          system->resetAddr() : 0)
       .privRead(FullSystem && system->highestEL() == EL1);
     InitReg(MISCREG_ISR_EL1)
       .allPrivileges().exceptUserMode().writes(0);
@@ -4377,10 +4449,14 @@ ISA::initializeMiscRegMetadata()
       .res0(0x7ff)
       .mapsTo(MISCREG_HVBAR);
     InitReg(MISCREG_RVBAR_EL2)
+      .reset(FullSystem && system->highestEL() == EL2 ?
+          system->resetAddr() : 0)
       .hypRead(FullSystem && system->highestEL() == EL2);
     InitReg(MISCREG_VBAR_EL3)
       .mon();
     InitReg(MISCREG_RVBAR_EL3)
+      .reset(FullSystem && system->highestEL() == EL3 ?
+          system->resetAddr() : 0)
       .mon().writes(0);
     InitReg(MISCREG_RMR_EL3)
       .mon();
