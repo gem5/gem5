@@ -190,7 +190,7 @@ GPUCoalescer::GPUCoalescer(const Params &p)
                  false, Event::Progress_Event_Pri),
       uncoalescedTable(this),
       deadlockCheckEvent([this]{ wakeup(); }, "GPUCoalescer deadlock check"),
-      gmTokenPort(name() + ".gmTokenPort", this)
+      gmTokenPort(name() + ".gmTokenPort")
 {
     m_store_waiting_on_load_cycles = 0;
     m_store_waiting_on_store_cycles = 0;
