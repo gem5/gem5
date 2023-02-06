@@ -118,6 +118,7 @@ namespace ArmISA
         Bitfield<39, 36> sm3;
         Bitfield<35, 32> sha3;
         Bitfield<31, 28> rdm;
+        Bitfield<27, 24> tme;
         Bitfield<23, 20> atomic;
         Bitfield<19, 16> crc32;
         Bitfield<15, 12> sha2;
@@ -201,6 +202,17 @@ namespace ArmISA
         Bitfield<7, 4> el1;
         Bitfield<3, 0> el0;
     EndBitUnion(AA64PFR0)
+
+    BitUnion64(AA64SMFR0)
+        Bitfield<63> fa64;
+        Bitfield<59, 56> smEver;
+        Bitfield<55, 52> i16i64;
+        Bitfield<48> f64f64;
+        Bitfield<39, 36> i8i32;
+        Bitfield<35> f16f32;
+        Bitfield<34> b16f32;
+        Bitfield<32> f32f32;
+    EndBitUnion(AA64SMFR0)
 
     BitUnion32(HDCR)
         Bitfield<27>   tdcc;

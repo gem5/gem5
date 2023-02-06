@@ -2497,6 +2497,7 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ID_PFR1)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_DFR0)
+      .reset(p.pmu ? 0x03000000 : 0)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AFR0)
       .allPrivileges().exceptUserMode().writes(0);
