@@ -3692,36 +3692,101 @@ ISA::initializeMiscRegMetadata()
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AA64PFR0_EL1)
+      .reset([this,release=release,tc=tc](){
+          AA64PFR0 pfr0_el1 = 0;
+          pfr0_el1.el0 = 0x2;
+          pfr0_el1.el1 = 0x2;
+          pfr0_el1.el2 = release->has(ArmExtension::VIRTUALIZATION) ? 0x2 : 0x0;
+          pfr0_el1.el3 = release->has(ArmExtension::SECURITY) ? 0x2 : 0x0;
+          pfr0_el1.sve = release->has(ArmExtension::FEAT_SVE) ? 0x1 : 0x0;
+          pfr0_el1.sel2 = release->has(ArmExtension::FEAT_SEL2) ? 0x1 : 0x0;
+          pfr0_el1.gic = FullSystem && getGICv3CPUInterface(tc) ? 0x1 : 0;
+          return pfr0_el1;
+      }())
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AA64PFR1_EL1)
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AA64DFR0_EL1)
+      .reset([p](){
+          AA64DFR0 dfr0_el1 = p.id_aa64dfr0_el1;
+          dfr0_el1.pmuver = p.pmu ? 1 : 0; // Enable PMUv3
+          return dfr0_el1;
+      }())
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AA64DFR1_EL1)
+      .reset(p.id_aa64dfr1_el1)
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AA64AFR0_EL1)
+      .reset(p.id_aa64afr0_el1)
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AA64AFR1_EL1)
+      .reset(p.id_aa64afr1_el1)
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AA64ISAR0_EL1)
+      .reset([p,release=release](){
+          AA64ISAR0 isar0_el1 = p.id_aa64isar0_el1;
+          if (release->has(ArmExtension::CRYPTO)) {
+              isar0_el1.crc32 = 1;
+              isar0_el1.sha2 = 1;
+              isar0_el1.sha1 = 1;
+              isar0_el1.aes = 2;
+          } else {
+              isar0_el1.crc32 = 0;
+              isar0_el1.sha2 = 0;
+              isar0_el1.sha1 = 0;
+              isar0_el1.aes = 0;
+          }
+          isar0_el1.atomic = release->has(ArmExtension::FEAT_LSE) ? 0x2 : 0x0;
+          isar0_el1.rdm = release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0;
+          isar0_el1.tme = release->has(ArmExtension::TME) ? 0x1 : 0x0;
+          return isar0_el1;
+      }())
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AA64ISAR1_EL1)
+      .reset([p,release=release](){
+          AA64ISAR1 isar1_el1 = p.id_aa64isar1_el1;
+          isar1_el1.apa = release->has(ArmExtension::FEAT_PAuth) ? 0x1 : 0x0;
+          isar1_el1.jscvt = release->has(ArmExtension::FEAT_JSCVT) ? 0x1 : 0x0;
+          isar1_el1.fcma = release->has(ArmExtension::FEAT_FCMA) ? 0x1 : 0x0;
+          isar1_el1.gpa = release->has(ArmExtension::FEAT_PAuth) ? 0x1 : 0x0;
+          return isar1_el1;
+      }())
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AA64MMFR0_EL1)
+      .reset([p,asidbits=haveLargeAsid64,parange=physAddrRange](){
+          AA64MMFR0 mmfr0_el1 = p.id_aa64mmfr0_el1;
+          mmfr0_el1.asidbits = asidbits ? 0x2 : 0x0;
+          mmfr0_el1.parange = encodePhysAddrRange64(parange);
+          return mmfr0_el1;
+      }())
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AA64MMFR1_EL1)
+      .reset([p,release=release](){
+          AA64MMFR1 mmfr1_el1 = p.id_aa64mmfr1_el1;
+          mmfr1_el1.vmidbits = release->has(ArmExtension::FEAT_VMID16) ? 0x2 : 0x0;
+          mmfr1_el1.vh = release->has(ArmExtension::FEAT_VHE) ? 0x1 : 0x0;
+          mmfr1_el1.hpds = release->has(ArmExtension::FEAT_HPDS) ? 0x1 : 0x0;
+          mmfr1_el1.pan = release->has(ArmExtension::FEAT_PAN) ? 0x1 : 0x0;
+          return mmfr1_el1;
+      }())
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AA64MMFR2_EL1)
+      .reset([p,release=release](){
+          AA64MMFR2 mmfr2_el1 = p.id_aa64mmfr2_el1;
+          mmfr2_el1.uao = release->has(ArmExtension::FEAT_UAO) ? 0x1 : 0x0;
+          mmfr2_el1.varange = release->has(ArmExtension::FEAT_LVA) ? 0x1 : 0x0;
+          return mmfr2_el1;
+      }())
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0);
 
@@ -5033,9 +5098,11 @@ ISA::initializeMiscRegMetadata()
         .faultRead(EL1, HCR_TRAP(tid3))
         .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ZCR_EL3)
+        .reset(sveVL - 1)
         .fault(EL3, faultZcrEL3)
         .mon();
     InitReg(MISCREG_ZCR_EL2)
+        .reset(sveVL - 1)
         .fault(EL2, faultZcrEL2)
         .fault(EL3, faultZcrEL3)
         .hyp().mon();
@@ -5044,6 +5111,7 @@ ISA::initializeMiscRegMetadata()
         .fault(EL3, defaultFaultE2H_EL3)
         .mapsTo(MISCREG_ZCR_EL1);
     InitReg(MISCREG_ZCR_EL1)
+        .reset(sveVL - 1)
         .fault(EL1, faultZcrEL1)
         .fault(EL2, faultZcrEL2)
         .fault(EL3, faultZcrEL3)
@@ -5051,22 +5119,77 @@ ISA::initializeMiscRegMetadata()
 
     // SME
     InitReg(MISCREG_ID_AA64SMFR0_EL1)
+        .reset([](){
+            AA64SMFR0 smfr0_el1 = 0;
+            smfr0_el1.f32f32 = 0x1;
+            // The following BF16F32 is actually not implemented due to a
+            // lack of BF16 support in gem5's fplib. However, as per the
+            // SME spec the _only_ allowed value is 0x1.
+            smfr0_el1.b16f32 = 0x1;
+            smfr0_el1.f16f32 = 0x1;
+            smfr0_el1.i8i32 = 0xF;
+            smfr0_el1.f64f64 = 0x1;
+            smfr0_el1.i16i64 = 0xF;
+            smfr0_el1.smEver = 0;
+            smfr0_el1.fa64 = 0x1;
+            return smfr0_el1;
+        }())
         .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_SVCR)
         .allPrivileges();
     InitReg(MISCREG_SMIDR_EL1)
+        .reset([](){
+            SMIDR smidr_el1 = 0;
+            smidr_el1.affinity = 0;
+            smidr_el1.smps = 0;
+            smidr_el1.implementer = 0x41;
+            return smidr_el1;
+        }())
         .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_SMPRI_EL1)
         .allPrivileges().exceptUserMode().reads(1);
     InitReg(MISCREG_SMPRIMAP_EL2)
         .hyp().mon();
     InitReg(MISCREG_SMCR_EL3)
+        .reset([this](){
+            // We want to support FEAT_SME_FA64. Therefore, we enable it in
+            // all SMCR_ELx registers by default. Runtime software might
+            // change this later, but given that gem5 doesn't disable
+            // instructions based on this flag we default to the most
+            // representative value.
+            SMCR smcr_el3 = 0;
+            smcr_el3.fa64 = 1;
+            smcr_el3.len = smeVL - 1;
+            return smcr_el3;
+        }())
         .mon();
     InitReg(MISCREG_SMCR_EL2)
+        .reset([this](){
+            // We want to support FEAT_SME_FA64. Therefore, we enable it in
+            // all SMCR_ELx registers by default. Runtime software might
+            // change this later, but given that gem5 doesn't disable
+            // instructions based on this flag we default to the most
+            // representative value.
+            SMCR smcr_el2 = 0;
+            smcr_el2.fa64 = 1;
+            smcr_el2.len = smeVL - 1;
+            return smcr_el2;
+        }())
         .hyp().mon();
     InitReg(MISCREG_SMCR_EL12)
         .allPrivileges().exceptUserMode();
     InitReg(MISCREG_SMCR_EL1)
+        .reset([this](){
+            // We want to support FEAT_SME_FA64. Therefore, we enable it in
+            // all SMCR_ELx registers by default. Runtime software might
+            // change this later, but given that gem5 doesn't disable
+            // instructions based on this flag we default to the most
+            // representative value.
+            SMCR smcr_el1 = 0;
+            smcr_el1.fa64 = 1;
+            smcr_el1.len = smeVL - 1;
+            return smcr_el1;
+        }())
         .allPrivileges().exceptUserMode();
     InitReg(MISCREG_TPIDR2_EL0)
         .allPrivileges();
