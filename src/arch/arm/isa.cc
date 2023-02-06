@@ -280,8 +280,6 @@ ISA::initID32(const ArmISAParams &p)
     miscRegs[MISCREG_ID_ISAR2] = p.id_isar2;
     miscRegs[MISCREG_ID_ISAR3] = p.id_isar3;
     miscRegs[MISCREG_ID_ISAR4] = p.id_isar4;
-    miscRegs[MISCREG_ID_ISAR5] = p.id_isar5;
-    miscRegs[MISCREG_ID_ISAR6] = p.id_isar6;
 
     miscRegs[MISCREG_ID_MMFR0] = p.id_mmfr0;
     miscRegs[MISCREG_ID_MMFR1] = p.id_mmfr1;
@@ -289,24 +287,25 @@ ISA::initID32(const ArmISAParams &p)
     miscRegs[MISCREG_ID_MMFR3] = p.id_mmfr3;
     miscRegs[MISCREG_ID_MMFR4] = p.id_mmfr4;
 
-    /** MISCREG_ID_ISAR5 */
-    // Crypto
-    miscRegs[MISCREG_ID_ISAR5] = insertBits(
-        miscRegs[MISCREG_ID_ISAR5], 19, 4,
-        release->has(ArmExtension::CRYPTO) ? 0x1112 : 0x0);
-    // RDM
-    miscRegs[MISCREG_ID_ISAR5] = insertBits(
-        miscRegs[MISCREG_ID_ISAR5], 27, 24,
-        release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0);
-    // FCMA
-    miscRegs[MISCREG_ID_ISAR5] = insertBits(
-        miscRegs[MISCREG_ID_ISAR5], 31, 28,
-        release->has(ArmExtension::FEAT_FCMA) ? 0x1 : 0x0);
+    ISAR5 isar5 = p.id_isar5;
+    if (release->has(ArmExtension::CRYPTO)) {
+        isar5.crc32 = 1;
+        isar5.sha2 = 1;
+        isar5.sha1 = 1;
+        isar5.aes = 2;
+    } else {
+        isar5.crc32 = 0;
+        isar5.sha2 = 0;
+        isar5.sha1 = 0;
+        isar5.aes = 0;
+    }
+    isar5.rdm = release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0;
+    isar5.vcma = release->has(ArmExtension::FEAT_FCMA) ? 0x1 : 0x0;
+    miscRegs[MISCREG_ID_ISAR5] = isar5;
 
-    /** ID_ISAR6 */
-    miscRegs[MISCREG_ID_ISAR6] = insertBits(
-        miscRegs[MISCREG_ID_ISAR6], 3, 0,
-        release->has(ArmExtension::FEAT_JSCVT) ? 0x1 : 0x0);
+    ISAR6 isar6 = p.id_isar6;
+    isar6.jscvt = release->has(ArmExtension::FEAT_JSCVT) ? 0x1 : 0x0;
+    miscRegs[MISCREG_ID_ISAR6] = isar6;
 }
 
 void

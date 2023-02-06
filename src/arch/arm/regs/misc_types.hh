@@ -75,6 +75,27 @@ namespace ArmISA
         Bitfield<0> sp;         // AArch64
     EndBitUnion(CPSR)
 
+    BitUnion32(ISAR5)
+        Bitfield<31, 28> vcma;
+        Bitfield<27, 24> rdm;
+        Bitfield<19, 16> crc32;
+        Bitfield<15, 12> sha2;
+        Bitfield<11, 8> sha1;
+        Bitfield<7, 4> aes;
+        Bitfield<3, 0> sevl;
+    EndBitUnion(ISAR5)
+
+    BitUnion32(ISAR6)
+        Bitfield<31, 28> clrbhb;
+        Bitfield<27, 24> i8mm;
+        Bitfield<23, 20> bf16;
+        Bitfield<19, 16> specres;
+        Bitfield<15, 12> sb;
+        Bitfield<11, 8> fhm;
+        Bitfield<7, 4> dp;
+        Bitfield<3, 0> jscvt;
+    EndBitUnion(ISAR6)
+
     BitUnion64(AA64DFR0)
         Bitfield<43, 40> tracefilt;
         Bitfield<39, 36> doublelock;
