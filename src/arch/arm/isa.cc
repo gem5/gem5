@@ -567,8 +567,6 @@ ISA::readMiscReg(RegIndex idx)
             l2ctlr.numCPUs = tc->getSystemPtr()->threads.size() - 1;
             return l2ctlr;
         }
-      case MISCREG_DBGDSCRint:
-        return readMiscRegNoEffect(MISCREG_DBGDSCRint);
       case MISCREG_ISR:
       case MISCREG_ISR_EL1:
         {
