@@ -2273,6 +2273,10 @@ ISA::initializeMiscRegMetadata()
 
     // AArch32 CP14 registers
     InitReg(MISCREG_DBGDIDR)
+      /* For now just implement the version number.
+       * ARMv7, v7.1 Debug architecture (0b0101 --> 0x5)
+       */
+      .reset(0x5 << 16)
       .allPrivileges().monSecureWrite(0).monNonSecureWrite(0);
     InitReg(MISCREG_DBGDSCRint)
       .allPrivileges().monSecureWrite(0).monNonSecureWrite(0);
@@ -2514,6 +2518,34 @@ ISA::initializeMiscRegMetadata()
       .reset(midr)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_CTR)
+      .reset([system=p.system](){
+          //all caches have the same line size in gem5
+          //4 byte words in ARM
+          unsigned line_size_words =
+              system->cacheLineSize() / 4;
+          unsigned log2_line_size_words = 0;
+
+          while (line_size_words >>= 1) {
+              ++log2_line_size_words;
+          }
+
+          CTR ctr = 0;
+          //log2 of minimun i-cache line size (words)
+          ctr.iCacheLineSize = log2_line_size_words;
+          //b11 - gem5 uses pipt
+          ctr.l1IndexPolicy = 0x3;
+          //log2 of minimum d-cache line size (words)
+          ctr.dCacheLineSize = log2_line_size_words;
+          //log2 of max reservation size (words)
+          ctr.erg = log2_line_size_words;
+          //log2 of max writeback size (words)
+          ctr.cwg = log2_line_size_words;
+          //b100 - gem5 format is ARMv7
+          ctr.format = 0x4;
+
+          return ctr;
+      }())
+      .unserialize(0)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_TCMTR)
       .allPrivileges().exceptUserMode().writes(0);
@@ -2528,8 +2560,20 @@ ISA::initializeMiscRegMetadata()
       .warnNotFail()
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_PFR0)
+      .reset(0x00000031) // !ThumbEE | !Jazelle | Thumb | ARM
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_PFR1)
+      .reset([release=release,system=system](){
+          // Timer | Virti | !M Profile | TrustZone | ARMv4
+          bool have_timer = (system && system->getGenericTimer() != nullptr);
+          return 0x00000001 |
+              (release->has(ArmExtension::SECURITY) ?
+                  0x00000010 : 0x0) |
+              (release->has(ArmExtension::VIRTUALIZATION) ?
+                  0x00001000 : 0x0) |
+              (have_timer ? 0x00010000 : 0x0);
+      }())
+      .unserialize(0)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_DFR0)
       .reset(p.pmu ? 0x03000000 : 0)
@@ -3772,9 +3816,13 @@ ISA::initializeMiscRegMetadata()
           pfr0_el1.gic = FullSystem && getGICv3CPUInterface(tc) ? 0x1 : 0;
           return pfr0_el1;
       }())
+      .unserialize(0)
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AA64PFR1_EL1)
+      .reset(release->has(ArmExtension::FEAT_SME) ?
+          0x1 << 24 : 0)
+      .unserialize(0)
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AA64DFR0_EL1)
@@ -3919,6 +3967,7 @@ ISA::initializeMiscRegMetadata()
       .reads(1)
       .mapsTo(MISCREG_CTR);
     InitReg(MISCREG_DCZID_EL0)
+      .reset(0x04) // DC ZVA clear 64-byte chunks
       .reads(1);
     InitReg(MISCREG_VPIDR_EL2)
       .hyp().mon()

@@ -486,35 +486,6 @@ ISA::readMiscReg(RegIndex idx)
         warn_once("The ccsidr register isn't implemented and "
                 "always reads as 0.\n");
         break;
-      case MISCREG_CTR:                 // AArch32, ARMv7, top bit set
-      case MISCREG_CTR_EL0:             // AArch64
-        {
-            //all caches have the same line size in gem5
-            //4 byte words in ARM
-            unsigned lineSizeWords =
-                tc->getSystemPtr()->cacheLineSize() / 4;
-            unsigned log2LineSizeWords = 0;
-
-            while (lineSizeWords >>= 1) {
-                ++log2LineSizeWords;
-            }
-
-            CTR ctr = 0;
-            //log2 of minimun i-cache line size (words)
-            ctr.iCacheLineSize = log2LineSizeWords;
-            //b11 - gem5 uses pipt
-            ctr.l1IndexPolicy = 0x3;
-            //log2 of minimum d-cache line size (words)
-            ctr.dCacheLineSize = log2LineSizeWords;
-            //log2 of max reservation size (words)
-            ctr.erg = log2LineSizeWords;
-            //log2 of max writeback size (words)
-            ctr.cwg = log2LineSizeWords;
-            //b100 - gem5 format is ARMv7
-            ctr.format = 0x4;
-
-            return ctr;
-        }
       case MISCREG_ACTLR:
         warn("Not doing anything for miscreg ACTLR\n");
         break;
@@ -615,11 +586,6 @@ ISA::readMiscReg(RegIndex idx)
             l2ctlr.numCPUs = tc->getSystemPtr()->threads.size() - 1;
             return l2ctlr;
         }
-      case MISCREG_DBGDIDR:
-        /* For now just implement the version number.
-         * ARMv7, v7.1 Debug architecture (0b0101 --> 0x5)
-         */
-        return 0x5 << 16;
       case MISCREG_DBGDSCRint:
         return readMiscRegNoEffect(MISCREG_DBGDSCRint);
       case MISCREG_ISR:
@@ -632,8 +598,6 @@ ISA::readMiscReg(RegIndex idx)
                 readMiscRegNoEffect(MISCREG_CPSR),
                 readMiscRegNoEffect(MISCREG_SCR_EL3));
         }
-      case MISCREG_DCZID_EL0:
-        return 0x04;  // DC ZVA clear 64-byte chunks
       case MISCREG_HCPTR:
         {
             RegVal val = readMiscRegNoEffect(idx);
@@ -655,36 +619,6 @@ ISA::readMiscReg(RegIndex idx)
         return readMiscRegNoEffect(MISCREG_DFAR_S);
       case MISCREG_HIFAR: // alias for secure IFAR
         return readMiscRegNoEffect(MISCREG_IFAR_S);
-
-      case MISCREG_ID_PFR0:
-        // !ThumbEE | !Jazelle | Thumb | ARM
-        return 0x00000031;
-      case MISCREG_ID_PFR1:
-        {   // Timer | Virti | !M Profile | TrustZone | ARMv4
-            bool have_timer = (system->getGenericTimer() != nullptr);
-            return 0x00000001 |
-                (release->has(ArmExtension::SECURITY) ?
-                    0x00000010 : 0x0) |
-                (release->has(ArmExtension::VIRTUALIZATION) ?
-                    0x00001000 : 0x0) |
-                (have_timer ? 0x00010000 : 0x0);
-        }
-      case MISCREG_ID_AA64PFR0_EL1:
-        return 0x0000000000000002 | // AArch{64,32} supported at EL0
-               0x0000000000000020 | // EL1
-               (release->has(ArmExtension::VIRTUALIZATION) ?
-                    0x0000000000000200 : 0) | // EL2
-               (release->has(ArmExtension::SECURITY) ?
-                    0x0000000000002000 : 0) | // EL3
-               (release->has(ArmExtension::FEAT_SVE) ?
-                    0x0000000100000000 : 0) | // SVE
-               (release->has(ArmExtension::FEAT_SEL2) ?
-                    0x0000001000000000 : 0) | // SecEL2
-               (gicv3CpuInterface     ? 0x0000000001000000 : 0);
-      case MISCREG_ID_AA64PFR1_EL1:
-        return 0x0 |
-               (release->has(ArmExtension::FEAT_SME) ?
-                    0x1 << 24 : 0); // SME
 
       // Generic Timer registers
       case MISCREG_CNTFRQ ... MISCREG_CNTVOFF:
