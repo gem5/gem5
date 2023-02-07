@@ -1249,13 +1249,13 @@ namespace ArmISA
             return *this;
         }
         chain
-        raz(uint64_t mask) const
+        raz(uint64_t mask = (uint64_t)-1) const
         {
             entry._raz  = mask;
             return *this;
         }
         chain
-        rao(uint64_t mask) const
+        rao(uint64_t mask = (uint64_t)-1) const
         {
             entry._rao  = mask;
             return *this;
