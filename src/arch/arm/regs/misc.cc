@@ -2273,10 +2273,7 @@ ISA::initializeMiscRegMetadata()
 
     // AArch32 CP14 registers
     InitReg(MISCREG_DBGDIDR)
-      /* For now just implement the version number.
-       * ARMv7, v7.1 Debug architecture (0b0101 --> 0x5)
-       */
-      .reset(0x5 << 16)
+      .reset(0x6 << 16) // Armv8 Debug architecture
       .allPrivileges().monSecureWrite(0).monNonSecureWrite(0);
     InitReg(MISCREG_DBGDSCRint)
       .allPrivileges().monSecureWrite(0).monNonSecureWrite(0);
