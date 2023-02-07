@@ -3681,7 +3681,8 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_CTR_EL0)
       .faultRead(EL0, faultCtrEL0)
       .faultRead(EL1, HCR_TRAP(tid2))
-      .reads(1);
+      .reads(1)
+      .mapsTo(MISCREG_CTR);
     InitReg(MISCREG_DCZID_EL0)
       .reads(1);
     InitReg(MISCREG_VPIDR_EL2)
