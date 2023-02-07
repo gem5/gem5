@@ -3510,7 +3510,8 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode().writes(0)
       .mapsTo(MISCREG_MIDR);
     InitReg(MISCREG_MPIDR_EL1)
-      .allPrivileges().exceptUserMode().writes(0);
+      .allPrivileges().exceptUserMode().writes(0)
+      .mapsTo(MISCREG_MPIDR);
     InitReg(MISCREG_REVIDR_EL1)
       .faultRead(EL1, HCR_TRAP(tid1))
       .allPrivileges().exceptUserMode().writes(0);
