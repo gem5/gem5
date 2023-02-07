@@ -91,18 +91,33 @@ class CSROp : public RiscvStaticInst
   protected:
     uint64_t csr;
     uint64_t uimm;
+    bool read;
+    bool write;
 
     /// Constructor
     CSROp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
         : RiscvStaticInst(mnem, _machInst, __opClass),
-            csr(FUNCT12), uimm(CSRIMM)
+            csr(FUNCT12), uimm(CSRIMM), read(true), write(true)
     {
         if (csr == CSR_SATP) {
             flags[IsSquashAfter] = true;
         }
+        if (strcmp(mnemonic, "csrrw") == 0 ||
+            strcmp(mnemonic, "csrrwi") == 0) {
+          if (RD == 0){
+            read = false;
+          }
+        } else if (strcmp(mnemonic, "csrrs") == 0 ||
+                   strcmp(mnemonic, "csrrc") == 0 ||
+                   strcmp(mnemonic, "csrrsi") == 0 ||
+                   strcmp(mnemonic, "csrrci") == 0 ){
+          if (RS1 == 0) {
+            write = false;
+          }
+        }
     }
 
-    std::string generateDisassembly(
+  std::string generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
