@@ -2505,12 +2505,15 @@ ISA::initializeMiscRegMetadata()
       .unimplemented()
       .allPrivileges();
     InitReg(MISCREG_JIDR)
+      .raz() // Jazelle trivial implementation, RAZ/WI
       .allPrivileges();
     InitReg(MISCREG_TEEHBR)
       .allPrivileges();
     InitReg(MISCREG_JOSCR)
+      .raz() // Jazelle trivial implementation, RAZ/WI
       .allPrivileges();
     InitReg(MISCREG_JMCR)
+      .raz() // Jazelle trivial implementation, RAZ/WI
       .allPrivileges();
 
     // AArch32 CP15 registers
@@ -2548,6 +2551,7 @@ ISA::initializeMiscRegMetadata()
       .unserialize(0)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_TCMTR)
+      .raz() // No TCM's
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_TLBTR)
       .reset(1) // Separate Instruction and Data TLBs
@@ -2646,6 +2650,7 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_CLIDR)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_AIDR)
+      .raz() // AUX ID set to 0
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_CSSELR)
       .banked();

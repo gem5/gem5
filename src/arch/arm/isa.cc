@@ -470,12 +470,6 @@ ISA::readMiscReg(RegIndex idx)
             return readMiscRegNoEffect(idx);
         }
         break;
-      case MISCREG_JOSCR: // Jazelle trivial implementation, RAZ/WI
-      case MISCREG_JMCR:  // Jazelle trivial implementation, RAZ/WI
-      case MISCREG_JIDR:  // Jazelle trivial implementation, RAZ/WI
-      case MISCREG_AIDR:  // AUX ID set to 0
-      case MISCREG_TCMTR: // No TCM's
-        return 0;
 
       case MISCREG_CLIDR:
         warn_once("The clidr register always reports 0 caches.\n");
