@@ -2662,6 +2662,7 @@ ISA::initializeMiscRegMetadata()
       .reset(midr)
       .hyp().monNonSecure();
     InitReg(MISCREG_VMPIDR)
+      .res1(mask(31, 31))
       .hyp().monNonSecure();
     InitReg(MISCREG_SCTLR)
       .banked()
@@ -2739,13 +2740,17 @@ ISA::initializeMiscRegMetadata()
       .hyp().monNonSecure();
     InitReg(MISCREG_HCR)
       .hyp().monNonSecure()
-      .res0(0x90000000);
+      .res0(release->has(ArmExtension::VIRTUALIZATION) ?
+          0x90000000 : mask(31, 0));
     InitReg(MISCREG_HCR2)
       .hyp().monNonSecure()
-      .res0(0xffa9ff8c);
+      .res0(release->has(ArmExtension::VIRTUALIZATION) ?
+          0xffa9ff8c : mask(31, 0));
     InitReg(MISCREG_HDCR)
       .hyp().monNonSecure();
     InitReg(MISCREG_HCPTR)
+      .res0(mask(29, 21) | mask(19, 16) | mask(14, 14))
+      .res1(mask(13, 12) | mask(9, 0))
       .hyp().monNonSecure();
     InitReg(MISCREG_HSTR)
       .hyp().monNonSecure();
@@ -2794,7 +2799,8 @@ ISA::initializeMiscRegMetadata()
       .bankedChild()
       .secure().exceptUserMode();
     InitReg(MISCREG_DFSR)
-      .banked();
+      .banked()
+      .res0(mask(31, 14) | mask(8, 8));
     InitReg(MISCREG_DFSR_NS)
       .bankedChild()
       .privSecure(!aarch32EL3)
@@ -2803,7 +2809,8 @@ ISA::initializeMiscRegMetadata()
       .bankedChild()
       .secure().exceptUserMode();
     InitReg(MISCREG_IFSR)
-      .banked();
+      .banked()
+      .res0(mask(31, 13) | mask(11, 11) | mask(8, 6));
     InitReg(MISCREG_IFSR_NS)
       .bankedChild()
       .privSecure(!aarch32EL3)
@@ -3118,6 +3125,7 @@ ISA::initializeMiscRegMetadata()
       .bankedChild()
       .secure().exceptUserMode();
     InitReg(MISCREG_AMAIR0)
+      .res0(release->has(ArmExtension::LPAE) ? 0 : mask(31, 0))
       .banked();
     InitReg(MISCREG_AMAIR0_NS)
       .bankedChild()
@@ -3127,6 +3135,7 @@ ISA::initializeMiscRegMetadata()
       .bankedChild()
       .secure().exceptUserMode();
     InitReg(MISCREG_AMAIR1)
+      .res0(release->has(ArmExtension::LPAE) ? 0 : mask(31, 0))
       .banked();
     InitReg(MISCREG_AMAIR1_NS)
       .bankedChild()
@@ -3976,6 +3985,8 @@ ISA::initializeMiscRegMetadata()
       .mapsTo(MISCREG_VPIDR);
     InitReg(MISCREG_VMPIDR_EL2)
       .hyp().mon()
+      .res0(mask(63, 40) | mask(29, 25))
+      .res1(mask(31, 31))
       .mapsTo(MISCREG_VMPIDR);
     InitReg(MISCREG_SCTLR_EL1)
       .allPrivileges().exceptUserMode()
@@ -5263,6 +5274,12 @@ ISA::initializeMiscRegMetadata()
         }())
         .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_SVCR)
+        .res0([](){
+            SVCR svcr_mask = 0;
+            svcr_mask.sm = 1;
+            svcr_mask.za = 1;
+            return ~svcr_mask;
+        }())
         .allPrivileges();
     InitReg(MISCREG_SMIDR_EL1)
         .reset([](){
@@ -5274,6 +5291,7 @@ ISA::initializeMiscRegMetadata()
         }())
         .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_SMPRI_EL1)
+        .res0(mask(63, 4))
         .allPrivileges().exceptUserMode().reads(1);
     InitReg(MISCREG_SMPRIMAP_EL2)
         .hyp().mon();

@@ -421,11 +421,6 @@ ISA::readMiscReg(RegIndex idx)
     idx = redirectRegVHE(idx);
 
     switch (unflattenMiscReg(idx)) {
-      case MISCREG_HCR:
-      case MISCREG_HCR2:
-            if (!release->has(ArmExtension::VIRTUALIZATION))
-                return 0;
-            break;
       case MISCREG_CPACR:
         {
             const uint32_t ones = (uint32_t)(-1);
@@ -456,10 +451,6 @@ ISA::readMiscReg(RegIndex idx)
       case MISCREG_MPIDR:
       case MISCREG_MPIDR_EL1:
         return readMPIDR(system, tc);
-      case MISCREG_VMPIDR:
-      case MISCREG_VMPIDR_EL2:
-        // top bit defined as RES1
-        return readMiscRegNoEffect(idx) | 0x80000000;
       case MISCREG_ID_AFR0: // not implemented, so alias MIDR
       case MISCREG_REVIDR:  // not implemented, so alias MIDR
       case MISCREG_MIDR:
@@ -568,10 +559,6 @@ ISA::readMiscReg(RegIndex idx)
         {
             return miscRegs[MISCREG_CPSR] & 0x800000;
         }
-      case MISCREG_SVCR:
-        {
-            return miscRegs[MISCREG_SVCR];
-        }
       case MISCREG_L2CTLR:
         {
             // mostly unimplemented, just set NumCPUs field from sim and return
@@ -594,20 +581,17 @@ ISA::readMiscReg(RegIndex idx)
         }
       case MISCREG_HCPTR:
         {
-            RegVal val = readMiscRegNoEffect(idx);
-            // The trap bit associated with CP14 is defined as RAZ
-            val &= ~(1 << 14);
-            // If a CP bit in NSACR is 0 then the corresponding bit in
-            // HCPTR is RAO/WI
+            HCPTR val = readMiscRegNoEffect(idx);
             bool secure_lookup = release->has(ArmExtension::SECURITY) &&
                 isSecure(tc);
             if (!secure_lookup) {
-                RegVal mask = readMiscRegNoEffect(MISCREG_NSACR);
-                val |= (mask ^ 0x7FFF) & 0xBFFF;
+                NSACR nsacr = readMiscRegNoEffect(MISCREG_NSACR);
+                if (!nsacr.cp10) {
+                    val.tcp10 = 1;
+                    val.tcp11 = 1;
+                }
             }
-            // Set the bits for unimplemented coprocessors to RAO/WI
-            val |= 0x33FF;
-            return (val);
+            return val;
         }
       case MISCREG_HDFAR: // alias for secure DFAR
         return readMiscRegNoEffect(MISCREG_DFAR_S);
@@ -934,16 +918,10 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                          (readMiscRegNoEffect(MISCREG_FPEXC) & ~fpexcMask);
             }
             break;
-          case MISCREG_HCR2:
-                if (!release->has(ArmExtension::VIRTUALIZATION))
-                    return;
-                break;
           case MISCREG_HCR:
             {
                 const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
                 selfDebug->setenableTDETGE((HCR)val, mdcr);
-                if (!release->has(ArmExtension::VIRTUALIZATION))
-                    return;
             }
             break;
 
@@ -1015,31 +993,6 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             break;
           case MISCREG_DBGWCR0_EL1 ... MISCREG_DBGWCR15_EL1:
             selfDebug->updateDBGWCR(idx - MISCREG_DBGWCR0_EL1, val);
-            break;
-          case MISCREG_IFSR:
-            {
-                // ARM ARM (ARM DDI 0406C.b) B4.1.96
-                const uint32_t ifsrMask =
-                    mask(31, 13) | mask(11, 11) | mask(8, 6);
-                newVal = newVal & ~ifsrMask;
-            }
-            break;
-          case MISCREG_DFSR:
-            {
-                // ARM ARM (ARM DDI 0406C.b) B4.1.52
-                const uint32_t dfsrMask = mask(31, 14) | mask(8, 8);
-                newVal = newVal & ~dfsrMask;
-            }
-            break;
-          case MISCREG_AMAIR0:
-          case MISCREG_AMAIR1:
-            {
-                // ARM ARM (ARM DDI 0406C.b) B4.1.5
-                // Valid only with LPAE
-                if (!release->has(ArmExtension::LPAE))
-                    return;
-                DPRINTF(MiscRegs, "Writing AMAIR: %#x\n", newVal);
-            }
             break;
           case MISCREG_SCR:
             getMMUPtr(tc)->invalidateMiscReg();
@@ -1326,21 +1279,6 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 newVal = cpsr;
                 idx = MISCREG_CPSR;
             }
-            break;
-          case MISCREG_SVCR:
-            {
-                SVCR svcr = miscRegs[MISCREG_SVCR];
-                SVCR newSvcr = newVal;
-
-                // Don't allow other bits to be set
-                svcr.sm = newSvcr.sm;
-                svcr.za = newSvcr.za;
-                newVal = svcr;
-            }
-            break;
-          case MISCREG_SMPRI_EL1:
-            // Only the bottom 4 bits are settable
-            newVal = newVal & 0xF;
             break;
           case MISCREG_AT_S1E1R_Xt:
             addressTranslation64(MMU::S1E1Tran, BaseMMU::Read, 0, val);
