@@ -962,101 +962,11 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 tc->setMiscReg(MISCREG_DBGOSLSR, r);
             }
             break;
-          case MISCREG_DBGBCR0:
-            selfDebug->updateDBGBCR(0, val);
+          case MISCREG_DBGBCR0 ... MISCREG_DBGBCR15:
+            selfDebug->updateDBGBCR(idx - MISCREG_DBGBCR0, val);
             break;
-          case MISCREG_DBGBCR1:
-            selfDebug->updateDBGBCR(1, val);
-            break;
-          case MISCREG_DBGBCR2:
-            selfDebug->updateDBGBCR(2, val);
-            break;
-          case MISCREG_DBGBCR3:
-            selfDebug->updateDBGBCR(3, val);
-            break;
-          case MISCREG_DBGBCR4:
-            selfDebug->updateDBGBCR(4, val);
-            break;
-          case MISCREG_DBGBCR5:
-            selfDebug->updateDBGBCR(5, val);
-            break;
-          case MISCREG_DBGBCR6:
-            selfDebug->updateDBGBCR(6, val);
-            break;
-          case MISCREG_DBGBCR7:
-            selfDebug->updateDBGBCR(7, val);
-            break;
-          case MISCREG_DBGBCR8:
-            selfDebug->updateDBGBCR(8, val);
-            break;
-          case MISCREG_DBGBCR9:
-            selfDebug->updateDBGBCR(9, val);
-            break;
-          case MISCREG_DBGBCR10:
-            selfDebug->updateDBGBCR(10, val);
-            break;
-          case MISCREG_DBGBCR11:
-            selfDebug->updateDBGBCR(11, val);
-            break;
-          case MISCREG_DBGBCR12:
-            selfDebug->updateDBGBCR(12, val);
-            break;
-          case MISCREG_DBGBCR13:
-            selfDebug->updateDBGBCR(13, val);
-            break;
-          case MISCREG_DBGBCR14:
-            selfDebug->updateDBGBCR(14, val);
-            break;
-          case MISCREG_DBGBCR15:
-            selfDebug->updateDBGBCR(15, val);
-            break;
-          case MISCREG_DBGWCR0:
-            selfDebug->updateDBGWCR(0, val);
-            break;
-          case MISCREG_DBGWCR1:
-            selfDebug->updateDBGWCR(1, val);
-            break;
-          case MISCREG_DBGWCR2:
-            selfDebug->updateDBGWCR(2, val);
-            break;
-          case MISCREG_DBGWCR3:
-            selfDebug->updateDBGWCR(3, val);
-            break;
-          case MISCREG_DBGWCR4:
-            selfDebug->updateDBGWCR(4, val);
-            break;
-          case MISCREG_DBGWCR5:
-            selfDebug->updateDBGWCR(5, val);
-            break;
-          case MISCREG_DBGWCR6:
-            selfDebug->updateDBGWCR(6, val);
-            break;
-          case MISCREG_DBGWCR7:
-            selfDebug->updateDBGWCR(7, val);
-            break;
-          case MISCREG_DBGWCR8:
-            selfDebug->updateDBGWCR(8, val);
-            break;
-          case MISCREG_DBGWCR9:
-            selfDebug->updateDBGWCR(9, val);
-            break;
-          case MISCREG_DBGWCR10:
-            selfDebug->updateDBGWCR(10, val);
-            break;
-          case MISCREG_DBGWCR11:
-            selfDebug->updateDBGWCR(11, val);
-            break;
-          case MISCREG_DBGWCR12:
-            selfDebug->updateDBGWCR(12, val);
-            break;
-          case MISCREG_DBGWCR13:
-            selfDebug->updateDBGWCR(13, val);
-            break;
-          case MISCREG_DBGWCR14:
-            selfDebug->updateDBGWCR(14, val);
-            break;
-          case MISCREG_DBGWCR15:
-            selfDebug->updateDBGWCR(15, val);
+          case MISCREG_DBGWCR0 ... MISCREG_DBGWCR15:
+            selfDebug->updateDBGWCR(idx - MISCREG_DBGWCR0, val);
             break;
 
           case MISCREG_MDCR_EL2:
@@ -1100,101 +1010,11 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             }
             break;
 
-          case MISCREG_DBGBCR0_EL1:
-            selfDebug->updateDBGBCR(0, val);
+          case MISCREG_DBGBCR0_EL1 ... MISCREG_DBGBCR15_EL1:
+            selfDebug->updateDBGBCR(idx - MISCREG_DBGBCR0_EL1, val);
             break;
-          case MISCREG_DBGBCR1_EL1:
-            selfDebug->updateDBGBCR(1, val);
-            break;
-          case MISCREG_DBGBCR2_EL1:
-            selfDebug->updateDBGBCR(2, val);
-            break;
-          case MISCREG_DBGBCR3_EL1:
-            selfDebug->updateDBGBCR(3, val);
-            break;
-          case MISCREG_DBGBCR4_EL1:
-            selfDebug->updateDBGBCR(4, val);
-            break;
-          case MISCREG_DBGBCR5_EL1:
-            selfDebug->updateDBGBCR(5, val);
-            break;
-          case MISCREG_DBGBCR6_EL1:
-            selfDebug->updateDBGBCR(6, val);
-            break;
-          case MISCREG_DBGBCR7_EL1:
-            selfDebug->updateDBGBCR(7, val);
-            break;
-          case MISCREG_DBGBCR8_EL1:
-            selfDebug->updateDBGBCR(8, val);
-            break;
-          case MISCREG_DBGBCR9_EL1:
-            selfDebug->updateDBGBCR(9, val);
-            break;
-          case MISCREG_DBGBCR10_EL1:
-            selfDebug->updateDBGBCR(10, val);
-            break;
-          case MISCREG_DBGBCR11_EL1:
-            selfDebug->updateDBGBCR(11, val);
-            break;
-          case MISCREG_DBGBCR12_EL1:
-            selfDebug->updateDBGBCR(12, val);
-            break;
-          case MISCREG_DBGBCR13_EL1:
-            selfDebug->updateDBGBCR(13, val);
-            break;
-          case MISCREG_DBGBCR14_EL1:
-            selfDebug->updateDBGBCR(14, val);
-            break;
-          case MISCREG_DBGBCR15_EL1:
-            selfDebug->updateDBGBCR(15, val);
-            break;
-          case MISCREG_DBGWCR0_EL1:
-            selfDebug->updateDBGWCR(0, val);
-            break;
-          case MISCREG_DBGWCR1_EL1:
-            selfDebug->updateDBGWCR(1, val);
-            break;
-          case MISCREG_DBGWCR2_EL1:
-            selfDebug->updateDBGWCR(2, val);
-            break;
-          case MISCREG_DBGWCR3_EL1:
-            selfDebug->updateDBGWCR(3, val);
-            break;
-          case MISCREG_DBGWCR4_EL1:
-            selfDebug->updateDBGWCR(4, val);
-            break;
-          case MISCREG_DBGWCR5_EL1:
-            selfDebug->updateDBGWCR(5, val);
-            break;
-          case MISCREG_DBGWCR6_EL1:
-            selfDebug->updateDBGWCR(6, val);
-            break;
-          case MISCREG_DBGWCR7_EL1:
-            selfDebug->updateDBGWCR(7, val);
-            break;
-          case MISCREG_DBGWCR8_EL1:
-            selfDebug->updateDBGWCR(8, val);
-            break;
-          case MISCREG_DBGWCR9_EL1:
-            selfDebug->updateDBGWCR(9, val);
-            break;
-          case MISCREG_DBGWCR10_EL1:
-            selfDebug->updateDBGWCR(10, val);
-            break;
-          case MISCREG_DBGWCR11_EL1:
-            selfDebug->updateDBGWCR(11, val);
-            break;
-          case MISCREG_DBGWCR12_EL1:
-            selfDebug->updateDBGWCR(12, val);
-            break;
-          case MISCREG_DBGWCR13_EL1:
-            selfDebug->updateDBGWCR(13, val);
-            break;
-          case MISCREG_DBGWCR14_EL1:
-            selfDebug->updateDBGWCR(14, val);
-            break;
-          case MISCREG_DBGWCR15_EL1:
-            selfDebug->updateDBGWCR(15, val);
+          case MISCREG_DBGWCR0_EL1 ... MISCREG_DBGWCR15_EL1:
+            selfDebug->updateDBGWCR(idx - MISCREG_DBGWCR0_EL1, val);
             break;
           case MISCREG_IFSR:
             {
