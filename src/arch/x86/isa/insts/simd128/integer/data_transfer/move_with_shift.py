@@ -31,13 +31,29 @@
 # DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-categories = ["move", "move_non_temporal", "move_mask", "move_with_shift"]
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.1
 
 microcode = """
-# 128 bit multimedia and scientific data transfer instructions
+def macroop PALIGNR_XMM_XMM_I {
+    movfp ufp1, xmml, dataSize=8
+    palignr xmml, xmmh, xmmlm, xmmhm, "IMMEDIATE", size=8
+    palignr xmmh, ufp1, xmmlm, xmmhm, "IMMEDIATE", size=8, ext=PartHi
+};
+
+def macroop PALIGNR_XMM_M_I {
+    ldfp ufp2, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp3, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    movfp ufp1, xmml, dataSize=8
+    palignr xmml, xmmh, ufp2, ufp3, "IMMEDIATE", size=8
+    palignr xmmh, ufp1, ufp2, ufp3, "IMMEDIATE", size=8, ext=PartHi
+};
+
+def macroop PALIGNR_XMM_P_I {
+    rdip t7
+    ldfp ufp2, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp3, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    movfp ufp1, xmml, dataSize=8
+    palignr xmml, xmmh, ufp2, ufp3, "IMMEDIATE", size=8
+    palignr xmmh, ufp1, ufp2, ufp3, "IMMEDIATE", size=8, ext=PartHi
+};
 """
-for category in categories:
-    exec("from . import %s as cat" % category)
-    microcode += cat.microcode

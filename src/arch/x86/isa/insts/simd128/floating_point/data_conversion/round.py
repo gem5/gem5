@@ -33,11 +33,40 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["move", "move_non_temporal", "move_mask", "move_with_shift"]
-
 microcode = """
-# 128 bit multimedia and scientific data transfer instructions
+def macroop ROUNDSS_XMM_XMM_I {
+    rdval t1, ctrlRegIdx("misc_reg::Mxcsr")
+    rounds xmml, xmmlm, t1, "IMMEDIATE", size=4
+};
+
+def macroop ROUNDSS_XMM_M_I {
+    rdval t1, ctrlRegIdx("misc_reg::Mxcsr")
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=4
+    rounds xmml, ufp1, t1, "IMMEDIATE", size=4
+};
+
+def macroop ROUNDSS_XMM_P_I {
+    rdval t1, ctrlRegIdx("misc_reg::Mxcsr")
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=4
+    rounds xmml, ufp1, t1, "IMMEDIATE", size=4
+};
+
+def macroop ROUNDSD_XMM_XMM_I {
+    rdval t1, ctrlRegIdx("misc_reg::Mxcsr")
+    rounds xmml, xmmlm, t1, "IMMEDIATE", size=8
+};
+
+def macroop ROUNDSD_XMM_M_I {
+    rdval t1, ctrlRegIdx("misc_reg::Mxcsr")
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    rounds xmml, ufp1, t1, "IMMEDIATE", size=8
+};
+
+def macroop ROUNDSD_XMM_P_I {
+    rdval t1, ctrlRegIdx("misc_reg::Mxcsr")
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    rounds xmml, ufp1, t1, "IMMEDIATE", size=8
+};
 """
-for category in categories:
-    exec("from . import %s as cat" % category)
-    microcode += cat.microcode

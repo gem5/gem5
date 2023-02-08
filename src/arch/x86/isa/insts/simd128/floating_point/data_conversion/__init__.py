@@ -38,6 +38,7 @@ categories = [
     "convert_floating_point_to_xmm_integer",
     "convert_floating_point_to_mmx_integer",
     "convert_floating_point_to_gpr_integer",
+    "round",
 ]
 
 microcode = """

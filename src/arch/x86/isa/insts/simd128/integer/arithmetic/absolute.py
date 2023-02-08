@@ -33,11 +33,64 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-categories = ["move", "move_non_temporal", "move_mask", "move_with_shift"]
-
 microcode = """
-# 128 bit multimedia and scientific data transfer instructions
+def macroop PABSB_XMM_XMM {
+    pabs xmml, xmmlm, size=1
+    pabs xmmh, xmmhm, size=1
+};
+
+def macroop PABSB_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    pabs xmml, ufp1, size=1
+    pabs xmmh, ufp2, size=1
+};
+
+def macroop PABSB_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    pabs xmml, ufp1, size=1
+    pabs xmmh, ufp2, size=1
+};
+
+def macroop PABSW_XMM_XMM {
+    pabs xmml, xmmlm, size=2
+    pabs xmmh, xmmhm, size=2
+};
+
+def macroop PABSW_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    pabs xmml, ufp1, size=2
+    pabs xmmh, ufp2, size=2
+};
+
+def macroop PABSW_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    pabs xmml, ufp1, size=2
+    pabs xmmh, ufp2, size=2
+};
+
+def macroop PABSD_XMM_XMM {
+    pabs xmml, xmmlm, size=4
+    pabs xmmh, xmmhm, size=4
+};
+
+def macroop PABSD_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    pabs xmml, ufp1, size=4
+    pabs xmmh, ufp2, size=4
+};
+
+def macroop PABSD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    pabs xmml, ufp1, size=4
+    pabs xmmh, ufp2, size=4
+};
 """
-for category in categories:
-    exec("from . import %s as cat" % category)
-    microcode += cat.microcode

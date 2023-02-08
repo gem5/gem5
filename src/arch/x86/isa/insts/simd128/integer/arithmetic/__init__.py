@@ -35,6 +35,7 @@
 
 categories = [
     "addition",
+    "absolute",
     "subtraction",
     "multiplication",
     "multiply_add",
