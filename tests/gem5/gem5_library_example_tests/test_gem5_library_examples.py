@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2021-2023 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -324,3 +324,57 @@ gem5_verify_config(
     valid_hosts=constants.supported_hosts,
     length=constants.very_long_tag,
 )
+
+gem5_verify_config(
+    name="test-gem5-library-create-looppoint-checkpoints",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "gem5_library",
+        "looppoints",
+        "create-looppoint-checkpoint.py",
+    ),
+    config_args=[
+        "--checkpoint-path",
+        joinpath(resource_path, "looppoint-checkpoint-save"),
+    ],
+    valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.very_long_tag,
+)
+
+for region in (
+    "1",
+    "2",
+    "3",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+):
+    gem5_verify_config(
+        name=f"test-gem5-library-restore-looppoint-checkpoint-region-f{region}",
+        fixtures=(),
+        verifiers=(),
+        config=joinpath(
+            config.base_dir,
+            "configs",
+            "example",
+            "gem5_library",
+            "looppoints",
+            "restore-looppoint-checkpoint.py",
+        ),
+        config_args=["--checkpoint-region", region],
+        valid_isas=(constants.all_compiled_tag,),
+        valid_hosts=constants.supported_hosts,
+        length=constants.very_long_tag,
+    )
