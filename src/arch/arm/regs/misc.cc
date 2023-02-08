@@ -2199,6 +2199,7 @@ ISA::initializeMiscRegMetadata()
       .reset(p.fpsid)
       .allPrivileges();
     InitReg(MISCREG_FPSCR)
+      .res0(mask(14, 13) | mask(6, 5))
       .allPrivileges();
     InitReg(MISCREG_MVFR1)
       .reset([] () {

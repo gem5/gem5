@@ -815,38 +815,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             return;
 
           case MISCREG_FPSCR:
-            {
-                const uint32_t ones = (uint32_t)(-1);
-                FPSCR fpscrMask = 0;
-                fpscrMask.ioc = ones;
-                fpscrMask.dzc = ones;
-                fpscrMask.ofc = ones;
-                fpscrMask.ufc = ones;
-                fpscrMask.ixc = ones;
-                fpscrMask.idc = ones;
-                fpscrMask.ioe = ones;
-                fpscrMask.dze = ones;
-                fpscrMask.ofe = ones;
-                fpscrMask.ufe = ones;
-                fpscrMask.ixe = ones;
-                fpscrMask.ide = ones;
-                fpscrMask.len = ones;
-                fpscrMask.fz16 = ones;
-                fpscrMask.stride = ones;
-                fpscrMask.rMode = ones;
-                fpscrMask.fz = ones;
-                fpscrMask.dn = ones;
-                fpscrMask.ahp = ones;
-                fpscrMask.qc = ones;
-                fpscrMask.v = ones;
-                fpscrMask.c = ones;
-                fpscrMask.z = ones;
-                fpscrMask.n = ones;
-                newVal = (newVal & (uint32_t)fpscrMask) |
-                         (readMiscRegNoEffect(MISCREG_FPSCR) &
-                          ~(uint32_t)fpscrMask);
-                tc->getDecoderPtr()->as<Decoder>().setContext(newVal);
-            }
+            tc->getDecoderPtr()->as<Decoder>().setContext(newVal);
             break;
           case MISCREG_FPSR:
             {
