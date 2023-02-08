@@ -1,0 +1,28 @@
+# Regions based on: /home/alen/isca2022/looppoint/tools/sde-external-9.0.0-2021-11-07-lin/pinplay-scripts/pcregions.py --label_file t.labels --warmup_factor 2 --tid global --bbv_file t.bb --region_file t.simpoints --weight_file t.weights
+
+# comment,thread-id,region-id,start-pc, start-image-name, start-image-offset, start-pc-count,end-pc, end-image-name, end-image-offset, end-pc-count,end-pc-relative-count, region-length, region-weight, region-multiplier, region-type
+
+# RegionId = 1 Slice = 27 Icount = 2160042521 Length = 79958388 Weight = 0.04651 Multiplier = 4.000 ClusterSlicecount = 4 ClusterIcount = 320005167
+#Start: pc : 0x4069d0 image: matrix-omp offset: 0x69d0 absolute_count: 211076617  source-info: matrix-omp.cpp:75
+#End: pc : 0x4069d0 image: matrix-omp offset: 0x69d0 absolute_count: 219060252  relative_count: 1060676.0 source-info: matrix-omp.cpp:75
+cluster 0 from slice 27,global,1,0x4069d0,matrix-omp,0x69d0,211076617,0x4069d0,matrix-omp,0x69d0,219060252,1060676,79958388,0.04651,4.000,simulation
+
+# RegionId = 2 Slice = 52 Icount = 4160001603 Length = 80000011 Weight = 0.05814 Multiplier = 5.001 ClusterSlicecount = 5 ClusterIcount = 400040399
+#Start: pc : 0x4069d0 image: matrix-omp offset: 0x69d0 absolute_count: 407294228  source-info: matrix-omp.cpp:75
+#End: pc : 0x4069d0 image: matrix-omp offset: 0x69d0 absolute_count: 415282447  relative_count: 1035231.0 source-info: matrix-omp.cpp:75
+cluster 1 from slice 52,global,2,0x4069d0,matrix-omp,0x69d0,407294228,0x4069d0,matrix-omp,0x69d0,415282447,1035231,80000011,0.05814,5.001,simulation
+
+# RegionId = 3 Slice = 24 Icount = 1920000792 Length = 80027459 Weight = 0.04651 Multiplier = 4.000 ClusterSlicecount = 4 ClusterIcount = 320021091
+#Start: pc : 0x4069d0 image: matrix-omp offset: 0x69d0 absolute_count: 187978221  source-info: matrix-omp.cpp:75
+#End: pc : 0x406880 image: matrix-omp offset: 0x6880 absolute_count: 23520614  relative_count: 144352.0 source-info: matrix-omp.cpp:95
+cluster 2 from slice 24,global,3,0x4069d0,matrix-omp,0x69d0,187978221,0x406880,matrix-omp,0x6880,23520614,144352,80027459,0.04651,4.000,simulation
+
+# RegionId = 16 Slice = 50 Icount = 4000001542 Length = 160000061 WarmupFactor = 2
+#Start: pc : 0x406880 image: matrix-omp offset: 0x6880 absolute_count: 48111518 source-info: matrix-omp.cpp:95
+#End: pc : 0x4069d0 image: matrix-omp offset: 0x69d0 absolute_count: 407294228  relative_count: 2004125.0 source-info: matrix-omp.cpp:75
+Warmup for regionid 2,global,16,0x406880,matrix-omp,0x6880,48111518,0x4069d0,matrix-omp,0x69d0,407294228,2004125,160000061,0.00000,0.000,warmup:2
+
+# First PC, 0x403050
+# Total instructions in 13 regions = 1039968792
+# Total instructions in workload = 6880002703
+# Total slices in workload = 86
