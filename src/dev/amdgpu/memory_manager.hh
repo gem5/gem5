@@ -45,11 +45,11 @@ namespace gem5
 
 class AMDGPUMemoryManager : public ClockedObject
 {
-    class GPUMemPort : public MasterPort
+    class GPUMemPort : public RequestPort
     {
       public:
         GPUMemPort(const std::string &_name, AMDGPUMemoryManager &_gpuMemMgr)
-            : MasterPort(_name, &_gpuMemMgr), gpu_mem(_gpuMemMgr)
+            : RequestPort(_name), gpu_mem(_gpuMemMgr)
         {
         }
 
