@@ -445,6 +445,9 @@ class MetaSimObject(type):
         return cls.__name__
 
     def getCCClass(cls):
+        # Ensure that m5.internal.params is available.
+        import m5.internal.params
+
         return getattr(m5.internal.params, cls.pybind_class)
 
     # See ParamValue.cxx_predecls for description.
