@@ -881,6 +881,28 @@ TEST_F(TypedRegisterTest, DefaultResetter)
     EXPECT_EQ(reg.get(), initial_value);
 }
 
+// Set initial value later than constructor
+TEST_F(TypedRegisterTest, LateInitialValueAssignment)
+{
+    BackingType initial_value = reg.get();
+    BackingType new_initial_value = initial_value + 1;
+
+    reg.get() = new_initial_value;
+    reg.resetInitialValue();
+
+    EXPECT_EQ(reg.get(), new_initial_value);
+    EXPECT_EQ(reg.initialValue(), new_initial_value);
+
+    reg.get() = new_initial_value + 1;
+    EXPECT_EQ(reg.get(), new_initial_value + 1);
+    EXPECT_EQ(reg.initialValue(), new_initial_value);
+
+    reg.reset();
+
+    EXPECT_EQ(reg.get(), new_initial_value);
+    EXPECT_EQ(reg.initialValue(), new_initial_value);
+}
+
 // Set a custom resetter for a register.
 TEST_F(TypedRegisterTest, Resetter)
 {

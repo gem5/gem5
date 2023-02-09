@@ -759,6 +759,9 @@ class RegisterBank : public RegisterBankBase
         // constructor. This is intended to be used in a resetter function.
         const Data &initialValue() const { return _resetData; }
 
+        // Reset the initial value, which is normally set in the constructor,
+        // to the register's current value.
+        void resetInitialValue() { _resetData = _data; }
 
         /*
          * Interface for accessing the register's state, for use by the
