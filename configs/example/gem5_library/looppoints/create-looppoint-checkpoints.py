@@ -61,7 +61,7 @@ from pathlib import Path
 from gem5.simulate.exit_event_generators import (
     looppoint_save_checkpoint_generator,
 )
-from gem5.resources.looppoint import LooppointCsvLoader
+
 import argparse
 
 requires(isa_required=ISA.X86)
@@ -103,15 +103,6 @@ processor = SimpleProcessor(
     num_cores=9,
 )
 
-looppoint = LooppointCsvLoader(
-    # Pass in the LoopPoint data file
-    looppoint_file=Path(
-        obtain_resource(
-            "x86-matrix-multiply-omp-100-8-global-pinpoints"
-        ).get_local_path()
-    )
-)
-
 board = SimpleBoard(
     clk_freq="3GHz",
     processor=processor,
@@ -119,6 +110,7 @@ board = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
+looppoint = obtain_resource("x86-matrix-multiply-omp-100-8-global-pinpoints")
 board.set_se_looppoint_workload(
     binary=obtain_resource("x86-matrix-multiply-omp"),
     arguments=[100, 8],

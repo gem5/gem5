@@ -29,6 +29,7 @@ import unittest
 from pathlib import Path
 
 from gem5.resources.resource import *
+from gem5.resources.looppoint import LooppointCsvLoader
 from gem5.isas import ISA
 
 
@@ -233,5 +234,25 @@ class ResourceSpecializationSuite(unittest.TestCase):
 
         self.assertEquals(
             "directory-example documentation.", resource.get_documentation()
+        )
+        self.assertIsNone(resource.get_source())
+
+    def test_looppoint_pinpoints_resource(self) -> None:
+        """Tests the creation of LooppointCreatorCSVResource via a Looppoint
+        pinpoints csv file."""
+
+        resource = obtain_resource(
+            resource_name="looppoint-pinpoint-csv-resource",
+            resource_directory=self.get_resource_dir(),
+        )
+
+        self.assertIsInstance(resource, LooppointCsvResource)
+
+        # The LooppointCreatorCSVResource should be a subtype of
+        # LooppointCsvLoader.
+        self.assertIsInstance(resource, LooppointCsvLoader)
+
+        self.assertEquals(
+            "A looppoint pinpoints csv file.", resource.get_documentation()
         )
         self.assertIsNone(resource.get_source())

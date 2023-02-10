@@ -108,6 +108,15 @@
             "warmup_interval": 23445,
             "simpoint_list" : [2,3,4,15],
             "weight_list" : [0.1, 0.2, 0.4, 0.3]
+        },
+        {
+            "type": "looppoint-pinpoint-csv",
+            "name": "looppoint-pinpoint-csv-resource",
+            "documentation" : "A looppoint pinpoints csv file.",
+            "is_zipped" :  false,
+            "md5sum" : "199ab22dd463dc70ee2d034bfe045082",
+            "url": "http://dist.gem5.org/dist/develop/pinpoints/x86-matrix-multiply-omp-100-8-global-pinpoints-20230127",
+            "source" : null
         }
     ]
 }
