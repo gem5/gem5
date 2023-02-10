@@ -31,7 +31,7 @@ from m5.util import warn, fatal
 
 from .downloader import get_resource, get_resources_json_obj
 
-from .looppoint import LooppointCsvLoader
+from .looppoint import LooppointCsvLoader, LooppointJsonLoader
 from ..isas import ISA, get_isa_from_str
 
 from typing import Optional, Dict, Union, Type, Tuple, List
@@ -415,6 +415,26 @@ class LooppointCsvResource(FileResource, LooppointCsvLoader):
         LooppointCsvLoader.__init__(self, pinpoints_file=Path(local_path))
 
 
+class LooppointJsonResource(FileResource, LooppointJsonLoader):
+    def __init__(
+        self,
+        local_path: str,
+        region_id: Optional[Union[str, int]] = None,
+        documentation: Optional[str] = None,
+        source: Optional[str] = None,
+        **kwargs,
+    ):
+        FileResource.__init__(
+            self,
+            local_path=local_path,
+            documentation=documentation,
+            source=source,
+        )
+        LooppointJsonLoader.__init__(
+            self, looppoint_file=local_path, region_id=region_id
+        )
+
+
 class SimpointDirectoryResource(SimpointResource):
     """A Simpoint diretory resource. This Simpoint Resource assumes the
     existance of a directory containing a simpoint file and a weight file."""
@@ -736,4 +756,5 @@ _get_resource_json_type_map = {
     "simpoint-directory": SimpointDirectoryResource,
     "resource": Resource,
     "looppoint-pinpoint-csv": LooppointCsvResource,
+    "looppoint-json": LooppointJsonResource,
 }

@@ -117,6 +117,16 @@
             "md5sum" : "199ab22dd463dc70ee2d034bfe045082",
             "url": "http://dist.gem5.org/dist/develop/pinpoints/x86-matrix-multiply-omp-100-8-global-pinpoints-20230127",
             "source" : null
+        },
+        {
+            "type": "looppoint-json",
+            "name": "looppoint-json-restore-resource-region-1",
+            "documentation" : "A looppoint json file resource.",
+            "is_zipped" :  false,
+            "region_id" : "1",
+            "md5sum" : "a71ed64908b082ea619b26b940a643c1",
+            "url": "http://dist.gem5.org/dist/develop/looppoints/x86-matrix-multiply-omp-100-8-looppoint-json-20230128",
+            "source" : null
         }
     ]
 }

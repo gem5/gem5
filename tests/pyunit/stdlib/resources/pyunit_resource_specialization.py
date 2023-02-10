@@ -29,7 +29,12 @@ import unittest
 from pathlib import Path
 
 from gem5.resources.resource import *
-from gem5.resources.looppoint import LooppointCsvLoader
+
+from gem5.resources.looppoint import (
+    LooppointCsvLoader,
+    LooppointJsonLoader,
+)
+
 from gem5.isas import ISA
 
 
@@ -254,5 +259,25 @@ class ResourceSpecializationSuite(unittest.TestCase):
 
         self.assertEquals(
             "A looppoint pinpoints csv file.", resource.get_documentation()
+        )
+        self.assertIsNone(resource.get_source())
+
+    def test_looppoint_json_restore_resource(self) -> None:
+        """Tests the creation of LooppointJsonResource via a
+        Looppoint JSON file."""
+
+        resource = obtain_resource(
+            resource_name="looppoint-json-restore-resource-region-1",
+            resource_directory=self.get_resource_dir(),
+        )
+
+        self.assertIsInstance(resource, LooppointJsonResource)
+        self.assertIsInstance(resource, LooppointJsonLoader)
+
+        self.assertEquals(1, len(resource.get_regions()))
+        self.assertTrue("1" in resource.get_regions())
+
+        self.assertEquals(
+            "A looppoint json file resource.", resource.get_documentation()
         )
         self.assertIsNone(resource.get_source())
