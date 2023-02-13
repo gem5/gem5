@@ -832,7 +832,7 @@ SDMAEngine::pollRegMem(SDMAQueue *q, sdmaPollRegMemHeader *header,
             auto cb = new DmaVirtCallback<uint32_t>(
                 [ = ] (const uint32_t &dma_buffer) {
                     pollRegMemRead(q, header, pkt, dma_buffer, 0); });
-            dmaReadVirt(pkt->address >> 3, sizeof(uint32_t), cb,
+            dmaReadVirt(pkt->address, sizeof(uint32_t), cb,
                         (void *)&cb->dmaBuffer);
         } else {
             panic("SDMA poll mem operation not implemented.");
