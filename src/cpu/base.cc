@@ -182,6 +182,12 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
               "of threads (%i).\n", params().isa.size(), numThreads);
     }
 
+    if (!FullSystem && params().workload.size() != numThreads) {
+        fatal("Number of processes (cpu.workload) (%i) assigned to the CPU "
+              "does not equal number of threads (%i).\n",
+              params().workload.size(), numThreads);
+    }
+
     modelResetPort.onChange([this](const bool &new_val) {
         setReset(new_val);
     });
