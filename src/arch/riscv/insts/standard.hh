@@ -111,7 +111,7 @@ class CSROp : public RiscvStaticInst
                    strcmp(mnemonic, "csrrc") == 0 ||
                    strcmp(mnemonic, "csrrsi") == 0 ||
                    strcmp(mnemonic, "csrrci") == 0 ){
-          if (RS1 == 0) {
+          if (RS1 == 0 || uimm == 0) {
             write = false;
           }
         }
