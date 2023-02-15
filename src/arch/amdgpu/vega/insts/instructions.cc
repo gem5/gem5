@@ -44984,13 +44984,11 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
         ConstVecOperandU32 data(gpuDynInst, extData.DATA);
 
-        addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -44999,8 +44997,7 @@ namespace VegaISA
             }
         }
 
-        gpuDynInst->computeUnit()->globalMemoryPipe.
-            issueRequest(gpuDynInst);
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -45091,13 +45088,11 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
         ConstVecOperandU32 data(gpuDynInst, extData.DATA);
 
-        addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -45106,8 +45101,7 @@ namespace VegaISA
             }
         }
 
-        gpuDynInst->computeUnit()->globalMemoryPipe.
-            issueRequest(gpuDynInst);
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
@@ -45226,13 +45220,11 @@ namespace VegaISA
         gpuDynInst->latency.init(gpuDynInst->computeUnit());
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
-        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
         ConstVecOperandU32 data(gpuDynInst, extData.DATA);
 
-        addr.read();
         data.read();
 
-        calcAddr(gpuDynInst, addr, extData.SADDR, instData.OFFSET);
+        calcAddr(gpuDynInst, extData.ADDR, extData.SADDR, instData.OFFSET);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -45241,8 +45233,7 @@ namespace VegaISA
             }
         }
 
-        gpuDynInst->computeUnit()->globalMemoryPipe.
-            issueRequest(gpuDynInst);
+        issueRequestHelper(gpuDynInst);
     } // execute
 
     void
