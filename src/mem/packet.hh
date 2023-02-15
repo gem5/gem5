@@ -55,6 +55,7 @@
 #include "base/addr_range.hh"
 #include "base/cast.hh"
 #include "base/compiler.hh"
+#include "base/extensible.hh"
 #include "base/flags.hh"
 #include "base/logging.hh"
 #include "base/printable.hh"
@@ -290,7 +291,7 @@ class MemCmd
  * ultimate destination and back, possibly being conveyed by several
  * different Packets along the way.)
  */
-class Packet : public Printable
+class Packet : public Printable, public Extensible<Packet>
 {
   public:
     typedef uint32_t FlagsType;
@@ -941,7 +942,8 @@ class Packet : public Printable
      * packet should allocate its own data.
      */
     Packet(const PacketPtr pkt, bool clear_flags, bool alloc_data)
-        :  cmd(pkt->cmd), id(pkt->id), req(pkt->req),
+        :  Extensible<Packet>(*pkt),
+           cmd(pkt->cmd), id(pkt->id), req(pkt->req),
            data(nullptr),
            addr(pkt->addr), _isSecure(pkt->_isSecure), size(pkt->size),
            bytesValid(pkt->bytesValid),
