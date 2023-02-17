@@ -2,6 +2,7 @@
  * Copyright (c) 2016 RISC-V Foundation
  * Copyright (c) 2016 The University of Virginia
  * Copyright (c) 2020 Barkhausen Institut
+ * Copyright (c) 2022 Google LLC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -544,6 +545,8 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 // qemu seems to update the tables when
                 // pmp addr regs are written (with the assumption
                 // that cfg regs are already written)
+                RegVal res = 0;
+                RegVal old_val = readMiscRegNoEffect(idx);
 
                 for (int i=0; i < regSize; i++) {
 
@@ -554,10 +557,15 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                     // Form pmp_index using the index i and
                     // PMPCFG register number
                     uint32_t pmp_index = i+(4*(idx-MISCREG_PMPCFG0));
-                    mmu->getPMP()->pmpUpdateCfg(pmp_index,cfg_val);
+                    bool result = mmu->getPMP()->pmpUpdateCfg(pmp_index,cfg_val);
+                    if (result) {
+                        res |= ((RegVal)cfg_val << (8*i));
+                    } else {
+                        res |= (old_val & (0xFF << (8*i)));
+                    }
                 }
 
-                setMiscRegNoEffect(idx, val);
+                setMiscRegNoEffect(idx, res);
             }
             break;
           case MISCREG_PMPADDR00 ... MISCREG_PMPADDR15:
@@ -568,9 +576,9 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 auto mmu = dynamic_cast<RiscvISA::MMU *>
                               (tc->getMMUPtr());
                 uint32_t pmp_index = idx-MISCREG_PMPADDR00;
-                mmu->getPMP()->pmpUpdateAddr(pmp_index, val);
-
-                setMiscRegNoEffect(idx, val);
+                if (mmu->getPMP()->pmpUpdateAddr(pmp_index, val)) {
+                    setMiscRegNoEffect(idx, val);
+                }
             }
             break;
 

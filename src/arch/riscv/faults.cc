@@ -33,6 +33,8 @@
 
 #include "arch/riscv/insts/static_inst.hh"
 #include "arch/riscv/isa.hh"
+#include "arch/riscv/mmu.hh"
+#include "arch/riscv/pmp.hh"
 #include "arch/riscv/regs/misc.hh"
 #include "arch/riscv/utility.hh"
 #include "cpu/base.hh"
@@ -180,6 +182,14 @@ Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         tc->getIsaPtr()->newPCState(workload->getEntry())));
     panic_if(!new_pc, "Failed create new PCState from ISA pointer");
     tc->pcState(*new_pc);
+
+    // Reset PMP Cfg
+    auto* mmu = dynamic_cast<RiscvISA::MMU*>(tc->getMMUPtr());
+    if (mmu == nullptr) {
+        warn("MMU is not Riscv MMU instance, we can't reset PMP");
+        return;
+    }
+    mmu->getPMP()->pmpReset();
 }
 
 void
