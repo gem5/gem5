@@ -27,6 +27,10 @@
 
 /* @file
  * Extensible Object Base Class Declaration
+ *
+ * This class can be used to add an "extension" field to packet/request which
+ * will be passed along with the original packet/request pointer. This allows
+ * developers to extend packet/request without modifying the original class.
  */
 
 #ifndef __BASE_EXTENSIBLE_HH__
@@ -69,6 +73,33 @@ class ExtensionBase
  * This is the extension for carrying additional information.
  * Each type of extension will have a unique extensionID.
  * This extensionID will assign to base class for comparsion.
+ *
+ * Example usage:
+ *
+ *   class MyTarget : Extensible<MyTarget> {};
+ *
+ *   class MyExtension : public Extension<MyTarget, MyExtension>
+ *   {
+ *     public:
+ *       MyExtension();
+ *       std::unique_ptr<ExtensionBase> clone() const override;
+ *       uint32_t getData();
+ *
+ *     private:
+ *       uint32_t data_;;
+ *   };
+ *
+ *   std::unique_ptr<MyTarget> mytarget(new MyTarget);
+ *   std::shared_ptr<MyExtension> myext(new MyExtension);
+ *   mytarget->setExtension(myext);
+ *
+ *   std::shared_ptr<MyExtension> ext = mytarget->getExtension<MyExtension>();
+ *   uint32_t data = ext->getData();
+ *   mytarget->removeExtension<MyExtension>();
+ *
+ *   In the example above, MyTarget can carry an extension named MyExtension,
+ *   which contains an additional data field. This could be applicated to any
+ *   debug information or any data field in any protocol.
  */
 template <typename Target, typename T>
 class Extension : public ExtensionBase
