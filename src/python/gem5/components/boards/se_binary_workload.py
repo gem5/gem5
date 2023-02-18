@@ -35,6 +35,7 @@ from ...resources.resource import (
     SimpointDirectoryResource,
 )
 
+from gem5.resources.elfie import ELFieInfo
 from gem5.resources.looppoint import Looppoint
 
 from m5.objects import SEWorkload, Process
@@ -206,6 +207,37 @@ class SEBinaryWorkload:
         # Call set_se_binary_workload after LoopPoint setup is complete
         self.set_se_binary_workload(
             binary=binary,
+            arguments=arguments,
+            checkpoint=checkpoint,
+        )
+
+    def set_se_elfie_workload(
+        self,
+        elfie: AbstractResource,
+        elfie_info: ELFieInfo,
+        arguments: List[str] = [],
+        checkpoint: Optional[Union[Path, AbstractResource]] = None,
+    ) -> None:
+        """Set up the system to run a ELFie workload.
+
+        **Limitations**
+        * Dynamically linked executables are partially supported when the host
+          ISA and the simulated ISA are the same.
+
+        :param elfie: The resource encapsulating the binary elfie to be run.
+        :param elfie_info: The ELFieInfo object that contain all the
+        information for the ELFie
+        :param arguments: The input arguments for the binary
+        """
+
+        assert isinstance(elfie_info, ELFieInfo)
+        self._elfie_info_object = elfie_info
+
+        self._elfie_info_object.setup_processor(self.get_processor())
+
+        # Call set_se_binary_workload after LoopPoint setup is complete
+        self.set_se_binary_workload(
+            binary=elfie,
             arguments=arguments,
             checkpoint=checkpoint,
         )
