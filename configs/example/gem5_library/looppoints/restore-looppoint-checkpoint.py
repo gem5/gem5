@@ -54,8 +54,7 @@ from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
-from pathlib import Path
-from gem5.utils.resource import LooppointJsonLoader
+from gem5.resources.workload import Workload
 from m5.stats import reset, dump
 
 requires(isa_required=ISA.X86)
@@ -113,24 +112,17 @@ board = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-looppoint = LooppointJsonLoader(
-    looppoint_file=Path(
-        obtain_resource(
-            "x86-matrix-multiply-omp-100-8-looppoint"
-        ).get_local_path()
-    ),
-    region_id=args.checkpoint_region,
-)
-
-board.set_se_looppoint_workload(
-    binary=obtain_resource("x86-matrix-multiply-omp"), looppoint=looppoint
+board.set_workload(
+    Workload(
+        f"x86-matrix-multiply-omp-100-8-looppoint-region-{args.checkpoint_region}"
+    )
 )
 
 # This generator will dump the stats and exit the simulation loop when the
 # simulation region reaches its end. In the case there is a warmup interval,
 # the simulation stats are reset after the warmup is complete.
 def reset_and_dump():
-    if len(looppoint.get_targets()) > 1:
+    if len(board.get_looppoint().get_targets()) > 1:
         print("Warmup region ended. Resetting stats.")
         reset()
         yield False
@@ -141,9 +133,6 @@ def reset_and_dump():
 
 simulator = Simulator(
     board=board,
-    checkpoint_path=obtain_resource(
-        f"x86-matrix-multiply-omp-100-8-looppoint-checkpoint-region-{args.checkpoint_region}"
-    ).get_local_path(),
     on_exit_event={ExitEvent.SIMPOINT_BEGIN: reset_and_dump()},
 )
 

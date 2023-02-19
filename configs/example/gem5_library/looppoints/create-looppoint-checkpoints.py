@@ -56,7 +56,7 @@ from gem5.components.memory.single_channel import SingleChannelDDR3_1600
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
-from gem5.resources.resource import obtain_resource
+from gem5.resources.workload import Workload
 from pathlib import Path
 from gem5.simulate.exit_event_generators import (
     looppoint_save_checkpoint_generator,
@@ -110,13 +110,7 @@ board = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-looppoint = obtain_resource("x86-matrix-multiply-omp-100-8-global-pinpoints")
-board.set_se_looppoint_workload(
-    binary=obtain_resource("x86-matrix-multiply-omp"),
-    arguments=[100, 8],
-    # Pass LoopPoint module into the board
-    looppoint=looppoint,
-)
+board.set_workload(Workload("x86-matrix-multiply-omp-100-8-looppoint-csv"))
 
 dir = Path(args.checkpoint_path)
 dir.mkdir(exist_ok=True)
@@ -126,7 +120,7 @@ simulator = Simulator(
     on_exit_event={
         ExitEvent.SIMPOINT_BEGIN: looppoint_save_checkpoint_generator(
             checkpoint_dir=dir,
-            looppoint=looppoint,
+            looppoint=board.get_looppoint(),
             # True if the relative PC count pairs should be updated during the
             # simulation. Default as True.
             update_relatives=True,
@@ -141,4 +135,4 @@ simulator = Simulator(
 simulator.run()
 
 # Output the JSON file
-looppoint.output_json_file()
+board.get_looppoint().output_json_file()
