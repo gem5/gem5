@@ -241,6 +241,61 @@ remu(T rs1, T rs2)
     return (rs2 == 0) ? rs1 : rs1 % rs2;
 }
 
+/*
+* Encode LMUL to lmul as follows:
+*     LMUL    vlmul    lmul
+*      1       000       0
+*      2       001       1
+*      4       010       2
+*      8       011       3
+*      -       100       -
+*     1/8      101      -3
+*     1/4      110      -2
+*     1/2      111      -1
+*
+* then, we can calculate VLMAX = vlen >> (vsew + 3 - lmul)
+* e.g. vlen = 256 bits, SEW = 16, LMUL = 1/8
+*      => VLMAX = vlen >> (1 + 3 - (-3))
+*               = 256 >> 7
+*               = 2
+* Ref: https://github.com/qemu/qemu/blob/5e9d14f2/target/riscv/cpu.h
+*/
+inline uint64_t
+vtype_VLMAX(const uint64_t vtype, const bool per_reg = false)
+{
+    int64_t lmul = (int64_t)sext<3>(bits(vtype, 2, 0));
+    lmul = per_reg ? std::min<int64_t>(0, lmul) : lmul;
+    int64_t vsew = bits(vtype, 5, 3);
+    return gem5::RiscvISA::VLEN >> (vsew + 3 - lmul);
+}
+
+inline uint64_t
+width_EEW(uint64_t width)
+{
+    switch (width) {
+    case 0b000: return 8;
+    case 0b101: return 16;
+    case 0b110: return 32;
+    case 0b111: return 64;
+    default: GEM5_UNREACHABLE;
+    }
+}
+
+/*
+  *  Spec Section 4.5
+  *  Ref:
+  *  https://github.com/qemu/qemu/blob/c7d773ae/target/riscv/vector_helper.c
+*/
+template<typename T>
+inline int
+elem_mask(const T* vs, const int index)
+{
+    static_assert(std::is_integral_v<T>);
+    int idx = index / (sizeof(T)*8);
+    int pos = index % (sizeof(T)*8);
+    return (vs[idx] >> pos) & 1;
+}
+
 } // namespace RiscvISA
 } // namespace gem5
 

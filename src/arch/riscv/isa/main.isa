@@ -50,6 +50,9 @@ namespace RiscvISA;
 //Include the operand_types and operand definitions
 ##include "operands.isa"
 
+//Include the definitions for the instruction templates
+##include "templates/templates.isa"
+
 //Include the definitions for the instruction formats
 ##include "formats/formats.isa"
 

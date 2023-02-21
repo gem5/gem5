@@ -500,6 +500,174 @@ decode QUADRANT default Unknown::unknown() {
                     Fd_bits = fd.v;
                 }}, inst_flags=FloatMemReadOp);
             }
+
+            0x0: decode MOP {
+                0x0: decode LUMOP {
+                    0x00: VleOp::vle8_v({{
+                        if ((machInst.vm || elem_mask(v0, ei)) &&
+                            i < this->microVl) {
+                            Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                        } else {
+                            Vd_ub[i] = Vs2_ub[i];
+                        }
+                    }}, inst_flags=VectorUnitStrideLoadOp);
+                    0x08: decode NF {
+                        format VlWholeOp {
+                            0x0: vl1re8_v({{
+                                Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x1: vl2re8_v({{
+                                Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x3: vl4re8_v({{
+                                Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x7: vl8re8_v({{
+                                Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                        }
+                    }
+                    0x0b: VlmOp::vlm_v({{
+                        Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                    }}, inst_flags=VectorUnitStrideMaskLoadOp);
+                }
+                0x1: VlIndexOp::vluxei8_v({{
+                    Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
+                }}, {{
+                    EA = Rs1 + Vs2_ub[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedLoadOp);
+                0x2: VlStrideOp::vlse8_v({{
+                    Vd_ub[microIdx] = Mem_vc.as<uint8_t>()[0];
+                }}, inst_flags=VectorStridedLoadOp);
+                0x3: VlIndexOp::vloxei8_v({{
+                    Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
+                }}, {{
+                    EA = Rs1 + Vs2_ub[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedLoadOp);
+            }
+            0x5: decode MOP {
+                0x0: decode LUMOP {
+                    0x00: VleOp::vle16_v({{
+                        if ((machInst.vm || elem_mask(v0, ei)) &&
+                            i < this->microVl) {
+                            Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                        } else {
+                            Vd_uh[i] = Vs2_uh[i];
+                        }
+                    }}, inst_flags=VectorUnitStrideLoadOp);
+                    0x08: decode NF {
+                        format VlWholeOp {
+                            0x0: vl1re16_v({{
+                                Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x1: vl2re16_v({{
+                                Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x3: vl4re16_v({{
+                                Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x7: vl8re16_v({{
+                                Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                        }
+                    }
+                }
+                0x1: VlIndexOp::vluxei16_v({{
+                    Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
+                }}, {{
+                    EA = Rs1 + Vs2_uh[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedLoadOp);
+                0x2: VlStrideOp::vlse16_v({{
+                    Vd_uh[microIdx] = Mem_vc.as<uint16_t>()[0];
+                }}, inst_flags=VectorStridedLoadOp);
+                0x3: VlIndexOp::vloxei16_v({{
+                    Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
+                }}, {{
+                    EA = Rs1 + Vs2_uh[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedLoadOp);
+            }
+            0x6: decode MOP {
+                0x0: decode LUMOP {
+                    0x00: VleOp::vle32_v({{
+                        if ((machInst.vm || elem_mask(v0, ei)) &&
+                            i < this->microVl) {
+                            Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                        } else {
+                            Vd_uw[i] = Vs2_uw[i];
+                        }
+                    }}, inst_flags=VectorUnitStrideLoadOp);
+                    0x08: decode NF {
+                        format VlWholeOp {
+                            0x0: vl1re32_v({{
+                                Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x1: vl2re32_v({{
+                                Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x3: vl4re32_v({{
+                                Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x7: vl8re32_v({{
+                                Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                        }
+                    }
+                }
+                0x1: VlIndexOp::vluxei32_v({{
+                    Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
+                }}, {{
+                    EA = Rs1 + Vs2_uw[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedLoadOp);
+                0x2: VlStrideOp::vlse32_v({{
+                    Vd_uw[microIdx] = Mem_vc.as<uint32_t>()[0];
+                }}, inst_flags=VectorStridedLoadOp);
+                0x3: VlIndexOp::vloxei32_v({{
+                    Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
+                }}, {{
+                    EA = Rs1 + Vs2_uw[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedLoadOp);
+            }
+            0x7: decode MOP {
+                0x0: decode LUMOP {
+                    0x00: VleOp::vle64_v({{
+                        if ((machInst.vm || elem_mask(v0, ei)) &&
+                            i < this->microVl) {
+                            Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                        } else {
+                            Vd_ud[i] = Vs2_ud[i];
+                        }
+                    }}, inst_flags=VectorUnitStrideLoadOp);
+                    0x08: decode NF {
+                        format VlWholeOp {
+                            0x0: vl1re64_v({{
+                                Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x1: vl2re64_v({{
+                                Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x3: vl4re64_v({{
+                                Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x7: vl8re64_v({{
+                                Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                        }
+                    }
+                }
+                0x1: VlIndexOp::vluxei64_v({{
+                    Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
+                }}, {{
+                    EA = Rs1 + Vs2_ud[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedLoadOp);
+                0x2: VlStrideOp::vlse64_v({{
+                    Vd_ud[microIdx] = Mem_vc.as<uint64_t>()[0];
+                }}, inst_flags=VectorStridedLoadOp);
+                0x3: VlIndexOp::vloxei64_v({{
+                    Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
+                }}, {{
+                    EA = Rs1 + Vs2_ud[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedLoadOp);
+            }
         }
 
         0x03: decode FUNCT3 {
@@ -805,6 +973,106 @@ decode QUADRANT default Unknown::unknown() {
 
                     Mem_ud = Fs2_bits;
                 }}, inst_flags=FloatMemWriteOp);
+            }
+
+            0x0: decode MOP {
+                0x0: decode SUMOP {
+                    0x00: VseOp::vse8_v({{
+                        Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
+                    }}, inst_flags=VectorUnitStrideStoreOp);
+                    format VsWholeOp {
+                        0x8: decode NF {
+                            0x0: vs1r_v({{
+                                Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
+                            }}, inst_flags=VectorWholeRegisterStoreOp);
+                            0x1: vs2r_v({{
+                                Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
+                            }}, inst_flags=VectorWholeRegisterStoreOp);
+                            0x3: vs4r_v({{
+                                Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
+                            }}, inst_flags=VectorWholeRegisterStoreOp);
+                            0x7: vs8r_v({{
+                                Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
+                            }}, inst_flags=VectorWholeRegisterStoreOp);
+                        }
+                    }
+                    0x0b: VsmOp::vsm_v({{
+                        Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
+                    }}, inst_flags=VectorUnitStrideMaskStoreOp);
+                }
+                0x1: VsIndexOp::vsuxei8_v({{
+                    Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
+                }}, {{
+                    EA = Rs1 + Vs2_ub[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedStoreOp);
+                0x2: VsStrideOp::vsse8_v({{
+                    Mem_vc.as<uint8_t>()[0] = Vs3_ub[microIdx];
+                }}, inst_flags=VectorStridedStoreOp);
+                0x3: VsIndexOp::vsoxei8_v({{
+                    Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
+                }}, {{
+                    EA = Rs1 + Vs2_ub[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedStoreOp);
+            }
+            0x5: decode MOP {
+                0x0: decode SUMOP {
+                    0x00: VseOp::vse16_v({{
+                        Mem_vc.as<uint16_t>()[i] = Vs3_uh[i];
+                    }}, inst_flags=VectorUnitStrideStoreOp);
+                }
+                0x1: VsIndexOp::vsuxei16_v({{
+                    Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
+                }}, {{
+                    EA = Rs1 + Vs2_uh[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedStoreOp);
+                0x2: VsStrideOp::vsse16_v({{
+                    Mem_vc.as<uint16_t>()[0] = Vs3_uh[microIdx];
+                }}, inst_flags=VectorStridedStoreOp);
+                0x3: VsIndexOp::vsoxei16_v({{
+                    Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
+                }}, {{
+                    EA = Rs1 + Vs2_uh[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedStoreOp);
+            }
+            0x6: decode MOP {
+                0x0: decode SUMOP {
+                    0x00: VseOp::vse32_v({{
+                        Mem_vc.as<uint32_t>()[i] = Vs3_uw[i];
+                    }}, inst_flags=VectorUnitStrideStoreOp);
+                }
+                0x1: VsIndexOp::vsuxei32_v({{
+                    Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
+                }}, {{
+                    EA = Rs1 + Vs2_uw[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedStoreOp);
+                0x2: VsStrideOp::vsse32_v({{
+                    Mem_vc.as<uint32_t>()[0] = Vs3_uw[microIdx];
+                }}, inst_flags=VectorStridedStoreOp);
+                0x3: VsIndexOp::vsoxei32_v({{
+                    Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
+                }}, {{
+                    EA = Rs1 + Vs2_uw[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedStoreOp);
+            }
+            0x7: decode MOP {
+                0x0: decode SUMOP {
+                    0x00: VseOp::vse64_v({{
+                        Mem_vc.as<uint64_t>()[i] = Vs3_ud[i];
+                    }}, inst_flags=VectorUnitStrideStoreOp);
+                }
+                0x1: VsIndexOp::vsuxei64_v({{
+                    Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
+                }}, {{
+                    EA = Rs1 + Vs2_ud[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedStoreOp);
+                0x2: VsStrideOp::vsse64_v({{
+                    Mem_vc.as<uint64_t>()[0] = Vs3_ud[microIdx];
+                }}, inst_flags=VectorStridedStoreOp);
+                0x3: VsIndexOp::vsoxei64_v({{
+                    Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
+                }}, {{
+                    EA = Rs1 + Vs2_ud[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedStoreOp);
             }
         }
 
