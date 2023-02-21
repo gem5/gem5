@@ -29,6 +29,9 @@ from .single_channel import SingleChannelDDR3_2133
 from .single_channel import SingleChannelDDR4_2400
 from .single_channel import SingleChannelHBM
 from .single_channel import SingleChannelLPDDR3_1600
+from .single_channel import DIMM_DDR5_4400
+from .single_channel import DIMM_DDR5_6400
+from .single_channel import DIMM_DDR5_8400
 from .multi_channel import DualChannelDDR3_1600
 from .multi_channel import DualChannelDDR3_2133
 from .multi_channel import DualChannelDDR4_2400

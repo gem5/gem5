@@ -186,6 +186,8 @@ PySource('gem5.components.memory.dram_interfaces',
 PySource('gem5.components.memory.dram_interfaces',
     'gem5/components/memory/dram_interfaces/ddr4.py')
 PySource('gem5.components.memory.dram_interfaces',
+    'gem5/components/memory/dram_interfaces/ddr5.py')
+PySource('gem5.components.memory.dram_interfaces',
     'gem5/components/memory/dram_interfaces/gddr.py')
 PySource('gem5.components.memory.dram_interfaces',
     'gem5/components/memory/dram_interfaces/hbm.py')
