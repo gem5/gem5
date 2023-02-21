@@ -371,7 +371,7 @@ namespace ArmISA
         Bitfield<0> ns;
     EndBitUnion(SCR)
 
-    BitUnion32(SCTLR)
+    BitUnion64(SCTLR)
         Bitfield<31>   enia;    // ARMv8.3 PAuth
         Bitfield<30>   enib;    // ARMv8.3 PAuth
         Bitfield<30>   te;      // Thumb Exception Enable (AArch32 only)
