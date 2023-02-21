@@ -41,6 +41,7 @@
 #ifndef __ARCH_ARM_REGS_MISC_HH__
 #define __ARCH_ARM_REGS_MISC_HH__
 
+#include <array>
 #include <bitset>
 #include <tuple>
 
