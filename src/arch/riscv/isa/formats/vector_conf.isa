@@ -1,0 +1,96 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2022 PLCT Lab
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+def format VConfOp(code, *flags) {{
+    iop = InstObjParams(name, Name, 'VConfOp', code, flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = VConfExecute.subst(iop)
+}};
+
+def template VConfExecute {{
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+        trace::InstRecord *traceData) const
+    {
+        auto tc = xc->tcBase();
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        tc->setMiscReg(MISCREG_VSTART, 0);
+
+        uint32_t vlen = xc->readMiscReg(MISCREG_VLENB) * 8;
+        uint32_t vlmax = getVlmax(xc->readMiscReg(MISCREG_VTYPE), vlen);
+
+        VTYPE new_vtype = requested_vtype;
+        if (xc->readMiscReg(MISCREG_VTYPE) != new_vtype) {
+            vlmax = getVlmax(new_vtype, vlen);
+
+            float vflmul = getVflmul(new_vtype.vlmul);
+
+            uint32_t sew = getSew(new_vtype.vsew);
+
+            uint32_t new_vill =
+                !(vflmul >= 0.125 && vflmul <= 8) ||
+                    sew > std::min(vflmul, 1.0f) * ELEN ||
+                    bits(requested_vtype, 30, 8) != 0;
+            if (new_vill) {
+                vlmax = 0;
+                new_vtype = 0;
+                new_vtype.vill = 1;
+            }
+
+            xc->setMiscReg(MISCREG_VTYPE, new_vtype);
+        }
+
+        uint32_t current_vl = xc->readMiscReg(MISCREG_VL);
+        uint32_t new_vl = 0;
+        if (vlmax == 0) {
+            new_vl = 0;
+        } else if (rd_bits == 0 && rs1_bits == 0) {
+            new_vl = current_vl > vlmax ? vlmax : current_vl;
+        } else if (rd_bits != 0 && rs1_bits == 0) {
+            new_vl = vlmax;
+        } else if (rs1_bits != 0) {
+            new_vl = requested_vl > vlmax ? vlmax : requested_vl;
+        }
+
+        xc->setMiscReg(MISCREG_VL, new_vl);
+
+        tc->getDecoderPtr()->as<Decoder>().setVlAndVtype(new_vl, new_vtype);
+
+        Rd = new_vl;
+
+        %(op_wb)s;
+        return NoFault;
+    }
+}};

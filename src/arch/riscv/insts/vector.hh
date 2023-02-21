@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2012 Google
- * Copyright (c) 2017 The University of Virginia
+ * Copyright (c) 2022 PLCT Lab
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,73 +26,63 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_RISCV_DECODER_HH__
-#define __ARCH_RISCV_DECODER_HH__
+#ifndef __ARCH_RISCV_INSTS_VECTOR_HH__
+#define __ARCH_RISCV_INSTS_VECTOR_HH__
 
-#include "arch/generic/decode_cache.hh"
-#include "arch/generic/decoder.hh"
-#include "arch/riscv/insts/vector.hh"
-#include "arch/riscv/types.hh"
-#include "base/logging.hh"
-#include "base/types.hh"
+#include <string>
+
+#include "arch/riscv/insts/static_inst.hh"
+#include "arch/riscv/regs/misc.hh"
+#include "arch/riscv/regs/vector.hh"
+#include "arch/riscv/utility.hh"
+#include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
-#include "debug/Decode.hh"
-#include "params/RiscvDecoder.hh"
 
 namespace gem5
 {
 
-class BaseISA;
-
 namespace RiscvISA
 {
 
-class Decoder : public InstDecoder
+float
+getVflmul(uint32_t vlmul_encoding);
+
+inline uint32_t getSew(uint32_t vsew) {
+    assert(vsew <= 3);
+    return (8 << vsew);
+}
+
+uint32_t
+getVlmax(VTYPE vtype, uint32_t vlen);
+
+/**
+ * Base class for Vector Config operations
+ */
+class VConfOp : public RiscvStaticInst
 {
-  private:
-    decode_cache::InstMap<ExtMachInst> instMap;
-    bool aligned;
-    bool mid;
-    bool vConfigDone;
-
   protected:
-    //The extended machine instruction being generated
-    ExtMachInst emi;
-    uint32_t machInst;
+    uint64_t bit30;
+    uint64_t bit31;
+    uint64_t zimm10;
+    uint64_t zimm11;
+    uint64_t uimm;
+    VConfOp(const char *mnem, ExtMachInst _extMachInst, OpClass __opClass)
+        : RiscvStaticInst(mnem, _extMachInst, __opClass),
+          bit30(_extMachInst.bit30), bit31(_extMachInst.bit31),
+          zimm10(_extMachInst.zimm_vsetivli),
+          zimm11(_extMachInst.zimm_vsetvli),
+          uimm(_extMachInst.uimm_vsetivli)
+    {}
 
-    VTYPE machVtype;
-    uint32_t machVl;
+    std::string generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const override;
 
-    StaticInstPtr decodeInst(ExtMachInst mach_inst);
-
-    /// Decode a machine instruction.
-    /// @param mach_inst The binary instruction to decode.
-    /// @retval A pointer to the corresponding StaticInst object.
-    StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
-
-  public:
-    Decoder(const RiscvDecoderParams &p) : InstDecoder(p, &machInst)
-    {
-        reset();
-    }
-
-    void reset() override;
-
-    inline bool compressed(ExtMachInst inst) { return inst.quadRant < 0x3; }
-    inline bool vconf(ExtMachInst inst) {
-      return inst.opcode == 0b1010111u && inst.funct3 == 0b111u;
-    }
-
-    //Use this to give data to the decoder. This should be used
-    //when there is control flow.
-    void moreBytes(const PCStateBase &pc, Addr fetchPC) override;
-
-    StaticInstPtr decode(PCStateBase &nextPC) override;
-
-    void setVlAndVtype(uint32_t vl, VTYPE vtype);
+    std::string generateZimmDisassembly() const;
 };
+
 
 } // namespace RiscvISA
 } // namespace gem5
 
-#endif // __ARCH_RISCV_DECODER_HH__
+
+#endif // __ARCH_RISCV_INSTS_VECTOR_HH__
