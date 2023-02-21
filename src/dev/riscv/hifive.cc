@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021 Huawei International
+ * Copyright (c) 2023 Google LLC
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -39,7 +40,7 @@
 
 #include "dev/riscv/clint.hh"
 #include "dev/riscv/plic.hh"
-#include "params/HiFive.hh"
+#include "params/HiFiveBase.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -47,44 +48,46 @@ namespace gem5
 
 using namespace RiscvISA;
 
-HiFive::HiFive(const Params &params) :
+HiFiveBase::HiFiveBase(const Params &params) :
     Platform(params),
     clint(params.clint), plic(params.plic),
     uartIntID(params.uart_int_id)
 {
+    fatal_if(clint == nullptr, "CLINT should not be NULL");
+    fatal_if(plic == nullptr, "PLIC should not be NULL");
 }
 
 void
-HiFive::postConsoleInt()
+HiFiveBase::postConsoleInt()
 {
     plic->post(uartIntID);
 }
 
 void
-HiFive::clearConsoleInt()
+HiFiveBase::clearConsoleInt()
 {
     plic->clear(uartIntID);
 }
 
 void
-HiFive::postPciInt(int line)
+HiFiveBase::postPciInt(int line)
 {
     plic->post(line);
 }
 
 void
-HiFive::clearPciInt(int line)
+HiFiveBase::clearPciInt(int line)
 {
     plic->clear(line);
 }
 
 void
-HiFive::serialize(CheckpointOut &cp) const
+HiFiveBase::serialize(CheckpointOut &cp) const
 {
 }
 
 void
-HiFive::unserialize(CheckpointIn &cp)
+HiFiveBase::unserialize(CheckpointIn &cp)
 {
 }
 

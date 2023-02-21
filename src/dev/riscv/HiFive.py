@@ -1,5 +1,6 @@
 # Copyright (c) 2021 Huawei International
 # Copyright (c) 2022 EXAscale Performance SYStems (EXAPSYS)
+# Copyright (c) 2023 Google LLC
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -63,23 +64,13 @@ class GenericRiscvPciHost(GenericPciHost):
     _dma_coherent = True
 
 
-class HiFive(Platform):
-    """HiFive Platform
+class HiFiveBase(Platform):
+    """HiFive Base Abstract Platform
 
     Implementation:
         This is the base class for SiFive's HiFive
         board series. It contains the CLINT and PLIC
         interrupt controllers, Uart and Disk.
-
-        Implementation details are based on SiFive
-        FU540-C000. https://sifive.cdn.prismic.io/
-        sifive/b5e7a29c-d3c2-44ea-85fb-acc1df282e2
-        1_FU540-C000-v1p3.pdf
-
-    Setup:
-        The following sections outline the required
-        setup for a RISC-V HiFive platform. See
-        configs/example/riscv/fs_linux.py for example.
 
     Driving CLINT:
         CLINT has an interrupt pin which increments
@@ -88,7 +79,7 @@ class HiFive(Platform):
         abstract RTC wrapper called RiscvRTC can be
         used.
 
-    Attaching PLIC devices:
+    Driving PLIC:
         PLIC handles external interrupts. Interrupt
         PioDevices should inherit from PlicIntDevice
         (PCI and DMA not yet implemented). It contains
@@ -96,63 +87,30 @@ class HiFive(Platform):
         to call platform->postPciInt(id).
 
         All PLIC interrupt devices should be returned
-        by _off_chip_devices(). Calling attachPlic sets
-        up the PLIC interrupt source count.
-
-    Uart:
-        The HiFive platform also has an uart_int_id.
-        This is because Uart8250 uses postConsoleInt
-        instead of postPciInt. In the future if a Uart
-        that inherits PlicIntDevice is implemented,
-        this can be removed.
-
-    Disk:
-        See fs_linux.py for setup example.
-
-    PMAChecker:
-        The PMAChecker will be attached to the MMU of
-        each CPU (which allows them to differ). See
-        fs_linux.py for setup example.
+        by _off_chip_devices().
     """
 
-    type = "HiFive"
+    type = "HiFiveBase"
     cxx_header = "dev/riscv/hifive.hh"
-    cxx_class = "gem5::HiFive"
+    cxx_class = "gem5::HiFiveBase"
 
     # CLINT
-    clint = Param.Clint(Clint(pio_addr=0x2000000), "CLINT")
+    clint = Param.Clint(NULL, "CLINT")
 
     # PLIC
-    plic = Param.Plic(Plic(pio_addr=0xC000000), "PLIC")
+    plic = Param.PlicBase(NULL, "PLIC")
 
-    # PCI
-    pci_host = GenericRiscvPciHost(
-        conf_base=0x30000000,
-        conf_size="256MB",
-        conf_device_bits=12,
-        pci_pio_base=0x2F000000,
-        pci_mem_base=0x40000000,
-    )
-
-    # Uart
-    uart = RiscvUart8250(pio_addr=0x10000000)
     # Int source ID to redirect console interrupts to
     # Set to 0 if using a pci interrupt for Uart instead
-    uart_int_id = Param.Int(0xA, "PLIC Uart interrupt ID")
-    terminal = Terminal()
+    uart_int_id = Param.Int(0, "PLIC Uart interrupt ID")
 
     def _on_chip_devices(self):
         """Returns a list of on-chip peripherals"""
-        return [self.clint, self.plic]
+        return []
 
     def _off_chip_devices(self):
         """Returns a list of off-chip peripherals"""
-        devices = [self.uart]
-        if hasattr(self, "disk"):
-            devices.append(self.disk)
-        if hasattr(self, "rng"):
-            devices.append(self.rng)
-        return devices
+        return []
 
     def _on_chip_ranges(self):
         """Returns a list of on-chip peripherals
@@ -172,17 +130,6 @@ class HiFive(Platform):
             for dev in self._off_chip_devices()
         ]
 
-    def attachPlic(self):
-        """Count number of PLIC interrupt sources"""
-        plic_srcs = [
-            self.uart_int_id,
-            self.pci_host.int_base + self.pci_host.int_count,
-        ]
-        for device in self._off_chip_devices():
-            if hasattr(device, "interrupt_id"):
-                plic_srcs.append(device.interrupt_id)
-        self.plic.n_src = max(plic_srcs) + 1
-
     def attachOnChipIO(self, bus):
         """Attach on-chip IO devices, needs modification
         to support DMA
@@ -196,6 +143,83 @@ class HiFive(Platform):
         """
         for device in self._off_chip_devices():
             device.pio = bus.mem_side_ports
+
+
+class HiFive(HiFiveBase):
+    """HiFive Platform
+
+    Implementation:
+        Implementation details are based on SiFive
+        FU540-C000. https://sifive.cdn.prismic.io/
+        sifive/b5e7a29c-d3c2-44ea-85fb-acc1df282e2
+        1_FU540-C000-v1p3.pdf
+
+    Setup:
+        The following sections outline the required
+        setup for a RISC-V HiFive platform. See
+        configs/example/riscv/fs_linux.py for example.
+
+    Uart:
+        The HiFive platform also has an uart_int_id.
+        This is because Uart8250 uses postConsoleInt
+        instead of postPciInt. In the future if a Uart
+        that inherits PlicIntDevice is implemented,
+        this can be removed.
+
+    Disk:
+        See fs_linux.py for setup example.
+
+    PMAChecker:
+        The PMAChecker will be attached to the MMU of
+        each CPU (which allows them to differ). See
+        fs_linux.py for setup example.
+    """
+
+    # CLINT
+    clint = Clint(pio_addr=0x2000000)
+
+    # PLIC
+    plic = Plic(pio_addr=0xC000000)
+
+    # PCI
+    pci_host = GenericRiscvPciHost(
+        conf_base=0x30000000,
+        conf_size="256MB",
+        conf_device_bits=12,
+        pci_pio_base=0x2F000000,
+        pci_mem_base=0x40000000,
+    )
+
+    # Uart
+    uart = RiscvUart8250(pio_addr=0x10000000)
+    # Int source ID to redirect console interrupts to
+    # Set to 0 if using a pci interrupt for Uart instead
+    uart_int_id = 0xA
+    terminal = Terminal()
+
+    def _on_chip_devices(self):
+        """Returns a list of on-chip peripherals"""
+        return [self.clint, self.plic]
+
+    def _off_chip_devices(self):
+        """Returns a list of off-chip peripherals"""
+        devices = [self.uart]
+        if hasattr(self, "disk"):
+            devices.append(self.disk)
+        if hasattr(self, "rng"):
+            devices.append(self.rng)
+        return devices
+
+    def attachPlic(self):
+        """Count and set number of PLIC interrupt sources"""
+        plic_srcs = [
+            self.uart_int_id,
+            self.pci_host.int_base + self.pci_host.int_count,
+        ]
+        for device in self._off_chip_devices():
+            if hasattr(device, "interrupt_id"):
+                plic_srcs.append(device.interrupt_id)
+        self.plic.n_src = max(plic_srcs) + 1
 
     def setNumCores(self, num_cpu):
         """Sets the PLIC and CLINT to have the right number of threads and

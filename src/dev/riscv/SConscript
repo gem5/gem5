@@ -30,7 +30,7 @@
 
 Import('*')
 
-SimObject('HiFive.py', sim_objects=['HiFive', 'GenericRiscvPciHost'],
+SimObject('HiFive.py', sim_objects=['HiFiveBase', 'GenericRiscvPciHost'],
           tags='riscv isa')
 SimObject('LupV.py', sim_objects=['LupV'], tags='riscv isa')
 SimObject('Clint.py', sim_objects=['Clint'], tags='riscv isa')
