@@ -45,6 +45,7 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/Plic.hh"
+#include "params/PlicBase.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -53,7 +54,7 @@ namespace gem5
 using namespace RiscvISA;
 
 Plic::Plic(const Params &params) :
-    BasicPioDevice(params, params.pio_size),
+    PlicBase(params),
     system(params.system),
     nSrc(params.n_src),
     nContext(params.n_contexts),
