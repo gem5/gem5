@@ -111,16 +111,16 @@ class SEBinaryWorkload:
         # Set whether to exit on work items for the se_workload
         self.exit_on_work_items = exit_on_work_items
 
-        # Here we set `self._checkpoint_dir`. This is then used by the
+        # Here we set `self._checkpoint`. This is then used by the
         # Simulator module to setup checkpoints.
         if checkpoint:
             if isinstance(checkpoint, Path):
                 self._checkpoint = checkpoint
             elif isinstance(checkpoint, AbstractResource):
-                self._checkpoint_dir = Path(checkpoint.get_local_path())
+                self._checkpoint = Path(checkpoint.get_local_path())
             else:
                 raise Exception(
-                    "The checkpoint_dir must be None, Path, or "
+                    "The checkpoint must be None, Path, or "
                     "AbstractResource."
                 )
 
