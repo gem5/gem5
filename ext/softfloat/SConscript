@@ -420,6 +420,6 @@ else:
 
 sf_env.Library('softfloat', [sf_env.SharedObject(f) for f in softfloat_files])
 
-env.Prepend(CPPPATH=Dir('./'))
+env.Prepend(CPPPATH=Dir('.').srcnode())
 env.Append(LIBS=['softfloat'])
 env.Prepend(LIBPATH=[Dir('.')])

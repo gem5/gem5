@@ -145,6 +145,9 @@ AddOption('--gprof', action='store_true',
           help='Enable support for the gprof profiler')
 AddOption('--pprof', action='store_true',
           help='Enable support for the pprof profiler')
+AddOption('--no-duplicate-sources', action='store_false',
+          dest='duplicate_sources',
+          help='Do not create symlinks to sources in the build directory')
 
 # Inject the built_tools directory into the python path.
 sys.path[1:1] = [ Dir('#build_tools').abspath ]
@@ -264,6 +267,7 @@ main.Append(CPPPATH=[Dir('ext')])
 
 # Add shared top-level headers
 main.Prepend(CPPPATH=Dir('include'))
+main.Prepend(CPPPATH=Dir('src'))
 
 
 ########################################################################
@@ -774,11 +778,13 @@ Build variables for {dir}:
             build_dir = os.path.relpath(root, ext_dir)
             SConscript(os.path.join(root, 'SConscript'),
                        variant_dir=os.path.join(variant_ext, build_dir),
-                       exports=exports)
+                       exports=exports,
+                       duplicate=GetOption('duplicate_sources'))
 
     # The src/SConscript file sets up the build rules in 'env' according
     # to the configured variables.  It returns a list of environments,
     # one for each variant build (debug, opt, etc.)
-    SConscript('src/SConscript', variant_dir=variant_path, exports=exports)
+    SConscript('src/SConscript', variant_dir=variant_path, exports=exports,
+               duplicate=GetOption('duplicate_sources'))
 
 atexit.register(summarize_warnings)

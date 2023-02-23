@@ -66,11 +66,13 @@ if gem5_variant == 'debug':
 
 deps = [] # keep track of all dependencies required for building the binaries
 
-deps += SConscript('src/SConscript', variant_dir='build/tlm', exports='env')
+deps += SConscript('src/SConscript', variant_dir='build/tlm', exports='env',
+                   duplicate=GetOption('duplicate_sources'))
 
 deps += SConscript('examples/common/SConscript',
                    variant_dir='build/examples/common',
-                   exports=['env'])
+                   exports=['env'],
+                   duplicate=GetOption('duplicate_sources'))
 
 # the SystemC SConscript makes certain assumptions, we need to fulfill these
 # assumptions before calling the SConscript.
@@ -81,7 +83,7 @@ AddOption('--no-colors', dest='use_colors', action='store_false',
 env.SConsignFile('build/systemc/sconsign')
 SConscript(gem5_root + '/ext/systemc/SConscript',
            variant_dir='build/systemc',
-           exports='env')
+           exports='env', duplicate=GetOption('duplicate_sources'))
 
 # By adding libraries as dependencies instead of using LIBS, we avoid that
 # the user needs to set the LD_LIBRARY_PATH
@@ -91,10 +93,12 @@ deps.append(File(os.path.join(gem5_root, 'build', gem5_arch,
 
 ex_master = SConscript('examples/master_port/SConscript',
                        variant_dir='build/examples/master_port',
-                       exports=['env', 'deps'])
+                       exports=['env', 'deps'],
+                       duplicate=GetOption('duplicate_sources'))
 
 ex_slave = SConscript('examples/slave_port/SConscript',
                       variant_dir='build/examples/slave_port',
-                      exports=['env', 'deps'])
+                      exports=['env', 'deps'],
+                      duplicate=GetOption('duplicate_sources'))
 
 Default(ex_master + ex_slave)

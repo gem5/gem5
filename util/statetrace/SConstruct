@@ -62,4 +62,5 @@ for arch in arches:
     env['CXX'] = ARGUMENTS.get(arch.upper() + 'CXX', env['CXX'])
     env.Append(CPPFLAGS = '-D__STATETRACE_%s__' % arch.upper())
     Export('env', 'arch')
-    env.SConscript('SConscript', variant_dir = os.path.join('build', arch))
+    env.SConscript('SConscript', variant_dir=os.path.join('build', arch),
+                   duplicate=GetOption('duplicate_sources'))

@@ -85,6 +85,6 @@ dramenv.Append(CCFLAGS=['-DNO_STORAGE'])
 
 dramenv.Library('dramsim2', [dramenv.SharedObject(f) for f in dram_files])
 
-env.Prepend(CPPPATH=Dir('.'))
+env.Prepend(CPPPATH=Dir('.').srcnode())
 env.Append(LIBS=['dramsim2'])
 env.Prepend(LIBPATH=[Dir('.')])
