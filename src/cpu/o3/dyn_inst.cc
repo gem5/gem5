@@ -187,6 +187,15 @@ DynInst::operator new(size_t count, Arrays &arrays)
     return buf;
 }
 
+// Because of the custom "new" operator that allocates more bytes than the
+// size of the DynInst object, AddressSanitizer throw new-delete-type-mismatch.
+// Adding a custom delete function is enough to shut down this false positive
+void
+DynInst::operator delete(void *ptr)
+{
+    ::operator delete(ptr);
+}
+
 DynInst::~DynInst()
 {
     /*

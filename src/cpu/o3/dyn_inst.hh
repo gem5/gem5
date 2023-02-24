@@ -95,6 +95,7 @@ class DynInst : public ExecContext, public RefCounted
     };
 
     static void *operator new(size_t count, Arrays &arrays);
+    static void  operator delete(void* ptr);
 
     /** BaseDynInst constructor given a binary instruction. */
     DynInst(const Arrays &arrays, const StaticInstPtr &staticInst,
