@@ -510,7 +510,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
 {
     if (idx >= MISCREG_CYCLE && idx <= MISCREG_HPMCOUNTER31) {
         // Ignore writes to HPM counters for now
-        warn("Ignoring write to %s.\n", CSRData.at(idx).name);
+        warn("Ignoring write to miscreg %s.\n", MiscRegNames[idx]);
     } else {
         switch (idx) {
 
