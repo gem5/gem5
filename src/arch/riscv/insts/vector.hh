@@ -89,6 +89,24 @@ inline uint8_t checked_vtype(bool vill, uint8_t vtype) {
     return vtype;
 }
 
+class VectorNonSplitInst : public RiscvStaticInst
+{
+  protected:
+    uint32_t vl;
+    uint8_t vtype;
+    VectorNonSplitInst(const char* mnem, ExtMachInst _machInst,
+                   OpClass __opClass)
+        : RiscvStaticInst(mnem, _machInst, __opClass),
+        vl(_machInst.vl),
+        vtype(checked_vtype(_machInst.vill, _machInst.vtype8))
+    {
+        this->flags[IsVector] = true;
+    }
+
+    std::string generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
 class VectorMacroInst : public RiscvMacroInst
 {
   protected:
@@ -165,6 +183,63 @@ class VectorArithMacroInst : public VectorMacroInst
     {
         this->flags[IsVector] = true;
     }
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class VectorVMUNARY0MicroInst : public VectorMicroInst
+{
+protected:
+    VectorVMUNARY0MicroInst(const char *mnem, ExtMachInst _machInst,
+                         OpClass __opClass, uint8_t _microVl,
+                         uint8_t _microIdx)
+        : VectorMicroInst(mnem, _machInst, __opClass, _microVl, _microIdx)
+    {}
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class VectorVMUNARY0MacroInst : public VectorMacroInst
+{
+  protected:
+    VectorVMUNARY0MacroInst(const char* mnem, ExtMachInst _machInst,
+                         OpClass __opClass)
+        : VectorMacroInst(mnem, _machInst, __opClass)
+    {
+        this->flags[IsVector] = true;
+    }
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class VectorSlideMacroInst : public VectorMacroInst
+{
+  protected:
+    VectorSlideMacroInst(const char* mnem, ExtMachInst _machInst,
+                         OpClass __opClass)
+        : VectorMacroInst(mnem, _machInst, __opClass)
+    {
+        this->flags[IsVector] = true;
+    }
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class VectorSlideMicroInst : public VectorMicroInst
+{
+  protected:
+    uint8_t vdIdx;
+    uint8_t vs2Idx;
+    VectorSlideMicroInst(const char *mnem, ExtMachInst _machInst,
+                         OpClass __opClass, uint8_t _microVl,
+                         uint8_t _microIdx, uint8_t _vdIdx, uint8_t _vs2Idx)
+        : VectorMicroInst(mnem, _machInst, __opClass, _microVl, _microIdx)
+        , vdIdx(_vdIdx), vs2Idx(_vs2Idx)
+    {}
 
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
@@ -421,6 +496,131 @@ class VsIndexMicroInst : public VectorMemMicroInst
         Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
+class VMvWholeMacroInst : public VectorArithMacroInst
+{
+  protected:
+    VMvWholeMacroInst(const char* mnem, ExtMachInst _machInst,
+                         OpClass __opClass)
+        : VectorArithMacroInst(mnem, _machInst, __opClass)
+    {}
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class VMvWholeMicroInst : public VectorArithMicroInst
+{
+  protected:
+    VMvWholeMicroInst(const char *mnem, ExtMachInst _machInst,
+                         OpClass __opClass, uint8_t _microVl,
+                         uint8_t _microIdx)
+        : VectorArithMicroInst(mnem, _machInst, __opClass, _microVl, _microIdx)
+    {}
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+template<typename ElemType>
+class VMaskMergeMicroInst : public VectorArithMicroInst
+{
+  private:
+    RegId srcRegIdxArr[NumVecInternalRegs];
+    RegId destRegIdxArr[1];
+
+  public:
+    VMaskMergeMicroInst(ExtMachInst extMachInst, uint8_t _dstReg,
+        uint8_t _numSrcs)
+        : VectorArithMicroInst("vmask_mv_micro", extMachInst,
+          VectorIntegerArithOp, 0, 0)
+    {
+        setRegIdxArrays(
+            reinterpret_cast<RegIdArrayPtr>(
+                &std::remove_pointer_t<decltype(this)>::srcRegIdxArr),
+            reinterpret_cast<RegIdArrayPtr>(
+                &std::remove_pointer_t<decltype(this)>::destRegIdxArr));
+
+        _numSrcRegs = 0;
+        _numDestRegs = 0;
+
+        setDestRegIdx(_numDestRegs++, vecRegClass[_dstReg]);
+        _numTypedDestRegs[VecRegClass]++;
+        for (uint8_t i=0; i<_numSrcs; i++) {
+            setSrcRegIdx(_numSrcRegs++, vecRegClass[VecMemInternalReg0 + i]);
+        }
+    }
+
+    Fault execute(ExecContext* xc, trace::InstRecord* traceData)
+            const override {
+        vreg_t tmp_d0 = *(vreg_t *)xc->getWritableRegOperand(this, 0);
+        auto Vd = tmp_d0.as<uint8_t>();
+        constexpr uint8_t elems_per_vreg = VLENB / sizeof(ElemType);
+        size_t bit_cnt = elems_per_vreg;
+        vreg_t tmp_s;
+        xc->getRegOperand(this, 0, &tmp_s);
+        auto s = tmp_s.as<uint8_t>();
+        // cp the first result and tail
+        memcpy(Vd, s, VLENB);
+        for (uint8_t i = 1; i < this->_numSrcRegs; i++) {
+            xc->getRegOperand(this, i, &tmp_s);
+            s = tmp_s.as<uint8_t>();
+            if constexpr (elems_per_vreg < 8) {
+                constexpr uint8_t m = (1 << elems_per_vreg) - 1;
+                const uint8_t mask = m << (i * elems_per_vreg % 8);
+                // clr & ext bits
+                Vd[bit_cnt/8] ^= Vd[bit_cnt/8] & mask;
+                Vd[bit_cnt/8] |= s[bit_cnt/8] & mask;
+                bit_cnt += elems_per_vreg;
+            } else {
+                constexpr uint8_t byte_offset = elems_per_vreg / 8;
+                memcpy(Vd + i * byte_offset, s + i * byte_offset, byte_offset);
+            }
+        }
+        xc->setRegOperand(this, 0, &tmp_d0);
+        if (traceData)
+            traceData->setData(vecRegClass, &tmp_d0);
+        return NoFault;
+    }
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << registerName(destRegIdx(0));
+        for (uint8_t i = 0; i < this->_numSrcRegs; i++) {
+            ss << ", " << registerName(srcRegIdx(i));
+        }
+        ss << ", offset:" << VLENB / sizeof(ElemType);
+        return ss.str();
+    }
+};
+
+class VxsatMicroInst : public VectorArithMicroInst
+{
+  private:
+    bool* vxsat;
+  public:
+    VxsatMicroInst(bool* Vxsat, ExtMachInst extMachInst)
+        : VectorArithMicroInst("vxsat_micro", extMachInst,
+          VectorIntegerArithOp, 0, 0)
+    {
+        vxsat = Vxsat;
+    }
+    Fault execute(ExecContext* xc, trace::InstRecord* traceData)
+    const override
+    {
+        xc->setMiscReg(MISCREG_VXSAT,*vxsat);
+        auto vcsr = xc->readMiscReg(MISCREG_VCSR);
+        xc->setMiscReg(MISCREG_VCSR, ((vcsr&~1)|*vxsat));
+        return NoFault;
+    }
+    std::string generateDisassembly(Addr pc, const loader::SymbolTable *symtab)
+      const override
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << "VXSAT" << ", " << (*vxsat ? "0x1" : "0x0");
+        return ss.str();
+    }
+};
 
 } // namespace RiscvISA
 } // namespace gem5
