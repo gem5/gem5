@@ -40,6 +40,11 @@
 
 #include "base/type_traits.hh"
 
+#include <functional>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
 namespace gem5::stl_helpers
 {
 
@@ -164,6 +169,32 @@ using hash_impl::hash;
 using hash_impl::make_hash_for;
 using hash_impl::hash_value;
 using hash_impl::is_hash_enabled;
+
+/*
+ * Provide unordered_map and unordered_set with stl_helpers::hash functions.
+ * These aliases enable clean use of stl_helpers::hash as default Hash template
+ * parameter. The reason for not using an alias is that template type aliases
+ * with default template arguments do not behave well with template parameter
+ * deductions in certain situations. One must remember that std::unordered_X
+ * is not a polymorphic type and as such, gem5::stl_helpers::unordered_X shall
+ * never be owned as a std::unordered_X.
+ */
+template<
+    typename Key,
+    typename T,
+    typename Hash = hash<Key>,
+    typename KeyEqual = std::equal_to<Key>,
+    typename Allocator = std::allocator< std::pair<const Key, T> >>
+struct unordered_map: std::unordered_map<Key, T, Hash, KeyEqual, Allocator>
+{};
+
+template<
+    typename Key,
+    typename Hash = hash<Key>,
+    typename KeyEqual = std::equal_to<Key>,
+    typename Allocator = std::allocator<Key>>
+struct unordered_set: std::unordered_set<Key, Hash, KeyEqual, Allocator>
+{};
 
 } // namespace gem5::stl_helpers
 
