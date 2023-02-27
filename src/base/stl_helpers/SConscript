@@ -26,3 +26,4 @@
 Import('*')
 
 GTest('hash_helpers.test', 'hash_helpers.test.cc')
+GTest('ostream_helpers.test', 'ostream_helpers.test.cc')
