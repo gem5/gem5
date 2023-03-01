@@ -38,6 +38,8 @@
 #ifndef __ARCH_ARM_INSTS_CRYPTO_HH__
 #define __ARCH_ARM_INSTS_CRYPTO_HH__
 
+#include <cstdint>
+
 namespace gem5
 {
 
