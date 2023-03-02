@@ -129,6 +129,9 @@ class AbstractMemory : public ClockedObject
     // Should KVM map this memory for the guest
     const bool kvmMap;
 
+    // Are writes allowed to this memory
+    const bool writeable;
+
     std::list<LockedAddr> lockedAddrList;
 
     // helper function for checkLockedAddrs(): we really want to
@@ -149,8 +152,12 @@ class AbstractMemory : public ClockedObject
     // requesting execution context), 'true' otherwise.  Note that
     // this method must be called on *all* stores since even
     // non-conditional stores must clear any matching lock addresses.
-    bool writeOK(PacketPtr pkt) {
+    bool
+    writeOK(PacketPtr pkt)
+    {
         const RequestPtr &req = pkt->req;
+        if (!writeable)
+            return false;
         if (lockedAddrList.empty()) {
             // no locked addrs: nothing to check, store_conditional fails
             bool isLLSC = pkt->isLLSC();

@@ -59,10 +59,11 @@ namespace memory
 AbstractMemory::AbstractMemory(const Params &p) :
     ClockedObject(p), range(p.range), pmemAddr(NULL),
     backdoor(params().range, nullptr,
-             (MemBackdoor::Flags)(MemBackdoor::Readable |
-                                  MemBackdoor::Writeable)),
+             (MemBackdoor::Flags)(p.writeable ?
+                 MemBackdoor::Readable | MemBackdoor::Writeable :
+                 MemBackdoor::Readable)),
     confTableReported(p.conf_table_reported), inAddrMap(p.in_addr_map),
-    kvmMap(p.kvm_map), _system(NULL),
+    kvmMap(p.kvm_map), writeable(p.writeable), _system(NULL),
     stats(*this)
 {
     panic_if(!range.valid() || !range.size(),

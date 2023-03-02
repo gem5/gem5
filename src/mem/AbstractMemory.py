@@ -74,3 +74,5 @@ class AbstractMemory(ClockedObject):
     image_file = Param.String(
         "", "Image to load into memory as its initial contents"
     )
+
+    writeable = Param.Bool(True, "Allow writes to this memory")
