@@ -254,7 +254,7 @@ TEST(StrTest, ToNumber8BitInt)
 {
     int8_t output;
     std::string input = "-128";
-    EXPECT_TRUE(to_number(input, output));
+    ASSERT_TRUE(to_number(input, output));
     EXPECT_EQ(-128, output);
 }
 
@@ -276,7 +276,7 @@ TEST(StrTest, ToNumberUnsigned8BitInt)
 {
     uint8_t output;
     std::string input = "255";
-    EXPECT_TRUE(to_number(input, output));
+    ASSERT_TRUE(to_number(input, output));
     EXPECT_EQ(255, output);
 }
 
@@ -292,11 +292,11 @@ TEST(StrTest, ToNumberUnsigned8BitIntRoundDown)
 {
     uint8_t output;
     std::string input_1 = "2.99";
-    EXPECT_TRUE(to_number(input_1, output));
+    ASSERT_TRUE(to_number(input_1, output));
     EXPECT_EQ(2, output);
 
     std::string input_2 = "3.99";
-    EXPECT_TRUE(to_number(input_2, output));
+    ASSERT_TRUE(to_number(input_2, output));
     EXPECT_EQ(3, output);
 }
 
@@ -308,7 +308,7 @@ TEST(StrTest, ToNumber8BitUnsignedLimit)
 {
     uint8_t output;
     std::string input = "255.99";
-    EXPECT_TRUE(to_number(input, output));
+    ASSERT_TRUE(to_number(input, output));
     EXPECT_EQ(255, output);
 }
 
@@ -344,7 +344,7 @@ TEST(StrTest, ToNumber64BitInt)
     int64_t output;
     int64_t input_number = 0xFFFFFFFFFFFFFFFF;
     std::string input = std::to_string(input_number);
-    EXPECT_TRUE(to_number(input, output));
+    ASSERT_TRUE(to_number(input, output));
     EXPECT_EQ(input_number, output);
 }
 
@@ -363,7 +363,7 @@ TEST(StrTest, ToNumberEnum)
     };
     Number output;
     std::string input = "2";
-    EXPECT_TRUE(to_number(input, output));
+    ASSERT_TRUE(to_number(input, output));
     EXPECT_EQ(TWO, output);
 }
 
@@ -384,7 +384,7 @@ TEST(StrTest, ToNumberFloat)
     float output;
     std::string input = "0.1";
     float expected_output = 0.1;
-    EXPECT_TRUE(to_number(input, output));
+    ASSERT_TRUE(to_number(input, output));
     EXPECT_EQ(expected_output, output);
 }
 
@@ -393,7 +393,7 @@ TEST(StrTest, ToNumberFloatIntegerString)
     float output;
     std::string input = "10";
     float expected_output = 10.0;
-    EXPECT_TRUE(to_number(input, output));
+    ASSERT_TRUE(to_number(input, output));
     EXPECT_EQ(expected_output, output);
 }
 
@@ -402,7 +402,7 @@ TEST(StrTest, ToNumberFloatNegative)
     float output;
     std::string input = "-0.1";
     float expected_output = -0.1;
-    EXPECT_TRUE(to_number(input, output));
+    ASSERT_TRUE(to_number(input, output));
     EXPECT_EQ(expected_output, output);
 }
 
@@ -411,7 +411,7 @@ TEST(StrTest, ToNumberDouble)
     double output;
     std::string input = "0.0001";
     double expected_output = 0.0001;
-    EXPECT_TRUE(to_number(input, output));
+    ASSERT_TRUE(to_number(input, output));
     EXPECT_EQ(expected_output, output);
 }
 
@@ -420,7 +420,7 @@ TEST(StrTest, ToNumberDoubleIntegerString)
     double output;
     std::string input = "12345";
     double expected_output = 12345.0;
-    EXPECT_TRUE(to_number(input, output));
+    ASSERT_TRUE(to_number(input, output));
     EXPECT_EQ(expected_output, output);
 }
 
@@ -429,7 +429,7 @@ TEST(StrTest, ToNumberDoubleNegative)
     double output;
     std::string input = "-1.2345";
     double expected_output = -1.2345;
-    EXPECT_TRUE(to_number(input, output));
+    ASSERT_TRUE(to_number(input, output));
     EXPECT_EQ(expected_output, output);
 }
 
@@ -439,7 +439,7 @@ TEST(StrTest, ToNumberScientific)
     double output;
     std::string input = "8.234e+08";
     double expected_output = 823400000;
-    EXPECT_TRUE(to_number(input, output));
+    ASSERT_TRUE(to_number(input, output));
     EXPECT_EQ(expected_output, output);
 }
 
