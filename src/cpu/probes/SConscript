@@ -26,12 +26,11 @@
 
 Import("*")
 
-if not env["CONF"]["USE_NULL_ISA"]:
-    SimObject(
-        "PcCountTracker.py",
-        sim_objects=["PcCountTracker", "PcCountTrackerManager"],
-    )
-    Source("pc_count_tracker.cc")
-    Source("pc_count_tracker_manager.cc")
+SimObject(
+    "PcCountTracker.py",
+    sim_objects=["PcCountTracker", "PcCountTrackerManager"],
+)
+Source("pc_count_tracker.cc")
+Source("pc_count_tracker_manager.cc")
 
-    DebugFlag("PcCountTracker")
+DebugFlag("PcCountTracker")
