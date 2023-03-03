@@ -732,6 +732,22 @@ class AddrRange
     {
         return !(*this == r);
     }
+
+    /**
+     * @ingroup api_addr_range
+     */
+    AddrRange
+    operator&(const AddrRange& r) const
+    {
+        panic_if(this->interleaved() || r.interleaved(),
+                 "Cannot calculate intersection of interleaved ranges.");
+        Addr start = std::max(this->_start, r._start);
+        Addr end = std::min(this->_end, r._end);
+        if (end <= start) {
+            return AddrRange(0, 0);
+        }
+        return AddrRange(start, end);
+    }
 };
 
 static inline AddrRangeList
