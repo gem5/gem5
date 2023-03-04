@@ -358,7 +358,7 @@ def template CSRExecute {{
         %(op_decl)s;
         %(op_rd)s;
 
-        RegVal data = 0, olddata = 0, nonmaskdata = 0;
+        RegVal data, olddata;
         auto lowestAllowedMode = (PrivilegeMode)bits(csr, 9, 8);
         auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
         if (pm < lowestAllowedMode) {
@@ -380,13 +380,11 @@ def template CSRExecute {{
             break;
         }
 
-        if (read) {
-          if (csr == CSR_FCSR) {
+        if (csr == CSR_FCSR) {
             olddata = xc->readMiscReg(MISCREG_FFLAGS) |
-              (xc->readMiscReg(MISCREG_FRM) << FRM_OFFSET);
-          } else {
+                      (xc->readMiscReg(MISCREG_FRM) << FRM_OFFSET);
+        } else {
             olddata = xc->readMiscReg(midx);
-          }
         }
         olddata = rvZext(olddata);
         auto olddata_all = olddata;
@@ -397,9 +395,8 @@ def template CSRExecute {{
 
         %(code)s;
 
-        nonmaskdata = data & ~maskVal;
         data &= maskVal;
-        if (write) {
+        if (data != olddata) {
             if (bits(csr, 11, 10) == 0x3) {
                 return std::make_shared<IllegalInstFault>(
                         csprintf("CSR %s is read-only\n", csrName), machInst);
@@ -420,7 +417,7 @@ def template CSRExecute {{
               case CSR_SIP: case CSR_SIE:
               case CSR_UIP: case CSR_UIE:
               case CSR_MSTATUS: case CSR_SSTATUS: case CSR_USTATUS:
-                if (nonmaskdata == 0) {
+                if (newdata_all != olddata_all) {
                     xc->setMiscReg(midx, newdata_all);
                 } else {
                     return std::make_shared<IllegalInstFault>(
