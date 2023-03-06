@@ -424,6 +424,15 @@ namespace Aarch64
                         // MSR immediate: moving immediate value to selected
                         // bits of the PSTATE
                         switch (op1 << 3 | op2) {
+                          case 0x0:
+                            // CFINV
+                            return new Cfinv(machInst);
+                          case 0x1:
+                            // XAFLAG
+                            return new Xaflag(machInst);
+                          case 0x2:
+                            // AXFLAG
+                            return new Axflag(machInst);
                           case 0x3:
                             // UAO
                             return new MsrImm64(
@@ -2081,6 +2090,26 @@ namespace Aarch64
     }
 
     StaticInstPtr
+    decodeRotIntoFlags(ExtMachInst machInst)
+    {
+        RegIndex rn = (RegIndex)(uint8_t)bits(machInst, 9, 5);
+        uint8_t imm6 = bits(machInst, 20, 15);
+        uint8_t mask = bits(machInst, 3, 0);
+        return new Rmif(machInst, rn, imm6, mask);
+    }
+
+    StaticInstPtr
+    decodeEvalIntoFlags(ExtMachInst machInst)
+    {
+        RegIndex rn = (RegIndex)(uint8_t)bits(machInst, 9, 5);
+        int sz = bits(machInst, 14);
+        if (sz)
+            return new Setf16(machInst, rn);
+        else
+            return new Setf8(machInst, rn);
+    }
+
+    StaticInstPtr
     decodeCondCompare(ExtMachInst machInst)
     {
         if ((bits(machInst, 4) == 1) ||
@@ -2328,7 +2357,16 @@ namespace Aarch64
 
             switch (bits(machInst, 23, 22)) {
               case 0x0:
-                return decodeAddSubWithCarry(machInst);
+                switch (bits(machInst, 11, 10)) {
+                  case 0b00:
+                    return decodeAddSubWithCarry(machInst);
+                  case 0b01:
+                    return decodeRotIntoFlags(machInst);
+                  case 0b10:
+                    return decodeEvalIntoFlags(machInst);
+                  default: // 0b11
+                    return new Unknown64(machInst);
+                }
               case 0x1:
                 return decodeCondCompare(machInst);
               case 0x2:

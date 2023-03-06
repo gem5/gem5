@@ -3891,6 +3891,9 @@ ISA::initializeMiscRegMetadata()
           isar0_el1.rdm = release->has(ArmExtension::FEAT_RDM) ? 0x1 : 0x0;
           isar0_el1.tme = release->has(ArmExtension::TME) ? 0x1 : 0x0;
           isar0_el1.tlb = release->has(ArmExtension::FEAT_TLBIOS) ? 0x1 : 0x0;
+          isar0_el1.ts = release->has(ArmExtension::FEAT_FLAGM2) ?
+              0x2 : release->has(ArmExtension::FEAT_FLAGM) ?
+                  0x1 : 0x0;
           return isar0_el1;
       }())
       .faultRead(EL1, HCR_TRAP(tid3))

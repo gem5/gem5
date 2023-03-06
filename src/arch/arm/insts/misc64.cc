@@ -55,6 +55,27 @@ ImmOp64::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 }
 
 std::string
+RegOp64::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printIntReg(ss, op1);
+    return ss.str();
+}
+
+std::string
+RegImmImmOp64::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printIntReg(ss, op1);
+    ccprintf(ss, "#0x%x", imm1);
+    ss << ", ";
+    ccprintf(ss, "#0x%x", imm2);
+    return ss.str();
+}
+
+std::string
 RegRegImmImmOp64::generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const
 {

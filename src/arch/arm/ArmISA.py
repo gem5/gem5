@@ -58,6 +58,10 @@ class ArmDefaultSERelease(ArmRelease):
         "FEAT_FCMA",
         "FEAT_JSCVT",
         "FEAT_PAuth",
+        # Armv8.4
+        "FEAT_FLAGM",
+        # Armv8.5
+        "FEAT_FLAGM2",
         # Armv9.2
         "FEAT_SME",
         # Other

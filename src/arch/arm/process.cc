@@ -314,6 +314,11 @@ ArmProcess64::armHwcapImpl2() const
 
     uint64_t hwcap = 0;
 
+    ThreadContext *tc = system->threads[contextIds[0]];
+
+    const AA64ISAR0 isa_r0 = tc->readMiscReg(MISCREG_ID_AA64ISAR0_EL1);
+    hwcap |= (isa_r0.ts >= 2) ? Arm_Flagm2 : Arm_None;
+
     return hwcap;
 }
 

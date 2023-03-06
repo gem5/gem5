@@ -248,4 +248,81 @@ let {{
     header_output += ImmOp64Declare.subst(hltIop)
     decoder_output += SemihostConstructor64.subst(hltIop)
     exec_output += BasicExecute.subst(hltIop)
+
+    flagmCheckCode = '''
+        if (!HaveExt(xc->tcBase(), ArmExtension::FEAT_FLAGM)) {
+            return std::make_shared<UndefinedInstruction>(
+                machInst, true);
+        }
+    '''
+    cfinvCode = 'CondCodesC = ~CondCodesC'
+    cfinvIop = ArmInstObjParams("cfinv", "Cfinv", "ArmStaticInst",
+                                flagmCheckCode + cfinvCode)
+    header_output += BasicDeclare.subst(cfinvIop)
+    decoder_output += BasicConstructor64.subst(cfinvIop)
+    exec_output += BasicExecute.subst(cfinvIop)
+
+    axflagCode = '''
+        bool z = CondCodesNZ || CondCodesV;
+        bool c = CondCodesC && !CondCodesV;
+        CondCodesNZ = z; // This implies zeroing PSTATE.N
+        CondCodesC = c;
+        CondCodesV = 0;
+    '''
+    axflagIop = ArmInstObjParams("axflag", "Axflag", "ArmStaticInst",
+                                 flagmCheckCode + axflagCode)
+    header_output += BasicDeclare.subst(axflagIop)
+    decoder_output += BasicConstructor64.subst(axflagIop)
+    exec_output += BasicExecute.subst(axflagIop)
+
+    xaflagCode = '''
+        const RegVal nz = CondCodesNZ;
+        const RegVal n = !CondCodesC && !bits(nz, 0);
+        const RegVal z = CondCodesC && bits(nz, 0);
+        const RegVal c = CondCodesC || bits(nz, 0);
+        const RegVal v = !CondCodesC && bits(nz, 0);
+
+        CondCodesNZ = (n << 1) | z;
+        CondCodesC = c;
+        CondCodesV = v;
+    '''
+    xaflagIop = ArmInstObjParams("xaflag", "Xaflag", "ArmStaticInst",
+                                 flagmCheckCode + xaflagCode)
+    header_output += BasicDeclare.subst(xaflagIop)
+    decoder_output += BasicConstructor64.subst(xaflagIop)
+    exec_output += BasicExecute.subst(xaflagIop)
+
+    rmifCode = '''
+        RegVal tmp = XOp1 << imm1;
+        int nz = CondCodesNZ;
+        if (bits(imm2, 0)) CondCodesV = bits(tmp, 0);
+        if (bits(imm2, 1)) CondCodesC = bits(tmp, 1);
+        if (bits(imm2, 2)) nz = insertBits(nz, 0, bits(tmp, 2));
+        if (bits(imm2, 3)) nz = insertBits(nz, 1, bits(tmp, 3));
+
+        CondCodesNZ = nz;
+    '''
+    rmifIop = ArmInstObjParams("rmif", "Rmif", "RegImmImmOp64",
+                               flagmCheckCode + rmifCode)
+    header_output += RegImmImmOp64Declare.subst(rmifIop)
+    decoder_output += RegImmImmOp64Constructor.subst(rmifIop)
+    exec_output += BasicExecute.subst(rmifIop)
+
+    setfCode = '''
+        const int msb = %d;
+        RegVal tmp = Op1;
+        CondCodesNZ = (bits(tmp, msb) << 1) | (bits(tmp, msb, 0) ? 0 : 1);
+        CondCodesV = bits(tmp, msb) ^ bits(tmp, msb + 1);
+    '''
+    setf8Iop = ArmInstObjParams("setf8", "Setf8", "RegOp64",
+                                flagmCheckCode + setfCode % 7)
+    header_output += RegOp64Declare.subst(setf8Iop)
+    decoder_output += RegOp64Constructor.subst(setf8Iop)
+    exec_output += BasicExecute.subst(setf8Iop)
+
+    setf16Iop = ArmInstObjParams("setf16", "Setf16", "RegOp64",
+                                 flagmCheckCode + setfCode % 15)
+    header_output += RegOp64Declare.subst(setf16Iop)
+    decoder_output += RegOp64Constructor.subst(setf16Iop)
+    exec_output += BasicExecute.subst(setf16Iop)
 }};
