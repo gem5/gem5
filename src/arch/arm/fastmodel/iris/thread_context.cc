@@ -269,6 +269,22 @@ ThreadContext::simulationTimeEvent(
         return iris::E_ok;
     }
 
+    // Handle the breakpoint event at simulation is stopped if needed.
+    if (bpAddr.has_value()) {
+        auto it = getOrAllocBp(bpAddr.value());
+
+        std::shared_ptr<BpInfo::EventList> events = it->second->events;
+        auto e_it = events->begin();
+        while (e_it != events->end()) {
+            PCEvent *e = *e_it;
+            // Advance e_it here since e might remove itself from the list.
+            e_it++;
+            e->process(this);
+        }
+
+        bpAddr.reset();
+    }
+
     // If simulation time has stopped for any reason, IRIS helpfully clears
     // all stepping counters and we need to set them back. We might also need
     // to service events based on the current number of executed instructions.
@@ -286,19 +302,10 @@ ThreadContext::breakpointHit(
         uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
         uint64_t sInstId, bool syncEc, std::string &error_message_out)
 {
+    // Handle the breakpoint event later when the fastmodel simulation is
+    // stopped.
     Addr pc = fields.at("PC").getU64();
-
-    auto it = getOrAllocBp(pc);
-
-    std::shared_ptr<BpInfo::EventList> events = it->second->events;
-    auto e_it = events->begin();
-    while (e_it != events->end()) {
-        PCEvent *e = *e_it;
-        // Advance e_it here since e might remove itself from the list.
-        e_it++;
-        e->process(this);
-    }
-
+    bpAddr = pc;
     return iris::E_ok;
 }
 
