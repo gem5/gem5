@@ -154,36 +154,10 @@ BaseSimpleCPU::countInst()
 
     if (!curStaticInst->isMicroop() || curStaticInst->isLastMicroop()) {
         t_info.numInst++;
+        t_info.execContextStats.numInsts++;
     }
     t_info.numOp++;
-}
-
-void
-BaseSimpleCPU::countFetchInst()
-{
-    SimpleExecContext& t_info = *threadInfo[curThread];
-
-    if (!curStaticInst->isMicroop() || curStaticInst->isLastMicroop()) {
-        // increment thread level numInsts fetched count
-        fetchStats[t_info.thread->threadId()]->numInsts++;
-    }
-    // increment thread level numOps fetched count
-    fetchStats[t_info.thread->threadId()]->numOps++;
-}
-
-void
-BaseSimpleCPU::countCommitInst()
-{
-    SimpleExecContext& t_info = *threadInfo[curThread];
-
-    if (!curStaticInst->isMicroop() || curStaticInst->isLastMicroop()) {
-        // increment thread level and core level numInsts count
-        commitStats[t_info.thread->threadId()]->numInsts++;
-        baseStats.numInsts++;
-    }
-    // increment thread level and core level numOps count
-    commitStats[t_info.thread->threadId()]->numOps++;
-    baseStats.numOps++;
+    t_info.execContextStats.numOps++;
 }
 
 Counter
@@ -402,11 +376,6 @@ BaseSimpleCPU::preExecute()
         if (predict_taken)
             ++t_info.execContextStats.numPredictedBranches;
     }
-
-    // increment the fetch instruction stat counters
-    if (curStaticInst) {
-        countFetchInst();
-    }
 }
 
 void
@@ -419,7 +388,7 @@ BaseSimpleCPU::postExecute()
     Addr instAddr = threadContexts[curThread]->pcState().instAddr();
 
     if (curStaticInst->isMemRef()) {
-        executeStats[t_info.thread->threadId()]->numMemRefs++;
+        t_info.execContextStats.numMemRefs++;
     }
 
     if (curStaticInst->isLoad()) {
@@ -427,26 +396,26 @@ BaseSimpleCPU::postExecute()
     }
 
     if (curStaticInst->isControl()) {
-        ++fetchStats[t_info.thread->threadId()]->numBranches;
+        ++t_info.execContextStats.numBranches;
     }
 
     /* Power model statistics */
     //integer alu accesses
     if (curStaticInst->isInteger()){
-        executeStats[t_info.thread->threadId()]->numIntAluAccesses++;
-        commitStats[t_info.thread->threadId()]->numIntInsts++;
+        t_info.execContextStats.numIntAluAccesses++;
+        t_info.execContextStats.numIntInsts++;
     }
 
     //float alu accesses
     if (curStaticInst->isFloating()){
-        executeStats[t_info.thread->threadId()]->numFpAluAccesses++;
-        commitStats[t_info.thread->threadId()]->numFpInsts++;
+        t_info.execContextStats.numFpAluAccesses++;
+        t_info.execContextStats.numFpInsts++;
     }
 
     //vector alu accesses
     if (curStaticInst->isVector()){
-        executeStats[t_info.thread->threadId()]->numVecAluAccesses++;
-        commitStats[t_info.thread->threadId()]->numVecInsts++;
+        t_info.execContextStats.numVecAluAccesses++;
+        t_info.execContextStats.numVecInsts++;
     }
 
     //Matrix alu accesses
@@ -460,22 +429,22 @@ BaseSimpleCPU::postExecute()
         t_info.execContextStats.numCallsReturns++;
     }
 
+    //the number of branch predictions that will be made
+    if (curStaticInst->isCondCtrl()){
+        t_info.execContextStats.numCondCtrlInsts++;
+    }
+
     //result bus acceses
     if (curStaticInst->isLoad()){
-        commitStats[t_info.thread->threadId()]->numLoadInsts++;
+        t_info.execContextStats.numLoadInsts++;
     }
 
     if (curStaticInst->isStore() || curStaticInst->isAtomic()){
-        commitStats[t_info.thread->threadId()]->numStoreInsts++;
+        t_info.execContextStats.numStoreInsts++;
     }
     /* End power model statistics */
 
-    commitStats[t_info.thread->threadId()]
-        ->committedInstType[curStaticInst->opClass()]++;
-    commitStats[t_info.thread->threadId()]->updateComCtrlStats(curStaticInst);
-
-    /* increment the committed numInsts and numOps stats */
-    countCommitInst();
+    t_info.execContextStats.statExecutedInstType[curStaticInst->opClass()]++;
 
     if (FullSystem)
         traceFunctions(instAddr);

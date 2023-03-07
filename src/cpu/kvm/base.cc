@@ -261,6 +261,8 @@ BaseKvmCPU::restartEqThread()
 
 BaseKvmCPU::StatGroup::StatGroup(statistics::Group *parent)
     : statistics::Group(parent),
+    ADD_STAT(committedInsts, statistics::units::Count::get(),
+             "Number of instructions committed"),
     ADD_STAT(numVMExits, statistics::units::Count::get(),
              "total number of KVM exits"),
     ADD_STAT(numVMHalfEntries, statistics::units::Count::get(),
@@ -776,8 +778,7 @@ BaseKvmCPU::kvmRun(Tick ticks)
 
         /* Update statistics */
         baseStats.numCycles += simCyclesExecuted;;
-        commitStats[thread->threadId()]->numInsts += instsExecuted;
-        baseStats.numInsts += instsExecuted;
+        stats.committedInsts += instsExecuted;
         ctrInsts += instsExecuted;
 
         DPRINTF(KvmRun,

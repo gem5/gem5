@@ -59,8 +59,30 @@ struct MinorStats : public statistics::Group
 {
     MinorStats(BaseCPU *parent);
 
+    /** Number of simulated instructions */
+    statistics::Scalar numInsts;
+
+    /** Number of simulated insts and microops */
+    statistics::Scalar numOps;
+
+    /** Number of ops discarded before committing */
+    statistics::Scalar numDiscardedOps;
+
+    /** Number of times fetch was asked to suspend by Execute */
+    statistics::Scalar numFetchSuspends;
+
     /** Number of cycles in quiescent state */
     statistics::Scalar quiesceCycles;
+
+    /** CPI/IPC for total cycle counts and macro insts */
+    statistics::Formula cpi;
+    statistics::Formula ipc;
+
+    /** Number of instructions by type (OpClass) */
+    statistics::Vector2d committedInstType;
+
+    /** Number of branches commited */
+    statistics::Vector2d committedControl;
 
 };
 

@@ -217,13 +217,51 @@ IEW::IEWStats::IEWStats(CPU *cpu)
 
 IEW::IEWStats::ExecutedInstStats::ExecutedInstStats(CPU *cpu)
     : statistics::Group(cpu),
+    ADD_STAT(numInsts, statistics::units::Count::get(),
+             "Number of executed instructions"),
+    ADD_STAT(numLoadInsts, statistics::units::Count::get(),
+             "Number of load instructions executed"),
     ADD_STAT(numSquashedInsts, statistics::units::Count::get(),
              "Number of squashed instructions skipped in execute"),
     ADD_STAT(numSwp, statistics::units::Count::get(),
-             "Number of swp insts executed")
+             "Number of swp insts executed"),
+    ADD_STAT(numNop, statistics::units::Count::get(),
+             "Number of nop insts executed"),
+    ADD_STAT(numRefs, statistics::units::Count::get(),
+             "Number of memory reference insts executed"),
+    ADD_STAT(numBranches, statistics::units::Count::get(),
+             "Number of branches executed"),
+    ADD_STAT(numStoreInsts, statistics::units::Count::get(),
+             "Number of stores executed"),
+    ADD_STAT(numRate, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Cycle>::get(),
+             "Inst execution rate", numInsts / cpu->baseStats.numCycles)
 {
+    numLoadInsts
+        .init(cpu->numThreads)
+        .flags(statistics::total);
+
     numSwp
         .init(cpu->numThreads)
+        .flags(statistics::total);
+
+    numNop
+        .init(cpu->numThreads)
+        .flags(statistics::total);
+
+    numRefs
+        .init(cpu->numThreads)
+        .flags(statistics::total);
+
+    numBranches
+        .init(cpu->numThreads)
+        .flags(statistics::total);
+
+    numStoreInsts
+        .flags(statistics::total);
+    numStoreInsts = numRefs - numLoadInsts;
+
+    numRate
         .flags(statistics::total);
 }
 
@@ -1015,7 +1053,7 @@ IEW::dispatchInsts(ThreadID tid)
 
             instQueue.recordProducer(inst);
 
-            cpu->executeStats[tid]->numNop++;
+            iewStats.executedInstStats.numNop[tid]++;
 
             add_to_iq = false;
         } else {
@@ -1523,7 +1561,7 @@ IEW::updateExeInstStats(const DynInstPtr& inst)
 {
     ThreadID tid = inst->threadNumber;
 
-    cpu->executeStats[tid]->numInsts++;
+    iewStats.executedInstStats.numInsts++;
 
 #if TRACING_ON
     if (debug::O3PipeView) {
@@ -1535,16 +1573,16 @@ IEW::updateExeInstStats(const DynInstPtr& inst)
     //  Control operations
     //
     if (inst->isControl())
-        cpu->executeStats[tid]->numBranches++;
+        iewStats.executedInstStats.numBranches[tid]++;
 
     //
     //  Memory operations
     //
     if (inst->isMemRef()) {
-        cpu->executeStats[tid]->numMemRefs++;
+        iewStats.executedInstStats.numRefs[tid]++;
 
         if (inst->isLoad()) {
-            cpu->executeStats[tid]->numLoadInsts++;
+            iewStats.executedInstStats.numLoadInsts[tid]++;
         }
     }
 }
