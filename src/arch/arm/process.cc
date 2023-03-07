@@ -318,6 +318,7 @@ ArmProcess64::armHwcapImpl2() const
 
     const AA64ISAR0 isa_r0 = tc->readMiscReg(MISCREG_ID_AA64ISAR0_EL1);
     hwcap |= (isa_r0.ts >= 2) ? Arm_Flagm2 : Arm_None;
+    hwcap |= (isa_r0.rndr >= 1) ? Arm_Rng : Arm_None;
 
     return hwcap;
 }

@@ -88,6 +88,8 @@ class ArmExtension(ScopedEnum):
         "FEAT_FLAGM",
         # Armv8.5
         "FEAT_FLAGM2",
+        "FEAT_RNG",
+        "FEAT_RNG_TRAP",
         # Armv9.2
         "FEAT_SME",  # Optional in Armv9.2
         # Others
@@ -204,7 +206,11 @@ class Armv84(Armv83):
 
 
 class Armv85(Armv84):
-    extensions = Armv84.extensions + ["FEAT_FLAGM2"]
+    extensions = Armv84.extensions + [
+        "FEAT_FLAGM2",
+        "FEAT_RNG",
+        "FEAT_RNG_TRAP",
+    ]
 
 
 class Armv92(Armv85):

@@ -1057,6 +1057,8 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 2, 0, 0, 0), MISCREG_CSSELR_EL1 },
     { MiscRegNum64(3, 3, 0, 0, 1), MISCREG_CTR_EL0 },
     { MiscRegNum64(3, 3, 0, 0, 7), MISCREG_DCZID_EL0 },
+    { MiscRegNum64(3, 3, 2, 4, 0), MISCREG_RNDR },
+    { MiscRegNum64(3, 3, 2, 4, 1), MISCREG_RNDRRS },
     { MiscRegNum64(3, 3, 4, 2, 0), MISCREG_NZCV },
     { MiscRegNum64(3, 3, 4, 2, 1), MISCREG_DAIF },
     { MiscRegNum64(3, 3, 4, 2, 2), MISCREG_SVCR },
@@ -1996,6 +1998,20 @@ faultImpdefUnimplEL1(const MiscRegLUTEntry &entry,
         return inst.generateTrap(EL2);
     } else {
         return faultUnimplemented(entry, tc, inst);
+    }
+}
+
+Fault
+faultRng(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+    if (HaveExt(tc, ArmExtension::FEAT_RNG_TRAP) && scr.trndr) {
+        return inst.generateTrap(EL3);
+    } else if (!HaveExt(tc, ArmExtension::FEAT_RNG)) {
+        return inst.undefined();
+    } else {
+        return NoFault;
     }
 }
 
@@ -3894,6 +3910,7 @@ ISA::initializeMiscRegMetadata()
           isar0_el1.ts = release->has(ArmExtension::FEAT_FLAGM2) ?
               0x2 : release->has(ArmExtension::FEAT_FLAGM) ?
                   0x1 : 0x0;
+          isar0_el1.rndr = release->has(ArmExtension::FEAT_RNG) ? 0x1 : 0x0;
           return isar0_el1;
       }())
       .faultRead(EL1, HCR_TRAP(tid3))
@@ -5399,6 +5416,21 @@ ISA::initializeMiscRegMetadata()
         .allPrivileges();
     InitReg(MISCREG_MPAMSM_EL1)
         .allPrivileges().exceptUserMode();
+
+    InitReg(MISCREG_RNDR)
+        .faultRead(EL0, faultRng)
+        .faultRead(EL1, faultRng)
+        .faultRead(EL2, faultRng)
+        .faultRead(EL3, faultRng)
+        .unverifiable()
+        .allPrivileges().writes(0);
+    InitReg(MISCREG_RNDRRS)
+        .faultRead(EL0, faultRng)
+        .faultRead(EL1, faultRng)
+        .faultRead(EL2, faultRng)
+        .faultRead(EL3, faultRng)
+        .unverifiable()
+        .allPrivileges().writes(0);
 
     // Dummy registers
     InitReg(MISCREG_NOP)

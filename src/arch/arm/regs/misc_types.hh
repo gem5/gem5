@@ -346,6 +346,7 @@ namespace ArmISA
     EndBitUnion(NSACR)
 
     BitUnion64(SCR)
+        Bitfield<40> trndr;
         Bitfield<21> fien;
         Bitfield<20> nmea;
         Bitfield<19> ease;

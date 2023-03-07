@@ -49,6 +49,7 @@
 #include "arch/arm/utility.hh"
 #include "arch/generic/decoder.hh"
 #include "base/cprintf.hh"
+#include "base/random.hh"
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/reg_class.hh"
@@ -595,6 +596,21 @@ ISA::readMiscReg(RegIndex idx)
         return readMiscRegNoEffect(MISCREG_DFAR_S);
       case MISCREG_HIFAR: // alias for secure IFAR
         return readMiscRegNoEffect(MISCREG_IFAR_S);
+
+      case MISCREG_RNDR:
+        tc->setReg(cc_reg::Nz, (RegVal)0);
+        tc->setReg(cc_reg::C, (RegVal)0);
+        tc->setReg(cc_reg::V, (RegVal)0);
+        return random_mt.random<RegVal>();
+      case MISCREG_RNDRRS:
+        tc->setReg(cc_reg::Nz, (RegVal)0);
+        tc->setReg(cc_reg::C, (RegVal)0);
+        tc->setReg(cc_reg::V, (RegVal)0);
+        // Note: we are not reseeding
+        // The random number generator already has an hardcoded
+        // seed for the sake of determinism. There is no point
+        // in simulating non-determinism here
+        return random_mt.random<RegVal>();
 
       // Generic Timer registers
       case MISCREG_CNTFRQ ... MISCREG_CNTVOFF:

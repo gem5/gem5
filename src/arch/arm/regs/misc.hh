@@ -1091,6 +1091,10 @@ namespace ArmISA
         MISCREG_TPIDR2_EL0,
         MISCREG_MPAMSM_EL1,
 
+        // FEAT_RNG
+        MISCREG_RNDR,
+        MISCREG_RNDRRS,
+
         // NUM_PHYS_MISCREGS specifies the number of actual physical
         // registers, not considering the following pseudo-registers
         // (dummy registers), like MISCREG_UNKNOWN, MISCREG_IMPDEF_UNIMPL.
@@ -2759,6 +2763,9 @@ namespace ArmISA
         "smcr_el1",
         "tpidr2_el0",
         "mpamsm_el1",
+
+        "rndr",
+        "rndrrs",
 
         "num_phys_regs",
 
