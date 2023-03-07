@@ -345,7 +345,7 @@ namespace ArmISA
         Bitfield<0>  cp0;
     EndBitUnion(NSACR)
 
-    BitUnion32(SCR)
+    BitUnion64(SCR)
         Bitfield<21> fien;
         Bitfield<20> nmea;
         Bitfield<19> ease;
