@@ -2002,6 +2002,68 @@ faultImpdefUnimplEL1(const MiscRegLUTEntry &entry,
 }
 
 Fault
+faultEsm(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    const CPTR cptr_el3 = tc->readMiscReg(MISCREG_CPTR_EL3);
+    if (ArmSystem::haveEL(tc, EL3) && !cptr_el3.esm) {
+        return inst.generateTrap(EL3, ExceptionClass::TRAPPED_SME, 0);
+    } else {
+        return NoFault;
+    }
+}
+
+Fault
+faultTsmSmen(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    const HCR hcr_el2 = tc->readMiscReg(MISCREG_HCR_EL2);
+    const CPTR cptr_el2 = tc->readMiscReg(MISCREG_CPTR_EL2);
+    const bool el2_enabled = EL2Enabled(tc);
+    if (el2_enabled && !hcr_el2.e2h && cptr_el2.tsm) {
+        return inst.generateTrap(EL2, ExceptionClass::TRAPPED_SME, 0);
+    } else if (el2_enabled && hcr_el2.e2h && !(cptr_el2.smen & 0b1)) {
+        return inst.generateTrap(EL2, ExceptionClass::TRAPPED_SME, 0);
+    } else {
+        return faultEsm(entry, tc, inst);
+    }
+}
+
+Fault
+faultSmenEL1(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    const CPACR cpacr = tc->readMiscReg(MISCREG_CPACR_EL1);
+    if (!(cpacr.smen & 0b1)) {
+        return inst.generateTrap(EL1, ExceptionClass::TRAPPED_SME, 0);
+    } else {
+        return faultTsmSmen(entry, tc, inst);
+    }
+}
+
+Fault
+faultSmenEL0(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    const bool el2_enabled = EL2Enabled(tc);
+    const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    const bool in_host = hcr.e2h && hcr.tge;
+
+    const CPACR cpacr = tc->readMiscReg(MISCREG_CPACR_EL1);
+    const CPTR cptr_el2 = tc->readMiscReg(MISCREG_CPTR_EL2);
+    if (!(el2_enabled && in_host) && cpacr.smen != 0b11) {
+        if (el2_enabled && hcr.tge)
+            return inst.generateTrap(EL2, ExceptionClass::TRAPPED_SME, 0);
+        else
+            return inst.generateTrap(EL1, ExceptionClass::TRAPPED_SME, 0);
+    } else if (el2_enabled && in_host && cptr_el2.smen != 0b11) {
+        return inst.generateTrap(EL2, ExceptionClass::TRAPPED_SME, 0);
+    } else {
+        return faultTsmSmen(entry, tc, inst);
+    }
+}
+
+Fault
 faultRng(const MiscRegLUTEntry &entry,
     ThreadContext *tc, const MiscRegOp64 &inst)
 {
@@ -5348,6 +5410,7 @@ ISA::initializeMiscRegMetadata()
             smfr0_el1.fa64 = 0x1;
             return smfr0_el1;
         }())
+        .faultRead(EL1, HCR_TRAP(tid3))
         .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_SVCR)
         .res0([](){
@@ -5356,6 +5419,10 @@ ISA::initializeMiscRegMetadata()
             svcr_mask.za = 1;
             return ~svcr_mask;
         }())
+        .fault(EL0, faultSmenEL0)
+        .fault(EL1, faultSmenEL1)
+        .fault(EL2, faultTsmSmen)
+        .fault(EL3, faultEsm)
         .allPrivileges();
     InitReg(MISCREG_SMIDR_EL1)
         .reset([](){
@@ -5365,11 +5432,17 @@ ISA::initializeMiscRegMetadata()
             smidr_el1.implementer = 0x41;
             return smidr_el1;
         }())
+        .faultRead(EL1, HCR_TRAP(tid1))
         .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_SMPRI_EL1)
         .res0(mask(63, 4))
-        .allPrivileges().exceptUserMode().reads(1);
+        .fault(EL1, faultEsm)
+        .fault(EL2, faultEsm)
+        .fault(EL3, faultEsm)
+        .allPrivileges().exceptUserMode();
     InitReg(MISCREG_SMPRIMAP_EL2)
+        .fault(EL2, faultEsm)
+        .fault(EL3, faultEsm)
         .hyp().mon();
     InitReg(MISCREG_SMCR_EL3)
         .reset([this](){
@@ -5383,6 +5456,7 @@ ISA::initializeMiscRegMetadata()
             smcr_el3.len = smeVL - 1;
             return smcr_el3;
         }())
+        .fault(EL3, faultEsm)
         .mon();
     InitReg(MISCREG_SMCR_EL2)
         .reset([this](){
@@ -5396,6 +5470,8 @@ ISA::initializeMiscRegMetadata()
             smcr_el2.len = smeVL - 1;
             return smcr_el2;
         }())
+        .fault(EL2, faultTsmSmen)
+        .fault(EL3, faultEsm)
         .hyp().mon();
     InitReg(MISCREG_SMCR_EL12)
         .allPrivileges().exceptUserMode();
@@ -5411,6 +5487,9 @@ ISA::initializeMiscRegMetadata()
             smcr_el1.len = smeVL - 1;
             return smcr_el1;
         }())
+        .fault(EL1, faultSmenEL1)
+        .fault(EL2, faultTsmSmen)
+        .fault(EL3, faultEsm)
         .allPrivileges().exceptUserMode();
     InitReg(MISCREG_TPIDR2_EL0)
         .allPrivileges();
