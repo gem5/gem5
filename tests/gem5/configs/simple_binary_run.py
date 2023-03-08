@@ -40,6 +40,7 @@ from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.boards.simple_board import SimpleBoard
 from gem5.components.cachehierarchies.classic.no_cache import NoCache
 from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.components.processors.base_cpu_core import BaseCPUCore
 from gem5.components.processors.base_cpu_processor import BaseCPUProcessor
 from gem5.components.processors.simple_core import SimpleCore
 from gem5.components.boards.mem_mode import MemMode
@@ -51,8 +52,6 @@ from m5.util import fatal
 
 import argparse
 import importlib
-
-from python.gem5.components.processors.base_cpu_core import BaseCPUCore
 
 cpu_types_string_map = {
     CPUTypes.ATOMIC: "AtomicSimpleCPU",

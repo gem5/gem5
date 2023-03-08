@@ -46,9 +46,6 @@ from gem5.resources.workload import Workload
 import argparse
 import importlib
 
-from python.gem5.components.boards.kernel_disk_workload import (
-    KernelDiskWorkload,
-)
 
 parser = argparse.ArgumentParser(
     description="A script to run the gem5 boot test. This test boots the "
