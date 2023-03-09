@@ -478,19 +478,21 @@ def cxxMethod(*args, **kwargs):
         return_value_policy = kwargs.get("return_value_policy", None)
         static = kwargs.get("static", False)
 
-        args, varargs, keywords, defaults = inspect.getargspec(func)
-        if varargs or keywords:
-            raise ValueError(
-                "Wrapped methods must not contain variable arguments"
-            )
-
-        # Create tuples of (argument, default)
-        if defaults:
-            args = args[: -len(defaults)] + list(
-                zip(args[-len(defaults) :], defaults)
-            )
-        # Don't include self in the argument list to PyBind
-        args = args[1:]
+        # Create a list of tuples of (argument, default). The `PyBindMethod`
+        # class expects the `args` argument to be a list of either argument
+        # names, in the case that argument does not have a default value, and
+        # a tuple of (argument, default) in the casae where an argument does.
+        args = []
+        sig = inspect.signature(func)
+        for param_name in sig.parameters.keys():
+            if param_name == "self":
+                # We don't cound 'self' as an argument in this case.
+                continue
+            param = sig.parameters[param_name]
+            if param.default is param.empty:
+                args.append(param_name)
+            else:
+                args.append((param_name, param.default))
 
         @wraps(func)
         def cxx_call(self, *args, **kwargs):
