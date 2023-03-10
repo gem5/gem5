@@ -67,7 +67,7 @@ class L2Cache(L1Cache_Controller):
         self.cache = RubyCache(
             size=l2_size,
             assoc=l2_assoc,
-            start_index_bit=self.getBlockSizeBits(cache_line_size.value),
+            start_index_bit=self.getBlockSizeBits(cache_line_size),
             is_icache=False,
         )
         # l2_select_num_bits is ruby backend terminology.

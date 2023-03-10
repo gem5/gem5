@@ -68,14 +68,14 @@ class L1Cache(L0Cache_Controller):
         self.Icache = RubyCache(
             size=l1i_size,
             assoc=l1i_assoc,
-            start_index_bit=self.getBlockSizeBits(cache_line_size.value),
+            start_index_bit=self.getBlockSizeBits(cache_line_size),
             is_icache=True,
             replacement_policy=LRURP(),
         )
         self.Dcache = RubyCache(
             size=l1d_size,
             assoc=l1d_assoc,
-            start_index_bit=self.getBlockSizeBits(cache_line_size.value),
+            start_index_bit=self.getBlockSizeBits(cache_line_size),
             is_icache=False,
             replacement_policy=LRURP(),
         )
