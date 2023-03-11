@@ -103,6 +103,16 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
     def incorporate_processor(self, board: AbstractBoard) -> None:
         super().incorporate_processor(board=board)
 
+        if (
+            board.get_cache_hierarchy().is_ruby()
+            and self._mem_mode == MemMode.ATOMIC
+        ):
+            warn(
+                "Using an atomic core with Ruby will result in "
+                "'atomic_noncaching' memory mode. This will skip caching "
+                "completely."
+            )
+            self._mem_mode = MemMode.ATOMIC_NONCACHING
         board.set_mem_mode(self._mem_mode)
 
     def switch(self):
