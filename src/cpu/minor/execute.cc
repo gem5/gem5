@@ -879,6 +879,9 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
     thread->numOp++;
     thread->threadStats.numOps++;
     cpu.stats.numOps++;
+    // update both old and new stats
+    cpu.commitStats[inst->id.threadId]
+        ->committedInstType[inst->staticInst->opClass()]++;
     cpu.stats.committedInstType[inst->id.threadId]
                                [inst->staticInst->opClass()]++;
 

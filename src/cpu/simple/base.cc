@@ -408,6 +408,7 @@ BaseSimpleCPU::postExecute()
     if (curStaticInst->isInteger()){
         // update both old and new stats
         executeStats[t_info.thread->threadId()]->numIntAluAccesses++;
+        commitStats[t_info.thread->threadId()]->numIntInsts++;
         t_info.execContextStats.numIntAluAccesses++;
         t_info.execContextStats.numIntInsts++;
     }
@@ -416,6 +417,7 @@ BaseSimpleCPU::postExecute()
     if (curStaticInst->isFloating()){
         // update both old and new stats
         executeStats[t_info.thread->threadId()]->numFpAluAccesses++;
+        commitStats[t_info.thread->threadId()]->numFpInsts++;
         t_info.execContextStats.numFpAluAccesses++;
         t_info.execContextStats.numFpInsts++;
     }
@@ -424,6 +426,7 @@ BaseSimpleCPU::postExecute()
     if (curStaticInst->isVector()){
         // update both old and new stats
         executeStats[t_info.thread->threadId()]->numVecAluAccesses++;
+        commitStats[t_info.thread->threadId()]->numVecInsts++;
         t_info.execContextStats.numVecAluAccesses++;
         t_info.execContextStats.numVecInsts++;
     }
@@ -446,14 +449,22 @@ BaseSimpleCPU::postExecute()
 
     //result bus acceses
     if (curStaticInst->isLoad()){
+        // update both old and new stats
+        commitStats[t_info.thread->threadId()]->numLoadInsts++;
         t_info.execContextStats.numLoadInsts++;
     }
 
     if (curStaticInst->isStore() || curStaticInst->isAtomic()){
+        // update both old and new stats
+        commitStats[t_info.thread->threadId()]->numStoreInsts++;
         t_info.execContextStats.numStoreInsts++;
     }
     /* End power model statistics */
 
+    // update both old and new stats
+    commitStats[t_info.thread->threadId()]
+        ->committedInstType[curStaticInst->opClass()]++;
+    commitStats[t_info.thread->threadId()]->updateComCtrlStats(curStaticInst);
     t_info.execContextStats.statExecutedInstType[curStaticInst->opClass()]++;
 
     if (FullSystem)

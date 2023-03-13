@@ -1396,6 +1396,8 @@ Commit::updateComInstStats(const DynInstPtr &inst)
     //
     //  Control Instructions
     //
+    // update both old and new stats
+    cpu->commitStats[tid]->updateComCtrlStats(inst->staticInst);
     if (inst->isControl())
         stats.branches[tid]++;
 
@@ -1403,14 +1405,22 @@ Commit::updateComInstStats(const DynInstPtr &inst)
     //  Memory references
     //
     if (inst->isMemRef()) {
+        // update both old and new stats
         stats.memRefs[tid]++;
+        cpu->commitStats[tid]->numMemRefs++;
 
         if (inst->isLoad()) {
+            // update both old and new stats
             stats.loads[tid]++;
+            cpu->commitStats[tid]->numLoadInsts++;
         }
 
         if (inst->isAtomic()) {
             stats.amos[tid]++;
+        }
+
+        if (inst->isStore()) {
+            cpu->commitStats[tid]->numStoreInsts++;
         }
     }
 
@@ -1419,15 +1429,24 @@ Commit::updateComInstStats(const DynInstPtr &inst)
     }
 
     // Integer Instruction
-    if (inst->isInteger())
+    if (inst->isInteger()) {
+        // update both old and new stats
+        cpu->commitStats[tid]->numIntInsts++;
         stats.integer[tid]++;
+    }
 
     // Floating Point Instruction
-    if (inst->isFloating())
+    if (inst->isFloating()) {
+        // update both old and new stats
+        cpu->commitStats[tid]->numFpInsts++;
         stats.floating[tid]++;
+    }
     // Vector Instruction
-    if (inst->isVector())
+    if (inst->isVector()) {
+        // update both old and new stats
+        cpu->commitStats[tid]->numVecInsts++;
         stats.vectorInstructions[tid]++;
+    }
 
     // Function Calls
     if (inst->isCall())
