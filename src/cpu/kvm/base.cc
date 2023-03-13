@@ -779,6 +779,9 @@ BaseKvmCPU::kvmRun(Tick ticks)
         /* Update statistics */
         baseStats.numCycles += simCyclesExecuted;;
         stats.committedInsts += instsExecuted;
+        // update both old and new stats
+        commitStats[thread->threadId()]->numInsts += instsExecuted;
+        baseStats.numInsts += instsExecuted;
         ctrInsts += instsExecuted;
 
         DPRINTF(KvmRun,
