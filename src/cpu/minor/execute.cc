@@ -872,6 +872,9 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
         thread->numInst++;
         thread->threadStats.numInsts++;
         cpu.stats.numInsts++;
+        // update both old and new stas
+        cpu.commitStats[inst->id.threadId]->numInsts++;
+        cpu.baseStats.numInsts++;
 
         /* Act on events related to instruction counts */
         thread->comInstEventQueue.serviceEvents(thread->numInst);
@@ -880,6 +883,8 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
     thread->threadStats.numOps++;
     cpu.stats.numOps++;
     // update both old and new stats
+    cpu.commitStats[inst->id.threadId]->numOps++;
+    cpu.baseStats.numOps++;
     cpu.commitStats[inst->id.threadId]
         ->committedInstType[inst->staticInst->opClass()]++;
     cpu.stats.committedInstType[inst->id.threadId]

@@ -633,8 +633,14 @@ class BaseCPU : public ClockedObject
     struct BaseCPUStats : public statistics::Group
     {
         BaseCPUStats(statistics::Group *parent);
+        // Number of CPU insts and ops committed at CPU core level
+        statistics::Scalar numInsts;
+        statistics::Scalar numOps;
         // Number of CPU cycles simulated
         statistics::Scalar numCycles;
+        /* CPI/IPC for total cycle counts and macro insts */
+        statistics::Formula cpi;
+        statistics::Formula ipc;
         statistics::Scalar numWorkItemsStarted;
         statistics::Scalar numWorkItemsCompleted;
     } baseStats;
@@ -683,6 +689,12 @@ class BaseCPU : public ClockedObject
     struct FetchCPUStats : public statistics::Group
     {
         FetchCPUStats(statistics::Group *parent, int thread_id);
+
+        /* Total number of instructions fetched */
+        statistics::Scalar numInsts;
+
+        /* Total number of operations fetched */
+        statistics::Scalar numOps;
 
         /* Total number of branches fetched */
         statistics::Scalar numBranches;
@@ -742,6 +754,14 @@ class BaseCPU : public ClockedObject
     struct CommitCPUStats: public statistics::Group
     {
         CommitCPUStats(statistics::Group *parent, int thread_id);
+
+        /* Number of simulated instructions committed */
+        statistics::Scalar numInsts;
+        statistics::Scalar numOps;
+
+        /* CPI/IPC for total cycle counts and macro insts */
+        statistics::Formula cpi;
+        statistics::Formula ipc;
 
         /* Number of committed memory references. */
         statistics::Scalar numMemRefs;

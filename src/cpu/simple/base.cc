@@ -160,6 +160,34 @@ BaseSimpleCPU::countInst()
     t_info.execContextStats.numOps++;
 }
 
+void
+BaseSimpleCPU::countFetchInst()
+{
+    SimpleExecContext& t_info = *threadInfo[curThread];
+
+    if (!curStaticInst->isMicroop() || curStaticInst->isLastMicroop()) {
+        // increment thread level numInsts fetched count
+        fetchStats[t_info.thread->threadId()]->numInsts++;
+    }
+    // increment thread level numOps fetched count
+    fetchStats[t_info.thread->threadId()]->numOps++;
+}
+
+void
+BaseSimpleCPU::countCommitInst()
+{
+    SimpleExecContext& t_info = *threadInfo[curThread];
+
+    if (!curStaticInst->isMicroop() || curStaticInst->isLastMicroop()) {
+        // increment thread level and core level numInsts count
+        commitStats[t_info.thread->threadId()]->numInsts++;
+        baseStats.numInsts++;
+    }
+    // increment thread level and core level numOps count
+    commitStats[t_info.thread->threadId()]->numOps++;
+    baseStats.numOps++;
+}
+
 Counter
 BaseSimpleCPU::totalInsts() const
 {
@@ -376,6 +404,11 @@ BaseSimpleCPU::preExecute()
         if (predict_taken)
             ++t_info.execContextStats.numPredictedBranches;
     }
+
+    // increment the fetch instruction stat counters
+    if (curStaticInst) {
+        countFetchInst();
+    }
 }
 
 void
@@ -466,6 +499,9 @@ BaseSimpleCPU::postExecute()
         ->committedInstType[curStaticInst->opClass()]++;
     commitStats[t_info.thread->threadId()]->updateComCtrlStats(curStaticInst);
     t_info.execContextStats.statExecutedInstType[curStaticInst->opClass()]++;
+
+    /* increment the committed numInsts and numOps stats */
+    countCommitInst();
 
     if (FullSystem)
         traceFunctions(instAddr);
