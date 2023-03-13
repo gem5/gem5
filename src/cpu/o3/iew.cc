@@ -1053,7 +1053,9 @@ IEW::dispatchInsts(ThreadID tid)
 
             instQueue.recordProducer(inst);
 
+            // update both old and new stats
             iewStats.executedInstStats.numNop[tid]++;
+            cpu->executeStats[tid]->numNop++;
 
             add_to_iq = false;
         } else {
@@ -1561,7 +1563,9 @@ IEW::updateExeInstStats(const DynInstPtr& inst)
 {
     ThreadID tid = inst->threadNumber;
 
+    // update both old and new stats
     iewStats.executedInstStats.numInsts++;
+    cpu->executeStats[tid]->numInsts++;
 
 #if TRACING_ON
     if (debug::O3PipeView) {
@@ -1572,17 +1576,24 @@ IEW::updateExeInstStats(const DynInstPtr& inst)
     //
     //  Control operations
     //
-    if (inst->isControl())
+    if (inst->isControl()) {
+        // update both old and new stats
         iewStats.executedInstStats.numBranches[tid]++;
+        cpu->executeStats[tid]->numBranches++;
+    }
 
     //
     //  Memory operations
     //
     if (inst->isMemRef()) {
+        // update both old and new stats
         iewStats.executedInstStats.numRefs[tid]++;
+        cpu->executeStats[tid]->numMemRefs++;
 
         if (inst->isLoad()) {
+            // update both old and new stats
             iewStats.executedInstStats.numLoadInsts[tid]++;
+            cpu->executeStats[tid]->numLoadInsts++;
         }
     }
 }

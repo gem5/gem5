@@ -203,7 +203,12 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
             baseStats.numCycles;
         fetchStats.emplace_back(fetchStatptr);
 
-        executeStats.emplace_back(new ExecuteCPUStats(this, i));
+        // create executeStat object for thread i and set rate formulas
+        ExecuteCPUStats* executeStatptr = new ExecuteCPUStats(this, i);
+        executeStatptr->instRate = executeStatptr->numInsts /
+            baseStats.numCycles;
+        executeStats.emplace_back(executeStatptr);
+
         // create commitStat object for thread i and set ipc, cpi formulas
         CommitCPUStats* commitStatptr = new CommitCPUStats(this, i);
         commitStatptr->ipc = commitStatptr->numInsts / baseStats.numCycles;
@@ -899,6 +904,19 @@ FetchCPUStats::FetchCPUStats(statistics::Group *parent, int thread_id)
 BaseCPU::
 ExecuteCPUStats::ExecuteCPUStats(statistics::Group *parent, int thread_id)
     : statistics::Group(parent, csprintf("executeStats%i", thread_id).c_str()),
+    ADD_STAT(numInsts, statistics::units::Count::get(),
+             "Number of executed instructions"),
+    ADD_STAT(numNop, statistics::units::Count::get(),
+             "Number of nop insts executed"),
+    ADD_STAT(numBranches, statistics::units::Count::get(),
+             "Number of branches executed"),
+    ADD_STAT(numLoadInsts, statistics::units::Count::get(),
+             "Number of load instructions executed"),
+    ADD_STAT(numStoreInsts, statistics::units::Count::get(),
+             "Number of stores executed"),
+    ADD_STAT(instRate, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Cycle>::get(),
+             "Inst execution rate"),
     ADD_STAT(dcacheStallCycles, statistics::units::Cycle::get(),
              "DCache total stall cycles"),
     ADD_STAT(numCCRegReads, statistics::units::Count::get(),
@@ -937,6 +955,8 @@ ExecuteCPUStats::ExecuteCPUStats(statistics::Group *parent, int thread_id)
              "Number of ops (including micro ops) which were discarded before "
              "commit")
 {
+    numStoreInsts = numMemRefs - numLoadInsts;
+
     dcacheStallCycles
         .prereq(dcacheStallCycles);
     numCCRegReads
