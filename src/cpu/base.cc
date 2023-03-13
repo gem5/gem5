@@ -954,6 +954,10 @@ CommitCPUStats::CommitCPUStats(statistics::Group *parent, int thread_id)
              "Number of instructions committed (thread level)"),
     ADD_STAT(numOps, statistics::units::Count::get(),
              "Number of ops (including micro ops) committed (thread level)"),
+    ADD_STAT(numInstsNotNOP, statistics::units::Count::get(),
+             "Number of instructions committed excluding NOPs or prefetches"),
+    ADD_STAT(numOpsNotNOP, statistics::units::Count::get(),
+             "Number of Ops (including micro ops) Simulated"),
     ADD_STAT(cpi, statistics::units::Rate<
                 statistics::units::Cycle, statistics::units::Count>::get(),
              "CPI: cycles per instruction (thread level)"),

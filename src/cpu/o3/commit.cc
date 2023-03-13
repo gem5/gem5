@@ -1383,9 +1383,16 @@ Commit::updateComInstStats(const DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
-    if (!inst->isMicroop() || inst->isLastMicroop())
+    if (!inst->isMicroop() || inst->isLastMicroop()) {
+        // update both old and new stats
         stats.instsCommitted[tid]++;
+        cpu->commitStats[tid]->numInsts++;
+        cpu->baseStats.numInsts++;
+    }
+    // update both old and new stats
     stats.opsCommitted[tid]++;
+    cpu->commitStats[tid]->numOps++;
+    cpu->baseStats.numOps++;
 
     // To match the old model, don't count nops and instruction
     // prefetches towards the total commit count.
