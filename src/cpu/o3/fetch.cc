@@ -540,6 +540,8 @@ Fetch::lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &next_pc)
     inst->setPredTarg(next_pc);
     inst->setPredTaken(predict_taken);
 
+    // update both old and new stats
+    cpu->fetchStats[tid]->numBranches++;
     ++fetchStats.branches;
 
     if (predict_taken) {
@@ -1145,8 +1147,11 @@ Fetch::fetch(bool &status_change)
 
             fetchCacheLine(fetchAddr, tid, this_pc.instAddr());
 
-            if (fetchStatus[tid] == IcacheWaitResponse)
+            if (fetchStatus[tid] == IcacheWaitResponse) {
+                // update both old and new stats
                 ++fetchStats.icacheStallCycles;
+                cpu->fetchStats[tid]->icacheStallCycles++;
+            }
             else if (fetchStatus[tid] == ItlbWait)
                 ++fetchStats.tlbCycles;
             else
@@ -1242,7 +1247,9 @@ Fetch::fetch(bool &status_change)
                     staticInst = dec_ptr->decode(this_pc);
 
                     // Increment stat of fetched instructions.
+                    // Update both old and new stats
                     ++fetchStats.insts;
+                    cpu->fetchStats[tid]->numInsts++;
 
                     if (staticInst->isMacroop()) {
                         curMacroop = staticInst;
@@ -1572,6 +1579,8 @@ Fetch::profileStall(ThreadID tid)
         ++fetchStats.squashCycles;
         DPRINTF(Fetch, "[tid:%i] Fetch is squashing!\n", tid);
     } else if (fetchStatus[tid] == IcacheWaitResponse) {
+        // update both old and new stats
+        cpu->fetchStats[tid]->icacheStallCycles++;
         ++fetchStats.icacheStallCycles;
         DPRINTF(Fetch, "[tid:%i] Fetch is waiting cache response!\n",
                 tid);

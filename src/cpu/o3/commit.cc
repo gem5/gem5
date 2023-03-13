@@ -1019,6 +1019,8 @@ Commit::commitInsts()
 
             if (commit_success) {
                 ++num_committed;
+                cpu->commitStats[tid]
+                    ->committedInstType[head_inst->opClass()]++;
                 stats.committedInstType[tid][head_inst->opClass()]++;
                 ppCommit->notify(head_inst);
 
