@@ -161,22 +161,23 @@ class SimpleExecContext : public ExecContext
               ADD_STAT(statExecutedInstType, statistics::units::Count::get(),
                        "Class of executed instruction."),
               numRegReads{
-                  &numIntRegReads,
-                  &numFpRegReads,
-                  &numVecRegReads,
-                  &numVecRegReads,
-                  &numVecPredRegReads,
-                  &numMatRegReads,
-                  &numCCRegReads
+                  &(cpu->executeStats[thread->threadId()]->numIntRegReads),
+                  &(cpu->executeStats[thread->threadId()]->numFpRegReads),
+                  &(cpu->executeStats[thread->threadId()]->numVecRegReads),
+                  &(cpu->executeStats[thread->threadId()]->numVecRegReads),
+                  &(cpu->executeStats[thread->threadId()]->numVecPredRegReads),
+                  &(cpu->executeStats[thread->threadId()]->numCCRegReads),
+                  &numMatRegReads
               },
               numRegWrites{
-                  &numIntRegWrites,
-                  &numFpRegWrites,
-                  &numVecRegWrites,
-                  &numVecRegWrites,
-                  &numVecPredRegWrites,
-                  &numMatRegWrites,
-                  &numCCRegWrites
+                  &(cpu->executeStats[thread->threadId()]->numIntRegWrites),
+                  &(cpu->executeStats[thread->threadId()]->numFpRegWrites),
+                  &(cpu->executeStats[thread->threadId()]->numVecRegWrites),
+                  &(cpu->executeStats[thread->threadId()]->numVecRegWrites),
+                  &(cpu->executeStats[thread->threadId()]
+                        ->numVecPredRegWrites),
+                  &(cpu->executeStats[thread->threadId()]->numCCRegWrites),
+                  &numMatRegWrites
               }
         {
             numCCRegReads
@@ -368,7 +369,9 @@ class SimpleExecContext : public ExecContext
     RegVal
     readMiscRegOperand(const StaticInst *si, int idx) override
     {
+        // update both old and new stats
         execContextStats.numMiscRegReads++;
+        cpu->executeStats[thread->threadId()]->numMiscRegReads++;
         const RegId& reg = si->srcRegIdx(idx);
         assert(reg.is(MiscRegClass));
         return thread->readMiscReg(reg.index());
@@ -377,7 +380,9 @@ class SimpleExecContext : public ExecContext
     void
     setMiscRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
+        // update both old and new stats
         execContextStats.numMiscRegWrites++;
+        cpu->executeStats[thread->threadId()]->numMiscRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.is(MiscRegClass));
         thread->setMiscReg(reg.index(), val);
@@ -390,7 +395,9 @@ class SimpleExecContext : public ExecContext
     RegVal
     readMiscReg(int misc_reg) override
     {
+        // update both old and new stats
         execContextStats.numMiscRegReads++;
+        cpu->executeStats[thread->threadId()]->numMiscRegReads++;
         return thread->readMiscReg(misc_reg);
     }
 
@@ -401,7 +408,9 @@ class SimpleExecContext : public ExecContext
     void
     setMiscReg(int misc_reg, RegVal val) override
     {
+        // update both old and new stats
         execContextStats.numMiscRegWrites++;
+        cpu->executeStats[thread->threadId()]->numMiscRegWrites++;
         thread->setMiscReg(misc_reg, val);
     }
 

@@ -317,6 +317,18 @@ class CPU : public BaseCPU
     void setReg(PhysRegIdPtr phys_reg, RegVal val);
     void setReg(PhysRegIdPtr phys_reg, const void *val);
 
+    /** These functions are duplicated so that one set
+     * doesn't use thread ID, while the other does.
+     * This allows us to still output both old and
+     * new versions of the stats.
+    */
+    RegVal getReg(PhysRegIdPtr phys_reg, ThreadID tid);
+    void getReg(PhysRegIdPtr phys_reg, void *val, ThreadID tid);
+    void *getWritableReg(PhysRegIdPtr phys_reg, ThreadID tid);
+
+    void setReg(PhysRegIdPtr phys_reg, RegVal val, ThreadID tid);
+    void setReg(PhysRegIdPtr phys_reg, const void *val, ThreadID tid);
+
     /** Architectural register accessors.  Looks up in the commit
      * rename table to obtain the true physical index of the
      * architected register first, then accesses that physical

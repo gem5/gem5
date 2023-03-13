@@ -692,7 +692,55 @@ class BaseCPU : public ClockedObject
 
     };
 
+    struct ExecuteCPUStats: public statistics::Group
+    {
+        ExecuteCPUStats(statistics::Group *parent, int thread_id);
+
+        /* Number of cycles stalled for D-cache responses */
+        statistics::Scalar dcacheStallCycles;
+
+        /* Number of condition code register file accesses */
+        statistics::Scalar numCCRegReads;
+        statistics::Scalar numCCRegWrites;
+
+        /* number of float alu accesses */
+        statistics::Scalar numFpAluAccesses;
+
+        /* Number of float register file accesses */
+        statistics::Scalar numFpRegReads;
+        statistics::Scalar numFpRegWrites;
+
+        /* Number of integer alu accesses */
+        statistics::Scalar numIntAluAccesses;
+
+        /* Number of integer register file accesses */
+        statistics::Scalar numIntRegReads;
+        statistics::Scalar numIntRegWrites;
+
+        /* number of simulated memory references */
+        statistics::Scalar numMemRefs;
+
+        /* Number of misc register file accesses */
+        statistics::Scalar numMiscRegReads;
+        statistics::Scalar numMiscRegWrites;
+
+        /* Number of vector alu accesses */
+        statistics::Scalar numVecAluAccesses;
+
+        /* Number of predicate register file accesses */
+        mutable statistics::Scalar numVecPredRegReads;
+        statistics::Scalar numVecPredRegWrites;
+
+        /* Number of vector register file accesses */
+        mutable statistics::Scalar numVecRegReads;
+        statistics::Scalar numVecRegWrites;
+
+        /* Number of ops discarded before committing */
+        statistics::Scalar numDiscardedOps;
+    };
+
     std::vector<std::unique_ptr<FetchCPUStats>> fetchStats;
+    std::vector<std::unique_ptr<ExecuteCPUStats>> executeStats;
 };
 
 } // namespace gem5

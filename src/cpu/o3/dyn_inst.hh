@@ -1085,11 +1085,16 @@ class DynInst : public ExecContext, public RefCounted
                 continue;
 
             if (bytes == sizeof(RegVal)) {
+                // call both old and new functions
                 setRegOperand(staticInst.get(), idx,
                         cpu->getReg(prev_phys_reg));
+                setRegOperand(staticInst.get(), idx,
+                        cpu->getReg(prev_phys_reg, threadNumber));
             } else {
                 uint8_t val[original_dest_reg.regClass().regBytes()];
+                // call both old and new functions
                 cpu->getReg(prev_phys_reg, val);
+                cpu->getReg(prev_phys_reg, val, threadNumber);
                 setRegOperand(staticInst.get(), idx, val);
             }
         }
@@ -1116,6 +1121,8 @@ class DynInst : public ExecContext, public RefCounted
         const PhysRegIdPtr reg = renamedSrcIdx(idx);
         if (reg->is(InvalidRegClass))
             return 0;
+        // call new function, only return old value
+        cpu->getReg(reg, threadNumber);
         return cpu->getReg(reg);
     }
 
@@ -1125,12 +1132,16 @@ class DynInst : public ExecContext, public RefCounted
         const PhysRegIdPtr reg = renamedSrcIdx(idx);
         if (reg->is(InvalidRegClass))
             return;
+        // call both old and new function
         cpu->getReg(reg, val);
+        cpu->getReg(reg, val, threadNumber);
     }
 
     void *
     getWritableRegOperand(const StaticInst *si, int idx) override
     {
+        // call both old and new function
+        return cpu->getWritableReg(renamedDestIdx(idx), threadNumber);
         return cpu->getWritableReg(renamedDestIdx(idx));
     }
 
@@ -1143,7 +1154,9 @@ class DynInst : public ExecContext, public RefCounted
         const PhysRegIdPtr reg = renamedDestIdx(idx);
         if (reg->is(InvalidRegClass))
             return;
+        // call both old and new functions
         cpu->setReg(reg, val);
+        cpu->setReg(reg, val, threadNumber);
         setResult(reg->regClass(), val);
     }
 
@@ -1153,7 +1166,9 @@ class DynInst : public ExecContext, public RefCounted
         const PhysRegIdPtr reg = renamedDestIdx(idx);
         if (reg->is(InvalidRegClass))
             return;
+        // call both old and new functions
         cpu->setReg(reg, val);
+        cpu->setReg(reg, val, threadNumber);
         setResult(reg->regClass(), val);
     }
 };

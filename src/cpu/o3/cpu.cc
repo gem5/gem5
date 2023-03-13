@@ -1019,7 +1019,10 @@ CPU::readMiscRegNoEffect(int misc_reg, ThreadID tid) const
 RegVal
 CPU::readMiscReg(int misc_reg, ThreadID tid)
 {
+    // output both old and new stats, keep
+    // return value the same
     cpuStats.miscRegfileReads++;
+    executeStats[tid]->numMiscRegReads++;
     return isa[tid]->readMiscReg(misc_reg);
 }
 
@@ -1032,7 +1035,9 @@ CPU::setMiscRegNoEffect(int misc_reg, RegVal val, ThreadID tid)
 void
 CPU::setMiscReg(int misc_reg, RegVal val, ThreadID tid)
 {
+    // output both old and new stats
     cpuStats.miscRegfileWrites++;
+    executeStats[tid]->numMiscRegWrites++;
     isa[tid]->setMiscReg(misc_reg, val);
 }
 
@@ -1149,6 +1154,126 @@ CPU::setReg(PhysRegIdPtr phys_reg, const void *val)
         break;
       case VecPredRegClass:
         cpuStats.vecPredRegfileWrites++;
+        break;
+      default:
+        break;
+    }
+    regFile.setReg(phys_reg, val);
+}
+
+RegVal
+CPU::getReg(PhysRegIdPtr phys_reg, ThreadID tid)
+{
+    switch (phys_reg->classValue()) {
+      case IntRegClass:
+        executeStats[tid]->numIntRegReads++;
+        break;
+      case FloatRegClass:
+        executeStats[tid]->numFpRegReads++;
+        break;
+      case CCRegClass:
+        executeStats[tid]->numCCRegReads++;
+        break;
+      case VecRegClass:
+      case VecElemClass:
+        executeStats[tid]->numVecRegReads++;
+        break;
+      case VecPredRegClass:
+        executeStats[tid]->numVecPredRegReads++;
+        break;
+      default:
+        break;
+    }
+    return regFile.getReg(phys_reg);
+}
+
+void
+CPU::getReg(PhysRegIdPtr phys_reg, void *val, ThreadID tid)
+{
+    switch (phys_reg->classValue()) {
+      case IntRegClass:
+        executeStats[tid]->numIntRegReads++;
+        break;
+      case FloatRegClass:
+        executeStats[tid]->numFpRegReads++;
+        break;
+      case CCRegClass:
+        executeStats[tid]->numCCRegReads++;
+        break;
+      case VecRegClass:
+      case VecElemClass:
+        executeStats[tid]->numVecRegReads++;
+        break;
+      case VecPredRegClass:
+        executeStats[tid]->numVecPredRegReads++;
+        break;
+      default:
+        break;
+    }
+    regFile.getReg(phys_reg, val);
+}
+
+void *
+CPU::getWritableReg(PhysRegIdPtr phys_reg, ThreadID tid)
+{
+    switch (phys_reg->classValue()) {
+      case VecRegClass:
+        executeStats[tid]->numVecRegReads++;
+        break;
+      case VecPredRegClass:
+        executeStats[tid]->numVecPredRegReads++;
+        break;
+      default:
+        break;
+    }
+    return regFile.getWritableReg(phys_reg);
+}
+
+void
+CPU::setReg(PhysRegIdPtr phys_reg, RegVal val, ThreadID tid)
+{
+    switch (phys_reg->classValue()) {
+      case IntRegClass:
+        executeStats[tid]->numIntRegWrites++;
+        break;
+      case FloatRegClass:
+        executeStats[tid]->numFpRegWrites++;
+        break;
+      case CCRegClass:
+        executeStats[tid]->numCCRegWrites++;
+        break;
+      case VecRegClass:
+      case VecElemClass:
+        executeStats[tid]->numVecRegWrites++;
+        break;
+      case VecPredRegClass:
+        executeStats[tid]->numVecPredRegWrites++;
+        break;
+      default:
+        break;
+    }
+    regFile.setReg(phys_reg, val);
+}
+
+void
+CPU::setReg(PhysRegIdPtr phys_reg, const void *val, ThreadID tid)
+{
+    switch (phys_reg->classValue()) {
+      case IntRegClass:
+        executeStats[tid]->numIntRegWrites++;
+        break;
+      case FloatRegClass:
+        executeStats[tid]->numFpRegWrites++;
+        break;
+      case CCRegClass:
+        executeStats[tid]->numCCRegWrites++;
+        break;
+      case VecRegClass:
+      case VecElemClass:
+        executeStats[tid]->numVecRegWrites++;
+        break;
+      case VecPredRegClass:
+        executeStats[tid]->numVecPredRegWrites++;
         break;
       default:
         break;
