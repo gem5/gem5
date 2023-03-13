@@ -191,6 +191,11 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
     modelResetPort.onChange([this](const bool &new_val) {
         setReset(new_val);
     });
+    // create a stat group object for each thread on this core
+    fetchStats.reserve(numThreads);
+    for (int i = 0; i < numThreads; i++) {
+        fetchStats.emplace_back(new FetchCPUStats(this, i));
+    }
 }
 
 void
@@ -825,6 +830,20 @@ BaseCPU::GlobalStats::GlobalStats(statistics::Group *parent)
 
     hostInstRate = simInsts / hostSeconds;
     hostOpRate = simOps / hostSeconds;
+}
+
+BaseCPU::
+FetchCPUStats::FetchCPUStats(statistics::Group *parent, int thread_id)
+    : statistics::Group(parent, csprintf("fetchStats%i", thread_id).c_str()),
+    ADD_STAT(numBranches, statistics::units::Count::get(),
+             "Number of branches fetched"),
+    ADD_STAT(numFetchSuspends, statistics::units::Count::get(),
+             "Number of times Execute suspended instruction fetching")
+
+{
+    numBranches
+        .prereq(numBranches);
+
 }
 
 } // namespace gem5

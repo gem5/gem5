@@ -396,7 +396,9 @@ BaseSimpleCPU::postExecute()
     }
 
     if (curStaticInst->isControl()) {
+        // output both old and new stats
         ++t_info.execContextStats.numBranches;
+        ++fetchStats[t_info.thread->threadId()]->numBranches;
     }
 
     /* Power model statistics */

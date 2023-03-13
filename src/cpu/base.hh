@@ -42,6 +42,7 @@
 #ifndef __CPU_BASE_HH__
 #define __CPU_BASE_HH__
 
+#include <memory>
 #include <vector>
 
 #include "arch/generic/interrupts.hh"
@@ -676,6 +677,22 @@ class BaseCPU : public ClockedObject
     const Cycles pwrGatingLatency;
     const bool powerGatingOnIdle;
     EventFunctionWrapper enterPwrGatingEvent;
+
+
+  public:
+    struct FetchCPUStats : public statistics::Group
+    {
+        FetchCPUStats(statistics::Group *parent, int thread_id);
+
+        /* Total number of branches fetched */
+        statistics::Scalar numBranches;
+
+        /* Number of times fetch was asked to suspend by Execute */
+        statistics::Scalar numFetchSuspends;
+
+    };
+
+    std::vector<std::unique_ptr<FetchCPUStats>> fetchStats;
 };
 
 } // namespace gem5
