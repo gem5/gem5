@@ -754,6 +754,37 @@ EndBitUnion(STATUS)
 
 /**
  * These fields are specified in the RISC-V Instruction Set Manual, Volume II,
+ * v1.10, v1.11 and v1.12 in Figure 3.1, accessible at www.riscv.org. The register
+ * is used to control instruction extensions.
+ */
+BitUnion64(MISA)
+    Bitfield<63, 62> rv64_mxl;
+    Bitfield<31, 30> rv32_mxl;
+    Bitfield<23> rvx;
+    Bitfield<21> rvv;
+    Bitfield<20> rvu;
+    Bitfield<19> rvt;
+    Bitfield<18> rvs;
+    Bitfield<16> rvq;
+    Bitfield<15> rvp;
+    Bitfield<13> rvn;
+    Bitfield<12> rvm;
+    Bitfield<11> rvl;
+    Bitfield<10> rvk;
+    Bitfield<9> rvj;
+    Bitfield<8> rvi;
+    Bitfield<7> rvh;
+    Bitfield<6> rvg;
+    Bitfield<5> rvf;
+    Bitfield<4> rve;
+    Bitfield<3> rvd;
+    Bitfield<2> rvc;
+    Bitfield<1> rvb;
+    Bitfield<0> rva;
+EndBitUnion(MISA)
+
+/**
+ * These fields are specified in the RISC-V Instruction Set Manual, Volume II,
  * v1.10 in Figures 3.11 and 3.12, accessible at www.riscv.org. Both the MIP
  * and MIE registers have the same fields, so accesses to either should use
  * this bit union.
