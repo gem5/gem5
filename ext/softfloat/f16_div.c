@@ -36,11 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdbool.h>
 #include <stdint.h>
-
-#include "internals.h"
 #include "platform.h"
-#include "softfloat.h"
+#include "internals.h"
 #include "specialize.h"
+#include "softfloat.h"
 
 extern const uint16_t softfloat_approxRecip_1k0s[];
 extern const uint16_t softfloat_approxRecip_1k1s[];

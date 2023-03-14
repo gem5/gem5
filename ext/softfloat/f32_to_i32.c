@@ -36,11 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdbool.h>
 #include <stdint.h>
-
-#include "internals.h"
 #include "platform.h"
-#include "softfloat.h"
+#include "internals.h"
 #include "specialize.h"
+#include "softfloat.h"
 
 int_fast32_t f32_to_i32( float32_t a, uint_fast8_t roundingMode, bool exact )
 {
@@ -51,6 +50,7 @@ int_fast32_t f32_to_i32( float32_t a, uint_fast8_t roundingMode, bool exact )
     uint_fast32_t sig;
     uint_fast64_t sig64;
     int_fast16_t shiftDist;
+
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     uA.f = a;
