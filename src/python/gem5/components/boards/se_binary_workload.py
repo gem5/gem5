@@ -35,6 +35,8 @@ from ...resources.resource import (
     SimpointDirectoryResource,
 )
 
+from ..processors.switchable_processor import SwitchableProcessor
+
 from gem5.resources.elfie import ELFieInfo
 from gem5.resources.looppoint import Looppoint
 
@@ -112,8 +114,23 @@ class SEBinaryWorkload:
         if env_list is not None:
             process.env = env_list
 
-        for core in self.get_processor().get_cores():
-            core.set_workload(process)
+        if isinstance(self.get_processor(), SwitchableProcessor):
+            # This is a hack to get switchable processors working correctly in
+            # SE mode. The "get_cores" API for processors only gets the current
+            # switched-in cores and, in most cases, this is what the script
+            # required. In the case there are switched-out cores via the
+            # SwitchableProcessor, we sometimes need to apply things to ALL
+            # cores (switched-in or switched-out). In this case we have an
+            # `__all_cores` function. Here we must apply the process to every
+            # core.
+            #
+            # A better API for this which avoids `isinstance` checks would be
+            # welcome.
+            for core in self.get_processor()._all_cores():
+                core.set_workload(process)
+        else:
+            for core in self.get_processor().get_cores():
+                core.set_workload(process)
 
         # Set whether to exit on work items for the se_workload
         self.exit_on_work_items = exit_on_work_items
