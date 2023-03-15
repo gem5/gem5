@@ -66,6 +66,7 @@ class SEBinaryWorkload:
         stdin_file: Optional[FileResource] = None,
         stdout_file: Optional[Path] = None,
         stderr_file: Optional[Path] = None,
+        env_list: Optional[List[str]] = None,
         arguments: List[str] = [],
         checkpoint: Optional[Union[Path, CheckpointResource]] = None,
     ) -> None:
@@ -80,6 +81,9 @@ class SEBinaryWorkload:
         :param exit_on_work_items: Whether the simulation should exit on work
         items. True by default.
         :param stdin_file: The input file for the binary
+        :param stdout_file: The output file for the binary
+        :param stderr_file: The error output file for the binary
+        :param env_list: The environment variables defined for the binary
         :param arguments: The input arguments for the binary
         :param checkpoint: The checkpoint directory. Used to restore the
         simulation to that checkpoint.
@@ -105,6 +109,8 @@ class SEBinaryWorkload:
             process.output = stdout_file.as_posix()
         if stderr_file is not None:
             process.errout = stderr_file.as_posix()
+        if env_list is not None:
+            process.env = env_list
 
         for core in self.get_processor().get_cores():
             core.set_workload(process)
