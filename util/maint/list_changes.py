@@ -104,7 +104,7 @@ class Commit(object):
         return cids[0]
 
     def __str__(self):
-        return "%s: %s" % (self.rev[0:8], self.log[0])
+        return f"{self.rev[0:8]}: {self.log[0]}"
 
 
 def list_revs(branch, baseline=None, paths=[]):
@@ -117,7 +117,7 @@ def list_revs(branch, baseline=None, paths=[]):
     """
 
     if baseline is not None:
-        query = "%s..%s" % (branch, baseline)
+        query = f"{branch}..{baseline}"
     else:
         query = str(branch)
 

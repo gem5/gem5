@@ -50,4 +50,4 @@ except ImportError:
 if in_gem5:
     for name, module in inspect.getmembers(_m5):
         if name.startswith("param_") or name.startswith("enum_"):
-            exec("from _m5.%s import *" % name)
+            exec(f"from _m5.{name} import *")

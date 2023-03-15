@@ -39,10 +39,10 @@ class Bah_Tweaked(object):
 
 class Hoop(object):
     def __init__(self, first_param, second_param):
-        self.mnemonic = "hoop_%s_%s" % (first_param, second_param)
+        self.mnemonic = f"hoop_{first_param}_{second_param}"
 
     def __str__(self):
-        return "%s" % self.mnemonic
+        return f"{self.mnemonic}"
 
 
 class Dah(object):

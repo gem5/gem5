@@ -47,7 +47,7 @@ class FileLock(object):
                 "If timeout is not None, then delay must not be None."
             )
         self.is_locked = False
-        self.lockfile = os.path.join(os.getcwd(), "%s.lock" % file_name)
+        self.lockfile = os.path.join(os.getcwd(), f"{file_name}.lock")
         self.file_name = file_name
         self.timeout = timeout
         self.delay = delay
@@ -83,7 +83,7 @@ class FileLock(object):
                     )
                 if (time.time() - start_time) >= self.timeout:
                     raise FileLockException(
-                        "Timeout occured. {}".format(solution_message)
+                        f"Timeout occured. {solution_message}"
                     )
                 time.sleep(self.delay)
 

@@ -428,7 +428,7 @@ class CPUSequencerWrapper:
         cpu.icache_port = self.inst_seq.in_ports
         for p in cpu._cached_ports:
             if str(p) != "icache_port":
-                exec("cpu.%s = self.data_seq.in_ports" % p)
+                exec(f"cpu.{p} = self.data_seq.in_ports")
         cpu.connectUncachedPorts(
             self.data_seq.in_ports, self.data_seq.interrupt_out_port
         )

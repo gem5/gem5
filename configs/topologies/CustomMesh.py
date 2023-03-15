@@ -325,9 +325,7 @@ class CustomMesh(SimpleTopology):
                 rni_io_params = check_same(type(n).NoC_Params, rni_io_params)
             else:
                 fatal(
-                    "topologies.CustomMesh: {} not supported".format(
-                        n.__class__.__name__
-                    )
+                    f"topologies.CustomMesh: {n.__class__.__name__} not supported"
                 )
 
         # Create all mesh routers
@@ -420,11 +418,11 @@ class CustomMesh(SimpleTopology):
             if pair_debug:
                 print(c.path())
                 for r in c.addr_ranges:
-                    print("%s" % r)
+                    print(f"{r}")
                 for p in c._pairing:
                     print("\t" + p.path())
                     for r in p.addr_ranges:
-                        print("\t%s" % r)
+                        print(f"\t{r}")
 
         # all must be paired
         for c in all_cache:
@@ -516,8 +514,8 @@ class CustomMesh(SimpleTopology):
                 assert len(c._pairing) == pairing_check
                 print(c.path())
                 for r in c.addr_ranges:
-                    print("%s" % r)
+                    print(f"{r}")
                 for p in c._pairing:
                     print("\t" + p.path())
                     for r in p.addr_ranges:
-                        print("\t%s" % r)
+                        print(f"\t{r}")

@@ -65,22 +65,18 @@ class ObjectList(object):
             sub_cls = self._sub_classes[real_name]
             return sub_cls
         except KeyError:
-            print(
-                "{} is not a valid sub-class of {}.".format(
-                    name, self.base_cls
-                )
-            )
+            print(f"{name} is not a valid sub-class of {self.base_cls}.")
             raise
 
     def print(self):
         """Print a list of available sub-classes and aliases."""
 
-        print("Available {} classes:".format(self.base_cls))
+        print(f"Available {self.base_cls} classes:")
         doc_wrapper = TextWrapper(
             initial_indent="\t\t", subsequent_indent="\t\t"
         )
         for name, cls in list(self._sub_classes.items()):
-            print("\t{}".format(name))
+            print(f"\t{name}")
 
             # Try to extract the class documentation from the class help
             # string.
@@ -92,7 +88,7 @@ class ObjectList(object):
         if self._aliases:
             print("\Aliases:")
             for alias, target in list(self._aliases.items()):
-                print("\t{} => {}".format(alias, target))
+                print(f"\t{alias} => {target}")
 
     def get_names(self):
         """Return a list of valid sub-class names and aliases."""

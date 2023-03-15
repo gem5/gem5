@@ -41,7 +41,7 @@ class IfStatementAST(StatementAST):
         self.else_ = else_
 
     def __repr__(self):
-        return "[IfStatement: %r%r%r]" % (self.cond, self.then, self.else_)
+        return f"[IfStatement: {self.cond!r}{self.then!r}{self.else_!r}]"
 
     def generate(self, code, return_type, **kwargs):
         cond_code = self.slicc.codeFormatter()

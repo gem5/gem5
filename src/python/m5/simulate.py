@@ -358,36 +358,35 @@ def switchCpus(system, cpuList, verbose=True):
     memory_mode_name = new_cpus[0].memory_mode()
     for old_cpu, new_cpu in cpuList:
         if not isinstance(old_cpu, objects.BaseCPU):
-            raise TypeError("%s is not of type BaseCPU" % old_cpu)
+            raise TypeError(f"{old_cpu} is not of type BaseCPU")
         if not isinstance(new_cpu, objects.BaseCPU):
-            raise TypeError("%s is not of type BaseCPU" % new_cpu)
+            raise TypeError(f"{new_cpu} is not of type BaseCPU")
         if new_cpu in old_cpu_set:
             raise RuntimeError(
-                "New CPU (%s) is in the list of old CPUs." % (old_cpu,)
+                f"New CPU ({old_cpu}) is in the list of old CPUs."
             )
         if not new_cpu.switchedOut():
-            raise RuntimeError("New CPU (%s) is already active." % (new_cpu,))
+            raise RuntimeError(f"New CPU ({new_cpu}) is already active.")
         if not new_cpu.support_take_over():
             raise RuntimeError(
-                "New CPU (%s) does not support CPU handover." % (old_cpu,)
+                f"New CPU ({old_cpu}) does not support CPU handover."
             )
         if new_cpu.memory_mode() != memory_mode_name:
             raise RuntimeError(
-                "%s and %s require different memory modes."
-                % (new_cpu, new_cpus[0])
+                f"{new_cpu} and {new_cpus[0]} require different memory modes."
             )
         if old_cpu.switchedOut():
-            raise RuntimeError("Old CPU (%s) is inactive." % (new_cpu,))
+            raise RuntimeError(f"Old CPU ({new_cpu}) is inactive.")
         if not old_cpu.support_take_over():
             raise RuntimeError(
-                "Old CPU (%s) does not support CPU handover." % (old_cpu,)
+                f"Old CPU ({old_cpu}) does not support CPU handover."
             )
 
     MemoryMode = params.allEnums["MemoryMode"]
     try:
         memory_mode = MemoryMode(memory_mode_name).getValue()
     except KeyError:
-        raise RuntimeError("Invalid memory mode (%s)" % memory_mode_name)
+        raise RuntimeError(f"Invalid memory mode ({memory_mode_name})")
 
     drain()
 

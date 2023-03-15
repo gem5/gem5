@@ -51,7 +51,7 @@ from shutil import rmtree, copyfile
 
 def hex_mask(terms):
     dec_mask = reduce(operator.or_, [2**i for i in terms], 0)
-    return "%08x" % dec_mask
+    return f"{dec_mask:08x}"
 
 
 def file_append(path, contents):
@@ -252,13 +252,13 @@ def _redirect_paths(options):
     # Redirect filesystem syscalls from src to the first matching dests
     redirect_paths = [
         RedirectPath(
-            app_path="/proc", host_paths=["%s/fs/proc" % m5.options.outdir]
+            app_path="/proc", host_paths=[f"{m5.options.outdir}/fs/proc"]
         ),
         RedirectPath(
-            app_path="/sys", host_paths=["%s/fs/sys" % m5.options.outdir]
+            app_path="/sys", host_paths=[f"{m5.options.outdir}/fs/sys"]
         ),
         RedirectPath(
-            app_path="/tmp", host_paths=["%s/fs/tmp" % m5.options.outdir]
+            app_path="/tmp", host_paths=[f"{m5.options.outdir}/fs/tmp"]
         ),
     ]
 
@@ -275,7 +275,7 @@ def _redirect_paths(options):
     if chroot:
         redirect_paths.append(
             RedirectPath(
-                app_path="/", host_paths=["%s" % os.path.expanduser(chroot)]
+                app_path="/", host_paths=[f"{os.path.expanduser(chroot)}"]
             )
         )
 

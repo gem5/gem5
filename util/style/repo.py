@@ -192,7 +192,7 @@ class GitRepo(AbstractRepo):
         if cached:
             cmd.append("--cached")
         if filter:
-            cmd += ["--diff-filter=%s" % filter]
+            cmd += [f"--diff-filter={filter}"]
         cmd += [self.head_revision(), "--"] + files
         status = subprocess.check_output(cmd).decode("utf-8").rstrip("\n")
 
@@ -202,13 +202,13 @@ class GitRepo(AbstractRepo):
             return []
 
     def file_from_index(self, name):
-        return subprocess.check_output(
-            [self.git, "show", ":%s" % (name,)]
-        ).decode("utf-8")
+        return subprocess.check_output([self.git, "show", f":{name}"]).decode(
+            "utf-8"
+        )
 
     def file_from_head(self, name):
         return subprocess.check_output(
-            [self.git, "show", "%s:%s" % (self.head_revision(), name)]
+            [self.git, "show", f"{self.head_revision()}:{name}"]
         ).decode("utf-8")
 
 

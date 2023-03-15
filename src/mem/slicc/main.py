@@ -122,7 +122,7 @@ def main(args=None):
 
     if opts.print_files:
         for i in sorted(slicc.files()):
-            print("    %s" % i)
+            print(f"    {i}")
     else:
         output("Processing AST...")
         slicc.process()

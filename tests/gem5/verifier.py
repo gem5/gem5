@@ -115,8 +115,7 @@ class MatchGoldStandard(Verifier):
         )
         if diff is not None:
             test_util.fail(
-                "Stdout did not match:\n%s\nSee %s for full results"
-                % (diff, tempdir)
+                f"Stdout did not match:\n{diff}\nSee {tempdir} for full results"
             )
 
     def _generic_instance_warning(self, kwargs):

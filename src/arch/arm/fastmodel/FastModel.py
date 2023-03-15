@@ -39,11 +39,11 @@ def AMBA_INITIATOR_ROLE(width):
 
 
 def SC_REQUEST_PORT_ROLE(port_type):
-    return "SC REQUEST PORT for %s" % port_type
+    return f"SC REQUEST PORT for {port_type}"
 
 
 def SC_RESPONSE_PORT_ROLE(port_type):
-    return "SC RESPONSE PORT for %s" % port_type
+    return f"SC RESPONSE PORT for {port_type}"
 
 
 class AmbaTargetSocket(Port):

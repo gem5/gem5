@@ -205,8 +205,7 @@ class SubOperandList(OperandList):
             op_desc = requestor_list.find_base(op_base)
             if not op_desc:
                 error(
-                    "Found operand %s which is not in the requestor list!"
-                    % op_base
+                    f"Found operand {op_base} which is not in the requestor list!"
                 )
             else:
                 # See if we've already found this operand

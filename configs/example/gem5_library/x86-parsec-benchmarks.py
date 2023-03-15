@@ -177,10 +177,7 @@ board = X86Board(
 command = (
     "cd /home/gem5/parsec-benchmark;".format(args.benchmark)
     + "source env.sh;"
-    + "parsecmgmt -a run -p {} -c gcc-hooks -i {} \
-        -n {};".format(
-        args.benchmark, args.size, "2"
-    )
+    + f"parsecmgmt -a run -p {args.benchmark} -c gcc-hooks -i {args.size}         -n 2;"
     + "sleep 5;"
     + "m5 exit;"
 )

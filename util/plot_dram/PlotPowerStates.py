@@ -295,7 +295,7 @@ def plotStackedStates(delay, states_list, bottom_state, plot_name, ylabel_str):
                 for prev_sum, new_s in zip(time_sum, l_states[state])
             ]
 
-        ax[sub_idx].set_title("Bank util %s" % bank_util)
+        ax[sub_idx].set_title(f"Bank util {bank_util}")
         ax[sub_idx].xaxis.set_ticks(ind + width / 2.0)
         ax[sub_idx].xaxis.set_ticklabels(seqBytesValues, rotation=45)
         ax[sub_idx].set_xlabel("Seq. bytes")

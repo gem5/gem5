@@ -117,7 +117,7 @@ class BaseTrafficGen(ClockedObject):
     def connectCachedPorts(self, in_ports):
         if hasattr(self, "_cached_ports") and (len(self._cached_ports) > 0):
             for p in self._cached_ports:
-                exec("self.%s = in_ports" % p)
+                exec(f"self.{p} = in_ports")
         else:
             self.port = in_ports
 

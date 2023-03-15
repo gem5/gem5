@@ -293,7 +293,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         root.appendCompatible(["luplab,lupv"])
 
         for mem_range in self.mem_ranges:
-            node = FdtNode("memory@%x" % int(mem_range.start))
+            node = FdtNode(f"memory@{int(mem_range.start):x}")
             node.append(FdtPropertyStrings("device_type", ["memory"]))
             node.append(
                 FdtPropertyWords(

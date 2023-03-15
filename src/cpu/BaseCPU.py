@@ -172,13 +172,13 @@ class BaseCPU(ClockedObject):
 
     def connectCachedPorts(self, in_ports):
         for p in self._cached_ports:
-            exec("self.%s = in_ports" % p)
+            exec(f"self.{p} = in_ports")
 
     def connectUncachedPorts(self, in_ports, out_ports):
         for p in self._uncached_interrupt_response_ports:
-            exec("self.%s = out_ports" % p)
+            exec(f"self.{p} = out_ports")
         for p in self._uncached_interrupt_request_ports:
-            exec("self.%s = in_ports" % p)
+            exec(f"self.{p} = in_ports")
 
     def connectAllPorts(self, cached_in, uncached_in, uncached_out):
         self.connectCachedPorts(cached_in)
@@ -267,7 +267,7 @@ class BaseCPU(ClockedObject):
         # Generate cpu nodes
         for i in range(int(self.numThreads)):
             reg = (int(self.socket_id) << 8) + int(self.cpu_id) + i
-            node = FdtNode("cpu@%x" % reg)
+            node = FdtNode(f"cpu@{reg:x}")
             node.append(FdtPropertyStrings("device_type", "cpu"))
             node.appendCompatible(["gem5,arm-cpu"])
             node.append(FdtPropertyWords("reg", state.CPUAddrCells(reg)))

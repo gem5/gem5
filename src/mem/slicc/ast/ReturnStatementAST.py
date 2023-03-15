@@ -35,7 +35,7 @@ class ReturnStatementAST(StatementAST):
         self.expr_ast = expr_ast
 
     def __repr__(self):
-        return "[ReturnStatementAST: %r]" % self.expr_ast
+        return f"[ReturnStatementAST: {self.expr_ast!r}]"
 
     def generate(self, code, return_type, **kwargs):
         actual_type, ecode = self.expr_ast.inline(True)

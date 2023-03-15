@@ -88,12 +88,9 @@ class PyBindMethod(PyBindExport):
             def get_arg_decl(arg):
                 if isinstance(arg, tuple):
                     name, default = arg
-                    return 'py::arg("%s") = %s' % (
-                        name,
-                        self._conv_arg(default),
-                    )
+                    return f'py::arg("{name}") = {self._conv_arg(default)}'
                 else:
-                    return 'py::arg("%s")' % arg
+                    return f'py::arg("{arg}")'
 
             arguments.extend(list([get_arg_decl(a) for a in self.args]))
         code("." + self.method_def + "(" + ", ".join(arguments) + ")")

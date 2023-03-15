@@ -203,7 +203,7 @@ def printList(items, indent=4):
             line = " " * indent
 
         if i < len(items) - 1:
-            line += "%s, " % item
+            line += f"{item}, "
         else:
             line += item
             print(line)

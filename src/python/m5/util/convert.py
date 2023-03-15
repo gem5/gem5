@@ -99,7 +99,7 @@ binary_prefixes = {
 
 def assertStr(value):
     if not isinstance(value, str):
-        raise TypeError("wrong type '%s' should be str" % type(value))
+        raise TypeError(f"wrong type '{type(value)}' should be str")
 
 
 def _split_suffix(value, suffixes):
@@ -141,9 +141,7 @@ def toNum(value, target_type, units, prefixes, converter):
         try:
             return converter(val)
         except ValueError:
-            raise ValueError(
-                "cannot convert '%s' to %s" % (value, target_type)
-            )
+            raise ValueError(f"cannot convert '{value}' to {target_type}")
 
     # Units can be None, the empty string, or a list/tuple. Convert
     # to a tuple for consistent handling.
@@ -198,7 +196,7 @@ def toBool(value):
         return True
     if value in ("false", "f", "no", "n", "0"):
         return False
-    raise ValueError("cannot convert '%s' to bool" % value)
+    raise ValueError(f"cannot convert '{value}' to bool")
 
 
 def toFrequency(value):
@@ -265,15 +263,15 @@ def toMemorySize(value):
 
 def toIpAddress(value):
     if not isinstance(value, str):
-        raise TypeError("wrong type '%s' should be str" % type(value))
+        raise TypeError(f"wrong type '{type(value)}' should be str")
 
     bytes = value.split(".")
     if len(bytes) != 4:
-        raise ValueError("invalid ip address %s" % value)
+        raise ValueError(f"invalid ip address {value}")
 
     for byte in bytes:
         if not 0 <= int(byte) <= 0xFF:
-            raise ValueError("invalid ip address %s" % value)
+            raise ValueError(f"invalid ip address {value}")
 
     return (
         (int(bytes[0]) << 24)
@@ -285,14 +283,14 @@ def toIpAddress(value):
 
 def toIpNetmask(value):
     if not isinstance(value, str):
-        raise TypeError("wrong type '%s' should be str" % type(value))
+        raise TypeError(f"wrong type '{type(value)}' should be str")
 
     (ip, netmask) = value.split("/")
     ip = toIpAddress(ip)
     netmaskParts = netmask.split(".")
     if len(netmaskParts) == 1:
         if not 0 <= int(netmask) <= 32:
-            raise ValueError("invalid netmask %s" % netmask)
+            raise ValueError(f"invalid netmask {netmask}")
         return (ip, int(netmask))
     elif len(netmaskParts) == 4:
         netmaskNum = toIpAddress(netmask)
@@ -303,19 +301,19 @@ def toIpNetmask(value):
             testVal |= 1 << (31 - i)
             if testVal == netmaskNum:
                 return (ip, i + 1)
-        raise ValueError("invalid netmask %s" % netmask)
+        raise ValueError(f"invalid netmask {netmask}")
     else:
-        raise ValueError("invalid netmask %s" % netmask)
+        raise ValueError(f"invalid netmask {netmask}")
 
 
 def toIpWithPort(value):
     if not isinstance(value, str):
-        raise TypeError("wrong type '%s' should be str" % type(value))
+        raise TypeError(f"wrong type '{type(value)}' should be str")
 
     (ip, port) = value.split(":")
     ip = toIpAddress(ip)
     if not 0 <= int(port) <= 0xFFFF:
-        raise ValueError("invalid port %s" % port)
+        raise ValueError(f"invalid port {port}")
     return (ip, int(port))
 
 

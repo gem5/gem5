@@ -331,10 +331,10 @@ def build(options):
         "lpj=19988480",
         "norandmaps",
         "loglevel=8",
-        "mem=%s" % options.mem_size,
-        "root=%s" % options.root,
+        f"mem={options.mem_size}",
+        f"root={options.root}",
         "rw",
-        "init=%s" % options.kernel_init,
+        f"init={options.kernel_init}",
         "vmalloc=768MB",
     ]
 

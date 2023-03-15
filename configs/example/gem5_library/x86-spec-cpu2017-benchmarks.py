@@ -193,7 +193,7 @@ if not os.path.exists(args.image):
     print(
         "https://gem5art.readthedocs.io/en/latest/tutorials/spec-tutorial.html"
     )
-    fatal("The disk-image is not found at {}".format(args.image))
+    fatal(f"The disk-image is not found at {args.image}")
 
 # Setting up all the fixed system parameters here
 # Caches: MESI Two Level Cache Hierarchy
@@ -266,7 +266,7 @@ except FileExistsError:
 # The runscript.sh file places `m5 exit` before and after the following command
 # Therefore, we only pass this command without m5 exit.
 
-command = "{} {} {}".format(args.benchmark, args.size, output_dir)
+command = f"{args.benchmark} {args.size} {output_dir}"
 
 # For enabling CustomResource, we pass an additional parameter to mount the
 # correct partition.

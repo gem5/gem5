@@ -135,8 +135,8 @@ class ParamValue(object, metaclass=MetaParamValue):
     # src into lvalue dest (of the param's C++ type)
     @classmethod
     def cxx_ini_parse(cls, code, src, dest, ret):
-        code("// Unhandled param type: %s" % cls.__name__)
-        code("%s false;" % ret)
+        code(f"// Unhandled param type: {cls.__name__}")
+        code(f"{ret} false;")
 
     # allows us to blithely call unproxy() on things without checking
     # if they're really proxies or not
@@ -176,7 +176,7 @@ class ParamDesc(object):
             del kwargs["default"]
 
         if kwargs:
-            raise TypeError("extra unknown kwargs %s" % kwargs)
+            raise TypeError(f"extra unknown kwargs {kwargs}")
 
         if not hasattr(self, "desc"):
             raise TypeError("desc attribute missing")
@@ -191,7 +191,7 @@ class ParamDesc(object):
             return ptype
 
         raise AttributeError(
-            "'%s' object has no attribute '%s'" % (type(self).__name__, attr)
+            f"'{type(self).__name__}' object has no attribute '{attr}'"
         )
 
     def example_str(self):
@@ -247,7 +247,7 @@ class ParamDesc(object):
 class VectorParamValue(list, metaclass=MetaParamValue):
     def __setattr__(self, attr, value):
         raise AttributeError(
-            "Not allowed to set %s on '%s'" % (attr, type(self).__name__)
+            f"Not allowed to set {attr} on '{type(self).__name__}'"
         )
 
     def config_value(self):
@@ -316,7 +316,7 @@ class SimObjectVector(VectorParamValue):
         val = self[key]
         if value.has_parent():
             warn(
-                "SimObject %s already has a parent" % value.get_name()
+                f"SimObject {value.get_name()} already has a parent"
                 + " that is being overwritten by a SimObjectVector"
             )
         value.set_parent(val.get_parent(), val._name)
@@ -327,7 +327,7 @@ class SimObjectVector(VectorParamValue):
     # allow it to be specified on the command line.
     def enumerateParams(self, flags_dict={}, cmd_line_str="", access_str=""):
         if hasattr(self, "_paramEnumed"):
-            print("Cycle detected enumerating params at %s?!" % (cmd_line_str))
+            print(f"Cycle detected enumerating params at {cmd_line_str}?!")
         else:
             x = 0
             for vals in self:
@@ -469,8 +469,8 @@ class String(ParamValue, str):
 
     @classmethod
     def cxx_ini_parse(self, code, src, dest, ret):
-        code("%s = %s;" % (dest, src))
-        code("%s true;" % ret)
+        code(f"{dest} = {src};")
+        code(f"{ret} true;")
 
     def getValue(self):
         return self
@@ -571,7 +571,7 @@ class NumericParamValue(ParamValue):
     # the dest type.
     @classmethod
     def cxx_ini_parse(self, code, src, dest, ret):
-        code("%s to_number(%s, %s);" % (ret, src, dest))
+        code(f"{ret} to_number({src}, {dest});")
 
 
 # Metaclass for bounds-checked integer parameters.  See CheckedInt.
@@ -621,8 +621,7 @@ class CheckedInt(NumericParamValue, metaclass=CheckedIntType):
             self.value = int(value)
         else:
             raise TypeError(
-                "Can't convert object of type %s to CheckedInt"
-                % type(value).__name__
+                f"Can't convert object of type {type(value).__name__} to CheckedInt"
             )
         self._check()
 
@@ -751,10 +750,10 @@ class Cycles(CheckedInt):
     @classmethod
     def cxx_ini_parse(cls, code, src, dest, ret):
         code("uint64_t _temp;")
-        code("bool _ret = to_number(%s, _temp);" % src)
+        code(f"bool _ret = to_number({src}, _temp);")
         code("if (_ret)")
-        code("    %s = Cycles(_temp);" % dest)
-        code("%s _ret;" % ret)
+        code(f"    {dest} = Cycles(_temp);")
+        code(f"{ret} _ret;")
 
 
 class Float(ParamValue, float):
@@ -766,8 +765,7 @@ class Float(ParamValue, float):
             self.value = float(value)
         else:
             raise TypeError(
-                "Can't convert object of type %s to Float"
-                % type(value).__name__
+                f"Can't convert object of type {type(value).__name__} to Float"
             )
 
     def __call__(self, value):
@@ -786,7 +784,7 @@ class Float(ParamValue, float):
 
     @classmethod
     def cxx_ini_parse(self, code, src, dest, ret):
-        code("%s (std::istringstream(%s) >> %s).eof();" % (ret, src, dest))
+        code(f"{ret} (std::istringstream({src}) >> {dest}).eof();")
 
 
 class MemorySize(CheckedInt):
@@ -851,7 +849,7 @@ class Addr(CheckedInt):
             val = convert.toMemorySize(value)
         except TypeError:
             val = int(value)
-        return "0x%x" % int(val)
+        return f"0x{int(val):x}"
 
 
 class PcCountPair(ParamValue):
@@ -961,11 +959,11 @@ class AddrRange(ParamValue):
             raise TypeError("Too many arguments specified")
 
         if kwargs:
-            raise TypeError("Too many keywords: %s" % list(kwargs.keys()))
+            raise TypeError(f"Too many keywords: {list(kwargs.keys())}")
 
     def __str__(self):
         if len(self.masks) == 0:
-            return "%s:%s" % (self.start, self.end)
+            return f"{self.start}:{self.end}"
         else:
             return "%s:%s:%s:%s" % (
                 self.start,
@@ -1084,7 +1082,7 @@ class Bool(ParamValue):
 
     @classmethod
     def cxx_ini_parse(cls, code, src, dest, ret):
-        code("%s to_bool(%s, %s);" % (ret, src, dest))
+        code(f"{ret} to_bool({src}, {dest});")
 
 
 def IncEthernetAddr(addr, val=1):
@@ -1097,7 +1095,7 @@ def IncEthernetAddr(addr, val=1):
             break
         bytes[i - 1] += val
     assert bytes[0] <= 255
-    return ":".join(map(lambda x: "%02x" % x, bytes))
+    return ":".join(map(lambda x: f"{x:02x}", bytes))
 
 
 _NextEthernetAddr = "00:90:00:00:00:01"
@@ -1130,11 +1128,11 @@ class EthernetAddr(ParamValue):
 
         bytes = value.split(":")
         if len(bytes) != 6:
-            raise TypeError("invalid ethernet address %s" % value)
+            raise TypeError(f"invalid ethernet address {value}")
 
         for byte in bytes:
             if not 0 <= int(byte, base=16) <= 0xFF:
-                raise TypeError("invalid ethernet address %s" % value)
+                raise TypeError(f"invalid ethernet address {value}")
 
         self.value = value
 
@@ -1160,8 +1158,8 @@ class EthernetAddr(ParamValue):
 
     @classmethod
     def cxx_ini_parse(self, code, src, dest, ret):
-        code("%s = networking::EthAddr(%s);" % (dest, src))
-        code("%s true;" % ret)
+        code(f"{dest} = networking::EthAddr({src});")
+        code(f"{ret} true;")
 
 
 # When initializing an IpAddress, pass in an existing IpAddress, a string of
@@ -1236,7 +1234,7 @@ class IpNetmask(IpAddress):
             elif elseVal:
                 setattr(self, key, elseVal)
             else:
-                raise TypeError("No value set for %s" % key)
+                raise TypeError(f"No value set for {key}")
 
         if len(args) == 0:
             handle_kwarg(self, kwargs, "ip")
@@ -1261,7 +1259,7 @@ class IpNetmask(IpAddress):
             raise TypeError("Too many arguments specified")
 
         if kwargs:
-            raise TypeError("Too many keywords: %s" % list(kwargs.keys()))
+            raise TypeError(f"Too many keywords: {list(kwargs.keys())}")
 
         self.verify()
 
@@ -1312,7 +1310,7 @@ class IpWithPort(IpAddress):
             elif elseVal:
                 setattr(self, key, elseVal)
             else:
-                raise TypeError("No value set for %s" % key)
+                raise TypeError(f"No value set for {key}")
 
         if len(args) == 0:
             handle_kwarg(self, kwargs, "ip")
@@ -1337,7 +1335,7 @@ class IpWithPort(IpAddress):
             raise TypeError("Too many arguments specified")
 
         if kwargs:
-            raise TypeError("Too many keywords: %s" % list(kwargs.keys()))
+            raise TypeError(f"Too many keywords: {list(kwargs.keys())}")
 
         self.verify()
 
@@ -1408,7 +1406,7 @@ def parse_time(value):
             except ValueError:
                 pass
 
-    raise ValueError("Could not parse '%s' as a time" % value)
+    raise ValueError(f"Could not parse '{value}' as a time")
 
 
 class Time(ParamValue):
@@ -1501,9 +1499,9 @@ class MetaEnum(MetaParamValue):
             )
 
         if cls.is_class:
-            cls.cxx_type = "%s" % name
+            cls.cxx_type = f"{name}"
         else:
-            cls.cxx_type = "enums::%s" % name
+            cls.cxx_type = f"enums::{name}"
 
         super().__init__(name, bases, init_dict)
 
@@ -1527,8 +1525,7 @@ class Enum(ParamValue, metaclass=MetaEnum):
     def __init__(self, value):
         if value not in self.map:
             raise TypeError(
-                "Enum param got bad value '%s' (not in %s)"
-                % (value, self.vals)
+                f"Enum param got bad value '{value}' (not in {self.vals})"
             )
         self.value = value
 
@@ -1547,20 +1544,17 @@ class Enum(ParamValue, metaclass=MetaEnum):
             code('} else if (%s == "%s") {' % (src, elem_name))
             code.indent()
             name = cls.__name__ if cls.enum_name is None else cls.enum_name
-            code(
-                "%s = %s::%s;"
-                % (dest, name if cls.is_class else "enums", elem_name)
-            )
-            code("%s true;" % ret)
+            code(f"{dest} = {name if cls.is_class else 'enums'}::{elem_name};")
+            code(f"{ret} true;")
             code.dedent()
         code("} else {")
-        code("    %s false;" % ret)
+        code(f"    {ret} false;")
         code("}")
 
     def getValue(self):
         import m5.internal.params
 
-        e = getattr(m5.internal.params, "enum_%s" % self.__class__.__name__)
+        e = getattr(m5.internal.params, f"enum_{self.__class__.__name__}")
         return e(self.map[self.value])
 
     def __str__(self):
@@ -1648,7 +1642,7 @@ class Latency(TickParamValue):
             return self
         if attr == "frequency":
             return Frequency(self)
-        raise AttributeError("Latency object has no attribute '%s'" % attr)
+        raise AttributeError(f"Latency object has no attribute '{attr}'")
 
     def getValue(self):
         if self.ticks or self.value == 0:
@@ -1691,7 +1685,7 @@ class Frequency(TickParamValue):
             return self
         if attr in ("latency", "period"):
             return Latency(self)
-        raise AttributeError("Frequency object has no attribute '%s'" % attr)
+        raise AttributeError(f"Frequency object has no attribute '{attr}'")
 
     # convert latency to ticks
     def getValue(self):
@@ -1730,14 +1724,14 @@ class Clock(TickParamValue):
         return value
 
     def __str__(self):
-        return "%s" % Latency(self)
+        return f"{Latency(self)}"
 
     def __getattr__(self, attr):
         if attr == "frequency":
             return Frequency(self)
         if attr in ("latency", "period"):
             return Latency(self)
-        raise AttributeError("Frequency object has no attribute '%s'" % attr)
+        raise AttributeError(f"Frequency object has no attribute '{attr}'")
 
     def getValue(self):
         return self.period.getValue()
@@ -1821,10 +1815,10 @@ class Temperature(ParamValue):
     @classmethod
     def cxx_ini_parse(self, code, src, dest, ret):
         code("double _temp;")
-        code("bool _ret = to_number(%s, _temp);" % src)
+        code(f"bool _ret = to_number({src}, _temp);")
         code("if (_ret)")
-        code("    %s = Temperature(_temp);" % dest)
-        code("%s _ret;" % ret)
+        code(f"    {dest} = Temperature(_temp);")
+        code(f"{ret} _ret;")
 
 
 class NetworkBandwidth(float, ParamValue):
@@ -1853,10 +1847,10 @@ class NetworkBandwidth(float, ParamValue):
         return float(value)
 
     def ini_str(self):
-        return "%f" % self.getValue()
+        return f"{self.getValue():f}"
 
     def config_value(self):
-        return "%f" % self.getValue()
+        return f"{self.getValue():f}"
 
     @classmethod
     def cxx_ini_predecls(cls, code):
@@ -1864,7 +1858,7 @@ class NetworkBandwidth(float, ParamValue):
 
     @classmethod
     def cxx_ini_parse(self, code, src, dest, ret):
-        code("%s (std::istringstream(%s) >> %s).eof();" % (ret, src, dest))
+        code(f"{ret} (std::istringstream({src}) >> {dest}).eof();")
 
 
 class MemoryBandwidth(float, ParamValue):
@@ -1892,10 +1886,10 @@ class MemoryBandwidth(float, ParamValue):
         return float(value)
 
     def ini_str(self):
-        return "%f" % self.getValue()
+        return f"{self.getValue():f}"
 
     def config_value(self):
-        return "%f" % self.getValue()
+        return f"{self.getValue():f}"
 
     @classmethod
     def cxx_ini_predecls(cls, code):
@@ -1903,7 +1897,7 @@ class MemoryBandwidth(float, ParamValue):
 
     @classmethod
     def cxx_ini_parse(self, code, src, dest, ret):
-        code("%s (std::istringstream(%s) >> %s).eof();" % (ret, src, dest))
+        code(f"{ret} (std::istringstream({src}) >> {dest}).eof();")
 
 
 #
@@ -1991,7 +1985,7 @@ class PortRef(object):
         self.index = -1  # always -1 for non-vector ports
 
     def __str__(self):
-        return "%s.%s" % (self.simobj, self.name)
+        return f"{self.simobj}.{self.name}"
 
     def __len__(self):
         # Return the number of connected ports, i.e. 0 is we have no
@@ -2015,8 +2009,7 @@ class PortRef(object):
             # shorthand for proxies
             return self.peer.simobj
         raise AttributeError(
-            "'%s' object has no attribute '%s'"
-            % (self.__class__.__name__, attr)
+            f"'{self.__class__.__name__}' object has no attribute '{attr}'"
         )
 
     # Full connection is symmetric (both ways).  Called via
@@ -2041,8 +2034,7 @@ class PortRef(object):
             return
         elif not isinstance(other, PortRef):
             raise TypeError(
-                "assigning non-port reference '%s' to port '%s'"
-                % (other, self)
+                f"assigning non-port reference '{other}' to port '{self}'"
             )
 
         if not Port.is_compat(self, other):
@@ -2068,8 +2060,7 @@ class PortRef(object):
 
         if not isinstance(new_1, PortRef) or not isinstance(new_2, PortRef):
             raise TypeError(
-                "Splicing non-port references '%s','%s' to port '%s'"
-                % (new_1, new_2, self)
+                f"Splicing non-port references '{new_1}','{new_2}' to port '{self}'"
             )
 
         old_peer = self.peer
@@ -2118,8 +2109,7 @@ class PortRef(object):
                 realPeer = self.peer.unproxy(self.simobj)
             except:
                 print(
-                    "Error in unproxying port '%s' of %s"
-                    % (self.name, self.simobj.path())
+                    f"Error in unproxying port '{self.name}' of {self.simobj.path()}"
                 )
                 raise
             self.connect(realPeer)
@@ -2163,7 +2153,7 @@ class VectorPortRef(object):
         self.elements = []
 
     def __str__(self):
-        return "%s.%s[:]" % (self.simobj, self.name)
+        return f"{self.simobj}.{self.name}[:]"
 
     def __len__(self):
         # Return the number of connected peers, corresponding the the
@@ -2390,12 +2380,8 @@ class DeprecatedParam(object):
         simobj_name: str, the name of the SimObject type
         """
         if not self.message:
-            self.message = "See {} for more information".format(simobj_name)
-        warn(
-            "{}.{} is deprecated. {}".format(
-                instance_name, self._oldName, self.message
-            )
-        )
+            self.message = f"See {simobj_name} for more information"
+        warn(f"{instance_name}.{self._oldName} is deprecated. {self.message}")
 
 
 baseEnums = allEnums.copy()

@@ -60,10 +60,10 @@ class Point(object):
         return (self.x, self.y)
 
     def __str__(self):
-        return "Point(%f,%f)" % (self.x, self.y)
+        return f"Point({self.x:f},{self.y:f})"
 
     def __repr__(self):
-        return "Point(%f,%f)" % (self.x, self.y)
+        return f"Point({self.x:f},{self.y:f})"
 
     def is_within_box(self, box):
         """Is this point inside the (centre, size) box box"""

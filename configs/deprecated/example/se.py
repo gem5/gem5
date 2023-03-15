@@ -159,8 +159,7 @@ if args.bench:
             multiprocesses.append(workload.makeProcess())
         except:
             print(
-                "Unable to find workload for %s: %s"
-                % (get_runtime_isa().name(), app),
+                f"Unable to find workload for {get_runtime_isa().name()}: {app}",
                 file=sys.stderr,
             )
             sys.exit(1)

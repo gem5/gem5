@@ -108,7 +108,7 @@ def _get_resources_json_at_path(path: str, use_caching: bool = True) -> Dict:
     # Note the timeout is 120 so the `_download` function is given time to run
     # its Truncated Exponential Backoff algorithm
     # (maximum of roughly 1 minute). Typically this code will run quickly.
-    with FileLock("{}.lock".format(download_path), timeout=120):
+    with FileLock(f"{download_path}.lock", timeout=120):
 
         # The resources.json file can change at any time, but to avoid
         # excessive retrieval we cache a version locally and use it for up to
@@ -212,9 +212,7 @@ def _get_resources(
             # after a check that the name is unique.
             if resource["name"] in to_return.keys():
                 raise Exception(
-                    "Error: Duplicate resource with name '{}'.".format(
-                        resource["name"]
-                    )
+                    f"Error: Duplicate resource with name '{resource['name']}'."
                 )
             to_return[resource["name"]] = resource
         elif resource["type"] == "group":
@@ -229,9 +227,7 @@ def _get_resources(
                 # the resources.json file. The resources names need to be
                 # unique keyes.
                 raise Exception(
-                    "Error: Duplicate resources with names: {}.".format(
-                        str(intersection)
-                    )
+                    f"Error: Duplicate resources with names: {str(intersection)}."
                 )
             to_return.update(new_map)
 
@@ -390,9 +386,7 @@ def get_resources_json_obj(resource_name: str) -> Dict:
 
     if resource_name not in resource_map:
         raise Exception(
-            "Error: Resource with name '{}' does not exist".format(
-                resource_name
-            )
+            f"Error: Resource with name '{resource_name}' does not exist"
         )
 
     return resource_map[resource_name]
@@ -435,7 +429,7 @@ def get_resource(
     # same resources at once. The timeout here is somewhat arbitarily put at 15
     # minutes.Most resources should be downloaded and decompressed in this
     # timeframe, even on the most constrained of systems.
-    with FileLock("{}.lock".format(to_path), timeout=900):
+    with FileLock(f"{to_path}.lock", timeout=900):
 
         resource_json = get_resources_json_obj(resource_name)
 
@@ -506,13 +500,11 @@ def get_resource(
         url = resource_json["url"].format(url_base=_get_url_base())
 
         _download(url=url, download_to=download_dest)
-        print("Finished downloading resource '{}'.".format(resource_name))
+        print(f"Finished downloading resource '{resource_name}'.")
 
         if run_unzip:
             print(
-                "Decompressing resource '{}' ('{}')...".format(
-                    resource_name, download_dest
-                )
+                f"Decompressing resource '{resource_name}' ('{download_dest}')..."
             )
             unzip_to = download_dest[: -len(zip_extension)]
             with gzip.open(download_dest, "rb") as f:
@@ -520,9 +512,7 @@ def get_resource(
                     shutil.copyfileobj(f, o)
             os.remove(download_dest)
             download_dest = unzip_to
-            print(
-                "Finished decompressing resource '{}'.".format(resource_name)
-            )
+            print(f"Finished decompressing resource '{resource_name}'.")
 
         if run_tar_extract:
             print(

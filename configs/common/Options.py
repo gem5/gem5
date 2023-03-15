@@ -834,8 +834,7 @@ def addFSOptions(parser):
         action="store",
         type=str,
         dest="benchmark",
-        help="Specify the benchmark to run. Available benchmarks: %s"
-        % DefinedBenchmarks,
+        help=f"Specify the benchmark to run. Available benchmarks: {DefinedBenchmarks}",
     )
 
     # Metafile options

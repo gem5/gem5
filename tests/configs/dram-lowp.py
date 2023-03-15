@@ -52,7 +52,7 @@ def run_test(root):
     argv = [
         sys.argv[0],
         # Add a specific page policy and specify the number of ranks
-        "-p%s" % page_policy,
+        f"-p{page_policy}",
         "-r 2",
     ]
 

@@ -46,9 +46,7 @@ def test_kvm_fork_run(cpu: str, num_cpus: int, mem_system: str, length: str):
         # Don't run the tests if KVM is unavailable.
         return
 
-    name = "{}-cpu_{}-cores_{}_kvm-fork-run-test".format(
-        cpu, str(num_cpus), mem_system
-    )
+    name = f"{cpu}-cpu_{str(num_cpus)}-cores_{mem_system}_kvm-fork-run-test"
     verifiers = []
 
     if mem_system == "mesi_two_level":

@@ -45,7 +45,7 @@ def category(app, sym):
     for regexp, cat in categories_re:
         if regexp.match(name):
             return cat
-    print("no match for symbol %s" % name)
+    print(f"no match for symbol {name}")
     return "other"
 
 
@@ -99,4 +99,4 @@ if showidle:
 
 for d in cats:
     if d in prof:
-        print("%s -- %5.1f%% " % (d, 100 * float(prof[d]) / float(total)))
+        print(f"{d} -- {100 * float(prof[d]) / float(total):5.1f}% ")

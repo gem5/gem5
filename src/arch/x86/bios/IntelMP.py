@@ -81,8 +81,7 @@ class X86IntelMPConfigTable(SimObject):
             self.ext_entries.append(entry)
         else:
             panic(
-                "Don't know what type of Intel MP entry %s is."
-                % entry.__class__.__name__
+                f"Don't know what type of Intel MP entry {entry.__class__.__name__} is."
             )
 
 

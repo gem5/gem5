@@ -76,7 +76,7 @@ parser.add_argument("--pdf", action="store_true", help="output Latex and pdf")
 def main():
     args = parser.parse_args()
     if not os.path.isfile(args.statsfile):
-        exit("Error! File not found: %s" % args.statsfile)
+        exit(f"Error! File not found: {args.statsfile}")
     if not os.path.isdir(args.outdir):
         os.mkdir(args.outdir)
 

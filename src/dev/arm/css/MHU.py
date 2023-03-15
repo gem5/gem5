@@ -103,7 +103,7 @@ class MHU(BasicPioDevice):
     scp = Param.Scp(Parent.any, "System Control Processor")
 
     def generateDeviceTree(self, state):
-        node = FdtNode("mailbox@%x" % int(self.pio_addr))
+        node = FdtNode(f"mailbox@{int(self.pio_addr):x}")
         node.appendCompatible(["arm,mhu", "arm,primecell"])
         node.append(
             FdtPropertyWords(

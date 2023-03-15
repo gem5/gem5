@@ -520,7 +520,7 @@ class SLICC(Grammar):
 
     def p_typestr__multi(self, p):
         "typestr : typestr DOUBLE_COLON ident"
-        p[0] = "%s::%s" % (p[1], p[3])
+        p[0] = f"{p[1]}::{p[3]}"
 
     def p_typestr__single(self, p):
         "typestr : ident"

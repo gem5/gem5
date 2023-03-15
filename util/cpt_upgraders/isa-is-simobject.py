@@ -79,7 +79,7 @@ def upgrader(cpt):
                 if key in isa_fields:
                     isa_section.append((key, value))
 
-        name = "%s.isa" % re_cpu_match.group(1)
+        name = f"{re_cpu_match.group(1)}.isa"
         isa_sections.append((name, isa_section))
 
         for (key, value) in isa_section:

@@ -683,7 +683,7 @@ def find_path(base_list, rel_path, test):
         full_path = os.path.join(base, rel_path)
         if test(full_path):
             return full_path
-    fatal("%s not found in %s" % (rel_path, base_list))
+    fatal(f"{rel_path} not found in {base_list}")
 
 
 def find_file(base_list, rel_path):
@@ -717,7 +717,7 @@ else:
                 "/usr/lib/x86_64-linux-gnu",
             ]
         ),
-        "HOME=%s" % os.getenv("HOME", "/"),
+        f"HOME={os.getenv('HOME', '/')}",
         # Disable the VM fault handler signal creation for dGPUs also
         # forces the use of DefaultSignals instead of driver-controlled
         # InteruptSignals throughout the runtime.  DefaultSignals poll
@@ -922,14 +922,10 @@ else:
 
 redirect_paths = [
     RedirectPath(
-        app_path="/proc", host_paths=["%s/fs/proc" % m5.options.outdir]
+        app_path="/proc", host_paths=[f"{m5.options.outdir}/fs/proc"]
     ),
-    RedirectPath(
-        app_path="/sys", host_paths=["%s/fs/sys" % m5.options.outdir]
-    ),
-    RedirectPath(
-        app_path="/tmp", host_paths=["%s/fs/tmp" % m5.options.outdir]
-    ),
+    RedirectPath(app_path="/sys", host_paths=[f"{m5.options.outdir}/fs/sys"]),
+    RedirectPath(app_path="/tmp", host_paths=[f"{m5.options.outdir}/fs/tmp"]),
 ]
 
 system.redirect_paths = redirect_paths
@@ -981,7 +977,7 @@ exit_event = m5.simulate(maxtick)
 if args.fast_forward:
     if exit_event.getCause() == "a thread reached the max instruction count":
         m5.switchCpus(system, switch_cpu_list)
-        print("Switched CPUS @ tick %s" % (m5.curTick()))
+        print(f"Switched CPUS @ tick {m5.curTick()}")
         m5.stats.reset()
         exit_event = m5.simulate(maxtick - m5.curTick())
 elif args.fast_forward_pseudo_op:
@@ -992,7 +988,7 @@ elif args.fast_forward_pseudo_op:
             print("Dumping stats...")
             m5.stats.dump()
         m5.switchCpus(system, switch_cpu_list)
-        print("Switched CPUS @ tick %s" % (m5.curTick()))
+        print(f"Switched CPUS @ tick {m5.curTick()}")
         m5.stats.reset()
         # This lets us switch back and forth without keeping a counter
         switch_cpu_list = [(x[1], x[0]) for x in switch_cpu_list]

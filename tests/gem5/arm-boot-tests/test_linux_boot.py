@@ -66,9 +66,7 @@ arm-boot-test"
     if to_tick:
         name += "_to-tick"
         exit_regex = re.compile(
-            "Exiting @ tick {} because simulate\(\) limit reached".format(
-                str(to_tick)
-            )
+            f"Exiting @ tick {str(to_tick)} because simulate\\(\\) limit reached"
         )
         verifiers.append(verifier.MatchRegex(exit_regex))
         config_args += ["--tick-exit", str(to_tick)]

@@ -39,5 +39,5 @@ microcode = """
 # 128 bit multimedia and scientific data transfer instructions
 """
 for category in categories:
-    exec("from . import %s as cat" % category)
+    exec(f"from . import {category} as cat")
     microcode += cat.microcode

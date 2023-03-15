@@ -347,8 +347,8 @@ if args.benchmark:
     try:
         bm = Benchmarks[args.benchmark]
     except KeyError:
-        print("Error benchmark %s has not been defined." % args.benchmark)
-        print("Valid benchmarks are: %s" % DefinedBenchmarks)
+        print(f"Error benchmark {args.benchmark} has not been defined.")
+        print(f"Valid benchmarks are: {DefinedBenchmarks}")
         sys.exit(1)
 else:
     if args.dual:
@@ -433,7 +433,7 @@ if buildEnv["USE_ARM_ISA"] and not args.bare_metal and not args.dtb_filename:
         if hasattr(root, sysname):
             sys = getattr(root, sysname)
             sys.workload.dtb_filename = os.path.join(
-                m5.options.outdir, "%s.dtb" % sysname
+                m5.options.outdir, f"{sysname}.dtb"
             )
             sys.generateDtb(sys.workload.dtb_filename)
 

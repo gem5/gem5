@@ -64,13 +64,13 @@ def check_armlmd_license(timeout):
 
     for server in servers:
         if os.path.exists(server):
-            logging.debug("License file %s exists." % server)
+            logging.debug(f"License file {server} exists.")
             break
 
         tuple = server.split("@")
         if len(tuple) != 2:
             # Probably not a server, and we know the file doesn't exist.
-            logging.debug('License file "%s" does not exist.' % server)
+            logging.debug(f'License file "{server}" does not exist.')
             continue
 
         try:
@@ -80,17 +80,15 @@ def check_armlmd_license(timeout):
                 (tuple[1], int(tuple[0])), timeout=timeout
             )
             s.close()
-            logging.debug("License server %s is reachable." % server)
+            logging.debug(f"License server {server} is reachable.")
             break
         except Exception as e:
             logging.debug(
-                "Cannot connect to license server %s (%s: %s)."
-                % (server, type(e).__name__, e)
+                f"Cannot connect to license server {server} ({type(e).__name__}: {e})."
             )
     else:
         raise ConnectionError(
-            "Cannot connect to any of the license servers (%s)."
-            % ", ".join(servers)
+            f"Cannot connect to any of the license servers ({', '.join(servers)})."
         )
 
 

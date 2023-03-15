@@ -184,7 +184,7 @@ def runGpuFSSystem(args):
             break
         else:
             print(
-                "Unknown exit event: %s. Continuing..." % exit_event.getCause()
+                f"Unknown exit event: {exit_event.getCause()}. Continuing..."
             )
 
     print(

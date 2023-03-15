@@ -206,13 +206,11 @@ class Format(object):
         label = "def format " + id
         self.user_code = compile(fixPythonIndentation(code), label, "exec")
         param_list = ", ".join(params)
-        f = (
-            """def defInst(_code, _context, %s):
+        f = f"""def defInst(_code, _context, {param_list}):
                 my_locals = vars().copy()
                 exec(_code, _context, my_locals)
-                return my_locals\n"""
-            % param_list
-        )
+                return my_locals
+"""
         c = compile(f, label + " wrapper", "exec")
         exec(c, globals())
         self.func = defInst
@@ -230,7 +228,7 @@ class Format(object):
         except Exception as exc:
             if debug:
                 raise
-            error(lineno, 'error defining "%s": %s.' % (name, exc))
+            error(lineno, f'error defining "{name}": {exc}.')
         for k in list(vars.keys()):
             if k not in (
                 "header_output",
@@ -250,7 +248,7 @@ class NoFormat(object):
 
     def defineInst(self, parser, name, args, lineno):
         error(
-            lineno, 'instruction definition "%s" with no active format!' % name
+            lineno, f'instruction definition "{name}" with no active format!'
         )
 
 
@@ -606,7 +604,7 @@ class ISAParser(Grammar):
             if section == "header":
                 file = "decoder.hh"
             else:
-                file = "%s.cc" % section
+                file = f"{section}.cc"
             filename = self.suffixize(file, section)
         try:
             return self.files[filename]
@@ -652,7 +650,7 @@ class ISAParser(Grammar):
             )
             fn = "decoder-g.hh.inc"
             assert fn in self.files
-            f.write('#include "%s"\n' % fn)
+            f.write(f'#include "{fn}"\n')
 
             fn = "decoder-ns.hh.inc"
             assert fn in self.files
@@ -663,26 +661,25 @@ class ISAParser(Grammar):
             )
             f.write("} // namespace gem5")
             f.write(
-                "\n#endif  // __ARCH_%s_GENERATED_DECODER_HH__\n"
-                % self.isa_name.upper()
+                f"\n#endif  // __ARCH_{self.isa_name.upper()}_GENERATED_DECODER_HH__\n"
             )
 
         # decoder method - cannot be split
         file = "decoder.cc"
         with self.open(file) as f:
             fn = "base/compiler.hh"
-            f.write('#include "%s"\n' % fn)
+            f.write(f'#include "{fn}"\n')
 
             fn = "decoder-g.cc.inc"
             assert fn in self.files
-            f.write('#include "%s"\n' % fn)
+            f.write(f'#include "{fn}"\n')
 
             fn = "decoder.hh"
-            f.write('#include "%s"\n' % fn)
+            f.write(f'#include "{fn}"\n')
 
             fn = "decode-method.cc.inc"
             # is guaranteed to have been written for parse to complete
-            f.write('#include "%s"\n' % fn)
+            f.write(f'#include "{fn}"\n')
 
         extn = re.compile("(\.[^\.]+)$")
 
@@ -697,10 +694,10 @@ class ISAParser(Grammar):
             with self.open(file) as f:
                 fn = "decoder-g.cc.inc"
                 assert fn in self.files
-                f.write('#include "%s"\n' % fn)
+                f.write(f'#include "{fn}"\n')
 
                 fn = "decoder.hh"
-                f.write('#include "%s"\n' % fn)
+                f.write(f'#include "{fn}"\n')
 
                 fn = "decoder-ns.cc.inc"
                 assert fn in self.files
@@ -708,7 +705,7 @@ class ISAParser(Grammar):
                 print("namespace %s {" % self.namespace, file=f)
                 if splits > 1:
                     print("#define __SPLIT %u" % i, file=f)
-                print('#include "%s"' % fn, file=f)
+                print(f'#include "{fn}"', file=f)
                 print("} // namespace %s" % self.namespace, file=f)
                 print("} // namespace gem5", file=f)
 
@@ -721,7 +718,7 @@ class ISAParser(Grammar):
             with self.open(file) as f:
                 fn = "exec-g.cc.inc"
                 assert fn in self.files
-                f.write('#include "%s"\n' % fn)
+                f.write(f'#include "{fn}"\n')
                 f.write('#include "cpu/exec_context.hh"\n')
                 f.write('#include "decoder.hh"\n')
 
@@ -731,7 +728,7 @@ class ISAParser(Grammar):
                 print("namespace %s {" % self.namespace, file=f)
                 if splits > 1:
                     print("#define __SPLIT %u" % i, file=f)
-                print('#include "%s"' % fn, file=f)
+                print(f'#include "{fn}"', file=f)
                 print("} // namespace %s" % self.namespace, file=f)
                 print("} // namespace gem5", file=f)
 
@@ -847,7 +844,7 @@ class ISAParser(Grammar):
         try:
             t.value = int(t.value, 0)
         except ValueError:
-            error(t.lexer.lineno, 'Integer value "%s" too large' % t.value)
+            error(t.lexer.lineno, f'Integer value "{t.value}" too large')
             t.value = 0
         return t
 
@@ -902,7 +899,7 @@ class ISAParser(Grammar):
 
     # Error handler
     def t_error(self, t):
-        error(t.lexer.lineno, "illegal character '%s'" % t.value[0])
+        error(t.lexer.lineno, f"illegal character '{t.value[0]}'")
         t.skip(1)
 
     #####################################################################
@@ -1060,7 +1057,7 @@ del wrap
             traceback.print_exc(file=sys.stdout)
             if debug:
                 raise
-            error(t.lineno(1), "In global let block: %s" % exc)
+            error(t.lineno(1), f"In global let block: {exc}")
         GenCode(
             self,
             header_output=self.exportContext["header_output"],
@@ -1078,7 +1075,7 @@ del wrap
         except Exception as exc:
             if debug:
                 raise
-            error(t.lineno(1), "In def operand_types: %s" % exc)
+            error(t.lineno(1), f"In def operand_types: {exc}")
 
     # Define the mapping from operand names to operand classes and
     # other traits.  Stored in operandNameMap.
@@ -1094,7 +1091,7 @@ del wrap
         except Exception as exc:
             if debug:
                 raise
-            error(t.lineno(1), "In def operands: %s" % exc)
+            error(t.lineno(1), f"In def operands: {exc}")
         self.buildOperandNameMap(user_dict, t.lexer.lineno)
 
     # A bitfield definition looks like:
@@ -1105,7 +1102,7 @@ del wrap
         expr = "bits(machInst, %2d, %2d)" % (t[6], t[8])
         if t[2] == "signed":
             expr = "sext<%d>(%s)" % (t[6] - t[8] + 1, expr)
-        hash_define = "#undef %s\n#define %s\t%s\n" % (t[4], t[4], expr)
+        hash_define = f"#undef {t[4]}\n#define {t[4]}\t{expr}\n"
         GenCode(self, header_output=hash_define).emit()
 
     # alternate form for single bit: 'def [signed] bitfield <ID> [<bit>]'
@@ -1114,7 +1111,7 @@ del wrap
         expr = "bits(machInst, %2d, %2d)" % (t[6], t[6])
         if t[2] == "signed":
             expr = "sext<%d>(%s)" % (1, expr)
-        hash_define = "#undef %s\n#define %s\t%s\n" % (t[4], t[4], expr)
+        hash_define = f"#undef {t[4]}\n#define {t[4]}\t{expr}\n"
         GenCode(self, header_output=hash_define).emit()
 
     # alternate form for structure member: 'def bitfield <ID> <ID>'
@@ -1124,8 +1121,8 @@ del wrap
             error(
                 t.lineno(1), "error: structure bitfields are always unsigned."
             )
-        expr = "machInst.%s" % t[5]
-        hash_define = "#undef %s\n#define %s\t%s\n" % (t[4], t[4], expr)
+        expr = f"machInst.{t[5]}"
+        hash_define = f"#undef {t[4]}\n#define {t[4]}\t{expr}\n"
         GenCode(self, header_output=hash_define).emit()
 
     def p_id_with_dot_0(self, t):
@@ -1147,7 +1144,7 @@ del wrap
     def p_def_template(self, t):
         "def_template : DEF TEMPLATE ID CODELIT SEMI"
         if t[3] in self.templateMap:
-            print("warning: template %s already defined" % t[3])
+            print(f"warning: template {t[3]} already defined")
         self.templateMap[t[3]] = Template(self, t[4])
 
     # An instruction format definition looks like
@@ -1326,9 +1323,9 @@ StaticInstPtr
         "push_format_id : ID"
         try:
             self.formatStack.push(self.formatMap[t[1]])
-            t[0] = ("", "// format %s" % t[1])
+            t[0] = ("", f"// format {t[1]}")
         except KeyError:
-            error(t.lineno(1), 'instruction format "%s" not defined.' % t[1])
+            error(t.lineno(1), f'instruction format "{t[1]}" not defined.')
 
     # Nested decode block: if the value of the current field matches
     # the specified constant(s), do a nested decode on some other field.
@@ -1339,7 +1336,7 @@ StaticInstPtr
         # just wrap the decoding code from the block as a case in the
         # outer switch statement.
         codeObj.wrap_decode_block(
-            "\n%s\n" % "".join(case_list), "GEM5_UNREACHABLE;\n"
+            f"\n{''.join(case_list)}\n", "GEM5_UNREACHABLE;\n"
         )
         codeObj.has_decode_default = case_list == ["default:"]
         t[0] = codeObj
@@ -1349,7 +1346,7 @@ StaticInstPtr
         "decode_stmt : case_list COLON inst SEMI"
         case_list = t[1]
         codeObj = t[3]
-        codeObj.wrap_decode_block("\n%s" % "".join(case_list), "break;\n")
+        codeObj.wrap_decode_block(f"\n{''.join(case_list)}", "break;\n")
         codeObj.has_decode_default = case_list == ["default:"]
         t[0] = codeObj
 
@@ -1368,7 +1365,7 @@ StaticInstPtr
             return "case %#x: " % lit
 
     def prep_str_lit_case_label(self, lit):
-        return "case %s: " % lit
+        return f"case {lit}: "
 
     def p_case_list_1(self, t):
         "case_list : INTLIT"
@@ -1399,7 +1396,7 @@ StaticInstPtr
         args = ",".join(list(map(str, t[3])))
         args = re.sub("(?m)^", "//", args)
         args = re.sub("^//", "", args)
-        comment = "\n// %s::%s(%s)\n" % (currentFormat.id, t[1], args)
+        comment = f"\n// {currentFormat.id}::{t[1]}({args})\n"
         codeObj.prepend_all(comment)
         t[0] = codeObj
 
@@ -1410,10 +1407,10 @@ StaticInstPtr
         try:
             format = self.formatMap[t[1]]
         except KeyError:
-            error(t.lineno(1), 'instruction format "%s" not defined.' % t[1])
+            error(t.lineno(1), f'instruction format "{t[1]}" not defined.')
 
         codeObj = format.defineInst(self, t[3], t[5], t.lexer.lineno)
-        comment = "\n// %s::%s(%s)\n" % (t[1], t[3], t[5])
+        comment = f"\n// {t[1]}::{t[3]}({t[5]})\n"
         codeObj.prepend_all(comment)
         t[0] = codeObj
 
@@ -1503,7 +1500,7 @@ StaticInstPtr
     # t.value)
     def p_error(self, t):
         if t:
-            error(t.lexer.lineno, "syntax error at '%s'" % t.value)
+            error(t.lexer.lineno, f"syntax error at '{t.value}'")
         else:
             error("unknown syntax error")
 
@@ -1523,7 +1520,7 @@ StaticInstPtr
 
         # make sure we haven't already defined this one
         if id in self.formatMap:
-            error(lineno, "format %s redefined." % id)
+            error(lineno, f"format {id} redefined.")
 
         # create new object and store in global map
         self.formatMap[id] = Format(id, params, code)
@@ -1641,7 +1638,7 @@ StaticInstPtr
         try:
             contents = open(filename).read()
         except IOError:
-            error('Error including file "%s"' % filename)
+            error(f'Error including file "{filename}"')
 
         self.fileNameStack.push(LineTracker(filename))
 
@@ -1691,7 +1688,7 @@ StaticInstPtr
             self._parse_isa_desc(*args, **kwargs)
         except ISAParserError as e:
             print(backtrace(self.fileNameStack))
-            print("At %s:" % e.lineno)
+            print(f"At {e.lineno}:")
             print(e)
             sys.exit(1)
 

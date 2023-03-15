@@ -248,7 +248,7 @@ class RealViewCtrl(BasicPioDevice):
     idreg = Param.UInt32(0x00000000, "ID Register, SYS_ID")
 
     def generateDeviceTree(self, state):
-        node = FdtNode("sysreg@%x" % int(self.pio_addr))
+        node = FdtNode(f"sysreg@{int(self.pio_addr):x}")
         node.appendCompatible("arm,vexpress-sysreg")
         node.append(
             FdtPropertyWords(
@@ -458,7 +458,7 @@ class FixedClock(SrcClockDomain):
     def generateDeviceTree(self, state):
         if len(self.clock) > 1:
             fatal("FixedClock configured with multiple frequencies")
-        node = FdtNode("clock{}".format(FixedClock._index))
+        node = FdtNode(f"clock{FixedClock._index}")
         node.appendCompatible("fixed-clock")
         node.append(FdtPropertyWords("#clock-cells", 0))
         node.append(
@@ -743,7 +743,7 @@ class MmioSRAM(ParentMem):
         super().__init__(**kwargs)
 
     def generateDeviceTree(self, state):
-        node = FdtNode("sram@%x" % int(self.range.start))
+        node = FdtNode(f"sram@{int(self.range.start):x}")
         node.appendCompatible(["mmio-sram"])
         node.append(
             FdtPropertyWords(

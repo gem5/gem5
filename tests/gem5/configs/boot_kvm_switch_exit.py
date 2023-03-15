@@ -137,9 +137,7 @@ elif args.mem_system == "classic":
     cache_hierarchy = PrivateL1CacheHierarchy(l1d_size="16kB", l1i_size="16kB")
 else:
     raise NotImplementedError(
-        "Memory system '{}' is not supported in the boot tests.".format(
-            args.mem_system
-        )
+        f"Memory system '{args.mem_system}' is not supported in the boot tests."
     )
 
 assert cache_hierarchy != None

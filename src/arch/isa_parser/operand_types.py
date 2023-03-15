@@ -286,16 +286,16 @@ class VecRegOperand(RegOperand):
         else:
             ext = dflt_elem_ext
         ctype = self.parser.operandTypeMap[ext]
-        return "\n\t%s %s = 0;" % (ctype, elem_name)
+        return f"\n\t{ctype} {elem_name} = 0;"
 
     def makeDecl(self):
         if not self.is_dest and self.is_src:
-            c_decl = "\t/* Vars for %s*/" % (self.base_name)
+            c_decl = f"\t/* Vars for {self.base_name}*/"
             if hasattr(self, "active_elems"):
                 if self.active_elems:
                     for elem in self.active_elems:
                         c_decl += self.makeDeclElem(elem)
-            return c_decl + "\t/* End vars for %s */\n" % (self.base_name)
+            return c_decl + f"\t/* End vars for {self.base_name} */\n"
         else:
             return ""
 
@@ -308,12 +308,7 @@ class VecRegOperand(RegOperand):
         else:
             ext = dflt_elem_ext
         ctype = self.parser.operandTypeMap[ext]
-        c_read = "\t\t%s& %s = %s[%s];\n" % (
-            ctype,
-            elem_name,
-            self.base_name,
-            elem_spec,
-        )
+        c_read = f"\t\t{ctype}& {elem_name} = {self.base_name}[{elem_spec}];\n"
         return c_read
 
     def makeReadW(self):
@@ -346,7 +341,7 @@ class VecRegOperand(RegOperand):
         else:
             ext = dflt_elem_ext
         ctype = self.parser.operandTypeMap[ext]
-        c_read = "\t\t%s = %s[%s];\n" % (elem_name, name, elem_spec)
+        c_read = f"\t\t{elem_name} = {name}[{elem_spec}];\n"
         return c_read
 
     def makeRead(self):
@@ -610,10 +605,7 @@ class PCStateOperand(Operand):
     def makeWrite(self):
         if self.reg_spec:
             # A component of the PC state.
-            return "__parserAutoPCState.%s(%s);\n" % (
-                self.reg_spec,
-                self.base_name,
-            )
+            return f"__parserAutoPCState.{self.reg_spec}({self.base_name});\n"
         else:
             # The whole PC state itself.
             return f"xc->pcState({self.base_name});\n"
@@ -624,7 +616,7 @@ class PCStateOperand(Operand):
             ctype = self.ctype
         # Note that initializations in the declarations are solely
         # to avoid 'uninitialized variable' errors from the compiler.
-        return "%s %s = 0;\n" % (ctype, self.base_name)
+        return f"{ctype} {self.base_name} = 0;\n"
 
     def isPCState(self):
         return 1

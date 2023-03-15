@@ -37,17 +37,17 @@ class TypeDeclAST(DeclAST):
         self.field_asts = field_asts
 
     def __repr__(self):
-        return "[TypeDecl: %r]" % (self.type_ast)
+        return f"[TypeDecl: {self.type_ast!r}]"
 
     def files(self, parent=None):
         if "external" in self:
             return set()
 
         if parent:
-            ident = "%s_%s" % (parent, self.type_ast.ident)
+            ident = f"{parent}_{self.type_ast.ident}"
         else:
             ident = self.type_ast.ident
-        return set(("%s.hh" % ident, "%s.cc" % ident))
+        return set((f"{ident}.hh", f"{ident}.cc"))
 
     def generate(self):
         ident = str(self.type_ast)

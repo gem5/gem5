@@ -35,7 +35,7 @@ import argparse
 
 
 def generateMemNode(state, mem_range):
-    node = FdtNode("memory@%x" % int(mem_range.start))
+    node = FdtNode(f"memory@{int(mem_range.start):x}")
     node.append(FdtPropertyStrings("device_type", ["memory"]))
     node.append(
         FdtPropertyWords(

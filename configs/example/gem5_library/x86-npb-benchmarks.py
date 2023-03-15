@@ -195,7 +195,7 @@ board = X86Board(
 # properly.
 
 command = (
-    "/home/gem5/NPB3.3-OMP/bin/{}.{}.x;".format(args.benchmark, args.size)
+    f"/home/gem5/NPB3.3-OMP/bin/{args.benchmark}.{args.size}.x;"
     + "sleep 5;"
     + "m5 exit;"
 )

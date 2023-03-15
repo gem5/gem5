@@ -97,5 +97,5 @@ class ExitEvent(Enum):
             # This is for the gups generator exit event
             return ExitEvent.EXIT
         raise NotImplementedError(
-            "Exit event '{}' not implemented".format(exit_string)
+            f"Exit event '{exit_string}' not implemented"
         )

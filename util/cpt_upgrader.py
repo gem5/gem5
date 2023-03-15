@@ -102,7 +102,7 @@ class Upgrader:
             self.depends = [self.depends]
 
         if not isinstance(self.depends, list):
-            print("Error: 'depends' for {} is the wrong type".format(self.tag))
+            print(f"Error: 'depends' for {self.tag} is the wrong type")
             sys.exit(1)
 
         if hasattr(self, "fwd_depends"):
@@ -112,37 +112,25 @@ class Upgrader:
             self.fwd_depends = []
 
         if not isinstance(self.fwd_depends, list):
-            print(
-                "Error: 'fwd_depends' for {} is the wrong type".format(
-                    self.tag
-                )
-            )
+            print(f"Error: 'fwd_depends' for {self.tag} is the wrong type")
             sys.exit(1)
 
         if hasattr(self, "upgrader"):
             if not isinstance(self.upgrader, types.FunctionType):
                 print(
-                    "Error: 'upgrader' for {} is {}, not function".format(
-                        self.tag, type(self)
-                    )
+                    f"Error: 'upgrader' for {self.tag} is {type(self)}, not function"
                 )
                 sys.exit(1)
             Upgrader.tag_set.add(self.tag)
         elif hasattr(self, "downgrader"):
             if not isinstance(self.downgrader, types.FunctionType):
                 print(
-                    "Error: 'downgrader' for {} is {}, not function".format(
-                        self.tag, type(self)
-                    )
+                    f"Error: 'downgrader' for {self.tag} is {type(self)}, not function"
                 )
                 sys.exit(1)
             Upgrader.untag_set.add(self.tag)
         else:
-            print(
-                "Error: no upgrader or downgrader method for {}".format(
-                    self.tag
-                )
-            )
+            print(f"Error: no upgrader or downgrader method for {self.tag}")
             sys.exit(1)
 
         if hasattr(self, "legacy_version"):
@@ -196,8 +184,7 @@ class Upgrader:
             for dep in upg.depends:
                 if dep not in Upgrader.by_tag:
                     print(
-                        "Error: '{}' cannot depend on "
-                        "nonexistent tag '{}'".format(tag, dep)
+                        f"Error: '{tag}' cannot depend on nonexistent tag '{dep}'"
                     )
                     sys.exit(1)
 
@@ -208,7 +195,7 @@ def process_file(path, **kwargs):
 
         raise IOError(errno.ENOENT, "No such file", path)
 
-    verboseprint("Processing file %s...." % path)
+    verboseprint(f"Processing file {path}....")
 
     if kwargs.get("backup", True):
         import shutil
@@ -337,7 +324,7 @@ if __name__ == "__main__":
         print()
         print("std::set<std::string> version_tags = {")
         for tag in sorted(Upgrader.tag_set):
-            print('  "{}",'.format(tag))
+            print(f'  "{tag}",')
         print("};")
         print()
         print("} // namespace gem5")
@@ -369,7 +356,7 @@ if __name__ == "__main__":
         elif osp.isfile(cpt_file):
             process_file(cpt_file, **vars(args))
         else:
-            print("Error: checkpoint file not found in {} ".format(path))
+            print(f"Error: checkpoint file not found in {path} ")
             print("and recurse not specified")
             sys.exit(1)
     sys.exit(0)

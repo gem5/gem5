@@ -387,7 +387,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
             "norandmaps",
             "root={root_value}",
             "rw",
-            "mem=%s" % self.get_memory().get_size(),
+            f"mem={self.get_memory().get_size()}",
         ]
 
     @overrides(SimObject)
