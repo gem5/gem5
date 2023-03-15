@@ -816,10 +816,14 @@ transition(I, Atomic, A) {TagArrayRead} {
   }
 
   transition({M, W}, Atomic, WI) {TagArrayRead} {
-    p_profileHit;
     t_allocateTBE;
     wb_writeBack;
-    p_popRequestQueue;
+    // after writing back the current line, we need to wait for it to be done
+    // before we try to perform the atomic
+    // by putting the stalled requests in a buffer, we reduce resource contention
+    // since they won't try again every cycle and will instead only try again once
+    // woken up
+    st_stallAndWaitRequest;
   }
 
   transition(I, WrVicBlk) {TagArrayRead} {
