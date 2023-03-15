@@ -718,10 +718,13 @@ machine(MachineType:TCC, "TCC Cache")
     p_popRequestQueue;
   }
   transition(W, RdBlk, WI) {TagArrayRead, DataArrayRead} {
-    p_profileHit;
     t_allocateTBE;
     wb_writeBack;
-    p_popRequestQueue;
+    // need to try this request again after writing back the current entry -- to
+    // do so, put it with other stalled requests in a buffer to reduce resource
+    // contention since they won't try again every cycle and will instead only
+    // try again once woken up
+    st_stallAndWaitRequest;
   }
 
   transition(I, RdBlk, IV) {TagArrayRead} {
