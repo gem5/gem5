@@ -239,17 +239,17 @@ ListenSocket::listen(int port, bool reuse)
 // Open a connection.  Accept will block, so if you don't want it to,
 // make sure a connection is ready before you call accept.
 int
-ListenSocket::accept(bool nodelay)
+ListenSocket::accept()
 {
     struct sockaddr_in sockaddr;
     socklen_t slen = sizeof (sockaddr);
     int sfd = acceptCloexec(fd, (struct sockaddr *)&sockaddr, &slen);
-    if (sfd != -1 && nodelay) {
-        int i = 1;
-        if (::setsockopt(sfd, IPPROTO_TCP, TCP_NODELAY, (char *)&i,
-                         sizeof(i)) < 0)
-            warn("ListenSocket(accept): setsockopt() TCP_NODELAY failed!");
-    }
+    if (sfd == -1)
+        return -1;
+
+    int i = 1;
+    int ret = ::setsockopt(sfd, IPPROTO_TCP, TCP_NODELAY, &i, sizeof(i));
+    warn_if(ret < 0, "ListenSocket(accept): setsockopt() TCP_NODELAY failed!");
 
     return sfd;
 }

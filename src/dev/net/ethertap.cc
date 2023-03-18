@@ -280,7 +280,7 @@ TapListener::accept()
     if (!listener.islistening())
         panic("TapListener(accept): cannot accept if we're not listening!");
 
-    int sfd = listener.accept(true);
+    int sfd = listener.accept();
     if (sfd != -1)
         tap->attach(sfd);
 }

@@ -190,7 +190,7 @@ VncServer::accept()
     if (!listener.islistening())
         panic("%s: cannot accept a connection if not listening!", name());
 
-    int fd = listener.accept(true);
+    int fd = listener.accept();
     if (fd < 0) {
         warn("%s: failed to accept VNC connection!", name());
         return;

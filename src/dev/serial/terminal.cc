@@ -195,7 +195,7 @@ Terminal::accept()
     if (!listener.islistening())
         panic("%s: cannot accept a connection if not listening!", name());
 
-    int fd = listener.accept(true);
+    int fd = listener.accept();
     if (data_fd != -1) {
         char message[] = "terminal already attached!\n";
         atomic_write(fd, message, sizeof(message));
