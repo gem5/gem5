@@ -269,4 +269,12 @@ ListenSocket::accept()
     return sfd;
 }
 
+ListenSocketConfig
+listenSocketInetConfig(int port)
+{
+    return ListenSocketConfig([port](const std::string &name) {
+        return std::make_unique<ListenSocket>(name, port);
+    });
+}
+
 } // namespace gem5

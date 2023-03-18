@@ -245,11 +245,12 @@ class TapListener
     void accept();
 
   protected:
-    ListenSocket listener;
+    ListenSocketPtr listener;
     EtherTapStub *tap;
 
   public:
-    TapListener(EtherTapStub *t, int p) : listener(t->name(), p), tap(t) {}
+    TapListener(EtherTapStub *t, int p) :
+        listener(listenSocketInetConfig(p).build(t->name())), tap(t) {}
     ~TapListener() { delete event; }
 
     void listen();
@@ -258,9 +259,9 @@ class TapListener
 void
 TapListener::listen()
 {
-    listener.listen();
+    listener->listen();
 
-    event = new Event(this, listener.getfd(), POLLIN|POLLERR);
+    event = new Event(this, listener->getfd(), POLLIN|POLLERR);
     pollQueue.schedule(event);
 }
 
@@ -272,10 +273,10 @@ TapListener::accept()
     // thread.
     EventQueue::ScopedMigration migrate(tap->eventQueue());
 
-    if (!listener.islistening())
+    if (!listener->islistening())
         panic("TapListener(accept): cannot accept if we're not listening!");
 
-    int sfd = listener.accept();
+    int sfd = listener->accept();
     if (sfd != -1)
         tap->attach(sfd);
 }

@@ -101,7 +101,7 @@ class Terminal : public SerialDevice
     OutputStream * terminalDump(const TerminalParams &p);
 
   protected:
-    ListenSocket listener;
+    ListenSocketPtr listener;
 
     void listen();
     void accept();

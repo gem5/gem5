@@ -121,7 +121,8 @@ Terminal::DataEvent::process(int revent)
  */
 Terminal::Terminal(const Params &p)
     : SerialDevice(p), listenEvent(NULL), dataEvent(NULL),
-      number(p.number), data_fd(-1), listener(p.name, p.port),
+      number(p.number), data_fd(-1),
+      listener(listenSocketInetConfig(p.port).build(p.name)),
       txbuf(16384), rxbuf(16384), outfile(terminalDump(p))
 #if TRACING_ON == 1
       , linebuf(16384)
@@ -175,19 +176,19 @@ Terminal::listen()
         return;
     }
 
-    listener.listen();
+    listener->listen();
 
-    listenEvent = new ListenEvent(this, listener.getfd(), POLLIN);
+    listenEvent = new ListenEvent(this, listener->getfd(), POLLIN);
     pollQueue.schedule(listenEvent);
 }
 
 void
 Terminal::accept()
 {
-    if (!listener.islistening())
+    if (!listener->islistening())
         panic("%s: cannot accept a connection if not listening!", name());
 
-    int fd = listener.accept();
+    int fd = listener->accept();
     if (data_fd != -1) {
         char message[] = "terminal already attached!\n";
         atomic_write(fd, message, sizeof(message));

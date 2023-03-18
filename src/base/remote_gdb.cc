@@ -392,10 +392,11 @@ std::map<Addr, HardBreakpoint *> hardBreakMap;
 
 BaseRemoteGDB::BaseRemoteGDB(System *_system, int _port) :
         incomingConnectionEvent(nullptr), incomingDataEvent(nullptr),
-        listener(_system->name() + ".remote_gdb", _port), fd(-1), sys(_system),
-        connectEvent(*this), disconnectEvent(*this), trapEvent(this),
-        singleStepEvent(*this)
-{}
+        fd(-1), sys(_system), connectEvent(*this), disconnectEvent(*this),
+        trapEvent(this), singleStepEvent(*this)
+{
+    listener = listenSocketInetConfig(_port).build(name());
+}
 
 BaseRemoteGDB::~BaseRemoteGDB()
 {
@@ -417,25 +418,22 @@ BaseRemoteGDB::listen()
         return;
     }
 
-    listener.listen();
+    listener->listen();
 
     incomingConnectionEvent =
-            new IncomingConnectionEvent(this, listener.getfd(), POLLIN);
+            new IncomingConnectionEvent(this, listener->getfd(), POLLIN);
     pollQueue.schedule(incomingConnectionEvent);
-
-    ccprintf(std::cerr, "%d: %s: listening for remote gdb on %s\n",
-             curTick(), name(), listener);
 }
 
 void
 BaseRemoteGDB::connect()
 {
-    panic_if(!listener.islistening(),
+    panic_if(!listener->islistening(),
              "Can't accept GDB connections without any threads!");
 
     pollQueue.remove(incomingConnectionEvent);
 
-    int sfd = listener.accept();
+    int sfd = listener->accept();
 
     if (sfd != -1) {
         if (isAttached())
@@ -448,9 +446,9 @@ BaseRemoteGDB::connect()
 const ListenSocket &
 BaseRemoteGDB::hostSocket() const
 {
-    panic_if(!listener.islistening(),
+    panic_if(!listener->islistening(),
              "Remote GDB socket is unknown until listen() has been called.");
-    return listener;
+    return *listener;
 }
 
 void
@@ -513,7 +511,7 @@ BaseRemoteGDB::addThreadContext(ThreadContext *_tc)
         assert(selectThreadContext(_tc->contextId()));
 
     // Now that we have a thread, we can start listening.
-    if (!listener.islistening())
+    if (!listener->islistening())
         listen();
 }
 

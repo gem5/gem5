@@ -33,6 +33,9 @@
 #include <sys/types.h>
 #include <sys/un.h>
 
+#include <cassert>
+#include <functional>
+#include <memory>
 #include <string>
 
 #include "base/named.hh"
@@ -126,6 +129,33 @@ class ListenSocket : public Named
                               socklen_t *addrlen);
     /** @} */ // end of api_socket
 };
+
+using ListenSocketPtr = std::unique_ptr<ListenSocket>;
+
+class ListenSocketConfig
+{
+  public:
+    using Builder = std::function<ListenSocketPtr(const std::string &name)>;
+
+    ListenSocketConfig() {}
+    ListenSocketConfig(Builder _builder) : builder(_builder) {}
+
+    ListenSocketPtr
+    build(const std::string &name) const
+    {
+        assert(builder);
+        return builder(name);
+    }
+
+    operator bool() const { return (bool)builder; }
+
+  private:
+    Builder builder;
+};
+
+static inline ListenSocketConfig listenSocketEmptyConfig() { return {}; }
+
+ListenSocketConfig listenSocketInetConfig(int port);
 
 inline static std::ostream &
 operator << (std::ostream &os, const ListenSocket &socket)

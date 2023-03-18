@@ -117,8 +117,8 @@ VncServer::DataEvent::process(int revent)
  */
 VncServer::VncServer(const Params &p)
     : VncInput(p), listenEvent(NULL), dataEvent(NULL), number(p.number),
-      listener(p.name, p.port), sendUpdate(false),
-      supportsRawEnc(false), supportsResizeEnc(false)
+      listener(listenSocketInetConfig(p.port).build(p.name)),
+      sendUpdate(false), supportsRawEnc(false), supportsResizeEnc(false)
 {
     if (p.port)
         listen();
@@ -164,9 +164,9 @@ VncServer::listen()
         return;
     }
 
-    listener.listen();
+    listener->listen();
 
-    listenEvent = new ListenEvent(this, listener.getfd(), POLLIN);
+    listenEvent = new ListenEvent(this, listener->getfd(), POLLIN);
     pollQueue.schedule(listenEvent);
 }
 
@@ -179,10 +179,10 @@ VncServer::accept()
     // thread.
     EventQueue::ScopedMigration migrate(eventQueue());
 
-    if (!listener.islistening())
+    if (!listener->islistening())
         panic("%s: cannot accept a connection if not listening!", name());
 
-    int fd = listener.accept();
+    int fd = listener->accept();
     if (fd < 0) {
         warn("%s: failed to accept VNC connection!", name());
         return;

@@ -39,14 +39,14 @@ namespace gem5
 namespace trace {
 
 NativeTrace::NativeTrace(const Params &p)
-    : ExeTracer(p), native_listener(p.name, 8000)
+    : ExeTracer(p), native_listener(listenSocketInetConfig(8000).build(p.name))
 {
     if (ListenSocket::allDisabled())
         fatal("All listeners are disabled!");
 
-    native_listener.listen();
+    native_listener->listen();
 
-    fd = native_listener.accept();
+    fd = native_listener->accept();
 }
 
 void

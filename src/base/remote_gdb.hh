@@ -231,7 +231,7 @@ class BaseRemoteGDB
     IncomingConnectionEvent *incomingConnectionEvent;
     IncomingDataEvent *incomingDataEvent;
 
-    ListenSocket listener;
+    ListenSocketPtr listener;
 
     // The socket commands come in through.
     int fd;
