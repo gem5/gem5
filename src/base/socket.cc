@@ -39,6 +39,7 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <filesystem>
 
 #include "base/logging.hh"
 #include "base/output.hh"
@@ -187,10 +188,10 @@ int
 ListenSocket::accept()
 {
     struct sockaddr_in sockaddr;
-    socklen_t slen = sizeof (sockaddr);
+    socklen_t slen = sizeof(sockaddr);
     int sfd = acceptCloexec(fd, (struct sockaddr *)&sockaddr, &slen);
-    if (sfd == -1)
-        return -1;
+    panic_if(sfd == -1, "%s: Failed to accept connection: %s",
+            name(), strerror(errno));
 
     return sfd;
 }
@@ -282,6 +283,149 @@ listenSocketInetConfig(int port)
 {
     return ListenSocketConfig([port](const std::string &name) {
         return std::make_unique<ListenSocketInet>(name, port);
+    });
+}
+
+std::string
+ListenSocketUnix::truncate(const std::string &original, size_t max_len)
+{
+    if (original.size() <= max_len)
+        return original;
+
+    std::string truncated = original.substr(0, max_len);
+    warn("%s: Truncated \"%s\" to \"%s\"", name(), original, truncated);
+    return truncated;
+}
+
+void
+ListenSocketUnix::listen()
+{
+    panic_if(listening, "%s: Socket already listening!", name());
+
+    // only create socket if not already created by previous call
+    if (fd == -1) {
+        fd = socketCloexec(PF_UNIX, SOCK_STREAM, 0);
+        panic_if(fd < 0, "%s: Can't create unix socket:%s !",
+                name(), strerror(errno));
+    }
+
+    sockaddr_un serv_addr;
+    std::memset(&serv_addr, 0, sizeof(serv_addr));
+    size_t addr_size = prepSockaddrUn(serv_addr);
+
+    fatal_if(bind(fd, (struct sockaddr *)&(serv_addr), addr_size) != 0,
+            "%s: Cannot bind unix socket %s: %s", name(), *this,
+            strerror(errno));
+
+    fatal_if(::listen(fd, 1) == -1, "%s: Failed to listen on %s: %s\n",
+            name(), *this, strerror(errno));
+
+    ccprintf(std::cerr, "%s: Listening for connections on %s\n",
+            name(), *this);
+
+    setListening();
+}
+
+ListenSocketUnixFile::ListenSocketUnixFile(const std::string &_name,
+        const std::string &_dir, const std::string &_fname) :
+    ListenSocketUnix(_name), dir(_dir),
+    fname(truncate(_fname, sizeof(sockaddr_un::sun_path) - 1))
+{
+}
+
+ListenSocketUnixFile::~ListenSocketUnixFile()
+{
+    if (fd != -1) {
+        close(fd);
+        fd = -1;
+        unlink();
+    }
+}
+
+bool
+ListenSocketUnixFile::unlink() const
+{
+    auto path = resolvedDir + "/" + fname;
+    return ::unlink(path.c_str()) == 0;
+}
+
+size_t
+ListenSocketUnixFile::prepSockaddrUn(sockaddr_un &addr) const
+{
+    addr.sun_family = AF_UNIX;
+    std::memcpy(addr.sun_path, fname.c_str(), fname.size());
+    return sizeof(addr.sun_path);
+}
+
+void
+ListenSocketUnixFile::listen()
+{
+    resolvedDir = simout.resolve(dir);
+    warn_if(unlink(),
+            "%s: server path %s was occupied and will be replaced. Please "
+            "make sure there is no other server using the same path.",
+            name(), resolvedDir + "/" + fname);
+
+    // Make sure "dir" exists.
+    std::error_code ec;
+    std::filesystem::create_directory(resolvedDir, ec);
+    fatal_if(ec, "Failed to create directory %s", ec.message());
+
+    // Change the working directory to the directory containing the socket so
+    // that we maximize the limited space in sockaddr_un.sun_path.
+    auto cwd = std::filesystem::current_path(ec);
+    panic_if(ec, "Failed to get current working directory %s", ec.message());
+    std::filesystem::current_path(resolvedDir, ec);
+    fatal_if(ec, "Failed to change to directory %s: %s",
+            resolvedDir, ec.message());
+
+    ListenSocketUnix::listen();
+
+    std::filesystem::current_path(cwd, ec);
+    panic_if(ec, "Failed to change back working directory %s", ec.message());
+}
+
+void
+ListenSocketUnixFile::output(std::ostream &os) const
+{
+    os << "socket \"" << dir << "/" << fname << "\"";
+}
+
+ListenSocketConfig
+listenSocketUnixFileConfig(std::string dir, std::string fname)
+{
+    return ListenSocketConfig([dir, fname](const std::string &name) {
+        return std::make_unique<ListenSocketUnixFile>(name, dir, fname);
+    });
+}
+
+size_t
+ListenSocketUnixAbstract::prepSockaddrUn(sockaddr_un &addr) const
+{
+    addr.sun_family = AF_UNIX;
+    addr.sun_path[0] = '\0';
+    std::memcpy(&addr.sun_path[1], path.c_str(), path.size());
+    return offsetof(sockaddr_un, sun_path) + path.size() + 1;
+}
+
+ListenSocketUnixAbstract::ListenSocketUnixAbstract(
+        const std::string &_name, const std::string &_path) :
+    ListenSocketUnix(_name),
+    path(truncate(_path, sizeof(sockaddr_un::sun_path) - 1))
+{
+}
+
+void
+ListenSocketUnixAbstract::output(std::ostream &os) const
+{
+    os << "abstract socket \"" << path << "\"";
+}
+
+ListenSocketConfig
+listenSocketUnixAbstractConfig(std::string path)
+{
+    return ListenSocketConfig([path](const std::string &name) {
+        return std::make_unique<ListenSocketUnixAbstract>(name, path);
     });
 }
 

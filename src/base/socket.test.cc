@@ -207,5 +207,10 @@ TEST(SocketTest, RelistenWithDifferentInstanceOnSamePort)
 TEST(SocketTest, AcceptError)
 {
     MockListenSocket listen_socket(-1);
-    EXPECT_EQ(-1, listen_socket.accept());
+    EXPECT_ANY_THROW(listen_socket.accept());
+    std::string expected =
+        "panic: panic condition sfd == -1 occurred: mock: Failed to accept "
+        "connection: Bad file descriptor\n";
+    std::string actual = gtestLogOutput.str();
+    EXPECT_EQ(expected, actual);
 }

@@ -184,6 +184,60 @@ class ListenSocketInet : public ListenSocket
 
 ListenSocketConfig listenSocketInetConfig(int port);
 
+// AF_UNIX based sockets.
+
+class ListenSocketUnix : public ListenSocket
+{
+  protected:
+    virtual size_t prepSockaddrUn(sockaddr_un &addr) const = 0;
+
+    std::string truncate(const std::string &original, size_t max_len);
+
+    ListenSocketUnix(const std::string &_name) : ListenSocket(_name) {}
+
+  public:
+    void listen() override;
+};
+
+class ListenSocketUnixFile : public ListenSocketUnix
+{
+  protected:
+    std::string dir;
+    std::string resolvedDir;
+    std::string fname;
+
+    bool unlink() const;
+
+    size_t prepSockaddrUn(sockaddr_un &addr) const override;
+
+  public:
+    ListenSocketUnixFile(const std::string &_name, const std::string &_dir,
+            const std::string &_fname);
+    ~ListenSocketUnixFile();
+
+    void listen() override;
+    void output(std::ostream &os) const override;
+};
+
+ListenSocketConfig listenSocketUnixFileConfig(
+        std::string dir, std::string fname);
+
+class ListenSocketUnixAbstract : public ListenSocketUnix
+{
+  protected:
+    std::string path;
+
+    size_t prepSockaddrUn(sockaddr_un &addr) const override;
+
+  public:
+    ListenSocketUnixAbstract(
+            const std::string &_name, const std::string &_path);
+
+    void output(std::ostream &os) const override;
+};
+
+ListenSocketConfig listenSocketUnixAbstractConfig(std::string path);
+
 } // namespace gem5
 
 #endif //__SOCKET_HH__
