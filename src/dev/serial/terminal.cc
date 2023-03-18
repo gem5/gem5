@@ -175,7 +175,7 @@ Terminal::listen(int port)
         return;
     }
 
-    while (!listener.listen(port, true)) {
+    while (!listener.listen(port)) {
         DPRINTF(Terminal,
                 ": can't bind address terminal port %d inuse PID %d\n",
                 port, getpid());

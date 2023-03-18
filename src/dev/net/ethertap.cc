@@ -259,7 +259,7 @@ class TapListener
 void
 TapListener::listen()
 {
-    while (!listener.listen(port, true)) {
+    while (!listener.listen(port)) {
         DPRINTF(Ethernet, "TapListener(listen): Can't bind port %d\n", port);
         port++;
     }

@@ -162,19 +162,6 @@ TEST(SocketTest, ListenToPort)
     EXPECT_FALSE(listen_socket.allDisabled());
 }
 
-TEST(SocketTest, ListenToPortReuseFalse)
-{
-    MockListenSocket listen_socket;
-    /*
-     * The ListenSocket object should have the same state regardless as to
-     * whether reuse is true or false (it is true by default).
-     */
-    EXPECT_TRUE(listen_socket.listen(TestPort1, false));
-    EXPECT_NE(-1, listen_socket.getfd());
-    EXPECT_TRUE(listen_socket.islistening());
-    EXPECT_FALSE(listen_socket.allDisabled());
-}
-
 TEST(SocketTest, RelistenWithSameInstanceSamePort)
 {
     MockListenSocket listen_socket;
@@ -185,7 +172,9 @@ TEST(SocketTest, RelistenWithSameInstanceSamePort)
      */
     gtestLogOutput.str("");
     EXPECT_ANY_THROW(listen_socket.listen(TestPort1));
-    std::string expected = "panic: Socket already listening!\n";
+    std::string expected =
+        "panic: panic condition listening occurred: "
+        "Socket already listening!\n";
     std::string actual = gtestLogOutput.str();
     EXPECT_EQ(expected, actual);
 }
@@ -201,7 +190,9 @@ TEST(SocketTest, RelistenWithSameInstanceDifferentPort)
     gtestLogOutput.str("");
     EXPECT_ANY_THROW(listen_socket.listen(TestPort2));
 
-    std::string expected = "panic: Socket already listening!\n";
+    std::string expected =
+        "panic: panic condition listening occurred: "
+        "Socket already listening!\n";
     std::string actual = gtestLogOutput.str();
     EXPECT_EQ(expected, actual);
 }

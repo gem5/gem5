@@ -45,8 +45,7 @@ NativeTrace::NativeTrace(const Params &p)
         fatal("All listeners are disabled!");
 
     int port = 8000;
-    while (!native_listener.listen(port, true))
-    {
+    while (!native_listener.listen(port)) {
         DPRINTF(GDBMisc, "Can't bind port %d\n", port);
         port++;
     }

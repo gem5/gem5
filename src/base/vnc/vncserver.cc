@@ -164,7 +164,7 @@ VncServer::listen(int port)
         return;
     }
 
-    while (!listener.listen(port, true)) {
+    while (!listener.listen(port)) {
         DPRINTF(VNC,
                 "can't bind address vnc server port %d in use PID %d\n",
                 port, getpid());

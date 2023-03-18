@@ -106,7 +106,7 @@ class ListenSocket
 
     virtual int accept();
 
-    virtual bool listen(int port, bool reuse = true);
+    virtual bool listen(int port);
 
     int getfd() const { return fd; }
     bool islistening() const { return listening; }

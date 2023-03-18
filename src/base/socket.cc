@@ -185,24 +185,20 @@ ListenSocket::~ListenSocket()
 
 // Create a socket and configure it for listening
 bool
-ListenSocket::listen(int port, bool reuse)
+ListenSocket::listen(int port)
 {
-    if (listening)
-        panic("Socket already listening!");
+    panic_if(listening, "Socket already listening!");
 
     // only create socket if not already created by a previous call
     if (fd == -1) {
         fd = socketCloexec(PF_INET, SOCK_STREAM, 0);
-        if (fd < 0)
-            panic("Can't create socket:%s !", strerror(errno));
+        panic_if(fd < 0, "Can't create socket:%s !", strerror(errno));
     }
 
-    if (reuse) {
-        int i = 1;
-        if (::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *)&i,
-                         sizeof(i)) < 0)
-            panic("ListenSocket(listen): setsockopt() SO_REUSEADDR failed!");
-    }
+    int i = 1;
+    int ret = ::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i));
+    panic_if(ret < 0,
+            "ListenSocket(listen): setsockopt() SO_REUSEADDR failed!");
 
     struct sockaddr_in sockaddr;
     sockaddr.sin_family = PF_INET;
@@ -211,16 +207,16 @@ ListenSocket::listen(int port, bool reuse)
     sockaddr.sin_port = htons(port);
     // finally clear sin_zero
     std::memset(&sockaddr.sin_zero, 0, sizeof(sockaddr.sin_zero));
-    int ret = ::bind(fd, (struct sockaddr *)&sockaddr, sizeof (sockaddr));
+    ret = ::bind(fd, (struct sockaddr *)&sockaddr, sizeof (sockaddr));
     if (ret != 0) {
-        if (ret == -1 && errno != EADDRINUSE)
-            panic("ListenSocket(listen): bind() failed!");
+        panic_if(ret == -1 && errno != EADDRINUSE,
+                "ListenSocket(listen): bind() failed!");
         return false;
     }
 
     if (::listen(fd, 1) == -1) {
-        if (errno != EADDRINUSE)
-            panic("ListenSocket(listen): listen() failed!");
+        panic_if(errno != EADDRINUSE,
+                "ListenSocket(listen): listen() failed!");
         // User may decide to retry with a different port later; however, the
         // socket is already bound to a port and the next bind will surely
         // fail. We'll close the socket and reset fd to -1 so our user can
