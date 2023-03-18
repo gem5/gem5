@@ -104,7 +104,7 @@ class ListenSocket
     ListenSocket();
     virtual ~ListenSocket();
 
-    virtual int accept(bool nodelay = false);
+    virtual int accept(bool nodelay = true);
 
     virtual bool listen(int port, bool reuse = true);
 
