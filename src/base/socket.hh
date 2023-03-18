@@ -93,31 +93,34 @@ class ListenSocket : public Named
     static void loopbackOnly();
 
   protected:
-    bool listening;
-    int fd;
-    int _port;
+    bool listening = false;
+    int fd = -1;
+
+    void
+    setListening()
+    {
+        listening = true;
+        anyListening = true;
+    }
 
     /*
      * cleanup resets the static variables back to their default values.
      */
     static void cleanup();
 
-    virtual bool listen(int port);
+    ListenSocket(const std::string &_name);
 
   public:
     /**
      * @ingroup api_socket
      * @{
      */
-    ListenSocket(const std::string &_name, int port);
-    ListenSocket();
     virtual ~ListenSocket();
 
     virtual int accept();
+    virtual void listen() = 0;
 
-    virtual void listen();
-
-    virtual void output(std::ostream &os) const;
+    virtual void output(std::ostream &os) const = 0;
 
     int getfd() const { return fd; }
     bool islistening() const { return listening; }
@@ -129,6 +132,13 @@ class ListenSocket : public Named
                               socklen_t *addrlen);
     /** @} */ // end of api_socket
 };
+
+inline static std::ostream &
+operator << (std::ostream &os, const ListenSocket &socket)
+{
+    socket.output(os);
+    return os;
+}
 
 using ListenSocketPtr = std::unique_ptr<ListenSocket>;
 
@@ -155,14 +165,24 @@ class ListenSocketConfig
 
 static inline ListenSocketConfig listenSocketEmptyConfig() { return {}; }
 
-ListenSocketConfig listenSocketInetConfig(int port);
+// AF_INET based sockets.
 
-inline static std::ostream &
-operator << (std::ostream &os, const ListenSocket &socket)
+class ListenSocketInet : public ListenSocket
 {
-    socket.output(os);
-    return os;
-}
+  protected:
+    int _port;
+
+    virtual bool listen(int port);
+
+  public:
+    ListenSocketInet(const std::string &_name, int port);
+
+    int accept() override;
+    void listen() override;
+    void output(std::ostream &os) const override;
+};
+
+ListenSocketConfig listenSocketInetConfig(int port);
 
 } // namespace gem5
 

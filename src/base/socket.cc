@@ -173,11 +173,7 @@ ListenSocket::acceptCloexec(int sockfd, struct sockaddr *addr,
 //
 //
 
-ListenSocket::ListenSocket(const std::string &_name, int port)
-    : Named(_name), listening(false), fd(-1), _port(port)
-{}
-
-ListenSocket::ListenSocket() : ListenSocket("<unnammed>", -1) {}
+ListenSocket::ListenSocket(const std::string &_name) : Named(_name) {}
 
 ListenSocket::~ListenSocket()
 {
@@ -185,9 +181,41 @@ ListenSocket::~ListenSocket()
         close(fd);
 }
 
+// Open a connection.  Accept will block, so if you don't want it to,
+// make sure a connection is ready before you call accept.
+int
+ListenSocket::accept()
+{
+    struct sockaddr_in sockaddr;
+    socklen_t slen = sizeof (sockaddr);
+    int sfd = acceptCloexec(fd, (struct sockaddr *)&sockaddr, &slen);
+    if (sfd == -1)
+        return -1;
+
+    return sfd;
+}
+
+ListenSocketInet::ListenSocketInet(const std::string &_name, int port)
+    : ListenSocket(_name), _port(port)
+{}
+
+int
+ListenSocketInet::accept()
+{
+    int sfd = ListenSocket::accept();
+    if (sfd == -1)
+        return -1;
+
+    int i = 1;
+    int ret = ::setsockopt(sfd, IPPROTO_TCP, TCP_NODELAY, &i, sizeof(i));
+    warn_if(ret < 0, "ListenSocket(accept): setsockopt() TCP_NODELAY failed!");
+
+    return sfd;
+}
+
 // Create a socket and configure it for listening
 bool
-ListenSocket::listen(int port)
+ListenSocketInet::listen(int port)
 {
     panic_if(listening, "Socket already listening!");
 
@@ -228,13 +256,12 @@ ListenSocket::listen(int port)
         return false;
     }
 
-    listening = true;
-    anyListening = true;
+    setListening();
     return true;
 }
 
 void
-ListenSocket::listen()
+ListenSocketInet::listen()
 {
     while (!listen(_port)) {
         _port++;
@@ -245,35 +272,16 @@ ListenSocket::listen()
 }
 
 void
-ListenSocket::output(std::ostream &os) const
+ListenSocketInet::output(std::ostream &os) const
 {
     os << "port " << _port;
-}
-
-
-// Open a connection.  Accept will block, so if you don't want it to,
-// make sure a connection is ready before you call accept.
-int
-ListenSocket::accept()
-{
-    struct sockaddr_in sockaddr;
-    socklen_t slen = sizeof (sockaddr);
-    int sfd = acceptCloexec(fd, (struct sockaddr *)&sockaddr, &slen);
-    if (sfd == -1)
-        return -1;
-
-    int i = 1;
-    int ret = ::setsockopt(sfd, IPPROTO_TCP, TCP_NODELAY, &i, sizeof(i));
-    warn_if(ret < 0, "ListenSocket(accept): setsockopt() TCP_NODELAY failed!");
-
-    return sfd;
 }
 
 ListenSocketConfig
 listenSocketInetConfig(int port)
 {
     return ListenSocketConfig([port](const std::string &name) {
-        return std::make_unique<ListenSocket>(name, port);
+        return std::make_unique<ListenSocketInet>(name, port);
     });
 }
 

@@ -118,10 +118,10 @@ TEST(UnixSocketAddrTest, TruncatedFileBasedSocket)
     EXPECT_EQ(truncated_addr, sock_addr.formattedPath);
 }
 
-class MockListenSocket : public ListenSocket
+class MockListenSocket : public ListenSocketInet
 {
   public:
-    MockListenSocket(int port) : ListenSocket("mock", port) {}
+    MockListenSocket(int port) : ListenSocketInet("mock", port) {}
     /*
      * This mock Listen Socket is used to ensure the static variables are reset
      * back to their default values after deconstruction (i.e., after a test
