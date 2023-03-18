@@ -121,8 +121,8 @@ Terminal::DataEvent::process(int revent)
  */
 Terminal::Terminal(const Params &p)
     : SerialDevice(p), listenEvent(NULL), dataEvent(NULL),
-      number(p.number), data_fd(-1), txbuf(16384), rxbuf(16384),
-      outfile(terminalDump(p))
+      number(p.number), data_fd(-1), listener(p.name, p.port),
+      txbuf(16384), rxbuf(16384), outfile(terminalDump(p))
 #if TRACING_ON == 1
       , linebuf(16384)
 #endif
@@ -131,7 +131,7 @@ Terminal::Terminal(const Params &p)
         outfile->stream()->setf(std::ios::unitbuf);
 
     if (p.port)
-        listen(p.port);
+        listen();
 }
 
 Terminal::~Terminal()
@@ -168,22 +168,14 @@ Terminal::terminalDump(const TerminalParams &p)
 //
 
 void
-Terminal::listen(int port)
+Terminal::listen()
 {
     if (ListenSocket::allDisabled()) {
         warn_once("Sockets disabled, not accepting terminal connections");
         return;
     }
 
-    while (!listener.listen(port)) {
-        DPRINTF(Terminal,
-                ": can't bind address terminal port %d inuse PID %d\n",
-                port, getpid());
-        port++;
-    }
-
-    ccprintf(std::cerr, "%s: Listening for connections on port %d\n",
-             name(), port);
+    listener.listen();
 
     listenEvent = new ListenEvent(this, listener.getfd(), POLLIN);
     pollQueue.schedule(listenEvent);

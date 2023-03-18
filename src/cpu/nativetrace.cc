@@ -39,17 +39,13 @@ namespace gem5
 namespace trace {
 
 NativeTrace::NativeTrace(const Params &p)
-    : ExeTracer(p)
+    : ExeTracer(p), native_listener(p.name, 8000)
 {
     if (ListenSocket::allDisabled())
         fatal("All listeners are disabled!");
 
-    int port = 8000;
-    while (!native_listener.listen(port)) {
-        DPRINTF(GDBMisc, "Can't bind port %d\n", port);
-        port++;
-    }
-    ccprintf(std::cerr, "Listening for native process on port %d\n", port);
+    native_listener.listen();
+
     fd = native_listener.accept();
 }
 

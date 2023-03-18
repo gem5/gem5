@@ -173,9 +173,11 @@ ListenSocket::acceptCloexec(int sockfd, struct sockaddr *addr,
 //
 //
 
-ListenSocket::ListenSocket()
-    : listening(false), fd(-1)
+ListenSocket::ListenSocket(const std::string &_name, int port)
+    : Named(_name), listening(false), fd(-1), _port(port)
 {}
+
+ListenSocket::ListenSocket() : ListenSocket("<unnammed>", -1) {}
 
 ListenSocket::~ListenSocket()
 {
@@ -229,6 +231,23 @@ ListenSocket::listen(int port)
     listening = true;
     anyListening = true;
     return true;
+}
+
+void
+ListenSocket::listen()
+{
+    while (!listen(_port)) {
+        _port++;
+        fatal_if(_port > 65536, "%s: cannot find an available port.", name());
+    }
+    ccprintf(std::cerr, "%s: Listening for connections on %s\n",
+            name(), *this);
+}
+
+void
+ListenSocket::output(std::ostream &os) const
+{
+    os << "port " << _port;
 }
 
 

@@ -103,7 +103,7 @@ class Terminal : public SerialDevice
   protected:
     ListenSocket listener;
 
-    void listen(int port);
+    void listen();
     void accept();
 
   protected:

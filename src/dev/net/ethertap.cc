@@ -240,17 +240,16 @@ class TapListener
     };
 
     friend class Event;
-    Event *event;
+    Event *event = nullptr;
 
     void accept();
 
   protected:
     ListenSocket listener;
     EtherTapStub *tap;
-    int port;
 
   public:
-    TapListener(EtherTapStub *t, int p) : event(NULL), tap(t), port(p) {}
+    TapListener(EtherTapStub *t, int p) : listener(t->name(), p), tap(t) {}
     ~TapListener() { delete event; }
 
     void listen();
@@ -259,12 +258,8 @@ class TapListener
 void
 TapListener::listen()
 {
-    while (!listener.listen(port)) {
-        DPRINTF(Ethernet, "TapListener(listen): Can't bind port %d\n", port);
-        port++;
-    }
+    listener.listen();
 
-    ccprintf(std::cerr, "Listening for tap connection on port %d\n", port);
     event = new Event(this, listener.getfd(), POLLIN|POLLERR);
     pollQueue.schedule(event);
 }

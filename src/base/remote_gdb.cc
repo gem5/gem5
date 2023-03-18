@@ -392,7 +392,7 @@ std::map<Addr, HardBreakpoint *> hardBreakMap;
 
 BaseRemoteGDB::BaseRemoteGDB(System *_system, int _port) :
         incomingConnectionEvent(nullptr), incomingDataEvent(nullptr),
-        _port(_port), fd(-1), sys(_system),
+        listener(_system->name() + ".remote_gdb", _port), fd(-1), sys(_system),
         connectEvent(*this), disconnectEvent(*this), trapEvent(this),
         singleStepEvent(*this)
 {}
@@ -417,17 +417,14 @@ BaseRemoteGDB::listen()
         return;
     }
 
-    while (!listener.listen(_port)) {
-        DPRINTF(GDBMisc, "Can't bind port %d\n", _port);
-        _port++;
-    }
+    listener.listen();
 
     incomingConnectionEvent =
             new IncomingConnectionEvent(this, listener.getfd(), POLLIN);
     pollQueue.schedule(incomingConnectionEvent);
 
-    ccprintf(std::cerr, "%d: %s: listening for remote gdb on port %d\n",
-             curTick(), name(), _port);
+    ccprintf(std::cerr, "%d: %s: listening for remote gdb on %s\n",
+             curTick(), name(), listener);
 }
 
 void
@@ -448,12 +445,12 @@ BaseRemoteGDB::connect()
     }
 }
 
-int
-BaseRemoteGDB::port() const
+const ListenSocket &
+BaseRemoteGDB::hostSocket() const
 {
     panic_if(!listener.islistening(),
-             "Remote GDB port is unknown until listen() has been called.\n");
-    return _port;
+             "Remote GDB socket is unknown until listen() has been called.");
+    return listener;
 }
 
 void

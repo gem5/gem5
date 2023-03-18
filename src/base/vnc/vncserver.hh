@@ -182,7 +182,7 @@ class VncServer : public VncInput
 
     ListenSocket listener;
 
-    void listen(int port);
+    void listen();
     void accept();
     void data();
     void detach();

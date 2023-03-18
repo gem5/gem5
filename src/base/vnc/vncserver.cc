@@ -117,11 +117,11 @@ VncServer::DataEvent::process(int revent)
  */
 VncServer::VncServer(const Params &p)
     : VncInput(p), listenEvent(NULL), dataEvent(NULL), number(p.number),
-      dataFd(-1), sendUpdate(false),
+      listener(p.name, p.port), sendUpdate(false),
       supportsRawEnc(false), supportsResizeEnc(false)
 {
     if (p.port)
-        listen(p.port);
+        listen();
 
     curState = WaitForProtocolVersion;
 
@@ -157,22 +157,14 @@ VncServer::~VncServer()
 
 //socket creation and vnc client attach
 void
-VncServer::listen(int port)
+VncServer::listen()
 {
     if (ListenSocket::allDisabled()) {
         warn_once("Sockets disabled, not accepting vnc client connections");
         return;
     }
 
-    while (!listener.listen(port)) {
-        DPRINTF(VNC,
-                "can't bind address vnc server port %d in use PID %d\n",
-                port, getpid());
-        port++;
-    }
-
-    ccprintf(std::cerr, "%s: Listening for connections on port %d\n",
-             name(), port);
+    listener.listen();
 
     listenEvent = new ListenEvent(this, listener.getfd(), POLLIN);
     pollQueue.schedule(listenEvent);

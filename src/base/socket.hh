@@ -35,6 +35,8 @@
 
 #include <string>
 
+#include "base/named.hh"
+
 namespace gem5
 {
 
@@ -69,7 +71,7 @@ struct UnixSocketAddr
     std::string formattedPath;
 };
 
-class ListenSocket
+class ListenSocket : public Named
 {
   protected:
     /**
@@ -90,6 +92,7 @@ class ListenSocket
   protected:
     bool listening;
     int fd;
+    int _port;
 
     /*
      * cleanup resets the static variables back to their default values.
@@ -101,12 +104,16 @@ class ListenSocket
      * @ingroup api_socket
      * @{
      */
+    ListenSocket(const std::string &_name, int port);
     ListenSocket();
     virtual ~ListenSocket();
 
     virtual int accept();
 
     virtual bool listen(int port);
+    virtual void listen();
+
+    virtual void output(std::ostream &os) const;
 
     int getfd() const { return fd; }
     bool islistening() const { return listening; }
@@ -118,6 +125,13 @@ class ListenSocket
                               socklen_t *addrlen);
     /** @} */ // end of api_socket
 };
+
+inline static std::ostream &
+operator << (std::ostream &os, const ListenSocket &socket)
+{
+    socket.output(os);
+    return os;
+}
 
 } // namespace gem5
 
