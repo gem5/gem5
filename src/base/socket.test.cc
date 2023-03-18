@@ -121,6 +121,7 @@ TEST(UnixSocketAddrTest, TruncatedFileBasedSocket)
 class MockListenSocket : public ListenSocket
 {
   public:
+    MockListenSocket(int port) : ListenSocket("mock", port) {}
     /*
      * This mock Listen Socket is used to ensure the static variables are reset
      * back to their default values after deconstruction (i.e., after a test
@@ -138,7 +139,7 @@ TEST(SocketTest, DefaultBehavior)
      * Tests the default behavior where listenSocket is constructed, and is
      * not listening to a port.
      */
-    MockListenSocket listen_socket;
+    MockListenSocket listen_socket(-1);
     EXPECT_EQ(-1, listen_socket.getfd());
     EXPECT_FALSE(listen_socket.islistening());
     EXPECT_FALSE(listen_socket.allDisabled());
@@ -146,7 +147,7 @@ TEST(SocketTest, DefaultBehavior)
 
 TEST(SocketTest, DisableAll)
 {
-    MockListenSocket listen_socket;
+    MockListenSocket listen_socket(-1);
     listen_socket.disableAll();
     EXPECT_EQ(-1, listen_socket.getfd());
     EXPECT_FALSE(listen_socket.islistening());
@@ -155,8 +156,8 @@ TEST(SocketTest, DisableAll)
 
 TEST(SocketTest, ListenToPort)
 {
-    MockListenSocket listen_socket;
-    EXPECT_TRUE(listen_socket.listen(TestPort1));
+    MockListenSocket listen_socket(TestPort1);
+    listen_socket.listen();
     EXPECT_NE(-1, listen_socket.getfd());
     EXPECT_TRUE(listen_socket.islistening());
     EXPECT_FALSE(listen_socket.allDisabled());
@@ -164,32 +165,14 @@ TEST(SocketTest, ListenToPort)
 
 TEST(SocketTest, RelistenWithSameInstanceSamePort)
 {
-    MockListenSocket listen_socket;
-    EXPECT_TRUE(listen_socket.listen(TestPort1));
+    MockListenSocket listen_socket(TestPort1);
+    listen_socket.listen();
 
     /*
      * You cannot listen to another port if you are already listening to one.
      */
     gtestLogOutput.str("");
-    EXPECT_ANY_THROW(listen_socket.listen(TestPort1));
-    std::string expected =
-        "panic: panic condition listening occurred: "
-        "Socket already listening!\n";
-    std::string actual = gtestLogOutput.str();
-    EXPECT_EQ(expected, actual);
-}
-
-TEST(SocketTest, RelistenWithSameInstanceDifferentPort)
-{
-    MockListenSocket listen_socket;
-    EXPECT_TRUE(listen_socket.listen(TestPort1));
-
-    /*
-     * You cannot listen to another port if you are already listening to one.
-     */
-    gtestLogOutput.str("");
-    EXPECT_ANY_THROW(listen_socket.listen(TestPort2));
-
+    EXPECT_ANY_THROW(listen_socket.listen());
     std::string expected =
         "panic: panic condition listening occurred: "
         "Socket already listening!\n";
@@ -199,30 +182,30 @@ TEST(SocketTest, RelistenWithSameInstanceDifferentPort)
 
 TEST(SocketTest, RelistenWithDifferentInstanceOnDifferentPort)
 {
-    MockListenSocket listen_socket;
-    EXPECT_TRUE(listen_socket.listen(TestPort1));
+    MockListenSocket listen_socket(TestPort1);
+    listen_socket.listen();
 
     /*
      * You can listen to another port with a different instance.
      */
-    MockListenSocket listen_socket_2;
-    EXPECT_TRUE(listen_socket_2.listen(TestPort2));
+    MockListenSocket listen_socket_2(TestPort2);
+    listen_socket_2.listen();
 }
 
 TEST(SocketTest, RelistenWithDifferentInstanceOnSamePort)
 {
-    MockListenSocket listen_socket;
-    EXPECT_TRUE(listen_socket.listen(TestPort1));
+    MockListenSocket listen_socket(TestPort1);
+    listen_socket.listen();
 
     /*
      * You cannot listen to a port that's already being listened to.
      */
-    MockListenSocket listen_socket_2;
-    EXPECT_FALSE(listen_socket_2.listen(TestPort1));
+    MockListenSocket listen_socket_2(TestPort1);
+    listen_socket_2.listen();
 }
 
 TEST(SocketTest, AcceptError)
 {
-    MockListenSocket listen_socket;
+    MockListenSocket listen_socket(-1);
     EXPECT_EQ(-1, listen_socket.accept());
 }

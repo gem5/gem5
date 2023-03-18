@@ -99,6 +99,8 @@ class ListenSocket : public Named
      */
     static void cleanup();
 
+    virtual bool listen(int port);
+
   public:
     /**
      * @ingroup api_socket
@@ -110,7 +112,6 @@ class ListenSocket : public Named
 
     virtual int accept();
 
-    virtual bool listen(int port);
     virtual void listen();
 
     virtual void output(std::ostream &os) const;
