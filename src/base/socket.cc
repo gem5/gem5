@@ -61,74 +61,11 @@
 
 namespace gem5
 {
-namespace
-{
-
-bool
-isSocketNameAbstract(const std::string &path)
-{
-    if (path.empty()) {
-        return false;
-    }
-    // No null byte should be present in the path
-    return path.front() == '@';
-}
-
-std::string
-resolve(const std::string &path)
-{
-    if (path.empty()) {
-        return path;
-    }
-    if (isSocketNameAbstract(path)) {
-        return '\0' + path.substr(1);
-    }
-    return simout.resolve(path);
-}
-
-}  // namespace
 
 bool ListenSocket::listeningDisabled = false;
 bool ListenSocket::anyListening = false;
 
 bool ListenSocket::bindToLoopback = false;
-
-UnixSocketAddr
-UnixSocketAddr::build(const std::string &path)
-{
-    sockaddr_un addr = {.sun_family = AF_UNIX, .sun_path = {}};
-
-    const bool is_abstract = isSocketNameAbstract(path);
-    size_t max_len = sizeof(addr.sun_path);
-    if (!is_abstract) {
-        // File based socket names need to be null terminated
-        max_len -= 1;
-    }
-
-    std::string resolved_path = resolve(path);
-    std::string fmt_path = replace(resolved_path, '\0', '@');
-    if (resolved_path.size() > max_len) {
-        resolved_path = resolved_path.substr(0, max_len);
-        const std::string untruncated_path = std::move(fmt_path);
-        fmt_path = replace(resolved_path, '\0', '@');
-        warn("SocketPath: unix socket path truncated from '%s' to '%s'",
-             untruncated_path, fmt_path);
-    }
-
-    // We can't use strncpy here, since abstract sockets start with \0 which
-    // will make strncpy think that the string is empty.
-    memcpy(addr.sun_path, resolved_path.c_str(), resolved_path.size());
-    // We can't use sizeof(sockaddr_un) for abstract sockets, since all
-    // sizeof(sun_path) bytes are used in representing the path.
-    const size_t path_size =
-        is_abstract ? resolved_path.size() : sizeof(addr.sun_path);
-    const size_t addr_size = offsetof(sockaddr_un, sun_path) + path_size;
-
-    return UnixSocketAddr{.addr = std::move(addr),
-                          .addrSize = addr_size,
-                          .isAbstract = is_abstract,
-                          .formattedPath = std::move(fmt_path)};
-}
 
 void
 ListenSocket::cleanup()
