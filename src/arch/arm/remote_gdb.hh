@@ -118,7 +118,7 @@ class RemoteGDB : public BaseRemoteGDB
     AArch64GdbRegCache regCache64;
 
   public:
-    RemoteGDB(System *_system, int _port);
+    RemoteGDB(System *_system, ListenSocketConfig _listen_config);
     BaseGdbRegCache *gdbRegs() override;
     bool checkBpKind(size_t kind) override;
     std::vector<std::string>

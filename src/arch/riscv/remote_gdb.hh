@@ -232,7 +232,7 @@ class RemoteGDB : public BaseRemoteGDB
     Riscv64GdbRegCache regCache64;
 
   public:
-    RemoteGDB(System *_system, int _port);
+    RemoteGDB(System *_system, ListenSocketConfig _listen_config);
     BaseGdbRegCache *gdbRegs() override;
     /**
      * Informs GDB remote serial protocol that XML features are supported

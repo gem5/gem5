@@ -147,7 +147,7 @@ class EtherTapStub(EtherTapBase):
     cxx_header = "dev/net/ethertap.hh"
     cxx_class = "gem5::EtherTapStub"
 
-    port = Param.UInt16(3500, "Port helper should send packets to")
+    port = Param.HostSocket(3500, "Port/socket helper should send packets to")
 
 
 class EtherDump(SimObject):

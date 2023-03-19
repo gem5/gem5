@@ -249,8 +249,8 @@ class TapListener
     EtherTapStub *tap;
 
   public:
-    TapListener(EtherTapStub *t, int p) :
-        listener(listenSocketInetConfig(p).build(t->name())), tap(t) {}
+    TapListener(EtherTapStub *t, ListenSocketPtr _listener) :
+        listener(std::move(_listener)), tap(t) {}
     ~TapListener() { delete event; }
 
     void listen();
@@ -287,7 +287,7 @@ EtherTapStub::EtherTapStub(const Params &p) : EtherTapBase(p), socket(-1)
     if (ListenSocket::allDisabled())
         fatal("All listeners are disabled! EtherTapStub can't work!");
 
-    listener = new TapListener(this, p.port);
+    listener = new TapListener(this, p.port.build(name()));
     listener->listen();
 }
 

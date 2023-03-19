@@ -117,7 +117,7 @@ VncServer::DataEvent::process(int revent)
  */
 VncServer::VncServer(const Params &p)
     : VncInput(p), listenEvent(NULL), dataEvent(NULL), number(p.number),
-      listener(listenSocketInetConfig(p.port).build(p.name)),
+      listener(p.port.build(p.name)),
       sendUpdate(false), supportsRawEnc(false), supportsResizeEnc(false)
 {
     if (p.port)

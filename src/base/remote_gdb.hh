@@ -153,7 +153,7 @@ class BaseRemoteGDB
     /**
      * Interface to other parts of the simulator.
      */
-    BaseRemoteGDB(System *system, int _port);
+    BaseRemoteGDB(System *system, ListenSocketConfig _listen_config);
     virtual ~BaseRemoteGDB();
 
     std::string name();
@@ -180,10 +180,10 @@ class BaseRemoteGDB
 
     template <class GDBStub, class ...Args>
     static BaseRemoteGDB *
-    build(int port, Args... args)
+    build(ListenSocketConfig listen_config, Args... args)
     {
-        if (port)
-            return new GDBStub(args..., port);
+        if (listen_config)
+            return new GDBStub(args..., listen_config);
         else
             return nullptr;
     }

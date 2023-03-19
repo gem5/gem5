@@ -121,8 +121,7 @@ Terminal::DataEvent::process(int revent)
  */
 Terminal::Terminal(const Params &p)
     : SerialDevice(p), listenEvent(NULL), dataEvent(NULL),
-      number(p.number), data_fd(-1),
-      listener(listenSocketInetConfig(p.port).build(p.name)),
+      number(p.number), data_fd(-1), listener(p.port.build(p.name)),
       txbuf(16384), rxbuf(16384), outfile(terminalDump(p))
 #if TRACING_ON == 1
       , linebuf(16384)

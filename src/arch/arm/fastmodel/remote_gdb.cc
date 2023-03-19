@@ -61,8 +61,9 @@ FastmodelRemoteGDB::AArch64GdbRegCache::setRegs(ThreadContext *context) const
     context->setMiscRegNoEffect(MISCREG_FPCR, r.fpcr);
 }
 
-FastmodelRemoteGDB::FastmodelRemoteGDB(System *_system, int port)
-    : gem5::ArmISA::RemoteGDB(_system, port), regCache64(this)
+FastmodelRemoteGDB::FastmodelRemoteGDB(System *_system,
+        ListenSocketConfig _listen_config)
+    : gem5::ArmISA::RemoteGDB(_system, _listen_config)
 {
 }
 

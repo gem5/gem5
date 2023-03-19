@@ -39,7 +39,7 @@ namespace fastmodel
 class FastmodelRemoteGDB : public ArmISA::RemoteGDB
 {
   public:
-    FastmodelRemoteGDB(System *_system, int port);
+    FastmodelRemoteGDB(System *_system, ListenSocketConfig _listen_config);
 
   protected:
     class AArch64GdbRegCache : public ArmISA::RemoteGDB::AArch64GdbRegCache
