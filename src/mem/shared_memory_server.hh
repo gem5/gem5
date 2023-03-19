@@ -83,10 +83,10 @@ class SharedMemoryServer : public SimObject
         void process(int revent) override;
     };
 
-    UnixSocketAddr sockAddr;
     System* system;
 
-    int serverFd;
+    ListenSocketPtr listener;
+
     std::unique_ptr<ListenSocketEvent> listenSocketEvent;
     std::unordered_map<int, std::unique_ptr<ClientSocketEvent>>
         clientSocketEvents;
