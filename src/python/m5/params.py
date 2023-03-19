@@ -1085,6 +1085,65 @@ class Bool(ParamValue):
         code(f"{ret} to_bool({src}, {dest});")
 
 
+class HostSocket(ParamValue):
+    cxx_type = "ListenSocketConfig"
+
+    @classmethod
+    def cxx_predecls(cls, code):
+        code('#include "base/socket.hh"')
+
+    def __init__(self, value):
+        if isinstance(value, HostSocket):
+            self.value = value.value
+        else:
+            self.value = value
+
+    def getValue(self):
+        from _m5.socket import listenSocketEmptyConfig
+        from _m5.socket import listenSocketInetConfig
+        from _m5.socket import listenSocketUnixFileConfig
+        from _m5.socket import listenSocketUnixAbstractConfig
+
+        if isinstance(self.value, str):
+            if self.value[0] == "@":
+                return listenSocketUnixAbstractConfig(self.value[1:])
+            else:
+                d, f = os.path.split(self.value)
+                return listenSocketUnixFileConfig(d, f)
+        else:
+            if self.value == 0:
+                return listenSocketEmptyConfig()
+            else:
+                return listenSocketInetConfig(self.value)
+
+    def __call__(self, value):
+        self.__init__(value)
+        return value
+
+    def __str__(self):
+        if isinstance(self.value, str):
+            return self.value
+        else:
+            return "#" + str(self.value)
+
+    def ini_str(self):
+        if isinstance(self.value, str):
+            if self.value[0] == "@":
+                return self.value
+            else:
+                return "P" + self.value
+        else:
+            return "#" + str(self.value)
+
+    @classmethod
+    def cxx_ini_predecls(cls, code):
+        code('#include "base/socket.hh"')
+
+    @classmethod
+    def cxx_ini_parse(cls, code, src, dest, ret):
+        code(f"{ret} ListenSocketConfig::parseIni({src}, {dest});")
+
+
 def IncEthernetAddr(addr, val=1):
     bytes = [int(x, 16) for x in addr.split(":")]
     bytes[5] += val

@@ -159,6 +159,8 @@ class ListenSocketConfig
 
     operator bool() const { return (bool)builder; }
 
+    static bool parseIni(const std::string &value, ListenSocketConfig &retval);
+
   private:
     Builder builder;
 };

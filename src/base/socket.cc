@@ -208,6 +208,32 @@ ListenSocket::accept()
     return sfd;
 }
 
+bool
+ListenSocketConfig::parseIni(const std::string &value,
+        ListenSocketConfig &retval)
+{
+    if (value.size() == 0) {
+        retval = listenSocketEmptyConfig();
+        return true;
+    } else if (value[0] == '@') {
+        retval = listenSocketUnixAbstractConfig(value.substr(1));
+        return true;
+    } else if (value[0] == 'P') {
+        std::filesystem::path p(value.substr(1));
+        retval = listenSocketUnixFileConfig(p.parent_path(), p.filename());
+        return true;
+    } else if (value[0] == '#') {
+        uint64_t port;
+        bool ret = to_number(value.substr(1), port);
+        if (!ret)
+            return false;
+        retval = listenSocketInetConfig(port);
+        return true;
+    } else {
+        panic("Can't interpret %s as a host socket.", value);
+    }
+}
+
 ListenSocketInet::ListenSocketInet(const std::string &_name, int port)
     : ListenSocket(_name), _port(port)
 {}

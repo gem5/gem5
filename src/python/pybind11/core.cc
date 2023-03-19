@@ -223,6 +223,20 @@ init_loader(py::module_ &m_native)
     m.def("setInterpDir", &loader::setInterpDir);
 }
 
+static void
+init_socket(py::module_ &m_native)
+{
+    py::module_ m_socket = m_native.def_submodule("socket");
+    m_socket
+        .def("listenSocketEmptyConfig", &listenSocketEmptyConfig)
+        .def("listenSocketInetConfig", &listenSocketInetConfig)
+        .def("listenSocketUnixFileConfig", &listenSocketUnixFileConfig)
+        .def("listenSocketUnixAbstractConfig",
+                &listenSocketUnixAbstractConfig);
+
+    py::class_<ListenSocketConfig>(m_socket, "ListenSocketConfig");
+}
+
 void
 pybind_init_core(py::module_ &m_native)
 {
@@ -334,6 +348,7 @@ pybind_init_core(py::module_ &m_native)
     init_net(m_native);
     init_loader(m_native);
     init_pc(m_native);
+    init_socket(m_native);
 }
 
 } // namespace gem5
