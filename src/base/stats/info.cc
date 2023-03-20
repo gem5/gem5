@@ -172,13 +172,11 @@ bool
 Info::baseCheck() const
 {
     if (!(flags & statistics::init)) {
-#ifdef DEBUG
-        cprintf("this is stat number %d\n", id);
-#endif
-        panic("Not all stats have been initialized.\n"
+        panic("this is stat number %d\n"
+              "Not all stats have been initialized.\n"
               "You may need to add <ParentClass>::regStats() to a"
               " new SimObject's regStats() function. Name: %s",
-              name);
+              id, name);
         return false;
     }
 
