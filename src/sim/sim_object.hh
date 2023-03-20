@@ -329,12 +329,6 @@ class SimObject : public EventManager, public Serializable, public Drainable,
      */
     static void serializeAll(const std::string &cpt_dir);
 
-#ifdef DEBUG
-  public:
-    bool doDebugBreak;
-    static void debugObjectBreak(const std::string &objs);
-#endif
-
     /**
      * Find the SimObject with the given name and return a pointer to
      * it.  Primarily used for interactive debugging.  Argument is
@@ -395,9 +389,6 @@ class SimObjectResolver
     virtual SimObject *resolveSimObject(const std::string &name) = 0;
 };
 
-#ifdef DEBUG
-void debugObjectBreak(const char *objs);
-#endif
 
 /**
  * To avoid circular dependencies the unserialization of SimObjects must be
