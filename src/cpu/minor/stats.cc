@@ -45,28 +45,11 @@ namespace minor
 
 MinorStats::MinorStats(BaseCPU *base_cpu)
     : statistics::Group(base_cpu),
-    ADD_STAT(numInsts, statistics::units::Count::get(),
-             "Number of instructions committed"),
-    ADD_STAT(numOps, statistics::units::Count::get(),
-             "Number of ops (including micro ops) committed"),
     ADD_STAT(quiesceCycles, statistics::units::Cycle::get(),
              "Total number of cycles that CPU has spent quiesced or waiting "
-             "for an interrupt"),
-    ADD_STAT(cpi, statistics::units::Rate<
-                statistics::units::Cycle, statistics::units::Count>::get(),
-             "CPI: cycles per instruction"),
-    ADD_STAT(ipc, statistics::units::Rate<
-                statistics::units::Count, statistics::units::Cycle>::get(),
-             "IPC: instructions per cycle")
-
+             "for an interrupt")
 {
     quiesceCycles.prereq(quiesceCycles);
-
-    cpi.precision(6);
-    cpi = base_cpu->baseStats.numCycles / numInsts;
-
-    ipc.precision(6);
-    ipc = numInsts / base_cpu->baseStats.numCycles;
 }
 
 } // namespace minor

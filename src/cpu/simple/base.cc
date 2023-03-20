@@ -154,10 +154,8 @@ BaseSimpleCPU::countInst()
 
     if (!curStaticInst->isMicroop() || curStaticInst->isLastMicroop()) {
         t_info.numInst++;
-        t_info.execContextStats.numInsts++;
     }
     t_info.numOp++;
-    t_info.execContextStats.numOps++;
 }
 
 void
@@ -183,9 +181,8 @@ BaseSimpleCPU::countCommitInst()
         commitStats[t_info.thread->threadId()]->numInsts++;
         baseStats.numInsts++;
     }
-    // increment thread level and core level numOps count
+    // increment thread level numOps count
     commitStats[t_info.thread->threadId()]->numOps++;
-    baseStats.numOps++;
 }
 
 Counter

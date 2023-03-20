@@ -1343,7 +1343,6 @@ Commit::updateComInstStats(const DynInstPtr &inst)
         cpu->baseStats.numInsts++;
     }
     cpu->commitStats[tid]->numOps++;
-    cpu->baseStats.numOps++;
 
     // To match the old model, don't count nops and instruction
     // prefetches towards the total commit count.

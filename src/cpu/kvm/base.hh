@@ -804,7 +804,6 @@ class BaseKvmCPU : public BaseCPU
     struct StatGroup : public statistics::Group
     {
         StatGroup(statistics::Group *parent);
-        statistics::Scalar committedInsts;
         statistics::Scalar numVMExits;
         statistics::Scalar numVMHalfEntries;
         statistics::Scalar numExitSignal;

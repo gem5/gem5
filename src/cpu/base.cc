@@ -407,10 +407,6 @@ BaseCPU::probeInstCommit(const StaticInstPtr &inst, Addr pc)
 BaseCPU::
 BaseCPUStats::BaseCPUStats(statistics::Group *parent)
     : statistics::Group(parent),
-      ADD_STAT(numInsts, statistics::units::Count::get(),
-               "Number of instructions committed (core level)"),
-      ADD_STAT(numOps, statistics::units::Count::get(),
-               "Number of ops (including micro ops) committed (core level)"),
       ADD_STAT(numCycles, statistics::units::Cycle::get(),
                "Number of cpu cycles simulated"),
       ADD_STAT(cpi, statistics::units::Rate<
