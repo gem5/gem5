@@ -328,47 +328,7 @@ CPU::CPUStats::CPUStats(CPU *cpu)
                "to idling"),
       ADD_STAT(quiesceCycles, statistics::units::Cycle::get(),
                "Total number of cycles that CPU has spent quiesced or waiting "
-               "for an interrupt"),
-      ADD_STAT(committedInsts, statistics::units::Count::get(),
-               "Number of Instructions Simulated"),
-      ADD_STAT(committedOps, statistics::units::Count::get(),
-               "Number of Ops (including micro ops) Simulated"),
-      ADD_STAT(cpi, statistics::units::Rate<
-                    statistics::units::Cycle, statistics::units::Count>::get(),
-               "CPI: Cycles Per Instruction"),
-      ADD_STAT(totalCpi, statistics::units::Rate<
-                    statistics::units::Cycle, statistics::units::Count>::get(),
-               "CPI: Total CPI of All Threads"),
-      ADD_STAT(ipc, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Cycle>::get(),
-               "IPC: Instructions Per Cycle"),
-      ADD_STAT(totalIpc, statistics::units::Rate<
-                    statistics::units::Count, statistics::units::Cycle>::get(),
-               "IPC: Total IPC of All Threads"),
-      ADD_STAT(intRegfileReads, statistics::units::Count::get(),
-               "Number of integer regfile reads"),
-      ADD_STAT(intRegfileWrites, statistics::units::Count::get(),
-               "Number of integer regfile writes"),
-      ADD_STAT(fpRegfileReads, statistics::units::Count::get(),
-               "Number of floating regfile reads"),
-      ADD_STAT(fpRegfileWrites, statistics::units::Count::get(),
-               "Number of floating regfile writes"),
-      ADD_STAT(vecRegfileReads, statistics::units::Count::get(),
-               "number of vector regfile reads"),
-      ADD_STAT(vecRegfileWrites, statistics::units::Count::get(),
-               "number of vector regfile writes"),
-      ADD_STAT(vecPredRegfileReads, statistics::units::Count::get(),
-               "number of predicate regfile reads"),
-      ADD_STAT(vecPredRegfileWrites, statistics::units::Count::get(),
-               "number of predicate regfile writes"),
-      ADD_STAT(ccRegfileReads, statistics::units::Count::get(),
-               "number of cc regfile reads"),
-      ADD_STAT(ccRegfileWrites, statistics::units::Count::get(),
-               "number of cc regfile writes"),
-      ADD_STAT(miscRegfileReads, statistics::units::Count::get(),
-               "number of misc regfile reads"),
-      ADD_STAT(miscRegfileWrites, statistics::units::Count::get(),
-               "number of misc regfile writes")
+               "for an interrupt")
 {
     // Register any of the O3CPU's stats here.
     timesIdled
@@ -379,70 +339,6 @@ CPU::CPUStats::CPUStats(CPU *cpu)
 
     quiesceCycles
         .prereq(quiesceCycles);
-
-    // Number of Instructions simulated
-    // --------------------------------
-    // Should probably be in Base CPU but need templated
-    // MaxThreads so put in here instead
-    committedInsts
-        .init(cpu->numThreads)
-        .flags(statistics::total);
-
-    committedOps
-        .init(cpu->numThreads)
-        .flags(statistics::total);
-
-    cpi
-        .precision(6);
-    cpi = cpu->baseStats.numCycles / committedInsts;
-
-    totalCpi
-        .precision(6);
-    totalCpi = cpu->baseStats.numCycles / sum(committedInsts);
-
-    ipc
-        .precision(6);
-    ipc = committedInsts / cpu->baseStats.numCycles;
-
-    totalIpc
-        .precision(6);
-    totalIpc = sum(committedInsts) / cpu->baseStats.numCycles;
-
-    intRegfileReads
-        .prereq(intRegfileReads);
-
-    intRegfileWrites
-        .prereq(intRegfileWrites);
-
-    fpRegfileReads
-        .prereq(fpRegfileReads);
-
-    fpRegfileWrites
-        .prereq(fpRegfileWrites);
-
-    vecRegfileReads
-        .prereq(vecRegfileReads);
-
-    vecRegfileWrites
-        .prereq(vecRegfileWrites);
-
-    vecPredRegfileReads
-        .prereq(vecPredRegfileReads);
-
-    vecPredRegfileWrites
-        .prereq(vecPredRegfileWrites);
-
-    ccRegfileReads
-        .prereq(ccRegfileReads);
-
-    ccRegfileWrites
-        .prereq(ccRegfileWrites);
-
-    miscRegfileReads
-        .prereq(miscRegfileReads);
-
-    miscRegfileWrites
-        .prereq(miscRegfileWrites);
 }
 
 void
@@ -1019,9 +915,6 @@ CPU::readMiscRegNoEffect(int misc_reg, ThreadID tid) const
 RegVal
 CPU::readMiscReg(int misc_reg, ThreadID tid)
 {
-    // output both old and new stats, keep
-    // return value the same
-    cpuStats.miscRegfileReads++;
     executeStats[tid]->numMiscRegReads++;
     return isa[tid]->readMiscReg(misc_reg);
 }
@@ -1035,130 +928,8 @@ CPU::setMiscRegNoEffect(int misc_reg, RegVal val, ThreadID tid)
 void
 CPU::setMiscReg(int misc_reg, RegVal val, ThreadID tid)
 {
-    // output both old and new stats
-    cpuStats.miscRegfileWrites++;
     executeStats[tid]->numMiscRegWrites++;
     isa[tid]->setMiscReg(misc_reg, val);
-}
-
-RegVal
-CPU::getReg(PhysRegIdPtr phys_reg)
-{
-    switch (phys_reg->classValue()) {
-      case IntRegClass:
-        cpuStats.intRegfileReads++;
-        break;
-      case FloatRegClass:
-        cpuStats.fpRegfileReads++;
-        break;
-      case CCRegClass:
-        cpuStats.ccRegfileReads++;
-        break;
-      case VecRegClass:
-      case VecElemClass:
-        cpuStats.vecRegfileReads++;
-        break;
-      case VecPredRegClass:
-        cpuStats.vecPredRegfileReads++;
-        break;
-      default:
-        break;
-    }
-    return regFile.getReg(phys_reg);
-}
-
-void
-CPU::getReg(PhysRegIdPtr phys_reg, void *val)
-{
-    switch (phys_reg->classValue()) {
-      case IntRegClass:
-        cpuStats.intRegfileReads++;
-        break;
-      case FloatRegClass:
-        cpuStats.fpRegfileReads++;
-        break;
-      case CCRegClass:
-        cpuStats.ccRegfileReads++;
-        break;
-      case VecRegClass:
-      case VecElemClass:
-        cpuStats.vecRegfileReads++;
-        break;
-      case VecPredRegClass:
-        cpuStats.vecPredRegfileReads++;
-        break;
-      default:
-        break;
-    }
-    regFile.getReg(phys_reg, val);
-}
-
-void *
-CPU::getWritableReg(PhysRegIdPtr phys_reg)
-{
-    switch (phys_reg->classValue()) {
-      case VecRegClass:
-        cpuStats.vecRegfileReads++;
-        break;
-      case VecPredRegClass:
-        cpuStats.vecPredRegfileReads++;
-        break;
-      default:
-        break;
-    }
-    return regFile.getWritableReg(phys_reg);
-}
-
-void
-CPU::setReg(PhysRegIdPtr phys_reg, RegVal val)
-{
-    switch (phys_reg->classValue()) {
-      case IntRegClass:
-        cpuStats.intRegfileWrites++;
-        break;
-      case FloatRegClass:
-        cpuStats.fpRegfileWrites++;
-        break;
-      case CCRegClass:
-        cpuStats.ccRegfileWrites++;
-        break;
-      case VecRegClass:
-      case VecElemClass:
-        cpuStats.vecRegfileWrites++;
-        break;
-      case VecPredRegClass:
-        cpuStats.vecPredRegfileWrites++;
-        break;
-      default:
-        break;
-    }
-    regFile.setReg(phys_reg, val);
-}
-
-void
-CPU::setReg(PhysRegIdPtr phys_reg, const void *val)
-{
-    switch (phys_reg->classValue()) {
-      case IntRegClass:
-        cpuStats.intRegfileWrites++;
-        break;
-      case FloatRegClass:
-        cpuStats.fpRegfileWrites++;
-        break;
-      case CCRegClass:
-        cpuStats.ccRegfileWrites++;
-        break;
-      case VecRegClass:
-      case VecElemClass:
-        cpuStats.vecRegfileWrites++;
-        break;
-      case VecPredRegClass:
-        cpuStats.vecPredRegfileWrites++;
-        break;
-      default:
-        break;
-    }
-    regFile.setReg(phys_reg, val);
 }
 
 RegVal
@@ -1353,19 +1124,15 @@ CPU::instDone(ThreadID tid, const DynInstPtr &inst)
 {
     // Keep an instruction count.
     if (!inst->isMicroop() || inst->isLastMicroop()) {
-        // update both old and new stats
         thread[tid]->numInst++;
         thread[tid]->threadStats.numInsts++;
-        cpuStats.committedInsts[tid]++;
         commitStats[tid]->numInstsNotNOP++;
 
         // Check for instruction-count-based events.
         thread[tid]->comInstEventQueue.serviceEvents(thread[tid]->numInst);
     }
-    // update both old and new stats
     thread[tid]->numOp++;
     thread[tid]->threadStats.numOps++;
-    cpuStats.committedOps[tid]++;
     commitStats[tid]->numOpsNotNOP++;
 
     probeInstCommit(inst->staticInst, inst->pcState().instAddr());

@@ -156,10 +156,6 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
                "The number of times a branch was mispredicted"),
       ADD_STAT(numCommittedDist, statistics::units::Count::get(),
                "Number of insts commited each cycle"),
-      ADD_STAT(instsCommitted, statistics::units::Count::get(),
-               "Number of instructions committed"),
-      ADD_STAT(opsCommitted, statistics::units::Count::get(),
-               "Number of ops (including micro ops) committed"),
       ADD_STAT(amos, statistics::units::Count::get(),
                "Number of atomic instructions committed"),
       ADD_STAT(membars, statistics::units::Count::get(),
@@ -180,14 +176,6 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
     numCommittedDist
         .init(0,commit->commitWidth,1)
         .flags(statistics::pdf);
-
-    instsCommitted
-        .init(cpu->numThreads)
-        .flags(total);
-
-    opsCommitted
-        .init(cpu->numThreads)
-        .flags(total);
 
     amos
         .init(cpu->numThreads)
@@ -1351,13 +1339,9 @@ Commit::updateComInstStats(const DynInstPtr &inst)
     ThreadID tid = inst->threadNumber;
 
     if (!inst->isMicroop() || inst->isLastMicroop()) {
-        // update both old and new stats
-        stats.instsCommitted[tid]++;
         cpu->commitStats[tid]->numInsts++;
         cpu->baseStats.numInsts++;
     }
-    // update both old and new stats
-    stats.opsCommitted[tid]++;
     cpu->commitStats[tid]->numOps++;
     cpu->baseStats.numOps++;
 

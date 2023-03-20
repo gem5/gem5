@@ -65,9 +65,6 @@ struct MinorStats : public statistics::Group
     /** Number of simulated insts and microops */
     statistics::Scalar numOps;
 
-    /** Number of ops discarded before committing */
-    statistics::Scalar numDiscardedOps;
-
     /** Number of cycles in quiescent state */
     statistics::Scalar quiesceCycles;
 

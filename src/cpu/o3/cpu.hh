@@ -310,18 +310,6 @@ class CPU : public BaseCPU
      */
     void setMiscReg(int misc_reg, RegVal val, ThreadID tid);
 
-    RegVal getReg(PhysRegIdPtr phys_reg);
-    void getReg(PhysRegIdPtr phys_reg, void *val);
-    void *getWritableReg(PhysRegIdPtr phys_reg);
-
-    void setReg(PhysRegIdPtr phys_reg, RegVal val);
-    void setReg(PhysRegIdPtr phys_reg, const void *val);
-
-    /** These functions are duplicated so that one set
-     * doesn't use thread ID, while the other does.
-     * This allows us to still output both old and
-     * new versions of the stats.
-    */
     RegVal getReg(PhysRegIdPtr phys_reg, ThreadID tid);
     void getReg(PhysRegIdPtr phys_reg, void *val, ThreadID tid);
     void *getWritableReg(PhysRegIdPtr phys_reg, ThreadID tid);
@@ -593,38 +581,6 @@ class CPU : public BaseCPU
         /** Stat for total number of cycles the CPU spends descheduled due to a
          * quiesce operation or waiting for an interrupt. */
         statistics::Scalar quiesceCycles;
-        /** Stat for the number of committed instructions per thread. */
-        statistics::Vector committedInsts;
-        /** Stat for the number of committed ops (including micro ops) per
-         *  thread. */
-        statistics::Vector committedOps;
-        /** Stat for the CPI per thread. */
-        statistics::Formula cpi;
-        /** Stat for the total CPI. */
-        statistics::Formula totalCpi;
-        /** Stat for the IPC per thread. */
-        statistics::Formula ipc;
-        /** Stat for the total IPC. */
-        statistics::Formula totalIpc;
-
-        //number of integer register file accesses
-        statistics::Scalar intRegfileReads;
-        statistics::Scalar intRegfileWrites;
-        //number of float register file accesses
-        statistics::Scalar fpRegfileReads;
-        statistics::Scalar fpRegfileWrites;
-        //number of vector register file accesses
-        mutable statistics::Scalar vecRegfileReads;
-        statistics::Scalar vecRegfileWrites;
-        //number of predicate register file accesses
-        mutable statistics::Scalar vecPredRegfileReads;
-        statistics::Scalar vecPredRegfileWrites;
-        //number of CC register file accesses
-        statistics::Scalar ccRegfileReads;
-        statistics::Scalar ccRegfileWrites;
-        //number of misc
-        statistics::Scalar miscRegfileReads;
-        statistics::Scalar miscRegfileWrites;
     } cpuStats;
 
   public:

@@ -479,10 +479,6 @@ class Commit
         /** Distribution of the number of committed instructions each cycle. */
         statistics::Distribution numCommittedDist;
 
-        /** Total number of instructions committed. */
-        statistics::Vector instsCommitted;
-        /** Total number of ops (including micro ops) committed. */
-        statistics::Vector opsCommitted;
         /** Stat for the total number of committed atomics. */
         statistics::Vector amos;
         /** Total number of committed memory barriers. */
