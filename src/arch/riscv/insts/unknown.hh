@@ -34,7 +34,6 @@
 #include <string>
 
 #include "arch/riscv/faults.hh"
-#include "arch/riscv/insts/bitfields.hh"
 #include "arch/riscv/insts/static_inst.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/static_inst.hh"
@@ -60,14 +59,14 @@ class Unknown : public RiscvStaticInst
     Fault
     execute(ExecContext *, trace::InstRecord *) const override
     {
-        return std::make_shared<UnknownInstFault>(machInst);
+        return std::make_shared<UnknownInstFault>(machInst.instBits);
     }
 
     std::string
     generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override
     {
-        return csprintf("unknown opcode %#02x", OPCODE);
+        return csprintf("unknown opcode %#02x", machInst.opcode);
     }
 };
 

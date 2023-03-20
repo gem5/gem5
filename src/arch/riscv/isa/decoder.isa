@@ -442,7 +442,7 @@ decode QUADRANT default Unknown::unknown() {
             }
         }
     }
-    0x3: decode OPCODE {
+    0x3: decode OPCODE5 {
         0x00: decode FUNCT3 {
             format Load {
                 0x0: lb({{

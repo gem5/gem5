@@ -39,7 +39,7 @@
 #include <gem5/asm/generic/m5ops.h>
 
 // riscv pseudo instructions have bit 1:0 (QUADRANT) = 0x3,
-// bit 6:2 (OPCODE) = 0x1e, and bit 31:25 (M5FUNC) specifies
+// bit 6:2 (OPCODE5) = 0x1e, and bit 31:25 (M5FUNC) specifies
 // the function performed by pseudo instruction
 
 .macro	m5op_func, name, func

@@ -33,7 +33,6 @@
 
 #include <string>
 
-#include "arch/riscv/insts/bitfields.hh"
 #include "arch/riscv/insts/static_inst.hh"
 #include "arch/riscv/regs/misc.hh"
 #include "cpu/exec_context.hh"
@@ -95,7 +94,7 @@ class CSROp : public RiscvStaticInst
     /// Constructor
     CSROp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
         : RiscvStaticInst(mnem, _machInst, __opClass),
-            csr(FUNCT12), uimm(CSRIMM)
+          csr(_machInst.funct12), uimm(_machInst.csrimm)
     {
         if (csr == CSR_SATP) {
             flags[IsSquashAfter] = true;
