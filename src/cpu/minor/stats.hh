@@ -75,12 +75,6 @@ struct MinorStats : public statistics::Group
     statistics::Formula cpi;
     statistics::Formula ipc;
 
-    /** Number of instructions by type (OpClass) */
-    statistics::Vector2d committedInstType;
-
-    /** Number of branches commited */
-    statistics::Vector2d committedControl;
-
 };
 
 } // namespace minor

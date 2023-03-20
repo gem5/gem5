@@ -437,29 +437,23 @@ BaseSimpleCPU::postExecute()
     /* Power model statistics */
     //integer alu accesses
     if (curStaticInst->isInteger()){
-        // update both old and new stats
         executeStats[t_info.thread->threadId()]->numIntAluAccesses++;
         commitStats[t_info.thread->threadId()]->numIntInsts++;
         t_info.execContextStats.numIntAluAccesses++;
-        t_info.execContextStats.numIntInsts++;
     }
 
     //float alu accesses
     if (curStaticInst->isFloating()){
-        // update both old and new stats
         executeStats[t_info.thread->threadId()]->numFpAluAccesses++;
         commitStats[t_info.thread->threadId()]->numFpInsts++;
         t_info.execContextStats.numFpAluAccesses++;
-        t_info.execContextStats.numFpInsts++;
     }
 
     //vector alu accesses
     if (curStaticInst->isVector()){
-        // update both old and new stats
         executeStats[t_info.thread->threadId()]->numVecAluAccesses++;
         commitStats[t_info.thread->threadId()]->numVecInsts++;
         t_info.execContextStats.numVecAluAccesses++;
-        t_info.execContextStats.numVecInsts++;
     }
 
     //Matrix alu accesses
@@ -473,30 +467,19 @@ BaseSimpleCPU::postExecute()
         t_info.execContextStats.numCallsReturns++;
     }
 
-    //the number of branch predictions that will be made
-    if (curStaticInst->isCondCtrl()){
-        t_info.execContextStats.numCondCtrlInsts++;
-    }
-
     //result bus acceses
     if (curStaticInst->isLoad()){
-        // update both old and new stats
         commitStats[t_info.thread->threadId()]->numLoadInsts++;
-        t_info.execContextStats.numLoadInsts++;
     }
 
     if (curStaticInst->isStore() || curStaticInst->isAtomic()){
-        // update both old and new stats
         commitStats[t_info.thread->threadId()]->numStoreInsts++;
-        t_info.execContextStats.numStoreInsts++;
     }
     /* End power model statistics */
 
-    // update both old and new stats
     commitStats[t_info.thread->threadId()]
         ->committedInstType[curStaticInst->opClass()]++;
     commitStats[t_info.thread->threadId()]->updateComCtrlStats(curStaticInst);
-    t_info.execContextStats.statExecutedInstType[curStaticInst->opClass()]++;
 
     /* increment the committed numInsts and numOps stats */
     countCommitInst();

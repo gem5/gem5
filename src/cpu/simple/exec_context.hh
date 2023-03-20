@@ -100,14 +100,6 @@ class SimpleExecContext : public ExecContext
                        "Number of matrix alu accesses"),
               ADD_STAT(numCallsReturns, statistics::units::Count::get(),
                        "Number of times a function call or return occured"),
-              ADD_STAT(numCondCtrlInsts, statistics::units::Count::get(),
-                       "Number of instructions that are conditional controls"),
-              ADD_STAT(numIntInsts, statistics::units::Count::get(),
-                       "Number of integer instructions"),
-              ADD_STAT(numFpInsts, statistics::units::Count::get(),
-                       "Number of float instructions"),
-              ADD_STAT(numVecInsts, statistics::units::Count::get(),
-                       "Number of vector instructions"),
               ADD_STAT(numMatInsts, statistics::units::Count::get(),
                        "Number of matrix instructions"),
               ADD_STAT(numIntRegReads, statistics::units::Count::get(),
@@ -136,10 +128,6 @@ class SimpleExecContext : public ExecContext
                        "Number of times the Misc registers were written"),
               ADD_STAT(numMemRefs, statistics::units::Count::get(),
                        "Number of memory refs"),
-              ADD_STAT(numLoadInsts, statistics::units::Count::get(),
-                       "Number of load instructions"),
-              ADD_STAT(numStoreInsts, statistics::units::Count::get(),
-                       "Number of store instructions"),
               ADD_STAT(numIdleCycles, statistics::units::Cycle::get(),
                        "Number of idle cycles"),
               ADD_STAT(numBusyCycles, statistics::units::Cycle::get(),
@@ -156,8 +144,6 @@ class SimpleExecContext : public ExecContext
                        "Number of branches predicted as taken"),
               ADD_STAT(numBranchMispred, statistics::units::Count::get(),
                        "Number of branch mispredictions"),
-              ADD_STAT(statExecutedInstType, statistics::units::Count::get(),
-                       "Class of executed instruction."),
               numRegReads{
                   &(cpu->executeStats[thread->threadId()]->numIntRegReads),
                   &(cpu->executeStats[thread->threadId()]->numFpRegReads),
@@ -190,14 +176,6 @@ class SimpleExecContext : public ExecContext
             dcacheStallCycles
                 .prereq(dcacheStallCycles);
 
-            statExecutedInstType
-                .init(enums::Num_OpClass)
-                .flags(statistics::total | statistics::pdf | statistics::dist);
-
-            for (unsigned i = 0; i < Num_OpClasses; ++i) {
-                statExecutedInstType.subname(i, enums::OpClassStrings[i]);
-            }
-
             idleFraction = statistics::constant(1.0) - notIdleFraction;
             numIdleCycles = idleFraction * cpu->baseStats.numCycles;
             numBusyCycles = notIdleFraction * cpu->baseStats.numCycles;
@@ -227,18 +205,6 @@ class SimpleExecContext : public ExecContext
 
         // Number of function calls/returns
         statistics::Scalar numCallsReturns;
-
-        // Conditional control instructions;
-        statistics::Scalar numCondCtrlInsts;
-
-        // Number of int instructions
-        statistics::Scalar numIntInsts;
-
-        // Number of float instructions
-        statistics::Scalar numFpInsts;
-
-        // Number of vector instructions
-        statistics::Scalar numVecInsts;
 
         // Number of matrix instructions
         statistics::Scalar numMatInsts;
@@ -273,8 +239,6 @@ class SimpleExecContext : public ExecContext
 
         // Number of simulated memory references
         statistics::Scalar numMemRefs;
-        statistics::Scalar numLoadInsts;
-        statistics::Scalar numStoreInsts;
 
         // Number of idle cycles
         statistics::Formula numIdleCycles;
@@ -298,9 +262,6 @@ class SimpleExecContext : public ExecContext
         /// Number of misprediced branches
         statistics::Scalar numBranchMispred;
         /// @}
-
-        // Instruction mix histogram by OpClass
-        statistics::Vector statExecutedInstType;
 
         std::array<statistics::Scalar *, CCRegClass + 1> numRegReads;
         std::array<statistics::Scalar *, CCRegClass + 1> numRegWrites;
