@@ -452,7 +452,7 @@ class DynInst : public ExecContext, public RefCounted
     }
 
   public:
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
     void dumpSNList();
 #endif
 

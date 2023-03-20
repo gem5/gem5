@@ -159,7 +159,7 @@ class TournamentBP : public BPredUnit
      */
     struct BPHistory
     {
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
         BPHistory()
         { newCount++; }
         ~BPHistory()

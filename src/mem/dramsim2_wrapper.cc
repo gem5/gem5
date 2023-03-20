@@ -37,15 +37,6 @@
 
 #include <cassert>
 
-/**
- * When building the debug binary, we need to undo the command-line
- * definition of DEBUG not to clash with DRAMSim2 print macros that
- * are included for no obvious reason.
- */
-#ifdef DEBUG
-#undef DEBUG
-#endif
-
 #include "mem/dramsim2_wrapper.hh"
 
 #include <fstream>

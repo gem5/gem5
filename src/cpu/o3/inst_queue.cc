@@ -165,7 +165,7 @@ InstructionQueue::InstructionQueue(CPU *cpu_ptr, IEW *iew_ptr,
 InstructionQueue::~InstructionQueue()
 {
     dependGraph.reset();
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
     cprintf("Nodes traversed: %i, removed: %i\n",
             dependGraph.nodesTraversed, dependGraph.nodesRemoved);
 #endif

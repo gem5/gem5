@@ -40,7 +40,7 @@ namespace gem5
 // type, but in all cases when we cast it to a derived type, we know
 // by construction that it should work correctly.
 
-#if defined(DEBUG)
+#if defined(GEM5_DEBUG)
 
 // In debug builds, do the dynamic cast and assert the result is good
 

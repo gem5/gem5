@@ -769,7 +769,7 @@ void
 IEW::sortInsts()
 {
     int insts_from_rename = fromRename->size;
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
     for (ThreadID tid = 0; tid < numThreads; tid++)
         assert(insts[tid].empty());
 #endif

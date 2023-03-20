@@ -385,7 +385,7 @@ class CPU : public BaseCPU
      */
     std::queue<ListIt> removeList;
 
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
     /** Debug structure to keep track of the sequence numbers still in
      * flight.
      */

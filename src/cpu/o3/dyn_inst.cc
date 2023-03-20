@@ -74,7 +74,7 @@ DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &static_inst,
     ++cpu->instcount;
 
     if (cpu->instcount > 1500) {
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
         cpu->dumpInsts();
         dumpSNList();
 #endif
@@ -86,7 +86,7 @@ DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &static_inst,
         seqNum, cpu->name(), cpu->instcount);
 #endif
 
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
     cpu->snList.insert(seqNum);
 #endif
 
@@ -262,13 +262,13 @@ DynInst::~DynInst()
         "DynInst: [sn:%lli] Instruction destroyed. Instcount for %s = %i\n",
         seqNum, cpu->name(), cpu->instcount);
 #endif
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
     cpu->snList.erase(seqNum);
 #endif
 };
 
 
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
 void
 DynInst::dumpSNList()
 {

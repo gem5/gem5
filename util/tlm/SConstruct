@@ -62,7 +62,7 @@ env.Append(CXXFLAGS=['-std=c++17',
                      ])
 
 if gem5_variant == 'debug':
-    env.Append(CXXFLAGS=['-g', '-DDEBUG'])
+    env.Append(CXXFLAGS=['-g', '-DGEM5_DEBUG'])
 
 deps = [] # keep track of all dependencies required for building the binaries
 

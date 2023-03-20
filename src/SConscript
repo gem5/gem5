@@ -649,7 +649,7 @@ envs = {
     'fast': env.Clone(ENV_LABEL='fast', OBJSUFFIX='.fo'),
 }
 
-envs['debug'].Append(CPPDEFINES=['DEBUG', 'TRACING_ON=1'])
+envs['debug'].Append(CPPDEFINES=['GEM5_DEBUG', 'TRACING_ON=1'])
 envs['opt'].Append(CCFLAGS=['-g'], CPPDEFINES=['TRACING_ON=1'])
 envs['fast'].Append(CPPDEFINES=['NDEBUG', 'TRACING_ON=0'])
 
