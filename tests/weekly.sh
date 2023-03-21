@@ -398,3 +398,39 @@ rm -rf ${gem5_root}/m5out
 
 # delete Pannotia datasets we downloaded and output files it created
 rm -f coAuthorsDBLP.graph 1k_128k.gr result.out
+
+# Run tests to ensure the DRAMSys integration is still functioning correctly.
+if [ -d "${gem5_root}/ext/dramsys/DRAMSys" ]; then
+    rm -r "${gem5_root}/ext/dramsys/DRAMSys"
+fi
+
+cd "${gem5_root}/ext/dramsys"
+git clone --recursive git@github.com:tukl-msd/DRAMSys.git DRAMSys
+cd DRAMSys
+git checkout -b gem5 09f6dcbb91351e6ee7cadfc7bc8b29d97625db8f
+cd "${gem5_root}"
+
+rm -rf "${gem5_root}/build/ALL"
+
+docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
+    "${gem5_root}" --memory="${docker_mem_limit}" --rm \
+    gcr.io/gem5-test/ubuntu-22.04_all-dependencies:${tag} \
+       scons build/ALL/gem5.opt -j${threads}
+
+docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
+    "${gem5_root}" --memory="${docker_mem_limit}" --rm \
+    gcr.io/gem5-test/ubuntu-22.04_all-dependencies:${tag} \
+       ./build/ALL/gem5.opt \
+       configs/example/gem5_library/dramsys/arm-hello-dramsys.py
+
+docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
+    "${gem5_root}" --memory="${docker_mem_limit}" --rm \
+    gcr.io/gem5-test/ubuntu-22.04_all-dependencies:${tag} \
+       ./build/ALL/gem5.opt \
+       configs/example/gem5_library/dramsys/dramsys-traffic.py
+
+docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
+    "${gem5_root}" --memory="${docker_mem_limit}" --rm \
+    gcr.io/gem5-test/ubuntu-22.04_all-dependencies:${tag} \
+       ./build/ALL/gem5.opt \
+       configs/example/dramsys.py
