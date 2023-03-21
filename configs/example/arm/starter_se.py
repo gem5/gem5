@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017 ARM Limited
+# Copyright (c) 2016-2017, 2023 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -95,7 +95,7 @@ class SimpleSeSystem(System):
 
         # Add CPUs to the system. A cluster of CPUs typically have
         # private L1 caches and a shared L2 cache.
-        self.cpu_cluster = devices.CpuCluster(
+        self.cpu_cluster = devices.ArmCpuCluster(
             self, args.num_cores, args.cpu_freq, "1.2V", *cpu_types[args.cpu]
         )
 
@@ -114,11 +114,11 @@ class SimpleSeSystem(System):
     def numCpuClusters(self):
         return len(self._clusters)
 
-    def addCpuCluster(self, cpu_cluster, num_cpus):
+    def addCpuCluster(self, cpu_cluster):
         assert cpu_cluster not in self._clusters
-        assert num_cpus > 0
+        assert len(cpu_cluster) > 0
         self._clusters.append(cpu_cluster)
-        self._num_cpus += num_cpus
+        self._num_cpus += len(cpu_cluster)
 
     def numCpus(self):
         return self._num_cpus
