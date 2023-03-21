@@ -95,6 +95,7 @@ output exec {{
 #include "arch/riscv/reg_abi.hh"
 #include "arch/riscv/regs/float.hh"
 #include "arch/riscv/regs/misc.hh"
+#include "arch/riscv/regs/vector.hh"
 #include "arch/riscv/utility.hh"
 #include "base/condcodes.hh"
 #include "cpu/base.hh"

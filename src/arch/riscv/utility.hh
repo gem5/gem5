@@ -51,6 +51,7 @@
 
 #include "arch/riscv/regs/float.hh"
 #include "arch/riscv/regs/int.hh"
+#include "arch/riscv/regs/vector.hh"
 #include "base/types.hh"
 #include "cpu/reg_class.hh"
 #include "cpu/static_inst.hh"
@@ -130,7 +131,14 @@ registerName(RegId reg)
             return str.str();
         }
         return float_reg::RegNames[reg.index()];
-    } else {
+    } else if (reg.is(VecRegClass)) {
+        if (reg.index() >= NumVecRegs) {
+            std::stringstream str;
+            str << "?? (v" << reg.index() << ')';
+            return str.str();
+        }
+        return VecRegNames[reg.index()];
+    } else  {
         /* It must be an InvalidRegClass, in RISC-V we should treat it as a
          * zero register for the disassembler to work correctly.
          */

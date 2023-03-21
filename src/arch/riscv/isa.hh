@@ -67,6 +67,8 @@ enum FPUStatus
     DIRTY = 3,
 };
 
+using VPUStatus = FPUStatus;
+
 class ISA : public BaseISA
 {
   protected:
