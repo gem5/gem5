@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017,2019-2022 Arm Limited
+# Copyright (c) 2016-2017,2019-2023 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -157,6 +157,10 @@ def create(args):
     workload_class = workloads.workload_list.get(args.workload)
     system.workload = workload_class(object_file, system)
 
+    if args.exit_on_uart_eot:
+        for uart in system.realview.uart:
+            uart.end_on_eot = True
+
     return system
 
 
@@ -252,6 +256,12 @@ def main():
         choices=TarmacDump.vals,
         default="stdoutput",
         help="Destination for the Tarmac trace output. [Default: stdoutput]",
+    )
+    parser.add_argument(
+        "--exit-on-uart-eot",
+        action="store_true",
+        help="Exit simulation if any of the UARTs receive an EOT. Many "
+        "workloads signal termination by sending an EOT character.",
     )
     parser.add_argument(
         "--dtb-gen",
