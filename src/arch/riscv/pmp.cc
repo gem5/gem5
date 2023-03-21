@@ -152,6 +152,13 @@ PMP::pmpGetAField(uint8_t cfg)
 bool
 PMP::pmpUpdateCfg(uint32_t pmp_index, uint8_t this_cfg)
 {
+    if (pmp_index >= pmpEntries) {
+        DPRINTF(PMP, "Can't update pmp entry config %u"
+                " because the index exceed the size of pmp entries %u",
+                pmp_index, pmpEntries);
+        return false;
+    }
+
     DPRINTF(PMP, "Update pmp config with %u for pmp entry: %u \n",
                                     (unsigned)this_cfg, pmp_index);
     if (pmpTable[pmp_index].pmpCfg & PMP_LOCK) {
@@ -231,6 +238,13 @@ PMP::pmpReset()
 bool
 PMP::pmpUpdateAddr(uint32_t pmp_index, Addr this_addr)
 {
+    if (pmp_index >= pmpEntries) {
+        DPRINTF(PMP, "Can't update pmp entry address %u"
+                " because the index exceed the size of pmp entries %u",
+                pmp_index, pmpEntries);
+        return false;
+    }
+
     DPRINTF(PMP, "Update pmp addr %#x for pmp entry %u \n",
                                       this_addr, pmp_index);
 
@@ -241,8 +255,8 @@ PMP::pmpUpdateAddr(uint32_t pmp_index, Addr this_addr)
     } else if (pmp_index < pmpTable.size() - 1 &&
                ((pmpTable[pmp_index+1].pmpCfg & PMP_LOCK) != 0) &&
                pmpGetAField(pmpTable[pmp_index+1].pmpCfg) == PMP_TOR) {
-        DPRINTF(PMP, "Update pmp entry %u failed because the entry %u lock bit set"
-                "and A field is TOR\n",
+        DPRINTF(PMP, "Update pmp entry %u failed because the entry %u lock bit"
+                " set and A field is TOR\n",
                 pmp_index, pmp_index+1);
         return false;
     }
