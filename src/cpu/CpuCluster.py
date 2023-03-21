@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Arm Limited
+# Copyright (c) 2022-2023 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -50,6 +50,9 @@ class CpuCluster(SubSystem):
 
     def __iter__(self):
         return iter(self.cpus)
+
+    def __len__(self):
+        return len(self.cpus)
 
     def generate_cpus(self, cpu_type: "BaseCPU", num_cpus: int):
         """
