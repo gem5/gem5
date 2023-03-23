@@ -45,7 +45,7 @@ def test_replacement_policy(config_name: str, config_path: str) -> None:
             "tests",
             "gem5",
             "replacement-policies",
-            "run_replacement_policy_test.py",
+            "run_replacement_policy.py",
         ),
         config_args=[config_name, config_path],
         valid_isas=(constants.null_tag,),
