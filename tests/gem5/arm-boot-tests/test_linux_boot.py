@@ -94,7 +94,7 @@ arm-boot-test"
             "arm_boot_exit_run.py",
         ),
         config_args=config_args,
-        valid_isas=(constants.all_compiled,),
+        valid_isas=(constants.all_compiled_tag,),
         valid_hosts=constants.supported_hosts,
         length=length,
         protocol=protocol_to_use,
