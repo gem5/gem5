@@ -755,7 +755,12 @@ def addSEOptions(parser):
         action="store_true",
         help="Wait for remote GDB to connect.",
     )
-
+    parser.add_argument(
+        "--pool_ids",
+        default="",
+        help="Specify the available mem pool id for each process.",
+    )
+    
 
 def addFSOptions(parser):
     from common.FSConfig import os_types

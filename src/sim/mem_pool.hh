@@ -38,6 +38,9 @@
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
+// The memory pool corresponding to the current id is exhausted
+#define POOL_EXHAUSTED 0x7FFFFFFFFFFFFFFF
+
 namespace gem5
 {
 

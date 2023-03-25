@@ -180,12 +180,15 @@ X86_64Process::initState()
     if (kvmInSE) {
         PortProxy physProxy = system->physProxy;
 
-        Addr syscallCodePhysAddr = seWorkload->allocPhysPages(1);
-        Addr gdtPhysAddr = seWorkload->allocPhysPages(1);
-        Addr idtPhysAddr = seWorkload->allocPhysPages(1);
-        Addr istPhysAddr = seWorkload->allocPhysPages(1);
-        Addr tssPhysAddr = seWorkload->allocPhysPages(1);
-        Addr pfHandlerPhysAddr = seWorkload->allocPhysPages(1);
+        /*
+         * Pass the available memory pool is the member of the current process
+         */
+        Addr syscallCodePhysAddr = seWorkload->allocPhysPages(1, pool_ids);
+        Addr gdtPhysAddr = seWorkload->allocPhysPages(1, pool_ids);
+        Addr idtPhysAddr = seWorkload->allocPhysPages(1, pool_ids);
+        Addr istPhysAddr = seWorkload->allocPhysPages(1, pool_ids);
+        Addr tssPhysAddr = seWorkload->allocPhysPages(1, pool_ids);
+        Addr pfHandlerPhysAddr = seWorkload->allocPhysPages(1, pool_ids);
 
         /*
          * Set up the gdt.

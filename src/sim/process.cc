@@ -128,6 +128,7 @@ Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
       _gid(params.gid), _egid(params.egid),
       _pid(params.pid), _ppid(params.ppid),
       _pgid(params.pgid), drivers(params.drivers),
+      pool_ids(params.pool_ids),// Pass in the available memory pool_ids vector
       fds(std::make_shared<FDArray>(
                   params.input, params.output, params.errout)),
       childClearTID(0),
@@ -336,7 +337,8 @@ Process::allocateMem(Addr vaddr, int64_t size, bool clobber)
     }
 
     const int npages = divCeil(size, page_size);
-    const Addr paddr = seWorkload->allocPhysPages(npages);
+    // try to allocate in all available memory pools
+    const Addr paddr = seWorkload->allocPhysPages(npages, pool_ids);
     const Addr pages_size = npages * page_size;
     pTable->map(page_addr, paddr, pages_size,
                 clobber ? EmulationPageTable::Clobber :
@@ -347,8 +349,10 @@ void
 Process::replicatePage(Addr vaddr, Addr new_paddr, ThreadContext *old_tc,
                        ThreadContext *new_tc, bool allocate_page)
 {
-    if (allocate_page)
-        new_paddr = seWorkload->allocPhysPages(1);
+    if (allocate_page){
+         // try to allocate in all available memory pools
+        new_paddr = seWorkload->allocPhysPages(1, pool_ids);
+    }
 
     // Read from old physical page.
     uint8_t buf_p[pTable->pageSize()];

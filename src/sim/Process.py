@@ -59,6 +59,8 @@ class Process(SimObject):
     ppid = Param.Int(0, "parent process id")
     pgid = Param.Int(100, "process group id")
 
+    pool_ids = VectorParam.Int([0], "Available mem pools")
+
     executable = Param.String("", "executable (overrides cmd[0] if set)")
     cmd = VectorParam.String("command line (executable plus arguments)")
     env = VectorParam.String([], "environment settings")

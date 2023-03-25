@@ -86,12 +86,27 @@ def get_processes(args):
     if args.options != "":
         pargs = args.options.split(";")
 
+    # Use ';' to separate the list of memory pool id available for each process
+    pool_ids_sv = args.pool_ids.split(";") if args.pool_ids != "" else ["0"]
+    # If no id is specified,
+    # each process can be allocated from mem_pool 0 by default
+    pool_ids_sv += ["0"] * (len(workloads) - len(pool_ids_sv))
+
     idx = 0
     for wrkld in workloads:
         process = Process(pid=100 + idx)
         process.executable = wrkld
         process.cwd = os.getcwd()
         process.gid = os.getgid()
+
+        # Split the pool ids available for the process by ','
+        pool_ids_v = list(map(int, pool_ids_sv[idx].split(",")))
+        # A negative value indicates that
+        # the process cannot allocate memory in any pool
+        pool_ids_v = [] if min(pool_ids_v) < 0 else pool_ids_v
+        # Pass this parameter,
+        # and the pool corresponding to the parameter should exist
+        process.pool_ids = pool_ids_v
 
         if args.env:
             with open(args.env, "r") as f:
@@ -182,7 +197,10 @@ mp0_path = multiprocesses[0].executable
 system = System(
     cpu=[CPUClass(cpu_id=i) for i in range(np)],
     mem_mode=test_mem_mode,
-    mem_ranges=[AddrRange(args.mem_size)],
+    mem_ranges=[
+        AddrRange(args.mem_size)
+        # AddrRange(0x10000000000,size=args.mem_size) # Add a new test memory
+    ],
     cache_line_size=args.cacheline_size,
 )
 

@@ -280,6 +280,9 @@ class Process : public SimObject
     uint64_t _pgid;
     uint64_t _tgid;
 
+    // Memory pool ids available to this process
+    std::vector<int> pool_ids;
+
     // Emulated drivers available to this process
     std::vector<EmulatedDriver *> drivers;
 
