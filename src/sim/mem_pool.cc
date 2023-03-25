@@ -116,10 +116,10 @@ MemPool::allocate(Addr npages)
 {
     Addr return_addr = freePageAddr();
     freePageNum += npages;
-
-    fatal_if(freePages() <= 0,
-            "Out of memory, please increase size of physical memory.");
-
+    // current pool has exhausted
+    if (freePages() <= 0)
+        return POOL_EXHAUSTED;
+    // fatal_if is transferred to the upper level function
     return return_addr;
 }
 
