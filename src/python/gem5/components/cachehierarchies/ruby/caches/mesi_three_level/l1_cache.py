@@ -92,7 +92,7 @@ class L1Cache(L0Cache_Controller):
 
     def getBlockSizeBits(self, cache_line_size):
         bits = int(math.log(cache_line_size, 2))
-        if 2**bits != cache_line_size:
+        if 2**bits != int(cache_line_size):
             raise Exception("Cache line size is not a power of 2!")
         return bits
 
