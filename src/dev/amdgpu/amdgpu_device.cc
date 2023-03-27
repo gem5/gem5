@@ -536,6 +536,7 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
 
     // Serialize the device memory
     deviceMem.serializeSection(cp, "deviceMem");
+    gpuvm.serializeSection(cp, "GPUVM");
 }
 
 void
@@ -597,6 +598,7 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
 
     // Unserialize the device memory
     deviceMem.unserializeSection(cp, "deviceMem");
+    gpuvm.unserializeSection(cp, "GPUVM");
 }
 
 uint16_t
