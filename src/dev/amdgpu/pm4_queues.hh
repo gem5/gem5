@@ -391,7 +391,7 @@ class PM4Queue
     Addr _offset;
     bool _processing;
     bool _ib;
-    const PM4MapQueues _pkt;
+    PM4MapQueues _pkt;
   public:
     PM4Queue() : _id(0), q(nullptr), _wptr(0), _offset(0), _processing(false),
         _ib(false), _pkt() {}
@@ -486,6 +486,13 @@ class PM4Queue
     uint32_t pipe() { return _pkt.pipe; }
     uint32_t queue() { return _pkt.queueSlot; }
     bool privileged() { return _pkt.queueSel == 0 ? 1 : 0; }
+    PM4MapQueues* getPkt() { return &_pkt; }
+    void setPkt(uint32_t me, uint32_t pipe, uint32_t queue, bool privileged) {
+        _pkt.me = me - 1;
+        _pkt.pipe = pipe;
+        _pkt.queueSlot = queue;
+        _pkt.queueSel = (privileged == 0) ? 1 : 0;
+    }
 
     // Same computation as processMQD. See comment there for details.
     uint64_t size() { return 4UL << ((q->hqd_pq_control & 0x3f) + 1); }
