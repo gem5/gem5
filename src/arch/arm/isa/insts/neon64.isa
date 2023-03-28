@@ -3255,8 +3255,9 @@ let {{
                         destElem = 0;
                     }
                 } else {
-                    if (bits(srcElem1, sizeof(Element) * 8 - 1,
-                                sizeof(Element) * 8 - shiftAmt)) {
+                    if (shiftAmt != 0 &&
+                            bits(srcElem1, sizeof(Element) * 8 - 1,
+                                           sizeof(Element) * 8 - shiftAmt)) {
                         destElem = mask(sizeof(Element) * 8);
                         fpscr.qc = 1;
                     } else {
