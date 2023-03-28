@@ -387,4 +387,13 @@ ControlExtension::setWriteAllocate(std::optional<bool> wa)
     write_allocate = std::move(wa);
 }
 
+void
+ControlExtension::setAXI4CacheAttributesFromFlag(uint32_t axi4_flag)
+{
+    setBufferable((axi4_flag >> 0) & 1);
+    setModifiable((axi4_flag >> 1) & 1);
+    setReadAllocate((axi4_flag >> 2) & 1);
+    setWriteAllocate((axi4_flag >> 3) & 1);
+}
+
 }  // namespace Gem5SystemC

@@ -138,6 +138,8 @@ class ControlExtension : public tlm::tlm_extension<ControlExtension>
     std::optional<bool> getWriteAllocate() const;
     void setWriteAllocate(std::optional<bool> wa);
 
+    void setAXI4CacheAttributesFromFlag(uint32_t axi4_flag);
+
   private:
     /* Secure and privileged access */
     bool privileged;
