@@ -36,8 +36,10 @@
 #ifndef __BASE_EXTENSIBLE_HH__
 #define __BASE_EXTENSIBLE_HH__
 
+#include <cassert>
 #include <list>
 #include <memory>
+#include <type_traits>
 #include <utility>
 
 namespace gem5
