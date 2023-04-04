@@ -310,23 +310,24 @@ RubySystem::writeCompressedTrace(uint8_t *raw_data, std::string filename,
 void
 RubySystem::serialize(CheckpointOut &cp) const
 {
-    // Store the cache-block size, so we are able to restore on systems with a
-    // different cache-block size. CacheRecorder depends on the correct
-    // cache-block size upon unserializing.
+    // Store the cache-block size, so we are able to restore on systems
+    // with a different cache-block size. CacheRecorder depends on the
+    // correct cache-block size upon unserializing.
     uint64_t block_size_bytes = getBlockSizeBytes();
     SERIALIZE_SCALAR(block_size_bytes);
 
-    // Check that there's a valid trace to use.  If not, then memory won't be
-    // up-to-date and the simulation will probably fail when restoring from the
-    // checkpoint.
+    // Check that there's a valid trace to use.  If not, then memory won't
+    // be up-to-date and the simulation will probably fail when restoring
+    // from the checkpoint.
     if (m_cache_recorder == NULL) {
-        fatal("Call memWriteback() before serialize() to create ruby trace");
+        fatal("Call memWriteback() before serialize() to create"
+                "ruby trace");
     }
 
     // Aggregate the trace entries together into a single array
     uint8_t *raw_data = new uint8_t[4096];
-    uint64_t cache_trace_size = m_cache_recorder->aggregateRecords(&raw_data,
-                                                                 4096);
+    uint64_t cache_trace_size = m_cache_recorder->aggregateRecords(
+                                                        &raw_data, 4096);
     std::string cache_trace_file = name() + ".cache.gz";
     writeCompressedTrace(raw_data, cache_trace_file, cache_trace_size);
 
