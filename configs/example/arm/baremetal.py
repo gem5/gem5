@@ -157,6 +157,11 @@ def create(args):
     workload_class = workloads.workload_list.get(args.workload)
     system.workload = workload_class(object_file, system)
 
+    if args.with_pmu:
+        for cluster in system.cpu_cluster:
+            interrupt_numbers = [args.pmu_ppi_number] * len(cluster)
+            cluster.addPMUs(interrupt_numbers)
+
     if args.exit_on_uart_eot:
         for uart in system.realview.uart:
             uart.end_on_eot = True
@@ -180,6 +185,15 @@ def run(args):
         else:
             print(f"{exit_msg} ({event.getCode()}) @ {m5.curTick()}")
             break
+
+
+def arm_ppi_arg(int_num: int) -> int:
+    """Argparse argument parser for valid Arm PPI numbers."""
+    # PPIs (1056 <= int_num <= 1119) are not yet supported by gem5
+    int_num = int(int_num)
+    if 16 <= int_num <= 31:
+        return int_num
+    raise ValueError(f"{int_num} is not a valid Arm PPI number")
 
 
 def main():
@@ -256,6 +270,18 @@ def main():
         choices=TarmacDump.vals,
         default="stdoutput",
         help="Destination for the Tarmac trace output. [Default: stdoutput]",
+    )
+    parser.add_argument(
+        "--with-pmu",
+        action="store_true",
+        help="Add a PMU to each core in the cluster.",
+    )
+    parser.add_argument(
+        "--pmu-ppi-number",
+        type=arm_ppi_arg,
+        default=23,
+        help="The number of the PPI to use to connect each PMU to its core. "
+        "Must be an integer and a valid PPI number (16 <= int_num <= 31).",
     )
     parser.add_argument(
         "--exit-on-uart-eot",
