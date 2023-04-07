@@ -118,7 +118,7 @@ class PMP : public SimObject
      * is allowed based on the pmp rules.
      * @param req memory request.
      * @param mode mode of request (read, write, execute).
-     * @param pmode current privilege mode of execution (U, S, M).
+     * @param pmode current privilege mode of memory (U, S, M).
      * @param tc thread context.
      * @param vaddr optional parameter to pass vaddr of original
      * request for which a page table walk is consulted by pmp unit
@@ -159,13 +159,11 @@ class PMP : public SimObject
      * This function is called during a memory
      * access to determine if the pmp table
      * should be consulted for this access.
-     * @param pmode current privilege mode of execution (U, S, M).
-     * @param mode mode of request (read, write, execute).
+     * @param pmode current privilege mode of memory (U, S, M).
      * @param tc thread context.
      * @return true or false.
      */
-    bool shouldCheckPMP(RiscvISA::PrivilegeMode pmode,
-                BaseMMU::Mode mode, ThreadContext *tc);
+    bool shouldCheckPMP(RiscvISA::PrivilegeMode pmode, ThreadContext *tc);
 
     /**
      * createAddrfault creates an address fault

@@ -59,7 +59,7 @@ PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
               Addr vaddr)
 {
     // First determine if pmp table should be consulted
-    if (!shouldCheckPMP(pmode, mode, tc))
+    if (!shouldCheckPMP(pmode, tc))
         return NoFault;
 
     if (req->hasVaddr()) {
@@ -70,9 +70,6 @@ PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
         DPRINTF(PMP, "Checking pmp permissions for pa: %#x\n",
                 req->getPaddr());
     }
-
-    if (numRules == 0)
-        return NoFault;
 
     // match_index will be used to identify the pmp entry
     // which matched for the given address
@@ -273,26 +270,14 @@ PMP::pmpUpdateAddr(uint32_t pmp_index, Addr this_addr)
 }
 
 bool
-PMP::shouldCheckPMP(RiscvISA::PrivilegeMode pmode,
-            BaseMMU::Mode mode, ThreadContext *tc)
+PMP::shouldCheckPMP(RiscvISA::PrivilegeMode pmode, ThreadContext *tc)
 {
-    // instruction fetch in S and U mode
-    bool cond1 = (mode == BaseMMU::Execute &&
-            (pmode != RiscvISA::PrivilegeMode::PRV_M));
-
-    // data access in S and U mode when MPRV in mstatus is clear
-    RiscvISA::STATUS status =
-            tc->readMiscRegNoEffect(RiscvISA::MISCREG_STATUS);
-    bool cond2 = (mode != BaseMMU::Execute &&
-                 (pmode != RiscvISA::PrivilegeMode::PRV_M)
-                 && (!status.mprv));
-
-    // data access in any mode when MPRV bit in mstatus is set
-    // and the MPP field in mstatus is S or U
-    bool cond3 = (mode != BaseMMU::Execute && (status.mprv)
-    && (status.mpp != RiscvISA::PrivilegeMode::PRV_M));
-
-    return (cond1 || cond2 || cond3 || hasLockEntry);
+    // The privilege mode of memory read and write
+    // is modified by TLB. It can just simply check if
+    // the numRule is not zero, then return true if
+    // privilege mode is not M or has any lock entry
+    return numRules != 0 && (
+        pmode != RiscvISA::PrivilegeMode::PRV_M || hasLockEntry);
 }
 
 AddrRange
