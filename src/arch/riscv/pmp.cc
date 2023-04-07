@@ -83,9 +83,9 @@ PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
     for (int i = 0; i < pmpTable.size(); i++) {
         AddrRange pmp_range = pmpTable[i].pmpAddr;
         if (pmp_range.contains(req->getPaddr()) &&
-                pmp_range.contains(req->getPaddr() + req->getSize())) {
+                pmp_range.contains(req->getPaddr() + req->getSize() - 1)) {
             // according to specs address is only matched,
-            // when (addr) and (addr + request_size) are both
+            // when (addr) and (addr + request_size - 1) are both
             // within the pmp range
             match_index = i;
         }
@@ -197,11 +197,11 @@ PMP::pmpUpdateRule(uint32_t pmp_index)
         break;
       case PMP_TOR:
         // top of range mode
-        this_range = AddrRange(prevAddr << 2, (this_addr << 2) - 1);
+        this_range = AddrRange(prevAddr << 2, (this_addr << 2));
         break;
       case PMP_NA4:
         // naturally aligned four byte region
-        this_range = AddrRange(this_addr << 2, (this_addr + 4) - 1);
+        this_range = AddrRange(this_addr << 2, ((this_addr << 2) + 4));
         break;
       case PMP_NAPOT:
         // naturally aligned power of two region, >= 8 bytes
@@ -246,7 +246,7 @@ PMP::pmpUpdateAddr(uint32_t pmp_index, Addr this_addr)
     }
 
     DPRINTF(PMP, "Update pmp addr %#x for pmp entry %u \n",
-                                      this_addr, pmp_index);
+                                      (this_addr << 2), pmp_index);
 
     if (pmpTable[pmp_index].pmpCfg & PMP_LOCK) {
         DPRINTF(PMP, "Update pmp entry %u failed because the lock bit set\n",
@@ -303,7 +303,7 @@ PMP::pmpDecodeNapot(Addr pmpaddr)
         return this_range;
     } else {
         uint64_t t1 = ctz64(~pmpaddr);
-        uint64_t range = (std::pow(2,t1+3))-1;
+        uint64_t range = (1ULL << (t1+3));
 
         // pmpaddr reg encodes bits 55-2 of a
         // 56 bit physical address for RV64
