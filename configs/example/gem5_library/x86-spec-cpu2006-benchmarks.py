@@ -306,7 +306,7 @@ print("All simulation events were successful.")
 print("Performance statistics:")
 
 roi_begin_ticks = simulator.get_tick_stopwatch()[0][1]
-roi_end_ticks = simulator.get_tick_stopwatch()[0][1]
+roi_end_ticks = simulator.get_tick_stopwatch()[1][1]
 
 print("roi simulated ticks: " + str(roi_end_ticks - roi_begin_ticks))
 

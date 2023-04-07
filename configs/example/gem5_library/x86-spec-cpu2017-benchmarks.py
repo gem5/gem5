@@ -288,6 +288,7 @@ def handle_exit():
     print("Done bootling Linux")
     print("Resetting stats at the start of ROI!")
     m5.stats.reset()
+    processor.switch()
     yield False  # E.g., continue the simulation.
     print("Dump stats at the end of the ROI!")
     m5.stats.dump()
@@ -319,7 +320,11 @@ print("Done with the simulation")
 print()
 print("Performance statistics:")
 
-print("Simulated time in ROI: " + ((str(simulator.get_roi_ticks()[0]))))
+roi_begin_ticks = simulator.get_tick_stopwatch()[0][1]
+roi_end_ticks = simulator.get_tick_stopwatch()[1][1]
+
+print("roi simulated ticks: " + str(roi_end_ticks - roi_begin_ticks))
+
 print(
     "Ran a total of", simulator.get_current_tick() / 1e12, "simulated seconds"
 )
