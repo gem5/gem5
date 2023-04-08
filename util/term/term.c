@@ -235,6 +235,7 @@ remote_connect_unix(const char *cpath)
             perror("chdir back failed:");
             exit(1);
         }
+        free(cwd);
     }
 
     // Return the FD of our new connection.
