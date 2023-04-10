@@ -483,6 +483,17 @@ for variant_path in variant_paths:
             '-fno-builtin-malloc', '-fno-builtin-calloc',
             '-fno-builtin-realloc', '-fno-builtin-free'])
 
+        if compareVersions(env['CXXVERSION'], "9") < 0:
+            # `libstdc++fs`` must be explicitly linked for `std::filesystem``
+            # in GCC version 8. As of GCC version 9, this is not required.
+            #
+            # In GCC 7 the `libstdc++fs`` library explicit linkage is also
+            # required but the `std::filesystem` is under the `experimental`
+            # namespace(`std::experimental::filesystem`).
+            #
+            # Note: gem5 does not support GCC versions < 7.
+            env.Append(LIBS=['stdc++fs'])
+
     elif env['CLANG']:
         if compareVersions(env['CXXVERSION'], "6") < 0:
             error('clang version 6 or newer required.\n'
