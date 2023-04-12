@@ -47,6 +47,8 @@ BareMetal::BareMetal(const Params &p) : Workload(p),
     fatal_if(!bootloader, "Could not load bootloader file %s.", p.bootloader);
     _resetVect = bootloader->entryPoint();
     bootloaderSymtab = bootloader->symtab();
+
+    loader::debugSymbolTable.insert(bootloaderSymtab);
 }
 
 BareMetal::~BareMetal()
