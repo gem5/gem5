@@ -162,7 +162,7 @@ class ListenSocketUnix : public ListenSocket
   protected:
     virtual size_t prepSockaddrUn(sockaddr_un &addr) const = 0;
 
-    std::string truncate(const std::string &original, size_t max_len);
+    void checkPathLength(const std::string &original, size_t max_len);
 
     ListenSocketUnix(const std::string &_name) : ListenSocket(_name) {}
 
