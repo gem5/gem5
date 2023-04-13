@@ -512,6 +512,18 @@ for variant_path in variant_paths:
 
         env.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
 
+        if compareVersions(env['CXXVERSION'], "11") < 0:
+            # `libstdc++fs`` must be explicitly linked for `std::filesystem``
+            # in clang versions 6 through 10.
+            #
+            # In addition, for these versions, the
+            # `std::filesystem` is under the `experimental`
+            # namespace(`std::experimental::filesystem`).
+            #
+            # Note: gem5 does not support clang versions < 6.
+            env.Append(LIBS=['stdc++fs'])
+
+
         # On Mac OS X/Darwin we need to also use libc++ (part of XCode) as
         # opposed to libstdc++, as the later is dated.
         if sys.platform == "darwin":
