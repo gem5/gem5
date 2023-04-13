@@ -2461,7 +2461,7 @@ namespace Aarch64
                 return new Unknown64(machInst);
             }
         } else if (bits(machInst, 15) == 1) {
-            return decodeNeon3SameExtra<DecoderFeatures>(machInst);
+            return decodeNeon3RegExtension<DecoderFeatures>(machInst);
         } else if (bits(machInst, 10) == 1) {
             if (bits(machInst, 23, 22))
                 return new Unknown64(machInst);

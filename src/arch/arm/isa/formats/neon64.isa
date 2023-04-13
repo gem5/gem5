@@ -39,9 +39,9 @@ namespace Aarch64
     // AdvSIMD three same
     template <typename DecoderFeatures>
     StaticInstPtr decodeNeon3Same(ExtMachInst machInst);
-    // AdvSIMD three same Extra
+    // AdvSIMD three register extension
     template <typename DecoderFeatures>
-    StaticInstPtr decodeNeon3SameExtra(ExtMachInst machInst);
+    StaticInstPtr decodeNeon3RegExtension(ExtMachInst machInst);
     // AdvSIMD three different
     inline StaticInstPtr decodeNeon3Diff(ExtMachInst machInst);
     // AdvSIMD two-reg misc
@@ -507,7 +507,7 @@ namespace Aarch64
 
     template <typename DecoderFeatures>
     StaticInstPtr
-    decodeNeon3SameExtra(ExtMachInst machInst)
+    decodeNeon3RegExtension(ExtMachInst machInst)
     {
         uint8_t q      = bits(machInst, 30);
         uint8_t size   = bits(machInst, 23, 22);
