@@ -39,13 +39,17 @@
 #include <algorithm>
 #include <cerrno>
 #include <cstring>
-#if (defined(__GNUC__) && (__GNUC__ >= 8)) || defined(__clang__)
+
+// check if filesystem library is available
+#if defined(__cpp_lib_filesystem) || __has_include(<filesystem>)
     #include <filesystem>
 #else
-    // This is only reachable if we're using GCC 7 (note: gem5 does not support
-    // GCC versions older than GCC 7 as they do not support the C++17
-    // standard).
-    // If we're using GCC 7, we need to use <experimental/filesystem>.
+    // This is only reachable if we're using GCC 7 or clang versions 6
+    // through 10 (note: gem5 does not support GCC versions older than
+    // GCC 7 or clang versions older than clang 6.0 as they do not
+    // support the C++17 standard).
+    // If we're using GCC 7 or clang versions 6 through 10, we need to use
+    // <experimental/filesystem>.
     #include <experimental/filesystem>
     namespace std {
         namespace filesystem = experimental::filesystem;
