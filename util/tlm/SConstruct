@@ -80,6 +80,12 @@ sys.path.append(gem5_root + '/src/python')
 AddOption('--no-colors', dest='use_colors', action='store_false',
           help="Don't add color to abbreviated scons output")
 
+# An option not to link source files in the build directory.
+# Not enabled by default.
+AddOption('--no-duplicate-sources', action='store_false', default=True,
+          dest='duplicate_sources',
+          help='Do not create symlinks to sources in the build directory')
+
 env.SConsignFile('build/systemc/sconsign')
 SConscript(gem5_root + '/ext/systemc/SConscript',
            variant_dir='build/systemc',
