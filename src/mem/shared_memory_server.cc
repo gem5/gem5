@@ -39,7 +39,18 @@
 #include <algorithm>
 #include <cerrno>
 #include <cstring>
-#include <filesystem>
+#if (defined(__GNUC__) && (__GNUC__ >= 8)) || defined(__clang__)
+    #include <filesystem>
+#else
+    // This is only reachable if we're using GCC 7 (note: gem5 does not support
+    // GCC versions older than GCC 7 as they do not support the C++17
+    // standard).
+    // If we're using GCC 7, we need to use <experimental/filesystem>.
+    #include <experimental/filesystem>
+    namespace std {
+        namespace filesystem = experimental::filesystem;
+    }
+#endif
 
 #include "base/logging.hh"
 #include "base/output.hh"
