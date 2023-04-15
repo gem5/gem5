@@ -95,6 +95,7 @@ class ArmExtension(ScopedEnum):
         "FEAT_FLAGM2",
         "FEAT_RNG",
         "FEAT_RNG_TRAP",
+        "FEAT_EVT",
         # Armv9.2
         "FEAT_SME",  # Optional in Armv9.2
         # Others
@@ -182,6 +183,7 @@ class ArmDefaultRelease(Armv8):
         "FEAT_IDST",
         # Armv8.5
         "FEAT_FLAGM2",
+        "FEAT_EVT",
         # Armv9.2
         "FEAT_SME",
     ]
@@ -229,6 +231,7 @@ class Armv85(Armv84):
         "FEAT_FLAGM2",
         "FEAT_RNG",
         "FEAT_RNG_TRAP",
+        "FEAT_EVT",
     ]
 
 
