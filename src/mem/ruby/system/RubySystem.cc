@@ -218,6 +218,13 @@ RubySystem::memWriteback()
     }
     DPRINTF(RubyCacheTrace, "Cache Trace Complete\n");
 
+    // If there is no dirty block, we don't need to flush the cache
+    if (m_cache_recorder->getNumRecords() == 0)
+    {
+        m_cooldown_enabled = false;
+        return;
+    }
+
     // save the current tick value
     Tick curtick_original = curTick();
     DPRINTF(RubyCacheTrace, "Recording current tick %ld\n", curtick_original);
