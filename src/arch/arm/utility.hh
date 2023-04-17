@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016-2020, 2022 Arm Limited
+ * Copyright (c) 2010, 2012-2013, 2016-2020, 2022-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -363,6 +363,8 @@ bool isUnpriviledgeAccess(ThreadContext *tc);
 
 void syncVecRegsToElems(ThreadContext *tc);
 void syncVecElemsToRegs(ThreadContext *tc);
+
+bool fgtEnabled(ThreadContext *tc);
 
 } // namespace ArmISA
 } // namespace gem5

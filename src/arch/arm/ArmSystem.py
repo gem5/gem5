@@ -1,4 +1,4 @@
-# Copyright (c) 2009, 2012-2013, 2015-2022 ARM Limited
+# Copyright (c) 2009, 2012-2013, 2015-2023 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -96,6 +96,8 @@ class ArmExtension(ScopedEnum):
         "FEAT_RNG",
         "FEAT_RNG_TRAP",
         "FEAT_EVT",
+        # Armv8.6
+        "FEAT_FGT",
         # Armv8.7
         "FEAT_HCX",
         # Armv9.2
@@ -186,6 +188,8 @@ class ArmDefaultRelease(Armv8):
         # Armv8.5
         "FEAT_FLAGM2",
         "FEAT_EVT",
+        # Armv8.6
+        "FEAT_FGT",
         # Armv8.7
         "FEAT_HCX",
         # Armv9.2
@@ -239,8 +243,14 @@ class Armv85(Armv84):
     ]
 
 
-class Armv87(Armv85):
+class Armv86(Armv85):
     extensions = Armv85.extensions + [
+        "FEAT_FGT",
+    ]
+
+
+class Armv87(Armv86):
+    extensions = Armv86.extensions + [
         "FEAT_HCX",
     ]
 
