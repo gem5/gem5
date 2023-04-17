@@ -1600,6 +1600,18 @@ faultDebugEL2(const MiscRegLUTEntry &entry,
 }
 
 Fault
+faultHcrxEL2(const MiscRegLUTEntry &entry,
+    ThreadContext *tc, const MiscRegOp64 &inst)
+{
+    const SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+    if (ArmSystem::haveEL(tc, EL3) && !scr.hxen) {
+        return inst.generateTrap(EL3);
+    } else {
+        return NoFault;
+    }
+}
+
+Fault
 faultZcrEL1(const MiscRegLUTEntry &entry,
     ThreadContext *tc, const MiscRegOp64 &inst)
 {
@@ -4083,6 +4095,7 @@ ISA::initializeMiscRegMetadata()
           mmfr1_el1.vh = release->has(ArmExtension::FEAT_VHE) ? 0x1 : 0x0;
           mmfr1_el1.hpds = release->has(ArmExtension::FEAT_HPDS) ? 0x1 : 0x0;
           mmfr1_el1.pan = release->has(ArmExtension::FEAT_PAN) ? 0x1 : 0x0;
+          mmfr1_el1.hcx = release->has(ArmExtension::FEAT_HCX) ? 0x1 : 0x0;
           return mmfr1_el1;
       }())
       .faultRead(EL0, faultIdst)
@@ -4227,6 +4240,9 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_HCR_EL2)
       .hyp().mon()
       .mapsTo(MISCREG_HCR, MISCREG_HCR2);
+    InitReg(MISCREG_HCRX_EL2)
+      .hyp().mon()
+      .fault(EL2, faultHcrxEL2);
     InitReg(MISCREG_MDCR_EL2)
       .hyp().mon()
       .fault(EL2, faultDebugEL2)
@@ -5653,11 +5669,6 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_VDISR_EL2)
       .warnNotFail()
       .fault(faultUnimplemented);
-
-    // HCX extension (unimplemented)
-    InitReg(MISCREG_HCRX_EL2)
-      .unimplemented()
-      .warnNotFail();
 
     // FGT extension (unimplemented)
     InitReg(MISCREG_HFGRTR_EL2)

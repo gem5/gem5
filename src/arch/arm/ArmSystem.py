@@ -96,6 +96,8 @@ class ArmExtension(ScopedEnum):
         "FEAT_RNG",
         "FEAT_RNG_TRAP",
         "FEAT_EVT",
+        # Armv8.7
+        "FEAT_HCX",
         # Armv9.2
         "FEAT_SME",  # Optional in Armv9.2
         # Others
@@ -184,6 +186,8 @@ class ArmDefaultRelease(Armv8):
         # Armv8.5
         "FEAT_FLAGM2",
         "FEAT_EVT",
+        # Armv8.7
+        "FEAT_HCX",
         # Armv9.2
         "FEAT_SME",
     ]
@@ -235,8 +239,14 @@ class Armv85(Armv84):
     ]
 
 
-class Armv92(Armv85):
-    extensions = Armv85.extensions + ["FEAT_SME"]
+class Armv87(Armv85):
+    extensions = Armv85.extensions + [
+        "FEAT_HCX",
+    ]
+
+
+class Armv92(Armv87):
+    extensions = Armv87.extensions + ["FEAT_SME"]
 
 
 class ArmAllRelease(ArmRelease):

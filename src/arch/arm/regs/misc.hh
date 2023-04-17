@@ -589,6 +589,7 @@ namespace ArmISA
         MISCREG_SCTLR_EL2,
         MISCREG_ACTLR_EL2,
         MISCREG_HCR_EL2,
+        MISCREG_HCRX_EL2,
         MISCREG_MDCR_EL2,
         MISCREG_CPTR_EL2,
         MISCREG_HSTR_EL2,
@@ -1124,9 +1125,6 @@ namespace ArmISA
         MISCREG_DISR_EL1,
         MISCREG_VSESR_EL2,
         MISCREG_VDISR_EL2,
-
-        // HCX extension (unimplemented)
-        MISCREG_HCRX_EL2,
 
         // FGT extension (unimplemented)
         MISCREG_HFGRTR_EL2,
@@ -2272,6 +2270,7 @@ namespace ArmISA
         "sctlr_el2",
         "actlr_el2",
         "hcr_el2",
+        "hcrx_el2",
         "mdcr_el2",
         "cptr_el2",
         "hstr_el2",
@@ -2785,7 +2784,6 @@ namespace ArmISA
         "disr_el1",
         "vsesr_el2",
         "vdisr_el2",
-        "hcrx_el2",
         "hfgrtr_el2",
         "hfgwtr_el2",
 
