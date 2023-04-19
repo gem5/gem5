@@ -908,6 +908,13 @@ MemCtrl::processNextReqEvent(MemInterface* mem_intr,
         }
     }
 
+    if (drainState() == DrainState::Draining && !totalWriteQueueSize &&
+        !totalReadQueueSize && respQEmpty() && allIntfDrained()) {
+
+        DPRINTF(Drain, "MemCtrl controller done draining\n");
+        signalDrainDone();
+    }
+
     // updates current state
     busState = busStateNext;
 
@@ -1411,8 +1418,8 @@ MemCtrl::drain()
 {
     // if there is anything in any of our internal queues, keep track
     // of that as well
-    if (!(!totalWriteQueueSize && !totalReadQueueSize && respQueue.empty() &&
-          allIntfDrained())) {
+    if (totalWriteQueueSize || totalReadQueueSize || !respQueue.empty() ||
+          !allIntfDrained()) {
 
         DPRINTF(Drain, "Memory controller not drained, write: %d, read: %d,"
                 " resp: %d\n", totalWriteQueueSize, totalReadQueueSize,
@@ -1420,7 +1427,8 @@ MemCtrl::drain()
 
         // the only queue that is not drained automatically over time
         // is the write queue, thus kick things into action if needed
-        if (!totalWriteQueueSize && !nextReqEvent.scheduled()) {
+        if (totalWriteQueueSize && !nextReqEvent.scheduled()) {
+            DPRINTF(Drain,"Scheduling nextReqEvent from drain\n");
             schedule(nextReqEvent, curTick());
         }
 
