@@ -524,6 +524,11 @@ decode QUADRANT default Unknown::unknown() {
                         }
                         Rd = rvSext(Rs1 << imm);
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0x01: decode RVTYPE {
+                        0x0: zip({{
+                            Rd_sw = _rvk_emu_zip_32(Rs1_sw);
+                        }}, imm_code = {{ imm = SHAMT5; }});
+                    }
                     0x02: decode FS2 {
                         0x0: sha256sum0({{
                             Rd_sw = _rvk_emu_sha256sum0(Rs1_sw);
@@ -643,6 +648,11 @@ decode QUADRANT default Unknown::unknown() {
                         }
                         Rd = rvSext(rvZext(Rs1) >> imm);
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                    0x1: decode RVTYPE {
+                        0x0: unzip({{
+                            Rd_sw = _rvk_emu_unzip_32(Rs1_sw);
+                        }}, imm_code = {{ imm = SHAMT5; }});
+                    }
                     0x5: orc_b({{
                         uint64_t result = 0;
                         result |= (Rs1<7:0> ? UINT64_C(0xff) : 0x0);
@@ -990,6 +1000,68 @@ decode QUADRANT default Unknown::unknown() {
                         0x0: mul({{
                             Rd = rvSext(Rs1_sd * Rs2_sd);
                         }}, IntMultOp);
+                    }
+                    0x08: decode BS {
+                        0x1: decode RVTYPE {
+                            0x0: sha512sum0r({{
+                                Rd_sw = _rvk_emu_sha512sum0r(Rs1_sw, Rs2_sw);
+                            }});
+                        }
+                    }
+                    0x09: decode BS {
+                        0x1: decode RVTYPE {
+                            0x0: sha512sum1r({{
+                                Rd_sw = _rvk_emu_sha512sum1r(Rs1_sw, Rs2_sw);
+                            }});
+                        }
+                    }
+                    0x0a: decode BS {
+                        0x1: decode RVTYPE {
+                            0x0: sha512sig0l({{
+                                Rd_sw = _rvk_emu_sha512sig0l(Rs1_sw, Rs2_sw);
+                            }});
+                        }
+                    }
+                    0x0b: decode BS {
+                        0x1: decode RVTYPE {
+                            0x0: sha512sig1l({{
+                                Rd_sw = _rvk_emu_sha512sig1l(Rs1_sw, Rs2_sw);
+                            }});
+                        }
+                    }
+                    0x0e: decode BS {
+                        0x1: decode RVTYPE {
+                            0x0: sha512sig0h({{
+                                Rd_sw = _rvk_emu_sha512sig0h(Rs1_sw, Rs2_sw);
+                            }});
+                        }
+                    }
+                    0x0f: decode BS {
+                        0x1: decode RVTYPE {
+                            0x0: sha512sig1h({{
+                                Rd_sw = _rvk_emu_sha512sig1h(Rs1_sw, Rs2_sw);
+                            }});
+                        }
+                    }
+                    0x11: decode RVTYPE {
+                        0x0: aes32esi({{
+                            Rd_sw = _rvk_emu_aes32esi(Rs1_sw, Rs2_sw, (uint8_t)BS);
+                        }});
+                    }
+                    0x13: decode RVTYPE {
+                        0x0: aes32esmi({{
+                            Rd_sw = _rvk_emu_aes32esmi(Rs1_sw, Rs2_sw, (uint8_t)BS);
+                        }});
+                    }
+                    0x15: decode RVTYPE {
+                        0x0: aes32dsi({{
+                            Rd_sw = _rvk_emu_aes32dsi(Rs1_sw, Rs2_sw, (uint8_t)BS);
+                        }});
+                    }
+                    0x17: decode RVTYPE {
+                        0x0: aes32dsmi({{
+                            Rd_sw = _rvk_emu_aes32dsmi(Rs1_sw, Rs2_sw, (uint8_t)BS);
+                        }});
                     }
                     0x18: sm4ed({{
                         Rd_sw = _rvk_emu_sm4ed(Rs1_sw, Rs2_sw, (uint8_t)BS);
