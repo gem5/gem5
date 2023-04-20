@@ -30,6 +30,7 @@
 # System includes
 import argparse
 import math
+import hashlib
 
 # gem5 related
 import m5
@@ -144,6 +145,11 @@ def runGpuFSSystem(args):
     args.num_scalar_cache = int(
         math.ceil(float(n_cu) / args.cu_per_scalar_cache)
     )
+
+    # Verify MMIO trace is valid
+    mmio_md5 = hashlib.md5(open(args.gpu_mmio_trace, "rb").read()).hexdigest()
+    if mmio_md5 != "c4ff3326ae8a036e329b8b595c83bd6d":
+        m5.util.panic("MMIO file does not match gem5 resources")
 
     system = makeGpuFSSystem(args)
 
