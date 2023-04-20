@@ -61,7 +61,9 @@ def makeGpuFSSystem(args):
         panic("Need at least 2GB of system memory to load amdgpu module")
 
     # Use the common FSConfig to setup a Linux X86 System
-    (TestCPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(args)
+    (TestCPUClass, test_mem_mode) = Simulation.getCPUClass(args.cpu_type)
+    if test_mem_mode == "atomic":
+        test_mem_mode = "atomic_noncaching"
     disks = [args.disk_image]
     if args.second_disk is not None:
         disks.extend([args.second_disk])
@@ -91,10 +93,11 @@ def makeGpuFSSystem(args):
 
     # Create specified number of CPUs. GPUFS really only needs one.
     system.cpu = [
-        X86KvmCPU(clk_domain=system.cpu_clk_domain, cpu_id=i)
+        TestCPUClass(clk_domain=system.cpu_clk_domain, cpu_id=i)
         for i in range(args.num_cpus)
     ]
-    system.kvm_vm = KvmVM()
+    if ObjectList.is_kvm_cpu(TestCPUClass):
+        system.kvm_vm = KvmVM()
 
     # Create AMDGPU and attach to southbridge
     shader = createGPU(system, args)
