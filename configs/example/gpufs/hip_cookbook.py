@@ -42,7 +42,7 @@ from ruby import Ruby
 cookbook_runscript = """\
 export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 export HSA_ENABLE_INTERRUPT=0
-dmesg -n3
+dmesg -n8
 dd if=/root/roms/vega10.rom of=/dev/mem bs=1k seek=768 count=128
 if [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then
     echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."
