@@ -248,6 +248,13 @@ AMDGPUDevice::readMMIO(PacketPtr pkt, Addr offset)
     DPRINTF(AMDGPUDevice, "Read MMIO %#lx\n", offset);
     mmioReader.readFromTrace(pkt, MMIO_BAR, offset);
 
+    if (regs.find(pkt->getAddr()) != regs.end()) {
+        uint64_t value = regs[pkt->getAddr()];
+        DPRINTF(AMDGPUDevice, "Reading what kernel wrote before: %#x\n",
+                value);
+        pkt->setUintX(value, ByteOrder::little);
+    }
+
     switch (aperture) {
       case NBIO_BASE:
         switch (aperture_offset) {
