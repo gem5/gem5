@@ -94,6 +94,7 @@ class AMDGPUDevice : public PciDevice
     AddrRange romRange;
     bool isROM(Addr addr) const { return romRange.contains(addr); }
     void readROM(PacketPtr pkt);
+    void writeROM(PacketPtr pkt);
 
     std::array<uint8_t, ROM_SIZE> rom;
 

@@ -107,6 +107,20 @@ AMDGPUDevice::readROM(PacketPtr pkt)
             pkt->getAddr(), rom_offset, rom_data);
 }
 
+void
+AMDGPUDevice::writeROM(PacketPtr pkt)
+{
+    assert(isROM(pkt->getAddr()));
+
+    Addr rom_offset = pkt->getAddr() - romRange.start();
+    uint64_t rom_data = pkt->getUintX(ByteOrder::little);
+
+    memcpy(rom.data() + rom_offset, &rom_data, pkt->getSize());
+
+    DPRINTF(AMDGPUDevice, "Write to addr %#x on ROM offset %#x data: %#x\n",
+            pkt->getAddr(), rom_offset, rom_data);
+}
+
 AddrRangeList
 AMDGPUDevice::getAddrRanges() const
 {
@@ -386,6 +400,14 @@ AMDGPUDevice::read(PacketPtr pkt)
 Tick
 AMDGPUDevice::write(PacketPtr pkt)
 {
+    if (isROM(pkt->getAddr())) {
+        writeROM(pkt);
+
+        dispatchAccess(pkt, false);
+
+        return pioDelay;
+    }
+
     int barnum = -1;
     Addr offset = 0;
     getBAR(pkt->getAddr(), barnum, offset);
