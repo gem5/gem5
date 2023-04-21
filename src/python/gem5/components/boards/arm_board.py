@@ -320,16 +320,16 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         # The workload needs to know the dtb_file.
         self.workload.dtb_filename = self._get_dtb_filename()
 
-        # Calling generateDtb from class ArmSystem to add memory information to
-        # the dtb file.
-        self.generateDtb(self._get_dtb_filename())
-
         # Finally we need to setup the bootloader for the ArmBoard. An ARM
         # system requires three inputs to simulate a full system: a disk image,
         # the kernel file and the bootloader file(s).
         self.realview.setupBootLoader(
             self, self._get_dtb_filename(), self._bootloader
         )
+
+        # Calling generateDtb from class ArmSystem to add memory information to
+        # the dtb file.
+        self.generateDtb(self._get_dtb_filename())
 
     def _get_dtb_filename(self) -> str:
         """Returns the dtb file location.
