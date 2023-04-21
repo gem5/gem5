@@ -126,6 +126,16 @@ def addRunFSOptions(parser):
         help="type of memory to use",
     )
 
+    # These are the models that are both supported in gem5 and supported
+    # by the versions of ROCm supported by gem5 in full system mode. For
+    # other gfx versions there is some support in syscall emulation mode.
+    parser.add_argument(
+        "--gpu-device",
+        default="Vega10",
+        choices=["Vega10", "MI100"],
+        help="GPU model to run: Vega10 (gfx900) or MI100 (gfx908)",
+    )
+
 
 def runGpuFSSystem(args):
     """
