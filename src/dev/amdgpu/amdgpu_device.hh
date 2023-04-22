@@ -36,6 +36,7 @@
 
 #include "base/bitunion.hh"
 #include "dev/amdgpu/amdgpu_defines.hh"
+#include "dev/amdgpu/amdgpu_nbio.hh"
 #include "dev/amdgpu/amdgpu_vm.hh"
 #include "dev/amdgpu/memory_manager.hh"
 #include "dev/amdgpu/mmio_reader.hh"
@@ -106,6 +107,7 @@ class AMDGPUDevice : public PciDevice
     /**
      * Blocks of the GPU
      */
+    AMDGPUNbio nbio;
     AMDGPUMemoryManager *gpuMemMgr;
     AMDGPUInterruptHandler *deviceIH;
     AMDGPUVM gpuvm;
@@ -185,6 +187,7 @@ class AMDGPUDevice : public PciDevice
      * Register value getter/setter. Used by other GPU blocks to change
      * values from incoming driver/user packets.
      */
+    bool haveRegVal(uint32_t addr);
     uint32_t getRegVal(uint32_t addr);
     void setRegVal(uint32_t addr, uint32_t value);
 

@@ -34,6 +34,7 @@
 #include <fstream>
 
 #include "debug/AMDGPUDevice.hh"
+#include "dev/amdgpu/amdgpu_nbio.hh"
 #include "dev/amdgpu/amdgpu_vm.hh"
 #include "dev/amdgpu/interrupt_handler.hh"
 #include "dev/amdgpu/pm4_packet_processor.hh"
@@ -129,6 +130,32 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     pm4PktProc->setGPUDevice(this);
     cp->hsaPacketProc().setGPUDevice(this);
     cp->setGPUDevice(this);
+
+    // Address aperture for device memory. We tell this to the driver and
+    // could possibly be anything, but these are the values used by hardware.
+    uint64_t mmhubBase = 0x8000ULL << 24;
+    uint64_t mmhubTop = 0x83ffULL << 24;
+
+    // These are hardcoded register values to return what the driver expects
+    setRegVal(AMDGPU_MP0_SMN_C2PMSG_33, 0x80000000);
+
+    // There are different registers for different GPUs, so we set the value
+    // based on the GPU type specified by the user.
+    if (p.device_name == "Vega10") {
+        setRegVal(VEGA10_FB_LOCATION_BASE, mmhubBase >> 24);
+        setRegVal(VEGA10_FB_LOCATION_TOP, mmhubTop >> 24);
+    } else if (p.device_name == "MI100") {
+        setRegVal(MI100_FB_LOCATION_BASE, mmhubBase >> 24);
+        setRegVal(MI100_FB_LOCATION_TOP, mmhubTop >> 24);
+        setRegVal(MI100_MEM_SIZE_REG, 0x3ff0); // 16GB of memory
+    } else {
+        panic("Unknown GPU device %s\n", p.device_name);
+    }
+
+    gpuvm.setMMHUBBase(mmhubBase);
+    gpuvm.setMMHUBTop(mmhubTop);
+
+    nbio.setGPUDevice(this);
 }
 
 void
@@ -236,35 +263,25 @@ AMDGPUDevice::readFrame(PacketPtr pkt, Addr offset)
      * first, ignoring any writes from driver. (2) Any other address from
      * device backing store / abstract memory class functionally.
      */
-    if (offset == 0xa28000) {
-        /*
-         * Handle special counter addresses in framebuffer. These counter
-         * addresses expect the read to return previous value + 1.
-         */
-        if (regs.find(pkt->getAddr()) == regs.end()) {
-            regs[pkt->getAddr()] = 1;
-        } else {
-            regs[pkt->getAddr()]++;
-        }
-
-        pkt->setUintX(regs[pkt->getAddr()], ByteOrder::little);
-    } else {
-        /*
-         * Read the value from device memory. This must be done functionally
-         * because this method is called by the PCIDevice::read method which
-         * is a non-timing read.
-         */
-        RequestPtr req = std::make_shared<Request>(offset, pkt->getSize(), 0,
-                                                   vramRequestorId());
-        PacketPtr readPkt = Packet::createRead(req);
-        uint8_t *dataPtr = new uint8_t[pkt->getSize()];
-        readPkt->dataDynamic(dataPtr);
-
-        auto system = cp->shader()->gpuCmdProc.system();
-        system->getDeviceMemory(readPkt)->access(readPkt);
-
-        pkt->setUintX(readPkt->getUintX(ByteOrder::little), ByteOrder::little);
+    if (nbio.readFrame(pkt, offset)) {
+        return;
     }
+
+    /*
+     * Read the value from device memory. This must be done functionally
+     * because this method is called by the PCIDevice::read method which
+     * is a non-timing read.
+     */
+    RequestPtr req = std::make_shared<Request>(offset, pkt->getSize(), 0,
+                                               vramRequestorId());
+    PacketPtr readPkt = Packet::createRead(req);
+    uint8_t *dataPtr = new uint8_t[pkt->getSize()];
+    readPkt->dataDynamic(dataPtr);
+
+    auto system = cp->shader()->gpuCmdProc.system();
+    system->getDeviceMemory(readPkt)->access(readPkt);
+
+    pkt->setUintX(readPkt->getUintX(ByteOrder::little), ByteOrder::little);
 }
 
 void
@@ -285,8 +302,8 @@ AMDGPUDevice::readMMIO(PacketPtr pkt, Addr offset)
     DPRINTF(AMDGPUDevice, "Read MMIO %#lx\n", offset);
     mmioReader.readFromTrace(pkt, MMIO_BAR, offset);
 
-    if (regs.find(pkt->getAddr()) != regs.end()) {
-        uint64_t value = regs[pkt->getAddr()];
+    if (regs.find(offset) != regs.end()) {
+        uint64_t value = regs[offset];
         DPRINTF(AMDGPUDevice, "Reading what kernel wrote before: %#x\n",
                 value);
         pkt->setUintX(value, ByteOrder::little);
@@ -294,19 +311,8 @@ AMDGPUDevice::readMMIO(PacketPtr pkt, Addr offset)
 
     switch (aperture) {
       case NBIO_BASE:
-        switch (aperture_offset) {
-          // This is a PCIe status register. At some point during driver init
-          // the driver checks that interrupts are enabled. This is only
-          // checked once, so if the MMIO trace does not exactly line up with
-          // what the driver is doing in gem5, this may still have the first
-          // bit zero causing driver to fail. Therefore, we always set this
-          // bit to one as there is no harm to do so.
-          case 0x3c: // mmPCIE_DATA2 << 2
-            uint32_t value = pkt->getLE<uint32_t>() | 0x1;
-            DPRINTF(AMDGPUDevice, "Marking interrupts enabled: %#lx\n", value);
-            pkt->setLE<uint32_t>(value);
-            break;
-        } break;
+        nbio.readMMIO(pkt, aperture_offset);
+        break;
       case GRBM_BASE:
         gpuvm.readMMIO(pkt, aperture_offset >> GRBM_OFFSET_SHIFT);
         break;
@@ -332,6 +338,8 @@ AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
         DPRINTF(AMDGPUDevice, "GART translation %p -> %p\n", aperture_offset,
                 gpuvm.gartTable[aperture_offset]);
     }
+
+    nbio.writeFrame(pkt, offset);
 }
 
 void
@@ -416,6 +424,10 @@ AMDGPUDevice::writeMMIO(PacketPtr pkt, Addr offset)
       case IH_BASE:
         deviceIH->writeMMIO(pkt, aperture_offset >> IH_OFFSET_SHIFT);
         break;
+      /* Write an IO space register */
+      case NBIO_BASE:
+        nbio.writeMMIO(pkt, aperture_offset);
+        break;
       default:
         DPRINTF(AMDGPUDevice, "Unknown MMIO aperture for %#x\n", offset);
         break;
@@ -489,19 +501,25 @@ AMDGPUDevice::write(PacketPtr pkt)
     DPRINTF(AMDGPUDevice, "PCI Write to %#lx data %#lx\n",
                             pkt->getAddr(), data);
 
-    if (data || regs.find(pkt->getAddr()) != regs.end())
-        regs[pkt->getAddr()] = data;
-
     dispatchAccess(pkt, false);
 
     return pioDelay;
 }
 
+bool
+AMDGPUDevice::haveRegVal(uint32_t addr)
+{
+    return regs.count(addr);
+}
+
 uint32_t
 AMDGPUDevice::getRegVal(uint32_t addr)
 {
+    DPRINTF(AMDGPUDevice, "Getting register 0x%lx = %x\n",
+            addr, regs[addr]);
     return regs[addr];
 }
+
 void
 AMDGPUDevice::setRegVal(uint32_t addr, uint32_t value)
 {

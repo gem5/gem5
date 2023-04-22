@@ -39,6 +39,7 @@ SimObject('AMDGPU.py', sim_objects=['AMDGPUDevice', 'AMDGPUInterruptHandler',
                                     tags='x86 isa')
 
 Source('amdgpu_device.cc', tags='x86 isa')
+Source('amdgpu_nbio.cc', tags='x86 isa')
 Source('amdgpu_vm.cc', tags='x86 isa')
 Source('interrupt_handler.cc', tags='x86 isa')
 Source('memory_manager.cc', tags='x86 isa')
