@@ -109,11 +109,18 @@ class AMDGPUDevice : public PciDevice
     AMDGPUMemoryManager *gpuMemMgr;
     AMDGPUInterruptHandler *deviceIH;
     AMDGPUVM gpuvm;
-    SDMAEngine *sdma0;
-    SDMAEngine *sdma1;
-    std::unordered_map<uint32_t, SDMAEngine *> sdmaEngs;
     PM4PacketProcessor *pm4PktProc;
     GPUCommandProcessor *cp;
+
+    // SDMAs mapped by doorbell offset
+    std::unordered_map<uint32_t, SDMAEngine *> sdmaEngs;
+    // SDMAs mapped by ID
+    std::unordered_map<uint32_t, SDMAEngine *> sdmaIds;
+    // SDMA ID to MMIO range
+    std::unordered_map<uint32_t, AddrRange> sdmaMmios;
+    // SDMA ID to function
+    typedef void (SDMAEngine::*sdmaFuncPtr)(uint32_t);
+    std::unordered_map<uint32_t, sdmaFuncPtr> sdmaFunc;
 
     /**
      * Initial checkpoint support variables.

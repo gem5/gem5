@@ -129,15 +129,45 @@ def makeGpuFSSystem(args):
     device_ih = AMDGPUInterruptHandler()
     system.pc.south_bridge.gpu.device_ih = device_ih
 
-    # Setup the SDMA engines
-    sdma0_pt_walker = VegaPagetableWalker()
-    sdma1_pt_walker = VegaPagetableWalker()
+    # Setup the SDMA engines depending on device. The MMIO base addresses
+    # can be found in the driver code under:
+    # include/asic_reg/sdmaX/sdmaX_Y_Z_offset.h
+    num_sdmas = 2
+    sdma_bases = []
+    sdma_sizes = []
+    if args.gpu_device == "Vega10":
+        num_sdmas = 2
+        sdma_bases = [0x4980, 0x5180]
+        sdma_sizes = [0x800] * 2
+    elif args.gpu_device == "MI100":
+        num_sdmas = 8
+        sdma_bases = [
+            0x4980,
+            0x6180,
+            0x78000,
+            0x79000,
+            0x7A000,
+            0x7B000,
+            0x7C000,
+            0x7D000,
+        ]
+        sdma_sizes = [0x1000] * 8
+    else:
+        m5.util.panic(f"Unknown GPU device {args.gpu_device}")
 
-    sdma0 = SDMAEngine(walker=sdma0_pt_walker)
-    sdma1 = SDMAEngine(walker=sdma1_pt_walker)
+    sdma_pt_walkers = []
+    sdma_engines = []
+    for sdma_idx in range(num_sdmas):
+        sdma_pt_walker = VegaPagetableWalker()
+        sdma_engine = SDMAEngine(
+            walker=sdma_pt_walker,
+            mmio_base=sdma_bases[sdma_idx],
+            mmio_size=sdma_sizes[sdma_idx],
+        )
+        sdma_pt_walkers.append(sdma_pt_walker)
+        sdma_engines.append(sdma_engine)
 
-    system.pc.south_bridge.gpu.sdma0 = sdma0
-    system.pc.south_bridge.gpu.sdma1 = sdma1
+    system.pc.south_bridge.gpu.sdmas = sdma_engines
 
     # Setup PM4 packet processor
     pm4_pkt_proc = PM4PacketProcessor()
@@ -155,22 +185,22 @@ def makeGpuFSSystem(args):
     system._dma_ports.append(gpu_hsapp)
     system._dma_ports.append(gpu_cmd_proc)
     system._dma_ports.append(system.pc.south_bridge.gpu)
-    system._dma_ports.append(sdma0)
-    system._dma_ports.append(sdma1)
+    for sdma in sdma_engines:
+        system._dma_ports.append(sdma)
     system._dma_ports.append(device_ih)
     system._dma_ports.append(pm4_pkt_proc)
     system._dma_ports.append(system_hub)
     system._dma_ports.append(gpu_mem_mgr)
     system._dma_ports.append(hsapp_pt_walker)
     system._dma_ports.append(cp_pt_walker)
-    system._dma_ports.append(sdma0_pt_walker)
-    system._dma_ports.append(sdma1_pt_walker)
+    for sdma_pt_walker in sdma_pt_walkers:
+        system._dma_ports.append(sdma_pt_walker)
 
     gpu_hsapp.pio = system.iobus.mem_side_ports
     gpu_cmd_proc.pio = system.iobus.mem_side_ports
     system.pc.south_bridge.gpu.pio = system.iobus.mem_side_ports
-    sdma0.pio = system.iobus.mem_side_ports
-    sdma1.pio = system.iobus.mem_side_ports
+    for sdma in sdma_engines:
+        sdma.pio = system.iobus.mem_side_ports
     device_ih.pio = system.iobus.mem_side_ports
     pm4_pkt_proc.pio = system.iobus.mem_side_ports
     system_hub.pio = system.iobus.mem_side_ports

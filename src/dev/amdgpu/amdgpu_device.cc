@@ -53,7 +53,7 @@ namespace gem5
 
 AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     : PciDevice(p), gpuMemMgr(p.memory_manager), deviceIH(p.device_ih),
-      sdma0(p.sdma0), sdma1(p.sdma1), pm4PktProc(p.pm4_pkt_proc), cp(p.cp),
+      pm4PktProc(p.pm4_pkt_proc), cp(p.cp),
       checkpoint_before_mmios(p.checkpoint_before_mmios),
       init_interrupt_count(0), _lastVMID(0),
       deviceMem(name() + ".deviceMem", p.memories, false, "", false)
@@ -84,10 +84,47 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
         mmioReader.readMMIOTrace(p.trace_file);
     }
 
-    sdma0->setGPUDevice(this);
-    sdma0->setId(0);
-    sdma1->setGPUDevice(this);
-    sdma1->setId(1);
+    int sdma_id = 0;
+    for (auto& s : p.sdmas) {
+        s->setGPUDevice(this);
+        s->setId(sdma_id);
+        sdmaIds.insert({sdma_id, s});
+        sdmaMmios.insert({sdma_id,
+                          RangeSize(s->getMmioBase(), s->getMmioSize())});
+        DPRINTF(AMDGPUDevice, "SDMA%d has MMIO range %s\n", sdma_id,
+                sdmaMmios[sdma_id].to_string().c_str());
+        sdma_id++;
+    }
+
+    // Map SDMA MMIO addresses to functions
+    sdmaFunc.insert({0x81, &SDMAEngine::setGfxBaseLo});
+    sdmaFunc.insert({0x82, &SDMAEngine::setGfxBaseHi});
+    sdmaFunc.insert({0x88, &SDMAEngine::setGfxRptrHi});
+    sdmaFunc.insert({0x89, &SDMAEngine::setGfxRptrLo});
+    sdmaFunc.insert({0x92, &SDMAEngine::setGfxDoorbellLo});
+    sdmaFunc.insert({0xab, &SDMAEngine::setGfxDoorbellOffsetLo});
+    sdmaFunc.insert({0x80, &SDMAEngine::setGfxSize});
+    sdmaFunc.insert({0xb2, &SDMAEngine::setGfxWptrLo});
+    sdmaFunc.insert({0xb3, &SDMAEngine::setGfxWptrHi});
+    if (p.device_name == "Vega10") {
+        sdmaFunc.insert({0xe1, &SDMAEngine::setPageBaseLo});
+        sdmaFunc.insert({0xe9, &SDMAEngine::setPageRptrLo});
+        sdmaFunc.insert({0xe8, &SDMAEngine::setPageRptrHi});
+        sdmaFunc.insert({0xf2, &SDMAEngine::setPageDoorbellLo});
+        sdmaFunc.insert({0x10b, &SDMAEngine::setPageDoorbellOffsetLo});
+        sdmaFunc.insert({0xe0, &SDMAEngine::setPageSize});
+        sdmaFunc.insert({0x113, &SDMAEngine::setPageWptrLo});
+    } else if (p.device_name == "MI100") {
+        sdmaFunc.insert({0xd9, &SDMAEngine::setPageBaseLo});
+        sdmaFunc.insert({0xe1, &SDMAEngine::setPageRptrLo});
+        sdmaFunc.insert({0xe0, &SDMAEngine::setPageRptrHi});
+        sdmaFunc.insert({0xea, &SDMAEngine::setPageDoorbellLo});
+        sdmaFunc.insert({0xd8, &SDMAEngine::setPageDoorbellOffsetLo});
+        sdmaFunc.insert({0x10b, &SDMAEngine::setPageWptrLo});
+    } else {
+        panic("Unknown GPU device %s\n", p.device_name);
+    }
+
     deviceIH->setGPUDevice(this);
     pm4PktProc->setGPUDevice(this);
     cp->hsaPacketProc().setGPUDevice(this);
@@ -351,15 +388,25 @@ AMDGPUDevice::writeMMIO(PacketPtr pkt, Addr offset)
 
     DPRINTF(AMDGPUDevice, "Wrote MMIO %#lx\n", offset);
 
+    // Check SDMA functions first, then fallback to switch statement
+    for (int idx = 0; idx < sdmaIds.size(); ++idx) {
+        if (sdmaMmios[idx].contains(offset)) {
+            Addr sdma_offset = (offset - sdmaMmios[idx].start()) >> 2;
+            if (sdmaFunc.count(sdma_offset)) {
+                DPRINTF(AMDGPUDevice, "Calling SDMA%d MMIO function %lx\n",
+                        idx, sdma_offset);
+                sdmaFuncPtr mptr = sdmaFunc[sdma_offset];
+                (getSDMAById(idx)->*mptr)(pkt->getLE<uint32_t>());
+            } else {
+                DPRINTF(AMDGPUDevice, "Unknown SDMA%d MMIO: %#lx\n", idx,
+                        sdma_offset);
+            }
+
+            return;
+        }
+    }
+
     switch (aperture) {
-      /* Write a register to the first System DMA. */
-      case SDMA0_BASE:
-        sdma0->writeMMIO(pkt, aperture_offset >> SDMA_OFFSET_SHIFT);
-        break;
-      /* Write a register to the second System DMA. */
-      case SDMA1_BASE:
-        sdma1->writeMMIO(pkt, aperture_offset >> SDMA_OFFSET_SHIFT);
-        break;
       /* Write a general register to the graphics register bus manager. */
       case GRBM_BASE:
         gpuvm.writeMMIO(pkt, aperture_offset >> GRBM_OFFSET_SHIFT);
@@ -483,19 +530,9 @@ AMDGPUDevice::getSDMAById(int id)
      * PM4 packets selected SDMAs using an integer ID. This method simply maps
      * the integer ID to a pointer to the SDMA and checks for invalid IDs.
      */
-    switch (id) {
-        case 0:
-            return sdma0;
-            break;
-        case 1:
-            return sdma1;
-            break;
-        default:
-            panic("No SDMA with id %d\n", id);
-            break;
-    }
+    assert(sdmaIds.count(id));
 
-    return nullptr;
+    return sdmaIds[id];
 }
 
 SDMAEngine*
@@ -549,7 +586,7 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     idx = 0;
     for (auto & it : sdmaEngs) {
         sdma_engs_offset[idx] = it.first;
-        sdma_engs[idx] = it.second == sdma0 ? 0 : 1;
+        sdma_engs[idx] = idx;
         ++idx;
     }
 
@@ -620,7 +657,8 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
         UNSERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs)/sizeof(sdma_engs[0]));
 
         for (int idx = 0; idx < sdma_engs_size; ++idx) {
-            SDMAEngine *sdma = sdma_engs[idx] == 0 ? sdma0 : sdma1;
+            assert(sdmaIds.count(idx));
+            SDMAEngine *sdma = sdmaIds[idx];
             sdmaEngs.insert(std::make_pair(sdma_engs_offset[idx], sdma));
         }
     }
@@ -669,8 +707,9 @@ AMDGPUDevice::deallocateAllQueues()
     idMap.erase(idMap.begin(), idMap.end());
     usedVMIDs.erase(usedVMIDs.begin(), usedVMIDs.end());
 
-    sdma0->deallocateRLCQueues();
-    sdma1->deallocateRLCQueues();
+    for (auto& it : sdmaEngs) {
+        it.second->deallocateRLCQueues();
+    }
 }
 
 void

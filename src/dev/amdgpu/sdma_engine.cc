@@ -49,7 +49,8 @@ SDMAEngine::SDMAEngine(const SDMAEngineParams &p)
     : DmaVirtDevice(p), id(0), gfxBase(0), gfxRptr(0),
       gfxDoorbell(0), gfxDoorbellOffset(0), gfxWptr(0), pageBase(0),
       pageRptr(0), pageDoorbell(0), pageDoorbellOffset(0),
-      pageWptr(0), gpuDevice(nullptr), walker(p.walker)
+      pageWptr(0), gpuDevice(nullptr), walker(p.walker),
+      mmioBase(p.mmio_base), mmioSize(p.mmio_size)
 {
     gfx.ib(&gfxIb);
     gfxIb.parent(&gfx);
@@ -87,6 +88,18 @@ SDMAEngine::getIHClientId()
         return SOC15_IH_CLIENTID_SDMA0;
       case 1:
         return SOC15_IH_CLIENTID_SDMA1;
+      case 2:
+        return SOC15_IH_CLIENTID_SDMA2;
+      case 3:
+        return SOC15_IH_CLIENTID_SDMA3;
+      case 4:
+        return SOC15_IH_CLIENTID_SDMA4;
+      case 5:
+        return SOC15_IH_CLIENTID_SDMA5;
+      case 6:
+        return SOC15_IH_CLIENTID_SDMA6;
+      case 7:
+        return SOC15_IH_CLIENTID_SDMA7;
       default:
         panic("Unknown SDMA id");
     }
@@ -1240,6 +1253,10 @@ SDMAEngine::setGfxDoorbellOffsetLo(uint32_t data)
 {
     gfxDoorbellOffset = insertBits(gfxDoorbellOffset, 31, 0, 0);
     gfxDoorbellOffset |= data;
+    if (bits(gfxDoorbell, 28, 28)) {
+        gpuDevice->setDoorbellType(gfxDoorbellOffset, QueueType::SDMAGfx);
+        gpuDevice->setSDMAEngine(gfxDoorbellOffset, this);
+    }
 }
 
 void
@@ -1250,9 +1267,11 @@ SDMAEngine::setGfxDoorbellOffsetHi(uint32_t data)
 }
 
 void
-SDMAEngine::setGfxSize(uint64_t data)
+SDMAEngine::setGfxSize(uint32_t data)
 {
-    gfx.size(data);
+    uint32_t rb_size = bits(data, 6, 1);
+    assert(rb_size >= 6 && rb_size <= 62);
+    gfx.size(1 << (rb_size + 2));
 }
 
 void
@@ -1320,6 +1339,10 @@ SDMAEngine::setPageDoorbellOffsetLo(uint32_t data)
 {
     pageDoorbellOffset = insertBits(pageDoorbellOffset, 31, 0, 0);
     pageDoorbellOffset |= data;
+    if (bits(pageDoorbell, 28, 28)) {
+        gpuDevice->setDoorbellType(pageDoorbellOffset, QueueType::SDMAPage);
+        gpuDevice->setSDMAEngine(pageDoorbellOffset, this);
+    }
 }
 
 void
@@ -1330,9 +1353,11 @@ SDMAEngine::setPageDoorbellOffsetHi(uint32_t data)
 }
 
 void
-SDMAEngine::setPageSize(uint64_t data)
+SDMAEngine::setPageSize(uint32_t data)
 {
-    page.size(data);
+    uint32_t rb_size = bits(data, 6, 1);
+    assert(rb_size >= 6 && rb_size <= 62);
+    page.size(1 << (rb_size + 2));
 }
 
 void

@@ -156,6 +156,9 @@ class SDMAEngine : public DmaVirtDevice
     void processRLC0(Addr wptrOffset);
     void processRLC1(Addr wptrOffset);
 
+    Addr mmioBase = 0;
+    Addr mmioSize = 0;
+
   public:
     SDMAEngine(const SDMAEngineParams &p);
 
@@ -243,6 +246,14 @@ class SDMAEngine : public DmaVirtDevice
                     uint64_t *dmaBuffer);
 
     /**
+     * Methods for getting SDMA MMIO base address and size. These are set by
+     * the python configuration depending on device to allow for flexible base
+     * addresses depending on what GPU is being simulated.
+     */
+    Addr getMmioBase() { return mmioBase; }
+    Addr getMmioSize() { return mmioSize; }
+
+    /**
      * Methods for getting the values of SDMA MMIO registers.
      */
     uint64_t getGfxBase() { return gfxBase; }
@@ -269,7 +280,7 @@ class SDMAEngine : public DmaVirtDevice
     void setGfxDoorbellHi(uint32_t data);
     void setGfxDoorbellOffsetLo(uint32_t data);
     void setGfxDoorbellOffsetHi(uint32_t data);
-    void setGfxSize(uint64_t data);
+    void setGfxSize(uint32_t data);
     void setGfxWptrLo(uint32_t data);
     void setGfxWptrHi(uint32_t data);
     void setPageBaseLo(uint32_t data);
@@ -280,7 +291,7 @@ class SDMAEngine : public DmaVirtDevice
     void setPageDoorbellHi(uint32_t data);
     void setPageDoorbellOffsetLo(uint32_t data);
     void setPageDoorbellOffsetHi(uint32_t data);
-    void setPageSize(uint64_t data);
+    void setPageSize(uint32_t data);
     void setPageWptrLo(uint32_t data);
     void setPageWptrHi(uint32_t data);
 
