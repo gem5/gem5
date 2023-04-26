@@ -41,7 +41,7 @@ from common import GPUTLBOptions
 from ruby import Ruby
 
 
-demo_runscript = """\
+demo_runscript_without_checkpoint = """\
 export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 export HSA_ENABLE_INTERRUPT=0
 dmesg -n8
@@ -54,6 +54,24 @@ modprobe -v amdgpu ip_block_mask=0xff ppfeaturemask=0 dpm=0 audio=0
 echo "Running {} {}"
 echo "{}" | base64 -d > myapp
 chmod +x myapp
+./myapp {}
+/sbin/m5 exit
+"""
+
+demo_runscript_with_checkpoint = """\
+export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
+export HSA_ENABLE_INTERRUPT=0
+dmesg -n8
+dd if=/root/roms/vega10.rom of=/dev/mem bs=1k seek=768 count=128
+if [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then
+    echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."
+    /sbin/m5 exit
+fi
+modprobe -v amdgpu ip_block_mask=0xff ppfeaturemask=0 dpm=0 audio=0
+echo "Running {} {}"
+echo "{}" | base64 -d > myapp
+chmod +x myapp
+/sbin/m5 checkpoint
 ./myapp {}
 /sbin/m5 exit
 """
@@ -79,6 +97,7 @@ if __name__ == "__m5_main__":
 
     # Parse now so we can override options
     args = parser.parse_args()
+    demo_runscript = ""
 
     # Create temp script to run application
     if args.app is None:
@@ -96,6 +115,12 @@ if __name__ == "__m5_main__":
     elif not os.path.isfile(args.app):
         print("Could not find applcation", args.app)
         sys.exit(1)
+
+    # Choose runscript Based on whether any checkpointing args are set
+    if args.checkpoint_dir is not None:
+        demo_runscript = demo_runscript_with_checkpoint
+    else:
+        demo_runscript = demo_runscript_without_checkpoint
 
     with open(os.path.abspath(args.app), "rb") as binfile:
         encodedBin = base64.b64encode(binfile.read()).decode()
