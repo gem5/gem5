@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2015-2017 ARM Limited
+# Copyright (c) 2013, 2015-2017, 2023 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -302,6 +302,48 @@ def FromValue(node):
     return pickle.loads(node.read())
 
 
+def patch_re_compile_for_inline_flags():
+    """Patch `re.compile` with a version that can handle RE strings with
+    inline flags anywhere within them. This is required to use PLY
+    with Python 3.11+.
+
+    """
+
+    import re
+    from functools import partial
+
+    def _inline_flag_aware_re_compile(re_compile, re_str, flags=0x0):
+        """Provide an alternative implementation of `re.compile` that allows
+        inline flags that are not at the start of the regular
+        expression string.
+
+        From Python 3.11, the `re` module only supports inline flags
+        at the start of the RE string. This makes it impossible to add
+        flags to the Lexer strings when using PLY, because PLY embeds
+        the user supplied token REs, and does not provide sufficient
+        control of the `flags` argument.
+
+        """
+        _flags_map = {
+            ("(?a)", b"(?a)"): re.ASCII,
+            ("(?i)", b"(?i)"): re.IGNORECASE,
+            ("(?L)", b"(?L)"): re.LOCALE,
+            ("(?m)", b"(?m)"): re.MULTILINE,
+            ("(?s)", b"(?s)"): re.DOTALL,
+            ("(?x)", b"(?x)"): re.VERBOSE,
+        }
+        for (pattern_s, pattern_b), flag in _flags_map.items():
+            pattern = pattern_b if isinstance(re_str, bytes) else pattern_s
+            replacement = b"" if isinstance(re_str, bytes) else ""
+            if pattern in re_str:
+                flags |= flag
+                re_str = re_str.replace(pattern, replacement)
+        return re_compile(re_str, flags)
+
+    # Patch the default `re.compile`
+    re.compile = partial(_inline_flag_aware_re_compile, re.compile)
+
+
 __all__ = [
     "Configure",
     "EnvDefaults",
@@ -312,4 +354,5 @@ __all__ = [
     "MakeActionTool",
     "ToValue",
     "FromValue",
+    "patch_re_compile_for_inline_flags",
 ]

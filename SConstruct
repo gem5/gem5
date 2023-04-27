@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2013, 2015-2020 ARM Limited
+# Copyright (c) 2013, 2015-2020, 2023 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -170,6 +170,10 @@ from gem5_scons.util import compareVersions, readCommand
 SetOption('warn', 'no-duplicate-environment')
 
 Export('MakeAction')
+
+# Patch re.compile to support inline flags anywhere within a RE
+# string. Required to use PLY with Python 3.11+.
+gem5_scons.patch_re_compile_for_inline_flags()
 
 ########################################################################
 #
