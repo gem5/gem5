@@ -436,6 +436,20 @@ SveTerPredOp::generateDisassembly(
 }
 
 std::string
+SveTerUnpredOp::generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printVecReg(ss, dest, true);
+    ccprintf(ss, ", ");
+    printVecReg(ss, op1, true);
+    ccprintf(ss, ", ");
+    printVecReg(ss, op2, true);
+    return ss.str();
+}
+
+std::string
 SveTerImmUnpredOp::generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const
 {

@@ -489,6 +489,32 @@ class %(class_name)s : public %(base_class)s
 };
 }};
 
+def template sveTerUnpredOpDeclare {{
+template <class _Element>
+class %(class_name)s : public %(base_class)s
+{
+  private:
+    %(reg_idx_arr_decl)s;
+
+  protected:
+    typedef _Element Element;
+    typedef _Element TPElem;
+
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                   RegIndex _op1, RegIndex _op2) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+};
+}};
+
 def template SveTerImmUnpredOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s

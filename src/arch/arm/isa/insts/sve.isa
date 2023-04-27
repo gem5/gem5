@@ -926,6 +926,19 @@ output header {{
         }
     }
 
+    // Decodes ternary, unpredicated SVE2 instructions
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveTerUnpred(unsigned size, ExtMachInst machInst,
+                      RegIndex dest, RegIndex op1, RegIndex op2)
+    {
+        if (bits(size, 0) == 0) {
+            return new Base<uint32_t>(machInst, dest, op1, op2);
+        } else {
+            return new Base<uint64_t>(machInst, dest, op1, op2);
+        }
+    }
+
     // Decodes ternary with immediate operand, destructive, unpredicated SVE
     // instructions handling floating-point variants only.
     template <template <typename T> class Base>
@@ -2083,6 +2096,35 @@ let {{
         for type in types:
             substDict = {'targs' : type,
                          'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for ternary SVE2 intructions (unpredicated)
+    def sveTerInstUnpred(name, Name, opClass, types, op,
+                         isTop=False, isAdd=True, decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned const pairs = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase()) / 2;
+        for (unsigned p = 0; p < pairs; p++) {
+            const Element& srcElem1 = AA64FpDestMerge_x[2 * p + 0];
+            const Element& srcElem2 = AA64FpOp1_x[%(src_top_elem)s];
+            int carryIn = bits(AA64FpOp2_x[2 * p + 1], 0);
+            Element %(op)s
+            int carryOut = findCarry(
+                                    sizeof(Element) * 8, res, srcElem1,
+                                    %(src_elem2)s) & 1;
+            AA64FpDest_x[2 * p + 0] = res;
+            AA64FpDest_x[2 * p + 1] = (Element)0x0 + carryOut;
+        }''' % {'op': op,
+                'src_top_elem' : '2 * p + 1' if isTop else '2 * p + 0',
+                'src_elem2' : 'srcElem2' if isAdd else '~(srcElem2)'}
+        iop = ArmInstObjParams(name, 'Sve2' + Name, 'SveTerUnpredOp',
+                               {'code': code, 'op_class': opClass}, [])
+        header_output += sveTerUnpredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve2' + Name}
             exec_output += SveOpExecDeclare.subst(substDict)
 
     # Generates definitions for ternary SVE instructions with indexed operand
@@ -4052,6 +4094,22 @@ let {{
     # MLS
     mlsCode = 'destElem -= srcElem1 * srcElem2;'
     sveTerInst('mls', 'Mls', 'SimdMultAccOp', signedTypes, mlsCode)
+    # ADCLT
+    adcltCode = 'res = srcElem1 + srcElem2 + carryIn;'
+    sveTerInstUnpred('adclt', 'Adclt', 'VectorIntegerArithOp', unsignedTypes,
+                       adcltCode, isTop=True, isAdd=True)
+    # ADCLB
+    adclbCode = 'res = srcElem1 + srcElem2 + carryIn;'
+    sveTerInstUnpred('adclb', 'Adclb', 'VectorIntegerArithOp', unsignedTypes,
+                      adclbCode, isTop=False, isAdd=True)
+    # SBCLT
+    sbcltCode = 'res = srcElem1 + ~(srcElem2) + carryIn;'
+    sveTerInstUnpred('sbclt', 'Sbclt', 'VectorIntegerArithOp', unsignedTypes,
+                      sbcltCode, isTop=True, isAdd=False)
+    # SBCLB
+    sbclbCode = 'res = srcElem1 + ~(srcElem2) + carryIn;'
+    sveTerInstUnpred('sbclb', 'Sbclb', 'VectorIntegerArithOp', unsignedTypes,
+                      sbclbCode, isTop=False, isAdd=False)
     # MOVPRFX (predicated)
     movCode = 'destElem = srcElem1;'
     sveUnaryInst('movprfx', 'MovprfxPredM', 'SimdMiscOp', unsignedTypes,

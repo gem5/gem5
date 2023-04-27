@@ -2284,6 +2284,52 @@ namespace Aarch64
     } // decodeSveMultiplyIndexed
 
     StaticInstPtr
+    decodeSve2ArithCarry(ExtMachInst machInst)
+    {
+        RegIndex zn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex zm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex zda = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+
+        uint8_t size = bits(machInst, 23, 22);
+        if (size & 0x2) {
+            if (bits(machInst, 10)){
+                return decodeSveTerUnpred<Sve2Sbclt>(
+                        size, machInst, zda, zn, zm);
+            } else {
+                return decodeSveTerUnpred<Sve2Sbclb>(
+                        size, machInst, zda, zn, zm);
+            }
+        } else {
+            if (bits(machInst, 10)){
+                return decodeSveTerUnpred<Sve2Adclt>(
+                        size, machInst, zda, zn, zm);
+            } else {
+                return decodeSveTerUnpred<Sve2Adclb>(
+                    size, machInst, zda, zn, zm);
+            }
+        }
+        return new Unknown64(machInst);
+    } //decodeSve2ArithCarry
+
+    StaticInstPtr
+    decodeSve2Accum(ExtMachInst machInst)
+    {
+        uint8_t op0 = bits(machInst, 20, 17);
+        uint8_t op1 = bits(machInst, 13, 11);
+        if (op0 != 0 && op1 == 3) {
+            return new Unknown64(machInst);
+        }
+        switch (op1) {
+            case 2:
+                return decodeSve2ArithCarry(machInst);
+            default:
+                break;
+        }
+
+        return new Unknown64(machInst);
+    } //decodeSve2Accum
+
+    StaticInstPtr
     decodeSveFpFastReduc(ExtMachInst machInst)
     {
         RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);

@@ -498,6 +498,23 @@ class SveTerPredOp : public ArmStaticInst
             Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
+///SVE2 Accumulate instructions
+class SveTerUnpredOp : public ArmStaticInst
+{
+  protected:
+    RegIndex dest, op1, op2;
+
+    SveTerUnpredOp(const char* mnem, ExtMachInst _machInst,
+                    OpClass __opClass, RegIndex _dest,
+                    RegIndex _op1, RegIndex _op2) :
+        ArmStaticInst(mnem, _machInst, __opClass),
+        dest(_dest), op1(_op1), op2(_op2)
+    {}
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
 /// Ternary with immediate, destructive, unpredicated SVE instruction.
 class SveTerImmUnpredOp : public ArmStaticInst
 {

@@ -69,6 +69,7 @@ namespace Aarch64
     StaticInstPtr decodeSvePsel(ExtMachInst machInst);
     StaticInstPtr decodeSveIntWideImmUnpred(ExtMachInst machInst);
     StaticInstPtr decodeSveClamp(ExtMachInst machInst);
+    StaticInstPtr decodeSve2Accum(ExtMachInst machInst);
 
     StaticInstPtr decodeSveMultiplyAddUnpred(ExtMachInst machInst);
     StaticInstPtr decodeSveMultiplyIndexed(ExtMachInst machInst);
@@ -173,10 +174,23 @@ namespace Aarch64
                 break;
             }
           case 0x2:
-            if (bits(machInst, 20)) {
-                return decodeSveIntWideImmPred(machInst);
-            } else {
-                return decodeSveLogMaskImm(machInst);
+            {
+              if (bits(machInst, 30) == 0) {
+                  if (bits(machInst, 20)) {
+                      return decodeSveIntWideImmPred(machInst);
+                } else {
+                    return decodeSveLogMaskImm(machInst);
+                }
+              } else {
+                uint8_t b_15_14 = bits(machInst, 15, 14);
+                switch (b_15_14) {
+                  case 3:
+                    return decodeSve2Accum(machInst);
+                  default :
+                    break;
+                }
+              }
+              break;
             }
           case 0x3:
             {
