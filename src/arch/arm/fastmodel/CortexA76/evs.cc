@@ -134,16 +134,6 @@ ScxEvsCortexA76<Types>::ScxEvsCortexA76(
 
 template <class Types>
 void
-ScxEvsCortexA76<Types>::sendFunc(PacketPtr pkt)
-{
-    auto *trans = sc_gem5::packet2payload(pkt);
-    panic_if(Base::amba->transport_dbg(*trans) != trans->get_data_length(),
-            "Didn't send entire functional packet!");
-    trans->release();
-}
-
-template <class Types>
-void
 ScxEvsCortexA76<Types>::before_end_of_elaboration()
 {
     Base::before_end_of_elaboration();

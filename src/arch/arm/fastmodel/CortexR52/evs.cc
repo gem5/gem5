@@ -129,16 +129,6 @@ ScxEvsCortexR52<Types>::ScxEvsCortexR52(
 }
 
 template <class Types>
-void
-ScxEvsCortexR52<Types>::sendFunc(PacketPtr pkt)
-{
-    auto *trans = sc_gem5::packet2payload(pkt);
-    panic_if(Base::amba[0]->transport_dbg(*trans) != trans->get_data_length(),
-            "Didn't send entire functional packet!");
-    trans->release();
-}
-
-template <class Types>
 Port &
 ScxEvsCortexR52<Types>::gem5_getPort(const std::string &if_name, int idx)
 {

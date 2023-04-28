@@ -47,7 +47,6 @@ class ThreadContext;
 class BaseCpuEvs
 {
   public:
-    virtual void sendFunc(PacketPtr pkt) = 0;
     virtual void setClkPeriod(Tick clk_period) = 0;
     virtual void setSysCounterFrq(uint64_t sys_counter_frq) = 0;
     virtual void setCluster(SimObject *cluster) = 0;

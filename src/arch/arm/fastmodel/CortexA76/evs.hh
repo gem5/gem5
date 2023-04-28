@@ -119,8 +119,6 @@ class ScxEvsCortexA76 : public Types::Base, public Iris::BaseCpuEvs
     }
     void start_of_simulation() override {}
 
-    void sendFunc(PacketPtr pkt) override;
-
     void setClkPeriod(Tick clk_period) override;
 
     void setSysCounterFrq(uint64_t sys_counter_frq) override;
