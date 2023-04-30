@@ -187,6 +187,7 @@ system.platform = HiFive()
 # RTCCLK (Set to 100MHz for faster simulation)
 system.platform.rtc = RiscvRTC(frequency=Frequency("100MHz"))
 system.platform.clint.int_pin = system.platform.rtc.int_pin
+system.platform.pci_host.pio = system.iobus.mem_side_ports
 
 # VirtIOMMIO
 if args.disk_image:
@@ -235,8 +236,6 @@ system.cpu_voltage_domain = VoltageDomain()
 system.cpu_clk_domain = SrcClockDomain(
     clock=args.cpu_clock, voltage_domain=system.cpu_voltage_domain
 )
-
-system.workload.object_file = args.kernel
 
 # NOTE: Not yet tested
 if args.script is not None:
