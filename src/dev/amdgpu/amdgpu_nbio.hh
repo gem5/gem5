@@ -109,7 +109,6 @@ class AMDGPUNbio
     Addr psp_ring_dev_addr = 0;
     Addr psp_ring_listen_addr = 0;
     int psp_ring_size = 0;
-    int psp_ring_retval = 0;
     int psp_ring_value = 0;
 };
 
