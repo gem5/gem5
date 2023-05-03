@@ -68,7 +68,8 @@ PMU::PMU(const ArmPMUParams &p)
       swIncrementEvent(nullptr),
       reg_pmcr_conf(0),
       interrupt(nullptr),
-      exitOnPMUControl(p.exitOnPMUControl)
+      exitOnPMUControl(p.exitOnPMUControl),
+      exitOnPMUInterrupt(p.exitOnPMUInterrupt)
 {
     DPRINTF(PMUVerbose, "Initializing the PMU.\n");
 
@@ -677,6 +678,10 @@ PMU::setOverflowStatus(RegVal new_val)
 void
 PMU::raiseInterrupt()
 {
+    if (exitOnPMUInterrupt) {
+        inform("Exiting simulation: PMU interrupt detected");
+        exitSimLoop("performance counter interrupt", 0);
+    }
     if (interrupt) {
         DPRINTF(PMUVerbose, "Delivering PMU interrupt.\n");
         interrupt->raise();

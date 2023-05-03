@@ -218,6 +218,7 @@ class ArmPMU(SimObject):
     exitOnPMUControl = Param.Bool(
         False, "Exit on PMU enable, disable, or reset"
     )
+    exitOnPMUInterrupt = Param.Bool(False, "Exit on PMU interrupt")
 
     # 64-bit PMU event counters are officially supported when
     # Armv8.5-A FEAT_PMUv3p5 is implemented. This parameter is not a

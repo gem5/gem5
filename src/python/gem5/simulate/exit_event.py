@@ -52,6 +52,7 @@ class ExitEvent(Enum):
     PERF_COUNTER_ENABLE = "performance counter enabled"
     PERF_COUNTER_DISABLE = "performance counter disabled"
     PERF_COUNTER_RESET = "performance counter reset"
+    PERF_COUNTER_INTERRUPT = "performance counter interrupt"
 
     @classmethod
     def translate_exit_status(cls, exit_string: str) -> "ExitEvent":
@@ -99,6 +100,8 @@ class ExitEvent(Enum):
             return ExitEvent.PERF_COUNTER_DISABLE
         elif exit_string == "performance counter reset":
             return ExitEvent.PERF_COUNTER_RESET
+        elif exit_string == "performance counter interrupt":
+            return ExitEvent.PERF_COUNTER_INTERRUPT
         elif exit_string.endswith("will terminate the simulation.\n"):
             # This is for the traffic generator exit event
             return ExitEvent.EXIT

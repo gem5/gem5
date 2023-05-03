@@ -638,6 +638,10 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
      */
     const bool exitOnPMUControl;
 
+    /**
+     * Exit simloop on PMU interrupt
+     */
+    bool exitOnPMUInterrupt;
 };
 
 } // namespace ArmISA
