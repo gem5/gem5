@@ -1,5 +1,24 @@
-This is the gem5 simulator.
+# ECE 562 Gem5 fork
+This is the gem5 simulator fork for ece_562.
 
+The benchmarks added are for the project for this class at UOA.
+
+The prerequisite is that you must have the riscv, arm, and x86 builds of Gem5 installed as well.
+The builds must be from this repository as well, since there was an added replacement policy to
+gem5. There shouldn't be a need to compile the benchmarks again as the binaries are tracked in this
+repository already. We are not tracking the gem5 builds as that would be an 18GB addition.
+
+There are separate cpu_configs per architecture, and 1 with lfru_cache replacement policy and
+another with standard lru_cache replacement.
+
+To recreate the results, one may run the [benchmarks](./run_benchmarks.sh)
+
+The current results are tracked in [ece_562_benchmarks](./ece_562_benchmarks/).
+CPU configs are in there as well.
+
+<br/>
+
+## Gem5
 The main website can be found at http://www.gem5.org
 
 A good starting point is http://www.gem5.org/about, and for

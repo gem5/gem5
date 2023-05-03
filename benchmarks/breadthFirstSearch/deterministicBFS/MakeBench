@@ -1,0 +1,58 @@
+# ********************
+# GENERIC MAKEFILE FOR MOST BENCHMARKS THAT LINK
+# THE TIMING CODE WITH THE IMPLEMENTATION
+# USES FOLLOWING DEFINITIONS
+#    BNCHMRK : the name of the benchmark
+#    GLOBAL_REQUIRE : implementation files needed from global common
+#    BENCH_REQUIRE : implementation files needed from benchmark common
+#    LOCAL_REQUIRE : local implementation files
+#    OBJS : implementation object files
+#    TIME_GLOBAL_REQUIRE
+#    TIME_REQUIRE : timing files needed from benchmark common
+#    PCC : the compiler
+#    PCFLAGS : compiler flags
+#    PLFLAGS : compiler link flags
+# ********************
+
+CHECK = $(BNCHMRK)Check
+TIME = $(BNCHMRK)Time
+TEST_FILES = testInputs
+
+# Make the benchmark, and make the output check code in the common directory
+all : $(BNCHMRK) testInputs
+	cd ../common; make -s $(CHECK)
+
+$(TEST_FILES) :
+	cp ../common/$@ .
+
+# Files copied (linked) from toplevel common directory
+# The sort used to remove duplicates
+GLOBAL = $(sort $(TIME_GLOBAL_REQUIRE) $(GLOBAL_REQUIRE))
+
+$(GLOBAL) :
+	ln -s ../../common/$@ .
+
+# Files copied (linked) from benchmark common directory
+BENCH = $(TIME).C $(sort $(TIME_REQUIRE) $(BENCH_REQUIRE))
+
+$(BENCH) :
+	ln -s ../common/$@ .
+
+# Make all implementation objects
+%.o : %.C $(GLOBAL_REQUIRE) $(BENCH_REQUIRE) $(LOCAL_REQUIRE)
+	$(PCC) $(PCFLAGS) -c $< -o $@
+
+# Make timing code object file
+$(TIME).o : $(TIME).C $(TIME_GLOBAL_REQUIRE) $(TIME_REQUIRE)
+	$(PCC) $(PCFLAGS) -c $< -o $@
+
+# Make benchmark
+$(BNCHMRK) : $(TIME).o $(OBJS)
+	$(PCC) $(PLFLAGS) -static -o $@ $(TIME).o $(OBJS)
+
+clean :
+	rm -f $(BNCHMRK) *.o *.pyc
+
+cleansrc :
+	make -s clean
+	rm -f $(GLOBAL) $(BENCH) $(TEST_FILES)

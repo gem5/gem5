@@ -1,0 +1,16 @@
+#!/usr/bin/python
+
+bnchmrk = "BFS"
+benchmark = "Breadth First Search"
+checkProgram = "../common/BFSCheck"
+dataDir = "../graphData/data"
+
+tests = [
+    [1, "randLocalGraph_J_5_10000000", "", ""],
+    [1, "rMatGraph_J_5_10000000", "", ""],
+    [1, "3Dgrid_J_10000000", "", ""],
+]
+
+import runTests
+
+runTests.timeAllArgs(bnchmrk, benchmark, checkProgram, dataDir, tests)

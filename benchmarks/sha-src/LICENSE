@@ -1,0 +1,7 @@
+/* NIST Secure Hash Algorithm */
+/* heavily modified by Uwe Hollerbach uh@alumni.caltech edu */
+/* from Peter C. Gutmann's implementation as found in */
+/* Applied Cryptography by Bruce Schneier */
+
+/* NIST's proposed modification to SHA of 7/11/94 may be */
+/* activated by defining USE_MODIFIED_SHA */

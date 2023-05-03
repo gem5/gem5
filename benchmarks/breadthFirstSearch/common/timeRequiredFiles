@@ -1,0 +1,10 @@
+BNCHMRK = BFS
+
+# generic toplevel common files needed by this and most timing code
+GLOBAL_GENERIC = utils.h parseCommandLine.h IO.h parallel.h gettime.h sequence.h runTests.py
+
+# toplevel common files needed by the timing code
+TIME_GLOBAL_REQUIRE = graph.h graphIO.h $(GLOBAL_GENERIC)
+
+# local common files needed by the timing code
+TIME_REQUIRE = $(BNCHMRK).h
