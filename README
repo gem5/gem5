@@ -16,8 +16,6 @@ To recreate the results, one may run the [benchmarks](./run_benchmarks.sh)
 The current results are tracked in [ece_562_benchmarks](./ece_562_benchmarks/).
 CPU configs are in there as well.
 
-<br/>
-
 ## Gem5
 The main website can be found at http://www.gem5.org
 
