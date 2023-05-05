@@ -464,8 +464,6 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
     // ruby request was outstanding. Since only 1 ruby request was made,
     // profile the ruby latency once.
     bool ruby_request = true;
-    int aliased_stores = 0;
-    int aliased_loads = 0;
     while (!seq_req_list.empty()) {
         SequencerRequest &seq_req = seq_req_list.front();
 
@@ -520,9 +518,8 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
                 recordMissLatency(&seq_req, success, mach, externalHit,
                                   initialRequestTime, forwardRequestTime,
                                   firstResponseTime);
-            } else {
-                aliased_stores++;
             }
+
             markRemoved();
             hitCallback(&seq_req, data, success, mach, externalHit,
                         initialRequestTime, forwardRequestTime,
@@ -532,7 +529,6 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
             // handle read request
             assert(!ruby_request);
             markRemoved();
-            aliased_loads++;
             hitCallback(&seq_req, data, true, mach, externalHit,
                         initialRequestTime, forwardRequestTime,
                         firstResponseTime, !ruby_request);
@@ -565,15 +561,12 @@ Sequencer::readCallback(Addr address, DataBlock& data,
     // ruby request was outstanding. Since only 1 ruby request was made,
     // profile the ruby latency once.
     bool ruby_request = true;
-    int aliased_loads = 0;
     while (!seq_req_list.empty()) {
         SequencerRequest &seq_req = seq_req_list.front();
         if (ruby_request) {
             assert((seq_req.m_type == RubyRequestType_LD) ||
                    (seq_req.m_type == RubyRequestType_Load_Linked) ||
                    (seq_req.m_type == RubyRequestType_IFETCH));
-        } else {
-            aliased_loads++;
         }
         if ((seq_req.m_type != RubyRequestType_LD) &&
             (seq_req.m_type != RubyRequestType_Load_Linked) &&

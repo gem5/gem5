@@ -127,9 +127,7 @@ SelfDebug::testWatchPoints(ThreadContext *tc, Addr vaddr, bool write,
         return NoFault;
 
     ExceptionLevel el = (ExceptionLevel) currEL(tc);
-    int idxtmp = -1;
     for (auto &p: arWatchPoints){
-        idxtmp ++;
         if (p.enable) {
             if (p.test(tc, vaddr, el, write, atomic, size)) {
                 return triggerWatchpointException(tc, vaddr, write, cm);

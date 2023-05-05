@@ -302,7 +302,6 @@ enterREDState(ThreadContext *tc)
 void
 doREDFault(ThreadContext *tc, TrapType tt)
 {
-    RegVal TL = tc->readMiscRegNoEffect(MISCREG_TL);
     RegVal TSTATE = tc->readMiscRegNoEffect(MISCREG_TSTATE);
     PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
     HPSTATE hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
@@ -312,8 +311,6 @@ doREDFault(ThreadContext *tc, TrapType tt)
     RegVal CANSAVE = tc->getReg(int_reg::Cansave);
     RegVal GL = tc->readMiscRegNoEffect(MISCREG_GL);
     auto &pc = tc->pcState().as<PCState>();
-
-    TL++;
 
     Addr pcMask = pstate.am ? mask(32) : mask(64);
 

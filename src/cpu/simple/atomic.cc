@@ -462,7 +462,7 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
     Addr frag_addr = addr;
     int frag_size = 0;
     int size_left = size;
-    int curr_frag_id = 0;
+    [[maybe_unused]] int curr_frag_id = 0;
     bool predicate;
     Fault fault = NoFault;
 

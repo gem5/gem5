@@ -568,10 +568,6 @@ Execute::issue(ThreadID thread_id)
     /* Number of memory ops issues this cycle to check for memoryIssueLimit */
     unsigned num_mem_insts_issued = 0;
 
-    /* Number of instructions discarded this cycle in order to enforce a
-     *  discardLimit. @todo, add that parameter? */
-    unsigned num_insts_discarded = 0;
-
     do {
         MinorDynInstPtr inst = insts_in->insts[thread.inputIndex];
         Fault fault = inst->fault;
@@ -800,9 +796,7 @@ Execute::issue(ThreadID thread_id)
             if (issued_mem_ref)
                 num_mem_insts_issued++;
 
-            if (discarded) {
-                num_insts_discarded++;
-            } else if (!inst->isBubble()) {
+            if (!discarded && !inst->isBubble()) {
                 num_insts_issued++;
 
                 if (num_insts_issued == issueLimit)
