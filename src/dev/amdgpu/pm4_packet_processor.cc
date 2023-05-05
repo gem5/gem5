@@ -271,12 +271,21 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
                     dmaBuffer);
         } break;
       case IT_MAP_PROCESS: {
-        dmaBuffer = new PM4MapProcess();
-        cb = new DmaVirtCallback<uint64_t>(
-            [ = ] (const uint64_t &)
-                { mapProcess(q, (PM4MapProcess *)dmaBuffer); });
-        dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4MapProcess), cb,
-                    dmaBuffer);
+        if (gpuDevice->getGfxVersion() == GfxVersion::gfx90a) {
+            dmaBuffer = new PM4MapProcessMI200();
+            cb = new DmaVirtCallback<uint64_t>(
+                [ = ] (const uint64_t &)
+                    { mapProcessGfx90a(q, (PM4MapProcessMI200 *)dmaBuffer); });
+            dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4MapProcessMI200),
+                        cb, dmaBuffer);
+        } else {
+            dmaBuffer = new PM4MapProcess();
+            cb = new DmaVirtCallback<uint64_t>(
+                [ = ] (const uint64_t &)
+                    { mapProcessGfx9(q, (PM4MapProcess *)dmaBuffer); });
+            dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4MapProcess), cb,
+                        dmaBuffer);
+        }
         } break;
 
       case IT_UNMAP_QUEUES: {
@@ -613,27 +622,50 @@ PM4PacketProcessor::doneMQDWrite(Addr mqdAddr, Addr addr) {
 }
 
 void
-PM4PacketProcessor::mapProcess(PM4Queue *q, PM4MapProcess *pkt)
+PM4PacketProcessor::mapProcess(uint32_t pasid, uint64_t ptBase,
+                               uint32_t shMemBases)
 {
-    q->incRptr(sizeof(PM4MapProcess));
-    uint16_t vmid = gpuDevice->allocateVMID(pkt->pasid);
+    uint16_t vmid = gpuDevice->allocateVMID(pasid);
 
-    DPRINTF(PM4PacketProcessor, "PM4 map_process pasid: %p vmid: %d quantum: "
-            "%d pt: %p signal: %p\n", pkt->pasid, vmid, pkt->processQuantum,
-            pkt->ptBase, pkt->completionSignal);
-
-    gpuDevice->getVM().setPageTableBase(vmid, pkt->ptBase);
-    gpuDevice->CP()->shader()->setHwReg(HW_REG_SH_MEM_BASES, pkt->shMemBases);
+    gpuDevice->getVM().setPageTableBase(vmid, ptBase);
+    gpuDevice->CP()->shader()->setHwReg(HW_REG_SH_MEM_BASES, shMemBases);
 
     // Setup the apertures that gem5 uses. These values are bits [63:48].
-    Addr lds_base = (Addr)bits(pkt->shMemBases, 31, 16) << 48;
-    Addr scratch_base = (Addr)bits(pkt->shMemBases, 15, 0) << 48;
+    Addr lds_base = (Addr)bits(shMemBases, 31, 16) << 48;
+    Addr scratch_base = (Addr)bits(shMemBases, 15, 0) << 48;
 
     // There does not seem to be any register for the limit, but the driver
     // assumes scratch and LDS have a 4GB aperture, so use that.
     gpuDevice->CP()->shader()->setLdsApe(lds_base, lds_base + 0xFFFFFFFF);
     gpuDevice->CP()->shader()->setScratchApe(scratch_base,
                                              scratch_base + 0xFFFFFFFF);
+}
+
+void
+PM4PacketProcessor::mapProcessGfx9(PM4Queue *q, PM4MapProcess *pkt)
+{
+    q->incRptr(sizeof(PM4MapProcess));
+
+    DPRINTF(PM4PacketProcessor, "PM4 map_process pasid: %p quantum: "
+            "%d pt: %p signal: %p\n", pkt->pasid, pkt->processQuantum,
+            pkt->ptBase, pkt->completionSignal);
+
+    mapProcess(pkt->pasid, pkt->ptBase, pkt->shMemBases);
+
+    delete pkt;
+    decodeNext(q);
+}
+
+void
+PM4PacketProcessor::mapProcessGfx90a(PM4Queue *q, PM4MapProcessMI200 *pkt)
+{
+    q->incRptr(sizeof(PM4MapProcessMI200));
+
+    DPRINTF(PM4PacketProcessor, "PM4 map_process pasid: %p quantum: "
+            "%d pt: %p signal: %p\n", pkt->pasid, pkt->processQuantum,
+            pkt->ptBase, pkt->completionSignal);
+
+    mapProcess(pkt->pasid, pkt->ptBase, pkt->shMemBases);
 
     delete pkt;
     decodeNext(q);

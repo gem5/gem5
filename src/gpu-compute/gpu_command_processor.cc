@@ -228,7 +228,8 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
     DPRINTF(GPUKernelInfo, "Kernel name: %s\n", kernel_name.c_str());
 
     HSAQueueEntry *task = new HSAQueueEntry(kernel_name, queue_id,
-        dynamic_task_id, raw_pkt, &akc, host_pkt_addr, machine_code_addr);
+        dynamic_task_id, raw_pkt, &akc, host_pkt_addr, machine_code_addr,
+        gpuDevice->getGfxVersion());
 
     DPRINTF(GPUCommandProc, "Task ID: %i Got AQL: wg size (%dx%dx%d), "
         "grid size (%dx%dx%d) kernarg addr: %#x, completion "

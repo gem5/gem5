@@ -115,7 +115,7 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
         sdmaFunc.insert({0x10b, &SDMAEngine::setPageDoorbellOffsetLo});
         sdmaFunc.insert({0xe0, &SDMAEngine::setPageSize});
         sdmaFunc.insert({0x113, &SDMAEngine::setPageWptrLo});
-    } else if (p.device_name == "MI100") {
+    } else if (p.device_name == "MI100" || p.device_name == "MI200") {
         sdmaFunc.insert({0xd9, &SDMAEngine::setPageBaseLo});
         sdmaFunc.insert({0xe1, &SDMAEngine::setPageRptrLo});
         sdmaFunc.insert({0xe0, &SDMAEngine::setPageRptrHi});
@@ -144,10 +144,19 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     if (p.device_name == "Vega10") {
         setRegVal(VEGA10_FB_LOCATION_BASE, mmhubBase >> 24);
         setRegVal(VEGA10_FB_LOCATION_TOP, mmhubTop >> 24);
+        gfx_version = GfxVersion::gfx900;
     } else if (p.device_name == "MI100") {
         setRegVal(MI100_FB_LOCATION_BASE, mmhubBase >> 24);
         setRegVal(MI100_FB_LOCATION_TOP, mmhubTop >> 24);
         setRegVal(MI100_MEM_SIZE_REG, 0x3ff0); // 16GB of memory
+        gfx_version = GfxVersion::gfx908;
+    } else if (p.device_name == "MI200") {
+        // This device can have either 64GB or 128GB of device memory.
+        // This limits to 16GB for simulation.
+        setRegVal(MI200_FB_LOCATION_BASE, mmhubBase >> 24);
+        setRegVal(MI200_FB_LOCATION_TOP, mmhubTop >> 24);
+        setRegVal(MI200_MEM_SIZE_REG, 0x3ff0);
+        gfx_version = GfxVersion::gfx90a;
     } else {
         panic("Unknown GPU device %s\n", p.device_name);
     }

@@ -81,6 +81,10 @@
 #define MI100_FB_LOCATION_BASE                                       0x6ac00
 #define MI100_FB_LOCATION_TOP                                        0x6ac04
 
+#define MI200_MEM_SIZE_REG                                           0x0378c
+#define MI200_FB_LOCATION_BASE                                       0x6b300
+#define MI200_FB_LOCATION_TOP                                        0x6b304
+
 // AMD GPUs support 16 different virtual address spaces
 static constexpr int AMDGPU_VM_COUNT = 16;
 

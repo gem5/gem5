@@ -51,6 +51,7 @@
 #include "base/types.hh"
 #include "dev/hsa/hsa_packet.hh"
 #include "dev/hsa/hsa_queue.hh"
+#include "enums/GfxVersion.hh"
 #include "gpu-compute/kernel_code.hh"
 
 namespace gem5
@@ -61,7 +62,7 @@ class HSAQueueEntry
   public:
     HSAQueueEntry(std::string kernel_name, uint32_t queue_id,
                   int dispatch_id, void *disp_pkt, AMDKernelCode *akc,
-                  Addr host_pkt_addr, Addr code_addr)
+                  Addr host_pkt_addr, Addr code_addr, GfxVersion gfx_version)
         : kernName(kernel_name),
           _wgSize{{(int)((_hsa_dispatch_packet_t*)disp_pkt)->workgroup_size_x,
                   (int)((_hsa_dispatch_packet_t*)disp_pkt)->workgroup_size_y,
@@ -92,9 +93,19 @@ class HSAQueueEntry
         // we need to rip register usage from the resource registers.
         //
         // We can't get an exact number of registers from the resource
-        // registers because they round, but we can get an upper bound on it
-        if (!numVgprs)
-            numVgprs = (akc->granulated_workitem_vgpr_count + 1) * 4;
+        // registers because they round, but we can get an upper bound on it.
+        // We determine the number of registers by solving for "vgprs_used"
+        // in the LLVM docs: https://www.llvm.org/docs/AMDGPUUsage.html
+        //     #code-object-v3-kernel-descriptor
+        // Currently, the only supported gfx version in gem5 that computes
+        // this differently is gfx90a.
+        if (!numVgprs) {
+            if (gfx_version == GfxVersion::gfx90a) {
+                numVgprs = (akc->granulated_workitem_vgpr_count + 1) * 8;
+            } else {
+                numVgprs = (akc->granulated_workitem_vgpr_count + 1) * 4;
+            }
+        }
 
         if (!numSgprs || numSgprs ==
             std::numeric_limits<decltype(akc->wavefront_sgpr_count)>::max()) {

@@ -42,6 +42,7 @@
 #include "dev/amdgpu/mmio_reader.hh"
 #include "dev/io_device.hh"
 #include "dev/pci/device.hh"
+#include "enums/GfxVersion.hh"
 #include "params/AMDGPUDevice.hh"
 
 namespace gem5
@@ -145,6 +146,9 @@ class AMDGPUDevice : public PciDevice
      */
     memory::PhysicalMemory deviceMem;
 
+    /* Device information */
+    GfxVersion gfx_version = GfxVersion::gfx900;
+
   public:
     AMDGPUDevice(const AMDGPUDeviceParams &p);
 
@@ -206,6 +210,9 @@ class AMDGPUDevice : public PciDevice
     uint16_t getVMID(Addr doorbell) { return doorbellVMIDMap[doorbell]; }
     std::unordered_map<uint16_t, std::set<int>>& getUsedVMIDs();
     void insertQId(uint16_t vmid, int id);
+
+    /* Device information */
+    GfxVersion getGfxVersion() const { return gfx_version; }
 };
 
 } // namespace gem5

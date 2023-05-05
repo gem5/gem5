@@ -75,12 +75,14 @@ AMDGPUNbio::readMMIO(PacketPtr pkt, Addr offset)
       case VEGA10_INV_ENG17_ACK2:
       case MI100_INV_ENG17_ACK2:
       case MI100_INV_ENG17_ACK3:
+      case MI200_INV_ENG17_ACK2:
         pkt->setLE<uint32_t>(0x10001);
         break;
       case VEGA10_INV_ENG17_SEM1:
       case VEGA10_INV_ENG17_SEM2:
       case MI100_INV_ENG17_SEM2:
       case MI100_INV_ENG17_SEM3:
+      case MI200_INV_ENG17_SEM2:
         pkt->setLE<uint32_t>(0x1);
         break;
       // PSP responds with bit 31 set when ready

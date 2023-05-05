@@ -132,8 +132,9 @@ def addRunFSOptions(parser):
     parser.add_argument(
         "--gpu-device",
         default="Vega10",
-        choices=["Vega10", "MI100"],
-        help="GPU model to run: Vega10 (gfx900) or MI100 (gfx908)",
+        choices=["Vega10", "MI100", "MI200"],
+        help="GPU model to run: Vega10 (gfx900), MI100 (gfx908), or "
+        "MI200 (gfx90a)",
     )
 
 

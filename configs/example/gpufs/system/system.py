@@ -152,6 +152,16 @@ def makeGpuFSSystem(args):
             0x7D000,
         ]
         sdma_sizes = [0x1000] * 8
+    elif args.gpu_device == "MI200":
+        num_sdmas = 5
+        sdma_bases = [
+            0x4980,
+            0x6180,
+            0x78000,
+            0x79000,
+            0x7A000,
+        ]
+        sdma_sizes = [0x1000] * 5
     else:
         m5.util.panic(f"Unknown GPU device {args.gpu_device}")
 
