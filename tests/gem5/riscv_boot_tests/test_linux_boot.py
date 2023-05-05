@@ -80,6 +80,7 @@ def test_boot(
             config.base_dir,
             "tests",
             "gem5",
+            "riscv_boot_tests",
             "configs",
             "riscv_boot_exit_run.py",
         ),

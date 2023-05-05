@@ -57,7 +57,12 @@ def test_parsec(
         verifiers=(),
         fixtures=(),
         config=joinpath(
-            config.base_dir, "tests", "gem5", "configs", "parsec_disk_run.py"
+            config.base_dir,
+            "tests",
+            "gem5",
+            "parsec_benchmarks",
+            "configs",
+            "parsec_disk_run.py",
         ),
         config_args=[
             "--cpu",

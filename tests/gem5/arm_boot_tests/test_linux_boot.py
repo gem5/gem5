@@ -46,7 +46,7 @@ def test_boot(
 ):
 
     name = f"{cpu}-cpu_{num_cpus}-cores_{mem_system}_{memory_class}_\
-arm-boot-test"
+arm_boot_test"
 
     verifiers = []
 
@@ -90,6 +90,7 @@ arm-boot-test"
             config.base_dir,
             "tests",
             "gem5",
+            "arm_boot_tests",
             "configs",
             "arm_boot_exit_run.py",
         ),

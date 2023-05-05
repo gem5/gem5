@@ -1,4 +1,5 @@
 # Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2022 Google Inc
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -45,9 +46,20 @@ from gem5.components.processors.simple_core import SimpleCore
 from gem5.components.boards.mem_mode import MemMode
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.simulate.simulator import Simulator
-from gem5.isas import get_isa_from_str, get_isas_str_set
+from gem5.isas import get_isa_from_str, get_isas_str_set, ISA
+
+from m5.util import fatal
 
 import argparse
+import importlib
+
+cpu_types_string_map = {
+    CPUTypes.ATOMIC: "AtomicSimpleCPU",
+    CPUTypes.O3: "O3CPU",
+    CPUTypes.TIMING: "TimingSimpleCPU",
+    CPUTypes.KVM: "KvmCPU",
+    CPUTypes.MINOR: "MinorCPU",
+}
 
 parser = argparse.ArgumentParser(
     description="A gem5 script for running simple binaries in SE mode."
@@ -63,13 +75,6 @@ parser.add_argument(
 
 parser.add_argument(
     "isa", type=str, choices=get_isas_str_set(), help="The ISA used"
-)
-
-parser.add_argument(
-    "-b",
-    "--base-cpu-processor",
-    action="store_true",
-    help="Use the BaseCPUProcessor instead of the SimpleProcessor.",
 )
 
 parser.add_argument(
@@ -104,28 +109,14 @@ args = parser.parse_args()
 cache_hierarchy = NoCache()
 memory = SingleChannelDDR3_1600()
 
-if args.base_cpu_processor:
-    cores = [
-        BaseCPUCore(
-            core=SimpleCore.cpu_simobject_factory(
-                cpu_type=get_cpu_type_from_str(args.cpu),
-                isa=get_isa_from_str(args.isa),
-                core_id=i,
-            ),
-            isa=get_isa_from_str(args.isa),
-        )
-        for i in range(args.num_cores)
-    ]
+isa_enum = get_isa_from_str(args.isa)
+cpu_enum = get_cpu_type_from_str(args.cpu)
 
-    processor = BaseCPUProcessor(
-        cores=cores,
-    )
-else:
-    processor = SimpleProcessor(
-        cpu_type=get_cpu_type_from_str(args.cpu),
-        isa=get_isa_from_str(args.isa),
-        num_cores=args.num_cores,
-    )
+processor = SimpleProcessor(
+    cpu_type=cpu_enum,
+    isa=isa_enum,
+    num_cores=args.num_cores,
+)
 
 motherboard = SimpleBoard(
     clk_freq="3GHz",

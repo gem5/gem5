@@ -67,6 +67,7 @@ def test_kvm_switch(cpu: str, num_cpus: int, mem_system: str, length: str):
             config.base_dir,
             "tests",
             "gem5",
+            "kvm_switch_tests",
             "configs",
             "boot_kvm_switch_exit.py",
         ),

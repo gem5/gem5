@@ -72,6 +72,7 @@ def test_memory(
             "tests",
             "gem5",
             "traffic_gen",
+            "configs",
             "simple_traffic_run.py",
         ),
         config_args=[generator, generator_cores, cache, module]

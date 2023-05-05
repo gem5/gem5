@@ -64,7 +64,12 @@ def test_kvm_fork_run(cpu: str, num_cpus: int, mem_system: str, length: str):
         verifiers=verifiers,
         fixtures=(),
         config=joinpath(
-            config.base_dir, "tests", "gem5", "configs", "boot_kvm_fork_run.py"
+            config.base_dir,
+            "tests",
+            "gem5",
+            "kvm_fork_tests",
+            "configs",
+            "boot_kvm_fork_run.py",
         ),
         config_args=[
             "--cpu",

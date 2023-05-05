@@ -75,7 +75,12 @@ def test_boot(
         verifiers=verifiers,
         fixtures=(),
         config=joinpath(
-            config.base_dir, "tests", "gem5", "configs", "x86_boot_exit_run.py"
+            config.base_dir,
+            "tests",
+            "gem5",
+            "x86_boot_tests",
+            "configs",
+            "x86_boot_exit_run.py",
         ),
         config_args=[
             "--cpu",

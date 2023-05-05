@@ -38,7 +38,12 @@ gem5_verify_config(
     fixtures=(),
     verifiers=(),
     config=joinpath(
-        config.base_dir, "tests", "gem5", "configs", "download_check.py"
+        config.base_dir,
+        "tests",
+        "gem5",
+        "gem5_resources",
+        "configs",
+        "download_check.py",
     ),
     config_args=["--download-directory", resource_path],
     valid_isas=(constants.all_compiled_tag,),
