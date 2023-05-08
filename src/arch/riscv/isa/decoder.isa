@@ -152,11 +152,9 @@ decode QUADRANT default Unknown::unknown() {
         }}, {{
             if ((RC1 == 0) != (imm == 0)) {
                 if (RC1 == 0) {
-                    return std::make_shared<IllegalInstFault>(
-                            "source reg x0", machInst);
-                } else { // imm == 0
-                    return std::make_shared<IllegalInstFault>(
-                            "immediate = 0", machInst);
+                    // imm != 0 is HINT
+                } else {
+                    // imm == 0 is HINT
                 }
             }
             Rc1_sd = rvSext(Rc1_sd + imm);
@@ -179,10 +177,7 @@ decode QUADRANT default Unknown::unknown() {
         0x2: CIOp::c_li({{
             imm = sext<6>(CIMM5 | (CIMM1 << 5));
         }}, {{
-            if (RC1 == 0) {
-                return std::make_shared<IllegalInstFault>(
-                        "source reg x0", machInst);
-            }
+            // RC1 == 0 is HINT
             Rc1_sd = imm;
         }});
         0x3: decode RC1 {
@@ -202,10 +197,7 @@ decode QUADRANT default Unknown::unknown() {
             default: CIOp::c_lui({{
                 imm = sext<6>(CIMM5 | (CIMM1 << 5)) << 12;
             }}, {{
-                if (RC1 == 0 || RC1 == 2) {
-                    return std::make_shared<IllegalInstFault>(
-                            "source reg x0", machInst);
-                }
+                // RC1 == 0 is HINT
                 if (imm == 0) {
                     return std::make_shared<IllegalInstFault>(
                             "immediate = 0", machInst);
@@ -223,8 +215,7 @@ decode QUADRANT default Unknown::unknown() {
                                 "shmat[5] != 0", machInst);
                     }
                     if (imm == 0) {
-                        return std::make_shared<IllegalInstFault>(
-                                "immediate = 0", machInst);
+                        // C.SRLI64, HINT for RV32/RV64
                     }
                     // The MSB can never be 1, hence no need to sign ext.
                     Rp1 = rvZext(Rp1) >> imm;
@@ -237,8 +228,7 @@ decode QUADRANT default Unknown::unknown() {
                                 "shmat[5] != 0", machInst);
                     }
                     if (imm == 0) {
-                        return std::make_shared<IllegalInstFault>(
-                                "immediate = 0", machInst);
+                        // C.SRAI64, HINT for RV32/RV64
                     }
                     Rp1_sd = rvSext(Rp1_sd) >> imm;
                 }}, uint64_t);
@@ -306,13 +296,9 @@ decode QUADRANT default Unknown::unknown() {
                         "shmat[5] != 0", machInst);
             }
             if (imm == 0) {
-                return std::make_shared<IllegalInstFault>(
-                        "immediate = 0", machInst);
+                // C.SLLI64, HINT for RV32/RV64
             }
-            if (RC1 == 0) {
-                return std::make_shared<IllegalInstFault>(
-                        "source reg x0", machInst);
-            }
+            // RC1 == 0 is HINT
             Rc1 = rvSext(Rc1 << imm);
         }}, uint64_t);
         format CompressedLoad {
@@ -375,10 +361,7 @@ decode QUADRANT default Unknown::unknown() {
                     NPC = rvZext(Rc1);
                 }}, IsIndirectControl, IsUncondControl);
                 default: CROp::c_mv({{
-                    if (RC1 == 0) {
-                        return std::make_shared<IllegalInstFault>(
-                                "source reg x0", machInst);
-                    }
+                    // RC1 == 0 is HINT
                     Rc1 = rvSext(Rc2);
                 }});
             }
