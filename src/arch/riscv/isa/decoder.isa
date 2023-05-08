@@ -365,27 +365,21 @@ decode QUADRANT default Unknown::unknown() {
                     Rc1 = rvSext(Rc2);
                 }});
             }
-            0x1: decode RC1 {
-                0x0: SystemOp::c_ebreak({{
-                    if (RC2 != 0) {
-                        return std::make_shared<IllegalInstFault>(
-                                "source reg x1", machInst);
-                    }
-                    return std::make_shared<BreakpointFault>(xc->pcState());
-                }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
-                default: decode RC2 {
-                    0x0: Jump::c_jalr({{
-                        if (RC1 == 0) {
-                            return std::make_shared<IllegalInstFault>(
-                                    "source reg x0", machInst);
-                        }
+            0x1: decode RC2 {
+                0x0: decode RC1 {
+                    0x0: SystemOp::c_ebreak({{
+                        return std::make_shared<BreakpointFault>(
+                            xc->pcState());
+                    }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                    default: Jump::c_jalr({{
                         ra = rvSext(NPC);
                         NPC = rvZext(Rc1);
                     }}, IsIndirectControl, IsUncondControl, IsCall);
-                    default: CompressedROp::c_add({{
-                        Rc1_sd = rvSext(Rc1_sd + Rc2_sd);
-                    }});
                 }
+                default: CompressedROp::c_add({{
+                    // RC1 == 0 is HINT
+                    Rc1_sd = rvSext(Rc1_sd + Rc2_sd);
+                }});
             }
         }
         format CompressedStore {
