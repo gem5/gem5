@@ -2069,22 +2069,30 @@ decode QUADRANT default Unknown::unknown() {
                 0x69: decode CONV_SGN {
                     0x0: fcvt_d_w({{
                         RM_REQUIRED;
-                        Fd = (double)Rs1_sw;
+                        freg_t fd;
+                        fd = freg(i32_to_f64(Rs1_sw));
+                        Fd_bits = fd.v;
                     }}, FloatCvtOp);
                     0x1: fcvt_d_wu({{
                         RM_REQUIRED;
-                        Fd = (double)Rs1_uw;
+                        freg_t fd;
+                        fd = freg(ui32_to_f64(Rs1_uw));
+                        Fd_bits = fd.v;
                     }}, FloatCvtOp);
                     0x2: decode RVTYPE {
                         0x1: fcvt_d_l({{
                             RM_REQUIRED;
-                            Fd = (double)Rs1_sd;
+                            freg_t fd;
+                            fd = freg(i64_to_f64(Rs1_sd));
+                            Fd_bits = fd.v;
                         }}, FloatCvtOp);
                     }
                     0x3: decode RVTYPE {
                         0x1: fcvt_d_lu({{
                             RM_REQUIRED;
-                            Fd = (double)Rs1;
+                            freg_t fd;
+                            fd = freg(ui64_to_f64(Rs1));
+                            Fd_bits = fd.v;
                         }}, FloatCvtOp);
                     }
                 }
