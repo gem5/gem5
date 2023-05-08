@@ -100,12 +100,12 @@ let {{
                             xc->tcBase());
 
             uint8_t offset = imm & (0xf >> (findMsbSet(sizeof(TPElem))));
-            M5_VAR_USED uint8_t tile_idx =
+            [[maybe_unused]] uint8_t tile_idx =
                 imm >> (4 - findMsbSet(sizeof(TPElem)));
-            M5_VAR_USED uint8_t vec_idx = (WOp2 + offset) % eCount;
+            [[maybe_unused]] uint8_t vec_idx = (WOp2 + offset) % eCount;
 
             // Calculate the address
-            M5_VAR_USED Addr EA = XOp1 + XOp3 * sizeof(TPElem);
+            [[maybe_unused]] Addr EA = XOp1 + XOp3 * sizeof(TPElem);
 
             // Calculate the read predicate. One boolean per byte,
             // initialised to all true.
@@ -164,10 +164,10 @@ let {{
             unsigned eCount = ArmStaticInst::getCurSmeVecLen<uint8_t>(
                             xc->tcBase());
 
-            M5_VAR_USED uint8_t vec_index = (WOp2 + imm) % eCount;
+            [[maybe_unused]] uint8_t vec_index = (WOp2 + imm) % eCount;
 
             // Calculate the address
-            M5_VAR_USED Addr EA = XOp1 + imm;
+            [[maybe_unused]] Addr EA = XOp1 + imm;
             '''
 
         iop = InstObjParams(name, "Sme" + Name, "SmeLdrStrOp",
@@ -378,12 +378,12 @@ let {{
                             xc->tcBase());
 
             uint8_t offset = imm & (0xf >> (findMsbSet(sizeof(TPElem))));
-            M5_VAR_USED uint8_t tile_idx =
+            [[maybe_unused]] uint8_t tile_idx =
                 imm >> (4 - findMsbSet(sizeof(TPElem)));
-            M5_VAR_USED uint8_t vec_idx = (WOp2 + offset) % eCount;
+            [[maybe_unused]] uint8_t vec_idx = (WOp2 + offset) % eCount;
 
             // Calculate the address
-            M5_VAR_USED Addr EA = XOp1 + XOp3 * sizeof(TPElem);
+            [[maybe_unused]] Addr EA = XOp1 + XOp3 * sizeof(TPElem);
 
             // Calculate the write predicate. One boolean per byte,
             // initialised to all true.
@@ -446,7 +446,7 @@ let {{
             auto row = getTileHSlice<uint8_t>(ZA, 0, vec_index);
 
             // Calculate the address
-            M5_VAR_USED Addr EA = XOp1 + imm;
+            [[maybe_unused]] Addr EA = XOp1 + imm;
 
             uint8_t data[MaxSmeVecLenInBytes];
 

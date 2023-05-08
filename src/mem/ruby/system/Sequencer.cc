@@ -230,7 +230,7 @@ Sequencer::wakeup()
     Cycles current_time = curCycle();
 
     // Check across all outstanding requests
-    GEM5_VAR_USED int total_outstanding = 0;
+    [[maybe_unused]] int total_outstanding = 0;
 
     for (const auto &table_entry : m_RequestTable) {
         for (const auto &seq_req : table_entry.second) {
