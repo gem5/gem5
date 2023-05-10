@@ -159,7 +159,7 @@ build_and_run_SST () {
         "${gem5_root}" --rm  --memory="${docker_mem_limit}" \
         gcr.io/gem5-test/sst-env:${tag} bash -c "\
 scons build/${isa}/libgem5_${variant}.so -j${compile_threads} \
---without-tcmalloc --ignore-style && \
+--without-tcmalloc --duplicate-sources --ignore-style && \
 cd ext/sst && \
 make clean; make -j ${compile_threads} && \
 sst --add-lib-path=./ sst/example.py && \
