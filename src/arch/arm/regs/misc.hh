@@ -1125,6 +1125,7 @@ namespace ArmISA
         MISCREG_IMPLEMENTED,
         MISCREG_UNVERIFIABLE,   // Does the value change on every read (e.g. a
                                 // arch generic counter)
+        MISCREG_UNSERIALIZE,    // Should the checkpointed value be restored?
         MISCREG_WARN_NOT_FAIL,  // If MISCREG_IMPLEMENTED is deasserted, it
                                 // tells whether the instruction should raise a
                                 // warning or fail
@@ -1274,6 +1275,12 @@ namespace ArmISA
         unverifiable(bool v = true) const
         {
             entry.info[MISCREG_UNVERIFIABLE] = v;
+            return *this;
+        }
+        chain
+        unserialize(bool v = true) const
+        {
+            entry.info[MISCREG_UNSERIALIZE] = v;
             return *this;
         }
         chain
@@ -1595,7 +1602,7 @@ namespace ArmISA
           : entry(e)
         {
             // force unimplemented registers to be thusly declared
-            implemented(1);
+            implemented(1).unserialize(1);
         }
     };
 

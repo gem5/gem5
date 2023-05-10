@@ -1879,6 +1879,18 @@ ISA::unserialize(CheckpointIn &cp)
 {
     DPRINTF(Checkpoint, "Unserializing Arm Misc Registers\n");
     UNSERIALIZE_MAPPING(miscRegs, miscRegName, NUM_PHYS_MISCREGS);
+
+    for (auto idx = 0; idx < NUM_MISCREGS; idx++) {
+        if (!lookUpMiscReg[idx].info[MISCREG_UNSERIALIZE] &&
+            miscRegs[idx] != lookUpMiscReg[idx].reset()) {
+            warn("Checkpoint value for register %s does not match "
+                 "current configuration (checkpointed: %#x, current: %#x)",
+                 miscRegName[idx], miscRegs[idx],
+                 lookUpMiscReg[idx].reset());
+            miscRegs[idx] = lookUpMiscReg[idx].reset();
+        }
+    }
+
     CPSR tmp_cpsr = miscRegs[MISCREG_CPSR];
     updateRegMap(tmp_cpsr);
 }
