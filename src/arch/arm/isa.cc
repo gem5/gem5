@@ -320,6 +320,8 @@ ISA::redirectRegVHE(int misc_reg)
         return ELIsInHost(tc, currEL()) ? MISCREG_CNTPCT_EL0 : misc_reg;
       case MISCREG_SCTLR_EL12:
         return MISCREG_SCTLR_EL1;
+      case MISCREG_SCTLR2_EL12:
+        return MISCREG_SCTLR2_EL1;
       case MISCREG_CPACR_EL12:
         return MISCREG_CPACR_EL1;
       case MISCREG_ZCR_EL12:

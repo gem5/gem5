@@ -1355,5 +1355,16 @@ fgtEnabled(ThreadContext *tc)
             static_cast<SCR>(tc->readMiscReg(MISCREG_SCR_EL3)).fgten);
 }
 
+bool
+isHcrxEL2Enabled(ThreadContext *tc)
+{
+    if (!ArmSystem::has(ArmExtension::FEAT_HCX, tc))
+        return false;
+    if (ArmSystem::haveEL(tc, EL3) &&
+        !static_cast<SCR>(tc->readMiscReg(MISCREG_SCR_EL3)).hxen)
+        return false;
+    return EL2Enabled(tc);
+}
+
 } // namespace ArmISA
 } // namespace gem5

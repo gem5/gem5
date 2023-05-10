@@ -376,6 +376,7 @@ namespace ArmISA
     EndBitUnion(NSACR)
 
     BitUnion64(SCR)
+        Bitfield<44> sctlr2En;
         Bitfield<40> trndr;
         Bitfield<38> hxen;
         Bitfield<27> fgten;
@@ -1057,6 +1058,10 @@ namespace ArmISA
         Bitfield<1> afsr1EL1;
         Bitfield<0> afsr0EL1;
     EndBitUnion(HFGTR)
+
+    BitUnion64(HCRX)
+        Bitfield<15> sctlr2En;
+    EndBitUnion(HCRX)
 
 } // namespace ArmISA
 } // namespace gem5
