@@ -1282,11 +1282,13 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }}, IntDivOp);
                     }
-                    0x4: decode RVTYPE {
-                        0x0: rv32_zext_h({{
-                            Rd = Rs1_uh;
-                        }});
-                    }
+                    0x4: pack({{
+                        int xlen = rvSelect(32, 64);
+                        Rd = rvSext(
+                            (bits(Rs2, xlen/2-1, 0) << (xlen / 2)) | \
+                            bits(Rs1, xlen/2-1, 0)
+                        );
+                    }});
                     0x5: min({{
                         Rd_sd = std::min(rvSext(Rs1_sd), rvSext(Rs2_sd));
                     }});
@@ -1402,6 +1404,10 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }}, IntDivOp);
                     }
+                    0x4: packh({{
+                        // It doesn't need to sign ext as MSB is always 0
+                        Rd = (Rs2_ub << 8) | Rs1_ub;
+                    }});
                     0x5: maxu({{
                         Rd = rvSext(std::max(rvZext(Rs1), rvZext(Rs2)));
                     }});
@@ -1459,8 +1465,8 @@ decode QUADRANT default Unknown::unknown() {
                                 Rd_sd = Rs1_sw/Rs2_sw;
                             }
                         }}, IntDivOp);
-                        0x4: zext_h({{
-                            Rd = Rs1_uh;
+                        0x4: packw({{
+                            Rd_sd = sext<32>((Rs2_uh << 16) | Rs1_uh);
                         }});
                         0x10: sh2add_uw({{
                             Rd = (((uint64_t)Rs1_uw) << 2) + Rs2;
