@@ -377,6 +377,7 @@ namespace ArmISA
 
     BitUnion64(SCR)
         Bitfield<44> sctlr2En;
+        Bitfield<43> tcr2En;
         Bitfield<40> trndr;
         Bitfield<38> hxen;
         Bitfield<27> fgten;
@@ -1061,6 +1062,7 @@ namespace ArmISA
 
     BitUnion64(HCRX)
         Bitfield<15> sctlr2En;
+        Bitfield<14> tcr2En;
     EndBitUnion(HCRX)
 
 } // namespace ArmISA

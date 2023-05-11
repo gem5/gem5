@@ -332,6 +332,8 @@ ISA::redirectRegVHE(int misc_reg)
         return MISCREG_TTBR1_EL1;
       case MISCREG_TCR_EL12:
         return MISCREG_TCR_EL1;
+      case MISCREG_TCR2_EL12:
+        return MISCREG_TCR2_EL1;
       case MISCREG_SPSR_EL12:
         return MISCREG_SPSR_EL1;
       case MISCREG_ELR_EL12:
