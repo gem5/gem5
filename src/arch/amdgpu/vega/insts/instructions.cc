@@ -35665,13 +35665,13 @@ namespace VegaISA
     Inst_DS__DS_READ2ST64_B32::completeAcc(GPUDynInstPtr gpuDynInst)
     {
         VecOperandU32 vdst0(gpuDynInst, extData.VDST);
-        VecOperandU32 vdst1(gpuDynInst, extData.VDST + 2);
+        VecOperandU32 vdst1(gpuDynInst, extData.VDST + 1);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
-                vdst0[lane] = (reinterpret_cast<VecElemU64*>(
+                vdst0[lane] = (reinterpret_cast<VecElemU32*>(
                     gpuDynInst->d_data))[lane * 2];
-                vdst1[lane] = (reinterpret_cast<VecElemU64*>(
+                vdst1[lane] = (reinterpret_cast<VecElemU32*>(
                     gpuDynInst->d_data))[lane * 2 + 1];
             }
         }

@@ -32123,9 +32123,9 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
-                vdst0[lane] = (reinterpret_cast<VecElemU64*>(
+                vdst0[lane] = (reinterpret_cast<VecElemU32*>(
                     gpuDynInst->d_data))[lane * 2];
-                vdst1[lane] = (reinterpret_cast<VecElemU64*>(
+                vdst1[lane] = (reinterpret_cast<VecElemU32*>(
                     gpuDynInst->d_data))[lane * 2 + 1];
             }
         }
