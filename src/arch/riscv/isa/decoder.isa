@@ -1124,14 +1124,13 @@ decode QUADRANT default Unknown::unknown() {
                     0x10: sh1add({{
                         Rd = rvSext((Rs1 << 1) + Rs2);
                     }});
-                    0x14: decode RVTYPE {
-                        0x0: xperm4_32({{
-                            Rd_sw = _rvk_emu_xperm4_32(Rs1_sw, Rs2_sw);
-                        }});
-                        0x1: xperm4_64({{
+                    0x14: xperm4({{
+                        if (machInst.rv_type == RV32) {
+                            Rd_sd = _rvk_emu_xperm4_32(Rs1_sd, Rs2_sd);
+                        } else {
                             Rd_sd = _rvk_emu_xperm4_64(Rs1_sd, Rs2_sd);
-                        }});
-                    }
+                        }
+                    }});
                 }
                 0x3: decode FUNCT7 {
                     0x0: sltu({{
@@ -1181,14 +1180,13 @@ decode QUADRANT default Unknown::unknown() {
                     0x10: sh2add({{
                         Rd = rvSext((Rs1 << 2) + Rs2);
                     }});
-                    0x14: decode RVTYPE {
-                        0x0: xperm8_32({{
-                            Rd_sw = _rvk_emu_xperm8_32(Rs1_sw, Rs2_sw);
-                        }});
-                        0x1: xperm8_64({{
+                    0x14: xperm8({{
+                        if (machInst.rv_type == RV32) {
+                            Rd_sd = _rvk_emu_xperm8_32(Rs1_sd, Rs2_sd);
+                        } else {
                             Rd_sd = _rvk_emu_xperm8_64(Rs1_sd, Rs2_sd);
-                        }});
-                    }
+                        }
+                    }});
                     0x20: xnor({{
                         Rd = rvSext(~(Rs1 ^ Rs2));
                     }});
