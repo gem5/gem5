@@ -667,44 +667,24 @@ decode QUADRANT default Unknown::unknown() {
                             | (Rs1 << ((xlen - imm) & (xlen - 1))));
                     }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
                     0xd: decode RS2 {
-                        0x18: decode BIT25 {
-                            0x0: rv32_rev8({{
-                                uint32_t result = 0;
-                                result |=
-                                    ((Rs1_uw & 0xffUL) << 24)
-                                    | (((Rs1_uw >> 24) & 0xffUL));
-                                result |=
-                                    (((Rs1_uw >> 8) & 0xffUL) << 16)
-                                    | (((Rs1_uw >> 16) & 0xffUL) << 8);
-                                Rd = rvSext(result);
-                            }},
-                            imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
-                            0x1: rev8({{
-                                uint64_t result = 0;
-                                result |=
-                                    ((Rs1 & 0xffULL) << 56)
-                                    | (((Rs1 >> 56) & 0xffULL));
-                                result |=
-                                    (((Rs1 >> 8) & 0xffULL) << 48)
-                                    | (((Rs1 >> 48) & 0xffULL) << 8);
-                                result |=
-                                    (((Rs1 >> 16) & 0xffULL) << 40)
-                                    | (((Rs1 >> 40) & 0xffULL) << 16);
-                                result |=
-                                    (((Rs1 >> 24) & 0xffULL) << 32)
-                                    | (((Rs1 >> 32) & 0xffULL) << 24);
-                                Rd = result;
-                            }},
-                            imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
-                        }
-                        0x07: decode RVTYPE {
-                            0x0: rv32_brev8({{
-                                Rd_sw = _rvk_emu_brev8_32(Rs1_sw);
-                            }}, imm_code = {{ imm = SHAMT5; }});
-                            0x1: brev8({{
-                                Rd = _rvk_emu_brev8_64(Rs1);
-                            }}, imm_code = {{ imm = SHAMT6; }});
-                        }
+                        0x18: ROp::rev8({{
+                            if (rvSelect((bool)SHAMT6BIT5, false)) {
+                                return std::make_shared<IllegalInstFault>(
+                                        "shmat[5] != 0", machInst);
+                            }
+                            if (machInst.rv_type == RV32) {
+                                Rd_sd = _rvk_emu_grev_32(Rs1_sd, 0x18);
+                            } else {
+                                Rd_sd = _rvk_emu_grev_64(Rs1_sd, 0x38);
+                            }
+                        }});
+                        0x07: ROp::brev8({{
+                            if (machInst.rv_type == RV32) {
+                                Rd_sd = _rvk_emu_brev8_32(Rs1_sd);
+                            } else {
+                                Rd_sd = _rvk_emu_brev8_64(Rs1_sd);
+                            }
+                        }});
                     }
                 }
                 0x6: ori({{
