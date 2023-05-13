@@ -1021,27 +1021,27 @@ decode QUADRANT default Unknown::unknown() {
                         }
                     }
                     0x11: decode RVTYPE {
-                        0x0: aes32esi({{
-                            Rd_sw = _rvk_emu_aes32esi(Rs1_sw, Rs2_sw, (uint8_t)BS);
+                        0x0: BSOp::aes32esi({{
+                            Rd_sw = _rvk_emu_aes32esi(Rs1_sw, Rs2_sw, bs);
                         }});
                     }
                     0x13: decode RVTYPE {
-                        0x0: aes32esmi({{
-                            Rd_sw = _rvk_emu_aes32esmi(Rs1_sw, Rs2_sw, (uint8_t)BS);
+                        0x0: BSOp::aes32esmi({{
+                            Rd_sw = _rvk_emu_aes32esmi(Rs1_sw, Rs2_sw, bs);
                         }});
                     }
                     0x15: decode RVTYPE {
-                        0x0: aes32dsi({{
-                            Rd_sw = _rvk_emu_aes32dsi(Rs1_sw, Rs2_sw, (uint8_t)BS);
+                        0x0: BSOp::aes32dsi({{
+                            Rd_sw = _rvk_emu_aes32dsi(Rs1_sw, Rs2_sw, bs);
                         }});
                     }
                     0x17: decode RVTYPE {
-                        0x0: aes32dsmi({{
-                            Rd_sw = _rvk_emu_aes32dsmi(Rs1_sw, Rs2_sw, (uint8_t)BS);
+                        0x0: BSOp::aes32dsmi({{
+                            Rd_sw = _rvk_emu_aes32dsmi(Rs1_sw, Rs2_sw, bs);
                         }});
                     }
-                    0x18: sm4ed({{
-                        Rd_sw = _rvk_emu_sm4ed(Rs1_sw, Rs2_sw, (uint8_t)BS);
+                    0x18: BSOp::sm4ed({{
+                        Rd_sw = _rvk_emu_sm4ed(Rs1_sw, Rs2_sw, bs);
                     }});
                     0x19: decode BS {
                         0x0: decode RVTYPE {
@@ -1050,8 +1050,8 @@ decode QUADRANT default Unknown::unknown() {
                             }});
                         }
                     }
-                    0x1a: sm4ks({{
-                        Rd_sw = _rvk_emu_sm4ks(Rs1_sw, Rs2_sw, (uint8_t)BS);
+                    0x1a: BSOp::sm4ks({{
+                        Rd_sw = _rvk_emu_sm4ks(Rs1_sw, Rs2_sw, bs);
                     }});
                     0x1b: decode BS {
                         0x0: decode RVTYPE {
