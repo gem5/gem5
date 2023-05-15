@@ -166,6 +166,61 @@ TEST(TraceTest, LogMessageFlagEnabled)
     trace::disable();
 }
 
+/** Test that log messages are displayed for activated objects (single). */
+TEST(TraceTest, LogMessageActivateOne)
+{
+    std::stringstream ss;
+    trace::OstreamLogger logger(ss);
+
+    ObjectMatch activate_foo("Foo");
+    ObjectMatch activate_bar("Bar");
+
+    // Activate foo.
+    logger.setActivate(activate_foo);
+    logger.logMessage(Tick(100), "Foo", "", "Test message");
+    ASSERT_EQ(getString(&logger), "    100: Foo: Test message");
+    logger.logMessage(Tick(100), "Bar", "", "Test message");
+    ASSERT_EQ(getString(&logger), "");
+
+    // When setting a new activate, the old activates are not kept.
+    logger.setActivate(activate_bar);
+    logger.logMessage(Tick(100), "Foo", "", "Test message");
+    ASSERT_EQ(getString(&logger), "");
+    logger.logMessage(Tick(100), "Bar", "", "Test message");
+    ASSERT_EQ(getString(&logger), "    100: Bar: Test message");
+}
+
+/** Test that log messages are displayed for activated objects (multiple). */
+TEST(TraceTest, LogMessageActivateMultiple)
+{
+    std::stringstream ss;
+    trace::OstreamLogger logger(ss);
+
+    ObjectMatch activate_foo("Foo");
+    ObjectMatch activate_bar("Bar");
+    ObjectMatch activate_thy("Thy");
+
+    // Activate foo and bar
+    logger.setActivate(activate_foo);
+    logger.addActivate(activate_bar);
+    logger.logMessage(Tick(100), "Foo", "", "Test message");
+    ASSERT_EQ(getString(&logger), "    100: Foo: Test message");
+    logger.logMessage(Tick(100), "Bar", "", "Test message");
+    ASSERT_EQ(getString(&logger), "    100: Bar: Test message");
+    logger.logMessage(Tick(100), "Thy", "", "Test message");
+    ASSERT_EQ(getString(&logger), "");
+
+    // Make sure that when setting a new activate, the old activates
+    // are not kept
+    logger.setActivate(activate_thy);
+    logger.logMessage(Tick(100), "Foo", "", "Test message");
+    ASSERT_EQ(getString(&logger), "");
+    logger.logMessage(Tick(100), "Bar", "", "Test message");
+    ASSERT_EQ(getString(&logger), "");
+    logger.logMessage(Tick(100), "Thy", "", "Test message");
+    ASSERT_EQ(getString(&logger), "    100: Thy: Test message");
+}
+
 /** Test that log messages are not displayed for ignored objects (single). */
 TEST(TraceTest, LogMessageIgnoreOne)
 {
@@ -218,6 +273,28 @@ TEST(TraceTest, LogMessageIgnoreMultiple)
     logger.logMessage(Tick(100), "Bar", "", "Test message");
     ASSERT_EQ(getString(&logger), "    100: Bar: Test message");
     logger.logMessage(Tick(100), "Thy", "", "Test message");
+    ASSERT_EQ(getString(&logger), "");
+}
+
+/** Test that log messages are displayed properly within ignore and activate */
+TEST(TraceTest, LogMessageActivateAndIgnore)
+{
+    std::stringstream ss;
+    trace::OstreamLogger logger(ss);
+
+    ObjectMatch foo("Foo");
+    ObjectMatch bar("Bar");
+
+    // Activate foo and ignore bar
+    logger.setActivate(foo);
+    logger.setIgnore(bar);
+    logger.logMessage(Tick(100), "Foo", "", "Test message");
+    ASSERT_EQ(getString(&logger), "    100: Foo: Test message");
+    logger.logMessage(Tick(100), "Bar", "", "Test message");
+    ASSERT_EQ(getString(&logger), "");
+    logger.logMessage(Tick(100), "Thy", "", "Test message");
+    // When the Activate list is not empty and thy is not in the list,
+    // log of Thy will not be displayed.
     ASSERT_EQ(getString(&logger), "");
 }
 
