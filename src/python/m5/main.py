@@ -276,6 +276,13 @@ def parse_options():
         " to be compressed automatically [Default: %default]",
     )
     option(
+        "--debug-activate",
+        metavar="EXPR[,EXPR]",
+        action="append",
+        split=",",
+        help="Activate EXPR sim objects",
+    )
+    option(
         "--debug-ignore",
         metavar="EXPR",
         action="append",
@@ -556,6 +563,10 @@ def main():
         event.mainq.schedule(e, options.debug_end)
 
     trace.output(options.debug_file)
+
+    for activate in options.debug_activate:
+        _check_tracing()
+        trace.activate(activate)
 
     for ignore in options.debug_ignore:
         _check_tracing()
