@@ -123,7 +123,7 @@ namespace ArmISA
         Bitfield<19, 16> crc32;
         Bitfield<15, 12> sha2;
         Bitfield<11, 8> sha1;
-        Bitfield<3, 0> aes;
+        Bitfield<7, 4> aes;
     EndBitUnion(AA64ISAR0)
 
     BitUnion64(AA64ISAR1)
