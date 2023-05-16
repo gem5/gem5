@@ -2278,7 +2278,8 @@ decode QUADRANT default Unknown::unknown() {
                                 && xc->readMiscReg(MISCREG_NMIP) == 0) {
                                 tc->quiesce();
                             }
-                        }}, No_OpClass);
+                        }}, IsNonSpeculative, IsQuiesce,
+                            IsSerializeAfter, No_OpClass);
                     }
                     0x9: sfence_vma({{
                         STATUS status = xc->readMiscReg(MISCREG_STATUS);
