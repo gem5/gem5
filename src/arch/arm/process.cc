@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012, 2017-2018 ARM Limited
+ * Copyright (c) 2010, 2012, 2017-2018, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -207,7 +207,11 @@ ArmProcess64::armHwcapImpl() const
         Arm_Dit = 1 << 24,
         Arm_Uscat = 1 << 25,
         Arm_Ilrcpc = 1 << 26,
-        Arm_Flagm = 1 << 27
+        Arm_Flagm = 1 << 27,
+        Arm_Sbss = 1 << 28,
+        Arm_Sb = 1 << 29,
+        Arm_Paca = 1 << 30,
+        Arm_Pacg = 1 << 31
     };
 
     uint32_t hwcap = 0;
