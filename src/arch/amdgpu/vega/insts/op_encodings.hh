@@ -272,6 +272,99 @@ namespace VegaISA
         InstFormat extData;
         uint32_t varSize;
 
+        template<typename T>
+        T sdwaSrcHelper(GPUDynInstPtr gpuDynInst, T & src1)
+        {
+            T src0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
+            // use copies of original src0, src1, and dest during selecting
+            T origSrc0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
+            T origSrc1(gpuDynInst, instData.VSRC1);
+
+            src0_sdwa.read();
+            origSrc0_sdwa.read();
+            origSrc1.read();
+
+            DPRINTF(VEGA, "Handling %s SRC SDWA. SRC0: register v[%d], "
+                "DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: %d, SRC0_SEXT: "
+                "%d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: %d, SRC1_SEXT: %d, "
+                "SRC1_NEG: %d, SRC1_ABS: %d\n",
+                opcode().c_str(), extData.iFmt_VOP_SDWA.SRC0,
+                extData.iFmt_VOP_SDWA.DST_SEL, extData.iFmt_VOP_SDWA.DST_U,
+                extData.iFmt_VOP_SDWA.CLMP, extData.iFmt_VOP_SDWA.SRC0_SEL,
+                extData.iFmt_VOP_SDWA.SRC0_SEXT,
+                extData.iFmt_VOP_SDWA.SRC0_NEG, extData.iFmt_VOP_SDWA.SRC0_ABS,
+                extData.iFmt_VOP_SDWA.SRC1_SEL,
+                extData.iFmt_VOP_SDWA.SRC1_SEXT,
+                extData.iFmt_VOP_SDWA.SRC1_NEG,
+                extData.iFmt_VOP_SDWA.SRC1_ABS);
+
+            processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa,
+                            src1, origSrc1);
+
+            return src0_sdwa;
+        }
+
+        template<typename T>
+        void sdwaDstHelper(GPUDynInstPtr gpuDynInst, T & vdst)
+        {
+            T origVdst(gpuDynInst, instData.VDST);
+
+            Wavefront *wf = gpuDynInst->wavefront();
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    origVdst[lane] = vdst[lane]; // keep copy consistent
+                }
+            }
+
+            processSDWA_dst(extData.iFmt_VOP_SDWA, vdst, origVdst);
+        }
+
+        template<typename T>
+        T dppHelper(GPUDynInstPtr gpuDynInst, T & src1)
+        {
+            T src0_dpp(gpuDynInst, extData.iFmt_VOP_DPP.SRC0);
+            src0_dpp.read();
+
+            DPRINTF(VEGA, "Handling %s SRC DPP. SRC0: register v[%d], "
+                "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, SRC1_ABS: %d, "
+                "SRC1_NEG: %d, BC: %d, BANK_MASK: %d, ROW_MASK: %d\n",
+                opcode().c_str(), extData.iFmt_VOP_DPP.SRC0,
+                extData.iFmt_VOP_DPP.DPP_CTRL, extData.iFmt_VOP_DPP.SRC0_ABS,
+                extData.iFmt_VOP_DPP.SRC0_NEG, extData.iFmt_VOP_DPP.SRC1_ABS,
+                extData.iFmt_VOP_DPP.SRC1_NEG, extData.iFmt_VOP_DPP.BC,
+                extData.iFmt_VOP_DPP.BANK_MASK, extData.iFmt_VOP_DPP.ROW_MASK);
+
+            processDPP(gpuDynInst, extData.iFmt_VOP_DPP, src0_dpp, src1);
+
+            return src0_dpp;
+        }
+
+        template<typename T>
+        void vop2Helper(GPUDynInstPtr gpuDynInst,
+                        void (*fOpImpl)(T&, T&, T&, Wavefront*))
+        {
+            Wavefront *wf = gpuDynInst->wavefront();
+            T src0(gpuDynInst, instData.SRC0);
+            T src1(gpuDynInst, instData.VSRC1);
+            T vdst(gpuDynInst, instData.VDST);
+
+            src0.readSrc();
+            src1.read();
+
+            if (isSDWAInst()) {
+                T src0_sdwa = sdwaSrcHelper(gpuDynInst, src1);
+                fOpImpl(src0_sdwa, src1, vdst, wf);
+                sdwaDstHelper(gpuDynInst, vdst);
+            } else if (isDPPInst()) {
+                T src0_dpp = dppHelper(gpuDynInst, src1);
+                fOpImpl(src0_dpp, src1, vdst, wf);
+            } else {
+                fOpImpl(src0, src1, vdst, wf);
+            }
+
+            vdst.write();
+        }
+
       private:
         bool hasSecondDword(InFmt_VOP2 *);
     }; // Inst_VOP2
