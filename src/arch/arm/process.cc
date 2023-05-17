@@ -251,6 +251,8 @@ ArmProcess64::armHwcapImpl() const
     hwcap |= (isa_r1.fcma >= 1) ? Arm_Fcma : 0;
     hwcap |= (isa_r1.lrcpc >= 1) ? Arm_Lrcpc : 0;
     hwcap |= (isa_r1.lrcpc >= 2) ? Arm_Ilrcpc : 0;
+    hwcap |= (isa_r1.apa >= 1 || isa_r1.api >= 1) ? Arm_Paca : 0;
+    hwcap |= (isa_r1.gpa >= 1 || isa_r1.gpi >= 1) ? Arm_Pacg : 0;
 
     const AA64MMFR2 mm_fr2 = tc->readMiscReg(MISCREG_ID_AA64MMFR2_EL1);
 
