@@ -162,9 +162,23 @@ void
 AMDGPUNbio::writeFrame(PacketPtr pkt, Addr offset)
 {
     if (offset == psp_ring_listen_addr) {
-        assert(pkt->getSize() == 8);
-        psp_ring_dev_addr = pkt->getLE<uint64_t>()
-                          - gpuDevice->getVM().getSysAddrRangeLow();
+        DPRINTF(AMDGPUDevice, "Saw psp_ring_listen_addr with size %ld value "
+                "%ld\n", pkt->getSize(), pkt->getUintX(ByteOrder::little));
+
+        /*
+         * In ROCm versions 4.x this packet is a 4 byte value. In ROCm 5.x
+         * the packet is 8 bytes and mapped as a system address which needs
+         * to be subtracted out to get the framebuffer address.
+         */
+        if (pkt->getSize() == 4) {
+            psp_ring_dev_addr = pkt->getLE<uint32_t>();
+        } else if (pkt->getSize() == 8) {
+            psp_ring_dev_addr = pkt->getUintX(ByteOrder::little)
+                              - gpuDevice->getVM().getSysAddrRangeLow();
+        } else {
+            panic("Invalid write size to psp_ring_listen_addr\n");
+        }
+
         DPRINTF(AMDGPUDevice, "Setting PSP ring device address to %#lx\n",
                 psp_ring_dev_addr);
     }
