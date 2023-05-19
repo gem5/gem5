@@ -61,8 +61,14 @@ class U74PredFU(MinorDefaultPredFU):
     pass
 
 
-class U74MemFU(MinorDefaultMemFU):
-    opLat = 3
+class U74MemReadFU(MinorDefaultMemFU):
+    opClasses = minorMakeOpClassSet(["MemRead", "FloatMemRead"])
+    opLat = 2
+
+
+class U74MemWriteFU(MinorDefaultMemFU):
+    opClasses = minorMakeOpClassSet(["MemWrite", "FloatMemWrite"])
+    opLat = 2
 
 
 class U74MiscFU(MinorDefaultMiscFU):
@@ -77,18 +83,24 @@ class U74FUPool(MinorFUPool):
         U74IntDivFU(),
         U74FloatSimdFU(),
         U74PredFU(),
-        U74MemFU(),
+        U74MemReadFU(),
+        U74MemWriteFU(),
         U74MiscFU(),
     ]
 
 
 class U74BP(TournamentBP):
-    BTBEntries = 16
-    RASSize = 6
+    BTBEntries = 32
+    RASSize = 12
     localHistoryTableSize = 4096  # is 3.6 KiB but gem5 requires power of 2
-
+    localPredictorSize = 16384
+    globalPredictorSize = 16384
+    choicePredictorSize = 16384
+    localCtrBits = 4
+    globalCtrBits = 4
+    choiceCtrBits = 4
     indirectBranchPred = SimpleIndirectPredictor()
-    indirectBranchPred.indirectSets = 8
+    indirectBranchPred.indirectSets = 16
 
 
 class U74CPU(RiscvMinorCPU):
@@ -97,26 +109,49 @@ class U74CPU(RiscvMinorCPU):
     This information about the CPU can be found on page 15 of
     gem5_rsk_gem5-21.2.pdf at https://github.com/arm-university/arm-gem5-rsk
 
-    The only parameter that is changed is the decodeToExecuteForwardDelay.
-    This is changed from 1 to 2 to avoid a PMC address fault.
+    The parameters that are changed are:
+    - threadPolicy:
+        This is initialized to "SingleThreaded".
+    - decodeToExecuteForwardDelay:
+        This is changed from 1 to 2 to avoid a PMC address fault.
+    - fetch1ToFetch2BackwardDelay:
+        This is changed from 1 to 0 to better match hardware performance.
+    - fetch2InputBufferSize:
+        This is changed from 2 to 1 to better match hardware performance.
+    - decodeInputBufferSize:
+        This is changed from 3 to 2 to better match hardware performance.
+    - decodeToExecuteForwardDelay:
+        This is changed from 2 to 1 to better match hardware performance.
+    - executeInputBufferSize:
+        This is changed from 7 to 4 to better match hardware performance.
+    - executeMaxAccessesInMemory:
+        This is changed from 2 to 1 to better match hardware performance.
+    - executeLSQStoreBufferSize:
+        This is changed from 5 to 3 to better match hardware performance.
+    - executeBranchDelay:
+        This is changed from 1 to 2 to better match hardware performance.
+    - enableIdling:
+        This is changed to False to better match hardware performance.
 
     """
+
+    threadPolicy = "SingleThreaded"
 
     # Fetch1 stage
     fetch1LineSnapWidth = 0
     fetch1LineWidth = 0
     fetch1FetchLimit = 1
     fetch1ToFetch2ForwardDelay = 1
-    fetch1ToFetch2BackwardDelay = 1
+    fetch1ToFetch2BackwardDelay = 0
 
     # Fetch2 stage
-    fetch2InputBufferSize = 2
+    fetch2InputBufferSize = 1
     fetch2ToDecodeForwardDelay = 1
     fetch2CycleInput = True
 
     # Decode stage
-    decodeInputBufferSize = 3
-    decodeToExecuteForwardDelay = 2
+    decodeInputBufferSize = 2
+    decodeToExecuteForwardDelay = 1
     decodeInputWidth = 2
     decodeCycleInput = True
 
@@ -127,17 +162,17 @@ class U74CPU(RiscvMinorCPU):
     executeMemoryIssueLimit = 1
     executeCommitLimit = 2
     executeMemoryCommitLimit = 1
-    executeInputBufferSize = 7
-    executeMaxAccessesInMemory = 2
+    executeInputBufferSize = 4
+    executeMaxAccessesInMemory = 1
     executeLSQMaxStoreBufferStoresPerCycle = 2
     executeLSQRequestsQueueSize = 1
     executeLSQTransfersQueueSize = 2
-    executeLSQStoreBufferSize = 5
-    executeBranchDelay = 1
+    executeLSQStoreBufferSize = 3
+    executeBranchDelay = 2
     executeSetTraceTimeOnCommit = True
     executeSetTraceTimeOnIssue = False
     executeAllowEarlyMemoryIssue = True
-    enableIdling = True
+    enableIdling = False
 
     # Functional Units and Branch Prediction
     executeFuncUnits = U74FUPool()
@@ -152,13 +187,21 @@ class U74Core(BaseCPUCore):
       - IntFU: 1 cycle
       - IntMulFU: 3 cycles
       - IntDivFU: 6 cycles (NOTE: latency is variable, but is set to 6 cycles)
-      - MemFU: 3 cycles
+      - MemReadFU: 2 cycles
+      - MemWriteFU: 2 cycles
     The branch predictor is a TournamentBP, based on Section 4.2.5 on page 38.
-      - BTBEntries: 16 entries
-      - RASSize: 6 entries
-      - IndirectSets: 8 sets
+      - BTBEntries: 32 entries
+      - RASSize: 12 entries
+      - IndirectSets: 16 sets
+      - localPredictorSize: 16384
+      - globalPredictorSize: 16384
+      - choicePredictorSize: 16384
+      - localCtrBits: 4
+      - globalCtrBits: 4
+      - choiceCtrBits: 4
       - localHistoryTableSize: 4096 B
-    NOTE: The BHT of the HiFive Board is 3.6KiB but gem5 requires a power of 2, so the BHT is 4096B.
+    NOTE: The TournamentBP deviates from the actual BP.
+    This configuration performs the best in relation to the hardware.
     """
 
     def __init__(

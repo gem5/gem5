@@ -109,7 +109,7 @@ class RISCVMatchedBoard(
     def __init__(
         self,
         clk_freq: str = "1.2GHz",
-        l2_size: str = "2MB",
+        l2_size: str = "2MiB",
         is_fs: bool = False,
     ) -> None:
         """
