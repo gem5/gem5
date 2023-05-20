@@ -48,6 +48,7 @@ interpretters, and so the exact same interpretter should be used both to run
 this script, and to read in and execute the marshalled code later.
 """
 
+import locale
 import marshal
 import sys
 import zlib
@@ -64,6 +65,11 @@ from code_formatter import code_formatter
 if len(sys.argv) < 4:
     print(f"Usage: {sys.argv[0]} CPP PY MODPATH ABSPATH", file=sys.stderr)
     sys.exit(1)
+
+# Set the Python's locale settings manually based on the `LC_CTYPE`
+# environment variable
+if "LC_CTYPE" in os.environ:
+    locale.setlocale(locale.LC_CTYPE, os.environ["LC_CTYPE"])
 
 _, cpp, python, modpath, abspath = sys.argv
 
