@@ -1,4 +1,4 @@
-# Copyright (c) 2022 The Regents of the University of California
+# Copyright (c) 2023 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@ import unittest
 import tempfile
 import os
 from typing import Dict
+import json
 
 from gem5.resources.downloader import (
     _get_resources_json_at_path,
@@ -42,48 +43,102 @@ class ResourceDownloaderTestSuite(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> str:
         """
-        This creates a simple resource.json temp file for testing purposes.
+        This creates a simple resources collection for testing
         """
-
-        file_contents = (
-            "{"
-            + f'"version" : "{_resources_json_version_required()}",'
-            + """
-    "url_base" : "http://dist.gem5.org/dist/v21-2",
-    "previous-versions" : {},
-    "resources": [
-        {
-            "type": "resource",
-            "name" : "riscv-disk-img",
-            "documentation" : "A simple RISCV disk image based on busybox.",
-            "architecture": "RISCV",
-            "is_zipped" : true,
-            "md5sum" : "d6126db9f6bed7774518ae25aa35f153",
-            "url": "{url_base}/images/riscv/busybox/riscv-disk.img.gz",
-            "source" : "src/riscv-fs",
-            "additional_metadata" : {
-                "root_partition": null
-            }
-        },
-        {
-            "type": "resource",
-            "name" : "riscv-lupio-busybox-img",
-            "documentation" : "A RISCV disk image, based on busybox, to ...",
-            "architecture": "RISCV",
-            "is_zipped" : true,
-            "md5sum" : "e5bee8a31f45f4803f87c0d781553ccc",
-            "url": "{url_base}/images/riscv/busybox/riscv-lupio-busybox.img",
-            "source" : "src/lupv",
-            "additional_metadata" : {
-                "root_partition": "1"
-            }
-        }
-    ]
-}
-        """
-        )
+        file_contents = [
+            {
+                "category": "binary",
+                "id": "this-is-a-test-resource",
+                "description": "This is a test resource",
+                "architecture": "X86",
+                "size": 13816,
+                "tags": ["asmtest", "testing", "riscv", "testing"],
+                "is_zipped": False,
+                "md5sum": "4e70a98b6976969deffff91eed17fba1",
+                "source": "src/asmtest",
+                "url": "http://dist.gem5.org/dist/develop/test-progs/asmtest/bin/rv64mi-p-sbreak",
+                "code_examples": [],
+                "license": " BSD-3-Clause",
+                "author": [],
+                "source_url": "https://github.com/gem5/gem5-resources/tree/develop/src/asmtest",
+                "resource_version": "1.0.0",
+                "gem5_versions": ["23.0"],
+                "example_usage": 'get_resource(resource_name="rv64mi-p-sbreak")',
+            },
+            {
+                "category": "binary",
+                "id": "this-is-a-test-resource",
+                "description": "This is a test resource but double newer",
+                "architecture": "X86",
+                "size": 13816,
+                "tags": ["asmtest"],
+                "is_zipped": False,
+                "md5sum": "4e70a98b6976969deffff91eed17fba1",
+                "source": "src/asmtest",
+                "url": "http://dist.gem5.org/dist/develop/test-progs/asmtest/bin/rv64mi-p-sbreak",
+                "code_examples": [],
+                "license": " BSD-3-Clause",
+                "author": [],
+                "source_url": "https://github.com/gem5/gem5-resources/tree/develop/src/asmtest",
+                "resource_version": "2.0.0",
+                "gem5_versions": ["23.1"],
+                "example_usage": 'get_resource(resource_name="rv64mi-p-sbreak")',
+            },
+            {
+                "category": "simpoint",
+                "id": "test-version",
+                "description": "Simpoints for running the 'x86-print-this' resource with the parameters `\"print this\" 15000`. This is encapsulated in the 'x86-print-this-15000-with-simpoints' workload.",
+                "architecture": "X86",
+                "size": 10240,
+                "tags": [],
+                "is_zipped": False,
+                "md5sum": "3fcffe3956c8a95e3fb82e232e2b41fb",
+                "is_tar_archive": True,
+                "url": "http://dist.gem5.org/dist/develop/simpoints/x86-print-this-15000-simpoints-20221013.tar",
+                "simpoint_interval": 1000000,
+                "warmup_interval": 1000000,
+                "code_examples": [],
+                "license": "",
+                "author": [],
+                "source_url": "",
+                "resource_version": "1.0.0",
+                "gem5_versions": ["23.0"],
+                "workload_name": "x86-print-this-15000-with-simpoints",
+                "example_usage": 'get_resource(resource_name="x86-print-this-1500-simpoints")',
+                "workloads": [
+                    "x86-print-this-15000-with-simpoints",
+                    "x86-print-this-15000-with-simpoints-and-checkpoint",
+                ],
+            },
+            {
+                "category": "file",
+                "id": "test-version",
+                "description": "Simpoints for running the 'x86-print-this' resource with the parameters `\"print this\" 15000`. This is encapsulated in the 'x86-print-this-15000-with-simpoints' workload.",
+                "architecture": "X86",
+                "size": 10240,
+                "tags": [],
+                "is_zipped": False,
+                "md5sum": "3fcffe3956c8a95e3fb82e232e2b41fb",
+                "is_tar_archive": True,
+                "url": "http://dist.gem5.org/dist/develop/simpoints/x86-print-this-15000-simpoints-20221013.tar",
+                "simpoint_interval": 1000000,
+                "warmup_interval": 1000000,
+                "code_examples": [],
+                "license": "",
+                "author": [],
+                "source_url": "",
+                "resource_version": "0.2.0",
+                "gem5_versions": ["23.0"],
+                "workload_name": "x86-print-this-15000-with-simpoints",
+                "example_usage": 'get_resource(resource_name="x86-print-this-1500-simpoints")',
+                "workloads": [
+                    "x86-print-this-15000-with-simpoints",
+                    "x86-print-this-15000-with-simpoints-and-checkpoint",
+                ],
+            },
+        ]
         file = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        file.write(file_contents)
+        file.write(json.dumps(file_contents))
         file.close()
         cls.file_path = file.name
 
@@ -100,14 +155,16 @@ class ResourceDownloaderTestSuite(unittest.TestCase):
         "create_temp_resources_json" has been loaded correctly into a Python
         dictionary.
         """
-        self.assertTrue("resources" in json)
-        self.assertEquals(2, len(json["resources"]))
-        self.assertTrue("name" in json["resources"][0])
-        self.assertEquals("riscv-disk-img", json["resources"][0]["name"])
-        self.assertTrue("name" in json["resources"][1])
-        self.assertEquals(
-            "riscv-lupio-busybox-img", json["resources"][1]["name"]
-        )
+        self.assertEquals(4, len(json))
+        self.assertTrue("id" in json[0])
+        self.assertEquals("this-is-a-test-resource", json[0]["id"])
+        self.assertEquals("binary", json[0]["category"])
+        self.assertTrue("id" in json[1])
+        self.assertEquals("this-is-a-test-resource", json[1]["id"])
+        self.assertTrue("id" in json[2])
+        self.assertEquals("test-version", json[2]["id"])
+        self.assertTrue("id" in json[3])
+        self.assertEquals("test-version", json[3]["id"])
 
     def test_get_resources_json_at_path(self) -> None:
         # Tests the gem5.resources.downloader._get_resources_json_at_path()

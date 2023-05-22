@@ -24,10 +24,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .downloader import get_workload_json_obj
 from .resource import obtain_resource
+from .client import get_resource_json_obj
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, List, Optional
 
 
 class AbstractWorkload:
@@ -155,7 +155,11 @@ class Workload(AbstractWorkload):
     """
 
     def __init__(
-        self, workload_name: str, resource_directory: Optional[str] = None
+        self,
+        workload_name: str,
+        resource_directory: Optional[str] = None,
+        resource_version: Optional[str] = None,
+        clients: Optional[List] = None,
     ) -> None:
         """
         This constructor will load the workload details from the workload with
@@ -167,13 +171,13 @@ class Workload(AbstractWorkload):
 
         ```json
         {
-            "type" : "workload",
-            "name" : "x86-ubuntu-18.04-echo-hello",
-            "documentation" : "Description of workload here",
+            "category" : "workload",
+            "id" : "x86-ubuntu-18.04-echo-hello",
+            "description" : "Description of workload here",
             "function" : "set_kernel_disk_workload",
             "resources" : {
                 "kernel" : "x86-linux-kernel-5.4.49",
-                "disk_image" : "x86-ubuntu-18.04-img"
+                "disk-image" : "x86-ubuntu-18.04-img"
             },
             "additional_params" : {
                 "readfile_contents" : "m5_exit; echo 'hello'; m5_exit"
@@ -187,7 +191,7 @@ class Workload(AbstractWorkload):
         ```python
         board.set_kernel_disk_workload(
             kernel = Resource("x86-linux-kernel-5.4.49"),
-            disk_image = Resource("x86-ubuntu-18.04-img"),
+            disk-image = Resource("x86-ubuntu-18.04-img"),
             readfile_contents = "m5_exit; echo 'hello'; m5_exit",
         )
         ```
@@ -198,7 +202,12 @@ class Workload(AbstractWorkload):
         any resources should be download and accessed from. If None, a default
         location will be used. None by default.
         """
-        workload_json = get_workload_json_obj(workload_name=workload_name)
+
+        workload_json = get_resource_json_obj(
+            workload_name,
+            resource_version=resource_version,
+            clients=clients,
+        )
 
         func = workload_json["function"]
         assert isinstance(func, str)

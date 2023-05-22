@@ -172,6 +172,7 @@ class MatchStdout(DerivedGoldStandard):
         re.compile("^Using GPU kernel code file\(s\) "),
         re.compile("^.* not found locally\. Downloading"),
         re.compile("^Finished downloading"),
+        re.compile("^info: Using default config"),
     ]
 
 
