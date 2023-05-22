@@ -165,6 +165,7 @@ class SDMAEngine : public DmaVirtDevice
     void setGPUDevice(AMDGPUDevice *gpu_device);
 
     void setId(int _id) { id = _id; }
+    int getId() const { return id; }
     /**
      * Returns the client id for the Interrupt Handler.
      */

@@ -604,7 +604,7 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     idx = 0;
     for (auto & it : sdmaEngs) {
         sdma_engs_offset[idx] = it.first;
-        sdma_engs[idx] = idx;
+        sdma_engs[idx] = it.second->getId();
         ++idx;
     }
 
@@ -675,8 +675,9 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
         UNSERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs)/sizeof(sdma_engs[0]));
 
         for (int idx = 0; idx < sdma_engs_size; ++idx) {
-            assert(sdmaIds.count(idx));
-            SDMAEngine *sdma = sdmaIds[idx];
+            int sdma_id = sdma_engs[idx];
+            assert(sdmaIds.count(sdma_id));
+            SDMAEngine *sdma = sdmaIds[sdma_id];
             sdmaEngs.insert(std::make_pair(sdma_engs_offset[idx], sdma));
         }
     }
