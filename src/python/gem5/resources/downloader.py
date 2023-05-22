@@ -41,6 +41,7 @@ from tempfile import gettempdir
 from urllib.error import HTTPError
 from typing import List, Dict, Set, Optional
 
+from .client import get_resource_json_obj
 from .md5_utils import md5_file, md5_dir
 from ..utils.progress_bar import tqdm, progress_hook
 
@@ -398,6 +399,8 @@ def get_resource(
     unzip: bool = True,
     untar: bool = True,
     download_md5_mismatch: bool = True,
+    resource_version: Optional[str] = None,
+    clients: Optional[List] = None,
 ) -> None:
     """
     Obtains a gem5 resource and stored it to a specified location. If the
@@ -419,6 +422,13 @@ def get_resource(
     will delete this local resource and re-download it if this parameter is
     True. True by default.
 
+    :param resource_version: The version of the resource to be obtained. If
+    None, the latest version of the resource compatible with the working
+    directory's gem5 version will be obtained. None by default.
+
+    :param clients: A list of clients to use when obtaining the resource. If
+    None, all clients will be used. None by default.
+
     :raises Exception: An exception is thrown if a file is already present at
     `to_path` but it does not have the correct md5 sum. An exception will also
     be thrown is a directory is present at `to_path`
@@ -430,11 +440,13 @@ def get_resource(
     # minutes.Most resources should be downloaded and decompressed in this
     # timeframe, even on the most constrained of systems.
     with FileLock(f"{to_path}.lock", timeout=900):
-
-        resource_json = get_resources_json_obj(resource_name)
+        resource_json = get_resource_json_obj(
+            resource_name,
+            resource_version=resource_version,
+            clients=clients,
+        )
 
         if os.path.exists(to_path):
-
             if os.path.isfile(to_path):
                 md5 = md5_file(Path(to_path))
             else:
@@ -495,9 +507,8 @@ def get_resource(
             )
         )
 
-        # Get the URL. The URL may contain '{url_base}' which needs replaced
-        # with the correct value.
-        url = resource_json["url"].format(url_base=_get_url_base())
+        # Get the URL.
+        url = resource_json["url"]
 
         _download(url=url, download_to=download_dest)
         print(f"Finished downloading resource '{resource_name}'.")

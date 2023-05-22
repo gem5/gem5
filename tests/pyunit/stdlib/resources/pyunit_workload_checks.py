@@ -1,4 +1,4 @@
-# Copyright (c) 2022 The Regents of the University of California
+# Copyright (c) 2023 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,29 @@ from gem5.resources.resource import (
 
 from typing import Dict
 
+from gem5.resources.client_api.client_wrapper import ClientWrapper
+from unittest.mock import patch
+from pathlib import Path
+
+mock_config_json1 = {
+    "sources": {
+        "baba": {
+            "url": Path(__file__).parent
+            / "refs/workload-checks-custom-workload.json",
+            "isMongo": False,
+        }
+    },
+}
+
+mock_config_json2 = {
+    "sources": {
+        "baba": {
+            "url": Path(__file__).parent / "refs/workload-checks.json",
+            "isMongo": False,
+        }
+    },
+}
+
 
 class CustomWorkloadTestSuite(unittest.TestCase):
     """
@@ -43,8 +66,11 @@ class CustomWorkloadTestSuite(unittest.TestCase):
     """
 
     @classmethod
+    @patch(
+        "gem5.resources.client.clientwrapper",
+        new=ClientWrapper(mock_config_json1),
+    )
     def setUpClass(cls) -> None:
-
         os.environ["GEM5_RESOURCE_JSON"] = os.path.join(
             os.path.realpath(os.path.dirname(__file__)),
             "refs",
@@ -114,8 +140,7 @@ class CustomWorkloadTestSuite(unittest.TestCase):
             "test", self.custom_workload.get_parameters()["binary"]
         )
 
-        # We set the overridden parameter back to it's old value.
-        self.custom_workload.set_parameter("binary", old_value)
+        # We set the overridden parameter back to it's old valu        self.custom_workload.set_parameter("binary", old_value)
 
 
 class WorkloadTestSuite(unittest.TestCase):
@@ -124,8 +149,11 @@ class WorkloadTestSuite(unittest.TestCase):
     """
 
     @classmethod
+    @patch(
+        "gem5.resources.client.clientwrapper",
+        ClientWrapper(mock_config_json2),
+    )
     def setUpClass(cls):
-
         os.environ["GEM5_RESOURCE_JSON"] = os.path.join(
             os.path.realpath(os.path.dirname(__file__)),
             "refs",
@@ -157,9 +185,9 @@ class WorkloadTestSuite(unittest.TestCase):
         self.assertTrue("kernel" in parameters)
         self.assertTrue(isinstance(parameters["kernel"], BinaryResource))
 
-        self.assertTrue("disk_image" in parameters)
+        self.assertTrue("disk-image" in parameters)
         self.assertTrue(
-            isinstance(parameters["disk_image"], DiskImageResource)
+            isinstance(parameters["disk-image"], DiskImageResource)
         )
 
         self.assertTrue("readfile_contents" in parameters)
