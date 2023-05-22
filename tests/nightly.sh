@@ -173,9 +173,11 @@ build_and_run_systemc () {
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --memory="${docker_mem_limit}" --rm \
         gcr.io/gem5-test/ubuntu-22.04_min-dependencies:${tag} bash -c "\
-scons -j${compile_threads} --ignore-style build/ARM/gem5.opt && \
-scons --with-cxx-config --without-python --without-tcmalloc USE_SYSTEMC=0 \
-    -j${compile_threads} build/ARM/libgem5_opt.so \
+scons -j${compile_threads} --ignore-style --duplicate-sources \
+build/ARM/gem5.opt && \
+scons --with-cxx-config --without-python --without-tcmalloc \
+--duplicate-sources USE_SYSTEMC=0  \
+-j${compile_threads} build/ARM/libgem5_opt.so \
 "
 
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
