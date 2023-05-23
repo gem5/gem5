@@ -872,6 +872,7 @@ namespace ArmISA
         MISCREG_TTBR1_EL2,
 
         MISCREG_ID_AA64MMFR2_EL1,
+        MISCREG_ID_AA64MMFR3_EL1,
 
         //PAuth Key Regsiters
         MISCREG_APDAKeyHi_EL1,
@@ -2585,6 +2586,7 @@ namespace ArmISA
 
         "ttbr1_el2",
         "id_aa64mmfr2_el1",
+        "id_aa64mmfr3_el1",
 
         "apdakeyhi_el1",
         "apdakeylo_el1",

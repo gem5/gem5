@@ -981,7 +981,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 0, 0, 7, 0), MISCREG_ID_AA64MMFR0_EL1 },
     { MiscRegNum64(3, 0, 0, 7, 1), MISCREG_ID_AA64MMFR1_EL1 },
     { MiscRegNum64(3, 0, 0, 7, 2), MISCREG_ID_AA64MMFR2_EL1 },
-    { MiscRegNum64(3, 0, 0, 7, 3), MISCREG_RAZ },
+    { MiscRegNum64(3, 0, 0, 7, 3), MISCREG_ID_AA64MMFR3_EL1 },
     { MiscRegNum64(3, 0, 0, 7, 4), MISCREG_RAZ },
     { MiscRegNum64(3, 0, 0, 7, 5), MISCREG_RAZ },
     { MiscRegNum64(3, 0, 0, 7, 6), MISCREG_RAZ },
@@ -4362,6 +4362,14 @@ ISA::initializeMiscRegMetadata()
           mmfr2_el1.ids = release->has(ArmExtension::FEAT_IDST) ? 0x1 : 0x0;
           mmfr2_el1.evt = release->has(ArmExtension::FEAT_EVT) ? 0x2 : 0x0;
           return mmfr2_el1;
+      }())
+      .faultRead(EL0, faultIdst)
+      .faultRead(EL1, faultHcrEL1<&HCR::tid3>)
+      .allPrivileges().writes(0);
+    InitReg(MISCREG_ID_AA64MMFR3_EL1)
+      .reset([p,release=release](){
+          AA64MMFR3 mmfr3_el1 = 0;
+          return mmfr3_el1;
       }())
       .faultRead(EL0, faultIdst)
       .faultRead(EL1, faultHcrEL1<&HCR::tid3>)

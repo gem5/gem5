@@ -187,6 +187,21 @@ namespace ArmISA
         Bitfield<3, 0> cnp;
     EndBitUnion(AA64MMFR2)
 
+    BitUnion64(AA64MMFR3)
+        Bitfield<47, 44> anerr;
+        Bitfield<43, 40> snerr;
+        Bitfield<39, 36> d128_2;
+        Bitfield<35, 32> d128;
+        Bitfield<31, 28> mec;
+        Bitfield<27, 24> aie;
+        Bitfield<23, 20> s2poe;
+        Bitfield<19, 16> s1poe;
+        Bitfield<15, 12> s2pie;
+        Bitfield<11, 8> s1pie;
+        Bitfield<7, 4> sctlrx;
+        Bitfield<3, 0> tcrx;
+    EndBitUnion(AA64MMFR3)
+
     BitUnion64(AA64PFR0)
         Bitfield<63, 60> csv3;
         Bitfield<59, 56> csv2;
