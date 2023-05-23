@@ -50,6 +50,7 @@ this script, and to read in and execute the marshalled code later.
 
 import locale
 import marshal
+import os
 import sys
 import zlib
 
