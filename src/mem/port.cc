@@ -45,6 +45,7 @@
 #include "mem/port.hh"
 
 #include "base/trace.hh"
+#include "debug/PortTrace.hh"
 #include "debug/ResponsePort.hh"
 #include "sim/sim_object.hh"
 
@@ -184,6 +185,29 @@ RequestPort::printAddr(Addr a)
     pkt.senderState = &prs;
 
     sendFunctional(&pkt);
+}
+
+void
+RequestPort::addTrace(PacketPtr pkt) const
+{
+    if (!gem5::debug::PortTrace || !pkt)
+        return;
+    auto ext = pkt->getExtension<TracingExtension>();
+    if (!ext) {
+        ext = std::make_shared<TracingExtension>();
+        pkt->setExtension(ext);
+    }
+    ext->add(name(), _responsePort->name());
+}
+
+void
+RequestPort::removeTrace(PacketPtr pkt) const
+{
+    if (!gem5::debug::PortTrace || !pkt)
+        return;
+    auto ext = pkt->getExtension<TracingExtension>();
+    panic_if(!ext, "There is no TracingExtension in the packet.");
+    ext->remove();
 }
 
 /**
