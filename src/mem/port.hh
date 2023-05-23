@@ -46,6 +46,10 @@
 #ifndef __MEM_PORT_HH__
 #define __MEM_PORT_HH__
 
+#include <memory>
+#include <stack>
+#include <string>
+
 #include "base/addr_range.hh"
 #include "mem/packet.hh"
 #include "mem/protocol/atomic.hh"
@@ -63,6 +67,43 @@ class MasterPort;
 class SlavePort;
 
 class ResponsePort;
+
+/**
+ * TracingExtension is an Extension of the Packet for recording the trace
+ * of the Packet. The stack in the TracingExtension holds the name of the
+ * ports that the Packet has passed through.
+ */
+class TracingExtension : public gem5::Extension<Packet, TracingExtension>
+{
+ public:
+   TracingExtension() = default;
+   TracingExtension(const std::stack<std::string>& q) { trace_ = q; }
+
+   std::unique_ptr<ExtensionBase> clone() const override
+   {
+       return std::make_unique<TracingExtension>(trace_);
+   }
+
+   void
+   add(std::string request_port, std::string response_port)
+   {
+       trace_.push(request_port);
+       trace_.push(response_port);
+   }
+
+   void
+   remove()
+   {
+       trace_.pop();  // Remove the response port name.
+       trace_.pop();  // Remove the request port name.
+   }
+
+   bool empty() { return trace_.empty(); }
+   std::stack<std::string>& getTrace() { return trace_; }
+
+  private:
+   std::stack<std::string> trace_;
+};
 
 /**
  * A RequestPort is a specialisation of a Port, which
@@ -266,6 +307,10 @@ class RequestPort: public Port, public AtomicRequestProtocol,
     {
         panic("%s was not expecting a snoop retry.\n", name());
     }
+
+  private:
+    void addTrace(PacketPtr pkt) const;
+    void removeTrace(PacketPtr pkt) const;
 };
 
 class [[deprecated]] MasterPort : public RequestPort
@@ -393,7 +438,11 @@ class ResponsePort : public Port, public AtomicResponseProtocol,
     sendTimingResp(PacketPtr pkt)
     {
         try {
-            return TimingResponseProtocol::sendResp(_requestPort, pkt);
+            _requestPort->removeTrace(pkt);
+            bool succ = TimingResponseProtocol::sendResp(_requestPort, pkt);
+            if (!succ)
+                _requestPort->addTrace(pkt);
+            return succ;
         } catch (UnboundPortException) {
             reportUnbound();
         }
@@ -487,7 +536,10 @@ inline Tick
 RequestPort::sendAtomic(PacketPtr pkt)
 {
     try {
-        return AtomicRequestProtocol::send(_responsePort, pkt);
+        addTrace(pkt);
+        Tick tick = AtomicRequestProtocol::send(_responsePort, pkt);
+        removeTrace(pkt);
+        return tick;
     } catch (UnboundPortException) {
         reportUnbound();
     }
@@ -497,8 +549,11 @@ inline Tick
 RequestPort::sendAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
 {
     try {
-        return AtomicRequestProtocol::sendBackdoor(_responsePort,
-                                                    pkt, backdoor);
+        addTrace(pkt);
+        Tick tick = AtomicRequestProtocol::sendBackdoor(_responsePort,
+                                                        pkt, backdoor);
+        removeTrace(pkt);
+        return tick;
     } catch (UnboundPortException) {
         reportUnbound();
     }
@@ -508,7 +563,9 @@ inline void
 RequestPort::sendFunctional(PacketPtr pkt) const
 {
     try {
-        return FunctionalRequestProtocol::send(_responsePort, pkt);
+        addTrace(pkt);
+        FunctionalRequestProtocol::send(_responsePort, pkt);
+        removeTrace(pkt);
     } catch (UnboundPortException) {
         reportUnbound();
     }
@@ -530,7 +587,11 @@ inline bool
 RequestPort::sendTimingReq(PacketPtr pkt)
 {
     try {
-        return TimingRequestProtocol::sendReq(_responsePort, pkt);
+        addTrace(pkt);
+        bool succ = TimingRequestProtocol::sendReq(_responsePort, pkt);
+        if (!succ)
+            removeTrace(pkt);
+        return succ;
     } catch (UnboundPortException) {
         reportUnbound();
     }
