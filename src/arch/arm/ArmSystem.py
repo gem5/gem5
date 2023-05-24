@@ -224,6 +224,18 @@ class Armv92(Armv85):
     extensions = Armv85.extensions + ["FEAT_SME"]
 
 
+class ArmAllRelease(ArmRelease):
+    """
+    A release containing any implemented extension.  It is alternatively
+    possible to use the latest release (e.g. Armv92 as of now).  This could be
+    preferrable for consistency across simulations.  However if users want to
+    always be up to date with development, using ArmAllRelease will allow them
+    to do so without the need to change their configuration script
+    """
+
+    extensions = ArmExtension.vals
+
+
 class ArmSystem(System):
     type = "ArmSystem"
     cxx_header = "arch/arm/system.hh"
