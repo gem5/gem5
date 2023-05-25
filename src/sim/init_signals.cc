@@ -103,6 +103,8 @@ raiseFatalSignal(int signo)
     // The signal handler should have been reset and unmasked (it was
     // registered with SA_RESETHAND | SA_NODEFER), just raise the
     // signal again to invoke the default handler.
+    STATIC_ERR("For more info on how to address this issue, please visit "
+        "https://www.gem5.org/documentation/general_docs/common-errors/ \n\n");
     pthread_kill(pthread_self(), signo);
 
     // Something is really wrong if the process is alive at this
