@@ -253,12 +253,6 @@ class FALRU : public BaseTags
         return blk->getTag();
     }
 
-    void forEachBlk(std::function<void(CacheBlk &)> visitor) override {
-        for (int i = 0; i < numBlocks; i++) {
-            visitor(blks[i]);
-        }
-    }
-
     bool anyBlk(std::function<bool(CacheBlk &)> visitor) override {
         for (int i = 0; i < numBlocks; i++) {
             if (visitor(blks[i])) {

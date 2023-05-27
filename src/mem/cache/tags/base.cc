@@ -215,6 +215,15 @@ BaseTags::print()
     return str;
 }
 
+void
+BaseTags::forEachBlk(std::function<void(CacheBlk &)> visitor)
+{
+    anyBlk([visitor](CacheBlk &blk) {
+        visitor(blk);
+        return false;
+    });
+}
+
 BaseTags::BaseTagStats::BaseTagStats(BaseTags &_tags)
     : statistics::Group(&_tags),
     tags(_tags),

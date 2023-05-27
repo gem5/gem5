@@ -194,16 +194,6 @@ class SectorTags : public BaseTags
     Addr regenerateBlkAddr(const CacheBlk* blk) const override;
 
     /**
-     * Visit each sub-block in the tags and apply a visitor.
-     *
-     * The visitor should be a std::function that takes a cache block.
-     * reference as its parameter.
-     *
-     * @param visitor Visitor to call on each block.
-     */
-    void forEachBlk(std::function<void(CacheBlk &)> visitor) override;
-
-    /**
      * Find if any of the sub-blocks satisfies a condition.
      *
      * The visitor should be a std::function that takes a cache block
