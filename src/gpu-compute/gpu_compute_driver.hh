@@ -142,6 +142,8 @@ class GPUComputeDriver final : public EmulatedDriver
     };
     typedef class EventTableEntry ETEntry;
 
+    GfxVersion getGfxVersion() const { return gfxVersion; }
+
   private:
     /**
      * GPU that is controlled by this driver.
