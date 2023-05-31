@@ -377,11 +377,12 @@ class ArmFastModelComponent(object):
         self.rpaths = [simgen_dir, project_file_dir]
         self.log = gen_dir.File('build_%s.log' % tlc)
         self.simgen_cmd = env.subst('${CONF["SIMGEN"]} -p %s '
-            '--configuration %s -b --verbose off --num-build-cpus %d %s '
+            '--configuration %s -b --verbose off --num-build-cpus %d -I %s %s '
             '--build-dir %s >%s') % \
             (shlex.quote(project_file.srcnode().abspath),
              shlex.quote(config_name),
              GetOption('num_jobs'),
+             shlex.quote(Dir('#/src').srcnode().abspath),
              simgen_command_line,
              shlex.quote(simgen_dir.abspath),
              shlex.quote(self.log.abspath))
