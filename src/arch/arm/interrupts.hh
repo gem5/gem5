@@ -129,6 +129,8 @@ class Interrupts : public BaseInterrupts
     };
 
     bool takeInt(InterruptTypes int_type) const;
+    bool takeInt32(InterruptTypes int_type) const;
+    bool takeInt64(InterruptTypes int_type) const;
 
     bool
     checkInterrupts() const override
