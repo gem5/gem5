@@ -1950,6 +1950,7 @@ action(Send_SnpSharedFwd_ToOwner, desc="") {
     if (retToSrc) {
       tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SC_Fwded_SC);
       tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SC_Fwded_SD_PD);
+      tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SD_Fwded_SC);
       tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_I_Fwded_SC);
       tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_I_Fwded_SD_PD);
     } else {
@@ -1964,6 +1965,7 @@ action(Send_SnpSharedFwd_ToOwner, desc="") {
       tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_SC_Fwded_SC);
     }
     tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SC_PD_Fwded_SC);
+    tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SD_Fwded_SC);
     tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_I_PD_Fwded_SC);
   }
   tbe.expected_snp_resp.addExpectedCount(1);
@@ -2304,7 +2306,8 @@ action(UpdateDirState_FromSnpDataResp, desc="") {
                  (in_msg.type == CHIDataType:SnpRespData_SC) ||
                  (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SC) ||
                  (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SD_PD) ||
-                 (in_msg.type == CHIDataType:SnpRespData_SC_PD_Fwded_SC)) {
+                 (in_msg.type == CHIDataType:SnpRespData_SC_PD_Fwded_SC) ||
+                 (in_msg.type == CHIDataType:SnpRespData_SD_Fwded_SC)) {
         // the owner must have been the responder, if there was one
         assert((tbe.dir_ownerExists == false) ||
              (tbe.dir_ownerExists && (tbe.dir_owner == in_msg.responder)));
@@ -2313,12 +2316,16 @@ action(UpdateDirState_FromSnpDataResp, desc="") {
         tbe.dir_ownerIsExcl := false;
         if ((in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SC) ||
             (in_msg.type == CHIDataType:SnpRespData_SC_PD_Fwded_SC) ||
-            (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SD_PD)) {
+            (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SD_PD) ||
+            (in_msg.type == CHIDataType:SnpRespData_SD_Fwded_SC)) {
           tbe.dir_sharers.add(tbe.requestor);
         }
         if (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SD_PD) {
           tbe.dir_ownerExists := true;
           tbe.dir_owner := tbe.requestor;
+        } else if (in_msg.type == CHIDataType:SnpRespData_SD_Fwded_SC) {
+          tbe.dir_ownerExists := true;
+          tbe.dir_owner := in_msg.responder;
         }
 
       } else if ((in_msg.type == CHIDataType:SnpRespData_I_Fwded_SD_PD) ||
@@ -2507,7 +2514,8 @@ action(UpdateDataState_FromSnpDataResp, desc="") {
 
       } else if ((in_msg.type == CHIDataType:SnpRespData_SD) ||
                  (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SD_PD) ||
-                 (in_msg.type == CHIDataType:SnpRespData_I_Fwded_SD_PD)) {
+                 (in_msg.type == CHIDataType:SnpRespData_I_Fwded_SD_PD) ||
+                 (in_msg.type == CHIDataType:SnpRespData_SD_Fwded_SC)) {
         tbe.dataDirty := true;
         tbe.dataValid := true;
         tbe.dataMaybeDirtyUpstream := true;
