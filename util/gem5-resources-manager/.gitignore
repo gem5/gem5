@@ -1,0 +1,12 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# Unit test / coverage reports
+.coverage
+database/*
+instance
+instance/*
+
+# Environments
+.env
+.venv
