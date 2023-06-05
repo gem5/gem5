@@ -1996,6 +1996,7 @@ action(Send_SnpSharedFwd_ToSharer, desc="") {
   bool retToSrc := tbe.doCacheFill;
   if (retToSrc) {
     tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SC_Fwded_SC);
+    tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_I_Fwded_SC);
   } else {
     tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_SC_Fwded_SC);
   }
