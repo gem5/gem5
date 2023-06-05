@@ -668,7 +668,6 @@ let {{
                                      0xF, true, sctlr.nmfi, xc->tcBase());
                     Cpsr = ~CondCodesMask & new_cpsr;
                     NextThumb = new_cpsr.t;
-                    NextJazelle = new_cpsr.j;
                     NextItState = ((((CPSR)URb).it2 << 2) & 0xFC)
                                     | (((CPSR)URb).it1 & 0x3);
                     CondCodesNZ = new_cpsr.nz;

@@ -581,8 +581,6 @@ ThreadContext::pcState() const
 
     pc.thumb(cpsr.t);
     pc.nextThumb(pc.thumb());
-    pc.jazelle(cpsr.j);
-    pc.nextJazelle(cpsr.j);
     pc.aarch64(!cpsr.width);
     pc.nextAArch64(!cpsr.width);
     pc.illegalExec(false);
