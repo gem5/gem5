@@ -280,9 +280,9 @@ def protoc_grpc_emitter(target, source, env):
     root, ext = os.path.splitext(source[0].get_abspath())
     return [root + '.grpc.pb.cc', root + '.grpc.pb.h'], source
 
-protoc_grpc_action=MakeAction('${PROTOC} --grpc_out ${BUILDDIR} '
-        '--plugin=protoc-gen-grpc=${PROTOC_GRPC} --proto_path ${BUILDDIR} '
-        '${SOURCE.get_abspath()}',
+protoc_grpc_action=MakeAction('${PROTOC} --grpc_out ${TARGET.dir.abspath} '
+        '--plugin=protoc-gen-grpc=${PROTOC_GRPC} '
+        '--proto_path ${SOURCE.dir.abspath} ${SOURCE.abspath}',
         Transform("PROTOC"))
 
 env.Append(BUILDERS={'GrpcProtoBufCC' : Builder(
