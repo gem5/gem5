@@ -672,11 +672,6 @@ ISA::unserialize(CheckpointIn &cp)
     UNSERIALIZE_CONTAINER(miscRegFile);
 }
 
-const int WARN_FAILURE = 10000;
-
-const Addr INVALID_RESERVATION_ADDR = (Addr) -1;
-std::unordered_map<int, Addr> load_reservation_addrs;
-
 void
 ISA::handleLockedSnoop(PacketPtr pkt, Addr cacheBlockMask)
 {
@@ -696,9 +691,9 @@ ISA::handleLockedRead(const RequestPtr &req)
 {
     Addr& load_reservation_addr = load_reservation_addrs[tc->contextId()];
 
-    load_reservation_addr = req->getPaddr() & ~0xF;
+    load_reservation_addr = req->getPaddr();
     DPRINTF(LLSC, "[cid:%d]: Reserved address %x.\n",
-            req->contextId(), req->getPaddr() & ~0xF);
+            req->contextId(), req->getPaddr());
 }
 
 bool
@@ -717,12 +712,13 @@ ISA::handleLockedWrite(const RequestPtr &req, Addr cacheBlockMask)
             lr_addr_empty ? "yes" : "no");
     if (!lr_addr_empty) {
         DPRINTF(LLSC, "[cid:%d]: addr = %x.\n", req->contextId(),
-                req->getPaddr() & ~0xF);
+                req->getPaddr() & cacheBlockMask);
         DPRINTF(LLSC, "[cid:%d]: last locked addr = %x.\n", req->contextId(),
-                load_reservation_addr);
+                load_reservation_addr & cacheBlockMask);
     }
-    if (lr_addr_empty
-            || load_reservation_addr != ((req->getPaddr() & ~0xF))) {
+    if (lr_addr_empty ||
+            (load_reservation_addr & cacheBlockMask)
+            != ((req->getPaddr() & cacheBlockMask))) {
         req->setExtraData(0);
         int stCondFailures = tc->readStCondFailures();
         tc->setStCondFailures(++stCondFailures);
@@ -730,12 +726,21 @@ ISA::handleLockedWrite(const RequestPtr &req, Addr cacheBlockMask)
             warn("%i: context %d: %d consecutive SC failures.\n",
                     curTick(), tc->contextId(), stCondFailures);
         }
+
+        // Must clear any reservations
+        load_reservation_addr = INVALID_RESERVATION_ADDR;
+
         return false;
     }
     if (req->isUncacheable()) {
         req->setExtraData(2);
     }
 
+    // Must clear any reservations
+    load_reservation_addr = INVALID_RESERVATION_ADDR;
+
+    DPRINTF(LLSC, "[cid:%d]: SC success! Current locked addr = %x.\n",
+            req->contextId(), load_reservation_addr & cacheBlockMask);
     return true;
 }
 
@@ -743,6 +748,8 @@ void
 ISA::globalClearExclusive()
 {
     tc->getCpuPtr()->wakeup(tc->threadId());
+    Addr& load_reservation_addr = load_reservation_addrs[tc->contextId()];
+    load_reservation_addr = INVALID_RESERVATION_ADDR;
 }
 
 void

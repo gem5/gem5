@@ -76,6 +76,11 @@ class ISA : public BaseISA
 
     bool hpmCounterEnabled(int counter) const;
 
+    // Load reserve - store conditional monitor
+    const int WARN_FAILURE = 10000;
+    const Addr INVALID_RESERVATION_ADDR = (Addr)-1;
+    std::unordered_map<int, Addr> load_reservation_addrs;
+
   public:
     using Params = RiscvISAParams;
 
@@ -85,6 +90,13 @@ class ISA : public BaseISA
     newPCState(Addr new_inst_addr=0) const override
     {
         return new PCState(new_inst_addr, rv_type);
+    }
+
+    void
+    clearLoadReservation(ContextID cid) override
+    {
+        Addr& load_reservation_addr = load_reservation_addrs[cid];
+        load_reservation_addr = INVALID_RESERVATION_ADDR;
     }
 
   public:
