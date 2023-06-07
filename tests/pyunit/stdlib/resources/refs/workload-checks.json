@@ -6,7 +6,7 @@
         "architecture": "X86",
         "is_zipped": false,
         "md5sum": "4838c99b77d33c8307b939c16624e4ac",
-        "url": "{url_base}/kernels/x86/static/vmlinux-5.2.3",
+        "url": "http://dist.gem5.org/dist/develop/kernels/x86/static/vmlinux-5.2.3",
         "source": "src/linux-kernel",
         "resource_version": "1.0.0",
         "gem5_versions": [
@@ -20,7 +20,7 @@
         "architecture": "X86",
         "is_zipped": true,
         "md5sum": "90e363abf0ddf22eefa2c7c5c9391c49",
-        "url": "{url_base}/images/x86/ubuntu-18-04/x86-ubuntu.img.gz",
+        "url": "http://dist.gem5.org/dist/develop/images/x86/ubuntu-18-04/x86-ubuntu.img.gz",
         "source": "src/x86-ubuntu",
         "root_partition": "1",
         "resource_version": "1.0.0",
