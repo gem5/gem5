@@ -162,7 +162,8 @@ def runGpuFSSystem(args):
     # GPUFS is primarily designed to use the X86 KVM CPU. This model needs to
     # use multiple event queues when more than one CPU is simulated. Force it
     # on if that is the case.
-    args.host_parallel = True if args.num_cpus > 1 else False
+    if ObjectList.is_kvm_cpu(ObjectList.cpu_list.get(args.cpu_type)):
+        args.host_parallel = True if args.num_cpus > 1 else False
 
     # These are used by the protocols. They should not be set by the user.
     n_cu = args.num_compute_units
