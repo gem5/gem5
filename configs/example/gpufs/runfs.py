@@ -137,6 +137,20 @@ def addRunFSOptions(parser):
         "MI200 (gfx90a)",
     )
 
+    parser.add_argument(
+        "--debug-at-gpu-kernel",
+        type=int,
+        default=-1,
+        help="Turn on debug flags starting with this kernel",
+    )
+
+    parser.add_argument(
+        "--exit-at-gpu-kernel",
+        type=int,
+        default=-1,
+        help="Exit simulation after running this many kernels",
+    )
+
 
 def runGpuFSSystem(args):
     """
@@ -184,6 +198,9 @@ def runGpuFSSystem(args):
 
     print("Running the simulation")
     sim_ticks = args.abs_max_tick
+    kernels_launched = 0
+    if args.debug_at_gpu_kernel != -1:
+        m5.trace.disable()
 
     exit_event = m5.simulate(sim_ticks)
 
@@ -199,10 +216,20 @@ def runGpuFSSystem(args):
             assert args.checkpoint_dir is not None
             m5.checkpoint(args.checkpoint_dir)
             break
+        elif "GPU Kernel Completed" in exit_event.getCause():
+            kernels_launched += 1
         else:
             print(
                 f"Unknown exit event: {exit_event.getCause()}. Continuing..."
             )
+
+        if kernels_launched == args.debug_at_gpu_kernel:
+            m5.trace.enable()
+        if kernels_launched == args.exit_at_gpu_kernel:
+            print(f"Exiting @ GPU kernel {kernels_launched}")
+            break
+
+        exit_event = m5.simulate(sim_ticks - m5.curTick())
 
     print(
         "Exiting @ tick %i because %s" % (m5.curTick(), exit_event.getCause())
