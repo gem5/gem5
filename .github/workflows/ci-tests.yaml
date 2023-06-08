@@ -8,9 +8,18 @@ on:
     types: [opened, reopened, edited]
 
 jobs:
+  pre-commit:
+    # runs on github hosted runner
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
+    - uses: pre-commit/action@v3.0.0
+
   build-gem5:
     runs-on: [self-hosted, linux, x64, build]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    needs: pre-commit # only runs if pre-commit passes
     outputs:
       artifactname: ${{ steps.name.outputs.test }}
     steps:
@@ -29,8 +38,8 @@ jobs:
 
   unittests-all-opt:
     runs-on: [self-hosted, linux, x64, run]
-    container:
-      image: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    needs: pre-commit # only runs if pre-commit passes
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v3
@@ -42,7 +51,7 @@ jobs:
   testlib-quick:
     runs-on: [self-hosted, linux, x64, run]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: build-gem5
+    needs: [pre-commit, build-gem5]
     timeout-minutes: 360     # 6 hours
     steps:
       - uses: actions/checkout@v3

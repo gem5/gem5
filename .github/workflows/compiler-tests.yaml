@@ -18,7 +18,7 @@ jobs:
         opts: [.opt, .fast]
     runs-on: [self-hosted, linux, x64, run]
     container: gcr.io/gem5-test/${{ matrix.image }}:latest
-    timeout-minutes: 2880 # 48 hours
+    timeout-minutes: 240 # 4 hours
     steps:
     - uses: actions/checkout@v3
       with:
@@ -26,7 +26,7 @@ jobs:
         # therefore need to explicitly checkout the develop branch.
         ref: develop
     - name: Compile build/ALL/gem5${{ matrix.opts }} with ${{ matrix.image }}
-      run: scons build/ALL/gem5${{ matrix.opts }}
+      run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/ALL/gem5${{ matrix.opts }}
 
   # Tests the two latest gcc and clang supported compilers against all gem5 compilations.
   latest-compilers-all-gem5-builds:
@@ -37,7 +37,7 @@ jobs:
         opts: [.opt, .fast]
     runs-on: [self-hosted, linux, x64, run]
     container: gcr.io/gem5-test/${{ matrix.image }}:latest
-    timeout-minutes: 2880 # 48 hours
+    timeout-minutes: 240 # 4 hours
     steps:
     - uses: actions/checkout@v3
       with:
@@ -45,4 +45,4 @@ jobs:
         # therefore need to explicitly checkout the develop branch.
         ref: develop
     - name: Compile build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} with ${{ matrix.image }}
-      run: scons build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }}
+      run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }}

@@ -223,7 +223,7 @@ jobs:
   unittests-all-debug:
     runs-on: [self-hosted, linux, x64, run]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v3
@@ -240,7 +240,7 @@ jobs:
   unittests-all-fast:
     runs-on: [self-hosted, linux, x64, run]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v3
@@ -837,22 +837,16 @@ jobs:
         # therefore need to explicitly checkout the develop branch.
         ref: develop
     - name: Build ARM/gem5.opt
-      uses: docker://gcr.io/gem5-test/ubuntu-22.04_min-dependencies:latest
-      # This is a bit of a hack so we can run a different docker container.
-      with:
-        args: scons --ignore-style --duplicate-sources -j4 build/ARM/gem5.opt
+      run: scons build/ARM/gem5.opt --ignore-style --duplicate-sources -j$(nproc)
     - name: Build ARM/libgem5_opt.so
-      uses: docker://gcr.io/gem5-test/ubuntu-22.04_min-dependencies:latest
-      # This is a bit of a hack so we can run a different docker container.
-      with:
-        args: scons --with-cxx-config --without-python --without-tcmalloc USE_SYSTEMC=0 -j4 --duplicate-sources build/ARM/libgem5_opt.so
+      run: scons build/ARM/libgem5_opt.so --with-cxx-config --without-python --without-tcmalloc USE_SYSTEMC=0 -j$(nproc) --duplicate-sources
     - name: Compile gem5 withing SystemC
       working-directory: ${{ github.workspace }}/util/systemc/gem5_within_systemc
       run: make
     - name: Run gem5 within SystemC test
       run: ./build/ARM/gem5.opt configs/deprecated/example/se.py -c tests/test-progs/hello/bin/arm/linux/hello
-    - name: bla
-      run: LD_LIBRARY_PATH=build/ARM/:/opt/systemc/lib-linux64/ ./gem5.opt.sc m5out/config.ini
+    - name: Continue gem5 within SystemC test
+      run: LD_LIBRARY_PATH=build/ARM/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
 
   # Runs the gem5 Nighyly GPU tests.
   gpu-tests:
@@ -872,7 +866,7 @@ jobs:
       uses: wei/wget@v1
       with:
         args: -q http://dist.gem5.org/dist/develop/test-progs/square/square # Removed -N bc it wasn't available within actions, should be okay bc workspace is clean every time: https://github.com/coder/sshcode/issues/102
-    - name: Run Square test with GCN3_X8/gem5.opt (SE mode)
+    - name: Run Square test with GCN3_X86/gem5.opt (SE mode)
       run: |
         mkdir -p tests/testing-results
         ./build/GCN3_X86/gem5.opt configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c square
@@ -880,7 +874,7 @@ jobs:
       uses: wei/wget@v1
       with:
         args: -q http://dist.gem5.org/dist/develop/test-progs/heterosync/gcn3/allSyncPrims-1kernel # Removed -N bc it wasn't available within actions, should be okay bc workspace is clean every time
-    - name: Run allSyncPrims-1kernel sleepMutex test with GCN3_X8/gem5.opt (SE mode)
+    - name: Run allSyncPrims-1kernel sleepMutex test with GCN3_X86/gem5.opt (SE mode)
       run: ./build/GCN3_X86/gem5.opt configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c allSyncPrims-1kernel --options="sleepMutex 10 16 4"
-    - name: Run allSysncPrims-1kernel lfTreeBarrUsing test with GCN3_X8/gem5.opt (SE mode)
-      run: ./build/GCN3_X86/gem5.opt configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c allSyncPrims-1kernel --options="lfTreeBarrUsing 10 16 4"
+    - name: Run allSyncPrims-1kernel lfTreeBarrUsing test with GCN3_X86/gem5.opt (SE mode)
+      run: ./build/GCN3_X86/gem5.opt configs/example/apu_se.py --reg-alloc-policy=dynamic -n3 -c allSyncPrims-1kernel --options="lfTreeBarrUniq 10 16 4"
