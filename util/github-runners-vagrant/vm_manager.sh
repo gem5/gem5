@@ -9,7 +9,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 export VAGRANT_HOME=${SCRIPT_DIR}
 
 param="up"
-if [[ $# -eq 1 ]]; then
+if [[ $# -ge 1 ]]; then
     param=$1
     if [[ "${param}" != "destroy" ]]; then
         echo "Only valid parameter is 'destroy', to destroy all VMs"
