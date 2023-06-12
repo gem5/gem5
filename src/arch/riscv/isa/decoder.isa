@@ -1615,93 +1615,80 @@ decode QUADRANT default Unknown::unknown() {
                 }
                 0x14: decode ROUND_MODE {
                     0x0: fmin_s({{
-                        bool less = f32_lt_quiet(f32(freg(Fs1_bits)),
-                            f32(freg(Fs2_bits))) ||
-                            (f32_eq(f32(freg(Fs1_bits)),
-                            f32(freg(Fs2_bits))) &&
-                            bits(f32(freg(Fs1_bits)).v, 31));
+                        float32_t fs1 = f32(freg(Fs1_bits));
+                        float32_t fs2 = f32(freg(Fs2_bits));
+                        float32_t fd;
+                        bool less = f32_lt_quiet(fs1, fs2) ||
+                            (f32_eq(fs1, fs2) && bits(fs1.v, 31));
 
-                        Fd_bits = less ||
-                            isNaNF32UI(f32(freg(Fs2_bits)).v) ?
-                            freg(Fs1_bits).v : freg(Fs2_bits).v;
-                        if (isNaNF32UI(f32(freg(Fs1_bits)).v) &&
-                            isNaNF32UI(f32(freg(Fs2_bits)).v))
-                            Fd_bits = f32(defaultNaNF32UI).v;
+                        fd = less || isNaNF32UI(fs2.v) ? fs1 : fs2;
+                        if (isNaNF32UI(fs1.v) && isNaNF32UI(fs2.v))
+                            fd = f32(defaultNaNF32UI);
+                        Fd_bits = freg(fd).v;
                         }}, FloatCmpOp);
                     0x1: fmax_s({{
-                        bool greater = f32_lt_quiet(f32(freg(Fs2_bits)),
-                            f32(freg(Fs1_bits))) ||
-                            (f32_eq(f32(freg(Fs2_bits)),
-                            f32(freg(Fs1_bits))) &&
-                            bits(f32(freg(Fs2_bits)).v, 31));
+                        float32_t fs1 = f32(freg(Fs1_bits));
+                        float32_t fs2 = f32(freg(Fs2_bits));
+                        float32_t fd;
+                        bool greater = f32_lt_quiet(fs2, fs1) ||
+                            (f32_eq(fs2, fs1) && bits(fs2.v, 31));
 
-                        Fd_bits = greater ||
-                            isNaNF32UI(f32(freg(Fs2_bits)).v) ?
-                            freg(Fs1_bits).v : freg(Fs2_bits).v;
-                        if (isNaNF32UI(f32(freg(Fs1_bits)).v) &&
-                            isNaNF32UI(f32(freg(Fs2_bits)).v))
-                            Fd_bits = f32(defaultNaNF32UI).v;
+                        fd = greater || isNaNF32UI(fs2.v) ? fs1: fs2;
+                        if (isNaNF32UI(fs1.v) && isNaNF32UI(fs2.v))
+                            fd = f32(defaultNaNF32UI);
+                        Fd_bits = freg(fd).v;
                         }}, FloatCmpOp);
                 }
                 0x15: decode ROUND_MODE {
                     0x0: fmin_d({{
-                        bool less = f64_lt_quiet(f64(freg(Fs1_bits)),
-                            f64(freg(Fs2_bits))) ||
-                            (f64_eq(f64(freg(Fs1_bits)),
-                            f64(freg(Fs2_bits))) &&
-                            bits(f64(freg(Fs1_bits)).v, 63));
+                        float64_t fs1 = f64(freg(Fs1_bits));
+                        float64_t fs2 = f64(freg(Fs2_bits));
+                        float64_t fd;
+                        bool less = f64_lt_quiet(fs1, fs2) ||
+                            (f64_eq(fs1, fs2) && bits(fs1.v, 63));
 
-                        Fd_bits = less ||
-                            isNaNF64UI(f64(freg(Fs2_bits)).v) ?
-                            freg(Fs1_bits).v : freg(Fs2_bits).v;
-                        if (isNaNF64UI(f64(freg(Fs1_bits)).v) &&
-                            isNaNF64UI(f64(freg(Fs2_bits)).v))
-                            Fd_bits = f64(defaultNaNF64UI).v;
+                        fd = less || isNaNF64UI(fs2.v) ? fs1 : fs2;
+                        if (isNaNF64UI(fs1.v) && isNaNF64UI(fs2.v))
+                            fd = f64(defaultNaNF64UI);
+                        Fd_bits = freg(fd).v;
                     }}, FloatCmpOp);
                     0x1: fmax_d({{
-                        bool greater =
-                            f64_lt_quiet(f64(freg(Fs2_bits)),
-                            f64(freg(Fs1_bits))) ||
-                            (f64_eq(f64(freg(Fs2_bits)),
-                            f64(freg(Fs1_bits))) &&
-                            bits(f64(freg(Fs2_bits)).v, 63));
+                        float64_t fs1 = f64(freg(Fs1_bits));
+                        float64_t fs2 = f64(freg(Fs2_bits));
+                        float64_t fd;
+                        bool greater = f64_lt_quiet(fs2, fs1) ||
+                            (f64_eq(fs2, fs1) && bits(fs2.v, 63));
 
-                        Fd_bits = greater ||
-                            isNaNF64UI(f64(freg(Fs2_bits)).v) ?
-                            freg(Fs1_bits).v : freg(Fs2_bits).v;
-                        if (isNaNF64UI(f64(freg(Fs1_bits)).v) &&
-                            isNaNF64UI(f64(Fs2_bits).v))
-                            Fd_bits = f64(defaultNaNF64UI).v;
+                        fd = greater || isNaNF64UI(fs2.v) ? fs1 : fs2;
+                        if (isNaNF64UI(fs1.v) && isNaNF64UI(fs2.v))
+                            fd = f64(defaultNaNF64UI);
+                        Fd_bits = freg(fd).v;
                     }}, FloatCmpOp);
                 }
                 0x16: decode ROUND_MODE {
                     0x0: fmin_h({{
-                        bool less = f16_lt_quiet(f16(freg(Fs1_bits)),
-                            f16(freg(Fs2_bits))) ||
-                            (f16_eq(f16(freg(Fs1_bits)),
-                            f16(freg(Fs2_bits))) &&
-                            bits(f16(freg(Fs1_bits)).v, 15));
+                        float16_t fs1 = f16(freg(Fs1_bits));
+                        float16_t fs2 = f16(freg(Fs2_bits));
+                        float16_t fd;
+                        bool less = f16_lt_quiet(fs1, fs2) ||
+                            (f16_eq(fs1, fs2) && bits(fs1.v, 15));
 
-                        Fd_bits = less ||
-                            isNaNF16UI(f16(freg(Fs2_bits)).v) ?
-                            freg(Fs1_bits).v : freg(Fs2_bits).v;
-                        if (isNaNF16UI(f16(freg(Fs1_bits)).v) &&
-                            isNaNF16UI(f16(freg(Fs2_bits)).v))
-                            Fd_bits = f16(defaultNaNF16UI).v;
+                        fd = less || isNaNF16UI(fs2.v) ? fs1 : fs2;
+                        if (isNaNF16UI(fs1.v) && isNaNF16UI(fs2.v))
+                            fd = f16(defaultNaNF16UI);
+                        Fd_bits = freg(fd).v;
                         }}, FloatCmpOp);
                     0x1: fmax_h({{
-                        bool greater = f16_lt_quiet(f16(freg(Fs2_bits)),
-                            f16(freg(Fs1_bits))) ||
-                            (f16_eq(f16(freg(Fs2_bits)),
-                            f16(freg(Fs1_bits))) &&
-                            bits(f16(freg(Fs2_bits)).v, 15));
+                        float16_t fs1 = f16(freg(Fs1_bits));
+                        float16_t fs2 = f16(freg(Fs2_bits));
+                        float16_t fd;
+                        bool greater = f16_lt_quiet(fs2, fs1) ||
+                            (f16_eq(fs2, fs1) && bits(fs2.v, 15));
 
-                        Fd_bits = greater ||
-                            isNaNF16UI(f16(freg(Fs2_bits)).v) ?
-                            freg(Fs1_bits).v : freg(Fs2_bits).v;
-                        if (isNaNF16UI(f16(freg(Fs1_bits)).v) &&
-                            isNaNF16UI(f16(freg(Fs2_bits)).v))
-                            Fd_bits = f16(defaultNaNF16UI).v;
+                        fd = greater || isNaNF16UI(fs2.v) ? fs1 : fs2;
+                        if (isNaNF16UI(fs1.v) && isNaNF16UI(fs2.v))
+                            fd = f16(defaultNaNF16UI);
+                        Fd_bits = freg(fd).v;
                         }}, FloatCmpOp);
                 }
                 0x20: decode CONV_SGN {
