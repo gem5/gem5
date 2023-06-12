@@ -193,6 +193,13 @@ def parse_options():
         callback=collect_args,
     )
 
+    option(
+        "-s",
+        action="store_true",
+        help="IGNORED, only for compatibility with python. don't"
+        "add user site directory to sys.path; also PYTHONNOUSERSITE",
+    )
+
     # Statistics options
     group("Statistics Options")
     option(
