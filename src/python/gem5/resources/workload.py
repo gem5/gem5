@@ -27,6 +27,8 @@
 from .resource import obtain_resource
 from .client import get_resource_json_obj
 
+from _m5 import core
+
 from typing import Dict, Any, List, Optional
 
 
@@ -160,6 +162,7 @@ class Workload(AbstractWorkload):
         resource_directory: Optional[str] = None,
         resource_version: Optional[str] = None,
         clients: Optional[List] = None,
+        gem5_version: Optional[str] = core.gem5Version,
     ) -> None:
         """
         This constructor will load the workload details from the workload with
@@ -201,12 +204,17 @@ class Workload(AbstractWorkload):
         :param resource_directory: An optional parameter that specifies where
         any resources should be download and accessed from. If None, a default
         location will be used. None by default.
+        :param gem5_version: The gem5 version for the Workload to be loaded.
+        By default, the current gem5 version is used. This will filter
+        resources which are incompatible with the current gem5 version. If
+        None, no filtering will be done.
         """
 
         workload_json = get_resource_json_obj(
             workload_name,
             resource_version=resource_version,
             clients=clients,
+            gem5_version=gem5_version,
         )
 
         func = workload_json["function"]
@@ -219,7 +227,9 @@ class Workload(AbstractWorkload):
                 value = workload_json["resources"][key]
                 assert isinstance(value, str)
                 params[key] = obtain_resource(
-                    value, resource_directory=resource_directory
+                    value,
+                    resource_directory=resource_directory,
+                    gem5_version=gem5_version,
                 )
 
         if "additional_params" in workload_json:

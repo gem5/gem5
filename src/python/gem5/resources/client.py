@@ -31,6 +31,7 @@ from typing import Optional, Dict, List
 from .client_api.client_wrapper import ClientWrapper
 from gem5.gem5_default_config import config
 from m5.util import inform
+from _m5 import core
 
 
 def getFileContent(file_path: Path) -> Dict:
@@ -49,17 +50,7 @@ def getFileContent(file_path: Path) -> Dict:
 clientwrapper = None
 
 
-def get_resource_json_obj(
-    resource_id,
-    resource_version: Optional[str] = None,
-    clients: Optional[List[str]] = None,
-) -> Dict:
-    """
-    Get the resource json object from the clients wrapper
-    :param resource_id: The resource id
-    :param resource_version: The resource version
-    :param clients: The list of clients to query
-    """
+def _get_clientwrapper():
     global clientwrapper
     if clientwrapper is None:
         # First check if the config file path is provided in the environment variable
@@ -78,7 +69,42 @@ def get_resource_json_obj(
             gem5_config = config
             inform("Using default config")
         clientwrapper = ClientWrapper(gem5_config)
+    return clientwrapper
 
-    return clientwrapper.get_resource_json_obj_from_client(
-        resource_id, resource_version, clients
+
+def list_resources(
+    clients: Optional[List[str]] = None,
+    gem5_version: Optional[str] = core.gem5Version,
+) -> Dict[str, List[str]]:
+    """
+    List all the resources available
+
+    :param clients: The list of clients to query
+    :param gem5_version: The gem5 version of the resource to get. By default,
+    it is the gem5 version of the current build. If set to none, it will return
+    all gem5 versions of the resource.
+    :return: A Python Dict where the key is the resource id and the value is
+    a list of all the supported resource versions.
+    """
+    return _get_clientwrapper().list_resources(clients, gem5_version)
+
+
+def get_resource_json_obj(
+    resource_id,
+    resource_version: Optional[str] = None,
+    clients: Optional[List[str]] = None,
+    gem5_version: Optional[str] = core.gem5Version,
+) -> Dict:
+    """
+    Get the resource json object from the clients wrapper
+    :param resource_id: The resource id
+    :param resource_version: The resource version
+    :param clients: The list of clients to query
+    :param gem5_version: The gem5 versions to filter the resources based on
+    compatibility. By default, it is the gem5 version of the current build.
+    If None, filtering based on compatibility is not performed.
+    """
+
+    return _get_clientwrapper().get_resource_json_obj_from_client(
+        resource_id, resource_version, clients, gem5_version
     )

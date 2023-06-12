@@ -24,24 +24,24 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import json
 import urllib.request
 import urllib.parse
-import hashlib
 import os
 import shutil
 import gzip
-import hashlib
-import base64
 import time
 import random
 from pathlib import Path
 import tarfile
-from tempfile import gettempdir
 from urllib.error import HTTPError
-from typing import List, Dict, Set, Optional
+from typing import List, Optional, Dict
 
-from .client import get_resource_json_obj
+from _m5 import core
+
+from .client import (
+    get_resource_json_obj,
+    list_resources as client_list_resources,
+)
 from .md5_utils import md5_file, md5_dir
 from ..utils.progress_bar import tqdm, progress_hook
 
@@ -51,188 +51,6 @@ from ..utils.filelock import FileLock
 This Python module contains functions used to download, list, and obtain
 information about resources from resources.gem5.org.
 """
-
-
-def _resources_json_version_required() -> str:
-    """
-    Specifies the version of resources.json to obtain.
-    """
-    return "develop"
-
-
-def _get_resources_json_uri() -> str:
-    return "https://resources.gem5.org/resources.json"
-
-
-def _url_validator(url):
-    try:
-        result = urllib.parse.urlparse(url)
-        return all([result.scheme, result.netloc, result.path])
-    except:
-        return False
-
-
-def _get_resources_json_at_path(path: str, use_caching: bool = True) -> Dict:
-    """
-    Returns a resource JSON, in the form of a Python Dict. The location
-    of the JSON must be specified.
-
-    If `use_caching` is True, and a URL is passed, a copy of the JSON will be
-    cached locally, and used for up to an hour after retrieval.
-
-    :param path: The URL or local path of the JSON file.
-    :param use_caching: True if a cached file is to be used (up to an hour),
-    otherwise the file will be retrieved from the URL regardless. True by
-    default. Only valid in cases where a URL is passed.
-    """
-
-    # If a local valid path is passed, just load it.
-    if Path(path).is_file():
-        return json.load(open(path))
-
-    # If it's not a local path, it should be a URL. We check this here and
-    # raise an Exception if it's not.
-    if not _url_validator(path):
-        raise Exception(
-            f"Resources location '{path}' is not a valid path or URL."
-        )
-
-    download_path = os.path.join(
-        gettempdir(),
-        f"gem5-resources-{hashlib.md5(path.encode()).hexdigest()}"
-        f"-{str(os.getuid())}.json",
-    )
-
-    # We apply a lock on the resources file for when it's downloaded, or
-    # re-downloaded, and read. This stops a corner-case from occuring where
-    # the file is re-downloaded while being read by another gem5 thread.
-    # Note the timeout is 120 so the `_download` function is given time to run
-    # its Truncated Exponential Backoff algorithm
-    # (maximum of roughly 1 minute). Typically this code will run quickly.
-    with FileLock(f"{download_path}.lock", timeout=120):
-
-        # The resources.json file can change at any time, but to avoid
-        # excessive retrieval we cache a version locally and use it for up to
-        # an hour before obtaining a fresh copy.
-        #
-        # `time.time()` and `os.path.getmtime(..)` both return an unix epoch
-        # time in seconds. Therefore, the value of "3600" here represents an
-        # hour difference between the two values. `time.time()` gets the
-        # current time, and `os.path.getmtime(<file>)` gets the modification
-        # time of the file. This is the most portable solution as other ideas,
-        # like "file creation time", are  not always the same concept between
-        # operating systems.
-        if (
-            not use_caching
-            or not os.path.exists(download_path)
-            or (time.time() - os.path.getmtime(download_path)) > 3600
-        ):
-            _download(path, download_path)
-
-    with open(download_path) as f:
-        file_contents = f.read()
-
-    try:
-        to_return = json.loads(file_contents)
-    except json.JSONDecodeError:
-        # This is a bit of a hack. If the URL specified exists in a Google
-        # Source repo (which is the case when on the gem5 develop branch) we
-        # retrieve the JSON in base64 format. This cannot be loaded directly as
-        # text. Conversion is therefore needed.
-        to_return = json.loads(base64.b64decode(file_contents).decode("utf-8"))
-
-    return to_return
-
-
-def _get_resources_json() -> Dict:
-    """
-    Gets the Resources JSON.
-
-    :returns: The Resources JSON (as a Python Dictionary).
-    """
-
-    path = os.getenv("GEM5_RESOURCE_JSON", _get_resources_json_uri())
-    to_return = _get_resources_json_at_path(path=path)
-
-    # If the current version pulled is not correct, look up the
-    # "previous-versions" field to find the correct one.
-    # If the resource JSON file does not have a "version" field or it's
-    # null/None, then we will use this resource JSON file (this is usefull for
-    # testing purposes).
-    version = _resources_json_version_required()
-    json_version = None if "version" not in to_return else to_return["version"]
-
-    if json_version and json_version != version:
-        if version in to_return["previous-versions"].keys():
-            to_return = _get_resources_json_at_path(
-                path=to_return["previous-versions"][version]
-            )
-        else:
-            # This should never happen, but we thrown an exception to explain
-            # that we can't find the version.
-            raise Exception(
-                f"Version '{version}' of resources.json cannot be found."
-            )
-
-    return to_return
-
-
-def _get_url_base() -> str:
-    """
-    Obtains the "url_base" string from the resources.json file.
-
-    :returns: The "url_base" string value from the resources.json file.
-    """
-    json = _get_resources_json()
-    if "url_base" in json.keys():
-        return json["url_base"]
-    return ""
-
-
-def _get_resources(
-    valid_types: Set[str], resources_group: Optional[Dict] = None
-) -> Dict[str, Dict]:
-    """
-    A recursive function to get all the workload/resource of the specified type
-    in the resources.json file.
-
-    :param valid_types: The type to return (i.e., "resource" or "workload).
-    :param resource_group: Used for recursion: The current resource group being
-    iterated through.
-
-    :returns: A dictionary of artifact names to the resource JSON objects.
-    """
-
-    if resources_group is None:
-        resources_group = _get_resources_json()["resources"]
-
-    to_return = {}
-    for resource in resources_group:
-        if resource["type"] in valid_types:
-            # If the type is valid then we add it directly to the map
-            # after a check that the name is unique.
-            if resource["name"] in to_return.keys():
-                raise Exception(
-                    f"Error: Duplicate resource with name '{resource['name']}'."
-                )
-            to_return[resource["name"]] = resource
-        elif resource["type"] == "group":
-            # If it's a group we get recursive. We then check to see if there
-            # are any duplication of keys.
-            new_map = _get_resources(
-                valid_types=valid_types, resources_group=resource["contents"]
-            )
-            intersection = set(new_map.keys()).intersection(to_return.keys())
-            if len(intersection) > 0:
-                # Note: if this error is received it's likely an error with
-                # the resources.json file. The resources names need to be
-                # unique keyes.
-                raise Exception(
-                    f"Error: Duplicate resources with names: {str(intersection)}."
-                )
-            to_return.update(new_map)
-
-    return to_return
 
 
 def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
@@ -336,61 +154,26 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
             )
 
 
-def list_resources() -> List[str]:
+def list_resources(
+    clients: Optional[List] = None, gem5_version: Optional[str] = None
+) -> Dict[str, List[str]]:
     """
-    Lists all available resources by name.
+    Lists all available resources. Returns a dictionary where the key is the
+    id of the resources and the value is a list of that resource's versions.
 
-    :returns: A list of resources by name.
+    :param clients: A list of clients to use when listing resources. If None,
+    all clients will be used. None by default.
+
+    :param gem5_version: The gem5 version to which all resources should be
+    compatible with. If None, compatibility of resources is not considered and
+    all resources will be returned.
+
+    **Note**: This function is here for legacy reasons. The `list_resources`
+    function was originally stored here. In order to remain backwards
+    compatible, this function will call the `client_list_resources` function
+
     """
-    from .resource import _get_resource_json_type_map
-
-    return _get_resources(
-        valid_types=_get_resource_json_type_map.keys()
-    ).keys()
-
-
-def get_workload_json_obj(workload_name: str) -> Dict:
-    """
-    Get a JSON object of a specified workload.
-
-    :param workload_name: The name of the workload.
-
-    :raises Exception: An exception is raised if the specified workload does
-    not exit.
-    """
-    workload_map = _get_resources(valid_types={"workload"})
-
-    if workload_name not in workload_map:
-        raise Exception(
-            f"Error: Workload with name {workload_name} does not exist"
-        )
-
-    return workload_map[workload_name]
-
-
-def get_resources_json_obj(resource_name: str) -> Dict:
-    """
-    Get a JSON object of a specified resource.
-
-    :param resource_name: The name of the resource.
-
-    :returns: The JSON object (in the form of a dictionary).
-
-    :raises Exception: An exception is raised if the specified resources does
-    not exist.
-    """
-    from .resource import _get_resource_json_type_map
-
-    resource_map = _get_resources(
-        valid_types=_get_resource_json_type_map.keys()
-    )
-
-    if resource_name not in resource_map:
-        raise Exception(
-            f"Error: Resource with name '{resource_name}' does not exist"
-        )
-
-    return resource_map[resource_name]
+    return client_list_resources(clients=clients, gem5_version=gem5_version)
 
 
 def get_resource(
@@ -401,6 +184,7 @@ def get_resource(
     download_md5_mismatch: bool = True,
     resource_version: Optional[str] = None,
     clients: Optional[List] = None,
+    gem5_version: Optional[str] = core.gem5Version,
 ) -> None:
     """
     Obtains a gem5 resource and stored it to a specified location. If the
@@ -429,6 +213,10 @@ def get_resource(
     :param clients: A list of clients to use when obtaining the resource. If
     None, all clients will be used. None by default.
 
+    :param gem5_version: The gem5 version to use when obtaining the resource.
+    By default, the version of gem5 being used is used. This is used primarily
+    for testing purposes.
+
     :raises Exception: An exception is thrown if a file is already present at
     `to_path` but it does not have the correct md5 sum. An exception will also
     be thrown is a directory is present at `to_path`
@@ -444,6 +232,7 @@ def get_resource(
             resource_name,
             resource_version=resource_version,
             clients=clients,
+            gem5_version=gem5_version,
         )
 
         if os.path.exists(to_path):

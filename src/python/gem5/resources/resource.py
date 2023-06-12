@@ -28,6 +28,7 @@ from abc import ABCMeta
 import os
 from pathlib import Path
 from m5.util import warn, fatal
+from _m5 import core
 
 from .downloader import get_resource
 
@@ -559,17 +560,15 @@ def obtain_resource(
     download_md5_mismatch: bool = True,
     resource_version: Optional[str] = None,
     clients: Optional[List] = None,
+    gem5_version=core.gem5Version,
 ) -> AbstractResource:
     """
     This function primarily serves as a factory for resources. It will return
     the correct `AbstractResource` implementation based on the resource
-    requested, by referencing the "resource.json" file (by default, that hosted
-    at https://resources.gem5.org/resources.json). In addition to this, this
-    function will download the resource if not detected in the
-    `resource_directory`.
+    requested.
 
     :param resource_name: The name of the gem5 resource as it appears under the
-    "name" field in the `resource.json` file.
+    "id" field in the `resource.json` file.
     :param resource_directory: The location of the directory in which the
     resource is to be stored. If this parameter is not set, it will set to
     the environment variable `GEM5_RESOURCE_DIR`. If the environment is not
@@ -582,11 +581,17 @@ def obtain_resource(
     Not a required parameter. None by default.
     :param clients: A list of clients to search for the resource. If this
     parameter is not set, it will default search all clients.
+    :param gem5_version: The gem5 version to use to filter incompatible
+    resource versions. By default set to the current gem5 version. If None,
+    this filtering is not performed.
     """
 
     # Obtain the resource object entry for this resource
     resource_json = get_resource_json_obj(
-        resource_id, resource_version=resource_version, clients=clients
+        resource_id,
+        resource_version=resource_version,
+        clients=clients,
+        gem5_version=gem5_version,
     )
 
     to_path = None
@@ -629,6 +634,7 @@ def obtain_resource(
             download_md5_mismatch=download_md5_mismatch,
             resource_version=resource_version,
             clients=clients,
+            gem5_version=gem5_version,
         )
 
     # Obtain the type from the JSON. From this we will determine what subclass
