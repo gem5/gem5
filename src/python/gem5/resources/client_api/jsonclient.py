@@ -58,13 +58,31 @@ class JSONClient(AbstractClient):
                 )
             self.resources = json.loads(response.read().decode("utf-8"))
 
-    def get_resources_by_id(self, resource_id: str) -> List[Dict[str, Any]]:
-        """
-        :param resource_id: The ID of the Resource.
-        :return: A list of all the Resources with the given ID.
-        """
-        return [
-            resource
-            for resource in self.resources
-            if resource["id"] == resource_id
-        ]
+    def get_resources_json(self) -> List[Dict[str, Any]]:
+        """Returns a JSON representation of the resources."""
+        return self.resources
+
+    def get_resources(
+        self,
+        resource_id: Optional[str] = None,
+        resource_version: Optional[str] = None,
+        gem5_version: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        filter = self.resources  # Unfiltered.
+        if resource_id:
+            filter = [  # Filter by resource_id.
+                resource
+                for resource in filter
+                if resource["id"] == resource_id
+            ]
+            if resource_version:
+                filter = [  # Filter by resource_version.
+                    resource
+                    for resource in filter
+                    if resource["resource_version"] == resource_version
+                ]
+
+        # Filter by gem5_version.
+        return self.filter_incompatible_resources(
+            resources_to_filter=filter, gem5_version=gem5_version
+        )

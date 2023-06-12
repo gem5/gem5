@@ -25,13 +25,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
-from gem5.isas import ISA
 from gem5.resources.client import get_resource_json_obj
-import gem5.resources.client
 from gem5.resources.client_api.client_wrapper import ClientWrapper
-from typing import Dict
 from unittest.mock import patch
-from unittest import mock
 import json
 from urllib.error import HTTPError
 import io
@@ -62,23 +58,8 @@ mock_config_mongo = {
     },
 }
 
-mock_config_combined = {
-    "sources": {
-        "gem5-resources": {
-            "dataSource": "gem5-vision",
-            "database": "gem5-vision",
-            "collection": "versions_test",
-            "url": "https://data.mongodb-api.com/app/data-ejhjf/endpoint/data/v1",
-            "authUrl": "https://realm.mongodb.com/api/client/v2.0/app/data-ejhjf/auth/providers/api-key/login",
-            "apiKey": "OIi5bAP7xxIGK782t8ZoiD2BkBGEzMdX3upChf9zdCxHSnMoiTnjI22Yw5kOSgy9",
-            "isMongo": True,
-        },
-        "baba": {
-            "url": mock_json_path,
-            "isMongo": False,
-        },
-    },
-}
+mock_config_combined = mock_config_mongo
+mock_config_combined["sources"]["baba"] = mock_config_json["sources"]["baba"]
 
 mock_json = {}
 
@@ -145,12 +126,12 @@ class ClientWrapperTestSuite(unittest.TestCase):
     def test_get_resource_json_obj(self):
         # Test that the resource object is correctly returned
         resource = "this-is-a-test-resource"
-        resource = get_resource_json_obj(resource)
+        resource = get_resource_json_obj(resource, gem5_version="develop")
         self.assertEqual(resource["id"], "this-is-a-test-resource")
-        self.assertEqual(resource["resource_version"], "2.0.0")
+        self.assertEqual(resource["resource_version"], "1.1.0")
         self.assertEqual(resource["category"], "binary")
         self.assertEqual(
-            resource["description"], "This is a test resource but double newer"
+            resource["description"], "This is a test resource but newer"
         )
         self.assertEqual(
             resource["source_url"],
@@ -167,7 +148,9 @@ class ClientWrapperTestSuite(unittest.TestCase):
         resource_id = "test-id"
         client = "invalid"
         with self.assertRaises(Exception) as context:
-            get_resource_json_obj(resource_id, clients=[client])
+            get_resource_json_obj(
+                resource_id, clients=[client], gem5_version="develop"
+            )
         self.assertTrue(
             f"Client: {client} does not exist" in str(context.exception)
         )
@@ -181,7 +164,9 @@ class ClientWrapperTestSuite(unittest.TestCase):
         resource_id = "this-is-a-test-resource"
         resource_version = "1.0.0"
         resource = get_resource_json_obj(
-            resource_id, resource_version=resource_version
+            resource_id,
+            resource_version=resource_version,
+            gem5_version="develop",
         )
         self.assertEqual(resource["id"], "this-is-a-test-resource")
         self.assertEqual(resource["resource_version"], "1.0.0")
@@ -200,17 +185,18 @@ class ClientWrapperTestSuite(unittest.TestCase):
     @patch("urllib.request.urlopen", side_effect=mocked_requests_post)
     def test_get_resource_json_obj_1(self, mock_get):
         resource = "x86-ubuntu-18.04-img"
-        resource = get_resource_json_obj(resource)
+        resource = get_resource_json_obj(resource, gem5_version="develop")
         self.assertEqual(resource["id"], "x86-ubuntu-18.04-img")
-        self.assertEqual(resource["resource_version"], "1.1.0")
+        self.assertEqual(resource["resource_version"], "2.0.0")
         self.assertEqual(resource["category"], "disk-image")
         self.assertEqual(
             resource["description"],
-            "A disk image containing Ubuntu 18.04 for x86. This image will run an `m5 readfile` instruction after booting. If no script file is specified an `m5 exit` instruction will be executed.",
+            "This is a test resource",
         )
         self.assertEqual(
             resource["source_url"],
-            "https://github.com/gem5/gem5-resources/tree/develop/src/x86-ubuntu",
+            "https://github.com/gem5/gem5-resources/tree/develop/"
+            "src/x86-ubuntu",
         )
         self.assertEqual(resource["architecture"], "X86")
 
@@ -227,6 +213,7 @@ class ClientWrapperTestSuite(unittest.TestCase):
             resource_id,
             resource_version=resource_version,
             clients=["gem5-resources"],
+            gem5_version="develop",
         )
         self.assertEqual(resource["id"], "x86-ubuntu-18.04-img")
         self.assertEqual(resource["resource_version"], "1.0.0")
@@ -246,7 +233,9 @@ class ClientWrapperTestSuite(unittest.TestCase):
     def test_get_resource_json_obj_with_id_invalid_mongodb(self, mock_get):
         resource_id = "invalid-id"
         with self.assertRaises(Exception) as context:
-            get_resource_json_obj(resource_id, clients=["gem5-resources"])
+            get_resource_json_obj(
+                resource_id, clients=["gem5-resources"], gem5_version="develop"
+            )
         self.assertTrue(
             "Resource with ID 'invalid-id' not found."
             in str(context.exception)
@@ -267,12 +256,13 @@ class ClientWrapperTestSuite(unittest.TestCase):
                 resource_id,
                 resource_version=resource_version,
                 clients=["gem5-resources"],
+                gem5_version="develop",
             )
         self.assertTrue(
             f"Resource x86-ubuntu-18.04-img with version '2.5.0'"
             " not found.\nResource versions can be found at: "
-            f"https://resources.gem5.org/resources/x86-ubuntu-18.04-img/versions"
-            in str(context.exception)
+            "https://resources.gem5.org/resources/x86-ubuntu-18.04-img/"
+            "versions" in str(context.exception)
         )
 
     @patch(
@@ -286,12 +276,13 @@ class ClientWrapperTestSuite(unittest.TestCase):
             get_resource_json_obj(
                 resource_id,
                 resource_version=resource_version,
+                gem5_version="develop",
             )
         self.assertTrue(
-            f"Resource this-is-a-test-resource with version '2.5.0'"
+            "Resource this-is-a-test-resource with version '2.5.0'"
             " not found.\nResource versions can be found at: "
-            f"https://resources.gem5.org/resources/this-is-a-test-resource/versions"
-            in str(context.exception)
+            "https://resources.gem5.org/resources/this-is-a-test-resource/"
+            "versions" in str(context.exception)
         )
 
     @patch(
@@ -308,11 +299,13 @@ class ClientWrapperTestSuite(unittest.TestCase):
             resource_id_mongo,
             resource_version=resource_version_mongo,
             clients=["gem5-resources"],
+            gem5_version="develop",
         )
         resource_json = get_resource_json_obj(
             resource_id_json,
             resource_version=resource_version_json,
             clients=["baba"],
+            gem5_version="develop",
         )
         self.assertEqual(resource_mongo["id"], "x86-ubuntu-18.04-img")
         self.assertEqual(resource_mongo["resource_version"], "1.0.0")
@@ -322,7 +315,8 @@ class ClientWrapperTestSuite(unittest.TestCase):
         )
         self.assertEqual(
             resource_mongo["source_url"],
-            "https://github.com/gem5/gem5-resources/tree/develop/src/x86-ubuntu",
+            "https://github.com/gem5/gem5-resources/tree/develop/src/"
+            "x86-ubuntu",
         )
         self.assertEqual(resource_mongo["architecture"], "X86")
 
@@ -347,6 +341,7 @@ class ClientWrapperTestSuite(unittest.TestCase):
         resource_id = "simpoint-resource"
         resource = get_resource_json_obj(
             resource_id,
+            gem5_version="develop",
         )
         self.assertEqual(resource["id"], resource_id)
         self.assertEqual(resource["resource_version"], "0.2.0")
@@ -371,6 +366,7 @@ class ClientWrapperTestSuite(unittest.TestCase):
         resource_id = "x86-ubuntu-18.04-img"
         resource_json = get_resource_json_obj(
             resource_id,
+            gem5_version="develop",
         )
 
         self.assertEqual(resource_json["id"], "x86-ubuntu-18.04-img")
@@ -378,8 +374,7 @@ class ClientWrapperTestSuite(unittest.TestCase):
         self.assertEqual(resource_json["category"], "disk-image")
 
         resource_json = get_resource_json_obj(
-            resource_id,
-            resource_version="1.0.0",
+            resource_id, resource_version="1.0.0", gem5_version="develop"
         )
 
         self.assertEqual(resource_json["id"], "x86-ubuntu-18.04-img")
@@ -396,6 +391,7 @@ class ClientWrapperTestSuite(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             get_resource_json_obj(
                 resource_id,
+                gem5_version="develop",
             )
         self.assertTrue(
             f"Resource {resource_id} has multiple resources with"
@@ -428,6 +424,7 @@ class ClientWrapperTestSuite(unittest.TestCase):
             with contextlib.redirect_stderr(f):
                 get_resource_json_obj(
                     resource_id,
+                    gem5_version="develop",
                 )
         self.assertTrue(
             "Error getting resources from client gem5-resources:"
@@ -440,21 +437,7 @@ class ClientWrapperTestSuite(unittest.TestCase):
 
     @patch(
         "gem5.resources.client.clientwrapper",
-        ClientWrapper(
-            {
-                "sources": {
-                    "gem5-resources": {
-                        "dataSource": "gem5-vision",
-                        "database": "gem5-vision",
-                        "collection": "versions_test",
-                        "url": "https://data.mongodb-api.com/app/data-ejhjf/endpoint/data/v",
-                        "authUrl": "https://realm.mongodb.com/api/client/v2.0/app/data-ejhjf/auth/providers/api-key/login",
-                        "apiKey": "OIi5bAP7xxIGK782t8ZoiD2BkBGEzMdX3upChf9zdCxHSnMoiTnjI22Yw5kOSgy9",
-                        "isMongo": True,
-                    }
-                },
-            }
-        ),
+        ClientWrapper(mock_config_mongo),
     )
     @patch("urllib.request.urlopen", side_effect=mocked_requests_post)
     def test_invalid_url(self, mock_get):
@@ -464,6 +447,7 @@ class ClientWrapperTestSuite(unittest.TestCase):
             with contextlib.redirect_stderr(f):
                 get_resource_json_obj(
                     resource_id,
+                    gem5_version="develop",
                 )
         self.assertTrue(
             "Error getting resources from client gem5-resources:"
@@ -476,21 +460,7 @@ class ClientWrapperTestSuite(unittest.TestCase):
 
     @patch(
         "gem5.resources.client.clientwrapper",
-        ClientWrapper(
-            {
-                "sources": {
-                    "gem5-resources": {
-                        "dataSource": "gem5-vision",
-                        "database": "gem5-vision",
-                        "collection": "versions_test",
-                        "url": "https://data.mongodb-api.com/app/data-ejhjf/endpoint/data/v1",
-                        "authUrl": "https://realm.mongodb.com/api/client/v2.0/app/data-ejhjf/auth/providers/api-key/login",
-                        "apiKey": "OIi5bAP7xxIGK782t8ZoiD2BkBGEzMdX3upChf9zdCxHSnMoiTnjI22Yw5kOSgy9",
-                        "isMongo": True,
-                    }
-                },
-            }
-        ),
+        ClientWrapper(mock_config_mongo),
     )
     @patch("urllib.request.urlopen", side_effect=mocked_requests_post)
     def test_invalid_url(self, mock_get):
@@ -500,6 +470,7 @@ class ClientWrapperTestSuite(unittest.TestCase):
             with contextlib.redirect_stderr(f):
                 get_resource_json_obj(
                     resource_id,
+                    gem5_version="develop",
                 )
         self.assertTrue(
             "Error getting resources from client gem5-resources:"

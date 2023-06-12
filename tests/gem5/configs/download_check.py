@@ -26,9 +26,10 @@
 
 from gem5.resources.downloader import (
     list_resources,
-    get_resources_json_obj,
     get_resource,
 )
+
+from gem5.resources.client import get_resource_json_obj
 
 from gem5.resources.md5_utils import md5
 
@@ -52,6 +53,15 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--gem5-version",
+    type=str,
+    required=False,
+    help="The gem5 version to check the resources against. Resources not "
+    "compatible with this version will be ignored. If not set, no "
+    "compatibility tests are performed.",
+)
+
+parser.add_argument(
     "--download-directory",
     type=str,
     required=True,
@@ -67,39 +77,59 @@ if not Path(args.download_directory).exists():
 
 
 ids = args.ids
+resource_list = list_resources(gem5_version=args.gem5_version)
 if len(ids) == 0:
-    ids = list_resources()
+    ids = resource_list
 
 # We log all the errors as they occur then dump them at the end. This means we
 # can be aware of all download errors in a single failure.
 errors = str()
 
 for id in ids:
-    if id not in list_resources():
+    if id not in resource_list:
         errors += (
             f"Resource with ID '{id}' not found in "
             + f"`list_resources()`.{os.linesep}"
         )
         continue
 
-    resource_json = get_resources_json_obj(id)
-    download_path = os.path.join(args.download_directory, id)
-    try:
-        get_resource(resource_name=id, to_path=download_path)
-    except Exception as e:
-        errors += f"Failure to download resource '{id}'.{os.linesep}"
-        errors += f"Exception message:{os.linesep}{str(e)}"
-        errors += f"{os.linesep}{os.linesep}"
-        continue
+    for resource_version in ids[id]:
 
-    if md5(Path(download_path)) != resource_json["md5sum"]:
-        errors += (
-            f"Downloaded resource '{id}' md5 "
-            + f"({md5(Path(download_path))}) differs to that in the "
-            + f"JSON ({resource_json['md5sum']}).{os.linesep}"
+        resource_json = get_resource_json_obj(
+            resource_id=id,
+            resource_version=resource_version,
+            gem5_version=args.gem5_version,
         )
+        if resource_json["category"] == "workload":
+            # Workloads are not downloaded as part of this test.
+            continue
+        download_path = os.path.join(
+            args.download_directory, f"{id}-v{resource_version}"
+        )
+        try:
+            get_resource(
+                resource_name=id,
+                resource_version=resource_version,
+                gem5_version=args.gem5_version,
+                to_path=download_path,
+            )
+        except Exception as e:
+            errors += (
+                f"Failure to download resource '{id}', "
+                + f"v{resource_version}.{os.linesep}"
+            )
+            errors += f"Exception message:{os.linesep}{str(e)}"
+            errors += f"{os.linesep}{os.linesep}"
+            continue
 
-    # Remove the downloaded resource.
+        if md5(Path(download_path)) != resource_json["md5sum"]:
+            errors += (
+                f"Downloaded resource '{id}' md5 "
+                + f"({md5(Path(download_path))}) differs to that recorded in "
+                + f" gem5-resources ({resource_json['md5sum']}).{os.linesep}"
+            )
+
+        # Remove the downloaded resource.
     shutil.rmtree(download_path, ignore_errors=True)
 
 # If errors exist, raise an exception highlighting them.

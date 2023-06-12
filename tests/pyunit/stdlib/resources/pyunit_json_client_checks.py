@@ -30,15 +30,11 @@ import os
 from typing import Dict
 import json
 
-from gem5.resources.downloader import (
-    _get_resources_json_at_path,
-    _get_resources_json,
-    _resources_json_version_required,
-)
+from gem5.resources.client_api.jsonclient import JSONClient
 
 
-class ResourceDownloaderTestSuite(unittest.TestCase):
-    """Test cases for gem5.resources.downloader"""
+class JSONClientTestSuite(unittest.TestCase):
+    """Test cases for gem5.resources.client_api.jsonclient"""
 
     @classmethod
     def setUpClass(cls) -> str:
@@ -142,12 +138,9 @@ class ResourceDownloaderTestSuite(unittest.TestCase):
         file.close()
         cls.file_path = file.name
 
-        os.environ["GEM5_RESOURCE_JSON"] = cls.file_path
-
     @classmethod
     def tearDownClass(cls) -> None:
         os.remove(cls.file_path)
-        del os.environ["GEM5_RESOURCE_JSON"]
 
     def verify_json(self, json: Dict) -> None:
         """
@@ -167,32 +160,22 @@ class ResourceDownloaderTestSuite(unittest.TestCase):
         self.assertEquals("test-version", json[3]["id"])
 
     def test_get_resources_json_at_path(self) -> None:
-        # Tests the gem5.resources.downloader._get_resources_json_at_path()
-        # function.
+        # Tests JSONClient.get_resources_json()
 
-        json = _get_resources_json_at_path(path=self.file_path)
-        self.verify_json(json=json)
-
-    def test_get_resources_json(self) -> None:
-        # Tests the gem5.resources.downloader._get_resources_json() function.
-
-        json = _get_resources_json()
+        client = JSONClient(path=self.file_path)
+        json = client.get_resources_json()
         self.verify_json(json=json)
 
     def test_get_resources_json_invalid_url(self) -> None:
-        # Tests the gem5.resources.downloader._get_resources_json() function in
-        # case where an invalid url is passed as the URL/PATH of the
-        # resources.json file.
+        # Tests the JSONClient.get_resources_json() function in case where an
+        # invalid url is passed as the URL/PATH of the resources JSON file.
 
         path = "NotAURLorFilePath"
-        os.environ["GEM5_RESOURCE_JSON"] = path
         with self.assertRaises(Exception) as context:
-            _get_resources_json()
+            client = JSONClient(path=path)
+            json = client.get_resources_json()
 
         self.assertTrue(
             f"Resources location '{path}' is not a valid path or URL."
             in str(context.exception)
         )
-
-        # Set back to the old path
-        os.environ["GEM5_RESOURCE_JSON"] = self.file_path
