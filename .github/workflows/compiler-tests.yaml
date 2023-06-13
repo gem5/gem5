@@ -1,6 +1,6 @@
 # This workflow runs all of the compiler tests
 
-name: Running main.py
+name: Compiler Tests
 run-name: ${{ github.actor }} is running compiler tests
 
 

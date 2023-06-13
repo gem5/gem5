@@ -1,6 +1,6 @@
 # This workflow runs all of the long tests within main.py, extra tests in nightly.sh, and unittests
 
-name: Running main.py
+name: Daily Tests
 run-name: ${{ github.actor }} is running the daily tests
 
 
