@@ -5,7 +5,8 @@ run-name: ${{ github.actor }} is running the pull-request continuous integration
 
 on:
   pull_request:
-    types: [opened, reopened, edited]
+    types: [opened, edited, synchronize]
+
 
 jobs:
   pre-commit:
