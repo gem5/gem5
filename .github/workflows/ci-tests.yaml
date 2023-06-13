@@ -1,7 +1,6 @@
 # This workflow runs after a pull-request has been approved by a reviewer.
 
 name: CI Tests
-run-name: ${{ github.actor }} is running the pull-request continuous integration tests
 
 on:
   pull_request:

@@ -1,8 +1,6 @@
 # This workflow runs all of the very-long tests within main.py
 
 name: Weekly Tests
-run-name: ${{ github.actor }} is running the weekly tests
-
 
 on:
   # Runs every Sunday from 7AM UTC
