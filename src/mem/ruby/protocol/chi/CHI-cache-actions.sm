@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 ARM Limited
+ * Copyright (c) 2021-2023 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -598,9 +598,12 @@ action(Initiate_ReadUnique_AutoUpgrade, desc="") {
 action(Initiate_ReadUnique_Upgrade, desc="") {
   // must use the transitions with auto upgrade otherwise
   assert(is_HN == false);
-  assert(tbe.use_DCT == false);
   assert((tbe.dataValid && tbe.dataUnique) == false);
   assert((tbe.dir_ownerExists && tbe.dir_ownerIsExcl) == false);
+
+  // CompData or CompUC will always be send by us after permission is received
+  // from downstream
+  tbe.use_DCT := false;
 
   tbe.actions.push(Event:ReadMissPipe);
   if (tbe.dataMaybeDirtyUpstream) {
