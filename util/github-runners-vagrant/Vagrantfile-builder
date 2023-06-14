@@ -20,6 +20,9 @@ Vagrant.configure("2") do |config|
   # sets up vm
   config.vm.provision :shell, path: "provision_root.sh"
   config.vm.provision :shell, privileged: false, path: "provision_nonroot.sh"
+  # To ensure we don't run out of memory, we enable dynamic Swap Space. This is
+  # done via the "swapspace" daemon: https://pqxx.org/development/swapspace/
+  config.vm.provision :shell, inline: "sudo apt install swapspace -y"
   # The provision_root.sh adds the vagrant user to the docker group, so we need to reload the VM.
   config.vm.provision :reload
   config.vm.provision :shell, run: 'always', inline: <<-SHELL
