@@ -51,7 +51,7 @@ gem5_binary = Artifact.registerArtifact(
     inputs = [gem5_repo,],
     documentation = '''
       Default gem5 binary compiled for the X86 ISA.
-      This was built from the main gem5 repo (gem5.googlesource.com) without
+      This was built from the main gem5 repo (https://github.com/gem5/gem5/) without
       any modifications. We recently updated to the current gem5 master
       which has a fix for memory channel address striping.
     '''
