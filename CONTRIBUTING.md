@@ -67,8 +67,8 @@ High-level flow for submitting changes
     | Submit code |
     +-------------+
 
-After creating your change to gem5, you can post a review on our Gerrit
-code-review site: https://gem5-review.googlesource.com. Before being able to
+After creating your change to gem5, you can post a review to git
+via a pull request at: https://github.com/gem5/gem5/pulls/. Before being able to
 submit your code to the mainline of gem5, the code is reviewed by others in the
 community. Additionally, the maintainer for that part of the code must sign off
 on it.
@@ -77,13 +77,13 @@ Cloning the gem5 repo to contribute
 ===================================
 
 If you plan on contributing, it is strongly encouraged for you to clone the
-repository directly, and checkout the `develop` branch from our gerrit instance
-at https://gem5.googlesource.com/.
+repository directly, and checkout the `develop` branch from our git instance
+at https://github.com/gem5/gem5/.
 
 To clone the gem5 repository:
 
 ```
- git clone https://gem5.googlesource.com/public/gem5
+ git clone https://github.com/gem5/gem5/
 ```
 
 By default, the stable branch is checked out. The stable branch contains the
@@ -156,7 +156,7 @@ The hooks are also automatically installed when gem5 is compiled.
 When you run a `git commit` command the pre-commit hook will run checks on your
 committed code. The commit will be blocked if a check fails.
 
-The same checks are run as part of Gerrit's CI tests (those required to obtain
+The same checks are run as part of github actions CI tests (those required to obtain
 a Verified label, necessary for a change to be accepted to the develop branch).
 Therefore setting up pre-commit in your local gem5 development environment is
 recommended.
@@ -187,8 +187,7 @@ A canonical commit message consists of three parts:
    less. Leave a blank line between the first short summary line and this
    detailed description.
  * Tags describing patch metadata. You are highly recommended to use
-   tags to acknowledge reviewers for their work. Gerrit will automatically add
-   most tags.
+   tags to acknowledge reviewers for their work.
 
 Tags are an optional mechanism to store additional metadata about a patch and
 acknowledge people who reported a bug or reviewed that patch. Tags are
@@ -243,7 +242,7 @@ who has contributed a significant amount of code to the file). The
 up-to-date when you make further changes to files which already have your
 copyright but with older dates.
 
-Note: If you do not follow these guidelines, the gerrit review site will
+Note: If you do not follow these guidelines, the github actions will
 automatically reject your patch.
 If this happens, update your changeset descriptions to match the required style
 and resubmit. The following is a useful git command to update the most recent
@@ -263,20 +262,18 @@ See TESTING.md for more information.
 Posting a review
 ================
 
-If you have not signed up for an account on the Gerrit review site
-(https://gem5-review.googlesource.com), you first have to create an account.
+If you have not signed up for an account on the github
+(https://github.com/), you first have to create an account.
 
 Setting up an account
 ---------------------
- 1. Go to https://gem5.googlesource.com/
- 2. Click "Sign In" in the upper right corner. Note: You will need a Google
- account to contribute.
- 3. After signing in, click "Generate Password" and follow the instructions.
+ 1. Go to https://github.com/
+ 2. Click "Sign up" in the upper right corner.
 
 Submitting a change
 -------------------
 
-In gerrit, to submit a review request, you can simply push your git commits to
+In github, to submit a review request, you can simply push your git commits to
 a special named branch. For more information on git push see
 https://git-scm.com/docs/git-push.
 
@@ -284,94 +281,13 @@ There are three ways to push your changes to gerrit.
 
 Push change to gerrit review
 ----------------------------
+1. Fork the gem5 repository on GitHub from https://github.com/gem5/gem5/.
+2. Create a new branch in your forked repository for your feature or bug fix.
+3. Commit your changes to the new branch.
+4. Push the branch to your forked repository.
+5. Open a pull request from your branch in your forked repository to the main gem5 repository.
 
-```
- git push origin HEAD:refs/for/develop
-```
-
-Assuming origin is https://gem5.googlesource.com/public/gem5 and you want to
-push the changeset at HEAD, this will create a new review request on top of the
-develop branch. More generally,
-
-```
- git push <gem5 gerrit instance> <changeset>:refs/for/<branch>
-```
-
-See https://gerrit-review.googlesource.com/Documentation/user-upload.html for
-more information.
-
-Pushing your first change
---------------------------
-The first time you push a change you may get the following error:
-
-```
- remote: ERROR: [fb1366b] missing Change-Id in commit message footer
- ...
-```
-
-Within the error message, there is a command line you should run. For every new
-clone of the git repo, you need to run the following command to automatically
-insert the change id in the the commit (all on one line).
-
-```
- curl -Lo `git rev-parse --git-dir`/hooks/commit-msg \
-	https://gerrit-review.googlesource.com/tools/hooks/commit-msg ; \
- chmod +x `git rev-parse --git-dir`/hooks/commit-msg
-```
-
-If you receive the above error, simply run this command and then amend your
-changeset.
-
-```
- git commit --amend
-```
-
-Push change to gerrit as a Work In Progress
--------------------------------------------
-
-It is acceptable to push commits as "Work In Progress" (WIP) changes within
-gerrit. WIP changes are publicly visible though no one will be able to review
-the changes or be directly notified they have been submitted. WIP changes can
-be useful for backing up code currently under-development or for sharing
-incomplete code with the wider community (i.e., the link to the gerrit change
-may be shared, and others may download the change, comment on it, and track
-alterations over time).
-
-See https://gerrit-review.googlesource.com/Documentation/intro-user.html#wip
-for details on WIP gerrit changes.
-
-To push a change as a WIP:
-
-```
- git push origin HEAD:refs/for/develop%wip
-```
-
-Once you have pushed your change as a WIP, you can log onto [gerrit](
-https://gem5-review.googlesource.com) and view it. Once you're happy with the
-change you can add reviewers which shall move your change from WIP status
-to be considered for submission by the wider gem5 community. Switching from a
-WIP to a regular change does not notify the gem5 community, via the gem5-dev
-mailing-list, that a change has been submitted (as would occur if a change were
-submitted directly for review). It is therefore important to include reviewers
-and CC those who you wish to view the change (they will be notified
-automatically via email).
-
-Push change bypassing gerrit
------------------------------
-
-Only maintainers can bypass gerrit review. This should very rarely be used.
-
-```
- git push origin HEAD:refs/heads/develop
-```
-
-Other gerrit push options
--------------------------
-
-There are a number of options you can specify when uploading your changes to
-gerrit (e.g., reviewers, labels). The gerrit documentation has more
-information.
-https://gerrit-review.googlesource.com/Documentation/user-upload.html
+We will continue to use the “develop” branch for development, so please ensure your pull requests are for the gem5 develop branch. Pull requests to the stable branch will be blocked.
 
 Branches
 ========
@@ -413,8 +329,8 @@ development.**
 Reviewing patches
 =================
 
-Reviewing patches is done on our gerrit instance at
-https://gem5-review.googlesource.com/.
+Reviewing patches is done on our github instance at
+https://github.com/gem5/gem5/pulls/.
 
 After logging in with your Google account, you will be able to comment, review,
 and push your own patches as well as review others' patches. All gem5 users are
@@ -550,7 +466,7 @@ into the stable branch after two weeks, thus marking the new release.
 3. The staging branch will have the full suite of gem5 tests run on it to
 ensure all tests pass and the to-be-released code is in a decent state.
 4. If a user submits a changeset to the staging branch, it will be considered
-and undergo the standard Gerrit review process. However, only alterations that
+and undergo the standard github review process. However, only alterations that
 cannot wait until the following release will be accepted for submission into
 the branch (i.e., submissions to the staging branch for "last minute"
 inclusions to the release should be of a high priority, such as a critical bug
@@ -585,7 +501,7 @@ permitted, the following steps will be taken:
 1. A new branch with the prefix "hotfix-" will be created from the stable
 branch. Only gem5 maintainers can create branches. If a non-maintainer requires
 the creation of a hotfix branch then they should contact a gem5 maintainer.
-2. The change shall be submitted to the hotfix branch via gerrit. Full review,
+2. The change shall be submitted to the hotfix branch via github. Full review,
 as with any other change, will be required.
 3. Once fully submitted, the hotfix branch shall be merged into both the
 develop and the stable branch by a gem5 maintainer.
