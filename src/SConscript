@@ -39,7 +39,7 @@
 
 import collections
 import copy
-import distutils.spawn
+from shutil import which
 import itertools
 import os
 import os.path
@@ -269,7 +269,7 @@ def ProtoBuf(source, tags=None, add_tags=None):
     '''Add a Protocol Buffer to build'''
     Source(source, tags, add_tags, append={'CXXFLAGS': '-Wno-array-bounds'})
 
-env['PROTOC_GRPC'] = distutils.spawn.find_executable('grpc_cpp_plugin')
+env['PROTOC_GRPC'] = which('grpc_cpp_plugin')
 if env['PROTOC_GRPC']:
     with Configure(env) as conf:
         if (not env['HAVE_PKG_CONFIG'] or
