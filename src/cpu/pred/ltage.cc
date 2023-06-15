@@ -141,8 +141,8 @@ LTAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* &bpHistory,
             nrand, corrTarget, bi->lpBranchInfo->predTaken);
     }
 
-    tage->updateHistories(tid, branch_pc, taken, bi->tageBranchInfo, false,
-                          inst, corrTarget);
+    tage->updateHistories(tid, branch_pc, false, taken, corrTarget,
+                          bi->tageBranchInfo, inst);
 
     delete bi; bpHistory = nullptr;
 }

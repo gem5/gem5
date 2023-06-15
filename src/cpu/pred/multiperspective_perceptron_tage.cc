@@ -201,9 +201,9 @@ MPP_TAGE::adjustAlloc(bool & alloc, bool taken, bool pred_taken)
 }
 
 void
-MPP_TAGE::updateHistories(
-    ThreadID tid, Addr branch_pc, bool taken, TAGEBase::BranchInfo* b,
-    bool speculative, const StaticInstPtr &inst, Addr target)
+MPP_TAGE::updateHistories(ThreadID tid, Addr branch_pc, bool speculative,
+                          bool taken, Addr target, TAGEBase::BranchInfo* bi,
+                          const StaticInstPtr & inst)
 {
     if (speculative != speculativeHistUpdate) {
         return;
@@ -211,18 +211,16 @@ MPP_TAGE::updateHistories(
     // speculation is not implemented
     assert(! speculative);
 
-    ThreadHistory& tHist = threadHistory[tid];
-
     int brtype = inst->isDirectCtrl() ? 0 : 2;
     if (! inst->isUncondCtrl()) {
         ++brtype;
     }
-    updatePathAndGlobalHistory(tHist, brtype, taken, branch_pc, target);
+    updatePathAndGlobalHistory(tid, brtype, taken, branch_pc, target);
 }
 
 void
 MPP_TAGE::updatePathAndGlobalHistory(
-    ThreadHistory& tHist, int brtype, bool taken, Addr branch_pc, Addr target)
+    ThreadID tid, int brtype, bool taken, Addr branch_pc, Addr target)
 {
     // TAGE update
     int tmp = (branch_pc << 1) + taken;
@@ -230,19 +228,16 @@ MPP_TAGE::updatePathAndGlobalHistory(
 
     int maxt = (brtype & 1) ? 1 : 4;
 
+    // Update path history
     for (int t = 0; t < maxt; t++) {
-        bool dir = (tmp & 1);
-        tmp >>= 1;
         int pathbit = (path & 127);
         path >>= 1;
-        updateGHist(tHist.gHist, dir, tHist.globalHistory, tHist.ptGhist);
-        tHist.pathHist = (tHist.pathHist << 1) ^ pathbit;
-        for (int i = 1; i <= nHistoryTables; i++) {
-            tHist.computeIndices[i].update(tHist.gHist);
-            tHist.computeTags[0][i].update(tHist.gHist);
-            tHist.computeTags[1][i].update(tHist.gHist);
-        }
+        threadHistory[tid].pathHist
+                        = (threadHistory[tid].pathHist << 1) ^ pathbit;
     }
+
+    // Update global history
+    updateGHist(tid, tmp, maxt);
 }
 
 bool
@@ -623,8 +618,8 @@ MultiperspectivePerceptronTAGE::update(ThreadID tid, Addr instPC, bool taken,
     if (bi->isUnconditional()) {
         statisticalCorrector->scHistoryUpdate(instPC, inst, taken,
                 bi->scBranchInfo, corrTarget);
-        tage->updateHistories(tid, instPC, taken, bi->tageBranchInfo, false,
-                inst, corrTarget);
+        tage->updateHistories(tid, instPC, false, taken, corrTarget,
+                              bi->tageBranchInfo, inst);
     } else {
         tage->updateStats(taken, bi->tageBranchInfo);
         loopPredictor->updateStats(taken, bi->lpBranchInfo);
@@ -672,8 +667,8 @@ MultiperspectivePerceptronTAGE::update(ThreadID tid, Addr instPC, bool taken,
             statisticalCorrector->scHistoryUpdate(instPC, inst, taken,
                     bi->scBranchInfo, corrTarget);
 
-            tage->updateHistories(tid, instPC, taken, bi->tageBranchInfo,
-                                  false, inst, corrTarget);
+            tage->updateHistories(tid, instPC, false, taken, corrTarget,
+                                  bi->tageBranchInfo, inst);
         }
     }
     delete bi; bpHistory = nullptr;

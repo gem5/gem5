@@ -93,8 +93,8 @@ TAGE::update(ThreadID tid, Addr branch_pc, bool taken, void * &bpHistory,
     }
 
     // optional non speculative update of the histories
-    tage->updateHistories(tid, branch_pc, taken, tage_bi, false, inst,
-                          corrTarget);
+    tage->updateHistories(tid, branch_pc, false, taken,
+                          corrTarget, tage_bi, inst);
     delete bi; bpHistory = nullptr;
 }
 
@@ -102,6 +102,7 @@ void
 TAGE::squash(ThreadID tid, void * &bpHistory)
 {
     TageBranchInfo *bi = static_cast<TageBranchInfo*>(bpHistory);
+    tage->restoreHistState(tid, bi->tageBranchInfo);
     DPRINTF(Tage, "Deleting branch info: %lx\n", bi->tageBranchInfo->branchPC);
     delete bi; bpHistory = nullptr;
 }
@@ -136,7 +137,7 @@ TAGE::updateHistories(ThreadID tid, Addr pc, bool uncond,
 
     // Update the global history for all branches
     TageBranchInfo *bi = static_cast<TageBranchInfo*>(bpHistory);
-    tage->updateHistories(tid, pc, taken, bi->tageBranchInfo, true);
+    tage->updateHistories(tid, pc, true, taken, target, bi->tageBranchInfo);
 }
 
 } // namespace branch_prediction

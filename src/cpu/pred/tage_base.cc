@@ -78,6 +78,7 @@ TAGEBase::TAGEBase(const TAGEBaseParams &p)
      numUseAltOnNa(p.numUseAltOnNa),
      useAltOnNaBits(p.useAltOnNaBits),
      maxNumAlloc(p.maxNumAlloc),
+     takenOnlyHistory(p.takenOnlyHistory),
      noSkip(p.noSkip),
      speculativeHistUpdate(p.speculativeHistUpdate),
      instShiftAmt(p.instShiftAmt),
@@ -331,21 +332,41 @@ TAGEBase::baseUpdate(Addr pc, bool taken, BranchInfo* bi)
 // shifting the global history:  we manage the history in a big table in order
 // to reduce simulation time
 void
-TAGEBase::updateGHist(uint8_t * &h, bool dir, uint8_t * tab, int &pt)
+TAGEBase::updateGHist(ThreadID tid, uint64_t bv, uint8_t n)
 {
-    if (pt == 0) {
+    if (n == 0) return;
+
+    // Handle rollovers first.
+    ThreadHistory& tHist = threadHistory[tid];
+    if (tHist.ptGhist < n) {
         DPRINTF(Tage, "Rolling over the histories\n");
          // Copy beginning of globalHistoryBuffer to end, such that
          // the last maxHist outcomes are still reachable
          // through pt[0 .. maxHist - 1].
          for (int i = 0; i < maxHist; i++)
-             tab[histBufferSize - maxHist + i] = tab[i];
-         pt =  histBufferSize - maxHist;
-         h = &tab[pt];
+            tHist.globalHistory[histBufferSize - maxHist + i]
+                = tHist.globalHistory[i];
+
+        tHist.ptGhist = histBufferSize - maxHist;
+        tHist.gHist = &tHist.globalHistory[tHist.ptGhist];
     }
-    pt--;
-    h--;
-    h[0] = (dir) ? 1 : 0;
+
+    // Update the global history
+    for (int i = 0; i < n; i++) {
+
+        // Shift the next bit of the bit vector into the history
+        tHist.ptGhist--;
+        tHist.gHist--;
+        tHist.gHist[0] = (bv & 1) ? 1 : 0;
+        bv >>= 1;
+
+        // Update the folded histories with the new bit.
+        for (int i = 1; i <= nHistoryTables; i++) {
+            tHist.computeIndices[i].update(tHist.gHist);
+            tHist.computeTags[0][i].update(tHist.gHist);
+            tHist.computeTags[1][i].update(tHist.gHist);
+        }
+    }
 }
 
 void
@@ -597,39 +618,58 @@ TAGEBase::handleTAGEUpdate(Addr branch_pc, bool taken, BranchInfo* bi)
 }
 
 void
-TAGEBase::updateHistories(ThreadID tid, Addr branch_pc, bool taken,
-                          BranchInfo* bi, bool speculative,
-                          const StaticInstPtr &inst, Addr target)
+TAGEBase::updateHistories(ThreadID tid, Addr branch_pc, bool speculative,
+                          bool taken, Addr target, BranchInfo* bi,
+                          const StaticInstPtr & inst)
 {
     if (speculative != speculativeHistUpdate) {
         return;
     }
+
+    // If this is the first time we see this branch record the current
+    // state of the history to be able to recover.
+    if (speculativeHistUpdate && (bi->nGhist == 0)) {
+        recordHistState(tid, bi);
+    }
+
+    // In case the branch already updated the history
+    // we need to revert the previous update first.
+    if (bi->nGhist > 0) {
+        restoreHistState(tid, bi);
+    }
+
     ThreadHistory& tHist = threadHistory[tid];
-    //  UPDATE HISTORIES
+
+    // Update path history
     bool pathbit = ((branch_pc >> instShiftAmt) & 1);
-    //on a squash, return pointers to this and recompute indices.
-    //update user history
-    updateGHist(tHist.gHist, taken, tHist.globalHistory, tHist.ptGhist);
     tHist.pathHist = (tHist.pathHist << 1) + pathbit;
     tHist.pathHist = (tHist.pathHist & ((1ULL << pathHistBits) - 1));
 
-    if (speculative) {
-        bi->ptGhist = tHist.ptGhist;
-        bi->pathHist = tHist.pathHist;
+
+    // Update global history
+    // We should have not already modified the history
+    // for this branch
+    assert(bi->nGhist == 0);
+
+    if (takenOnlyHistory) {
+        // For taken history we shift two bits into the global
+        // history in case the branch was taken.
+        // For not-taken branches no history update will happen.
+        if (taken) {
+            bi->ghist = (((branch_pc >> instShiftAmt) >> 2)
+                      ^  ((target >> instShiftAmt) >> 3)) & 0x3;
+            bi->nGhist = 2;
     }
 
-    //prepare next index and tag computations for user branchs
-    for (int i = 1; i <= nHistoryTables; i++)
-    {
-        if (speculative) {
-            bi->ci[i]  = tHist.computeIndices[i].comp;
-            bi->ct0[i] = tHist.computeTags[0][i].comp;
-            bi->ct1[i] = tHist.computeTags[1][i].comp;
+    } else {
+        // For normal direction history update the history by
+        // whether the branch was taken or not.
+        bi->ghist = taken ? 1 : 0;
+        bi->nGhist = 1;
         }
-        tHist.computeIndices[i].update(tHist.gHist);
-        tHist.computeTags[0][i].update(tHist.gHist);
-        tHist.computeTags[1][i].update(tHist.gHist);
-    }
+    // Update the global history
+    updateGHist(tid, bi->ghist, bi->nGhist);
+
     DPRINTF(Tage, "Updating global histories with branch:%lx; taken?:%d, "
             "path Hist: %x; pointer:%d\n", branch_pc, taken, tHist.pathHist,
             tHist.ptGhist);
@@ -638,29 +678,50 @@ TAGEBase::updateHistories(ThreadID tid, Addr branch_pc, bool taken,
 }
 
 void
-TAGEBase::squash(ThreadID tid, bool taken, TAGEBase::BranchInfo *bi,
-                 Addr target)
+TAGEBase::recordHistState(ThreadID tid, BranchInfo* bi)
 {
-    if (!speculativeHistUpdate) {
-        /* If there are no speculative updates, no actions are needed */
-        return;
+    ThreadHistory& tHist = threadHistory[tid];
+    bi->ptGhist = tHist.ptGhist;
+    bi->pathHist = tHist.pathHist;
+
+    for (int i = 1; i <= nHistoryTables; i++) {
+        bi->ci[i]  = tHist.computeIndices[i].comp;
+        bi->ct0[i] = tHist.computeTags[0][i].comp;
+        bi->ct1[i] = tHist.computeTags[1][i].comp;
+    }
     }
 
+void
+TAGEBase::restoreHistState(ThreadID tid, BranchInfo* bi)
+{
     ThreadHistory& tHist = threadHistory[tid];
-    DPRINTF(Tage, "Restoring branch info: %lx; taken? %d; PathHistory:%x, "
-            "pointer:%d\n", bi->branchPC,taken, bi->pathHist, bi->ptGhist);
     tHist.pathHist = bi->pathHist;
-    tHist.ptGhist = bi->ptGhist;
-    tHist.gHist = &(tHist.globalHistory[tHist.ptGhist]);
-    tHist.gHist[0] = (taken ? 1 : 0);
+
+    if (bi->nGhist == 0)
+        return;
+
+    //  RESTORE HISTORIES
+    // Shift out the inserted bits
+    // from the folded history and the global history vector
+    for (int n = 0; n < bi->nGhist; n++) {
+
+        // First revert the folded history
     for (int i = 1; i <= nHistoryTables; i++) {
-        tHist.computeIndices[i].comp = bi->ci[i];
-        tHist.computeTags[0][i].comp = bi->ct0[i];
-        tHist.computeTags[1][i].comp = bi->ct1[i];
-        tHist.computeIndices[i].update(tHist.gHist);
-        tHist.computeTags[0][i].update(tHist.gHist);
-        tHist.computeTags[1][i].update(tHist.gHist);
+            tHist.computeIndices[i].restore(tHist.gHist);
+            tHist.computeTags[0][i].restore(tHist.gHist);
+            tHist.computeTags[1][i].restore(tHist.gHist);
     }
+        tHist.ptGhist++;
+        tHist.gHist++;
+    }
+    bi->nGhist = 0;
+}
+
+void
+TAGEBase::squash(ThreadID tid, bool taken,
+                 TAGEBase::BranchInfo *bi, Addr target)
+{
+    updateHistories(tid, bi->branchPC, true, taken, target, bi);
 }
 
 void

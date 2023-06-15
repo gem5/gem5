@@ -94,11 +94,11 @@ class MPP_TAGE : public TAGEBase
 
     unsigned getUseAltIdx(TAGEBase::BranchInfo* bi, Addr branch_pc) override;
     void adjustAlloc(bool & alloc, bool taken, bool pred_taken) override;
-    void updateHistories(ThreadID tid, Addr branch_pc, bool taken,
-                         TAGEBase::BranchInfo* b, bool speculative,
-                         const StaticInstPtr &inst, Addr target) override;
+    void updateHistories(ThreadID tid, Addr branch_pc, bool speculative,
+                         bool taken, Addr target, TAGEBase::BranchInfo* bi,
+                         const StaticInstPtr & inst) override;
 
-    void updatePathAndGlobalHistory(ThreadHistory& tHist, int brtype,
+    void updatePathAndGlobalHistory(ThreadID tid, int brtype,
                                     bool taken, Addr branch_pc, Addr target);
 };
 

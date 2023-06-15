@@ -141,7 +141,7 @@ class IndirectPredictor(SimObject):
 
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
     takenOnlyHistory = Param.Bool(
-        False,
+        Parent.takenOnlyHistory,
         "Build the global "
         "history using taken-only branch target history instead of direction "
         "history from all branches",
@@ -195,6 +195,14 @@ class BranchPredictor(SimObject):
         SimpleIndirectPredictor(),
         "Indirect branch predictor, set to NULL to disable "
         "indirect predictions",
+    )
+
+    # Taken only history as used in most modern server CPUs.
+    takenOnlyHistory = Param.Bool(
+        False,
+        "Build the global history only from taken branches (2-bit) "
+        "instead of direction history from all branches. Widely implemented "
+        "in modern server CPUs: https://ieeexplore.ieee.org/document/9246215",
     )
 
 
@@ -283,6 +291,14 @@ class TAGEBase(SimObject):
 
     speculativeHistUpdate = Param.Bool(
         True, "Use speculative update for histories"
+    )
+
+    # Taken only history as used in most modern server CPUs.
+    takenOnlyHistory = Param.Bool(
+        Parent.takenOnlyHistory,
+        "Build the global history only from taken branches (2-bit) "
+        "instead of direction history from all branches. Widely implemented "
+        "in modern server CPUs: https://ieeexplore.ieee.org/document/9246215",
     )
 
 
