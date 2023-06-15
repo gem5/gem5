@@ -66,6 +66,7 @@ def EnvDefaults(env):
             "GEM5PY_LINKFLAGS_EXTRA",
             "LINKFLAGS_EXTRA",
             "LANG",
+            "LC_CTYPE",
         ]
     )
 

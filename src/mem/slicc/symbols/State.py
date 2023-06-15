@@ -30,7 +30,7 @@ from slicc.symbols.Symbol import Symbol
 
 class State(Symbol):
     def __repr__(self):
-        return "[State: %s]" % self.ident
+        return f"[State: {self.ident}]"
 
     def isWildcard(self):
         return False

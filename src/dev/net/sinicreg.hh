@@ -59,11 +59,9 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(Sinic, sinic);
 namespace sinic
 {
 
-GEM5_DEPRECATED_NAMESPACE(Regs, registers);
 namespace registers
 {
 

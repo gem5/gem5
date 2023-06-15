@@ -38,8 +38,12 @@
 def format M5Op() {{
     iop = InstObjParams(name, Name, 'PseudoOp', '''
             uint64_t result;
-            pseudo_inst::pseudoInst<RegABI64>(xc->tcBase(), M5FUNC, result);
-            a0 = result''',
+            if (machInst.rv_type == RV32) {
+                pseudo_inst::pseudoInst<RegABI32>(xc->tcBase(), M5FUNC, result);
+            } else {
+                pseudo_inst::pseudoInst<RegABI64>(xc->tcBase(), M5FUNC, result);
+            }
+            a0 = rvSext(result)''',
             ['IsNonSpeculative', 'IsSerializeAfter'])
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)

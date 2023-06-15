@@ -103,6 +103,10 @@ sc_report_handler::report(sc_severity severity, const char *msg_type,
     }
 
     sc_gem5::reportHandlerProc(report, actions);
+
+    for (auto& handler : sc_gem5::getExtraSystemCReportHandlers()) {
+        handler(report, actions);
+    }
 }
 
 void

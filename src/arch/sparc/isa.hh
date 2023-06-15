@@ -133,13 +133,13 @@ class ISA : public BaseISA
     void processSTickCompare();
     void processHSTickCompare();
 
-    typedef EventWrapper<ISA, &ISA::processTickCompare> TickCompareEvent;
+    typedef MemberEventWrapper<&ISA::processTickCompare> TickCompareEvent;
     TickCompareEvent *tickCompare = nullptr;
 
-    typedef EventWrapper<ISA, &ISA::processSTickCompare> STickCompareEvent;
+    typedef MemberEventWrapper<&ISA::processSTickCompare> STickCompareEvent;
     STickCompareEvent *sTickCompare = nullptr;
 
-    typedef EventWrapper<ISA, &ISA::processHSTickCompare> HSTickCompareEvent;
+    typedef MemberEventWrapper<&ISA::processHSTickCompare> HSTickCompareEvent;
     HSTickCompareEvent *hSTickCompare = nullptr;
 
     static const int NumGlobalRegs = 8;

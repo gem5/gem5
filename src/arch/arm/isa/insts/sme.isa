@@ -1,0 +1,821 @@
+// Copyright (c) 2022 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+// @file Definition of SME instructions.
+
+let {{
+
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
+
+    def smeAddInst(name, Name, opClass, types, op):
+        global header_output, decoder_output, exec_output
+        code = smEnCheckCode + smeZaWrite + '''
+            // imm stores the tile index
+            // op1 is the source SVE vector register
+            // gp1 is the row predecate register
+            // gp2 is the column predecate register
+
+            unsigned eCount = ArmStaticInst::getCurSmeVecLen<TPElem>(
+                xc->tcBase());
+
+            uint8_t tile_index = imm & 0x7;
+
+            // View the tile as the correct data type, extract the sub-tile
+            auto tile = getTile<TPElem>(ZA, tile_index);
+            '''
+        code += op
+
+        iop = InstObjParams(name, "Sme" + Name, "SmeAddOp",
+                            {'code': code, 'op_class': opClass},
+                            ['IsNonSpeculative'])
+        header_output += SmeAddDeclare.subst(iop)
+        exec_output += SmeTemplatedExecute.subst(iop)
+
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sme' + Name}
+            exec_output += SmeOpExecDeclare.subst(substDict)
+
+    def smeAddVlInst(name, Name, opClass, op):
+        global header_output, decoder_output, exec_output
+        code = smEnCheckCodeNoPstate + '''
+            // dest is the 64-bit destination register
+            // op1 is the 64-bit source register
+            // imm is a signed multiplier
+            '''
+        code += op
+
+        iop = InstObjParams(name, "Sme" + Name, "SmeAddVlOp",
+                            {'code': code, 'op_class': opClass},
+                            ['IsNonSpeculative'])
+        header_output += SmeAddVlDeclare.subst(iop)
+        exec_output += SmeExecute.subst(iop)
+
+    def smeLd1xInst(name, Name, opClass, types):
+        global header_output, decoder_output, exec_output
+        code = smEnCheckCode + smeZaWrite + '''
+            // imm stores the tile number as well as the vector offset. The
+            // size of the fields changes based on the data type being used.
+            // XOp1 stores Rn
+            // GpOp stores the governing predicate register
+            // WOp2 stores Rs - the vector index register
+            // XOp3 stores Rm - the offset register (applied to Rn)
+
+
+            unsigned eCount = ArmStaticInst::getCurSmeVecLen<TPElem>(
+                            xc->tcBase());
+
+            uint8_t offset = imm & (0xf >> (findMsbSet(sizeof(TPElem))));
+            [[maybe_unused]] uint8_t tile_idx =
+                imm >> (4 - findMsbSet(sizeof(TPElem)));
+            [[maybe_unused]] uint8_t vec_idx = (WOp2 + offset) % eCount;
+
+            // Calculate the address
+            [[maybe_unused]] Addr EA = XOp1 + XOp3 * sizeof(TPElem);
+
+            // Calculate the read predicate. One boolean per byte,
+            // initialised to all true.
+            auto rdEn = std::vector<bool>(eCount * sizeof(TPElem), true);
+            for (int i = 0; i < eCount; ++i) {
+                if (GpOp_x[i]) {
+                    continue;
+                }
+
+                // Mark each byte of the corresponding elem as false
+                for (int j = 0; j < sizeof(TPElem); ++j) {
+                    rdEn[i * sizeof(TPElem) + j] = false;
+                }
+            }
+            '''
+
+        zaWriteCode = '''
+            // Here we write the data we just got from memory to the tile:
+            if (V) {
+                auto col = getTileVSlice<TPElem>(ZA, tile_idx, vec_idx);
+                for(int i = 0; i < eCount; ++i) {
+                    col[i] = GpOp_x[i] ? data[i] : 0;
+                }
+            } else {
+                auto row = getTileHSlice<TPElem>(ZA, tile_idx, vec_idx);
+                for(int i = 0; i < eCount; ++i) {
+                    row[i] = GpOp_x[i] ? data[i] : 0;
+                }
+            }
+        '''
+
+        iop = InstObjParams(name, "Sme" + Name, "SmeLd1xSt1xOp",
+                            {'code': code, 'za_write': zaWriteCode,
+                             'op_class': opClass}, ['IsLoad',
+                             'IsNonSpeculative'])
+        header_output += SmeLd1xDeclare.subst(iop)
+        exec_output += SmeLd1xExecute.subst(iop)
+        exec_output += SmeLd1xInitiateAcc.subst(iop)
+        exec_output += SmeLd1xCompleteAcc.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sme' + Name}
+            exec_output += SmeLd1xExecDeclare.subst(substDict)
+
+    def smeLdrInst(name, Name, opClass):
+        global header_output, decoder_output, exec_output
+        code = smEnCheckCodeNoSM + smeZaWrite + '''
+            // imm stores the vector offset. We do not have a tile number as
+            // we target the whole accumulator array.
+            // imm also stores the offset applied to the base memory access
+            // register.
+            // Op1 stores Rn, which is the base memory access register
+            // Op2 stores Rv, which is the vector select register
+
+
+            unsigned eCount = ArmStaticInst::getCurSmeVecLen<uint8_t>(
+                            xc->tcBase());
+
+            [[maybe_unused]] uint8_t vec_index = (WOp2 + imm) % eCount;
+
+            // Calculate the address
+            [[maybe_unused]] Addr EA = XOp1 + imm;
+            '''
+
+        iop = InstObjParams(name, "Sme" + Name, "SmeLdrStrOp",
+                            {'code': code, 'op_class': opClass},
+                            ['IsLoad', 'IsNonSpeculative'])
+        header_output += SmeLdrDeclare.subst(iop)
+        exec_output += SmeLdrExecute.subst(iop)
+        exec_output += SmeLdrInitiateAcc.subst(iop)
+        exec_output += SmeLdrCompleteAcc.subst(iop)
+
+    def smeMovaExtractInst(name, Name, opClass, types):
+        global header_output, decoder_output, exec_output
+        code = smEnCheckCode + '''
+            // imm stores the tile index
+            // op1 is the source SVE vector register
+            // gp is the governing predecate register
+            // op2 is the slice index register
+            // v is the row/col select immediate - true for column accesses
+
+            unsigned eCount = ArmStaticInst::getCurSmeVecLen<TPElem>(
+                xc->tcBase());
+
+            uint8_t offset = imm & (0xf >> (findMsbSet(sizeof(TPElem))));
+            uint8_t tile_idx = imm >> (4 - findMsbSet(sizeof(TPElem)));
+
+            uint32_t vec_idx = (WOp2 + offset) % eCount;
+
+            if (!v) { // Horizontal (row) access
+                auto row = getTileHSlice<TPElem>(ZA, tile_idx, vec_idx);
+                for (int i = 0; i < eCount; ++i) {
+                    if (!GpOp_x[i]) {
+                        continue;
+                    }
+
+                    AA64FpOp1_x[i] = row[i];
+                }
+            } else { // Vertical (column) access
+                auto col = getTileVSlice<TPElem>(ZA, tile_idx, vec_idx);
+                for (int i = 0; i < eCount; ++i) {
+                    if (!GpOp_x[i]) {
+                        continue;
+                    }
+
+                    AA64FpOp1_x[i] = col[i];
+                }
+            }
+            '''
+
+        iop = InstObjParams(name, "Sme" + Name, "SmeMovExtractOp",
+                            {'code': code, 'op_class': opClass},
+                            ['IsNonSpeculative'])
+        header_output += SmeMovaExtractDeclare.subst(iop)
+        exec_output += SmeTemplatedExecute.subst(iop)
+
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sme' + Name}
+            exec_output += SmeOpExecDeclare.subst(substDict)
+
+    def smeMovaInsertInst(name, Name, opClass, types):
+        global header_output, decoder_output, exec_output
+        code = smEnCheckCode + smeZaWrite + '''
+            // imm stores the tile index
+            // op1 is the source SVE vector register
+            // gp is the governing predecate register
+            // op2 is the slice index register
+            // v is the row/col select immediate - true for column accesses
+
+            unsigned eCount = ArmStaticInst::getCurSmeVecLen<TPElem>(
+                xc->tcBase());
+
+            uint8_t offset = imm & (0xf >> (findMsbSet(sizeof(TPElem))));
+            uint8_t tile_idx = imm >> (4 - findMsbSet(sizeof(TPElem)));
+
+            uint32_t vec_idx = (WOp2 + offset) % eCount;
+
+            if (!v) { // Horizontal (row) access
+                auto row = getTileHSlice<TPElem>(ZA, tile_idx, vec_idx);
+                for (int i = 0; i < eCount; ++i) {
+                    if (!GpOp_x[i]) {
+                        continue;
+                    }
+
+                    row[i] = AA64FpOp1_x[i];
+                }
+            } else { // Vertical (column) access
+                auto col = getTileVSlice<TPElem>(ZA, tile_idx, vec_idx);
+                for (int i = 0; i < eCount; ++i) {
+                    if (!GpOp_x[i]) {
+                        continue;
+                    }
+
+                    col[i] = AA64FpOp1_x[i];
+                }
+            }
+            '''
+
+        iop = InstObjParams(name, "Sme" + Name, "SmeMovInsertOp",
+                            {'code': code, 'op_class': opClass},
+                            ['IsNonSpeculative'])
+        header_output += SmeMovaInsertDeclare.subst(iop)
+        exec_output += SmeTemplatedExecute.subst(iop)
+
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sme' + Name}
+            exec_output += SmeOpExecDeclare.subst(substDict)
+
+    def smeMsrInst(name, Name, opClass, op):
+        global header_output, decoder_output, exec_output
+        code = '''
+            if (FullSystem) {
+                fault = this->checkSmeAccess(xc->tcBase(), Cpsr, Cpacr64);
+                if (fault != NoFault) {
+                    return fault;
+                }
+            }
+        ''' + op
+
+        iop = InstObjParams(name, "Sme" + Name, "ImmOp64",
+                            {'code': code, 'op_class': opClass},
+                            ['IsNonSpeculative', 'IsSerializeAfter'])
+        header_output += SMEMgmtDeclare.subst(iop)
+        exec_output += SmeExecute.subst(iop)
+
+    def smeFPOPInst(name, Name, opClass, srcTypes, dstTypes, op):
+        global header_output, decoder_output, exec_output
+        code = smEnCheckCode + smeZaWrite + '''
+            // imm stores the tile index
+            // op1 is the first SVE vector register
+            // gp1 is the predecate register corresponding to the first
+            //      SVE vector register
+            // gp2 is the predecate register corresponding to the second
+            //      SVE vector register
+            // op2 is the second SVE vector register
+
+            unsigned eCount = ArmStaticInst::getCurSmeVecLen<TPDElem>(
+                xc->tcBase());
+            '''
+        code += op
+
+        iop = InstObjParams(name, "Sme" + Name, "SmeOPOp",
+                            {'code': code, 'op_class': opClass},
+                            ['IsNonSpeculative'])
+        header_output += SmeFPOPDeclare.subst(iop)
+        exec_output += SmeDualTemplatedExecute.subst(iop)
+        for src, dst in zip(srcTypes, dstTypes):
+            substDict = {'targs' : "{}, {}".format(src, dst),
+                         'class_name' : 'Sme' + Name}
+            exec_output += SmeOpExecDeclare.subst(substDict)
+
+    def smeIntOPInst(name, Name, opClass, src1Types, src2Types, dstTypes, op):
+        global header_output, decoder_output, exec_output
+        code = smEnCheckCode + smeZaWrite + '''
+            // imm stores the tile index
+            // op1 is the first SVE vector register
+            // gp1 is the predecate register corresponding to the first
+            //      SVE vector register
+            // gp2 is the predecate register corresponding to the second
+            //      SVE vector register
+            // op2 is the second SVE vector register
+
+            unsigned eCount = ArmStaticInst::getCurSmeVecLen<TPDElem>(
+                xc->tcBase());
+            '''
+        code += op
+
+        iop = InstObjParams(name, "Sme" + Name, "SmeOPOp",
+                            {'code': code, 'op_class': opClass},
+                            ['IsNonSpeculative'])
+        header_output += SmeIntOPDeclare.subst(iop)
+        exec_output += SmeTripleTemplatedExecute.subst(iop)
+        for src1, src2, dst in zip(src1Types, src2Types, dstTypes):
+            substDict = {'targs' : "{}, {}, {}".format(src1, src2, dst),
+                         'class_name' : 'Sme' + Name}
+            exec_output += SmeOpExecDeclare.subst(substDict)
+
+    def smeRdsvlInst(name, Name, opClass):
+        global header_output, decoder_output, exec_output
+        code = smEnCheckCodeNoPstate + '''
+            // dest is the 64-bit destination register
+            // imm is a signed multiplier
+
+            unsigned eCount = ArmStaticInst::getCurSmeVecLen<uint8_t>(
+                xc->tcBase());
+
+            Dest64 = eCount * imm;
+            '''
+
+        iop = InstObjParams(name, "Sme" + Name, "SmeRdsvlOp",
+                            {'code': code, 'op_class': opClass},
+                            ['IsNonSpeculative'])
+        header_output += SmeRdsvlDeclare.subst(iop)
+        exec_output += SmeExecute.subst(iop)
+
+    def smeSt1xInst(name, Name, opClass, types):
+        global header_output, decoder_output, exec_output
+        code = smEnCheckCode + '''
+            // imm stores the tile number as well as the vector offset. The
+            // size of the fields changes based on the data type being used.
+            // XOp1 stores Rn
+            // GpOp stores the governing predicate register
+            // WOp2 stores Rs - the vector index register
+            // XOp3 stores Rm - the offset register (applied to Rn)
+
+
+            unsigned eCount = ArmStaticInst::getCurSmeVecLen<TPElem>(
+                            xc->tcBase());
+
+            uint8_t offset = imm & (0xf >> (findMsbSet(sizeof(TPElem))));
+            [[maybe_unused]] uint8_t tile_idx =
+                imm >> (4 - findMsbSet(sizeof(TPElem)));
+            [[maybe_unused]] uint8_t vec_idx = (WOp2 + offset) % eCount;
+
+            // Calculate the address
+            [[maybe_unused]] Addr EA = XOp1 + XOp3 * sizeof(TPElem);
+
+            // Calculate the write predicate. One boolean per byte,
+            // initialised to all true.
+            auto wrEn = std::vector<bool>(eCount * sizeof(TPElem), true);
+            for (int i = 0; i < eCount; ++i) {
+                if (GpOp_x[i]) {
+                    continue;
+                }
+
+                // Mark each byte of the corresponding elem as false
+                for (int j = 0; j < sizeof(TPElem); ++j) {
+                    wrEn[i * sizeof(TPElem) + j] = false;
+                }
+            }
+
+            // Extract the data to be stored from the tile. We don't worry
+            // about the predicate here as that's already handled by wrEn.
+            TPElem data[MaxSmeVecLenInBytes / sizeof(TPElem)];
+            if(V) {
+                auto col = getTileVSlice<TPElem>(ZA, tile_idx, vec_idx);
+                for (int i = 0; i < eCount; ++i) {
+                    data[i] = col[i];
+                }
+            } else {
+                auto row = getTileHSlice<TPElem>(ZA, tile_idx, vec_idx);
+                for (int i = 0; i < eCount; ++i) {
+                    data[i] = row[i];
+                }
+            }
+            '''
+
+        iop = InstObjParams(name, "Sme" + Name, "SmeLd1xSt1xOp",
+                            {'code': code, 'op_class': opClass},
+                            ['IsStore', 'IsNonSpeculative'])
+        header_output += SmeSt1xDeclare.subst(iop)
+        exec_output += SmeSt1xExecute.subst(iop)
+        exec_output += SmeSt1xInitiateAcc.subst(iop)
+        exec_output += SmeSt1xCompleteAcc.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sme' + Name}
+            exec_output += SmeSt1xExecDeclare.subst(substDict)
+
+    def smeStrInst(name, Name, opClass):
+        global header_output, decoder_output, exec_output
+        code = smEnCheckCodeNoSM + '''
+            // imm stores the vector offset. We do not have a tile number
+            // as we target the whole accumulator array.
+            // imm also stores the offset applied to the base memory access
+            // register.
+            // Op1 stores Rn, which is the base memory access register
+            // Op2 stores Rv, which is the vector select register
+
+
+            unsigned eCount = ArmStaticInst::getCurSmeVecLen<uint8_t>(
+                            xc->tcBase());
+
+            uint8_t vec_index = (WOp2 + imm) % eCount;
+
+            auto row = getTileHSlice<uint8_t>(ZA, 0, vec_index);
+
+            // Calculate the address
+            [[maybe_unused]] Addr EA = XOp1 + imm;
+
+            uint8_t data[MaxSmeVecLenInBytes];
+
+            // Update data which will then by used to store the row to memory
+            for (int i = 0; i < eCount; ++i) {
+                data[i] = row[i];
+            }
+            '''
+
+        iop = InstObjParams(name, "Sme" + Name, "SmeLdrStrOp",
+                            {'code': code, 'op_class': opClass},
+                            ['IsStore', 'IsNonSpeculative'])
+        header_output += SmeStrDeclare.subst(iop)
+        exec_output += SmeStrExecute.subst(iop)
+        exec_output += SmeStrInitiateAcc.subst(iop)
+        exec_output += SmeStrCompleteAcc.subst(iop)
+
+    def smeZeroInst(name, Name, opClass, types):
+        global header_output, decoder_output, exec_output
+        code = smEnCheckCodeNoSM + smeZaWrite + '''
+            // When zeroing tiles, we use  64-bit elements. This means
+            // that we have up to eight subtiles to clear in the ZA tile.
+
+            ZA = ZA;
+
+            for (int i = 0; i < 8; ++i) {
+                if (((imm >> i) & 0x1) == 0x1) {
+                    getTile<TPElem>(ZA, i).zero();
+                }
+            }'''
+
+        iop = InstObjParams(name, "Sme" + Name, "SmeZeroOp",
+                            {'code': code, 'op_class': opClass},
+                            ['IsNonSpeculative'])
+        header_output += SmeZeroDeclare.subst(iop)
+        exec_output += SmeTemplatedExecute.subst(iop)
+
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sme' + Name}
+            exec_output += SmeOpExecDeclare.subst(substDict)
+
+    # ADDHA
+    addCode = '''
+        for (int col = 0; col < eCount; ++col) {
+            TPElem val = AA64FpOp1_x[col];
+
+            for (int row = 0; row < eCount; ++row) {
+                if (!(GpOp1_x[row] && GpOp2_x[col])) {
+                    continue;
+                }
+
+                tile[col][row] += val;
+            }
+        }
+        '''
+    smeAddInst('addha', "Addha", "SimdAddOp", ['int32_t', 'int64_t'], addCode)
+
+    # ADDSPL
+    addSplCode = '''
+        Dest64 = imm * ArmStaticInst::getCurSmeVecLen<uint8_t>(xc->tcBase());
+        // Divide down to get the predicate length in bytes
+        Dest64 /= 8;
+        Dest64 += XOp1;
+    '''
+    smeAddVlInst('addspl', "Addspl", "SimdAddOp", addSplCode)
+
+    # ADDSVL
+    addSvlCode = '''
+        Dest64 = imm * ArmStaticInst::getCurSmeVecLen<uint8_t>(xc->tcBase());
+        Dest64 += XOp1;
+    '''
+    smeAddVlInst('addsvl', "Addsvl", "SimdAddOp", addSvlCode)
+
+    # ADDVA
+    addCode = '''
+        for (int row = 0; row < eCount; ++row) {
+            TPElem val = AA64FpOp1_x[row];
+
+            for (int col = 0; col < eCount; ++col) {
+                if (!(GpOp1_x[row] && GpOp2_x[col])) {
+                    continue;
+                }
+
+                tile[col][row] += val;
+            }
+        }
+        '''
+    smeAddInst('addva', "Addva", "SimdAddOp", ['int32_t', 'int64_t'], addCode)
+
+    # BFMOPA
+    # BFMOPS
+
+    # FMOPA (non-widening)
+    fmopxCode = '''
+        auto tile = getTile<TPDElem>(ZA, imm);
+        FPSCR fpscr = (FPSCR) Fpscr;
+
+        for (int j = 0; j < eCount; ++j) {
+            if (!GpOp1_xd[j]) {
+                continue;
+            }
+
+            TPDElem val1 = AA64FpOp1_xd[j];
+
+            for (int i = 0; i < eCount; ++i) {
+                if (!GpOp2_xd[i]) {
+                    continue;
+                }
+
+                TPDElem val2 = AA64FpOp2_xd[i];
+
+        #if %s
+                val2 = fplibNeg(val2);
+        #endif
+
+                TPDElem res = fplibMul(val1, val2, fpscr);
+
+                tile[j][i] = fplibAdd(tile[j][i],
+                                      res, fpscr);
+            }
+        }
+        '''
+    smeFPOPInst('fmopa', 'Fmopa', 'MatrixOPOp', ['uint32_t', 'uint64_t'],
+              ['uint32_t', 'uint64_t'], fmopxCode % "0")
+
+    # FMOPA (widening)
+    wideningFmopxCode = '''
+        auto tile = getTile<TPDElem>(ZA, imm);
+        FPSCR fpscr = (FPSCR) Fpscr;
+
+        for (int j = 0; j < eCount; ++j) {
+            if (!GpOp1_xd[j]) {
+                continue;
+            }
+            for (int i = 0; i < eCount; ++i) {
+                if (!GpOp2_xd[i]) {
+                    continue;
+                }
+
+                for (int k = 0; k < 2; ++k) {
+                    TPSElem temp1 = (AA64FpOp1_xd[j] >> (16 * k)) & 0xFFFF;
+                    TPSElem temp2 = (AA64FpOp2_xd[j] >> (16 * k)) & 0xFFFF;
+                    TPDElem val1 = fplibConvert<TPSElem, TPDElem>(temp1,
+                        FPCRRounding(fpscr), fpscr);
+                    TPDElem val2 = fplibConvert<TPSElem, TPDElem>(temp2,
+                        FPCRRounding(fpscr), fpscr);
+
+        #if %s
+                    val2 = fplibNeg(val2);
+        #endif
+
+                    TPDElem res = fplibMul(val1, val2, fpscr);
+                    tile[j][i] = fplibAdd(tile[j][i], res, fpscr);
+                }
+            }
+        }
+        '''
+    smeFPOPInst('fmopa', 'FmopaWidening', 'MatrixOPOp',
+              ['uint16_t'], ['uint32_t'], wideningFmopxCode % "0")
+
+    # FMOPS (non-widening)
+    smeFPOPInst('fmops', 'Fmops', 'MatrixOPOp', ['uint32_t', 'uint64_t'],
+              ['uint32_t', 'uint64_t'], fmopxCode % "1")
+
+    # FMOPS (widening)
+    smeFPOPInst('fmops', 'FmopsWidening', 'MatrixOPOp',
+              ['uint16_t'], ['uint32_t'], wideningFmopxCode % "1")
+
+    # LD1B
+    smeLd1xInst('ld1b', 'Ld1b', 'MemReadOp', ['uint8_t'])
+
+    # LD1D
+    smeLd1xInst('ld1d', 'Ld1d', 'MemReadOp', ['uint64_t'])
+
+    # LD1H
+    smeLd1xInst('ld1h', 'Ld1h', 'MemReadOp', ['uint16_t'])
+
+    # LD1Q
+    smeLd1xInst('ld1q', 'Ld1q', 'MemReadOp', ['__uint128_t'])
+
+    # LD1W
+    smeLd1xInst('ld1w', 'Ld1w', 'MemReadOp', ['uint32_t'])
+
+    # LDR
+    smeLdrInst("ldr", "Ldr", 'MemReadOp')
+
+    # MOV (tile to vector) - ALIAS; see MOVA
+    # MOV (vector to tile) - ALIAS; see MOVA
+    # MOVA (tile to vector)
+    smeMovaExtractInst("mova", "MovaExtract", 'MatrixMovOp',
+                      ["uint8_t", "uint16_t", "uint32_t", "uint64_t",
+                      "__uint128_t"])
+
+    # MOVA (vector to tile)
+    smeMovaInsertInst("mova", "MovaInsert", 'MatrixMovOp',
+                      ["uint8_t", "uint16_t", "uint32_t", "uint64_t",
+                      "__uint128_t"])
+
+    # RDSVL
+    smeRdsvlInst('rdsvl', 'Rdsvl', 'SimdAddOp')
+
+    # SMOPA
+    intMopxCode = '''
+        auto tile = getTile<TPDElem>(ZA, imm);
+
+        size_t shift = 8 * sizeof(TPS1Elem);
+        size_t mask = (1 << shift) - 1;
+
+        for (int j = 0; j < eCount; ++j) {
+            for (int i = 0; i < eCount; ++i) {
+                for (int k = 0; k < 4; ++k) {
+                    if (!GpOp1_xs1[4 * j + k]) {
+                        continue;
+                    }
+
+                    if (!GpOp2_xs2[4 * i + k]) {
+                        continue;
+                    }
+
+                    TPS1Elem temp1 =
+                        (TPS1Elem)(AA64FpOp1_xd[j] >> (shift * k)) & mask;
+                    TPS2Elem temp2 =
+                        (TPS2Elem)(AA64FpOp2_xd[i] >> (shift * k)) & mask;
+
+                    tile[j][i] %s= (TPDElem)temp1 * (TPDElem)temp2;
+                }
+            }
+        }
+        '''
+    smeIntOPInst('smopa', 'Smopa', 'MatrixOPOp', ['int8_t', 'int16_t'],
+                 ['int8_t', 'int16_t'], ['int32_t', 'int64_t'],
+                 intMopxCode % "+")
+
+    # SMOPS
+    smeIntOPInst('smops', 'Smops', 'MatrixOPOp', ['int8_t', 'int16_t'],
+                 ['int8_t', 'int16_t'], ['int32_t', 'int64_t'],
+                 intMopxCode % "-")
+
+    # SMSTART
+    smstartSmstopCode = '''
+        // Bit 0 of imm determines if we are setting or clearing
+        // (smstart vs smstop)
+        // Bit 1 means that we are applying this to SM
+        // Bit 2 means that we are applying this to ZA
+        bool new_state    = imm & 0x1;
+        bool sm_affected  = imm & 0x2;
+        bool za_affected  = imm & 0x4;
+        bool old_sm_state = Svcr & 0x1;
+        bool old_za_state = Svcr & 0x2;
+
+        bool sm_changed = sm_affected && old_sm_state != new_state;
+        bool za_changed = za_affected && old_za_state != new_state;
+
+        if (sm_changed) {
+            // We need to zero the SVE Z, P, FFR registers on SM change. Also,
+            // set FPSR to a default value. Note that we use the max SVE len
+            // instead of the actual vector length.
+            //
+            // For the Z, P registers we are directly setting these to zero
+            // without going through the ISA parser (which generates the
+            // dependencies) as otherwise the O3 CPU can deadlock when there
+            // are too few free physical registers. We therefore rely on this
+            // instruction being a barrier (IsSerialiseAfter).
+
+            // Z Registers, including special and interleave registers
+            ArmISA::VecRegContainer zeroed_z_reg;
+            zeroed_z_reg.zero();
+
+            for (int reg_idx = 0; reg_idx < NumVecRegs; ++reg_idx) {
+                auto reg_id = ArmISA::vecRegClass[reg_idx];
+                xc->tcBase()->setReg(reg_id, &zeroed_z_reg);
+            }
+
+            // P Registers, including the FFR
+            ArmISA::VecPredRegContainer zeroed_p_reg;
+            zeroed_p_reg.reset();
+
+            for (int reg_idx = 0; reg_idx < NumVecPredRegs; ++reg_idx) {
+                auto reg_id = ArmISA::vecPredRegClass[reg_idx];
+                xc->tcBase()->setReg(reg_id, &zeroed_p_reg);
+            }
+
+            // FPSR
+            Fpsr = 0x0800009f;
+        }
+
+        if (za_changed) {
+            // ZA write
+            ZA = ZA;
+            ZA.zero();
+        }
+
+        // Now that we've handled the zeroing of the appropriate registers,
+        // we update the pstate accordingly.
+
+        if (sm_changed) {
+            if (new_state == 1) {
+                Svcr = Svcr | 0x1; // Set SM
+            } else {
+                Svcr = Svcr & ~(uint64_t)0x1; // Clear SM
+            }
+        }
+
+        if (za_changed) {
+            if (new_state == 1) {
+                Svcr = Svcr | 0x2; // Set ZA
+            } else {
+                Svcr = Svcr & ~(uint64_t)0x2; // Clear ZA
+            }
+        }
+    '''
+
+    smeMsrInst('smstart', 'Smstart', 'IntAluOp',
+               smstartSmstopCode)
+
+    # SMSTOP
+    smeMsrInst('smstop', 'Smstop', 'IntAluOp',
+               smstartSmstopCode)
+
+    # ST1B
+    smeSt1xInst('st1b', 'St1b', 'MemWriteOp', ['uint8_t'])
+
+    # ST1D
+    smeSt1xInst('st1d', 'St1d', 'MemWriteOp', ['uint64_t'])
+
+    # ST1H
+    smeSt1xInst('st1h', 'St1h', 'MemWriteOp', ['uint16_t'])
+
+    # ST1Q
+    smeSt1xInst('st1q', 'St1q', 'MemWriteOp', ['__uint128_t'])
+
+    # ST1W
+    smeSt1xInst('st1w', 'St1w', 'MemWriteOp', ['uint32_t'])
+
+    # STR
+    smeStrInst("str", "Str", "MemWriteOp")
+
+    # SUMOPA
+    smeIntOPInst('sumopa', 'Sumopa', 'MatrixOPOp', ['int8_t', 'int16_t'],
+                 ['uint8_t', 'uint16_t'], ['int32_t', 'int64_t'],
+                 intMopxCode % "+")
+
+    # SUMOPS
+    smeIntOPInst('sumops', 'Sumops', 'MatrixOPOp', ['int8_t', 'int16_t'],
+                 ['uint8_t', 'uint16_t'], ['int32_t', 'int64_t'],
+                 intMopxCode % "-")
+
+    # UMOPA
+    smeIntOPInst('umopa', 'Umopa', 'MatrixOPOp', ['uint8_t', 'uint16_t'],
+                 ['uint8_t', 'uint16_t'], ['int32_t', 'int64_t'],
+                 intMopxCode % "+")
+
+    # UMOPS
+    smeIntOPInst('umops', 'Umops', 'MatrixOPOp', ['uint8_t', 'uint16_t'],
+                 ['uint8_t', 'uint16_t'], ['int32_t', 'int64_t'],
+                 intMopxCode % "-")
+
+    # USMOPA
+    smeIntOPInst('usmopa', 'Usmopa', 'MatrixOPOp', ['uint8_t', 'uint16_t'],
+                 ['int8_t', 'int16_t'], ['int32_t', 'int64_t'],
+                 intMopxCode % "+")
+
+    # USMOPS
+    smeIntOPInst('usmops', 'Usmops', 'MatrixOPOp', ['uint8_t', 'uint16_t'],
+                 ['int8_t', 'int16_t'], ['int32_t', 'int64_t'],
+                 intMopxCode % "-")
+
+    # ZERO
+    smeZeroInst("zero", "Zero", "MatrixOp", ["uint64_t"])
+
+}};

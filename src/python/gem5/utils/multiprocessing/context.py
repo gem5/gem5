@@ -65,7 +65,7 @@ class gem5Context(context.BaseContext):
         try:
             ctx = _concrete_contexts[method]
         except KeyError:
-            raise ValueError("cannot find context for %r" % method) from None
+            raise ValueError(f"cannot find context for {method!r}") from None
         ctx._check_available()
         return ctx
 

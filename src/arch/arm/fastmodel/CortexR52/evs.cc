@@ -36,7 +36,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
 
@@ -79,6 +78,7 @@ ScxEvsCortexR52<Types>::CorePins::CorePins(Evs *_evs, int _cpu) :
     core_reset(name + ".core_reset", 0),
     poweron_reset(name + ".poweron_reset", 0),
     halt(name + ".halt", 0),
+    standbywfi(name + ".standbywfi"),
     cfgvectable((name + "cfgvectable").c_str())
 {
     for (int i = 0; i < Evs::PpiCount; i++) {
@@ -88,6 +88,7 @@ ScxEvsCortexR52<Types>::CorePins::CorePins(Evs *_evs, int _cpu) :
     core_reset.signal_out.bind(evs->core_reset[cpu]);
     poweron_reset.signal_out.bind(evs->poweron_reset[cpu]);
     halt.signal_out.bind(evs->halt[cpu]);
+    evs->standbywfi[cpu].bind(standbywfi.signal_in);
     cfgvectable.bind(evs->cfgvectable[cpu]);
 }
 
@@ -99,9 +100,19 @@ ScxEvsCortexR52<Types>::ScxEvsCortexR52(
     ext_slave(Base::ext_slave, p.name + ".ext_slave", -1),
     top_reset(p.name + ".top_reset", 0),
     dbg_reset(p.name + ".dbg_reset", 0),
-    model_reset(p.name + ".model_reset", -1, this),
+    model_reset(p.name + ".model_reset"),
     params(p)
 {
+    model_reset.onChange([this](const bool &new_val) {
+        // Set reset for all cores.
+        for (auto &core_pin : corePins)
+            core_pin->poweron_reset.signal_out.set_state(0, new_val);
+        // Set reset for L2 system.
+        top_reset.signal_out.set_state(0, new_val);
+        // Set reset for debug APB.
+        dbg_reset.signal_out.set_state(0, new_val);
+    });
+
     for (int i = 0; i < CoreCount; i++)
         corePins.emplace_back(new CorePins(this, i));
 
@@ -115,16 +126,6 @@ ScxEvsCortexR52<Types>::ScxEvsCortexR52(
 
     clockRateControl.bind(this->clock_rate_s);
     signalInterrupt.bind(this->signal_interrupt);
-}
-
-template <class Types>
-void
-ScxEvsCortexR52<Types>::sendFunc(PacketPtr pkt)
-{
-    auto *trans = sc_gem5::packet2payload(pkt);
-    panic_if(Base::amba[0]->transport_dbg(*trans) != trans->get_data_length(),
-            "Didn't send entire functional packet!");
-    trans->release();
 }
 
 template <class Types>
@@ -161,6 +162,14 @@ ScxEvsCortexR52<Types>::gem5_getPort(const std::string &if_name, int idx)
             panic("Couldn't find CPU number in %s.", if_name);
         }
         return *this->corePins.at(cpu)->ppis.at(idx);
+    } else if (if_name.substr(0, 10) == "standbywfi") {
+        int cpu;
+        try {
+            cpu = std::stoi(if_name.substr(11));
+        } catch (const std::invalid_argument &a) {
+            panic("Couldn't find CPU number in %s.", if_name);
+        }
+        return this->corePins.at(cpu)->standbywfi.getSignalOut(idx);
     } else {
         return Base::gem5_getPort(if_name, idx);
     }

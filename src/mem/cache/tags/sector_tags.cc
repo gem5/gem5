@@ -359,14 +359,6 @@ SectorTags::SectorTagsStats::regStats()
     }
 }
 
-void
-SectorTags::forEachBlk(std::function<void(CacheBlk &)> visitor)
-{
-    for (SectorSubBlk& blk : blks) {
-        visitor(blk);
-    }
-}
-
 bool
 SectorTags::anyBlk(std::function<bool(CacheBlk &)> visitor)
 {

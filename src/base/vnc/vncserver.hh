@@ -180,9 +180,9 @@ class VncServer : public VncInput
     int number;
     int dataFd; // data stream file describer
 
-    ListenSocket listener;
+    ListenSocketPtr listener;
 
-    void listen(int port);
+    void listen();
     void accept();
     void data();
     void detach();

@@ -32,6 +32,7 @@
 #ifndef __BASE_STR_HH__
 #define __BASE_STR_HH__
 
+#include <algorithm>
 #include <cstring>
 #include <limits>
 #include <locale>
@@ -249,6 +250,14 @@ inline bool
 startswith(const std::string &s, const std::string &prefix)
 {
     return (s.compare(0, prefix.size(), prefix) == 0);
+}
+
+inline std::string
+replace(const std::string &s, char from, char to)
+{
+    std::string replaced = s;
+    std::replace(replaced.begin(), replaced.end(), from, to);
+    return replaced;
 }
 
 } // namespace gem5

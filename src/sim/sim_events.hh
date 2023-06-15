@@ -68,8 +68,11 @@ class GlobalSimLoopExitEvent : public GlobalEvent
     const std::string getCause() const { return cause; }
     int getCode() const { return code; }
 
-    void process();     // process event
-
+    virtual void process();// process event
+    virtual void clean(){};//cleaning event
+    ~GlobalSimLoopExitEvent (){
+      DPRINTF(Event,"GlobalSimLoopExitEvent destructed\n");
+    };
     virtual const char *description() const;
 };
 

@@ -53,7 +53,7 @@ class InPortDeclAST(DeclAST):
         self.queue_type = TypeAST(slicc, "InPort")
 
     def __repr__(self):
-        return "[InPortDecl: %s]" % self.ident
+        return f"[InPortDecl: {self.ident}]"
 
     def generate(self):
         symtab = self.symtab

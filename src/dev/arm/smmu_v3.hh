@@ -167,7 +167,7 @@ class SMMUv3 : public ClockedObject
     SMMUAction runProcessTiming(SMMUProcess *proc, PacketPtr pkt);
 
     void processCommands();
-    EventWrapper<SMMUv3, &SMMUv3::processCommands> processCommandsEvent;
+    MemberEventWrapper<&SMMUv3::processCommands> processCommandsEvent;
 
     void processCommand(const SMMUCommand &cmd);
 

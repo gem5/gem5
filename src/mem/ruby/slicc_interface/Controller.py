@@ -49,7 +49,7 @@ class RubyController(ClockedObject):
 
     version = Param.Int("")
     addr_ranges = VectorParam.AddrRange(
-        [AllMemory], "Address range this " "controller responds to"
+        [AllMemory], "Address range this controller responds to"
     )
     cluster_id = Param.UInt32(0, "Id of this controller's cluster")
 

@@ -86,10 +86,10 @@ build_tools = Dir('#build_tools')
 # as gem5. This is in an unorthodox location to avoid building it for every
 # variant.
 gem5py_env = gem5py_env.Clone()
-gem5py = gem5py_env.File('gem5py')
-gem5py_m5 = gem5py_env.File('gem5py_m5')
-gem5py_env['GEM5PY'] = gem5py
-gem5py_env['GEM5PY_M5'] = gem5py_m5
+gem5py = gem5py_env.File('gem5py', Dir(gem5py_env['BUILDDIR']))
+gem5py_m5 = gem5py_env.File('gem5py_m5', Dir(gem5py_env['BUILDDIR']))
+gem5py_env['GEM5PY'] = gem5py.get_abspath()
+gem5py_env['GEM5PY_M5'] = gem5py_m5.get_abspath()
 gem5py_env['OBJSUFFIX'] = '.pyo'
 # Inject build_tools into PYTHONPATH for when we run gem5py.
 pythonpath = gem5py_env['ENV'].get('PYTHONPATH', '').split(':')
@@ -121,7 +121,7 @@ class PySource(SourceFile):
 
         self.modpath = modpath
 
-        cpp = File(self.filename + '.cc')
+        cpp = self.tnode.target_from_source('', '.py.cc').get_abspath()
 
         overrides = {
             'PYSOURCE_MODPATH': modpath,
@@ -169,12 +169,13 @@ class SimObject(PySource):
                 return ' '.join(list('"${%s}"' % arg for arg in all_args))
 
             # Params header.
+            params_hh = build_dir.File(f'params/{simobj}.hh').get_abspath()
             gem5py_env.Command([ "${PARAMS_HH}" ], srcs,
                     MakeAction(cmdline('PARAMS_HH'), Transform("SO Param", 2)),
                     MODULE=module,
                     SIMOBJ=simobj,
                     PYSCRIPT=build_tools.File('sim_object_param_struct_hh.py'),
-                    PARAMS_HH=build_dir.File(f'params/{simobj}.hh'))
+                    PARAMS_HH=params_hh)
 
             # Params cc.
             cc_file = build_dir.File(f'python/_m5/param_{simobj}.cc')
@@ -184,18 +185,19 @@ class SimObject(PySource):
                     PYSCRIPT=build_tools.File('sim_object_param_struct_cc.py'),
                     MODULE=module,
                     SIMOBJ=simobj,
-                    PARAMS_CC=cc_file,
+                    PARAMS_CC=cc_file.get_abspath(),
                     USE_PYTHON=env['USE_PYTHON'])
-            Source(cc_file, tags=self.tags,
+            Source(cc_file.get_abspath(), tags=self.tags,
                    add_tags=('python' if env['USE_PYTHON'] else None))
 
             # CXX config header.
+            config_hh = build_dir.File(f'cxx_config/{simobj}.hh').get_abspath()
             gem5py_env.Command([ "${CXXCONFIG_HH}" ], srcs,
                     MakeAction(cmdline('CXXCONFIG_HH'),
                         Transform("CXXCPRHH", 2)),
                     PYSCRIPT=build_tools.File('cxx_config_hh.py'),
                     MODULE=module,
-                    CXXCONFIG_HH=build_dir.File(f'cxx_config/{simobj}.hh'))
+                    CXXCONFIG_HH=config_hh)
 
             # CXX config cc.
             cc_file=build_dir.File(f'cxx_config/{simobj}.cc')
@@ -204,9 +206,9 @@ class SimObject(PySource):
                         Transform("CXXCPRCC", 2)),
                     PYSCRIPT=build_tools.File('cxx_config_cc.py'),
                     MODULE=module,
-                    CXXCONFIG_CC=cc_file)
+                    CXXCONFIG_CC=cc_file.get_abspath())
             if GetOption('with_cxx_config'):
-                Source(cc_file, tags=self.tags)
+                Source(cc_file.get_abspath(), tags=self.tags)
 
         # C++ versions of enum params.
         for enum in enums:
@@ -218,7 +220,7 @@ class SimObject(PySource):
                         Transform("ENUMDECL", 2)),
                     MODULE=module,
                     ENUM=enum,
-                    ENUM_HH=build_dir.File(f'enums/{enum}.hh'),
+                    ENUM_HH=build_dir.File(f'enums/{enum}.hh').get_abspath(),
                     ENUMHH_PY=build_tools.File('enum_hh.py'))
             cc_file = build_dir.File(f'enums/{enum}.cc')
             gem5py_env.Command([ "${ENUM_CC}" ],
@@ -229,10 +231,10 @@ class SimObject(PySource):
                         Transform("ENUM STR", 2)),
                     MODULE=module,
                     ENUM=enum,
-                    ENUM_CC=cc_file,
+                    ENUM_CC=cc_file.get_abspath(),
                     ENUMCC_PY=build_tools.File('enum_cc.py'),
                     USE_PYTHON=env['USE_PYTHON'])
-            Source(cc_file, tags=self.tags,
+            Source(cc_file.get_abspath(), tags=self.tags,
                    add_tags=('python' if env['USE_PYTHON'] else None))
 
 # This regular expression is simplistic and assumes that the import takes up
@@ -278,9 +280,9 @@ def protoc_grpc_emitter(target, source, env):
     root, ext = os.path.splitext(source[0].get_abspath())
     return [root + '.grpc.pb.cc', root + '.grpc.pb.h'], source
 
-protoc_grpc_action=MakeAction('${PROTOC} --grpc_out ${BUILDDIR} '
-        '--plugin=protoc-gen-grpc=${PROTOC_GRPC} --proto_path ${BUILDDIR} '
-        '${SOURCE.get_abspath()}',
+protoc_grpc_action=MakeAction('${PROTOC} --grpc_out ${TARGET.dir.abspath} '
+        '--plugin=protoc-gen-grpc=${PROTOC_GRPC} '
+        '--proto_path ${SOURCE.dir.abspath} ${SOURCE.abspath}',
         Transform("PROTOC"))
 
 env.Append(BUILDERS={'GrpcProtoBufCC' : Builder(
@@ -376,6 +378,14 @@ class SharedLib(TopLevelBase):
     def declare(self, env):
         objs = self.srcs_to_objs(env, self.sources(env))
 
+        env = env.Clone()
+
+        libs = self.libs(env)
+        # Higher priority libraries should be earlier in the list.
+        libs.sort(key=lambda l: l.priority, reverse=True)
+        if libs:
+            env.Append(LIBS=list(lib.source for lib in libs))
+
         date_obj = env.SharedObject(date_source)
         env.Depends(date_obj, objs)
 
@@ -407,8 +417,9 @@ class Executable(TopLevelBase):
             cmd = 'cp $SOURCE $TARGET; strip $TARGET'
         else:
             cmd = 'strip $SOURCE -o $TARGET'
-        stripped = env.Command(str(executable) + '.stripped',
-                executable, MakeAction(cmd, Transform("STRIP")))[0]
+        stripped = env.Command(executable.abspath + '.stripped',
+                               executable.abspath,
+                               MakeAction(cmd, Transform("STRIP")))[0]
 
         return [executable, stripped]
 
@@ -542,7 +553,8 @@ for root, dirs, files in os.walk(base_dir, topdown=True):
 
     if 'SConscript' in files:
         build_dir = os.path.join(env['BUILDDIR'], root[len(base_dir) + 1:])
-        SConscript(os.path.join(root, 'SConscript'), variant_dir=build_dir)
+        SConscript(os.path.join(root, 'SConscript'), variant_dir=build_dir,
+                   duplicate=GetOption('duplicate_sources'))
 
 for extra_dir in extras_dir_list:
     prefix_len = len(os.path.dirname(extra_dir)) + 1
@@ -558,7 +570,8 @@ for extra_dir in extras_dir_list:
 
         if 'SConscript' in files:
             build_dir = os.path.join(env['BUILDDIR'], root[prefix_len:])
-            SConscript(os.path.join(root, 'SConscript'), variant_dir=build_dir)
+            SConscript(os.path.join(root, 'SConscript'), variant_dir=build_dir,
+                       duplicate=GetOption('duplicate_sources'))
 
 for opt in env['CONF'].keys():
     env.ConfigFile(opt)
@@ -641,7 +654,7 @@ envs = {
     'fast': env.Clone(ENV_LABEL='fast', OBJSUFFIX='.fo'),
 }
 
-envs['debug'].Append(CPPDEFINES=['DEBUG', 'TRACING_ON=1'])
+envs['debug'].Append(CPPDEFINES=['GEM5_DEBUG', 'TRACING_ON=1'])
 envs['opt'].Append(CCFLAGS=['-g'], CPPDEFINES=['TRACING_ON=1'])
 envs['fast'].Append(CPPDEFINES=['NDEBUG', 'TRACING_ON=0'])
 

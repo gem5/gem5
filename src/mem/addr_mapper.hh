@@ -101,7 +101,7 @@ class AddrMapper : public SimObject
     {
       public:
         MapperRequestPort(const std::string& _name, AddrMapper& _mapper)
-            : RequestPort(_name, &_mapper), mapper(_mapper)
+            : RequestPort(_name), mapper(_mapper)
         { }
 
       protected:
@@ -158,7 +158,7 @@ class AddrMapper : public SimObject
     {
       public:
         MapperResponsePort(const std::string& _name, AddrMapper& _mapper)
-            : ResponsePort(_name, &_mapper), mapper(_mapper)
+            : ResponsePort(_name), mapper(_mapper)
         {}
 
       protected:

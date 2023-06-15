@@ -58,6 +58,7 @@
 
 #include "base/amo.hh"
 #include "base/compiler.hh"
+#include "base/extensible.hh"
 #include "base/flags.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
@@ -74,7 +75,6 @@ namespace gem5
  * doesn't cause a problem with stats and is large enough to realistic
  * benchmarks (Linux/Android boot, BBench, etc.)
  */
-GEM5_DEPRECATED_NAMESPACE(ContextSwitchTaskId, context_switch_task_id);
 namespace context_switch_task_id
 {
     enum TaskId
@@ -94,7 +94,7 @@ class ThreadContext;
 typedef std::shared_ptr<Request> RequestPtr;
 typedef uint16_t RequestorID;
 
-class Request
+class Request : public Extensible<Request>
 {
   public:
     typedef uint64_t FlagsType;
@@ -502,7 +502,8 @@ class Request
     }
 
     Request(const Request& other)
-        : _paddr(other._paddr), _size(other._size),
+        : Extensible<Request>(other),
+          _paddr(other._paddr), _size(other._size),
           _byteEnable(other._byteEnable),
           _requestorId(other._requestorId),
           _flags(other._flags),
@@ -1070,6 +1071,17 @@ class Request
     Flags getDest() const { return _flags & DST_BITS; }
 
     bool isAcquire() const { return _cacheCoherenceFlags.isSet(ACQUIRE); }
+
+
+    /**
+     * Accessor functions for the cache bypass flags. The cache bypass
+     * can specify which levels in the hierarchy to bypass. If GLC_BIT
+     * is set, the requests are globally coherent and bypass TCP.
+     * If SLC_BIT is set, then the requests are system level coherent
+     * and bypass both TCP and TCC.
+     */
+    bool isGLCSet() const {return _cacheCoherenceFlags.isSet(GLC_BIT); }
+    bool isSLCSet() const {return _cacheCoherenceFlags.isSet(SLC_BIT); }
 
     /**
      * Accessor functions for the memory space configuration flags and used by

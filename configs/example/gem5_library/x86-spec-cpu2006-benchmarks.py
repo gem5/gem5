@@ -179,7 +179,7 @@ if not os.path.exists(args.image):
     print(
         "https://gem5art.readthedocs.io/en/latest/tutorials/spec-tutorial.html"
     )
-    fatal("The disk-image is not found at {}".format(args.image))
+    fatal(f"The disk-image is not found at {args.image}")
 
 # Setting up all the fixed system parameters here
 # Caches: MESI Two Level Cache Hierarchy
@@ -252,7 +252,7 @@ except FileExistsError:
 # The runscript.sh file places `m5 exit` before and after the following command
 # Therefore, we only pass this command without m5 exit.
 
-command = "{} {} {}".format(args.benchmark, args.size, output_dir)
+command = f"{args.benchmark} {args.size} {output_dir}"
 
 board.set_kernel_disk_workload(
     # The x86 linux kernel will be automatically downloaded to the
@@ -272,6 +272,7 @@ def handle_exit():
     print("Done bootling Linux")
     print("Resetting stats at the start of ROI!")
     m5.stats.reset()
+    processor.switch()
     yield False  # E.g., continue the simulation.
     print("Dump stats at the end of the ROI!")
     m5.stats.dump()
@@ -304,7 +305,11 @@ print("All simulation events were successful.")
 
 print("Performance statistics:")
 
-print("Simulated time: " + ((str(simulator.get_roi_ticks()[0]))))
+roi_begin_ticks = simulator.get_tick_stopwatch()[0][1]
+roi_end_ticks = simulator.get_tick_stopwatch()[1][1]
+
+print("roi simulated ticks: " + str(roi_end_ticks - roi_begin_ticks))
+
 print(
     "Ran a total of", simulator.get_current_tick() / 1e12, "simulated seconds"
 )

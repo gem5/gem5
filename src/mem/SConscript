@@ -88,6 +88,7 @@ Source('packet.cc')
 Source('port.cc')
 Source('packet_queue.cc')
 Source('port_proxy.cc')
+Source('port_wrapper.cc')
 Source('physical.cc')
 Source('shared_memory_server.cc')
 Source('simple_mem.cc')
@@ -119,6 +120,10 @@ if env['HAVE_DRAMSIM3']:
     SimObject('DRAMsim3.py', sim_objects=['DRAMsim3'])
     Source('dramsim3_wrapper.cc')
     Source('dramsim3.cc')
+
+if env['HAVE_DRAMSYS']:
+    SimObject('DRAMSys.py', sim_objects=['DRAMSys'])
+    Source('dramsys_wrapper.cc')
 
 SimObject('MemChecker.py', sim_objects=['MemChecker', 'MemCheckerMonitor'])
 Source('mem_checker.cc')

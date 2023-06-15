@@ -36,7 +36,7 @@ class ActionDeclAST(DeclAST):
         self.statement_list = statement_list
 
     def __repr__(self):
-        return "[ActionDecl: %r]" % (self.ident)
+        return f"[ActionDecl: {self.ident!r}]"
 
     def generate(self):
         resources = {}

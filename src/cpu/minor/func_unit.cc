@@ -74,7 +74,6 @@ MinorFUTiming::MinorFUTiming(
     opClasses(params.opClasses)
 { }
 
-GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
 

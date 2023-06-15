@@ -57,7 +57,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
 
@@ -569,10 +568,6 @@ Execute::issue(ThreadID thread_id)
     /* Number of memory ops issues this cycle to check for memoryIssueLimit */
     unsigned num_mem_insts_issued = 0;
 
-    /* Number of instructions discarded this cycle in order to enforce a
-     *  discardLimit. @todo, add that parameter? */
-    unsigned num_insts_discarded = 0;
-
     do {
         MinorDynInstPtr inst = insts_in->insts[thread.inputIndex];
         Fault fault = inst->fault;
@@ -801,9 +796,7 @@ Execute::issue(ThreadID thread_id)
             if (issued_mem_ref)
                 num_mem_insts_issued++;
 
-            if (discarded) {
-                num_insts_discarded++;
-            } else if (!inst->isBubble()) {
+            if (!discarded && !inst->isBubble()) {
                 num_insts_issued++;
 
                 if (num_insts_issued == issueLimit)
@@ -872,49 +865,17 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
     {
         thread->numInst++;
         thread->threadStats.numInsts++;
-        cpu.stats.numInsts++;
+        cpu.commitStats[inst->id.threadId]->numInsts++;
+        cpu.baseStats.numInsts++;
 
         /* Act on events related to instruction counts */
         thread->comInstEventQueue.serviceEvents(thread->numInst);
     }
     thread->numOp++;
     thread->threadStats.numOps++;
-    cpu.stats.numOps++;
-    cpu.stats.committedInstType[inst->id.threadId]
-                               [inst->staticInst->opClass()]++;
-
-    /** Add a count for every control instruction */
-    if (inst->staticInst->isControl()) {
-        if (inst->staticInst->isReturn()) {
-            cpu.stats.committedControl[inst->id.threadId]
-                        [gem5::StaticInstFlags::Flags::IsReturn]++;
-        }
-        if (inst->staticInst->isCall()) {
-            cpu.stats.committedControl[inst->id.threadId]
-                        [gem5::StaticInstFlags::Flags::IsCall]++;
-        }
-        if (inst->staticInst->isDirectCtrl()) {
-            cpu.stats.committedControl[inst->id.threadId]
-                        [gem5::StaticInstFlags::Flags::IsDirectControl]++;
-        }
-        if (inst->staticInst->isIndirectCtrl()) {
-            cpu.stats.committedControl[inst->id.threadId]
-                        [gem5::StaticInstFlags::Flags::IsIndirectControl]++;
-        }
-        if (inst->staticInst->isCondCtrl()) {
-            cpu.stats.committedControl[inst->id.threadId]
-                        [gem5::StaticInstFlags::Flags::IsCondControl]++;
-        }
-        if (inst->staticInst->isUncondCtrl()) {
-            cpu.stats.committedControl[inst->id.threadId]
-                        [gem5::StaticInstFlags::Flags::IsUncondControl]++;
-
-        }
-        cpu.stats.committedControl[inst->id.threadId]
-                        [gem5::StaticInstFlags::Flags::IsControl]++;
-    }
-
-
+    cpu.commitStats[inst->id.threadId]->numOps++;
+    cpu.commitStats[inst->id.threadId]
+        ->committedInstType[inst->staticInst->opClass()]++;
 
     /* Set the CP SeqNum to the numOps commit number */
     if (inst->traceData)
@@ -1055,7 +1016,7 @@ Execute::commitInst(MinorDynInstPtr inst, bool early_memory_issue,
             DPRINTF(MinorInterrupt, "Suspending thread: %d from Execute"
                 " inst: %s\n", thread_id, *inst);
 
-            cpu.stats.numFetchSuspends++;
+            cpu.fetchStats[thread_id]->numFetchSuspends++;
 
             updateBranchData(thread_id, BranchData::SuspendThread, inst,
                 resume_pc, branch);
@@ -1368,8 +1329,9 @@ Execute::commit(ThreadID thread_id, bool only_commit_microops, bool discard,
                 " state was unexpected, expected: %d\n",
                 *inst, ex_info.streamSeqNum);
 
-            if (fault == NoFault)
-                cpu.stats.numDiscardedOps++;
+            if (fault == NoFault) {
+                cpu.executeStats[thread_id]->numDiscardedOps++;
+            }
         }
 
         /* Mark the mem inst as being in the LSQ */

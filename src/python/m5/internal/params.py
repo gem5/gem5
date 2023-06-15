@@ -37,8 +37,17 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import inspect
-import _m5
 
-for name, module in inspect.getmembers(_m5):
-    if name.startswith("param_") or name.startswith("enum_"):
-        exec("from _m5.%s import *" % name)
+try:
+    # Avoid ImportErrors at build time when _m5 is not available
+    import _m5
+
+    in_gem5 = True
+except ImportError:
+    # The import failed, we're being called from the build system
+    in_gem5 = False
+
+if in_gem5:
+    for name, module in inspect.getmembers(_m5):
+        if name.startswith("param_") or name.startswith("enum_"):
+            exec(f"from _m5.{name} import *")

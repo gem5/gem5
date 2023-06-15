@@ -139,8 +139,6 @@ readMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
 {
     const ExceptionLevel current_el = currEL(tc);
 
-    const bool is_secure = isSecureBelowEL3(tc);
-
     switch (current_el) {
       case EL0:
         // Note: in MsrMrs instruction we read the register value before
@@ -150,7 +148,7 @@ readMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
         warn_once("Trying to read MPIDR at EL0\n");
         [[fallthrough]];
       case EL1:
-        if (ArmSystem::haveEL(tc, EL2) && !is_secure)
+        if (EL2Enabled(tc))
             return tc->readMiscReg(MISCREG_VMPIDR_EL2);
         else
             return getMPIDR(arm_sys, tc);

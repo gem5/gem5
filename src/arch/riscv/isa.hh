@@ -70,6 +70,7 @@ enum FPUStatus
 class ISA : public BaseISA
 {
   protected:
+    RiscvType rv_type;
     std::vector<RegVal> miscRegFile;
     bool checkAlignment;
 
@@ -80,10 +81,10 @@ class ISA : public BaseISA
 
     void clear() override;
 
-    PCStateBase *
+    PCStateBase*
     newPCState(Addr new_inst_addr=0) const override
     {
-        return new PCState(new_inst_addr);
+        return new PCState(new_inst_addr, rv_type);
     }
 
   public:
@@ -104,7 +105,7 @@ class ISA : public BaseISA
     virtual const std::unordered_map<int, RegVal>&
     getCSRMaskMap() const
     {
-        return CSRMasks;
+        return CSRMasks[rv_type];
     }
 
     bool alignmentCheckEnabled() const { return checkAlignment; }
@@ -125,6 +126,10 @@ class ISA : public BaseISA
     void handleLockedSnoop(PacketPtr pkt, Addr cacheBlockMask) override;
 
     void globalClearExclusive() override;
+
+    void resetThread() override;
+
+    RiscvType rvType() const { return rv_type; }
 };
 
 } // namespace RiscvISA

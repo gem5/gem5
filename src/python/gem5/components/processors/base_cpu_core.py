@@ -33,7 +33,15 @@ from ...runtime import get_runtime_isa
 from ...utils.override import overrides
 from ...utils.requires import requires
 
-from m5.objects import BaseMMU, Port, BaseCPU, Process
+from m5.objects import (
+    BaseMMU,
+    Port,
+    BaseCPU,
+    Process,
+    PcCountTracker,
+    PcCountTrackerManager,
+)
+from m5.params import PcCountPair
 
 
 class BaseCPUCore(AbstractCore):
@@ -169,3 +177,13 @@ class BaseCPUCore(AbstractCore):
             self.core.scheduleInstStopAnyThread(inst)
         else:
             self.core.max_insts_any_thread = inst
+
+    @overrides(AbstractCore)
+    def add_pc_tracker_probe(
+        self, target_pair: List[PcCountPair], manager: PcCountTrackerManager
+    ) -> None:
+        pair_tracker = PcCountTracker()
+        pair_tracker.targets = target_pair
+        pair_tracker.core = self.core
+        pair_tracker.ptmanager = manager
+        self.core.probeListener = pair_tracker

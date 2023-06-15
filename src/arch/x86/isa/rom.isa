@@ -42,9 +42,7 @@ let {{
 
     class X86MicrocodeRom(Rom):
         def getDeclaration(self):
-            declareLabels = \
-                "GEM5_DEPRECATED_NAMESPACE(RomLabels, rom_labels);\n"
-            declareLabels += "namespace rom_labels\n{\n"
+            declareLabels = "namespace rom_labels\n{\n"
             for (label, microop) in self.labels.items():
                 declareLabels += "const static uint64_t label_%s = %d;\n" \
                                   % (label, microop.micropc)

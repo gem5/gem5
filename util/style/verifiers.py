@@ -147,7 +147,7 @@ class Verifier(object, metaclass=ABCMeta):
         try:
             f = open(filename, mode)
         except OSError as msg:
-            print("could not open file {}: {}".format(filename, msg))
+            print(f"could not open file {filename}: {msg}")
             return None
 
         return f
@@ -247,7 +247,7 @@ class LineVerifier(Verifier):
                         % (self.test_name, filename, num + 1)
                     )
                     if self.ui.verbose:
-                        self.ui.write(">>%s<<\n" % s_line[:-1])
+                        self.ui.write(f">>{s_line[:-1]}<<\n")
                 errors += 1
         if close:
             fobj.close()

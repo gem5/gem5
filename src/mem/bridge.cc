@@ -58,7 +58,7 @@ Bridge::BridgeResponsePort::BridgeResponsePort(const std::string& _name,
                                          BridgeRequestPort& _memSidePort,
                                          Cycles _delay, int _resp_limit,
                                          std::vector<AddrRange> _ranges)
-    : ResponsePort(_name, &_bridge), bridge(_bridge),
+    : ResponsePort(_name), bridge(_bridge),
       memSidePort(_memSidePort), delay(_delay),
       ranges(_ranges.begin(), _ranges.end()),
       outstandingResponses(0), retryReq(false), respQueueLimit(_resp_limit),
@@ -70,7 +70,7 @@ Bridge::BridgeRequestPort::BridgeRequestPort(const std::string& _name,
                                            Bridge& _bridge,
                                            BridgeResponsePort& _cpuSidePort,
                                            Cycles _delay, int _req_limit)
-    : RequestPort(_name, &_bridge), bridge(_bridge),
+    : RequestPort(_name), bridge(_bridge),
       cpuSidePort(_cpuSidePort),
       delay(_delay), reqQueueLimit(_req_limit),
       sendEvent([this]{ trySendTiming(); }, _name)
@@ -347,6 +347,14 @@ Bridge::BridgeResponsePort::recvAtomic(PacketPtr pkt)
     return delay * bridge.clockPeriod() + memSidePort.sendAtomic(pkt);
 }
 
+Tick
+Bridge::BridgeResponsePort::recvAtomicBackdoor(
+    PacketPtr pkt, MemBackdoorPtr &backdoor)
+{
+    return delay * bridge.clockPeriod() + memSidePort.sendAtomicBackdoor(
+        pkt, backdoor);
+}
+
 void
 Bridge::BridgeResponsePort::recvFunctional(PacketPtr pkt)
 {
@@ -369,6 +377,13 @@ Bridge::BridgeResponsePort::recvFunctional(PacketPtr pkt)
 
     // fall through if pkt still not satisfied
     memSidePort.sendFunctional(pkt);
+}
+
+void
+Bridge::BridgeResponsePort::recvMemBackdoorReq(
+    const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
+{
+    memSidePort.sendMemBackdoorReq(req, backdoor);
 }
 
 bool

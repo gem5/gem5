@@ -1,6 +1,6 @@
 // -*- mode: c++ -*-
 
-// Copyright (c) 2012-2013, 2015-2018 ARM Limited
+// Copyright (c) 2012-2013, 2015-2018, 2020 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -1082,6 +1082,159 @@ let {{
                        complex=True)
     threeEqualRegInstX("fcmla", "FcmlaQX", "SimdFloatMultAccOp",
                        floatTypes, 4, fcmla_vec, True, complex=True)
+
+    def intDotInst(name, Name, opClass,
+                   destIsSigned, src1IsSigned, src2IsSigned,
+                   rCount, byElem):
+        destType = "int32_t" if destIsSigned else "uint32_t"
+        src1Type = "int8_t" if src1IsSigned else "uint8_t"
+        src2Type = "int8_t" if src2IsSigned else "uint8_t"
+        dotCode = '''
+        using Src1Element = %(src1Type)s;
+        using Src2Element = %(src2Type)s;
+
+        // Neon dot instructions always generate one output element
+        // from 4 pairs of source elements.
+        static_assert(sizeof(Element) == 4 * sizeof(Src1Element));
+        static_assert(sizeof(Element) == 4 * sizeof(Src2Element));
+
+        // Extended source element types to avoid overflow of intermediate
+        // calculations.
+        using ExtendedSrc1Element =
+                typename vector_element_traits::
+                    extend_element<Element, Src1Element>::type;
+        using ExtendedSrc2Element =
+                typename vector_element_traits::
+                    extend_element<Element, Src2Element>::type;
+
+        for (unsigned i = 0; i < eCount; ++i) {
+            Element src1ElemsPacked = letoh(srcReg1.elements[i]);
+            Element src2ElemsPacked = letoh(srcReg2.elements[%(src2Index)s]);
+
+            Src1Element *src1Elems =
+                reinterpret_cast<Src1Element*>(&src1ElemsPacked);
+            Src2Element *src2Elems =
+                reinterpret_cast<Src2Element*>(&src2ElemsPacked);
+
+            // Dot instructions accumulate into the dest reg
+            Element destElem = letoh(destReg.elements[i]);
+
+            for (unsigned j = 0; j < 4; ++j) {
+                ExtendedSrc1Element src1Elem =
+                    static_cast<ExtendedSrc1Element>(src1Elems[j]);
+                ExtendedSrc2Element src2Elem =
+                    static_cast<ExtendedSrc2Element>(src2Elems[j]);
+                destElem += src1Elem * src2Elem;
+            }
+            destReg.elements[i] = htole(destElem);
+        }
+        ''' % dict(src1Type=src1Type, src2Type=src2Type,
+                   src2Index="imm" if byElem else "i")
+        threeEqualRegInstX(name, Name, opClass, (destType,), rCount,
+                           dotCode, readDest=True, byElem=byElem,
+                           complex=True)
+
+    # SDOT (vector)
+    intDotInst('sdot', 'SdotDX', 'SimdAluOp', True, True, True, 2, False)
+    intDotInst('sdot', 'SdotQX', 'SimdAluOp', True, True, True, 4, False)
+    # SDOT (element)
+    intDotInst('sdot', 'SdotElemDX', 'SimdAluOp', True, True, True, 2, True)
+    intDotInst('sdot', 'SdotElemQX', 'SimdAluOp', True, True, True, 4, True)
+    # UDOT (vector)
+    intDotInst('udot', 'UdotDX', 'SimdAluOp', False, False, False, 2, False)
+    intDotInst('udot', 'UdotQX', 'SimdAluOp', False, False, False, 4, False)
+    # UDOT (element)
+    intDotInst('udot', 'UdotElemDX', 'SimdAluOp', False, False, False, 2, True)
+    intDotInst('udot', 'UdotElemQX', 'SimdAluOp', False, False, False, 4, True)
+    # SUDOT (element)
+    intDotInst('sudot', 'SudotElemDX', 'SimdAluOp', True, True, False, 2, True)
+    intDotInst('sudot', 'SudotElemQX', 'SimdAluOp', True, True, False, 4, True)
+    # USDOT (vector)
+    intDotInst('usdot', 'UsdotDX', 'SimdAluOp', True, False, True, 2, False)
+    intDotInst('usdot', 'UsdotQX', 'SimdAluOp', True, False, True, 4, False)
+    # USDOT (element)
+    intDotInst('usdot', 'UsdotElemDX', 'SimdAluOp', True, False, True, 2, True)
+    intDotInst('usdot', 'UsdotElemQX', 'SimdAluOp', True, False, True, 4, True)
+
+    def intMatMulInst(name, Name, opClass,
+                      destIsSigned, src1IsSigned, src2IsSigned):
+        destType = "int32_t" if destIsSigned else "uint32_t"
+        src1Type = "int8_t" if src1IsSigned else "uint8_t"
+        src2Type = "int8_t" if src2IsSigned else "uint8_t"
+        matMulCode = '''
+        using Src1Element = %(src1Type)s;
+        using Src2Element = %(src2Type)s;
+
+        // Neon MM instructions always generate four output elements
+        // from 16 pairs of source elements.
+        static_assert(sizeof(Element) == 4 * sizeof(Src1Element));
+        static_assert(sizeof(Element) == 4 * sizeof(Src2Element));
+
+        // Extended source element types to avoid overflow of intermediate
+        // calculations.
+        using ExtendedSrc1Element =
+                typename vector_element_traits::
+                    extend_element<Element, Src1Element>::type;
+        using ExtendedSrc2Element =
+                typename vector_element_traits::
+                    extend_element<Element, Src2Element>::type;
+
+        // Properties of the matrices
+        constexpr unsigned destMatSize = 2; // Dest Matrices are dim 2x2
+        constexpr unsigned K = 8;           // Src matrices are dim 2x8 & 8x2
+
+        constexpr unsigned eltsPerMatrix = destMatSize * destMatSize;
+
+        Element destMat[eltsPerMatrix] = {0};
+        for (unsigned j = 0; j < eltsPerMatrix; ++j) {
+            destMat[j] = letoh(destReg.elements[j]);
+        }
+
+        Element src1MatPacked[eltsPerMatrix] = {0};
+        Element src2MatPacked[eltsPerMatrix] = {0};
+        for (unsigned j = 0; j < eltsPerMatrix; ++j) {
+            src1MatPacked[j] = letoh(srcReg1.elements[j]);
+            src2MatPacked[j] = letoh(srcReg2.elements[j]);
+        }
+
+        Src1Element *src1Mat =
+            reinterpret_cast<Src1Element*>(&src1MatPacked);
+        Src2Element *src2Mat =
+            reinterpret_cast<Src2Element*>(&src2MatPacked);
+
+        unsigned destEltIdx = 0;
+        for (unsigned rowIdx = 0; rowIdx < destMatSize; ++rowIdx) {
+            for (unsigned colIdx = 0; colIdx < destMatSize; ++colIdx) {
+                Element destElem = destMat[destEltIdx];
+                for (unsigned k = 0; k < K; ++k) {
+                    const ExtendedSrc1Element src1Elem =
+                        static_cast<ExtendedSrc1Element>
+                                            (src1Mat[K * rowIdx + k]);
+                    const ExtendedSrc2Element src2Elem =
+                        static_cast<ExtendedSrc2Element>
+                                            (src2Mat[K * colIdx + k]);
+
+                    destElem += src1Elem * src2Elem;
+                }
+                destMat[destEltIdx++] = destElem;
+            }
+        }
+
+        for (unsigned j = 0; j < eltsPerMatrix; ++j) {
+            destReg.elements[j] = htole(destMat[j]);
+        }
+        ''' % dict(src1Type=src1Type, src2Type=src2Type)
+        threeEqualRegInstX(name, Name, opClass, (destType,), 4,
+                           matMulCode, readDest=True, byElem=False,
+                           complex=True)
+
+    # SMMLA
+    intMatMulInst('smmla', 'SmmlaQX', 'SimdMatMultAccOp', True, True, True)
+    # USMMLA
+    intMatMulInst('usmmla', 'UsmmlaQX', 'SimdMatMultAccOp', True, False, True)
+    # UMMLA
+    intMatMulInst('ummla', 'UmmlaQX', 'SimdMatMultAccOp', False, False, False)
+
     # CLS
     clsCode = '''
             unsigned count = 0;
@@ -1993,9 +2146,9 @@ let {{
             Element carryBit =
                 (((unsigned)srcElem1 & 0x1) +
                  ((unsigned)srcElem2 & 0x1)) >> 1;
-            // Use division instead of a shift to ensure the sign extension works
-            // right. The compiler will figure out if it can be a shift. Mask the
-            // inputs so they get truncated correctly.
+            // Use division instead of a shift to ensure the sign extension
+            // works right. The compiler will figure out if it can be a shift.
+            // Mask the inputs so they get truncated correctly.
             destElem = (((srcElem1 & ~(Element)1) / 2) +
                         ((srcElem2 & ~(Element)1) / 2)) + carryBit;
     '''
@@ -2035,9 +2188,9 @@ let {{
     hsubCode = '''
             Element borrowBit =
                 (((srcElem1 & 0x1) - (srcElem2 & 0x1)) >> 1) & 0x1;
-            // Use division instead of a shift to ensure the sign extension works
-            // right. The compiler will figure out if it can be a shift. Mask the
-            // inputs so they get truncated correctly.
+            // Use division instead of a shift to ensure the sign extension
+            // works right. The compiler will figure out if it can be a shift.
+            // Mask the inputs so they get truncated correctly.
             destElem = (((srcElem1 & ~(Element)1) / 2) -
                         ((srcElem2 & ~(Element)1) / 2)) - borrowBit;
     '''
@@ -2802,7 +2955,8 @@ let {{
             FPSCR fpscr = (FPSCR) FpscrQc;
             destElem = srcElem1;
             if (srcElem1 < 0 ||
-                    ((BigElement)destElem & mask(sizeof(Element) * 8)) != srcElem1) {
+                    ((BigElement)destElem & mask(sizeof(Element) * 8))
+                     != srcElem1) {
                 fpscr.qc = 1;
                 destElem = mask(sizeof(Element) * 8);
                 if (srcElem1 < 0)
@@ -2821,9 +2975,9 @@ let {{
             Element carryBit =
                 (((unsigned)srcElem1 & 0x1) +
                  ((unsigned)srcElem2 & 0x1) + 1) >> 1;
-            // Use division instead of a shift to ensure the sign extension works
-            // right. The compiler will figure out if it can be a shift. Mask the
-            // inputs so they get truncated correctly.
+            // Use division instead of a shift to ensure the sign extension
+            // works right. The compiler will figure out if it can be a shift.
+            // Mask the inputs so they get truncated correctly.
             destElem = (((srcElem1 & ~(Element)1) / 2) +
                         ((srcElem2 & ~(Element)1) / 2)) + carryBit;
     '''
@@ -3013,7 +3167,8 @@ let {{
             if (bits(destElem, sizeof(Element) * 8 - 1) == 0) {
                 if (bits(tmp, sizeof(Element) * 8 - 1) == 1 ||
                         tmp < srcElem1 || tmp < destElem) {
-                    destElem = (((Element) 1) << (sizeof(Element) * 8 - 1)) - 1;
+                    destElem = (((Element) 1) << (sizeof(Element) * 8 - 1))
+                               - 1;
                     fpscr.qc = 1;
                 } else {
                     destElem = tmp;
@@ -3021,9 +3176,11 @@ let {{
             } else {
                 Element absDestElem = (~destElem) + 1;
                 if (absDestElem < srcElem1) {
-                    // Still check for positive sat., no need to check for negative sat.
+                    // Still check for positive sat., no need to check for
+                    // negative sat.
                     if (bits(tmp, sizeof(Element) * 8 - 1) == 1) {
-                        destElem = (((Element) 1) << (sizeof(Element) * 8 - 1)) - 1;
+                        destElem = (((Element) 1) << (sizeof(Element) * 8 - 1))
+                                   - 1;
                         fpscr.qc = 1;
                     } else {
                         destElem = tmp;
@@ -3255,8 +3412,9 @@ let {{
                         destElem = 0;
                     }
                 } else {
-                    if (bits(srcElem1, sizeof(Element) * 8 - 1,
-                                sizeof(Element) * 8 - shiftAmt)) {
+                    if (shiftAmt != 0 &&
+                            bits(srcElem1, sizeof(Element) * 8 - 1,
+                                           sizeof(Element) * 8 - shiftAmt)) {
                         destElem = mask(sizeof(Element) * 8);
                         fpscr.qc = 1;
                     } else {

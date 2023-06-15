@@ -1,0 +1,29 @@
+There are two seperate files targeting loads and stores for each test.
+In each test file, each letter in the comments represents a 64-bit address
+range. For example, A represents the address from 0 to 63, B represents
+the address from 64 to 127, C represents the address from 128 to 191, and so on.
+If you enable debug flags to print the hits and misses information, you
+can compare the results with your expectation. This test can be used to
+test the correctness of the replacement policy. The first block will
+always get an eviction.
+
+The format of test files should be using traffic generator
+
+To emulate 4-way 1-set cache with implementation of 4-way 2-set cache,
+we will use A, C, E, G, I, K, M, O instead of A, B, C, D, E, F, G, H,
+so they will never get to the second set
+
+The linear traffic generator has
+<duration (ticks)> <start addr> <end addr> <access size (bytes)>
+<min period (ticks)> <max period (ticks)> <percent reads> <data limit (bytes)>
+
+Addresses are expressed as decimal numbers. The period in the linear
+and random state is from a uniform random distribution over the
+interval. If a specific value is desired, then the min and max can
+be set to the same value.
+
+The duration(in ticks) is calculated by the time needed for accessing a cache
+line * (the number of cache lines accessed in this state + 1). For example, to
+access address 0 to address 1023, the duration should be 510000 ticks, which is
+calcualted by 510000 = 30000 * (1024/64 + 1). Please note that 30000 is assumed
+to be the number of ticks in one period here.

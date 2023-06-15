@@ -61,7 +61,7 @@ class SimpleUart(Uart):
     byte_order = Param.ByteOrder("little", "Device byte order")
     pio_size = Param.Addr(0x4, "Size of address range")
     end_on_eot = Param.Bool(
-        False, "End the simulation when a EOT is " "received on the UART"
+        False, "End the simulation when a EOT is received on the UART"
     )
 
 

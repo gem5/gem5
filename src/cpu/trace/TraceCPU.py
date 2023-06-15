@@ -64,7 +64,7 @@ class TraceCPU(BaseCPU):
     instTraceFile = Param.String("", "Instruction trace file")
     dataTraceFile = Param.String("", "Data dependency trace file")
     sizeStoreBuffer = Param.Unsigned(
-        16, "Number of entries in the store " "buffer"
+        16, "Number of entries in the store buffer"
     )
     sizeLoadBuffer = Param.Unsigned(16, "Number of entries in the load buffer")
     sizeROB = Param.Unsigned(40, "Number of entries in the re-order buffer")
@@ -74,13 +74,13 @@ class TraceCPU(BaseCPU):
     # changed when frequency is scaled. A default value of 1.0 means the same
     # frequency as was used for generating the traces.
     freqMultiplier = Param.Float(
-        1.0, "Multiplier scale the Trace CPU " "frequency up or down"
+        1.0, "Multiplier scale the Trace CPU frequency up or down"
     )
 
     # Enable exiting when any one Trace CPU completes execution which is set to
     # false by default
     enableEarlyExit = Param.Bool(
-        False, "Exit when any one Trace CPU " "completes execution"
+        False, "Exit when any one Trace CPU completes execution"
     )
 
     # If progress msg interval is set to a non-zero value, it is treated as

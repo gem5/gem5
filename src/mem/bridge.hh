@@ -195,23 +195,35 @@ class Bridge : public ClockedObject
 
         /** When receiving a timing request from the peer port,
             pass it to the bridge. */
-        bool recvTimingReq(PacketPtr pkt);
+        bool recvTimingReq(PacketPtr pkt) override;
 
         /** When receiving a retry request from the peer port,
             pass it to the bridge. */
-        void recvRespRetry();
+        void recvRespRetry() override;
 
-        /** When receiving a Atomic requestfrom the peer port,
+        /** When receiving an Atomic request from the peer port,
             pass it to the bridge. */
-        Tick recvAtomic(PacketPtr pkt);
+        Tick recvAtomic(PacketPtr pkt) override;
+
+        /** When receiving an Atomic backdoor request from the peer port,
+            pass it to the bridge. */
+        Tick recvAtomicBackdoor(
+            PacketPtr pkt, MemBackdoorPtr &backdoor) override;
+
 
         /** When receiving a Functional request from the peer port,
             pass it to the bridge. */
-        void recvFunctional(PacketPtr pkt);
+        void recvFunctional(PacketPtr pkt) override;
+
+        /** When receiving a Functional backdoor request from the peer port,
+            pass it to the bridge. */
+        void recvMemBackdoorReq(
+            const MemBackdoorReq &req, MemBackdoorPtr &backdoor) override;
+
 
         /** When receiving a address range request the peer port,
             pass it to the bridge. */
-        AddrRangeList getAddrRanges() const;
+        AddrRangeList getAddrRanges() const override;
     };
 
 
@@ -303,11 +315,11 @@ class Bridge : public ClockedObject
 
         /** When receiving a timing request from the peer port,
             pass it to the bridge. */
-        bool recvTimingResp(PacketPtr pkt);
+        bool recvTimingResp(PacketPtr pkt) override;
 
         /** When receiving a retry request from the peer port,
             pass it to the bridge. */
-        void recvReqRetry();
+        void recvReqRetry() override;
     };
 
     /** Response port of the bridge. */

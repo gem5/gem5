@@ -44,11 +44,11 @@ class DRAMsim3(AbstractMemory):
 
     # A single port for now
     port = ResponsePort(
-        "port for receiving requests from" "the CPU or other requestor"
+        "port for receiving requests fromthe CPU or other requestor"
     )
 
     configFile = Param.String(
-        "ext/dramsim3/DRAMsim3/configs/" "DDR4_8Gb_x8_2400.ini",
+        "ext/dramsim3/DRAMsim3/configs/DDR4_8Gb_x8_2400.ini",
         "The configuration file to use with DRAMSim3",
     )
     filePath = Param.String(

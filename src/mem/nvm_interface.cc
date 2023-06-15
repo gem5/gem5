@@ -402,9 +402,9 @@ NVMInterface::processReadReadyEvent()
 
 bool
 NVMInterface::burstReady(MemPacket* pkt) const {
-    bool read_rdy =  pkt->isRead() && (ctrl->inReadBusState(true)) &&
-               (pkt->readyTime <= curTick()) && (numReadDataReady > 0);
-    bool write_rdy =  !pkt->isRead() && !ctrl->inReadBusState(true) &&
+    bool read_rdy =  pkt->isRead() && (ctrl->inReadBusState(true, this)) &&
+                (pkt->readyTime <= curTick()) && (numReadDataReady > 0);
+    bool write_rdy =  !pkt->isRead() && !ctrl->inReadBusState(true, this) &&
                 !writeRespQueueFull();
     return (read_rdy || write_rdy);
 }
@@ -613,7 +613,7 @@ NVMInterface::isBusy(bool read_queue_empty, bool all_writes_nvm)
      // Only assert busy for the write case when there are also
      // no reads in Q and the write queue only contains NVM commands
      // This allows the bus state to switch and service reads
-     return (ctrl->inReadBusState(true) ?
+     return (ctrl->inReadBusState(true, this) ?
                  (numReadDataReady == 0) && !read_queue_empty :
                  writeRespQueueFull() && read_queue_empty &&
                                          all_writes_nvm);

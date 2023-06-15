@@ -126,6 +126,25 @@ class MemBackdoor
 
 typedef MemBackdoor *MemBackdoorPtr;
 
+class MemBackdoorReq
+{
+  private:
+    AddrRange _range;
+    MemBackdoor::Flags _flags;
+
+  public:
+    MemBackdoorReq(AddrRange r, MemBackdoor::Flags new_flags) :
+        _range(r), _flags(new_flags)
+    {}
+
+    const AddrRange &range() const { return _range; }
+
+    bool readable() const { return _flags & MemBackdoor::Readable; }
+    bool writeable() const { return _flags & MemBackdoor::Writeable; }
+
+    MemBackdoor::Flags flags() const { return _flags; }
+};
+
 } // namespace gem5
 
 #endif  //__MEM_BACKDOOR_HH__

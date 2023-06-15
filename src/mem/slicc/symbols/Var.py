@@ -39,7 +39,7 @@ class Var(Symbol):
         self.code = code
 
     def __repr__(self):
-        return "[Var id: %s]" % (self.ident)
+        return f"[Var id: {self.ident}]"
 
     def writeCodeFiles(self, path, includes):
         pass

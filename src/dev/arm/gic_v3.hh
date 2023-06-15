@@ -167,6 +167,17 @@ class Gicv3 : public BaseGic, public Gicv3Registers
     Tick write(PacketPtr pkt) override;
     bool supportsVersion(GicVersion version) override;
 
+    template<typename... Args>
+    void
+    reserved(const char* fmt, Args... args) const
+    {
+        if (params().reserved_is_res0) {
+            warn(fmt, args...);
+        } else {
+            panic(fmt, args...);
+        }
+    }
+
   public:
 
     Gicv3(const Params &p);
@@ -205,6 +216,8 @@ class Gicv3 : public BaseGic, public Gicv3Registers
     getRedistributorByAddr(Addr address) const;
 
     void postInt(uint32_t cpu, ArmISA::InterruptTypes int_type);
+
+    void update();
 
   protected: // GIC state transfer
     void copyGicState(Gicv3Registers* from, Gicv3Registers* to);

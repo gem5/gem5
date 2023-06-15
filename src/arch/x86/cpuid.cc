@@ -162,7 +162,7 @@ namespace X86ISA {
                   ISA *isa = dynamic_cast<ISA *>(tc->getIsaPtr());
                   auto vendor_string = isa->getVendorString();
                   result = CpuidResult(
-                          NumExtendedCpuidFuncs - 1,
+                          NumStandardCpuidFuncs - 1,
                           stringToRegister(vendor_string.c_str()),
                           stringToRegister(vendor_string.c_str() + 4),
                           stringToRegister(vendor_string.c_str() + 8));

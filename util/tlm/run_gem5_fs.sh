@@ -42,9 +42,9 @@ echo -e "\n${BGre}Create gem5 Configuration${RCol}\n"
 --mem-size=512MB                                            \
 --mem-channels=1                                            \
 --caches --l2cache                                          \
---machine-type=VExpress_EMM                                 \
---dtb-filename=vexpress.aarch32.ll_20131205.0-gem5.1cpu.dtb \
---kernel=vmlinux.aarch32.ll_20131205.0-gem5
+--machine-type=VExpress_GEM5_Foundation                     \
+--kernel=vmlinux.arm64                                      \
+--disk-image=ubuntu-18.04-arm64-docker.img
 
 echo -e "\n${BGre}Run gem5 ${RCol}\n"
 

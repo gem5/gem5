@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 ARM Limited
+// Copyright (c) 2018-2020 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -36,7 +36,9 @@
 let {{
     sveEnabledCheckCode = '''
         if (FullSystem) {
-            fault = this->checkSveEnabled(xc->tcBase(), Cpsr, Cpacr64);
+            // Check an SVE inst against the appropriate traps/enables based
+            // on the Streaming Mode.
+            fault = this->checkSveSmeEnabled(xc->tcBase(), Cpsr, Cpacr64);
             if (fault != NoFault) {
                 return fault;
             }
@@ -487,6 +489,59 @@ class %(class_name)s : public %(base_class)s
 };
 }};
 
+def template sveTerUnpredOpDeclare {{
+template <class _Element>
+class %(class_name)s : public %(base_class)s
+{
+  private:
+    %(reg_idx_arr_decl)s;
+
+  protected:
+    typedef _Element Element;
+    typedef _Element TPElem;
+
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                   RegIndex _op1, RegIndex _op2) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+};
+}};
+
+def template SveMatMulOpDeclare {{
+template <typename DestElement,
+          typename SrcElementA,
+          typename SrcElementB>
+class %(class_name)s : public %(base_class)s
+{
+  private:
+    %(reg_idx_arr_decl)s;
+  protected:
+    typedef DestElement TPElem;
+    typedef SrcElementA TPSrcAElem;
+    typedef SrcElementB TPSrcBElem;
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst,
+                   RegIndex _dest, RegIndex _op1, RegIndex _op2)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _op2)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+};
+}};
+
 def template SveTerImmUnpredOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
@@ -798,6 +853,33 @@ class %(class_name)s : public %(base_class)s
 };
 }};
 
+def template SvePselOpDeclare {{
+template <class _Element>
+class %(class_name)s : public %(base_class)s
+{
+  private:
+    %(reg_idx_arr_decl)s;
+
+  protected:
+    typedef _Element Element;
+    typedef _Element TPElem;
+
+  public:
+    %(class_name)s(ExtMachInst machInst,
+                   RegIndex dest, RegIndex op1,
+                   RegIndex gp, RegIndex op2,
+                   uint64_t imm)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                          dest, op1, gp, op2, imm)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+};
+}};
+
 def template SveCompTermOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
@@ -1057,17 +1139,22 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template SveWideningTerImmOpDeclare {{
-template <class _SElement, class _DElement>
+template <class _SElementA, class _SElementB, class _DElement>
 class %(class_name)s : public %(base_class)s
 {
+  static_assert(sizeof(_SElementA) == sizeof(_SElementB),
+                "Source elements must have the same size.");
+
   private:
     %(reg_idx_arr_decl)s;
 
   protected:
     typedef _DElement Element;
-    typedef _SElement SElement;
+    typedef _SElementA SElementA;
+    typedef _SElementB SElementB;
     typedef _DElement DElement;
-    typedef _SElement TPSElem;
+    typedef _SElementA TPSrcAElem;
+    typedef _SElementB TPSrcBElem;
     typedef _DElement TPDElem;
 
   public:
@@ -1086,7 +1173,7 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template SveWideningTerOpDeclare {{
-template <class _SElement, class _DElement>
+template <class _SElementA, class _SElementB, class _DElement>
 class %(class_name)s : public %(base_class)s
 {
   private:
@@ -1094,9 +1181,11 @@ class %(class_name)s : public %(base_class)s
 
   protected:
     typedef _DElement Element;
-    typedef _SElement SElement;
+    typedef _SElementA SElementA;
+    typedef _SElementB SElementB;
     typedef _DElement DElement;
-    typedef _SElement TPSElem;
+    typedef _SElementA TPSrcAElem;
+    typedef _SElementB TPSrcBElem;
     typedef _DElement TPDElem;
 
   public:
@@ -1168,6 +1257,32 @@ class %(class_name)s : public %(base_class)s
 };
 }};
 
+def template SveClampOpDeclare {{
+template <class _Element>
+class %(class_name)s : public %(base_class)s
+{
+  private:
+    %(reg_idx_arr_decl)s;
+
+  protected:
+    typedef _Element Element;
+    typedef _Element TPElem;
+
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst,
+                   RegIndex dest, RegIndex op1, RegIndex op2)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         dest, op1, op2)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+};
+}};
+
 def template SveWideningOpExecute {{
     template <class SElement, class DElement>
     Fault
@@ -1180,6 +1295,26 @@ def template SveWideningOpExecute {{
 
         %(code)s;
         if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SveWideningTerOpExecute {{
+    template <class SElementA, class SElementB, class DElement>
+    Fault %(class_name)s<SElementA, SElementB, DElement>::execute
+           (ExecContext *xc,
+            trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        %(op_decl)s;
+        %(op_rd)s;
+
+        %(code)s;
+        if (fault == NoFault)
+        {
             %(op_wb)s;
         }
 
@@ -1228,4 +1363,33 @@ def template SveOpExecDeclare {{
     template
     Fault %(class_name)s<%(targs)s>::execute(
             ExecContext *, trace::InstRecord *) const;
+}};
+
+def template SveMatMulOpExecute {{
+    template <typename DestElement,
+              typename SrcElementA,
+              typename SrcElementB>
+    Fault %(class_name)s<DestElement,SrcElementA,SrcElementB>::execute(
+            ExecContext *xc,
+            trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        %(op_decl)s;
+        %(op_rd)s;
+
+        %(code)s;
+        if (fault == NoFault)
+        {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SveMatMulOpExecDeclare {{
+    template
+    Fault
+    %(class_name)s<%(destEltType)s,%(srcEltAType)s,%(srcEltBType)s>
+    ::execute(ExecContext *, trace::InstRecord *) const;
 }};

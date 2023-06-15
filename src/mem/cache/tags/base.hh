@@ -336,7 +336,7 @@ class BaseTags : public ClockedObject
      *
      * @param visitor Visitor to call on each block.
      */
-    virtual void forEachBlk(std::function<void(CacheBlk &)> visitor) = 0;
+    void forEachBlk(std::function<void(CacheBlk &)> visitor);
 
     /**
      * Find if any of the blocks satisfies a condition

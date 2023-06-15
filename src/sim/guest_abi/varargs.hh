@@ -39,7 +39,6 @@ namespace gem5
 
 class ThreadContext;
 
-GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
 namespace guest_abi
 {
 

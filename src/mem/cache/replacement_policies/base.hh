@@ -45,7 +45,6 @@ namespace gem5
  */
 typedef std::vector<ReplaceableEntry*> ReplacementCandidates;
 
-GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
 {
 

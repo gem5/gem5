@@ -191,17 +191,23 @@ class XMLElement(object):
     def begin(self, file_):
         file_.write('<')
         file_.write(self.name)
-        for attr in self.attributes:
-            file_.write(' ')
-            attr.write(file_)
+        if hasattr(self, 'attributes'):
+            for attr in self.attributes:
+                file_.write(' ')
+                attr.write(file_)
         file_.write('>')
 
         self.body(file_)
 
     def body(self, file_):
-        for elem in self.elements:
-            file_.write('\n')
-            elem.write(file_)
+        if hasattr(self, 'elements'):
+            for elem in self.elements:
+                file_.write('\n')
+                elem.write(file_)
+        if hasattr(self, 'content'):
+                file_.write('\n')
+                file_.write(
+                    xml.sax.saxutils.escape(self.content))
         file_.write('\n')
 
     def end(self, file_):
@@ -286,17 +292,22 @@ class JUnitTestCase(XMLElement):
         ]
 
         if str(test_result.result) == 'Failed':
-            self.elements.append(JUnitFailure('Test failed', 'ERROR'))
+            self.elements.append(JUnitFailure(
+                'Test failed',
+                str(test_result.result.reason))
+            )
 
 
 class JUnitFailure(XMLElement):
     name = 'failure'
-    def __init__(self, message, fail_type):
+    def __init__(self, message, cause):
         self.attributes = [
             XMLAttribute('message', message),
-            XMLAttribute('type', fail_type),
         ]
-        self.elements = []
+        cause_element = XMLElement()
+        cause_element.name = 'cause'
+        cause_element.content = cause
+        self.elements = [cause_element]
 
 
 class LargeFileElement(XMLElement):

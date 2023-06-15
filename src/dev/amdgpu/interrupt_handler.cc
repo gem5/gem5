@@ -80,6 +80,12 @@ AMDGPUInterruptHandler::prepareInterruptCookie(ContextID cntxt_id,
     assert(client_id == SOC15_IH_CLIENTID_RLC ||
            client_id == SOC15_IH_CLIENTID_SDMA0 ||
            client_id == SOC15_IH_CLIENTID_SDMA1 ||
+           client_id == SOC15_IH_CLIENTID_SDMA2 ||
+           client_id == SOC15_IH_CLIENTID_SDMA3 ||
+           client_id == SOC15_IH_CLIENTID_SDMA4 ||
+           client_id == SOC15_IH_CLIENTID_SDMA5 ||
+           client_id == SOC15_IH_CLIENTID_SDMA6 ||
+           client_id == SOC15_IH_CLIENTID_SDMA7 ||
            client_id == SOC15_IH_CLIENTID_GRBM_CP);
     assert(source_id == CP_EOP || source_id == TRAP_ID);
 

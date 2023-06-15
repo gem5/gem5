@@ -115,8 +115,8 @@ class PrivateL1PrivateL2CacheHierarchy(
         # Set up the system port for functional access from the simulator.
         board.connect_system_port(self.membus.cpu_side_ports)
 
-        for cntr in board.get_memory().get_memory_controllers():
-            cntr.port = self.membus.mem_side_ports
+        for _, port in board.get_memory().get_mem_ports():
+            self.membus.mem_side_ports = port
 
         self.l1icaches = [
             L1ICache(size=self._l1i_size)

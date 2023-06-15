@@ -98,6 +98,10 @@ ComputeUnit::ComputeUnit(const Params &p) : ClockedObject(p),
     countPages(p.countPages),
     req_tick_latency(p.mem_req_latency * p.clk_domain->clockPeriod()),
     resp_tick_latency(p.mem_resp_latency * p.clk_domain->clockPeriod()),
+    scalar_req_tick_latency(
+            p.scalar_mem_req_latency * p.clk_domain->clockPeriod()),
+    scalar_resp_tick_latency(
+            p.scalar_mem_resp_latency * p.clk_domain->clockPeriod()),
     _requestorId(p.system->getRequestorId(this, "ComputeUnit")),
     lds(*p.localDataStore), gmTokenPort(name() + ".gmTokenPort", this),
     ldsPort(csprintf("%s-port", name()), this),
@@ -1074,7 +1078,9 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
         fatal("pkt is not a read nor a write\n");
     }
 
-    stats.tlbCycles -= curTick();
+    if (!functionalTLB) {
+        stats.tlbCycles -= curTick();
+    }
     ++stats.tlbRequests;
 
     PortID tlbPort_index = perLaneTLB ? index : 0;
@@ -1786,7 +1792,7 @@ ComputeUnit::ScalarDTLBPort::recvTimingResp(PacketPtr pkt)
             = new ComputeUnit::ScalarDataPort::MemReqEvent
                 (computeUnit->scalarDataPort, req_pkt);
     computeUnit->schedule(scalar_mem_req_event, curTick() +
-                          computeUnit->req_tick_latency);
+                          computeUnit->scalar_req_tick_latency);
 
     return true;
 }

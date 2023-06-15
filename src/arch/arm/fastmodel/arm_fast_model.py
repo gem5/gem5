@@ -23,10 +23,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import logging
 import os
+import socket
 
 from m5.defines import buildEnv
 import _m5.arm_fast_model
+
+ARM_LICENSE_ENV = "ARMLMD_LICENSE_FILE"
+LM_LICENSE_ENV = "LM_LICENSE_FILE"
 
 
 def set_armlmd_license_file(force=False):
@@ -34,10 +39,57 @@ def set_armlmd_license_file(force=False):
     False, then it will only be set if it wasn't already set in the
     environment. The value it's set to is the one gem5 was built with.
     """
-    key = "ARMLMD_LICENSE_FILE"
-    license_file = buildEnv[key]
-    if force or key not in os.environ:
-        os.environ[key] = license_file
+    license_file = buildEnv[ARM_LICENSE_ENV]
+    if force or ARM_LICENSE_ENV not in os.environ:
+        os.environ[ARM_LICENSE_ENV] = license_file
+
+
+def check_armlmd_license(timeout):
+    """Check if any of the provided license server can be reached, or
+    if a license file is provided. This allows to fail early and fast,
+    as fastmodel code makes multiple lengthy attempts to connect to
+    license server. "timeout" is in seconds.
+    """
+    servers = os.environ[ARM_LICENSE_ENV].split(":")
+
+    extras = list()
+    # Add LM_LICENSE_ENV to the list, if set.
+    if LM_LICENSE_ENV in os.environ and os.environ[LM_LICENSE_ENV]:
+        extras += os.environ[LM_LICENSE_ENV].split(":")
+    # Fastmodel appears to always add this file.
+    extras.append("/opt/arm/licenses/license.dat")
+    for extra in extras:
+        if extra not in servers:
+            servers.append(extra)
+
+    for server in servers:
+        if os.path.exists(server):
+            logging.debug(f"License file {server} exists.")
+            break
+
+        tuple = server.split("@")
+        if len(tuple) != 2:
+            # Probably not a server, and we know the file doesn't exist.
+            logging.debug(f'License file "{server}" does not exist.')
+            continue
+
+        try:
+            # Try to connect to license server. This doesn't attempt to
+            # communicate with it, just checking reachability.
+            s = socket.create_connection(
+                (tuple[1], int(tuple[0])), timeout=timeout
+            )
+            s.close()
+            logging.debug(f"License server {server} is reachable.")
+            break
+        except Exception as e:
+            logging.debug(
+                f"Cannot connect to license server {server} ({type(e).__name__}: {e})."
+            )
+    else:
+        raise ConnectionError(
+            f"Cannot connect to any of the license servers ({', '.join(servers)})."
+        )
 
 
 # These methods wrap much of the SystemC Export API described in section
@@ -141,7 +193,17 @@ def scx_get_min_sync_latency(arg=None):
 
 
 # This should be called once per simulation
-def setup_simulation(sim_name, min_sync_latency=100.0 / 100000000):
+def setup_simulation(
+    sim_name,
+    min_sync_latency=100.0 / 100000000,
+    exit_on_dmi_warning=False,
+    license_precheck=False,
+    license_precheck_timeout=1,
+):
     set_armlmd_license_file()
+    if license_precheck:
+        check_armlmd_license(license_precheck_timeout)
     scx_initialize(sim_name)
     scx_set_min_sync_latency(min_sync_latency)
+    if exit_on_dmi_warning:
+        _m5.arm_fast_model.gem5.enable_exit_on_dmi_warning_handler()

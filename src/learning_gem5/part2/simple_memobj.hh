@@ -68,7 +68,7 @@ class SimpleMemobj : public SimObject
          * Constructor. Just calls the superclass constructor.
          */
         CPUSidePort(const std::string& name, SimpleMemobj *owner) :
-            ResponsePort(name, owner), owner(owner), needRetry(false),
+            ResponsePort(name), owner(owner), needRetry(false),
             blockedPacket(nullptr)
         { }
 
@@ -147,7 +147,7 @@ class SimpleMemobj : public SimObject
          * Constructor. Just calls the superclass constructor.
          */
         MemSidePort(const std::string& name, SimpleMemobj *owner) :
-            RequestPort(name, owner), owner(owner), blockedPacket(nullptr)
+            RequestPort(name), owner(owner), blockedPacket(nullptr)
         { }
 
         /**

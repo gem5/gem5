@@ -97,6 +97,7 @@ class BaseCPUProcessor(AbstractProcessor):
                     "'atomic_noncaching' memory mode. This will skip caching "
                     "completely."
                 )
+                board.set_mem_mode(MemMode.ATOMIC_NONCACHING)
             else:
                 board.set_mem_mode(MemMode.ATOMIC)
         else:

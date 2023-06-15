@@ -46,7 +46,7 @@ namespace gem5
 
 SimpleTimingPort::SimpleTimingPort(const std::string& _name,
                                    SimObject* _owner) :
-    QueuedResponsePort(_name, _owner, queueImpl), queueImpl(*_owner, *this)
+    QueuedResponsePort(_name, queueImpl), queueImpl(*_owner, *this)
 {
 }
 

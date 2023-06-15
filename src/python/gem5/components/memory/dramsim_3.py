@@ -32,6 +32,7 @@ def config_ds3(mem_type: str, num_chnls: int) -> Tuple[str, str]:
         os.pardir,
         os.pardir,
         "ext",
+        "dramsim3",
         "DRAMsim3",
     )
 
@@ -47,13 +48,13 @@ def config_ds3(mem_type: str, num_chnls: int) -> Tuple[str, str]:
             "Please navigate to `ext` and run:\n"
             "git clone git@github.com:umd-memsys/DRAMsim3.git"
         )
-    elif os.path.isdir(dramsim_3_mem_configs):
+    elif not os.path.isdir(dramsim_3_mem_configs):
         raise Exception(
             "The `ext/DRAMsim3/configs` directory cannot be found."
         )
-    elif os.path.isfile(input_file):
+    elif not os.path.isfile(input_file):
         raise Exception(
-            "The configuration file '" + input_file + "' cannot " " be found."
+            "The configuration file '" + input_file + "' cannot  be found."
         )
 
     output_file = "/tmp/" + mem_type + "_chnls" + str(num_chnls) + ".ini"

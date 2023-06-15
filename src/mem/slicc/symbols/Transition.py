@@ -41,7 +41,7 @@ class Transition(Symbol):
         request_types,
         location,
     ):
-        ident = "%s|%s" % (state, event)
+        ident = f"{state}|{event}"
         super().__init__(table, ident, location)
 
         self.state = machine.states[state]

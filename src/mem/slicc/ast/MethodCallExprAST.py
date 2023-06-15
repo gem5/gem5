@@ -171,9 +171,9 @@ class MemberMethodCallExprAST(MethodCallExprAST):
             "interface" in obj_type
             and (obj_type["interface"] == "AbstractCacheEntry")
         ):
-            prefix = "%s((*(%s))." % (prefix, code)
+            prefix = f"{prefix}((*({code}))."
         else:
-            prefix = "%s((%s)." % (prefix, code)
+            prefix = f"{prefix}(({code})."
 
         return obj_type, methodId, prefix
 
@@ -186,12 +186,12 @@ class ClassMethodCallExprAST(MethodCallExprAST):
         self.type_ast = type_ast
 
     def __repr__(self):
-        return "[MethodCallExpr: %r %r]" % (self.proc_name, self.expr_ast_vec)
+        return f"[MethodCallExpr: {self.proc_name!r} {self.expr_ast_vec!r}]"
 
     def generate_prefix(self, paramTypes):
 
         # class method call
-        prefix = "(%s::" % self.type_ast
+        prefix = f"({self.type_ast}::"
         obj_type = self.type_ast.type
         methodId = obj_type.methodId(self.proc_name, paramTypes)
 

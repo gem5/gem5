@@ -51,8 +51,7 @@ HBMCtrl::HBMCtrl(const HBMCtrlParams &p) :
                          name()),
     respondEventPC1([this] {processRespondEvent(pc1Int, respQueuePC1,
                          respondEventPC1, retryRdReqPC1); }, name()),
-    pc1Int(p.dram_2),
-    partitionedQ(p.partitioned_q)
+    pc1Int(p.dram_2)
 {
     DPRINTF(MemCtrl, "Setting up HBM controller\n");
 
@@ -69,17 +68,8 @@ HBMCtrl::HBMCtrl(const HBMCtrlParams &p) :
     pc0Int->setCtrl(this, commandWindow, 0);
     pc1Int->setCtrl(this, commandWindow, 1);
 
-    if (partitionedQ) {
-        writeHighThreshold = (writeBufferSize * (p.write_high_thresh_perc/2)
-                             / 100.0);
-        writeLowThreshold = (writeBufferSize * (p.write_low_thresh_perc/2)
-                            / 100.0);
-    } else {
-        writeHighThreshold = (writeBufferSize * p.write_high_thresh_perc
-                            / 100.0);
-        writeLowThreshold = (writeBufferSize * p.write_low_thresh_perc
-                            / 100.0);
-    }
+    writeHighThreshold = (writeBufferSize/2 * p.write_high_thresh_perc)/100.0;
+    writeLowThreshold = (writeBufferSize/2 * p.write_low_thresh_perc)/100.0;
 }
 
 void
@@ -109,9 +99,9 @@ HBMCtrl::recvAtomic(PacketPtr pkt)
     Tick latency = 0;
 
     if (pc0Int->getAddrRange().contains(pkt->getAddr())) {
-        latency = MemCtrl::recvAtomicLogic(pkt, pc0Int);
+        latency = recvAtomicLogic(pkt, pc0Int);
     } else if (pc1Int->getAddrRange().contains(pkt->getAddr())) {
-        latency = MemCtrl::recvAtomicLogic(pkt, pc1Int);
+        latency = recvAtomicLogic(pkt, pc1Int);
     } else {
         panic("Can't handle address range for packet %s\n", pkt->print());
     }
@@ -122,10 +112,10 @@ HBMCtrl::recvAtomic(PacketPtr pkt)
 void
 HBMCtrl::recvFunctional(PacketPtr pkt)
 {
-    bool found = MemCtrl::recvFunctionalLogic(pkt, pc0Int);
+    bool found = recvFunctionalLogic(pkt, pc0Int);
 
     if (!found) {
-        found = MemCtrl::recvFunctionalLogic(pkt, pc1Int);
+        found = recvFunctionalLogic(pkt, pc1Int);
     }
 
     if (!found) {
@@ -150,14 +140,29 @@ HBMCtrl::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
     return latency;
 }
 
+void
+HBMCtrl::recvMemBackdoorReq(const MemBackdoorReq &req,
+        MemBackdoorPtr &backdoor)
+{
+    auto &range = req.range();
+    if (pc0Int && pc0Int->getAddrRange().isSubset(range)) {
+        pc0Int->getBackdoor(backdoor);
+    } else if (pc1Int && pc1Int->getAddrRange().isSubset(range)) {
+        pc1Int->getBackdoor(backdoor);
+    }
+    else {
+        panic("Can't handle address range for range %s\n", range.to_string());
+    }
+}
+
 bool
 HBMCtrl::writeQueueFullPC0(unsigned int neededEntries) const
 {
     DPRINTF(MemCtrl,
             "Write queue limit %d, PC0 size %d, entries needed %d\n",
-            writeBufferSize, writeQueueSizePC0, neededEntries);
+            writeBufferSize/2, pc0Int->writeQueueSize, neededEntries);
 
-    unsigned int wrsize_new = (writeQueueSizePC0 + neededEntries);
+    unsigned int wrsize_new = (pc0Int->writeQueueSize + neededEntries);
     return wrsize_new > (writeBufferSize/2);
 }
 
@@ -166,9 +171,9 @@ HBMCtrl::writeQueueFullPC1(unsigned int neededEntries) const
 {
     DPRINTF(MemCtrl,
             "Write queue limit %d, PC1 size %d, entries needed %d\n",
-            writeBufferSize, writeQueueSizePC1, neededEntries);
+            writeBufferSize/2, pc1Int->writeQueueSize, neededEntries);
 
-    unsigned int wrsize_new = (writeQueueSizePC1 + neededEntries);
+    unsigned int wrsize_new = (pc1Int->writeQueueSize + neededEntries);
     return wrsize_new > (writeBufferSize/2);
 }
 
@@ -177,10 +182,10 @@ HBMCtrl::readQueueFullPC0(unsigned int neededEntries) const
 {
     DPRINTF(MemCtrl,
             "Read queue limit %d, PC0 size %d, entries needed %d\n",
-            readBufferSize, readQueueSizePC0 + respQueue.size(),
+            readBufferSize/2, pc0Int->readQueueSize + respQueue.size(),
             neededEntries);
 
-    unsigned int rdsize_new = readQueueSizePC0 + respQueue.size()
+    unsigned int rdsize_new = pc0Int->readQueueSize + respQueue.size()
                                                + neededEntries;
     return rdsize_new > (readBufferSize/2);
 }
@@ -190,24 +195,12 @@ HBMCtrl::readQueueFullPC1(unsigned int neededEntries) const
 {
     DPRINTF(MemCtrl,
             "Read queue limit %d, PC1 size %d, entries needed %d\n",
-            readBufferSize, readQueueSizePC1 + respQueuePC1.size(),
+            readBufferSize/2, pc1Int->readQueueSize + respQueuePC1.size(),
             neededEntries);
 
-    unsigned int rdsize_new = readQueueSizePC1 + respQueuePC1.size()
+    unsigned int rdsize_new = pc1Int->readQueueSize + respQueuePC1.size()
                                                + neededEntries;
     return rdsize_new > (readBufferSize/2);
-}
-
-bool
-HBMCtrl::readQueueFull(unsigned int neededEntries) const
-{
-    DPRINTF(MemCtrl,
-            "HBMCtrl: Read queue limit %d, entries needed %d\n",
-            readBufferSize, neededEntries);
-
-    unsigned int rdsize_new = totalReadQueueSize + respQueue.size() +
-                                respQueuePC1.size() + neededEntries;
-    return rdsize_new > readBufferSize;
 }
 
 bool
@@ -254,23 +247,23 @@ HBMCtrl::recvTimingReq(PacketPtr pkt)
     // check local buffers and do not accept if full
     if (pkt->isWrite()) {
         if (is_pc0) {
-            if (partitionedQ ? writeQueueFullPC0(pkt_count) :
-                                        writeQueueFull(pkt_count))
-            {
+            if (writeQueueFullPC0(pkt_count)) {
                 DPRINTF(MemCtrl, "Write queue full, not accepting\n");
                 // remember that we have to retry this port
-                MemCtrl::retryWrReq = true;
+                retryWrReq = true;
                 stats.numWrRetry++;
                 return false;
             } else {
                 addToWriteQueue(pkt, pkt_count, pc0Int);
+                if (!nextReqEvent.scheduled()) {
+                    DPRINTF(MemCtrl, "Request scheduled immediately\n");
+                    schedule(nextReqEvent, curTick());
+                }
                 stats.writeReqs++;
                 stats.bytesWrittenSys += size;
             }
         } else {
-            if (partitionedQ ? writeQueueFullPC1(pkt_count) :
-                                        writeQueueFull(pkt_count))
-            {
+            if (writeQueueFullPC1(pkt_count)) {
                 DPRINTF(MemCtrl, "Write queue full, not accepting\n");
                 // remember that we have to retry this port
                 retryWrReqPC1 = true;
@@ -278,6 +271,10 @@ HBMCtrl::recvTimingReq(PacketPtr pkt)
                 return false;
             } else {
                 addToWriteQueue(pkt, pkt_count, pc1Int);
+                if (!nextReqEventPC1.scheduled()) {
+                    DPRINTF(MemCtrl, "Request scheduled immediately\n");
+                    schedule(nextReqEventPC1, curTick());
+                }
                 stats.writeReqs++;
                 stats.bytesWrittenSys += size;
             }
@@ -288,11 +285,10 @@ HBMCtrl::recvTimingReq(PacketPtr pkt)
         assert(size != 0);
 
         if (is_pc0) {
-            if (partitionedQ ? readQueueFullPC0(pkt_count) :
-                                        HBMCtrl::readQueueFull(pkt_count)) {
+            if (readQueueFullPC0(pkt_count)) {
                 DPRINTF(MemCtrl, "Read queue full, not accepting\n");
                 // remember that we have to retry this port
-                retryRdReqPC1 = true;
+                retryRdReq = true;
                 stats.numRdRetry++;
                 return false;
             } else {
@@ -307,8 +303,7 @@ HBMCtrl::recvTimingReq(PacketPtr pkt)
                 stats.bytesReadSys += size;
             }
         } else {
-            if (partitionedQ ? readQueueFullPC1(pkt_count) :
-                                        HBMCtrl::readQueueFull(pkt_count)) {
+            if (readQueueFullPC1(pkt_count)) {
                 DPRINTF(MemCtrl, "Read queue full, not accepting\n");
                 // remember that we have to retry this port
                 retryRdReqPC1 = true;
@@ -336,7 +331,7 @@ HBMCtrl::pruneRowBurstTick()
     auto it = rowBurstTicks.begin();
     while (it != rowBurstTicks.end()) {
         auto current_it = it++;
-        if (MemCtrl::getBurstWindow(curTick()) > *current_it) {
+        if (getBurstWindow(curTick()) > *current_it) {
             DPRINTF(MemCtrl, "Removing burstTick for %d\n", *current_it);
             rowBurstTicks.erase(current_it);
         }
@@ -349,7 +344,7 @@ HBMCtrl::pruneColBurstTick()
     auto it = colBurstTicks.begin();
     while (it != colBurstTicks.end()) {
         auto current_it = it++;
-        if (MemCtrl::getBurstWindow(curTick()) > *current_it) {
+        if (getBurstWindow(curTick()) > *current_it) {
             DPRINTF(MemCtrl, "Removing burstTick for %d\n", *current_it);
             colBurstTicks.erase(current_it);
         }
@@ -370,7 +365,7 @@ HBMCtrl::verifySingleCmd(Tick cmd_tick, Tick max_cmds_per_burst, bool row_cmd)
     Tick cmd_at = cmd_tick;
 
     // get tick aligned to burst window
-    Tick burst_tick = MemCtrl::getBurstWindow(cmd_tick);
+    Tick burst_tick = getBurstWindow(cmd_tick);
 
     // verify that we have command bandwidth to issue the command
     // if not, iterate over next window(s) until slot found
@@ -409,7 +404,7 @@ HBMCtrl::verifyMultiCmd(Tick cmd_tick, Tick max_cmds_per_burst,
     Tick cmd_at = cmd_tick;
 
     // get tick aligned to burst window
-    Tick burst_tick = MemCtrl::getBurstWindow(cmd_tick);
+    Tick burst_tick = getBurstWindow(cmd_tick);
 
     // Command timing requirements are from 2nd command
     // Start with assumption that 2nd command will issue at cmd_at and

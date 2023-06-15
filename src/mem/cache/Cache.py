@@ -61,10 +61,10 @@ class WriteAllocator(SimObject):
     # allow whole-line write coalescing, and eventually switches to a
     # write-no-allocate policy.
     coalesce_limit = Param.Unsigned(
-        2, "Consecutive lines written before " "delaying for coalescing"
+        2, "Consecutive lines written before delaying for coalescing"
     )
     no_allocate_limit = Param.Unsigned(
-        12, "Consecutive lines written before" " skipping allocation"
+        12, "Consecutive lines written before skipping allocation"
     )
 
     delay_threshold = Param.Unsigned(
@@ -129,7 +129,7 @@ class BaseCache(ClockedObject):
     # co-allocatable with another existing entry of the same superblock,
     # so try move the block to co-allocate it
     move_contractions = Param.Bool(
-        True, "Try to co-allocate blocks that " "contract"
+        True, "Try to co-allocate blocks that contract"
     )
 
     sequential_access = Param.Bool(

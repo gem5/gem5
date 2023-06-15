@@ -68,8 +68,7 @@ sim_object_classes_by_name = {
 
 def no_parser(cls, flags, param):
     raise Exception(
-        "Can't parse string: %s for parameter"
-        " class: %s" % (str(param), cls.__name__)
+        f"Can't parse string: {str(param)} for parameter class: {cls.__name__}"
     )
 
 
@@ -114,7 +113,7 @@ def memory_bandwidth_parser(cls, flags, param):
     value = 1.0 / float(param)
     # Convert to byte/s
     value = ticks.fromSeconds(value)
-    return cls("%fB/s" % value)
+    return cls(f"{value:f}B/s")
 
 
 # These parameters have trickier parsing from .ini files than might be
@@ -201,8 +200,7 @@ class ConfigManager(object):
 
         if object_type not in sim_object_classes_by_name:
             raise Exception(
-                "No SimObject type %s is available to"
-                " build: %s" % (object_type, object_name)
+                f"No SimObject type {object_type} is available to build: {object_name}"
             )
 
         object_class = sim_object_classes_by_name[object_type]
@@ -479,7 +477,7 @@ class ConfigIniFile(ConfigFile):
             if object_name == "root":
                 return child_name
             else:
-                return "%s.%s" % (object_name, child_name)
+                return f"{object_name}.{child_name}"
 
         return [(name, make_path(name)) for name in child_names]
 

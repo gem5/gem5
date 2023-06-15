@@ -49,6 +49,9 @@ AddOption('--debug-build', dest='debug_build', action='store_true',
 AddOption('--run-tests', dest='run_tests', action='store_true',
           help='Enable test output xml files as build targets.')
 AddOption('--verbose', dest='verbose', action='store_true')
+AddOption('--no-duplicate-sources', action='store_false', default=True,
+          dest='duplicate_sources',
+          help='Do not create symlinks to sources in the build directory')
 
 # Universal settings.
 if GetOption('debug_build'):
@@ -179,10 +182,12 @@ native_dir = build_dir.Dir('native')
 
 # Bring in the googletest sources.
 native.SConscript(googletest_dir.File('SConscript'),
-        variant_dir=native_dir.Dir('googletest'), exports={ 'env': native })
+        variant_dir=native_dir.Dir('googletest'), exports={ 'env': native },
+                  duplicate=GetOption('duplicate_sources'))
 
 native.SConscript(src_dir.File('SConscript.native'),
-        variant_dir=native_dir, exports={ 'env': native })
+        variant_dir=native_dir, exports={ 'env': native },
+                  duplicate=GetOption('duplicate_sources'))
 
 main['CC'] = '${CROSS_COMPILE}gcc'
 main['CXX'] = '${CROSS_COMPILE}g++'
@@ -268,6 +273,7 @@ for root, dirs, files in os.walk(abspath(src_dir)):
         # Bring in the googletest sources.
         env.SConscript(googletest_dir.File('SConscript'),
                 variant_dir=abi_dir.Dir('googletest'),
-                exports='env')
+                exports='env', duplicate=GetOption('duplicate_sources'))
         env.SConscript(src_dir.File('SConscript'),
-                       variant_dir=abi_dir, exports='env')
+                       variant_dir=abi_dir, exports='env',
+                       duplicate=GetOption('duplicate_sources'))

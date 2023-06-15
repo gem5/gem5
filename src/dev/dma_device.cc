@@ -57,7 +57,7 @@ namespace gem5
 
 DmaPort::DmaPort(ClockedObject *dev, System *s,
                  uint32_t sid, uint32_t ssid)
-    : RequestPort(dev->name() + ".dma", dev),
+    : RequestPort(dev->name() + ".dma"),
       device(dev), sys(s), requestorId(s->getRequestorId(dev)),
       sendEvent([this]{ sendDma(); }, dev->name()),
       defaultSid(sid), defaultSSid(ssid), cacheLineSize(s->cacheLineSize())
@@ -81,6 +81,8 @@ DmaPort::handleRespPacket(PacketPtr pkt, Tick delay)
 void
 DmaPort::handleResp(DmaReqState *state, Addr addr, Addr size, Tick delay)
 {
+    assert(pendingCount != 0);
+    pendingCount--;
     DPRINTF(DMA, "Received response %s for addr: %#x size: %d nb: %d,"  \
             " tot: %d sched %d\n",
             MemCmd(state->cmd).toString(), addr, size,
@@ -93,11 +95,22 @@ DmaPort::handleResp(DmaReqState *state, Addr addr, Addr size, Tick delay)
     state->numBytes += size;
     assert(state->totBytes >= state->numBytes);
 
-    // If we have reached the total number of bytes for this DMA request,
-    // then signal the completion and delete the sate.
-    if (state->totBytes == state->numBytes) {
-        assert(pendingCount != 0);
-        pendingCount--;
+    bool all_bytes = (state->totBytes == state->numBytes);
+    if (state->aborted) {
+        // If this request was aborted, check to see if its in flight accesses
+        // have finished. There may be packets for more than one request in
+        // flight at a time, so check for finished requests, or no more
+        // packets.
+        if (all_bytes || pendingCount == 0) {
+            // If yes, signal its abort event (if any) and delete the state.
+            if (state->abortEvent) {
+                device->schedule(state->abortEvent, curTick());
+            }
+            delete state;
+        }
+    } else if (all_bytes) {
+        // If we have reached the end of this DMA request, then signal the
+        // completion and delete the sate.
         if (state->completionEvent) {
             delay += state->delay;
             device->schedule(state->completionEvent, curTick() + delay);
@@ -166,8 +179,9 @@ DmaPort::drain()
 void
 DmaPort::recvReqRetry()
 {
-    assert(transmitList.size());
-    trySendTimingReq();
+    retryPending = false;
+    if (transmitList.size())
+        trySendTimingReq();
 }
 
 void
@@ -184,7 +198,6 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
     transmitList.push_back(
             new DmaReqState(cmd, addr, cacheLineSize, size,
                 data, flag, requestorId, sid, ssid, event, delay));
-    pendingCount++;
 
     // In zero time, also initiate the sending of the packets for the request
     // we have just created. For atomic this involves actually completing all
@@ -198,6 +211,42 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
 {
     dmaAction(cmd, addr, size, event, data,
               defaultSid, defaultSSid, delay, flag);
+}
+
+void
+DmaPort::abortPending()
+{
+    if (inRetry) {
+        delete inRetry;
+        inRetry = nullptr;
+    }
+
+    if (pendingCount && !transmitList.empty()) {
+        auto *state = transmitList.front();
+        if (state->numBytes != state->gen.complete()) {
+            // In flight packets refer to the transmission at the front of the
+            // list, and not a transmission whose packets have all been sent
+            // but not completed. Preserve the state so the packets don't have
+            // dangling pointers.
+            transmitList.pop_front();
+            state->aborted = true;
+        }
+    }
+
+    // Get rid of requests that haven't started yet.
+    while (!transmitList.empty()) {
+        auto *state = transmitList.front();
+        if (state->abortEvent)
+            device->schedule(state->abortEvent, curTick());
+        delete state;
+        transmitList.pop_front();
+    }
+
+    if (sendEvent.scheduled())
+        device->deschedule(sendEvent);
+
+    if (pendingCount == 0)
+        signalDrainDone();
 }
 
 void
@@ -216,14 +265,17 @@ DmaPort::trySendTimingReq()
     // Check if this was the last packet now, since hypothetically the packet
     // response may come immediately, and state may be deleted.
     bool last = state->gen.last();
-    if (!sendTimingReq(pkt))
+    if (sendTimingReq(pkt)) {
+        pendingCount++;
+    } else {
+        retryPending = true;
         inRetry = pkt;
-    if (!inRetry) {
+    }
+    if (!retryPending) {
+        state->gen.next();
         // If that was the last packet from this request, pop it from the list.
         if (last)
             transmitList.pop_front();
-        else
-            state->gen.next();
         DPRINTF(DMA, "-- Done\n");
         // If there is more to do, then do so.
         if (!transmitList.empty()) {
@@ -236,8 +288,8 @@ DmaPort::trySendTimingReq()
         DPRINTF(DMA, "-- Failed, waiting for retry\n");
     }
 
-    DPRINTF(DMA, "TransmitList: %d, inRetry: %d\n",
-            transmitList.size(), inRetry ? 1 : 0);
+    DPRINTF(DMA, "TransmitList: %d, retryPending: %d\n",
+            transmitList.size(), retryPending ? 1 : 0);
 }
 
 bool
@@ -246,6 +298,7 @@ DmaPort::sendAtomicReq(DmaReqState *state)
     PacketPtr pkt = state->createPacket();
     DPRINTF(DMA, "Sending  DMA for addr: %#x size: %d\n",
             state->gen.addr(), state->gen.size());
+    pendingCount++;
     Tick lat = sendAtomic(pkt);
 
     // Check if we're done, since handleResp may delete state.
@@ -258,6 +311,7 @@ bool
 DmaPort::sendAtomicBdReq(DmaReqState *state)
 {
     bool done = false;
+    pendingCount++;
 
     auto bd_it = memBackdoors.contains(state->gen.addr());
     if (bd_it == memBackdoors.end()) {
@@ -336,7 +390,7 @@ DmaPort::sendDma()
     if (sys->isTimingMode()) {
         // If we are either waiting for a retry or are still waiting after
         // sending the last packet, then do not proceed.
-        if (inRetry || sendEvent.scheduled()) {
+        if (retryPending || sendEvent.scheduled()) {
             DPRINTF(DMA, "Can't send immediately, waiting to send\n");
             return;
         }

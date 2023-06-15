@@ -37,6 +37,7 @@
 #include <initializer_list>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <sstream>
 #include <utility>
 
@@ -84,6 +85,9 @@
  * entire device, with the address from accesses passed into read or write
  * unmodified.
  *
+ * The base(), size() and name() methods can be used to access each of those
+ * read only properties of the RegisterBank instance.
+ *
  * To add actual registers to the RegisterBank (discussed below), you can use
  * either the addRegister method which adds a single register, or addRegisters
  * which adds an initializer list of them all at once. The register will be
@@ -91,8 +95,19 @@
  * existing registers. The size of the bank is automatically accumulated as
  * registers are added.
  *
- * The base(), size() and name() methods can be used to access each of those
- * read only properties of the RegisterBank instance.
+ * When adding a lot of registers, you might accidentally add an extra,
+ * or accidentally skip one in a long list. Because the offset is handled
+ * automatically, some of your registers might end up shifted higher or lower
+ * than you expect. To help mitigate this, you can set what offset you expect
+ * a register to have by specifying it as an offset, register pair.
+ *
+ * addRegisters({{0x1000, reg0}, reg1, reg2});
+ *
+ * If the register would end up at a different offset, gem5 will panic. You
+ * can also leave off the register if you want to just check the offset, for
+ * instance between groups of registers.
+ *
+ * addRegisters({reg0, reg1, reg2, 0x100c})
  *
  * While the RegisterBank itself doesn't have any data in it directly and so
  * has no endianness, it's very likely all the registers within it will have
@@ -101,6 +116,11 @@
  * within it. The RegisterBank class is templated on its endianness. There are
  * RegisterBankLE and RegisterBankBE aliases to make it a little easier to
  * refer to one or the other version.
+ *
+ * A RegisterBank also has a reset() method which will (by default) call the
+ * reset() method on each register within it. This method is virtual, and so
+ * can be overridden if something additional or different needs to be done to
+ * reset the hardware model.
  *
  *
  * == Register interface ==
@@ -129,6 +149,12 @@
  * doesn't need to be serialized (for instance if it has a fixed value) then
  * it still has to implement these methods, but they don't have to actually do
  * anything.
+ *
+ * Each register also has a "reset" method, which will reset the register as
+ * if its containing device is being reset. By default, this will just restore
+ * the initial value of the register, but can be overridden to implement
+ * additional behavior like resetting other aspects of the device which are
+ * controlled by the value of the register.
  *
  *
  * == Basic Register types ==
@@ -244,6 +270,12 @@
  * is an alternative form of update which also takes a custom bitmask, if you
  * need to update bits other than the normally writeable ones.
  *
+ * Similarly, you can set a "resetter" handler which is responsible for
+ * resetting the register. It takes a reference to the current Register, and
+ * no other parameters. The "initialValue" accessor can retrieve the value the
+ * register was constructed with. The register is simply set to this value
+ * in the default resetter implementation.
+ *
  * = Read only bits =
  *
  * Often registers have bits which are fixed and not affected by writes. To
@@ -345,6 +377,9 @@ class RegisterBank : public RegisterBankBase
         // Methods for implementing serialization for checkpoints.
         virtual void serialize(std::ostream &os) const = 0;
         virtual bool unserialize(const std::string &s) = 0;
+
+        // Reset the register.
+        virtual void reset() = 0;
     };
 
     // Filler registers which return a fixed pattern.
@@ -373,6 +408,9 @@ class RegisterBank : public RegisterBankBase
 
         void serialize(std::ostream &os) const override {}
         bool unserialize(const std::string &s) override { return true; }
+
+        // Resetting a read only register doesn't need to do anything.
+        void reset() override {}
     };
 
     // Register which reads as all zeroes.
@@ -438,6 +476,10 @@ class RegisterBank : public RegisterBankBase
         void serialize(std::ostream &os) const override {}
         bool unserialize(const std::string &s) override { return true; }
 
+        // Assume since the buffer is managed externally, it will be reset
+        // externally.
+        void reset() override {}
+
       protected:
         /**
          * This method exists so that derived classes that need to initialize
@@ -501,6 +543,8 @@ class RegisterBank : public RegisterBankBase
 
             return true;
         }
+
+        void reset() override { buffer = std::array<uint8_t, BufBytes>{}; }
     };
 
     template <typename Data, ByteOrder RegByteOrder=BankByteOrder>
@@ -516,15 +560,18 @@ class RegisterBank : public RegisterBankBase
         using WriteFunc = std::function<void (This &reg, const Data &value)>;
         using PartialWriteFunc = std::function<
             void (This &reg, const Data &value, int first, int last)>;
+        using ResetFunc = std::function<void (This &reg)>;
 
       private:
         Data _data = {};
+        Data _resetData = {};
         Data _writeMask = mask(sizeof(Data) * 8);
 
         ReadFunc _reader = defaultReader;
         WriteFunc _writer = defaultWriter;
         PartialWriteFunc _partialWriter = defaultPartialWriter;
         PartialReadFunc _partialReader = defaultPartialReader;
+        ResetFunc _resetter = defaultResetter;
 
       protected:
         static Data defaultReader(This &reg) { return reg.get(); }
@@ -546,6 +593,12 @@ class RegisterBank : public RegisterBankBase
         {
             reg._writer(reg, writeWithMask<Data>(reg._reader(reg), value,
                                                  mask(first, last)));
+        }
+
+        static void
+        defaultResetter(This &reg)
+        {
+            reg.get() = reg.initialValue();
         }
 
         constexpr Data
@@ -587,11 +640,13 @@ class RegisterBank : public RegisterBankBase
 
         // Constructor and move constructor with an initial data value.
         constexpr Register(const std::string &new_name, const Data &new_data) :
-            RegisterBase(new_name, sizeof(Data)), _data(new_data)
+            RegisterBase(new_name, sizeof(Data)), _data(new_data),
+            _resetData(new_data)
         {}
         constexpr Register(const std::string &new_name,
                            const Data &&new_data) :
-            RegisterBase(new_name, sizeof(Data)), _data(new_data)
+            RegisterBase(new_name, sizeof(Data)), _data(new_data),
+            _resetData(new_data)
         {}
 
         // Set which bits of the register are writeable.
@@ -680,6 +735,33 @@ class RegisterBank : public RegisterBankBase
             return partialWriter(wrapper);
         }
 
+        // Set the callables which handle resetting.
+        //
+        // The default resetter restores the initial value used in the
+        // constructor.
+        constexpr This &
+        resetter(const ResetFunc &new_resetter)
+        {
+            _resetter = new_resetter;
+            return *this;
+        }
+        template <class Parent, class... Args>
+        constexpr This &
+        resetter(Parent *parent, void (Parent::*nr)(Args... args))
+        {
+            auto wrapper = [parent, nr](Args&&... args) {
+                return (parent->*nr)(std::forward<Args>(args)...);
+            };
+            return resetter(wrapper);
+        }
+
+        // An accessor which returns the initial value as set in the
+        // constructor. This is intended to be used in a resetter function.
+        const Data &initialValue() const { return _resetData; }
+
+        // Reset the initial value, which is normally set in the constructor,
+        // to the register's current value.
+        void resetInitialValue() { _resetData = _data; }
 
         /*
          * Interface for accessing the register's state, for use by the
@@ -774,6 +856,9 @@ class RegisterBank : public RegisterBankBase
         {
             return ParseParam<Data>::parse(s, get());
         }
+
+        // Reset our data to its initial value.
+        void reset() override { _resetter(*this); }
     };
 
   private:
@@ -805,19 +890,52 @@ class RegisterBank : public RegisterBankBase
 
     virtual ~RegisterBank() {}
 
-    void
-    addRegisters(
-            std::initializer_list<std::reference_wrapper<RegisterBase>> regs)
+    class RegisterAdder
     {
-        panic_if(regs.size() == 0, "Adding an empty list of registers to %s?",
-                 name());
-        for (auto &reg: regs) {
-            _offsetMap.emplace(_base + _size, reg);
-            _size += reg.get().size();
+      private:
+        std::optional<Addr> offset;
+        std::optional<RegisterBase *> reg;
+
+      public:
+        // Nothing special to do for this register.
+        RegisterAdder(RegisterBase &new_reg) : reg(&new_reg) {}
+        // Ensure that this register is added at a particular offset.
+        RegisterAdder(Addr new_offset, RegisterBase &new_reg) :
+            offset(new_offset), reg(&new_reg)
+        {}
+        // No register, just check that the offset is what we expect.
+        RegisterAdder(Addr new_offset) : offset(new_offset) {}
+
+        friend class RegisterBank;
+    };
+
+    void
+    addRegisters(std::initializer_list<RegisterAdder> adders)
+    {
+        panic_if(std::empty(adders),
+                "Adding an empty list of registers to %s?", name());
+        for (auto &adder: adders) {
+            const Addr offset = _base + _size;
+
+            if (adder.reg) {
+                auto *reg = adder.reg.value();
+                if (adder.offset && adder.offset.value() != offset) {
+                    panic(
+                        "Expected offset of register %s.%s to be %#x, is %#x.",
+                        name(), reg->name(), adder.offset.value(), offset);
+                }
+                _offsetMap.emplace(offset, *reg);
+                _size += reg->size();
+            } else if (adder.offset) {
+                if (adder.offset.value() != offset) {
+                    panic("Expected current offset of %s to be %#x, is %#x.",
+                        name(), adder.offset.value(), offset);
+                }
+            }
         }
     }
 
-    void addRegister(RegisterBase &reg) { addRegisters({reg}); }
+    void addRegister(RegisterAdder reg) { addRegisters({reg}); }
 
     Addr base() const { return _base; }
     Addr size() const { return _size; }
@@ -935,6 +1053,14 @@ class RegisterBank : public RegisterBankBase
                 return;
             }
         }
+    }
+
+    // By default, reset all the registers in the bank.
+    virtual void
+    reset()
+    {
+        for (auto &it: _offsetMap)
+            it.second.get().reset();
     }
 };
 

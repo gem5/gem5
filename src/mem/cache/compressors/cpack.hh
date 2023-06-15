@@ -46,7 +46,6 @@ namespace gem5
 
 struct CPackParams;
 
-GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
 

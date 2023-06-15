@@ -91,6 +91,10 @@ class PhysRegFile
     RegFile vecPredRegFile;
     std::vector<PhysRegId> vecPredRegIds;
 
+    /** Matrix register file. */
+    RegFile matRegFile;
+    std::vector<PhysRegId> matRegIds;
+
     /** Condition-code register file. */
     RegFile ccRegFile;
     std::vector<PhysRegId> ccRegIds;
@@ -124,6 +128,11 @@ class PhysRegFile
     unsigned numPhysicalVecPredRegs;
 
     /**
+     * Number of physical matrix registers
+     */
+    unsigned numPhysicalMatRegs;
+
+    /**
      * Number of physical CC registers
      */
     unsigned numPhysicalCCRegs;
@@ -140,6 +149,7 @@ class PhysRegFile
                 unsigned _numPhysicalFloatRegs,
                 unsigned _numPhysicalVecRegs,
                 unsigned _numPhysicalVecPredRegs,
+                unsigned _numPhysicalMatRegs,
                 unsigned _numPhysicalCCRegs,
                 const BaseISA::RegClasses &classes);
 
@@ -218,6 +228,11 @@ class PhysRegFile
             DPRINTF(IEW, "RegFile: Access to predicate register %i, has "
                     "data %s\n", idx, vecPredRegFile.regClass.valString(val));
             break;
+          case MatRegClass:
+            matRegFile.get(idx, val);
+            DPRINTF(IEW, "RegFile: Access to matrix register %i, has "
+                    "data %s\n", idx, matRegFile.regClass.valString(val));
+            break;
           case CCRegClass:
             *(RegVal *)val = getReg(phys_reg);
             break;
@@ -237,6 +252,8 @@ class PhysRegFile
             return vectorRegFile.ptr(idx);
           case VecPredRegClass:
             return vecPredRegFile.ptr(idx);
+          case MatRegClass:
+            return matRegFile.ptr(idx);
           default:
             panic("Unrecognized register class type %d.", type);
         }
@@ -299,8 +316,13 @@ class PhysRegFile
             break;
           case VecPredRegClass:
             DPRINTF(IEW, "RegFile: Setting predicate register %i to %s\n",
-                    idx, vectorRegFile.regClass.valString(val));
+                    idx, vecPredRegFile.regClass.valString(val));
             vecPredRegFile.set(idx, val);
+            break;
+          case MatRegClass:
+            DPRINTF(IEW, "RegFile: Setting matrix register %i to %s\n",
+                    idx, matRegFile.regClass.valString(val));
+            matRegFile.set(idx, val);
             break;
           case CCRegClass:
             setReg(phys_reg, *(RegVal *)val);
@@ -309,20 +331,6 @@ class PhysRegFile
             panic("Unrecognized register class type %d.", type);
         }
     }
-
-    /**
-     * Get the PhysRegIds of the elems of all vector registers.
-     * Auxiliary function to transition from Full vector mode to Elem mode
-     * and to initialise the rename map.
-     */
-    IdRange getRegIds(RegClassType cls);
-
-    /**
-     * Get the true physical register id.
-     * As many parts work with PhysRegIdPtr, we need to be able to produce
-     * the pointer out of just class and register idx.
-     */
-    PhysRegIdPtr getTrueId(PhysRegIdPtr reg);
 };
 
 } // namespace o3

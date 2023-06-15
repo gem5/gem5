@@ -377,8 +377,8 @@ Gicv3Redistributor::read(Addr addr, size_t size, bool is_secure_access)
         return 0;
 
       default:
-        panic("Gicv3Redistributor::read(): invalid offset %#x\n", addr);
-        break;
+        gic->reserved("Gicv3Redistributor::read(): invalid offset %#x\n", addr);
+        return 0; // RES0
     }
 }
 
@@ -704,7 +704,7 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
       }
 
       default:
-        panic("Gicv3Redistributor::write(): invalid offset %#x\n", addr);
+        gic->reserved("Gicv3Redistributor::write(): invalid offset %#x\n", addr);
         break;
     }
 }

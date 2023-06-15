@@ -56,7 +56,7 @@ def skip_test(reason=""):
     """
 
     if reason:
-        print("Skipping test: %s" % reason)
+        print(f"Skipping test: {reason}")
     sys.exit(2)
 
 
@@ -90,7 +90,7 @@ def require_sim_object(name, fatal=False):
     if has_sim_object(name):
         return
     else:
-        msg = "Test requires the '%s' SimObject." % name
+        msg = f"Test requires the '{name}' SimObject."
         if fatal:
             m5.fatal(msg)
         else:
@@ -113,7 +113,7 @@ def require_file(path, fatal=False, mode=os.F_OK):
     if os.access(path, mode):
         return
     else:
-        msg = "Test requires '%s'" % path
+        msg = f"Test requires '{path}'"
         if not os.path.exists(path):
             msg += " which does not exist."
         else:

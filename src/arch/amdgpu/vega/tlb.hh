@@ -215,7 +215,7 @@ class GpuTLB : public ClockedObject
       public:
         CpuSidePort(const std::string &_name, GpuTLB * gpu_TLB,
                     PortID _index)
-            : ResponsePort(_name, gpu_TLB), tlb(gpu_TLB), index(_index) { }
+            : ResponsePort(_name), tlb(gpu_TLB), index(_index) { }
 
       protected:
         GpuTLB *tlb;
@@ -242,7 +242,7 @@ class GpuTLB : public ClockedObject
       public:
         MemSidePort(const std::string &_name, GpuTLB * gpu_TLB,
                     PortID _index)
-            : RequestPort(_name, gpu_TLB), tlb(gpu_TLB), index(_index) { }
+            : RequestPort(_name), tlb(gpu_TLB), index(_index) { }
 
         std::deque<PacketPtr> retries;
 

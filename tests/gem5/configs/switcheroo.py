@@ -125,7 +125,7 @@ def run_test(root, switcher=None, freq=1000, verbose=False):
 
             if verbose:
                 print("Switching CPUs...")
-                print("Next CPU: %s" % type(next_cpu))
+                print(f"Next CPU: {type(next_cpu)}")
             m5.drain()
             if current_cpu != next_cpu:
                 m5.switchCpus(
@@ -144,5 +144,5 @@ def run_test(root, switcher=None, freq=1000, verbose=False):
 
             sys.exit(0)
         else:
-            print("Test failed: Unknown exit cause: %s" % exit_cause)
+            print(f"Test failed: Unknown exit cause: {exit_cause}")
             sys.exit(1)

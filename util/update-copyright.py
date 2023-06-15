@@ -130,7 +130,7 @@ else:
 filter_repo_args = git_filter_repo.FilteringOptions.default_options()
 filter_repo_args.force = True
 filter_repo_args.partial = True
-filter_repo_args.refs = ["{}..HEAD".format(args.start)]
+filter_repo_args.refs = [f"{args.start}..HEAD"]
 filter_repo_args.repack = False
 filter_repo_args.replace_refs = "update-no-add"
 

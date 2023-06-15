@@ -41,6 +41,6 @@ Import('env')
 
 env.Library('iostream3', [env.SharedObject('zfstream.cc')])
 
-env.Prepend(CPPPATH=Dir('.'))
+env.Prepend(CPPPATH=Dir('.').srcnode())
 env.Append(LIBS=['iostream3'])
 env.Prepend(LIBPATH=[Dir('.')])

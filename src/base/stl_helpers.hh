@@ -36,7 +36,6 @@
 
 #include "base/compiler.hh"
 
-GEM5_DEPRECATED_NAMESPACE(m5, gem5);
 namespace gem5
 {
 

@@ -62,7 +62,7 @@ using namespace ArmISA;
 TableWalker::TableWalker(const Params &p)
     : ClockedObject(p),
       requestorId(p.sys->getRequestorId(this)),
-      port(new Port(this, requestorId)),
+      port(new Port(*this, requestorId)),
       isStage2(p.is_stage2), tlb(NULL),
       currState(NULL), pending(false),
       numSquashable(p.num_squash_per_cycle),
@@ -138,10 +138,11 @@ TableWalker::WalkerState::WalkerState() :
 {
 }
 
-TableWalker::Port::Port(TableWalker *_walker, RequestorID id)
-  : QueuedRequestPort(_walker->name() + ".port", _walker,
-        reqQueue, snoopRespQueue),
-    reqQueue(*_walker, *this), snoopRespQueue(*_walker, *this),
+TableWalker::Port::Port(TableWalker& _walker, RequestorID id)
+  : QueuedRequestPort(_walker.name() + ".port", reqQueue, snoopRespQueue),
+    owner{_walker},
+    reqQueue(_walker, *this),
+    snoopRespQueue(_walker, *this),
     requestorId(id)
 {
 }

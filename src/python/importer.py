@@ -50,7 +50,7 @@ class CodeImporter(object):
 
     def add_module(self, abspath, modpath, code):
         if modpath in self.modules:
-            raise AttributeError("%s already found in importer" % modpath)
+            raise AttributeError(f"{modpath} already found in importer")
 
         self.modules[modpath] = (abspath, code)
 

@@ -73,7 +73,7 @@ def _run_step(name, restore=None, interval=0.5):
     elif cause in _exit_normal:
         sys.exit(_exitcode_done)
     else:
-        print("Test failed: Unknown exit cause: %s" % cause)
+        print(f"Test failed: Unknown exit cause: {cause}")
         sys.exit(_exitcode_fail)
 
 
@@ -129,5 +129,5 @@ def run_test(root, interval=0.5, max_checkpoints=5):
     if cause in _exit_normal:
         sys.exit(0)
     else:
-        print("Test failed: Unknown exit cause: %s" % cause)
+        print(f"Test failed: Unknown exit cause: {cause}")
         sys.exit(1)

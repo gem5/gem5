@@ -63,7 +63,7 @@ class BaseProxy(object):
     def __setattr__(self, attr, value):
         if not attr.startswith("_"):
             raise AttributeError(
-                "cannot set attribute '%s' on proxy object" % attr
+                f"cannot set attribute '{attr}' on proxy object"
             )
         super().__setattr__(attr, value)
 
@@ -234,7 +234,7 @@ class AttrProxy(BaseProxy):
         p = self._attr
         for m in self._modifiers:
             if isinstance(m, str):
-                p += ".%s" % m
+                p += f".{m}"
             elif isinstance(m, int):
                 p += "[%d]" % m
             else:

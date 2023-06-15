@@ -75,7 +75,6 @@ namespace gem5
         UNIT_UNSPECIFIED, statistics::units::Unspecified::get(), \
         "Use statistics::units::Unspecified::get()")
 
-GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
 
@@ -110,7 +109,6 @@ namespace statistics
  *   - The new unit is significant enough to be not included in Count unit.
  *     (e.g. Cycle unit, Tick unit)
  */
-GEM5_DEPRECATED_NAMESPACE(Units, units);
 namespace units
 {
 

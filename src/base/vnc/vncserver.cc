@@ -117,11 +117,11 @@ VncServer::DataEvent::process(int revent)
  */
 VncServer::VncServer(const Params &p)
     : VncInput(p), listenEvent(NULL), dataEvent(NULL), number(p.number),
-      dataFd(-1), sendUpdate(false),
-      supportsRawEnc(false), supportsResizeEnc(false)
+      dataFd(-1), listener(p.port.build(p.name)),
+      sendUpdate(false), supportsRawEnc(false), supportsResizeEnc(false)
 {
     if (p.port)
-        listen(p.port);
+        listen();
 
     curState = WaitForProtocolVersion;
 
@@ -157,24 +157,16 @@ VncServer::~VncServer()
 
 //socket creation and vnc client attach
 void
-VncServer::listen(int port)
+VncServer::listen()
 {
     if (ListenSocket::allDisabled()) {
         warn_once("Sockets disabled, not accepting vnc client connections");
         return;
     }
 
-    while (!listener.listen(port, true)) {
-        DPRINTF(VNC,
-                "can't bind address vnc server port %d in use PID %d\n",
-                port, getpid());
-        port++;
-    }
+    listener->listen();
 
-    ccprintf(std::cerr, "%s: Listening for connections on port %d\n",
-             name(), port);
-
-    listenEvent = new ListenEvent(this, listener.getfd(), POLLIN);
+    listenEvent = new ListenEvent(this, listener->getfd(), POLLIN);
     pollQueue.schedule(listenEvent);
 }
 
@@ -187,10 +179,10 @@ VncServer::accept()
     // thread.
     EventQueue::ScopedMigration migrate(eventQueue());
 
-    if (!listener.islistening())
+    if (!listener->islistening())
         panic("%s: cannot accept a connection if not listening!", name());
 
-    int fd = listener.accept(true);
+    int fd = listener->accept();
     if (fd < 0) {
         warn("%s: failed to accept VNC connection!", name());
         return;

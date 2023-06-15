@@ -359,7 +359,7 @@ DRAMSim2::drain()
 
 DRAMSim2::MemoryPort::MemoryPort(const std::string& _name,
                                  DRAMSim2& _memory)
-    : ResponsePort(_name, &_memory), mem(_memory)
+    : ResponsePort(_name), mem(_memory)
 { }
 
 AddrRangeList

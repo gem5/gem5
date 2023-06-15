@@ -34,7 +34,7 @@ class Action(Symbol):
         self.resources = resources
 
     def __repr__(self):
-        return "[Action: %s]" % self.ident
+        return f"[Action: {self.ident}]"
 
 
 __all__ = ["Action"]

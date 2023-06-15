@@ -113,6 +113,13 @@ class Uart8250 : public Uart
 
             void serialize(std::ostream &os) const override {}
             bool unserialize(const std::string &s) override { return true; }
+
+            void
+            reset() override
+            {
+                _reg1.reset();
+                _reg2.reset();
+            }
         };
 
         class BankedRegister : public PairedRegister

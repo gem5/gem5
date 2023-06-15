@@ -74,6 +74,17 @@
 #define mmMMHUB_VM_FB_LOCATION_BASE                                   0x082c
 #define mmMMHUB_VM_FB_LOCATION_TOP                                    0x082d
 
+#define VEGA10_FB_LOCATION_BASE                                      0x6a0b0
+#define VEGA10_FB_LOCATION_TOP                                       0x6a0b4
+
+#define MI100_MEM_SIZE_REG                                           0x0378c
+#define MI100_FB_LOCATION_BASE                                       0x6ac00
+#define MI100_FB_LOCATION_TOP                                        0x6ac04
+
+#define MI200_MEM_SIZE_REG                                           0x0378c
+#define MI200_FB_LOCATION_BASE                                       0x6b300
+#define MI200_FB_LOCATION_TOP                                        0x6b304
+
 // AMD GPUs support 16 different virtual address spaces
 static constexpr int AMDGPU_VM_COUNT = 16;
 
@@ -191,6 +202,9 @@ class AMDGPUVM : public Serializable
 
     Addr getMMHUBBase() { return mmhubBase; }
     Addr getMMHUBTop() { return mmhubTop; }
+
+    void setMMHUBBase(Addr base) { mmhubBase = base; }
+    void setMMHUBTop(Addr top) { mmhubTop = top; }
 
     bool
     inFB(Addr vaddr)

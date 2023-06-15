@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012, 2017-2018 ARM Limited
+ * Copyright (c) 2010, 2012, 2017-2018, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -207,7 +207,11 @@ ArmProcess64::armHwcapImpl() const
         Arm_Dit = 1 << 24,
         Arm_Uscat = 1 << 25,
         Arm_Ilrcpc = 1 << 26,
-        Arm_Flagm = 1 << 27
+        Arm_Flagm = 1 << 27,
+        Arm_Sbss = 1 << 28,
+        Arm_Sb = 1 << 29,
+        Arm_Paca = 1 << 30,
+        Arm_Pacg = 1 << 31
     };
 
     uint32_t hwcap = 0;
@@ -247,10 +251,82 @@ ArmProcess64::armHwcapImpl() const
     hwcap |= (isa_r1.fcma >= 1) ? Arm_Fcma : 0;
     hwcap |= (isa_r1.lrcpc >= 1) ? Arm_Lrcpc : 0;
     hwcap |= (isa_r1.lrcpc >= 2) ? Arm_Ilrcpc : 0;
+    hwcap |= (isa_r1.apa >= 1 || isa_r1.api >= 1) ? Arm_Paca : 0;
+    hwcap |= (isa_r1.gpa >= 1 || isa_r1.gpi >= 1) ? Arm_Pacg : 0;
 
     const AA64MMFR2 mm_fr2 = tc->readMiscReg(MISCREG_ID_AA64MMFR2_EL1);
 
     hwcap |= (mm_fr2.at >= 1) ? Arm_Uscat : 0;
+
+    return hwcap;
+}
+
+uint64_t
+ArmProcess64::armHwcapImpl2() const
+{
+    enum ArmCpuFeature : uint64_t
+    {
+        Arm_None = 0,
+        Arm_Dcpodp = 1ULL << 0,
+        Arm_Sve2 = 1ULL<< 1,
+        Arm_Sveaes = 1ULL << 2,
+        Arm_Svepmull = 1ULL << 3,
+        Arm_Svebitperm = 1ULL << 4,
+        Arm_Svesha3 = 1ULL << 5,
+        Arm_Svesm4 = 1ULL << 6,
+        Arm_Flagm2 = 1ULL << 7,
+        Arm_Frint = 1ULL << 8,
+        Arm_Svei8mm = 1ULL << 9,
+        Arm_Svef32mm = 1ULL << 10,
+        Arm_Svef64mm = 1ULL << 11,
+        Arm_Svebf16 = 1ULL << 12,
+        Arm_I8mm = 1ULL << 13,
+        Arm_Bf16 = 1ULL << 14,
+        Arm_Dgh = 1ULL << 15,
+        Arm_Rng = 1ULL << 16,
+        Arm_Bti = 1ULL << 17,
+        Arm_Mte = 1ULL << 18,
+        Arm_Ecv = 1ULL << 19,
+        Arm_Afp = 1ULL << 20,
+        Arm_Rpres = 1ULL << 21,
+        Arm_Mte3 = 1ULL << 22,
+        Arm_Sme = 1ULL << 23,
+        Arm_Sme_I16i64 = 1ULL << 24,
+        Arm_Sme_F64f64 = 1ULL << 25,
+        Arm_Sme_I8i32 = 1ULL << 26,
+        Arm_Sme_F16f32 = 1ULL << 27,
+        Arm_Sme_B16f32 = 1ULL << 28,
+        Arm_Sme_F32f32 = 1ULL << 29,
+        Arm_Sme_Fa64 = 1ULL << 30,
+        Arm_Wfxt = 1ULL << 31,
+        Arm_Ebf16 = 1ULL << 32,
+        Arm_Sve_Ebf16 = 1ULL << 33,
+        Arm_Cssc = 1ULL << 34,
+        Arm_Rprfm = 1ULL << 35,
+        Arm_Sve2p1 = 1ULL << 36,
+        Arm_Sme2 = 1ULL << 37,
+        Arm_Sme2p1 = 1ULL << 38,
+        Arm_Sme_I16i32 = 1ULL << 39,
+        Arm_Sme_Bi32i32 = 1ULL << 40,
+        Arm_Sme_B16b16 = 1ULL << 41,
+        Arm_Sme_F16f16 = 1ULL << 42
+    };
+
+    uint64_t hwcap = 0;
+
+    ThreadContext *tc = system->threads[contextIds[0]];
+
+    const AA64ISAR0 isa_r0 = tc->readMiscReg(MISCREG_ID_AA64ISAR0_EL1);
+    hwcap |= (isa_r0.ts >= 2) ? Arm_Flagm2 : Arm_None;
+    hwcap |= (isa_r0.rndr >= 1) ? Arm_Rng : Arm_None;
+
+    const AA64ISAR1 isa_r1 = tc->readMiscReg(MISCREG_ID_AA64ISAR1_EL1);
+    hwcap |= (isa_r1.i8mm >= 1) ? Arm_I8mm : Arm_None;
+
+    const AA64ZFR0 zf_r0 = tc->readMiscReg(MISCREG_ID_AA64ZFR0_EL1);
+    hwcap |= (zf_r0.f32mm >= 1) ? Arm_Svef32mm : Arm_None;
+    hwcap |= (zf_r0.f64mm >= 1) ? Arm_Svef64mm : Arm_None;
+    hwcap |= (zf_r0.i8mm >= 1) ? Arm_Svei8mm : Arm_None;
 
     return hwcap;
 }
@@ -278,11 +354,10 @@ ArmProcess::argsInit(int pageSize, const RegId &spId)
     if (elfObject) {
 
         if (objFile->getOpSys() == loader::Linux) {
-            IntType features = armHwcap<IntType>();
-
             //Bits which describe the system hardware capabilities
             //XXX Figure out what these should be
-            auxv.emplace_back(gem5::auxv::Hwcap, features);
+            auxv.emplace_back(gem5::auxv::Hwcap, armHwcap<IntType>());
+            auxv.emplace_back(gem5::auxv::Hwcap2, armHwcap2<IntType>());
             //Frequency at which times() increments
             auxv.emplace_back(gem5::auxv::Clktck, 0x64);
             //Whether to enable "secure mode" in the executable

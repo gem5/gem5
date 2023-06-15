@@ -36,7 +36,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(CopyEngineReg, copy_engine_reg);
 namespace copy_engine_reg
 {
 

@@ -55,6 +55,7 @@
 #include "cpu/reg_class.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "enums/RiscvType.hh"
 #include "rvk.hh"
 
 namespace gem5
@@ -135,6 +136,101 @@ registerName(RegId reg)
          */
         return int_reg::RegNames[reg.index()];
     }
+}
+
+inline uint32_t
+mulhu_32(uint32_t rs1, uint32_t rs2)
+{
+    return ((uint64_t)rs1 * rs2) >> 32;
+}
+
+inline uint64_t
+mulhu_64(uint64_t rs1, uint64_t rs2)
+{
+    uint64_t rs1_lo = (uint32_t)rs1;
+    uint64_t rs1_hi = rs1 >> 32;
+    uint64_t rs2_lo = (uint32_t)rs2;
+    uint64_t rs2_hi = rs2 >> 32;
+
+    uint64_t hi = rs1_hi * rs2_hi;
+    uint64_t mid1 = rs1_hi * rs2_lo;
+    uint64_t mid2 = rs1_lo * rs2_hi;
+    uint64_t lo = rs1_lo * rs2_lo;
+    uint64_t carry = ((uint64_t)(uint32_t)mid1
+            + (uint64_t)(uint32_t)mid2
+            + (lo >> 32)) >> 32;
+
+    return hi + (mid1 >> 32) + (mid2 >> 32) + carry;
+}
+
+inline int32_t
+mulh_32(int32_t rs1, int32_t rs2)
+{
+    return ((int64_t)rs1 * rs2) >> 32;
+}
+
+inline int64_t
+mulh_64(int64_t rs1, int64_t rs2)
+{
+    bool negate = (rs1 < 0) != (rs2 < 0);
+    uint64_t res = mulhu_64(std::abs(rs1), std::abs(rs2));
+    return negate ? ~res + (rs1 * rs2 == 0 ? 1 : 0) : res;
+}
+
+inline int32_t
+mulhsu_32(int32_t rs1, uint32_t rs2)
+{
+    return ((int64_t)rs1 * rs2) >> 32;
+}
+
+inline int64_t
+mulhsu_64(int64_t rs1, uint64_t rs2)
+{
+    bool negate = rs1 < 0;
+    uint64_t res = mulhu_64(std::abs(rs1), rs2);
+    return negate ? ~res + (rs1 * rs2 == 0 ? 1 : 0) : res;
+}
+
+template<typename T> inline T
+div(T rs1, T rs2)
+{
+    constexpr T kRsMin = std::numeric_limits<T>::min();
+    if (rs2 == 0) {
+        return -1;
+    } else if (rs1 == kRsMin && rs2 == -1) {
+        return kRsMin;
+    } else {
+        return rs1 / rs2;
+    }
+}
+
+template<typename T> inline T
+divu(T rs1, T rs2)
+{
+    if (rs2 == 0) {
+        return std::numeric_limits<T>::max();
+    } else {
+        return rs1 / rs2;
+    }
+}
+
+template<typename T> inline T
+rem(T rs1, T rs2)
+{
+    constexpr T kRsMin = std::numeric_limits<T>::min();
+    if (rs2 == 0) {
+        return rs1;
+    } else if (rs1 == kRsMin && rs2 == -1) {
+        return 0;
+    } else {
+        return rs1 % rs2;
+    }
+}
+
+template<typename T> inline T
+remu(T rs1, T rs2)
+{
+    return (rs2 == 0) ? rs1 : rs1 % rs2;
 }
 
 } // namespace RiscvISA

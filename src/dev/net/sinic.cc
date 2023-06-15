@@ -48,7 +48,6 @@ namespace gem5
 
 using namespace networking;
 
-GEM5_DEPRECATED_NAMESPACE(Sinic, sinic);
 namespace sinic
 {
 

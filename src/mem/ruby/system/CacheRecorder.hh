@@ -85,6 +85,8 @@ class CacheRecorder
 
     uint64_t aggregateRecords(uint8_t **data, uint64_t size);
 
+    uint64_t getNumRecords() const;
+
     /*!
      * Function for flushing the memory contents of the caches to the
      * main memory. It goes through the recorded contents of the caches,

@@ -151,6 +151,7 @@ ActivityRecorder::dump()
 void
 ActivityRecorder::validate()
 {
+#ifdef DEBUG
     int count = 0;
     for (int i = 0; i <= longestLatency; ++i) {
         if (activityBuffer[-i]) {
@@ -165,6 +166,7 @@ ActivityRecorder::validate()
     }
 
     assert(count == activityCount);
+#endif
 }
 
 } // namespace gem5

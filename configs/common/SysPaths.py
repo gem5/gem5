@@ -73,9 +73,7 @@ class PathSearchFunc(object):
                 return next(p for p in paths if os.path.exists(p))
             except StopIteration:
                 raise IOError(
-                    "Can't find file '{}' on {}.".format(
-                        filepath, self.environment_variable
-                    )
+                    f"Can't find file '{filepath}' on {self.environment_variable}."
                 )
 
 

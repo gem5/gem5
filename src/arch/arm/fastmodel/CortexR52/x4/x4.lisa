@@ -53,6 +53,9 @@ component CortexR52x4
         self.dbg_reset => core.presetdbg;
         self.halt => core.cpuhalt;
 
+        // Status signals.
+        core.standbywfi => self.standbywfi;
+
         // Clocks.
         clock1Hz.clk_out => clockDiv.clk_in;
         clock1Hz.clk_out => clockDivPeriph.clk_in;
@@ -82,6 +85,7 @@ component CortexR52x4
     slave port<Signal> core_reset[4];
     slave port<Signal> poweron_reset[4];
     slave port<Signal> halt[4];
+    master port<Signal> standbywfi[4];
     slave port<Signal> top_reset;
     slave port<Signal> dbg_reset;
     slave port<Value_64> cfgvectable[4];

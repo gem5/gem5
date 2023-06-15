@@ -36,9 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdbool.h>
 #include <stdint.h>
-
-#include "internals.h"
 #include "platform.h"
+#include "internals.h"
 #include "specialize.h"
 
 float32_t softfloat_addMagsF32( uint_fast32_t uiA, uint_fast32_t uiB )

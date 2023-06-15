@@ -36,17 +36,17 @@ class StateDeclAST(DeclAST):
         self.states = states
 
     def __repr__(self):
-        return "[StateDecl: %s]" % (self.type_ast)
+        return f"[StateDecl: {self.type_ast}]"
 
     def files(self, parent=None):
         if "external" in self:
             return set()
 
         if parent:
-            ident = "%s_%s" % (parent, self.type_ast.ident)
+            ident = f"{parent}_{self.type_ast.ident}"
         else:
             ident = self.type_ast.ident
-        s = set(("%s.hh" % ident, "%s.cc" % ident))
+        s = set((f"{ident}.hh", f"{ident}.cc"))
         return s
 
     def generate(self):
@@ -63,7 +63,7 @@ class StateDeclAST(DeclAST):
             state.generate(t)
 
         # Add the implicit State_to_string method - FIXME, this is a bit dirty
-        func_id = "%s_to_string" % t.c_ident
+        func_id = f"{t.c_ident}_to_string"
 
         pairs = {"external": "yes"}
         func = Func(
@@ -80,7 +80,7 @@ class StateDeclAST(DeclAST):
         self.symtab.newSymbol(func)
 
         # Add the State_to_permission method
-        func_id = "%s_to_permission" % t.c_ident
+        func_id = f"{t.c_ident}_to_permission"
 
         pairs = {"external": "yes"}
         func = Func(

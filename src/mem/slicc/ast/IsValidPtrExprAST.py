@@ -37,7 +37,7 @@ class IsValidPtrExprAST(ExprAST):
         self.flag = flag
 
     def __repr__(self):
-        return "[IsValidPtrExprAST: %r]" % self.variable
+        return f"[IsValidPtrExprAST: {self.variable!r}]"
 
     def generate(self, code, **kwargs):
         # Make sure the variable is valid

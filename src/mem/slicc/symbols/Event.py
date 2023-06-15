@@ -30,7 +30,7 @@ from slicc.symbols.Symbol import Symbol
 
 class Event(Symbol):
     def __repr__(self):
-        return "[Event: %s]" % self.ident
+        return f"[Event: {self.ident}]"
 
 
 __all__ = ["Event"]

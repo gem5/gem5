@@ -39,7 +39,7 @@
 
 Import('env')
 
-env.Prepend(CPPPATH=Dir('./include'))
+env.Prepend(CPPPATH=Dir('include').srcnode())
 
 nomali = env.Clone()
 nomali.Append(CCFLAGS=['-Wno-ignored-qualifiers'])

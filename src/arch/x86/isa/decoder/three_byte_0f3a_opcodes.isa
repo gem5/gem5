@@ -33,22 +33,57 @@ format WarnUnimpl {
         1: decode OPCODE_OP {
             0x08: roundps_Vdq_Wdq_Ib();
             0x09: roundpd_Vdq_Wdq_Ib();
-            0x0A: roundss_Vss_Wss_Ib();
-            0x0B: roundsd_Vsd_Wsd_Ib();
-            0x0C: blendps_Vdq_Wdq_Ib();
-            0x0D: blendpd_Vdq_Wdq_Ib();
-            0x0E: pblendw_Vdq_Wdq_Ib();
-            0x0F: palignr_Vdq_Wdq_Ib();
-            0x14: pextrb_Rd_or_Mb_Vdq_Ib();
+            0x0A: decode MODRM_MOD {
+                0x3: Inst::ROUNDSS(Vdq, Wdq, Ib);
+                default: Inst::ROUNDSS(Vss, Md, Ib);
+            }
+            0x0B: decode MODRM_MOD {
+                0x3: Inst::ROUNDSD(Vss, Wdq, Ib);
+                default: Inst::ROUNDSD(Vss, Mq, Ib);
+            }
+            0x0C: decode MODRM_MOD {
+                default: Inst::BLENDPS(Vdq, Wdq, Ib);
+            }
+            0x0D: decode MODRM_MOD {
+                default: Inst::BLENDPD(Vdq, Wdq, Ib);
+            }
+            0x0E: decode MODRM_MOD {
+                default: Inst::PBLENDW(Vdq, Wdq, Ib);
+            }
+            0x0F: decode MODRM_MOD {
+                default: Inst::PALIGNR(Vdq, Wdq, Ib);
+            }
+            0x14: decode MODRM_MOD {
+                0x3: Inst::PEXTRB(Rd, Vdq, Ib);
+                default: Inst::PEXTRB(Mb, Vdq, Ib);
+            }
             0x15: decode MODRM_MOD {
                 0x3: Inst::PEXTRW(Rd,Vdq,Ib);
-                default: pextrw_Mw_Vdq_Ib();
+                default: Inst::PEXTRW(Mw,Vdq,Ib);
             }
-            0x16: pextrd_pextrq_Ed_or_Eq_Vdq_Ib();
-            0x17: extractps_Ed_Vdq_Ib();
-            0x20: pinsrb_Vdq_Rd_or_Rq_or_Mb_Ib();
-            0x21: insertps_Vdq_Udq_or_Md_Ib();
-            0x22: pinsrd_pinsrq_Vdq_Ed_or_Eq_Ib();
+            0x16: decode MODRM_MOD {
+                default: decode REX_W {
+                    0x0: Inst::PEXTRD(Ed, Vdq, Ib);
+                    0x1: Inst::PEXTRQ(Eq, Vdq, Ib);
+                }
+            }
+            0x17: decode MODRM_MOD {
+                default: Inst::EXTRACTPS(Ed, Vdq, Ib);
+            }
+            0x20: decode MODRM_MOD {
+                0x3: Inst::PINSRB(Vdq, Rq, Ib);
+                default: Inst::PINSRB(Vdq, Mb, Ib);
+            }
+            0x21: decode MODRM_MOD {
+                0x3: Inst::INSERTPS(Vdq, Wdq, Ib);
+                default: Inst::INSERTPS(Vdq, Md, Ib);
+            }
+            0x22: decode MODRM_MOD {
+                default: decode REX_W {
+                    0x0: Inst::PINSRD(Vdq, Ed, Ib);
+                    0x1: Inst::PINSRQ(Vdq, Eq, Ib);
+                }
+            }
             0x40: dpps_Vdq_Wdq_Ib();
             0x41: dppd_Vdq_Wdq_Ib();
             0x42: pcmpistrm_Vdq_Wdq_Ib();

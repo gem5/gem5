@@ -132,7 +132,7 @@ class BaseTrafficGen : public ClockedObject
       public:
 
         TrafficGenPort(const std::string& name, BaseTrafficGen& traffic_gen)
-            : RequestPort(name, &traffic_gen), trafficGen(traffic_gen)
+            : RequestPort(name), trafficGen(traffic_gen)
         { }
 
       protected:

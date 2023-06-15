@@ -37,7 +37,7 @@ docker_mem_limit="18g"
 
 # The docker tag to use (varies between develop, and versions on the staging
 # branch)
-tag="v22-1"
+tag="latest"
 
 # The first argument is the number of threads to be used for compilation. If no
 # argument is given we default to one.
@@ -159,10 +159,10 @@ build_and_run_SST () {
         "${gem5_root}" --rm  --memory="${docker_mem_limit}" \
         gcr.io/gem5-test/sst-env:${tag} bash -c "\
 scons build/${isa}/libgem5_${variant}.so -j${compile_threads} \
---without-tcmalloc --ignore-style; \
-cd ext/sst; \
-make clean; make -j ${compile_threads}; \
-sst --add-lib-path=./ sst/example.py; \
+--without-tcmalloc --duplicate-sources --ignore-style && \
+cd ext/sst && \
+make clean; make -j ${compile_threads} && \
+sst --add-lib-path=./ sst/example.py && \
 cd -;
 "
 }
@@ -172,21 +172,23 @@ build_and_run_systemc () {
     rm -rf "${gem5_root}/build/ARM"
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --memory="${docker_mem_limit}" --rm \
-        gcr.io/gem5-test/ubuntu-22.04_all-dependencies:${tag} bash -c "\
-scons -j${compile_threads} --ignore-style build/ARM/gem5.opt; \
-scons --with-cxx-config --without-python --without-tcmalloc USE_SYSTEMC=0 \
-    -j${compile_threads} build/ARM/libgem5_opt.so \
+        gcr.io/gem5-test/ubuntu-22.04_min-dependencies:${tag} bash -c "\
+scons -j${compile_threads} --ignore-style --duplicate-sources \
+build/ARM/gem5.opt && \
+scons --with-cxx-config --without-python --without-tcmalloc \
+--duplicate-sources USE_SYSTEMC=0  \
+-j${compile_threads} build/ARM/libgem5_opt.so \
 "
 
     docker run -u $UID:$GID --volume "${gem5_root}":"${gem5_root}" -w \
         "${gem5_root}" --memory="${docker_mem_limit}" --rm \
         gcr.io/gem5-test/systemc-env:${tag} bash -c "\
-cd util/systemc/gem5_within_systemc; \
-make -j${compile_threads}; \
-../../../build/ARM/gem5.opt ../../../configs/example/se.py -c \
-    ../../../tests/test-progs/hello/bin/arm/linux/hello; \
+cd util/systemc/gem5_within_systemc && \
+make -j${compile_threads} && \
+../../../build/ARM/gem5.opt ../../../configs/deprecated/example/se.py -c \
+    ../../../tests/test-progs/hello/bin/arm/linux/hello && \
 LD_LIBRARY_PATH=../../../build/ARM/:/opt/systemc/lib-linux64/ \
-    ./gem5.opt.sc m5out/config.ini; \
+    ./gem5.opt.sc m5out/config.ini && \
 cd -; \
 "
 }

@@ -48,13 +48,13 @@ class SMMUv3DeviceInterface(ClockedObject):
     device_port = ResponsePort("Device port")
     slave = DeprecatedParam(device_port, "`slave` is now called `device_port`")
     ats_mem_side_port = RequestPort(
-        "ATS mem side port," "sends requests and receives responses"
+        "ATS mem side port,sends requests and receives responses"
     )
     ats_master = DeprecatedParam(
         ats_mem_side_port, "`ats_master` is now called `ats_mem_side_port`"
     )
     ats_dev_side_port = ResponsePort(
-        "ATS dev_side_port," "sends responses and receives requests"
+        "ATS dev_side_port,sends responses and receives requests"
     )
     ats_slave = DeprecatedParam(
         ats_dev_side_port, "`ats_slave` is now called `ats_dev_side_port`"
@@ -203,7 +203,7 @@ class SMMUv3(ClockedObject):
     def generateDeviceTree(self, state):
         reg_addr = self.reg_map.start
         reg_size = self.reg_map.size()
-        node = FdtNode("smmuv3@%x" % int(reg_addr))
+        node = FdtNode(f"smmuv3@{int(reg_addr):x}")
         node.appendCompatible("arm,smmu-v3")
         node.append(
             FdtPropertyWords(

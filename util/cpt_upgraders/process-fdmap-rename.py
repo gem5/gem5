@@ -15,7 +15,7 @@ def upgrader(cpt):
     for sec in cpt.sections():
         fdm = "FdMap"
         fde = "FDEntry"
-        if re.match(".*\.%s.*" % fdm, sec):
+        if re.match(f".*\\.{fdm}.*", sec):
             rename = re.sub(fdm, fde, sec)
             split = re.split(fde, rename)
 
@@ -26,7 +26,7 @@ def upgrader(cpt):
             # add in entries 257 to 1023
             if split[1] == "0":
                 for x in range(257, 1024):
-                    seq = (split[0], fde, "%s" % x)
+                    seq = (split[0], fde, f"{x}")
                     section = "".join(seq)
                     cpt.add_section(section)
                     cpt.set(section, "fd", "-1")

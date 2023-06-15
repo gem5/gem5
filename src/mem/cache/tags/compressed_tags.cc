@@ -163,14 +163,6 @@ CompressedTags::findVictim(Addr addr, const bool is_secure,
     return victim;
 }
 
-void
-CompressedTags::forEachBlk(std::function<void(CacheBlk &)> visitor)
-{
-    for (CompressionBlk& blk : blks) {
-        visitor(blk);
-    }
-}
-
 bool
 CompressedTags::anyBlk(std::function<bool(CacheBlk &)> visitor)
 {

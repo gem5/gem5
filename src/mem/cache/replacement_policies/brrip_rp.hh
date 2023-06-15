@@ -60,7 +60,6 @@ namespace gem5
 
 struct BRRIPRPParams;
 
-GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
 {
 

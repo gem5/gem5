@@ -120,8 +120,8 @@ def define_options(parser):
     )
 
     protocol = buildEnv["PROTOCOL"]
-    exec("from . import %s" % protocol)
-    eval("%s.define_options(parser)" % protocol)
+    exec(f"from . import {protocol}")
+    eval(f"{protocol}.define_options(parser)")
     Network.define_options(parser)
 
 
@@ -207,8 +207,8 @@ def create_topology(controllers, options):
     found in configs/topologies/BaseTopology.py
     This is a wrapper for the legacy topologies.
     """
-    exec("import topologies.%s as Topo" % options.topology)
-    topology = eval("Topo.%s(controllers)" % options.topology)
+    exec(f"import topologies.{options.topology} as Topo")
+    topology = eval(f"Topo.{options.topology}(controllers)")
     return topology
 
 
@@ -242,7 +242,7 @@ def create_system(
         cpus = system.cpu
 
     protocol = buildEnv["PROTOCOL"]
-    exec("from . import %s" % protocol)
+    exec(f"from . import {protocol}")
     try:
         (cpu_sequencers, dir_cntrls, topology) = eval(
             "%s.create_system(options, full_system, system, dma_ports,\
@@ -250,7 +250,7 @@ def create_system(
             % protocol
         )
     except:
-        print("Error: could not create sytem for ruby protocol %s" % protocol)
+        print(f"Error: could not create sytem for ruby protocol {protocol}")
         raise
 
     # Create the network topology

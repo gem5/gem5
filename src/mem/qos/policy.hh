@@ -57,7 +57,6 @@ struct QoSPolicyParams;
 namespace memory
 {
 
-GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
 

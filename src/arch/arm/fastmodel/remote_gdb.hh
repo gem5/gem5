@@ -36,14 +36,24 @@ namespace gem5
 namespace fastmodel
 {
 
-class FastmodelRemoteGDB : public gem5::ArmISA::RemoteGDB
+class FastmodelRemoteGDB : public ArmISA::RemoteGDB
 {
   public:
-    FastmodelRemoteGDB(System *_system, int port);
+    FastmodelRemoteGDB(System *_system, ListenSocketConfig _listen_config);
 
-  private:
+  protected:
+    class AArch64GdbRegCache : public ArmISA::RemoteGDB::AArch64GdbRegCache
+    {
+      using ArmISA::RemoteGDB::AArch64GdbRegCache::AArch64GdbRegCache;
+      public:
+        void setRegs(ThreadContext*) const override;
+    };
+
     bool readBlob(Addr vaddr, size_t size, char *data) override;
     bool writeBlob(Addr vaddr, size_t size, const char *data) override;
+    BaseGdbRegCache* gdbRegs() override;
+
+    AArch64GdbRegCache regCache64;
 };
 
 }  // namespace fastmodel

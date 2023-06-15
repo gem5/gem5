@@ -30,6 +30,8 @@
 #define __BASE_CAST_HH__
 
 #include <cassert>
+#include <type_traits>
+#include "base/logging.hh"
 
 namespace gem5
 {
@@ -38,16 +40,26 @@ namespace gem5
 // type, but in all cases when we cast it to a derived type, we know
 // by construction that it should work correctly.
 
-#if defined(DEBUG)
+#if defined(GEM5_DEBUG)
 
 // In debug builds, do the dynamic cast and assert the result is good
 
 template <class T, class U>
 inline T
-safe_cast(U ptr)
+safe_cast(U&& ref_or_ptr)
 {
-    T ret = dynamic_cast<T>(ptr);
-    assert(ret);
+    /*
+     * srd::forward used in conjunction with forwarding references (template T
+     * + T&&) ensures that dynamic_cast will see the exact same type that was
+     * passed to safe_cast (a.k.a., perfect forwarding).
+     *
+     * Not using std::forward would make safe_cast compile with references to
+     * temporary objects and thus return a dangling reference.
+     */
+    T ret = dynamic_cast<T>(std::forward<U>(ref_or_ptr));
+    if constexpr (std::is_pointer_v<T>) {
+        gem5_assert(ret);
+    }
     return ret;
 }
 
@@ -59,9 +71,19 @@ safe_cast(U ptr)
 
 template <class T, class U>
 inline T
-safe_cast(U ptr)
+safe_cast(U&& ref_or_ptr)
 {
-    return static_cast<T>(ptr);
+    /*
+     * safe_cast should be reserved to polymorphic types while static_cast is
+     * also allowed for non-polymorphic types. It could make safe_cast able to
+     * compile in a non-debug build and fail in a debug build.
+     */
+    static_assert(std::is_polymorphic_v<
+        std::remove_pointer_t<
+        std::remove_reference_t<
+        U>>
+    >);
+    return static_cast<T>(std::forward<U>(ref_or_ptr));
 }
 
 #endif

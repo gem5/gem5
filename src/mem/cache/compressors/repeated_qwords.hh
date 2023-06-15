@@ -46,7 +46,6 @@ namespace gem5
 
 struct RepeatedQwordsCompressorParams;
 
-GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
 

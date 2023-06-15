@@ -35,11 +35,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 =============================================================================*/
 
 #include <stdint.h>
-
 #include "platform.h"
 #include "primitiveTypes.h"
-#include "softfloat.h"
 #include "specialize.h"
+#include "softfloat.h"
 
 /*----------------------------------------------------------------------------
 | Interpreting the unsigned integer formed from concatenating `uiA64' and

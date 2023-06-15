@@ -144,7 +144,7 @@ elif args.cpu == "minor":
     cpu_type = CPUTypes.MINOR
 else:
     raise NotImplementedError(
-        "CPU type '{}' is not supported in the boot tests.".format(args.cpu)
+        f"CPU type '{args.cpu}' is not supported in the boot tests."
     )
 
 processor = SimpleProcessor(

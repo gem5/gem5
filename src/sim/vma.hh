@@ -105,6 +105,10 @@ class VMA
     void sliceRegionLeft(Addr slice_addr);
 
     const std::string& getName() { return _vmaName; }
+    off_t getFileMappingOffset() const
+    {
+        return hasHostBuf() ? _origHostBuf->getOffset() : 0;
+    }
 
     /**
      * Defer AddrRange related calls to the AddrRange.
@@ -191,10 +195,12 @@ class VMA
 
         void *getBuffer() const { return _buffer; }
         uint64_t getLength() const { return _length; }
+        off_t getOffset() const { return _offset; }
 
       private:
         void *_buffer;       // Host buffer ptr
         size_t _length;       // Length of host ptr
+        off_t _offset;       // Offset in file at which mapping starts
     };
 };
 

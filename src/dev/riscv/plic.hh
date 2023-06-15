@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021 Huawei International
+ * Copyright (c) 2023 Google LLC
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,6 +48,7 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/Plic.hh"
+#include "params/PlicBase.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -94,7 +96,21 @@ struct PlicOutput
   std::vector<uint32_t> maxPriority;
 };
 
-class Plic : public BasicPioDevice
+class PlicBase : public BasicPioDevice
+{
+  public:
+    typedef PlicBaseParams Params;
+    PlicBase(const Params &params) :
+      BasicPioDevice(params, params.pio_size)
+    {}
+
+    // Interrupt interface to send signal to PLIC
+    virtual void post(int src_id) = 0;
+    // Interrupt interface to clear signal to PLIC
+    virtual void clear(int src_id) = 0;
+};
+
+class Plic : public PlicBase
 {
   // Params
   protected:
@@ -125,8 +141,8 @@ class Plic : public BasicPioDevice
     /**
      * Interrupt interface
      */
-    void post(int src_id);
-    void clear(int src_id);
+    void post(int src_id) override;
+    void clear(int src_id) override;
 
     /**
      * SimObject functions

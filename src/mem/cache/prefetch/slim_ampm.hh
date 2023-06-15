@@ -48,7 +48,6 @@ namespace gem5
 
 struct SlimAMPMPrefetcherParams;
 
-GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
 

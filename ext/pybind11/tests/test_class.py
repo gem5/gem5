@@ -1,13 +1,20 @@
-# -*- coding: utf-8 -*-
 import pytest
 
-import env  # noqa: F401
+import env
 from pybind11_tests import ConstructorStats, UserType
 from pybind11_tests import class_ as m
 
 
+def test_obj_class_name():
+    if env.PYPY:
+        expected_name = "UserType"
+    else:
+        expected_name = "pybind11_tests.UserType"
+    assert m.obj_class_name(UserType(1)) == expected_name
+    assert m.obj_class_name(UserType) == expected_name
+
+
 def test_repr():
-    # In Python 3.3+, repr() accesses __qualname__
     assert "pybind11_type" in repr(type(UserType))
     assert "UserType" in repr(UserType)
 
@@ -103,8 +110,8 @@ def test_docstrings(doc):
 
 
 def test_qualname(doc):
-    """Tests that a properly qualified name is set in __qualname__ (even in pre-3.3, where we
-    backport the attribute) and that generated docstrings properly use it and the module name"""
+    """Tests that a properly qualified name is set in __qualname__ and that
+    generated docstrings properly use it and the module name"""
     assert m.NestBase.__qualname__ == "NestBase"
     assert m.NestBase.Nested.__qualname__ == "NestBase.Nested"
 
@@ -130,13 +137,13 @@ def test_qualname(doc):
         doc(m.NestBase.Nested.fn)
         == """
         fn(self: m.class_.NestBase.Nested, arg0: int, arg1: m.class_.NestBase, arg2: m.class_.NestBase.Nested) -> None
-    """  # noqa: E501 line too long
+    """
     )
     assert (
         doc(m.NestBase.Nested.fa)
         == """
         fa(self: m.class_.NestBase.Nested, a: int, b: m.class_.NestBase, c: m.class_.NestBase.Nested) -> None
-    """  # noqa: E501 line too long
+    """
     )
     assert m.NestBase.__module__ == "pybind11_tests.class_"
     assert m.NestBase.Nested.__module__ == "pybind11_tests.class_"
@@ -315,6 +322,8 @@ def test_bind_protected_functions():
 
     b = m.ProtectedB()
     assert b.foo() == 42
+    assert m.read_foo(b.void_foo()) == 42
+    assert m.pointers_equal(b.get_self(), b)
 
     class C(m.ProtectedB):
         def __init__(self):
@@ -471,3 +480,10 @@ def test_register_duplicate_class():
         m.register_duplicate_nested_class_type(ClassScope)
     expected = 'generic_type: type "YetAnotherDuplicateNested" is already registered!'
     assert str(exc_info.value) == expected
+
+
+def test_pr4220_tripped_over_this():
+    assert (
+        m.Empty0().get_msg()
+        == "This is really only meant to exercise successful compilation."
+    )

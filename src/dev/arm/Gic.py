@@ -315,6 +315,15 @@ class Gicv3(BaseGic):
 
     gicv4 = Param.Bool(False, "GIC is GICv4 compatible")
 
+    reserved_is_res0 = Param.Bool(
+        True,
+        "According to the GIC specification (IHI0069) "
+        "reserved addresses in the GIC memory map are treated as RES0. "
+        "We allow to disable this behaviour and panic instead "
+        "(reserved_res0 = False) to catch development bugs "
+        "(in gem5 and in the guest SW)",
+    )
+
     def interruptCells(self, int_type, int_num, int_trigger, partition=None):
         """
         Interupt cells generation helper:

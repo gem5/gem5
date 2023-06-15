@@ -83,11 +83,11 @@ class MESITwoLevelCacheHierarchy(
 
         self.ruby_system = RubySystem()
 
-        # MESI_Two_Level needs 5 virtual networks
-        self.ruby_system.number_of_virtual_networks = 5
+        # MESI_Two_Level needs 3 virtual networks
+        self.ruby_system.number_of_virtual_networks = 3
 
         self.ruby_system.network = SimplePt2Pt(self.ruby_system)
-        self.ruby_system.network.number_of_virtual_networks = 5
+        self.ruby_system.network.number_of_virtual_networks = 3
 
         self._l1_controllers = []
         for i, core in enumerate(board.get_processor().get_cores()):

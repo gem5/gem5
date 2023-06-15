@@ -29,6 +29,7 @@
 #define __SYSTEMC_UTILS_REPORT_HH__
 
 #include <initializer_list>
+#include <list>
 #include <map>
 #include <memory>
 #include <string>
@@ -102,6 +103,13 @@ extern sc_core::sc_actions reportForcedActions;
 extern sc_core::sc_actions reportCatchActions;
 
 extern sc_core::sc_report_handler_proc reportHandlerProc;
+
+// gem5-specific support for extra SystemC report handlers. Called _after_
+// the default/set handler.
+const std::list<sc_core::sc_report_handler_proc>
+    &getExtraSystemCReportHandlers();
+void addExtraSystemCReportHandler(sc_core::sc_report_handler_proc proc);
+void removeExtraSystemCReportHandler(sc_core::sc_report_handler_proc proc);
 
 extern std::unique_ptr<sc_core::sc_report> globalReportCache;
 

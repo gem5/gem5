@@ -46,7 +46,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(SCMI, scmi);
 namespace scmi
 {
 

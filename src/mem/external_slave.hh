@@ -77,7 +77,7 @@ class ExternalSlave : public SimObject
       public:
         ExternalPort(const std::string &name_,
             ExternalSlave &owner_) :
-            ResponsePort(name_, &owner_), owner(owner_)
+            ResponsePort(name_), owner(owner_)
         { }
 
         ~ExternalPort() { }

@@ -45,7 +45,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(Ps2, ps2);
 namespace ps2
 {
 

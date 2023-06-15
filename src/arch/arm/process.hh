@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2012, 2018 ARM Limited
+* Copyright (c) 2012, 2018, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -69,10 +69,18 @@ class ArmProcess : public Process
         return static_cast<IntType>(armHwcapImpl());
     }
 
+    template<class IntType>
+    IntType
+    armHwcap2() const
+    {
+        return static_cast<IntType>(armHwcapImpl2());
+    }
+
     /**
      * AT_HWCAP is 32-bit wide on AArch64 as well so we can
      * safely return an uint32_t */
     virtual uint32_t armHwcapImpl() const = 0;
+    virtual uint64_t armHwcapImpl2() const = 0;
 };
 
 class ArmProcess32 : public ArmProcess
@@ -86,6 +94,7 @@ class ArmProcess32 : public ArmProcess
 
     /** AArch32 AT_HWCAP */
     uint32_t armHwcapImpl() const override;
+    uint64_t armHwcapImpl2() const override { return 0; }
 };
 
 class ArmProcess64 : public ArmProcess
@@ -99,6 +108,7 @@ class ArmProcess64 : public ArmProcess
 
     /** AArch64 AT_HWCAP */
     uint32_t armHwcapImpl() const override;
+    uint64_t armHwcapImpl2() const override;
 };
 
 } // namespace gem5

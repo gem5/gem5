@@ -201,8 +201,9 @@ tryTranslate(ThreadContext *tc, Addr addr)
            mmu->translateFunctional(req, tc, BaseMMU::Execute) == NoFault;
 }
 
-RemoteGDB::RemoteGDB(System *_system, int _port)
-    : BaseRemoteGDB(_system, _port), regCache32(this), regCache64(this)
+RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config)
+    : BaseRemoteGDB(_system, _listen_config),
+    regCache32(this), regCache64(this)
 {
 }
 

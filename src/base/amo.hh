@@ -129,30 +129,57 @@ class AtomicGenericPair3Op : public TypedAtomicOpFunctor<T>
 template<typename T>
 class AtomicOpAnd : public TypedAtomicOpFunctor<T>
 {
+    // Bitwise operations are only legal on integral types
+    template<typename B>
+    typename std::enable_if<std::is_integral<B>::value, void>::type
+    executeImpl(B *b) { *b &= a; }
+
+    template<typename B>
+    typename std::enable_if<!std::is_integral<B>::value, void>::type
+    executeImpl(B *b) { }
+
   public:
     T a;
     AtomicOpAnd(T _a) : a(_a) { }
-    void execute(T *b) { *b &= a; }
+    void execute(T *b) { executeImpl<T>(b); }
     AtomicOpFunctor* clone () { return new AtomicOpAnd(a); }
 };
 
 template<typename T>
 class AtomicOpOr : public TypedAtomicOpFunctor<T>
 {
+    // Bitwise operations are only legal on integral types
+    template<typename B>
+    typename std::enable_if<std::is_integral<B>::value, void>::type
+    executeImpl(B *b) { *b |= a; }
+
+    template<typename B>
+    typename std::enable_if<!std::is_integral<B>::value, void>::type
+    executeImpl(B *b) { }
+
   public:
     T a;
     AtomicOpOr(T _a) : a(_a) { }
-    void execute(T *b) { *b |= a; }
+    void execute(T *b) { executeImpl<T>(b); }
     AtomicOpFunctor* clone () { return new AtomicOpOr(a); }
 };
 
 template<typename T>
 class AtomicOpXor : public TypedAtomicOpFunctor<T>
 {
+    // Bitwise operations are only legal on integral types
+    template<typename B>
+    typename std::enable_if<std::is_integral<B>::value, void>::type
+    executeImpl(B *b) { *b ^= a; }
+
+    template<typename B>
+    typename std::enable_if<!std::is_integral<B>::value, void>::type
+    executeImpl(B *b) { }
+
   public:
     T a;
     AtomicOpXor(T _a) : a(_a) {}
-    void execute(T *b) { *b ^= a; }
+    void execute(T *b) { executeImpl<T>(b); }
     AtomicOpFunctor* clone () { return new AtomicOpXor(a); }
 };
 

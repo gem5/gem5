@@ -46,9 +46,6 @@ from gem5.resources.workload import Workload
 import argparse
 import importlib
 
-from python.gem5.components.boards.kernel_disk_workload import (
-    KernelDiskWorkload,
-)
 
 parser = argparse.ArgumentParser(
     description="A script to run the gem5 boot test. This test boots the "
@@ -155,9 +152,7 @@ elif args.mem_system == "classic":
     cache_hierarchy = PrivateL1CacheHierarchy(l1d_size="16kB", l1i_size="16kB")
 else:
     raise NotImplementedError(
-        "Memory system '{}' is not supported in the boot tests.".format(
-            args.mem_system
-        )
+        f"Memory system '{args.mem_system}' is not supported in the boot tests."
     )
 
 assert cache_hierarchy != None

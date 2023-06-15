@@ -46,7 +46,7 @@ import SCons.Util
 
 
 def CheckCxxFlag(context, flag, autoadd=True):
-    context.Message("Checking for compiler %s support... " % flag)
+    context.Message(f"Checking for compiler {flag} support... ")
     last_cxxflags = context.env["CXXFLAGS"]
     context.env.Append(CXXFLAGS=[flag])
     pre_werror = context.env["CXXFLAGS"]
@@ -60,7 +60,7 @@ def CheckCxxFlag(context, flag, autoadd=True):
 
 
 def CheckLinkFlag(context, flag, autoadd=True, set_for_shared=True):
-    context.Message("Checking for linker %s support... " % flag)
+    context.Message(f"Checking for linker {flag} support... ")
     last_linkflags = context.env["LINKFLAGS"]
     context.env.Append(LINKFLAGS=[flag])
     pre_werror = context.env["LINKFLAGS"]
@@ -78,7 +78,7 @@ def CheckLinkFlag(context, flag, autoadd=True, set_for_shared=True):
 
 # Add a custom Check function to test for structure members.
 def CheckMember(context, include, decl, member, include_quotes="<>"):
-    context.Message("Checking for member %s in %s..." % (member, decl))
+    context.Message(f"Checking for member {member} in {decl}...")
     text = """
 #include %(header)s
 int main(){
@@ -128,8 +128,8 @@ def CheckPkgConfig(context, pkgs, *args):
     assert pkgs
 
     for pkg in pkgs:
-        context.Message("Checking for pkg-config package %s... " % pkg)
-        ret = context.TryAction("pkg-config %s" % pkg)[0]
+        context.Message(f"Checking for pkg-config package {pkg}... ")
+        ret = context.TryAction(f"pkg-config {pkg}")[0]
         if not ret:
             context.Result(ret)
             continue

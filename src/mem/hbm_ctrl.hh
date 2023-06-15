@@ -144,7 +144,6 @@ class HBMCtrl : public MemCtrl
      */
     bool readQueueFullPC0(unsigned int pkt_count) const;
     bool readQueueFullPC1(unsigned int pkt_count) const;
-    bool readQueueFull(unsigned int pkt_count) const;
 
     /**
      * Check if the write queue partition of both pseudo
@@ -259,6 +258,8 @@ class HBMCtrl : public MemCtrl
     Tick recvAtomic(PacketPtr pkt) override;
     Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor) override;
     void recvFunctional(PacketPtr pkt) override;
+    void recvMemBackdoorReq(const MemBackdoorReq &req,
+            MemBackdoorPtr &_backdoor) override;
     bool recvTimingReq(PacketPtr pkt) override;
 
 };

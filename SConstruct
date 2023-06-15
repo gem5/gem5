@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2013, 2015-2020 ARM Limited
+# Copyright (c) 2013, 2015-2020, 2023 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -145,6 +145,15 @@ AddOption('--gprof', action='store_true',
           help='Enable support for the gprof profiler')
 AddOption('--pprof', action='store_true',
           help='Enable support for the pprof profiler')
+# Default to --no-duplicate-sources, but keep --duplicate-sources to opt-out
+# of this new build behaviour in case it introduces regressions. We could use
+# action=argparse.BooleanOptionalAction here once Python 3.9 is required.
+AddOption('--duplicate-sources', action='store_true', default=False,
+          dest='duplicate_sources',
+          help='Create symlinks to sources in the build directory')
+AddOption('--no-duplicate-sources', action='store_false',
+          dest='duplicate_sources',
+          help='Do not create symlinks to sources in the build directory')
 
 # Inject the built_tools directory into the python path.
 sys.path[1:1] = [ Dir('#build_tools').abspath ]
@@ -167,6 +176,10 @@ from gem5_scons.util import compareVersions, readCommand
 SetOption('warn', 'no-duplicate-environment')
 
 Export('MakeAction')
+
+# Patch re.compile to support inline flags anywhere within a RE
+# string. Required to use PLY with Python 3.11+.
+gem5_scons.patch_re_compile_for_inline_flags()
 
 ########################################################################
 #
@@ -264,6 +277,8 @@ main.Append(CPPPATH=[Dir('ext')])
 
 # Add shared top-level headers
 main.Prepend(CPPPATH=Dir('include'))
+if not GetOption('duplicate_sources'):
+    main.Prepend(CPPPATH=Dir('src'))
 
 
 ########################################################################
@@ -290,6 +305,17 @@ main['CLANG'] = CXX_version and CXX_version.find('clang') >= 0
 if main['GCC'] + main['CLANG'] > 1:
     error('Two compilers enabled at once?')
 
+# Find the gem5 binary target architecture (usually host architecture). The
+# "Target: <target>" is consistent accross gcc and clang at the time of
+# writting this.
+bin_target_arch = readCommand([main['CXX'], '--verbose'], exception=False)
+main["BIN_TARGET_ARCH"] = (
+    "x86_64"
+    if bin_target_arch.find("Target: x86_64") != -1
+    else "aarch64"
+    if bin_target_arch.find("Target: aarch64") != -1
+    else "unknown"
+)
 
 ########################################################################
 #
@@ -420,6 +446,14 @@ for variant_path in variant_paths:
                     conf.CheckLinkFlag('-Wl,--threads')
                     conf.CheckLinkFlag(
                             '-Wl,--thread-count=%d' % GetOption('num_jobs'))
+
+        # Treat warnings as errors but white list some warnings that we
+        # want to allow (e.g., deprecation warnings).
+        env.Append(CCFLAGS=['-Werror',
+                             '-Wno-error=deprecated-declarations',
+                             '-Wno-error=deprecated',
+                            ])
+
     else:
         error('\n'.join((
               "Don't know what compiler options to use for your compiler.",
@@ -438,10 +472,6 @@ for variant_path in variant_paths:
         if compareVersions(env['CXXVERSION'], "7") < 0:
             error('gcc version 7 or newer required.\n'
                   'Installed version:', env['CXXVERSION'])
-
-        with gem5_scons.Configure(env) as conf:
-            # This warning has a false positive in the systemc in g++ 11.1.
-            conf.CheckCxxFlag('-Wno-free-nonheap-object')
 
         # Add the appropriate Link-Time Optimization (LTO) flags if
         # `--with-lto` is set.
@@ -464,6 +494,17 @@ for variant_path in variant_paths:
             '-fno-builtin-malloc', '-fno-builtin-calloc',
             '-fno-builtin-realloc', '-fno-builtin-free'])
 
+        if compareVersions(env['CXXVERSION'], "9") < 0:
+            # `libstdc++fs`` must be explicitly linked for `std::filesystem``
+            # in GCC version 8. As of GCC version 9, this is not required.
+            #
+            # In GCC 7 the `libstdc++fs`` library explicit linkage is also
+            # required but the `std::filesystem` is under the `experimental`
+            # namespace(`std::experimental::filesystem`).
+            #
+            # Note: gem5 does not support GCC versions < 7.
+            env.Append(LIBS=['stdc++fs'])
+
     elif env['CLANG']:
         if compareVersions(env['CXXVERSION'], "6") < 0:
             error('clang version 6 or newer required.\n'
@@ -480,6 +521,18 @@ for variant_path in variant_paths:
             conf.CheckCxxFlag('-Wno-defaulted-function-deleted')
 
         env.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
+
+        if compareVersions(env['CXXVERSION'], "11") < 0:
+            # `libstdc++fs`` must be explicitly linked for `std::filesystem``
+            # in clang versions 6 through 10.
+            #
+            # In addition, for these versions, the
+            # `std::filesystem` is under the `experimental`
+            # namespace(`std::experimental::filesystem`).
+            #
+            # Note: gem5 does not support clang versions < 6.
+            env.Append(LIBS=['stdc++fs'])
+
 
         # On Mac OS X/Darwin we need to also use libc++ (part of XCode) as
         # opposed to libstdc++, as the later is dated.
@@ -511,7 +564,38 @@ for variant_path in variant_paths:
         if env['GCC'] or env['CLANG']:
             env.Append(CCFLAGS=['-fsanitize=%s' % sanitizers,
                                  '-fno-omit-frame-pointer'],
-                        LINKFLAGS='-fsanitize=%s' % sanitizers)
+                        LINKFLAGS=['-fsanitize=%s' % sanitizers,
+                                   '-static-libasan'])
+
+            if main["BIN_TARGET_ARCH"] == "x86_64":
+                # Sanitizers can enlarge binary size drammatically, north of
+                # 2GB.  This can prevent successful linkage due to symbol
+                # relocation outside from the 2GB region allocated by the small
+                # x86_64 code model that is enabled by default (32-bit relative
+                # offset limitation).  Switching to the medium model in x86_64
+                # enables 64-bit relative offset for large objects (>64KB by
+                # default) while sticking to 32-bit relative addressing for
+                # code and smaller objects. Note this comes at a potential
+                # performance cost so it should not be enabled in all cases.
+                # This should still be a very happy medium for
+                # non-perf-critical sanitized builds.
+                env.Append(CCFLAGS='-mcmodel=medium')
+                env.Append(LINKFLAGS='-mcmodel=medium')
+            elif main["BIN_TARGET_ARCH"] == "aarch64":
+                # aarch64 default code model is small but with different
+                # constrains than for x86_64. With aarch64, the small code
+                # model enables 4GB distance between symbols. This is
+                # sufficient for the largest ALL/gem5.debug target with all
+                # sanitizers enabled at the time of writting this. Note that
+                # the next aarch64 code model is "large" which prevents dynamic
+                # linkage so it should be avoided when possible.
+                pass
+            else:
+                warning(
+                    "Unknown code model options for your architecture. "
+                    "Linkage might fail for larger binaries "
+                    "(e.g., ALL/gem5.debug with sanitizers enabled)."
+                )
         else:
             warning("Don't know how to enable %s sanitizer(s) for your "
                     "compiler." % sanitizers)
@@ -563,9 +647,9 @@ for variant_path in variant_paths:
 
     if not GetOption('without_tcmalloc'):
         with gem5_scons.Configure(env) as conf:
-            if conf.CheckLib('tcmalloc'):
+            if conf.CheckLib('tcmalloc_minimal'):
                 conf.env.Append(CCFLAGS=conf.env['TCMALLOC_CCFLAGS'])
-            elif conf.CheckLib('tcmalloc_minimal'):
+            elif conf.CheckLib('tcmalloc'):
                 conf.env.Append(CCFLAGS=conf.env['TCMALLOC_CCFLAGS'])
             else:
                 warning("You can get a 12% performance improvement by "
@@ -728,11 +812,13 @@ Build variables for {dir}:
             build_dir = os.path.relpath(root, ext_dir)
             SConscript(os.path.join(root, 'SConscript'),
                        variant_dir=os.path.join(variant_ext, build_dir),
-                       exports=exports)
+                       exports=exports,
+                       duplicate=GetOption('duplicate_sources'))
 
     # The src/SConscript file sets up the build rules in 'env' according
     # to the configured variables.  It returns a list of environments,
     # one for each variant build (debug, opt, etc.)
-    SConscript('src/SConscript', variant_dir=variant_path, exports=exports)
+    SConscript('src/SConscript', variant_dir=variant_path, exports=exports,
+               duplicate=GetOption('duplicate_sources'))
 
 atexit.register(summarize_warnings)

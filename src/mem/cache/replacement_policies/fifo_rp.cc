@@ -37,7 +37,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
 {
 
@@ -51,7 +50,7 @@ FIFO::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 {
     // Reset insertion tick
     std::static_pointer_cast<FIFOReplData>(
-        replacement_data)->tickInserted = Tick(0);
+        replacement_data)->tickInserted = ++timeTicks;
 }
 
 void
@@ -65,7 +64,7 @@ FIFO::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
     // Set insertion tick
     std::static_pointer_cast<FIFOReplData>(
-        replacement_data)->tickInserted = curTick();
+        replacement_data)->tickInserted = ++timeTicks;
 }
 
 ReplaceableEntry*

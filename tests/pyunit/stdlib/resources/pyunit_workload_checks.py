@@ -1,4 +1,4 @@
-# Copyright (c) 2022 The Regents of the University of California
+# Copyright (c) 2023 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,14 +25,39 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
-import tempfile
 import os
 
 from gem5.resources.workload import Workload, CustomWorkload
-from gem5.resources.resource import Resource
-from gem5.resources.downloader import _resources_json_version_required
+from gem5.resources.resource import (
+    BinaryResource,
+    DiskImageResource,
+    obtain_resource,
+)
 
 from typing import Dict
+
+from gem5.resources.client_api.client_wrapper import ClientWrapper
+from unittest.mock import patch
+from pathlib import Path
+
+mock_config_json1 = {
+    "sources": {
+        "baba": {
+            "url": Path(__file__).parent
+            / "refs/workload-checks-custom-workload.json",
+            "isMongo": False,
+        }
+    },
+}
+
+mock_config_json2 = {
+    "sources": {
+        "baba": {
+            "url": Path(__file__).parent / "refs/workload-checks.json",
+            "isMongo": False,
+        }
+    },
+}
 
 
 class CustomWorkloadTestSuite(unittest.TestCase):
@@ -41,48 +66,29 @@ class CustomWorkloadTestSuite(unittest.TestCase):
     """
 
     @classmethod
+    @patch(
+        "gem5.resources.client.clientwrapper",
+        new=ClientWrapper(mock_config_json1),
+    )
     def setUpClass(cls) -> None:
-        file_contents = (
-            "{"
-            + f'"version" : "{_resources_json_version_required()}",'
-            + """
-        "url_base" : "http://dist.gem5.org/dist/v22-0",
-        "previous-versions" : {},
-        "resources": [
-        {
-            "type" : "resource",
-            "name" : "x86-hello64-static",
-            "documentation" : "A 'Hello World!' binary.",
-            "architecture" : "X86",
-            "is_zipped" :  false,
-            "md5sum" : "dbf120338b37153e3334603970cebd8c",
-            "url" : "{url_base}/test-progs/hello/bin/x86/linux/hello64-static",
-            "source" : "src/simple"
-        }
-    ]
-}
-        """
+        os.environ["GEM5_RESOURCE_JSON"] = os.path.join(
+            os.path.realpath(os.path.dirname(__file__)),
+            "refs",
+            "workload-checks-custom-workload.json",
         )
-        file = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        file.write(file_contents)
-        file.close()
-
-        cls.test_json = file.name
-        os.environ["GEM5_RESOURCE_JSON"] = cls.test_json
 
         cls.custom_workload = CustomWorkload(
             function="set_se_binary_workload",
             parameters={
-                "binary": Resource("x86-hello64-static"),
+                "binary": obtain_resource("x86-hello64-static"),
                 "arguments": ["hello", 6],
             },
         )
 
     @classmethod
     def tearDownClass(cls):
-        # Remove the test json file and unset the environment variable so this
-        # test does not interfere with others.
-        os.remove(cls.test_json)
+        # Unset the environment variable so this test does not interfere with
+        # others.
         os.environ["GEM5_RESOURCE_JSON"]
 
     def test_get_function_str(self) -> None:
@@ -100,7 +106,7 @@ class CustomWorkloadTestSuite(unittest.TestCase):
         self.assertEquals(2, len(parameters))
 
         self.assertTrue("binary" in parameters)
-        self.assertTrue(isinstance(parameters["binary"], Resource))
+        self.assertTrue(isinstance(parameters["binary"], BinaryResource))
 
         self.assertTrue("arguments" in parameters)
         self.assertTrue(isinstance(parameters["arguments"], list))
@@ -134,8 +140,7 @@ class CustomWorkloadTestSuite(unittest.TestCase):
             "test", self.custom_workload.get_parameters()["binary"]
         )
 
-        # We set the overridden parameter back to it's old value.
-        self.custom_workload.set_parameter("binary", old_value)
+        # We set the overridden parameter back to it's old valu        self.custom_workload.set_parameter("binary", old_value)
 
 
 class WorkloadTestSuite(unittest.TestCase):
@@ -144,70 +149,22 @@ class WorkloadTestSuite(unittest.TestCase):
     """
 
     @classmethod
+    @patch(
+        "gem5.resources.client.clientwrapper",
+        ClientWrapper(mock_config_json2),
+    )
     def setUpClass(cls):
-        # In this constructor we create a json file to load then create a test
-        # workload.
-
-        file_contents = (
-            "{"
-            + f'"version" : "{_resources_json_version_required()}",'
-            + """
-        "url_base" : "http://dist.gem5.org/dist/v22-0",
-        "previous-versions" : {},
-        "resources": [
-        {
-            "type" : "resource",
-            "name" : "x86-linux-kernel-5.2.3",
-            "documentation" : "The linux kernel (v5.2.3), compiled to X86.",
-            "architecture" : "X86",
-            "is_zipped" : false,
-            "md5sum" : "4838c99b77d33c8307b939c16624e4ac",
-            "url" : "{url_base}/kernels/x86/static/vmlinux-5.2.3",
-            "source" : "src/linux-kernel"
-        },
-        {
-            "type" : "resource",
-            "name" : "x86-ubuntu-18.04-img",
-            "documentation" : "A disk image containing Ubuntu 18.04 for x86..",
-            "architecture" : "X86",
-            "is_zipped" : true,
-            "md5sum" : "90e363abf0ddf22eefa2c7c5c9391c49",
-            "url" : "{url_base}/images/x86/ubuntu-18-04/x86-ubuntu.img.gz",
-            "source" : "src/x86-ubuntu",
-            "additional_metadata" : {
-                "root_partition": "1"
-            }
-        },
-        {
-            "type" : "workload",
-            "name" : "simple-boot",
-            "documentation" : "Description of workload here",
-            "function" : "set_kernel_disk_workload",
-            "resources" : {
-                "kernel" : "x86-linux-kernel-5.2.3",
-                "disk_image" : "x86-ubuntu-18.04-img"
-            },
-            "additional_params" : {
-                "readfile_contents" : "echo 'Boot successful'; m5 exit"
-            }
-        }
-    ]
-}
-        """
+        os.environ["GEM5_RESOURCE_JSON"] = os.path.join(
+            os.path.realpath(os.path.dirname(__file__)),
+            "refs",
+            "workload-checks.json",
         )
-        file = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        file.write(file_contents)
-        file.close()
-
-        cls.test_json = file.name
-        os.environ["GEM5_RESOURCE_JSON"] = cls.test_json
         cls.workload = Workload("simple-boot")
 
     @classmethod
     def tearDownClass(cls):
-        # Remove the test json file and unset the environment variable so this
-        # test does not interfere with others.
-        os.remove(cls.test_json)
+        # Unset the environment variable so this test does not interfere with
+        # others.
         os.environ["GEM5_RESOURCE_JSON"]
 
     def test_get_function_str(self) -> None:
@@ -226,10 +183,12 @@ class WorkloadTestSuite(unittest.TestCase):
         self.assertEqual(3, len(parameters))
 
         self.assertTrue("kernel" in parameters)
-        self.assertTrue(isinstance(parameters["kernel"], Resource))
+        self.assertTrue(isinstance(parameters["kernel"], BinaryResource))
 
-        self.assertTrue("disk_image" in parameters)
-        self.assertTrue(isinstance(parameters["disk_image"], Resource))
+        self.assertTrue("disk-image" in parameters)
+        self.assertTrue(
+            isinstance(parameters["disk-image"], DiskImageResource)
+        )
 
         self.assertTrue("readfile_contents" in parameters)
         self.assertTrue(

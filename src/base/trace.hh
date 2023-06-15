@@ -39,6 +39,7 @@
 #include "base/compiler.hh"
 #include "base/cprintf.hh"
 #include "base/debug.hh"
+#include "base/logging.hh"
 #include "base/match.hh"
 #include "base/types.hh"
 #include "sim/cur_tick.hh"
@@ -60,6 +61,23 @@ class Logger
   protected:
     /** Name match for objects to ignore */
     ObjectMatch ignore;
+    /** Name match for objects to activate log */
+    ObjectMatch activate;
+
+    bool isEnabled(const std::string &name) const
+    {
+        if (name.empty()) // Enable the logger with a empty name.
+            return true;
+        bool ignore_match = ignore.match(name);
+        bool activate_match = activate.match(name);
+        if (ignore_match && activate_match)
+            panic("%s in both ignore and activate.\n", name);
+        if (ignore_match)
+            return false;
+        if (!activate.empty() && !activate_match)
+            return false;
+        return true;
+    }
 
   public:
     /** Log a single message */
@@ -76,7 +94,7 @@ class Logger
             const std::string &flag,
             const char *fmt, const Args &...args)
     {
-        if (!name.empty() && ignore.match(name))
+        if (!isEnabled(name))
             return;
         std::ostringstream line;
         ccprintf(line, fmt, args...);
@@ -103,6 +121,12 @@ class Logger
 
     /** Add objects to ignore */
     void addIgnore(const ObjectMatch &ignore_) { ignore.add(ignore_); }
+
+    /** Set objects to activate */
+    void setActivate(ObjectMatch &activate_) { activate = activate_; }
+
+    /** Add objects to activate */
+    void addActivate(const ObjectMatch &activate_) { activate.add(activate_); }
 
     virtual ~Logger() { }
 };

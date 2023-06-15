@@ -43,7 +43,7 @@ class WakeupPortStatementAST(StatementAST):
         self.address = address
 
     def __repr__(self):
-        return "[WakeupPortStatementAst: %r]" % self.in_port
+        return f"[WakeupPortStatementAst: {self.in_port!r}]"
 
     def generate(self, code, return_type):
         self.in_port.assertType("InPort")

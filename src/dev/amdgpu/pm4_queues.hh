@@ -33,6 +33,8 @@
 #ifndef __DEV_AMDGPU_PM4_QUEUES_HH__
 #define __DEV_AMDGPU_PM4_QUEUES_HH__
 
+#include "dev/amdgpu/pm4_defines.hh"
+
 namespace gem5
 {
 
@@ -201,10 +203,24 @@ typedef struct GEM5_PACKED
         };
         uint64_t rb_base;
     };
-    uint32_t sdmax_rlcx_rb_rptr;
-    uint32_t sdmax_rlcx_rb_rptr_hi;
-    uint32_t sdmax_rlcx_rb_wptr;
-    uint32_t sdmax_rlcx_rb_wptr_hi;
+    union
+    {
+        struct
+        {
+            uint32_t sdmax_rlcx_rb_rptr;
+            uint32_t sdmax_rlcx_rb_rptr_hi;
+        };
+        uint64_t rptr;
+    };
+    union
+    {
+        struct
+        {
+            uint32_t sdmax_rlcx_rb_wptr;
+            uint32_t sdmax_rlcx_rb_wptr_hi;
+        };
+        uint64_t wptr;
+    };
     uint32_t sdmax_rlcx_rb_wptr_poll_cntl;
     uint32_t sdmax_rlcx_rb_rptr_addr_hi;
     uint32_t sdmax_rlcx_rb_rptr_addr_lo;
@@ -375,7 +391,7 @@ class PM4Queue
     Addr _offset;
     bool _processing;
     bool _ib;
-    const PM4MapQueues _pkt;
+    PM4MapQueues _pkt;
   public:
     PM4Queue() : _id(0), q(nullptr), _wptr(0), _offset(0), _processing(false),
         _ib(false), _pkt() {}
@@ -470,6 +486,13 @@ class PM4Queue
     uint32_t pipe() { return _pkt.pipe; }
     uint32_t queue() { return _pkt.queueSlot; }
     bool privileged() { return _pkt.queueSel == 0 ? 1 : 0; }
+    PM4MapQueues* getPkt() { return &_pkt; }
+    void setPkt(uint32_t me, uint32_t pipe, uint32_t queue, bool privileged) {
+        _pkt.me = me - 1;
+        _pkt.pipe = pipe;
+        _pkt.queueSlot = queue;
+        _pkt.queueSel = (privileged == 0) ? 1 : 0;
+    }
 
     // Same computation as processMQD. See comment there for details.
     uint64_t size() { return 4UL << ((q->hqd_pq_control & 0x3f) + 1); }

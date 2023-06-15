@@ -323,6 +323,7 @@ namespace ArmISA
         SMC_64                  = 0x17,
         TRAPPED_MSR_MRS_64      = 0x18,
         TRAPPED_SVE             = 0x19,
+        TRAPPED_SME             = 0x1D,
         PREFETCH_ABORT_TO_HYP   = 0x20,
         PREFETCH_ABORT_LOWER_EL = 0x20,  // AArch64 alias
         PREFETCH_ABORT_FROM_HYP = 0x21,
@@ -471,6 +472,18 @@ namespace ArmISA
 
     constexpr unsigned VecRegSizeBytes = MaxSveVecLenInBytes;
     constexpr unsigned VecPredRegSizeBits = MaxSveVecLenInBytes;
+
+    constexpr unsigned MaxSmeVecLenInBits = 2048;
+    static_assert(MaxSmeVecLenInBits >= 128 &&
+                  MaxSmeVecLenInBits <= 2048 &&
+                  // Only powers of two are supported. We don't need to
+                  // check for the zero case here as we already know it
+                  // is over 128.
+                  (MaxSmeVecLenInBits & (MaxSmeVecLenInBits - 1)) == 0,
+                  "Unsupported max. SME vector length");
+    constexpr unsigned MaxSmeVecLenInBytes  = MaxSmeVecLenInBits >> 3;
+    constexpr unsigned MaxSmeVecLenInWords  = MaxSmeVecLenInBits >> 5;
+    constexpr unsigned MaxSmeVecLenInDWords = MaxSmeVecLenInBits >> 6;
 
 } // namespace ArmISA
 } // namespace gem5

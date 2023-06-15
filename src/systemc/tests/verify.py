@@ -148,7 +148,7 @@ class RunPhase(TestPhaseBase):
             "--timeout",
             type=int,
             metavar="SECONDS",
-            help="Time limit for each run in seconds, " "0 to disable.",
+            help="Time limit for each run in seconds, 0 to disable.",
             default=60,
         )
         parser.add_argument(
@@ -413,11 +413,7 @@ class VerifyPhase(TestPhaseBase):
         total_passed = len(self._passed)
         total_failed = sum(map(len, self._failed.values()))
         print()
-        print(
-            "Passed: {passed:4} - Failed: {failed:4}".format(
-                passed=total_passed, failed=total_failed
-            )
-        )
+        print(f"Passed: {total_passed:4} - Failed: {total_failed:4}")
 
     def write_result_file(self, path):
         results = {
@@ -604,7 +600,7 @@ filter_opts = parser.add_mutually_exclusive_group()
 filter_opts.add_argument(
     "--filter",
     default="True",
-    help="Python expression which filters tests based " "on their properties",
+    help="Python expression which filters tests based on their properties",
 )
 filter_opts.add_argument(
     "--filter-file",
@@ -626,7 +622,7 @@ def collect_phases(args):
     for group in phase_groups[1:]:
         name = group[0]
         if name in names:
-            raise RuntimeException("Phase %s specified more than once" % name)
+            raise RuntimeException(f"Phase {name} specified more than once")
         phase = test_phase_classes[name]
         phases.append(phase(main_args, *group[1:]))
     phases.sort()
@@ -669,10 +665,10 @@ with open(json_path) as f:
 
     if main_args.list:
         for target, props in sorted(filtered_tests.items()):
-            print("%s.%s" % (target, main_args.flavor))
+            print(f"{target}.{main_args.flavor}")
             for key, val in props.items():
-                print("    %s: %s" % (key, val))
-        print("Total tests: %d" % len(filtered_tests))
+                print(f"    {key}: {val}")
+        print(f"Total tests: {len(filtered_tests)}")
     else:
         tests_to_run = list(
             [

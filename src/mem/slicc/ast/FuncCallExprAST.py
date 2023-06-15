@@ -49,7 +49,7 @@ class FuncCallExprAST(ExprAST):
         self.exprs = exprs
 
     def __repr__(self):
-        return "[FuncCallExpr: %s %s]" % (self.proc_name, self.exprs)
+        return f"[FuncCallExpr: {self.proc_name} {self.exprs}]"
 
     # When calling generate for statements in a in_port, the reference to
     # the port must be provided as the in_port kwarg (see InPortDeclAST)
@@ -69,14 +69,14 @@ class FuncCallExprAST(ExprAST):
             # handled differently. Hence the check whether or not
             # the str_list is empty.
 
-            dflag = "%s" % (self.exprs[0].name)
+            dflag = f"{self.exprs[0].name}"
             machine.addDebugFlag(dflag)
-            format = "%s" % (self.exprs[1].inline())
+            format = f"{self.exprs[1].inline()}"
             format_length = len(format)
             str_list = []
 
             for i in range(2, len(self.exprs)):
-                str_list.append("%s" % self.exprs[i].inline())
+                str_list.append(f"{self.exprs[i].inline()}")
 
             if len(str_list) == 0:
                 code(
@@ -97,12 +97,12 @@ class FuncCallExprAST(ExprAST):
             return self.symtab.find("void", Type)
 
         if self.proc_name == "DPRINTFN":
-            format = "%s" % (self.exprs[0].inline())
+            format = f"{self.exprs[0].inline()}"
             format_length = len(format)
             str_list = []
 
             for i in range(1, len(self.exprs)):
-                str_list.append("%s" % self.exprs[i].inline())
+                str_list.append(f"{self.exprs[i].inline()}")
 
             if len(str_list) == 0:
                 code(
@@ -264,11 +264,11 @@ if (!(${{cvec[0]}})) {
             )
 
         elif self.proc_name == "set_cache_entry":
-            code("set_cache_entry(m_cache_entry_ptr, %s);" % (cvec[0]))
+            code(f"set_cache_entry(m_cache_entry_ptr, {cvec[0]});")
         elif self.proc_name == "unset_cache_entry":
             code("unset_cache_entry(m_cache_entry_ptr);")
         elif self.proc_name == "set_tbe":
-            code("set_tbe(m_tbe_ptr, %s);" % (cvec[0]))
+            code(f"set_tbe(m_tbe_ptr, {cvec[0]});")
         elif self.proc_name == "unset_tbe":
             code("unset_tbe(m_tbe_ptr);")
         elif self.proc_name == "stallPort":

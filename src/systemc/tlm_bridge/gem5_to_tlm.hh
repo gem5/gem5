@@ -61,7 +61,9 @@
 
 #include <functional>
 #include <string>
+#include <unordered_map>
 
+#include "mem/backdoor.hh"
 #include "mem/port.hh"
 #include "params/Gem5ToTlmBridgeBase.hh"
 #include "sim/system.hh"
@@ -117,6 +119,12 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
         {
             return bridge.recvFunctional(pkt);
         }
+        void
+        recvMemBackdoorReq(const gem5::MemBackdoorReq &req,
+                gem5::MemBackdoorPtr &backdoor) override
+        {
+            bridge.recvMemBackdoorReq(req, backdoor);
+        }
         bool
         recvTimingReq(gem5::PacketPtr pkt) override
         {
@@ -137,7 +145,7 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
       public:
         BridgeResponsePort(const std::string &name_,
                         Gem5ToTlmBridge<BITWIDTH> &bridge_) :
-            ResponsePort(name_, nullptr), bridge(bridge_)
+            ResponsePort(name_), bridge(bridge_)
         {}
     };
 
@@ -166,6 +174,12 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
      */
     tlm::tlm_generic_payload *blockingResponse;
 
+    /**
+     * A map to record the association between payload and packet. This helps us
+     * could get the correct packet when handling nonblocking interfaces.
+     */
+    std::unordered_map<tlm::tlm_generic_payload *, gem5::PacketPtr> packetMap;
+
     gem5::AddrRangeList addrRanges;
 
   protected:
@@ -179,6 +193,8 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
     gem5::Tick recvAtomicBackdoor(gem5::PacketPtr pkt,
         gem5::MemBackdoorPtr &backdoor);
     void recvFunctional(gem5::PacketPtr packet);
+    void recvMemBackdoorReq(const gem5::MemBackdoorReq &req,
+            gem5::MemBackdoorPtr &backdoor);
     bool recvTimingReq(gem5::PacketPtr packet);
     bool tryTiming(gem5::PacketPtr packet);
     bool recvTimingSnoopResp(gem5::PacketPtr packet);

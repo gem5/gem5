@@ -4,7 +4,7 @@ ARCH=RISCV
 OFLAG=3
 
 LDFLAGS=-shared -fno-common ${shell pkg-config ${SST_VERSION} --libs} -L../../build/${ARCH}/ -Wl,-rpath ../../build/${ARCH}
-CXXFLAGS=-std=c++17 -g -O${OFLAG} -fPIC ${shell pkg-config ${SST_VERSION} --cflags} ${shell python3-config --includes} -I../../build/${ARCH}/ -I../../ext/pybind11/include/ -I../../build/softfloat/
+CXXFLAGS=-std=c++17 -g -O${OFLAG} -fPIC ${shell pkg-config ${SST_VERSION} --cflags} ${shell python3-config --includes} -I../../build/${ARCH}/ -I../../ext/pybind11/include/ -I../../build/softfloat/ -I../../ext
 CPPFLAGS+=-MMD -MP
 SRC=$(wildcard *.cc)
 

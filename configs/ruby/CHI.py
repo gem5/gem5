@@ -280,6 +280,6 @@ def create_system(
     elif options.topology in ["Crossbar", "Pt2Pt"]:
         topology = create_topology(network_cntrls, options)
     else:
-        m5.fatal("%s not supported!" % options.topology)
+        m5.fatal(f"{options.topology} not supported!")
 
     return (cpu_sequencers, mem_cntrls, topology)

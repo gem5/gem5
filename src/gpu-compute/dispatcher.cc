@@ -40,6 +40,7 @@
 #include "gpu-compute/hsa_queue_entry.hh"
 #include "gpu-compute/shader.hh"
 #include "gpu-compute/wavefront.hh"
+#include "sim/sim_exit.hh"
 #include "sim/syscall_emul_buf.hh"
 #include "sim/system.hh"
 
@@ -330,6 +331,8 @@ GPUDispatcher::notifyWgCompl(Wavefront *wf)
         DPRINTF(GPUWgLatency, "Kernel Complete ticks:%d kernel:%d\n",
                 curTick(), kern_id);
         DPRINTF(GPUKernelInfo, "Completed kernel %d\n", kern_id);
+
+        exitSimLoop("GPU Kernel Completed");
     }
 
     if (!tickEvent.scheduled()) {

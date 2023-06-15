@@ -107,7 +107,7 @@ class EtherSwitch(SimObject):
 
     dump = Param.EtherDump(NULL, "dump object")
     fabric_speed = Param.NetworkBandwidth(
-        "10Gbps", "switch fabric speed in " "bits per second"
+        "10Gbps", "switch fabric speed in bits per second"
     )
     interface = VectorEtherInt("Ethernet Interface")
     output_buffer_size = Param.MemorySize(
@@ -147,7 +147,7 @@ class EtherTapStub(EtherTapBase):
     cxx_header = "dev/net/ethertap.hh"
     cxx_class = "gem5::EtherTapStub"
 
-    port = Param.UInt16(3500, "Port helper should send packets to")
+    port = Param.HostSocket(3500, "Port/socket helper should send packets to")
 
 
 class EtherDump(SimObject):

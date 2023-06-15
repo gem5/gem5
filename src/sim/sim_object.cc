@@ -60,9 +60,6 @@ SimObject::SimObject(const Params &p)
       statistics::Group(nullptr), Named(p.name),
       _params(p)
 {
-#ifdef DEBUG
-    doDebugBreak = false;
-#endif
     simObjectList.push_back(this);
     probeManager = new ProbeManager(this);
 }
@@ -147,30 +144,6 @@ SimObject::serializeAll(const std::string &cpt_dir)
         obj->serializeSection(cp, obj->name());
    }
 }
-
-#ifdef DEBUG
-//
-// static function: flag which objects should have the debugger break
-//
-void
-SimObject::debugObjectBreak(const std::string &objs)
-{
-    SimObjectList::const_iterator i = simObjectList.begin();
-    SimObjectList::const_iterator end = simObjectList.end();
-
-    ObjectMatch match(objs);
-    for (; i != end; ++i) {
-        SimObject *obj = *i;
-        obj->doDebugBreak = match.match(obj->name());
-   }
-}
-
-void
-debugObjectBreak(const char *objs)
-{
-    SimObject::debugObjectBreak(std::string(objs));
-}
-#endif
 
 SimObject *
 SimObject::find(const char *name)

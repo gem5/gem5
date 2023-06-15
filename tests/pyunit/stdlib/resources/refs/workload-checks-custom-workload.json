@@ -1,0 +1,16 @@
+[
+    {
+        "category": "binary",
+        "id": "x86-hello64-static",
+        "description": "A 'Hello World!' binary.",
+        "architecture": "X86",
+        "is_zipped": false,
+        "md5sum": "dbf120338b37153e3334603970cebd8c",
+        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/x86/linux/hello64-static",
+        "source": "src/simple",
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "23.0"
+        ]
+    }
+]

@@ -132,4 +132,233 @@ def macroop LDDQU_XMM_P {
     ldfp xmml, seg, sib, "DISPLACEMENT", dataSize=8
     ldfp xmmh, seg, sib, "DISPLACEMENT + 8", dataSize=8
 };
+
+def macroop PMOVSXDQ_XMM_XMM {
+    movfp ufp1, xmmlm, dataSize=8
+    extmove xmml, ufp1, destSize=8, srcSize=4, ext = Signed
+    extmove xmmh, ufp1, destSize=8, srcSize=4, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXDQ_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    extmove xmml, ufp1, destSize=8, srcSize=4, ext = Signed
+    extmove xmmh, ufp1, destSize=8, srcSize=4, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXDQ_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    extmove xmml, ufp1, destSize=8, srcSize=4, ext = Signed
+    extmove xmmh, ufp1, destSize=8, srcSize=4, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXWQ_XMM_XMM {
+    movfp ufp1, xmmlm, dataSize=8
+    extmove xmml, ufp1, destSize=8, srcSize=2, ext = Signed
+    extmove xmmh, ufp1, destSize=8, srcSize=2, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXWQ_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=4
+    extmove xmml, ufp1, destSize=8, srcSize=2, ext = Signed
+    extmove xmmh, ufp1, destSize=8, srcSize=2, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXWQ_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=4
+    extmove xmml, ufp1, destSize=8, srcSize=2, ext = Signed
+    extmove xmmh, ufp1, destSize=8, srcSize=2, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXWD_XMM_XMM {
+    movfp ufp1, xmmlm, dataSize=8
+    extmove xmml, ufp1, destSize=4, srcSize=2, ext = Signed
+    extmove xmmh, ufp1, destSize=4, srcSize=2, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXWD_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    extmove xmml, ufp1, destSize=4, srcSize=2, ext = Signed
+    extmove xmmh, ufp1, destSize=4, srcSize=2, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXWD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    extmove xmml, ufp1, destSize=4, srcSize=2, ext = Signed
+    extmove xmmh, ufp1, destSize=4, srcSize=2, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXBQ_XMM_XMM {
+    movfp ufp1, xmmlm, dataSize=8
+    extmove xmml, ufp1, destSize=8, srcSize=1, ext = Signed
+    extmove xmmh, ufp1, destSize=8, srcSize=1, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXBQ_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=2
+    extmove xmml, ufp1, destSize=8, srcSize=1, ext = Signed
+    extmove xmmh, ufp1, destSize=8, srcSize=1, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXBQ_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=2
+    extmove xmml, ufp1, destSize=8, srcSize=1, ext = Signed
+    extmove xmmh, ufp1, destSize=8, srcSize=1, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXBD_XMM_XMM {
+    movfp ufp1, xmmlm, dataSize=8
+    extmove xmml, ufp1, destSize=4, srcSize=1, ext = Signed
+    extmove xmmh, ufp1, destSize=4, srcSize=1, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXBD_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=4
+    extmove xmml, ufp1, destSize=4, srcSize=1, ext = Signed
+    extmove xmmh, ufp1, destSize=4, srcSize=1, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXBD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=4
+    extmove xmml, ufp1, destSize=4, srcSize=1, ext = Signed
+    extmove xmmh, ufp1, destSize=4, srcSize=1, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXBW_XMM_XMM {
+    movfp ufp1, xmmlm, dataSize=8
+    extmove xmml, ufp1, destSize=2, srcSize=1, ext = Signed
+    extmove xmmh, ufp1, destSize=2, srcSize=1, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXBW_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    extmove xmml, ufp1, destSize=2, srcSize=1, ext = Signed
+    extmove xmmh, ufp1, destSize=2, srcSize=1, ext = Signed + "|" + PartHi
+};
+
+def macroop PMOVSXBW_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    extmove xmml, ufp1, destSize=2, srcSize=1, ext = Signed
+    extmove xmmh, ufp1, destSize=2, srcSize=1, ext = Signed + "|" + PartHi
+};
+
+
+def macroop PMOVZXDQ_XMM_XMM {
+    movfp ufp1, xmmlm, dataSize=8
+    extmove xmml, ufp1, destSize=8, srcSize=4
+    extmove xmmh, ufp1, destSize=8, srcSize=4, ext=PartHi
+};
+
+def macroop PMOVZXDQ_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    extmove xmml, ufp1, destSize=8, srcSize=4
+    extmove xmmh, ufp1, destSize=8, srcSize=4, ext=PartHi
+};
+
+def macroop PMOVZXDQ_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    extmove xmml, ufp1, destSize=8, srcSize=4
+    extmove xmmh, ufp1, destSize=8, srcSize=4, ext=PartHi
+};
+
+def macroop PMOVZXWQ_XMM_XMM {
+    movfp ufp1, xmmlm, dataSize=8
+    extmove xmml, ufp1, destSize=8, srcSize=2
+    extmove xmmh, ufp1, destSize=8, srcSize=2, ext=PartHi
+};
+
+def macroop PMOVZXWQ_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=4
+    extmove xmml, ufp1, destSize=8, srcSize=2
+    extmove xmmh, ufp1, destSize=8, srcSize=2, ext=PartHi
+};
+
+def macroop PMOVZXWQ_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=4
+    extmove xmml, ufp1, destSize=8, srcSize=2
+    extmove xmmh, ufp1, destSize=8, srcSize=2, ext=PartHi
+};
+
+def macroop PMOVZXWD_XMM_XMM {
+    movfp ufp1, xmmlm, dataSize=8
+    extmove xmml, ufp1, destSize=4, srcSize=2
+    extmove xmmh, ufp1, destSize=4, srcSize=2, ext=PartHi
+};
+
+def macroop PMOVZXWD_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    extmove xmml, ufp1, destSize=4, srcSize=2
+    extmove xmmh, ufp1, destSize=4, srcSize=2, ext=PartHi
+};
+
+def macroop PMOVZXWD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    extmove xmml, ufp1, destSize=4, srcSize=2
+    extmove xmmh, ufp1, destSize=4, srcSize=2, ext=PartHi
+};
+
+def macroop PMOVZXBQ_XMM_XMM {
+    movfp ufp1, xmmlm, dataSize=8
+    extmove xmml, ufp1, destSize=8, srcSize=1
+    extmove xmmh, ufp1, destSize=8, srcSize=1, ext=PartHi
+};
+
+def macroop PMOVZXBQ_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=2
+    extmove xmml, ufp1, destSize=8, srcSize=1
+    extmove xmmh, ufp1, destSize=8, srcSize=1, ext=PartHi
+};
+
+def macroop PMOVZXBQ_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=2
+    extmove xmml, ufp1, destSize=8, srcSize=1
+    extmove xmmh, ufp1, destSize=8, srcSize=1, ext=PartHi
+};
+
+def macroop PMOVZXBD_XMM_XMM {
+    movfp ufp1, xmmlm, dataSize=8
+    extmove xmml, ufp1, destSize=4, srcSize=1
+    extmove xmmh, ufp1, destSize=4, srcSize=1, ext=PartHi
+};
+
+def macroop PMOVZXBD_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=4
+    extmove xmml, ufp1, destSize=4, srcSize=1
+    extmove xmmh, ufp1, destSize=4, srcSize=1, ext=PartHi
+};
+
+def macroop PMOVZXBD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=4
+    extmove xmml, ufp1, destSize=4, srcSize=1
+    extmove xmmh, ufp1, destSize=4, srcSize=1, ext=PartHi
+};
+
+def macroop PMOVZXBW_XMM_XMM {
+    movfp ufp1, xmmlm, dataSize=8
+    extmove xmml, ufp1, destSize=2, srcSize=1
+    extmove xmmh, ufp1, destSize=2, srcSize=1, ext=PartHi
+};
+
+def macroop PMOVZXBW_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    extmove xmml, ufp1, destSize=2, srcSize=1
+    extmove xmmh, ufp1, destSize=2, srcSize=1, ext=PartHi
+};
+
+def macroop PMOVZXBW_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    extmove xmml, ufp1, destSize=2, srcSize=1
+    extmove xmmh, ufp1, destSize=2, srcSize=1, ext=PartHi
+};
 """

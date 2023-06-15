@@ -36,6 +36,7 @@
 ##include "mem.isa"
 ##include "fp.isa"
 ##include "amo.isa"
+##include "bs.isa"
 
 // Include formats for nonstandard extensions
 ##include "compressed.isa"

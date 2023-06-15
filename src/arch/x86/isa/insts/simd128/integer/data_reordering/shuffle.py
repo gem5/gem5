@@ -112,4 +112,124 @@ def macroop PSHUFB_XMM_P {
     movfp xmml, ufp1, dataSize=8
     movfp xmmh, ufp2, dataSize=8
 };
+
+def macroop PBLENDW_XMM_XMM_I {
+    blend xmml, xmmlm, "IMMEDIATE & mask(8)", size=2, ext=0
+    blend xmmh, xmmhm, "IMMEDIATE & mask(8)", size=2, ext=1
+};
+
+def macroop PBLENDW_XMM_M_I {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    blend xmml, ufp1, "IMMEDIATE & mask(8)", size=2, ext=0
+    blend xmmh, ufp2, "IMMEDIATE & mask(8)", size=2, ext=1
+};
+
+def macroop PBLENDW_XMM_P_I {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    blend xmml, ufp1, "IMMEDIATE & mask(8)", size=2, ext=0
+    blend xmmh, ufp2, "IMMEDIATE & mask(8)", size=2, ext=1
+};
+
+def macroop BLENDPS_XMM_XMM_I {
+    blend xmml, xmmlm, "IMMEDIATE & mask(4)", size=4, ext=0
+    blend xmmh, xmmhm, "IMMEDIATE & mask(4)", size=4, ext=1
+};
+
+def macroop BLENDPS_XMM_M_I {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    blend xmml, ufp1, "IMMEDIATE & mask(4)", size=4, ext=0
+    blend xmmh, ufp2, "IMMEDIATE & mask(4)", size=4, ext=1
+};
+
+def macroop BLENDPS_XMM_P_I {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    blend xmml, ufp1, "IMMEDIATE & mask(4)", size=4, ext=0
+    blend xmmh, ufp2, "IMMEDIATE & mask(4)", size=4, ext=1
+};
+
+def macroop BLENDPD_XMM_XMM_I {
+    blend xmml, xmmlm, "IMMEDIATE & mask(2)", size=8, ext=0
+    blend xmmh, xmmhm, "IMMEDIATE & mask(2)", size=8, ext=1
+};
+
+def macroop BLENDPD_XMM_M_I {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    blend xmml, ufp1, "IMMEDIATE & mask(2)", size=8, ext=0
+    blend xmmh, ufp2, "IMMEDIATE & mask(2)", size=8, ext=1
+};
+
+def macroop BLENDPD_XMM_P_I {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    blend xmml, ufp1, "IMMEDIATE & mask(2)", size=8, ext=0
+    blend xmmh, ufp2, "IMMEDIATE & mask(2)", size=8, ext=1
+};
+
+def macroop BLENDVPD_XMM_XMM {
+    blendxmm xmml, xmmlm, fpRegIdx("float_reg::xmmLow(0)"), size=8
+    blendxmm xmmh, xmmhm, fpRegIdx("float_reg::xmmHigh(0)"), size=8
+};
+
+def macroop BLENDVPD_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    blendxmm xmml, ufp1, fpRegIdx("float_reg::xmmLow(0)"), size=8
+    blendxmm xmmh, ufp2, fpRegIdx("float_reg::xmmHigh(0)"), size=8
+};
+
+def macroop BLENDVPD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    blendxmm xmml, ufp1, fpRegIdx("float_reg::xmmLow(0)"), size=8
+    blendxmm xmmh, ufp2, fpRegIdx("float_reg::xmmHigh(0)"), size=8
+};
+
+def macroop BLENDVPS_XMM_XMM {
+    blendxmm xmml, xmmlm, fpRegIdx("float_reg::xmmLow(0)"), size=4
+    blendxmm xmmh, xmmhm, fpRegIdx("float_reg::xmmHigh(0)"), size=4
+};
+
+def macroop BLENDVPS_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    blendxmm xmml, ufp1, fpRegIdx("float_reg::xmmLow(0)"), size=4
+    blendxmm xmmh, ufp2, fpRegIdx("float_reg::xmmHigh(0)"), size=4
+};
+
+def macroop BLENDVPS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    blendxmm xmml, ufp1, fpRegIdx("float_reg::xmmLow(0)"), size=4
+    blendxmm xmmh, ufp2, fpRegIdx("float_reg::xmmHigh(0)"), size=4
+};
+
+def macroop PBLENDVB_XMM_XMM {
+    blendxmm xmml, xmmlm, fpRegIdx("float_reg::xmmLow(0)"), size=1
+    blendxmm xmmh, xmmhm, fpRegIdx("float_reg::xmmHigh(0)"), size=1
+};
+
+def macroop PBLENDVB_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    blendxmm xmml, ufp1, fpRegIdx("float_reg::xmmLow(0)"), size=1
+    blendxmm xmmh, ufp2, fpRegIdx("float_reg::xmmHigh(0)"), size=1
+};
+
+def macroop PBLENDVB_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    blendxmm xmml, ufp1, fpRegIdx("float_reg::xmmLow(0)"), size=1
+    blendxmm xmmh, ufp2, fpRegIdx("float_reg::xmmHigh(0)"), size=1
+};
 """

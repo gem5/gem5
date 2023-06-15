@@ -46,7 +46,6 @@ namespace gem5
 
 struct SecondChanceRPParams;
 
-GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
 {
 

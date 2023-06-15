@@ -24,8 +24,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# from .abstract_cache_hierarchy import AbstractCacheHierarchy
-
 
 class AbstractTwoLevelCacheHierarchy:
     """
@@ -51,9 +49,9 @@ class AbstractTwoLevelCacheHierarchy:
 
         :type l1i_assoc: int
 
-        :param l1dsize: The size of the LL1 Data cache (e.g. "32kB").
+        :param l1d_size: The size of the L1 Data cache (e.g. "32kB").
 
-        :type l1dsize: str
+        :type l1d_size: str
 
         :param l1d_assoc:
 

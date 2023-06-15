@@ -39,7 +39,7 @@ class TypeFieldStateAST(TypeFieldAST):
         self.pairs_ast = pairs_ast
 
     def __repr__(self):
-        return "[TypeFieldState: %r]" % self.field_id
+        return f"[TypeFieldState: {self.field_id!r}]"
 
     def generate(self, type, **kwargs):
         if not str(type) == "State":
@@ -47,7 +47,7 @@ class TypeFieldStateAST(TypeFieldAST):
 
         # Add enumeration
         if not type.addEnum(self.field_id, self.pairs_ast.pairs):
-            self.error("Duplicate enumeration: %s:%s" % (type, self.field_id))
+            self.error(f"Duplicate enumeration: {type}:{self.field_id}")
 
         # Fill machine info
         machine = self.symtab.state_machine
