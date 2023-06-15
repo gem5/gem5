@@ -2,6 +2,8 @@ This is the gem5 simulator.
 
 The main website can be found at http://www.gem5.org
 
+This is a useless change to the readme.
+
 A good starting point is http://www.gem5.org/about, and for
 more information about building the simulator and getting started
 please see http://www.gem5.org/documentation and
