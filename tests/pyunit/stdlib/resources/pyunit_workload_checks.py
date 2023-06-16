@@ -40,17 +40,7 @@ from gem5.resources.client_api.client_wrapper import ClientWrapper
 from unittest.mock import patch
 from pathlib import Path
 
-mock_config_json1 = {
-    "sources": {
-        "baba": {
-            "url": Path(__file__).parent
-            / "refs/workload-checks-custom-workload.json",
-            "isMongo": False,
-        }
-    },
-}
-
-mock_config_json2 = {
+mock_config_json = {
     "sources": {
         "baba": {
             "url": Path(__file__).parent / "refs/workload-checks.json",
@@ -68,28 +58,18 @@ class CustomWorkloadTestSuite(unittest.TestCase):
     @classmethod
     @patch(
         "gem5.resources.client.clientwrapper",
-        new=ClientWrapper(mock_config_json1),
+        new=ClientWrapper(mock_config_json),
     )
     def setUpClass(cls) -> None:
-        os.environ["GEM5_RESOURCE_JSON"] = os.path.join(
-            os.path.realpath(os.path.dirname(__file__)),
-            "refs",
-            "workload-checks-custom-workload.json",
-        )
-
         cls.custom_workload = CustomWorkload(
             function="set_se_binary_workload",
             parameters={
-                "binary": obtain_resource("x86-hello64-static"),
+                "binary": obtain_resource(
+                    "x86-hello64-static", gem5_version="develop"
+                ),
                 "arguments": ["hello", 6],
             },
         )
-
-    @classmethod
-    def tearDownClass(cls):
-        # Unset the environment variable so this test does not interfere with
-        # others.
-        os.environ["GEM5_RESOURCE_JSON"]
 
     def test_get_function_str(self) -> None:
         # Tests `CustomResource.get_function_str`
@@ -140,7 +120,8 @@ class CustomWorkloadTestSuite(unittest.TestCase):
             "test", self.custom_workload.get_parameters()["binary"]
         )
 
-        # We set the overridden parameter back to it's old valu        self.custom_workload.set_parameter("binary", old_value)
+        # We set the overridden parameter back to it's old value
+        self.custom_workload.set_parameter("binary", old_value)
 
 
 class WorkloadTestSuite(unittest.TestCase):
@@ -151,21 +132,10 @@ class WorkloadTestSuite(unittest.TestCase):
     @classmethod
     @patch(
         "gem5.resources.client.clientwrapper",
-        ClientWrapper(mock_config_json2),
+        ClientWrapper(mock_config_json),
     )
     def setUpClass(cls):
-        os.environ["GEM5_RESOURCE_JSON"] = os.path.join(
-            os.path.realpath(os.path.dirname(__file__)),
-            "refs",
-            "workload-checks.json",
-        )
-        cls.workload = Workload("simple-boot")
-
-    @classmethod
-    def tearDownClass(cls):
-        # Unset the environment variable so this test does not interfere with
-        # others.
-        os.environ["GEM5_RESOURCE_JSON"]
+        cls.workload = Workload("simple-boot", gem5_version="develop")
 
     def test_get_function_str(self) -> None:
         # Tests `Resource.get_function_str`

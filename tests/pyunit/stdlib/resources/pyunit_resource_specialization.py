@@ -62,24 +62,6 @@ class ResourceSpecializationSuite(unittest.TestCase):
     function.
     """
 
-    @classmethod
-    def setUpClass(cls):
-        """Prior to running the suite we set the resource directory to
-        "ref/resource-specialization.json"
-        """
-        os.environ["GEM5_RESOURCE_JSON"] = os.path.join(
-            os.path.realpath(os.path.dirname(__file__)),
-            "refs",
-            "resource-specialization.json",
-        )
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        """After running the suite we unset the gem5-resource JSON file, as to
-        not interfere with others tests.
-        """
-        del os.environ["GEM5_RESOURCE_JSON"]
-
     def get_resource_dir(cls) -> str:
         """To ensure the resources are cached to the same directory as all
         other tests, this function returns the location of the testing
@@ -99,6 +81,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         resource = obtain_resource(
             resource_id="binary-example",
             resource_directory=self.get_resource_dir(),
+            gem5_version="develop",
         )
 
         self.assertIsInstance(resource, BinaryResource)
@@ -114,6 +97,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         resource = obtain_resource(
             resource_id="kernel-example",
             resource_directory=self.get_resource_dir(),
+            gem5_version="develop",
         )
 
         self.assertIsInstance(resource, KernelResource)
@@ -129,6 +113,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         resource = obtain_resource(
             resource_id="bootloader-example",
             resource_directory=self.get_resource_dir(),
+            gem5_version="develop",
         )
 
         self.assertIsInstance(resource, BootloaderResource)
@@ -144,6 +129,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         resource = obtain_resource(
             resource_id="disk-image-example",
             resource_directory=self.get_resource_dir(),
+            gem5_version="develop",
         )
 
         self.assertIsInstance(resource, DiskImageResource)
@@ -159,6 +145,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         resource = obtain_resource(
             resource_id="checkpoint-example",
             resource_directory=self.get_resource_dir(),
+            gem5_version="develop",
         )
 
         self.assertIsInstance(resource, CheckpointResource)
@@ -173,6 +160,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         resource = obtain_resource(
             resource_id="git-example",
             resource_directory=self.get_resource_dir(),
+            gem5_version="develop",
         )
 
         self.assertIsInstance(resource, GitResource)
@@ -185,6 +173,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         resource = obtain_resource(
             resource_id="simpoint-directory-example",
             resource_directory=self.get_resource_dir(),
+            gem5_version="develop",
         )
 
         self.assertIsInstance(resource, SimpointDirectoryResource)
@@ -219,6 +208,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         resource = obtain_resource(
             resource_id="simpoint-example",
             resource_directory=self.get_resource_dir(),
+            gem5_version="develop",
         )
 
         self.assertIsInstance(resource, SimpointResource)
@@ -240,6 +230,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
             resource_id="file-example",
             resource_directory=self.get_resource_dir(),
             resource_version="1.0.0",
+            gem5_version="develop",
         )
 
         self.assertIsInstance(resource, FileResource)
@@ -268,6 +259,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         resource = obtain_resource(
             resource_id="looppoint-pinpoint-csv-resource",
             resource_directory=self.get_resource_dir(),
+            gem5_version="develop",
         )
 
         self.assertIsInstance(resource, LooppointCsvResource)
@@ -289,6 +281,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
             resource_id="looppoint-json-restore-resource-region-1",
             resource_directory=self.get_resource_dir(),
             resource_version="1.0.0",
+            gem5_version="develop",
         )
 
         self.assertIsInstance(resource, LooppointJsonResource)
