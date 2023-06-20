@@ -105,6 +105,17 @@ struct is_iterable<T,
 template <typename T>
 constexpr bool is_iterable_v = is_iterable<T>::value;
 
+// std::hash-enabled type trait
+template <typename, typename = void>
+struct is_std_hash_enabled: std::false_type {};
+
+template <typename T>
+struct is_std_hash_enabled<T,
+    std::void_t<decltype(std::hash<T>())>>: std::true_type {};
+
+template <typename T>
+constexpr bool is_std_hash_enabled_v = is_std_hash_enabled<T>::value;
+
 } // namespace gem5
 
 #endif // BASE_TYPETRAITS_HH
