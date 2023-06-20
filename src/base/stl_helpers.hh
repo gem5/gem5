@@ -31,10 +31,12 @@
 
 #include <algorithm>
 #include <iostream>
+#include <numeric>
 #include <type_traits>
 #include <vector>
 
 #include "base/compiler.hh"
+#include "base/stl_helpers/hash_helpers.hh"
 
 namespace gem5
 {
