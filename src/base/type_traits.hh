@@ -27,8 +27,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BASE_TYPETRAITS_HH__
-#define __BASE_TYPETRAITS_HH__
+#ifndef BASE_TYPETRAITS_HH
+#define BASE_TYPETRAITS_HH
 
 #include <tuple>
 #include <type_traits>
@@ -92,6 +92,19 @@ template<auto F>
 using MemberFunctionArgsTuple_t =
     typename MemberFunctionSignature<decltype(F)>::argsTuple_t;
 
+
+// iterable type trait
+template <typename, typename = void>
+struct is_iterable: std::false_type {};
+
+template <typename T>
+struct is_iterable<T,
+    std::void_t<decltype(begin(std::declval<T>())),
+                decltype(end(std::declval<T>()))>>: std::true_type {};
+
+template <typename T>
+constexpr bool is_iterable_v = is_iterable<T>::value;
+
 } // namespace gem5
 
-#endif // __BASE_TYPETRAITS_HH__
+#endif // BASE_TYPETRAITS_HH
