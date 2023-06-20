@@ -41,6 +41,19 @@
 namespace gem5::stl_helpers
 {
 
+/*
+ * Wrap any object in a Printer object to force using a opExtract_impl printing
+ * function. This is not required for types that do not already enable
+ * operator<< in another namespace. However, to enable the special printing
+ * function for, e.g., raw pointers, those must be wrapped in a Printer.
+ */
+template<typename T>
+struct Printer
+{
+    Printer(const T& value): value{value} {}
+    const T& value;
+};
+
 namespace opExtract_impl
 {
 
@@ -128,6 +141,10 @@ opExtractPrimDisp(std::ostream& os, const std::unique_ptr<T>& p)
     return opExtractPrimDisp(os, p.get());
 }
 
+template <typename T>
+std::ostream&
+opExtractPrimDisp(std::ostream& os, const Printer<T>& p);
+
 template <typename, typename = void>
 constexpr bool isOpExtractNativelySupported = false;
 
@@ -166,6 +183,18 @@ opExtractPrimDisp(std::ostream& os, T* p)
     }
 }
 
+template <typename T>
+std::ostream&
+opExtractPrimDisp(std::ostream& os, const Printer<T>& p)
+{
+    if constexpr (isOpExtractHelped<T>) {
+        return opExtractPrimDisp(os, p.value);
+    } else {
+        return os << p.value;
+    }
+}
+
+
 template<typename T>
 std::ostream&
 opExtractSecDisp(std::ostream& os, const T& v)
@@ -179,7 +208,8 @@ opExtractSecDisp(std::ostream& os, const T& v)
 
 } // namespace opExtract_impl
 
-// Add "using stl_helpers::operator<<" in the scope where you want to use it.
+// use the Printer wrapper or add "using stl_helpers::operator<<" in the scope
+// where you want to use that operator<<.
 template<typename T>
 std::enable_if_t<opExtract_impl::needsDispatch<T>, std::ostream&>
 operator<<(std::ostream& os, const T& v)
