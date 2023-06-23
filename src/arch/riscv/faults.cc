@@ -154,7 +154,8 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         }
 
         // Clear load reservation address
-        tc->getIsaPtr()->clearLoadReservation(tc->contextId());
+        auto isa = static_cast<RiscvISA::ISA*>(tc->getIsaPtr());
+        isa->clearLoadReservation(tc->contextId());
 
         // Set PC to fault handler address
         Addr addr = mbits(tc->readMiscReg(tvec), 63, 2);
