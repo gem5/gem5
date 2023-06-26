@@ -42,6 +42,7 @@ if env['CONF']['BUILD_ISA']:
     Source('dyn_inst.cc')
     Source('fetch.cc')
     Source('free_list.cc')
+    Source('ftq.cc')
     Source('fu_pool.cc')
     Source('iew.cc')
     Source('inst_queue.cc')
@@ -58,6 +59,7 @@ if env['CONF']['BUILD_ISA']:
     Source('thread_state.cc')
 
     DebugFlag('CommitRate')
+    DebugFlag('FTQ')
     DebugFlag('IEW')
     DebugFlag('IQ')
     DebugFlag('LSQ')
