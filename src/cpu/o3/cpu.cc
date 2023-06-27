@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2011-2012, 2014, 2016, 2017, 2019-2020 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
+ * Copyright (c) 2022-2023 The University of Edinburgh
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -80,6 +81,8 @@ CPU::CPU(const BaseO3CPUParams &params)
       instcount(0),
 #endif
       removeInstsThisCycle(false),
+      bac(this, params),
+      ftq(this, params),
       fetch(this, params),
       decode(this, params),
       rename(this, params),
@@ -111,7 +114,7 @@ CPU::CPU(const BaseO3CPUParams &params)
                   params.backComSize + params.forwardComSize,
                   params.activity),
 
-      globalSeqNum(1),
+      globalSeqNum(1), globalFTSeqNum(1),
       system(params.system),
       lastRunningCycle(curCycle()),
       cpuStats(this)
@@ -148,6 +151,7 @@ CPU::CPU(const BaseO3CPUParams &params)
     // to the upper level CPU, and not this CPU.
 
     // Set up Pointers to the activeThreads list for each stage
+    bac.setActiveThreads(&activeThreads);
     fetch.setActiveThreads(&activeThreads);
     decode.setActiveThreads(&activeThreads);
     rename.setActiveThreads(&activeThreads);
@@ -155,6 +159,7 @@ CPU::CPU(const BaseO3CPUParams &params)
     commit.setActiveThreads(&activeThreads);
 
     // Give each of the stages the time buffer they will use.
+    bac.setTimeBuffer(&timeBuffer);
     fetch.setTimeBuffer(&timeBuffer);
     decode.setTimeBuffer(&timeBuffer);
     rename.setTimeBuffer(&timeBuffer);
@@ -162,6 +167,8 @@ CPU::CPU(const BaseO3CPUParams &params)
     commit.setTimeBuffer(&timeBuffer);
 
     // Also setup each of the stages' queues.
+    bac.setFetchTargetQueue(&ftq);
+    fetch.setBACandFTQPtr(&bac, &ftq);
     fetch.setFetchQueue(&fetchQueue);
     decode.setFetchQueue(&fetchQueue);
     commit.setFetchQueue(&fetchQueue);
@@ -312,6 +319,8 @@ CPU::regProbePoints()
         std::pair<DynInstPtr, PacketPtr>>(
                 getProbeManager(), "DataAccessComplete");
 
+    ftq.regProbePoints();
+    bac.regProbePoints();
     fetch.regProbePoints();
     rename.regProbePoints();
     iew.regProbePoints();
@@ -354,6 +363,8 @@ CPU::tick()
 //    activity = false;
 
     //Tick each of the stages
+    bac.tick();
+
     fetch.tick();
 
     decode.tick();
@@ -422,6 +433,7 @@ CPU::startup()
 {
     BaseCPU::startup();
 
+    bac.startupStage();
     fetch.startupStage();
     decode.startupStage();
     iew.startupStage();
@@ -465,6 +477,7 @@ CPU::deactivateThread(ThreadID tid)
         activeThreads.erase(thread_it);
     }
 
+    bac.deactivateThread(tid);
     fetch.deactivateThread(tid);
     commit.deactivateThread(tid);
 }
@@ -628,6 +641,7 @@ CPU::removeThread(ThreadID tid)
     // clear all thread-specific states in each stage of the pipeline
     // since this thread is going to be completely removed from the CPU
     commit.clearStates(tid);
+    bac.clearStates(tid);
     fetch.clearStates(tid);
     decode.clearStates(tid);
     rename.clearStates(tid);
@@ -648,6 +662,7 @@ CPU::removeThread(ThreadID tid)
     assert(iew.instQueue.getCount(tid) == 0);
     assert(iew.ldstQueue.getCount(tid) == 0);
     assert(commit.rob->isEmpty(tid));
+    assert(ftq.isEmpty(tid));
 
     // Reset ROB/IQ/LSQ Entries
 
@@ -786,6 +801,7 @@ void
 CPU::drainSanityCheck() const
 {
     assert(isCpuDrained());
+    bac.drainSanityCheck();
     fetch.drainSanityCheck();
     decode.drainSanityCheck();
     rename.drainSanityCheck();
@@ -800,6 +816,11 @@ CPU::isCpuDrained() const
 
     if (!instList.empty() || !removeList.empty()) {
         DPRINTF(Drain, "Main CPU structures not drained.\n");
+        drained = false;
+    }
+
+    if (!bac.isDrained()) {
+        DPRINTF(Drain, "BAC not drained.\n");
         drained = false;
     }
 
@@ -831,7 +852,12 @@ CPU::isCpuDrained() const
     return drained;
 }
 
-void CPU::commitDrained(ThreadID tid) { fetch.drainStall(tid); }
+void
+CPU::commitDrained(ThreadID tid)
+{
+    bac.drainStall(tid);
+    fetch.drainStall(tid);
+}
 
 void
 CPU::drainResume()
@@ -842,6 +868,7 @@ CPU::drainResume()
     DPRINTF(Drain, "Resuming...\n");
     verifyMemoryMode();
 
+    bac.drainResume();
     fetch.drainResume();
     commit.drainResume();
 
@@ -881,6 +908,7 @@ CPU::takeOverFrom(BaseCPU *oldCPU)
 {
     BaseCPU::takeOverFrom(oldCPU);
 
+    bac.takeOverFrom();
     fetch.takeOverFrom();
     decode.takeOverFrom();
     rename.takeOverFrom();

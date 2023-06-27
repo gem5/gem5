@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012-2014,2018, 2021 Arm Limited
+ * Copyright (c) 2023 The University of Edinburgh
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall

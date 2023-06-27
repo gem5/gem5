@@ -1,4 +1,5 @@
 # Copyright (c) 2016, 2019 ARM Limited
+# Copyright (c) 2022-2023 The University of Edinburgh
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -83,6 +84,8 @@ class BaseO3CPU(BaseCPU):
     )
     cacheLoadPorts = Param.Unsigned(200, "Cache Ports. Constrains loads only.")
 
+    # Backward pipeline delays
+    fetchToBacDelay = Param.Cycles(1, "Fetch to Branch address calc. delay")
     decodeToFetchDelay = Param.Cycles(1, "Decode to fetch delay")
     renameToFetchDelay = Param.Cycles(1, "Rename to fetch delay")
     iewToFetchDelay = Param.Cycles(1, "Issue/Execute/Writeback to fetch delay")
@@ -98,6 +101,9 @@ class BaseO3CPU(BaseCPU):
         1, "Issue/Execute/Writeback to decode delay"
     )
     commitToDecodeDelay = Param.Cycles(1, "Commit to decode delay")
+
+    # Forward pipeline delays
+    bacToFetchDelay = Param.Cycles(1, "Branch address calc. to fetch delay")
     fetchToDecodeDelay = Param.Cycles(1, "Fetch to decode delay")
     decodeWidth = Param.Unsigned(8, "Decode width")
 
@@ -192,3 +198,18 @@ class BaseO3CPU(BaseCPU):
         TournamentBP(numThreads=Parent.numThreads), "Branch Predictor"
     )
     needsTSO = Param.Bool(False, "Enable TSO Memory model")
+
+    numFTQEntries = Param.Unsigned(
+        8, "Number of entries in the Fetch target queue."
+    )
+    fetchTargetWidth = Param.Unsigned(
+        32,
+        "Max width (bytes) of Fetch target. "
+        "Determines the maximum search width per cycle",
+    )
+    minInstSize = Param.Unsigned(
+        1,
+        "Minimum instruction size (bytes). Determines the granularity "
+        "of the instruction minimum search width per cycle",
+    )
+    decoupledFrontEnd = Param.Bool(False, "Enables the decoupled front-end")

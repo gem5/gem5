@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2010-2012, 2014 ARM Limited
+ * Copyright (c) 2022-2023 The University of Edinburgh
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,8 +45,10 @@
 #include "arch/generic/decoder.hh"
 #include "arch/generic/mmu.hh"
 #include "base/statistics.hh"
+#include "cpu/o3/bac.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"
+#include "cpu/o3/ftq.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/pred/bpred_unit.hh"
@@ -179,6 +182,7 @@ class Fetch
         IcacheWaitResponse,
         IcacheWaitRetry,
         IcacheAccessComplete,
+        FTQEmpty,
         NoGoodAddr
     };
 
@@ -219,6 +223,9 @@ class Fetch
 
     /** Sets pointer to time buffer used to communicate to the next stage. */
     void setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr);
+
+    /** Sets pointer to branch address calculation stage and FTQ */
+    void setBACandFTQPtr(BAC *bac_ptr, FTQ * ftq_ptr);
 
     /** Initialize stage. */
     void startupStage();
@@ -275,17 +282,6 @@ class Fetch
     void switchToInactive();
 
     /**
-     * Looks up in the branch predictor to see if the next PC should be
-     * either next PC+=MachInst or a branch target.
-     * @param next_PC Next PC variable passed in by reference.  It is
-     * expected to be set to the current PC; it will be updated with what
-     * the next PC will be.
-     * @param next_NPC Used for ISAs which use delay slots.
-     * @return Whether or not a branch was predicted as taken.
-     */
-    bool lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &pc);
-
-    /**
      * Fetches the cache line that contains the fetch PC.  Returns any
      * fault that happened.  Puts the data into the class variable
      * fetchBuffer, which may not hold the entire fetched cache line.
@@ -316,8 +312,14 @@ class Fetch
                           const DynInstPtr squashInst,
                           const InstSeqNum seq_num, ThreadID tid);
 
+    /** Signal BAC to redirect. */
+    void bacResteer(const PCStateBase &new_pc, ThreadID tid);
+
     /** Checks if a thread is stalled. */
     bool checkStall(ThreadID tid) const;
+
+    /** Checks if the FTQ is ready. Always true for coupled frontend. */
+    bool ftqReady(ThreadID tid, bool &status_change);
 
     /** Updates overall fetch stage status; to be called at the end of each
      * cycle. */
@@ -405,12 +407,18 @@ class Fetch
     /** Wire to get commit's information from backwards time buffer. */
     TimeBuffer<TimeStruct>::wire fromCommit;
 
+    /** Wire used to write any information backward to BAC. */
+    TimeBuffer<TimeStruct>::wire toBAC;
+
     //Might be annoying how this name is different than the queue.
     /** Wire used to write any information heading to decode. */
     TimeBuffer<FetchStruct>::wire toDecode;
 
-    /** BPredUnit. */
-    branch_prediction::BPredUnit *branchPred;
+    /** BPredict. */
+    BAC *bac;
+
+    /** Fetch Target Queue */
+    FTQ *ftq;
 
     std::unique_ptr<PCStateBase> pc[MaxThreads];
 
@@ -442,23 +450,26 @@ class Fetch
     /** Tracks which stages are telling fetch to stall. */
     Stalls stalls[MaxThreads];
 
+    /** Enables the decoupled front-end */
+    const bool decoupledFrontEnd;
+
     /** Decode to fetch delay. */
-    Cycles decodeToFetchDelay;
+    const Cycles decodeToFetchDelay;
 
     /** Rename to fetch delay. */
-    Cycles renameToFetchDelay;
+    const Cycles renameToFetchDelay;
 
     /** IEW to fetch delay. */
-    Cycles iewToFetchDelay;
+    const Cycles iewToFetchDelay;
 
     /** Commit to fetch delay. */
-    Cycles commitToFetchDelay;
+    const Cycles commitToFetchDelay;
 
     /** The width of fetch in instructions. */
-    unsigned fetchWidth;
+    const unsigned fetchWidth;
 
     /** The width of decode in instructions. */
-    unsigned decodeWidth;
+    const unsigned decodeWidth;
 
     /** Is the cache blocked?  If so no threads can access it. */
     bool cacheBlocked;
@@ -541,6 +552,8 @@ class Fetch
         statistics::Scalar squashCycles;
         /** Stat for total number of cycles spent waiting for translation */
         statistics::Scalar tlbCycles;
+        /** Stat for total number of cycles spent waiting for FTQ to fill. */
+        statistics::Scalar ftqStallCycles;
         /** Stat for total number of cycles
          *  spent blocked due to other stages in
          * the pipeline.
