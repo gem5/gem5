@@ -146,6 +146,15 @@ class RiscvMacroInst : public RiscvStaticInst
     {
         panic("Tried to execute a macroop directly!\n");
     }
+
+    void size(size_t newSize) override
+    {
+        for (int i = 0; i < microops.size(); i++) {
+            microops[i]->size(newSize);
+        }
+        _size = newSize;
+    }
+
 };
 
 /**

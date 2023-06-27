@@ -687,6 +687,8 @@ Decoder::decode(ExtMachInst mach_inst, Addr addr)
         (*instMap)[mach_inst] = si;
     }
 
+    si->size(basePC + offset - origPC);
+
     DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n",
             si->getName(), mach_inst);
     return si;
@@ -732,8 +734,7 @@ Decoder::decode(PCStateBase &next_pc)
         start = 0;
     }
 
-    si = decode(emi, origPC);
-    return si;
+    return decode(emi, origPC);
 }
 
 StaticInstPtr
