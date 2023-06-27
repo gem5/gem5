@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2017, 2020 ARM Limited
+ * Copyright (c) 2022-2023 The University of Edinburgh
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -251,6 +252,11 @@ class StaticInst : public RefCounted, public StaticInstFlags
     }
 
     /**
+     * Instruction size in bytes. Necessary for dynamic instruction sizes
+     */
+    size_t _size = 0;
+
+    /**
      * Base mnemonic (e.g., "add").  Used by generateDisassembly()
      * methods.  Also useful to readily identify instructions from
      * within the debugger when #cachedDisassembly has not been
@@ -306,6 +312,9 @@ class StaticInst : public RefCounted, public StaticInstFlags
     {
         panic("buildRetPC not defined!");
     }
+
+    size_t size() const { return _size; }
+    void size(size_t newSize) { _size = newSize; }
 
     /**
      * Return the microop that goes with a particular micropc. This should

@@ -701,8 +701,11 @@ Decoder::decode(PCStateBase &next_pc)
     updateNPC(next_pc.as<PCState>());
 
     StaticInstPtr &si = instBytes->si;
-    if (si)
+    if (si) {
+        si->size(next_pc.as<PCState>().size());
         return si;
+    }
+
 
     // We didn't match in the AddrMap, but we still populated an entry. Fix
     // up its byte masks.
@@ -733,6 +736,7 @@ Decoder::decode(PCStateBase &next_pc)
     }
 
     si = decode(emi, origPC);
+    si->size(next_pc.as<PCState>().size());
     return si;
 }
 

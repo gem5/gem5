@@ -1245,6 +1245,14 @@ Fetch::fetch(bool &status_change)
                     staticInst = curMacroop->fetchMicroop(this_pc.microPC());
                 }
                 newMacro |= staticInst->isLastMicroop();
+
+                /// TODO: Make it proper
+                // This is a hack to make sure that the size of the macroop
+                // is propergated to the microops. This is needed for
+                // for the branch predictor to compute the return address
+                // in the decoupled frontend.
+                if (curMacroop)
+                    staticInst->size(curMacroop->size());
             }
 
             DynInstPtr instruction = buildInst(

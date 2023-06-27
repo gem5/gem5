@@ -208,7 +208,9 @@ Decoder::decode(PCStateBase &_pc)
     instDone = false;
     foundIt = false;
 
-    return decode(this_emi, pc.instAddr());
+    auto si = decode(this_emi, pc.instAddr());
+    si->size(inst_size);
+    return si;
 }
 
 } // namespace ArmISA
