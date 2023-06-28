@@ -27,7 +27,7 @@
 """
 This example runs a simple linux boot. It uses the 'riscv-disk-img' resource.
 It is built with the sources in `src/riscv-fs` in [gem5 resources](
-https://gem5.googlesource.com/public/gem5-resources).
+https://github.com/gem5/gem5-resources).
 
 Characteristics
 ---------------

@@ -94,7 +94,7 @@ rm -rf ${gem5_root}/m5out coAuthorsDBLP.graph 1k_128k.gr result.out
 # Moreover, DNNMark builds a library and thus doesn't have a binary, so we
 # need to build it before we run it.
 # Need to pull this first because HACC's docker requires this path to exist
-git clone https://gem5.googlesource.com/public/gem5-resources \
+git clone https://github.com/gem5/gem5-resources \
     "${gem5_root}/gem5-resources"
 
 
