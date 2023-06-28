@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 ARM Limited
+ * Copyright (c) 2021-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -411,6 +411,12 @@ TBE allocateRequestTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes"
   TBE tbe := TBEs[addr];
 
   initializeTBE(tbe, addr, storTBEs.addEntryToNewSlot());
+  if (fromSequencer(in_msg.type)) {
+    assert(in_msg.txnId == max_outstanding_transactions);
+    tbe.txnId := static_cast(Addr, "value", tbe.storSlot);
+  } else {
+    tbe.txnId := in_msg.txnId;
+  }
 
   assert(tbe.is_snp_tbe == false);
   assert(tbe.is_repl_tbe == false);
@@ -492,6 +498,7 @@ TBE allocateSnoopTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes" {
   tbe.requestor := in_msg.requestor;
   tbe.fwdRequestor := in_msg.fwdRequestor;
   tbe.reqType := in_msg.type;
+  tbe.txnId := in_msg.txnId;
 
   tbe.snpNeedsData := in_msg.retToSrc;
 
@@ -544,6 +551,8 @@ TBE _allocateReplacementTBE(Addr addr, int storSlot), return_by_pointer="yes" {
   tbe.accSize := blockSize;
   tbe.requestor := machineID;
   tbe.reqType := CHIRequestType:null;
+  // This is an internal event and should generate a new TxnId
+  tbe.txnId := static_cast(Addr, "value", storSlot);
 
   tbe.use_DMT := false;
   tbe.use_DCT := false;
@@ -630,6 +639,9 @@ void prepareRequest(TBE tbe, CHIRequestType type, CHIRequestMsg & out_msg) {
   out_msg.seqReq := tbe.seqReq;
   out_msg.is_local_pf := false;
   out_msg.is_remote_pf := tbe.is_local_pf || tbe.is_remote_pf;
+  out_msg.txnId := tbe.txnId;
+
+  assert(tbe.txnId != static_cast(Addr, "value", -1));
 }
 
 void allowRequestRetry(TBE tbe, CHIRequestMsg & out_msg) {
@@ -786,12 +798,12 @@ bool upstreamHasShared(State state) {
 }
 
 void printTBEState(TBE tbe) {
-  DPRINTF(RubySlicc, "STATE: addr: %#x data present=%d valid=%d unique=%d dirty=%d mu_dirty=%d dir ownerV=%d ownerE=%d sharers=%d tobe_I=%d tobe_SC=%d doFill=%d pendAction=%s\n",
+  DPRINTF(RubySlicc, "STATE: addr: %#x data present=%d valid=%d unique=%d dirty=%d mu_dirty=%d dir ownerV=%d ownerE=%d sharers=%d tobe_I=%d tobe_SC=%d doFill=%d pendAction=%s txnId=%d\n",
                       tbe.addr, tbe.dataBlkValid.isFull(), tbe.dataValid, tbe.dataUnique,
                       tbe.dataDirty, tbe.dataMaybeDirtyUpstream, tbe.dir_ownerExists,
                       tbe.dir_ownerIsExcl,tbe.dir_sharers.count(),
                       tbe.dataToBeInvalid, tbe.dataToBeSharedClean,
-                      tbe.doCacheFill, tbe.pendAction);
+                      tbe.doCacheFill, tbe.pendAction, tbe.txnId);
   DPRINTF(RubySlicc, "dataBlkValid = %s\n", tbe.dataBlkValid);
 }
 

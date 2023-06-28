@@ -63,6 +63,7 @@ action(AllocateTBE_Request, desc="") {
         out_msg.usesTxnId := false;
         out_msg.event := Event:SendRetryAck;
         out_msg.retryDest := in_msg.requestor;
+        out_msg.txnId := in_msg.txnId;
         retryQueue.emplace(in_msg.addr,false,in_msg.requestor);
       }
     }
@@ -145,6 +146,7 @@ action(AllocateTBE_SeqRequest, desc="") {
       assert(in_msg.Prefetch == PrefetchBit:No);
       out_msg.is_local_pf := false;
       out_msg.is_remote_pf := false;
+      out_msg.txnId := max_outstanding_transactions;
 
       if ((in_msg.Type == RubyRequestType:LD) ||
           (in_msg.Type == RubyRequestType:IFETCH)) {
@@ -2508,6 +2510,7 @@ action(Send_Data, desc="") {
   enqueue(datOutPort, CHIDataMsg, data_latency) {
     out_msg.addr := tbe.addr;
     out_msg.type := tbe.snd_msgType;
+    out_msg.txnId := tbe.txnId;
 
     int offset := tbe.snd_pendBytes.firstBitSet(true);
     assert(offset < blockSize);
@@ -2564,6 +2567,7 @@ action(Send_CompUC, desc="") {
     out_msg.type := CHIResponseType:Comp_UC;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.txnId := tbe.txnId;
   }
 }
 
@@ -2574,6 +2578,7 @@ action(Send_CompUC_Stale, desc="") {
     out_msg.type := CHIResponseType:Comp_UC;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.txnId := tbe.txnId;
     // We don't know if this is a stale clean unique or a bug, so flag the
     // reponse so the requestor can make further checks
     out_msg.stale := true;
@@ -2587,6 +2592,7 @@ action(Send_CompAck, desc="") {
     out_msg.type := CHIResponseType:CompAck;
     out_msg.responder := machineID;
     out_msg.Destination.add(mapAddressToDownstreamMachine(tbe.addr));
+    out_msg.txnId := tbe.txnId;
   }
 }
 
@@ -2610,6 +2616,7 @@ action(Send_CompDBIDResp, desc="") {
     out_msg.type := CHIResponseType:CompDBIDResp;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.txnId := tbe.txnId;
   }
 }
 
@@ -2667,6 +2674,7 @@ action(Send_RetryAck, desc="") {
       out_msg.type := CHIResponseType:RetryAck;
       out_msg.responder := machineID;
       out_msg.Destination.add(in_msg.retryDest);
+      out_msg.txnId := in_msg.txnId;
     }
   }
 }
