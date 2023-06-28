@@ -14,12 +14,12 @@ several reasons to do this:
  * You will have the satisfaction of contributing back to the community.
 
 The main method for contributing code to gem5 is via our code review website:
-https://gem5-review.googlesource.com/. This documents describes the details of
+https://github.com/gem5/gem5/pulls/. This documents describes the details of
 how to create code changes, upload your changes, have your changes
 reviewed, and finally push your changes to gem5. More information can be found
 from the following sources:
  * http://gem5.org/contributing
- * https://gerrit-review.googlesource.com/Documentation/index.html
+ * https://docs.github.com/en/pull-requests
  * https://git-scm.com/book
 
 
@@ -277,9 +277,7 @@ In github, to submit a review request, you can simply push your git commits to
 a special named branch. For more information on git push see
 https://git-scm.com/docs/git-push.
 
-There are three ways to push your changes to gerrit.
-
-Push change to gerrit review
+Push changes to GitHub
 ----------------------------
 1. Fork the gem5 repository on GitHub from https://github.com/gem5/gem5/.
 2. Create a new branch in your forked repository for your feature or bug fix.
@@ -296,35 +294,7 @@ By default, contributions to gem5 should be made on the develop branch. The
 stable branch is maintained as a stable release branch (i.e., it can be pulled
 to obtain the latest official release of gem5). Creation of additional branches
 is generally discouraged due to their tendency to bloat git repositories with
-abandoned code. However, the creation of new branches is permitted for
-development of a specific feature or improvement if one or more of the
-following criteria are met:
-
-1. The feature/improvement is likely to be of a large size, consisting of many
-commits, with little logic in these commits being contributed separately.
-2. The feature/improvement will be developed over a long period of time.
-3. There is sufficient reason that a feature/improvement should not be part
-of the next gem5 release (e.g., the change should be held within a feature
-branch until ready for the next release, at which point it will be merged
-into the develop branch).
-
-If a branch is required it can only be created by a project maintainer.
-Therefore, if a gem5 contributor desires a separate branch for their work, they
-should request one from the maintainer of the component the work relates to
-(see MAINTAINERS for the list of maintainers and the components they are
-responsible for). **The maintainer shall use their discretion to determine
-whether the creation of a branch is necessary**. If approved, the maintainer
-shall create the branch which the contributor may then use.
-
-Development on a branch within Gerrit functions in exactly the same way as
-contributing to the develop branch. When contributors to a branch are
-satisfied, they should create a merge commit into the develop branch. The
-maintainer should then be notified that the branch they created can now be
-deleted.
-
-**Abandonment of changes within branches may result in these branches being
-removed from the repository. All branches within a repo should be under active
-development.**
+abandoned code.
 
 Reviewing patches
 =================
@@ -332,7 +302,7 @@ Reviewing patches
 Reviewing patches is done on our github instance at
 https://github.com/gem5/gem5/pulls/.
 
-After logging in with your Google account, you will be able to comment, review,
+After logging in with your GitHub account, you will be able to comment, review,
 and push your own patches as well as review others' patches. All gem5 users are
 encouraged to review patches. The only requirement to review patches is to be
 polite and respectful of others.

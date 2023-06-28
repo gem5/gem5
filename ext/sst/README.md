@@ -78,7 +78,7 @@ the `bbl-busybox-boot-exit` resource, which contains an m5 binary, and
 `m5 exit` will be called upon the booting process reaching the early userspace.
 More information about building a bootloader containing a Linux Kernel and a
 customized workload is available at
-[https://gem5.googlesource.com/public/gem5-resources/+/refs/heads/stable/src/riscv-boot-exit-nodisk/].
+[https://github.com/gem5/gem5-resources/tree/stable/src/riscv-boot-exit-nodisk].
 
 ## Running an example simulation (Arm)
 
