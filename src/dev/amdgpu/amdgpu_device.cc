@@ -349,6 +349,22 @@ AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
     }
 
     nbio.writeFrame(pkt, offset);
+
+    /*
+     * Write the value to device memory. This must be done functionally
+     * because this method is called by the PCIDevice::write method which
+     * is a non-timing write.
+     */
+    RequestPtr req = std::make_shared<Request>(offset, pkt->getSize(), 0,
+                                               vramRequestorId());
+    PacketPtr writePkt = Packet::createWrite(req);
+    uint8_t *dataPtr = new uint8_t[pkt->getSize()];
+    std::memcpy(dataPtr, pkt->getPtr<uint8_t>(),
+                pkt->getSize() * sizeof(uint8_t));
+    writePkt->dataDynamic(dataPtr);
+
+    auto system = cp->shader()->gpuCmdProc.system();
+    system->getDeviceMemory(writePkt)->access(writePkt);
 }
 
 void
@@ -489,8 +505,6 @@ AMDGPUDevice::write(PacketPtr pkt)
 
     switch (barnum) {
       case FRAMEBUFFER_BAR:
-          gpuMemMgr->writeRequest(offset, pkt->getPtr<uint8_t>(),
-                                  pkt->getSize(), 0, nullptr);
           writeFrame(pkt, offset);
           break;
       case DOORBELL_BAR:
