@@ -153,6 +153,9 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             tc->setMiscReg(MISCREG_NMIE, 0);
         }
 
+        // Clear load reservation address
+        tc->getIsaPtr()->clearLoadReservation(tc->contextId());
+
         // Set PC to fault handler address
         Addr addr = mbits(tc->readMiscReg(tvec), 63, 2);
         if (isInterrupt() && bits(tc->readMiscReg(tvec), 1, 0) == 1)

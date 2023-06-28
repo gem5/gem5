@@ -64,14 +64,26 @@ class AtlasClient(AbstractClient):
         token = result["access_token"]
         return token
 
-    def get_resources_by_id(self, resource_id: str) -> List[Dict[str, Any]]:
+    def get_resources(
+        self,
+        resource_id: Optional[str] = None,
+        resource_version: Optional[str] = None,
+        gem5_version: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         url = f"{self.url}/action/find"
         data = {
             "dataSource": self.dataSource,
             "collection": self.collection,
             "database": self.database,
-            "filter": {"id": resource_id},
         }
+        filter = {}
+        if resource_id:
+            filter["id"] = resource_id
+            if resource_version is not None:
+                filter["resource_version"] = resource_version
+
+        if filter:
+            data["filter"] = filter
         data = json.dumps(data).encode("utf-8")
 
         headers = {
@@ -88,4 +100,8 @@ class AtlasClient(AbstractClient):
         result = json.loads(response.read().decode("utf-8"))
         resources = result["documents"]
 
-        return resources
+        # I do this as a lazy post-processing step because I can't figure out
+        # how to do this via an Atlas query, which may be more efficient.
+        return self.filter_incompatible_resources(
+            resources_to_filter=resources, gem5_version=gem5_version
+        )

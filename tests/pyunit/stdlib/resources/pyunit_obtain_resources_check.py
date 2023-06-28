@@ -30,12 +30,7 @@ import io
 import contextlib
 from pathlib import Path
 
-from gem5.resources.resource import *
-
-from gem5.resources.looppoint import (
-    LooppointCsvLoader,
-    LooppointJsonLoader,
-)
+from gem5.resources.resource import obtain_resource, BinaryResource
 
 from gem5.isas import ISA
 
@@ -61,24 +56,6 @@ mock_config_json = {
     new=ClientWrapper(mock_config_json),
 )
 class TestObtainResourcesCheck(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        """Prior to running the suite we set the resource directory to
-        "ref/resource-specialization.json"
-        """
-        os.environ["GEM5_RESOURCE_JSON"] = os.path.join(
-            os.path.realpath(os.path.dirname(__file__)),
-            "refs",
-            "obtain-resource.json",
-        )
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        """After running the suite we unset the gem5-resource JSON file, as to
-        not interfere with others tests.
-        """
-        del os.environ["GEM5_RESOURCE_JSON"]
-
     def get_resource_dir(cls) -> str:
         """To ensure the resources are cached to the same directory as all
         other tests, this function returns the location of the testing
@@ -99,26 +76,27 @@ class TestObtainResourcesCheck(unittest.TestCase):
         resource = obtain_resource(
             resource_id="test-binary-resource",
             resource_directory=self.get_resource_dir(),
+            gem5_version="develop",
         )
-        self.assertEquals("2.5.0", resource.get_resource_version())
+        self.assertEquals("1.7.0", resource.get_resource_version())
         self.assertIsInstance(resource, BinaryResource)
-        # self.assertIn(gem5Version, resource.get_gem5_versions())
-        self.assertEquals("test description", resource.get_description())
+        self.assertEquals(
+            "test description v1.7.0", resource.get_description()
+        )
         self.assertEquals("src/test-source", resource.get_source())
         self.assertEquals(ISA.ARM, resource.get_architecture())
 
     def test_obtain_resources_with_version_compatible(self):
-        gem5Version = core.gem5Version
         resource = obtain_resource(
             resource_id="test-binary-resource",
             resource_directory=self.get_resource_dir(),
-            resource_version="1.7.0",
+            resource_version="1.5.0",
+            gem5_version="develop",
         )
-        self.assertEquals("1.7.0", resource.get_resource_version())
+        self.assertEquals("1.5.0", resource.get_resource_version())
         self.assertIsInstance(resource, BinaryResource)
-        # self.assertIn(gem5Version, resource.get_gem5_versions())
         self.assertEquals(
-            "test description v1.7.0", resource.get_description()
+            "test description for 1.5.0", resource.get_description()
         )
         self.assertEquals("src/test-source", resource.get_source())
         self.assertEquals(ISA.ARM, resource.get_architecture())
@@ -143,6 +121,7 @@ class TestObtainResourcesCheck(unittest.TestCase):
             resource_id="test-binary-resource",
             resource_directory=self.get_resource_dir(),
             resource_version="1.5.0",
+            gem5_version="develop",
         )
         self.assertEquals("1.5.0", resource.get_resource_version())
         self.assertIsInstance(resource, BinaryResource)
@@ -157,6 +136,7 @@ class TestObtainResourcesCheck(unittest.TestCase):
             obtain_resource(
                 resource_id="invalid-id",
                 resource_directory=self.get_resource_dir(),
+                gem5_version="develop",
             )
         self.assertTrue(
             "Resource with ID 'invalid-id' not found."
@@ -169,6 +149,7 @@ class TestObtainResourcesCheck(unittest.TestCase):
                 resource_id="invalid-id",
                 resource_directory=self.get_resource_dir(),
                 resource_version="1.7.0",
+                gem5_version="develop",
             )
         self.assertTrue(
             "Resource with ID 'invalid-id' not found."
@@ -182,8 +163,6 @@ class TestObtainResourcesCheck(unittest.TestCase):
                 resource_directory=self.get_resource_dir(),
                 resource_version="3.0.0",
             )
-        print("context.exception: ", context.exception)
-        print(str(context.exception))
         self.assertTrue(
             f"Resource test-binary-resource with version '3.0.0'"
             " not found.\nResource versions can be found at: "
