@@ -81,6 +81,7 @@ machine(MachineType:TCC, "TCC Cache")
     I, AccessPermission:Invalid,    desc="Invalid";
     IV, AccessPermission:Busy,      desc="Waiting for Data";
     WI, AccessPermission:Busy,      desc="Waiting on Writethrough Ack";
+    WIB, AccessPermission:Busy,     desc="Waiting on Writethrough Ack; Will be Bypassed";
     A, AccessPermission:Busy,       desc="Invalid waiting on atomici Data";
   }
 
@@ -289,7 +290,14 @@ machine(MachineType:TCC, "TCC Cache")
             is_slc_set := tbe.isSLCSet;
         }
 
-        if (is_slc_set) {
+        // Whether the SLC bit is set or not, WB acks should invoke the
+        // WBAck event. For cases where a read response will follow a
+        // WBAck (A read bypass evict on a dirty line), the line's TLB
+        // will not be deallocated on WBAck, and the SLC bit will be
+        // checked when the read response is received.
+        if (in_msg.Type == CoherenceResponseType:NBSysWBAck) {
+          trigger(Event:WBAck, in_msg.addr, cache_entry, tbe);
+        } else if (is_slc_set) {
             // If the SLC bit is set, the response needs to bypass the cache
             // and should not be allocated an entry.
             trigger(Event:Bypass, in_msg.addr, cache_entry, tbe);
@@ -300,8 +308,6 @@ machine(MachineType:TCC, "TCC Cache")
             Addr victim :=  L2cache.cacheProbe(in_msg.addr);
             trigger(Event:L2_Repl, victim, getCacheEntry(victim), TBEs.lookup(victim));
           }
-        } else if (in_msg.Type == CoherenceResponseType:NBSysWBAck) {
-          trigger(Event:WBAck, in_msg.addr, cache_entry, tbe);
         } else {
           error("Unexpected Response Message to Core");
         }
@@ -699,6 +705,12 @@ machine(MachineType:TCC, "TCC Cache")
       // woken up
       st_stallAndWaitRequest;
   }
+  transition(WIB, {RdBlk, WrVicBlk, Atomic, WrVicBlkBack}) { //TagArrayRead} {
+      // by putting the stalled requests in a buffer, we reduce resource contention
+      // since they won't try again every cycle and will instead only try again once
+      // woken up
+      st_stallAndWaitRequest;
+  }
   transition(A, {RdBlk, WrVicBlk, WrVicBlkBack}) { //TagArrayRead} {
       // by putting the stalled requests in a buffer, we reduce resource contention
       // since they won't try again every cycle and will instead only try again once
@@ -751,7 +763,7 @@ machine(MachineType:TCC, "TCC Cache")
 // Transition to be called when a read request with SLC flag set arrives at
 // entry in state W. It evicts and invalidates the cache entry before
 // forwarding the request to global memory
-  transition(W, RdBypassEvict, I) {TagArrayRead} {
+  transition(W, RdBypassEvict, WIB) {TagArrayRead} {
     p_profileMiss;
     t_allocateTBE;
     wb_writeBack;
@@ -763,7 +775,7 @@ machine(MachineType:TCC, "TCC Cache")
 // Transition to be called when a read request with SLC flag set arrives at
 // entry in state M. It evicts and invalidates the cache entry before
 // forwarding the request to global memory to main memory
-  transition(M, RdBypassEvict, I) {TagArrayRead} {
+  transition(M, RdBypassEvict, WIB) {TagArrayRead} {
     p_profileMiss;
     t_allocateTBE;
     wb_writeBack;
@@ -785,7 +797,7 @@ machine(MachineType:TCC, "TCC Cache")
 
 // Transition to be called when a read request with SLC flag arrives at entry
 // in transient state. The request stalls until the pending transition is complete.
-  transition({WI, IV}, RdBypassEvict)  {
+  transition({WI, WIB, IV}, RdBypassEvict)  {
     st_stallAndWaitRequest;
   }
 
@@ -900,7 +912,7 @@ transition(I, Atomic, A) {TagArrayRead} {
     i_invL2;
   }
 
-  transition({A, IV, WI}, L2_Repl) {
+  transition({A, IV, WI, WIB}, L2_Repl) {
     i_invL2;
   }
 
@@ -919,7 +931,7 @@ transition(I, Atomic, A) {TagArrayRead} {
     pp_popProbeQueue;
   }
 
-  transition({A, IV, WI}, PrbInv) {
+  transition({A, IV, WI, WIB}, PrbInv) {
     pi_sendProbeResponseInv;
     pp_popProbeQueue;
   }
@@ -972,6 +984,10 @@ transition(I, Atomic, A) {TagArrayRead} {
   transition(WI, WBAck,I) {
     dt_deallocateTBE;
     wada_wakeUpAllDependentsAddr;
+    pr_popResponseQueue;
+  }
+
+  transition(WIB, WBAck,I) {
     pr_popResponseQueue;
   }
 }
