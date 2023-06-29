@@ -2135,6 +2135,16 @@ action(Receive_ReqResp_WUComp, desc="") {
   }
 }
 
+action(Receive_ReqResp_CopyDBID, desc="Copy the rsp DBID into the TBE") {
+  if (tbe.expected_req_resp.receivedRespType(CHIResponseType:DBIDResp) == false &&
+      tbe.expected_req_resp.receivedRespType(CHIResponseType:CompDBIDResp) == false) {
+    error("Received unexpected message");
+  }
+  peek(rspInPort, CHIResponseMsg) {
+    tbe.txnId := in_msg.dbid;
+  }
+}
+
 action(Receive_SnpResp, desc="") {
   assert(tbe.expected_snp_resp.hasExpected());
   peek(rspInPort, CHIResponseMsg) {
@@ -2557,6 +2567,7 @@ action(Send_CompI, desc="") {
     out_msg.type := CHIResponseType:Comp_I;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.dbid := tbe.txnId;
   }
 }
 
@@ -2568,6 +2579,7 @@ action(Send_CompUC, desc="") {
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
     out_msg.txnId := tbe.txnId;
+    out_msg.dbid := tbe.txnId;
   }
 }
 
@@ -2579,6 +2591,7 @@ action(Send_CompUC_Stale, desc="") {
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
     out_msg.txnId := tbe.txnId;
+    out_msg.dbid := tbe.txnId;
     // We don't know if this is a stale clean unique or a bug, so flag the
     // reponse so the requestor can make further checks
     out_msg.stale := true;
@@ -2603,6 +2616,7 @@ action(Send_CompI_Stale, desc="") {
     out_msg.type := CHIResponseType:Comp_I;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.dbid := tbe.txnId;
     // We don't know if this is a stale writeback or a bug, so flag the
     // reponse so the requestor can make further checks
     out_msg.stale := true;
@@ -2617,6 +2631,7 @@ action(Send_CompDBIDResp, desc="") {
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
     out_msg.txnId := tbe.txnId;
+    out_msg.dbid := tbe.txnId;
   }
 }
 
@@ -2627,6 +2642,7 @@ action(Send_CompDBIDResp_Stale, desc="") {
     out_msg.type := CHIResponseType:CompDBIDResp;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.dbid := tbe.txnId;
     // We don't know if this is a stale writeback or a bug, so flag the
     // reponse so the requestor can make further checks
     out_msg.stale := true;
@@ -2640,6 +2656,7 @@ action(Send_DBIDResp, desc="") {
     out_msg.type := CHIResponseType:DBIDResp;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.dbid := tbe.txnId;
   }
 }
 
