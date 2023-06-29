@@ -38,6 +38,10 @@
 #ifndef __MEM_ADDR_MAPPER_HH__
 #define __MEM_ADDR_MAPPER_HH__
 
+#include <vector>
+
+#include "mem/backdoor_manager.hh"
+#include "mem/packet.hh"
 #include "mem/port.hh"
 #include "params/AddrMapper.hh"
 #include "params/RangeAddrMapper.hh"
@@ -76,6 +80,20 @@ class AddrMapper : public SimObject
      * @return the new address (can be unchanged)
      */
     virtual Addr remapAddr(Addr addr) const = 0;
+
+    /**
+     * This function returns a backdoor that fulfills the initiator request,
+     * based on the target backdoor at the first parameter.
+     * Note that this function should return a backdoor in original address
+     * space, while the target backdoor is in remapped address space. Address
+     * reverting logic is probably required in this function.
+     *
+     * @param backdoor the backdoor obtained from target
+     * @param range the initiator request to be fulfilled
+     * @return a backdoor that fulfill the initiator request
+     */
+    virtual MemBackdoorPtr getRevertedBackdoor(MemBackdoorPtr &backdoor,
+                                               const AddrRange &range) = 0;
 
     class AddrMapperSenderState : public Packet::SenderState
     {
@@ -168,10 +186,22 @@ class AddrMapper : public SimObject
             mapper.recvFunctional(pkt);
         }
 
+        void recvMemBackdoorReq(const MemBackdoorReq &req,
+                                MemBackdoorPtr &backdoor) override
+        {
+            mapper.recvMemBackdoorReq(req, backdoor);
+        }
+
         Tick
         recvAtomic(PacketPtr pkt) override
         {
             return mapper.recvAtomic(pkt);
+        }
+
+        Tick
+        recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr& backdoor) override
+        {
+            return mapper.recvAtomicBackdoor(pkt, backdoor);
         }
 
         bool
@@ -209,9 +239,14 @@ class AddrMapper : public SimObject
 
     void recvFunctionalSnoop(PacketPtr pkt);
 
+    void recvMemBackdoorReq(const MemBackdoorReq &req,
+                            MemBackdoorPtr &backdoor);
+
     Tick recvAtomic(PacketPtr pkt);
 
     Tick recvAtomicSnoop(PacketPtr pkt);
+
+    Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr& backdoor);
 
     bool recvTimingReq(PacketPtr pkt);
 
@@ -269,12 +304,19 @@ class RangeAddrMapper : public AddrMapper
     std::vector<AddrRange> remappedRanges;
 
     Addr remapAddr(Addr addr) const override;
+
+    MemBackdoorPtr getRevertedBackdoor(MemBackdoorPtr &backdoor,
+                                       const AddrRange &range) override;
+
     void
     recvRangeChange() override
     {
         // TODO Check that our peer is actually expecting to receive accesses
         // in our output range(s).
     }
+
+  private:
+    BackdoorManager backdoorManager;
 };
 
 } // namespace gem5

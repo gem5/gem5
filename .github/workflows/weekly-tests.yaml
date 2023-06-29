@@ -1,0 +1,176 @@
+# This workflow runs all of the very-long tests within main.py
+
+name: Weekly Tests
+
+on:
+  # Runs every Sunday from 7AM UTC
+  schedule:
+    - cron:  '00 7 * * 6'
+  # Allows us to manually start workflow for testing
+  workflow_dispatch:
+
+jobs:
+  build-gem5:
+    runs-on: [self-hosted, linux, x64, build]
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    outputs:
+      build-name: ${{ steps.artifact-name.outputs.name }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # Scheduled workflows run on the default branch by default. We
+          # therefore need to explicitly checkout the develop branch.
+          ref: develop
+      - id: artifact-name
+        run: echo "name=$(date +"%Y-%m-%d_%H.%M.%S")-ALL" >> $GITHUB_OUTPUT
+      - name: Build gem5
+        run: |
+          scons build/ALL/gem5.opt -j $(nproc)
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.artifact-name.outputs.name }}
+          path: build/ALL/gem5.opt
+          retention-days: 5
+      - run: echo "This job's status is ${{ job.status }}."
+
+# start running the very-long tests
+  testlib-very-long-gem5_library_example_tests:
+    runs-on: [self-hosted, linux, x64, run]
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    needs: [build-gem5]
+    timeout-minutes: 4320 # 3 days
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        # Scheduled workflows run on the default branch by default. We
+        # therefore need to explicitly checkout the develop branch.
+        ref: develop
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{needs.build-gem5.outputs.build-name}}
+        path: build/ALL
+    - run: chmod u+x build/ALL/gem5.opt
+    - name: very-long gem5_library_example_tests
+      working-directory: ${{ github.workspace }}/tests
+      run: ./main.py run gem5/gem5_library_example_tests --length very-long --skip-build -vv -t $(nproc)
+    - name: create zip of results
+      if: success() || failure()
+      run: |
+        apt-get -y install zip
+        zip -r output.zip tests/testing-results
+    - name: upload zip
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      env:
+        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+      with:
+        name: ${{ env.MY_STEP_VAR }}
+        path: output.zip
+        retention-days: 7
+    - run: echo "This job's status is ${{ job.status }}."
+
+
+  testlib-long-gem5-resources:
+    runs-on: [self-hosted, linux, x64, run]
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    needs: [build-gem5]
+    timeout-minutes: 4320 # 3 days
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        # Scheduled workflows run on the default branch by default. We
+        # therefore need to explicitly checkout the develop branch.
+        ref: develop
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{needs.build-gem5.outputs.build-name}}
+        path: build/ALL
+    - run: chmod u+x build/ALL/gem5.opt
+    - name: very-long gem5-resources tests
+      working-directory: ${{ github.workspace }}/tests
+      run: ./main.py run gem5/gem5-resources --length very-long --skip-build -vv -t $(nproc)
+    - name: create zip of results
+      if: success() || failure()
+      run: |
+        apt-get -y install zip
+        zip -r output.zip tests/testing-results
+    - name: upload zip
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      env:
+        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+      with:
+        name: ${{ env.MY_STEP_VAR }}
+        path: output.zip
+        retention-days: 7
+    - run: echo "This job's status is ${{ job.status }}."
+
+  testlib-very-long-parsec-benchmarks:
+    runs-on: [self-hosted, linux, x64, run]
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    needs: build-gem5
+    timeout-minutes: 4320 # 3 days
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        # Scheduled workflows run on the default branch by default. We
+        # therefore need to explicitly checkout the develop branch.
+        ref: develop
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{needs.build-gem5.outputs.build-name}}
+        path: build/ALL
+    - run: chmod u+x build/ALL/gem5.opt
+    - name: very-long x86-boot-tests
+      working-directory: ${{ github.workspace }}/tests
+      run: ./main.py run gem5/x86-boot-tests --length very-long --skip-build -vv -t $(nproc)
+    - name: create zip of results
+      if: success() || failure()
+      run: |
+        apt-get -y install zip
+        zip -r output.zip tests/testing-results
+    - name: upload zip
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      env:
+        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+      with:
+        name: ${{ env.MY_STEP_VAR }}
+        path: output.zip
+        retention-days: 7
+    - run: echo "This job's status is ${{ job.status }}."
+
+  testlib-very-long-x86-boot-tests:
+    runs-on: [self-hosted, linux, x64, run]
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    needs: build-gem5
+    timeout-minutes: 4320 # 3 days
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        # Scheduled workflows run on the default branch by default. We
+        # therefore need to explicitly checkout the develop branch.
+        ref: develop
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{needs.build-gem5.outputs.build-name}}
+        path: build/ALL
+    - run: chmod u+x build/ALL/gem5.opt
+    - name: very-long x86-boot-tests
+      working-directory: ${{ github.workspace }}/tests
+      run: ./main.py run gem5/x86-boot-tests --length very-long --skip-build -vv -t $(nproc)
+    - name: create zip of results
+      if: success() || failure()
+      run: |
+        apt-get -y install zip
+        zip -r output.zip tests/testing-results
+    - name: upload zip
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      env:
+        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+      with:
+        name: ${{ env.MY_STEP_VAR }}
+        path: output.zip
+        retention-days: 7
+    - run: echo "This job's status is ${{ job.status }}."

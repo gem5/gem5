@@ -84,6 +84,19 @@ AddrMapper::recvFunctionalSnoop(PacketPtr pkt)
     pkt->setAddr(orig_addr);
 }
 
+void
+AddrMapper::recvMemBackdoorReq(const MemBackdoorReq &req,
+                               MemBackdoorPtr &backdoor)
+{
+    AddrRange remapped_req_range = AddrRange(remapAddr(req.range().start()),
+                                             remapAddr(req.range().end()));
+    MemBackdoorReq remapped_req(remapped_req_range, req.flags());
+    memSidePort.sendMemBackdoorReq(remapped_req, backdoor);
+    if (backdoor != nullptr) {
+        backdoor = getRevertedBackdoor(backdoor, req.range());
+    }
+}
+
 Tick
 AddrMapper::recvAtomic(PacketPtr pkt)
 {
@@ -101,6 +114,19 @@ AddrMapper::recvAtomicSnoop(PacketPtr pkt)
     pkt->setAddr(remapAddr(orig_addr));
     Tick ret_tick = cpuSidePort.sendAtomicSnoop(pkt);
     pkt->setAddr(orig_addr);
+    return ret_tick;
+}
+
+Tick
+AddrMapper::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr& backdoor)
+{
+    Addr orig_addr = pkt->getAddr();
+    pkt->setAddr(remapAddr(orig_addr));
+    Tick ret_tick = memSidePort.sendAtomicBackdoor(pkt, backdoor);
+    pkt->setAddr(orig_addr);
+    if (backdoor != nullptr) {
+        backdoor = getRevertedBackdoor(backdoor, pkt->getAddrRange());
+    }
     return ret_tick;
 }
 
@@ -206,7 +232,8 @@ AddrMapper::recvRangeChange()
 RangeAddrMapper::RangeAddrMapper(const RangeAddrMapperParams &p) :
     AddrMapper(p),
     originalRanges(p.original_ranges),
-    remappedRanges(p.remapped_ranges)
+    remappedRanges(p.remapped_ranges),
+    backdoorManager(originalRanges, remappedRanges)
 {
     if (originalRanges.size() != remappedRanges.size())
         fatal("AddrMapper: original and shadowed range list must "
@@ -230,6 +257,13 @@ RangeAddrMapper::remapAddr(Addr addr) const
     }
 
     return addr;
+}
+
+MemBackdoorPtr
+RangeAddrMapper::getRevertedBackdoor(MemBackdoorPtr &backdoor,
+                                     const AddrRange &range)
+{
+    return backdoorManager.getRevertedBackdoor(backdoor, range);
 }
 
 AddrRangeList
