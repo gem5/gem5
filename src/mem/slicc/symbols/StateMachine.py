@@ -64,6 +64,7 @@ python_class_map = {
     "DMASequencer": "DMASequencer",
     "RubyPrefetcher": "RubyPrefetcher",
     "Cycles": "Cycles",
+    "Addr": "Addr",
 }
 
 
