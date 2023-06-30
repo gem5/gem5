@@ -275,6 +275,8 @@ class TCC(RubyCache):
 
     def create(self, options):
         self.assoc = options.tcc_assoc
+        self.atomicLatency = options.atomic_alu_latency
+        self.atomicALUs = options.tcc_num_atomic_alus
         if hasattr(options, "bw_scalor") and options.bw_scalor > 0:
             s = options.num_compute_units
             tcc_size = s * 128
@@ -496,6 +498,15 @@ def define_options(parser):
     )
     parser.add_argument(
         "--glc-atomic-latency", type=int, default=1, help="GLC Atomic Latency"
+    )
+    parser.add_argument(
+        "--atomic-alu-latency", type=int, default=0, help="Atomic ALU Latency"
+    )
+    parser.add_argument(
+        "--tcc-num-atomic-alus",
+        type=int,
+        default=64,
+        help="Number of atomic ALUs in the TCC",
     )
     parser.add_argument(
         "--tcp-num-banks",
