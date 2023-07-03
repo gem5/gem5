@@ -94,7 +94,6 @@ for id in ids:
         continue
 
     for resource_version in ids[id]:
-
         resource_json = get_resource_json_obj(
             resource_id=id,
             resource_version=resource_version,
@@ -129,8 +128,8 @@ for id in ids:
                 + f" gem5-resources ({resource_json['md5sum']}).{os.linesep}"
             )
 
-        # Remove the downloaded resource.
-    shutil.rmtree(download_path, ignore_errors=True)
+# Remove the downloaded resource.
+shutil.rmtree(args.download_directory, ignore_errors=True)
 
 # If errors exist, raise an exception highlighting them.
 if errors:
