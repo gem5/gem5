@@ -52,6 +52,7 @@ def EnvDefaults(env):
             "CC",
             "CXX",
             "HOME",
+            "CPATH",
             "LD_LIBRARY_PATH",
             "LIBRARY_PATH",
             "PATH",
