@@ -150,8 +150,9 @@ def template CBasicExecute {{
         std::vector<RegId> indices = {%(regs)s};
         std::stringstream ss;
         ss << mnemonic << ' ';
-        ss << registerName(indices[0]) << ", ";
-        ss << registerName(indices[1]);
+        ss << registerName(indices[0]);
+        if (_numSrcRegs >= 2)
+            ss << ", " << registerName(indices[1]);
         return ss.str();
     }
 }};
