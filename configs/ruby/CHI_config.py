@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2023 ARM Limited
+# Copyright (c) 2021-2024 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -49,6 +49,29 @@ import math
 
 import m5
 from m5.objects import *
+
+
+# Declare caches and controller types used by the protocol
+# Notice tag and data accesses are not concurrent, so the a cache hit
+# latency = tag + data + response latencies.
+# Default response latencies are 1 cy for all controllers.
+# For L1 controllers the mandatoryQueue enqueue latency is always 1 cy and
+# this is deducted from the initial tag read latency for sequencer requests
+# dataAccessLatency may be set to 0 if one wants to consider parallel
+# data and tag lookups
+class L1ICache(RubyCache):
+    dataAccessLatency = 1
+    tagAccessLatency = 1
+
+
+class L1DCache(RubyCache):
+    dataAccessLatency = 2
+    tagAccessLatency = 1
+
+
+class L2Cache(RubyCache):
+    dataAccessLatency = 6
+    tagAccessLatency = 2
 
 
 class Versions:
@@ -575,6 +598,24 @@ class CHI_RNF(CHI_Node):
                 c.downstream_destinations = [cpu.l2]
             cpu._ll_cntrls = [cpu.l2]
 
+    @classmethod
+    def generate(cls, options, ruby_system, cpus):
+        rnfs = [
+            CHI_RNF(
+                [cpu],
+                ruby_system,
+                L1ICache(size=options.l1i_size, assoc=options.l1i_assoc),
+                L1DCache(size=options.l1d_size, assoc=options.l1d_assoc),
+                options.cacheline_size,
+            )
+            for cpu in cpus
+        ]
+        for rnf in rnfs:
+            rnf.addPrivL2Cache(
+                L2Cache(size=options.l2_size, assoc=options.l2_assoc)
+            )
+        return rnfs
+
 
 class CHI_HNF(CHI_Node):
     """
@@ -677,6 +718,13 @@ class CHI_MN(CHI_Node):
 
     def getNetworkSideControllers(self):
         return [self._cntrl]
+
+    @classmethod
+    def generate(cls, options, ruby_system, cpus):
+        """
+        Creates one Misc Node
+        """
+        return [CHI_MN(ruby_system, [cpu.l1d for cpu in cpus])]
 
 
 class CHI_SNF_Base(CHI_Node):
