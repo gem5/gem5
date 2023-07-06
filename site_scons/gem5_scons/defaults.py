@@ -52,6 +52,7 @@ def EnvDefaults(env):
             "CC",
             "CXX",
             "HOME",
+            "CPATH",
             "LD_LIBRARY_PATH",
             "LIBRARY_PATH",
             "PATH",
@@ -67,6 +68,7 @@ def EnvDefaults(env):
             "LINKFLAGS_EXTRA",
             "LANG",
             "LC_CTYPE",
+            "DISPLAY",
         ]
     )
 

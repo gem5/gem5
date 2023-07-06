@@ -151,6 +151,13 @@ def addRunFSOptions(parser):
         help="Exit simulation after running this many kernels",
     )
 
+    parser.add_argument(
+        "--root-partition",
+        type=str,
+        default="/dev/sda1",
+        help="Root partition of disk image",
+    )
+
 
 def runGpuFSSystem(args):
     """
