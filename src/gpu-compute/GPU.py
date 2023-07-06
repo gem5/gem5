@@ -328,6 +328,10 @@ class GPUDispatcher(SimObject):
     cxx_class = "gem5::GPUDispatcher"
     cxx_header = "gpu-compute/dispatcher.hh"
 
+    kernel_exit_events = Param.Bool(
+        False, "Enable exiting sim loop after a kernel"
+    )
+
 
 class GPUCommandProcessor(DmaVirtDevice):
     type = "GPUCommandProcessor"
