@@ -149,7 +149,14 @@ def log_call(logger, command, time, *popenargs, **kwargs):
     if isinstance(command, str):
         cmdstr = command
     else:
-        cmdstr = ' '.join(command)
+        try:
+            command = list(map(str, command))
+            cmdstr = " ".join(command)
+        except TypeError as e:
+            logger.trace(
+                "Argument <command> must be an iterable of string-convertible types"
+            )
+            raise e
 
     logger_callback = logger.trace
     logger.trace('Logging call to command: %s' % cmdstr)

@@ -89,7 +89,7 @@ class SparcLinux : public Linux, public OpenFlagTable<SparcLinux>
         uint64_t st_mtime_nsec;
         uint64_t st_ctimeX;
         uint64_t st_ctime_nsec;
-        int64_t __unused[3];
+        int64_t __unused4[3];
     };
 
     // SPARC receives weird subsignals for several of its signals. If you

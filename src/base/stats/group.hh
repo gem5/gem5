@@ -74,7 +74,6 @@ namespace gem5
 
 #define ADD_STAT(n, ...) n(this, #n, __VA_ARGS__)
 
-GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
 

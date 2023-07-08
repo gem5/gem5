@@ -371,8 +371,10 @@ class RiscvLinux32 : public RiscvLinux, public OpenFlagTable<RiscvLinux32>
               uint64_t stack, uint64_t tls)
     {
         ctc->getIsaPtr()->copyRegsFrom(ptc);
+        if (flags & TGT_CLONE_SETTLS)
+            ctc->setReg(RiscvISA::ThreadPointerReg, sext<32>(tls));
         if (stack)
-            ctc->setReg(RiscvISA::StackPointerReg, stack);
+            ctc->setReg(RiscvISA::StackPointerReg, sext<32>(stack));
     }
 };
 

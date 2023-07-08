@@ -138,6 +138,9 @@ structure(CPURequestMsg, desc="...", interface="Message") {
   bool NoWriteConflict,             default="true", desc="write collided with CAB entry";
   int ProgramCounter,               desc="PC that accesses to this block";
 
+  bool isGLCSet, default="false", desc="GLC flag value in the request";
+  bool isSLCSet, default="false", desc="SLC flag value in the request";
+
   bool functionalRead(Packet *pkt) {
     // Only PUTX messages contains the data block
     if (Type == CoherenceRequestType:VicDirty) {
@@ -248,6 +251,9 @@ structure(ResponseMsg, desc="...", interface="Message") {
   int ProgramCounter,       desc="PC that issues this request";
   bool mispred,              desc="tell TCP if the block should not be bypassed";
 
+  bool isGLCSet, default="false", desc="GLC flag value in the request that triggered response";
+  bool isSLCSet, default="false", desc="SLC flag value in the request that triggered response";
+
 
   bool functionalRead(Packet *pkt) {
     // Only PUTX messages contains the data block
@@ -277,6 +283,8 @@ structure(UnblockMsg, desc="...", interface="Message") {
   bool wasValid, default="false", desc="Was block valid when evicted";
   bool valid, default="false", desc="Is block valid";
   bool validToInvalid, default="false", desc="Was block valid when evicted";
+  bool isGLCSet, default="false", desc="GLC flag value in the request";
+  bool isSLCSet, default="false", desc="SLC flag value in the request";
 
   bool functionalRead(Packet *pkt) {
     return false;
@@ -321,6 +329,8 @@ structure(TriggerMsg, desc="...", interface="Message") {
   TriggerType Type,             desc="Type of trigger";
   CacheId Dest,         default="CacheId_NA", desc="Cache to invalidate";
   int ProgramCounter,           desc="PC that accesses to this block";
+  bool isGLCSet,        default="false", desc="GLC flag value in the request";
+  bool isSLCSet,        default="false", desc="SLC flag value in the request";
 
   bool functionalRead(Packet *pkt) {
     return false;

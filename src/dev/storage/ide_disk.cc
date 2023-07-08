@@ -1072,7 +1072,7 @@ IdeDisk::serialize(CheckpointOut &cp) const
     Tick reschedule = 0;
     Events_t event = None;
 
-    int eventCount = 0;
+    [[maybe_unused]] int eventCount = 0;
 
     if (dmaTransferEvent.scheduled()) {
         reschedule = dmaTransferEvent.when();

@@ -53,10 +53,15 @@ def operand_types {{
     'sf' : 'float',
     'df' : 'double',
     'vc' : 'ArmISA::VecRegContainer',
+    'mc' : 'ArmISA::MatRegContainer',
     # For operations that are implemented as a template
     'x' : 'TPElem',
     'xs' : 'TPSElem',
+    'xs1' : 'TPS1Elem',
+    'xs2' : 'TPS2Elem',
     'xd' : 'TPDElem',
+    'srcA' : 'TPSrcAElem',
+    'srcB' : 'TPSrcBElem',
     'pc' : 'ArmISA::VecPredRegContainer',
     'pb' : 'uint8_t'
 }};
@@ -98,6 +103,10 @@ let {{
     class VecPredReg(VecPredRegOp):
         def __init__(self, idx):
             super().__init__('pc', idx, sort_pri=srtNormal)
+
+    class MatrixReg(MatRegOp):
+        def __init__(self, idx, suffix=''):
+            super().__init__('mc', idx, 'IsMatrix', srtNormal)
 
     class IntRegNPC(IntRegOp):
         @overrideInOperand
@@ -446,6 +455,8 @@ def operands {{
 
     # Predicate register operands
     'GpOp': VecPredReg('gp'),
+    'GpOp1': VecPredReg('gp1'),
+    'GpOp2': VecPredReg('gp2'),
     'POp1': VecPredReg('op1'),
     'POp2': VecPredReg('op2'),
     'PDest': VecPredReg('dest'),
@@ -453,6 +464,9 @@ def operands {{
     'Ffr': VecPredReg('PREDREG_FFR'),
     'FfrAux': VecPredReg('PREDREG_FFR'),
     'PUreg0': VecPredReg('PREDREG_UREG0'),
+
+    # SME ZA Register:
+    'ZA': MatrixReg('0'),
 
     #Abstracted control reg operands
     'MiscDest': CntrlReg('dest'),
@@ -488,6 +502,7 @@ def operands {{
     'LLSCLock': CntrlRegNC('MISCREG_LOCKFLAG'),
     'Dczid' : CntrlRegNC('MISCREG_DCZID_EL0'),
     'PendingDvm': CntrlRegNC('MISCREG_TLBINEEDSYNC'),
+    'Svcr' : CntrlReg('MISCREG_SVCR'),
 
     #Register fields for microops
     'URa' : IntReg('ura'),

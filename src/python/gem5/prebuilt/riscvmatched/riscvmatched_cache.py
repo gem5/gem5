@@ -1,4 +1,4 @@
-# Copyright (c) 2022 The Regents of the University of California
+# Copyright (c) 2023 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,7 @@ from gem5.isas import ISA
 from m5.objects import Cache, L2XBar, BaseXBar, SystemXBar, BadAddr, Port
 
 from gem5.utils.override import *
+from typing import Type
 
 
 class RISCVMatchedCacheHierarchy(
@@ -50,7 +51,7 @@ class RISCVMatchedCacheHierarchy(
     """
 
     A cache setup where each core has a private L1 Data and Instruction Cache,
-    and a private L2 cache.
+    and a shared L2 cache.
     The HiFive board has a partially inclusive cache hierarchy, hence this hierarchy is chosen.
     The details of the cache hierarchy are in Table 7, page 36 of the datasheet.
 
@@ -74,9 +75,9 @@ class RISCVMatchedCacheHierarchy(
         AbstractClassicCacheHierarchy.__init__(self=self)
         AbstractTwoLevelCacheHierarchy.__init__(
             self,
-            l1i_size="32kB",
+            l1i_size="32KiB",
             l1i_assoc=4,
-            l1d_size="32kB",
+            l1d_size="32KiB",
             l1d_assoc=8,
             l2_size=l2_size,
             l2_assoc=16,
@@ -108,16 +109,17 @@ class RISCVMatchedCacheHierarchy(
             for i in range(board.get_processor().get_num_cores())
         ]
         self.l1dcaches = [
-            L1DCache(size=self._l1d_size, assoc=self._l1d_assoc)
+            L1DCache(
+                size=self._l1d_size, assoc=self._l1d_assoc, response_latency=10
+            )
             for i in range(board.get_processor().get_num_cores())
         ]
-        self.l2buses = [
-            L2XBar() for i in range(board.get_processor().get_num_cores())
-        ]
-        self.l2caches = [
-            L2Cache(size=self._l2_size, assoc=self._l2_assoc)
-            for i in range(board.get_processor().get_num_cores())
-        ]
+        self.l2bus = L2XBar()
+
+        self.l2cache = L2Cache(
+            size=self._l2_size, assoc=self._l2_assoc, data_latency=20
+        )
+
         # ITLB Page walk caches
         self.iptw_caches = [
             MMUCache(size="4KiB")
@@ -137,14 +139,10 @@ class RISCVMatchedCacheHierarchy(
             cpu.connect_icache(self.l1icaches[i].cpu_side)
             cpu.connect_dcache(self.l1dcaches[i].cpu_side)
 
-            self.l1icaches[i].mem_side = self.l2buses[i].cpu_side_ports
-            self.l1dcaches[i].mem_side = self.l2buses[i].cpu_side_ports
-            self.iptw_caches[i].mem_side = self.l2buses[i].cpu_side_ports
-            self.dptw_caches[i].mem_side = self.l2buses[i].cpu_side_ports
-
-            self.l2buses[i].mem_side_ports = self.l2caches[i].cpu_side
-
-            self.membus.cpu_side_ports = self.l2caches[i].mem_side
+            self.l1icaches[i].mem_side = self.l2bus.cpu_side_ports
+            self.l1dcaches[i].mem_side = self.l2bus.cpu_side_ports
+            self.iptw_caches[i].mem_side = self.l2bus.cpu_side_ports
+            self.dptw_caches[i].mem_side = self.l2bus.cpu_side_ports
 
             cpu.connect_walker_ports(
                 self.iptw_caches[i].cpu_side, self.dptw_caches[i].cpu_side
@@ -156,6 +154,9 @@ class RISCVMatchedCacheHierarchy(
                 cpu.connect_interrupt(int_req_port, int_resp_port)
             else:
                 cpu.connect_interrupt()
+
+        self.l2bus.mem_side_ports = self.l2cache.cpu_side
+        self.membus.cpu_side_ports = self.l2cache.mem_side
 
     def _setup_io_cache(self, board: AbstractBoard) -> None:
         """Create a cache for coherent I/O connections"""

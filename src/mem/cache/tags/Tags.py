@@ -139,7 +139,7 @@ class FALRU(BaseTags):
     cxx_class = "gem5::FALRU"
 
     min_tracked_cache_size = Param.MemorySize(
-        "128KiB", "Minimum cache size" " for which we track statistics"
+        "128KiB", "Minimum cache size for which we track statistics"
     )
 
     # This tag uses its own embedded indexing

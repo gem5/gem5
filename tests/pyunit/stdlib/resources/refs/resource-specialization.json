@@ -1,0 +1,193 @@
+[
+    {
+        "category": "kernel",
+        "id": "kernel-example",
+        "description": "kernel-example documentation.",
+        "architecture": "RISCV",
+        "is_zipped": false,
+        "md5sum": "60a53c7d47d7057436bf4b9df707a841",
+        "url": "http://dist.gem5.org/dist/develop/kernels/x86/static/vmlinux-5.4.49",
+        "source": "src/linux-kernel",
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "23.0"
+        ]
+    },
+    {
+        "category": "disk-image",
+        "id": "disk-image-example",
+        "description": "disk-image documentation.",
+        "architecture": "X86",
+        "is_zipped": true,
+        "md5sum": "90e363abf0ddf22eefa2c7c5c9391c49",
+        "url": "http://dist.gem5.org/dist/develop/images/x86/ubuntu-18-04/x86-ubuntu.img.gz",
+        "source": "src/x86-ubuntu",
+        "root_partition": "1",
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "23.0"
+        ]
+    },
+    {
+        "category": "binary",
+        "id": "binary-example",
+        "description": "binary-example documentation.",
+        "architecture": "ARM",
+        "is_zipped": false,
+        "md5sum": "71b2cb004fe2cda4556f0b1a38638af6",
+        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
+        "source": "src/simple",
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "23.0"
+        ]
+    },
+    {
+        "category": "bootloader",
+        "id": "bootloader-example",
+        "description": "bootloader documentation.",
+        "is_zipped": false,
+        "md5sum": "71b2cb004fe2cda4556f0b1a38638af6",
+        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "23.0"
+        ]
+    },
+    {
+        "category": "checkpoint",
+        "id": "checkpoint-example",
+        "description": "checkpoint-example documentation.",
+        "architecture": "RISCV",
+        "is_zipped": false,
+        "md5sum": "3a57c1bb1077176c4587b8a3bf4f8ace",
+        "source": null,
+        "is_tar_archive": true,
+        "url": "http://dist.gem5.org/dist/develop/checkpoints/riscv-hello-example-checkpoint.tar",
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "23.0"
+        ]
+    },
+    {
+        "category": "git",
+        "id": "git-example",
+        "description": null,
+        "is_zipped": false,
+        "is_tar_archive": true,
+        "md5sum": "3a57c1bb1077176c4587b8a3bf4f8ace",
+        "url": "http://dist.gem5.org/dist/develop/checkpoints/riscv-hello-example-checkpoint.tar",
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "23.0"
+        ]
+    },
+    {
+        "category": "file",
+        "id": "file-example",
+        "description": null,
+        "is_zipped": false,
+        "md5sum": "2efd144c11829ab18d54eae6371e120a",
+        "url": "http://dist.gem5.org/dist/develop/checkpoints/riscv-hello-example-checkpoint.tar",
+        "source": null,
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "23.0"
+        ]
+    },
+    {
+        "category": "directory",
+        "id": "directory-example",
+        "description": "directory-example documentation.",
+        "is_zipped": false,
+        "md5sum": "3a57c1bb1077176c4587b8a3bf4f8ace",
+        "source": null,
+        "is_tar_archive": true,
+        "url": "http://dist.gem5.org/dist/develop/checkpoints/riscv-hello-example-checkpoint.tar",
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "23.0"
+        ]
+    },
+    {
+        "category": "simpoint-directory",
+        "id": "simpoint-directory-example",
+        "description": "simpoint directory documentation.",
+        "is_zipped": false,
+        "md5sum": "3fcffe3956c8a95e3fb82e232e2b41fb",
+        "source": null,
+        "is_tar_archive": true,
+        "url": "http://dist.gem5.org/dist/develop/simpoints/x86-print-this-15000-simpoints-20221013.tar",
+        "simpoint_interval": 1000000,
+        "warmup_interval": 1000000,
+        "simpoint_file": "simpoint.simpt",
+        "weight_file": "simpoint.weight",
+        "workload_name": "Example Workload",
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "23.0"
+        ]
+    },
+    {
+        "category": "simpoint",
+        "id": "simpoint-example",
+        "description": "simpoint documentation.",
+        "simpoint_interval": 1000000,
+        "warmup_interval": 23445,
+        "simpoint_list": [
+            2,
+            3,
+            4,
+            15
+        ],
+        "weight_list": [
+            0.1,
+            0.2,
+            0.4,
+            0.3
+        ],
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "23.0"
+        ]
+    },
+    {
+        "category": "looppoint-pinpoint-csv",
+        "id": "looppoint-pinpoint-csv-resource",
+        "description": "A looppoint pinpoints csv file.",
+        "is_zipped": false,
+        "md5sum": "199ab22dd463dc70ee2d034bfe045082",
+        "url": "http://dist.gem5.org/dist/develop/pinpoints/x86-matrix-multiply-omp-100-8-global-pinpoints-20230127",
+        "source": null,
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "23.0"
+        ]
+    },
+    {
+        "category": "looppoint-json",
+        "id": "looppoint-json-restore-resource-region-1",
+        "description": "A looppoint json file resource.",
+        "is_zipped": false,
+        "region_id": "1",
+        "md5sum": "efb85ebdf90c5cee655bf2e05ae7692a",
+        "url": "http://dist.gem5.org/dist/develop/looppoints/x86-matrix-multiply-omp-100-8-looppoint-json-20230128",
+        "source": null,
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop",
+            "23.0"
+        ]
+    }
+]

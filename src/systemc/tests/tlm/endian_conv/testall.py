@@ -545,23 +545,16 @@ for txn in txn_generator(nr_txns_to_test):
         else:
             if memory_state != golden_memory_state:
                 raise FragmenterDifference(
-                    """
-fragmenter: %s
+                    f"""
+fragmenter: {fragmenter}
 transaction:
-%s
+{txn}
 start memory:
-%s
+{initial_memory}
 golden memory:
-%s
+{golden_memory_state}
 actual memory:
-%s"""
-                    % (
-                        fragmenter,
-                        txn,
-                        initial_memory,
-                        golden_memory_state,
-                        memory_state,
-                    )
+{memory_state}"""
                 )
 
     print("."),

@@ -25,8 +25,20 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from .abstract_board import AbstractBoard
-from ...resources.resource import AbstractResource
-from gem5.utils.simpoint import SimPoint
+
+from ...resources.resource import (
+    FileResource,
+    AbstractResource,
+    BinaryResource,
+    CheckpointResource,
+    SimpointResource,
+    SimpointDirectoryResource,
+)
+
+from ..processors.switchable_processor import SwitchableProcessor
+
+from gem5.resources.elfie import ELFieInfo
+from gem5.resources.looppoint import Looppoint
 
 from m5.objects import SEWorkload, Process
 
@@ -51,13 +63,14 @@ class SEBinaryWorkload:
 
     def set_se_binary_workload(
         self,
-        binary: AbstractResource,
+        binary: BinaryResource,
         exit_on_work_items: bool = True,
-        stdin_file: Optional[AbstractResource] = None,
+        stdin_file: Optional[FileResource] = None,
         stdout_file: Optional[Path] = None,
         stderr_file: Optional[Path] = None,
+        env_list: Optional[List[str]] = None,
         arguments: List[str] = [],
-        checkpoint: Optional[Union[Path, AbstractResource]] = None,
+        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
     ) -> None:
         """Set up the system to run a specific binary.
 
@@ -70,6 +83,9 @@ class SEBinaryWorkload:
         :param exit_on_work_items: Whether the simulation should exit on work
         items. True by default.
         :param stdin_file: The input file for the binary
+        :param stdout_file: The output file for the binary
+        :param stderr_file: The error output file for the binary
+        :param env_list: The environment variables defined for the binary
         :param arguments: The input arguments for the binary
         :param checkpoint: The checkpoint directory. Used to restore the
         simulation to that checkpoint.
@@ -95,32 +111,49 @@ class SEBinaryWorkload:
             process.output = stdout_file.as_posix()
         if stderr_file is not None:
             process.errout = stderr_file.as_posix()
+        if env_list is not None:
+            process.env = env_list
 
-        for core in self.get_processor().get_cores():
-            core.set_workload(process)
+        if isinstance(self.get_processor(), SwitchableProcessor):
+            # This is a hack to get switchable processors working correctly in
+            # SE mode. The "get_cores" API for processors only gets the current
+            # switched-in cores and, in most cases, this is what the script
+            # required. In the case there are switched-out cores via the
+            # SwitchableProcessor, we sometimes need to apply things to ALL
+            # cores (switched-in or switched-out). In this case we have an
+            # `__all_cores` function. Here we must apply the process to every
+            # core.
+            #
+            # A better API for this which avoids `isinstance` checks would be
+            # welcome.
+            for core in self.get_processor()._all_cores():
+                core.set_workload(process)
+        else:
+            for core in self.get_processor().get_cores():
+                core.set_workload(process)
 
         # Set whether to exit on work items for the se_workload
         self.exit_on_work_items = exit_on_work_items
 
-        # Here we set `self._checkpoint_dir`. This is then used by the
+        # Here we set `self._checkpoint`. This is then used by the
         # Simulator module to setup checkpoints.
         if checkpoint:
             if isinstance(checkpoint, Path):
                 self._checkpoint = checkpoint
             elif isinstance(checkpoint, AbstractResource):
-                self._checkpoint_dir = Path(checkpoint.get_local_path())
+                self._checkpoint = Path(checkpoint.get_local_path())
             else:
                 raise Exception(
-                    "The checkpoint_dir must be None, Path, or "
+                    "The checkpoint must be None, Path, or "
                     "AbstractResource."
                 )
 
     def set_se_simpoint_workload(
         self,
-        binary: AbstractResource,
+        binary: BinaryResource,
         arguments: List[str] = [],
-        simpoint: Union[AbstractResource, SimPoint] = None,
-        checkpoint: Optional[Union[Path, AbstractResource]] = None,
+        simpoint: SimpointResource = None,
+        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
     ) -> None:
         """Set up the system to run a SimPoint workload.
 
@@ -129,28 +162,23 @@ class SEBinaryWorkload:
         * Dynamically linked executables are partially supported when the host
           ISA and the simulated ISA are the same.
 
-        **Warning:** SimPoints only works with one core
+        **Warning:** Simpoints only works with one core
 
         :param binary: The resource encapsulating the binary to be run.
         :param arguments: The input arguments for the binary
-        :param simpoint: The SimPoint object or Resource that contains the list of
+        :param simpoint: The SimpointResource that contains the list of
         SimPoints starting instructions, the list of weights, and the SimPoints
         interval
         :param checkpoint: The checkpoint directory. Used to restore the
         simulation to that checkpoint.
         """
 
-        # convert input to SimPoint if necessary
-        if isinstance(simpoint, AbstractResource):
-            self._simpoint_object = SimPoint(simpoint)
-        else:
-            assert isinstance(simpoint, SimPoint)
-            self._simpoint_object = simpoint
+        self._simpoint_resource = simpoint
 
         if self.get_processor().get_num_cores() > 1:
             warn("SimPoints only works with one core")
         self.get_processor().get_cores()[0]._set_simpoint(
-            inst_starts=self._simpoint_object.get_simpoint_start_insts(),
+            inst_starts=self._simpoint_resource.get_simpoint_start_insts(),
             board_initialized=False,
         )
 
@@ -161,11 +189,87 @@ class SEBinaryWorkload:
             checkpoint=checkpoint,
         )
 
-    def get_simpoint(self) -> SimPoint:
+    def get_simpoint(self) -> SimpointResource:
         """
-        Returns the SimPoint object set. If no SimPoint object has been set an
-        exception is thrown.
+        Returns the SimpointResorce object set. If no SimpointResource object
+        has been set an exception is thrown.
         """
-        if getattr(self, "_simpoint_object", None):
-            return self._simpoint_object
+        if getattr(self, "_simpoint_resource", None):
+            return self._simpoint_resource
         raise Exception("This board does not have a simpoint set.")
+
+    def set_se_looppoint_workload(
+        self,
+        binary: AbstractResource,
+        looppoint: Looppoint,
+        arguments: List[str] = [],
+        checkpoint: Optional[Union[Path, AbstractResource]] = None,
+        region_id: Optional[Union[int, str]] = None,
+    ) -> None:
+        """Set up the system to run a LoopPoint workload.
+
+        **Limitations**
+        * Dynamically linked executables are partially supported when the host
+          ISA and the simulated ISA are the same.
+
+        :param binary: The resource encapsulating the binary to be run.
+        :param looppoint: The LoopPoint object that contain all the information
+        gather from the LoopPoint files and a LoopPointManager that will raise
+        exit events for LoopPoints
+        :param arguments: The input arguments for the binary
+        :param region_id: If set, will only load the Looppoint region
+        corresponding to that ID.
+        """
+
+        assert isinstance(looppoint, Looppoint)
+        self._looppoint_object = looppoint
+        if region_id:
+            self._looppoint_object.set_target_region_id(region_id=region_id)
+        self._looppoint_object.setup_processor(self.get_processor())
+
+        # Call set_se_binary_workload after LoopPoint setup is complete
+        self.set_se_binary_workload(
+            binary=binary,
+            arguments=arguments,
+            checkpoint=checkpoint,
+        )
+
+    def set_se_elfie_workload(
+        self,
+        elfie: AbstractResource,
+        elfie_info: ELFieInfo,
+        arguments: List[str] = [],
+        checkpoint: Optional[Union[Path, AbstractResource]] = None,
+    ) -> None:
+        """Set up the system to run a ELFie workload.
+
+        **Limitations**
+        * Dynamically linked executables are partially supported when the host
+          ISA and the simulated ISA are the same.
+
+        :param elfie: The resource encapsulating the binary elfie to be run.
+        :param elfie_info: The ELFieInfo object that contain all the
+        information for the ELFie
+        :param arguments: The input arguments for the binary
+        """
+
+        assert isinstance(elfie_info, ELFieInfo)
+        self._elfie_info_object = elfie_info
+
+        self._elfie_info_object.setup_processor(self.get_processor())
+
+        # Call set_se_binary_workload after LoopPoint setup is complete
+        self.set_se_binary_workload(
+            binary=elfie,
+            arguments=arguments,
+            checkpoint=checkpoint,
+        )
+
+    def get_looppoint(self) -> Looppoint:
+        """
+        Returns the LoopPoint object set. If no LoopPoint object has been set
+        an exception is thrown.
+        """
+        if getattr(self, "_looppoint_object", None):
+            return self._looppoint_object
+        raise Exception("This board does not have a looppoint set.")

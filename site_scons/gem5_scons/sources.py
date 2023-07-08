@@ -261,13 +261,13 @@ class SourceFile(SourceItem):
         if self.append:
             env = env.Clone()
             env.Append(**self.append)
-        return env.StaticObject(self.tnode)
+        return env.StaticObject(self.tnode.abspath)
 
     def shared(self, env):
         if self.append:
             env = env.Clone()
             env.Append(**self.append)
-        return env.SharedObject(self.tnode)
+        return env.SharedObject(self.tnode.abspath)
 
 
 __all__ = [

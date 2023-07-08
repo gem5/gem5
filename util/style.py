@@ -62,12 +62,11 @@ def verify(
         verifiers = style.verifiers.all_verifiers
 
     if verbose:
-        print("Verifying %s[%s]..." % (filename, regions))
+        print(f"Verifying {filename}[{regions}]...")
     for verifier in [v(ui, opts, base=base) for v in verifiers]:
         if verbose:
             print(
-                "Applying %s (%s)"
-                % (verifier.test_name, verifier.__class__.__name__)
+                f"Applying {verifier.test_name} ({verifier.__class__.__name__})"
             )
         if verifier.apply(filename, regions=regions):
             return False

@@ -46,7 +46,7 @@ namespace gem5
 namespace o3
 {
 
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
 int MemDepUnit::MemDepEntry::memdep_count = 0;
 int MemDepUnit::MemDepEntry::memdep_insert = 0;
 int MemDepUnit::MemDepEntry::memdep_erase = 0;
@@ -83,7 +83,7 @@ MemDepUnit::~MemDepUnit()
         }
     }
 
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
     assert(MemDepEntry::memdep_count == 0);
 #endif
 }
@@ -196,7 +196,7 @@ MemDepUnit::insert(const DynInstPtr &inst)
     // Add the MemDepEntry to the hash.
     memDepHash.insert(
         std::pair<InstSeqNum, MemDepEntryPtr>(inst->seqNum, inst_entry));
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
     MemDepEntry::memdep_insert++;
 #endif
 
@@ -329,7 +329,7 @@ MemDepUnit::insertBarrier(const DynInstPtr &barr_inst)
     // Add the MemDepEntry to the hash.
     memDepHash.insert(
         std::pair<InstSeqNum, MemDepEntryPtr>(barr_inst->seqNum, inst_entry));
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
     MemDepEntry::memdep_insert++;
 #endif
 
@@ -419,7 +419,7 @@ MemDepUnit::completed(const DynInstPtr &inst)
     (*hash_it).second = NULL;
 
     memDepHash.erase(hash_it);
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
     MemDepEntry::memdep_erase++;
 #endif
 }
@@ -494,7 +494,7 @@ MemDepUnit::wakeDependents(const DynInstPtr &inst)
 MemDepUnit::MemDepEntry::MemDepEntry(const DynInstPtr &new_inst) :
     inst(new_inst)
 {
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
     ++memdep_count;
 
     DPRINTF(MemDepUnit,
@@ -508,7 +508,7 @@ MemDepUnit::MemDepEntry::~MemDepEntry()
     for (int i = 0; i < dependInsts.size(); ++i) {
         dependInsts[i] = NULL;
     }
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
     --memdep_count;
 
     DPRINTF(MemDepUnit,
@@ -556,7 +556,7 @@ MemDepUnit::squash(const InstSeqNum &squashed_num, ThreadID tid)
         (*hash_it).second = NULL;
 
         memDepHash.erase(hash_it);
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
         MemDepEntry::memdep_erase++;
 #endif
 
@@ -635,7 +635,7 @@ MemDepUnit::dumpLists()
 
     cprintf("Memory dependence hash size: %i\n", memDepHash.size());
 
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
     cprintf("Memory dependence entries: %i\n", MemDepEntry::memdep_count);
 #endif
 }

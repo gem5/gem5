@@ -88,10 +88,10 @@ for isa in valid_isas:
 
         for cpu in valid_isas[isa]:
             gem5_verify_config(
-                name="cpu_test_{}_{}".format(cpu, workload),
+                name=f"cpu_test_{cpu}_{workload}",
                 verifiers=verifiers,
                 config=joinpath(getcwd(), "run.py"),
-                config_args=["--cpu={}".format(cpu), binary],
+                config_args=[f"--cpu={cpu}", binary],
                 valid_isas=(constants.all_compiled_tag,),
                 fixtures=[workload_binary],
             )

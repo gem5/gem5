@@ -66,8 +66,8 @@ class PortTerminator : public SimObject
     class ReqPort : public RequestPort
     {
       public:
-        ReqPort(const std::string &name, PortTerminator *owner):
-            RequestPort(name, owner)
+        ReqPort(const std::string &name):
+            RequestPort(name)
         {}
       protected:
         bool recvTimingResp(PacketPtr pkt) override
@@ -97,8 +97,8 @@ class PortTerminator : public SimObject
     class RespPort : public ResponsePort
     {
       public:
-        RespPort(const std::string &name, PortTerminator *owner):
-            ResponsePort(name, owner)
+        RespPort(const std::string &name):
+            ResponsePort(name)
         {}
     };
 

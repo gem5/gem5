@@ -193,6 +193,13 @@ def parse_options():
         callback=collect_args,
     )
 
+    option(
+        "-s",
+        action="store_true",
+        help="IGNORED, only for compatibility with python. don't"
+        "add user site directory to sys.path; also PYTHONNOUSERSITE",
+    )
+
     # Statistics options
     group("Statistics Options")
     option(
@@ -276,6 +283,13 @@ def parse_options():
         " to be compressed automatically [Default: %default]",
     )
     option(
+        "--debug-activate",
+        metavar="EXPR[,EXPR]",
+        action="append",
+        split=",",
+        help="Activate EXPR sim objects",
+    )
+    option(
         "--debug-ignore",
         metavar="EXPR",
         action="append",
@@ -334,12 +348,13 @@ def interact(scope):
 
 
 def _check_tracing():
+    import m5
     import _m5.core
 
     if _m5.core.TRACING_ON:
         return
 
-    fatal("Tracing is not enabled.  Compile with TRACING_ON")
+    m5.fatal("Tracing is not enabled.  Compile with TRACING_ON")
 
 
 def main():
@@ -399,14 +414,14 @@ def main():
         done = True
         print("Build information:")
         print()
-        print("gem5 version %s" % defines.gem5Version)
-        print("compiled %s" % defines.compileDate)
+        print(f"gem5 version {defines.gem5Version}")
+        print(f"compiled {defines.compileDate}")
         print("build options:")
         keys = list(defines.buildEnv.keys())
         keys.sort()
         for key in keys:
             val = defines.buildEnv[key]
-            print("    %s = %s" % (key, val))
+            print(f"    {key} = {val}")
         print()
 
     if options.copyright:
@@ -470,27 +485,40 @@ def main():
         print(brief_copyright)
         print()
 
-        print("gem5 version %s" % _m5.core.gem5Version)
-        print("gem5 compiled %s" % _m5.core.compileDate)
+        print(f"gem5 version {_m5.core.gem5Version}")
+        print(f"gem5 compiled {_m5.core.compileDate}")
 
         print(
-            "gem5 started %s" % datetime.datetime.now().strftime("%b %e %Y %X")
+            f"gem5 started {datetime.datetime.now().strftime('%b %e %Y %X')}"
         )
         print(
             "gem5 executing on %s, pid %d"
             % (socket.gethostname(), os.getpid())
         )
 
-        # in Python 3 pipes.quote() is moved to shlex.quote()
-        import pipes
+        def quote(arg: str) -> str:
+            """Quotes a string for printing in a shell. In addition to Unix,
+            this is designed to handle the problematic Windows cases where
+            'shlex.quote' doesn't work"""
 
-        print("command line:", " ".join(map(pipes.quote, sys.argv)))
+            if os.name == "nt" and os.sep == "\\":
+                # If a Windows machine, we manually quote the string.
+                arg = arg.replace('"', '\\"')
+                if re.search("\s", args):
+                    # We quote args which have whitespace.
+                    arg = '"' + arg + '"'
+                return arg
+            import shlex
+
+            return shlex.quote(arg)
+
+        print("command line:", " ".join(map(quote, sys.argv)))
         print()
 
     # check to make sure we can find the listed script
     if not options.c and (not arguments or not os.path.isfile(arguments[0])):
         if arguments and not os.path.isfile(arguments[0]):
-            print("Script %s not found" % arguments[0])
+            print(f"Script {arguments[0]} not found")
 
         options.usage(2)
 
@@ -514,7 +542,7 @@ def main():
     elif options.listener_mode == "on":
         pass
     else:
-        panic("Unhandled listener mode: %s" % options.listener_mode)
+        panic(f"Unhandled listener mode: {options.listener_mode}")
 
     if not options.allow_remote_connections:
         m5.listenersLoopbackOnly()
@@ -534,7 +562,7 @@ def main():
                 off = True
 
             if flag not in debug.flags:
-                print("invalid debug flag '%s'" % flag, file=sys.stderr)
+                print(f"invalid debug flag '{flag}'", file=sys.stderr)
                 sys.exit(1)
 
             if off:
@@ -555,6 +583,10 @@ def main():
         event.mainq.schedule(e, options.debug_end)
 
     trace.output(options.debug_file)
+
+    for activate in options.debug_activate:
+        _check_tracing()
+        trace.activate(activate)
 
     for ignore in options.debug_ignore:
         _check_tracing()

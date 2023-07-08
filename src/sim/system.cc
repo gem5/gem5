@@ -165,7 +165,7 @@ System::Threads::quiesceTick(ContextID id, Tick when)
 int System::numSystemsRunning = 0;
 
 System::System(const Params &p)
-    : SimObject(p), _systemPort("system_port", this),
+    : SimObject(p), _systemPort("system_port"),
       multiThread(p.multi_thread),
       init_param(p.init_param),
       physProxy(_systemPort, p.cache_line_size),
@@ -391,7 +391,7 @@ System::workItemEnd(uint32_t tid, uint32_t workid)
 }
 
 bool
-System::trapToGdb(int signal, ContextID ctx_id) const
+System::trapToGdb(GDBSignal signal, ContextID ctx_id) const
 {
     return workload->trapToGdb(signal, ctx_id);
 }

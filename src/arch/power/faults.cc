@@ -42,7 +42,7 @@ namespace PowerISA
 void
 UnimplementedOpcodeFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    panic_if(tc->getSystemPtr()->trapToGdb(SIGILL, tc->contextId()),
+    panic_if(tc->getSystemPtr()->trapToGdb(GDBSignal::ILL, tc->contextId()),
              "Unimplemented opcode encountered at virtual address %#x\n",
              tc->pcState().instAddr());
 }
@@ -50,14 +50,14 @@ UnimplementedOpcodeFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 void
 AlignmentFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    panic_if(!tc->getSystemPtr()->trapToGdb(SIGBUS, tc->contextId()),
+    panic_if(!tc->getSystemPtr()->trapToGdb(GDBSignal::BUS, tc->contextId()),
              "Alignment fault when accessing virtual address %#x\n", vaddr);
 }
 
 void
 TrapFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    panic_if(tc->getSystemPtr()->trapToGdb(SIGTRAP, tc->contextId()),
+    panic_if(tc->getSystemPtr()->trapToGdb(GDBSignal::TRAP, tc->contextId()),
              "Trap encountered at virtual address %#x\n",
              tc->pcState().instAddr());
 }

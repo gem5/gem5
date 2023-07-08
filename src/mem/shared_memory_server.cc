@@ -34,73 +34,68 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/un.h>
 #include <unistd.h>
 
 #include <algorithm>
 #include <cerrno>
 #include <cstring>
 
+// check if filesystem library is available
+#if defined(__cpp_lib_filesystem) || __has_include(<filesystem>)
+    #include <filesystem>
+#else
+    // This is only reachable if we're using GCC 7 or clang versions 6
+    // through 10 (note: gem5 does not support GCC versions older than
+    // GCC 7 or clang versions older than clang 6.0 as they do not
+    // support the C++17 standard).
+    // If we're using GCC 7 or clang versions 6 through 10, we need to use
+    // <experimental/filesystem>.
+    #include <experimental/filesystem>
+    namespace std {
+        namespace filesystem = experimental::filesystem;
+    }
+#endif
+
 #include "base/logging.hh"
 #include "base/output.hh"
 #include "base/pollevent.hh"
-#include "base/socket.hh"
 
 namespace gem5
 {
 namespace memory
 {
 
-SharedMemoryServer::SharedMemoryServer(const SharedMemoryServerParams& params)
-    : SimObject(params), unixSocketPath(simout.resolve(params.server_path)),
-      system(params.system), serverFd(-1)
+namespace
 {
-    fatal_if(system == nullptr, "Requires a system to share memory from!");
-    // Create a new unix socket.
-    serverFd = ListenSocket::socketCloexec(AF_UNIX, SOCK_STREAM, 0);
-    panic_if(serverFd < 0, "%s: cannot create unix socket: %s", name(),
-             strerror(errno));
-    // Bind to the specified path.
-    sockaddr_un serv_addr = {};
-    serv_addr.sun_family = AF_UNIX;
-    strncpy(serv_addr.sun_path, unixSocketPath.c_str(),
-            sizeof(serv_addr.sun_path) - 1);
-    // If the target path is truncated, warn the user that the actual path is
-    // different and update the target path.
-    if (strlen(serv_addr.sun_path) != unixSocketPath.size()) {
-        warn("%s: unix socket path truncated, expect '%s' but get '%s'",
-             name(), unixSocketPath, serv_addr.sun_path);
-        unixSocketPath = serv_addr.sun_path;
-    }
-    // Ensure the unix socket path to use is not occupied. Also, if there's
-    // actually anything to be removed, warn the user something might be off.
-    bool old_sock_removed = unlink(unixSocketPath.c_str()) == 0;
-    warn_if(old_sock_removed,
-            "%s: the server path %s was occupied and will be replaced. Please "
-            "make sure there is no other server using the same path.",
-            name(), unixSocketPath);
-    int bind_retv = bind(serverFd, reinterpret_cast<sockaddr*>(&serv_addr),
-                         sizeof(serv_addr));
-    fatal_if(bind_retv != 0, "%s: cannot bind unix socket: %s", name(),
-             strerror(errno));
-    // Start listening.
-    int listen_retv = listen(serverFd, 1);
-    fatal_if(listen_retv != 0, "%s: listen failed: %s", name(),
-             strerror(errno));
-    listenSocketEvent.reset(new ListenSocketEvent(serverFd, this));
-    pollQueue.schedule(listenSocketEvent.get());
-    inform("%s: listening at %s", name(), unixSocketPath);
+
+ListenSocketPtr
+buildListenSocket(const std::string &path, const std::string &name)
+{
+    fatal_if(path.empty(), "%s: Empty socket path", name);
+    if (path[0] == '@')
+        return listenSocketUnixAbstractConfig(path.substr(1)).build(name);
+
+    std::filesystem::path p(path);
+    return listenSocketUnixFileConfig(
+            p.parent_path(), p.filename()).build(name);
 }
 
-SharedMemoryServer::~SharedMemoryServer()
+} // anonymous namespace
+
+SharedMemoryServer::SharedMemoryServer(const SharedMemoryServerParams& params)
+    : SimObject(params),
+      system(params.system),
+      listener(buildListenSocket(params.server_path, name()))
 {
-    int unlink_retv = unlink(unixSocketPath.c_str());
-    warn_if(unlink_retv != 0, "%s: cannot unlink unix socket: %s", name(),
-            strerror(errno));
-    int close_retv = close(serverFd);
-    warn_if(close_retv != 0, "%s: cannot close unix socket: %s", name(),
-            strerror(errno));
+    fatal_if(system == nullptr, "Requires a system to share memory from!");
+    listener->listen();
+
+    listenSocketEvent.reset(new ListenSocketEvent(listener->getfd(), this));
+    pollQueue.schedule(listenSocketEvent.get());
+    inform("%s: listening at %s", name(), *listener);
 }
+
+SharedMemoryServer::~SharedMemoryServer() {}
 
 SharedMemoryServer::BaseShmPollEvent::BaseShmPollEvent(
     int fd, SharedMemoryServer* shm_server)
@@ -134,10 +129,7 @@ SharedMemoryServer::BaseShmPollEvent::tryReadAll(void* buffer, size_t size)
 void
 SharedMemoryServer::ListenSocketEvent::process(int revents)
 {
-    panic_if(revents & (POLLERR | POLLNVAL), "%s: listen socket is broken",
-             name());
-    int cli_fd = ListenSocket::acceptCloexec(pfd.fd, nullptr, nullptr);
-    panic_if(cli_fd < 0, "%s: accept failed: %s", name(), strerror(errno));
+    int cli_fd = shmServer->listener->accept();
     inform("%s: accept new connection %d", name(), cli_fd);
     shmServer->clientSocketEvents[cli_fd].reset(
         new ClientSocketEvent(cli_fd, shmServer));

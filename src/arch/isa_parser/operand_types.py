@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2016, 2018-2019 ARM Limited
+# Copyright (c) 2014, 2016, 2018-2019, 2022 ARM Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -286,16 +286,16 @@ class VecRegOperand(RegOperand):
         else:
             ext = dflt_elem_ext
         ctype = self.parser.operandTypeMap[ext]
-        return "\n\t%s %s = 0;" % (ctype, elem_name)
+        return f"\n\t{ctype} {elem_name} = 0;"
 
     def makeDecl(self):
         if not self.is_dest and self.is_src:
-            c_decl = "\t/* Vars for %s*/" % (self.base_name)
+            c_decl = f"\t/* Vars for {self.base_name}*/"
             if hasattr(self, "active_elems"):
                 if self.active_elems:
                     for elem in self.active_elems:
                         c_decl += self.makeDeclElem(elem)
-            return c_decl + "\t/* End vars for %s */\n" % (self.base_name)
+            return c_decl + f"\t/* End vars for {self.base_name} */\n"
         else:
             return ""
 
@@ -308,12 +308,7 @@ class VecRegOperand(RegOperand):
         else:
             ext = dflt_elem_ext
         ctype = self.parser.operandTypeMap[ext]
-        c_read = "\t\t%s& %s = %s[%s];\n" % (
-            ctype,
-            elem_name,
-            self.base_name,
-            elem_spec,
-        )
+        c_read = f"\t\t{ctype}& {elem_name} = {self.base_name}[{elem_spec}];\n"
         return c_read
 
     def makeReadW(self):
@@ -346,7 +341,7 @@ class VecRegOperand(RegOperand):
         else:
             ext = dflt_elem_ext
         ctype = self.parser.operandTypeMap[ext]
-        c_read = "\t\t%s = %s[%s];\n" % (elem_name, name, elem_spec)
+        c_read = f"\t\t{elem_name} = {name}[{elem_spec}];\n"
         return c_read
 
     def makeRead(self):
@@ -445,6 +440,69 @@ class VecPredRegOperand(RegOperand):
 class VecPredRegOperandDesc(RegOperandDesc):
     def __init__(self, *args, **kwargs):
         super().__init__("vecPredRegClass", VecPredRegOperand, *args, **kwargs)
+
+
+class MatRegOperand(RegOperand):
+    reg_class = "MatRegClass"
+
+    def __init__(self, parser, full_name, ext, is_src, is_dest):
+        super().__init__(parser, full_name, ext, is_src, is_dest)
+
+    def makeDecl(self):
+        return ""
+
+    def makeReadW(self):
+        c_readw = (
+            f"\t\tauto &tmp_d{self.dest_reg_idx} = \n"
+            f"\t\t    *({self.parser.namespace}::MatRegContainer *)\n"
+            f"\t\t    xc->getWritableRegOperand(this, \n"
+            f"\t\t        {self.dest_reg_idx});\n"
+            f"\t\tauto &{self.base_name} = tmp_d{self.dest_reg_idx};\n"
+        )
+
+        return c_readw
+
+    def makeRead(self):
+        name = self.base_name
+        if self.is_dest and self.is_src:
+            name += "_merger"
+
+        c_read = (
+            f"\t\t{self.parser.namespace}::MatRegContainer "
+            f"\t\t        tmp_s{self.src_reg_idx};\n"
+            f"\t\txc->getRegOperand(this, {self.src_reg_idx},\n"
+            f"\t\t        &tmp_s{self.src_reg_idx});\n"
+            f"\t\tauto &{name} = tmp_s{self.src_reg_idx};\n"
+        )
+
+        # The following is required due to the way that the O3 CPU
+        # works. The ZA register is seen as two physical registers; one
+        # for reading from and one for writing to. We need to make sure
+        # to copy the data from the read-only copy to the writable
+        # reference (the destination). Failure to do this results in
+        # data loss for the O3 CPU. Other CPU models don't appear to
+        # require this.
+        if self.is_dest and self.is_src:
+            c_read += f"{self.base_name} = {name};"
+
+        return c_read
+
+    def makeWrite(self):
+        return f"""
+        if (traceData) {{
+            traceData->setData({self.reg_class}, &tmp_d{self.dest_reg_idx});
+        }}
+        """
+
+    def finalize(self):
+        super().finalize()
+        if self.is_dest:
+            self.op_rd = self.makeReadW() + self.op_rd
+
+
+class MatRegOperandDesc(RegOperandDesc):
+    def __init__(self, *args, **kwargs):
+        super().__init__("matRegClass", MatRegOperand, *args, **kwargs)
 
 
 class ControlRegOperand(Operand):
@@ -547,10 +605,7 @@ class PCStateOperand(Operand):
     def makeWrite(self):
         if self.reg_spec:
             # A component of the PC state.
-            return "__parserAutoPCState.%s(%s);\n" % (
-                self.reg_spec,
-                self.base_name,
-            )
+            return f"__parserAutoPCState.{self.reg_spec}({self.base_name});\n"
         else:
             # The whole PC state itself.
             return f"xc->pcState({self.base_name});\n"
@@ -561,7 +616,7 @@ class PCStateOperand(Operand):
             ctype = self.ctype
         # Note that initializations in the declarations are solely
         # to avoid 'uninitialized variable' errors from the compiler.
-        return "%s %s = 0;\n" % (ctype, self.base_name)
+        return f"{ctype} {self.base_name} = 0;\n"
 
     def isPCState(self):
         return 1

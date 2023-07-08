@@ -88,7 +88,7 @@ def create(args):
     """Create and configure the system object."""
 
     if args.script and not os.path.isfile(args.script):
-        print("Error: Bootscript %s does not exist" % args.script)
+        print(f"Error: Bootscript {args.script} does not exist")
         sys.exit(1)
 
     cpu_class = cpu_types[args.cpu][0]
@@ -128,8 +128,14 @@ def create(args):
 
     # Add CPU clusters to the system
     system.cpu_cluster = [
-        devices.CpuCluster(
-            system, args.num_cores, args.cpu_freq, "1.0V", *cpu_types[args.cpu]
+        devices.ArmCpuCluster(
+            system,
+            args.num_cores,
+            args.cpu_freq,
+            "1.0V",
+            *cpu_types[args.cpu],
+            tarmac_gen=args.tarmac_gen,
+            tarmac_dest=args.tarmac_dest,
         )
     ]
 
@@ -163,13 +169,18 @@ def create(args):
         # memory layout.
         "norandmaps",
         # Tell Linux where to find the root disk image.
-        "root=%s" % args.root_device,
+        f"root={args.root_device}",
         # Mount the root disk read-write by default.
         "rw",
         # Tell Linux about the amount of physical memory present.
-        "mem=%s" % args.mem_size,
+        f"mem={args.mem_size}",
     ]
     system.workload.command_line = " ".join(kernel_cmd)
+
+    if args.with_pmu:
+        for cluster in system.cpu_cluster:
+            interrupt_numbers = [args.pmu_ppi_number] * len(cluster)
+            cluster.addPMUs(interrupt_numbers)
 
     return system
 
@@ -177,7 +188,7 @@ def create(args):
 def run(args):
     cptdir = m5.options.outdir
     if args.checkpoint:
-        print("Checkpoint directory: %s" % cptdir)
+        print(f"Checkpoint directory: {cptdir}")
 
     while True:
         event = m5.simulate()
@@ -188,10 +199,17 @@ def run(args):
             m5.checkpoint(os.path.join(cpt_dir))
             print("Checkpoint done.")
         else:
-            print(exit_msg, " @ ", m5.curTick())
+            print(f"{exit_msg} ({event.getCode()}) @ {m5.curTick()}")
             break
 
-    sys.exit(event.getCode())
+
+def arm_ppi_arg(int_num: int) -> int:
+    """Argparse argument parser for valid Arm PPI numbers."""
+    # PPIs (1056 <= int_num <= 1119) are not yet supported by gem5
+    int_num = int(int_num)
+    if 16 <= int_num <= 31:
+        return int_num
+    raise ValueError(f"{int_num} is not a valid Arm PPI number")
 
 
 def main():
@@ -219,9 +237,7 @@ def main():
         "--root-device",
         type=str,
         default=default_root_device,
-        help="OS device name for root partition (default: {})".format(
-            default_root_device
-        ),
+        help=f"OS device name for root partition (default: {default_root_device})",
     )
     parser.add_argument(
         "--script", type=str, default="", help="Linux bootscript"
@@ -258,6 +274,29 @@ def main():
         type=str,
         default="2GB",
         help="Specify the physical memory size",
+    )
+    parser.add_argument(
+        "--tarmac-gen",
+        action="store_true",
+        help="Write a Tarmac trace.",
+    )
+    parser.add_argument(
+        "--tarmac-dest",
+        choices=TarmacDump.vals,
+        default="stdoutput",
+        help="Destination for the Tarmac trace output. [Default: stdoutput]",
+    )
+    parser.add_argument(
+        "--with-pmu",
+        action="store_true",
+        help="Add a PMU to each core in the cluster.",
+    )
+    parser.add_argument(
+        "--pmu-ppi-number",
+        type=arm_ppi_arg,
+        default=23,
+        help="The number of the PPI to use to connect each PMU to its core. "
+        "Must be an integer and a valid PPI number (16 <= int_num <= 31).",
     )
     parser.add_argument("--checkpoint", action="store_true")
     parser.add_argument("--restore", type=str, default=None)

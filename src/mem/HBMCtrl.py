@@ -46,5 +46,3 @@ class HBMCtrl(MemCtrl):
     # gives the best results with following min_r/w_per_switch
     min_reads_per_switch = 64
     min_writes_per_switch = 64
-
-    partitioned_q = Param.Bool(False, "split queues for pseudo channels")

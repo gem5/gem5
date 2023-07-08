@@ -57,6 +57,38 @@ class ImmOp64 : public ArmISA::ArmStaticInst
             Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
+class RegOp64 : public ArmISA::ArmStaticInst
+{
+  protected:
+    RegIndex op1;
+
+    RegOp64(const char *mnem, ArmISA::ExtMachInst _machInst,
+            OpClass __opClass, RegIndex _op1) :
+        ArmISA::ArmStaticInst(mnem, _machInst, __opClass), op1(_op1)
+    {}
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class RegImmImmOp64 : public ArmISA::ArmStaticInst
+{
+  protected:
+    RegIndex op1;
+    uint64_t imm1;
+    uint64_t imm2;
+
+    RegImmImmOp64(const char *mnem, ArmISA::ExtMachInst _machInst,
+                  OpClass __opClass, RegIndex _op1,
+                  uint64_t _imm1, uint64_t _imm2) :
+        ArmISA::ArmStaticInst(mnem, _machInst, __opClass),
+        op1(_op1), imm1(_imm1), imm2(_imm2)
+    {}
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
 class RegRegImmImmOp64 : public ArmISA::ArmStaticInst
 {
   protected:

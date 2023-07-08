@@ -26,3 +26,6 @@ c3bd8eb1214cbebbc92c7958b80aa06913bce3ba
 # A commit which ran Python Black on all Python files.
 # https://gem5-review.googlesource.com/c/public/gem5/+/47024
 787204c92d876dd81357b75aede52d8ef5e053d3
+
+# A commit which ran flynt all Python files.
+e73655d038cdfa68964109044e33c9a6e7d85ac9

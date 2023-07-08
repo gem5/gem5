@@ -68,6 +68,14 @@ output(const char *filename)
 }
 
 static void
+activate(const char *expr)
+{
+    ObjectMatch activate(expr);
+
+    trace::getDebugLogger()->addActivate(activate);
+}
+
+static void
 ignore(const char *expr)
 {
     ObjectMatch ignore(expr);
@@ -121,6 +129,7 @@ pybind_init_debug(py::module_ &m_native)
     py::module_ m_trace = m_native.def_submodule("trace");
     m_trace
         .def("output", &output)
+        .def("activate", &activate)
         .def("ignore", &ignore)
         .def("enable", &trace::enable)
         .def("disable", &trace::disable)

@@ -136,7 +136,7 @@ def _include_matcher_main():
         base, ext = m.groups()
         (keyword, fname, extra) = base_matcher(context, line)
         try:
-            if fname == "%s.%s" % (base, header_map[ext]):
+            if fname == f"{base}.{header_map[ext]}":
                 return (keyword, fname, extra)
         except KeyError:
             pass
@@ -342,6 +342,6 @@ if __name__ == "__main__":
             dir_ignore=args.dir_ignore,
         ):
             if args.dry_run:
-                print("{}: {}".format(filename, language))
+                print(f"{filename}: {language}")
             else:
                 update_file(filename, filename, language, SortIncludes())

@@ -55,7 +55,7 @@ class PioDevice(ClockedObject):
     def generateBasicPioDeviceNode(
         self, state, name, pio_addr, size, interrupts=None
     ):
-        node = FdtNode("%s@%x" % (name, int(pio_addr)))
+        node = FdtNode(f"{name}@{int(pio_addr):x}")
         node.append(
             FdtPropertyWords(
                 "reg", state.addrCells(pio_addr) + state.sizeCells(size)

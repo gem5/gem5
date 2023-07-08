@@ -39,7 +39,7 @@ class LocalVariableAST(StatementAST):
         self.pointer = pointer
 
     def __repr__(self):
-        return "[LocalVariableAST: %r %r]" % (self.type_ast, self.ident)
+        return f"[LocalVariableAST: {self.type_ast!r} {self.ident!r}]"
 
     @property
     def name(self):
@@ -55,7 +55,7 @@ class LocalVariableAST(StatementAST):
 
     def generate(self, code, **kwargs):
         type = self.type_ast.type
-        ident = "%s" % self.ident
+        ident = f"{self.ident}"
 
         # Add to symbol table
         v = Var(
@@ -72,7 +72,7 @@ class LocalVariableAST(StatementAST):
                 and (type["interface"] == "AbstractCacheEntry")
             )
         ):
-            code += "%s* %s" % (type.c_ident, ident)
+            code += f"{type.c_ident}* {ident}"
         else:
-            code += "%s %s" % (type.c_ident, ident)
+            code += f"{type.c_ident} {ident}"
         return type

@@ -149,6 +149,20 @@ TEST(SatCounterTest, Saturate)
     ASSERT_TRUE(counter.isSaturated());
 }
 
+TEST(SatCounterTest, Saturate16)
+{
+    const unsigned bits = 14;
+    const unsigned max_value = (1 << bits) - 1;
+    SatCounter16 counter(bits);
+    counter++;
+    ASSERT_FALSE(counter.isSaturated());
+
+    // Make sure the value added is what was missing to saturate
+    const unsigned diff = counter.saturate();
+    ASSERT_EQ(diff, max_value - 1);
+    ASSERT_TRUE(counter.isSaturated());
+}
+
 /**
  * Test back and forth against an int.
  */

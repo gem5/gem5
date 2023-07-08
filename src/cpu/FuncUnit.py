@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2017-2018 ARM Limited
+# Copyright (c) 2010, 2017-2018, 2020, 2022 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -62,6 +62,7 @@ class OpClass(Enum):
         "SimdMisc",
         "SimdMult",
         "SimdMultAcc",
+        "SimdMatMultAcc",
         "SimdShift",
         "SimdShiftAcc",
         "SimdDiv",
@@ -74,6 +75,7 @@ class OpClass(Enum):
         "SimdFloatMisc",
         "SimdFloatMult",
         "SimdFloatMultAcc",
+        "SimdFloatMatMultAcc",
         "SimdFloatSqrt",
         "SimdReduceAdd",
         "SimdReduceAlu",
@@ -89,12 +91,34 @@ class OpClass(Enum):
         "SimdShaSigma2",
         "SimdShaSigma3",
         "SimdPredAlu",
+        "Matrix",
+        "MatrixMov",
+        "MatrixOP",
         "MemRead",
         "MemWrite",
         "FloatMemRead",
         "FloatMemWrite",
         "IprAccess",
         "InstPrefetch",
+        "VectorUnitStrideLoad",
+        "VectorUnitStrideStore",
+        "VectorUnitStrideMaskLoad",
+        "VectorUnitStrideMaskStore",
+        "VectorStridedLoad",
+        "VectorStridedStore",
+        "VectorIndexedLoad",
+        "VectorIndexedStore",
+        "VectorUnitStrideFaultOnlyFirstLoad",
+        "VectorWholeRegisterLoad",
+        "VectorWholeRegisterStore",
+        "VectorIntegerArith",
+        "VectorFloatArith",
+        "VectorFloatConvert",
+        "VectorIntegerReduce",
+        "VectorFloatReduce",
+        "VectorMisc",
+        "VectorIntegerExtension",
+        "VectorConfig",
     ]
 
 

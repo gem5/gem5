@@ -36,7 +36,7 @@ class LiteralExprAST(ExprAST):
         self.type = type
 
     def __repr__(self):
-        return "[Literal: %s]" % self.literal
+        return f"[Literal: {self.literal}]"
 
     def generate(self, code, **kwargs):
         fix = code.nofix()
@@ -51,6 +51,6 @@ class LiteralExprAST(ExprAST):
         type = self.symtab.find(self.type, Type)
         if type is None:
             # Can't find the type
-            self.error("Internal: can't primitive type '%s'" % self.type)
+            self.error(f"Internal: can't primitive type '{self.type}'")
 
         return type

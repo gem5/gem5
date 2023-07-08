@@ -56,6 +56,10 @@ component GIC
         // Outgoing wake requests.
         gic.wake_request => self.wake_request;
 
+        // Reset signals.
+        self.normal_reset => gic.reset;
+        self.po_reset => gic.po_reset;
+
         // Internal ports for PPI and SPI programmatic access.
         self.ppi_0 => gic.ppi_in_0;
         self.ppi_1 => gic.ppi_in_1;
@@ -404,6 +408,9 @@ component GIC
             spi[num].setValue(state);
         }
     }
+
+    slave port<Signal> normal_reset;
+    slave port<Signal> po_reset;
 
     internal slave port<Signal> spi[988];
 

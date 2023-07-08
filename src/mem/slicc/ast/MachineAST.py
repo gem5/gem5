@@ -39,16 +39,16 @@ class MachineAST(DeclAST):
         self.decls = decls
 
     def __repr__(self):
-        return "[Machine: %r]" % self.ident
+        return f"[Machine: {self.ident!r}]"
 
     def files(self, parent=None):
         s = set(
             (
-                "%s_Controller.cc" % self.ident,
-                "%s_Controller.hh" % self.ident,
-                "%s_Controller.py" % self.ident,
-                "%s_Transitions.cc" % self.ident,
-                "%s_Wakeup.cc" % self.ident,
+                f"{self.ident}_Controller.cc",
+                f"{self.ident}_Controller.hh",
+                f"{self.ident}_Controller.py",
+                f"{self.ident}_Transitions.cc",
+                f"{self.ident}_Wakeup.cc",
             )
         )
 
@@ -83,4 +83,4 @@ class MachineAST(DeclAST):
         mtype = self.ident
         machine_type = self.symtab.find("MachineType", Type)
         if not machine_type.checkEnum(mtype):
-            self.error("Duplicate machine name: %s:%s" % (machine_type, mtype))
+            self.error(f"Duplicate machine name: {machine_type}:{mtype}")

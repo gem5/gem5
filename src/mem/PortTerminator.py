@@ -35,8 +35,8 @@ class PortTerminator(SimObject):
     cxx_class = "gem5::PortTerminator"
 
     req_ports = VectorRequestPort(
-        "Vector port for connecting terminating " "response ports."
+        "Vector port for connecting terminating response ports."
     )
     resp_ports = VectorResponsePort(
-        "Vector port for terminating " "request ports."
+        "Vector port for terminating request ports."
     )

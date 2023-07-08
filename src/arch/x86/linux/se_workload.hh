@@ -96,7 +96,6 @@ class EmuLinux : public SEWorkload
 
 } // namespace X86ISA
 
-GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
 namespace guest_abi
 {
 

@@ -33,28 +33,26 @@
 #include <amba_pv.h>
 #pragma GCC diagnostic pop
 
-#include "dev/intpin.hh"
+#include "sim/signal.hh"
 
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
 
-class SignalSender : public IntSinkPinBase
+class SignalSender : public SignalSinkPort<bool>
 {
   public:
     amba_pv::signal_master_port<bool> signal_out;
 
     SignalSender(const std::string &_name, PortID _id) :
-        IntSinkPinBase(_name, _id, 0),
-        signal_out((_name + ".sig").c_str())
-    {}
-
-  private:
-    void raiseOnDevice() override { signal_out.set_state(id, true); }
-    void lowerOnDevice() override { signal_out.set_state(id, false); }
+        SignalSinkPort(_name, _id), signal_out((_name + ".sig").c_str())
+    {
+        onChange([this](const bool &new_val) {
+            signal_out.set_state(id, new_val);
+        });
+    }
 };
 
 } // namespace fastmodel

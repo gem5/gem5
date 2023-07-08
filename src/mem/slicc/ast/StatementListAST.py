@@ -36,7 +36,7 @@ class StatementListAST(AST):
         self.statements = statements
 
     def __repr__(self):
-        return "[StatementListAST: %r]" % self.statements
+        return f"[StatementListAST: {self.statements!r}]"
 
     def generate(self, code, return_type, **kwargs):
         for statement in self.statements:

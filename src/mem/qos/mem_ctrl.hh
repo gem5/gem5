@@ -64,7 +64,6 @@ namespace gem5
 namespace memory
 {
 
-GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
 
@@ -243,7 +242,7 @@ class MemCtrl : public ClockedObject
      * Record statistics on turnarounds based on
      * busStateNext and busState values
      */
-    void recordTurnaroundStats();
+    void recordTurnaroundStats(BusState busState, BusState busStateNext);
 
     /**
      * Escalates/demotes priority of all packets

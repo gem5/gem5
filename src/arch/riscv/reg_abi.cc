@@ -39,5 +39,11 @@ const std::vector<RegId> RegABI64::ArgumentRegs = {
     int_reg::A4, int_reg::A5, int_reg::A6
 };
 
+const std::vector<RegId> RegABI32::ArgumentRegs = {
+    int_reg::A0, int_reg::A1, int_reg::A2, int_reg::A3,
+    int_reg::A4, int_reg::A5, int_reg::A6
+};
+
+
 } // namespace RiscvISA
 } // namespace gem5

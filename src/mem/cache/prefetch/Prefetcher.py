@@ -64,7 +64,7 @@ class BasePrefetcher(ClockedObject):
     abstract = True
     cxx_class = "gem5::prefetch::Base"
     cxx_header = "mem/cache/prefetch/base.hh"
-    cxx_exports = [PyBindMethod("addEventProbe"), PyBindMethod("addTLB")]
+    cxx_exports = [PyBindMethod("addEventProbe"), PyBindMethod("addMMU")]
     sys = Param.System(Parent.any, "System this prefetcher belongs to")
 
     # Get the block size from the parent (system)
@@ -93,7 +93,7 @@ class BasePrefetcher(ClockedObject):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._events = []
-        self._tlbs = []
+        self._mmus = []
 
     def addEvent(self, newObject):
         self._events.append(newObject)
@@ -101,8 +101,8 @@ class BasePrefetcher(ClockedObject):
     # Override the normal SimObject::regProbeListeners method and
     # register deferred event handlers.
     def regProbeListeners(self):
-        for tlb in self._tlbs:
-            self.getCCObject().addTLB(tlb.getCCObject())
+        for mmu in self._mmus:
+            self.getCCObject().addMMU(mmu.getCCObject())
         for event in self._events:
             event.register()
         self.getCCObject().regProbeListeners()
@@ -114,10 +114,10 @@ class BasePrefetcher(ClockedObject):
             raise TypeError("probeNames must have at least one element")
         self.addEvent(HWPProbeEvent(self, simObj, *probeNames))
 
-    def registerTLB(self, simObj):
+    def registerMMU(self, simObj):
         if not isinstance(simObj, SimObject):
             raise TypeError("argument must be a SimObject type")
-        self._tlbs.append(simObj)
+        self._mmus.append(simObj)
 
 
 class MultiPrefetcher(BasePrefetcher):

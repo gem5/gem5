@@ -199,9 +199,9 @@ board = X86Board(
 command = (
     "cd /home/gem5/parsec-benchmark\n"
     + "source env.sh\n"
-    + "parsecmgmt -a run -p {} ".format(args.benchmark)
-    + "-c gcc-hooks -i {} ".format(args.size)
-    + "-n {}\n".format(str(args.num_cpus))
+    + f"parsecmgmt -a run -p {args.benchmark} "
+    + f"-c gcc-hooks -i {args.size} "
+    + f"-n {str(args.num_cpus)}\n"
 )
 
 board.set_kernel_disk_workload(
@@ -247,12 +247,8 @@ print("Done running the simulation")
 print()
 print("Performance statistics:")
 
-print("Simulated time in ROI: {}s".format((roi_ticks[0]) / 1e12))
+print(f"Simulated time in ROI: {roi_ticks[0] / 1000000000000.0}s")
 print(
-    "Ran a total of {} simulated seconds".format(
-        simulator.get_current_tick() / 1e12
-    )
+    f"Ran a total of {simulator.get_current_tick() / 1000000000000.0} simulated seconds"
 )
-print(
-    "Total wallclock time: {}s, {} min".format(global_time, (global_time) / 60)
-)
+print(f"Total wallclock time: {global_time}s, {global_time / 60} min")

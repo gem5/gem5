@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019 ARM Limited
+// Copyright (c) 2017-2020 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -1480,20 +1480,33 @@ let {{
             exec_output += SveStructMemExecDeclare.subst(substDict)
 
     # Generates definitions for SVE load-and-replicate quadword instructions
-    def emitSveLoadAndReplQuad(offsetIsImm):
+    def emitSveLoadAndReplMulti(offsetIsImm, numQwordSegments):
         global header_output, exec_output, decoders
+        assert(numQwordSegments in (1, 2)) # Quadword or Octaword
+        from collections import namedtuple
+        InstConfig = namedtuple("_InstConfig", "mnemonic classname baseclass")
+        INST_CONFIGURATIONS = {
+            # (offsetIsImm, numQwordSegments) -> InstConfig Recors
+            (True, 1): InstConfig("ld1rq", "SveLd1RqSI", "SveContigMemSI"),
+            (False, 1): InstConfig("ld1rq", "SveLd1RqSS", "SveContigMemSS"),
+            (True, 2): InstConfig("ld1ro", "SveLd1RoSI", "SveContigMemSI"),
+            (False, 2): InstConfig("ld1ro", "SveLd1RoSS", "SveContigMemSS"),
+        }
+        inst_config = INST_CONFIGURATIONS[(offsetIsImm, numQwordSegments)]
+        memAccessSize = numQwordSegments * 16;
         tplHeader = 'template <class RegElemType, class MemElemType>'
         tplArgs = '<RegElemType, MemElemType>'
         eaCode = SPAlignmentCheckCode + '''
-        int memAccessSize = 16;
-        EA = XBase + '''
+        int memAccessSize = %(memAccessSize)d;
+        EA = XBase + ''' % dict(memAccessSize=memAccessSize)
         if offsetIsImm:
-            eaCode += '(((int64_t) this->imm) * 16);'
+            eaCode += ('(((int64_t) this->imm) * %(memAccessSize)d);'
+                       % dict(memAccessSize=memAccessSize))
         else:
             eaCode += '(XOffset * sizeof(MemElemType));'
         loadRdEnableCode = '''
-        eCount = 16/sizeof(RegElemType);
-        auto rdEn = std::vector<bool>(16, true);
+        eCount = %(memAccessSize)d/sizeof(RegElemType);
+        auto rdEn = std::vector<bool>(%(memAccessSize)d, true);
         for (int i = 0; i < eCount; ++i) {
             if (!GpOp_x[i]) {
                 for (int j = 0; j < sizeof(RegElemType); ++j) {
@@ -1501,26 +1514,40 @@ let {{
                 }
             }
         }
-        '''
+        ''' % dict(memAccessSize=memAccessSize)
         memAccCode = '''
-        __uint128_t qword;
-        RegElemType* qp = reinterpret_cast<RegElemType*>(&qword);
-        for (int i = 0; i < 16/sizeof(RegElemType); ++i) {
+        // Copy active elements of the data from memory into a temporary
+        // quadword/octaword
+        __uint128_t qwords[%(numQwordSegments)d];
+        eCount = %(memAccessSize)d/sizeof(RegElemType);
+        RegElemType* qp = reinterpret_cast<RegElemType*>(&qwords);
+        for (int i = 0; i < eCount; ++i) {
             if (GpOp_x[i]) {
                 qp[i] = memDataView[i];
             } else {
                 qp[i] = 0;
             }
         }
-        eCount = ArmStaticInst::getCurSveVecLen<__uint128_t>(
+        // Repeat the temporary quadword/octaword segment into the
+        // vector register. Zero fill the remainder for non-full
+        // octawords.
+        unsigned numQwords = ArmStaticInst::getCurSveVecLen<__uint128_t>(
                 xc->tcBase());
-        for (int i = 0; i < eCount; ++i) {
-            AA64FpDest_uq[i] = qword;
+        unsigned numFullQwords = numQwords -
+                                 (numQwords %% %(numQwordSegments)d);
+        for (int i = 0; i < numQwords; ++i) {
+            if (i < numFullQwords) {
+                AA64FpDest_uq[i] = qwords[i %% %(numQwordSegments)d];
+            } else {
+                AA64FpDest_uq[i] = 0;
+            }
         }
-        '''
-        iop = ArmInstObjParams('ld1rq',
-                'SveLd1RqSI' if offsetIsImm else 'SveLd1RqSS',
-                'SveContigMemSI' if offsetIsImm else 'SveContigMemSS',
+        ''' % dict(memAccessSize=memAccessSize,
+                   numQwordSegments=numQwordSegments)
+        iop = ArmInstObjParams(
+                inst_config.mnemonic,
+                inst_config.classname,
+                inst_config.baseclass,
                 {'tpl_header': tplHeader,
                  'tpl_args': tplArgs,
                  'rden_code': loadRdEnableCode,
@@ -1539,8 +1566,7 @@ let {{
                 SveContigLoadCompleteAcc.subst(iop))
         for ttype in ('uint8_t', 'uint16_t', 'uint32_t', 'uint64_t'):
             substDict = {'tpl_args': '<%s, %s>' % (ttype, ttype),
-                    'class_name': 'SveLd1RqSI' if offsetIsImm
-                                  else 'SveLd1RqSS'}
+                         'class_name': inst_config.classname}
             exec_output += SveContigMemExecDeclare.subst(substDict)
 
     # LD1[S]{B,H,W,D} (scalar plus immediate)
@@ -1556,9 +1582,14 @@ let {{
     emitSveLoadAndRepl()
 
     # LD1RQ{B,H,W,D} (scalar plus immediate)
-    emitSveLoadAndReplQuad(offsetIsImm = True)
+    emitSveLoadAndReplMulti(offsetIsImm=True, numQwordSegments=1)
     # LD1RQ{B,H,W,D} (scalar plus scalar)
-    emitSveLoadAndReplQuad(offsetIsImm = False)
+    emitSveLoadAndReplMulti(offsetIsImm=False, numQwordSegments=1)
+
+    # LD1RO{B,H,W,D} (scalar plus immediate)
+    emitSveLoadAndReplMulti(offsetIsImm=True, numQwordSegments=2)
+    # LD1RO{B,H,W,D} (scalar plus scalar)
+    emitSveLoadAndReplMulti(offsetIsImm=False, numQwordSegments=2)
 
     # LD{2,3,4}{B,H,W,D} (scalar plus immediate)
     # ST{2,3,4}{B,H,W,D} (scalar plus immediate)

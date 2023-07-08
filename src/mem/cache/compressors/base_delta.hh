@@ -52,7 +52,6 @@ struct Base32Delta8Params;
 struct Base32Delta16Params;
 struct Base16Delta8Params;
 
-GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
 

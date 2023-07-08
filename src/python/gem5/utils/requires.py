@@ -47,7 +47,7 @@ def _get_exception_str(msg: str):
         # Otherwise we assume the `requires` is being called by a class, in
         # which case we label the exception message with the class name.
         name = inspect.stack()[2].frame.f_locals["self"].__class__.__name__
-    return "[{}] {}".format(name, msg)
+    return f"[{name}] {msg}"
 
 
 def requires(

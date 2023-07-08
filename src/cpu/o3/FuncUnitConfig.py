@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2017 ARM Limited
+# Copyright (c) 2010, 2017, 2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -87,6 +87,7 @@ class SIMD_Unit(FUDesc):
         OpDesc(opClass="SimdMisc"),
         OpDesc(opClass="SimdMult"),
         OpDesc(opClass="SimdMultAcc"),
+        OpDesc(opClass="SimdMatMultAcc"),
         OpDesc(opClass="SimdShift"),
         OpDesc(opClass="SimdShiftAcc"),
         OpDesc(opClass="SimdDiv"),
@@ -99,6 +100,7 @@ class SIMD_Unit(FUDesc):
         OpDesc(opClass="SimdFloatMisc"),
         OpDesc(opClass="SimdFloatMult"),
         OpDesc(opClass="SimdFloatMultAcc"),
+        OpDesc(opClass="SimdFloatMatMultAcc"),
         OpDesc(opClass="SimdFloatSqrt"),
         OpDesc(opClass="SimdReduceAdd"),
         OpDesc(opClass="SimdReduceAlu"),

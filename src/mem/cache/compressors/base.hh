@@ -50,7 +50,6 @@ class BaseCache;
 class CacheBlk;
 struct BaseCacheCompressorParams;
 
-GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
 

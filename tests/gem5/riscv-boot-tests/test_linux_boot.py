@@ -51,9 +51,7 @@ def test_boot(
 
     verifiers = []
     exit_regex = re.compile(
-        "Exiting @ tick {} because simulate\(\) limit reached".format(
-            str(to_tick)
-        )
+        f"Exiting @ tick {str(to_tick)} because simulate\\(\\) limit reached"
     )
     verifiers.append(verifier.MatchRegex(exit_regex))
 

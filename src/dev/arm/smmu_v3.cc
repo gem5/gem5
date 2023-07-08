@@ -100,7 +100,7 @@ SMMUv3::SMMUv3(const SMMUv3Params &params) :
     deviceInterfaces(params.device_interfaces),
     commandExecutor(name() + ".cmd_exec", *this),
     regsMap(params.reg_map),
-    processCommandsEvent(this)
+    processCommandsEvent(*this)
 {
     fatal_if(regsMap.size() != SMMU_REG_SIZE,
         "Invalid register map size: %#x different than SMMU_REG_SIZE = %#x\n",

@@ -47,7 +47,6 @@ namespace gem5
 
 class ThreadContext;
 
-GEM5_DEPRECATED_NAMESPACE(Linux, linux);
 namespace linux
 {
 

@@ -74,7 +74,7 @@ class ProtocolTester : public ClockedObject
       public:
         SeqPort(const std::string &_name, ProtocolTester *_tester, PortID _id,
                 PortID _index)
-            : RequestPort(_name, _tester, _id)
+            : RequestPort(_name, _id)
         {}
 
       protected:

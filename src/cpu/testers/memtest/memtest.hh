@@ -100,7 +100,7 @@ class MemTest : public ClockedObject
       public:
 
         CpuPort(const std::string &_name, MemTest &_memtest)
-            : RequestPort(_name, &_memtest), memtest(_memtest)
+            : RequestPort(_name), memtest(_memtest)
         { }
 
       protected:

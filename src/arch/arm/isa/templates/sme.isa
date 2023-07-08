@@ -1,0 +1,773 @@
+// Copyright (c) 2022 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+// @file Definition of SME instruction templates.
+
+let {{
+    # All SME instructions should be checking if Streaming Mode is
+    # enabled in the PSTATE. The following call checks both the SME and
+    # the FP enable flags in the relevant registers depending on the
+    # current EL.
+    smEnCheckCodeNoPstate = '''
+        if (FullSystem) {
+            fault = this->checkSmeEnabled(xc->tcBase(), Cpsr, Cpacr64);
+            if (fault != NoFault) {
+                return fault;
+            }
+        }
+    '''
+
+    smPreamble = '''
+        CPSR cpsr = (CPSR) Cpsr;
+        ExceptionLevel target_el = (ExceptionLevel) (uint8_t) cpsr.el;
+        if (target_el == EL0) {
+            target_el = EL1;
+        }
+    '''
+
+    smCheckCode = '''
+        // Check streaming mode first
+        if ((Svcr & 1) != 0b1) {
+            fault = smeAccessTrap(target_el, 0b10);
+            return fault;
+        }
+    '''
+
+    zaCheckCode = '''
+        // Check if ZA is enabled
+        if ((Svcr & 2) >> 1 != 0b1) {
+            fault = smeAccessTrap(target_el, 0b11);
+            return fault;
+        }
+    '''
+
+    # If streaming mode is disabled or ZA is disabled we trap
+    smEnCheckCode = smPreamble + smCheckCode + zaCheckCode + \
+                    smEnCheckCodeNoPstate
+
+    # If ZA is disabled we trap
+    smEnCheckCodeNoSM = smPreamble + zaCheckCode + smEnCheckCodeNoPstate
+
+    # If streaming mode is disabled we trap
+    smEnCheckCodeNoZA = smPreamble + smCheckCode + smEnCheckCodeNoPstate
+
+    smeZaWrite = '''
+        // Force the ISA parser to see the access to ZA as a write,
+        // not a read.
+        ZA = ZA;
+        '''
+}};
+
+def template SmeAddDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, uint64_t imm,
+                       RegIndex op1, RegIndex gp1,
+                       RegIndex gp2)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             imm, op1, gp1, gp2)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeAddVlDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest, RegIndex op1,
+                       int8_t imm)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             dest, op1, imm)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeLd1xDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, uint64_t imm,
+                       RegIndex op1, RegIndex mpop1,
+                       RegIndex op2, RegIndex op3,
+                       bool V)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             imm, op1, mpop1, op2, op3, V)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeLd1xExecute {{
+    template <typename TPElem>
+    Fault %(class_name)s<TPElem>::execute(ExecContext *xc,
+                                          trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        Request::Flags flags = 0;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        // We need a buffer in which to store the data:
+        TPElem data[MaxSmeVecLenInBytes / sizeof(TPElem)];
+
+        if (fault == NoFault) {
+            // The size of the access is controlled by the type of data, and
+            // the number of elements.
+            fault = xc->readMem(EA, (uint8_t*)data, eCount * sizeof(TPElem),
+                                flags, rdEn);
+        }
+
+        if (fault == NoFault) {
+            %(za_write)s
+
+            // Write back the changes to the actual tile
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeLd1xInitiateAcc {{
+    template <typename TPElem>
+    Fault %(class_name)s<TPElem>::initiateAcc(ExecContext *xc,
+                                            trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        Request::Flags flags = 0;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        if (fault == NoFault) {
+            fault = xc->initiateMemRead(EA, eCount * sizeof(TPElem),
+                                        flags, rdEn);
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeLd1xCompleteAcc {{
+    template <typename TPElem>
+    Fault %(class_name)s<TPElem>::completeAcc(PacketPtr pkt, ExecContext *xc,
+                                            trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        // The O3 CPU will call this with a NULL-pointer if the access was
+        // disabled. Just return.
+        if (pkt == NULL) {
+            return fault;
+        }
+
+        if (fault == NoFault) {
+            // We need a buffer in which to store the data:
+            TPElem data[MaxSmeVecLenInBytes / sizeof(TPElem)];
+
+            // The size for the amount of data returned here should
+            // have been set in initiateAcc.
+            memcpy((uint8_t*)data, pkt->getPtr<uint8_t>(), pkt->getSize());
+
+            %(za_write)s
+
+            // Write back the changes to the tile
+            %(op_wb)s;
+        }
+        return fault;
+    }
+}};
+
+def template SmeLd1xExecDeclare {{
+    template
+    Fault %(class_name)s<%(targs)s>::execute(
+            ExecContext *, trace::InstRecord *) const;
+    template
+    Fault %(class_name)s<%(targs)s>::initiateAcc(
+            ExecContext *, trace::InstRecord *) const;
+    template
+    Fault %(class_name)s<%(targs)s>::completeAcc(
+            PacketPtr, ExecContext *, trace::InstRecord *) const;
+}};
+
+def template SmeLdrDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, uint64_t imm,
+                       RegIndex op1, RegIndex op2)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             imm, op1, op2)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeLdrExecute {{
+    Fault %(class_name)s::execute(ExecContext *xc,
+                                  trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        Request::Flags flags = 0;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        auto rdEn = std::vector<bool>(eCount, true);
+
+        // We need a buffer in which to store the data:
+        uint8_t data[MaxSmeVecLenInBytes];
+
+        if (fault == NoFault) {
+            fault = xc->readMem(EA, (uint8_t*)data, eCount, flags, rdEn);
+        }
+
+        if (fault == NoFault) {
+            auto row = getTileHSlice<uint8_t>(ZA, 0, vec_index);
+            for (int i = 0; i < eCount; ++i) {
+                row[i] = data[i];
+            }
+
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeLdrInitiateAcc {{
+    Fault %(class_name)s::initiateAcc(ExecContext *xc,
+                                  trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        Request::Flags flags = 0;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        auto rdEn = std::vector<bool>(eCount, true);
+
+        if (fault == NoFault) {
+            fault = xc->initiateMemRead(EA, eCount, flags, rdEn);
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeLdrCompleteAcc {{
+        Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+                                  trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        // The O3 CPU will call this with a NULL-pointer if the access was
+        // disabled. Just return.
+        if (pkt == NULL) {
+            return fault;
+        }
+
+        if (fault == NoFault) {
+            // Get the data out of the packet
+            auto row = getTileHSlice<uint8_t>(ZA, 0, vec_index);
+            for (int i = 0; i < eCount; ++i) {
+                row[i] = pkt->getPtr<uint8_t>()[i];
+            }
+
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SMEMgmtDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, uint64_t imm)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, imm)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeMovaExtractDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, RegIndex op1,
+                       uint8_t imm, RegIndex gp,
+                       RegIndex op2, bool v)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             op1, imm, gp, op2, v)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeMovaInsertDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, uint8_t imm,
+                       RegIndex op1, RegIndex gp,
+                       RegIndex op2, bool v)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             imm, op1, gp, op2, v)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeFPOPDeclare {{
+    template <typename TPSElem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, uint64_t imm,
+                                   RegIndex op1, RegIndex gp1,
+                                   RegIndex gp2, RegIndex op2)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             imm, op1, gp1, gp2, op2)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeIntOPDeclare {{
+    template <typename TPS1Elem, typename TPS2Elem, typename TPDElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, uint64_t imm,
+                                   RegIndex op1, RegIndex gp1,
+                                   RegIndex gp2, RegIndex op2)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             imm, op1, gp1, gp2, op2)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeRdsvlDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex dest, int8_t imm)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             dest, imm)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeSt1xDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, uint64_t imm,
+                       RegIndex op1, RegIndex mpop1,
+                       RegIndex op2, RegIndex op3, bool V)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                             imm, op1, mpop1, op2, op3, V)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeSt1xExecute {{
+    template <typename TPElem>
+    Fault %(class_name)s<TPElem>::execute(ExecContext *xc,
+                                  trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        Request::Flags flags = 0;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        if (fault == NoFault) {
+            fault = xc->writeMem((uint8_t*)data, eCount * sizeof(TPElem), EA,
+                                 flags, NULL, wrEn);
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeSt1xInitiateAcc {{
+    template <typename TPElem>
+    Fault %(class_name)s<TPElem>::initiateAcc(ExecContext *xc,
+                                  trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        Request::Flags flags = 0;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        if (fault == NoFault) {
+            fault = xc->writeMem((uint8_t*)data, eCount * sizeof(TPElem), EA,
+                                 flags, NULL, wrEn);
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeSt1xCompleteAcc {{
+    template <typename TPElem>
+    Fault %(class_name)s<TPElem>::completeAcc(PacketPtr pkt, ExecContext *xc,
+                                  trace::InstRecord *traceData) const
+    {
+        return NoFault;
+    }
+}};
+
+def template SmeStrDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, uint64_t imm,
+                       RegIndex op1, RegIndex op2)
+            : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                              imm, op1, op2)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeStrExecute {{
+    Fault %(class_name)s::execute(ExecContext *xc,
+                                  trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        Request::Flags flags = 0;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+
+        if (fault == NoFault) {
+            auto wrEn = std::vector<bool>(eCount, true);
+            fault = xc->writeMem((uint8_t*)data, eCount, EA,
+                                 flags, NULL, wrEn);
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeStrInitiateAcc {{
+    Fault %(class_name)s::initiateAcc(ExecContext *xc,
+                                  trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        Request::Flags flags = 0;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        if (fault == NoFault) {
+            auto wrEn = std::vector<bool>(eCount, true);
+            fault = xc->writeMem((uint8_t*)data, eCount, EA,
+                                 flags, NULL, wrEn);
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeStrCompleteAcc {{
+        Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+                                  trace::InstRecord *traceData) const
+    {
+        // TODO-SME: Can this fail?
+        return NoFault;
+    }
+}};
+
+def template SmeSt1xExecDeclare {{
+    template
+    Fault %(class_name)s<%(targs)s>::execute(
+            ExecContext *, trace::InstRecord *) const;
+    template
+    Fault %(class_name)s<%(targs)s>::initiateAcc(
+            ExecContext *, trace::InstRecord *) const;
+    template
+    Fault %(class_name)s<%(targs)s>::completeAcc(
+            PacketPtr, ExecContext *, trace::InstRecord *) const;
+}};
+
+def template SmeZeroDeclare {{
+    template <typename TPElem>
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst, uint8_t imm)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, imm)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+    };
+}};
+
+def template SmeExecute {{
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+                            trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeTemplatedExecute {{
+    template <typename TPElem>
+    Fault
+    %(class_name)s<TPElem>::execute(ExecContext *xc,
+                                    trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeDualTemplatedExecute {{
+    template <typename TPSElem, typename TPDElem>
+    Fault
+    %(class_name)s<TPSElem, TPDElem>::execute(ExecContext *xc,
+                                        trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeTripleTemplatedExecute {{
+    template <typename TPS1Elem, typename TPS2Elem, typename TPDElem>
+    Fault
+    %(class_name)s<TPS1Elem, TPS2Elem, TPDElem>::execute(ExecContext *xc,
+                                        trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SmeOpExecDeclare {{
+    template
+    Fault %(class_name)s<%(targs)s>::execute(
+            ExecContext *, trace::InstRecord *) const;
+}};

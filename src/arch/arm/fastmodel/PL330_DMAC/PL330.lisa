@@ -64,6 +64,9 @@ component PL330
         // Interrupts.
         pl330.irq_master_port => self.irq;
         pl330.irq_abort_master_port => self.irq_abort;
+
+        // Reset signals.
+        self.reset_in => pl330.reset_in;
     }
 
     properties
@@ -85,4 +88,6 @@ component PL330
 
     master port<Signal> irq[32];
     master port<Signal> irq_abort;
+
+    slave port<Signal> reset_in;
 }

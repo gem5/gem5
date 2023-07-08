@@ -601,7 +601,7 @@ class BaseKvmCPU : public BaseCPU
 
       public:
         KVMCpuPort(const std::string &_name, BaseKvmCPU *_cpu)
-            : RequestPort(_name, _cpu), cpu(_cpu), activeMMIOReqs(0)
+            : RequestPort(_name), cpu(_cpu), activeMMIOReqs(0)
         { }
         /**
          * Interface to send Atomic or Timing IO request.  Assumes that the pkt
@@ -804,7 +804,6 @@ class BaseKvmCPU : public BaseCPU
     struct StatGroup : public statistics::Group
     {
         StatGroup(statistics::Group *parent);
-        statistics::Scalar committedInsts;
         statistics::Scalar numVMExits;
         statistics::Scalar numVMHalfEntries;
         statistics::Scalar numExitSignal;

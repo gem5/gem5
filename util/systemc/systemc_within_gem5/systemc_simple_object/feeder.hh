@@ -64,7 +64,7 @@ class Feeder : public gem5::SimObject
     // except to help interact with systemc objects/models.
     sc_core::sc_buffer<const char *> buf;
 
-    gem5::EventWrapper<Feeder, &Feeder::feed> event;
+    gem5::MemberEventWrapper<&Feeder::feed> event;
 
     void startup() override;
 };

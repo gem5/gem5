@@ -118,7 +118,7 @@ class IntRequestPort : public QueuedRequestPort
   public:
     IntRequestPort(const std::string& _name, SimObject* _parent,
                   Device* dev, Tick _latency) :
-        QueuedRequestPort(_name, _parent, reqQueue, snoopRespQueue),
+        QueuedRequestPort(_name, reqQueue, snoopRespQueue),
         reqQueue(*_parent, *this), snoopRespQueue(*_parent, *this),
         device(dev), latency(_latency)
     {

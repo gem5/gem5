@@ -95,7 +95,7 @@ class MemCheckerMonitor : public SimObject
       public:
 
         MonitorRequestPort(const std::string& _name, MemCheckerMonitor& _mon)
-            : RequestPort(_name, &_mon), mon(_mon)
+            : RequestPort(_name), mon(_mon)
         { }
 
       protected:
@@ -156,7 +156,7 @@ class MemCheckerMonitor : public SimObject
       public:
 
         MonitorResponsePort(const std::string& _name, MemCheckerMonitor& _mon)
-            : ResponsePort(_name, &_mon), mon(_mon)
+            : ResponsePort(_name), mon(_mon)
         { }
 
       protected:

@@ -34,11 +34,11 @@ PortTerminator::PortTerminator(const PortTerminatorParams &params):
     SimObject(params)
 {
     for (int i = 0; i < params.port_req_ports_connection_count; ++i) {
-        reqPorts.emplace_back(name() + ".req_ports" + std::to_string(i), this);
+        reqPorts.emplace_back(name() + ".req_ports" + std::to_string(i));
     }
     for (int j = 0; j < params.port_resp_ports_connection_count; ++j) {
         reqPorts.emplace_back(name() + ".resp_ports" +
-                                std::to_string(j), this);
+                                std::to_string(j));
     }
 }
 

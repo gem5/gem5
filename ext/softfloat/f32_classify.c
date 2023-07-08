@@ -1,11 +1,10 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-
-#include "internals.h"
 #include "platform.h"
-#include "softfloat.h"
+#include "internals.h"
 #include "specialize.h"
+#include "softfloat.h"
 
 uint_fast16_t f32_classify( float32_t a )
 {

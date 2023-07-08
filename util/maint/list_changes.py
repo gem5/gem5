@@ -104,7 +104,7 @@ class Commit(object):
         return cids[0]
 
     def __str__(self):
-        return "%s: %s" % (self.rev[0:8], self.log[0])
+        return f"{self.rev[0:8]}: {self.log[0]}"
 
 
 def list_revs(branch, baseline=None, paths=[]):
@@ -117,7 +117,7 @@ def list_revs(branch, baseline=None, paths=[]):
     """
 
     if baseline is not None:
-        query = "%s..%s" % (branch, baseline)
+        query = f"{branch}..{baseline}"
     else:
         query = str(branch)
 
@@ -178,15 +178,15 @@ def _main():
         "--upstream",
         "-u",
         type=str,
-        default="origin/master",
-        help="Upstream branch for comparison. " "Default: %(default)s",
+        default="origin/develop",
+        help="Upstream branch for comparison. Default: %(default)s",
     )
     parser.add_argument(
         "--feature",
         "-f",
         type=str,
         default="HEAD",
-        help="Feature branch for comparison. " "Default: %(default)s",
+        help="Feature branch for comparison. Default: %(default)s",
     )
     parser.add_argument(
         "--show-unknown",
@@ -199,7 +199,7 @@ def _main():
     parser.add_argument(
         "--deep-search",
         action="store_true",
-        help="Use a deep search to find incorrectly " "rebased changes",
+        help="Use a deep search to find incorrectly rebased changes",
     )
     parser.add_argument(
         "paths",

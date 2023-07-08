@@ -39,11 +39,11 @@ def AMBA_INITIATOR_ROLE(width):
 
 
 def SC_REQUEST_PORT_ROLE(port_type):
-    return "SC REQUEST PORT for %s" % port_type
+    return f"SC REQUEST PORT for {port_type}"
 
 
 def SC_RESPONSE_PORT_ROLE(port_type):
-    return "SC RESPONSE PORT for %s" % port_type
+    return f"SC RESPONSE PORT for {port_type}"
 
 
 class AmbaTargetSocket(Port):
@@ -107,6 +107,10 @@ class AmbaToTlmBridge64(SystemC_ScModule):
 
     amba = AmbaTargetSocket(64, "AMBA PV target socket")
     tlm = TlmInitiatorSocket(64, "TLM initiator socket")
+
+    set_stream_id = Param.Bool(
+        False, "Set this true to forward stream ID to gem5 world"
+    )
 
 
 class AmbaFromTlmBridge64(SystemC_ScModule):

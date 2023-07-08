@@ -42,8 +42,15 @@ class ResetResponsePort(Port):
         super().__init__(RESET_RESPONSE_ROLE, desc)
 
 
-# VectorResetRequestPort presents a bank of artifact reset request
+# VectorResetRequestPort represents a bank of artifact reset request
 # ports.
 class VectorResetRequestPort(VectorPort):
     def __init__(self, desc):
         super().__init__(RESET_REQUEST_ROLE, desc, is_source=True)
+
+
+# VectorResetResponsePort represents a bank of artifact reset request
+# ports.
+class VectorResetResponsePort(VectorPort):
+    def __init__(self, desc):
+        super().__init__(RESET_RESPONSE_ROLE, desc)

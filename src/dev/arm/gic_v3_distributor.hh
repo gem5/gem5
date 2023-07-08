@@ -257,7 +257,6 @@ class Gicv3Distributor : public Serializable
 
     void serialize(CheckpointOut & cp) const override;
     void unserialize(CheckpointIn & cp) override;
-    void update();
     Gicv3CPUInterface* route(uint32_t int_id);
 
   public:
@@ -274,6 +273,7 @@ class Gicv3Distributor : public Serializable
                bool is_secure_access);
 
     void copy(Gicv3Registers *from, Gicv3Registers *to);
+    void update();
 };
 
 } // namespace gem5

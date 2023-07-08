@@ -120,7 +120,7 @@ VMA::sanityCheck()
 
 VMA::MappedFileBuffer::MappedFileBuffer(int fd, size_t length,
                                         off_t offset)
-    : _buffer(nullptr), _length(length)
+    : _buffer(nullptr), _length(length), _offset(offset)
 {
     panic_if(_length == 0, "Tried to mmap file of length zero");
 

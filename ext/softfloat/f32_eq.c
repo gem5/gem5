@@ -36,11 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdbool.h>
 #include <stdint.h>
-
-#include "internals.h"
 #include "platform.h"
-#include "softfloat.h"
+#include "internals.h"
 #include "specialize.h"
+#include "softfloat.h"
 
 bool f32_eq( float32_t a, float32_t b )
 {

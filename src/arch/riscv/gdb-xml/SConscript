@@ -43,7 +43,11 @@
 
 Import('*')
 
-GdbXml('riscv.xml', 'gdb_xml_riscv_target', tags='riscv isa')
-GdbXml('riscv-64bit-cpu.xml', 'gdb_xml_riscv_cpu', tags='riscv isa')
-GdbXml('riscv-64bit-fpu.xml', 'gdb_xml_riscv_fpu', tags='riscv isa')
-GdbXml('riscv-64bit-csr.xml', 'gdb_xml_riscv_csr', tags='riscv isa')
+GdbXml('riscv-32bit.xml', 'gdb_xml_riscv_32bit_target', tags='riscv isa')
+GdbXml('riscv-32bit-cpu.xml', 'gdb_xml_riscv_32bit_cpu', tags='riscv isa')
+GdbXml('riscv-32bit-fpu.xml', 'gdb_xml_riscv_32bit_fpu', tags='riscv isa')
+GdbXml('riscv-32bit-csr.xml', 'gdb_xml_riscv_32bit_csr', tags='riscv isa')
+GdbXml('riscv-64bit.xml', 'gdb_xml_riscv_64bit_target', tags='riscv isa')
+GdbXml('riscv-64bit-cpu.xml', 'gdb_xml_riscv_64bit_cpu', tags='riscv isa')
+GdbXml('riscv-64bit-fpu.xml', 'gdb_xml_riscv_64bit_fpu', tags='riscv isa')
+GdbXml('riscv-64bit-csr.xml', 'gdb_xml_riscv_64bit_csr', tags='riscv isa')

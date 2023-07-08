@@ -357,7 +357,6 @@ operator + (A a, const ProxyPtr<T, Proxy> &other)
     return other + a;
 }
 
-GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
 namespace guest_abi
 {
 

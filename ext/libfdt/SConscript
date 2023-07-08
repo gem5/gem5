@@ -44,6 +44,6 @@ FdtFile('fdt_empty_tree.c')
 FdtFile('fdt_strerror.c')
 
 env.Library('fdt', [env.SharedObject(f) for f in fdt_files])
-env.Prepend(CPPPATH=Dir('.'))
+env.Prepend(CPPPATH=Dir('.').srcnode())
 env.Append(LIBS=['fdt'])
 env.Prepend(LIBPATH=[Dir('.')])

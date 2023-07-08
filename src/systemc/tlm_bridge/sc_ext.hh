@@ -36,6 +36,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 
 #include "base/amo.hh"
 #include "mem/packet.hh"
@@ -115,6 +116,14 @@ class ControlExtension : public tlm::tlm_extension<ControlExtension>
     uint8_t getQos() const;
     void setQos(uint8_t q);
 
+    /* Stream ID and Substream ID */
+    bool hasStreamId() const;
+    std::optional<uint32_t> getStreamId() const;
+    void setStreamId(std::optional<uint32_t> s);
+    bool hasSubstreamId() const;
+    std::optional<uint32_t> getSubstreamId() const;
+    void setSubstreamId(std::optional<uint32_t> s);
+
   private:
     /* Secure and privileged access */
     bool privileged;
@@ -123,6 +132,10 @@ class ControlExtension : public tlm::tlm_extension<ControlExtension>
 
     /* Quality of Service (AXI4) */
     uint8_t qos;
+
+    /* Stream ID and Substream ID */
+    std::optional<uint32_t> stream_id;
+    std::optional<uint32_t> substream_id;
 };
 
 } // namespace Gem5SystemC

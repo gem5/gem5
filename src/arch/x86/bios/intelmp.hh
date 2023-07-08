@@ -84,7 +84,6 @@ uint8_t writeOutString(PortProxy& proxy, Addr addr, std::string str,
 namespace X86ISA
 {
 
-GEM5_DEPRECATED_NAMESPACE(IntelMP, intelmp);
 namespace intelmp
 {
 

@@ -50,7 +50,7 @@ class TokenRequestPort : public RequestPort
   public:
     TokenRequestPort(const std::string& name, SimObject* owner,
                     PortID id = InvalidPortID) :
-        RequestPort(name, owner, id), tokenManager(nullptr)
+        RequestPort(name, id), tokenManager(nullptr)
     { }
 
     /**
@@ -98,9 +98,9 @@ class TokenResponsePort : public ResponsePort
     void recvRespRetry() override;
 
   public:
-    TokenResponsePort(const std::string& name, ClockedObject *owner,
+    TokenResponsePort(const std::string& name,
                    PortID id = InvalidPortID) :
-        ResponsePort(name, owner, id), tokenRequestPort(nullptr)
+        ResponsePort(name, id), tokenRequestPort(nullptr)
     { }
     ~TokenResponsePort() { }
 

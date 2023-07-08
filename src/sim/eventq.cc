@@ -109,6 +109,32 @@ Event::insertBefore(Event *event, Event *curr)
 }
 
 void
+Event::acquire()
+{
+    if (flags.isSet(Event::Managed))
+        acquireImpl();
+}
+
+void
+Event::release()
+{
+    if (flags.isSet(Event::Managed))
+        releaseImpl();
+}
+
+void
+Event::acquireImpl()
+{
+}
+
+void
+Event::releaseImpl()
+{
+    if (!scheduled())
+        delete this;
+}
+
+void
 EventQueue::insert(Event *event)
 {
     // Deal with the head case

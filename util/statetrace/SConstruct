@@ -57,9 +57,16 @@ main['CXXFLAGS'] = "-O3 -ggdb $_CPPINCFLAGS"
 
 main['CXX'] = ARGUMENTS.get('CXX', main['CXX'])
 
+# An option not to link source files in the build directory.
+# Not enabled by default.
+AddOption('--no-duplicate-sources', action='store_false', default=True,
+          dest='duplicate_sources',
+          help='Do not create symlinks to sources in the build directory')
+
 for arch in arches:
     env = main.Clone()
     env['CXX'] = ARGUMENTS.get(arch.upper() + 'CXX', env['CXX'])
     env.Append(CPPFLAGS = '-D__STATETRACE_%s__' % arch.upper())
     Export('env', 'arch')
-    env.SConscript('SConscript', variant_dir = os.path.join('build', arch))
+    env.SConscript('SConscript', variant_dir=os.path.join('build', arch),
+                   duplicate=GetOption('duplicate_sources'))

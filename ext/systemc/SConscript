@@ -25,6 +25,7 @@
 
 import os
 from m5.util.terminal import get_termcap
+import gem5_scons
 
 Import('env')
 systemc = env.Clone()
@@ -32,36 +33,30 @@ systemc = env.Clone()
 build_root = Dir('.').abspath
 src_root = Dir('.').srcdir.abspath
 
-systemc.Prepend(CPPPATH=Dir('./src'))
+systemc.Prepend(CPPPATH=Dir('./src').srcnode())
 systemc.Prepend(CPATH=Dir('./src'))
 
 systemc.Prepend(CXXFLAGS=['-DSC_INCLUDE_FX'])
 systemc.Prepend(CFLAGS=['-DSC_INCLUDE_FX'])
 
-conf = Configure(systemc,
-                 conf_dir = os.path.join(build_root, '.scons_config'),
-                 log_file = os.path.join(build_root, 'scons_config.log'))
-systemc = conf.env
+with gem5_scons.Configure(systemc) as conf:
+    if systemc['PLATFORM'] == 'darwin':
+        systemc.Append(LINKFLAGS=['-undefined', 'dynamic_lookup'])
 
-if systemc['PLATFORM'] == 'darwin':
-    systemc.Append(LINKFLAGS=['-undefined', 'dynamic_lookup'])
-
-arch = None
-systemc['COROUTINE_LIB'] = ''
-if conf.CheckDeclaration('__i386__'):
-    systemc['COROUTINE_LIB'] = 'qt'
-    systemc['QT_ARCH'] = 'i386'
-    arch = 'i386'
-elif conf.CheckDeclaration('__x86_64__'):
-    systemc['COROUTINE_LIB'] = 'qt'
-    systemc['QT_ARCH'] = 'iX86_64'
-    arch = 'x86_64'
-else:
-    termcap = get_termcap(GetOption('use_colors'))
-    print(termcap.Yellow + termcap.Bold +
-          "Warning: Unrecognized architecture for systemc." + termcap.Normal)
-
-systemc = conf.Finish()
+    arch = None
+    systemc['COROUTINE_LIB'] = ''
+    if conf.CheckDeclaration('__i386__'):
+        systemc['COROUTINE_LIB'] = 'qt'
+        systemc['QT_ARCH'] = 'i386'
+        arch = 'i386'
+    elif conf.CheckDeclaration('__x86_64__'):
+        systemc['COROUTINE_LIB'] = 'qt'
+        systemc['QT_ARCH'] = 'iX86_64'
+        arch = 'x86_64'
+    else:
+        termcap = get_termcap(GetOption('use_colors'))
+        print(termcap.Yellow + termcap.Bold +
+              "Warning: Unrecognized architecture for systemc." + termcap.Normal)
 
 if systemc['COROUTINE_LIB'] == 'pthreads':
     systemc.Prepend(CXXFLAGS=['-DSC_USE_PTHREADS'])
@@ -77,7 +72,8 @@ if arch:
             build_dir = os.path.relpath(root, src_root)
             systemc.SConscript(os.path.join(root, 'SConscript.sc'),
                                exports=['systemc', 'SystemCSource'],
-                               variant_dir=os.path.join(build_root, build_dir))
+                               variant_dir=os.path.join(build_root, build_dir),
+                               duplicate=GetOption('duplicate_sources'))
 
     systemc.Library('libsystemc', systemc_files)
     systemc.SharedLibrary('libsystemc', systemc_files)

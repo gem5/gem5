@@ -86,7 +86,7 @@ class StateMachine(Symbol):
                     param.ident,
                     location,
                     param.type_ast.type,
-                    "(*m_%s_ptr)" % param.ident,
+                    f"(*m_{param.ident}_ptr)",
                     {},
                     self,
                 )
@@ -96,7 +96,7 @@ class StateMachine(Symbol):
                     param.ident,
                     location,
                     param.type_ast.type,
-                    "m_%s" % param.ident,
+                    f"m_{param.ident}",
                     {},
                     self,
                 )
@@ -127,7 +127,7 @@ class StateMachine(Symbol):
         self.debug_flags.add("RubySlicc")
 
     def __repr__(self):
-        return "[StateMachine: %s]" % self.ident
+        return f"[StateMachine: {self.ident}]"
 
     def addState(self, state):
         assert self.table is None
@@ -143,15 +143,13 @@ class StateMachine(Symbol):
         # Check for duplicate action
         for other in self.actions.values():
             if action.ident == other.ident:
-                action.warning(
-                    "Duplicate action definition: %s" % action.ident
-                )
-                action.error("Duplicate action definition: %s" % action.ident)
+                action.warning(f"Duplicate action definition: {action.ident}")
+                action.error(f"Duplicate action definition: {action.ident}")
             if action.short == other.short:
-                other.warning("Duplicate action shorthand: %s" % other.ident)
-                other.warning("    shorthand = %s" % other.short)
-                action.warning("Duplicate action shorthand: %s" % action.ident)
-                action.error("    shorthand = %s" % action.short)
+                other.warning(f"Duplicate action shorthand: {other.ident}")
+                other.warning(f"    shorthand = {other.short}")
+                action.warning(f"Duplicate action shorthand: {action.ident}")
+                action.error(f"    shorthand = {action.short}")
 
         self.actions[action.ident] = action
 
@@ -179,12 +177,12 @@ class StateMachine(Symbol):
         self.objects.append(obj)
 
     def addType(self, type):
-        type_ident = "%s" % type.c_ident
+        type_ident = f"{type.c_ident}"
 
-        if type_ident == "%s_TBE" % self.ident:
+        if type_ident == f"{self.ident}_TBE":
             if self.TBEType != None:
                 self.error(
-                    "Multiple Transaction Buffer types in a " "single machine."
+                    "Multiple Transaction Buffer types in a single machine."
                 )
             self.TBEType = type
 
@@ -216,14 +214,14 @@ class StateMachine(Symbol):
 
             index = (trans.state, trans.event)
             if index in table:
-                table[index].warning("Duplicate transition: %s" % table[index])
-                trans.error("Duplicate transition: %s" % trans)
+                table[index].warning(f"Duplicate transition: {table[index]}")
+                trans.error(f"Duplicate transition: {trans}")
             table[index] = trans
 
         # Look at all actions to make sure we used them all
         for action in self.actions.values():
             if not action.used:
-                error_msg = "Unused action: %s" % action.ident
+                error_msg = f"Unused action: {action.ident}"
                 if "desc" in action:
                     error_msg += ", " + action.desc
                 action.warning(error_msg)
@@ -235,7 +233,7 @@ class StateMachine(Symbol):
         port_to_buf_map = {}
         in_msg_bufs = {}
         for port in self.in_ports:
-            buf_name = "m_%s_ptr" % port.pairs["buffer_expr"].name
+            buf_name = f"m_{port.pairs['buffer_expr'].name}_ptr"
             msg_bufs.append(buf_name)
             port_to_buf_map[port] = msg_bufs.index(buf_name)
             if buf_name not in in_msg_bufs:
@@ -255,8 +253,8 @@ class StateMachine(Symbol):
         code = self.symtab.codeFormatter()
         ident = self.ident
 
-        py_ident = "%s_Controller" % ident
-        c_ident = "%s_Controller" % self.ident
+        py_ident = f"{ident}_Controller"
+        c_ident = f"{self.ident}_Controller"
 
         code(
             """
@@ -292,13 +290,13 @@ class $py_ident(RubyController):
                 )
 
         code.dedent()
-        code.write(path, "%s.py" % py_ident)
+        code.write(path, f"{py_ident}.py")
 
     def printControllerHH(self, path):
         """Output the method declarations for the class declaration"""
         code = self.symtab.codeFormatter()
         ident = self.ident
-        c_ident = "%s_Controller" % self.ident
+        c_ident = f"{self.ident}_Controller"
 
         code(
             """
@@ -529,14 +527,14 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 """
         )
 
-        code.write(path, "%s.hh" % c_ident)
+        code.write(path, f"{c_ident}.hh")
 
     def printControllerCC(self, path, includes):
         """Output the actions for performing the actions"""
 
         code = self.symtab.codeFormatter()
         ident = self.ident
-        c_ident = "%s_Controller" % self.ident
+        c_ident = f"{self.ident}_Controller"
 
         # Unfortunately, clang compilers will throw a "call to function ...
         # that is neither visible in the template definition nor found by
@@ -701,7 +699,7 @@ $c_ident::initNetQueues()
         vnet_dir_set = set()
 
         for var in self.config_parameters:
-            vid = "m_%s_ptr" % var.ident
+            vid = f"m_{var.ident}_ptr"
             if "network" in var:
                 vtype = var.type_ast.type
                 code("assert($vid != NULL);")
@@ -742,7 +740,7 @@ $c_ident::init()
 
         for var in self.objects:
             vtype = var.type
-            vid = "m_%s_ptr" % var.ident
+            vid = f"m_{var.ident}_ptr"
             if "network" not in var:
                 # Not a network port object
                 if "primitive" in vtype:
@@ -752,7 +750,7 @@ $c_ident::init()
                 else:
                     # Normal Object
                     th = var.get("template", "")
-                    expr = "%s  = new %s%s" % (vid, vtype.c_ident, th)
+                    expr = f"{vid}  = new {vtype.c_ident}{th}"
                     args = ""
                     if "non_obj" not in vtype and not vtype.isEnumeration:
                         args = var.get("constructor", "")
@@ -763,7 +761,7 @@ $c_ident::init()
                     if "default" in var:
                         code('*$vid = ${{var["default"]}}; // Object default')
                     elif "default" in vtype:
-                        comment = "Type %s default" % vtype.ident
+                        comment = f"Type {vtype.ident} default"
                         code('*$vid = ${{vtype["default"]}}; // $comment')
 
         # Set the prefetchers
@@ -787,8 +785,8 @@ $c_ident::init()
 
             # Only possible if it is not a 'z' case
             if not stall:
-                state = "%s_State_%s" % (self.ident, trans.state.ident)
-                event = "%s_Event_%s" % (self.ident, trans.event.ident)
+                state = f"{self.ident}_State_{trans.state.ident}"
+                event = f"{self.ident}_Event_{trans.event.ident}"
                 code("possibleTransition($state, $event);")
 
         code.dedent()
@@ -819,19 +817,19 @@ $c_ident::init()
         for param in self.config_parameters:
             if param.ident == "sequencer":
                 assert param.pointer
-                seq_ident = "m_%s_ptr" % param.ident
+                seq_ident = f"m_{param.ident}_ptr"
 
         dma_seq_ident = "NULL"
         for param in self.config_parameters:
             if param.ident == "dma_sequencer":
                 assert param.pointer
-                dma_seq_ident = "m_%s_ptr" % param.ident
+                dma_seq_ident = f"m_{param.ident}_ptr"
 
         coal_ident = "NULL"
         for param in self.config_parameters:
             if param.ident == "coalescer":
                 assert param.pointer
-                coal_ident = "m_%s_ptr" % param.ident
+                coal_ident = f"m_{param.ident}_ptr"
 
         if seq_ident != "NULL":
             code(
@@ -1276,13 +1274,13 @@ $c_ident::functionalWriteBuffers(PacketPtr& pkt)
         for var in self.objects:
             vtype = var.type
             if vtype.isBuffer:
-                vid = "m_%s_ptr" % var.ident
+                vid = f"m_{var.ident}_ptr"
                 code("num_functional_writes += $vid->functionalWrite(pkt);")
 
         for var in self.config_parameters:
             vtype = var.type_ast.type
             if vtype.isBuffer:
-                vid = "m_%s_ptr" % var.ident
+                vid = f"m_{var.ident}_ptr"
                 code("num_functional_writes += $vid->functionalWrite(pkt);")
 
         code(
@@ -1303,13 +1301,13 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt)
         for var in self.objects:
             vtype = var.type
             if vtype.isBuffer:
-                vid = "m_%s_ptr" % var.ident
+                vid = f"m_{var.ident}_ptr"
                 code("if ($vid->functionalRead(pkt)) return true;")
 
         for var in self.config_parameters:
             vtype = var.type_ast.type
             if vtype.isBuffer:
-                vid = "m_%s_ptr" % var.ident
+                vid = f"m_{var.ident}_ptr"
                 code("if ($vid->functionalRead(pkt)) return true;")
 
         code(
@@ -1326,13 +1324,13 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt, WriteMask &mask)
         for var in self.objects:
             vtype = var.type
             if vtype.isBuffer:
-                vid = "m_%s_ptr" % var.ident
+                vid = f"m_{var.ident}_ptr"
                 code("if ($vid->functionalRead(pkt, mask)) read = true;")
 
         for var in self.config_parameters:
             vtype = var.type_ast.type
             if vtype.isBuffer:
-                vid = "m_%s_ptr" % var.ident
+                vid = f"m_{var.ident}_ptr"
                 code("if ($vid->functionalRead(pkt, mask)) read = true;")
 
         code(
@@ -1345,7 +1343,7 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt, WriteMask &mask)
 """
         )
 
-        code.write(path, "%s.cc" % c_ident)
+        code.write(path, f"{c_ident}.cc")
 
     def printCWakeup(self, path, includes):
         """Output the wakeup loop for the events"""
@@ -1496,7 +1494,7 @@ ${ident}_Controller::wakeup()
 """
         )
 
-        code.write(path, "%s_Wakeup.cc" % self.ident)
+        code.write(path, f"{self.ident}_Wakeup.cc")
 
     def printCSwitch(self, path):
         """Output switch statement for transition table"""
@@ -1720,13 +1718,10 @@ ${ident}_Controller::doTransitionWorker(${ident}_Event event,
             case_sorter = []
             res = trans.resources
             for key, val in res.items():
-                val = """
-if (!%s.areNSlotsAvailable(%s, clockEdge()))
+                val = f"""
+if (!{key.code}.areNSlotsAvailable({val}, clockEdge()))
     return TransitionResult_ResourceStall;
-""" % (
-                    key.code,
-                    val,
-                )
+"""
                 case_sorter.append(val)
 
             # Check all of the request_types for resource constraints
@@ -1811,7 +1806,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
 } // namespace gem5
 """
         )
-        code.write(path, "%s_Transitions.cc" % self.ident)
+        code.write(path, f"{self.ident}_Transitions.cc")
 
     # **************************
     # ******* HTML Files *******
@@ -1838,19 +1833,19 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
 
         # Generate action descriptions
         for action in self.actions.values():
-            name = "%s_action_%s.html" % (self.ident, action.ident)
+            name = f"{self.ident}_action_{action.ident}.html"
             code = html.createSymbol(action, "Action")
             code.write(path, name)
 
         # Generate state descriptions
         for state in self.states.values():
-            name = "%s_State_%s.html" % (self.ident, state.ident)
+            name = f"{self.ident}_State_{state.ident}.html"
             code = html.createSymbol(state, "State")
             code.write(path, name)
 
         # Generate event descriptions
         for event in self.events.values():
-            name = "%s_Event_%s.html" % (self.ident, event.ident)
+            name = f"{self.ident}_Event_{event.ident}.html"
             code = html.createSymbol(event, "Event")
             code.write(path, name)
 
@@ -1891,7 +1886,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
         )
 
         for event in self.events.values():
-            href = "%s_Event_%s.html" % (self.ident, event.ident)
+            href = f"{self.ident}_Event_{event.ident}.html"
             ref = self.frameRef(href, "Status", href, "1", event.short)
             code("<TH bgcolor=white>$ref</TH>")
 
@@ -1904,8 +1899,8 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
             else:
                 color = "white"
 
-            click = "%s_table_%s.html" % (self.ident, state.ident)
-            over = "%s_State_%s.html" % (self.ident, state.ident)
+            click = f"{self.ident}_table_{state.ident}.html"
+            over = f"{self.ident}_State_{state.ident}.html"
             text = html.formatShorthand(state.short)
             ref = self.frameRef(click, "Table", over, "1", state.short)
             code(
@@ -1955,7 +1950,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
 
                 code("<TD bgcolor=$color>")
                 for action in trans.actions:
-                    href = "%s_action_%s.html" % (self.ident, action.ident)
+                    href = f"{self.ident}_action_{action.ident}.html"
                     ref = self.frameRef(
                         href, "Status", href, "1", action.short
                     )
@@ -1963,8 +1958,8 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
                 if next != state:
                     if trans.actions:
                         code("/")
-                    click = "%s_table_%s.html" % (self.ident, next.ident)
-                    over = "%s_State_%s.html" % (self.ident, next.ident)
+                    click = f"{self.ident}_table_{next.ident}.html"
+                    over = f"{self.ident}_State_{next.ident}.html"
                     ref = self.frameRef(click, "Table", over, "1", next.short)
                     code("$ref")
                 code("</TD>")
@@ -1975,8 +1970,8 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
             else:
                 color = "white"
 
-            click = "%s_table_%s.html" % (self.ident, state.ident)
-            over = "%s_State_%s.html" % (self.ident, state.ident)
+            click = f"{self.ident}_table_{state.ident}.html"
+            over = f"{self.ident}_State_{state.ident}.html"
             ref = self.frameRef(click, "Table", over, "1", state.short)
             code(
                 """
@@ -1993,7 +1988,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
         )
 
         for event in self.events.values():
-            href = "%s_Event_%s.html" % (self.ident, event.ident)
+            href = f"{self.ident}_Event_{event.ident}.html"
             ref = self.frameRef(href, "Status", href, "1", event.short)
             code("<TH bgcolor=white>$ref</TH>")
         code(
@@ -2005,9 +2000,9 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
         )
 
         if active_state:
-            name = "%s_table_%s.html" % (self.ident, active_state.ident)
+            name = f"{self.ident}_table_{active_state.ident}.html"
         else:
-            name = "%s_table.html" % self.ident
+            name = f"{self.ident}_table.html"
         code.write(path, name)
 
 

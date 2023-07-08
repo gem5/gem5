@@ -122,7 +122,6 @@ class HighBandwidthMemory(ChanneledMemory):
         # for interleaving across pseudo channels (at 64B currently)
         mask_list.insert(0, 1 << 6)
         for i, ctrl in enumerate(self.mem_ctrl):
-            ctrl.partitioned_q = False
             ctrl.dram.range = AddrRange(
                 start=self._mem_range.start,
                 size=self._mem_range.size(),

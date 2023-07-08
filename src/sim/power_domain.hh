@@ -151,7 +151,7 @@ class PowerDomain : public PowerState
     /**
      * Event to update the power states of the followers
      */
-    EventWrapper<PowerDomain, &PowerDomain::setFollowerPowerStates>
+    MemberEventWrapper<&PowerDomain::setFollowerPowerStates>
                 pwrStateUpdateEvent;
 
   protected:

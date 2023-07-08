@@ -1554,4 +1554,341 @@ let {{
             super().__init__(size=2)
         op_class = 'FloatMiscOp'
         code = 'FTW = 0xFFFF;'
+
+    class Blend(Media3Op):
+        def __init__(self, dest, src1, src2=0, **kwargs):
+            super().__init__(dest, src1, src2, **kwargs)
+        operand_types = (FloatDestOp, FloatSrc1Op, Imm8Op)
+        op_class = 'SimdMiscOp'
+        code = '''
+            assert(srcSize == destSize);
+            int size = srcSize;
+            int sizeBits = size * 8;
+            int items = sizeof(double) / size;
+            int offset = ext ? items : 0;
+
+            for (int i = 0; i < items; i++) {
+                int hiIndex = (i + 1) * sizeBits - 1;
+                int loIndex = (i + 0) * sizeBits;
+
+                if (bits(imm8, i + offset)) {
+                    uint64_t resBits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
+                    FpDestReg_uqw =
+                        insertBits(FpDestReg_uqw, hiIndex, loIndex, resBits);
+                } else {
+                    // do nothing
+                }
+            }
+        '''
+
+    class Extmove(Media2Op):
+        op_class = 'SimdMiscOp'
+        code = '''
+            int items = sizeof(double) / destSize;
+            int offset = partHi() ? items : 0;
+            int srcBits = srcSize * 8;
+            int destBits = destSize * 8;
+
+            for (int i = 0; i < items; i++) {
+                int hiIndexSrc = (i + offset + 1) * srcBits - 1;
+                int loIndexSrc = (i + offset + 0) * srcBits;
+                uint64_t resBits = bits(FpSrcReg1_uqw, hiIndexSrc, loIndexSrc);
+                if (signedOp()) {
+                    resBits = sext(resBits, srcBits);
+                } else {
+                    // do nothing, already zero-extended
+                }
+
+                int hiIndexDest = (i + 1) * destBits - 1;
+                int loIndexDest = (i + 0) * destBits;
+                FpDestReg_uqw =
+                    insertBits(FpDestReg_uqw, hiIndexDest,
+                               loIndexDest, resBits);
+            }
+        '''
+
+    class Blendxmm(Media3Op):
+        op_class = 'SimdMiscOp'
+        operand_types = (FloatDestOp, FloatSrc1Op, FloatSrc2Op)
+        code = '''
+            int size = srcSize;
+            int sizeBits = size * 8;
+            int items = sizeof(double) / size;
+
+            for (int i = 0; i < items; i++) {
+
+                int maskBit = bits(FpSrcReg2_uqw, (i + 1) * sizeBits - 1);
+
+                if (maskBit) {
+                    int hiIndex = (i + 1) * sizeBits - 1;
+                    int loIndex = (i + 0) * sizeBits;
+                    uint64_t resBits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
+                    FpDestReg_uqw =
+                        insertBits(FpDestReg_uqw, hiIndex, loIndex, resBits);
+                } else {
+                    // do nothing
+                }
+            }
+        '''
+
+
+    class Palignr(MediaOp):
+        operand_types = (FloatDestOp, FloatSrc1Op,
+            FloatSrc2Op, FloatSrc3Op, Imm8Op)
+        def __init__(self, op1, op2, op3, op4, op5, **kwargs):
+            super().__init__(op1, op2, op3, op4, op5, **kwargs)
+        op_class = 'SimdMiscOp'
+        code = '''
+            int zeroRegisterBytes = partHi() ? 24 : 32;
+            if (imm8 >= zeroRegisterBytes) {
+                FpDestReg_uqw = 0;
+            } else if (imm8 == 16) {
+                FpDestReg_uqw = FpDestReg_uqw;
+            } else if (imm8 == 8) {
+                FpDestReg_uqw = partHi() ? FpSrcReg1_uqw : FpSrcReg3_uqw;
+            } else if (imm8 == 0) {
+                FpDestReg_uqw = partHi() ? FpSrcReg3_uqw : FpSrcReg2_uqw;
+            } else {
+                int shift = imm8 * 8;
+                uint64_t firstFpSrcReg;
+                uint64_t secondFpSrcReg;
+                if (imm8 < 8) {
+                    firstFpSrcReg = partHi() ? FpSrcReg3_uqw : FpSrcReg2_uqw;
+                    secondFpSrcReg = partHi() ? FpSrcReg1_uqw : FpSrcReg3_uqw;
+                } else if (imm8 < 16) {
+                    shift -=64;
+                    firstFpSrcReg = partHi() ? FpSrcReg1_uqw : FpSrcReg3_uqw;
+                    secondFpSrcReg = partHi() ? FpDestReg_uqw : FpDestReg_uqw;
+                } else if (imm8 < 24) {
+                    shift = partHi() ? 192 - shift : shift - 128;
+                    firstFpSrcReg = partHi() ? 0 : FpDestReg_uqw;
+                    secondFpSrcReg = partHi() ?
+                        FpDestReg_uqw >> (64 - shift) : FpSrcReg1_uqw;
+                } else { // < 32
+                    shift = 256 - shift;
+                    firstFpSrcReg = 0;
+                    secondFpSrcReg = FpSrcReg1_uqw >> (64 - shift);
+                }
+
+                FpDestReg_uqw = firstFpSrcReg >> shift;
+                int hiIndex = 63;
+                int loIndex = 64 - shift;
+                FpDestReg_uqw = insertBits(FpDestReg_uqw, hiIndex,
+                                           loIndex, secondFpSrcReg);
+            }
+        '''
+
+    class Extractps(Media3Op):
+        op_class = 'SimdMiscOp'
+        operand_types = (IntDestOp, FloatSrc1Op, Imm8Op)
+        code = '''
+            if (imm8 < 2 && !partHi()) {
+                DestReg = (FpSrcReg1_uqw >> (32 * imm8)) & 0xFFFFFFFF;
+            } else if (imm8 >= 2 && partHi()) {
+                int shift = imm8 - 2;
+                DestReg = (FpSrcReg1_uqw >> (32 * shift)) & 0xFFFFFFFF;
+            }
+        '''
+
+    class Phminposuw(Media3Op):
+        op_class = 'SimdMiscOp'
+        code = '''
+            int minIndex = 0;
+            uint64_t min = 0xFFFFF;
+            int destBits = destSize * 8;
+
+            for (int i = 0; i < 128; i += destBits) {
+                uint64_t FpSrcReg = i < 64 ? FpSrcReg1_uqw : FpSrcReg2_uqw;
+                uint16_t value = bits(FpSrcReg, i + destBits - 1, i);
+                if (value < min) {
+                    min = value;
+                    minIndex = i / destBits;
+                }
+            }
+
+            FpDestReg_uqw = min;
+            FpDestReg_uqw = insertBits(FpDestReg_uqw, 64, destBits, minIndex);
+        '''
+
+    class Insertps(MediaOp):
+        operand_types = (FloatDestOp, FloatSrc1Op,
+            FloatSrc2Op, FloatSrc3Op, Imm8Op)
+        def __init__(self, op1, op2, op3, op4, op5, **kwargs):
+            super().__init__(op1, op2, op3, op4, op5, **kwargs)
+        op_class = 'SimdMiscOp'
+        code = '''
+            int countS = bits(imm8, 7, 6);
+            int countD = bits(imm8, 5, 4);
+            int zmask = bits(imm8, 3, 0);
+
+            uint64_t tmp = 0;
+            switch (countS) {
+                case 0: {
+                    tmp = bits(FpSrcReg2_uqw, 31, 0);
+                    break;
+                }
+                case 1: {
+                    tmp = bits(FpSrcReg2_uqw, 63, 32);
+                    break;
+                }
+                case 2: {
+                    tmp = bits(FpSrcReg3_uqw, 31, 0);
+                    break;
+                }
+                case 3: {
+                    tmp = bits(FpSrcReg3_uqw, 63, 32);
+                    break;
+                }
+            }
+
+            uint64_t tmp2l = partHi() ? FpSrcReg1_uqw : FpDestReg_uqw;
+            uint64_t tmp2h = partHi() ? FpDestReg_uqw : FpSrcReg1_uqw;
+
+            switch (countD) {
+                case 0: {
+                    tmp2l = insertBits(tmp2l, 31, 0, tmp);
+                    break;
+                }
+                case 1: {
+                    tmp2l = insertBits(tmp2l, 63, 32, tmp);
+                    break;
+                }
+                case 2: {
+                    tmp2h = insertBits(tmp2h, 31, 0, tmp);
+                    break;
+                }
+                case 3: {
+                    tmp2h = insertBits(tmp2h, 63, 32, tmp);
+                    break;
+                }
+            }
+
+            if (!partHi()) {
+                if (bits(zmask, 0)) {
+                    tmp2l = insertBits(tmp2l, 31, 0, 0);
+                }
+                if (bits(zmask, 1)) {
+                    tmp2l = insertBits(tmp2l, 63, 32, 0);
+                }
+                FpDestReg_uqw = tmp2l;
+            } else {
+                if (bits(zmask, 2)) {
+                    tmp2h = insertBits(tmp2h, 31, 0, 0);
+                }
+                if (bits(zmask, 3)) {
+                    tmp2h = insertBits(tmp2h, 63, 32, 0);
+                }
+                FpDestReg_uqw = tmp2h;
+            }
+
+        '''
+
+    class Rounds(MediaOp):
+        operand_types = (FloatDestOp, FloatSrc1Op, IntSrc2Op, Imm8Op)
+        def __init__(self, op1, op2, op3, op4, **kwargs):
+            super().__init__(op1, op2, op3, op4, **kwargs)
+        op_class = 'SimdMiscOp'
+        code = '''
+            bool isMXCSR = bits(imm8, 2);
+            int roundingMode = 0;
+            if (isMXCSR) {
+                roundingMode = bits(imm8, 14, 13);
+            } else {
+                roundingMode = bits(imm8, 1, 0);
+            }
+
+            union floatInt
+            {
+                float f;
+                uint32_t i;
+            };
+            union doubleInt
+            {
+                double d;
+                uint64_t i;
+            };
+
+            double arg;
+            if (srcSize == 4) {
+                floatInt fi;
+                fi.i = bits(FpSrcReg1_uqw, 31, 0);
+                arg = fi.f;
+            } else {
+                doubleInt di;
+                di.i = bits(FpSrcReg1_uqw, 63, 0);
+                arg = di.d;
+            }
+
+            switch (roundingMode) {
+                case 0: {
+                    // to nearest
+                    arg = std::round(arg);
+                    break;
+                }
+                case 1: {
+                    // down
+                    arg = std::floor(arg);
+                    break;
+                }
+                case 2: {
+                    // up
+                    arg = std::ceil(arg);
+                    break;
+                }
+                case 3: {
+                    // to 0
+                    arg = std::trunc(arg);
+                    break;
+                }
+            }
+
+            int destHiIndex = 0;
+            uint64_t argBits = 0;
+            if (destSize == 4) {
+                floatInt convertBack;
+                convertBack.f = arg;
+                argBits = convertBack.i;
+                destHiIndex = 31;
+            } else {
+                doubleInt convertBack;
+                convertBack.d = arg;
+                argBits  = convertBack.i;
+                destHiIndex = 63;
+            }
+            FpDestReg_uqw = insertBits(FpDestReg_uqw, destHiIndex, 0, argBits);
+        '''
+
+    class Pabs(Media2Op):
+        op_class = 'SimdMiscOp'
+        code = '''
+            int size = srcSize;
+            int sizeBits = size * 8;
+            int items = numItems(size);
+
+            for (int i = 0; i < items; i++) {
+                int hiIndex = (i + 1) * sizeBits - 1;
+                int loIndex = (i + 0) * sizeBits;
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
+                if (bits(arg1Bits, sizeBits - 1)) {
+                    if (size == 1) {
+                        uint8_t tmpBits = (uint8_t)arg1Bits;
+                        tmpBits = ~tmpBits + 1;
+                        arg1Bits = tmpBits;
+                    } else if (size == 2) {
+                        uint16_t tmpBits = (uint16_t)arg1Bits;
+                        tmpBits = ~tmpBits + 1;
+                        arg1Bits = tmpBits;
+                    } else if (size == 4) {
+                        uint32_t tmpBits = (uint32_t)arg1Bits;
+                        tmpBits = ~tmpBits + 1;
+                        arg1Bits = tmpBits;
+                    } else {
+                        assert(false);
+                    }
+                }
+
+                FpDestReg_uqw =
+                    insertBits(FpDestReg_uqw, hiIndex, loIndex, arg1Bits);
+            }
+        '''
 }};

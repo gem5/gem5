@@ -99,7 +99,7 @@ class SerializationFixture : public ::testing::Test
     {
         // Create the directory
         dirName = generateTempDirName();
-        M5_VAR_USED int success = mkdir(dirName.c_str(), 0775);
+        [[maybe_unused]] int success = mkdir(dirName.c_str(), 0775);
         assert(!(success == -1 && errno != EEXIST));
     }
 
@@ -110,7 +110,7 @@ class SerializationFixture : public ::testing::Test
         // rmdir does not work
         std::remove(getCptPath().c_str());
         // Remove the directory we created on SetUp
-        M5_VAR_USED int success = rmdir(dirName.c_str());
+        [[maybe_unused]] int success = rmdir(dirName.c_str());
         assert(success == 0);
     }
 };

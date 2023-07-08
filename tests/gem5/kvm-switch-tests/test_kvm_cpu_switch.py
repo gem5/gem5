@@ -46,9 +46,7 @@ def test_kvm_switch(cpu: str, num_cpus: int, mem_system: str, length: str):
         # Don't run the tests if KVM is unavailable.
         return
 
-    name = "{}-cpu_{}-cores_{}_kvm-switch-test".format(
-        cpu, str(num_cpus), mem_system
-    )
+    name = f"{cpu}-cpu_{str(num_cpus)}-cores_{mem_system}_kvm-switch-test"
     verifiers = []
 
     if mem_system == "mesi_two_level":

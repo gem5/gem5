@@ -117,7 +117,7 @@ class AmbaDmaDevice(DmaDevice):
     pio_addr = Param.Addr("Address for AMBA responder interface")
     pio_latency = Param.Latency(
         "10ns",
-        "Time between action and write/read" "result by AMBA DMA Device",
+        "Time between action and write/readresult by AMBA DMA Device",
     )
     interrupt = Param.ArmInterruptPin("Interrupt that connects to GIC")
     amba_id = Param.UInt32("ID of AMBA device for kernel detection")
@@ -248,7 +248,7 @@ class RealViewCtrl(BasicPioDevice):
     idreg = Param.UInt32(0x00000000, "ID Register, SYS_ID")
 
     def generateDeviceTree(self, state):
-        node = FdtNode("sysreg@%x" % int(self.pio_addr))
+        node = FdtNode(f"sysreg@{int(self.pio_addr):x}")
         node.appendCompatible("arm,vexpress-sysreg")
         node.append(
             FdtPropertyWords(
@@ -458,7 +458,7 @@ class FixedClock(SrcClockDomain):
     def generateDeviceTree(self, state):
         if len(self.clock) > 1:
             fatal("FixedClock configured with multiple frequencies")
-        node = FdtNode("clock{}".format(FixedClock._index))
+        node = FdtNode(f"clock{FixedClock._index}")
         node.appendCompatible("fixed-clock")
         node.append(FdtPropertyWords("#clock-cells", 0))
         node.append(
@@ -634,17 +634,17 @@ class HDLcd(AmbaDmaDevice):
     cxx_header = "dev/arm/hdlcd.hh"
     cxx_class = "gem5::HDLcd"
     vnc = Param.VncInput(
-        Parent.any, "Vnc server for remote frame buffer " "display"
+        Parent.any, "Vnc server for remote frame buffer display"
     )
     amba_id = 0x00141000
     workaround_swap_rb = Param.Bool(
-        False, "Workaround incorrect color " "selector order in some kernels"
+        False, "Workaround incorrect color selector order in some kernels"
     )
     workaround_dma_line_count = Param.Bool(
-        True, "Workaround incorrect " "DMA line count (off by 1)"
+        True, "Workaround incorrect DMA line count (off by 1)"
     )
     enable_capture = Param.Bool(
-        True, "capture frame to " "system.framebuffer.{extension}"
+        True, "capture frame to system.framebuffer.{extension}"
     )
     frame_format = Param.ImageFormat(
         "Auto", "image format of the captured frame"
@@ -655,7 +655,7 @@ class HDLcd(AmbaDmaDevice):
     pxl_clk = Param.ClockDomain("Pixel clock source")
     pixel_chunk = Param.Unsigned(32, "Number of pixels to handle in one batch")
     virt_refresh_rate = Param.Frequency(
-        "20Hz", "Frame refresh rate " "in KVM mode"
+        "20Hz", "Frame refresh rate in KVM mode"
     )
     _status = "ok"
 
@@ -743,7 +743,7 @@ class MmioSRAM(ParentMem):
         super().__init__(**kwargs)
 
     def generateDeviceTree(self, state):
-        node = FdtNode("sram@%x" % int(self.range.start))
+        node = FdtNode(f"sram@{int(self.range.start):x}")
         node.appendCompatible(["mmio-sram"])
         node.append(
             FdtPropertyWords(

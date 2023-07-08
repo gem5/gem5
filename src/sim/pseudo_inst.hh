@@ -55,7 +55,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(PseudoInst, pseudo_inst);
 namespace pseudo_inst
 {
 

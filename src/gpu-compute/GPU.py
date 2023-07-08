@@ -45,7 +45,7 @@ class PrefetchType(Enum):
 
 
 class GfxVersion(ScopedEnum):
-    vals = ["gfx801", "gfx803", "gfx900", "gfx902"]
+    vals = ["gfx801", "gfx803", "gfx900", "gfx902", "gfx908", "gfx90a"]
 
 
 class PoolManager(SimObject):
@@ -115,7 +115,7 @@ class Wavefront(SimObject):
     wf_size = Param.Int(64, "Wavefront size (in work items)")
     max_ib_size = Param.Int(
         13,
-        "Maximum size (in number of insts) of the " "instruction buffer (IB).",
+        "Maximum size (in number of insts) of the instruction buffer (IB).",
     )
 
 
@@ -134,32 +134,32 @@ class ComputeUnit(ClockedObject):
     num_SIMDs = Param.Int(4, "number of SIMD units per CU")
     num_scalar_cores = Param.Int(1, "number of Scalar cores per CU")
     num_scalar_mem_pipes = Param.Int(
-        1, "number of Scalar memory pipelines " "per CU"
+        1, "number of Scalar memory pipelines per CU"
     )
     simd_width = Param.Int(16, "width (number of lanes) per SIMD unit")
 
     operand_network_length = Param.Int(
-        1, "number of pipe stages of operand " "network"
+        1, "number of pipe stages of operand network"
     )
 
     spbypass_pipe_length = Param.Int(
-        4, "vector ALU Single Precision bypass " "latency"
+        4, "vector ALU Single Precision bypass latency"
     )
 
     dpbypass_pipe_length = Param.Int(
-        4, "vector ALU Double Precision bypass " "latency"
+        4, "vector ALU Double Precision bypass latency"
     )
     scalar_pipe_length = Param.Int(1, "number of pipe stages per scalar ALU")
     issue_period = Param.Int(4, "number of cycles per issue period")
 
     vrf_gm_bus_latency = Param.Int(
-        1, "number of cycles per use of VRF to " "GM bus"
+        1, "number of cycles per use of VRF to GM bus"
     )
     srf_scm_bus_latency = Param.Int(
-        1, "number of cycles per use of SRF " "to Scalar Mem bus"
+        1, "number of cycles per use of SRF to Scalar Mem bus"
     )
     vrf_lm_bus_latency = Param.Int(
-        1, "number of cycles per use of VRF to " "LM bus"
+        1, "number of cycles per use of VRF to LM bus"
     )
 
     num_global_mem_pipes = Param.Int(1, "number of global memory pipes per CU")
@@ -178,13 +178,26 @@ class ComputeUnit(ClockedObject):
         "TCP and cu as well as TCP data array "
         "access. Specified in GPU clock cycles",
     )
+    scalar_mem_req_latency = Param.Int(
+        50,
+        "Latency for scalar requests from the cu to ruby. "
+        "Represents the pipeline to reach the TCP "
+        "and specified in GPU clock cycles",
+    )
+    scalar_mem_resp_latency = Param.Int(
+        50,
+        "Latency for scalar responses from ruby to the "
+        "cu. Represents the pipeline between the "
+        "TCP and cu as well as TCP data array "
+        "access. Specified in GPU clock cycles",
+    )
     system = Param.System(Parent.any, "system object")
     cu_id = Param.Int("CU id")
     vrf_to_coalescer_bus_width = Param.Int(
-        64, "VRF->Coalescer data bus " "width in bytes"
+        64, "VRF->Coalescer data bus width in bytes"
     )
     coalescer_to_vrf_bus_width = Param.Int(
-        64, "Coalescer->VRF data bus " "width  in bytes"
+        64, "Coalescer->VRF data bus width  in bytes"
     )
 
     memory_port = VectorRequestPort("Port to the memory system")
@@ -198,7 +211,7 @@ class ComputeUnit(ClockedObject):
     perLaneTLB = Param.Bool(False, "enable per-lane TLB")
     prefetch_depth = Param.Int(
         0,
-        "Number of prefetches triggered at a time" "(0 turns off prefetching)",
+        "Number of prefetches triggered at a time(0 turns off prefetching)",
     )
     prefetch_stride = Param.Int(1, "Fixed Prefetch Stride (1 means next-page)")
     prefetch_prev_type = Param.PrefetchType(
@@ -212,24 +225,24 @@ class ComputeUnit(ClockedObject):
     functionalTLB = Param.Bool(False, "Assume TLB causes no delay")
 
     localMemBarrier = Param.Bool(
-        False, "Assume Barriers do not wait on " "kernel end"
+        False, "Assume Barriers do not wait on kernel end"
     )
 
     countPages = Param.Bool(
         False,
-        "Generate per-CU file of all pages " "touched and how many times",
+        "Generate per-CU file of all pages touched and how many times",
     )
     scalar_mem_queue_size = Param.Int(
-        32, "Number of entries in scalar " "memory pipeline's queues"
+        32, "Number of entries in scalar memory pipeline's queues"
     )
     global_mem_queue_size = Param.Int(
-        256, "Number of entries in the global " "memory pipeline's queues"
+        256, "Number of entries in the global memory pipeline's queues"
     )
     local_mem_queue_size = Param.Int(
-        256, "Number of entries in the local " "memory pipeline's queues"
+        256, "Number of entries in the local memory pipeline's queues"
     )
     max_wave_requests = Param.Int(
-        64, "number of pending vector memory " "requests per wavefront"
+        64, "number of pending vector memory requests per wavefront"
     )
     max_cu_tokens = Param.Int(
         4,
@@ -241,18 +254,18 @@ class ComputeUnit(ClockedObject):
     localDataStore = Param.LdsState("the LDS for this CU")
 
     vector_register_file = VectorParam.VectorRegisterFile(
-        "Vector register " "file"
+        "Vector register file"
     )
 
     scalar_register_file = VectorParam.ScalarRegisterFile(
-        "Scalar register " "file"
+        "Scalar register file"
     )
     out_of_order_data_delivery = Param.Bool(
-        False, "enable OoO data delivery" " in the GM pipeline"
+        False, "enable OoO data delivery in the GM pipeline"
     )
     register_manager = Param.RegisterManager("Register Manager")
     fetch_depth = Param.Int(
-        2, "number of i-cache lines that may be " "buffered in the fetch unit."
+        2, "number of i-cache lines that may be buffered in the fetch unit."
     )
 
 
@@ -314,6 +327,10 @@ class GPUDispatcher(SimObject):
     type = "GPUDispatcher"
     cxx_class = "gem5::GPUDispatcher"
     cxx_header = "gpu-compute/dispatcher.hh"
+
+    kernel_exit_events = Param.Bool(
+        False, "Enable exiting sim loop after a kernel"
+    )
 
 
 class GPUCommandProcessor(DmaVirtDevice):

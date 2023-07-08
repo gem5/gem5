@@ -31,11 +31,11 @@
 #include <string>
 
 #include "arch/arm/fastmodel/iris/cpu.hh"
-#include "dev/intpin.hh"
 #include "dev/io_device.hh"
 #include "dev/reg_bank.hh"
 #include "mem/packet_access.hh"
 #include "params/FastModelResetControllerExample.hh"
+#include "sim/signal.hh"
 
 namespace gem5
 {
@@ -48,9 +48,8 @@ class ResetControllerExample : public BasicPioDevice
   private:
     struct CorePins
     {
-        using CoreInt = IntSourcePin<CorePins>;
-        CoreInt reset;
-        CoreInt halt;
+        SignalSourcePort<bool> reset;
+        SignalSourcePort<bool> halt;
 
         explicit CorePins(const std::string &);
     };

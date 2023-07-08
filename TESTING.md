@@ -86,10 +86,10 @@ For instance, if you want to run only with `gem5.opt`, you can use
 ./main.py run --variant opt
 ```
 
-Or, if you want to just run X86 tests with the `gem5.opt` binary:
+Or, if you want to just run quick tests with the `gem5.opt` binary:
 
 ```shell
-./main.py run --length quick --variant opt --isa X86
+./main.py run --length quick --variant opt
 ```
 
 
@@ -102,6 +102,14 @@ To view all of the available tags, use
 The output is split into tag *types* (e.g., isa, variant, length) and the
 tags for each type are listed after the type name.
 
+Note that when using the isa tag type, tests were traditionally sorted based
+on what compilation it required. However, as tests have switched to all be
+compiled under the ALL compilation, which includes all ISAs so one doesn't
+need to compile each one individually, using the isa tag for ISAs other than
+ALL has become a less optimal way of searching for tests.  It would instead
+be better to run subsets of tests based on their directories, as described
+above.
+
 You can specify "or" between tags within the same type by using the tag flag
 multiple times. For instance, to run everything that is tagged "opt" or "fast"
 use
@@ -112,10 +120,10 @@ use
 
 You can also specify "and" between different types of tags by specifying more
 than one type on the command line. For instance, this will only run tests with
-both the "X86" and "opt" tags.
+both the "ALL" and "opt" tags.
 
 ```shell
-./main.py run --isa X86 --variant opt
+./main.py run --isa All --variant opt
 ```
 
 ## Running tests in batch

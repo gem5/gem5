@@ -41,7 +41,7 @@ class OutPortDeclAST(DeclAST):
         self.queue_type = TypeAST(slicc, "OutPort")
 
     def __repr__(self):
-        return "[OutPortDecl: %r]" % self.ident
+        return f"[OutPortDecl: {self.ident!r}]"
 
     def generate(self):
         code = self.slicc.codeFormatter(newlines=False)

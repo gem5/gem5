@@ -52,7 +52,7 @@ class FdtProperty(object):
         """Init with name"""
         self.name = name
         if not FdtProperty.__validate_dt_name(self.name):
-            raise Exception("Invalid name '%s'" % self.name)
+            raise Exception(f"Invalid name '{self.name}'")
 
     def get_name(self):
         """Get property name"""
@@ -60,7 +60,7 @@ class FdtProperty(object):
 
     def __str__(self):
         """String representation"""
-        return "Property(%s)" % self.name
+        return f"Property({self.name})"
 
     def dts_represent(self, depth=0):
         """Get dts string representation"""
@@ -78,7 +78,7 @@ class FdtProperty(object):
 
     def json_represent(self, depth=0):
         """Ouput JSON"""
-        return "%s: null" % json.dumps(self.name)
+        return f"{json.dumps(self.name)}: null"
 
     def to_raw(self):
         """Return RAW value representation"""
@@ -219,7 +219,7 @@ class FdtPropertyStrings(FdtProperty):
 
     def json_represent(self, depth=0):
         """Ouput JSON"""
-        result = '%s: ["strings", ' % json.dumps(self.name)
+        result = f'{json.dumps(self.name)}: ["strings", '
         result += ", ".join([json.dumps(stri) for stri in self.strings])
         result += "]"
         return result
@@ -230,7 +230,7 @@ class FdtPropertyStrings(FdtProperty):
 
     def __str__(self):
         """String representation"""
-        return "Property(%s,Strings:%s)" % (self.name, self.strings)
+        return f"Property({self.name},Strings:{self.strings})"
 
     def __getitem__(self, index):
         """Get strings, returns a string"""
@@ -291,7 +291,7 @@ class FdtPropertyWords(FdtProperty):
             INDENT * depth
             + self.name
             + " = <"
-            + " ".join(["0x%08x" % word for word in self.words])
+            + " ".join([f"0x{word:08x}" for word in self.words])
             + ">;"
         )
 
@@ -310,8 +310,8 @@ class FdtPropertyWords(FdtProperty):
 
     def json_represent(self, depth=0):
         """Ouput JSON"""
-        result = '%s: ["words", "' % json.dumps(self.name)
-        result += '", "'.join(["0x%08x" % word for word in self.words])
+        result = f'{json.dumps(self.name)}: ["words", "'
+        result += '", "'.join([f"0x{word:08x}" for word in self.words])
         result += '"]'
         return result
 
@@ -321,7 +321,7 @@ class FdtPropertyWords(FdtProperty):
 
     def __str__(self):
         """String representation"""
-        return "Property(%s,Words:%s)" % (self.name, self.words)
+        return f"Property({self.name},Words:{self.words})"
 
     def __getitem__(self, index):
         """Get words, returns a word integer"""
@@ -376,7 +376,7 @@ class FdtPropertyBytes(FdtProperty):
             + self.name
             + " = ["
             + " ".join(
-                ["%02x" % (byte & int("ffffffff", 16)) for byte in self.bytes]
+                [f"{byte & int('ffffffff', 16):02x}" for byte in self.bytes]
             )
             + "];"
         )
@@ -397,8 +397,8 @@ class FdtPropertyBytes(FdtProperty):
 
     def json_represent(self, depth=0):
         """Ouput JSON"""
-        result = '%s: ["bytes", "' % json.dumps(self.name)
-        result += '", "'.join(["%02x" % byte for byte in self.bytes])
+        result = f'{json.dumps(self.name)}: ["bytes", "'
+        result += '", "'.join([f"{byte:02x}" for byte in self.bytes])
         result += '"]'
         return result
 
@@ -408,7 +408,7 @@ class FdtPropertyBytes(FdtProperty):
 
     def __str__(self):
         """String representation"""
-        return "Property(%s,Bytes:%s)" % (self.name, self.bytes)
+        return f"Property({self.name},Bytes:{self.bytes})"
 
     def __getitem__(self, index):
         """Get bytes, returns a byte"""
@@ -471,7 +471,7 @@ class FdtNode(object):
         self.subdata = []
         self.parent = None
         if not FdtNode.__validate_dt_name(self.name):
-            raise Exception("Invalid name '%s'" % self.name)
+            raise Exception(f"Invalid name '{self.name}'")
 
     def get_name(self):
         """Get property name"""
@@ -504,7 +504,7 @@ class FdtNode(object):
 
     def __str__(self):
         """String representation"""
-        return "Node(%s)" % self.name
+        return f"Node({self.name})"
 
     def dts_represent(self, depth=0):
         """Get dts string representation"""
@@ -579,7 +579,7 @@ class FdtNode(object):
         ].get_name() != subnode.get_name() and self.__check_name_duplicate(
             subnode.get_name()
         ):
-            raise Exception("%s : %s subnode already exists" % (self, subnode))
+            raise Exception(f"{self} : {subnode} subnode already exists")
         if not isinstance(subnode, (FdtNode, FdtProperty, FdtNop)):
             raise Exception("Invalid object type")
         self.subdata[index] = subnode
@@ -635,7 +635,7 @@ class FdtNode(object):
     def append(self, subnode):
         """Append subnode, same as add_subnode"""
         if self.__check_name_duplicate(subnode.get_name()):
-            raise Exception("%s : %s subnode already exists" % (self, subnode))
+            raise Exception(f"{self} : {subnode} subnode already exists")
         if not isinstance(subnode, (FdtNode, FdtProperty, FdtNop)):
             raise Exception("Invalid object type")
         self.subdata.append(subnode)
@@ -647,7 +647,7 @@ class FdtNode(object):
     def insert(self, index, subnode):
         """Insert subnode before index, must not be a duplicate name"""
         if self.__check_name_duplicate(subnode.get_name()):
-            raise Exception("%s : %s subnode already exists" % (self, subnode))
+            raise Exception(f"{self} : {subnode} subnode already exists")
         if not isinstance(subnode, (FdtNode, FdtProperty, FdtNop)):
             raise Exception("Invalid object type")
         self.subdata.insert(index, subnode)
@@ -778,7 +778,7 @@ class Fdt(object):
         )
         if self.header["version"] >= 2:
             result += (
-                "// boot_cpuid_phys:\t0x%x\n" % self.header["boot_cpuid_phys"]
+                f"// boot_cpuid_phys:\t0x{self.header['boot_cpuid_phys']:x}\n"
             )
         result += "\n"
         if self.reserve_entries is not None:
@@ -914,7 +914,7 @@ def _add_json_to_fdtnode(node, subjson):
             _add_json_to_fdtnode(subnode, value)
         elif isinstance(value, list):
             if len(value) < 2:
-                raise Exception("Invalid list for %s" % key)
+                raise Exception(f"Invalid list for {key}")
             if value[0] == "words":
                 words = [int(word, 16) for word in value[1:]]
                 node.append(FdtPropertyWords(key, words))
@@ -924,11 +924,11 @@ def _add_json_to_fdtnode(node, subjson):
             elif value[0] == "strings":
                 node.append(FdtPropertyStrings(key, [s for s in value[1:]]))
             else:
-                raise Exception("Invalid list for %s" % key)
+                raise Exception(f"Invalid list for {key}")
         elif value is None:
             node.append(FdtProperty(key))
         else:
-            raise Exception("Invalid value for %s" % key)
+            raise Exception(f"Invalid value for {key}")
 
 
 def FdtJsonParse(buf):

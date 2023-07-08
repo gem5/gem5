@@ -42,7 +42,7 @@ from ruby import Ruby
 samples_runscript = """\
 export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 export HSA_ENABLE_INTERRUPT=0
-dmesg -n3
+dmesg -n8
 dd if=/root/roms/vega10.rom of=/dev/mem bs=1k seek=768 count=128
 if [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then
     echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."
@@ -97,18 +97,16 @@ if __name__ == "__m5_main__":
 
     # Create temp script to run application
     if args.app is None:
-        print("No application given. Use %s -a <app>" % sys.argv[0])
+        print(f"No application given. Use {sys.argv[0]} -a <app>")
         sys.exit(1)
     elif args.kernel is None:
-        print("No kernel path given. Use %s --kernel <vmlinux>" % sys.argv[0])
+        print(f"No kernel path given. Use {sys.argv[0]} --kernel <vmlinux>")
         sys.exit(1)
     elif args.disk_image is None:
-        print("No disk path given. Use %s --disk-image <linux>" % sys.argv[0])
+        print(f"No disk path given. Use {sys.argv[0]} --disk-image <linux>")
         sys.exit(1)
     elif args.gpu_mmio_trace is None:
-        print(
-            "No MMIO trace path. Use %s --gpu-mmio-trace <path>" % sys.argv[0]
-        )
+        print(f"No MMIO trace path. Use {sys.argv[0]} --gpu-mmio-trace <path>")
         sys.exit(1)
 
     _, tempRunscript = tempfile.mkstemp()

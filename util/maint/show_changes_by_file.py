@@ -51,7 +51,7 @@ def diff_files(upstream, feature, paths=[]):
     """
 
     raw = subprocess.check_output(
-        ["git", "diff", "--name-status", "%s..%s" % (upstream, feature), "--"]
+        ["git", "diff", "--name-status", f"{upstream}..{feature}", "--"]
         + paths
     )
 
@@ -61,7 +61,7 @@ def diff_files(upstream, feature, paths=[]):
     for p in path:
         direc = subprocess.check_output(["dirname", p]).strip() + "/"
         filename = subprocess.check_output(["basename", p]).strip()
-        odd[direc].append("%s" % filename)
+        odd[direc].append(f"{filename}")
 
     return odd
 
@@ -76,7 +76,7 @@ def cl_hash(upstream, feature, path):
     """
 
     raw = subprocess.check_output(
-        ["git", "log", "--oneline", "%s..%s" % (upstream, feature), "--", path]
+        ["git", "log", "--oneline", f"{upstream}..{feature}", "--", path]
     )
 
     return [l.split()[0] for l in raw.splitlines()]
@@ -94,15 +94,15 @@ def _main():
         "--upstream",
         "-u",
         type=str,
-        default="origin/master",
-        help="Upstream branch for comparison. " "Default: %(default)s",
+        default="origin/develop",
+        help="Upstream branch for comparison. Default: %(default)s",
     )
     parser.add_argument(
         "--feature",
         "-f",
         type=str,
         default="HEAD",
-        help="Feature branch for comparison. " "Default: %(default)s",
+        help="Feature branch for comparison. Default: %(default)s",
     )
     parser.add_argument(
         "paths",
@@ -119,11 +119,11 @@ def _main():
     for key, value in odd.items():
         print(key)
         for entry in value:
-            print("    %s" % entry)
+            print(f"    {entry}")
             path = key + entry
             sha = cl_hash(args.upstream, args.feature, path)
             for s in sha:
-                print("\t%s" % s)
+                print(f"\t{s}")
         print()
 
 

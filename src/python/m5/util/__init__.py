@@ -108,8 +108,12 @@ def deprecated(replacement=None, logger=warn):
                     message += f" Prefer {replacement} instead."
             logger(message)
 
-        notifyDeprecation()
-        return func
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            notifyDeprecation()
+            return func(*args, **kwargs)
+
+        return wrapper
 
     return decorator
 
@@ -199,7 +203,7 @@ def printList(items, indent=4):
             line = " " * indent
 
         if i < len(items) - 1:
-            line += "%s, " % item
+            line += f"{item}, "
         else:
             line += item
             print(line)

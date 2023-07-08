@@ -59,7 +59,6 @@ bool emptyStrings(const T &labels)
 }
 
 
-GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
 

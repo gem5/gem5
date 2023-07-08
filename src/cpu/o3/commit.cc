@@ -156,25 +156,10 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
                "The number of times a branch was mispredicted"),
       ADD_STAT(numCommittedDist, statistics::units::Count::get(),
                "Number of insts commited each cycle"),
-      ADD_STAT(instsCommitted, statistics::units::Count::get(),
-               "Number of instructions committed"),
-      ADD_STAT(opsCommitted, statistics::units::Count::get(),
-               "Number of ops (including micro ops) committed"),
-      ADD_STAT(memRefs, statistics::units::Count::get(),
-               "Number of memory references committed"),
-      ADD_STAT(loads, statistics::units::Count::get(), "Number of loads committed"),
       ADD_STAT(amos, statistics::units::Count::get(),
                "Number of atomic instructions committed"),
       ADD_STAT(membars, statistics::units::Count::get(),
                "Number of memory barriers committed"),
-      ADD_STAT(branches, statistics::units::Count::get(),
-               "Number of branches committed"),
-      ADD_STAT(vectorInstructions, statistics::units::Count::get(),
-               "Number of committed Vector instructions."),
-      ADD_STAT(floating, statistics::units::Count::get(),
-               "Number of committed floating point instructions."),
-      ADD_STAT(integer, statistics::units::Count::get(),
-               "Number of committed integer instructions."),
       ADD_STAT(functionCalls, statistics::units::Count::get(),
                "Number of function calls committed."),
       ADD_STAT(committedInstType, statistics::units::Count::get(),
@@ -192,43 +177,11 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
         .init(0,commit->commitWidth,1)
         .flags(statistics::pdf);
 
-    instsCommitted
-        .init(cpu->numThreads)
-        .flags(total);
-
-    opsCommitted
-        .init(cpu->numThreads)
-        .flags(total);
-
-    memRefs
-        .init(cpu->numThreads)
-        .flags(total);
-
-    loads
-        .init(cpu->numThreads)
-        .flags(total);
-
     amos
         .init(cpu->numThreads)
         .flags(total);
 
     membars
-        .init(cpu->numThreads)
-        .flags(total);
-
-    branches
-        .init(cpu->numThreads)
-        .flags(total);
-
-    vectorInstructions
-        .init(cpu->numThreads)
-        .flags(total);
-
-    floating
-        .init(cpu->numThreads)
-        .flags(total);
-
-    integer
         .init(cpu->numThreads)
         .flags(total);
 
@@ -1019,6 +972,8 @@ Commit::commitInsts()
 
             if (commit_success) {
                 ++num_committed;
+                cpu->commitStats[tid]
+                    ->committedInstType[head_inst->opClass()]++;
                 stats.committedInstType[tid][head_inst->opClass()]++;
                 ppCommit->notify(head_inst);
 
@@ -1383,9 +1338,11 @@ Commit::updateComInstStats(const DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
-    if (!inst->isMicroop() || inst->isLastMicroop())
-        stats.instsCommitted[tid]++;
-    stats.opsCommitted[tid]++;
+    if (!inst->isMicroop() || inst->isLastMicroop()) {
+        cpu->commitStats[tid]->numInsts++;
+        cpu->baseStats.numInsts++;
+    }
+    cpu->commitStats[tid]->numOps++;
 
     // To match the old model, don't count nops and instruction
     // prefetches towards the total commit count.
@@ -1396,21 +1353,20 @@ Commit::updateComInstStats(const DynInstPtr &inst)
     //
     //  Control Instructions
     //
-    if (inst->isControl())
-        stats.branches[tid]++;
+    cpu->commitStats[tid]->updateComCtrlStats(inst->staticInst);
 
     //
     //  Memory references
     //
     if (inst->isMemRef()) {
-        stats.memRefs[tid]++;
+        cpu->commitStats[tid]->numMemRefs++;
 
         if (inst->isLoad()) {
-            stats.loads[tid]++;
+            cpu->commitStats[tid]->numLoadInsts++;
         }
 
-        if (inst->isAtomic()) {
-            stats.amos[tid]++;
+        if (inst->isStore()) {
+            cpu->commitStats[tid]->numStoreInsts++;
         }
     }
 
@@ -1419,15 +1375,18 @@ Commit::updateComInstStats(const DynInstPtr &inst)
     }
 
     // Integer Instruction
-    if (inst->isInteger())
-        stats.integer[tid]++;
+    if (inst->isInteger()) {
+        cpu->commitStats[tid]->numIntInsts++;
+    }
 
     // Floating Point Instruction
-    if (inst->isFloating())
-        stats.floating[tid]++;
+    if (inst->isFloating()) {
+        cpu->commitStats[tid]->numFpInsts++;
+    }
     // Vector Instruction
-    if (inst->isVector())
-        stats.vectorInstructions[tid]++;
+    if (inst->isVector()) {
+        cpu->commitStats[tid]->numVecInsts++;
+    }
 
     // Function Calls
     if (inst->isCall())

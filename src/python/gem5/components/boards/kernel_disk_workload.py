@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2021, 2023 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,12 @@
 from abc import abstractmethod
 
 from .abstract_board import AbstractBoard
-from ...resources.resource import AbstractResource
+from ...resources.resource import (
+    DiskImageResource,
+    BootloaderResource,
+    CheckpointResource,
+    KernelResource,
+)
 
 from typing import List, Optional, Union
 import os
@@ -89,7 +94,7 @@ class KernelDiskWorkload:
         raise NotImplementedError
 
     @abstractmethod
-    def _add_disk_to_board(self, disk_image: AbstractResource) -> None:
+    def _add_disk_to_board(self, disk_image: DiskImageResource) -> None:
         """
         Sets the configuration needed to add the disk image to the board.
 
@@ -101,7 +106,7 @@ class KernelDiskWorkload:
         raise NotImplementedError
 
     def get_disk_root_partition(
-        cls, disk_image: AbstractResource
+        cls, disk_image: DiskImageResource
     ) -> Optional[str]:
         """
         Obtains the root partition of a disk image by inspecting the resource's
@@ -109,14 +114,11 @@ class KernelDiskWorkload:
 
         :returns: The disk image's root partition.
         """
-        try:
-            return disk_image.get_metadata()["additional_metadata"][
-                "root_partition"
-            ]
-        except KeyError:
-            return None
+        return disk_image.get_root_partition()
 
-    def get_default_kernel_root_val(self, disk_image: AbstractResource) -> str:
+    def get_default_kernel_root_val(
+        self, disk_image: DiskImageResource
+    ) -> str:
         """
         Get the default kernel root value to be passed to the kernel. This is
         determined by the value implemented in the `get_disk_device()`
@@ -134,14 +136,14 @@ class KernelDiskWorkload:
 
     def set_kernel_disk_workload(
         self,
-        kernel: AbstractResource,
-        disk_image: AbstractResource,
-        bootloader: Optional[AbstractResource] = None,
+        kernel: KernelResource,
+        disk_image: DiskImageResource,
+        bootloader: Optional[BootloaderResource] = None,
         readfile: Optional[str] = None,
         readfile_contents: Optional[str] = None,
         kernel_args: Optional[List[str]] = None,
         exit_on_work_items: bool = True,
-        checkpoint: Optional[Union[Path, AbstractResource]] = None,
+        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
     ) -> None:
         """
         This function allows the setting of a full-system run with a Kernel
@@ -212,11 +214,11 @@ class KernelDiskWorkload:
         if checkpoint:
             if isinstance(checkpoint, Path):
                 self._checkpoint = checkpoint
-            elif isinstance(checkpoint, AbstractResource):
+            elif isinstance(checkpoint, CheckpointResource):
                 self._checkpoint = Path(checkpoint.get_local_path())
             else:
                 # The checkpoint_dir must be None, Path, Or AbstractResource.
                 raise Exception(
                     "Checkpoints must be passed as a Path or an "
-                    "AbstractResource."
+                    "CheckpointResource."
                 )

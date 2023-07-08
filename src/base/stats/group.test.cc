@@ -255,10 +255,10 @@ TEST(StatsGroupTest, ConstructTwoLevelsUnbalancedTree)
     ASSERT_EQ(node2_2.getStatGroups().size(), 0);
 }
 
-class DummyInfo : public Stats::Info
+class DummyInfo : public statistics::Info
 {
   public:
-    using Stats::Info::Info;
+    using statistics::Info::Info;
 
     int value = 0;
 
@@ -266,7 +266,7 @@ class DummyInfo : public Stats::Info
     void prepare() override {}
     void reset() override { value = 0; }
     bool zero() const override { return false; }
-    void visit(Stats::Output &visitor) override {}
+    void visit(statistics::Output &visitor) override {}
 };
 
 /** Test adding stats to a group. */

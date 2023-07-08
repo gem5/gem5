@@ -75,7 +75,7 @@ class L1ICache(L1Cache):
     size = "16kB"
 
     SimpleOpts.add_option(
-        "--l1i_size", help="L1 instruction cache size. Default: %s" % size
+        "--l1i_size", help=f"L1 instruction cache size. Default: {size}"
     )
 
     def __init__(self, opts=None):
@@ -96,7 +96,7 @@ class L1DCache(L1Cache):
     size = "64kB"
 
     SimpleOpts.add_option(
-        "--l1d_size", help="L1 data cache size. Default: %s" % size
+        "--l1d_size", help=f"L1 data cache size. Default: {size}"
     )
 
     def __init__(self, opts=None):
@@ -122,9 +122,7 @@ class L2Cache(Cache):
     mshrs = 20
     tgts_per_mshr = 12
 
-    SimpleOpts.add_option(
-        "--l2_size", help="L2 cache size. Default: %s" % size
-    )
+    SimpleOpts.add_option("--l2_size", help=f"L2 cache size. Default: {size}")
 
     def __init__(self, opts=None):
         super(L2Cache, self).__init__()

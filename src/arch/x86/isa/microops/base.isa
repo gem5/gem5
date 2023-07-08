@@ -105,6 +105,8 @@ let {{
         idx_name = 'Src1'
     class Src2Op(object):
         idx_name = 'Src2'
+    class Src3Op(object):
+        idx_name = 'Src3'
 
     class RegisterOp(object):
         def __init__(self, it):
@@ -189,6 +191,9 @@ let {{
     class IntSrc2Op(IntOp, Src2Op, Operand):
         pass
 
+    class FloatSrc3Op(FloatOp, Src3Op, Operand):
+        pass
+
     class Op2(object):
         @classmethod
         def isDual(cls):
@@ -197,6 +202,13 @@ let {{
         RegType = FoldedSrc2Op
         FloatType = FloatSrc2Op
         ImmType = Imm8Op
+
+    class Op3(object):
+        @classmethod
+        def isDual(cls):
+            return False
+
+        FloatType = FloatSrc3Op
 
     class X86Microop(object):
 

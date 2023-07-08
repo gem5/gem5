@@ -162,6 +162,8 @@ class BaseGlobalEventTemplate : public BaseGlobalEvent
         for (int i = 0; i < numMainEventQueues; ++i)
             barrierEvent[i] = new typename Derived::BarrierEvent(this, p, f);
     }
+
+    virtual ~BaseGlobalEventTemplate(){}
 };
 
 
@@ -228,6 +230,8 @@ class GlobalSyncEvent : public BaseGlobalEventTemplate<GlobalSyncEvent>
     {
         schedule(when);
     }
+
+    virtual ~GlobalSyncEvent (){}
 
     void process();
 

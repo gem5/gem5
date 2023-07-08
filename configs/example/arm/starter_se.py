@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017 ARM Limited
+# Copyright (c) 2016-2017, 2022-2023 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -95,30 +95,36 @@ class SimpleSeSystem(System):
 
         # Add CPUs to the system. A cluster of CPUs typically have
         # private L1 caches and a shared L2 cache.
-        self.cpu_cluster = devices.CpuCluster(
-            self, args.num_cores, args.cpu_freq, "1.2V", *cpu_types[args.cpu]
+        self.cpu_cluster = devices.ArmCpuCluster(
+            self,
+            args.num_cores,
+            args.cpu_freq,
+            "1.2V",
+            *cpu_types[args.cpu],
+            tarmac_gen=args.tarmac_gen,
+            tarmac_dest=args.tarmac_dest,
         )
 
         # Create a cache hierarchy (unless we are simulating a
         # functional CPU in atomic memory mode) for the CPU cluster
         # and connect it to the shared memory bus.
-        if self.cpu_cluster.memoryMode() == "timing":
+        if self.cpu_cluster.memory_mode() == "timing":
             self.cpu_cluster.addL1()
             self.cpu_cluster.addL2(self.cpu_cluster.clk_domain)
         self.cpu_cluster.connectMemSide(self.membus)
 
         # Tell gem5 about the memory mode used by the CPUs we are
         # simulating.
-        self.mem_mode = self.cpu_cluster.memoryMode()
+        self.mem_mode = self.cpu_cluster.memory_mode()
 
     def numCpuClusters(self):
         return len(self._clusters)
 
-    def addCpuCluster(self, cpu_cluster, num_cpus):
+    def addCpuCluster(self, cpu_cluster):
         assert cpu_cluster not in self._clusters
-        assert num_cpus > 0
+        assert len(cpu_cluster) > 0
         self._clusters.append(cpu_cluster)
-        self._num_cpus += num_cpus
+        self._num_cpus += len(cpu_cluster)
 
     def numCpus(self):
         return self._num_cpus
@@ -215,6 +221,17 @@ def main():
         default="2GB",
         help="Specify the physical memory size",
     )
+    parser.add_argument(
+        "--tarmac-gen",
+        action="store_true",
+        help="Write a Tarmac trace.",
+    )
+    parser.add_argument(
+        "--tarmac-dest",
+        choices=TarmacDump.vals,
+        default="stdoutput",
+        help="Destination for the Tarmac trace output. [Default: stdoutput]",
+    )
 
     args = parser.parse_args()
 
@@ -240,8 +257,7 @@ def main():
     # Print the reason for the simulation exit. Some exit codes are
     # requests for service (e.g., checkpoints) from the simulation
     # script. We'll just ignore them here and exit.
-    print(event.getCause(), " @ ", m5.curTick())
-    sys.exit(event.getCode())
+    print(f"{event.getCause()} ({event.getCode()}) @ {m5.curTick()}")
 
 
 if __name__ == "__m5_main__":

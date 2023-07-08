@@ -51,7 +51,6 @@ struct RegABI64 : public GenericSyscallABI64
 
 } // namespace ArmISA
 
-GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
 namespace guest_abi
 {
 

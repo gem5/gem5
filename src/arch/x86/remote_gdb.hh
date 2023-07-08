@@ -146,7 +146,7 @@ class RemoteGDB : public BaseRemoteGDB
     AMD64GdbRegCache regCache64;
 
   public:
-    RemoteGDB(System *system, int _port);
+    RemoteGDB(System *system, ListenSocketConfig _listen_config);
     BaseGdbRegCache *gdbRegs();
 };
 

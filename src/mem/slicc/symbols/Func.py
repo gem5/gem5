@@ -67,11 +67,7 @@ class Func(Symbol):
         elif "return_by_pointer" in self and self.return_type != void_type:
             return_type += "*"
 
-        return "%s %s(%s);" % (
-            return_type,
-            self.c_name,
-            ", ".join(self.param_strings),
-        )
+        return f"{return_type} {self.c_name}({', '.join(self.param_strings)});"
 
     def writeCodeFiles(self, path, includes):
         return
@@ -97,8 +93,7 @@ class Func(Symbol):
                 and str(actual_type["interface"]) != str(expected_type)
             ):
                 expr.error(
-                    "Type mismatch: expected: %s actual: %s"
-                    % (expected_type, actual_type)
+                    f"Type mismatch: expected: {expected_type} actual: {actual_type}"
                 )
             cvec.append(param_code)
             type_vec.append(expected_type)

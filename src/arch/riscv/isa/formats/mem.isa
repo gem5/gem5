@@ -228,7 +228,7 @@ def template StoreCompleteAcc {{
     }
 }};
 
-def format Load(memacc_code, ea_code = {{EA = Rs1 + offset;}},
+def format Load(memacc_code, ea_code = {{EA = rvZext(Rs1 + offset);}},
         offset_code={{offset = sext<12>(IMM12);}},
         mem_flags=[], inst_flags=[]) {{
     (header_output, decoder_output, decode_block, exec_output) = \
@@ -236,7 +236,7 @@ def format Load(memacc_code, ea_code = {{EA = Rs1 + offset;}},
         inst_flags, 'Load', exec_template_base='Load')
 }};
 
-def format Store(memacc_code, ea_code={{EA = Rs1 + offset;}},
+def format Store(memacc_code, ea_code={{EA = rvZext(Rs1 + offset);}},
         offset_code={{offset = sext<12>(IMM5 | (IMM7 << 5));}},
         mem_flags=[], inst_flags=[]) {{
     (header_output, decoder_output, decode_block, exec_output) = \

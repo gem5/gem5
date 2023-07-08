@@ -37,5 +37,5 @@ categories = ["load_and_store", "push_and_pop", "set_and_clear"]
 
 microcode = ""
 for category in categories:
-    exec("from . import %s as cat" % category)
+    exec(f"from . import {category} as cat")
     microcode += cat.microcode

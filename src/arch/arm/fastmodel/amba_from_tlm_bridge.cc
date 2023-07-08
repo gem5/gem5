@@ -34,11 +34,12 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
 
-AmbaFromTlmBridge64::AmbaFromTlmBridge64(const sc_core::sc_module_name& name) :
+AmbaFromTlmBridge64::AmbaFromTlmBridge64(
+    const AmbaFromTlmBridge64Params &params,
+    const sc_core::sc_module_name& name) :
     amba_pv::amba_pv_from_tlm_bridge<64>(name),
     targetProxy("target_proxy"),
     initiatorProxy("initiator_proxy"),
@@ -117,11 +118,4 @@ AmbaFromTlmBridge64::syncControlExtension(amba_pv::amba_pv_transaction &trans)
 }
 
 } // namespace fastmodel
-
-fastmodel::AmbaFromTlmBridge64 *
-AmbaFromTlmBridge64Params::create() const
-{
-    return new fastmodel::AmbaFromTlmBridge64(name.c_str());
-}
-
 } // namespace gem5

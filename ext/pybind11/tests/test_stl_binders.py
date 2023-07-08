@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 import pytest
 
-import env
 from pybind11_tests import stl_binders as m
 
 
@@ -74,18 +72,13 @@ def test_vector_buffer():
     assert v[1] == 2
     v[2] = 5
     mv = memoryview(v)  # We expose the buffer interface
-    if not env.PY2:
-        assert mv[2] == 5
-        mv[2] = 6
-    else:
-        assert mv[2] == "\x05"
-        mv[2] = "\x06"
+    assert mv[2] == 5
+    mv[2] = 6
     assert v[2] == 6
 
-    if not env.PY2:
-        mv = memoryview(b)
-        v = m.VectorUChar(mv[::2])
-        assert v[1] == 3
+    mv = memoryview(b)
+    v = m.VectorUChar(mv[::2])
+    assert v[1] == 3
 
     with pytest.raises(RuntimeError) as excinfo:
         m.create_undeclstruct()  # Undeclared struct contents, no buffer interface
@@ -316,3 +309,29 @@ def test_map_delitem():
     del um["ua"]
     assert sorted(list(um)) == ["ub"]
     assert sorted(list(um.items())) == [("ub", 2.6)]
+
+
+def test_map_view_types():
+    map_string_double = m.MapStringDouble()
+    unordered_map_string_double = m.UnorderedMapStringDouble()
+    map_string_double_const = m.MapStringDoubleConst()
+    unordered_map_string_double_const = m.UnorderedMapStringDoubleConst()
+
+    assert map_string_double.keys().__class__.__name__ == "KeysView[str]"
+    assert map_string_double.values().__class__.__name__ == "ValuesView[float]"
+    assert map_string_double.items().__class__.__name__ == "ItemsView[str, float]"
+
+    keys_type = type(map_string_double.keys())
+    assert type(unordered_map_string_double.keys()) is keys_type
+    assert type(map_string_double_const.keys()) is keys_type
+    assert type(unordered_map_string_double_const.keys()) is keys_type
+
+    values_type = type(map_string_double.values())
+    assert type(unordered_map_string_double.values()) is values_type
+    assert type(map_string_double_const.values()) is values_type
+    assert type(unordered_map_string_double_const.values()) is values_type
+
+    items_type = type(map_string_double.items())
+    assert type(unordered_map_string_double.items()) is items_type
+    assert type(map_string_double_const.items()) is items_type
+    assert type(unordered_map_string_double_const.items()) is items_type

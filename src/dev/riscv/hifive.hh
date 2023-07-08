@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021 Huawei International
+ * Copyright (c) 2023 Google LLC
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -41,23 +42,23 @@
 #include "dev/platform.hh"
 #include "dev/riscv/clint.hh"
 #include "dev/riscv/plic.hh"
-#include "params/HiFive.hh"
+#include "params/HiFiveBase.hh"
 
 namespace gem5
 {
 
 using namespace RiscvISA;
 
-class HiFive : public Platform
+class HiFiveBase : public Platform
 {
   public:
     Clint *clint;
-    Plic *plic;
+    PlicBase *plic;
     int uartIntID;
 
   public:
-    typedef HiFiveParams Params;
-    HiFive(const Params &params);
+    typedef HiFiveBaseParams Params;
+    HiFiveBase(const Params &params);
 
     void postConsoleInt() override;
 

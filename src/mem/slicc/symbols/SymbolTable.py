@@ -38,9 +38,9 @@ def makeDir(path):
     ensure that it is a directory"""
     if os.path.exists(path):
         if not os.path.isdir(path):
-            raise AttributeError("%s exists but is not directory" % path)
+            raise AttributeError(f"{path} exists but is not directory")
     else:
-        os.mkdir(path)
+        os.makedirs(path, exist_ok=True)
 
 
 class SymbolTable(object):
@@ -124,7 +124,7 @@ class SymbolTable(object):
     def registerGlobalSym(self, ident, symbol):
         # Check for redeclaration (global frame only)
         if ident in self.sym_map_vec[0]:
-            symbol.error("Symbol '%s' redeclared in global scope." % ident)
+            symbol.error(f"Symbol '{ident}' redeclared in global scope.")
 
         self.sym_map_vec[0][ident] = symbol
 
@@ -155,7 +155,7 @@ class SymbolTable(object):
 
         machines = list(self.getAllType(StateMachine))
         if len(machines) > 1:
-            name = "%s_table.html" % machines[0].ident
+            name = f"{machines[0].ident}_table.html"
         else:
             name = "empty.html"
 

@@ -380,7 +380,18 @@ class DRAMInterface : public MemInterface
          * @param Return true if the rank is idle from a bank
          *        and power point of view
          */
-        bool inPwrIdleState() const { return pwrState == PWR_IDLE; }
+        bool
+        inPwrIdleState() const
+        {
+            // If powerdown is not enabled, then the ranks never go to idle
+            // states. In that case return true here to prevent checkpointing
+            // from getting stuck waiting for DRAM to be idle.
+            if (!dram.enableDRAMPowerdown) {
+                return true;
+            }
+
+            return pwrState == PWR_IDLE;
+        }
 
         /**
          * Trigger a self-refresh exit if there are entries enqueued

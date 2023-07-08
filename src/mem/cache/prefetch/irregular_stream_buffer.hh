@@ -48,7 +48,6 @@ namespace gem5
 
 struct IrregularStreamBufferPrefetcherParams;
 
-GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
 

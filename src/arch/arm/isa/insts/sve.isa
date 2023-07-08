@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019 ARM Limited
+// Copyright (c) 2017-2020 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -633,6 +633,29 @@ output header {{
     }
 
     // Decodes binary, constructive, unpredicated SVE instructions.
+    // Unsigned instructions only, including Quadword variants.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinUnpredUQ(unsigned size, ExtMachInst machInst, RegIndex dest,
+            RegIndex op1, RegIndex op2)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1, op2);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, op2);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, op2);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, op2);
+          case 4:
+            return new Base<__uint128_t>(machInst, dest, op1, op2);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary, constructive, unpredicated SVE instructions.
     // Signed instructions only.
     template <template <typename T> class Base>
     StaticInstPtr
@@ -923,6 +946,19 @@ output header {{
             return new Base<uint64_t>(machInst, dest, op1, op2, gp);
           default:
             return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes ternary, unpredicated SVE2 instructions
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveTerUnpred(unsigned size, ExtMachInst machInst,
+                      RegIndex dest, RegIndex op1, RegIndex op2)
+    {
+        if (bits(size, 0) == 0) {
+            return new Base<uint32_t>(machInst, dest, op1, op2);
+        } else {
+            return new Base<uint64_t>(machInst, dest, op1, op2);
         }
     }
 
@@ -1305,6 +1341,34 @@ let {{
                 {'code': code, 'op_class': opClass, 'srcIs32b': srcSize}, [])
         iop.snippets['code'] = extraPrologCode + iop.snippets['code']
         header_output += SveWhileOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type, 'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict);
+
+    # Generates definition for SVE psel predicate selection instructions
+    def svePselInst(name, Name, opClass, types):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<TPElem>(
+                xc->tcBase());
+
+        uint8_t index = ((uint32_t)Op2 + imm) % eCount;
+
+        bool copy = POp1_x[index];
+        if (copy) {
+            for (int i = 0; i < eCount; ++i) {
+                PDest_x[i] = GpOp_x[i];
+            }
+        } else {
+            for (int i = 0; i < eCount; ++i) {
+                PDest_x[i] = false;
+            }
+        }
+        '''
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SvePselOp',
+                {'code': code, 'op_class': opClass}, [])
+        header_output += SvePselOpDeclare.subst(iop)
         exec_output += SveOpExecute.subst(iop)
         for type in types:
             substDict = {'targs' : type, 'class_name' : 'Sve' + Name}
@@ -2057,6 +2121,35 @@ let {{
                          'class_name' : 'Sve' + Name}
             exec_output += SveOpExecDeclare.subst(substDict)
 
+    # Generates definitions for ternary SVE2 intructions (unpredicated)
+    def sveTerInstUnpred(name, Name, opClass, types, op,
+                         isTop=False, isAdd=True, decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned const pairs = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase()) / 2;
+        for (unsigned p = 0; p < pairs; p++) {
+            const Element& srcElem1 = AA64FpDestMerge_x[2 * p + 0];
+            const Element& srcElem2 = AA64FpOp1_x[%(src_top_elem)s];
+            int carryIn = bits(AA64FpOp2_x[2 * p + 1], 0);
+            Element %(op)s
+            int carryOut = findCarry(
+                                    sizeof(Element) * 8, res, srcElem1,
+                                    %(src_elem2)s) & 1;
+            AA64FpDest_x[2 * p + 0] = res;
+            AA64FpDest_x[2 * p + 1] = (Element)0x0 + carryOut;
+        }''' % {'op': op,
+                'src_top_elem' : '2 * p + 1' if isTop else '2 * p + 0',
+                'src_elem2' : 'srcElem2' if isAdd else '~(srcElem2)'}
+        iop = ArmInstObjParams(name, 'Sve2' + Name, 'SveTerUnpredOp',
+                               {'code': code, 'op_class': opClass}, [])
+        header_output += sveTerUnpredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve2' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
     # Generates definitions for ternary SVE instructions with indexed operand
     def sveTerIdxInst(name, Name, opClass, types, op, decoder='Generic'):
         global header_output, exec_output, decoders
@@ -2117,6 +2210,111 @@ let {{
             substDict = {'targs' : type,
                          'class_name' : 'Sve' + Name}
             exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for ternary destructive SVE Matrix
+    # Multiplication instructions (not predicated)
+    #
+    # `type_specs` can either be a sequence of types for cases where
+    # the dest and source matrices have the same element types, or a
+    # sequence of 3-tuples for case where the dest and source matrices
+    # have differnet element types.
+    #
+    # The calculation Z = Z + A x B is performed for full matrices
+    # Z (numDestRows x numDestCols), A (numDestRows x K), and
+    # B(K x numDestCols), and remaining elemnts of Z are set to zero.
+    # The vector length must be large enough for one full matrix or
+    # an UndefinedInstruction Fault is generated.
+    #
+    def sveMatMulInst(name, Name, opClass, type_specs,
+                      numDestRows, numDestCols, K,
+                      elt_mul_op):
+        global header_output, exec_output
+        code = sveEnabledCheckCode + '''
+        // Types of the extended versions of the source elements.
+        // Required to make sure the itermediate calculations don't overflow.
+        using ExtendedElementA = typename vector_element_traits::
+                                   extend_element<DestElement,
+                                                  SrcElementA>::type;
+        using ExtendedElementB = typename vector_element_traits::
+                                   extend_element<DestElement,
+                                                  SrcElementB>::type;
+
+        // Element count of destination vector
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<DestElement>(
+                xc->tcBase());
+
+        // SVE Matrix operations require that there are at least 4
+        // elements (one full matrix). Further matrices may be partial,
+        // in which case the trailing dest elements are filled with zeros.
+        if (eCount < 4) {
+            return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                          "%(mnemonic)s");
+        }
+
+        // Some properties of the source and dest matrix dimensions
+        //   ( numDestRows x numDestCols ) <- (numDestRows x K) .
+        //                                        (K x numDestCols)
+        constexpr unsigned numDestRows = %(numDestRows)d;
+        constexpr unsigned numDestCols = %(numDestCols)d;
+        constexpr unsigned K = %(K)d;
+
+        constexpr unsigned eltsPerDestMatrix = numDestRows * numDestCols;
+        constexpr unsigned eltsPerSrcAMatrix = numDestRows * K;
+        constexpr unsigned eltsPerSrcBMatrix = K * numDestCols;
+
+        // Number of full matrices - there may be some elements left over
+        const unsigned mCount = eCount / eltsPerDestMatrix;
+
+        // Calculate z_ij = Sum[k=1..K](a_ik * b_kj)
+
+        unsigned zEltIdx = 0; // Index of the result element being produced
+        unsigned aMatIdx = 0; // Index of the first element of the A matrix
+        unsigned bMatIdx = 0; // Index of the first element of the B matrix
+        for (unsigned matIdx = 0; matIdx < mCount; ++matIdx) {
+            for (unsigned rowIdx = 0; rowIdx < numDestRows; ++rowIdx) {
+                for (unsigned colIdx = 0; colIdx < numDestCols; ++colIdx) {
+                    DestElement destElem =
+                        static_cast<DestElement>(AA64FpDestMerge_x[zEltIdx]);
+                    for (unsigned k = 0; k < K; ++k) {
+                        const ExtendedElementA srcElemA =
+                            static_cast<ExtendedElementA>
+                                                (AA64FpOp1_srcA[aMatIdx + K * rowIdx + k]);
+                        const ExtendedElementB srcElemB =
+                            static_cast<ExtendedElementB>
+                                                (AA64FpOp2_srcB[bMatIdx + K * colIdx + k]);
+
+                        // Do the math operation. Should be of form:
+                        //   destElem += f(destElem, srcElemA, srcElemB);
+                        %(elt_mul_op)s;
+                    }
+                    AA64FpDest_x[zEltIdx++] = destElem;
+                }
+            }
+            aMatIdx += eltsPerSrcAMatrix;
+            bMatIdx += eltsPerSrcBMatrix;
+        }
+
+        // Zero-fill any trailing elements
+        for (unsigned i = mCount * eltsPerDestMatrix; i < eCount; ++i) {
+            AA64FpDest_x[i] = static_cast<DestElement>(0);
+        }
+        ''' % {'elt_mul_op': elt_mul_op, 'mnemonic': name,
+               'numDestRows': numDestRows, 'numDestCols': numDestCols,
+               'K': K}
+        iop = InstObjParams(name, 'Sve' + Name, 'SveTerUnpredOp',
+                            {'code': code, 'op_class': opClass}, [])
+        header_output += SveMatMulOpDeclare.subst(iop)
+        exec_output += SveMatMulOpExecute.subst(iop)
+        for type_spec in type_specs:
+            try:
+                destEltType, srcEltAType, srcEltBType = type_spec
+            except ValueError:
+                destEltType, srcEltAType, srcEltBType = (type_spec,) * 3
+            substDict = {'destEltType': destEltType,
+                         'srcEltAType': srcEltAType,
+                         'srcEltBType': srcEltBType,
+                         'class_name': 'Sve' + Name}
+            exec_output += SveMatMulOpExecDeclare.subst(substDict)
 
     # Generates definitions for PTRUE and PTRUES instructions.
     def svePtrueInst(name, Name, opClass, types, isFlagSetting=False,
@@ -2900,6 +3098,15 @@ let {{
     def sveDotInst(name, Name, opClass, types, isIndexed = True):
         global header_output, exec_output, decoders
         code = sveEnabledCheckCode + '''
+        // Types of the extended versions of the source elements.
+        // Required to make sure the intermediate calculations don't overflow.
+        using ExtendedElementA = typename vector_element_traits::
+                                   extend_element<DElement,
+                                                  SElementA>::type;
+        using ExtendedElementB = typename vector_element_traits::
+                                   extend_element<DElement,
+                                                  SElementB>::type;
+
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
         for (int i = 0; i < eCount; ++i) {'''
@@ -2909,17 +3116,21 @@ let {{
             int s = segbase + imm;'''
         code += '''
             DElement res = AA64FpDest_xd[i];
-            DElement srcElem1, srcElem2;
+            ExtendedElementA srcElemA;
+            ExtendedElementB srcElemB;
             for (int j = 0; j <= 3; ++j) {
-                srcElem1 = static_cast<DElement>(AA64FpOp1_xs[4 * i + j]);'''
+                srcElemA = static_cast<ExtendedElementA>
+                                          (AA64FpOp1_srcA[4 * i + j]);'''
         if isIndexed:
             code += '''
-                srcElem2 = static_cast<DElement>(AA64FpOp2_xs[4 * s + j]);'''
+                srcElemB = static_cast<ExtendedElementB>
+                                          (AA64FpOp2_srcB[4 * s + j]);'''
         else:
             code += '''
-                srcElem2 = static_cast<DElement>(AA64FpOp2_xs[4 * i + j]);'''
+                srcElemB = static_cast<ExtendedElementB>
+                                          (AA64FpOp2_srcB[4 * i + j]);'''
         code += '''
-                res += srcElem1 * srcElem2;
+                res += srcElemA * srcElemB;
             }
             AA64FpDestMerge_xd[i] = res;
         }'''
@@ -2931,7 +3142,7 @@ let {{
             header_output += SveWideningTerImmOpDeclare.subst(iop)
         else:
             header_output += SveWideningTerOpDeclare.subst(iop)
-        exec_output += SveWideningOpExecute.subst(iop)
+        exec_output += SveWideningTerOpExecute.subst(iop)
         for type in types:
             substDict = {'targs': type, 'class_name': 'Sve' + Name}
             exec_output += SveOpExecDeclare.subst(substDict)
@@ -3096,9 +3307,36 @@ let {{
                     'class_name' : 'Sve' + Name}
             exec_output += SveOpExecDeclare.subst(substDict)
 
+    # Generate definitions for clamp to min/max instructions
+    def sveClampInst(name, Name, opClass, types,
+            decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<TPElem>(
+                xc->tcBase());
+
+        for (int i = 0 ; i < eCount ; ++i) {
+            if (AA64FpDestMerge_x[i] < AA64FpOp2_x[i]) {
+                AA64FpDest_x[i] = AA64FpOp2_x[i];
+            } else if (AA64FpDestMerge_x[i] > AA64FpOp1_x[i]) {
+                AA64FpDest_x[i] = AA64FpOp1_x[i];
+            }
+        }
+        '''
+        iop = ArmInstObjParams(name, 'Sve' + Name, 'SveClampOp',
+                {'code': code, 'op_class': opClass}, [])
+        header_output += SveClampOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
     fpTypes = ('uint16_t', 'uint32_t', 'uint64_t')
     signedTypes = ('int8_t', 'int16_t', 'int32_t', 'int64_t')
     unsignedTypes = ('uint8_t', 'uint16_t', 'uint32_t', 'uint64_t')
+    extendedUnsignedTypes = ('uint8_t', 'uint16_t', 'uint32_t', 'uint64_t',
+                             '__uint128_t')
 
     smallSignedTypes = ('int8_t', 'int16_t', 'int32_t')
     bigSignedTypes = ('int16_t', 'int32_t', 'int64_t')
@@ -3727,6 +3965,16 @@ let {{
     # FMLS (indexed)
     sveTerIdxInst('fmls', 'FmlsIdx', 'SimdFloatMultAccOp', floatTypes,
                   fmlsCode, PredType.MERGE)
+
+    fmmlaCode = fpOp % '''
+        fplibAdd<DestElement>(destElem,
+            fplibMul<DestElement>(srcElemA, srcElemB, fpscr), fpscr);
+    '''
+    # FMMLA (vectors)
+    sveMatMulInst('fmmla', 'Fmmla', 'SimdFloatMatMultAccOp', floatTypes,
+                  numDestRows=2, numDestCols=2, K=2,
+                  elt_mul_op=fmmlaCode)
+
     # FMLS (vectors)
     sveTerInst('fmls', 'Fmls', 'SimdFloatMultAccOp', floatTypes, fmlsCode,
                PredType.MERGE)
@@ -3999,6 +4247,38 @@ let {{
     # MLS
     mlsCode = 'destElem -= srcElem1 * srcElem2;'
     sveTerInst('mls', 'Mls', 'SimdMultAccOp', signedTypes, mlsCode)
+    # ADCLT
+    adcltCode = 'res = srcElem1 + srcElem2 + carryIn;'
+    sveTerInstUnpred('adclt', 'Adclt', 'VectorIntegerArithOp', unsignedTypes,
+                       adcltCode, isTop=True, isAdd=True)
+    # ADCLB
+    adclbCode = 'res = srcElem1 + srcElem2 + carryIn;'
+    sveTerInstUnpred('adclb', 'Adclb', 'VectorIntegerArithOp', unsignedTypes,
+                      adclbCode, isTop=False, isAdd=True)
+    # SBCLT
+    sbcltCode = 'res = srcElem1 + ~(srcElem2) + carryIn;'
+    sveTerInstUnpred('sbclt', 'Sbclt', 'VectorIntegerArithOp', unsignedTypes,
+                      sbcltCode, isTop=True, isAdd=False)
+    # SBCLB
+    sbclbCode = 'res = srcElem1 + ~(srcElem2) + carryIn;'
+    sveTerInstUnpred('sbclb', 'Sbclb', 'VectorIntegerArithOp', unsignedTypes,
+                      sbclbCode, isTop=False, isAdd=False)
+    mmlaCode = ('destElem += srcElemA * srcElemB')
+    # SMMLA (vectors)
+    sveMatMulInst('smmla', 'Smmla', 'SimdMatMultAccOp',
+                  (('int32_t', 'int8_t', 'int8_t'),),
+                  numDestRows=2, numDestCols=2, K=8,
+                  elt_mul_op=mmlaCode)
+    # USMMLA (vectors)
+    sveMatMulInst('usmmla', 'Usmmla', 'SimdMatMultAccOp',
+                  (('int32_t', 'uint8_t', 'int8_t'),),
+                  numDestRows=2, numDestCols=2, K=8,
+                  elt_mul_op=mmlaCode)
+    # UMMLA (vectors)
+    sveMatMulInst('ummla', 'Ummla', 'SimdMatMultAccOp',
+                  (('uint32_t', 'uint8_t', 'uint8_t'),),
+                  numDestRows=2, numDestCols=2, K=8,
+                  elt_mul_op=mmlaCode)
     # MOVPRFX (predicated)
     movCode = 'destElem = srcElem1;'
     sveUnaryInst('movprfx', 'MovprfxPredM', 'SimdMiscOp', unsignedTypes,
@@ -4071,6 +4351,8 @@ let {{
     svePFirstInst('pfirst', 'Pfirst', 'SimdPredAluOp')
     # PNEXT
     svePNextInst('pnext', 'Pnext', 'SimdPredAluOp', unsignedTypes)
+    # PSEL
+    svePselInst('psel', 'Psel', 'SimdPredAluOp', unsignedTypes)
     # PTEST
     svePredTestInst('ptest', 'Ptest', 'SimdPredAluOp')
     # PTRUE
@@ -4140,6 +4422,10 @@ let {{
             ['uint16_t', 'uint32_t', 'uint64_t'],
             revCode % {'revtype' : 'uint8_t'}, predType=PredType.MERGE,
             srcRegType=SrcRegType.Vector, decoder='Generic')
+    # REVD
+    sveUnaryInst('revd', 'Revd', 'SimdAluOp', ['__uint128_t'],
+            revCode % {'revtype' : 'uint64_t'}, predType=PredType.MERGE,
+            srcRegType=SrcRegType.Vector, decoder='Generic')
     # REVH
     sveUnaryInst('revh', 'Revh', 'SimdAluOp', ['uint32_t', 'uint64_t'],
             revCode % {'revtype' : 'uint16_t'}, predType=PredType.MERGE,
@@ -4160,6 +4446,8 @@ let {{
     sveWideningAssocReducInst('saddv', 'Saddv', 'SimdReduceAddOp',
             ['int8_t, int64_t', 'int16_t, int64_t', 'int32_t, int64_t'],
             addvCode, '0')
+    # SCLAMP
+    sveClampInst('sclamp', 'Sclamp', 'SimdAluOp', signedTypes)
     # SCVTF
     scvtfCode = fpOp % ('fplibFixedToFP<DElement>('
                         'sext<sizeof(SElement) * 8>(srcElem1), 0,'
@@ -4193,11 +4481,14 @@ let {{
     sveBinInst('sdivr', 'Sdivr', 'SimdDivOp', signedTypes, sdivrCode,
                PredType.MERGE, True)
     # SDOT (indexed)
-    sveDotInst('sdot', 'Sdoti', 'SimdAluOp', ['int8_t, int32_t',
-        'int16_t, int64_t'], isIndexed = True)
+    sveDotInst('sdot', 'Sdoti', 'SimdAluOp', ['int8_t, int8_t, int32_t',
+        'int16_t, int16_t, int64_t'], isIndexed = True)
     # SDOT (vectors)
-    sveDotInst('sdot', 'Sdotv', 'SimdAluOp', ['int8_t, int32_t',
-        'int16_t, int64_t'], isIndexed = False)
+    sveDotInst('sdot', 'Sdotv', 'SimdAluOp', ['int8_t, int8_t, int32_t',
+        'int16_t, int16_t, int64_t'], isIndexed = False)
+    # SUDOT (indexed)
+    sveDotInst('sudot', 'Sudoti', 'SimdAluOp', ['int8_t, uint8_t, int32_t'],
+               isIndexed = True)
     # SEL (predicates)
     selCode = 'destElem = srcElem1;'
     svePredLogicalInst('sel', 'PredSel', 'SimdPredAluOp', ('uint8_t',),
@@ -4520,23 +4811,36 @@ let {{
                        trnPredIterCode % 1)
     # TRN1, TRN2 (vectors)
     trnIterCode = '''
+        // SVE F64MM support requires that there are at least two elements
+        // in the vector.
+        if (eCount < 2) {
+            return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                          "%(mnemonic)s");
+        }
         int s;
-        int part = %d;
+        int part = %(part)d;
         ArmISA::VecRegContainer tmpVecC;
         auto auxDest = tmpVecC.as<Element>();
-        for (unsigned i = 0; i < eCount / 2; i++) {
+        const unsigned eltPairsCount = eCount / 2;
+        const unsigned eltsInPairsCount = eltPairsCount * 2;
+        for (unsigned i = 0; i < eltPairsCount; i++) {
             s = 2 * i + part;
             auxDest[2 * i] = AA64FpOp1_x[s];
             auxDest[2 * i + 1] = AA64FpOp2_x[s];
         }
-        for (unsigned i = 0; i < eCount; i++) {
+        // Fill output vector with pairs of elements
+        for (unsigned i = 0; i < eltsInPairsCount; i++) {
             AA64FpDest_x[i] = auxDest[i];
         }
+        // Fill any trailing non-full pairs with zeros
+        for (unsigned i = eltsInPairsCount; i < eCount; i++) {
+            AA64FpDest_x[i] = 0;
+        }
     '''
-    sveBinInst('trn1', 'Trn1', 'SimdAluOp', unsignedTypes, '',
-               customIterCode=trnIterCode % 0)
-    sveBinInst('trn2', 'Trn2', 'SimdAluOp', unsignedTypes, '',
-               customIterCode=trnIterCode % 1)
+    sveBinInst('trn1', 'Trn1', 'SimdAluOp', extendedUnsignedTypes, '',
+               customIterCode=trnIterCode % dict(mnemonic='trn1', part=0))
+    sveBinInst('trn2', 'Trn2', 'SimdAluOp', extendedUnsignedTypes, '',
+               customIterCode=trnIterCode % dict(mnemonic='trn2', part=1))
     # UABD
     sveBinInst('uabd', 'Uabd', 'SimdAddOp', unsignedTypes, abdCode,
                PredType.MERGE, True)
@@ -4545,6 +4849,8 @@ let {{
             ['uint8_t, uint64_t', 'uint16_t, uint64_t', 'uint32_t, uint64_t',
              'uint64_t, uint64_t'],
             addvCode, '0')
+    # UCLAMP
+    sveClampInst('uclamp', 'Uclamp', 'SimdAluOp', unsignedTypes)
     # UCVTF
     ucvtfCode = fpOp % ('fplibFixedToFP<DElement>(srcElem1, 0, true,'
                         ' FPCRRounding(fpscr), fpscr)')
@@ -4567,11 +4873,17 @@ let {{
     sveBinInst('udivr', 'Udivr', 'SimdDivOp', unsignedTypes, udivrCode,
                PredType.MERGE, True)
     # UDOT (indexed)
-    sveDotInst('udot', 'Udoti', 'SimdAluOp', ['uint8_t, uint32_t',
-        'uint16_t, uint64_t'], isIndexed = True)
+    sveDotInst('udot', 'Udoti', 'SimdAluOp', ['uint8_t, uint8_t, uint32_t',
+        'uint16_t, uint16_t, uint64_t'], isIndexed = True)
     # UDOT (vectors)
-    sveDotInst('udot', 'Udotv', 'SimdAluOp', ['uint8_t, uint32_t',
-        'uint16_t, uint64_t'], isIndexed = False)
+    sveDotInst('udot', 'Udotv', 'SimdAluOp', ['uint8_t, uint8_t, uint32_t',
+        'uint16_t, uint16_t, uint64_t'], isIndexed = False)
+    # USDOT (indexed)
+    sveDotInst('usdot', 'Usdoti', 'SimdAluOp', ['uint8_t, int8_t, int32_t'],
+               isIndexed = True)
+    # USDOT (vectors)
+    sveDotInst('usdot', 'Usdotv', 'SimdAluOp', ['uint8_t, int8_t, int32_t'],
+               isIndexed = False)
     # UMAX (immediate)
     sveWideImmInst('umax', 'UmaxImm', 'SimdCmpOp', unsignedTypes, maxCode)
     # UMAX (vectors)
@@ -4740,26 +5052,39 @@ let {{
                        uzpPredIterCode % 1)
     # UZP1, UZP2 (vectors)
     uzpIterCode = '''
+        // SVE F64MM support requires that there are at least two elements
+        // in the vector.
+        if (eCount < 2) {
+            return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                          "%(mnemonic)s");
+        }
         int s;
-        int part = %d;
+        int part = %(part)d;
         ArmISA::VecRegContainer tmpVecC;
         auto auxDest = tmpVecC.as<Element>();
-        for (unsigned i = 0; i < eCount; i++) {
+        const unsigned eltPairsCount = eCount / 2;
+        const unsigned eltsInPairsCount = eltPairsCount * 2;
+        for (unsigned i = 0; i < eltsInPairsCount; i++) {
             s = 2 * i + part;
-            if (s < eCount) {
+            if (s < eltsInPairsCount) {
                 auxDest[i] = AA64FpOp1_x[s];
             } else {
-                auxDest[i] = AA64FpOp2_x[s - eCount];
+                auxDest[i] = AA64FpOp2_x[s - eltsInPairsCount];
             }
         }
-        for (unsigned i = 0; i < eCount; i++) {
+        // Fill output vector with pairs of elements
+        for (unsigned i = 0; i < eltsInPairsCount; i++) {
             AA64FpDest_x[i] = auxDest[i];
         }
+        // Fill any trailing non-full pairs with zeros
+        for (unsigned i = eltsInPairsCount; i < eCount; i++) {
+            AA64FpDest_x[i] = 0;
+        }
     '''
-    sveBinInst('uzp1', 'Uzp1', 'SimdAluOp', unsignedTypes, '',
-               customIterCode=uzpIterCode % 0)
-    sveBinInst('uzp2', 'Uzp2', 'SimdAluOp', unsignedTypes, '',
-               customIterCode=uzpIterCode % 1)
+    sveBinInst('uzp1', 'Uzp1', 'SimdAluOp', extendedUnsignedTypes, '',
+               customIterCode=uzpIterCode % dict(mnemonic='uzp1', part=0))
+    sveBinInst('uzp2', 'Uzp2', 'SimdAluOp', extendedUnsignedTypes, '',
+               customIterCode=uzpIterCode % dict(mnemonic='uzp2', part=1))
     # WHILELE (32-bit)
     whileLECode = '''
             cond = srcElem1 <= srcElem2;
@@ -4822,22 +5147,35 @@ let {{
                        zipPredIterCode % 1)
     # ZIP1, ZIP2 (vectors)
     zipIterCode = '''
+        // SVE F64MM support requires that there are at least two elements
+        // in the vector.
+        if (eCount < 2) {
+            return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                          "%(mnemonic)s");
+        }
         int s;
-        int part = %d;
+        int part = %(part)d;
         ArmISA::VecRegContainer tmpVecC;
         auto auxDest = tmpVecC.as<Element>();
-        for (unsigned i = 0; i < eCount / 2; i++) {
-            s = i + (part * (eCount / 2));
+        const unsigned eltPairsCount = eCount / 2;
+        const unsigned eltsInPairsCount = eltPairsCount * 2;
+        for (unsigned i = 0; i < eltPairsCount; i++) {
+            s = i + (part * (eltsInPairsCount / 2));
             auxDest[2 * i] = AA64FpOp1_x[s];
             auxDest[2 * i + 1] = AA64FpOp2_x[s];
         }
-        for (unsigned i = 0; i < eCount; i++) {
+        // Fill output vector with pairs of elements
+        for (unsigned i = 0; i < eltsInPairsCount; i++) {
             AA64FpDest_x[i] = auxDest[i];
         }
+        // Fill any trailing non-full pairs with zeros
+        for (unsigned i = eltsInPairsCount; i < eCount; i++) {
+            AA64FpDest_x[i] = 0;
+        }
     '''
-    sveBinInst('zip1', 'Zip1', 'SimdAluOp', unsignedTypes, '',
-               customIterCode=zipIterCode % 0)
-    sveBinInst('zip2', 'Zip2', 'SimdAluOp', unsignedTypes, '',
-               customIterCode=zipIterCode % 1)
+    sveBinInst('zip1', 'Zip1', 'SimdAluOp', extendedUnsignedTypes, '',
+               customIterCode=zipIterCode % dict(mnemonic='zip1', part=0))
+    sveBinInst('zip2', 'Zip2', 'SimdAluOp', extendedUnsignedTypes, '',
+               customIterCode=zipIterCode % dict(mnemonic='zip2', part=1))
 
 }};

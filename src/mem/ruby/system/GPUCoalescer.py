@@ -44,7 +44,7 @@ class RubyGPUCoalescer(RubyPort):
         40 * 64, "max requests (incl. prefetches) outstanding"
     )
     max_coalesces_per_cycle = Param.Int(
-        1, "max instructions that can be " "coalesced in a single cycle"
+        1, "max instructions that can be coalesced in a single cycle"
     )
 
     icache = Param.RubyCache("")

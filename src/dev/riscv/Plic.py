@@ -1,4 +1,5 @@
 # Copyright (c) 2021 Huawei International
+# Copyright (c) 2023 Google LLC
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -39,7 +40,22 @@ from m5.proxy import *
 from m5.util.fdthelper import *
 
 
-class Plic(BasicPioDevice):
+class PlicBase(BasicPioDevice):
+    """
+    This is abstract class of PLIC and
+    define interface to handle received
+    interrupt singal from device
+    """
+
+    type = "PlicBase"
+    cxx_header = "dev/riscv/plic.hh"
+    cxx_class = "gem5::PlicBase"
+    abstract = True
+
+    pio_size = Param.Addr("PIO Size")
+
+
+class Plic(PlicBase):
     """
     This implementation of PLIC is based on
     the SiFive U54MC datasheet:
@@ -51,7 +67,7 @@ class Plic(BasicPioDevice):
     type = "Plic"
     cxx_header = "dev/riscv/plic.hh"
     cxx_class = "gem5::Plic"
-    pio_size = Param.Addr(0x4000000, "PIO Size")
+    pio_size = 0x4000000
     n_src = Param.Int("Number of interrupt sources")
     n_contexts = Param.Int(
         "Number of interrupt contexts. Usually the number "

@@ -183,7 +183,7 @@ class LdsState: public ClockedObject
     {
       public:
         CuSidePort(const std::string &_name, LdsState *_ownerLds) :
-                ResponsePort(_name, _ownerLds), ownerLds(_ownerLds)
+                ResponsePort(_name), ownerLds(_ownerLds)
         {
         }
 

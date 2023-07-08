@@ -180,6 +180,28 @@ class SveWhileOp : public ArmStaticInst
             Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
+/// Psel predicate selection SVE instruction.
+class SvePselOp : public ArmStaticInst
+{
+  protected:
+    RegIndex dest;
+    RegIndex op1;
+    RegIndex gp;
+    RegIndex op2;
+    uint64_t imm;
+
+    SvePselOp(const char *mnem, ExtMachInst _machInst,
+              OpClass __opClass, RegIndex _dest,
+              RegIndex _op1, RegIndex _gp,
+              RegIndex _op2, uint64_t _imm) :
+        ArmStaticInst(mnem, _machInst, __opClass),
+        dest(_dest), op1(_op1), gp(_gp), op2(_op2), imm(_imm)
+    {}
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
 /// Compare and terminate loop SVE instruction.
 class SveCompTermOp : public ArmStaticInst
 {
@@ -470,6 +492,23 @@ class SveTerPredOp : public ArmStaticInst
                  RegIndex _gp) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), gp(_gp)
+    {}
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+/// Ternary, destructive, unpredicated SVE instruction.
+class SveTerUnpredOp : public ArmStaticInst
+{
+  protected:
+    RegIndex dest, op1, op2;
+
+    SveTerUnpredOp(const char* mnem, ExtMachInst _machInst,
+                    OpClass __opClass, RegIndex _dest,
+                    RegIndex _op1, RegIndex _op2) :
+        ArmStaticInst(mnem, _machInst, __opClass),
+        dest(_dest), op1(_op1), op2(_op2)
     {}
 
     std::string generateDisassembly(
@@ -945,6 +984,25 @@ class SveComplexIdxOp : public ArmStaticInst
             RegIndex _op2, uint8_t _rot, uint8_t _imm) :
         ArmStaticInst(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), rot(_rot), imm(_imm)
+    {}
+
+    std::string generateDisassembly(
+            Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+// SVE2 SCLAMP/UCLAMP instructions
+class SveClampOp : public ArmStaticInst
+{
+  protected:
+    RegIndex dest;
+    RegIndex op1;
+    RegIndex op2;
+
+    SveClampOp(const char *mnem, ExtMachInst _machInst,
+                  OpClass __opClass, RegIndex _dest,
+                  RegIndex _op1, RegIndex _op2) :
+        ArmStaticInst(mnem, _machInst, __opClass),
+        dest(_dest), op1(_op1), op2(_op2)
     {}
 
     std::string generateDisassembly(

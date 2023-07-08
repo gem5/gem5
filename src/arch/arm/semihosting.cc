@@ -714,7 +714,6 @@ struct SemiPseudoAbi64 : public ArmSemihosting::Abi64
     };
 };
 
-GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
 namespace guest_abi
 {
 

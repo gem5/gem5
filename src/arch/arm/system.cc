@@ -78,6 +78,7 @@ ArmSystem::ArmSystem(const Params &p)
       _physAddrRange64(p.phys_addr_range_64),
       _haveLargeAsid64(p.have_large_asid_64),
       _sveVL(p.sve_vl),
+      _smeVL(p.sme_vl),
       semihosting(p.semihosting),
       release(p.release),
       multiProc(p.multi_proc)

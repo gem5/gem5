@@ -56,7 +56,7 @@ class EventWrapper(Event):
 
         if not callable(func):
             raise RuntimeError(
-                "Can't wrap '%s', object is not callable" % str(func)
+                f"Can't wrap '{str(func)}', object is not callable"
             )
 
         self._func = func
@@ -65,7 +65,7 @@ class EventWrapper(Event):
         self._func()
 
     def __str__(self):
-        return "EventWrapper(%s)" % (str(self._func),)
+        return f"EventWrapper({str(self._func)})"
 
 
 class ProgressEvent(Event):
@@ -76,7 +76,7 @@ class ProgressEvent(Event):
         self.eventq.schedule(self, m5.curTick() + self.period)
 
     def __call__(self):
-        print("Progress! Time now %fs" % (m5.curTick() / 1e12))
+        print(f"Progress! Time now {m5.curTick() / 1000000000000.0:f}s")
         self.eventq.schedule(self, m5.curTick() + self.period)
 
 

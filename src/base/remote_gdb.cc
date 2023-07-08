@@ -130,7 +130,6 @@
 #include "base/remote_gdb.hh"
 
 #include <sys/select.h>
-#include <sys/signal.h>
 #include <sys/time.h>
 #include <unistd.h>
 
@@ -158,6 +157,7 @@
 #include "mem/translating_port_proxy.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
+#include "sim/sim_events.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -192,7 +192,7 @@ class HardBreakpoint : public PCEvent
         DPRINTF(GDBMisc, "handling hardware breakpoint at %#x\n", pc());
 
         if (tc == gdb->tc)
-            gdb->trap(tc->contextId(), SIGTRAP,"");
+            gdb->trap(tc->contextId(), GDBSignal::TRAP,"");
     }
 };
 
@@ -242,7 +242,7 @@ hex2c(char c0,char c1)
 
 //this function will be used in a future patch
 //convert a encoded string to a string
-[[maybe_unused]] std::string
+std::string
 hexS2string(std::string hex_in)
 {
    std::string out="";
@@ -390,12 +390,14 @@ std::map<Addr, HardBreakpoint *> hardBreakMap;
 
 }
 
-BaseRemoteGDB::BaseRemoteGDB(System *_system, int _port) :
+BaseRemoteGDB::BaseRemoteGDB(System *_system,
+        ListenSocketConfig _listen_config) :
         incomingConnectionEvent(nullptr), incomingDataEvent(nullptr),
-        _port(_port), fd(-1), sys(_system),
-        connectEvent(this), disconnectEvent(this), trapEvent(this),
-        singleStepEvent(*this)
-{}
+        fd(-1), sys(_system), connectEvent(*this), disconnectEvent(*this),
+        trapEvent(this), singleStepEvent(*this)
+{
+    listener = _listen_config.build(name());
+}
 
 BaseRemoteGDB::~BaseRemoteGDB()
 {
@@ -417,28 +419,22 @@ BaseRemoteGDB::listen()
         return;
     }
 
-    while (!listener.listen(_port, true)) {
-        DPRINTF(GDBMisc, "Can't bind port %d\n", _port);
-        _port++;
-    }
+    listener->listen();
 
     incomingConnectionEvent =
-            new IncomingConnectionEvent(this, listener.getfd(), POLLIN);
+            new IncomingConnectionEvent(this, listener->getfd(), POLLIN);
     pollQueue.schedule(incomingConnectionEvent);
-
-    ccprintf(std::cerr, "%d: %s: listening for remote gdb on port %d\n",
-             curTick(), name(), _port);
 }
 
 void
 BaseRemoteGDB::connect()
 {
-    panic_if(!listener.islistening(),
+    panic_if(!listener->islistening(),
              "Can't accept GDB connections without any threads!");
 
     pollQueue.remove(incomingConnectionEvent);
 
-    int sfd = listener.accept(true);
+    int sfd = listener->accept();
 
     if (sfd != -1) {
         if (isAttached())
@@ -448,12 +444,12 @@ BaseRemoteGDB::connect()
     }
 }
 
-int
-BaseRemoteGDB::port() const
+const ListenSocket &
+BaseRemoteGDB::hostSocket() const
 {
-    panic_if(!listener.islistening(),
-             "Remote GDB port is unknown until listen() has been called.\n");
-    return _port;
+    panic_if(!listener->islistening(),
+             "Remote GDB socket is unknown until listen() has been called.");
+    return *listener;
 }
 
 void
@@ -516,7 +512,7 @@ BaseRemoteGDB::addThreadContext(ThreadContext *_tc)
         assert(selectThreadContext(_tc->contextId()));
 
     // Now that we have a thread, we can start listening.
-    if (!listener.islistening())
+    if (!listener->islistening())
         listen();
 }
 
@@ -549,13 +545,12 @@ BaseRemoteGDB::selectThreadContext(ContextID id)
 // makes sense to use POSIX errno values, because that is what the
 // gdb/remote.c functions want to return.
 void
-BaseRemoteGDB::trap(ContextID id, int signum,const std::string& stopReason)
+BaseRemoteGDB::trap(ContextID id, GDBSignal sig,const std::string& stopReason)
 {
     if (!attached)
         return;
 
     if (tc->contextId() != id) {
-
         //prevent thread switch when single stepping
         if (singleStepEvent.scheduled()){
             return;
@@ -565,20 +560,23 @@ BaseRemoteGDB::trap(ContextID id, int signum,const std::string& stopReason)
             return;
     }
 
+
     DPRINTF(GDBMisc, "trap: PC=%s\n", tc->pcState());
 
     clearSingleStep();
-
-    if (threadSwitching) {
+    if (stopReason=="monitor_return"){
+        //should wnot send any Tpacket here
+        send("OK");
+    }else if (threadSwitching) {
         threadSwitching = false;
         // Tell GDB the thread switch has completed.
         send("OK");
     } else {
         // Tell remote host that an exception has occurred.
-        sendTPacket(signum,id,stopReason);
+        sendTPacket(sig,id,stopReason);
     }
 
-    processCommands(signum);
+    processCommands(sig);
 }
 
 bool
@@ -613,7 +611,7 @@ BaseRemoteGDB::incomingData(int revent)
     }
 
     if (revent & POLLIN) {
-        scheduleTrapEvent(tc->contextId(),SIGILL,0,"");
+        scheduleTrapEvent(tc->contextId(),GDBSignal::ILL,0,"");
     } else if (revent & POLLNVAL) {
         descheduleInstCommitEvent(&trapEvent);
         scheduleInstCommitEvent(&disconnectEvent, 0);
@@ -766,14 +764,14 @@ BaseRemoteGDB::send(const char *bp)
 }
 
 void
-BaseRemoteGDB::processCommands(int signum)
+BaseRemoteGDB::processCommands(GDBSignal sig)
 {
     // Stick frame regs into our reg cache.
     regCachePtr = gdbRegs();
     regCachePtr->getRegs(tc);
 
     GdbCommand::Context cmd_ctx;
-    cmd_ctx.type = signum;
+    cmd_ctx.type = sig;
     std::vector<char> data;
 
     for (;;) {
@@ -882,7 +880,7 @@ BaseRemoteGDB::singleStep()
 {
     if (!singleStepEvent.scheduled())
         scheduleInstCommitEvent(&singleStepEvent, 1);
-    trap(tc->contextId(), SIGTRAP);
+    trap(tc->contextId(), GDBSignal::TRAP);
 }
 
 void
@@ -951,18 +949,20 @@ BaseRemoteGDB::removeHardBreak(Addr addr, size_t kind)
 }
 
 void
-BaseRemoteGDB::sendTPacket(int errnum, ContextID id,
+BaseRemoteGDB::sendTPacket(GDBSignal sig, ContextID id,
     const std::string& stopReason)
 {
     if (!stopReason.empty()){
-        send("T%02xcore:%x;thread:%x;%s;",errnum,id + 1,id + 1,stopReason);
+        send("T%02xcore:%x;thread:%x;%s;",
+            (uint8_t)sig,id + 1,id + 1,stopReason);
     }else{
-        send("T%02xcore:%x;thread:%x;",errnum,id + 1,id + 1);
+        send("T%02xcore:%x;thread:%x;",
+            (uint8_t)sig,id + 1,id + 1);
     }
 }
 void
-BaseRemoteGDB::sendSPacket(int errnum){
-       send("S%02x",errnum);
+BaseRemoteGDB::sendSPacket(GDBSignal sig){
+       send("S%02x",(uint8_t)sig);
 }
 void
 BaseRemoteGDB::sendOPacket(const std::string message){
@@ -970,12 +970,12 @@ BaseRemoteGDB::sendOPacket(const std::string message){
 }
 
 void
-BaseRemoteGDB::scheduleTrapEvent(ContextID id,int type,int delta,
+BaseRemoteGDB::scheduleTrapEvent(ContextID id,GDBSignal sig,int delta,
     std::string stopReason){
     ThreadContext* _tc = threads[id];
     panic_if(_tc == nullptr, "Unknown context id :%i",id);
     trapEvent.id(id);
-    trapEvent.type(type);
+    trapEvent.type(sig);
     trapEvent.stopReason(stopReason);
     if (!trapEvent.scheduled())
         scheduleInstCommitEvent(&trapEvent,delta,_tc);
@@ -1171,7 +1171,7 @@ BaseRemoteGDB::cmdSetThread(GdbCommand::Context &ctx)
                 throw CmdError("E04");
             // Line up on an instruction boundary in the new thread.
             threadSwitching = true;
-            scheduleTrapEvent(tid,0,0,"");
+            scheduleTrapEvent(tid,GDBSignal::ZERO,0,"");
             return false;
         }
     } else {
@@ -1325,6 +1325,7 @@ splitAt(std::string str, const char * const delim)
 std::map<std::string, BaseRemoteGDB::QuerySetCommand>
         BaseRemoteGDB::queryMap = {
     { "C", { &BaseRemoteGDB::queryC } },
+    { "Rcmd", { &BaseRemoteGDB::queryRcmd} },
     { "Attached", { &BaseRemoteGDB::queryAttached} },
     { "Supported", { &BaseRemoteGDB::querySupported, ";" } },
     { "Xfer", { &BaseRemoteGDB::queryXfer } },
@@ -1333,13 +1334,14 @@ std::map<std::string, BaseRemoteGDB::QuerySetCommand>
     { "sThreadInfo", { &BaseRemoteGDB::querySThreadInfo } },
 };
 
-void
+bool
 BaseRemoteGDB::queryC(QuerySetCommand::Context &ctx)
 {
     send("QC%x", encodeThreadId(tc->contextId()));
+    return true;
 }
 
-void
+bool
 BaseRemoteGDB::querySupported(QuerySetCommand::Context &ctx)
 {
     std::ostringstream oss;
@@ -1350,9 +1352,10 @@ BaseRemoteGDB::querySupported(QuerySetCommand::Context &ctx)
     for (const auto& feature : availableFeatures())
         oss << ';' << feature;
     send(oss.str());
+    return true;
 }
 
-void
+bool
 BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
 {
     auto split = splitAt(ctx.args.at(0), ":");
@@ -1391,15 +1394,16 @@ BaseRemoteGDB::queryXfer(QuerySetCommand::Context &ctx)
     std::string encoded;
     encodeXferResponse(content, encoded, offset, length);
     send(encoded);
+    return true;
 }
-void
+bool
 BaseRemoteGDB::querySymbol(QuerySetCommand::Context &ctx)
 {
     //The target does not need to look up any (more) symbols.
     send("OK");
+    return true;
 }
-
-void
+bool
 BaseRemoteGDB::queryAttached(QuerySetCommand::Context &ctx)
 {
     std::string pid="";
@@ -1409,17 +1413,51 @@ BaseRemoteGDB::queryAttached(QuerySetCommand::Context &ctx)
     DPRINTF(GDBMisc, "QAttached : pid=%s\n",pid);
     //The remote server is attached to an existing process.
     send("1");
+    return true;
 }
 
+class MonitorCallEvent : public GlobalSimLoopExitEvent
+{
+    BaseRemoteGDB& gdb;
+    ContextID id;
+    public:
+    MonitorCallEvent(BaseRemoteGDB& gdb,ContextID id,const std::string &_cause,
+                  int code):
+                  GlobalSimLoopExitEvent(_cause,code), gdb(gdb),id(id)
+                  {};
+    void process() override{
+        GlobalSimLoopExitEvent::process();
+    }
+    void clean() override{
+        //trapping now
+        //this is the only point in time when we can call trap
+        //before any breakpoint triggers
+        gdb.trap(id,GDBSignal::ZERO,"monitor_return");
+        delete this;
+    }
+    ~MonitorCallEvent(){
+        DPRINTF(Event,"MonitorCallEvent destructed\n");;
+    }
+};
 
-void
+bool
+BaseRemoteGDB::queryRcmd(QuerySetCommand::Context &ctx){
+    std::string message=hexS2string(ctx.args[0]);
+    DPRINTF(GDBMisc, "Rcmd Query: %s => %s\n", ctx.args[0],message);
+    //Tick when = curTick();
+    new MonitorCallEvent(*this,tc->contextId(),"GDB_MONITOR:"+ message, 0);
+    return false;
+}
+
+bool
 BaseRemoteGDB::queryFThreadInfo(QuerySetCommand::Context &ctx)
 {
     threadInfoIdx = 0;
     querySThreadInfo(ctx);
+    return true;
 }
 
-void
+bool
 BaseRemoteGDB::querySThreadInfo(QuerySetCommand::Context &ctx)
 {
     if (threadInfoIdx >= threads.size()) {
@@ -1430,6 +1468,7 @@ BaseRemoteGDB::querySThreadInfo(QuerySetCommand::Context &ctx)
         std::advance(it, threadInfoIdx++);
         send("m%x", encodeThreadId(it->second->contextId()));
     }
+    return true;
 }
 
 bool
@@ -1437,7 +1476,7 @@ BaseRemoteGDB::cmdQueryVar(GdbCommand::Context &ctx)
 {
     // The query command goes until the first ':', or the end of the string.
     std::string s(ctx.data, ctx.len);
-    auto query_split = splitAt({ ctx.data, (size_t)ctx.len }, ":");
+    auto query_split = splitAt({ ctx.data, (size_t)ctx.len }, ":,");
     const auto &query_str = query_split.first;
 
     // Look up the query command, and report if it isn't found.
@@ -1461,10 +1500,9 @@ BaseRemoteGDB::cmdQueryVar(GdbCommand::Context &ctx)
             remaining = std::move(arg_split.second);
         }
     }
-
-    (this->*(query.func))(qctx);
-
-    return true;
+    //returning true if the query want to pursue GDB command processing
+    //false means that the command processing stop until it's trigger again.
+    return (this->*(query.func))(qctx);
 }
 
 std::vector<std::string>

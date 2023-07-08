@@ -26,6 +26,7 @@
 from m5.params import *
 from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
 from m5.objects.IntPin import IntSourcePin
+from m5.objects.ResetPort import ResetResponsePort
 from m5.objects.SystemC import SystemC_ScModule
 
 
@@ -87,7 +88,7 @@ class FastModelPL330(SystemC_ScModule):
     cache_lines = Param.UInt32(1, "number of cache lines")
     max_channels = Param.UInt32(8, "virtual channels")
     controller_nsecure = Param.Bool(
-        False, "Controller non-secure at reset " "(boot_manager_ns)"
+        False, "Controller non-secure at reset (boot_manager_ns)"
     )
     irq_nsecure = Param.UInt32(0, "Interrupts non-secure at reset")
     periph_nsecure = Param.Bool(False, "Peripherals non-secure at reset")
@@ -196,6 +197,8 @@ class FastModelPL330(SystemC_ScModule):
     dma = AmbaInitiatorSocket(64, "Memory accesses")
     pio_s = AmbaTargetSocket(64, "Register accesses (secure)")
     pio_ns = AmbaTargetSocket(64, "Register accesses (non-secure)")
+
+    reset_in = ResetResponsePort("System reset")
 
     # irq_abort_master_port
     # irq_master_port

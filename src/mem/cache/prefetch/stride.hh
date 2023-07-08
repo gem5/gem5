@@ -64,14 +64,12 @@ namespace gem5
 {
 
 class BaseIndexingPolicy;
-GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
 {
     class Base;
 }
 struct StridePrefetcherParams;
 
-GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
 

@@ -106,9 +106,7 @@ def gem5_verify_config(
                 )
 
                 # Common name of this generated testcase.
-                _name = "{given_name}-{isa}-{host}-{opt}".format(
-                    given_name=name, isa=isa, host=host, opt=opt
-                )
+                _name = f"{name}-{isa}-{host}-{opt}"
                 if protocol:
                     _name += "-" + protocol
 

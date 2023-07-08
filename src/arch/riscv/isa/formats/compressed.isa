@@ -61,33 +61,31 @@ def format CIOp(imm_code, code, imm_type='int64_t', *opt_flags) {{
 
 def format CJOp(code, *opt_flags) {{
     imm_code = """
-           imm =             CJUMPIMM3TO1 << 1 |
-                             CJUMPIMM4TO4 << 4 |
-                             CJUMPIMM5TO5 << 5 |
-                             CJUMPIMM6TO6 << 6 |
-                             CJUMPIMM7TO7 << 7 |
-                             CJUMPIMM9TO8 << 8 |
-                             CJUMPIMM10TO10 << 10;
-            if (CJUMPIMMSIGN)
-                imm |= ~((int64_t)0x7FF);
+            imm = sext<12>((CJUMPIMM3TO1 << 1) |
+                           (CJUMPIMM4TO4 << 4) |
+                           (CJUMPIMM5TO5 << 5) |
+                           (CJUMPIMM6TO6 << 6) |
+                           (CJUMPIMM7TO7 << 7) |
+                           (CJUMPIMM9TO8 << 8) |
+                           (CJUMPIMM10TO10 << 10) |
+                           (CJUMPIMMSIGN << 11));
     """
     iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
         {'code': code, 'imm_code': imm_code,
          'regs': ''}, opt_flags)
     header_output = BranchDeclare.subst(iop)
-    decoder_output = ImmConstructor.subst(iop)
+    decoder_output = JumpConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
     exec_output = BranchExecute.subst(iop)
 }};
 
 def format CBOp(code, *opt_flags) {{
     imm_code = """
-                imm = CIMM5<2:1> << 1 |
-                      CIMM3<1:0> << 3 |
-                      CIMM5<0:0> << 5 |
-                      CIMM5<4:3> << 6;
-                if (CIMM3<2:2> > 0)
-                    imm |= ~((int64_t)0xFF);
+                imm = sext<9>((CIMM5<2:1> << 1) |
+                              (CIMM3<1:0> << 3) |
+                              (CIMM5<0:0> << 5) |
+                              (CIMM5<4:3> << 6) |
+                              (CIMM3<2:2> << 8));
                """
     regs = 'srcRegIdx(0)'
     iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
@@ -125,7 +123,7 @@ def template CBasicDeclare {{
 
       public:
         /// Constructor.
-        %(class_name)s(MachInst machInst);
+        %(class_name)s(ExtMachInst machInst);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
         std::string generateDisassembly(
                 Addr pc, const loader::SymbolTable *symtab) const override;

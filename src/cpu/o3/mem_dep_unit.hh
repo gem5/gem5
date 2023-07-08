@@ -210,7 +210,7 @@ class MemDepUnit
         bool squashed = false;
 
         /** For debugging. */
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
         static int memdep_count;
         static int memdep_insert;
         static int memdep_erase;

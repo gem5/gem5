@@ -33,6 +33,8 @@
 
 #include "systemc/tlm_bridge/sc_ext.hh"
 
+#include <optional>
+
 #include "systemc/ext/utils/sc_report_handler.hh"
 #include "systemc/tlm_bridge/gem5_to_tlm.hh"
 #include "systemc/tlm_bridge/tlm_to_gem5.hh"
@@ -76,6 +78,14 @@ struct ControlConversionRegister
                 }
 
                 pkt->qosValue(control_ex->getQos());
+
+                if (control_ex->hasStreamId()) {
+                    pkt->req->setStreamId(control_ex->getStreamId().value());
+                }
+                if (control_ex->hasSubstreamId()) {
+                    pkt->req->setSubstreamId(
+                        control_ex->getSubstreamId().value());
+                }
             });
         sc_gem5::addPacketToPayloadConversionStep(
             [] (PacketPtr pkt, tlm::tlm_generic_payload &trans)
@@ -90,6 +100,12 @@ struct ControlConversionRegister
                 control_ex->setSecure(pkt->req->isSecure());
                 control_ex->setInstruction(pkt->req->isInstFetch());
                 control_ex->setQos(pkt->qosValue());
+                if (pkt->req->hasStreamId()) {
+                    control_ex->setStreamId(pkt->req->streamId());
+                }
+                if (pkt->req->hasSubstreamId()) {
+                    control_ex->setSubstreamId(pkt->req->substreamId());
+                }
             });
     }
 };
@@ -263,4 +279,40 @@ ControlExtension::setQos(uint8_t q)
     qos = q;
 }
 
-} // namespace Gem5SystemC
+bool
+ControlExtension::hasStreamId() const
+{
+    return stream_id.has_value();
+}
+
+std::optional<uint32_t>
+ControlExtension::getStreamId() const
+{
+    return stream_id;
+}
+
+void
+ControlExtension::setStreamId(std::optional<uint32_t> s)
+{
+    stream_id = std::move(s);
+}
+
+bool
+ControlExtension::hasSubstreamId() const
+{
+    return substream_id.has_value();
+}
+
+std::optional<uint32_t>
+ControlExtension::getSubstreamId() const
+{
+    return substream_id;
+}
+
+void
+ControlExtension::setSubstreamId(std::optional<uint32_t> s)
+{
+    substream_id = std::move(s);
+}
+
+}  // namespace Gem5SystemC

@@ -53,8 +53,7 @@ class TransitionDeclAST(DeclAST):
         for action in self.actions:
             if action not in machine.actions:
                 self.error(
-                    "Invalid action: %s is not part of machine: %s"
-                    % (action, machine)
+                    f"Invalid action: {action} is not part of machine: {machine}"
                 )
 
         for request_type in self.request_types:
@@ -67,15 +66,13 @@ class TransitionDeclAST(DeclAST):
         for state in self.states:
             if state not in machine.states:
                 self.error(
-                    "Invalid state: %s is not part of machine: %s"
-                    % (state, machine)
+                    f"Invalid state: {state} is not part of machine: {machine}"
                 )
             next_state = self.next_state or state
             for event in self.events:
                 if event not in machine.events:
                     self.error(
-                        "Invalid event: %s is not part of machine: %s"
-                        % (event, machine)
+                        f"Invalid event: {event} is not part of machine: {machine}"
                     )
                 t = Transition(
                     self.symtab,

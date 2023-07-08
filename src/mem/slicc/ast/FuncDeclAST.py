@@ -39,7 +39,7 @@ class FuncDeclAST(DeclAST):
         self.statements = statements
 
     def __repr__(self):
-        return "[FuncDecl: %s]" % self.ident
+        return f"[FuncDecl: {self.ident}]"
 
     def files(self, parent=None):
         return set()
@@ -102,12 +102,12 @@ class FuncDeclAST(DeclAST):
 
         if parent is not None:
             if not parent.addFunc(func):
-                self.error("Duplicate method: %s:%s()" % (parent, self.ident))
+                self.error(f"Duplicate method: {parent}:{self.ident}()")
             func.class_name = parent.c_ident
 
         elif machine is not None:
             machine.addFunc(func)
             func.isInternalMachineFunc = True
-            func.class_name = "%s_Controller" % machine
+            func.class_name = f"{machine}_Controller"
         else:
             self.symtab.newSymbol(func)

@@ -330,7 +330,7 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
 make_cache_level(cachespec, cache_proto, len(cachespec), None)
 
 # Connect the lowest level crossbar to the memory
-last_subsys = getattr(system, "l%dsubsys0" % len(cachespec))
+last_subsys = getattr(system, f"l{len(cachespec)}subsys0")
 last_subsys.xbar.mem_side_ports = system.physmem.port
 last_subsys.xbar.point_of_coherency = True
 

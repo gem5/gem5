@@ -44,7 +44,7 @@ class StackDistProbe(BaseMemProbe):
     cxx_class = "gem5::StackDistProbe"
 
     system = Param.System(
-        Parent.any, "System to use when determining system cache " "line size"
+        Parent.any, "System to use when determining system cache line size"
     )
 
     line_size = Param.Unsigned(

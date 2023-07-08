@@ -42,6 +42,7 @@
 #ifndef __CPU_BASE_HH__
 #define __CPU_BASE_HH__
 
+#include <memory>
 #include <vector>
 
 #include "arch/generic/interrupts.hh"
@@ -55,6 +56,7 @@
 #include "sim/insttracer.hh"
 #include "sim/probe/pmu.hh"
 #include "sim/probe/probe.hh"
+#include "sim/signal.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -160,6 +162,8 @@ class BaseCPU : public ClockedObject
      * constructed from regStats since we merge it into the root
      * group. */
     static std::unique_ptr<GlobalStats> globalStats;
+
+    SignalSinkPort<bool> modelResetPort;
 
   public:
 
@@ -336,6 +340,19 @@ class BaseCPU : public ClockedObject
      * @param cpu CPU to initialize read state from.
      */
     virtual void takeOverFrom(BaseCPU *cpu);
+
+    /**
+     * Set the reset of the CPU to be either asserted or deasserted.
+     *
+     * When asserted, the CPU should be stopped and waiting. When deasserted,
+     * the CPU should start running again, unless some other condition would
+     * also prevent it. At the point the reset is deasserted, it should be
+     * reinitialized as defined by the ISA it's running and any other relevant
+     * part of its configuration (reset address, etc).
+     *
+     * @param state The new state of the reset signal to this CPU.
+     */
+    virtual void setReset(bool state);
 
     /**
      * Flush all TLBs in the CPU.
@@ -616,8 +633,14 @@ class BaseCPU : public ClockedObject
     struct BaseCPUStats : public statistics::Group
     {
         BaseCPUStats(statistics::Group *parent);
+        // Number of CPU insts and ops committed at CPU core level
+        statistics::Scalar numInsts;
+        statistics::Scalar numOps;
         // Number of CPU cycles simulated
         statistics::Scalar numCycles;
+        /* CPI/IPC for total cycle counts and macro insts */
+        statistics::Formula cpi;
+        statistics::Formula ipc;
         statistics::Scalar numWorkItemsStarted;
         statistics::Scalar numWorkItemsCompleted;
     } baseStats;
@@ -660,6 +683,142 @@ class BaseCPU : public ClockedObject
     const Cycles pwrGatingLatency;
     const bool powerGatingOnIdle;
     EventFunctionWrapper enterPwrGatingEvent;
+
+
+  public:
+    struct FetchCPUStats : public statistics::Group
+    {
+        FetchCPUStats(statistics::Group *parent, int thread_id);
+
+        /* Total number of instructions fetched */
+        statistics::Scalar numInsts;
+
+        /* Total number of operations fetched */
+        statistics::Scalar numOps;
+
+        /* Number of instruction fetched per cycle. */
+        statistics::Formula fetchRate;
+
+        /* Total number of branches fetched */
+        statistics::Scalar numBranches;
+
+        /* Number of branch fetches per cycle. */
+        statistics::Formula branchRate;
+
+        /* Number of cycles stalled due to an icache miss */
+        statistics::Scalar icacheStallCycles;
+
+        /* Number of times fetch was asked to suspend by Execute */
+        statistics::Scalar numFetchSuspends;
+
+    };
+
+    struct ExecuteCPUStats: public statistics::Group
+    {
+        ExecuteCPUStats(statistics::Group *parent, int thread_id);
+
+        /* Stat for total number of executed instructions */
+        statistics::Scalar numInsts;
+        /* Number of executed nops */
+        statistics::Scalar numNop;
+        /* Number of executed branches */
+        statistics::Scalar numBranches;
+        /* Stat for total number of executed load instructions */
+        statistics::Scalar numLoadInsts;
+        /* Number of executed store instructions */
+        statistics::Formula numStoreInsts;
+        /* Number of instructions executed per cycle */
+        statistics::Formula instRate;
+
+        /* Number of cycles stalled for D-cache responses */
+        statistics::Scalar dcacheStallCycles;
+
+        /* Number of condition code register file accesses */
+        statistics::Scalar numCCRegReads;
+        statistics::Scalar numCCRegWrites;
+
+        /* number of float alu accesses */
+        statistics::Scalar numFpAluAccesses;
+
+        /* Number of float register file accesses */
+        statistics::Scalar numFpRegReads;
+        statistics::Scalar numFpRegWrites;
+
+        /* Number of integer alu accesses */
+        statistics::Scalar numIntAluAccesses;
+
+        /* Number of integer register file accesses */
+        statistics::Scalar numIntRegReads;
+        statistics::Scalar numIntRegWrites;
+
+        /* number of simulated memory references */
+        statistics::Scalar numMemRefs;
+
+        /* Number of misc register file accesses */
+        statistics::Scalar numMiscRegReads;
+        statistics::Scalar numMiscRegWrites;
+
+        /* Number of vector alu accesses */
+        statistics::Scalar numVecAluAccesses;
+
+        /* Number of predicate register file accesses */
+        mutable statistics::Scalar numVecPredRegReads;
+        statistics::Scalar numVecPredRegWrites;
+
+        /* Number of vector register file accesses */
+        mutable statistics::Scalar numVecRegReads;
+        statistics::Scalar numVecRegWrites;
+
+        /* Number of ops discarded before committing */
+        statistics::Scalar numDiscardedOps;
+    };
+
+    struct CommitCPUStats: public statistics::Group
+    {
+        CommitCPUStats(statistics::Group *parent, int thread_id);
+
+        /* Number of simulated instructions committed */
+        statistics::Scalar numInsts;
+        statistics::Scalar numOps;
+
+        /* Number of instructions committed that are not NOP or prefetches */
+        statistics::Scalar numInstsNotNOP;
+        statistics::Scalar numOpsNotNOP;
+
+        /* CPI/IPC for total cycle counts and macro insts */
+        statistics::Formula cpi;
+        statistics::Formula ipc;
+
+        /* Number of committed memory references. */
+        statistics::Scalar numMemRefs;
+
+        /* Number of float instructions */
+        statistics::Scalar numFpInsts;
+
+        /* Number of int instructions */
+        statistics::Scalar numIntInsts;
+
+        /* number of load instructions */
+        statistics::Scalar numLoadInsts;
+
+        /* Number of store instructions */
+        statistics::Scalar numStoreInsts;
+
+        /* Number of vector instructions */
+        statistics::Scalar numVecInsts;
+
+        /* Number of instructions committed by type (OpClass) */
+        statistics::Vector committedInstType;
+
+        /* number of control instructions committed by control inst type */
+        statistics::Vector committedControl;
+        void updateComCtrlStats(const StaticInstPtr staticInst);
+
+    };
+
+    std::vector<std::unique_ptr<FetchCPUStats>> fetchStats;
+    std::vector<std::unique_ptr<ExecuteCPUStats>> executeStats;
+    std::vector<std::unique_ptr<CommitCPUStats>> commitStats;
 };
 
 } // namespace gem5

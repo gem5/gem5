@@ -62,7 +62,7 @@ See `INSTALL.md`.
 Downloading the built bootloader containing a Linux Kernel and a workload,
 
 ```sh
-wget http://dist.gem5.org/dist/v22-1/misc/riscv/bbl-busybox-boot-exit
+wget http://dist.gem5.org/dist/develop/misc/riscv/bbl-busybox-boot-exit
 ```
 
 Running the simulation
@@ -87,7 +87,7 @@ extract them under the $M5_PATH directory (make sure M5_PATH points to a valid
 directory):
 
 ```sh
-wget http://dist.gem5.org/dist/v22-1/arm/aarch-sst-20211207.tar.bz2
+wget http://dist.gem5.org/dist/develop/arm/aarch-sst-20211207.tar.bz2
 tar -xf aarch-sst-20211207.tar.bz2
 
 # copying bootloaders

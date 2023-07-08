@@ -46,7 +46,6 @@ namespace gem5
 
 class PortProxy;
 
-GEM5_DEPRECATED_NAMESPACE(Loader, loader);
 namespace loader
 {
 

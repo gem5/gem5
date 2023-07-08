@@ -66,9 +66,7 @@ arm-boot-test"
     if to_tick:
         name += "_to-tick"
         exit_regex = re.compile(
-            "Exiting @ tick {} because simulate\(\) limit reached".format(
-                str(to_tick)
-            )
+            f"Exiting @ tick {str(to_tick)} because simulate\\(\\) limit reached"
         )
         verifiers.append(verifier.MatchRegex(exit_regex))
         config_args += ["--tick-exit", str(to_tick)]
@@ -96,7 +94,7 @@ arm-boot-test"
             "arm_boot_exit_run.py",
         ),
         config_args=config_args,
-        valid_isas=(constants.all_compiled,),
+        valid_isas=(constants.all_compiled_tag,),
         valid_hosts=constants.supported_hosts,
         length=length,
         protocol=protocol_to_use,

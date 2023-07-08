@@ -65,7 +65,7 @@ class Kernel : public gem5::SimObject
   private:
     static void stopWork();
 
-    gem5::EventWrapper<Kernel, &Kernel::t0Handler> t0Event;
+    gem5::MemberEventWrapper<&Kernel::t0Handler> t0Event;
 };
 
 extern Kernel *kernel;

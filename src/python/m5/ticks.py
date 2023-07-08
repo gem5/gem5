@@ -48,7 +48,7 @@ def setGlobalFrequency(ticksPerSecond):
         tps = round(convert.anyToFrequency(ticksPerSecond))
     else:
         raise TypeError(
-            "wrong type '%s' for ticksPerSecond" % type(ticksPerSecond)
+            f"wrong type '{type(ticksPerSecond)}' for ticksPerSecond"
         )
     _m5.core.setClockFrequency(int(tps))
 
@@ -61,7 +61,7 @@ def fromSeconds(value):
     import _m5.core
 
     if not isinstance(value, float):
-        raise TypeError("can't convert '%s' to type tick" % type(value))
+        raise TypeError(f"can't convert '{type(value)}' to type tick")
 
     # once someone needs to convert to seconds, the global frequency
     # had better be fixed

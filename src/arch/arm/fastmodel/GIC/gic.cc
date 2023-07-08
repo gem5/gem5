@@ -34,7 +34,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
 
@@ -73,9 +72,14 @@ SCGIC::Terminator::sendTowardsCPU(uint8_t len, const uint8_t *data)
 
 SCGIC::SCGIC(const SCFastModelGICParams &params,
              sc_core::sc_module_name _name)
-    : scx_evs_GIC(_name), _params(params)
+    : scx_evs_GIC(_name), _params(params),
+      resetPort(params.name + ".reset", 0),
+      poResetPort(params.name + ".po_reset", 0)
 {
     signalInterrupt.bind(signal_interrupt);
+
+    resetPort.signal_out.bind(scx_evs_GIC::normal_reset);
+    poResetPort.signal_out.bind(scx_evs_GIC::po_reset);
 
     for (int i = 0; i < wake_request.size(); i++) {
         wakeRequests.emplace_back(
@@ -299,6 +303,18 @@ SCGIC::SCGIC(const SCFastModelGICParams &params,
     set_parameter("gic.consolidators", params.consolidators);
 }
 
+Port &
+SCGIC::gem5_getPort(const std::string &if_name, int idx)
+{
+    if (if_name == "reset") {
+        return resetPort;
+    } else if (if_name == "po_reset") {
+        return poResetPort;
+    } else {
+        return scx_evs_GIC::gem5_getPort(if_name, idx);
+    }
+}
+
 void
 SCGIC::before_end_of_elaboration()
 {
@@ -342,6 +358,8 @@ GIC::getPort(const std::string &if_name, PortID idx)
         return *ptr;
     } else if (if_name == "wake_request") {
         return *wakeRequestPorts.at(idx);
+    } else if (if_name == "reset" || if_name == "po_reset") {
+        return scGIC->gem5_getPort(if_name, idx);
     } else {
         return BaseGic::getPort(if_name, idx);
     }

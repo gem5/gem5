@@ -218,7 +218,7 @@ class TraceCPU : public BaseCPU
       public:
         /** Default constructor. */
         IcachePort(TraceCPU* _cpu) :
-            RequestPort(_cpu->name() + ".icache_port", _cpu), owner(_cpu)
+            RequestPort(_cpu->name() + ".icache_port"), owner(_cpu)
         {}
 
       public:
@@ -258,7 +258,7 @@ class TraceCPU : public BaseCPU
       public:
         /** Default constructor. */
         DcachePort(TraceCPU* _cpu) :
-            RequestPort(_cpu->name() + ".dcache_port", _cpu), owner(_cpu)
+            RequestPort(_cpu->name() + ".dcache_port"), owner(_cpu)
         {}
 
       public:

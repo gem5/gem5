@@ -47,10 +47,10 @@ class EmuLinux : public SEWorkload
   protected:
 
     /// 64 bit syscall descriptors, indexed by call number.
-    static SyscallDescTable<SEWorkload::SyscallABI> syscallDescs64;
+    static SyscallDescTable<SEWorkload::SyscallABI64> syscallDescs64;
 
     /// 32 bit syscall descriptors, indexed by call number.
-    static SyscallDescTable<SEWorkload::SyscallABI> syscallDescs32;
+    static SyscallDescTable<SEWorkload::SyscallABI32> syscallDescs32;
 
   public:
     using Params = RiscvEmuLinuxParams;

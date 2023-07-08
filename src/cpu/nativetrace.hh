@@ -71,7 +71,7 @@ class NativeTrace : public ExeTracer
   protected:
     int fd;
 
-    ListenSocket native_listener;
+    ListenSocketPtr native_listener;
 
   public:
 

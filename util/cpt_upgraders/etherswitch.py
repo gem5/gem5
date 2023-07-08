@@ -11,7 +11,7 @@ def upgrader(cpt):
                 if "outputFifo" in new_sec_name:
                     new_sec_name = new_sec_name.rstrip("outputFifo")
                     new_sec_name += ".outputFifo"
-                    new_sec_name = "system.system.%s" % (new_sec_name)
+                    new_sec_name = f"system.system.{new_sec_name}"
                     if not cpt.has_section(new_sec_name):
                         cpt.add_section(new_sec_name)
                     if old_opt_name == "size":

@@ -37,7 +37,7 @@ class ExprStatementAST(StatementAST):
         self.expr = expr
 
     def __repr__(self):
-        return "[ExprStatementAST: %s]" % (self.expr)
+        return f"[ExprStatementAST: {self.expr}]"
 
     def generate(self, code, return_type, **kwargs):
         actual_type, rcode = self.expr.inline(True, **kwargs)

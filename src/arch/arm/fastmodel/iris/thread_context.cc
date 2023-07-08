@@ -269,6 +269,22 @@ ThreadContext::simulationTimeEvent(
         return iris::E_ok;
     }
 
+    // Handle the breakpoint event at simulation is stopped if needed.
+    if (bpAddr.has_value()) {
+        auto it = getOrAllocBp(bpAddr.value());
+
+        std::shared_ptr<BpInfo::EventList> events = it->second->events;
+        auto e_it = events->begin();
+        while (e_it != events->end()) {
+            PCEvent *e = *e_it;
+            // Advance e_it here since e might remove itself from the list.
+            e_it++;
+            e->process(this);
+        }
+
+        bpAddr.reset();
+    }
+
     // If simulation time has stopped for any reason, IRIS helpfully clears
     // all stepping counters and we need to set them back. We might also need
     // to service events based on the current number of executed instructions.
@@ -286,19 +302,10 @@ ThreadContext::breakpointHit(
         uint64_t esId, const iris::IrisValueMap &fields, uint64_t time,
         uint64_t sInstId, bool syncEc, std::string &error_message_out)
 {
+    // Handle the breakpoint event later when the fastmodel simulation is
+    // stopped.
     Addr pc = fields.at("PC").getU64();
-
-    auto it = getOrAllocBp(pc);
-
-    std::shared_ptr<BpInfo::EventList> events = it->second->events;
-    auto e_it = events->begin();
-    while (e_it != events->end()) {
-        PCEvent *e = *e_it;
-        // Advance e_it here since e might remove itself from the list.
-        e_it++;
-        e->process(this);
-    }
-
+    bpAddr = pc;
     return iris::E_ok;
 }
 
@@ -441,9 +448,9 @@ void
 ThreadContext::readMem(
     iris::MemorySpaceId space, Addr addr, void *p, size_t size)
 {
-    iris::r0master::MemoryReadResult r;
+    iris::MemoryReadResult r;
     auto err = call().memory_read(_instId, r, space, addr, 1, size);
-    panic_if(err != iris::r0master::E_ok, "readMem failed.");
+    panic_if(err != iris::E_ok, "readMem failed.");
     std::memcpy(p, r.data.data(), size);
 }
 
@@ -455,7 +462,7 @@ ThreadContext::writeMem(
     std::memcpy(data.data(), p, size);
     iris::MemoryWriteResult r;
     auto err = call().memory_write(_instId, r, space, addr, 1, size, data);
-    panic_if(err != iris::r0master::E_ok, "writeMem failed.");
+    panic_if(err != iris::E_ok, "writeMem failed.");
 }
 
 bool

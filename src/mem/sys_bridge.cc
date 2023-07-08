@@ -43,9 +43,9 @@ SysBridge::BridgingPort::replaceReqID(PacketPtr pkt)
 }
 
 SysBridge::SysBridge(const SysBridgeParams &p) : SimObject(p),
-    sourcePort(p.name + ".source_port", this, &targetPort,
+    sourcePort(p.name + ".source_port", &targetPort,
             p.target->getRequestorId(this)),
-    targetPort(p.name + ".target_port", this, &sourcePort,
+    targetPort(p.name + ".target_port", &sourcePort,
             p.source->getRequestorId(this))
 {}
 

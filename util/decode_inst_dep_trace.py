@@ -164,20 +164,20 @@ def main():
         num_packets += 1
 
         # Write to file the seq num
-        ascii_out.write("%s" % (packet.seq_num))
+        ascii_out.write(f"{packet.seq_num}")
         # Write to file the pc of the instruction, default is 0
         if packet.HasField("pc"):
-            ascii_out.write(",%s" % (packet.pc))
+            ascii_out.write(f",{packet.pc}")
         else:
             ascii_out.write(",0")
         # Write to file the weight, default is 1
         if packet.HasField("weight"):
-            ascii_out.write(",%s" % (packet.weight))
+            ascii_out.write(f",{packet.weight}")
         else:
             ascii_out.write(",1")
         # Write to file the type of the record
         try:
-            ascii_out.write(",%s" % enumNames[packet.type])
+            ascii_out.write(f",{enumNames[packet.type]}")
         except KeyError:
             print(
                 "Seq. num", packet.seq_num, "has unsupported type", packet.type
@@ -187,21 +187,21 @@ def main():
         # Write to file if it has the optional fields physical addr, size,
         # flags
         if packet.HasField("p_addr"):
-            ascii_out.write(",%s" % (packet.p_addr))
+            ascii_out.write(f",{packet.p_addr}")
         if packet.HasField("size"):
-            ascii_out.write(",%s" % (packet.size))
+            ascii_out.write(f",{packet.size}")
         if packet.HasField("flags"):
-            ascii_out.write(",%s" % (packet.flags))
+            ascii_out.write(f",{packet.flags}")
 
         # Write to file the comp delay
-        ascii_out.write(",%s" % (packet.comp_delay))
+        ascii_out.write(f",{packet.comp_delay}")
 
         # Write to file the repeated field order dependency
         ascii_out.write(":")
         if packet.rob_dep:
             num_robdeps += 1
             for dep in packet.rob_dep:
-                ascii_out.write(",%s" % dep)
+                ascii_out.write(f",{dep}")
         # Write to file the repeated field register dependency
         ascii_out.write(":")
         if packet.reg_dep:
@@ -209,7 +209,7 @@ def main():
                 1  # No. of packets with atleast 1 register dependency
             )
             for dep in packet.reg_dep:
-                ascii_out.write(",%s" % dep)
+                ascii_out.write(f",{dep}")
         # New line
         ascii_out.write("\n")
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017, 2019, 2021 Arm Limited
+# Copyright (c) 2016-2017, 2019, 2021-2023 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -95,7 +95,7 @@ class MemBus(SystemXBar):
     default = Self.badaddr_responder.pio
 
 
-class CpuCluster(SubSystem):
+class ArmCpuCluster(CpuCluster):
     def __init__(
         self,
         system,
@@ -106,8 +106,10 @@ class CpuCluster(SubSystem):
         l1i_type,
         l1d_type,
         l2_type,
+        tarmac_gen=False,
+        tarmac_dest=None,
     ):
-        super(CpuCluster, self).__init__()
+        super().__init__()
         self._cpu_type = cpu_type
         self._l1i_type = l1i_type
         self._l1d_type = l1d_type
@@ -120,24 +122,15 @@ class CpuCluster(SubSystem):
             clock=cpu_clock, voltage_domain=self.voltage_domain
         )
 
-        self.cpus = [
-            self._cpu_type(
-                cpu_id=system.numCpus() + idx, clk_domain=self.clk_domain
-            )
-            for idx in range(num_cpus)
-        ]
+        self.generate_cpus(cpu_type, num_cpus)
 
         for cpu in self.cpus:
-            cpu.createThreads()
-            cpu.createInterruptController()
-            cpu.socket_id = system.numCpuClusters()
-        system.addCpuCluster(self, num_cpus)
+            if tarmac_gen:
+                cpu.tracer = TarmacTracer()
+                if tarmac_dest is not None:
+                    cpu.tracer.outfile = tarmac_dest
 
-    def requireCaches(self):
-        return self._cpu_type.require_caches()
-
-    def memoryMode(self):
-        return self._cpu_type.memory_mode()
+        system.addCpuCluster(self)
 
     def addL1(self):
         for cpu in self.cpus:
@@ -154,7 +147,13 @@ class CpuCluster(SubSystem):
             cpu.connectCachedPorts(self.toL2Bus.cpu_side_ports)
         self.toL2Bus.mem_side_ports = self.l2.cpu_side
 
-    def addPMUs(self, ints, events=[]):
+    def addPMUs(
+        self,
+        ints,
+        events=[],
+        exit_sim_on_control=False,
+        exit_sim_on_interrupt=False,
+    ):
         """
         Instantiates 1 ArmPMU per PE. The method is accepting a list of
         interrupt numbers (ints) used by the PMU and a list of events to
@@ -166,12 +165,21 @@ class CpuCluster(SubSystem):
         :type ints: List[int]
         :param events: Additional events to be measured by the PMUs
         :type events: List[Union[ProbeEvent, SoftwareIncrement]]
+        :param exit_sim_on_control: If true, exit the sim loop when the PMU is
+            enabled, disabled, or reset.
+        :type exit_on_control: bool
+        :param exit_sim_on_interrupt: If true, exit the sim loop when the PMU
+            triggers an interrupt.
+        :type exit_on_control: bool
+
         """
         assert len(ints) == len(self.cpus)
         for cpu, pint in zip(self.cpus, ints):
             int_cls = ArmPPI if pint < 32 else ArmSPI
             for isa in cpu.isa:
                 isa.pmu = ArmPMU(interrupt=int_cls(num=pint))
+                isa.pmu.exitOnPMUControl = exit_sim_on_control
+                isa.pmu.exitOnPMUInterrupt = exit_sim_on_interrupt
                 isa.pmu.addArchEvents(
                     cpu=cpu,
                     itb=cpu.mmu.itb,
@@ -191,36 +199,63 @@ class CpuCluster(SubSystem):
                 cpu.connectCachedPorts(bus.cpu_side_ports)
 
 
-class AtomicCluster(CpuCluster):
-    def __init__(self, system, num_cpus, cpu_clock, cpu_voltage="1.0V"):
-        cpu_config = [
-            ObjectList.cpu_list.get("AtomicSimpleCPU"),
-            None,
-            None,
-            None,
-        ]
-        super(AtomicCluster, self).__init__(
-            system, num_cpus, cpu_clock, cpu_voltage, *cpu_config
+class AtomicCluster(ArmCpuCluster):
+    def __init__(
+        self,
+        system,
+        num_cpus,
+        cpu_clock,
+        cpu_voltage="1.0V",
+        tarmac_gen=False,
+        tarmac_dest=None,
+    ):
+        super().__init__(
+            system,
+            num_cpus,
+            cpu_clock,
+            cpu_voltage,
+            cpu_type=ObjectList.cpu_list.get("AtomicSimpleCPU"),
+            l1i_type=None,
+            l1d_type=None,
+            l2_type=None,
+            tarmac_gen=tarmac_gen,
+            tarmac_dest=tarmac_dest,
         )
 
     def addL1(self):
         pass
 
 
-class KvmCluster(CpuCluster):
-    def __init__(self, system, num_cpus, cpu_clock, cpu_voltage="1.0V"):
-        cpu_config = [ObjectList.cpu_list.get("ArmV8KvmCPU"), None, None, None]
-        super(KvmCluster, self).__init__(
-            system, num_cpus, cpu_clock, cpu_voltage, *cpu_config
+class KvmCluster(ArmCpuCluster):
+    def __init__(
+        self,
+        system,
+        num_cpus,
+        cpu_clock,
+        cpu_voltage="1.0V",
+        tarmac_gen=False,
+        tarmac_dest=None,
+    ):
+        super().__init__(
+            system,
+            num_cpus,
+            cpu_clock,
+            cpu_voltage,
+            cpu_type=ObjectList.cpu_list.get("ArmV8KvmCPU"),
+            l1i_type=None,
+            l1d_type=None,
+            l2_type=None,
+            tarmac_gen=tarmac_gen,
+            tarmac_dest=tarmac_dest,
         )
 
     def addL1(self):
         pass
 
 
-class FastmodelCluster(SubSystem):
+class FastmodelCluster(CpuCluster):
     def __init__(self, system, num_cpus, cpu_clock, cpu_voltage="1.0V"):
-        super(FastmodelCluster, self).__init__()
+        super().__init__()
 
         # Setup GIC
         gic = system.realview.gic
@@ -285,12 +320,12 @@ class FastmodelCluster(SubSystem):
         self.cpu_hub.a2t = a2t
         self.cpu_hub.t2g = t2g
 
-        system.addCpuCluster(self, num_cpus)
+        system.addCpuCluster(self)
 
-    def requireCaches(self):
+    def require_caches(self):
         return False
 
-    def memoryMode(self):
+    def memory_mode(self):
         return "atomic_noncaching"
 
     def addL1(self):
@@ -330,7 +365,6 @@ class BaseSimpleSystem(ArmSystem):
         self.mem_ranges = self.getMemRanges(int(Addr(mem_size)))
 
         self._clusters = []
-        self._num_cpus = 0
 
     def getMemRanges(self, mem_size):
         """
@@ -357,14 +391,8 @@ class BaseSimpleSystem(ArmSystem):
     def numCpuClusters(self):
         return len(self._clusters)
 
-    def addCpuCluster(self, cpu_cluster, num_cpus):
-        assert cpu_cluster not in self._clusters
-        assert num_cpus > 0
+    def addCpuCluster(self, cpu_cluster):
         self._clusters.append(cpu_cluster)
-        self._num_cpus += num_cpus
-
-    def numCpus(self):
-        return self._num_cpus
 
     def addCaches(self, need_caches, last_cache_level):
         if not need_caches:

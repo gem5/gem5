@@ -1,31 +1,43 @@
-# -*- coding: utf-8 -*-
 """pytest configuration
 
 Extends output capture as needed by pybind11: ignore constructors, optional unordered lines.
-Adds docstring and exceptions message sanitizers: ignore Python 2 vs 3 differences.
+Adds docstring and exceptions message sanitizers.
 """
 
 import contextlib
 import difflib
 import gc
+import multiprocessing
+import os
 import re
 import textwrap
 
 import pytest
 
-import env
-
 # Early diagnostic for failed imports
-import pybind11_tests  # noqa: F401
+import pybind11_tests
 
-_unicode_marker = re.compile(r"u(\'[^\']*\')")
+
+@pytest.fixture(scope="session", autouse=True)
+def always_forkserver_on_unix():
+    if os.name == "nt":
+        return
+
+    # Full background: https://github.com/pybind/pybind11/issues/4105#issuecomment-1301004592
+    # In a nutshell: fork() after starting threads == flakiness in the form of deadlocks.
+    # It is actually a well-known pitfall, unfortunately without guard rails.
+    # "forkserver" is more performant than "spawn" (~9s vs ~13s for tests/test_gil_scoped.py,
+    # visit the issuecomment link above for details).
+    # Windows does not have fork() and the associated pitfall, therefore it is best left
+    # running with defaults.
+    multiprocessing.set_start_method("forkserver")
+
+
 _long_marker = re.compile(r"([0-9])L")
 _hexadecimal = re.compile(r"0x[0-9a-fA-F]+")
 
 # Avoid collecting Python3 only files
 collect_ignore = []
-if env.PY2:
-    collect_ignore.append("test_async.py")
 
 
 def _strip_and_dedent(s):
@@ -45,7 +57,7 @@ def _make_explanation(a, b):
     ]
 
 
-class Output(object):
+class Output:
     """Basic output post-processing and comparison"""
 
     def __init__(self, string):
@@ -83,7 +95,7 @@ class Unordered(Output):
             return False
 
 
-class Capture(object):
+class Capture:
     def __init__(self, capfd):
         self.capfd = capfd
         self.out = ""
@@ -126,7 +138,7 @@ def capture(capsys):
     return Capture(capsys)
 
 
-class SanitizedString(object):
+class SanitizedString:
     def __init__(self, sanitizer):
         self.sanitizer = sanitizer
         self.string = ""
@@ -149,9 +161,7 @@ class SanitizedString(object):
 def _sanitize_general(s):
     s = s.strip()
     s = s.replace("pybind11_tests.", "m.")
-    s = s.replace("unicode", "str")
     s = _long_marker.sub(r"\1", s)
-    s = _unicode_marker.sub(r"\1", s)
     return s
 
 
@@ -206,3 +216,17 @@ def gc_collect():
 def pytest_configure():
     pytest.suppress = suppress
     pytest.gc_collect = gc_collect
+
+
+def pytest_report_header(config):
+    del config  # Unused.
+    assert (
+        pybind11_tests.compiler_info is not None
+    ), "Please update pybind11_tests.cpp if this assert fails."
+    return (
+        "C++ Info:"
+        f" {pybind11_tests.compiler_info}"
+        f" {pybind11_tests.cpp_std}"
+        f" {pybind11_tests.PYBIND11_INTERNALS_ID}"
+        f" PYBIND11_SIMPLE_GIL_MANAGEMENT={pybind11_tests.PYBIND11_SIMPLE_GIL_MANAGEMENT}"
+    )

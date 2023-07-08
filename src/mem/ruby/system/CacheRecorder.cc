@@ -207,5 +207,11 @@ CacheRecorder::aggregateRecords(uint8_t **buf, uint64_t total_size)
     return current_size;
 }
 
+uint64_t
+CacheRecorder::getNumRecords() const
+{
+    return m_records.size();
+}
+
 } // namespace ruby
 } // namespace gem5

@@ -44,7 +44,6 @@ namespace gem5
 
 struct FIFORPParams;
 
-GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
 {
 
@@ -56,12 +55,18 @@ class FIFO : public Base
     {
         /** Tick on which the entry was inserted. */
         Tick tickInserted;
-
         /**
          * Default constructor. Invalidate data.
          */
         FIFOReplData() : tickInserted(0) {}
     };
+
+  private:
+    /**
+     * A counter that tracks the number of
+     * ticks since being created to avoid a tie
+     */
+    mutable Tick timeTicks;
 
   public:
     typedef FIFORPParams Params;

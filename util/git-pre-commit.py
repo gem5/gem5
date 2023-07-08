@@ -67,7 +67,7 @@ staged_mismatch = set()
 
 for status, fname in git.status(filter="MA", cached=True):
     if args.verbose:
-        print("Checking {}...".format(fname))
+        print(f"Checking {fname}...")
     if check_ignores(fname):
         continue
     if status == "M":
@@ -112,7 +112,7 @@ if failing_files:
         print("Style checker failed for the following files:", file=sys.stderr)
         for f in failing_files:
             if f not in staged_mismatch:
-                print("\t{}".format(f), file=sys.stderr)
+                print(f"\t{f}", file=sys.stderr)
         print("\n", file=sys.stderr)
         print(
             "Please run the style checker manually to fix "
@@ -130,6 +130,6 @@ if failing_files:
             file=sys.stderr,
         )
         for f in staged_mismatch:
-            print("\t{}".format(f), file=sys.stderr)
+            print(f"\t{f}", file=sys.stderr)
         print("Please `git --add' them", file=sys.stderr)
     sys.exit(1)

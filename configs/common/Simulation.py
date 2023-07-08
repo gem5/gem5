@@ -71,7 +71,7 @@ def setCPUClass(options):
     TmpClass, test_mem_mode = getCPUClass(options.cpu_type)
     CPUClass = None
     if TmpClass.require_caches() and not options.caches and not options.ruby:
-        fatal("%s must be used with caches" % options.cpu_type)
+        fatal(f"{options.cpu_type} must be used with caches")
 
     if options.checkpoint_restore != None:
         if options.restore_with_cpu != options.cpu_type:
@@ -144,7 +144,7 @@ def findCptDir(options, cptdir, testsys):
                 fatal("Unable to find simpoint")
             inst += int(testsys.cpu[0].workload[0].simpoint)
 
-        checkpoint_dir = joinpath(cptdir, "cpt.%s.%s" % (options.bench, inst))
+        checkpoint_dir = joinpath(cptdir, f"cpt.{options.bench}.{inst}")
         if not exists(checkpoint_dir):
             fatal("Unable to find checkpoint directory %s", checkpoint_dir)
 
@@ -204,7 +204,7 @@ def findCptDir(options, cptdir, testsys):
             fatal("Checkpoint %d not found", cpt_num)
 
         cpt_starttick = int(cpts[cpt_num - 1])
-        checkpoint_dir = joinpath(cptdir, "cpt.%s" % cpts[cpt_num - 1])
+        checkpoint_dir = joinpath(cptdir, f"cpt.{cpts[cpt_num - 1]}")
 
     return cpt_starttick, checkpoint_dir
 
@@ -220,7 +220,7 @@ def scriptCheckpoints(options, maxtick, cptdir):
         print("Creating checkpoint at inst:%d" % (checkpoint_inst))
         exit_event = m5.simulate()
         exit_cause = exit_event.getCause()
-        print("exit cause = %s" % exit_cause)
+        print(f"exit cause = {exit_cause}")
 
         # skip checkpoint instructions should they exist
         while exit_cause == "checkpoint":
@@ -549,10 +549,10 @@ def run(options, root, testsys, cpu_class):
     if options.repeat_switch:
         switch_class = getCPUClass(options.cpu_type)[0]
         if switch_class.require_caches() and not options.caches:
-            print("%s: Must be used with caches" % str(switch_class))
+            print(f"{str(switch_class)}: Must be used with caches")
             sys.exit(1)
         if not switch_class.support_take_over():
-            print("%s: CPU switching not supported" % str(switch_class))
+            print(f"{str(switch_class)}: CPU switching not supported")
             sys.exit(1)
 
         repeat_switch_cpus = [
@@ -740,9 +740,9 @@ def run(options, root, testsys, cpu_class):
             )
             exit_event = m5.simulate()
         else:
-            print("Switch at curTick count:%s" % str(10000))
+            print(f"Switch at curTick count:{str(10000)}")
             exit_event = m5.simulate(10000)
-        print("Switched CPUS @ tick %s" % (m5.curTick()))
+        print(f"Switched CPUS @ tick {m5.curTick()}")
 
         m5.switchCpus(testsys, switch_cpu_list)
 
@@ -757,7 +757,7 @@ def run(options, root, testsys, cpu_class):
                 exit_event = m5.simulate()
             else:
                 exit_event = m5.simulate(options.standard_switch)
-            print("Switching CPUS @ tick %s" % (m5.curTick()))
+            print(f"Switching CPUS @ tick {m5.curTick()}")
             print(
                 "Simulation ends instruction count:%d"
                 % (testsys.switch_cpus_1[0].max_insts_any_thread)

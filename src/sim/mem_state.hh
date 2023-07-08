@@ -29,6 +29,9 @@
 #ifndef SRC_SIM_MEM_STATE_HH
 #define SRC_SIM_MEM_STATE_HH
 
+#include <fcntl.h>
+#include <unistd.h>
+
 #include <list>
 #include <memory>
 #include <string>
@@ -199,6 +202,9 @@ class MemState : public Serializable
         for (auto vma : _vmaList) {
             ScopedCheckpointSection sec(cp, csprintf("Vma%d", count++));
             paramOut(cp, "name", vma.getName());
+            if (vma.hasHostBuf()) {
+                paramOut(cp, "fileOffset", vma.getFileMappingOffset());
+            }
             paramOut(cp, "addrRangeStart", vma.start());
             paramOut(cp, "addrRangeEnd", vma.end());
         }
@@ -223,10 +229,20 @@ class MemState : public Serializable
             std::string name;
             Addr start;
             Addr end;
+            off_t offset = 0;
+            int host_fd = -1;
             paramIn(cp, "name", name);
+            if (optParamIn(cp, "fileOffset", offset, false)) {
+                host_fd = open(name.c_str(), O_RDONLY);
+                fatal_if(host_fd < 0,
+                         "Failed to open %s file "
+                         "while unserializing file-backed VMA\n", name);
+            }
             paramIn(cp, "addrRangeStart", start);
             paramIn(cp, "addrRangeEnd", end);
-            _vmaList.emplace_back(AddrRange(start, end), _pageBytes, name);
+            _vmaList.emplace_back(AddrRange(start, end), _pageBytes, name,
+                                  host_fd, offset);
+            close(host_fd);
         }
     }
 

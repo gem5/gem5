@@ -170,3 +170,18 @@ def connectGPU(system, args):
     system.pc.south_bridge.gpu.checkpoint_before_mmios = (
         args.checkpoint_before_mmios
     )
+
+    system.pc.south_bridge.gpu.device_name = args.gpu_device
+
+    if args.gpu_device == "MI100":
+        system.pc.south_bridge.gpu.DeviceID = 0x738C
+        system.pc.south_bridge.gpu.SubsystemVendorID = 0x1002
+        system.pc.south_bridge.gpu.SubsystemID = 0x0C34
+    elif args.gpu_device == "MI200":
+        system.pc.south_bridge.gpu.DeviceID = 0x740F
+        system.pc.south_bridge.gpu.SubsystemVendorID = 0x1002
+        system.pc.south_bridge.gpu.SubsystemID = 0x0C34
+    elif args.gpu_device == "Vega10":
+        system.pc.south_bridge.gpu.DeviceID = 0x6863
+    else:
+        panic("Unknown GPU device: {}".format(args.gpu_device))

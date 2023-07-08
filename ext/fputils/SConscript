@@ -30,7 +30,7 @@
 
 Import('env')
 
-env.Prepend(CPPPATH=Dir('./include'))
+env.Prepend(CPPPATH=Dir('./include').srcnode())
 
 fpenv = env.Clone()
 

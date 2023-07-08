@@ -38,11 +38,12 @@ categories = [
     "convert_floating_point_to_xmm_integer",
     "convert_floating_point_to_mmx_integer",
     "convert_floating_point_to_gpr_integer",
+    "round",
 ]
 
 microcode = """
 # SSE instructions
 """
 for category in categories:
-    exec("from . import %s as cat" % category)
+    exec(f"from . import {category} as cat")
     microcode += cat.microcode

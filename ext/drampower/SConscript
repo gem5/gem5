@@ -41,7 +41,7 @@ import os
 
 Import('env')
 
-env.Prepend(CPPPATH=Dir('./src'))
+env.Prepend(CPPPATH=Dir('./src').srcnode())
 
 # Add the appropriate files for the library
 drampower_files = []

@@ -31,7 +31,7 @@ from m5.objects.ArmInterrupts import ArmInterrupts
 from m5.objects.ArmISA import ArmISA
 from m5.objects.FastModel import AmbaInitiatorSocket, AmbaTargetSocket
 from m5.objects.ResetPort import ResetResponsePort
-from m5.objects.IntPin import IntSinkPin, VectorIntSinkPin
+from m5.objects.IntPin import IntSourcePin, IntSinkPin, VectorIntSinkPin
 from m5.objects.Iris import IrisBaseCPU
 from m5.objects.SystemC import SystemC_ScModule
 
@@ -49,13 +49,16 @@ class FastModelCortexR52(IrisBaseCPU):
     flash = AmbaInitiatorSocket(64, "Flash")
     amba = AmbaInitiatorSocket(64, "AMBA initiator socket")
     core_reset = IntSinkPin(
-        "Raising this signal will put the core into " "reset mode."
+        "Raising this signal will put the core into reset mode."
     )
     poweron_reset = IntSinkPin(
         "Power on reset. Initializes all the "
         "processor logic, including debug logic."
     )
     halt = IntSinkPin("Raising this signal will put the core into halt mode.")
+    standbywfi = IntSourcePin(
+        "This signal indicates if a core is in WFI state."
+    )
 
     CFGEND = Param.Bool(
         False,
@@ -65,7 +68,7 @@ class FastModelCortexR52(IrisBaseCPU):
     CFGTE = Param.Bool(False, "Equivalent to CFGTHUMBEXCEPTIONS")
     RVBARADDR = Param.UInt32(0, "Equivalent to CFGVECTABLE")
     ase_present = Param.Bool(
-        True, "Set whether the model has been built " "with NEON support"
+        True, "Set whether the model has been built with NEON support"
     )
     dcache_size = Param.UInt16(0x8000, "L1 D-Cache size in bytes")
     flash_enable = Param.Bool(False, "Equivalent to CFGFLASHEN")
@@ -85,33 +88,33 @@ class FastModelCortexR52(IrisBaseCPU):
         "(0=off=default,1=syncState,2=postInsnIO,3=postInsnAll)",
     )
     semihosting_A32_HLT = Param.UInt16(
-        0xF000, "A32 HLT number for " "semihosting calls."
+        0xF000, "A32 HLT number for semihosting calls."
     )
     semihosting_ARM_SVC = Param.UInt32(
-        0x123456, "A32 SVC number for " "semihosting calls."
+        0x123456, "A32 SVC number for semihosting calls."
     )
     semihosting_T32_HLT = Param.UInt8(
-        60, "T32 HLT number for semihosting " "calls."
+        60, "T32 HLT number for semihosting calls."
     )
     semihosting_Thumb_SVC = Param.UInt8(
-        171, "T32 SVC number for " "semihosting calls."
+        171, "T32 SVC number for semihosting calls."
     )
     semihosting_cmd_line = Param.String(
-        "", "Command line available to " "semihosting calls."
+        "", "Command line available to semihosting calls."
     )
     semihosting_cwd = Param.String(
-        "", "Base directory for semihosting " "file access."
+        "", "Base directory for semihosting file access."
     )
     semihosting_enable = Param.Bool(True, "Enable semihosting SVC/HLT traps.")
     semihosting_heap_base = Param.UInt32(0, "Virtual address of heap base.")
     semihosting_heap_limit = Param.UInt32(
-        0xF000000, "Virtual address of " "top of heap."
+        0xF000000, "Virtual address of top of heap."
     )
     semihosting_stack_base = Param.UInt32(
-        0x10000000, "Virtual address of " "base of descending stack."
+        0x10000000, "Virtual address of base of descending stack."
     )
     semihosting_stack_limit = Param.UInt32(
-        0xF000000, "Virtual address of " "stack limit."
+        0xF000000, "Virtual address of stack limit."
     )
     tcm_a_enable = Param.Bool(False, "Equivalent to CFGTCMBOOT")
     tcm_a_size = Param.UInt32(0x4000, "Sets the size of the ATCM(in bytes)")
@@ -119,7 +122,7 @@ class FastModelCortexR52(IrisBaseCPU):
     tcm_c_size = Param.UInt32(0x2000, "Sets the size of the CTCM(in bytes)")
     vfp_dp_present = Param.Bool(
         True,
-        "Whether double-precision floating " "point feature is implemented",
+        "Whether double-precision floating point feature is implemented",
     )
     vfp_enable_at_reset = Param.Bool(
         False,
@@ -168,10 +171,10 @@ class FastModelCortexR52Cluster(SimObject):
     PERIPHBASE = Param.UInt32(0x13080000, "Equivalent to CFGPERIPHBASE")
     cluster_utid = Param.UInt8(0, "Equivalent to CFGCLUSTERUTID")
     cpi_div = Param.UInt32(
-        1, "Divider for calculating CPI " "(Cycles Per Instruction)"
+        1, "Divider for calculating CPI (Cycles Per Instruction)"
     )
     cpi_mul = Param.UInt32(
-        1, "Multiplier for calculating CPI " "(Cycles Per Instruction)"
+        1, "Multiplier for calculating CPI (Cycles Per Instruction)"
     )
     dcache_prefetch_enabled = Param.Bool(
         False,
@@ -191,7 +194,7 @@ class FastModelCortexR52Cluster(SimObject):
         "upstream bus, this is only used when dcache-state_modelled=true.",
     )
     dcache_state_modelled = Param.Bool(
-        False, "Set whether D-cache has " "stateful implementation"
+        False, "Set whether D-cache has stateful implementation"
     )
     dcache_write_access_latency = Param.UInt64(
         0,
@@ -203,7 +206,7 @@ class FastModelCortexR52Cluster(SimObject):
         "is only used when dcache-state_modelled=true.",
     )
     flash_protection_enable_at_reset = Param.Bool(
-        False, "Equivalent to " "CFGFLASHPROTEN"
+        False, "Equivalent to CFGFLASHPROTEN"
     )
     has_flash_protection = Param.Bool(True, "Equivalent to CFGFLASHPROTIMP")
     icache_prefetch_enabled = Param.Bool(
@@ -224,7 +227,7 @@ class FastModelCortexR52Cluster(SimObject):
         "upstream bus, this is only used when icache-state_modelled=true.",
     )
     icache_state_modelled = Param.Bool(
-        False, "Set whether I-cache has " "stateful implementation"
+        False, "Set whether I-cache has stateful implementation"
     )
     memory_ext_slave_base = Param.UInt32(0, "Equivalent to CFGAXISTCMBASEADDR")
     memory_flash_base = Param.UInt32(0, "Equivalent to CFGFLASHBASEADDR")
@@ -234,16 +237,16 @@ class FastModelCortexR52Cluster(SimObject):
         "memory.flash_size = 0 => CFGFLASHIMP = false",
     )
     num_protection_regions_s1 = Param.UInt8(
-        16, "Number of v8-R stage1 " "protection regions"
+        16, "Number of v8-R stage1 protection regions"
     )
     num_protection_regions_s2 = Param.UInt8(
-        16, "Number of v8-R hyp " "protection regions"
+        16, "Number of v8-R hyp protection regions"
     )
     num_spi = Param.UInt16(
-        960, "Number of interrupts (SPI) into the " "internal GIC controller"
+        960, "Number of interrupts (SPI) into the internal GIC controller"
     )
     ram_protection_enable_at_reset = Param.Bool(
-        False, "Equivalent to " "CFGRAMPROTEN"
+        False, "Equivalent to CFGRAMPROTEN"
     )
     has_export_m_port = Param.Bool(
         True,

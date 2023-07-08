@@ -38,7 +38,7 @@ class InfixOperatorExprAST(ExprAST):
         self.right = right
 
     def __repr__(self):
-        return "[InfixExpr: %r %s %r]" % (self.left, self.op, self.right)
+        return f"[InfixExpr: {self.left!r} {self.op} {self.right!r}]"
 
     def generate(self, code, **kwargs):
         lcode = self.slicc.codeFormatter()
@@ -83,7 +83,7 @@ class InfixOperatorExprAST(ExprAST):
                     ("int", "Cycles", "Cycles"),
                 ]
             else:
-                self.error("No operator matched with {0}!".format(self.op))
+                self.error(f"No operator matched with {self.op}!")
 
             for expected_type in expected_types:
                 left_input_type = self.symtab.find(expected_type[0], Type)
@@ -115,7 +115,7 @@ class PrefixOperatorExprAST(ExprAST):
         self.operand = operand
 
     def __repr__(self):
-        return "[PrefixExpr: %s %r]" % (self.op, self.operand)
+        return f"[PrefixExpr: {self.op} {self.operand!r}]"
 
     def generate(self, code, **kwargs):
         opcode = self.slicc.codeFormatter()

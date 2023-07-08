@@ -50,7 +50,6 @@ namespace gem5
 namespace memory
 {
 
-GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
 
@@ -61,7 +60,7 @@ MemSinkCtrl::MemSinkCtrl(const QoSMemSinkCtrlParams &p)
     readBufferSize(p.read_buffer_size),
     writeBufferSize(p.write_buffer_size), port(name() + ".port", *this),
     interface(p.interface),
-    retryRdReq(false), retryWrReq(false), nextRequest(0), nextReqEvent(this),
+    retryRdReq(false), retryWrReq(false), nextRequest(0), nextReqEvent(*this),
     stats(this)
 {
     // Resize read and write queue to allocate space
@@ -218,7 +217,7 @@ MemSinkCtrl::processNextReqEvent()
     busStateNext = selectNextBusState();
 
     // Record turnaround stats and update current state direction
-    recordTurnaroundStats();
+    recordTurnaroundStats(busState, busStateNext);
 
     // Set current bus state
     setCurrentBusState();
@@ -353,7 +352,7 @@ MemSinkCtrl::MemSinkCtrlStats::MemSinkCtrlStats(statistics::Group *parent)
 
 MemSinkCtrl::MemoryPort::MemoryPort(const std::string& n,
                                     MemSinkCtrl& m)
-  : QueuedResponsePort(n, &m, queue, true),
+  : QueuedResponsePort(n, queue, true),
    mem(m), queue(mem, *this, true)
 {}
 
