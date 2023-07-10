@@ -40,6 +40,7 @@
 #include "gpu-compute/hsa_queue_entry.hh"
 #include "gpu-compute/shader.hh"
 #include "gpu-compute/wavefront.hh"
+#include "sim/sim_exit.hh"
 #include "sim/syscall_emul_buf.hh"
 #include "sim/system.hh"
 
