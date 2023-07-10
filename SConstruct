@@ -447,6 +447,12 @@ for variant_path in variant_paths:
                     conf.CheckLinkFlag(
                             '-Wl,--thread-count=%d' % GetOption('num_jobs'))
 
+        # Treat warnings as errors but white list some warnings that we
+        # want to allow (e.g., deprecation warnings).
+        env.Append(CCFLAGS=['-Werror',
+                             '-Wno-error=deprecated-declarations',
+                             '-Wno-error=deprecated',
+                            ])
 
     else:
         error('\n'.join((
