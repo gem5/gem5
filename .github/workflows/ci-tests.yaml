@@ -26,16 +26,20 @@ jobs:
           fetch-depth: 0
       - name: Check for Change-Id
         run: |
+          # loop through all the commits in the pull request
           for commit in $(git rev-list ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}); do
               git checkout $commit
-              if !(git log -1 --pretty=format:"%s" | grep -q "Change-Id: ")
+              if (git log -1 --pretty=format:"%s" | grep -q "Change-Id: ")
               then
-                echo "One or more of the commits in this pull request is missing a Change-ID, which we require for any changes made to gem5. "\
-                "To automatically insert one, run the following:\n f=`git rev-parse --git-dir`/hooks/commit-msg ; mkdir -p $(dirname $f) ; "\
-                "curl -Lo $f https://gerrit-review.googlesource.com/tools/hooks/commit-msg ; chmod +x $f\n Then amend the commit with git commit --amend --no-edit, and update your pull request."
-                exit 1
+                # passes as long as at least one change-id exists in the pull request
+                exit 0
               fi
           done
+          # if we reach this part, none of the commits had a change-id
+          echo "None of the commits in this pull request contains a Change-ID, which we require for any changes made to gem5. "\
+            "To automatically insert one, run the following:\n f=`git rev-parse --git-dir`/hooks/commit-msg ; mkdir -p $(dirname $f) ; "\
+            "curl -Lo $f https://gerrit-review.googlesource.com/tools/hooks/commit-msg ; chmod +x $f\n Then amend the commit with git commit --amend --no-edit, and update your pull request."
+          exit 1
 
   build-gem5:
     runs-on: [self-hosted, linux, x64, build]
