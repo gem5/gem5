@@ -3911,83 +3911,104 @@ ISA::initializeMiscRegMetadata()
       .mapsTo(MISCREG_MIDR);
     InitReg(MISCREG_MPIDR_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .mapsTo(MISCREG_MPIDR);
     InitReg(MISCREG_REVIDR_EL1)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid1))
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_PFR0_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .mapsTo(MISCREG_ID_PFR0);
     InitReg(MISCREG_ID_PFR1_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .mapsTo(MISCREG_ID_PFR1);
     InitReg(MISCREG_ID_DFR0_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .mapsTo(MISCREG_ID_DFR0);
     InitReg(MISCREG_ID_AFR0_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .mapsTo(MISCREG_ID_AFR0);
     InitReg(MISCREG_ID_MMFR0_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .mapsTo(MISCREG_ID_MMFR0);
     InitReg(MISCREG_ID_MMFR1_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .mapsTo(MISCREG_ID_MMFR1);
     InitReg(MISCREG_ID_MMFR2_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .mapsTo(MISCREG_ID_MMFR2);
     InitReg(MISCREG_ID_MMFR3_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .mapsTo(MISCREG_ID_MMFR3);
     InitReg(MISCREG_ID_MMFR4_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .mapsTo(MISCREG_ID_MMFR4);
     InitReg(MISCREG_ID_ISAR0_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .mapsTo(MISCREG_ID_ISAR0);
     InitReg(MISCREG_ID_ISAR1_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .mapsTo(MISCREG_ID_ISAR1);
     InitReg(MISCREG_ID_ISAR2_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .mapsTo(MISCREG_ID_ISAR2);
     InitReg(MISCREG_ID_ISAR3_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .mapsTo(MISCREG_ID_ISAR3);
     InitReg(MISCREG_ID_ISAR4_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .mapsTo(MISCREG_ID_ISAR4);
     InitReg(MISCREG_ID_ISAR5_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .mapsTo(MISCREG_ID_ISAR5);
     InitReg(MISCREG_ID_ISAR6_EL1)
       .allPrivileges().exceptUserMode().writes(0)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .mapsTo(MISCREG_ID_ISAR6);
     InitReg(MISCREG_MVFR0_EL1)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0)
       .mapsTo(MISCREG_MVFR0);
     InitReg(MISCREG_MVFR1_EL1)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0)
       .mapsTo(MISCREG_MVFR1);
     InitReg(MISCREG_MVFR2_EL1)
+      .faultRead(EL0, faultIdst)
       .faultRead(EL1, HCR_TRAP(tid3))
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AA64PFR0_EL1)
