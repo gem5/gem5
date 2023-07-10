@@ -44,7 +44,7 @@ from gem5_python_paths import extra_python_paths
 
 
 def EnvDefaults(env):
-    # export TERM so that clang reports errors in color
+    # initialize the toolchain related env with host environment
     use_vars = set(
         [
             "AS",
@@ -60,15 +60,15 @@ def EnvDefaults(env):
             "PROTOC",
             "PYTHONPATH",
             "RANLIB",
-            "TERM",
-            "PYTHON_CONFIG",
-            "CCFLAGS_EXTRA",
-            "GEM5PY_CCFLAGS_EXTRA",
-            "GEM5PY_LINKFLAGS_EXTRA",
-            "LINKFLAGS_EXTRA",
-            "LANG",
-            "LC_CTYPE",
-            "DISPLAY",
+            "TERM",  # for clang reports errors in color
+            "PYTHON_CONFIG",  # gem5 specific build env
+            "CCFLAGS_EXTRA",  # gem5 specific build env
+            "GEM5PY_CCFLAGS_EXTRA",  # gem5 specific build env
+            "GEM5PY_LINKFLAGS_EXTRA",  # gem5 specific build env
+            "LINKFLAGS_EXTRA",  # gem5 specific build env
+            "LANG",  # for work with non-ascii directory path
+            "LC_CTYPE",  # for work with non-ascii directory path
+            "DISPLAY",  # for gui program, ex kconfig guiconfig
         ]
     )
 

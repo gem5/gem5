@@ -598,7 +598,7 @@ machine(MachineType:Directory, "Directory protocol")
   }
 
   action(q_popMemQueue, "q", desc="Pop off-chip request queue") {
-    memQueue_in.dequeue(clockEdge());
+    dequeueMemRespQueue();
   }
 
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {

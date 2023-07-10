@@ -1,0 +1,20 @@
+{% extends 'base.html' %} {% block head %}
+<title>Page Not Found</title>
+{% endblock %} {% block body %}
+<main class="container-fluid calc-main-height">
+  <div
+    class="d-flex flex-column align-items-center justify-content-center"
+    style="height: inherit"
+  >
+    <h1 style="color: #0095af; font-size: 10rem">404</h1>
+    <p class="main-text-regular text-center">
+      The page you are looking for does not seem to exist.
+    </p>
+    <a
+      href="/"
+      class="btn btn-outline-primary main-text-regular btn-box-shadow mt-2 mb-2"
+      >Home</a
+    >
+  </div>
+</main>
+{% endblock %}

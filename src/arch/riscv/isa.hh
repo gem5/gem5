@@ -92,6 +92,13 @@ class ISA : public BaseISA
         return new PCState(new_inst_addr, rv_type);
     }
 
+    void
+    clearLoadReservation(ContextID cid) override
+    {
+        Addr& load_reservation_addr = load_reservation_addrs[cid];
+        load_reservation_addr = INVALID_RESERVATION_ADDR;
+    }
+
   public:
     RegVal readMiscRegNoEffect(RegIndex idx) const override;
     RegVal readMiscReg(RegIndex idx) override;

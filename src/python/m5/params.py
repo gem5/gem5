@@ -1560,8 +1560,8 @@ class MetaEnum(MetaParamValue):
         if cls.is_class:
             cls.cxx_type = f"{name}"
         else:
-            cls.cxx_type = f"enums::{name}"
-
+            scope = init_dict.get("wrapper_name", "enums")
+            cls.cxx_type = f"{scope}::{name}"
         super().__init__(name, bases, init_dict)
 
 

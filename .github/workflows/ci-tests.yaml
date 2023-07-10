@@ -16,10 +16,30 @@ jobs:
     - uses: actions/setup-python@v3
     - uses: pre-commit/action@v3.0.0
 
+  # ensures we have a change-id in every commit, needed for gerrit
+  check-for-change-id:
+    # runs on github hosted runner
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Check for Change-Id
+        run: |
+          for commit in $(git rev-list ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}); do
+              git checkout $commit
+              if !(git log -1 --pretty=format:"%s" | grep -q "Change-Id: ")
+              then
+                echo "One or more of the commits in this pull request is missing a Change-ID, which we require for any changes made to gem5. "\
+                "To automatically insert one, run the following:\n f=`git rev-parse --git-dir`/hooks/commit-msg ; mkdir -p $(dirname $f) ; "\
+                "curl -Lo $f https://gerrit-review.googlesource.com/tools/hooks/commit-msg ; chmod +x $f\n Then amend the commit with git commit --amend --no-edit, and update your pull request."
+                exit 1
+              fi
+          done
+
   build-gem5:
     runs-on: [self-hosted, linux, x64, build]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: pre-commit # only runs if pre-commit passes
+    needs: [pre-commit, check-for-change-id] # only runs if pre-commit and change-id passes
     outputs:
       artifactname: ${{ steps.name.outputs.test }}
     steps:
@@ -39,7 +59,7 @@ jobs:
   unittests-all-opt:
     runs-on: [self-hosted, linux, x64, run]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: pre-commit # only runs if pre-commit passes
+    needs: [pre-commit, check-for-change-id] # only runs if pre-commit and change-id passes
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v3
@@ -51,7 +71,7 @@ jobs:
   testlib-quick:
     runs-on: [self-hosted, linux, x64, run]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: [pre-commit, build-gem5]
+    needs: [pre-commit, build-gem5, check-for-change-id]
     timeout-minutes: 360     # 6 hours
     steps:
       - uses: actions/checkout@v3

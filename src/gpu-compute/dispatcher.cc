@@ -51,7 +51,8 @@ GPUDispatcher::GPUDispatcher(const Params &p)
     : SimObject(p), shader(nullptr), gpuCmdProc(nullptr),
       tickEvent([this]{ exec(); },
           "GPU Dispatcher tick", false, Event::CPU_Tick_Pri),
-      dispatchActive(false), stats(this)
+      dispatchActive(false), kernelExitEvents(p.kernel_exit_events),
+      stats(this)
 {
     schedule(&tickEvent, 0);
 }
@@ -332,7 +333,9 @@ GPUDispatcher::notifyWgCompl(Wavefront *wf)
                 curTick(), kern_id);
         DPRINTF(GPUKernelInfo, "Completed kernel %d\n", kern_id);
 
-        exitSimLoop("GPU Kernel Completed");
+        if (kernelExitEvents) {
+            exitSimLoop("GPU Kernel Completed");
+        }
     }
 
     if (!tickEvent.scheduled()) {

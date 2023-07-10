@@ -262,7 +262,7 @@ board.set_kernel_disk_workload(
     kernel=Resource("x86-linux-kernel-4.19.83"),
     # The location of the x86 SPEC CPU 2017 image
     disk_image=CustomDiskImageResource(
-        args.image, disk_root_partition=args.partition
+        args.image, root_partition=args.partition
     ),
     readfile_contents=command,
 )

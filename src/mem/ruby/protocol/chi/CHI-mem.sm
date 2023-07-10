@@ -663,7 +663,7 @@ machine(MachineType:Memory, "Memory controller interface") :
   }
 
   action(popMemoryQueue, "pmem", desc="Pop memory queue.") {
-    memQueue_in.dequeue(clockEdge());
+    dequeueMemRespQueue();
   }
 
   // Stall/wake-up only used for requests that arrive when we are on the

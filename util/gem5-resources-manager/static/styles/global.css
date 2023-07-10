@@ -1,0 +1,231 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Mulish:wght@700&display=swap');
+
+html,
+body {
+  min-height: 100vh;
+  margin: 0;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: #0095AF;
+  --bs-btn-bg: #FFFFFF;
+  --bs-btn-border-color: #0095AF;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #0095AF;
+  --bs-btn-hover-border-color: #0095AF;
+  --bs-btn-focus-shadow-rgb: 13, 110, 253;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #0095AF;
+  --bs-btn-active-border-color: #0095AF;
+  --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  --bs-btn-disabled-color: white;
+  --bs-btn-disabled-bg: grey;
+  --bs-btn-disabled-border-color: grey;
+  --bs-gradient: none;
+}
+
+.btn-box-shadow {
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.calc-main-height {
+  height: calc(100vh - 81px);
+}
+
+.main-text-semi {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.main-text-regular,
+.buttonGroup>button,
+#markdown-body-styling p,
+#markdown-body-styling li {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 400;
+  font-size: 1rem;
+}
+
+.secondary-text-semi {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.secondary-text-bold {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.main-text-bold {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.page-title,
+#markdown-body-styling h1 {
+  color: #425469;
+  font-family: 'Mulish', sans-serif;
+  font-weight: 700;
+  font-size: 2.5rem;
+}
+
+.main-panel-container {
+  max-width: 530px;
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+.input-shadow,
+.form-input-shadow>input {
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+.panel-container {
+  background: rgba(0, 149, 175, 0.50);
+  border-radius: 1rem;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px, rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  height: 555px;
+  width: 530px;
+}
+
+.panel-text-styling,
+#generate-uri-form>label {
+  text-shadow: 0px 0px 5px rgba(0, 0, 0, 0.50);
+  color: white;
+}
+
+.editorContainer {
+  width: 80%;
+}
+
+.monaco-editor {
+  position: absolute !important;
+}
+
+.editor-sizing {
+  min-height: 650px;
+  height: 75%;
+  width: 100%;
+}
+
+#liveAlertPlaceholder {
+  position: absolute;
+  margin-top: 1rem;
+  right: 2rem;
+  margin-left: 2rem;
+  z-index: 1040;
+}
+
+.alert-dismissible {
+  padding-right: 1rem;
+}
+
+.reset-nav,
+.login-nav {
+  --bs-nav-link-color: #0095AF;
+  --bs-nav-link-hover-color: white;
+  --bs-nav-tabs-link-active-color: #0095AF;
+}
+
+.login-nav-link {
+  color: white;
+  text-shadow: 0px 0px 5px rgba(0, 0, 0, 0.50);
+}
+
+.login-nav-link.active {
+  text-shadow: none;
+}
+
+.navbar-nav>.nav-link:hover {
+  text-decoration: underline;
+}
+
+.reset-nav-link:hover,
+.login-nav-link:hover {
+  background-color: #0095AF;
+}
+
+.reset-nav-link {
+  color: black;
+}
+
+.form-check-input:checked {
+  background-color: #6c6c6c;
+  border-color: #6c6c6c;
+}
+
+#markdown-body-styling h1 {
+  color: #425469;
+}
+
+code {
+  display: inline-table;
+  overflow-x: auto;
+  padding: 2px;
+  color: #333;
+  background: #f8f8f8;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+.editor-tooltips {
+  --bs-tooltip-bg: #0095AF;
+  --bs-tooltip-opacity: 1;
+}
+
+#loading-container {
+  display: none;
+  position: absolute;
+  right: 2rem;
+  margin-top: 1rem;
+}
+
+.spinner {
+  --bs-spinner-width: 2.25rem;
+  --bs-spinner-height: 2.25rem;
+  --bs-spinner-border-width: 0.45em;
+  border-color: #0095AF;
+  border-right-color: transparent;
+}
+
+#saved-confirmation {
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
+@media (max-width: 991px) {
+  .editorContainer {
+    width: 95%;
+  }
+}
+
+@media (max-width: 425px) {
+
+  .main-text-regular,
+  .main-text-semi,
+  .main-text-bold,
+  .buttonGroup>button,
+  #markdown-body-styling p {
+    font-size: 0.875rem;
+  }
+
+  .secondary-text-semi {
+    font-size: 1rem;
+  }
+
+  .page-title,
+  #markdown-body-styling h1 {
+    font-size: 2.25rem;
+  }
+}
+
+@media (min-width: 425px) {
+  #databaseActions {
+    max-width: 375px;
+  }
+}

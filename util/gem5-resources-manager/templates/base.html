@@ -1,0 +1,96 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/static/styles/global.css">
+    {% block head %}{% endblock %}
+  </head>
+  <body>
+    <nav class="navbar bg-body-tertiary navbar-expand-lg shadow-sm base-nav">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/">
+          <img src="/static/images/gem5ColorLong.gif" alt="gem5" height="55">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title secondary-text-semi" id="offcanvasNavbarLabel">gem5 Resources Manager</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <div class="navbar-nav justify-content-end flex-grow-1 pe-3">
+              <div class="navbar-nav main-text-regular">
+                <a class="nav-link" href="https://resources.gem5.org/">gem5 Resources</a>
+                <a class="nav-link" href="{{ url_for('help') }}">Help</a>
+                <a id="reset" class="nav-link" role="button" onclick="showResetSavedSessionsModal()">Reset</a>
+              </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div id="liveAlertPlaceholder"></div>
+    <div id="loading-container" class="align-items-center justify-content-center">
+      <span class="main-text-semi me-3">Processing...</span>
+      <div class="spinner-border spinner" role="status">
+        <span class="visually-hidden">Processing...</span>
+      </div>
+    </div>
+    <div class="modal fade" id="resetSavedSessionsModal" tabindex="-1" aria-labelledby="resetSavedSessionsModal" aria-hidden="true" data-bs-backdrop="static">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header secondary-text-semi">
+            <h5 class="modal-title secondary-text-semi" id="resetSavedSessionsLabel">Reset Saved Sessions</h5>
+            <button type="button" id="close-reset-modal" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="container-fluid">
+              <h5 class="secondary-text-semi mb-3" style="text-align: center">Once You Delete Sessions, There is no Going Back. Please be Certain.</h5>
+              <ul class="nav nav-tabs nav-fill reset-nav main-text-semi panel-text-styling" id="reset-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active reset-nav-link" id="delete-one-tab" data-bs-toggle="tab" data-bs-target="#delete-one-panel" type="button" role="tab">Delete One</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link reset-nav-link" id="delete-all-tab" data-bs-toggle="tab" data-bs-target="#delete-all-panel" type="button" role="tab">Delete All</button>
+                </li>
+              </ul>
+              <div class="tab-content mt-3" id="tabContent">
+                <div class="tab-pane fade show active" id="delete-one-panel" role="tabpanel">
+                  <div class="d-flex justify-content-center flex-column m-auto" style="width: 90%;">
+                    <h4 class="main-text-semi mt-3 mb-3" style="text-align: center;">Select One Saved Session to Delete.</h4>
+                    <form class="row mt-3">
+                      <label for="delete-session-dropdown" class="form-label main-text-regular ps-1">Saved Sessions</label>
+                      <select id="delete-session-dropdown" class="form-select input-shadow" aria-label="Select Session"></select>
+                      <label for="delete-one-confirmation" class="form-label main-text-regular ps-1 mt-3">
+                        To confirm, type <span id="selected-session"></span> below.
+                      </label>
+                      <input type="text" class="form-control input-shadow main-text-regular" id="delete-one-confirmation" placeholder="Enter Confirmation..." />
+                    </form>
+                  </div>
+                </div>
+                <div class="tab-pane fade" id="delete-all-panel" role="tabpanel">
+                  <div class="d-flex justify-content-center flex-column m-auto" style="width: 90%;">
+                    <h4 class="main-text-semi mt-3 mb-3" style="text-align: center;">All Saved Sessions Will be Deleted.</h4>
+                    <form class="d-flex flex-column mt-3">
+                      <label for="delete-all-confirmation" class="form-label main-text-regular ps-1">To confirm, type "Delete All" below.</label>
+                      <input type="text" class="form-control input-shadow main-text-regular" id="delete-all-confirmation" placeholder="Enter Confirmation..." />
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button id="resetCookies" type="button" class="btn btn-outline-primary" onclick="resetSavedSessions()">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% block body %}{% endblock %}
+    <script src="/static/js/app.js"></script>
+  </body>
+</html>

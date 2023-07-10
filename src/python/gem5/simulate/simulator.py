@@ -53,10 +53,6 @@ class Simulator:
     """
     This Simulator class is used to manage the execution of a gem5 simulation.
 
-    **Warning:** The simulate package is still in a beta state. The gem5
-    project does not guarantee the APIs within this package will remain
-    consistent in future across upcoming releases.
-
     Example
     -------
     Examples using the Simulator class can be found under
@@ -164,12 +160,6 @@ class Simulator:
         These generators can be found in the `exit_event_generator.py` module.
 
         """
-
-        warn(
-            "The simulate package is still in a beta state. The gem5 "
-            "project does not guarantee the APIs within this package will "
-            "remain consistent across upcoming releases."
-        )
 
         # We specify a dictionary here outlining the default behavior for each
         # exit event. Each exit event is mapped to a generator.

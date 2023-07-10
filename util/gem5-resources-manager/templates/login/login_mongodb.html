@@ -1,0 +1,189 @@
+{% extends 'base.html' %} {% block head %}
+<title>MongoDB Login</title>
+{% endblock %} {% block body %}
+<main>
+  <div
+    class="container-fluid d-flex justify-content-center main-panel-container"
+  >
+    <div
+      class="d-flex flex-column align-items-center justify-content-around panel-container h-auto"
+    >
+      <div
+        class="d-flex flex-column align-items-center"
+        style="width: -webkit-fill-available"
+      >
+        <h2 class="page-title panel-text-styling mt-5">MongoDB</h2>
+        <div class="mt-3" style="width: 75%">
+          <ul
+            class="nav nav-tabs nav-fill login-nav main-text-semi"
+            id="mongodb-login-tabs"
+            role="tablist"
+          >
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link active login-nav-link"
+                id="enter-uri-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#enter-uri-panel"
+                type="button"
+                role="tab"
+              >
+                Enter URI
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link login-nav-link"
+                id="generate-uri-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#generate-uri-panel"
+                type="button"
+                role="tab"
+              >
+                Generate URI
+              </button>
+            </li>
+          </ul>
+          <div class="tab-content mt-5" id="tabContent">
+            <div
+              class="tab-pane fade show active"
+              id="enter-uri-panel"
+              role="tabpanel"
+            >
+              <form
+                class="form-outline d-flex flex-column mt-3 panel-text-styling form-input-shadow"
+              >
+                <label for="alias" class="main-text-semi">Alias</label>
+                <input
+                  class="form-control mt-1 main-text-regular"
+                  type="text"
+                  id="alias"
+                  placeholder="Enter Alias..."
+                />
+                <label for="collection" class="main-text-semi mt-3"
+                  >Collection</label
+                >
+                <input
+                  class="form-control mt-1 main-text-regular"
+                  type="text"
+                  id="collection"
+                  placeholder="Enter Collection Name..."
+                />
+                <label for="database" class="main-text-semi mt-3"
+                  >Database</label
+                >
+                <input
+                  class="form-control mt-1 main-text-regular"
+                  type="text"
+                  id="database"
+                  placeholder="Enter Database Name..."
+                />
+                <label for="uri" class="main-text-semi mt-3">MongoDB URI</label>
+                <input
+                  class="form-control mt-1 main-text-regular"
+                  type="text"
+                  id="uri"
+                  name="uri"
+                  placeholder="Enter URI..."
+                />
+              </form>
+            </div>
+            <div class="tab-pane fade" id="generate-uri-panel" role="tabpanel">
+              <form
+                id="generate-uri-form"
+                class="form-outline d-flex flex-column mt-3 form-input-shadow"
+              >
+                <div
+                  class="d-flex flex-row align-items-center justify-content-center main-text-semi panel-text-styling"
+                >
+                  <span class="me-2">Standard</span>
+                  <div class="form-check form-switch d-flex flex-row mb-0">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      id="connection"
+                      checked
+                    />
+                  </div>
+                  <span class="">DNS Seed List</span>
+                </div>
+                <label for="alias" class="main-text-semi mt-3">Alias</label>
+                <input
+                  class="form-control mt-1 main-text-regular"
+                  type="text"
+                  id="aliasGenerate"
+                  placeholder="Enter Alias..."
+                />
+                <label for="username" class="main-text-semi mt-3"
+                  >Username (Optional)</label
+                >
+                <input
+                  class="form-control mt-1 main-text-regular"
+                  type="text"
+                  id="username"
+                  placeholder="Enter Username..."
+                />
+                <label for="password" class="main-text-semi mt-3"
+                  >Password (Optional)</label
+                >
+                <input
+                  class="form-control mt-1 main-text-regular"
+                  type="text"
+                  id="password"
+                  placeholder="Enter Password..."
+                />
+                <label for="host" class="main-text-semi mt-3">Host</label>
+                <input
+                  class="form-control mt-1 main-text-regular"
+                  type="text"
+                  id="host"
+                  placeholder="Enter Host..."
+                />
+                <label for="collection" class="main-text-semi mt-3"
+                  >Collection</label
+                >
+                <input
+                  class="form-control mt-1 main-text-regular"
+                  type="text"
+                  id="collectionGenerate"
+                  placeholder="Enter Collection..."
+                />
+                <label for="database" class="main-text-semi mt-3"
+                  >Database</label
+                >
+                <input
+                  class="form-control mt-1 main-text-regular"
+                  type="text"
+                  id="databaseGenerate"
+                  placeholder="Enter Database..."
+                />
+                <label for="options" class="main-text-semi mt-3"
+                  >Options (Optional)</label
+                >
+                <input
+                  class="form-control mt-1 main-text-regular"
+                  type="text"
+                  id="options"
+                  value="retryWrites=true,w=majority"
+                />
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex flex-row align-self-end me-3 mt-5 mb-3 buttonGroup">
+        <button
+          type="button"
+          id="login"
+          class="btn btn-outline-primary btn-box-shadow mt-2 mb-2"
+          onclick="handleMongoDBLogin(event)"
+        >
+          Login
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="/static/js/login.js"></script>
+{% endblock %}

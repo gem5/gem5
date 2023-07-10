@@ -29,7 +29,7 @@ config = {
         "gem5-resources": {
             "dataSource": "gem5-vision",
             "database": "gem5-vision",
-            "collection": "versions_test",
+            "collection": "resources",
             "url": "https://data.mongodb-api.com/app/data-ejhjf/endpoint/data/v1",
             "authUrl": "https://realm.mongodb.com/api/client/v2.0/app/data-ejhjf/auth/providers/api-key/login",
             "apiKey": "OIi5bAP7xxIGK782t8ZoiD2BkBGEzMdX3upChf9zdCxHSnMoiTnjI22Yw5kOSgy9",
