@@ -56,8 +56,8 @@ setup(
     install_requires=["pymongo"],
     python_requires=">=3.6",
     project_urls={
-        "Bug Reports": "https://gem5.atlassian.net/",
-        "Source": "https://gem5.googlesource.com/",
+        "Bug Reports": "https://github.com/gem5/issues/",
+        "Source": "https://github.com/gem5/gem5/",
         "Documentation": "https://www.gem5.org/documentation/gem5art",
     },
 )

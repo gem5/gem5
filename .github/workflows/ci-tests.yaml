@@ -29,7 +29,7 @@ jobs:
           # loop through all the commits in the pull request
           for commit in $(git rev-list ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}); do
               git checkout $commit
-              if (git log -1 --pretty=format:"%s" | grep -q "Change-Id: ")
+              if (git log -1 --pretty=format:"%B" | grep -q "Change-Id: ")
               then
                 # passes as long as at least one change-id exists in the pull request
                 exit 0

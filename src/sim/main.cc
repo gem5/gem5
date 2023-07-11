@@ -50,6 +50,7 @@ main(int argc, char **argv)
     // Initialize gem5 special signal handling.
     initSignals();
 
+#if PY_VERSION_HEX < 0x03080000
     // Convert argv[0] to a wchar_t string, using python's locale and cleanup
     // functions.
     std::unique_ptr<wchar_t[], decltype(&PyMem_RawFree)> program(
@@ -59,6 +60,23 @@ main(int argc, char **argv)
     // This can help python find libraries at run time relative to this binary.
     // It's probably not necessary, but is mostly harmless and might be useful.
     Py_SetProgramName(program.get());
+#else
+    // Preinitialize Python for Python 3.8+
+    // This ensures that the locale configuration takes effect
+    PyStatus status;
+
+    PyConfig config;
+    PyConfig_InitPythonConfig(&config);
+
+    /* Set the program name. Implicitly preinitialize Python. */
+    status = PyConfig_SetBytesString(&config, &config.program_name,
+                                     argv[0]);
+    if (PyStatus_Exception(status)) {
+        PyConfig_Clear(&config);
+        Py_ExitStatusException(status);
+        return 1;
+    }
+#endif
 
     py::scoped_interpreter guard(true, argc, argv);
 

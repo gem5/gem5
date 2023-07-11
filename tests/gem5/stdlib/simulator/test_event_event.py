@@ -1,5 +1,5 @@
-# Copyright (c) 2019, 2021 The Regents of the University of California
-# All Rights Reserved.
+# Copyright (c) 2022 The Regents of the University of California
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,41 +24,45 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""A setuptools based setup module."""
+from testlib import *
 
-from os.path import join
-from pathlib import Path
-from setuptools import setup, find_namespace_packages
+"""
+These tests are designed to test the BaseCPUProcessor. It utilizes the
+tests/gem5/configs/simple_binary_run.py to run a simple SE-mode simualation
+with different configurations of the BaseCPUProcessor.
+"""
+
+verifiers = (verifier.MatchStdoutNoPerf(joinpath(getcwd(), "ref", "simout")),)
 
 
-with open(Path(__file__).parent / "README.md", encoding="utf-8") as f:
-    long_description = f.read()
+gem5_verify_config(
+    name="simulator-exit-event-handler-with-function-list",
+    verifiers=verifiers,
+    fixtures=(),
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "configs",
+        "simulator_exit_event_run.py",
+    ),
+    config_args=["-l"],
+    valid_isas=(constants.all_compiled_tag,),
+    length=constants.quick_tag,
+)
 
-setup(
-    name="gem5art-run",
-    version="1.4.0",
-    description="A collection of utilities for running gem5",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://www.gem5.org/",
-    author="Davis Architecture Research Group (DArchR)",
-    author_email="jlowepower@ucdavis.edu",
-    license="BSD",
-    classifiers=[
-        "Development Status :: 4 - Beta",
-        "License :: OSI Approved :: BSD License",
-        "Topic :: System :: Hardware",
-        "Intended Audience :: Science/Research",
-        "Programming Language :: Python :: 3",
-    ],
-    keywords="simulation architecture gem5",
-    packages=find_namespace_packages(),
-    install_requires=["gem5art-artifact"],
-    python_requires=">=3.6",
-    project_urls={
-        "Bug Reports": "https://gem5.atlassian.net/",
-        "Source": "https://github.com/gem5/gem5/",
-        "Documentation": "https://www.gem5.org/documentation/gem5art",
-    },
-    scripts=["bin/gem5art-getruns"],
+gem5_verify_config(
+    name="simulator-exit-event-handler-with-generator",
+    verifiers=verifiers,
+    fixtures=(),
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "configs",
+        "simulator_exit_event_run.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    length=constants.quick_tag,
 )
