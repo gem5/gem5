@@ -36,11 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdbool.h>
 #include <stdint.h>
-
-#include "internals.h"
 #include "platform.h"
-#include "softfloat.h"
+#include "internals.h"
 #include "specialize.h"
+#include "softfloat.h"
 
 uint_fast64_t f64_to_ui64_r_minMag( float64_t a, bool exact )
 {

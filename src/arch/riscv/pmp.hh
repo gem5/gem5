@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021 The Regents of the University of California
+ * Copyright (c) 2023 Google LLC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -85,11 +86,17 @@ class PMP : public SimObject
     /** pmpcfg address range execute permission mask */
     const uint8_t PMP_EXEC = 1 << 2;
 
+    /** pmpcfg A field mask */
+    const uint8_t PMP_A_MASK = 3 << 3;
+
     /** pmpcfg address range locked mask */
     const uint8_t PMP_LOCK = 1 << 7;
 
     /** variable to keep track of active number of rules any time */
     int numRules;
+
+    /** variable to keep track of any lock of entry */
+    bool hasLockEntry;
 
     /** single pmp entry struct*/
     struct PmpEntry
@@ -111,7 +118,7 @@ class PMP : public SimObject
      * is allowed based on the pmp rules.
      * @param req memory request.
      * @param mode mode of request (read, write, execute).
-     * @param pmode current privilege mode of execution (U, S, M).
+     * @param pmode current privilege mode of memory (U, S, M).
      * @param tc thread context.
      * @param vaddr optional parameter to pass vaddr of original
      * request for which a page table walk is consulted by pmp unit
@@ -127,8 +134,9 @@ class PMP : public SimObject
      * rule of corresponding pmp entry.
      * @param pmp_index pmp entry index.
      * @param this_cfg value to be written to pmpcfg.
+     * @returns true if update pmpicfg success
      */
-    void pmpUpdateCfg(uint32_t pmp_index, uint8_t this_cfg);
+    bool pmpUpdateCfg(uint32_t pmp_index, uint8_t this_cfg);
 
     /**
      * pmpUpdateAddr updates the pmpaddr for a pmp
@@ -136,21 +144,26 @@ class PMP : public SimObject
      * rule of corresponding pmp entry.
      * @param pmp_index pmp entry index.
      * @param this_addr value to be written to pmpaddr.
+     * @returns true if update pmpaddri success
      */
-    void pmpUpdateAddr(uint32_t pmp_index, Addr this_addr);
+    bool pmpUpdateAddr(uint32_t pmp_index, Addr this_addr);
+
+    /**
+     * pmpReset reset when reset signal in trigger from
+     * CPU.
+     */
+    void pmpReset();
 
   private:
     /**
      * This function is called during a memory
      * access to determine if the pmp table
      * should be consulted for this access.
-     * @param pmode current privilege mode of execution (U, S, M).
-     * @param mode mode of request (read, write, execute).
+     * @param pmode current privilege mode of memory (U, S, M).
      * @param tc thread context.
      * @return true or false.
      */
-    bool shouldCheckPMP(RiscvISA::PrivilegeMode pmode,
-                BaseMMU::Mode mode, ThreadContext *tc);
+    bool shouldCheckPMP(RiscvISA::PrivilegeMode pmode, ThreadContext *tc);
 
     /**
      * createAddrfault creates an address fault

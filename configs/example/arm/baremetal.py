@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017,2019-2021 ARM Limited
+# Copyright (c) 2016-2017,2019-2023 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -44,6 +44,7 @@ import m5
 from m5.util import addToPath
 from m5.objects import *
 from m5.options import *
+from gem5.simulate.exit_event import ExitEvent
 import argparse
 
 m5.util.addToPath("../..")
@@ -52,6 +53,7 @@ from common import SysPaths
 from common import MemConfig
 from common import ObjectList
 from common.cores.arm import HPI
+from common.cores.arm import O3_ARM_v7a
 
 import devices
 import workloads
@@ -63,7 +65,25 @@ cpu_types = {
     "atomic": (AtomicSimpleCPU, None, None, None),
     "minor": (MinorCPU, devices.L1I, devices.L1D, devices.L2),
     "hpi": (HPI.HPI, HPI.HPI_ICache, HPI.HPI_DCache, HPI.HPI_L2),
+    "o3": (
+        O3_ARM_v7a.O3_ARM_v7a_3,
+        O3_ARM_v7a.O3_ARM_v7a_ICache,
+        O3_ARM_v7a.O3_ARM_v7a_DCache,
+        O3_ARM_v7a.O3_ARM_v7aL2,
+    ),
 }
+
+pmu_control_events = {
+    "enable": ExitEvent.PERF_COUNTER_ENABLE,
+    "disable": ExitEvent.PERF_COUNTER_DISABLE,
+    "reset": ExitEvent.PERF_COUNTER_RESET,
+}
+
+pmu_interrupt_events = {
+    "interrupt": ExitEvent.PERF_COUNTER_INTERRUPT,
+}
+
+pmu_stats_events = dict(**pmu_control_events, **pmu_interrupt_events)
 
 
 def create_cow_image(name):
@@ -77,7 +97,7 @@ def create(args):
     """Create and configure the system object."""
 
     if args.readfile and not os.path.isfile(args.readfile):
-        print("Error: Bootscript %s does not exist" % args.readfile)
+        print(f"Error: Bootscript {args.readfile} does not exist")
         sys.exit(1)
 
     object_file = args.kernel if args.kernel else ""
@@ -122,8 +142,14 @@ def create(args):
 
     # Add CPU clusters to the system
     system.cpu_cluster = [
-        devices.CpuCluster(
-            system, args.num_cores, args.cpu_freq, "1.0V", *cpu_types[args.cpu]
+        devices.ArmCpuCluster(
+            system,
+            args.num_cores,
+            args.cpu_freq,
+            "1.0V",
+            *cpu_types[args.cpu],
+            tarmac_gen=args.tarmac_gen,
+            tarmac_dest=args.tarmac_dest,
         )
     ]
 
@@ -136,12 +162,35 @@ def create(args):
     system.auto_reset_addr = True
 
     # Using GICv3
-    system.realview.gic.gicv4 = False
+    if hasattr(system.realview.gic, "gicv4"):
+        system.realview.gic.gicv4 = False
 
     system.highest_el_is_64 = True
 
     workload_class = workloads.workload_list.get(args.workload)
     system.workload = workload_class(object_file, system)
+
+    if args.with_pmu:
+        enabled_pmu_events = set(
+            (*args.pmu_dump_stats_on, *args.pmu_reset_stats_on)
+        )
+        exit_sim_on_control = bool(
+            enabled_pmu_events & set(pmu_control_events.keys())
+        )
+        exit_sim_on_interrupt = bool(
+            enabled_pmu_events & set(pmu_interrupt_events.keys())
+        )
+        for cluster in system.cpu_cluster:
+            interrupt_numbers = [args.pmu_ppi_number] * len(cluster)
+            cluster.addPMUs(
+                interrupt_numbers,
+                exit_sim_on_control=exit_sim_on_control,
+                exit_sim_on_interrupt=exit_sim_on_interrupt,
+            )
+
+    if args.exit_on_uart_eot:
+        for uart in system.realview.uart:
+            uart.end_on_eot = True
 
     return system
 
@@ -149,21 +198,49 @@ def create(args):
 def run(args):
     cptdir = m5.options.outdir
     if args.checkpoint:
-        print("Checkpoint directory: %s" % cptdir)
+        print(f"Checkpoint directory: {cptdir}")
+
+    pmu_exit_msgs = tuple(evt.value for evt in pmu_stats_events.values())
+    pmu_stats_dump_msgs = tuple(
+        pmu_stats_events[evt].value for evt in set(args.pmu_dump_stats_on)
+    )
+    pmu_stats_reset_msgs = tuple(
+        pmu_stats_events[evt].value for evt in set(args.pmu_reset_stats_on)
+    )
 
     while True:
         event = m5.simulate()
         exit_msg = event.getCause()
-        if exit_msg == "checkpoint":
-            print("Dropping checkpoint at tick %d" % m5.curTick())
+        if exit_msg == ExitEvent.CHECKPOINT.value:
+            print(f"Dropping checkpoint at tick {m5.curTick():d}")
             cpt_dir = os.path.join(m5.options.outdir, "cpt.%d" % m5.curTick())
             m5.checkpoint(os.path.join(cpt_dir))
             print("Checkpoint done.")
+        elif exit_msg in pmu_exit_msgs:
+            if exit_msg in pmu_stats_dump_msgs:
+                print(
+                    f"Dumping stats at tick {m5.curTick():d}, "
+                    f"due to {exit_msg}"
+                )
+                m5.stats.dump()
+            if exit_msg in pmu_stats_reset_msgs:
+                print(
+                    f"Resetting stats at tick {m5.curTick():d}, "
+                    f"due to {exit_msg}"
+                )
+                m5.stats.reset()
         else:
-            print(exit_msg, " @ ", m5.curTick())
+            print(f"{exit_msg} ({event.getCode()}) @ {m5.curTick()}")
             break
 
-    sys.exit(event.getCode())
+
+def arm_ppi_arg(int_num: int) -> int:
+    """Argparse argument parser for valid Arm PPI numbers."""
+    # PPIs (1056 <= int_num <= 1119) are not yet supported by gem5
+    int_num = int(int_num)
+    if 16 <= int_num <= 31:
+        return int_num
+    raise ValueError(f"{int_num} is not a valid Arm PPI number")
 
 
 def main():
@@ -231,6 +308,55 @@ def main():
     parser.add_argument("--checkpoint", action="store_true")
     parser.add_argument("--restore", type=str, default=None)
     parser.add_argument(
+        "--tarmac-gen",
+        action="store_true",
+        help="Write a Tarmac trace.",
+    )
+    parser.add_argument(
+        "--tarmac-dest",
+        choices=TarmacDump.vals,
+        default="stdoutput",
+        help="Destination for the Tarmac trace output. [Default: stdoutput]",
+    )
+    parser.add_argument(
+        "--with-pmu",
+        action="store_true",
+        help="Add a PMU to each core in the cluster.",
+    )
+    parser.add_argument(
+        "--pmu-ppi-number",
+        type=arm_ppi_arg,
+        default=23,
+        help="The number of the PPI to use to connect each PMU to its core. "
+        "Must be an integer and a valid PPI number (16 <= int_num <= 31).",
+    )
+    parser.add_argument(
+        "--pmu-dump-stats-on",
+        type=str,
+        default=[],
+        action="append",
+        choices=pmu_stats_events.keys(),
+        help="Specify the PMU events on which to dump the gem5 stats. "
+        "This option may be specified multiple times to enable multiple "
+        "PMU events.",
+    )
+    parser.add_argument(
+        "--pmu-reset-stats-on",
+        type=str,
+        default=[],
+        action="append",
+        choices=pmu_stats_events.keys(),
+        help="Specify the PMU events on which to reset the gem5 stats. "
+        "This option may be specified multiple times to enable multiple "
+        "PMU events.",
+    )
+    parser.add_argument(
+        "--exit-on-uart-eot",
+        action="store_true",
+        help="Exit simulation if any of the UARTs receive an EOT. Many "
+        "workloads signal termination by sending an EOT character.",
+    )
+    parser.add_argument(
         "--dtb-gen",
         action="store_true",
         help="Doesn't run simulation, it generates a DTB only",
@@ -242,25 +368,25 @@ def main():
         "--semi-stdin",
         type=str,
         default="stdin",
-        help="Standard input for semihosting " "(default: gem5's stdin)",
+        help="Standard input for semihosting (default: gem5's stdin)",
     )
     parser.add_argument(
         "--semi-stdout",
         type=str,
         default="stdout",
-        help="Standard output for semihosting " "(default: gem5's stdout)",
+        help="Standard output for semihosting (default: gem5's stdout)",
     )
     parser.add_argument(
         "--semi-stderr",
         type=str,
         default="stderr",
-        help="Standard error for semihosting " "(default: gem5's stderr)",
+        help="Standard error for semihosting (default: gem5's stderr)",
     )
     parser.add_argument(
         "--semi-path",
         type=str,
         default="",
-        help=("Search path for files to be loaded through " "Arm Semihosting"),
+        help=("Search path for files to be loaded through Arm Semihosting"),
     )
     parser.add_argument(
         "args",

@@ -102,26 +102,21 @@ def _url_factory(schemes, enable=True):
             # values into proper Python types.
             def parse_value(key, values):
                 if len(values) == 0 or (len(values) == 1 and not values[0]):
-                    fatal(
-                        "%s: '%s' doesn't have a value." % (url.geturl(), key)
-                    )
+                    fatal(f"{url.geturl()}: '{key}' doesn't have a value.")
                 elif len(values) > 1:
-                    fatal(
-                        "%s: '%s' has multiple values." % (url.geturl(), key)
-                    )
+                    fatal(f"{url.geturl()}: '{key}' has multiple values.")
                 else:
                     try:
                         return key, literal_eval(values[0])
                     except ValueError:
                         fatal(
-                            "%s: %s isn't a valid Python literal"
-                            % (url.geturl(), values[0])
+                            f"{url.geturl()}: {values[0]} isn't a valid Python literal"
                         )
 
             kwargs = dict([parse_value(k, v) for k, v in qs.items()])
 
             try:
-                return func("%s%s" % (url.netloc, url.path), **kwargs)
+                return func(f"{url.netloc}{url.path}", **kwargs)
             except TypeError:
                 fatal("Illegal stat visitor parameter specified")
 
@@ -227,10 +222,10 @@ def addStatVisitor(url):
     try:
         factory = factories[parsed.scheme]
     except KeyError:
-        fatal("Illegal stat file type '%s' specified." % parsed.scheme)
+        fatal(f"Illegal stat file type '{parsed.scheme}' specified.")
 
     if factory is None:
-        fatal("Stat type '%s' disabled at compile time" % parsed.scheme)
+        fatal(f"Stat type '{parsed.scheme}' disabled at compile time")
 
     outputList.append(factory(parsed))
 
@@ -242,12 +237,12 @@ def printStatVisitorTypes():
 
     def print_doc(doc):
         for line in doc.splitlines():
-            print("| %s" % line)
+            print(f"| {line}")
         print()
 
     enabled_visitors = [x for x in all_factories if x[2]]
     for factory, schemes, _ in enabled_visitors:
-        print("%s:" % ", ".join(filter(lambda x: x is not None, schemes)))
+        print(f"{', '.join(filter(lambda x: x is not None, schemes))}:")
 
         # Try to extract the factory doc string
         print_doc(inspect.getdoc(factory))
@@ -283,7 +278,7 @@ def _bindStatHierarchy(root):
                 _bind_obj(name, obj[0])
             else:
                 for idx, obj in enumerate(obj):
-                    _bind_obj("{}{}".format(name, idx), obj)
+                    _bind_obj(f"{name}{idx}", obj)
         else:
             # We need this check because not all obj.getCCObject() is an
             # instance of Stat::Group. For example, sc_core::sc_module, the C++

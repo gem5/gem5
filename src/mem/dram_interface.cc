@@ -1068,13 +1068,14 @@ DRAMInterface::minBankPrep(const MemPacketQueue& queue,
 
                 // latest Tick for which ACT can occur without
                 // incurring additoinal delay on the data bus
-                const Tick tRCD = ctrl->inReadBusState(false) ?
-                                                 tRCD_RD : tRCD_WR;
+                const Tick tRCD = ctrl->inReadBusState(false, this) ?
+                                                tRCD_RD : tRCD_WR;
                 const Tick hidden_act_max =
                             std::max(min_col_at - tRCD, curTick());
 
                 // When is the earliest the R/W burst can issue?
-                const Tick col_allowed_at = ctrl->inReadBusState(false) ?
+                const Tick col_allowed_at = ctrl->inReadBusState(false,
+                                              this) ?
                                               ranks[i]->banks[j].rdAllowedAt :
                                               ranks[i]->banks[j].wrAllowedAt;
                 Tick col_at = std::max(col_allowed_at, act_at + tRCD);
@@ -1180,10 +1181,10 @@ bool
 DRAMInterface::Rank::isQueueEmpty() const
 {
     // check commmands in Q based on current bus direction
-    bool no_queued_cmds = (dram.ctrl->inReadBusState(true) &&
-                          (readEntries == 0))
-                       || (dram.ctrl->inWriteBusState(true) &&
-                          (writeEntries == 0));
+    bool no_queued_cmds = (dram.ctrl->inReadBusState(true, &(this->dram))
+                          && (readEntries == 0)) ||
+                          (dram.ctrl->inWriteBusState(true, &(this->dram))
+                          && (writeEntries == 0));
     return no_queued_cmds;
 }
 
@@ -1669,7 +1670,7 @@ DRAMInterface::Rank::processPowerEvent()
         // completed refresh event, ensure next request is scheduled
         if (!(dram.ctrl->requestEventScheduled(dram.pseudoChannel))) {
             DPRINTF(DRAM, "Scheduling next request after refreshing"
-                           " rank %d\n", rank);
+                           " rank %d, PC %d \n", rank, dram.pseudoChannel);
             dram.ctrl->restartScheduler(curTick(), dram.pseudoChannel);
         }
     }
@@ -1831,7 +1832,8 @@ DRAMInterface::Rank::resetStats() {
 bool
 DRAMInterface::Rank::forceSelfRefreshExit() const {
     return (readEntries != 0) ||
-           (dram.ctrl->inWriteBusState(true) && (writeEntries != 0));
+           (dram.ctrl->inWriteBusState(true, &(this->dram))
+            && (writeEntries != 0));
 }
 
 void

@@ -39,8 +39,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define LITTLEENDIAN 1
 
 #define INLINE_LEVEL 5
-#define SOFTFLOAT_FAST_INT64
+
+// This macro is defined in SConscript
+// #define SOFTFLOAT_FAST_INT64
+
 #define SOFTFLOAT_FAST_DIV64TO32
+#define SOFTFLOAT_ROUND_ODD
 
 /*----------------------------------------------------------------------------
 *----------------------------------------------------------------------------*/

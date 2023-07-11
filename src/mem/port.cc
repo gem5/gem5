@@ -64,7 +64,7 @@ class DefaultRequestPort : public RequestPort
     }
 
   public:
-    DefaultRequestPort() : RequestPort("default_request_port", nullptr) {}
+    DefaultRequestPort() : RequestPort("default_request_port") {}
 
     // Atomic protocol.
     Tick recvAtomicSnoop(PacketPtr) override { blowUp(); }
@@ -89,7 +89,7 @@ class DefaultResponsePort : public ResponsePort
     }
 
   public:
-    DefaultResponsePort() : ResponsePort("default_response_port", nullptr) {}
+    DefaultResponsePort() : ResponsePort("default_response_port") {}
 
     // Atomic protocol.
     Tick recvAtomic(PacketPtr) override { blowUp(); }
@@ -102,6 +102,11 @@ class DefaultResponsePort : public ResponsePort
 
     // Functional protocol.
     void recvFunctional(PacketPtr) override { blowUp(); }
+    void
+    recvMemBackdoorReq(const MemBackdoorReq &, MemBackdoorPtr &) override
+    {
+        blowUp();
+    }
 
     // General.
     AddrRangeList getAddrRanges() const override { return AddrRangeList(); }
@@ -115,9 +120,23 @@ DefaultResponsePort defaultResponsePort;
 /**
  * Request port
  */
-RequestPort::RequestPort(const std::string& name, SimObject* _owner,
-    PortID _id) : Port(name, _id), _responsePort(&defaultResponsePort),
-    owner(*_owner)
+[[deprecated]]
+RequestPort::RequestPort(const std::string& name,
+                         SimObject* _owner,
+                         PortID _id):
+    Port(name, _id), _responsePort(&defaultResponsePort), owner{*_owner}
+{
+}
+
+/*** FIXME:
+ * The owner reference member is going through a deprecation path. In the
+ * meantime, it must be initialized but no valid reference is available here.
+ * Using 1 instead of nullptr prevents warning upon dereference. It should be
+ * OK until definitive removal of owner.
+ */
+RequestPort::RequestPort(const std::string& name, PortID _id) :
+    Port(name, _id), _responsePort(&defaultResponsePort),
+    owner{*reinterpret_cast<SimObject*>(1)}
 {
 }
 
@@ -170,9 +189,30 @@ RequestPort::printAddr(Addr a)
 /**
  * Response port
  */
-ResponsePort::ResponsePort(const std::string& name, SimObject* _owner,
-    PortID id) : Port(name, id), _requestPort(&defaultRequestPort),
-    defaultBackdoorWarned(false), owner(*_owner)
+
+[[deprecated]]
+ResponsePort::ResponsePort(const std::string& name,
+                           SimObject* _owner,
+                           PortID _id):
+    Port(name, _id),
+    _requestPort(&defaultRequestPort),
+    defaultBackdoorWarned(false),
+    owner{*_owner}
+{
+}
+
+
+/*** FIXME:
+ * The owner reference member is going through a deprecation path. In the
+ * meantime, it must be initialized but no valid reference is available here.
+ * Using 1 instead of nullptr prevents warning upon dereference. It should be
+ * OK until definitive removal of owner.
+ */
+ResponsePort::ResponsePort(const std::string& name, PortID id) :
+    Port(name, id),
+    _requestPort(&defaultRequestPort),
+    defaultBackdoorWarned(false),
+    owner{*reinterpret_cast<SimObject*>(1)}
 {
 }
 
@@ -203,6 +243,17 @@ ResponsePort::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
         defaultBackdoorWarned = true;
     }
     return recvAtomic(pkt);
+}
+
+void
+ResponsePort::recvMemBackdoorReq(const MemBackdoorReq &req,
+        MemBackdoorPtr &backdoor)
+{
+    if (!defaultBackdoorWarned) {
+        DPRINTF(ResponsePort,
+                "Port %s doesn't support requesting a back door.", name());
+        defaultBackdoorWarned = true;
+    }
 }
 
 } // namespace gem5

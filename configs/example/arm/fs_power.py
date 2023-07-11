@@ -79,7 +79,7 @@ class L2PowerOn(MathExprPowerModel):
         # Example to report l2 Cache overallAccesses
         # The estimated power is converted to Watt and will vary based
         # on the size of the cache
-        self.dyn = "{}.overallAccesses * 0.000018000".format(l2_path)
+        self.dyn = f"{l2_path}.overallAccesses * 0.000018000"
         self.st = "(voltage * 3)/10"
 
 

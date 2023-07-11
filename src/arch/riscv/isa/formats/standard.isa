@@ -44,7 +44,7 @@ def template ImmDeclare {{
 
       public:
         /// Constructor.
-        %(class_name)s(MachInst machInst);
+        %(class_name)s(ExtMachInst machInst);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
         std::string generateDisassembly(Addr pc,
             const loader::SymbolTable *symtab) const override;
@@ -52,7 +52,7 @@ def template ImmDeclare {{
 }};
 
 def template ImmConstructor {{
-    %(class_name)s::%(class_name)s(MachInst machInst)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
         %(set_reg_idx_arr)s;
@@ -168,7 +168,7 @@ def template BranchDeclare {{
 
       public:
         /// Constructor.
-        %(class_name)s(MachInst machInst);
+        %(class_name)s(ExtMachInst machInst);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::string
@@ -198,7 +198,9 @@ def template BranchExecute {{
     %(class_name)s::branchTarget(const PCStateBase &branch_pc) const
     {
         auto &rpc = branch_pc.as<RiscvISA::PCState>();
-        return std::make_unique<PCState>(rpc.pc() + imm);
+        std::unique_ptr<PCState> npc(dynamic_cast<PCState*>(rpc.clone()));
+        npc->set(rpc.pc() + imm);
+        return npc;
     }
 
     std::string
@@ -226,7 +228,7 @@ def template JumpDeclare {{
 
       public:
         /// Constructor.
-        %(class_name)s(MachInst machInst);
+        %(class_name)s(ExtMachInst machInst);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
 
         std::string
@@ -241,16 +243,21 @@ def template JumpDeclare {{
 }};
 
 def template JumpConstructor {{
-    %(class_name)s::%(class_name)s(MachInst machInst)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
         %(imm_code)s;
         if (QUADRANT != 0x3) {
-            // Handle "c_jr" instruction, set "IsReturn" flag if RC1 is 1 or 5
-            if (CFUNCT1 == 0 && (RC1 == 1 || RC1 == 5))
-                flags[IsReturn] = true;
+            if (COPCODE == 4) {
+                // Handle "c_jr" instruction, set "IsReturn" flag if RC1 is 1 or 5
+                if (CFUNCT1 == 0 && (RC1 == 1 || RC1 == 5))
+                    flags[IsReturn] = true;
+                // Handle "c_jalr" instruction, set IsReturn if RC1 != ra
+                if (CFUNCT1 == 1 && RC1 == 5)
+                    flags[IsReturn] = true;
+            }
         } else {
             bool rd_link = (RD == 1 || RD == 5);
             bool rs1_link = (RS1 == 1 || RS1 == 5);
@@ -336,6 +343,14 @@ def template CSRExecute {{
 
         RegIndex midx = csr_data_it->second.physIndex;
         const std::string& csrName = csr_data_it->second.name;
+        if ((csr_data_it->second.rvTypes & (1 << machInst.rv_type)) == 0) {
+            return std::make_shared<IllegalInstFault>(
+                    csprintf("%s is not support in mode %d\n",
+                             csrName,
+                             machInst.rv_type),
+                    machInst);
+        }
+
         auto mask_it = csr_masks.find(csr);
         RegVal maskVal = (mask_it == csr_masks.end()) ? mask(64)
                                                       : mask_it->second;
@@ -371,6 +386,7 @@ def template CSRExecute {{
         } else {
             olddata = xc->readMiscReg(midx);
         }
+        olddata = rvZext(olddata);
         auto olddata_all = olddata;
 
         olddata &= maskVal;

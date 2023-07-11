@@ -100,7 +100,7 @@ class Region(tuple):
         return tuple.__new__(cls, args)
 
     def __repr__(self):
-        return "Region(%s, %s)" % (self[0], self[1])
+        return f"Region({self[0]}, {self[1]})"
 
     @property
     def start(self):
@@ -267,7 +267,7 @@ class Regions(object):
         return result
 
     def __repr__(self):
-        return "Regions(%s)" % ([(r[0], r[1]) for r in self.regions],)
+        return f"Regions({[(r[0], r[1]) for r in self.regions]})"
 
 
 all_regions = Regions(Region(neg_inf, pos_inf))
@@ -279,12 +279,12 @@ if __name__ == "__main__":
     n = Region(9, 10)
 
     def test(left, right):
-        print("%s == %s: %s" % (left, right, left == right))
-        print("%s != %s: %s" % (left, right, left != right))
-        print("%s <  %s: %s" % (left, right, left < right))
-        print("%s <= %s: %s" % (left, right, left <= right))
-        print("%s >  %s: %s" % (left, right, left > right))
-        print("%s >= %s: %s" % (left, right, left >= right))
+        print(f"{left} == {right}: {left == right}")
+        print(f"{left} != {right}: {left != right}")
+        print(f"{left} <  {right}: {left < right}")
+        print(f"{left} <= {right}: {left <= right}")
+        print(f"{left} >  {right}: {left > right}")
+        print(f"{left} >= {right}: {left >= right}")
         print("\n")
 
     test(neg_inf, neg_inf)

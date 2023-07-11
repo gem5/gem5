@@ -55,6 +55,27 @@ ImmOp64::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 }
 
 std::string
+RegOp64::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printIntReg(ss, op1);
+    return ss.str();
+}
+
+std::string
+RegImmImmOp64::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printIntReg(ss, op1);
+    ccprintf(ss, "#0x%x", imm1);
+    ss << ", ";
+    ccprintf(ss, "#0x%x", imm2);
+    return ss.str();
+}
+
+std::string
 RegRegImmImmOp64::generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const
 {
@@ -241,6 +262,10 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         }
       // AArch64 TLB Invalidate All, EL3, Inner Shareable
       case MISCREG_TLBI_ALLE3IS:
+      // AArch64 TLB Invalidate All, EL3, Outer Shareable
+      // We are currently not distinguishing Inner and Outer domains.
+      // We therefore implement TLBIOS instructions as TLBIIS
+      case MISCREG_TLBI_ALLE3OS:
         {
             TLBIALLEL tlbiOp(EL3, true);
             tlbiOp.broadcast(tc);
@@ -258,6 +283,10 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         }
       // AArch64 TLB Invalidate All, EL2, Inner Shareable
       case MISCREG_TLBI_ALLE2IS:
+      // AArch64 TLB Invalidate All, EL2, Outer Shareable
+      // We are currently not distinguishing Inner and Outer domains.
+      // We therefore implement TLBIOS instructions as TLBIIS
+      case MISCREG_TLBI_ALLE2OS:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
@@ -278,6 +307,10 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         }
       // AArch64 TLB Invalidate All, EL1, Inner Shareable
       case MISCREG_TLBI_ALLE1IS:
+      // AArch64 TLB Invalidate All, EL1, Outer Shareable
+      // We are currently not distinguishing Inner and Outer domains.
+      // We therefore implement TLBIOS instructions as TLBIIS
+      case MISCREG_TLBI_ALLE1OS:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
@@ -313,6 +346,9 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             return;
         }
       case MISCREG_TLBI_VMALLS12E1IS:
+      // We are currently not distinguishing Inner and Outer domains.
+      // We therefore implement TLBIOS instructions as TLBIIS
+      case MISCREG_TLBI_VMALLS12E1OS:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
@@ -322,6 +358,9 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
             return;
         }
       case MISCREG_TLBI_VMALLE1IS:
+      // We are currently not distinguishing Inner and Outer domains.
+      // We therefore implement TLBIOS instructions as TLBIIS
+      case MISCREG_TLBI_VMALLE1OS:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
@@ -360,6 +399,10 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         }
       // AArch64 TLB Invalidate by VA, EL3, Inner Shareable
       case MISCREG_TLBI_VAE3IS_Xt:
+      // AArch64 TLB Invalidate by VA, EL3, Outer Shareable
+      // We are currently not distinguishing Inner and Outer domains.
+      // We therefore implement TLBIOS instructions as TLBIIS
+      case MISCREG_TLBI_VAE3OS_Xt:
         {
             TLBIMVAA tlbiOp(EL3, true,
                             static_cast<Addr>(bits(value, 43, 0)) << 12,
@@ -370,6 +413,10 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         }
       // AArch64 TLB Invalidate by VA, Last Level, EL3, Inner Shareable
       case MISCREG_TLBI_VALE3IS_Xt:
+      // AArch64 TLB Invalidate by VA, Last Level, EL3, Outer Shareable
+      // We are currently not distinguishing Inner and Outer domains.
+      // We therefore implement TLBIOS instructions as TLBIIS
+      case MISCREG_TLBI_VALE3OS_Xt:
         {
             TLBIMVAA tlbiOp(EL3, true,
                             static_cast<Addr>(bits(value, 43, 0)) << 12,
@@ -430,6 +477,10 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         }
       // AArch64 TLB Invalidate by VA, EL2, Inner Shareable
       case MISCREG_TLBI_VAE2IS_Xt:
+      // AArch64 TLB Invalidate by VA, EL2, Outer Shareable
+      // We are currently not distinguishing Inner and Outer domains.
+      // We therefore implement TLBIOS instructions as TLBIIS
+      case MISCREG_TLBI_VAE2OS_Xt:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
@@ -455,6 +506,10 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         }
       // AArch64 TLB Invalidate by VA, Last Level, EL2, Inner Shareable
       case MISCREG_TLBI_VALE2IS_Xt:
+      // AArch64 TLB Invalidate by VA, Last Level, EL2, Outer Shareable
+      // We are currently not distinguishing Inner and Outer domains.
+      // We therefore implement TLBIOS instructions as TLBIIS
+      case MISCREG_TLBI_VALE2OS_Xt:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
             HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
@@ -526,6 +581,10 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         }
       // AArch64 TLB Invalidate by VA, EL1, Inner Shareable
       case MISCREG_TLBI_VAE1IS_Xt:
+      // AArch64 TLB Invalidate by VA, EL1, Outer Shareable
+      // We are currently not distinguishing Inner and Outer domains.
+      // We therefore implement TLBIOS instructions as TLBIIS
+      case MISCREG_TLBI_VAE1OS_Xt:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
             auto asid = asid_16bits ? bits(value, 63, 48) :
@@ -591,6 +650,10 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         }
       // AArch64 TLB Invalidate by ASID, EL1, Inner Shareable
       case MISCREG_TLBI_ASIDE1IS_Xt:
+      // AArch64 TLB Invalidate by ASID, EL1, Outer Shareable
+      // We are currently not distinguishing Inner and Outer domains.
+      // We therefore implement TLBIOS instructions as TLBIIS
+      case MISCREG_TLBI_ASIDE1OS_Xt:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
             auto asid = asid_16bits ? bits(value, 63, 48) :
@@ -653,6 +716,10 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
         }
       // AArch64 TLB Invalidate by VA, All ASID, EL1, Inner Shareable
       case MISCREG_TLBI_VAAE1IS_Xt:
+      // AArch64 TLB Invalidate by VA, All ASID, EL1, Outer Shareable
+      // We are currently not distinguishing Inner and Outer domains.
+      // We therefore implement TLBIOS instructions as TLBIIS
+      case MISCREG_TLBI_VAAE1OS_Xt:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
@@ -675,6 +742,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       // AArch64 TLB Invalidate by VA, All ASID,
       // Last Level, EL1, Inner Shareable
       case MISCREG_TLBI_VAALE1IS_Xt:
+      // AArch64 TLB Invalidate by VA, All ASID,
+      // Last Level, EL1, Outer Shareable
+      // We are currently not distinguishing Inner and Outer domains.
+      // We therefore implement TLBIOS instructions as TLBIIS
+      case MISCREG_TLBI_VAALE1OS_Xt:
         {
             SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
 
@@ -735,6 +807,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       // AArch64 TLB Invalidate by Intermediate Physical Address,
       // Stage 2, EL1, Inner Shareable
       case MISCREG_TLBI_IPAS2E1IS_Xt:
+      // AArch64 TLB Invalidate by Intermediate Physical Address,
+      // Stage 2, EL1, Outer Shareable
+      // We are currently not distinguishing Inner and Outer domains.
+      // We therefore implement TLBIOS instructions as TLBIIS
+      case MISCREG_TLBI_IPAS2E1OS_Xt:
         {
             if (EL2Enabled(tc)) {
                 SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
@@ -755,6 +832,11 @@ TlbiOp64::performTlbi(ExecContext *xc, MiscRegIndex dest_idx, RegVal value) cons
       // AArch64 TLB Invalidate by Intermediate Physical Address,
       // Stage 2, Last Level, EL1, Inner Shareable
       case MISCREG_TLBI_IPAS2LE1IS_Xt:
+      // AArch64 TLB Invalidate by Intermediate Physical Address,
+      // Stage 2, Last Level, EL1, Outer Shareable
+      // We are currently not distinguishing Inner and Outer domains.
+      // We therefore implement TLBIOS instructions as TLBIIS
+      case MISCREG_TLBI_IPAS2LE1OS_Xt:
         {
             if (EL2Enabled(tc)) {
                 SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);

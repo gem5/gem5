@@ -49,7 +49,6 @@ namespace gem5
 
 class Doorbell;
 
-GEM5_DEPRECATED_NAMESPACE(SCMI, scmi);
 namespace scmi
 {
 

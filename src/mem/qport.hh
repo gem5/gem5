@@ -77,9 +77,10 @@ class QueuedResponsePort : public ResponsePort
      * behaviuor in a subclass, and provide the latter to the
      * QueuePort constructor.
      */
-    QueuedResponsePort(const std::string& name, SimObject* owner,
-                    RespPacketQueue &resp_queue, PortID id = InvalidPortID) :
-        ResponsePort(name, owner, id), respQueue(resp_queue)
+    QueuedResponsePort(const std::string& name,
+                       RespPacketQueue &resp_queue,
+                       PortID id = InvalidPortID) :
+        ResponsePort(name, id), respQueue(resp_queue)
     { }
 
     virtual ~QueuedResponsePort() { }
@@ -124,17 +125,17 @@ class QueuedRequestPort : public RequestPort
   public:
 
     /**
-     * Create a QueuedPort with a given name, owner, and a supplied
+     * Create a QueuedPort with a given name, and a supplied
      * implementation of two packet queues. The external definition of
      * the queues enables e.g. the cache to implement a specific queue
      * behaviuor in a subclass, and provide the latter to the
      * QueuePort constructor.
      */
-    QueuedRequestPort(const std::string& name, SimObject* owner,
+    QueuedRequestPort(const std::string& name,
                      ReqPacketQueue &req_queue,
                      SnoopRespPacketQueue &snoop_resp_queue,
                      PortID id = InvalidPortID) :
-        RequestPort(name, owner, id), reqQueue(req_queue),
+        RequestPort(name, id), reqQueue(req_queue),
         snoopRespQueue(snoop_resp_queue)
     { }
 

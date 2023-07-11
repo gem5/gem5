@@ -233,8 +233,9 @@ MC146818::readData(uint8_t addr)
     else {
         switch (addr) {
           case RTC_STAT_REGA:
-            // toggle UIP bit for linux
-            stat_regA.uip = !stat_regA.uip;
+            // Linux after v5.10 checks this multiple times so toggling
+            // leads to a deadlock on bootup.
+            stat_regA.uip = 0;
             return stat_regA;
             break;
           case RTC_STAT_REGB:

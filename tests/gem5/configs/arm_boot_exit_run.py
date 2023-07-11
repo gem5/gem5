@@ -161,9 +161,7 @@ elif args.mem_system == "mi_example":
     cache_hierarchy = MIExampleCacheHierarchy(size="32kB", assoc=4)
 else:
     raise NotImplementedError(
-        "Memory type '{}' is not supported in the boot tests.".format(
-            args.mem_system
-        )
+        f"Memory type '{args.mem_system}' is not supported in the boot tests."
     )
 
 # Setup the system memory.

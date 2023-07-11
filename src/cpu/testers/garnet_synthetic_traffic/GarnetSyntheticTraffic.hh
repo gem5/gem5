@@ -84,7 +84,7 @@ class GarnetSyntheticTraffic : public ClockedObject
       public:
 
         CpuPort(const std::string &_name, GarnetSyntheticTraffic *_tester)
-            : RequestPort(_name, _tester), tester(_tester)
+            : RequestPort(_name), tester(_tester)
         { }
 
       protected:

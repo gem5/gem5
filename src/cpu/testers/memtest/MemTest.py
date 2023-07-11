@@ -70,7 +70,7 @@ class MemTest(ClockedObject):
         1000000, "Progress report interval (in accesses)"
     )
     progress_check = Param.Cycles(
-        5000000, "Cycles before exiting " "due to lack of progress"
+        5000000, "Cycles before exiting due to lack of progress"
     )
 
     port = RequestPort("Port to the memory system")
@@ -79,5 +79,5 @@ class MemTest(ClockedObject):
     # Add the ability to supress error responses on functional
     # accesses as Ruby needs this
     suppress_func_errors = Param.Bool(
-        False, "Suppress panic when " "functional accesses fail."
+        False, "Suppress panic when functional accesses fail."
     )

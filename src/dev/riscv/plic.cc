@@ -45,6 +45,7 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/Plic.hh"
+#include "params/PlicBase.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -53,7 +54,7 @@ namespace gem5
 using namespace RiscvISA;
 
 Plic::Plic(const Params &params) :
-    BasicPioDevice(params, params.pio_size),
+    PlicBase(params),
     system(params.system),
     nSrc(params.n_src),
     nContext(params.n_contexts),
@@ -203,7 +204,7 @@ Plic::PlicRegisters::init()
         - plic->nSrc32 * 4;
     reserved.emplace_back("reserved1", reserve1_size);
     const size_t reserve2_size = thresholdStart - enableStart
-        - plic->nSrc32 * plic->nContext * enablePadding;
+        - plic->nContext * enablePadding;
     reserved.emplace_back("reserved2", reserve2_size);
     const size_t reserve3_size = plic->pioSize - thresholdStart
         - plic->nContext * thresholdPadding;
@@ -333,6 +334,8 @@ void
 Plic::writeThreshold(Register32& reg, const uint32_t& data,
     const int context_id)
 {
+    reg.update(data);
+
     DPRINTF(Plic,
         "Threshold updated - context: %d, val: %d\n",
         context_id, reg.get());

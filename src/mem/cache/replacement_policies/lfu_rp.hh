@@ -44,7 +44,6 @@ namespace gem5
 
 struct LFURPParams;
 
-GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
 {
 

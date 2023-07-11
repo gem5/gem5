@@ -36,9 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdbool.h>
 #include <stdint.h>
-
-#include "internals.h"
 #include "platform.h"
+#include "internals.h"
 #include "softfloat.h"
 
 float128_t f128_sub( float128_t a, float128_t b )

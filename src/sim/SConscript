@@ -42,6 +42,7 @@ SimObject('SubSystem.py', sim_objects=['SubSystem'])
 SimObject('RedirectPath.py', sim_objects=['RedirectPath'])
 SimObject('PowerState.py', sim_objects=['PowerState'], enums=['PwrState'])
 SimObject('PowerDomain.py', sim_objects=['PowerDomain'])
+SimObject('SignalPort.py', sim_objects=[])
 
 Source('async.cc')
 Source('backtrace_%s.cc' % env['BACKTRACE_IMPL'], add_tags='gem5 trace')

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021 The Regents of the University of California
+ * Copyright (c) 2023 Google LLC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +28,6 @@
  */
 
 #include "arch/riscv/pmp.hh"
-
 #include "arch/generic/tlb.hh"
 #include "arch/riscv/faults.hh"
 #include "arch/riscv/isa.hh"
@@ -47,7 +47,8 @@ namespace gem5
 PMP::PMP(const Params &params) :
     SimObject(params),
     pmpEntries(params.pmp_entries),
-    numRules(0)
+    numRules(0),
+    hasLockEntry(false)
 {
     pmpTable.resize(pmpEntries);
 }
@@ -58,7 +59,7 @@ PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
               Addr vaddr)
 {
     // First determine if pmp table should be consulted
-    if (!shouldCheckPMP(pmode, mode, tc))
+    if (!shouldCheckPMP(pmode, tc))
         return NoFault;
 
     if (req->hasVaddr()) {
@@ -70,12 +71,6 @@ PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
                 req->getPaddr());
     }
 
-    // An access should be successful if there are
-    // no rules defined yet or we are in M mode (based
-    // on specs v1.10)
-    if (numRules == 0 || (pmode == RiscvISA::PrivilegeMode::PRV_M))
-        return NoFault;
-
     // match_index will be used to identify the pmp entry
     // which matched for the given address
     int match_index = -1;
@@ -85,29 +80,28 @@ PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
     for (int i = 0; i < pmpTable.size(); i++) {
         AddrRange pmp_range = pmpTable[i].pmpAddr;
         if (pmp_range.contains(req->getPaddr()) &&
-                pmp_range.contains(req->getPaddr() + req->getSize())) {
+                pmp_range.contains(req->getPaddr() + req->getSize() - 1)) {
             // according to specs address is only matched,
-            // when (addr) and (addr + request_size) are both
+            // when (addr) and (addr + request_size - 1) are both
             // within the pmp range
             match_index = i;
         }
 
         if ((match_index > -1)
             && (PMP_OFF != pmpGetAField(pmpTable[match_index].pmpCfg))) {
-            // check the RWX permissions from the pmp entry
-            uint8_t allowed_privs = PMP_READ | PMP_WRITE | PMP_EXEC;
+            uint8_t this_cfg = pmpTable[match_index].pmpCfg;
 
-            // i is the index of pmp table which matched
-            allowed_privs &= pmpTable[match_index].pmpCfg;
-
-            if ((mode == BaseMMU::Mode::Read) &&
-                                        (PMP_READ & allowed_privs)) {
+            if ((pmode == RiscvISA::PrivilegeMode::PRV_M) &&
+                                    (PMP_LOCK & this_cfg) == 0) {
+                return NoFault;
+            } else if ((mode == BaseMMU::Mode::Read) &&
+                                        (PMP_READ & this_cfg)) {
                 return NoFault;
             } else if ((mode == BaseMMU::Mode::Write) &&
-                                        (PMP_WRITE & allowed_privs)) {
+                                        (PMP_WRITE & this_cfg)) {
                 return NoFault;
             } else if ((mode == BaseMMU::Mode::Execute) &&
-                                        (PMP_EXEC & allowed_privs)) {
+                                        (PMP_EXEC & this_cfg)) {
                 return NoFault;
             } else {
                 if (req->hasVaddr()) {
@@ -119,7 +113,9 @@ PMP::pmpCheck(const RequestPtr &req, BaseMMU::Mode mode,
         }
     }
     // if no entry matched and we are not in M mode return fault
-    if (req->hasVaddr()) {
+    if (pmode == RiscvISA::PrivilegeMode::PRV_M) {
+        return NoFault;
+    } else if (req->hasVaddr()) {
         return createAddrfault(req->getVaddr(), mode);
     } else {
         return createAddrfault(vaddr, mode);
@@ -150,17 +146,26 @@ PMP::pmpGetAField(uint8_t cfg)
 }
 
 
-void
+bool
 PMP::pmpUpdateCfg(uint32_t pmp_index, uint8_t this_cfg)
 {
+    if (pmp_index >= pmpEntries) {
+        DPRINTF(PMP, "Can't update pmp entry config %u"
+                " because the index exceed the size of pmp entries %u",
+                pmp_index, pmpEntries);
+        return false;
+    }
+
     DPRINTF(PMP, "Update pmp config with %u for pmp entry: %u \n",
                                     (unsigned)this_cfg, pmp_index);
-
-    warn_if((PMP_LOCK & this_cfg), "pmp lock feature is not supported.\n");
-
+    if (pmpTable[pmp_index].pmpCfg & PMP_LOCK) {
+        DPRINTF(PMP, "Update pmp entry config %u failed because it locked\n",
+                pmp_index);
+        return false;
+    }
     pmpTable[pmp_index].pmpCfg = this_cfg;
     pmpUpdateRule(pmp_index);
-
+    return true;
 }
 
 void
@@ -170,6 +175,7 @@ PMP::pmpUpdateRule(uint32_t pmp_index)
     // pmpaddr/pmpcfg is written
 
     numRules = 0;
+    hasLockEntry = false;
     Addr prevAddr = 0;
 
     if (pmp_index >= 1) {
@@ -188,11 +194,11 @@ PMP::pmpUpdateRule(uint32_t pmp_index)
         break;
       case PMP_TOR:
         // top of range mode
-        this_range = AddrRange(prevAddr << 2, (this_addr << 2) - 1);
+        this_range = AddrRange(prevAddr << 2, (this_addr << 2));
         break;
       case PMP_NA4:
         // naturally aligned four byte region
-        this_range = AddrRange(this_addr << 2, (this_addr + 4) - 1);
+        this_range = AddrRange(this_addr << 2, ((this_addr << 2) + 4));
         break;
       case PMP_NAPOT:
         // naturally aligned power of two region, >= 8 bytes
@@ -209,14 +215,48 @@ PMP::pmpUpdateRule(uint32_t pmp_index)
       if (PMP_OFF != a_field) {
           numRules++;
       }
+      hasLockEntry |= ((pmpTable[i].pmpCfg & PMP_LOCK) != 0);
+    }
+
+    if (hasLockEntry) {
+        DPRINTF(PMP, "Find lock entry\n");
     }
 }
 
 void
+PMP::pmpReset()
+{
+    for (uint32_t i = 0; i < pmpTable.size(); i++) {
+        pmpTable[i].pmpCfg &= ~(PMP_A_MASK | PMP_LOCK);
+        pmpUpdateRule(i);
+    }
+}
+
+bool
 PMP::pmpUpdateAddr(uint32_t pmp_index, Addr this_addr)
 {
+    if (pmp_index >= pmpEntries) {
+        DPRINTF(PMP, "Can't update pmp entry address %u"
+                " because the index exceed the size of pmp entries %u",
+                pmp_index, pmpEntries);
+        return false;
+    }
+
     DPRINTF(PMP, "Update pmp addr %#x for pmp entry %u \n",
-                                      this_addr, pmp_index);
+                                      (this_addr << 2), pmp_index);
+
+    if (pmpTable[pmp_index].pmpCfg & PMP_LOCK) {
+        DPRINTF(PMP, "Update pmp entry %u failed because the lock bit set\n",
+                pmp_index);
+        return false;
+    } else if (pmp_index < pmpTable.size() - 1 &&
+               ((pmpTable[pmp_index+1].pmpCfg & PMP_LOCK) != 0) &&
+               pmpGetAField(pmpTable[pmp_index+1].pmpCfg) == PMP_TOR) {
+        DPRINTF(PMP, "Update pmp entry %u failed because the entry %u lock bit"
+                " set and A field is TOR\n",
+                pmp_index, pmp_index+1);
+        return false;
+    }
 
     // just writing the raw addr in the pmp table
     // will convert it into a range, once cfg
@@ -225,29 +265,19 @@ PMP::pmpUpdateAddr(uint32_t pmp_index, Addr this_addr)
     for (int index = 0; index < pmpEntries; index++) {
         pmpUpdateRule(index);
     }
+
+    return true;
 }
 
 bool
-PMP::shouldCheckPMP(RiscvISA::PrivilegeMode pmode,
-            BaseMMU::Mode mode, ThreadContext *tc)
+PMP::shouldCheckPMP(RiscvISA::PrivilegeMode pmode, ThreadContext *tc)
 {
-    // instruction fetch in S and U mode
-    bool cond1 = (mode == BaseMMU::Execute &&
-            (pmode != RiscvISA::PrivilegeMode::PRV_M));
-
-    // data access in S and U mode when MPRV in mstatus is clear
-    RiscvISA::STATUS status =
-            tc->readMiscRegNoEffect(RiscvISA::MISCREG_STATUS);
-    bool cond2 = (mode != BaseMMU::Execute &&
-                 (pmode != RiscvISA::PrivilegeMode::PRV_M)
-                 && (!status.mprv));
-
-    // data access in any mode when MPRV bit in mstatus is set
-    // and the MPP field in mstatus is S or U
-    bool cond3 = (mode != BaseMMU::Execute && (status.mprv)
-    && (status.mpp != RiscvISA::PrivilegeMode::PRV_M));
-
-    return (cond1 || cond2 || cond3);
+    // The privilege mode of memory read and write
+    // is modified by TLB. It can just simply check if
+    // the numRule is not zero, then return true if
+    // privilege mode is not M or has any lock entry
+    return numRules != 0 && (
+        pmode != RiscvISA::PrivilegeMode::PRV_M || hasLockEntry);
 }
 
 AddrRange
@@ -258,7 +288,7 @@ PMP::pmpDecodeNapot(Addr pmpaddr)
         return this_range;
     } else {
         uint64_t t1 = ctz64(~pmpaddr);
-        uint64_t range = (std::pow(2,t1+3))-1;
+        uint64_t range = (1ULL << (t1+3));
 
         // pmpaddr reg encodes bits 55-2 of a
         // 56 bit physical address for RV64

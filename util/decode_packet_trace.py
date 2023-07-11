@@ -93,18 +93,15 @@ def main():
         # ReadReq is 1 and WriteReq is 4 in src/mem/packet.hh Command enum
         cmd = "r" if packet.cmd == 1 else ("w" if packet.cmd == 4 else "u")
         if packet.HasField("pkt_id"):
-            ascii_out.write("%s," % (packet.pkt_id))
+            ascii_out.write(f"{packet.pkt_id},")
         if packet.HasField("flags"):
             ascii_out.write(
-                "%s,%s,%s,%s,%s"
-                % (cmd, packet.addr, packet.size, packet.flags, packet.tick)
+                f"{cmd},{packet.addr},{packet.size},{packet.flags},{packet.tick}"
             )
         else:
-            ascii_out.write(
-                "%s,%s,%s,%s" % (cmd, packet.addr, packet.size, packet.tick)
-            )
+            ascii_out.write(f"{cmd},{packet.addr},{packet.size},{packet.tick}")
         if packet.HasField("pc"):
-            ascii_out.write(",%s\n" % (packet.pc))
+            ascii_out.write(f",{packet.pc}\n")
         else:
             ascii_out.write("\n")
 

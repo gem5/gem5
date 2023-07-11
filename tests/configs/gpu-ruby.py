@@ -79,13 +79,13 @@ parser.add_argument(
     help="Number of GPU Command Processors (CP)",
 )
 parser.add_argument(
-    "--simds-per-cu", type=int, default=4, help="SIMD units" "per CU"
+    "--simds-per-cu", type=int, default=4, help="SIMD unitsper CU"
 )
 parser.add_argument(
     "--cu-per-sqc",
     type=int,
     default=4,
-    help="number of CUs" "sharing an SQC (icache, and thus icache TLB)",
+    help="number of CUssharing an SQC (icache, and thus icache TLB)",
 )
 parser.add_argument(
     "--wf-size", type=int, default=64, help="Wavefront size(in workitems)"
@@ -94,7 +94,7 @@ parser.add_argument(
     "--wfs-per-simd",
     type=int,
     default=8,
-    help="Number of " "WF slots per SIMD",
+    help="Number of WF slots per SIMD",
 )
 parser.add_argument(
     "--sp-bypass-path-length",
@@ -194,13 +194,11 @@ parser.add_argument(
     action="store_true",
     help="Count Page Accesses and output in per-CU output files",
 )
-parser.add_argument(
-    "--TLB-prefetch", type=int, help="prefetch depth for" "TLBs"
-)
+parser.add_argument("--TLB-prefetch", type=int, help="prefetch depth forTLBs")
 parser.add_argument(
     "--pf-type",
     type=str,
-    help="type of prefetch: " "PF_CU, PF_WF, PF_PHASE, PF_STRIDE",
+    help="type of prefetch: PF_CU, PF_WF, PF_PHASE, PF_STRIDE",
 )
 parser.add_argument("--pf-stride", type=int, help="set prefetch stride")
 parser.add_argument(

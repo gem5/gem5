@@ -7,7 +7,7 @@ if("${PYTHON_MODULE_EXTENSION}" MATCHES "pypy" OR "${Python_INTERPRETER_ID}" STR
   return()
 endif()
 
-find_package(Catch 2.13.2)
+find_package(Catch 2.13.9)
 
 if(CATCH_FOUND)
   message(STATUS "Building interpreter tests using Catch v${CATCH_VERSION}")
@@ -25,7 +25,7 @@ pybind11_enable_warnings(test_embed)
 target_link_libraries(test_embed PRIVATE pybind11::embed Catch2::Catch2 Threads::Threads)
 
 if(NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
-  file(COPY test_interpreter.py DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+  file(COPY test_interpreter.py test_trampoline.py DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
 add_custom_target(

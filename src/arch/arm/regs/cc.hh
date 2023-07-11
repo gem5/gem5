@@ -61,10 +61,31 @@ enum : RegIndex
     NumRegs
 };
 
+const char * const RegName[NumRegs] = {
+    "nz",
+    "c",
+    "v",
+    "ge",
+    "fp",
+    "zero"
+};
+
 } // namespace cc_reg
 
-inline constexpr RegClass ccRegClass(CCRegClass, CCRegClassName,
-        cc_reg::NumRegs, debug::CCRegs);
+class CCRegClassOps : public RegClassOps
+{
+  public:
+    std::string
+    regName(const RegId &id) const override
+    {
+        return cc_reg::RegName[id.index()];
+    }
+};
+
+static inline CCRegClassOps ccRegClassOps;
+
+inline constexpr RegClass ccRegClass = RegClass(CCRegClass, CCRegClassName,
+        cc_reg::NumRegs, debug::CCRegs).ops(ccRegClassOps);
 
 namespace cc_reg
 {
@@ -76,15 +97,6 @@ inline constexpr RegId
     Ge = ccRegClass[_GeIdx],
     Fp = ccRegClass[_FpIdx],
     Zero = ccRegClass[_ZeroIdx];
-
-const char * const RegName[NumRegs] = {
-    "nz",
-    "c",
-    "v",
-    "ge",
-    "fp",
-    "zero"
-};
 
 } // namespace cc_reg
 

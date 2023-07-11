@@ -216,9 +216,9 @@ class GPUCoalescer : public RubyPort
     class GMTokenPort : public TokenResponsePort
     {
       public:
-        GMTokenPort(const std::string& name, ClockedObject *owner,
+        GMTokenPort(const std::string& name,
                     PortID id = InvalidPortID)
-            : TokenResponsePort(name, owner, id)
+            : TokenResponsePort(name, id)
         { }
         ~GMTokenPort() { }
 

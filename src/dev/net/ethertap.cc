@@ -240,17 +240,17 @@ class TapListener
     };
 
     friend class Event;
-    Event *event;
+    Event *event = nullptr;
 
     void accept();
 
   protected:
-    ListenSocket listener;
+    ListenSocketPtr listener;
     EtherTapStub *tap;
-    int port;
 
   public:
-    TapListener(EtherTapStub *t, int p) : event(NULL), tap(t), port(p) {}
+    TapListener(EtherTapStub *t, ListenSocketPtr _listener) :
+        listener(std::move(_listener)), tap(t) {}
     ~TapListener() { delete event; }
 
     void listen();
@@ -259,13 +259,9 @@ class TapListener
 void
 TapListener::listen()
 {
-    while (!listener.listen(port, true)) {
-        DPRINTF(Ethernet, "TapListener(listen): Can't bind port %d\n", port);
-        port++;
-    }
+    listener->listen();
 
-    ccprintf(std::cerr, "Listening for tap connection on port %d\n", port);
-    event = new Event(this, listener.getfd(), POLLIN|POLLERR);
+    event = new Event(this, listener->getfd(), POLLIN|POLLERR);
     pollQueue.schedule(event);
 }
 
@@ -277,10 +273,10 @@ TapListener::accept()
     // thread.
     EventQueue::ScopedMigration migrate(tap->eventQueue());
 
-    if (!listener.islistening())
+    if (!listener->islistening())
         panic("TapListener(accept): cannot accept if we're not listening!");
 
-    int sfd = listener.accept(true);
+    int sfd = listener->accept();
     if (sfd != -1)
         tap->attach(sfd);
 }
@@ -291,7 +287,7 @@ EtherTapStub::EtherTapStub(const Params &p) : EtherTapBase(p), socket(-1)
     if (ListenSocket::allDisabled())
         fatal("All listeners are disabled! EtherTapStub can't work!");
 
-    listener = new TapListener(this, p.port);
+    listener = new TapListener(this, p.port.build(name()));
     listener->listen();
 }
 

@@ -37,7 +37,6 @@ namespace gem5
 
 struct BloomFilterH3Params;
 
-GEM5_DEPRECATED_NAMESPACE(BloomFilter, bloom_filter);
 namespace bloom_filter
 {
 

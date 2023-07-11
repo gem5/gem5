@@ -209,7 +209,7 @@ class ArtifactMongoDB(ArtifactDB):
         some type and a regex name."""
 
         data = self.artifacts.find(
-            {"type": typ, "name": {"$regex": "{}".format(name)}}, limit=limit
+            {"type": typ, "name": {"$regex": f"{name}"}}, limit=limit
         )
         for d in data:
             yield d

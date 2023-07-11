@@ -73,7 +73,7 @@ class Type(Symbol):
                     self.c_ident = self["external_name"]
             else:
                 # Append with machine name
-                self.c_ident = "%s_%s" % (machine, ident)
+                self.c_ident = f"{machine}_{ident}"
 
         self.pairs.setdefault("desc", "No description avaliable")
 
@@ -157,7 +157,7 @@ class Type(Symbol):
             ident,
             self.location,
             type,
-            "m_%s" % ident,
+            f"m_{ident}",
             pairs,
             None,
             init_code,
@@ -195,7 +195,7 @@ class Type(Symbol):
 
         # Add default
         if "default" not in self:
-            self["default"] = "%s_NUM" % self.c_ident
+            self["default"] = f"{self.c_ident}_NUM"
 
         return True
 
@@ -240,7 +240,7 @@ class Type(Symbol):
         parent = ""
         if "interface" in self:
             code('#include "mem/ruby/protocol/$0.hh"', self["interface"])
-            parent = " :  public %s" % self["interface"]
+            parent = f" :  public {self['interface']}"
 
         code(
             """
@@ -294,7 +294,7 @@ $klass ${{self.c_ident}}$parent
         # ******** Full init constructor ********
         if not self.isGlobal:
             params = [
-                "const %s& local_%s" % (dm.real_c_type, dm.ident)
+                f"const {dm.real_c_type}& local_{dm.ident}"
                 for dm in self.data_members.values()
             ]
             params = ", ".join(params)
@@ -407,7 +407,7 @@ set${{dm.ident}}(const ${{dm.real_c_type}}& local_${{dm.ident}})
                 if dm.init_code:
                     # only global structure can have init value here
                     assert self.isGlobal
-                    init = " = %s" % (dm.init_code)
+                    init = f" = {dm.init_code}"
 
                 if "desc" in dm:
                     code('/** ${{dm["desc"]}} */')
@@ -440,7 +440,7 @@ operator<<(::std::ostream& out, const ${{self.c_ident}}& obj)
 """
         )
 
-        code.write(path, "%s.hh" % self.c_ident)
+        code.write(path, f"{self.c_ident}.hh")
 
     def printTypeCC(self, path):
         code = self.symtab.codeFormatter()
@@ -498,7 +498,7 @@ out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";"""
 """
         )
 
-        code.write(path, "%s.cc" % self.c_ident)
+        code.write(path, f"{self.c_ident}.cc")
 
     def printEnumHH(self, path):
         code = self.symtab.codeFormatter()
@@ -552,7 +552,7 @@ enum ${{self.c_ident}} {
         for i, (ident, enum) in enumerate(self.enums.items()):
             desc = enum.get("desc", "No description avaliable")
             if i == 0:
-                init = " = %s_FIRST" % self.c_ident
+                init = f" = {self.c_ident}_FIRST"
             else:
                 init = ""
             code("${{self.c_ident}}_${{enum.ident}}$init, /**< $desc */")
@@ -640,7 +640,7 @@ struct hash<gem5::ruby::MachineType>
 """
         )
 
-        code.write(path, "%s.hh" % self.c_ident)
+        code.write(path, f"{self.c_ident}.hh")
 
     def printEnumCC(self, path):
         code = self.symtab.codeFormatter()
@@ -932,7 +932,7 @@ get${{enum.ident}}MachineID(NodeID RubyNode)
         )
 
         # Write the file
-        code.write(path, "%s.cc" % self.c_ident)
+        code.write(path, f"{self.c_ident}.cc")
 
 
 __all__ = ["Type"]

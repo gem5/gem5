@@ -60,15 +60,15 @@ def _get_hwp(hwp_option):
 def _get_cache_opts(level, options):
     opts = {}
 
-    size_attr = "{}_size".format(level)
+    size_attr = f"{level}_size"
     if hasattr(options, size_attr):
         opts["size"] = getattr(options, size_attr)
 
-    assoc_attr = "{}_assoc".format(level)
+    assoc_attr = f"{level}_assoc"
     if hasattr(options, assoc_attr):
         opts["assoc"] = getattr(options, assoc_attr)
 
-    prefetcher_attr = "{}_hwp_type".format(level)
+    prefetcher_attr = f"{level}_hwp_type"
     if hasattr(options, prefetcher_attr):
         opts["prefetcher"] = _get_hwp(getattr(options, prefetcher_attr))
 

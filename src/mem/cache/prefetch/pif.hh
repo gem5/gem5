@@ -49,7 +49,6 @@ namespace gem5
 
 struct PIFPrefetcherParams;
 
-GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
 

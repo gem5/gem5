@@ -82,3 +82,6 @@
 //Templates for SVE instructions
 ##include "sve.isa"
 ##include "sve_mem.isa"
+
+//Templates for SME instructions
+##include "sme.isa"

@@ -80,7 +80,6 @@ namespace gem5
 
 struct TreePLRURPParams;
 
-GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
 {
 

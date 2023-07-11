@@ -39,7 +39,6 @@ namespace gem5
 struct DeltaCorrelatingPredictionTablesParams;
 struct DCPTPrefetcherParams;
 
-GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
 

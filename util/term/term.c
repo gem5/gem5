@@ -27,26 +27,30 @@
  */
 
 #include <arpa/telnet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/termios.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/un.h>
+#include <ctype.h>
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <libgen.h>
+#include <linux/limits.h>
 #include <netdb.h>
+#include <netinet/in.h>
 #include <poll.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/termios.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/un.h>
 #include <unistd.h>
 
 ssize_t atomicio(ssize_t (*)(), int, void *, size_t);
 void    readwrite(int);
-int     remote_connect(char *, char *, struct addrinfo);
+int     remote_connect_inet(char *, char *);
+int     remote_connect_unix(const char *);
 
 struct  termios saved_ios;
 void    raw_term();
@@ -60,7 +64,6 @@ main(int argc, char *argv[])
 {
     int ch, s, ret;
     char *host, *port, *endp;
-    struct addrinfo hints;
     socklen_t len;
 
     ret = 1;
@@ -87,32 +90,37 @@ main(int argc, char *argv[])
 
     raw_term();
 
+    if (strcmp(host, "--unix") == 0) {
+        s = remote_connect_unix(port);
+    } else {
+        s = remote_connect_inet(host, port);
+    }
+
+    if (s != -1) {
+        readwrite(s);
+        close(s);
+    }
+
+    exit(0);
+}
+
+/*
+ * remote_connect_inet()
+ * Return's a socket connected to a remote host. Properly bind's to a local
+ * port or source address if needed. Return's -1 on failure.
+ */
+int
+remote_connect_inet(char *host, char *port)
+{
+    struct addrinfo hints;
+    struct addrinfo *res, *res0;
+    int s, error;
+
     /* Initialize addrinfo structure */
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
-
-    s = remote_connect(host, port, hints);
-    ret = 0;
-    readwrite(s);
-
-    if (s)
-        close(s);
-
-    exit(ret);
-}
-
-/*
- * remote_connect()
- * Return's a socket connected to a remote host. Properly bind's to a local
- * port or source address if needed. Return's -1 on failure.
- */
-int
-remote_connect(char *host, char *port, struct addrinfo hints)
-{
-    struct addrinfo *res, *res0;
-    int s, error;
 
     if ((error = getaddrinfo(host, port, &hints, &res)))
         errx(1, "getaddrinfo: %s", gai_strerror(error));
@@ -133,6 +141,105 @@ remote_connect(char *host, char *port, struct addrinfo hints)
     freeaddrinfo(res);
 
     return (s);
+}
+
+/*
+ * remote_connect_inet()
+ * Return's a socket connected to a remote host. Properly bind's to a local
+ * port or source address if needed. Return's -1 on failure.
+ */
+int
+remote_connect_unix(const char *cpath)
+{
+    struct sockaddr_un addr;
+
+    // Create a copy of path so we can safely modify it in place.
+    char *path = strdup(cpath);
+    char *const path_buf = path;
+
+    // Create a unix domain socket.
+    int s = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (s == -1)
+        return s;
+
+    // Prepare the scokaddr_un.
+    memset(&addr, 0, sizeof(addr));
+    addr.sun_family = AF_UNIX;
+
+    // Keep track of where we're filling in the path, and the remaining space.
+    int path_size = sizeof(addr.sun_path);
+    char *sun_path = &addr.sun_path[0];
+
+    // Keep track of the current directory in case we change it to maximize
+    // what we can fit in the limited space in sun_path.
+    char *cwd = NULL;
+
+    if (path[0] == '@') {
+        // If this is an abstract socket, prefix it with a null byte.
+        *sun_path++ = '\0';
+        path++;
+        path_size--;
+        // Keep track of how much of sun_path is actual data since everything
+        // we include will be part of the lookup.
+        int len = strlen(path);
+        if (len < path_size) {
+            fprintf(stderr,
+                "warning: Truncated abstract socket from %d to %d bytes.\n",
+                len, path_size);
+            path_size = len;
+        }
+    } else {
+        // Switch to the parent directory of the socket.
+        cwd = (char *)malloc(PATH_MAX);
+        if (!cwd)
+            errx(1, "Failed to allocate %d byte buffer.", PATH_MAX);
+        if (!getcwd(cwd, PATH_MAX)) {
+            perror("getcwd failed");
+            exit(1);
+        }
+        char *dirc = strdup(path);
+        if (!dirc) {
+            perror("strdup failed");
+            exit(1);
+        }
+        char *dname = dirname(dirc);
+        if (chdir(dname) != 0) {
+            perror("chdir to socket dir failed");
+            exit(1);
+        }
+        free(dirc);
+
+        // Replace the path with just the filename part. We still have a
+        // pointer to the cpath argument, so we can clean it up later.
+        path = basename(path);
+    }
+
+    // Copy the path into sun_path.
+    strncpy(sun_path, path, path_size);
+
+    // Figure out how much actual data we have in sockaddr_un.
+    int struct_len = (char *)sun_path + path_size - (char *)&addr;
+
+    // Actually connect to the socket.
+    if (connect(s, (struct sockaddr *)&addr, struct_len) == -1) {
+        // If that didn't work, switch our dir back and error out.
+        if (cwd)
+            chdir(cwd);
+        errx(1, "Failed to connect");
+    }
+
+    // We're connected, clean up memory and switch the current dir back.
+    free(path_buf);
+    if (cwd) {
+        if (chdir(cwd) != 0) {
+            perror("chdir back failed:");
+            exit(1);
+        }
+        free(cwd);
+    }
+
+    // Return the FD of our new connection.
+    return s;
 }
 
 /*
@@ -165,7 +272,8 @@ readwrite(int nfd)
         n = select(max_fd, &read_fds, NULL, NULL, &timeout);
         if (n < 0) {
             close(nfd);
-            perror("Select Error:");
+            perror("Select Error");
+            exit(1);
         }
 
         if (n == 0) {
@@ -221,7 +329,8 @@ readwrite(int nfd)
 void
 usage(int ret)
 {
-    fprintf(stderr, "usage: %s hostname port\n", progname);
+    fprintf(stderr, "usage: %s [hostname] port\n", progname);
+    fprintf(stderr, "usage: %s --unix socket\n", progname);
     if (ret)
         exit(1);
 }

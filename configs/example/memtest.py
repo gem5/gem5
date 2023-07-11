@@ -211,8 +211,7 @@ else:
 
     if numtesters(cachespec, testerspec) > block_size:
         print(
-            "Error: Limited to %s testers because of false sharing"
-            % (block_size)
+            f"Error: Limited to {block_size} testers because of false sharing"
         )
         sys.exit(1)
 
@@ -351,7 +350,7 @@ make_cache_level(cachespec, cache_proto, len(cachespec), None)
 
 # Connect the lowest level crossbar to the last-level cache and memory
 # controller
-last_subsys = getattr(system, "l%dsubsys0" % len(cachespec))
+last_subsys = getattr(system, f"l{len(cachespec)}subsys0")
 last_subsys.xbar.point_of_coherency = True
 if args.noncoherent_cache:
     system.llc = NoncoherentCache(

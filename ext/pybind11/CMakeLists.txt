@@ -16,6 +16,11 @@ else()
   cmake_policy(VERSION 3.22)
 endif()
 
+# Avoid infinite recursion if tests include this as a subdirectory
+if(DEFINED PYBIND11_MASTER_PROJECT)
+  return()
+endif()
+
 # Extract project version from source
 file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/include/pybind11/detail/common.h"
      pybind11_version_defines REGEX "#define PYBIND11_VERSION_(MAJOR|MINOR|PATCH) ")
@@ -45,13 +50,8 @@ if(NOT pybind11_FIND_QUIETLY)
   message(STATUS "pybind11 v${pybind11_VERSION} ${pybind11_VERSION_TYPE}")
 endif()
 
-# Avoid infinite recursion if tests include this as a subdirectory
-if(DEFINED PYBIND11_MASTER_PROJECT)
-  set(PYBIND11_TEST OFF)
-endif()
-
 # Check if pybind11 is being used directly or via add_subdirectory
-if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR AND NOT DEFINED PYBIND11_MASTER_PROJECT)
+if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
   ### Warn if not an out-of-source builds
   if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
     set(lines
@@ -80,6 +80,8 @@ if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR AND NOT DEFINED PYBIND11_MASTER_
   endif()
 
   set(pybind11_system "")
+
+  set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 else()
   set(PYBIND11_MASTER_PROJECT OFF)
   set(pybind11_system SYSTEM)
@@ -89,9 +91,15 @@ endif()
 option(PYBIND11_INSTALL "Install pybind11 header files?" ${PYBIND11_MASTER_PROJECT})
 option(PYBIND11_TEST "Build pybind11 test suite?" ${PYBIND11_MASTER_PROJECT})
 option(PYBIND11_NOPYTHON "Disable search for Python" OFF)
+option(PYBIND11_SIMPLE_GIL_MANAGEMENT
+       "Use simpler GIL management logic that does not support disassociation" OFF)
 set(PYBIND11_INTERNALS_VERSION
     ""
     CACHE STRING "Override the ABI version, may be used to enable the unstable ABI.")
+
+if(PYBIND11_SIMPLE_GIL_MANAGEMENT)
+  add_compile_definitions(PYBIND11_SIMPLE_GIL_MANAGEMENT)
+endif()
 
 cmake_dependent_option(
   USE_PYTHON_INCLUDE_DIR
@@ -118,6 +126,8 @@ set(PYBIND11_HEADERS
     include/pybind11/complex.h
     include/pybind11/options.h
     include/pybind11/eigen.h
+    include/pybind11/eigen/matrix.h
+    include/pybind11/eigen/tensor.h
     include/pybind11/embed.h
     include/pybind11/eval.h
     include/pybind11/gil.h
@@ -196,6 +206,9 @@ else()
 endif()
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/tools/pybind11Common.cmake")
+# https://github.com/jtojnar/cmake-snips/#concatenating-paths-when-building-pkg-config-files
+# TODO: cmake 3.20 adds the cmake_path() function, which obsoletes this snippet
+include("${CMAKE_CURRENT_SOURCE_DIR}/tools/JoinPaths.cmake")
 
 # Relative directory setting
 if(USE_PYTHON_INCLUDE_DIR AND DEFINED Python_INCLUDE_DIRS)
@@ -259,6 +272,16 @@ if(PYBIND11_INSTALL)
     EXPORT "${PYBIND11_EXPORT_NAME}"
     NAMESPACE "pybind11::"
     DESTINATION ${PYBIND11_CMAKECONFIG_INSTALL_DIR})
+
+  # pkg-config support
+  if(NOT prefix_for_pc_file)
+    set(prefix_for_pc_file "${CMAKE_INSTALL_PREFIX}")
+  endif()
+  join_paths(includedir_for_pc_file "\${prefix}" "${CMAKE_INSTALL_INCLUDEDIR}")
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/tools/pybind11.pc.in"
+                 "${CMAKE_CURRENT_BINARY_DIR}/pybind11.pc" @ONLY)
+  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pybind11.pc"
+          DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig/")
 
   # Uninstall target
   if(PYBIND11_MASTER_PROJECT)

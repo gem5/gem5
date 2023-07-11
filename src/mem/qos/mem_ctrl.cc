@@ -48,7 +48,6 @@ namespace gem5
 namespace memory
 {
 
-GEM5_DEPRECATED_NAMESPACE(QoS, qos);
 namespace qos
 {
 
@@ -356,7 +355,7 @@ MemCtrl::MemCtrlStats::regStats()
 }
 
 void
-MemCtrl::recordTurnaroundStats()
+MemCtrl::recordTurnaroundStats(BusState busState, BusState busStateNext)
 {
     if (busStateNext != busState) {
         if (busState == READ) {

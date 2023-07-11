@@ -55,7 +55,6 @@ namespace gem5
 namespace X86ISA
 {
 
-GEM5_DEPRECATED_NAMESPACE(SMBios, smbios);
 namespace smbios
 {
 
@@ -63,7 +62,6 @@ class SMBiosTable;
 
 } // namespace smbios
 
-GEM5_DEPRECATED_NAMESPACE(IntelMP, intelmp);
 namespace intelmp
 {
 

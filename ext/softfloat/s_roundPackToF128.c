@@ -36,9 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdbool.h>
 #include <stdint.h>
-
-#include "internals.h"
 #include "platform.h"
+#include "internals.h"
 #include "softfloat.h"
 
 float128_t
@@ -107,7 +106,7 @@ float128_t
         } else if (
                (0x7FFD < exp)
             || ((exp == 0x7FFD)
-                    && softfloat_eq128(
+                    && softfloat_eq128( 
                            sig64,
                            sig0,
                            UINT64_C( 0x0001FFFFFFFFFFFF ),

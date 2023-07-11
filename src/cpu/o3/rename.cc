@@ -134,6 +134,8 @@ Rename::RenameStats::RenameStats(statistics::Group *parent)
                "Number of vector rename lookups"),
       ADD_STAT(vecPredLookups, statistics::units::Count::get(),
                "Number of vector predicate rename lookups"),
+      ADD_STAT(matLookups, statistics::units::Count::get(),
+               "Number of matrix rename lookups"),
       ADD_STAT(committedMaps, statistics::units::Count::get(),
                "Number of HB maps that are committed"),
       ADD_STAT(undoneMaps, statistics::units::Count::get(),
@@ -167,6 +169,7 @@ Rename::RenameStats::RenameStats(statistics::Group *parent)
     fpLookups.prereq(fpLookups);
     vecLookups.prereq(vecLookups);
     vecPredLookups.prereq(vecPredLookups);
+    matLookups.prereq(matLookups);
 
     committedMaps.prereq(committedMaps);
     undoneMaps.prereq(undoneMaps);
@@ -1034,6 +1037,9 @@ Rename::renameSrcRegs(const DynInstPtr &inst, ThreadID tid)
           case VecPredRegClass:
             stats.vecPredLookups++;
             break;
+          case MatRegClass:
+            stats.matLookups++;
+            break;
           case CCRegClass:
           case MiscRegClass:
             break;
@@ -1248,7 +1254,7 @@ Rename::readFreeEntries(ThreadID tid)
     }
 
     DPRINTF(Rename, "[tid:%i] Free IQ: %i, Free ROB: %i, "
-                    "Free LQ: %i, Free SQ: %i, FreeRM %i(%i %i %i %i %i %i)\n",
+                    "Free LQ: %i, Free SQ: %i, FreeRM %i(%i %i %i %i %i %i %i)\n",
             tid,
             freeEntries[tid].iqEntries,
             freeEntries[tid].robEntries,
@@ -1260,6 +1266,7 @@ Rename::readFreeEntries(ThreadID tid)
             renameMap[tid]->numFreeEntries(VecRegClass),
             renameMap[tid]->numFreeEntries(VecElemClass),
             renameMap[tid]->numFreeEntries(VecPredRegClass),
+            renameMap[tid]->numFreeEntries(MatRegClass),
             renameMap[tid]->numFreeEntries(CCRegClass));
 
     DPRINTF(Rename, "[tid:%i] %i instructions not yet in ROB\n",

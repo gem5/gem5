@@ -303,9 +303,9 @@ namespace VegaISA
      * Currently the values are:
      * 0x0 - 0xFF: full permute of four threads
      * 0x100: reserved
-     * 0x101 - 0x10F: row shift right by 1-15 threads
+     * 0x101 - 0x10F: row shift left by 1-15 threads
      * 0x111 - 0x11F: row shift right by 1-15 threads
-     * 0x121 - 0x12F: row shift right by 1-15 threads
+     * 0x121 - 0x12F: row rotate right by 1-15 threads
      * 0x130: wavefront left shift by 1 thread
      * 0x134: wavefront left rotate by 1 thread
      * 0x138: wavefront right shift by 1 thread
@@ -322,7 +322,8 @@ namespace VegaISA
         // newLane will be the same as the input lane unless swizzling happens
         int newLane = currLane;
         // for shift/rotate permutations; positive values are LEFT rotates
-        int count = 1;
+        // shift/rotate left means lane n -> lane n-1 (e.g., lane 1 -> lane 0)
+        int count = 0;
         int localRowOffset = rowOffset;
         int localRowNum = rowNum;
 
@@ -335,51 +336,47 @@ namespace VegaISA
             panic("ERROR: instruction using reserved DPP_CTRL value\n");
         } else if ((dppCtrl >= SQ_DPP_ROW_SL1) &&
                    (dppCtrl <= SQ_DPP_ROW_SL15)) { // DPP_ROW_SL{1:15}
-            count -= (dppCtrl - SQ_DPP_ROW_SL1 + 1);
+            count = (dppCtrl - SQ_DPP_ROW_SL1 + 1);
             if ((localRowOffset + count >= 0) &&
                 (localRowOffset + count < ROW_SIZE)) {
                 localRowOffset += count;
-                newLane = (rowNum | localRowOffset);
+                newLane = ((rowNum * ROW_SIZE) | localRowOffset);
             } else {
                 outOfBounds = true;
             }
         } else if ((dppCtrl >= SQ_DPP_ROW_SR1) &&
                    (dppCtrl <= SQ_DPP_ROW_SR15)) { // DPP_ROW_SR{1:15}
-            count -= (dppCtrl - SQ_DPP_ROW_SR1 + 1);
+            count = -(dppCtrl - SQ_DPP_ROW_SR1 + 1);
             if ((localRowOffset + count >= 0) &&
                 (localRowOffset + count < ROW_SIZE)) {
                 localRowOffset += count;
-                newLane = (rowNum | localRowOffset);
+                newLane = ((rowNum * ROW_SIZE) | localRowOffset);
             } else {
                 outOfBounds = true;
             }
         } else if ((dppCtrl >= SQ_DPP_ROW_RR1) &&
                    (dppCtrl <= SQ_DPP_ROW_RR15)) { // DPP_ROW_RR{1:15}
-            count -= (dppCtrl - SQ_DPP_ROW_RR1 + 1);
+            count = -(dppCtrl - SQ_DPP_ROW_RR1 + 1);
             localRowOffset = (localRowOffset + count + ROW_SIZE) % ROW_SIZE;
-            newLane = (rowNum | localRowOffset);
+            newLane = ((rowNum * ROW_SIZE) | localRowOffset);
         } else if (dppCtrl == SQ_DPP_WF_SL1) { // DPP_WF_SL1
-            count = 1;
             if ((currLane >= 0) && (currLane < NumVecElemPerVecReg)) {
-                newLane += count;
+                newLane += 1;
             } else {
                 outOfBounds = true;
             }
         } else if (dppCtrl == SQ_DPP_WF_RL1) { // DPP_WF_RL1
-            count = 1;
-            newLane = (currLane + count + NumVecElemPerVecReg) %
+            newLane = (currLane - 1 + NumVecElemPerVecReg) %
                       NumVecElemPerVecReg;
         } else if (dppCtrl == SQ_DPP_WF_SR1) { // DPP_WF_SR1
-            count = -1;
-            int currVal = (currLane + count);
+            int currVal = (currLane - 1);
             if ((currVal >= 0) && (currVal < NumVecElemPerVecReg)) {
-                newLane += count;
+                newLane -= 1;
             } else {
                 outOfBounds = true;
             }
         } else if (dppCtrl == SQ_DPP_WF_RR1) { // DPP_WF_RR1
-            count = -1;
-            newLane = (currLane + count + NumVecElemPerVecReg) %
+            newLane = (currLane - 1 + NumVecElemPerVecReg) %
                       NumVecElemPerVecReg;
         } else if (dppCtrl == SQ_DPP_ROW_MIRROR) { // DPP_ROW_MIRROR
             localRowOffset = (15 - localRowOffset);
@@ -392,12 +389,22 @@ namespace VegaISA
         } else if (dppCtrl == SQ_DPP_ROW_BCAST15) { // DPP_ROW_BCAST15
             count = 15;
             if (currLane > count) {
-                newLane = (currLane & ~count) - 1;
+                // 0x30 selects which set of 16 lanes to use. We broadcast the
+                // last lane of one set to all lanes of the next set (e.g.,
+                // lane 15 is written to 16-31, 31 to 32-47, 47 to 48-63).
+                newLane = (currLane & 0x30) - 1;
+            } else {
+                outOfBounds = true;
             }
         } else if (dppCtrl == SQ_DPP_ROW_BCAST31) { // DPP_ROW_BCAST31
             count = 31;
             if (currLane > count) {
-                newLane = (currLane & ~count) - 1;
+                // 0x20 selects either the upper 32 or lower 32 lanes and
+                // broadcasts the last lane of one set to all lanes of the
+                // next set (e.g., lane 31 is written to 32-63).
+                newLane = (currLane & 0x20) - 1;
+            } else {
+                outOfBounds = true;
             }
         } else {
             panic("Unimplemented DPP control operation: %d\n", dppCtrl);
@@ -443,6 +450,9 @@ namespace VegaISA
             src0.absModifier();
         }
 
+        // Need a copy of the original data since we update one lane at a time
+        T src0_copy = src0;
+
         // iterate over all register lanes, performing steps 2-4
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             threadValid = (0x1LL << lane);
@@ -458,7 +468,6 @@ namespace VegaISA
             if (((rowMask & (0x1 << rowNum)) == 0)   /* row mask */   ||
                 ((bankMask & (0x1 << bankNum)) == 0) /* bank mask */) {
                 laneDisabled = true;
-                continue;
             }
 
             /**
@@ -495,7 +504,7 @@ namespace VegaISA
                 } else {
                     threadValid = 0;
                 }
-            } else if (!gpuDynInst->exec_mask[lane]) {
+            } else if (!gpuDynInst->wavefront()->execMask(lane)) {
                 if (boundCtrl == 1) {
                     zeroSrc = true;
                 } else {
@@ -505,13 +514,15 @@ namespace VegaISA
 
             if (threadValid != 0 && !outOfBounds && !zeroSrc) {
                 assert(!laneDisabled);
-                src0[outLane] = src0[lane];
+                src0[lane] = src0_copy[outLane];
             } else if (zeroSrc) {
                 src0[lane] = 0;
             }
 
             // reset for next iteration
             laneDisabled = false;
+            outOfBounds = false;
+            zeroSrc = false;
         }
     }
 

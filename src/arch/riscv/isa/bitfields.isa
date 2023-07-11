@@ -3,6 +3,7 @@
 // Copyright (c) 2015 RISC-V Foundation
 // Copyright (c) 2016 The University of Virginia
 // Copyright (c) 2020 Barkhausen Institut
+// Copyright (c) 2022 Google LLC
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,9 +33,10 @@
 //
 // Bitfield definitions.
 //
+def bitfield RVTYPE rv_type;
 
 def bitfield QUADRANT <1:0>;
-def bitfield OPCODE <6:2>;
+def bitfield OPCODE5 <6:2>;
 
 // R-Type
 def bitfield ALL	<31:0>;
@@ -48,6 +50,7 @@ def bitfield FUNCT7 <31:25>;
 def bitfield SRTYPE <30>;
 def bitfield SHAMT5 <24:20>;
 def bitfield SHAMT6 <25:20>;
+def bitfield SHAMT6BIT5 <25>;
 
 // I-Type
 def bitfield IMM12  <31:20>;
@@ -126,6 +129,7 @@ def bitfield M5FUNC <31:25>;
 
 // Cryptography instructions
 def bitfield BIT24         <24>;
+def bitfield BIT25         <25>;
 def bitfield RNUM       <23:20>;
 def bitfield KFUNCT5    <29:25>;
 def bitfield BS         <31:30>;

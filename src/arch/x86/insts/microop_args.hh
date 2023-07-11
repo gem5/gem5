@@ -91,6 +91,19 @@ struct Src2Op
     {}
 };
 
+struct Src3Op
+{
+    const RegIndex src3;
+    const size_t size;
+    RegIndex opIndex() const { return src3; }
+
+    Src3Op(RegIndex _src3, size_t _size) : src3(_src3), size(_size) {}
+    template <class InstType>
+    Src3Op(RegIndex _src3, InstType *inst) : src3(_src3),
+        size(inst->getSrcSize())
+    {}
+};
+
 struct DataOp
 {
     const RegIndex data;
@@ -270,6 +283,8 @@ using IntSrc1Op = IntOp<Src1Op>;
 using FoldedSrc2Op = FoldedOp<Src2Op>;
 using FloatSrc2Op = FloatOp<Src2Op>;
 using IntSrc2Op = IntOp<Src2Op>;
+
+using FloatSrc3Op = FloatOp<Src3Op>;
 
 using FoldedDataOp = FoldedOp<DataOp>;
 using FloatDataOp = FloatOp<DataOp>;

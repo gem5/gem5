@@ -49,7 +49,7 @@ def addAmdGPUOptions(parser):
         "--cu-per-sqc",
         type=int,
         default=4,
-        help="number of CUs sharing an SQC" " (icache, and thus icache TLB)",
+        help="number of CUs sharing an SQC (icache, and thus icache TLB)",
     )
     parser.add_argument(
         "--cu-per-scalar-cache",
@@ -102,19 +102,19 @@ def addAmdGPUOptions(parser):
         "--issue-period",
         type=int,
         default=4,
-        help="Number of cycles per vector instruction issue" " period",
+        help="Number of cycles per vector instruction issue period",
     )
     parser.add_argument(
         "--glbmem-wr-bus-width",
         type=int,
         default=32,
-        help="VGPR to Coalescer (Global Memory) data bus width" " in bytes",
+        help="VGPR to Coalescer (Global Memory) data bus width in bytes",
     )
     parser.add_argument(
         "--glbmem-rd-bus-width",
         type=int,
         default=32,
-        help="Coalescer to VGPR (Global Memory) data bus width" " in bytes",
+        help="Coalescer to VGPR (Global Memory) data bus width in bytes",
     )
     # Currently we only support 1 local memory pipe
     parser.add_argument(
@@ -204,20 +204,20 @@ def addAmdGPUOptions(parser):
     parser.add_argument(
         "--LocalMemBarrier",
         action="store_true",
-        help="Barrier does not wait for writethroughs to " " complete",
+        help="Barrier does not wait for writethroughs to complete",
     )
     parser.add_argument(
         "--countPages",
         action="store_true",
-        help="Count Page Accesses and output in " " per-CU output files",
+        help="Count Page Accesses and output in per-CU output files",
     )
     parser.add_argument(
-        "--TLB-prefetch", type=int, help="prefetch depth for" "TLBs"
+        "--TLB-prefetch", type=int, help="prefetch depth for TLBs"
     )
     parser.add_argument(
         "--pf-type",
         type=str,
-        help="type of prefetch: " "PF_CU, PF_WF, PF_PHASE, PF_STRIDE",
+        help="type of prefetch: PF_CU, PF_WF, PF_PHASE, PF_STRIDE",
     )
     parser.add_argument("--pf-stride", type=int, help="set prefetch stride")
     parser.add_argument(

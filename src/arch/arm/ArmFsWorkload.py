@@ -78,10 +78,10 @@ class ArmFsWorkload(KernelWorkload):
     )
 
     panic_on_panic = Param.Bool(
-        False, "Trigger a gem5 panic if the " "guest kernel panics"
+        False, "Trigger a gem5 panic if the guest kernel panics"
     )
     panic_on_oops = Param.Bool(
-        False, "Trigger a gem5 panic if the " "guest kernel oopses"
+        False, "Trigger a gem5 panic if the guest kernel oopses"
     )
 
 

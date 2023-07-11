@@ -109,7 +109,7 @@ class TlmToGem5Bridge : public TlmToGem5BridgeBase
       public:
         BridgeRequestPort(const std::string &name_,
                          TlmToGem5Bridge<BITWIDTH> &bridge_) :
-            RequestPort(name_, nullptr), bridge(bridge_)
+            RequestPort(name_), bridge(bridge_)
         {}
     };
 

@@ -142,8 +142,8 @@ for i in range(1, len(cpts)):
             "-ru",
             "-I",
             "^##.*",
-            "%s/%s" % (cptdir, cpt_name),
-            "%s/%s" % (mydir, cpt_name),
+            f"{cptdir}/{cpt_name}",
+            f"{mydir}/{cpt_name}",
         ],
         stdout=diffout,
     )

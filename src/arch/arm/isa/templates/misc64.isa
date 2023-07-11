@@ -58,6 +58,56 @@ def template ImmOp64Constructor {{
     }
 }};
 
+def template RegOp64Declare {{
+class %(class_name)s : public %(base_class)s
+{
+  private:
+    %(reg_idx_arr_decl)s;
+
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, RegIndex _op1);
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+};
+}};
+
+def template RegOp64Constructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, RegIndex _op1) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+}};
+
+def template RegImmImmOp64Declare {{
+class %(class_name)s : public %(base_class)s
+{
+  private:
+    %(reg_idx_arr_decl)s;
+
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst,
+                   RegIndex _op1,
+                   uint64_t _imm1, uint64_t _imm2);
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+};
+}};
+
+def template RegImmImmOp64Constructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                   RegIndex _op1,
+                                   uint64_t _imm1, uint64_t _imm2) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _op1, _imm1, _imm2)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+}};
+
 def template RegRegImmImmOp64Declare {{
 class %(class_name)s : public %(base_class)s
 {

@@ -34,13 +34,16 @@
 #pragma GCC diagnostic pop
 
 #include <functional>
+#include <vector>
 
 #include "base/compiler.hh"
+#include "base/cprintf.hh"
+#include "base/types.hh"
+#include "dev/intpin.hh"
 
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
 
@@ -78,6 +81,39 @@ class SignalReceiver : public amba_pv::signal_slave_base<bool>
         _state = new_state;
         _onChange(_state);
     }
+};
+
+class SignalReceiverInt : public SignalReceiver
+{
+  public:
+    using IntPin = SignalSourcePort<bool>;
+
+    explicit SignalReceiverInt(const std::string &name)
+        : SignalReceiver(name)
+    {
+        onChange([this](bool status) {
+            for (auto &signal : signalOut) {
+                if (signal && signal->isConnected())
+                    signal->set(status);
+            }
+        });
+    }
+
+    IntPin &
+    getSignalOut(int idx)
+    {
+        if (signalOut.size() <= idx) {
+            signalOut.resize(idx + 1);
+        }
+        if (!signalOut[idx]) {
+            signalOut[idx] = std::make_unique<IntPin>(
+                csprintf("%s.signalOut[%d]", get_name(), idx), idx);
+        }
+        return *signalOut[idx];
+    }
+
+  private:
+    std::vector<std::unique_ptr<IntPin>> signalOut;
 };
 
 } // namespace fastmodel

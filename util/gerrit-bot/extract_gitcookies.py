@@ -62,7 +62,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "input",
-        help=("Path to a .gitcookies file or a file with " "a similar format"),
+        help=("Path to a .gitcookies file or a file with a similar format"),
     )
     parser.add_argument("output", help="Path to the output file")
     args = parser.parse_args()

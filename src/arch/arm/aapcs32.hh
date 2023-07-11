@@ -70,7 +70,6 @@ struct Aapcs32
     };
 };
 
-GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
 namespace guest_abi
 {
 
@@ -446,7 +445,6 @@ struct Aapcs32Vfp : public Aapcs32
     };
 };
 
-GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
 namespace guest_abi
 {
 

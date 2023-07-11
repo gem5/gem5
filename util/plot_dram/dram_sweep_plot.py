@@ -90,7 +90,7 @@ def main():
 
     for line in simout:
         match = re.match(
-            "DRAM sweep with " "burst: (\d+), banks: (\d+), max stride: (\d+)",
+            "DRAM sweep with burst: (\d+), banks: (\d+), max stride: (\d+)",
             line,
         )
         if match:
@@ -147,7 +147,7 @@ def main():
             # avg_pwr is in mW, peak_bw in MiByte/s, bus_util in percent
             z.append(avg_pwr[j] / (bus_util[j] / 100.0 * peak_bw[j] / 1000.0))
         else:
-            print("Unexpected mode %s" % mode)
+            print(f"Unexpected mode {mode}")
             exit(-1)
 
         i += 1

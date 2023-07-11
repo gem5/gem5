@@ -37,15 +37,6 @@
 
 #include <cassert>
 
-/**
- * When building the debug binary, we need to undo the command-line
- * definition of DEBUG not to clash with DRAMSim2 print macros that
- * are included for no obvious reason.
- */
-#ifdef DEBUG
-#undef DEBUG
-#endif
-
 #include "mem/dramsim2_wrapper.hh"
 
 #include <fstream>
@@ -54,18 +45,18 @@
 #include "base/compiler.hh"
 #include "base/logging.hh"
 
-namespace gem5
-{
-
-namespace memory
-{
-
 /**
  * DRAMSim2 requires SHOW_SIM_OUTPUT to be defined (declared extern in
  * the DRAMSim2 print macros), otherwise we get linking errors due to
  * undefined references
  */
 int SHOW_SIM_OUTPUT = 0;
+
+namespace gem5
+{
+
+namespace memory
+{
 
 DRAMSim2Wrapper::DRAMSim2Wrapper(const std::string& config_file,
                                  const std::string& system_file,

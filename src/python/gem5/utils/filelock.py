@@ -47,7 +47,7 @@ class FileLock(object):
                 "If timeout is not None, then delay must not be None."
             )
         self.is_locked = False
-        self.lockfile = os.path.join(os.getcwd(), "%s.lock" % file_name)
+        self.lockfile = os.path.join(os.getcwd(), f"{file_name}.lock")
         self.file_name = file_name
         self.timeout = timeout
         self.delay = delay
@@ -69,12 +69,22 @@ class FileLock(object):
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise
+                solution_message = (
+                    "This is likely due to the existence"
+                    " of the lock file '{}'. If there's no other process"
+                    " the lock file, you can manually delete the lock file and"
+                    " rerun the script.".format(self.lockfile)
+                )
                 if self.timeout is None:
                     raise FileLockException(
-                        "Could not acquire lock on {}".format(self.file_name)
+                        "Could not acquire lock on {}. {}".format(
+                            self.file_name, solution_message
+                        )
                     )
                 if (time.time() - start_time) >= self.timeout:
-                    raise FileLockException("Timeout occured.")
+                    raise FileLockException(
+                        f"Timeout occured. {solution_message}"
+                    )
                 time.sleep(self.delay)
 
     #        self.is_locked = True

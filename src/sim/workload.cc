@@ -72,7 +72,7 @@ Workload::replaceThreadContext(ThreadContext *tc)
 }
 
 bool
-Workload::trapToGdb(int signal, ContextID ctx_id)
+Workload::trapToGdb(GDBSignal signal, ContextID ctx_id)
 {
     if (gdb && gdb->isAttached()) {
         gdb->trap(ctx_id, signal);
@@ -97,8 +97,8 @@ Workload::startup()
     // Now that we're about to start simulation, wait for GDB connections if
     // requested.
     if (gdb && waitForRemoteGDB) {
-        inform("%s: Waiting for a remote GDB connection on port %d.", name(),
-                gdb->port());
+        inform("%s: Waiting for a remote GDB connection on %s.", name(),
+                gdb->hostSocket());
         gdb->connect();
     }
 }

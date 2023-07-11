@@ -36,6 +36,7 @@
 #include "params/ExternalMaster.hh"
 #include "sc_ext.hh"
 #include "sc_master_port.hh"
+#include "sim/core.hh"
 #include "sim/system.hh"
 
 namespace Gem5SystemC

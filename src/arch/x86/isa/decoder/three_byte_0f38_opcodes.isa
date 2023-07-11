@@ -43,40 +43,102 @@
             0x09: psignw_Vdq_Wdq();
             0x0A: psignd_Vdq_Wdq();
             0x0B: pmulhrsw_Vdq_Wdq();
-            0x10: pblendvb_Vdq_Wdq();
-            0x14: blendvps_Vdq_Wdq();
-            0x15: blendvpd_Vdq_Wdq();
+            0x10: decode MODRM_MOD {
+                default: Inst::PBLENDVB(Vdq, Wdq);
+            }
+            0x14: decode MODRM_MOD {
+                default: Inst::BLENDVPS(Vdq, Wdq);
+            }
+            0x15: decode MODRM_MOD {
+                default: Inst::BLENDVPD(Vdq, Wdq);
+            }
             0x17: ptest_Vdq_Wdq();
-            0x1C: pabsb_Vdq_Wdq();
-            0x1D: pabsw_Vdq_Wdq();
-            0x1E: pabsd_Vdq_Wdq();
-            0x20: pmovsxbw_Vdq_Udq_or_Mq();
-            0x21: pmovsxbd_Vdq_Udq_or_Md();
-            0x22: pmovsxbq_Vdq_Udq_or_Mw();
-            0x23: pmovsxwd_Vdq_Udq_or_Mq();
-            0x24: pmovsxwq_Vdq_Udq_or_Md();
-            0x25: pmovsxdq_Vdq_Udq_or_Mq();
-            0x28: pmuldq_Vdq_Wdq();
+            0x1C: decode MODRM_MOD {
+                default: Inst::PABSB(Vdq, Wdq);
+            }
+            0x1D: decode MODRM_MOD {
+                default: Inst::PABSW(Vdq, Wdq);
+            }
+            0x1E: decode MODRM_MOD {
+                default: Inst::PABSD(Vdq, Wdq);
+            }
+            0x20: decode MODRM_MOD {
+                default: Inst::PMOVSXBW(Vdq, Wdq);
+            }
+            0x21: decode MODRM_MOD  {
+                default: Inst::PMOVSXBD(Vdq, Wdq);
+            }
+            0x22: decode MODRM_MOD {
+                default: Inst::PMOVSXBQ(Vdq, Wdq);
+            }
+            0x23: decode MODRM_MOD {
+                default: Inst::PMOVSXWD(Vdq, Wdq);
+            }
+            0x24: decode MODRM_MOD {
+                default: Inst::PMOVSXWQ(Vdq, Wdq);
+            }
+            0x25: decode MODRM_MOD {
+                default: Inst::PMOVSXDQ(Vdq, Wdq);
+            }
+            0x28: decode MODRM_MOD {
+                default: Inst::PMULDQ(Vdq, Wdq);
+            }
             0x29: pcmpeqq_Vdq_Wdq();
             0x2A: movntdqa_Vdq_Mdq();
-            0x2B: packusdw_Vdq_Wdq();
-            0x30: pmovzxbw_Vdq_Udq_or_Mq();
-            0x31: pmovzxbd_Vdq_Udq_or_Md();
-            0x32: pmovzxbq_Vdq_Udq_or_Mw();
-            0x33: pmovzxwd_Vdq_Udq_or_Mq();
-            0x34: pmovzxwq_Vdq_Udq_or_Md();
-            0x35: pmovzxdq_Vdq_Udq_or_Mq();
-            0x37: pcmpgtq_Vdq_Wdq();
-            0x38: pminsb_Vdq_Wdq();
-            0x39: pminsd_Vdq_Wdq();
-            0x3A: pminuw_Vdq_Wdq();
-            0x3B: pminud_Vdq_Wdq();
-            0x3C: pmaxsb_Vdq_Wdq();
-            0x3D: pmaxsd_Vdq_Wdq();
-            0x3E: pmaxuw_Vdq_Wdq();
-            0x3F: pmaxud_Vdq_Wdq();
-            0x40: pmulld_Vdq_Wdq();
-            0x41: phminposuw_Vdq_Wdq();
+            0x2B: decode MODRM_MOD {
+                default: Inst::PACKUSDW(Vdq, Wdq);
+            }
+            0x30: decode MODRM_MOD {
+                default: Inst::PMOVZXBW(Vdq, Wdq);
+            }
+            0x31: decode MODRM_MOD  {
+                default: Inst::PMOVZXBD(Vdq, Wdq);
+            }
+            0x32: decode MODRM_MOD {
+                default: Inst::PMOVZXBQ(Vdq, Wdq);
+            }
+            0x33: decode MODRM_MOD {
+                default: Inst::PMOVZXWD(Vdq, Wdq);
+            }
+            0x34: decode MODRM_MOD {
+                default: Inst::PMOVZXWQ(Vdq, Wdq);
+            }
+            0x35: decode MODRM_MOD {
+                default: Inst::PMOVZXDQ(Vdq, Wdq);
+            }
+            0x37: decode MODRM_MOD {
+                default: Inst::PCMPGTQ(Vdq, Wdq);
+            }
+            0x38: decode MODRM_MOD {
+                default: Inst::PMINSB(Vdq, Wdq);
+            }
+            0x39: decode MODRM_MOD {
+                default: Inst::PMINSD(Vdq, Wdq);
+            }
+            0x3A: decode MODRM_MOD {
+                default: Inst::PMINUW(Vdq, Wdq);
+            }
+            0x3B: decode MODRM_MOD {
+                default: Inst::PMINUD(Vdq, Wdq);
+            }
+            0x3C: decode MODRM_MOD {
+                default: Inst::PMAXSB(Vdq, Wdq);
+            }
+            0x3D: decode MODRM_MOD {
+                default: Inst::PMAXSD(Vdq, Wdq);
+            }
+            0x3E: decode MODRM_MOD {
+                default: Inst::PMAXUW(Vdq, Wdq);
+            }
+            0x3F: decode MODRM_MOD {
+                default: Inst::PMAXUD(Vdq, Wdq);
+            }
+            0x40: decode MODRM_MOD {
+                default: Inst::PMULLD(Vdq, Wdq);
+            }
+            0x41: decode MODRM_MOD {
+                default: Inst::PHMINPOSUW(Vdq, Wdq);
+            }
             default: Inst::UD2();
         }
         default: decode LEGACY_REPNE {

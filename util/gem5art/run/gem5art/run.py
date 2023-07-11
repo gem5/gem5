@@ -316,7 +316,7 @@ class gem5Run:
         try:
             return cls.loadFromDict(d)
         except KeyError:
-            print("Incompatible json file: {}!".format(filename))
+            print(f"Incompatible json file: {filename}!")
             raise
 
     @classmethod
@@ -521,7 +521,7 @@ class gem5Run:
             # Check again in five seconds
             time.sleep(5)
 
-        print("Done running {}".format(" ".join(self.command)))
+        print(f"Done running {' '.join(self.command)}")
 
         # Done executing
         self.running = False
@@ -540,7 +540,7 @@ class gem5Run:
         # Store current gem5 run in the database
         db.put(self._id, self._getSerializable())
 
-        print("Done storing the results of {}".format(" ".join(self.command)))
+        print(f"Done storing the results of {' '.join(self.command)}")
 
     def run(self, task: Any = None, cwd: str = ".") -> None:
         """Actually run the test.

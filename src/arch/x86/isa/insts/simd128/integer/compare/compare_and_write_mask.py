@@ -153,4 +153,24 @@ def macroop PCMPGTD_XMM_P {
     mcmpi2r xmml, xmml, ufp1, size=4, ext=2
     mcmpi2r xmmh, xmmh, ufp2, size=4, ext=2
 };
+
+def macroop PCMPGTQ_XMM_XMM {
+    mcmpi2r xmml, xmml, xmmlm, size=8, ext=2
+    mcmpi2r xmmh, xmmh, xmmhm, size=8, ext=2
+};
+
+def macroop PCMPGTQ_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mcmpi2r xmml, xmml, ufp1, size=8, ext=2
+    mcmpi2r xmmh, xmmh, ufp2, size=8, ext=2
+};
+
+def macroop PCMPGTQ_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mcmpi2r xmml, xmml, ufp1, size=8, ext=2
+    mcmpi2r xmmh, xmmh, ufp2, size=8, ext=2
+};
 """

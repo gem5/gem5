@@ -67,7 +67,6 @@ constexpr auto Nan = std::numeric_limits<float>::quiet_NaN();
 
 } // anonymous namespace
 
-GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
 

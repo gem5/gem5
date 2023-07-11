@@ -1,0 +1,40 @@
+{
+    "1": {
+        "simulation": {
+            "start": {
+                "pc": 4221392,
+                "global": 211076617,
+                "relative": 15326617
+            },
+            "end": {
+                "pc": 4221392,
+                "global": 219060252,
+                "relative": 23310252
+            }
+        },
+        "multiplier": 4.0,
+        "warmup": {
+            "start": {
+                "pc": 4221056,
+                "count": 23520614
+            },
+            "end": {
+                "pc": 4221392,
+                "count": 211076617
+            }
+        }
+    },
+    "2": {
+        "simulation": {
+            "start": {
+                "pc": 4221392,
+                "global": 407294228
+            },
+            "end": {
+                "pc": 4221392,
+                "global": 415282447
+            }
+        },
+        "multiplier": 5.001
+    }
+}

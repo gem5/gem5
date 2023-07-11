@@ -61,7 +61,7 @@ def SwitchingHeaders(env):
             os.path.realpath(dp), os.path.realpath(env["BUILDDIR"])
         )
         with open(path, "w") as hdr:
-            print('#include "%s/%s/%s"' % (dp, subdir, fp), file=hdr)
+            print(f'#include "{dp}/{subdir}/{fp}"', file=hdr)
 
     switching_header_action = MakeAction(
         build_switching_header, Transform("GENERATE")

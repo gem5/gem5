@@ -87,7 +87,7 @@ class GUPSGen : public ClockedObject
       public:
 
         GenPort(const std::string& name, GUPSGen *owner) :
-            RequestPort(name, owner), owner(owner), _blocked(false),
+            RequestPort(name), owner(owner), _blocked(false),
             blockedPacket(nullptr)
         {}
 

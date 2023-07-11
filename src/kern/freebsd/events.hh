@@ -40,7 +40,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(FreeBSD, free_bsd);
 namespace free_bsd
 {
 

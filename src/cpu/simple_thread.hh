@@ -57,6 +57,7 @@
 #include "debug/CCRegs.hh"
 #include "debug/FloatRegs.hh"
 #include "debug/IntRegs.hh"
+#include "debug/MatRegs.hh"
 #include "debug/VecPredRegs.hh"
 #include "debug/VecRegs.hh"
 #include "mem/htm.hh"

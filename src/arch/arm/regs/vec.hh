@@ -93,7 +93,7 @@ const int VECREG_UREG0 = 32;
 const int PREDREG_FFR = 16;
 const int PREDREG_UREG0 = 17;
 
-static inline VecElemRegClassOps<ArmISA::VecElem>
+static inline VecElemRegClassOps<RegVal>
     vecRegElemClassOps(NumVecElemPerVecReg);
 static inline TypedRegClassOps<ArmISA::VecRegContainer> vecRegClassOps;
 static inline TypedRegClassOps<ArmISA::VecPredRegContainer> vecPredRegClassOps;

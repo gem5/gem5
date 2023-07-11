@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2013 ARM Limited
+// Copyright (c) 2012-2013, 2020 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -39,9 +39,9 @@ namespace Aarch64
     // AdvSIMD three same
     template <typename DecoderFeatures>
     StaticInstPtr decodeNeon3Same(ExtMachInst machInst);
-    // AdvSIMD three same Extra
+    // AdvSIMD three register extension
     template <typename DecoderFeatures>
-    StaticInstPtr decodeNeon3SameExtra(ExtMachInst machInst);
+    StaticInstPtr decodeNeon3RegExtension(ExtMachInst machInst);
     // AdvSIMD three different
     inline StaticInstPtr decodeNeon3Diff(ExtMachInst machInst);
     // AdvSIMD two-reg misc
@@ -507,9 +507,11 @@ namespace Aarch64
 
     template <typename DecoderFeatures>
     StaticInstPtr
-    decodeNeon3SameExtra(ExtMachInst machInst)
+    decodeNeon3RegExtension(ExtMachInst machInst)
     {
         uint8_t q      = bits(machInst, 30);
+        uint8_t u      = bits(machInst, 29);
+        uint8_t qu     = bits(machInst, 30, 29);
         uint8_t size   = bits(machInst, 23, 22);
         uint8_t opcode = bits(machInst, 15, 11);
 
@@ -532,6 +534,33 @@ namespace Aarch64
             else
                 return decodeNeonSThreeHAndWReg<SqrdmlshDX>(
                     size, machInst, vd, vn, vm);
+          case 0x12:
+              switch (qu) {
+                case 0b00:
+                  return new SdotDX<int32_t>(machInst, vd, vn, vm);
+                case 0b01:
+                  return new UdotDX<uint32_t>(machInst, vd, vn, vm);
+                case 0b10:
+                  return new SdotQX<int32_t>(machInst, vd, vn, vm);
+                case 0b11:
+                  return new UdotQX<uint32_t>(machInst, vd, vn, vm);
+                default:
+                  return new Unknown64(machInst);
+              }
+          case 0x13:
+              if (q) {
+                  return new UsdotQX<int32_t>(machInst, vd, vn, vm);
+              } else {
+                  return new UsdotDX<int32_t>(machInst, vd, vn, vm);
+              }
+          case 0x14:
+              if (u) {
+                  return new UmmlaQX<uint32_t>(machInst, vd, vn, vm);
+              } else {
+                  return new SmmlaQX<int32_t>(machInst, vd, vn, vm);
+              }
+          case 0x15:
+              return new UsmmlaQX<int32_t>(machInst, vd, vn, vm);
           case 0x18:
           case 0x19:
           case 0x1a:
@@ -1213,13 +1242,17 @@ namespace Aarch64
 
             switch (imm5_pos) {
               case 0:
-                return new InsElemX<uint8_t>(machInst, vd, vn, index1, index2);
+                return new InsElemX<uint8_t>(
+                        machInst, vd, vn, index1, index2);
               case 1:
-                return new InsElemX<uint16_t>(machInst, vd, vn, index1, index2);
+                return new InsElemX<uint16_t>(
+                        machInst, vd, vn, index1, index2);
               case 2:
-                return new InsElemX<uint32_t>(machInst, vd, vn, index1, index2);
+                return new InsElemX<uint32_t>(
+                        machInst, vd, vn, index1, index2);
               case 3:
-                return new InsElemX<uint64_t>(machInst, vd, vn, index1, index2);
+                return new InsElemX<uint64_t>(
+                        machInst, vd, vn, index1, index2);
               default:
                 return new Unknown64(machInst);
             }
@@ -1347,6 +1380,7 @@ namespace Aarch64
     {
         uint8_t q = bits(machInst, 30);
         uint8_t u = bits(machInst, 29);
+        uint8_t qu = bits(machInst, 30, 29);
         uint8_t size = bits(machInst, 23, 22);
         uint8_t L = bits(machInst, 21);
         uint8_t M = bits(machInst, 20);
@@ -1382,6 +1416,11 @@ namespace Aarch64
             index_fp = H;
         }
         RegIndex vm_fp = (RegIndex) (uint8_t) (vmh << 4 | vm_bf);
+
+        // Index and 2nd register operand for FEAT_DOTPROD and
+        // FEAT_I8MM instructions
+        uint8_t index_dp = (H << 1) | L;
+        RegIndex vm_dp = (RegIndex) (uint8_t) (M << 4 | vm_bf);
 
         switch (opcode) {
           case 0x0:
@@ -1547,14 +1586,16 @@ namespace Aarch64
             if (u || (size == 0x0 || size == 0x3))
                 return new Unknown64(machInst);
             else
-                return decodeNeonSThreeImmHAndWReg<SqdmullElemX, SqdmullElem2X>(
-                    q, size, machInst, vd, vn, vm, index);
+                return decodeNeonSThreeImmHAndWReg
+                    <SqdmullElemX, SqdmullElem2X>(
+                        q, size, machInst, vd, vn, vm, index);
           case 0xc:
             if (u || (size == 0x0 || size == 0x3))
                 return new Unknown64(machInst);
             else
-                return decodeNeonSThreeImmHAndWReg<SqdmulhElemDX, SqdmulhElemQX>(
-                    q, size, machInst, vd, vn, vm, index);
+                return decodeNeonSThreeImmHAndWReg
+                    <SqdmulhElemDX, SqdmulhElemQX>(
+                        q, size, machInst, vd, vn, vm, index);
           case 0xd:
             if (u)
                 return decodeNeonSThreeImmHAndWReg<SqrdmlahElemDX,
@@ -1564,9 +1605,56 @@ namespace Aarch64
                 return decodeNeonSThreeImmHAndWReg<SqrdmulhElemDX,
                                                    SqrdmulhElemQX>(
                     q, size, machInst, vd, vn, vm, index);
+          case 0xe:
+              switch (qu) {
+                case 0b00:
+                  return new SdotElemDX<int32_t>(machInst,
+                                                 vd, vn, vm_dp, index_dp);
+                case 0b01:
+                  return new UdotElemDX<uint32_t>(machInst,
+                                                  vd, vn, vm_dp, index_dp);
+                case 0b10:
+                  return new SdotElemQX<int32_t>(machInst,
+                                                 vd, vn, vm_dp, index_dp);
+                case 0b11:
+                  return new UdotElemQX<uint32_t>(machInst,
+                                                  vd, vn, vm_dp, index_dp);
+                default:
+                  return new Unknown64(machInst);
+              }
           case 0xf:
-            return decodeNeonSThreeImmHAndWReg<SqrdmlshElemDX, SqrdmlshElemQX>(
-                    q, size, machInst, vd, vn, vm, index);
+              if (u) {
+                   // Armv8.2-RDMA SQRDMLSH(elem)
+                   return decodeNeonSThreeImmHAndWReg<SqrdmlshElemDX,
+                                                      SqrdmlshElemQX>(
+                       q, size, machInst, vd, vn, vm, index);
+              } else {
+                  switch (size) {
+                  case 0x0:
+                      if (q) {
+                          return new SudotElemQX<int32_t>(
+                                  machInst, vd, vn, vm_dp, index_dp);
+                      } else {
+                          return new SudotElemDX<int32_t>(
+                                  machInst, vd, vn, vm_dp, index_dp);
+                      }
+                  case 0x1:
+                       // Armv8.2-BF16 BFDOT(elem)
+                       return new Unknown64(machInst);
+                  case 0x2:
+                      if (q) {
+                          return new UsdotElemQX<int32_t>(
+                                  machInst, vd, vn, vm_dp, index_dp);
+                      } else {
+                          return new UsdotElemDX<int32_t>(
+                                  machInst, vd, vn, vm_dp, index_dp);
+                      }
+                  case 0x3:
+                  default:
+                       // Armv8.2-BF16 BFMLALB(elem), BFMLALT(elem)
+                       return new Unknown64(machInst);
+                  }
+              }
           default:
             return new Unknown64(machInst);
         }
@@ -2176,11 +2264,14 @@ namespace Aarch64
 
         switch (opcode) {
           case 0x9:
-            return decodeNeonSThreeHAndWReg<SqdmlalScX>(size, machInst, vd, vn, vm);
+            return decodeNeonSThreeHAndWReg<SqdmlalScX>(
+                    size, machInst, vd, vn, vm);
           case 0xb:
-            return decodeNeonSThreeHAndWReg<SqdmlslScX>(size, machInst, vd, vn, vm);
+            return decodeNeonSThreeHAndWReg<SqdmlslScX>(
+                    size, machInst, vd, vn, vm);
           case 0xd:
-            return decodeNeonSThreeHAndWReg<SqdmullScX>(size, machInst, vd, vn, vm);
+            return decodeNeonSThreeHAndWReg<SqdmullScX>(
+                    size, machInst, vd, vn, vm);
           default:
             return new Unknown64(machInst);
         }

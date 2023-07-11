@@ -26,4 +26,4 @@
 
 for module in __spec__.loader_state:
     if module.startswith("m5.objects."):
-        exec("from %s import *" % module)
+        exec(f"from {module} import *")

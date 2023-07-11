@@ -114,9 +114,7 @@ class SMMUv3DeviceInterface : public ClockedObject
     bool atsDeviceNeedsRetry;
 
     SMMUDeviceRetryEvent sendDeviceRetryEvent;
-    EventWrapper<
-        SMMUv3DeviceInterface,
-        &SMMUv3DeviceInterface::atsSendDeviceRetry> atsSendDeviceRetryEvent;
+    MemberEventWrapper<&SMMUv3DeviceInterface::atsSendDeviceRetry> atsSendDeviceRetryEvent;
 
     Port& getPort(const std::string &name, PortID id) override;
 

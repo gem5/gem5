@@ -36,7 +36,7 @@ class VarExprAST(ExprAST):
         self._var = var
 
     def __repr__(self):
-        return "[VarExprAST: %r]" % self._var
+        return f"[VarExprAST: {self._var!r}]"
 
     @property
     def name(self):

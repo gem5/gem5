@@ -35,9 +35,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 =============================================================================*/
 
 #include <stdint.h>
-
-#include "internals.h"
 #include "platform.h"
+#include "internals.h"
 #include "softfloat.h"
 
 float16_t ui64_to_f16( uint64_t a )

@@ -36,7 +36,7 @@ class MemberExprAST(ExprAST):
         self.field = field
 
     def __repr__(self):
-        return "[MemberExprAST: %r.%r]" % (self.expr_ast, self.field)
+        return f"[MemberExprAST: {self.expr_ast!r}.{self.field!r}]"
 
     def generate(self, code):
         return_type, gcode = self.expr_ast.inline(True)
@@ -68,6 +68,5 @@ class MemberExprAST(ExprAST):
                         return interface_type.data_members[self.field].type
         self.error(
             "Invalid object field: "
-            + "Type '%s' does not have data member %s"
-            % (return_type, self.field)
+            + f"Type '{return_type}' does not have data member {self.field}"
         )

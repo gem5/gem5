@@ -127,16 +127,19 @@ if not SCons.Tool.m4.exists(m4env):
 # Setup m4 tool
 m4env.Tool('m4')
 
-m4env.Append(M4FLAGS=['-DSRCDIR=%s' % Dir('.').path])
+m4env.Append(M4FLAGS=['-DSRCDIR=%s' % Dir('.').srcnode().path])
 m4env['M4COM'] = '$M4 $M4FLAGS $SOURCES > $TARGET'
 m4env.M4(target=File('libelf_convert.c'),
-         source=[File('elf_types.m4'), File('libelf_convert.m4')])
+         source=[File('elf_types.m4').srcnode(),
+                 File('libelf_convert.m4').srcnode()])
 m4env.M4(target=File('libelf_fsize.c'),
-         source=[File('elf_types.m4'), File('libelf_fsize.m4')])
+         source=[File('elf_types.m4').srcnode(),
+                 File('libelf_fsize.m4').srcnode()])
 m4env.M4(target=File('libelf_msize.c'),
-         source=[File('elf_types.m4'), File('libelf_msize.m4')])
+         source=[File('elf_types.m4').srcnode(),
+                 File('libelf_msize.m4').srcnode()])
 
-m4env.Append(CPPPATH=Dir('.'))
+m4env.Append(CPPPATH=[Dir('.'), Dir('.').srcnode()])
 
 # Build libelf as a static library with PIC code so it can be linked
 # into either m5 or the library
@@ -146,6 +149,6 @@ m4env.Library('elf', [m4env.SharedObject(f) for f in elf_files])
 m4env.Command(File('native-elf-format.h'), File('native-elf-format'),
               '${SOURCE} > ${TARGET}')
 
-env.Prepend(CPPPATH=Dir('.'))
+env.Prepend(CPPPATH=Dir('.').srcnode())
 env.Append(LIBS=[File('libelf.a')])
 env.Prepend(LIBPATH=[Dir('.')])

@@ -513,6 +513,35 @@ class ArmStaticInst : public StaticInst
      */
     Fault checkSveEnabled(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const;
 
+
+    /**
+     * Trap an access to SME registers due to access control bits.
+     *
+     * @param el Target EL for the trap.
+     * @param iss ISS to be used for the trap.
+     */
+    Fault smeAccessTrap(ExceptionLevel el, uint32_t iss = 0) const;
+
+    /**
+     * Check if SME is enabled by checking the SME and FP bits of
+     * CPACR_EL1, CPTR_EL2, and CPTR_EL3
+     */
+    Fault checkSmeEnabled(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const;
+
+    /**
+     * Check an SME access against CPACR_EL1, CPTR_EL2, and CPTR_EL3.
+     * This is purely used from the management instructions as it should
+     * be possible to call SMSTART/SMSTOP without having the floating
+     * point flags correctly set up.
+     */
+    Fault checkSmeAccess(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const;
+
+    /**
+     * Check an SVE access against CPACR_EL1, CPTR_EL2, and CPTR_EL3, but
+     * choosing the correct set of traps to check based on Streaming Mode
+     */
+    Fault checkSveSmeEnabled(ThreadContext *tc, CPSR cpsr, CPACR cpacr) const;
+
     /**
      * Get the new PSTATE from a SPSR register in preparation for an
      * exception return.
@@ -581,6 +610,21 @@ class ArmStaticInst : public StaticInst
     getCurSveVecLen(ThreadContext *tc)
     {
         return getCurSveVecLenInBits(tc) / (8 * sizeof(T));
+    }
+
+    static unsigned getCurSmeVecLenInBits(ThreadContext *tc);
+
+    static unsigned
+    getCurSmeVecLenInQWords(ThreadContext *tc)
+    {
+        return getCurSmeVecLenInBits(tc) >> 6;
+    }
+
+    template<typename T>
+    static unsigned
+    getCurSmeVecLen(ThreadContext *tc)
+    {
+        return getCurSmeVecLenInBits(tc) / (8 * sizeof(T));
     }
 
     inline Fault

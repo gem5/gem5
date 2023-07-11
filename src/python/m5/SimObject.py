@@ -152,7 +152,7 @@ class MetaSimObject(type):
     # and only allow "private" attributes to be passed to the base
     # __new__ (starting with underscore).
     def __new__(mcls, name, bases, dict):
-        assert name not in allClasses, "SimObject %s already present" % name
+        assert name not in allClasses, f"SimObject {name} already present"
 
         # Copy "private" attributes, functions, and classes to the
         # official dict.  Everything else goes in _init_dict to be
@@ -252,7 +252,7 @@ class MetaSimObject(type):
             if "cxx_class" not in cls._value_dict:
                 cls._value_dict["cxx_class"] = cls._value_dict["type"]
 
-            cls._value_dict["cxx_type"] = "%s *" % cls._value_dict["cxx_class"]
+            cls._value_dict["cxx_type"] = f"{cls._value_dict['cxx_class']} *"
 
             if "cxx_header" not in cls._value_dict:
                 global noCxxHeader
@@ -295,8 +295,7 @@ class MetaSimObject(type):
     def _set_keyword(cls, keyword, val, kwtype):
         if not isinstance(val, kwtype):
             raise TypeError(
-                "keyword %s has bad type %s (expecting %s)"
-                % (keyword, type(val), kwtype)
+                f"keyword {keyword} has bad type {type(val)} (expecting {kwtype})"
             )
         if isinstance(val, FunctionType):
             val = classmethod(val)
@@ -316,11 +315,8 @@ class MetaSimObject(type):
             hr_value = value
             value = param.convert(value)
         except Exception as e:
-            msg = "%s\nError setting param %s.%s to %s\n" % (
-                e,
-                cls.__name__,
-                name,
-                value,
+            msg = (
+                f"{e}\nError setting param {cls.__name__}.{name} to {value}\n"
             )
             e.args = (msg,)
             raise
@@ -372,9 +368,7 @@ class MetaSimObject(type):
         for k, v in cls._value_dict.items():
             if v == value:
                 return k, v
-        raise RuntimeError(
-            "Cannot find parameter {} in parameter list".format(value)
-        )
+        raise RuntimeError(f"Cannot find parameter {value} in parameter list")
 
     # Set attribute (called on foo.attr = value when foo is an
     # instance of class cls).
@@ -411,9 +405,7 @@ class MetaSimObject(type):
             return
 
         # no valid assignment... raise exception
-        raise AttributeError(
-            "Class %s has no parameter '%s'" % (cls.__name__, attr)
-        )
+        raise AttributeError(f"Class {cls.__name__} has no parameter '{attr}'")
 
     def __getattr__(cls, attr):
         if attr == "cxx_class_path":
@@ -438,13 +430,16 @@ class MetaSimObject(type):
             return getattr(cls.getCCClass(), attr)
         except AttributeError:
             raise AttributeError(
-                "object '%s' has no attribute '%s'" % (cls.__name__, attr)
+                f"object '{cls.__name__}' has no attribute '{attr}'"
             )
 
     def __str__(cls):
         return cls.__name__
 
     def getCCClass(cls):
+        # Ensure that m5.internal.params is available.
+        import m5.internal.params
+
         return getattr(m5.internal.params, cls.pybind_class)
 
     # See ParamValue.cxx_predecls for description.
@@ -475,19 +470,21 @@ def cxxMethod(*args, **kwargs):
         return_value_policy = kwargs.get("return_value_policy", None)
         static = kwargs.get("static", False)
 
-        args, varargs, keywords, defaults = inspect.getargspec(func)
-        if varargs or keywords:
-            raise ValueError(
-                "Wrapped methods must not contain variable " "arguments"
-            )
-
-        # Create tuples of (argument, default)
-        if defaults:
-            args = args[: -len(defaults)] + list(
-                zip(args[-len(defaults) :], defaults)
-            )
-        # Don't include self in the argument list to PyBind
-        args = args[1:]
+        # Create a list of tuples of (argument, default). The `PyBindMethod`
+        # class expects the `args` argument to be a list of either argument
+        # names, in the case that argument does not have a default value, and
+        # a tuple of (argument, default) in the casae where an argument does.
+        args = []
+        sig = inspect.signature(func)
+        for param_name in sig.parameters.keys():
+            if param_name == "self":
+                # We don't cound 'self' as an argument in this case.
+                continue
+            param = sig.parameters[param_name]
+            if param.default is param.empty:
+                args.append(param_name)
+            else:
+                args.append((param_name, param.default))
 
         @wraps(func)
         def cxx_call(self, *args, **kwargs):
@@ -571,7 +568,7 @@ class SimObjectCliWrapper(object):
                     setattr(sim_object, key, val)
                 else:
                     raise SimObjectCliWrapperException(
-                        "tried to set or unsettable" "object parameter: " + key
+                        "tried to set or unsettableobject parameter: " + key
                     )
             else:
                 raise SimObjectCliWrapperException(
@@ -667,10 +664,10 @@ class SimObject(object, metaclass=MetaSimObject):
                     ex_str = values.example_str()
                     ptype = None
                     if isinstance(values, VectorParamDesc):
-                        type_str = "Vector_%s" % values.ptype_str
+                        type_str = f"Vector_{values.ptype_str}"
                         ptype = values
                     else:
-                        type_str = "%s" % values.ptype_str
+                        type_str = f"{values.ptype_str}"
                         ptype = values.ptype
 
                     if (
@@ -837,9 +834,8 @@ class SimObject(object, metaclass=MetaSimObject):
         if self._ccObject and hasattr(self._ccObject, attr):
             return getattr(self._ccObject, attr)
 
-        err_string = "object '%s' has no attribute '%s'" % (
-            self.__class__.__name__,
-            attr,
+        err_string = (
+            f"object '{self.__class__.__name__}' has no attribute '{attr}'"
         )
 
         if not self._ccObject:
@@ -910,7 +906,7 @@ class SimObject(object, metaclass=MetaSimObject):
 
         # no valid assignment... raise exception
         raise AttributeError(
-            "Class %s has no parameter %s" % (self.__class__.__name__, attr)
+            f"Class {self.__class__.__name__} has no parameter {attr}"
         )
 
     # this hack allows tacking a '[0]' onto parameters that may or may
@@ -918,7 +914,7 @@ class SimObject(object, metaclass=MetaSimObject):
     def __getitem__(self, key):
         if key == 0:
             return self
-        raise IndexError("Non-zero index '%s' to SimObject" % key)
+        raise IndexError(f"Non-zero index '{key}' to SimObject")
 
     # this hack allows us to iterate over a SimObject that may
     # not be a vector, so we can call a loop over it and get just one
@@ -995,7 +991,7 @@ class SimObject(object, metaclass=MetaSimObject):
 
     def path(self):
         if not self._parent:
-            return "<orphan %s>" % self.__class__
+            return f"<orphan {self.__class__}>"
         elif isinstance(self._parent, MetaSimObject):
             return str(self.__class__)
 
@@ -1091,8 +1087,7 @@ class SimObject(object, metaclass=MetaSimObject):
                     value = value.unproxy(self)
                 except:
                     print(
-                        "Error in unproxying param '%s' of %s"
-                        % (param, self.path())
+                        f"Error in unproxying param '{param}' of {self.path()}"
                     )
                     raise
                 setattr(self, param, value)
@@ -1112,7 +1107,7 @@ class SimObject(object, metaclass=MetaSimObject):
         instanceDict[self.path()] = self
 
         if hasattr(self, "type"):
-            print("type=%s" % self.type, file=ini_file)
+            print(f"type={self.type}", file=ini_file)
 
         if len(self._children.keys()):
             print(
@@ -1128,14 +1123,14 @@ class SimObject(object, metaclass=MetaSimObject):
             value = self._values.get(param)
             if value != None:
                 print(
-                    "%s=%s" % (param, self._values[param].ini_str()),
+                    f"{param}={self._values[param].ini_str()}",
                     file=ini_file,
                 )
 
         for port_name in sorted(self._ports.keys()):
             port = self._port_refs.get(port_name, None)
             if port != None:
-                print("%s=%s" % (port_name, port.ini_str()), file=ini_file)
+                print(f"{port_name}={port.ini_str()}", file=ini_file)
 
         print(file=ini_file)  # blank line between objects
 
@@ -1181,7 +1176,7 @@ class SimObject(object, metaclass=MetaSimObject):
         # Ensure that m5.internal.params is available.
         import m5.internal.params
 
-        cc_params_struct = getattr(m5.internal.params, "%sParams" % self.type)
+        cc_params_struct = getattr(m5.internal.params, f"{self.type}Params")
         cc_params = cc_params_struct()
         cc_params.name = str(self)
 
@@ -1244,7 +1239,7 @@ class SimObject(object, metaclass=MetaSimObject):
                 self._ccObject = params.create()
         elif self._ccObject == -1:
             raise RuntimeError(
-                "%s: Cycle found in configuration hierarchy." % self.path()
+                f"{self.path()}: Cycle found in configuration hierarchy."
             )
         return self._ccObject
 

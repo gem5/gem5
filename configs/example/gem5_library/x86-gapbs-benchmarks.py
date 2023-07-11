@@ -195,9 +195,9 @@ if args.synthetic == "1":
         )
         exit(-1)
 
-    command = "./{} -g {}\n".format(args.benchmark, args.size)
+    command = f"./{args.benchmark} -g {args.size}\n"
 else:
-    command = "./{} -sf ../{}".format(args.benchmark, args.size)
+    command = f"./{args.benchmark} -sf ../{args.size}"
 
 board.set_kernel_disk_workload(
     # The x86 linux kernel will be automatically downloaded to the
@@ -262,7 +262,9 @@ print("Done with the simulation")
 print()
 print("Performance statistics:")
 
-print("Simulated time in ROI: %.2fs" % ((end_tick - start_tick) / 1e12))
+print(
+    f"Simulated time in ROI: {(end_tick - start_tick) / 1000000000000.0:.2f}s"
+)
 print(
     "Ran a total of", simulator.get_current_tick() / 1e12, "simulated seconds"
 )

@@ -425,7 +425,7 @@ def print_inst(
                 )
             )
             if timestamps:
-                outfile.write("  f=%s, r=%s" % (inst["fetch"], inst["retire"]))
+                outfile.write(f"  f={inst['fetch']}, r={inst['retire']}")
             outfile.write("\n")
         else:
             outfile.write("...".center(12) + "\n")
@@ -522,7 +522,7 @@ def main():
                 args.timestamps,
                 args.only_committed,
                 args.store_completions,
-                *(tick_range + inst_range)
+                *(tick_range + inst_range),
             )
     print("done!")
 

@@ -61,7 +61,6 @@ struct X86SMBiosSMBiosTableParams;
 namespace X86ISA
 {
 
-GEM5_DEPRECATED_NAMESPACE(SMBios, smbios);
 namespace smbios
 {
 

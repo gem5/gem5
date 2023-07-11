@@ -74,6 +74,26 @@ def macroop PMULLW_XMM_P {
     mmuli xmmh, xmmh, ufp2, size=2, ext=Signed
 };
 
+def macroop PMULLD_XMM_XMM {
+    mmuli xmml, xmml, xmmlm, size=4, ext=Signed
+    mmuli xmmh, xmmh, xmmhm, size=4, ext=Signed
+};
+
+def macroop PMULLD_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mmuli xmml, xmml, ufp1, size=4, ext=Signed
+    mmuli xmmh, xmmh, ufp2, size=4, ext=Signed
+};
+
+def macroop PMULLD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mmuli xmml, xmml, ufp1, size=4, ext=Signed
+    mmuli xmmh, xmmh, ufp2, size=4, ext=Signed
+};
+
 def macroop PMULHUW_XMM_XMM {
     mmuli xmml, xmml, xmmlm, size=2, ext = MultHi
     mmuli xmmh, xmmh, xmmhm, size=2, ext = MultHi
@@ -112,5 +132,25 @@ def macroop PMULUDQ_XMM_P {
     ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
     mmuli xmml, xmml, ufp1, srcSize=4, destSize=8, ext=Scalar
     mmuli xmmh, xmmh, ufp2, srcSize=4, destSize=8, ext=Scalar
+};
+
+def macroop PMULDQ_XMM_XMM {
+    mmuli xmml, xmml, xmmlm, srcSize=4, destSize=8, ext=Scalar + "|" + Signed
+    mmuli xmmh, xmmh, xmmhm, srcSize=4, destSize=8, ext=Scalar + "|" + Signed
+};
+
+def macroop PMULDQ_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mmuli xmml, xmml, ufp1, srcSize=4, destSize=8, ext=Scalar + "|" + Signed
+    mmuli xmmh, xmmh, ufp2, srcSize=4, destSize=8, ext=Scalar + "|" + Signed
+};
+
+def macroop PMULDQ_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mmuli xmml, xmml, ufp1, srcSize=4, destSize=8, ext=Scalar + "|" + Signed
+    mmuli xmmh, xmmh, ufp2, srcSize=4, destSize=8, ext=Scalar + "|" + Signed
 };
 """

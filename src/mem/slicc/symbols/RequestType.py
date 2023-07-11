@@ -29,7 +29,7 @@ from slicc.symbols.Symbol import Symbol
 
 class RequestType(Symbol):
     def __repr__(self):
-        return "[RequestType: %s]" % self.ident
+        return f"[RequestType: {self.ident}]"
 
 
 __all__ = ["RequestType"]

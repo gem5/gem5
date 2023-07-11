@@ -23,9 +23,10 @@
 #ifndef KFD_IOCTL_H_INCLUDED
 #define KFD_IOCTL_H_INCLUDED
 
+#include <sys/ioctl.h>
+#include <sys/types.h>
+
 #include <cstdint>
-#include <linux/ioctl.h>
-#include <linux/types.h>
 
 namespace gem5
 {

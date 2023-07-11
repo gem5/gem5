@@ -64,7 +64,7 @@ class Symbol(PairContainer):
         self.used = False
 
     def __repr__(self):
-        return "[Symbol: %s]" % self.ident
+        return f"[Symbol: {self.ident}]"
 
     def __str__(self):
         return str(self.ident)

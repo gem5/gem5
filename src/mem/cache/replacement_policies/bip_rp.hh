@@ -49,7 +49,6 @@ namespace gem5
 
 struct BIPRPParams;
 
-GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
 {
 

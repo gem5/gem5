@@ -207,11 +207,11 @@ m5.instantiate()
 generator.start_traffic()
 print("Beginning simulation!")
 exit_event = m5.simulate()
-print(
-    "Exiting @ tick {} because {}.".format(m5.curTick(), exit_event.getCause())
-)
+print(f"Exiting @ tick {m5.curTick()} because {exit_event.getCause()}.")
 
-simstats = get_simstat(root, prepare_stats=True)
+simstats = get_simstat(
+    [core.generator for core in generator.get_cores()], prepare_stats=True
+)
 json_output = Path(m5.options.outdir) / "output.json"
 with open(json_output, "w") as stats_file:
     simstats.dump(stats_file, indent=2)

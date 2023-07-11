@@ -40,13 +40,13 @@ def help():
         lambda kv: isinstance(kv[1], SimpleFlag) and not kv[1].isFormat,
         sorted_flags,
     ):
-        print("    %s: %s" % (name, flag.desc))
+        print(f"    {name}: {flag.desc}")
     print()
     print("Compound Flags:")
     for name, flag in filter(
         lambda kv: isinstance(kv[1], CompoundFlag), sorted_flags
     ):
-        print("    %s: %s" % (name, flag.desc))
+        print(f"    {name}: {flag.desc}")
         # The list of kids for flag "All" is too long, so it is not printed
         if name != "All":
             printList([c.name for c in flag.kids()], indent=8)
@@ -58,7 +58,7 @@ def help():
         lambda kv: isinstance(kv[1], SimpleFlag) and kv[1].isFormat,
         sorted_flags,
     ):
-        print("    %s: %s" % (name, flag.desc))
+        print(f"    {name}: {flag.desc}")
     print()
 
 

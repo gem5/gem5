@@ -349,7 +349,7 @@ TournamentBP::squash(ThreadID tid, void *bp_history)
     delete history;
 }
 
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
 int
 TournamentBP::BPHistory::newCount = 0;
 #endif

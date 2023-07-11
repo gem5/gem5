@@ -107,7 +107,7 @@ ISA::setFSReg(int miscReg, RegVal val)
 
       case MISCREG_TICK_CMPR:
         if (tickCompare == NULL)
-            tickCompare = new TickCompareEvent(this);
+            tickCompare = new TickCompareEvent(*this);
         setMiscRegNoEffect(miscReg, val);
         if ((tick_cmpr & ~mask(63)) && tickCompare->scheduled())
             cpu->deschedule(tickCompare);
@@ -122,7 +122,7 @@ ISA::setFSReg(int miscReg, RegVal val)
 
       case MISCREG_STICK_CMPR:
         if (sTickCompare == NULL)
-            sTickCompare = new STickCompareEvent(this);
+            sTickCompare = new STickCompareEvent(*this);
         setMiscRegNoEffect(miscReg, val);
         if ((stick_cmpr & ~mask(63)) && sTickCompare->scheduled())
             cpu->deschedule(sTickCompare);
@@ -193,7 +193,7 @@ ISA::setFSReg(int miscReg, RegVal val)
 
       case MISCREG_HSTICK_CMPR:
         if (hSTickCompare == NULL)
-            hSTickCompare = new HSTickCompareEvent(this);
+            hSTickCompare = new HSTickCompareEvent(*this);
         setMiscRegNoEffect(miscReg, val);
         if ((hstick_cmpr & ~mask(63)) && hSTickCompare->scheduled())
             cpu->deschedule(hSTickCompare);

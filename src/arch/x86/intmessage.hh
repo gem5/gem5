@@ -52,7 +52,6 @@ namespace X86ISA
         Bitfield<21> trigger;
     EndBitUnion(TriggerIntMessage)
 
-    GEM5_DEPRECATED_NAMESPACE(DeliveryMode, delivery_mode);
     namespace delivery_mode
     {
         enum IntDeliveryMode

@@ -998,6 +998,14 @@ CoherentXBar::forwardAtomic(PacketPtr pkt, PortID exclude_cpu_side_port_id,
 }
 
 void
+CoherentXBar::recvMemBackdoorReq(const MemBackdoorReq &req,
+        MemBackdoorPtr &backdoor)
+{
+    PortID dest_id = findPort(req.range());
+    memSidePorts[dest_id]->sendMemBackdoorReq(req, backdoor);
+}
+
+void
 CoherentXBar::recvFunctional(PacketPtr pkt, PortID cpu_side_port_id)
 {
     if (!pkt->isPrint()) {

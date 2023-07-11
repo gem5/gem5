@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2017-2018 ARM Limited
+ * Copyright (c) 2010, 2017-2018, 2020, 2022 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -72,6 +72,7 @@ static const OpClass SimdCvtOp = enums::SimdCvt;
 static const OpClass SimdMiscOp = enums::SimdMisc;
 static const OpClass SimdMultOp = enums::SimdMult;
 static const OpClass SimdMultAccOp = enums::SimdMultAcc;
+static const OpClass SimdMatMultAccOp = enums::SimdMatMultAcc;
 static const OpClass SimdShiftOp = enums::SimdShift;
 static const OpClass SimdShiftAccOp = enums::SimdShiftAcc;
 static const OpClass SimdDivOp = enums::SimdDiv;
@@ -87,6 +88,7 @@ static const OpClass SimdFloatDivOp = enums::SimdFloatDiv;
 static const OpClass SimdFloatMiscOp = enums::SimdFloatMisc;
 static const OpClass SimdFloatMultOp = enums::SimdFloatMult;
 static const OpClass SimdFloatMultAccOp = enums::SimdFloatMultAcc;
+static const OpClass SimdFloatMatMultAccOp = enums::SimdFloatMatMultAcc;
 static const OpClass SimdFloatSqrtOp = enums::SimdFloatSqrt;
 static const OpClass SimdFloatReduceCmpOp = enums::SimdFloatReduceCmp;
 static const OpClass SimdFloatReduceAddOp = enums::SimdFloatReduceAdd;
@@ -99,12 +101,39 @@ static const OpClass SimdSha256Hash2Op = enums::SimdSha256Hash2;
 static const OpClass SimdShaSigma2Op = enums::SimdShaSigma2;
 static const OpClass SimdShaSigma3Op = enums::SimdShaSigma3;
 static const OpClass SimdPredAluOp = enums::SimdPredAlu;
+static const OpClass MatrixOp = enums::Matrix;
+static const OpClass MatrixMovOp = enums::MatrixMov;
+static const OpClass MatrixOPOp = enums::MatrixOP;
 static const OpClass MemReadOp = enums::MemRead;
 static const OpClass MemWriteOp = enums::MemWrite;
 static const OpClass FloatMemReadOp = enums::FloatMemRead;
 static const OpClass FloatMemWriteOp = enums::FloatMemWrite;
 static const OpClass IprAccessOp = enums::IprAccess;
 static const OpClass InstPrefetchOp = enums::InstPrefetch;
+static const OpClass VectorUnitStrideLoadOp = enums::VectorUnitStrideLoad;
+static const OpClass VectorUnitStrideStoreOp = enums::VectorUnitStrideStore;
+static const OpClass VectorUnitStrideMaskLoadOp
+             = enums::VectorUnitStrideMaskLoad;
+static const OpClass VectorUnitStrideMaskStoreOp
+             = enums::VectorUnitStrideMaskStore;
+static const OpClass VectorStridedLoadOp = enums::VectorStridedLoad;
+static const OpClass VectorStridedStoreOp = enums::VectorStridedStore;
+static const OpClass VectorIndexedLoadOp = enums::VectorIndexedLoad;
+static const OpClass VectorIndexedStoreOp = enums::VectorIndexedStore;
+static const OpClass VectorUnitStrideFaultOnlyFirstLoadOp
+             = enums::VectorUnitStrideFaultOnlyFirstLoad;
+static const OpClass VectorWholeRegisterLoadOp
+             = enums::VectorWholeRegisterLoad;
+static const OpClass VectorWholeRegisterStoreOp
+             = enums::VectorWholeRegisterStore;
+static const OpClass VectorIntegerArithOp = enums::VectorIntegerArith;
+static const OpClass VectorFloatArithOp = enums::VectorFloatArith;
+static const OpClass VectorFloatConvertOp = enums::VectorFloatConvert;
+static const OpClass VectorIntegerReduceOp = enums::VectorIntegerReduce;
+static const OpClass VectorFloatReduceOp = enums::VectorFloatReduce;
+static const OpClass VectorMiscOp = enums::VectorMisc;
+static const OpClass VectorIntegerExtensionOp = enums::VectorIntegerExtension;
+static const OpClass VectorConfigOp = enums::VectorConfig;
 static const OpClass Num_OpClasses = enums::Num_OpClass;
 
 } // namespace gem5

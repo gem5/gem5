@@ -47,7 +47,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(Stats, statistics);
 namespace statistics
 {
 
@@ -73,7 +72,8 @@ Group::regStats()
 
     for (auto &g : statGroups) {
         if (debug::Stats) {
-            M5_VAR_USED const Named *named = dynamic_cast<const Named *>(this);
+            [[maybe_unused]] const Named *named = \
+                dynamic_cast<const Named *>(this);
             DPRINTF(Stats, "%s: regStats in group %s\n",
                     named ? named->name() : "?",
                     g.first);

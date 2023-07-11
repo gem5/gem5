@@ -39,7 +39,7 @@ class ObjDeclAST(DeclAST):
         self.pointer = pointer
 
     def __repr__(self):
-        return "[ObjDecl: %r]" % self.ident
+        return f"[ObjDecl: {self.ident!r}]"
 
     def generate(self, parent=None, **kwargs):
         if "network" in self and not (
@@ -60,7 +60,7 @@ class ObjDeclAST(DeclAST):
         elif self.ident == "recycle_latency":
             c_code = "m_recycle_latency"
         else:
-            c_code = "(*m_%s_ptr)" % (self.ident)
+            c_code = f"(*m_{self.ident}_ptr)"
 
         # check type if this is a initialization
         init_code = ""
@@ -68,8 +68,7 @@ class ObjDeclAST(DeclAST):
             rvalue_type, init_code = self.rvalue.inline(True)
             if type != rvalue_type:
                 self.error(
-                    "Initialization type mismatch '%s' and '%s'"
-                    % (type, rvalue_type)
+                    f"Initialization type mismatch '{type}' and '{rvalue_type}'"
                 )
 
         machine = self.symtab.state_machine
@@ -89,9 +88,7 @@ class ObjDeclAST(DeclAST):
             if not parent.addDataMember(
                 self.ident, type, self.pairs, init_code
             ):
-                self.error(
-                    "Duplicate data member: %s:%s" % (parent, self.ident)
-                )
+                self.error(f"Duplicate data member: {parent}:{self.ident}")
 
         elif machine:
             machine.addObject(v)

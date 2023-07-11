@@ -28,7 +28,8 @@ from typing import Generator, Optional
 import m5.stats
 from ..components.processors.abstract_processor import AbstractProcessor
 from ..components.processors.switchable_processor import SwitchableProcessor
-from ..utils.simpoint import SimPoint
+from ..resources.resource import SimpointResource
+from gem5.resources.looppoint import Looppoint
 from m5.util import warn
 from pathlib import Path
 
@@ -134,7 +135,7 @@ def skip_generator():
 
 
 def simpoints_save_checkpoint_generator(
-    checkpoint_dir: Path, simpoint: SimPoint
+    checkpoint_dir: Path, simpoint: SimpointResource
 ):
     """
     A generator for taking multiple checkpoints for SimPoints. It will save the
@@ -167,3 +168,46 @@ def simpoints_save_checkpoint_generator(
             yield False
         else:
             yield True
+
+
+def looppoint_save_checkpoint_generator(
+    checkpoint_dir: Path,
+    looppoint: Looppoint,
+    update_relatives: bool = True,
+    exit_when_empty: bool = True,
+):
+    """
+    A generator for taking a checkpoint for LoopPoint. It will save the
+    checkpoints in the checkpoint_dir path with the Region id.
+    (i.e. "cpt.Region10) It only takes a checkpoint if the current PC Count
+    pair is a significant PC Count Pair. This is determined in the LoopPoint
+    module. The simulation loop continues after exiting this generator.
+    :param checkpoint_dir: where to save the checkpoints
+    :param loopoint: the looppoint object used in the configuration script
+    :param update_relative: if the generator should update the relative count
+    information in the output json file, then it should be True. It is default
+    as True.
+    :param exit_when_empty: if the generator should exit the simulation loop if
+    all PC paris have been discovered, then it should be True. It is default as
+    True.
+    """
+    if exit_when_empty:
+        total_pairs = len(looppoint.get_targets())
+    else:
+        total_pairs = -1
+        # it will never equal to 0 if exit_when_empty is false
+
+    while total_pairs != 0:
+        region = looppoint.get_current_region()
+        # if it is a significant PC Count pair, then the get_current_region()
+        # will return an integer greater than 0. By significant PC Count pair,
+        # it means the PC Count pair that indicates where to take the
+        # checkpoint at. This is determined in the LoopPoint module.
+        if region:
+            if update_relatives:
+                looppoint.update_relatives_counts()
+            m5.checkpoint((checkpoint_dir / f"cpt.Region{region}").as_posix())
+        total_pairs -= 1
+        yield False
+
+    yield True

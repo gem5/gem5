@@ -38,7 +38,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define primitiveTypes_h 1
 
 #include <stdint.h>
-
 #include "platform.h"
 
 #ifdef SOFTFLOAT_FAST_INT64

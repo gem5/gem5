@@ -1,3 +1,133 @@
+# Version 23.0.0.1
+
+**[HOTFIX]** Fixes compilation of `GCN3_X86` and `VEGA_X85`.
+
+This hotfix release:
+
+* Removes the use of 'std::random_shuffle'.
+This is a deprecated function in C++17 and has been removed in C++20.
+* Adds missing 'overrides' in "src/arch/amdgpu/vega/insts/instructions.hh".
+* Fixes Linux specific includes, allowing for compilation on non-linux systems.
+* Adds a missing include in "src/gpu-compute/dispatcher.cc".
+
+# Version 23.0
+
+This release has approximately 500 contributions from 50 unique contributors.
+Below we highlight key gem5 features and improvements in this release.
+
+## Significant API and user-facing changes
+
+### Major renaming of CPU stats
+
+The CPU stats have been renamed.
+See <https://gem5.atlassian.net/browse/GEM5-1304> for details.
+
+Now, each stage (fetch, execute, commit) have their own stat group.
+Stats that are shared between the different CPU model (O3, Minor, Simple) now have the exact same names.
+
+**Important:** Some stat names were misleading before this change.
+With this change, stats with the same names between different CPU models have the same meaning.
+
+### `fs.py` and `se.py` deprecated
+
+These scripts have not been well supported for many gem5 releases.
+With gem5 23.0, we have officially deprecated these scripts.
+They have been moved into the `deprecated` directory, **but they will be removed in a future release.**
+As a replacement, we strongly suggest using the gem5 standard library.
+See <https://www.gem5.org/documentation/gem5-stdlib/overview> for more information.
+
+### Renaming of `DEBUG` guard into `GEM5_DEBUG`
+
+Scons no longer defines the `DEBUG` guard in debug builds, so code making using of it should use `GEM5_DEBUG` instead.
+
+### Other API changes
+
+Also, this release:
+
+- Removes deprecated namespaces. Namespace names were updated a couple of releases ago. This release removes the old names.
+- Uses `MemberEventWrapper` in favor of `EventWrapper` for instance member functions.
+- Adds an extension mechanism to `Packet` and `Request`.
+- Sets x86 CPU vendor string to "HygoneGenuine" to better support GLIBC.
+
+## New features and improvements
+
+### Large improvements to gem5 resources and gem5 resources website
+
+We now have a new web portal for the gem5 resources: <https://resources.gem5.org>
+
+This web portal will allow users to browse the resources available (e.g., disk images, kernels, workloads, binaries, simpoints, etc.) to use out-of-the-box with the gem5 standard library.
+You can filter based on architecture, resource type, and compatible gem5 versions.
+
+For each resource, there are examples of how to use the resource and pointers to examples using the resource in the gem5 codebase.
+
+More information can be found on gem5's website: <https://www.gem5.org/documentation/general_docs/gem5_resources/>
+
+We will be expanding gem5 resources with more workloads and resources over the course of the next release.
+If you would like to contribute to gem5 resources by uploading your own workloads, disk images, etc., please create an issue on GitHub.
+
+In addition to the new gem5 Resources web portal, the gem5 Resources API has been significantly updated and improved.
+There are now much simpler functions for getting resources such as `obtain_resource(<name>)` that will download the resource by name and return a reference that can be used (e.g., as a binary in `set_se_workload` function on the board).
+As such the generic `Resouce` class has been deprecated and will be removed in a future release.
+
+Resources are now specialized for their particular category.
+For example, there is now a `BinaryResource` class which will return if a user specifies a binary resource when using the `obtain_resource` function.
+This allow for resource typing and for greater resource specialization.
+
+### Arm ISA improvements
+
+Architectural support for Armv9 [Scalable Matrix extension](https://developer.arm.com/documentation/ddi0616/latest) (FEAT_SME).
+The implementation employs a simple renaming scheme for the Za array register in the O3 CPU, so that writes to difference tiles in the register are considered a dependency and are therefore serialized.
+
+The following SVE and SIMD & FP extensions have also been implemented:
+* FEAT_F64MM
+* FEAT_F32MM
+* FEAT_DOTPROD
+* FEAT_I8MM
+
+And more generally:
+
+* FEAT_TLBIOS
+* FEAT_FLAGM
+* FEAT_FLAGM2
+* FEAT_RNG
+* FEAT_RNG_TRAP
+* FEAT_EVT
+
+### Support for DRAMSys
+
+gem5 can now use DRAMSys <https://github.com/tukl-msd/DRAMSys> as a DRAM backend.
+
+### RISC-V improvements
+
+This release:
+
+- Fully implements RISC-V scalar cryptography extensions.
+- Fully implement RISC-V rv32.
+- Implements PMP lock features.
+- Adds general RISC-V improvements to provide better stability.
+
+### Standard library improvements and new components
+
+This release:
+
+- Adds MESI_Three_Level component.
+- Supports ELFies and LoopPoint analysis output from Sniper.
+- Supports DRAMSys in the stdlib.
+
+## Bugfixes and other small improvements
+
+This release also:
+
+- Removes deprecated python libraries.
+- Adds a DDR5 model.
+- Adds AMD GPU MI200/gfx90a support.
+- Changes building so it no longer "duplicates sources" in build/ which improves support for some IDEs and code analysis. If you still need to duplicate sources you can use the `--duplicate-sources` option to `scons`.
+- Enables `--debug-activate=<object name>` to use debug trace for only a single SimObject (the opposite of `--debug-ignore`). See `--debug-help` for more information.
+- Adds support to exit the simulation loop based on Arm-PMU events.
+- Supports Python 3.11.
+- Adds the idea of a CpuCluster to gem5.
+
+
 # Version 22.1.0.0
 
 This release has 500 contributions from 48 unique contributors and marks our second major release of 2022.

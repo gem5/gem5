@@ -136,7 +136,7 @@ TEST(CircleBufTest, PointerWrapAround)
 TEST(CircleBufTest, ProduceConsumeEmpty)
 {
     CircleBuf<char> buf(8);
-    char foo[1];
+    char foo[1] = {'a'};
 
     // buf is empty to begin with.
     EXPECT_TRUE(buf.empty());

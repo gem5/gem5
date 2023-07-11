@@ -118,11 +118,11 @@ def createVegaTopology(options):
 
     # Populate CPU node properties
     node_prop = (
-        "cpu_cores_count %s\n" % options.num_cpus
+        f"cpu_cores_count {options.num_cpus}\n"
         + "simd_count 0\n"
         + "mem_banks_count 1\n"
         + "caches_count 0\n"
-        + "io_links_count %s\n" % io_links
+        + f"io_links_count {io_links}\n"
         + "cpu_core_id_base 0\n"
         + "simd_id_base 0\n"
         + "max_waves_per_simd 0\n"
@@ -200,8 +200,8 @@ def createVegaTopology(options):
         "cpu_cores_count 0\n"
         + "simd_count 256\n"
         + "mem_banks_count 1\n"
-        + "caches_count %s\n" % caches
-        + "io_links_count %s\n" % io_links
+        + f"caches_count {caches}\n"
+        + f"io_links_count {io_links}\n"
         + "cpu_core_id_base 0\n"
         + "simd_id_base 2147487744\n"
         + "max_waves_per_simd 10\n"
@@ -212,11 +212,11 @@ def createVegaTopology(options):
         + "simd_arrays_per_engine 1\n"
         + "cu_per_simd_array 16\n"
         + "simd_per_cu 4\n"
-        + "max_slots_scratch_cu %s\n" % cu_scratch
+        + f"max_slots_scratch_cu {cu_scratch}\n"
         + "vendor_id 4098\n"
         + "device_id 26720\n"
         + "location_id 1024\n"
-        + "drm_render_minor %s\n" % drm_num
+        + f"drm_render_minor {drm_num}\n"
         + "hive_id 0\n"
         + "num_sdma_engines 2\n"
         + "num_sdma_xgmi_engines 0\n"
@@ -313,11 +313,11 @@ def createFijiTopology(options):
 
     # Populate CPU node properties
     node_prop = (
-        "cpu_cores_count %s\n" % options.num_cpus
+        f"cpu_cores_count {options.num_cpus}\n"
         + "simd_count 0\n"
         + "mem_banks_count 1\n"
         + "caches_count 0\n"
-        + "io_links_count %s\n" % io_links
+        + f"io_links_count {io_links}\n"
         + "cpu_core_id_base 0\n"
         + "simd_id_base 0\n"
         + "max_waves_per_simd 0\n"
@@ -392,33 +392,30 @@ def createFijiTopology(options):
     # Populate GPU node properties
     node_prop = (
         "cpu_cores_count 0\n"
-        + "simd_count %s\n"
-        % (options.num_compute_units * options.simds_per_cu)
+        + f"simd_count {options.num_compute_units * options.simds_per_cu}\n"
         + "mem_banks_count 1\n"
-        + "caches_count %s\n" % caches
-        + "io_links_count %s\n" % io_links
+        + f"caches_count {caches}\n"
+        + f"io_links_count {io_links}\n"
         + "cpu_core_id_base 0\n"
         + "simd_id_base 2147487744\n"
-        + "max_waves_per_simd %s\n" % options.wfs_per_simd
-        + "lds_size_in_kb %s\n" % int(options.lds_size / 1024)
+        + f"max_waves_per_simd {options.wfs_per_simd}\n"
+        + f"lds_size_in_kb {int(options.lds_size / 1024)}\n"
         + "gds_size_in_kb 0\n"
-        + "wave_front_size %s\n" % options.wf_size
+        + f"wave_front_size {options.wf_size}\n"
         + "array_count 4\n"
-        + "simd_arrays_per_engine %s\n" % options.sa_per_complex
-        + "cu_per_simd_array %s\n" % options.cu_per_sa
-        + "simd_per_cu %s\n" % options.simds_per_cu
+        + f"simd_arrays_per_engine {options.sa_per_complex}\n"
+        + f"cu_per_simd_array {options.cu_per_sa}\n"
+        + f"simd_per_cu {options.simds_per_cu}\n"
         + "max_slots_scratch_cu 32\n"
         + "vendor_id 4098\n"
         + "device_id 29440\n"
         + "location_id 512\n"
-        + "drm_render_minor %s\n" % drm_num
-        + "max_engine_clk_fcompute %s\n"
-        % int(toFrequency(options.gpu_clock) / 1e6)
+        + f"drm_render_minor {drm_num}\n"
+        + f"max_engine_clk_fcompute {int(toFrequency(options.gpu_clock) / 1000000.0)}\n"
         + "local_mem_size 4294967296\n"
         + "fw_version 730\n"
         + "capability 4736\n"
-        + "max_engine_clk_ccompute %s\n"
-        % int(toFrequency(options.CPUClock) / 1e6)
+        + f"max_engine_clk_ccompute {int(toFrequency(options.CPUClock) / 1000000.0)}\n"
     )
 
     file_append((node_dir, "properties"), node_prop)
@@ -484,34 +481,31 @@ def createCarrizoTopology(options):
     # populate global node properties
     # NOTE: SIMD count triggers a valid GPU agent creation
     node_prop = (
-        "cpu_cores_count %s\n" % options.num_cpus
-        + "simd_count %s\n"
-        % (options.num_compute_units * options.simds_per_cu)
-        + "mem_banks_count %s\n" % mem_banks_cnt
+        f"cpu_cores_count {options.num_cpus}\n"
+        + f"simd_count {options.num_compute_units * options.simds_per_cu}\n"
+        + f"mem_banks_count {mem_banks_cnt}\n"
         + "caches_count 0\n"
         + "io_links_count 0\n"
         + "cpu_core_id_base 16\n"
         + "simd_id_base 2147483648\n"
-        + "max_waves_per_simd %s\n" % options.wfs_per_simd
-        + "lds_size_in_kb %s\n" % int(options.lds_size / 1024)
+        + f"max_waves_per_simd {options.wfs_per_simd}\n"
+        + f"lds_size_in_kb {int(options.lds_size / 1024)}\n"
         + "gds_size_in_kb 0\n"
-        + "wave_front_size %s\n" % options.wf_size
+        + f"wave_front_size {options.wf_size}\n"
         + "array_count 1\n"
-        + "simd_arrays_per_engine %s\n" % options.sa_per_complex
-        + "cu_per_simd_array %s\n" % options.cu_per_sa
-        + "simd_per_cu %s\n" % options.simds_per_cu
+        + f"simd_arrays_per_engine {options.sa_per_complex}\n"
+        + f"cu_per_simd_array {options.cu_per_sa}\n"
+        + f"simd_per_cu {options.simds_per_cu}\n"
         + "max_slots_scratch_cu 32\n"
         + "vendor_id 4098\n"
-        + "device_id %s\n" % device_id
+        + f"device_id {device_id}\n"
         + "location_id 8\n"
-        + "drm_render_minor %s\n" % drm_num
-        + "max_engine_clk_fcompute %s\n"
-        % int(toFrequency(options.gpu_clock) / 1e6)
+        + f"drm_render_minor {drm_num}\n"
+        + f"max_engine_clk_fcompute {int(toFrequency(options.gpu_clock) / 1000000.0)}\n"
         + "local_mem_size 0\n"
         + "fw_version 699\n"
         + "capability 4738\n"
-        + "max_engine_clk_ccompute %s\n"
-        % int(toFrequency(options.CPUClock) / 1e6)
+        + f"max_engine_clk_ccompute {int(toFrequency(options.CPUClock) / 1000000.0)}\n"
     )
 
     file_append((node_dir, "properties"), node_prop)

@@ -65,7 +65,7 @@ namespace o3
 {
 
 LSQ::DcachePort::DcachePort(LSQ *_lsq, CPU *_cpu) :
-    RequestPort(_cpu->name() + ".dcache_port", _cpu), lsq(_lsq), cpu(_cpu)
+    RequestPort(_cpu->name() + ".dcache_port"), lsq(_lsq), cpu(_cpu)
 {}
 
 LSQ::LSQ(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params)

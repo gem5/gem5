@@ -49,6 +49,10 @@ class ExitEvent(Enum):
     )
     SIMPOINT_BEGIN = "simpoint begins"
     MAX_INSTS = "number of instructions reached"
+    PERF_COUNTER_ENABLE = "performance counter enabled"
+    PERF_COUNTER_DISABLE = "performance counter disabled"
+    PERF_COUNTER_RESET = "performance counter reset"
+    PERF_COUNTER_INTERRUPT = "performance counter interrupt"
 
     @classmethod
     def translate_exit_status(cls, exit_string: str) -> "ExitEvent":
@@ -90,6 +94,14 @@ class ExitEvent(Enum):
             return ExitEvent.SIMPOINT_BEGIN
         elif exit_string == "a thread reached the max instruction count":
             return ExitEvent.MAX_INSTS
+        elif exit_string == "performance counter enabled":
+            return ExitEvent.PERF_COUNTER_ENABLE
+        elif exit_string == "performance counter disabled":
+            return ExitEvent.PERF_COUNTER_DISABLE
+        elif exit_string == "performance counter reset":
+            return ExitEvent.PERF_COUNTER_RESET
+        elif exit_string == "performance counter interrupt":
+            return ExitEvent.PERF_COUNTER_INTERRUPT
         elif exit_string.endswith("will terminate the simulation.\n"):
             # This is for the traffic generator exit event
             return ExitEvent.EXIT
@@ -97,5 +109,5 @@ class ExitEvent(Enum):
             # This is for the gups generator exit event
             return ExitEvent.EXIT
         raise NotImplementedError(
-            "Exit event '{}' not implemented".format(exit_string)
+            f"Exit event '{exit_string}' not implemented"
         )

@@ -2,6 +2,7 @@
 
 # Copyright (c) 2021 Huawei International
 # Copyright (c) 2022 EXAscale Performance SYStems (EXAPSYS)
+# Copyright (c) 2023 Google LLC
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,12 +30,12 @@
 
 Import('*')
 
-SimObject('HiFive.py', sim_objects=['HiFive', 'GenericRiscvPciHost'],
+SimObject('HiFive.py', sim_objects=['HiFiveBase', 'GenericRiscvPciHost'],
           tags='riscv isa')
 SimObject('LupV.py', sim_objects=['LupV'], tags='riscv isa')
 SimObject('Clint.py', sim_objects=['Clint'], tags='riscv isa')
 SimObject('PlicDevice.py', sim_objects=['PlicIntDevice'], tags='riscv isa')
-SimObject('Plic.py', sim_objects=['Plic'], tags='riscv isa')
+SimObject('Plic.py', sim_objects=['PlicBase', 'Plic'], tags='riscv isa')
 SimObject('RTC.py', sim_objects=['RiscvRTC'], tags='riscv isa')
 SimObject('RiscvVirtIOMMIO.py', sim_objects=['RiscvMmioVirtIO'],
     tags='riscv isa')

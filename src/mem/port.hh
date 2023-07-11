@@ -86,8 +86,13 @@ class RequestPort: public Port, public AtomicRequestProtocol,
     SimObject &owner;
 
   public:
+    [[deprecated("RequestPort ownership is deprecated. "
+                 "Owner should now be registered in derived classes.")]]
     RequestPort(const std::string& name, SimObject* _owner,
-               PortID id=InvalidPortID);
+                PortID id=InvalidPortID);
+
+    RequestPort(const std::string& name, PortID id=InvalidPortID);
+
     virtual ~RequestPort();
 
     /**
@@ -160,6 +165,21 @@ class RequestPort: public Port, public AtomicRequestProtocol,
      * @param pkt Packet to send.
      */
     void sendFunctional(PacketPtr pkt) const;
+
+    /**
+     * Send a request for a back door to a range of memory.
+     *
+     * @param req An object which describes what back door is being requested.
+     * @param backdoor Can be set to a back door pointer by the target to let
+     *        caller have direct access to the requested range. The original
+     *        caller should initialize this pointer to nullptr. If a receiver
+     *        does not want to provide a back door, they should leave this
+     *        value. If an intermediary wants to support a back door across it,
+     *        it should pass this pointer through, or if not, return without
+     *        passing the request further downstream.
+     */
+    void sendMemBackdoorReq(const MemBackdoorReq &req,
+            MemBackdoorPtr &backdoor);
 
   public:
     /* The timing protocol. */
@@ -251,9 +271,7 @@ class RequestPort: public Port, public AtomicRequestProtocol,
 class [[deprecated]] MasterPort : public RequestPort
 {
   public:
-    MasterPort(const std::string& name, SimObject* _owner,
-               PortID id=InvalidPortID) : RequestPort(name, _owner, id)
-               {}
+    using RequestPort::RequestPort;
 };
 
 /**
@@ -279,8 +297,13 @@ class ResponsePort : public Port, public AtomicResponseProtocol,
     SimObject& owner;
 
   public:
+    [[deprecated("ResponsePort ownership is deprecated. "
+                 "Owner should now be registered in derived classes.")]]
     ResponsePort(const std::string& name, SimObject* _owner,
-              PortID id=InvalidPortID);
+                 PortID id=InvalidPortID);
+
+    ResponsePort(const std::string& name, PortID id=InvalidPortID);
+
     virtual ~ResponsePort();
 
     /**
@@ -438,6 +461,8 @@ class ResponsePort : public Port, public AtomicResponseProtocol,
      * Default implementations.
      */
     Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor) override;
+    void recvMemBackdoorReq(const MemBackdoorReq &req,
+            MemBackdoorPtr &backdoor) override;
 
     bool
     tryTiming(PacketPtr pkt) override
@@ -455,9 +480,7 @@ class ResponsePort : public Port, public AtomicResponseProtocol,
 class [[deprecated]] SlavePort : public ResponsePort
 {
   public:
-    SlavePort(const std::string& name, SimObject* _owner,
-              PortID id=InvalidPortID) : ResponsePort(name, _owner, id)
-              {}
+    using ResponsePort::ResponsePort;
 };
 
 inline Tick
@@ -486,6 +509,18 @@ RequestPort::sendFunctional(PacketPtr pkt) const
 {
     try {
         return FunctionalRequestProtocol::send(_responsePort, pkt);
+    } catch (UnboundPortException) {
+        reportUnbound();
+    }
+}
+
+inline void
+RequestPort::sendMemBackdoorReq(const MemBackdoorReq &req,
+        MemBackdoorPtr &backdoor)
+{
+    try {
+        return FunctionalRequestProtocol::sendMemBackdoorReq(
+                _responsePort, req, backdoor);
     } catch (UnboundPortException) {
         reportUnbound();
     }

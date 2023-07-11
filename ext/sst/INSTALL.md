@@ -61,8 +61,11 @@ echo "export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$SST_CORE_HOME/lib/pkgconfig/" >> 
 At the root of gem5 folder,
 
 ```sh
-scons build/RISCV/libgem5_opt.so -j $(nproc) --without-tcmalloc
+scons build/RISCV/libgem5_opt.so -j $(nproc) --without-tcmalloc --duplicate-sources
 ```
+
+**Note:** `--without-tcmalloc` is required to avoid a conflict with SST's malloc.
+`--duplicate-sources` is required as the compilation of SST depends on sources to be present in the "build" directory.
 
 ### Compiling the SST integration
 

@@ -284,7 +284,7 @@ def dot_gen_colour(simNode, isPort=False):
 
 
 def dot_rgb_to_html(r, g, b):
-    return "#%.2x%.2x%.2x" % (int(r), int(g), int(b))
+    return f"#{int(r):02x}{int(g):02x}{int(b):02x}"
 
 
 # We need to create all of the clock domains. We abuse the alpha channel to get

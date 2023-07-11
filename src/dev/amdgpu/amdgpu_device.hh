@@ -36,11 +36,13 @@
 
 #include "base/bitunion.hh"
 #include "dev/amdgpu/amdgpu_defines.hh"
+#include "dev/amdgpu/amdgpu_nbio.hh"
 #include "dev/amdgpu/amdgpu_vm.hh"
 #include "dev/amdgpu/memory_manager.hh"
 #include "dev/amdgpu/mmio_reader.hh"
 #include "dev/io_device.hh"
 #include "dev/pci/device.hh"
+#include "enums/GfxVersion.hh"
 #include "params/AMDGPUDevice.hh"
 
 namespace gem5
@@ -94,6 +96,7 @@ class AMDGPUDevice : public PciDevice
     AddrRange romRange;
     bool isROM(Addr addr) const { return romRange.contains(addr); }
     void readROM(PacketPtr pkt);
+    void writeROM(PacketPtr pkt);
 
     std::array<uint8_t, ROM_SIZE> rom;
 
@@ -105,14 +108,22 @@ class AMDGPUDevice : public PciDevice
     /**
      * Blocks of the GPU
      */
+    AMDGPUNbio nbio;
     AMDGPUMemoryManager *gpuMemMgr;
     AMDGPUInterruptHandler *deviceIH;
     AMDGPUVM gpuvm;
-    SDMAEngine *sdma0;
-    SDMAEngine *sdma1;
-    std::unordered_map<uint32_t, SDMAEngine *> sdmaEngs;
     PM4PacketProcessor *pm4PktProc;
     GPUCommandProcessor *cp;
+
+    // SDMAs mapped by doorbell offset
+    std::unordered_map<uint32_t, SDMAEngine *> sdmaEngs;
+    // SDMAs mapped by ID
+    std::unordered_map<uint32_t, SDMAEngine *> sdmaIds;
+    // SDMA ID to MMIO range
+    std::unordered_map<uint32_t, AddrRange> sdmaMmios;
+    // SDMA ID to function
+    typedef void (SDMAEngine::*sdmaFuncPtr)(uint32_t);
+    std::unordered_map<uint32_t, sdmaFuncPtr> sdmaFunc;
 
     /**
      * Initial checkpoint support variables.
@@ -134,6 +145,9 @@ class AMDGPUDevice : public PciDevice
      * Backing store for GPU memory / framebuffer / VRAM
      */
     memory::PhysicalMemory deviceMem;
+
+    /* Device information */
+    GfxVersion gfx_version = GfxVersion::gfx900;
 
   public:
     AMDGPUDevice(const AMDGPUDeviceParams &p);
@@ -177,6 +191,7 @@ class AMDGPUDevice : public PciDevice
      * Register value getter/setter. Used by other GPU blocks to change
      * values from incoming driver/user packets.
      */
+    bool haveRegVal(uint32_t addr);
     uint32_t getRegVal(uint32_t addr);
     void setRegVal(uint32_t addr, uint32_t value);
 
@@ -195,6 +210,9 @@ class AMDGPUDevice : public PciDevice
     uint16_t getVMID(Addr doorbell) { return doorbellVMIDMap[doorbell]; }
     std::unordered_map<uint16_t, std::set<int>>& getUsedVMIDs();
     void insertQId(uint16_t vmid, int id);
+
+    /* Device information */
+    GfxVersion getGfxVersion() const { return gfx_version; }
 };
 
 } // namespace gem5

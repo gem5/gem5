@@ -56,12 +56,12 @@ dramsim_path = os.path.join(Dir('#').abspath, 'ext/dramsim3/DRAMsim3/')
 
 if thermal:
     superlu_path = os.path.join(dramsim_path, 'ext/SuperLU_MT_3.1/lib')
-    env.Prepend(CPPPATH=Dir('.'))
+    env.Prepend(CPPPATH=Dir('.').srcnode())
     env.Append(LIBS=['dramsim3', 'superlu_mt_OPENMP', 'm', 'f77blas',
                       'atlas', 'gomp'],
                 LIBPATH=[dramsim_path, superlu_path])
 else:
-    env.Prepend(CPPPATH=Dir('.'))
+    env.Prepend(CPPPATH=Dir('.').srcnode())
     # a littel hacky but can get a shared library working
     env.Append(LIBS=['dramsim3', 'gomp'],
                 LIBPATH=[dramsim_path],  # compile-time lookup

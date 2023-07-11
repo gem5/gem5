@@ -28,6 +28,7 @@
 Import('*')
 
 Source('amo.cc', tags='riscv isa')
+Source('bs.cc', tags='riscv isa')
 Source('compressed.cc', tags='riscv isa')
 Source('mem.cc', tags='riscv isa')
 Source('standard.cc', tags='riscv isa')

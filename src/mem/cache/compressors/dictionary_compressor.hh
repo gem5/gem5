@@ -61,7 +61,6 @@ namespace gem5
 
 struct BaseDictionaryCompressorParams;
 
-GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
 

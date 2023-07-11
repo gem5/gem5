@@ -529,12 +529,12 @@ class Inst(IdedObj):
 
     def table_line(self):
         if self.nextAddr is not None:
-            addrStr = "0x%x->0x%x" % (self.addr, self.nextAddr)
+            addrStr = f"0x{self.addr:x}->0x{self.nextAddr:x}"
         else:
-            addrStr = "0x%x" % self.addr
+            addrStr = f"0x{self.addr:x}"
         ret = [addrStr, self.disassembly]
         for name, value in self.pairs.items():
-            ret.append("%s=%s" % (name, str(value)))
+            ret.append(f"{name}={str(value)}")
         return ret
 
 
@@ -547,7 +547,7 @@ class InstFault(IdedObj):
         self.addr = addr
 
     def table_line(self):
-        ret = ["0x%x" % self.addr, self.fault]
+        ret = [f"0x{self.addr:x}", self.fault]
         for name, value in self.pairs:
             ret.append("%s=%s", name, str(value))
         return ret
@@ -563,7 +563,7 @@ class Line(IdedObj):
         self.size = size
 
     def table_line(self):
-        ret = ["0x%x/0x%x" % (self.vaddr, self.paddr), "%d" % self.size]
+        ret = [f"0x{self.vaddr:x}/0x{self.paddr:x}", "%d" % self.size]
         for name, value in self.pairs:
             ret.append("%s=%s", name, str(value))
         return ret
@@ -578,7 +578,7 @@ class LineFault(IdedObj):
         self.fault = fault
 
     def table_line(self):
-        ret = ["0x%x" % self.vaddr, self.fault]
+        ret = [f"0x{self.vaddr:x}", self.fault]
         for name, value in self.pairs:
             ret.append("%s=%s", name, str(value))
         return ret

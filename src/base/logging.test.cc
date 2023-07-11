@@ -553,6 +553,9 @@ TEST(LoggingDeathTest, gem5Assert)
     gem5_assert(true, "message\n");
     ASSERT_DEATH(gem5_assert(false, "message\n"), ::testing::HasSubstr(
         "panic: assert(false) failed: message\nMemory Usage:"));
+    ASSERT_DEATH(gem5_assert(false, "%s, %s!\n", "Hello", "World"),
+        ::testing::HasSubstr(
+        "panic: assert(false) failed: Hello, World!\nMemory Usage:"));
     gem5_assert(true);
     ASSERT_DEATH(gem5_assert(false), ::testing::HasSubstr(
         "panic: assert(false) failed\nMemory Usage:"));

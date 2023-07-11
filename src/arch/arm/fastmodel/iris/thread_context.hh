@@ -31,6 +31,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 
 #include "arch/arm/fastmodel/iris/memory_spaces.hh"
@@ -133,6 +134,7 @@ class ThreadContext : public gem5::ThreadContext
     using BpInfoIt = BpInfoMap::iterator;
 
     BpInfoMap bps;
+    std::optional<Addr> bpAddr;
 
     BpInfoIt getOrAllocBp(Addr pc);
 

@@ -523,7 +523,7 @@ FetchUnit::FetchBufDesc::checkWaveReleaseBuf()
             wavefront->wfSlotId, wavefront->wfDynId, cur_wave_pc,
             wavefront->pc());
 
-#ifdef DEBUG
+#ifdef GEM5_DEBUG
     int idx = 0;
     for (const auto &buf_pc : bufferedPCs) {
         DPRINTF(GPUFetch, "PC[%d] = %#x\n", idx, buf_pc.first);

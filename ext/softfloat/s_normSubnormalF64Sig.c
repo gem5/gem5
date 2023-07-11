@@ -35,9 +35,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 =============================================================================*/
 
 #include <stdint.h>
-
-#include "internals.h"
 #include "platform.h"
+#include "internals.h"
 
 struct exp16_sig64 softfloat_normSubnormalF64Sig( uint_fast64_t sig )
 {

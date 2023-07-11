@@ -36,7 +36,7 @@ class StaticCastAST(ExprAST):
         self.type_modifier = type_modifier
 
     def __repr__(self):
-        return "[StaticCastAST: %r]" % self.expr_ast
+        return f"[StaticCastAST: {self.expr_ast!r}]"
 
     def generate(self, code, **kwargs):
         actual_type, ecode = self.expr_ast.inline(True)

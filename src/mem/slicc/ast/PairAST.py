@@ -34,4 +34,4 @@ class PairAST(AST):
         self.value = value
 
     def __repr__(self):
-        return "[%s=%s]" % (self.key, self.value)
+        return f"[{self.key}={self.value}]"

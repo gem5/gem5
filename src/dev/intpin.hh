@@ -28,93 +28,70 @@
 #ifndef __DEV_INTPIN_HH__
 #define __DEV_INTPIN_HH__
 
-#include "sim/port.hh"
+#include <type_traits>
+
+#include "sim/signal.hh"
 
 namespace gem5
 {
 
-class IntSourcePinBase;
-
-class IntSinkPinBase : public Port
+class IntSinkPinBase : public SignalSinkPort<bool>
 {
-  protected:
-    friend IntSourcePinBase;
+  private:
+    const int _number = 0;
 
-    IntSourcePinBase *source = nullptr;
+  public:
 
-    int _number = 0;
-    bool _state = false;
+    template <class Device>
+    IntSinkPinBase(const std::string &_name, PortID _id, Device *dev,
+            int num) :
+        SignalSinkPort(_name, _id), _number(num)
+    {
+        onChange([dev, num](const bool &new_val) {
+            if (new_val)
+                dev->raiseInterruptPin(num);
+            else
+                dev->lowerInterruptPin(num);
+        });
+    }
+
+    template <class Device>
+    IntSinkPinBase(const std::string &_name, PortID _id, Device *dev) :
+        IntSinkPinBase(_name, _id, dev, _id)
+    {}
 
     IntSinkPinBase(const std::string &_name, PortID _id, int num) :
-        Port(_name, _id), _number(num)
+        SignalSinkPort(_name, _id), _number(num)
     {}
 
-    virtual void raiseOnDevice() = 0;
-    virtual void lowerOnDevice() = 0;
+    IntSinkPinBase(const std::string &_name, PortID _id) :
+        IntSinkPinBase(_name, _id, _id)
+    {}
 
-    void
-    raise()
-    {
-        _state = true;
-        raiseOnDevice();
-    }
-
-    void
-    lower()
-    {
-        _state = false;
-        lowerOnDevice();
-    }
-
-  public:
     int number() { return _number; }
-    bool state() { return _state; }
-
-    void bind(Port &peer) override;
-    void unbind() override;
 };
 
-template <class Device>
-class IntSinkPin : public IntSinkPinBase
+template <class Compat>
+using IntSinkPin = IntSinkPinBase;
+
+class IntSourcePinBase : public SignalSourcePort<bool>
 {
-  private:
-    Device *device = nullptr;
-
-    void raiseOnDevice() override { device->raiseInterruptPin(number()); }
-    void lowerOnDevice() override { device->lowerInterruptPin(number()); }
-
   public:
-    IntSinkPin(const std::string &_name, PortID _id, Device *dev, int num) :
-        IntSinkPinBase(_name, _id, num), device(dev) {}
-    IntSinkPin(const std::string &_name, PortID _id, Device *dev) :
-        IntSinkPin(_name, _id, dev, _id) {}
-};
-
-class IntSourcePinBase : public Port
-{
-  private:
-    IntSinkPinBase *sink = nullptr;
-
-  public:
-    IntSourcePinBase(const std::string &_name, PortID _id):
-        Port(_name, _id)
+    template <class Device>
+    IntSourcePinBase(const std::string &_name, PortID _id, Device *owner) :
+        SignalSourcePort(_name, _id)
     {}
 
-    void raise() { sink->raise(); }
-    void lower() { sink->lower(); }
-
-    void bind(Port &peer) override;
-    void unbind() override;
-};
-
-template <class Device>
-class IntSourcePin : public IntSourcePinBase
-{
-  public:
-    IntSourcePin(const std::string &_name, PortID _id, Device *owner) :
-        IntSourcePinBase(_name, _id)
+    IntSourcePinBase(const std::string &_name, PortID _id) :
+        SignalSourcePort(_name, _id)
     {}
+
+    void raise() { set(true); }
+    void lower() { set(false); }
 };
+
+template <class Compat>
+using IntSourcePin = IntSourcePinBase;
 
 } // namespace gem5
 

@@ -63,7 +63,7 @@ def install_style_hooks(env):
             ).strip("\n")
         )
     except Exception as e:
-        print("Warning: Failed to find git repo directory: %s" % e)
+        print(f"Warning: Failed to find git repo directory: {e}")
         return
 
     git_hooks = gitdir.Dir("hooks")

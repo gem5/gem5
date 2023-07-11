@@ -87,7 +87,7 @@ namespace gem5
 )
 
 if enum.wrapper_is_struct:
-    code("const char *${wrapper_name}::${name}Strings" "[Num_${name}] =")
+    code("const char *${wrapper_name}::${name}Strings[Num_${name}] =")
 else:
     if enum.is_class:
         code(
@@ -97,8 +97,7 @@ const char *${name}Strings[static_cast<int>(${name}::Num_${name})] =
         )
     else:
         code(
-            """GEM5_DEPRECATED_NAMESPACE(Enums, enums);
-namespace enums
+            """namespace enums
 {"""
         )
         code.indent(1)

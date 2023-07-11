@@ -92,6 +92,8 @@ class GPUDispatcher : public SimObject
     std::queue<int> doneIds;
     // is there a kernel in execution?
     bool dispatchActive;
+    // Enable exiting sim loop after each kernel completion
+    bool kernelExitEvents;
 
   protected:
     struct GPUDispatcherStats : public statistics::Group

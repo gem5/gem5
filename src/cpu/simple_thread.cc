@@ -75,6 +75,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
           {*_isa->regClasses().at(VecRegClass)},
           {*_isa->regClasses().at(VecElemClass)},
           {*_isa->regClasses().at(VecPredRegClass)},
+          {*_isa->regClasses().at(MatRegClass)},
           {*_isa->regClasses().at(CCRegClass)}
       }},
       isa(_isa),

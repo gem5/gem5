@@ -198,7 +198,6 @@ class MinorFUPool : public SimObject
     { }
 };
 
-GEM5_DEPRECATED_NAMESPACE(Minor, minor);
 namespace minor
 {
 

@@ -39,6 +39,12 @@ Test file for the hdf5 stats.
 It just runs an SE simulation with the hdf5 stats and checks that the
 simulation succeeds and the stats file exists.
 No specific checks on the stats are performed.
+
+**Important Note**: This test has a major design flaw, noted here:
+https://gem5.atlassian.net/browse/GEM5-1073.
+It will not run if the build/ARM/gem5.opt has not been built. As this is not
+built prior to this test being processed during the Weekly run, this test is
+not run.
 """
 import re
 import os
@@ -54,6 +60,12 @@ def have_hdf5():
     have_hdf5_file = os.path.join(
         config.base_dir, "build", constants.arm_tag, "config", "have_hdf5.hh"
     )
+    if not os.path.exists(have_hdf5_file):
+        # This will most likely happen if the file has yet to have been
+        # compiled. It should be noted that this case is likely. This is not
+        # a good test as checking if hdf5 is available requires compilation
+        # which is not assumed to be true at this stage in the test.
+        return False
     with open(have_hdf5_file) as f:
         content = f.read()
 

@@ -61,7 +61,7 @@ SerialLinkResponsePort(const std::string& _name,
                                          Cycles _delay, int _resp_limit,
                                          const std::vector<AddrRange>&
                                          _ranges)
-    : ResponsePort(_name, &_serial_link), serial_link(_serial_link),
+    : ResponsePort(_name), serial_link(_serial_link),
       mem_side_port(_mem_side_port), delay(_delay),
       ranges(_ranges.begin(), _ranges.end()),
       outstandingResponses(0), retryReq(false),
@@ -75,7 +75,7 @@ SerialLink::SerialLinkRequestPort::SerialLinkRequestPort(const std::string&
                                            SerialLinkResponsePort&
                                            _cpu_side_port, Cycles _delay,
                                            int _req_limit)
-    : RequestPort(_name, &_serial_link), serial_link(_serial_link),
+    : RequestPort(_name), serial_link(_serial_link),
       cpu_side_port(_cpu_side_port), delay(_delay), reqQueueLimit(_req_limit),
       sendEvent([this]{ trySendTiming(); }, _name)
 {

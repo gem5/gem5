@@ -35,7 +35,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
 {
 

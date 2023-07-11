@@ -98,7 +98,6 @@ struct TestABI_TcInit
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(GuestABI, guest_abi);
 namespace guest_abi
 {
 

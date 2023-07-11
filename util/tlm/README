@@ -145,10 +145,9 @@ C++-configured gem5 using normal gem5
 > ../../build/ARM/gem5.opt ../../configs/example/fs.py               \
   --tlm-memory=transactor --cpu-type=TimingSimpleCPU --num-cpu=1     \
   --mem-type=SimpleMemory --mem-size=512MB --mem-channels=1 --caches \
-  --l2cache --machine-type=VExpress_EMM                              \
-  --dtb-filename=vexpress.aarch32.ll_20131205.0-gem5.1cpu.dtb        \
-  --kernel=vmlinux.aarch32.ll_20131205.0-gem5                        \
-  --disk-image=linux-aarch32-ael.img
+  --l2cache --machine-type=VExpress_GEM5_Foundation                  \
+  --kernel=vmlinux.arm64                                             \
+  --disk-image=ubuntu-18.04-arm64-docker.img
 
 The message "fatal: Can't find port handler type 'tlm_slave'" is okay.
 The configuration will be stored in the m5out/ directory

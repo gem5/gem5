@@ -37,8 +37,8 @@ namespace fastmodel
 {
 
 ResetControllerExample::CorePins::CorePins(const std::string &module_name)
-    : reset(module_name + ".reset", 0, this),
-      halt(module_name + ".halt", 0, this)
+    : reset(module_name + ".reset"),
+      halt(module_name + ".halt")
 {}
 
 ResetControllerExample::Registers::Registers(
@@ -65,22 +65,14 @@ ResetControllerExample::Registers::Registers(
           {
               panic_if(!pins->reset.isConnected(),
                        "%s is not connected.", pins->reset.name());
-
-              if (val)
-                  pins->reset.raise();
-              else
-                  pins->reset.lower();
+              pins->reset.set(val);
           });
       halt.writer(
           [this] (auto &reg, auto val)
           {
               panic_if(!pins->halt.isConnected(),
                        "%s is not connected.", pins->halt.name());
-
-              if (val)
-                  pins->halt.raise();
-              else
-                  pins->halt.lower();
+              pins->halt.set(val);
           });
 
       addRegisters({

@@ -53,6 +53,14 @@ FunctionalRequestProtocol::send(
     return peer->recvFunctional(pkt);
 }
 
+void
+FunctionalRequestProtocol::sendMemBackdoorReq(
+        FunctionalResponseProtocol *peer,
+        const MemBackdoorReq &req, MemBackdoorPtr &backdoor)
+{
+    return peer->recvMemBackdoorReq(req, backdoor);
+}
+
 /* The response protocol. */
 
 void

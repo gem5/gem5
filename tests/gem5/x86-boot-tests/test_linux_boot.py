@@ -54,9 +54,7 @@ def test_boot(
     if to_tick != None:
         name += "_to-tick"
         exit_regex = re.compile(
-            "Exiting @ tick {} because simulate\(\) limit reached".format(
-                str(to_tick)
-            )
+            f"Exiting @ tick {str(to_tick)} because simulate\\(\\) limit reached"
         )
         verifiers.append(verifier.MatchRegex(exit_regex))
         additional_config_args.append("--tick-exit")

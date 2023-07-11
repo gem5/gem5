@@ -35,7 +35,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
 
@@ -91,6 +90,10 @@ CortexR52::getPort(const std::string &if_name, PortID idx)
     if (if_name == "ppi") {
         // Since PPIs are indexed both by core and by number, modify the name
         // to hold the core number.
+        return evs->gem5_getPort(csprintf("%s_%d", if_name, num), idx);
+    } else if (if_name == "standbywfi") {
+        // Since standbywfi is indexed by fanout, modify the name to hold the
+        // core number.
         return evs->gem5_getPort(csprintf("%s_%d", if_name, num), idx);
     } else if (if_name == "amba" || if_name == "llpp" || if_name == "flash" ||
                if_name == "core_reset" || if_name == "poweron_reset" ||

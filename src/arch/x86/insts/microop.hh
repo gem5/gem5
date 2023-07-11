@@ -48,7 +48,6 @@ namespace gem5
 namespace X86ISA
 {
 
-GEM5_DEPRECATED_NAMESPACE(ConditionTests, condition_tests);
 namespace condition_tests
 {
 

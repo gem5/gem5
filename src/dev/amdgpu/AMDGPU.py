@@ -46,6 +46,9 @@ class AMDGPUDevice(PciDevice):
     cxx_header = "dev/amdgpu/amdgpu_device.hh"
     cxx_class = "gem5::AMDGPUDevice"
 
+    # Human readable name for device ID
+    device_name = Param.String("Vega10", "Codename for device")
+
     # IDs for AMD Vega 10
     VendorID = 0x1002
     DeviceID = 0x6863
@@ -73,14 +76,12 @@ class AMDGPUDevice(PciDevice):
     rom_binary = Param.String("ROM binary dumped from hardware")
     trace_file = Param.String("MMIO trace collected on hardware")
     checkpoint_before_mmios = Param.Bool(
-        False, "Take a checkpoint before the" " device begins sending MMIOs"
+        False, "Take a checkpoint before the device begins sending MMIOs"
     )
 
-    # Specific to Vega10: Vega10 has two SDMA engines these do not have any
-    # assigned function and are referenced by ID so they are given the generic
-    # names sdma0, sdma1, ... sdmaN.
-    sdma0 = Param.SDMAEngine("SDMA Engine 0")
-    sdma1 = Param.SDMAEngine("SDMA Engine 1")
+    # SDMA engines. There are a different number depending on device,
+    # therefore an array is used.
+    sdmas = VectorParam.SDMAEngine("All SDMA Engines")
 
     # The cp is needed here to handle certain packets the device may receive.
     # The config script should not create a new cp here but rather assign the
@@ -96,6 +97,9 @@ class SDMAEngine(DmaVirtDevice):
     type = "SDMAEngine"
     cxx_header = "dev/amdgpu/sdma_engine.hh"
     cxx_class = "gem5::SDMAEngine"
+
+    mmio_base = Param.Addr(0x0, "Base MMIO Address")
+    mmio_size = Param.Addr(0x800, "Size of MMIO range")
 
     gpu_device = Param.AMDGPUDevice(NULL, "GPU Controller")
     walker = Param.VegaPagetableWalker("Page table walker")

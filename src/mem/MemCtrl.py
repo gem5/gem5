@@ -63,7 +63,7 @@ class MemCtrl(QoSMemCtrl):
 
     # Interface to memory media
     dram = Param.MemInterface(
-        "Memory interface, can be a DRAM" "or an NVM interface "
+        "Memory interface, can be a DRAMor an NVM interface "
     )
 
     # read and write buffer depths are set in the interface
@@ -79,12 +79,12 @@ class MemCtrl(QoSMemCtrl):
 
     # minimum write bursts to schedule before switching back to reads
     min_writes_per_switch = Param.Unsigned(
-        16, "Minimum write bursts before " "switching to reads"
+        16, "Minimum write bursts before switching to reads"
     )
 
     # minimum read bursts to schedule before switching back to writes
     min_reads_per_switch = Param.Unsigned(
-        16, "Minimum read bursts before " "switching to writes"
+        16, "Minimum read bursts before switching to writes"
     )
 
     # scheduler, address map and page policy

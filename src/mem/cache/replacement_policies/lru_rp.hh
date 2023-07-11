@@ -42,7 +42,6 @@ namespace gem5
 
 struct LRURPParams;
 
-GEM5_DEPRECATED_NAMESPACE(ReplacementPolicy, replacement_policy);
 namespace replacement_policy
 {
 

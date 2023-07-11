@@ -1,0 +1,56 @@
+[
+    {
+        "category": "disk-image",
+        "id": "x86-ubuntu-18.04-img",
+        "description": "This is a test resource",
+        "architecture": "X86",
+        "size": 688119691,
+        "tags": [
+            "x86",
+            "fullsystem"
+        ],
+        "is_zipped": true,
+        "md5sum": "90e363abf0ddf22eefa2c7c5c9391c49",
+        "source": "src/x86-ubuntu",
+        "url": "http://dist.gem5.org/dist/develop/images/x86/ubuntu-18-04/x86-ubuntu.img.gz",
+        "root_partition": "1",
+        "code_examples": [],
+        "license": "",
+        "author": [
+            "Ayaz Akram"
+        ],
+        "source_url": "https://github.com/gem5/gem5-resources/tree/develop/src/x86-ubuntu",
+        "resource_version": "1.0.0",
+        "gem5_versions": [
+            "develop"
+        ],
+        "example_usage": "get_resource(resource_name=\"x86-ubuntu-18.04-img\")"
+    },
+    {
+        "category": "disk-image",
+        "id": "x86-ubuntu-18.04-img",
+        "description": "A disk image containing Ubuntu 18.04 for x86. This image will run an `m5 readfile` instruction after booting. If no script file is specified an `m5 exit` instruction will be executed.",
+        "architecture": "X86",
+        "size": 688119691,
+        "tags": [
+            "x86",
+            "fullsystem"
+        ],
+        "is_zipped": true,
+        "md5sum": "90e363abf0ddf22eefa2c7c5c9391c49",
+        "source": "src/x86-ubuntu",
+        "url": "http://dist.gem5.org/dist/develop/images/x86/ubuntu-18-04/x86-ubuntu.img.gz",
+        "root_partition": "1",
+        "code_examples": [],
+        "license": "",
+        "author": [
+            "Ayaz Akram"
+        ],
+        "source_url": "https://github.com/gem5/gem5-resources/tree/develop/src/x86-ubuntu",
+        "resource_version": "1.1.0",
+        "gem5_versions": [
+            "develop"
+        ],
+        "example_usage": "get_resource(resource_name=\"x86-ubuntu-18.04-img\")"
+    }
+]

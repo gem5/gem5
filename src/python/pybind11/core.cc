@@ -58,6 +58,7 @@
 #include "sim/drain.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_object.hh"
+#include "cpu/probes/pc_count_pair.hh"
 
 namespace py = pybind11;
 
@@ -164,6 +165,31 @@ init_range(py::module_ &m_native)
 }
 
 static void
+init_pc(py::module_ &m_native)
+{
+    py::module_ m = m_native.def_submodule("pc");
+    py::class_<PcCountPair>(m, "PcCountPair")
+        .def(py::init<>())
+        .def(py::init<Addr, int>())
+        .def("__eq__", [](const PcCountPair& self, py::object other) {
+            py::int_ pyPC = other.attr("get_pc")();
+            py::int_ pyCount = other.attr("get_count")();
+            uint64_t cPC = pyPC.cast<uint64_t>();
+            int cCount = pyCount.cast<int>();
+            return (self.getPC() == cPC && self.getCount() == cCount);
+        })
+        .def("__hash__", [](const PcCountPair& self){
+            py::int_ pyPC = py::cast(self.getPC());
+            py::int_ pyCount = py::cast(self.getCount());
+            return py::hash(py::make_tuple(pyPC, pyCount));
+        })
+        .def("__str__", &PcCountPair::to_string)
+        .def("get_pc", &PcCountPair::getPC)
+        .def("get_count", &PcCountPair::getCount)
+        ;
+}
+
+static void
 init_net(py::module_ &m_native)
 {
     py::module_ m = m_native.def_submodule("net");
@@ -195,6 +221,20 @@ init_loader(py::module_ &m_native)
     py::module_ m = m_native.def_submodule("loader");
 
     m.def("setInterpDir", &loader::setInterpDir);
+}
+
+static void
+init_socket(py::module_ &m_native)
+{
+    py::module_ m_socket = m_native.def_submodule("socket");
+    m_socket
+        .def("listenSocketEmptyConfig", &listenSocketEmptyConfig)
+        .def("listenSocketInetConfig", &listenSocketInetConfig)
+        .def("listenSocketUnixFileConfig", &listenSocketUnixFileConfig)
+        .def("listenSocketUnixAbstractConfig",
+                &listenSocketUnixAbstractConfig);
+
+    py::class_<ListenSocketConfig>(m_socket, "ListenSocketConfig");
 }
 
 void
@@ -307,6 +347,8 @@ pybind_init_core(py::module_ &m_native)
     init_range(m_native);
     init_net(m_native);
     init_loader(m_native);
+    init_pc(m_native);
+    init_socket(m_native);
 }
 
 } // namespace gem5

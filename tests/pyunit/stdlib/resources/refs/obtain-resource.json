@@ -1,0 +1,59 @@
+[
+    {
+        "category": "binary",
+        "id": "test-binary-resource",
+        "description": "test description",
+        "architecture": "ARM",
+        "is_zipped": false,
+        "md5sum": "71b2cb004fe2cda4556f0b1a38638af6",
+        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
+        "source": "src/test-source",
+        "resource_version": "2.5.0",
+        "gem5_versions": [
+            "25.0"
+        ]
+    },
+    {
+        "category": "binary",
+        "id": "test-binary-resource",
+        "description": "test description",
+        "architecture": "ARM",
+        "is_zipped": false,
+        "md5sum": "71b2cb004fe2cda4556f0b1a38638af6",
+        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
+        "source": "src/test-source",
+        "resource_version": "2.0.0",
+        "gem5_versions": [
+            "23.0"
+        ]
+    },
+    {
+        "category": "binary",
+        "id": "test-binary-resource",
+        "description": "test description v1.7.0",
+        "architecture": "ARM",
+        "is_zipped": false,
+        "md5sum": "71b2cb004fe2cda4556f0b1a38638af6",
+        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
+        "source": "src/test-source",
+        "resource_version": "1.7.0",
+        "gem5_versions": [
+            "develop",
+            "develop-2"
+        ]
+    },
+    {
+        "category": "binary",
+        "id": "test-binary-resource",
+        "description": "test description for 1.5.0",
+        "architecture": "ARM",
+        "is_zipped": false,
+        "md5sum": "71b2cb004fe2cda4556f0b1a38638af6",
+        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
+        "source": "src/test-source",
+        "resource_version": "1.5.0",
+        "gem5_versions": [
+            "develop"
+        ]
+    }
+]

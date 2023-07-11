@@ -39,6 +39,7 @@
 
 #include "arch/arm/fastmodel/amba_ports.hh"
 #include "arch/arm/fastmodel/common/signal_receiver.hh"
+#include "arch/arm/fastmodel/common/signal_sender.hh"
 #include "arch/arm/fastmodel/protocol/exported_clock_rate_control.hh"
 #include "dev/intpin.hh"
 #include "params/FastModelPL330.hh"
@@ -49,7 +50,6 @@
 namespace gem5
 {
 
-GEM5_DEPRECATED_NAMESPACE(FastModel, fastmodel);
 namespace fastmodel
 {
 
@@ -72,6 +72,8 @@ class PL330 : public scx_evs_PL330
     SignalReceiver irqAbortReceiver;
 
     void allocateIrq(int idx, int count);
+
+    SignalSender resetIn;
 
   public:
     PL330(const FastModelPL330Params &params, sc_core::sc_module_name _name);

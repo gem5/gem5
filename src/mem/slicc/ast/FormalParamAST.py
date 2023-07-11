@@ -50,7 +50,7 @@ class FormalParamAST(AST):
         self.qualifier = qualifier
 
     def __repr__(self):
-        return "[FormalParamAST: %s]" % self.ident
+        return f"[FormalParamAST: {self.ident}]"
 
     @property
     def name(self):
@@ -58,7 +58,7 @@ class FormalParamAST(AST):
 
     def generate(self):
         type = self.type_ast.type
-        param = "param_%s" % self.ident
+        param = f"param_{self.ident}"
 
         # Add to symbol table
         v = Var(
@@ -84,10 +84,10 @@ class FormalParamAST(AST):
             qualifier = "CONST_REF"
 
         if qualifier == "PTR":
-            return type, "%s* %s" % (type.c_ident, param)
+            return type, f"{type.c_ident}* {param}"
         elif qualifier == "REF":
-            return type, "%s& %s" % (type.c_ident, param)
+            return type, f"{type.c_ident}& {param}"
         elif qualifier == "CONST_REF":
-            return type, "const %s& %s" % (type.c_ident, param)
+            return type, f"const {type.c_ident}& {param}"
         else:
-            self.error("Invalid qualifier for param '%s'" % self.ident)
+            self.error(f"Invalid qualifier for param '{self.ident}'")

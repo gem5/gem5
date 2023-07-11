@@ -187,7 +187,7 @@ let {{
             assembler.symbols[reg] = \
                 ctrlRegIdx(f"misc_reg::{reg.capitalize()}")
 
-    for flag in ('Scalar', 'MultHi', 'Signed'):
+    for flag in ('Scalar', 'MultHi', 'Signed', 'PartHi'):
         assembler.symbols[flag] = 'Media%sOp' % flag
 
     # Code literal which forces a default 64 bit operand size in 64 bit mode.

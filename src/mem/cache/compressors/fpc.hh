@@ -51,7 +51,6 @@ namespace gem5
 
 struct FPCParams;
 
-GEM5_DEPRECATED_NAMESPACE(Compressor, compression);
 namespace compression
 {
 

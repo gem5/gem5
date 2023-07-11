@@ -45,7 +45,7 @@ namespace gem5
 {
 
 SMMURequestPort::SMMURequestPort(const std::string &_name, SMMUv3 &_smmu) :
-    RequestPort(_name, &_smmu),
+    RequestPort(_name),
     smmu(_smmu)
 {}
 
@@ -63,7 +63,7 @@ SMMURequestPort::recvReqRetry()
 
 SMMUTableWalkPort::SMMUTableWalkPort(const std::string &_name,
                                                  SMMUv3 &_smmu) :
-    RequestPort(_name, &_smmu),
+    RequestPort(_name),
     smmu(_smmu)
 {}
 
@@ -83,7 +83,7 @@ SMMUDevicePort::SMMUDevicePort(const std::string &_name,
                              SMMUv3DeviceInterface &_ifc,
                              PortID _id)
 :
-    QueuedResponsePort(_name, &_ifc, respQueue, _id),
+    QueuedResponsePort(_name, respQueue, _id),
     ifc(_ifc),
     respQueue(_ifc, *this)
 {}
@@ -141,7 +141,7 @@ SMMUControlPort::getAddrRanges() const
 
 SMMUATSMemoryPort::SMMUATSMemoryPort(const std::string &_name,
                                      SMMUv3DeviceInterface &_ifc) :
-    QueuedRequestPort(_name, &_ifc, reqQueue, snoopRespQueue),
+    QueuedRequestPort(_name, reqQueue, snoopRespQueue),
     ifc(_ifc),
     reqQueue(_ifc, *this),
     snoopRespQueue(_ifc, *this)
@@ -155,7 +155,7 @@ SMMUATSMemoryPort::recvTimingResp(PacketPtr pkt)
 
 SMMUATSDevicePort::SMMUATSDevicePort(const std::string &_name,
                                    SMMUv3DeviceInterface &_ifc) :
-    QueuedResponsePort(_name, &_ifc, respQueue),
+    QueuedResponsePort(_name, respQueue),
     ifc(_ifc),
     respQueue(_ifc, *this)
 {}
