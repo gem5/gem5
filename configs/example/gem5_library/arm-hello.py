@@ -80,7 +80,7 @@ board = SimpleBoard(
 board.set_se_binary_workload(
     # The `Resource` class reads the `resources.json` file from the gem5
     # resources repository:
-    # https://gem5.googlesource.com/public/gem5-resource.
+    # https://github.com/gem5/gem5-resources.
     # Any resource specified in this file will be automatically retrieved.
     # At the time of writing, this file is a WIP and does not contain all
     # resources. Jira ticket: https://gem5.atlassian.net/browse/GEM5-1096

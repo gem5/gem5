@@ -37,3 +37,5 @@ Cycles recycle_latency;
 // memory controllers.
 void functionalMemoryRead(Packet *pkt);
 bool functionalMemoryWrite(Packet *pkt);
+
+void dequeueMemRespQueue();

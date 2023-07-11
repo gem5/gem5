@@ -626,6 +626,7 @@ PySource('m5', 'python/m5/info.py')
 gem5py_m5_env = gem5py_env.Clone()
 gem5py_env.Append(CPPPATH=env['CPPPATH'])
 gem5py_env.Append(LIBS='z')
+gem5py_env.Append(LINKFLAGS='-rdynamic')
 gem5py_env.Program(gem5py, 'python/gem5py.cc')[0]
 m5_module_source = \
         Source.all.with_all_tags(env, 'm5_module', 'gem5 lib')
@@ -647,6 +648,7 @@ env.AlwaysBuild(tags)
 #
 
 env['SHOBJSUFFIX'] = '${OBJSUFFIX}s'
+env.Append(LINKFLAGS='-rdynamic')
 
 envs = {
     'debug': env.Clone(ENV_LABEL='debug', OBJSUFFIX='.do'),

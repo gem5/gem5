@@ -299,7 +299,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
   }
 
   action(l_popMemQueue, "q", desc="Pop off-chip request queue") {
-    memQueue_in.dequeue(clockEdge());
+    dequeueMemRespQueue();
   }
 
   action(kd_wakeUpDependents, "kd", desc="wake-up dependents") {
@@ -365,7 +365,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
          desc="Queue off-chip writeback request") {
     peek(requestNetwork_in, RequestMsg) {
       enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
-        out_msg.addr := address;
+        out_msg.addr := in_msg.addr;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         out_msg.Sender := machineID;
         out_msg.MessageSize := MessageSizeType:Writeback_Data;

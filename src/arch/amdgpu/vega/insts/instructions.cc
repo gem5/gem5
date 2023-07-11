@@ -6384,65 +6384,17 @@ namespace VegaISA
     void
     Inst_VOP2__V_MUL_U32_U24::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-        ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
-        VecOperandU32 src1(gpuDynInst, instData.VSRC1);
-        VecOperandU32 vdst(gpuDynInst, instData.VDST);
-
-        src0.readSrc();
-        src1.read();
-
-        if (isSDWAInst()) {
-            VecOperandU32 src0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
-            // use copies of original src0, src1, and dest during selecting
-            VecOperandU32 origSrc0_sdwa(gpuDynInst,
-                                        extData.iFmt_VOP_SDWA.SRC0);
-            VecOperandU32 origSrc1(gpuDynInst, instData.VSRC1);
-            VecOperandU32 origVdst(gpuDynInst, instData.VDST);
-
-            src0_sdwa.read();
-            origSrc0_sdwa.read();
-            origSrc1.read();
-
-            DPRINTF(VEGA, "Handling V_MUL_U32_U24 SRC SDWA. SRC0: register "
-                    "v[%d], DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: "
-                    "%d, SRC0_SEXT: %d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: "
-                    "%d, SRC1_SEXT: %d, SRC1_NEG: %d, SRC1_ABS: %d\n",
-                    extData.iFmt_VOP_SDWA.SRC0, extData.iFmt_VOP_SDWA.DST_SEL,
-                    extData.iFmt_VOP_SDWA.DST_U,
-                    extData.iFmt_VOP_SDWA.CLMP,
-                    extData.iFmt_VOP_SDWA.SRC0_SEL,
-                    extData.iFmt_VOP_SDWA.SRC0_SEXT,
-                    extData.iFmt_VOP_SDWA.SRC0_NEG,
-                    extData.iFmt_VOP_SDWA.SRC0_ABS,
-                    extData.iFmt_VOP_SDWA.SRC1_SEL,
-                    extData.iFmt_VOP_SDWA.SRC1_SEXT,
-                    extData.iFmt_VOP_SDWA.SRC1_NEG,
-                    extData.iFmt_VOP_SDWA.SRC1_ABS);
-
-            processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa,
-                            src1, origSrc1);
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (wf->execMask(lane)) {
-                    vdst[lane] = bits(src0_sdwa[lane], 23, 0) *
-                                 bits(src1[lane], 23, 0);
-                    origVdst[lane] = vdst[lane]; // keep copy consistent
-                }
-            }
-
-            processSDWA_dst(extData.iFmt_VOP_SDWA, vdst, origVdst);
-        } else {
+        auto opImpl = [](VecOperandU32& src0, VecOperandU32& src1,
+                         VecOperandU32& vdst, Wavefront* wf) {
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (wf->execMask(lane)) {
                     vdst[lane] = bits(src0[lane], 23, 0) *
                                  bits(src1[lane], 23, 0);
                 }
             }
-        }
+        };
 
-
-        vdst.write();
+        vop2Helper<VecOperandU32>(gpuDynInst, opImpl);
     } // execute
     // --- Inst_VOP2__V_MUL_HI_U32_U24 class methods ---
 

@@ -18,8 +18,8 @@ To build and run all the unit tests:
 scons build/ALL/unittests.opt
 ```
 
-All unit tests should be run prior to posting a patch to
-https://gem5-review.googlesource.com
+All unit tests should be run prior to creating a pull request at
+https://github.com/gem5/gem5/pulls/
 
 To compile and run just one set of tests (e.g. those declared within
 `src/base/bitunion.test.cc`):
@@ -60,8 +60,8 @@ cd tests
 ./main.py run
 ```
 
-The above is the *minumum* you should run before posting a patch to
-https://gem5-review.googlesource.com
+The above is the *minumum* you should run before posting a pull request to
+https://github.com/gem5/gem5/pulls/
 
 ## Running tests from multiple directories
 
@@ -260,3 +260,42 @@ suites in parallel, supply the `-t <number-tests>` flag to the run command.
 For example, to run up to three test suites at the same time::
 
     ./main.py run --skip-build -t 3
+
+## Running Tests within GitHub Actions
+
+To run these tests within GitHub Actions, we use the format of running
+tests by directory as shown above in the "Running Tests from Multiple
+Directories" section.  These tests are run within workflow files,
+which can be found in the .github directory of this repository.
+You can learn more about workflows
+[here](https://docs.github.com/en/actions/using-workflows/about-workflows).
+
+Each workflow is made up of individual jobs, where each job is a set
+of tests that is executed on a runner within GitHub.  In each
+workflow, each version of gem5.opt needed is first built, and then
+stored as an artifact for main.py to use.
+
+There are two sets of runners within the gem5 repository: builders and
+runners.  The builders have more resources available to allow for a
+quicker compilation of gem5, while the runners have less, and are
+meant to only run tests.
+
+After the gem5 artifact has been uploaded, a runner can then download
+the versions needed for their tests.  For example, in the daily-tests.yaml,
+in order to run the multi_isa tests, you need artifacts of ARM, RISCV,
+and VEGA_X86.
+
+## Adding Tests to GitHub Actions
+
+In order to add new tests to our GitHub Actions testing infastructure,
+follow the format currently shown in the existing workflows.  If the
+new tests were added to an already existing directory (ex. A very-long
+test in the gem5_library_example_tests), it will automatically be
+included into the weekly testing, since weekly-tests.yaml already
+contains a job for the gem5_library_example_tests.
+
+However, if a new directory is added to the tests, you need to manually
+add a new step to the GitHub workflows.  This would consist of both a
+step to build whatever version of gem5 was required if it wasn't
+already included in the file, as well as a step to run main.py
+in the given directory after downloading the gem5 artifact.

@@ -50,7 +50,7 @@ def makeGpuFSSystem(args):
         "earlyprintk=ttyS0",
         "console=ttyS0,9600",
         "lpj=7999923",
-        "root=/dev/sda1",
+        f"root={args.root_partition}",
         "drm_kms_helper.fbdev_emulation=0",
         "modprobe.blacklist=amdgpu",
         "modprobe.blacklist=psmouse",

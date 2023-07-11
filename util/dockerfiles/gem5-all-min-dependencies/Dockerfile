@@ -26,7 +26,7 @@
 
 FROM gcr.io/gem5-test/ubuntu-22.04_min-dependencies:latest as source
 RUN apt -y update && apt -y install git
-RUN git clone -b develop https://gem5.googlesource.com/public/gem5 /gem5
+RUN git clone -b develop https://github.com/gem5/gem5/ /gem5
 WORKDIR /gem5
 RUN scons -j`nproc` build/ALL/gem5.fast
 

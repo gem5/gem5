@@ -61,6 +61,7 @@
 #include "mem/ruby/system/CacheRecorder.hh"
 #include "params/RubyController.hh"
 #include "sim/clocked_object.hh"
+#include "sim/eventq.hh"
 
 namespace gem5
 {
@@ -100,6 +101,14 @@ class AbstractController : public ClockedObject, public Consumer
     virtual MessageBuffer* getMandatoryQueue() const = 0;
     virtual MessageBuffer* getMemReqQueue() const = 0;
     virtual MessageBuffer* getMemRespQueue() const = 0;
+
+    // That function must be called by controller when dequeuing mem resp queue
+    // for memory controller to receive the retry request in time
+    void memRespQueueDequeued();
+    // Or that function can be called to perform both dequeue and notification
+    // at once.
+    void dequeueMemRespQueue();
+
     virtual AccessPermission getAccessPermission(const Addr &addr) = 0;
 
     virtual void print(std::ostream & out) const = 0;
@@ -165,7 +174,7 @@ class AbstractController : public ClockedObject, public Consumer
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID);
 
-    void recvTimingResp(PacketPtr pkt);
+    bool recvTimingResp(PacketPtr pkt);
     Tick recvAtomic(PacketPtr pkt);
 
     const AddrRangeList &getAddrRanges() const { return addrRanges; }
@@ -364,6 +373,7 @@ class AbstractController : public ClockedObject, public Consumer
     Cycles m_recycle_latency;
     const Cycles m_mandatory_queue_latency;
     bool m_waiting_mem_retry;
+    bool m_mem_ctrl_waiting_retry;
 
     /**
      * Port that forwards requests and receives responses from the
@@ -410,6 +420,9 @@ class AbstractController : public ClockedObject, public Consumer
 
     NetDest downstreamDestinations;
     NetDest upstreamDestinations;
+
+    void sendRetryRespToMem();
+    MemberEventWrapper<&AbstractController::sendRetryRespToMem> mRetryRespEvent;
 
   public:
     struct ControllerStats : public statistics::Group

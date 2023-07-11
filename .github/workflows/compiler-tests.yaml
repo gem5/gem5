@@ -35,7 +35,7 @@ jobs:
   latest-compilers-all-gem5-builds:
     strategy:
       matrix:
-        gem5-compilation: [ARM, ARM_MESI_Three_Level, ARM_MESI_Three_Level_HTM, ARM_MOESI_hammer, Garnet_standalone, GCN3_X86, MIPS, 'NULL', NULL_MESI_Two_Level, NULL_MOESI_CMP_directory, NULL_MOESI_CMP_token, NULL_MOESI_hammer, POWER, RISCV, SPARC, X86, X86_MI_example, X86_MOESI_AMD_Base]
+        gem5-compilation: [ARM, ARM_MESI_Three_Level, ARM_MESI_Three_Level_HTM, ARM_MOESI_hammer, Garnet_standalone, GCN3_X86, MIPS, 'NULL', NULL_MESI_Two_Level, NULL_MOESI_CMP_directory, NULL_MOESI_CMP_token, NULL_MOESI_hammer, POWER, RISCV, SPARC, X86, X86_MI_example, X86_MOESI_AMD_Base, VEGA_X86, GCN3_X86]
         image: [gcc-version-12, clang-version-14]
         opts: [.opt]
     runs-on: [self-hosted, linux, x64, run]

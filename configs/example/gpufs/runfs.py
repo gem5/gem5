@@ -137,6 +137,27 @@ def addRunFSOptions(parser):
         "MI200 (gfx90a)",
     )
 
+    parser.add_argument(
+        "--debug-at-gpu-kernel",
+        type=int,
+        default=-1,
+        help="Turn on debug flags starting with this kernel",
+    )
+
+    parser.add_argument(
+        "--exit-at-gpu-kernel",
+        type=int,
+        default=-1,
+        help="Exit simulation after running this many kernels",
+    )
+
+    parser.add_argument(
+        "--root-partition",
+        type=str,
+        default="/dev/sda1",
+        help="Root partition of disk image",
+    )
+
 
 def runGpuFSSystem(args):
     """
@@ -148,7 +169,8 @@ def runGpuFSSystem(args):
     # GPUFS is primarily designed to use the X86 KVM CPU. This model needs to
     # use multiple event queues when more than one CPU is simulated. Force it
     # on if that is the case.
-    args.host_parallel = True if args.num_cpus > 1 else False
+    if ObjectList.is_kvm_cpu(ObjectList.cpu_list.get(args.cpu_type)):
+        args.host_parallel = True if args.num_cpus > 1 else False
 
     # These are used by the protocols. They should not be set by the user.
     n_cu = args.num_compute_units
@@ -184,6 +206,9 @@ def runGpuFSSystem(args):
 
     print("Running the simulation")
     sim_ticks = args.abs_max_tick
+    kernels_launched = 0
+    if args.debug_at_gpu_kernel != -1:
+        m5.trace.disable()
 
     exit_event = m5.simulate(sim_ticks)
 
@@ -199,10 +224,20 @@ def runGpuFSSystem(args):
             assert args.checkpoint_dir is not None
             m5.checkpoint(args.checkpoint_dir)
             break
+        elif "GPU Kernel Completed" in exit_event.getCause():
+            kernels_launched += 1
         else:
             print(
                 f"Unknown exit event: {exit_event.getCause()}. Continuing..."
             )
+
+        if kernels_launched == args.debug_at_gpu_kernel:
+            m5.trace.enable()
+        if kernels_launched == args.exit_at_gpu_kernel:
+            print(f"Exiting @ GPU kernel {kernels_launched}")
+            break
+
+        exit_event = m5.simulate(sim_ticks - m5.curTick())
 
     print(
         "Exiting @ tick %i because %s" % (m5.curTick(), exit_event.getCause())

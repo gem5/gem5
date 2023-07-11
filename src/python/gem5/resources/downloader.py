@@ -139,14 +139,32 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
                 time.sleep((2**attempt) + random.uniform(0, 1))
             else:
                 raise e
+        except ConnectionResetError as e:
+            # This catches the ConnectionResetError we see occassionally see
+            # when accessing resources on GitHub Actions.  It retries using a
+            # Truncated Exponential backoff algorithm, truncating after
+            # "max_attempts". If any other is retrieved we raise the error.
+            if e.errno == 104:
+                attempt += 1
+                if attempt >= max_attempts:
+                    raise Exception(
+                        f"After {attempt} attempts, the resource json could "
+                        "not be retrieved. OS Error Code retrieved: "
+                        f"{e.errno}"
+                    )
+                time.sleep((2**attempt) + random.uniform(0, 1))
+            else:
+                raise e
         except ValueError as e:
             raise Exception(
+                f"ValueError: {e}\n"
                 "Environment variable GEM5_USE_PROXY is set to "
                 f"'{use_proxy}'. The expected form is "
                 "<host>:<port>'."
             )
         except ImportError as e:
             raise Exception(
+                f"ImportError: {e}\n"
                 "An import error has occurred. This is likely due "
                 "the Python SOCKS client module not being "
                 "installed. It can be installed with "

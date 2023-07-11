@@ -1,0 +1,116 @@
+{% extends 'base.html' %} {% block head %}
+<title>Resources Manager</title>
+{% endblock %} {% block body %}
+<div
+  class="modal fade"
+  id="savedSessionModal"
+  tabindex="-1"
+  aria-labelledby="savedSessionModal"
+  aria-hidden="true"
+  data-bs-backdrop="static"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title secondary-text-semi" id="savedSessionModalLabel">
+          Load Saved Session
+        </h5>
+        <button
+          type="button"
+          id="close-load-session-modal"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+          <div class="row">
+            <h4 class="main-text-semi text-center">
+              Select Saved Session to Load & Enter Password.
+            </h4>
+          </div>
+          <form class="row mt-3">
+            <label
+              for="sessions-dropdown"
+              class="form-label main-text-regular ps-1"
+              >Saved Sessions</label
+            >
+            <select
+              id="sessions-dropdown"
+              class="form-select input-shadow"
+              aria-label="Select Session"
+            ></select>
+            <label
+              for="session-password"
+              class="form-label main-text-regular ps-1 mt-3"
+              >Enter Password</label
+            >
+            <input
+              type="password"
+              class="form-control input-shadow main-text-regular"
+              id="session-password"
+              placeholder="Password..."
+            />
+          </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          id="loadSession"
+          type="button"
+          class="btn btn-outline-primary"
+          onclick="loadSession()"
+        >
+          Load Session
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<main>
+  <div
+    class="container-fluid d-flex justify-content-center main-panel-container"
+  >
+    <div
+      class="d-flex flex-column align-items-center justify-content-center panel-container"
+    >
+      <div class="d-flex flex-column align-items-center mb-3">
+        <div style="width: 50%">
+          <img
+            id="gem5RMImg"
+            class="img-fluid"
+            src="/static/images/gem5ResourcesManager.png"
+            alt="gem5"
+          />
+        </div>
+      </div>
+      <div class="d-flex flex-column justify-content-center mb-3 buttonGroup">
+        <button
+          id="showSavedSessionModal"
+          type="button"
+          class="btn btn-outline-primary btn-box-shadow mt-2 mb-2"
+          onclick="showSavedSessionModal()"
+        >
+          Load Saved Session
+        </button>
+        <a href="{{ url_for('login_mongodb') }}">
+          <button
+            class="btn btn-outline-primary btn-box-shadow mt-2 mb-2 w-100"
+          >
+            MongoDB
+          </button>
+        </a>
+        <a href="{{ url_for('login_json') }}">
+          <button
+            class="btn btn-outline-primary btn-box-shadow mt-2 mb-2 w-100"
+          >
+            JSON
+          </button>
+        </a>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="/static/js/index.js"></script>
+{% endblock %}

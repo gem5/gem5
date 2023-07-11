@@ -19,25 +19,27 @@ jobs:
   # ensures we have a change-id in every commit, needed for gerrit
   check-for-change-id:
     # runs on github hosted runner
-    runs-on: ubuntu-latest
-    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/github-script@v6
-        env:
-          token: "Change-Id"
-          pattern: ".*"
+      - uses: actions/checkout@v3
         with:
-          script: |
-            const commits = ${{ toJSON(github.event.commits) }}
-            for (const commit of commits) {
-              const id = "Change-Id: "
-              const message = commit.message;
-              if (!message.includes(id)) {
-                core.setFailed('One or more of the commits in this pull request is missing a Change-ID, which we require for any changes made to gem5. ' +
-                'To automatically insert one, run the following:\n f=`git rev-parse --git-dir`/hooks/commit-msg ; mkdir -p $(dirname $f) ; ' +
-                'curl -Lo $f https://gerrit-review.googlesource.com/tools/hooks/commit-msg ; chmod +x $f\n Then amend the commit with git commit --amend --no-edit, and update your pull request.')
-              }
-            }
+          fetch-depth: 0
+      - name: Check for Change-Id
+        run: |
+          # loop through all the commits in the pull request
+          for commit in $(git rev-list ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}); do
+              git checkout $commit
+              if (git log -1 --pretty=format:"%B" | grep -q "Change-Id: ")
+              then
+                # passes as long as at least one change-id exists in the pull request
+                exit 0
+              fi
+          done
+          # if we reach this part, none of the commits had a change-id
+          echo "None of the commits in this pull request contains a Change-ID, which we require for any changes made to gem5. "\
+            "To automatically insert one, run the following:\n f=`git rev-parse --git-dir`/hooks/commit-msg ; mkdir -p $(dirname $f) ; "\
+            "curl -Lo $f https://gerrit-review.googlesource.com/tools/hooks/commit-msg ; chmod +x $f\n Then amend the commit with git commit --amend --no-edit, and update your pull request."
+          exit 1
 
   build-gem5:
     runs-on: [self-hosted, linux, x64, build]
@@ -74,7 +76,7 @@ jobs:
   testlib-quick:
     runs-on: [self-hosted, linux, x64, run]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: [pre-commit, check-for-change-id, build-gem5]
+    needs: [pre-commit, build-gem5, check-for-change-id]
     timeout-minutes: 360     # 6 hours
     steps:
       - uses: actions/checkout@v3
