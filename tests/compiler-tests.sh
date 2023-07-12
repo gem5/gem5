@@ -58,6 +58,8 @@ builds=("ALL"
         "POWER"
         "RISCV"
         "SPARC"
+        "GCN3_X86"
+        "VEGA_X86"
         "X86"
         "X86_MI_example"
         "X86_MOESI_AMD_Base")

@@ -32,6 +32,8 @@
 #include "cpu/testers/gpu_ruby_test/address_manager.hh"
 
 #include <algorithm>
+#include <climits>
+#include <random>
 
 #include "base/intmath.hh"
 #include "base/logging.hh"
@@ -58,8 +60,13 @@ AddressManager::AddressManager(int n_atomic_locs, int n_normal_locs_per_atomic)
         randAddressMap[i] = (Addr)((i + 128) << floorLog2(sizeof(Value)));
     }
 
-    // randomly shuffle randAddressMap
-    std::random_shuffle(randAddressMap.begin(), randAddressMap.end());
+    // randomly shuffle randAddressMap. The seed is determined by the random_mt
+    // gem5 rng. This allows for deterministic randomization.
+    std::shuffle(
+        randAddressMap.begin(),
+        randAddressMap.end(),
+        std::default_random_engine(random_mt.random<unsigned>(0,UINT_MAX))
+    );
 
     // initialize atomic locations
     // first and last normal location per atomic location
