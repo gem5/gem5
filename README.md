@@ -46,9 +46,11 @@ The main source tree includes these subdirectories:
 
 To run full-system simulations, you may need compiled system firmware, kernel
 binaries and one or more disk images, depending on gem5's configuration and
-what type of workload you're trying to run. Many of those resources can be
-downloaded from <http://resources.gem5.org>, and/or from the git repository
-here: <https://gem5.googlesource.com/public/gem5-resources/>
+what type of workload you're trying to run. Many of these resources can be
+obtained from <https://resources.gem5.org>.
+
+More information on gem5 Resources can be found at
+<https://www.gem5.org/documentation/general_docs/gem5_resources/>.
 
 ## Getting Help
 
