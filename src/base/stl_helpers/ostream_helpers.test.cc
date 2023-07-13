@@ -34,9 +34,9 @@
 
 #include "base/stl_helpers/ostream_helpers.hh"
 
-using gem5::stl_helpers::operator<<;
 
 TEST(OstreamHelpers, pair) {
+    using gem5::stl_helpers::operator<<;
     auto p = std::make_pair(1, 2);
     std::ostringstream os;
     os << p;
@@ -44,6 +44,7 @@ TEST(OstreamHelpers, pair) {
 }
 
 TEST(OstreamHelpers, tuple) {
+    using gem5::stl_helpers::operator<<;
     auto t = std::make_tuple(true,
         std::make_pair("Hello", std::string_view("World")), '!');
     std::ostringstream os;
@@ -52,6 +53,7 @@ TEST(OstreamHelpers, tuple) {
 }
 
 TEST(OstreamHelpers, vector) {
+    using gem5::stl_helpers::operator<<;
     auto v = std::vector<const char*>{"abc", "defg", "hijklm", "\n"};
     std::ostringstream os;
     os << v;
@@ -59,8 +61,21 @@ TEST(OstreamHelpers, vector) {
 }
 
 TEST(OstreamHelpers, map) {
+    using gem5::stl_helpers::operator<<;
     auto m = std::map<char, int>{{'a', 0}, {'b', 1}, {'c', 2}, {'d', 3}};
     std::ostringstream os;
     os << m;
     EXPECT_EQ(os.str(), "[ (a, 0), (b, 1), (c, 2), (d, 3), ]");
+}
+
+TEST(OstreamHelpers, optional) {
+    using gem5::stl_helpers::operator<<;
+    auto m = std::make_optional<int>(42);
+    std::ostringstream os;
+    os << m;
+    EXPECT_EQ(os.str(), "42");
+    os.str("");
+    m.reset();
+    os << m;
+    EXPECT_EQ(os.str(), "(-)");
 }
