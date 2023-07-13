@@ -64,7 +64,7 @@ namespace opExtract_impl
  * mechanism is used. The only entry point in the system is through a primary
  * dispatch function that won't resolve for non-helped types. Then, recursive
  * calls go through the secondary dispatch interface that sort between helped
- * and non-helped types. Helped typed will enter the system back through the
+ * and non-helped types. Helped types will enter the system back through the
  * primary dispatch interface while other types will look for operator<<
  * through regular lookup, especially ADL.
  */
