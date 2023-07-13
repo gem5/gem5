@@ -306,23 +306,19 @@ findMsbSet(uint64_t val)
     return msb;
 }
 
-/**
- * Returns the bit position of the LSB that is set in the input
- * That function will either use a builting that exploit a "count trailing
- * zeros" instruction or use a bit-fidling algorithm explained bellow.
- *
- * @ingroup api_bitfield
- */
-constexpr int
-findLsbSet(uint64_t val) {
-    if (val == 0) return 64;
-
+namespace {
+template<typename T>
+constexpr bool
+hasBuiltinCtz() {
 #if defined(__has_builtin) && __has_builtin(__builtin_ctz)
-    if constexpr (sizeof(unsigned long long) == sizeof(val)) {
-        return __builtin_ctzll(val);
-    }
+    return sizeof(unsigned long long) >= sizeof(T);
+#else
+    return false;
 #endif
+}
 
+int
+findLsbSetFallback(uint64_t val) {
     // Create a mask with val's trailing zeros flipped to 1, lsb set flipped to
     // 0 and the rest unchanged. This effectively is equivalent to doing -1.
     // e.g.: 0101000 - 1 = 0100111
@@ -337,9 +333,31 @@ findLsbSet(uint64_t val) {
     // e.g.: 00001111 >> 1 = 00000111 (val is 0101000 in the example)
     auto ones = masked >> 1;
     // Number of bit set is the lsb set. This operation should be optimized by
-    // the compiler without unsing intrinsics.
+    // the compiler without unsing intrinsics. This operation will become
+    // constexpr starting from C++23. In the meantime, that fallback should not
+    // be used much in favor of the constexpr intrinsic
     return std::bitset<sizeof(ones) * CHAR_BIT>(ones).count();
 }
+}
+
+/**
+ * Returns the bit position of the LSB that is set in the input
+ * That function will either use a builting that exploit a "count trailing
+ * zeros" instruction or use a bit-fidling algorithm explained bellow.
+ *
+ * @ingroup api_bitfield
+ */
+constexpr int
+findLsbSet(uint64_t val) {
+    if (val == 0) return 64;
+
+    if constexpr (hasBuiltinCtz<decltype(val)>()) {
+        return __builtin_ctzll(val);
+    } else {
+        return findLsbSetFallback(val);
+    }
+}
+
 
 template<size_t N>
 constexpr int
