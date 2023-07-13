@@ -119,7 +119,7 @@ opExtractPrimDisp(std::ostream& os, const std::optional<T>& o)
     if (o) {
         return opExtractSecDisp(os, *o);
     } else {
-        return os << '-';
+        return os << "(-)";
     }
 }
 
