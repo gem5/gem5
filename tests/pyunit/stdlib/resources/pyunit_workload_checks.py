@@ -65,7 +65,7 @@ class CustomWorkloadTestSuite(unittest.TestCase):
             function="set_se_binary_workload",
             parameters={
                 "binary": obtain_resource(
-                    "x86-hello64-static", gem5_version="develop"
+                    "x86-hello64-static-example", gem5_version="develop"
                 ),
                 "arguments": ["hello", 6],
             },
