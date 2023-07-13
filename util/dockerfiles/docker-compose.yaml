@@ -41,13 +41,6 @@ services:
             context: ubuntu-22.04_min-dependencies
             dockerfile: Dockerfile
         image: gcr.io/gem5-test/ubuntu-22.04_min-dependencies:latest
-    gcc-7:
-        build:
-            context: ubuntu-18.04_gcc-version
-            dockerfile: Dockerfile
-            args:
-                - version=7
-        image: gcr.io/gem5-test/gcc-version-7:latest
     gcc-8:
         build:
             context: ubuntu-18.04_gcc-version
