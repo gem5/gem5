@@ -79,3 +79,14 @@ TEST(OstreamHelpers, optional) {
     os << m;
     EXPECT_EQ(os.str(), "(-)");
 }
+
+TEST(OstreamHelpers, printer) {
+    std::string hello = "Hello";
+    std::ostringstream os;
+    os << hello;
+    EXPECT_EQ(os.str(), hello);
+
+    std::ostringstream os2;
+    os2 << gem5::stl_helpers::Printer(hello);
+    EXPECT_EQ(os2.str(), "[ H, e, l, l, o, ]");
+}
