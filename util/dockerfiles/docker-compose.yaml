@@ -76,13 +76,6 @@ services:
             args:
                 - version=12
         image: gcr.io/gem5-test/gcc-version-12:latest
-    clang-6:
-        build:
-            context: ubuntu-18.04_clang-version
-            dockerfile: Dockerfile
-            args:
-                - version=6.0
-        image: gcr.io/gem5-test/clang-version-6.0:latest
     clang-7:
         build:
             context: ubuntu-18.04_clang-version

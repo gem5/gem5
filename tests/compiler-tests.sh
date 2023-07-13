@@ -26,7 +26,6 @@ images=("gcc-version-12"
         "clang-version-9"
         "clang-version-8"
         "clang-version-7"
-        "clang-version-6.0"
         # The following checks our support for Ubuntu 18.04, 20.04, and 22.04.
         "ubuntu-18.04_all-dependencies"
         "ubuntu-20.04_all-dependencies"
