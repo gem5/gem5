@@ -90,3 +90,29 @@ TEST(OstreamHelpers, printer) {
     os2 << gem5::stl_helpers::Printer(hello);
     EXPECT_EQ(os2.str(), "[ H, e, l, l, o, ]");
 }
+
+
+TEST(OstreamHelpers, pointers) {
+    auto helpedRepresentation = [](const auto& val) {
+        std::ostringstream os;
+        os << gem5::stl_helpers::Printer(val);
+        return os.str();
+    };
+    auto expectedRepresentation = [&](const auto& ptr) {
+        using gem5::stl_helpers::operator<<;
+        std::ostringstream os;
+        auto* rawPtr = &*ptr;
+        os << '(' << rawPtr << ": " << *ptr << ')';
+        return os.str();
+    };
+
+    int x = 42;
+    auto* ptr = &x;
+    EXPECT_EQ(helpedRepresentation(ptr), expectedRepresentation(ptr));
+
+    auto uptr = std::make_unique<std::string>("Hello, World!");
+    EXPECT_EQ(helpedRepresentation(uptr), expectedRepresentation(uptr));
+
+    auto sptr = std::make_unique<std::optional<bool>>();
+    EXPECT_EQ(helpedRepresentation(sptr), expectedRepresentation(sptr));
+}
