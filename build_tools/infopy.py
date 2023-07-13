@@ -51,7 +51,7 @@ args = parser.parse_args()
 code = code_formatter()
 
 for source in args.files:
-    src = os.path.basename(source)
+    src = os.path.basename(source).replace(".", "_")
     with open(source, "r") as f:
         data = "".join(f)
     code("${src} = ${{repr(data)}}")
