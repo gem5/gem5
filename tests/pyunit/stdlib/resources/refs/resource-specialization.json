@@ -177,7 +177,7 @@
     },
     {
         "category": "looppoint-json",
-        "id": "looppoint-json-restore-resource-region-1",
+        "id": "looppoint-json-restore-resource-region-1-example",
         "description": "A looppoint json file resource.",
         "is_zipped": false,
         "region_id": "1",
