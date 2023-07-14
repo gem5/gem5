@@ -25,13 +25,15 @@ protobuf if you want trace capture and playback support. Please see
 <http://www.gem5.org/documentation/general_docs/building> for more details
 concerning the minimum versions of these tools.
 
-Once you have all dependencies resolved, type
-`scons build/<CONFIG>/gem5.opt` where `<CONFIG>` is one of the options in
-build_opts like `ARM`, `NULL`, `MIPS`, `POWER`, `SPARC`, `X86`,
-`Garnet_standalone`, etc. This will build an optimized version of the gem5
-binary (gem5.opt) with the the specified configuration. See
-http://www.gem5.org/documentation/general_docs/building for more details and
-options.
+Once you have all dependencies resolved, execute
+`scons build/ALL/gem5.opt` to build an optimized version of the gem5 binary
+(`gem5.opt`) containing all gem5 ISAs. If you only wish to compile gem5 to
+include a single ISA, you can replace `ALL` with the name of the ISA. Valid
+options include `ARM`, `NULL`, `MIPS`, `POWER`, `SPARC`, and `X86` The complete
+list of options can be found in the build_opts directory.
+
+See https://www.gem5.org/documentation/general_docs/building for more
+information on building gem5.
 
 ## The Source Tree
 
