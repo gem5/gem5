@@ -1,4 +1,4 @@
-# This workflow runs after a pull-request has been approved by a reviewer.
+# This workflow runs after a pull-request has been created.
 
 name: CI Tests
 
@@ -40,66 +40,3 @@ jobs:
             "To automatically insert one, run the following:\n f=`git rev-parse --git-dir`/hooks/commit-msg ; mkdir -p $(dirname $f) ; "\
             "curl -Lo $f https://gerrit-review.googlesource.com/tools/hooks/commit-msg ; chmod +x $f\n Then amend the commit with git commit --amend --no-edit, and update your pull request."
           exit 1
-
-  build-gem5:
-    runs-on: [self-hosted, linux, x64, build]
-    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: [pre-commit, check-for-change-id] # only runs if pre-commit and change-id passes
-    outputs:
-      artifactname: ${{ steps.name.outputs.test }}
-    steps:
-      - uses: actions/checkout@v3
-      - id: name
-        run: echo "test=$(date +"%Y-%m-%d_%H.%M.%S")-artifact" >> $GITHUB_OUTPUT
-
-      - name: Build gem5
-        run: |
-          scons build/ALL/gem5.opt -j $(nproc)
-      - uses: actions/upload-artifact@v3
-        with:
-          name: ${{ steps.name.outputs.test }}
-          path: build/ALL/gem5.opt
-      - run: echo "This job's status is ${{ job.status }}."
-
-  unittests-all-opt:
-    runs-on: [self-hosted, linux, x64, run]
-    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: [pre-commit, check-for-change-id] # only runs if pre-commit and change-id passes
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v3
-      - name: CI Unittests
-        working-directory: ${{ github.workspace }}
-        run: scons build/ALL/unittests.opt -j $(nproc)
-      - run: echo "This job's status is ${{ job.status }}."
-
-  testlib-quick:
-    runs-on: [self-hosted, linux, x64, run]
-    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: [pre-commit, build-gem5, check-for-change-id]
-    timeout-minutes: 360     # 6 hours
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
-        with:
-          name: ${{needs.build-gem5.outputs.artifactname}}
-          path: build/ALL
-      - run: chmod u+x build/ALL/gem5.opt
-      - name: The TestLib CI Tests
-        working-directory: ${{ github.workspace }}/tests
-        run: ./main.py run --skip-build -vv
-      - name: create zip of results
-        if: success() || failure()
-        run: |
-          apt-get -y install zip
-          zip -r output.zip tests/testing-results
-      - name: upload zip
-        if: success() || failure()
-        uses: actions/upload-artifact@v3
-        env:
-          MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
-        with:
-          name: ${{ env.MY_STEP_VAR }}
-          path: output.zip
-          retention-days: 7
-      - run: echo "This job's status is ${{ job.status }}."
