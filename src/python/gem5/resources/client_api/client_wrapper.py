@@ -285,6 +285,7 @@ class ClientWrapper:
             return False
         if (
             gem5_version
+            and not gem5_version.upper().startswith("DEVELOP")
             and not self._get_resources_compatible_with_gem5_version(
                 [resource], gem5_version=gem5_version
             )
