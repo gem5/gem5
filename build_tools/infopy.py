@@ -51,6 +51,10 @@ args = parser.parse_args()
 code = code_formatter()
 
 for source in args.files:
+    # We replace the "."s in the file name with underscores to make
+    # it a valid python identifier. With the dot, "README.md" would generate
+    # `README.md = "..."` which is not valid as `md` is not a property of
+    # `README`.
     src = os.path.basename(source).replace(".", "_")
     with open(source, "r") as f:
         data = "".join(f)
