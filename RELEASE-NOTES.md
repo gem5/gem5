@@ -1,3 +1,15 @@
+# Version 23.0.0.1
+
+**[HOTFIX]** Fixes compilation of `GCN3_X86` and `VEGA_X85`.
+
+This hotfix release:
+
+* Removes the use of 'std::random_shuffle'.
+This is a deprecated function in C++17 and has been removed in C++20.
+* Adds missing 'overrides' in "src/arch/amdgpu/vega/insts/instructions.hh".
+* Fixes Linux specific includes, allowing for compilation on non-linux systems.
+* Adds a missing include in "src/gpu-compute/dispatcher.cc".
+
 # Version 23.0
 
 This release has approximately 500 contributions from 50 unique contributors.
