@@ -43,7 +43,7 @@ The main source tree includes these subdirectories:
 * ext: less-common external packages needed to build gem5
 * include: include files for use in other programs
 * site_scons: modular components of the build system
-* src: source code of the gem5 simulator
+* src: source code of the gem5 simulator. The C++ source, Python wrappers, and Python standard library are found in this directory.
 * system: source for some optional system software for simulated systems
 * tests: regression tests
 * util: useful utility programs and files
