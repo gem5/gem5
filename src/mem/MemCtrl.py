@@ -101,8 +101,10 @@ class MemCtrl(QoSMemCtrl):
     command_window = Param.Latency("10ns", "Static backend latency")
     disable_sanity_check = Param.Bool(False, "Disable port resp Q size check")
 
-add_citation(MemCtrl,
-"""@inproceedings{Hansson:2014:dram-controller,
+
+add_citation(
+    MemCtrl,
+    """@inproceedings{Hansson:2014:dram-controller,
   author       = {Andreas Hansson and
                   Neha Agarwal and
                   Aasheesh Kolli and
@@ -115,9 +117,7 @@ add_citation(MemCtrl,
   publisher    = {{IEEE} Computer Society},
   year         = {2014},
   url          = {https://doi.org/10.1109/ISPASS.2014.6844484},
-  doi          = {10.1109/ISPASS.2014.6844484},
-  timestamp    = {Fri, 24 Mar 2023 00:02:25 +0100},
-  biburl       = {https://dblp.org/rec/conf/ispass/HanssonAKWU14.bib},
-  bibsource    = {dblp computer science bibliography, https://dblp.org}
+  doi          = {10.1109/ISPASS.2014.6844484}
 }
-""")
+""",
+)

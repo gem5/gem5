@@ -27,6 +27,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from m5.citations import add_citation
 from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
@@ -356,3 +357,35 @@ class StorageClassType(Enum):
         "SC_ARG",
         "SC_NONE",
     ]
+
+
+add_citation(
+    ComputeUnit,
+    """@inproceedings{Gutierrez:2018:amdgpu,
+  author       = {Anthony Gutierrez and
+                  Bradford M. Beckmann and
+                  Alexandru Dutu and
+                  Joseph Gross and
+                  Michael LeBeane and
+                  John Kalamatianos and
+                  Onur Kayiran and
+                  Matthew Poremba and
+                  Brandon Potter and
+                  Sooraj Puthoor and
+                  Matthew D. Sinclair and
+                  Mark Wyse and
+                  Jieming Yin and
+                  Xianwei Zhang and
+                  Akshay Jain and
+                  Timothy G. Rogers},
+  title        = {Lost in Abstraction: Pitfalls of Analyzing GPUs at the Intermediate
+                  Language Level},
+  booktitle    = {{IEEE} International Symposium on High Performance Computer Architecture,
+                  {HPCA} 2018, Vienna, Austria, February 24-28, 2018},
+  pages        = {608--619},
+  publisher    = {{IEEE} Computer Society},
+  year         = {2018},
+  url          = {https://doi.org/10.1109/HPCA.2018.00058},
+  doi          = {10.1109/HPCA.2018.00058}
+}""",
+)
