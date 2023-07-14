@@ -291,10 +291,10 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-fs:
@@ -336,10 +336,10 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-gem5_library_example_tests:
@@ -381,10 +381,10 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-gpu:
@@ -421,10 +421,10 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-insttest_se:
@@ -461,10 +461,10 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
 # kvm tests don't work on github actions
@@ -495,10 +495,10 @@ jobs:
 #         path: tests/testing-results
 #         retention-days: 7
 #     - name: Clean runner
-#         run:
-#           rm -rf ./* || true
-#           rm -rf ./.??* || true
-#           rm -rf ~/.cache || true
+#       run:
+#         rm -rf ./* || true
+#         rm -rf ./.??* || true
+#         rm -rf ~/.cache || true
 #     - run: echo "This job's status is ${{ job.status }}."
 
   # testlib-long-kvm-switch-tests:
@@ -528,10 +528,10 @@ jobs:
   #       path: tests/testing-results
   #       retention-days: 7
   #   - name: Clean runner
-  #       run:
-  #         rm -rf ./* || true
-  #         rm -rf ./.??* || true
-  #         rm -rf ~/.cache || true
+  #     run:
+  #       rm -rf ./* || true
+  #       rm -rf ./.??* || true
+  #       rm -rf ~/.cache || true
   #   - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-learning_gem5:
@@ -568,10 +568,10 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-m5_threads:
@@ -608,10 +608,10 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-memory:
@@ -648,10 +648,10 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-multi_isa:
@@ -698,10 +698,10 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-replacement-policies:
@@ -738,10 +738,10 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-riscv-boot-tests:
@@ -778,10 +778,10 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-stdlib:
@@ -828,10 +828,10 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-x86-boot-tests:
@@ -868,10 +868,10 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   # This runs the SST-gem5 integration compilation and tests it with

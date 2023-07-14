@@ -68,10 +68,10 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
 
@@ -109,10 +109,10 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-very-long-parsec-benchmarks:
@@ -149,10 +149,10 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-very-long-x86-boot-tests:
@@ -189,8 +189,8 @@ jobs:
         path: output.zip
         retention-days: 7
     - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
