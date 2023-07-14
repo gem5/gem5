@@ -66,12 +66,6 @@ We provide a variety of channels for users and developers to get help, report
 bugs, requests features, or engage in community discussions. Below
 are a few of the most common we recommend using.
 
-* **gem5-users@gem5.org**: A mailing list for users of gem5 to ask questions
-or start discussions. To join the mailing list please visit
-<https://www.gem5.org/mailing_lists>.
-* **gem5-dev@gem5.org**: A mailing list for developers of gem5 to ask questions
-or start discussions. To join the mailing list please visit
-<https://www.gem5.org/mailing_lists>.
 * **GitHub Discussions**: A GitHub Discussions page. This can be used to start
 discussions or ask questions. Available at
 <https://github.com/orgs/gem5/discussions>.
@@ -82,6 +76,12 @@ features. Available at <https://gem5.atlassian.net/>.
 * **Slack**: A Slack server with a variety of channels for the gem5 community
 to engage in a variety of discussions. Please visit
 <https://www.gem5.org/join-slack> to join.
+* **gem5-users@gem5.org**: A mailing list for users of gem5 to ask questions
+or start discussions. To join the mailing list please visit
+<https://www.gem5.org/mailing_lists>.
+* **gem5-dev@gem5.org**: A mailing list for developers of gem5 to ask questions
+or start discussions. To join the mailing list please visit
+<https://www.gem5.org/mailing_lists>.
 
 ## Contributing to gem5
 
