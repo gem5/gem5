@@ -70,7 +70,6 @@ class BaseISA : public SimObject
   public:
     virtual PCStateBase *newPCState(Addr new_inst_addr=0) const = 0;
     virtual void clear() {}
-    virtual void clearLoadReservation(ContextID cid) {}
 
     virtual RegVal readMiscRegNoEffect(RegIndex idx) const = 0;
     virtual RegVal readMiscReg(RegIndex idx) = 0;
