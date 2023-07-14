@@ -67,6 +67,11 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
 
@@ -103,6 +108,11 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-very-long-parsec-benchmarks:
@@ -138,6 +148,11 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-very-long-x86-boot-tests:
@@ -173,4 +188,9 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."

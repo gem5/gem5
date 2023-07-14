@@ -290,6 +290,11 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-fs:
@@ -330,6 +335,11 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-gem5_library_example_tests:
@@ -370,6 +380,11 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-gpu:
@@ -405,6 +420,11 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-insttest_se:
@@ -440,36 +460,46 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
 # kvm tests don't work on github actions
-  # testlib-long-kvm-fork-tests:
-  #   runs-on: [self-hosted, linux, x64, run]
-  #   container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-  #   needs: build-gem5
-  #   timeout-minutes: 1440 # 24 hours
-    # steps:
-    # - uses: actions/checkout@v3
-    #   with:
-    #     # Scheduled workflows run on the default branch by default. We
-    #     # therefore need to explicitly checkout the develop branch.
-    #     ref: develop
-  #   - uses: actions/download-artifact@v3
-  #     with:
-  #       name: ${{ env.artifact-name }}
-  #       path: build/ALL/gem5.opt
-  #   - run: chmod u+x build/ALL/gem5.opt
-  #   - name: long kvm-fork-tests
-  #     working-directory: ${{ github.workspace }}/tests
-  #     run: ./main.py run gem5/kvm-fork-tests --length=long --skip-build -vv -t $(nproc)
-  #   - uses: actions/upload-artifact@v3
-  #     env:
-  #       MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
-  #     with:
-  #       name: ${{ env.MY_STEP_VAR }}
-  #       path: tests/testing-results
-  #       retention-days: 7
-  #   - run: echo "This job's status is ${{ job.status }}."
+#   testlib-long-kvm-fork-tests:
+#     runs-on: [self-hosted, linux, x64, run]
+#     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+#     needs: build-gem5
+#     timeout-minutes: 1440 # 24 hours
+#     steps:
+#     - uses: actions/checkout@v3
+#       with:
+#         # Scheduled workflows run on the default branch by default. We
+#         # therefore need to explicitly checkout the develop branch.
+#         ref: develop
+#     - uses: actions/download-artifact@v3
+#       with:
+#         name: ${{ env.artifact-name }}
+#         path: build/ALL/gem5.opt
+#     - run: chmod u+x build/ALL/gem5.opt
+#     - name: long kvm-fork-tests
+#       working-directory: ${{ github.workspace }}/tests
+#       run: ./main.py run gem5/kvm-fork-tests --length=long --skip-build -vv -t $(nproc)
+#     - uses: actions/upload-artifact@v3
+#       env:
+#         MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+#       with:
+#         name: ${{ env.MY_STEP_VAR }}
+#         path: tests/testing-results
+#         retention-days: 7
+#     - name: Clean runner
+#         run:
+#           rm -rf ./* || true
+#           rm -rf ./.??* || true
+#           rm -rf ~/.cache || true
+#     - run: echo "This job's status is ${{ job.status }}."
 
   # testlib-long-kvm-switch-tests:
   #   runs-on: [self-hosted, linux, x64, run]
@@ -477,11 +507,11 @@ jobs:
   #   needs: build-gem5
   #   timeout-minutes: 1440 # 24 hours
   #   steps:
-    # - uses: actions/checkout@v3
-    #   with:
-    #     # Scheduled workflows run on the default branch by default. We
-    #     # therefore need to explicitly checkout the develop branch.
-    #     ref: develop
+  #   - uses: actions/checkout@v3
+  #     with:
+  #       # Scheduled workflows run on the default branch by default. We
+  #       # therefore need to explicitly checkout the develop branch.
+  #       ref: develop
   #   - uses: actions/download-artifact@v3
   #     with:
   #       name: ${{ env.artifact-name }}
@@ -497,6 +527,11 @@ jobs:
   #       name: ${{ env.MY_STEP_VAR }}
   #       path: tests/testing-results
   #       retention-days: 7
+  #   - name: Clean runner
+  #       run:
+  #         rm -rf ./* || true
+  #         rm -rf ./.??* || true
+  #         rm -rf ~/.cache || true
   #   - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-learning_gem5:
@@ -532,6 +567,11 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-m5_threads:
@@ -567,6 +607,11 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-memory:
@@ -602,6 +647,11 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-multi_isa:
@@ -647,6 +697,11 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-replacement-policies:
@@ -682,6 +737,11 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-riscv-boot-tests:
@@ -717,6 +777,11 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-stdlib:
@@ -762,6 +827,11 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   testlib-long-x86-boot-tests:
@@ -797,6 +867,11 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
+    - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   # This runs the SST-gem5 integration compilation and tests it with
