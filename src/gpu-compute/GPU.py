@@ -130,7 +130,7 @@ class ComputeUnit(ClockedObject):
     # Wavefront size is 64. This is configurable, however changing
     # this value to anything other than 64 will likely cause errors.
     wf_size = Param.Int(64, "Wavefront size (in work items)")
-    num_barrier_slots = Param.Int(4, "Number of barrier slots in a CU")
+    num_barrier_slots = Param.Int(16, "Number of barrier slots in a CU")
     num_SIMDs = Param.Int(4, "number of SIMD units per CU")
     num_scalar_cores = Param.Int(1, "number of Scalar cores per CU")
     num_scalar_mem_pipes = Param.Int(
