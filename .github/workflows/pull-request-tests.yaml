@@ -1,6 +1,6 @@
 # This workflow runs after a pull-request has been created.
 
-name: CI Tests
+name: Pull Request Tests
 
 on:
   pull_request:
