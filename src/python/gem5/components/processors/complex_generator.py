@@ -27,6 +27,7 @@
 from ...utils.override import overrides
 from .complex_generator_core import ComplexGeneratorCore
 from .abstract_generator import AbstractGenerator
+from .abstract_generator import partition_range
 
 from typing import Iterator, List, Any
 
@@ -76,13 +77,14 @@ class ComplexGenerator(AbstractGenerator):
         :param data_limit: The amount of data in bytes to read/write by the
         generator before stopping generation.
         """
-        for core in self.cores:
+        ranges = partition_range(min_addr, max_addr, len(self.cores))
+        for i, core in enumerate(self.cores):
             core.add_linear(
                 duration,
                 rate,
                 block_size,
-                min_addr,
-                max_addr,
+                ranges[i][0],
+                ranges[i][1],
                 rd_perc,
                 data_limit,
             )
