@@ -173,12 +173,18 @@ PerfKvmCounter::attach(PerfKvmCounterConfig &config,
     {
         if (errno == EACCES)
         {
-            panic("PerfKvmCounter::attach recieved error EACCESS\n"
-            "  This error may be caused by a too restrictive setting\n"
-            "  in the file '/proc/sys/kernel/perf_event_paranoid'\n"
-            "  The default value was changed to 2 in kernel 4.6\n"
-            "  A value greater than 1 prevents gem5 from making\n"
-            "  the syscall to perf_event_open");
+            panic("PerfKvmCounter::attach received error EACCESS.\n"
+            " This error may be caused by a too restrictive setting"
+            " in the file '/proc/sys/kernel/perf_event_paranoid'."
+            " The default value was changed to 2 in kernel 4.6."
+            " A value greater than 1 prevents gem5 from making"
+            " the syscall to perf_event_open.\n\n"
+            " Alternatively, you can set the usePerf flag of the KVM CPU to"
+            " False. Setting this flag to False will limit some"
+            " functionalities of KVM CPU, such as counting the number of"
+            " cycles and the number of instructions, as well as the ability"
+            " to exit to gem5 after a certain amount of cycles of"
+            " instructions.");
         }
         panic("PerfKvmCounter::attach failed (%i)\n", errno);
     }

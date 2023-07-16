@@ -653,6 +653,9 @@ class BaseKvmCPU : public BaseCPU
      */
     bool kvmStateDirty;
 
+    /** True if using perf; False otherwise*/
+    bool usePerf;
+
     /** KVM internal ID of the vCPU */
     long vcpuID;
 
