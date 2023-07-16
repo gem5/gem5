@@ -184,7 +184,7 @@ PerfKvmCounter::attach(PerfKvmCounterConfig &config,
             " functionalities of KVM CPU, such as counting the number of"
             " cycles and the number of instructions, as well as the ability"
             " to exit to gem5 after a certain amount of cycles of"
-            " instructions.");
+            " instructions when using KVM CPU.");
         }
         panic("PerfKvmCounter::attach failed (%i)\n", errno);
     }
