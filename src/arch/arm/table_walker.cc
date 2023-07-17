@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2019, 2021-2022 Arm Limited
+ * Copyright (c) 2010, 2012-2019, 2021-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -2305,6 +2305,7 @@ TableWalker::insertPartialTableEntry(LongDescriptor &descriptor)
     te.asid           = currState->asid;
     te.vmid           = currState->vmid;
     te.N              = descriptor.offsetBits();
+    te.tg             = descriptor.grainSize;
     te.vpn            = currState->vaddr >> te.N;
     te.size           = (1ULL << te.N) - 1;
     te.pfn            = descriptor.nextTableAddr();
@@ -2378,6 +2379,7 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool long_descriptor)
         LongDescriptor l_descriptor =
             dynamic_cast<LongDescriptor &>(descriptor);
 
+        te.tg = l_descriptor.grainSize;
         te.xn |= currState->xnTable;
         te.pxn = currState->pxnTable || l_descriptor.pxn();
         if (isStage2) {
