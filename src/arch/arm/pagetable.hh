@@ -320,8 +320,8 @@ struct TlbEntry : public Serializable
             if (match && !lookup.ignoreAsn) {
                 match = global || (lookup.asn == asid);
             }
-            if (match && nstid) {
-                match = isHyp || (lookup.vmid == vmid);
+            if (match && useVMID(lookup.targetEL, lookup.inHost)) {
+                match = lookup.vmid == vmid;
             }
         }
         return match;
