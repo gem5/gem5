@@ -47,6 +47,8 @@ import m5
 from m5.util import *
 from m5.util.pybind import *
 
+from m5.citations import gem5_citations
+
 # Use the pyfdt and not the helper class, because the fdthelper
 # relies on the SimObject definition
 from m5.ext.pyfdt import pyfdt
@@ -214,6 +216,8 @@ class MetaSimObject(type):
         cls._port_refs = multidict()  # port ref objects
         cls._instantiated = False  # really instantiated, cloned, or subclassed
         cls._init_called = False  # Used to check if __init__ overridden
+
+        cls._citations = gem5_citations  # Default to gem5's citations
 
         # We don't support multiple inheritance of sim objects.  If you want
         # to, you must fix multidict to deal with it properly. Non sim-objects

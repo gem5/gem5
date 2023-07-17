@@ -311,6 +311,7 @@ PySource('gem5.utils.multiprocessing',
 PySource('', 'importer.py')
 PySource('m5', 'm5/__init__.py')
 PySource('m5', 'm5/SimObject.py')
+PySource('m5', 'm5/citations.py')
 PySource('m5', 'm5/core.py')
 PySource('m5', 'm5/debug.py')
 PySource('m5', 'm5/event.py')
