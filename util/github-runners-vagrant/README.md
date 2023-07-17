@@ -97,6 +97,20 @@ If you wish to destroy all the VMs you can run:
 
 **Note:** This script assumes "VAGRANT_HOME" is set to the CWD.
 
+## Improving stability
+
+Occasionally GitHub runner services, or VMs, go down. This is often silent and
+usually only noticable from going to the GitHub repo page "settings" -> "actions" -> "runners" and observing the status.
+When the VMs or the service stop working they need restarted.
+To do so you can sun `./vm_manager.sh`. This will cycle through the VMs and execute a `vagrant up` command.
+This does one of three things depending on the state of the VM:
+
+1. If the VM is down this will bring the VM back online and start the GitHub runner service.
+2. If the VM is up but the GitHub runner service is down, this will start the GitHub runner service.
+3. If the VM is up and the GitHub runner service is running (i.e., everything is fine) then this does nothing.
+
+Given there is no harm in running this command frequently, we recommend setting up a cron job to automatically execute `./vm_manager.sh` every few hours.
+
 ## Troubleshooting
 
 ### The default libvirt disk image storage pool is on the wrong drive
