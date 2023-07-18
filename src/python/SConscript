@@ -242,6 +242,10 @@ PySource('gem5.components.processors',
 PySource('gem5.components.processors',
     'gem5/components/processors/linear_generator.py')
 PySource('gem5.components.processors',
+    'gem5/components/processors/strided_generator_core.py')
+PySource('gem5.components.processors',
+    'gem5/components/processors/strided_generator.py')
+PySource('gem5.components.processors',
     'gem5/components/processors/random_generator_core.py')
 PySource('gem5.components.processors',
     'gem5/components/processors/random_generator.py')
