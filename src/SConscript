@@ -615,7 +615,7 @@ PySource('m5', 'python/m5/defines.py')
 
 # Generate a file that wraps the basic top level files
 gem5py_env.Command('python/m5/info.py',
-            [ File('#/COPYING'), File('#/LICENSE'), File('#/README'),
+            [ File('#/COPYING'), File('#/LICENSE'), File('#/README.md'),
                 "${GEM5PY}", "${INFOPY_PY}" ],
             MakeAction('"${GEM5PY}" "${INFOPY_PY}" "${TARGET}" '
                        '${SOURCES[:-2]}',
