@@ -113,6 +113,6 @@ TEST(OstreamHelpers, pointers) {
     auto uptr = std::make_unique<std::string>("Hello, World!");
     EXPECT_EQ(helped_representation(uptr), expected_representation(uptr));
 
-    auto sptr = std::make_unique<std::optional<bool>>();
+    auto sptr = std::make_shared<std::optional<bool>>();
     EXPECT_EQ(helped_representation(sptr), expected_representation(sptr));
 }
