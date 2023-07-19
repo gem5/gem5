@@ -178,7 +178,7 @@ PerfKvmCounter::attach(PerfKvmCounterConfig &config,
             " in the file '/proc/sys/kernel/perf_event_paranoid'."
             " The default value was changed to 2 in kernel 4.6."
             " A value greater than 1 prevents gem5 from making"
-            " the syscall to perf_event_open.\n\n"
+            " the syscall to perf_event_open.\n"
             " Alternatively, you can set the usePerf flag of the KVM CPU to"
             " False. Setting this flag to False will limit some"
             " functionalities of KVM CPU, such as counting the number of"
