@@ -63,7 +63,7 @@ from gem5.components.processors.simple_switchable_processor import (
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.coherence_protocol import CoherenceProtocol
-from gem5.resources.resource import obtain_resource, CustomDiskImageResource
+from gem5.resources.resource import obtain_resource, DiskImageResource
 from gem5.simulate.simulator import Simulator
 from gem5.simulate.exit_event import ExitEvent
 
@@ -277,9 +277,7 @@ board.set_kernel_disk_workload(
     # SPEC CPU2017 benchamarks were tested with kernel version 4.19.83
     kernel=obtain_resource("x86-linux-kernel-4.19.83"),
     # The location of the x86 SPEC CPU 2017 image
-    disk_image=CustomDiskImageResource(
-        args.image, root_partition=args.partition
-    ),
+    disk_image=DiskImageResource(args.image, root_partition=args.partition),
     readfile_contents=command,
 )
 
