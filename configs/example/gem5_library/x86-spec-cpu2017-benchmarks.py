@@ -268,7 +268,7 @@ except FileExistsError:
 
 command = f"{args.benchmark} {args.size} {output_dir}"
 
-# For enabling CustomResource, we pass an additional parameter to mount the
+# For enabling DiskImageResource, we pass an additional parameter to mount the
 # correct partition.
 
 board.set_kernel_disk_workload(

@@ -42,7 +42,7 @@ from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.utils.requires import requires
-from gem5.resources.resource import obtain_resource, CustomResource
+from gem5.resources.resource import obtain_resource
 
 import argparse
 

@@ -72,14 +72,14 @@ class CustomWorkloadTestSuite(unittest.TestCase):
         )
 
     def test_get_function_str(self) -> None:
-        # Tests `CustomResource.get_function_str`
+        # Tests `CustomWorkload.get_function_str`
 
         self.assertEqual(
             "set_se_binary_workload", self.custom_workload.get_function_str()
         )
 
     def test_get_parameters(self) -> None:
-        # Tests `CustomResource.get_parameter`
+        # Tests `CustomWorkload.get_parameter`
 
         parameters = self.custom_workload.get_parameters()
         self.assertTrue(isinstance(parameters, Dict))
@@ -95,7 +95,7 @@ class CustomWorkloadTestSuite(unittest.TestCase):
         self.assertEquals(6, parameters["arguments"][1])
 
     def test_add_parameters(self) -> None:
-        # Tests `CustomResource.set_parameter` for the case where we add a new
+        # Tests `CustomWorkload.set_parameter` for the case where we add a new
         # parameter value.
 
         self.custom_workload.set_parameter("test_param", 10)
@@ -109,7 +109,7 @@ class CustomWorkloadTestSuite(unittest.TestCase):
         del self.custom_workload.get_parameters()["test_param"]
 
     def test_override_parameter(self) -> None:
-        # Tests `CustomResource.set_parameter` for the case where we override
+        # Tests `CustomWorkload.set_parameter` for the case where we override
         # a parameter's value.
 
         old_value = self.custom_workload.get_parameters()["binary"]
