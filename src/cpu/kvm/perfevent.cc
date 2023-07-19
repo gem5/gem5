@@ -173,7 +173,7 @@ PerfKvmCounter::attach(PerfKvmCounterConfig &config,
     {
         if (errno == EACCES)
         {
-            panic("    PerfKvmCounter::attach received error EACCESS.\n"
+            panic("PerfKvmCounter::attach received error EACCESS.\n"
             "  This error may be caused by a too restrictive setting\n"
             "  in the file '/proc/sys/kernel/perf_event_paranoid'.\n"
             "  The default value was changed to 2 in kernel 4.6.\n"
@@ -186,7 +186,7 @@ PerfKvmCounter::attach(PerfKvmCounterConfig &config,
             "  ability of exiting to gem5 after a certain amount of cycles\n"
             "  or instructions when using KVM CPU. An example can be found\n"
             "  here, configs/example/gem5_library/"
-            "x86-ubuntu-run-with-kvm-no-perf.py");
+            "x86-ubuntu-run-with-kvm-no-perf.py.");
         }
         panic("PerfKvmCounter::attach failed (%i)\n", errno);
     }
