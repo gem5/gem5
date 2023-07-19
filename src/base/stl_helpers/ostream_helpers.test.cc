@@ -93,26 +93,26 @@ TEST(OstreamHelpers, printer) {
 
 
 TEST(OstreamHelpers, pointers) {
-    auto helpedRepresentation = [](const auto& val) {
+    auto helped_representation = [](const auto& val) {
         std::ostringstream os;
         os << gem5::stl_helpers::Printer(val);
         return os.str();
     };
-    auto expectedRepresentation = [&](const auto& ptr) {
+    auto expected_representation = [&](const auto& ptr) {
         using gem5::stl_helpers::operator<<;
         std::ostringstream os;
-        auto* rawPtr = &*ptr;
-        os << '(' << rawPtr << ": " << *ptr << ')';
+        auto* raw_ptr = &*ptr;
+        os << '(' << raw_ptr << ": " << *ptr << ')';
         return os.str();
     };
 
     int x = 42;
     auto* ptr = &x;
-    EXPECT_EQ(helpedRepresentation(ptr), expectedRepresentation(ptr));
+    EXPECT_EQ(helped_representation(ptr), expected_representation(ptr));
 
     auto uptr = std::make_unique<std::string>("Hello, World!");
-    EXPECT_EQ(helpedRepresentation(uptr), expectedRepresentation(uptr));
+    EXPECT_EQ(helped_representation(uptr), expected_representation(uptr));
 
     auto sptr = std::make_unique<std::optional<bool>>();
-    EXPECT_EQ(helpedRepresentation(sptr), expectedRepresentation(sptr));
+    EXPECT_EQ(helped_representation(sptr), expected_representation(sptr));
 }
