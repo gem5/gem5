@@ -310,6 +310,13 @@ namespace {
 template<typename T>
 constexpr bool
 hasBuiltinCtz() {
+// Since the defined(__has_builtin) in the subsequent #if statement
+// won't short-circuit the macro expansion of
+// __has_builtin(__builtin_ctz), we must explicitly define it as zero
+// if it's undefined to avoid a preprocessor error.
+#ifndef __has_builtin
+#   define __has_builtin(foo) 0
+#endif
 #if defined(__has_builtin) && __has_builtin(__builtin_ctz)
     return sizeof(unsigned long long) >= sizeof(T);
 #else

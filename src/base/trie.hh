@@ -70,7 +70,7 @@ class Trie
         Value *value;
 
         Node *parent;
-        Node *kids[2];
+        std::unique_ptr<Node> kids[2];
 
         Node(Key _key, Key _mask, Value *_val) :
             key(_key & _mask), mask(_mask), value(_val),
@@ -83,16 +83,8 @@ class Trie
         void
         clear()
         {
-            if (kids[1]) {
-                kids[1]->clear();
-                delete kids[1];
-                kids[1] = NULL;
-            }
-            if (kids[0]) {
-                kids[0]->clear();
-                delete kids[0];
-                kids[0] = NULL;
-            }
+            kids[1].reset();
+            kids[0].reset();
         }
 
         void
@@ -188,9 +180,9 @@ class Trie
                 return node;
 
             if (node->kids[0] && node->kids[0]->matches(key))
-                node = node->kids[0];
+                node = node->kids[0].get();
             else if (node->kids[1] && node->kids[1]->matches(key))
-                node = node->kids[1];
+                node = node->kids[1].get();
             else
                 node = NULL;
         }
@@ -225,8 +217,8 @@ class Trie
         // Walk past all the nodes this new node will be inserted after. They
         // can be ignored for the purposes of this function.
         Node *node = &head;
-        while (goesAfter(&node, node->kids[0], key, new_mask) ||
-               goesAfter(&node, node->kids[1], key, new_mask))
+        while (goesAfter(&node, node->kids[0].get(), key, new_mask) ||
+               goesAfter(&node, node->kids[1].get(), key, new_mask))
         {}
         assert(node);
 
@@ -239,14 +231,13 @@ class Trie
         }
 
         for (unsigned int i = 0; i < 2; i++) {
-            Node *&kid = node->kids[i];
-            Node *new_node;
+            auto& kid = node->kids[i];
             if (!kid) {
                 // No kid. Add a new one.
-                new_node = new Node(key, new_mask, val);
+                auto new_node = std::make_unique<Node>(key, new_mask, val);
                 new_node->parent = node;
-                kid = new_node;
-                return new_node;
+                kid = std::move(new_node);
+                return kid.get();
             }
 
             // Walk down the leg until something doesn't match or we run out
@@ -266,23 +257,23 @@ class Trie
                 continue;
 
             // At the point we walked to above, add a new node.
-            new_node = new Node(key, cur_mask, NULL);
+            auto new_node = std::make_unique<Node>(key, cur_mask, nullptr);
             new_node->parent = node;
-            kid->parent = new_node;
-            new_node->kids[0] = kid;
-            kid = new_node;
+            kid->parent = new_node.get();
+            new_node->kids[0] = std::move(kid);
+            kid = std::move(new_node);
 
             // If we ran out of bits, the value goes right here.
             if (cur_mask == new_mask) {
-                new_node->value = val;
-                return new_node;
+                kid->value = val;
+                return kid.get();
             }
 
             // Still more bits to deal with, so add a new node for that path.
-            new_node = new Node(key, new_mask, val);
-            new_node->parent = kid;
-            kid->kids[1] = new_node;
-            return new_node;
+            new_node = std::make_unique<Node>(key, new_mask, val);
+            new_node->parent = kid.get();
+            kid->kids[1] = std::move(new_node);
+            return kid->kids[1].get();
         }
 
         panic("Reached the end of the Trie insert function!\n");
@@ -332,23 +323,22 @@ class Trie
         if (node->kids[0])
             node->kids[0]->parent = parent;
         // Figure out which kid we are, and update our parent's pointers.
-        if (parent->kids[0] == node)
-            parent->kids[0] = node->kids[0];
-        else if (parent->kids[1] == node)
-            parent->kids[1] = node->kids[0];
+        if (parent->kids[0].get() == node)
+            parent->kids[0] = std::move(node->kids[0]);
+        else if (parent->kids[1].get() == node)
+            parent->kids[1] = std::move(node->kids[0]);
         else
             panic("Trie: Inconsistent parent/kid relationship.\n");
         // Make sure if the parent only has one kid, it's kid[0].
         if (parent->kids[1] && !parent->kids[0]) {
-            parent->kids[0] = parent->kids[1];
-            parent->kids[1] = NULL;
+            parent->kids[0] = std::move(parent->kids[1]);
+            parent->kids[1] = nullptr;
         }
 
         // If the parent has less than two kids and no cargo and isn't the
         // root, delete it too.
         if (!parent->kids[1] && !parent->value && parent->parent)
             remove(parent);
-        delete node;
         return val;
     }
 
