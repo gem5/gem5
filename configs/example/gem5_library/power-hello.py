@@ -43,7 +43,7 @@ scons build/POWER/gem5.opt
 
 from gem5.isas import ISA
 from gem5.utils.requires import requires
-from gem5.resources.resource import Resource
+from gem5.resources.resource import obtain_resource
 from gem5.components.memory import SingleChannelDDR4_2400
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.boards.simple_board import SimpleBoard
@@ -75,7 +75,7 @@ board = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-board.set_se_binary_workload(Resource("power-hello"))
+board.set_se_binary_workload(obtain_resource("power-hello"))
 
 # Lastly we run the simulation.
 simulator = Simulator(board=board)

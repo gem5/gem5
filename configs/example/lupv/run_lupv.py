@@ -42,7 +42,7 @@ from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.utils.requires import requires
-from gem5.resources.resource import Resource, CustomResource
+from gem5.resources.resource import obtain_resource, CustomResource
 
 import argparse
 
@@ -98,8 +98,8 @@ board = LupvBoard(
 # Set the Full System workload.
 
 board.set_kernel_disk_workload(
-    kernel=Resource("riscv-lupio-linux-kernel"),
-    disk_image=Resource("riscv-lupio-busybox-img"),
+    kernel=obtain_resource("riscv-lupio-linux-kernel"),
+    disk_image=obtain_resource("riscv-lupio-busybox-img"),
 )
 
 

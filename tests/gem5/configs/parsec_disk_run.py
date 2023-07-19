@@ -37,7 +37,7 @@ Notes
 
 import m5.stats
 
-from gem5.resources.resource import Resource
+from gem5.resources.resource import obtain_resource
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.processors.simple_switchable_processor import (
@@ -205,10 +205,10 @@ command = (
 )
 
 board.set_kernel_disk_workload(
-    kernel=Resource(
+    kernel=obtain_resource(
         "x86-linux-kernel-5.4.49", resource_directory=args.resource_directory
     ),
-    disk_image=Resource(
+    disk_image=obtain_resource(
         "x86-parsec", resource_directory=args.resource_directory
     ),
     readfile_contents=command,

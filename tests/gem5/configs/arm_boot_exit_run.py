@@ -36,7 +36,7 @@ Characteristics
 from gem5.isas import ISA
 from m5.objects import ArmDefaultRelease
 from gem5.utils.requires import requires
-from gem5.resources.resource import Resource
+from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
 from m5.objects import VExpress_GEM5_Foundation
 from gem5.coherence_protocol import CoherenceProtocol
@@ -199,15 +199,15 @@ board = ArmBoard(
 
 # Set the Full System workload.
 board.set_kernel_disk_workload(
-    kernel=Resource(
+    kernel=obtain_resource(
         "arm64-linux-kernel-5.4.49",
         resource_directory=args.resource_directory,
     ),
-    bootloader=Resource(
+    bootloader=obtain_resource(
         "arm64-bootloader-foundation",
         resource_directory=args.resource_directory,
     ),
-    disk_image=Resource(
+    disk_image=obtain_resource(
         "arm64-ubuntu-20.04-img",
         resource_directory=args.resource_directory,
     ),

@@ -48,8 +48,8 @@ def run_sim(name):
     from gem5.simulate.simulator import Simulator
     board = X86DemoBoard()
     board.set_kernel_disk_workload(
-        kernel=Resource("x86-linux-kernel-5.4.49"),
-        disk_image=Resource("x86-ubuntu-18.04-img"),
+        kernel=obtain_resource("x86-linux-kernel-5.4.49"),
+        disk_image=obtain_resource("x86-ubuntu-18.04-img"),
     )
     simulator = Simulator(board=board)
     simulator.run(max_ticks=10000000)
