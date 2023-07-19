@@ -110,10 +110,10 @@ BaseKvmCPU::BaseKvmCPU(const BaseKvmCPUParams &params)
         hwCycles = std::unique_ptr<PerfKvmCounter>(new PerfKvmCounter());
         hwInstructions = std::unique_ptr<PerfKvmCounter>(new PerfKvmCounter());
     } else {
-        info("Using KVM CPU without perf. The stats related to the number of "
-             "cycles and the number of instructions executed by the KVM CPU "
-             "will not be updated and should not be used for performance "
-             "evaluation.");
+        inform("Using KVM CPU without perf. The stats related to the number "
+               "of cycles and instructions executed by the KVM CPU will not "
+               "be updated. The stats should not be used for performance "
+               "evaluation.");
     }
 }
 
