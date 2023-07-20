@@ -27,6 +27,7 @@
 from ...utils.override import overrides
 from .linear_generator_core import LinearGeneratorCore
 from .abstract_generator import AbstractGenerator
+from .abstract_generator import partition_range
 
 from typing import List
 
@@ -91,17 +92,20 @@ class LinearGenerator(AbstractGenerator):
         The helper function to create the cores for the generator, it will use
         the same inputs as the constructor function.
         """
+
+        ranges = partition_range(min_addr, max_addr, num_cores)
+
         return [
             LinearGeneratorCore(
                 duration=duration,
                 rate=rate,
                 block_size=block_size,
-                min_addr=min_addr,
-                max_addr=max_addr,
+                min_addr=ranges[i][0],
+                max_addr=ranges[i][1],
                 rd_perc=rd_perc,
                 data_limit=data_limit,
             )
-            for _ in range(num_cores)
+            for i in range(num_cores)
         ]
 
     @overrides(AbstractGenerator)

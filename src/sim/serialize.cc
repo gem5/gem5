@@ -145,8 +145,11 @@ CheckpointIn::setDir(const std::string &name)
     // appears to have a format placeholder in it.
     currentDirectory = (name.find("%") != std::string::npos) ?
         csprintf(name, curTick()) : name;
-    if (currentDirectory[currentDirectory.size() - 1] != '/')
+    auto isEmptyPath = currentDirectory.empty();
+    auto endsWithSlash = !isEmptyPath && currentDirectory.back() == '/';
+    if (!endsWithSlash) {
         currentDirectory += "/";
+    }
     return currentDirectory;
 }
 

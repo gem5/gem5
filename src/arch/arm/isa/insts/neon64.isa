@@ -3403,7 +3403,7 @@ let {{
                     destElem = (srcElem1 >> shiftAmt);
                 }
                 destElem += rBit;
-            } else {
+            } else if (shiftAmt > 0) {
                 if (shiftAmt >= sizeof(Element) * 8) {
                     if (srcElem1 != 0) {
                         destElem = mask(sizeof(Element) * 8);
@@ -3421,6 +3421,8 @@ let {{
                         destElem = srcElem1 << shiftAmt;
                     }
                 }
+            } else {
+                destElem = srcElem1;
             }
             FpscrQc = fpscr;
     '''

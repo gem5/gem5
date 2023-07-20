@@ -85,7 +85,7 @@ class Memoizer
     using ret_type = Ret;
     using args_type = std::tuple<Args...>;
 
-    constexpr Memoizer(Ret _func(Args...))
+    constexpr Memoizer(Ret (*_func)(Args...))
      : func(_func)
     {
         validateMemoizer();

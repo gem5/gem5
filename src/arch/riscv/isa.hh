@@ -136,6 +136,12 @@ class ISA : public BaseISA
 
     RiscvType rvType() const { return rv_type; }
 
+    void
+    clearLoadReservation(ContextID cid)
+    {
+        Addr& load_reservation_addr = load_reservation_addrs[cid];
+        load_reservation_addr = INVALID_RESERVATION_ADDR;
+    }
 };
 
 } // namespace RiscvISA

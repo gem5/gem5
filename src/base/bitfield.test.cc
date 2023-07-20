@@ -316,11 +316,29 @@ TEST(BitfieldTest, FindLsb)
 {
     uint64_t val = (1ULL << 63) + (1 << 1);
     EXPECT_EQ(1, findLsbSet(val));
+    EXPECT_EQ(1, findLsbSetFallback(val));
 }
 
 TEST(BitfieldTest, FindLsbZero)
 {
     EXPECT_EQ(64, findLsbSet(0));
+}
+
+TEST(BitfieldTest, FindLsbGeneralized)
+{
+    static constexpr size_t N{1000};
+    std::bitset<N> bs{0};
+    EXPECT_EQ(findLsbSet(bs), N);
+    for (size_t i{0}; i < N ; ++i) {
+        bs = std::bitset<N>{1} << i;
+        ASSERT_EQ(findLsbSet(bs), i);
+    }
+
+    const auto leadingOne = std::bitset<N>{1} << (N-1);
+    for (size_t i{0}; i < N ; ++i) {
+        bs = leadingOne | (std::bitset<N>{1} << i);
+        ASSERT_EQ(findLsbSet(bs), i);
+    }
 }
 
 /*

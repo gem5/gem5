@@ -35,6 +35,22 @@ from ..boards.abstract_board import AbstractBoard
 from typing import List
 
 
+def partition_range(
+    min_addr: int, max_addr: int, num_partitions: int
+) -> List[tuple]:
+    assert (
+        isinstance(min_addr, int)
+        and isinstance(max_addr, int)
+        and isinstance(num_partitions, int)
+    )
+    assert ((max_addr - min_addr) % num_partitions) == 0
+    chunk_size = int((max_addr - min_addr) / num_partitions)
+    return [
+        (min_addr + chunk_size * i, min_addr + chunk_size * (i + 1))
+        for i in range(num_partitions)
+    ]
+
+
 class AbstractGenerator(AbstractProcessor):
     """The abstract generator
     It defines the external interface of every generator component.
