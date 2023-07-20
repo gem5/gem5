@@ -64,6 +64,11 @@ class BaseKvmCPU(BaseCPU):
     def support_take_over(cls):
         return True
 
+    usePerf = Param.Bool(
+        True,
+        "Use perf for gathering statistics from the guest and providing "
+        "statistic-related functionalities",
+    )
     useCoalescedMMIO = Param.Bool(False, "Use coalesced MMIO (EXPERIMENTAL)")
     usePerfOverflow = Param.Bool(
         False, "Use perf event overflow counters (EXPERIMENTAL)"

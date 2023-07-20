@@ -653,6 +653,9 @@ class BaseKvmCPU : public BaseCPU
      */
     bool kvmStateDirty;
 
+    /** True if using perf; False otherwise*/
+    bool usePerf;
+
     /** KVM internal ID of the vCPU */
     long vcpuID;
 
@@ -763,7 +766,7 @@ class BaseKvmCPU : public BaseCPU
      * PerfKvmTimer (see perfControlledByTimer) to trigger exits from
      * KVM.
      */
-    PerfKvmCounter hwCycles;
+    std::unique_ptr<PerfKvmCounter> hwCycles;
 
     /**
      * Guest instruction counter.
@@ -776,7 +779,7 @@ class BaseKvmCPU : public BaseCPU
      * @see setupInstBreak
      * @see scheduleInstStop
      */
-    PerfKvmCounter hwInstructions;
+    std::unique_ptr<PerfKvmCounter> hwInstructions;
 
     /**
      * Does the runTimer control the performance counters?
