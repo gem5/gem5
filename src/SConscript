@@ -536,6 +536,14 @@ Export('DebugFormatFlag')
 # the corresponding build directory to pick up generated include
 # files.
 env.Append(CPPPATH=Dir('.'))
+parent_dir_set = set()
+
+for extra_dir in extras_dir_list:
+    parent_dir_set.add(str(Dir(extra_dir).Dir('..').abspath))
+
+if not GetOption('duplicate_sources'):
+    for parent_dir in parent_dir_set:
+        env.Append(CPPPATH=Dir(parent_dir))
 
 for extra_dir in extras_dir_list:
     env.Append(CPPPATH=Dir(extra_dir))
