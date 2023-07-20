@@ -148,8 +148,9 @@ class Workload(AbstractWorkload):
 
     # Optionally we can override a parameter in the workload. In this example
     # we are going to run this workload with a difference kernel.
-    workload.set_parameter("kernel", \
-        obtain_resource("arm64-linux-kernel-4.14.134"))
+    workload.set_parameter("kernel",
+        obtain_resource("arm64-linux-kernel-4.14.134")
+    )
 
     # We then set this workload to the board.
     board.set_workload(workload)
