@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 #
+# Copyright (c) 2023 The Regents of the University of California
 # Copyright (c) 2019 Inria
 # All rights reserved
 #
@@ -32,7 +33,7 @@
 import os
 import re
 import sys
-from maint.lib import maintainers
+from maint.lib import tags
 
 from style.repo import GitRepo
 
@@ -67,7 +68,7 @@ def _printErrorQuit(error_message):
     print(
         """
 The first line of a commit must contain one or more gem5 tags separated by
-commas (see MAINTAINERS.yaml for the possible tags), followed by a colon and
+commas (see TAGS.yaml for the possible tags), followed by a colon and
 a commit title. There must be no leading nor trailing whitespaces.
 
 This header line must then be followed by an empty line. A detailed message,
@@ -97,17 +98,18 @@ def _validateTags(commit_header):
     """
 
     # List of valid tags
-    maintainer_dict = maintainers.Maintainers.from_file()
-    valid_tags = [tag for tag, _ in maintainer_dict]
+    tags_dict = tags.Tags.from_file()
+    valid_tags = [tag for tag, _ in tags_dict]
 
-    # Remove non-tag 'pmc' and add special tags not in MAINTAINERS.yaml
-    valid_tags.remove("pmc")
+    # Add special tags not in TAGS.yaml
     valid_tags.extend(["RFC", "WIP"])
 
-    tags = "".join(commit_header.split(":")[0].split()).split(",")
-    if any(tag not in valid_tags for tag in tags):
-        invalid_tag = next((tag for tag in tags if tag not in valid_tags))
-        _printErrorQuit("Invalid Gem5 tag: " + invalid_tag)
+    commit_tags = "".join(commit_header.split(":")[0].split()).split(",")
+    if any(tag not in valid_tags for tag in commit_tags):
+        invalid_tag = next(
+            (tag for tag in commit_tags if tag not in valid_tags)
+        )
+        _printErrorQuit("Invalid gem5 tag: " + invalid_tag)
 
 
 # Go to git directory

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 #
+# Copyright (c) 2021 The Regents of the University of California
 # Copyright (c) 2020 Arm Limited
 # All rights reserved
 #
@@ -35,17 +36,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import email.utils
-import enum
 import os
 from typing import (
     Any,
     Dict,
     Iterator,
-    List,
     Mapping,
     Optional,
-    Sequence,
     TextIO,
     Tuple,
     Union,
@@ -68,69 +65,46 @@ class IllegalValueException(FileFormatException):
     pass
 
 
-class Status(enum.Enum):
-    MAINTAINED = enum.auto()
-    ORPHANED = enum.auto()
-
-    @classmethod
-    def from_str(cls, key: str) -> "Status":
-        _status_dict = {"maintained": cls.MAINTAINED, "orphaned": cls.ORPHANED}
-        return _status_dict[key]
-
-    def __str__(self) -> str:
-        return {Status.MAINTAINED: "maintained", Status.ORPHANED: "orphaned"}[
-            self
-        ]
-
-
 class Subsystem(object):
     tag: str
-    status: Status
-    maintainers: List[Tuple[str, str]]  # Name, email
     description: str
 
     def __init__(
         self,
         tag: str,
-        maintainers: Optional[Sequence[Tuple[str, str]]],
         description: str = "",
-        status: Status = Status.ORPHANED,
     ):
         self.tag = tag
-        self.status = status
-        self.maintainers = list(maintainers) if maintainers is not None else []
         self.description = description if description is not None else ""
 
 
-class Maintainers(object):
-    DEFAULT_MAINTAINERS = os.path.join(
-        os.path.dirname(__file__), "../../../MAINTAINERS.yaml"
+class Tags(object):
+    DEFAULT_TAGS = os.path.join(
+        os.path.dirname(__file__), "../../../TAGS.yaml"
     )
 
     _subsystems: Dict[str, Subsystem]  # tag -> Subsystem
 
     def __init__(self, ydict: Mapping[str, Any]):
         self._subsystems = {}
-        for tag, maint in list(ydict.items()):
-            self._subsystems[tag] = Maintainers._parse_subsystem(tag, maint)
+        for tag, content in list(ydict.items()):
+            self._subsystems[tag] = Tags._parse_subsystem(tag, content)
 
     @classmethod
-    def from_file(
-        cls, path_or_file: Optional[PathOrFile] = None
-    ) -> "Maintainers":
+    def from_file(cls, path_or_file: Optional[PathOrFile] = None) -> "Tags":
 
-        return cls(Maintainers._load_maintainers_file(path_or_file))
+        return cls(Tags._load_tags_file(path_or_file))
 
     @classmethod
-    def from_yaml(cls, yaml_str: str) -> "Maintainers":
+    def from_yaml(cls, yaml_str: str) -> "Tags":
         return cls(yaml.load(yaml_str, Loader=yaml.SafeLoader))
 
     @classmethod
-    def _load_maintainers_file(
+    def _load_tags_file(
         cls, path_or_file: Optional[PathOrFile] = None
     ) -> Mapping[str, Any]:
         if path_or_file is None:
-            path_or_file = cls.DEFAULT_MAINTAINERS
+            path_or_file = cls.DEFAULT_TAGS
 
         if isinstance(path_or_file, str):
             with open(path_or_file, "r") as fin:
@@ -140,40 +114,9 @@ class Maintainers(object):
 
     @classmethod
     def _parse_subsystem(cls, tag: str, ydict: Mapping[str, Any]) -> Subsystem:
-        def required_field(name):
-            try:
-                return ydict[name]
-            except KeyError:
-                raise MissingFieldException(
-                    f"{tag}: Required field '{name}' is missing"
-                )
-
-        maintainers: List[Tuple[str, str]] = []
-        raw_maintainers = ydict.get("maintainers", [])
-        if not isinstance(raw_maintainers, Sequence):
-            raise IllegalValueException(
-                f"{tag}: Illegal field 'maintainers' isn't a list."
-            )
-        for maintainer in raw_maintainers:
-            name, address = email.utils.parseaddr(maintainer)
-            if name == "" and address == "":
-                raise IllegalValueException(
-                    f"{tag}: Illegal maintainer field: '{maintainer}'"
-                )
-            maintainers.append((name, address))
-
-        try:
-            status = Status.from_str(required_field("status"))
-        except KeyError:
-            raise IllegalValueException(
-                f"{tag}: Invalid status '{ydict['status']}'"
-            )
-
         return Subsystem(
             tag,
-            maintainers=maintainers,
-            status=status,
-            description=ydict.get("desc", ""),
+            description=ydict.get("desc", "") if ydict is not None else "",
         )
 
     def __iter__(self) -> Iterator[Tuple[str, Subsystem]]:
@@ -184,13 +127,9 @@ class Maintainers(object):
 
 
 def _main():
-    maintainers = Maintainers.from_file()
-    for tag, subsys in maintainers:
+    tags = Tags.from_file()
+    for tag, subsys in tags:
         print(f"{tag}: {subsys.description}")
-        print(f"  Status: {subsys.status}")
-        print(f"  Maintainers:")
-        for maint in subsys.maintainers:
-            print(f"    - {maint[0]} <{maint[1]}>")
         print()
 
 
@@ -203,5 +142,5 @@ __all__ = [
     "IllegalValueException",
     "Status",
     "Subsystem",
-    "Maintainers",
+    "Tags",
 ]

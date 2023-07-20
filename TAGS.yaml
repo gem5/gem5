@@ -1,0 +1,154 @@
+# See CONTRIBUTING.md for details of gem5's contribution process.
+#
+# This file contains a list of gem5's tags which are used to identify a
+# subsystem or comonent of gem5. These tags are used at the beginning of commit
+# message headers for commits targetting that subsystem. For example, for a
+# change which modifies the ARM ISA and  the KVM CPU the commit message would
+# take the form:
+#
+# ```
+# arch-arm, cpu-kvm: <commit header>
+#
+# <commit description>
+# ```
+#
+# Entries in this file conform to the following YAML schema:
+#   tag:
+#     desc: >-
+#       Optional description of the subsystem.
+
+
+arch:
+  desc: >-
+    General architecture-specific components
+
+arch-arm:
+
+arch-gcn3:
+
+arch-vega:
+
+arch-mips:
+
+arch-power:
+
+arch-riscv:
+arch-sparc:
+
+arch-x86:
+
+base:
+
+base-stats:
+
+configs:
+
+cpu:
+  desc: >-
+    General changes to all CPU models (e.g., BaseCPU)
+
+cpu-kvm:
+
+cpu-minor:
+
+cpu-o3:
+
+cpu-simple:
+
+dev:
+
+dev-hsa:
+
+dev-amdgpu:
+
+dev-virtio:
+
+dev-arm:
+
+doc:
+  desc: >-
+    Documentation changes
+
+ext:
+  desc: >-
+    Components external to gem5
+
+ext-testlib:
+
+fastmodel:
+  desc: >-
+    Changes relating to ARM Fast Models
+
+gpu-compute:
+
+learning-gem5:
+  desc: >-
+    The code and configs for the Learning gem5 book
+
+stdlib:
+  desc: >-
+    The gem5 standard library found under `src/python/gem5`
+
+mem:
+  desc: >-
+    General memory system (e.g., XBar, Packet)
+
+mem-cache:
+  desc: >-
+    Classic caches and coherence
+
+mem-dram:
+
+mem-garnet:
+  desc: >-
+    Garnet subcomponent of Ruby
+
+mem-ruby:
+  desc: >-
+    Ruby structures and protocols
+
+misc:
+  desc: >-
+    Anything outside of the other categories
+
+python:
+  desc: >-
+    Python SimObject wrapping and infrastructure
+
+resources:
+  desc: >-
+    The gem5-resources repo with auxiliary resources for simulation
+
+scons:
+  desc: >-
+    Build system
+
+sim:
+  desc: >-
+    General simulation components
+
+sim-se:
+  desc: >-
+    Syscall emulation
+
+system-arm:
+
+systemc:
+  desc: >-
+    Code for the gem5 SystemC implementation and interface
+
+tests:
+  desc: >-
+    testing changes
+
+util:
+
+util-docker:
+
+util-m5:
+
+util-gem5art:
+
+website:
+  desc: >-
+    The gem5-website repo which contains the gem5.org site
