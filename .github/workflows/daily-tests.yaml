@@ -342,7 +342,9 @@ jobs:
         rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
-  testlib-long-gem5_library_example_tests:
+  # split library example tests into runs based on Suite UID
+  # so that they don't hog the runners for too long
+  testlib-long-gem5_library_example_tests_x86_ubuntu_run_ALL_x86_64_opt:
     runs-on: [self-hosted, linux, x64, run]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
     needs: [build-gem5, build-gem5-ALL_MESI_Two_Level]
@@ -363,9 +365,189 @@ jobs:
         name: ${{needs.build-gem5-ALL_MESI_Two_Level.outputs.build-name}}
         path: build/ALL_MESI_Two_Level
     - run: chmod u+x build/ALL_MESI_Two_Level/gem5.opt
-    - name: long gem5_library_example_tests
+    - name: long gem5_library_example_tests_x86_ubuntu_run_ALL_x86_64_opt
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run gem5/gem5_library_example_tests --length=long --skip-build -vv -t $(nproc)
+      run: ./main.py run --uid SuiteUID:tests/gem5/gem5_library_example_tests/test_gem5_library_examples.py:test-gem5-library-example-x86-ubuntu-run-ALL-x86_64-opt --length=long --skip-build -vv
+    - name: create zip of results
+      if: success() || failure()
+      run: |
+        apt-get -y install zip
+        zip -r output.zip tests/testing-results
+    - name: upload zip
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      env:
+        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+      with:
+        name: ${{ env.MY_STEP_VAR }}
+        path: output.zip
+        retention-days: 7
+    - name: Clean runner
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
+    - run: echo "This job's status is ${{ job.status }}."
+
+  testlib-long-gem5_library_example_tests_riscv_ubuntu_run_ALL_x86_64_opt:
+    runs-on: [self-hosted, linux, x64, run]
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    needs: [build-gem5, build-gem5-ALL_MESI_Two_Level]
+    timeout-minutes: 1440 # 24 hours
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        # Scheduled workflows run on the default branch by default. We
+        # therefore need to explicitly checkout the develop branch.
+        ref: develop
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{needs.build-gem5.outputs.build-name}}
+        path: build/ALL
+    - run: chmod u+x build/ALL/gem5.opt
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{needs.build-gem5-ALL_MESI_Two_Level.outputs.build-name}}
+        path: build/ALL_MESI_Two_Level
+    - run: chmod u+x build/ALL_MESI_Two_Level/gem5.opt
+    - name: long gem5_library_example_tests_riscv_ubuntu_run_ALL_x86_64_opt
+      working-directory: ${{ github.workspace }}/tests
+      run: ./main.py run --uid SuiteUID:tests/gem5/gem5_library_example_tests/test_gem5_library_examples.py:test-gem5-library-example-riscv-ubuntu-run-ALL-x86_64-opt --length=long --skip-build -vv
+    - name: create zip of results
+      if: success() || failure()
+      run: |
+        apt-get -y install zip
+        zip -r output.zip tests/testing-results
+    - name: upload zip
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      env:
+        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+      with:
+        name: ${{ env.MY_STEP_VAR }}
+        path: output.zip
+        retention-days: 7
+    - name: Clean runner
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
+    - run: echo "This job's status is ${{ job.status }}."
+
+  testlib-long-gem5_library_example_tests_lupv_example_ALL_x86_64_opt:
+    runs-on: [self-hosted, linux, x64, run]
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    needs: [build-gem5, build-gem5-ALL_MESI_Two_Level]
+    timeout-minutes: 1440 # 24 hours
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        # Scheduled workflows run on the default branch by default. We
+        # therefore need to explicitly checkout the develop branch.
+        ref: develop
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{needs.build-gem5.outputs.build-name}}
+        path: build/ALL
+    - run: chmod u+x build/ALL/gem5.opt
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{needs.build-gem5-ALL_MESI_Two_Level.outputs.build-name}}
+        path: build/ALL_MESI_Two_Level
+    - run: chmod u+x build/ALL_MESI_Two_Level/gem5.opt
+    - name: long gem5_library_example_tests_lupv_example_ALL_x86_64_opt
+      working-directory: ${{ github.workspace }}/tests
+      run: ./main.py run --uid SuiteUID:tests/gem5/gem5_library_example_tests/test_gem5_library_examples.py:test-lupv-example-ALL-x86_64-opt --length=long --skip-build -vv
+    - name: create zip of results
+      if: success() || failure()
+      run: |
+        apt-get -y install zip
+        zip -r output.zip tests/testing-results
+    - name: upload zip
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      env:
+        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+      with:
+        name: ${{ env.MY_STEP_VAR }}
+        path: output.zip
+        retention-days: 7
+    - name: Clean runner
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
+    - run: echo "This job's status is ${{ job.status }}."
+
+  testlib-long-gem5_library_example_tests_arm_ubuntu_run_test_ALL_x86_64_opt:
+    runs-on: [self-hosted, linux, x64, run]
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    needs: [build-gem5, build-gem5-ALL_MESI_Two_Level]
+    timeout-minutes: 1440 # 24 hours
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        # Scheduled workflows run on the default branch by default. We
+        # therefore need to explicitly checkout the develop branch.
+        ref: develop
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{needs.build-gem5.outputs.build-name}}
+        path: build/ALL
+    - run: chmod u+x build/ALL/gem5.opt
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{needs.build-gem5-ALL_MESI_Two_Level.outputs.build-name}}
+        path: build/ALL_MESI_Two_Level
+    - run: chmod u+x build/ALL_MESI_Two_Level/gem5.opt
+    - name: long gem5_library_example_tests_arm_ubuntu_run_test_ALL_x86_64_opt
+      working-directory: ${{ github.workspace }}/tests
+      run: ./main.py run --uid SuiteUID:tests/gem5/gem5_library_example_tests/test_gem5_library_examples.py:test-gem5-library-example-arm-ubuntu-run-test-ALL-x86_64-opt --length=long --skip-build -vv
+    - name: create zip of results
+      if: success() || failure()
+      run: |
+        apt-get -y install zip
+        zip -r output.zip tests/testing-results
+    - name: upload zip
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      env:
+        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+      with:
+        name: ${{ env.MY_STEP_VAR }}
+        path: output.zip
+        retention-days: 7
+    - name: Clean runner
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
+    - run: echo "This job's status is ${{ job.status }}."
+
+  testlib-long-gem5_library_example_tests_riscvmatched_hello_ALL_x86_64_opt:
+    runs-on: [self-hosted, linux, x64, run]
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    needs: [build-gem5, build-gem5-ALL_MESI_Two_Level]
+    timeout-minutes: 1440 # 24 hours
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        # Scheduled workflows run on the default branch by default. We
+        # therefore need to explicitly checkout the develop branch.
+        ref: develop
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{needs.build-gem5.outputs.build-name}}
+        path: build/ALL
+    - run: chmod u+x build/ALL/gem5.opt
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{needs.build-gem5-ALL_MESI_Two_Level.outputs.build-name}}
+        path: build/ALL_MESI_Two_Level
+    - run: chmod u+x build/ALL_MESI_Two_Level/gem5.opt
+    - name: long gem5_library_example_tests_riscvmatched_hello_ALL_x86_64_opt
+      working-directory: ${{ github.workspace }}/tests
+      run: ./main.py run --uid SuiteUID:tests/gem5/gem5_library_example_tests/test_gem5_library_examples.py:test-gem5-library-example-riscvmatched-hello-ALL-x86_64-opt --length=long --skip-build -vv
     - name: create zip of results
       if: success() || failure()
       run: |
