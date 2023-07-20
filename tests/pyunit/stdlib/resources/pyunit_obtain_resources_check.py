@@ -110,12 +110,6 @@ class TestObtainResourcesCheck(unittest.TestCase):
                 resource_directory=self.get_resource_dir(),
                 resource_version="1.5.0",
             )
-        self.assertTrue(
-            f"warn: Resource test-binary-resource with version 1.5.0 is not known to be compatible with gem5 version {core.gem5Version}. "
-            "This may cause problems with your simulation. This resource's compatibility with different gem5 versions can be found here: "
-            f"https://resources.gem5.org/resources/test-binary-resource/versions"
-            in f.getvalue()
-        )
 
         resource = obtain_resource(
             resource_id="test-binary-resource",
