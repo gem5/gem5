@@ -50,14 +50,6 @@ with gem5_scons.Configure(main) as conf:
         warning('protoc version', min_protoc_version, 'or newer required.\n'
                 'Installed version:', protoc_version[1])
     else:
-        # Attempt to determine the appropriate include path and
-        # library path using pkg-config, that means we also need to
-        # check for pkg-config. Note that it is possible to use
-        # protobuf without the involvement of pkg-config. Later on we
-        # check go a library config check and at that point the test
-        # will fail if libprotobuf cannot be found.
-        if conf.env['HAVE_PKG_CONFIG']:
-            conf.CheckPkgConfig('protobuf', '--cflags', '--libs-only-L')
         conf.env['HAVE_PROTOC'] = True
 
     # If we have the protobuf compiler, also make sure we have the
@@ -65,9 +57,11 @@ with gem5_scons.Configure(main) as conf:
     # automatically added to the LIBS environment variable. After
     # this, we can use the HAVE_PROTOBUF flag to determine if we have
     # got both protoc and libprotobuf available.
-    conf.env['CONF']['HAVE_PROTOBUF'] = conf.env['HAVE_PROTOC'] and \
+    conf.env['CONF']['HAVE_PROTOBUF'] = conf.env['HAVE_PROTOC'] and (
+        (conf.env['HAVE_PKG_CONFIG'] and
+         conf.CheckPkgConfig('protobuf', '--cflags', '--libs')) or
         conf.CheckLibWithHeader('protobuf', 'google/protobuf/message.h',
-                                'C++', 'GOOGLE_PROTOBUF_VERIFY_VERSION;')
+                                'C++', 'GOOGLE_PROTOBUF_VERIFY_VERSION;'))
 
 # If we have the compiler but not the library, print another warning.
 if main['HAVE_PROTOC'] and not main['CONF']['HAVE_PROTOBUF']:

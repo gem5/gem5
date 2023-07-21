@@ -51,6 +51,7 @@ from . import SimObject
 from . import ticks
 from . import objects
 from . import params
+from .citations import gather_citations
 from m5.util.dot_writer import do_dot, do_dvfs_dot
 from m5.util.dot_writer_ruby import do_ruby_dot
 
@@ -163,6 +164,8 @@ def instantiate(ckpt_dir=None):
     # Check to see if any of the stat events are in the past after resuming from
     # a checkpoint, If so, this call will shift them to be at a valid time.
     updateStatEvents()
+
+    gather_citations(root)
 
 
 need_startup = True

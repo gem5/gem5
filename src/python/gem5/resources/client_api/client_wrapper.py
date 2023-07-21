@@ -285,19 +285,21 @@ class ClientWrapper:
             return False
         if (
             gem5_version
+            and not gem5_version.upper().startswith("DEVELOP")
             and not self._get_resources_compatible_with_gem5_version(
                 [resource], gem5_version=gem5_version
             )
         ):
-            warn(
-                f"Resource {resource['id']} with version "
-                f"{resource['resource_version']} is not known to be compatible"
-                f" with gem5 version {gem5_version}. "
-                "This may cause problems with your simulation. "
-                "This resource's compatibility "
-                "with different gem5 versions can be found here: "
-                "https://resources.gem5.org"
-                f"/resources/{resource['id']}/versions"
-            )
+            if not gem5_version.upper().startswith("DEVELOP"):
+                warn(
+                    f"Resource {resource['id']} with version "
+                    f"{resource['resource_version']} is not known to be compatible"
+                    f" with gem5 version {gem5_version}. "
+                    "This may cause problems with your simulation. "
+                    "This resource's compatibility "
+                    "with different gem5 versions can be found here: "
+                    "https://resources.gem5.org"
+                    f"/resources/{resource['id']}/versions"
+                )
             return False
         return True

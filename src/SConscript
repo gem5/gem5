@@ -536,6 +536,14 @@ Export('DebugFormatFlag')
 # the corresponding build directory to pick up generated include
 # files.
 env.Append(CPPPATH=Dir('.'))
+parent_dir_set = set()
+
+for extra_dir in extras_dir_list:
+    parent_dir_set.add(str(Dir(extra_dir).Dir('..').abspath))
+
+if not GetOption('duplicate_sources'):
+    for parent_dir in parent_dir_set:
+        env.Append(CPPPATH=Dir(parent_dir))
 
 for extra_dir in extras_dir_list:
     env.Append(CPPPATH=Dir(extra_dir))
@@ -615,7 +623,7 @@ PySource('m5', 'python/m5/defines.py')
 
 # Generate a file that wraps the basic top level files
 gem5py_env.Command('python/m5/info.py',
-            [ File('#/COPYING'), File('#/LICENSE'), File('#/README'),
+            [ File('#/COPYING'), File('#/LICENSE'), File('#/README.md'),
                 "${GEM5PY}", "${INFOPY_PY}" ],
             MakeAction('"${GEM5PY}" "${INFOPY_PY}" "${TARGET}" '
                        '${SOURCES[:-2]}',

@@ -64,9 +64,10 @@ TEST(AmoTest, AtomicOpMin)
     std::string test_string_smaller = "apple";
     std::string test_string_bigger = "cat";
 
-    TypedAtomicOpFunctor<int> *amo_op_int = new AtomicOpMin<int>(10);
-    TypedAtomicOpFunctor<std::string> *amo_op_string =
-        new AtomicOpMin<std::string>("base");
+    std::unique_ptr<TypedAtomicOpFunctor<int>> amo_op_int =
+        std::make_unique<AtomicOpMin<int>>(10);
+    std::unique_ptr<TypedAtomicOpFunctor<std::string>> amo_op_string =
+        std::make_unique<AtomicOpMin<std::string>>("base");
     amo_op_int->execute(&test_int_smaller);
     amo_op_int->execute(&test_int_bigger);
     amo_op_string->execute(&test_string_smaller);
@@ -85,9 +86,10 @@ TEST(AmoTest, AtomicOpMax)
     std::string test_string_smaller = "apple";
     std::string test_string_bigger = "cat";
 
-    TypedAtomicOpFunctor<int> *amo_op_int = new AtomicOpMax<int>(10);
-    TypedAtomicOpFunctor<std::string> *amo_op_string =
-        new AtomicOpMax<std::string>("base");
+    std::unique_ptr<TypedAtomicOpFunctor<int>> amo_op_int =
+        std::make_unique<AtomicOpMax<int>>(10);
+    std::unique_ptr<TypedAtomicOpFunctor<std::string>> amo_op_string =
+        std::make_unique<AtomicOpMax<std::string>>("base");
     amo_op_int->execute(&test_int_smaller);
     amo_op_int->execute(&test_int_bigger);
     amo_op_string->execute(&test_string_smaller);
@@ -104,8 +106,10 @@ TEST(AmoTest, AtomicOpDec)
     int test_int = 10;
     char test_char = 'c';
 
-    TypedAtomicOpFunctor<int> *amo_op_int = new AtomicOpDec<int>();
-    TypedAtomicOpFunctor<char> *amo_op_char = new AtomicOpDec<char>();
+    std::unique_ptr<TypedAtomicOpFunctor<int>> amo_op_int =
+        std::make_unique<AtomicOpDec<int>>();
+    std::unique_ptr<TypedAtomicOpFunctor<char>> amo_op_char =
+        std::make_unique<AtomicOpDec<char>>();
     amo_op_int->execute(&test_int);
     amo_op_char->execute(&test_char);
 
@@ -118,8 +122,10 @@ TEST(AmoTest, AtomicOpInc)
     int test_int = 10;
     char test_char = 'c';
 
-    TypedAtomicOpFunctor<int> *amo_op_int = new AtomicOpInc<int>();
-    TypedAtomicOpFunctor<char> *amo_op_char = new AtomicOpInc<char>();
+    std::unique_ptr<TypedAtomicOpFunctor<int>> amo_op_int =
+        std::make_unique<AtomicOpInc<int>>();
+    std::unique_ptr<TypedAtomicOpFunctor<char>> amo_op_char =
+        std::make_unique<AtomicOpInc<char>>();
     amo_op_int->execute(&test_int);
     amo_op_char->execute(&test_char);
 
@@ -132,8 +138,10 @@ TEST(AmoTest, AtomicOpSub)
     int test_int = 10;
     char test_char = 'c';
 
-    TypedAtomicOpFunctor<int> *amo_op_int = new AtomicOpSub<int>(2);
-    TypedAtomicOpFunctor<char> *amo_op_char = new AtomicOpSub<char>('a');
+    std::unique_ptr<TypedAtomicOpFunctor<int>> amo_op_int =
+        std::make_unique<AtomicOpSub<int>>(2);
+    std::unique_ptr<TypedAtomicOpFunctor<char>> amo_op_char =
+        std::make_unique<AtomicOpSub<char>>('a');
     amo_op_int->execute(&test_int);
     amo_op_char->execute(&test_char);
 
@@ -146,8 +154,10 @@ TEST(AmoTest, AtomicOpAdd)
     int test_int = 10;
     char test_char = 'c';
 
-    TypedAtomicOpFunctor<int> *amo_op_int = new AtomicOpAdd<int>(2);
-    TypedAtomicOpFunctor<char> *amo_op_char = new AtomicOpAdd<char>(2);
+    std::unique_ptr<TypedAtomicOpFunctor<int>> amo_op_int =
+        std::make_unique<AtomicOpAdd<int>>(2);
+    std::unique_ptr<TypedAtomicOpFunctor<char>> amo_op_char =
+        std::make_unique<AtomicOpAdd<char>>(2);
     amo_op_int->execute(&test_int);
     amo_op_char->execute(&test_char);
 
@@ -160,8 +170,10 @@ TEST(AmoTest, AtomicOpExch)
     int test_int = 10;
     char test_char = 'c';
 
-    TypedAtomicOpFunctor<int> *amo_op_int = new AtomicOpExch<int>(2);
-    TypedAtomicOpFunctor<char> *amo_op_char = new AtomicOpExch<char>('a');
+    std::unique_ptr<TypedAtomicOpFunctor<int>> amo_op_int =
+        std::make_unique<AtomicOpExch<int>>(2);
+    std::unique_ptr<TypedAtomicOpFunctor<char>> amo_op_char =
+        std::make_unique<AtomicOpExch<char>>('a');
     amo_op_int->execute(&test_int);
     amo_op_char->execute(&test_char);
 
@@ -174,8 +186,10 @@ TEST(AmoTest, AtomicOpXor)
     int test_int = 10;
     char test_char = 'c';
 
-    TypedAtomicOpFunctor<int> *amo_op_int = new AtomicOpXor<int>(2);
-    TypedAtomicOpFunctor<char> *amo_op_char = new AtomicOpXor<char>('a');
+    std::unique_ptr<TypedAtomicOpFunctor<int>> amo_op_int =
+        std::make_unique<AtomicOpXor<int>>(2);
+    std::unique_ptr<TypedAtomicOpFunctor<char>> amo_op_char =
+        std::make_unique<AtomicOpXor<char>>('a');
     amo_op_int->execute(&test_int);
     amo_op_char->execute(&test_char);
 
@@ -188,8 +202,10 @@ TEST(AmoTest, AtomicOpOr)
     int test_int = 8;
     bool test_bool = true;
 
-    TypedAtomicOpFunctor<int> *amo_op_int = new AtomicOpOr<int>(2);
-    TypedAtomicOpFunctor<bool> *amo_op_bool = new AtomicOpOr<bool>(false);
+    std::unique_ptr<TypedAtomicOpFunctor<int>> amo_op_int =
+        std::make_unique<AtomicOpOr<int>>(2);
+    std::unique_ptr<TypedAtomicOpFunctor<bool>> amo_op_bool =
+        std::make_unique<AtomicOpOr<bool>>(false);
     amo_op_int->execute(&test_int);
     amo_op_bool->execute(&test_bool);
 
@@ -202,8 +218,10 @@ TEST(AmoTest, AtomicOpAnd)
     int test_int = 10;
     char test_char = 'c';
 
-    TypedAtomicOpFunctor<int> *amo_op_int = new AtomicOpAnd<int>(6);
-    TypedAtomicOpFunctor<char> *amo_op_char = new AtomicOpAnd<char>('a');
+    std::unique_ptr<TypedAtomicOpFunctor<int>> amo_op_int =
+        std::make_unique<AtomicOpAnd<int>>(6);
+    std::unique_ptr<TypedAtomicOpFunctor<char>> amo_op_char =
+        std::make_unique<AtomicOpAnd<char>>('a');
     amo_op_int->execute(&test_int);
     amo_op_char->execute(&test_char);
 
@@ -215,8 +233,8 @@ TEST(AmoTest, AtomicGeneric2Op)
 {
     int test_int = 9;
 
-    TypedAtomicOpFunctor<int> *amo_op_int =
-        new AtomicGeneric2Op<int>(9, multiply2Op);
+    std::unique_ptr<TypedAtomicOpFunctor<int>> amo_op_int =
+        std::make_unique<AtomicGeneric2Op<int>>(9, multiply2Op);
     amo_op_int->execute(&test_int);
 
     EXPECT_EQ(test_int, 81);
@@ -226,8 +244,8 @@ TEST(AmoTest, AtomicGeneric3Op)
 {
     int test_int = 2;
 
-    TypedAtomicOpFunctor<int> *amo_op_int =
-        new AtomicGeneric3Op<int>(4, 3, multiply3Op);
+    std::unique_ptr<TypedAtomicOpFunctor<int>> amo_op_int =
+        std::make_unique<AtomicGeneric3Op<int>>(4, 3, multiply3Op);
     amo_op_int->execute(&test_int);
 
     EXPECT_EQ(test_int, 24);
@@ -239,8 +257,8 @@ TEST(AmoTest, AtomicGenericPair3Op)
 
     std::array<int, 2> a = {6, 3};
     std::array<int, 2> c = {10, 8};
-    TypedAtomicOpFunctor<int> *amo_op_int =
-         new AtomicGenericPair3Op<int>(a, c, addSubColumns);
+    std::unique_ptr<TypedAtomicOpFunctor<int>> amo_op_int =
+            std::make_unique<AtomicGenericPair3Op<int>>(a, c, addSubColumns);
     amo_op_int->execute(&test_int);
 
     EXPECT_EQ(test_int, 10);

@@ -33,6 +33,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from citations import add_citation
+
 from m5.params import *
 from m5.objects.AbstractMemory import *
 
@@ -56,3 +58,22 @@ class DRAMSim2(AbstractMemory):
     )
     traceFile = Param.String("", "Output file for trace generation")
     enableDebug = Param.Bool(False, "Enable DRAMSim2 debug output")
+
+
+add_citation(
+    DRAMSim2,
+    """@article{Rosenfeld:2011:dramsim2,
+  author       = {Paul Rosenfeld and
+                  Elliott Cooper{-}Balis and
+                  Bruce L. Jacob},
+  title        = {DRAMSim2: {A} Cycle Accurate Memory System Simulator},
+  journal      = {{IEEE} Compututer Architecture Letters},
+  volume       = {10},
+  number       = {1},
+  pages        = {16--19},
+  year         = {2011},
+  url          = {https://doi.org/10.1109/L-CA.2011.4},
+  doi          = {10.1109/L-CA.2011.4}
+}
+""",
+)
