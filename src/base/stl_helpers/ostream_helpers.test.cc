@@ -34,9 +34,9 @@
 
 #include "base/stl_helpers/ostream_helpers.hh"
 
-using gem5::stl_helpers::operator<<;
 
 TEST(OstreamHelpers, pair) {
+    using gem5::stl_helpers::operator<<;
     auto p = std::make_pair(1, 2);
     std::ostringstream os;
     os << p;
@@ -44,6 +44,7 @@ TEST(OstreamHelpers, pair) {
 }
 
 TEST(OstreamHelpers, tuple) {
+    using gem5::stl_helpers::operator<<;
     auto t = std::make_tuple(true,
         std::make_pair("Hello", std::string_view("World")), '!');
     std::ostringstream os;
@@ -52,6 +53,7 @@ TEST(OstreamHelpers, tuple) {
 }
 
 TEST(OstreamHelpers, vector) {
+    using gem5::stl_helpers::operator<<;
     auto v = std::vector<const char*>{"abc", "defg", "hijklm", "\n"};
     std::ostringstream os;
     os << v;
@@ -59,8 +61,58 @@ TEST(OstreamHelpers, vector) {
 }
 
 TEST(OstreamHelpers, map) {
+    using gem5::stl_helpers::operator<<;
     auto m = std::map<char, int>{{'a', 0}, {'b', 1}, {'c', 2}, {'d', 3}};
     std::ostringstream os;
     os << m;
     EXPECT_EQ(os.str(), "[ (a, 0), (b, 1), (c, 2), (d, 3), ]");
+}
+
+TEST(OstreamHelpers, optional) {
+    using gem5::stl_helpers::operator<<;
+    auto m = std::make_optional<int>(42);
+    std::ostringstream os;
+    os << m;
+    EXPECT_EQ(os.str(), "42");
+    os.str("");
+    m.reset();
+    os << m;
+    EXPECT_EQ(os.str(), "(-)");
+}
+
+TEST(OstreamHelpers, printer) {
+    std::string hello = "Hello";
+    std::ostringstream os;
+    os << hello;
+    EXPECT_EQ(os.str(), hello);
+
+    std::ostringstream os2;
+    os2 << gem5::stl_helpers::Printer(hello);
+    EXPECT_EQ(os2.str(), "[ H, e, l, l, o, ]");
+}
+
+
+TEST(OstreamHelpers, pointers) {
+    auto helped_representation = [](const auto& val) {
+        std::ostringstream os;
+        os << gem5::stl_helpers::Printer(val);
+        return os.str();
+    };
+    auto expected_representation = [&](const auto& ptr) {
+        using gem5::stl_helpers::operator<<;
+        std::ostringstream os;
+        auto* raw_ptr = &*ptr;
+        os << '(' << raw_ptr << ": " << *ptr << ')';
+        return os.str();
+    };
+
+    int x = 42;
+    auto* ptr = &x;
+    EXPECT_EQ(helped_representation(ptr), expected_representation(ptr));
+
+    auto uptr = std::make_unique<std::string>("Hello, World!");
+    EXPECT_EQ(helped_representation(uptr), expected_representation(uptr));
+
+    auto sptr = std::make_shared<std::optional<bool>>();
+    EXPECT_EQ(helped_representation(sptr), expected_representation(sptr));
 }
