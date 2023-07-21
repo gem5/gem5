@@ -45,7 +45,7 @@ By default a generator is passed to define the evit_event. A list of functions
 can also be passed. This is enabled by passing the `--list-format` flag.
 """
 
-from gem5.resources.resource import Resource
+from gem5.resources.resource import obtain_resource
 from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.boards.simple_board import SimpleBoard
 from gem5.components.cachehierarchies.classic.no_cache import NoCache
@@ -101,7 +101,7 @@ motherboard = SimpleBoard(
 # Set the workload
 # Note: Here we're using the "x86-m5-exit-repeat" resource. This calls an
 # `m5_exit(0)` command in an infinite while-loop.
-binary = Resource(
+binary = obtain_resource(
     "x86-m5-exit-repeat", resource_directory=args.resource_directory
 )
 motherboard.set_se_binary_workload(binary)

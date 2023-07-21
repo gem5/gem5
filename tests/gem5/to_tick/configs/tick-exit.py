@@ -28,7 +28,7 @@
 
 """
 
-from gem5.resources.resource import Resource
+from gem5.resources.resource import obtain_resource
 from gem5.isas import ISA
 from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.boards.simple_board import SimpleBoard
@@ -76,7 +76,7 @@ motherboard = SimpleBoard(
 )
 
 # Set the workload
-binary = Resource(
+binary = obtain_resource(
     "x86-hello64-static", resource_directory=args.resource_directory
 )
 motherboard.set_se_binary_workload(binary)
