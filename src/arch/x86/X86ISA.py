@@ -54,3 +54,59 @@ class X86ISA(BaseISA):
     vendor_string = Param.String(
         "HygonGenuine", "Vendor string for CPUID instruction"
     )
+    name_string = Param.String(
+        "Fake gem5 x86_64 CPU", "Processor name for CPUID instruction"
+    )
+
+    # For the functions that return numerical values we use a vector of ints.
+    # The order of the values is: EAX, EBX, EDX, ECX.
+    #
+    # If the CPU function can take an index, the index value is used as an
+    # offset into the vector and four numerical values are added for each
+    # possible index value. For example, if the function accepts 3 index
+    # values, there are 12 total ints in the vector param. In addition, the
+    # last values for functions which take an index must be all zeros. All
+    # zeros indicates to the KVM cpu / OS that there are no more index values
+    # to iterate over.
+    #
+    # A good resource for these values can be found here:
+    #     https://sandpile.org/x86/cpuid.htm
+    # 0000_0001h
+    FamilyModelStepping = VectorParam.UInt32(
+        [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x00000209],
+        "type/family/model/stepping and feature flags",
+    )
+    # 0000_0004h
+    CacheParams = VectorParam.UInt32(
+        [0x00000000, 0x00000000, 0x00000000, 0x00000000],
+        "cache configuration descriptors",
+    )
+    # 0000_0007h
+    ExtendedFeatures = VectorParam.UInt32(
+        [0x00000000, 0x01800000, 0x00000000, 0x00000000], "feature flags"
+    )
+    # 8000_0001h
+    FamilyModelSteppingBrandFeatures = VectorParam.UInt32(
+        [0x00020F51, 0x00000405, 0xEBD3FBFF, 0x00020001],
+        "family/model/stepping and features flags",
+    )
+    # 8000_0005h
+    L1CacheAndTLB = VectorParam.UInt32(
+        [0xFF08FF08, 0xFF20FF20, 0x40020140, 0x40020140],
+        "L1 cache and L1 TLB configuration descriptors",
+    )
+    # 8000_0006h
+    L2L3CacheAndL2TLB = VectorParam.UInt32(
+        [0x00000000, 0x42004200, 0x00000000, 0x04008140],
+        "L2/L3 cache and L2 TLB configuration descriptors",
+    )
+    # 8000_0007h
+    APMInfo = VectorParam.UInt32(
+        [0x80000018, 0x68747541, 0x69746E65, 0x444D4163],
+        "processor feedback capabilities",
+    )
+    # 8000_0008h
+    LongModeAddressSize = VectorParam.UInt32(
+        [0x00003030, 0x00000000, 0x00000000, 0x00000000],
+        "miscellaneous information",
+    )

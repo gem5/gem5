@@ -29,7 +29,10 @@
 #ifndef __ARCH_X86_CPUID_HH__
 #define __ARCH_X86_CPUID_HH__
 
+#include <unordered_map>
+
 #include "base/types.hh"
+#include "params/X86ISA.hh"
 
 namespace gem5
 {
@@ -38,28 +41,72 @@ class ThreadContext;
 
 namespace X86ISA
 {
-    struct CpuidResult
-    {
-        uint64_t rax;
-        uint64_t rbx;
-        uint64_t rcx;
-        uint64_t rdx;
 
-        // These are not in alphebetical order on purpose. The order reflects
-        // how the CPUID orders the registers when it returns results.
-        CpuidResult(uint64_t _rax, uint64_t _rbx,
-                    uint64_t _rdx, uint64_t _rcx) :
-            rax(_rax), rbx(_rbx), rcx(_rcx), rdx(_rdx)
-        {}
+enum StandardCpuidFunction
+{
+    VendorAndLargestStdFunc,
+    FamilyModelStepping,
+    CacheAndTLB,
+    SerialNumber,
+    CacheParams,
+    MonitorMwait,
+    ThermalPowerMgmt,
+    ExtendedFeatures,
+    NumStandardCpuidFuncs
+};
 
-        CpuidResult()
-        {}
-    };
+enum ExtendedCpuidFunctions
+{
+    VendorAndLargestExtFunc,
+    FamilyModelSteppingBrandFeatures,
+    NameString1,
+    NameString2,
+    NameString3,
+    L1CacheAndTLB,
+    L2L3CacheAndL2TLB,
+    APMInfo,
+    LongModeAddressSize,
+    NumExtendedCpuidFuncs
+};
 
-    uint64_t stringToRegister(const char *str);
+constexpr int nameStringSize = 48;
+
+struct CpuidResult
+{
+    uint64_t rax;
+    uint64_t rbx;
+    uint64_t rcx;
+    uint64_t rdx;
+
+    // These are not in alphebetical order on purpose. The order reflects
+    // how the CPUID orders the registers when it returns results.
+    CpuidResult(uint64_t _rax, uint64_t _rbx,
+                uint64_t _rdx, uint64_t _rcx) :
+        rax(_rax), rbx(_rbx), rcx(_rcx), rdx(_rdx)
+    {}
+
+    CpuidResult()
+    {}
+};
+
+class X86CPUID
+{
+  public:
+    X86CPUID(const std::string& vendor, const std::string& name);
+
+    void addStandardFunc(uint32_t func, std::vector<uint32_t> values);
+    void addExtendedFunc(uint32_t func, std::vector<uint32_t> values);
 
     bool doCpuid(ThreadContext * tc, uint32_t function,
-            uint32_t index, CpuidResult &result);
+                 uint32_t index, CpuidResult &result);
+
+  private:
+    const std::string vendorString;
+    const std::string nameString;
+    std::unordered_map<uint32_t, std::vector<uint32_t>> capabilities;
+
+    uint64_t stringToRegister(const char *str);
+};
 
 } // namespace X86ISA
 } // namespace gem5

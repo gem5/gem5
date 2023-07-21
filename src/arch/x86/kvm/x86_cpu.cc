@@ -37,6 +37,7 @@
 #include "arch/x86/cpuid.hh"
 #include "arch/x86/faults.hh"
 #include "arch/x86/interrupts.hh"
+#include "arch/x86/isa.hh"
 #include "arch/x86/regs/float.hh"
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/msr.hh"
@@ -1443,26 +1444,27 @@ X86KvmCPU::updateCPUID()
      * currently not a problem since M5 doesn't expose any of them at
      * the moment.
      */
+    X86ISA::ISA *isa = dynamic_cast<X86ISA::ISA *>(tc->getIsaPtr());
 
     /* Basic features */
     CpuidResult func0;
-    X86ISA::doCpuid(tc, 0x0, 0, func0);
+    isa->cpuid->doCpuid(tc, 0x0, 0, func0);
     for (uint32_t function = 0; function <= func0.rax; ++function) {
         CpuidResult cpuid;
         uint32_t idx(0);
 
-        X86ISA::doCpuid(tc, function, idx, cpuid);
+        isa->cpuid->doCpuid(tc, function, idx, cpuid);
         m5_supported.push_back(makeKvmCpuid(function, idx, cpuid));
     }
 
     /* Extended features */
     CpuidResult efunc0;
-    X86ISA::doCpuid(tc, 0x80000000, 0, efunc0);
+    isa->cpuid->doCpuid(tc, 0x80000000, 0, efunc0);
     for (uint32_t function = 0x80000000; function <= efunc0.rax; ++function) {
         CpuidResult cpuid;
         uint32_t idx(0);
 
-        X86ISA::doCpuid(tc, function, idx, cpuid);
+        isa->cpuid->doCpuid(tc, function, idx, cpuid);
         m5_supported.push_back(makeKvmCpuid(function, idx, cpuid));
     }
 
