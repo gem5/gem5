@@ -65,6 +65,7 @@ class X86FsWorkload(KernelWorkload):
     acpi_description_table_pointer = Param.X86ACPIRSDP(
         X86ACPIRSDP(), "ACPI root description pointer structure"
     )
+    enable_osxsave = Param.Bool(False, "Enable OSXSAVE in CR4 register")
 
 
 class X86FsLinux(X86FsWorkload):
