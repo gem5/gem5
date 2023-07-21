@@ -103,6 +103,7 @@ jobs:
           path: output.zip
           retention-days: 7
       - name: Clean runner
+        if: success() || failure()
         run:
           rm -rf ./* || true
           rm -rf ./.??* || true
