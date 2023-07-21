@@ -111,9 +111,19 @@ X86CPUID::doCpuid(ThreadContext * tc, uint32_t function, uint32_t index,
         return false;
     }
 
+    int cap_offset = 0;
+
+    // Ignore index values for functions that do not take index values.
+    if (hasSignificantIndex(function)) {
+        cap_offset = index * 4;
+    }
+
+    // Ensure we have the offset and 4 dwords after it.
+    assert(capabilities[function].size() >= (cap_offset + 4));
+
     auto &cap_vec = capabilities[function];
-    result = CpuidResult(cap_vec[0], cap_vec[1],
-                         cap_vec[2], cap_vec[3]);
+    result = CpuidResult(cap_vec[cap_offset + 0], cap_vec[cap_offset + 1],
+                         cap_vec[cap_offset + 2], cap_vec[cap_offset + 3]);
     DPRINTF(X86, "CPUID function %x returning (%x, %x, %x, %x)\n",
             function, result.rax, result.rbx, result.rdx, result.rcx);
 
@@ -129,6 +139,14 @@ X86CPUID::stringToRegister(const char *str)
         reg |= str[pos];
     }
     return reg;
+}
+
+// Return true if the CPUID function takes ECX index as an input AND
+// those multiple index values are supported in gem5.
+bool
+X86CPUID::hasSignificantIndex(uint32_t function)
+{
+    return false;
 }
 
 } // namespace X86ISA

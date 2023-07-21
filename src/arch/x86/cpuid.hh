@@ -99,6 +99,7 @@ class X86CPUID
 
     bool doCpuid(ThreadContext * tc, uint32_t function,
                  uint32_t index, CpuidResult &result);
+    bool hasSignificantIndex(uint32_t function);
 
   private:
     const std::string vendorString;
