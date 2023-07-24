@@ -63,7 +63,7 @@ from gem5.components.processors.simple_switchable_processor import (
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.coherence_protocol import CoherenceProtocol
-from gem5.resources.resource import Resource
+from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
 from gem5.simulate.exit_event import ExitEvent
 
@@ -203,10 +203,10 @@ board.set_kernel_disk_workload(
     # The x86 linux kernel will be automatically downloaded to the
     # `~/.cache/gem5` directory if not already present.
     # gapbs benchamarks was tested with kernel version 4.19.83
-    kernel=Resource("x86-linux-kernel-4.19.83"),
+    kernel=obtain_resource("x86-linux-kernel-4.19.83"),
     # The x86-gapbs image will be automatically downloaded to the
     # `~/.cache/gem5` directory if not already present.
-    disk_image=Resource("x86-gapbs"),
+    disk_image=obtain_resource("x86-gapbs"),
     readfile_contents=command,
 )
 

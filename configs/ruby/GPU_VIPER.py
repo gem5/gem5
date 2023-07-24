@@ -489,6 +489,9 @@ def define_options(parser):
         help="Size of the mandatory queue in the GPU scalar "
         "cache controller",
     )
+    parser.add_argument(
+        "--glc-atomic-latency", type=int, default=1, help="GLC Atomic Latency"
+    )
 
 
 def construct_dirs(options, system, ruby_system, network):
@@ -875,6 +878,7 @@ def construct_tccs(options, system, ruby_system, network):
         tcc_cntrl.create(options, ruby_system, system)
         tcc_cntrl.l2_request_latency = options.gpu_to_dir_latency
         tcc_cntrl.l2_response_latency = options.TCC_latency
+        tcc_cntrl.glc_atomic_latency = options.glc_atomic_latency
         tcc_cntrl_nodes.append(tcc_cntrl)
         tcc_cntrl.WB = options.WB_L2
         tcc_cntrl.number_of_TBEs = 2560 * options.num_compute_units

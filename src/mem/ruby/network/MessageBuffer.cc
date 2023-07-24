@@ -62,7 +62,8 @@ MessageBuffer::MessageBuffer(const Params &p)
     m_max_dequeue_rate(p.max_dequeue_rate), m_dequeues_this_cy(0),
     m_time_last_time_size_checked(0),
     m_time_last_time_enqueue(0), m_time_last_time_pop(0),
-    m_last_arrival_time(0), m_strict_fifo(p.ordered),
+    m_last_arrival_time(0), m_last_message_strict_fifo_bypassed(false),
+    m_strict_fifo(p.ordered),
     m_randomization(p.randomization),
     m_allow_zero_latency(p.allow_zero_latency),
     m_routing_priority(p.routing_priority),
@@ -214,7 +215,8 @@ random_time()
 }
 
 void
-MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta)
+MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta,
+                       bool bypassStrictFIFO)
 {
     // record current time incase we have a pop that also adjusts my size
     if (m_time_last_time_enqueue < current_time) {
@@ -252,7 +254,8 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta)
 
     // Check the arrival time
     assert(arrival_time >= current_time);
-    if (m_strict_fifo) {
+    if (m_strict_fifo &&
+        !(bypassStrictFIFO || m_last_message_strict_fifo_bypassed)) {
         if (arrival_time < m_last_arrival_time) {
             panic("FIFO ordering violated: %s name: %s current time: %d "
                   "delta: %d arrival_time: %d last arrival_time: %d\n",
@@ -265,6 +268,8 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta)
     if (!RubySystem::getWarmupEnabled()) {
         m_last_arrival_time = arrival_time;
     }
+
+    m_last_message_strict_fifo_bypassed = bypassStrictFIFO;
 
     // compute the delay cycles and set enqueue time
     Message* msg_ptr = message.get();

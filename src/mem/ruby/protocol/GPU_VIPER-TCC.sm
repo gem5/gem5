@@ -36,6 +36,7 @@ machine(MachineType:TCC, "TCC Cache")
    bool WB; /*is this cache Writeback?*/
    Cycles l2_request_latency := 50;
    Cycles l2_response_latency := 20;
+   Cycles glc_atomic_latency := 0;
 
   // From the TCPs or SQCs
   MessageBuffer * requestFromTCP, network="From", virtual_network="1", vnet_type="request";
@@ -510,7 +511,7 @@ machine(MachineType:TCC, "TCC Cache")
 
   action(ar_sendAtomicResponse, "ar", desc="send Atomic Ack") {
     peek(coreRequestNetwork_in, CPURequestMsg) {
-        enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
+        enqueue(responseToCore_out, ResponseMsg, l2_response_latency + glc_atomic_latency, true) {
           out_msg.addr := address;
           out_msg.Type := CoherenceResponseType:TDSysResp;
           out_msg.Destination.clear();

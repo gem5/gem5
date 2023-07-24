@@ -45,7 +45,7 @@ from gem5.components.processors.cpu_types import (
 from gem5.components.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
 )
-from gem5.resources.resource import Resource
+from gem5.resources.resource import obtain_resource
 from gem5.runtime import get_runtime_coherence_protocol
 from gem5.simulate.simulator import Simulator
 from gem5.simulate.exit_event import ExitEvent
@@ -165,10 +165,10 @@ kernal_args = motherboard.get_default_kernel_args() + [args.kernel_args]
 
 # Set the Full System workload.
 motherboard.set_kernel_disk_workload(
-    kernel=Resource(
+    kernel=obtain_resource(
         "x86-linux-kernel-5.4.49", resource_directory=args.resource_directory
     ),
-    disk_image=Resource(
+    disk_image=obtain_resource(
         "x86-ubuntu-18.04-img", resource_directory=args.resource_directory
     ),
     # The first exit signals to switch processors.

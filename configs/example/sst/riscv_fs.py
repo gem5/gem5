@@ -29,7 +29,7 @@ from m5.objects import *
 from os import path
 
 # For downloading the disk image
-from gem5.resources.resource import Resource
+from gem5.resources.resource import obtain_resource
 
 import argparse
 
@@ -139,7 +139,7 @@ cpu_clock_rate = args.cpu_clock_rate
 memory_size = args.memory_size
 
 # Try downloading the Resource
-bbl_resource = Resource("riscv-boot-exit-nodisk")
+bbl_resource = obtain_resource("riscv-boot-exit-nodisk")
 bbl_path = bbl_resource.get_local_path()
 
 system = System()

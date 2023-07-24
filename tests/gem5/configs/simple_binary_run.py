@@ -30,7 +30,7 @@ The system has no cache heirarchy and is as "bare-bones" as you can get in
 gem5 while still being functinal.
 """
 
-from gem5.resources.resource import Resource
+from gem5.resources.resource import obtain_resource
 from gem5.components.processors.cpu_types import (
     get_cpu_types_str_set,
     get_cpu_type_from_str,
@@ -135,7 +135,9 @@ motherboard = SimpleBoard(
 )
 
 # Set the workload
-binary = Resource(args.resource, resource_directory=args.resource_directory)
+binary = obtain_resource(
+    args.resource, resource_directory=args.resource_directory
+)
 motherboard.set_se_binary_workload(binary, arguments=args.arguments)
 
 # Run the simulation

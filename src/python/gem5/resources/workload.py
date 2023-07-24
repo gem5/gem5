@@ -52,7 +52,7 @@ class AbstractWorkload:
     workload = CustomWorkload(
         function = "set_se_binary_workload",
         parameters = {
-            "binary" : Resource("x86-print-this"),
+            "binary" : obtain_resource("x86-print-this"),
             "arguments" : ["hello", 6]
         },
     )
@@ -64,7 +64,7 @@ class AbstractWorkload:
 
     ```py
     board.set_se_binary_workload(
-        binary = Resource("x86-print-this"),
+        binary = obtain_resource("x86-print-this"),
         arguments = ["hello", 6],
     )
     ```
@@ -121,7 +121,7 @@ class CustomWorkload(AbstractWorkload):
     workload = CustomWorkload(
         function = "set_se_binary_workload",
         parameters = {
-            "binary" : Resource("x86-print-this"),
+            "binary" : obtain_resource("x86-print-this"),
             "arguments" : ["hello", 6]
         },
     )
@@ -148,7 +148,9 @@ class Workload(AbstractWorkload):
 
     # Optionally we can override a parameter in the workload. In this example
     # we are going to run this workload with a difference kernel.
-    workload.set_parameter("kernel", Resource("arm64-linux-kernel-4.14.134"))
+    workload.set_parameter("kernel",
+        obtain_resource("arm64-linux-kernel-4.14.134")
+    )
 
     # We then set this workload to the board.
     board.set_workload(workload)
@@ -193,8 +195,8 @@ class Workload(AbstractWorkload):
 
         ```python
         board.set_kernel_disk_workload(
-            kernel = Resource("x86-linux-kernel-5.4.49"),
-            disk-image = Resource("x86-ubuntu-18.04-img"),
+            kernel = obtain_resource("x86-linux-kernel-5.4.49"),
+            disk-image = obtain_resource("x86-ubuntu-18.04-img"),
             readfile_contents = "m5_exit; echo 'hello'; m5_exit",
         )
         ```
