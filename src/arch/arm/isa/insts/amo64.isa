@@ -827,35 +827,35 @@ let {{
                    ret_op=False, flavor="release").emit(OP_DICT['MIN'])
 
     AtomicArithmeticSingleOp("swpb",   "SWPB",    1, unsign=True,
-                   ret_op=False, flavor="normal").emit(OP_DICT['SWP'])
+                   flavor="normal").emit(OP_DICT['SWP'])
     AtomicArithmeticSingleOp("swplb",  "SWPLB",   1, unsign=True,
-                   ret_op=False, flavor="release").emit(OP_DICT['SWP'])
+                   flavor="release").emit(OP_DICT['SWP'])
     AtomicArithmeticSingleOp("swpab",  "SWPAB",   1, unsign=True,
-                   ret_op=False, flavor="acquire").emit(OP_DICT['SWP'])
+                   flavor="acquire").emit(OP_DICT['SWP'])
     AtomicArithmeticSingleOp("swplab", "SWPLAB",  1, unsign=True,
-                   ret_op=False, flavor="acquire_release").emit(OP_DICT['SWP'])
+                   flavor="acquire_release").emit(OP_DICT['SWP'])
     AtomicArithmeticSingleOp("swph",   "SWPH",    2, unsign=True,
-                   ret_op=False, flavor="normal").emit(OP_DICT['SWP'])
+                   flavor="normal").emit(OP_DICT['SWP'])
     AtomicArithmeticSingleOp("swplh",  "SWPLH",   2, unsign=True,
-                   ret_op=False, flavor="release").emit(OP_DICT['SWP'])
+                   flavor="release").emit(OP_DICT['SWP'])
     AtomicArithmeticSingleOp("swpah",  "SWPAH",   2, unsign=True,
-                   ret_op=False, flavor="acquire").emit(OP_DICT['SWP'])
+                   flavor="acquire").emit(OP_DICT['SWP'])
     AtomicArithmeticSingleOp("swplah", "SWPLAH",  2, unsign=True,
-                   ret_op=False, flavor="acquire_release").emit(OP_DICT['SWP'])
+                   flavor="acquire_release").emit(OP_DICT['SWP'])
     AtomicArithmeticSingleOp("swp",    "SWP",     4, unsign=True,
-                   ret_op=False, flavor="normal").emit(OP_DICT['SWP'])
+                   flavor="normal").emit(OP_DICT['SWP'])
     AtomicArithmeticSingleOp("swpl",   "SWPL",    4, unsign=True,
-                   ret_op=False, flavor="release").emit(OP_DICT['SWP'])
+                   flavor="release").emit(OP_DICT['SWP'])
     AtomicArithmeticSingleOp("swpa",   "SWPA",    4, unsign=True,
-                   ret_op=False, flavor="acquire").emit(OP_DICT['SWP'])
+                   flavor="acquire").emit(OP_DICT['SWP'])
     AtomicArithmeticSingleOp("swpla",  "SWPLA",   4, unsign=True,
-                   ret_op=False, flavor="acquire_release").emit(OP_DICT['SWP'])
+                   flavor="acquire_release").emit(OP_DICT['SWP'])
     AtomicArithmeticSingleOp("swp64",  "SWP64",    8, unsign=True,
-                   ret_op=False, flavor="normal").emit(OP_DICT['SWP'])
+                   flavor="normal").emit(OP_DICT['SWP'])
     AtomicArithmeticSingleOp("swpl64", "SWPL64",   8, unsign=True,
-                   ret_op=False, flavor="release").emit(OP_DICT['SWP'])
+                   flavor="release").emit(OP_DICT['SWP'])
     AtomicArithmeticSingleOp("swpa64", "SWPA64",   8, unsign=True,
-                   ret_op=False, flavor="acquire").emit(OP_DICT['SWP'])
+                   flavor="acquire").emit(OP_DICT['SWP'])
     AtomicArithmeticSingleOp("swpla64", "SWPLA64", 8, unsign=True,
-                   ret_op=False, flavor="acquire_release").emit(OP_DICT['SWP'])
+                   flavor="acquire_release").emit(OP_DICT['SWP'])
 }};
