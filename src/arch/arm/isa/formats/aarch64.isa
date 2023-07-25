@@ -545,21 +545,37 @@ namespace Aarch64
                                 return new Tlbi64LocalHub(
                                   machInst, miscReg, rt);
                               case MISCREG_TLBI_ALLE3IS:
+                              case MISCREG_TLBI_ALLE3OS:
                               case MISCREG_TLBI_ALLE2IS:
+                              case MISCREG_TLBI_ALLE2OS:
                               case MISCREG_TLBI_ALLE1IS:
+                              case MISCREG_TLBI_ALLE1OS:
                               case MISCREG_TLBI_VMALLS12E1IS:
+                              case MISCREG_TLBI_VMALLS12E1OS:
                               case MISCREG_TLBI_VMALLE1IS:
+                              case MISCREG_TLBI_VMALLE1OS:
                               case MISCREG_TLBI_VAE3IS_Xt:
+                              case MISCREG_TLBI_VAE3OS_Xt:
                               case MISCREG_TLBI_VALE3IS_Xt:
+                              case MISCREG_TLBI_VALE3OS_Xt:
                               case MISCREG_TLBI_VAE2IS_Xt:
+                              case MISCREG_TLBI_VAE2OS_Xt:
                               case MISCREG_TLBI_VALE2IS_Xt:
+                              case MISCREG_TLBI_VALE2OS_Xt:
                               case MISCREG_TLBI_VAE1IS_Xt:
+                              case MISCREG_TLBI_VAE1OS_Xt:
                               case MISCREG_TLBI_VALE1IS_Xt:
+                              case MISCREG_TLBI_VALE1OS_Xt:
                               case MISCREG_TLBI_ASIDE1IS_Xt:
+                              case MISCREG_TLBI_ASIDE1OS_Xt:
                               case MISCREG_TLBI_VAAE1IS_Xt:
+                              case MISCREG_TLBI_VAAE1OS_Xt:
                               case MISCREG_TLBI_VAALE1IS_Xt:
+                              case MISCREG_TLBI_VAALE1OS_Xt:
                               case MISCREG_TLBI_IPAS2E1IS_Xt:
+                              case MISCREG_TLBI_IPAS2E1OS_Xt:
                               case MISCREG_TLBI_IPAS2LE1IS_Xt:
+                              case MISCREG_TLBI_IPAS2LE1OS_Xt:
                                 return new Tlbi64ShareableHub(
                                   machInst, miscReg, rt, dec.dvmEnabled);
                               default:
