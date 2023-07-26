@@ -194,44 +194,6 @@ test library executes each python file it finds searching for tests. It's okay
 if the file causes an exception. This means there are no tests in that file
 (e.g., it's not a new-style test).
 
-
-## Binary test applications
-
-The code for some test binaries that are run in the gem5 guest during
-testing can be found in `tests/test-progs`.
-There's one directory per test application.
-The source code is under the `source` directory.
-
-You may have a `bin` directory as well.
-The `bin` directory is automatically created when running the test case that
-uses the test binary.
-This is not the case when a test is run via the --bin-path option.
-In that scenario a bin directory will be created in the selected path
-rather than in `tests/test-progs`.
-The binary is downloaded from the gem5 servers the first
-time it is referenced by a test.
-
-Some other tests (like Linux-boot) don't have sources inside gem5 and
-are simply downloaded from gem5 servers.
-
-## Updating the test binaries
-
-The test infrastructure should check with the gem5 servers to ensure you have
-the latest binaries. However, if you believe your binaries are out of date,
-simply delete the `bin` directory and they will be re-downloaded to your local
-machine.
-
-## Building (new-style) test binaries
-
-In each `src/` directory under `tests/test-progs`, there is a Makefile.
-This Makefile downloads a docker image and builds the test binary for some ISA
-(e.g., Makefile.x86 builds the binary for x86). Additionally, if you run `make
-upload` it will upload the binaries to the gem5 server, if you have access to
-modify the binaries. *If you need to modify the binaries for updating a test or
-adding a new test and you don't have access to the gem5 server, contact a
-maintainer (see MAINTAINERS).*
-
-
 ## Running Tests in Parallel
 
 Whimsy has support for parallel testing baked in. This system supports
