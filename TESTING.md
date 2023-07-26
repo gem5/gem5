@@ -77,54 +77,35 @@ arguments:
 This will load every test in directory1 and directory2 (and their
 subdirectories).
 
-## Specifying a subset of tests to run
+## 'quick', 'long', and 'very-long' tests
 
-You can use the tag query interface to specify the exact tests you want to run.
-For instance, if you want to run only with `gem5.opt`, you can use
+There are three categoties of tests which may be run from the "tests" directory:
 
-```shell
-./main.py run --variant opt
+1. **'quick' tests**. This suite of tests are designed to finish execution in a few hours, inclusive of compilation of gem5.
+We run these as part of our continuous integration tests on pull requests made to our repository.
+These tests all utilize a binary build `scons build/ALL/gem5.opt`, and thus only rely on a single compilation for the tests to run.
+2. **'long' tests**. This suite of tests are designed to finish execution in around 12 hours.
+They incorporate longer running tests which are unsuitable to run as part of the 'quick' tests.
+We run these daily via a scheduled job.
+3. **'very-long' tests**. This suite of tests are designed to finish execution in days.
+They incorporate tests which are too long to run frequntly
+We run these daily via a scheduled job.
+
+When executing `./main.py run` the 'quick' tests are executed.
+To run the 'long' tests execute:
+
+```sh
+./main.py run --length=long
 ```
 
-Or, if you want to just run quick tests with the `gem5.opt` binary:
+and to run the 'very-long' tests execute:
 
-```shell
-./main.py run --length quick --variant opt
+```sh
+./main.py run --length=very-long
 ```
 
-
-To view all of the available tags, use
-
-```shell
-./main.py list --all-tags
-```
-
-The output is split into tag *types* (e.g., isa, variant, length) and the
-tags for each type are listed after the type name.
-
-Note that when using the isa tag type, tests were traditionally sorted based
-on what compilation it required. However, as tests have switched to all be
-compiled under the ALL compilation, which includes all ISAs so one doesn't
-need to compile each one individually, using the isa tag for ISAs other than
-ALL has become a less optimal way of searching for tests.  It would instead
-be better to run subsets of tests based on their directories, as described
-above.
-
-You can specify "or" between tags within the same type by using the tag flag
-multiple times. For instance, to run everything that is tagged "opt" or "fast"
-use
-
-```shell
-./main.py run --variant opt --variant fast
-```
-
-You can also specify "and" between different types of tags by specifying more
-than one type on the command line. For instance, this will only run tests with
-both the "ALL" and "opt" tags.
-
-```shell
-./main.py run --isa All --variant opt
-```
+In most cases we recommend running the 'quick' tests for most changes.
+Only in some cases, such as contributions which significantly change the codebase, do we recommend running the 'long' or 'very-long' suite.
 
 ## Running tests in batch
 
