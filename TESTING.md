@@ -7,9 +7,9 @@ gem5's testing infrastructure has the following goals:
  * Fast execution in the simple case
  * High coverage of gem5 code
 
-## Running unit tests
+## Running the CPP unit tests
 
-gem5 comes with unit tests, created using the Google Test framework. These can
+gem5 comes with unit tests for CPP, created using the Google Test framework. These can
 be built through SCons.
 
 To build and run all the unit tests:
@@ -41,9 +41,30 @@ To run a specific test function (e.g., BitUnionData.NormalBitfield):
 ./build/ALL/base/bitunion.test.opt --gtest_filter=BitUnionData.NormalBitfield
 ```
 
+## Running the Python unit tests
+
+gem5 comes with Python unit tests.
+These are built using the [Python unit testing framework](https://docs.python.org/3/library/unittest.html).
+These tests can be found in "tests/gem5/pyunit".
+
+To run these tests a gem5 binary must first be compiled.
+We recommend, `build/ALL/gem5.opt`:
+
+```sh
+scons build/ALL/gem5.opt -j {number of compilation threads}
+```
+
+Then the Pyunit tests may be executed using:
+
+```sh
+./build/ALL/gem5.opt tests/run_pyunit.py
+```
+
+**Note**: These tests are also run via the 'quick' system-level tests, explained below.
+
 ## Running system-level tests
 
-Within the `tests` directory we have system-level tests. These tests run
+Within the "tests/gem5" directory we have system-level tests. These tests run
 the gem5 framework against various hardware configurations, with different
 ISAs, then verify the simulations execute correctly. These should be seen as
 high-level, coarse-grained tests to compliment the unit-tests.
