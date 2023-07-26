@@ -324,6 +324,7 @@ hasBuiltinCtz() {
 #endif
 }
 
+[[maybe_unused]]
 int
 findLsbSetFallback(uint64_t val) {
     // Create a mask with val's trailing zeros flipped to 1, lsb set flipped to
