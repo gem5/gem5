@@ -369,6 +369,7 @@ bool Walker::sendTiming(WalkerState* sending_walker, PacketPtr pkt)
         return true;
     } else {
         (void)pkt->popSenderState();
+        delete walker_state;
     }
 
     return false;
