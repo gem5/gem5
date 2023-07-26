@@ -7,7 +7,7 @@ gem5's testing infrastructure has the following goals:
  * Fast execution in the simple case
  * High coverage of gem5 code
 
-# Running unit tests
+## Running unit tests
 
 gem5 comes with unit tests, created using the Google Test framework. These can
 be built through SCons.
@@ -41,7 +41,7 @@ To run a specific test function (e.g., BitUnionData.NormalBitfield):
 ./build/ALL/base/bitunion.test.opt --gtest_filter=BitUnionData.NormalBitfield
 ```
 
-# Running system-level tests
+## Running system-level tests
 
 Within the `tests` directory we have system-level tests. These tests run
 the gem5 framework against various hardware configurations, with different
@@ -77,7 +77,7 @@ arguments:
 This will load every test in directory1 and directory2 (and their
 subdirectories).
 
-## 'quick', 'long', and 'very-long' tests
+### 'quick', 'long', and 'very-long' tests
 
 There are three categoties of tests which may be run from the "tests" directory:
 
@@ -107,7 +107,7 @@ and to run the 'very-long' tests execute:
 In most cases we recommend running the 'quick' tests for most changes.
 Only in some cases, such as contributions which significantly change the codebase, do we recommend running the 'long' or 'very-long' suite.
 
-## Running tests in batch
+### Running tests in batch
 
 The testing infrastructure provides the two needed methods to run tests in
 batch. First, you can list all of the tests based on the same tags as above in
@@ -141,7 +141,7 @@ run more than one uid, you must call `./main.py` multiple times.
 Currently, you must specify `--skip-build` if you want to run a single suite or
 run in batch mode. Otherwise, you will build gem5 for all architectures.
 
-## Rerunning failed tests
+### Rerunning failed tests
 
 While developing software a common practice is to run tests, make a change, and
 assert that the tests still pass. If tests fail you'll likely want to
@@ -159,7 +159,7 @@ using the `rerun` command.
 ./main.py rerun
 ```
 
-## If something goes wrong
+### If something goes wrong
 
 The first step is to turn up the verbosity of the output using `-v`. This will
 allow you to see what tests are running and why a test is failing.
@@ -167,7 +167,7 @@ allow you to see what tests are running and why a test is failing.
 If a test fails, the temporary directory where the gem5 output was saved is kept
 and the path to the directory is printed in the terminal.
 
-## Debugging the testing infrastructure
+### Debugging the testing infrastructure
 
 Every command takes an option for the verbosity. `-v`, `-vv`, `-vvv` will
 increase the verbosity level. If something isn't working correctly, you can
@@ -178,7 +178,7 @@ contains the base code for tests, suites, fixtures, etc. The code in tests/gem5
 is *gem5-specific* code. For the most part, the code in tests/gem5 extends the
 structures in ext/testlib.
 
-## Common errors
+### Common errors
 
 You may see a number of lines of output during test discovery that look like
 the following:
@@ -194,7 +194,7 @@ test library executes each python file it finds searching for tests. It's okay
 if the file causes an exception. This means there are no tests in that file
 (e.g., it's not a new-style test).
 
-## Running Tests in Parallel
+### Running Tests in Parallel
 
 Whimsy has support for parallel testing baked in. This system supports
 running multiple suites at the same time on the same computer. To run
@@ -203,6 +203,13 @@ suites in parallel, supply the `-t <number-tests>` flag to the run command.
 For example, to run up to three test suites at the same time::
 
     ./main.py run --skip-build -t 3
+
+### Testing resources
+
+By default binaries and testing resources are obtained via the [gem5 resources infrastructure](https://www.gem5.org/documentation/general_docs/gem5_resources/).
+The downloaded resources are cached in "tests/gem5/resources".
+The resources are cached to avoid re-downloading when tests are run multiple times, though some of these resources, such as disk images, are large.
+It is therefore recommended you remove the "tests/gem5/resources" directory when you are done testing.
 
 ## Running Tests within GitHub Actions
 
