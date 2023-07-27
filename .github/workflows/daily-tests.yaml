@@ -168,7 +168,7 @@ jobs:
       matrix:
         test-type: [gem5-library-example-x86-ubuntu-run-ALL-x86_64-opt, gem5-library-example-riscv-ubuntu-run-ALL-x86_64-opt, lupv-example-ALL-x86_64-opt, gem5-library-example-arm-ubuntu-run-test-ALL-x86_64-opt, gem5-library-example-riscvmatched-hello-ALL-x86_64-opt]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: build-gem5
+    needs: [name-artifacts, build-gem5]
     timeout-minutes: 1440 # 24 hours
     steps:
     - uses: actions/checkout@v3
