@@ -30,7 +30,7 @@
 
 #include <string>
 
-#include "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaamem/port.hh"
+#include "mem/port.hh"
 
 /**
  *  SSTResponderInterface provides an interface specified gem5's expectations
