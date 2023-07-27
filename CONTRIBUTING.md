@@ -1,425 +1,390 @@
-If you've made changes to gem5 that might benefit others, we strongly encourage
-you to contribute those changes to the public gem5 repository. There are
-several reasons to do this:
- * Share your work with others, so that they can benefit from new functionality.
- * Support the scientific principle by enabling others to evaluate your
-   suggestions without having to guess what you did.
- * Once your changes are part of the main repo, you no longer have to merge
-   them back in every time you update your local repo. This can be a huge time
-   saving!
- * Once your code is in the main repo, other people have to make their changes
-   work with your code, and not the other way around.
- * Others may build on your contributions to make them even better, or extend
-   them in ways you did not have time to do.
- * You will have the satisfaction of contributing back to the community.
+This document serves as a guide to contributing to gem5.
+The following subsections outline, in order, the steps involved in contributing
+to the gem5 project.
 
-The main method for contributing code to gem5 is via our code review website:
-https://github.com/gem5/gem5/pulls/. This documents describes the details of
-how to create code changes, upload your changes, have your changes
-reviewed, and finally push your changes to gem5. More information can be found
-from the following sources:
- * http://gem5.org/contributing
- * https://docs.github.com/en/pull-requests
- * https://git-scm.com/book
+## Determining what you can contribute
 
+The easiest way to see how you can contribute to gem5 is to check our Jira
+issue tracker: <https://gem5.atlassian.net> or GitHub issue tracker:
+<https://github.com/gem5/gem5/issues>.
 
-High-level flow for submitting changes
-======================================
+Browse these open issues and see if there are any which you are capable of
+handling. When you find a task you are happy to carry out, verify no one else
+is presently assigned, then leave a comment asking if you may assign yourself
+this task. Though not mandatory, we
+advise first-time contributors do this so developers more familiar with the
+task may give advice on how best to implement the necessary changes.
 
-    +-------------+
-    | Make change |
-    +------+------+
-           |
-           |
-           v
-    +-------------+
-    |  Run tests  |<--------------+
-    +------+------+               |
-           |                      |
-           |                      |
-           v                      |
-    +------+------+               |
-    | Post review |               |
-    +------+------+               |
-           |                      |
-           v                      |
-    +--------+---------+          |
-    | Wait for reviews |          |
-    +--------+---------+          |
-           |                      |
-           |                      |
-           v                      |
-      +----+----+   No     +------+------+
-      |Reviewers+--------->+ Update code |
-      |happy?   |          +------+------+
-      +----+----+                 ^
-           |                      |
-           | Yes                  |
-           v                      |
-      +----+-----+   No           |
-      |Maintainer+----------------+
-      |happy?    |
-      +----+-----+
-           |
-           | Yes
-           v
-    +------+------+
-    | Submit code |
-    +-------------+
+Once a developers has replied to your comment (and given any advice they may
+have), you may officially assign yourself the task. This helps the gem5
+development community understand which parts of the project are presently being
+worked on.
 
-After creating your change to gem5, you can post a review to git
-via a pull request at: https://github.com/gem5/gem5/pulls/. Before being able to
-submit your code to the mainline of gem5, the code is reviewed by others in the
-community. Additionally, the maintainer for that part of the code must sign off
-on it.
+**If, for whatever reason, you stop working on a task, please unassign
+yourself from the task.**
 
-Cloning the gem5 repo to contribute
-===================================
+## Obtaining the git repo
 
-If you plan on contributing, it is strongly encouraged for you to clone the
-repository directly, and checkout the `develop` branch from our git instance
-at https://github.com/gem5/gem5/.
+The gem5 git repository is hosted at <https://github.com/gem5/gem5>.
+**Please note: contributions made to other gem5 repos
+will not be considered. Please contribute to <https://github.com/gem5/gem5>
+exclusively.**
 
-To clone the gem5 repository:
+To pull the gem5 git repo:
 
-```
- git clone https://github.com/gem5/gem5/
+```sh
+git clone https://github.com/gem5/gem5
 ```
 
-By default, the stable branch is checked out. The stable branch contains the
-latest released version of gem5. To obtain code still under-development (and
-which contributions can be made):
+If you wish to use gem5 and never contribute, this is fine. However, to
+contribute, we use the [GitHub Pull-Request model](https://docs.github.com/en/pull-requests), and therefore recommend [Forking the gem5 repository](https://docs.github.com/en/get-started/quickstart/fork-a-repo) prior to contributing.
 
+### Forking
+
+Please consult the [GitHub documentation on Forking a GitHub repository](https://docs.github.com/en/get-started/quickstart/fork-a-repo).
+As we will be working atop the `develop` branch, please ensure you Fork all the repository's branches, not just the `stable` branch.
+
+This will create your own forked version of the gem5 repo on your own GitHub account.
+You may then obtain it locally using:
+
+```sh
+git clone https://github.com/{your github account}/gem5
 ```
-cd gem5
-git checkout --track origin/develop
+
+### stable / develop branch
+
+When cloned the git repo will have the `stable` branch checked-out by default. The
+`stable` branch is the gem5 stable release branch. I.e., the HEAD
+of this branch contains the latest stable release of gem5. (execute `git tag`
+on the `stable` branch to see the list of stable releases. A particular
+release may be checked out by executing `git checkout <release>`). As the
+`stable` branch only contains officially released gem5 code **contributors
+should not develop changes on top of the `stable` branch** they should instead
+**develop changes on top of the `develop` branch**.
+
+To switch to the `develop` branch:
+
+```sh
+git switch develop
 ```
 
-Changes should be made to this develop branch. Changes to the stable branch
-will be blocked. Once a change on the develop branch is properly incorporated
-into the gem5 repo it will be merged into the stable branch upon the next
-release of gem5. New releases of gem5 occur three times a year. Ergo, changes
-made to the develop branch should appear on the stable branch within three to
-four months as part of a stable release.
+The develop `branch` is merged into the `stable` branch upon a gem5 release.
+Therefore, any changes you make exist on the develop branch until the next release.
 
-Other gem5 repositories
------------------------
+We strongly recommend creating your own local branches to do changes.
+The flow of development works best if `develop` and `stable` are not modified directly.
+This helps keep your changes organized across different branches in your forked repository.
+The following example will create a new branch, from `develop`, called `new-feature`:
 
-There are a few repositories other than the main gem5 development repository.
+```sh
+git switch -c new-feature
+```
 
- * public/m5threads: The code for a pthreads implementation that works with
-   gem5's syscall emulation mode.
- * public/gem5-resources: Resources to enable computer architecture research
-   with gem5. See the README.md file in the gem5-resources repository for more
-   information.
- * public/gem5-website: The gem5.org website source. See the README.md file in
-   the gem5-website repository for more information.
+## Making modifications
 
-Making changes to gem5
-======================
+### C/CPP
 
-It is strongly encouraged to use git branches when making changes to gem5.
-Additionally, keeping changes small and concise and only have a single logical
-change per commit.
+Different tasks will require the project to be modified in different ways.
+Though, in all cases, our style-guide must be adhered to. The full C/C++ style
+guide is outlined [here](/documentation/general_docs/development/coding_style).
 
-Unlike our previous flow with Mercurial and patch queues, when using git, you
-will be committing changes to your local branch. By using separate branches in
-git, you will be able to pull in and merge changes from mainline and simply
-keep up with upstream changes.
+As a high-level overview:
 
-We use a rebase-always model for contributions to the develop branch of gem5.
-In this model, the changes are rebased on top of the tip of develop instead of
-merged. This means that to contribute, you will have to frequently rebase any
-feature branches on top of develop. If you see a "merge conflict" in gerrit, it
-can often be solved with a simple rebase. To find out more information about
-rebasing and git, see the [git book].
+* Lines must not exceed 79 characters in length.
+* There should be no trailing white-space on any line.
+* Indentations must be 4 spaces (no tab characters).
+* Class names must use upper camel case (e.g., `ThisIsAClass`).
+* Class member variables must use lower camel case (e.g.,
+`thisIsAMemberVariable`).
+* Class member variables with their own public accessor must start with an
+underscore (e.g., `_variableWithAccessor`).
+* Local variables must use snake case (e.g., `this_is_a_local_variable`).
+* Functions must use lower camel case (e.g., `thisIsAFunction`)
+* Function parameters must use snake case.
+* Macros must be in all caps with underscores (e.g., `THIS_IS_A_MACRO`).
+* Function declaration return types must be on their own line.
+* Function brackets must be on their own line.
+* `for`/`if`/`while` branching operations must be followed by a white-space
+before the conditional statement (e.g., `for (...)`).
+* `for`/`if`/`while` branching operations' opening bracket must be on the
+same line, with the closing bracket on its own line (e.g.,
+`for (...) {\n ... \n}\n`). There should be a space between the condition(s)
+and the opening bracket.
+* C++ access modifies must be indented by two spaces, with method/variables
+defined within indented by four spaces.
 
-[git book]: https://git-scm.com/book/en/v2/Git-Branching-Rebasing
+Below is a simple toy example of how a class should be formatted:
 
+```C++
+#DEFINE EXAMPLE_MACRO 7
+class ExampleClass
+{
+  private:
+    int _fooBar;
+    int barFoo;
 
-Setting up pre-commit
----------------------
+  public:
+    int
+    getFooBar()
+    {
+        return _fooBar;
+    }
 
-To help ensure the gem5 style guide is maintained, we use [pre-commit](
-https://pre-commit.com) to run checks on changes to be contributed.
+    int
+    aFunction(int parameter_one, int parameter_two)
+    {
+        int local_variable = 0;
+        if (true) {
+            int local_variable = parameter_one + parameter_two + barFoo
+                               + EXAMPLE_MACRO;
+        }
+        return local_variable;
+    }
 
-To setup pre-commit, run the following in your gem5 directory to install the
-pre-commit and commit message hooks.
+}
+```
+
+### Python
+
+We use [Python Black](https://github.com/psf/black) to format our Python code
+to the correct style. To install:
+
+```sh
+pip install black
+```
+
+Then run on modified/added python files using:
+
+```sh
+black <files/directories>
+```
+
+For variable/method/etc. naming conventions, please follow the [PEP 8 naming
+convention recommendations](
+https://peps.python.org/pep-0008/#naming-conventions). While we try our best to
+enforce naming conventions across the gem5 project, we are aware there are
+instances where they are not. In such cases please **follow the convention
+of the code you are modifying**.
+
+### Using pre-commit
+
+To help enforce our style guide we use use [pre-commit](
+https://pre-commit.com). pre-commit is a git hook and, as such, must be
+explicitly installed by a gem5 developer.
+
+To install the gem5 pre-commit checks, execute the following in the gem5
+directory:
 
 ```sh
 pip install pre-commit
-pre-commit install -t pre-commit -t commit-msg
+pre-commit install
 ```
 
-The hooks are also automatically installed when gem5 is compiled.
+Once installed pre-commit will run checks on modified code prior to running the
+`git commit` command (see [our section on committing](#committing) for more
+details on committing your changes). If these tests fail you will not be able to
+commit.
 
-When you run a `git commit` command the pre-commit hook will run checks on your
-committed code. The commit will be blocked if a check fails.
+These same pre-commit checks are run as part our CI checks (those
+which must pass in order for a change to be merged into the develop branch). It
+is therefore strongly recommended that developers install pre-commit to catch
+style errors early.
 
-The same checks are run as part of github actions CI tests (those required to obtain
-a Verified label, necessary for a change to be accepted to the develop branch).
-Therefore setting up pre-commit in your local gem5 development environment is
-recommended.
+## Compiling and running tests
 
-You can automatically format files to pass the pre-commit tests by running:
+The minimum criteria for a change to be submitted is that the code is
+compilable and the test cases pass.
+
+The following command both compiles the project and runs our "quick"
+system-level checks:
 
 ```sh
-pre-commit run --files <files to format>
+cd tests
+./main.py run
 ```
 
-Requirements for change descriptions
-------------------------------------
-To help reviewers and future contributors more easily understand and track
-changes, we require all change descriptions be strictly formatted.
+**Note: These tests can take several hours to build and execute. `main.py` may
+be run on multiple threads with the `-j` flag. E.g.: `python main.py run
+-j6`.**
 
-A canonical commit message consists of three parts:
- * A short summary line describing the change. This line starts with one or
-   more keywords (found in the MAINTAINERS file) separated by commas followed
-   by a colon and a description of the change. This short description is
-   written in the imperative mood, and should say what happens when the patch
-   is applied. Keep it short and simple. Write it in sentence case preferably
-   not ending in a period. This line should be no more than 65 characters long
-   since version control systems usually add a prefix that causes line-wrapping
-   for longer lines.
- * (Optional, but highly recommended) A detailed description. This describes
-   what you have done and why. If the change isn't obvious, you might want to
-   motivate why it is needed. Lines need to be wrapped to 72 characters or
-   less. Leave a blank line between the first short summary line and this
-   detailed description.
- * Tags describing patch metadata. You are highly recommended to use
-   tags to acknowledge reviewers for their work.
+The unit tests should also pass. To run the unit tests:
 
-Tags are an optional mechanism to store additional metadata about a patch and
-acknowledge people who reported a bug or reviewed that patch. Tags are
-generally appended to the end of the commit message in the order they happen.
-We currently use the following tags:
- * Signed-off-by: Added by the author and the submitter (if different).
-   This tag is a statement saying that you believe the patch to be correct and
-   have the right to submit the patch according to the license in the affected
-   files. Similarly, if you commit someone else's patch, this tells the rest
-   of the world that you have have the right to forward it to the main
-   repository. If you need to make any changes at all to submit the change,
-   these should be described within hard brackets just before your
-   Signed-off-by tag. By adding this line, the contributor certifies the
-   contribution is made under the terms of the Developer Certificate of Origin
-   (DCO) [https://developercertificate.org/].
- * Reviewed-by: Used to acknowledge patch reviewers. It's generally considered
-   good form to add these. Added automatically.
- * Reported-by: Used to acknowledge someone for finding and reporting a bug.
- * Reviewed-on: Link to the review request corresponding to this patch. Added
-   automatically.
- * Change-Id: Used by Gerrit to track changes across rebases. Added
-   automatically with a commit hook by git.
- * Tested-by: Used to acknowledge people who tested a patch. Sometimes added
-   automatically by review systems that integrate with CI systems.
- * Issue-On: Used to link a commit to an issue in gem5's [issue tracker]. The
-   format should be https://gem5.atlassian.net/browse/GEM5-<NUMBER>
-
-[issue tracker]: https://gem5.atlassian.net/
-
-Other than the "Signed-off-by", "Issue-On", "Reported-by", and "Tested-by"
-tags, you generally don't need to add these manually as they are added
-automatically by Gerrit.
-
-It is encouraged for the author of the patch and the submitter to add a
-Signed-off-by tag to the commit message. By adding this line, the contributor
-certifies the contribution is made under the terms of the Developer Certificate
-of Origin (DCO) [https://developercertificate.org/].
-
-If your change relates to a [Jira Issue](https://gem5.atlassian.net), it is
-advised that you provide a link to the issue in the commit message (or messages
-if the Jira Issue relates to multiple commits). Though optional, doing this
-can help reviewers understand the context of a change.
-
-It is imperative that you use your real name and your real email address in
-both tags and in the author field of the changeset.
-
-For significant changes, authors are encouraged to add copyright information
-and their names at the beginning of the file. The main purpose of the author
-names on the file is to track who is most knowledgeable about the file (e.g.,
-who has contributed a significant amount of code to the file). The
-`util/update-copyright.py` helper script can help to keep your copyright dates
-up-to-date when you make further changes to files which already have your
-copyright but with older dates.
-
-Note: If you do not follow these guidelines, the github actions will
-automatically reject your patch.
-If this happens, update your changeset descriptions to match the required style
-and resubmit. The following is a useful git command to update the most recent
-commit (HEAD).
-
-```
- git commit --amend
+```sh
+scons build/NULL/unittests.opt
 ```
 
-Running tests
-=============
+To compile an individual gem5 binary:
 
-Before posting a change to the code review site, you should always run the
-quick tests!
-See TESTING.md for more information.
-
-Posting a review
-================
-
-If you have not signed up for an account on the github
-(https://github.com/), you first have to create an account.
-
-Setting up an account
----------------------
- 1. Go to https://github.com/
- 2. Click "Sign up" in the upper right corner.
-
-Submitting a change
--------------------
-
-In github, to submit a review request, you can simply push your git commits to
-a special named branch. For more information on git push see
-https://git-scm.com/docs/git-push.
-
-Push changes to GitHub
-----------------------------
-1. Fork the gem5 repository on GitHub from https://github.com/gem5/gem5/.
-2. Create a new branch in your forked repository for your feature or bug fix.
-3. Commit your changes to the new branch.
-4. Push the branch to your forked repository.
-5. Open a pull request from your branch in your forked repository to the main gem5 repository.
-
-We will continue to use the “develop” branch for development, so please ensure your pull requests are for the gem5 develop branch. Pull requests to the stable branch will be blocked.
-
-Branches
-========
-
-By default, contributions to gem5 should be made on the develop branch. The
-stable branch is maintained as a stable release branch (i.e., it can be pulled
-to obtain the latest official release of gem5). Creation of additional branches
-is generally discouraged due to their tendency to bloat git repositories with
-abandoned code.
-
-Reviewing patches
-=================
-
-Reviewing patches is done on our github instance at
-https://github.com/gem5/gem5/pulls/.
-
-After logging in with your GitHub account, you will be able to comment, review,
-and push your own patches as well as review others' patches. All gem5 users are
-encouraged to review patches. The only requirement to review patches is to be
-polite and respectful of others.
-
-There are multiple labels in Gerrit that can be applied to each review detailed
-below.
- * Code-review: This is used by any gem5 user to review patches. When reviewing
-   a patch you can give it a score of -2 to +2 with the following semantics.
-   * -2: This blocks the patch. You believe that this patch should never be
-     committed. This label should be very rarely used.
-   * -1: You would prefer this is not merged as is
-   * 0: No score
-   * +1: This patch seems good, but you aren't 100% confident that it should be
-     pushed.
-   * +2: This is a good patch and should be pushed as is.
- * Maintainer: Currently only PMC members are maintainers. At least one
-   maintainer must review your patch and give it a +1 before it can be merged.
- * Verified: This is automatically generated from the continuous integrated
-   (CI) tests. Each patch must receive at least a +1 from the CI tests before
-   the patch can be merged. The patch will receive a +1 if gem5 builds and
-   runs, and it will receive a +2 if the stats match.
- * Style-Check: This is automatically generated and tests the patch against the
-   gem5 code style
-   (http://www.gem5.org/documentation/general_docs/development/coding_style/).
-   The patch must receive a +1 from the style checker to be pushed.
-
-Note: Whenever the patch creator updates the patch all reviewers must re-review
-the patch. There is no longer a "Fix it, then Ship It" option.
-
-Once you have received reviews for your patch, you will likely need to make
-changes. To do this, you should update the original git changeset. Then, you
-can simply push the changeset again to the same Gerrit branch to update the
-review request.
-
-```
- git push origin HEAD:refs/for/develop
+```sh
+scons build/ALL/gem5.opt
 ```
 
-Committing changes
-==================
+This compiles a gem5 binary containing "ALL" ISA targets. For more information
+on building gem5 please consult our [building documentation](
+/documentation/general_docs/building).
 
-Each patch must meet the following criteria to be merged:
- * At least one review with +2
- * At least one maintainer with +1
- * At least +1 from the CI tests (gem5 must build and run)
- * At least +1 from the style checker
+## Committing
 
-Once a patch meets the above criteria, the submitter of the patch will be able
-to merge the patch by pressing the "Submit" button on Gerrit. When the patch is
-submitted, it is merged into the public gem5 branch.
+When you feel your change is done, you may commit. Start by adding the changed
+files:
 
-Review moderation and guidelines
---------------------------------
+```Shell
+git add <changed files>
+```
 
-Once a change is submitted, reviewers shall review the change. This may require
-several iterations before a merge. Comments from reviewers may include
-questions, and requests for alterations to the change prior to merging. The
-overarching philosophy in managing this process is that there should be
-politeness and clear communication between all parties at all times, and,
-whenever possible, permission should be asked before doing anything that may
-inconvenience another party. Included below are some guidelines we expect
-contributors and reviewers to follow.
+Make sure these changes are being added to your forked repository.
+Then commit using:
 
- * In all forms of communication, contributors and reviewers must be polite.
-   Comments seen as being needlessly hostile or dismissive will not be
-   tolerated.
- * Change contributors should respond to, or act upon, each item of feedback
-   given by reviewers. If there is disagreement with a piece of
-   feedback, a sufficiently detailed reason for this disagreement should
-   be given. Polite discussion, and sharing of information and expertise
-   is strongly encouraged.
- * Contributors are advised to assign reviewers when submitting a change.
-   Anyone who contributes to gem5 can be assigned as a reviewer. However,
-   all changes must be accepted by at least one maintainer prior to a
-   merge, ergo assigning of at least one maintainer as a reviewer is
-   strongly recommended. Please see MAINTAINERS for a breakdown of
-   gem5 maintainers and which components they claim responsibility for.
-   Maintainers should be chosen based on which components the change is
-   targeting. Assigning of reviewers is not strictly enforced, though not
-   assigning reviewers may slow the time in which a change is reviewed.
- * If a contributor posts a change and does not receive any reviews after two
-   working days (excluding regional holidays), it is acceptable to "prod"
-   reviewers. This can be done by adding a reply to the changeset review
-   (e.g., "Would it be possible for someone to review my change?"). If the
-   contributor has yet to assign reviewers, they are strongly advised to do so.
-   Reviewers will get notified when assigned to referee a change.
- * By default, the original contributor is assumed to own a change. I.e.,
-   they are assumed to be the sole party to submit patchsets. If someone
-   other than the original contributor wishes to submit patchsets to a
-   change on the original contributor's behalf, they should first ask
-   permission. If two working days pass without a response, a patchset may be
-   submitted without permission. Permission does not need to be asked to submit
-   a patchset consisting of minor, inoffensive, changes such a typo and format
-   fixes.
- * Once a change is ready to merge, it enters a "Ready to Submit" state. The
-   original contributor should  merge their change at this point, assuming they
-   are content with the commit in its present form. After two working days, a
-   reviewer may message a contributor to remind them of the change being in a
-   "Ready to Submit" state and ask if they can merge the change on the
-   contributors behalf. If a further two working days elapse without a
-   response, the reviewer may merge without permission. A contributor may keep
-   a change open for whatever reason though this should be communicated to the
-   reviewer when asked.
- * After a month of inactivity from a contributor on an active change, a
-   reviewer may post a message on the change reminding the submitter, and
-   anyone else watching the change, of its active status and ask if they are
-   still interested in eventually merging the change. After two weeks of no
-   response the reviewer reserves the right to abandon the change under the
-   assumption there is no longer interest.
- * The final arbiter in any dispute between reviewers and/or contributors
-   is the PMC (PMC members are highlighted in MAINTAINERS). Disputes requiring
-   intervention by the PMC are undesirable. Attempts should be made to resolve
-   disagreements via respectful and polite discourse before being escalated to
-   this level.
+```Shell
+git commit
+```
 
-Releases
-========
+The commit message must adhere to our style. The first line of the commit is
+the "header". The header starts with a tag (or tags, separated by a comma),
+then a colon. Which tags are used depend on which components of gem5
+you have modified. **Please refer to the [MAINTAINERS.yaml](
+https://github.com/gem5/gem5/blob/stable/MAINTAINERS.yaml) for
+a comprehensive list of accepted tags**. After this colon a short description
+of the commit must be provided. **This header line must not exceed 65
+characters**.
+
+After this, a more detailed description of the commit can be added. This is
+inserted below the header, separated by an empty line. Including a description
+is optional but it's strongly recommended. The description may span multiple
+lines, and multiple paragraphs. **No line in the description may exceed 72
+characters.**
+
+To improve the navigability of the gem5 project we would appreciate if commit
+messages include a link to the relevant Jira issue/issues.
+
+Below is an example of how a gem5 commit message should be formatted:
+
+```
+test,base: This commit tests some classes in the base component
+
+This is a more detailed description of the commit. This can be as long
+as is necessary to adequately describe the change.
+
+A description may spawn multiple paragraphs if desired.
+
+Jira Issue: https://gem5.atlassian.net/browse/GEM5-186
+```
+
+If you feel the need to change your commit, add the necessary files then
+_amend_ the changes to the commit using:
+
+```sh
+git commit --amend
+```
+
+This will give you opportunity to edit the commit message.
+
+You may continue to add more commits as a chain of commits to be included in the pull-request.
+However, we recommend that pull-requests are kept small and focused.
+For example, if you wish to add a different feature or fix a different bug, we recommend doing so in another pull requests.
+
+## Keeping your forked and local repositories up-to-date
+
+While working on your contribution, we recommend keeping your forked repository in-sync with the source gem5 repository.
+To do so, regularly [Sync your fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork).
+This can be done via the GitHub web interface and, if so, you should `git pull` on top of your local `stable` and `develop` branches to ensure your local repository is in-sync.
+To do so from the command line:
+
+```sh
+# Add the main gem5 repository as a remote on your local repository. This only
+# needs done once.
+git remote add upstream https://github.com/gem5/gem5.git
+
+git fetch upstream # Obtain the latest from the gem5 repo.
+git switch develop # Switch to the develop branch.
+git merge upstream/develop # Merge the latest changes into the develop branch.
+git push # Push to develop to your forked repo.
+git switch stable # Switch to the stable branch.
+git merge upstream/stable # Merge the latest changes into the stable branch.
+git push # Push the changes to stable to your forked repo.
+```
+
+As our local branch work atop the `develop` branch, once we've synced our forked repository, we can rebase our local branch on top of the `develop` branch.
+Assuming our local branch is called `new-feature`:
+
+```sh
+git switch develop # Switching back to the develop branch.
+git pull # Ensuring we have the latest from the forked repository.
+git switch new-feature # Switching back to our local branch.
+git rebase develop # Rebasing our local branch on top of the develop branch.
+```
+
+Conflicts may need resolved between your branch and new changes.
+
+## Pushing and creating a pull request
+
+Once you have completed your changes locally, you can push to your forked gem5 repository.
+Assuming the branch we are working on is `new-feature`:
+
+```sh
+git switch new-feature # Ensure we are on the 'new-feature' branch.
+git push --set-upstream origin new-feature
+```
+
+Now, via the GitHub web interface, you can [create a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) of your changes from your forked repository's branch into the gem5 `develop` branch.
+
+## Passing the checks
+
+Once you have created a pull request, the gem5 Continuous Integration (CI) tests will run.
+These run a series of checks to ensure your changes are valid.
+These must pass before your changes can be merged into the gem5 `develop` branch.
+
+In addition to the CI tests, your changes will be reviewed by the gem5 community.
+Your pull-request must have the approval of at least one community member prior to being merged.
+
+Once your pull-request has passed all the CI tests and has been approved by at least one community member, it will be merged a gem5 maintainer will do a [Merge](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges) on the pull-request.
+The gem5 maintainers are individuals granted the ability to merge pull requests into the gem5 `develop` branch.
+
+
+### Making iterative improvements based on feedback
+
+A reviewer will ask questions and post suggestions on GitHub. You should read
+these comments and answer these questions. **All communications between
+reviewers and contributors should be done in a polite manner. Rude and/or
+dismissive remarks will not be tolerated.**
+
+When you understand what changes are required make amendments to the pull
+request by adding patches to the same branch and then pushing to the forked repository.
+A git "force push" (i.e., `git push --force`) is also acceptable if you wish to alter the commits locally in order to make the changes.
+We encourage contributors to help keep our `git log` clean and readable.
+We recommend that users rebase their changes frequently on top of the develop branch, squash their commits where appropriate (e.g., in cases where there are many small fix commits to a change in the same PR) then force push changes to keep their PR commits concise.
+
+Once pushed to the forked repository, the pull request will automatically update with your changes.
+The reviewer will then re-review your changes and, if necessary, ask for further changes, or approve your pull-request.
+
+## Reviewing other contributions
+
+We encourage all gem5 developers to review other's contributions.
+Anyone may review a gem5 change and, if they feel it is ready, approve it.
+All pull-requests can be found at <https://github.com/gem5/gem5/pulls>.
+
+When reviewing a pull request we enforce the followings guidelines.
+These have been designed to ensure clear and polite communication between all parties:
+
+* In all forms of communication, contributors and reviewers must be polite.
+Comments seen as being rude or dismissive will not be tolerated.
+* If choosing to not approve a PR, please state clearly why.
+When asking for changes, the commits should be specific and actionable.
+General criticisms which cannot be addressed or understood by the contributor are unhelpful.
+If the contribution needs improvement, reviewers should state what their requested changes are.
+If more information is needed for the reviewers to make a decision the reviewer should ask clear questions.
+If the PR is generally not seen as a worthwhile contribution, a good justification should be given so the contributor may fairly rebuttal.
+* By default, the original contributor is assumed to own a change.
+I.e., they are assumed to be the sole party to submit patches to the pull request.
+If someone other than the original contributor wishes to submit patches on the original contributors behalf they should first ask permission.
+Pull requests which appear abandoned may be adopted by a new contributor as long as there is good enough reason to assume the original contributor is no longer working on the pull request.
+* Maintainers have the final say on whether a change is merged.
+Your review will be taken into account by the maintainer.
+It is expected, in all but the most extreme cases, that the reviewer's concerns must be addressed and for the reviewer to approve the the contribution prior to the maintainer merging the pull request.
+
+We also recommend consulting Google's ["How to write code review comments"](https://google.github.io/eng-practices/review/reviewer/comments.html) for advice on giving feedback to contributors.
+
+## Releases
 
 gem5 releases occur 3 times per year. The procedure for releasing gem5 is as
 follows:
@@ -435,7 +400,7 @@ gem5-dev mailing list will be notified that the staging branch will be merged
 into the stable branch after two weeks, thus marking the new release.
 3. The staging branch will have the full suite of gem5 tests run on it to
 ensure all tests pass and the to-be-released code is in a decent state.
-4. If a user submits a changeset to the staging branch, it will be considered
+4. If a user submits a pull request to the staging branch, it will be considered
 and undergo the standard github review process. However, only alterations that
 cannot wait until the following release will be accepted for submission into
 the branch (i.e., submissions to the staging branch for "last minute"
@@ -444,8 +409,8 @@ fix). The project maintainers will use their discretion in deciding whether a
 change may be submitted directly to the staging branch. All other submissions
 to gem5 will continue to be made to the develop branch. Patches submitted
 into the staging branch do not need to be re-added to the develop branch.
-5. Once signed off by members of the PMC the staging branch shall be merged
-into the stable and develop branch. The staging branch will then be deleted.
+5. Once the staging branch has been deemed ready for release, the [release procedures](https://www.gem5.org/documentation/general_docs/development/release_procedures/) will be carried out.
+This will end with the staging branch being merged into the stable branch.
 6. The stable branch shall be tagged with the correct version number for that
 release. gem5 conforms to a "v{YY}.{MAJOR}.{MINOR}.{HOTFIX}" versioning system.
 E.g., the first major release of 2022 will be "v22.0.0.0", followed by
@@ -455,8 +420,16 @@ the minor release numbers in case this policy changes in the future.
 7. The gem5-dev and gem5-user mailing lists shall be notified of the new gem5
 release.
 
-Hotfixes
---------
+### Exemptions
+
+Due to limitations with GitHub we may update the ".github" directory in the gem5 repo's `stable` branch between gem5 releases.
+This is due to certain processes carried out by the GitHub Actions infrastructure which rely on configurations being present on a repository's primary branch.
+As the files in ".github" only influence the functionality of our GitHub actions and other GitHub activities, updating these files does not change the functionality of the gem5 in way.
+It is therefore safe to do this.
+Despite this exemption to our normal procedure we aim to ensure that **the ".github" directory on the `stable` is never "ahead" of that in the `develop` branch**.
+Therefore contributors who wish to update files in ".github" should submit their changes to `develop` and then request their changes to be applied to the `stable` branch.
+
+### Hotfixes
 
 There may be circumstances in which a change to gem5 is deemed critical and
 cannot wait for an official release (e.g., a high-priority bug fix). In these
