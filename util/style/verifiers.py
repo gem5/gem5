@@ -424,7 +424,11 @@ class LineLength(LineVerifier):
     test_name = "line length"
     opt_name = "length"
 
-    def check_line(self, line, **kwargs):
+    def check_line(self, line, language, **kwargs):
+        # Ignore line length check for include pragmas of C/C++.
+        if language in {"C", "C++"}:
+            if line.startswith("#include"):
+                return True
         return style.normalized_len(line) <= 79
 
     def fix(self, filename, regions=all_regions, **kwargs):
