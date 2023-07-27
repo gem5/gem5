@@ -69,7 +69,7 @@ class HelloObject : public SimObject
      * SimObjects have been constructed. It is called after the user calls
      * simulate() for the first time.
      */
-    void startup();
+    void startup() override;
 };
 
 } // namespace gem5
