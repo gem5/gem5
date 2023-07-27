@@ -157,6 +157,7 @@ ISA::ISA(const X86ISAParams &p)
     cpuid->addStandardFunc(FamilyModelStepping, p.FamilyModelStepping);
     cpuid->addStandardFunc(CacheParams, p.CacheParams);
     cpuid->addStandardFunc(ExtendedFeatures, p.ExtendedFeatures);
+    cpuid->addStandardFunc(ExtendedState, p.ExtendedState);
 
     cpuid->addExtendedFunc(FamilyModelSteppingBrandFeatures,
                           p.FamilyModelSteppingBrandFeatures);

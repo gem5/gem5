@@ -52,6 +52,7 @@ enum StandardCpuidFunction
     MonitorMwait,
     ThermalPowerMgmt,
     ExtendedFeatures,
+    ExtendedState = 0xD,
     NumStandardCpuidFuncs
 };
 

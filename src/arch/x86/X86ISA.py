@@ -85,6 +85,20 @@ class X86ISA(BaseISA):
     ExtendedFeatures = VectorParam.UInt32(
         [0x00000000, 0x01800000, 0x00000000, 0x00000000], "feature flags"
     )
+    # 0000_000Dh - This uses ECX index, so the last entry must be all zeros
+    ExtendedState = VectorParam.UInt32(
+        [
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            0x00000000,
+            0x00000000,
+        ],
+        "extended state enumeration",
+    )
     # 8000_0001h
     FamilyModelSteppingBrandFeatures = VectorParam.UInt32(
         [0x00020F51, 0x00000405, 0xEBD3FBFF, 0x00020001],

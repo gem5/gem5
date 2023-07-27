@@ -146,6 +146,18 @@ X86CPUID::stringToRegister(const char *str)
 bool
 X86CPUID::hasSignificantIndex(uint32_t function)
 {
+    uint16_t family = bits(function, 31, 16);
+    uint16_t funcNum = bits(function, 15, 0);
+
+    if (family == 0x0000) {
+        switch (funcNum) {
+          case ExtendedState:
+            return true;
+          default:
+            return false;
+        }
+    }
+
     return false;
 }
 
