@@ -189,6 +189,7 @@ GpuWavefront::issueAtomicOps()
                                              AtomicOpFunctorPtr(amo_op));
         req->setPaddr(address);
         req->setReqInstSeqNum(tester->getActionSeqNum());
+        req->setCacheCoherenceFlags(Request::SLC_BIT);
         // set protocol-specific flags
         setExtraRequestFlags(req);
 
