@@ -1496,6 +1496,11 @@ MemCtrl::MemoryPort::recvFunctional(PacketPtr pkt)
         // calls recvAtomic() and throws away the latency; we can save a
         // little here by just not calculating the latency.
         ctrl.recvFunctional(pkt);
+    } else {
+        // The packet's request is satisfied by the queue, but queue
+        // does not call makeResponse.
+        // Here, change the packet to the corresponding response
+        pkt->makeResponse();
     }
 
     pkt->popLabel();
