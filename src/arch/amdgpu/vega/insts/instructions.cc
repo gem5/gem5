@@ -6394,7 +6394,7 @@ namespace VegaISA
             }
         };
 
-        vop2Helper<VecOperandU32>(gpuDynInst, opImpl);
+        vop2Helper<ConstVecOperandU32, VecOperandU32>(gpuDynInst, opImpl);
     } // execute
     // --- Inst_VOP2__V_MUL_HI_U32_U24 class methods ---
 
