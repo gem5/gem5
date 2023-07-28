@@ -73,7 +73,7 @@ class ProtocolTester(ClockedObject):
     random_seed = Param.Int(
         0,
         "Random seed number. Default value (0) means \
-                                using runtime-specific value.",
+                                using base/random.hh without seed.",
     )
     log_file = Param.String("Log file's name")
     system = Param.System(Parent.any, "System we belong to")
