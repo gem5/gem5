@@ -1156,7 +1156,7 @@ class Packet : public Printable, public Extensible<Packet>
   public:
     /**
      * @{
-     * @name Data accessor mehtods
+     * @name Data accessor methods
      */
 
     /**
