@@ -154,6 +154,18 @@ PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
 PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
     'gem5/components/cachehierarchies/ruby/caches/mesi_three_level/'
     'l3_cache.py')
+PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
+    'gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/'
+    'octopi.py')
+PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
+    'gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/'
+    'core_complex.py')
+PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
+    'gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/'
+    'octopi_network.py')
+PySource('gem5.components.cachehierarchies.ruby.caches.mesi_three_level',
+    'gem5/components/cachehierarchies/ruby/caches/prebuilt/octopi_cache/'
+    'ruby_network_components.py')
 PySource('gem5.components.cachehierarchies.ruby.caches.mi_example',
     'gem5/components/cachehierarchies/ruby/caches/mi_example/__init__.py')
 PySource('gem5.components.cachehierarchies.ruby.caches.mi_example',

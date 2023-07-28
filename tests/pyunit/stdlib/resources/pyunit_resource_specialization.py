@@ -278,7 +278,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         Looppoint JSON file."""
 
         resource = obtain_resource(
-            resource_id="looppoint-json-restore-resource-region-1",
+            resource_id="looppoint-json-restore-resource-region-1-example",
             resource_directory=self.get_resource_dir(),
             resource_version="1.0.0",
             gem5_version="develop",

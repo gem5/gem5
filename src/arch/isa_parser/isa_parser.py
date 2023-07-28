@@ -514,6 +514,7 @@ class InstObjParams(object):
 class ISAParser(Grammar):
     def __init__(self, output_dir):
         super().__init__()
+        self.lex_kwargs["reflags"] = int(re.MULTILINE)
         self.output_dir = output_dir
 
         self.filename = None  # for output file watermarking/scaremongering
@@ -851,7 +852,7 @@ class ISAParser(Grammar):
     # String literal.  Note that these use only single quotes, and
     # can span multiple lines.
     def t_STRLIT(self, t):
-        r"(?m)'([^'])+'"
+        r"'([^'])+'"
         # strip off quotes
         t.value = t.value[1:-1]
         t.lexer.lineno += t.value.count("\n")
@@ -860,19 +861,19 @@ class ISAParser(Grammar):
     # "Code literal"... like a string literal, but delimiters are
     # '{{' and '}}' so they get formatted nicely under emacs c-mode
     def t_CODELIT(self, t):
-        r"(?m)\{\{([^\}]|}(?!\}))+\}\}"
+        r"\{\{([^\}]|}(?!\}))+\}\}"
         # strip off {{ & }}
         t.value = t.value[2:-2]
         t.lexer.lineno += t.value.count("\n")
         return t
 
     def t_CPPDIRECTIVE(self, t):
-        r"^\#[^\#].*\n"
+        r"^\#[^\#][^\n]*\n"
         t.lexer.lineno += t.value.count("\n")
         return t
 
     def t_NEWFILE(self, t):
-        r'^\#\#newfile\s+"[^"]*"\n'
+        r'^\#\#newfile\s+"[^"\n]*"\n'
         self.fileNameStack.push(t.lexer.lineno)
         t.lexer.lineno = LineTracker(t.value[11:-2])
 
@@ -892,7 +893,7 @@ class ISAParser(Grammar):
 
     # Comments
     def t_comment(self, t):
-        r"//.*"
+        r"//[^\n]*\n"
 
     # Completely ignored characters
     t_ignore = " \t\x0c"

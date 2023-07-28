@@ -171,7 +171,9 @@ class CustomMesh(SimpleTopology):
     def _createRNFRouter(self, mesh_router):
         # Create a zero-latency router bridging node controllers
         # and the mesh router
-        node_router = self._Router(router_id=len(self._routers), latency=0)
+        node_router = self._Router(
+            router_id=len(self._routers), latency=self.node_router_latency
+        )
         self._routers.append(node_router)
 
         # connect node_router <-> mesh router
@@ -270,6 +272,7 @@ class CustomMesh(SimpleTopology):
         self._ExtLink = ExtLink
         self._Router = Router
 
+        self.node_router_latency = 1 if options.network == "garnet" else 0
         if hasattr(options, "router_link_latency"):
             self._router_link_latency = options.router_link_latency
             self._node_link_latency = options.node_link_latency
