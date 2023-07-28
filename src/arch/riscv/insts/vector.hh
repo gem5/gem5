@@ -47,7 +47,9 @@ namespace RiscvISA
 float
 getVflmul(uint32_t vlmul_encoding);
 
-inline uint32_t getSew(uint32_t vsew) {
+inline uint32_t
+getSew(uint32_t vsew)
+{
     assert(vsew <= 3);
     return (8 << vsew);
 }
@@ -124,7 +126,7 @@ class VectorMacroInst : public RiscvMacroInst
 
 class VectorMicroInst : public RiscvMicroInst
 {
-protected:
+  protected:
     uint8_t microVl;
     uint8_t microIdx;
     uint8_t vtype;
@@ -420,7 +422,7 @@ class VsStrideMacroInst : public VectorMemMacroInst
 class VsStrideMicroInst : public VectorMemMicroInst
 {
   protected:
-  uint8_t regIdx;
+    uint8_t regIdx;
     VsStrideMicroInst(const char *mnem, ExtMachInst _machInst,
                       OpClass __opClass, uint8_t _regIdx,
                       uint8_t _microIdx, uint8_t _microVl)
@@ -487,9 +489,9 @@ class VsIndexMicroInst : public VectorMemMicroInst
     VsIndexMicroInst(const char *mnem, ExtMachInst _machInst,
                     OpClass __opClass, uint8_t _vs3RegIdx, uint8_t _vs3ElemIdx,
                     uint8_t _vs2RegIdx, uint8_t _vs2ElemIdx)
-        : VectorMemMicroInst(mnem, _machInst, __opClass, 1, 0, 0)
-        , vs3RegIdx(_vs3RegIdx), vs3ElemIdx(_vs3ElemIdx)
-        , vs2RegIdx(_vs2RegIdx), vs2ElemIdx(_vs2ElemIdx)
+        : VectorMemMicroInst(mnem, _machInst, __opClass, 1, 0, 0),
+          vs3RegIdx(_vs3RegIdx), vs3ElemIdx(_vs3ElemIdx),
+          vs2RegIdx(_vs2RegIdx), vs2ElemIdx(_vs2ElemIdx)
     {}
 
     std::string generateDisassembly(
@@ -532,7 +534,7 @@ class VMaskMergeMicroInst : public VectorArithMicroInst
     VMaskMergeMicroInst(ExtMachInst extMachInst, uint8_t _dstReg,
         uint8_t _numSrcs)
         : VectorArithMicroInst("vmask_mv_micro", extMachInst,
-          VectorIntegerArithOp, 0, 0)
+                               VectorIntegerArithOp, 0, 0)
     {
         setRegIdxArrays(
             reinterpret_cast<RegIdArrayPtr>(
@@ -550,8 +552,9 @@ class VMaskMergeMicroInst : public VectorArithMicroInst
         }
     }
 
-    Fault execute(ExecContext* xc, trace::InstRecord* traceData)
-            const override {
+    Fault
+    execute(ExecContext* xc, trace::InstRecord* traceData) const override
+    {
         vreg_t tmp_d0 = *(vreg_t *)xc->getWritableRegOperand(this, 0);
         auto Vd = tmp_d0.as<uint8_t>();
         constexpr uint8_t elems_per_vreg = VLENB / sizeof(ElemType);
@@ -582,8 +585,10 @@ class VMaskMergeMicroInst : public VectorArithMicroInst
         return NoFault;
     }
 
-    std::string generateDisassembly(
-            Addr pc, const loader::SymbolTable *symtab) const override {
+    std::string
+    generateDisassembly(Addr pc, const loader::SymbolTable *symtab)
+        const override
+    {
         std::stringstream ss;
         ss << mnemonic << ' ' << registerName(destRegIdx(0));
         for (uint8_t i = 0; i < this->_numSrcRegs; i++) {
@@ -605,8 +610,8 @@ class VxsatMicroInst : public VectorArithMicroInst
     {
         vxsat = Vxsat;
     }
-    Fault execute(ExecContext* xc, trace::InstRecord* traceData)
-    const override
+    Fault
+    execute(ExecContext* xc, trace::InstRecord* traceData) const override
     {
         xc->setMiscReg(MISCREG_VXSAT,*vxsat);
         auto vcsr = xc->readMiscReg(MISCREG_VCSR);
@@ -614,7 +619,7 @@ class VxsatMicroInst : public VectorArithMicroInst
         return NoFault;
     }
     std::string generateDisassembly(Addr pc, const loader::SymbolTable *symtab)
-      const override
+        const override
     {
         std::stringstream ss;
         ss << mnemonic << ' ' << "VXSAT" << ", " << (*vxsat ? "0x1" : "0x0");

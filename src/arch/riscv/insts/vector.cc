@@ -56,18 +56,20 @@ namespace RiscvISA
  *
 **/
 float
-getVflmul(uint32_t vlmul_encoding) {
-  int vlmul = sext<3>(vlmul_encoding & 7);
-  float vflmul = vlmul >= 0 ? 1 << vlmul : 1.0 / (1 << -vlmul);
-  return vflmul;
+getVflmul(uint32_t vlmul_encoding)
+{
+    int vlmul = sext<3>(vlmul_encoding & 7);
+    float vflmul = vlmul >= 0 ? 1 << vlmul : 1.0 / (1 << -vlmul);
+    return vflmul;
 }
 
 uint32_t
-getVlmax(VTYPE vtype, uint32_t vlen) {
-  uint32_t sew = getSew(vtype.vsew);
-  // vlmax is defined in RVV 1.0 spec p12 chapter 3.4.2.
-  uint32_t vlmax = (vlen/sew) * getVflmul(vtype.vlmul);
-  return vlmax;
+getVlmax(VTYPE vtype, uint32_t vlen)
+{
+    uint32_t sew = getSew(vtype.vsew);
+    // vlmax is defined in RVV 1.0 spec p12 chapter 3.4.2.
+    uint32_t vlmax = (vlen/sew) * getVflmul(vtype.vlmul);
+    return vlmax;
 }
 
 std::string
