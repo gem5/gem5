@@ -146,6 +146,15 @@ ProtocolTester::ProtocolTester(const Params &p)
     // This ensures a reproducable.
     if (p.random_seed != 0) {
         random_mt.init(p.random_seed);
+    } else {
+        warn(
+            "If `random_seed == 0` (or `random_seed` is unset) "
+            "ProtocolTester does not seed the RNG. This will NOT result in "
+            "the RNG generating different results each run. In this case the "
+            "RNG is seeded by a default value. This differs from behavior in "
+            "previous versions of gem5. Setting `random_seed` to a non-zero "
+            "value is strongly recommended."
+        );
     }
 
     actionCount = 0;
