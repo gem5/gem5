@@ -690,8 +690,9 @@
             }
             0x2: CPUIDInst::CPUID({{
                 CpuidResult result;
-                bool success = doCpuid(xc->tcBase(), bits(Rax, 31, 0),
-                    bits(Rcx, 31, 0), result);
+                ISA *isa = dynamic_cast<ISA *>(xc->tcBase()->getIsaPtr());
+                bool success = isa->cpuid->doCpuid(xc->tcBase(),
+                    bits(Rax, 31, 0), bits(Rcx, 31, 0), result);
                 if (success) {
                     Rax = result.rax;
                     Rbx = result.rbx;

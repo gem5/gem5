@@ -231,6 +231,42 @@ def makeGpuFSSystem(args):
         clock=args.ruby_clock, voltage_domain=system.voltage_domain
     )
 
+    # If we are using KVM cpu, enable AVX. AVX is used in some ROCm libraries
+    # such as rocBLAS which is used in higher level libraries like PyTorch.
+    use_avx = False
+    if ObjectList.is_kvm_cpu(TestCPUClass):
+        # AVX also requires CR4.osxsave to be 1. These must be set together
+        # of KVM will error out.
+        system.workload.enable_osxsave = 1
+        use_avx = True
+
+    # These values are taken from a real CPU and are further explained here:
+    # https://sandpile.org/x86/cpuid.htm#level_0000_000Dh
+    avx_extended_state = [
+        0x00000007,
+        0x00000340,
+        0x00000000,
+        0x00000340,
+        0x0000000F,
+        0x00000340,
+        0x00000000,
+        0x00000000,
+        0x00000100,
+        0x00000240,
+        0x00000000,
+        0x00000040,
+        0x00000000,
+        0x00000000,
+        0x00000000,
+        0x00000000,
+    ]
+
+    # This modifies the default value for ECX only (4th in this array).
+    # See: https://sandpile.org/x86/cpuid.htm#level_0000_0001h
+    # Enables AVX, OSXSAVE, XSAVE, POPCNT, SSE4.2, SSE4.1, CMPXCHG16B,
+    # and FMA.
+    avx_cpu_features = [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x1C983209]
+
     for (i, cpu) in enumerate(system.cpu):
         # Break once we reach the shader "CPU"
         if i == args.num_cpus:
@@ -247,6 +283,9 @@ def makeGpuFSSystem(args):
 
         for j in range(len(system.cpu[i].isa)):
             system.cpu[i].isa[j].vendor_string = "AuthenticAMD"
+            if use_avx:
+                system.cpu[i].isa[j].ExtendedState = avx_extended_state
+                system.cpu[i].isa[j].FamilyModelStepping = avx_cpu_features
 
     if args.host_parallel:
         # To get the KVM CPUs to run on different host CPUs, specify a

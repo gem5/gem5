@@ -63,6 +63,7 @@ output header {{
 #include "arch/x86/insts/microregop.hh"
 #include "arch/x86/insts/microspecop.hh"
 #include "arch/x86/insts/static_inst.hh"
+#include "arch/x86/isa.hh"
 #include "arch/x86/regs/ccr.hh"
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/misc.hh"

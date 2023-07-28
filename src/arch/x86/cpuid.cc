@@ -31,162 +31,135 @@
 #include "arch/x86/isa.hh"
 #include "base/bitfield.hh"
 #include "cpu/thread_context.hh"
+#include "debug/X86.hh"
 
 namespace gem5
 {
 
-namespace X86ISA {
-    enum StandardCpuidFunction
-    {
-        VendorAndLargestStdFunc,
-        FamilyModelStepping,
-        CacheAndTLB,
-        SerialNumber,
-        CacheParams,
-        MonitorMwait,
-        ThermalPowerMgmt,
-        ExtendedFeatures,
-        NumStandardCpuidFuncs
-    };
+namespace X86ISA
+{
 
-    enum ExtendedCpuidFunctions
-    {
-        VendorAndLargestExtFunc,
-        FamilyModelSteppingBrandFeatures,
-        NameString1,
-        NameString2,
-        NameString3,
-        L1CacheAndTLB,
-        L2L3CacheAndL2TLB,
-        APMInfo,
-        LongModeAddressSize,
+X86CPUID::X86CPUID(const std::string& vendor, const std::string& name)
+    : vendorString(vendor), nameString(name)
+{
+    fatal_if(vendorString.size() != 12,
+             "CPUID vendor string must be 12 characters\n");
+}
 
-        /*
-         * The following are defined by the spec but not yet implemented
-         */
-/*      // Function 9 is reserved
-        SVMInfo = 10,
-        // Functions 11-24 are reserved
-        TLB1GBPageInfo = 25,
-        PerformanceInfo,*/
+void
+X86CPUID::addStandardFunc(uint32_t func, std::vector<uint32_t> values)
+{
+    capabilities[func] = values;
+}
 
-        NumExtendedCpuidFuncs
-    };
+void
+X86CPUID::addExtendedFunc(uint32_t func, std::vector<uint32_t> values)
+{
+    // Extended functions begin with 8000_0000h, but the enum is based from
+    // zero, so we need to add that to the function value.
+    capabilities[func | 0x80000000] = values;
+}
 
-    static const int nameStringSize = 48;
-    static const char nameString[nameStringSize] = "Fake M5 x86_64 CPU";
+bool
+X86CPUID::doCpuid(ThreadContext * tc, uint32_t function, uint32_t index,
+                  CpuidResult &result)
+{
+    constexpr uint32_t ext = 0x80000000;
 
-    uint64_t
-    stringToRegister(const char *str)
-    {
-        uint64_t reg = 0;
-        for (int pos = 3; pos >=0; pos--) {
-            reg <<= 8;
-            reg |= str[pos];
-        }
-        return reg;
-    }
+    DPRINTF(X86, "Calling CPUID function %x with index %d\n", function, index);
 
-    bool
-    doCpuid(ThreadContext * tc, uint32_t function,
-            uint32_t index, CpuidResult &result)
-    {
-        uint16_t family = bits(function, 31, 16);
-        uint16_t funcNum = bits(function, 15, 0);
-        if (family == 0x8000) {
-            // The extended functions
-            switch (funcNum) {
-              case VendorAndLargestExtFunc:
-                {
-                  ISA *isa = dynamic_cast<ISA *>(tc->getIsaPtr());
-                  auto vendor_string = isa->getVendorString();
-                  result = CpuidResult(
-                          0x80000000 + NumExtendedCpuidFuncs - 1,
-                          stringToRegister(vendor_string.c_str()),
-                          stringToRegister(vendor_string.c_str() + 4),
-                          stringToRegister(vendor_string.c_str() + 8));
-                }
-                break;
-              case FamilyModelSteppingBrandFeatures:
-                result = CpuidResult(0x00020f51, 0x00000405,
-                                     0xebd3fbff, 0x00020001);
-                break;
-              case NameString1:
-              case NameString2:
-              case NameString3:
-                {
-                    // Zero fill anything beyond the end of the string. This
-                    // should go away once the string is a vetted parameter.
-                    char cleanName[nameStringSize];
-                    memset(cleanName, '\0', nameStringSize);
-                    strncpy(cleanName, nameString, nameStringSize);
+    // Handle the string-related CPUID functions specially
+    if (function == VendorAndLargestStdFunc) {
+        result = CpuidResult(NumStandardCpuidFuncs - 1,
+                             stringToRegister(vendorString.c_str()),
+                             stringToRegister(vendorString.c_str() + 4),
+                             stringToRegister(vendorString.c_str() + 8));
 
-                    int offset = (funcNum - NameString1) * 16;
-                    assert(nameStringSize >= offset + 16);
-                    result = CpuidResult(
-                            stringToRegister(cleanName + offset + 0),
-                            stringToRegister(cleanName + offset + 4),
-                            stringToRegister(cleanName + offset + 12),
-                            stringToRegister(cleanName + offset + 8));
-                }
-                break;
-              case L1CacheAndTLB:
-                result = CpuidResult(0xff08ff08, 0xff20ff20,
-                                     0x40020140, 0x40020140);
-                break;
-              case L2L3CacheAndL2TLB:
-                result = CpuidResult(0x00000000, 0x42004200,
-                                     0x00000000, 0x04008140);
-                break;
-              case APMInfo:
-                result = CpuidResult(0x80000018, 0x68747541,
-                                     0x69746e65, 0x444d4163);
-                break;
-              case LongModeAddressSize:
-                result = CpuidResult(0x00003030, 0x00000000,
-                                     0x00000000, 0x00000000);
-                break;
-/*            case SVMInfo:
-              case TLB1GBPageInfo:
-              case PerformanceInfo:*/
-              default:
-                warn("x86 cpuid family 0x8000: unimplemented function %u",
-                    funcNum);
-                return false;
-            }
-        } else if (family == 0x0000) {
-            // The standard functions
-            switch (funcNum) {
-              case VendorAndLargestStdFunc:
-                {
-                  ISA *isa = dynamic_cast<ISA *>(tc->getIsaPtr());
-                  auto vendor_string = isa->getVendorString();
-                  result = CpuidResult(
-                          NumStandardCpuidFuncs - 1,
-                          stringToRegister(vendor_string.c_str()),
-                          stringToRegister(vendor_string.c_str() + 4),
-                          stringToRegister(vendor_string.c_str() + 8));
-                }
-                break;
-              case FamilyModelStepping:
-                result = CpuidResult(0x00020f51, 0x00000805,
-                                     0xefdbfbff, 0x00000209);
-                break;
-              case ExtendedFeatures:
-                result = CpuidResult(0x00000000, 0x01800000,
-                                     0x00000000, 0x00000000);
-                break;
-              default:
-                warn("x86 cpuid family 0x0000: unimplemented function %u",
-                    funcNum);
-                return false;
-            }
-        } else {
-            warn("x86 cpuid: unknown family %#x", family);
-            return false;
-        }
+        return true;
+    } else if (function == (ext | VendorAndLargestExtFunc)) {
+        result = CpuidResult(0x80000000 + NumExtendedCpuidFuncs - 1,
+                             stringToRegister(vendorString.c_str()),
+                             stringToRegister(vendorString.c_str() + 4),
+                             stringToRegister(vendorString.c_str() + 8));
+
+        return true;
+    } else if ((function == (ext | NameString1)) ||
+               (function == (ext | NameString2)) ||
+               (function == (ext | NameString3))) {
+        // Zero fill anything beyond the end of the string. This
+        // should go away once the string is a vetted parameter.
+        char cleanName[nameStringSize];
+        memset(cleanName, '\0', nameStringSize);
+        strncpy(cleanName, nameString.c_str(), nameStringSize-1);
+
+        int funcNum = bits(function, 15, 0);
+        int offset = (funcNum - NameString1) * 16;
+        assert(nameStringSize >= offset + 16);
+        result = CpuidResult(
+                stringToRegister(cleanName + offset + 0),
+                stringToRegister(cleanName + offset + 4),
+                stringToRegister(cleanName + offset + 12),
+                stringToRegister(cleanName + offset + 8));
 
         return true;
     }
+
+    // Ignore anything not in the map of supported CPUID functions.
+    // This is checked after the string-related functions as those are not
+    // in the capabilities map.
+    if (!capabilities.count(function)) {
+        return false;
+    }
+
+    int cap_offset = 0;
+
+    // Ignore index values for functions that do not take index values.
+    if (hasSignificantIndex(function)) {
+        cap_offset = index * 4;
+    }
+
+    // Ensure we have the offset and 4 dwords after it.
+    assert(capabilities[function].size() >= (cap_offset + 4));
+
+    auto &cap_vec = capabilities[function];
+    result = CpuidResult(cap_vec[cap_offset + 0], cap_vec[cap_offset + 1],
+                         cap_vec[cap_offset + 2], cap_vec[cap_offset + 3]);
+    DPRINTF(X86, "CPUID function %x returning (%x, %x, %x, %x)\n",
+            function, result.rax, result.rbx, result.rdx, result.rcx);
+
+    return true;
+}
+
+uint64_t
+X86CPUID::stringToRegister(const char *str)
+{
+    uint64_t reg = 0;
+    for (int pos = 3; pos >=0; pos--) {
+        reg <<= 8;
+        reg |= str[pos];
+    }
+    return reg;
+}
+
+// Return true if the CPUID function takes ECX index as an input AND
+// those multiple index values are supported in gem5.
+bool
+X86CPUID::hasSignificantIndex(uint32_t function)
+{
+    uint16_t family = bits(function, 31, 16);
+    uint16_t funcNum = bits(function, 15, 0);
+
+    if (family == 0x0000) {
+        switch (funcNum) {
+          case ExtendedState:
+            return true;
+          default:
+            return false;
+        }
+    }
+
+    return false;
+}
+
 } // namespace X86ISA
 } // namespace gem5
