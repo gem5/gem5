@@ -1,3 +1,29 @@
+# Version 23.0.1.0
+
+This minor release incorporates documentation updates, bug fixes, and some minor improvements.
+
+## Documentation updates
+
+* "TESTING.md" has been updated to more accurately reflect our current testing infrastructure.
+* "README" has been replaced with "README.md" and includes more up-to-date information on using gem5.
+* "CONTRIBUTING.md" has been updated to reflect our migration to GitHub and the changes in policy and proceedures.
+* Where needed old references to Gerrit have been removed in favor of GitHub.
+
+## Bug Fixes
+
+* Fixes an assert failure when using ARM which was trigged when `shiftAmt` is 0 for a UQRSH instruction.
+* Fixes `name 'fatal' is not defined` being thrown when tracing is off.
+* Fixes a bug in ARM in which the TLBIOS instructions were decoded as normal MSR instructions with no effect on the TLBs.
+* Fixes invalid `packet_id` value in flit.
+* Fixes default CustomMesh for use with Garnet.
+
+## Minor Improvements
+
+* The gem5 resources downloader now outputs more helpful errors in the case of a failure.
+* "util/github-runners-vagrant" has been added. This outlines how to setup a GitHub Action's set-hosted runner for gem5.
+* The PyUnit tests have been refactored to no longer download large resources during testing.
+* Using Perf is now optional when utilizing KVM CPUs.
+
 # Version 23.0.0.1
 
 **[HOTFIX]** Fixes compilation of `GCN3_X86` and `VEGA_X85`.
