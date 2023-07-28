@@ -334,7 +334,7 @@ GPUDispatcher::notifyWgCompl(Wavefront *wf)
         DPRINTF(GPUKernelInfo, "Completed kernel %d\n", kern_id);
 
         if (kernelExitEvents) {
-            exitSimLoop("GPU Kernel Completed");
+            shader->requestKernelExitEvent();
         }
     }
 
