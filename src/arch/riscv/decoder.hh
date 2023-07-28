@@ -61,6 +61,7 @@ class Decoder : public InstDecoder
     ExtMachInst emi;
     uint32_t machInst;
 
+    bool enableRvv = false;
     VTYPE machVtype;
     uint32_t machVl;
 
@@ -72,10 +73,7 @@ class Decoder : public InstDecoder
     StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
 
   public:
-    Decoder(const RiscvDecoderParams &p) : InstDecoder(p, &machInst)
-    {
-        reset();
-    }
+    Decoder(const RiscvDecoderParams &p);
 
     void reset() override;
 

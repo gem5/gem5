@@ -24,6 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.InstDecoder import InstDecoder
+from m5.params import *
 
 
 class RiscvDecoder(InstDecoder):

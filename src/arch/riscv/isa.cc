@@ -253,7 +253,8 @@ RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 } // anonymous namespace
 
 ISA::ISA(const Params &p) :
-    BaseISA(p), rv_type(p.riscv_type), checkAlignment(p.check_alignment)
+    BaseISA(p), rv_type(p.riscv_type), checkAlignment(p.check_alignment),
+    enableRvv(p.enable_rvv)
 {
     _regClasses.push_back(&intRegClass);
     _regClasses.push_back(&floatRegClass);
@@ -324,8 +325,10 @@ void ISA::clear()
         case RV64:
           misa.rv64_mxl = 2;
           status.uxl = status.sxl = 2;
-          status.vs = VPUStatus::INITIAL;
-          misa.rvv = 1;
+          if (getEnableRvv()) {
+              status.vs = VPUStatus::INITIAL;
+              misa.rvv = 1;
+          }
           break;
         default:
           panic("%s: Unknown rv_type: %d", name(), (int)rv_type);
