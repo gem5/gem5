@@ -339,7 +339,7 @@ namespace VegaISA
             return src0_dpp;
         }
 
-        template<typename T>
+        template<typename ConstT, typename T>
         void vop2Helper(GPUDynInstPtr gpuDynInst,
                         void (*fOpImpl)(T&, T&, T&, Wavefront*))
         {
@@ -359,7 +359,19 @@ namespace VegaISA
                 T src0_dpp = dppHelper(gpuDynInst, src1);
                 fOpImpl(src0_dpp, src1, vdst, wf);
             } else {
-                fOpImpl(src0, src1, vdst, wf);
+                // src0 is unmodified. We need to use the const container
+                // type to allow reading scalar operands from src0. Only
+                // src0 can index scalar operands. We copy this to vdst
+                // temporarily to pass to the lambda so the instruction
+                // does not need to write two lambda functions (one for
+                // a const src0 and one of a mutable src0).
+                ConstT const_src0(gpuDynInst, instData.SRC0);
+                const_src0.readSrc();
+
+                for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                    vdst[lane] = const_src0[lane];
+                }
+                fOpImpl(vdst, src1, vdst, wf);
             }
 
             vdst.write();
