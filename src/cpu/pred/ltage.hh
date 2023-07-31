@@ -85,6 +85,8 @@ class LTAGE : public TAGE
     void update(ThreadID tid, Addr branch_addr, bool taken, void * &bpHistory,
                 bool squashed, const StaticInstPtr & inst,
                 Addr corrTarget) override;
+    virtual void branchPlaceholder(ThreadID tid, Addr pc,
+                                   bool uncond, void * &bpHistory) override;
 
     void init() override;
 
@@ -103,8 +105,10 @@ class LTAGE : public TAGE
     struct LTageBranchInfo : public TageBranchInfo
     {
         LoopPredictor::BranchInfo *lpBranchInfo;
-        LTageBranchInfo(TAGEBase &tage, LoopPredictor &lp)
-          : TageBranchInfo(tage), lpBranchInfo(lp.makeBranchInfo())
+        LTageBranchInfo(TAGEBase &tage, LoopPredictor &lp,
+                        Addr pc, bool conditional)
+          : TageBranchInfo(tage, pc, conditional),
+            lpBranchInfo(lp.makeBranchInfo())
         {}
 
         virtual ~LTageBranchInfo()

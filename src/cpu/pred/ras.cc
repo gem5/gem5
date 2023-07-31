@@ -298,8 +298,6 @@ ReturnAddrStack::commit(ThreadID tid, bool misp,
          * The only case where we could have no history at this point is
          * for a conditional call that is not taken.
          *
-         * Conditional calls
-         *
          * Conditional calls have different scenarios:
          * 1. the call was predicted as non taken but was actually taken
          * 2. the call was predicted taken but was actually not taken.

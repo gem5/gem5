@@ -146,6 +146,9 @@ class TAGEBase : public SimObject
     // Primary branch history entry
     struct BranchInfo
     {
+        const Addr branchPC;
+        const bool condBranch;
+
         int pathHist;
         int ptGhist;
         int hitBank;
@@ -156,10 +159,8 @@ class TAGEBase : public SimObject
 
         bool tagePred;
         bool altTaken;
-        bool condBranch;
         bool longestMatchPred;
         bool pseudoNewAlloc;
-        Addr branchPC;
 
         // Pointer to dynamically allocated storage
         // to save table indices and folded histories.
@@ -173,6 +174,8 @@ class TAGEBase : public SimObject
         int *ci;
         int *ct0;
         int *ct1;
+        // A flag to indicate if the indies and tags are valid.
+        bool valid;
 
         // for stats purposes
         unsigned provider;
@@ -182,14 +185,15 @@ class TAGEBase : public SimObject
         uint64_t ghist;
         uint8_t nGhist;
 
-        BranchInfo(const TAGEBase &tage)
-            : pathHist(0), ptGhist(0),
+        BranchInfo(const TAGEBase &tage, Addr pc, bool conditional)
+            : branchPC(pc), condBranch(conditional),
+              pathHist(0), ptGhist(0),
               hitBank(0), hitBankIndex(0),
               altBank(0), altBankIndex(0),
               bimodalIndex(0),
               tagePred(false), altTaken(false),
-              condBranch(false), longestMatchPred(false),
-              pseudoNewAlloc(false), branchPC(0),
+              longestMatchPred(false),
+              pseudoNewAlloc(false), valid(false),
               provider(-1),
               ghist(0), nGhist(0)
         {
@@ -208,7 +212,8 @@ class TAGEBase : public SimObject
         }
     };
 
-    virtual BranchInfo *makeBranchInfo();
+    virtual BranchInfo *makeBranchInfo(Addr pc, bool conditional);
+
 
     /**
      * Computes the index used to access the
@@ -455,7 +460,6 @@ class TAGEBase : public SimObject
         return false;
     }
 
-    void btbUpdate(ThreadID tid, Addr branch_addr, BranchInfo* &bi);
     unsigned getGHR(ThreadID tid, BranchInfo *bi) const;
     unsigned getGHR(ThreadID tid) const;
     int8_t getCtr(int hitBank, int hitBankIndex) const;

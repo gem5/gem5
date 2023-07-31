@@ -82,7 +82,8 @@ class TAGE: public BPredUnit
     {
         TAGEBase::BranchInfo *tageBranchInfo;
 
-        TageBranchInfo(TAGEBase &tage) : tageBranchInfo(tage.makeBranchInfo())
+        TageBranchInfo(TAGEBase &tage, Addr pc, bool conditional)
+        : tageBranchInfo(tage.makeBranchInfo(pc, conditional))
         {}
 
         virtual ~TageBranchInfo()
@@ -106,6 +107,8 @@ class TAGE: public BPredUnit
                 bool squashed, const StaticInstPtr & inst,
                 Addr corrTarget) override;
     virtual void squash(ThreadID tid, void * &bpHistory) override;
+    virtual void branchPlaceholder(ThreadID tid, Addr pc,
+                                   bool uncond, void * &bpHistory) override;
 };
 
 } // namespace branch_prediction

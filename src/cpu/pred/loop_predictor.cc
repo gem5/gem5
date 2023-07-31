@@ -289,19 +289,21 @@ bool
 LoopPredictor::loopPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
                    BranchInfo* bi, bool prev_pred_taken, unsigned instShiftAmt)
 {
+    if (!cond_branch) {
+        return prev_pred_taken;
+    }
     bool pred_taken = prev_pred_taken;
-    if (cond_branch) {
-        // loop prediction
-        bi->loopPred = getLoop(branch_pc, bi, useSpeculation, instShiftAmt);
 
-        if ((loopUseCounter >= 0) && bi->loopPredValid) {
-            pred_taken = bi->loopPred;
-            bi->loopPredUsed = true;
-        }
+    // loop prediction
+    bi->loopPred = getLoop(branch_pc, bi, useSpeculation, instShiftAmt);
 
-        if (useSpeculation) {
-            specLoopUpdate(pred_taken, bi);
-        }
+    if ((loopUseCounter >= 0) && bi->loopPredValid) {
+        pred_taken = bi->loopPred;
+        bi->loopPredUsed = true;
+    }
+
+    if (useSpeculation) {
+        specLoopUpdate(pred_taken, bi);
     }
 
     return pred_taken;

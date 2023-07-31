@@ -87,14 +87,15 @@ class TAGE_SC_L_TAGE : public TAGEBase
         bool highConf;
         bool altConf;
         bool medConf;
-        BranchInfo(TAGEBase &tage) : TAGEBase::BranchInfo(tage),
+        BranchInfo(TAGEBase &tage, Addr pc, bool cond)
+          : TAGEBase::BranchInfo(tage, pc, cond),
             lowConf(false), highConf(false), altConf(false), medConf(false)
         {}
         virtual ~BranchInfo()
         {}
     };
 
-    virtual TAGEBase::BranchInfo *makeBranchInfo() override;
+    virtual TAGEBase::BranchInfo *makeBranchInfo(Addr pc, bool cond) override;
 
     TAGE_SC_L_TAGE(const TAGE_SC_L_TAGEParams &p)
       : TAGEBase(p),
@@ -177,6 +178,10 @@ class TAGE_SC_L: public LTAGE
                 bool squashed, const StaticInstPtr & inst,
                 Addr corrTarget) override;
 
+    void branchPlaceholder(ThreadID tid, Addr pc,
+                                bool uncond, void * &bpHistory) override
+    { panic("Not implemented for this BP!\n"); }
+
   protected:
 
     struct TageSCLBranchInfo : public LTageBranchInfo
@@ -184,8 +189,9 @@ class TAGE_SC_L: public LTAGE
         StatisticalCorrector::BranchInfo *scBranchInfo;
 
         TageSCLBranchInfo(TAGEBase &tage, StatisticalCorrector &sc,
-                          LoopPredictor &lp)
-          : LTageBranchInfo(tage, lp), scBranchInfo(sc.makeBranchInfo())
+                          LoopPredictor &lp, Addr pc, bool cond_branch)
+          : LTageBranchInfo(tage, lp, pc, cond_branch),
+            scBranchInfo(sc.makeBranchInfo())
         {}
 
         virtual ~TageSCLBranchInfo()

@@ -92,8 +92,8 @@ TAGEBase::TAGEBase(const TAGEBaseParams &p)
 }
 
 TAGEBase::BranchInfo*
-TAGEBase::makeBranchInfo() {
-    return new BranchInfo(*this);
+TAGEBase::makeBranchInfo(Addr pc, bool conditional) {
+    return new BranchInfo(*this, pc, conditional);
 }
 
 void
@@ -194,25 +194,6 @@ TAGEBase::calculateParameters()
                        pow ((double) (maxHist) / (double) minHist,
                            (double) (i - 1) / (double) ((nHistoryTables- 1))))
                        + 0.5);
-    }
-}
-
-void
-TAGEBase::btbUpdate(ThreadID tid, Addr branch_pc, BranchInfo* &bi)
-{
-    if (speculativeHistUpdate) {
-        ThreadHistory& tHist = threadHistory[tid];
-        DPRINTF(Tage, "BTB miss resets prediction: %lx\n", branch_pc);
-        assert(tHist.gHist == &tHist.globalHistory[tHist.ptGhist]);
-        tHist.gHist[0] = 0;
-        for (int i = 1; i <= nHistoryTables; i++) {
-            tHist.computeIndices[i].comp = bi->ci[i];
-            tHist.computeTags[0][i].comp = bi->ct0[i];
-            tHist.computeTags[1][i].comp = bi->ct1[i];
-            tHist.computeIndices[i].update(tHist.gHist);
-            tHist.computeTags[0][i].update(tHist.gHist);
-            tHist.computeTags[1][i].update(tHist.gHist);
-        }
     }
 }
 
@@ -380,6 +361,7 @@ TAGEBase::calculateIndicesAndTags(ThreadID tid, Addr branch_pc,
         tableTags[i] = gtag(tid, branch_pc, i);
         bi->tableTags[i] = tableTags[i];
     }
+    bi->valid = true;
 }
 
 unsigned
@@ -393,15 +375,16 @@ bool
 TAGEBase::tagePredict(ThreadID tid, Addr branch_pc,
               bool cond_branch, BranchInfo* bi)
 {
-    Addr pc = branch_pc;
-    bool pred_taken = true;
+    if (!cond_branch) {
+        // Unconditional branch, predict taken
+        assert(bi->branchPC == branch_pc);
+        return true;
+    }
 
-    if (cond_branch) {
         // TAGE prediction
 
-        calculateIndicesAndTags(tid, pc, bi);
-
-        bi->bimodalIndex = bindex(pc);
+    calculateIndicesAndTags(tid, branch_pc, bi);
+    bi->bimodalIndex = bindex(branch_pc);
 
         bi->hitBank = 0;
         bi->altBank = 0;
@@ -430,7 +413,7 @@ TAGEBase::tagePredict(ThreadID tid, Addr branch_pc,
                     gtable[bi->altBank][tableIndices[bi->altBank]].ctr >= 0;
                 extraAltCalc(bi);
             }else {
-                bi->altTaken = getBimodePred(pc, bi);
+            bi->altTaken = getBimodePred(branch_pc, bi);
             }
 
             bi->longestMatchPred =
@@ -451,20 +434,16 @@ TAGEBase::tagePredict(ThreadID tid, Addr branch_pc,
                                            : BIMODAL_ALT_MATCH;
             }
         } else {
-            bi->altTaken = getBimodePred(pc, bi);
+        bi->altTaken = getBimodePred(branch_pc, bi);
             bi->tagePred = bi->altTaken;
             bi->longestMatchPred = bi->altTaken;
             bi->provider = BIMODAL_ONLY;
         }
-        //end TAGE prediction
 
-        pred_taken = (bi->tagePred);
-        DPRINTF(Tage, "Predict for %lx: taken?:%d, tagePred:%d, altPred:%d\n",
-                branch_pc, pred_taken, bi->tagePred, bi->altTaken);
-    }
-    bi->branchPC = branch_pc;
-    bi->condBranch = cond_branch;
-    return pred_taken;
+    DPRINTF(Tage, "Predict for %lx: tagePred:%d, altPred:%d\n",
+            branch_pc, bi->tagePred, bi->altTaken);
+
+    return bi->tagePred;
 }
 
 void
@@ -638,6 +617,18 @@ TAGEBase::updateHistories(ThreadID tid, Addr branch_pc, bool speculative,
         restoreHistState(tid, bi);
     }
 
+    // Recalculate the tags and indices if needed. This can be the case
+    // as in the decoupled frontend branches can be inserted out of order
+    // (surprise branches). We can not compute the tags and indices
+    // at that point since the BPU might already speculated on other branches
+    // which updated the history. We can recalulate the tags and indices
+    // now since either the branch was correctly not taken and the history
+    // will not be updated or the branch was incorrect in which case the
+    // branches afterwards where squashed and the history was restored.
+    if (!bi->valid && bi->condBranch) {
+        calculateIndicesAndTags(tid, branch_pc, bi);
+    }
+
     ThreadHistory& tHist = threadHistory[tid];
 
     // Update path history
@@ -794,6 +785,21 @@ TAGEBase::getGHR(ThreadID tid, BranchInfo *bi) const
 
     return val;
 }
+
+unsigned
+TAGEBase::getGHR(ThreadID tid) const
+{
+    unsigned val = 0;
+    int gh_ptr = threadHistory[tid].ptGhist;
+    for (unsigned i = 0; i < 16; i++) {
+        // Make sure we don't go out of bounds
+        assert(&(threadHistory[tid].globalHistory[gh_ptr + i]) <
+               threadHistory[tid].globalHistory + histBufferSize);
+        val |= ((threadHistory[tid].globalHistory[gh_ptr + i] & 0x1) << i);
+    }
+    return val;
+}
+
 
 TAGEBase::TAGEBaseStats::TAGEBaseStats(
     statistics::Group *parent, unsigned nHistoryTables)

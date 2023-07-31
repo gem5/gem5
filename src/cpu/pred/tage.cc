@@ -110,7 +110,7 @@ TAGE::squash(ThreadID tid, void * &bpHistory)
 bool
 TAGE::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b)
 {
-    TageBranchInfo *bi = new TageBranchInfo(*tage);//nHistoryTables+1);
+    TageBranchInfo *bi = new TageBranchInfo(*tage, branch_pc, cond_branch);
     b = (void*)(bi);
     return tage->tagePredict(tid, branch_pc, cond_branch, bi->tageBranchInfo);
 }
@@ -129,15 +129,24 @@ void
 TAGE::updateHistories(ThreadID tid, Addr pc, bool uncond,
                          bool taken, Addr target, void * &bpHistory)
 {
-    assert(uncond || bpHistory);
-    if (uncond) {
-        DPRINTF(Tage, "UnConditionalBranch: %lx\n", pc);
+    if (bpHistory == nullptr) {
+
+        // We should only see unconditional branches
+        assert(uncond);
+
         predict(tid, pc, false, bpHistory);
     }
 
     // Update the global history for all branches
     TageBranchInfo *bi = static_cast<TageBranchInfo*>(bpHistory);
     tage->updateHistories(tid, pc, true, taken, target, bi->tageBranchInfo);
+}
+
+void
+TAGE::branchPlaceholder(ThreadID tid, Addr pc, bool uncond, void * &bpHistory)
+{
+    TageBranchInfo *bi = new TageBranchInfo(*tage, pc, !uncond);
+    bpHistory = (void*)(bi);
 }
 
 } // namespace branch_prediction

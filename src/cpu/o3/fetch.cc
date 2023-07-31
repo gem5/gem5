@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2010-2014 ARM Limited
  * Copyright (c) 2012-2013 AMD
+ * Copyright (c) 2022-2023 The University of Edinburgh
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -1269,10 +1270,6 @@ Fetch::fetch(bool &status_change)
                 if (curMacroop)
                     staticInst->size(curMacroop->size());
             }
-            // DPRINTF(Fetch, "[tid:%i] Decoded %s, size %i\n",
-            //             tid, staticInst->disassemble(this_pc.instAddr()),
-            //             staticInst->size()
-            //             );
 
             DynInstPtr instruction = buildInst(
                     tid, staticInst, curMacroop, this_pc, *next_pc, true);

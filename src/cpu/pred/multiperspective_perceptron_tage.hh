@@ -72,7 +72,8 @@ class MPP_TAGE : public TAGEBase
   public:
     struct BranchInfo : public TAGEBase::BranchInfo
     {
-        BranchInfo(TAGEBase &tage) : TAGEBase::BranchInfo(tage)
+        BranchInfo(TAGEBase &tage, Addr pc, bool cond)
+        : TAGEBase::BranchInfo(tage, pc, cond)
         {}
         virtual ~BranchInfo()
         {}
@@ -221,7 +222,7 @@ class MultiperspectivePerceptronTAGE : public MultiperspectivePerceptron
                           LoopPredictor &loopPredictor,
                           StatisticalCorrector &statisticalCorrector)
           : MPPBranchInfo(pc, pcshift, cond),
-            tageBranchInfo(tage.makeBranchInfo()),
+            tageBranchInfo(tage.makeBranchInfo(pc, cond)),
             lpBranchInfo(loopPredictor.makeBranchInfo()),
             scBranchInfo(statisticalCorrector.makeBranchInfo()),
             predictedTaken(false)
@@ -255,6 +256,9 @@ class MultiperspectivePerceptronTAGE : public MultiperspectivePerceptron
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
                          Addr target,  void * &bpHistory) override;
     void squash(ThreadID tid, void * &bpHistory) override;
+    void branchPlaceholder(ThreadID tid, Addr pc,
+                                bool uncond, void * &bpHistory) override
+    { panic("Not implemented for this BP!\n"); }
 
 };
 
