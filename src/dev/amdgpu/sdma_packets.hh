@@ -37,7 +37,7 @@ namespace gem5
 {
 
 /**
- * SDMA packets
+ * SDMA packets - see src/core/inc/sdma_registers.h in ROCR-Runtime
  */
 typedef struct GEM5_PACKED
 {
@@ -79,6 +79,23 @@ typedef struct GEM5_PACKED
     uint32_t count : 22;
 }  sdmaConstFill;
 static_assert(sizeof(sdmaConstFill) == 16);
+
+typedef struct GEM5_PACKED
+{
+    union
+    {
+        struct
+        {
+            uint32_t op : 8;
+            uint32_t sub_op : 8;
+            uint32_t sw : 2;
+            uint32_t res0 : 12;
+            uint32_t fillsize : 2;
+        };
+        uint32_t ordinal;
+    };
+}  sdmaConstFillHeader;
+static_assert(sizeof(sdmaConstFillHeader) == 4);
 
 typedef struct GEM5_PACKED
 {

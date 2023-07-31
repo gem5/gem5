@@ -245,6 +245,8 @@ class SDMAEngine : public DmaVirtDevice
                     uint64_t *dmaBuffer);
     void atomicDone(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
                     uint64_t *dmaBuffer);
+    void constFill(SDMAQueue *q, sdmaConstFill *pkt, uint32_t header);
+    void constFillDone(SDMAQueue *q, sdmaConstFill *pkt, uint8_t *fill_data);
 
     /**
      * Methods for getting SDMA MMIO base address and size. These are set by
