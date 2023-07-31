@@ -224,6 +224,7 @@ class NeoverseV2_BTB(SimpleBTB):
 # TAGE Branch Predictor
 class NeoverseV2_BP(BranchPredictor):
     conditionalBranchPred = TAGE_SC_L_64KB()
+    indirectBranchPred = ITTAGE()
     btb = NeoverseV2_BTB()
     ras = ReturnAddrStack(numEntries=31)
     instShiftAmt = 2

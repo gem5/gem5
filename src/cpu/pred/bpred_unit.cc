@@ -256,9 +256,8 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
 
         ++stats.indirectLookups;
 
-        std::unique_ptr<const PCStateBase> itarget(
-            iPred->lookup(tid, seqNum, pc.instAddr(),
-                          hist->indirectHistory));
+        const PCStateBase *itarget =
+            iPred->lookup(tid, seqNum, pc.instAddr(), hist->indirectHistory);
 
         if (itarget) {
             // Indirect predictor hit
