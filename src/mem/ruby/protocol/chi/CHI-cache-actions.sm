@@ -927,6 +927,25 @@ action(Initiate_StoreUpgrade, desc="") {
   tbe.actions.push(Event:TagArrayWrite);
 }
 
+action(Initiate_WriteUnique_Zero, desc="") {
+  assert(is_HN);
+  tbe.dataUnique := true;
+  if (tbe.dir_sharers.count() > 0) {
+    tbe.actions.push(Event:SendSnpCleanInvalid);
+  }
+  tbe.actions.push(Event:WriteZero);
+  if (comp_wu) {
+    tbe.actions.push(Event:SendDBIDResp_WUZ);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+    tbe.actions.pushNB(Event:SendComp_WU);
+  } else {
+    tbe.actions.push(Event:SendCompDBIDResp);
+    tbe.actions.pushNB(Event:WriteFEPipe);
+  }
+  tbe.actions.push(Event:CheckCacheFill);
+  tbe.actions.push(Event:TagArrayWrite);
+}
+
 action(Initiate_WriteUnique_LocalWrite, desc="") {
   // auto-upgrade if hn but state was not unique
   assert(is_HN || tbe.dataUnique);
@@ -1953,6 +1972,11 @@ action(ExpectComp, desc="") {
   assert(is_valid(tbe));
   tbe.expected_req_resp.addExpectedRespType(CHIResponseType:Comp);
   tbe.expected_req_resp.addExpectedCount(1);
+}
+
+action(WriteZero, desc="") {
+  tbe.dataBlkValid.fillMask();
+  tbe.dataBlk.clear();
 }
 
 action(Receive_ReqDataResp, desc="") {
