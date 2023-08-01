@@ -30,7 +30,7 @@ import os
 from typing import Optional, Dict, List
 from .client_api.client_wrapper import ClientWrapper
 from gem5.gem5_default_config import config
-from m5.util import inform
+from m5.util import inform, warn
 from _m5 import core
 
 
@@ -53,6 +53,14 @@ clientwrapper = None
 def _get_clientwrapper():
     global clientwrapper
     if clientwrapper is None:
+        if (
+            "GEM5_RESOURCE_JSON" in os.environ
+            and "GEM5_RESOURCE_JSON_APPEND" in os.environ
+        ):
+            raise Exception(
+                "Both GEM5_RESOURCE_JSON and GEM5_RESOURCE_JSON_APPEND are set. Please set only one of them."
+            )
+
         # First check if the config file path is provided in the environment variable
         if "GEM5_CONFIG" in os.environ:
             config_file_path = Path(os.environ["GEM5_CONFIG"])
@@ -68,6 +76,29 @@ def _get_clientwrapper():
         else:
             gem5_config = config
             inform("Using default config")
+
+        # If the GEM5_RESOURCE_JSON_APPEND is set, append the resources to the gem5_config
+        if "GEM5_RESOURCE_JSON_APPEND" in os.environ:
+            json_source = {
+                "url": os.environ["GEM5_RESOURCE_JSON_APPEND"],
+                "isMongo": False,
+            }
+            gem5_config["sources"].update(
+                {"GEM5_RESOURCE_JSON_APPEND": json_source}
+            )
+            inform(
+                f"Appending resources from {os.environ['GEM5_RESOURCE_JSON_APPEND']}"
+            )
+        # If the GEM5_RESOURCE_JSON is set, use it as the only source
+        elif "GEM5_RESOURCE_JSON" in os.environ:
+            json_source = {
+                "url": os.environ["GEM5_RESOURCE_JSON"],
+                "isMongo": False,
+            }
+            gem5_config["sources"] = {"GEM5_RESOURCE_JSON": json_source}
+            warn(
+                f"No config sources are used, Using resources from {os.environ['GEM5_RESOURCE_JSON']}"
+            )
         clientwrapper = ClientWrapper(gem5_config)
     return clientwrapper
 
