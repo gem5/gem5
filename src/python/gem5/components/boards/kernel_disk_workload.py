@@ -39,6 +39,7 @@ import os
 from pathlib import Path
 
 import m5
+from m5 import warn
 
 
 class KernelDiskWorkload:
@@ -84,10 +85,24 @@ class KernelDiskWorkload:
         """
         raise NotImplementedError
 
-    @abstractmethod
     def get_disk_device(self) -> str:
         """
         Get the disk device, e.g., "/dev/sda", where the disk image is placed.
+
+        :returns: The disk device.
+        """
+        if self._disk_device is None:
+            warn("No disk device set, ie where the disk image is located. Defaulting to board disk device")
+            return _get_default_disk_device()
+        else:
+            return self._disk_device
+        
+
+    
+    @abstractmethod
+    def _get_default_disk_device(self) -> str:
+        """
+        Set a default disk device, in case user does not specify a disk device.
 
         :returns: The disk device.
         """
@@ -139,6 +154,7 @@ class KernelDiskWorkload:
         kernel: KernelResource,
         disk_image: DiskImageResource,
         bootloader: Optional[BootloaderResource] = None,
+        _disk_device: Optional[str] = None,
         readfile: Optional[str] = None,
         readfile_contents: Optional[str] = None,
         kernel_args: Optional[List[str]] = None,
@@ -171,6 +187,9 @@ class KernelDiskWorkload:
         # Abstract board. This function will not work otherwise.
         assert isinstance(self, AbstractBoard)
 
+        # Set the disk device
+        self._disk_device = _disk_device
+
         # If we are setting a workload of this type, we need to run as a
         # full-system simulation.
         self._set_fullsystem(True)
@@ -191,6 +210,7 @@ class KernelDiskWorkload:
 
         if bootloader is not None:
             self._bootloader = [bootloader.get_local_path()]
+
 
         # Set the readfile.
         if readfile:

@@ -354,7 +354,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         )
 
     @overrides(KernelDiskWorkload)
-    def get_disk_device(self):
+    def _get_default_disk_device(self):
         return "/dev/vda"
 
     @overrides(KernelDiskWorkload)
