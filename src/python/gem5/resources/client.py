@@ -60,9 +60,31 @@ def _get_clientwrapper():
             raise Exception(
                 "Both GEM5_RESOURCE_JSON and GEM5_RESOURCE_JSON_APPEND are set. Please set only one of them."
             )
-
+        gem5_config = {}
+        # If the GEM5_RESOURCE_JSON is set, use it as the only source
+        if "GEM5_RESOURCE_JSON" in os.environ:
+            json_source = {
+                "url": os.environ["GEM5_RESOURCE_JSON"],
+                "isMongo": False,
+            }
+            gem5_config["sources"] = {"GEM5_RESOURCE_JSON": json_source}
+            if "GEM5_CONFIG" in os.environ:
+                warn(
+                    f"Both GEM5_CONFIG and GEM5_RESOURCE_JSON are set.\n"
+                    f"GEM5_CONFIG will be ignored in favor of the GEM5_RESOURCE_JSON environment variable."
+                )
+            elif (Path().cwd().resolve() / "gem5-config.json").exists():
+                warn(
+                    f"Both gem5-config.json and GEM5_RESOURCE_JSON are set.\n"
+                    f"gem5-config.json will be ignored in favor of the GEM5_RESOURCE_JSON environment variable."
+                )
+            else:
+                warn(
+                    f"GEM5_RESOURCE_JSON is set.\n"
+                    f"gem5-default-config will be ignored in favor of the GEM5_RESOURCE_JSON environment variable."
+                )
         # First check if the config file path is provided in the environment variable
-        if "GEM5_CONFIG" in os.environ:
+        elif "GEM5_CONFIG" in os.environ:
             config_file_path = Path(os.environ["GEM5_CONFIG"])
             gem5_config = getFileContent(config_file_path)
             inform("Using config file specified by $GEM5_CONFIG")
@@ -89,16 +111,7 @@ def _get_clientwrapper():
             inform(
                 f"Appending resources from {os.environ['GEM5_RESOURCE_JSON_APPEND']}"
             )
-        # If the GEM5_RESOURCE_JSON is set, use it as the only source
-        elif "GEM5_RESOURCE_JSON" in os.environ:
-            json_source = {
-                "url": os.environ["GEM5_RESOURCE_JSON"],
-                "isMongo": False,
-            }
-            gem5_config["sources"] = {"GEM5_RESOURCE_JSON": json_source}
-            warn(
-                f"No config sources are used, Using resources from {os.environ['GEM5_RESOURCE_JSON']}"
-            )
+
         clientwrapper = ClientWrapper(gem5_config)
     return clientwrapper
 
