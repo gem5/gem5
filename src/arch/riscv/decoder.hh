@@ -32,6 +32,7 @@
 
 #include "arch/generic/decode_cache.hh"
 #include "arch/generic/decoder.hh"
+#include "arch/riscv/insts/vector.hh"
 #include "arch/riscv/types.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
@@ -53,11 +54,16 @@ class Decoder : public InstDecoder
     decode_cache::InstMap<ExtMachInst> instMap;
     bool aligned;
     bool mid;
+    bool vConfigDone;
 
   protected:
     //The extended machine instruction being generated
     ExtMachInst emi;
     uint32_t machInst;
+
+    bool enableRvv = false;
+    VTYPE machVtype;
+    uint32_t machVl;
 
     StaticInstPtr decodeInst(ExtMachInst mach_inst);
 
@@ -67,20 +73,22 @@ class Decoder : public InstDecoder
     StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
 
   public:
-    Decoder(const RiscvDecoderParams &p) : InstDecoder(p, &machInst)
-    {
-        reset();
-    }
+    Decoder(const RiscvDecoderParams &p);
 
     void reset() override;
 
-    inline bool compressed(ExtMachInst inst) { return (inst & 0x3) < 0x3; }
+    inline bool compressed(ExtMachInst inst) { return inst.quadRant < 0x3; }
+    inline bool vconf(ExtMachInst inst) {
+      return inst.opcode == 0b1010111u && inst.funct3 == 0b111u;
+    }
 
     //Use this to give data to the decoder. This should be used
     //when there is control flow.
     void moreBytes(const PCStateBase &pc, Addr fetchPC) override;
 
     StaticInstPtr decode(PCStateBase &nextPC) override;
+
+    void setVlAndVtype(uint32_t vl, VTYPE vtype);
 };
 
 } // namespace RiscvISA

@@ -38,7 +38,15 @@ def operand_types {{
     'sd' : 'int64_t',
     'ud' : 'uint64_t',
     'sf' : 'float',
-    'df' : 'double'
+    'df' : 'double',
+
+    'vi'    : 'vi',
+    'vu'    : 'vu',
+    'vwi'   : 'vwi',
+    'vwu'   : 'vwu',
+    'vext'  : 'vext',
+    'vextu' : 'vextu',
+    'vc'    : 'RiscvISA::VecRegContainer'
 }};
 
 let {{
@@ -78,6 +86,11 @@ def operands {{
     'Fc2_bits': FloatRegOp('ud', 'FC2', 'IsFloating', 2),
     'Fp2': FloatRegOp('df', 'FP2 + 8', 'IsFloating', 2),
     'Fp2_bits': FloatRegOp('ud', 'FP2 + 8', 'IsFloating', 2),
+
+    'Vd':  VecRegOp('vc', 'VD', 'IsVector', 1),
+    'Vs1': VecRegOp('vc', 'VS1', 'IsVector', 2),
+    'Vs2': VecRegOp('vc', 'VS2', 'IsVector', 3),
+    'Vs3': VecRegOp('vc', 'VS3', 'IsVector', 4),
 
 #Memory Operand
     'Mem': MemOp('ud', None, (None, 'IsLoad', 'IsStore'), 5),

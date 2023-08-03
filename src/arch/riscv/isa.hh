@@ -67,12 +67,15 @@ enum FPUStatus
     DIRTY = 3,
 };
 
+using VPUStatus = FPUStatus;
+
 class ISA : public BaseISA
 {
   protected:
     RiscvType _rvType;
     std::vector<RegVal> miscRegFile;
     bool checkAlignment;
+    bool enableRvv;
 
     bool hpmCounterEnabled(int counter) const;
 
@@ -135,6 +138,8 @@ class ISA : public BaseISA
     void resetThread() override;
 
     RiscvType rvType() const { return _rvType; }
+
+    bool getEnableRvv() const { return enableRvv; }
 
     void
     clearLoadReservation(ContextID cid)
