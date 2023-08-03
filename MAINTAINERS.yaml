@@ -1,23 +1,22 @@
 # See CONTRIBUTING.md for details of gem5's contribution process.
 #
 # This file contains a list of gem5's subsystems and their
-# maintainers. The key used to identifity a subsystem should be used
-# as a tag in commit messages targetting that subsystem. At least one
-# (not all) of these maintainers must review the patch before it can
-# be pushed. These people will automatically be emailed when you
-# upload the patch to Gerrit (https://gem5-review.googlesource.com).
-# These subsystem keys mostly follow the directory structure.
+# maintainers. The key used to identify a subsystem should be used
+# as a tag in commit messages targeting that subsystem. Via our GitHub
+# Pull Request system (https://github.com/gem5/gem5/pulls) a maintainer
+# of the subsystem impacted by a pull request contribution will be added
+# as an assignee to that pull request. Their role is be to referee the
+# contribution (add a review, assign reviewers, suggest changes, etc.), then
+# merge the contribution into the gem5 develop branch when they are satisfied
+# with the change.
 #
-# Maintainers have the following responsibilities:
-# 1. That at least one maintainer of each subsystem reviews all
-#    changes to that subsystem (they will be automatically tagged and
-#    emailed on each new change).
-# 2. They will complete your reviews in a timely manner (within a few
-#    business days).
-# 3. They pledge to uphold gem5's community standards and its code of
-#    conduct by being polite and professional in their code
-#    reviews. See CODE-OF-CONDUCT.md.
+# Maintainers assigned to a pull request are expected to acknowledge their
+# assignment in 2 business days and to fully begin refereeing the contribution
+# within a business week.
 #
+# Maintainers pledge to uphold gem5's community standards and its code of
+# conduct by being polite and professional in their interactions with
+# contributors. See CODE-OF-CONDUCT.md.
 #
 # Entries in this file have the following format:
 #   key:
