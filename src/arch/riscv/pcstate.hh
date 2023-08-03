@@ -58,12 +58,12 @@ class PCState : public GenericISA::UPCState<4>
 {
   private:
     bool _compressed = false;
-    RiscvType _rv_type = RV64;
+    RiscvType _rvType = RV64;
 
   public:
     PCState() = default;
     PCState(const PCState &other) = default;
-    PCState(Addr addr, RiscvType rv_type) : UPCState(addr), _rv_type(rv_type)
+    PCState(Addr addr, RiscvType rvType) : UPCState(addr), _rvType(rvType)
     {
     }
 
@@ -75,14 +75,14 @@ class PCState : public GenericISA::UPCState<4>
         Base::update(other);
         auto &pcstate = other.as<PCState>();
         _compressed = pcstate._compressed;
-        _rv_type = pcstate._rv_type;
+        _rvType = pcstate._rvType;
     }
 
     void compressed(bool c) { _compressed = c; }
     bool compressed() const { return _compressed; }
 
-    void rvType(RiscvType rv_type) { _rv_type = rv_type; }
-    RiscvType rvType() const { return _rv_type; }
+    void rvType(RiscvType rvType) { _rvType = rvType; }
+    RiscvType rvType() const { return _rvType; }
 
     bool
     branching() const override

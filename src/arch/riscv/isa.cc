@@ -253,8 +253,9 @@ RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 } // anonymous namespace
 
 ISA::ISA(const Params &p) :
-    BaseISA(p), rv_type(p.riscv_type), checkAlignment(p.check_alignment),
+    BaseISA(p), _rvType(p.riscv_type), checkAlignment(p.check_alignment),
     enableRvv(p.enable_rvv)
+
 {
     _regClasses.push_back(&intRegClass);
     _regClasses.push_back(&floatRegClass);
@@ -316,9 +317,8 @@ void ISA::clear()
     // mark FS is initial
     status.fs = INITIAL;
 
-
-    // rv_type dependent init.
-    switch (rv_type) {
+    // _rvType dependent init.
+    switch (_rvType) {
         case RV32:
           misa.rv32_mxl = 1;
           break;
@@ -331,7 +331,7 @@ void ISA::clear()
           }
           break;
         default:
-          panic("%s: Unknown rv_type: %d", name(), (int)rv_type);
+          panic("%s: Unknown _rvType: %d", name(), (int)_rvType);
     }
 
     miscRegFile[MISCREG_ISA] = misa;
@@ -487,7 +487,7 @@ ISA::readMiscReg(RegIndex idx)
                 (status.xs == 3) || (status.fs == 3) || (status.vs == 3);
             // For RV32, the SD bit is at index 31
             // For RV64, the SD bit is at index 63.
-            switch (rv_type) {
+            switch (_rvType) {
                 case RV32:
                     status.rv32_sd = sd_bit;
                     break;
@@ -495,7 +495,7 @@ ISA::readMiscReg(RegIndex idx)
                     status.rv64_sd = sd_bit;
                     break;
                 default:
-                    panic("%s: Unknown rv_type: %d", name(), (int)rv_type);
+                    panic("%s: Unknown _rvType: %d", name(), (int)_rvType);
             }
             setMiscRegNoEffect(idx, status);
 
@@ -574,7 +574,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 assert(readMiscRegNoEffect(MISCREG_PRV) == PRV_M);
 
                 int regSize = 0;
-                switch (rv_type) {
+                switch (_rvType) {
                     case RV32:
                         regSize = 4;
                     break;
@@ -582,7 +582,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                         regSize = 8;
                     break;
                     default:
-                        panic("%s: Unknown rv_type: %d", name(), (int)rv_type);
+                        panic("%s: Unknown _rvType: %d", name(), (int)_rvType);
                 }
 
                 // Specs do not seem to mention what should be
@@ -676,7 +676,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             break;
           case MISCREG_STATUS:
             {
-                if (rv_type != RV32) {
+                if (_rvType != RV32) {
                     // SXL and UXL are hard-wired to 64 bit
                     auto cur = readMiscRegNoEffect(idx);
                     val &= ~(STATUS_SXL_MASK | STATUS_UXL_MASK);
