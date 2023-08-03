@@ -127,9 +127,14 @@ for id in ids:
                 + f"({md5(Path(download_path))}) differs to that recorded in "
                 + f" gem5-resources ({resource_json['md5sum']}).{os.linesep}"
             )
+        # Remove the downloaded resource.
+        if os.path.isfile(download_path):
+            os.remove(download_path)
+        elif os.path.isdir(download_path):
+            shutil.rmtree(download_path, ignore_errors=True)
+        else:
+            raise Exception("{download_path} is not a file or directory.")
 
-# Remove the downloaded resource.
-shutil.rmtree(args.download_directory, ignore_errors=True)
 
 # If errors exist, raise an exception highlighting them.
 if errors:
