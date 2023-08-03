@@ -26,11 +26,18 @@
 #     maintainers:
 #       - John Doe <john.doe@gem5.org>
 #       - Jane Doe <jane.doe@gem5.org>
-#
+#     experts:
+#       - Jack Doe <jack.doe@gem5org>
+#       - Jill Doe <jill.doe@gem5org>
 #
 # The status field should have one of the following values:
 #   - maintained: The component has an active maintainer.
 #   - orphaned: The component is looking for a new owner.
+#
+# The experts field is optional and used to identify people who are
+# knowledgeable about the subsystem but are not responsible for it. Those
+# listed as an expert are typically good to add as a reviewer for pull requests
+# targeting that subsystem.
 
 
 pmc:
@@ -93,11 +100,15 @@ base-stats:
 
 configs:
   status: orphaned
+  experts:
+    - Jason Lowe-Power <jason@lowepower.com>
 
 cpu:
   desc: >-
     General changes to all CPU models (e.g., BaseCPU)
   status: orphaned
+  experts:
+    - Jason Lowe-Power <jason@lowepower.com>
 
 cpu-kvm:
   status: maintained
@@ -112,6 +123,8 @@ cpu-o3:
 
 cpu-simple:
   status: orphaned
+  experts:
+    - Jason Lowe-Power <jason@lowepower.com>
 
 dev:
   status: orphaned
@@ -140,9 +153,13 @@ ext:
   desc: >-
     Components external to gem5
   status: orphaned
+  experts:
+    - Jason Lowe-Power <jason@lowepower.com>
 
 ext-testlib:
   status: orphaned
+  experts:
+    - Bobby R. Bruce <bbruce@ucdavis.edu>
 
 fastmodel:
   desc: >-
@@ -156,6 +173,9 @@ learning-gem5:
   desc: >-
     The code and configs for the Learning gem5 book
   status: orphaned
+  experts:
+    - Jason Lowe-Power <jason@lowepower.com>
+    - Bobby R. Bruce <bbruce@ucdavis.edu>
 
 stdlib:
   desc: >-
@@ -188,16 +208,23 @@ mem-ruby:
   status: maintained
   maintainers:
     - Matt Sinclair <sinclair@cs.wisc.edu>
+  experts:
+    - Jason Lowe-Power <jason@lowepower.com>
 
 misc:
   desc: >-
     Anything outside of the other categories
   status: orphaned
+  experts:
+    - Jason Lowe-Power <jason@lowepower.com>
 
 python:
   desc: >-
     Python SimObject wrapping and infrastructure
   status: orphaned
+  experts:
+    - Jason Lowe-Power <jason@lowepower.com>
+    - Andreas Sandberg <andreas.sandberg@arm.com>
 
 resources:
   desc: >-
@@ -205,6 +232,8 @@ resources:
   status: maintained
   maintainers:
     - Bobby R. Bruce <bbruce@ucdavis.edu>
+  experts:
+    - Jason Lowe-Power <jason@lowepower.com>
 
 scons:
   desc: >-
@@ -215,6 +244,8 @@ sim:
   desc: >-
     General simulation components
   status: orphaned
+  experts:
+    - Jason Lowe-Power <jason@lowepower.com>
 
 sim-se:
   desc: >-
