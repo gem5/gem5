@@ -500,6 +500,174 @@ decode QUADRANT default Unknown::unknown() {
                     Fd_bits = fd.v;
                 }}, inst_flags=FloatMemReadOp);
             }
+
+            0x0: decode MOP {
+                0x0: decode LUMOP {
+                    0x00: VleOp::vle8_v({{
+                        if ((machInst.vm || elem_mask(v0, ei)) &&
+                            i < this->microVl) {
+                            Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                        } else {
+                            Vd_ub[i] = Vs2_ub[i];
+                        }
+                    }}, inst_flags=VectorUnitStrideLoadOp);
+                    0x08: decode NF {
+                        format VlWholeOp {
+                            0x0: vl1re8_v({{
+                                Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x1: vl2re8_v({{
+                                Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x3: vl4re8_v({{
+                                Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x7: vl8re8_v({{
+                                Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                        }
+                    }
+                    0x0b: VlmOp::vlm_v({{
+                        Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                    }}, inst_flags=VectorUnitStrideMaskLoadOp);
+                }
+                0x1: VlIndexOp::vluxei8_v({{
+                    Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
+                }}, {{
+                    EA = Rs1 + Vs2_ub[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedLoadOp);
+                0x2: VlStrideOp::vlse8_v({{
+                    Vd_ub[microIdx] = Mem_vc.as<uint8_t>()[0];
+                }}, inst_flags=VectorStridedLoadOp);
+                0x3: VlIndexOp::vloxei8_v({{
+                    Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
+                }}, {{
+                    EA = Rs1 + Vs2_ub[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedLoadOp);
+            }
+            0x5: decode MOP {
+                0x0: decode LUMOP {
+                    0x00: VleOp::vle16_v({{
+                        if ((machInst.vm || elem_mask(v0, ei)) &&
+                            i < this->microVl) {
+                            Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                        } else {
+                            Vd_uh[i] = Vs2_uh[i];
+                        }
+                    }}, inst_flags=VectorUnitStrideLoadOp);
+                    0x08: decode NF {
+                        format VlWholeOp {
+                            0x0: vl1re16_v({{
+                                Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x1: vl2re16_v({{
+                                Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x3: vl4re16_v({{
+                                Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x7: vl8re16_v({{
+                                Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                        }
+                    }
+                }
+                0x1: VlIndexOp::vluxei16_v({{
+                    Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
+                }}, {{
+                    EA = Rs1 + Vs2_uh[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedLoadOp);
+                0x2: VlStrideOp::vlse16_v({{
+                    Vd_uh[microIdx] = Mem_vc.as<uint16_t>()[0];
+                }}, inst_flags=VectorStridedLoadOp);
+                0x3: VlIndexOp::vloxei16_v({{
+                    Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
+                }}, {{
+                    EA = Rs1 + Vs2_uh[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedLoadOp);
+            }
+            0x6: decode MOP {
+                0x0: decode LUMOP {
+                    0x00: VleOp::vle32_v({{
+                        if ((machInst.vm || elem_mask(v0, ei)) &&
+                            i < this->microVl) {
+                            Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                        } else {
+                            Vd_uw[i] = Vs2_uw[i];
+                        }
+                    }}, inst_flags=VectorUnitStrideLoadOp);
+                    0x08: decode NF {
+                        format VlWholeOp {
+                            0x0: vl1re32_v({{
+                                Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x1: vl2re32_v({{
+                                Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x3: vl4re32_v({{
+                                Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x7: vl8re32_v({{
+                                Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                        }
+                    }
+                }
+                0x1: VlIndexOp::vluxei32_v({{
+                    Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
+                }}, {{
+                    EA = Rs1 + Vs2_uw[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedLoadOp);
+                0x2: VlStrideOp::vlse32_v({{
+                    Vd_uw[microIdx] = Mem_vc.as<uint32_t>()[0];
+                }}, inst_flags=VectorStridedLoadOp);
+                0x3: VlIndexOp::vloxei32_v({{
+                    Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
+                }}, {{
+                    EA = Rs1 + Vs2_uw[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedLoadOp);
+            }
+            0x7: decode MOP {
+                0x0: decode LUMOP {
+                    0x00: VleOp::vle64_v({{
+                        if ((machInst.vm || elem_mask(v0, ei)) &&
+                            i < this->microVl) {
+                            Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                        } else {
+                            Vd_ud[i] = Vs2_ud[i];
+                        }
+                    }}, inst_flags=VectorUnitStrideLoadOp);
+                    0x08: decode NF {
+                        format VlWholeOp {
+                            0x0: vl1re64_v({{
+                                Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x1: vl2re64_v({{
+                                Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x3: vl4re64_v({{
+                                Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                            0x7: vl8re64_v({{
+                                Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                            }}, inst_flags=VectorWholeRegisterLoadOp);
+                        }
+                    }
+                }
+                0x1: VlIndexOp::vluxei64_v({{
+                    Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
+                }}, {{
+                    EA = Rs1 + Vs2_ud[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedLoadOp);
+                0x2: VlStrideOp::vlse64_v({{
+                    Vd_ud[microIdx] = Mem_vc.as<uint64_t>()[0];
+                }}, inst_flags=VectorStridedLoadOp);
+                0x3: VlIndexOp::vloxei64_v({{
+                    Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
+                }}, {{
+                    EA = Rs1 + Vs2_ud[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedLoadOp);
+            }
         }
 
         0x03: decode FUNCT3 {
@@ -805,6 +973,106 @@ decode QUADRANT default Unknown::unknown() {
 
                     Mem_ud = Fs2_bits;
                 }}, inst_flags=FloatMemWriteOp);
+            }
+
+            0x0: decode MOP {
+                0x0: decode SUMOP {
+                    0x00: VseOp::vse8_v({{
+                        Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
+                    }}, inst_flags=VectorUnitStrideStoreOp);
+                    format VsWholeOp {
+                        0x8: decode NF {
+                            0x0: vs1r_v({{
+                                Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
+                            }}, inst_flags=VectorWholeRegisterStoreOp);
+                            0x1: vs2r_v({{
+                                Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
+                            }}, inst_flags=VectorWholeRegisterStoreOp);
+                            0x3: vs4r_v({{
+                                Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
+                            }}, inst_flags=VectorWholeRegisterStoreOp);
+                            0x7: vs8r_v({{
+                                Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
+                            }}, inst_flags=VectorWholeRegisterStoreOp);
+                        }
+                    }
+                    0x0b: VsmOp::vsm_v({{
+                        Mem_vc.as<uint8_t>()[i] = Vs3_ub[i];
+                    }}, inst_flags=VectorUnitStrideMaskStoreOp);
+                }
+                0x1: VsIndexOp::vsuxei8_v({{
+                    Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
+                }}, {{
+                    EA = Rs1 + Vs2_ub[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedStoreOp);
+                0x2: VsStrideOp::vsse8_v({{
+                    Mem_vc.as<uint8_t>()[0] = Vs3_ub[microIdx];
+                }}, inst_flags=VectorStridedStoreOp);
+                0x3: VsIndexOp::vsoxei8_v({{
+                    Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
+                }}, {{
+                    EA = Rs1 + Vs2_ub[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedStoreOp);
+            }
+            0x5: decode MOP {
+                0x0: decode SUMOP {
+                    0x00: VseOp::vse16_v({{
+                        Mem_vc.as<uint16_t>()[i] = Vs3_uh[i];
+                    }}, inst_flags=VectorUnitStrideStoreOp);
+                }
+                0x1: VsIndexOp::vsuxei16_v({{
+                    Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
+                }}, {{
+                    EA = Rs1 + Vs2_uh[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedStoreOp);
+                0x2: VsStrideOp::vsse16_v({{
+                    Mem_vc.as<uint16_t>()[0] = Vs3_uh[microIdx];
+                }}, inst_flags=VectorStridedStoreOp);
+                0x3: VsIndexOp::vsoxei16_v({{
+                    Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
+                }}, {{
+                    EA = Rs1 + Vs2_uh[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedStoreOp);
+            }
+            0x6: decode MOP {
+                0x0: decode SUMOP {
+                    0x00: VseOp::vse32_v({{
+                        Mem_vc.as<uint32_t>()[i] = Vs3_uw[i];
+                    }}, inst_flags=VectorUnitStrideStoreOp);
+                }
+                0x1: VsIndexOp::vsuxei32_v({{
+                    Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
+                }}, {{
+                    EA = Rs1 + Vs2_uw[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedStoreOp);
+                0x2: VsStrideOp::vsse32_v({{
+                    Mem_vc.as<uint32_t>()[0] = Vs3_uw[microIdx];
+                }}, inst_flags=VectorStridedStoreOp);
+                0x3: VsIndexOp::vsoxei32_v({{
+                    Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
+                }}, {{
+                    EA = Rs1 + Vs2_uw[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedStoreOp);
+            }
+            0x7: decode MOP {
+                0x0: decode SUMOP {
+                    0x00: VseOp::vse64_v({{
+                        Mem_vc.as<uint64_t>()[i] = Vs3_ud[i];
+                    }}, inst_flags=VectorUnitStrideStoreOp);
+                }
+                0x1: VsIndexOp::vsuxei64_v({{
+                    Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
+                }}, {{
+                    EA = Rs1 + Vs2_ud[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedStoreOp);
+                0x2: VsStrideOp::vsse64_v({{
+                    Mem_vc.as<uint64_t>()[0] = Vs3_ud[microIdx];
+                }}, inst_flags=VectorStridedStoreOp);
+                0x3: VsIndexOp::vsoxei64_v({{
+                    Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
+                }}, {{
+                    EA = Rs1 + Vs2_ud[vs2ElemIdx];
+                }}, inst_flags=VectorIndexedStoreOp);
             }
         }
 
@@ -2009,6 +2277,2095 @@ decode QUADRANT default Unknown::unknown() {
                     fd = freg(f16(Rs1_uh));
                     Fd_bits = fd.v;
                 }}, FloatCvtOp);
+            }
+        }
+
+        0x15: decode FUNCT3 {
+            // OPIVV
+            0x0: decode VFUNCT6 {
+                format VectorIntFormat {
+                    0x0: vadd_vv({{
+                        Vd_vu[i] = Vs2_vu[i] + Vs1_vu[i];
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x2: vsub_vv({{
+                        Vd_vu[i] = Vs2_vu[i] - Vs1_vu[i];
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x4: vminu_vv({{
+                        Vd_vu[i] = Vs2_vu[i] < Vs1_vu[i] ?
+                                Vs2_vu[i] : Vs1_vu[i];
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x5: vmin_vv({{
+                        Vd_vi[i] = Vs2_vi[i] < Vs1_vi[i] ?
+                                Vs2_vi[i] : Vs1_vi[i];
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x6: vmaxu_vv({{
+                        Vd_vu[i] = Vs2_vu[i] > Vs1_vu[i] ?
+                                Vs2_vu[i] : Vs1_vu[i];
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x7: vmax_vv({{
+                        Vd_vi[i] = Vs2_vi[i] > Vs1_vi[i] ?
+                                Vs2_vi[i] : Vs1_vi[i];
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x9: vand_vv({{
+                        Vd_vu[i] = Vs2_vu[i] & Vs1_vu[i];
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0xa: vor_vv({{
+                        Vd_vu[i] = Vs2_vu[i] | Vs1_vu[i];
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0xb: vxor_vv({{
+                        Vd_vu[i] = Vs2_vu[i] ^ Vs1_vu[i];
+                    }}, OPIVV, VectorIntegerArithOp);
+                }
+                0x0c: VectorGatherFormat::vrgather_vv({{
+                    for (uint32_t i = 0; i < microVl; i++) {
+                        uint32_t ei = i + vs1_idx * vs1_elems + vs1_bias;
+                        if (this->vm || elem_mask(v0, ei)) {
+                            const uint64_t idx = Vs1_vu[i]
+                                - vs2_elems * vs2_idx;
+                            auto res = (Vs1_vu[i] >= vlmax) ? 0
+                                : (idx < vs2_elems) ? Vs2_vu[idx]
+                                : Vs3_vu[i];
+                            Vd_vu[i] = res;
+                        }
+                    }
+                }}, OPIVV, VectorMiscOp);
+                0x0e: VectorGatherFormat::vrgatherei16_vv({{
+                    for (uint32_t i = 0; i < microVl; i++) {
+                        uint32_t ei = i + vs1_idx * vs1_elems + vs1_bias;
+                        if (this->vm || elem_mask(v0, ei)) {
+                            const uint16_t idx = Vs1_uh[i + vs1_bias]
+                                - vs2_elems * vs2_idx;
+                            auto res = (Vs1_uh[i + vs1_bias] >= vlmax) ? 0
+                                : (idx < vs2_elems) ? Vs2_vu[idx]
+                                : Vs3_vu[i + vd_bias];
+                            Vd_vu[i + vd_bias] = res;
+                        }
+                    }
+                }}, OPIVV, VectorMiscOp);
+                format VectorIntFormat {
+                    0x10: decode VM {
+                        0x0: vadc_vvm({{
+                            Vd_vi[i] = Vs2_vi[i] + Vs1_vi[i]
+                                    + elem_mask(v0, ei);
+                        }}, OPIVV, VectorIntegerArithOp);
+                        // the unmasked versions (vm=1) are reserved
+                    }
+                    0x12: decode VM {
+                        0x0: vsbc_vvm({{
+                            Vd_vi[i] = Vs2_vi[i] - Vs1_vi[i]
+                                    - elem_mask(v0, ei);
+                        }}, OPIVV, VectorIntegerArithOp);
+                        // the unmasked versions (vm=1) are reserved
+                    }
+                    0x17: decode VM {
+                        0x0: vmerge_vvm({{
+                            Vd_vu[i] = elem_mask(v0, ei)
+                                    ? Vs1_vu[i]
+                                    : Vs2_vu[i];
+                        }}, OPIVV, VectorIntegerArithOp);
+                        0x1: decode VS2 {
+                            0x0: vmv_v_v({{
+                                Vd_vu[i] = Vs1_vu[i];
+                            }}, OPIVV, VectorIntegerArithOp);
+                        }
+                    }
+                }
+                format VectorIntVxsatFormat{
+                    0x20: vsaddu_vv({{
+                        Vd_vu[i] = sat_addu<vu>(Vs2_vu[i], Vs1_vu[i],
+                            vxsatptr);
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x21: vsadd_vv({{
+                        Vd_vu[i] = sat_add<vi>(Vs2_vu[i], Vs1_vu[i],
+                            vxsatptr);
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x22: vssubu_vv({{
+                        Vd_vu[i] = sat_subu<vu>(Vs2_vu[i], Vs1_vu[i],
+                            vxsatptr);
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x23: vssub_vv({{
+                        Vd_vu[i] = sat_sub<vi>(Vs2_vu[i], Vs1_vu[i],
+                            vxsatptr);
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x27: vsmul_vv({{
+                        vi max = std::numeric_limits<vi>::max();
+                        vi min = std::numeric_limits<vi>::min();
+                        bool overflow = Vs1_vi[i] == Vs2_vi[i] &&
+                                        Vs1_vi[i] == min;
+                        __int128_t result = (__int128_t)Vs1_vi[i] *
+                                            (__int128_t)Vs2_vi[i];
+                        result = int_rounding<__int128_t>(
+                            result, 0 /* TODO */, sew - 1);
+                        result = result >> (sew - 1);
+                        if (overflow) {
+                            result = max;
+                            *vxsatptr = true;
+                        }
+
+                        Vd_vi[i] = (vi)result;
+                    }}, OPIVV, VectorIntegerArithOp);
+                }
+                format VectorIntFormat {
+                    0x25: vsll_vv({{
+                        Vd_vu[i] = Vs2_vu[i] << (Vs1_vu[i] & (sew - 1));
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x28: vsrl_vv({{
+                        Vd_vu[i] = Vs2_vu[i] >> (Vs1_vu[i] & (sew - 1));
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x29: vsra_vv({{
+                        Vd_vi[i] = Vs2_vi[i] >> (Vs1_vu[i] & (sew - 1));
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x2a: vssrl_vv({{
+                        int sh = Vs1_vu[i] & (sew - 1);
+                        __uint128_t val = Vs2_vu[i];
+
+                        val = int_rounding<__uint128_t>(val,
+                            xc->readMiscReg(MISCREG_VXRM), sh);
+                        Vd_vu[i] = val >> sh;
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x2b: vssra_vv({{
+                        int sh = Vs1_vi[i] & (sew - 1);
+                        __int128_t val = Vs2_vi[i];
+
+                        val = int_rounding<__int128_t>(val,
+                            xc->readMiscReg(MISCREG_VXRM), sh);
+                        Vd_vi[i] = val >> sh;
+                    }}, OPIVV, VectorIntegerArithOp);
+                }
+                format VectorReduceIntWideningFormat {
+                    0x30: vwredsumu_vs({{
+                        Vd_vwu[0] = reduce_loop(std::plus<vwu>(),
+                            Vs1_vwu, Vs2_vu);
+                    }}, OPIVV, VectorIntegerReduceOp);
+                    0x31: vwredsum_vs({{
+                        Vd_vwu[0] = reduce_loop(std::plus<vwi>(),
+                            Vs1_vwi, Vs2_vi);
+                    }}, OPIVV, VectorIntegerReduceOp);
+                }
+                format VectorIntMaskFormat {
+                    0x11: decode VM {
+                        0x0: vmadc_vvm({{
+                            Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                                carry_out(Vs2_vu[i], Vs1_vu[i],
+                                    elem_mask(v0, ei)));
+                        }}, OPIVV, VectorIntegerArithOp);
+                        0x1: vmadc_vv({{
+                            Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                                carry_out(Vs2_vu[i], Vs1_vu[i]));
+                        }}, OPIVV, VectorIntegerArithOp);
+                    }
+                    0x13: decode VM {
+                        0x0: vmsbc_vvm({{
+                            Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                                borrow_out(Vs2_vi[i], Vs1_vi[i],
+                                    elem_mask(v0, ei)));
+                        }}, OPIVV, VectorIntegerArithOp);
+                        0x1: vmsbc_vv({{
+                            Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                                borrow_out(Vs2_vi[i], Vs1_vi[i]));
+                        }}, OPIVV, VectorIntegerArithOp);
+                    }
+                    0x18: vmseq_vv({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vu[i] == Vs1_vu[i]));
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x19: vmsne_vv({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vu[i] != Vs1_vu[i]));
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x1a: vmsltu_vv({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vu[i] < Vs1_vu[i]));
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x1b: vmslt_vv({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vi[i] < Vs1_vi[i]));
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x1c: vmsleu_vv({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vu[i] <= Vs1_vu[i]));
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x1d: vmsle_vv({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vi[i] <= Vs1_vi[i]));
+                    }}, OPIVV, VectorIntegerArithOp);
+                }
+                format VectorIntNarrowingFormat {
+                    0x2c: vnsrl_wv({{
+                        Vd_vu[i + offset] = (vu)(Vs2_vwu[i] >>
+                            ((vwu)Vs1_vu[i + offset] & (sew * 2 - 1)));
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x2d: vnsra_wv({{
+                        Vd_vi[i + offset] = (vi)(Vs2_vwi[i] >>
+                            ((vwu)Vs1_vu[i + offset] & (sew * 2 - 1)));
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x2e: vnclipu_wv({{
+                        vu max = std::numeric_limits<vu>::max();
+                        uint64_t sign_mask =
+                            std::numeric_limits<uint64_t>::max() << sew;
+                        __uint128_t res = Vs2_vwu[i];
+                        unsigned shift = Vs1_vu[i + offset] & ((sew * 2) - 1);
+
+                        res = int_rounding<__uint128_t>(
+                            res, 0 /* TODO */, shift) >> shift;
+
+                        if (res & sign_mask) {
+                            res = max;
+                            // TODO: vxsat
+                        }
+
+                        Vd_vu[i + offset] = (vu)res;
+                    }}, OPIVV, VectorIntegerArithOp);
+                    0x2f: vnclip_wv({{
+                        vi max = std::numeric_limits<vi>::max();
+                        vi min = std::numeric_limits<vi>::min();
+                        __int128_t res = Vs2_vwi[i];
+                        unsigned shift = Vs1_vi[i + offset] & ((sew * 2) - 1);
+
+                        res = int_rounding<__int128_t>(
+                            res, 0 /* TODO */, shift) >> shift;
+
+                        if (res < min) {
+                            res = min;
+                            // TODO: vxsat
+                        } else if (res > max) {
+                            res = max;
+                            // TODO: vxsat
+                        }
+
+                        Vd_vi[i + offset] = (vi)res;
+                    }}, OPIVV, VectorIntegerArithOp);
+                }
+            }
+            // OPFVV
+            0x1: decode VFUNCT6 {
+                0x00: VectorFloatFormat::vfadd_vv({{
+                    auto fd = fadd<et>(ftype<et>(Vs2_vu[i]),
+                                       ftype<et>(Vs1_vu[i]));
+                    Vd_vu[i] = fd.v;
+                }}, OPFVV, VectorFloatArithOp);
+                0x01: VectorReduceFloatFormat::vfredusum_vs({{
+                    Vd_vu[0] = reduce_loop([](const vu& src1, const vu& src2) {
+                        return fadd<et>(ftype<et>(src1), ftype<et>(src2));
+                    }, Vs1_vu, Vs2_vu);
+                }}, OPFVV, VectorFloatReduceOp);
+                0x02: VectorFloatFormat::vfsub_vv({{
+                    auto fd = fsub<et>(ftype<et>(Vs2_vu[i]),
+                                       ftype<et>(Vs1_vu[i]));
+                    Vd_vu[i] = fd.v;
+                }}, OPFVV, VectorFloatArithOp);
+                0x03: VectorReduceFloatFormat::vfredosum_vs({{
+                    Vd_vu[0] = reduce_loop([](const vu& src1, const vu& src2) {
+                        return fadd<et>(ftype<et>(src1), ftype<et>(src2));
+                    }, Vs1_vu, Vs2_vu);
+                }}, OPFVV, VectorFloatReduceOp);
+                0x04: VectorFloatFormat::vfmin_vv({{
+                    auto fd = fmin<et>(ftype<et>(Vs2_vu[i]),
+                                       ftype<et>(Vs1_vu[i]));
+                    Vd_vu[i] = fd.v;
+                }}, OPFVV, VectorFloatArithOp);
+                0x05: VectorReduceFloatFormat::vfredmin_vs({{
+                    Vd_vu[0] = reduce_loop([](const vu& src1, const vu& src2) {
+                        return fmin<et>(ftype<et>(src1), ftype<et>(src2));
+                    }, Vs1_vu, Vs2_vu);
+                }}, OPFVV, VectorFloatReduceOp);
+                0x06: VectorFloatFormat::vfmax_vv({{
+                    auto fd = fmax<et>(ftype<et>(Vs2_vu[i]),
+                                       ftype<et>(Vs1_vu[i]));
+                    Vd_vu[i] = fd.v;
+                }}, OPFVV, VectorFloatArithOp);
+                0x07: VectorReduceFloatFormat::vfredmax_vs({{
+                    Vd_vu[0] = reduce_loop([](const vu& src1, const vu& src2) {
+                        return fmax<et>(ftype<et>(src1), ftype<et>(src2));
+                    }, Vs1_vu, Vs2_vu);
+                }}, OPFVV, VectorFloatReduceOp);
+                0x08: VectorFloatFormat::vfsgnj_vv({{
+                    Vd_vu[i] = fsgnj<et>(ftype<et>(Vs2_vu[i]),
+                                         ftype<et>(Vs1_vu[i]),
+                                         false, false).v;
+                }}, OPFVV, VectorFloatArithOp);
+                0x09: VectorFloatFormat::vfsgnjn_vv({{
+                    Vd_vu[i] = fsgnj<et>(ftype<et>(Vs2_vu[i]),
+                                         ftype<et>(Vs1_vu[i]),
+                                         true, false).v;
+                }}, OPFVV, VectorFloatArithOp);
+                0x0a: VectorFloatFormat::vfsgnjx_vv({{
+                    Vd_vu[i] = fsgnj<et>(ftype<et>(Vs2_vu[i]),
+                                         ftype<et>(Vs1_vu[i]),
+                                         false, true).v;
+                }}, OPFVV, VectorFloatArithOp);
+                // VWFUNARY0
+                0x10: decode VS1 {
+                    0x00: decode VM {
+                        // The encodings corresponding to the masked versions
+                        // (vm=0) of vfmv.f.s are reserved
+                        0x1: VectorNonSplitFormat::vfmv_f_s({{
+                            freg_t fd = freg(Vs2_vu[0]);
+                            Fd_bits = fd.v;
+                        }}, OPFVV, VectorMiscOp);
+                    }
+                }
+                0x12: decode VS1 {
+                    format VectorFloatCvtFormat {
+                        0x00: vfcvt_xu_f_v({{
+                            Vd_vu[i] = f_to_ui<et>(ftype<et>(Vs2_vu[i]),
+                                                   softfloat_roundingMode);
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x01: vfcvt_x_f_v({{
+                            Vd_vu[i] = f_to_i<et>(ftype<et>(Vs2_vu[i]),
+                                                  softfloat_roundingMode);
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x02: vfcvt_f_xu_v({{
+                            auto fd = ui_to_f<et>(Vs2_vu[i]);
+                            Vd_vu[i] = fd.v;
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x03: vfcvt_f_x_v({{
+                            auto fd = i_to_f<et>(Vs2_vu[i]);
+                            Vd_vu[i] = fd.v;
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x06: vfcvt_rtz_xu_f_v({{
+                            Vd_vu[i] = f_to_ui<et>(ftype<et>(Vs2_vu[i]),
+                                                   softfloat_round_minMag);
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x07: vfcvt_rtz_x_f_v({{
+                            Vd_vu[i] = f_to_i<et>(ftype<et>(Vs2_vu[i]),
+                                                  softfloat_round_minMag);
+                        }}, OPFVV, VectorFloatConvertOp);
+                    }
+                    format VectorFloatWideningCvtFormat {
+                        0x08: vfwcvt_xu_f_v({{
+                            Vd_vwu[i] = f_to_wui<et>(
+                                ftype<et>(Vs2_vu[i + offset]),
+                                softfloat_roundingMode);
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x09: vfwcvt_x_f_v({{
+                            Vd_vwu[i] = f_to_wi<et>(
+                                ftype<et>(Vs2_vu[i + offset]),
+                                softfloat_roundingMode);
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x0a: vfwcvt_f_xu_v({{
+                            auto fd = ui_to_wf<vu>(Vs2_vu[i + offset]);
+                            Vd_vwu[i] = fd.v;
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x0b: vfwcvt_f_x_v({{
+                            auto fd = i_to_wf<vu>(Vs2_vu[i + offset]);
+                            Vd_vwu[i] = fd.v;
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x0c: vfwcvt_f_f_v({{
+                            auto fd = f_to_wf<et>(
+                                ftype<et>(Vs2_vu[i + offset]));
+                            Vd_vwu[i] = fd.v;
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x0e: vfwcvt_rtz_xu_f_v({{
+                            Vd_vwu[i] = f_to_wui<et>(
+                                ftype<et>(Vs2_vu[i + offset]),
+                                softfloat_round_minMag);
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x0f: vfwcvt_rtz_x_f_v({{
+                            Vd_vwu[i] = f_to_wi<et>(
+                                ftype<et>(Vs2_vu[i + offset]),
+                                softfloat_round_minMag);
+                        }}, OPFVV, VectorFloatConvertOp);
+                    }
+                    format VectorFloatNarrowingCvtFormat {
+                        0x10: vfncvt_xu_f_w({{
+                            Vd_vu[i + offset] = f_to_nui<vu>(
+                                ftype<ewt>(Vs2_vwu[i]),
+                                softfloat_roundingMode);
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x11: vfncvt_x_f_w({{
+                            Vd_vu[i + offset] = f_to_ni<vu>(
+                                ftype<ewt>(Vs2_vwu[i]),
+                                softfloat_roundingMode);
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x12: vfncvt_f_xu_w({{
+                            auto fd = ui_to_nf<et>(Vs2_vwu[i]);
+                            Vd_vu[i + offset] = fd.v;
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x13: vfncvt_f_x_w({{
+                            auto fd = i_to_nf<et>(Vs2_vwu[i]);
+                            Vd_vu[i + offset] = fd.v;
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x14: vfncvt_f_f_w({{
+                            auto fd = f_to_nf<et>(ftype<ewt>(Vs2_vwu[i]));
+                            Vd_vu[i + offset] = fd.v;
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x15: vfncvt_rod_f_f_w({{
+                            softfloat_roundingMode = softfloat_round_odd;
+                            auto fd = f_to_nf<et>(ftype<ewt>(Vs2_vwu[i]));
+                            Vd_vu[i + offset] = fd.v;
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x16: vfncvt_rtz_xu_f_w({{
+                            Vd_vu[i + offset] = f_to_nui<vu>(
+                                ftype<ewt>(Vs2_vwu[i]),
+                                softfloat_round_minMag);
+                        }}, OPFVV, VectorFloatConvertOp);
+                        0x17: vfncvt_rtz_x_f_w({{
+                            Vd_vu[i + offset] = f_to_ni<vu>(
+                                ftype<ewt>(Vs2_vwu[i]),
+                                softfloat_round_minMag);
+                        }}, OPFVV, VectorFloatConvertOp);
+                    }
+                }
+                0x13: decode VS1 {
+                    format VectorFloatCvtFormat {
+                        0x00: vfsqrt_v({{
+                            auto fd = fsqrt<et>(ftype<et>(Vs2_vu[i]));
+                            Vd_vu[i] = fd.v;
+                        }}, OPFVV, VectorFloatArithOp);
+                        0x04: vfrsqrt7_v({{
+                            auto fd = frsqrte7<et>(ftype<et>(Vs2_vu[i]));
+                            Vd_vu[i] = fd.v;
+                        }}, OPFVV, VectorFloatArithOp);
+                        0x05: vfrec7_v({{
+                            auto fd = frecip7<et>(ftype<et>(Vs2_vu[i]));
+                            Vd_vu[i] = fd.v;
+                        }}, OPFVV, VectorFloatArithOp);
+                        0x10: vfclass_v({{
+                            auto fd = fclassify<et>(ftype<et>(Vs2_vu[i]));
+                            Vd_vu[i] = fd.v;
+                        }}, OPFVV, VectorFloatArithOp);
+                    }
+                }
+
+                format VectorFloatMaskFormat {
+                    0x18: vmfeq_vv({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            feq<et>(ftype<et>(Vs2_vu[i]),
+                                    ftype<et>(Vs1_vu[i])));
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x19: vmfle_vv({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            fle<et>(ftype<et>(Vs2_vu[i]),
+                                    ftype<et>(Vs1_vu[i])));
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x1b: vmflt_vv({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            flt<et>(ftype<et>(Vs2_vu[i]),
+                                    ftype<et>(Vs1_vu[i])));
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x1c: vmfne_vv({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            !feq<et>(ftype<et>(Vs2_vu[i]),
+                                    ftype<et>(Vs1_vu[i])));
+                    }}, OPFVV, VectorFloatArithOp);
+                }
+                format VectorFloatFormat {
+                    0x20: vfdiv_vv({{
+                        auto fd = fdiv<et>(ftype<et>(Vs2_vu[i]),
+                                           ftype<et>(Vs1_vu[i]));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x24: vfmul_vv({{
+                        auto fd = fmul<et>(ftype<et>(Vs2_vu[i]),
+                                           ftype<et>(Vs1_vu[i]));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x28: vfmadd_vv({{
+                        auto fd = fmadd<et>(ftype<et>(Vs3_vu[i]),
+                                            ftype<et>(Vs1_vu[i]),
+                                            ftype<et>(Vs2_vu[i]));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x29: vfnmadd_vv({{
+                        auto fd = fmadd<et>(fneg(ftype<et>(Vs3_vu[i])),
+                                            ftype<et>(Vs1_vu[i]),
+                                            fneg(ftype<et>(Vs2_vu[i])));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x2a: vfmsub_vv({{
+                        auto fd = fmadd<et>(ftype<et>(Vs3_vu[i]),
+                                            ftype<et>(Vs1_vu[i]),
+                                            fneg(ftype<et>(Vs2_vu[i])));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x2b: vfnmsub_vv({{
+                        auto fd = fmadd<et>(fneg(ftype<et>(Vs3_vu[i])),
+                                            ftype<et>(Vs1_vu[i]),
+                                            ftype<et>(Vs2_vu[i]));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x2c: vfmacc_vv({{
+                        auto fd = fmadd<et>(ftype<et>(Vs1_vu[i]),
+                                            ftype<et>(Vs2_vu[i]),
+                                            ftype<et>(Vs3_vu[i]));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x2d: vfnmacc_vv({{
+                        auto fd = fmadd<et>(fneg(ftype<et>(Vs1_vu[i])),
+                                            ftype<et>(Vs2_vu[i]),
+                                            fneg(ftype<et>(Vs3_vu[i])));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x2e: vfmsac_vv({{
+                        auto fd = fmadd<et>(ftype<et>(Vs1_vu[i]),
+                                            ftype<et>(Vs2_vu[i]),
+                                            fneg(ftype<et>(Vs3_vu[i])));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x2f: vfnmsac_vv({{
+                        auto fd = fmadd<et>(fneg(ftype<et>(Vs1_vu[i])),
+                                            ftype<et>(Vs2_vu[i]),
+                                            ftype<et>(Vs3_vu[i]));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x31: VectorReduceFloatWideningFormat::vfwredusum_vs({{
+                        Vd_vwu[0] = reduce_loop(
+                            [](const vwu& src1, const vu& src2) {
+                                return fadd<ewt>(
+                                    ftype<ewt>(src1),
+                                    f_to_wf<et>(ftype<et>(src2))
+                                );
+                            }, Vs1_vwu, Vs2_vu);
+                    }}, OPFVV, VectorFloatReduceOp);
+                    0x33: VectorReduceFloatWideningFormat::vfwredosum_vs({{
+                        Vd_vwu[0] = reduce_loop(
+                            [](const vwu& src1, const vu& src2) {
+                                return fadd<ewt>(
+                                    ftype<ewt>(src1),
+                                    f_to_wf<et>(ftype<et>(src2))
+                                );
+                            }, Vs1_vwu, Vs2_vu);
+                    }}, OPFVV, VectorFloatReduceOp);
+                }
+                format VectorFloatWideningFormat {
+                    0x30: vfwadd_vv({{
+                        auto fd = fadd<ewt>(
+                            fwiden(ftype<et>(Vs2_vu[i + offset])),
+                            fwiden(ftype<et>(Vs1_vu[i + offset])));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x32: vfwsub_vv({{
+                        auto fd = fsub<ewt>(
+                            fwiden(ftype<et>(Vs2_vu[i + offset])),
+                            fwiden(ftype<et>(Vs1_vu[i + offset])));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x34: vfwadd_wv({{
+                        auto fd = fadd<ewt>(
+                            ftype<ewt>(Vs2_vwu[i]),
+                            fwiden(ftype<et>(Vs1_vu[i + offset])));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x36: vfwsub_wv({{
+                        auto fd = fsub<ewt>(
+                            ftype<ewt>(Vs2_vwu[i]),
+                            fwiden(ftype<et>(Vs1_vu[i + offset])));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x38: vfwmul_vv({{
+                        auto fd = fmul<ewt>(
+                            fwiden(ftype<et>(Vs2_vu[i + offset])),
+                            fwiden(ftype<et>(Vs1_vu[i + offset])));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x3c: vfwmacc_vv({{
+                        auto fd = fmadd<ewt>(
+                            fwiden(ftype<et>(Vs1_vu[i + offset])),
+                            fwiden(ftype<et>(Vs2_vu[i + offset])),
+                            ftype<ewt>(Vs3_vwu[i]));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x3d: vfwnmacc_vv({{
+                        auto fd = fmadd<ewt>(
+                            fwiden(fneg(ftype<et>(Vs1_vu[i + offset]))),
+                            fwiden(ftype<et>(Vs2_vu[i + offset])),
+                            fneg(ftype<ewt>(Vs3_vwu[i])));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x3e: vfwmsac_vv({{
+                        auto fd = fmadd<ewt>(
+                            fwiden(ftype<et>(Vs1_vu[i + offset])),
+                            fwiden(ftype<et>(Vs2_vu[i + offset])),
+                            fneg(ftype<ewt>(Vs3_vwu[i])));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                    0x3f: vfwnmsac_vv({{
+                        auto fd = fmadd<ewt>(
+                            fwiden(fneg(ftype<et>(Vs1_vu[i + offset]))),
+                            fwiden(ftype<et>(Vs2_vu[i + offset])),
+                            ftype<ewt>(Vs3_vwu[i]));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVV, VectorFloatArithOp);
+                }
+            }
+            // OPMVV
+            0x2: decode VFUNCT6 {
+                format VectorReduceIntFormat {
+                    0x0: vredsum_vs({{
+                        Vd_vi[0] =
+                            reduce_loop(std::plus<vi>(), Vs1_vi, Vs2_vi);
+                    }}, OPMVV, VectorIntegerReduceOp);
+                    0x1: vredand_vs({{
+                        Vd_vi[0] =
+                            reduce_loop(std::bit_and<vi>(), Vs1_vi, Vs2_vi);
+                    }}, OPMVV, VectorIntegerReduceOp);
+                    0x2: vredor_vs({{
+                        Vd_vi[0] =
+                            reduce_loop(std::bit_or<vi>(), Vs1_vi, Vs2_vi);
+                    }}, OPMVV, VectorIntegerReduceOp);
+                    0x3: vredxor_vs({{
+                        Vd_vi[0] =
+                            reduce_loop(std::bit_xor<vi>(), Vs1_vi, Vs2_vi);
+                    }}, OPMVV, VectorIntegerReduceOp);
+                    0x4: vredminu_vs({{
+                        Vd_vu[0] =
+                            reduce_loop([](const vu& src1, const vu& src2) {
+                                return std::min<vu>(src1, src2);
+                            }, Vs1_vu, Vs2_vu);
+                    }}, OPMVV, VectorIntegerReduceOp);
+                    0x5: vredmin_vs({{
+                        Vd_vi[0] =
+                            reduce_loop([](const vi& src1, const vi& src2) {
+                                return std::min<vi>(src1, src2);
+                            }, Vs1_vi, Vs2_vi);
+                    }}, OPMVV, VectorIntegerReduceOp);
+                    0x6: vredmaxu_vs({{
+                        Vd_vu[0] =
+                            reduce_loop([](const vu& src1, const vu& src2) {
+                                return std::max<vu>(src1, src2);
+                            }, Vs1_vu, Vs2_vu);
+                    }}, OPMVV, VectorIntegerReduceOp);
+                    0x7: vredmax_vs({{
+                        Vd_vi[0] =
+                            reduce_loop([](const vi& src1, const vi& src2) {
+                                return std::max<vi>(src1, src2);
+                            }, Vs1_vi, Vs2_vi);
+                    }}, OPMVV, VectorIntegerReduceOp);
+                }
+                format VectorIntFormat {
+                    0x8: vaaddu_vv({{
+                        __uint128_t res = (__uint128_t)Vs2_vu[i] + Vs1_vu[i];
+                        res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
+                        Vd_vu[i] = res >> 1;
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x9: vaadd_vv({{
+                        __uint128_t res = (__uint128_t)Vs2_vi[i] + Vs1_vi[i];
+                        res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
+                        Vd_vi[i] = res >> 1;
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0xa: vasubu_vv({{
+                        __uint128_t res = (__uint128_t)Vs2_vu[i] - Vs1_vu[i];
+                        res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
+                        Vd_vu[i] = res >> 1;
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0xb: vasub_vv({{
+                        __uint128_t res = (__uint128_t)Vs2_vi[i] - Vs1_vi[i];
+                        res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
+                        Vd_vi[i] = res >> 1;
+                    }}, OPMVV, VectorIntegerArithOp);
+                }
+                // VWXUNARY0
+                0x10: decode VS1 {
+                    0x00: decode VM {
+                        // The encodings corresponding to the masked versions
+                        // (vm=0) of vmv.x.s are reserved.
+                        0x1: VectorNonSplitFormat::vmv_x_s({{
+                            Rd_ud = Vs2_vi[0];
+                        }}, OPMVV, VectorMiscOp);
+                    }
+                    0x10: Vector1Vs1RdMaskFormat::vcpop_m({{
+                        uint64_t popcount = 0;
+                        for (uint32_t i = 0; i < (uint32_t)machInst.vl; i++) {
+                            bool vs2_lsb = elem_mask(Vs2_vu, i);
+                            if(this->vm){
+                                popcount += vs2_lsb;
+                            }else{
+                                bool do_mask = elem_mask(v0, i);
+                                popcount += (vs2_lsb && do_mask);
+                            }
+                        }
+                        Rd_vu = popcount;
+                    }}, OPMVV, VectorMiscOp);
+                    0x11: Vector1Vs1RdMaskFormat::vfirst_m({{
+                        int64_t pos = -1;
+                        for (uint32_t i = 0; i < (uint32_t)machInst.vl; i++) {
+                            if(this->vm == 0){
+                                if(elem_mask(v0, i)==0){
+                                    continue;
+                                }
+                            }
+                            bool vs2_lsb = elem_mask(Vs2_vu, i);
+                            if (vs2_lsb) {
+                                pos = i;
+                                break;
+                            }
+                        }
+                        Rd_vu = pos;
+                    }}, OPMVV, VectorMiscOp);
+                }
+                0x12: decode VS1 {
+                    format VectorIntExtFormat {
+                        0x02: vzext_vf8({{
+                            Vd_vu[i] = Vs2_vextu[i + offset];
+                        }}, OPMVV, VectorIntegerExtensionOp);
+                        0x03: vsext_vf8({{
+                            Vd_vi[i] = Vs2_vext[i + offset];
+                        }}, OPMVV, VectorIntegerExtensionOp);
+                        0x04: vzext_vf4({{
+                            Vd_vu[i] = Vs2_vextu[i + offset];
+                        }}, OPMVV, VectorIntegerExtensionOp);
+                        0x05: vsext_vf4({{
+                            Vd_vi[i] = Vs2_vext[i + offset];
+                        }}, OPMVV, VectorIntegerExtensionOp);
+                        0x06: vzext_vf2({{
+                            Vd_vu[i] = Vs2_vextu[i + offset];
+                        }}, OPMVV, VectorIntegerExtensionOp);
+                        0x07: vsext_vf2({{
+                            Vd_vi[i] = Vs2_vext[i + offset];
+                        }}, OPMVV, VectorIntegerExtensionOp);
+                    }
+                }
+                0x14: decode VS1 {
+                    0x01: Vector1Vs1VdMaskFormat::vmsbf_m({{
+                        bool has_one = false;
+                        for (uint32_t i = 0; i < (uint32_t)machInst.vl; i++) {
+                            bool vs2_lsb = elem_mask(Vs2_vu, i);
+                            bool do_mask = elem_mask(v0, i);
+                            if(this->vm||(this->vm == 0&&do_mask)){
+                                uint64_t res = 0;
+                                if (!has_one && !vs2_lsb) {
+                                    res = 1;
+                                } else if(!has_one && vs2_lsb) {
+                                    has_one = true;
+                                }
+                                Vd_ub[i/8] = ASSIGN_VD_BIT(i, res);
+                            }
+                        }
+                    }}, OPMVV, VectorMiscOp);
+                    0x02: Vector1Vs1VdMaskFormat::vmsof_m({{
+                        bool has_one = false;
+                        for (uint32_t i = 0; i < (uint32_t)machInst.vl; i++) {
+                            bool vs2_lsb = elem_mask(Vs2_vu, i);
+                            bool do_mask = elem_mask(v0, i);
+                            if(this->vm||(this->vm == 0&&do_mask)){
+                                uint64_t res = 0;
+                                if(!has_one && vs2_lsb) {
+                                    has_one = true;
+                                    res = 1;
+                                }
+                                Vd_ub[i/8] = ASSIGN_VD_BIT(i, res);
+                            }
+                        }
+                    }}, OPMVV, VectorMiscOp);
+                    0x03: Vector1Vs1VdMaskFormat::vmsif_m({{
+                        bool has_one = false;
+                        for (uint32_t i = 0; i < (uint32_t)machInst.vl; i++) {
+                            bool vs2_lsb = elem_mask(Vs2_vu, i);
+                            bool do_mask = elem_mask(v0, i);
+                            if(this->vm||(this->vm == 0&&do_mask)){
+                                uint64_t res = 0;
+                                if (!has_one && !vs2_lsb) {
+                                    res = 1;
+                                } else if(!has_one && vs2_lsb) {
+                                    has_one = true;
+                                    res = 1;
+                                }
+                                Vd_ub[i/8] = ASSIGN_VD_BIT(i, res);
+                            }
+                        }
+                    }}, OPMVV, VectorMiscOp);
+                    0x10: ViotaFormat::viota_m({{
+                        RiscvISAInst::VecRegContainer tmp_s2;
+                        xc->getRegOperand(this, 2,
+                            &tmp_s2);
+                        auto Vs2bit = tmp_s2.as<vu>();
+                        for (uint32_t i = 0; i < this->microVl; i++) {
+                            uint32_t ei = i +
+                                vtype_VLMAX(vtype, true) * this->microIdx;
+                            bool vs2_lsb = elem_mask(Vs2bit, ei);
+                            bool do_mask = elem_mask(v0, ei);
+                            bool has_one = false;
+                            if (this->vm || (do_mask && !this->vm)) {
+                                if (vs2_lsb) {
+                                    has_one = true;
+                                }
+                            }
+                            bool use_ori = (!this->vm) && !do_mask;
+                            if(use_ori == false){
+                                Vd_vu[i] = *cnt;
+                            }
+                            if (has_one) {
+                                *cnt = *cnt+1;
+                            }
+                        }
+                    }}, OPMVV, VectorMiscOp);
+                    0x11: VectorIntFormat::vid_v({{
+                        Vd_vu[i] = ei;
+                    }}, OPMVV, VectorMiscOp);
+                }
+                format VectorMaskFormat {
+                    0x18: vmandn_mm({{
+                        Vd_ub[i/8] = ASSIGN_VD_BIT(i,
+                            elem_mask(Vs2_vu, i) & !elem_mask(Vs1_vu, i));
+                    }}, OPMVV, VectorMiscOp);
+                    0x19: vmand_mm({{
+                        Vd_ub[i/8] = ASSIGN_VD_BIT(i,
+                            elem_mask(Vs2_vu, i) & elem_mask(Vs1_vu, i));
+                    }}, OPMVV, VectorMiscOp);
+                    0x1a: vmor_mm({{
+                        Vd_ub[i/8] = ASSIGN_VD_BIT(i,
+                            elem_mask(Vs2_vu, i) | elem_mask(Vs1_vu, i));
+                    }}, OPMVV, VectorMiscOp);
+                    0x1b: vmxor_mm({{
+                        Vd_ub[i/8] = ASSIGN_VD_BIT(i,
+                            elem_mask(Vs2_vu, i) ^ elem_mask(Vs1_vu, i));
+                    }}, OPMVV, VectorMiscOp);
+                    0x1c: vmorn_mm({{
+                        Vd_ub[i/8] = ASSIGN_VD_BIT(i,
+                            elem_mask(Vs2_vu, i) | !elem_mask(Vs1_vu, i));
+                    }}, OPMVV, VectorMiscOp);
+                    0x1d: vmnand_mm({{
+                        Vd_ub[i/8] = ASSIGN_VD_BIT(i,
+                            !(elem_mask(Vs2_vu, i) & elem_mask(Vs1_vu, i)));
+                    }}, OPMVV, VectorMiscOp);
+                    0x1e: vmnor_mm({{
+                        Vd_ub[i/8] = ASSIGN_VD_BIT(i,
+                            !(elem_mask(Vs2_vu, i) | elem_mask(Vs1_vu, i)));
+                    }}, OPMVV, VectorMiscOp);
+                    0x1f: vmxnor_mm({{
+                        Vd_ub[i/8] = ASSIGN_VD_BIT(i,
+                            !(elem_mask(Vs2_vu, i) ^ elem_mask(Vs1_vu, i)));
+                    }}, OPMVV, VectorMiscOp);
+                }
+                format VectorIntFormat {
+                    0x20: vdivu_vv({{
+                        if (Vs1_vu[i] == 0)
+                            Vd_vu[i] = (vu)-1;
+                        else
+                            Vd_vu[i] = Vs2_vu[i] / Vs1_vu[i];
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x21: vdiv_vv({{
+                        if (Vs1_vi[i] == 0)
+                            Vd_vi[i] = -1;
+                        else if (Vs2_vi[i] == std::numeric_limits<vi>::min()
+                                && Vs1_vi[i] == -1)
+                            Vd_vi[i] = Vs2_vi[i];
+                        else
+                            Vd_vi[i] = Vs2_vi[i] / Vs1_vi[i];
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x22: vremu_vv({{
+                        if (Vs1_vu[i] == 0) {
+                            Vd_vu[i] = Vs2_vu[i];
+                        } else {
+                            Vd_vu[i] = Vs2_vu[i] % Vs1_vu[i];
+                        }
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x23: vrem_vv({{
+                        if (Vs1_vi[i] == 0) {
+                            Vd_vi[i] = Vs2_vi[i];
+                        } else if (Vs2_vi[i] == std::numeric_limits<vi>::min()
+                                && Vs1_vi[i] == -1) {
+                            Vd_vi[i] = 0;
+                        } else {
+                            Vd_vi[i] = Vs2_vi[i] % Vs1_vi[i];
+                        }
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x24: vmulhu_vv({{
+                        if (sew < 64) {
+                            Vd_vu[i] = ((uint64_t)Vs2_vu[i] * Vs1_vu[i])
+                                        >> sew;
+                        } else {
+                            Vd_vu[i] = mulhu_64(Vs2_vu[i], Vs1_vu[i]);
+                        }
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x25: vmul_vv({{
+                        Vd_vi[i] = Vs2_vi[i] * Vs1_vi[i];
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x26: vmulhsu_vv({{
+                        if (sew < 64) {
+                            Vd_vi[i] = ((int64_t)Vs2_vi[i] *
+                                        (uint64_t)Vs1_vu[i])
+                                        >> sew;
+                        } else {
+                            Vd_vi[i] = mulhsu_64(Vs2_vi[i], Vs1_vu[i]);
+                        }
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x27: vmulh_vv({{
+                        if (sew < 64) {
+                            Vd_vi[i] = ((int64_t)Vs2_vi[i] * Vs1_vi[i])
+                                        >> sew;
+                        } else {
+                            Vd_vi[i] = mulh_64(Vs2_vi[i], Vs1_vi[i]);
+                        }
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x29: vmadd_vv({{
+                        Vd_vi[i] = Vs3_vi[i] * Vs1_vi[i] + Vs2_vi[i];
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x2b: vnmsub_vv({{
+                        Vd_vi[i] = -(Vs3_vi[i] * Vs1_vi[i]) + Vs2_vi[i];
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x2d: vmacc_vv({{
+                        Vd_vi[i] = Vs2_vi[i] * Vs1_vi[i] + Vs3_vi[i];
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x2f: vnmsac_vv({{
+                        Vd_vi[i] = -(Vs2_vi[i] * Vs1_vi[i]) + Vs3_vi[i];
+                    }}, OPMVV, VectorIntegerArithOp);
+                }
+                format VectorIntWideningFormat {
+                    0x30: vwaddu_vv({{
+                        Vd_vwu[i] = vwu(Vs2_vu[i + offset])
+                                + vwu(Vs1_vu[i + offset]);
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x31: vwadd_vv({{
+                        Vd_vwi[i] = vwi(Vs2_vi[i + offset])
+                                + vwi(Vs1_vi[i + offset]);
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x32: vwsubu_vv({{
+                        Vd_vwu[i] = vwu(Vs2_vu[i + offset])
+                                - vwu(Vs1_vu[i + offset]);
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x33: vwsub_vv({{
+                        Vd_vwi[i] = vwi(Vs2_vi[i + offset])
+                                - vwi(Vs1_vi[i + offset]);
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x34: vwaddu_wv({{
+                        Vd_vwu[i] = Vs2_vwu[i] + vwu(Vs1_vu[i + offset]);
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x35: vwadd_wv({{
+                        Vd_vwi[i] = Vs2_vwi[i] + vwi(Vs1_vi[i + offset]);
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x36: vwsubu_wv({{
+                        Vd_vwu[i] = Vs2_vwu[i] - vwu(Vs1_vu[i + offset]);
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x37: vwsub_wv({{
+                        Vd_vwi[i] = Vs2_vwi[i] - vwi(Vs1_vi[i + offset]);
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x38: vwmulu_vv({{
+                        Vd_vwu[i] = vwu(Vs2_vu[i + offset])
+                                * vwu(Vs1_vu[i + offset]);
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x3a: vwmulsu_vv({{
+                        Vd_vwi[i] = vwi(Vs2_vi[i + offset])
+                                * vwu(Vs1_vu[i + offset]);
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x3b: vwmul_vv({{
+                        Vd_vwi[i] = vwi(Vs2_vi[i + offset])
+                                * vwi(Vs1_vi[i + offset]);
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x3c: vwmaccu_vv({{
+                        Vd_vwu[i] = vwu(Vs1_vu[i + offset])
+                                * vwu(Vs2_vu[i + offset])
+                                + Vs3_vwu[i];
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x3d: vwmacc_vv({{
+                        Vd_vwi[i] = vwi(Vs1_vi[i + offset])
+                                * vwi(Vs2_vi[i + offset])
+                                + Vs3_vwi[i];
+                    }}, OPMVV, VectorIntegerArithOp);
+                    0x3f: vwmaccsu_vv({{
+                        Vd_vwi[i] = vwi(Vs1_vi[i + offset])
+                                * vwu(Vs2_vu[i + offset])
+                                + Vs3_vwi[i];
+                    }}, OPMVV, VectorIntegerArithOp);
+                }
+            }
+            // OPIVI
+            0x3: decode VFUNCT6 {
+                format VectorIntFormat {
+                    0x00: vadd_vi({{
+                        Vd_vi[i] = Vs2_vi[i] + (vi)sext<5>(SIMM5);
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x03: vrsub_vi({{
+                        Vd_vi[i] = (vi)sext<5>(SIMM5) - Vs2_vi[i];
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x09: vand_vi({{
+                        Vd_vi[i] = Vs2_vi[i] & (vi)sext<5>(SIMM5);
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x0a: vor_vi({{
+                        Vd_vi[i] = Vs2_vi[i] | (vi)sext<5>(SIMM5);
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x0b: vxor_vi({{
+                        Vd_vi[i] = Vs2_vi[i] ^ (vi)sext<5>(SIMM5);
+                    }}, OPIVI, VectorIntegerArithOp);
+                }
+                0x0c: VectorGatherFormat::vrgather_vi({{
+                    for (uint32_t i = 0; i < microVl; i++) {
+                        uint32_t ei = i + vs1_idx * vs1_elems + vs1_bias;
+                        if (this->vm || elem_mask(v0, ei)) {
+                            const uint64_t idx =
+                                (uint64_t)sext<5>(SIMM5) - vs2_elems * vs2_idx;
+                            Vd_vu[i] = ((uint64_t)sext<5>(SIMM5) >= vlmax) ? 0
+                                : (idx < vs2_elems) ? Vs2_vu[idx]
+                                : Vs3_vu[i];
+                        }
+                    }
+                }}, OPIVI, VectorMiscOp);
+                0x0e: VectorSlideUpFormat::vslideup_vi({{
+                    const int offset = (int)(uint64_t)(SIMM5);
+                    const int microVlmax = vtype_VLMAX(machInst.vtype8, true);
+                    const int vregOffset = vdIdx - vs2Idx;
+                    const int offsetInVreg = offset - vregOffset * microVlmax;
+                    if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
+                        const int upperBound = (offsetInVreg >= 0)
+                            ? microVlmax - offsetInVreg
+                            : microVlmax + offsetInVreg;
+                        const int vdOffset = (offsetInVreg >= 0)
+                            ? offsetInVreg
+                            : 0;
+                        const int vs2Offset = (offsetInVreg >= 0)
+                            ? 0
+                            : -offsetInVreg;
+                        const int elemOffset = vdOffset + vdIdx * microVlmax;
+                        for (int i = 0;
+                            i < upperBound && i + vdOffset < microVl;
+                            i++) {
+                            if (this->vm || elem_mask(v0, i + elemOffset)) {
+                                Vd_vu[i + vdOffset] = Vs2_vu[i + vs2Offset];
+                            }
+                        }
+                    }
+                }}, OPIVI, VectorMiscOp);
+                0x0f: VectorSlideDownFormat::vslidedown_vi({{
+                    const int offset = (int)(uint64_t)(SIMM5);
+                    const int microVlmax = vtype_VLMAX(machInst.vtype8, true);
+                    const int vregOffset = vs2Idx - vdIdx;
+                    const int offsetInVreg = offset - vregOffset * microVlmax;
+                    const int numVs2s = vtype_regs_per_group(vtype);
+                    if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
+                        const bool needZeroTail = numVs2s == vs2Idx + 1;
+                        const int upperBound = (offsetInVreg >= 0)
+                            ? microVlmax - offsetInVreg
+                            : microVlmax + offsetInVreg;
+                        const int vdOffset = (offsetInVreg >= 0)
+                            ? 0
+                            : -offsetInVreg;
+                        const int vs2Offset = (offsetInVreg >= 0)
+                            ? offsetInVreg
+                            : 0;
+                        const int elemIdxBase = vdIdx * microVlmax;
+                        vreg_t resVreg;
+                        auto res = resVreg.as<vu>();
+                        for (int i = 0;
+                            i < upperBound && i + vdOffset < microVl;
+                            i++) {
+                            res[i + vdOffset] = Vs2_vu[i + vs2Offset];
+                        }
+                        if (needZeroTail) {
+                            for (int i = upperBound + vdOffset;
+                                i < microVlmax; i++) {
+                                res[i] = 0;
+                            }
+                        }
+                        for (int i = vdOffset; i < microVl ; i++) {
+                            if (vm || elem_mask(v0, i + elemIdxBase)) {
+                                Vd_vu[i] = res[i];
+                            }
+                        }
+                    }
+                }}, OPIVI, VectorMiscOp);
+                format VectorIntFormat {
+                    0x10: decode VM {
+                        0x0: vadc_vim({{
+                            Vd_vi[i] = Vs2_vi[i] +
+                                (vi)sext<5>(SIMM5) + elem_mask(v0, ei);
+                        }}, OPIVI, VectorIntegerArithOp);
+                        // the unmasked versions (vm=1) are reserved
+                    }
+                    0x17: decode VM {
+                        0x0: vmerge_vim({{
+                            Vd_vi[i] = elem_mask(v0, ei)
+                                    ? (vi)sext<5>(SIMM5)
+                                    : Vs2_vi[i];
+                        }}, OPIVI, VectorIntegerArithOp);
+                        0x1: vmv_v_i({{
+                            Vd_vi[i] = (vi)sext<5>(SIMM5);
+                        }}, OPIVI, VectorIntegerArithOp);
+                    }
+                }
+                format VectorIntVxsatFormat{
+                    0x20: vsaddu_vi({{
+                        Vd_vu[i] = sat_addu<vu>(Vs2_vu[i], (vu)SIMM5,
+                            vxsatptr);
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x21: vsadd_vi({{
+                        Vd_vu[i] = sat_add<vi>(Vs2_vu[i], (vu)SIMM5,
+                            vxsatptr);
+                    }}, OPIVI, VectorIntegerArithOp);
+                }
+                format VectorIntFormat {
+                    0x25: vsll_vi({{
+                        Vd_vu[i] = Vs2_vu[i] << ((vu)SIMM5 & (sew - 1) & 0x1f);
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x28: vsrl_vi({{
+                        Vd_vu[i] = Vs2_vu[i] >> ((vu)SIMM5 & (sew - 1) & 0x1f);
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x2a: vssrl_vi({{
+                        int sh = SIMM5 & (vtype_SEW(vtype) - 1);
+                        __uint128_t res = Vs2_vu[i];
+
+                        res = int_rounding<__uint128_t>(
+                            res, 0 /* TODO */, sh) >> sh;
+
+                        Vd_vu[i] = res;
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x29: vsra_vi({{
+                        Vd_vi[i] = Vs2_vi[i] >> ((vu)SIMM5 & (sew - 1) & 0x1f);
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x2b: vssra_vi({{
+                        int sh = SIMM5 & (sew - 1);
+                        __int128_t val = Vs2_vi[i];
+
+                        val = int_rounding<__int128_t>(val,
+                            xc->readMiscReg(MISCREG_VXRM), sh);
+                        Vd_vi[i] = val >> sh;
+                    }}, OPIVI, VectorIntegerArithOp);
+                }
+                // According to Spec Section 16.6,
+                // vm must be 1 (unmasked) in vmv<nr>r.v instructions.
+                0x27: decode VM { 0x1: decode SIMM3 {
+                    format VMvWholeFormat {
+                        0x0: vmv1r_v({{
+                            Vd_ud[i] = Vs2_ud[i];
+                        }}, OPIVI, VectorMiscOp);
+                        0x1: vmv2r_v({{
+                            Vd_ud[i] = Vs2_ud[i];
+                        }}, OPIVI, VectorMiscOp);
+                        0x3: vmv4r_v({{
+                            Vd_ud[i] = Vs2_ud[i];
+                        }}, OPIVI, VectorMiscOp);
+                        0x7: vmv8r_v({{
+                            Vd_ud[i] = Vs2_ud[i];
+                        }}, OPIVI, VectorMiscOp);
+                    }
+                }}
+                format VectorIntMaskFormat {
+                    0x11: decode VM {
+                        0x0: vmadc_vim({{
+                            Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                                carry_out(Vs2_vi[i], (vi)sext<5>(SIMM5),
+                                    elem_mask(v0, ei)));
+                        }}, OPIVI, VectorIntegerArithOp);
+                        0x1: vmadc_vi({{
+                            Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                                carry_out(Vs2_vi[i], (vi)sext<5>(SIMM5)));
+                        }}, OPIVI, VectorIntegerArithOp);
+                    }
+                    0x18: vmseq_vi({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vi[i] == (vi)sext<5>(SIMM5)));
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x19: vmsne_vi({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vi[i] != (vi)sext<5>(SIMM5)));
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x1c: vmsleu_vi({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vu[i] <= (vu)sext<5>(SIMM5)));
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x1d: vmsle_vi({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vi[i] <= (vi)sext<5>(SIMM5)));
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x1e: vmsgtu_vi({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vu[i] > (vu)sext<5>(SIMM5)));
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x1f: vmsgt_vi({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vi[i] > (vi)sext<5>(SIMM5)));
+                    }}, OPIVI, VectorIntegerArithOp);
+                }
+                format VectorIntNarrowingFormat {
+                    0x2c: vnsrl_wi({{
+                        Vd_vu[i + offset] = (vu)(Vs2_vwu[i] >>
+                                            ((vwu)SIMM5 & (sew * 2 - 1)));
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x2d: vnsra_wi({{
+                        Vd_vi[i + offset] = (vi)(Vs2_vwi[i] >>
+                                            ((vwu)SIMM5 & (sew * 2 - 1)));
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x2e: vnclipu_wi({{
+                        vu max = std::numeric_limits<vu>::max();
+                        uint64_t sign_mask =
+                            std::numeric_limits<uint64_t>::max() << sew;
+                        __uint128_t res = Vs2_vwu[i];
+                        unsigned shift = VS1 & ((sew * 2) - 1);
+
+                        res = int_rounding<__uint128_t>(
+                            res, 0 /* TODO */, shift) >> shift;
+
+                        if (res & sign_mask) {
+                            // TODO: vxsat
+                            res = max;
+                        }
+
+                        Vd_vu[i + offset] = (vu)res;
+                    }}, OPIVI, VectorIntegerArithOp);
+                    0x2f: vnclip_wi({{
+                        vi max = std::numeric_limits<vi>::max();
+                        vi min = std::numeric_limits<vi>::min();
+                        __int128_t res = Vs2_vwi[i];
+                        unsigned shift = VS1 & ((sew * 2) - 1);
+
+                        res = int_rounding<__int128_t>(
+                            res, 0 /* TODO */, shift) >> shift;
+
+                        if (res < min) {
+                            res = min;
+                            // TODO: vxsat
+                        } else if (res > max) {
+                            res = max;
+                            // TODO: vxsat
+                        }
+
+                        Vd_vi[i + offset] = (vi)res;
+                    }}, OPIVI, VectorIntegerArithOp);
+                }
+            }
+            // OPIVX
+            0x4: decode VFUNCT6 {
+                format VectorIntFormat {
+                    0x0: vadd_vx({{
+                        Vd_vu[i] = Vs2_vu[i] + Rs1_vu;
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x2: vsub_vx({{
+                        Vd_vu[i] = Vs2_vu[i] - Rs1_vu;
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x3: vrsub_vx({{
+                        Vd_vu[i] = Rs1_vu - Vs2_vu[i];
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x4: vminu_vx({{
+                        Vd_vu[i] = std::min(Vs2_vu[i], Rs1_vu);
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x5: vmin_vx({{
+                        Vd_vi[i] = std::min(Vs2_vi[i], Rs1_vi);
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x6: vmaxu_vx({{
+                        Vd_vu[i] = std::max(Vs2_vu[i], Rs1_vu);
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x7: vmax_vx({{
+                        Vd_vi[i] = std::max(Vs2_vi[i], Rs1_vi);
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x9: vand_vx({{
+                        Vd_vu[i] = Vs2_vu[i] & Rs1_vu;
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0xa: vor_vx({{
+                        Vd_vu[i] = Vs2_vu[i] | Rs1_vu;
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0xb: vxor_vx({{
+                        Vd_vu[i] = Vs2_vu[i] ^ Rs1_vu;
+                    }}, OPIVX, VectorIntegerArithOp);
+                }
+                0x0e: VectorSlideUpFormat::vslideup_vx({{
+                    const int offset = (int)Rs1_vu;
+                    const int microVlmax = vtype_VLMAX(machInst.vtype8, true);
+                    const int vregOffset = vdIdx - vs2Idx;
+                    const int offsetInVreg = offset - vregOffset * microVlmax;
+                    if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
+                        const int upperBound = (offsetInVreg >= 0)
+                            ? microVlmax - offsetInVreg
+                            : microVlmax + offsetInVreg;
+                        const int vdOffset = (offsetInVreg >= 0)
+                            ? offsetInVreg
+                            : 0;
+                        const int vs2Offset = (offsetInVreg >= 0)
+                            ? 0
+                            : -offsetInVreg;
+                        const int elemOffset = vdOffset + vdIdx * microVlmax;
+                        for (int i = 0;
+                            i < upperBound && i + vdOffset < microVl;
+                            i++) {
+                            if (this->vm || elem_mask(v0, i + elemOffset)) {
+                                Vd_vu[i + vdOffset] = Vs2_vu[i + vs2Offset];
+                            }
+                        }
+                    }
+                }}, OPIVX, VectorMiscOp);
+                0x0f: VectorSlideDownFormat::vslidedown_vx({{
+                    const int offset = (int)Rs1_vu;
+                    const int microVlmax = vtype_VLMAX(machInst.vtype8, true);
+                    const int vregOffset = vs2Idx - vdIdx;
+                    const int offsetInVreg = offset - vregOffset * microVlmax;
+                    const int numVs2s = vtype_regs_per_group(vtype);
+                    if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
+                        const bool needZeroTail = numVs2s == vs2Idx + 1;
+                        const int upperBound = (offsetInVreg >= 0)
+                            ? microVlmax - offsetInVreg
+                            : microVlmax + offsetInVreg;
+                        const int vdOffset = (offsetInVreg >= 0)
+                            ? 0
+                            : -offsetInVreg;
+                        const int vs2Offset = (offsetInVreg >= 0)
+                            ? offsetInVreg
+                            : 0;
+                        const int elemIdxBase = vdIdx * microVlmax;
+                        vreg_t resVreg;
+                        auto res = resVreg.as<vu>();
+                        for (int i = 0;
+                            i < upperBound && i + vdOffset < microVl;
+                            i++) {
+                            res[i + vdOffset] = Vs2_vu[i + vs2Offset];
+                        }
+                        if (needZeroTail) {
+                            for (int i = upperBound + vdOffset;
+                                i < microVlmax; i++) {
+                                res[i] = 0;
+                            }
+                        }
+                        for (int i = vdOffset; i < microVl ; i++) {
+                            if (vm || elem_mask(v0, i + elemIdxBase)) {
+                                Vd_vu[i] = res[i];
+                            }
+                        }
+                    }
+                }}, OPIVX, VectorMiscOp);
+                0x0c: VectorGatherFormat::vrgather_vx({{
+                    for (uint32_t i = 0; i < microVl; i++) {
+                        uint32_t ei = i + vs1_idx * vs1_elems + vs1_bias;
+                        if (this->vm || elem_mask(v0, ei)) {
+                            const uint64_t idx = Rs1_vu - vs2_elems * vs2_idx;
+                            Vd_vu[i] = (Rs1_vu >= vlmax) ? 0
+                                : (idx < vs2_elems) ? Vs2_vu[idx]
+                                : Vs3_vu[i];
+                        }
+                    }
+                }}, OPIVX, VectorMiscOp);
+                format VectorIntFormat {
+                    0x10: decode VM {
+                        0x0: vadc_vxm({{
+                            Vd_vi[i] = Vs2_vi[i] + Rs1_vi + elem_mask(v0, ei);
+                        }}, OPIVX, VectorIntegerArithOp);
+                        // the unmasked versions (vm=1) are reserved
+                    }
+                    0x12: decode VM {
+                        0x0: vsbc_vxm({{
+                            Vd_vi[i] = Vs2_vi[i] - Rs1_vi - elem_mask(v0, ei);
+                        }}, OPIVX, VectorIntegerArithOp);
+                        // the unmasked versions (vm=1) are reserved
+                    }
+                    0x17: decode VM {
+                        0x0: vmerge_vxm({{
+                            Vd_vu[i] = elem_mask(v0, ei) ? Rs1_vu : Vs2_vu[i];
+                        }}, OPIVX, VectorIntegerArithOp);
+                        0x1: decode VS2 {
+                            0x0: vmv_v_x({{
+                                Vd_vu[i] = Rs1_vu;
+                            }}, OPIVX, VectorIntegerArithOp);
+                        }
+                    }
+                }
+                format VectorIntVxsatFormat{
+                    0x20: vsaddu_vx({{
+                        Vd_vu[i] = sat_addu<vu>(Vs2_vu[i], Rs1_vu,
+                            vxsatptr);
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x21: vsadd_vx({{
+                        Vd_vu[i] = sat_add<vi>(Vs2_vu[i], Rs1_vu,
+                            vxsatptr);
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x22: vssubu_vx({{
+                        Vd_vu[i] = sat_subu<vu>(Vs2_vu[i], Rs1_vu,
+                            vxsatptr);
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x23: vssub_vx({{
+                        Vd_vu[i] = sat_sub<vi>(Vs2_vu[i], Rs1_vu,
+                            vxsatptr);
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x27: vsmul_vx({{
+                        vi max = std::numeric_limits<vi>::max();
+                        vi min = std::numeric_limits<vi>::min();
+                        bool overflow = Rs1_vi == Vs2_vi[i] && Rs1_vi == min;
+                        __int128_t result =
+                            (__int128_t)Rs1_vi * (__int128_t)Vs2_vi[i];
+                        result = int_rounding<__uint128_t>(
+                            result, 0 /* TODO */, sew - 1);
+                        result = result >> (sew - 1);
+                        if (overflow) {
+                            result = max;
+                            *vxsatptr = true;
+                        }
+
+                        Vd_vi[i] = (vi)result;
+                    }}, OPIVX, VectorIntegerArithOp);
+                }
+                format VectorIntFormat {
+                    0x25: vsll_vx({{
+                        Vd_vu[i] = Vs2_vu[i] << (Rs1_vu & (sew - 1));
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x28: vsrl_vx({{
+                        Vd_vu[i] = Vs2_vu[i] >> (Rs1_vu & (sew - 1));
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x29: vsra_vx({{
+                        Vd_vi[i] = Vs2_vi[i] >> (Rs1_vu & (sew - 1));
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x2a: vssrl_vx({{
+                        int sh = Rs1_vu & (sew - 1);
+                        __uint128_t val = Vs2_vu[i];
+
+                        val = int_rounding<__uint128_t>(val,
+                            xc->readMiscReg(MISCREG_VXRM), sh);
+                        Vd_vu[i] = val >> sh;
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x2b: vssra_vx({{
+                        int sh = Rs1_vu & (sew - 1);
+                        __int128_t val = Vs2_vi[i];
+
+                        val = int_rounding<__int128_t>(val,
+                            xc->readMiscReg(MISCREG_VXRM), sh);
+                        Vd_vi[i] = val >> sh;
+                    }}, OPIVX, VectorIntegerArithOp);
+                }
+                format VectorIntNarrowingFormat {
+                    0x2c: vnsrl_wx({{
+                        Vd_vu[i + offset] = (vu)(Vs2_vwu[i] >>
+                                            ((vwu)Rs1_vu & (sew * 2 - 1)));
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x2d: vnsra_wx({{
+                        Vd_vi[i + offset] = (vi)(Vs2_vwi[i] >>
+                                            ((vwu)Rs1_vu & (sew * 2 - 1)));
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x2e: vnclipu_wx({{
+                        vu max = std::numeric_limits<vu>::max();
+                        uint64_t sign_mask =
+                            std::numeric_limits<uint64_t>::max() << sew;
+                        __uint128_t res = Vs2_vwu[i];
+                        unsigned shift = Rs1_vu & ((sew * 2) - 1);
+
+                        res = int_rounding<__uint128_t>(
+                            res, 0 /* TODO */, shift) >> shift;
+
+                        if (res & sign_mask) {
+                            // TODO: vxsat
+                            res = max;
+                        }
+
+                        Vd_vu[i + offset] = (vu)res;
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x2f: vnclip_wx({{
+                        vi max = std::numeric_limits<vi>::max();
+                        vi min = std::numeric_limits<vi>::min();
+                        __int128_t res = Vs2_vwi[i];
+                        unsigned shift = Rs1_vi & ((sew * 2) - 1);
+
+                        res = int_rounding<__int128_t>(
+                            res, 0 /* TODO */, shift) >> shift;
+
+                        if (res < min) {
+                            res = min;
+                            // TODO: vxsat
+                        } else if (res > max) {
+                            res = max;
+                            // TODO: vxsat
+                        }
+
+                        Vd_vi[i + offset] = (vi)res;
+                    }}, OPIVX, VectorIntegerArithOp);
+                }
+
+                format VectorIntMaskFormat {
+                    0x11: decode VM {
+                        0x0: vmadc_vxm({{
+                            Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                                carry_out(Vs2_vi[i], Rs1_vi,
+                                    elem_mask(v0, ei)));
+                        }}, OPIVX, VectorIntegerArithOp);
+                        0x1: vmadc_vx({{
+                            Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                                carry_out(Vs2_vi[i], Rs1_vi));
+                        }}, OPIVX, VectorIntegerArithOp);
+                    }
+                    0x13: decode VM {
+                        0x0: vmsbc_vxm({{
+                            Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                                borrow_out(Vs2_vi[i], Rs1_vi,
+                                    elem_mask(v0, ei)));
+                        }}, OPIVX, VectorIntegerArithOp);
+                        0x1: vmsbc_vx({{
+                            Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                                borrow_out(Vs2_vi[i], Rs1_vi));
+                        }}, OPIVX, VectorIntegerArithOp);
+                    }
+                    0x18: vmseq_vx({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vu[i] == Rs1_vu));
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x19: vmsne_vx({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vu[i] != Rs1_vu));
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x1a: vmsltu_vx({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vu[i] < Rs1_vu));
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x1b: vmslt_vx({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vi[i] < Rs1_vi));
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x1c: vmsleu_vx({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vu[i] <= Rs1_vu));
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x1d: vmsle_vx({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vi[i] <= Rs1_vi));
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x1e: vmsgtu_vx({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vu[i] > Rs1_vu));
+                    }}, OPIVX, VectorIntegerArithOp);
+                    0x1f: vmsgt_vx({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            (Vs2_vi[i] > Rs1_vi));
+                    }}, OPIVX, VectorIntegerArithOp);
+                }
+            }
+            // OPFVF
+            0x5: decode VFUNCT6 {
+                format VectorFloatFormat{
+                    0x00: vfadd_vf({{
+                        auto fd = fadd<et>(ftype<et>(Vs2_vu[i]),
+                                           ftype_freg<et>(freg(Fs1_bits)));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x02: vfsub_vf({{
+                        auto fd = fsub<et>(ftype<et>(Vs2_vu[i]),
+                                           ftype_freg<et>(freg(Fs1_bits)));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x04: vfmin_vf({{
+                        auto fd = fmin<et>(ftype<et>(Vs2_vu[i]),
+                                           ftype_freg<et>(freg(Fs1_bits)));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x06: vfmax_vf({{
+                        auto fd = fmax<et>(ftype<et>(Vs2_vu[i]),
+                                           ftype_freg<et>(freg(Fs1_bits)));
+                            Vd_vu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x08: vfsgnj_vf({{
+                        Vd_vu[i] = fsgnj<et>(ftype<et>(Vs2_vu[i]),
+                                             ftype_freg<et>(freg(Fs1_bits)),
+                                             false, false).v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x09: vfsgnjn_vf({{
+                        Vd_vu[i] = fsgnj<et>(ftype<et>(Vs2_vu[i]),
+                                             ftype_freg<et>(freg(Fs1_bits)),
+                                             true, false).v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x0a: vfsgnjx_vf({{
+                        Vd_vu[i] = fsgnj<et>(ftype<et>(Vs2_vu[i]),
+                                             ftype_freg<et>(freg(Fs1_bits)),
+                                             false, true).v;
+                    }}, OPFVF, VectorFloatArithOp);
+                }
+                0x0e: VectorFloatSlideUpFormat::vfslide1up_vf({{
+                    const int offset = 1;
+                    const int microVlmax = vtype_VLMAX(machInst.vtype8, true);
+                    const int vregOffset = vdIdx - vs2Idx;
+                    const int offsetInVreg = offset - vregOffset * microVlmax;
+                    if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
+                        const int upperBound = (offsetInVreg >= 0)
+                            ? microVlmax - offsetInVreg
+                            : microVlmax + offsetInVreg;
+                        const int vdOffset = (offsetInVreg >= 0)
+                            ? offsetInVreg
+                            : 0;
+                        const int vs2Offset = (offsetInVreg >= 0)
+                            ? 0
+                            : -offsetInVreg;
+                        const int elemOffset = vdOffset + vdIdx * microVlmax;
+                        for (int i = 0;
+                            i < upperBound && i + vdOffset < microVl;
+                            i++) {
+                            if (this->vm || elem_mask(v0, i + elemOffset)) {
+                                Vd_vu[i + vdOffset] = Vs2_vu[i + vs2Offset];
+                            }
+                        }
+                        // TODO: dirty code
+                        if (vdIdx == 0 && vs2Idx == 0 &&
+                                (this->vm || elem_mask(v0, 0))) {
+                            tmp_d0.as<vu>()[0] = Rs1_vu;
+                        }
+                    }
+                }}, OPFVF, VectorMiscOp);
+                0x0f: VectorFloatSlideDownFormat::vfslide1down_vf({{
+                    const int offset = 1;
+                    const int microVlmax = vtype_VLMAX(machInst.vtype8, true);
+                    const int vregOffset = vs2Idx - vdIdx;
+                    const int offsetInVreg = offset - vregOffset * microVlmax;
+                    const int numVs2s = vtype_regs_per_group(vtype);
+                    if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
+                        const bool needZeroTail = numVs2s == vs2Idx + 1;
+                        const int upperBound = (offsetInVreg >= 0)
+                            ? microVlmax - offsetInVreg
+                            : microVlmax + offsetInVreg;
+                        const int vdOffset = (offsetInVreg >= 0)
+                            ? 0
+                            : -offsetInVreg;
+                        const int vs2Offset = (offsetInVreg >= 0)
+                            ? offsetInVreg
+                            : 0;
+                        const int elemIdxBase = vdIdx * microVlmax;
+                        vreg_t resVreg;
+                        auto res = resVreg.as<vu>();
+                        for (int i = 0;
+                            i < upperBound && i + vdOffset < microVl;
+                            i++) {
+                            res[i + vdOffset] = Vs2_vu[i + vs2Offset];
+                        }
+                        if (needZeroTail) {
+                            for (int i = upperBound + vdOffset;
+                                i < microVlmax; i++) {
+                                res[i] = 0;
+                            }
+                        }
+                        for (int i = vdOffset; i < microVl ; i++) {
+                            if (vm || elem_mask(v0, i + elemIdxBase)) {
+                                Vd_vu[i] = (i + elemIdxBase != machInst.vl - 1)
+                                    ? res[i]
+                                    : Rs1_vu;
+                            }
+                        }
+                    }
+                }}, OPFVF, VectorMiscOp);
+                // VRFUNARY0
+                0x10: decode VS2 {
+                    0x00: decode VM {
+                        // The encodings corresponding to the masked versions
+                        // (vm=0) of vfmv.s.f are reserved
+                        0x1: VectorNonSplitFormat::vfmv_s_f({{
+                            auto fd = ftype_freg<et>(freg(Fs1_bits));
+                            Vd_vu[0] = fd.v;
+                        }}, OPFVV, VectorMiscOp);
+                    }
+                }
+                format VectorFloatFormat{
+                    0x17: decode VM {
+                        0x0: vfmerge_vfm({{
+                            Vd_vu[i] = elem_mask(v0, ei)
+                                    ? ftype_freg<et>(freg(Fs1_bits)).v
+                                    : Vs2_vu[i];
+                        }}, OPFVF, VectorFloatArithOp);
+                        0x1: vfmv_v_f({{
+                            auto fd = ftype_freg<et>(freg(Fs1_bits));
+                            Vd_vu[i] = fd.v;
+                        }}, OPFVF, VectorFloatArithOp);
+                    }
+                }
+                format VectorFloatMaskFormat {
+                    0x18: vmfeq_vf({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            feq<et>(ftype<et>(Vs2_vu[i]),
+                                    ftype_freg<et>(freg(Fs1_bits))));
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x19: vmfle_vf({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            fle<et>(ftype<et>(Vs2_vu[i]),
+                                    ftype_freg<et>(freg(Fs1_bits))));
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x1b: vmflt_vf({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            flt<et>(ftype<et>(Vs2_vu[i]),
+                                    ftype_freg<et>(freg(Fs1_bits))));
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x1c: vmfne_vf({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            !feq<et>(ftype<et>(Vs2_vu[i]),
+                                     ftype_freg<et>(freg(Fs1_bits))));
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x1d: vmfgt_vf({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            flt<et>(ftype_freg<et>(freg(Fs1_bits)),
+                                    ftype<et>(Vs2_vu[i])));
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x1f: vmfge_vf({{
+                        Vd_ub[(i + offset)/8] = ASSIGN_VD_BIT(i + offset,
+                            fle<et>(ftype_freg<et>(freg(Fs1_bits)),
+                                    ftype<et>(Vs2_vu[i])));
+                    }}, OPFVF, VectorFloatArithOp);
+                }
+                format VectorFloatFormat{
+                    0x20: vfdiv_vf({{
+                        auto fd = fdiv<et>(ftype<et>(Vs2_vu[i]),
+                                           ftype_freg<et>(freg(Fs1_bits)));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x21: vfrdiv_vf({{
+                        auto fd = fdiv<et>(ftype_freg<et>(freg(Fs1_bits)),
+                                           ftype<et>(Vs2_vu[i]));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x24: vfmul_vf({{
+                        auto fd = fmul<et>(ftype<et>(Vs2_vu[i]),
+                                           ftype_freg<et>(freg(Fs1_bits)));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x27: vfrsub_vf({{
+                        auto fd = fsub<et>(ftype_freg<et>(freg(Fs1_bits)),
+                                           ftype<et>(Vs2_vu[i]));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x28: vfmadd_vf({{
+                        auto fd = fmadd<et>(ftype<et>(Vs3_vu[i]),
+                                            ftype_freg<et>(freg(Fs1_bits)),
+                                            ftype<et>(Vs2_vu[i]));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x29: vfnmadd_vf({{
+                        auto fd = fmadd<et>(fneg(ftype<et>(Vs3_vu[i])),
+                                            ftype_freg<et>(freg(Fs1_bits)),
+                                            fneg(ftype<et>(Vs2_vu[i])));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x2a: vfmsub_vf({{
+                        auto fd = fmadd<et>(ftype<et>(Vs3_vu[i]),
+                                            ftype_freg<et>(freg(Fs1_bits)),
+                                            fneg(ftype<et>(Vs2_vu[i])));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x2b: vfnmsub_vf({{
+                        auto fd = fmadd<et>(fneg(ftype<et>(Vs3_vu[i])),
+                                            ftype_freg<et>(freg(Fs1_bits)),
+                                            ftype<et>(Vs2_vu[i]));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x2c: vfmacc_vf({{
+                        auto fd = fmadd<et>(ftype_freg<et>(freg(Fs1_bits)),
+                                            ftype<et>(Vs2_vu[i]),
+                                            ftype<et>(Vs3_vu[i]));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x2d: vfnmacc_vf({{
+                        auto fd = fmadd<et>(
+                            fneg(ftype_freg<et>(freg(Fs1_bits))),
+                            ftype<et>(Vs2_vu[i]),
+                            fneg(ftype<et>(Vs3_vu[i]))
+                        );
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x2e: vfmsac_vf({{
+                        auto fd = fmadd<et>(ftype_freg<et>(freg(Fs1_bits)),
+                                            ftype<et>(Vs2_vu[i]),
+                                            fneg(ftype<et>(Vs3_vu[i])));
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x2f: vfnmsac_vf({{
+                        auto fd = fmadd<et>(
+                            fneg(ftype_freg<et>(freg(Fs1_bits))),
+                            ftype<et>(Vs2_vu[i]),
+                            ftype<et>(Vs3_vu[i])
+                        );
+                        Vd_vu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                }
+                format VectorFloatWideningFormat {
+                    0x30: vfwadd_vf({{
+                        auto fd = fadd<ewt>(
+                            fwiden(ftype<et>(Vs2_vu[i + offset])),
+                            fwiden(ftype_freg<et>(freg(Fs1_bits))));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x32: vfwsub_vf({{
+                        auto fd = fsub<ewt>(
+                            fwiden(ftype<et>(Vs2_vu[i + offset])),
+                            fwiden(ftype_freg<et>(freg(Fs1_bits))));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x34: vfwadd_wf({{
+                        auto fd = fadd<ewt>(
+                            ftype<ewt>(Vs2_vwu[i]),
+                            fwiden(ftype_freg<et>(freg(Fs1_bits))));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x36: vfwsub_wf({{
+                        auto fd = fsub<ewt>(
+                            ftype<ewt>(Vs2_vwu[i]),
+                            fwiden(ftype_freg<et>(freg(Fs1_bits))));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x38: vfwmul_vf({{
+                        auto fd = fmul<ewt>(
+                            fwiden(ftype<et>(Vs2_vu[i + offset])),
+                            fwiden(ftype_freg<et>(freg(Fs1_bits))));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x3c: vfwmacc_vf({{
+                        auto fd = fmadd<ewt>(
+                            fwiden(ftype_freg<et>(freg(Fs1_bits))),
+                            fwiden(ftype<et>(Vs2_vu[i + offset])),
+                            ftype<ewt>(Vs3_vwu[i]));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x3d: vfwnmacc_vf({{
+                        auto fd = fmadd<ewt>(
+                            fwiden(fneg(ftype_freg<et>(freg(Fs1_bits)))),
+                            fwiden(ftype<et>(Vs2_vu[i + offset])),
+                            fneg(ftype<ewt>(Vs3_vwu[i])));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x3e: vfwmsac_vf({{
+                        auto fd = fmadd<ewt>(
+                            fwiden(ftype_freg<et>(freg(Fs1_bits))),
+                            fwiden(ftype<et>(Vs2_vu[i + offset])),
+                            fneg(ftype<ewt>(Vs3_vwu[i])));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                    0x3f: vfwnmsac_vf({{
+                        auto fd = fmadd<ewt>(
+                            fwiden(fneg(ftype_freg<et>(freg(Fs1_bits)))),
+                            fwiden(ftype<et>(Vs2_vu[i + offset])),
+                            ftype<ewt>(Vs3_vwu[i]));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVF, VectorFloatArithOp);
+                }
+            }
+            // OPMVX
+            0x6: decode VFUNCT6 {
+                format VectorIntFormat {
+                    0x08: vaaddu_vx({{
+                        __uint128_t res = (__uint128_t)Vs2_vu[i] + Rs1_vu;
+                        res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
+                        Vd_vu[i] = res >> 1;
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x09: vaadd_vx({{
+                        __uint128_t res = (__uint128_t)Vs2_vi[i] + Rs1_vi;
+                        res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
+                        Vd_vi[i] = res >> 1;
+                    }}, OPMVX, VectorIntegerArithOp);
+                }
+                0x0e: VectorSlideUpFormat::vslide1up_vx({{
+                    const int offset = 1;
+                    const int microVlmax = vtype_VLMAX(machInst.vtype8, true);
+                    const int vregOffset = vdIdx - vs2Idx;
+                    const int offsetInVreg = offset - vregOffset * microVlmax;
+                    if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
+                        const int upperBound = (offsetInVreg >= 0)
+                            ? microVlmax - offsetInVreg
+                            : microVlmax + offsetInVreg;
+                        const int vdOffset = (offsetInVreg >= 0)
+                            ? offsetInVreg
+                            : 0;
+                        const int vs2Offset = (offsetInVreg >= 0)
+                            ? 0
+                            : -offsetInVreg;
+                        const int elemOffset = vdOffset + vdIdx * microVlmax;
+                        for (int i = 0;
+                            i < upperBound && i + vdOffset < microVl;
+                            i++) {
+                            if (this->vm || elem_mask(v0, i + elemOffset)) {
+                                Vd_vu[i + vdOffset] = Vs2_vu[i + vs2Offset];
+                            }
+                        }
+                        // TODO: dirty code
+                        if (vdIdx == 0 && vs2Idx == 0 &&
+                                (this->vm || elem_mask(v0, 0))) {
+                            tmp_d0.as<vu>()[0] = Rs1_vu;
+                        }
+                    }
+                }}, OPIVX, VectorMiscOp);
+                0x0f: VectorSlideDownFormat::vslide1down_vx({{
+                    const int offset = 1;
+                    const int microVlmax = vtype_VLMAX(machInst.vtype8, true);
+                    const int vregOffset = vs2Idx - vdIdx;
+                    const int offsetInVreg = offset - vregOffset * microVlmax;
+                    const int numVs2s = vtype_regs_per_group(vtype);
+                    if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
+                        const bool needZeroTail = numVs2s == vs2Idx + 1;
+                        const int upperBound = (offsetInVreg >= 0)
+                            ? microVlmax - offsetInVreg
+                            : microVlmax + offsetInVreg;
+                        const int vdOffset = (offsetInVreg >= 0)
+                            ? 0
+                            : -offsetInVreg;
+                        const int vs2Offset = (offsetInVreg >= 0)
+                            ? offsetInVreg
+                            : 0;
+                        const int elemIdxBase = vdIdx * microVlmax;
+                        vreg_t resVreg;
+                        auto res = resVreg.as<vu>();
+                        for (int i = 0;
+                            i < upperBound && i + vdOffset < microVl;
+                            i++) {
+                            res[i + vdOffset] = Vs2_vu[i + vs2Offset];
+                        }
+                        if (needZeroTail) {
+                            for (int i = upperBound + vdOffset;
+                                i < microVlmax; i++) {
+                                res[i] = 0;
+                            }
+                        }
+                        for (int i = vdOffset; i < microVl ; i++) {
+                            if (vm || elem_mask(v0, i + elemIdxBase)) {
+                                Vd_vu[i] = (i + elemIdxBase != machInst.vl - 1)
+                                    ? res[i]
+                                    : Rs1_vu;
+                            }
+                        }
+                    }
+                }}, OPIVX, VectorMiscOp);
+                // VRXUNARY0
+                0x10: decode VS2 {
+                    0x00: decode VM {
+                        // The encodings corresponding to the masked versions
+                        // (vm=0) of vmv.s.x are reserved.
+                        0x1: VectorNonSplitFormat::vmv_s_x({{
+                            Vd_vu[0] = Rs1_vu;
+                        }}, OPMVX, VectorMiscOp);
+                    }
+                }
+                format VectorIntFormat {
+                    0x0a: vasubu_vx({{
+                        __uint128_t res = (__uint128_t)Vs2_vu[i] - Rs1_vu;
+                        res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
+                        Vd_vu[i] = res >> 1;
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x0b: vasub_vx({{
+                        __uint128_t res = (__uint128_t)Vs2_vi[i] - Rs1_vi;
+                        res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
+                        Vd_vi[i] = res >> 1;
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x20: vdivu_vx({{
+                        if (Rs1_vu == 0)
+                            Vd_vu[i] = (vu)-1;
+                        else
+                            Vd_vu[i] = Vs2_vu[i] / Rs1_vu;
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x21: vdiv_vx({{
+                        if (Rs1_vi == 0)
+                            Vd_vi[i] = -1;
+                        else if (Vs2_vi[i] == std::numeric_limits<vi>::min()
+                                && Rs1_vi == -1)
+                            Vd_vi[i] = Vs2_vi[i];
+                        else
+                            Vd_vi[i] = Vs2_vi[i] / Rs1_vi;
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x22: vremu_vx({{
+                        if (Rs1_vu == 0)
+                            Vd_vu[i] = Vs2_vu[i];
+                        else
+                            Vd_vu[i] = Vs2_vu[i] % Rs1_vu;
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x23: vrem_vx({{
+                        if (Rs1_vi == 0)
+                            Vd_vi[i] = Vs2_vi[i];
+                        else if (Vs2_vi[i] == std::numeric_limits<vi>::min()
+                                && Rs1_vi == -1)
+                            Vd_vi[i] = 0;
+                        else
+                            Vd_vi[i] = Vs2_vi[i] % Rs1_vi;
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x24: vmulhu_vx({{
+                        if (sew < 64)
+                            Vd_vu[i] = ((uint64_t)Vs2_vu[i] * Rs1_vu)
+                                        >> sew;
+                        else
+                            Vd_vu[i] = mulhu_64(Vs2_vu[i], Rs1_vu);
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x25: vmul_vx({{
+                        Vd_vi[i] = Vs2_vi[i] * Rs1_vi;
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x26: vmulhsu_vx({{
+                        if (sew < 64)
+                            Vd_vi[i] = ((int64_t)Vs2_vi[i] *
+                                        (uint64_t)Rs1_vu)
+                                        >> sew;
+                        else
+                            Vd_vi[i] = mulhsu_64(Vs2_vi[i], Rs1_vu);
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x27: vmulh_vx({{
+                        if (sew < 64)
+                            Vd_vi[i] = ((int64_t)Vs2_vi[i] * Rs1_vi)
+                                        >> sew;
+                        else
+                            Vd_vi[i] = mulh_64(Vs2_vi[i], Rs1_vi);
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x29: vmadd_vx({{
+                        Vd_vi[i] = Vs3_vi[i] * Rs1_vi + Vs2_vi[i];
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x2b: vnmsub_vx({{
+                        Vd_vi[i] = -(Vs3_vi[i] * Rs1_vi) + Vs2_vi[i];
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x2d: vmacc_vx({{
+                        Vd_vi[i] = Vs2_vi[i] * Rs1_vi + Vs3_vi[i];
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x2f: vnmsac_vx({{
+                        Vd_vi[i] = -(Vs2_vi[i] * Rs1_vi) + Vs3_vi[i];
+                    }}, OPMVX, VectorIntegerArithOp);
+                }
+                format VectorIntWideningFormat {
+                    0x30: vwaddu_vx({{
+                        Vd_vwu[i] = vwu(Vs2_vu[i + offset]) + vwu(Rs1_vu);
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x31: vwadd_vx({{
+                        Vd_vwi[i] = vwi(Vs2_vi[i + offset]) + vwi(Rs1_vi);
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x32: vwsubu_vx({{
+                        Vd_vwu[i] = vwu(Vs2_vu[i + offset]) - vwu(Rs1_vu);
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x33: vwsub_vx({{
+                        Vd_vwi[i] = vwi(Vs2_vi[i + offset]) - vwi(Rs1_vi);
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x34: vwaddu_wx({{
+                        Vd_vwu[i] = Vs2_vwu[i] + vwu(Rs1_vu);
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x35: vwadd_wx({{
+                        Vd_vwi[i] = Vs2_vwi[i] + vwi(Rs1_vi);
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x36: vwsubu_wx({{
+                        Vd_vwu[i] = Vs2_vwu[i] - vwu(Rs1_vu);
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x37: vwsub_wx({{
+                        Vd_vwi[i] = Vs2_vwi[i] - vwi(Rs1_vi);
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x38: vwmulu_vx({{
+                        Vd_vwu[i] = vwu(Vs2_vu[i + offset]) * vwu(Rs1_vu);
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x3a: vwmulsu_vx({{
+                        Vd_vwi[i] = vwi(Vs2_vi[i + offset]) * vwu(Rs1_vu);
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x3b: vwmul_vx({{
+                        Vd_vwi[i] = vwi(Vs2_vi[i + offset]) * vwi(Rs1_vi);
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x3c: vwmaccu_vx({{
+                        Vd_vwu[i] = vwu(Rs1_vu) * vwu(Vs2_vu[i + offset])
+                                + Vs3_vwu[i];
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x3d: vwmacc_vx({{
+                        Vd_vwi[i] = vwi(Rs1_vi) * vwi(Vs2_vi[i + offset])
+                                + Vs3_vwi[i];
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x3e: vwmaccus_vx({{
+                        Vd_vwi[i] = vwu(Rs1_vu) * vwi(Vs2_vi[i + offset])
+                                + Vs3_vwi[i];
+                    }}, OPMVX, VectorIntegerArithOp);
+                    0x3f: vwmaccsu_vx({{
+                        Vd_vwi[i] = vwi(Rs1_vi) * vwu(Vs2_vu[i + offset])
+                                + Vs3_vwi[i];
+                    }}, OPMVX, VectorIntegerArithOp);
+                }
+            }
+            0x7: decode BIT31 {
+                format VConfOp {
+                    0x0: vsetvli({{
+                        uint64_t rd_bits = RD;
+                        uint64_t rs1_bits = RS1;
+                        uint64_t requested_vl = Rs1_ud;
+                        uint64_t requested_vtype = zimm11;
+
+                        Rd_ud = 0;
+                    }}, VectorConfigOp, IsSerializeAfter, IsNonSpeculative);
+                    0x1: decode BIT30 {
+                        0x0: vsetvl({{
+                            uint64_t rd_bits = RD;
+                            uint64_t rs1_bits = RS1;
+                            uint64_t requested_vl = Rs1_ud;
+                            uint64_t requested_vtype = Rs2_ud;
+
+                            Rd_ud = 0;
+                        }}, VectorConfigOp, IsSerializeAfter,
+                        IsNonSpeculative);
+                        0x1: vsetivli({{
+                            uint64_t rd_bits = RD;
+                            uint64_t rs1_bits = -1;
+                            uint64_t requested_vl = uimm;
+                            uint64_t requested_vtype = zimm10;
+
+                            Rd_ud = 0;
+                        }}, VectorConfigOp, IsSerializeAfter,
+                        IsNonSpeculative);
+                    }
+                }
             }
         }
 

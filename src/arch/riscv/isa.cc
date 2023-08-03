@@ -43,6 +43,7 @@
 #include "arch/riscv/regs/float.hh"
 #include "arch/riscv/regs/int.hh"
 #include "arch/riscv/regs/misc.hh"
+#include "arch/riscv/regs/vector.hh"
 #include "base/bitfield.hh"
 #include "base/compiler.hh"
 #include "base/logging.hh"
@@ -52,6 +53,7 @@
 #include "debug/LLSC.hh"
 #include "debug/MatRegs.hh"
 #include "debug/RiscvMisc.hh"
+#include "debug/VecRegs.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "params/RiscvISA.hh"
@@ -189,6 +191,14 @@ namespace RiscvISA
     [MISCREG_FFLAGS]        = "FFLAGS",
     [MISCREG_FRM]           = "FRM",
 
+    [MISCREG_VSTART]        = "VSTART",
+    [MISCREG_VXSAT]         = "VXSAT",
+    [MISCREG_VXRM]          = "VXRM",
+    [MISCREG_VCSR]          = "VCSR",
+    [MISCREG_VL]            = "VL",
+    [MISCREG_VTYPE]         = "VTYPE",
+    [MISCREG_VLENB]         = "VLENB",
+
     [MISCREG_NMIVEC]        = "NMIVEC",
     [MISCREG_NMIE]          = "NMIE",
     [MISCREG_NMIP]          = "NMIP",
@@ -234,17 +244,17 @@ namespace
 {
 
 /* Not applicable to RISCV */
-RegClass vecRegClass(VecRegClass, VecRegClassName, 1, debug::IntRegs);
-RegClass vecElemClass(VecElemClass, VecElemClassName, 2, debug::IntRegs);
-RegClass vecPredRegClass(VecPredRegClass, VecPredRegClassName, 1,
+RegClass vecElemClass(VecElemClass, VecElemClassName, 0, debug::IntRegs);
+RegClass vecPredRegClass(VecPredRegClass, VecPredRegClassName, 0,
         debug::IntRegs);
-RegClass matRegClass(MatRegClass, MatRegClassName, 1, debug::MatRegs);
+RegClass matRegClass(MatRegClass, MatRegClassName, 0, debug::MatRegs);
 RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
 } // anonymous namespace
 
 ISA::ISA(const Params &p) :
-    BaseISA(p), rv_type(p.riscv_type), checkAlignment(p.check_alignment)
+    BaseISA(p), rv_type(p.riscv_type), checkAlignment(p.check_alignment),
+    enableRvv(p.enable_rvv)
 {
     _regClasses.push_back(&intRegClass);
     _regClasses.push_back(&floatRegClass);
@@ -275,6 +285,13 @@ ISA::copyRegsFrom(ThreadContext *src)
     for (auto &id: floatRegClass)
         tc->setReg(id, src->getReg(id));
 
+    // Third loop through the vector registers.
+    RiscvISA::VecRegContainer vc;
+    for (auto &id: vecRegClass) {
+        src->getReg(id, &vc);
+        tc->setReg(id, &vc);
+    }
+
     // Lastly copy PC/NPC
     tc->pcState(src->pcState());
 }
@@ -299,6 +316,7 @@ void ISA::clear()
     // mark FS is initial
     status.fs = INITIAL;
 
+
     // rv_type dependent init.
     switch (rv_type) {
         case RV32:
@@ -307,6 +325,10 @@ void ISA::clear()
         case RV64:
           misa.rv64_mxl = 2;
           status.uxl = status.sxl = 2;
+          if (getEnableRvv()) {
+              status.vs = VPUStatus::INITIAL;
+              misa.rvv = 1;
+          }
           break;
         default:
           panic("%s: Unknown rv_type: %d", name(), (int)rv_type);
@@ -479,6 +501,17 @@ ISA::readMiscReg(RegIndex idx)
 
             return readMiscRegNoEffect(idx);
         }
+      case MISCREG_VLENB:
+        {
+            return VLENB;
+        }
+        break;
+      case MISCREG_VCSR:
+        {
+            return readMiscRegNoEffect(MISCREG_VXSAT) &
+                  (readMiscRegNoEffect(MISCREG_VXRM) << 1);
+        }
+        break;
       default:
         // Try reading HPM counters
         // As a placeholder, all HPM counters are just cycle counters
@@ -650,6 +683,22 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                     val |= cur & (STATUS_SXL_MASK | STATUS_UXL_MASK);
                 }
                 setMiscRegNoEffect(idx, val);
+            }
+            break;
+          case MISCREG_VXSAT:
+            {
+                setMiscRegNoEffect(idx, val & 0x1);
+            }
+            break;
+          case MISCREG_VXRM:
+            {
+                setMiscRegNoEffect(idx, val & 0x3);
+            }
+            break;
+          case MISCREG_VCSR:
+            {
+                setMiscRegNoEffect(MISCREG_VXSAT, val & 0x1);
+                setMiscRegNoEffect(MISCREG_VXRM, (val & 0x6) >> 1);
             }
             break;
           default:
