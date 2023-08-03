@@ -137,7 +137,7 @@ jobs:
     # run test
     - name: long ${{ matrix.test-type }} tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run gem5/${{ matrix.image }} --length=long --skip-build -vv -t $(nproc)
+      run: ./main.py run gem5/${{ matrix.test-type }} --length=long --skip-build -vv -t $(nproc)
     - name: create zip of results
       if: success() || failure()
       run: |
@@ -147,7 +147,7 @@ jobs:
       if: success() || failure()
       uses: actions/upload-artifact@v3
       env:
-        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+        MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
       with:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
@@ -193,7 +193,7 @@ jobs:
       if: success() || failure()
       uses: actions/upload-artifact@v3
       env:
-        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+        MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
       with:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
