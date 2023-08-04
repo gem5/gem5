@@ -539,7 +539,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         return ["console=ttyLIO0", "root={root_value}", "rw"]
 
     @overrides(KernelDiskWorkload)
-    def set_default_disk_device(self) -> str:
+    def get_default_disk_device(self) -> str:
         return "/dev/lda"
 
     @overrides(KernelDiskWorkload)

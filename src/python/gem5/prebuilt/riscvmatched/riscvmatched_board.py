@@ -539,7 +539,7 @@ class RISCVMatchedBoard(
         fdt.writeDtbFile(os.path.join(outdir, "device.dtb"))
 
     @overrides(KernelDiskWorkload)
-    def _get_default_disk_device(self):
+    def get_default_disk_device(self):
         return "/dev/vda"
 
     @overrides(KernelDiskWorkload)

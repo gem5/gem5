@@ -39,7 +39,7 @@ import os
 from pathlib import Path
 
 import m5
-from m5 import warn
+from m5.util import inform
 
 
 class KernelDiskWorkload:
@@ -92,15 +92,15 @@ class KernelDiskWorkload:
         :returns: The disk device.
         """
         if self._disk_device is None:
-            warn("No disk device set, ie where the disk image is located. Defaulting to board disk device")
-            return _get_default_disk_device()
-        else:
+            self._disk_device = get_default_disk_device()
+            inform(f"Disk Device set to {self._disk_device}")
             return self._disk_device
-        
+        else:
+            inform(f"Disk Device set to {self._disk_device}")
+            return self._disk_device
 
-    
     @abstractmethod
-    def _get_default_disk_device(self) -> str:
+    def get_default_disk_device(self) -> str:
         """
         Set a default disk device, in case user does not specify a disk device.
 
@@ -154,7 +154,7 @@ class KernelDiskWorkload:
         kernel: KernelResource,
         disk_image: DiskImageResource,
         bootloader: Optional[BootloaderResource] = None,
-        _disk_device: Optional[str] = None,
+        disk_device: Optional[str] = None,
         readfile: Optional[str] = None,
         readfile_contents: Optional[str] = None,
         kernel_args: Optional[List[str]] = None,
@@ -188,7 +188,7 @@ class KernelDiskWorkload:
         assert isinstance(self, AbstractBoard)
 
         # Set the disk device
-        self._disk_device = _disk_device
+        self._disk_device = disk_device
 
         # If we are setting a workload of this type, we need to run as a
         # full-system simulation.
@@ -210,7 +210,6 @@ class KernelDiskWorkload:
 
         if bootloader is not None:
             self._bootloader = [bootloader.get_local_path()]
-
 
         # Set the readfile.
         if readfile:
