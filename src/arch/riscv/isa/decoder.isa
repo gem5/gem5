@@ -677,6 +677,23 @@ decode QUADRANT default Unknown::unknown() {
                 0x1: fence_i({{
                 }}, uint64_t, IsNonSpeculative, IsSerializeAfter, No_OpClass);
             }
+
+            0x2: decode FUNCT12 {
+                format CBMOp {
+                    0x0: cbo_inval({{
+                        Mem = 0;
+                    }}, mem_flags=[INVALIDATE, DST_POC]);
+                    0x1: cbo_clean({{
+                        Mem = 0;
+                    }}, mem_flags=[CLEAN, DST_POC]);
+                    0x2: cbo_flush({{
+                        Mem = 0;
+                    }}, mem_flags=[CLEAN, INVALIDATE, DST_POC]);
+                    0x4: cbo_zero({{
+                        Mem = 0;
+                    }}, mem_flags=[CACHE_BLOCK_ZERO]);
+                }
+            }
         }
 
         0x04: decode FUNCT3 {
