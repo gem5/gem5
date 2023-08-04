@@ -1,0 +1,205 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2022 PLCT Lab
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+let {{
+
+def VMemBase(name, Name, ea_code, memacc_code, mem_flags,
+                   inst_flags, base_class, postacc_code='',
+                   declare_template_base=VMemMacroDeclare,
+                   decode_template=BasicDecode, exec_template_base='',
+                   # If it's a macroop, the corresponding microops will be
+                   # generated.
+                   is_macroop=True):
+    # Make sure flags are in lists (convert to lists if not).
+    mem_flags = makeList(mem_flags)
+    inst_flags = makeList(inst_flags)
+    iop = InstObjParams(name, Name, base_class,
+        {'ea_code': ea_code,
+         'memacc_code': memacc_code,
+         'postacc_code': postacc_code },
+        inst_flags)
+
+    constructTemplate = eval(exec_template_base + 'Constructor')
+
+    header_output   = declare_template_base.subst(iop)
+    decoder_output  = ''
+    if declare_template_base is not VMemTemplateMacroDeclare:
+        decoder_output  += constructTemplate.subst(iop)
+    else:
+        header_output   += constructTemplate.subst(iop)
+    decode_block    = decode_template.subst(iop)
+    exec_output     = ''
+    if not is_macroop:
+        return (header_output, decoder_output, decode_block, exec_output)
+
+    microiop = InstObjParams(name + '_micro',
+        Name + 'Micro',
+        exec_template_base + 'MicroInst',
+        {'ea_code': ea_code,
+         'memacc_code': memacc_code,
+         'postacc_code': postacc_code},
+        inst_flags)
+
+    if mem_flags:
+        mem_flags = [ 'Request::%s' % flag for flag in mem_flags ]
+        s = '\n\tmemAccessFlags = ' + '|'.join(mem_flags) + ';'
+        microiop.constructor += s
+
+    microDeclTemplate = eval(exec_template_base + 'Micro' + 'Declare')
+    microExecTemplate = eval(exec_template_base + 'Micro' + 'Execute')
+    microInitTemplate = eval(exec_template_base + 'Micro' + 'InitiateAcc')
+    microCompTemplate = eval(exec_template_base + 'Micro' + 'CompleteAcc')
+    header_output = microDeclTemplate.subst(microiop) + header_output
+    micro_exec_output = (microExecTemplate.subst(microiop) +
+        microInitTemplate.subst(microiop) +
+        microCompTemplate.subst(microiop))
+    if declare_template_base is not VMemTemplateMacroDeclare:
+        exec_output += micro_exec_output
+    else:
+        header_output += micro_exec_output
+
+    return (header_output, decoder_output, decode_block, exec_output)
+
+}};
+
+def format VleOp(
+    memacc_code,
+    ea_code={{ EA = Rs1 + VLENB * microIdx; }},
+    mem_flags=[],
+    inst_flags=[]
+) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VMemBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                 'VleMacroInst', exec_template_base='Vle')
+}};
+
+def format VseOp(
+    memacc_code,
+    ea_code={{ EA = Rs1 + VLENB * microIdx; }},
+    mem_flags=[],
+    inst_flags=[]
+) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VMemBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                 'VseMacroInst', exec_template_base='Vse')
+}};
+
+def format VlmOp(
+    memacc_code,
+    ea_code={{ EA = Rs1; }},
+    mem_flags=[],
+    inst_flags=[]
+) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VMemBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                 'VleMacroInst', exec_template_base='Vlm', is_macroop=False)
+}};
+
+def format VsmOp(
+  memacc_code,
+  ea_code={{ EA = Rs1; }},
+  mem_flags=[],
+  inst_flags=[]
+) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VMemBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                 'VseMacroInst', exec_template_base='Vsm', is_macroop=False)
+}};
+
+def format VlWholeOp(
+    memacc_code,
+    ea_code={{ EA = Rs1 + VLENB * microIdx; }},
+    mem_flags=[],
+    inst_flags=[]
+) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VMemBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                 'VlWholeMacroInst', exec_template_base='VlWhole')
+}};
+
+def format VsWholeOp(
+    memacc_code,
+    ea_code={{ EA = Rs1 + VLENB * microIdx; }},
+    mem_flags=[],
+    inst_flags=[]
+) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VMemBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                 'VsWholeMacroInst', exec_template_base='VsWhole')
+}};
+
+def format VlStrideOp(
+    memacc_code,
+    ea_code={{ EA = Rs1 + Rs2 * (regIdx * VLENB / elem_size + microIdx); }},
+    mem_flags=[],
+    inst_flags=[]
+) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VMemBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                 'VlStrideMacroInst', exec_template_base='VlStride')
+}};
+
+def format VsStrideOp(
+    memacc_code,
+    ea_code={{ EA = Rs1 + Rs2 * (regIdx * VLENB / elem_size + microIdx); }},
+    mem_flags=[],
+    inst_flags=[]
+) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VMemBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                 'VsStrideMacroInst', exec_template_base='VsStride')
+}};
+
+def format VlIndexOp(
+    memacc_code,
+    ea_code,
+    mem_flags=[],
+    inst_flags=[]
+) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VMemBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                 'VlIndexMacroInst', exec_template_base='VlIndex',
+                 declare_template_base=VMemTemplateMacroDeclare,
+                 decode_template=VMemTemplateDecodeBlock
+                 )
+}};
+
+def format VsIndexOp(
+    memacc_code,
+    ea_code,
+    mem_flags=[],
+    inst_flags=[]
+) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        VMemBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
+                 'VsIndexMacroInst', exec_template_base='VsIndex',
+                 declare_template_base=VMemTemplateMacroDeclare,
+                 decode_template=VMemTemplateDecodeBlock
+                 )
+}};

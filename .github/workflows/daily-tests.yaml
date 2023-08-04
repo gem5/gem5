@@ -137,7 +137,7 @@ jobs:
     # run test
     - name: long ${{ matrix.test-type }} tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run gem5/${{ matrix.image }} --length=long --skip-build -vv -t $(nproc)
+      run: ./main.py run gem5/${{ matrix.test-type }} --length=long --skip-build -vv -t $(nproc)
     - name: create zip of results
       if: success() || failure()
       run: |
@@ -147,7 +147,7 @@ jobs:
       if: success() || failure()
       uses: actions/upload-artifact@v3
       env:
-        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+        MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
       with:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
@@ -168,7 +168,7 @@ jobs:
       matrix:
         test-type: [gem5-library-example-x86-ubuntu-run-ALL-x86_64-opt, gem5-library-example-riscv-ubuntu-run-ALL-x86_64-opt, lupv-example-ALL-x86_64-opt, gem5-library-example-arm-ubuntu-run-test-ALL-x86_64-opt, gem5-library-example-riscvmatched-hello-ALL-x86_64-opt]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: build-gem5
+    needs: [name-artifacts, build-gem5]
     timeout-minutes: 1440 # 24 hours
     steps:
     - uses: actions/checkout@v3
@@ -193,7 +193,7 @@ jobs:
       if: success() || failure()
       uses: actions/upload-artifact@v3
       env:
-        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+        MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
       with:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip

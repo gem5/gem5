@@ -28,6 +28,7 @@
  */
 
 #include "arch/riscv/decoder.hh"
+#include "arch/riscv/isa.hh"
 #include "arch/riscv/types.hh"
 #include "base/bitfield.hh"
 #include "debug/Decode.hh"
@@ -38,10 +39,18 @@ namespace gem5
 namespace RiscvISA
 {
 
+Decoder::Decoder(const RiscvDecoderParams &p) : InstDecoder(p, &machInst)
+{
+    ISA *isa = dynamic_cast<ISA*>(p.isa);
+    enableRvv = isa->getEnableRvv();
+    reset();
+}
+
 void Decoder::reset()
 {
     aligned = true;
     mid = false;
+    vConfigDone = true;
     machInst = 0;
     emi = 0;
 }
@@ -49,6 +58,19 @@ void Decoder::reset()
 void
 Decoder::moreBytes(const PCStateBase &pc, Addr fetchPC)
 {
+    // TODO: Current vsetvl instructions stall decode. Future fixes should
+    // enable speculation, and this code will be removed.
+    if (GEM5_UNLIKELY(!this->vConfigDone)) {
+        fatal_if(!enableRvv,
+            "Vector extension is not enabled for this CPU type\n"
+            "You can manually enable vector extensions by setting rvv_enabled "
+            "to true for each ISA object after `createThreads()`\n");
+        DPRINTF(Decode, "Waiting for vset*vl* to be executed\n");
+        instDone = false;
+        outOfBytes = false;
+        return;
+    }
+
     // The MSB of the upper and lower halves of a machine instruction.
     constexpr size_t max_bit = sizeof(machInst) * 8 - 1;
     constexpr size_t mid_bit = sizeof(machInst) * 4 - 1;
@@ -76,6 +98,14 @@ Decoder::moreBytes(const PCStateBase &pc, Addr fetchPC)
             mid = !compressed(emi);
             outOfBytes = true;
             instDone = compressed(emi);
+        }
+    }
+    if (instDone) {
+        emi.vl      = this->machVl;
+        emi.vtype8   = this->machVtype & 0xff;
+        emi.vill    = this->machVtype.vill;
+        if (vconf(emi)) {
+            this->vConfigDone = false; // set true when vconfig inst execute
         }
     }
 }
@@ -114,6 +144,15 @@ Decoder::decode(PCStateBase &_next_pc)
 
     emi.rv_type = static_cast<int>(next_pc.rvType());
     return decode(emi, next_pc.instAddr());
+}
+
+void
+Decoder::setVlAndVtype(uint32_t vl, VTYPE vtype)
+{
+    this->machVtype = vtype;
+    this->machVl = vl;
+
+    this->vConfigDone = true;
 }
 
 } // namespace RiscvISA

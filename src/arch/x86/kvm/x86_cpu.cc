@@ -37,6 +37,7 @@
 #include "arch/x86/cpuid.hh"
 #include "arch/x86/faults.hh"
 #include "arch/x86/interrupts.hh"
+#include "arch/x86/isa.hh"
 #include "arch/x86/regs/float.hh"
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/msr.hh"
@@ -72,6 +73,13 @@ using namespace X86ISA;
 // The lowest bit of the type field for normal segments (code and
 // data) is used to indicate that a segment has been accessed.
 #define SEG_TYPE_BIT_ACCESSED 1
+
+// Some linux distro s(e.g., RHEL7) define the KVM macros using "BIT" but do
+// not include where BIT is defined, so define it here in that case.
+#ifndef BIT
+#define BIT(nr)         (1UL << (nr))
+#endif
+
 
 struct GEM5_PACKED FXSave
 {
@@ -1419,12 +1427,12 @@ X86KvmCPU::ioctlRun()
 
 static struct kvm_cpuid_entry2
 makeKvmCpuid(uint32_t function, uint32_t index,
-             CpuidResult &result)
+             CpuidResult &result, uint32_t flags = 0)
 {
     struct kvm_cpuid_entry2 e;
     e.function = function;
     e.index = index;
-    e.flags = 0;
+    e.flags = flags;
     e.eax = (uint32_t)result.rax;
     e.ebx = (uint32_t)result.rbx;
     e.ecx = (uint32_t)result.rcx;
@@ -1437,33 +1445,74 @@ void
 X86KvmCPU::updateCPUID()
 {
     Kvm::CPUIDVector m5_supported;
-
-    /* TODO: We currently don't support any of the functions that
-     * iterate through data structures in the CPU using an index. It's
-     * currently not a problem since M5 doesn't expose any of them at
-     * the moment.
-     */
+    X86ISA::ISA *isa = dynamic_cast<X86ISA::ISA *>(tc->getIsaPtr());
 
     /* Basic features */
     CpuidResult func0;
-    X86ISA::doCpuid(tc, 0x0, 0, func0);
+    isa->cpuid->doCpuid(tc, 0x0, 0, func0);
     for (uint32_t function = 0; function <= func0.rax; ++function) {
         CpuidResult cpuid;
         uint32_t idx(0);
 
-        X86ISA::doCpuid(tc, function, idx, cpuid);
-        m5_supported.push_back(makeKvmCpuid(function, idx, cpuid));
+        if (!isa->cpuid->hasSignificantIndex(function)) {
+            isa->cpuid->doCpuid(tc, function, idx, cpuid);
+            m5_supported.push_back(makeKvmCpuid(function, idx, cpuid));
+        } else {
+            while (true) {
+                bool rv = isa->cpuid->doCpuid(tc, function, idx, cpuid);
+                assert(rv);
+
+                if (idx &&
+                    !cpuid.rax && !cpuid.rbx && !cpuid.rdx && !cpuid.rcx) {
+                    break;
+                }
+
+                /*
+                 * For functions in family 0, this flag tells Linux to compare
+                 * the index as well as the function number rather than only
+                 * the function number. Important: Do NOT set this flag if the
+                 * function does not take an index. Doing so will break SMP.
+                 */
+                uint32_t flag = KVM_CPUID_FLAG_SIGNIFCANT_INDEX;
+                m5_supported.push_back(
+                    makeKvmCpuid(function, idx, cpuid, flag));
+                idx++;
+            }
+        }
     }
 
     /* Extended features */
     CpuidResult efunc0;
-    X86ISA::doCpuid(tc, 0x80000000, 0, efunc0);
+    isa->cpuid->doCpuid(tc, 0x80000000, 0, efunc0);
     for (uint32_t function = 0x80000000; function <= efunc0.rax; ++function) {
         CpuidResult cpuid;
         uint32_t idx(0);
 
-        X86ISA::doCpuid(tc, function, idx, cpuid);
-        m5_supported.push_back(makeKvmCpuid(function, idx, cpuid));
+        if (!isa->cpuid->hasSignificantIndex(function)) {
+            isa->cpuid->doCpuid(tc, function, idx, cpuid);
+            m5_supported.push_back(makeKvmCpuid(function, idx, cpuid));
+        } else {
+            while (true) {
+                bool rv = isa->cpuid->doCpuid(tc, function, idx, cpuid);
+                assert(rv);
+
+                if (idx &&
+                    !cpuid.rax && !cpuid.rbx && !cpuid.rdx && !cpuid.rcx) {
+                    break;
+                }
+
+                /*
+                 * For functions in family 0, this flag tells Linux to compare
+                 * the index as well as the function number rather than only
+                 * the function number. Important: Do NOT set this flag if the
+                 * function does not take an index. Doing so will break SMP.
+                 */
+                uint32_t flag = KVM_CPUID_FLAG_SIGNIFCANT_INDEX;
+                m5_supported.push_back(
+                    makeKvmCpuid(function, idx, cpuid, flag));
+                idx++;
+            }
+        }
     }
 
     setCPUID(m5_supported);

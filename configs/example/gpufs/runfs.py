@@ -179,10 +179,15 @@ def runGpuFSSystem(args):
         math.ceil(float(n_cu) / args.cu_per_scalar_cache)
     )
 
-    # Verify MMIO trace is valid
-    mmio_md5 = hashlib.md5(open(args.gpu_mmio_trace, "rb").read()).hexdigest()
-    if mmio_md5 != "c4ff3326ae8a036e329b8b595c83bd6d":
-        m5.util.panic("MMIO file does not match gem5 resources")
+    # Verify MMIO trace is valid. This is only needed for Vega10 simulations.
+    # The md5sum refers to the md5sum of the Vega10 MMIO hardware trace in
+    # the gem5-resources repository. By checking it here, we avoid potential
+    # errors that would cause the driver not to load and simulations to fail.
+    if args.gpu_device == "Vega10":
+        mmio_file = open(args.gpu_mmio_trace, "rb")
+        mmio_md5 = hashlib.md5(mmio_file.read()).hexdigest()
+        if mmio_md5 != "c4ff3326ae8a036e329b8b595c83bd6d":
+            m5.util.panic("MMIO file does not match gem5 resources")
 
     system = makeGpuFSSystem(args)
 

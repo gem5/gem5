@@ -151,10 +151,20 @@ RegClass matRegClass(MatRegClass, MatRegClassName, 1, debug::MatRegs);
 
 } // anonymous namespace
 
-ISA::ISA(const X86ISAParams &p) : BaseISA(p), vendorString(p.vendor_string)
+ISA::ISA(const X86ISAParams &p)
+    : BaseISA(p), cpuid(new X86CPUID(p.vendor_string, p.name_string))
 {
-    fatal_if(vendorString.size() != 12,
-             "CPUID vendor string must be 12 characters\n");
+    cpuid->addStandardFunc(FamilyModelStepping, p.FamilyModelStepping);
+    cpuid->addStandardFunc(CacheParams, p.CacheParams);
+    cpuid->addStandardFunc(ExtendedFeatures, p.ExtendedFeatures);
+    cpuid->addStandardFunc(ExtendedState, p.ExtendedState);
+
+    cpuid->addExtendedFunc(FamilyModelSteppingBrandFeatures,
+                          p.FamilyModelSteppingBrandFeatures);
+    cpuid->addExtendedFunc(L1CacheAndTLB, p.L1CacheAndTLB);
+    cpuid->addExtendedFunc(L2L3CacheAndL2TLB, p.L2L3CacheAndL2TLB);
+    cpuid->addExtendedFunc(APMInfo, p.APMInfo);
+    cpuid->addExtendedFunc(LongModeAddressSize, p.LongModeAddressSize);
 
     _regClasses.push_back(&flatIntRegClass);
     _regClasses.push_back(&flatFloatRegClass);

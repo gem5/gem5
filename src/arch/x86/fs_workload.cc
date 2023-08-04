@@ -58,7 +58,8 @@ FsWorkload::FsWorkload(const Params &p) : KernelWorkload(p),
     smbiosTable(p.smbios_table),
     mpFloatingPointer(p.intel_mp_pointer),
     mpConfigTable(p.intel_mp_table),
-    rsdp(p.acpi_description_table_pointer)
+    rsdp(p.acpi_description_table_pointer),
+    enable_osxsave(p.enable_osxsave)
 {}
 
 void
@@ -295,6 +296,7 @@ FsWorkload::initState()
     CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
     // Turn on pae.
     cr4.pae = 1;
+    cr4.osxsave = enable_osxsave;
     tc->setMiscReg(misc_reg::Cr4, cr4);
 
     // Point to the page tables.

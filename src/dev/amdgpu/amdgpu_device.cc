@@ -291,6 +291,7 @@ AMDGPUDevice::readFrame(PacketPtr pkt, Addr offset)
     system->getDeviceMemory(readPkt)->access(readPkt);
 
     pkt->setUintX(readPkt->getUintX(ByteOrder::little), ByteOrder::little);
+    delete readPkt;
 }
 
 void

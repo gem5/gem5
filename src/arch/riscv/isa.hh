@@ -67,12 +67,15 @@ enum FPUStatus
     DIRTY = 3,
 };
 
+using VPUStatus = FPUStatus;
+
 class ISA : public BaseISA
 {
   protected:
-    RiscvType rv_type;
+    RiscvType _rvType;
     std::vector<RegVal> miscRegFile;
     bool checkAlignment;
+    bool enableRvv;
 
     bool hpmCounterEnabled(int counter) const;
 
@@ -89,7 +92,7 @@ class ISA : public BaseISA
     PCStateBase*
     newPCState(Addr new_inst_addr=0) const override
     {
-        return new PCState(new_inst_addr, rv_type);
+        return new PCState(new_inst_addr, _rvType);
     }
 
   public:
@@ -110,7 +113,7 @@ class ISA : public BaseISA
     virtual const std::unordered_map<int, RegVal>&
     getCSRMaskMap() const
     {
-        return CSRMasks[rv_type];
+        return CSRMasks[_rvType];
     }
 
     bool alignmentCheckEnabled() const { return checkAlignment; }
@@ -134,7 +137,9 @@ class ISA : public BaseISA
 
     void resetThread() override;
 
-    RiscvType rvType() const { return rv_type; }
+    RiscvType rvType() const { return _rvType; }
+
+    bool getEnableRvv() const { return enableRvv; }
 
     void
     clearLoadReservation(ContextID cid)

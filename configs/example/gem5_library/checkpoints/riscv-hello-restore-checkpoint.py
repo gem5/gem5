@@ -90,7 +90,7 @@ board = SimpleBoard(
 board.set_se_binary_workload(
     # the workload should be the same as the save-checkpoint script
     obtain_resource("riscv-hello"),
-    checkpoint=obtain_resource("riscv-hello-example-checkpoint-v23"),
+    checkpoint=obtain_resource("riscv-hello-example-checkpoint"),
 )
 
 simulator = Simulator(
