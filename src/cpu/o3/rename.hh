@@ -359,6 +359,9 @@ class Rename
     /** Free list interface. */
     UnifiedFreeList *freeList;
 
+    /** Hold phys regs to be released after squash finish */
+    std::vector<PhysRegIdPtr> freeingInProgress[MaxThreads];
+
     /** Pointer to the list of active threads. */
     std::list<ThreadID> *activeThreads;
 
