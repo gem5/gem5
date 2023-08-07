@@ -62,7 +62,7 @@ gem5_root = sys.argv[3]
 # path setup
 sys.path.append(joinpath(gem5_root, "configs"))
 tests_root = joinpath(gem5_root, "tests")
-sys.path.append(joinpath(tests_root, "gem5", "configs"))
+sys.path.append(joinpath(tests_root, "gem5", "fs", "linux", "arm", "configs"))
 
 
 exec(compile(open(config).read(), config, "exec"))

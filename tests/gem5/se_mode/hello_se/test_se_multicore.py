@@ -40,7 +40,13 @@ gem5_verify_config(
     fixtures=(),
     verifiers=(),
     config=joinpath(
-        config.base_dir, "tests", "gem5", "configs", "simple_binary_run.py"
+        config.base_dir,
+        "tests",
+        "gem5",
+        "se_mode",
+        "hello_se",
+        "configs",
+        "simple_binary_run.py",
     ),
     config_args=[
         "x86-hello64-static",

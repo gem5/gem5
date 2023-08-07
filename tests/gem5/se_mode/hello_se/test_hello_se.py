@@ -96,7 +96,13 @@ def verify_config(isa, binary, cpu, hosts, verifier, input):
         fixtures=(),
         verifiers=(verifier,),
         config=joinpath(
-            config.base_dir, "tests", "gem5", "configs", "simple_binary_run.py"
+            config.base_dir,
+            "tests",
+            "gem5",
+            "se_mode",
+            "hello_se",
+            "configs",
+            "simple_binary_run.py",
         ),
         config_args=[
             binary,

@@ -52,6 +52,7 @@ for isa in test_progs:
                     config.base_dir,
                     "tests",
                     "gem5",
+                    "insttest_se",
                     "configs",
                     "simple_binary_run.py",
                 ),
