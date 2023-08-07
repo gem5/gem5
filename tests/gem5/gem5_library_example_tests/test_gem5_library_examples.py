@@ -171,7 +171,14 @@ gem5_verify_config(
     length=constants.long_tag,
 )
 
-if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
+print(
+    "WARNING: PARSEC tests are disabled. This is due to our GitHub "
+    "Actions self-hosted runners only having 60GB of disk space. The "
+    "PARSEC Disk image is too big to use."
+)
+# 'False' is used to disable the tests.
+if False:  # os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
+
     # The x86-parsec-benchmarks uses KVM cores, this test will therefore only
     # be run on systems that support KVM.
     gem5_verify_config(
