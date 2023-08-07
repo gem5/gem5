@@ -180,6 +180,7 @@ for cpu_type in cpu_types:
                 config.base_dir,
                 "tests",
                 "gem5",
+                "asmtest",
                 "configs",
                 "simple_binary_run.py",
             ),

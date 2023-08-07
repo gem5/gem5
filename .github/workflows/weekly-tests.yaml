@@ -93,7 +93,7 @@ jobs:
     - run: chmod u+x build/ALL/gem5.opt
     - name: very-long gem5-resources tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run gem5/gem5-resources --length very-long --skip-build -vv -t $(nproc)
+      run: ./main.py run gem5/gem5_resources --length very-long --skip-build -vv -t $(nproc)
     - name: create zip of results
       if: success() || failure()
       run: |
@@ -131,9 +131,9 @@ jobs:
         name: ${{needs.build-gem5.outputs.build-name}}
         path: build/ALL
     - run: chmod u+x build/ALL/gem5.opt
-    - name: very-long x86-boot-tests
+    - name: very-long parsec_benchmarks
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run gem5/x86-boot-tests --length very-long --skip-build -vv -t $(nproc)
+      run: ./main.py run gem5/parsec_benchmarks --length very-long --skip-build -vv -t $(nproc)
     - name: create zip of results
       if: success() || failure()
       run: |
@@ -173,7 +173,7 @@ jobs:
     - run: chmod u+x build/ALL/gem5.opt
     - name: very-long x86-boot-tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run gem5/x86-boot-tests --length very-long --skip-build -vv -t $(nproc)
+      run: ./main.py run gem5/x86_boot_tests --length very-long --skip-build -vv -t $(nproc)
     - name: create zip of results
       if: success() || failure()
       run: |

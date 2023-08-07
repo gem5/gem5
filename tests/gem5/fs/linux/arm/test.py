@@ -129,7 +129,16 @@ for name in arm_fs_quick_tests:
         valid_hosts = constants.supported_hosts
 
     args = [
-        joinpath(config.base_dir, "tests", "gem5", "configs", name + ".py"),
+        joinpath(
+            config.base_dir,
+            "tests",
+            "gem5",
+            "fs",
+            "linux",
+            "arm",
+            "configs",
+            name + ".py",
+        ),
         path,
         config.base_dir,
     ]
@@ -147,7 +156,16 @@ for name in arm_fs_quick_tests:
 
 for name in arm_fs_long_tests:
     args = [
-        joinpath(config.base_dir, "tests", "gem5", "configs", name + ".py"),
+        joinpath(
+            config.base_dir,
+            "tests",
+            "gem5",
+            "fs",
+            "linux",
+            "arm",
+            "configs",
+            name + ".py",
+        ),
         path,
         config.base_dir,
     ]
@@ -164,7 +182,16 @@ for name in arm_fs_long_tests:
 
 for name in arm_fs_long_tests_arm_target:
     args = [
-        joinpath(config.base_dir, "tests", "gem5", "configs", name + ".py"),
+        joinpath(
+            config.base_dir,
+            "tests",
+            "gem5",
+            "fs",
+            "linux",
+            "arm",
+            "configs",
+            name + ".py",
+        ),
         path,
         config.base_dir,
     ]

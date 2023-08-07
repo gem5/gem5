@@ -96,14 +96,17 @@ if have_hdf5():
         verifiers=[ok_verifier, err_verifier, h5_verifier],
         fixtures=(),
         config=joinpath(
-            config.base_dir, "tests", "gem5", "configs", "simple_binary_run.py"
+            config.base_dir,
+            "tests",
+            "gem5",
+            "stats",
+            "configs",
+            "simple_binary_run.py",
         ),
         config_args=[
             "arm-hello64-static",
-            "atomic",
             "--resource-directory",
             resource_path,
-            "arm",
         ],
         gem5_args=["--stats-file=h5://stats.h5"],
         valid_isas=(constants.all_compiled_tag,),
