@@ -79,6 +79,11 @@ jobs:
     needs: [pre-commit, build-gem5, check-for-change-id]
     timeout-minutes: 360     # 6 hours
     steps:
+      - name: Clean runner
+        run:
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          rm -rf ~/.cache || true
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
         with:
@@ -102,10 +107,4 @@ jobs:
           name: ${{ env.MY_STEP_VAR }}
           path: output.zip
           retention-days: 7
-      - name: Clean runner
-        if: success() || failure()
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
       - run: echo "This job's status is ${{ job.status }}."

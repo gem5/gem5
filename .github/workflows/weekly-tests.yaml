@@ -33,13 +33,21 @@ jobs:
           retention-days: 5
       - run: echo "This job's status is ${{ job.status }}."
 
-# start running the very-long tests
-  testlib-very-long-gem5_library_example_tests:
+  # start running the very-long tests
+  testlib-very-long-tests:
+    strategy:
+      matrix:
+        test-type: [gem5_library_example_tests, gem5_resources, parsec_benchmarks, x86_boot_tests]
     runs-on: [self-hosted, linux, x64, run]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
     needs: [build-gem5]
     timeout-minutes: 4320 # 3 days
     steps:
+    - name: Clean runner
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - uses: actions/checkout@v3
       with:
         # Scheduled workflows run on the default branch by default. We
@@ -50,9 +58,9 @@ jobs:
         name: ${{needs.build-gem5.outputs.build-name}}
         path: build/ALL
     - run: chmod u+x build/ALL/gem5.opt
-    - name: very-long gem5_library_example_tests
+    - name: very-long ${{ matrix.test-type }}
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run gem5/gem5_library_example_tests --length very-long --skip-build -vv -t $(nproc)
+      run: ./main.py run gem5/${{ matrix.test-type }} --length very-long --skip-build -vv -t $(nproc)
     - name: create zip of results
       if: success() || failure()
       run: |
@@ -62,135 +70,9 @@ jobs:
       if: success() || failure()
       uses: actions/upload-artifact@v3
       env:
-        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+        MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
       with:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
-    - name: Clean runner
-      run:
-        rm -rf ./* || true
-        rm -rf ./.??* || true
-        rm -rf ~/.cache || true
-    - run: echo "This job's status is ${{ job.status }}."
-
-
-  testlib-long-gem5-resources:
-    runs-on: [self-hosted, linux, x64, run]
-    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: [build-gem5]
-    timeout-minutes: 4320 # 3 days
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-        ref: develop
-    - uses: actions/download-artifact@v3
-      with:
-        name: ${{needs.build-gem5.outputs.build-name}}
-        path: build/ALL
-    - run: chmod u+x build/ALL/gem5.opt
-    - name: very-long gem5-resources tests
-      working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run gem5/gem5-resources --length very-long --skip-build -vv -t $(nproc)
-    - name: create zip of results
-      if: success() || failure()
-      run: |
-        apt-get -y install zip
-        zip -r output.zip tests/testing-results
-    - name: upload zip
-      if: success() || failure()
-      uses: actions/upload-artifact@v3
-      env:
-        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
-      with:
-        name: ${{ env.MY_STEP_VAR }}
-        path: output.zip
-        retention-days: 7
-    - name: Clean runner
-      run:
-        rm -rf ./* || true
-        rm -rf ./.??* || true
-        rm -rf ~/.cache || true
-    - run: echo "This job's status is ${{ job.status }}."
-
-  testlib-very-long-parsec-benchmarks:
-    runs-on: [self-hosted, linux, x64, run]
-    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: build-gem5
-    timeout-minutes: 4320 # 3 days
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-        ref: develop
-    - uses: actions/download-artifact@v3
-      with:
-        name: ${{needs.build-gem5.outputs.build-name}}
-        path: build/ALL
-    - run: chmod u+x build/ALL/gem5.opt
-    - name: very-long x86-boot-tests
-      working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run gem5/x86-boot-tests --length very-long --skip-build -vv -t $(nproc)
-    - name: create zip of results
-      if: success() || failure()
-      run: |
-        apt-get -y install zip
-        zip -r output.zip tests/testing-results
-    - name: upload zip
-      if: success() || failure()
-      uses: actions/upload-artifact@v3
-      env:
-        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
-      with:
-        name: ${{ env.MY_STEP_VAR }}
-        path: output.zip
-        retention-days: 7
-    - name: Clean runner
-      run:
-        rm -rf ./* || true
-        rm -rf ./.??* || true
-        rm -rf ~/.cache || true
-    - run: echo "This job's status is ${{ job.status }}."
-
-  testlib-very-long-x86-boot-tests:
-    runs-on: [self-hosted, linux, x64, run]
-    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: build-gem5
-    timeout-minutes: 4320 # 3 days
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-        ref: develop
-    - uses: actions/download-artifact@v3
-      with:
-        name: ${{needs.build-gem5.outputs.build-name}}
-        path: build/ALL
-    - run: chmod u+x build/ALL/gem5.opt
-    - name: very-long x86-boot-tests
-      working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run gem5/x86-boot-tests --length very-long --skip-build -vv -t $(nproc)
-    - name: create zip of results
-      if: success() || failure()
-      run: |
-        apt-get -y install zip
-        zip -r output.zip tests/testing-results
-    - name: upload zip
-      if: success() || failure()
-      uses: actions/upload-artifact@v3
-      env:
-        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
-      with:
-        name: ${{ env.MY_STEP_VAR }}
-        path: output.zip
-        retention-days: 7
-    - name: Clean runner
-      run:
-        rm -rf ./* || true
-        rm -rf ./.??* || true
-        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
