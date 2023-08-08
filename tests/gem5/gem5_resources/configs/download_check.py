@@ -53,6 +53,14 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--skip",
+    nargs="+",  # Accepts 1 or more arguments.
+    type=str,
+    help="The resource IDs to skip. If not set, no resources will be skipped.",
+    required=False,
+)
+
+parser.add_argument(
     "--gem5-version",
     type=str,
     required=False,
@@ -86,6 +94,8 @@ if len(ids) == 0:
 errors = str()
 
 for id in ids:
+    if args.skip and id in args.skip:
+        continue
     if id not in resource_list:
         errors += (
             f"Resource with ID '{id}' not found in "

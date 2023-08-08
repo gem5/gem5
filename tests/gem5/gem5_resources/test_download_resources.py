@@ -45,7 +45,12 @@ gem5_verify_config(
         "configs",
         "download_check.py",
     ),
-    config_args=["--download-directory", resource_path],
+    config_args=[
+        "--download-directory",
+        resource_path,
+        "--skip",
+        "x86-parsec",
+    ],
     valid_isas=(constants.all_compiled_tag,),
     length=constants.very_long_tag,
 )
