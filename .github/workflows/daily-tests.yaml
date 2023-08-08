@@ -80,6 +80,11 @@ jobs:
     needs: [name-artifacts, build-gem5]
     timeout-minutes: 1440 # 24 hours for entire matrix to run
     steps:
+    - name: Clean runner
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - uses: actions/checkout@v3
       with:
         # Scheduled workflows run on the default branch by default. We
@@ -152,12 +157,6 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
-    - name: Clean runner
-      if: success() || failure()
-      run:
-        rm -rf ./* || true
-        rm -rf ./.??* || true
-        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   # split library example tests into runs based on Suite UID
@@ -171,6 +170,11 @@ jobs:
     needs: [name-artifacts, build-gem5]
     timeout-minutes: 1440 # 24 hours
     steps:
+    - name: Clean runner
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - uses: actions/checkout@v3
       with:
         # Scheduled workflows run on the default branch by default. We
@@ -198,12 +202,6 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
-    - name: Clean runner
-      if: success() || failure()
-      run:
-        rm -rf ./* || true
-        rm -rf ./.??* || true
-        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   # This runs the SST-gem5 integration compilation and tests it with

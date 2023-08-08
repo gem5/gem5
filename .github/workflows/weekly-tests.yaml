@@ -43,6 +43,11 @@ jobs:
     needs: [build-gem5]
     timeout-minutes: 4320 # 3 days
     steps:
+    - name: Clean runner
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - uses: actions/checkout@v3
       with:
         # Scheduled workflows run on the default branch by default. We
@@ -70,9 +75,4 @@ jobs:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
-    - name: Clean runner
-      run:
-        rm -rf ./* || true
-        rm -rf ./.??* || true
-        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
