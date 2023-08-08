@@ -164,8 +164,6 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         pc_state.set(addr);
         tc->pcState(pc_state);
     } else {
-        inst->advancePC(pc_state);
-        tc->pcState(pc_state);
         invokeSE(tc, inst);
     }
 }
@@ -234,6 +232,12 @@ BreakpointFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 void
 SyscallFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 {
+    /* Advance the PC to next instruction so - once (simulated) syscall
+       is executed - execution continues. */
+    auto pc_state = tc->pcState().as<PCState>();
+    inst->advancePC(pc_state);
+    tc->pcState(pc_state);
+
     tc->getSystemPtr()->workload->syscall(tc);
 }
 
