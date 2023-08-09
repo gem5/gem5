@@ -503,12 +503,11 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                         "return [sn:%llu] PC: %#x Restoring RAS\n", tid,
                         squashed_sn,
                         hist_it->seqNum, hist_it->pc);
-                if (hist_it->RASTarget != nullptr) {
-                    DPRINTF(Branch,
-                            "[tid:%i] [squash sn:%llu] Restoring top of RAS "
-                            "to: %i, target: %s\n", tid, squashed_sn,
-                            hist_it->RASIndex, *hist_it->RASTarget.get());
-                }
+                 DPRINTF(Branch,
+                        "[tid:%i] [squash sn:%llu] Restoring top of RAS "
+                        "to: %i, target: %s\n", tid, squashed_sn,
+                        hist_it->RASIndex,
+                        hist_it->RASIndex ? *hist_it->RASTarget.get() : "no RAS");
                 RAS[tid].restore(hist_it->RASIndex, hist_it->RASTarget.get());
                 hist_it->usedRAS = false;
            }
