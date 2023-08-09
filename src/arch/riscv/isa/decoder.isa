@@ -3110,21 +3110,33 @@ decode QUADRANT default Unknown::unknown() {
                 0x12: decode VS1 {
                     format VectorIntExtFormat {
                         0x02: vzext_vf8({{
+                            auto offset = (vlen / SEW) * index;
+
                             Vd_vu[i] = Vs2_vextu[i + offset];
                         }}, OPMVV, VectorIntegerExtensionOp);
                         0x03: vsext_vf8({{
+                            auto offset = (vlen / SEW) * index;
+
                             Vd_vi[i] = Vs2_vext[i + offset];
                         }}, OPMVV, VectorIntegerExtensionOp);
                         0x04: vzext_vf4({{
+                            auto offset = (vlen / SEW) * index;
+
                             Vd_vu[i] = Vs2_vextu[i + offset];
                         }}, OPMVV, VectorIntegerExtensionOp);
                         0x05: vsext_vf4({{
+                            auto offset = (vlen / SEW) * index;
+
                             Vd_vi[i] = Vs2_vext[i + offset];
                         }}, OPMVV, VectorIntegerExtensionOp);
                         0x06: vzext_vf2({{
+                            auto offset = (vlen / SEW) * index;
+
                             Vd_vu[i] = Vs2_vextu[i + offset];
                         }}, OPMVV, VectorIntegerExtensionOp);
                         0x07: vsext_vf2({{
+                            auto offset = (vlen / SEW) * index;
+
                             Vd_vi[i] = Vs2_vext[i + offset];
                         }}, OPMVV, VectorIntegerExtensionOp);
                     }
@@ -3185,7 +3197,8 @@ decode QUADRANT default Unknown::unknown() {
                         auto Vs2bit = tmp_s2.as<vu>();
                         for (uint32_t i = 0; i < this->microVl; i++) {
                             uint32_t ei = i +
-                                vtype_VLMAX(vtype, true) * this->microIdx;
+                                vtype_VLMAX(vtype, vlen, true) *
+                                this->microIdx;
                             bool vs2_lsb = elem_mask(Vs2bit, ei);
                             bool do_mask = elem_mask(v0, ei);
                             bool has_one = false;
@@ -3406,7 +3419,8 @@ decode QUADRANT default Unknown::unknown() {
                 }}, OPIVI, VectorMiscOp);
                 0x0e: VectorSlideUpFormat::vslideup_vi({{
                     const int offset = (int)(uint64_t)(SIMM5);
-                    const int microVlmax = vtype_VLMAX(machInst.vtype8, true);
+                    const int microVlmax = vtype_VLMAX(machInst.vtype8,
+                        vlen, true);
                     const int vregOffset = vdIdx - vs2Idx;
                     const int offsetInVreg = offset - vregOffset * microVlmax;
                     if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
@@ -3431,7 +3445,8 @@ decode QUADRANT default Unknown::unknown() {
                 }}, OPIVI, VectorMiscOp);
                 0x0f: VectorSlideDownFormat::vslidedown_vi({{
                     const int offset = (int)(uint64_t)(SIMM5);
-                    const int microVlmax = vtype_VLMAX(machInst.vtype8, true);
+                    const int microVlmax = vtype_VLMAX(machInst.vtype8,
+                        vlen, true);
                     const int vregOffset = vs2Idx - vdIdx;
                     const int offsetInVreg = offset - vregOffset * microVlmax;
                     const int numVs2s = vtype_regs_per_group(vtype);
@@ -3662,7 +3677,8 @@ decode QUADRANT default Unknown::unknown() {
                 }
                 0x0e: VectorSlideUpFormat::vslideup_vx({{
                     const int offset = (int)Rs1_vu;
-                    const int microVlmax = vtype_VLMAX(machInst.vtype8, true);
+                    const int microVlmax = vtype_VLMAX(machInst.vtype8,
+                        vlen, true);
                     const int vregOffset = vdIdx - vs2Idx;
                     const int offsetInVreg = offset - vregOffset * microVlmax;
                     if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
@@ -3687,7 +3703,8 @@ decode QUADRANT default Unknown::unknown() {
                 }}, OPIVX, VectorMiscOp);
                 0x0f: VectorSlideDownFormat::vslidedown_vx({{
                     const int offset = (int)Rs1_vu;
-                    const int microVlmax = vtype_VLMAX(machInst.vtype8, true);
+                    const int microVlmax = vtype_VLMAX(machInst.vtype8,
+                        vlen, true);
                     const int vregOffset = vs2Idx - vdIdx;
                     const int offsetInVreg = offset - vregOffset * microVlmax;
                     const int numVs2s = vtype_regs_per_group(vtype);
@@ -3964,7 +3981,8 @@ decode QUADRANT default Unknown::unknown() {
                 }
                 0x0e: VectorFloatSlideUpFormat::vfslide1up_vf({{
                     const int offset = 1;
-                    const int microVlmax = vtype_VLMAX(machInst.vtype8, true);
+                    const int microVlmax = vtype_VLMAX(machInst.vtype8,
+                        vlen, true);
                     const int vregOffset = vdIdx - vs2Idx;
                     const int offsetInVreg = offset - vregOffset * microVlmax;
                     if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
@@ -3994,7 +4012,8 @@ decode QUADRANT default Unknown::unknown() {
                 }}, OPFVF, VectorMiscOp);
                 0x0f: VectorFloatSlideDownFormat::vfslide1down_vf({{
                     const int offset = 1;
-                    const int microVlmax = vtype_VLMAX(machInst.vtype8, true);
+                    const int microVlmax = vtype_VLMAX(machInst.vtype8,
+                        vlen, true);
                     const int vregOffset = vs2Idx - vdIdx;
                     const int offsetInVreg = offset - vregOffset * microVlmax;
                     const int numVs2s = vtype_regs_per_group(vtype);
@@ -4239,7 +4258,8 @@ decode QUADRANT default Unknown::unknown() {
                 }
                 0x0e: VectorSlideUpFormat::vslide1up_vx({{
                     const int offset = 1;
-                    const int microVlmax = vtype_VLMAX(machInst.vtype8, true);
+                    const int microVlmax = vtype_VLMAX(machInst.vtype8,
+                        vlen, true);
                     const int vregOffset = vdIdx - vs2Idx;
                     const int offsetInVreg = offset - vregOffset * microVlmax;
                     if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
@@ -4269,7 +4289,8 @@ decode QUADRANT default Unknown::unknown() {
                 }}, OPIVX, VectorMiscOp);
                 0x0f: VectorSlideDownFormat::vslide1down_vx({{
                     const int offset = 1;
-                    const int microVlmax = vtype_VLMAX(machInst.vtype8, true);
+                    const int microVlmax = vtype_VLMAX(machInst.vtype8,
+                        vlen, true);
                     const int vregOffset = vs2Idx - vdIdx;
                     const int offsetInVreg = offset - vregOffset * microVlmax;
                     const int numVs2s = vtype_regs_per_group(vtype);

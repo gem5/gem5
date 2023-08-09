@@ -62,7 +62,7 @@ class PCState : public GenericISA::UPCState<4>
 
     bool _compressed = false;
     RiscvType _rvType = RV64;
-    uint64_t _vlenb = 256;
+    uint64_t _vlenb = 32;
     VTYPE _vtype = (1ULL << 63); // vtype.vill = 1 at initial;
     uint32_t _vl = 0;
 

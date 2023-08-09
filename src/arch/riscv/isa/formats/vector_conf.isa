@@ -157,7 +157,8 @@ def template VConfExecute {{
 
         tc->setMiscReg(MISCREG_VSTART, 0);
 
-        VTYPE new_vtype = getNewVtype(Vtype, requested_vtype, vlen);
+        VTYPE new_vtype = getNewVtype(Vtype, requested_vtype,
+            vlen);
         vlmax = new_vtype.vill ? 0 : getVlmax(new_vtype, vlen);
         uint32_t new_vl = getNewVL(
             current_vl, requested_vl, vlmax, rd_bits, rs1_bits);

@@ -29,10 +29,15 @@
 
 let {{
 
+def setVlen():
+        return "uint32_t vlen = VlenbBits * 8;\n"
+def setVlenb():
+        return "uint32_t vlenb = VlenbBits;\n"
+
 def VMemBase(name, Name, ea_code, memacc_code, mem_flags,
                    inst_flags, base_class, postacc_code='',
                    declare_template_base=VMemMacroDeclare,
-                   decode_template=BasicDecode, exec_template_base='',
+                   decode_template=VMemBaseDecodeBlock, exec_template_base='',
                    # If it's a macroop, the corresponding microops will be
                    # generated.
                    is_macroop=True):
@@ -63,7 +68,9 @@ def VMemBase(name, Name, ea_code, memacc_code, mem_flags,
         exec_template_base + 'MicroInst',
         {'ea_code': ea_code,
          'memacc_code': memacc_code,
-         'postacc_code': postacc_code},
+         'postacc_code': postacc_code,
+         'set_vlenb': setVlenb(),
+         'set_vlen': setVlen()},
         inst_flags)
 
     if mem_flags:
@@ -90,7 +97,9 @@ def VMemBase(name, Name, ea_code, memacc_code, mem_flags,
 
 def format VleOp(
     memacc_code,
-    ea_code={{ EA = Rs1 + VLENB * microIdx; }},
+    ea_code={{
+        EA = Rs1 + vlenb * microIdx;
+    }},
     mem_flags=[],
     inst_flags=[]
 ) {{
@@ -101,7 +110,9 @@ def format VleOp(
 
 def format VseOp(
     memacc_code,
-    ea_code={{ EA = Rs1 + VLENB * microIdx; }},
+    ea_code={{
+        EA = Rs1 + vlenb * microIdx;
+    }},
     mem_flags=[],
     inst_flags=[]
 ) {{
@@ -134,7 +145,9 @@ def format VsmOp(
 
 def format VlWholeOp(
     memacc_code,
-    ea_code={{ EA = Rs1 + VLENB * microIdx; }},
+    ea_code={{
+        EA = Rs1 + vlenb * microIdx;
+    }},
     mem_flags=[],
     inst_flags=[]
 ) {{
@@ -145,7 +158,9 @@ def format VlWholeOp(
 
 def format VsWholeOp(
     memacc_code,
-    ea_code={{ EA = Rs1 + VLENB * microIdx; }},
+    ea_code={{
+        EA = Rs1 + vlenb * microIdx;
+    }},
     mem_flags=[],
     inst_flags=[]
 ) {{
@@ -156,7 +171,9 @@ def format VsWholeOp(
 
 def format VlStrideOp(
     memacc_code,
-    ea_code={{ EA = Rs1 + Rs2 * (regIdx * VLENB / elem_size + microIdx); }},
+    ea_code={{
+        EA = Rs1 + Rs2 * (regIdx * vlenb / elem_size + microIdx);
+    }},
     mem_flags=[],
     inst_flags=[]
 ) {{
@@ -167,7 +184,9 @@ def format VlStrideOp(
 
 def format VsStrideOp(
     memacc_code,
-    ea_code={{ EA = Rs1 + Rs2 * (regIdx * VLENB / elem_size + microIdx); }},
+    ea_code={{
+        EA = Rs1 + Rs2 * (regIdx * vlenb / elem_size + microIdx);
+    }},
     mem_flags=[],
     inst_flags=[]
 ) {{
@@ -186,7 +205,7 @@ def format VlIndexOp(
         VMemBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
                  'VlIndexMacroInst', exec_template_base='VlIndex',
                  declare_template_base=VMemTemplateMacroDeclare,
-                 decode_template=VMemTemplateDecodeBlock
+                 decode_template=VMemSplitTemplateDecodeBlock
                  )
 }};
 
@@ -200,6 +219,6 @@ def format VsIndexOp(
         VMemBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
                  'VsIndexMacroInst', exec_template_base='VsIndex',
                  declare_template_base=VMemTemplateMacroDeclare,
-                 decode_template=VMemTemplateDecodeBlock
+                 decode_template=VMemSplitTemplateDecodeBlock
                  )
 }};

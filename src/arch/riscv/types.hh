@@ -42,7 +42,6 @@
 #ifndef __ARCH_RISCV_TYPES_HH__
 #define __ARCH_RISCV_TYPES_HH__
 
-#include "arch/riscv/pcstate.hh"
 #include "base/bitunion.hh"
 
 namespace gem5

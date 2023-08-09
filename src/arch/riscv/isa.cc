@@ -271,6 +271,9 @@ ISA::ISA(const Params &p) :BaseISA(p),
     "VLEN should be greater or equal",
         "than ELEN. Ch. 2RISC-V vector spec.");
 
+    inform("RVV enabled, VLEN = %d bits, ELEN = %d bits",
+            p.vlen, p.elen);
+
 
     miscRegFile.resize(NUM_MISCREGS);
     clear();

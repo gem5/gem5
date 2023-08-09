@@ -268,12 +268,13 @@ vtype_SEW(const uint64_t vtype)
 * Ref: https://github.com/qemu/qemu/blob/5e9d14f2/target/riscv/cpu.h
 */
 inline uint64_t
-vtype_VLMAX(const uint64_t vtype, const bool per_reg = false)
+vtype_VLMAX(const uint64_t vtype, const uint64_t vlen,
+    const bool per_reg = false)
 {
     int64_t lmul = (int64_t)sext<3>(bits(vtype, 2, 0));
     lmul = per_reg ? std::min<int64_t>(0, lmul) : lmul;
     int64_t vsew = bits(vtype, 5, 3);
-    return gem5::RiscvISA::VLEN >> (vsew + 3 - lmul);
+    return vlen >> (vsew + 3 - lmul);
 }
 
 inline int64_t
