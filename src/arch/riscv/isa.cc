@@ -671,6 +671,9 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                             2, 0) != 0) {
                     new_misa.rvc = new_misa.rvc | cur_misa.rvc;
                 }
+                if (!getEnableRvv()) {
+                    new_misa.rvv = 0;
+                }
                 setMiscRegNoEffect(idx, new_misa);
             }
             break;
@@ -681,6 +684,10 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                     auto cur = readMiscRegNoEffect(idx);
                     val &= ~(STATUS_SXL_MASK | STATUS_UXL_MASK);
                     val |= cur & (STATUS_SXL_MASK | STATUS_UXL_MASK);
+                }
+                if (!getEnableRvv()) {
+                    // Always OFF is rvv is disabled.
+                    val &= ~STATUS_VS_MASK;
                 }
                 setMiscRegNoEffect(idx, val);
             }
