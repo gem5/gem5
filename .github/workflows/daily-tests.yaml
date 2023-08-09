@@ -74,12 +74,17 @@ jobs:
   testlib-long-tests:
     strategy:
       matrix:
-        test-type: [arm-boot-tests, fs, gem5_library_example_tests, gpu, insttest_se, learning_gem5, m5threads_test_atomic, memory, multi_isa, replacement-policies, riscv-boot-tests, stdlib, x86-boot-tests]
+        test-type: [arm_boot_tests, fs, gem5_library_example_tests, gpu, insttest_se, learning_gem5, m5threads_test_atomic, memory, multi_isa, replacement_policies, riscv_boot_tests, stdlib, x86_boot_tests]
     runs-on: [self-hosted, linux, x64, run]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
     needs: [name-artifacts, build-gem5]
     timeout-minutes: 1440 # 24 hours for entire matrix to run
     steps:
+    - name: Clean runner
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - uses: actions/checkout@v3
       with:
         # Scheduled workflows run on the default branch by default. We
@@ -137,7 +142,7 @@ jobs:
     # run test
     - name: long ${{ matrix.test-type }} tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run gem5/${{ matrix.image }} --length=long --skip-build -vv -t $(nproc)
+      run: ./main.py run gem5/${{ matrix.test-type }} --length=long --skip-build -vv -t $(nproc)
     - name: create zip of results
       if: success() || failure()
       run: |
@@ -147,17 +152,11 @@ jobs:
       if: success() || failure()
       uses: actions/upload-artifact@v3
       env:
-        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+        MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
       with:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
-    - name: Clean runner
-      if: success() || failure()
-      run:
-        rm -rf ./* || true
-        rm -rf ./.??* || true
-        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   # split library example tests into runs based on Suite UID
@@ -171,6 +170,11 @@ jobs:
     needs: [name-artifacts, build-gem5]
     timeout-minutes: 1440 # 24 hours
     steps:
+    - name: Clean runner
+      run:
+        rm -rf ./* || true
+        rm -rf ./.??* || true
+        rm -rf ~/.cache || true
     - uses: actions/checkout@v3
       with:
         # Scheduled workflows run on the default branch by default. We
@@ -193,17 +197,11 @@ jobs:
       if: success() || failure()
       uses: actions/upload-artifact@v3
       env:
-        MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+        MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
       with:
         name: ${{ env.MY_STEP_VAR }}
         path: output.zip
         retention-days: 7
-    - name: Clean runner
-      if: success() || failure()
-      run:
-        rm -rf ./* || true
-        rm -rf ./.??* || true
-        rm -rf ~/.cache || true
     - run: echo "This job's status is ${{ job.status }}."
 
   # This runs the SST-gem5 integration compilation and tests it with
