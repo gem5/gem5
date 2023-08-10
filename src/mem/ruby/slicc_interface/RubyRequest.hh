@@ -226,6 +226,8 @@ class RubyRequest : public Message
     const PrefetchBit& getPrefetch() const { return m_Prefetch; }
     RequestPtr getRequestPtr() const { return m_pkt->req; }
 
+    void setWriteMask(uint32_t offset, uint32_t len,
+        std::vector< std::pair<int,AtomicOpFunctor*>> atomicOps);
     void print(std::ostream& out) const;
     bool functionalRead(Packet *pkt);
     bool functionalRead(Packet *pkt, WriteMask &mask);
