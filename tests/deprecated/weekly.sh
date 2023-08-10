@@ -296,10 +296,15 @@ docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        -c color_maxmin.gem5 --options="1k_128k.gr 0"
 
 # build FW
-docker run --rm -v ${gem5_root}:${gem5_root} -w \
-       ${gem5_root}/gem5-resources/src/gpu/pannotia/fw -u $UID:$GID \
+docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
+       ${gem5_root}/gem5-resources/src/gpu/pannotia/fw \
        --memory="${docker_mem_limit}" hacc-test-weekly bash -c \
-       "export GEM5_PATH=${gem5_root} ; make gem5-fusion"
+       "export GEM5_PATH=${gem5_root} ; make default; make gem5-fusion"
+
+# create input mmap file for FW
+docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
+       --memory="${docker_mem_limit}" hacc-test-weekly bash -c\
+       "./gem5-resources/src/gpu/pannotia/fw/bin/fw_hip ./gem5-resources/src/gpu/pannotia/fw/1k_128k.gr 1"
 
 # run FW (use same input dataset as BC for faster testing)
 docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
@@ -308,7 +313,7 @@ docker run --rm -v ${gem5_root}:${gem5_root} -w ${gem5_root} -u $UID:$GID \
        ${gem5_root}/configs/example/apu_se.py -n3 --mem-size=8GB \
        --reg-alloc-policy=dynamic \
        --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/fw/bin \
-       -c fw_hip.gem5 --options="1k_128k.gr"
+       -c fw_hip.gem5 --options="1k_128k.gr 2"
 
 # build MIS
 docker run --rm -v ${gem5_root}:${gem5_root} -w \
