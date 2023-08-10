@@ -39,21 +39,6 @@
 # listed as an expert are typically good to add as a reviewer for pull requests
 # targeting that subsystem.
 
-
-pmc:
-  desc: >-
-    PMC Members (general maintainers):
-  status: maintained
-  maintainers:
-    - Andreas Sandberg <andreas.sandberg@arm.com>
-    - Giacomo Travaglini <giacomo.travaglini@arm.com>
-    - Matt Poremba <Matthew.Poremba@amd.com>
-    - Jason Lowe-Power <jason@lowepower.com> (chair)
-    - Zhengrong Wang <seanzw@ucla.edu>
-    - Borius Shingarov <shingarov@labware.com>
-    - Matt Sinclair <sinclair@cs.wisc.edu>
-    - Bobby R. Bruce <bbruce@ucdavis.edu>
-
 arch:
   desc: >-
     General architecture-specific components

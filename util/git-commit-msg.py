@@ -100,8 +100,7 @@ def _validateTags(commit_header):
     maintainer_dict = maintainers.Maintainers.from_file()
     valid_tags = [tag for tag, _ in maintainer_dict]
 
-    # Remove non-tag 'pmc' and add special tags not in MAINTAINERS.yaml
-    valid_tags.remove("pmc")
+    # Add special tags not in MAINTAINERS.yaml
     valid_tags.extend(["RFC", "WIP"])
 
     tags = "".join(commit_header.split(":")[0].split()).split(",")
