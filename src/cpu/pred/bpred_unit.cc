@@ -498,16 +498,25 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                  hist_it->pushedRAS = false;
            }
            if (hist_it->usedRAS) {
+
+                std::string RASTarget;
+
                 DPRINTF(Branch,
                         "[tid:%i] [squash sn:%llu] Incorrectly predicted "
                         "return [sn:%llu] PC: %#x Restoring RAS\n", tid,
                         squashed_sn,
                         hist_it->seqNum, hist_it->pc);
-                 DPRINTF(Branch,
+                if (hist_it->RASTarget) {
+                    std::ostringstream os;
+                    os << *hist_it->RASTarget.get();
+                    RASTarget = os.str();
+                } else {
+                    RASTarget = "no RAS";
+                }
+                DPRINTF(Branch,
                         "[tid:%i] [squash sn:%llu] Restoring top of RAS "
                         "to: %i, target: %s\n", tid, squashed_sn,
-                        hist_it->RASIndex,
-                        hist_it->RASIndex ? *hist_it->RASTarget.get() : "no RAS");
+                        hist_it->RASIndex, RASTarget.c_str());
                 RAS[tid].restore(hist_it->RASIndex, hist_it->RASTarget.get());
                 hist_it->usedRAS = false;
            }
