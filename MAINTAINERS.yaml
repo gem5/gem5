@@ -115,10 +115,14 @@ dev:
   status: orphaned
 
 dev-hsa:
-  status: orphaned
+  status: maintained
+  maintainers:
+    - Matt Poremba <matthew.poremba@amd.com>
 
 dev-amdgpu:
-  status: orphaned
+  status: maintained
+  maintainers:
+    - Matt Poremba <matthew.poremba@amd.com>
 
 dev-virtio:
   status: maintained
@@ -152,7 +156,9 @@ fastmodel:
   status: orphaned
 
 gpu-compute:
-  status: orphaned
+  status: maintained
+  maintainers:
+    - Matt Poremba <matthew.poremba@amd.com>
 
 learning-gem5:
   desc: >-
