@@ -290,3 +290,5 @@ website:
   status: maintained
   maintainers:
     - Bobby R. Bruce <bbruce@ucdavis.edu>
+  experts:
+    - Jason Lowe-Power <jason@lowepower.com>
