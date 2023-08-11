@@ -245,8 +245,9 @@ then a colon. Which tags are used depend on which components of gem5
 you have modified. **Please refer to the [MAINTAINERS.yaml](
 https://github.com/gem5/gem5/blob/stable/MAINTAINERS.yaml) for
 a comprehensive list of accepted tags**. After this colon a short description
-of the commit must be provided. **This header line must not exceed 65
-characters**.
+of the commit must be provided. This short description should be written in the imperative mood and should state what happens when the patch is applied. Keep
+it short and simple. Write it in sentence case, preferably with no punctuation.
+**This header line must not exceed 65 characters**.
 
 After this, a more detailed description of the commit can be added. This is
 inserted below the header, separated by an empty line. Including a description
