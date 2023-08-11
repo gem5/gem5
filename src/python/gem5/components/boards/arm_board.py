@@ -386,6 +386,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
             "lpj=19988480",
             "norandmaps",
             "root={root_value}",
+            "disk_device={disk_device}",
             "rw",
             f"mem={self.get_memory().get_size()}",
         ]

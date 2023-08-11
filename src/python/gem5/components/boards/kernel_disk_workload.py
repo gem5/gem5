@@ -91,13 +91,13 @@ class KernelDiskWorkload:
 
         :returns: The disk device.
         """
-        if self._disk_device is None:
-            self._disk_device = get_default_disk_device()
-            inform(f"Disk Device set to {self._disk_device}")
-            return self._disk_device
-        else:
-            inform(f"Disk Device set to {self._disk_device}")
-            return self._disk_device
+        to_return = (
+            self._disk_device
+            if self._disk_device
+            else self.get_default_disk_device()
+        )
+        assert to_return is not None
+        return to_return
 
     @abstractmethod
     def get_default_disk_device(self) -> str:
@@ -201,7 +201,8 @@ class KernelDiskWorkload:
         self.workload.command_line = (
             " ".join(kernel_args or self.get_default_kernel_args())
         ).format(
-            root_value=self.get_default_kernel_root_val(disk_image=disk_image)
+            root_value=self.get_default_kernel_root_val(disk_image=disk_image),
+            disk_device=self.get_disk_device(),
         )
 
         # Setting the bootloader information for ARM board. The current

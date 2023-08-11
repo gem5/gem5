@@ -535,12 +535,17 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         fdt.writeDtbFile(os.path.join(outdir, "device.dtb"))
 
     @overrides(KernelDiskWorkload)
-    def get_default_kernel_args(self) -> List[str]:
-        return ["console=ttyLIO0", "root={root_value}", "rw"]
-
-    @overrides(KernelDiskWorkload)
     def get_default_disk_device(self) -> str:
         return "/dev/lda"
+
+    @overrides(KernelDiskWorkload)
+    def get_default_kernel_args(self) -> List[str]:
+        return [
+            "console=ttyLIO0",
+            "root={root_value}",
+            "disk_device={disk_device}",
+            "rw",
+        ]
 
     @overrides(KernelDiskWorkload)
     def _add_disk_to_board(self, disk_image: AbstractResource) -> None:

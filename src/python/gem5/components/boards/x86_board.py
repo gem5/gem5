@@ -318,4 +318,5 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
             "console=ttyS0",
             "lpj=7999923",
             "root={root_value}",
+            "disk_device={disk_device}",
         ]
