@@ -1,0 +1,48 @@
+{
+    "tasks": [
+        {
+            "type": "docker-build",
+            "label": "Build act Docker Image",
+            "detail": "Builds the Docker Image act needs. It's our Ubuntu 22.04 image but with nodejs installed.",
+            "dockerBuild": {
+                "context": "${workspaceFolder}/act-docker",
+                "dockerfile": "${workspaceFolder}/act-docker/Dockerfile",
+                "tag": "act-docker:latest"
+            }
+        },
+        {
+            "type": "shell",
+            "label": "GitHub CI Tests",
+            "detail": "Runs the GitHub CI Tests, via act. Requires act and docker to be installed.",
+            "command": "act",
+            "dependsOn": ["Build act Docker Image"],
+            "args": [
+                "pull_request",
+                "-W=${workspaceFolder}/.github/workflows/ci-tests.yaml",
+                "--container-architecture=linux/amd64",
+                "--rm",
+                "--defaultbranch=stable",
+                "--rebuild=False",
+                "-e=${workspaceFolder}/act-event-env.json",
+                "-P=ubuntu-latest=catthehacker/ubuntu:act-latest",
+                "-P=ubuntu-22.04=catthehacker/ubuntu:act-22.04",
+                "-P=ubuntu-20.04=catthehacker/ubuntu:act-20.04",
+                "-P=ubuntu-18.04=catthehacker/ubuntu:act-18.04",
+                "-P=gcr.io/gem5-test/ubuntu-22.04_all-dependencies-test:latest=act-docker:latest"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        }
+    ],
+    "version": "2.0.0"
+}
