@@ -1,0 +1,4 @@
+{
+	"skip-pre-commit": true,
+    "skip-check-for-change-id": true
+}

@@ -6,11 +6,23 @@ on:
   pull_request:
     types: [opened, edited, synchronize, ready_for_review]
 
+env:
+    # This give us a way to skip the pre-commit and check-for-change-id
+    # jobs. On GitHub Actions, these remain false and therefore these jobs
+    # are always run. When running locally via `act`, pre-commit and
+    # check-for-change-id failed to run due to a lack of ref-head and ref-base.
+    # `act` has an argument `-e` which allows users to set a JSON file
+    # specifying these environment variables. A copy of this file can be found
+    # in "act-event-env.json". This file, if loaded via `-e` will has the local
+    #`act` skipping these jobs.
+    github.event.skip-pre-commit: false
+    github.event.skip-check-for-change-id: false
 
 jobs:
   pre-commit:
     # runs on github hosted runner
     runs-on: ubuntu-22.04
+    if: ${{ !github.event.skip-pre-commit }}
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v3
@@ -18,6 +30,7 @@ jobs:
 
   # ensures we have a change-id in every commit, needed for gerrit
   check-for-change-id:
+    if: ${{ !github.event.skip-check-for-change-id }}
     # runs on github hosted runner
     runs-on: ubuntu-22.04
     steps:
@@ -45,6 +58,8 @@ jobs:
     runs-on: [self-hosted, linux, x64, build]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
     needs: [pre-commit, check-for-change-id] # only runs if pre-commit and change-id passes
+    # build-gem5 should still run if pre-commit and check-for-change-id are skipped.
+    if : ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     outputs:
       artifactname: ${{ steps.name.outputs.test }}
     steps:
@@ -65,6 +80,8 @@ jobs:
     runs-on: [self-hosted, linux, x64, run]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
     needs: [pre-commit, check-for-change-id] # only runs if pre-commit and change-id passes
+    # unittests-all-opt should still run if pre-commit and check-for-change-id are skipped.
+    if : ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v3
@@ -77,6 +94,9 @@ jobs:
     runs-on: [self-hosted, linux, x64, run]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
     needs: [pre-commit, build-gem5, check-for-change-id]
+    # The only true requirement is that build-gem5 passes. pre-commit and
+    # check-for-change-id may be skipped.
+    if : ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && needs.build-gem5.result == 'success' }}
     timeout-minutes: 360     # 6 hours
     steps:
       - name: Clean runner
