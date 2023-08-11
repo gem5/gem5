@@ -307,6 +307,11 @@ decode QUADRANT default Unknown::unknown() {
                          CIMM1 << 5 |
                          CIMM5<2:0> << 6;
             }}, {{
+                STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                if (status.fs == FPUStatus::OFF)
+                    return std::make_shared<IllegalInstFault>("FPU is off",
+                                                               machInst);
+
                 Fc1_bits = Mem;
             }}, {{
                 EA = rvZext(sp + offset);
@@ -330,6 +335,11 @@ decode QUADRANT default Unknown::unknown() {
                              CIMM1 << 5 |
                              CIMM5<1:0> << 6;
                 }}, {{
+                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                    if (status.fs == FPUStatus::OFF)
+                        return std::make_shared<IllegalInstFault>("FPU is off",
+                                                                   machInst);
+
                     freg_t fd;
                     fd = freg(f32(Mem_uw));
                     Fd_bits = fd.v;
@@ -387,6 +397,11 @@ decode QUADRANT default Unknown::unknown() {
                 offset = CIMM6<5:3> << 3 |
                          CIMM6<2:0> << 6;
             }}, {{
+                STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                if (status.fs == FPUStatus::OFF)
+                    return std::make_shared<IllegalInstFault>("FPU is off",
+                                                               machInst);
+
                 Mem_ud = Fc2_bits;
             }}, {{
                 EA = rvZext(sp + offset);
@@ -404,6 +419,11 @@ decode QUADRANT default Unknown::unknown() {
                     offset = CIMM6<5:2> << 2 |
                              CIMM6<1:0> << 6;
                 }}, {{
+                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                    if (status.fs == FPUStatus::OFF)
+                        return std::make_shared<IllegalInstFault>("FPU is off",
+                                                                   machInst);
+
                     Mem_uw = unboxF32(boxF32(Fs2_bits));
                 }}, {{
                     EA = (uint32_t)(sp_uw + offset);

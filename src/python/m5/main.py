@@ -348,13 +348,14 @@ def interact(scope):
 
 
 def _check_tracing():
-    import m5
     import _m5.core
+
+    from .util import fatal
 
     if _m5.core.TRACING_ON:
         return
 
-    m5.fatal("Tracing is not enabled.  Compile with TRACING_ON")
+    fatal("Tracing is not enabled.  Compile with TRACING_ON")
 
 
 def main():
@@ -369,7 +370,7 @@ def main():
     from . import stats
     from . import trace
 
-    from .util import inform, fatal, panic, isInteractive
+    from .util import inform, panic, isInteractive
     from m5.util.terminal_formatter import TerminalFormatter
 
     options, arguments = parse_options()
