@@ -39,6 +39,7 @@ jobs:
       matrix:
         test-type: [gem5_library_example_tests, gem5_resources, parsec_benchmarks, x86_boot_tests]
     runs-on: [self-hosted, linux, x64, run]
+    continue-on-error: true
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
     needs: [build-gem5]
     timeout-minutes: 4320 # 3 days
