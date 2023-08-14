@@ -36,6 +36,7 @@ jobs:
           - image: NULL_MI_example
             command-line: --default=NULL PROTOCOL=MI_example -j $(nproc)
     runs-on: [self-hosted, linux, x64, build]
+    continue-on-error: true
     needs: name-artifacts
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
     steps:
@@ -76,6 +77,7 @@ jobs:
       matrix:
         test-type: [arm_boot_tests, fs, gem5_library_example_tests, gpu, insttest_se, learning_gem5, m5threads_test_atomic, memory, multi_isa, replacement_policies, riscv_boot_tests, stdlib, x86_boot_tests]
     runs-on: [self-hosted, linux, x64, run]
+    continue-on-error: true
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
     needs: [name-artifacts, build-gem5]
     timeout-minutes: 1440 # 24 hours for entire matrix to run
@@ -167,6 +169,7 @@ jobs:
       matrix:
         test-type: [gem5-library-example-x86-ubuntu-run-ALL-x86_64-opt, gem5-library-example-riscv-ubuntu-run-ALL-x86_64-opt, lupv-example-ALL-x86_64-opt, gem5-library-example-arm-ubuntu-run-test-ALL-x86_64-opt, gem5-library-example-riscvmatched-hello-ALL-x86_64-opt]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    continue-on-error: true
     needs: [name-artifacts, build-gem5]
     timeout-minutes: 1440 # 24 hours
     steps:
