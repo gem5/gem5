@@ -77,16 +77,16 @@ class TranslatingPortProxy : public PortProxy
 
     /** Version of tryReadblob that translates virt->phys and deals
       * with page boundries. */
-    bool tryReadBlob(Addr addr, void *p, int size) const override;
+    bool tryReadBlob(Addr addr, void *p, uint64_t size) const override;
 
     /** Version of tryWriteBlob that translates virt->phys and deals
       * with page boundries. */
-    bool tryWriteBlob(Addr addr, const void *p, int size) const override;
+    bool tryWriteBlob(Addr addr, const void *p, uint64_t size) const override;
 
     /**
      * Fill size bytes starting at addr with byte value val.
      */
-    bool tryMemsetBlob(Addr address, uint8_t  v, int size) const override;
+    bool tryMemsetBlob(Addr address, uint8_t  v, uint64_t size) const override;
 };
 
 } // namespace gem5

@@ -86,7 +86,7 @@ TranslatingPortProxy::tryOnBlob(BaseMMU::Mode mode, TranslationGenPtr gen,
 }
 
 bool
-TranslatingPortProxy::tryReadBlob(Addr addr, void *p, int size) const
+TranslatingPortProxy::tryReadBlob(Addr addr, void *p, uint64_t size) const
 {
     constexpr auto mode = BaseMMU::Read;
     return tryOnBlob(mode, _tc->getMMUPtr()->translateFunctional(
@@ -99,7 +99,7 @@ TranslatingPortProxy::tryReadBlob(Addr addr, void *p, int size) const
 
 bool
 TranslatingPortProxy::tryWriteBlob(
-        Addr addr, const void *p, int size) const
+        Addr addr, const void *p, uint64_t size) const
 {
     constexpr auto mode = BaseMMU::Write;
     return tryOnBlob(mode, _tc->getMMUPtr()->translateFunctional(
@@ -111,7 +111,7 @@ TranslatingPortProxy::tryWriteBlob(
 }
 
 bool
-TranslatingPortProxy::tryMemsetBlob(Addr addr, uint8_t v, int size) const
+TranslatingPortProxy::tryMemsetBlob(Addr addr, uint8_t v, uint64_t size) const
 {
     constexpr auto mode = BaseMMU::Write;
     return tryOnBlob(mode, _tc->getMMUPtr()->translateFunctional(

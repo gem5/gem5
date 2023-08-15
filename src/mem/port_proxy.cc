@@ -56,7 +56,7 @@ PortProxy::PortProxy(const RequestPort &port, unsigned int cache_line_size) :
 
 void
 PortProxy::readBlobPhys(Addr addr, Request::Flags flags,
-                        void *p, int size) const
+                        void *p, uint64_t size) const
 {
     for (ChunkGenerator gen(addr, size, _cacheLineSize); !gen.done();
          gen.next()) {
@@ -73,7 +73,7 @@ PortProxy::readBlobPhys(Addr addr, Request::Flags flags,
 
 void
 PortProxy::writeBlobPhys(Addr addr, Request::Flags flags,
-                         const void *p, int size) const
+                         const void *p, uint64_t size) const
 {
     for (ChunkGenerator gen(addr, size, _cacheLineSize); !gen.done();
          gen.next()) {
@@ -90,7 +90,7 @@ PortProxy::writeBlobPhys(Addr addr, Request::Flags flags,
 
 void
 PortProxy::memsetBlobPhys(Addr addr, Request::Flags flags,
-                          uint8_t v, int size) const
+                          uint8_t v, uint64_t size) const
 {
     // quick and dirty...
     uint8_t *buf = new uint8_t[size];

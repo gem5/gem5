@@ -120,19 +120,19 @@ class PortProxy : FunctionalRequestProtocol
      * Read size bytes memory at physical address and store in p.
      */
     void readBlobPhys(Addr addr, Request::Flags flags,
-                      void *p, int size) const;
+                      void *p, uint64_t size) const;
 
     /**
      * Write size bytes from p to physical address.
      */
     void writeBlobPhys(Addr addr, Request::Flags flags,
-                       const void *p, int size) const;
+                       const void *p, uint64_t size) const;
 
     /**
      * Fill size bytes starting at physical addr with byte value val.
      */
     void memsetBlobPhys(Addr addr, Request::Flags flags,
-                        uint8_t v, int size) const;
+                        uint8_t v, uint64_t size) const;
 
 
 
@@ -143,7 +143,7 @@ class PortProxy : FunctionalRequestProtocol
      * Returns true on success and false on failure.
      */
     virtual bool
-    tryReadBlob(Addr addr, void *p, int size) const
+    tryReadBlob(Addr addr, void *p, uint64_t size) const
     {
         readBlobPhys(addr, 0, p, size);
         return true;
@@ -154,7 +154,7 @@ class PortProxy : FunctionalRequestProtocol
      * Returns true on success and false on failure.
      */
     virtual bool
-    tryWriteBlob(Addr addr, const void *p, int size) const
+    tryWriteBlob(Addr addr, const void *p, uint64_t size) const
     {
         writeBlobPhys(addr, 0, p, size);
         return true;
@@ -165,7 +165,7 @@ class PortProxy : FunctionalRequestProtocol
      * Returns true on success and false on failure.
      */
     virtual bool
-    tryMemsetBlob(Addr addr, uint8_t val, int size) const
+    tryMemsetBlob(Addr addr, uint8_t val, uint64_t size) const
     {
         memsetBlobPhys(addr, 0, val, size);
         return true;
@@ -179,7 +179,7 @@ class PortProxy : FunctionalRequestProtocol
      * Same as tryReadBlob, but insists on success.
      */
     void
-    readBlob(Addr addr, void *p, int size) const
+    readBlob(Addr addr, void *p, uint64_t size) const
     {
         if (!tryReadBlob(addr, p, size))
             fatal("readBlob(%#x, ...) failed", addr);
@@ -189,7 +189,7 @@ class PortProxy : FunctionalRequestProtocol
      * Same as tryWriteBlob, but insists on success.
      */
     void
-    writeBlob(Addr addr, const void *p, int size) const
+    writeBlob(Addr addr, const void *p, uint64_t size) const
     {
         if (!tryWriteBlob(addr, p, size))
             fatal("writeBlob(%#x, ...) failed", addr);
@@ -199,7 +199,7 @@ class PortProxy : FunctionalRequestProtocol
      * Same as tryMemsetBlob, but insists on success.
      */
     void
-    memsetBlob(Addr addr, uint8_t v, int size) const
+    memsetBlob(Addr addr, uint8_t v, uint64_t size) const
     {
         if (!tryMemsetBlob(addr, v, size))
             fatal("memsetBlob(%#x, ...) failed", addr);
