@@ -159,7 +159,7 @@ CoherentXBar::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
     assert(is_express_snoop == cache_responding);
 
     // determine the destination based on the destination address range
-    PortID mem_side_port_id = findPort(pkt->getAddrRange());
+    PortID mem_side_port_id = findPort(pkt);
 
     // test if the crossbar should be considered occupied for the current
     // port, and exclude express snoops from the check
@@ -563,7 +563,7 @@ CoherentXBar::recvTimingSnoopReq(PacketPtr pkt, PortID mem_side_port_id)
     // device responsible for the address range something is
     // wrong, hence there is nothing further to do as the packet
     // would be going back to where it came from
-    assert(findPort(pkt->getAddrRange()) == mem_side_port_id);
+    assert(findPort(pkt) == mem_side_port_id);
 }
 
 bool
@@ -799,7 +799,7 @@ CoherentXBar::recvAtomicBackdoor(PacketPtr pkt, PortID cpu_side_port_id,
 
     // even if we had a snoop response, we must continue and also
     // perform the actual request at the destination
-    PortID mem_side_port_id = findPort(pkt->getAddrRange());
+    PortID mem_side_port_id = findPort(pkt);
 
     if (sink_packet) {
         DPRINTF(CoherentXBar, "%s: Not forwarding %s\n", __func__,
@@ -1035,7 +1035,7 @@ CoherentXBar::recvFunctional(PacketPtr pkt, PortID cpu_side_port_id)
             }
         }
 
-        PortID dest_id = findPort(pkt->getAddrRange());
+        PortID dest_id = findPort(pkt);
 
         memSidePorts[dest_id]->sendFunctional(pkt);
     }
