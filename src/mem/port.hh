@@ -47,6 +47,7 @@
 #define __MEM_PORT_HH__
 
 #include <memory>
+#include <sstream>
 #include <stack>
 #include <string>
 
@@ -100,6 +101,21 @@ class TracingExtension : public gem5::Extension<Packet, TracingExtension>
 
    bool empty() { return trace_.empty(); }
    std::stack<std::string>& getTrace() { return trace_; }
+   std::string getTraceInString()
+   {
+       std::stringstream port_trace;
+       std::stack<std::string> copy_stack = trace_;
+       port_trace << "Port trace of the Packet (" << std::endl
+                  << "[Destination] ";
+       while (!copy_stack.empty()) {
+           if (copy_stack.size() == 1)
+               port_trace << "[Source] ";
+           port_trace << copy_stack.top() << std::endl;
+           copy_stack.pop();
+       }
+       port_trace << ")";
+       return port_trace.str();
+   }
 
   private:
    std::stack<std::string> trace_;
