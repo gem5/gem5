@@ -182,12 +182,11 @@ for cpu_type in cpu_types:
                 "gem5",
                 "asmtest",
                 "configs",
-                "simple_binary_run.py",
+                "riscv_asmtest.py",
             ),
             config_args=[
                 binary,
                 cpu_type,
-                "riscv",
                 "--num-cores",
                 "4",
                 "--resource-directory",
