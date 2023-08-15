@@ -85,9 +85,9 @@ class TracingExtension : public gem5::Extension<Packet, TracingExtension>
    }
 
    void
-   add(std::string request_port, std::string response_port)
+   add(std::string request_port, std::string response_port, gem5::Addr addr)
    {
-       trace_.push(request_port);
+       trace_.push(request_port + csprintf(" addr=%#llx", addr));
        trace_.push(response_port);
    }
 
