@@ -519,8 +519,14 @@ Shader::notifyCuSleep() {
     panic_if(_activeCus <= 0 || _activeCus > cuList.size(),
              "Invalid activeCu size\n");
     _activeCus--;
-    if (!_activeCus)
+    if (!_activeCus) {
         stats.shaderActiveTicks += curTick() - _lastInactiveTick;
+
+        if (kernelExitRequested) {
+            kernelExitRequested = false;
+            exitSimLoop("GPU Kernel Completed");
+        }
+    }
 }
 
 /**

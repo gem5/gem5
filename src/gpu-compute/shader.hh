@@ -97,6 +97,10 @@ class Shader : public ClockedObject
     // Last tick that all CUs attached to this shader were inactive
     Tick _lastInactiveTick;
 
+    // If a kernel-based exit event was requested, wait for all CUs in the
+    // shader to complete before actually exiting so that stats are updated.
+    bool kernelExitRequested = false;
+
   public:
     typedef ShaderParams Params;
     enum hsail_mode_e {SIMT,VECTOR_SCALAR};
@@ -312,6 +316,12 @@ class Shader : public ClockedObject
     incVectorInstDstOperand(int num_operands)
     {
         stats.vectorInstDstOperand[num_operands]++;
+    }
+
+    void
+    requestKernelExitEvent()
+    {
+        kernelExitRequested = true;
     }
 
   protected:
