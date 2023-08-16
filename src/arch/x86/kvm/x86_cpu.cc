@@ -1459,7 +1459,8 @@ X86KvmCPU::updateCPUID()
             m5_supported.push_back(makeKvmCpuid(function, idx, cpuid));
         } else {
             while (true) {
-                bool rv = isa->cpuid->doCpuid(tc, function, idx, cpuid);
+                [[maybe_unused]] bool rv = isa->cpuid->doCpuid(
+                    tc, function, idx, cpuid);
                 assert(rv);
 
                 if (idx &&
@@ -1493,7 +1494,8 @@ X86KvmCPU::updateCPUID()
             m5_supported.push_back(makeKvmCpuid(function, idx, cpuid));
         } else {
             while (true) {
-                bool rv = isa->cpuid->doCpuid(tc, function, idx, cpuid);
+                [[maybe_unused]] bool rv = isa->cpuid->doCpuid(
+                    tc, function, idx, cpuid);
                 assert(rv);
 
                 if (idx &&
