@@ -79,6 +79,7 @@ class SignalSinkPort : public Port
         _source = dynamic_cast<SignalSourcePort<State> *>(&peer);
         fatal_if(!_source, "Attempt to bind signal pin %s to "
                 "incompatible pin %s", name(), peer.name());
+        _state = _source->state();
         Port::bind(peer);
     }
     void
@@ -94,12 +95,21 @@ class SignalSourcePort : public Port
 {
   private:
     SignalSinkPort<State> *sink = nullptr;
-    State _state = {};
+    State _state;
 
   public:
-    SignalSourcePort(const std::string &_name, PortID _id=InvalidPortID) :
-        Port(_name, _id)
-    {}
+    SignalSourcePort(const std::string &_name, PortID _id = InvalidPortID)
+        : Port(_name, _id)
+    {
+        _state = {};
+    }
+
+    SignalSourcePort(const std::string &_name, PortID _id,
+                     const State &init_state)
+        : SignalSourcePort(_name, _id)
+    {
+        _state = init_state;
+    }
 
     void
     set(const State &new_state)
@@ -126,6 +136,6 @@ class SignalSourcePort : public Port
     }
 };
 
-} // namespace gem5
+}  // namespace gem5
 
-#endif //__SIM_SIGNAL_HH__
+#endif  //__SIM_SIGNAL_HH__
