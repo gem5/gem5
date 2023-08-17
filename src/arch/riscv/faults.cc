@@ -164,8 +164,6 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         pc_state.set(addr);
         tc->pcState(pc_state);
     } else {
-        inst->advancePC(pc_state);
-        tc->pcState(pc_state);
         invokeSE(tc, inst);
     }
 }
@@ -207,9 +205,11 @@ UnknownInstFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 void
 IllegalInstFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    auto *rsi = static_cast<RiscvStaticInst *>(inst.get());
-    panic("Illegal instruction 0x%08x at pc %s: %s", rsi->machInst,
-        tc->pcState(), reason.c_str());
+    if (! tc->getSystemPtr()->trapToGdb(GDBSignal::ILL, tc->contextId()) ) {
+        auto *rsi = static_cast<RiscvStaticInst *>(inst.get());
+        panic("Illegal instruction 0x%08x at pc %s: %s", rsi->machInst,
+            tc->pcState(), reason.c_str());
+    }
 }
 
 void
@@ -228,12 +228,20 @@ IllegalFrmFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 void
 BreakpointFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 {
-    schedRelBreak(0);
+    if (! tc->getSystemPtr()->trapToGdb(GDBSignal::TRAP, tc->contextId()) ) {
+        schedRelBreak(0);
+    }
 }
 
 void
 SyscallFault::invokeSE(ThreadContext *tc, const StaticInstPtr &inst)
 {
+    /* Advance the PC to next instruction so - once (simulated) syscall
+       is executed - execution continues. */
+    auto pc_state = tc->pcState().as<PCState>();
+    inst->advancePC(pc_state);
+    tc->pcState(pc_state);
+
     tc->getSystemPtr()->workload->syscall(tc);
 }
 
