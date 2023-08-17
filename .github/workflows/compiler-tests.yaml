@@ -15,11 +15,11 @@ jobs:
   # replication of compiler-tests.sh
   all-compilers:
     strategy:
+      fail-fast: false
       matrix:
         image: [gcc-version-12, gcc-version-11, gcc-version-10, gcc-version-9, gcc-version-8, clang-version-14, clang-version-13, clang-version-12, clang-version-11, clang-version-10, clang-version-9, clang-version-8, clang-version-7, ubuntu-20.04_all-dependencies, ubuntu-22.04_all-dependencies, ubuntu-22.04_min-dependencies]
         opts: [.opt, .fast]
     runs-on: [self-hosted, linux, x64, run]
-    continue-on-error: true
     timeout-minutes: 2880     # 48 hours
     container: gcr.io/gem5-test/${{ matrix.image }}:latest
     steps:
@@ -35,12 +35,12 @@ jobs:
   # Tests the two latest gcc and clang supported compilers against all gem5 compilations.
   latest-compilers-all-gem5-builds:
     strategy:
+      fail-fast: false
       matrix:
         gem5-compilation: [ARM, ARM_MESI_Three_Level, ARM_MESI_Three_Level_HTM, ARM_MOESI_hammer, Garnet_standalone, GCN3_X86, MIPS, 'NULL', NULL_MESI_Two_Level, NULL_MOESI_CMP_directory, NULL_MOESI_CMP_token, NULL_MOESI_hammer, POWER, RISCV, SPARC, X86, X86_MI_example, X86_MOESI_AMD_Base, VEGA_X86, GCN3_X86]
         image: [gcc-version-12, clang-version-14]
         opts: [.opt]
     runs-on: [self-hosted, linux, x64, run]
-    continue-on-error: true
     timeout-minutes: 2880     # 48 hours
     container: gcr.io/gem5-test/${{ matrix.image }}:latest
     steps:
