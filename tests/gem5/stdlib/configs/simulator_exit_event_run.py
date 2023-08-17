@@ -41,8 +41,9 @@ About to exit the simulation for the 3 st/nd/rd/th time
 Handling the final exit event. We'll exit now.
 ```
 
-By default a generator is passed to define the evit_event. A list of functions
-can also be passed. This is enabled by passing the `--list-format` flag.
+By default a generator is passed to define the exit_event behavior. A list of
+functions or a lone function can also be passed. This can be specified by the
+`--exit-event-type` parameter.
 """
 
 from gem5.resources.resource import obtain_resource
@@ -63,11 +64,12 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument(
-    "-l",
-    "--list-format",
-    action="store_true",
-    help="Use a list of functions, instead of a generator, for the exit event "
-    "handler",
+    "-e",
+    "--exit-event-type",
+    type=str,
+    choices=("generator", "function-list", "function"),
+    default="generator",
+    help="Used to specify what exit event format is to be passed.",
 )
 
 parser.add_argument(
@@ -106,9 +108,9 @@ binary = obtain_resource(
 )
 motherboard.set_se_binary_workload(binary)
 
-# Create the exit event handler. Here there are two kinds: either pass a
-# generator or a list of functions. In this script they both do the same things
-# for testing purposes.
+# Create the exit event handler. Here there are three kinds: either pass a
+# generator, a list of functions, or a lone function. In this script they all
+# do the same thing for testing purposes.
 
 
 def event_handle() -> bool:
@@ -129,11 +131,24 @@ def generator():
 
 func_list = [event_handle, event_handle, event_handle_final]
 
+i = 0
+
+
+def lone_function() -> bool:
+    global i
+    i += 1
+    if i < 3:
+        return event_handle()
+    return event_handle_final()
+
+
 exit_event_handler = None
-if args.list_format:
+if args.exit_event_type == "function-list":
     exit_event_handler = func_list
-else:
+elif args.exit_event_type == "generator":
     exit_event_handler = generator()
+elif args.exit_event_type == "function":
+    exit_event_handler = lone_function
 
 assert exit_event_handler is not None
 
