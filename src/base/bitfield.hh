@@ -325,33 +325,43 @@ hasBuiltinCtz() {
 }
 
 [[maybe_unused]]
-int
+constexpr int
 findLsbSetFallback(uint64_t val) {
-    // Create a mask with val's trailing zeros flipped to 1, lsb set flipped to
-    // 0 and the rest unchanged. This effectively is equivalent to doing -1.
-    // e.g.: 0101000 - 1 = 0100111
-    //          ^^^^          ^^^^
-    auto mask = val - 1;
-    // This will create a mask of ones from lsb set to last bit
-    // e.g.: 0101000 ^ 0100111 = 00001111
-    //          ^^^^                 ^^^^
-    auto masked = val ^ mask;
-    // Shift that mask to that there is 1s only where there was 0s after the
-    // lsb set before
-    // e.g.: 00001111 >> 1 = 00000111 (val is 0101000 in the example)
-    auto ones = masked >> 1;
-    // Number of bit set is the lsb set. This operation should be optimized by
-    // the compiler without unsing intrinsics. This operation will become
-    // constexpr starting from C++23. In the meantime, that fallback should not
-    // be used much in favor of the constexpr intrinsic
-    return std::bitset<sizeof(ones) * CHAR_BIT>(ones).count();
+    int lsb = 0;
+    if (!val) {
+        return sizeof(val) * 8;
+    }
+    if (!bits(val, 31, 0)) {
+        lsb += 32;
+        val >>= 32;
+    }
+    if (!bits(val, 15, 0)) {
+        lsb += 16;
+        val >>= 16;
+    }
+    if (!bits(val, 7, 0)) {
+        lsb += 8;
+        val >>= 8;
+    }
+    if (!bits(val, 3, 0)) {
+        lsb += 4;
+        val >>= 4;
+    }
+    if (!bits(val, 1, 0)) {
+        lsb += 2;
+        val >>= 2;
+    }
+    if (!bits(val, 0, 0)) {
+        lsb += 1;
+    }
+    return lsb;
 }
-}
+} // anonymous namespace
 
 /**
  * Returns the bit position of the LSB that is set in the input
- * That function will either use a builting that exploit a "count trailing
- * zeros" instruction or use a bit-fidling algorithm explained bellow.
+ * That function will either use a builtin that exploit a "count trailing
+ * zeros" instruction or use fall back method, `findLsbSetFallback`.
  *
  * @ingroup api_bitfield
  */
