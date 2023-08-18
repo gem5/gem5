@@ -85,7 +85,11 @@ class Simulator:
         on_exit_event: Optional[
             Dict[
                 ExitEvent,
-                Union[Generator[Optional[bool], None, None], List[Callable]],
+                Union[
+                    Generator[Optional[bool], None, None],
+                    List[Callable],
+                    Callable,
+                ],
             ]
         ] = None,
         expected_execution_order: Optional[List[ExitEvent]] = None,
@@ -97,16 +101,21 @@ class Simulator:
         This is optional and used to override default behavior. If not set,
         whether or not to run in FS mode will be determined via the board's
         `is_fullsystem()` function.
-        :param on_exit_event: An optional map to specify the generator to
-        execute on each exit event. The generator may yield a boolean which,
-        if True, will have the Simulator exit the run loop. A List of functions
-        may also be used. Each function must be callable with no arguments and
-        return a boolean specifying if the Simulation should exit the run loop.
-        :param expected_execution_order: May be specified to check the exit
-        events come in a specified order. If the order specified is not
-        encountered (e.g., 'Workbegin', 'Workend', then 'Exit'), an Exception
-        is thrown. If this parameter is not specified, any ordering of exit
-        events is valid.
+        :param on_exit_event: An optional map to specify what to execute on
+        each exit event. There are three possibilities here: a generator, a
+        list of functions, or a single function.:
+        1. Generator: The generator may yield a boolean each time the
+        associated exit event is encountered. If True the simulator will exit
+        the simulation loop.
+        2. List of functions: Each function must be callable with no mandatory
+        arguments and return a boolean specifying if the Simulation should exit
+        the simulation loop. Upon each exit event the list will pop the start
+        of the list and execute it. If the list is empty the default behavior
+        for that exit event will be executed.
+        3. Single function: The function must be callable with no mandatory
+        arguments and return a boolean specifying if the Simulation should exit
+        or not. This function is executed each time the associated exit event
+        is encountered.
         :param checkpoint_path: An optional parameter specifying the directory
         of the checkpoint to instantiate from. When the path is None, no
         checkpoint will be loaded. By default, the path is None. **This
@@ -195,6 +204,29 @@ class Simulator:
         again before finally, on the forth exit event will call
         `stop_simulation` which will stop the simulation as it returns False.
 
+        With a function
+        ===============
+        A single function can be passed. In this case every exit event of that
+        type will execute that function every time. The function should not
+        accept any mandatory parameters and return a boolean specifying if the
+        simulation loop should end after it is executed.
+        An example:
+        ```
+        def print_hello() -> bool:
+            print("Hello")
+            return False
+        simulator = Simulator(
+            board=board,
+            on_exit_event = {
+                ExitEvent.Exit : print_hello
+            },
+        )
+        ```
+        The above will print "Hello" on every `Exit` type Exit Event. As the
+        function returns False, the simulation loop will not end on these
+        events.
+
+
         Exit Event defaults
         ===================
 
@@ -266,6 +298,15 @@ class Simulator:
                     # In instances where we have a list of functions, we
                     # convert this to a generator.
                     self._on_exit_event[key] = (func() for func in value)
+                elif isinstance(value, Callable):
+                    # In instances where the user passes a lone function, the
+                    # function is called on every exit event of that type. Here
+                    # we convert the function into an infinite generator.
+                    def function_generator(func: Callable):
+                        while True:
+                            yield func()
+
+                    self._on_exit_event[key] = function_generator(func=value)
                 else:
                     raise Exception(
                         f"`on_exit_event` for '{key.value}' event is "

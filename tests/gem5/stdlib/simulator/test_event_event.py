@@ -47,7 +47,7 @@ gem5_verify_config(
         "configs",
         "simulator_exit_event_run.py",
     ),
-    config_args=["-l"],
+    config_args=["-e", "function-list"],
     valid_isas=(constants.all_compiled_tag,),
     length=constants.quick_tag,
 )
@@ -64,7 +64,24 @@ gem5_verify_config(
         "configs",
         "simulator_exit_event_run.py",
     ),
-    config_args=[],
+    config_args=["-e", "generator"],
+    valid_isas=(constants.all_compiled_tag,),
+    length=constants.quick_tag,
+)
+
+gem5_verify_config(
+    name="simulator-exit-event-handler-with-lone-function",
+    verifiers=verifiers,
+    fixtures=(),
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "stdlib",
+        "configs",
+        "simulator_exit_event_run.py",
+    ),
+    config_args=["-e", "function"],
     valid_isas=(constants.all_compiled_tag,),
     length=constants.quick_tag,
 )
