@@ -78,3 +78,6 @@ print(
         sim.get_current_tick(), sim.get_last_exit_event_cause()
     )
 )
+print("Taking checkpoint at", args.checkpoint_path)
+sim.save_checkpoint(args.checkpoint_path)
+print("Done taking checkpoint")

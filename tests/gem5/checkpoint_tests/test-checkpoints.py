@@ -199,45 +199,8 @@ gem5_verify_config(
     length=constants.quick_tag,
 )
 
-# gem5_verify_config(
-#     name="test-checkpoint-mips-hello-save-checkpoint",
-#     fixtures=(),
-#     verifiers=(save_checkpoint_verifier,),
-#     config=joinpath(
-#         config.base_dir,
-#         "tests",
-#         "gem5",
-#         "checkpoint_tests",
-#         "configs",
-#         "mips-hello-save-checkpoint.py",
-#     ),
-#     config_args=[
-#         # "--checkpoint-path",
-#         # joinpath(resource_path, "mips-hello-test-checkpoint"),
-#     ],
-#     valid_isas=(constants.all_compiled_tag,),
-#     valid_hosts=constants.supported_hosts,
-#     length=constants.quick_tag,
-# )
-
-# gem5_verify_config(
-#     name="test-checkpoint-mips-hello-restore-checkpoint",
-#     fixtures=(),
-#     verifiers=(hello_verifier,),
-#     config=joinpath(
-#         config.base_dir,
-#         "tests",
-#         "gem5",
-#         "checkpoint_tests",
-#         "configs",
-#         "mips-hello-restore-checkpoint.py",
-#     ),
-#     config_args=[],
-#     valid_isas=(constants.all_compiled_tag,),
-#     valid_hosts=constants.supported_hosts,
-#     length=constants.quick_tag,
-# )
-
+# There is a bug in sparc isa that causes the checkpoints to fail
+# GitHub issue: https://github.com/gem5/gem5/issues/197
 # gem5_verify_config(
 #     name="test-checkpoint-sparc-hello-save-checkpoint",
 #     fixtures=(),
