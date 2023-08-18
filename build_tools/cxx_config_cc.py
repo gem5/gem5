@@ -3,6 +3,7 @@
 # Copyright 2013 Mark D. Hill and David A. Wood
 # Copyright 2017-2020 ARM Limited
 # Copyright 2021 Google, Inc.
+# Copyright 2023 COSEDA Technologies GmbH
 #
 # The license below extends only to copyright in the software and shall
 # not be construed as granting a license to any other intellectual
@@ -104,7 +105,7 @@ for param in sim_object._params.values():
 
 for port in sim_object._ports.values():
     is_vector = isinstance(port, m5.params.VectorPort)
-    is_requestor = port.role == "GEM5 REQUESTOR"
+    is_requestor = port.is_source
 
     code(
         'ports["%s"] = new PortDesc("%s", %s, %s);'
