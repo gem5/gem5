@@ -24,92 +24,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .resource import obtain_resource
+from .resource import obtain_resource, WorkloadResource
 from .client import get_resource_json_obj
 
 from _m5 import core
 
 from typing import Dict, Any, List, Optional
 
-
-class AbstractWorkload:
-    """
-    Workloads contain information needed to build a workload.
-
-    A workload specifies a function and its parameters to run on a board to
-    set a workload. Workload's are passed to board via the `AbstractBoard`'s
-    `set_workload` function.
-
-    The `AbstractBoard` has a `set_workload` function which accepts an
-    AbstractWorkload. The `set_workload` function uses the `get_function_str`
-    to determine which function should be called on the board and the
-    `get_parameters` function specifies the parameters to be passed.
-
-    Example
-    -------
-
-    ```py
-    workload = CustomWorkload(
-        function = "set_se_binary_workload",
-        parameters = {
-            "binary" : obtain_resource("x86-print-this"),
-            "arguments" : ["hello", 6]
-        },
-    )
-
-    board.set_workload(workload)
-    ```
-
-    The above is the equivalent of:
-
-    ```py
-    board.set_se_binary_workload(
-        binary = obtain_resource("x86-print-this"),
-        arguments = ["hello", 6],
-    )
-    ```
-
-    Notes
-    -----
-    This class should not be used directly. Please use `Workload` or
-    `CustomWorkload`.
-    """
-
-    def __init__(self, function: str, parameters: Dict[str, Any]) -> None:
-        self._func = function
-        self._params = parameters
-
-    def get_function_str(self) -> str:
-        """
-        Returns the name of the workload function to be run.
-
-        This function is called via the AbstractBoard's `set_workload`
-        function. The parameters from the `get_parameters` function are passed
-        to this function.
-        """
-        return self._func
-
-    def get_parameters(self) -> Dict[str, Any]:
-        """
-        Returns a dictionary mapping the workload parameters to their values.
-
-        These parameters are passed to the function specified by
-        `get_function_str` via the AbstractBoard's `set_workload` function.
-        """
-        return self._params
-
-    def set_parameter(self, parameter: str, value: Any) -> None:
-        """
-        Used to set or override a workload parameter
-
-        :param parameter: The parameter of the function to set.
-        :param value: The value to set to the parameter.
-        """
-        self._params[parameter] = value
-
-
-class CustomWorkload(AbstractWorkload):
-    """
+"""
     A workload specified locally (i.e., not via gem5-resources as with the
     `Workload` class). Here the user specifies the function and the parameters
     to be passed.
@@ -128,14 +50,14 @@ class CustomWorkload(AbstractWorkload):
 
     board.set_workload(workload)
     ```
-    """
-
-    def __init__(self, function: str, parameters: Dict[str, Any]) -> None:
-        super().__init__(function=function, parameters=parameters)
+"""
 
 
-class Workload(AbstractWorkload):
-    """
+def CustomWorkload(function: str, parameters: Dict[str, Any]) -> None:
+    return WorkloadResource(function=function, parameters=parameters)
+
+
+"""
     The `Workload` class loads a workload's information from gem5-resources
     based on a name/id passed via the constructor.
 
@@ -156,87 +78,65 @@ class Workload(AbstractWorkload):
     board.set_workload(workload)
     ```
 
+"""
+
+
+def Workload(
+    workload_name: str,
+    resource_directory: Optional[str] = None,
+    resource_version: Optional[str] = None,
+    clients: Optional[List] = None,
+    gem5_version: Optional[str] = core.gem5Version,
+):
     """
+    This constructor will load the workload details from the workload with
+    the given name/id.
 
-    def __init__(
-        self,
-        workload_name: str,
-        resource_directory: Optional[str] = None,
-        resource_version: Optional[str] = None,
-        clients: Optional[List] = None,
-        gem5_version: Optional[str] = core.gem5Version,
-    ) -> None:
-        """
-        This constructor will load the workload details from the workload with
-        the given name/id.
+    This function assumes the dictionary returned by the downloader's
+    `get_workload_json_obj` is a dictionary. An example of the schema is
+    shown below:
 
-        This function assumes the dictionary returned by the downloader's
-        `get_workload_json_obj` is a dictionary. An example of the schema is
-        shown below:
-
-        ```json
-        {
-            "category" : "workload",
-            "id" : "x86-ubuntu-18.04-echo-hello",
-            "description" : "Description of workload here",
-            "function" : "set_kernel_disk_workload",
-            "resources" : {
-                "kernel" : "x86-linux-kernel-5.4.49",
-                "disk-image" : "x86-ubuntu-18.04-img"
-            },
-            "additional_params" : {
-                "readfile_contents" : "m5_exit; echo 'hello'; m5_exit"
-            }
+    ```json
+    {
+        "category" : "workload",
+        "id" : "x86-ubuntu-18.04-echo-hello",
+        "description" : "Description of workload here",
+        "function" : "set_kernel_disk_workload",
+        "resources" : {
+            "kernel" : "x86-linux-kernel-5.4.49",
+            "disk-image" : "x86-ubuntu-18.04-img"
+        },
+        "additional_params" : {
+            "readfile_contents" : "m5_exit; echo 'hello'; m5_exit"
         }
-        ```
+    }
+    ```
 
-        This resource will result in the equivalent of the following action
-        being taken:
+    This resource will result in the equivalent of the following action
+    being taken:
 
-        ```python
-        board.set_kernel_disk_workload(
-            kernel = obtain_resource("x86-linux-kernel-5.4.49"),
-            disk-image = obtain_resource("x86-ubuntu-18.04-img"),
-            readfile_contents = "m5_exit; echo 'hello'; m5_exit",
-        )
-        ```
+    ```python
+    board.set_kernel_disk_workload(
+        kernel = obtain_resource("x86-linux-kernel-5.4.49"),
+        disk-image = obtain_resource("x86-ubuntu-18.04-img"),
+        readfile_contents = "m5_exit; echo 'hello'; m5_exit",
+    )
+    ```
 
-        :param workload_name: The name of the workload in the resources.json
-        file to be loaded.
-        :param resource_directory: An optional parameter that specifies where
-        any resources should be download and accessed from. If None, a default
-        location will be used. None by default.
-        :param gem5_version: The gem5 version for the Workload to be loaded.
-        By default, the current gem5 version is used. This will filter
-        resources which are incompatible with the current gem5 version. If
-        None, no filtering will be done.
-        """
-
-        workload_json = get_resource_json_obj(
-            workload_name,
-            resource_version=resource_version,
-            clients=clients,
-            gem5_version=gem5_version,
-        )
-
-        func = workload_json["function"]
-        assert isinstance(func, str)
-
-        params = {}
-        if "resources" in workload_json:
-            for key in workload_json["resources"].keys():
-                assert isinstance(key, str)
-                value = workload_json["resources"][key]
-                assert isinstance(value, str)
-                params[key] = obtain_resource(
-                    value,
-                    resource_directory=resource_directory,
-                    gem5_version=gem5_version,
-                )
-
-        if "additional_params" in workload_json:
-            for key in workload_json["additional_params"]:
-                assert isinstance(key, str)
-                params[key] = workload_json["additional_params"][key]
-
-        super().__init__(function=func, parameters=params)
+    :param workload_name: The name of the workload in the resources.json
+    file to be loaded.
+    :param resource_directory: An optional parameter that specifies where
+    any resources should be download and accessed from. If None, a default
+    location will be used. None by default.
+    :param gem5_version: The gem5 version for the Workload to be loaded.
+    By default, the current gem5 version is used. This will filter
+    resources which are incompatible with the current gem5 version. If
+    None, no filtering will be done.
+    """
+    return obtain_resource(
+        workload_name,
+        resource_directory=resource_directory,
+        gem5_version=gem5_version,
+        clients=clients,
+        resource_version=resource_version,
+    )

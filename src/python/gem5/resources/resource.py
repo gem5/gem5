@@ -562,13 +562,15 @@ class WorkloadResource(AbstractResource):
 
     def __init__(
         self,
-        resource_version: Optional[str] = None,
         function: str = None,
-        resoucres: Dict[str, Dict[str, str]] = None,
-        additional_params: Dict[str, str] = None,
+        resources: Optional[Dict[str, str]] = None,
+        additional_params: Optional[Dict[str, str]] = None,
+        resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
         local_path: Optional[str] = None,
+        parameters: Optional[Dict[str, Any]] = None,
+        **kwargs,
     ):
         """
         :param function: The function to call on the board.
@@ -583,14 +585,14 @@ class WorkloadResource(AbstractResource):
         )
 
         self._func = function
-        self._params = {}
-        for key in resoucres.keys():
+        self._params = parameters if parameters else {}
+        print(resources)
+        for key in resources.keys():
             assert isinstance(key, str)
-            value = resoucres[key]
-            assert isinstance(value, dict)
+            value = resources[key]
+            assert isinstance(value, str)
             self._params[key] = obtain_resource(
-                value["id"],
-                resource_version=value["resource_version"],
+                value,
             )
         for key in additional_params.keys():
             assert isinstance(key, str)
