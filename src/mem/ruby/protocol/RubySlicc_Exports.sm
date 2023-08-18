@@ -77,6 +77,8 @@ structure(DataBlock, external = "yes", desc="..."){
   void copyPartial(DataBlock, int, int);
   void copyPartial(DataBlock, WriteMask);
   void atomicPartial(DataBlock, WriteMask);
+  int numAtomicLogEntries();
+  void clearAtomicLogEntries();
 }
 
 bool testAndRead(Addr addr, DataBlock datablk, Packet *pkt);

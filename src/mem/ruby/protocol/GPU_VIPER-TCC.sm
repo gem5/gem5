@@ -523,6 +523,7 @@ machine(MachineType:TCC, "TCC Cache")
           out_msg.isSLCSet := in_msg.isSLCSet;
         }
     }
+    cache_entry.DataBlk.clearAtomicLogEntries();
   }
 
   action(bar_sendBypassedAtomicResponse, "bar", desc="send bypassed Atomic Ack") {

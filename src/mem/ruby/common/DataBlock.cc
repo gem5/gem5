@@ -51,9 +51,19 @@ namespace ruby
 
 DataBlock::DataBlock(const DataBlock &cp)
 {
-    m_data = new uint8_t[RubySystem::getBlockSizeBytes()];
-    memcpy(m_data, cp.m_data, RubySystem::getBlockSizeBytes());
+    uint8_t *block_update;
+    size_t block_bytes = RubySystem::getBlockSizeBytes();
+    m_data = new uint8_t[block_bytes];
+    memcpy(m_data, cp.m_data, block_bytes);
     m_alloc = true;
+    // If this data block is involved in an atomic operation, the effect
+    // of applying the atomic operations on the data block are recorded in
+    // m_atomicLog. If so, we must copy over every entry in the change log
+    for (size_t i = 0; i < cp.m_atomicLog.size(); i++) {
+        block_update = new uint8_t[block_bytes];
+        memcpy(block_update, cp.m_atomicLog[i], block_bytes);
+        m_atomicLog.push_back(block_update);
+    }
 }
 
 void
@@ -73,7 +83,20 @@ DataBlock::clear()
 bool
 DataBlock::equal(const DataBlock& obj) const
 {
-    return !memcmp(m_data, obj.m_data, RubySystem::getBlockSizeBytes());
+    size_t block_bytes = RubySystem::getBlockSizeBytes();
+    // Check that the block contents match
+    if (memcmp(m_data, obj.m_data, block_bytes)) {
+        return false;
+    }
+    if (m_atomicLog.size() != obj.m_atomicLog.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < m_atomicLog.size(); i++) {
+        if (memcmp(m_atomicLog[i], obj.m_atomicLog[i], block_bytes)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void
@@ -92,7 +115,7 @@ DataBlock::atomicPartial(const DataBlock &dblk, const WriteMask &mask)
     for (int i = 0; i < RubySystem::getBlockSizeBytes(); i++) {
         m_data[i] = dblk.m_data[i];
     }
-    mask.performAtomic(m_data);
+    mask.performAtomic(m_data, m_atomicLog);
 }
 
 void
@@ -105,6 +128,28 @@ DataBlock::print(std::ostream& out) const
             << "0x" << (int)m_data[i] << " " << std::setfill(' ');
     }
     out << std::dec << "]" << std::flush;
+}
+
+int
+DataBlock::numAtomicLogEntries() const
+{
+    return m_atomicLog.size();
+}
+uint8_t*
+DataBlock::popAtomicLogEntryFront()
+{
+    assert(m_atomicLog.size() > 0);
+    auto ret = m_atomicLog.front();
+    m_atomicLog.pop_front();
+    return ret;
+}
+void
+DataBlock::clearAtomicLogEntries()
+{
+    for (auto log : m_atomicLog) {
+        delete [] log;
+    }
+    m_atomicLog.clear();
 }
 
 const uint8_t*
@@ -137,7 +182,18 @@ DataBlock::setData(PacketPtr pkt)
 DataBlock &
 DataBlock::operator=(const DataBlock & obj)
 {
-    memcpy(m_data, obj.m_data, RubySystem::getBlockSizeBytes());
+    uint8_t *block_update;
+    size_t block_bytes = RubySystem::getBlockSizeBytes();
+    // Copy entire block contents from obj to current block
+    memcpy(m_data, obj.m_data, block_bytes);
+    // If this data block is involved in an atomic operation, the effect
+    // of applying the atomic operations on the data block are recorded in
+    // m_atomicLog. If so, we must copy over every entry in the change log
+    for (size_t i = 0; i < obj.m_atomicLog.size(); i++) {
+        block_update = new uint8_t[block_bytes];
+        memcpy(block_update, obj.m_atomicLog[i], block_bytes);
+        m_atomicLog.push_back(block_update);
+    }
     return *this;
 }
 
