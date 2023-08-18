@@ -1,0 +1,82 @@
+# This workflow runs all of the very-long tests within main.py
+
+name: Weekly Tests
+
+on:
+  # Runs every Sunday from 7AM UTC
+  schedule:
+    - cron:  '00 7 * * 6'
+  # Allows us to manually start workflow for testing
+  workflow_dispatch:
+
+jobs:
+  name-artifacts:
+    runs-on: ubuntu-latest
+    outputs:
+      build-name: ${{ steps.artifact-name.outputs.name }}
+    steps:
+    - uses: actions/checkout@v2
+    - id: artifact-name
+      run: echo "name=$(date +"%Y-%m-%d_%H.%M.%S-")" >> $GITHUB_OUTPUT
+
+  build-gem5:
+    strategy:
+      matrix:
+        image: [ALL, GCN3_X86]
+        # this allows us to pass additional command line parameters
+        # the default is to add -j $(nproc), but some images
+        # require more specifications when built
+        include:
+          - command-line: -j $(nproc)
+          - image: GCN3_X86
+            command-line: -j4 --ignore-style
+    runs-on: [self-hosted, linux, x64, build]
+    needs: name-artifacts
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    outputs:
+      build-name: ${{ steps.artifact-name.outputs.name }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # Scheduled workflows run on the default branch by default. We
+          # therefore need to explicitly checkout the develop branch.
+          ref: develop
+      - name: Build gem5
+        run: scons build/${{ matrix.image }}/gem5.opt ${{ matrix.command-line }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ needs.name-artifacts.outputs.build-name }}${{ matrix.image }}
+          path: build/${{ matrix.image }}/gem5.opt
+          retention-days: 5
+      - run: echo "This job's status is ${{ job.status }}."
+
+  HACC-tests:
+    runs-on: [self-hosted, linux, x64, build]
+    container: mkjost/testing-gpu-image:latest
+    needs: build-gem5
+    timeout-minutes: 4320 # 3 day
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # Scheduled workflows run on the default branch by default. We
+          # therefore need to explicitly checkout the develop branch.
+          ref: develop
+      - uses: actions/download-artifact@v3
+        with:
+          name: ${{needs.name-artifacts.outputs.build-name}}GCN3_X86
+          path: build/GCN3_X86
+      - run: chmod u+x build/GCN3_X86/gem5.opt
+      - name: make hip directory
+        run: mkdir hip
+      - name: Compile m5ops and x86
+        working-directory: ${{ github.workspace }}/util/m5
+        run: |
+          export TERM=xterm-256color
+          scons build/x86/out/m5
+      - name: Download tests
+        working-directory: ${{ github.workspace }}/hip
+        run: wget http://dist.gem5.org/dist/v22-1/test-progs/halo-finder/ForceTreeTest
+      - name: Run HACC tests
+        working-directory: ${{ github.workspace }}
+        run: |
+          build/GCN3_X86/gem5.opt configs/example/apu_se.py -n3 --reg-alloc-policy=dynamic --benchmark-root=hip -c ForceTreeTest --options="0.5 0.1 64 0.1 1 N 12 rcb"
