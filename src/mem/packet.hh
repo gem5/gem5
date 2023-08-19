@@ -1441,7 +1441,7 @@ class Packet : public Printable, public Extensible<Packet>
      * Is this packet a clean invalidate request, e.g., clflush/clflushopt?
      */
     bool
-    isCleanInvalidateRequst() const
+    isCleanInvalidateRequest() const
     {
         return cmd == MemCmd::CleanInvalidReq;
     }
