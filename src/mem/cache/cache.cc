@@ -338,7 +338,7 @@ Cache::handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk, Tick forward_time,
 
         if (pkt->isWrite()) {
             allocateWriteBuffer(pkt, forward_time);
-        } else if (pkt->isRead() {
+        } else if (pkt->isRead()) {
             // uncacheable accesses always allocate a new MSHR
 
             // Here we are using forward_time, modelling the latency of
