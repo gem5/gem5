@@ -352,7 +352,7 @@ Cache::handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk, Tick forward_time,
             // the clflush might occur in an uncacheable region.
             // clflush results in a CleanInvalidReq, which is neither read
             // nor write.
-            assert(pkt->req->isCleanInvalidateRequest());
+            assert(pkt->isCleanInvalidateRequest());
             allocateWriteBuffer(pkt, forward_time);
         }
 
