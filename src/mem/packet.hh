@@ -1437,6 +1437,15 @@ class Packet : public Printable, public Extensible<Packet>
         return cmd == MemCmd::CleanEvict || cmd == MemCmd::WritebackClean;
     }
 
+    /**
+     * Is this packet a clean invalidate request, e.g., clflush/clflushopt?
+     */
+    bool
+    isCleanInvalidateRequst() const
+    {
+        return cmd == MemCmd::CleanInvalidReq;
+    }
+
     bool
     isMaskedWrite() const
     {

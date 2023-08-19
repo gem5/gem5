@@ -338,15 +338,22 @@ Cache::handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk, Tick forward_time,
 
         if (pkt->isWrite()) {
             allocateWriteBuffer(pkt, forward_time);
-        } else {
-            assert(pkt->isRead());
-
+        } else if (pkt->isRead() {
             // uncacheable accesses always allocate a new MSHR
 
             // Here we are using forward_time, modelling the latency of
             // a miss (outbound) just as forwardLatency, neglecting the
             // lookupLatency component.
             allocateMissBuffer(pkt, forward_time);
+        } else {
+            // When a linux kernel wants to change a page property,
+            // it flushes the related cache lines. The kernel might change
+            // the page property before flushing the cache. This results in
+            // the clflush might occur in an uncacheable region.
+            // clflush results in a CleanInvalidReq, which is neither read
+            // nor write.
+            assert(pkt->req->isCleanInvalidateRequest());
+            allocateWriteBuffer(pkt, forward_time);
         }
 
         return;
