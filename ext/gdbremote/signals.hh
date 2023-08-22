@@ -168,12 +168,12 @@ namespace gem5{
     INFO = 142, //information request
     unknown = 143, //unknown signal
 
-    EXC_BAD_ACCESS = 145, //could not access memory
-    EXC_BAD_INSTRUCTION = 146, //illegal instruction/operand
-    EXC_ARITHMETIC = 147, //arithmetic exception
-    EXC_EMULATION = 148, //emulation instruction
-    EXC_SOFTWARE = 149, //software generated exception
-    EXC_BREAKPOINT = 150, //breakpoint
+    GEM5_EXC_BAD_ACCESS = 145, //could not access memory
+    GEM5_EXC_BAD_INSTRUCTION = 146, //illegal instruction/operand
+    GEM5_EXC_ARITHMETIC = 147, //arithmetic exception
+    GEM5_EXC_EMULATION = 148, //emulation instruction
+    GEM5_EXC_SOFTWARE = 149, //software generated exception
+    GEM5_EXC_BREAKPOINT = 150, //breakpoint
 
     LIBRT = 151, //librt internal signal
   };
