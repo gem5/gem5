@@ -668,7 +668,7 @@ def parseProcessInfo(task_file):
     task_name_failure_warned = False
 
     for line in process_file:
-        match = re.match(process_re, line.decode("ISO-8859-1"))
+        match = re.match(process_re, line.decode())
         if match:
             tick = int(match.group(1))
             if start_tick < 0:
