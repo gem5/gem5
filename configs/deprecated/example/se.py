@@ -50,21 +50,9 @@ from m5.objects import *
 from m5.params import NULL
 from m5.util import addToPath, fatal, warn
 from gem5.isas import ISA
-from gem5.runtime import get_runtime_isa
+from gem5.runtime import get_runtime_isa, get_supported_isas
 
 addToPath("../../")
-
-from ruby import Ruby
-
-from common import Options
-from common import Simulation
-from common import CacheConfig
-from common import CpuConfig
-from common import ObjectList
-from common import MemConfig
-from common.FileSystemConfig import config_filesystem
-from common.Caches import *
-from common.cpu2000 import *
 
 
 def get_processes(args):
@@ -119,10 +107,91 @@ def get_processes(args):
         return multiprocesses, 1
 
 
+#
+# Following constants are taken from elf.h.
+#
+ELFMAG = b"\177ELF"
+
+EI_DATA = 5  #  Data encoding byte index
+ELFDATANONE = 0  #  Invalid data encoding
+ELFDATA2LSB = 1  #  2's complement, little endian
+ELFDATA2MSB = 2  #  2's complement, big endian
+
+# Legal values for e_machine (architecture).
+EM_NONE = 0  #  No machine
+EM_SPARC = 2  #  SUN SPARC
+EM_386 = 3  #  Intel 80386
+EM_MIPS = 8  #  MIPS R3000 big-endian
+EM_MIPS_RS3_LE = 10  #  MIPS R3000 little-endian
+EM_PPC = 20  #  PowerPC
+EM_PPC64 = 21  #  PowerPC 64-bit
+EM_ARM = 40  #  ARM
+EM_X86_64 = 62  #  AMD x86-64 architecture
+EM_AARCH64 = 183  #  ARM AARCH64
+EM_AMDGPU = 224  #  AMD GPU
+EM_RISCV = 243  #  RISC-V
+
+# Non-standard
+EI_E_MACHINE = 18  # e_machine first byte index
+
+
+def set_isa(args):
+    """
+    Set the architecture based on executable (if this gem5 has
+    support for multiple architectures).
+    """
+    if len(get_supported_isas()) > 1:
+        exe_path = args.cmd.split(";")[0]
+        with open(exe_path, mode="br") as exe:
+            # Code below essentially reads an ELF header
+            # and set the ISA based on e_machine value.
+            # Everything is hard-coded here to avoid pulling
+            # in more dependencies.
+
+            ehdr = exe.read(
+                16 + 2 + 2
+            )  # EI_NIDENT=16 + e_type=2 + e_machibe=2
+            if ehdr[0:4] != ELFMAG:
+                raise Exception(f"Invalid ELF executable: {exe_path}")
+
+            if ehdr[EI_DATA] == ELFDATA2LSB:
+                e_machine = (ehdr[EI_E_MACHINE + 1] << 8) + ehdr[EI_E_MACHINE]
+            elif ehdr[5] == 2:
+                e_machine = (ehdr[EI_E_MACHINE] << 8) + ehdr[EI_E_MACHINE + 1]
+            else:
+                raise Exception(
+                    f"Invalid ELF data encoding ({ehdr[5]}): {exe_path}"
+                )
+
+            if e_machine in (EM_SPARC,):
+                isa = "Sparc"
+            elif e_machine in (EM_386, EM_X86_64):
+                isa = "X86"
+            elif e_machine in (EM_MIPS, EM_MIPS_RS3_LE):
+                isa = "Mips"
+            elif e_machine in (EM_PPC, EM_PPC64):
+                isa = "Power"
+            elif e_machine in (EM_ARM, EM_AARCH64):
+                isa = "Arm"
+            elif e_machine in (EM_RISCV,):
+                isa = "Riscv"
+            else:
+                raise Exception(
+                    f"Unsupported ELF machine ({e_machine}): {exe_path}"
+                )
+
+            print(f"Target ISA is {isa}")
+
+            buildEnv["TARGET_ISA"] = isa
+            args.cpu_type = f"{isa}AtomicSimpleCPU"
+
+
 warn(
     "The se.py script is deprecated. It will be removed in future releases of "
     " gem5."
 )
+
+from common import Options
 
 parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser)
@@ -132,6 +201,21 @@ if "--ruby" in sys.argv:
     Ruby.define_options(parser)
 
 args = parser.parse_args()
+
+# set_isa must be called before below imports
+# since TARGET_ISA has to be set before importing
+# CacheConfig (which still uses get_runtime_isa())
+set_isa(args)
+
+from ruby import Ruby
+from common import Simulation
+from common import CacheConfig
+from common import CpuConfig
+from common import ObjectList
+from common import MemConfig
+from common.FileSystemConfig import config_filesystem
+from common.Caches import *
+from common.cpu2000 import *
 
 multiprocesses = []
 numThreads = 1
@@ -168,7 +252,6 @@ elif args.cmd:
 else:
     print("No workload specified. Exiting!\n", file=sys.stderr)
     sys.exit(1)
-
 
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(args)
 CPUClass.numThreads = numThreads
