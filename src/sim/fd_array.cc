@@ -420,23 +420,23 @@ FDArray::unserialize(CheckpointIn &cp, SimObject* process_ptr) {
 
         mode_t mode = this_ffd->getFileMode();
 
-        std::string const& path = this_ffd->getFileName();
+        std::string path;
+
+        if (process_ptr)
+        {
+            Process* ptr = static_cast<Process*>(process_ptr);
+            path = ptr->checkPathRedirect(this_ffd->getFileName());
+        }
+        else
+        {
+            path = this_ffd->getFileName();
+        }
 
         int flags = this_ffd->getFlags();
 
         // Re-open the file and assign a new sim_fd
         int sim_fd;
-        if (process_ptr)
-        {
-            Process* ptr = static_cast<Process*>(process_ptr);
-            std::string const& host_path =
-                            ptr->checkPathRedirect(this_ffd->getFileName());
-            sim_fd = openFile(host_path, flags, mode);
-        }
-        else
-        {
-            sim_fd = openFile(path, flags, mode);
-        }
+        sim_fd = openFile(path, flags, mode);
 
         this_ffd->setSimFD(sim_fd);
 
