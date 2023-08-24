@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 ARM Limited
+ * Copyright (c) 2021-2023 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -923,8 +923,8 @@ action(Initiate_Evict, desc="") {
       tbe.actions.push(Event:WriteBEPipe);
       tbe.actions.push(Event:SendWBData);
     } else {
-      tbe.actions.push(Event:SendCompIResp);
       tbe.actions.push(Event:SendEvict);
+      tbe.actions.push(Event:SendCompIResp);
     }
   } else {
     tbe.actions.push(Event:SendCompIResp);
