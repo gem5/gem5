@@ -41,6 +41,7 @@ from textwrap import TextWrapper
 import m5.internal.params
 import m5.objects
 
+from gem5.isas import ISA
 from gem5.runtime import get_supported_isas
 
 
@@ -158,6 +159,38 @@ class CPUList(ObjectList):
                     module, self._is_obj_class
                 ):
                     self._sub_classes[name] = cls
+
+    def get_isa(self, name: str) -> ISA:
+        """For a given CPU (string representation) determine the ISA of the
+        CPU."""
+
+        cls = self.get(name)
+
+        def class_exist(className: str) -> bool:
+            """Check if a class exists."""
+            import types
+
+            result = False
+            try:
+                result = eval("type(" + className + ")") == types.ClassType
+            except NameError:
+                pass
+            return result
+
+        if class_exist(m5.objects.X86CPU) and issubclass(
+            cls, m5.objects.X86CPU
+        ):
+            return ISA.X86
+        elif class_exist(m5.objects.ArmCPU) and issubclass(
+            cls, m5.objects.ArmCPU
+        ):
+            return ISA.ARM
+        elif class_exist(m5.objects.RiscvCPU) and issubclass(
+            cls, m5.objects.RiscvCPU
+        ):
+            return ISA.RISCV
+        else:
+            raise ValueError("Unable to determine CPU ISA.")
 
 
 class EnumList(ObjectList):

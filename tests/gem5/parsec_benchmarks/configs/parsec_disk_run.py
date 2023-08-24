@@ -51,10 +51,6 @@ from gem5.components.processors.simple_switchable_processor import (
 )
 from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
-from gem5.runtime import (
-    get_runtime_coherence_protocol,
-    get_runtime_isa,
-)
 from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires

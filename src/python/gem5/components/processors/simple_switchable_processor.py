@@ -53,30 +53,17 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
         starting_core_type: CPUTypes,
         switch_core_type: CPUTypes,
         num_cores: int,
-        isa: Optional[ISA] = None,
+        isa: ISA = None,
     ) -> None:
         """
         :param starting_core_type: The CPU type for each type in the processor
                                    to start with (i.e., when the simulation has
                                    just started).
+        :param switch_core_types: The CPU type for each core, to be switched
+        to.
 
-        :param switch_core_types: The CPU type for each core, to be switched to.
-
-        :param isa: The ISA of the processor. This argument is optional. If not
-                    set the ``runtime.get_runtime_isa`` is used to determine the
-                    ISA at runtime. **WARNING**: This functionality is deprecated.
-                    It is recommended you explicitly set your ISA via
-                    SimpleSwitchableProcessor construction.
+        :param isa: The ISA of the processor.
         """
-
-        if not isa:
-            warn(
-                "An ISA for the SimpleSwitchableProcessor was not set. This "
-                "will result in usage of `runtime.get_runtime_isa` to obtain "
-                "the ISA. This function is deprecated and will be removed in "
-                "future releases of gem5. Please explicitly state the ISA "
-                "via the processor constructor."
-            )
 
         if num_cores <= 0:
             raise AssertionError("Number of cores must be a positive integer!")

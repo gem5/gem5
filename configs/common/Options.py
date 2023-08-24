@@ -45,6 +45,8 @@ import m5
 from m5.defines import buildEnv
 from m5.objects import *
 
+from gem5.runtime import get_supported_isas
+
 vio_9p_help = """\
 Enable the Virtio 9P device and set the path to share. The default 9p path is
 m5ou5/9p/share, and it can be changed by setting VirtIO9p.root with --param. A
@@ -250,7 +252,7 @@ def addCommonOptions(parser):
     )
     parser.add_argument(
         "--cpu-type",
-        default="AtomicSimpleCPU",
+        default=list(get_supported_isas())[0].name + "AtomicSimpleCPU",
         choices=ObjectList.cpu_list.get_names(),
         help="type of cpu to run with",
     )

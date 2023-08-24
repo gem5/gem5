@@ -55,7 +55,6 @@ from m5.util import (
 )
 
 from gem5.isas import ISA
-from gem5.runtime import get_runtime_isa
 
 addToPath("../../")
 
@@ -119,7 +118,7 @@ def get_processes(args):
         idx += 1
 
     if args.smt:
-        assert args.cpu_type == "DerivO3CPU"
+        assert isinstance(args.cpu_type, DerivO3CPU)
         return multiprocesses, idx
     else:
         return multiprocesses, 1
@@ -150,7 +149,7 @@ if args.bench:
 
     for app in apps:
         try:
-            if get_runtime_isa() == ISA.ARM:
+            if ObjectList.CPUList().get_isa(args.cpu_type) == ISA.ARM:
                 exec(
                     "workload = %s('arm_%s', 'linux', '%s')"
                     % (app, args.arm_iset, args.spec_input)
@@ -165,7 +164,7 @@ if args.bench:
             multiprocesses.append(workload.makeProcess())
         except:
             print(
-                f"Unable to find workload for {get_runtime_isa().name()}: {app}",
+                f"Unable to find workload for ISA: {app}",
                 file=sys.stderr,
             )
             sys.exit(1)
