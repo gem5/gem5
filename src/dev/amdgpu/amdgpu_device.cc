@@ -216,11 +216,47 @@ AMDGPUDevice::getAddrRanges() const
 Tick
 AMDGPUDevice::readConfig(PacketPtr pkt)
 {
-    [[maybe_unused]] int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
-    DPRINTF(AMDGPUDevice, "Read Config: from offset: %#x size: %#x "
-            "data: %#x\n", offset, pkt->getSize(), config.data[offset]);
+    int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
 
-    Tick delay = PciDevice::readConfig(pkt);
+    if (offset < PCI_DEVICE_SPECIFIC) {
+        PciDevice::readConfig(pkt);
+    } else {
+        if (offset >= PXCAP_BASE && offset < (PXCAP_BASE + sizeof(PXCAP))) {
+            int pxcap_offset = offset - PXCAP_BASE;
+
+            switch (pkt->getSize()) {
+                case sizeof(uint8_t):
+                    pkt->setLE<uint8_t>(pxcap.data[pxcap_offset]);
+                    DPRINTF(AMDGPUDevice,
+                        "Read PXCAP:  dev %#x func %#x reg %#x 1 bytes: data "
+                        "= %#x\n", _busAddr.dev, _busAddr.func, pxcap_offset,
+                        (uint32_t)pkt->getLE<uint8_t>());
+                    break;
+                case sizeof(uint16_t):
+                    pkt->setLE<uint16_t>(
+                        *(uint16_t*)&pxcap.data[pxcap_offset]);
+                    DPRINTF(AMDGPUDevice,
+                        "Read PXCAP:  dev %#x func %#x reg %#x 2 bytes: data "
+                        "= %#x\n", _busAddr.dev, _busAddr.func, pxcap_offset,
+                        (uint32_t)pkt->getLE<uint16_t>());
+                    break;
+                case sizeof(uint32_t):
+                    pkt->setLE<uint32_t>(
+                        *(uint32_t*)&pxcap.data[pxcap_offset]);
+                    DPRINTF(AMDGPUDevice,
+                        "Read PXCAP:  dev %#x func %#x reg %#x 4 bytes: data "
+                        "= %#x\n",_busAddr.dev, _busAddr.func, pxcap_offset,
+                        (uint32_t)pkt->getLE<uint32_t>());
+                    break;
+                default:
+                    panic("Invalid access size (%d) for amdgpu PXCAP %#x\n",
+                          pkt->getSize(), pxcap_offset);
+            }
+            pkt->makeAtomicResponse();
+        } else {
+            warn("Device specific offset %d not implemented!\n", offset);
+        }
+    }
 
     // Before sending MMIOs the driver sends three interrupts in a row.
     // Use this to trigger creating a checkpoint to restore in timing mode.
@@ -231,14 +267,14 @@ AMDGPUDevice::readConfig(PacketPtr pkt)
         if (offset == PCI0_INTERRUPT_PIN) {
             if (++init_interrupt_count == 3) {
                 DPRINTF(AMDGPUDevice, "Checkpointing before first MMIO\n");
-                exitSimLoop("checkpoint", 0, curTick() + delay + 1);
+                exitSimLoop("checkpoint", 0, curTick() + configDelay + 1);
             }
         } else {
             init_interrupt_count = 0;
         }
     }
 
-    return delay;
+    return configDelay;
 }
 
 Tick
@@ -249,7 +285,24 @@ AMDGPUDevice::writeConfig(PacketPtr pkt)
             "data: %#x\n", offset, pkt->getSize(),
             pkt->getUintX(ByteOrder::little));
 
-    return PciDevice::writeConfig(pkt);
+    if (offset < PCI_DEVICE_SPECIFIC)
+        return PciDevice::writeConfig(pkt);
+
+
+    if (offset >= PXCAP_BASE && offset < (PXCAP_BASE + sizeof(PXCAP))) {
+        uint8_t *pxcap_data = &(pxcap.data[0]);
+        int pxcap_offset = offset - PXCAP_BASE;
+
+        DPRINTF(AMDGPUDevice, "Writing PXCAP offset %d size %d\n",
+                pxcap_offset, pkt->getSize());
+
+        memcpy(pxcap_data + pxcap_offset, pkt->getConstPtr<void>(),
+               pkt->getSize());
+    }
+
+    pkt->makeAtomicResponse();
+
+    return configDelay;
 }
 
 void

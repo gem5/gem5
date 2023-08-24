@@ -185,3 +185,26 @@ def connectGPU(system, args):
         system.pc.south_bridge.gpu.DeviceID = 0x6863
     else:
         panic("Unknown GPU device: {}".format(args.gpu_device))
+
+    # Use the gem5 default of 0x280 OR'd  with 0x10 which tells Linux there is
+    # a PCI capabilities list to travse.
+    system.pc.south_bridge.gpu.Status = 0x0290
+
+    # The PCI capabilities are like a linked list. The list has a memory
+    # offset and a capability type ID read by the OS. Make the first
+    # capability at 0x80 and set the PXCAP (PCI express) capability to
+    # that address. Mark the type ID as PCI express.
+    # We leave the next ID of PXCAP blank to end the list.
+    system.pc.south_bridge.gpu.PXCAPBaseOffset = 0x80
+    system.pc.south_bridge.gpu.CapabilityPtr = 0x80
+    system.pc.south_bridge.gpu.PXCAPCapId = 0x10
+
+    # Set bits 7 and 8 in the second PCIe device capabilities register which
+    # reports support for PCIe atomics for 32 and 64 bits respectively.
+    # Bit 9 for 128-bit compare and swap is not set because the amdgpu driver
+    # does not check this.
+    system.pc.south_bridge.gpu.PXCAPDevCap2 = 0x00000180
+
+    # Set bit 6 to enable atomic requestor, meaning this device can request
+    # atomics from other PCI devices.
+    system.pc.south_bridge.gpu.PXCAPDevCtrl2 = 0x00000040
