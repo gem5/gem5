@@ -250,6 +250,110 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
     ++dynamic_task_id;
 }
 
+void
+GPUCommandProcessor::sendCompletionSignal(Addr signal_handle)
+{
+    // Originally the completion signal was read functionally and written
+    // with a timing DMA. This can cause issues in FullSystem mode and
+    // cause translation failures. Therefore, in FullSystem mode everything
+    // is done in timing mode.
+
+    if (!FullSystem) {
+        /**
+        * HACK: The semantics of the HSA signal is to decrement
+        * the current signal value. We cheat here and read out
+        * he value from main memory using functional access and
+        * then just DMA the decremented value.
+        */
+        uint64_t signal_value = functionalReadHsaSignal(signal_handle);
+
+        updateHsaSignal(signal_handle, signal_value - 1);
+    } else {
+        // The semantics of the HSA signal is to decrement the current
+        // signal value by one. Do this asynchronously via DMAs and
+        // callbacks as we can safely continue with this function
+        // while waiting for the next packet from the host.
+        updateHsaSignalAsync(signal_handle, -1);
+    }
+}
+
+void
+GPUCommandProcessor::updateHsaSignalAsync(Addr signal_handle, int64_t diff)
+{
+    Addr value_addr = getHsaSignalValueAddr(signal_handle);
+
+    uint64_t *signalValue = new uint64_t;
+    auto cb = new DmaVirtCallback<uint64_t>(
+        [ = ] (const uint64_t &)
+            { updateHsaSignalData(value_addr, diff, signalValue); });
+    dmaReadVirt(value_addr, sizeof(uint64_t), cb, (void *)signalValue);
+    DPRINTF(GPUCommandProc, "updateHsaSignalAsync reading value addr %lx\n",
+            value_addr);
+
+    Addr mailbox_addr = getHsaSignalMailboxAddr(signal_handle);
+    uint64_t *mailboxValue = new uint64_t;
+    auto cb2 = new DmaVirtCallback<uint64_t>(
+        [ = ] (const uint64_t &)
+            { updateHsaMailboxData(signal_handle, mailboxValue); });
+    dmaReadVirt(mailbox_addr, sizeof(uint64_t), cb2, (void *)mailboxValue);
+    DPRINTF(GPUCommandProc, "updateHsaSignalAsync reading mailbox addr %lx\n",
+            mailbox_addr);
+}
+
+void
+GPUCommandProcessor::updateHsaSignalData(Addr value_addr, int64_t diff,
+                                         uint64_t *prev_value)
+{
+    // Reuse the value allocated for the read
+    DPRINTF(GPUCommandProc, "updateHsaSignalData read %ld, writing %ld\n",
+            *prev_value, *prev_value + diff);
+    *prev_value += diff;
+    auto cb = new DmaVirtCallback<uint64_t>(
+        [ = ] (const uint64_t &)
+            { updateHsaSignalDone(prev_value); });
+    dmaWriteVirt(value_addr, sizeof(uint64_t), cb, (void *)prev_value);
+}
+
+void
+GPUCommandProcessor::updateHsaMailboxData(Addr signal_handle,
+                                          uint64_t *mailbox_value)
+{
+    Addr event_addr = getHsaSignalEventAddr(signal_handle);
+
+    DPRINTF(GPUCommandProc, "updateHsaMailboxData read %ld\n", *mailbox_value);
+    if (*mailbox_value != 0) {
+        // This is an interruptible signal. Now, read the
+        // event ID and directly communicate with the driver
+        // about that event notification.
+        auto cb = new DmaVirtCallback<uint64_t>(
+            [ = ] (const uint64_t &)
+                { updateHsaEventData(signal_handle, mailbox_value); });
+        dmaReadVirt(event_addr, sizeof(uint64_t), cb, (void *)mailbox_value);
+    } else {
+        delete mailbox_value;
+    }
+}
+
+void
+GPUCommandProcessor::updateHsaEventData(Addr signal_handle,
+                                        uint64_t *event_value)
+{
+    Addr mailbox_addr = getHsaSignalMailboxAddr(signal_handle);
+
+    DPRINTF(GPUCommandProc, "updateHsaEventData read %ld\n", *event_value);
+    // Write *event_value to the mailbox to clear the event
+    auto cb = new DmaVirtCallback<uint64_t>(
+        [ = ] (const uint64_t &)
+            { updateHsaSignalDone(event_value); }, *event_value);
+    dmaWriteVirt(mailbox_addr, sizeof(uint64_t), cb, &cb->dmaBuffer, 0);
+}
+
+void
+GPUCommandProcessor::updateHsaSignalDone(uint64_t *signal_value)
+{
+    delete signal_value;
+}
+
 uint64_t
 GPUCommandProcessor::functionalReadHsaSignal(Addr signal_handle)
 {

@@ -106,9 +106,16 @@ class GPUCommandProcessor : public DmaVirtDevice
     AddrRangeList getAddrRanges() const override;
     System *system();
 
+    void sendCompletionSignal(Addr signal_handle);
     void updateHsaSignal(Addr signal_handle, uint64_t signal_value,
                          HsaSignalCallbackFunction function =
                             [] (const uint64_t &) { });
+    void updateHsaSignalAsync(Addr signal_handle, int64_t diff);
+    void updateHsaSignalData(Addr value_addr, int64_t diff,
+                             uint64_t *prev_value);
+    void updateHsaSignalDone(uint64_t *signal_value);
+    void updateHsaMailboxData(Addr signal_handle, uint64_t *mailbox_value);
+    void updateHsaEventData(Addr signal_handle, uint64_t *event_value);
 
     uint64_t functionalReadHsaSignal(Addr signal_handle);
 
