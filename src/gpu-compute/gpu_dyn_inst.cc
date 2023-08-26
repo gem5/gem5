@@ -901,12 +901,12 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
         uint32_t numSgprs = wavefront()->maxSgprs;
         uint32_t physSgprIdx =
             wavefront()->computeUnit->registerManager->mapSgpr(wavefront(),
-                                                          numSgprs - 3);
+                                                          numSgprs - 4);
         uint32_t offset =
             wavefront()->computeUnit->srf[simdId]->read(physSgprIdx);
         physSgprIdx =
             wavefront()->computeUnit->registerManager->mapSgpr(wavefront(),
-                                                          numSgprs - 4);
+                                                          numSgprs - 3);
         uint32_t size =
             wavefront()->computeUnit->srf[simdId]->read(physSgprIdx);
         for (int lane = 0; lane < wavefront()->computeUnit->wfSize(); ++lane) {
