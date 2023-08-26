@@ -433,6 +433,12 @@ GPUDynInst::isFlatGlobal() const
 }
 
 bool
+GPUDynInst::isFlatScratch() const
+{
+    return _staticInst->isFlatScratch();
+}
+
+bool
 GPUDynInst::isLoad() const
 {
     return _staticInst->isLoad();

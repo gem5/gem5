@@ -130,6 +130,7 @@ class GPUStaticInst : public GPUStaticInstFlags
     bool isMemRef() const { return _flags[MemoryRef]; }
     bool isFlat() const { return _flags[Flat]; }
     bool isFlatGlobal() const { return _flags[FlatGlobal]; }
+    bool isFlatScratch() const { return _flags[FlatScratch]; }
     bool isLoad() const { return _flags[Load]; }
     bool isStore() const { return _flags[Store]; }
 

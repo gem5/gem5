@@ -926,7 +926,8 @@ namespace VegaISA
         void
         initMemRead(GPUDynInstPtr gpuDynInst)
         {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL ||
+                gpuDynInst->executedAs() == enums::SC_PRIVATE) {
                 initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
             } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
                 Wavefront *wf = gpuDynInst->wavefront();
@@ -944,7 +945,8 @@ namespace VegaISA
         void
         initMemRead(GPUDynInstPtr gpuDynInst)
         {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL ||
+                gpuDynInst->executedAs() == enums::SC_PRIVATE) {
                 initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::ReadReq);
             } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
                 Wavefront *wf = gpuDynInst->wavefront();
@@ -966,7 +968,8 @@ namespace VegaISA
         void
         initMemWrite(GPUDynInstPtr gpuDynInst)
         {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL ||
+                gpuDynInst->executedAs() == enums::SC_PRIVATE) {
                 initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
             } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
                 Wavefront *wf = gpuDynInst->wavefront();
@@ -984,7 +987,8 @@ namespace VegaISA
         void
         initMemWrite(GPUDynInstPtr gpuDynInst)
         {
-            if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
+            if (gpuDynInst->executedAs() == enums::SC_GLOBAL ||
+                gpuDynInst->executedAs() == enums::SC_PRIVATE) {
                 initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::WriteReq);
             } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
                 Wavefront *wf = gpuDynInst->wavefront();
@@ -1006,6 +1010,10 @@ namespace VegaISA
         void
         initAtomicAccess(GPUDynInstPtr gpuDynInst)
         {
+            // Flat scratch requests may not be atomic according to ISA manual
+            // up to MI200. See MI200 manual Table 45.
+            assert(gpuDynInst->executedAs() != enums::SC_PRIVATE);
+
             if (gpuDynInst->executedAs() == enums::SC_GLOBAL) {
                 initMemReqHelper<T, 1>(gpuDynInst, MemCmd::SwapReq, true);
             } else if (gpuDynInst->executedAs() == enums::SC_GROUP) {
@@ -1044,7 +1052,8 @@ namespace VegaISA
             // If saddr = 0x7f there is no scalar reg to read and address will
             // be a 64-bit address. Otherwise, saddr is the reg index for a
             // scalar reg used as the base address for a 32-bit address.
-            if ((saddr == 0x7f && isFlatGlobal()) || isFlat()) {
+            if ((saddr == 0x7f && (isFlatGlobal() || isFlatScratch()))
+                || isFlat()) {
                 ConstVecOperandU64 vbase(gpuDynInst, vaddr);
                 vbase.read();
 
@@ -1063,9 +1072,13 @@ namespace VegaISA
 
             if (isFlat()) {
                 gpuDynInst->resolveFlatSegment(gpuDynInst->exec_mask);
-            } else {
+            } else if (isFlatGlobal()) {
                 gpuDynInst->staticInstruction()->executed_as =
                     enums::SC_GLOBAL;
+            } else {
+                assert(isFlatScratch());
+                gpuDynInst->staticInstruction()->executed_as =
+                    enums::SC_PRIVATE;
             }
         }
 
@@ -1081,7 +1094,9 @@ namespace VegaISA
                 gpuDynInst->computeUnit()->localMemoryPipe
                     .issueRequest(gpuDynInst);
             } else {
-                fatal("Unsupported scope for flat instruction.\n");
+                assert(gpuDynInst->executedAs() == enums::SC_PRIVATE);
+                gpuDynInst->computeUnit()->globalMemoryPipe
+                    .issueRequest(gpuDynInst);
             }
         }
 
@@ -1098,10 +1113,10 @@ namespace VegaISA
 
       private:
         void initFlatOperandInfo();
-        void initGlobalOperandInfo();
+        void initGlobalScratchOperandInfo();
 
         void generateFlatDisassembly();
-        void generateGlobalDisassembly();
+        void generateGlobalScratchDisassembly();
 
         void
         calcAddrSgpr(GPUDynInstPtr gpuDynInst, ConstVecOperandU32 &vaddr,

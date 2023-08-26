@@ -54,6 +54,7 @@ class GPUStaticInstFlags(Enum):
         "MemoryRef",  # References memory (load, store, or atomic)
         "Flat",  # Flat memory op
         "FlatGlobal",  # Global memory op
+        "FlatScratch",  # Scratch memory op
         "Load",  # Reads from memory
         "Store",  # Writes to memory
         # Atomic ops
