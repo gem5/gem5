@@ -919,12 +919,12 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
         wavefront()->execUnitId =  wavefront()->flatLmUnitId;
         wavefront()->decLGKMInstsIssued();
         if (isLoad()) {
-            wavefront()->rdGmReqsInPipe--;
+            wavefront()->rdLmReqsInPipe--;
         } else if (isStore()) {
-            wavefront()->wrGmReqsInPipe--;
+            wavefront()->wrLmReqsInPipe--;
         } else if (isAtomic() || isMemSync()) {
-            wavefront()->rdGmReqsInPipe--;
-            wavefront()->wrGmReqsInPipe--;
+            wavefront()->wrLmReqsInPipe--;
+            wavefront()->rdLmReqsInPipe--;
         } else {
             panic("Invalid memory operation!\n");
         }
