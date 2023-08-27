@@ -234,6 +234,7 @@ class GPUDynInst : public GPUExecContext
     bool isMemRef() const;
     bool isFlat() const;
     bool isFlatGlobal() const;
+    bool isFlatScratch() const;
     bool isLoad() const;
     bool isStore() const;
 

@@ -433,6 +433,12 @@ GPUDynInst::isFlatGlobal() const
 }
 
 bool
+GPUDynInst::isFlatScratch() const
+{
+    return _staticInst->isFlatScratch();
+}
+
+bool
 GPUDynInst::isLoad() const
 {
     return _staticInst->isLoad();
@@ -901,12 +907,12 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
         uint32_t numSgprs = wavefront()->maxSgprs;
         uint32_t physSgprIdx =
             wavefront()->computeUnit->registerManager->mapSgpr(wavefront(),
-                                                          numSgprs - 3);
+                                                          numSgprs - 4);
         uint32_t offset =
             wavefront()->computeUnit->srf[simdId]->read(physSgprIdx);
         physSgprIdx =
             wavefront()->computeUnit->registerManager->mapSgpr(wavefront(),
-                                                          numSgprs - 4);
+                                                          numSgprs - 3);
         uint32_t size =
             wavefront()->computeUnit->srf[simdId]->read(physSgprIdx);
         for (int lane = 0; lane < wavefront()->computeUnit->wfSize(); ++lane) {
@@ -919,12 +925,12 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
         wavefront()->execUnitId =  wavefront()->flatLmUnitId;
         wavefront()->decLGKMInstsIssued();
         if (isLoad()) {
-            wavefront()->rdGmReqsInPipe--;
+            wavefront()->rdLmReqsInPipe--;
         } else if (isStore()) {
-            wavefront()->wrGmReqsInPipe--;
+            wavefront()->wrLmReqsInPipe--;
         } else if (isAtomic() || isMemSync()) {
-            wavefront()->rdGmReqsInPipe--;
-            wavefront()->wrGmReqsInPipe--;
+            wavefront()->wrLmReqsInPipe--;
+            wavefront()->rdLmReqsInPipe--;
         } else {
             panic("Invalid memory operation!\n");
         }

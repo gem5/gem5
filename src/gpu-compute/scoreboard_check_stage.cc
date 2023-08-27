@@ -154,7 +154,8 @@ ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
     if (!(ii->isBarrier() || ii->isNop() || ii->isReturn() || ii->isBranch() ||
          ii->isALU() || ii->isLoad() || ii->isStore() || ii->isAtomic() ||
          ii->isEndOfKernel() || ii->isMemSync() || ii->isFlat() ||
-         ii->isFlatGlobal() || ii->isSleep() || ii->isLocalMem())) {
+         ii->isFlatGlobal() || ii->isFlatScratch() || ii->isSleep() ||
+         ii->isLocalMem())) {
         panic("next instruction: %s is of unknown type\n", ii->disassemble());
     }
 

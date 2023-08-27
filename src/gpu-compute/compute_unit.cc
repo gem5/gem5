@@ -1917,6 +1917,8 @@ ComputeUnit::updateInstStats(GPUDynInstPtr gpuDynInst)
             }
         } else if (gpuDynInst->isFlatGlobal()) {
             stats.flatVMemInsts++;
+        } else if (gpuDynInst->isFlatScratch()) {
+            stats.flatVMemInsts++;
         } else if (gpuDynInst->isLocalMem()) {
             stats.ldsNoFlatInsts++;
         } else if (gpuDynInst->isLoad()) {

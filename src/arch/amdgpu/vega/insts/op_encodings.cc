@@ -1546,6 +1546,8 @@ namespace VegaISA
         // The SEG field specifies FLAT(0) SCRATCH(1) or GLOBAL(2)
         if (iFmt->SEG == 0) {
             setFlag(Flat);
+        } else if (iFmt->SEG == 1) {
+            setFlag(FlatScratch);
         } else if (iFmt->SEG == 2) {
             setFlag(FlatGlobal);
         } else {
@@ -1573,12 +1575,12 @@ namespace VegaISA
     Inst_FLAT::initOperandInfo()
     {
         // One of the flat subtypes should be specified via flags
-        assert(isFlat() ^ isFlatGlobal());
+        assert(isFlat() ^ isFlatGlobal() ^ isFlatScratch());
 
         if (isFlat()) {
             initFlatOperandInfo();
-        } else if (isFlatGlobal()) {
-            initGlobalOperandInfo();
+        } else if (isFlatGlobal() || isFlatScratch()) {
+            initGlobalScratchOperandInfo();
         } else {
             panic("Unknown flat subtype!\n");
         }
@@ -1622,7 +1624,7 @@ namespace VegaISA
     }
 
     void
-    Inst_FLAT::initGlobalOperandInfo()
+    Inst_FLAT::initGlobalScratchOperandInfo()
     {
         //3 formats:
         // 1 dst + 2 src (load)
@@ -1691,12 +1693,12 @@ namespace VegaISA
     Inst_FLAT::generateDisassembly()
     {
         // One of the flat subtypes should be specified via flags
-        assert(isFlat() ^ isFlatGlobal());
+        assert(isFlat() ^ isFlatGlobal() ^ isFlatScratch());
 
         if (isFlat()) {
             generateFlatDisassembly();
-        } else if (isFlatGlobal()) {
-            generateGlobalDisassembly();
+        } else if (isFlatGlobal() || isFlatScratch()) {
+            generateGlobalScratchDisassembly();
         } else {
             panic("Unknown flat subtype!\n");
         }
@@ -1720,11 +1722,16 @@ namespace VegaISA
     }
 
     void
-    Inst_FLAT::generateGlobalDisassembly()
+    Inst_FLAT::generateGlobalScratchDisassembly()
     {
         // Replace flat_ with global_ in assembly string
         std::string global_opcode = _opcode;
-        global_opcode.replace(0, 4, "global");
+        if (isFlatGlobal()) {
+            global_opcode.replace(0, 4, "global");
+        } else {
+            assert(isFlatScratch());
+            global_opcode.replace(0, 4, "scratch");
+        }
 
         std::stringstream dis_stream;
         dis_stream << global_opcode << " ";
