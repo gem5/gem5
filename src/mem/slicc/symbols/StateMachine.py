@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 ARM Limited
+# Copyright (c) 2019-2021,2023 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -111,8 +111,11 @@ class StateMachine(Symbol):
         self.actions = OrderedDict()
         self.request_types = OrderedDict()
         self.transitions = []
+        self.transitions_per_ev = {}
         self.in_ports = []
         self.functions = []
+        self.event_stats_in_trans = []
+        self.event_stats_out_trans = []
 
         # Data members in the State Machine that have been declared inside
         # the {} machine.  Note that these along with the config params
@@ -136,6 +139,10 @@ class StateMachine(Symbol):
     def addEvent(self, event):
         assert self.table is None
         self.events[event.ident] = event
+        if "in_trans" in event.pairs:
+            self.event_stats_in_trans.append(event)
+        if "out_trans" in event.pairs:
+            self.event_stats_out_trans.append(event)
 
     def addAction(self, action):
         assert self.table is None
@@ -163,6 +170,9 @@ class StateMachine(Symbol):
     def addTransition(self, trans):
         assert self.table is None
         self.transitions.append(trans)
+        if trans.event not in self.transitions_per_ev:
+            self.transitions_per_ev[trans.event] = []
+        self.transitions_per_ev[trans.event].append(trans)
 
     def addInPort(self, var):
         self.in_ports.append(var)
@@ -957,53 +967,93 @@ $c_ident::regStats()
         }
     }
 
-    for (${ident}_Event event = ${ident}_Event_FIRST;
-                 event < ${ident}_Event_NUM; ++event) {
+"""
+        )
+        # check if Events/States have profiling qualifiers flags for
+        # inTransLatHist and outTransLatHist stats.
+        ev_ident_list = [
+            "%s_Event_%s" % (ident, ev.ident)
+            for ev in self.event_stats_out_trans
+        ]
+        ev_ident_str = "{" + ",".join(ev_ident_list) + "}"
+        code(
+            """
+    const std::vector<${ident}_Event> out_trans_evs = ${ev_ident_str};
+"""
+        )
+        ev_ident_list = [
+            "%s_Event_%s" % (ident, ev.ident)
+            for ev in self.event_stats_in_trans
+        ]
+        ev_ident_str = "{" + ",".join(ev_ident_list) + "}"
+        code(
+            """
+    const std::vector<${ident}_Event> in_trans_evs = ${ev_ident_str};
+"""
+        )
+        kv_ident_list = []
+        for ev in self.event_stats_in_trans:
+            key_ident = "%s_Event_%s" % (ident, ev.ident)
+            val_ident_lst = [
+                "%s_State_%s" % (ident, trans.state.ident)
+                for trans in self.transitions_per_ev[ev]
+            ]
+            val_ident_str = "{" + ",".join(val_ident_lst) + "}"
+            kv_ident_list.append("{%s, %s}" % (key_ident, val_ident_str))
+        key_ident_str = "{" + ",".join(kv_ident_list) + "}"
+        code(
+            """
+    const std::unordered_map<${ident}_Event, std::vector<${ident}_State>>
+                                in_trans_evs_states = ${key_ident_str};
+"""
+        )
+        code(
+            """
+
+    for (const auto event : out_trans_evs) {
         std::string stat_name =
             "outTransLatHist." + ${ident}_Event_to_string(event);
         statistics::Histogram* t =
             new statistics::Histogram(&stats, stat_name.c_str());
-        stats.outTransLatHist.push_back(t);
+        stats.outTransLatHist[event] = t;
         t->init(5);
         t->flags(statistics::pdf | statistics::total |
                  statistics::oneline | statistics::nozero);
 
         statistics::Scalar* r = new statistics::Scalar(&stats,
                                              (stat_name + ".retries").c_str());
-        stats.outTransLatHistRetries.push_back(r);
+        stats.outTransRetryCnt[event] = r;
         r->flags(statistics::nozero);
     }
 
-    for (${ident}_Event event = ${ident}_Event_FIRST;
-                 event < ${ident}_Event_NUM; ++event) {
-        std::string stat_name = "inTransLatHist." +
-                                ${ident}_Event_to_string(event);
+    for (const auto event : in_trans_evs) {
+        std::string stat_name =
+            "inTransLatHist." + ${ident}_Event_to_string(event);
+        statistics::Histogram* t =
+            new statistics::Histogram(&stats, stat_name.c_str());
+        stats.inTransLatHist[event] = t;
+        t->init(5);
+        t->flags(statistics::pdf | statistics::total |
+                 statistics::oneline | statistics::nozero);
+
         statistics::Scalar* r = new statistics::Scalar(&stats,
-                                             (stat_name + ".total").c_str());
-        stats.inTransLatTotal.push_back(r);
+                                             (stat_name + ".retries").c_str());
+        stats.inTransRetryCnt[event] = r;
         r->flags(statistics::nozero);
 
-        r = new statistics::Scalar(&stats,
-                              (stat_name + ".retries").c_str());
-        stats.inTransLatRetries.push_back(r);
-        r->flags(statistics::nozero);
-
-        stats.inTransLatHist.emplace_back();
-        for (${ident}_State initial_state = ${ident}_State_FIRST;
-             initial_state < ${ident}_State_NUM; ++initial_state) {
-            stats.inTransLatHist.back().emplace_back();
+        auto &src_states = stats.inTransStateChanges[event];
+        for (const auto initial_state : in_trans_evs_states.at(event)) {
+            auto &dst_vector = src_states[initial_state];
             for (${ident}_State final_state = ${ident}_State_FIRST;
                  final_state < ${ident}_State_NUM; ++final_state) {
                 std::string stat_name = "inTransLatHist." +
                     ${ident}_Event_to_string(event) + "." +
                     ${ident}_State_to_string(initial_state) + "." +
-                    ${ident}_State_to_string(final_state);
-                statistics::Histogram* t =
-                    new statistics::Histogram(&stats, stat_name.c_str());
-                stats.inTransLatHist.back().back().push_back(t);
-                t->init(5);
-                t->flags(statistics::pdf | statistics::total |
-                         statistics::oneline | statistics::nozero);
+                    ${ident}_State_to_string(final_state) + ".total";
+                statistics::Scalar* t =
+                    new statistics::Scalar(&stats, stat_name.c_str());
+                t->flags(statistics::nozero);
+                dst_vector.push_back(t);
             }
         }
     }

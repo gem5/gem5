@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 ARM Limited
+ * Copyright (c) 2021-2023 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -280,37 +280,37 @@ machine(MachineType:Cache, "Cache coherency protocol") :
 
     // Events triggered by sequencer requests or snoops in the rdy queue
     // See CHIRequestType in CHi-msg.sm for descriptions
-    Load,                        desc="";
-    Store,                       desc="";
-    Prefetch,                    desc="";
-    ReadShared,                  desc="";
-    ReadNotSharedDirty,          desc="";
-    ReadUnique,                  desc="";
-    ReadUnique_PoC,              desc="";
-    ReadOnce,                    desc="";
-    CleanUnique,                 desc="";
-    Evict,                       desc="";
-    WriteBackFull,               desc="";
-    WriteEvictFull,              desc="";
-    WriteCleanFull,              desc="";
-    WriteUnique,                 desc="";
-    WriteUniquePtl_PoC,          desc="";
-    WriteUniqueFull_PoC,         desc="";
-    WriteUniqueFull_PoC_Alloc,   desc="";
-    SnpCleanInvalid,             desc="";
-    SnpShared,                   desc="";
-    SnpSharedFwd,                desc="";
-    SnpNotSharedDirtyFwd,        desc="";
-    SnpUnique,                   desc="";
-    SnpUniqueFwd,                desc="";
-    SnpOnce,                     desc="";
-    SnpOnceFwd,                  desc="";
-    SnpStalled, desc=""; // A snoop stall triggered from the inport
+    Load,                        desc="", in_trans="yes";
+    Store,                       desc="", in_trans="yes";
+    Prefetch,                    desc="", in_trans="yes";
+    ReadShared,                  desc="", in_trans="yes";
+    ReadNotSharedDirty,          desc="", in_trans="yes";
+    ReadUnique,                  desc="", in_trans="yes";
+    ReadUnique_PoC,              desc="", in_trans="yes";
+    ReadOnce,                    desc="", in_trans="yes";
+    CleanUnique,                 desc="", in_trans="yes";
+    Evict,                       desc="", in_trans="yes";
+    WriteBackFull,               desc="", in_trans="yes";
+    WriteEvictFull,              desc="", in_trans="yes";
+    WriteCleanFull,              desc="", in_trans="yes";
+    WriteUnique,                 desc="", in_trans="yes";
+    WriteUniquePtl_PoC,          desc="", in_trans="yes";
+    WriteUniqueFull_PoC,         desc="", in_trans="yes";
+    WriteUniqueFull_PoC_Alloc,   desc="", in_trans="yes";
+    SnpCleanInvalid,             desc="", in_trans="yes";
+    SnpShared,                   desc="", in_trans="yes";
+    SnpSharedFwd,                desc="", in_trans="yes";
+    SnpNotSharedDirtyFwd,        desc="", in_trans="yes";
+    SnpUnique,                   desc="", in_trans="yes";
+    SnpUniqueFwd,                desc="", in_trans="yes";
+    SnpOnce,                     desc="", in_trans="yes";
+    SnpOnceFwd,                  desc="", in_trans="yes";
+    SnpStalled, desc="", in_trans="yes"; // A snoop stall triggered from the inport
 
     // DVM sequencer requests
-    DvmTlbi_Initiate, desc=""; // triggered when a CPU core wants to send a TLBI
+    DvmTlbi_Initiate, desc="", out_trans="yes", in_trans="yes"; // triggered when a CPU core wants to send a TLBI
     // TLBIs are handled entirely within Ruby, so there's no ExternCompleted message
-    DvmSync_Initiate, desc=""; // triggered when a CPU core wants to send a sync
+    DvmSync_Initiate, desc="", out_trans="yes", in_trans="yes"; // triggered when a CPU core wants to send a sync
     DvmSync_ExternCompleted, desc=""; // triggered when an externally requested Sync is completed
 
     // Events triggered by incoming response messages
@@ -344,10 +344,10 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     PCrdGrant_PoC_Hazard,    desc="";
 
     // Events triggered by incoming DVM messages
-    SnpDvmOpSync_P1,         desc="";
-    SnpDvmOpSync_P2,         desc="";
-    SnpDvmOpNonSync_P1,      desc="";
-    SnpDvmOpNonSync_P2,      desc="";
+    SnpDvmOpSync_P1,         desc="", in_trans="yes";
+    SnpDvmOpSync_P2,         desc="", in_trans="yes";
+    SnpDvmOpNonSync_P1,      desc="", in_trans="yes";
+    SnpDvmOpNonSync_P2,      desc="", in_trans="yes";
 
     // Events triggered by incoming data response messages
     // See CHIDataType in CHi-msg.sm for descriptions
@@ -383,20 +383,20 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     // A Write or Evict becomes stale when the requester receives a snoop that
     // changes the state of the data while the request was pending.
     // Actual CHI implementations don't have this check.
-    Evict_Stale,            desc="";
-    WriteBackFull_Stale,    desc="";
-    WriteEvictFull_Stale,   desc="";
-    WriteCleanFull_Stale,   desc="";
-    CleanUnique_Stale,   desc="";
+    Evict_Stale,            desc="", in_trans="yes";
+    WriteBackFull_Stale,    desc="", in_trans="yes";
+    WriteEvictFull_Stale,   desc="", in_trans="yes";
+    WriteCleanFull_Stale,   desc="", in_trans="yes";
+    CleanUnique_Stale,   desc="", in_trans="yes";
 
     // Cache fill handling
     CheckCacheFill,   desc="Check if need to write or update the cache and trigger any necessary allocation and evictions";
 
     // Internal requests generated to evict or writeback a local copy
     // to free-up cache space
-    Local_Eviction,   desc="Evicts/WB the local copy of the line";
-    LocalHN_Eviction, desc="Local_Eviction triggered when is HN";
-    Global_Eviction,  desc="Local_Eviction + back-invalidate line in all upstream requesters";
+    Local_Eviction,   in_trans="yes", desc="Evicts/WB the local copy of the line";
+    LocalHN_Eviction, in_trans="yes", desc="Local_Eviction triggered when is HN";
+    Global_Eviction,  in_trans="yes", desc="Local_Eviction + back-invalidate line in all upstream requesters";
 
     // Events triggered from tbe.actions
     // In general, for each event we define a single transition from
@@ -425,11 +425,11 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SnpOncePipe,   desc="Latency for SnpOnce requests";
 
     // Send a read request downstream.
-    SendReadShared,       desc="Send a ReadShared or ReadNotSharedDirty is allow_SD is false";
-    SendReadOnce,         desc="Send a ReadOnce";
-    SendReadNoSnp,        desc="Send a SendReadNoSnp";
-    SendReadNoSnpDMT,     desc="Send a SendReadNoSnp using DMT";
-    SendReadUnique,       desc="Send a ReadUnique";
+    SendReadShared,       out_trans="yes", desc="Send a ReadShared or ReadNotSharedDirty is allow_SD is false";
+    SendReadOnce,         out_trans="yes", desc="Send a ReadOnce";
+    SendReadNoSnp,        out_trans="yes", desc="Send a SendReadNoSnp";
+    SendReadNoSnpDMT,     out_trans="yes", desc="Send a SendReadNoSnp using DMT";
+    SendReadUnique,       out_trans="yes", desc="Send a ReadUnique";
     SendCompAck,          desc="Send CompAck";
     // Read handling at the completer
     SendCompData,    desc="Send CompData";
@@ -437,11 +437,11 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SendRespSepData, desc="Send RespSepData for a DMT request";
 
     // Send a write request downstream.
-    SendWriteBackOrWriteEvict, desc="Send a WriteBackFull (if line is UD or SD) or WriteEvictFull (if UC)";
-    SendWriteClean,            desc="Send a WriteCleanFull";
-    SendWriteNoSnp,            desc="Send a WriteNoSnp for a full line";
-    SendWriteNoSnpPartial,     desc="Send a WriteNoSnpPtl";
-    SendWriteUnique,           desc="Send a WriteUniquePtl";
+    SendWriteBackOrWriteEvict, out_trans="yes", desc="Send a WriteBackFull (if line is UD or SD) or WriteEvictFull (if UC)";
+    SendWriteClean,            out_trans="yes", desc="Send a WriteCleanFull";
+    SendWriteNoSnp,            out_trans="yes", desc="Send a WriteNoSnp for a full line";
+    SendWriteNoSnpPartial,     out_trans="yes", desc="Send a WriteNoSnpPtl";
+    SendWriteUnique,           out_trans="yes", desc="Send a WriteUniquePtl";
     SendWBData,                desc="Send writeback data";
     SendWUData,                desc="Send write unique data";
     SendWUDataCB,              desc="Send write unique data from a sequencer callback";
@@ -453,9 +453,9 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SendComp_WU,           desc="Ack WU completion";
 
     // Dataless requests
-    SendEvict,      desc="Send a Evict";
+    SendEvict,      out_trans="yes", desc="Send a Evict";
     SendCompIResp,  desc="Ack Evict with Comp_I";
-    SendCleanUnique,desc="Send a CleanUnique";
+    SendCleanUnique,out_trans="yes", desc="Send a CleanUnique";
     SendCompUCResp, desc="Ack CleanUnique with Comp_UC";
     SendCompUCRespStale, desc="Ack stale CleanUnique with Comp_UC";
 
