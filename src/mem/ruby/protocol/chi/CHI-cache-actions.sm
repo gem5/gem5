@@ -2319,7 +2319,7 @@ action(Send_SnpRespData, desc="") {
          ((tbe.dataDirty || tbe.dataUnique) && (tbe.reqType == CHIRequestType:SnpShared)) ||
          ((tbe.dataDirty || tbe.dataUnique) && (tbe.reqType == CHIRequestType:SnpUnique)));
 
-  if (tbe.dataToBeInvalid) {
+  if (tbe.dataToBeInvalid && tbe.dir_sharers.isEmpty()) {
     assert(tbe.dataMaybeDirtyUpstream == false);
     if (tbe.dataDirty) {
       tbe.snd_msgType := CHIDataType:SnpRespData_I_PD;
