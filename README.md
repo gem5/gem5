@@ -1,5 +1,13 @@
 # The gem5 Simulator
 
+[![gem5 Licence](https://img.shields.io/github/license/gem5/gem5?color=blue)](https://github.com/gem5/gem5/blob/stable/LICENSE)
+[![gem5 Commits Total](https://img.shields.io/github/commit-activity/m/gem5/gem5)](https://github.com/gem5/gem5/commits/stable)
+[![GitHub contributors](https://img.shields.io/github/contributors/gem5/gem5)](https://github.com/gem5/gem5/graphs/contributors)
+
+[![gem5 Issues](https://img.shields.io/github/issues/gem5/gem5)](https://github.com/gem5/gem5/issues)
+[![gem5 pull requests](https://img.shields.io/github/issues-pr/gem5/gem5)](https://github.com/gem5/gem5/pulls)
+
+
 This is the repository for the gem5 simulator. It contains the full source code
 for the simulator and all tests and regressions.
 
