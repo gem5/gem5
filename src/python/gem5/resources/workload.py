@@ -38,13 +38,16 @@ def CustomWorkload(function: str, parameters: Dict[str, Any]):
     A custom workload gem5 resource. It can be used to specify a custom,
     local workload.
 
-    **Warning**: This class is deprecated and changed to a funtion and will be removed in future
-    releases of gem5. Please use the `WorkloadResource` class instead. This
-    class is merely a wrapper for it.
+    **Warning**: This `CustomWorkload` class is deprecated. It will be removed in a
+    future release of gem5. Please use the `gem5.resources.resource.WorkloadResource`
+    class instead.
+
+    The class has been stealthily converted to a function which wraps the
+    `WorkloadResource` class.
     """
     warn(
         "The `CustomWorkload` class is deprecated. Please use "
-        "`WorkloadResource` instead."
+        "the `gem5.resources.resource.WorkloadResource` class instead."
     )
     return WorkloadResource(function=function, parameters=parameters)
 
@@ -57,17 +60,26 @@ def Workload(
     gem5_version: Optional[str] = core.gem5Version,
 ):
     """
-    This function was created to maintain backwards compability for v23.0.0
-    and prior releases of gem5 where `Workload` was a class.
+    **Warning**: The `Workload` class is deprecated. It will be removed in a
+        future release of gem5. Please use the `gem5.resources.resource.WorkloadResource`
+        class instead.
 
-    In the interests of gem5-resource specialization, the `Workload` class
-    has been dropped. Instead users are advized to use the `obtain_resource`
-    function which will return the correct `AbstractResource` implementation.
-    This function (disguised as a class) wraps this function.
+    The class has been stealthily converted to a function which wraps the
+    `WorkloadResource` class.
     """
     warn(
         "`Workload` has been deprecated. Please use the `obtain_resource` "
-        "function instead."
+        "function instead:\n\n"
+        "```\n"
+        "from gem5.resources.resource import obtain_resource\n"
+        "workload = obtain_resource(\n"
+        f'    resource_id="{workload_name}",\n'
+        f'    resource_directory="{resource_directory}",\n'
+        f'    gem5_version="{gem5_version}",\n'
+        f"    clients={clients},\n"
+        f"    resource_version={resource_version},\n"
+        ")\n"
+        "```"
     )
     return obtain_resource(
         workload_name,

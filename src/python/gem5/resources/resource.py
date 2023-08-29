@@ -714,6 +714,7 @@ def obtain_resource(
     # Obtain the type from the JSON. From this we will determine what subclass
     # of `AbstractResource` we are to create and return.
     resources_category = resource_json["category"]
+
     if resources_category == "resource":
         # This is a stop-gap measure to ensure to work with older versions of
         # the "resource.json" file. These should be replaced with their
