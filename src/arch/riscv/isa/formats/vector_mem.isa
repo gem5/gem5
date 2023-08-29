@@ -34,6 +34,14 @@ def setVlen():
 def setVlenb():
         return "uint32_t vlenb = VlenbBits;\n"
 
+def declareVMemTemplate(class_name):
+    return f'''
+    template class {class_name}<uint8_t>;
+    template class {class_name}<uint16_t>;
+    template class {class_name}<uint32_t>;
+    template class {class_name}<uint64_t>;
+    '''
+
 def VMemBase(name, Name, ea_code, memacc_code, mem_flags,
                    inst_flags, base_class, postacc_code='',
                    declare_template_base=VMemMacroDeclare,
@@ -47,22 +55,20 @@ def VMemBase(name, Name, ea_code, memacc_code, mem_flags,
     iop = InstObjParams(name, Name, base_class,
         {'ea_code': ea_code,
          'memacc_code': memacc_code,
-         'postacc_code': postacc_code },
+         'postacc_code': postacc_code,
+         'declare_vmem_template': declareVMemTemplate(Name)},
         inst_flags)
 
     constructTemplate = eval(exec_template_base + 'Constructor')
 
     header_output   = declare_template_base.subst(iop)
-    decoder_output  = ''
-    if declare_template_base is not VMemTemplateMacroDeclare:
-        decoder_output  += constructTemplate.subst(iop)
-    else:
-        header_output   += constructTemplate.subst(iop)
+    decoder_output  = constructTemplate.subst(iop)
     decode_block    = decode_template.subst(iop)
     exec_output     = ''
     if not is_macroop:
         return (header_output, decoder_output, decode_block, exec_output)
 
+    micro_class_name = exec_template_base + 'MicroInst'
     microiop = InstObjParams(name + '_micro',
         Name + 'Micro',
         exec_template_base + 'MicroInst',
@@ -70,7 +76,8 @@ def VMemBase(name, Name, ea_code, memacc_code, mem_flags,
          'memacc_code': memacc_code,
          'postacc_code': postacc_code,
          'set_vlenb': setVlenb(),
-         'set_vlen': setVlen()},
+         'set_vlen': setVlen(),
+         'declare_vmem_template': declareVMemTemplate(Name + 'Micro')},
         inst_flags)
 
     if mem_flags:
@@ -79,17 +86,16 @@ def VMemBase(name, Name, ea_code, memacc_code, mem_flags,
         microiop.constructor += s
 
     microDeclTemplate = eval(exec_template_base + 'Micro' + 'Declare')
+    microConsTemplate = eval(exec_template_base + 'Micro' + 'Constructor')
     microExecTemplate = eval(exec_template_base + 'Micro' + 'Execute')
     microInitTemplate = eval(exec_template_base + 'Micro' + 'InitiateAcc')
     microCompTemplate = eval(exec_template_base + 'Micro' + 'CompleteAcc')
     header_output = microDeclTemplate.subst(microiop) + header_output
+    decoder_output = microConsTemplate.subst(microiop) + decoder_output
     micro_exec_output = (microExecTemplate.subst(microiop) +
         microInitTemplate.subst(microiop) +
         microCompTemplate.subst(microiop))
-    if declare_template_base is not VMemTemplateMacroDeclare:
-        exec_output += micro_exec_output
-    else:
-        header_output += micro_exec_output
+    exec_output += micro_exec_output
 
     return (header_output, decoder_output, decode_block, exec_output)
 
