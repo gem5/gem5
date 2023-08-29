@@ -221,6 +221,7 @@ def packed32(x):
     ret = []
     more = True
     while more:
+        x = int(x)
         b = x & 0x7F
         x = x >> 7
         if ((x == 0) and ((b & 0x40) == 0)) or (
@@ -383,7 +384,13 @@ def timestampList(x):
 
 def writeBinary(outfile, binary_list):
     for i in binary_list:
-        outfile.write(f"{i:c}")
+        if isinstance(i, str):
+            byteVal = bytes(i, "utf-8")
+        elif isinstance(i, int):
+            byteVal = bytes([i])
+        else:
+            byteVal = i
+        outfile.write(byteVal)
 
 
 ############################################################
@@ -661,7 +668,7 @@ def parseProcessInfo(task_file):
     task_name_failure_warned = False
 
     for line in process_file:
-        match = re.match(process_re, line)
+        match = re.match(process_re, line.decode())
         if match:
             tick = int(match.group(1))
             if start_tick < 0:
