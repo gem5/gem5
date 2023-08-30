@@ -3155,9 +3155,7 @@ action(Profile_OutgoingEnd_DatalessResp, desc="") {
 action(TagArrayRead, desc="") {
   assert(is_valid(tbe));
   tbe.delayNextAction := curTick() + cyclesToTicks(
-                            tagLatency((tbe.reqType == CHIRequestType:Load) ||
-                                      (tbe.reqType == CHIRequestType:Store) ||
-                                      (tbe.reqType == CHIRequestType:StoreLine)));
+    tagLatency(fromSequencer(tbe.reqType)));
 }
 
 action(TagArrayWrite, desc="") {

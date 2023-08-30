@@ -299,6 +299,12 @@ Cycles dataLatency() {
   return cache.getDataLatency();
 }
 
+bool fromSequencer(CHIRequestType reqType) {
+  return reqType == CHIRequestType:Load ||
+         reqType == CHIRequestType:Store ||
+         reqType == CHIRequestType:StoreLine;
+}
+
 bool inCache(Addr addr) {
   CacheEntry entry := getCacheEntry(makeLineAddress(addr));
   // NOTE: we consider data for the addr to be in cache if it exists in local,
