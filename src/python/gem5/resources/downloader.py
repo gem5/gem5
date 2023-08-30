@@ -34,6 +34,7 @@ import random
 from pathlib import Path
 import tarfile
 from urllib.error import HTTPError
+from urllib.parse import urlparse
 from typing import List, Optional, Dict
 
 from _m5 import core
@@ -310,19 +311,34 @@ def get_resource(
         if run_unzip:
             download_dest += zip_extension
 
-        # TODO: Might be nice to have some kind of download status bar here.
-        # TODO: There might be a case where this should be silenced.
-        print(
-            "Resource '{}' was not found locally. Downloading to '{}'...".format(
-                resource_name, download_dest
+        file_uri_path = _file_uri_to_path(resource_json["url"])
+        if file_uri_path:
+            if not file_uri_path.exists():
+                raise Exception(
+                    f"Could not find file at path '{file_uri_path}'"
+                )
+            print(
+                "Resource '{}' is being copied from '{}' to '{}'...".format(
+                    resource_name,
+                    urlparse(resource_json["url"]).path,
+                    download_dest,
+                )
             )
-        )
+            shutil.copy(file_uri_path, download_dest)
+        else:
+            # TODO: Might be nice to have some kind of download status bar here.
+            # TODO: There might be a case where this should be silenced.
+            print(
+                "Resource '{}' was not found locally. Downloading to '{}'...".format(
+                    resource_name, download_dest
+                )
+            )
 
-        # Get the URL.
-        url = resource_json["url"]
+            # Get the URL.
+            url = resource_json["url"]
 
-        _download(url=url, download_to=download_dest)
-        print(f"Finished downloading resource '{resource_name}'.")
+            _download(url=url, download_to=download_dest)
+            print(f"Finished downloading resource '{resource_name}'.")
 
         if run_unzip:
             print(
@@ -368,3 +384,27 @@ def get_resource(
 
                 safe_extract(f, unpack_to)
             os.remove(download_dest)
+
+
+def _file_uri_to_path(uri: str) -> Optional[Path]:
+    """
+    If the URI uses the File scheme (e.g, `file://host/path`) then
+    a Path object for the local path is returned, otherwise None.
+
+    **Note:** Only files from localhost are permitted. An exception
+    is thrown otherwise.
+
+    :param uri: The file URI to convert.
+
+    :returns: The path to the file.
+    """
+
+    if urlparse(uri).scheme == "file":
+        if urlparse(uri).netloc == "" or urlparse(uri).netloc == "localhost":
+            local_path = urlparse(uri).path
+            return Path(local_path)
+        raise Exception(
+            f"File URI '{uri}' specifies host '{urlparse(uri).netloc}'. "
+            "Only localhost is permitted."
+        )
+    return None
