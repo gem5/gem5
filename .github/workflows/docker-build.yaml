@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: ubuntu-20.04_all-depenencies
+  IMAGE_NAME: ubuntu-20.04_all-dependencies
 #
 jobs:
   # This builds and pushes the docker image.
