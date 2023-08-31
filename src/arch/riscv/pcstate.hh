@@ -56,15 +56,22 @@ constexpr enums::RiscvType RV64 = enums::RV64;
 
 class PCState : public GenericISA::UPCState<4>
 {
-  private:
+  protected:
+    typedef GenericISA::UPCState<4> Base;
+
     bool _compressed = false;
     RiscvType _rvType = RV64;
 
   public:
+    PCState(const PCState &other) : Base(other), _rvType(other._rvType)
+    {}
+    PCState &operator=(const PCState &other) = default;
     PCState() = default;
-    PCState(const PCState &other) = default;
-    PCState(Addr addr, RiscvType rvType) : UPCState(addr), _rvType(rvType)
+    explicit PCState(Addr addr) { set(addr); }
+    explicit PCState(Addr addr, RiscvType rvType)
     {
+        set(addr);
+        _rvType = rvType;
     }
 
     PCStateBase *clone() const override { return new PCState(*this); }
@@ -84,14 +91,28 @@ class PCState : public GenericISA::UPCState<4>
     void rvType(RiscvType rvType) { _rvType = rvType; }
     RiscvType rvType() const { return _rvType; }
 
+    uint64_t size() const { return _compressed ? 2 : 4; }
+
     bool
     branching() const override
     {
-        if (_compressed) {
-            return npc() != pc() + 2 || nupc() != upc() + 1;
-        } else {
-            return npc() != pc() + 4 || nupc() != upc() + 1;
-        }
+        return npc() != pc() + size() || nupc() != upc() + 1;
+    }
+
+    void
+    serialize(CheckpointOut &cp) const override
+    {
+        Base::serialize(cp);
+        SERIALIZE_SCALAR(_rvType);
+        SERIALIZE_SCALAR(_compressed);
+    }
+
+    void
+    unserialize(CheckpointIn &cp) override
+    {
+        Base::unserialize(cp);
+        UNSERIALIZE_SCALAR(_rvType);
+        UNSERIALIZE_SCALAR(_compressed);
     }
 };
 
