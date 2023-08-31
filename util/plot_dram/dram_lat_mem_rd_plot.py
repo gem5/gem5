@@ -47,7 +47,7 @@ import sys
 import re
 
 # This script is intended to post process and plot the output from
-# running configs/dram/lat_mem_rd.py, as such it parses the simout and
+# running configs/dram/lat_mem_rd.py, as such it parses the simout.txt and
 # stats.txt to get the relevant data points.
 def main():
 
@@ -62,9 +62,9 @@ def main():
         exit(-1)
 
     try:
-        simout = open(sys.argv[1] + "/simout", "r")
+        simout = open(sys.argv[1] + "/simout.txt", "r")
     except IOError:
-        print("Failed to open ", sys.argv[1] + "/simout", " for reading")
+        print("Failed to open ", sys.argv[1] + "/simout.txt", " for reading")
         exit(-1)
 
     # Get the address ranges
@@ -85,7 +85,7 @@ def main():
     simout.close()
 
     if not got_ranges:
-        print("Failed to get address ranges, ensure simout is up-to-date")
+        print("Failed to get address ranges, ensure simout.txt is up-to-date")
         exit(-1)
 
     # Now parse the stats

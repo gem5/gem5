@@ -32,7 +32,9 @@ tests/gem5/configs/simple_binary_run.py to run a simple SE-mode simualation
 with different configurations of the BaseCPUProcessor.
 """
 
-verifiers = (verifier.MatchStdoutNoPerf(joinpath(getcwd(), "ref", "simout")),)
+verifiers = (
+    verifier.MatchStdoutNoPerf(joinpath(getcwd(), "ref", "simout.txt")),
+)
 
 
 gem5_verify_config(

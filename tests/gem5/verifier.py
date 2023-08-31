@@ -84,7 +84,7 @@ class MatchGoldStandard(Verifier):
     """
 
     def __init__(
-        self, standard_filename, ignore_regex=None, test_filename="simout"
+        self, standard_filename, ignore_regex=None, test_filename="simout.txt"
     ):
         """
         :param standard_filename: The path of the standard file to compare
