@@ -2,11 +2,6 @@
 name: Docker images build and push
 
 on:
-  push:
-    branches:
-      - develop
-    paths:
-      - 'util/docker/ubuntu-20.04_all-depenencies'
   workflow_dispatch:
 
 env:
