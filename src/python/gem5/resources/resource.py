@@ -563,13 +563,11 @@ class WorkloadResource(AbstractResource):
     def __init__(
         self,
         function: str = None,
-        resources: Optional[Dict[str, str]] = None,
-        additional_params: Optional[Dict[str, str]] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
         local_path: Optional[str] = None,
-        parameters: Optional[Dict[str, Any]] = None,
+        parameters: Optional[Dict[str, Any]] = {},
         **kwargs,
     ):
         """
@@ -585,19 +583,7 @@ class WorkloadResource(AbstractResource):
         )
 
         self._func = function
-        self._params = parameters if parameters else {}
-        for key in resources.keys():
-            assert isinstance(key, str)
-            value = resources[key]
-            assert isinstance(value, str)
-            self._params[key] = obtain_resource(
-                value,
-            )
-        for key in additional_params.keys():
-            assert isinstance(key, str)
-            value = additional_params[key]
-            assert isinstance(value, str)
-            self._params[key] = value
+        self._params = parameters
 
     def get_function_str(self) -> str:
         """
@@ -732,6 +718,26 @@ def obtain_resource(
     assert resources_category in _get_resource_json_type_map
     resource_class = _get_resource_json_type_map[resources_category]
 
+    if resources_category == "workload":
+        # This parses the "resources" and "additional_params" fields of the
+        # workload resource into a dictionary of AbstractResource objects and
+        # strings respectively.
+        params = {}
+        if "resources" in resource_json:
+            for key in resource_json["resources"].keys():
+                assert isinstance(key, str)
+                value = resource_json["resources"][key]
+                assert isinstance(value, str)
+                params[key] = obtain_resource(
+                    value,
+                )
+        if "additional_params" in resource_json:
+            for key in resource_json["additional_params"].keys():
+                assert isinstance(key, str)
+                value = resource_json["additional_params"][key]
+                assert isinstance(value, str)
+                params[key] = value
+        resource_json["parameters"] = params
     # Once we know what AbstractResource subclass we are using, we create it.
     # The fields in the JSON object are assumed to map like-for-like to the
     # subclass contructor, so we can pass the resource_json map directly.
