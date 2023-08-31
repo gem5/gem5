@@ -41,6 +41,7 @@
 #include "debug/GPUMem.hh"
 #include "debug/GPUShader.hh"
 #include "debug/GPUWgLatency.hh"
+#include "dev/amdgpu/hwreg_defines.hh"
 #include "gpu-compute/dispatcher.hh"
 #include "gpu-compute/gpu_command_processor.hh"
 #include "gpu-compute/gpu_static_inst.hh"
@@ -72,14 +73,24 @@ Shader::Shader(const Params &p) : ClockedObject(p),
     gpuCmdProc.setShader(this);
     _dispatcher.setShader(this);
 
+    // These apertures are set by the driver. In full system mode that is done
+    // using a PM4 packet but the emulated SE mode driver does not set them
+    // explicitly, so we need to define some reasonable defaults here.
     _gpuVmApe.base = ((Addr)1 << 61) + 0x1000000000000L;
     _gpuVmApe.limit = (_gpuVmApe.base & 0xFFFFFF0000000000UL) | 0xFFFFFFFFFFL;
 
-    _ldsApe.base = ((Addr)1 << 61) + 0x0;
+    _ldsApe.base = 0x1000000000000;
     _ldsApe.limit =  (_ldsApe.base & 0xFFFFFFFF00000000UL) | 0xFFFFFFFF;
 
-    _scratchApe.base = ((Addr)1 << 61) + 0x100000000L;
+    _scratchApe.base = 0x2000000000000;
     _scratchApe.limit = (_scratchApe.base & 0xFFFFFFFF00000000UL) | 0xFFFFFFFF;
+
+    // The scratch and LDS address can be queried starting in gfx900. The
+    // base addresses are in the SH_MEM_BASES 32-bit register. The upper 16
+    // bits are for the LDS address and the lower 16 bits are for scratch
+    // address. In both cases the 16 bits represent bits 63:48 of the address.
+    // This means bits 47:0 of the base address is always zero.
+    setHwReg(HW_REG_SH_MEM_BASES, 0x00010002);
 
     shHiddenPrivateBaseVmid = 0;
 
