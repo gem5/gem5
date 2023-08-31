@@ -554,25 +554,48 @@ GPUCoalescer::hitCallback(CoalescedRequest* crequest,
                       success, isRegion);
     // update the data
     //
-    // MUST AD DOING THIS FOR EACH REQUEST IN COALESCER
+    // MUST ADD DOING THIS FOR EACH REQUEST IN COALESCER
     std::vector<PacketPtr> pktList = crequest->getPackets();
+
+    uint8_t* log = nullptr;
     DPRINTF(GPUCoalescer, "Responding to %d packets for addr 0x%X\n",
             pktList.size(), request_line_address);
+    uint32_t offset;
+    int pkt_size;
     for (auto& pkt : pktList) {
-        request_address = pkt->getAddr();
+        offset = getOffset(pkt->getAddr());
+        pkt_size = pkt->getSize();
         if (pkt->getPtr<uint8_t>()) {
-            if ((type == RubyRequestType_LD) ||
-                (type == RubyRequestType_ATOMIC) ||
-                (type == RubyRequestType_ATOMIC_RETURN) ||
-                (type == RubyRequestType_IFETCH) ||
-                (type == RubyRequestType_RMW_Read) ||
-                (type == RubyRequestType_Locked_RMW_Read) ||
-                (type == RubyRequestType_Load_Linked)) {
-                pkt->setData(
-                    data.getData(getOffset(request_address), pkt->getSize()));
-            } else {
-                data.setData(pkt->getPtr<uint8_t>(),
-                             getOffset(request_address), pkt->getSize());
+            switch(type) {
+                // Store and AtomicNoReturns follow the same path, as the
+                // data response is not needed.
+                case RubyRequestType_ATOMIC_NO_RETURN:
+                    assert(pkt->isAtomicOp());
+                case RubyRequestType_ST:
+                    data.setData(pkt->getPtr<uint8_t>(), offset, pkt_size);
+                    break;
+                case RubyRequestType_LD:
+                    pkt->setData(data.getData(offset, pkt_size));
+                    break;
+                case RubyRequestType_ATOMIC_RETURN:
+                    assert(pkt->isAtomicOp());
+                    // Atomic operations are performed by the WriteMask
+                    // in packet order, set by the crequest. Thus, when
+                    // unpacking the changes from the log, we read from
+                    // the front of the log to correctly map response
+                    // data into the packets.
+
+                    // Log entry contains the old value before the current
+                    // atomic operation occurred.
+                    log = data.popAtomicLogEntryFront();
+                    pkt->setData(&log[offset]);
+                    delete [] log;
+                    log = nullptr;
+                    break;
+                default:
+                    panic("Unsupported ruby packet type:%s\n",
+                                    RubyRequestType_to_string(type));
+                    break;
             }
         } else {
             DPRINTF(MemoryAccess,
@@ -581,6 +604,7 @@ GPUCoalescer::hitCallback(CoalescedRequest* crequest,
                     RubyRequestType_to_string(type));
         }
     }
+    assert(data.numAtomicLogEntries() == 0);
 
     m_outstanding_count--;
     assert(m_outstanding_count >= 0);
