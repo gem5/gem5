@@ -368,7 +368,7 @@ FDArray::serialize(CheckpointOut &cp) const {
 }
 
 void
-FDArray::unserialize(CheckpointIn &cp, SimObject* process_ptr) {
+FDArray::unserialize(CheckpointIn &cp, Process* process_ptr) {
     ScopedCheckpointSection sec(cp, "fdarray");
     uint64_t size;
     paramIn(cp, "size", size);
@@ -424,8 +424,9 @@ FDArray::unserialize(CheckpointIn &cp, SimObject* process_ptr) {
 
         if (process_ptr)
         {
-            Process* ptr = static_cast<Process*>(process_ptr);
-            path = ptr->checkPathRedirect(this_ffd->getFileName());
+            // Check if it is needed to redirect the app path to another host
+            // path
+            path = process_ptr->checkPathRedirect(this_ffd->getFileName());
         }
         else
         {

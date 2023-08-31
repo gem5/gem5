@@ -36,12 +36,14 @@
 #include <map>
 #include <memory>
 #include <string>
+
 #include "sim/fd_entry.hh"
 #include "sim/serialize.hh"
-#include "sim/sim_object.hh"
 
 namespace gem5
 {
+
+class Process;
 
 class FDArray : public Serializable
 {
@@ -117,7 +119,7 @@ class FDArray : public Serializable
      * Serialization methods for file descriptors
      */
     void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp, SimObject* process_ptr );
+    void unserialize(CheckpointIn &cp, Process* process_ptr );
     void unserialize(CheckpointIn &cp) override {
       unserialize(cp, nullptr);
     };
