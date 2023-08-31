@@ -72,6 +72,8 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v3
+      - uses: ./.github/actions/runner-cleanup
+      - uses: actions/checkout@v3
       - name: CI Unittests
         working-directory: ${{ github.workspace }}
         run: scons build/ALL/unittests.opt -j $(nproc)
@@ -84,11 +86,8 @@ jobs:
     needs: [pre-commit, build-gem5, check-for-change-id]
     timeout-minutes: 360     # 6 hours
     steps:
-      - name: Clean runner
-        run:
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          rm -rf ~/.cache || true
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/runner-cleanup
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
         with:

@@ -1,0 +1,52 @@
+name: 'Runner Cleanup'
+description: 'Cleans up the runner after a job'
+inputs:
+  prune-docker:
+    description: 'Prune docker: Remove images no longer used by a container.'
+    required: false
+    default: true
+    options:
+      - true
+      - false
+  clean-workspace:
+    description: 'Clean the workspace: Wipe the contents.'
+    required: false
+    default: true
+    options:
+      - true
+      - false
+  clear-cache:
+    description: 'Clear the cache: Wipe the ~/cache directory.'
+    required: false
+    default: true
+    options:
+      - true
+      - false
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Cleaning GitHub Workspace'
+      if: ${{ inputs.clean-workspace == 'true' }}
+      uses: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+      run: |
+        echo "Cleaning files from the workspace..."
+        rm -rf "${{ github.workspace }}/{*,.*}""
+        echo "Workspace cleared."
+        echo "::set-output name=output::Done"
+
+    - name: 'Clear cache'
+      if: ${{ inputs.clear-cache == 'true' }}
+      uses: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+      run: |
+        echo "Clearing cache..."
+        rm -rf "${HOME}/.cache"
+        echo "Cache cleared."
+        echo "::set-output name=output::Done"
+
+    - name: 'Prune Docker'
+      if: ${{ inputs.prune-docker == 'true' }}
+      run: |
+        echo "Pruning docker..."
+        docker system prune -f
+        echo "Docker pruned."
+        echo "::set-output name=output::Done"
