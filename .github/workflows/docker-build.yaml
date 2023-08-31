@@ -1,0 +1,42 @@
+#
+name: Docker images build and push
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'util/docker/ubuntu-20.04_all-depenencies'
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: ubuntu-20.04_all-depenencies
+#
+jobs:
+  # This builds and pushes the docker image.
+  push:
+    runs-on: [self-hosted, linux, x64, run]
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build image
+        run: |
+          cd util/docker/ubuntu-20.04_all-depenencies
+          docker build . --file Dockerfile --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
+
+      - name: Log in to registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+
+      - name: Push image
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
+
+          # This changes all uppercase characters to lowercase.
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          docker tag $IMAGE_NAME $IMAGE_ID:latest
+          docker push $IMAGE_ID::latest
