@@ -4359,8 +4359,13 @@ decode QUADRANT default Unknown::unknown() {
                         uint64_t rs1_bits = RS1;
                         uint64_t requested_vl = Rs1_ud;
                         uint64_t requested_vtype = zimm11;
-
-                        Rd_ud = 0;
+                        uint32_t vlen = VlenbBits * 8;
+                        uint32_t vlmax = getVlmax(Vtype, vlen);
+                        uint32_t current_vl = VL;
+                    }}, {{
+                        Rd_ud = new_vl;
+                        VL = new_vl;
+                        Vtype = new_vtype;
                     }}, VectorConfigOp, IsSerializeAfter, IsNonSpeculative);
                     0x1: decode BIT30 {
                         0x0: vsetvl({{
@@ -4368,8 +4373,13 @@ decode QUADRANT default Unknown::unknown() {
                             uint64_t rs1_bits = RS1;
                             uint64_t requested_vl = Rs1_ud;
                             uint64_t requested_vtype = Rs2_ud;
-
-                            Rd_ud = 0;
+                            uint32_t vlen = VlenbBits * 8;
+                            uint32_t vlmax = getVlmax(Vtype, vlen);
+                            uint32_t current_vl = VL;
+                        }}, {{
+                            Rd_ud = new_vl;
+                            VL = new_vl;
+                            Vtype = new_vtype;
                         }}, VectorConfigOp, IsSerializeAfter,
                         IsNonSpeculative);
                         0x1: vsetivli({{
@@ -4377,8 +4387,13 @@ decode QUADRANT default Unknown::unknown() {
                             uint64_t rs1_bits = -1;
                             uint64_t requested_vl = uimm;
                             uint64_t requested_vtype = zimm10;
-
-                            Rd_ud = 0;
+                            uint32_t vlen = VlenbBits * 8;
+                            uint32_t vlmax = getVlmax(Vtype, vlen);
+                            uint32_t current_vl = VL;
+                        }}, {{
+                            Rd_ud = new_vl;
+                            VL = new_vl;
+                            Vtype = new_vtype;
                         }}, VectorConfigOp, IsSerializeAfter,
                         IsNonSpeculative);
                     }

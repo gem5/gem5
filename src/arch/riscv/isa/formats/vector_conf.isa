@@ -27,8 +27,17 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-def format VConfOp(code, *flags) {{
-    iop = InstObjParams(name, Name, 'VConfOp', code, flags)
+def format VConfOp(code, write_code, *flags) {{
+    iop = InstObjParams(
+        name,
+        Name,
+        'VConfOp',
+        {
+            'code': code,
+            'write_code': write_code,
+        },
+        flags
+    )
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -54,11 +63,8 @@ def template VConfExecute {{
 
         tc->setMiscReg(MISCREG_VSTART, 0);
 
-        uint32_t vlen = xc->readMiscReg(MISCREG_VLENB) * 8;
-        uint32_t vlmax = getVlmax(xc->readMiscReg(MISCREG_VTYPE), vlen);
-
         VTYPE new_vtype = requested_vtype;
-        if (xc->readMiscReg(MISCREG_VTYPE) != new_vtype) {
+        if (Vtype != new_vtype) {
             vlmax = getVlmax(new_vtype, vlen);
 
             float vflmul = getVflmul(new_vtype.vlmul);
@@ -68,17 +74,16 @@ def template VConfExecute {{
             uint32_t new_vill =
                 !(vflmul >= 0.125 && vflmul <= 8) ||
                     sew > std::min(vflmul, 1.0f) * ELEN ||
-                    bits(requested_vtype, 30, 8) != 0;
+                    bits(requested_vtype, 62, 8) != 0;
             if (new_vill) {
                 vlmax = 0;
                 new_vtype = 0;
                 new_vtype.vill = 1;
             }
-
-            xc->setMiscReg(MISCREG_VTYPE, new_vtype);
+        } else {
+            new_vtype = Vtype;
         }
 
-        uint32_t current_vl = xc->readMiscReg(MISCREG_VL);
         uint32_t new_vl = 0;
         if (vlmax == 0) {
             new_vl = 0;
@@ -90,11 +95,7 @@ def template VConfExecute {{
             new_vl = requested_vl > vlmax ? vlmax : requested_vl;
         }
 
-        xc->setMiscReg(MISCREG_VL, new_vl);
-
-        tc->getDecoderPtr()->as<Decoder>().setVlAndVtype(new_vl, new_vtype);
-
-        Rd = new_vl;
+        %(write_code)s;
 
         %(op_wb)s;
         return NoFault;
