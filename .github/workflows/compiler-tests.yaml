@@ -1,8 +1,6 @@
 # This workflow runs all of the compiler tests
 
 name: Compiler Tests
-run-name: ${{ github.actor }} is running compiler tests
-
 
 on:
   # Runs every Friday from 7AM UTC
