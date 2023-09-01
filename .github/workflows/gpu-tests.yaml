@@ -1,0 +1,128 @@
+# This workflow runs all of the very-long tests within main.py
+
+name: Weekly Tests
+
+on:
+  # Runs every Sunday from 7AM UTC
+  schedule:
+    - cron:  '00 7 * * 6'
+  # Allows us to manually start workflow for testing
+  workflow_dispatch:
+
+jobs:
+  name-artifacts:
+    runs-on: ubuntu-latest
+    outputs:
+      build-name: ${{ steps.artifact-name.outputs.name }}
+    steps:
+    - uses: actions/checkout@v2
+    - id: artifact-name
+      run: echo "name=$(date +"%Y-%m-%d_%H.%M.%S-")" >> $GITHUB_OUTPUT
+
+  build-gem5:
+    strategy:
+      matrix:
+        image: [ALL, GCN3_X86]
+        # this allows us to pass additional command line parameters
+        # the default is to add -j $(nproc), but some images
+        # require more specifications when built
+        include:
+          - command-line: -j $(nproc)
+          - image: GCN3_X86
+            command-line: -j4 --ignore-style
+    runs-on: [self-hosted, linux, x64, build]
+    needs: name-artifacts
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    outputs:
+      build-name: ${{ steps.artifact-name.outputs.name }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # Scheduled workflows run on the default branch by default. We
+          # therefore need to explicitly checkout the develop branch.
+          ref: develop
+      - name: Build gem5
+        run: scons build/${{ matrix.image }}/gem5.opt ${{ matrix.command-line }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ needs.name-artifacts.outputs.build-name }}${{ matrix.image }}
+          path: build/${{ matrix.image }}/gem5.opt
+          retention-days: 5
+      - run: echo "This job's status is ${{ job.status }}."
+
+# These tests fail to make gem5-fusion due to not finding gem5/m5ops.h
+  pannotia-tests:
+    runs-on: [self-hosted, linux, x64, build]
+    container: mkjost/testing-gpu-image:latest
+    needs: [build-gem5, name-artifact]
+    timeout-minutes: 4320 # 3 days
+    strategy:
+      matrix:
+        test-name: [BC, "Color Max", "Color Max Min", FW, MIS, "PageRank Default", "PageRank (SPMV)", "SSSP (CSR)", "SSSP (ELL)"]
+        include:
+          - export: export GEM5_PATH=${{ github.workspace }}
+          - test-name: BC
+            working-directory: /pannotia/bc
+            command-line: --benchmark-root=gem5-resources/src/gpu/pannotia/bc/bin -c bc.gem5 --options="1k_128k.gr"
+          - test-name: "Color Max"
+            working-directory: /pannotia/color
+            command-line: --benchmark-root=gem5-resources/src/gpu/pannotia/color/bin -c color_max.gem5 --options="1k_128k.gr 0"
+          - test-name: "Color Max Min"
+            working-directory: /pannotia/color
+            export: export GEM5_PATH=${{ github.workspace }}; export VARIANT=MAXMIN
+            command-line: --benchmark-root=gem5-resources/src/gpu/pannotia/color/bin -c color_maxmin.gem5 --options="1k_128k.gr 0"
+          - test-name: FW
+            working-directory: /pannotia/fw
+            command-line: --benchmark-root=gem5-resources/src/gpu/pannotia/fw/bin -c fw_hip.gem5 --options="1k_128k.gr"
+          - test-name: MIS
+            working-directory: /pannotia/mis
+            command-line: --benchmark-root=gem5-resources/src/gpu/pannotia/mis/bin -c mis_hip.gem5 --options="1k_128k.gr 0"
+          - test-name: "PageRank Default"
+            working-directory: /pannotia/pagerank
+            command-line: --benchmark-root=gem5-resources/src/gpu/pannotia/pagerank/bin -c pagerank.gem5 --options="coAuthorsDBLP.graph 1"
+          - test-name: "PageRank (SPMV)"
+            working-directory: /pannotia/pagerank
+            export: export GEM5_PATH=${{ github.workspace }}; export VARIANT=SPMV
+            command-line: --benchmark-root=gem5-resources/src/gpu/pannotia/pagerank/bin -c pagerank_spmv.gem5 --options="coAuthorsDBLP.graph 1"
+          - test-name: "SSSP (CSR)"
+            working-directory: /pannotia/sssp
+            export: export GEM5_PATH=${{ github.workspace }}; export VARIANT=CSR
+            command-line: --benchmark-root=${gem5_root}/gem5-resources/src/gpu/pannotia/sssp/bin -c sssp.gem5 --options="1k_128k.gr 0"
+          - test-name: "SSSP (ELL)"
+            working-directory: /pannotia/sssp
+            export: export GEM5_PATH=${{ github.workspace }}; export VARIANT=ELL
+            command-line: --benchmark-root=gem5-resources/src/gpu/pannotia/sssp/bin -c sssp_ell.gem5 --options="1k_128k.gr 0"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # Scheduled workflows run on the default branch by default. We
+          # therefore need to explicitly checkout the develop branch.
+          ref: develop
+      - uses: actions/download-artifact@v3
+        with:
+          name: ${{needs.name-artifacts.outputs.build-name}}GCN3_X86
+          path: build/GCN3_X86
+      - run: chmod u+x build/GCN3_X86/gem5.opt
+      - name: checkout gem5 resources
+        working-directory: ${{ github.workspace }}
+        run: |
+          git clone https://gem5.googlesource.com/public/gem5-resources
+          cd gem5-resources
+          git checkout develop
+      - name: Compile m5ops and x86
+        working-directory: ${{ github.workspace }}/util/m5
+        run: |
+          export TERM=xterm-256color
+          scons build/x86/out/m5
+      # test pannotia
+      - name: Build ${{ matrix.test-name }}
+        working-directory: ${{ github.workspace }}/gem5-resources/src/gpu${{ matrix.working-directory }}
+        run: |
+          export GEM5_PATH=${{ github.workspace }}
+          make gem5-fusion
+      - name: Run ${{ matrix.test-name }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          wget http://dist.gem5.org/dist/develop/datasets/pannotia/bc/1k_128k.gr # for bc
+          wget http://dist.gem5.org/dist/develop/datasets/pannotia/pagerank/coAuthorsDBLP.graph # for pagerank
+          build/GCN3_X86/gem5.opt configs/example/apu_se.py -n3 --mem-size=8GB --reg-alloc-policy=dynamic ${{ matrix.command-line }}
