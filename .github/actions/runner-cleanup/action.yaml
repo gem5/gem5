@@ -27,7 +27,6 @@ runs:
   steps:
     - name: 'Cleaning GitHub Workspace'
       if: ${{ inputs.clean-workspace == 'true' }}
-      uses: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
       run: |
         echo "Cleaning files from the workspace..."
         rm -rf "${{ github.workspace }}/{*,.*}""
@@ -36,7 +35,6 @@ runs:
 
     - name: 'Clear cache'
       if: ${{ inputs.clear-cache == 'true' }}
-      uses: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
       run: |
         echo "Clearing cache..."
         rm -rf "${HOME}/.cache"
