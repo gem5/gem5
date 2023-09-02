@@ -8,6 +8,44 @@ on:
     - cron:  '0 7 * * *'
 
 jobs:
+  commits-since-last-run:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        # Scheduled workflows run on the default branch by default. We
+        # therefore need to explicitly checkout the develop branch.
+        ref: develop
+
+    - name: Obtain last scheduled daily run commit artifact
+      uses: actions/download-artifact@v3
+      continue-on-error: true
+      with:
+        name: last-scheduled-daily-run-commit
+        path: last-scheduled-daily-run-commit
+
+    - name: get-last-daily-test-commit
+      run: |
+        echo "## Commits since last scheduled daily run" >> $GITHUB_STEP_SUMMARY
+        if [ -f last-scheduled-daily-run-commit ]; then
+          prev_commit=$(cat last-scheduled-daily-run-commit)
+          git log --oneline --ancestry-path  --pretty='* [%h](${{ github.server_url }}/${{ github.repository }}/commit/%h) %s ' ${prev_commit}..HEAD >> $GITHUB_STEP_SUMMARY
+        else
+          echo "No last-scheduled-daily-run-commit artifact found. This is the first scheduled daily run." >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Record this run's commit as last scheduled daily run commit
+      run: echo "$(git rev-parse HEAD)" >last-scheduled-daily-run-commit
+
+    - name: Upload last scheduled daily run commit artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: last-scheduled-daily-run-commit
+        path: last-scheduled-daily-run-commit
+
+    - name: Cleanup
+      run: rm last-scheduled-daily-run-commit
+
   name-artifacts:
     runs-on: ubuntu-latest
     outputs:
