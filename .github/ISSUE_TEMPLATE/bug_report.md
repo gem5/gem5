@@ -25,9 +25,9 @@ If writing code, or a terminal command, use code blocks. Either an inline code b
 
 
 ```python
-int x=2;
-int y=3'
-print(x+y);
+int x=2
+int y=3
+print(x+y)
 ```
 
 If possible, please include the Python configuration script used and state clearly any parameters passed.
