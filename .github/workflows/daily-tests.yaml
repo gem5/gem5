@@ -8,51 +8,6 @@ on:
     - cron:  '0 7 * * *'
 
 jobs:
-  name-artifacts:
-    runs-on: ubuntu-latest
-    outputs:
-      build-name: ${{ steps.artifact-name.outputs.name }}
-    steps:
-    - uses: actions/checkout@v2
-    - id: artifact-name
-      run: echo "name=$(date +"%Y-%m-%d_%H.%M.%S-")" >> $GITHUB_OUTPUT
-
-  build-gem5:
-    strategy:
-      fail-fast: false
-      matrix:
-        # NULL is in quotes since it is considered a keyword in yaml files
-        image: [ALL, ALL_CHI, ARM, ALL_MSI, ALL_MESI_Two_Level, "NULL", NULL_MI_example, RISCV, VEGA_X86]
-        # this allows us to pass additional command line parameters
-        # the default is to add -j $(nproc), but some images
-        # require more specifications when built
-        include:
-          - command-line: -j $(nproc)
-          - image: ALL_CHI
-            command-line: --default=ALL PROTOCOL=CHI -j $(nproc)
-          - image: ALL_MSI
-            command-line: --default=ALL PROTOCOL=MSI -j $(nproc)
-          - image: ALL_MESI_Two_Level
-            command-line: --default=ALL PROTOCOL=MESI_Two_Level -j $(nproc)
-          - image: NULL_MI_example
-            command-line: --default=NULL PROTOCOL=MI_example -j $(nproc)
-    runs-on: [self-hosted, linux, x64, build]
-    needs: name-artifacts
-    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          # Scheduled workflows run on the default branch by default. We
-          # therefore need to explicitly checkout the develop branch.
-          ref: develop
-      - name: Build gem5
-        run: scons build/${{ matrix.image }}/gem5.opt ${{ matrix.command-line }}
-      - uses: actions/upload-artifact@v3
-        with:
-          name: ${{ needs.name-artifacts.outputs.build-name }}${{ matrix.image }}
-          path: build/${{ matrix.image }}/gem5.opt
-          retention-days: 5
-      - run: echo "This job's status is ${{ job.status }}."
 
   # this builds both unittests.fast and unittests.debug
   unittests-fast-debug:
@@ -71,141 +26,124 @@ jobs:
       - name: ALL/unittests.${{ matrix.type }} UnitTests
         run: scons build/ALL/unittests.${{ matrix.type }} -j $(nproc)
 
-  # start running all of the long tests
-  testlib-long-tests:
-    strategy:
-      fail-fast: false
-      matrix:
-        test-type: [arm_boot_tests, fs, gem5_library_example_tests, gpu, insttest_se, learning_gem5, m5threads_test_atomic, memory, multi_isa, replacement_policies, riscv_boot_tests, stdlib, x86_boot_tests]
+  testlib-long-matrix:
     runs-on: [self-hosted, linux, x64, run]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: [name-artifacts, build-gem5]
-    timeout-minutes: 1440 # 24 hours for entire matrix to run
     steps:
-    - name: Clean runner
-      run:
-        rm -rf ./* || true
-        rm -rf ./.??* || true
-        rm -rf ~/.cache || true
-    - uses: actions/checkout@v3
-      with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-        ref: develop
-    # download all artifacts for each test
-    # since long tests can't start until the build matrix completes,
-    # we download all artifacts from the build for each test
-    # in this matrix
-    - uses: actions/download-artifact@v3
-      with:
-        name: ${{needs.name-artifacts.outputs.build-name}}ALL
-        path: build/ALL
-    - run: chmod u+x build/ALL/gem5.opt
-    - uses: actions/download-artifact@v3
-      with:
-        name: ${{needs.name-artifacts.outputs.build-name}}ALL_CHI
-        path: build/ALL_CHI
-    - run: chmod u+x build/ALL_CHI/gem5.opt
-    - uses: actions/download-artifact@v3
-      with:
-        name: ${{needs.name-artifacts.outputs.build-name}}ARM
-        path: build/ARM
-    - run: chmod u+x build/ARM/gem5.opt
-    - uses: actions/download-artifact@v3
-      with:
-        name: ${{needs.name-artifacts.outputs.build-name}}ALL_MSI
-        path: build/ALL_MSI
-    - run: chmod u+x build/ALL_MSI/gem5.opt
-    - uses: actions/download-artifact@v3
-      with:
-        name: ${{needs.name-artifacts.outputs.build-name}}ALL_MESI_Two_Level
-        path: build/ALL_MESI_Two_Level
-    - run: chmod u+x build/ALL_MESI_Two_Level/gem5.opt
-    - uses: actions/download-artifact@v3
-      with:
-        name: ${{needs.name-artifacts.outputs.build-name}}NULL
-        path: build/NULL
-    - run: chmod u+x build/NULL/gem5.opt
-    - uses: actions/download-artifact@v3
-      with:
-        name: ${{needs.name-artifacts.outputs.build-name}}NULL_MI_example
-        path: build/NULL_MI_example
-    - run: chmod u+x build/NULL_MI_example/gem5.opt
-    - uses: actions/download-artifact@v3
-      with:
-        name: ${{needs.name-artifacts.outputs.build-name}}RISCV
-        path: build/RISCV
-    - run: chmod u+x build/RISCV/gem5.opt
-    - uses: actions/download-artifact@v3
-      with:
-        name: ${{needs.name-artifacts.outputs.build-name}}VEGA_X86
-        path: build/VEGA_X86
-    - run: chmod u+x build/VEGA_X86/gem5.opt
-    # run test
-    - name: long ${{ matrix.test-type }} tests
-      working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run gem5/${{ matrix.test-type }} --length=long --skip-build -vv -t $(nproc)
-    - name: create zip of results
-      if: success() || failure()
-      run: |
-        apt-get -y install zip
-        zip -r output.zip tests/testing-results
-    - name: upload zip
-      if: success() || failure()
-      uses: actions/upload-artifact@v3
-      env:
-        MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
-      with:
-        name: ${{ env.MY_STEP_VAR }}
-        path: output.zip
-        retention-days: 7
-    - run: echo "This job's status is ${{ job.status }}."
+      - uses: actions/checkout@v3
+        with:
+          # Scheduled workflows run on the default branch by default. We
+          # therefore need to explicitly checkout the develop branch.
+          ref: develop
 
-  # split library example tests into runs based on Suite UID
-  # so that they don't hog the runners for too long
-  testlib-long-gem5_library_example_tests:
+        # Unfortunately the 'ubunutu-latest' image doesn't have jq installed.
+        # We therefore need to install it as a step here.
+      - name: Install jq
+        run: apt install -y jq
+
+      - name: Get directories for testlib-quick
+        working-directory: "${{ github.workspace }}/tests"
+        id: suite-id-matrix
+        run: echo "suite-id-matrix=$(./main.py list --length=long --suites -q | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
+
+      - name: Get the build targets for testlib-quick-gem5-builds
+        working-directory: "${{ github.workspace }}/tests"
+        id: build-matrix
+        run: echo "build-matrix=$(./main.py list --build-targets --length=long -q | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
+
+    outputs:
+        build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}
+        suite-id-matrix: ${{ steps.suite-id-matrix.outputs.suite-id-matrix }}
+
+  testlib-long-build:
+    needs: [testlib-long-matrix]
+    strategy:
+        matrix:
+          build: ${{ fromJson(needs.testlib-long-matrix.outputs.build-matrix) }}
+    runs-on: [self-hosted, linux, x64, build]
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+            # Scheduled workflows run on the default branch by default. We
+            # therefore need to explicitly checkout the develop branch.
+            ref: develop
+
+      - name: Build gem5
+        run: scons ${{ matrix.build }} -j $(nproc)
+
+        # This hashing hack is required as the upload-artifact action is strict
+        # in what it allows in the name field. The build info is written to a
+        # file then `hashFiles` is used to hash the file as the artifact name.
+        # This same trick is then used to retrieve the artifact in the
+        # testlib-long job.
+      - run: echo ${{ matrix.build }} >build.txt
+      - uses: actions/upload-artifact@v3
+        with:
+            name: "daily-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-long-gem5-build-${{ hashFiles('build.txt') }}"
+            path: build/**/gem5.*
+            retention-days: 5
+
+        # Here we create an artifact containing all the gem5-builds for this
+        # run of the workload. This may be useful for debugging.
+      - uses: actions/upload-artifact@v3
+        with:
+            name: "daily-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-all-gem5-builds"
+            path: build/**/gem5.*
+            retention-days: 5
+
+  testlib-long:
     runs-on: [self-hosted, linux, x64, run]
+    needs: [testlib-long-build, testlib-long-matrix]
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    timeout-minutes: 1440 # 24 hours for entire matrix to run
     strategy:
       fail-fast: false
       matrix:
-        test-type: [gem5-library-example-x86-ubuntu-run-ALL-x86_64-opt, gem5-library-example-riscv-ubuntu-run-ALL-x86_64-opt, lupv-example-ALL-x86_64-opt, gem5-library-example-arm-ubuntu-run-test-ALL-x86_64-opt, gem5-library-example-riscvmatched-hello-ALL-x86_64-opt]
-    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: [name-artifacts, build-gem5]
-    timeout-minutes: 1440 # 24 hours
+        suite-id: ${{ fromJson(needs.testlib-long-matrix.outputs.suite-id-matrix) }}
     steps:
-    - name: Clean runner
-      run:
-        rm -rf ./* || true
-        rm -rf ./.??* || true
-        rm -rf ~/.cache || true
-    - uses: actions/checkout@v3
-      with:
-        # Scheduled workflows run on the default branch by default. We
-        # therefore need to explicitly checkout the develop branch.
-        ref: develop
-    - uses: actions/download-artifact@v3
-      with:
-        name: ${{needs.name-artifacts.outputs.build-name}}ALL
-        path: build/ALL
-    - run: chmod u+x build/ALL/gem5.opt
-    - name: long ${{ matrix.test-type }} gem5_library_example_tests
-      working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run --uid SuiteUID:tests/gem5/gem5_library_example_tests/test_gem5_library_examples.py:test-${{ matrix.test-type }} --length=long --skip-build -vv
-    - name: create zip of results
-      if: success() || failure()
-      run: |
-        apt-get -y install zip
-        zip -r output.zip tests/testing-results
-    - name: upload zip
-      if: success() || failure()
-      uses: actions/upload-artifact@v3
-      env:
-        MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
-      with:
-        name: ${{ env.MY_STEP_VAR }}
-        path: output.zip
-        retention-days: 7
-    - run: echo "This job's status is ${{ job.status }}."
+        - name: Clean runner
+          run:
+            rm -rf ./* || true
+            rm -rf ./.??* || true
+            rm -rf ~/.cache || true
+
+        - uses: actions/checkout@v3
+          with:
+            # Scheduled workflows run on the default branch by default. We
+            # therefore need to explicitly checkout the develop branch.
+            ref: develop
+
+          # Here we download the gem5 binaries from the build job. We use the
+          # Same hashing trick as in the build job to get the artifact.
+        - run: echo $(./main.py list --length=long --build-target -q --uid ${{ matrix.suite-id }}) >build.txt
+        - name: Download gem5 binaries
+          uses: actions/download-artifact@v2
+          with:
+            name: "daily-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-long-gem5-build-${{ hashFiles('build.txt') }}"
+
+          # GitHub's artifact action does not pereserve file permissions.
+          # Therefore, we need to make the gem5 binaries executable.
+        - name: Chmod gem5.{opt,debug,fast} to be executable
+          run:
+            find . -name "gem5.opt" -exec chmod u+x {} \;
+            find . -name "gem5.debug" -exec chmod u+x {} \;
+            find . -name "gem5.fast" -exec chmod u+x {} \;
+
+          # Run the suite of tests.
+        - name: Run ${{matrix.suite-id}}
+          id: run-suite
+          working-directory: ${{ github.workspace }}/tests
+          run: ./main.py run --uid="${{ matrix.suite-id }}" --skip-build -vv
+
+          # Upload the tests/testing-results directory as an artifact.
+        - name: Upload tests/testing-results
+          if: success() || failure()
+          uses: actions/upload-artifact@v3
+          with:
+            name: "daily-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-long-suite-${{ matrix.suite-id }}-status-${{ steps.run-suite.outcome }}-output"
+            path: "tests/testing-results/${{ matrix.suite-id }}"
+            retention-days: 30
 
   # This runs the SST-gem5 integration compilation and tests it with
   # ext/sst/sst/example.py.
