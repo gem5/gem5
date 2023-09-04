@@ -751,6 +751,13 @@ class ListParser(ArgParser):
             default=False,
             help="Quiet output (machine readable).",
         ).add_to(parser)
+        Argument(
+            '--uid',
+            action='store',
+            default=None,
+            help='UID of a specific test item to list.'
+        ).add_to(parser)
+        
 
         common_args.directories.add_to(parser)
         common_args.bin_path.add_to(parser)
