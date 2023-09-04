@@ -1,3 +1,15 @@
+# Copyright (c) 2022-2023 The University of Edinburgh
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2012 Mark D. Hill and David A. Wood
 # Copyright (c) 2015 The University of Wisconsin
 # All rights reserved.
@@ -25,9 +37,75 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.SimObject import SimObject
+from m5.SimObject import *
 from m5.params import *
 from m5.proxy import *
+
+from m5.objects.ClockedObject import ClockedObject
+from m5.objects.IndexingPolicies import *
+from m5.objects.ReplacementPolicies import *
+
+
+class BranchType(Enum):
+    vals = [
+        "NoBranch",
+        "Return",
+        "CallDirect",
+        "CallIndirect",  # 'Call',
+        "DirectCond",
+        "DirectUncond",  # 'Direct',
+        "IndirectCond",
+        "IndirectUncond",  #'Indirect',
+    ]
+
+
+class BranchTargetBuffer(ClockedObject):
+    type = "BranchTargetBuffer"
+    cxx_class = "gem5::branch_prediction::BranchTargetBuffer"
+    cxx_header = "cpu/pred/btb.hh"
+    abstract = True
+
+    numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
+
+
+class SimpleBTB(BranchTargetBuffer):
+    type = "SimpleBTB"
+    cxx_class = "gem5::branch_prediction::SimpleBTB"
+    cxx_header = "cpu/pred/simple_btb.hh"
+
+    numEntries = Param.Unsigned(4096, "Number of BTB entries")
+    tagBits = Param.Unsigned(16, "Size of the BTB tags, in bits")
+    instShiftAmt = Param.Unsigned(
+        Parent.instShiftAmt, "Number of bits to shift instructions by"
+    )
+
+
+class AssociativeBTB(BranchTargetBuffer):
+    type = "AssociativeBTB"
+    cxx_class = "gem5::branch_prediction::AssociativeBTB"
+    cxx_header = "cpu/pred/associative_btb.hh"
+
+    numEntries = Param.MemorySize("4096", "Number of entries of BTB entries")
+    assoc = Param.Unsigned(8, "Associativity of the BTB")
+    indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(
+            entry_size=1, assoc=Parent.assoc, size=Parent.numEntries
+        ),
+        "Indexing policy of the BTB",
+    )
+    replacement_policy = Param.BaseReplacementPolicy(
+        LRURP(), "Replacement policy of the table"
+    )
+
+    tagBits = Param.Unsigned(16, "Size of the BTB tags, in bits")
+    useTagCompression = Param.Bool(
+        False,
+        "Use a tag compression function as"
+        "described in https://ieeexplore.ieee.org/document/9528930",
+    )
+    instShiftAmt = Param.Unsigned(
+        Parent.instShiftAmt, "Number of bits to shift instructions by"
+    )
 
 
 class IndirectPredictor(SimObject):
@@ -63,11 +141,11 @@ class BranchPredictor(SimObject):
     abstract = True
 
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
-    BTBEntries = Param.Unsigned(4096, "Number of BTB entries")
-    BTBTagSize = Param.Unsigned(16, "Size of the BTB tags, in bits")
-    RASSize = Param.Unsigned(16, "RAS size")
     instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
 
+    RASSize = Param.Unsigned(16, "RAS size")
+
+    BTB = Param.BranchTargetBuffer(SimpleBTB(), "Branch target buffer (BTB)")
     indirectBranchPred = Param.IndirectPredictor(
         SimpleIndirectPredictor(),
         "Indirect branch predictor, set to NULL to disable indirect predictions",

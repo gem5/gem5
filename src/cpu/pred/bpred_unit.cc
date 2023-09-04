@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2011-2012, 2014 ARM Limited
- * Copyright (c) 2010 The University of Edinburgh
+ * Copyright (c) 2010,2022-2023 The University of Edinburgh
  * Copyright (c) 2012 Mark D. Hill and David A. Wood
  * All rights reserved
  *
@@ -59,10 +59,7 @@ BPredUnit::BPredUnit(const Params &params)
     : SimObject(params),
       numThreads(params.numThreads),
       predHist(numThreads),
-      BTB(params.BTBEntries,
-          params.BTBTagSize,
-          params.instShiftAmt,
-          params.numThreads),
+      btb(params.BTB),
       RAS(numThreads),
       iPred(params.indirectBranchPred),
       stats(this),
@@ -218,10 +215,12 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             if (inst->isDirectCtrl() || !iPred) {
                 ++stats.BTBLookups;
                 // Check BTB on direct branches
-                if (BTB.valid(pc.instAddr(), tid)) {
+                const PCStateBase * btb_target = btb->lookup(tid,
+                                                       pc.instAddr());
+                if (btb_target) {
                     ++stats.BTBHits;
                     // If it's not a return, use the BTB to get target addr.
-                    set(target, BTB.lookup(pc.instAddr(), tid));
+                    set(target, btb_target);
                     DPRINTF(Branch,
                             "[tid:%i] [sn:%llu] Instruction %s predicted "
                             "target is %s\n",
@@ -482,7 +481,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                         hist_it->seqNum, hist_it->pc);
 
                 ++stats.BTBUpdates;
-                BTB.update(hist_it->pc, corr_target, tid);
+                btb->update(tid, hist_it->pc, corr_target);
             }
         } else {
            //Actually not Taken

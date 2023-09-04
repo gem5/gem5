@@ -11,9 +11,6 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
- * All rights reserved.
- *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met: redistributions of source code must retain the above copyright
@@ -38,7 +35,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/pred/btb.hh"
+/* @file
+ * A helper for branch type information
+ */
+
+#ifndef __CPU_PRED_BRANCH_TYPE_HH__
+#define __CPU_PRED_BRANCH_TYPE_HH__
+
+#include "cpu/static_inst.hh"
+#include "enums/BranchType.hh"
 
 namespace gem5
 {
@@ -46,65 +51,41 @@ namespace gem5
 namespace branch_prediction
 {
 
-BranchTargetBuffer::BranchTargetBuffer(const Params &params)
-    : ClockedObject(params),
-      numThreads(params.numThreads),
-      stats(this)
+typedef enums::BranchType BranchType;
+
+inline BranchType getBranchType(StaticInstPtr inst)
 {
-}
-
-const StaticInstPtr
-BranchTargetBuffer::lookupInst(ThreadID tid, Addr instPC)
-{
-    panic("Not implemented for this BTB");
-    return nullptr;
-}
-
-BranchTargetBuffer::BranchTargetBufferStats::BranchTargetBufferStats(
-                                                statistics::Group *parent)
-    : statistics::Group(parent),
-      ADD_STAT(lookups, statistics::units::Count::get(),
-               "Number of BTB lookups"),
-      ADD_STAT(lookupType, statistics::units::Count::get(),
-               "Number of BTB lookups per branch type"),
-      ADD_STAT(misses, statistics::units::Count::get(),
-               "Number of BTB misses"),
-      ADD_STAT(missType, statistics::units::Count::get(),
-               "Number of BTB misses per branch type"),
-      ADD_STAT(missRatio, statistics::units::Ratio::get(), "BTB Hit Ratio",
-               misses / lookups),
-      ADD_STAT(updates, statistics::units::Count::get(),
-               "Number of BTB updates"),
-      ADD_STAT(mispredict, statistics::units::Count::get(),
-               "Number of BTB mispredicts"),
-      ADD_STAT(evictions, statistics::units::Count::get(),
-               "Number of BTB evictions")
-{
-    using namespace statistics;
-    missRatio.precision(6);
-    lookupType
-        .init(enums::Num_BranchType)
-        .flags(total | pdf);
-
-    missType
-        .init(enums::Num_BranchType)
-        .flags(total | pdf);
-
-    updates
-        .init(enums::Num_BranchType)
-        .flags(total | pdf);
-
-    mispredict
-        .init(enums::Num_BranchType)
-        .flags(total | pdf);
-
-    for (int i = 0; i < enums::Num_BranchType; i++) {
-        lookupType.subname(i, enums::BranchTypeStrings[i]);
-        missType.subname(i, enums::BranchTypeStrings[i]);
-        updates.subname(i, enums::BranchTypeStrings[i]);
-        mispredict.subname(i, enums::BranchTypeStrings[i]);
+    if (inst->isReturn()) {
+        return BranchType::Return;
     }
+
+    if (inst->isCall()) {
+        return inst->isDirectCtrl()
+                    ? BranchType::CallDirect
+                    : BranchType::CallIndirect;
+    }
+
+    if (inst->isDirectCtrl()) {
+        return inst->isCondCtrl()
+                    ? BranchType::DirectCond
+                    : BranchType::DirectUncond;
+    }
+
+    if (inst->isIndirectCtrl()) {
+        return inst->isCondCtrl()
+                    ? BranchType::IndirectCond
+                    : BranchType::IndirectUncond;
+    }
+    return BranchType::NoBranch;
 }
+
+inline std::string toString(BranchType type)
+{
+    return std::string(enums::BranchTypeStrings[type]);
+}
+
 
 } // namespace branch_prediction
 } // namespace gem5
+
+#endif // __CPU_PRED_BRANCH_TYPE_HH__
