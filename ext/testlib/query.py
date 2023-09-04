@@ -55,6 +55,13 @@ class QueryRunner(object):
             for test in suite:
                 log.test_log.message(test.uid, machine_readable=True)
 
+    def list_fixtures(self):
+        log.test_log.message(terminal.separator())
+        log.test_log.message('Listing all Test Fixtures.', bold=True)
+        log.test_log.message(terminal.separator())
+        for fixture in self.schedule.all_fixtures():
+            log.test_log.message(fixture, machine_readable=True)
+
     def list_suites(self):
         log.test_log.message(terminal.separator())
         log.test_log.message("Listing all Test Suites.", bold=True)

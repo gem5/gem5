@@ -27,6 +27,7 @@
 # Authors: Sean Wilson
 
 import testlib.helper as helper
+from testlib.configuration import constants
 
 
 class SkipException(Exception):
@@ -78,6 +79,9 @@ class Fixture(object):
 
     def teardown(self, testitem):
         pass
+
+    def __str__(self):
+        return f"{self.name} fixture"
 
     def set_global(self):
         self._is_global = True

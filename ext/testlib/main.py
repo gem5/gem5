@@ -253,6 +253,8 @@ def do_list():
         qrunner.list_tests()
     elif configuration.config.all_tags:
         qrunner.list_tags()
+    elif configuration.config.fixtures:
+        qrunner.list_fixtures()
     else:
         qrunner.list_suites()
         qrunner.list_tests()
