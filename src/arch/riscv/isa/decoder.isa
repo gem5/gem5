@@ -4366,7 +4366,8 @@ decode QUADRANT default Unknown::unknown() {
                         Rd_ud = new_vl;
                         VL = new_vl;
                         Vtype = new_vtype;
-                    }}, VectorConfigOp, IsSerializeAfter, IsNonSpeculative);
+                    }}, VSetVlDeclare, VSetVliBranchTarget
+                      , VectorConfigOp, IsSerializeAfter, IsNonSpeculative);
                     0x1: decode BIT30 {
                         0x0: vsetvl({{
                             uint64_t rd_bits = RD;
@@ -4380,7 +4381,8 @@ decode QUADRANT default Unknown::unknown() {
                             Rd_ud = new_vl;
                             VL = new_vl;
                             Vtype = new_vtype;
-                        }}, VectorConfigOp, IsSerializeAfter,
+                        }}, VSetVlDeclare, VSetVlBranchTarget
+                          , VectorConfigOp, IsSerializeAfter,
                         IsNonSpeculative);
                         0x1: vsetivli({{
                             uint64_t rd_bits = RD;
@@ -4394,7 +4396,8 @@ decode QUADRANT default Unknown::unknown() {
                             Rd_ud = new_vl;
                             VL = new_vl;
                             Vtype = new_vtype;
-                        }}, VectorConfigOp, IsSerializeAfter,
+                        }}, VSetiVliDeclare, VSetiVliBranchTarget
+                          , VectorConfigOp, IsSerializeAfter,
                         IsNonSpeculative);
                     }
                 }
