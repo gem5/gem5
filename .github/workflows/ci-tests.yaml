@@ -48,21 +48,16 @@ jobs:
     if: github.event.pull_request.draft == false
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
     needs: [pre-commit, check-for-change-id] # only runs if pre-commit and change-id passes
-    outputs:
-      artifactname: ${{ steps.name.outputs.test }}
     steps:
       - uses: actions/checkout@v3
-      - id: name
-        run: echo "test=$(date +"%Y-%m-%d_%H.%M.%S")-artifact" >> $GITHUB_OUTPUT
 
       - name: Build gem5
-        run: |
-          scons build/ALL/gem5.opt -j $(nproc)
+        run: scons build/ALL/gem5.opt -j $(nproc)
+
       - uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.name.outputs.test }}
+          name: gem5-all-opt-ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}
           path: build/ALL/gem5.opt
-      - run: echo "This job's status is ${{ job.status }}."
 
   unittests-all-opt:
     runs-on: [self-hosted, linux, x64, run]
@@ -77,39 +72,62 @@ jobs:
         run: scons build/ALL/unittests.opt -j $(nproc)
       - run: echo "This job's status is ${{ job.status }}."
 
+  testlib-get-test-dirs:
+    runs-on: [self-hosted, linux, x64, run]
+    if: github.event.pull_request.draft == false
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get directories for testlib-quick-tests
+        working-directory: "${{ github.workspace }}/tests"
+        id: dirs
+        run: |
+            {
+                echo 'dirs<<EOF'
+                find gem5 -type d -maxdepth 1
+                echo EOF
+            } >> "$GITHUB_ENV"
+    outputs:
+        test-dirs: ${{ steps.dirs.outputs.dirs }}
+
   testlib-quick:
     runs-on: [self-hosted, linux, x64, run]
     if: github.event.pull_request.draft == false
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: [pre-commit, build-gem5, check-for-change-id]
+    needs: [testlib-get-test-dirs, pre-commit, build-gem5, check-for-change-id]
     timeout-minutes: 360     # 6 hours
+    strategy:
+      fail-fast: false
+      matrix:
+        test-dir: ${{ needs.testlib-get-test-dirs.outputs.test-dirs }}
     steps:
       - name: Clean runner
         run:
           rm -rf ./* || true
           rm -rf ./.??* || true
           rm -rf ~/.cache || true
+
+        # Checkout the repository then download the gem5.opt artifact.
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
-        with:
-          name: ${{needs.build-gem5.outputs.artifactname}}
-          path: build/ALL
-      - run: chmod u+x build/ALL/gem5.opt
-      - name: The TestLib CI Tests
+
+        # Run the testlib quick tests in the given directory.
+      - name: Run "tests/${{ matrix.test-dir }}"" TestLib CI Tests
+        id: run-tests
         working-directory: ${{ github.workspace }}/tests
-        run: ./main.py run --skip-build -vv
-      - name: create zip of results
+        run: ./main.py run --skip-build -vv ${{ matrix.test-dir }}
+
+        # Get the basename of the matrix.test-dir path (to name the artifact).
+      - name: Get directory name from path
+        id: get-dir
         if: success() || failure()
-        run: |
-          apt-get -y install zip
-          zip -r output.zip tests/testing-results
-      - name: upload zip
+        run: echo "dirname=$(basename ${{ matrix.test-dir }})" >> $GITHUB_ENV
+
+        # Upload the tests/testing-results directory as an artifact.
+      - name: Upload test results
         if: success() || failure()
         uses: actions/upload-artifact@v3
-        env:
-          MY_STEP_VAR: ${{github.job}}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
         with:
-          name: ${{ env.MY_STEP_VAR }}
-          path: output.zip
-          retention-days: 7
-      - run: echo "This job's status is ${{ job.status }}."
+          name: "ci-tests-output-${{ steps.get-dir.outputs.dirname }}-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-status-${{ steps.run-tests.outcome }}"
+          path: tests/testing-results
+          retention-days: 30
