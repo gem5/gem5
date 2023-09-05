@@ -40,7 +40,7 @@ default_language_version:
 
 exclude: |
   (?x)^(
-    ext/.*|
+    ext/(?!testlib/).*|
     build/.*|
     src/systemc/ext/.*|
     src/systemc/tests/.*/.*|
