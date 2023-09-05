@@ -30,10 +30,9 @@
 # This is really basic, but it works for our purposes.
 
 WORKSPACE=$1
-HOME=$2
-PRUNE_DOCKER=$3
-CLEAN_WORKSPACE=$4
-CLEAR_CACHE=$5
+PRUNE_DOCKER=$2
+CLEAN_WORKSPACE=$3
+CLEAR_CACHE=$4
 
 if [[ $PRUNE_DOCKER == "true" ]]; then
     docker system prune -f
