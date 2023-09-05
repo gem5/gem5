@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2022-2023 The University of Edinburgh
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2014 The University of Wisconsin
  *
  * Copyright (c) 2006 INRIA (Institut National de Recherche en
@@ -320,10 +332,13 @@ LoopPredictor::squashLoop(BranchInfo* bi)
 void
 LoopPredictor::updateStats(bool taken, BranchInfo* bi)
 {
-    if (taken == bi->loopPred) {
-        stats.correct++;
-    } else {
-        stats.wrong++;
+    if (bi->loopPredUsed) {
+        stats.used++;
+        if (taken == bi->loopPred) {
+            stats.correct++;
+        } else {
+            stats.wrong++;
+        }
     }
 }
 
@@ -354,6 +369,8 @@ LoopPredictor::condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
 LoopPredictor::LoopPredictorStats::LoopPredictorStats(
     statistics::Group *parent)
     : statistics::Group(parent),
+      ADD_STAT(used, statistics::units::Count::get(),
+               "Number of times the loop predictor is the provider."),
       ADD_STAT(correct, statistics::units::Count::get(),
                "Number of times the loop predictor is the provider and the "
                "prediction is correct"),

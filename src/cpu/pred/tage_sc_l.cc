@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2022-2023 The University of Edinburgh
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2018 Metempsy Technology Consulting
  * All rights reserved.
  *
@@ -410,12 +422,12 @@ TAGE_SC_L::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b)
 }
 
 void
-TAGE_SC_L::update(ThreadID tid, Addr branch_pc, bool taken, void *bp_history,
+TAGE_SC_L::update(ThreadID tid, Addr branch_pc, bool taken, void * &bpHistory,
         bool squashed, const StaticInstPtr & inst, Addr corrTarget)
 {
-    assert(bp_history);
+    assert(bpHistory);
 
-    TageSCLBranchInfo* bi = static_cast<TageSCLBranchInfo*>(bp_history);
+    TageSCLBranchInfo* bi = static_cast<TageSCLBranchInfo*>(bpHistory);
     TAGE_SC_L_TAGE::BranchInfo* tage_bi =
         static_cast<TAGE_SC_L_TAGE::BranchInfo *>(bi->tageBranchInfo);
 
@@ -462,7 +474,7 @@ TAGE_SC_L::update(ThreadID tid, Addr branch_pc, bool taken, void *bp_history,
                               inst, corrTarget);
     }
 
-    delete bi;
+    delete bi; bpHistory = nullptr;
 }
 
 } // namespace branch_prediction
