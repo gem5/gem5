@@ -29,10 +29,9 @@
 # Parse the command line options.
 # This is really basic, but it works for our purposes.
 
-WORKSPACE=$1
-PRUNE_DOCKER=$2
-CLEAN_WORKSPACE=$3
-CLEAR_CACHE=$4
+PRUNE_DOCKER=$1
+CLEAN_WORKSPACE=$2
+CLEAR_CACHE=$3
 
 if [[ $PRUNE_DOCKER == "true" ]]; then
     docker system prune -f
