@@ -75,8 +75,8 @@ inline constexpr RegClass vecRegClass =
         ops(vecRegClassOps).
         regType<VecRegContainer>();
 
-BitUnion32(VTYPE)
-    Bitfield<31> vill;
+BitUnion64(VTYPE)
+    Bitfield<63> vill;
     Bitfield<7, 0> vtype8;
     Bitfield<7> vma;
     Bitfield<6> vta;
