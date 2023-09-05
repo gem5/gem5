@@ -28,16 +28,18 @@
 
 import testlib.helper as helper
 
+
 class SkipException(Exception):
     def __init__(self, fixture, testitem):
         self.msg = 'Fixture "%s" raised SkipException for "%s".' % (
-               fixture.name, testitem.name
+            fixture.name,
+            testitem.name,
         )
         super(SkipException, self).__init__(self.msg)
 
 
 class Fixture(object):
-    '''
+    """
     Base Class for a test Fixture.
 
     Fixtures are items which possibly require setup and/or tearing down after
@@ -50,7 +52,8 @@ class Fixture(object):
 
     .. note:: In order for Fixtures to be enumerated by the test system this
         class' :code:`__new__` method must be called.
-    '''
+    """
+
     collector = helper.InstanceCollector()
 
     def __new__(klass, *args, **kwargs):

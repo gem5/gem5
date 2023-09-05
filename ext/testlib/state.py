@@ -24,14 +24,15 @@
 #
 # Authors: Sean Wilson
 
+
 class Result:
-    enums = '''
+    enums = """
         NotRun
         Skipped
         Passed
         Failed
         Errored
-    '''.split()
+    """.split()
     for idx, enum in enumerate(enums):
         locals()[enum] = idx
 
@@ -46,15 +47,16 @@ class Result:
     def __str__(self):
         return self.name(self.value)
 
+
 class Status:
-    enums = '''
+    enums = """
         Unscheduled
         Building
         Running
         TearingDown
         Complete
         Avoided
-    '''.split()
+    """.split()
     for idx, enum in enumerate(enums):
         locals()[enum] = idx
 
