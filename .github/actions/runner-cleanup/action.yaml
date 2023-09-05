@@ -25,29 +25,20 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: 'Cleaning GitHub Workspace'
+    - name: 'Clean GitHub Workspace'
       if: ${{ inputs.clean-workspace == 'true' }}
       shell: bash
       run: |
-        echo "Cleaning files from the workspace..."
-        rm -rf "${{ github.workspace }}/{*,.*}""
-        echo "Workspace cleared."
-        echo "::set-output name=output::Done"
+        rm -rf "${{ github.workspace }}/{*,.*}"
 
     - name: 'Clear cache'
       if: ${{ inputs.clear-cache == 'true' }}
       shell: bash
       run: |
-        echo "Clearing cache..."
         rm -rf "${HOME}/.cache"
-        echo "Cache cleared."
-        echo "::set-output name=output::Done"
 
     - name: 'Prune Docker'
       if: ${{ inputs.prune-docker == 'true' }}
       shell: bash
       run: |
-        echo "Pruning docker..."
         docker system prune -f
-        echo "Docker pruned."
-        echo "::set-output name=output::Done"
