@@ -39,8 +39,8 @@ if [[ $PRUNE_DOCKER == "true" ]]; then
 fi
 
 if [[ $CLEAN_WORKSPACE == "true" ]]; then
-    echo $(pwd)
-    rm -rf "{*,.*}"
+    echo "${GITHUB_WORKSPACE}"
+    rm -rf "${GITHUB_WORKSPACE}{*,.*}"
 fi
 
 if [[ $CLEAR_CACHE == "true" ]]; then
