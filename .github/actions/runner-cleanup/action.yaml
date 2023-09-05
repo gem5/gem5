@@ -23,22 +23,11 @@ inputs:
       - true
       - false
 runs:
-  using: 'composite'
-  steps:
-    - name: 'Clean GitHub Workspace'
-      if: ${{ inputs.clean-workspace == 'true' }}
-      shell: bash
-      run: |
-        rm -rf "${{ github.workspace }}/{*,.*}"
-
-    - name: 'Clear cache'
-      if: ${{ inputs.clear-cache == 'true' }}
-      shell: bash
-      run: |
-        rm -rf "${HOME}/.cache"
-
-    - name: 'Prune Docker'
-      if: ${{ inputs.prune-docker == 'true' }}
-      shell: bash
-      run: |
-        docker system prune -f
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ github.workspace }}
+    - ${{ github.home }}
+    - ${{ inputs.prune-docker }}
+    - ${{ inputs.clean-workspace }}
+    - ${{ inputs.clear-cache }}
