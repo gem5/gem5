@@ -72,7 +72,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/runner-cleanup
+      - run: docker system prune -a
       - uses: actions/checkout@v3
       - name: CI Unittests
         working-directory: ${{ github.workspace }}

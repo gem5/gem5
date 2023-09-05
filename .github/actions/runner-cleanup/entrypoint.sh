@@ -29,6 +29,8 @@
 # Parse the command line options.
 # This is really basic, but it works for our purposes.
 
+set -e
+
 PRUNE_DOCKER=$1
 CLEAN_WORKSPACE=$2
 CLEAR_CACHE=$3
