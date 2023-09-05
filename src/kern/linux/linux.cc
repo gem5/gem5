@@ -58,19 +58,19 @@ Linux::openSpecialFile(std::string path, Process *process,
     bool matched = false;
     std::string data;
 
-    if (path.compare(0, 13, "/proc/meminfo") == 0) {
+    if (path == "/proc/meminfo") {
         data = Linux::procMeminfo(process, tc);
         matched = true;
-    } else if (path.compare(0, 11, "/etc/passwd") == 0) {
+    } else if (path == "/etc/passwd") {
         data = Linux::etcPasswd(process, tc);
         matched = true;
-    } else if (path.compare(0, 15, "/proc/self/maps") == 0) {
+    } else if (path == "/proc/self/maps") {
         data = Linux::procSelfMaps(process, tc);
         matched = true;
-    } else if (path.compare(0, 30, "/sys/devices/system/cpu/online") == 0) {
+    } else if (path == "/sys/devices/system/cpu/online") {
         data = Linux::cpuOnline(process, tc);
         matched = true;
-    } else if (path.compare(0, 12 ,"/dev/urandom") == 0) {
+    } else if (path == "/dev/urandom") {
         data = Linux::devRandom(process, tc);
         matched = true;
     }
