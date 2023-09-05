@@ -33,16 +33,16 @@ PRUNE_DOCKER=$1
 CLEAN_WORKSPACE=$2
 CLEAR_CACHE=$3
 
-if [[ $PRUNE_DOCKER == "true" ]]; then
+if [ "${PRUNE_DOCKER}" = "true" ]; then
     docker system prune -f
 fi
 
-if [[ $CLEAN_WORKSPACE == "true" ]]; then
+if [ "${CLEAN_WORKSPACE}" = "true" ]; then
     echo "${GITHUB_WORKSPACE}"
     rm -rf "${GITHUB_WORKSPACE}{*,.*}"
 fi
 
-if [[ $CLEAR_CACHE == "true" ]]; then
+if [ "${CLEAR_CACHE}" = "true" ]; then
     echo "${HOME}/.cache"
     rm -rf "${HOME}/.cache"
 fi
