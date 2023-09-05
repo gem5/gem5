@@ -38,13 +38,75 @@ def format VConfOp(code, write_code, *flags) {{
         },
         flags
     )
-    header_output = BasicDeclare.subst(iop)
+    header_output = VSetVlDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
     exec_output = VConfExecute.subst(iop)
 }};
 
+def template VSetVlDeclare {{
+    //
+    // Static instruction class for "%(mnemonic)s".
+    //
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+        VTYPE getNewVtype(VTYPE, VTYPE, uint32_t) const;
+        uint32_t getNewVL(
+            uint32_t, uint32_t, uint32_t, uint64_t, uint64_t) const;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst);
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        using %(base_class)s::generateDisassembly;
+
+    };
+}};
+
 def template VConfExecute {{
+    VTYPE
+    %(class_name)s::getNewVtype(
+        VTYPE oldVtype, VTYPE reqVtype, uint32_t vlen) const
+    {
+        VTYPE newVtype = oldVtype;
+        if (oldVtype != reqVtype) {
+            newVtype = reqVtype;
+
+            float vflmul = getVflmul(newVtype.vlmul);
+
+            uint32_t sew = getSew(newVtype.vsew);
+
+            uint32_t newVill =
+                !(vflmul >= 0.125 && vflmul <= 8) ||
+                    sew > std::min(vflmul, 1.0f) * ELEN ||
+                    bits(reqVtype, 62, 8) != 0;
+            if (newVill) {
+                newVtype = 0;
+                newVtype.vill = 1;
+            }
+        }
+        return newVtype;
+    }
+
+    uint32_t
+    %(class_name)s::getNewVL(uint32_t currentVl, uint32_t reqVl,
+        uint32_t vlmax, uint64_t rdBits, uint64_t rs1Bits) const
+    {
+        uint32_t newVl = 0;
+        if (vlmax == 0) {
+            newVl = 0;
+        } else if (rdBits == 0 && rs1Bits == 0) {
+            newVl = currentVl > vlmax ? vlmax : currentVl;
+        } else if (rdBits != 0 && rs1Bits == 0) {
+            newVl = vlmax;
+        } else if (rs1Bits != 0) {
+            newVl = reqVl > vlmax ? vlmax : reqVl;
+        }
+        return newVl;
+    }
+
     Fault
     %(class_name)s::execute(ExecContext *xc,
         trace::InstRecord *traceData) const
@@ -63,37 +125,12 @@ def template VConfExecute {{
 
         tc->setMiscReg(MISCREG_VSTART, 0);
 
-        VTYPE new_vtype = requested_vtype;
-        if (Vtype != new_vtype) {
-            vlmax = getVlmax(new_vtype, vlen);
+        VTYPE new_vtype = getNewVtype(Vtype, requested_vtype, vlen);
+        vlmax = new_vtype.vill ? 0 : getVlmax(new_vtype, vlen);
+        uint32_t new_vl = getNewVL(
+            current_vl, requested_vl, vlmax, rd_bits, rs1_bits);
 
-            float vflmul = getVflmul(new_vtype.vlmul);
 
-            uint32_t sew = getSew(new_vtype.vsew);
-
-            uint32_t new_vill =
-                !(vflmul >= 0.125 && vflmul <= 8) ||
-                    sew > std::min(vflmul, 1.0f) * ELEN ||
-                    bits(requested_vtype, 62, 8) != 0;
-            if (new_vill) {
-                vlmax = 0;
-                new_vtype = 0;
-                new_vtype.vill = 1;
-            }
-        } else {
-            new_vtype = Vtype;
-        }
-
-        uint32_t new_vl = 0;
-        if (vlmax == 0) {
-            new_vl = 0;
-        } else if (rd_bits == 0 && rs1_bits == 0) {
-            new_vl = current_vl > vlmax ? vlmax : current_vl;
-        } else if (rd_bits != 0 && rs1_bits == 0) {
-            new_vl = vlmax;
-        } else if (rs1_bits != 0) {
-            new_vl = requested_vl > vlmax ? vlmax : requested_vl;
-        }
 
         %(write_code)s;
 
