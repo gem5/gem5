@@ -39,9 +39,11 @@ if [[ $PRUNE_DOCKER == "true" ]]; then
 fi
 
 if [[ $CLEAN_WORKSPACE == "true" ]]; then
-    rm -rf "${WORKSPACE}/{*,.*}"
+    echo $(pwd)
+    rm -rf "{*,.*}"
 fi
 
 if [[ $CLEAR_CACHE == "true" ]]; then
+    echo "${HOME}/.cache"
     rm -rf "${HOME}/.cache"
 fi

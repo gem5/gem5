@@ -26,7 +26,6 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
-    - ${{ github.workspace }}
     - ${{ inputs.prune-docker }}
     - ${{ inputs.clean-workspace }}
     - ${{ inputs.clear-cache }}
