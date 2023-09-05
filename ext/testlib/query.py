@@ -57,10 +57,22 @@ class QueryRunner(object):
 
     def list_fixtures(self):
         log.test_log.message(terminal.separator())
-        log.test_log.message('Listing all Test Fixtures.', bold=True)
+        log.test_log.message("Listing all Test Fixtures.", bold=True)
         log.test_log.message(terminal.separator())
         for fixture in self.schedule.all_fixtures():
             log.test_log.message(fixture, machine_readable=True)
+
+    def list_build_targets(self):
+        log.test_log.message(terminal.separator())
+        log.test_log.message("Listing all gem5 Build Targets.", bold=True)
+        log.test_log.message(terminal.separator())
+        builds = []
+        for fixture in self.schedule.all_fixtures():
+            build = fixture.get_get_build_info()
+            if build and build not in builds:
+                builds.append(build)
+        for build in builds:
+            log.test_log.message(build, machine_readable=True)
 
     def list_suites(self):
         log.test_log.message(terminal.separator())

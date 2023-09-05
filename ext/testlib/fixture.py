@@ -29,6 +29,8 @@
 import testlib.helper as helper
 from testlib.configuration import constants
 
+from typing import Optional
+
 
 class SkipException(Exception):
     def __init__(self, fixture, testitem):
@@ -79,6 +81,18 @@ class Fixture(object):
 
     def teardown(self, testitem):
         pass
+
+    def get_get_build_info(self) -> Optional[dict]:
+        # If this is a gem5 build it will return the target gem5 build path
+        # and any additional build information. E.g.:
+        #
+        # /path/to/gem5/build/NULL/gem5.opt--default=NULL PROTOCOL=MI_example
+        #
+        # In this example this may be passed to scons to build gem5 in
+        # accordance to the test's build requirements.
+        #
+        # If this fixtures is not a build of gem5, None is returned.
+        return None
 
     def __str__(self):
         return f"{self.name} fixture"
