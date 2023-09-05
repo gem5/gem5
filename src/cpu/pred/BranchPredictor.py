@@ -59,6 +59,22 @@ class BranchType(Enum):
     ]
 
 
+class ReturnAddrStack(SimObject):
+    type = "ReturnAddrStack"
+    cxx_class = "gem5::branch_prediction::ReturnAddrStack"
+    cxx_header = "cpu/pred/ras.hh"
+    # abstract = True
+
+    numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
+    numEntries = Param.Unsigned(Parent.RASSize, "Number of RAS entries")
+    corruptionDetection = Param.Bool(
+        False,
+        "When corruption detection is "
+        "enabled no entry will returned when "
+        "the stack was corrupted.",
+    )
+
+
 class BranchTargetBuffer(ClockedObject):
     type = "BranchTargetBuffer"
     cxx_class = "gem5::branch_prediction::BranchTargetBuffer"
@@ -146,6 +162,9 @@ class BranchPredictor(SimObject):
     RASSize = Param.Unsigned(16, "RAS size")
 
     BTB = Param.BranchTargetBuffer(SimpleBTB(), "Branch target buffer (BTB)")
+    RAS = Param.ReturnAddrStack(
+        ReturnAddrStack(), "Return address stack, set to NULL to disable RAS."
+    )
     indirectBranchPred = Param.IndirectPredictor(
         SimpleIndirectPredictor(),
         "Indirect branch predictor, set to NULL to disable indirect predictions",

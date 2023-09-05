@@ -218,13 +218,15 @@ class BPredUnit : public SimObject
                          void *indirect_history, ThreadID _tid,
                          const StaticInstPtr & inst)
             : seqNum(seq_num), pc(instPC), bpHistory(bp_history),
-              indirectHistory(indirect_history), tid(_tid),
+              indirectHistory(indirect_history), rasHistory(nullptr),
+              tid(_tid),
               predTaken(pred_taken), inst(inst)
         {}
 
         PredictorHistory(const PredictorHistory &other) :
             seqNum(other.seqNum), pc(other.pc), bpHistory(other.bpHistory),
-            indirectHistory(other.indirectHistory), RASIndex(other.RASIndex),
+            indirectHistory(other.indirectHistory),
+            rasHistory(other.rasHistory), RASIndex(other.RASIndex),
             tid(other.tid), predTaken(other.predTaken), usedRAS(other.usedRAS),
             pushedRAS(other.pushedRAS), wasCall(other.wasCall),
             wasReturn(other.wasReturn), wasIndirect(other.wasIndirect),
@@ -252,6 +254,8 @@ class BPredUnit : public SimObject
         void *bpHistory = nullptr;
 
         void *indirectHistory = nullptr;
+
+        void *rasHistory = nullptr;
 
         /** The RAS target (only valid if a return). */
         std::unique_ptr<PCStateBase> RASTarget;
@@ -303,10 +307,10 @@ class BPredUnit : public SimObject
     std::vector<History> predHist;
 
     /** The BTB. */
-    BranchTargetBuffer* btb;
+    BranchTargetBuffer * btb;
 
-    /** The per-thread return address stack. */
-    std::vector<ReturnAddrStack> RAS;
+    /** The return address stack. */
+    ReturnAddrStack * ras;
 
     /** The indirect target predictor. */
     IndirectPredictor * iPred;
