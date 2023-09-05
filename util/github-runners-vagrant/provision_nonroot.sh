@@ -13,3 +13,7 @@ DOCKER_COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/rel
 mkdir -p "${HOME}/.docker/cli-plugins"
 curl -sL "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o "${HOME}/.docker/cli-plugins/docker-compose"
 chmod +x "${HOME}/.docker/cli-plugins/docker-compose"
+
+# Setup crontab to run docker prune every 3 hours
+echo "0 */3 * * * docker system prune -af --volumes"> /tmp/cron
+crontab /tmp/cron
