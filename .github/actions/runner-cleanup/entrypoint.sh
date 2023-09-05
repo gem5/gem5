@@ -1,4 +1,4 @@
-#!/usr/bin/env sh -l
+#!/usr/bin/env sh
 
 # Copyright (c) 2023 The Regents of the University of California
 # All rights reserved.
