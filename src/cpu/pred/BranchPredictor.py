@@ -59,6 +59,15 @@ class BranchType(Enum):
     ]
 
 
+class TargetProvider(Enum):
+    vals = [
+        "NoTarget",
+        "BTB",
+        "RAS",
+        "Indirect",
+    ]
+
+
 class ReturnAddrStack(SimObject):
     type = "ReturnAddrStack"
     cxx_class = "gem5::branch_prediction::ReturnAddrStack"
@@ -170,6 +179,11 @@ class BranchPredictor(SimObject):
 
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
     instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
+    requiresBTBHit = Param.Bool(
+        False,
+        "Requires a BTB hit to detect if "
+        " a branch was a return or indirect branch.",
+    )
 
     RASSize = Param.Unsigned(16, "RAS size")
 

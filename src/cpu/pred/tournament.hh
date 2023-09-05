@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2011, 2014 ARM Limited
+ * Copyright (c) 2022-2023 The University of Edinburgh
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -70,52 +71,14 @@ class TournamentBP : public BPredUnit
      */
     TournamentBP(const TournamentBPParams &params);
 
-    /**
-     * Looks up the given address in the branch predictor and returns
-     * a true/false value as to whether it is taken.  Also creates a
-     * BPHistory object to store any state it will need on squash/update.
-     * @param branch_addr The address of the branch to look up.
-     * @param bp_history Pointer that will be set to the BPHistory object.
-     * @return Whether or not the branch is taken.
-     */
-    bool lookup(ThreadID tid, Addr branch_addr, void * &bp_history);
-
-    /**
-     * Records that there was an unconditional branch, and modifies
-     * the bp history to point to an object that has the previous
-     * global history stored in it.
-     * @param bp_history Pointer that will be set to the BPHistory object.
-     */
-    void uncondBranch(ThreadID tid, Addr pc, void * &bp_history);
-    /**
-     * Updates the branch predictor to Not Taken if a BTB entry is
-     * invalid or not found.
-     * @param branch_addr The address of the branch to look up.
-     * @param bp_history Pointer to any bp history state.
-     * @return Whether or not the branch is taken.
-     */
-    void btbUpdate(ThreadID tid, Addr branch_addr, void * &bp_history);
-    /**
-     * Updates the branch predictor with the actual result of a branch.
-     * @param branch_addr The address of the branch to update.
-     * @param taken Whether or not the branch was taken.
-     * @param bp_history Pointer to the BPHistory object that was created
-     * when the branch was predicted.
-     * @param squashed is set when this function is called during a squash
-     * operation.
-     * @param inst Static instruction information
-     * @param corrTarget Resolved target of the branch (only needed if
-     * squashed)
-     */
-    void update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
-                bool squashed, const StaticInstPtr & inst, Addr corrTarget);
-
-    /**
-     * Restores the global branch history on a squash.
-     * @param bp_history Pointer to the BPHistory object that has the
-     * previous global branch history in it.
-     */
-    void squash(ThreadID tid, void *bp_history);
+    // Base class methods.
+    bool lookup(ThreadID tid, Addr branch_addr, void* &bpHistory) override;
+    void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
+                         Addr target,  void * &bpHistory) override;
+    void update(ThreadID tid, Addr branch_addr, bool taken, void * &bpHistory,
+                bool squashed, const StaticInstPtr & inst,
+                Addr corrTarget) override;
+    void squash(ThreadID tid, void * &bpHistory) override;
 
   private:
     /**
@@ -131,25 +94,18 @@ class TournamentBP : public BPredUnit
      */
     inline unsigned calcLocHistIdx(Addr &branch_addr);
 
-    /** Updates global history as taken. */
-    inline void updateGlobalHistTaken(ThreadID tid);
-
-    /** Updates global history as not taken. */
-    inline void updateGlobalHistNotTaken(ThreadID tid);
-
-    /**
-     * Updates local histories as taken.
-     * @param local_history_idx The local history table entry that
-     * will be updated.
-     */
-    inline void updateLocalHistTaken(unsigned local_history_idx);
+    /** Updates global history with the given direction
+     * @param taken Whether or not the branch was taken
+    */
+    inline void updateGlobalHist(ThreadID tid, bool taken);
 
     /**
-     * Updates local histories as not taken.
+     * Updates local histories.
      * @param local_history_idx The local history table entry that
      * will be updated.
+     * @param taken Whether or not the branch was taken.
      */
-    inline void updateLocalHistNotTaken(unsigned local_history_idx);
+    inline void updateLocalHist(unsigned local_history_idx, bool taken);
 
     /**
      * The branch history information that is created upon predicting
