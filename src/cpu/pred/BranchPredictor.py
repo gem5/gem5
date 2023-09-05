@@ -131,6 +131,12 @@ class IndirectPredictor(SimObject):
     abstract = True
 
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
+    takenOnlyHistory = Param.Bool(
+        False,
+        "Build the global "
+        "history using taken-only branch target history instead of direction "
+        "history from all branches",
+    )
 
 
 class SimpleIndirectPredictor(IndirectPredictor):
@@ -145,6 +151,12 @@ class SimpleIndirectPredictor(IndirectPredictor):
     indirectTagSize = Param.Unsigned(16, "Indirect target cache tag bits")
     indirectPathLength = Param.Unsigned(
         3, "Previous indirect targets to use for path history"
+    )
+    speculativePathLength = Param.Unsigned(
+        3,
+        "Additional buffer space to store speculative path history. "
+        "If there are more speculative branches in flight the history cannot "
+        "be recoverd.",
     )
     indirectGHRBits = Param.Unsigned(13, "Indirect GHR number of bits")
     instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
@@ -167,7 +179,8 @@ class BranchPredictor(SimObject):
     )
     indirectBranchPred = Param.IndirectPredictor(
         SimpleIndirectPredictor(),
-        "Indirect branch predictor, set to NULL to disable indirect predictions",
+        "Indirect branch predictor, set to NULL to disable "
+        "indirect predictions",
     )
 
 
