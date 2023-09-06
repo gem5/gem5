@@ -41,7 +41,7 @@ from gem5.components.processors.cpu_types import (
 )
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.simulate.simulator import Simulator
-from gem5.resources.workload import Workload
+from gem5.resources.resource import obtain_resource
 
 import argparse
 import importlib
@@ -184,7 +184,7 @@ if args.boot_type == "init":
     kernal_args.append("init=/root/exit.sh")
 
 # Set the workload.
-workload = Workload(
+workload = obtain_resource(
     "x86-ubuntu-18.04-boot", resource_directory=args.resource_directory
 )
 workload.set_parameter("kernel_args", kernal_args)

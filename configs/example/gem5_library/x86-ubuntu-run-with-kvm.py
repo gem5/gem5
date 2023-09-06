@@ -51,7 +51,7 @@ from gem5.isas import ISA
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.simulate.simulator import Simulator
 from gem5.simulate.exit_event import ExitEvent
-from gem5.resources.workload import Workload
+from gem5.resources.resource import obtain_resource
 
 # This runs a check to ensure the gem5 binary is compiled to X86 and to the
 # MESI Two Level coherence protocol.
@@ -117,7 +117,7 @@ command = (
     + "m5 exit;"
 )
 
-workload = Workload("x86-ubuntu-18.04-boot")
+workload = obtain_resource("x86-ubuntu-18.04-boot")
 workload.set_parameter("readfile_contents", command)
 board.set_workload(workload)
 

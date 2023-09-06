@@ -51,7 +51,7 @@ from gem5.components.cachehierarchies.ruby.caches.mesi_three_level.octopi import
 from gem5.isas import ISA
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.simulate.simulator import Simulator
-from gem5.resources.workload import Workload
+from gem5.resources.resource import obtain_resource
 
 num_ccds = 1  # CCDs
 num_cores_per_ccd = 8  # 8 cores/CCD
@@ -94,7 +94,7 @@ board = ArmBoard(
     platform=platform,
 )
 
-board.set_workload(Workload("arm64-ubuntu-20.04-boot"))
+board.set_workload(obtain_resource("arm64-ubuntu-20.04-boot"))
 
 simulator = Simulator(board=board)
 simulator.run()

@@ -43,7 +43,7 @@ scons build/ARM/gem5.opt -j<NUM_CPUS>
 from gem5.isas import ISA
 from m5.objects import ArmDefaultRelease
 from gem5.utils.requires import requires
-from gem5.resources.workload import Workload
+from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
 from m5.objects import VExpress_GEM5_Foundation
 from gem5.coherence_protocol import CoherenceProtocol
@@ -100,7 +100,7 @@ board = ArmBoard(
 # Here we set a full system workload. The "arm64-ubuntu-20.04-boot" boots
 # Ubuntu 20.04.
 
-board.set_workload(Workload("arm64-ubuntu-20.04-boot"))
+board.set_workload(obtain_resource("arm64-ubuntu-20.04-boot"))
 
 # We define the system with the aforementioned system defined.
 
