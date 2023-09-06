@@ -36,9 +36,9 @@ from .fixture import *
 from .configuration import *
 from .main import main
 
-#TODO Remove this awkward bootstrap
-#FIXME
+# TODO Remove this awkward bootstrap
+# FIXME
 from gem5 import *
 
-#TODO Remove this as an export, users should getcwd from os
+# TODO Remove this as an export, users should getcwd from os
 from os import getcwd
