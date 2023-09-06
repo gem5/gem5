@@ -422,14 +422,12 @@ FDArray::unserialize(CheckpointIn &cp, Process* process_ptr) {
 
         std::string path;
 
-        if (process_ptr)
-        {
+        if (process_ptr) {
             // Check if it is needed to redirect the app path to another host
             // path
             path = process_ptr->checkPathRedirect(this_ffd->getFileName());
         }
-        else
-        {
+        else {
             path = this_ffd->getFileName();
         }
 
