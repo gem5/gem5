@@ -6,6 +6,9 @@ on:
   pull_request:
     types: [opened, edited, synchronize, ready_for_review]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   pre-commit:
