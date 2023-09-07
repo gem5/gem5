@@ -438,7 +438,7 @@ for variant_path in variant_paths:
         mold_check_message = \
             "You are seeing this error because -fuse-ld=mold failed.\n" \
             "If you did not add the folder containing mold to $PATH, you " \
-            "should do so and recompiling gem5.\n" \
+            "should do so and recompile gem5.\n" \
             "If that does not work, you can manually specify the path to " \
             "the binary of mold using the --mold-path option. This will " \
             "cause scons to look for ld or ld.mold in the same folder as " \
