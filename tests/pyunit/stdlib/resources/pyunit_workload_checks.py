@@ -32,6 +32,7 @@ from gem5.resources.resource import (
     BinaryResource,
     DiskImageResource,
     obtain_resource,
+    WorkloadResource,
 )
 
 from typing import Dict
@@ -61,7 +62,7 @@ class CustomWorkloadTestSuite(unittest.TestCase):
         new=ClientWrapper(mock_config_json),
     )
     def setUpClass(cls) -> None:
-        cls.custom_workload = CustomWorkload(
+        cls.custom_workload = WorkloadResource(
             function="set_se_binary_workload",
             parameters={
                 "binary": obtain_resource(
@@ -135,7 +136,7 @@ class WorkloadTestSuite(unittest.TestCase):
         ClientWrapper(mock_config_json),
     )
     def setUpClass(cls):
-        cls.workload = Workload("simple-boot", gem5_version="develop")
+        cls.workload = obtain_resource("simple-boot", gem5_version="develop")
 
     def test_get_function_str(self) -> None:
         # Tests `Resource.get_function_str`

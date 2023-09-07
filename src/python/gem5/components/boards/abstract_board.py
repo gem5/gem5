@@ -28,7 +28,7 @@ from abc import ABCMeta, abstractmethod
 import inspect
 
 from .mem_mode import MemMode, mem_mode_to_string
-from ...resources.workload import AbstractWorkload
+from ...resources.resource import WorkloadResource
 
 from m5.objects import (
     AddrRange,
@@ -198,7 +198,7 @@ class AbstractBoard:
             )
         return self._is_fs
 
-    def set_workload(self, workload: AbstractWorkload) -> None:
+    def set_workload(self, workload: WorkloadResource) -> None:
         """
         Set the workload for this board to run.
 
