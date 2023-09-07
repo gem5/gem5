@@ -3,21 +3,34 @@ name: Docker images build and push
 on:
   workflow_dispatch:
 jobs:
-  # This builds and pushes the docker image.
-  build-and-push:
+  obtain-dockerfiles:
     runs-on: [self-hosted, linux, x64, run]
-    permissions:
-      packages: write
-      contents: read
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
 
     steps:
       - uses: actions/checkout@v3
-        name: Checkout the develop branch
         with:
-            # Scheduled workflows run on the default branch by default. We
-            # therefore need to explicitly checkout the develop branch.
-            ref: develop
+          # Scheduled workflows run on the default branch by default. We
+          # therefore need to explicitly checkout the develop branch.
+          ref: develop
+      - uses: actions/upload-artifact@v2
+        with:
+          name: dockerfiles
+          path: util/dockerfiles
+
+  # This builds and pushes the docker image.
+  build-and-push:
+    runs-on: [self-hosted, linux, x64, run]
+    needs: obtain-dockerfiles
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: dockerfiles
+          path: dockerfiles
 
       - uses: docker/setup-qemu-action@v2
         name: Setup QEMU
@@ -35,5 +48,5 @@ jobs:
       - name: Build and push with bake
         uses: docker/bake-action@v3
         with:
-          files: util/dockerfiles/docker-bake.hcl
+          files: dockerfiles/docker-bake.hcl
           push: true
