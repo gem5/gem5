@@ -40,7 +40,7 @@ from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.boards.riscv_board import RiscvBoard
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.simulate.simulator import Simulator
-from gem5.resources.workload import Workload
+from gem5.resources.resource import obtain_resource
 
 import argparse
 import importlib
@@ -160,7 +160,7 @@ board = RiscvBoard(
 )
 
 # Set the workload.
-workload = Workload(
+workload = obtain_resource(
     "riscv-ubuntu-20.04-boot", resource_directory=args.resource_directory
 )
 board.set_workload(workload)

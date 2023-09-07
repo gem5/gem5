@@ -54,7 +54,6 @@ from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
-from gem5.resources.workload import Workload
 from m5.stats import reset, dump
 
 requires(isa_required=ISA.X86)
@@ -113,7 +112,7 @@ board = SimpleBoard(
 )
 
 board.set_workload(
-    Workload(
+    obtain_resource(
         f"x86-matrix-multiply-omp-100-8-looppoint-region-{args.checkpoint_region}"
     )
 )

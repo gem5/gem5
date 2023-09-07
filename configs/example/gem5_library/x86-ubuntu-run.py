@@ -45,7 +45,7 @@ scons build/X86/gem5.opt
 """
 
 from gem5.prebuilt.demo.x86_demo_board import X86DemoBoard
-from gem5.resources.workload import Workload
+from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
 
 
@@ -56,7 +56,7 @@ board = X86DemoBoard()
 # We then set the workload. Here we use the "x86-ubuntu-18.04-boot" workload.
 # This boots Ubuntu 18.04 with Linux 5.4.49. If the required resources are not
 # found locally, they will be downloaded.
-board.set_workload(Workload("x86-ubuntu-18.04-boot"))
+board.set_workload(obtain_resource("x86-ubuntu-18.04-boot"))
 
 simulator = Simulator(board=board)
 simulator.run()

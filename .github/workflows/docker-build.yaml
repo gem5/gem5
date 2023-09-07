@@ -1,42 +1,39 @@
-#
 name: Docker images build and push
 
 on:
-  push:
-    branches:
-      - develop
-    paths:
-      - 'util/docker/ubuntu-20.04_all-depenencies'
   workflow_dispatch:
-
-env:
-  IMAGE_NAME: ubuntu-20.04_all-depenencies
-#
 jobs:
   # This builds and pushes the docker image.
-  push:
+  build-and-push:
     runs-on: [self-hosted, linux, x64, run]
     permissions:
       packages: write
       contents: read
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
 
     steps:
       - uses: actions/checkout@v3
+        name: Checkout the develop branch
+        with:
+            # Scheduled workflows run on the default branch by default. We
+            # therefore need to explicitly checkout the develop branch.
+            ref: develop
 
-      - name: Build image
-        run: |
-          cd util/docker/ubuntu-20.04_all-depenencies
-          docker build . --file Dockerfile --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
+      - uses: docker/setup-qemu-action@v2
+        name: Setup QEMU
 
-      - name: Log in to registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+      - uses: docker/setup-buildx-action@v2
+        name: Set up Docker Buildx
 
-      - name: Push image
-        run: |
-          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
+      - uses: docker/login-action@v2
+        name: Login to the GitHub Container Registry
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-          # This changes all uppercase characters to lowercase.
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-
-          docker tag $IMAGE_NAME $IMAGE_ID:latest
-          docker push $IMAGE_ID::latest
+      - name: Build and push with bake
+        uses: docker/bake-action@v3
+        with:
+          files: util/dockerfiles/docker-bake.hcl
+          push: true
