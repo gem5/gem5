@@ -76,7 +76,7 @@ class TempdirFixture(Fixture):
         suiteUID = testitem.metadata.uid.suite
         testUID = testitem.metadata.name
         testing_result_folder = os.path.join(
-            config.result_path, "SuiteUID:" + suiteUID, "TestUID:" + testUID
+            config.result_path, "SuiteUID-" + suiteUID, "TestUID-" + testUID
         )
 
         # Copy the output files of the run from /tmp to testing-results
