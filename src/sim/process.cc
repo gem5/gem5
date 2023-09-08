@@ -387,7 +387,7 @@ Process::unserialize(CheckpointIn &cp)
 {
     memState->unserialize(cp);
     pTable->unserialize(cp);
-    fds->unserialize(cp);
+    fds->unserialize(cp, this);
 
     /**
      * Checkpoints for pipes, device drivers or sockets currently

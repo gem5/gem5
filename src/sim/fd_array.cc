@@ -42,6 +42,7 @@
 #include "base/output.hh"
 #include "params/Process.hh"
 #include "sim/fd_entry.hh"
+#include "sim/process.hh"
 
 namespace gem5
 {
@@ -367,7 +368,7 @@ FDArray::serialize(CheckpointOut &cp) const {
 }
 
 void
-FDArray::unserialize(CheckpointIn &cp) {
+FDArray::unserialize(CheckpointIn &cp, Process* process_ptr) {
     ScopedCheckpointSection sec(cp, "fdarray");
     uint64_t size;
     paramIn(cp, "size", size);
@@ -418,11 +419,24 @@ FDArray::unserialize(CheckpointIn &cp) {
         setFDEntry(tgt_fd, fdep);
 
         mode_t mode = this_ffd->getFileMode();
-        std::string const& path = this_ffd->getFileName();
+
+        std::string path;
+
+        if (process_ptr) {
+            // Check if it is needed to redirect the app path to another host
+            // path
+            path = process_ptr->checkPathRedirect(this_ffd->getFileName());
+        }
+        else {
+            path = this_ffd->getFileName();
+        }
+
         int flags = this_ffd->getFlags();
 
         // Re-open the file and assign a new sim_fd
-        int sim_fd = openFile(path, flags, mode);
+        int sim_fd;
+        sim_fd = openFile(path, flags, mode);
+
         this_ffd->setSimFD(sim_fd);
 
         // Restore the file offset to the proper value
