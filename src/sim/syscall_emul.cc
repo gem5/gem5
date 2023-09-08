@@ -959,7 +959,9 @@ chdirFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname)
         tgt_cwd = path;
     } else {
         char buf[PATH_MAX];
-        tgt_cwd = realpath((p->tgtCwd + "/" + path).c_str(), buf);
+        if (!realpath((p->tgtCwd + "/" + path).c_str(), buf))
+            return -errno;
+        tgt_cwd = buf;
     }
     std::string host_cwd = p->checkPathRedirect(tgt_cwd);
 
