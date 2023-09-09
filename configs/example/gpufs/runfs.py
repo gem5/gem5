@@ -137,6 +137,13 @@ def addRunFSOptions(parser):
         "MI200 (gfx90a)",
     )
 
+    parser.add_argument(
+        "--exit-at-gpu-kernel",
+        type=int,
+        default=-1,
+        help="Exit simulation after running this many kernels",
+    )
+
 
 def runGpuFSSystem(args):
     """
