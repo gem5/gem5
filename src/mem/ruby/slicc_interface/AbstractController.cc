@@ -125,6 +125,7 @@ AbstractController::resetStats()
     for (uint32_t i = 0; i < size; i++) {
         stats.delayVCHistogram[i]->reset();
     }
+    ClockedObject::resetStats();
 }
 
 void
