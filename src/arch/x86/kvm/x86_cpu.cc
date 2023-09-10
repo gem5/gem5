@@ -42,6 +42,7 @@
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/msr.hh"
 #include "arch/x86/utility.hh"
+#include "base/bitunion.hh"
 #include "base/compiler.hh"
 #include "cpu/kvm/base.hh"
 #include "debug/Drain.hh"
@@ -116,6 +117,32 @@ struct GEM5_PACKED FXSave
 };
 
 static_assert(sizeof(FXSave) == 512, "Unexpected size of FXSave");
+
+BitUnion64(XStateBV)
+    Bitfield<0> fpu;
+    Bitfield<1> sse;
+    Bitfield<2> avx;
+    Bitfield<4, 3> mpx;
+    Bitfield<7, 5> avx512;
+    Bitfield<8> pt;
+    Bitfield<9> pkru;
+    Bitfield<10> pasid;
+    Bitfield<12, 11> cet;
+    Bitfield<13> hdc;
+    Bitfield<14> uintr;
+    Bitfield<15> lbr;
+    Bitfield<16> hwp;
+    Bitfield<18, 17> amx;
+    Bitfield<63, 19> reserved;
+EndBitUnion(XStateBV)
+
+struct XSaveHeader
+{
+    XStateBV xstate_bv;
+    uint64_t reserved[7];
+};
+
+static_assert(sizeof(XSaveHeader) == 64, "Unexpected size of XSaveHeader");
 
 #define FOREACH_IREG() \
     do { \
@@ -911,6 +938,19 @@ X86KvmCPU::updateKvmStateFPUXSave()
     memset(&kxsave, 0, sizeof(kxsave));
 
     updateKvmStateFPUCommon(tc, xsave);
+
+    /**
+     * The xsave header (Vol. 1, Section 13.4.2 of the Intel Software
+     * Development Manual) directly follows the legacy xsave region
+     * (i.e., the FPU/SSE state). The first 8 bytes of the xsave header
+     * hold a state-component bitmap called xstate_bv. We need to set
+     * the state component bits corresponding to the FPU and SSE
+     * states.
+     */
+    XSaveHeader& xsave_hdr =
+      * (XSaveHeader *) ((char *) &kxsave + sizeof(FXSave));
+    xsave_hdr.xstate_bv.fpu = 1;
+    xsave_hdr.xstate_bv.sse = 1;
 
     if (tc->readMiscRegNoEffect(misc_reg::Fiseg))
         warn_once("misc_reg::Fiseg is non-zero.\n");
