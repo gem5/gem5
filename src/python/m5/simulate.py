@@ -318,6 +318,10 @@ def checkpoint(dir):
 
     drain()
     memWriteback(root)
+
+    # Recursively create the checkpoint directory if it does not exist.
+    os.makedirs(dir, exist_ok=True)
+
     print("Writing checkpoint")
     _m5.core.serializeAll(dir)
 
