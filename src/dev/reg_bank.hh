@@ -42,7 +42,9 @@
 #include <utility>
 
 #include "base/bitfield.hh"
+#include "base/debug.hh"
 #include "base/logging.hh"
+#include "base/trace.hh"
 #include "base/types.hh"
 #include "sim/byteswap.hh"
 #include "sim/serialize_handlers.hh"
@@ -861,9 +863,27 @@ class RegisterBank : public RegisterBankBase
         void reset() override { _resetter(*this); }
     };
 
+    // Allow gem5 models to set a debug flag to the register bank for logging
+    // all full/partial read/write access to the registers. The register bank
+    // would not log if the flag is not set.
+    //
+    // The debug flag is the one declared in the SConscript
+    //
+    // DebugFlag('HelloExample')
+    //
+    // Then the flag can be set in the register bank with:
+    //
+    // setDebugFlag(::gem5::debug::HelloExample)
+    void
+    setDebugFlag(const ::gem5::debug::SimpleFlag& flag)
+    {
+        _debug_flag = &flag;
+    }
+
   private:
     std::map<Addr, std::reference_wrapper<RegisterBase>> _offsetMap;
 
+    const ::gem5::debug::SimpleFlag* _debug_flag = nullptr;
     Addr _base = 0;
     Addr _size = 0;
     const std::string _name;
@@ -956,45 +976,34 @@ class RegisterBank : public RegisterBankBase
         if (it == _offsetMap.end() || it->first > addr)
             it--;
 
-        if (it->first < addr) {
-            RegisterBase &reg = it->second.get();
-            // Skip at least the beginning of the first register.
+        std::ostringstream ss;
+        while (done != bytes) {
+          RegisterBase &reg = it->second.get();
+          const size_t reg_off = addr - it->first;
+          const size_t reg_size = reg.size() - reg_off;
+          const size_t reg_bytes = std::min(reg_size, bytes - done);
 
-            // Figure out what parts of it we're accessing.
-            const off_t reg_off = addr - it->first;
-            const size_t reg_bytes = std::min(reg.size() - reg_off,
-                                              bytes - done);
+          if (reg_bytes != reg.size()) {
+              if (_debug_flag) {
+                  ccprintf(ss, "Read register %s, byte offset %d, size %d\n",
+                          reg.name(), reg_off, reg_bytes);
+              }
+              reg.read(ptr + done, reg_off, reg_bytes);
+          } else {
+              if (_debug_flag) {
+                  ccprintf(ss, "Read register %s\n", reg.name());
+              }
+              reg.read(ptr + done);
+          }
 
-            // Actually do the access.
-            reg.read(ptr, reg_off, reg_bytes);
-            done += reg_bytes;
-            it++;
-
-            // Was that everything?
-            if (done == bytes)
-                return;
+          done += reg_bytes;
+          addr += reg_bytes;
+          ++it;
         }
 
-        while (true) {
-            RegisterBase &reg = it->second.get();
-
-            const size_t reg_size = reg.size();
-            const size_t remaining = bytes - done;
-
-            if (remaining == reg_size) {
-                // A complete register read, and then we're done.
-                reg.read(ptr + done);
-                return;
-            } else if (remaining > reg_size) {
-                // A complete register read, with more to go.
-                reg.read(ptr + done);
-                done += reg_size;
-                it++;
-            } else {
-                // Skip the end of the register, and then we're done.
-                reg.read(ptr + done, 0, remaining);
-                return;
-            }
+        if (_debug_flag) {
+            ::gem5::trace::getDebugLogger()->dprintf_flag(
+                curTick(), name(), _debug_flag->name(), "%s", ss.str());
         }
     }
 
@@ -1013,45 +1022,34 @@ class RegisterBank : public RegisterBankBase
         if (it == _offsetMap.end() || it->first > addr)
             it--;
 
-        if (it->first < addr) {
+        std::ostringstream ss;
+        while (done != bytes) {
             RegisterBase &reg = it->second.get();
-            // Skip at least the beginning of the first register.
+            const size_t reg_off = addr - it->first;
+            const size_t reg_size = reg.size() - reg_off;
+            const size_t reg_bytes = std::min(reg_size, bytes - done);
 
-            // Figure out what parts of it we're accessing.
-            const off_t reg_off = addr - it->first;
-            const size_t reg_bytes = std::min(reg.size() - reg_off,
-                                              bytes - done);
+            if (reg_bytes != reg.size()) {
+                if (_debug_flag) {
+                    ccprintf(ss, "Write register %s, byte offset %d, size %d\n",
+                              reg.name(), reg_off, reg_size);
+                }
+                reg.write(ptr + done, reg_off, reg_bytes);
+            } else {
+                if (_debug_flag) {
+                  ccprintf(ss, "Write register %s\n", reg.name());
+                }
+                reg.write(ptr + done);
+            }
 
-            // Actually do the access.
-            reg.write(ptr, reg_off, reg_bytes);
             done += reg_bytes;
-            it++;
-
-            // Was that everything?
-            if (done == bytes)
-                return;
+            addr += reg_bytes;
+            ++it;
         }
 
-        while (true) {
-            RegisterBase &reg = it->second.get();
-
-            const size_t reg_size = reg.size();
-            const size_t remaining = bytes - done;
-
-            if (remaining == reg_size) {
-                // A complete register write, and then we're done.
-                reg.write(ptr + done);
-                return;
-            } else if (remaining > reg_size) {
-                // A complete register write, with more to go.
-                reg.write(ptr + done);
-                done += reg_size;
-                it++;
-            } else {
-                // Skip the end of the register, and then we're done.
-                reg.write(ptr + done, 0, remaining);
-                return;
-            }
+        if (_debug_flag) {
+            ::gem5::trace::getDebugLogger()->dprintf_flag(
+                curTick(), name(), _debug_flag->name(), "%s", ss.str());
         }
     }
 
