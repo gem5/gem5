@@ -9,9 +9,38 @@ on:
   # Allows us to manually start workflow for testing
   workflow_dispatch:
 
+env:
+  RUN_SCRIPT="configs/example/gem5_library/x86-ubuntu-run-to-tick.py --ticks 1000000"
+  BASELINE_STATS="stats-baseline.txt"
+  COMPARE_STATS="stats-to-compare.txt"
+
 jobs:
+  stats-output-baseline:
+    runs-on: [self-hosted, linux, x64, build]
+    timeout-minutes: 120     # 2 hours
+    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    steps:
+        - uses: actions/checkout@v3
+          with:
+            # Scheduled workflows run on the default branch by default. We
+            # therefore need to explicitly checkout the develop branch.
+            ref: develop
+
+        - name: Compile build/ALL/gem5.opt with ubuntu-22.04_all-dependencies
+          run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/ALL/gem5.opt -j$(nproc)
+
+        - name: Run basic gem5 script
+          run: ./build/ALL/gem5.opt --stats-file="${BASELINE_STATS}" ${RUN_SCRIPT}
+
+        - name: Upload stats JSON
+          uses: actions/upload-artifact@v2
+          with:
+            name: all-stats-json
+            path: m5out/${{ env.BASELINE_STATS }}
+
   # replication of compiler-tests.sh
   all-compilers:
+    needs: stats-output-baseline
     strategy:
       fail-fast: false
       matrix:
@@ -29,6 +58,29 @@ jobs:
     - name: Compile build/ALL/gem5${{ matrix.opts }} with ${{ matrix.image }}
       run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/ALL/gem5${{ matrix.opts }} -j$(nproc)
       timeout-minutes: 600  # 10 hours
+
+    # Here we check the binary the compiler produces produces the same stats.
+    - name: Run basic gem5 script
+      run: ./build/ALL/gem5${{ matrix.opts }} --stats-file="${COMPARE_STATS}" ${RUN_SCRIPT}
+
+    - name: Get the baseline stats JSON
+      uses: actions/download-artifact@v2
+      with:
+        name: all-stats-json
+
+    - name: Install jq
+      run: apt install jq
+
+    - name: Compare the stats JSONs
+      run: |
+        diff <(grep -v "^host" "m5out/${COMPARE_STATS}" ) <(grep -v "^host" "${BASELINE_STATS}")
+        if [ $? -eq 0 ]; then
+          echo "Stats files are the same"
+          exit 0
+        else
+          echo "Stats files are different"
+          exit 1
+        fi
 
   # Tests the two latest gcc and clang supported compilers against all gem5 compilations.
   latest-compilers-all-gem5-builds:
