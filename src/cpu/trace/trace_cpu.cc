@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2016 ARM Limited
+ * Copyright (c) 2013 - 2016, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,7 +47,8 @@ namespace gem5
 int TraceCPU::numTraceCPUs = 0;
 
 TraceCPU::TraceCPU(const TraceCPUParams &params)
-    :   BaseCPU(params),
+    :   ClockedObject(params),
+        cacheLineSize(params.system->cacheLineSize()),
         icachePort(this),
         dcachePort(this),
         instRequestorID(params.system->getRequestorId(this, "inst")),
@@ -109,7 +110,7 @@ TraceCPU::init()
     DPRINTF(TraceCPUData, "Data memory request trace file is \"%s\".\n",
             dataTraceFile);
 
-    BaseCPU::init();
+    ClockedObject::init();
 
     // Get the send tick of the first instruction read request
     Tick first_icache_tick = icacheGen.init();
@@ -176,7 +177,7 @@ TraceCPU::schedDcacheNext()
     DPRINTF(TraceCPUData, "DcacheGen event.\n");
 
     // Update stat for numCycles
-    baseStats.numCycles = clockEdge() / clockPeriod();
+    traceStats.numCycles = clockEdge() / clockPeriod();
 
     dcacheGen.execute();
     if (dcacheGen.isExecComplete()) {
@@ -216,7 +217,7 @@ TraceCPU::checkAndSchedExitEvent()
     ADD_STAT(cpi, statistics::units::Rate<
                     statistics::units::Cycle, statistics::units::Count>::get(),
              "Cycles per micro-op used as a proxy for CPI",
-             trace->baseStats.numCycles / numOps)
+             trace->traceStats.numCycles / numOps)
 {
     cpi.precision(6);
 }
@@ -591,7 +592,7 @@ TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
     // stat counting this is useful to keep a check on how frequently this
     // happens. If required the code could be revised to mimick splitting such
     // a request into two.
-    unsigned blk_size = owner.cacheLineSize();
+    unsigned blk_size = owner.cacheLineSize;
     Addr blk_offset = (node_ptr->physAddr & (Addr)(blk_size - 1));
     if (!(blk_offset + node_ptr->size <= blk_size)) {
         node_ptr->size = blk_size - blk_offset;
@@ -1150,6 +1151,20 @@ TraceCPU::schedDcacheNextEvent(Tick when)
         reschedule(dcacheNextEvent, when);
     }
 
+}
+
+Port &
+TraceCPU::getPort(const std::string &if_name, PortID idx)
+{
+    // Get the right port based on name. This applies to all the
+    // subclasses of the base CPU and relies on their implementation
+    // of getDataPort and getInstPort.
+    if (if_name == "dcache_port")
+        return getDataPort();
+    else if (if_name == "icache_port")
+        return getInstPort();
+    else
+        return ClockedObject::getPort(if_name, idx);
 }
 
 bool

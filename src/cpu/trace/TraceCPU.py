@@ -1,4 +1,4 @@
-# Copyright (c) 2013 - 2016 ARM Limited
+# Copyright (c) 2013 - 2016, 2023 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -34,10 +34,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.params import *
-from m5.objects.BaseCPU import BaseCPU
+from m5.proxy import *
+from m5.objects.ClockedObject import ClockedObject
 
 
-class TraceCPU(BaseCPU):
+class TraceCPU(ClockedObject):
     """Trace CPU model which replays traces generated in a prior simulation
     using DerivO3CPU or its derived classes. It interfaces with L1 caches.
     """
@@ -54,13 +55,14 @@ class TraceCPU(BaseCPU):
     def require_caches(cls):
         return True
 
-    def addPMU(self, pmu=None):
-        pass
-
     @classmethod
     def support_take_over(cls):
         return True
 
+    system = Param.System(Parent.any, "system object")
+
+    icache_port = RequestPort("Instruction Port")
+    dcache_port = RequestPort("Data Port")
     instTraceFile = Param.String("", "Instruction trace file")
     dataTraceFile = Param.String("", "Data dependency trace file")
     sizeStoreBuffer = Param.Unsigned(
