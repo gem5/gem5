@@ -32,8 +32,8 @@ from ...components.processors.cpu_types import CPUTypes
 from ...components.boards.x86_board import X86Board
 from ...components.memory.single_channel import SingleChannelDDR4_2400
 from ...components.processors.simple_processor import SimpleProcessor
-from .viper_cache_hierarchy import (
-    ViperCacheHierarchy,
+from .cpu_cache_hierarchy import (
+    ViperCPUCacheHierarchy,
 )
 from .gpus import Vega10GPU
 from ...coherence_protocol import CoherenceProtocol
@@ -45,11 +45,13 @@ from ...components.boards.kernel_disk_workload import KernelDiskWorkload
 from m5.objects import (
     Addr,
     AddrRange,
+    AMDGPUDevice,
 )
+
 
 class X86ViperBoard(X86Board):
     """
-   
+
 
     Example
     -------
@@ -60,15 +62,15 @@ class X86ViperBoard(X86Board):
     To run:
 
     ```
-    scons build/ALL/gem5.opt -j`nproc`
-    ./build/ALL/gem5.opt <>
+    scons build/VEGA_X86/gem5.opt -j`nproc`
+    ./build/VEGA_X86/gem5.opt <>
     ```
 
     """
 
     def __init__(self, gpu_model: str):
         """
-        GPU model can be one of the following: Vega10, MI100
+        GPU model can be one of the following: Vega10, MI200
         """
 
         requires(
@@ -77,18 +79,21 @@ class X86ViperBoard(X86Board):
         )
 
         memory = SingleChannelDDR4_2400(size="3GB")
+
+        # Supported CPUs: Atomic and KVM
         processor = SimpleProcessor(
             cpu_type=CPUTypes.KVM, isa=ISA.X86, num_cores=1
         )
-        cache_hierarchy = ViperCacheHierarchy(
+        cache_hierarchy = ViperCPUCacheHierarchy(
             l1d_size="32kB",
             l1d_assoc=8,
             l1i_size="32kB",
             l1i_assoc=8,
             l2_size="1MB",
             l2_assoc=16,
-            num_l2_banks=1,
         )
+
+        print(cache_hierarchy.get_ruby())
 
         super().__init__(
             clk_freq="3GHz",
@@ -99,14 +104,15 @@ class X86ViperBoard(X86Board):
 
         gpu_device = AMDGPUDevice(pci_func=0, pci_dev=8, pci_bus=0)
         self.pc.south_bridge.gpu = gpu_device
-        self.gpu = Vega10GPU(8, gpu_device)
-    
+        mmio_trace = "/home/mporemba/gem5-resources/src/gpu-fs/vega_mmio.log"
+        rom = ""  # This isn't really used, rom is on the disk
+        self.gpu = Vega10GPU(8, gpu_device, mmio_trace, rom)
+
+    # I think this isn't needed?  Not good with python classes
+    # The shadow rom is no longer necessary which is what was here
     @overrides(X86Board)
     def _setup_memory_ranges(self):
         super()._setup_memory_ranges()
-
-        # Setup VGA ROM region
-        self.shadow_rom_ranges = [AddrRange(0xC0000, size=Addr("128kB"))]   
 
     def _set_mmio_file(self, file_name: str):
         mmio_md5 = hashlib.md5(open(file_name, "rb").read()).hexdigest()

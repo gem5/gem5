@@ -43,12 +43,12 @@ class DisjointSimplePt2Pt(SimpleNetwork):
         together in a point-to-point network.
         """
         # Create one router/switch per controller in the system
-        self.cpu_routers = [Switch(router_id=i) for i in range(len(controllers))]
+        self.routers = [Switch(router_id=i) for i in range(len(controllers))]
 
         # Make a link from each controller to the router. The link goes
         # externally to the network.
-        self.cpu_ext_links = [
-            SimpleExtLink(link_id=i, ext_node=c, int_node=self.cpu_routers[i])
+        self.ext_links = [
+            SimpleExtLink(link_id=i, ext_node=c, int_node=self.routers[i])
             for i, c in enumerate(controllers)
         ]
 
@@ -56,22 +56,24 @@ class DisjointSimplePt2Pt(SimpleNetwork):
         # of routers.
         link_count = 0
         int_links = []
-        for ri in self.cpu_routers:
-            for rj in self.cpu_routers:
+        for ri in self.routers:
+            for rj in self.routers:
                 if ri == rj:
                     continue  # Don't connect a router to itself!
                 link_count += 1
                 int_links.append(
                     SimpleIntLink(link_id=link_count, src_node=ri, dst_node=rj)
                 )
-        self.cpu_int_links = int_links
+        self.int_links = int_links
 
     def connectGPU(self, controllers):
         """Connect all of the controllers to routers and connect the routers
         together in a point-to-point network.
         """
         # Create one router/switch per controller in the system
-        self.gpu_routers = [Switch(router_id=i) for i in range(len(controllers))]
+        self.gpu_routers = [
+            Switch(router_id=i) for i in range(len(controllers))
+        ]
 
         # Make a link from each controller to the router. The link goes
         # externally to the network.

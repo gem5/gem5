@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-Parameters: 
+Parameters:
 - number of compute units
 
 
@@ -55,12 +55,15 @@ from m5.objects import (
     AMDGPUMemoryManager,
     SDMAEngine,
     VegaGPUTLB,
-    TLBCoalescer,
+    VegaTLBCoalescer,
+    BaseXBar,
 )
 
 
 class ViperGPU(Shader):
-    def __init__(self, num_cu: int, device: AMDGPUDevice, mmio_trace: Path, rom: Path):
+    def __init__(
+        self, num_cu: int, device: AMDGPUDevice, mmio_trace: Path, rom: Path
+    ):
         """
 
         This is the GPU, not the PCI device. However, this object does have
@@ -82,23 +85,18 @@ class ViperGPU(Shader):
         self.impl_kern_launch_acq = True
         self.impl_kern_end_rel = False
 
-        self.CUs = [
-            ViperCU(device)
-            for _ in range(num_cu)
-        ]
+        self.CUs = [ViperCU(device) for _ in range(num_cu)]
 
-        self._create_tlbs()
+        self._create_tlbs(device)
 
-        self.trace_file = mmio_trace
-        self.rom_binary = rom
-
-        self._setup_device(device)
+        device.trace_file = mmio_trace
+        device.rom_binary = rom
 
         # This arbitrary address is something in the X86 I/O hole
         hsapp_gpu_map_paddr = 0xE00000000
         self.dispatcher = GPUDispatcher()
         self.gpu_cmd_processor = GPUCommandProcessor(
-            hsapp = HSAPacketProcessor(
+            hsapp=HSAPacketProcessor(
                 pioAddr=hsapp_gpu_map_paddr,
                 numHWQueues=10,
                 walker=VegaPagetableWalker(),
@@ -107,22 +105,23 @@ class ViperGPU(Shader):
             walker=VegaPagetableWalker(),
         )
         self._dma_ports.append(self.gpu_cmd_processor.hsapp.dma)
-        self._dma_ports.append(self.gpu_cmd_processor.hsapp.walker.dma)
-        self._dma_ports.append(self.gpu_cmd_processor.walker.dma)
+        self._dma_ports.append(self.gpu_cmd_processor.hsapp.walker.port)
+        self._dma_ports.append(self.gpu_cmd_processor.walker.port)
         self._dma_ports.append(self.gpu_cmd_processor.dma)
 
         self.system_hub = AMDGPUSystemHub()
         self._dma_ports.append(self.system_hub.dma)
 
+        self._setup_device(device)
+
     def set_cpu_pointer(self, cpu: BaseCPU):
-        """ Set the CPU pointer for the CUs.
-        """
+        """Set the CPU pointer for the CUs."""
         for cu in self.CUs:
             cu.cpu_pointer = cpu
-    
+
     def _setup_device(self, device: AMDGPUDevice):
-        """ Set the device type info on the device connected to the south 
-            bridge.
+        """Set the device type info on the device connected to the south
+        bridge.
         """
         self._device = device
 
@@ -136,16 +135,17 @@ class ViperGPU(Shader):
 
         # GPU data path
         device.memory_manager = AMDGPUMemoryManager()
-        self._dma_ports.append(device.memory_manager.dma)
+        self._dma_ports.append(device.memory_manager.port)
 
         self._dma_ports.append(device.dma)
-    
-    def _create_sdmas(self, num_sdmas: int, sdma_bases: List[int], sdma_sizes: List[int]):
-        """ Create the SDMA engines.
-        """
+
+    def _create_sdmas(
+        self, num_sdmas: int, sdma_bases: List[int], sdma_sizes: List[int]
+    ):
+        """Create the SDMA engines."""
         sdmas = [
             SDMAEngine(
-                walker = VegaPagetableWalker(),
+                walker=VegaPagetableWalker(),
                 mmio_base=sdma_bases[i],
                 mmio_size=sdma_sizes[i],
             )
@@ -154,60 +154,62 @@ class ViperGPU(Shader):
 
         for sdma in sdmas:
             self._dma_ports.append(sdma.dma)
-            self._dma_ports.append(sdma.walker.dma)
+            self._dma_ports.append(sdma.walker.port)
 
         return sdmas
-    
+
     def _get_dma_ports(self):
         return self._dma_ports
 
-    def _create_tlbs(self):
-        """ Connect per-CU TLBs to the L2/L3 TLBs
-        """
+    def _create_tlbs(self, device: AMDGPUDevice):
+        """Connect per-CU TLBs to the L2/L3 TLBs"""
         self.l2_tlb = VegaGPUTLB(
-            gpu_device = self._device,
-            size = 4096,
-            assoc = 32,
-            hitLatency = 69,
-            missLatency1 = 750, ## ????
-            missLatency2 = 750, ## ????
-            maxOutstandingRequests = 64,
+            gpu_device=device,
+            size=4096,
+            assoc=32,
+            hitLatency=69,
+            missLatency1=750,  ## ????
+            missLatency2=750,  ## ????
+            maxOutstandingReqs=64,
         )
-        self.l2_coalescer = TLBCoalescer(
-            probesPerCycle = 2,
-            tlb_level = 2,
-            coalescingWindow = 1,
-            disableCoalescing = False, 
+        self.l2_coalescer = VegaTLBCoalescer(
+            probesPerCycle=2,
+            tlb_level=2,
+            coalescingWindow=1,
+            disableCoalescing=False,
         )
-        self.l2_tlb.cpu_side_ports = self.l2_coalescer.mem_side_ports  # May need [0]?
+        self.l2_tlb.cpu_side_ports = (
+            self.l2_coalescer.mem_side_ports
+        )  # May need [0]?
 
         for cu in self.CUs:
             for port in cu.get_tlb_ports():
                 self.l2_coalescer.cpu_side_ports = port
-        
+
         self.l3_tlb = VegaGPUTLB(
-            gpu_device = self._device,
-            size = 8192,
-            assoc = 32,
-            hitLatency = 150,
-            missLatency1 = 750, ## ????
-            missLatency2 = 750, ## ????
-            maxOutstandingRequests = 64,
+            gpu_device=device,
+            size=8192,
+            assoc=32,
+            hitLatency=150,
+            missLatency1=750,  ## ????
+            missLatency2=750,  ## ????
+            maxOutstandingReqs=64,
         )
-        self.l3_coalescer = TLBCoalescer(
-            probesPerCycle = 2,
-            tlb_level = 3,
-            coalescingWindow = 1,
-            disableCoalescing = False, 
+        self.l3_coalescer = VegaTLBCoalescer(
+            probesPerCycle=2,
+            tlb_level=3,
+            coalescingWindow=1,
+            disableCoalescing=False,
         )
-        self.l3_tlb.cpu_side_ports = self.l3_coalescer.mem_side_ports  # May need [0]?
+        self.l3_tlb.cpu_side_ports = (
+            self.l3_coalescer.mem_side_ports
+        )  # May need [0]?
         self.l3_coalescer.cpu_side_ports = self.l2_tlb.mem_side_ports
 
-        self._dma_ports.append(self.l3_tlb.walker.dma)
-    
+        self._dma_ports.append(self.l3_tlb.walker.port)
+
     def connect_iobus(self, iobus: BaseXBar):
-        """ Connect the GPU devices to the IO bus.
-        """
+        """Connect the GPU devices to the IO bus."""
         self.gpu_cmd_processor.pio = iobus.mem_side_ports
         self.gpu_cmd_processor.hsapp.pio = iobus.mem_side_ports
         self.system_hub.pio = iobus.mem_side_ports
@@ -216,6 +218,7 @@ class ViperGPU(Shader):
             sdma.pio = iobus.mem_side_ports
         self._device.device_ih.pio = iobus.mem_side_ports
         self._device.pm4_pkt_proc.pio = iobus.mem_side_ports
+
 
 class MI100GPU(ViperGPU):
     def setup_device(self, device: AMDGPUDevice):
@@ -242,6 +245,7 @@ class MI100GPU(ViperGPU):
 
         device.sdmas = self._create_sdmas(num_sdmas, sdma_bases, sdma_sizes)
 
+
 class Vega10GPU(ViperGPU):
     def setup_device(self, device: AMDGPUDevice):
         super().setup_device(device)
@@ -256,9 +260,11 @@ class Vega10GPU(ViperGPU):
 
         device.sdmas = self._create_sdmas(num_sdmas, sdma_bases, sdma_sizes)
 
+
 class ViperCU(ComputeUnit):
 
     _next_id = 0
+
     @classmethod
     def _get_next_id(cls):
         cls._next_id += 1
@@ -270,90 +276,89 @@ class ViperCU(ComputeUnit):
 
         self.cu_id = self._get_next_id()
         self.localDataStore = LdsState()
-        self.simds_per_cu = 4
-        self.n_wf = 10
+        self.num_SIMDs = 4
+        self.n_wf = 8
 
         self.wavefronts = [
             Wavefront(simdId=j, wf_slot_id=k)
-            for j in range(self.simds_per_cu) for k in range(self.n_wf)
+            for j in range(self.num_SIMDs)
+            for k in range(self.n_wf)
         ]
 
         self.vector_register_file = [
-            VectorRegisterFile(simd_id=i)
-            for i in range(self.simds_per_cu)
+            VectorRegisterFile(simd_id=i) for i in range(self.num_SIMDs)
         ]
 
         self.scalar_register_file = [
-            ScalarRegisterFile(simd_id=i)
-            for i in range(self.simds_per_cu)
+            ScalarRegisterFile(simd_id=i) for i in range(self.num_SIMDs)
         ]
 
         self.register_manager = RegisterManager(
             vrf_pool_managers=[
-                SimplePoolManager()
-                for _ in range(self.simds_per_cu)
+                SimplePoolManager() for _ in range(self.num_SIMDs)
             ],
             srf_pool_managers=[
-                SimplePoolManager()
-                for _ in range(self.simds_per_cu)
-            ]
+                SimplePoolManager() for _ in range(self.num_SIMDs)
+            ],
         )
 
         self.ldsPort = self.ldsBus.cpu_side_port
         self.ldsPort.mem_side_port = self.localDataStore.cuPort
 
         self._create_tlbs()
-    
+
     def _create_tlbs(self):
         self.l1_tlb = VegaGPUTLB(
-            gpu_device = self._device,
-            size = 32,
-            assoc = 32,
-            hitLatency = 1,
-            missLatency1 = 750, ## ????
-            missLatency2 = 750, ## ????
-            maxOutstandingRequests = 64,
+            gpu_device=self._device,
+            size=32,
+            assoc=32,
+            hitLatency=1,
+            missLatency1=750,  ## ????
+            missLatency2=750,  ## ????
+            maxOutstandingReqs=64,
         )
-        self.l1_coalescer = TLBCoalescer(
-            probesPerCycle = 2,
-            tlb_level = 1,
-            coalescingWindow = 1,
-            disableCoalescing = False, 
+        self.l1_coalescer = VegaTLBCoalescer(
+            probesPerCycle=2,
+            tlb_level=1,
+            coalescingWindow=1,
+            disableCoalescing=False,
         )
-        self.l1_tlb.cpu_side_ports = self.l1_coalescer.mem_side_ports  # May need [0]?
+        self.l1_tlb.cpu_side_ports = (
+            self.l1_coalescer.mem_side_ports
+        )  # May need [0]?
         self.translation_port = self.l1_coalescer.cpu_side_ports
 
-        self.sqc_tlb = VegaGPUTLB( # the I-TLB
-            gpu_device = self._device,
-            size = 32,
-            assoc = 32,
-            hitLatency = 1,
-            missLatency1 = 750, ## ????
-            missLatency2 = 750, ## ????
-            maxOutstandingRequests = 64,
+        self.sqc_tlb = VegaGPUTLB(  # the I-TLB
+            gpu_device=self._device,
+            size=32,
+            assoc=32,
+            hitLatency=1,
+            missLatency1=750,  ## ????
+            missLatency2=750,  ## ????
+            maxOutstandingReqs=64,
         )
-        self.sqc_coalescer = TLBCoalescer(
-            probesPerCycle = 2,
-            tlb_level = 1,
-            coalescingWindow = 1,
-            disableCoalescing = False, 
+        self.sqc_coalescer = VegaTLBCoalescer(
+            probesPerCycle=2,
+            tlb_level=1,
+            coalescingWindow=1,
+            disableCoalescing=False,
         )
         self.sqc_tlb.cpu_side_ports = self.sqc_coalescer.mem_side_ports
         self.sqc_tlb_port = self.sqc_coalescer.cpu_side_ports
 
-        self.scalar_tlb = VegaGPUTLB( # the Scalar D-TLB
-            size = 32,
-            assoc = 32,
-            hitLatency = 1,
-            missLatency1 = 750, ## ????
-            missLatency2 = 750, ## ????
-            maxOutstandingRequests = 64,
+        self.scalar_tlb = VegaGPUTLB(  # the Scalar D-TLB
+            size=32,
+            assoc=32,
+            hitLatency=1,
+            missLatency1=750,  ## ????
+            missLatency2=750,  ## ????
+            maxOutstandingReqs=64,
         )
-        self.scalar_coalescer = TLBCoalescer(
-            probesPerCycle = 2,
-            tlb_level = 1,
-            coalescingWindow = 1,
-            disableCoalescing = False, 
+        self.scalar_coalescer = VegaTLBCoalescer(
+            probesPerCycle=2,
+            tlb_level=1,
+            coalescingWindow=1,
+            disableCoalescing=False,
         )
         self.scalar_tlb.cpu_side_ports = self.scalar_coalescer.mem_side_ports
         self.scalar_tlb_port = self.scalar_coalescer.cpu_side_ports
