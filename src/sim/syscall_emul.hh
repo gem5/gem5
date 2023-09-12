@@ -2409,7 +2409,7 @@ tgkillFunc(SyscallDesc *desc, ThreadContext *tc, int tgid, int tid, int sig)
         }
     }
 
-    if (sig != 0 || sig != OS::TGT_SIGABRT)
+    if (sig != 0 && sig != OS::TGT_SIGABRT)
         return -EINVAL;
 
     if (tgt_proc == nullptr)
