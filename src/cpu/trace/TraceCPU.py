@@ -55,10 +55,6 @@ class TraceCPU(ClockedObject):
     def require_caches(cls):
         return True
 
-    @classmethod
-    def support_take_over(cls):
-        return True
-
     system = Param.System(Parent.any, "system object")
 
     icache_port = RequestPort("Instruction Port")

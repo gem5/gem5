@@ -39,6 +39,7 @@
 
 #include "base/compiler.hh"
 #include "sim/sim_exit.hh"
+#include "sim/system.hh"
 
 namespace gem5
 {
@@ -92,14 +93,6 @@ TraceCPU::updateNumOps(uint64_t rob_num)
         inform("%s: %i insts committed\n", name(), progressMsgThreshold);
         progressMsgThreshold += progressMsgInterval;
     }
-}
-
-void
-TraceCPU::takeOverFrom(BaseCPU *oldCPU)
-{
-    // Unbind the ports of the old CPU and bind the ports of the TraceCPU.
-    getInstPort().takeOverFrom(&oldCPU->getInstPort());
-    getDataPort().takeOverFrom(&oldCPU->getDataPort());
 }
 
 void

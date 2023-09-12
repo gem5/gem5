@@ -45,10 +45,10 @@
 #include <unordered_map>
 
 #include "base/statistics.hh"
-#include "cpu/base.hh"
 #include "debug/TraceCPUData.hh"
 #include "debug/TraceCPUInst.hh"
 #include "mem/packet.hh"
+#include "mem/port.hh"
 #include "mem/request.hh"
 #include "params/TraceCPU.hh"
 #include "proto/inst_dep_record.pb.h"
@@ -162,14 +162,6 @@ class TraceCPU : public ClockedObject
      * node.
      */
     void updateNumOps(uint64_t rob_num);
-
-    /*
-     * When resuming from checkpoint in FS mode, the TraceCPU takes over from
-     * the old cpu. This function overrides the takeOverFrom() function in the
-     * BaseCPU. It unbinds the ports of the old CPU and binds the ports of the
-     * TraceCPU.
-     */
-    void takeOverFrom(BaseCPU *oldCPU);
 
     /**
      * When instruction cache port receives a retry, schedule event
