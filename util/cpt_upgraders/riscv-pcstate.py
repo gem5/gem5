@@ -1,5 +1,6 @@
-# Copyright 2021 Google, Inc.
-#
+# Copyright (c) 2023 Google LLC
+# All rights reserved.
+
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met: redistributions of source code must retain the above copyright
@@ -10,7 +11,7 @@
 # neither the name of the copyright holders nor the names of its
 # contributors may be used to endorse or promote products derived from
 # this software without specific prior written permission.
-#
+
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -23,39 +24,28 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
-from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
-from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
-from m5.objects.BaseO3CPU import BaseO3CPU
-from m5.objects.BaseMinorCPU import BaseMinorCPU
-from m5.objects.RiscvDecoder import RiscvDecoder
-from m5.objects.RiscvMMU import RiscvMMU
-from m5.objects.RiscvInterrupts import RiscvInterrupts
-from m5.objects.RiscvISA import RiscvISA
 
+def upgrader(cpt):
 
-class RiscvCPU:
-    ArchDecoder = RiscvDecoder
-    ArchMMU = RiscvMMU
-    ArchInterrupts = RiscvInterrupts
-    ArchISA = RiscvISA
+    # Update the RISC-V pcstate to match the new version of
+    # PCState
 
+    for sec in cpt.sections():
+        import re
 
-class RiscvAtomicSimpleCPU(BaseAtomicSimpleCPU, RiscvCPU):
-    mmu = RiscvMMU()
+        if re.search(".*processor.*\.core.*\.xc.*", sec):
 
+            if cpt.get(sec, "_rvType", fallback="") == "":
+                cpt.set(sec, "_rvType", "1")
 
-class RiscvNonCachingSimpleCPU(BaseNonCachingSimpleCPU, RiscvCPU):
-    mmu = RiscvMMU()
+            if cpt.get(sec, "_vlenb", fallback="") == "":
+                cpt.set(sec, "_vlenb", "32")
 
+            if cpt.get(sec, "_vtype", fallback="") == "":
+                cpt.set(sec, "_vtype", str(1 << 63))
 
-class RiscvTimingSimpleCPU(BaseTimingSimpleCPU, RiscvCPU):
-    mmu = RiscvMMU()
+            if cpt.get(sec, "_vl", fallback="") == "":
+                cpt.set(sec, "_vl", "0")
 
-
-class RiscvO3CPU(BaseO3CPU, RiscvCPU):
-    mmu = RiscvMMU()
-
-
-class RiscvMinorCPU(BaseMinorCPU, RiscvCPU):
-    mmu = RiscvMMU()
+            if cpt.get(sec, "_compressed", fallback="") == "":
+                cpt.set(sec, "_compressed", "false")

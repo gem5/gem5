@@ -40,6 +40,7 @@
 #include "arch/riscv/mmu.hh"
 #include "arch/riscv/pagetable.hh"
 #include "arch/riscv/pmp.hh"
+#include "arch/riscv/pcstate.hh"
 #include "arch/riscv/regs/float.hh"
 #include "arch/riscv/regs/int.hh"
 #include "arch/riscv/regs/misc.hh"
@@ -503,9 +504,19 @@ ISA::readMiscReg(RegIndex idx)
         }
       case MISCREG_VLENB:
         {
-            return VLENB;
+            auto rpc = tc->pcState().as<PCState>();
+            return rpc.vlenb();
         }
-        break;
+      case MISCREG_VTYPE:
+        {
+            auto rpc = tc->pcState().as<PCState>();
+            return rpc.vtype();
+        }
+      case MISCREG_VL:
+        {
+            auto rpc = tc->pcState().as<PCState>();
+            return (RegVal)rpc.vl();
+        }
       case MISCREG_VCSR:
         {
             return readMiscRegNoEffect(MISCREG_VXSAT) &
