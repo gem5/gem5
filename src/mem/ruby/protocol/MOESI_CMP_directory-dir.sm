@@ -1014,6 +1014,31 @@ machine(MachineType:Directory, "Directory protocol")
     i_popIncomingRequestQueue;
   }
 
+  //this happens when there is race between FwdGetX
+  //and PUTX on owner. Owner in this case hands off
+  //ownership to GetX requestor and PUTX still goes
+  //through. But since owner has changed, state should
+  //go back to M and PUTX is essentially trashed.
+  transition(MI, Unblock, M) {
+    w_deallocateTBE;
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(MIS, Unblock, M) {
+    w_deallocateTBE;
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(OS, Unblock, O) {
+    //In OS state there is no TBE for some reason
+    // w_deallocateTBE;
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(OSS, Unblock, O) {
+    j_popIncomingUnblockQueue;
+  }
+
   transition(WBI, Memory_Ack, I) {
     clearWBAck;
     w_deallocateTBE;
