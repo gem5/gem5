@@ -621,6 +621,7 @@ def obtain_resource(
     resource_version: Optional[str] = None,
     clients: Optional[List] = None,
     gem5_version=core.gem5Version,
+    quiet: bool = False,
 ) -> AbstractResource:
     """
     This function primarily serves as a factory for resources. It will return
@@ -644,6 +645,7 @@ def obtain_resource(
     :param gem5_version: The gem5 version to use to filter incompatible
     resource versions. By default set to the current gem5 version. If None,
     this filtering is not performed.
+    :param quiet: If True, suppress output. False by default.
     """
 
     # Obtain the resource object entry for this resource
@@ -695,6 +697,7 @@ def obtain_resource(
             resource_version=resource_version,
             clients=clients,
             gem5_version=gem5_version,
+            quiet=quiet,
         )
 
     # Obtain the type from the JSON. From this we will determine what subclass
