@@ -621,6 +621,7 @@ def obtain_resource(
     resource_version: Optional[str] = None,
     clients: Optional[List] = None,
     gem5_version=core.gem5Version,
+    to_path: Optional[str] = None,
     quiet: bool = False,
 ) -> AbstractResource:
     """
@@ -634,6 +635,7 @@ def obtain_resource(
     resource is to be stored. If this parameter is not set, it will set to
     the environment variable `GEM5_RESOURCE_DIR`. If the environment is not
     set it will default to `~/.cache/gem5` if available, otherwise the CWD.
+    **Note**: This argument is ignored if the `to_path` parameter is specified.
     :param download_md5_mismatch: If the resource is present, but does not
     have the correct md5 value, the resoruce will be deleted and
     re-downloaded if this value is True. Otherwise an exception will be
@@ -645,6 +647,10 @@ def obtain_resource(
     :param gem5_version: The gem5 version to use to filter incompatible
     resource versions. By default set to the current gem5 version. If None,
     this filtering is not performed.
+    :param to_path: The path to which the resource is to be downloaded. If
+    None, the resource will be downloaded to the resource directory with
+    the file/directory name equal to the ID of the resource. **Note**: Usage
+    of this parameter will override the `resource_directory` parameter.
     :param quiet: If True, suppress output. False by default.
     """
 
@@ -656,43 +662,59 @@ def obtain_resource(
         gem5_version=gem5_version,
     )
 
-    to_path = None
     # If the "url" field is specified, the resoruce must be downloaded.
     if "url" in resource_json and resource_json["url"]:
 
-        # If the `resource_directory` parameter is not set via this function, we
-        # check the "GEM5_RESOURCE_DIR" environment variable. If this too is not
-        # set we call `_get_default_resource_dir()` to determine where the
-        # resource directory is, or should be, located.
-        if resource_directory == None:
-            resource_directory = os.getenv(
-                "GEM5_RESOURCE_DIR", _get_default_resource_dir()
-            )
-
-        # Small checks here to ensure the resource directory is valid.
-        if os.path.exists(resource_directory):
-            if not os.path.isdir(resource_directory):
-                raise Exception(
-                    "gem5 resource directory, "
-                    "'{}', exists but is not a directory".format(
-                        resource_directory
-                    )
+        # If the `to_path` parameter is set, we use that as the path to which
+        # the resource is to be downloaded. Otherwise, default to the
+        # `resource_directory` parameter plus the resource ID.
+        if not to_path:
+            # If the `resource_directory` parameter is not set via this
+            # function, we heck the "GEM5_RESOURCE_DIR" environment variable.
+            # If this too is not set we call `_get_default_resource_dir()` to
+            # determine where the resource directory is, or should be, located.
+            if resource_directory == None:
+                resource_directory = os.getenv(
+                    "GEM5_RESOURCE_DIR", _get_default_resource_dir()
                 )
-        else:
-            # `exist_ok=True` here as, occasionally, if multiple instance of
-            # gem5 are started simultaneously, a race condition can exist to
-            # create the resource directory. Without `exit_ok=True`, threads
-            # which lose this race will thrown a `FileExistsError` exception.
-            # `exit_ok=True` ensures no exception is thrown.
-            os.makedirs(resource_directory, exist_ok=True)
 
-        # This is the path to which the resource is to be stored.
-        to_path = os.path.join(resource_directory, resource_id)
+            # Small checks here to ensure the resource directory is valid.
+            if os.path.exists(resource_directory):
+                if not os.path.isdir(resource_directory):
+                    raise Exception(
+                        "gem5 resource directory, "
+                        "'{}', exists but is not a directory".format(
+                            resource_directory
+                        )
+                    )
+
+            # This is the path to which the resource is to be stored.
+            to_path = os.path.join(resource_directory, resource_id)
+
+        assert to_path
+
+        # Here we ensure the directory in which the resource is to be stored
+        # is created.
+        #
+        # `exist_ok=True` here as, occasionally, if multiple instance of gem5
+        # are started simultaneously, a race condition can exist to create the
+        # resource directory. Without `exit_ok=True`, threads which lose this
+        # race will thrown a `FileExistsError` exception. `exit_ok=True`
+        # ensures no exception is thrown.
+        try:
+            Path(to_path).parent.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            fatal(
+                f"Recursive creation of the directory "
+                f"'{Path(to_path).parent.absolute}' failed. \n"
+                f"Perhaps the path specified, '{to_path}', is incorrect?\n"
+                f"Failed with Exception:\n{e}"
+            )
 
         # Download the resource if it does not already exist.
         get_resource(
             resource_name=resource_id,
-            to_path=os.path.join(resource_directory, resource_id),
+            to_path=to_path,
             download_md5_mismatch=download_md5_mismatch,
             resource_version=resource_version,
             clients=clients,
