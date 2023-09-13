@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2016 ARM Limited
+ * Copyright (c) 2013 - 2016, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,13 +45,16 @@
 #include <unordered_map>
 
 #include "base/statistics.hh"
-#include "cpu/base.hh"
 #include "debug/TraceCPUData.hh"
 #include "debug/TraceCPUInst.hh"
+#include "mem/packet.hh"
+#include "mem/port.hh"
+#include "mem/request.hh"
 #include "params/TraceCPU.hh"
 #include "proto/inst_dep_record.pb.h"
 #include "proto/packet.pb.h"
 #include "proto/protoio.hh"
+#include "sim/clocked_object.hh"
 #include "sim/sim_events.hh"
 
 namespace gem5
@@ -66,8 +69,7 @@ namespace gem5
  * simulation compared to the detailed cpu model and good correlation when the
  * same trace is used for playback on different memory sub-systems.
  *
- * The TraceCPU inherits from BaseCPU so some virtual methods need to be
- * defined. It has two port subclasses inherited from RequestPort for
+ * The TraceCPU has two port subclasses inherited from RequestPort for
  * instruction and data ports. It issues the memory requests deducing the
  * timing from the trace and without performing real execution of micro-ops. As
  * soon as the last dependency for an instruction is complete, its
@@ -139,22 +141,13 @@ namespace gem5
  * exit.
  */
 
-class TraceCPU : public BaseCPU
+class TraceCPU : public ClockedObject
 {
 
   public:
     TraceCPU(const TraceCPUParams &params);
 
     void init();
-
-    /**
-     * This is a pure virtual function in BaseCPU. As we don't know how many
-     * insts are in the trace but only know how how many micro-ops are we
-     * cannot count this stat.
-     *
-     * @return 0
-     */
-    Counter totalInsts() const { return 0; }
 
     /**
      * Return totalOps as the number of committed micro-ops plus the
@@ -169,17 +162,6 @@ class TraceCPU : public BaseCPU
      * node.
      */
     void updateNumOps(uint64_t rob_num);
-
-    /* Pure virtual function in BaseCPU. Do nothing. */
-    void wakeup(ThreadID tid=0) { return; }
-
-    /*
-     * When resuming from checkpoint in FS mode, the TraceCPU takes over from
-     * the old cpu. This function overrides the takeOverFrom() function in the
-     * BaseCPU. It unbinds the ports of the old CPU and binds the ports of the
-     * TraceCPU.
-     */
-    void takeOverFrom(BaseCPU *oldCPU);
 
     /**
      * When instruction cache port receives a retry, schedule event
@@ -302,6 +284,9 @@ class TraceCPU : public BaseCPU
       private:
         TraceCPU* owner;
     };
+
+    /** Cache the cache line size that we get from the system */
+    const unsigned int cacheLineSize;
 
     /** Port to connect to L1 instruction cache. */
     IcachePort icachePort;
@@ -1112,6 +1097,8 @@ class TraceCPU : public BaseCPU
 
         /** Stat for number of simulated micro-ops. */
         statistics::Scalar numOps;
+        /** Number of CPU cycles simulated */
+        statistics::Scalar numCycles;
         /** Stat for the CPI. This is really cycles per
          *  micro-op and not inst. */
         statistics::Formula cpi;
@@ -1125,6 +1112,18 @@ class TraceCPU : public BaseCPU
     /** Used to get a reference to the dcache port. */
     Port &getDataPort() { return dcachePort; }
 
+    /**
+     * Get a port on this CPU. All CPUs have a data and
+     * instruction port, and this method uses getDataPort and
+     * getInstPort of the subclasses to resolve the two ports.
+     *
+     * @param if_name the port name
+     * @param idx ignored index
+     *
+     * @return a reference to the port with the given name
+     */
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 };
 
 } // namespace gem5
