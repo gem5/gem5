@@ -81,9 +81,3 @@ repos:
     language: system
     stages: [commit-msg]
     description: 'The gem5 commit message checker hook.'
-  - id: gerrit-commit-msg-job
-    name: gerrit commit message job
-    entry: util/gerrit-commit-msg-hook
-    language: system
-    stages: [commit-msg]
-    description: 'Adds Change-ID to the commit message. Needed by Gerrit.'
