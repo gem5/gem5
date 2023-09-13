@@ -65,7 +65,7 @@ from Caches import *
 
 # Setup System:
 system = System(
-    cpu=TraceCPU(cpu_id=0),
+    cpu=TraceCPU(),
     mem_mode="timing",
     mem_ranges=[AddrRange("512MB")],
     cache_line_size=64,
@@ -89,8 +89,7 @@ system.cpu_clk_domain = SrcClockDomain(
     clock="1GHz", voltage_domain=system.cpu_voltage_domain
 )
 
-# Setup CPU and its L1 caches:
-system.cpu.createInterruptController()
+# Setup CPU's L1 caches:
 system.cpu.icache = L1_ICache(size="32kB")
 system.cpu.dcache = L1_DCache(size="32kB")
 system.cpu.icache.cpu_side = system.cpu.icache_port
@@ -114,10 +113,10 @@ system.tlm.port_data = "transactor"
 
 # Connect everything:
 system.membus = SystemXBar()
-system.system_port = system.membus.slave
-system.cpu.icache.mem_side = system.membus.slave
-system.cpu.dcache.mem_side = system.membus.slave
-system.membus.master = system.tlm.port
+system.system_port = system.membus.cpu_side_ports
+system.cpu.icache.mem_side = system.membus.cpu_side_ports
+system.cpu.dcache.mem_side = system.membus.cpu_side_ports
+system.membus.mem_side_ports = system.tlm.port
 
 # Start the simulation:
 root = Root(full_system=False, system=system)
