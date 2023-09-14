@@ -41,6 +41,8 @@ namespace RiscvISA
 
 Decoder::Decoder(const RiscvDecoderParams &p) : InstDecoder(p, &machInst)
 {
+    ISA *isa = dynamic_cast<ISA*>(p.isa);
+    vlen = isa->getVecLenInBits();
     reset();
 }
 

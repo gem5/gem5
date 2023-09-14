@@ -60,6 +60,8 @@ class Decoder : public InstDecoder
     ExtMachInst emi;
     uint32_t machInst;
 
+    uint32_t vlen;
+
     virtual StaticInstPtr decodeInst(ExtMachInst mach_inst);
 
     /// Decode a machine instruction.
