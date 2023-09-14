@@ -39,7 +39,6 @@ import os
 from pathlib import Path
 
 import m5
-from m5.util import inform
 
 
 class KernelDiskWorkload:
@@ -84,20 +83,6 @@ class KernelDiskWorkload:
         :returns: A default list of arguments for the workload kernel.
         """
         raise NotImplementedError
-
-    def get_disk_device(self) -> str:
-        """
-        Get the disk device, e.g., "/dev/sda", where the disk image is placed.
-
-        :returns: The disk device.
-        """
-        to_return = (
-            self._disk_device
-            if self._disk_device
-            else self.get_default_disk_device()
-        )
-        assert to_return is not None
-        return to_return
 
     @abstractmethod
     def get_default_disk_device(self) -> str:
@@ -202,7 +187,11 @@ class KernelDiskWorkload:
             " ".join(kernel_args or self.get_default_kernel_args())
         ).format(
             root_value=self.get_default_kernel_root_val(disk_image=disk_image),
-            disk_device=self.get_disk_device(),
+            disk_device=(
+                self._disk_device
+                if self._disk_device
+                else self.get_default_disk_device()
+            ),
         )
 
         # Setting the bootloader information for ARM board. The current
