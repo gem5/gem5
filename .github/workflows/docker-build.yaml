@@ -13,7 +13,7 @@ jobs:
           # Scheduled workflows run on the default branch by default. We
           # therefore need to explicitly checkout the develop branch.
           ref: develop
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: dockerfiles
           path: util/dockerfiles
@@ -27,7 +27,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: dockerfiles
           path: dockerfiles-docker-build
