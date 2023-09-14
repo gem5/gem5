@@ -30,6 +30,7 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: dockerfiles
+          path: dockerfiles-docker-build
 
       - uses: docker/setup-qemu-action@v2
         name: Setup QEMU
@@ -45,7 +46,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push with bake
-        uses: docker/bake-action@v3
+        uses: docker/bake-action@v4
         with:
+          workdir: ./dockerfiles-docker-build
           files: docker-bake.hcl
           push: true
