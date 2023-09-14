@@ -30,7 +30,6 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: dockerfiles
-          path: dockerfiles
 
       - uses: docker/setup-qemu-action@v2
         name: Setup QEMU
@@ -48,5 +47,5 @@ jobs:
       - name: Build and push with bake
         uses: docker/bake-action@v3
         with:
-          files: dockerfiles/docker-bake.hcl
+          files: docker-bake.hcl
           push: true
