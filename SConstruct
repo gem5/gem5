@@ -216,10 +216,10 @@ Help(f"""
 Targets:
         To build gem5 using a predefined configuration, use a target with
         a directory called "build" in the path, followed by a directory named
-        after a predefined configuration, and then the actual target, likely
-        a gem5 binary. For example:
+        after a predefined configuration in "build_opts" directory, and then
+        the actual target, likely a gem5 binary. For example:
 
-        scons build/X86/gem5.opt
+        scons build/ALL/gem5.opt
 
         The "build" component tells SCons that the next part names an initial
         configuration, and the part after that is the actual target.
@@ -237,10 +237,14 @@ Targets:
             disabled.
 
         gem5 can also be built as a static or dynamic library. In that case,
-        the extension is fixed by the operating system, so the binary type
+        the extension is determined by the operating system, so the binary type
         is part of the target file name. For example:
 
         scons build/ARM/libgem5_opt.so
+
+        In MacOS, the extension should change to "dylib" like this:
+
+        scons build/ARM/libgem5_opt.dylib
 
         To build unit tests, you can use a target like this:
 
@@ -283,17 +287,13 @@ Kconfig:
         configs, or edit one that already exists. To use one of the kconfig
         tools with a particular directory, use a target which is the directory
         to configure, and then the name of the tool. For example, to run
-        menuconfig on directory build/foo/bar, run:
+        menuconfig on directory build_foo/bar, run:
 
-        scons menuconfig build/foo/bar
+        scons menuconfig build_foo/bar
 
-        will set up a build directory in build/foo/bar if one doesn't already
+        will set up a build directory in build_foo/bar if one doesn't already
         exist, and open the menuconfig editor to view/set configuration
         values.
-
-        The tools available for working with kconfig are generally very
-        similar to ones used with the linux kernel, so information about the
-        kernel versions will typically (but not always) apply here as well.
 
 Kconfig tools:
         defconfig:
@@ -302,28 +302,28 @@ Kconfig tools:
         defconfig file. A defconfig file in the build_opts directory can be
         implicitly specified in the build path via `build/<defconfig file>/`
 
-        scons defconfig build/foo/bar build_opts/MIPS
+        scons defconfig build_foo/bar build_opts/MIPS
 
 
         guiconfig:
         Opens the guiconfig editor which will let you view and edit config
         values, and view help text. guiconfig runs as a graphical application.
 
-        scons guiconfig build/foo/bar
+        scons guiconfig build_foo/bar
 
 
         listnewconfig:
         Lists config options which are new in the Kconfig and which are not
         currently set in the existing config file.
 
-        scons listnewconfig build/foo/bar
+        scons listnewconfig build_foo/bar
 
 
         menuconfig:
         Opens the menuconfig editor which will let you view and edit config
         values, and view help text. menuconfig runs in text mode.
 
-        scons menuconfig build/foo/bar
+        scons menuconfig build_foo/bar
 
 
         oldconfig:
@@ -331,7 +331,7 @@ Kconfig tools:
         the same as the olddefconfig tool, except it asks what values you want
         for the new settings.
 
-        scons oldconfig build/foo/bar
+        scons oldconfig build_foo/bar
 
 
         olddefconfig:
@@ -339,7 +339,7 @@ Kconfig tools:
         the same as the oldconfig tool, except it uses the default for any new
         setting.
 
-        scons olddefconfig build/foo/bar
+        scons olddefconfig build_foo/bar
 
 
         savedefconfig:
@@ -350,14 +350,14 @@ Kconfig tools:
         defconfig directory. The second argument specifies the filename for
         the new defconfig file.
 
-        scons savedefconfig build/foo/bar new_def_config
+        scons savedefconfig build_foo/bar new_def_config
 
 
         setconfig:
         Set values in an existing config directory as specified on the command
         line. For example, to enable gem5's built in systemc kernel:
 
-        scons setconfig build/foo/bar USE_SYSTEMC=y
+        scons setconfig build_foo/bar USE_SYSTEMC=y
 """, append=True)
 
 # Take a list of paths (or SCons Nodes) and return a list with all
@@ -907,8 +907,6 @@ for variant_path in variant_paths:
         elif kconfig_action == 'setconfig':
             kconfig.setconfig(env, kconfig_file.abspath, config_file.abspath,
                     ARGUMENTS)
-        else:
-            error(f'Unrecognized kconfig action {kconfig_action}')
         Exit(0)
 
     # If no config exists yet, see if we know how to make one?
