@@ -49,7 +49,7 @@ jobs:
   build-gem5:
     runs-on: [self-hosted, linux, x64, build]
     if: github.event.pull_request.draft == false
-    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
     needs: [pre-commit, check-for-change-id] # only runs if pre-commit and change-id passes
     outputs:
       artifactname: ${{ steps.name.outputs.test }}
@@ -70,7 +70,7 @@ jobs:
   unittests-all-opt:
     runs-on: [self-hosted, linux, x64, run]
     if: github.event.pull_request.draft == false
-    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
     needs: [pre-commit, check-for-change-id] # only runs if pre-commit and change-id passes
     timeout-minutes: 60
     steps:
@@ -83,7 +83,7 @@ jobs:
   testlib-quick:
     runs-on: [self-hosted, linux, x64, run]
     if: github.event.pull_request.draft == false
-    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+    container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
     needs: [pre-commit, build-gem5, check-for-change-id]
     timeout-minutes: 360     # 6 hours
     steps:
