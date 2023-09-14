@@ -42,6 +42,9 @@ def get_supported_isas() -> Set[ISA]:
     """
     supported_isas = set()
 
+    if not buildEnv["BUILD_ISA"]:
+        return {ISA.NULL}
+
     if "TARGET_ISA" in buildEnv.keys():
         supported_isas.add(get_isa_from_str(buildEnv["TARGET_ISA"]))
 

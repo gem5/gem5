@@ -30,5 +30,4 @@ config KVM_ISA
 config USE_KVM
     depends on KVM_ISA != ""
     bool "Enable hardware virtualized (KVM) CPU models"
-    default y if KVM_ISA != ""
-    default n
+    default y
