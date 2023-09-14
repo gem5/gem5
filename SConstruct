@@ -84,7 +84,6 @@ from os import mkdir, remove, environ
 from os.path import abspath, dirname, expanduser
 from os.path import isdir, isfile
 from os.path import join, split
-from pathlib import Path
 
 import logging
 logging.basicConfig()
@@ -122,8 +121,6 @@ AddOption('--ignore-style', action='store_true',
           help='Disable style checking hooks')
 AddOption('--linker', action='store', default=None, choices=linker_options,
           help=f'Select which linker to use ({", ".join(linker_options)})')
-AddOption('--mold-path', action='store', default='/usr/libexec/mold/',
-          help='Path to the binary of mold linker.')
 AddOption('--gold-linker', action='store_const', const='gold', dest='linker',
           help='Use the gold linker. Deprecated: Use --linker=gold')
 AddOption('--no-compress-debug', action='store_true',
@@ -428,36 +425,19 @@ for variant_path in variant_paths:
             conf.CheckLinkFlag('-Wl,--as-needed')
 
         linker = GetOption('linker')
-        # check for mold linker when -fuse-ld=mold fails
-        # this checks whether mold_dir has ld or ld.mold and
-        # whether -B{mold_dir} works
-        mold_check = lambda mold_dir: \
-            isdir(mold_dir) and \
-            (isfile(mold_dir/'ld') or isfile(mold_dir/'ld.mold')) and \
-            conf.CheckLinkFlag('-B' + str(mold_dir))
-        mold_check_message = \
-            "You are seeing this error because -fuse-ld=mold failed.\n" \
-            "If you did not add the folder containing mold to $PATH, you " \
-            "should do so and recompile gem5.\n" \
-            "If that does not work, you can manually specify the path to " \
-            "the binary of mold using the --mold-path option. This will " \
-            "cause scons to look for ld or ld.mold in the same folder as " \
-            "the binary of mold."
         if linker:
             with gem5_scons.Configure(env) as conf:
                 if not conf.CheckLinkFlag(f'-fuse-ld={linker}'):
-                    # If -fuse-ld=mold fails, we use "-B$mold_path" instead.
-                    mold_path = Path(GetOption('mold_path')).parent
-                    if linker == 'mold':
-                        if any(map(mold_check, [mold_path,
-                            Path("/usr/libexec/mold"),
-                            Path("/usr/libexec/mold")])):
-                            pass # support mold
-                        else:
-                            error(
-                                f'Linker "{linker}" is not supported. '
-                                f'{mold_check_message}'
-                            )
+                    # check mold support for gcc older than 12.1.0
+                    if linker == 'mold' and \
+                       (env['GCC'] and \
+                           compareVersions(env['CXXVERSION'],
+                                           "12.1.0") < 0) and \
+                       ((isdir('/usr/libexec/mold') and \
+                           conf.CheckLinkFlag('-B/usr/libexec/mold')) or \
+                       (isdir('/usr/local/libexec/mold') and \
+                           conf.CheckLinkFlag('-B/usr/local/libexec/mold'))):
+                        pass # support mold
                     else:
                         error(f'Linker "{linker}" is not supported')
                 if linker == 'gold' and not GetOption('with_lto'):
