@@ -28,10 +28,21 @@ config TARGET_GPU_ISA
 
 rsource "amdgpu/Kconfig"
 
+config BUILD_ISA
+    bool "Build the arch ISA"
+    default n
+
+menu "ISA"
+
+if BUILD_ISA
+
 rsource "arm/Kconfig"
 rsource "mips/Kconfig"
-rsource "null/Kconfig"
 rsource "power/Kconfig"
 rsource "riscv/Kconfig"
 rsource "sparc/Kconfig"
 rsource "x86/Kconfig"
+
+endif
+
+endmenu
