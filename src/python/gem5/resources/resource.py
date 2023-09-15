@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from abc import ABCMeta
+import json
 import os
 from pathlib import Path
 from m5.util import warn, fatal
@@ -70,6 +71,8 @@ class AbstractResource:
 
     def __init__(
         self,
+        category: Optional[str] = None,
+        id: Optional[str] = None,
         resource_version: Optional[str] = None,
         local_path: Optional[str] = None,
         description: Optional[str] = None,
@@ -91,11 +94,15 @@ class AbstractResource:
                 f"Local path specified for resource, '{local_path}', does not "
                 "exist."
             )
-
+        self._id = id
+        self._category = category
         self._local_path = local_path
         self._description = description
         self._source = source
         self._version = resource_version
+
+    def __str__(self):
+        return f"{self._category} resource({self._id}, {self._version})\nFor more information, please visit https://resources.gem5.org/resources/{self._id}?version={self._version}"
 
     def get_resource_version(self) -> str:
         """Returns the version of the resource."""
@@ -122,6 +129,8 @@ class FileResource(AbstractResource):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
+        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -134,6 +143,8 @@ class FileResource(AbstractResource):
 
         super().__init__(
             local_path=local_path,
+            id=id,
+            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -146,6 +157,8 @@ class DirectoryResource(AbstractResource):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
+        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -159,6 +172,8 @@ class DirectoryResource(AbstractResource):
 
         super().__init__(
             local_path=local_path,
+            id=id,
+            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -171,6 +186,8 @@ class DiskImageResource(FileResource):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
+        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -179,6 +196,8 @@ class DiskImageResource(FileResource):
     ):
         super().__init__(
             local_path=local_path,
+            id=id,
+            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -196,6 +215,8 @@ class BinaryResource(FileResource):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
+        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -204,6 +225,8 @@ class BinaryResource(FileResource):
     ):
         super().__init__(
             local_path=local_path,
+            id=id,
+            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -227,6 +250,8 @@ class BootloaderResource(BinaryResource):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
+        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -235,6 +260,8 @@ class BootloaderResource(BinaryResource):
     ):
         super().__init__(
             local_path=local_path,
+            id=id,
+            category=category,
             description=description,
             architecture=architecture,
             source=source,
@@ -248,6 +275,8 @@ class GitResource(DirectoryResource):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
+        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -255,6 +284,8 @@ class GitResource(DirectoryResource):
     ):
         super().__init__(
             local_path=local_path,
+            id=id,
+            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -267,6 +298,8 @@ class KernelResource(BinaryResource):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
+        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -275,6 +308,8 @@ class KernelResource(BinaryResource):
     ):
         super().__init__(
             local_path=local_path,
+            id=id,
+            category=category,
             description=description,
             source=source,
             architecture=architecture,
@@ -293,6 +328,8 @@ class CheckpointResource(DirectoryResource):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
+        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -300,6 +337,8 @@ class CheckpointResource(DirectoryResource):
     ):
         super().__init__(
             local_path=local_path,
+            id=id,
+            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -320,6 +359,8 @@ class SimpointResource(AbstractResource):
         simpoint_list: List[int] = None,
         weight_list: List[float] = None,
         warmup_interval: int = 0,
+        id: Optional[str] = None,
+        category: Optional[str] = None,
         workload_name: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -340,6 +381,8 @@ class SimpointResource(AbstractResource):
 
         super().__init__(
             local_path=local_path,
+            id=id,
+            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -429,6 +472,8 @@ class LooppointCsvResource(FileResource, LooppointCsvLoader):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
+        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -437,6 +482,8 @@ class LooppointCsvResource(FileResource, LooppointCsvLoader):
         FileResource.__init__(
             self,
             local_path=local_path,
+            id=id,
+            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -448,6 +495,8 @@ class LooppointJsonResource(FileResource, LooppointJsonLoader):
     def __init__(
         self,
         local_path: str,
+        id: Optional[str] = None,
+        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         region_id: Optional[Union[str, int]] = None,
         description: Optional[str] = None,
@@ -457,6 +506,8 @@ class LooppointJsonResource(FileResource, LooppointJsonLoader):
         FileResource.__init__(
             self,
             local_path=local_path,
+            id=id,
+            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -477,6 +528,8 @@ class SimpointDirectoryResource(SimpointResource):
         weight_file: str,
         simpoint_interval: int,
         warmup_interval: int,
+        id: Optional[str] = None,
+        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         workload_name: Optional[str] = None,
         description: Optional[str] = None,
@@ -510,6 +563,8 @@ class SimpointDirectoryResource(SimpointResource):
             warmup_interval=warmup_interval,
             workload_name=workload_name,
             local_path=local_path,
+            id=id,
+            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -563,6 +618,8 @@ class WorkloadResource(AbstractResource):
     def __init__(
         self,
         function: str = None,
+        id: Optional[str] = None,
+        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -577,6 +634,8 @@ class WorkloadResource(AbstractResource):
 
         super().__init__(
             local_path=local_path,
+            id=id,
+            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -741,6 +800,7 @@ def obtain_resource(
     # Once we know what AbstractResource subclass we are using, we create it.
     # The fields in the JSON object are assumed to map like-for-like to the
     # subclass contructor, so we can pass the resource_json map directly.
+
     return resource_class(local_path=to_path, **resource_json)
 
 
