@@ -2567,6 +2567,8 @@ action(Send_CompI, desc="") {
     out_msg.type := CHIResponseType:Comp_I;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.Destination.add(tbe.requestor);
+    out_msg.txnId := tbe.txnId;
     out_msg.dbid := tbe.txnId;
   }
 }
