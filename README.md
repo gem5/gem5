@@ -1,3 +1,61 @@
+# Fetch Directed Instruction Prefetching for gem5
+
+This is the development repository for **Fetch Directed Instruction Prefetching
+(FDP)** in gem5 also known as **decoupled front-end**. FDP was originally
+published in [MICRO'99](https://web.eecs.umich.edu/~taustin/papers/MICRO32-fdp.pdf).
+Today, FDP is the standard front-end design for high performance
+server CPU's including CPU's from
+[Intel](https://www.anandtech.com/show/16881/a-deep-dive-into-intels-alder-lake-microarchitectures/3),
+[IBM](https://doi.org/10.1109/ISCA45697.2020.00014),
+[AMD](https://www.amd.com/en/support/tech-docs/software-optimization-guide-for-the-amd-zen4-microarchitecture), and [ARM](https://doi.org/10.1109/MM.2020.2972222).
+
+This implementation is based on industrial [report](https://ieeexplore.ieee.org/document/9408197)
+and aims to establish a state-of-the-art front-end design comparable to modern servers in gem5.
+
+## How to use
+We included an example [script](./configs/example/gem5_library/fdp-hello.py)
+how to configure FDP correctly and simulate a simple "Hello World!" program.
+The script is tested with the x86, ARM, RISC-V ISA's which can be specified
+by the `--isa` flag.
+
+```bash
+# Build gem5
+scons build/ALL/gem5.opt
+# Run the simulation
+./build/ALL/gem5.opt \
+    configs/example/gem5_library/fdp-hello.py \
+        --isa <X86/Arm/RiscV> [--disable-fdp]
+```
+
+## Notes
+The implementation was develped for the X86 architecture in full-system mode.
+Other architectures where not extensively tested. If you encounter any issues,
+please let us know via issues, pull requests or PM to David Schall
+[GitHub](https://github.com/dhschall),[web page](https://dhschall.github.io/).
+Furthermore, we welcome any feedback and ideas for improvements.
+
+
+## Reference our work
+This work was done for our recent [paper](https://ease-lab.github.io/ease_website/pubs/IGNITE_MICRO23.pdf)
+accepted to MICRO'23. If you use our work, please cite our paper:
+```
+@inproceedings{10.1145/3613424.3614258,
+  author    = {Schall, David and
+               Sandberg, Andreas and
+               Grot, Boris},
+  title     = {Warming Up a Cold Front-End with Ignite},
+  year      = {2023},
+  publisher = {Association for Computing Machinery},
+  address   = {Toronto, ON, Canada},
+  doi       = {10.1145/3613424.3614258},
+  booktitle = {Proceedings of the 56th Annual IEEE/ACM International Symposium on Microarchitecture (MICRO '23)},
+  series    = {MICRO'23}
+}
+```
+
+---
+---
+
 # The gem5 Simulator
 
 This is the repository for the gem5 simulator. It contains the full source code
