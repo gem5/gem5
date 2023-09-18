@@ -1077,16 +1077,6 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
 }
 
 void
-TimingSimpleCPU::updateCycleCounts()
-{
-    const Cycles delta(curCycle() - previousCycle);
-
-    baseStats.numCycles += delta;
-
-    previousCycle = curCycle();
-}
-
-void
 TimingSimpleCPU::DcachePort::recvTimingSnoopReq(PacketPtr pkt)
 {
     for (ThreadID tid = 0; tid < cpu->numThreads; tid++) {

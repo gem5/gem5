@@ -383,12 +383,22 @@ class Event : public EventBase, public Serializable
     /**
      * Managed event scheduled and being held in the event queue.
      */
-    void acquire();
+    void
+    acquire()
+    {
+        if (flags.isSet(Managed))
+            acquireImpl();
+    }
 
     /**
      * Managed event removed from the event queue.
      */
-    void release();
+    void
+    release()
+    {
+        if (flags.isSet(Managed))
+            releaseImpl();
+    }
 
     virtual void acquireImpl();
 

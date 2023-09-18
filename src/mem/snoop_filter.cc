@@ -156,30 +156,6 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const ResponsePort&
     return snoopSelected(maskToPortList(interested & ~req_port), lookupLatency);
 }
 
-void
-SnoopFilter::finishRequest(bool will_retry, Addr addr, bool is_secure)
-{
-    if (reqLookupResult.it != cachedLocations.end()) {
-        // since we rely on the caller, do a basic check to ensure
-        // that finishRequest is being called following lookupRequest
-        assert(reqLookupResult.it->first == \
-                (is_secure ? ((addr & ~(Addr(linesize - 1))) | LineSecure) : \
-                 (addr & ~(Addr(linesize - 1)))));
-        if (will_retry) {
-            SnoopItem retry_item = reqLookupResult.retryItem;
-            // Undo any changes made in lookupRequest to the snoop filter
-            // entry if the request will come again. retryItem holds
-            // the previous value of the snoopfilter entry.
-            reqLookupResult.it->second = retry_item;
-
-            DPRINTF(SnoopFilter, "%s:   restored SF value %x.%x\n",
-                    __func__,  retry_item.requested, retry_item.holder);
-        }
-
-        eraseIfNullEntry(reqLookupResult.it);
-    }
-}
-
 std::pair<SnoopFilter::SnoopList, Cycles>
 SnoopFilter::lookupSnoop(const Packet* cpkt)
 {

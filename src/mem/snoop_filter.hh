@@ -47,6 +47,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "debug/SnoopFilter.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
 #include "mem/qport.hh"
@@ -151,7 +152,29 @@ class SnoopFilter : public SimObject
      * @param will_retry    This request will retry on this bus / snoop filter
      * @param addr          Packet address, merely for sanity checking
      */
-    void finishRequest(bool will_retry, Addr addr, bool is_secure);
+    void finishRequest(const bool will_retry, const Addr addr,
+                       const bool is_secure)
+    {
+        if (reqLookupResult.it != cachedLocations.end()) {
+            // since we rely on the caller, do a basic check to ensure
+            // that finishRequest is being called following lookupRequest
+            assert(reqLookupResult.it->first == \
+                (is_secure ? ((addr & ~(Addr(linesize - 1))) | LineSecure) : \
+                (addr & ~(Addr(linesize - 1)))));
+            if (will_retry) {
+                SnoopItem retry_item = reqLookupResult.retryItem;
+                // Undo any changes made in lookupRequest to the snoop filter
+                // entry if the request will come again. retryItem holds
+                // the previous value of the snoopfilter entry.
+                reqLookupResult.it->second = retry_item;
+
+                DPRINTF(SnoopFilter, "%s:   restored SF value %x.%x\n",
+                        __func__,  retry_item.requested, retry_item.holder);
+            }
+
+            eraseIfNullEntry(reqLookupResult.it);
+        }
+    }
 
     /**
      * Handle an incoming snoop from below (the memory-side port). These

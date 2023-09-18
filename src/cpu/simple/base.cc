@@ -122,6 +122,9 @@ BaseSimpleCPU::BaseSimpleCPU(const BaseSimpleCPUParams &p)
 void
 BaseSimpleCPU::checkPcEventQueue()
 {
+    //if empty now then no whole PCEventQueue is empty so no need to check
+    if (threadInfo[curThread]->thread->pcEventQueue.empty()) return;
+
     Addr oldpc, pc = threadInfo[curThread]->thread->pcState().instAddr();
     do {
         oldpc = pc;

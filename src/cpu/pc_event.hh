@@ -121,6 +121,7 @@ class PCEventQueue : public PCEventScope
 
         return doService(pc, tc);
     }
+    bool empty() const { return pcMap.empty(); }
 
     range_t equal_range(Addr pc);
     range_t equal_range(PCEvent *event) { return equal_range(event->pc()); }

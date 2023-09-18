@@ -109,20 +109,6 @@ Event::insertBefore(Event *event, Event *curr)
 }
 
 void
-Event::acquire()
-{
-    if (flags.isSet(Event::Managed))
-        acquireImpl();
-}
-
-void
-Event::release()
-{
-    if (flags.isSet(Event::Managed))
-        releaseImpl();
-}
-
-void
 Event::acquireImpl()
 {
 }

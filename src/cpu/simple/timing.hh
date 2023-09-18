@@ -253,7 +253,14 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
     };
 
-    void updateCycleCounts();
+    void updateCycleCounts()
+    {
+        const Cycles delta(curCycle() - previousCycle);
+
+        baseStats.numCycles += delta;
+
+        previousCycle = curCycle();
+    }
 
     IcachePort icachePort;
     DcachePort dcachePort;
