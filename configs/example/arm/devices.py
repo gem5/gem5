@@ -382,6 +382,30 @@ class ClusterSystem:
             cluster.connectMemSide(cluster_mem_bus)
 
 
+class SimpleSeSystem(System, ClusterSystem):
+    """
+    Example system class for syscall emulation mode
+    """
+
+    # Use a fixed cache line size of 64 bytes
+    cache_line_size = 64
+
+    def __init__(self, **kwargs):
+        System.__init__(self, **kwargs)
+        ClusterSystem.__init__(self, **kwargs)
+        # Create a voltage and clock domain for system components
+        self.voltage_domain = VoltageDomain(voltage="3.3V")
+        self.clk_domain = SrcClockDomain(
+            clock="1GHz", voltage_domain=self.voltage_domain
+        )
+
+        # Create the off-chip memory bus.
+        self.membus = SystemXBar()
+
+    def connect(self):
+        self.system_port = self.membus.cpu_side_ports
+
+
 class BaseSimpleSystem(ArmSystem, ClusterSystem):
     cache_line_size = 64
 
