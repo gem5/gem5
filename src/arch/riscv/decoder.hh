@@ -60,7 +60,7 @@ class Decoder : public InstDecoder
     ExtMachInst emi;
     uint32_t machInst;
 
-    StaticInstPtr decodeInst(ExtMachInst mach_inst);
+    virtual StaticInstPtr decodeInst(ExtMachInst mach_inst);
 
     /// Decode a machine instruction.
     /// @param mach_inst The binary instruction to decode.
