@@ -50,6 +50,7 @@ Source('system_hub.cc', tags='x86 isa')
 
 DebugFlag('AMDGPUDevice', tags='x86 isa')
 DebugFlag('AMDGPUMem', tags='x86 isa')
+DebugFlag('AMDGPUSystemHub', tags='x86 isa')
 DebugFlag('PM4PacketProcessor', tags='x86 isa')
 DebugFlag('SDMAEngine', tags='x86 isa')
 DebugFlag('SDMAData', tags='x86 isa')
