@@ -143,7 +143,7 @@ class BaseCPU : public ClockedObject
     bool _switchedOut;
 
     /** Cache the cache line size that we get from the system */
-    const unsigned int _cacheLineSize;
+    const uint64_t _cacheLineSize;
 
     /** Global CPU statistics that are merged into the Root object. */
     struct GlobalStats : public statistics::Group
@@ -394,7 +394,7 @@ class BaseCPU : public ClockedObject
     /**
      * Get the cache line size of the system.
      */
-    inline unsigned int cacheLineSize() const { return _cacheLineSize; }
+    inline uint64_t cacheLineSize() const { return _cacheLineSize; }
 
     /**
      * Serialize this object to the given output stream.
