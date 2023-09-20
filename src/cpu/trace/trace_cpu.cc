@@ -585,7 +585,7 @@ TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
     // stat counting this is useful to keep a check on how frequently this
     // happens. If required the code could be revised to mimick splitting such
     // a request into two.
-    unsigned blk_size = owner.cacheLineSize;
+    Addr blk_size = owner.cacheLineSize;
     Addr blk_offset = (node_ptr->physAddr & (Addr)(blk_size - 1));
     if (!(blk_offset + node_ptr->size <= blk_size)) {
         node_ptr->size = blk_size - blk_offset;

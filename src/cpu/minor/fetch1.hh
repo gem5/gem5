@@ -213,13 +213,13 @@ class Fetch1 : public Named
     /** Line snap size in bytes.  All fetches clip to make their ends not
      *  extend beyond this limit.  Setting this to the machine L1 cache line
      *  length will result in fetches never crossing line boundaries. */
-    unsigned int lineSnap;
+    Addr lineSnap;
 
     /** Maximum fetch width in bytes.  Setting this (and lineSnap) to the
      *  machine L1 cache line length will result in fetches of whole cache
      *  lines.  Setting this to sizeof(MachInst) will result it fetches of
      *  single instructions (except near the end of lineSnap lines) */
-    unsigned int maxLineWidth;
+    Addr maxLineWidth;
 
     /** Maximum number of fetches allowed in flight (in queues or memory) */
     unsigned int fetchLimit;

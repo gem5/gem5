@@ -267,7 +267,7 @@ class SimpleCache : public ClockedObject
     const Cycles latency;
 
     /// The block size for the cache
-    const unsigned blockSize;
+    const Addr blockSize;
 
     /// Number of blocks in the cache (size of cache / block size)
     const unsigned capacity;
