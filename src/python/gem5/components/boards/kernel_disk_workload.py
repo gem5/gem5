@@ -85,7 +85,7 @@ class KernelDiskWorkload:
         raise NotImplementedError
 
     @abstractmethod
-    def get_default_disk_device(self) -> str:
+    def get_disk_device(self) -> str:
         """
         Set a default disk device, in case user does not specify a disk device.
 

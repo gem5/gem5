@@ -535,7 +535,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         fdt.writeDtbFile(os.path.join(outdir, "device.dtb"))
 
     @overrides(KernelDiskWorkload)
-    def get_default_disk_device(self) -> str:
+    def get_disk_device(self) -> str:
         return "/dev/lda"
 
     @overrides(KernelDiskWorkload)
