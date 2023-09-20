@@ -1,0 +1,35 @@
+# How to build Sphinx documentation
+
+In order to build documentation for the standard library, first install sphinx
+
+```bash
+python -m venv build/
+source build/bin/activate
+pip install sphinx
+
+```
+
+Next, build gem5, then cd to the docs directory
+
+```bash
+scons build/ALL/gem5.opt
+cd docs
+```
+
+In order to generate the RST files, run `../build/ALL/gem5.opt gem5-sphinx-apidoc -o . ../src/python/gem5 -F -e`
+
+To generate the documentation, run `SPHINXBUILD="../build/ALL/gem5.opt gem5-sphinx" make html`
+
+In order to view this documentation as a website, run the commands below:
+
+```bash
+cd _build/html
+python -m http.server 8000
+```
+
+Note: In order to generate additional documentation for memory within gem5, also build ALL_CHI/gem5.opt, and run the SPHINXBUILD command, as shown below:
+
+```bash
+scons build/ALL_CHI/gem5.opt
+`SPHINXBUILD="../build/ALL_CHI/gem5.opt gem5-sphinx" make html`
+```
