@@ -63,16 +63,37 @@ class AMDGPUSystemHub : public DmaDevice
     AddrRangeList getAddrRanges() const override;
 
   private:
+    typedef std::pair<PacketPtr, Event*> DeferredReq;
+    typedef std::list<DeferredReq> DeferredReqList;
+    std::unordered_map<Addr, DeferredReqList> outstandingReqs;
+
+    void sendNextRequest(Addr addr, const PacketPtr donePkt);
+    void sendDeferredRequest(DeferredReq& deferredReq);
 
     class ResponseEvent : public Event
     {
-       Event *callback;
+        AMDGPUSystemHub &systemHub;
+        Event *callback;
+        PacketPtr pkt;
 
-       public:
-        ResponseEvent(Event *_callback);
+      public:
+        ResponseEvent(AMDGPUSystemHub& _hub,
+                      Event *_callback, PacketPtr _pkt);
 
         void process();
+    };
 
+    class AtomicResponseEvent : public Event
+    {
+        AMDGPUSystemHub &systemHub;
+        Event *callback;
+        PacketPtr pkt;
+
+      public:
+        AtomicResponseEvent(AMDGPUSystemHub& _hub,
+                            Event *_callback, PacketPtr _pkt);
+
+        void process();
     };
 };
 
