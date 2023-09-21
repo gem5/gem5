@@ -997,7 +997,8 @@ X86Process::argsInit(int pageSize,
     initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 
-    initVirtMem->writeString(aux_data_base, platform.c_str());
+    initVirtMem->writeString(aux_data_base + numRandomBytes,
+                             platform.c_str());
 
     copyStringArray(envp, envp_array_base, env_data_base,
                     ByteOrder::little, *initVirtMem);
