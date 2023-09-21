@@ -1,4 +1,4 @@
-# Copyright (c) 2018, 2023 Arm Limited
+# Copyright (c) 2023 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -33,17 +33,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.SimObject import SimObject
+from m5.params import *
+from m5.objects.Capstone import CapstoneDisassembler
 
-SimObject('TarmacTrace.py', sim_objects=['TarmacParser', 'TarmacTracer'],
-        enums=['TarmacDump'], tags='arm isa')
-Source('tarmac_base.cc', tags='arm isa')
-Source('tarmac_parser.cc', tags='arm isa')
-Source('tarmac_tracer.cc', tags='arm isa')
-Source('tarmac_record.cc', tags='arm isa')
-Source('tarmac_record_v8.cc', tags='arm isa')
 
-if env['CONF']['HAVE_CAPSTONE']:
-    SimObject('ArmCapstone.py', sim_objects=['ArmCapstoneDisassembler'],
-              tags=['capstone', 'arm isa'])
-    Source('capstone.cc', tags=['capstone', 'arm isa'])
+class ArmCapstoneDisassembler(CapstoneDisassembler):
+    type = "ArmCapstoneDisassembler"
+    cxx_class = "gem5::trace::ArmCapstoneDisassembler"
+    cxx_header = "arch/arm/tracers/capstone.hh"
