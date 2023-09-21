@@ -194,6 +194,14 @@ def parse_options():
     )
 
     option(
+        "-P",
+        action="store_true",
+        default=False,
+        help="Don't prepend the script directory to the system path. "
+        "Mimics Python 3's `-P` option.",
+    )
+
+    option(
         "-s",
         action="store_true",
         help="IGNORED, only for compatibility with python. don't"
@@ -601,7 +609,11 @@ def main():
         sys.argv = ["-c"] + options.c[1]
         scope = {"__name__": "__m5_main__"}
     else:
-        sys.path = [os.path.dirname(sys.argv[0])] + sys.path
+        # If `-P` was used (`options.P == true`), don't prepend the script
+        # directory to the `sys.path`. This mimics Python 3's `-P` option
+        # (https://docs.python.org/3/using/cmdline.html#cmdoption-P).
+        if not options.P:
+            sys.path = [os.path.dirname(sys.argv[0])] + sys.path
         filename = sys.argv[0]
         filedata = open(filename, "r").read()
         filecode = compile(filedata, filename, "exec")
