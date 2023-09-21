@@ -52,7 +52,7 @@ from gem5.isas import ISA
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.simulate.simulator import Simulator
 from gem5.simulate.exit_event import ExitEvent
-from gem5.resources.resoruce import obtain_resource
+from gem5.resources.resource import obtain_resource
 
 # This simulation requires using KVM with gem5 compiled for X86 simulation
 # and with MESI_Two_Level cache coherence protocol.
