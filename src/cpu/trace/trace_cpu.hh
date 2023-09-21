@@ -147,7 +147,7 @@ class TraceCPU : public ClockedObject
   public:
     TraceCPU(const TraceCPUParams &params);
 
-    void init();
+    void init() override;
 
     /**
      * Return totalOps as the number of committed micro-ops plus the
