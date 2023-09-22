@@ -105,7 +105,7 @@ GTest('proxy_ptr.test', 'proxy_ptr.test.cc')
 GTest('serialize.test', 'serialize.test.cc', with_tag('gem5 serialize'))
 GTest('serialize_handlers.test', 'serialize_handlers.test.cc')
 
-SimObject('InstTracer.py', sim_objects=['InstTracer'])
+SimObject('InstTracer.py', sim_objects=['InstTracer', 'InstDisassembler'])
 SimObject('Process.py', sim_objects=['Process', 'EmulatedDriver'])
 Source('faults.cc')
 Source('process.cc')
