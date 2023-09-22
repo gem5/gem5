@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019 ARM Limited
+ * Copyright (c) 2017, 2019, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -101,7 +101,7 @@ ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     //
 
     outs << std::setw(26) << std::left;
-    outs << inst->disassemble(cur_pc, &loader::debugSymbolTable);
+    outs << tracer.disassemble(inst, *pc, &loader::debugSymbolTable);
 
     if (ran) {
         outs << " : ";
