@@ -338,6 +338,7 @@ TarmacTracerRecord::dump()
     auto &regQueue = tracer.regQueue;
 
     const TarmacContext tarmCtx(
+        tracer,
         thread,
         staticInst->isMicroop()? macroStaticInst : staticInst,
         *pc
