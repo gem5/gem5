@@ -93,7 +93,6 @@ class TarmacBaseRecord : public InstRecord
         bool taken;
         Addr addr;
         ArmISA::MachInst opcode;
-        std::string disassemble;
         ISetState isetstate;
         ArmISA::OperatingMode mode;
     };
