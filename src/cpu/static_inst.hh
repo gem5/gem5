@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2020 ARM Limited
+ * Copyright (c) 2017, 2020, 2023 Arm Limited
  * Copyright (c) 2022-2023 The University of Edinburgh
  * All rights reserved
  *
@@ -182,6 +182,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
     bool isNonSpeculative() const { return flags[IsNonSpeculative]; }
     bool isQuiesce() const { return flags[IsQuiesce]; }
     bool isUnverifiable() const { return flags[IsUnverifiable]; }
+    bool isPseudo() const { return flags[IsPseudo]; }
     bool isSyscall() const { return flags[IsSyscall]; }
     bool isMacroop() const { return flags[IsMacroop]; }
     bool isMicroop() const { return flags[IsMicroop]; }
