@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019 ARM Limited
+ * Copyright (c) 2017-2019, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -124,7 +124,7 @@ TarmacTracerRecord::TraceInstEntry::TraceInstEntry(
     const TarmacContext& tarmCtx,
     bool predicate)
       : InstEntry(tarmCtx.thread, *tarmCtx.pc, tarmCtx.staticInst, predicate),
-        disassemble(tarmCtx.staticInst->disassemble(addr))
+        disassemble(tarmCtx.tracer.disassemble(tarmCtx.staticInst, *tarmCtx.pc))
 {
     secureMode = isSecure(tarmCtx.thread);
 
