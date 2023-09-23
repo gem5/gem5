@@ -69,12 +69,15 @@ class VConfOp : public RiscvStaticInst
     uint64_t zimm10;
     uint64_t zimm11;
     uint64_t uimm;
-    VConfOp(const char *mnem, ExtMachInst _extMachInst, OpClass __opClass)
+    uint32_t elen;
+    VConfOp(const char *mnem, ExtMachInst _extMachInst,
+            uint32_t _elen, OpClass __opClass)
         : RiscvStaticInst(mnem, _extMachInst, __opClass),
           bit30(_extMachInst.bit30), bit31(_extMachInst.bit31),
           zimm10(_extMachInst.zimm_vsetivli),
           zimm11(_extMachInst.zimm_vsetvli),
-          uimm(_extMachInst.uimm_vsetivli)
+          uimm(_extMachInst.uimm_vsetivli),
+          elen(_elen)
     {
         this->flags[IsVector] = true;
     }
