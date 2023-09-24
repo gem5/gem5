@@ -428,6 +428,7 @@ class Commit
 
     /** The sequence number of the last commited instruction. */
     InstSeqNum lastCommitedSeqNum[MaxThreads];
+    InstSeqNum lastCommitedBrSeqNum[MaxThreads];
 
     /** Records if there is a trap currently in flight. */
     bool trapInFlight[MaxThreads];
@@ -461,6 +462,7 @@ class Commit
     int htmStarts[MaxThreads];
     int htmStops[MaxThreads];
 
+    uint64_t mispredBrInstSeq;
     struct CommitStats : public statistics::Group
     {
         CommitStats(CPU *cpu, Commit *commit);

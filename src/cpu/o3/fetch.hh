@@ -66,6 +66,7 @@ namespace o3
 {
 
 class CPU;
+class FTQEntry;
 
 /**
  * Fetch class handles both single threaded and SMT fetch. Its
@@ -78,6 +79,7 @@ class CPU;
 class Fetch
 {
   public:
+    typedef typename std::vector<Addr>::iterator pcIt;
     /**
      * IcachePort class for instruction fetch.
      */
@@ -120,6 +122,46 @@ class Fetch
             delete this;
         }
     };
+
+     /**
+      * CacheInfo to store all cache line info per entry
+      * of the cache reponse
+      */
+     class FetchBufferEntry
+     {
+         public:
+             bool isPdipPrefetch=false;
+             bool isLatePrefetch=false;
+             Addr pdipTriggerAddr=0;
+             Tick translationTick;
+             Tick sentTick;
+             Tick recvTick;
+             int  memLevel=0;
+
+             Addr fetchBufferPC;
+             bool fetchBufferValid;
+             RequestPtr memReq;
+             uint8_t* fetchBuffer;
+
+             FetchBufferEntry(Tick translationTick, Addr fetchBufPC,
+                              RequestPtr req, uint8_t *buf):
+                 isPdipPrefetch(false), isLatePrefetch(false),
+                 pdipTriggerAddr(0), translationTick(translationTick),
+                 sentTick(0), recvTick(0),
+                 memLevel(0), fetchBufferPC(fetchBufPC),
+                 fetchBufferValid(false), memReq(req),
+                 fetchBuffer(buf)
+             {
+             }
+
+             ~FetchBufferEntry()
+             {
+                 delete fetchBuffer;
+             }
+
+     };
+
+     typedef typename std::vector<FetchBufferEntry>::iterator fetchBufIt;
 
   private:
     /* Event to delay delivery of a fetch translation result in case of
@@ -183,6 +225,10 @@ class Fetch
     };
 
   private:
+    //sequence number to track instruction sequence number per thread
+    InstSeqNum seq[MaxThreads];
+    InstSeqNum brseq[MaxThreads];
+
     /** Fetch status. */
     FetchStatus _status;
 
@@ -422,7 +468,7 @@ class Fetch
     bool delayedCommit[MaxThreads];
 
     /** Memory request used to access cache. */
-    RequestPtr memReq[MaxThreads];
+    //RequestPtr memReq[MaxThreads];
 
     /** Variable that tracks if fetch has written to the time buffer this
      * cycle. Used to tell CPU if there is activity this cycle.
@@ -481,10 +527,13 @@ class Fetch
     Addr fetchBufferMask;
 
     /** The fetch data that is being fetched and buffered. */
-    uint8_t *fetchBuffer[MaxThreads];
+    //uint8_t *fetchBuffer[MaxThreads];
 
     /** The PC of the first instruction loaded into the fetch buffer. */
-    Addr fetchBufferPC[MaxThreads];
+    //Addr fetchBufferPC[MaxThreads];
+    //std::list<Addr> fetchBufferPC[MaxThreads];
+    std::vector<Addr> prefetchBufferPC[MaxThreads];
+    std::vector<FetchBufferEntry> fetchBuffer[MaxThreads];
 
     /** The size of the fetch queue in micro-ops */
     unsigned fetchQueueSize;
@@ -493,7 +542,7 @@ class Fetch
     std::deque<DynInstPtr> fetchQueue[MaxThreads];
 
     /** Whether or not the fetch buffer data is valid. */
-    bool fetchBufferValid[MaxThreads];
+    //bool fetchBufferValid[MaxThreads];
 
     /** Size of instructions. */
     int instSize;
@@ -510,6 +559,8 @@ class Fetch
     /** Number of threads that are actively fetching. */
     ThreadID numFetchingThreads;
 
+    /** Enable FDIP **/
+    bool enableFDIP;
     /** Thread ID being fetched. */
     ThreadID threadFetched;
 
@@ -526,6 +577,42 @@ class Fetch
 
     /** Event used to delay fault generation of translation faults */
     FinishTranslationEvent finishTranslationEvent;
+
+    // FTQ Related Changes here
+    int32_t ftqSize;
+    int32_t ftqInst;
+    int  prefetchFTQIndex;
+    Addr bblAddr[MaxThreads];
+    uint64_t bblSize[MaxThreads];
+    bool stopPrefetching = false;
+    bool resteer = false;
+
+    /** Fetch Target Queue (FTQ) **/
+    std::vector<FTQEntry> ftq[MaxThreads];
+
+    /** Prefetch from this PC and populate FTQ **/
+    std::unique_ptr<PCStateBase> prefPC[MaxThreads];
+
+    /** Prefetch Buffer **/
+    std::list<Addr> prefetchBuffer[MaxThreads];
+    std::list<Addr> prefetchBufferActualPC[MaxThreads];
+
+    /** add new entries to FTQ **/
+    void addToFTQ();
+
+    void resetFTQ(ThreadID tid);
+
+    void updatePrefetchBuffer(ThreadID tid);
+
+    Addr alignToCacheBlock(Addr pc);
+
+    /** predicts next basic block by querying BPU **/
+    void predictNextBasicBlock(PCStateBase *prefetchPc,
+            std::unique_ptr<PCStateBase> &branchPC,
+            std::unique_ptr<PCStateBase> &nextPC,
+            ThreadID tid, bool &stopPrefetch,
+            bool &instLimitReached, bool &isTaken);
+
 
   protected:
     struct FetchStatGroup : public statistics::Group
@@ -576,6 +663,38 @@ class Fetch
         /** Rate of how often fetch was idle. */
         statistics::Formula idleRate;
     } fetchStats;
+};
+
+/**
+ * FTQEntry represents an entry of Fetch Target Queue
+ * Each entry contains
+ * begin: beginning of a basic block
+ * end/branhcPC: last PC which is end of basic block
+ * target: target of the branchPC
+ * brSeq: branch sequence number of the current branch
+ *
+ */
+class FTQEntry
+{
+  public:
+    std::unique_ptr<PCStateBase> beginPC;
+    std::unique_ptr<PCStateBase> branchPC;
+    std::unique_ptr<PCStateBase> targetPC;
+    BrSeqNum brSeq;
+    bool isTaken;
+    int bblSize;
+
+    //track whether entry was prefetched or not
+    bool isPrefetched = false;
+
+    FTQEntry (PCStateBase &beginPC_, PCStateBase &branchPC_,
+              PCStateBase &targetPC_, BrSeqNum brSeq,
+              bool isTaken, int bblSize):
+            brSeq(brSeq), isTaken(isTaken), bblSize(bblSize) {
+        set(beginPC, beginPC_);
+        set(branchPC, branchPC_);
+        set(targetPC, targetPC_);
+    }
 };
 
 } // namespace o3

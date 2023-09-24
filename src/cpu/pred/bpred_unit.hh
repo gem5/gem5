@@ -79,6 +79,10 @@ class BPredUnit : public SimObject
     /** Perform sanity checks after a drain. */
     void drainSanityCheck() const;
 
+    StaticInstPtr getBranch(Addr bbladdr, ThreadID tid);
+    const PCStateBase* getBranchPC(Addr bbladdr, ThreadID tid);
+    uint64_t getBblSize(Addr bbladdr, ThreadID tid);
+    bool getBblValid(Addr bbladdr, ThreadID tid);
     /**
      * Predicts whether or not the instruction is a taken branch, and the
      * target of the branch if it is taken.
@@ -89,6 +93,8 @@ class BPredUnit : public SimObject
      */
     bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                  PCStateBase &pc, ThreadID tid);
+    bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
+                 Addr bblAddr, PCStateBase &pc, ThreadID tid);
 
     // @todo: Rename this function.
     virtual void uncondBranch(ThreadID tid, Addr pc, void * &bp_history) = 0;
@@ -120,7 +126,7 @@ class BPredUnit : public SimObject
      */
     void squash(const InstSeqNum &squashed_sn,
                 const PCStateBase &corr_target,
-                bool actually_taken, ThreadID tid);
+                bool actually_taken, ThreadID tid, bool update_btb = true);
 
     /**
      * @param bp_history Pointer to the history object.  The predictor
@@ -188,6 +194,16 @@ class BPredUnit : public SimObject
      * @param inst_PC The branch's PC that will be updated.
      * @param target_PC The branch's target that will be added to the BTB.
      */
+    void BTBUpdate(Addr &instPC, const StaticInstPtr &staticBranchInst,
+                const PCStateBase &branch,
+                uint64_t &bblSize, const PCStateBase &target,
+                bool uncond, ThreadID &tid)
+    {
+        ++stats.BTBUpdates;
+            BTB.update(instPC, staticBranchInst, branch, bblSize,
+                        target, uncond, tid);
+    }
+
     void
     BTBUpdate(Addr instPC, const PCStateBase &target)
     {

@@ -291,6 +291,7 @@ Decode::squash(const DynInstPtr &inst, ThreadID tid)
     toFetch->decodeInfo[tid].mispredictInst = inst;
     toFetch->decodeInfo[tid].squash = true;
     toFetch->decodeInfo[tid].doneSeqNum = inst->seqNum;
+    toFetch->decodeInfo[tid].doneBrSeqNum = inst->brSeqNum;
     set(toFetch->decodeInfo[tid].nextPC, *inst->branchTarget());
 
     // Looking at inst->pcState().branching()
@@ -304,6 +305,8 @@ Decode::squash(const DynInstPtr &inst, ThreadID tid)
                                            inst->isUncondCtrl();
 
     toFetch->decodeInfo[tid].squashInst = inst;
+    toFetch->decodeInfo[tid].bblSize = inst->bblSize;
+    toFetch->decodeInfo[tid].bblAddr = inst->bblAddr;
 
     InstSeqNum squash_seq_num = inst->seqNum;
 
@@ -691,6 +694,7 @@ Decode::decodeInsts(ThreadID tid)
             inst->decodeTick = curTick() - inst->fetchTick;
         }
 #endif
+        bblSize[inst->threadNumber]++;
 
         // Ensure that if it was predicted as a branch, it really is a
         // branch.
@@ -721,6 +725,8 @@ Decode::decodeInsts(ThreadID tid)
                 // Might want to set some sort of boolean and just do
                 // a check at the end
                 squash(inst, inst->threadNumber);
+                bblSize[inst->threadNumber] = 0;
+                bblAddr[inst->threadNumber] = inst->branchTarget()->instAddr();
 
                 DPRINTF(Decode,
                         "[tid:%i] [sn:%llu] "
@@ -731,6 +737,11 @@ Decode::decodeInsts(ThreadID tid)
                 inst->setPredTarg(*target);
                 break;
             }
+            bblAddr[inst->threadNumber] = inst->branchTarget()->instAddr();
+        }
+
+        if (inst->isControl()) {
+            bblSize[inst->threadNumber] = 0;
         }
     }
 
