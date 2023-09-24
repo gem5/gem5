@@ -130,6 +130,59 @@ DefaultBTB::lookup(Addr inst_pc, ThreadID tid)
     }
 }
 
+const PCStateBase *
+DefaultBTB::lookupBranchPC(Addr instPC, ThreadID tid)
+{
+    unsigned btb_idx = getIndex(instPC, tid);
+
+    Addr inst_tag = getTag(instPC);
+
+    assert(btb_idx < numEntries);
+
+    if (btb[btb_idx].valid
+        && inst_tag == btb[btb_idx].tag
+        && btb[btb_idx].tid == tid) {
+        return btb[btb_idx].branch.get();
+    } else {
+        return nullptr;
+    }
+}
+
+StaticInstPtr
+DefaultBTB::lookupBranch(Addr instPC, ThreadID tid)
+{
+    unsigned btb_idx = getIndex(instPC, tid);
+
+    Addr inst_tag = getTag(instPC);
+
+    assert(btb_idx < numEntries);
+
+    if (btb[btb_idx].valid
+        && inst_tag == btb[btb_idx].tag
+        && btb[btb_idx].tid == tid) {
+        return btb[btb_idx].staticBranchInst;
+    } else {
+        return nullptr;
+    }
+}
+uint64_t
+DefaultBTB::lookupBblSize(Addr instPC, ThreadID tid)
+{
+    unsigned btb_idx = getIndex(instPC, tid);
+
+    Addr inst_tag = getTag(instPC);
+
+    assert(btb_idx < numEntries);
+
+    if (btb[btb_idx].valid
+        && inst_tag == btb[btb_idx].tag
+        && btb[btb_idx].tid == tid) {
+        return btb[btb_idx].bblSize;
+    } else {
+        return 0;
+    }
+}
+
 void
 DefaultBTB::update(Addr inst_pc, const PCStateBase &target, ThreadID tid)
 {
@@ -142,6 +195,31 @@ DefaultBTB::update(Addr inst_pc, const PCStateBase &target, ThreadID tid)
     set(btb[btb_idx].target, target);
     btb[btb_idx].tag = getTag(inst_pc);
 }
+
+void
+DefaultBTB::update(Addr instPC, const StaticInstPtr &staticBranchInst,
+                   const PCStateBase &branch,
+                   const uint64_t bblSize, const PCStateBase &target,
+                   bool uncond, ThreadID tid)
+{
+    unsigned btb_idx = getIndex(instPC, tid);
+
+    DPRINTF(Fetch, "BTB update btb_index: %d staticBrancInst 0x%lx "
+            "target %s branchPC: %s\n",
+            btb_idx, &*staticBranchInst, target, branch);
+
+    assert(btb_idx < numEntries);
+
+    btb[btb_idx].tid = tid;
+    btb[btb_idx].valid = true;
+    btb[btb_idx].staticBranchInst = staticBranchInst;
+    set(btb[btb_idx].branch, branch);
+    btb[btb_idx].bblSize = bblSize;
+    set(btb[btb_idx].target, target);
+    btb[btb_idx].tag = getTag(instPC);
+    btb[btb_idx].uncond = uncond;
+}
+
 
 } // namespace branch_prediction
 } // namespace gem5

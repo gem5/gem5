@@ -32,6 +32,7 @@
 #include "arch/generic/pcstate.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
+#include "cpu/base.hh"
 
 namespace gem5
 {
@@ -47,8 +48,16 @@ class DefaultBTB
         /** The entry's tag. */
         Addr tag = 0;
 
+        /** The entry's branch. */
+        StaticInstPtr staticBranchInst = nullptr;
+        std::unique_ptr<PCStateBase> branch;
+
+        /** Size of the basic block */
+        uint64_t bblSize = 0;
+
         /** The entry's target. */
         std::unique_ptr<PCStateBase> target;
+        bool uncond = false;
 
         /** The entry's thread id. */
         ThreadID tid;
@@ -68,6 +77,10 @@ class DefaultBTB
                unsigned instShiftAmt, unsigned numThreads);
 
     void reset();
+
+    StaticInstPtr lookupBranch(Addr instPC, ThreadID tid);
+    const PCStateBase * lookupBranchPC(Addr instPC, ThreadID tid);
+    uint64_t lookupBblSize(Addr instPC, ThreadID tid);
 
     /** Looks up an address in the BTB. Must call valid() first on the address.
      *  @param inst_PC The address of the branch to look up.
@@ -89,6 +102,10 @@ class DefaultBTB
      *  @param tid The thread id.
      */
     void update(Addr inst_pc, const PCStateBase &target_pc, ThreadID tid);
+    void update(Addr instPC, const StaticInstPtr &staticBranchInst,
+                const PCStateBase &branch,
+                const uint64_t bblSize, const PCStateBase &target,
+                bool uncond, ThreadID tid);
 
   private:
     /** Returns the index into the BTB, based on the branch's PC.

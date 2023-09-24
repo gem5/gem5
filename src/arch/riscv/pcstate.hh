@@ -112,6 +112,14 @@ class PCState : public GenericISA::UPCState<4>
 
     uint64_t size() const { return _compressed ? 2 : 4; }
 
+    uint8_t size() const override {
+        if (_compressed) {
+            return 2;
+        } else {
+            return 4;
+        }
+    }
+
     bool
     branching() const override
     {
