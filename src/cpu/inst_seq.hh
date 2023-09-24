@@ -39,6 +39,8 @@ namespace gem5
 // up, but execution will continue and complete correctly
 typedef uint64_t InstSeqNum;
 
+typedef uint64_t BrSeqNum;
+
 // inst tag type, used to tag an operation instance in the IQ
 typedef unsigned int InstTag;
 

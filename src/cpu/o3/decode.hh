@@ -288,6 +288,8 @@ class Decode
     /** Instruction used for squashing branch (used for MIPS)*/
     DynInstPtr squashInst[MaxThreads];
 
+    uint64_t bblSize[MaxThreads];
+    Addr bblAddr[MaxThreads];
     /** Tells when their is a pending delay slot inst. to send
      *  to rename. If there is, then wait squash after the next
      *  instruction (used for MIPS).

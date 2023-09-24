@@ -158,6 +158,11 @@ class BaseCPU(ClockedObject):
 
     tracer = Param.InstTracer(default_tracer, "Instruction tracer")
 
+    enableFDIP = Param.Bool(
+        False, "Enable Fetch Directed Instruction Prefetching"
+    )
+    ftqSize = Param.Int(24, "Fetch target queue size")
+    ftqInst = Param.Int(192, "Fetch target queue size")
     icache_port = RequestPort("Instruction Port")
     dcache_port = RequestPort("Data Port")
     _cached_ports = ["icache_port", "dcache_port"]

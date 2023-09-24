@@ -294,6 +294,7 @@ Commit::clearStates(ThreadID tid)
     tcSquash[tid] = false;
     pc[tid].reset(cpu->tcBase(tid)->getIsaPtr()->newPCState());
     lastCommitedSeqNum[tid] = 0;
+    lastCommitedBrSeqNum[tid] = 0;
     squashAfterInst[tid] = NULL;
 }
 
@@ -490,6 +491,8 @@ Commit::squashAll(ThreadID tid)
     // all instructions of this thread.
     InstSeqNum squashed_inst = rob->isEmpty(tid) ?
         lastCommitedSeqNum[tid] : rob->readHeadInst(tid)->seqNum - 1;
+    InstSeqNum squashed_inst_br = rob->isEmpty(tid) ?
+        lastCommitedBrSeqNum[tid] : rob->readHeadInst(tid)->brSeqNum - 1;
 
     // All younger instructions will be squashed. Set the sequence
     // number as the youngest instruction in the ROB (0 in this case.
@@ -501,6 +504,17 @@ Commit::squashAll(ThreadID tid)
 
     // Send back the sequence number of the squashed instruction.
     toIEW->commitInfo[tid].doneSeqNum = squashed_inst;
+    toIEW->commitInfo[tid].doneBrSeqNum = squashed_inst_br;
+    if (!rob->isEmpty(tid)){
+        toIEW->commitInfo[tid].bblSize = rob->readHeadInst(tid)->bblSize;
+        toIEW->commitInfo[tid].bblAddr = rob->readHeadInst(tid)->bblAddr;
+        DPRINTF(Commit, "Squashed head rob inst  bblSize: %d "
+                "bblAddr: %#x seqNum: %llu\n",
+                rob->readHeadInst(tid)->bblSize,
+                rob->readHeadInst(tid)->bblAddr,
+                rob->readHeadInst(tid)->seqNum);
+
+    }
 
     // Send back the squash signal to tell stages that they should
     // squash.
@@ -560,6 +574,10 @@ Commit::squashFromSquashAfter(ThreadID tid)
     // the squash. It'll try to re-fetch an instruction executing in
     // microcode unless this is set.
     toIEW->commitInfo[tid].squashInst = squashAfterInst[tid];
+    if (squashAfterInst[tid]){
+      squashAfterInst[tid]->squashedFromThisInst = true;
+    }
+
     squashAfterInst[tid] = NULL;
 
     commitStatus[tid] = ROBSquashing;
@@ -575,6 +593,9 @@ Commit::squashAfter(ThreadID tid, const DynInstPtr &head_inst)
     assert(!squashAfterInst[tid] || squashAfterInst[tid] == head_inst);
     commitStatus[tid] = SquashAfterPending;
     squashAfterInst[tid] = head_inst;
+    if (squashAfterInst[tid]){
+      squashAfterInst[tid]->squashedFromThisInst = true;
+    }
 }
 
 void
@@ -758,6 +779,10 @@ Commit::commit()
             assert(!tcSquash[tid]);
             squashFromTrap(tid);
 
+            InstSeqNum squashed_inst = fromIEW->squashedSeqNum[tid];
+            DPRINTF(Commit, "suash from Trap: squashed_inst seq:%llu\n",
+                    squashed_inst);
+
             // If the thread is trying to exit (i.e., an exit syscall was
             // executed), this trapSquash was originated by the exit
             // syscall earlier. In this case, schedule an exit event in
@@ -803,6 +828,9 @@ Commit::commit()
             // then use one older sequence number.
             InstSeqNum squashed_inst = fromIEW->squashedSeqNum[tid];
 
+            const DynInstPtr &orderViolatedInst  =
+                rob->findInst(tid, squashed_inst);
+
             if (fromIEW->includeSquashInst[tid]) {
                 squashed_inst--;
             }
@@ -824,10 +852,48 @@ Commit::commit()
 
             toIEW->commitInfo[tid].mispredictInst =
                 fromIEW->mispredictInst[tid];
+                if (fromIEW->mispredictInst[tid]){
+                    mispredBrInstSeq = fromIEW->mispredictInst[tid]->seqNum;
+                //fromIEW->mispredictInst[tid]->mispred = 'T';
+                }
             toIEW->commitInfo[tid].branchTaken =
                 fromIEW->branchTaken[tid];
             toIEW->commitInfo[tid].squashInst =
                                     rob->findInst(tid, squashed_inst);
+            toIEW->commitInfo[tid].bblSize = orderViolatedInst->bblSize;
+            toIEW->commitInfo[tid].bblAddr = orderViolatedInst->bblAddr;
+
+            if (toIEW->commitInfo[tid].squashInst){
+                DPRINTF(Commit, "[tid:%i] SquashInst from ROB %#x\n",
+                        tid,
+                        toIEW->commitInfo[tid]
+                        .squashInst->pcState().instAddr());
+
+                toIEW->commitInfo[tid].doneBrSeqNum =
+                    toIEW->commitInfo[tid].squashInst->brSeqNum;
+
+                DPRINTF(Commit, "[tid:%i] SquashInst from ROB %llu\n",
+                        tid,
+                        toIEW->commitInfo[tid].squashInst->brSeqNum);
+            }else{
+                DPRINTF(Commit, "squashInst is null probably it "
+                        "is order violation\n");
+                    if (fromIEW->includeSquashInst[tid]){
+                    DPRINTF(Commit, "squashInst is null so setting "
+                            "breSeqNum to %llu\n",
+                            orderViolatedInst->brSeqNum - 1);
+                    toIEW->commitInfo[tid].doneBrSeqNum =
+                        orderViolatedInst->brSeqNum - 1;
+                }
+            }
+
+            DPRINTF(Commit, "Order Vioalted inst  bblSize: %d "
+                    "bblAddr: %#x seqNum: %llu brSeq: %llu\n",
+                    orderViolatedInst->bblSize,
+                    orderViolatedInst->bblAddr,
+                    orderViolatedInst->seqNum,
+                    orderViolatedInst->brSeqNum);
+
             if (toIEW->commitInfo[tid].mispredictInst) {
                 if (toIEW->commitInfo[tid].mispredictInst->isUncondCtrl()) {
                      toIEW->commitInfo[tid].branchTaken = true;
@@ -998,6 +1064,7 @@ Commit::commitInsts()
 
                 // Set the doneSeqNum to the youngest committed instruction.
                 toIEW->commitInfo[tid].doneSeqNum = head_inst->seqNum;
+                toIEW->commitInfo[tid].doneBrSeqNum = head_inst->brSeqNum;
 
                 if (tid == 0)
                     canHandleInterrupts = !head_inst->isDelayedCommit();
@@ -1023,6 +1090,7 @@ Commit::commitInsts()
 
                 // Keep track of the last sequence number commited
                 lastCommitedSeqNum[tid] = head_inst->seqNum;
+                lastCommitedBrSeqNum[tid] = head_inst->brSeqNum;
 
                 // If this is an instruction that doesn't play nicely with
                 // others squash everything and restart fetch
