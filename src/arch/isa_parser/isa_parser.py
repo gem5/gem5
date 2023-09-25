@@ -512,7 +512,7 @@ class InstObjParams(object):
 
 
 class ISAParser(Grammar):
-    def __init__(self, output_dir):
+    def __init__(self, output_dir, decoder_name="Decoder"):
         super().__init__()
         self.lex_kwargs["reflags"] = int(re.MULTILINE)
         self.output_dir = output_dir
@@ -541,6 +541,9 @@ class ISAParser(Grammar):
         # before the namespace declaration, None.
         self.isa_name = None
         self.namespace = None
+
+        # decoder_name is class name for cpu decoder.
+        self.decoder_name = decoder_name
 
         # The format stack.
         self.formatStack = Stack(NoFormat())
@@ -1231,7 +1234,7 @@ del wrap
             """
 using namespace gem5;
 StaticInstPtr
-%(isa_name)s::Decoder::decodeInst(%(isa_name)s::ExtMachInst machInst)
+%(isa_name)s::%(decoder_name)s::decodeInst(%(isa_name)s::ExtMachInst machInst)
 {
     using namespace %(namespace)s;
 """
