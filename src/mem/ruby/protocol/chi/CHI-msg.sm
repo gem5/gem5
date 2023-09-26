@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 ARM Limited
+ * Copyright (c) 2021, 2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -156,6 +156,7 @@ structure(CHIResponseMsg, desc="", interface="Message") {
   bool stale,           desc="Response to a stale request";
   bool usesTxnId,       desc="True if using a Transaction ID", default="false";
   Addr txnId,           desc="Transaction ID", default="0";
+  Addr dbid,            desc="Data Buffer ID", default="0";
   //NOTE: not in CHI and for debuging only
 
   MessageSizeType MessageSize, default="MessageSizeType_Control";

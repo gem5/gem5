@@ -81,6 +81,9 @@ machine(MachineType:Cache, "Cache coherency protocol") :
   int sc_lock_multiplier_max   := 256;
   bool sc_lock_enabled;
 
+  // Maximum number of outstanding transactions from a single requester
+  Addr max_outstanding_transactions := 1024;
+
   // Recycle latency on resource stalls
   Cycles stall_recycle_lat := 1;
 
@@ -599,6 +602,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     Addr accAddr,           desc="Access address for Load/Store/WriteUniquePtl; otherwisse == addr";
     int accSize,            desc="Access size for Load/Store/WriteUniquePtl; otherwisse == blockSize";
     CHIRequestType reqType, desc="Request type that initiated this transaction";
+    Addr txnId,             desc="Transaction ID. We default to -1 for debug purposes", default="-1";
     MachineID requestor,    desc="Requestor ID";
     MachineID fwdRequestor, desc="Requestor to receive data on fwding snoops";
     bool use_DMT,           desc="Use DMT for this transaction";
@@ -785,6 +789,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     Event event;
     MachineID retryDest;
     bool usesTxnId;
+    Addr txnId;
 
     bool functionalRead(Packet *pkt) { return false; }
     bool functionalRead(Packet *pkt, WriteMask &mask) { return false; }
