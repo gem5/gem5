@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2013 ARM Limited
+ * Copyright (c) 2022-2023 The University of Edinburgh
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -316,6 +317,47 @@ class ProbePointArg : public ProbePoint
         }
     }
 };
+
+
+/**
+ * ProbeListenerArgFunc generates a listener for the class of Arg and
+ * a lambda callback function that is called by the notify.
+ *
+ * Note that the function is passed as lambda function on construction
+ * Example:
+ * ProbeListenerArgFunc<MyArg> (myobj->getProbeManager(),
+ *                "MyProbePointName", [this](const MyArg &arg)
+ *                { my_own_func(arg, xyz...); // do something with arg
+ *  }));
+ */
+template <class Arg>
+class ProbeListenerArgFunc : public ProbeListenerArgBase<Arg>
+{
+  typedef std::function<void(const Arg &)> NotifyFunction;
+  private:
+    NotifyFunction function;
+
+  public:
+    /**
+     * @param obj the class of type Tcontaining the method to call on notify.
+     * @param pm A probe manager that is not part of the obj
+     * @param name the name of the ProbePoint to add this listener to.
+     * @param func a pointer to the function on obj (called on notify).
+     */
+    ProbeListenerArgFunc(ProbeManager *pm, const std::string &name,
+                       const NotifyFunction &func)
+      : ProbeListenerArgBase<Arg>(pm, name),
+        function(func)
+    {}
+
+    /**
+     * @brief called when the ProbePoint calls notify. This is a shim through
+     *        to the function passed during construction.
+     * @param val the argument value to pass.
+     */
+    void notify(const Arg &val) override { function(val); }
+};
+
 
 } // namespace gem5
 
