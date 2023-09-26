@@ -30,6 +30,7 @@ from _m5 import core
 from typing import Optional, Dict, List, Tuple
 import itertools
 from m5.util import warn
+import time
 
 
 class ClientWrapper:
@@ -109,12 +110,20 @@ class ClientWrapper:
         for client in clients:
             if client not in self.clients:
                 raise Exception(f"Client: {client} does not exist")
-            try:
-                resources.extend(
-                    self.clients[client].get_resources_by_id(resource_id)
-                )
-            except Exception as e:
-                warn(f"Error getting resources from client {client}: {str(e)}")
+            for i in range(3):
+                try:
+                    resources.extend(
+                        self.clients[client].get_resources_by_id(resource_id)
+                    )
+
+                except Exception as e:
+                    warn(
+                        f"Error getting resources from client {client}: {str(e)}"
+                    )
+                    print(f"Retrying {i+1}/3 in {i*10} seconds")
+                    time.sleep(10)
+                    continue
+                break
         # check if no 2 resources have the same id and version
         for res1, res2 in itertools.combinations(resources, 2):
             if res1["resource_version"] == res2["resource_version"]:
