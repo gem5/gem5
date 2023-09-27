@@ -128,22 +128,6 @@ MiscRegOp64::generateTrap(ExceptionLevel el) const
     return generateTrap(el, ExceptionClass::TRAPPED_MSR_MRS_64, iss());
 }
 
-Fault
-MiscRegOp64::generateTrap(ExceptionLevel el, ExceptionClass ec,
-        uint32_t iss) const
-{
-    switch (el) {
-      case EL1:
-        return std::make_shared<SupervisorTrap>(getEMI(), iss, ec);
-      case EL2:
-        return std::make_shared<HypervisorTrap>(getEMI(), iss, ec);
-      case EL3:
-        return std::make_shared<SecureMonitorTrap>(getEMI(), iss, ec);
-      default:
-        panic("Invalid EL: %d\n", el);
-    }
-}
-
 RegVal
 MiscRegImmOp64::miscRegImm() const
 {
