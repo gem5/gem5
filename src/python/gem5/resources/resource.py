@@ -70,7 +70,6 @@ class AbstractResource:
 
     def __init__(
         self,
-        category: Optional[str] = None,
         id: Optional[str] = None,
         resource_version: Optional[str] = None,
         local_path: Optional[str] = None,
@@ -94,14 +93,22 @@ class AbstractResource:
                 "exist."
             )
         self._id = id
-        self._category = category
         self._local_path = local_path
         self._description = description
         self._source = source
         self._version = resource_version
 
+    def get_category_name(cls) -> str:
+        raise NotImplementedError
+
     def __str__(self):
-        return f"{self._category} resource({self._id}, {self._version})\nFor more information, please visit https://resources.gem5.org/resources/{self._id}?version={self._version}"
+        message = (
+            f"{self.get_category_name()}({self._id}, {self._version})\n"
+            "For more information, please visit "
+            f"https://resources.gem5.org/resources/{self._id}?"
+            f"version={self._version}"
+        )
+        return message
 
     def get_resource_version(self) -> str:
         """Returns the version of the resource."""
@@ -129,7 +136,6 @@ class FileResource(AbstractResource):
         self,
         local_path: str,
         id: Optional[str] = None,
-        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -143,11 +149,13 @@ class FileResource(AbstractResource):
         super().__init__(
             local_path=local_path,
             id=id,
-            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
         )
+
+    def get_category_name(cls) -> str:
+        return "FileResource"
 
 
 class DirectoryResource(AbstractResource):
@@ -157,7 +165,6 @@ class DirectoryResource(AbstractResource):
         self,
         local_path: str,
         id: Optional[str] = None,
-        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -172,11 +179,13 @@ class DirectoryResource(AbstractResource):
         super().__init__(
             local_path=local_path,
             id=id,
-            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
         )
+
+    def get_category_name(cls) -> str:
+        return "DirectoryResource"
 
 
 class DiskImageResource(FileResource):
@@ -186,7 +195,6 @@ class DiskImageResource(FileResource):
         self,
         local_path: str,
         id: Optional[str] = None,
-        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -196,7 +204,6 @@ class DiskImageResource(FileResource):
         super().__init__(
             local_path=local_path,
             id=id,
-            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -207,6 +214,9 @@ class DiskImageResource(FileResource):
         """Returns, if applicable, the Root Partition of the disk image."""
         return self._root_partition
 
+    def get_category_name(cls) -> str:
+        return "DiskImageResource"
+
 
 class BinaryResource(FileResource):
     """A binary resource."""
@@ -215,7 +225,6 @@ class BinaryResource(FileResource):
         self,
         local_path: str,
         id: Optional[str] = None,
-        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -225,7 +234,6 @@ class BinaryResource(FileResource):
         super().__init__(
             local_path=local_path,
             id=id,
-            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -237,6 +245,9 @@ class BinaryResource(FileResource):
                 self._architecture = get_isa_from_str(architecture)
             elif isinstance(architecture, ISA):
                 self._architecture = architecture
+
+    def get_category_name(cls) -> str:
+        return "BinaryResource"
 
     def get_architecture(self) -> Optional[ISA]:
         """Returns the ISA this binary is compiled to."""
@@ -250,7 +261,6 @@ class BootloaderResource(BinaryResource):
         self,
         local_path: str,
         id: Optional[str] = None,
-        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -260,12 +270,14 @@ class BootloaderResource(BinaryResource):
         super().__init__(
             local_path=local_path,
             id=id,
-            category=category,
             description=description,
             architecture=architecture,
             source=source,
             resource_version=resource_version,
         )
+
+    def get_category_name(cls) -> str:
+        return "BootloaderResource"
 
 
 class GitResource(DirectoryResource):
@@ -275,7 +287,6 @@ class GitResource(DirectoryResource):
         self,
         local_path: str,
         id: Optional[str] = None,
-        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -284,11 +295,13 @@ class GitResource(DirectoryResource):
         super().__init__(
             local_path=local_path,
             id=id,
-            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
         )
+
+    def get_category_name(cls) -> str:
+        return "GitResource"
 
 
 class KernelResource(BinaryResource):
@@ -298,7 +311,6 @@ class KernelResource(BinaryResource):
         self,
         local_path: str,
         id: Optional[str] = None,
-        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -308,12 +320,14 @@ class KernelResource(BinaryResource):
         super().__init__(
             local_path=local_path,
             id=id,
-            category=category,
             description=description,
             source=source,
             architecture=architecture,
             resource_version=resource_version,
         )
+
+    def get_category_name(cls) -> str:
+        return "KernelResource"
 
 
 class CheckpointResource(DirectoryResource):
@@ -328,7 +342,6 @@ class CheckpointResource(DirectoryResource):
         self,
         local_path: str,
         id: Optional[str] = None,
-        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -337,11 +350,13 @@ class CheckpointResource(DirectoryResource):
         super().__init__(
             local_path=local_path,
             id=id,
-            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
         )
+
+    def get_category_name(cls) -> str:
+        return "CheckpointResource"
 
 
 class SimpointResource(AbstractResource):
@@ -359,7 +374,6 @@ class SimpointResource(AbstractResource):
         weight_list: List[float] = None,
         warmup_interval: int = 0,
         id: Optional[str] = None,
-        category: Optional[str] = None,
         workload_name: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -381,7 +395,6 @@ class SimpointResource(AbstractResource):
         super().__init__(
             local_path=local_path,
             id=id,
-            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -463,6 +476,9 @@ class SimpointResource(AbstractResource):
             self._simpoint_start_insts[index] = start_inst - warmup_inst
         return warmup_list
 
+    def get_category_name(cls) -> str:
+        return "SimpointResource"
+
 
 class LooppointCsvResource(FileResource, LooppointCsvLoader):
     """This Looppoint resource used to create a Looppoint resource from a
@@ -472,7 +488,6 @@ class LooppointCsvResource(FileResource, LooppointCsvLoader):
         self,
         local_path: str,
         id: Optional[str] = None,
-        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -482,12 +497,14 @@ class LooppointCsvResource(FileResource, LooppointCsvLoader):
             self,
             local_path=local_path,
             id=id,
-            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
         )
         LooppointCsvLoader.__init__(self, pinpoints_file=Path(local_path))
+
+    def get_category_name(cls) -> str:
+        return "LooppointCsvResource"
 
 
 class LooppointJsonResource(FileResource, LooppointJsonLoader):
@@ -495,7 +512,6 @@ class LooppointJsonResource(FileResource, LooppointJsonLoader):
         self,
         local_path: str,
         id: Optional[str] = None,
-        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         region_id: Optional[Union[str, int]] = None,
         description: Optional[str] = None,
@@ -506,7 +522,6 @@ class LooppointJsonResource(FileResource, LooppointJsonLoader):
             self,
             local_path=local_path,
             id=id,
-            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -514,6 +529,9 @@ class LooppointJsonResource(FileResource, LooppointJsonLoader):
         LooppointJsonLoader.__init__(
             self, looppoint_file=local_path, region_id=region_id
         )
+
+    def get_category_name(cls) -> str:
+        return "LooppointJsonResource"
 
 
 class SimpointDirectoryResource(SimpointResource):
@@ -528,7 +546,6 @@ class SimpointDirectoryResource(SimpointResource):
         simpoint_interval: int,
         warmup_interval: int,
         id: Optional[str] = None,
-        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         workload_name: Optional[str] = None,
         description: Optional[str] = None,
@@ -563,7 +580,6 @@ class SimpointDirectoryResource(SimpointResource):
             workload_name=workload_name,
             local_path=local_path,
             id=id,
-            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -607,6 +623,9 @@ class SimpointDirectoryResource(SimpointResource):
             weight_list.append(weight)
         return simpoint_list, weight_list
 
+    def get_category_name(cls) -> str:
+        return "SimpointDirectoryResource"
+
 
 class WorkloadResource(AbstractResource):
     """A workload resource. This resource is used to specify a workload to run
@@ -618,7 +637,6 @@ class WorkloadResource(AbstractResource):
         self,
         function: str = None,
         id: Optional[str] = None,
-        category: Optional[str] = None,
         resource_version: Optional[str] = None,
         description: Optional[str] = None,
         source: Optional[str] = None,
@@ -634,7 +652,6 @@ class WorkloadResource(AbstractResource):
         super().__init__(
             local_path=local_path,
             id=id,
-            category=category,
             description=description,
             source=source,
             resource_version=resource_version,
@@ -670,6 +687,9 @@ class WorkloadResource(AbstractResource):
         :param value: The value to set to the parameter.
         """
         self._params[parameter] = value
+
+    def get_category_name(cls) -> str:
+        return "WorkloadResource"
 
 
 def obtain_resource(
