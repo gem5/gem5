@@ -62,7 +62,7 @@ class WFxOpBase
     // Utility function used by checkForWFxTrap32 and checkForWFxTrap64
     // Returns true if processor has to trap a WFI/WFE instruction.
     bool isWFxTrapping(ThreadContext *tc, ArmISA::ExceptionLevel target_el,
-                       bool is_wfe) const;
+                       Type wfx_type) const;
 
     /**
      * Check if WFE/WFI instruction execution in aarch32 should be trapped.
@@ -73,7 +73,7 @@ class WFxOpBase
     Fault checkForWFxTrap32(ThreadContext *tc,
                             ArmISA::ExceptionLevel target_el,
                             const ArmISA::ArmStaticInst &inst,
-                            bool is_wfe) const;
+                            Type wfx_type) const;
 
     /**
      * Check if WFE/WFI instruction execution in aarch64 should be trapped.
@@ -84,13 +84,13 @@ class WFxOpBase
     Fault checkForWFxTrap64(ThreadContext *tc,
                             ArmISA::ExceptionLevel target_el,
                             const ArmISA::ArmStaticInst &inst,
-                            bool is_wfe) const;
+                            Type wfx_type) const;
 
     /**
      * WFE/WFI trapping helper function.
      */
     Fault trapWFx(ThreadContext *tc, ArmISA::CPSR cpsr, ArmISA::SCR scr,
-                  const ArmISA::ArmStaticInst &inst, bool is_wfe) const;
+                  const ArmISA::ArmStaticInst &inst, Type wfx_type) const;
 };
 
 } // namespace gem5

@@ -53,23 +53,24 @@ namespace gem5
 using namespace ArmISA;
 
 inline bool
-WFxOpBase::isWFxTrapping(ThreadContext *tc, ExceptionLevel tgtEl,
-                         bool isWfe) const
+WFxOpBase::isWFxTrapping(ThreadContext *tc, ExceptionLevel target_el,
+                         Type wfx_type) const
 {
     bool trap = false;
+    const bool is_wfe = wfx_type == Type::Wfe;
     SCTLR sctlr = ((SCTLR)tc->readMiscReg(MISCREG_SCTLR_EL1));
     HCR hcr = ((HCR)tc->readMiscReg(MISCREG_HCR_EL2));
     SCR scr = ((SCR)tc->readMiscReg(MISCREG_SCR_EL3));
 
-    switch (tgtEl) {
+    switch (target_el) {
         case EL1:
-            trap = isWfe ? !sctlr.ntwe : !sctlr.ntwi;
+            trap = is_wfe ? !sctlr.ntwe : !sctlr.ntwi;
             break;
         case EL2:
-            trap = isWfe ? hcr.twe : hcr.twi;
+            trap = is_wfe ? hcr.twe : hcr.twi;
             break;
         case EL3:
-            trap = isWfe ? scr.twe : scr.twi;
+            trap = is_wfe ? scr.twe : scr.twi;
             break;
         default:
             break;
@@ -81,7 +82,7 @@ WFxOpBase::isWFxTrapping(ThreadContext *tc, ExceptionLevel tgtEl,
 Fault
 WFxOpBase::checkForWFxTrap32(ThreadContext *tc, ExceptionLevel targetEL,
                              const ArmISA::ArmStaticInst &inst,
-                             bool isWfe) const
+                             Type wfx_type) const
 {
     // Check if target exception level is implemented.
     assert(ArmSystem::haveEL(tc, targetEL));
@@ -90,15 +91,16 @@ WFxOpBase::checkForWFxTrap32(ThreadContext *tc, ExceptionLevel targetEL,
     // target exception level (where the trap will be handled)
     // is using aarch64
     if (ELIs64(tc, targetEL)) {
-        return checkForWFxTrap64(tc, targetEL, inst, isWfe);
+        return checkForWFxTrap64(tc, targetEL, inst, wfx_type);
     }
 
     // Check if processor needs to trap at selected exception level
-    bool trap = isWFxTrapping(tc, targetEL, isWfe);
+    bool trap = isWFxTrapping(tc, targetEL, wfx_type);
 
     if (trap) {
-        uint32_t iss = isWfe ? 0x1E00001 : /* WFE Instruction syndrome */
-                           0x1E00000;      /* WFI Instruction syndrome */
+        uint32_t iss = wfx_type == Type::Wfe ? 0x1E00001
+                                             : /* WFE Instruction syndrome */
+                           0x1E00000;          /* WFI Instruction syndrome */
         return inst.generateTrap(targetEL, ExceptionClass::TRAPPED_WFI_WFE,
                                  iss);
     } else {
@@ -109,17 +111,18 @@ WFxOpBase::checkForWFxTrap32(ThreadContext *tc, ExceptionLevel targetEL,
 Fault
 WFxOpBase::checkForWFxTrap64(ThreadContext *tc, ExceptionLevel targetEL,
                              const ArmISA::ArmStaticInst &inst,
-                             bool isWfe) const
+                             Type wfx_type) const
 {
     // Check if target exception level is implemented.
     assert(ArmSystem::haveEL(tc, targetEL));
 
     // Check if processor needs to trap at selected exception level
-    bool trap = isWFxTrapping(tc, targetEL, isWfe);
+    bool trap = isWFxTrapping(tc, targetEL, wfx_type);
 
     if (trap) {
-        uint32_t iss = isWfe ? 0x1E00001 : /* WFE Instruction syndrome */
-                           0x1E00000;      /* WFI Instruction syndrome */
+        uint32_t iss = wfx_type == Type::Wfe ? 0x1E00001
+                                             : /* WFE Instruction syndrome */
+                           0x1E00000;          /* WFI Instruction syndrome */
         return inst.generateTrap(targetEL, ExceptionClass::TRAPPED_WFI_WFE,
                                  iss);
     } else {
@@ -129,23 +132,23 @@ WFxOpBase::checkForWFxTrap64(ThreadContext *tc, ExceptionLevel targetEL,
 
 Fault
 WFxOpBase::trapWFx(ThreadContext *tc, CPSR cpsr, SCR scr,
-                   const ArmISA::ArmStaticInst &inst, bool isWfe) const
+                   const ArmISA::ArmStaticInst &inst, Type wfx_type) const
 {
     Fault fault = NoFault;
     ExceptionLevel curr_el = currEL(tc);
 
     if (curr_el == EL0) {
-        fault = checkForWFxTrap32(tc, EL1, inst, isWfe);
+        fault = checkForWFxTrap32(tc, EL1, inst, wfx_type);
     }
 
     if ((fault == NoFault) && EL2Enabled(tc) &&
         ((curr_el == EL0 && !ELIsInHost(tc, curr_el)) || (curr_el == EL1))) {
 
-        fault = checkForWFxTrap32(tc, EL2, inst, isWfe);
+        fault = checkForWFxTrap32(tc, EL2, inst, wfx_type);
     }
 
     if ((fault == NoFault) && ArmSystem::haveEL(tc, EL3) && curr_el != EL3) {
-        fault = checkForWFxTrap32(tc, EL3, inst, isWfe);
+        fault = checkForWFxTrap32(tc, EL3, inst, wfx_type);
     }
 
     return fault;

@@ -748,7 +748,7 @@ let {{
                 tc->threadId())->checkInterrupts()) {
         tc->quiesceTick(next_cycle + 1);
     } else {
-        fault = trapWFx(tc, cpsr, scr, *this, true);
+        fault = trapWFx(tc, cpsr, scr, *this, Type::Wfe);
         if (fault == NoFault) {
             tc->quiesce();
         } else {
@@ -798,7 +798,7 @@ let {{
     if (ic->checkWfiWake(hcr, cpsr, scr)) {
         tc->quiesceTick(next_cycle + 1);
     } else {
-        fault = trapWFx(tc, cpsr, scr, *this, false);
+        fault = trapWFx(tc, cpsr, scr, *this, Type::Wfi);
         if (fault == NoFault) {
             tc->quiesce();
             ArmSystem::callSetStandByWfi(tc);
