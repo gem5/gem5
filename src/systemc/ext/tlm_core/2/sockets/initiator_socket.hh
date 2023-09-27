@@ -51,10 +51,6 @@ template <unsigned int BUSWIDTH, typename FW_IF, typename BW_IF, int N,
           sc_core::sc_port_policy POL>
 class tlm_base_target_socket;
 
-// The overloaded virtual is intended in SystemC, so we'll disable the warning.
-// Please check section 9.3 of SystemC 2.3.1 release note for more details.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Woverloaded-virtual"
 template <unsigned int BUSWIDTH=32, typename FW_IF=tlm_fw_transport_if<>,
           typename BW_IF=tlm_bw_transport_if<>, int N=1,
           sc_core::sc_port_policy POL=sc_core::SC_ONE_OR_MORE_BOUND>
@@ -174,7 +170,6 @@ class tlm_base_initiator_socket :
   protected:
     export_type m_export;
 };
-#pragma GCC diagnostic pop
 
 //
 // Convenience socket classes
