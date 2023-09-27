@@ -5799,6 +5799,7 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ID_AA64ISAR2_EL1)
       .reset([p,release=release](){
           AA64ISAR2 isar2_el1 = 0;
+          isar2_el1.wfxt = release->has(ArmExtension::FEAT_WFxT) ? 0x1 : 0x0;
           return isar2_el1;
       }())
       .faultRead(EL0, faultIdst)

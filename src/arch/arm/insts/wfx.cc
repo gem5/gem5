@@ -46,6 +46,7 @@
 #include "arch/arm/insts/static_inst.hh"
 #include "arch/arm/system.hh"
 #include "cpu/thread_context.hh"
+#include "dev/arm/generic_timer.hh"
 
 namespace gem5
 {
@@ -57,7 +58,7 @@ WFxOpBase::isWFxTrapping(ThreadContext *tc, ExceptionLevel target_el,
                          Type wfx_type) const
 {
     bool trap = false;
-    const bool is_wfe = wfx_type == Type::Wfe;
+    const bool is_wfe = wfx_type == Type::Wfe || wfx_type == Type::Wfet;
     SCTLR sctlr = ((SCTLR)tc->readMiscReg(MISCREG_SCTLR_EL1));
     HCR hcr = ((HCR)tc->readMiscReg(MISCREG_HCR_EL2));
     SCR scr = ((SCR)tc->readMiscReg(MISCREG_SCR_EL3));
@@ -79,6 +80,48 @@ WFxOpBase::isWFxTrapping(ThreadContext *tc, ExceptionLevel target_el,
     return trap;
 }
 
+uint32_t
+WFxOpBase::iss(Type wfx_type) const
+{
+    ESR esr = 0;
+    auto &iss = esr.wfx_iss;
+    iss.cv = 0b1;
+    iss.cond = 0b1110;
+    switch (wfx_type) {
+        case Type::Wfi:
+            iss.ti = 0b00;
+            break;
+        case Type::Wfe:
+            iss.ti = 0b01;
+            break;
+        case Type::Wfit:
+            iss.ti = 0b10;
+            iss.rv = 0b1;
+            iss.rn = op1;
+            break;
+        case Type::Wfet:
+            iss.ti = 0b11;
+            iss.rv = 0b1;
+            iss.rn = op1;
+            break;
+    }
+    return iss;
+}
+
+Fault
+WFxOpBase::generateTrap(ThreadContext *tc, ArmISA::ExceptionLevel target_el,
+                        const ArmISA::ArmStaticInst &inst, Type wfx_type) const
+{
+    const HCR hcr = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    if (target_el == EL1 && EL2Enabled(tc) && hcr.tge) {
+        return inst.generateTrap(EL2, ExceptionClass::TRAPPED_WFI_WFE,
+                                 iss(wfx_type));
+    } else {
+        return inst.generateTrap(target_el, ExceptionClass::TRAPPED_WFI_WFE,
+                                 iss(wfx_type));
+    }
+}
+
 Fault
 WFxOpBase::checkForWFxTrap32(ThreadContext *tc, ExceptionLevel targetEL,
                              const ArmISA::ArmStaticInst &inst,
@@ -98,11 +141,7 @@ WFxOpBase::checkForWFxTrap32(ThreadContext *tc, ExceptionLevel targetEL,
     bool trap = isWFxTrapping(tc, targetEL, wfx_type);
 
     if (trap) {
-        uint32_t iss = wfx_type == Type::Wfe ? 0x1E00001
-                                             : /* WFE Instruction syndrome */
-                           0x1E00000;          /* WFI Instruction syndrome */
-        return inst.generateTrap(targetEL, ExceptionClass::TRAPPED_WFI_WFE,
-                                 iss);
+        return generateTrap(tc, targetEL, inst, wfx_type);
     } else {
         return NoFault;
     }
@@ -120,11 +159,7 @@ WFxOpBase::checkForWFxTrap64(ThreadContext *tc, ExceptionLevel targetEL,
     bool trap = isWFxTrapping(tc, targetEL, wfx_type);
 
     if (trap) {
-        uint32_t iss = wfx_type == Type::Wfe ? 0x1E00001
-                                             : /* WFE Instruction syndrome */
-                           0x1E00000;          /* WFI Instruction syndrome */
-        return inst.generateTrap(targetEL, ExceptionClass::TRAPPED_WFI_WFE,
-                                 iss);
+        return generateTrap(tc, targetEL, inst, wfx_type);
     } else {
         return NoFault;
     }
@@ -152,6 +187,22 @@ WFxOpBase::trapWFx(ThreadContext *tc, CPSR cpsr, SCR scr,
     }
 
     return fault;
+}
+
+Tick
+WFxOpBase::localTimeout(ThreadContext *tc, RegVal timeout) const
+{
+    if (auto system = dynamic_cast<ArmSystem *>(tc->getSystemPtr()); system) {
+        // FS mode (system != nullptr)
+        const auto timer = system->getGenericTimer();
+        auto cntv_timer = timer->coreTimer(tc->contextId(),
+                                           GenericTimer::CoreTimersType::Cntv);
+
+        return cntv_timer->whenValue(timeout);
+    } else {
+        // SE mode (system == nullptr). Just return next cycle
+        return tc->getCpuPtr()->nextCycle() + 1;
+    }
 }
 
 } // namespace gem5

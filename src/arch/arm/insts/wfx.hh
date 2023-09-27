@@ -56,8 +56,15 @@ class WFxOpBase
     enum class Type
     {
         Wfe,
-        Wfi
+        Wfi,
+        Wfet,
+        Wfit
     };
+
+    WFxOpBase(RegIndex _op1 = 0) : op1(_op1) {}
+
+    // Returns the ISS in case the WFx is trapping
+    uint32_t iss(Type wfx_type) const;
 
     // Utility function used by checkForWFxTrap32 and checkForWFxTrap64
     // Returns true if processor has to trap a WFI/WFE instruction.
@@ -91,6 +98,14 @@ class WFxOpBase
      */
     Fault trapWFx(ThreadContext *tc, ArmISA::CPSR cpsr, ArmISA::SCR scr,
                   const ArmISA::ArmStaticInst &inst, Type wfx_type) const;
+
+    Tick localTimeout(ThreadContext *tc, RegVal timeout) const;
+
+    Fault generateTrap(ThreadContext *tc, ArmISA::ExceptionLevel target_el,
+                       const ArmISA::ArmStaticInst &inst, Type wfx_type) const;
+
+  protected:
+    RegIndex op1 = 0;
 };
 
 } // namespace gem5

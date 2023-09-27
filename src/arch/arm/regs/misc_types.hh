@@ -865,6 +865,15 @@ namespace ArmISA
             Bitfield<6> wnr;
             Bitfield<5, 0> dfsc;
         EndSubBitUnion(watchpoint_iss)
+
+        // WFX trap ISS
+        SubBitUnion(wfx_iss, 24, 0)
+            Bitfield<24> cv;
+            Bitfield<23, 20> cond;
+            Bitfield<9, 5> rn;
+            Bitfield<2> rv;
+            Bitfield<1, 0> ti;
+        EndSubBitUnion(wfx_iss)
    EndBitUnion(ESR)
 
    BitUnion32(CPTR)
