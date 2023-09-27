@@ -39,6 +39,7 @@
 #define __ARCH_ARM_INSTS_MISC64_HH__
 
 #include "arch/arm/insts/static_inst.hh"
+#include "arch/arm/insts/wfx.hh"
 #include "arch/arm/mmu.hh"
 #include "arch/arm/tlbi_op.hh"
 #include "arch/arm/types.hh"
@@ -398,6 +399,14 @@ class DsbOp64 : public ArmISA::ArmStaticInst
 
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class WFxOp64 : public ArmISA::ArmStaticInst, public WFxOpBase
+{
+  protected:
+    WFxOp64(const char *mnem, ArmISA::ExtMachInst _machInst, OpClass __opClass)
+        : ArmISA::ArmStaticInst(mnem, _machInst, __opClass)
+    {}
 };
 
 } // namespace gem5
