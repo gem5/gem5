@@ -1,4 +1,4 @@
-# Copyright (c) 2022 The Regents of the University of California
+# Copyright (c) 2023 The Regents of the University of California
 # All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,7 @@
 FROM ubuntu:22.04
 
 # Valid version values:
-# 13
-# 15
+# 16
 ARG version
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -35,7 +34,16 @@ RUN apt -y update && apt -y upgrade && \
     apt -y install git m4 scons zlib1g zlib1g-dev libprotobuf-dev \
     protobuf-compiler libprotoc-dev libgoogle-perftools-dev python3-dev \
     python-is-python3 doxygen libboost-all-dev libhdf5-serial-dev \
-    python3-pydot libpng-dev clang-${version} make
+    python3-pydot libpng-dev make
+
+RUN apt-get update && apt-get -y install sudo wget
+
+# extra installations to have wget work
+RUN apt -y install lsb-release wget software-properties-common gnupg
+RUN wget https://apt.llvm.org/llvm.sh
++
+RUN chmod u+x llvm.sh
+RUN ./llvm.sh 16
 
 RUN apt-get --purge -y remove gcc
 
