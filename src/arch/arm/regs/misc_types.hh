@@ -149,6 +149,10 @@ namespace ArmISA
         Bitfield<3, 0> dpb;
     EndBitUnion(AA64ISAR1)
 
+    BitUnion64(AA64ISAR2)
+        Bitfield<3, 0> wfxt;
+    EndBitUnion(AA64ISAR2)
+
     BitUnion64(AA64MMFR0)
         Bitfield<63, 60> ecv;
         Bitfield<47, 44> exs;

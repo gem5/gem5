@@ -1531,6 +1531,7 @@ std::unordered_map<MiscRegIndex, MiscRegNum64> idxToMiscRegNum;
 
 // The map is translating AArch64 system register numbers
 // (op0, op1, crn, crm, op2) into a MiscRegIndex
+// clang-format off
 std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(1, 0, 7, 1, 0), MISCREG_IC_IALLUIS },
     { MiscRegNum64(1, 0, 7, 5, 0), MISCREG_IC_IALLU },
@@ -1839,7 +1840,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 0, 0, 5, 7), MISCREG_RAZ },
     { MiscRegNum64(3, 0, 0, 6, 0), MISCREG_ID_AA64ISAR0_EL1 },
     { MiscRegNum64(3, 0, 0, 6, 1), MISCREG_ID_AA64ISAR1_EL1 },
-    { MiscRegNum64(3, 0, 0, 6, 2), MISCREG_RAZ },
+    { MiscRegNum64(3, 0, 0, 6, 2), MISCREG_ID_AA64ISAR2_EL1 },
     { MiscRegNum64(3, 0, 0, 6, 3), MISCREG_RAZ },
     { MiscRegNum64(3, 0, 0, 6, 4), MISCREG_RAZ },
     { MiscRegNum64(3, 0, 0, 6, 5), MISCREG_RAZ },
@@ -2179,6 +2180,7 @@ std::unordered_map<MiscRegNum64, MiscRegIndex> miscRegNumToIdx{
     { MiscRegNum64(3, 7, 14, 2, 1), MISCREG_CNTPS_CTL_EL1 },
     { MiscRegNum64(3, 7, 14, 2, 2), MISCREG_CNTPS_CVAL_EL1 }
 };
+// clang-format on
 
 template <bool read>
 HFGTR
@@ -5791,6 +5793,14 @@ ISA::initializeMiscRegMetadata()
           return isar1_el1;
       }())
       .serializing(false)
+      .faultRead(EL0, faultIdst)
+      .faultRead(EL1, faultHcrEL1<&HCR::tid3>)
+      .allPrivileges().writes(0);
+    InitReg(MISCREG_ID_AA64ISAR2_EL1)
+      .reset([p,release=release](){
+          AA64ISAR2 isar2_el1 = 0;
+          return isar2_el1;
+      }())
       .faultRead(EL0, faultIdst)
       .faultRead(EL1, faultHcrEL1<&HCR::tid3>)
       .allPrivileges().writes(0);
