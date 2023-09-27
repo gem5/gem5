@@ -139,7 +139,7 @@ WFxOpBase::trapWFx(ThreadContext *tc, CPSR cpsr, SCR scr,
     }
 
     if ((fault == NoFault) && EL2Enabled(tc) &&
-        ((curr_el == EL0) || (curr_el == EL1))) {
+        ((curr_el == EL0 && !ELIsInHost(tc, curr_el)) || (curr_el == EL1))) {
 
         fault = checkForWFxTrap32(tc, EL2, inst, isWfe);
     }
