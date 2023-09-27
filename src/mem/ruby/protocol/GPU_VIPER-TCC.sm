@@ -299,16 +299,22 @@ machine(MachineType:TCC, "TCC Cache")
         // checked when the read response is received.
         if (in_msg.Type == CoherenceResponseType:NBSysWBAck) {
           trigger(Event:WBAck, in_msg.addr, cache_entry, tbe);
-        } else if (is_slc_set) {
-            // If the SLC bit is set, the response needs to bypass the cache
-            // and should not be allocated an entry.
+        } else if(in_msg.Type == CoherenceResponseType:NBSysResp) {
+          // If the SLC bit is set or the cache is write-through and
+          // we're receiving modified data (such as from an atomic),
+          // the response needs to bypass the cache and should not be
+          // allocated an entry.
+          if(is_slc_set || (!WB && in_msg.State == CoherenceState:Modified)) {
             trigger(Event:Bypass, in_msg.addr, cache_entry, tbe);
-        } else if (in_msg.Type == CoherenceResponseType:NBSysResp) {
-          if(presentOrAvail(in_msg.addr)) {
-            trigger(Event:Data, in_msg.addr, cache_entry, tbe);
           } else {
-            Addr victim :=  L2cache.cacheProbe(in_msg.addr);
-            trigger(Event:L2_Repl, victim, getCacheEntry(victim), TBEs.lookup(victim));
+            if(presentOrAvail(in_msg.addr)) {
+              // Responses with atomic data will only reach here if the
+              // SLC bit isn't set and the cache is WB
+              trigger(Event:Data, in_msg.addr, cache_entry, tbe);
+            } else {
+              Addr victim :=  L2cache.cacheProbe(in_msg.addr);
+              trigger(Event:L2_Repl, victim, getCacheEntry(victim), TBEs.lookup(victim));
+            }
           }
         } else {
           error("Unexpected Response Message to Core");
@@ -357,13 +363,13 @@ machine(MachineType:TCC, "TCC Cache")
                 trigger(Event:WrVicBlk, in_msg.addr, cache_entry, tbe);
             }
         } else if (in_msg.Type == CoherenceRequestType:Atomic) {
-          // If the request is system-level, or if the address isn't in the cache,
-          // then send the request to the directory. Since non-SLC atomics won't be
-          // performed by the directory, TCC will perform the atomic on the return path
-          // on Event:Data.
+          // If the request is system-level, if the address isn't in the cache,
+          // or if this cache is write-through, then send the request to the
+          // directory. Since non-SLC atomics won't be performed by the directory,
+          // TCC will perform the atomic on the return path on Event:Data.
           // The action will invalidate the cache line if SLC is set and the address is
           // in the cache.
-          if(in_msg.isSLCSet || !presentOrAvail(in_msg.addr)) {
+          if(in_msg.isSLCSet || !WB || !presentOrAvail(in_msg.addr)) {
             trigger(Event:AtomicPassOn, in_msg.addr, cache_entry, tbe);
           } else {
             trigger(Event:Atomic, in_msg.addr, cache_entry, tbe);

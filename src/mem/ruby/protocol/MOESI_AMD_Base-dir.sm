@@ -39,6 +39,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   bool GPUonly := "False";
   int TCC_select_num_bits;
   bool useL3OnWT := "False";
+  bool L2isWB;
   Cycles to_memory_controller_latency := 1;
 
   // DMA
@@ -997,11 +998,9 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   action(wd_writeBackData, "wd", desc="Write back data if needed") {
     if (tbe.wtData || tbe.atomicData || tbe.Dirty == false) {
-    // If SLC is not set, the atomic is handled in the L2
-    // Atomic needs to be done at the L3 only if this is
-    // not the case
-
-      if (tbe.atomicData && tbe.isSLCSet) {
+      // Only perform atomics in the directory if the SLC bit is set, or
+      // if the L2 is WT
+      if (tbe.atomicData && (tbe.isSLCSet || !L2isWB)) {
         tbe.DataBlk.atomicPartial(tbe.DataBlk, tbe.writeMask);
       }
       enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
