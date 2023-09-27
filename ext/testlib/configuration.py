@@ -745,11 +745,23 @@ class ListParser(ArgParser):
             help="List all tags.",
         ).add_to(parser)
         Argument(
+            "--build-targets",
+            action="store_true",
+            default=False,
+            help="List all the gem5 build targets.",
+        ).add_to(parser)
+        Argument(
             "-q",
             dest="quiet",
             action="store_true",
             default=False,
             help="Quiet output (machine readable).",
+        ).add_to(parser)
+        Argument(
+            "--uid",
+            action="store",
+            default=None,
+            help="UID of a specific test item to list.",
         ).add_to(parser)
 
         common_args.directories.add_to(parser)

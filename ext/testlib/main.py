@@ -242,7 +242,27 @@ def do_list():
 
     entry_message()
 
-    test_schedule = load_tests().schedule
+    if configuration.config.uid:
+        uid_ = uid.UID.from_uid(configuration.config.uid)
+        if isinstance(uid_, uid.TestUID):
+            log.test_log.error(
+                "Unable to list a standalone test.\n"
+                "Gem5 expects test suites to be the smallest unit "
+                " of test.\n\n"
+                "Pass a SuiteUID instead."
+            )
+            return
+        test_schedule = loader_mod.Loader().load_schedule_for_suites(uid_)
+        if get_config_tags():
+            log.test_log.warn(
+                "The '--uid' flag was supplied,"
+                " '--include-tags' and '--exclude-tags' will be ignored."
+            )
+    else:
+        test_schedule = load_tests().schedule
+        # Filter tests based on tags
+        filter_with_config_tags(test_schedule)
+
     filter_with_config_tags(test_schedule)
 
     qrunner = query.QueryRunner(test_schedule)
@@ -253,10 +273,15 @@ def do_list():
         qrunner.list_tests()
     elif configuration.config.all_tags:
         qrunner.list_tags()
+    elif configuration.config.fixtures:
+        qrunner.list_fixtures()
+    elif configuration.config.build_targets:
+        qrunner.list_build_targets()
     else:
         qrunner.list_suites()
         qrunner.list_tests()
         qrunner.list_tags()
+        qrunner.list_build_targets()
 
     return 0
 

@@ -29,6 +29,7 @@ This runs simple tests to ensure the examples in `configs/example/gem5_library`
 still function. They simply check the simulation completed.
 """
 from testlib import *
+from testlib.log import *
 import re
 import os
 
@@ -171,10 +172,11 @@ gem5_verify_config(
     length=constants.long_tag,
 )
 
-print(
-    "WARNING: PARSEC tests are disabled. This is due to our GitHub "
+log.test_log.message(
+    "PARSEC tests are disabled. This is due to our GitHub "
     "Actions self-hosted runners only having 60GB of disk space. The "
-    "PARSEC Disk image is too big to use."
+    "PARSEC Disk image is too big to use.",
+    level=LogLevel.Warn,
 )
 # 'False' is used to disable the tests.
 if False:  # os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
