@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Arm Limited
+// Copyright (c) 2011-2026 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -537,9 +537,9 @@ namespace Aarch64
               case 0x1:
                 return new YieldInst(machInst);
               case 0x2:
-                return new WfeInst(machInst);
+                return new Wfe64(machInst);
               case 0x3:
-                return new WfiInst(machInst);
+                return new Wfi64(machInst);
               case 0x4:
                 return new SevInst(machInst);
               case 0x5:

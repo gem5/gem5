@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2013,2017-2021,2023 Arm Limited
+// Copyright (c) 2010-2013,2017-2021,2023,2026 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -771,6 +771,14 @@ let {{
     decoder_output += BasicConstructor.subst(wfeIop)
     exec_output += QuiescePredOpExecuteWithFixup.subst(wfeIop)
 
+    wfe64Iop = ArmInstObjParams("wfe", "Wfe64", "ArmStaticInst",
+                                wfeCode,
+                                ["IsNonSpeculative", "IsQuiesce",
+                                 "IsSerializeAfter", "IsUnverifiable"])
+    header_output += BasicDeclare.subst(wfe64Iop)
+    decoder_output += BasicConstructor64.subst(wfe64Iop)
+    exec_output += BasicExecute.subst(wfe64Iop)
+
     wfiCode = '''
     if (xc->inHtmTransactionalState()) {
         fault = std::make_shared<GenericHtmFailureFault>(
@@ -807,6 +815,14 @@ let {{
     header_output += BasicDeclare.subst(wfiIop)
     decoder_output += BasicConstructor.subst(wfiIop)
     exec_output += QuiescePredOpExecute.subst(wfiIop)
+
+    wfi64Iop = ArmInstObjParams("wfi", "Wfi64", "ArmStaticInst",
+                                wfiCode,
+                                ["IsNonSpeculative", "IsQuiesce",
+                                 "IsSerializeAfter", "IsUnverifiable"])
+    header_output += BasicDeclare.subst(wfi64Iop)
+    decoder_output += BasicConstructor64.subst(wfi64Iop)
+    exec_output += BasicExecute.subst(wfi64Iop)
 
     sevCode = '''
     SevMailbox = 1;
