@@ -266,9 +266,6 @@ let {{
         def __init__(self, idx, id=srtNormal, ctype='ud'):
             super().__init__(idx, id, ctype)
 
-    class CntrlRegNC(CntrlReg):
-        pass
-
     class PCStateReg(PCStateOp):
         def __init__(self, idx, id):
             super().__init__('ud', idx, (None, None, 'IsControl'), id)
@@ -480,18 +477,18 @@ def operands {{
     #Fixed index control regs
     'Cpsr': CntrlReg('MISCREG_CPSR', srtCpsr),
     'CpsrQ': CntrlReg('MISCREG_CPSR_Q', srtCpsr),
-    'Spsr': CntrlRegNC('MISCREG_SPSR'),
-    'Fpsr': CntrlRegNC('MISCREG_FPSR'),
-    'Fpsid': CntrlRegNC('MISCREG_FPSID'),
-    'Fpscr': CntrlRegNC('MISCREG_FPSCR'),
-    'FpscrQc': CntrlRegNC('MISCREG_FPSCR_QC'),
-    'FpscrExc': CntrlRegNC('MISCREG_FPSCR_EXC'),
-    'Fpcr': CntrlRegNC('MISCREG_FPCR'),
+    'Spsr': CntrlReg('MISCREG_SPSR'),
+    'Fpsr': CntrlReg('MISCREG_FPSR'),
+    'Fpsid': CntrlReg('MISCREG_FPSID'),
+    'Fpscr': CntrlReg('MISCREG_FPSCR'),
+    'FpscrQc': CntrlReg('MISCREG_FPSCR_QC'),
+    'FpscrExc': CntrlReg('MISCREG_FPSCR_EXC'),
+    'Fpcr': CntrlReg('MISCREG_FPCR'),
     'Cpacr': CntrlReg('MISCREG_CPACR'),
     'Cpacr64': CntrlReg64('MISCREG_CPACR_EL1'),
-    'Fpexc': CntrlRegNC('MISCREG_FPEXC'),
+    'Fpexc': CntrlReg('MISCREG_FPEXC'),
     'Nsacr': CntrlReg('MISCREG_NSACR'),
-    'ElrHyp': CntrlRegNC('MISCREG_ELR_HYP'),
+    'ElrHyp': CntrlReg('MISCREG_ELR_HYP'),
     'Hcr': CntrlReg('MISCREG_HCR'),
     'Hcr64': CntrlReg64('MISCREG_HCR_EL2'),
     'CptrEl264': CntrlReg64('MISCREG_CPTR_EL2'),
@@ -499,11 +496,11 @@ def operands {{
     'Hstr': CntrlReg('MISCREG_HSTR'),
     'Scr': CntrlReg('MISCREG_SCR'),
     'Scr64': CntrlReg64('MISCREG_SCR_EL3'),
-    'Sctlr': CntrlRegNC('MISCREG_SCTLR'),
-    'SevMailbox': CntrlRegNC('MISCREG_SEV_MAILBOX'),
-    'LLSCLock': CntrlRegNC('MISCREG_LOCKFLAG'),
-    'Dczid' : CntrlRegNC('MISCREG_DCZID_EL0'),
-    'PendingDvm': CntrlRegNC('MISCREG_TLBINEEDSYNC'),
+    'Sctlr': CntrlReg('MISCREG_SCTLR'),
+    'SevMailbox': CntrlReg('MISCREG_SEV_MAILBOX'),
+    'LLSCLock': CntrlReg('MISCREG_LOCKFLAG'),
+    'Dczid' : CntrlReg('MISCREG_DCZID_EL0'),
+    'PendingDvm': CntrlReg('MISCREG_TLBINEEDSYNC'),
     'Svcr' : CntrlReg('MISCREG_SVCR'),
 
     #Register fields for microops
