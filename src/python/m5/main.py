@@ -126,13 +126,13 @@ def parse_options():
     option(
         "--stdout-file",
         metavar="FILE",
-        default="simout",
+        default="simout.txt",
         help="Filename for -r redirection [Default: %default]",
     )
     option(
         "--stderr-file",
         metavar="FILE",
-        default="simerr",
+        default="simerr.txt",
         help="Filename for -e redirection [Default: %default]",
     )
     option(

@@ -318,8 +318,8 @@ def define_constants(constants):
     constants.supported_hosts = constants.supported_tags["host"]
 
     constants.tempdir_fixture_name = "tempdir"
-    constants.gem5_simulation_stderr = "simerr"
-    constants.gem5_simulation_stdout = "simout"
+    constants.gem5_simulation_stderr = "simerr.txt"
+    constants.gem5_simulation_stdout = "simout.txt"
     constants.gem5_simulation_stats = "stats.txt"
     constants.gem5_simulation_config_ini = "config.ini"
     constants.gem5_simulation_config_json = "config.json"
