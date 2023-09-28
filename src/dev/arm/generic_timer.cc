@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2015, 2017-2018,2020,2022 Arm Limited
+ * Copyright (c) 2013, 2015, 2017-2018,2020,2022,2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -805,6 +805,20 @@ GenericTimer::readMiscReg(int reg, unsigned cpu)
       default:
         warn("Reading from unknown register: %s\n", miscRegName[reg]);
         return 0;
+    }
+}
+
+ArchTimer *
+GenericTimer::coreTimer(int cpu_id, CoreTimersType type)
+{
+    CoreTimers &core(getTimers(cpu_id));
+    switch (type) {
+        case CoreTimersType::Cntv:
+            return &core.virtEL1;
+        case CoreTimersType::Cntp:
+            return &core.physEL1;
+        default:
+            return nullptr;
     }
 }
 
