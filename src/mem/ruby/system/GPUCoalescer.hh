@@ -71,6 +71,7 @@ class UncoalescedTable
     ~UncoalescedTable() {}
 
     void insertPacket(PacketPtr pkt);
+    void insertReqType(PacketPtr pkt, RubyRequestType type);
     bool packetAvailable();
     void printRequestTable(std::stringstream& ss);
 
@@ -101,6 +102,8 @@ class UncoalescedTable
     std::map<InstSeqNum, PerInstPackets> instMap;
 
     std::map<InstSeqNum, int> instPktsRemaining;
+
+    std::map<InstSeqNum, RubyRequestType> reqTypeMap;
 };
 
 class CoalescedRequest
