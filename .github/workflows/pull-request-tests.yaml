@@ -1,0 +1,51 @@
+# This workflow runs after a pull-request has been created.
+
+name: Pull Request Tests
+
+on:
+  # workflow_dispatch:
+  pull_request:
+    types: [opened, edited, synchronize, ready_for_review]
+
+jobs:
+  pre-commit:
+    # runs on github hosted runner
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
+    - uses: pre-commit/action@v3.0.0
+
+  # ensures we have a change-id in every commit, needed for gerrit
+  check-for-change-id:
+    # runs on github hosted runner
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Check for Change-Id
+        run: |
+          # loop through all the commits in the pull request
+          for commit in $(git rev-list ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}); do
+              git checkout $commit
+              if (git log -1 --pretty=format:"%B" | grep -q "Change-Id: ")
+              then
+                # passes as long as at least one change-id exists in the pull request
+                exit 0
+              fi
+          done
+          # if we reach this part, none of the commits had a change-id
+          echo "None of the commits in this pull request contains a Change-ID, which we require for any changes made to gem5. "\
+            "To automatically insert one, run the following:\n f=`git rev-parse --git-dir`/hooks/commit-msg ; mkdir -p $(dirname $f) ; "\
+            "curl -Lo $f https://gerrit-review.googlesource.com/tools/hooks/commit-msg ; chmod +x $f\n Then amend the commit with git commit --amend --no-edit, and update your pull request."
+          exit 1
+
+
+  all-tests-pass:
+    # runs on github hosted runner
+    runs-on: ubuntu-22.04
+    needs: [pre-commit, check-for-change-id]
+    steps:
+      - name: PR Checks are successful!
+        run: echo "PR Checks are successful!"
