@@ -50,6 +50,7 @@ namespace ruby
 {
 
 class Sequencer;
+class GPUCoalescer;
 
 /*!
  * Class for recording cache contents. Note that the last element of the
@@ -79,6 +80,7 @@ class CacheRecorder
     CacheRecorder(uint8_t* uncompressed_trace,
                   uint64_t uncompressed_trace_size,
                   std::vector<Sequencer*>& SequencerMap,
+                  std::vector<GPUCoalescer*>& CoalescerMap,
                   uint64_t block_size_bytes);
     void addRecord(int cntrl, Addr data_addr, Addr pc_addr,
                    RubyRequestType type, Tick time, DataBlock& data);
@@ -115,6 +117,7 @@ class CacheRecorder
     uint8_t* m_uncompressed_trace;
     uint64_t m_uncompressed_trace_size;
     std::vector<Sequencer*> m_seq_map;
+    std::vector<GPUCoalescer*> m_coalescer_map;
     uint64_t m_bytes_read;
     uint64_t m_records_read;
     uint64_t m_records_flushed;
