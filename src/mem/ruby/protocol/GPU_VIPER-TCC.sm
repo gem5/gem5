@@ -65,7 +65,8 @@ machine(MachineType:TCC, "TCC Cache")
     AtomicPassOn,           desc="Atomic Op Passed on to Directory";
     AtomicDone,             desc="AtomicOps Complete";
     AtomicNotDone,          desc="AtomicOps not Complete";
-    Data,                   desc="data messgae";
+    Data,                   desc="Data message";
+    Flush,                  desc="Flush cache entry";
     // Coming from this TCC
     L2_Repl,                desc="L2 Replacement";
     // Probes
@@ -376,6 +377,8 @@ machine(MachineType:TCC, "TCC Cache")
           } else {
             trigger(Event:RdBlk, in_msg.addr, cache_entry, tbe);
           }
+        } else if (in_msg.Type == CoherenceRequestType:WriteFlush) {
+            trigger(Event:Flush, in_msg.addr, cache_entry, tbe);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg);
           error("Unexpected Response Message to Core");
@@ -509,6 +512,20 @@ machine(MachineType:TCC, "TCC Cache")
     }
   }
 
+  action(fw_sendFlushResponse, "fw", desc="send Flush Response") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:TDSysWBAck;
+        out_msg.Destination.clear();
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.Sender := machineID;
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+        out_msg.instSeqNum := in_msg.instSeqNum;
+      }
+    }
+  }
+
   action(ar_sendAtomicResponse, "ar", desc="send Atomic Ack") {
     peek(coreRequestNetwork_in, CPURequestMsg) {
         enqueue(responseToCore_out, ResponseMsg, l2_response_latency + glc_atomic_latency, true) {
@@ -625,6 +642,22 @@ machine(MachineType:TCC, "TCC Cache")
       out_msg.Dirty := true;
       out_msg.DataBlk := cache_entry.DataBlk;
       out_msg.writeMask.orMask(cache_entry.writeMask);
+    }
+  }
+
+  action(f_flush, "f", desc="write back data") {
+    peek(coreRequestNetwork_in, CPURequestMsg) {
+      enqueue(requestToNB_out, CPURequestMsg, l2_request_latency) {
+        out_msg.addr := address;
+        out_msg.Requestor := machineID;
+        out_msg.WTRequestor := in_msg.Requestor;
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+        out_msg.MessageSize := MessageSizeType:Data;
+        out_msg.Type := CoherenceRequestType:WriteFlush;
+        out_msg.Dirty := true;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.writeMask.orMask(cache_entry.writeMask);
+      }
     }
   }
 
@@ -1075,4 +1108,21 @@ machine(MachineType:TCC, "TCC Cache")
   transition(WIB, WBAck,I) {
     pr_popResponseQueue;
   }
+
+  transition({A, IV, WI, WIB}, Flush) {
+    st_stallAndWaitRequest;
+  }
+
+  transition(I, Flush) {
+    fw_sendFlushResponse;
+    p_popRequestQueue;
+  }
+
+  transition({V, W}, Flush, I) {TagArrayRead, TagArrayWrite} {
+    t_allocateTBE;
+    ut_updateTag;
+    f_flush;
+    i_invL2;
+    p_popRequestQueue;
+   }
 }
