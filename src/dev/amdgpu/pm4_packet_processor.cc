@@ -1044,6 +1044,7 @@ PM4PacketProcessor::serialize(CheckpointOut &cp) const
     int num_queues = queues.size();
     Addr id[num_queues];
     Addr mqd_base[num_queues];
+    uint64_t mqd_read_index[num_queues];
     Addr base[num_queues];
     Addr rptr[num_queues];
     Addr wptr[num_queues];
@@ -1060,6 +1061,7 @@ PM4PacketProcessor::serialize(CheckpointOut &cp) const
     uint32_t hqd_active[num_queues];
     uint32_t hqd_vmid[num_queues];
     Addr aql_rptr[num_queues];
+    uint32_t aql[num_queues];
     uint32_t doorbell[num_queues];
     uint32_t hqd_pq_control[num_queues];
 
@@ -1068,9 +1070,10 @@ PM4PacketProcessor::serialize(CheckpointOut &cp) const
         PM4Queue *q = iter.second;
         id[i] = q->id();
         mqd_base[i] = q->mqdBase();
+        mqd_read_index[i] = q->getMQD()->mqdReadIndex;
         bool cur_state = q->ib();
         q->ib(false);
-        base[i] = q->base() >> 8;
+        base[i] = q->base();
         rptr[i] = q->getRptr();
         wptr[i] = q->getWptr();
         q->ib(true);
@@ -1088,6 +1091,7 @@ PM4PacketProcessor::serialize(CheckpointOut &cp) const
         hqd_active[i] = q->getMQD()->hqd_active;
         hqd_vmid[i] = q->getMQD()->hqd_vmid;
         aql_rptr[i] = q->getMQD()->aqlRptr;
+        aql[i] = q->getMQD()->aql;
         doorbell[i] = q->getMQD()->doorbell;
         hqd_pq_control[i] = q->getMQD()->hqd_pq_control;
         i++;
@@ -1096,6 +1100,7 @@ PM4PacketProcessor::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(num_queues);
     SERIALIZE_ARRAY(id, num_queues);
     SERIALIZE_ARRAY(mqd_base, num_queues);
+    SERIALIZE_ARRAY(mqd_read_index, num_queues);
     SERIALIZE_ARRAY(base, num_queues);
     SERIALIZE_ARRAY(rptr, num_queues);
     SERIALIZE_ARRAY(wptr, num_queues);
@@ -1112,6 +1117,7 @@ PM4PacketProcessor::serialize(CheckpointOut &cp) const
     SERIALIZE_ARRAY(hqd_active, num_queues);
     SERIALIZE_ARRAY(hqd_vmid, num_queues);
     SERIALIZE_ARRAY(aql_rptr, num_queues);
+    SERIALIZE_ARRAY(aql, num_queues);
     SERIALIZE_ARRAY(doorbell, num_queues);
     SERIALIZE_ARRAY(hqd_pq_control, num_queues);
 }
@@ -1127,6 +1133,7 @@ PM4PacketProcessor::unserialize(CheckpointIn &cp)
 
     Addr id[num_queues];
     Addr mqd_base[num_queues];
+    uint64_t mqd_read_index[num_queues];
     Addr base[num_queues];
     Addr rptr[num_queues];
     Addr wptr[num_queues];
@@ -1143,11 +1150,13 @@ PM4PacketProcessor::unserialize(CheckpointIn &cp)
     uint32_t hqd_active[num_queues];
     uint32_t hqd_vmid[num_queues];
     Addr aql_rptr[num_queues];
+    uint32_t aql[num_queues];
     uint32_t doorbell[num_queues];
     uint32_t hqd_pq_control[num_queues];
 
     UNSERIALIZE_ARRAY(id, num_queues);
     UNSERIALIZE_ARRAY(mqd_base, num_queues);
+    UNSERIALIZE_ARRAY(mqd_read_index, num_queues);
     UNSERIALIZE_ARRAY(base, num_queues);
     UNSERIALIZE_ARRAY(rptr, num_queues);
     UNSERIALIZE_ARRAY(wptr, num_queues);
@@ -1164,6 +1173,7 @@ PM4PacketProcessor::unserialize(CheckpointIn &cp)
     UNSERIALIZE_ARRAY(hqd_active, num_queues);
     UNSERIALIZE_ARRAY(hqd_vmid, num_queues);
     UNSERIALIZE_ARRAY(aql_rptr, num_queues);
+    UNSERIALIZE_ARRAY(aql, num_queues);
     UNSERIALIZE_ARRAY(doorbell, num_queues);
     UNSERIALIZE_ARRAY(hqd_pq_control, num_queues);
 
@@ -1172,19 +1182,20 @@ PM4PacketProcessor::unserialize(CheckpointIn &cp)
         memset(mqd, 0, sizeof(QueueDesc));
 
         mqd->mqdBase = mqd_base[i] >> 8;
-        mqd->base = base[i];
-        mqd->rptr = rptr[i];
-        mqd->ibBase = ib_base[i];
-        mqd->ibRptr = ib_rptr[i];
+        mqd->mqdReadIndex = mqd_read_index[i];
+        mqd->base = base[i] >> 8;
+        mqd->aql = aql[i];
 
         PM4MapQueues* pkt = new PM4MapQueues;
         memset(pkt, 0, sizeof(PM4MapQueues));
         newQueue(mqd, offset[i], pkt, id[i]);
 
         queues[id[i]]->ib(false);
+        queues[id[i]]->rptr(rptr[i]);
         queues[id[i]]->wptr(wptr[i]);
         queues[id[i]]->ib(true);
         queues[id[i]]->wptr(ib_wptr[i]);
+        queues[id[i]]->rptr(ib_rptr[i]);
         queues[id[i]]->offset(offset[i]);
         queues[id[i]]->processing(processing[i]);
         queues[id[i]]->ib(ib[i]);
@@ -1194,6 +1205,14 @@ PM4PacketProcessor::unserialize(CheckpointIn &cp)
         queues[id[i]]->getMQD()->aqlRptr = aql_rptr[i];
         queues[id[i]]->getMQD()->doorbell = doorbell[i];
         queues[id[i]]->getMQD()->hqd_pq_control = hqd_pq_control[i];
+
+        if (mqd->aql) {
+            int mqd_size = (1 << ((hqd_pq_control[i] & 0x3f) + 1)) * 4;
+            auto &hsa_pp = gpuDevice->CP()->hsaPacketProc();
+            hsa_pp.setDeviceQueueDesc(aql_rptr[i], base[i], id[i],
+                                  mqd_size, 8, GfxVersion::gfx900, offset[i],
+                                  mqd_read_index[i]);
+        }
 
         DPRINTF(PM4PacketProcessor, "PM4 queue %d, rptr: %p wptr: %p\n",
                 queues[id[i]]->id(), queues[id[i]]->rptr(),
