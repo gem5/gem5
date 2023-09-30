@@ -141,10 +141,11 @@ class Fetch
              Addr fetchBufferPC;
              bool fetchBufferValid;
              RequestPtr memReq;
-             uint8_t* fetchBuffer;
+            std::shared_ptr<uint8_t> fetchBuffer;
+            bool translationValid=false;
 
              FetchBufferEntry(Tick translationTick, Addr fetchBufPC,
-                              RequestPtr req, uint8_t *buf):
+                              RequestPtr req, std::shared_ptr<uint8_t> buf):
                  isPdipPrefetch(false), isLatePrefetch(false),
                  pdipTriggerAddr(0), translationTick(translationTick),
                  sentTick(0), recvTick(0),
@@ -152,11 +153,6 @@ class Fetch
                  fetchBufferValid(false), memReq(req),
                  fetchBuffer(buf)
              {
-             }
-
-             ~FetchBufferEntry()
-             {
-                 delete fetchBuffer;
              }
 
      };
@@ -531,7 +527,6 @@ class Fetch
 
     /** The PC of the first instruction loaded into the fetch buffer. */
     //Addr fetchBufferPC[MaxThreads];
-    //std::list<Addr> fetchBufferPC[MaxThreads];
     std::vector<Addr> prefetchBufferPC[MaxThreads];
     std::vector<FetchBufferEntry> fetchBuffer[MaxThreads];
 
@@ -541,8 +536,6 @@ class Fetch
     /** Queue of fetched instructions. Per-thread to prevent HoL blocking. */
     std::deque<DynInstPtr> fetchQueue[MaxThreads];
 
-    /** Whether or not the fetch buffer data is valid. */
-    //bool fetchBufferValid[MaxThreads];
 
     /** Size of instructions. */
     int instSize;
