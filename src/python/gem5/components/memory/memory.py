@@ -171,6 +171,10 @@ class ChanneledMemory(AbstractMemorySystem):
         return [ctrl for ctrl in self.mem_ctrl]
 
     @overrides(AbstractMemorySystem)
+    def get_monolithic_range(self) -> int:
+        return self._mem_range
+
+    @overrides(AbstractMemorySystem)
     def get_size(self) -> int:
         return self._size
 

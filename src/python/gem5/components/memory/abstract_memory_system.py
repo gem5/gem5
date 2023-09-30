@@ -56,6 +56,11 @@ class AbstractMemorySystem(SubSystem):
         raise NotImplementedError
 
     @abstractmethod
+    def get_monolithic_range(self) -> AddrRange:
+        """Returns the uninterleaved address range of the memory system"""
+        raise NotImplementedError
+
+    @abstractmethod
     def get_size(self) -> int:
         """Returns the total size of the memory system"""
         raise NotImplementedError
