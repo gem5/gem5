@@ -39,35 +39,26 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import m5
-import m5.defines
 from m5.objects import *
 from m5.util import *
 from common.Benchmarks import *
 from common import ObjectList
 
 # Populate to reflect supported os types per target ISA
-os_types = set()
-if m5.defines.buildEnv["USE_ARM_ISA"]:
-    os_types.update(
-        [
-            "linux",
-            "android-gingerbread",
-            "android-ics",
-            "android-jellybean",
-            "android-kitkat",
-            "android-nougat",
-        ]
-    )
-if m5.defines.buildEnv["USE_MIPS_ISA"]:
-    os_types.add("linux")
-if m5.defines.buildEnv["USE_POWER_ISA"]:
-    os_types.add("linux")
-if m5.defines.buildEnv["USE_RISCV_ISA"]:
-    os_types.add("linux")  # TODO that's a lie
-if m5.defines.buildEnv["USE_SPARC_ISA"]:
-    os_types.add("linux")
-if m5.defines.buildEnv["USE_X86_ISA"]:
-    os_types.add("linux")
+os_types = {
+    "mips": ["linux"],
+    "riscv": ["linux"],  # TODO that's a lie
+    "sparc": ["linux"],
+    "x86": ["linux"],
+    "arm": [
+        "linux",
+        "android-gingerbread",
+        "android-ics",
+        "android-jellybean",
+        "android-kitkat",
+        "android-nougat",
+    ],
+}
 
 
 class CowIdeDisk(IdeDisk):
@@ -88,7 +79,8 @@ def attach_9p(parent, bus):
     viodir = os.path.realpath(os.path.join(m5.options.outdir, "9p"))
     viopci.vio.root = os.path.join(viodir, "share")
     viopci.vio.socketPath = os.path.join(viodir, "socket")
-    os.makedirs(viopci.vio.root, exist_ok=True)
+    if not os.path.exists(viopci.vio.root):
+        os.makedirs(viopci.vio.root)
     if os.path.exists(viopci.vio.socketPath):
         os.remove(viopci.vio.socketPath)
     parent.viopci = viopci
@@ -139,11 +131,11 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
         AddrRange(Addr("1MB"), size="64MB"),
         AddrRange(Addr("2GB"), size="256MB"),
     ]
-    self.bridge.mem_side_port = self.iobus.cpu_side_ports
-    self.bridge.cpu_side_port = self.membus.mem_side_ports
+    self.bridge.master = self.iobus.slave
+    self.bridge.slave = self.membus.master
     self.disk0 = CowMmDisk()
     self.disk0.childImage(mdesc.disks()[0])
-    self.disk0.pio = self.iobus.mem_side_ports
+    self.disk0.pio = self.iobus.master
 
     # The puart0 and hvuart are placed on the IO bus, so create ranges
     # for them. The remaining IO range is rather fragmented, so poke
@@ -190,12 +182,12 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
         range=AddrRange(0x1F12000000, size="8kB"),
     )
 
-    self.rom.port = self.membus.mem_side_ports
-    self.nvram.port = self.membus.mem_side_ports
-    self.hypervisor_desc.port = self.membus.mem_side_ports
-    self.partition_desc.port = self.membus.mem_side_ports
+    self.rom.port = self.membus.master
+    self.nvram.port = self.membus.master
+    self.hypervisor_desc.port = self.membus.master
+    self.partition_desc.port = self.membus.master
 
-    self.system_port = self.membus.cpu_side_ports
+    self.system_port = self.membus.slave
 
     self.workload = workload
 
@@ -212,6 +204,7 @@ def makeArmSystem(
     cmdline=None,
     external_memory="",
     ruby=False,
+    security=False,
     vio_9p=None,
     bootloader=None,
 ):
@@ -229,10 +222,10 @@ def makeArmSystem(
     self.iobus = IOXBar()
     if not ruby:
         self.bridge = Bridge(delay="50ns")
-        self.bridge.mem_side_port = self.iobus.cpu_side_ports
+        self.bridge.master = self.iobus.slave
         self.membus = MemBus()
         self.membus.badaddr_responder.warn_access = "warn"
-        self.bridge.cpu_side_port = self.membus.mem_side_ports
+        self.bridge.slave = self.membus.master
 
     self.mem_mode = mem_mode
 
@@ -279,6 +272,8 @@ def makeArmSystem(
             " the amount of DRAM you've selected. Please try"
             " another platform"
         )
+
+    self.have_security = security
 
     if bare_metal:
         # EOT character on UART will end the simulation
@@ -354,7 +349,7 @@ def makeArmSystem(
         self.external_io = ExternalMaster(
             port_data="external_io", port_type=external_memory
         )
-        self.external_io.port = self.iobus.cpu_side_ports
+        self.external_io.port = self.iobus.slave
 
         # Ensure iocache only receives traffic destined for (actual) memory.
         self.iocache = ExternalSlave(
@@ -362,7 +357,7 @@ def makeArmSystem(
             port_type=external_memory,
             addr_ranges=self.mem_ranges,
         )
-        self.iocache.port = self.iobus.mem_side_ports
+        self.iocache.port = self.iobus.master
 
         # Let system_port get to nvmem and nothing else.
         self.bridge.ranges = [self.realview.nvmem.range]
@@ -394,7 +389,7 @@ def makeArmSystem(
         attach_9p(self.realview, self.iobus)
 
     if not ruby:
-        self.system_port = self.membus.cpu_side_ports
+        self.system_port = self.membus.slave
 
     if ruby:
         if buildEnv["PROTOCOL"] == "MI_example" and num_cpus > 1:
@@ -423,15 +418,15 @@ def makeLinuxMipsSystem(mem_mode, mdesc=None, cmdline=None):
     self.membus = MemBus()
     self.bridge = Bridge(delay="50ns")
     self.mem_ranges = [AddrRange("1GB")]
-    self.bridge.mem_side_port = self.iobus.cpu_side_ports
-    self.bridge.cpu_side_port = self.membus.mem_side_ports
+    self.bridge.master = self.iobus.slave
+    self.bridge.slave = self.membus.master
     self.disks = makeCowDisks(mdesc.disks())
     self.malta = BaseMalta()
     self.malta.attachIO(self.iobus)
-    self.malta.ide.pio = self.iobus.mem_side_ports
-    self.malta.ide.dma = self.iobus.cpu_side_ports
-    self.malta.ethernet.pio = self.iobus.mem_side_ports
-    self.malta.ethernet.dma = self.iobus.cpu_side_ports
+    self.malta.ide.pio = self.iobus.master
+    self.malta.ide.dma = self.iobus.slave
+    self.malta.ethernet.pio = self.iobus.master
+    self.malta.ethernet.dma = self.iobus.slave
     self.simple_disk = SimpleDisk(
         disk=RawDiskImage(image_file=mdesc.disks()[0], read_only=True)
     )
@@ -439,10 +434,11 @@ def makeLinuxMipsSystem(mem_mode, mdesc=None, cmdline=None):
     self.terminal = Terminal()
     self.console = binary("mips/console")
     if not cmdline:
-        cmdline = "root=/dev/hda1 console=ttyS0"
+        # cmdline = 'root=/dev/hda1 console=ttyS0'
+        cmdline = "--set=root root=UUID=63241d84-f493-4718-985a-22ab907f2d0b console=ttyS0 mitigations=off"
     self.workload = KernelWorkload(command_line=fillInCmdline(mdesc, cmdline))
 
-    self.system_port = self.membus.cpu_side_ports
+    self.system_port = self.membus.slave
 
     return self
 
@@ -464,8 +460,8 @@ def connectX86ClassicSystem(x86_sys, numCPUs):
     # North Bridge
     x86_sys.iobus = IOXBar()
     x86_sys.bridge = Bridge(delay="50ns")
-    x86_sys.bridge.mem_side_port = x86_sys.iobus.cpu_side_ports
-    x86_sys.bridge.cpu_side_port = x86_sys.membus.mem_side_ports
+    x86_sys.bridge.master = x86_sys.iobus.slave
+    x86_sys.bridge.slave = x86_sys.membus.master
     # Allow the bridge to pass through:
     #  1) kernel configured PCI device memory map address: address range
     #     [0xC0000000, 0xFFFF0000). (The upper 64kB are reserved for m5ops.)
@@ -481,8 +477,8 @@ def connectX86ClassicSystem(x86_sys, numCPUs):
     # Create a bridge from the IO bus to the memory bus to allow access to
     # the local APIC (two pages)
     x86_sys.apicbridge = Bridge(delay="50ns")
-    x86_sys.apicbridge.cpu_side_port = x86_sys.iobus.mem_side_ports
-    x86_sys.apicbridge.mem_side_port = x86_sys.membus.cpu_side_ports
+    x86_sys.apicbridge.slave = x86_sys.iobus.master
+    x86_sys.apicbridge.master = x86_sys.membus.slave
     x86_sys.apicbridge.ranges = [
         AddrRange(
             interrupts_address_space_base,
@@ -493,7 +489,7 @@ def connectX86ClassicSystem(x86_sys, numCPUs):
     # connect the io bus
     x86_sys.pc.attachIO(x86_sys.iobus)
 
-    x86_sys.system_port = x86_sys.membus.cpu_side_ports
+    x86_sys.system_port = x86_sys.membus.slave
 
 
 def connectX86RubySystem(x86_sys):
@@ -508,8 +504,6 @@ def connectX86RubySystem(x86_sys):
 
 def makeX86System(mem_mode, numCPUs=1, mdesc=None, workload=None, Ruby=False):
     self = System()
-
-    self.m5ops_base = 0xFFFF0000
 
     if workload is None:
         workload = X86FsWorkload()
@@ -712,7 +706,7 @@ def makeLinuxX86System(
 
     # Command line
     if not cmdline:
-        cmdline = "earlyprintk=ttyS0 console=ttyS0 lpj=7999923 root=/dev/hda1"
+        cmdline = "earlyprintk=ttyS0 console=ttyS0 lpj=7999923 root=/dev/hda2 mitigations=off norandmaps transparent_hugepage=never"
     self.workload.command_line = fillInCmdline(mdesc, cmdline)
     return self
 
@@ -730,14 +724,16 @@ def makeBareMetalRiscvSystem(mem_mode, mdesc=None, cmdline=None):
     self.iobus = IOXBar()
     self.membus = MemBus()
 
+    # self.membus.snoop_filter = None
+
     self.bridge = Bridge(delay="50ns")
-    self.bridge.mem_side_port = self.iobus.cpu_side_ports
-    self.bridge.cpu_side_port = self.membus.mem_side_ports
+    self.bridge.master = self.iobus.slave
+    self.bridge.slave = self.membus.master
     # Sv39 has 56 bit physical addresses; use the upper 8 bit for the IO space
     IO_address_space_base = 0x00FF000000000000
     self.bridge.ranges = [AddrRange(IO_address_space_base, Addr.max)]
 
-    self.system_port = self.membus.cpu_side_ports
+    self.system_port = self.membus.slave
     return self
 
 
@@ -800,4 +796,5 @@ def makeDistRoot(
         self.etherdump = EtherDump(file=dumpfile)
         self.etherlink.dump = Parent.etherdump
 
+    print("Making DistRoot")
     return self
