@@ -137,8 +137,13 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     if(!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
         v0 = tmp_v0.as<uint8_t>();
@@ -203,6 +208,10 @@ Fault
 {
     %(op_decl)s;
     %(op_rd)s;
+
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
 
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
@@ -642,6 +651,10 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     %(op_decl)s;
     %(op_rd)s;
     %(ea_code)s;
@@ -693,6 +706,10 @@ Fault
 {
     %(op_decl)s;
     %(op_rd)s;
+
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
 
     memcpy(Mem.as<uint8_t>(), pkt->getPtr<uint8_t>(), pkt->getSize());
 
@@ -794,8 +811,13 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     %(op_decl)s;
     %(op_rd)s;
     constexpr uint8_t elem_size = sizeof(Vd[0]);
@@ -872,6 +894,10 @@ Fault
 {
     %(op_decl)s;
     %(op_rd)s;
+
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
 
     constexpr uint8_t elem_size = sizeof(Vd[0]);
 
@@ -1177,8 +1203,13 @@ Fault
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
     }
+
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     %(op_decl)s;
     %(op_rd)s;
     %(ea_code)s;
@@ -1255,6 +1286,10 @@ Fault
 %(class_name)s<ElemType>::completeAcc(PacketPtr pkt, ExecContext *xc,
                             trace::InstRecord *traceData) const
 {
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
     using vu = std::make_unsigned_t<ElemType>;
     %(op_decl)s;
     %(op_rd)s;
