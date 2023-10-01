@@ -1699,8 +1699,9 @@ Fetch::addToFTQ()
     /////////////////////////////////////////////////
     // Add Prefetch entries to Fetch Target Queue
     /////////////////////////////////////////////////
-    ThreadID tid = getFetchingThread();
+    //ThreadID tid = getFetchingThread();
 
+    ThreadID tid = 0;
     assert(!cpu->switchedOut());
     // Do not prefetch when status is TrapPending
     if ( fetchStatus[tid] == Squashing ||
@@ -2481,6 +2482,10 @@ Fetch::pipelineIcacheAccesses(ThreadID tid)
 
     const PCStateBase &thisPC = *pc[tid];
     bool inRom = isRomMicroPC(thisPC.microPC());
+
+    if (inRom){
+        return;
+    }
 
     if (!prefetchBufferPC[tid].empty()){
         Addr curPCLine = (thisPC.instAddr() + fetchOffset[tid]);
