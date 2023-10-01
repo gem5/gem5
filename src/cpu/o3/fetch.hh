@@ -683,7 +683,8 @@ class FTQEntry
     FTQEntry (PCStateBase &beginPC_, PCStateBase &branchPC_,
               PCStateBase &targetPC_, BrSeqNum brSeq,
               bool isTaken, int bblSize):
-            brSeq(brSeq), isTaken(isTaken), bblSize(bblSize) {
+            brSeq(brSeq), isTaken(isTaken), bblSize(bblSize),
+            isPrefetched(false){
         set(beginPC, beginPC_);
         set(branchPC, branchPC_);
         set(targetPC, targetPC_);

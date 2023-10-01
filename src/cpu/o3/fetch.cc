@@ -692,7 +692,7 @@ Fetch::lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &next_pc)
 
                 // delete branchPC since it could be a bogus branch
                 if (inst->pcState().instAddr() > branchPC->instAddr()){
-                    DPRINTFN("Deleting potential bogus branch 0x%llx\n",
+                    DPRINTF(FDIP, "Delete potential bogus branch 0x%llx\n",
                              branchPC->instAddr());
 
                     //TODO: Add this function later
@@ -1743,7 +1743,7 @@ Fetch::addToFTQ()
 
             // Stop prefetching if the instruction count limit is reached
         if (limitReached){
-            return;
+            break;
         }
 
         if (nextPC->instAddr()>0x10) {
@@ -1768,7 +1768,7 @@ Fetch::addToFTQ()
 
                 branchPred->squash(seq[tid]-1,tid);
                 seq[tid]++;
-                return;
+                break;
             }
 
             // Stop prefetching if the bbl size in the BTB is not same
@@ -1786,7 +1786,7 @@ Fetch::addToFTQ()
                 //assert(false && "Check BTB parameters\n");
                 branchPred->squash(seq[tid]-1,tid);
                 seq[tid]++;
-                return;
+                break;
             }
 
             auto bblSize = branchPC->instAddr() - thisPC->instAddr();
@@ -1847,6 +1847,7 @@ Fetch::addToFTQ()
             //break;
         }
     }
+    updatePrefetchBuffer(tid);
  }
 
 void
@@ -1875,35 +1876,43 @@ Fetch::updatePrefetchBuffer(ThreadID tid)
         return;
     }
 
-    if (prefetchFTQIndex < 0 || prefetchFTQIndex >= ftq[tid].size()){
-        DPRINTF(FDIP, "[tid:%d] Returning because prefetchFTQ is out of range "
-                "prefetchFTQIndex %d ftq size %d \n",
-                tid,
-                prefetchFTQIndex,
-                ftq[tid].size());
+    auto ftq_it = ftq[tid].begin();
+    // find first ftq entry that is not prefetched
+    while (ftq_it != ftq[tid].end()){
+        if (!ftq_it->isPrefetched){
+            break;
+        }
+        ftq_it++;
+    }
+
+    if (ftq_it == ftq[tid].end()){
+        DPRINTF(FDIP, "Reached FTQ end\n");
         return;
     }
+
 
     Addr lastFetchedBlock = 0;
     // if index to prefetch is 0 then insert cachelines without any checks
     // else check if the last line is same as the line being prefetched
     // if so then skip that line
-    if (prefetchFTQIndex != 0){
-        lastFetchedBlock = ftq[tid][prefetchFTQIndex - 1].branchPC->instAddr();
+    if (ftq_it != ftq[tid].begin()){
+        auto ftq_prev_it = std::prev(ftq_it);
+        lastFetchedBlock = ftq_prev_it->branchPC->instAddr();
+        lastFetchedBlock += ftq_prev_it->branchPC->size();
 
         lastFetchedBlock = alignToCacheBlock(lastFetchedBlock);
     }
 
     //TODO: check if prefetchFTQIndex reached end of ftq
 
-    Addr curPCLine = ftq[tid][prefetchFTQIndex].beginPC->instAddr();
+    Addr curPCLine = ftq_it->beginPC->instAddr();
     curPCLine = alignToCacheBlock(curPCLine);
 
-    Addr branchPCLine = ftq[tid][prefetchFTQIndex].branchPC->instAddr();
-    branchPCLine += ftq[tid][prefetchFTQIndex].branchPC->size();
+    //In X86 branchPC could go over onto the next cache line
+    Addr branchPCLine = ftq_it->branchPC->instAddr();
+    branchPCLine += ftq_it->branchPC->size();
     branchPCLine = alignToCacheBlock(branchPCLine);
 
-    //TODO: In X86 branchPC could go over onto the next cache line
 
     if (lastFetchedBlock && curPCLine == lastFetchedBlock){
         DPRINTF(FDIP, "skipping curPCLine %#x\n",curPCLine);
@@ -1913,12 +1922,14 @@ Fetch::updatePrefetchBuffer(ThreadID tid)
     while (curPCLine <= branchPCLine){
         DPRINTF(FDIP, "curPCLine %#x and branchPCLine %#x\n",
                 curPCLine, branchPCLine);
+        prefetchBufferPC[tid].push_back(curPCLine);
         curPCLine += CACHE_LINE_SIZE;
         //actualPC = curPCLine;
     }
 
     // Update FTQ Index
     prefetchFTQIndex++;
+    ftq_it->isPrefetched = true;
 }
 
 void
@@ -2087,7 +2098,6 @@ Fetch::fetch(bool &status_change)
         if (needMem) {
 
             if (fetchBuffer[tid].size() == 0){
-                warn("Fix this case!");
                 break;
             }
             // If buffer is no longer valid or fetchAddr has moved to point
@@ -2463,7 +2473,7 @@ Fetch::pipelineIcacheAccesses(ThreadID tid)
         return;
     }
 
-    updatePrefetchBuffer(tid);
+    //updatePrefetchBuffer(tid);
 
     //if (prefetchQueue[tid].empty()) {
     //    return;
@@ -2482,6 +2492,9 @@ Fetch::pipelineIcacheAccesses(ThreadID tid)
             DPRINTF(FDIP, "BUG! fetch at %#x and prefetchBuffer at %#x "
                     "tick: %llu\n",thisPC.instAddr(),
                     prefetchBufferPC[tid].front(), curTick());
+            prefetchBufferPC[tid].clear();
+            fetchBuffer[tid].clear();
+            stopPrefetching = true;
         }
     }
     if (prefetchBufferPC[tid].empty() && !inRom && !macroop[tid]){
