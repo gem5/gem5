@@ -90,6 +90,9 @@ decode QUADRANT default Unknown::unknown() {
                         return std::make_shared<IllegalInstFault>("FPU is off",
                                                                    machInst);
 
+                    status.fs = FPUStatus::DIRTY;
+                    xc->setMiscReg(MISCREG_STATUS, status);
+
                     freg_t fd = freg(f32(Mem_uw));
                     Fp2_bits = fd.v;
                 }}, {{
@@ -317,8 +320,6 @@ decode QUADRANT default Unknown::unknown() {
                     return std::make_shared<IllegalInstFault>("FPU is off",
                                                                machInst);
 
-                // Mutating any floating point register changes the FS bit
-                // of the STATUS CSR.
                 status.fs = FPUStatus::DIRTY;
                 xc->setMiscReg(MISCREG_STATUS, status);
 
@@ -349,6 +350,9 @@ decode QUADRANT default Unknown::unknown() {
                     if (status.fs == FPUStatus::OFF)
                         return std::make_shared<IllegalInstFault>("FPU is off",
                                                                    machInst);
+
+                    status.fs = FPUStatus::DIRTY;
+                    xc->setMiscReg(MISCREG_STATUS, status);
 
                     freg_t fd;
                     fd = freg(f32(Mem_uw));
@@ -487,6 +491,10 @@ decode QUADRANT default Unknown::unknown() {
                     if (status.fs == FPUStatus::OFF)
                         return std::make_shared<IllegalInstFault>(
                                     "FPU is off", machInst);
+
+                    status.fs = FPUStatus::DIRTY;
+                    xc->setMiscReg(MISCREG_STATUS, status);
+
                     freg_t fd;
                     fd = freg(f16(Mem_uh));
                     Fd_bits = fd.v;
@@ -496,6 +504,10 @@ decode QUADRANT default Unknown::unknown() {
                     if (status.fs == FPUStatus::OFF)
                         return std::make_shared<IllegalInstFault>(
                                     "FPU is off", machInst);
+
+                    status.fs = FPUStatus::DIRTY;
+                    xc->setMiscReg(MISCREG_STATUS, status);
+
                     freg_t fd;
                     fd = freg(f32(Mem_uw));
                     Fd_bits = fd.v;
@@ -506,8 +518,6 @@ decode QUADRANT default Unknown::unknown() {
                         return std::make_shared<IllegalInstFault>(
                                     "FPU is off", machInst);
 
-                    // Mutating any floating point register changes the FS bit
-                    // of the STATUS CSR.
                     status.fs = FPUStatus::DIRTY;
                     xc->setMiscReg(MISCREG_STATUS, status);
 
