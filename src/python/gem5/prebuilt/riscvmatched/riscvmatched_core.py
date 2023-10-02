@@ -82,7 +82,6 @@ class U74VecFU(MinorDefaultVecFU):
 class U74FUPool(MinorFUPool):
     funcUnits = [
         U74IntFU(),
-        U74IntFU(),
         U74IntMulFU(),
         U74IntDivFU(),
         U74FloatSimdFU(),
