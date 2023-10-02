@@ -1899,9 +1899,22 @@ Fetch::updatePrefetchBuffer(ThreadID tid)
     if (ftq_it != ftq[tid].begin()){
         auto ftq_prev_it = std::prev(ftq_it);
         lastFetchedBlock = ftq_prev_it->branchPC->instAddr();
-        lastFetchedBlock += ftq_prev_it->branchPC->size();
+        lastFetchedBlock += (ftq_prev_it->branchPC->size() - 1);
 
         lastFetchedBlock = alignToCacheBlock(lastFetchedBlock);
+    }
+
+    //Check if the fetchBufferPC already at same line
+    if (ftq_it == ftq[tid].begin()){
+        DPRINTF(FDIP, "At head of FTQ\n");
+        DPRINTF(FDIP, "prefetchBufferPC Begin\n");
+        for (auto &it : prefetchBufferPC[tid]){
+            DPRINTF(FDIP, "%#x\n", it);
+        }
+        DPRINTF(FDIP, "prefetchBufferPC End\n");
+        if (!prefetchBufferPC[tid].empty()){
+            lastFetchedBlock = prefetchBufferPC[tid].back();
+        }
     }
 
     //TODO: check if prefetchFTQIndex reached end of ftq
@@ -1911,7 +1924,7 @@ Fetch::updatePrefetchBuffer(ThreadID tid)
 
     //In X86 branchPC could go over onto the next cache line
     Addr branchPCLine = ftq_it->branchPC->instAddr();
-    branchPCLine += ftq_it->branchPC->size();
+    branchPCLine += (ftq_it->branchPC->size() - 1);
     branchPCLine = alignToCacheBlock(branchPCLine);
 
 
