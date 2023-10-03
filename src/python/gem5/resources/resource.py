@@ -980,7 +980,6 @@ def obtain_resource(
     # Once we know what AbstractResource subclass we are using, we create it.
     # The fields in the JSON object are assumed to map like-for-like to the
     # subclass contructor, so we can pass the resource_json map directly.
-
     return resource_class(local_path=to_path, **resource_json)
 
 

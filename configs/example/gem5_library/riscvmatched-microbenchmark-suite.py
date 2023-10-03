@@ -50,15 +50,9 @@ microbenchmarks = obtain_resource("riscv-vertical-microbenchmarks")
 # list all the microbenchmarks present in the suite
 print("Microbenchmarks present in the suite:")
 print("====================================")
-for (
-    id,
-    resource_version,
-    input_group,
-    workload,
-) in microbenchmarks.get_all_workloads():
-    print(f"Workload ID: {id}")
-    print(f"Workload Version: {resource_version}")
-    print(f"Workload Input Groups: {input_group}")
+for workload in microbenchmarks:
+    print(f"Workload ID: {workload.get_id()}")
+    print(f"Workload Version: {workload.get_resource_version()}")
     print(f"WorkloadResource Object: {workload}")
     print("====================================")
 

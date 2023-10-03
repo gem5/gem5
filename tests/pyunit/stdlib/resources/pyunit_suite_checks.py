@@ -59,7 +59,7 @@ class CustomSuiteResourceTestSuite(unittest.TestCase):
         cls.workload1 = obtain_resource("simple-workload-1")
         cls.workload2 = obtain_resource("simple-workload-2")
         cls.SuiteResource = SuiteResource(
-            workload_obj_list={cls.workload1: set(), cls.workload2: set()}
+            workloads={cls.workload1: set(), cls.workload2: set()}
         )
 
     @patch(
