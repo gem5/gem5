@@ -234,7 +234,7 @@ def makeGpuFSSystem(args):
     # If we are using KVM cpu, enable AVX. AVX is used in some ROCm libraries
     # such as rocBLAS which is used in higher level libraries like PyTorch.
     use_avx = False
-    if ObjectList.is_kvm_cpu(TestCPUClass):
+    if ObjectList.is_kvm_cpu(TestCPUClass) and not args.disable_avx:
         # AVX also requires CR4.osxsave to be 1. These must be set together
         # of KVM will error out.
         system.workload.enable_osxsave = 1
