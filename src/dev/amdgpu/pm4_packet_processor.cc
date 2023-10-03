@@ -1190,15 +1190,16 @@ PM4PacketProcessor::unserialize(CheckpointIn &cp)
         memset(pkt, 0, sizeof(PM4MapQueues));
         newQueue(mqd, offset[i], pkt, id[i]);
 
-        queues[id[i]]->ib(false);
-        queues[id[i]]->rptr(rptr[i]);
-        queues[id[i]]->wptr(wptr[i]);
-        queues[id[i]]->ib(true);
-        queues[id[i]]->wptr(ib_wptr[i]);
-        queues[id[i]]->rptr(ib_rptr[i]);
+        if (ib[i]) {
+            queues[id[i]]->wptr(ib_wptr[i]);
+            queues[id[i]]->rptr(ib_rptr[i]);
+        } else {
+            queues[id[i]]->rptr(rptr[i]);
+            queues[id[i]]->wptr(wptr[i]);
+        }
+        queues[id[i]]->ib(ib[i]);
         queues[id[i]]->offset(offset[i]);
         queues[id[i]]->processing(processing[i]);
-        queues[id[i]]->ib(ib[i]);
         queues[id[i]]->setPkt(me[i], pipe[i], queue[i], privileged[i]);
         queues[id[i]]->getMQD()->hqd_active = hqd_active[i];
         queues[id[i]]->getMQD()->hqd_vmid = hqd_vmid[i];
