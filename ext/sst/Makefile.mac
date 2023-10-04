@@ -1,4 +1,4 @@
-SST_VERSION=SST-11.1.0 # Name of the .pc file in lib/pkgconfig where SST is installed
+SST_VERSION=SST-13.0.0 # Name of the .pc file in lib/pkgconfig where SST is installed
 GEM5_LIB=gem5_opt
 ARCH=RISCV
 OFLAG=3
@@ -10,12 +10,12 @@ SRC=$(wildcard *.cc)
 
 .PHONY: clean all
 
-all: libgem5.so
+all: libgem5.dylib
 
-libgem5.so: $(SRC:%.cc=%.o)
+libgem5.dylib: $(SRC:%.cc=%.o)
 	${CXX} ${CPPFLAGS} ${LDFLAGS} $? -o $@ -l${GEM5_LIB}
 
 -include $(SRC:%.cc=%.d)
 
 clean:
-	${RM} *.[do] libgem5.so
+	${RM} *.[do] libgem5.dylib

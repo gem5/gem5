@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2023 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -104,7 +104,7 @@ def createHiFivePlatform(system):
 
     system.platform.pci_host.pio = system.membus.mem_side_ports
 
-    system.platform.rtc = RiscvRTC(frequency=Frequency("100MHz"))
+    system.platform.rtc = RiscvRTC(frequency=Frequency("10MHz"))
     system.platform.clint.int_pin = system.platform.rtc.int_pin
 
     system.pma_checker = PMAChecker(
