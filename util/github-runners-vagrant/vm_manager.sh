@@ -1,9 +1,7 @@
 #!/bin/bash
 
-NUM_RUNNERS=20
-NUM_BUILDERS=3
-RUNNER_PREFIX="$(hostname)-runner-"
-BUILDER_PREFIX="$(hostname)-builder-"
+NUM_RUNNERS=3
+RUNNER_PREFIX_PREFIX="$(hostname)"
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 export VAGRANT_HOME=${SCRIPT_DIR}
@@ -19,25 +17,13 @@ fi
 
 
 for (( i=1; i<=NUM_RUNNERS; i++ )); do
-    sed -i "s/  config.vm.define.*/  config.vm.define \"${RUNNER_PREFIX}${i}\"/g" Vagrantfile-runner
-    sed -i "s/  config.vm.hostname.*/  config.vm.hostname = \"${RUNNER_PREFIX}${i}\"/g" Vagrantfile-runner
+    sed -i "s/  config.vm.define.*/  config.vm.define \"${RUNNER_PREFIX}-${i}\"/g" Vagrantfile
+    sed -i "s/  config.vm.hostname.*/  config.vm.hostname = \"${RUNNER_PREFIX}-${i}\"/g" Vagrantfile
     if [[ "${param}" == "destroy" ]]; then
-        VAGRANT_VAGRANTFILE=Vagrantfile-runner vagrant destroy -f
+        VAGRANT_VAGRANTFILE=Vagrantfile vagrant destroy -f
     elif [[ "${param}" == "shutdown" ]]; then
-        VAGRANT_VAGRANTFILE=Vagrantfile-runner vagrant halt -f
+        VAGRANT_VAGRANTFILE=Vagrantfile vagrant halt -f
     else
-        VAGRANT_VAGRANTFILE=Vagrantfile-runner vagrant up --provider=libvirt
-    fi
-done
-
-for (( i=1; i<=NUM_BUILDERS; i++ )); do
-    sed -i "s/  config.vm.define.*/  config.vm.define \"${BUILDER_PREFIX}${i}\"/g" Vagrantfile-builder
-    sed -i "s/  config.vm.hostname.*/  config.vm.hostname = \"${BUILDER_PREFIX}${i}\"/g" Vagrantfile-builder
-    if [[ "${param}" == "destroy" ]]; then
-        VAGRANT_VAGRANTFILE=Vagrantfile-builder vagrant destroy -f
-    elif [[ "${param}" == "shutdown" ]]; then
-        VAGRANT_VAGRANTFILE=Vagrantfile-builder vagrant halt -f
-    else
-        VAGRANT_VAGRANTFILE=Vagrantfile-builder vagrant up --provider=libvirt
+        VAGRANT_VAGRANTFILE=Vagrantfile vagrant up --provider=libvirt
     fi
 done

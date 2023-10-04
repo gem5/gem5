@@ -21,10 +21,10 @@ sudo apt-get install qemu libvirt-daemon-system libvirt-clients ebtables dnsmasq
 sudo apt purge vagrant-libvirt
 ```
 
-## Set up the Vagrantfiles for the GitHub repository
+## Set up the Vagrant for the GitHub repository
 
 First, generate a Personal Access Token, which you can create [here](https://github.com/settings/tokens)
-Make sure to set admin permissions on this token, then replace instances of `<PERSONAL ACCESS TOKEN>` in the Vagrantfiles ("Vagrantfile-builder" and "Vagrant-runner") with your token.
+Make sure to set admin permissions on this token, then replace the of `<PERSONAL ACCESS TOKEN>` in the Vagrantfile  with your token.
 
 Next, replace instances of `<GITHUB REPO>` with your GitHub account name and the repository name, separated by a forward slash.
 For example, if your GitHub account name is `example` and your repository name is `example-repo`, you would replace `<GITHUB REPO>` with `example/example-repo`.
@@ -46,20 +46,11 @@ vagrant plugin install vagrant-libvirt
 vagrant plugin install vagrant-reload
 ```
 
-## The "builder" and "runner" VMs
-
-The number of CPUs and the memory size differs between the "Vagrantfile-builder" and "Vagrantfile-runner".
-
-In our work we have two types of machines "runners" and "builders".
-Runners are single core machines with 8GB of memory, and builders are 4 core machines with 16GB of memory.
-The latter is used for building gem5 binaries while the former is used for running instances of gem5.
-You can expect each machine to take up approximately 60GB of disk space though VMs will consume the disk space they require.
-
-The "Vagrantfile-builder" file is set to create a runner machine and the "Vagrantfile-builder" file is set to create a builder machine.
-
-Specifying which Vagrantfile to use is done by setting the `VAGRANT_VAGRANTFILE` environment variable.
-
 ## Creating the virtual machine
+
+The Vagrantfile in this directory defines a VM that can be used to create a GitHub Actions runner.
+It has 4-cores, 16GB of RAM, and 60GB of disk space.
+This is sufficient to both compile gem5 and run most simulations.
 
 Each VM on your host system must have a unique name.
 Give the VM to be created a unique name by setting the `<VM NAME>` variables in the Vagrantfile you wish to utilize.
@@ -67,7 +58,7 @@ Give the VM to be created a unique name by setting the `<VM NAME>` variables in 
 Then run:
 
 ```sh
-VAGRANT_VAGRANTFILE=<VAGRANTFILE> vagrant up --provider=libvirt
+vagrant up --provider=libvirt
 ```
 
 This should automatically create your machine, as well as configure and start up a Github Actions runner.
@@ -80,7 +71,7 @@ If you wish to create more than one runner you must edit the `<VM NAME>` in the 
 ## Helper scripts
 
 The "vm_manager" script can be used to set up multiple builder and runner VMs.
-To use this script simply modify the `NUM_RUNNERS`, `NUM_BUILDERS`, `RUNNER_PREFIX`, and `BUILDER_PREFIX` variables to the desired values.
+To use this script simply modify the `NUM_RUNNERS` and `RUNNER_PREFIX` variables to the desired values.
 Then run the script with:
 
 ```sh
