@@ -489,7 +489,7 @@ class DelaySlotPCState : public SimplePCState<InstWidth>
     void nnpc(Addr val) { _nnpc = val; }
 
     void
-    set(Addr val)
+    set(Addr val) override
     {
         Base::set(val);
         nnpc(val + 2 * InstWidth);
@@ -563,7 +563,7 @@ class DelaySlotUPCState : public DelaySlotPCState<InstWidth>
     }
 
     void
-    set(Addr val)
+    set(Addr val) override
     {
         Base::set(val);
         this->upc(0);
