@@ -75,5 +75,107 @@ FsLinux::initState()
     }
 }
 
+void
+BootloaderKernelWorkload::loadBootloaderSymbolTable()
+{
+    if (params().bootloader_filename != "") {
+        Addr bootloader_paddr_offset = params().bootloader_addr;
+        bootloader = loader::createObjectFile(params().bootloader_filename);
+        bootloaderSymbolTable = bootloader->symtab();
+        auto renamedBootloaderSymbolTable = \
+            bootloaderSymbolTable.offset(bootloader_paddr_offset)->rename(
+                [](std::string &name) {
+                    name = "bootloader." + name;
+                }
+            );
+        loader::debugSymbolTable.insert(*renamedBootloaderSymbolTable);
+    }
+}
+
+void
+BootloaderKernelWorkload::loadKernelSymbolTable()
+{
+    if (params().kernel_filename != "") {
+        Addr kernel_paddr_offset = params().kernel_addr;
+        kernel = loader::createObjectFile(params().kernel_filename);
+        kernelSymbolTable = kernel->symtab();
+        auto renamedKernelSymbolTable = \
+            kernelSymbolTable.offset(kernel_paddr_offset)->rename(
+                [](std::string &name) {
+                    name = "kernel." + name;
+                }
+            );
+        loader::debugSymbolTable.insert(*renamedKernelSymbolTable);
+    }
+}
+
+void
+BootloaderKernelWorkload::loadBootloader()
+{
+    if (params().bootloader_filename != "") {
+        Addr bootloader_addr_offset = params().bootloader_addr;
+        bootloader->buildImage().offset(bootloader_addr_offset).write(
+            system->physProxy
+        );
+        delete bootloader;
+    }
+}
+
+void
+BootloaderKernelWorkload::loadKernel()
+{
+    if (params().kernel_filename != "") {
+        Addr kernel_paddr_offset = params().kernel_addr;
+        kernel->buildImage().offset(kernel_paddr_offset).write(
+            system->physProxy
+        );
+        delete kernel;
+    }
+}
+
+
+void
+BootloaderKernelWorkload::loadDtb()
+{
+    if (params().dtb_filename != "") {
+        auto *dtb_file = new loader::DtbFile(params().dtb_filename);
+
+        dtb_file->buildImage().offset(params().dtb_addr)
+            .write(system->physProxy);
+        delete dtb_file;
+
+        for (auto *tc: system->threads) {
+            tc->setReg(int_reg::A1, params().dtb_addr);
+        }
+    }
+}
+
+void
+BootloaderKernelWorkload::initState()
+{
+    loadBootloader();
+    loadKernel();
+    loadDtb();
+
+    for (auto *tc: system->threads) {
+        RiscvISA::Reset().invoke(tc);
+        tc->activate();
+    }
+}
+
+void
+BootloaderKernelWorkload::serialize(CheckpointOut &checkpoint) const
+{
+    bootloaderSymbolTable.serialize("bootloader_symbol_table", checkpoint);
+    kernelSymbolTable.serialize("kernel_symbol_table", checkpoint);
+}
+
+void
+BootloaderKernelWorkload::unserialize(CheckpointIn &checkpoint)
+{
+    bootloaderSymbolTable.unserialize("bootloader_symbol_table", checkpoint);
+    kernelSymbolTable.unserialize("kernel_symbol_table", checkpoint);
+}
+
 } // namespace RiscvISA
 } // namespace gem5
