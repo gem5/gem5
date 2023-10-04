@@ -26,8 +26,7 @@ sudo apt purge vagrant-libvirt
 First, generate a Personal Access Token, which you can create [here](https://github.com/settings/tokens)
 Make sure to set admin permissions on this token, then replace the of `<PERSONAL ACCESS TOKEN>` in the Vagrantfile  with your token.
 
-Next, replace instances of `<GITHUB REPO>` with your GitHub account name and the repository name, separated by a forward slash.
-For example, if your GitHub account name is `example` and your repository name is `example-repo`, you would replace `<GITHUB REPO>` with `example/example-repo`.
+Next, replace instances of `<GITHUB_ORG>` with your GitHub organization you wish to add this runner.
 
 ## Install Vagrant Plugins
 
@@ -62,7 +61,7 @@ vagrant up --provider=libvirt
 ```
 
 This should automatically create your machine, as well as configure and start up a Github Actions runner.
-You can check the status of the runner here: https://github.com/<account>/<repo>/settings/actions/runners
+You can check the status of the runner here: https://github.com/organizations/{GITHUB_ORG}/settings/actions/runners
 
 If the runner ever shows as offline, you can rerun the `vagrant up --provider=libvirt` command to make sure everything is working properly.
 
