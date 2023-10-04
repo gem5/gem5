@@ -190,7 +190,7 @@ class KernelDiskWorkload:
             disk_device=(
                 self._disk_device
                 if self._disk_device
-                else self.get_default_disk_device()
+                else self.get_disk_device()
             ),
         )
 
