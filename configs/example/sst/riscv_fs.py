@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2023 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@ from m5.objects import *
 from os import path
 
 # For downloading the disk image
-from gem5.resources.resource import Resource
+from gem5.resources.resource import obtain_resource
 
 import argparse
 
@@ -104,7 +104,7 @@ def createHiFivePlatform(system):
 
     system.platform.pci_host.pio = system.membus.mem_side_ports
 
-    system.platform.rtc = RiscvRTC(frequency=Frequency("100MHz"))
+    system.platform.rtc = RiscvRTC(frequency=Frequency("10MHz"))
     system.platform.clint.int_pin = system.platform.rtc.int_pin
 
     system.pma_checker = PMAChecker(
@@ -139,7 +139,7 @@ cpu_clock_rate = args.cpu_clock_rate
 memory_size = args.memory_size
 
 # Try downloading the Resource
-bbl_resource = Resource("riscv-boot-exit-nodisk")
+bbl_resource = obtain_resource("riscv-boot-exit-nodisk")
 bbl_path = bbl_resource.get_local_path()
 
 system = System()

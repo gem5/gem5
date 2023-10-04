@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Regents of the University of California
+// Copyright (c) 2023 The Regents of the University of California
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -108,15 +108,20 @@ class gem5Component: public SST::Component
 
   private:
     SST::Output output;
-    SSTResponderSubComponent* systemPort;
-    SSTResponderSubComponent* cachePort;
     uint64_t clocksProcessed;
     SST::TimeConverter* timeConverter;
     gem5::GlobalSimLoopExitEvent *simulateLimitEvent;
     std::vector<char*> args;
 
+    // We need a list of incoming port names so that we don't need to recompile
+    // everytime when we add a new OutgoingBridge from python.
+    std::vector<SSTResponderSubComponent*> sstPorts;
+    std::vector<std::string> sstPortNames;
+    int sstPortCount;
+
     void initPython(int argc, char **argv);
     void splitCommandArgs(std::string &cmd, std::vector<char*> &args);
+    void splitPortNames(std::string port_names);
 
     bool threadInitialized;
 
@@ -139,6 +144,7 @@ class gem5Component: public SST::Component
     )
 
     SST_ELI_DOCUMENT_SUBCOMPONENT_SLOTS(
+        // These are the generally expected ports.
         {"system_port", "Connection to gem5 system_port", "gem5.gem5Bridge"},
         {"cache_port", "Connection to gem5 CPU", "gem5.gem5Bridge"}
     )
