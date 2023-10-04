@@ -1,4 +1,4 @@
-# Copyright (c) 2022 The Regents of the University of California
+# Copyright (c) 2023 The Regents of the University of California
 # All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,25 +25,25 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 FROM ubuntu:22.04
 
-# Valid version values:
-# 13
-# 15
-ARG version
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt -y update && apt -y upgrade && \
     apt -y install git m4 scons zlib1g zlib1g-dev libprotobuf-dev \
     protobuf-compiler libprotoc-dev libgoogle-perftools-dev python3-dev \
     python-is-python3 doxygen libboost-all-dev libhdf5-serial-dev \
-    python3-pydot libpng-dev clang-${version} make
+    python3-pydot libpng-dev make lsb-release wget \
+    software-properties-common gnupg
+
+COPY llvm.sh /llvm.sh
+RUN ./llvm.sh 16
 
 RUN apt-get --purge -y remove gcc
 
 RUN update-alternatives --install \
-    /usr/bin/clang++ clang++ /usr/bin/clang++-${version} 100
+    /usr/bin/clang++ clang++ /usr/bin/clang++-16 100
 RUN update-alternatives --install \
-    /usr/bin/clang clang /usr/bin/clang-${version} 100
+    /usr/bin/clang clang /usr/bin/clang-16 100
 RUN update-alternatives --install \
-    /usr/bin/c++ c++ /usr/bin/clang++-${version} 100
+    /usr/bin/c++ c++ /usr/bin/clang++-16 100
 RUN update-alternatives --install \
-    /usr/bin/cc cc /usr/bin/clang-${version} 100
+    /usr/bin/cc cc /usr/bin/clang-16 100
