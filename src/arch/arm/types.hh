@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2017-2018, 2022 Arm Limited
+ * Copyright (c) 2010, 2012-2013, 2017-2018, 2022-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -323,6 +323,7 @@ namespace ArmISA
         SMC_64                  = 0x17,
         TRAPPED_MSR_MRS_64      = 0x18,
         TRAPPED_SVE             = 0x19,
+        TRAPPED_ERET            = 0x1A,
         TRAPPED_SME             = 0x1D,
         PREFETCH_ABORT_TO_HYP   = 0x20,
         PREFETCH_ABORT_LOWER_EL = 0x20,  // AArch64 alias
