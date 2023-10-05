@@ -178,21 +178,27 @@ RubySystem::makeCacheRecorder(uint8_t *uncompressed_trace,
                               uint64_t block_size_bytes)
 {
     std::vector<Sequencer*> sequencer_map;
+#if BUILD_GPU
     std::vector<GPUCoalescer*> coalescer_map;
-    Sequencer* sequencer_ptr = NULL;
     GPUCoalescer* coalescer_ptr = NULL;
+#endif
+    Sequencer* sequencer_ptr = NULL;
 
     for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
         sequencer_map.push_back(m_abs_cntrl_vec[cntrl]->getCPUSequencer());
+#if BUILD_GPU
         coalescer_map.push_back(m_abs_cntrl_vec[cntrl]->getGPUCoalescer());
+#endif
 
         if (sequencer_ptr == NULL) {
             sequencer_ptr = sequencer_map[cntrl];
         }
 
+#if BUILD_GPU
         if (coalescer_ptr == NULL) {
             coalescer_ptr = coalescer_map[cntrl];
         }
+#endif
 
     }
 
@@ -203,9 +209,11 @@ RubySystem::makeCacheRecorder(uint8_t *uncompressed_trace,
             sequencer_map[cntrl] = sequencer_ptr;
         }
 
+#if BUILD_GPU
         if (coalescer_map[cntrl] == NULL) {
             coalescer_map[cntrl] = coalescer_ptr;
         }
+#endif
 
     }
 
@@ -215,9 +223,15 @@ RubySystem::makeCacheRecorder(uint8_t *uncompressed_trace,
     }
 
     // Create the CacheRecorder and record the cache trace
+#if BUILD_GPU
     m_cache_recorder = new CacheRecorder(uncompressed_trace, cache_trace_size,
                                          sequencer_map, coalescer_map,
                                          block_size_bytes);
+#else
+    m_cache_recorder = new CacheRecorder(uncompressed_trace, cache_trace_size,
+                                         sequencer_map,
+                                         block_size_bytes);
+#endif
 }
 
 void

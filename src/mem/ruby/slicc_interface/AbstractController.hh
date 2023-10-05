@@ -70,7 +70,9 @@ namespace ruby
 {
 
 class Network;
+#ifdef BUILD_GPU
 class GPUCoalescer;
+#endif
 class DMASequencer;
 
 // used to communicate that an in_port peeked the wrong message type

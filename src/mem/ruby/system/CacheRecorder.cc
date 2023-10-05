@@ -57,6 +57,7 @@ CacheRecorder::CacheRecorder()
 {
 }
 
+#if BUILD_GPU
 CacheRecorder::CacheRecorder(uint8_t* uncompressed_trace,
                              uint64_t uncompressed_trace_size,
                              std::vector<Sequencer*>& seq_map,
@@ -67,6 +68,18 @@ CacheRecorder::CacheRecorder(uint8_t* uncompressed_trace,
       m_seq_map(seq_map), m_coalescer_map(coal_map), m_bytes_read(0),
       m_records_read(0), m_records_flushed(0),
       m_block_size_bytes(block_size_bytes)
+#else
+CacheRecorder::CacheRecorder(uint8_t* uncompressed_trace,
+                             uint64_t uncompressed_trace_size,
+                             std::vector<Sequencer*>& seq_map,
+                             uint64_t block_size_bytes)
+    : m_uncompressed_trace(uncompressed_trace),
+      m_uncompressed_trace_size(uncompressed_trace_size),
+      m_seq_map(seq_map), m_bytes_read(0),
+      m_records_read(0), m_records_flushed(0),
+      m_block_size_bytes(block_size_bytes)
+
+#endif
 {
     if (m_uncompressed_trace != NULL) {
         if (m_block_size_bytes < RubySystem::getBlockSizeBytes()) {
@@ -86,7 +99,9 @@ CacheRecorder::~CacheRecorder()
         m_uncompressed_trace = NULL;
     }
     m_seq_map.clear();
+#if BUILD_GPU
     m_coalescer_map.clear();
+#endif
 }
 
 void
@@ -102,14 +117,20 @@ CacheRecorder::enqueueNextFlushRequest()
         Packet *pkt = new Packet(req, requestType);
 
         Sequencer* m_sequencer_ptr = m_seq_map[rec->m_cntrl_id];
+#if BUILD_GPU
         GPUCoalescer* m_coal_ptr = m_coalescer_map[rec->m_cntrl_id];
+#endif
         assert(m_sequencer_ptr != NULL);
+#if BUILD_GPU
         if (m_coal_ptr == NULL)
             m_sequencer_ptr->makeRequest(pkt);
         else {
             pkt->req->setReqInstSeqNum(m_records_flushed - 1);
             m_coal_ptr->makeRequest(pkt);
         }
+#else
+        m_sequencer_ptr->makeRequest(pkt);
+#endif
 
         DPRINTF(RubyCacheTrace, "Flushing %s\n", *rec);
 
@@ -159,15 +180,21 @@ CacheRecorder::enqueueNextFetchRequest()
             pkt->dataStatic(traceRecord->m_data + rec_bytes_read);
 
             Sequencer* m_sequencer_ptr = m_seq_map[traceRecord->m_cntrl_id];
+#if BUILD_GPU
             GPUCoalescer* m_coal_ptr;
             m_coal_ptr = m_coalescer_map[traceRecord->m_cntrl_id];
+#endif
             assert(m_sequencer_ptr != NULL);
+#if BUILD_GPU
             if (m_coal_ptr == NULL)
                 m_sequencer_ptr->makeRequest(pkt);
             else {
                 pkt->req->setReqInstSeqNum(m_records_read);
                 m_coal_ptr->makeRequest(pkt);
             }
+#else
+            m_sequencer_ptr->makeRequest(pkt);
+#endif
         }
 
         m_bytes_read += (sizeof(TraceRecord) + m_block_size_bytes);

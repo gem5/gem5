@@ -32,6 +32,10 @@
 #ifndef __MEM_RUBY_SYSTEM_GPU_COALESCER_HH__
 #define __MEM_RUBY_SYSTEM_GPU_COALESCER_HH__
 
+#include "config/build_gpu.hh"
+
+#if BUILD_GPU
+
 #include <iostream>
 #include <unordered_map>
 
@@ -546,4 +550,5 @@ operator<<(std::ostream& out, const GPUCoalescer& obj)
 } // namespace ruby
 } // namespace gem5
 
+#endif // BUILD_GPU
 #endif // __MEM_RUBY_SYSTEM_GPU_COALESCER_HH__
