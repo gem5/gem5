@@ -86,3 +86,15 @@ virsh pool-define default-pool.xml # From here we re-add the default.
 virsh pool-start default
 virsh pool-autostart default
 ```
+
+### Error: "Vagrant failed to initialize at a very early stage"
+
+W set the `VAGRANT_HOME` environment variable to the CWD.
+It's likely this has become unset The solution is simple.
+Within the directory containing "Vagrantfile":
+
+```sh
+VAGRANT_HOME=`pwd` vagrant <command>
+```
+
+You may want to set `VAGRANT_HOME` in your .bashrc or .zshrc.
