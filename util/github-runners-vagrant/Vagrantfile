@@ -1,6 +1,9 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+PERSONAL_ACCESS_TOKEN="<PERSONAL ACCESS TOKEN>"
+GITHUB_ORG="<GITHUB_ORG>"
+
 Vagrant.configure("2") do |config|
   config.vm.box = "generic/ubuntu2204"
   config.vm.box_check_update = true
@@ -22,27 +25,10 @@ Vagrant.configure("2") do |config|
   config.vm.provision :shell, privileged: false, path: "provision_nonroot.sh"
   # The provision_root.sh adds the vagrant user to the docker group, so we need to reload the VM.
   config.vm.provision :reload
-  config.vm.provision :shell, privileged: false, run: 'always', inline: <<-SHELL
-    if [ -d ~/actions-runner ]; then
-        # This will be run everytime the VM is run (once created).
-        cd actions-runner
-        nohup ./run.sh &
-    else
-        # This will be run the first time the VM is created.
-        mkdir ~/actions-runner && cd ~/actions-runner
-        curl -so actions-runner-linux-x64-2.304.0.tar.gz -L \
-            https://github.com/actions/runner/releases/download/v2.304.0/actions-runner-linux-x64-2.304.0.tar.gz
-        tar xzf ./actions-runner-linux-x64-2.304.0.tar.gz
+  # Copy the "action-run.sh" script from the host to the VM.
+  builder.vm.provision "file", source: "./action-run.sh", destination: "/tmp/action-run.sh"
+  builder.vm.provision :shell, privileged: false,  inline: "cp /tmp/action-run.sh ."
+  # Execute the actions-run.sh script on every boot. This configures the and starts the runner.
+  config.vm.provision :shell, privileged: false, run: 'always', inline: "./action-run.sh #{PERSONAL_ACCESS_TOKEN} #{GITHUB_ORG} >> action-run.log 2>&1 &"
 
-        # configure the runner
-        # echo automatically sets the name of the runner, and the tags
-        # create a personal access token with admin permission and copy it into the curl command
-        echo -ne '\n\nrun\n\n' | ./config.sh --url https://github.com/<GITHUB_ORG> --token $(curl -L \
-            -X POST   -H "Accept: application/vnd.github+json"   -H "Authorization: Bearer <PERSONAL ACCESS TOKEN>" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            https://api.github.com/orgs/${GITHUB_ORG}/actions/runners/registration-token | jq -r '.token')
-        # start the runner
-        nohup ./run.sh &
-    fi
-  SHELL
 end
