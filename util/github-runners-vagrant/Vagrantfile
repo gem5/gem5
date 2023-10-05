@@ -9,8 +9,6 @@ Vagrant.configure("2") do |config|
   config.vm.box_check_update = true
   config.vm.define "<VM NAME>"
   config.vm.hostname = "<VM NAME>"
-  # allows us to ssh into the machine, addressing the problem below
-  # https://www.reddit.com/r/vagrant/comments/sb7hfl/new_to_vagrant_getting_efault_warning/
   config.ssh.username = "vagrant"
   config.ssh.password = "vagrant"
 
