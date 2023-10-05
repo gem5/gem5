@@ -27,34 +27,39 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+NUM_RUNNERS=0 # Set this to the desired number of runners.
 PERSONAL_ACCESS_TOKEN="<PERSONAL ACCESS TOKEN>"
 GITHUB_ORG="<GITHUB_ORG>"
 HOSTNAME="<VM NAME>"
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "generic/ubuntu2204"
-  config.vm.box_check_update = true
-  config.vm.define "#{HOSTNAME}"
-  config.vm.hostname = "#{HOSTNAME}"
   config.ssh.username = "vagrant"
   config.ssh.password = "vagrant"
 
-  config.vm.provider "libvirt" do |vb|
-    # Customize the amount of cpus, memory, and storage on the VM:
-    vb.cpus = "4".to_i
-    vb.memory = "16384".to_i
-    vb.machine_virtual_size = 128 # 128G is the minimum.
+  (1..NUM_RUNNERS).each do |i|
+
+    config.vm.define "#{HOSTNAME}-#{i}" do |runner|
+      runner.vm.hostname = "#{HOSTNAME}-#{i}"
+      runner.vm.box = "generic/ubuntu2204"
+      runner.vm.box_check_update = true
+
+      runner.vm.provider "libvirt" do |vb|
+        # Customize the amount of cpus, memory, and storage on the VM:
+        vb.cpus = "4".to_i
+        vb.memory = "16384".to_i
+        vb.machine_virtual_size = 128 # 128G is the minimum.
+      end
+
+      # sets up vm
+      runner.vm.provision :shell, path: "provision_root.sh"
+      runner.vm.provision :shell, privileged: false, path: "provision_nonroot.sh"
+      # The provision_root.sh adds the vagrant user to the docker group, so we need to reload the VM.
+      runner.vm.provision :reload
+      # Copy the "action-run.sh" script from the host to the VM.
+      runner.vm.provision "file", source: "./action-run.sh", destination: "/tmp/action-run.sh"
+      runner.vm.provision :shell, privileged: false,  inline: "cp /tmp/action-run.sh ."
+      # Execute the actions-run.sh script on every boot. This configures the and starts the runner.
+      runner.vm.provision :shell, privileged: false, run: 'always', inline: "./action-run.sh #{PERSONAL_ACCESS_TOKEN} #{GITHUB_ORG} >> action-run.log 2>&1 &"
+    end
   end
-
-  # sets up vm
-  config.vm.provision :shell, path: "provision_root.sh"
-  config.vm.provision :shell, privileged: false, path: "provision_nonroot.sh"
-  # The provision_root.sh adds the vagrant user to the docker group, so we need to reload the VM.
-  config.vm.provision :reload
-  # Copy the "action-run.sh" script from the host to the VM.
-  builder.vm.provision "file", source: "./action-run.sh", destination: "/tmp/action-run.sh"
-  builder.vm.provision :shell, privileged: false,  inline: "cp /tmp/action-run.sh ."
-  # Execute the actions-run.sh script on every boot. This configures the and starts the runner.
-  config.vm.provision :shell, privileged: false, run: 'always', inline: "./action-run.sh #{PERSONAL_ACCESS_TOKEN} #{GITHUB_ORG} >> action-run.log 2>&1 &"
-
 end
