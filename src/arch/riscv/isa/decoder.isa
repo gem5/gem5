@@ -107,6 +107,49 @@ decode QUADRANT default Unknown::unknown() {
                 }});
             }
         }
+        0x4: decode CFUNCT6LOW3 {
+            format CompressedLoad {
+                0x0: c_lbu({{
+                    offset = (CIMM2<0:0> << 1) | CIMM2<1:1>;
+                }}, {{
+                    Rp2 = Mem_ub;
+                }}, {{
+                    EA = rvZext(Rp1 + offset);
+                }});
+                0x1: decode CFUNCT1BIT6 {
+                    0x0: c_lhu({{
+                        offset = CIMM2<0:0> << 1;
+                    }}, {{
+                        Rp2 = Mem_uh;
+                    }}, {{
+                        EA = rvZext(Rp1 + offset);
+                    }});
+                    0x1: c_lh({{
+                        offset = CIMM2<0:0> << 1;
+                    }}, {{
+                        Rp2_sd = Mem_sh;
+                    }}, {{
+                        EA = rvZext(Rp1 + offset);
+                    }});
+                }
+            }
+            format CompressedStore {
+                0x2: c_sb({{
+                    offset = (CIMM2<0:0> << 1) | CIMM2<1:1>;
+                }}, {{
+                    Mem_ub = Rp2_ub;
+                }}, ea_code={{
+                    EA = rvZext(Rp1 + offset);
+                }});
+                0x3: c_sh({{
+                    offset = (CIMM2<0:0> << 1);
+                }}, {{
+                    Mem_uh = Rp2_uh;
+                }}, ea_code={{
+                    EA = rvZext(Rp1 + offset);
+                }});
+            }
+        }
         format CompressedStore {
             0x5: c_fsd({{
                 offset = CIMM3 << 3 | CIMM2 << 6;
@@ -264,13 +307,40 @@ decode QUADRANT default Unknown::unknown() {
                             Rp1 = rvSext(Rp1 & Rp2);
                         }});
                     }
-                    0x1: decode RVTYPE {
-                        0x1: decode CFUNCT2LOW {
-                            0x0: c_subw({{
+                    0x1: decode CFUNCT2LOW {
+                        0x0: decode RVTYPE {
+                            0x1: c_subw({{
                                 Rp1_sd = (int32_t)Rp1_sd - Rp2_sw;
                             }});
+                        }
+                        0x1: decode RVTYPE {
                             0x1: c_addw({{
                                 Rp1_sd = (int32_t)Rp1_sd + Rp2_sw;
+                            }});
+                        }
+                        0x2: c_mul({{
+                            Rp1_sd = rvSext(Rp1_sd * Rp2_sd);
+                        }}, IntMultOp);
+                        0x3: decode RP2 {
+                            0x0: c_zext_b({{
+                                Rp1 = Rp1 & 0xFFULL;
+                            }});
+                            0x1: c_sext_b({{
+                                Rp1 = sext<8>(Rp1 & 0xFFULL);
+                            }});
+                            0x2: c_zext_h({{
+                                Rp1 = Rp1 & 0xFFFFULL;
+                            }});
+                            0x3: c_sext_h({{
+                                Rp1 = sext<16>(Rp1 & 0xFFFFULL);
+                            }});
+                            0x4: decode RVTYPE {
+                                0x1: c_zext_w({{
+                                    Rp1 = bits(Rp1, 31, 0);
+                                }});
+                            }
+                            0x5: c_not({{
+                                Rp1 = ~Rp1;
                             }});
                         }
                     }
