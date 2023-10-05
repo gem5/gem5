@@ -72,3 +72,6 @@ usermod -aG docker vagrant
 
 # Cleanup
 apt-get autoremove -y
+
+# Resize the root partition to fill up all the free size on the disk
+lvextend -l +100%FREE $(df / --output=source | sed 1d)

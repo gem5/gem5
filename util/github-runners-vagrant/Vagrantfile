@@ -40,9 +40,10 @@ Vagrant.configure("2") do |config|
   config.ssh.password = "vagrant"
 
   config.vm.provider "libvirt" do |vb|
-    # Customize the amount of cpus and memory on the VM:
+    # Customize the amount of cpus, memory, and storage on the VM:
     vb.cpus = "4".to_i
     vb.memory = "16384".to_i
+    vb.machine_virtual_size = 128 # 128G is the minimum.
   end
 
   # sets up vm
