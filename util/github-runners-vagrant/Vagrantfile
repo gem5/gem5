@@ -3,12 +3,13 @@
 
 PERSONAL_ACCESS_TOKEN="<PERSONAL ACCESS TOKEN>"
 GITHUB_ORG="<GITHUB_ORG>"
+HOSTNAME="<VM NAME>"
 
 Vagrant.configure("2") do |config|
   config.vm.box = "generic/ubuntu2204"
   config.vm.box_check_update = true
-  config.vm.define "<VM NAME>"
-  config.vm.hostname = "<VM NAME>"
+  config.vm.define "#{HOSTNAME}"
+  config.vm.hostname = "#{HOSTNAME}"
   config.ssh.username = "vagrant"
   config.ssh.password = "vagrant"
 

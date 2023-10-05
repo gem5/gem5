@@ -17,8 +17,7 @@ fi
 
 
 for (( i=1; i<=NUM_RUNNERS; i++ )); do
-    sed -i "s/  config.vm.define.*/  config.vm.define \"${RUNNER_PREFIX}-${i}\"/g" Vagrantfile
-    sed -i "s/  config.vm.hostname.*/  config.vm.hostname = \"${RUNNER_PREFIX}-${i}\"/g" Vagrantfile
+    sed -i "s/HOSTNAME=.*/HOTNAME=\"${RUNNER_PREFIX}-${i}\"/g" Vagrantfile
     if [[ "${param}" == "destroy" ]]; then
         VAGRANT_VAGRANTFILE=Vagrantfile vagrant destroy -f
     elif [[ "${param}" == "shutdown" ]]; then
