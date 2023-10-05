@@ -183,6 +183,10 @@ Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     std::unique_ptr<PCState> new_pc(dynamic_cast<PCState *>(
         tc->getIsaPtr()->newPCState(workload->getEntry())));
     panic_if(!new_pc, "Failed create new PCState from ISA pointer");
+    VTYPE vtype = 0;
+    vtype.vill = 1;
+    new_pc->vtype(vtype);
+    new_pc->vl(0);
     tc->pcState(*new_pc);
 
     // Reset PMP Cfg

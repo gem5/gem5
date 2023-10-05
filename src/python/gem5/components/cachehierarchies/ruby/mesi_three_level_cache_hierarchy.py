@@ -193,10 +193,10 @@ class MESIThreeLevelCacheHierarchy(
         if board.has_dma_ports():
             dma_ports = board.get_dma_ports()
             for i, port in enumerate(dma_ports):
-                ctrl = DMAController(self.ruby_system.network, cache_line_size)
-                ctrl.dma_sequencer = DMASequencer(version=i, in_ports=port)
+                ctrl = DMAController(
+                    DMASequencer(version=i, in_ports=port), self.ruby_system
+                )
                 self._dma_controllers.append(ctrl)
-                ctrl.ruby_system = self.ruby_system
 
         self.ruby_system.num_of_sequencers = len(self._l1_controllers) + len(
             self._dma_controllers

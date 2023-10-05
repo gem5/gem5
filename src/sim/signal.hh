@@ -54,14 +54,16 @@ class SignalSinkPort : public Port
     OnChangeFunc _onChange;
 
   protected:
+    // if bypass_on_change is specified true, it will not call the _onChange
+    // function. Only _state will be updated if needed.
     void
-    set(const State &new_state)
+    set(const State &new_state, const bool bypass_on_change = false)
     {
         if (new_state == _state)
             return;
 
         _state = new_state;
-        if (_onChange)
+        if (!bypass_on_change && _onChange)
             _onChange(_state);
     }
 
@@ -113,11 +115,13 @@ class SignalSourcePort : public Port
         _state = init_state;
     }
 
+    // if bypass_on_change is specified true, it will not call the _onChange
+    // function. Only _state will be updated if needed.
     void
-    set(const State &new_state)
+    set(const State &new_state, const bool bypass_on_change = false)
     {
         _state = new_state;
-        sink->set(new_state);
+        sink->set(new_state, bypass_on_change);
     }
 
     const State &state() const { return _state; }

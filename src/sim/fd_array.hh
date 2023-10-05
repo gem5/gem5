@@ -43,6 +43,8 @@
 namespace gem5
 {
 
+class Process;
+
 class FDArray : public Serializable
 {
   public:
@@ -117,7 +119,11 @@ class FDArray : public Serializable
      * Serialization methods for file descriptors
      */
     void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
+    void unserialize(CheckpointIn &cp, Process* process_ptr );
+    void unserialize(CheckpointIn &cp) override {
+      unserialize(cp, nullptr);
+    };
+
 
   private:
     /**

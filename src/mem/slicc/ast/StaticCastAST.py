@@ -1,3 +1,15 @@
+# Copyright (c) 2023 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2009 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
@@ -42,22 +54,9 @@ class StaticCastAST(ExprAST):
         actual_type, ecode = self.expr_ast.inline(True)
         if self.type_modifier == "pointer":
             code("static_cast<${{self.type_ast.type.c_ident}} *>($ecode)")
+        elif self.type_modifier == "value":
+            code("static_cast<${{self.type_ast.type.c_ident}} >($ecode)")
         else:
             code("static_cast<${{self.type_ast.type.c_ident}} &>($ecode)")
-
-        if not "interface" in self.type_ast.type:
-            self.expr_ast.error(
-                "static cast only premitted for those types "
-                "that implement inherit an interface"
-            )
-
-        # The interface type should match
-        if str(actual_type) != str(self.type_ast.type["interface"]):
-            self.expr_ast.error(
-                "static cast miss-match, type is '%s',"
-                "but inherited type is '%s'",
-                actual_type,
-                self.type_ast.type["interface"],
-            )
 
         return self.type_ast.type

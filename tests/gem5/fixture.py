@@ -53,6 +53,8 @@ from testlib.helper import log_call, cacheresult, joinpath, absdirpath
 import testlib.log as log
 from testlib.state import Result
 
+from typing import Optional, List
+
 
 class VariableFixture(Fixture):
     def __init__(self, value=None, name=None):
@@ -74,7 +76,7 @@ class TempdirFixture(Fixture):
         suiteUID = testitem.metadata.uid.suite
         testUID = testitem.metadata.name
         testing_result_folder = os.path.join(
-            config.result_path, "SuiteUID:" + suiteUID, "TestUID:" + testUID
+            config.result_path, "SuiteUID-" + suiteUID, "TestUID-" + testUID
         )
 
         # Copy the output files of the run from /tmp to testing-results
@@ -151,6 +153,10 @@ class SConsFixture(UniqueFixture):
         if config.skip_build:
             return
 
+    def _setup(self, testitem):
+        if config.skip_build:
+            return
+
         command = [
             "scons",
             "-C",
@@ -203,6 +209,12 @@ class Gem5Fixture(SConsFixture):
         if protocol:
             self.options = ["--default=" + isa.upper(), "PROTOCOL=" + protocol]
         self.set_global()
+
+    def get_get_build_info(self) -> Optional[str]:
+        build_target = self.target
+        if self.options:
+            build_target += " ".join(self.options)
+        return build_target
 
 
 class MakeFixture(Fixture):

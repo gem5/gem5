@@ -1096,6 +1096,11 @@ namespace ArmISA
         MISCREG_RNDR,
         MISCREG_RNDRRS,
 
+        // FEAT_FGT
+        MISCREG_HFGITR_EL2,
+        MISCREG_HFGRTR_EL2,
+        MISCREG_HFGWTR_EL2,
+
         // NUM_PHYS_MISCREGS specifies the number of actual physical
         // registers, not considering the following pseudo-registers
         // (dummy registers), like MISCREG_UNKNOWN, MISCREG_IMPDEF_UNIMPL.
@@ -1125,10 +1130,6 @@ namespace ArmISA
         MISCREG_DISR_EL1,
         MISCREG_VSESR_EL2,
         MISCREG_VDISR_EL2,
-
-        // FGT extension (unimplemented)
-        MISCREG_HFGRTR_EL2,
-        MISCREG_HFGWTR_EL2,
 
         // PSTATE
         MISCREG_PAN,
@@ -2766,6 +2767,10 @@ namespace ArmISA
         "rndr",
         "rndrrs",
 
+        "hfgitr_el2",
+        "hfgrtr_el2",
+        "hfgwtr_el2",
+
         "num_phys_regs",
 
         // Dummy registers
@@ -2784,8 +2789,6 @@ namespace ArmISA
         "disr_el1",
         "vsesr_el2",
         "vdisr_el2",
-        "hfgrtr_el2",
-        "hfgwtr_el2",
 
         // PSTATE
         "pan",

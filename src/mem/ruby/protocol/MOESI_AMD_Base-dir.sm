@@ -1411,8 +1411,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   transition(BDW_M, MemData, U) {
     mt_writeMemDataToTBE;
-    da_sendResponseDmaAck;
     wd_writeBackData;
+    da_sendResponseDmaAck;
     wada_wakeUpAllDependentsAddr;
     dt_deallocateTBE;
     pm_popMemQueue;
@@ -1420,8 +1420,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   transition(BS_M, MemData, B){L3TagArrayWrite, L3DataArrayWrite} {
     mt_writeMemDataToTBE;
-    s_sendResponseS;
     wd_writeBackData;
+    s_sendResponseS;
     alwt_allocateL3BlockOnWT;
     dt_deallocateTBE;
     pm_popMemQueue;
@@ -1429,8 +1429,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   transition(BM_M, MemData, B){L3TagArrayWrite, L3DataArrayWrite} {
     mt_writeMemDataToTBE;
-    m_sendResponseM;
     wd_writeBackData;
+    m_sendResponseM;
     alwt_allocateL3BlockOnWT;
     dt_deallocateTBE;
     pm_popMemQueue;
@@ -1438,32 +1438,32 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   transition(B_M, MemData, B){L3TagArrayWrite, L3DataArrayWrite} {
     mt_writeMemDataToTBE;
-    es_sendResponseES;
     wd_writeBackData;
+    es_sendResponseES;
     alwt_allocateL3BlockOnWT;
     dt_deallocateTBE;
     pm_popMemQueue;
   }
 
   transition(BS_M, L3Hit, B) {L3TagArrayWrite, L3DataArrayWrite} {
-    s_sendResponseS;
     wd_writeBackData;
+    s_sendResponseS;
     alwt_allocateL3BlockOnWT;
     dt_deallocateTBE;
     ptl_popTriggerQueue;
   }
 
   transition(BM_M, L3Hit, B) {L3DataArrayWrite, L3TagArrayWrite} {
-    m_sendResponseM;
     wd_writeBackData;
+    m_sendResponseM;
     alwt_allocateL3BlockOnWT;
     dt_deallocateTBE;
     ptl_popTriggerQueue;
   }
 
   transition(B_M, L3Hit, B) {L3DataArrayWrite, L3TagArrayWrite} {
-    es_sendResponseES;
     wd_writeBackData;
+    es_sendResponseES;
     alwt_allocateL3BlockOnWT;
     dt_deallocateTBE;
     ptl_popTriggerQueue;
@@ -1509,8 +1509,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   }
 
   transition(BDW_Pm, ProbeAcksComplete, U) {
-    da_sendResponseDmaAck;
     wd_writeBackData;
+    da_sendResponseDmaAck;
     // Check for pending requests from the core we put to sleep while waiting
     // for a response
     wada_wakeUpAllDependentsAddr;
@@ -1520,8 +1520,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   transition(BS_Pm, ProbeAcksComplete, B){L3DataArrayWrite, L3TagArrayWrite} {
     sf_setForwardReqTime;
-    s_sendResponseS;
     wd_writeBackData;
+    s_sendResponseS;
     alwt_allocateL3BlockOnWT;
     dt_deallocateTBE;
     pt_popTriggerQueue;
@@ -1529,8 +1529,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   transition(BM_Pm, ProbeAcksComplete, B){L3DataArrayWrite, L3TagArrayWrite} {
     sf_setForwardReqTime;
-    m_sendResponseM;
     wd_writeBackData;
+    m_sendResponseM;
     alwt_allocateL3BlockOnWT;
     dt_deallocateTBE;
     pt_popTriggerQueue;
@@ -1538,8 +1538,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   transition(B_Pm, ProbeAcksComplete, B){L3DataArrayWrite, L3TagArrayWrite} {
     sf_setForwardReqTime;
-    es_sendResponseES;
     wd_writeBackData;
+    es_sendResponseES;
     alwt_allocateL3BlockOnWT;
     dt_deallocateTBE;
     pt_popTriggerQueue;
@@ -1547,8 +1547,8 @@ machine(MachineType:Directory, "AMD Baseline protocol")
 
   transition(BP, ProbeAcksComplete, B){L3TagArrayWrite, L3TagArrayWrite} {
     sf_setForwardReqTime;
-    c_sendResponseCtoD;
     wd_writeBackData;
+    c_sendResponseCtoD;
     alwt_allocateL3BlockOnWT;
     dt_deallocateTBE;
     pt_popTriggerQueue;

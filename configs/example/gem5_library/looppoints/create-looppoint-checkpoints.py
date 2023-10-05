@@ -56,7 +56,7 @@ from gem5.components.memory.single_channel import SingleChannelDDR3_1600
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
-from gem5.resources.workload import Workload
+from gem5.resources.resource import obtain_resource
 from pathlib import Path
 from gem5.simulate.exit_event_generators import (
     looppoint_save_checkpoint_generator,
@@ -110,7 +110,9 @@ board = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-board.set_workload(Workload("x86-matrix-multiply-omp-100-8-looppoint-csv"))
+board.set_workload(
+    obtain_resource("x86-matrix-multiply-omp-100-8-looppoint-csv")
+)
 
 dir = Path(args.checkpoint_path)
 dir.mkdir(exist_ok=True)

@@ -98,4 +98,10 @@ def operands {{
 #Program Counter Operands
     'PC': PCStateOp('ud', 'pc', (None, None, 'IsControl'), 7),
     'NPC': PCStateOp('ud', 'npc', (None, None, 'IsControl'), 8),
+
+# VL and VTYPE
+    'Vtype': PCStateOp('ud', 'vtype', (None, None, 'IsControl'), 10),
+    'VL': PCStateOp('uw', 'vl', (None, None, 'IsControl'), 11),
+#VLENB, actually the CSR is read only.
+    'VlenbBits': PCStateOp('ud', 'vlenb', (None, None, 'IsControl'), 12),
 }};

@@ -79,9 +79,9 @@ def main():
         exit(-1)
 
     try:
-        simout = open(sys.argv[2] + "/simout", "r")
+        simout = open(sys.argv[2] + "/simout.txt", "r")
     except IOError:
-        print("Failed to open ", sys.argv[2] + "/simout", " for reading")
+        print("Failed to open ", sys.argv[2] + "/simout.txt", " for reading")
         exit(-1)
 
     # Get the burst size, number of banks and the maximum stride from
@@ -102,7 +102,9 @@ def main():
     simout.close()
 
     if not got_sweep:
-        print("Failed to establish sweep details, ensure simout is up-to-date")
+        print(
+            "Failed to establish sweep details, ensure simout.txt is up-to-date"
+        )
         exit(-1)
 
     # Now parse the stats

@@ -138,6 +138,7 @@ class Decoder : public InstDecoder
         StaticInstPtr si = defaultCache.decode(this, mach_inst, addr);
         DPRINTF(Decode, "Decode: Decoded %s instruction: %#x\n",
                 si->getName(), mach_inst);
+        si->size((!emi.thumb || emi.bigThumb) ? 4 : 2);
         return si;
     }
 

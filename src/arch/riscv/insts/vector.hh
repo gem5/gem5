@@ -100,7 +100,7 @@ class VectorNonSplitInst : public RiscvStaticInst
                    OpClass __opClass)
         : RiscvStaticInst(mnem, _machInst, __opClass),
         vl(_machInst.vl),
-        vtype(checked_vtype(_machInst.vill, _machInst.vtype8))
+        vtype(_machInst.vtype8)
     {
         this->flags[IsVector] = true;
     }
@@ -118,7 +118,7 @@ class VectorMacroInst : public RiscvMacroInst
                    OpClass __opClass)
         : RiscvMacroInst(mnem, _machInst, __opClass),
         vl(_machInst.vl),
-        vtype(checked_vtype(_machInst.vill, _machInst.vtype8))
+        vtype(_machInst.vtype8)
     {
         this->flags[IsVector] = true;
     }

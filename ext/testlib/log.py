@@ -26,49 +26,53 @@
 #
 # Authors: Sean Wilson
 
-'''
+"""
 This module supplies the global `test_log` object which all testing
 results and messages are reported through.
-'''
+"""
 import testlib.wrappers as wrappers
 
-class LogLevel():
+
+class LogLevel:
     Fatal = 0
     Error = 1
-    Warn  = 2
-    Info  = 3
+    Warn = 2
+    Info = 3
     Debug = 4
     Trace = 5
 
 
 class RecordTypeCounterMetaclass(type):
-    '''
+    """
     Record type metaclass.
 
     Adds a static integer value in addition to typeinfo so identifiers
     are common across processes, networks and module reloads.
-    '''
+    """
+
     counter = 0
+
     def __init__(cls, name, bases, dct):
         cls.type_id = RecordTypeCounterMetaclass.counter
         RecordTypeCounterMetaclass.counter += 1
 
 
 class Record(object, metaclass=RecordTypeCounterMetaclass):
-    '''
+    """
     A generic object that is passed to the :class:`Log` and its handlers.
 
     ..note: Although not statically enforced, all items in the record should be
         be pickleable. This enables logging accross multiple processes.
-    '''
+    """
 
     def __init__(self, **data):
         self.data = data
 
     def __getitem__(self, item):
         if item not in self.data:
-            raise KeyError('%s not in record %s' %\
-                    (item, self.__class__.__name__))
+            raise KeyError(
+                "%s not in record %s" % (item, self.__class__.__name__)
+            )
         return self.data[item]
 
     def __str__(self):
@@ -78,30 +82,52 @@ class Record(object, metaclass=RecordTypeCounterMetaclass):
 class StatusRecord(Record):
     def __init__(self, obj, status):
         Record.__init__(self, metadata=obj.metadata, status=status)
+
+
 class ResultRecord(Record):
     def __init__(self, obj, result):
         Record.__init__(self, metadata=obj.metadata, result=result)
-#TODO Refactor this shit... Not ideal. Should just specify attributes.
+
+
+# TODO Refactor this shit... Not ideal. Should just specify attributes.
 class TestStatus(StatusRecord):
     pass
+
+
 class SuiteStatus(StatusRecord):
     pass
+
+
 class LibraryStatus(StatusRecord):
     pass
+
+
 class TestResult(ResultRecord):
     pass
+
+
 class SuiteResult(ResultRecord):
     pass
+
+
 class LibraryResult(ResultRecord):
     pass
+
+
 # Test Output Types
 class TestStderr(Record):
     pass
+
+
 class TestStdout(Record):
     pass
+
+
 # Message (Raw String) Types
 class TestMessage(Record):
     pass
+
+
 class LibraryMessage(Record):
     pass
 
@@ -121,8 +147,8 @@ class Log(object):
     def __init__(self, test=None):
         self.test = test
         self.handlers = []
-        self._opened = False # TODO Guards to methods
-        self._closed = False # TODO Guards to methods
+        self._opened = False  # TODO Guards to methods
+        self._closed = False  # TODO Guards to methods
 
     def finish_init(self):
         self._opened = True
@@ -136,19 +162,25 @@ class Log(object):
         if not self._opened:
             self.finish_init()
         if self._closed:
-            raise Exception('The log has been closed'
-                ' and is no longer available.')
+            raise Exception(
+                "The log has been closed" " and is no longer available."
+            )
 
         for handler in self.handlers:
             handler.handle(record)
 
     def message(self, message, level=LogLevel.Info, bold=False, **metadata):
         if self.test:
-            record = TestMessage(message=message, level=level,
-                test_uid=self.test.uid, suite_uid=self.test.parent_suite.uid)
+            record = TestMessage(
+                message=message,
+                level=level,
+                test_uid=self.test.uid,
+                suite_uid=self.test.parent_suite.uid,
+            )
         else:
-            record = LibraryMessage(message=message, level=level,
-                bold=bold, **metadata)
+            record = LibraryMessage(
+                message=message, level=level, bold=bold, **metadata
+            )
 
         self.log(record)
 
@@ -168,20 +200,19 @@ class Log(object):
         self.message(message, LogLevel.Trace)
 
     def status_update(self, obj, status):
-        self.log(
-            self._status_typemap[obj.__class__.__name__](obj, status))
+        self.log(self._status_typemap[obj.__class__.__name__](obj, status))
 
     def result_update(self, obj, result):
-        self.log(
-            self._result_typemap[obj.__class__.__name__](obj, result))
+        self.log(self._result_typemap[obj.__class__.__name__](obj, result))
 
     def add_handler(self, handler):
         if self._opened:
-            raise Exception('Unable to add a handler once the log is open.')
+            raise Exception("Unable to add a handler once the log is open.")
         self.handlers.append(handler)
 
     def close_handler(self, handler):
         handler.close()
         self.handlers.remove(handler)
+
 
 test_log = Log()

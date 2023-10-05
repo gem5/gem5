@@ -267,7 +267,7 @@ def template JumpConstructor {{
                 flags[IsCall] = true;
 
             // Handle "Jalr" instruction
-            if (FUNCT3 == 0x0) {
+            if (FUNCT3 == 0x0 && OPCODE5 == 0x19) {
                 // If RD is not link and RS1 is link, then pop RAS
                 if (!rd_link && rs1_link) flags[IsReturn] = true;
                 else if (rd_link) {

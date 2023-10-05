@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 ARM Limited
+ * Copyright (c) 2021-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1212,8 +1212,7 @@ transition(BUSY_BLKD,
 }
 
 // waiting for WB or evict ack
-transition(BUSY_INTR,
-           {CompDBIDResp,Comp_I}, BUSY_BLKD) {
+transition(BUSY_INTR, Comp_I, BUSY_BLKD) {
   Receive_ReqResp;
   Profile_OutgoingEnd_DatalessResp;
   Pop_RespInQueue;
@@ -1229,9 +1228,19 @@ transition(BUSY_INTR, Comp_UC, BUSY_BLKD) {
   ProcessNextState;
 }
 
+// waiting for WB or evict ack
+transition(BUSY_INTR, CompDBIDResp, BUSY_BLKD) {
+  Receive_ReqResp;
+  Receive_ReqResp_CopyDBID;
+  Profile_OutgoingEnd_DatalessResp;
+  Pop_RespInQueue;
+  ProcessNextState;
+}
+
 // alternative flow for WU with separate Comp
 transition(BUSY_INTR, DBIDResp, BUSY_BLKD) {
   Receive_ReqResp;
+  Receive_ReqResp_CopyDBID;
   Receive_ReqResp_WUNeedComp;
   Pop_RespInQueue;
   ProcessNextState;

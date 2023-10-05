@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2014, 2016-2020, 2022 Arm Limited
+ * Copyright (c) 2009-2014, 2016-2020, 2022-2023 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -1345,6 +1345,14 @@ syncVecElemsToRegs(ThreadContext *tc)
         }
         tc->setReg(vecRegClass[ri], &reg);
     }
+}
+
+bool
+fgtEnabled(ThreadContext *tc)
+{
+    return EL2Enabled(tc) && HaveExt(tc, ArmExtension::FEAT_FGT) &&
+        (!ArmSystem::haveEL(tc, EL3) ||
+            static_cast<SCR>(tc->readMiscReg(MISCREG_SCR_EL3)).fgten);
 }
 
 } // namespace ArmISA

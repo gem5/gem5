@@ -639,7 +639,7 @@ gem5py_env.Program(gem5py, 'python/gem5py.cc')[0]
 m5_module_source = \
         Source.all.with_all_tags(env, 'm5_module', 'gem5 lib')
 m5_module_static = list(map(lambda s: s.static(gem5py_env), m5_module_source))
-gem5py_env.Program(gem5py_m5, [ 'python/gem5py.cc' ] + m5_module_static)
+gem5py_env.Program(gem5py_m5, [ 'python/gem5py_m5.cc' ] + m5_module_static)
 
 
 # version tags

@@ -41,17 +41,6 @@ class RiscvCPU:
     ArchISA = RiscvISA
 
 
-class RiscvISANoRVV(RiscvISA):
-    enable_rvv = False
-
-
-class RiscvCPUNoRVV:
-    ArchDecoder = RiscvDecoder
-    ArchMMU = RiscvMMU
-    ArchInterrupts = RiscvInterrupts
-    ArchISA = RiscvISANoRVV
-
-
 class RiscvAtomicSimpleCPU(BaseAtomicSimpleCPU, RiscvCPU):
     mmu = RiscvMMU()
 
@@ -64,9 +53,9 @@ class RiscvTimingSimpleCPU(BaseTimingSimpleCPU, RiscvCPU):
     mmu = RiscvMMU()
 
 
-class RiscvO3CPU(BaseO3CPU, RiscvCPUNoRVV):
+class RiscvO3CPU(BaseO3CPU, RiscvCPU):
     mmu = RiscvMMU()
 
 
-class RiscvMinorCPU(BaseMinorCPU, RiscvCPUNoRVV):
+class RiscvMinorCPU(BaseMinorCPU, RiscvCPU):
     mmu = RiscvMMU()

@@ -397,6 +397,7 @@ X86_64Process::initState()
             tc->setMiscReg(misc_reg::Cr8, cr8);
 
             tc->setMiscReg(misc_reg::Mxcsr, 0x1f80);
+            tc->setMiscReg(misc_reg::Ftw, 0xffff);
 
             tc->setMiscReg(misc_reg::ApicBase, 0xfee00900);
 
@@ -593,6 +594,7 @@ X86_64Process::initState()
             tc->setMiscReg(misc_reg::Cr0, cr0);
 
             tc->setMiscReg(misc_reg::Mxcsr, 0x1f80);
+            tc->setMiscReg(misc_reg::Ftw, 0xffff);
 
             // Setting CR3 to the process pid so that concatinated
             // page addr with lower 12 bits of CR3 can be used in SE
@@ -727,6 +729,7 @@ I386Process::initState()
         tc->setMiscReg(misc_reg::Cr0, cr0);
 
         tc->setMiscReg(misc_reg::Mxcsr, 0x1f80);
+        tc->setMiscReg(misc_reg::Ftw, 0xffff);
     }
 }
 
@@ -994,7 +997,8 @@ X86Process::argsInit(int pageSize,
     initVirtMem->write(auxv_array_end, zero);
     auxv_array_end += sizeof(zero);
 
-    initVirtMem->writeString(aux_data_base, platform.c_str());
+    initVirtMem->writeString(aux_data_base + numRandomBytes,
+                             platform.c_str());
 
     copyStringArray(envp, envp_array_base, env_data_base,
                     ByteOrder::little, *initVirtMem);

@@ -1375,7 +1375,7 @@ statFunc(SyscallDesc *desc, ThreadContext *tc,
 template <class OS>
 SyscallReturn
 newfstatatFunc(SyscallDesc *desc, ThreadContext *tc, int dirfd,
-               VPtr<> pathname, VPtr<typename OS::tgt_stat> tgt_stat,
+               VPtr<> pathname, VPtr<typename OS::tgt_stat64> tgt_stat,
                int flags)
 {
     std::string path;
@@ -1405,7 +1405,7 @@ newfstatatFunc(SyscallDesc *desc, ThreadContext *tc, int dirfd,
     if (result < 0)
         return -errno;
 
-    copyOutStatBuf<OS>(tgt_stat, &host_buf);
+    copyOutStat64Buf<OS>(tgt_stat, &host_buf);
 
     return 0;
 }
@@ -2409,7 +2409,7 @@ tgkillFunc(SyscallDesc *desc, ThreadContext *tc, int tgid, int tid, int sig)
         }
     }
 
-    if (sig != 0 || sig != OS::TGT_SIGABRT)
+    if (sig != 0 && sig != OS::TGT_SIGABRT)
         return -EINVAL;
 
     if (tgt_proc == nullptr)

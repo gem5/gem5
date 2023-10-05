@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013, 2016-2022 Arm Limited
+// Copyright (c) 2011-2013, 2016-2023 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -335,13 +335,18 @@ let {{
     decoder_output += RegMiscRegOp64Constructor.subst(mrsIop)
     exec_output += BasicExecute.subst(mrsIop)
 
-    buildDataXRegInst("mrsNZCV", 1, '''
+    mrsNZCVCode = '''
         CPSR cpsr = 0;
         cpsr.nz = CondCodesNZ;
         cpsr.c = CondCodesC;
         cpsr.v = CondCodesV;
         XDest = cpsr;
-    ''')
+    '''
+    mrsNZCViop = ArmInstObjParams("mrs", "MrsNZCV64",
+                                  "RegMiscRegImmOp64", mrsNZCVCode)
+    header_output += RegMiscRegOp64Declare.subst(mrsNZCViop)
+    decoder_output += RegMiscRegOp64Constructor.subst(mrsNZCViop)
+    exec_output += BasicExecute.subst(mrsNZCViop)
 
     msrCode = msr_check_code + '''
         MiscDest_ud = XOp1;
@@ -382,12 +387,17 @@ let {{
     exec_output += DvmInitiateAcc.subst(msrTlbiSIop)
     exec_output += DvmCompleteAcc.subst(msrTlbiSIop)
 
-    buildDataXRegInst("msrNZCV", 1, '''
+    msrNZCVCode = '''
         CPSR cpsr = XOp1;
         CondCodesNZ = cpsr.nz;
         CondCodesC = cpsr.c;
         CondCodesV = cpsr.v;
-    ''')
+    '''
+    msrNZCVIop = ArmInstObjParams("msr", "MsrNZCV64", "MiscRegRegImmOp64",
+                                  msrNZCVCode)
+    header_output += MiscRegRegOp64Declare.subst(msrNZCVIop)
+    decoder_output += MiscRegRegOp64Constructor.subst(msrNZCVIop)
+    exec_output += BasicExecute.subst(msrNZCVIop)
 
 
     msrdczva_ea_code = msr_check_code

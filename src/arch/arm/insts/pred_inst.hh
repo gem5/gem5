@@ -378,6 +378,15 @@ class PredMacroOp : public PredOp
 
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
+
+
+    void size(size_t newSize) override
+    {
+        for (int i = 0; i < numMicroops; i++) {
+            microOps[i]->size(newSize);
+        }
+        _size = newSize;
+    }
 };
 
 /**

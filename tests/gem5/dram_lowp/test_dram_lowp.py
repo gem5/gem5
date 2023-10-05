@@ -26,7 +26,9 @@
 
 from testlib import *
 
-verifiers = (verifier.MatchStdoutNoPerf(joinpath(getcwd(), "ref", "simout")),)
+verifiers = (
+    verifier.MatchStdoutNoPerf(joinpath(getcwd(), "ref", "simout.txt")),
+)
 
 gem5_verify_config(
     name="test-low_power-close_adaptive",

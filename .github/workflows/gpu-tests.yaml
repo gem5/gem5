@@ -28,12 +28,27 @@ jobs:
           retention-days: 5
       - run: echo "This job's status is ${{ job.status }}."
 
-# These tests run successfully
   LULESH-tests:
     runs-on: [self-hosted, linux, x64, build]
     container: gcr.io/gem5-test/gcn-gpu:latest
     needs: build-gem5
     timeout-minutes: 600 # 10 hours
+    steps:
+      - name: Build LULESH
+        working-directory: ${{ github.workspace }}/lulesh
+        # rename lulesh binary in this step so test can find it properly
+        run:  |
+          wget https://storage.googleapis.com/dist.gem5.org/dist/develop/test-progs/lulesh/lulesh-2023-09-27
+          mv lulesh-2023-09-27 lulesh
+      - name: Run LULUESH tests
+        working-directory: ${{ github.workspace }}
+        run: build/GCN3_X86/gem5.opt configs/example/apu_se.py -n3 --mem-size=8GB --reg-alloc-policy=dynamic --benchmark-root="lulesh" -c lulesh
+
+  HACC-tests:
+    runs-on: [self-hosted, linux, x64, build]
+    container: gcr.io/gem5-test/gcn-gpu:latest
+    needs: build-gem5
+    timeout-minutes: 120 # 2 hours
     steps:
       - uses: actions/checkout@v3
         with:
@@ -45,17 +60,20 @@ jobs:
           name: weekly-test-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gem5-build-gcn3
           path: build/GCN3_X86
       - run: chmod u+x build/GCN3_X86/gem5.opt
+
+      - name: make hip directory
+        run: mkdir hip
+
       - name: Compile m5ops and x86
         working-directory: ${{ github.workspace }}/util/m5
         run: |
           export TERM=xterm-256color
           scons build/x86/out/m5
-      - name: Build LULESH
-        working-directory: ${{ github.workspace }}/lulesh
-        # rename lulesh binary in this step so test can find it properly
-        run:  |
-          wget https://storage.googleapis.com/dist.gem5.org/dist/develop/test-progs/lulesh/lulesh-2023-09-27
-          mv lulesh-2023-09-27 lulesh
-      - name: Run LULUESH tests
+
+      - name: Download tests
+        working-directory: ${{ github.workspace }}/hip
+        run: wget http://dist.gem5.org/dist/v22-1/test-progs/halo-finder/ForceTreeTest
+      - name: Run HACC tests
         working-directory: ${{ github.workspace }}
-        run: build/GCN3_X86/gem5.opt configs/example/apu_se.py -n3 --mem-size=8GB --reg-alloc-policy=dynamic --benchmark-root="lulesh" -c lulesh
+        run: |
+          build/GCN3_X86/gem5.opt configs/example/apu_se.py -n3 --reg-alloc-policy=dynamic --benchmark-root=hip -c ForceTreeTest --options="0.5 0.1 64 0.1 1 N 12 rcb"
