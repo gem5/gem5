@@ -334,6 +334,23 @@ gem5_verify_config(
     length=constants.very_long_tag,
 )
 
+gem5_verify_config(
+    name="test-gem5-library-example-riscvmatched-microbenchmark-suite",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "gem5_library",
+        "riscvmatched-microbenchmark-suite.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.long_tag,
+)
+
 # The LoopPoint-Checkpointing feature is still under development, therefore
 # these tests are temporarily disabled until this feature is complete.#
 
