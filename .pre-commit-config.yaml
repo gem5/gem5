@@ -66,6 +66,7 @@ repos:
           - id: check-case-conflict
           - id: check-merge-conflict
           - id: check-symlinks
+          - id: destroyed-symlinks
           - id: requirements-txt-fixer
     - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
       rev: 0.2.3
