@@ -22,14 +22,13 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import datetime
 import logging
 import os
 import socket
 
-from m5.defines import buildEnv
 import _m5.arm_fast_model
+from m5.defines import buildEnv
 
 ARM_LICENSE_ENV = "ARMLMD_LICENSE_FILE"
 LM_LICENSE_ENV = "LM_LICENSE_FILE"

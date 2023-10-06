@@ -32,18 +32,17 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """This script is the full system example script from the ARM
 Research Starter Kit on System Modeling. More information can be found
 at: http://www.arm.com/ResearchEnablement/SystemModeling
 """
-
+import argparse
 import os
+
 import m5
-from m5.util import addToPath
 from m5.objects import *
 from m5.options import *
-import argparse
+from m5.util import addToPath
 
 m5.util.addToPath("../..")
 

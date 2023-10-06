@@ -26,18 +26,17 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+import argparse
+import base64
+import os
+import sys
+import tempfile
 
 import m5
 import runfs
-import base64
-import tempfile
-import argparse
-import sys
-import os
-
 from amd import AmdGPUOptions
-from common import Options
 from common import GPUTLBOptions
+from common import Options
 from ruby import Ruby
 
 rodinia_runscript = """\

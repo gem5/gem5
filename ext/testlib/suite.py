@@ -25,8 +25,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Sean Wilson
-
-
 import testlib.helper as helper
 import testlib.runner as runner_mod
 

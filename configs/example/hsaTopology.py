@@ -26,15 +26,20 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+import operator
+from os import fsync
+from os import getpid
+from os import listdir
+from os import makedirs
+from os import mkdir
+from os.path import isdir
+from os.path import join as joinpath
+from shutil import copyfile
+from shutil import rmtree
 
 import m5
-
-import operator
-from os import mkdir, makedirs, getpid, listdir, fsync
-from os.path import join as joinpath
-from os.path import isdir
-from shutil import rmtree, copyfile
-from m5.util.convert import toFrequency, toMemorySize
+from m5.util.convert import toFrequency
+from m5.util.convert import toMemorySize
 
 
 def file_append(path, contents):

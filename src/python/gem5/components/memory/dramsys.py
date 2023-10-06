@@ -23,24 +23,22 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from typing import List
+from typing import Sequence
+from typing import Tuple
 
 import m5
-
-from m5.objects import (
-    DRAMSys,
-    AddrRange,
-    Port,
-    MemCtrl,
-    Gem5ToTlmBridge32,
-    SystemC_Kernel,
-)
+from m5.objects import AddrRange
+from m5.objects import DRAMSys
+from m5.objects import Gem5ToTlmBridge32
+from m5.objects import MemCtrl
+from m5.objects import Port
+from m5.objects import SystemC_Kernel
 from m5.util.convert import toMemorySize
 
 from ...utils.override import overrides
 from ..boards.abstract_board import AbstractBoard
 from .abstract_memory_system import AbstractMemorySystem
-
-from typing import Tuple, Sequence, List
 
 
 class DRAMSysMem(AbstractMemorySystem):

@@ -32,7 +32,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 Definitions for CHI nodes and controller types. These are used by
 create_system in configs/ruby/CHI.py or may be used in custom configuration
@@ -44,8 +43,8 @@ When using the CustomMesh topology, --chi-config must be provided with
 specialization of the NoC_Param classes defining the NoC dimensions and
 node to router binding. See configs/example/noc_config/2x4.py for an example.
 """
-
 import math
+
 import m5
 from m5.objects import *
 

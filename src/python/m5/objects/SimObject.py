@@ -22,9 +22,8 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+from m5.params import ByteOrder
 from m5.SimObject import *
 
 # The ByteOrder enum is defined in params. Expose it here so we can declare it
 # to SCons, since there's no normal SimObject file to make it a part of.
-from m5.params import ByteOrder

@@ -32,13 +32,18 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from m5.SimObject import SimObject
 from m5.objects.Device import PioDevice
-from m5.params import Param, MaxAddr, NULL, VectorParam
+from m5.params import MaxAddr
+from m5.params import NULL
+from m5.params import Param
+from m5.params import VectorParam
 from m5.proxy import Parent
+from m5.SimObject import SimObject
 from m5.util import fatal
-from m5.util.fdthelper import FdtNode, FdtProperty, FdtPropertyWords, FdtState
+from m5.util.fdthelper import FdtNode
+from m5.util.fdthelper import FdtProperty
+from m5.util.fdthelper import FdtPropertyWords
+from m5.util.fdthelper import FdtState
 
 
 class SystemCounter(SimObject):

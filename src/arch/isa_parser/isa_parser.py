@@ -36,19 +36,19 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import os
 import re
 import sys
 import traceback
-
-# get type names
 from types import *
 
 from grammar import Grammar
+
 from .operand_list import *
 from .operand_types import *
 from .util import *
+
+# get type names
 
 debug = False
 

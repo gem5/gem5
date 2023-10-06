@@ -22,14 +22,14 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import argparse
-import m5
 import os
 import re
 import sys
 
-from m5.objects import SystemC_Kernel, Root
+import m5
+from m5.objects import Root
+from m5.objects import SystemC_Kernel
 
 # pylint:disable=unused-variable
 

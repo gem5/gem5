@@ -35,9 +35,8 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from m5.params import *
 from m5.objects.AbstractMemory import *
+from m5.params import *
 
 
 class SimpleMemory(AbstractMemory):

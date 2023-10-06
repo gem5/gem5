@@ -23,13 +23,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from typing import List
 
 from ...utils.override import overrides
-from .traffic_generator_core import TrafficGeneratorCore
-
 from .abstract_generator import AbstractGenerator
-
-from typing import List
+from .traffic_generator_core import TrafficGeneratorCore
 
 
 class TrafficGenerator(AbstractGenerator):

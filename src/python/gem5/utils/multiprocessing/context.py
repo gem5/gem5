@@ -23,14 +23,13 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This file contains extensions of the multiprocessing module to be used with gem5
 Some code inspired by the Python standard library implementation of the
 multiprocessing module (i.e., cpython/Lib/multiprocessing/).
 """
-
-from multiprocessing import context, process
+from multiprocessing import context
+from multiprocessing import process
 from multiprocessing.context import DefaultContext
 
 

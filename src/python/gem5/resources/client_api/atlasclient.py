@@ -23,11 +23,19 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from urllib import request, parse
-from urllib.error import HTTPError, URLError
-from typing import Optional, Dict, Union, Type, Tuple, List, Any
 import json
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Type
+from typing import Union
+from urllib import parse
+from urllib import request
+from urllib.error import HTTPError
+from urllib.error import URLError
+
 from .abstract_client import AbstractClient
 
 

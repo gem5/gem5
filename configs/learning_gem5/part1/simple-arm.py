@@ -23,12 +23,10 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This is the ARM equivalent to `simple.py` (which is designed to run using the
 X86 ISA). More detailed documentation can be found in `simple.py`.
 """
-
 import m5
 from m5.objects import *
 

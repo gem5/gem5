@@ -23,15 +23,17 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from m5.objects import BadAddr
+from m5.objects import BaseXBar
+from m5.objects import Bridge
+from m5.objects import Port
+from m5.objects import SystemXBar
 
-from .abstract_classic_cache_hierarchy import AbstractClassicCacheHierarchy
-from ..abstract_cache_hierarchy import AbstractCacheHierarchy
-from ...boards.abstract_board import AbstractBoard
 from ....isas import ISA
-
-from m5.objects import Bridge, BaseXBar, SystemXBar, BadAddr, Port
-
 from ....utils.override import *
+from ...boards.abstract_board import AbstractBoard
+from ..abstract_cache_hierarchy import AbstractCacheHierarchy
+from .abstract_classic_cache_hierarchy import AbstractClassicCacheHierarchy
 
 
 class NoCache(AbstractClassicCacheHierarchy):

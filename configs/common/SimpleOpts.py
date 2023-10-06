@@ -24,14 +24,12 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """ Options wrapper for simple gem5 configuration scripts
 
 This module wraps the argparse class so that we can register options
 from each class instead of only from the configuration script.
 
 """
-
 # Module-level variable to track if we've called the parse_args function yet
 called_parse_args = False
 

@@ -36,27 +36,28 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import atexit
 import os
 import sys
 
-# import the wrapped C++ functions
-import _m5.drain
 import _m5.core
+import _m5.drain
 from _m5.stats import updateEvents as updateStatEvents
-
-from . import stats
-from . import SimObject
-from . import ticks
-from . import objects
-from . import params
-from .citations import gather_citations
-from m5.util.dot_writer import do_dot, do_dvfs_dot
+from m5.util.dot_writer import do_dot
+from m5.util.dot_writer import do_dvfs_dot
 from m5.util.dot_writer_ruby import do_ruby_dot
 
-from .util import fatal, warn
+from . import objects
+from . import params
+from . import SimObject
+from . import stats
+from . import ticks
+from .citations import gather_citations
 from .util import attrdict
+from .util import fatal
+from .util import warn
+
+# import the wrapped C++ functions
 
 # define a MaxTick parameter, unsigned 64 bit
 MaxTick = 2**64 - 1

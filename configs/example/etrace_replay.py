@@ -32,12 +32,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # Basic elastic traces replay script that configures a Trace CPU
-
 import argparse
 
-from m5.util import addToPath, fatal
+from m5.util import addToPath
+from m5.util import fatal
 
 addToPath("../")
 

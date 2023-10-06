@@ -25,7 +25,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Sean Wilson
-
 """
 Contains the :class:`Loader` which is responsible for discovering and loading
 tests.
@@ -64,18 +63,17 @@ a :class:`TestSuite` named after the module.
 
 .. seealso:: :func:`load_file`
 """
-
 import os
 import re
 import sys
 import traceback
 
+import testlib.fixture as fixture_mod
 import testlib.log as log
 import testlib.suite as suite_mod
 import testlib.test_util as test_mod
-import testlib.fixture as fixture_mod
-import testlib.wrappers as wrappers
 import testlib.uid as uid
+import testlib.wrappers as wrappers
 
 
 class DuplicateTestItemException(Exception):

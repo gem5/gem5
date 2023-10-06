@@ -36,12 +36,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 from collections import OrderedDict
 
-from slicc.util import PairContainer
 from slicc.symbols.Symbol import Symbol
 from slicc.symbols.Var import Var
+from slicc.util import PairContainer
 
 
 class DataMember(Var):

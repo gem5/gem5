@@ -25,20 +25,19 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Sean Wilson
+from os import getcwd
 
+from gem5 import *
 
-from .state import *
-from .runner import *
-from .test_util import *
-from .suite import *
-from .loader import *
-from .fixture import *
 from .configuration import *
+from .fixture import *
+from .loader import *
 from .main import main
+from .runner import *
+from .state import *
+from .suite import *
+from .test_util import *
 
 # TODO Remove this awkward bootstrap
 # FIXME
-from gem5 import *
-
 # TODO Remove this as an export, users should getcwd from os
-from os import getcwd

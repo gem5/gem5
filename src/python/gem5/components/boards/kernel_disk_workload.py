@@ -23,22 +23,20 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from abc import abstractmethod
-
-from .abstract_board import AbstractBoard
-from ...resources.resource import (
-    DiskImageResource,
-    BootloaderResource,
-    CheckpointResource,
-    KernelResource,
-)
-
-from typing import List, Optional, Union
 import os
+from abc import abstractmethod
 from pathlib import Path
+from typing import List
+from typing import Optional
+from typing import Union
 
 import m5
+
+from ...resources.resource import BootloaderResource
+from ...resources.resource import CheckpointResource
+from ...resources.resource import DiskImageResource
+from ...resources.resource import KernelResource
+from .abstract_board import AbstractBoard
 
 
 class KernelDiskWorkload:

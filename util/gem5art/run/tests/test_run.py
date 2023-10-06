@@ -23,13 +23,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """Tests for gem5Run object"""
-
 import hashlib
-from pathlib import Path
 import os
 import unittest
+from pathlib import Path
 from uuid import uuid4
 
 from gem5art.artifact import artifact

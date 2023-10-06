@@ -23,17 +23,16 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 from m5.util import warn
 
-from ...components.processors.cpu_types import CPUTypes
+from ...coherence_protocol import CoherenceProtocol
 from ...components.boards.x86_board import X86Board
-from ...components.memory.single_channel import SingleChannelDDR3_1600
-from ...components.processors.simple_processor import SimpleProcessor
 from ...components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
     MESITwoLevelCacheHierarchy,
 )
-from ...coherence_protocol import CoherenceProtocol
+from ...components.memory.single_channel import SingleChannelDDR3_1600
+from ...components.processors.cpu_types import CPUTypes
+from ...components.processors.simple_processor import SimpleProcessor
 from ...isas import ISA
 from ...utils.requires import requires
 

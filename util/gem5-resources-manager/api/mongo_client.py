@@ -23,14 +23,16 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import json
-from bson import json_util
-from api.client import Client
-from pymongo.errors import ConnectionFailure, ConfigurationError
-from pymongo import MongoClient
-from typing import Dict, List
+from typing import Dict
+from typing import List
+
 import pymongo
+from api.client import Client
+from bson import json_util
+from pymongo import MongoClient
+from pymongo.errors import ConfigurationError
+from pymongo.errors import ConnectionFailure
 
 
 class DatabaseConnectionError(Exception):

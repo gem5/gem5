@@ -23,17 +23,25 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """ Channeled "generic" DDR memory controllers
 """
-
 from math import log
-from ...utils.override import overrides
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
+from typing import Type
+from typing import Union
+
+from m5.objects import AddrRange
+from m5.objects import DRAMInterface
+from m5.objects import MemCtrl
+from m5.objects import Port
 from m5.util.convert import toMemorySize
+
+from ...utils.override import overrides
 from ..boards.abstract_board import AbstractBoard
 from .abstract_memory_system import AbstractMemorySystem
-from m5.objects import AddrRange, DRAMInterface, MemCtrl, Port
-from typing import Type, Sequence, Tuple, List, Optional, Union
 
 
 def _try_convert(val, cls):

@@ -23,7 +23,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 Script to run PARSEC benchmarks with gem5.
 The script expects a benchmark program name and the simulation
@@ -48,20 +47,19 @@ import argparse
 import time
 
 import m5
-from m5.objects import Root
-
-from gem5.utils.requires import requires
+from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.memory import DualChannelDDR4_2400
+from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
 )
-from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
-from gem5.coherence_protocol import CoherenceProtocol
 from gem5.resources.resource import obtain_resource
-from gem5.simulate.simulator import Simulator
 from gem5.simulate.exit_event import ExitEvent
+from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
+from m5.objects import Root
 
 # We check for the required gem5 build.
 

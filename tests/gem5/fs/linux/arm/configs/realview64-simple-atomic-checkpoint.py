@@ -32,12 +32,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import functools
 
-from m5.objects import *
-from arm_generic import *
 import checkpoint
+from arm_generic import *
+from m5.objects import *
 
 root = LinuxArmFSSystemUniprocessor(
     mem_mode="atomic", mem_class=SimpleMemory, cpu_class=ArmAtomicSimpleCPU

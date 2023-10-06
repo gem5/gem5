@@ -23,17 +23,14 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import re
+from typing import Callable
+from typing import List
+from typing import Optional
+from typing import Pattern
+from typing import Union
 
 from .serializable_stat import SerializableStat
-
-import re
-from typing import (
-    Callable,
-    List,
-    Optional,
-    Pattern,
-    Union,
-)
 
 
 class AbstractStat(SerializableStat):

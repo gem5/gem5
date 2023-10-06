@@ -23,14 +23,18 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from abc import ABCMeta
+from abc import abstractmethod
+from typing import List
+from typing import Optional
 
-from abc import ABCMeta, abstractmethod
-from typing import Optional, List
+from m5.objects import BaseMMU
+from m5.objects import PcCountTrackerManager
+from m5.objects import Port
+from m5.objects import SubSystem
+from m5.params import PcCountPair
 
 from ...isas import ISA
-
-from m5.objects import BaseMMU, Port, SubSystem, PcCountTrackerManager
-from m5.params import PcCountPair
 
 
 class AbstractCore(SubSystem):

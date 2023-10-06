@@ -23,14 +23,12 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # Official Tool Website: www.mit.edu/~kaisopos/FaultModel
 #
 # If you use our tool for academic research, we request that you cite:
 # Konstantinos Aisopos, Chia-Hsin Owen Chen, and Li-Shiuan Peh. Enabling
 # System-Level Modeling of Variation-Induced Faults in Networks-on-Chip.
 # Proceedings of the 48th Design Automation Conference (DAC'11)
-
 from m5.params import *
 from m5.SimObject import SimObject
 

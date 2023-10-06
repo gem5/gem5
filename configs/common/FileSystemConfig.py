@@ -35,18 +35,26 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import getpass
+import operator
+import os
+import platform
+from functools import reduce
+from os import access
+from os import getpid
+from os import listdir
+from os import makedirs
+from os import mkdir
+from os import stat
+from os.path import isdir
+from os.path import join as joinpath
+from pwd import getpwuid
+from shutil import copyfile
+from shutil import rmtree
 
 import m5
 from m5.objects import *
 from m5.util.convert import *
-
-from functools import reduce
-import operator, os, platform, getpass
-from os import mkdir, makedirs, getpid, listdir, stat, access
-from pwd import getpwuid
-from os.path import join as joinpath
-from os.path import isdir
-from shutil import rmtree, copyfile
 
 
 def hex_mask(terms):

@@ -23,13 +23,17 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
 from typing import Optional
+
+from m5.objects import Addr
+from m5.objects import GUPSGen
+from m5.objects import Port
+from m5.objects import SrcClockDomain
+from m5.objects import VoltageDomain
+
 from ...utils.override import overrides
 from .abstract_core import AbstractCore
 from .abstract_generator_core import AbstractGeneratorCore
-from m5.objects import Port, GUPSGen, Addr, SrcClockDomain, VoltageDomain
 
 
 class GUPSGeneratorCore(AbstractGeneratorCore):

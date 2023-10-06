@@ -23,7 +23,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """This file defines the ArtifactDB type and some common implementations of
 ArtifactDB.
 
@@ -33,15 +32,20 @@ artifacts stored in the database.
 
 Some common queries can be found in common_queries.py
 """
-
-from abc import ABC, abstractmethod
-
 import copy
 import json
 import os
-from pathlib import Path
 import shutil
-from typing import Any, Dict, Iterable, Union, Type, List, Tuple
+from abc import ABC
+from abc import abstractmethod
+from pathlib import Path
+from typing import Any
+from typing import Dict
+from typing import Iterable
+from typing import List
+from typing import Tuple
+from typing import Type
+from typing import Union
 from urllib.parse import urlparse
 from uuid import UUID
 

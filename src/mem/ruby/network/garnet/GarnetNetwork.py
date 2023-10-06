@@ -27,13 +27,12 @@
 #
 # Author: Tushar Krishna
 #
-
 from m5.citations import add_citation
-from m5.params import *
-from m5.proxy import *
-from m5.objects.Network import RubyNetwork
 from m5.objects.BasicRouter import BasicRouter
 from m5.objects.ClockedObject import ClockedObject
+from m5.objects.Network import RubyNetwork
+from m5.params import *
+from m5.proxy import *
 
 
 class GarnetNetwork(RubyNetwork):

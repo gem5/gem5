@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # Copyright (c) 2012-2013,2015-2016, 2020 ARM Limited
 # All rights reserved
 #
@@ -34,13 +33,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # This python code is used to migrate checkpoints that were created in one
 # version of the simulator to newer version. As features are added or bugs are
 # fixed some of the state that needs to be checkpointed can change. If you have
 # many historic checkpoints that you use, manually editing them to fix them is
 # both time consuming and error-prone.
-
 # This script provides a way to migrate checkpoints to the newer repository in
 # a programmatic way. It can be imported into another script or used on the
 # command line. From the command line the script will either migrate every
@@ -52,14 +49,12 @@
 # ConfigParser object which contains the open file. As these operations can
 # be isa specific the method can verify the isa and use regexes to find the
 # correct sections that need to be updated.
-
 # It is also possible to use this mechanism to revert prior tags.  In this
 # case, implement a downgrade() method instead.  Dependencies should still
 # work naturally - a tag depending on a tag with a downgrader means that it
 # insists on the other tag being removed and its downgrader executed before
 # its upgrader (or downgrader) can run.  It is still the case that a tag
 # can only be used once.
-
 # Dependencies between tags are expressed by two variables at the top-level
 # of the upgrader script: "depends" can be either a string naming another
 # tag that it depends upon or a list of such strings; and "fwd_depends"
@@ -67,11 +62,12 @@
 # arrow(s) -- it expresses that that tag depends upon the tag of the current
 # upgrader. This can be especially valuable when maintaining private
 # upgraders in private branches.
-
-
 import configparser
-import glob, types, sys, os
+import glob
+import os
 import os.path as osp
+import sys
+import types
 
 verbose_print = False
 

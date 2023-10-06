@@ -24,53 +24,45 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import os
 import re
+from typing import List
+from typing import Optional
 
-from typing import List, Optional
-
-from gem5.utils.override import overrides
+import m5
 from gem5.components.boards.abstract_system_board import AbstractSystemBoard
 from gem5.components.boards.kernel_disk_workload import KernelDiskWorkload
 from gem5.components.boards.se_binary_workload import SEBinaryWorkload
-from gem5.resources.resource import AbstractResource
 from gem5.components.memory import SingleChannelDDR4_2400
-from gem5.utils.requires import requires
 from gem5.isas import ISA
+from gem5.resources.resource import AbstractResource
+from gem5.utils.override import overrides
+from gem5.utils.requires import requires
+from m5.objects import AddrRange
+from m5.objects import BadAddr
+from m5.objects import Bridge
+from m5.objects import CowDiskImage
+from m5.objects import Frequency
+from m5.objects import HiFive
+from m5.objects import IGbE_e1000
+from m5.objects import IOXBar
+from m5.objects import PMAChecker
+from m5.objects import Port
+from m5.objects import RawDiskImage
+from m5.objects import RiscvLinux
+from m5.objects import RiscvMmioVirtIO
+from m5.objects import RiscvRTC
+from m5.objects import VirtIOBlock
+from m5.objects import VirtIORng
+from m5.util.fdthelper import Fdt
+from m5.util.fdthelper import FdtNode
+from m5.util.fdthelper import FdtProperty
+from m5.util.fdthelper import FdtPropertyStrings
+from m5.util.fdthelper import FdtPropertyWords
+from m5.util.fdthelper import FdtState
+
 from .riscvmatched_cache import RISCVMatchedCacheHierarchy
 from .riscvmatched_processor import U74Processor
-from gem5.isas import ISA
-
-import m5
-
-from m5.objects import (
-    BadAddr,
-    Bridge,
-    PMAChecker,
-    RiscvLinux,
-    AddrRange,
-    IOXBar,
-    RiscvRTC,
-    HiFive,
-    IGbE_e1000,
-    CowDiskImage,
-    RawDiskImage,
-    RiscvMmioVirtIO,
-    VirtIOBlock,
-    VirtIORng,
-    Frequency,
-    Port,
-)
-
-from m5.util.fdthelper import (
-    Fdt,
-    FdtNode,
-    FdtProperty,
-    FdtPropertyStrings,
-    FdtPropertyWords,
-    FdtState,
-)
 
 
 def U74Memory():

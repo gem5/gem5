@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 # Copyright (c) 2020 ARM Limited
 # All rights reserved
 #
@@ -34,14 +33,12 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import argparse
 import datetime
 import subprocess
 import sys
 
 import git_filter_repo
-
 import update_copyright
 
 parser = argparse.ArgumentParser(

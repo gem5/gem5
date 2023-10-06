@@ -32,16 +32,13 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 Arm FS simulation tests
 """
-
+import re
 from os.path import join as joinpath
 
 from testlib import *
-
-import re
 
 arm_fs_kvm_tests = ["realview64-kvm", "realview64-kvm-dual"]
 

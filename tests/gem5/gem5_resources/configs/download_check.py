@@ -23,20 +23,15 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from gem5.resources.downloader import (
-    list_resources,
-    get_resource,
-)
-
-from gem5.resources.client import get_resource_json_obj
-
-from gem5.resources.md5_utils import md5
-
+import argparse
 import os
 import shutil
-import argparse
 from pathlib import Path
+
+from gem5.resources.client import get_resource_json_obj
+from gem5.resources.downloader import get_resource
+from gem5.resources.downloader import list_resources
+from gem5.resources.md5_utils import md5
 
 parser = argparse.ArgumentParser(
     description="A script that will checks that input resource IDs will "

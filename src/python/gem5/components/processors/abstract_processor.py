@@ -23,18 +23,17 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from abc import ABCMeta, abstractmethod
-
-from ...utils.requires import requires
-from .abstract_core import AbstractCore
+from abc import ABCMeta
+from abc import abstractmethod
+from typing import List
+from typing import Optional
 
 from m5.objects import SubSystem
 
-from ..boards.abstract_board import AbstractBoard
 from ...isas import ISA
-
-from typing import List, Optional
+from ...utils.requires import requires
+from ..boards.abstract_board import AbstractBoard
+from .abstract_core import AbstractCore
 
 
 class AbstractProcessor(SubSystem):

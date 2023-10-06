@@ -37,7 +37,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Sean Wilson
-
 """
 Global configuration module which exposes two types of configuration
 variables:
@@ -82,10 +81,11 @@ import argparse
 import copy
 import os
 import re
-
 from pickle import HIGHEST_PROTOCOL as highest_pickle_protocol
 
-from testlib.helper import absdirpath, AttrDict, FrozenAttrDict
+from testlib.helper import absdirpath
+from testlib.helper import AttrDict
+from testlib.helper import FrozenAttrDict
 
 
 class UninitialzedAttributeException(Exception):

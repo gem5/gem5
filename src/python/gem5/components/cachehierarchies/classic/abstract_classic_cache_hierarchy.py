@@ -23,12 +23,12 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 from abc import abstractmethod
-from ....utils.override import overrides
-from ..abstract_cache_hierarchy import AbstractCacheHierarchy
 
 from m5.objects import Port
+
+from ....utils.override import overrides
+from ..abstract_cache_hierarchy import AbstractCacheHierarchy
 
 
 class AbstractClassicCacheHierarchy(AbstractCacheHierarchy):

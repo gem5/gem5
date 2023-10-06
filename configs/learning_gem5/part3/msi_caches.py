@@ -24,7 +24,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """ This file creates a set of Ruby caches, the Ruby network, and a simple
 point-to-point topology.
 See Part 3 in the Learning gem5 book:
@@ -34,13 +33,12 @@ IMPORTANT: If you modify this file, it's likely that the Learning gem5 book
            also needs to be updated. For now, email Jason <jason@lowepower.com>
 
 """
-
 import math
 
 from m5.defines import buildEnv
-from m5.util import fatal, panic
-
 from m5.objects import *
+from m5.util import fatal
+from m5.util import panic
 
 
 class MyCacheSystem(RubySystem):

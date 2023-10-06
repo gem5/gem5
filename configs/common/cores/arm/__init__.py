@@ -32,9 +32,8 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from pkgutil import iter_modules
 from importlib import import_module
+from pkgutil import iter_modules
 
 _cpu_modules = [name for _, name, ispkg in iter_modules(__path__) if not ispkg]
 

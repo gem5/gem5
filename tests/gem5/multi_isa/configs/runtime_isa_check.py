@@ -23,16 +23,16 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This is a very simple script to test the output given by
 `gem5.runtime.get_runtime_isa`
 """
-
-from gem5.runtime import get_runtime_isa
-from gem5.isas import ISA, get_isas_str_set, get_isa_from_str
-
 import argparse
+
+from gem5.isas import get_isa_from_str
+from gem5.isas import get_isas_str_set
+from gem5.isas import ISA
+from gem5.runtime import get_runtime_isa
 
 parser = argparse.ArgumentParser(
     description="A simple script used to check the output of "

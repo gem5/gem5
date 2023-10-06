@@ -23,10 +23,10 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from .celery import gem5app
 import multiprocessing as mp
 import time
+
+from .celery import gem5app
 
 
 @gem5app.task(bind=True, serializer="pickle")

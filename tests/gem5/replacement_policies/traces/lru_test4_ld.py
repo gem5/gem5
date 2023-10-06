@@ -23,11 +23,9 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # This test is targeting loads.
 # Access pattern: A, C, E, G, E, G, A, C, I, E
 # Each letter represents a 64-byte address range.
-
 # The [] indicate two different sets, and each set has four ways.
 # [set0way0, set0way1, set0way2, set0way3],
 # [set1way0, set1way1, set1way2, set1way3],
@@ -35,7 +33,6 @@
 # line is 64B with LRU replacement policy, you will observe:
 # m, m, m, m, h, h, h, h, m, m, where 'h' means
 # hit and 'm' means miss.
-
 # Explanation of this result:
 # A, C, E, G are misses, now the cache stores ([A*, C, E, G],[ , , ,]).
 # A is marked as the LRU address range.
@@ -43,7 +40,6 @@
 # A and C then hits, and the cache stores ([A, C, E*, G],[ , , ,]).
 # I searches for a victim and selects E. Now the cache stores ([A, C, I, G*],[ , , ,]).
 # E searches for a victim and selects G. Now the cache stores ([A*, C, I, E],[ , , ,]).
-
 from m5.objects.ReplacementPolicies import LRURP as rp
 
 

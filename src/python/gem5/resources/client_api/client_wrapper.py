@@ -23,13 +23,17 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from .jsonclient import JSONClient
-from .atlasclient import AtlasClient
-from _m5 import core
-from typing import Optional, Dict, List, Tuple
 import itertools
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+
+from _m5 import core
 from m5.util import warn
+
+from .atlasclient import AtlasClient
+from .jsonclient import JSONClient
 
 
 class ClientWrapper:

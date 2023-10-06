@@ -23,6 +23,9 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # Export native methods to Python
-from _m5.trace import output, activate, ignore, disable, enable
+from _m5.trace import activate
+from _m5.trace import disable
+from _m5.trace import enable
+from _m5.trace import ignore
+from _m5.trace import output

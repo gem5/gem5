@@ -5,9 +5,8 @@ loaders.
 
 Discovers and runs all tests from a given root directory.
 """
-
-import sys
 import os
+import sys
 
 os.environ["PYTHONUNBUFFERED"] = "1"
 

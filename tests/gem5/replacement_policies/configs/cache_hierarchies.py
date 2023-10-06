@@ -24,14 +24,13 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 from typing import Type
 
-from gem5.utils.override import overrides
+from gem5.components.boards.abstract_board import AbstractBoard
 from gem5.components.cachehierarchies.ruby.mi_example_cache_hierarchy import (
     MIExampleCacheHierarchy,
 )
-from gem5.components.boards.abstract_board import AbstractBoard
+from gem5.utils.override import overrides
 from m5.objects.ReplacementPolicies import BaseReplacementPolicy
 
 

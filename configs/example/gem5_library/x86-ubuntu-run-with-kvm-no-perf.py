@@ -23,7 +23,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 
 This script demonstrates how to use KVM CPU without perf.
@@ -37,22 +36,21 @@ scons build/X86/gem5.opt -j`nproc`
 ./build/X86/gem5.opt configs/example/gem5_library/x86-ubuntu-run-with-kvm-no-perf.py
 ```
 """
-
-from gem5.utils.requires import requires
+from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
     MESITwoLevelCacheHierarchy,
 )
 from gem5.components.memory.single_channel import SingleChannelDDR4_2400
+from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
 )
-from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
-from gem5.coherence_protocol import CoherenceProtocol
-from gem5.simulate.simulator import Simulator
-from gem5.simulate.exit_event import ExitEvent
 from gem5.resources.resource import obtain_resource
+from gem5.simulate.exit_event import ExitEvent
+from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
 
 # This simulation requires using KVM with gem5 compiled for X86 simulation
 # and with MESI_Two_Level cache coherence protocol.

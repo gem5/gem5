@@ -25,9 +25,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Sean Wilson
-
-import os
 import itertools
+import os
 
 import testlib.configuration as configuration
 

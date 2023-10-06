@@ -23,16 +23,18 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from m5.params import PcCountPair
-from m5.objects import PcCountTrackerManager
-import m5
-
-import os
 import csv
 import json
+import os
 from pathlib import Path
-from typing import List, Optional, Dict, Union
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
+
+import m5
+from m5.objects import PcCountTrackerManager
+from m5.params import PcCountPair
 
 
 class LooppointRegionPC:

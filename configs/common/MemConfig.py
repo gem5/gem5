@@ -32,10 +32,9 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import m5.objects
-from common import ObjectList
 from common import HMC
+from common import ObjectList
 
 
 def create_mem_intf(intf, r, i, intlv_bits, intlv_size, xor_low_bit):

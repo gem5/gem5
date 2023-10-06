@@ -23,25 +23,22 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from typing import List
+from typing import Optional
 
-from typing import Optional, List
-from ...utils.requires import requires
-from .abstract_core import AbstractCore
+from m5.objects import BaseCPU
+from m5.objects import BaseMMU
+from m5.objects import PcCountTracker
+from m5.objects import PcCountTrackerManager
+from m5.objects import Port
+from m5.objects import Process
+from m5.params import PcCountPair
 
 from ...isas import ISA
 from ...runtime import get_runtime_isa
 from ...utils.override import overrides
 from ...utils.requires import requires
-
-from m5.objects import (
-    BaseMMU,
-    Port,
-    BaseCPU,
-    Process,
-    PcCountTracker,
-    PcCountTrackerManager,
-)
-from m5.params import PcCountPair
+from .abstract_core import AbstractCore
 
 
 class BaseCPUCore(AbstractCore):

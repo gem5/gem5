@@ -22,19 +22,17 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from m5.proxy import Self
-
-from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
-from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
-from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
-from m5.objects.BaseO3CPU import BaseO3CPU
-from m5.objects.BaseO3Checker import BaseO3Checker
-from m5.objects.BaseMinorCPU import BaseMinorCPU
 from m5.objects.ArmDecoder import ArmDecoder
-from m5.objects.ArmMMU import ArmMMU
 from m5.objects.ArmInterrupts import ArmInterrupts
 from m5.objects.ArmISA import ArmISA
+from m5.objects.ArmMMU import ArmMMU
+from m5.objects.BaseAtomicSimpleCPU import BaseAtomicSimpleCPU
+from m5.objects.BaseMinorCPU import BaseMinorCPU
+from m5.objects.BaseNonCachingSimpleCPU import BaseNonCachingSimpleCPU
+from m5.objects.BaseO3Checker import BaseO3Checker
+from m5.objects.BaseO3CPU import BaseO3CPU
+from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
+from m5.proxy import Self
 
 
 class ArmCPU:

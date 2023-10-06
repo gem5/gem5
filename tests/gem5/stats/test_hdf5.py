@@ -33,7 +33,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 Test file for the hdf5 stats.
 It just runs an SE simulation with the hdf5 stats and checks that the
@@ -46,8 +45,9 @@ It will not run if the build/ARM/gem5.opt has not been built. As this is not
 built prior to this test being processed during the Weekly run, this test is
 not run.
 """
-import re
 import os
+import re
+
 from testlib import *
 
 if config.bin_path:

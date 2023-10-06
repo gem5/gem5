@@ -23,7 +23,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This configuration script shows an example of how to take checkpoints for
 LoopPoint using the gem5 stdlib. To take checkpoints for LoopPoint simulation
@@ -46,23 +45,22 @@ scons build/X86/gem5.opt
     configs/example/gem5_library/looppoints/create-looppoint-checkpoint.py
 ```
 """
+import argparse
+from pathlib import Path
 
-from gem5.simulate.exit_event import ExitEvent
-from gem5.simulate.simulator import Simulator
-from gem5.utils.requires import requires
-from gem5.components.cachehierarchies.classic.no_cache import NoCache
 from gem5.components.boards.simple_board import SimpleBoard
+from gem5.components.cachehierarchies.classic.no_cache import NoCache
 from gem5.components.memory.single_channel import SingleChannelDDR3_1600
-from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.processors.cpu_types import CPUTypes
+from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
-from pathlib import Path
+from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.exit_event_generators import (
     looppoint_save_checkpoint_generator,
 )
-
-import argparse
+from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
 
 requires(isa_required=ISA.X86)
 

@@ -24,7 +24,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """ This file creates a system with Ruby caches and executes 'threads', a
 simple multi-threaded application with false sharing to stress the Ruby
 protocol.
@@ -36,12 +35,11 @@ IMPORTANT: If you modify this file, it's likely that the Learning gem5 book
            also needs to be updated. For now, email Jason <jason@lowepower.com>
 
 """
-
 # import the m5 (gem5) library created when gem5 is built
 import m5
+from m5.objects import *
 
 # import all of the SimObjects
-from m5.objects import *
 
 # Needed for running C++ threads
 m5.util.addToPath("../../")

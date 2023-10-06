@@ -23,30 +23,32 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-import m5
-import m5.ticks
-from m5.stats import addStatVisitor
-from m5.ext.pystats.simstat import SimStat
-from m5.objects import Root
-from m5.util import warn
-
 import os
 import sys
 from pathlib import Path
-from typing import Optional, List, Tuple, Dict, Generator, Union, Callable
+from typing import Callable
+from typing import Dict
+from typing import Generator
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
-from .exit_event_generators import (
-    warn_default_decorator,
-    exit_generator,
-    switch_generator,
-    save_checkpoint_generator,
-    reset_stats_generator,
-    dump_stats_generator,
-)
-from .exit_event import ExitEvent
+import m5.ticks
+from m5.ext.pystats.simstat import SimStat
+from m5.objects import Root
+from m5.stats import addStatVisitor
+from m5.util import warn
+
 from ..components.boards.abstract_board import AbstractBoard
 from ..components.processors.switchable_processor import SwitchableProcessor
+from .exit_event import ExitEvent
+from .exit_event_generators import dump_stats_generator
+from .exit_event_generators import exit_generator
+from .exit_event_generators import reset_stats_generator
+from .exit_event_generators import save_checkpoint_generator
+from .exit_event_generators import switch_generator
+from .exit_event_generators import warn_default_decorator
 
 
 class Simulator:

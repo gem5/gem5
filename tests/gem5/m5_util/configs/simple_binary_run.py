@@ -24,34 +24,31 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 A run script for a very simple Syscall-Execution running simple binaries.
 The system has no cache heirarchy and is as "bare-bones" as you can get in
 gem5 while still being functinal.
 """
-
-from gem5.resources.resource import Resource
-from gem5.components.processors.cpu_types import (
-    get_cpu_types_str_set,
-    get_cpu_type_from_str,
-)
-from gem5.components.memory import SingleChannelDDR3_1600
-from gem5.components.boards.simple_board import SimpleBoard
-from gem5.components.cachehierarchies.classic.no_cache import NoCache
-from gem5.components.processors.simple_processor import SimpleProcessor
-from gem5.components.processors.base_cpu_core import BaseCPUCore
-from gem5.components.processors.base_cpu_processor import BaseCPUProcessor
-from gem5.components.processors.simple_core import SimpleCore
-from gem5.components.boards.mem_mode import MemMode
-from gem5.components.processors.cpu_types import CPUTypes
-from gem5.simulate.simulator import Simulator
-from gem5.isas import get_isa_from_str, get_isas_str_set, ISA
-
-from m5.util import fatal
-
 import argparse
 import importlib
+
+from gem5.components.boards.mem_mode import MemMode
+from gem5.components.boards.simple_board import SimpleBoard
+from gem5.components.cachehierarchies.classic.no_cache import NoCache
+from gem5.components.memory import SingleChannelDDR3_1600
+from gem5.components.processors.base_cpu_core import BaseCPUCore
+from gem5.components.processors.base_cpu_processor import BaseCPUProcessor
+from gem5.components.processors.cpu_types import CPUTypes
+from gem5.components.processors.cpu_types import get_cpu_type_from_str
+from gem5.components.processors.cpu_types import get_cpu_types_str_set
+from gem5.components.processors.simple_core import SimpleCore
+from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.isas import get_isa_from_str
+from gem5.isas import get_isas_str_set
+from gem5.isas import ISA
+from gem5.resources.resource import Resource
+from gem5.simulate.simulator import Simulator
+from m5.util import fatal
 
 
 parser = argparse.ArgumentParser(

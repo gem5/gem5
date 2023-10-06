@@ -23,11 +23,9 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # This test is targeting stores
 # Access pattern: A, C, E, G, A, I, K, M, O, A
 # Each letter represents a 64-byte address range.
-
 # The [] indicate two different sets, and each set has four ways.
 # [set0way0, set0way1, set0way2, set0way3],
 # [set1way0, set1way1, set1way2, set1way3],
@@ -35,7 +33,6 @@
 # and each cache line is 64B with TreePLRU replacement policy,
 # you will observe: m, m, m, m, h, m, m, m, m, m,
 # where 'm' means miss, and 'h' means hit.
-
 # Explanation of this result:
 # A, C, E, G are misses, now the cache stores ([A*, C, E, G],[ , , ,]).
 # and A is the next one to get replaced.
@@ -45,7 +42,6 @@
 # M searches for a victim and selects G. Now the cache stores ([A*, K, I, M],[ , , ,]).
 # O searches for a victim and selects A. Now the cache stores ([O, K, I*, M],[ , , ,]).
 # A searches for a victim and selects I. Now the cache stores ([O, K*, A, M],[ , , ,]).
-
 from m5.objects.ReplacementPolicies import TreePLRURP as rp
 
 

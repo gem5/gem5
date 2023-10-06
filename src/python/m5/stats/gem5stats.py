@@ -23,21 +23,21 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This serves as the bridge between the gem5 statistics exposed via PyBind11 and
 the Python Stats model.
 """
-
 from datetime import datetime
-from typing import IO, List, Union
+from typing import IO
+from typing import List
+from typing import Union
 
 import _m5.stats
-from m5.objects import *
 from m5.ext.pystats.group import *
 from m5.ext.pystats.simstat import *
 from m5.ext.pystats.statistic import *
 from m5.ext.pystats.storagetype import *
+from m5.objects import *
 
 
 class JsonOutputVistor:

@@ -25,11 +25,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Sean Wilson
+from typing import Optional
 
 import testlib.helper as helper
 from testlib.configuration import constants
-
-from typing import Optional
 
 
 class SkipException(Exception):

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-
 import os
 import re
 import sys
 
-from file_types import lang_type, find_files
+from file_types import find_files
+from file_types import lang_type
 
 mode_line = re.compile("(-\*- *mode:.* *-\*-)")
 shell_comment = re.compile(r"^\s*#")

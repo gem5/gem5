@@ -23,23 +23,19 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-import unittest
 import os
-
-from gem5.resources.workload import Workload, CustomWorkload
-from gem5.resources.resource import (
-    BinaryResource,
-    DiskImageResource,
-    obtain_resource,
-    WorkloadResource,
-)
-
+import unittest
+from pathlib import Path
 from typing import Dict
+from unittest.mock import patch
 
 from gem5.resources.client_api.client_wrapper import ClientWrapper
-from unittest.mock import patch
-from pathlib import Path
+from gem5.resources.resource import BinaryResource
+from gem5.resources.resource import DiskImageResource
+from gem5.resources.resource import obtain_resource
+from gem5.resources.resource import WorkloadResource
+from gem5.resources.workload import CustomWorkload
+from gem5.resources.workload import Workload
 
 mock_config_json = {
     "sources": {

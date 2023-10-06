@@ -23,12 +23,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 from slicc.symbols.Action import Action
 from slicc.symbols.Event import Event
 from slicc.symbols.Func import Func
-from slicc.symbols.State import State
 from slicc.symbols.RequestType import RequestType
+from slicc.symbols.State import State
 from slicc.symbols.StateMachine import StateMachine
 from slicc.symbols.Symbol import Symbol
 from slicc.symbols.SymbolTable import SymbolTable

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # Copyright (c) 2020 The Regents of the University of California
 # All Rights Reserved.
 #
@@ -25,15 +24,15 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import json
+import sys
+import time
 
 from gerrit import GerritResponseParser as Parser
 from gerrit import GerritRestAPI
-from util import add_maintainers_to_change, convert_time_in_seconds
 
-import json
-import time
-
-import sys
+from util import add_maintainers_to_change
+from util import convert_time_in_seconds
 
 sys.path.append("..")
 import maint.lib.maintainers

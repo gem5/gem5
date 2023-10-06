@@ -23,44 +23,44 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from m5.objects import (
-    Port,
-    IOXBar,
-    Bridge,
-    BadAddr,
-    Terminal,
-    PciVirtIO,
-    VncServer,
-    AddrRange,
-    ArmSystem,
-    ArmRelease,
-    ArmFsLinux,
-    VirtIOBlock,
-    CowDiskImage,
-    RawDiskImage,
-    VoltageDomain,
-    SrcClockDomain,
-    ArmDefaultRelease,
-    VExpress_GEM5_Base,
-    VExpress_GEM5_Foundation,
-    SimObject,
-)
-
 import os
-import m5
 from abc import ABCMeta
+from typing import List
+from typing import Sequence
+from typing import Tuple
+
+import m5
+from m5.objects import AddrRange
+from m5.objects import ArmDefaultRelease
+from m5.objects import ArmFsLinux
+from m5.objects import ArmRelease
+from m5.objects import ArmSystem
+from m5.objects import BadAddr
+from m5.objects import Bridge
+from m5.objects import CowDiskImage
+from m5.objects import IOXBar
+from m5.objects import PciVirtIO
+from m5.objects import Port
+from m5.objects import RawDiskImage
+from m5.objects import SimObject
+from m5.objects import SrcClockDomain
+from m5.objects import Terminal
+from m5.objects import VExpress_GEM5_Base
+from m5.objects import VExpress_GEM5_Foundation
+from m5.objects import VirtIOBlock
+from m5.objects import VncServer
+from m5.objects import VoltageDomain
+
 from ...isas import ISA
-from ...utils.requires import requires
-from ...utils.override import overrides
-from typing import List, Sequence, Tuple
-from .abstract_board import AbstractBoard
 from ...resources.resource import AbstractResource
-from .kernel_disk_workload import KernelDiskWorkload
-from ..cachehierarchies.classic.no_cache import NoCache
-from ..processors.abstract_processor import AbstractProcessor
-from ..memory.abstract_memory_system import AbstractMemorySystem
+from ...utils.override import overrides
+from ...utils.requires import requires
 from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
+from ..cachehierarchies.classic.no_cache import NoCache
+from ..memory.abstract_memory_system import AbstractMemorySystem
+from ..processors.abstract_processor import AbstractProcessor
+from .abstract_board import AbstractBoard
+from .kernel_disk_workload import KernelDiskWorkload
 
 
 class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):

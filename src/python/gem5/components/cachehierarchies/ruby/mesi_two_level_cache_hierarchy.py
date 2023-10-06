@@ -23,22 +23,22 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from m5.objects import DMASequencer
+from m5.objects import RubyPortProxy
+from m5.objects import RubySequencer
+from m5.objects import RubySystem
 
-
-from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
-from ..abstract_two_level_cache_hierarchy import AbstractTwoLevelCacheHierarchy
 from ....coherence_protocol import CoherenceProtocol
 from ....isas import ISA
-from ...boards.abstract_board import AbstractBoard
 from ....utils.requires import requires
-
-from .topologies.simple_pt2pt import SimplePt2Pt
-from .caches.mesi_two_level.l1_cache import L1Cache
-from .caches.mesi_two_level.l2_cache import L2Cache
+from ...boards.abstract_board import AbstractBoard
+from ..abstract_two_level_cache_hierarchy import AbstractTwoLevelCacheHierarchy
+from .abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
 from .caches.mesi_two_level.directory import Directory
 from .caches.mesi_two_level.dma_controller import DMAController
-
-from m5.objects import RubySystem, RubySequencer, DMASequencer, RubyPortProxy
+from .caches.mesi_two_level.l1_cache import L1Cache
+from .caches.mesi_two_level.l2_cache import L2Cache
+from .topologies.simple_pt2pt import SimplePt2Pt
 
 
 class MESITwoLevelCacheHierarchy(

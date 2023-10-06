@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # Copyright (c) 2014 ARM Limited
 # All rights reserved
 #

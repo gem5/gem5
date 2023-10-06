@@ -25,12 +25,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Author: Tushar Krishna
+import argparse
+import os
+import sys
 
 import m5
-from m5.objects import *
 from m5.defines import buildEnv
+from m5.objects import *
 from m5.util import addToPath
-import os, argparse, sys
 
 addToPath("../")
 

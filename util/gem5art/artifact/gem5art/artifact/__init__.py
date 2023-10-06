@@ -23,17 +23,13 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """This is the gem5 artifact package"""
-
-from .artifact import Artifact
-from .common_queries import (
-    getByName,
-    getDiskImages,
-    getLinuxBinaries,
-    getgem5Binaries,
-)
 from ._artifactdb import getDBConnection
+from .artifact import Artifact
+from .common_queries import getByName
+from .common_queries import getDiskImages
+from .common_queries import getgem5Binaries
+from .common_queries import getLinuxBinaries
 
 __all__ = [
     "Artifact",

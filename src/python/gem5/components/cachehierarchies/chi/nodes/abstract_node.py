@@ -23,15 +23,15 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from abc import abstractmethod
-from gem5.isas import ISA
-from gem5.components.processors.cpu_types import CPUTypes
-from gem5.components.processors.abstract_core import AbstractCore
-
-from m5.objects import Cache_Controller, MessageBuffer, RubyNetwork
-
 import math
+from abc import abstractmethod
+
+from gem5.components.processors.abstract_core import AbstractCore
+from gem5.components.processors.cpu_types import CPUTypes
+from gem5.isas import ISA
+from m5.objects import Cache_Controller
+from m5.objects import MessageBuffer
+from m5.objects import RubyNetwork
 
 
 class TriggerMessageBuffer(MessageBuffer):

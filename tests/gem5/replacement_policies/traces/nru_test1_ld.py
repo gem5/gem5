@@ -23,11 +23,9 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # This test is targeting loads.
 # Access pattern: A, C, E, G, A, I, A, E, K, E, G
 # Each letter represents a 64-byte address range.
-
 # The [] indicate two different sets, and each set has four ways.
 # [set0way0, set0way1, set0way2, set0way3],
 # [set1way0, set1way1, set1way2, set1way3],
@@ -39,7 +37,6 @@
 # with NRU replacement policy, you will observe:
 # m, m, m, m, h, m, m, h, m, h, m, where 'm' means miss, and 'h' means
 # hit.
-
 # Explanation of this result:
 # A, C, E, G are misses, now the cache stores ([A0, C0, E0, G0],[ , , ,]).
 # The number following each letter is the NRU bit for the address range.
@@ -50,7 +47,6 @@
 # K searches a victim and selects G. Now the cache stores ([I0, A0, E0, K0],[ , , ,]).
 # E hits. Now the cache stores ([I0, A0, E0, K0],[ , , ,]).
 # G searches a victim and selects I. Now the cache stores ([G0, A1, E1, K1],[ , , ,]).
-
 from m5.objects.ReplacementPolicies import NRURP as rp
 
 

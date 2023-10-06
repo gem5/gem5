@@ -36,7 +36,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 #####################################################################
 #
 # Parameter description classes
@@ -53,13 +52,12 @@
 # MetaSimObject._new_param()); after that point they aren't used.
 #
 #####################################################################
-
 import copy
 import datetime
+import math
 import re
 import sys
 import time
-import math
 
 from . import proxy
 from . import ticks

@@ -32,7 +32,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """Marshal another python script.
 
 This script compiles another script, marshals the resulting code object, and
@@ -47,7 +46,6 @@ The output of the marshal module is *not* generally compatible accross python
 interpretters, and so the exact same interpretter should be used both to run
 this script, and to read in and execute the marshalled code later.
 """
-
 import locale
 import marshal
 import os

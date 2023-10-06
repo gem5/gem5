@@ -37,13 +37,12 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+import re
 from collections import OrderedDict
 
+import slicc.generate.html as html
 from slicc.symbols.Symbol import Symbol
 from slicc.symbols.Var import Var
-import slicc.generate.html as html
-import re
 
 python_class_map = {
     "int": "Int",

@@ -23,14 +23,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 from m5.objects import SimpleNetwork
 
-from .ruby_network_components import (
-    RubyNetworkComponent,
-    RubyRouter,
-    RubyIntLink,
-)
+from .ruby_network_components import RubyIntLink
+from .ruby_network_components import RubyNetworkComponent
+from .ruby_network_components import RubyRouter
 
 
 # . The Network owns all routers, all int links and all ext links that are not in CCD's.

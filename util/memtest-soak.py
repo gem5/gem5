@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-
 # Copyright (c) 2015 ARM Limited
 # All rights reserved
 #
@@ -34,7 +33,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import argparse
 import subprocess
 import sys

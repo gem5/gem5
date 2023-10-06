@@ -23,17 +23,18 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from typing import Iterator
 
+from m5.objects import BaseTrafficGen
+from m5.objects import Port
+from m5.objects import PyTrafficGen
 from m5.ticks import fromSeconds
-from m5.util.convert import toLatency, toMemoryBandwidth
-from m5.objects import PyTrafficGen, Port, BaseTrafficGen
-
-from .abstract_core import AbstractCore
-from .abstract_generator_core import AbstractGeneratorCore
+from m5.util.convert import toLatency
+from m5.util.convert import toMemoryBandwidth
 
 from ...utils.override import overrides
-
-from typing import Iterator
+from .abstract_core import AbstractCore
+from .abstract_generator_core import AbstractGeneratorCore
 
 
 class LinearGeneratorCore(AbstractGeneratorCore):

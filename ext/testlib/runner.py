@@ -37,15 +37,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Sean Wilson
-
 import multiprocessing.dummy
 import traceback
 
 import testlib.helper as helper
 import testlib.log as log
-
-from testlib.state import Status, Result
 from testlib.fixture import SkipException
+from testlib.state import Result
+from testlib.state import Status
 
 
 def compute_aggregate_result(iterable):

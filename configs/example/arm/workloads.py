@@ -33,14 +33,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-
 import inspect
+
 import m5
+from common.ObjectList import ObjectList
+from common.SysPaths import binary
+from common.SysPaths import disk
 from m5.objects import *
 from m5.options import *
-
-from common.ObjectList import ObjectList
-from common.SysPaths import binary, disk
 
 
 class ArmBaremetal(ArmFsWorkload):

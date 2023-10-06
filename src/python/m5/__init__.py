@@ -23,7 +23,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # Import useful subpackages of M5, but *only* when run as an m5
 # script.  This is mostly to keep backward compatibility with existing
 # scripts while allowing new SCons code to operate properly.

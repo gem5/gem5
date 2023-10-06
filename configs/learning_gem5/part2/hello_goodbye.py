@@ -24,7 +24,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 A simple run file that creates two SimObjects: HelloObject and GoodbyeObject
 and then runs the simulation. Using the debug "Hello" is informative.
@@ -33,12 +32,11 @@ IMPORTANT: If you modify this file, it's likely that the Learning gem5 book
            also needs to be updated. For now, email Jason <power.jg@gmail.com>
 
 """
-
 # import the m5 (gem5) library created when gem5 is built
 import m5
+from m5.objects import *
 
 # import all of the SimObjects
-from m5.objects import *
 
 # set up the root SimObject and start the simulation
 root = Root(full_system=False)

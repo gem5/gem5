@@ -37,13 +37,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-import m5
 import m5.defines
+from common import ObjectList
+from common.Benchmarks import *
 from m5.objects import *
 from m5.util import *
-from common.Benchmarks import *
-from common import ObjectList
 
 # Populate to reflect supported os types per target ISA
 os_types = set()

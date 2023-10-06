@@ -37,13 +37,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Sean Wilson
-
 """
 Helper classes for writing tests with this test library.
 """
-from collections import namedtuple
-from collections.abc import MutableSet
-
 import difflib
 import errno
 import os
@@ -54,6 +50,8 @@ import subprocess
 import tempfile
 import threading
 import time
+from collections import namedtuple
+from collections.abc import MutableSet
 
 
 class TimedWaitPID(object):

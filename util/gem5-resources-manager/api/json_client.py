@@ -23,11 +23,12 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from pathlib import Path
 import json
+from pathlib import Path
+from typing import Dict
+from typing import List
+
 from api.client import Client
-from typing import Dict, List
 
 
 class JSONClient(Client):

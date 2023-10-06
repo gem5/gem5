@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # Copyright (c) 2012, 2014 ARM Limited
 # All rights reserved
 #
@@ -37,7 +36,6 @@
 #
 # Author: Dam Sunwoo
 #
-
 # This script converts gem5 output to ARM DS-5 Streamline .apc project file
 # (Requires the gem5 runs to be run with ContextSwitchStatsDump enabled and
 # some patches applied to target Linux kernel.)
@@ -57,16 +55,16 @@
 #
 # APC project generation based on Gator v17 (DS-5 v5.17)
 # Subsequent versions should be backward compatible
-
-import re, sys, os
-from configparser import ConfigParser
-import gzip
-import xml.etree.ElementTree as ET
-import xml.dom.minidom as minidom
-import shutil
-import zlib
-
 import argparse
+import gzip
+import os
+import re
+import shutil
+import sys
+import xml.dom.minidom as minidom
+import xml.etree.ElementTree as ET
+import zlib
+from configparser import ConfigParser
 
 parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,

@@ -23,18 +23,18 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """Tests for the Artifact object and associated functions"""
-
 import hashlib
-from pathlib import Path
-import unittest
-from uuid import uuid4, UUID
-import sys
 import io
+import sys
+import unittest
+from pathlib import Path
+from uuid import UUID
+from uuid import uuid4
 
 from gem5art import artifact
-from gem5art.artifact._artifactdb import ArtifactDB, getDBConnection
+from gem5art.artifact._artifactdb import ArtifactDB
+from gem5art.artifact._artifactdb import getDBConnection
 
 
 class MockDB(ArtifactDB):

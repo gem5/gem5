@@ -37,39 +37,34 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-import sys
-from types import FunctionType, MethodType, ModuleType
-from functools import wraps
 import inspect
+import sys
+from functools import wraps
+from types import FunctionType
+from types import MethodType
+from types import ModuleType
 
 import m5
+from m5.citations import gem5_citations
+from m5.ext.pyfdt import pyfdt
+from m5.params import *
+from m5.params import isNullPointer
+from m5.params import ParamDesc
+from m5.params import Port
+from m5.params import SimObjectVector
+from m5.params import VectorParamDesc
+from m5.proxy import *
+from m5.proxy import isproxy
 from m5.util import *
 from m5.util.pybind import *
 
-from m5.citations import gem5_citations
-
 # Use the pyfdt and not the helper class, because the fdthelper
 # relies on the SimObject definition
-from m5.ext.pyfdt import pyfdt
-
 # Have to import params up top since Param is referenced on initial
 # load (when SimObject class references Param to create a class
 # variable, the 'name' param)...
-from m5.params import *
-
 # There are a few things we need that aren't in params.__all__ since
 # normal users don't need them
-from m5.params import (
-    ParamDesc,
-    VectorParamDesc,
-    isNullPointer,
-    SimObjectVector,
-    Port,
-)
-
-from m5.proxy import *
-from m5.proxy import isproxy
 
 #####################################################################
 #

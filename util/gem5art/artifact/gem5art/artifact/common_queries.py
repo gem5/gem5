@@ -23,11 +23,9 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """File contains the some helper functions with common queries for artifacts
 in the ArtifactDB.
 """
-
 from typing import Iterator
 
 from ._artifactdb import ArtifactDB

@@ -26,16 +26,16 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-
 # System includes
 import argparse
-import math
 import hashlib
+import math
 
-# gem5 related
 import m5
 from m5.objects import *
 from m5.util import addToPath
+
+# gem5 related
 
 # gem5 options and objects
 addToPath("../../")

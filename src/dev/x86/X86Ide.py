@@ -22,12 +22,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from m5.SimObject import SimObject
-from m5.params import *
 from m5.objects.Ide import IdeController
 from m5.objects.IntPin import IntSourcePin
 from m5.objects.PciDevice import PciLegacyIoBar
+from m5.params import *
+from m5.SimObject import SimObject
 
 
 class X86IdeController(IdeController):

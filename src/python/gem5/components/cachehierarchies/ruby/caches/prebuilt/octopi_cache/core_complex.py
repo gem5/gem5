@@ -23,12 +23,10 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from typing import List
+from typing import Tuple
 
-from typing import List, Tuple
-
-from gem5.isas import ISA
 from gem5.components.boards.abstract_board import AbstractBoard
-from gem5.components.processors.abstract_core import AbstractCore
 from gem5.components.cachehierarchies.ruby.caches.mesi_three_level.l1_cache import (
     L1Cache,
 )
@@ -38,15 +36,15 @@ from gem5.components.cachehierarchies.ruby.caches.mesi_three_level.l2_cache impo
 from gem5.components.cachehierarchies.ruby.caches.mesi_three_level.l3_cache import (
     L3Cache,
 )
+from gem5.components.processors.abstract_core import AbstractCore
+from gem5.isas import ISA
+from m5.objects import RubySequencer
+from m5.objects import SubSystem
 
-from m5.objects import SubSystem, RubySequencer
-
-from .ruby_network_components import (
-    RubyRouter,
-    RubyExtLink,
-    RubyIntLink,
-    RubyNetworkComponent,
-)
+from .ruby_network_components import RubyExtLink
+from .ruby_network_components import RubyIntLink
+from .ruby_network_components import RubyNetworkComponent
+from .ruby_network_components import RubyRouter
 
 
 class CoreComplex(SubSystem, RubyNetworkComponent):

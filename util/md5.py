@@ -23,10 +23,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import argparse
 from pathlib import Path
-from gem5.resources.md5_utils import md5_file, md5_dir
+
+from gem5.resources.md5_utils import md5_dir
+from gem5.resources.md5_utils import md5_file
 
 parser = argparse.ArgumentParser(
     description="A utility to determine the md5 hash of files and "

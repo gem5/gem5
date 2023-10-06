@@ -23,10 +23,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
+import os
+import string
+import subprocess
+import sys
 from configparser import ConfigParser
-import string, sys, subprocess, os
 
 # Compile DSENT to generate the Python module and then import it.
 # This script assumes it is executed from the gem5 root.

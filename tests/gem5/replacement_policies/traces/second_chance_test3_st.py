@@ -23,11 +23,9 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # This test is targeting stores.
 # access pattern: A, C, E, G, A, C, E, G, E, I, A, C, G, E
 # Each letter represents a 64-byte address range.
-
 # The [] indicate two different sets, and each set has four ways.
 # [set0way0, set0way1, set0way2, set0way3],
 # [set1way0, set1way1, set1way2, set1way3],
@@ -37,7 +35,6 @@
 # 'A' and 'C' in the cache because of the second chance bit. More specifically,
 # with Second Chance replacement policy, you will observe:
 # m, m, m, m, h, h, h, h, h, m, m, m, h, m, h where 'm' means miss, and 'h' means hit.
-
 # Explanation of the result:
 # A, C, E, G are misses. The cache stores ([A0, C0, E0, G0],[ , , ,]).
 # The number after each letter is the second chance bit, which would be set after a re-reference.
@@ -49,7 +46,6 @@
 # G hits.
 # E searches a victim and selects I. Now the cache stores ([E0, A0, C0, G0],[ , , ,]).
 # G hits
-
 from m5.objects.ReplacementPolicies import SecondChanceRP as rp
 
 

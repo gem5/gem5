@@ -1,6 +1,6 @@
-from m5.SimObject import SimObject
 from m5.params import Param
 from m5.proxy import Parent
+from m5.SimObject import SimObject
 
 
 class SharedMemoryServer(SimObject):

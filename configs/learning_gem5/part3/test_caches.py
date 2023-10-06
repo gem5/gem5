@@ -24,7 +24,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """ This file creates a set of Ruby caches, the Ruby network, and a simple
 point-to-point topology for the RubyRandomTester to use.
 See Part 3 in the Learning gem5 book:
@@ -34,13 +33,12 @@ IMPORTANT: If you modify this file, it's likely that the Learning gem5 book
            also needs to be updated. For now, email Jason <jason@lowepower.com>
 
 """
-
 from m5.defines import buildEnv
-from m5.util import fatal
-
 from m5.objects import *
-
-from msi_caches import L1Cache, DirController, MyNetwork
+from m5.util import fatal
+from msi_caches import DirController
+from msi_caches import L1Cache
+from msi_caches import MyNetwork
 
 
 class TestCacheSystem(RubySystem):

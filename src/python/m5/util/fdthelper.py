@@ -34,10 +34,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Author: Glenn Bergmans
+import os
+import re
 
 from m5.ext.pyfdt import pyfdt
-import re
-import os
 from m5.SimObject import SimObject
 from m5.util import fatal
 

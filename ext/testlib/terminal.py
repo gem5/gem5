@@ -23,11 +23,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Author: Steve Reinhardt
-
-import sys
 import fcntl
-import termios
 import struct
+import sys
+import termios
 
 # Intended usage example:
 #

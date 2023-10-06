@@ -23,24 +23,25 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from abc import ABCMeta, abstractmethod
 import inspect
+from abc import ABCMeta
+from abc import abstractmethod
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
 
-from .mem_mode import MemMode, mem_mode_to_string
+from m5.objects import AddrRange
+from m5.objects import ClockDomain
+from m5.objects import IOXBar
+from m5.objects import Port
+from m5.objects import SrcClockDomain
+from m5.objects import System
+from m5.objects import VoltageDomain
+
 from ...resources.resource import WorkloadResource
-
-from m5.objects import (
-    AddrRange,
-    System,
-    Port,
-    IOXBar,
-    ClockDomain,
-    SrcClockDomain,
-    VoltageDomain,
-)
-
-from typing import List, Optional, Sequence, Tuple
+from .mem_mode import mem_mode_to_string
+from .mem_mode import MemMode
 
 
 class AbstractBoard:

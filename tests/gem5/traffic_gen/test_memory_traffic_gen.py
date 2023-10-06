@@ -23,14 +23,12 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This tests the gem5 memory components with a simple traffic generator.
 
 TODO: At present all the Single Channel memory components are tested. This
       should be expanded to included DRAMSIM3 memory systems.
 """
-
 import os
 
 from testlib import *

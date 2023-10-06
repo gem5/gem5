@@ -23,28 +23,25 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from .abstract_board import AbstractBoard
-
-from ...resources.resource import (
-    FileResource,
-    AbstractResource,
-    BinaryResource,
-    CheckpointResource,
-    SimpointResource,
-    SimpointDirectoryResource,
-)
-
-from ..processors.switchable_processor import SwitchableProcessor
+from pathlib import Path
+from typing import List
+from typing import Optional
+from typing import Union
 
 from gem5.resources.elfie import ELFieInfo
 from gem5.resources.looppoint import Looppoint
-
-from m5.objects import SEWorkload, Process
-
-from typing import Optional, List, Union
+from m5.objects import Process
+from m5.objects import SEWorkload
 from m5.util import warn
-from pathlib import Path
+
+from ...resources.resource import AbstractResource
+from ...resources.resource import BinaryResource
+from ...resources.resource import CheckpointResource
+from ...resources.resource import FileResource
+from ...resources.resource import SimpointDirectoryResource
+from ...resources.resource import SimpointResource
+from ..processors.switchable_processor import SwitchableProcessor
+from .abstract_board import AbstractBoard
 
 
 class SEBinaryWorkload:

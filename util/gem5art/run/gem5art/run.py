@@ -23,7 +23,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This file defines a gem5Run object which contains all information needed to
 run a single gem5 test.
@@ -31,17 +30,24 @@ run a single gem5 test.
 This class works closely with the artifact module to ensure that the gem5
 experiment is reproducible and the output is saved to the database.
 """
-
 import hashlib
 import json
 import os
-from pathlib import Path
 import signal
 import subprocess
 import time
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
-from uuid import UUID, uuid4
 import zipfile
+from pathlib import Path
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Iterable
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
+from uuid import UUID
+from uuid import uuid4
 
 from gem5art import artifact
 from gem5art.artifact import Artifact

@@ -23,32 +23,30 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-from abc import ABCMeta
 import json
 import os
+from abc import ABCMeta
 from pathlib import Path
-from m5.util import warn, fatal
+from typing import Any
+from typing import Dict
+from typing import Generator
+from typing import List
+from typing import Optional
+from typing import Set
+from typing import Tuple
+from typing import Type
+from typing import Union
+
 from _m5 import core
+from m5.util import fatal
+from m5.util import warn
 
-from .downloader import get_resource
-
-from .looppoint import LooppointCsvLoader, LooppointJsonLoader
-from ..isas import ISA, get_isa_from_str
-
-from typing import (
-    Optional,
-    Dict,
-    Union,
-    Type,
-    Tuple,
-    List,
-    Any,
-    Set,
-    Generator,
-)
-
+from ..isas import get_isa_from_str
+from ..isas import ISA
 from .client import get_resource_json_obj
+from .downloader import get_resource
+from .looppoint import LooppointCsvLoader
+from .looppoint import LooppointJsonLoader
 
 """
 Resources are items needed to run a simulation, such as a disk image, kernel,

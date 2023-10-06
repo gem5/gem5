@@ -23,7 +23,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """
 This example runs a simple linux boot. It uses the 'riscv-disk-img' resource.
 It is built with the sources in `src/riscv-fs` in [gem5 resources](
@@ -38,18 +37,17 @@ Characteristics
 * Will boot but requires a user to login using `m5term` (username: `root`,
   password: `root`)
 """
-
 from gem5.components.boards.riscv_board import RiscvBoard
-from gem5.components.memory import SingleChannelDDR3_1600
-from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
     PrivateL1PrivateL2CacheHierarchy,
 )
+from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.processors.cpu_types import CPUTypes
+from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import ISA
-from gem5.utils.requires import requires
 from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
 
 # Run a check to ensure the right version of gem5 is being used.
 requires(isa_required=ISA.RISCV)

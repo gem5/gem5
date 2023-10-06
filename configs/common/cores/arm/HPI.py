@@ -32,7 +32,6 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """The High-Performance In-order (HPI) CPU timing model is tuned to be
 representative of a modern in-order ARMv8-A implementation. The HPI
 core and its supporting simulation scripts, namely starter_se.py and
@@ -41,7 +40,6 @@ Research Starter Kit on System Modeling. More information can be found
 at: http://www.arm.com/ResearchEnablement/SystemModeling
 
 """
-
 from m5.objects import *
 
 
