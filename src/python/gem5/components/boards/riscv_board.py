@@ -259,6 +259,12 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
             )
             root.append(node)
 
+        node = FdtNode(f"chosen")
+        bootargs = " ".join(self.get_default_kernel_args())
+        node.append(FdtPropertyStrings("bootargs", [bootargs]))
+        node.append(FdtPropertyStrings("stdout-path", ["/uart@10000000"]))
+        root.append(node)
+
         # See Documentation/devicetree/bindings/riscv/cpus.txt for details.
         cpus_node = FdtNode("cpus")
         cpus_state = FdtState(addr_cells=1, size_cells=0)
