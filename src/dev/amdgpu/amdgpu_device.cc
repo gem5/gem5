@@ -379,6 +379,9 @@ AMDGPUDevice::readMMIO(PacketPtr pkt, Addr offset)
       case GRBM_BASE:
         gpuvm.readMMIO(pkt, aperture_offset >> GRBM_OFFSET_SHIFT);
         break;
+      case GFX_BASE:
+        gfx.readMMIO(pkt, aperture_offset);
+        break;
       case MMHUB_BASE:
         gpuvm.readMMIO(pkt, aperture_offset >> MMHUB_OFFSET_SHIFT);
         break;
@@ -506,6 +509,9 @@ AMDGPUDevice::writeMMIO(PacketPtr pkt, Addr offset)
       /* Write an IO space register */
       case NBIO_BASE:
         nbio.writeMMIO(pkt, aperture_offset);
+        break;
+      case GFX_BASE:
+        gfx.writeMMIO(pkt, aperture_offset);
         break;
       default:
         DPRINTF(AMDGPUDevice, "Unknown MMIO aperture for %#x\n", offset);
