@@ -771,7 +771,6 @@ def run(options, root, testsys, cpu_class):
     if (
         options.take_checkpoints or options.take_simpoint_checkpoints
     ) and options.checkpoint_restore:
-
         if m5.options.outdir:
             cptdir = m5.options.outdir
         else:

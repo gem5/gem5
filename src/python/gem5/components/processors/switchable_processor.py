@@ -52,7 +52,6 @@ class SwitchableProcessor(AbstractProcessor):
         switchable_cores: Dict[str, List[SimpleCore]],
         starting_cores: str,
     ) -> None:
-
         if starting_cores not in switchable_cores.keys():
             raise AssertionError(
                 f"Key {starting_cores} cannot be found in the "
@@ -85,7 +84,6 @@ class SwitchableProcessor(AbstractProcessor):
 
     @overrides(AbstractProcessor)
     def incorporate_processor(self, board: AbstractBoard) -> None:
-
         # This is a bit of a hack. The `m5.switchCpus` function, used in the
         # "switch_to_processor" function, requires the System simobject as an
         # argument. We therefore need to store the board when incorporating the
@@ -119,7 +117,6 @@ class SwitchableProcessor(AbstractProcessor):
                 yield core
 
     def switch_to_processor(self, switchable_core_key: str):
-
         # Run various checks.
         if not hasattr(self, "_board"):
             raise AssertionError("The processor has not been incorporated.")

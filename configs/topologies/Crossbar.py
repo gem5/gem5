@@ -34,7 +34,6 @@ class Crossbar(SimpleTopology):
     description = "Crossbar"
 
     def makeTopology(self, options, network, IntLink, ExtLink, Router):
-
         # default values for link latency and router latency.
         # Can be over-ridden on a per link/router basis
         link_latency = options.link_latency  # used by simple and garnet

@@ -67,7 +67,6 @@ class CustomMesh(SimpleTopology):
         cross_links,
         cross_link_latency,
     ):
-
         # East->West, West->East, North->South, South->North
         # XY routing weights
         link_weights = [1, 1, 2, 2]

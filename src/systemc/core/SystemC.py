@@ -25,6 +25,7 @@
 
 from m5.SimObject import SimObject, cxxMethod
 
+
 # This class represents the systemc kernel. There should be exactly one in the
 # simulation. It receives gem5 SimObject lifecycle callbacks (init, regStats,
 # etc.) and manages the lifecycle of the systemc simulation accordingly.

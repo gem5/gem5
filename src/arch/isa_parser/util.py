@@ -42,6 +42,7 @@ import re
 ###################
 # Utility functions
 
+
 #
 # Indent every line in string 's' by two spaces
 # (except preprocessor directives).

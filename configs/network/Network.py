@@ -121,7 +121,6 @@ def define_options(parser):
 
 
 def create_network(options, ruby):
-
     # Allow legacy users to use garnet through garnet2.0 option
     # until next gem5 release.
     if options.network == "garnet2.0":
@@ -162,7 +161,6 @@ def create_network(options, ruby):
 
 
 def init_network(options, network, InterfaceClass):
-
     if options.network == "garnet":
         network.num_rows = options.mesh_rows
         network.vcs_per_vnet = options.vcs_per_vnet

@@ -30,7 +30,6 @@ from m5.proxy import Parent
 
 
 class LupioRNG(BasicPioDevice):
-
     type = "LupioRNG"
     cxx_class = "gem5::LupioRNG"
     cxx_header = "dev/lupio/lupio_rng.hh"

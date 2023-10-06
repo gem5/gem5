@@ -39,6 +39,7 @@ import sys
 from m5.params import *
 from m5.objects.PowerState import PowerState
 
+
 # A power domain groups multiple ClockedObjects and creates a
 # hierarchy in which follower ClockedObjects (caches for example) can
 # change power state depeding on what the leader objects (CPUs for

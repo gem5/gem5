@@ -34,6 +34,7 @@ from m5.objects.PciDevice import PciMemBar, PciMemUpperBar, PciLegacyIoBar
 from m5.objects.Device import DmaDevice, DmaVirtDevice
 from m5.objects.ClockedObject import ClockedObject
 
+
 # PCI device model for an AMD Vega 10 based GPU. The PCI codes and BARs
 # correspond to a Vega Frontier Edition hardware device. None of the PCI
 # related values in this class should be changed.

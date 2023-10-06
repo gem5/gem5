@@ -86,7 +86,6 @@ class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
 
     @overrides(AbstractCacheHierarchy)
     def incorporate_cache(self, board: AbstractBoard) -> None:
-
         # Set up the system port for functional access from the simulator.
         board.connect_system_port(self.membus.cpu_side_ports)
 
@@ -117,7 +116,6 @@ class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
             self._setup_io_cache(board)
 
         for i, cpu in enumerate(board.get_processor().get_cores()):
-
             cpu.connect_icache(self.l1icaches[i].cpu_side)
             cpu.connect_dcache(self.l1dcaches[i].cpu_side)
 

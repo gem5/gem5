@@ -205,7 +205,6 @@ class TestArtifactSimilarity(unittest.TestCase):
 
 class TestRegisterArtifact(unittest.TestCase):
     def setUp(self):
-
         # Create and register an artifact
         self.testArtifactA = artifact.Artifact.registerArtifact(
             name="artifact-A",

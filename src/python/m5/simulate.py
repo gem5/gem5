@@ -65,6 +65,7 @@ _drain_manager = _m5.drain.DrainManager.instance()
 
 _instantiated = False  # Has m5.instantiate() been called?
 
+
 # The final call to instantiate the SimObject graph and initialize the
 # system.
 def instantiate(ckpt_dir=None):

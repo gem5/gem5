@@ -45,7 +45,6 @@ class TerminalFormatter:
         return w, h
 
     def __get_paragraphs(self, text, flatten=False):
-
         """
         This function takes a text and returns a list of constituent
         paragraphs, defining a paragraph as a block of text separated from

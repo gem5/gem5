@@ -133,7 +133,7 @@ else:
     dmas = []
 
 dma_ports = []
-for (i, dma) in enumerate(dmas):
+for i, dma in enumerate(dmas):
     dma_ports.append(dma.test)
 Ruby.create_system(args, False, system, dma_ports=dma_ports)
 
@@ -155,7 +155,7 @@ system.ruby.randomization = True
 
 assert len(cpus) == len(system.ruby._cpu_ports)
 
-for (i, cpu) in enumerate(cpus):
+for i, cpu in enumerate(cpus):
     #
     # Tie the cpu memtester ports to the correct system ports
     #

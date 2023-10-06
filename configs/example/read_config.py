@@ -366,7 +366,6 @@ class ConfigManager(object):
             if port_has_correct_index(from_port) and port_has_correct_index(
                 to_port
             ):
-
                 connections_to_make.append((from_port, to_port))
 
                 increment_port_index(from_port)

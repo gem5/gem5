@@ -318,7 +318,6 @@ class LooppointTestSuite(unittest.TestCase):
         self.assertEquals(PcCountPair(101, 202), targets[5])
 
     def test_get_region_start_id_map(self):
-
         region1 = LooppointRegion(
             simulation=LooppointSimulation(
                 start=LooppointRegionPC(pc=56, globl=2345, relative=344),

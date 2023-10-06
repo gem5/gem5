@@ -32,7 +32,6 @@ from m5.util import fatal
 
 
 class Root(SimObject):
-
     _the_instance = None
 
     def __new__(cls, **kwargs):

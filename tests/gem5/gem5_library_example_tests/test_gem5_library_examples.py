@@ -180,7 +180,6 @@ log.test_log.message(
 )
 # 'False' is used to disable the tests.
 if False:  # os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
-
     # The x86-parsec-benchmarks uses KVM cores, this test will therefore only
     # be run on systems that support KVM.
     gem5_verify_config(

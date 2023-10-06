@@ -108,7 +108,6 @@ class MyCacheSystem(RubySystem):
 
 
 class L1Cache(L1Cache_Controller):
-
     _version = 0
 
     @classmethod
@@ -163,7 +162,6 @@ class L1Cache(L1Cache_Controller):
 
 
 class DirController(Directory_Controller):
-
     _version = 0
 
     @classmethod

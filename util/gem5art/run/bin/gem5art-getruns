@@ -71,7 +71,6 @@ def parseArgs():
 
 
 if __name__ == "__main__":
-
     args = parseArgs()
 
     db = getDBConnection(args.db_uri)

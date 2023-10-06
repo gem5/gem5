@@ -267,7 +267,7 @@ def makeGpuFSSystem(args):
     # and FMA.
     avx_cpu_features = [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x1C983209]
 
-    for (i, cpu) in enumerate(system.cpu):
+    for i, cpu in enumerate(system.cpu):
         # Break once we reach the shader "CPU"
         if i == args.num_cpus:
             break

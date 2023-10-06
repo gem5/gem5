@@ -75,17 +75,17 @@ def upgrader(cpt):
 
         isa_section = []
         for fspec in isa_fields:
-            for (key, value) in cpt.items(sec, raw=True):
+            for key, value in cpt.items(sec, raw=True):
                 if key in isa_fields:
                     isa_section.append((key, value))
 
         name = f"{re_cpu_match.group(1)}.isa"
         isa_sections.append((name, isa_section))
 
-        for (key, value) in isa_section:
+        for key, value in isa_section:
             cpt.remove_option(sec, key)
 
-    for (sec, options) in isa_sections:
+    for sec, options in isa_sections:
         # Some intermediate versions of gem5 have empty ISA sections
         # (after we made the ISA a SimObject, but before we started to
         # serialize into a separate ISA section).
@@ -97,7 +97,7 @@ def upgrader(cpt):
                     "Unexpected populated ISA section in old checkpoint"
                 )
 
-        for (key, value) in options:
+        for key, value in options:
             cpt.set(sec, key, value)
 
 

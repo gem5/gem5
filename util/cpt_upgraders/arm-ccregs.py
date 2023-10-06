@@ -11,7 +11,7 @@ def upgrader(cpt):
                 continue
 
             items = []
-            for (item, value) in cpt.items(sec):
+            for item, value in cpt.items(sec):
                 items.append(item)
             if "ccRegs" not in items:
                 intRegs = cpt.get(sec, "intRegs").split()

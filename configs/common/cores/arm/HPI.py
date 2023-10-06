@@ -44,6 +44,7 @@ at: http://www.arm.com/ResearchEnablement/SystemModeling
 
 from m5.objects import *
 
+
 # Simple function to allow a string of [01x_] to be converted into a
 # mask and value for use with MinorFUTiming
 def make_implicant(implicant_string):

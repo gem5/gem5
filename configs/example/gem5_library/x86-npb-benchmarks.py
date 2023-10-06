@@ -211,6 +211,7 @@ board.set_kernel_disk_workload(
     readfile_contents=command,
 )
 
+
 # The first exit_event ends with a `workbegin` cause. This means that the
 # system started successfully and the execution on the program started.
 def handle_workbegin():
@@ -235,6 +236,7 @@ def handle_workbegin():
 
 # The next exit_event is to simulate the ROI. It should be exited with a cause
 # marked by `workend`.
+
 
 # We exepect that ROI ends with `workend` or `simulate() limit reached`.
 def handle_workend():
