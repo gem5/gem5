@@ -152,7 +152,7 @@ jobs:
       - name: Run "tests/${{ matrix.test-dir }}" TestLib quick tests
         id: run-tests
         working-directory: ${{ github.workspace }}/tests
-        run: ./main.py run --skip-build -vv ${{ matrix.test-dir }}
+        run: ./main.py run --skip-build -t $(nproc) -vv ${{ matrix.test-dir }}
 
         # Get the basename of the matrix.test-dir path (to name the artifact).
       - name: Sanatize test-dir for artifact name
