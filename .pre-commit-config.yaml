@@ -65,6 +65,7 @@ repos:
   - id: check-case-conflict
   - id: check-merge-conflict
   - id: check-symlinks
+  - id: destroyed-symlinks
 - repo: https://github.com/psf/black
   rev: 23.9.1
   hooks:
