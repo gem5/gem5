@@ -11,7 +11,7 @@ on:
 
 jobs:
   build-gem5:
-    runs-on: [self-hosted, linux, x64, build]
+    runs-on: [self-hosted, linux, x64]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
     outputs:
       build-name: ${{ steps.artifact-name.outputs.name }}
@@ -39,7 +39,7 @@ jobs:
       fail-fast: false
       matrix:
         test-type: [gem5_library_example_tests, gem5_resources, parsec_benchmarks, x86_boot_tests]
-    runs-on: [self-hosted, linux, x64, run]
+    runs-on: [self-hosted, linux, x64]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
     needs: [build-gem5]
     timeout-minutes: 4320 # 3 days
@@ -79,7 +79,7 @@ jobs:
     - run: echo "This job's status is ${{ job.status }}."
 
   dramsys-tests:
-    runs-on: [self-hosted, linux, x64, build]
+    runs-on: [self-hosted, linux, x64]
     container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
     timeout-minutes: 4320 # 3 days
     steps:
