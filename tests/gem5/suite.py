@@ -103,7 +103,7 @@ def gem5_verify_config(
                 # Create a tempdir fixture to be shared throughout the test.
                 tempdir = TempdirFixture()
                 gem5_returncode = VariableFixture(
-                    name=constants.gem5_returncode_fixture_name
+                    name=constants.gem5_returncode_fixture_name,
                 )
 
                 # Common name of this generated testcase.
@@ -143,8 +143,11 @@ def gem5_verify_config(
                 # tests.
                 testsuites.append(
                     TestSuite(
-                        name=_name, fixtures=_fixtures, tags=tags, tests=tests
-                    )
+                        name=_name,
+                        fixtures=_fixtures,
+                        tags=tags,
+                        tests=tests,
+                    ),
                 )
     return testsuites
 

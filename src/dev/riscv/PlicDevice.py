@@ -50,7 +50,10 @@ class PlicIntDevice(BasicPioDevice):
 
     def generatePlicDeviceNode(self, state, name):
         node = self.generateBasicPioDeviceNode(
-            state, name, self.pio_addr, self.pio_size
+            state,
+            name,
+            self.pio_addr,
+            self.pio_size,
         )
 
         plic = self.platform.unproxy(self).plic

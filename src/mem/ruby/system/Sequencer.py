@@ -53,31 +53,35 @@ class RubyPort(ClockedObject):
         "CPU side of this RubyPort/Sequencer. "
         "The CPU request ports should be connected to this. If a CPU "
         "has multiple ports (e.g., I/D ports) all of the ports for a "
-        "single CPU can connect to one RubyPort."
+        "single CPU can connect to one RubyPort.",
     )
     slave = DeprecatedParam(in_ports, "`slave` is now called `in_ports`")
 
     interrupt_out_port = VectorRequestPort(
         "Port to connect to x86 interrupt "
-        "controller to send the CPU requests from outside."
+        "controller to send the CPU requests from outside.",
     )
     master = DeprecatedParam(
-        interrupt_out_port, "`master` is now called `interrupt_out_port`"
+        interrupt_out_port,
+        "`master` is now called `interrupt_out_port`",
     )
 
     pio_request_port = RequestPort("Ruby pio request port")
     pio_master_port = DeprecatedParam(
-        pio_request_port, "`pio_master_port` is now called `pio_request_port`"
+        pio_request_port,
+        "`pio_master_port` is now called `pio_request_port`",
     )
 
     mem_request_port = RequestPort("Ruby mem request port")
     mem_master_port = DeprecatedParam(
-        mem_request_port, "`mem_master_port` is now called `mem_request_port`"
+        mem_request_port,
+        "`mem_master_port` is now called `mem_request_port`",
     )
 
     pio_response_port = ResponsePort("Ruby pio response port")
     pio_slave_port = DeprecatedParam(
-        pio_response_port, "`pio_slave_port` is now called `pio_response_port`"
+        pio_response_port,
+        "`pio_slave_port` is now called `pio_response_port`",
     )
 
     using_ruby_tester = Param.Bool(False, "")
@@ -103,7 +107,8 @@ class RubySequencer(RubyPort):
     dcache = Param.RubyCache("")
 
     max_outstanding_requests = Param.Int(
-        16, "max requests (incl. prefetches) outstanding"
+        16,
+        "max requests (incl. prefetches) outstanding",
     )
     deadlock_threshold = Param.Cycles(
         500000,
@@ -127,7 +132,9 @@ class RubySequencer(RubyPort):
         assert isinstance(cpu, m5.objects.BaseCPU)
         # this connects all cpu mem-side ports to self.in_ports
         cpu.connectAllPorts(
-            self.in_ports, self.in_ports, self.interrupt_out_port
+            self.in_ports,
+            self.in_ports,
+            self.interrupt_out_port,
         )
 
     def connectIOPorts(self, piobus):

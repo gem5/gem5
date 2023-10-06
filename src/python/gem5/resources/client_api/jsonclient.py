@@ -53,7 +53,7 @@ class JSONClient(AbstractClient):
             self.resources = json.load(open(self.path))
         elif not self._url_validator(self.path):
             raise Exception(
-                f"Resources location '{self.path}' is not a valid path or URL."
+                f"Resources location '{self.path}' is not a valid path or URL.",
             )
         else:
             req = request.Request(self.path)
@@ -61,7 +61,7 @@ class JSONClient(AbstractClient):
                 response = request.urlopen(req)
             except URLError as e:
                 raise Exception(
-                    f"Unable to open Resources location '{self.path}': {e}"
+                    f"Unable to open Resources location '{self.path}': {e}",
                 )
             self.resources = json.loads(response.read().decode("utf-8"))
 
@@ -91,5 +91,6 @@ class JSONClient(AbstractClient):
 
         # Filter by gem5_version.
         return self.filter_incompatible_resources(
-            resources_to_filter=filter, gem5_version=gem5_version
+            resources_to_filter=filter,
+            gem5_version=gem5_version,
         )

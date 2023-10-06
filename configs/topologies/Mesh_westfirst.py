@@ -97,7 +97,7 @@ class Mesh_westfirst(SimpleTopology):
                     ext_node=n,
                     int_node=routers[router_id],
                     latency=link_latency,
-                )
+                ),
             )
             link_count += 1
 
@@ -112,7 +112,7 @@ class Mesh_westfirst(SimpleTopology):
                     ext_node=node,
                     int_node=routers[0],
                     latency=link_latency,
-                )
+                ),
             )
             link_count += 1
 
@@ -134,7 +134,7 @@ class Mesh_westfirst(SimpleTopology):
                             dst_node=routers[west_in],
                             latency=link_latency,
                             weight=2,
-                        )
+                        ),
                     )
                     link_count += 1
 
@@ -151,7 +151,7 @@ class Mesh_westfirst(SimpleTopology):
                             dst_node=routers[east_in],
                             latency=link_latency,
                             weight=1,
-                        )
+                        ),
                     )
                     link_count += 1
 
@@ -168,7 +168,7 @@ class Mesh_westfirst(SimpleTopology):
                             dst_node=routers[south_in],
                             latency=link_latency,
                             weight=2,
-                        )
+                        ),
                     )
                     link_count += 1
 
@@ -185,7 +185,7 @@ class Mesh_westfirst(SimpleTopology):
                             dst_node=routers[north_in],
                             latency=link_latency,
                             weight=2,
-                        )
+                        ),
                     )
                     link_count += 1
 

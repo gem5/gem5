@@ -43,13 +43,16 @@ class NetworkLink(ClockedObject):
     link_id = Param.Int(Parent.link_id, "link id")
     link_latency = Param.Cycles(Parent.latency, "link latency")
     vcs_per_vnet = Param.Int(
-        Parent.vcs_per_vnet, "virtual channels per virtual network"
+        Parent.vcs_per_vnet,
+        "virtual channels per virtual network",
     )
     virt_nets = Param.Int(
-        Parent.number_of_virtual_networks, "number of virtual networks"
+        Parent.number_of_virtual_networks,
+        "number of virtual networks",
     )
     supported_vnets = VectorParam.Int(
-        Parent.supported_vnets, "Vnets supported"
+        Parent.supported_vnets,
+        "Vnets supported",
     )
     width = Param.UInt32(Parent.width, "bit-width of the link")
 
@@ -67,7 +70,8 @@ class NetworkBridge(CreditLink):
 
     link = Param.NetworkLink("Associated Network Link")
     vtype = Param.CDCType(
-        "LINK_OBJECT", "Direction of CDC LINK->OBJECT or OBJECT->LINK"
+        "LINK_OBJECT",
+        "Direction of CDC LINK->OBJECT or OBJECT->LINK",
     )
     serdes_latency = Param.Cycles(1, "Latency of SerDes Unit")
     cdc_latency = Param.Cycles(1, "Latency of CDC Unit")
@@ -110,7 +114,8 @@ class GarnetIntLink(BasicIntLink):
     dst_cred_bridge = Param.NetworkBridge(NULL, "Credit Bridge at dest")
 
     width = Param.UInt32(
-        Parent.ni_flit_size, "bit width supported by the router"
+        Parent.ni_flit_size,
+        "bit width supported by the router",
     )
 
 
@@ -159,18 +164,23 @@ class GarnetExtLink(BasicExtLink):
     # units in HeteroGarnet. This is automatically enabled when
     # either CDC or Ser-Des is enabled.
     ext_net_bridge = VectorParam.NetworkBridge(
-        [], "Network Bridge at external end"
+        [],
+        "Network Bridge at external end",
     )
     ext_cred_bridge = VectorParam.NetworkBridge(
-        [], "Credit Bridge at external end"
+        [],
+        "Credit Bridge at external end",
     )
     int_net_bridge = VectorParam.NetworkBridge(
-        [], "Network Bridge at internal end"
+        [],
+        "Network Bridge at internal end",
     )
     int_cred_bridge = VectorParam.NetworkBridge(
-        [], "Credit Bridge at internal end"
+        [],
+        "Credit Bridge at internal end",
     )
 
     width = Param.UInt32(
-        Parent.ni_flit_size, "bit width supported by the router"
+        Parent.ni_flit_size,
+        "bit width supported by the router",
     )

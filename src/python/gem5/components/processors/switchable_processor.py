@@ -53,7 +53,7 @@ class SwitchableProcessor(AbstractProcessor):
         if starting_cores not in switchable_cores.keys():
             raise AssertionError(
                 f"Key {starting_cores} cannot be found in the "
-                "switchable_processors dictionary."
+                "switchable_processors dictionary.",
             )
 
         self._current_cores = switchable_cores[starting_cores]
@@ -122,7 +122,7 @@ class SwitchableProcessor(AbstractProcessor):
         if switchable_core_key not in self._switchable_cores.keys():
             raise AssertionError(
                 f"Key {switchable_core_key} is not a key in the"
-                " switchable_processor dictionary."
+                " switchable_processor dictionary.",
             )
 
         # Select the correct processor to switch to.
@@ -131,13 +131,13 @@ class SwitchableProcessor(AbstractProcessor):
         # Run more checks.
         if to_switch == self._current_cores:
             raise AssertionError(
-                "Cannot swap current cores with the current cores"
+                "Cannot swap current cores with the current cores",
             )
 
         if len(to_switch) != len(self._current_cores):
             raise AssertionError(
                 "The number of cores to swap in is not the same as the number "
-                "already swapped in. This is not allowed."
+                "already swapped in. This is not allowed.",
             )
 
         current_core_simobj = [
@@ -147,7 +147,8 @@ class SwitchableProcessor(AbstractProcessor):
 
         # Switch the CPUs
         m5.switchCpus(
-            self._board, list(zip(current_core_simobj, to_switch_simobj))
+            self._board,
+            list(zip(current_core_simobj, to_switch_simobj)),
         )
 
         # Ensure the current processor is updated.

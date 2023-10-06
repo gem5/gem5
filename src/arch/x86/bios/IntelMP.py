@@ -47,7 +47,8 @@ class X86IntelMPFloatingPointer(SimObject):
     # If no default configuration is used, set this to 0.
     default_config = Param.UInt8(0, "which default configuration to use")
     imcr_present = Param.Bool(
-        True, "whether the IMCR register is present in the APIC"
+        True,
+        "whether the IMCR register is present in the APIC",
     )
 
 
@@ -60,17 +61,20 @@ class X86IntelMPConfigTable(SimObject):
     oem_id = Param.String("", "system manufacturer")
     product_id = Param.String("", "product family")
     oem_table_addr = Param.UInt32(
-        0, "pointer to the optional oem configuration table"
+        0,
+        "pointer to the optional oem configuration table",
     )
     oem_table_size = Param.UInt16(0, "size of the oem configuration table")
     local_apic = Param.UInt32(0xFEE00000, "address of the local APIC")
 
     base_entries = VectorParam.X86IntelMPBaseConfigEntry(
-        [], "base configuration table entries"
+        [],
+        "base configuration table entries",
     )
 
     ext_entries = VectorParam.X86IntelMPExtConfigEntry(
-        [], "extended configuration table entries"
+        [],
+        "extended configuration table entries",
     )
 
     def add_entry(self, entry):
@@ -80,7 +84,7 @@ class X86IntelMPConfigTable(SimObject):
             self.ext_entries.append(entry)
         else:
             panic(
-                f"Don't know what type of Intel MP entry {entry.__class__.__name__} is."
+                f"Don't know what type of Intel MP entry {entry.__class__.__name__} is.",
             )
 
 
@@ -105,7 +109,8 @@ class X86IntelMPProcessor(X86IntelMPBaseConfigEntry):
 
     local_apic_id = Param.UInt8(0, "local APIC id")
     local_apic_version = Param.UInt8(
-        0, "bits 0-7 of the local APIC version register"
+        0,
+        "bits 0-7 of the local APIC version register",
     )
     enable = Param.Bool(True, "if this processor is usable")
     bootstrap = Param.Bool(False, "if this is the bootstrap processor")
@@ -167,17 +172,21 @@ class X86IntelMPIOIntAssignment(X86IntelMPBaseConfigEntry):
     trigger = Param.X86IntelMPTriggerMode("ConformTrigger", "trigger mode")
 
     source_bus_id = Param.UInt8(
-        0, "id of the bus from which the interrupt signal comes"
+        0,
+        "id of the bus from which the interrupt signal comes",
     )
     source_bus_irq = Param.UInt8(
-        0, "which interrupt signal from the source bus"
+        0,
+        "which interrupt signal from the source bus",
     )
 
     dest_io_apic_id = Param.UInt8(
-        0, "id of the IO APIC the interrupt is going to"
+        0,
+        "id of the IO APIC the interrupt is going to",
     )
     dest_io_apic_intin = Param.UInt8(
-        0, "the INTIN pin on the IO APIC the interrupt is connected to"
+        0,
+        "the INTIN pin on the IO APIC the interrupt is connected to",
     )
 
 
@@ -192,17 +201,21 @@ class X86IntelMPLocalIntAssignment(X86IntelMPBaseConfigEntry):
     trigger = Param.X86IntelMPTriggerMode("ConformTrigger", "trigger mode")
 
     source_bus_id = Param.UInt8(
-        0, "id of the bus from which the interrupt signal comes"
+        0,
+        "id of the bus from which the interrupt signal comes",
     )
     source_bus_irq = Param.UInt8(
-        0, "which interrupt signal from the source bus"
+        0,
+        "which interrupt signal from the source bus",
     )
 
     dest_local_apic_id = Param.UInt8(
-        0, "id of the local APIC the interrupt is going to"
+        0,
+        "id of the local APIC the interrupt is going to",
     )
     dest_local_apic_intin = Param.UInt8(
-        0, "the INTIN pin on the local APIC the interrupt is connected to"
+        0,
+        "the INTIN pin on the local APIC the interrupt is connected to",
     )
 
 
@@ -217,7 +230,8 @@ class X86IntelMPAddrSpaceMapping(X86IntelMPExtConfigEntry):
 
     bus_id = Param.UInt8(0, "id of the bus the address space is mapped to")
     address_type = Param.X86IntelMPAddressType(
-        "IOAddress", "address type used to access bus"
+        "IOAddress",
+        "address type used to access bus",
     )
     address = Param.Addr(0, "starting address of the mapping")
     length = Param.UInt64(0, "length of mapping in bytes")
@@ -247,8 +261,10 @@ class X86IntelMPCompatAddrSpaceMod(X86IntelMPExtConfigEntry):
 
     bus_id = Param.UInt8(0, "id of the bus being described")
     add = Param.Bool(
-        False, "if the range should be added to the original mapping"
+        False,
+        "if the range should be added to the original mapping",
     )
     range_list = Param.X86IntelMPRangeList(
-        "ISACompatible", "which predefined range of addresses to use"
+        "ISACompatible",
+        "which predefined range of addresses to use",
     )

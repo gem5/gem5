@@ -50,7 +50,7 @@ def CustomWorkload(function: str, parameters: Dict[str, Any]):
     """
     warn(
         "The `CustomWorkload` class is deprecated. Please use "
-        "the `gem5.resources.resource.WorkloadResource` class instead."
+        "the `gem5.resources.resource.WorkloadResource` class instead.",
     )
     return WorkloadResource(function=function, parameters=parameters)
 
@@ -82,7 +82,7 @@ def Workload(
         f"    clients={clients},\n"
         f"    resource_version={resource_version},\n"
         ")\n"
-        "```"
+        "```",
     )
     return obtain_resource(
         workload_name,

@@ -104,7 +104,8 @@ class KernelDiskWorkload:
         raise NotImplementedError
 
     def get_disk_root_partition(
-        cls, disk_image: DiskImageResource
+        cls,
+        disk_image: DiskImageResource,
     ) -> Optional[str]:
         """
         Obtains the root partition of a disk image by inspecting the resource's
@@ -115,7 +116,8 @@ class KernelDiskWorkload:
         return disk_image.get_root_partition()
 
     def get_default_kernel_root_val(
-        self, disk_image: DiskImageResource
+        self,
+        disk_image: DiskImageResource,
     ) -> str:
         """
         Get the default kernel root value to be passed to the kernel. This is
@@ -180,7 +182,7 @@ class KernelDiskWorkload:
         self.workload.command_line = (
             " ".join(kernel_args or self.get_default_kernel_args())
         ).format(
-            root_value=self.get_default_kernel_root_val(disk_image=disk_image)
+            root_value=self.get_default_kernel_root_val(disk_image=disk_image),
         )
 
         # Setting the bootloader information for ARM board. The current
@@ -218,5 +220,5 @@ class KernelDiskWorkload:
                 # The checkpoint_dir must be None, Path, Or AbstractResource.
                 raise Exception(
                     "Checkpoints must be passed as a Path or an "
-                    "CheckpointResource."
+                    "CheckpointResource.",
                 )

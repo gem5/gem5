@@ -41,7 +41,7 @@ def generateMemNode(state, mem_range):
             "reg",
             state.addrCells(mem_range.start)
             + state.sizeCells(mem_range.size()),
-        )
+        ),
     )
     return node
 
@@ -96,7 +96,8 @@ def createHiFivePlatform(system):
         cpu.dcache_port = system.membus.cpu_side_ports
 
         cpu.mmu.connectWalkerPorts(
-            system.membus.cpu_side_ports, system.membus.cpu_side_ports
+            system.membus.cpu_side_ports,
+            system.membus.cpu_side_ports,
         )
 
     system.platform = HiFive()
@@ -110,7 +111,7 @@ def createHiFivePlatform(system):
         uncacheable=[
             *system.platform._on_chip_ranges(),
             *system.platform._off_chip_ranges(),
-        ]
+        ],
     )
 
     system.iobus = IOXBar()
@@ -129,7 +130,9 @@ def createHiFivePlatform(system):
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "--cpu-clock-rate", type=str, help="CPU clock rate, e.g. 3GHz"
+    "--cpu-clock-rate",
+    type=str,
+    help="CPU clock rate, e.g. 3GHz",
 )
 parser.add_argument("--memory-size", type=str, help="Memory size, e.g. 4GiB")
 
@@ -144,7 +147,8 @@ bbl_path = bbl_resource.get_local_path()
 system = System()
 
 system.clk_domain = SrcClockDomain(
-    clock=cpu_clock_rate, voltage_domain=VoltageDomain()
+    clock=cpu_clock_rate,
+    voltage_domain=VoltageDomain(),
 )
 
 system.mem_ranges = [AddrRange(start=0x80000000, size=memory_size)]
@@ -164,7 +168,7 @@ system.workload.dtb_filename = path.join(m5.options.outdir, "device.dtb")
 system.workload.dtb_addr = 0x87E00000
 kernel_cmd = [
     # specifying Linux kernel boot options
-    "console=ttyS0"
+    "console=ttyS0",
 ]
 system.workload.command_line = " ".join(kernel_cmd)
 

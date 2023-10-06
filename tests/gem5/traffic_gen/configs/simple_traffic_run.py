@@ -41,7 +41,9 @@ from m5.stats.gem5stats import get_simstat
 
 
 def generator_factory(
-    generator_class: str, generator_cores: int, mem_size: MemorySize
+    generator_class: str,
+    generator_cores: int,
+    mem_size: MemorySize,
 ):
     if generator_class == "LinearGenerator":
         from gem5.components.processors.linear_generator import LinearGenerator
@@ -66,7 +68,7 @@ def generator_factory(
             raise ValueError(
                 "Only one core should be used with GUPSGenerator. "
                 "In order to use multiple cores of GUPS generator, use either "
-                "GUPSGeneratorEP or GUPSGeneratorPAR."
+                "GUPSGeneratorEP or GUPSGeneratorPAR.",
             )
         from gem5.components.processors.gups_generator import GUPSGenerator
 
@@ -80,7 +82,11 @@ def generator_factory(
         table_size = f"{int(mem_size / 2)}B"
 
         return GUPSGeneratorEP(
-            generator_cores, 0, table_size, update_limit=1000, clk_freq="2GHz"
+            generator_cores,
+            0,
+            table_size,
+            update_limit=1000,
+            clk_freq="2GHz",
         )
     elif generator_class == "GUPSGeneratorPAR":
         from gem5.components.processors.gups_generator_par import (
@@ -89,7 +95,11 @@ def generator_factory(
 
         table_size = f"{int(mem_size / 2)}B"
         return GUPSGeneratorPAR(
-            generator_cores, 0, table_size, update_limit=1000, clk_freq="2GHz"
+            generator_cores,
+            0,
+            table_size,
+            update_limit=1000,
+            clk_freq="2GHz",
         )
     else:
         raise ValueError(f"Unknown generator class {generator_class}")
@@ -112,7 +122,9 @@ def cache_factory(cache_class: str):
         )
 
         return PrivateL1PrivateL2CacheHierarchy(
-            l1d_size="32KiB", l1i_size="32KiB", l2_size="256KiB"
+            l1d_size="32KiB",
+            l1i_size="32KiB",
+            l2_size="256KiB",
         )
     elif cache_class == "MESITwoLevel":
         from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
@@ -134,7 +146,7 @@ def cache_factory(cache_class: str):
 
 parser = argparse.ArgumentParser(
     description="A traffic generator that can be used to test a gem5 "
-    "memory component."
+    "memory component.",
 )
 
 parser.add_argument(
@@ -151,7 +163,9 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "generator_cores", type=int, help="The number of generator cores to use."
+    "generator_cores",
+    type=int,
+    help="The number of generator cores to use.",
 )
 
 parser.add_argument(
@@ -162,11 +176,15 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "mem_module", type=str, help="The python module to import for memory."
+    "mem_module",
+    type=str,
+    help="The python module to import for memory.",
 )
 
 parser.add_argument(
-    "mem_class", type=str, help="The memory class to import and instantiate."
+    "mem_class",
+    type=str,
+    help="The memory class to import and instantiate.",
 )
 
 parser.add_argument(
@@ -180,12 +198,15 @@ args = parser.parse_args()
 cache_hierarchy = cache_factory(args.cache_class)
 
 memory_class = getattr(
-    importlib.import_module(args.mem_module), args.mem_class
+    importlib.import_module(args.mem_module),
+    args.mem_class,
 )
 memory = memory_class(*args.mem_args)
 
 generator = generator_factory(
-    args.generator_class, args.generator_cores, memory.get_size()
+    args.generator_class,
+    args.generator_cores,
+    memory.get_size(),
 )
 
 # We use the Test Board. This is a special board to run traffic generation
@@ -208,7 +229,8 @@ exit_event = m5.simulate()
 print(f"Exiting @ tick {m5.curTick()} because {exit_event.getCause()}.")
 
 simstats = get_simstat(
-    [core.generator for core in generator.get_cores()], prepare_stats=True
+    [core.generator for core in generator.get_cores()],
+    prepare_stats=True,
 )
 json_output = Path(m5.options.outdir) / "output.json"
 with open(json_output, "w") as stats_file:

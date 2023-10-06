@@ -49,11 +49,14 @@ class GUPSGeneratorCore(AbstractGeneratorCore):
         """
         super().__init__()
         self.generator = GUPSGen(
-            start_addr=start_addr, mem_size=mem_size, update_limit=update_limit
+            start_addr=start_addr,
+            mem_size=mem_size,
+            update_limit=update_limit,
         )
         if clk_freq:
             clock_domain = SrcClockDomain(
-                clock=clk_freq, voltage_domain=VoltageDomain()
+                clock=clk_freq,
+                voltage_domain=VoltageDomain(),
             )
             self.generator.clk_domain = clock_domain
 

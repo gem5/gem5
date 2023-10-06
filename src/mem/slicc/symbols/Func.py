@@ -92,7 +92,7 @@ class Func(Symbol):
                 and str(actual_type["interface"]) != str(expected_type)
             ):
                 expr.error(
-                    f"Type mismatch: expected: {expected_type} actual: {actual_type}"
+                    f"Type mismatch: expected: {expected_type} actual: {actual_type}",
                 )
             cvec.append(param_code)
             type_vec.append(expected_type)
@@ -123,7 +123,7 @@ ${{self.class_name}}::${{self.c_name}}($params)
 {
 ${{self.body}}
 }
-"""
+""",
         )
         return str(code)
 

@@ -64,7 +64,9 @@ class ArmSESystemUniprocessor(BaseSESystemUniprocessor):
         if self.mem_mode == "timing":
             # Use the more representative cache configuration
             cpu.addTwoLevelCacheHierarchy(
-                O3_ARM_v7a_ICache(), O3_ARM_v7a_DCache(), O3_ARM_v7aL2()
+                O3_ARM_v7a_ICache(),
+                O3_ARM_v7a_DCache(),
+                O3_ARM_v7aL2(),
             )
 
 
@@ -147,7 +149,7 @@ class LinuxArmSystemBuilder(object):
         system.workload.panic_on_oops = True
 
         system.workload.object_file = SysPaths.binary(
-            default_kernels[self.machine_type]
+            default_kernels[self.machine_type],
         )
 
         self.init_system(system)
@@ -157,7 +159,8 @@ class LinuxArmSystemBuilder(object):
                     decoder.dvm_enabled = True
 
         system.workload.dtb_filename = os.path.join(
-            m5.options.outdir, "system.dtb"
+            m5.options.outdir,
+            "system.dtb",
         )
         system.generateDtb(system.workload.dtb_filename)
         return system
@@ -171,7 +174,7 @@ class LinuxArmFSSystem(LinuxArmSystemBuilder, BaseFSSystem):
         machine_type="VExpress_GEM5_Foundation",
         aarch64_kernel=True,
         enable_dvm=False,
-        **kwargs
+        **kwargs,
     ):
         """Initialize an ARM system that supports full system simulation.
 
@@ -183,18 +186,25 @@ class LinuxArmFSSystem(LinuxArmSystemBuilder, BaseFSSystem):
         """
         BaseFSSystem.__init__(self, **kwargs)
         LinuxArmSystemBuilder.__init__(
-            self, machine_type, aarch64_kernel, enable_dvm, **kwargs
+            self,
+            machine_type,
+            aarch64_kernel,
+            enable_dvm,
+            **kwargs,
         )
 
     def create_caches_private(self, cpu):
         # Use the more representative cache configuration
         cpu.addTwoLevelCacheHierarchy(
-            O3_ARM_v7a_ICache(), O3_ARM_v7a_DCache(), O3_ARM_v7aL2()
+            O3_ARM_v7a_ICache(),
+            O3_ARM_v7a_DCache(),
+            O3_ARM_v7aL2(),
         )
 
 
 class LinuxArmFSSystemUniprocessor(
-    LinuxArmSystemBuilder, BaseFSSystemUniprocessor
+    LinuxArmSystemBuilder,
+    BaseFSSystemUniprocessor,
 ):
     """Basic ARM full system builder for uniprocessor systems.
 
@@ -207,11 +217,15 @@ class LinuxArmFSSystemUniprocessor(
         self,
         machine_type="VExpress_GEM5_Foundation",
         aarch64_kernel=True,
-        **kwargs
+        **kwargs,
     ):
         BaseFSSystemUniprocessor.__init__(self, **kwargs)
         LinuxArmSystemBuilder.__init__(
-            self, machine_type, aarch64_kernel, False, **kwargs
+            self,
+            machine_type,
+            aarch64_kernel,
+            False,
+            **kwargs,
         )
 
 
@@ -222,9 +236,13 @@ class LinuxArmFSSwitcheroo(LinuxArmSystemBuilder, BaseFSSwitcheroo):
         self,
         machine_type="VExpress_GEM5_Foundation",
         aarch64_kernel=True,
-        **kwargs
+        **kwargs,
     ):
         BaseFSSwitcheroo.__init__(self, **kwargs)
         LinuxArmSystemBuilder.__init__(
-            self, machine_type, aarch64_kernel, False, **kwargs
+            self,
+            machine_type,
+            aarch64_kernel,
+            False,
+            **kwargs,
         )

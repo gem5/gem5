@@ -94,7 +94,7 @@ def main():
             ascii_out.write(f"{packet.pkt_id},")
         if packet.HasField("flags"):
             ascii_out.write(
-                f"{cmd},{packet.addr},{packet.size},{packet.flags},{packet.tick}"
+                f"{cmd},{packet.addr},{packet.size},{packet.flags},{packet.tick}",
             )
         else:
             ascii_out.write(f"{cmd},{packet.addr},{packet.size},{packet.tick}")

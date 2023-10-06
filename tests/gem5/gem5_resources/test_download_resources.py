@@ -29,7 +29,10 @@ if config.bin_path:
     resource_path = joinpath(config.bin_path, "resource-downloading-test")
 else:
     resource_path = joinpath(
-        absdirpath(__file__), "..", "resources", "resource_downloading-test"
+        absdirpath(__file__),
+        "..",
+        "resources",
+        "resource_downloading-test",
     )
 
 gem5_verify_config(

@@ -44,6 +44,7 @@ class BaseMemProbe(SimObject):
     cxx_class = "gem5::BaseMemProbe"
 
     manager = VectorParam.SimObject(
-        Parent.any, "Probe manager(s) to instrument"
+        Parent.any,
+        "Probe manager(s) to instrument",
     )
     probe_name = Param.String("PktRequest", "Memory request probe to use")

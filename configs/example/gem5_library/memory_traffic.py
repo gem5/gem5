@@ -43,20 +43,28 @@ from m5.objects import MemorySize
 
 
 def generator_factory(
-    generator_class: str, rd_perc: int, mem_size: MemorySize
+    generator_class: str,
+    rd_perc: int,
+    mem_size: MemorySize,
 ):
     rd_perc = int(rd_perc)
     if rd_perc > 100 or rd_perc < 0:
         raise ValueError(
-            "Read percentage has to be an integer number between 0 and 100."
+            "Read percentage has to be an integer number between 0 and 100.",
         )
     if generator_class == "LinearGenerator":
         return LinearGenerator(
-            duration="1ms", rate="32GiB/s", max_addr=mem_size, rd_perc=rd_perc
+            duration="1ms",
+            rate="32GiB/s",
+            max_addr=mem_size,
+            rd_perc=rd_perc,
         )
     elif generator_class == "RandomGenerator":
         return RandomGenerator(
-            duration="1ms", rate="32GiB/s", max_addr=mem_size, rd_perc=rd_perc
+            duration="1ms",
+            rate="32GiB/s",
+            max_addr=mem_size,
+            rd_perc=rd_perc,
         )
     else:
         raise ValueError(f"Unknown generator class {generator_class}")
@@ -64,7 +72,7 @@ def generator_factory(
 
 parser = argparse.ArgumentParser(
     description="A traffic generator that can be used to test a gem5 "
-    "memory component."
+    "memory component.",
 )
 
 parser.add_argument(
@@ -90,7 +98,9 @@ args = parser.parse_args()
 memory = HighBandwidthMemory(HBM_2000_4H_1x64, 1, 128)
 
 generator = generator_factory(
-    args.generator_class, args.read_percentage, memory.get_size()
+    args.generator_class,
+    args.read_percentage,
+    memory.get_size(),
 )
 
 # We use the Test Board. This is a special board to run traffic generation

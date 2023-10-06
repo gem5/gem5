@@ -67,7 +67,7 @@ except:
             "--python_out=util",
             "--proto_path=src/proto",
             "src/proto/packet.proto",
-        ]
+        ],
     )
     if not error:
         print("Generated packet proto definitions")

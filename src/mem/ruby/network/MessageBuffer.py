@@ -60,7 +60,8 @@ class MessageBuffer(SimObject):
                                      (0 allows infinite entries)",
     )
     randomization = Param.MessageRandomization(
-        "ruby_system", "Randomization parameter"
+        "ruby_system",
+        "Randomization parameter",
     )
     allow_zero_latency = Param.Bool(
         False,

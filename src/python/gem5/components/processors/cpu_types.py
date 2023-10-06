@@ -67,7 +67,7 @@ def get_cpu_type_from_str(input: str) -> CPUTypes:
 
     raise Exception(
         f"CPU type '{input}' does not correspond to a known CPU type. "
-        f"Known CPU Types:{valid_cpu_types_list_str}"
+        f"Known CPU Types:{valid_cpu_types_list_str}",
     )
 
 

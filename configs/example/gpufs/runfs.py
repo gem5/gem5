@@ -82,7 +82,9 @@ def addRunFSOptions(parser):
     parser.add_argument("--kernel", default=None, help="Linux kernel to boot")
     parser.add_argument("--gpu-rom", default=None, help="GPU BIOS to load")
     parser.add_argument(
-        "--gpu-mmio-trace", default=None, help="GPU MMIO trace to load"
+        "--gpu-mmio-trace",
+        default=None,
+        help="GPU MMIO trace to load",
     )
     parser.add_argument(
         "--checkpoint-before-mmios",
@@ -176,7 +178,7 @@ def runGpuFSSystem(args):
     n_cu = args.num_compute_units
     args.num_sqc = int(math.ceil(float(n_cu) / args.cu_per_sqc))
     args.num_scalar_cache = int(
-        math.ceil(float(n_cu) / args.cu_per_scalar_cache)
+        math.ceil(float(n_cu) / args.cu_per_scalar_cache),
     )
 
     # Verify MMIO trace is valid. This is only needed for Vega10 simulations.
@@ -233,7 +235,7 @@ def runGpuFSSystem(args):
             kernels_launched += 1
         else:
             print(
-                f"Unknown exit event: {exit_event.getCause()}. Continuing..."
+                f"Unknown exit event: {exit_event.getCause()}. Continuing...",
             )
 
         if kernels_launched == args.debug_at_gpu_kernel:
@@ -245,7 +247,7 @@ def runGpuFSSystem(args):
         exit_event = m5.simulate(sim_ticks - m5.curTick())
 
     print(
-        "Exiting @ tick %i because %s" % (m5.curTick(), exit_event.getCause())
+        "Exiting @ tick %i because %s" % (m5.curTick(), exit_event.getCause()),
     )
 
 

@@ -110,7 +110,7 @@ def _url_factory(schemes, enable=True):
                         return key, literal_eval(values[0])
                     except ValueError:
                         fatal(
-                            f"{url.geturl()}: {values[0]} isn't a valid Python literal"
+                            f"{url.geturl()}: {values[0]} isn't a valid Python literal",
                         )
 
             kwargs = dict([parse_value(k, v) for k, v in qs.items()])
@@ -452,5 +452,5 @@ flags = attrdict(
         "dist": 0x0080,
         "nozero": 0x0100,
         "nonan": 0x0200,
-    }
+    },
 )

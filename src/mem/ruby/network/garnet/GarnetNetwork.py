@@ -49,7 +49,8 @@ class GarnetNetwork(RubyNetwork):
     enable_fault_model = Param.Bool(False, "enable network fault model")
     fault_model = Param.FaultModel(NULL, "network fault model")
     garnet_deadlock_threshold = Param.UInt32(
-        50000, "network-level deadlock threshold"
+        50000,
+        "network-level deadlock threshold",
     )
 
 
@@ -60,13 +61,16 @@ class GarnetNetworkInterface(ClockedObject):
 
     id = Param.UInt32("ID in relation to other network interfaces")
     vcs_per_vnet = Param.UInt32(
-        Parent.vcs_per_vnet, "virtual channels per virtual network"
+        Parent.vcs_per_vnet,
+        "virtual channels per virtual network",
     )
     virt_nets = Param.UInt32(
-        Parent.number_of_virtual_networks, "number of virtual networks"
+        Parent.number_of_virtual_networks,
+        "number of virtual networks",
     )
     garnet_deadlock_threshold = Param.UInt32(
-        Parent.garnet_deadlock_threshold, "network-level deadlock threshold"
+        Parent.garnet_deadlock_threshold,
+        "network-level deadlock threshold",
     )
 
 
@@ -75,13 +79,16 @@ class GarnetRouter(BasicRouter):
     cxx_class = "gem5::ruby::garnet::Router"
     cxx_header = "mem/ruby/network/garnet/Router.hh"
     vcs_per_vnet = Param.UInt32(
-        Parent.vcs_per_vnet, "virtual channels per virtual network"
+        Parent.vcs_per_vnet,
+        "virtual channels per virtual network",
     )
     virt_nets = Param.UInt32(
-        Parent.number_of_virtual_networks, "number of virtual networks"
+        Parent.number_of_virtual_networks,
+        "number of virtual networks",
     )
     width = Param.UInt32(
-        Parent.ni_flit_size, "bit width supported by the router"
+        Parent.ni_flit_size,
+        "bit width supported by the router",
     )
 
 

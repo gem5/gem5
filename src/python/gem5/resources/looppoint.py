@@ -75,7 +75,7 @@ class LooppointRegionPC:
     def update_relative_count(self, manager: PcCountTrackerManager) -> None:
         """Updates the relative count."""
         self._relative = int(
-            self.get_global() - manager.getPcCount(self.get_pc())
+            self.get_global() - manager.getPcCount(self.get_pc()),
         )
 
     def to_json(self) -> Dict[str, int]:
@@ -167,7 +167,9 @@ class LooppointSimulation:
         ]
 
     def update_relatives_counts(
-        self, manager: PcCountTrackerManager, include_start: bool = False
+        self,
+        manager: PcCountTrackerManager,
+        include_start: bool = False,
     ) -> None:
         """Updates the relative counts for this simulation region."""
         if include_start:
@@ -234,7 +236,8 @@ class LooppointRegion:
     def update_relatives_counts(self, manager: PcCountTrackerManager) -> None:
         """Updates the relative counds of this Looppoint region."""
         self.get_simulation().update_relatives_counts(
-            manager=manager, include_start=bool(self.get_warmup())
+            manager=manager,
+            include_start=bool(self.get_warmup()),
         )
 
     def get_start(self) -> PcCountPair:
@@ -315,7 +318,7 @@ class Looppoint:
         if current_pair in region_start_map:
             region_id = region_start_map[current_pair]
             self.get_regions()[region_id].update_relatives_counts(
-                manager=self.get_manager()
+                manager=self.get_manager(),
             )
 
     def get_current_region(self) -> Optional[Union[str, int]]:
@@ -432,13 +435,15 @@ class LooppointCsvLoader(Looppoint):
                         )
 
                         simulation = LooppointSimulation(
-                            start=region_start, end=region_end
+                            start=region_start,
+                            end=region_end,
                         )
 
                         multiplier = float(line[14])
 
                         region = LooppointRegion(
-                            simulation=simulation, multiplier=multiplier
+                            simulation=simulation,
+                            multiplier=multiplier,
                         )
 
                         regions[rid] = region
@@ -456,7 +461,7 @@ class LooppointCsvLoader(Looppoint):
             if rid not in regions:
                 raise Exception(
                     "Warmup region ID '{rid}' does not have a "
-                    "corresponding region."
+                    "corresponding region.",
                 )
             regions[rid]._warmup = warmups[rid]
 
@@ -495,7 +500,7 @@ class LooppointJsonLoader(Looppoint):
             for rid in json_contents:
                 start_pc = int(json_contents[rid]["simulation"]["start"]["pc"])
                 start_globl = int(
-                    json_contents[rid]["simulation"]["start"]["global"]
+                    json_contents[rid]["simulation"]["start"]["global"],
                 )
                 start_relative = (
                     int(json_contents[rid]["simulation"]["start"]["relative"])
@@ -510,7 +515,7 @@ class LooppointJsonLoader(Looppoint):
 
                 end_pc = int(json_contents[rid]["simulation"]["end"]["pc"])
                 end_globl = int(
-                    json_contents[rid]["simulation"]["end"]["global"]
+                    json_contents[rid]["simulation"]["end"]["global"],
                 )
                 end_relative = (
                     int(json_contents[rid]["simulation"]["end"]["relative"])
@@ -537,7 +542,9 @@ class LooppointJsonLoader(Looppoint):
                     warmup = LooppointRegionWarmup(start=start, end=end)
 
                 regions[rid] = LooppointRegion(
-                    simulation=simulation, multiplier=multiplier, warmup=warmup
+                    simulation=simulation,
+                    multiplier=multiplier,
+                    warmup=warmup,
                 )
 
         super().__init__(regions=regions)

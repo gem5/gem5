@@ -49,7 +49,11 @@ class SingleChannelSimpleMemory(AbstractMemorySystem):
     """
 
     def __init__(
-        self, latency: str, latency_var: str, bandwidth: str, size: str
+        self,
+        latency: str,
+        latency_var: str,
+        bandwidth: str,
+        size: str,
     ):
         """
         :param latency: The average of request to response latency.
@@ -60,7 +64,9 @@ class SingleChannelSimpleMemory(AbstractMemorySystem):
         super().__init__()
 
         self.module = SimpleMemory(
-            latency=latency, latency_var=latency_var, bandwidth=bandwidth
+            latency=latency,
+            latency_var=latency_var,
+            bandwidth=bandwidth,
         )
         self._size = toMemorySize(size)
 
@@ -85,6 +91,6 @@ class SingleChannelSimpleMemory(AbstractMemorySystem):
         if len(ranges) != 1 or ranges[0].size() != self._size:
             raise Exception(
                 "Simple single channel memory controller requires a single "
-                "range which matches the memory's size."
+                "range which matches the memory's size.",
             )
         self.module.range = ranges[0]

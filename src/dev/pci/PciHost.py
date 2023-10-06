@@ -56,7 +56,8 @@ class GenericPciHost(PciHost):
     conf_base = Param.Addr("Config space base address")
     conf_size = Param.Addr("Config space base address")
     conf_device_bits = Param.UInt8(
-        8, "Number of bits used to as an offset a devices address space"
+        8,
+        "Number of bits used to as an offset a devices address space",
     )
 
     pci_pio_base = Param.Addr(0, "Base address for PCI IO accesses")

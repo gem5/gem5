@@ -136,7 +136,8 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         # as the user specified in the config script.
         self.voltage_domain = VoltageDomain(voltage="1.0V")
         self.clk_domain = SrcClockDomain(
-            clock=self._clk_freq, voltage_domain=self.voltage_domain
+            clock=self._clk_freq,
+            voltage_domain=self.voltage_domain,
         )
 
         # The ARM board supports both Terminal and VncServer.
@@ -170,7 +171,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         for mem_range in self.realview._mem_regions:
             size_in_range = min(mem_size, mem_range.size())
             self.mem_ranges.append(
-                AddrRange(start=mem_range.start, size=size_in_range)
+                AddrRange(start=mem_range.start, size=size_in_range),
             )
 
             mem_size -= size_in_range
@@ -249,7 +250,8 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
             # PrivateL1PrivateL2CacheHierarchy and PrivateL1CacheHierarchy
             # classes.
             self.realview.attachOnChipIO(
-                self.cache_hierarchy.membus, self.iobridge
+                self.cache_hierarchy.membus,
+                self.iobridge,
             )
             self.realview.attachIO(self.iobus)
 
@@ -321,7 +323,9 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         # system requires three inputs to simulate a full system: a disk image,
         # the kernel file and the bootloader file(s).
         self.realview.setupBootLoader(
-            self, self._get_dtb_filename(), self._bootloader
+            self,
+            self._get_dtb_filename(),
+            self._bootloader,
         )
 
         # Calling generateDtb from class ArmSystem to add memory information to
@@ -347,7 +351,9 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         # For every PCI device, we need to get its dma_port so that we
         # can setup dma_controllers correctly.
         self.realview.attachPciDevice(
-            pci_device, self.iobus, dma_ports=self.get_dma_ports()
+            pci_device,
+            self.iobus,
+            dma_ports=self.get_dma_ports(),
         )
 
     @overrides(KernelDiskWorkload)
@@ -358,7 +364,8 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
     def _add_disk_to_board(self, disk_image: AbstractResource):
         self._image = CowDiskImage(
             child=RawDiskImage(
-                read_only=True, image_file=disk_image.get_local_path()
+                read_only=True,
+                image_file=disk_image.get_local_path(),
             ),
             read_only=False,
         )

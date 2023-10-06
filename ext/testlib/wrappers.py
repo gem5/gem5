@@ -164,12 +164,14 @@ class LoadedTest(LoadedTestable):
                 "name": self.obj.name,
                 "path": self._path,
                 "uid": uid.TestUID(
-                    self._path, self.obj.name, self.parent_suite.name
+                    self._path,
+                    self.obj.name,
+                    self.parent_suite.name,
                 ),
                 "status": Status.Unscheduled,
                 "result": Result(Result.NotRun),
                 "suite_uid": self.parent_suite.metadata.uid,
-            }
+            },
         )
 
 
@@ -193,7 +195,7 @@ class LoadedSuite(LoadedTestable):
                 "uid": uid.SuiteUID(self._path, self.obj.name),
                 "status": Status.Unscheduled,
                 "result": Result(Result.NotRun),
-            }
+            },
         )
 
     def __iter__(self):
@@ -219,7 +221,7 @@ class LoadedLibrary(LoadedTestable):
                 "name": "Test Library",
                 "status": Status.Unscheduled,
                 "result": Result(Result.NotRun),
-            }
+            },
         )
 
     def __iter__(self):
@@ -235,7 +237,7 @@ class LoadedLibrary(LoadedTestable):
         """
         return itertools.chain(
             itertools.chain(*(suite.fixtures for suite in self.obj)),
-            *(self.test_fixtures(suite) for suite in self.obj)
+            *(self.test_fixtures(suite) for suite in self.obj),
         )
 
     def test_fixtures(self, suite):

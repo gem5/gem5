@@ -92,7 +92,8 @@ def config_ruby(system, args):
 
     # Create a seperate clock domain for Ruby
     system.ruby.clk_domain = SrcClockDomain(
-        clock=args.ruby_clock, voltage_domain=system.voltage_domain
+        clock=args.ruby_clock,
+        voltage_domain=system.voltage_domain,
     )
 
 
@@ -124,7 +125,7 @@ def create(args):
             None,
             None,
             None,
-        )
+        ),
     ]
 
     # Add the PCI devices we need for this system. The base system
@@ -135,7 +136,7 @@ def create(args):
         # disk. Attach the disk image using gem5's Copy-on-Write
         # functionality to avoid writing changes to the stored copy of
         # the disk image.
-        PciVirtIO(vio=VirtIOBlock(image=create_cow_image(args.disk_image)))
+        PciVirtIO(vio=VirtIOBlock(image=create_cow_image(args.disk_image))),
     ]
 
     # Attach the PCI devices to the system. The helper method in the
@@ -157,7 +158,8 @@ def create(args):
     else:
         # No DTB specified: autogenerate DTB
         system.workload.dtb_filename = os.path.join(
-            m5.options.outdir, "system.dtb"
+            m5.options.outdir,
+            "system.dtb",
         )
         system.generateDtb(system.workload.dtb_filename)
 
@@ -206,10 +208,16 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--dtb", type=str, default=None, help="DTB file to load"
+        "--dtb",
+        type=str,
+        default=None,
+        help="DTB file to load",
     )
     parser.add_argument(
-        "--kernel", type=str, default=default_kernel, help="Linux kernel"
+        "--kernel",
+        type=str,
+        default=default_kernel,
+        help="Linux kernel",
     )
     parser.add_argument(
         "--disk-image",
@@ -224,7 +232,10 @@ def main():
         help=f"OS device name for root partition (default: {default_root_device})",
     )
     parser.add_argument(
-        "--script", type=str, default="", help="Linux bootscript"
+        "--script",
+        type=str,
+        default="",
+        help="Linux bootscript",
     )
     parser.add_argument(
         "--cpu",
@@ -244,7 +255,10 @@ def main():
         help="type of memory to use",
     )
     parser.add_argument(
-        "--mem-channels", type=int, default=1, help="number of memory channels"
+        "--mem-channels",
+        type=int,
+        default=1,
+        help="number of memory channels",
     )
     parser.add_argument(
         "--mem-ranks",

@@ -61,14 +61,15 @@ def run_cmd(explanation, working_dir, cmd, stdout=None):
         return
 
     print(
-        "Error running phase %s. Returncode: %d" % (explanation, return_code)
+        "Error running phase %s. Returncode: %d" % (explanation, return_code),
     )
     sys.exit(1)
 
 
 def linux_clone():
     kernel_vexpress_gem5_dir = os.path.join(
-        args.dest_dir, "linux-kernel-vexpress_gem5"
+        args.dest_dir,
+        "linux-kernel-vexpress_gem5",
     )
 
     run_cmd(
@@ -85,7 +86,8 @@ def linux_clone():
 
 def linux64():
     kernel_vexpress_gem5_dir = os.path.join(
-        args.dest_dir, "linux-kernel-vexpress_gem5"
+        args.dest_dir,
+        "linux-kernel-vexpress_gem5",
     )
 
     linux_bin = os.path.join(binaries_dir, "vmlinux.vexpress_gem5_v1_64")
@@ -133,7 +135,8 @@ def linux64():
 
 def linux32():
     kernel_vexpress_gem5_dir = os.path.join(
-        args.dest_dir, "linux-kernel-vexpress_gem5"
+        args.dest_dir,
+        "linux-kernel-vexpress_gem5",
     )
 
     linux_bin = os.path.join(binaries_dir, "vmlinux.vexpress_gem5_v1")
@@ -185,7 +188,9 @@ def dtbs():
         ["make", make_jobs_str],
     )
     run_cmd(
-        "copy DTBs", dt_dir, ["cp"] + glob(dt_dir + "/*dtb") + [binaries_dir]
+        "copy DTBs",
+        dt_dir,
+        ["cp"] + glob(dt_dir + "/*dtb") + [binaries_dir],
     )
 
 
@@ -218,10 +223,14 @@ def m5():
     m5_dir = gem5_dir + "/util/m5"
     run_cmd("compile arm64 m5", m5_dir, ["make", "-f", "Makefile.aarch64"])
     run_cmd(
-        "copy arm64 m5", m5_dir, ["cp", "m5", binaries_dir + "/m5.aarch64"]
+        "copy arm64 m5",
+        m5_dir,
+        ["cp", "m5", binaries_dir + "/m5.aarch64"],
     )
     run_cmd(
-        "clean arm64 m5", m5_dir, ["make", "clean", "-f", "Makefile.aarch64"]
+        "clean arm64 m5",
+        m5_dir,
+        ["make", "clean", "-f", "Makefile.aarch64"],
     )
     run_cmd("compile arm m5", m5_dir, ["make", "-f", "Makefile.arm"])
     run_cmd("copy arm m5", m5_dir, ["cp", "m5", binaries_dir + "/m5.aarch32"])

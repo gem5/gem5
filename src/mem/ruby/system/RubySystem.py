@@ -41,10 +41,12 @@ class RubySystem(ClockedObject):
          buffer set its own flag to enable/disable randomization)",
     )
     block_size_bytes = Param.UInt32(
-        64, "default cache block size; must be a power of two"
+        64,
+        "default cache block size; must be a power of two",
     )
     memory_size_bits = Param.UInt32(
-        64, "number of bits that a memory address requires"
+        64,
+        "number of bits that a memory address requires",
     )
 
     phys_mem = Param.SimpleMemory(NULL, "")

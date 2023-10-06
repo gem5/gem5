@@ -66,7 +66,7 @@ sim_object_classes_by_name = {
 
 def no_parser(cls, flags, param):
     raise Exception(
-        f"Can't parse string: {str(param)} for parameter class: {cls.__name__}"
+        f"Can't parse string: {str(param)} for parameter class: {cls.__name__}",
     )
 
 
@@ -198,7 +198,7 @@ class ConfigManager(object):
 
         if object_type not in sim_object_classes_by_name:
             raise Exception(
-                f"No SimObject type {object_type} is available to build: {object_name}"
+                f"No SimObject type {object_type} is available to build: {object_name}",
             )
 
         object_class = sim_object_classes_by_name[object_type]
@@ -209,7 +209,8 @@ class ConfigManager(object):
             if issubclass(param.ptype, m5.params.ParamValue):
                 if isinstance(param, m5.params.VectorParamDesc):
                     param_values = self.config.get_param_vector(
-                        object_name, param_name
+                        object_name,
+                        param_name,
                     )
 
                     param_value = [
@@ -241,7 +242,8 @@ class ConfigManager(object):
             if issubclass(param.ptype, m5.objects.SimObject):
                 if isinstance(param, m5.params.VectorParamDesc):
                     param_values = self.config.get_param_vector(
-                        object_name, param_name
+                        object_name,
+                        param_name,
                     )
 
                     setattr(
@@ -256,12 +258,15 @@ class ConfigManager(object):
                     )
                 else:
                     param_value = self.config.get_param(
-                        object_name, param_name
+                        object_name,
+                        param_name,
                     )
 
                     if param_value != "Null":
                         setattr(
-                            obj, param_name, self.objects_by_name[param_value]
+                            obj,
+                            param_name,
+                            self.objects_by_name[param_value],
                         )
 
         return obj
@@ -321,7 +326,7 @@ class ConfigManager(object):
                     (
                         PortConnection(object_name, port.name, index),
                         PortConnection.from_string(peer),
-                    )
+                    ),
                 )
 
         return parsed_ports
@@ -362,7 +367,7 @@ class ConfigManager(object):
             from_port, to_port = connection
 
             if port_has_correct_index(from_port) and port_has_correct_index(
-                to_port
+                to_port,
             ):
                 connections_to_make.append((from_port, to_port))
 

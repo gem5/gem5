@@ -85,13 +85,16 @@ class TestGit(unittest.TestCase):
     def test_keys(self):
         git = artifact.artifact.getGit(Path("."))
         self.assertSetEqual(
-            set(git.keys()), set(["origin", "hash", "name"]), "git keys wrong"
+            set(git.keys()),
+            set(["origin", "hash", "name"]),
+            "git keys wrong",
         )
 
     def test_origin(self):
         git = artifact.artifact.getGit(Path("."))
         self.assertTrue(
-            git["origin"].endswith("gem5"), "Origin should end with gem5art"
+            git["origin"].endswith("gem5"),
+            "Origin should end with gem5art",
         )
 
 
@@ -112,7 +115,7 @@ class TestArtifact(unittest.TestCase):
                 "git": artifact.artifact.getGit(Path(".")),
                 "cwd": "/",
                 "inputs": [],
-            }
+            },
         )
 
     def test_dirs(self):
@@ -134,7 +137,7 @@ class TestArtifactSimilarity(unittest.TestCase):
                 "git": artifact.artifact.getGit(Path(".")),
                 "cwd": "/",
                 "inputs": [],
-            }
+            },
         )
 
         self.artifactB = artifact.Artifact(
@@ -149,7 +152,7 @@ class TestArtifactSimilarity(unittest.TestCase):
                 "git": artifact.artifact.getGit(Path(".")),
                 "cwd": "/",
                 "inputs": [],
-            }
+            },
         )
 
         self.artifactC = artifact.Artifact(
@@ -164,7 +167,7 @@ class TestArtifactSimilarity(unittest.TestCase):
                 "git": artifact.artifact.getGit(Path(".")),
                 "cwd": "/",
                 "inputs": [],
-            }
+            },
         )
 
         self.artifactD = artifact.Artifact(
@@ -179,7 +182,7 @@ class TestArtifactSimilarity(unittest.TestCase):
                 "git": artifact.artifact.getGit(Path(".")),
                 "cwd": "/",
                 "inputs": [],
-            }
+            },
         )
 
     def test_not_equal(self):
@@ -228,7 +231,7 @@ class TestRegisterArtifact(unittest.TestCase):
                 "git": artifact.artifact.getGit(Path(".")),
                 "cwd": "/",
                 "inputs": [],
-            }
+            },
         )
 
     # test to see if an artifact is in the database

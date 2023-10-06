@@ -78,7 +78,7 @@ class TestBoard(AbstractSystemBoard):
     def get_io_bus(self) -> IOXBar:
         raise NotImplementedError(
             "The TestBoard does not have an IO Bus. "
-            "Use `has_io_bus()` to check this."
+            "Use `has_io_bus()` to check this.",
         )
 
     @overrides(AbstractSystemBoard)
@@ -89,7 +89,7 @@ class TestBoard(AbstractSystemBoard):
     def get_dma_ports(self) -> List[Port]:
         raise NotImplementedError(
             "The TestBoard does not have DMA Ports. "
-            "Use `has_dma_ports()` to check this."
+            "Use `has_dma_ports()` to check this.",
         )
 
     @overrides(AbstractSystemBoard)
@@ -100,7 +100,7 @@ class TestBoard(AbstractSystemBoard):
     def get_mem_side_coherent_io_port(self):
         raise NotImplementedError(
             "SimpleBoard does not have any I/O ports. Use has_coherent_io to "
-            "check this."
+            "check this.",
         )
 
     @overrides(AbstractSystemBoard)
@@ -126,5 +126,5 @@ class TestBoard(AbstractSystemBoard):
             assert len(self.get_processor().get_cores()) == 1
             assert len(self.get_memory().get_mem_ports()) == 1
             self.get_processor().get_cores()[0].connect_dcache(
-                self.get_memory().get_mem_ports()[0][1]
+                self.get_memory().get_mem_ports()[0][1],
             )

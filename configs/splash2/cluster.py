@@ -44,10 +44,16 @@ parser.add_argument("-t", "--timing", action="store_true")
 parser.add_argument("-m", "--maxtick", type=int)
 parser.add_argument("-c", "--numclusters", help="Number of clusters", type=int)
 parser.add_argument(
-    "-n", "--numcpus", help="Number of cpus in total", type=int
+    "-n",
+    "--numcpus",
+    help="Number of cpus in total",
+    type=int,
 )
 parser.add_argument(
-    "-f", "--frequency", default="1GHz", help="Frequency of each CPU"
+    "-f",
+    "--frequency",
+    default="1GHz",
+    help="Frequency of each CPU",
 )
 parser.add_argument("--l1size", default="32kB")
 parser.add_argument("--l1latency", default=1)
@@ -295,7 +301,7 @@ else:
 The --benchmark environment variable was set to something improper.
 Use Cholesky, FFT, LUContig, LUNoncontig, Radix, Barnes, FMM, OceanContig,
 OceanNoncontig, Raytrace, WaterNSquared, or WaterSpatial
-"""
+""",
     )
 
 # --------------------

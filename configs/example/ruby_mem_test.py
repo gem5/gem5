@@ -43,12 +43,15 @@ config_path = os.path.dirname(os.path.abspath(__file__))
 config_root = os.path.dirname(config_path)
 
 parser = argparse.ArgumentParser(
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 Options.addNoISAOptions(parser)
 
 parser.add_argument(
-    "--maxloads", metavar="N", default=0, help="Stop after N loads"
+    "--maxloads",
+    metavar="N",
+    default=0,
+    help="Stop after N loads",
 )
 parser.add_argument(
     "--progress",
@@ -95,7 +98,7 @@ block_size = 64
 if args.num_cpus > block_size:
     print(
         "Error: Number of testers %d limited to %d because of false sharing"
-        % (args.num_cpus, block_size)
+        % (args.num_cpus, block_size),
     )
     sys.exit(1)
 
@@ -142,11 +145,13 @@ Ruby.create_system(args, False, system, dma_ports=dma_ports)
 # Create a top-level voltage domain and clock domain
 system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
 system.clk_domain = SrcClockDomain(
-    clock=args.sys_clock, voltage_domain=system.voltage_domain
+    clock=args.sys_clock,
+    voltage_domain=system.voltage_domain,
 )
 # Create a seperate clock domain for Ruby
 system.ruby.clk_domain = SrcClockDomain(
-    clock=args.ruby_clock, voltage_domain=system.voltage_domain
+    clock=args.ruby_clock,
+    voltage_domain=system.voltage_domain,
 )
 
 #

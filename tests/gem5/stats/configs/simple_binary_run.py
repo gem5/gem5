@@ -51,11 +51,13 @@ from gem5.simulate.simulator import Simulator
 from m5.util import fatal
 
 parser = argparse.ArgumentParser(
-    description="A gem5 script for running simple binaries in SE mode."
+    description="A gem5 script for running simple binaries in SE mode.",
 )
 
 parser.add_argument(
-    "resource", type=str, help="The gem5 resource binary to run."
+    "resource",
+    type=str,
+    help="The gem5 resource binary to run.",
 )
 
 parser.add_argument(
@@ -104,6 +106,7 @@ simulator.run()
 
 print(
     "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(), simulator.get_last_exit_event_cause()
-    )
+        simulator.get_current_tick(),
+        simulator.get_last_exit_event_cause(),
+    ),
 )

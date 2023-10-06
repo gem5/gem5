@@ -57,7 +57,8 @@ class DRAMInterface(MemInterface):
 
     # enforce a limit on the number of accesses per row
     max_accesses_per_row = Param.Unsigned(
-        16, "Max accesses per row before closing"
+        16,
+        "Max accesses per row before closing",
     )
 
     # default to 0 bank groups per rank, indicating bank group architecture
@@ -126,7 +127,8 @@ class DRAMInterface(MemInterface):
     # This will be used to enable different same bank group delays
     # for writes versus reads
     tCCD_L_WR = Param.Latency(
-        Self.tCCD_L, "Same bank group Write to Write delay"
+        Self.tCCD_L,
+        "Same bank group Write to Write delay",
     )
 
     # time taken to complete one refresh cycle (N rows in all banks)
@@ -147,11 +149,13 @@ class DRAMInterface(MemInterface):
 
     # maximum delay between two-cycle ACT command phases
     tAAD = Param.Latency(
-        Self.tCK, "Maximum delay between two-cycle ACT commands"
+        Self.tCK,
+        "Maximum delay between two-cycle ACT commands",
     )
 
     two_cycle_activate = Param.Bool(
-        False, "Two cycles required to send activate"
+        False,
+        "Two cycles required to send activate",
     )
 
     # minimum row activate to row activate delay time

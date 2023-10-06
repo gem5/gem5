@@ -112,7 +112,7 @@ def construct(options, system, ruby_system):
     if buildEnv["PROTOCOL"] != "GPU_VIPER":
         panic(
             "This script requires VIPER based protocols \
-        to be built."
+        to be built.",
         )
     cpu_sequencers = []
     cpuCluster = None

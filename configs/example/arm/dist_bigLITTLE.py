@@ -48,7 +48,9 @@ import sw
 def addOptions(parser):
     # Options for distributed simulation (i.e. dist-gem5)
     parser.add_argument(
-        "--dist", action="store_true", help="Distributed gem5 simulation."
+        "--dist",
+        action="store_true",
+        help="Distributed gem5 simulation.",
     )
     parser.add_argument(
         "--is-switch",
@@ -158,7 +160,7 @@ def addEthernet(system, options):
 def main():
     parser = argparse.ArgumentParser(
         description="Generic ARM big.LITTLE configuration with "
-        "dist-gem5 support"
+        "dist-gem5 support",
     )
     bL.addOptions(parser)
     addOptions(parser)

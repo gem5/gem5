@@ -88,7 +88,7 @@ class DuplicateTestItemException(Exception):
 # Match filenames that either begin or end with 'test' or tests and use
 # - or _ to separate additional name components.
 default_filepath_regex = re.compile(
-    r"(((.+[_])?tests?)|(tests?([-_].+)?))\.py$"
+    r"(((.+[_])?tests?)|(tests?([-_].+)?))\.py$",
 )
 
 
@@ -167,7 +167,8 @@ class Loader(object):
         for suite in new_suites:
             if suite.uid in new_suite_uids:
                 raise DuplicateTestItemException(
-                    "More than one suite with UID '%s' was defined" % suite.uid
+                    "More than one suite with UID '%s' was defined"
+                    % suite.uid,
                 )
             new_suite_uids[suite.uid] = suite
 
@@ -178,7 +179,7 @@ class Loader(object):
                 if test.uid in test_uids:
                     raise DuplicateTestItemException(
                         "More than one test with UID '%s' was defined"
-                        " in suite '%s'" % (test.uid, suite.uid)
+                        " in suite '%s'" % (test.uid, suite.uid),
                     )
                 test_uids.add(test.uid)
 
@@ -200,7 +201,7 @@ class Loader(object):
         if path in self._files:
             if not self._files[path]:
                 raise Exception(
-                    "Attempted to load a file which already" " failed to load"
+                    "Attempted to load a file which already" " failed to load",
                 )
             else:
                 log.test_log.debug("Tried to reload: %s" % path)
@@ -230,7 +231,7 @@ class Loader(object):
             log.test_log.debug(traceback.format_exc())
             log.test_log.warn(
                 'Exception thrown while loading "%s"\n'
-                "Ignoring all tests in this file." % (path)
+                "Ignoring all tests in this file." % (path),
             )
             # Clean up
             sys.path[:] = old_path
@@ -255,7 +256,8 @@ class Loader(object):
             # NOTE: This is automatically collected (we still have the
             # collector active.)
             suite_mod.TestSuite(
-                tests=orphan_tests, name=path_as_suitename(path)
+                tests=orphan_tests,
+                name=path_as_suitename(path),
             )
 
         try:
@@ -270,17 +272,17 @@ class Loader(object):
                 "%s\n"
                 'Exception thrown while loading "%s"\n'
                 "Ignoring all tests in this file."
-                % (traceback.format_exc(), path)
+                % (traceback.format_exc(), path),
             )
         else:
             log.test_log.info(
                 "Discovered %d tests and %d suites in %s"
-                "" % (len(new_tests), len(loaded_suites), path)
+                "" % (len(new_tests), len(loaded_suites), path),
             )
 
             self.suites.extend(loaded_suites)
             self.suite_uids.update(
-                {suite.uid: suite for suite in loaded_suites}
+                {suite.uid: suite for suite in loaded_suites},
             )
         # Clean up
         sys.path[:] = old_path

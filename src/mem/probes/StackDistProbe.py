@@ -43,7 +43,8 @@ class StackDistProbe(BaseMemProbe):
     cxx_class = "gem5::StackDistProbe"
 
     system = Param.System(
-        Parent.any, "System to use when determining system cache line size"
+        Parent.any,
+        "System to use when determining system cache line size",
     )
 
     line_size = Param.Unsigned(
@@ -54,7 +55,8 @@ class StackDistProbe(BaseMemProbe):
 
     # enable verification stack
     verify = Param.Bool(
-        False, "Verify behaviuor with reference implementation"
+        False,
+        "Verify behaviuor with reference implementation",
     )
 
     # linear histogram bins and enable/disable

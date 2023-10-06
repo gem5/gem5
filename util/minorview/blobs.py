@@ -115,10 +115,12 @@ def striped_box(cr, centre, size, colours):
             cr.move_to(left + xOffset - half_x_stripe_width, bottom)
             cr.line_to(left + xOffset + half_x_stripe_width, bottom)
             cr.line_to(
-                left + xOffset + x_stripe_width + half_x_stripe_width, top
+                left + xOffset + x_stripe_width + half_x_stripe_width,
+                top,
             )
             cr.line_to(
-                left + xOffset + x_stripe_width - half_x_stripe_width, top
+                left + xOffset + x_stripe_width - half_x_stripe_width,
+                top,
             )
             stroke_and_fill(cr, colours[i])
         # Right triangle
@@ -135,7 +137,11 @@ def speech_bubble(cr, top_left, size, unit):
 
     def local_arc(centre, angleFrom, angleTo):
         cr.arc(
-            centre.x, centre.y, unit, angleFrom * math.pi, angleTo * math.pi
+            centre.x,
+            centre.y,
+            unit,
+            angleFrom * math.pi,
+            angleTo * math.pi,
         )
 
     cr.move_to(*top_left.to_pair())
@@ -144,7 +150,9 @@ def speech_bubble(cr, top_left, size, unit):
     local_arc(top_left + Point(size.x + unit * 2.0, unit * 2.0), -0.5, 0.0)
     cr.rel_line_to(0.0, size.y)
     local_arc(
-        top_left + Point(size.x + unit * 2.0, size.y + unit * 2.0), 0, 0.5
+        top_left + Point(size.x + unit * 2.0, size.y + unit * 2.0),
+        0,
+        0.5,
     )
     cr.rel_line_to(-size.x, 0.0)
     local_arc(top_left + Point(unit * 2.0, size.y + unit * 2.0), 0.5, 1.0)
@@ -235,7 +243,7 @@ class Block(Blob):
 
         if self.picChar in event.visuals:
             strips = event.visuals[self.picChar].to_striped_block(
-                select & self.dataSelect
+                select & self.dataSelect,
             )
         else:
             strips = [[[colours.unknownColour]]]
@@ -385,7 +393,12 @@ class Key(Blob):
     colours half as wide as the key"""
 
     def __init__(
-        self, picChar, unit, topLeft, colour=colours.black, size=Point(1, 1)
+        self,
+        picChar,
+        unit,
+        topLeft,
+        colour=colours.black,
+        size=Point(1, 1),
     ):
         super(Key, self).__init__(picChar, unit, topLeft, colour, size=size)
         self.colours = "BBBB"
@@ -398,7 +411,7 @@ class Key(Blob):
         # cr.translate(*(self.size - Point(1,1)).scale(0.5).to_pair())
         half_width = self.size.x / 2.0
         cr.translate(
-            *(self.size - Point(1.0 + half_width, 1.0)).scale(0.5).to_pair()
+            *(self.size - Point(1.0 + half_width, 1.0)).scale(0.5).to_pair(),
         )
 
         num_colours = len(self.colours)
@@ -409,7 +422,7 @@ class Key(Blob):
         )
         blob_step = Point(0.0, 1.0) * blob_size
         first_blob_centre = Point(0.0, 0.0) - blob_step.scale(
-            (num_colours / 2.0) - 0.5
+            (num_colours / 2.0) - 0.5,
         )
 
         cr.set_source_color(self.colour)
@@ -421,7 +434,9 @@ class Key(Blob):
 
         cr.set_font_size(0.8 * blob_size.y * blob_proportion)
         cr.select_font_face(
-            "Helvetica", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD
+            "Helvetica",
+            cairo.FONT_SLANT_NORMAL,
+            cairo.FONT_WEIGHT_BOLD,
         )
 
         for i in range(num_colours):

@@ -48,7 +48,10 @@ class SimpleDirectory(AbstractNode):
 
         # Dummy cache
         self.cache = RubyCache(
-            dataAccessLatency=0, tagAccessLatency=1, size="128", assoc=1
+            dataAccessLatency=0,
+            tagAccessLatency=1,
+            size="128",
+            assoc=1,
         )
 
         self.clk_domain = clk_domain

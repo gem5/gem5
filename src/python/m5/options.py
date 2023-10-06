@@ -101,10 +101,16 @@ class OptionParser(dict):
             fhelp = optparse.SUPPRESS_HELP
 
         topt = self.add_option(
-            tname, action="store_true", default=default, help=thelp
+            tname,
+            action="store_true",
+            default=default,
+            help=thelp,
         )
         fopt = self.add_option(
-            fname, action="store_false", dest=dest, help=fhelp
+            fname,
+            action="store_false",
+            dest=dest,
+            help=fhelp,
         )
 
         return topt, fopt

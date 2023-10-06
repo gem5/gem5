@@ -259,7 +259,8 @@ system = System(
 
 system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
 system.clk_domain = SrcClockDomain(
-    clock=args.sys_clock, voltage_domain=system.voltage_domain
+    clock=args.sys_clock,
+    voltage_domain=system.voltage_domain,
 )
 
 #
@@ -349,7 +350,8 @@ tester.dma_ports = dma_ports
 # Common variables for all types of threads
 #
 thread_clock = SrcClockDomain(
-    clock="1GHz", voltage_domain=system.voltage_domain
+    clock="1GHz",
+    voltage_domain=system.voltage_domain,
 )
 g_thread_idx = 0
 
@@ -370,7 +372,7 @@ for dma_idx in range(n_DMAs):
             num_lanes=1,
             clk_domain=thread_clock,
             deadlock_threshold=tester_deadlock_threshold,
-        )
+        ),
     )
     g_thread_idx += 1
 tester.dma_threads = dma_threads
@@ -381,7 +383,7 @@ tester.dma_threads = dma_threads
 wavefronts = []
 print(
     "Creating %i WFs attached to %i CUs"
-    % (n_CUs * tester.wavefronts_per_cu, n_CUs)
+    % (n_CUs * tester.wavefronts_per_cu, n_CUs),
 )
 for cu_idx in range(n_CUs):
     for wf_idx in range(tester.wavefronts_per_cu):
@@ -392,7 +394,7 @@ for cu_idx in range(n_CUs):
                 num_lanes=args.wf_size,
                 clk_domain=thread_clock,
                 deadlock_threshold=tester_deadlock_threshold,
-            )
+            ),
         )
         g_thread_idx += 1
 tester.wavefronts = wavefronts

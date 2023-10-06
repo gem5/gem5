@@ -172,7 +172,11 @@ def parse_options():
     )
     option("-q", "--quiet", action="count", default=0, help="Reduce verbosity")
     option(
-        "-v", "--verbose", action="count", default=0, help="Increase verbosity"
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Increase verbosity",
     )
 
     # To make gem5 mimic python better. After `-c` we should consume all other
@@ -261,7 +265,9 @@ def parse_options():
         "(kills process if no debugger attached)",
     )
     option(
-        "--debug-help", action="store_true", help="Print help on debug flags"
+        "--debug-help",
+        action="store_true",
+        help="Print help on debug flags",
     )
     option(
         "--debug-flags",
@@ -339,7 +345,9 @@ def interact(scope):
         cfg.PromptManager.in_template = prompt_in1
         cfg.PromptManager.out_template = prompt_out
         ipshell = InteractiveShellEmbed(
-            config=cfg, user_ns=scope, banner1=banner
+            config=cfg,
+            user_ns=scope,
+            banner1=banner,
         )
     except ImportError:
         pass
@@ -469,13 +477,17 @@ def main():
                 if default:
                     print(
                         terminal_formatter.format_output(
-                            str(default), label="default: ", indent=21
-                        )
+                            str(default),
+                            label="default: ",
+                            indent=21,
+                        ),
                     )
                 print(
                     terminal_formatter.format_output(
-                        param.desc, label="desc: ", indent=21
-                    )
+                        param.desc,
+                        label="desc: ",
+                        indent=21,
+                    ),
                 )
                 print()
             print()
@@ -497,11 +509,11 @@ def main():
         print(f"gem5 compiled {_m5.core.compileDate}")
 
         print(
-            f"gem5 started {datetime.datetime.now().strftime('%b %e %Y %X')}"
+            f"gem5 started {datetime.datetime.now().strftime('%b %e %Y %X')}",
         )
         print(
             "gem5 executing on %s, pid %d"
-            % (socket.gethostname(), os.getpid())
+            % (socket.gethostname(), os.getpid()),
         )
 
         def quote(arg: str) -> str:

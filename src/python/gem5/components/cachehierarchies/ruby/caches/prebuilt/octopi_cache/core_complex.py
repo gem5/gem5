@@ -96,7 +96,7 @@ class CoreComplex(SubSystem, RubyNetworkComponent):
 
         self._core_complex_id = self._get_core_complex_id()
         self.main_router = RubyRouter(
-            self._ruby_system
+            self._ruby_system,
         )  # this will be connect to component outside the core complex
         self._add_router(self.main_router)
         self._create_core_complex()
@@ -206,11 +206,13 @@ class CoreComplex(SubSystem, RubyNetworkComponent):
         self._add_ext_link(self.l3_router_link)
         for cluster in self.core_clusters:
             cluster.l1_router_link = RubyExtLink(
-                ext_node=cluster.l1_cache, int_node=cluster.l1_router
+                ext_node=cluster.l1_cache,
+                int_node=cluster.l1_router,
             )
             self._add_ext_link(cluster.l1_router_link)
             cluster.l2_router_link = RubyExtLink(
-                ext_node=cluster.l2_cache, int_node=cluster.l2_router
+                ext_node=cluster.l2_cache,
+                int_node=cluster.l2_router,
             )
             self._add_ext_link(cluster.l2_router_link)
 
@@ -218,7 +220,8 @@ class CoreComplex(SubSystem, RubyNetworkComponent):
         # create L1/L2 links
         for cluster in self.core_clusters:
             l1_to_l2, l2_to_l1 = RubyIntLink.create_bidirectional_links(
-                cluster.l1_router, cluster.l2_router
+                cluster.l1_router,
+                cluster.l2_router,
             )
             cluster.l1_to_l2_link = l1_to_l2
             cluster.l2_to_l1_link = l2_to_l1
@@ -227,7 +230,8 @@ class CoreComplex(SubSystem, RubyNetworkComponent):
         # create L2/main_router links
         for cluster in self.core_clusters:
             l2_to_main, main_to_l2 = RubyIntLink.create_bidirectional_links(
-                cluster.l2_router, self.main_router
+                cluster.l2_router,
+                self.main_router,
             )
             cluster.l2_to_main_link = l2_to_main
             cluster.main_to_l2_link = main_to_l2
@@ -235,7 +239,9 @@ class CoreComplex(SubSystem, RubyNetworkComponent):
             self._add_int_link(main_to_l2)
         # create L3/main_router link
         l3_to_main, main_to_l3 = RubyIntLink.create_bidirectional_links(
-            self.l3_router, self.main_router, bandwidth_factor=64
+            self.l3_router,
+            self.main_router,
+            bandwidth_factor=64,
         )
         self.l3_to_main_link = l3_to_main
         self.main_to_l3_link = main_to_l3

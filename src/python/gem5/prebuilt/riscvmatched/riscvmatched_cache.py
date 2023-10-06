@@ -50,7 +50,8 @@ from m5.objects import SystemXBar
 
 
 class RISCVMatchedCacheHierarchy(
-    AbstractClassicCacheHierarchy, AbstractTwoLevelCacheHierarchy
+    AbstractClassicCacheHierarchy,
+    AbstractTwoLevelCacheHierarchy,
 ):
     """
 
@@ -113,14 +114,18 @@ class RISCVMatchedCacheHierarchy(
         ]
         self.l1dcaches = [
             L1DCache(
-                size=self._l1d_size, assoc=self._l1d_assoc, response_latency=10
+                size=self._l1d_size,
+                assoc=self._l1d_assoc,
+                response_latency=10,
             )
             for i in range(board.get_processor().get_num_cores())
         ]
         self.l2bus = L2XBar()
 
         self.l2cache = L2Cache(
-            size=self._l2_size, assoc=self._l2_assoc, data_latency=20
+            size=self._l2_size,
+            assoc=self._l2_assoc,
+            data_latency=20,
         )
 
         # ITLB Page walk caches
@@ -147,7 +152,8 @@ class RISCVMatchedCacheHierarchy(
             self.dptw_caches[i].mem_side = self.l2bus.cpu_side_ports
 
             cpu.connect_walker_ports(
-                self.iptw_caches[i].cpu_side, self.dptw_caches[i].cpu_side
+                self.iptw_caches[i].cpu_side,
+                self.dptw_caches[i].cpu_side,
             )
 
             if board.get_processor().get_isa() == ISA.X86:

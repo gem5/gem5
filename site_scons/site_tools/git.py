@@ -58,8 +58,8 @@ def install_style_hooks(env):
     try:
         gitdir = env.Dir(
             gem5_scons.util.readCommand(
-                ["git", "rev-parse", "--git-dir"]
-            ).strip("\n")
+                ["git", "rev-parse", "--git-dir"],
+            ).strip("\n"),
         )
     except Exception as e:
         print(f"Warning: Failed to find git repo directory: {e}")
@@ -91,7 +91,7 @@ def install_style_hooks(env):
         print(
             "It is strongly recommended you install the pre-commit hooks "
             "before working with gem5. Do you want to continue compilation "
-            "(y/n)?"
+            "(y/n)?",
         )
         while True:
             response = input().lower().strip()
@@ -102,7 +102,7 @@ def install_style_hooks(env):
             else:
                 print(
                     f"Could not parse answer '{response}'. Do you want to "
-                    "continue compilation (y/n)?"
+                    "continue compilation (y/n)?",
                 )
 
 

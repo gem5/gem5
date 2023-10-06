@@ -64,7 +64,8 @@ def config_cache(args, system):
         # are not connected using addTwoLevelCacheHierarchy. Use the
         # same clock as the CPUs.
         system.l2 = L2Cache(
-            clk_domain=system.cpu_clk_domain, **_get_cache_opts("l2", args)
+            clk_domain=system.cpu_clk_domain,
+            **_get_cache_opts("l2", args),
         )
 
         system.tol2bus = L2XBar(clk_domain=system.cpu_clk_domain)
@@ -84,7 +85,7 @@ Options.addCommonOptions(parser)
 if "--ruby" in sys.argv:
     print(
         "This script does not support Ruby configuration, mainly"
-        " because Trace CPU has been tested only with classic memory system"
+        " because Trace CPU has been tested only with classic memory system",
     )
     sys.exit(1)
 
@@ -108,7 +109,8 @@ system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
 # Create a source clock for the system. This is used as the clock period for
 # xbar and memory
 system.clk_domain = SrcClockDomain(
-    clock=args.sys_clock, voltage_domain=system.voltage_domain
+    clock=args.sys_clock,
+    voltage_domain=system.voltage_domain,
 )
 
 # Create a CPU voltage domain
@@ -117,7 +119,8 @@ system.cpu_voltage_domain = VoltageDomain()
 # Create a separate clock domain for the CPUs. In case of Trace CPUs this clock
 # is actually used only by the caches connected to the CPU.
 system.cpu_clk_domain = SrcClockDomain(
-    clock=args.cpu_clock, voltage_domain=system.cpu_voltage_domain
+    clock=args.cpu_clock,
+    voltage_domain=system.cpu_voltage_domain,
 )
 
 # All cpus belong to a common cpu_clk_domain, therefore running at a common

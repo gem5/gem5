@@ -47,6 +47,7 @@ class RiscvLinux(KernelWorkload):
     cxx_header = "arch/riscv/linux/fs_workload.hh"
 
     dtb_filename = Param.String(
-        "", "File that contains the Device Tree Blob. Don't use DTB if empty."
+        "",
+        "File that contains the Device Tree Blob. Don't use DTB if empty.",
     )
     dtb_addr = Param.Addr(0x87E00000, "DTB address")

@@ -45,7 +45,15 @@ from slicc.util import PairContainer
 
 class DataMember(Var):
     def __init__(
-        self, symtab, ident, location, type, code, pairs, machine, init_code
+        self,
+        symtab,
+        ident,
+        location,
+        type,
+        code,
+        pairs,
+        machine,
+        init_code,
     ):
         super().__init__(symtab, ident, location, type, code, pairs, machine)
         self.init_code = init_code
@@ -229,7 +237,7 @@ class Type(Symbol):
 
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 
-"""
+""",
         )
 
         for dm in self.data_members.values():
@@ -270,7 +278,7 @@ $klass ${{self.c_ident}}$parent
                 if "default" in dm:
                     # look for default value
                     code(
-                        'm_$ident = ${{dm["default"]}}; // default for this field'
+                        'm_$ident = ${{dm["default"]}}; // default for this field',
                     )
                 elif "default" in dm.type:
                     # Look for the type default
@@ -327,7 +335,7 @@ clone() const
 {
      return std::shared_ptr<Message>(new ${{self.c_ident}}(*this));
 }
-"""
+""",
             )
         else:
             code(
@@ -337,7 +345,7 @@ clone() const
 {
      return new ${{self.c_ident}}(*this);
 }
-"""
+""",
             )
 
         if not self.isGlobal:
@@ -354,7 +362,7 @@ get${{dm.ident}}() const
 {
     return m_${{dm.ident}};
 }
-"""
+""",
                 )
 
             # Non-const Get methods for each field
@@ -370,7 +378,7 @@ get${{dm.ident}}()
 {
     return m_${{dm.ident}};
 }
-"""
+""",
                 )
 
             # Set methods for each field
@@ -384,7 +392,7 @@ set${{dm.ident}}(const ${{dm.real_c_type}}& local_${{dm.ident}})
 {
     m_${{dm.ident}} = local_${{dm.ident}};
 }
-"""
+""",
                 )
 
         code("void print(std::ostream& out) const;")
@@ -436,7 +444,7 @@ operator<<(::std::ostream& out, const ${{self.c_ident}}& obj)
 } // namespace gem5
 
 #endif // __${{self.c_ident}}_HH__
-"""
+""",
         )
 
         code.write(path, f"{self.c_ident}.hh")
@@ -463,7 +471,7 @@ void
 ${{self.c_ident}}::print(std::ostream& out) const
 {
     out << "[${{self.c_ident}}: ";
-"""
+""",
         )
 
         # For each field
@@ -472,7 +480,7 @@ ${{self.c_ident}}::print(std::ostream& out) const
             if dm.type.c_ident == "Addr":
                 code(
                     """
-out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";"""
+out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";""",
                 )
             else:
                 code('out << "${{dm.ident}} = " << m_${{dm.ident}} << " ";' "")
@@ -483,7 +491,7 @@ out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";"""
         code(
             """
     out << "]";
-}"""
+}""",
         )
 
         # print the code for the methods in the type
@@ -494,7 +502,7 @@ out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";"""
             """
 } // namespace ruby
 } // namespace gem5
-"""
+""",
         )
 
         code.write(path, f"{self.c_ident}.cc")
@@ -509,7 +517,7 @@ out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";"""
 #include <iostream>
 #include <string>
 
-"""
+""",
         )
         if self.isStateDecl:
             code('#include "mem/ruby/protocol/AccessPermission.hh"')
@@ -528,7 +536,7 @@ namespace gem5
 namespace ruby
 {
 
-"""
+""",
         )
 
         if self.isMachineType:
@@ -543,7 +551,7 @@ namespace ruby
  */
 enum ${{self.c_ident}} {
     ${{self.c_ident}}_FIRST,
-"""
+""",
         )
 
         code.indent()
@@ -569,7 +577,7 @@ ${{self.c_ident}} string_to_${{self.c_ident}}(const ::std::string& str);
 
 // Code to increment an enumeration type
 ${{self.c_ident}} &operator++(${{self.c_ident}} &e);
-"""
+""",
         )
 
         # MachineType hack used to set the base component id for each Machine
@@ -580,7 +588,7 @@ int ${{self.c_ident}}_base_level(const ${{self.c_ident}}& obj);
 MachineType ${{self.c_ident}}_from_base_level(int);
 int ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj);
 int ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj);
-"""
+""",
             )
 
             for enum in self.enums.values():
@@ -588,7 +596,7 @@ int ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj);
                     """
 
 MachineID get${{enum.ident}}MachineID(NodeID RubyNode);
-"""
+""",
                 )
 
         if self.isStateDecl:
@@ -598,7 +606,7 @@ MachineID get${{enum.ident}}MachineID(NodeID RubyNode);
 // Code to convert the current state to an access permission
 AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj);
 
-"""
+""",
             )
 
         code(
@@ -609,7 +617,7 @@ operator<<(::std::ostream& out, const ${{self.c_ident}}& obj);
 
 } // namespace ruby
 } // namespace gem5
-"""
+""",
         )
 
         if self.isMachineType:
@@ -629,14 +637,14 @@ struct hash<gem5::ruby::MachineType>
 };
 }
 
-"""
+""",
             )
 
         # Trailer
         code(
             """
 #endif // __${{self.c_ident}}_HH__
-"""
+""",
         )
 
         code.write(path, f"{self.c_ident}.hh")
@@ -652,7 +660,7 @@ struct hash<gem5::ruby::MachineType>
 #include "base/logging.hh"
 #include "mem/ruby/protocol/${{self.c_ident}}.hh"
 
-"""
+""",
         )
 
         if self.isStateDecl:
@@ -668,7 +676,7 @@ namespace ruby
 AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
 {
     switch(obj) {
-"""
+""",
             )
             # For each case
             code.indent()
@@ -688,7 +696,7 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
 } // namespace ruby
 } // namespace gem5
 
-"""
+""",
             )
 
         if self.isMachineType:
@@ -696,7 +704,7 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
                 if enum.primary:
                     code(
                         '#include "mem/ruby/protocol/${{enum.ident}}'
-                        '_Controller.hh"'
+                        '_Controller.hh"',
                     )
             code('#include "mem/ruby/common/MachineID.hh"')
 
@@ -722,7 +730,7 @@ std::string
 ${{self.c_ident}}_to_string(const ${{self.c_ident}}& obj)
 {
     switch(obj) {
-"""
+""",
         )
 
         # For each field
@@ -746,7 +754,7 @@ ${{self.c_ident}}_to_string(const ${{self.c_ident}}& obj)
 ${{self.c_ident}}
 string_to_${{self.c_ident}}(const std::string& str)
 {
-"""
+""",
         )
 
         # For each field
@@ -772,7 +780,7 @@ operator++(${{self.c_ident}}& e)
     assert(e < ${{self.c_ident}}_NUM);
     return e = ${{self.c_ident}}(e+1);
 }
-"""
+""",
         )
 
         # MachineType hack used to set the base level and number of
@@ -790,7 +798,7 @@ int
 ${{self.c_ident}}_base_level(const ${{self.c_ident}}& obj)
 {
     switch(obj) {
-"""
+""",
             )
 
             # For each field
@@ -821,7 +829,7 @@ MachineType
 ${{self.c_ident}}_from_base_level(int type)
 {
     switch(type) {
-"""
+""",
             )
 
             # For each field
@@ -849,7 +857,7 @@ ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
 {
     int base = 0;
     switch(obj) {
-"""
+""",
             )
 
             # For each field
@@ -859,7 +867,7 @@ ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
                 # Check if there is a defined machine with this type
                 if enum.primary:
                     code(
-                        "    base += ${{enum.ident}}_Controller::getNumControllers();"
+                        "    base += ${{enum.ident}}_Controller::getNumControllers();",
                     )
                 else:
                     code("    base += 0;")
@@ -884,7 +892,7 @@ int
 ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
 {
     switch(obj) {
-"""
+""",
             )
 
             # For each field
@@ -892,7 +900,7 @@ ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
                 code("case ${{self.c_ident}}_${{enum.ident}}:")
                 if enum.primary:
                     code(
-                        "return ${{enum.ident}}_Controller::getNumControllers();"
+                        "return ${{enum.ident}}_Controller::getNumControllers();",
                     )
                 else:
                     code("return 0;")
@@ -907,7 +915,7 @@ ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
     // Appease the compiler since this function has a return value
     return -1;
 }
-"""
+""",
             )
 
             for enum in self.enums.values():
@@ -920,14 +928,14 @@ get${{enum.ident}}MachineID(NodeID RubyNode)
       MachineID mach = {MachineType_${{enum.ident}}, RubyNode};
       return mach;
 }
-"""
+""",
                 )
 
         code(
             """
 } // namespace ruby
 } // namespace gem5
-"""
+""",
         )
 
         # Write the file

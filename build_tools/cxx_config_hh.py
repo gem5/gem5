@@ -109,7 +109,7 @@ class ${param_class} : public CxxConfigParams, public ${sim_object_name}Params
 };
 
 } // namespace gem5
-"""
+""",
 )
 
 code.write(args.cxx_config_hh)

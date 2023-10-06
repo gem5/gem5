@@ -109,7 +109,10 @@ def main(args=None):
     output("Parsing...")
 
     protocol_base = os.path.join(
-        os.path.dirname(__file__), "..", "ruby", "protocol"
+        os.path.dirname(__file__),
+        "..",
+        "ruby",
+        "protocol",
     )
     slicc = SLICC(
         slicc_file,

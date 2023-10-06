@@ -123,7 +123,8 @@ class BlobView(object):
         # Draw each blob
         for blob in self.model.blobs:
             blob_event = self.model.find_unit_event_by_time(
-                blob.unit, self.time
+                blob.unit,
+                self.time,
             )
 
             cr.save()
@@ -192,7 +193,11 @@ class BlobController(object):
     """The controller bar for the viewer"""
 
     def __init__(
-        self, model, view, defaultEventFile="", defaultPictureFile=""
+        self,
+        model,
+        view,
+        defaultEventFile="",
+        defaultPictureFile="",
     ):
         self.model = model
         self.view = view
@@ -261,7 +266,7 @@ class BlobController(object):
                 (e, "clicked", self.toggle_id("E")),
                 (self.filenameEntry, "activate", self.load_events),
                 (gtk.Button("Reload"), "clicked", self.load_events),
-            ]
+            ],
         )
 
         self.bar.pack_start(row1, False, True, 0)
@@ -307,7 +312,7 @@ class BlobController(object):
     def time_forward(self, button):
         """Step forward pressed"""
         self.set_time_index(
-            min(self.view.timeIndex + 1, len(self.model.times) - 1)
+            min(self.view.timeIndex + 1, len(self.model.times) - 1),
         )
         self.view.redraw()
         gtk.gdk.flush()
@@ -355,7 +360,7 @@ class BlobController(object):
             endTime=self.endTime,
         )
         self.set_time_index(
-            min(len(self.model.times) - 1, self.view.timeIndex)
+            min(len(self.model.times) - 1, self.view.timeIndex),
         )
         self.view.redraw()
 
@@ -372,7 +377,8 @@ class Overlay(object):
     def find_event(self):
         """Find the event for a changing time and a fixed blob"""
         return self.model.find_unit_event_by_time(
-            self.blob.unit, self.view.time
+            self.blob.unit,
+            self.view.time,
         )
 
     def show(self, cr):
@@ -517,12 +523,16 @@ class BlobWindow(object):
             for blob, centre, size in self.view.positions:
                 if point.is_within_box((centre, size)):
                     event = self.model.find_unit_event_by_time(
-                        blob.unit, self.view.time
+                        blob.unit,
+                        self.view.time,
                     )
                     if event is not None:
                         if overlay is None:
                             overlay = Overlay(
-                                self.model, self.view, point, blob
+                                self.model,
+                                self.view,
+                                point,
+                                blob,
                             )
                         show_event(blob.picChar, event)
             if overlay is not None:

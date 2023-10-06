@@ -134,7 +134,10 @@ def addNoISAOptions(parser):
         help="type of memory to use",
     )
     parser.add_argument(
-        "--mem-channels", type=int, default=1, help="number of memory channels"
+        "--mem-channels",
+        type=int,
+        default=1,
+        help="number of memory channels",
     )
     parser.add_argument(
         "--mem-ranks",
@@ -603,7 +606,10 @@ def addCommonOptions(parser):
         help="switch from timing to Detailed CPU after warmup period of <N>",
     )
     parser.add_argument(
-        "-p", "--prog-interval", type=str, help="CPU Progress Interval"
+        "-p",
+        "--prog-interval",
+        type=str,
+        help="CPU Progress Interval",
     )
 
     # Fastforwarding and simpoint related materials
@@ -699,13 +705,20 @@ def addSEOptions(parser):
         help="Initialize workload environment from text file.",
     )
     parser.add_argument(
-        "-i", "--input", default="", help="Read stdin from a file."
+        "-i",
+        "--input",
+        default="",
+        help="Read stdin from a file.",
     )
     parser.add_argument(
-        "--output", default="", help="Redirect stdout to a file."
+        "--output",
+        default="",
+        help="Redirect stdout to a file.",
     )
     parser.add_argument(
-        "--errout", default="", help="Redirect stderr to a file."
+        "--errout",
+        default="",
+        help="Redirect stderr to a file.",
     )
     parser.add_argument(
         "--chroot",

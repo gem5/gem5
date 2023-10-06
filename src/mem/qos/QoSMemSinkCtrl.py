@@ -46,7 +46,8 @@ class QoSMemSinkCtrl(QoSMemCtrl):
     port = ResponsePort("Response ports")
 
     interface = Param.QoSMemSinkInterface(
-        QoSMemSinkInterface(), "Interface to memory"
+        QoSMemSinkInterface(),
+        "Interface to memory",
     )
 
     # the basic configuration of the controller architecture, note

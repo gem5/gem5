@@ -128,12 +128,14 @@ def run_test(root, switcher=None, freq=1000, verbose=False):
             m5.drain()
             if current_cpu != next_cpu:
                 m5.switchCpus(
-                    system, [(current_cpu, next_cpu)], verbose=verbose
+                    system,
+                    [(current_cpu, next_cpu)],
+                    verbose=verbose,
                 )
             else:
                 print(
                     "Source CPU and destination CPU are the same,"
-                    " skipping..."
+                    " skipping...",
                 )
             current_cpu = next_cpu
         elif (

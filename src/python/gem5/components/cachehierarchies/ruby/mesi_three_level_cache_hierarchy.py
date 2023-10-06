@@ -45,7 +45,8 @@ from .topologies.simple_pt2pt import SimplePt2Pt
 
 
 class MESIThreeLevelCacheHierarchy(
-    AbstractRubyCacheHierarchy, AbstractThreeLevelCacheHierarchy
+    AbstractRubyCacheHierarchy,
+    AbstractThreeLevelCacheHierarchy,
 ):
     """A three-level private-L1-private-L2-shared-L3 MESI hierarchy.
 
@@ -81,7 +82,7 @@ class MESIThreeLevelCacheHierarchy(
 
     def incorporate_cache(self, board: AbstractBoard) -> None:
         requires(
-            coherence_protocol_required=CoherenceProtocol.MESI_THREE_LEVEL
+            coherence_protocol_required=CoherenceProtocol.MESI_THREE_LEVEL,
         )
 
         cache_line_size = board.get_cache_line_size()
@@ -126,7 +127,8 @@ class MESIThreeLevelCacheHierarchy(
             core.connect_dcache(l1_cache.sequencer.in_ports)
 
             core.connect_walker_ports(
-                l1_cache.sequencer.in_ports, l1_cache.sequencer.in_ports
+                l1_cache.sequencer.in_ports,
+                l1_cache.sequencer.in_ports,
             )
 
             # Connect the interrupt ports
@@ -193,12 +195,13 @@ class MESIThreeLevelCacheHierarchy(
             dma_ports = board.get_dma_ports()
             for i, port in enumerate(dma_ports):
                 ctrl = DMAController(
-                    DMASequencer(version=i, in_ports=port), self.ruby_system
+                    DMASequencer(version=i, in_ports=port),
+                    self.ruby_system,
                 )
                 self._dma_controllers.append(ctrl)
 
         self.ruby_system.num_of_sequencers = len(self._l1_controllers) + len(
-            self._dma_controllers
+            self._dma_controllers,
         )
         self.ruby_system.l1_controllers = self._l1_controllers
         self.ruby_system.l2_controllers = self._l2_controllers
@@ -214,7 +217,7 @@ class MESIThreeLevelCacheHierarchy(
             + self._l2_controllers
             + self._l3_controllers
             + self._directory_controllers
-            + self._dma_controllers
+            + self._dma_controllers,
         )
         self.ruby_system.network.setup_buffers()
 

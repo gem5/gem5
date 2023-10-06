@@ -56,15 +56,15 @@ storeXMMRegTemplate = """
 """
 
 loadAllDataRegs = "".join(
-    [loadX87RegTemplate % {"idx": i, "mode": "%(mode)s"} for i in range(8)]
+    [loadX87RegTemplate % {"idx": i, "mode": "%(mode)s"} for i in range(8)],
 ) + "".join(
-    [loadXMMRegTemplate % {"idx": i, "mode": "%(mode)s"} for i in range(16)]
+    [loadXMMRegTemplate % {"idx": i, "mode": "%(mode)s"} for i in range(16)],
 )
 
 storeAllDataRegs = "".join(
-    [storeX87RegTemplate % {"idx": i, "mode": "%(mode)s"} for i in range(8)]
+    [storeX87RegTemplate % {"idx": i, "mode": "%(mode)s"} for i in range(8)],
 ) + "".join(
-    [storeXMMRegTemplate % {"idx": i, "mode": "%(mode)s"} for i in range(16)]
+    [storeXMMRegTemplate % {"idx": i, "mode": "%(mode)s"} for i in range(16)],
 )
 
 fxsaveCommonTemplate = (

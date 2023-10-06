@@ -73,12 +73,14 @@ class X86DemoBoard(X86Board):
         warn(
             "The X86DemoBoard is solely for demonstration purposes. "
             "This board is not known to be be representative of any "
-            "real-world system. Use with caution."
+            "real-world system. Use with caution.",
         )
 
         memory = SingleChannelDDR3_1600(size="2GB")
         processor = SimpleProcessor(
-            cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=4
+            cpu_type=CPUTypes.TIMING,
+            isa=ISA.X86,
+            num_cores=4,
         )
         cache_hierarchy = MESITwoLevelCacheHierarchy(
             l1d_size="32kB",

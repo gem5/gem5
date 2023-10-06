@@ -87,7 +87,7 @@ def _dot_create_ext_edge(src, dst):
 def _dot_create(network, callgraph):
     for r in network.routers:
         callgraph.add_node(
-            _dot_create_router_node(r.path(), "R %d" % r.router_id)
+            _dot_create_router_node(r.path(), "R %d" % r.router_id),
         )
 
     # One link for each direction but draw one edge only
@@ -98,7 +98,7 @@ def _dot_create(network, callgraph):
         ):
             continue
         callgraph.add_edge(
-            _dot_create_int_edge(link.src_node.path(), link.dst_node.path())
+            _dot_create_int_edge(link.src_node.path(), link.dst_node.path()),
         )
         connected[link.dst_node.path()] = link.src_node.path()
 
@@ -126,7 +126,7 @@ def _dot_create(network, callgraph):
         callgraph.add_node(_dot_create_ctrl_node(ctrl.path(), label))
 
         callgraph.add_edge(
-            _dot_create_ext_edge(link.ext_node.path(), link.int_node.path())
+            _dot_create_ext_edge(link.ext_node.path(), link.int_node.path()),
         )
 
 
@@ -157,6 +157,7 @@ def do_ruby_dot(root, outdir, dotFilename):
     for network in filter(is_ruby_network, root.descendants()):
         # We assume each ruby system has a single network.
         rubydotFilename = dotFilename.replace(
-            ".dot", "." + network.get_parent().path() + ".dot"
+            ".dot",
+            "." + network.get_parent().path() + ".dot",
         )
         _do_dot(network, outdir, rubydotFilename)

@@ -60,10 +60,12 @@ class WriteAllocator(SimObject):
     # allow whole-line write coalescing, and eventually switches to a
     # write-no-allocate policy.
     coalesce_limit = Param.Unsigned(
-        2, "Consecutive lines written before delaying for coalescing"
+        2,
+        "Consecutive lines written before delaying for coalescing",
     )
     no_allocate_limit = Param.Unsigned(
-        12, "Consecutive lines written before skipping allocation"
+        12,
+        "Consecutive lines written before skipping allocation",
     )
 
     delay_threshold = Param.Unsigned(
@@ -90,11 +92,13 @@ class BaseCache(ClockedObject):
     response_latency = Param.Cycles("Latency for the return path on a miss")
 
     warmup_percentage = Param.Percent(
-        0, "Percentage of tags to be touched to warm up the cache"
+        0,
+        "Percentage of tags to be touched to warm up the cache",
     )
 
     max_miss_count = Param.Counter(
-        0, "Number of misses to handle before calling exit"
+        0,
+        "Number of misses to handle before calling exit",
     )
 
     mshrs = Param.Unsigned("Number of MSHRs (max outstanding requests)")
@@ -110,12 +114,14 @@ class BaseCache(ClockedObject):
         "Notify the hardware prefetcher on every access (not just misses)",
     )
     prefetch_on_pf_hit = Param.Bool(
-        False, "Notify the hardware prefetcher on hit on prefetched lines"
+        False,
+        "Notify the hardware prefetcher on hit on prefetched lines",
     )
 
     tags = Param.BaseTags(BaseSetAssoc(), "Tag store")
     replacement_policy = Param.BaseReplacementPolicy(
-        LRURP(), "Replacement policy"
+        LRURP(),
+        "Replacement policy",
     )
 
     compressor = Param.BaseCacheCompressor(NULL, "Cache compressor.")
@@ -128,18 +134,21 @@ class BaseCache(ClockedObject):
     # co-allocatable with another existing entry of the same superblock,
     # so try move the block to co-allocate it
     move_contractions = Param.Bool(
-        True, "Try to co-allocate blocks that contract"
+        True,
+        "Try to co-allocate blocks that contract",
     )
 
     sequential_access = Param.Bool(
-        False, "Whether to access tags and data sequentially"
+        False,
+        "Whether to access tags and data sequentially",
     )
 
     cpu_side = ResponsePort("Upstream port closer to the CPU and/or device")
     mem_side = RequestPort("Downstream port closer to memory")
 
     addr_ranges = VectorParam.AddrRange(
-        [AllMemory], "Address range for the CPU-side port (to allow striping)"
+        [AllMemory],
+        "Address range for the CPU-side port (to allow striping)",
     )
 
     system = Param.System(Parent.any, "System we belong to")

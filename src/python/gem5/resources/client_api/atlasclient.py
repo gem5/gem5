@@ -111,5 +111,6 @@ class AtlasClient(AbstractClient):
         # I do this as a lazy post-processing step because I can't figure out
         # how to do this via an Atlas query, which may be more efficient.
         return self.filter_incompatible_resources(
-            resources_to_filter=resources, gem5_version=gem5_version
+            resources_to_filter=resources,
+            gem5_version=gem5_version,
         )

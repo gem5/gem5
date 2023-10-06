@@ -117,7 +117,7 @@ class HighBandwidthMemory(ChanneledMemory):
         else:
             raise ValueError(
                 "Only these address mappings are supported: "
-                "RoRaBaChCo, RoRaBaCoCh, RoCoRaBaCh"
+                "RoRaBaChCo, RoRaBaCoCh, RoCoRaBaCh",
             )
 
         intlv_bits = log(self._num_channels, 2)
@@ -157,7 +157,7 @@ class HighBandwidthMemory(ChanneledMemory):
                     size=self._mem_range.size(),
                     masks=mask_list,
                     intlvMatch=i,
-                )
+                ),
             )
         return [
             (addr_ranges[i], ctrl.port) for i, ctrl in enumerate(self.mem_ctrl)

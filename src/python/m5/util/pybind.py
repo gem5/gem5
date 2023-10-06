@@ -80,7 +80,7 @@ class PyBindMethod(PyBindExport):
         if self.return_value_policy:
             arguments.append(
                 "pybind11::return_value_policy::"
-                "${{self.return_value_policy}}"
+                "${{self.return_value_policy}}",
             )
         if self.args:
 

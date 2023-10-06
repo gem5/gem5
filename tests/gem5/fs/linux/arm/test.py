@@ -107,7 +107,7 @@ def verifier_list(name):
             verifier.MatchFileRegex(
                 re.compile(r".*CPU1: Booted secondary processor.*"),
                 ["system.terminal"],
-            )
+            ),
         )
 
     return verifiers

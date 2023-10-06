@@ -132,7 +132,9 @@ def cli():
     )
 
     subparsers = parser.add_subparsers(
-        help="The command to run.", dest="command", required=True
+        help="The command to run.",
+        dest="command",
+        required=True,
     )
 
     parser_get_resource = subparsers.add_parser(
@@ -144,7 +146,7 @@ def cli():
         ),
     )
     req_group = parser_get_resource.add_argument_group(
-        title="required arguments"
+        title="required arguments",
     )
     req_group.add_argument(
         "-i",
@@ -167,7 +169,7 @@ def cli():
         help="Backs up the MongoDB collection to a JSON file.",
     )
     req_group = parser_backup_mongodb.add_argument_group(
-        title="required arguments"
+        title="required arguments",
     )
     req_group.add_argument(
         "-f",
@@ -183,7 +185,7 @@ def cli():
         help="Restores a backup of the MongoDB collection from a JSON file.",
     )
     req_group = parser_update_mongodb.add_argument_group(
-        title="required arguments"
+        title="required arguments",
     )
     req_group.add_argument(
         "-f",
@@ -235,7 +237,8 @@ def get_resource(args):
     resource = None
     if args.version:
         resource = collection.find_one(
-            {"id": args.id, "resource_version": args.version}, {"_id": 0}
+            {"id": args.id, "resource_version": args.version},
+            {"_id": 0},
         )
     else:
         resource = collection.find({"id": args.id}, {"_id": 0})

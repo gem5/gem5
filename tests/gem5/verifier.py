@@ -61,7 +61,9 @@ class Verifier(object):
     def instantiate_test(self, name_pfx):
         name = "-".join([name_pfx, self.__class__.__name__])
         return test_util.TestFunction(
-            self._test, name=name, fixtures=self.fixtures
+            self._test,
+            name=name,
+            fixtures=self.fixtures,
         )
 
 
@@ -84,7 +86,10 @@ class MatchGoldStandard(Verifier):
     """
 
     def __init__(
-        self, standard_filename, ignore_regex=None, test_filename="simout.txt"
+        self,
+        standard_filename,
+        ignore_regex=None,
+        test_filename="simout.txt",
     ):
         """
         :param standard_filename: The path of the standard file to compare
@@ -115,7 +120,7 @@ class MatchGoldStandard(Verifier):
         )
         if diff is not None:
             test_util.fail(
-                f"Stdout did not match:\n{diff}\nSee {tempdir} for full results"
+                f"Stdout did not match:\n{diff}\nSee {tempdir} for full results",
             )
 
     def _generic_instance_warning(self, kwargs):
@@ -127,7 +132,7 @@ class MatchGoldStandard(Verifier):
             raise ValueError(
                 "If you are setting test_filename use the more"
                 " generic %s"
-                " instead" % MatchGoldStandard.__name__
+                " instead" % MatchGoldStandard.__name__,
             )
 
 
@@ -137,7 +142,10 @@ class DerivedGoldStandard(MatchGoldStandard):
     _default_ignore_regex = []
 
     def __init__(
-        self, standard_filename, ignore_regex=__ignore_regex_sentinel, **kwargs
+        self,
+        standard_filename,
+        ignore_regex=__ignore_regex_sentinel,
+        **kwargs,
     ):
         if ignore_regex == self.__ignore_regex_sentinel:
             ignore_regex = self._default_ignore_regex
@@ -178,7 +186,7 @@ class MatchStdout(DerivedGoldStandard):
 class MatchStdoutNoPerf(MatchStdout):
     _file = constants.gem5_simulation_stdout
     _default_ignore_regex = MatchStdout._default_ignore_regex + [
-        re.compile("^Exiting @ tick")
+        re.compile("^Exiting @ tick"),
     ]
 
 

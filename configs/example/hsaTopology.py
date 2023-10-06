@@ -66,7 +66,8 @@ def remake_dir(path):
 # fields from the simulator in the future.
 def createVegaTopology(options):
     topology_dir = joinpath(
-        m5.options.outdir, "fs/sys/devices/virtual/kfd/kfd/topology"
+        m5.options.outdir,
+        "fs/sys/devices/virtual/kfd/kfd/topology",
     )
     remake_dir(topology_dir)
 
@@ -264,7 +265,8 @@ def createVegaTopology(options):
 # fields from the simulator in the future.
 def createFijiTopology(options):
     topology_dir = joinpath(
-        m5.options.outdir, "fs/sys/devices/virtual/kfd/kfd/topology"
+        m5.options.outdir,
+        "fs/sys/devices/virtual/kfd/kfd/topology",
     )
     remake_dir(topology_dir)
 
@@ -444,7 +446,8 @@ def createFijiTopology(options):
 
 def createCarrizoTopology(options):
     topology_dir = joinpath(
-        m5.options.outdir, "fs/sys/devices/virtual/kfd/kfd/topology"
+        m5.options.outdir,
+        "fs/sys/devices/virtual/kfd/kfd/topology",
     )
     remake_dir(topology_dir)
 

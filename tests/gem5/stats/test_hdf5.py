@@ -58,7 +58,11 @@ else:
 
 def have_hdf5():
     have_hdf5_file = os.path.join(
-        config.base_dir, "build", constants.arm_tag, "config", "have_hdf5.hh"
+        config.base_dir,
+        "build",
+        constants.arm_tag,
+        "config",
+        "have_hdf5.hh",
     )
     if not os.path.exists(have_hdf5_file):
         # This will most likely happen if the file has yet to have been
@@ -78,14 +82,14 @@ def have_hdf5():
 
 if have_hdf5():
     ok_exit_regex = re.compile(
-        r"Exiting @ tick \d+ because exiting with last active thread context"
+        r"Exiting @ tick \d+ because exiting with last active thread context",
     )
     ok_verifier = verifier.MatchRegex(ok_exit_regex)
 
     # FIXME: flaky, should check return code instead...
     # See: https://gem5.atlassian.net/browse/GEM5-1099
     err_regex = re.compile(
-        r"RuntimeError: Failed creating H5::DataSet \w+; .*"
+        r"RuntimeError: Failed creating H5::DataSet \w+; .*",
     )
     err_verifier = verifier.NoMatchRegex(err_regex, True, False)
 

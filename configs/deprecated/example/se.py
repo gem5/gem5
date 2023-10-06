@@ -121,7 +121,7 @@ def get_processes(args):
 
 warn(
     "The se.py script is deprecated. It will be removed in future releases of "
-    " gem5."
+    " gem5.",
 )
 
 parser = argparse.ArgumentParser()
@@ -147,14 +147,14 @@ if args.bench:
             if get_runtime_isa() == ISA.ARM:
                 exec(
                     "workload = %s('arm_%s', 'linux', '%s')"
-                    % (app, args.arm_iset, args.spec_input)
+                    % (app, args.arm_iset, args.spec_input),
                 )
             else:
                 # TARGET_ISA has been removed, but this is missing a ], so it
                 # has incorrect syntax and wasn't being used anyway.
                 exec(
                     "workload = %s(buildEnv['TARGET_ISA', 'linux', '%s')"
-                    % (app, args.spec_input)
+                    % (app, args.spec_input),
                 )
             multiprocesses.append(workload.makeProcess())
         except:
@@ -194,7 +194,8 @@ system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
 
 # Create a source clock for the system and set the clock period
 system.clk_domain = SrcClockDomain(
-    clock=args.sys_clock, voltage_domain=system.voltage_domain
+    clock=args.sys_clock,
+    voltage_domain=system.voltage_domain,
 )
 
 # Create a CPU voltage domain
@@ -202,7 +203,8 @@ system.cpu_voltage_domain = VoltageDomain()
 
 # Create a separate clock domain for the CPUs
 system.cpu_clk_domain = SrcClockDomain(
-    clock=args.cpu_clock, voltage_domain=system.cpu_voltage_domain
+    clock=args.cpu_clock,
+    voltage_domain=system.cpu_voltage_domain,
 )
 
 # If elastic tracing is enabled, then configure the cpu and attach the elastic
@@ -252,7 +254,7 @@ for i in range(np):
 
     if args.indirect_bp_type:
         indirectBPClass = ObjectList.indirect_bp_list.get(
-            args.indirect_bp_type
+            args.indirect_bp_type,
         )
         system.cpu[i].branchPred.indirectBranchPred = indirectBPClass()
 
@@ -263,7 +265,8 @@ if args.ruby:
     assert args.num_cpus == len(system.ruby._cpu_ports)
 
     system.ruby.clk_domain = SrcClockDomain(
-        clock=args.ruby_clock, voltage_domain=system.voltage_domain
+        clock=args.ruby_clock,
+        voltage_domain=system.voltage_domain,
     )
     for i in range(np):
         ruby_port = system.ruby._cpu_ports[i]

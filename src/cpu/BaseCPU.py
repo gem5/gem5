@@ -120,10 +120,12 @@ class BaseCPU(ClockedObject):
     syscallRetryLatency = Param.Cycles(10000, "Cycles to wait until retry")
 
     do_checkpoint_insts = Param.Bool(
-        True, "enable checkpoint pseudo instructions"
+        True,
+        "enable checkpoint pseudo instructions",
     )
     do_statistics_insts = Param.Bool(
-        True, "enable statistics pseudo instructions"
+        True,
+        "enable statistics pseudo instructions",
     )
 
     workload = VectorParam.Process([], "processes to run")
@@ -134,16 +136,20 @@ class BaseCPU(ClockedObject):
     decoder = VectorParam.InstDecoder([], "Decoder instance")
 
     max_insts_all_threads = Param.Counter(
-        0, "terminate when all threads have reached this inst count"
+        0,
+        "terminate when all threads have reached this inst count",
     )
     max_insts_any_thread = Param.Counter(
-        0, "terminate when any thread reaches this inst count"
+        0,
+        "terminate when any thread reaches this inst count",
     )
     simpoint_start_insts = VectorParam.Counter(
-        [], "starting instruction counts of simpoints"
+        [],
+        "starting instruction counts of simpoints",
     )
     progress_interval = Param.Frequency(
-        "0Hz", "frequency to print out the progress message"
+        "0Hz",
+        "frequency to print out the progress message",
     )
 
     switched_out = Param.Bool(
@@ -184,7 +190,9 @@ class BaseCPU(ClockedObject):
 
     def connectBus(self, bus):
         self.connectAllPorts(
-            bus.cpu_side_ports, bus.cpu_side_ports, bus.mem_side_ports
+            bus.cpu_side_ports,
+            bus.cpu_side_ports,
+            bus.mem_side_ports,
         )
 
     def addPrivateSplitL1Caches(self, ic, dc, iwc=None, dwc=None):
@@ -212,7 +220,13 @@ class BaseCPU(ClockedObject):
             ]
 
     def addTwoLevelCacheHierarchy(
-        self, ic, dc, l2c, iwc=None, dwc=None, xbar=None
+        self,
+        ic,
+        dc,
+        l2c,
+        iwc=None,
+        dwc=None,
+        xbar=None,
     ):
         self.addPrivateSplitL1Caches(ic, dc, iwc, dwc)
         self.toL2Bus = xbar if xbar else L2XBar()
@@ -229,7 +243,7 @@ class BaseCPU(ClockedObject):
         else:
             if len(self.isa) != int(self.numThreads):
                 raise RuntimeError(
-                    "Number of ISA instances doesn't match thread count"
+                    "Number of ISA instances doesn't match thread count",
                 )
         if len(self.decoder) != 0:
             raise RuntimeError("Decoders should not be set up manually")
@@ -275,7 +289,7 @@ class BaseCPU(ClockedObject):
             else:
                 warn(
                     "Platform not found for device tree generation; "
-                    "system or multiple CPUs may not start"
+                    "system or multiple CPUs may not start",
                 )
 
             freq = int(self.clk_domain.unproxy(self).clock[0].frequency)

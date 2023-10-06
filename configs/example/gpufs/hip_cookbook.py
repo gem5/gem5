@@ -80,7 +80,10 @@ def addCookbookOptions(parser):
         help="GPU application to run",
     )
     parser.add_argument(
-        "-o", "--opts", default="", help="GPU application arguments"
+        "-o",
+        "--opts",
+        default="",
+        help="GPU application arguments",
     )
 
 

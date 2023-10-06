@@ -67,7 +67,7 @@ from gem5.utils.requires import requires
 requires(isa_required=ISA.X86)
 
 parser = argparse.ArgumentParser(
-    description="An example simpoint workload file path"
+    description="An example simpoint workload file path",
 )
 
 # The lone arguments is a file path to a directory to store the checkpoints.
@@ -134,7 +134,7 @@ simulator = Simulator(
     on_exit_event={
         # using the SimPoints event generator in the standard library to take
         # checkpoints
-        ExitEvent.SIMPOINT_BEGIN: save_checkpoint_generator(dir)
+        ExitEvent.SIMPOINT_BEGIN: save_checkpoint_generator(dir),
     },
 )
 

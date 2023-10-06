@@ -50,7 +50,8 @@ class VegaGPUTLB(ClockedObject):
     assoc = Param.Int(64, "TLB associativity")
 
     walker = Param.VegaPagetableWalker(
-        VegaPagetableWalker(), "page table walker"
+        VegaPagetableWalker(),
+        "page table walker",
     )
     gpu_device = Param.AMDGPUDevice(NULL, "GPU Device")
 

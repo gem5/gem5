@@ -41,7 +41,7 @@ from subprocess import call
 import PlotPowerStates as plotter
 
 parser = argparse.ArgumentParser(
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 
 parser.add_argument("--statsfile", required=True, help="stats file path")
@@ -67,7 +67,9 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--outdir", help="directory to output plots", default="plot_test"
+    "--outdir",
+    help="directory to output plots",
+    default="plot_test",
 )
 
 parser.add_argument("--pdf", action="store_true", help="output Latex and pdf")
@@ -84,7 +86,11 @@ def main():
     seqbyte_list = args.seqbytes.strip().split()
     delays = args.delays.strip().split()
     plotter.plotLowPStates(
-        args.outdir + "/", args.statsfile, bank_util_list, seqbyte_list, delays
+        args.outdir + "/",
+        args.statsfile,
+        bank_util_list,
+        seqbyte_list,
+        delays,
     )
 
     if args.pdf:

@@ -94,7 +94,7 @@ class Region(tuple):
 
         if len(args) != 2:
             raise AttributeError(
-                "Only one or two arguments allowed, %d provided" % (alen,)
+                "Only one or two arguments allowed, %d provided" % (alen,),
             )
 
         return tuple.__new__(cls, args)

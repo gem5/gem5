@@ -312,7 +312,10 @@ def options():
         help="languages",
     )
     parser.add_argument(
-        "-n", "--dry-run", action="store_true", help="don't overwrite files"
+        "-n",
+        "--dry-run",
+        action="store_true",
+        help="don't overwrite files",
     )
     parser.add_argument("bases", nargs="*")
 

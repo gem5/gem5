@@ -109,7 +109,7 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
         if board.has_dma_ports():
             self.dma_controllers = self._create_dma_controllers(board)
             self.ruby_system.num_of_sequencers = len(
-                self.core_clusters
+                self.core_clusters,
             ) * 2 + len(self.dma_controllers)
         else:
             self.ruby_system.num_of_sequencers = len(self.core_clusters) * 2
@@ -120,12 +120,12 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
                     [
                         (cluster.dcache, cluster.icache)
                         for cluster in self.core_clusters
-                    ]
-                )
+                    ],
+                ),
             )
             + self.memory_controllers
             + [self.directory]
-            + (self.dma_controllers if board.has_dma_ports() else [])
+            + (self.dma_controllers if board.has_dma_ports() else []),
         )
 
         self.ruby_system.network.setup_buffers()
@@ -136,7 +136,10 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
         board.connect_system_port(self.ruby_system.sys_port_proxy.in_ports)
 
     def _create_core_cluster(
-        self, core: AbstractCore, core_num: int, board: AbstractBoard
+        self,
+        core: AbstractCore,
+        core_num: int,
+        board: AbstractBoard,
     ) -> SubSystem:
         """Given the core and the core number this function creates a cluster
         for the core with a split I/D cache
@@ -162,7 +165,9 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
         )
 
         cluster.icache.sequencer = RubySequencer(
-            version=core_num, dcache=NULL, clk_domain=cluster.icache.clk_domain
+            version=core_num,
+            dcache=NULL,
+            clk_domain=cluster.icache.clk_domain,
         )
         cluster.dcache.sequencer = RubySequencer(
             version=core_num,
@@ -198,7 +203,8 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
         return cluster
 
     def _create_memory_controllers(
-        self, board: AbstractBoard
+        self,
+        board: AbstractBoard,
     ) -> List[MemoryController]:
         memory_controllers = []
         for rng, port in board.get_mem_ports():
@@ -208,7 +214,8 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
         return memory_controllers
 
     def _create_dma_controllers(
-        self, board: AbstractBoard
+        self,
+        board: AbstractBoard,
     ) -> List[DMARequestor]:
         dma_controllers = []
         for i, port in enumerate(board.get_dma_ports()):

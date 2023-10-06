@@ -48,7 +48,7 @@ def warn_default_decorator(gen: Generator, type: str, effect: str):
     def wrapped_generator(*args, **kw_args):
         warn(
             f"No behavior was set by the user for {type}."
-            f" Default behavior is {effect}."
+            f" Default behavior is {effect}.",
         )
         for value in gen(*args, **kw_args):
             yield value
@@ -137,7 +137,8 @@ def skip_generator():
 
 
 def simpoints_save_checkpoint_generator(
-    checkpoint_dir: Path, simpoint: SimpointResource
+    checkpoint_dir: Path,
+    simpoint: SimpointResource,
 ):
     """
     A generator for taking multiple checkpoints for SimPoints. It will save the

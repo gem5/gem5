@@ -71,7 +71,7 @@ def get_runtime_isa() -> ISA:
 
     warn(
         "The `get_runtime_isa` function is deprecated. Please migrate away "
-        "from using this function."
+        "from using this function.",
     )
 
     if "TARGET_ISA" in buildEnv.keys():
@@ -85,7 +85,7 @@ def get_runtime_isa() -> ISA:
     raise Exception(
         "Cannot determine the the runtime ISA. Either the "
         "'TARGET_ISA' parameter must be set or the binary only "
-        "compiled to one ISA."
+        "compiled to one ISA.",
     )
 
 
@@ -111,7 +111,7 @@ def get_runtime_coherence_protocol() -> CoherenceProtocol:
     protocol_str = str(buildEnv["PROTOCOL"]).lower()
     if protocol_str not in protocol_map.keys():
         raise NotImplementedError(
-            "Protocol '" + buildEnv["PROTOCOL"] + "' not recognized."
+            "Protocol '" + buildEnv["PROTOCOL"] + "' not recognized.",
         )
 
     return protocol_map[protocol_str]

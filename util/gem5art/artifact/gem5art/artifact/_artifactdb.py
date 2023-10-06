@@ -110,7 +110,10 @@ class ArtifactDB(ABC):
         raise NotImplementedError()
 
     def searchByNameType(
-        self, name: str, typ: str, limit: int
+        self,
+        name: str,
+        typ: str,
+        limit: int,
     ) -> Iterable[Dict[str, Any]]:
         """Returns an iterable of all artifacts in the database that match
         some name and type. Note: Not all DB implementations will implement
@@ -118,7 +121,10 @@ class ArtifactDB(ABC):
         raise NotImplementedError()
 
     def searchByLikeNameType(
-        self, name: str, typ: str, limit: int
+        self,
+        name: str,
+        typ: str,
+        limit: int,
     ) -> Iterable[Dict[str, Any]]:
         """Returns an iterable of all artifacts in the database that match
         some type and a regex name. Note: Not all DB implementations will
@@ -199,7 +205,10 @@ class ArtifactMongoDB(ArtifactDB):
             yield d
 
     def searchByNameType(
-        self, name: str, typ: str, limit: int
+        self,
+        name: str,
+        typ: str,
+        limit: int,
     ) -> Iterable[Dict[str, Any]]:
         """Returns an iterable of all artifacts in the database that match
         some name and type."""
@@ -207,13 +216,17 @@ class ArtifactMongoDB(ArtifactDB):
             yield d
 
     def searchByLikeNameType(
-        self, name: str, typ: str, limit: int
+        self,
+        name: str,
+        typ: str,
+        limit: int,
     ) -> Iterable[Dict[str, Any]]:
         """Returns an iterable of all artifacts in the database that match
         some type and a regex name."""
 
         data = self.artifacts.find(
-            {"type": typ, "name": {"$regex": f"{name}"}}, limit=limit
+            {"type": typ, "name": {"$regex": f"{name}"}},
+            limit=limit,
         )
         for d in data:
             yield d
@@ -265,13 +278,13 @@ class ArtifactFileDB(ArtifactDB):
             and not self._storage_path.is_dir()
         ):
             raise Exception(
-                f"GEM5ART_STORAGE={storage_path} exists and is not a directory"
+                f"GEM5ART_STORAGE={storage_path} exists and is not a directory",
             )
         if self._storage_enabled:
             os.makedirs(self._storage_path, exist_ok=True)
 
         self._uuid_artifact_map, self._hash_uuid_map = self._load_from_file(
-            self._json_file
+            self._json_file,
         )
 
     def put(self, key: UUID, artifact: Dict[str, Union[str, UUID]]) -> None:
@@ -317,7 +330,8 @@ class ArtifactFileDB(ArtifactDB):
         shutil.copy2(src_path, dst_path)
 
     def _load_from_file(
-        self, json_file: Path
+        self,
+        json_file: Path,
     ) -> Tuple[Dict[str, Dict[str, str]], Dict[str, List[str]]]:
         uuid_mapping: Dict[str, Dict[str, str]] = {}
         hash_mapping: Dict[str, List[str]] = {}
@@ -381,7 +395,9 @@ class ArtifactFileDB(ArtifactDB):
         return True
 
     def find_exact(
-        self, attr: Dict[str, str], limit: int
+        self,
+        attr: Dict[str, str],
+        limit: int,
     ) -> Iterable[Dict[str, Any]]:
         """
         Return all artifacts such that, for every yielded artifact,

@@ -50,11 +50,11 @@ class FastModelCortexA76(IrisBaseCPU):
 
     redistributor = Gicv3CommsTargetSocket("GIC communication target")
     core_reset = IntSinkPin(
-        "Raising this signal will put the core into reset mode."
+        "Raising this signal will put the core into reset mode.",
     )
     poweron_reset = IntSinkPin(
         "Power on reset. Initializes all the "
-        "processor logic, including debug logic."
+        "processor logic, including debug logic.",
     )
 
     CFGEND = Param.Bool(
@@ -71,7 +71,8 @@ class FastModelCortexA76(IrisBaseCPU):
     RVBARADDR = Param.Addr(0x0, "Value of RVBAR_ELx register.")
     VINITHI = Param.Bool(False, "Reset value of SCTLR.V.")
     enable_trace_special_hlt_imm16 = Param.Bool(
-        False, "Enable usage of parameter trace_special_hlt_imm16"
+        False,
+        "Enable usage of parameter trace_special_hlt_imm16",
     )
     l2cache_hit_latency = Param.UInt64(
         0,
@@ -156,36 +157,46 @@ class FastModelCortexA76(IrisBaseCPU):
         "(0=off=default,1=syncState,2=postInsnIO,3=postInsnAll)",
     )
     semihosting_A32_HLT = Param.UInt16(
-        0xF000, "A32 HLT number for semihosting calls."
+        0xF000,
+        "A32 HLT number for semihosting calls.",
     )
     semihosting_A64_HLT = Param.UInt16(
-        0xF000, "A64 HLT number for semihosting calls."
+        0xF000,
+        "A64 HLT number for semihosting calls.",
     )
     semihosting_ARM_SVC = Param.UInt32(
-        0x123456, "A32 SVC number for semihosting calls."
+        0x123456,
+        "A32 SVC number for semihosting calls.",
     )
     semihosting_T32_HLT = Param.Unsigned(
-        60, "T32 HLT number for semihosting calls."
+        60,
+        "T32 HLT number for semihosting calls.",
     )
     semihosting_Thumb_SVC = Param.Unsigned(
-        171, "T32 SVC number for semihosting calls."
+        171,
+        "T32 SVC number for semihosting calls.",
     )
     semihosting_cmd_line = Param.String(
-        "", "Command line available to semihosting calls."
+        "",
+        "Command line available to semihosting calls.",
     )
     semihosting_cwd = Param.String(
-        "", "Base directory for semihosting file access."
+        "",
+        "Base directory for semihosting file access.",
     )
     semihosting_enable = Param.Bool(True, "Enable semihosting SVC/HLT traps.")
     semihosting_heap_base = Param.Addr(0x0, "Virtual address of heap base.")
     semihosting_heap_limit = Param.Addr(
-        0xF000000, "Virtual address of top of heap."
+        0xF000000,
+        "Virtual address of top of heap.",
     )
     semihosting_stack_base = Param.Addr(
-        0x10000000, "Virtual address of base of descending stack."
+        0x10000000,
+        "Virtual address of base of descending stack.",
     )
     semihosting_stack_limit = Param.Addr(
-        0xF000000, "Virtual address of stack limit."
+        0xF000000,
+        "Virtual address of stack limit.",
     )
     trace_special_hlt_imm16 = Param.UInt16(
         0xF000,
@@ -207,45 +218,52 @@ class FastModelCortexA76Cluster(SimObject):
     cxx_header = "arch/arm/fastmodel/CortexA76/cortex_a76.hh"
 
     cores = VectorParam.FastModelCortexA76(
-        "Core in a given cluster of CortexA76s"
+        "Core in a given cluster of CortexA76s",
     )
 
     evs = Param.SystemC_ScModule(
-        "Fast mo0del exported virtual subsystem holding cores"
+        "Fast mo0del exported virtual subsystem holding cores",
     )
 
     cnthpirq = Param.ArmInterruptPin(
-        ArmPPI(num=10), "EL2 physical timer event"
+        ArmPPI(num=10),
+        "EL2 physical timer event",
     )
     cnthvirq = Param.ArmInterruptPin(ArmPPI(num=12), "EL2 virtual timer event")
     cntpsirq = Param.ArmInterruptPin(
-        ArmPPI(num=13), "EL1 Secure physical timer event"
+        ArmPPI(num=13),
+        "EL1 Secure physical timer event",
     )
     cntvirq = Param.ArmInterruptPin(ArmPPI(num=11), "Virtual timer event")
     commirq = Param.ArmInterruptPin(
-        ArmPPI(num=6), "Interrupt signal from debug communications channel"
+        ArmPPI(num=6),
+        "Interrupt signal from debug communications channel",
     )
     ctidbgirq = Param.ArmInterruptPin(
-        ArmPPI(num=8), "Cross Trigger Interface (CTI) interrupt trigger output"
+        ArmPPI(num=8),
+        "Cross Trigger Interface (CTI) interrupt trigger output",
     )
     pmuirq = Param.ArmInterruptPin(
-        ArmPPI(num=7), "Interrupt from performance monitoring unit"
+        ArmPPI(num=7),
+        "Interrupt from performance monitoring unit",
     )
     vcpumntirq = Param.ArmInterruptPin(
-        ArmPPI(num=9), "Interrupt signal for virtual CPU maintenance IRQ"
+        ArmPPI(num=9),
+        "Interrupt signal for virtual CPU maintenance IRQ",
     )
     cntpnsirq = Param.ArmInterruptPin(
-        ArmPPI(num=14), "Non-secure physical timer event"
+        ArmPPI(num=14),
+        "Non-secure physical timer event",
     )
 
     amba = AmbaInitiatorSocket(64, "AMBA initiator socket")
     top_reset = IntSinkPin(
         "A single cluster-wide power on reset signal for "
-        "all resettable registers in DynamIQ."
+        "all resettable registers in DynamIQ.",
     )
     dbg_reset = IntSinkPin(
         "Initialize the shared debug APB, Cross Trigger "
-        "Interface (CTI), and Cross Trigger Matrix (CTM) logic."
+        "Interface (CTI), and Cross Trigger Matrix (CTM) logic.",
     )
     model_reset = ResetResponsePort("A reset port to reset the whole cluster.")
 
@@ -283,10 +301,12 @@ class FastModelCortexA76Cluster(SimObject):
         "contains a GICv3 distributor.",
     )
     cpi_div = Param.UInt32(
-        1, "Divider for calculating CPI (Cycles Per Instruction)"
+        1,
+        "Divider for calculating CPI (Cycles Per Instruction)",
     )
     cpi_mul = Param.UInt32(
-        1, "Multiplier for calculating CPI (Cycles Per Instruction)"
+        1,
+        "Multiplier for calculating CPI (Cycles Per Instruction)",
     )
     dcache_hit_latency = Param.UInt64(
         0,
@@ -342,7 +362,8 @@ class FastModelCortexA76Cluster(SimObject):
         "dcache-state_modelled=true.",
     )
     dcache_state_modelled = Param.Bool(
-        False, "Set whether D-cache has stateful implementation"
+        False,
+        "Set whether D-cache has stateful implementation",
     )
     dcache_write_access_latency = Param.UInt64(
         0,
@@ -377,16 +398,20 @@ class FastModelCortexA76Cluster(SimObject):
         "of stage12_tlb_size parameter to 1024).",
     )
     ext_abort_device_read_is_sync = Param.Bool(
-        False, "Synchronous reporting of device-nGnRE read external aborts"
+        False,
+        "Synchronous reporting of device-nGnRE read external aborts",
     )
     ext_abort_device_write_is_sync = Param.Bool(
-        False, "Synchronous reporting of device-nGnRE write external aborts"
+        False,
+        "Synchronous reporting of device-nGnRE write external aborts",
     )
     ext_abort_so_read_is_sync = Param.Bool(
-        False, "Synchronous reporting of device-nGnRnE read external aborts"
+        False,
+        "Synchronous reporting of device-nGnRnE read external aborts",
     )
     ext_abort_so_write_is_sync = Param.Bool(
-        False, "Synchronous reporting of device-nGnRnE write external aborts"
+        False,
+        "Synchronous reporting of device-nGnRnE write external aborts",
     )
     gicv3_cpuintf_mmap_access_level = Param.Unsigned(
         0,
@@ -396,10 +421,12 @@ class FastModelCortexA76Cluster(SimObject):
         "not supported.",
     )
     has_peripheral_port = Param.Bool(
-        False, "If true, additional AXI peripheral port is configured."
+        False,
+        "If true, additional AXI peripheral port is configured.",
     )
     has_statistical_profiling = Param.Bool(
-        True, "Whether Statistical Based Profiling is implemented"
+        True,
+        "Whether Statistical Based Profiling is implemented",
     )
     icache_hit_latency = Param.UInt64(
         0,
@@ -448,7 +475,8 @@ class FastModelCortexA76Cluster(SimObject):
         "used when icache-state_modelled=true.",
     )
     icache_state_modelled = Param.Bool(
-        False, "Set whether I-cache has stateful implementation"
+        False,
+        "Set whether I-cache has stateful implementation",
     )
     l3cache_hit_latency = Param.UInt64(
         0,
@@ -522,7 +550,8 @@ class FastModelCortexA76Cluster(SimObject):
         "l3cache-state_modelled=true.",
     )
     pchannel_treat_simreset_as_poreset = Param.Bool(
-        False, "Register core as ON state to cluster with simulation reset."
+        False,
+        "Register core as ON state to cluster with simulation reset.",
     )
     periph_address_end = Param.Addr(
         0x0,
@@ -562,7 +591,7 @@ class FastModelCortexA76Cluster(SimObject):
         node = FdtNode("timer")
 
         node.appendCompatible(
-            ["arm,cortex-a15-timer", "arm,armv7-timer", "arm,armv8-timer"]
+            ["arm,cortex-a15-timer", "arm,armv7-timer", "arm,armv8-timer"],
         )
         node.append(
             FdtPropertyWords(
@@ -581,7 +610,7 @@ class FastModelCortexA76Cluster(SimObject):
                     int(self.cnthpirq.num),
                     0xF08,
                 ],
-            )
+            ),
         )
 
         yield node

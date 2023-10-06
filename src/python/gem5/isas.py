@@ -84,5 +84,5 @@ def get_isa_from_str(input: str) -> ISA:
 
     raise Exception(
         f"Value '{input}' does not correspond to a known ISA. Known ISAs:"
-        f"{valid_isas_str_list}"
+        f"{valid_isas_str_list}",
     )

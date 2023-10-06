@@ -44,6 +44,7 @@ class MemFootprintProbe(BaseMemProbe):
     cxx_class = "gem5::MemFootprintProbe"
 
     system = Param.System(
-        Parent.any, "System pointer to get cache line and mem size"
+        Parent.any,
+        "System pointer to get cache line and mem size",
     )
     page_size = Param.Unsigned(4096, "Page size for page-level footprint")

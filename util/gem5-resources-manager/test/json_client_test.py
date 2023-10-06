@@ -132,7 +132,7 @@ class TestJson(unittest.TestCase):
             "gem5_versions": ["23.0"],
         }
         response = self.json_client.find_resource(
-            {"id": expected_response["id"]}
+            {"id": expected_response["id"]},
         )
         self.assertEqual(response, expected_response)
 
@@ -156,7 +156,7 @@ class TestJson(unittest.TestCase):
             {
                 "id": expected_response["id"],
                 "resource_version": expected_response["resource_version"],
-            }
+            },
         )
         self.assertEqual(response, expected_response)
 
@@ -185,7 +185,7 @@ class TestJson(unittest.TestCase):
             {
                 "id": deleted_resource["id"],
                 "resource_version": deleted_resource["resource_version"],
-            }
+            },
         )
         self.assertEqual(response, {"status": "Deleted"})
         json_data = get_json()
@@ -229,7 +229,7 @@ class TestJson(unittest.TestCase):
             {
                 "original_resource": original_resource,
                 "resource": updated_resource,
-            }
+            },
         )
         self.assertEqual(response, {"status": "Updated"})
         json_data = get_json()
@@ -248,7 +248,7 @@ class TestJson(unittest.TestCase):
         resource_id = "kernel-example"
         resource_version = "1.0.0"
         response = self.json_client.check_resource_exists(
-            {"id": resource_id, "resource_version": resource_version}
+            {"id": resource_id, "resource_version": resource_version},
         )
         self.assertEqual(response, {"exists": True})
 
@@ -256,6 +256,6 @@ class TestJson(unittest.TestCase):
         resource_id = "kernel-example"
         resource_version = "3.0.0"
         response = self.json_client.check_resource_exists(
-            {"id": resource_id, "resource_version": resource_version}
+            {"id": resource_id, "resource_version": resource_version},
         )
         self.assertEqual(response, {"exists": False})

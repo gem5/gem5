@@ -34,5 +34,6 @@ class OutgoingRequestBridge(SimObject):
 
     port = ResponsePort("Response Port")
     physical_address_ranges = VectorParam.AddrRange(
-        [AddrRange(0x80000000, MaxAddr)], "Physical address ranges."
+        [AddrRange(0x80000000, MaxAddr)],
+        "Physical address ranges.",
     )

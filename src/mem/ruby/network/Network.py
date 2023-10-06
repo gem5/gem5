@@ -36,7 +36,8 @@ class RubyNetwork(ClockedObject):
     abstract = True
 
     topology = Param.String(
-        "Not Specified", "the name of the imported topology module"
+        "Not Specified",
+        "the name of the imported topology module",
     )
 
     number_of_virtual_networks = Param.Unsigned(
@@ -44,7 +45,7 @@ class RubyNetwork(ClockedObject):
         "used by the coherence protocol in use.  The on-chip network "
         "assumes the protocol numbers vnets starting from 0.  Therefore, "
         "the number of virtual networks should be one more than the "
-        "highest numbered vnet in use."
+        "highest numbered vnet in use.",
     )
     control_msg_size = Param.Int(8, "")
     ruby_system = Param.RubySystem("")

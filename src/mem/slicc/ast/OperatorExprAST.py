@@ -110,8 +110,10 @@ class InfixOperatorExprAST(ExprAST):
                 self.error(
                     "Type mismatch: operands ({0}, {1}) for operator "
                     "'{2}' failed to match with the expected types".format(
-                        ltype, rtype, self.op
-                    )
+                        ltype,
+                        rtype,
+                        self.op,
+                    ),
                 )
 
         # All is well

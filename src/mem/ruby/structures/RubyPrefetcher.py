@@ -49,7 +49,8 @@ class RubyPrefetcher(SimObject):
     num_streams = Param.UInt32(4, "Number of prefetch streams to be allocated")
     unit_filter = Param.UInt32(8, "Number of entries in the unit filter array")
     nonunit_filter = Param.UInt32(
-        8, "Number of entries in the non-unit filter array"
+        8,
+        "Number of entries in the non-unit filter array",
     )
     train_misses = Param.UInt32(4, "")
     num_startup_pfs = Param.UInt32(1, "")
@@ -59,7 +60,8 @@ class RubyPrefetcher(SimObject):
             page different from the observed address""",
     )
     page_shift = Param.UInt32(
-        12, "Number of bits to mask to get a page number"
+        12,
+        "Number of bits to mask to get a page number",
     )
 
 

@@ -90,7 +90,8 @@ class LooppointRegionWarmupTestSuite(unittest.TestCase):
 
     def test_construction(self) -> None:
         region_warmup = LooppointRegionWarmup(
-            start=PcCountPair(123, 456), end=PcCountPair(789, 1011)
+            start=PcCountPair(123, 456),
+            end=PcCountPair(789, 1011),
         )
 
         self.assertEquals(PcCountPair(123, 456), region_warmup.get_start())
@@ -98,7 +99,8 @@ class LooppointRegionWarmupTestSuite(unittest.TestCase):
 
     def test_get_pc_count_pairs(self) -> None:
         region_warmup = LooppointRegionWarmup(
-            start=PcCountPair(1, 1), end=PcCountPair(2, 2)
+            start=PcCountPair(1, 1),
+            end=PcCountPair(2, 2),
         )
 
         output = region_warmup.get_pc_count_pairs()
@@ -108,7 +110,8 @@ class LooppointRegionWarmupTestSuite(unittest.TestCase):
 
     def test_to_json(self) -> None:
         region_warmup = LooppointRegionWarmup(
-            start=PcCountPair(100, 200), end=PcCountPair(101, 202)
+            start=PcCountPair(100, 200),
+            end=PcCountPair(101, 202),
         )
 
         expected = {
@@ -181,12 +184,13 @@ class LooppointRegionTestSuite(unittest.TestCase):
             ),
             multiplier=5.6,
             warmup=LooppointRegionWarmup(
-                start=PcCountPair(100, 200), end=PcCountPair(101, 202)
+                start=PcCountPair(100, 200),
+                end=PcCountPair(101, 202),
             ),
         )
 
         self.assertTrue(
-            isinstance(region.get_simulation(), LooppointSimulation)
+            isinstance(region.get_simulation(), LooppointSimulation),
         )
         self.assertEquals(5.6, region.get_multiplier())
         self.assertIsNotNone(region.get_warmup())
@@ -202,7 +206,7 @@ class LooppointRegionTestSuite(unittest.TestCase):
         )
 
         self.assertTrue(
-            isinstance(region.get_simulation(), LooppointSimulation)
+            isinstance(region.get_simulation(), LooppointSimulation),
         )
         self.assertEquals(5444.4, region.get_multiplier())
         self.assertIsNone(region.get_warmup())
@@ -215,7 +219,8 @@ class LooppointRegionTestSuite(unittest.TestCase):
             ),
             multiplier=5.6,
             warmup=LooppointRegionWarmup(
-                start=PcCountPair(100, 200), end=PcCountPair(101, 202)
+                start=PcCountPair(100, 200),
+                end=PcCountPair(101, 202),
             ),
         )
         pc_count_pairs = region.get_pc_count_pairs()
@@ -260,7 +265,8 @@ class LooppointTestSuite(unittest.TestCase):
             ),
             multiplier=5.6,
             warmup=LooppointRegionWarmup(
-                start=PcCountPair(100, 200), end=PcCountPair(101, 202)
+                start=PcCountPair(100, 200),
+                end=PcCountPair(101, 202),
             ),
         )
 
@@ -268,7 +274,7 @@ class LooppointTestSuite(unittest.TestCase):
             regions={
                 1: region1,
                 3: region2,
-            }
+            },
         )
 
         self.assertEquals(2, len(looppoint.get_regions()))
@@ -292,7 +298,8 @@ class LooppointTestSuite(unittest.TestCase):
             ),
             multiplier=5.6,
             warmup=LooppointRegionWarmup(
-                start=PcCountPair(100, 200), end=PcCountPair(101, 202)
+                start=PcCountPair(100, 200),
+                end=PcCountPair(101, 202),
             ),
         )
 
@@ -300,7 +307,7 @@ class LooppointTestSuite(unittest.TestCase):
             regions={
                 1: region1,
                 3: region2,
-            }
+            },
         )
 
         targets = looppoint.get_targets()
@@ -327,7 +334,8 @@ class LooppointTestSuite(unittest.TestCase):
             ),
             multiplier=5.6,
             warmup=LooppointRegionWarmup(
-                start=PcCountPair(100, 200), end=PcCountPair(101, 202)
+                start=PcCountPair(100, 200),
+                end=PcCountPair(101, 202),
             ),
         )
 
@@ -335,7 +343,7 @@ class LooppointTestSuite(unittest.TestCase):
             regions={
                 1: region1,
                 3: region2,
-            }
+            },
         )
 
         region_start_id_map = looppoint.get_region_start_id_map()
@@ -365,7 +373,8 @@ class LooppointTestSuite(unittest.TestCase):
             ),
             multiplier=5.6,
             warmup=LooppointRegionWarmup(
-                start=PcCountPair(100, 200), end=PcCountPair(101, 202)
+                start=PcCountPair(100, 200),
+                end=PcCountPair(101, 202),
             ),
         )
 
@@ -373,7 +382,7 @@ class LooppointTestSuite(unittest.TestCase):
             regions={
                 1: region1,
                 3: region2,
-            }
+            },
         )
 
         expected = {
@@ -431,7 +440,7 @@ class LooppointCSVLoaderTestSuite(unittest.TestCase):
                 os.path.realpath(os.path.dirname(__file__)),
                 "refs",
                 "matrix.1_92.global.pinpoints_reduced.csv",
-            )
+            ),
         )
 
         regions = looppoint.get_regions()
@@ -470,10 +479,12 @@ class LooppointCSVLoaderTestSuite(unittest.TestCase):
         region2warmup = region2.get_warmup()
         self.assertIsNotNone(region2warmup)
         self.assertEquals(
-            PcCountPair(0x406880, 48111518), region2warmup.get_start()
+            PcCountPair(0x406880, 48111518),
+            region2warmup.get_start(),
         )
         self.assertEquals(
-            PcCountPair(0x4069D0, 407294228), region2warmup.get_end()
+            PcCountPair(0x4069D0, 407294228),
+            region2warmup.get_end(),
         )
 
         region3 = regions[3]
@@ -558,10 +569,12 @@ class LooppointJsonLoaderTestSuite(unittest.TestCase):
         self.assertIsNotNone(region_warmup)
 
         self.assertEquals(
-            PcCountPair(4221056, 23520614), region_warmup.get_start()
+            PcCountPair(4221056, 23520614),
+            region_warmup.get_start(),
         )
         self.assertEquals(
-            PcCountPair(4221392, 211076617), region_warmup.get_end()
+            PcCountPair(4221392, 211076617),
+            region_warmup.get_end(),
         )
 
     def test_load_pinpoints_matrix_region_2(self):

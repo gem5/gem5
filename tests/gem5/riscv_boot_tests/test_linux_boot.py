@@ -43,12 +43,15 @@ def test_boot(
     to_tick: Optional[int] = None,
 ):
     name = "{}-cpu_{}-cores_{}_{}_riscv-boot-test".format(
-        cpu, str(num_cpus), cache_type, memory_class
+        cpu,
+        str(num_cpus),
+        cache_type,
+        memory_class,
     )
 
     verifiers = []
     exit_regex = re.compile(
-        f"Exiting @ tick {str(to_tick)} because simulate\\(\\) limit reached"
+        f"Exiting @ tick {str(to_tick)} because simulate\\(\\) limit reached",
     )
     verifiers.append(verifier.MatchRegex(exit_regex))
 

@@ -118,7 +118,9 @@ def terminal_size():
         h, w, hp, wp = struct.unpack(
             "HHHH",
             fcntl.ioctl(
-                0, termios.TIOCGWINSZ, struct.pack("HHHH", 0, 0, 0, 0)
+                0,
+                termios.TIOCGWINSZ,
+                struct.pack("HHHH", 0, 0, 0, 0),
             ),
         )
         return w, h
@@ -141,7 +143,10 @@ def separator(char=default_separator, color=None):
 
 
 def insert_separator(
-    inside, char=default_separator, min_barrier=3, color=None
+    inside,
+    char=default_separator,
+    min_barrier=3,
+    color=None,
 ):
     """
     Place the given string inside of the separator. If it does not fit inside,
@@ -181,7 +186,7 @@ if __name__ == "__main__":
                 + c_name
                 + "Bold Underline "
                 + c_str
-                + obj.Normal
+                + obj.Normal,
             )
 
     print("=== termcap enabled ===")

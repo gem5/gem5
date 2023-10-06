@@ -70,7 +70,7 @@ def upgrader(cpt):
             # of in-order and O3 CPUs.
             raise ValueError(
                 "Don't know how to migrate multi-threaded CPUs "
-                "from version 1"
+                "from version 1",
             )
 
         isa_section = []
@@ -94,7 +94,7 @@ def upgrader(cpt):
         else:
             if cpt.items(sec):
                 raise ValueError(
-                    "Unexpected populated ISA section in old checkpoint"
+                    "Unexpected populated ISA section in old checkpoint",
                 )
 
         for key, value in options:

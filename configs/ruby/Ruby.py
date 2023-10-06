@@ -247,7 +247,7 @@ def create_system(
         (cpu_sequencers, dir_cntrls, topology) = eval(
             "%s.create_system(options, full_system, system, dma_ports,\
                                     bootmem, ruby, cpus)"
-            % protocol
+            % protocol,
         )
     except:
         print(f"Error: could not create sytem for ruby protocol {protocol}")
@@ -255,7 +255,11 @@ def create_system(
 
     # Create the network topology
     topology.makeTopology(
-        options, network, IntLinkClass, ExtLinkClass, RouterClass
+        options,
+        network,
+        IntLinkClass,
+        ExtLinkClass,
+        RouterClass,
     )
 
     # Register the topology elements with faux filesystem (SE mode only)
@@ -294,7 +298,8 @@ def create_system(
     if options.access_backing_store:
         ruby.access_backing_store = True
         ruby.phys_mem = SimpleMemory(
-            range=system.mem_ranges[0], in_addr_map=False
+            range=system.mem_ranges[0],
+            in_addr_map=False,
         )
 
 

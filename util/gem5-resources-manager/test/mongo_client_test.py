@@ -53,7 +53,9 @@ class TestApi(unittest.TestCase):
         for obj in objects:
             self.collection.insert_one(obj)
         self.mongo_client = MongoDBClient(
-            "mongodb://localhost:27017", "test", "test"
+            "mongodb://localhost:27017",
+            "test",
+            "test",
         )
 
     def tearDown(self):
@@ -81,7 +83,8 @@ class TestApi(unittest.TestCase):
         ret_value = self.mongo_client.insert_resource(test_resource)
         self.assertEqual(ret_value, {"status": "Inserted"})
         self.assertEqual(
-            self.collection.find({"id": "test-resource"})[0], test_resource
+            self.collection.find({"id": "test-resource"})[0],
+            test_resource,
         )
         self.collection.delete_one({"id": "test-resource"})
 
@@ -153,7 +156,7 @@ class TestApi(unittest.TestCase):
         test_resource["description"] = "test-description2"
         self.collection.insert_one(test_resource.copy())
         ret_value = self.mongo_client.find_resource(
-            {"id": "test-resource", "resource_version": "2.0.0"}
+            {"id": "test-resource", "resource_version": "2.0.0"},
         )
         self.assertEqual(ret_value, test_resource)
 
@@ -181,13 +184,13 @@ class TestApi(unittest.TestCase):
         }
         self.collection.insert_one(test_resource.copy())
         ret_value = self.mongo_client.delete_resource(
-            {"id": "test-resource", "resource_version": "1.0.0"}
+            {"id": "test-resource", "resource_version": "1.0.0"},
         )
         self.assertEqual(ret_value, {"status": "Deleted"})
 
         self.assertEqual(
             json.loads(
-                json_util.dumps(self.collection.find({"id": "test-resource"}))
+                json_util.dumps(self.collection.find({"id": "test-resource"})),
             ),
             [],
         )
@@ -215,7 +218,10 @@ class TestApi(unittest.TestCase):
         test_resource["author"].append("test-author2")
         test_resource["description"] = "test-description2"
         ret_value = self.mongo_client.update_resource(
-            {"original_resource": original_resource, "resource": test_resource}
+            {
+                "original_resource": original_resource,
+                "resource": test_resource,
+            },
         )
         self.assertEqual(ret_value, {"status": "Updated"})
         self.assertEqual(
@@ -243,13 +249,13 @@ class TestApi(unittest.TestCase):
         }
         self.collection.insert_one(test_resource.copy())
         ret_value = self.mongo_client.check_resource_exists(
-            {"id": "test-resource", "resource_version": "1.0.0"}
+            {"id": "test-resource", "resource_version": "1.0.0"},
         )
         self.assertEqual(ret_value, {"exists": True})
 
     def test_checkResourceExists_not_found(self):
         ret_value = self.mongo_client.check_resource_exists(
-            {"id": "test-resource", "resource_version": "1.0.0"}
+            {"id": "test-resource", "resource_version": "1.0.0"},
         )
         self.assertEqual(ret_value, {"exists": False})
 

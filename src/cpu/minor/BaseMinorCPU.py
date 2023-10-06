@@ -65,7 +65,8 @@ class MinorOpClassSet(SimObject):
     cxx_class = "gem5::MinorOpClassSet"
 
     opClasses = VectorParam.MinorOpClass(
-        [], "op classes to be matched.  An empty list means any class"
+        [],
+        "op classes to be matched.  An empty list means any class",
     )
 
 
@@ -81,13 +82,16 @@ class MinorFUTiming(SimObject):
         " (ext_mach_inst & mask) == match",
     )
     suppress = Param.Bool(
-        False, "if true, this inst. is not executed by this FU"
+        False,
+        "if true, this inst. is not executed by this FU",
     )
     extraCommitLat = Param.Cycles(
-        0, "extra cycles to stall commit for this inst."
+        0,
+        "extra cycles to stall commit for this inst.",
     )
     extraCommitLatExpr = Param.TimingExpr(
-        NULL, "extra cycles as a run-time evaluated expression"
+        NULL,
+        "extra cycles as a run-time evaluated expression",
     )
     extraAssumedLat = Param.Cycles(
         0,
@@ -99,7 +103,7 @@ class MinorFUTiming(SimObject):
     srcRegsRelativeLats = VectorParam.Cycles(
         "the maximum number of cycles"
         " after inst. issue that each src reg can be available for this"
-        " inst. to issue"
+        " inst. to issue",
     )
     opClasses = Param.MinorOpClassSet(
         MinorOpClassSet(),
@@ -107,7 +111,8 @@ class MinorFUTiming(SimObject):
         " class",
     )
     description = Param.String(
-        "", "description string of the decoding/inst class"
+        "",
+        "description string of the decoding/inst class",
     )
 
 
@@ -131,7 +136,8 @@ class MinorFU(SimObject):
     )
     opLat = Param.Cycles(1, "latency in cycles")
     issueLat = Param.Cycles(
-        1, "cycles until another instruction can be issued"
+        1,
+        "cycles until another instruction can be issued",
     )
     timings = VectorParam.MinorFUTiming([], "extra decoding rules")
 
@@ -218,7 +224,7 @@ class MinorDefaultFloatSimdFU(MinorFU):
             "Matrix",
             "MatrixMov",
             "MatrixOP",
-        ]
+        ],
     )
 
     timings = [MinorFUTiming(description="FloatSimd", srcRegsRelativeLats=[2])]
@@ -233,12 +239,14 @@ class MinorDefaultPredFU(MinorFU):
 
 class MinorDefaultMemFU(MinorFU):
     opClasses = minorMakeOpClassSet(
-        ["MemRead", "MemWrite", "FloatMemRead", "FloatMemWrite"]
+        ["MemRead", "MemWrite", "FloatMemRead", "FloatMemWrite"],
     )
     timings = [
         MinorFUTiming(
-            description="Mem", srcRegsRelativeLats=[1], extraAssumedLat=2
-        )
+            description="Mem",
+            srcRegsRelativeLats=[1],
+            extraAssumedLat=2,
+        ),
     ]
     opLat = 1
 
@@ -270,7 +278,7 @@ class MinorDefaultVecFU(MinorFU):
             "VectorMisc",
             "VectorIntegerExtension",
             "VectorConfig",
-        ]
+        ],
     )
     opLat = 1
 
@@ -312,7 +320,8 @@ class BaseMinorCPU(BaseCPU):
 
     threadPolicy = Param.ThreadPolicy("RoundRobin", "Thread scheduling policy")
     fetch1FetchLimit = Param.Unsigned(
-        1, "Number of line fetches allowable in flight at once"
+        1,
+        "Number of line fetches allowable in flight at once",
     )
     fetch1LineSnapWidth = Param.Unsigned(
         0,
@@ -325,7 +334,8 @@ class BaseMinorCPU(BaseCPU):
         " line size)",
     )
     fetch1ToFetch2ForwardDelay = Param.Cycles(
-        1, "Forward cycle delay from Fetch1 to Fetch2 (1 means next cycle)"
+        1,
+        "Forward cycle delay from Fetch1 to Fetch2 (1 means next cycle)",
     )
     fetch1ToFetch2BackwardDelay = Param.Cycles(
         1,
@@ -334,10 +344,12 @@ class BaseMinorCPU(BaseCPU):
     )
 
     fetch2InputBufferSize = Param.Unsigned(
-        2, "Size of input buffer to Fetch2 in cycles-worth of insts."
+        2,
+        "Size of input buffer to Fetch2 in cycles-worth of insts.",
     )
     fetch2ToDecodeForwardDelay = Param.Cycles(
-        1, "Forward cycle delay from Fetch2 to Decode (1 means next cycle)"
+        1,
+        "Forward cycle delay from Fetch2 to Decode (1 means next cycle)",
     )
     fetch2CycleInput = Param.Bool(
         True,
@@ -346,10 +358,12 @@ class BaseMinorCPU(BaseCPU):
     )
 
     decodeInputBufferSize = Param.Unsigned(
-        3, "Size of input buffer to Decode in cycles-worth of insts."
+        3,
+        "Size of input buffer to Decode in cycles-worth of insts.",
     )
     decodeToExecuteForwardDelay = Param.Cycles(
-        1, "Forward cycle delay from Decode to Execute (1 means next cycle)"
+        1,
+        "Forward cycle delay from Decode to Execute (1 means next cycle)",
     )
     decodeInputWidth = Param.Unsigned(
         2,
@@ -363,7 +377,8 @@ class BaseMinorCPU(BaseCPU):
     )
 
     executeInputWidth = Param.Unsigned(
-        2, "Width (in instructions) of input to Execute"
+        2,
+        "Width (in instructions) of input to Execute",
     )
     executeCycleInput = Param.Bool(
         True,
@@ -371,19 +386,24 @@ class BaseMinorCPU(BaseCPU):
         " each cycle",
     )
     executeIssueLimit = Param.Unsigned(
-        2, "Number of issuable instructions in Execute each cycle"
+        2,
+        "Number of issuable instructions in Execute each cycle",
     )
     executeMemoryIssueLimit = Param.Unsigned(
-        1, "Number of issuable memory instructions in Execute each cycle"
+        1,
+        "Number of issuable memory instructions in Execute each cycle",
     )
     executeCommitLimit = Param.Unsigned(
-        2, "Number of committable instructions in Execute each cycle"
+        2,
+        "Number of committable instructions in Execute each cycle",
     )
     executeMemoryCommitLimit = Param.Unsigned(
-        1, "Number of committable memory references in Execute each cycle"
+        1,
+        "Number of committable memory references in Execute each cycle",
     )
     executeInputBufferSize = Param.Unsigned(
-        7, "Size of input buffer to Execute in cycles-worth of insts."
+        7,
+        "Size of input buffer to Execute in cycles-worth of insts.",
     )
     executeMemoryWidth = Param.Unsigned(
         0,
@@ -396,13 +416,16 @@ class BaseMinorCPU(BaseCPU):
         " from the dcache port",
     )
     executeLSQMaxStoreBufferStoresPerCycle = Param.Unsigned(
-        2, "Maximum number of stores that the store buffer can issue per cycle"
+        2,
+        "Maximum number of stores that the store buffer can issue per cycle",
     )
     executeLSQRequestsQueueSize = Param.Unsigned(
-        1, "Size of LSQ requests queue (address translation queue)"
+        1,
+        "Size of LSQ requests queue (address translation queue)",
     )
     executeLSQTransfersQueueSize = Param.Unsigned(
-        2, "Size of LSQ transfers queue (memory transaction queue)"
+        2,
+        "Size of LSQ transfers queue (memory transaction queue)",
     )
     executeLSQStoreBufferSize = Param.Unsigned(5, "Size of LSQ store buffer")
     executeBranchDelay = Param.Cycles(
@@ -412,14 +435,17 @@ class BaseMinorCPU(BaseCPU):
     )
 
     executeFuncUnits = Param.MinorFUPool(
-        MinorDefaultFUPool(), "FUlines for this processor"
+        MinorDefaultFUPool(),
+        "FUlines for this processor",
     )
 
     executeSetTraceTimeOnCommit = Param.Bool(
-        True, "Set inst. trace times to be commit times"
+        True,
+        "Set inst. trace times to be commit times",
     )
     executeSetTraceTimeOnIssue = Param.Bool(
-        False, "Set inst. trace times to be issue times"
+        False,
+        "Set inst. trace times to be issue times",
     )
 
     executeAllowEarlyMemoryIssue = Param.Bool(
@@ -429,11 +455,13 @@ class BaseMinorCPU(BaseCPU):
     )
 
     enableIdling = Param.Bool(
-        True, "Enable cycle skipping when the processor is idle\n"
+        True,
+        "Enable cycle skipping when the processor is idle\n",
     )
 
     branchPred = Param.BranchPredictor(
-        TournamentBP(numThreads=Parent.numThreads), "Branch Predictor"
+        TournamentBP(numThreads=Parent.numThreads),
+        "Branch Predictor",
     )
 
     def addCheckerCpu(self):

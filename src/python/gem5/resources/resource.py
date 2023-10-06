@@ -99,7 +99,7 @@ class AbstractResource:
         if local_path and not os.path.exists(local_path):
             raise Exception(
                 f"Local path specified for resource, '{local_path}', does not "
-                "exist."
+                "exist.",
             )
         self._id = id
         self._local_path = local_path
@@ -152,7 +152,7 @@ class FileResource(AbstractResource):
     ):
         if not os.path.isfile(local_path):
             raise Exception(
-                f"FileResource path specified, '{local_path}', is not a file."
+                f"FileResource path specified, '{local_path}', is not a file.",
             )
 
         super().__init__(
@@ -182,7 +182,7 @@ class DirectoryResource(AbstractResource):
         if not os.path.isdir(local_path):
             raise Exception(
                 f"DirectoryResource path specified, {local_path}, is not a "
-                "directory."
+                "directory.",
             )
 
         super().__init__(
@@ -536,7 +536,9 @@ class LooppointJsonResource(FileResource, LooppointJsonLoader):
             resource_version=resource_version,
         )
         LooppointJsonLoader.__init__(
-            self, looppoint_file=local_path, region_id=region_id
+            self,
+            looppoint_file=local_path,
+            region_id=region_id,
         )
 
     def get_category_name(cls) -> str:
@@ -610,7 +612,7 @@ class SimpointDirectoryResource(SimpointResource):
         """
         simpoint_weight_pair = []
         with open(self.get_simpoint_file()) as simpoint_file, open(
-            self.get_weight_file()
+            self.get_weight_file(),
         ) as weight_file:
             while True:
                 line = simpoint_file.readline()
@@ -871,7 +873,8 @@ def obtain_resource(
             # determine where the resource directory is, or should be, located.
             if resource_directory == None:
                 resource_directory = os.getenv(
-                    "GEM5_RESOURCE_DIR", _get_default_resource_dir()
+                    "GEM5_RESOURCE_DIR",
+                    _get_default_resource_dir(),
                 )
 
             # Small checks here to ensure the resource directory is valid.
@@ -880,8 +883,8 @@ def obtain_resource(
                     raise Exception(
                         "gem5 resource directory, "
                         "'{}', exists but is not a directory".format(
-                            resource_directory
-                        )
+                            resource_directory,
+                        ),
                     )
 
             # This is the path to which the resource is to be stored.
@@ -904,7 +907,7 @@ def obtain_resource(
                 f"Recursive creation of the directory "
                 f"'{Path(to_path).parent.absolute}' failed. \n"
                 f"Perhaps the path specified, '{to_path}', is incorrect?\n"
-                f"Failed with Exception:\n{e}"
+                f"Failed with Exception:\n{e}",
             )
 
         # Download the resource if it does not already exist.
@@ -1032,12 +1035,12 @@ class CustomResource(AbstractResource):
         """
         warn(
             "The `CustomResource` class is deprecated. Please use an "
-            "`AbstractResource` subclass instead."
+            "`AbstractResource` subclass instead.",
         )
         if bool(metadata):  # Empty dicts cast to False
             warn(
                 "the `metadata` parameter was set via the `CustomResource` "
-                "constructor. This parameter is not used."
+                "constructor. This parameter is not used.",
             )
         super().__init__(local_path=local_path)
 
@@ -1068,13 +1071,13 @@ class CustomDiskImageResource(DiskImageResource):
         """
         warn(
             "The `CustomDiskImageResource` class is deprecated. Please use "
-            "`DiskImageResource` instead."
+            "`DiskImageResource` instead.",
         )
         if bool(metadata):  # Empty dicts cast to False
             warn(
                 "the `metadata` parameter was set via the "
                 "`CustomDiskImageResource` constructor. This parameter is not "
-                "used."
+                "used.",
             )
         super().__init__(
             local_path=local_path,
@@ -1102,7 +1105,7 @@ def Resource(
 
     warn(
         "`Resource` has been deprecated. Please use the `obtain_resource` "
-        "function instead."
+        "function instead.",
     )
 
     return obtain_resource(

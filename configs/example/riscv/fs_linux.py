@@ -99,7 +99,7 @@ def generateMemNode(state, mem_range):
             "reg",
             state.addrCells(mem_range.start)
             + state.sizeCells(mem_range.size()),
-        )
+        ),
     )
     return node
 
@@ -146,7 +146,9 @@ parser.add_argument(
     "enabled kernels",
 )
 parser.add_argument(
-    "--virtio-rng", action="store_true", help="Enable VirtIORng device"
+    "--virtio-rng",
+    action="store_true",
+    help="Enable VirtIORng device",
 )
 
 # ---------------------------- Parse Options --------------------------- #
@@ -204,7 +206,10 @@ if args.disk_image:
 # VirtIORng
 if args.virtio_rng:
     system.platform.rng = RiscvMmioVirtIO(
-        vio=VirtIORng(), interrupt_id=0x8, pio_size=4096, pio_addr=0x10007000
+        vio=VirtIORng(),
+        interrupt_id=0x8,
+        pio_size=4096,
+        pio_addr=0x10007000,
     )
 
 system.bridge = Bridge(delay="50ns")
@@ -227,7 +232,8 @@ system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
 
 # Create a source clock for the system and set the clock period
 system.clk_domain = SrcClockDomain(
-    clock=args.sys_clock, voltage_domain=system.voltage_domain
+    clock=args.sys_clock,
+    voltage_domain=system.voltage_domain,
 )
 
 # Create a CPU voltage domain
@@ -235,7 +241,8 @@ system.cpu_voltage_domain = VoltageDomain()
 
 # Create a source clock for the CPUs and set the clock period
 system.cpu_clk_domain = SrcClockDomain(
-    clock=args.cpu_clock, voltage_domain=system.cpu_voltage_domain
+    clock=args.cpu_clock,
+    voltage_domain=system.cpu_voltage_domain,
 )
 
 # NOTE: Not yet tested
@@ -276,7 +283,7 @@ for i in range(np):
             system.cpu[i].branchPred = bpClass()
         if args.indirect_bp_type:
             IndirectBPClass = ObjectList.indirect_bp_list.get(
-                args.indirect_bp_type
+                args.indirect_bp_type,
             )
             system.cpu[i].branchPred.indirectBranchPred = IndirectBPClass()
     system.cpu[i].createThreads()
@@ -302,7 +309,8 @@ if not args.bare_metal:
     else:
         generateDtb(system)
         system.workload.dtb_filename = path.join(
-            m5.options.outdir, "device.dtb"
+            m5.options.outdir,
+            "device.dtb",
         )
 
     # Default DTB address if bbl is bulit with --with-dts option

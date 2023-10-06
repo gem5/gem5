@@ -96,7 +96,7 @@ class Benchmark(object):
             func = getattr(self.__class__, input_set)
         except AttributeError:
             raise AttributeError(
-                f"The benchmark {self.name} does not have the {input_set} input set"
+                f"The benchmark {self.name} does not have the {input_set} input set",
             )
 
         executable = joinpath(spec_dist, "binaries", isa, os, self.binary)

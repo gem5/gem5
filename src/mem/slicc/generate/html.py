@@ -34,7 +34,7 @@ def createSymbol(symbol, title):
 <HTML><BODY><BIG>
 $title: ${{formatShorthand(symbol.short)}} - ${{symbol.desc}}
 </BIG></BODY></HTML>
-"""
+""",
     )
     return code
 

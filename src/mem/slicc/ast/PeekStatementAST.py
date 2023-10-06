@@ -80,7 +80,7 @@ class PeekStatementAST(StatementAST):
         // different inport or punt.
         throw RejectException();
     }
-"""
+""",
         )
 
         if "block_on" in self.pairs:
@@ -93,7 +93,7 @@ class PeekStatementAST(StatementAST):
             $qcode.delayHead(clockEdge(), cyclesToTicks(Cycles(1)));
             continue;
     }
-            """
+            """,
             )
 
         if "wake_up" in self.pairs:
@@ -103,7 +103,7 @@ class PeekStatementAST(StatementAST):
     if (m_waiting_buffers.count(in_msg_ptr->m_$address_field) > 0) {
         wakeUpBuffers(in_msg_ptr->m_$address_field);
     }
-            """
+            """,
             )
 
         # The other statements

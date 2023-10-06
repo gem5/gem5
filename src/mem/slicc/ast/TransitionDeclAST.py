@@ -30,7 +30,13 @@ from slicc.symbols import Transition
 
 class TransitionDeclAST(DeclAST):
     def __init__(
-        self, slicc, request_types, states, events, next_state, actions
+        self,
+        slicc,
+        request_types,
+        states,
+        events,
+        next_state,
+        actions,
     ):
         super().__init__(slicc)
 
@@ -52,26 +58,26 @@ class TransitionDeclAST(DeclAST):
         for action in self.actions:
             if action not in machine.actions:
                 self.error(
-                    f"Invalid action: {action} is not part of machine: {machine}"
+                    f"Invalid action: {action} is not part of machine: {machine}",
                 )
 
         for request_type in self.request_types:
             if request_type not in machine.request_types:
                 self.error(
                     "Invalid protocol access type: "
-                    "%s is not part of machine: %s" % (request_type, machine)
+                    "%s is not part of machine: %s" % (request_type, machine),
                 )
 
         for state in self.states:
             if state not in machine.states:
                 self.error(
-                    f"Invalid state: {state} is not part of machine: {machine}"
+                    f"Invalid state: {state} is not part of machine: {machine}",
                 )
             next_state = self.next_state or state
             for event in self.events:
                 if event not in machine.events:
                     self.error(
-                        f"Invalid event: {event} is not part of machine: {machine}"
+                        f"Invalid event: {event} is not part of machine: {machine}",
                     )
                 t = Transition(
                     self.symtab,

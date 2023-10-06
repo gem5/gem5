@@ -243,7 +243,8 @@ class ComplexGeneratorCore(AbstractGeneratorCore):
         self._traffic_set = True
 
     def set_traffic_from_python_generator(
-        self, python_generator: Iterator[Any]
+        self,
+        python_generator: Iterator[Any],
     ) -> None:
         """
         Function to set the traffic from a user defined python generator.

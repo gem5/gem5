@@ -68,7 +68,7 @@ def EnvDefaults(env):
             "LANG",  # for work with non-ascii directory path
             "LC_CTYPE",  # for work with non-ascii directory path
             "DISPLAY",  # for gui program, ex kconfig guiconfig
-        ]
+        ],
     )
 
     use_prefixes = [
@@ -84,7 +84,7 @@ def EnvDefaults(env):
 
     for key, val in sorted(os.environ.items()):
         if key in use_vars or any(
-            [key.startswith(prefix) for prefix in use_prefixes]
+            [key.startswith(prefix) for prefix in use_prefixes],
         ):
             env["ENV"][key] = val
 

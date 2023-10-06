@@ -44,7 +44,8 @@ class ExprStatementAST(StatementAST):
 
         # The return type must be void, except for local var decls
         if not isinstance(
-            self.expr, LocalVariableAST
+            self.expr,
+            LocalVariableAST,
         ) and actual_type != self.symtab.find("void", Type):
             self.expr.warning(
                 "Non-void return ignored, " + "return type is '%s'",

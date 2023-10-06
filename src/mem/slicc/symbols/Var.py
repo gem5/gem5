@@ -29,7 +29,14 @@ from slicc.symbols.Symbol import Symbol
 
 class Var(Symbol):
     def __init__(
-        self, symtab, ident, location, type, code, pairs, machine=None
+        self,
+        symtab,
+        ident,
+        location,
+        type,
+        code,
+        pairs,
+        machine=None,
     ):
         super().__init__(symtab, ident, location, pairs)
 

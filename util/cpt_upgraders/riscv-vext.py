@@ -59,7 +59,7 @@ def upgrader(cpt):
             mr = cpt.get(sec, "miscRegFile").split()
             if len(mr) == 164:
                 print(
-                    "MISCREG_* RVV registers already seem " "to be inserted."
+                    "MISCREG_* RVV registers already seem " "to be inserted.",
                 )
             else:
                 # Add dummy value for MISCREG_VSTART

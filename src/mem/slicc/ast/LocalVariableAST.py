@@ -58,7 +58,12 @@ class LocalVariableAST(StatementAST):
 
         # Add to symbol table
         v = Var(
-            self.symtab, self.ident, self.location, type, ident, self.pairs
+            self.symtab,
+            self.ident,
+            self.location,
+            type,
+            ident,
+            self.pairs,
         )
         self.symtab.newSymbol(v)
         if (

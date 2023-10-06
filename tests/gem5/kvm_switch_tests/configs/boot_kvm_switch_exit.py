@@ -48,7 +48,7 @@ from m5.objects import Root
 
 parser = argparse.ArgumentParser(
     description="A script to test switching cpus. This test boots"
-    "the linux kernel with the KVM cpu, then switches cpus until exiting."
+    "the linux kernel with the KVM cpu, then switches cpus until exiting.",
 )
 parser.add_argument(
     "-m",
@@ -132,7 +132,7 @@ elif args.mem_system == "classic":
     cache_hierarchy = PrivateL1CacheHierarchy(l1d_size="16kB", l1i_size="16kB")
 else:
     raise NotImplementedError(
-        f"Memory system '{args.mem_system}' is not supported in the boot tests."
+        f"Memory system '{args.mem_system}' is not supported in the boot tests.",
     )
 
 assert cache_hierarchy != None
@@ -161,10 +161,12 @@ kernal_args = motherboard.get_default_kernel_args() + [args.kernel_args]
 # Set the Full System workload.
 motherboard.set_kernel_disk_workload(
     kernel=obtain_resource(
-        "x86-linux-kernel-5.4.49", resource_directory=args.resource_directory
+        "x86-linux-kernel-5.4.49",
+        resource_directory=args.resource_directory,
     ),
     disk_image=obtain_resource(
-        "x86-ubuntu-18.04-img", resource_directory=args.resource_directory
+        "x86-ubuntu-18.04-img",
+        resource_directory=args.resource_directory,
     ),
     # The first exit signals to switch processors.
     readfile_contents="m5 exit\nm5 exit\n",
@@ -183,7 +185,7 @@ simulator = Simulator(
     on_exit_event={
         # When we reach the first exit, we switch cores. For the second exit we
         # simply exit the simulation (default behavior).
-        ExitEvent.EXIT: (i() for i in [processor.switch])
+        ExitEvent.EXIT: (i() for i in [processor.switch]),
     },
     # This parameter allows us to state the expected order-of-execution.
     # That is, we expect two exit events. If anyother event is triggered, an
@@ -195,6 +197,7 @@ simulator.run()
 
 print(
     "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(), simulator.get_last_exit_event_cause()
-    )
+        simulator.get_current_tick(),
+        simulator.get_last_exit_event_cause(),
+    ),
 )

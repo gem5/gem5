@@ -155,7 +155,7 @@ def dot_create_cluster(simNode, full_path, label):
         if value != None:
             # parameter name = value in HTML friendly format
             ini_strings.append(
-                str(param) + "&#61;" + simNode._values[param].ini_str()
+                str(param) + "&#61;" + simNode._values[param].ini_str(),
             )
     # join all the parameters with an HTML newline
     # Pydot limit line length to 16384.
@@ -213,11 +213,13 @@ def get_node_type(simNode):
     # NULL ISA has no BaseCPU or PioDevice, so check if these names
     # exists before using them
     elif "BaseCPU" in dir(m5.objects) and isinstance(
-        simNode, m5.objects.BaseCPU
+        simNode,
+        m5.objects.BaseCPU,
     ):
         return NodeType.CPU
     elif "PioDevice" in dir(m5.objects) and isinstance(
-        simNode, m5.objects.PioDevice
+        simNode,
+        m5.objects.PioDevice,
     ):
         return NodeType.DEV
     elif isinstance(simNode, m5.objects.BaseXBar):
@@ -363,7 +365,7 @@ def do_dot(root, outdir, dotFilename):
     if not pydot:
         warn(
             "No dot file generated. "
-            + "Please install pydot to generate the dot file and pdf."
+            + "Please install pydot to generate the dot file and pdf.",
         )
         return
     # * use ranksep > 1.0 for for vertical separation between nodes
@@ -388,7 +390,7 @@ def do_dvfs_dot(root, outdir, dotFilename):
     if not pydot:
         warn(
             "No dot file generated. "
-            + "Please install pydot to generate the dot file and pdf."
+            + "Please install pydot to generate the dot file and pdf.",
         )
         return
 

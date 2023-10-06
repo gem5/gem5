@@ -144,7 +144,8 @@ class code_formatter(object, metaclass=code_formatter_meta):
         self.globals = kwargs.pop("globals", type(self).globals)
         self.locals = kwargs.pop("locals", type(self).locals)
         self._fix_newlines = kwargs.pop(
-            "fix_newlines", type(self).fix_newlines
+            "fix_newlines",
+            type(self).fix_newlines,
         )
 
         if args:
@@ -185,7 +186,7 @@ class code_formatter(object, metaclass=code_formatter_meta):
  *   {frame.f_code.co_filename}:{frame.f_lineno}
  */
 
-"""
+""",
             )
         elif re.match(r"^\.py$", extension) is not None:
             f.write(
@@ -195,7 +196,7 @@ class code_formatter(object, metaclass=code_formatter_meta):
 #   {frame.f_code.co_filename}:{frame.f_lineno}
 #
 
-"""
+""",
             )
         elif re.match(r"^\.html$", extension) is not None:
             f.write(
@@ -205,7 +206,7 @@ class code_formatter(object, metaclass=code_formatter_meta):
    {frame.f_code.co_filename}:{frame.f_lineno}
 -->
 
-"""
+""",
             )
 
         for data in self._data:
@@ -325,7 +326,7 @@ class code_formatter(object, metaclass=code_formatter_meta):
                 lineno = len(lines)
 
                 raise ValueError(
-                    "Invalid format string: line %d, col %d" % (lineno, colno)
+                    "Invalid format string: line %d, col %d" % (lineno, colno),
                 )
 
         d = code_formatter.pattern.sub(convert, format)
@@ -355,12 +356,12 @@ if __name__ == "__main__":
 {
     this_is_a_test();
 }
-"""
+""",
     )
     f("    $y")
     f(
         """$__file__:$__line__
-{"""
+{""",
     )
     f("${{', '.join(str(x) for x in range(4))}}")
     f("${x}")

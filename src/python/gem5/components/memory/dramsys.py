@@ -88,7 +88,7 @@ class DRAMSysMem(AbstractMemorySystem):
         if len(ranges) != 1 or ranges[0].size() != self._size:
             raise Exception(
                 "DRAMSys memory controller requires a single "
-                "range which matches the memory's size."
+                "range which matches the memory's size.",
             )
         self.dramsys.range = ranges[0]
         self.bridge.addr_ranges = ranges[0]

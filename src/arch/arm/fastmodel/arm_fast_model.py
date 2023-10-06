@@ -62,18 +62,19 @@ def check_armlmd_server(server, timeout):
         # Try to connect to license server. This doesn't attempt to
         # communicate with it, just checking reachability.
         s = socket.create_connection(
-            (tuple[1], int(tuple[0])), timeout=timeout
+            (tuple[1], int(tuple[0])),
+            timeout=timeout,
         )
         end = datetime.datetime.now()
         s.close()
         time = end - start
         logging.info(
-            f"License server {server} is reachable ({time.total_seconds()} seconds)."
+            f"License server {server} is reachable ({time.total_seconds()} seconds).",
         )
         return True
     except Exception as e:
         logging.debug(
-            f"Cannot connect to license server {server} ({type(e).__name__}: {e})."
+            f"Cannot connect to license server {server} ({type(e).__name__}: {e}).",
         )
         return False
 
@@ -103,11 +104,11 @@ def check_armlmd_license(timeout, tries):
                 return
         if try_count == tries:
             raise ConnectionError(
-                f"Cannot connect to any of the license servers ({', '.join(servers)})."
+                f"Cannot connect to any of the license servers ({', '.join(servers)}).",
             )
         # retry
         logging.warning(
-            "Cannot connect to any of the license servers, retrying..."
+            "Cannot connect to any of the license servers, retrying...",
         )
 
 
@@ -168,7 +169,10 @@ def scx_simlimit(t):
 
 def scx_parse_and_configure(self, argc, argv, trailer=None, sig_handler=True):
     _m5.arm_fast_model.scx_parse_and_configure(
-        argc, argv, trailer, sig_handler
+        argc,
+        argv,
+        trailer,
+        sig_handler,
     )
 
 

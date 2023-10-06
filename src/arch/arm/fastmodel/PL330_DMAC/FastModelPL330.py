@@ -88,7 +88,8 @@ class FastModelPL330(SystemC_ScModule):
     cache_lines = Param.UInt32(1, "number of cache lines")
     max_channels = Param.UInt32(8, "virtual channels")
     controller_nsecure = Param.Bool(
-        False, "Controller non-secure at reset (boot_manager_ns)"
+        False,
+        "Controller non-secure at reset (boot_manager_ns)",
     )
     irq_nsecure = Param.UInt32(0, "Interrupts non-secure at reset")
     periph_nsecure = Param.Bool(False, "Peripherals non-secure at reset")
@@ -96,100 +97,132 @@ class FastModelPL330(SystemC_ScModule):
     reset_pc = Param.UInt32(0x60000000, "DMA PC at reset")
     max_periph = Param.UInt32(32, "number of peripheral interfaces")
     perip_request_acceptance_0 = Param.UInt32(
-        2, "Peripheral 0 request acceptance"
+        2,
+        "Peripheral 0 request acceptance",
     )
     perip_request_acceptance_1 = Param.UInt32(
-        2, "Peripheral 1 request acceptance"
+        2,
+        "Peripheral 1 request acceptance",
     )
     perip_request_acceptance_2 = Param.UInt32(
-        2, "Peripheral 2 request acceptance"
+        2,
+        "Peripheral 2 request acceptance",
     )
     perip_request_acceptance_3 = Param.UInt32(
-        2, "Peripheral 3 request acceptance"
+        2,
+        "Peripheral 3 request acceptance",
     )
     perip_request_acceptance_4 = Param.UInt32(
-        2, "Peripheral 4 request acceptance"
+        2,
+        "Peripheral 4 request acceptance",
     )
     perip_request_acceptance_5 = Param.UInt32(
-        2, "Peripheral 5 request acceptance"
+        2,
+        "Peripheral 5 request acceptance",
     )
     perip_request_acceptance_6 = Param.UInt32(
-        2, "Peripheral 6 request acceptance"
+        2,
+        "Peripheral 6 request acceptance",
     )
     perip_request_acceptance_7 = Param.UInt32(
-        2, "Peripheral 7 request acceptance"
+        2,
+        "Peripheral 7 request acceptance",
     )
     perip_request_acceptance_8 = Param.UInt32(
-        2, "Peripheral 8 request acceptance"
+        2,
+        "Peripheral 8 request acceptance",
     )
     perip_request_acceptance_9 = Param.UInt32(
-        2, "Peripheral 9 request acceptance"
+        2,
+        "Peripheral 9 request acceptance",
     )
     perip_request_acceptance_10 = Param.UInt32(
-        2, "Peripheral 10 request acceptance"
+        2,
+        "Peripheral 10 request acceptance",
     )
     perip_request_acceptance_11 = Param.UInt32(
-        2, "Peripheral 11 request acceptance"
+        2,
+        "Peripheral 11 request acceptance",
     )
     perip_request_acceptance_12 = Param.UInt32(
-        2, "Peripheral 12 request acceptance"
+        2,
+        "Peripheral 12 request acceptance",
     )
     perip_request_acceptance_13 = Param.UInt32(
-        2, "Peripheral 13 request acceptance"
+        2,
+        "Peripheral 13 request acceptance",
     )
     perip_request_acceptance_14 = Param.UInt32(
-        2, "Peripheral 14 request acceptance"
+        2,
+        "Peripheral 14 request acceptance",
     )
     perip_request_acceptance_15 = Param.UInt32(
-        2, "Peripheral 15 request acceptance"
+        2,
+        "Peripheral 15 request acceptance",
     )
     perip_request_acceptance_16 = Param.UInt32(
-        2, "Peripheral 16 request acceptance"
+        2,
+        "Peripheral 16 request acceptance",
     )
     perip_request_acceptance_17 = Param.UInt32(
-        2, "Peripheral 17 request acceptance"
+        2,
+        "Peripheral 17 request acceptance",
     )
     perip_request_acceptance_18 = Param.UInt32(
-        2, "Peripheral 18 request acceptance"
+        2,
+        "Peripheral 18 request acceptance",
     )
     perip_request_acceptance_19 = Param.UInt32(
-        2, "Peripheral 19 request acceptance"
+        2,
+        "Peripheral 19 request acceptance",
     )
     perip_request_acceptance_20 = Param.UInt32(
-        2, "Peripheral 20 request acceptance"
+        2,
+        "Peripheral 20 request acceptance",
     )
     perip_request_acceptance_21 = Param.UInt32(
-        2, "Peripheral 21 request acceptance"
+        2,
+        "Peripheral 21 request acceptance",
     )
     perip_request_acceptance_22 = Param.UInt32(
-        2, "Peripheral 22 request acceptance"
+        2,
+        "Peripheral 22 request acceptance",
     )
     perip_request_acceptance_23 = Param.UInt32(
-        2, "Peripheral 23 request acceptance"
+        2,
+        "Peripheral 23 request acceptance",
     )
     perip_request_acceptance_24 = Param.UInt32(
-        2, "Peripheral 24 request acceptance"
+        2,
+        "Peripheral 24 request acceptance",
     )
     perip_request_acceptance_25 = Param.UInt32(
-        2, "Peripheral 25 request acceptance"
+        2,
+        "Peripheral 25 request acceptance",
     )
     perip_request_acceptance_26 = Param.UInt32(
-        2, "Peripheral 26 request acceptance"
+        2,
+        "Peripheral 26 request acceptance",
     )
     perip_request_acceptance_27 = Param.UInt32(
-        2, "Peripheral 27 request acceptance"
+        2,
+        "Peripheral 27 request acceptance",
     )
     perip_request_acceptance_28 = Param.UInt32(
-        2, "Peripheral 28 request acceptance"
+        2,
+        "Peripheral 28 request acceptance",
     )
     perip_request_acceptance_29 = Param.UInt32(
-        2, "Peripheral 29 request acceptance"
+        2,
+        "Peripheral 29 request acceptance",
     )
     perip_request_acceptance_30 = Param.UInt32(
-        2, "Peripheral 30 request acceptance"
+        2,
+        "Peripheral 30 request acceptance",
     )
     perip_request_acceptance_31 = Param.UInt32(
-        2, "Peripheral 31 request acceptance"
+        2,
+        "Peripheral 31 request acceptance",
     )
 
     # Singleton IRQ abort signal port

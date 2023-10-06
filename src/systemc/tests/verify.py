@@ -177,7 +177,7 @@ class RunPhase(TestPhaseBase):
                     "--listener-mode=off",
                     "--quiet",
                     os.path.abspath(config_path),
-                ]
+                ],
             )
             # Ensure the output directory exists.
             if not os.path.exists(test.m5out_dir()):
@@ -242,7 +242,10 @@ class DiffingChecker(Checker):
 
     def do_diff(self, ref_lines, test_lines, ref_file, test_file):
         return difflib.unified_diff(
-            ref_lines, test_lines, fromfile=ref_file, tofile=test_file
+            ref_lines,
+            test_lines,
+            fromfile=ref_file,
+            tofile=test_file,
         )
 
     def diffing_check(self, ref_lines, test_lines):
@@ -255,7 +258,10 @@ class DiffingChecker(Checker):
             flag = "wb" if self.is_bytes_mode() else "w"
             with open(diff_file, flag) as diff_f:
                 for line in self.do_diff(
-                    ref_lines, test_lines, ref_file, test_file
+                    ref_lines,
+                    test_lines,
+                    ref_file,
+                    test_file,
                 ):
                     diff_f.write(line)
             return False
@@ -320,7 +326,8 @@ class LogChecker(DiffingChecker):
             test = re.sub(self.test_filt, b"", test_f.read())
             ref = re.sub(self.ref_filt, b"", ref_f.read())
             return self.diffing_check(
-                ref.splitlines(True), test.splitlines(True)
+                ref.splitlines(True),
+                test.splitlines(True),
             )
 
 
@@ -512,7 +519,7 @@ class VerifyPhase(TestPhaseBase):
                 missing.append("log output")
             elif log_path:
                 diffs.append(
-                    LogChecker(log_path, simout_path, log_file, out_dir)
+                    LogChecker(log_path, simout_path, log_file, out_dir),
                 )
 
             for name in gd.unused():
@@ -522,7 +529,7 @@ class VerifyPhase(TestPhaseBase):
                     missing.append(name)
                 elif name.endswith(".vcd"):
                     diffs.append(
-                        VcdChecker(ref_path, test_path, name, out_dir)
+                        VcdChecker(ref_path, test_path, name, out_dir),
                     )
                 else:
                     diffs.append(Checker(ref_path, test_path, name))
@@ -576,7 +583,9 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--list", action="store_true", help="List the available tests"
+    "--list",
+    action="store_true",
+    help="List the available tests",
 )
 
 parser.add_argument(
@@ -673,7 +682,7 @@ with open(json_path) as f:
             [
                 Test(target, main_args.flavor, main_args.build_dir, props)
                 for target, props in sorted(filtered_tests.items())
-            ]
+            ],
         )
 
         for phase in phases:

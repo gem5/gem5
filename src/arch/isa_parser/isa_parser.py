@@ -99,7 +99,7 @@ class Template(object):
                 [
                     (s, self.parser.mungeSnippet(d.snippets[s]))
                     for s in snippetLabels
-                ]
+                ],
             )
 
             myDict.update(snippets)
@@ -143,10 +143,12 @@ class Template(object):
             is_dest = lambda op: op.is_dest
 
             myDict["op_src_decl"] = operands.concatSomeAttrStrings(
-                is_src, "op_src_decl"
+                is_src,
+                "op_src_decl",
             )
             myDict["op_dest_decl"] = operands.concatSomeAttrStrings(
-                is_dest, "op_dest_decl"
+                is_dest,
+                "op_dest_decl",
             )
             if operands.readPC:
                 myDict["op_src_decl"] += pcstate_decl
@@ -248,7 +250,8 @@ class NoFormat(object):
 
     def defineInst(self, parser, name, args, lineno):
         error(
-            lineno, f'instruction definition "{name}" with no active format!'
+            lineno,
+            f'instruction definition "{name}" with no active format!',
         )
 
 
@@ -415,7 +418,13 @@ opClassRE = re.compile(r".*Op|No_OpClass")
 
 class InstObjParams(object):
     def __init__(
-        self, parser, mnem, class_name, base_class="", snippets={}, opt_args=[]
+        self,
+        parser,
+        mnem,
+        class_name,
+        base_class="",
+        snippets={},
+        opt_args=[],
     ):
         self.mnemonic = mnem
         self.class_name = class_name
@@ -435,7 +444,7 @@ class InstObjParams(object):
         header = ""
 
         self.constructor = header + self.operands.concatAttrStrings(
-            "constructor"
+            "constructor",
         )
 
         self.flags = self.operands.concatAttrLists("flags")
@@ -454,7 +463,7 @@ class InstObjParams(object):
             else:
                 error(
                     'InstObjParams: optional arg "%s" not recognized '
-                    "as StaticInst::Flag or OpClass." % oa
+                    "as StaticInst::Flag or OpClass." % oa,
                 )
 
         # Make a basic guess on the operand class if not set.
@@ -573,7 +582,7 @@ class ISAParser(Grammar):
                 "ControlRegOp": ControlRegOperandDesc,
                 "MemOp": MemOperandDesc,
                 "PCStateOp": PCStateOperandDesc,
-            }
+            },
         )
 
         self.maxMiscDestRegs = 0
@@ -651,7 +660,7 @@ class ISAParser(Grammar):
             f.write(
                 "#ifndef __ARCH_%(isa)s_GENERATED_DECODER_HH__\n"
                 "#define __ARCH_%(isa)s_GENERATED_DECODER_HH__\n\n"
-                % {"isa": self.isa_name.upper()}
+                % {"isa": self.isa_name.upper()},
             )
             fn = "decoder-g.hh.inc"
             assert fn in self.files
@@ -662,11 +671,11 @@ class ISAParser(Grammar):
             f.write("namespace gem5\n{\n")
             f.write(
                 'namespace %s {\n#include "%s"\n} // namespace %s\n'
-                % (self.namespace, fn, self.namespace)
+                % (self.namespace, fn, self.namespace),
             )
             f.write("} // namespace gem5")
             f.write(
-                f"\n#endif  // __ARCH_{self.isa_name.upper()}_GENERATED_DECODER_HH__\n"
+                f"\n#endif  // __ARCH_{self.isa_name.upper()}_GENERATED_DECODER_HH__\n",
             )
 
         # decoder method - cannot be split
@@ -807,7 +816,7 @@ class ISAParser(Grammar):
         "DBLCOLON",
         "ASTERISK",
         # C preprocessor directives
-        "CPPDIRECTIVE"
+        "CPPDIRECTIVE",
         # The following are matched but never returned. commented out to
         # suppress PLY warning
         # newfile directive
@@ -1124,7 +1133,8 @@ del wrap
         "def_bitfield_struct : DEF opt_signed BITFIELD ID id_with_dot SEMI"
         if t[2] != "":
             error(
-                t.lineno(1), "error: structure bitfields are always unsigned."
+                t.lineno(1),
+                "error: structure bitfields are always unsigned.",
             )
         expr = f"machInst.{t[5]}"
         hash_define = f"#undef {t[4]}\n#define {t[4]}\t{expr}\n"
@@ -1341,7 +1351,8 @@ StaticInstPtr
         # just wrap the decoding code from the block as a case in the
         # outer switch statement.
         codeObj.wrap_decode_block(
-            f"\n{''.join(case_list)}\n", "GEM5_UNREACHABLE;\n"
+            f"\n{''.join(case_list)}\n",
+            "GEM5_UNREACHABLE;\n",
         )
         codeObj.has_decode_default = case_list == ["default:"]
         t[0] = codeObj
@@ -1572,7 +1583,8 @@ StaticInstPtr
         )
 
         self._operandsRE = re.compile(
-            operandsREString, re.MULTILINE | re.VERBOSE
+            operandsREString,
+            re.MULTILINE | re.VERBOSE,
         )
 
         # Same as operandsREString, but extension is mandatory, and only two
@@ -1584,7 +1596,8 @@ StaticInstPtr
         )
 
         self._operandsWithExtRE = re.compile(
-            operandsWithExtREString, re.MULTILINE
+            operandsWithExtREString,
+            re.MULTILINE,
         )
 
     def substMungedOpNames(self, code):
@@ -1618,7 +1631,8 @@ StaticInstPtr
 
     # This regular expression matches '##include' directives
     includeRE = re.compile(
-        r'^\s*##include\s+"(?P<filename>[^"]*)".*$', re.MULTILINE
+        r'^\s*##include\s+"(?P<filename>[^"]*)".*$',
+        re.MULTILINE,
     )
 
     def replace_include(self, matchobj, dirname):

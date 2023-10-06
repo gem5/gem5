@@ -47,7 +47,10 @@ parser = argparse.ArgumentParser()
 Options.addNoISAOptions(parser)
 
 parser.add_argument(
-    "--requests", metavar="N", default=100, help="Stop after N requests"
+    "--requests",
+    metavar="N",
+    default=100,
+    help="Stop after N requests",
 )
 parser.add_argument(
     "-f",
@@ -80,15 +83,18 @@ args = parser.parse_args()
 #
 if args.test_type == "SeriesGetx":
     generator = SeriesRequestGenerator(
-        num_cpus=args.num_cpus, percent_writes=100
+        num_cpus=args.num_cpus,
+        percent_writes=100,
     )
 elif args.test_type == "SeriesGets":
     generator = SeriesRequestGenerator(
-        num_cpus=args.num_cpus, percent_writes=0
+        num_cpus=args.num_cpus,
+        percent_writes=0,
     )
 elif args.test_type == "SeriesGetMixed":
     generator = SeriesRequestGenerator(
-        num_cpus=args.num_cpus, percent_writes=args.percent_writes
+        num_cpus=args.num_cpus,
+        percent_writes=args.percent_writes,
     )
 elif args.test_type == "Invalidate":
     generator = InvalidateGenerator(num_cpus=args.num_cpus)
@@ -104,12 +110,14 @@ system = System(mem_ranges=[AddrRange(args.mem_size)])
 system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
 
 system.clk_domain = SrcClockDomain(
-    clock=args.sys_clock, voltage_domain=system.voltage_domain
+    clock=args.sys_clock,
+    voltage_domain=system.voltage_domain,
 )
 
 # Create the ruby random tester
 system.cpu = RubyDirectedTester(
-    requests_to_complete=args.requests, generator=generator
+    requests_to_complete=args.requests,
+    generator=generator,
 )
 
 # the ruby tester reuses num_cpus to specify the
@@ -122,7 +130,8 @@ Ruby.create_system(args, False, system, cpus=cpu_list)
 
 # Since Ruby runs at an independent frequency, create a seperate clock
 system.ruby.clk_domain = SrcClockDomain(
-    clock=args.ruby_clock, voltage_domain=system.voltage_domain
+    clock=args.ruby_clock,
+    voltage_domain=system.voltage_domain,
 )
 
 assert args.num_cpus == len(system.ruby._cpu_ports)

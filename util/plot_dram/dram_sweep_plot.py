@@ -63,7 +63,7 @@ def main():
     ):
         print(
             "Choose -u (utilisation), -p (total power), or -e "
-            "(power efficiency)"
+            "(power efficiency)",
         )
         exit(-1)
 
@@ -102,7 +102,7 @@ def main():
 
     if not got_sweep:
         print(
-            "Failed to establish sweep details, ensure simout.txt is up-to-date"
+            "Failed to establish sweep details, ensure simout.txt is up-to-date",
         )
         exit(-1)
 
@@ -128,7 +128,7 @@ def main():
     # Sanity check
     if not (len(peak_bw) == len(bus_util) and len(bus_util) == len(avg_pwr)):
         print(
-            "Peak bandwidth, bus utilisation, and average power do not match"
+            "Peak bandwidth, bus utilisation, and average power do not match",
         )
         exit(-1)
 

@@ -51,10 +51,12 @@ class X86ISA(BaseISA):
     # https://gem5.atlassian.net/browse/GEM5-1300) we opted to use
     # "HygonGenuine" instead.
     vendor_string = Param.String(
-        "HygonGenuine", "Vendor string for CPUID instruction"
+        "HygonGenuine",
+        "Vendor string for CPUID instruction",
     )
     name_string = Param.String(
-        "Fake gem5 x86_64 CPU", "Processor name for CPUID instruction"
+        "Fake gem5 x86_64 CPU",
+        "Processor name for CPUID instruction",
     )
 
     # For the functions that return numerical values we use a vector of ints.
@@ -82,7 +84,8 @@ class X86ISA(BaseISA):
     )
     # 0000_0007h
     ExtendedFeatures = VectorParam.UInt32(
-        [0x00000000, 0x01800000, 0x00000000, 0x00000000], "feature flags"
+        [0x00000000, 0x01800000, 0x00000000, 0x00000000],
+        "feature flags",
     )
     # 0000_000Dh - This uses ECX index, so the last entry must be all zeros
     ExtendedState = VectorParam.UInt32(

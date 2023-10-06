@@ -55,7 +55,10 @@ class MemoryController(Memory_Controller):
         return cls._version - 1
 
     def __init__(
-        self, network: RubyNetwork, ranges: List[AddrRange], port: Port
+        self,
+        network: RubyNetwork,
+        ranges: List[AddrRange],
+        port: Port,
     ):
         super().__init__()
 

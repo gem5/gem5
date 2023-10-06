@@ -56,7 +56,7 @@ def _gem5_args_for_multiprocessing(name):
     if any(disallowed):
         raise Exception(
             f"Disallowed option for multiprocessing. "
-            f"See {__file__} for details."
+            f"See {__file__} for details.",
         )
 
     # Options not forwarded:

@@ -51,13 +51,19 @@ class PioDevice(ClockedObject):
     system = Param.System(Parent.any, "System this device is part of")
 
     def generateBasicPioDeviceNode(
-        self, state, name, pio_addr, size, interrupts=None
+        self,
+        state,
+        name,
+        pio_addr,
+        size,
+        interrupts=None,
     ):
         node = FdtNode(f"{name}@{int(pio_addr):x}")
         node.append(
             FdtPropertyWords(
-                "reg", state.addrCells(pio_addr) + state.sizeCells(size)
-            )
+                "reg",
+                state.addrCells(pio_addr) + state.sizeCells(size),
+            ),
         )
 
         if interrupts:
@@ -73,7 +79,7 @@ class PioDevice(ClockedObject):
                 FdtPropertyWords(
                     "interrupts",
                     sum([i.generateFdtProperty(gic) for i in interrupts], []),
-                )
+                ),
             )
 
         return node
@@ -121,8 +127,9 @@ class DmaDevice(PioDevice):
         if self._iommu is not None:
             node.append(
                 FdtPropertyWords(
-                    "iommus", [state.phandle(self._iommu), self.sid]
-                )
+                    "iommus",
+                    [state.phandle(self._iommu), self.sid],
+                ),
             )
 
 
@@ -145,7 +152,8 @@ class IsaFake(BasicPioDevice):
     ret_data64 = Param.UInt64(0xFFFFFFFFFFFFFFFF, "Default data to return")
     ret_bad_addr = Param.Bool(False, "Return pkt status bad address on access")
     update_data = Param.Bool(
-        False, "Update the data that is returned on writes"
+        False,
+        "Update the data that is returned on writes",
     )
     warn_access = Param.String("", "String to print when device is accessed")
     fake_mem = Param.Bool(

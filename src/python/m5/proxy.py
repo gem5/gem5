@@ -61,7 +61,7 @@ class BaseProxy(object):
     def __setattr__(self, attr, value):
         if not attr.startswith("_"):
             raise AttributeError(
-                f"cannot set attribute '{attr}' on proxy object"
+                f"cannot set attribute '{attr}' on proxy object",
             )
         super().__setattr__(attr, value)
 
@@ -69,7 +69,7 @@ class BaseProxy(object):
         def op(self, operand):
             if not (isinstance(operand, (int, float)) or isproxy(operand)):
                 raise TypeError(
-                    "Proxy operand must be a constant or a proxy to a param"
+                    "Proxy operand must be a constant or a proxy to a param",
                 )
             self._ops.append((operation, operand))
             return self
@@ -86,10 +86,10 @@ class BaseProxy(object):
 
     # Support for dividing constants by proxies
     __rtruediv__ = _gen_op(
-        lambda operand_a, operand_b: operand_b / operand_a.getValue()
+        lambda operand_a, operand_b: operand_b / operand_a.getValue(),
     )
     __rfloordiv__ = _gen_op(
-        lambda operand_a, operand_b: operand_b // operand_a.getValue()
+        lambda operand_a, operand_b: operand_b // operand_a.getValue(),
     )
 
     # After all the operators and operands have been defined, this function
@@ -135,7 +135,7 @@ class BaseProxy(object):
         if not done:
             raise AttributeError(
                 "Can't resolve proxy '%s' of type '%s' from '%s'"
-                % (self.path(), self._pdesc.ptype_str, base.path())
+                % (self.path(), self._pdesc.ptype_str, base.path()),
             )
 
         if isinstance(result, BaseProxy):
@@ -178,7 +178,7 @@ class AttrProxy(BaseProxy):
             return super().__getattr__(self, attr)
         if hasattr(self, "_pdesc"):
             raise AttributeError(
-                "Attribute reference on bound proxy " f"({self}.{attr})"
+                "Attribute reference on bound proxy " f"({self}.{attr})",
             )
         # Return a copy of self rather than modifying self in place
         # since self could be an indirect reference via a variable or

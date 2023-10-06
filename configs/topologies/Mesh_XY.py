@@ -93,7 +93,7 @@ class Mesh_XY(SimpleTopology):
                     ext_node=n,
                     int_node=routers[router_id],
                     latency=link_latency,
-                )
+                ),
             )
             link_count += 1
 
@@ -108,7 +108,7 @@ class Mesh_XY(SimpleTopology):
                     ext_node=node,
                     int_node=routers[0],
                     latency=link_latency,
-                )
+                ),
             )
             link_count += 1
 
@@ -132,7 +132,7 @@ class Mesh_XY(SimpleTopology):
                             dst_inport="West",
                             latency=link_latency,
                             weight=1,
-                        )
+                        ),
                     )
                     link_count += 1
 
@@ -151,7 +151,7 @@ class Mesh_XY(SimpleTopology):
                             dst_inport="East",
                             latency=link_latency,
                             weight=1,
-                        )
+                        ),
                     )
                     link_count += 1
 
@@ -170,7 +170,7 @@ class Mesh_XY(SimpleTopology):
                             dst_inport="South",
                             latency=link_latency,
                             weight=2,
-                        )
+                        ),
                     )
                     link_count += 1
 
@@ -189,7 +189,7 @@ class Mesh_XY(SimpleTopology):
                             dst_inport="North",
                             latency=link_latency,
                             weight=2,
-                        )
+                        ),
                     )
                     link_count += 1
 
@@ -199,5 +199,7 @@ class Mesh_XY(SimpleTopology):
     def registerTopology(self, options):
         for i in range(options.num_cpus):
             FileSystemConfig.register_node(
-                [i], MemorySize(options.mem_size) // options.num_cpus, i
+                [i],
+                MemorySize(options.mem_size) // options.num_cpus,
+                i,
             )

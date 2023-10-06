@@ -66,7 +66,8 @@ class SerializableStat:
         return model_dct
 
     def __process_json_value(
-        self, value: Any
+        self,
+        value: Any,
     ) -> Union[str, int, float, Dict, List, None]:
         """
         Translate values into a value which can be handled by the Python stdlib

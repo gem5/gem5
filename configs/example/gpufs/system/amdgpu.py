@@ -32,7 +32,9 @@ from m5.objects import *
 
 def createGPU(system, args):
     shader = Shader(
-        n_wf=args.wfs_per_simd, timing=True, clk_domain=system.clk_domain
+        n_wf=args.wfs_per_simd,
+        timing=True,
+        clk_domain=system.clk_domain,
     )
 
     # VIPER GPU protocol implements release consistency at GPU side. So,
@@ -76,7 +78,7 @@ def createGPU(system, args):
                     bankConflictPenalty=args.ldsBankConflictPenalty,
                     size=args.lds_size,
                 ),
-            )
+            ),
         )
 
         wavefronts = []
@@ -87,7 +89,7 @@ def createGPU(system, args):
         for j in range(args.simds_per_cu):
             for k in range(shader.n_wf):
                 wavefronts.append(
-                    Wavefront(simdId=j, wf_slot_id=k, wf_size=args.wf_size)
+                    Wavefront(simdId=j, wf_slot_id=k, wf_size=args.wf_size),
                 )
 
             if args.reg_alloc_policy == "simple":
@@ -95,26 +97,26 @@ def createGPU(system, args):
                     SimplePoolManager(
                         pool_size=args.vreg_file_size,
                         min_alloc=args.vreg_min_alloc,
-                    )
+                    ),
                 )
                 srf_pool_mgrs.append(
                     SimplePoolManager(
                         pool_size=args.sreg_file_size,
                         min_alloc=args.vreg_min_alloc,
-                    )
+                    ),
                 )
             elif args.reg_alloc_policy == "dynamic":
                 vrf_pool_mgrs.append(
                     DynPoolManager(
                         pool_size=args.vreg_file_size,
                         min_alloc=args.vreg_min_alloc,
-                    )
+                    ),
                 )
                 srf_pool_mgrs.append(
                     DynPoolManager(
                         pool_size=args.sreg_file_size,
                         min_alloc=args.vreg_min_alloc,
-                    )
+                    ),
                 )
 
             vrfs.append(
@@ -122,7 +124,7 @@ def createGPU(system, args):
                     simd_id=j,
                     wf_size=args.wf_size,
                     num_regs=args.vreg_file_size,
-                )
+                ),
             )
 
             srfs.append(
@@ -130,7 +132,7 @@ def createGPU(system, args):
                     simd_id=j,
                     wf_size=args.wf_size,
                     num_regs=args.sreg_file_size,
-                )
+                ),
             )
 
         compute_units[-1].wavefronts = wavefronts

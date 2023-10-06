@@ -47,5 +47,5 @@ class StallAndWaitStatementAST(StatementAST):
             """
         stallBuffer(&($in_port_code), $address_code);
         $in_port_code.stallMessage($address_code, clockEdge());
-        """
+        """,
         )

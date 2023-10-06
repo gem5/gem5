@@ -42,7 +42,8 @@ class X86GPUTLB(ClockedObject):
 
     if buildEnv.get("FULL_SYSTEM", False):
         walker = Param.X86PagetableWalker(
-            X86PagetableWalker(), "page table walker"
+            X86PagetableWalker(),
+            "page table walker",
         )
 
     hitLatency = Param.Int(2, "Latency of a TLB hit")
@@ -51,11 +52,13 @@ class X86GPUTLB(ClockedObject):
     maxOutstandingReqs = Param.Int(64, "# of maximum outstanding requests")
     cpu_side_ports = VectorResponsePort("Ports on side closer to CPU/CU")
     slave = DeprecatedParam(
-        cpu_side_ports, "`slave` is now called `cpu_side_ports`"
+        cpu_side_ports,
+        "`slave` is now called `cpu_side_ports`",
     )
     mem_side_ports = VectorRequestPort("Ports on side closer to memory")
     master = DeprecatedParam(
-        mem_side_ports, "`master` is now called `mem_side_ports`"
+        mem_side_ports,
+        "`master` is now called `mem_side_ports`",
     )
     allocationPolicy = Param.Bool(True, "Allocate on an access")
     accessDistance = Param.Bool(False, "print accessDistance stats")
@@ -70,10 +73,12 @@ class TLBCoalescer(ClockedObject):
     coalescingWindow = Param.Int(1, "Permit coalescing across that many ticks")
     cpu_side_ports = VectorResponsePort("Port on side closer to CPU/CU")
     slave = DeprecatedParam(
-        cpu_side_ports, "`slave` is now called `cpu_side_ports`"
+        cpu_side_ports,
+        "`slave` is now called `cpu_side_ports`",
     )
     mem_side_ports = VectorRequestPort("Port on side closer to memory")
     master = DeprecatedParam(
-        mem_side_ports, "`master` is now called `mem_side_ports`"
+        mem_side_ports,
+        "`master` is now called `mem_side_ports`",
     )
     disableCoalescing = Param.Bool(False, "Dispable Coalescing")

@@ -36,7 +36,7 @@ from gem5.runtime import get_supported_isas
 
 parser = argparse.ArgumentParser(
     description="A simple script used to check the output of "
-    "`gem5.runtime.get_supported_isas`"
+    "`gem5.runtime.get_supported_isas`",
 )
 
 parser.add_argument(

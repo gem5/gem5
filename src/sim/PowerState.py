@@ -66,7 +66,8 @@ class PowerState(SimObject):
     # Possible power states this object can be in sorted from the most
     # to the least performant
     possible_states = VectorParam.PwrState(
-        [], "Power states this object can be in"
+        [],
+        "Power states this object can be in",
     )
 
     clk_gate_min = Param.Latency("1ns", "Min value of the distribution")
@@ -76,5 +77,6 @@ class PowerState(SimObject):
     # The objects which drive the power state of this object. If the list is
     # empty, the object determines its power state independently.
     leaders = VectorParam.PowerState(
-        [], "Objects which drive the power state of this object"
+        [],
+        "Objects which drive the power state of this object",
     )

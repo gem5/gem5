@@ -121,7 +121,9 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
                     desc=f"Downloading {download_to}",
                 ) as t:
                     urllib.request.urlretrieve(
-                        url, download_to, reporthook=progress_hook(t)
+                        url,
+                        download_to,
+                        reporthook=progress_hook(t),
                     )
             return
         except HTTPError as e:
@@ -135,7 +137,7 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
                     raise Exception(
                         f"After {attempt} attempts, the resource json could "
                         "not be retrieved. HTTP Status Code retrieved: "
-                        f"{e.code}"
+                        f"{e.code}",
                     )
                 time.sleep((2**attempt) + random.uniform(0, 1))
             else:
@@ -151,7 +153,7 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
                     raise Exception(
                         f"After {attempt} attempts, the resource json could "
                         "not be retrieved. OS Error Code retrieved: "
-                        f"{e.errno}"
+                        f"{e.errno}",
                     )
                 time.sleep((2**attempt) + random.uniform(0, 1))
             else:
@@ -161,7 +163,7 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
                 f"ValueError: {e}\n"
                 "Environment variable GEM5_USE_PROXY is set to "
                 f"'{use_proxy}'. The expected form is "
-                "<host>:<port>'."
+                "<host>:<port>'.",
             )
         except ImportError as e:
             raise Exception(
@@ -169,12 +171,13 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
                 "An import error has occurred. This is likely due "
                 "the Python SOCKS client module not being "
                 "installed. It can be installed with "
-                "`pip install PySocks`."
+                "`pip install PySocks`.",
             )
 
 
 def list_resources(
-    clients: Optional[List] = None, gem5_version: Optional[str] = None
+    clients: Optional[List] = None,
+    gem5_version: Optional[str] = None,
 ) -> Dict[str, List[str]]:
     """
     Lists all available resources. Returns a dictionary where the key is the
@@ -276,7 +279,7 @@ def get_resource(
             else:
                 raise Exception(
                     "There already a file present at '{}' but "
-                    "its md5 value is invalid.".format(to_path)
+                    "its md5 value is invalid.".format(to_path),
                 )
 
         download_dest = to_path
@@ -297,8 +300,8 @@ def get_resource(
                 raise Exception(
                     "The resource.json entry for '{}' has a value for the "
                     "'is_zipped' field which is neither a string or a boolean.".format(
-                        resource_name
-                    )
+                        resource_name,
+                    ),
                 )
 
         run_tar_extract = (
@@ -319,14 +322,14 @@ def get_resource(
         if file_uri_path:
             if not file_uri_path.exists():
                 raise Exception(
-                    f"Could not find file at path '{file_uri_path}'"
+                    f"Could not find file at path '{file_uri_path}'",
                 )
             print(
                 "Resource '{}' is being copied from '{}' to '{}'...".format(
                     resource_name,
                     urlparse(resource_json["url"]).path,
                     download_dest,
-                )
+                ),
             )
             shutil.copy(file_uri_path, download_dest)
         else:
@@ -334,7 +337,7 @@ def get_resource(
             if not quiet:
                 print(
                     f"Resource '{resource_name}' was not found locally. "
-                    f"Downloading to '{download_dest}'..."
+                    f"Downloading to '{download_dest}'...",
                 )
 
             # Get the URL.
@@ -348,7 +351,7 @@ def get_resource(
             if not quiet:
                 print(
                     f"Decompressing resource '{resource_name}' "
-                    f"('{download_dest}')..."
+                    f"('{download_dest}')...",
                 )
             unzip_to = download_dest[: -len(zip_extension)]
             with gzip.open(download_dest, "rb") as f:
@@ -363,7 +366,7 @@ def get_resource(
             if not quiet:
                 print(
                     f"Unpacking the the resource '{resource_name}' "
-                    f"('{download_dest}')"
+                    f"('{download_dest}')",
                 )
             unpack_to = download_dest[: -len(tar_extension)]
             with tarfile.open(download_dest) as f:
@@ -377,13 +380,17 @@ def get_resource(
                     return prefix == abs_directory
 
                 def safe_extract(
-                    tar, path=".", members=None, *, numeric_owner=False
+                    tar,
+                    path=".",
+                    members=None,
+                    *,
+                    numeric_owner=False,
                 ):
                     for member in tar.getmembers():
                         member_path = os.path.join(path, member.name)
                         if not is_within_directory(path, member_path):
                             raise Exception(
-                                "Attempted Path Traversal in Tar File"
+                                "Attempted Path Traversal in Tar File",
                             )
 
                     tar.extractall(path, members, numeric_owner=numeric_owner)
@@ -411,6 +418,6 @@ def _file_uri_to_path(uri: str) -> Optional[Path]:
             return Path(local_path)
         raise Exception(
             f"File URI '{uri}' specifies host '{urlparse(uri).netloc}'. "
-            "Only localhost is permitted."
+            "Only localhost is permitted.",
         )
     return None

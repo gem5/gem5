@@ -42,10 +42,16 @@ parser.add_argument("-d", "--detailed", action="store_true")
 parser.add_argument("-t", "--timing", action="store_true")
 parser.add_argument("-m", "--maxtick", type=int)
 parser.add_argument(
-    "-n", "--numcpus", help="Number of cpus in total", type=int
+    "-n",
+    "--numcpus",
+    help="Number of cpus in total",
+    type=int,
 )
 parser.add_argument(
-    "-f", "--frequency", default="1GHz", help="Frequency of each CPU"
+    "-f",
+    "--frequency",
+    default="1GHz",
+    help="Frequency of each CPU",
 )
 parser.add_argument("--l1size", default="32kB")
 parser.add_argument("--l1latency", default="1ns")
@@ -215,7 +221,9 @@ else:
 # Create a system, and add system wide objects
 # ----------------------
 system = System(
-    cpu=cpus, physmem=SimpleMemory(), membus=SystemXBar(clock=busFrequency)
+    cpu=cpus,
+    physmem=SimpleMemory(),
+    membus=SystemXBar(clock=busFrequency),
 )
 system.clock = "1GHz"
 
@@ -236,7 +244,8 @@ system.system_port = system.membus.cpu_side_ports
 # ----------------------
 for cpu in cpus:
     cpu.addPrivateSplitL1Caches(
-        L1(size=args.l1size, assoc=1), L1(size=args.l1size, assoc=4)
+        L1(size=args.l1size, assoc=1),
+        L1(size=args.l1size, assoc=4),
     )
     # connect cpu level-1 caches to shared level-2 cache
     cpu.connectAllPorts(

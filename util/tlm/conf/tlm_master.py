@@ -52,7 +52,8 @@ system = System()
 system.membus = IOXBar(width=16)
 system.physmem = SimpleMemory(range=AddrRange("512MB"))
 system.clk_domain = SrcClockDomain(
-    clock="1.5GHz", voltage_domain=VoltageDomain(voltage="1V")
+    clock="1.5GHz",
+    voltage_domain=VoltageDomain(voltage="1V"),
 )
 
 # Create a external TLM port:

@@ -47,7 +47,7 @@ from gem5.utils.requires import requires
 requires(isa_required=ISA.RISCV)
 
 parser = argparse.ArgumentParser(
-    description="A script which uses the RISCVMatchedBoard in FS mode."
+    description="A script which uses the RISCVMatchedBoard in FS mode.",
 )
 
 parser.add_argument(

@@ -49,7 +49,8 @@ class SimpleIndirectPredictor(IndirectPredictor):
     indirectWays = Param.Unsigned(2, "Ways for indirect predictor")
     indirectTagSize = Param.Unsigned(16, "Indirect target cache tag bits")
     indirectPathLength = Param.Unsigned(
-        3, "Previous indirect targets to use for path history"
+        3,
+        "Previous indirect targets to use for path history",
     )
     indirectGHRBits = Param.Unsigned(13, "Indirect GHR number of bits")
     instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
@@ -114,7 +115,8 @@ class TAGEBase(SimObject):
 
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
     instShiftAmt = Param.Unsigned(
-        Parent.instShiftAmt, "Number of bits to shift instructions by"
+        Parent.instShiftAmt,
+        "Number of bits to shift instructions by",
     )
 
     nHistoryTables = Param.Unsigned(7, "Number of history tables")
@@ -122,10 +124,12 @@ class TAGEBase(SimObject):
     maxHist = Param.Unsigned(130, "Maximum history size of TAGE")
 
     tagTableTagWidths = VectorParam.Unsigned(
-        [0, 9, 9, 10, 10, 11, 11, 12], "Tag size in TAGE tag tables"
+        [0, 9, 9, 10, 10, 11, 11, 12],
+        "Tag size in TAGE tag tables",
     )
     logTagTableSizes = VectorParam.Int(
-        [13, 9, 9, 9, 9, 9, 9, 9], "Log2 of TAGE table sizes"
+        [13, 9, 9, 9, 9, 9, 9, 9],
+        "Log2 of TAGE table sizes",
     )
     logRatioBiModalHystEntries = Param.Unsigned(
         2,
@@ -143,21 +147,24 @@ class TAGEBase(SimObject):
 
     pathHistBits = Param.Unsigned(16, "Path history size")
     logUResetPeriod = Param.Unsigned(
-        18, "Log period in number of branches to reset TAGE useful counters"
+        18,
+        "Log period in number of branches to reset TAGE useful counters",
     )
     numUseAltOnNa = Param.Unsigned(1, "Number of USE_ALT_ON_NA counters")
     initialTCounterValue = Param.Int(1 << 17, "Initial value of tCounter")
     useAltOnNaBits = Param.Unsigned(4, "Size of the USE_ALT_ON_NA counter(s)")
 
     maxNumAlloc = Param.Unsigned(
-        1, "Max number of TAGE entries allocted on mispredict"
+        1,
+        "Max number of TAGE entries allocted on mispredict",
     )
 
     # List of enabled TAGE tables. If empty, all are enabled
     noSkip = VectorParam.Bool([], "Vector of enabled TAGE tables")
 
     speculativeHistUpdate = Param.Bool(
-        True, "Use speculative update for histories"
+        True,
+        "Use speculative update for histories",
     )
 
 
@@ -189,7 +196,8 @@ class LoopPredictor(SimObject):
     withLoopBits = Param.Unsigned(7, "Size of the WITHLOOP counter")
     loopTableAgeBits = Param.Unsigned(8, "Number of age bits per loop entry")
     loopTableConfidenceBits = Param.Unsigned(
-        2, "Number of confidence bits per loop entry"
+        2,
+        "Number of confidence bits per loop entry",
     )
     loopTableTagBits = Param.Unsigned(14, "Number of tag bits per loop entry")
     loopTableIterBits = Param.Unsigned(14, "Nuber of iteration bits per loop")
@@ -214,13 +222,15 @@ class LoopPredictor(SimObject):
     # If true, use random to decide whether to allocate or not, and only try
     # with one entry
     restrictAllocation = Param.Bool(
-        False, "Restrict the allocation conditions"
+        False,
+        "Restrict the allocation conditions",
     )
 
     initialLoopIter = Param.Unsigned(1, "Initial iteration number")
     initialLoopAge = Param.Unsigned(255, "Initial age value")
     optionalAgeReset = Param.Bool(
-        True, "Reset age bits optionally in some cases"
+        True,
+        "Reset age bits optionally in some cases",
     )
 
 
@@ -247,11 +257,11 @@ class TAGE_SC_L_TAGE(TAGEBase):
     logTagTableSize = Param.Unsigned("Log size of each tag table")
 
     shortTagsTageFactor = Param.Unsigned(
-        "Factor for calculating the total number of short tags TAGE entries"
+        "Factor for calculating the total number of short tags TAGE entries",
     )
 
     longTagsTageFactor = Param.Unsigned(
-        "Factor for calculating the total number of long tags TAGE entries"
+        "Factor for calculating the total number of long tags TAGE entries",
     )
 
     shortTagsSize = Param.Unsigned(8, "Size of the short tags")
@@ -261,7 +271,8 @@ class TAGE_SC_L_TAGE(TAGEBase):
     firstLongTagTable = Param.Unsigned("First table with long tags")
 
     truncatePathHist = Param.Bool(
-        True, "Truncate the path history to its configured size"
+        True,
+        "Truncate the path history to its configured size",
     )
 
 
@@ -433,56 +444,62 @@ class StatisticalCorrector(SimObject):
     # Statistical corrector parameters
 
     numEntriesFirstLocalHistories = Param.Unsigned(
-        "Number of entries for first local histories"
+        "Number of entries for first local histories",
     )
 
     bwnb = Param.Unsigned("Num global backward branch GEHL lengths")
     bwm = VectorParam.Int("Global backward branch GEHL lengths")
     logBwnb = Param.Unsigned("Log num of global backward branch GEHL entries")
     bwWeightInitValue = Param.Int(
-        "Initial value of the weights of the global backward branch GEHL entries"
+        "Initial value of the weights of the global backward branch GEHL entries",
     )
 
     lnb = Param.Unsigned("Num first local history GEHL lenghts")
     lm = VectorParam.Int("First local history GEHL lengths")
     logLnb = Param.Unsigned("Log number of first local history GEHL entries")
     lWeightInitValue = Param.Int(
-        "Initial value of the weights of the first local history GEHL entries"
+        "Initial value of the weights of the first local history GEHL entries",
     )
 
     inb = Param.Unsigned(1, "Num IMLI GEHL lenghts")
     im = VectorParam.Int([8], "IMLI history GEHL lengths")
     logInb = Param.Unsigned("Log number of IMLI GEHL entries")
     iWeightInitValue = Param.Int(
-        "Initial value of the weights of the IMLI history GEHL entries"
+        "Initial value of the weights of the IMLI history GEHL entries",
     )
 
     logBias = Param.Unsigned("Log size of Bias tables")
 
     logSizeUp = Param.Unsigned(
-        6, "Log size of update threshold counters tables"
+        6,
+        "Log size of update threshold counters tables",
     )
 
     chooserConfWidth = Param.Unsigned(
-        7, "Number of bits for the chooser counters"
+        7,
+        "Number of bits for the chooser counters",
     )
 
     updateThresholdWidth = Param.Unsigned(
-        12, "Number of bits for the update threshold counter"
+        12,
+        "Number of bits for the update threshold counter",
     )
 
     pUpdateThresholdWidth = Param.Unsigned(
-        8, "Number of bits for the pUpdate threshold counters"
+        8,
+        "Number of bits for the pUpdate threshold counters",
     )
 
     extraWeightsWidth = Param.Unsigned(
-        6, "Number of bits for the extra weights"
+        6,
+        "Number of bits for the extra weights",
     )
 
     scCountersWidth = Param.Unsigned(6, "Statistical corrector counters width")
 
     initialUpdateThresholdValue = Param.Int(
-        0, "Initial pUpdate threshold counter value"
+        0,
+        "Initial pUpdate threshold counter value",
     )
 
 
@@ -523,19 +540,22 @@ class TAGE_SC_L_64KB_StatisticalCorrector(StatisticalCorrector):
     pnb = Param.Unsigned(3, "Num variation global branch GEHL lengths")
     pm = VectorParam.Int([25, 16, 9], "Variation global branch GEHL lengths")
     logPnb = Param.Unsigned(
-        9, "Log number of variation global branch GEHL entries"
+        9,
+        "Log number of variation global branch GEHL entries",
     )
 
     snb = Param.Unsigned(3, "Num second local history GEHL lenghts")
     sm = VectorParam.Int([16, 11, 6], "Second local history GEHL lengths")
     logSnb = Param.Unsigned(
-        9, "Log number of second local history GEHL entries"
+        9,
+        "Log number of second local history GEHL entries",
     )
 
     tnb = Param.Unsigned(2, "Num third local history GEHL lenghts")
     tm = VectorParam.Int([9, 4], "Third local history GEHL lengths")
     logTnb = Param.Unsigned(
-        10, "Log number of third local history GEHL entries"
+        10,
+        "Log number of third local history GEHL entries",
     )
 
     imnb = Param.Unsigned(2, "Num second IMLI GEHL lenghts")
@@ -543,10 +563,12 @@ class TAGE_SC_L_64KB_StatisticalCorrector(StatisticalCorrector):
     logImnb = Param.Unsigned(9, "Log number of second IMLI GEHL entries")
 
     numEntriesSecondLocalHistories = Param.Unsigned(
-        16, "Number of entries for second local histories"
+        16,
+        "Number of entries for second local histories",
     )
     numEntriesThirdLocalHistories = Param.Unsigned(
-        16, "Number of entries for second local histories"
+        16,
+        "Number of entries for second local histories",
     )
 
     numEntriesFirstLocalHistories = 256
@@ -627,7 +649,8 @@ class MultiperspectivePerceptron(BranchPredictor):
     num_filter_entries = Param.Int("Number of filter entries")
     num_local_histories = Param.Int("Number of local history entries")
     local_history_length = Param.Int(
-        11, "Length in bits of each history entry"
+        11,
+        "Length in bits of each history entry",
     )
 
     block_size = Param.Int(
@@ -638,10 +661,12 @@ class MultiperspectivePerceptron(BranchPredictor):
     pcshift = Param.Int(-10, "Shift for hashing PC")
     threshold = Param.Int(1, "Threshold for deciding low/high confidence")
     bias0 = Param.Int(
-        -5, "Bias perceptron output this much on all-bits-zero local history"
+        -5,
+        "Bias perceptron output this much on all-bits-zero local history",
     )
     bias1 = Param.Int(
-        5, "Bias perceptron output this much on all-bits-one local history"
+        5,
+        "Bias perceptron output this much on all-bits-one local history",
     )
     biasmostly0 = Param.Int(
         -1,
@@ -665,28 +690,31 @@ class MultiperspectivePerceptron(BranchPredictor):
     )
     imli_mask1 = Param.UInt64(
         "Which tables should have their indices hashed with the first IMLI "
-        "counter"
+        "counter",
     )
     imli_mask4 = Param.UInt64(
         "Which tables should have their indices hashed with the fourth IMLI "
-        "counter"
+        "counter",
     )
     recencypos_mask = Param.UInt64(
         "Which tables should have their indices hashed with the recency "
-        "position"
+        "position",
     )
     fudge = Param.Float(0.245, "Fudge factor to multiply by perceptron output")
     n_sign_bits = Param.Int(2, "Number of sign bits per magnitude")
     pcbit = Param.Int(2, "Bit from the PC to use for hashing global history")
     decay = Param.Int(0, "Whether and how often to decay a random weight")
     record_mask = Param.Int(
-        191, "Which histories are updated with filtered branch outcomes"
+        191,
+        "Which histories are updated with filtered branch outcomes",
     )
     hash_taken = Param.Bool(
-        False, "Hash the taken/not taken value with a PC bit"
+        False,
+        "Hash the taken/not taken value with a PC bit",
     )
     tuneonly = Param.Bool(
-        True, "If true, only count mispredictions of low-confidence branches"
+        True,
+        "If true, only count mispredictions of low-confidence branches",
     )
     extra_rounds = Param.Int(
         1,
@@ -697,7 +725,8 @@ class MultiperspectivePerceptron(BranchPredictor):
     initial_theta = Param.Int(10, "Initial theta")
     budgetbits = Param.Int("Hardware budget in bits")
     speculative_update = Param.Bool(
-        False, "Use speculative update for histories"
+        False,
+        "Use speculative update for histories",
     )
 
     initial_ghist_length = Param.Int(1, "Initial GHist length value")
@@ -838,10 +867,12 @@ class MPP_StatisticalCorrector(StatisticalCorrector):
 
     pnb = Param.Unsigned(4, "Num variation global branch GEHL lengths")
     pm = VectorParam.Int(
-        [16, 11, 6, 3], "Variation global branch GEHL lengths"
+        [16, 11, 6, 3],
+        "Variation global branch GEHL lengths",
     )
     logPnb = Param.Unsigned(
-        9, "Log number of variation global branch GEHL entries"
+        9,
+        "Log number of variation global branch GEHL entries",
     )
 
 
@@ -878,20 +909,24 @@ class MPP_StatisticalCorrector_64KB(MPP_StatisticalCorrector):
     snb = Param.Unsigned(4, "Num second local history GEHL lenghts")
     sm = VectorParam.Int([16, 11, 6, 3], "Second local history GEHL lengths")
     logSnb = Param.Unsigned(
-        9, "Log number of second local history GEHL entries"
+        9,
+        "Log number of second local history GEHL entries",
     )
 
     tnb = Param.Unsigned(3, "Num third local history GEHL lenghts")
     tm = VectorParam.Int([22, 17, 14], "Third local history GEHL lengths")
     logTnb = Param.Unsigned(
-        9, "Log number of third local history GEHL entries"
+        9,
+        "Log number of third local history GEHL entries",
     )
 
     numEntriesSecondLocalHistories = Param.Unsigned(
-        16, "Number of entries for second local histories"
+        16,
+        "Number of entries for second local histories",
     )
     numEntriesThirdLocalHistories = Param.Unsigned(
-        16, "Number of entries for second local histories"
+        16,
+        "Number of entries for second local histories",
     )
 
     numEntriesFirstLocalHistories = 256

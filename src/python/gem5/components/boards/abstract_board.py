@@ -195,7 +195,7 @@ class AbstractBoard:
                 "The workload for this board not yet to be set. "
                 "Whether the board is to be executed in FS or SE "
                 "mode is determined by which 'set workload' "
-                "function is run."
+                "function is run.",
             )
         return self._is_fs
 
@@ -216,7 +216,7 @@ class AbstractBoard:
             raise Exception(
                 "This board does not support this workload type. "
                 f"This board does not contain the necessary "
-                f"`{workload.get_function_str()}` function"
+                f"`{workload.get_function_str()}` function",
             )
 
         func_signature = inspect.signature(func)
@@ -225,7 +225,7 @@ class AbstractBoard:
                 raise Exception(
                     "Workload specifies non-existent parameter "
                     f"`{param_name}` for function "
-                    f"`{workload.get_function_str()}` "
+                    f"`{workload.get_function_str()}` ",
                 )
 
         func(**workload.get_parameters())
@@ -349,7 +349,7 @@ class AbstractBoard:
 
         if self._connect_things_called:
             raise Exception(
-                "The `_connect_things` function has already been called."
+                "The `_connect_things` function has already been called.",
             )
 
         # Incorporate the memory into the motherboard.
@@ -406,5 +406,5 @@ AbstractBoard's `_connect_things` function has not been called. This is likely
 due to not running a board outside of the gem5 Standard Library Simulator
 module. If this is the case, this can be resolved by calling
 `<AbstractBoard>._pre_instantiate()` prior to `m5.instantiate()`.
-"""
+""",
             )

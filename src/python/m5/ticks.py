@@ -48,7 +48,7 @@ def setGlobalFrequency(ticksPerSecond):
         tps = round(convert.anyToFrequency(ticksPerSecond))
     else:
         raise TypeError(
-            f"wrong type '{type(ticksPerSecond)}' for ticksPerSecond"
+            f"wrong type '{type(ticksPerSecond)}' for ticksPerSecond",
         )
     _m5.core.setClockFrequency(int(tps))
 
@@ -67,7 +67,7 @@ def fromSeconds(value):
     # had better be fixed
     if not _m5.core.clockFrequencyFixed():
         raise AttributeError(
-            "In order to do conversions, the global frequency must be fixed"
+            "In order to do conversions, the global frequency must be fixed",
         )
 
     if value == 0:
@@ -77,7 +77,7 @@ def fromSeconds(value):
     value *= _m5.core.getClockFrequency()
 
     int_value = int(
-        decimal.Decimal(value).to_integral_value(decimal.ROUND_HALF_UP)
+        decimal.Decimal(value).to_integral_value(decimal.ROUND_HALF_UP),
     )
     err = (value - int_value) / value
     if err > frequency_tolerance:

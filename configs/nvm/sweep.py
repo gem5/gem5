@@ -71,7 +71,10 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--rd_perc", type=int, default=100, help="Percentage of read commands"
+    "--rd_perc",
+    type=int,
+    default=100,
+    help="Percentage of read commands",
 )
 
 parser.add_argument(
@@ -98,7 +101,8 @@ args = parser.parse_args()
 # which amounts to 42.7 GByte/s per layer and thus per port
 system = System(membus=IOXBar(width=32))
 system.clk_domain = SrcClockDomain(
-    clock="2.0GHz", voltage_domain=VoltageDomain(voltage="1V")
+    clock="2.0GHz",
+    voltage_domain=VoltageDomain(voltage="1V"),
 )
 
 # we are fine with 256 MB memory for now
@@ -145,7 +149,7 @@ burst_size = int(
         * system.mem_ctrls[0].dram.device_bus_width.value
         * system.mem_ctrls[0].dram.burst_length.value
     )
-    / 8
+    / 8,
 )
 
 
@@ -220,5 +224,5 @@ m5.simulate()
 
 print(
     "NVM sweep with burst: %d, banks: %d, max stride: %d"
-    % (burst_size, nbr_banks, max_stride)
+    % (burst_size, nbr_banks, max_stride),
 )

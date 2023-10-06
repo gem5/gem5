@@ -130,7 +130,8 @@ def process_dates(dates):
 
 
 copyright_re = re.compile(
-    r"Copyright (\([cC]\)) ([-, 0-9]+)[\s*#/]*([A-z-,. ]+)", re.DOTALL
+    r"Copyright (\([cC]\)) ([-, 0-9]+)[\s*#/]*([A-z-,. ]+)",
+    re.DOTALL,
 )
 
 authors_re = re.compile(r"^[\s*#/]*Authors:\s*([A-z .]+)\s*$")

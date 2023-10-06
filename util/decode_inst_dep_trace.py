@@ -102,7 +102,7 @@ except:
             "--python_out=util",
             "--proto_path=src/proto",
             "src/proto/inst_dep_record.proto",
-        ]
+        ],
     )
     if not error:
         import inst_dep_record_pb2
@@ -178,7 +178,10 @@ def main():
             ascii_out.write(f",{enumNames[packet.type]}")
         except KeyError:
             print(
-                "Seq. num", packet.seq_num, "has unsupported type", packet.type
+                "Seq. num",
+                packet.seq_num,
+                "has unsupported type",
+                packet.type,
             )
             exit(-1)
 

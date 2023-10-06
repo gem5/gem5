@@ -49,27 +49,32 @@ class SouthBridge(SimObject):
     cxx_class = "gem5::SouthBridge"
 
     pic1 = Param.I8259(
-        I8259(pio_addr=x86IOAddress(0x20), mode="I8259Master"), "Master PIC"
+        I8259(pio_addr=x86IOAddress(0x20), mode="I8259Master"),
+        "Master PIC",
     )
     pic2 = Param.I8259(
-        I8259(pio_addr=x86IOAddress(0xA0), mode="I8259Slave"), "Slave PIC"
+        I8259(pio_addr=x86IOAddress(0xA0), mode="I8259Slave"),
+        "Slave PIC",
     )
     cmos = Param.Cmos(
         Cmos(pio_addr=x86IOAddress(0x70)),
         "CMOS memory and real time clock device",
     )
     dma1 = Param.I8237(
-        I8237(pio_addr=x86IOAddress(0x0)), "The first dma controller"
+        I8237(pio_addr=x86IOAddress(0x0)),
+        "The first dma controller",
     )
     keyboard = Param.I8042(
         I8042(data_port=x86IOAddress(0x60), command_port=x86IOAddress(0x64)),
         "The keyboard controller",
     )
     pit = Param.I8254(
-        I8254(pio_addr=x86IOAddress(0x40)), "Programmable interval timer"
+        I8254(pio_addr=x86IOAddress(0x40)),
+        "Programmable interval timer",
     )
     speaker = Param.PcSpeaker(
-        PcSpeaker(pio_addr=x86IOAddress(0x61)), "PC speaker"
+        PcSpeaker(pio_addr=x86IOAddress(0x61)),
+        "PC speaker",
     )
     io_apic = Param.I82094AA(I82094AA(pio_addr=0xFEC00000), "I/O APIC")
 

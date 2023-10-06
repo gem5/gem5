@@ -65,17 +65,17 @@ class Display(SimObject):
         timing_node = FdtNode(self.timingNode())
 
         timing_node.append(
-            FdtPropertyWords("clock-frequency", [self.clock_frequency])
+            FdtPropertyWords("clock-frequency", [self.clock_frequency]),
         )
         timing_node.append(FdtPropertyWords("hactive", [self.hactive]))
         timing_node.append(FdtPropertyWords("vactive", [self.vactive]))
         timing_node.append(
-            FdtPropertyWords("hfront-porch", [self.hfront_porch])
+            FdtPropertyWords("hfront-porch", [self.hfront_porch]),
         )
         timing_node.append(FdtPropertyWords("hback-porch", [self.hback_porch]))
         timing_node.append(FdtPropertyWords("hsync-len", [self.hsync_len]))
         timing_node.append(
-            FdtPropertyWords("vfront-porch", [self.vfront_porch])
+            FdtPropertyWords("vfront-porch", [self.vfront_porch]),
         )
         timing_node.append(FdtPropertyWords("vback-porch", [self.vback_porch]))
         timing_node.append(FdtPropertyWords("vsync-len", [self.vsync_len]))
@@ -85,7 +85,7 @@ class Display(SimObject):
         # display timing node
         dispt_node = FdtNode("display-timings")
         dispt_node.append(
-            FdtPropertyWords("native-mode", state.phandle(self.timingNode()))
+            FdtPropertyWords("native-mode", state.phandle(self.timingNode())),
         )
         dispt_node.append(timing_node)
 

@@ -46,7 +46,9 @@ class PrivateL1MOESICache(AbstractNode):
         super().__init__(network, cache_line_size)
 
         self.cache = RubyCache(
-            size=size, assoc=assoc, start_index_bit=self.getBlockSizeBits()
+            size=size,
+            assoc=assoc,
+            start_index_bit=self.getBlockSizeBits(),
         )
 
         self.clk_domain = clk_domain

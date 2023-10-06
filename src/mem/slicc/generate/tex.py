@@ -41,7 +41,7 @@ def printTexTable(sm, code):
 \usepackage{graphics}
 \begin{document}
 \begin{tabular}{|l||$<<"l" * len(sm.events)>>|} \hline
-"""
+""",
     )
 
     for event in sm.events:
@@ -70,7 +70,7 @@ def printTexTable(sm, code):
 \hline
 \end{tabular}
 \end{document}
-"""
+""",
     )
 
     code.append(tex)

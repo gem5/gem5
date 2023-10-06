@@ -50,19 +50,22 @@ class X86LocalApic(BaseInterrupts):
 
     int_requestor = RequestPort("Port for sending interrupt messages")
     int_master = DeprecatedParam(
-        int_requestor, "`int_master` is now called `int_requestor`"
+        int_requestor,
+        "`int_master` is now called `int_requestor`",
     )
 
     int_responder = ResponsePort("Port for receiving interrupt messages")
     int_slave = DeprecatedParam(
-        int_responder, "`int_slave` is now called `int_responder`"
+        int_responder,
+        "`int_slave` is now called `int_responder`",
     )
 
     lint0 = IntSinkPin("Local interrupt pin 0")
     lint1 = IntSinkPin("Local interrupt pin 1")
 
     int_latency = Param.Latency(
-        "1ns", "Latency for an interrupt to propagate through this device."
+        "1ns",
+        "Latency for an interrupt to propagate through this device.",
     )
     pio = ResponsePort("Programmed I/O port")
     system = Param.System(Parent.any, "System this device is part of")

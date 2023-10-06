@@ -70,12 +70,15 @@ class Plic(PlicBase):
     n_src = Param.Int("Number of interrupt sources")
     n_contexts = Param.Int(
         "Number of interrupt contexts. Usually the number "
-        "of threads * 2. One for M mode, one for S mode"
+        "of threads * 2. One for M mode, one for S mode",
     )
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(
-            state, "plic", self.pio_addr, self.pio_size
+            state,
+            "plic",
+            self.pio_addr,
+            self.pio_size,
         )
 
         int_state = FdtState(addr_cells=0, interrupt_cells=1)

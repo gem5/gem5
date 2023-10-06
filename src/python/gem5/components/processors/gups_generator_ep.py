@@ -62,7 +62,7 @@ class GUPSGeneratorEP(AbstractGenerator):
                 mem_size=mem_size,
                 update_limit=update_limit,
                 clk_freq=clk_freq,
-            )
+            ),
         )
 
     def _create_cores(

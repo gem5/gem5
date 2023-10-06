@@ -49,7 +49,7 @@ from werkzeug.utils import secure_filename
 databases = {}
 
 response = requests.get(
-    "https://resources.gem5.org/gem5-resources-schema.json"
+    "https://resources.gem5.org/gem5-resources-schema.json",
 )
 schema = json.loads(response.content)
 
@@ -389,7 +389,7 @@ def editor():
         return render_template("404.html"), 404
 
     response = make_response(
-        render_template("editor.html", client_type=client_type, alias=alias)
+        render_template("editor.html", client_type=client_type, alias=alias),
     )
 
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
@@ -411,7 +411,8 @@ def help():
     """
     with Path("static/help.md").open("r") as f:
         return render_template(
-            "help.html", rendered_html=markdown.markdown(f.read())
+            "help.html",
+            rendered_html=markdown.markdown(f.read()),
         )
 
 
@@ -469,7 +470,7 @@ def update():
         {
             "original_resource": original_resource,
             "resource": modified_resource,
-        }
+        },
     )
     database._add_to_stack(
         {
@@ -478,7 +479,7 @@ def update():
                 "original_resource": modified_resource,
                 "resource": original_resource,
             },
-        }
+        },
     )
     return status
 
@@ -571,7 +572,7 @@ def getFields():
             ]
         if "is not valid under any of the given schemas" in error.message:
             validator = validator.evolve(
-                schema=error.schema["definitions"][request.json["category"]]
+                schema=error.schema["definitions"][request.json["category"]],
             )
             for e in validator.iter_errors(empty_object):
                 if "is a required property" in e.message:
@@ -732,9 +733,9 @@ def fernet_instance_generation(password):
     return Fernet(
         base64.urlsafe_b64encode(
             Scrypt(salt=app.secret_key, length=32, n=2**16, r=8, p=1).derive(
-                password.encode()
-            )
-        )
+                password.encode(),
+            ),
+        ),
     )
 
 

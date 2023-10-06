@@ -51,7 +51,7 @@ def diff_files(upstream, feature, paths=[]):
 
     raw = subprocess.check_output(
         ["git", "diff", "--name-status", f"{upstream}..{feature}", "--"]
-        + paths
+        + paths,
     )
 
     path = [line.split("\t")[1] for line in raw.splitlines()]
@@ -75,7 +75,7 @@ def cl_hash(upstream, feature, path):
     """
 
     raw = subprocess.check_output(
-        ["git", "log", "--oneline", f"{upstream}..{feature}", "--", path]
+        ["git", "log", "--oneline", f"{upstream}..{feature}", "--", path],
     )
 
     return [l.split()[0] for l in raw.splitlines()]
@@ -86,7 +86,7 @@ def _main():
 
     parser = argparse.ArgumentParser(
         description="List all changes between an upstream branch and a "
-        "feature branch by filename(s) and changeset hash(es)."
+        "feature branch by filename(s) and changeset hash(es).",
     )
 
     parser.add_argument(

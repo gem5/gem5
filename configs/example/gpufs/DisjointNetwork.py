@@ -82,7 +82,11 @@ class DisjointGarnet(GarnetNetwork):
         topo_class = getattr(topo_module, opts.cpu_topology)
         _topo = topo_class(controllers)
         _topo.makeTopology(
-            opts, self, GarnetIntLink, GarnetExtLink, GarnetRouter
+            opts,
+            self,
+            GarnetIntLink,
+            GarnetExtLink,
+            GarnetRouter,
         )
 
         Network.init_network(opts, self, GarnetNetworkInterface)
@@ -93,7 +97,11 @@ class DisjointGarnet(GarnetNetwork):
         topo_class = getattr(topo_module, opts.gpu_topology)
         _topo = topo_class(controllers)
         _topo.makeTopology(
-            opts, self, GarnetIntLink, GarnetExtLink, GarnetRouter
+            opts,
+            self,
+            GarnetIntLink,
+            GarnetExtLink,
+            GarnetRouter,
         )
 
         Network.init_network(opts, self, GarnetNetworkInterface)

@@ -152,10 +152,12 @@ def CheckPkgConfig(context, pkgs, *args):
 @contextlib.contextmanager
 def Configure(env, *args, **kwargs):
     kwargs.setdefault(
-        "conf_dir", os.path.join(env["GEM5BUILD"], "scons_config")
+        "conf_dir",
+        os.path.join(env["GEM5BUILD"], "scons_config"),
     )
     kwargs.setdefault(
-        "log_file", os.path.join(env["GEM5BUILD"], "scons_config.log")
+        "log_file",
+        os.path.join(env["GEM5BUILD"], "scons_config.log"),
     )
     kwargs.setdefault("custom_tests", {})
     kwargs["custom_tests"].update(
@@ -165,7 +167,7 @@ def Configure(env, *args, **kwargs):
             "CheckMember": CheckMember,
             "CheckPkgConfig": CheckPkgConfig,
             "CheckPythonLib": CheckPythonLib,
-        }
+        },
     )
     conf = SCons.Script.Configure(env, *args, **kwargs)
 

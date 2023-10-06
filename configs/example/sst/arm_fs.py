@@ -51,7 +51,8 @@ class ArmSstSystem(ArmSystem):
 
         self.voltage_domain = VoltageDomain(voltage="1.0V")
         self.clk_domain = SrcClockDomain(
-            clock=cpu_clock_rate, voltage_domain=Parent.voltage_domain
+            clock=cpu_clock_rate,
+            voltage_domain=Parent.voltage_domain,
         )
 
         self.terminal = Terminal()
@@ -77,7 +78,7 @@ class ArmSstSystem(ArmSystem):
             AddrRange(0x80000000, size="16GiB"),
         ]
         self.memory_outgoing_bridge = OutgoingRequestBridge(
-            physical_address_ranges=_my_ranges
+            physical_address_ranges=_my_ranges,
         )
 
         self.memory_outgoing_bridge.port = self.membus.mem_side_ports
@@ -91,7 +92,8 @@ class ArmSstSystem(ArmSystem):
             cpu.dcache_port = self.membus.cpu_side_ports
 
             cpu.mmu.connectWalkerPorts(
-                self.membus.cpu_side_ports, self.membus.cpu_side_ports
+                self.membus.cpu_side_ports,
+                self.membus.cpu_side_ports,
             )
 
         self.bridge = Bridge(delay="50ns")
@@ -111,7 +113,7 @@ class ArmSstSystem(ArmSystem):
             size_in_range = min(mem_size, mem_range.size())
 
             mem_ranges.append(
-                AddrRange(start=mem_range.start, size=size_in_range)
+                AddrRange(start=mem_range.start, size=size_in_range),
             )
 
             mem_size -= size_in_range
@@ -139,7 +141,9 @@ def createArmPlatform(system):
 parser = argparse.ArgumentParser()
 parser.add_argument("--kernel", help="Path to the Kernel")
 parser.add_argument(
-    "--cpu-clock-rate", type=str, help="CPU clock rate, e.g. 3GHz"
+    "--cpu-clock-rate",
+    type=str,
+    help="CPU clock rate, e.g. 3GHz",
 )
 parser.add_argument("--memory-size", type=str, help="Memory size, e.g. 4GiB")
 parser.add_argument("--root-device", type=str, default="/dev/vda")

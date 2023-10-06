@@ -35,7 +35,7 @@ from gem5.utils.requires import requires
 
 parser = argparse.ArgumentParser(
     description="A simple script used to check the behavior of "
-    "`gem5.utils.requires`."
+    "`gem5.utils.requires`.",
 )
 
 parser.add_argument(

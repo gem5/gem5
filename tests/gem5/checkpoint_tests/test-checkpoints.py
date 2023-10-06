@@ -39,7 +39,7 @@ else:
 
 hello_verifier = verifier.MatchRegex(re.compile(r"Hello world!"))
 save_checkpoint_verifier = verifier.MatchRegex(
-    re.compile(r"Done taking checkpoint")
+    re.compile(r"Done taking checkpoint"),
 )
 
 

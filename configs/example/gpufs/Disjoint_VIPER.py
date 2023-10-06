@@ -59,21 +59,36 @@ class Disjoint_VIPER(RubySystem):
         # Construct CPU controllers
         cpu_dir_nodes = construct_dirs(options, system, self, self.network_cpu)
         (cp_sequencers, cp_cntrl_nodes) = construct_corepairs(
-            options, system, self, self.network_cpu
+            options,
+            system,
+            self,
+            self.network_cpu,
         )
 
         # Construct GPU controllers
         (tcp_sequencers, tcp_cntrl_nodes) = construct_tcps(
-            options, system, self, self.network_gpu
+            options,
+            system,
+            self,
+            self.network_gpu,
         )
         (sqc_sequencers, sqc_cntrl_nodes) = construct_sqcs(
-            options, system, self, self.network_gpu
+            options,
+            system,
+            self,
+            self.network_gpu,
         )
         (scalar_sequencers, scalar_cntrl_nodes) = construct_scalars(
-            options, system, self, self.network_gpu
+            options,
+            system,
+            self,
+            self.network_gpu,
         )
         tcc_cntrl_nodes = construct_tccs(
-            options, system, self, self.network_gpu
+            options,
+            system,
+            self,
+            self.network_gpu,
         )
 
         # Construct CPU memories
@@ -81,7 +96,10 @@ class Disjoint_VIPER(RubySystem):
 
         # Construct GPU memories
         (gpu_dir_nodes, gpu_mem_ctrls) = construct_gpudirs(
-            options, system, self, self.network_gpu
+            options,
+            system,
+            self,
+            self.network_gpu,
         )
 
         # Configure the directories based on which network they are in
@@ -116,7 +134,9 @@ class Disjoint_VIPER(RubySystem):
         for i, dma_device in enumerate(dma_devices):
             dma_seq = DMASequencer(version=i, ruby_system=self)
             dma_cntrl = DMA_Controller(
-                version=i, dma_sequencer=dma_seq, ruby_system=self
+                version=i,
+                dma_sequencer=dma_seq,
+                ruby_system=self,
             )
 
             # Handle inconsistently named ports on various DMA devices:

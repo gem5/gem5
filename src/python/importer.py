@@ -64,7 +64,9 @@ class CodeImporter(object):
 
         is_package = os.path.basename(abspath) == "__init__.py"
         spec = importlib.util.spec_from_loader(
-            name=fullname, loader=ByteCodeLoader(code), is_package=is_package
+            name=fullname,
+            loader=ByteCodeLoader(code),
+            is_package=is_package,
         )
 
         spec.loader_state = self.modules.keys()

@@ -192,7 +192,7 @@ class StateMachine(Symbol):
         if type_ident == f"{self.ident}_TBE":
             if self.TBEType != None:
                 self.error(
-                    "Multiple Transaction Buffer types in a single machine."
+                    "Multiple Transaction Buffer types in a single machine.",
                 )
             self.TBEType = type
 
@@ -203,7 +203,7 @@ class StateMachine(Symbol):
                 if self.EntryType != None:
                     self.error(
                         "Multiple AbstractCacheEntry types in a "
-                        "single machine."
+                        "single machine.",
                     )
                 self.EntryType = type
 
@@ -276,7 +276,7 @@ class $py_ident(RubyController):
     type = '$py_ident'
     cxx_header = 'mem/ruby/protocol/${c_ident}.hh'
     cxx_class = 'gem5::ruby::$py_ident'
-"""
+""",
         )
         code.indent()
         for param in self.config_parameters:
@@ -288,7 +288,7 @@ class $py_ident(RubyController):
             if param.type_ast.type.c_ident in python_class_map:
                 python_type = python_class_map[param.type_ast.type.c_ident]
                 code(
-                    '${{param.ident}} = Param.${{python_type}}(${dflt_str}"")'
+                    '${{param.ident}} = Param.${{python_type}}(${dflt_str}"")',
                 )
 
             else:
@@ -325,7 +325,7 @@ class $py_ident(RubyController):
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "params/$c_ident.hh"
 
-"""
+""",
         )
 
         seen_types = set()
@@ -380,7 +380,7 @@ class $c_ident : public AbstractController
     uint64_t getTransitionCount(${ident}_State state, ${ident}_Event event);
 
 private:
-"""
+""",
         )
 
         code.indent()
@@ -394,20 +394,20 @@ private:
         code(
             """
 TransitionResult doTransition(${ident}_Event event,
-"""
+""",
         )
 
         if self.EntryType != None:
             code(
                 """
                               ${{self.EntryType.c_ident}}* m_cache_entry_ptr,
-"""
+""",
             )
         if self.TBEType != None:
             code(
                 """
                               ${{self.TBEType.c_ident}}* m_tbe_ptr,
-"""
+""",
             )
 
         code(
@@ -417,20 +417,20 @@ TransitionResult doTransition(${ident}_Event event,
 TransitionResult doTransitionWorker(${ident}_Event event,
                                     ${ident}_State state,
                                     ${ident}_State& next_state,
-"""
+""",
         )
 
         if self.TBEType != None:
             code(
                 """
                                     ${{self.TBEType.c_ident}}*& m_tbe_ptr,
-"""
+""",
             )
         if self.EntryType != None:
             code(
                 """
                                     ${{self.EntryType.c_ident}}*& m_cache_entry_ptr,
-"""
+""",
             )
 
         code(
@@ -452,7 +452,7 @@ static std::vector<std::vector<statistics::Vector *> > transVec;
 static int m_num_controllers;
 
 // Internal functions
-"""
+""",
         )
 
         for func in self.functions:
@@ -467,7 +467,7 @@ static int m_num_controllers;
 // Set and Reset for cache_entry variable
 void set_cache_entry(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, AbstractCacheEntry* m_new_cache_entry);
 void unset_cache_entry(${{self.EntryType.c_ident}}*& m_cache_entry_ptr);
-"""
+""",
             )
 
         if self.TBEType != None:
@@ -477,7 +477,7 @@ void unset_cache_entry(${{self.EntryType.c_ident}}*& m_cache_entry_ptr);
 // Set and Reset for tbe variable
 void set_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${ident}_TBE* m_new_tbe);
 void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
-"""
+""",
             )
 
         # Prototype the actions that the controller can take
@@ -485,7 +485,7 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
             """
 
 // Actions
-"""
+""",
         )
         if self.TBEType != None and self.EntryType != None:
             for action in self.actions.values():
@@ -493,21 +493,21 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
                 code(
                     "void ${{action.ident}}(${{self.TBEType.c_ident}}*& "
                     "m_tbe_ptr, ${{self.EntryType.c_ident}}*& "
-                    "m_cache_entry_ptr, Addr addr);"
+                    "m_cache_entry_ptr, Addr addr);",
                 )
         elif self.TBEType != None:
             for action in self.actions.values():
                 code("/** \\brief ${{action.desc}} */")
                 code(
                     "void ${{action.ident}}(${{self.TBEType.c_ident}}*& "
-                    "m_tbe_ptr, Addr addr);"
+                    "m_tbe_ptr, Addr addr);",
                 )
         elif self.EntryType != None:
             for action in self.actions.values():
                 code("/** \\brief ${{action.desc}} */")
                 code(
                     "void ${{action.ident}}(${{self.EntryType.c_ident}}*& "
-                    "m_cache_entry_ptr, Addr addr);"
+                    "m_cache_entry_ptr, Addr addr);",
                 )
         else:
             for action in self.actions.values():
@@ -519,7 +519,7 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
             """
 
 // Objects
-"""
+""",
         )
         for var in self.objects:
             th = var.get("template", "")
@@ -534,7 +534,7 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 } // namespace gem5
 
 #endif // __${ident}_CONTROLLER_H__
-"""
+""",
         )
 
         code.write(path, f"{c_ident}.hh")
@@ -583,7 +583,7 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 #include <string>
 #include <typeinfo>
 
-"""
+""",
         )
 
         code(boolvec_include)
@@ -601,7 +601,7 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 #include "mem/ruby/protocol/Types.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
-"""
+""",
         )
         for include_path in includes:
             code('#include "${{include_path}}"')
@@ -646,7 +646,7 @@ $c_ident::$c_ident(const Params &p)
     p.ruby_system->registerAbstractController(this);
 
     m_in_ports = $num_in_ports;
-"""
+""",
         )
         code.indent()
 
@@ -671,7 +671,7 @@ $c_ident::$c_ident(const Params &p)
 if (m_${{param.ident}}_ptr != NULL) {
     m_${{param.ident}}_ptr->setController(this);
 }
-"""
+""",
                 )
 
         code(
@@ -686,7 +686,7 @@ for (int state = 0; state < ${ident}_State_NUM; state++) {
 for (int event = 0; event < ${ident}_Event_NUM; event++) {
     m_event_counters[event] = 0;
 }
-"""
+""",
         )
         code.dedent()
         code(
@@ -699,7 +699,7 @@ $c_ident::initNetQueues()
     MachineType machine_type = string_to_MachineType("${{self.ident}}");
     [[maybe_unused]] int base = MachineType_base_number(machine_type);
 
-"""
+""",
         )
         code.indent()
 
@@ -728,7 +728,7 @@ $c_ident::initNetQueues()
                         """
 m_net_ptr->set${network}NetQueue(m_version + base, $vid->getOrdered(), $vnet,
                                  "$vnet_type", $vid);
-"""
+""",
                     )
                 # Set Priority
                 if "rank" in var:
@@ -743,7 +743,7 @@ void
 $c_ident::init()
 {
     // initialize objects
-"""
+""",
         )
 
         code.indent()
@@ -805,7 +805,7 @@ $c_ident::init()
     AbstractController::init();
     resetStats();
 }
-"""
+""",
         )
 
         mq_ident = "NULL"
@@ -853,7 +853,7 @@ $c_ident::getCPUSequencer() const
         return NULL;
     }
 }
-"""
+""",
             )
         else:
             code(
@@ -864,7 +864,7 @@ $c_ident::getCPUSequencer() const
 {
     return NULL;
 }
-"""
+""",
             )
 
         if dma_seq_ident != "NULL":
@@ -879,7 +879,7 @@ $c_ident::getDMASequencer() const
         return NULL;
     }
 }
-"""
+""",
             )
         else:
             code(
@@ -890,7 +890,7 @@ $c_ident::getDMASequencer() const
 {
     return NULL;
 }
-"""
+""",
             )
 
         if coal_ident != "NULL":
@@ -905,7 +905,7 @@ $c_ident::getGPUCoalescer() const
         return NULL;
     }
 }
-"""
+""",
             )
         else:
             code(
@@ -916,7 +916,7 @@ $c_ident::getGPUCoalescer() const
 {
     return NULL;
 }
-"""
+""",
             )
 
         code(
@@ -967,7 +967,7 @@ $c_ident::regStats()
         }
     }
 
-"""
+""",
         )
         # check if Events/States have profiling qualifiers flags for
         # inTransLatHist and outTransLatHist stats.
@@ -979,7 +979,7 @@ $c_ident::regStats()
         code(
             """
     const std::vector<${ident}_Event> out_trans_evs = ${ev_ident_str};
-"""
+""",
         )
         ev_ident_list = [
             "%s_Event_%s" % (ident, ev.ident)
@@ -989,7 +989,7 @@ $c_ident::regStats()
         code(
             """
     const std::vector<${ident}_Event> in_trans_evs = ${ev_ident_str};
-"""
+""",
         )
         kv_ident_list = []
         for ev in self.event_stats_in_trans:
@@ -1005,7 +1005,7 @@ $c_ident::regStats()
             """
     const std::unordered_map<${ident}_Event, std::vector<${ident}_State>>
                                 in_trans_evs_states = ${key_ident_str};
-"""
+""",
         )
         code(
             """
@@ -1169,7 +1169,7 @@ void $c_ident::resetStats()
 
     AbstractController::resetStats();
 }
-"""
+""",
         )
 
         if self.EntryType != None:
@@ -1188,7 +1188,7 @@ $c_ident::unset_cache_entry(${{self.EntryType.c_ident}}*& m_cache_entry_ptr)
 {
   m_cache_entry_ptr = 0;
 }
-"""
+""",
             )
 
         if self.TBEType != None:
@@ -1207,7 +1207,7 @@ $c_ident::unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr)
 {
   m_tbe_ptr = NULL;
 }
-"""
+""",
             )
 
         code(
@@ -1216,7 +1216,7 @@ $c_ident::unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr)
 void
 $c_ident::recordCacheTrace(int cntrl, CacheRecorder* tr)
 {
-"""
+""",
         )
         #
         # Record cache contents for all associated caches.
@@ -1233,7 +1233,7 @@ $c_ident::recordCacheTrace(int cntrl, CacheRecorder* tr)
 }
 
 // Actions
-"""
+""",
         )
         if self.TBEType != None and self.EntryType != None:
             for action in self.actions.values():
@@ -1256,7 +1256,7 @@ $c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${{self.Entry
     }
 }
 
-"""
+""",
                 )
         elif self.TBEType != None:
             for action in self.actions.values():
@@ -1273,7 +1273,7 @@ $c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, Addr addr)
     ${{action["c_code"]}}
 }
 
-"""
+""",
                 )
         elif self.EntryType != None:
             for action in self.actions.values():
@@ -1290,7 +1290,7 @@ $c_ident::${{action.ident}}(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, Add
     ${{action["c_code"]}}
 }
 
-"""
+""",
                 )
         else:
             for action in self.actions.values():
@@ -1307,7 +1307,7 @@ $c_ident::${{action.ident}}(Addr addr)
     ${{action["c_code"]}}
 }
 
-"""
+""",
                 )
         for func in self.functions:
             code(func.generateCode())
@@ -1319,7 +1319,7 @@ int
 $c_ident::functionalWriteBuffers(PacketPtr& pkt)
 {
     int num_functional_writes = 0;
-"""
+""",
         )
         for var in self.objects:
             vtype = var.type
@@ -1337,7 +1337,7 @@ $c_ident::functionalWriteBuffers(PacketPtr& pkt)
             """
     return num_functional_writes;
 }
-"""
+""",
         )
 
         # Function for functional reads to messages buffered in the controller
@@ -1346,7 +1346,7 @@ $c_ident::functionalWriteBuffers(PacketPtr& pkt)
 bool
 $c_ident::functionalReadBuffers(PacketPtr& pkt)
 {
-"""
+""",
         )
         for var in self.objects:
             vtype = var.type
@@ -1369,7 +1369,7 @@ bool
 $c_ident::functionalReadBuffers(PacketPtr& pkt, WriteMask &mask)
 {
     bool read = false;
-"""
+""",
         )
         for var in self.objects:
             vtype = var.type
@@ -1390,7 +1390,7 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt, WriteMask &mask)
 
 } // namespace ruby
 } // namespace gem5
-"""
+""",
         )
 
         code.write(path, f"{c_ident}.cc")
@@ -1417,7 +1417,7 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt, WriteMask &mask)
 
 #include "base/logging.hh"
 
-"""
+""",
         )
         # We have to sort self.debug_flags in order to produce deterministic
         # output and avoid unnecessary rebuilds of the generated files.
@@ -1429,7 +1429,7 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt, WriteMask &mask)
 #include "mem/ruby/protocol/${ident}_Event.hh"
 #include "mem/ruby/protocol/${ident}_State.hh"
 
-"""
+""",
         )
 
         if outputRequest_types:
@@ -1440,7 +1440,7 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt, WriteMask &mask)
 #include "mem/ruby/protocol/Types.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
-"""
+""",
         )
 
         for include_path in includes:
@@ -1477,7 +1477,7 @@ ${ident}_Controller::wakeup()
             scheduleEvent(Cycles(1));
             break;
         }
-"""
+""",
         )
 
         code.indent()
@@ -1504,7 +1504,7 @@ ${ident}_Controller::wakeup()
             } catch (const RejectException & e) {
                 rejected[${{port_to_buf_map[port]}}]++;
             }
-"""
+""",
                 )
             code.dedent()
             code("")
@@ -1514,7 +1514,7 @@ ${ident}_Controller::wakeup()
         code(
             """
         // If we got this far, we have nothing left todo or something went
-        // wrong"""
+        // wrong""",
         )
         for buf_name, ports in in_msg_bufs.items():
             if len(ports) > 1:
@@ -1531,7 +1531,7 @@ ${ident}_Controller::wakeup()
                   "the incoming message type.\\n",
                   Cycles(1));
         }
-"""
+""",
                 )
         code(
             """
@@ -1541,7 +1541,7 @@ ${ident}_Controller::wakeup()
 
 } // namespace ruby
 } // namespace gem5
-"""
+""",
         )
 
         code.write(path, f"{self.ident}_Wakeup.cc")
@@ -1581,31 +1581,31 @@ namespace ruby
 
 TransitionResult
 ${ident}_Controller::doTransition(${ident}_Event event,
-"""
+""",
         )
         if self.EntryType != None:
             code(
                 """
                                   ${{self.EntryType.c_ident}}* m_cache_entry_ptr,
-"""
+""",
             )
         if self.TBEType != None:
             code(
                 """
                                   ${{self.TBEType.c_ident}}* m_tbe_ptr,
-"""
+""",
             )
         code(
             """
                                   Addr addr)
 {
-"""
+""",
         )
         code.indent()
 
         if self.TBEType != None and self.EntryType != None:
             code(
-                "${ident}_State state = getState(m_tbe_ptr, m_cache_entry_ptr, addr);"
+                "${ident}_State state = getState(m_tbe_ptr, m_cache_entry_ptr, addr);",
             )
         elif self.TBEType != None:
             code("${ident}_State state = getState(m_tbe_ptr, addr);")
@@ -1623,19 +1623,19 @@ DPRINTF(RubyGenerated, "%s, Time: %lld, state: %s, event: %s, addr: %#x\\n",
         ${ident}_Event_to_string(event), addr);
 
 TransitionResult result =
-"""
+""",
         )
         if self.TBEType != None and self.EntryType != None:
             code(
-                "doTransitionWorker(event, state, next_state, m_tbe_ptr, m_cache_entry_ptr, addr);"
+                "doTransitionWorker(event, state, next_state, m_tbe_ptr, m_cache_entry_ptr, addr);",
             )
         elif self.TBEType != None:
             code(
-                "doTransitionWorker(event, state, next_state, m_tbe_ptr, addr);"
+                "doTransitionWorker(event, state, next_state, m_tbe_ptr, addr);",
             )
         elif self.EntryType != None:
             code(
-                "doTransitionWorker(event, state, next_state, m_cache_entry_ptr, addr);"
+                "doTransitionWorker(event, state, next_state, m_cache_entry_ptr, addr);",
             )
         else:
             code("doTransitionWorker(event, state, next_state, addr);")
@@ -1658,7 +1658,7 @@ if (result == TransitionResult_Valid) {
              printAddress(addr), GET_TRANSITION_COMMENT());
 
     CLEAR_TRANSITION_COMMENT();
-"""
+""",
         )
         if self.TBEType != None and self.EntryType != None:
             code("setState(m_tbe_ptr, m_cache_entry_ptr, addr, next_state);")
@@ -1693,7 +1693,7 @@ if (result == TransitionResult_Valid) {
 }
 
 return result;
-"""
+""",
         )
         code.dedent()
         code(
@@ -1704,20 +1704,20 @@ TransitionResult
 ${ident}_Controller::doTransitionWorker(${ident}_Event event,
                                         ${ident}_State state,
                                         ${ident}_State& next_state,
-"""
+""",
         )
 
         if self.TBEType != None:
             code(
                 """
                                         ${{self.TBEType.c_ident}}*& m_tbe_ptr,
-"""
+""",
             )
         if self.EntryType != None:
             code(
                 """
                                         ${{self.EntryType.c_ident}}*& m_cache_entry_ptr,
-"""
+""",
             )
         code(
             """
@@ -1726,7 +1726,7 @@ ${ident}_Controller::doTransitionWorker(${ident}_Event event,
     m_curTransitionEvent = event;
     m_curTransitionNextState = next_state;
     switch(HASH_FUN(state, event)) {
-"""
+""",
         )
 
         # This map will allow suppress generating duplicate code
@@ -1752,13 +1752,13 @@ ${ident}_Controller::doTransitionWorker(${ident}_Event event,
                     # depend on any of the transitionactions.
                     case(
                         "next_state = getNextState(addr); "
-                        "m_curTransitionNextState = next_state;"
+                        "m_curTransitionNextState = next_state;",
                     )
                 else:
                     ns_ident = trans.nextState.ident
                     case(
                         "next_state = ${ident}_State_${ns_ident}; "
-                        "m_curTransitionNextState = next_state;"
+                        "m_curTransitionNextState = next_state;",
                     )
 
             actions = trans.actions
@@ -1795,7 +1795,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
             # Record access types for this transition
             for request_type in request_types:
                 case(
-                    "recordRequestType(${ident}_RequestType_${{request_type.ident}}, addr);"
+                    "recordRequestType(${ident}_RequestType_${{request_type.ident}}, addr);",
                 )
 
             # Figure out if we stall
@@ -1811,7 +1811,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
                 if self.TBEType != None and self.EntryType != None:
                     for action in actions:
                         case(
-                            "${{action.ident}}(m_tbe_ptr, m_cache_entry_ptr, addr);"
+                            "${{action.ident}}(m_tbe_ptr, m_cache_entry_ptr, addr);",
                         )
                 elif self.TBEType != None:
                     for action in actions:
@@ -1854,7 +1854,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
 
 } // namespace ruby
 } // namespace gem5
-"""
+""",
         )
         code.write(path, f"{self.ident}_Transitions.cc")
 
@@ -1869,7 +1869,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
         parent.frames[$over_num].location='$over_href'
     }\">
     ${{html.formatShorthand(text)}}
-    </A>"""
+    </A>""",
         )
         return str(code)
 
@@ -1908,7 +1908,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
 <BODY link="blue" vlink="blue">
 
 <H1 align="center">${{html.formatShorthand(self.short)}}:
-"""
+""",
         )
         code.indent()
         for i, machine in enumerate(self.symtab.getAllType(StateMachine)):
@@ -1921,7 +1921,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
                 code("$extra$mid")
             else:
                 code(
-                    '$extra<A target="Table" href="${mid}_table.html">$mid</A>'
+                    '$extra<A target="Table" href="${mid}_table.html">$mid</A>',
                 )
         code.dedent()
 
@@ -1932,7 +1932,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
 <TABLE border=1>
 <TR>
   <TH> </TH>
-"""
+""",
         )
 
         for event in self.events.values():
@@ -1957,7 +1957,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
                 """
 <TR>
   <TH bgcolor=$color>$ref</TH>
-"""
+""",
             )
 
             # -- One column for each event
@@ -2002,7 +2002,11 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
                 for action in trans.actions:
                     href = f"{self.ident}_action_{action.ident}.html"
                     ref = self.frameRef(
-                        href, "Status", href, "1", action.short
+                        href,
+                        "Status",
+                        href,
+                        "1",
+                        action.short,
                     )
                     code("  $ref")
                 if next != state:
@@ -2027,14 +2031,14 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
                 """
   <TH bgcolor=$color>$ref</TH>
 </TR>
-"""
+""",
             )
         code(
             """
 <!- Column footer->
 <TR>
   <TH> </TH>
-"""
+""",
         )
 
         for event in self.events.values():
@@ -2046,7 +2050,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
 </TR>
 </TABLE>
 </BODY></HTML>
-"""
+""",
         )
 
         if active_state:

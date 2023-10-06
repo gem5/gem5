@@ -142,7 +142,7 @@ class SEBinaryWorkload:
             else:
                 raise Exception(
                     "The checkpoint must be None, Path, or "
-                    "AbstractResource."
+                    "AbstractResource.",
                 )
 
     def set_se_simpoint_workload(

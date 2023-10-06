@@ -39,7 +39,8 @@ class LdsState(ClockedObject):
     size = Param.Int(65536, "the size of the LDS")
     range = Param.AddrRange("64kB", "address space of the LDS")
     bankConflictPenalty = Param.Int(
-        1, "penalty per LDS bank conflict when accessing data"
+        1,
+        "penalty per LDS bank conflict when accessing data",
     )
     banks = Param.Int(32, "Number of LDS banks")
     cuPort = ResponsePort("port that goes to the compute unit")

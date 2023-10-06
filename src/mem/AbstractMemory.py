@@ -48,7 +48,8 @@ class AbstractMemory(ClockedObject):
     # A default memory size of 128 MiB (starting at 0) is used to
     # simplify the regressions
     range = Param.AddrRange(
-        "128MiB", "Address range (potentially interleaved)"
+        "128MiB",
+        "Address range (potentially interleaved)",
     )
     null = Param.Bool(False, "Do not store data, always return zero")
 
@@ -71,7 +72,8 @@ class AbstractMemory(ClockedObject):
     # Image file to load into this memory as its initial contents. This is
     # particularly useful for ROMs.
     image_file = Param.String(
-        "", "Image to load into memory as its initial contents"
+        "",
+        "Image to load into memory as its initial contents",
     )
 
     writeable = Param.Bool(True, "Allow writes to this memory")

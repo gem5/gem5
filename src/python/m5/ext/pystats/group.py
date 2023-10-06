@@ -49,7 +49,8 @@ class Group(AbstractStat):
         type: Optional[str] = None,
         time_conversion: Optional[TimeConversion] = None,
         **kwargs: Dict[
-            str, Union["Group", Statistic, List["Group"], List["Statistic"]]
+            str,
+            Union["Group", Statistic, List["Group"], List["Statistic"]],
         ],
     ):
         if type is None:

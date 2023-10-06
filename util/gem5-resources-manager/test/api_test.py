@@ -204,7 +204,7 @@ class TestAPI(unittest.TestCase):
         returnedData = json.loads(response.data)
         schema = {}
         schema = requests.get(
-            "https://resources.gem5.org/gem5-resources-schema.json"
+            "https://resources.gem5.org/gem5-resources-schema.json",
         ).json()
         self.assertTrue(returnedData == schema)
 
@@ -228,7 +228,8 @@ class TestAPI(unittest.TestCase):
             "resource_version": "1.0.0",
         }
         response = self.test_client.post(
-            "/insert", json={"resource": test_resource, "alias": self.alias}
+            "/insert",
+            json={"resource": test_resource, "alias": self.alias},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"status": "Inserted"})
@@ -337,7 +338,8 @@ class TestAPI(unittest.TestCase):
         }
         self.collection.insert_one(test_resource.copy())
         response = self.test_client.post(
-            "/delete", json={"resource": test_resource, "alias": self.alias}
+            "/delete",
+            json={"resource": test_resource, "alias": self.alias},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"status": "Deleted"})
@@ -418,7 +420,8 @@ class TestAPI(unittest.TestCase):
         test_resource["description"] = "test-description2"
         self.collection.insert_one(test_resource.copy())
         response = self.test_client.post(
-            "/versions", json={"id": test_id, "alias": self.alias}
+            "/versions",
+            json={"id": test_id, "alias": self.alias},
         )
         return_json = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
@@ -468,7 +471,8 @@ class TestAPI(unittest.TestCase):
     def test_keys_1(self):
         """This method tests the keys method of the API."""
         response = self.test_client.post(
-            "/keys", json={"category": "simpoint", "id": "test-resource"}
+            "/keys",
+            json={"category": "simpoint", "id": "test-resource"},
         )
         test_response = {
             "category": "simpoint",
@@ -490,7 +494,8 @@ class TestAPI(unittest.TestCase):
     def test_keys_2(self):
         """This method tests the keys method of the API."""
         response = self.test_client.post(
-            "/keys", json={"category": "disk-image", "id": "test-resource"}
+            "/keys",
+            json={"category": "disk-image", "id": "test-resource"},
         )
         test_response = {
             "category": "disk-image",
@@ -525,7 +530,8 @@ class TestAPI(unittest.TestCase):
         original_resource = test_resource.copy()
         # insert resource
         response = self.test_client.post(
-            "/insert", json={"resource": test_resource, "alias": self.alias}
+            "/insert",
+            json={"resource": test_resource, "alias": self.alias},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"status": "Inserted"})
@@ -573,7 +579,8 @@ class TestAPI(unittest.TestCase):
         original_resource = test_resource.copy()
         # insert resource
         response = self.test_client.post(
-            "/insert", json={"resource": test_resource, "alias": self.alias}
+            "/insert",
+            json={"resource": test_resource, "alias": self.alias},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"status": "Inserted"})
@@ -632,7 +639,8 @@ class TestAPI(unittest.TestCase):
         }
         alias = "invalid"
         response = self.test_client.post(
-            "/insert", json={"resource": test_resource, "alias": alias}
+            "/insert",
+            json={"resource": test_resource, "alias": alias},
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json, {"error": "database not found"})
@@ -643,7 +651,8 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json, {"error": "database not found"})
         response = self.test_client.post(
-            "/delete", json={"resource": test_resource, "alias": alias}
+            "/delete",
+            json={"resource": test_resource, "alias": alias},
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json, {"error": "database not found"})
@@ -654,7 +663,8 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json, {"error": "database not found"})
         response = self.test_client.post(
-            "/versions", json={"id": test_id, "alias": alias}
+            "/versions",
+            json={"id": test_id, "alias": alias},
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json, {"error": "database not found"})
@@ -675,7 +685,8 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json, {"error": "database not found"})
         response = self.test_client.post(
-            "/getRevisionStatus", json={"alias": alias}
+            "/getRevisionStatus",
+            json={"alias": alias},
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json, {"error": "database not found"})
@@ -685,7 +696,8 @@ class TestAPI(unittest.TestCase):
 
     def test_get_revision_status_valid(self):
         response = self.test_client.post(
-            "/getRevisionStatus", json={"alias": self.alias}
+            "/getRevisionStatus",
+            json={"alias": self.alias},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"undo": 1, "redo": 1})
@@ -699,7 +711,8 @@ class TestAPI(unittest.TestCase):
         password = "test"
         expected_session = server.databases["test"].save_session()
         response = self.test_client.post(
-            "/saveSession", json={"alias": self.alias, "password": password}
+            "/saveSession",
+            json={"alias": self.alias, "password": password},
         )
         self.assertEqual(response.status_code, 200)
 
@@ -713,7 +726,8 @@ class TestAPI(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(
-            expected_session, server.databases[self.alias].save_session()
+            expected_session,
+            server.databases[self.alias].save_session(),
         )
 
     def test_logout(self):

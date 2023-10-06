@@ -8,7 +8,7 @@ def upgrader(cpt):
         "Warning: The size of the FP register file has changed. "
         "To get similar results you need to adjust the number of "
         "physical registers in the CPU you're restoring into by "
-        "NNNN."
+        "NNNN.",
     )
     # Find the CPU context's and upgrade their registers
     for sec in cpt.sections():
@@ -271,7 +271,8 @@ def upgrader(cpt):
     # Add in extra state for the new TLB Entries
     for sec in cpt.sections():
         re_tlbentry_match = re.match(
-            "(^.*?sys.*?\.cpu(\d+)*)\.(dtb|itb).TlbEntry\d+$", sec
+            "(^.*?sys.*?\.cpu(\d+)*)\.(dtb|itb).TlbEntry\d+$",
+            sec,
         )
         if not re_tlbentry_match:
             continue

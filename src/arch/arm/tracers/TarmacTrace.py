@@ -45,11 +45,13 @@ class TarmacParser(InstTracer):
     path_to_trace = Param.String("tarmac.log", "path to TARMAC trace")
 
     start_pc = Param.Int(
-        0x0, "tracing starts when the PC gets this value; ignored if 0x0"
+        0x0,
+        "tracing starts when the PC gets this value; ignored if 0x0",
     )
 
     exit_on_diff = Param.Bool(
-        False, "stop simulation after first mismatch is detected"
+        False,
+        "stop simulation after first mismatch is detected",
     )
 
     exit_on_insn_diff = Param.Bool(
@@ -62,7 +64,8 @@ class TarmacParser(InstTracer):
     cpu_id = Param.Bool(False, "true if trace format includes the CPU id")
 
     ignore_mem_addr = Param.AddrRange(
-        AddrRange(0, size=0), "Range of unverifiable memory addresses"
+        AddrRange(0, size=0),
+        "Range of unverifiable memory addresses",
     )
 
 
@@ -76,11 +79,13 @@ class TarmacTracer(InstTracer):
     cxx_header = "arch/arm/tracers/tarmac_tracer.hh"
 
     start_tick = Param.Tick(
-        0, "tracing starts when the tick time gets this value"
+        0,
+        "tracing starts when the tick time gets this value",
     )
 
     end_tick = Param.Tick(
-        MaxTick, "tracing ends when the tick time gets this value"
+        MaxTick,
+        "tracing ends when the tick time gets this value",
     )
     outfile = Param.TarmacDump(
         "stdoutput",

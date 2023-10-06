@@ -43,7 +43,7 @@ import re
 from testlib import *
 
 m5_exit_regex = re.compile(
-    r"Exiting @ tick \d* because m5_exit instruction encountered"
+    r"Exiting @ tick \d* because m5_exit instruction encountered",
 )
 
 if config.bin_path:

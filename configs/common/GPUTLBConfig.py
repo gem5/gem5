@@ -110,15 +110,19 @@ def create_TLB_Coalescer(
     # Level, TLB name and  Coalescer name
     for i in range(my_index):
         tlb_name.append(
-            eval(TLB_constructor(options, my_level, gpu_ctrl, full_system))
+            eval(TLB_constructor(options, my_level, gpu_ctrl, full_system)),
         )
         coalescer_name.append(
-            eval(Coalescer_constructor(options, my_level, full_system))
+            eval(Coalescer_constructor(options, my_level, full_system)),
         )
 
 
 def config_tlb_hierarchy(
-    options, system, shader_idx, gpu_ctrl=None, full_system=False
+    options,
+    system,
+    shader_idx,
+    gpu_ctrl=None,
+    full_system=False,
 ):
     n_cu = options.num_compute_units
 
@@ -221,7 +225,7 @@ def config_tlb_hierarchy(
                 exec(
                     "system.%s_coalescer[%d].mem_side_ports[0] = \
                         system.%s_tlb[%d].cpu_side_ports[0]"
-                    % (name, index, name, index)
+                    % (name, index, name, index),
                 )
 
     # Connect the cpuSidePort of all the coalescers in level 1
@@ -243,7 +247,7 @@ def config_tlb_hierarchy(
                                 tlb,
                                 cu_idx * tlb_per_cu + tlb,
                                 0,
-                            )
+                            ),
                         )
                 else:
                     exec(
@@ -255,7 +259,7 @@ def config_tlb_hierarchy(
                             tlb_per_cu,
                             cu_idx / (n_cu / num_TLBs),
                             cu_idx % (n_cu / num_TLBs),
-                        )
+                        ),
                     )
         elif name == "sqc":  # I-TLB
             for index in range(n_cu):
@@ -264,7 +268,7 @@ def config_tlb_hierarchy(
                 exec(
                     "system.cpu[%d].CUs[%d].sqc_tlb_port = \
                         system.sqc_coalescer[%d].cpu_side_ports[%d]"
-                    % (shader_idx, index, sqc_tlb_index, sqc_tlb_port_id)
+                    % (shader_idx, index, sqc_tlb_index, sqc_tlb_port_id),
                 )
         elif name == "scalar":  # Scalar D-TLB
             for index in range(n_cu):
@@ -273,7 +277,12 @@ def config_tlb_hierarchy(
                 exec(
                     "system.cpu[%d].CUs[%d].scalar_tlb_port = \
                         system.scalar_coalescer[%d].cpu_side_ports[%d]"
-                    % (shader_idx, index, scalar_tlb_index, scalar_tlb_port_id)
+                    % (
+                        shader_idx,
+                        index,
+                        scalar_tlb_index,
+                        scalar_tlb_port_id,
+                    ),
                 )
 
     # Connect the memSidePorts of all the TLBs with the
@@ -287,7 +296,7 @@ def config_tlb_hierarchy(
             exec(
                 "system.%s_tlb[%d].mem_side_ports[0] = \
                     system.l2_coalescer[0].cpu_side_ports[%d]"
-                % (name, index, l2_coalescer_index)
+                % (name, index, l2_coalescer_index),
             )
             l2_coalescer_index += 1
 
@@ -303,7 +312,7 @@ def config_tlb_hierarchy(
             for index in range(TLB_type["width"]):
                 exec(
                     "system._dma_ports.append(system.%s_tlb[%d].walker)"
-                    % (name, index)
+                    % (name, index),
                 )
 
     return system

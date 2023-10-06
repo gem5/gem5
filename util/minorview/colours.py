@@ -73,7 +73,7 @@ number_colour_code = list(
             "grey",
             "white",
         ],
-    )
+    ),
 )
 
 

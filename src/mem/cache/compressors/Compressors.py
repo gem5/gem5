@@ -38,7 +38,8 @@ class BaseCacheCompressor(SimObject):
 
     block_size = Param.Int(Parent.cache_line_size, "Block size in bytes")
     chunk_size_bits = Param.Unsigned(
-        32, "Size of a parsing data chunk (in bits)"
+        32,
+        "Size of a parsing data chunk (in bits)",
     )
     size_threshold_percentage = Param.Percent(
         50,
@@ -47,7 +48,8 @@ class BaseCacheCompressor(SimObject):
     )
 
     comp_chunks_per_cycle = Param.Unsigned(
-        1, "Number of chunks that can be compressed in parallel per cycle."
+        1,
+        "Number of chunks that can be compressed in parallel per cycle.",
     )
     comp_extra_latency = Param.Cycles(
         1,
@@ -55,7 +57,8 @@ class BaseCacheCompressor(SimObject):
         "to finish compression (e.g., due to shifting and packaging).",
     )
     decomp_chunks_per_cycle = Param.Unsigned(
-        1, "Number of chunks that can be decompressed in parallel per cycle."
+        1,
+        "Number of chunks that can be decompressed in parallel per cycle.",
     )
     decomp_extra_latency = Param.Cycles(
         1,
@@ -71,7 +74,8 @@ class BaseDictionaryCompressor(BaseCacheCompressor):
     cxx_header = "mem/cache/compressors/dictionary_compressor.hh"
 
     dictionary_size = Param.Int(
-        Parent.cache_line_size, "Number of dictionary entries"
+        Parent.cache_line_size,
+        "Number of dictionary entries",
     )
 
 
@@ -237,12 +241,15 @@ class FrequentValuesCompressor(BaseCacheCompressor):
     vft_entries = Param.MemorySize("1024", "Number of entries of the VFT.")
     vft_indexing_policy = Param.BaseIndexingPolicy(
         SetAssociative(
-            entry_size=1, assoc=Parent.vft_assoc, size=Parent.vft_entries
+            entry_size=1,
+            assoc=Parent.vft_assoc,
+            size=Parent.vft_entries,
         ),
         "Indexing policy of the VFT.",
     )
     vft_replacement_policy = Param.BaseReplacementPolicy(
-        LFURP(), "Replacement policy of the VFT."
+        LFURP(),
+        "Replacement policy of the VFT.",
     )
 
     comp_chunks_per_cycle = 1
@@ -259,7 +266,8 @@ class MultiCompressor(BaseCacheCompressor):
     # Dummy default compressor list. This might not be an optimal choice,
     # since these compressors have many overlapping patterns
     compressors = VectorParam.BaseCacheCompressor(
-        [CPack(), FPCD()], "Array of compressors"
+        [CPack(), FPCD()],
+        "Array of compressors",
     )
     encoding_in_tags = Param.Bool(
         False,

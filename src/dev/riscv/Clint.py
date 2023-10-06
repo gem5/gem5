@@ -57,7 +57,10 @@ class Clint(BasicPioDevice):
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(
-            state, "clint", self.pio_addr, self.pio_size
+            state,
+            "clint",
+            self.pio_addr,
+            self.pio_size,
         )
 
         cpus = self.system.unproxy(self).cpu

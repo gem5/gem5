@@ -78,12 +78,18 @@ def define_options(parser):
 
 
 def create_system(
-    options, full_system, system, dma_ports, bootmem, ruby_system, cpus
+    options,
+    full_system,
+    system,
+    dma_ports,
+    bootmem,
+    ruby_system,
+    cpus,
 ):
     if buildEnv["PROTOCOL"] != "MESI_Three_Level_HTM":
         fatal(
             "This script requires the MESI_Three_Level protocol to be\
-               built."
+               built.",
         )
 
     cpu_sequencers = []
@@ -185,11 +191,11 @@ def create_system(
 
             exec(
                 "ruby_system.l0_cntrl%d = l0_cntrl"
-                % (i * num_cpus_per_cluster + j)
+                % (i * num_cpus_per_cluster + j),
             )
             exec(
                 "ruby_system.l1_cntrl%d = l1_cntrl"
-                % (i * num_cpus_per_cluster + j)
+                % (i * num_cpus_per_cluster + j),
             )
 
             #
@@ -237,7 +243,7 @@ def create_system(
 
             exec(
                 "ruby_system.l2_cntrl%d = l2_cntrl"
-                % (i * num_l2caches_per_cluster + j)
+                % (i * num_l2caches_per_cluster + j),
             )
             l2_cntrl_nodes.append(l2_cntrl)
 
@@ -264,11 +270,15 @@ def create_system(
     # the ruby system
     # clk_divider value is a fix to pass regression.
     ruby_system.memctrl_clk_domain = DerivedClockDomain(
-        clk_domain=ruby_system.clk_domain, clk_divider=3
+        clk_domain=ruby_system.clk_domain,
+        clk_divider=3,
     )
 
     mem_dir_cntrl_nodes, rom_dir_cntrl_node = create_directories(
-        options, bootmem, ruby_system, system
+        options,
+        bootmem,
+        ruby_system,
+        system,
     )
     dir_cntrl_nodes = mem_dir_cntrl_nodes[:]
     if rom_dir_cntrl_node is not None:
@@ -376,7 +386,7 @@ def create_system(
                 level=2,
                 idu_type="Unified",
                 size=str(
-                    MemorySize(options.l2_size) * num_l2caches_per_cluster
+                    MemorySize(options.l2_size) * num_l2caches_per_cluster,
                 )
                 + "B",
                 line_size=options.cacheline_size,

@@ -35,6 +35,7 @@ class Cmos(BasicPioDevice):
     cxx_header = "dev/x86/cmos.hh"
 
     time = Param.Time(
-        "01/01/2012", "System time to use ('Now' for actual time)"
+        "01/01/2012",
+        "System time to use ('Now' for actual time)",
     )
     int_pin = IntSourcePin("Pin to signal RTC alarm interrupts to")

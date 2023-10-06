@@ -51,5 +51,5 @@ class CheckProbeStatementAST(StatementAST):
             $in_port_code.delayHead(clockEdge(), cyclesToTicks(Cycles(1)));
             continue;
         }
-        """
+        """,
         )

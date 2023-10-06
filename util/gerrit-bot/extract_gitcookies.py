@@ -57,7 +57,7 @@ if __name__ == "__main__":
         description=(
             "Extract username and password from .gitcookies"
             "or from the script used to write .gitcookies file"
-        )
+        ),
     )
     parser.add_argument(
         "input",

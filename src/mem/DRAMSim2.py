@@ -47,13 +47,16 @@ class DRAMSim2(AbstractMemory):
     port = ResponsePort("This port sends responses and receives requests")
 
     deviceConfigFile = Param.String(
-        "ini/DDR3_micron_32M_8B_x8_sg15.ini", "Device configuration file"
+        "ini/DDR3_micron_32M_8B_x8_sg15.ini",
+        "Device configuration file",
     )
     systemConfigFile = Param.String(
-        "system.ini.example", "Memory organisation configuration file"
+        "system.ini.example",
+        "Memory organisation configuration file",
     )
     filePath = Param.String(
-        "ext/dramsim2/DRAMSim2/", "Directory to prepend to file names"
+        "ext/dramsim2/DRAMSim2/",
+        "Directory to prepend to file names",
     )
     traceFile = Param.String("", "Output file for trace generation")
     enableDebug = Param.Bool(False, "Enable DRAMSim2 debug output")

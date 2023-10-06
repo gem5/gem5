@@ -54,7 +54,7 @@ class Transition(Symbol):
                     break
             if not found:
                 fatal(
-                    "Machine uses a wildcard transition without getNextState defined"
+                    "Machine uses a wildcard transition without getNextState defined",
                 )
             self.nextState = WildcardState(machine.symtab, "*", location)
         else:

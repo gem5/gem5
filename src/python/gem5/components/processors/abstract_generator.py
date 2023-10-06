@@ -34,7 +34,9 @@ from .abstract_processor import AbstractProcessor
 
 
 def partition_range(
-    min_addr: int, max_addr: int, num_partitions: int
+    min_addr: int,
+    max_addr: int,
+    num_partitions: int,
 ) -> List[tuple]:
     assert (
         isinstance(min_addr, int)

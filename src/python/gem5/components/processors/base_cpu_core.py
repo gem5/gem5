@@ -156,7 +156,9 @@ class BaseCPUCore(AbstractCore):
 
     @overrides(AbstractCore)
     def _set_simpoint(
-        self, inst_starts: List[int], board_initialized: bool
+        self,
+        inst_starts: List[int],
+        board_initialized: bool,
     ) -> None:
         if board_initialized:
             self.core.scheduleSimpointsInstStop(sorted(set(inst_starts)))
@@ -165,7 +167,9 @@ class BaseCPUCore(AbstractCore):
 
     @overrides(AbstractCore)
     def _set_inst_stop_any_thread(
-        self, inst: int, board_initialized: bool
+        self,
+        inst: int,
+        board_initialized: bool,
     ) -> None:
         if board_initialized:
             self.core.scheduleInstStopAnyThread(inst)
@@ -174,7 +178,9 @@ class BaseCPUCore(AbstractCore):
 
     @overrides(AbstractCore)
     def add_pc_tracker_probe(
-        self, target_pair: List[PcCountPair], manager: PcCountTrackerManager
+        self,
+        target_pair: List[PcCountPair],
+        manager: PcCountTrackerManager,
     ) -> None:
         pair_tracker = PcCountTracker()
         pair_tracker.targets = target_pair

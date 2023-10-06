@@ -62,7 +62,9 @@ requires(isa_required=ISA.X86)
 # For classic, PrivateL1PrivateL2 and NoCache have been tested.
 # For Ruby, MESI_Two_Level and MI_example have been tested.
 cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-    l1d_size="32kB", l1i_size="32kB", l2_size="512kB"
+    l1d_size="32kB",
+    l1i_size="32kB",
+    l2_size="512kB",
 )
 
 # Setup the system memory.
@@ -92,8 +94,9 @@ max_ticks = 10**6
 sim.run(max_ticks=max_ticks)
 print(
     "Exiting @ tick {} because {}.".format(
-        sim.get_current_tick(), sim.get_last_exit_event_cause()
-    )
+        sim.get_current_tick(),
+        sim.get_last_exit_event_cause(),
+    ),
 )
 print("Taking checkpoint at", args.checkpoint_path)
 sim.save_checkpoint(args.checkpoint_path)

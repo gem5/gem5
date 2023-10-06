@@ -48,7 +48,12 @@ overrideInOperand.overrides = dict()
 
 class OperandDesc(object):
     def __init__(
-        self, base_cls, dflt_ext, reg_spec, flags=None, sort_pri=None
+        self,
+        base_cls,
+        dflt_ext,
+        reg_spec,
+        flags=None,
+        sort_pri=None,
     ):
         from .isa_parser import makeList
 
@@ -103,7 +108,7 @@ class OperandDesc(object):
                 "reg_spec": reg_spec,
                 "flags": flags,
                 "sort_pri": sort_pri,
-            }
+            },
         )
         self.attrs = attrs
 

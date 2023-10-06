@@ -49,16 +49,18 @@ class CommMonitor(SimObject):
 
     # one port in each direction
     mem_side_port = RequestPort(
-        "This port sends requests and receives responses"
+        "This port sends requests and receives responses",
     )
     master = DeprecatedParam(
-        mem_side_port, "`master` is now called `mem_side_port`"
+        mem_side_port,
+        "`master` is now called `mem_side_port`",
     )
     cpu_side_port = ResponsePort(
-        "This port receives requests and sends responses"
+        "This port receives requests and sends responses",
     )
     slave = DeprecatedParam(
-        cpu_side_port, "`slave` is now called `cpu_side_port`"
+        cpu_side_port,
+        "`slave` is now called `cpu_side_port`",
     )
 
     # control the sample period window length of this monitor
@@ -70,10 +72,12 @@ class CommMonitor(SimObject):
 
     # histogram of burst length of packets (not using sample period)
     burst_length_bins = Param.Unsigned(
-        "20", "# bins in burst length histograms"
+        "20",
+        "# bins in burst length histograms",
     )
     disable_burst_length_hists = Param.Bool(
-        False, "Disable burst length histograms"
+        False,
+        "Disable burst length histograms",
     )
 
     # bandwidth per sample period
@@ -95,18 +99,22 @@ class CommMonitor(SimObject):
     # outstanding requests (that did not yet get a response) per
     # sample period
     outstanding_bins = Param.Unsigned(
-        "20", "# bins in outstanding requests histograms"
+        "20",
+        "# bins in outstanding requests histograms",
     )
     disable_outstanding_hists = Param.Bool(
-        False, "Disable outstanding requests histograms"
+        False,
+        "Disable outstanding requests histograms",
     )
 
     # transactions (requests) observed per sample period
     transaction_bins = Param.Unsigned(
-        "20", "# bins in transaction count histograms"
+        "20",
+        "# bins in transaction count histograms",
     )
     disable_transaction_hists = Param.Bool(
-        False, "Disable transaction count histograms"
+        False,
+        "Disable transaction count histograms",
     )
 
     # address distributions (heatmaps) with associated address masks

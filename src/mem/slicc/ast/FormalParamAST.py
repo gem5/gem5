@@ -61,7 +61,12 @@ class FormalParamAST(AST):
 
         # Add to symbol table
         v = Var(
-            self.symtab, self.ident, self.location, type, param, self.pairs
+            self.symtab,
+            self.ident,
+            self.location,
+            type,
+            param,
+            self.pairs,
         )
         self.symtab.newSymbol(v)
 
@@ -74,7 +79,7 @@ class FormalParamAST(AST):
             if qualifier not in ["", "PTR"]:
                 self.warning(
                     "Parameter '%s' is always pointer. "
-                    "%s qualifier ignored" % (self.ident, qualifier)
+                    "%s qualifier ignored" % (self.ident, qualifier),
                 )
             qualifier = "PTR"
 

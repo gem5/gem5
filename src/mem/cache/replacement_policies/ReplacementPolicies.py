@@ -41,16 +41,16 @@ class DuelingRP(BaseReplacementPolicy):
     cxx_header = "mem/cache/replacement_policies/dueling_rp.hh"
 
     constituency_size = Param.Unsigned(
-        "The size of a region containing one sample"
+        "The size of a region containing one sample",
     )
     team_size = Param.Unsigned(
-        "Number of entries in a sampling set that belong to a team"
+        "Number of entries in a sampling set that belong to a team",
     )
     replacement_policy_a = Param.BaseReplacementPolicy(
-        "Sub-replacement policy A"
+        "Sub-replacement policy A",
     )
     replacement_policy_b = Param.BaseReplacementPolicy(
-        "Sub-replacement policy B"
+        "Sub-replacement policy B",
     )
 
 
@@ -107,10 +107,12 @@ class BRRIPRP(BaseReplacementPolicy):
     cxx_header = "mem/cache/replacement_policies/brrip_rp.hh"
     num_bits = Param.Int(2, "Number of bits per RRPV")
     hit_priority = Param.Bool(
-        False, "Prioritize evicting blocks that havent had a hit recently"
+        False,
+        "Prioritize evicting blocks that havent had a hit recently",
     )
     btp = Param.Percent(
-        3, "Percentage of blocks to be inserted with long RRPV"
+        3,
+        "Percentage of blocks to be inserted with long RRPV",
     )
 
 
@@ -143,7 +145,8 @@ class SHiPRP(BRRIPRP):
     shct_size = Param.Unsigned(16384, "Number of SHCT entries")
     # By default any value greater than 0 is enough to change insertion policy
     insertion_threshold = Param.Percent(
-        1, "Percentage at which an entry changes insertion policy"
+        1,
+        "Percentage at which an entry changes insertion policy",
     )
     # Always make hits mark entries as last to be evicted
     hit_priority = True

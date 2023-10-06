@@ -38,8 +38,8 @@ class SysBridge(SimObject):
     target = Param.System("Target System")
 
     target_port = RequestPort(
-        "A port which sends requests to a target system."
+        "A port which sends requests to a target system.",
     )
     source_port = ResponsePort(
-        "A port which sends responses to a source system"
+        "A port which sends responses to a source system",
     )

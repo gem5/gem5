@@ -91,13 +91,13 @@ class Grammar(object):
             return self.current_lexer.lineno
 
         raise AttributeError(
-            "'%s' object has no attribute '%s'" % (type(self), attr)
+            "'%s' object has no attribute '%s'" % (type(self), attr),
         )
 
     def parse_string(self, data, source="<string>", debug=None, tracking=0):
         if not isinstance(data, str):
             raise AttributeError(
-                "argument must be a string, was '%s'" % type(f)
+                "argument must be a string, was '%s'" % type(f),
             )
 
         lexer = self.lex.clone()
@@ -122,7 +122,7 @@ class Grammar(object):
             source = f.name
         else:
             raise AttributeError(
-                "argument must be either a string or file, was '%s'" % type(f)
+                "argument must be either a string or file, was '%s'" % type(f),
             )
 
         return self.parse_string(f.read(), source, **kwargs)

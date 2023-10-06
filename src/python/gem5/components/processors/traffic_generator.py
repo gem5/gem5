@@ -36,7 +36,7 @@ class TrafficGenerator(AbstractGenerator):
         config_file_list: List[str],
     ) -> None:
         super().__init__(
-            cores=self._create_cores(config_file_list=config_file_list)
+            cores=self._create_cores(config_file_list=config_file_list),
         )
         """The traffic generator
 
@@ -49,7 +49,8 @@ class TrafficGenerator(AbstractGenerator):
         """
 
     def _create_cores(
-        self, config_file_list: List[str]
+        self,
+        config_file_list: List[str],
     ) -> List[TrafficGeneratorCore]:
         """
         The helper function to create the cores for the generator, it will use

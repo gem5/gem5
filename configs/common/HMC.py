@@ -314,7 +314,9 @@ def add_options(parser):
 
     # The link performance monitors
     parser.add_argument(
-        "--enable-link-monitor", action="store_true", help="The link monitors"
+        "--enable-link-monitor",
+        action="store_true",
+        help="The link monitors",
     )
 
     # link aggregator enable - put a cross between buffers & links

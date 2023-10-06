@@ -53,7 +53,8 @@ class HWPProbeEvent(object):
         if self.obj:
             for name in self.names:
                 self.prefetcher.getCCObject().addEventProbe(
-                    self.obj.getCCObject(), name
+                    self.obj.getCCObject(),
+                    name,
                 )
 
 
@@ -82,10 +83,12 @@ class BasePrefetcher(ClockedObject):
         "Notify the hardware prefetcher on hit on prefetched lines",
     )
     use_virtual_addresses = Param.Bool(
-        False, "Use virtual addresses for prefetching"
+        False,
+        "Use virtual addresses for prefetching",
     )
     page_bytes = Param.MemorySize(
-        "4KiB", "Size of pages for virtual addresses"
+        "4KiB",
+        "Size of pages for virtual addresses",
     )
 
     def __init__(self, **kwargs):
@@ -140,11 +143,13 @@ class QueuedPrefetcher(BasePrefetcher):
     queue_squash = Param.Bool(True, "Squash queued prefetch on demand access")
     queue_filter = Param.Bool(True, "Don't queue redundant prefetches")
     cache_snoop = Param.Bool(
-        False, "Snoop cache to eliminate redundant request"
+        False,
+        "Snoop cache to eliminate redundant request",
     )
 
     tag_prefetch = Param.Bool(
-        True, "Tag prefetch with PC of generating access"
+        True,
+        "Tag prefetch with PC of generating access",
     )
 
     # The throttle_control_percentage controls how many of the candidate
@@ -178,13 +183,16 @@ class StridePrefetcher(QueuedPrefetcher):
     on_inst = False
 
     confidence_counter_bits = Param.Unsigned(
-        3, "Number of bits of the confidence counter"
+        3,
+        "Number of bits of the confidence counter",
     )
     initial_confidence = Param.Unsigned(
-        4, "Starting confidence of new entries"
+        4,
+        "Starting confidence of new entries",
     )
     confidence_threshold = Param.Percent(
-        50, "Prefetch generation confidence threshold"
+        50,
+        "Prefetch generation confidence threshold",
     )
 
     use_requestor_id = Param.Bool(True, "Use requestor id based history")
@@ -195,12 +203,15 @@ class StridePrefetcher(QueuedPrefetcher):
     table_entries = Param.MemorySize("64", "Number of entries of the PC table")
     table_indexing_policy = Param.BaseIndexingPolicy(
         StridePrefetcherHashedSetAssociative(
-            entry_size=1, assoc=Parent.table_assoc, size=Parent.table_entries
+            entry_size=1,
+            assoc=Parent.table_assoc,
+            size=Parent.table_entries,
         ),
         "Indexing policy of the PC table",
     )
     table_replacement_policy = Param.BaseReplacementPolicy(
-        RandomRP(), "Replacement policy of the PC table"
+        RandomRP(),
+        "Replacement policy of the PC table",
     )
 
 
@@ -217,7 +228,8 @@ class IndirectMemoryPrefetcher(QueuedPrefetcher):
     cxx_class = "gem5::prefetch::IndirectMemory"
     cxx_header = "mem/cache/prefetch/indirect_memory.hh"
     pt_table_entries = Param.MemorySize(
-        "16", "Number of entries of the Prefetch Table"
+        "16",
+        "Number of entries of the Prefetch Table",
     )
     pt_table_assoc = Param.Unsigned(16, "Associativity of the Prefetch Table")
     pt_table_indexing_policy = Param.BaseIndexingPolicy(
@@ -229,17 +241,21 @@ class IndirectMemoryPrefetcher(QueuedPrefetcher):
         "Indexing policy of the pattern table",
     )
     pt_table_replacement_policy = Param.BaseReplacementPolicy(
-        LRURP(), "Replacement policy of the pattern table"
+        LRURP(),
+        "Replacement policy of the pattern table",
     )
     max_prefetch_distance = Param.Unsigned(16, "Maximum prefetch distance")
     num_indirect_counter_bits = Param.Unsigned(
-        3, "Number of bits of the indirect counter"
+        3,
+        "Number of bits of the indirect counter",
     )
     ipd_table_entries = Param.MemorySize(
-        "4", "Number of entries of the Indirect Pattern Detector"
+        "4",
+        "Number of entries of the Indirect Pattern Detector",
     )
     ipd_table_assoc = Param.Unsigned(
-        4, "Associativity of the Indirect Pattern Detector"
+        4,
+        "Associativity of the Indirect Pattern Detector",
     )
     ipd_table_indexing_policy = Param.BaseIndexingPolicy(
         SetAssociative(
@@ -250,18 +266,22 @@ class IndirectMemoryPrefetcher(QueuedPrefetcher):
         "Indexing policy of the Indirect Pattern Detector",
     )
     ipd_table_replacement_policy = Param.BaseReplacementPolicy(
-        LRURP(), "Replacement policy of the Indirect Pattern Detector"
+        LRURP(),
+        "Replacement policy of the Indirect Pattern Detector",
     )
     shift_values = VectorParam.Int([2, 3, 4, -3], "Shift values to evaluate")
     addr_array_len = Param.Unsigned(4, "Number of misses tracked")
     prefetch_threshold = Param.Unsigned(
-        2, "Counter threshold to start the indirect prefetching"
+        2,
+        "Counter threshold to start the indirect prefetching",
     )
     stream_counter_threshold = Param.Unsigned(
-        4, "Counter threshold to enable the stream prefetcher"
+        4,
+        "Counter threshold to enable the stream prefetcher",
     )
     streaming_distance = Param.Unsigned(
-        4, "Number of prefetches to generate when using the stream prefetcher"
+        4,
+        "Number of prefetches to generate when using the stream prefetcher",
     )
 
 
@@ -271,14 +291,17 @@ class SignaturePathPrefetcher(QueuedPrefetcher):
     cxx_header = "mem/cache/prefetch/signature_path.hh"
 
     signature_shift = Param.UInt8(
-        3, "Number of bits to shift when calculating a new signature"
+        3,
+        "Number of bits to shift when calculating a new signature",
     )
     signature_bits = Param.UInt16(12, "Size of the signature, in bits")
     signature_table_entries = Param.MemorySize(
-        "1024", "Number of entries of the signature table"
+        "1024",
+        "Number of entries of the signature table",
     )
     signature_table_assoc = Param.Unsigned(
-        2, "Associativity of the signature table"
+        2,
+        "Associativity of the signature table",
     )
     signature_table_indexing_policy = Param.BaseIndexingPolicy(
         SetAssociative(
@@ -289,20 +312,25 @@ class SignaturePathPrefetcher(QueuedPrefetcher):
         "Indexing policy of the signature table",
     )
     signature_table_replacement_policy = Param.BaseReplacementPolicy(
-        LRURP(), "Replacement policy of the signature table"
+        LRURP(),
+        "Replacement policy of the signature table",
     )
 
     num_counter_bits = Param.UInt8(
-        3, "Number of bits of the saturating counters"
+        3,
+        "Number of bits of the saturating counters",
     )
     pattern_table_entries = Param.MemorySize(
-        "4096", "Number of entries of the pattern table"
+        "4096",
+        "Number of entries of the pattern table",
     )
     pattern_table_assoc = Param.Unsigned(
-        1, "Associativity of the pattern table"
+        1,
+        "Associativity of the pattern table",
     )
     strides_per_pattern_entry = Param.Unsigned(
-        4, "Number of strides stored in each pattern entry"
+        4,
+        "Number of strides stored in each pattern entry",
     )
     pattern_table_indexing_policy = Param.BaseIndexingPolicy(
         SetAssociative(
@@ -313,14 +341,17 @@ class SignaturePathPrefetcher(QueuedPrefetcher):
         "Indexing policy of the pattern table",
     )
     pattern_table_replacement_policy = Param.BaseReplacementPolicy(
-        LRURP(), "Replacement policy of the pattern table"
+        LRURP(),
+        "Replacement policy of the pattern table",
     )
 
     prefetch_confidence_threshold = Param.Float(
-        0.5, "Minimum confidence to issue prefetches"
+        0.5,
+        "Minimum confidence to issue prefetches",
     )
     lookahead_confidence_threshold = Param.Float(
-        0.75, "Minimum confidence to continue exploring lookahead entries"
+        0.75,
+        "Minimum confidence to continue exploring lookahead entries",
     )
 
 
@@ -338,7 +369,8 @@ class SignaturePathPrefetcherV2(SignaturePathPrefetcher):
     lookahead_confidence_threshold = 0.25
 
     global_history_register_entries = Param.MemorySize(
-        "8", "Number of entries of global history register"
+        "8",
+        "Number of entries of global history register",
     )
     global_history_register_indexing_policy = Param.BaseIndexingPolicy(
         SetAssociative(
@@ -349,7 +381,8 @@ class SignaturePathPrefetcherV2(SignaturePathPrefetcher):
         "Indexing policy of the global history register",
     )
     global_history_register_replacement_policy = Param.BaseReplacementPolicy(
-        LRURP(), "Replacement policy of the global history register"
+        LRURP(),
+        "Replacement policy of the global history register",
     )
 
 
@@ -364,17 +397,21 @@ class AccessMapPatternMatching(ClockedObject):
     )
 
     limit_stride = Param.Unsigned(
-        0, "Limit the strides checked up to -X/X, if 0, disable the limit"
+        0,
+        "Limit the strides checked up to -X/X, if 0, disable the limit",
     )
     start_degree = Param.Unsigned(
-        4, "Initial degree (Maximum number of prefetches generated"
+        4,
+        "Initial degree (Maximum number of prefetches generated",
     )
     hot_zone_size = Param.MemorySize("2KiB", "Memory covered by a hot zone")
     access_map_table_entries = Param.MemorySize(
-        "256", "Number of entries in the access map table"
+        "256",
+        "Number of entries in the access map table",
     )
     access_map_table_assoc = Param.Unsigned(
-        8, "Associativity of the access map table"
+        8,
+        "Associativity of the access map table",
     )
     access_map_table_indexing_policy = Param.BaseIndexingPolicy(
         SetAssociative(
@@ -385,29 +422,37 @@ class AccessMapPatternMatching(ClockedObject):
         "Indexing policy of the access map table",
     )
     access_map_table_replacement_policy = Param.BaseReplacementPolicy(
-        LRURP(), "Replacement policy of the access map table"
+        LRURP(),
+        "Replacement policy of the access map table",
     )
     high_coverage_threshold = Param.Float(
-        0.25, "A prefetch coverage factor bigger than this is considered high"
+        0.25,
+        "A prefetch coverage factor bigger than this is considered high",
     )
     low_coverage_threshold = Param.Float(
-        0.125, "A prefetch coverage factor smaller than this is considered low"
+        0.125,
+        "A prefetch coverage factor smaller than this is considered low",
     )
     high_accuracy_threshold = Param.Float(
-        0.5, "A prefetch accuracy factor bigger than this is considered high"
+        0.5,
+        "A prefetch accuracy factor bigger than this is considered high",
     )
     low_accuracy_threshold = Param.Float(
-        0.25, "A prefetch accuracy factor smaller than this is considered low"
+        0.25,
+        "A prefetch accuracy factor smaller than this is considered low",
     )
     high_cache_hit_threshold = Param.Float(
-        0.875, "A cache hit ratio bigger than this is considered high"
+        0.875,
+        "A cache hit ratio bigger than this is considered high",
     )
     low_cache_hit_threshold = Param.Float(
-        0.75, "A cache hit ratio smaller than this is considered low"
+        0.75,
+        "A cache hit ratio smaller than this is considered low",
     )
     epoch_cycles = Param.Cycles(256000, "Cycles in an epoch period")
     offchip_memory_latency = Param.Latency(
-        "30ns", "Memory latency used to compute the required memory bandwidth"
+        "30ns",
+        "Memory latency used to compute the required memory bandwidth",
     )
 
 
@@ -416,7 +461,8 @@ class AMPMPrefetcher(QueuedPrefetcher):
     cxx_class = "gem5::prefetch::AMPM"
     cxx_header = "mem/cache/prefetch/access_map_pattern_matching.hh"
     ampm = Param.AccessMapPatternMatching(
-        AccessMapPatternMatching(), "Access Map Pattern Matching object"
+        AccessMapPatternMatching(),
+        "Access Map Pattern Matching object",
     )
 
 
@@ -425,22 +471,27 @@ class DeltaCorrelatingPredictionTables(SimObject):
     cxx_class = "gem5::prefetch::DeltaCorrelatingPredictionTables"
     cxx_header = "mem/cache/prefetch/delta_correlating_prediction_tables.hh"
     deltas_per_entry = Param.Unsigned(
-        20, "Number of deltas stored in each table entry"
+        20,
+        "Number of deltas stored in each table entry",
     )
     delta_bits = Param.Unsigned(12, "Bits per delta")
     delta_mask_bits = Param.Unsigned(
-        8, "Lower bits to mask when comparing deltas"
+        8,
+        "Lower bits to mask when comparing deltas",
     )
     table_entries = Param.MemorySize("128", "Number of entries in the table")
     table_assoc = Param.Unsigned(128, "Associativity of the table")
     table_indexing_policy = Param.BaseIndexingPolicy(
         SetAssociative(
-            entry_size=1, assoc=Parent.table_assoc, size=Parent.table_entries
+            entry_size=1,
+            assoc=Parent.table_assoc,
+            size=Parent.table_entries,
         ),
         "Indexing policy of the table",
     )
     table_replacement_policy = Param.BaseReplacementPolicy(
-        LRURP(), "Replacement policy of the table"
+        LRURP(),
+        "Replacement policy of the table",
     )
 
 
@@ -460,17 +511,21 @@ class IrregularStreamBufferPrefetcher(QueuedPrefetcher):
     cxx_header = "mem/cache/prefetch/irregular_stream_buffer.hh"
 
     num_counter_bits = Param.Unsigned(
-        2, "Number of bits of the confidence counter"
+        2,
+        "Number of bits of the confidence counter",
     )
     chunk_size = Param.Unsigned(
-        256, "Maximum number of addresses in a temporal stream"
+        256,
+        "Maximum number of addresses in a temporal stream",
     )
     degree = Param.Unsigned(4, "Number of prefetches to generate")
     training_unit_assoc = Param.Unsigned(
-        128, "Associativity of the training unit"
+        128,
+        "Associativity of the training unit",
     )
     training_unit_entries = Param.MemorySize(
-        "128", "Number of entries of the training unit"
+        "128",
+        "Number of entries of the training unit",
     )
     training_unit_indexing_policy = Param.BaseIndexingPolicy(
         SetAssociative(
@@ -481,17 +536,21 @@ class IrregularStreamBufferPrefetcher(QueuedPrefetcher):
         "Indexing policy of the training unit",
     )
     training_unit_replacement_policy = Param.BaseReplacementPolicy(
-        LRURP(), "Replacement policy of the training unit"
+        LRURP(),
+        "Replacement policy of the training unit",
     )
 
     prefetch_candidates_per_entry = Param.Unsigned(
-        16, "Number of prefetch candidates stored in a SP-AMC entry"
+        16,
+        "Number of prefetch candidates stored in a SP-AMC entry",
     )
     address_map_cache_assoc = Param.Unsigned(
-        128, "Associativity of the PS/SP AMCs"
+        128,
+        "Associativity of the PS/SP AMCs",
     )
     address_map_cache_entries = Param.MemorySize(
-        "128", "Number of entries of the PS/SP AMCs"
+        "128",
+        "Number of entries of the PS/SP AMCs",
     )
     ps_address_map_cache_indexing_policy = Param.BaseIndexingPolicy(
         SetAssociative(
@@ -536,7 +595,8 @@ class SlimAMPMPrefetcher(QueuedPrefetcher):
     cxx_header = "mem/cache/prefetch/slim_ampm.hh"
 
     ampm = Param.AccessMapPatternMatching(
-        SlimAccessMapPatternMatching(), "Access Map Pattern Matching object"
+        SlimAccessMapPatternMatching(),
+        "Access Map Pattern Matching object",
     )
     dcpt = Param.DeltaCorrelatingPredictionTables(
         SlimDeltaCorrelatingPredictionTables(),
@@ -554,7 +614,8 @@ class BOPPrefetcher(QueuedPrefetcher):
     rr_size = Param.Unsigned(64, "Number of entries of each RR bank")
     tag_bits = Param.Unsigned(12, "Bits used to store the tag")
     offset_list_size = Param.Unsigned(
-        46, "Number of entries in the offsets list"
+        46,
+        "Number of entries in the offsets list",
     )
     negative_offsets_enable = Param.Bool(
         True,
@@ -564,7 +625,8 @@ class BOPPrefetcher(QueuedPrefetcher):
     )
     delay_queue_enable = Param.Bool(True, "Enable the delay queue")
     delay_queue_size = Param.Unsigned(
-        15, "Number of entries in the delay queue"
+        15,
+        "Number of entries in the delay queue",
     )
     delay_queue_cycles = Param.Cycles(
         60,
@@ -593,13 +655,16 @@ class STeMSPrefetcher(QueuedPrefetcher):
     cxx_header = "mem/cache/prefetch/spatio_temporal_memory_streaming.hh"
 
     spatial_region_size = Param.MemorySize(
-        "2KiB", "Memory covered by a hot zone"
+        "2KiB",
+        "Memory covered by a hot zone",
     )
     active_generation_table_entries = Param.MemorySize(
-        "64", "Number of entries in the active generation table"
+        "64",
+        "Number of entries in the active generation table",
     )
     active_generation_table_assoc = Param.Unsigned(
-        64, "Associativity of the active generation table"
+        64,
+        "Associativity of the active generation table",
     )
     active_generation_table_indexing_policy = Param.BaseIndexingPolicy(
         SetAssociative(
@@ -610,14 +675,17 @@ class STeMSPrefetcher(QueuedPrefetcher):
         "Indexing policy of the active generation table",
     )
     active_generation_table_replacement_policy = Param.BaseReplacementPolicy(
-        LRURP(), "Replacement policy of the active generation table"
+        LRURP(),
+        "Replacement policy of the active generation table",
     )
 
     pattern_sequence_table_entries = Param.MemorySize(
-        "16384", "Number of entries in the pattern sequence table"
+        "16384",
+        "Number of entries in the pattern sequence table",
     )
     pattern_sequence_table_assoc = Param.Unsigned(
-        16384, "Associativity of the pattern sequence table"
+        16384,
+        "Associativity of the pattern sequence table",
     )
     pattern_sequence_table_indexing_policy = Param.BaseIndexingPolicy(
         SetAssociative(
@@ -628,17 +696,21 @@ class STeMSPrefetcher(QueuedPrefetcher):
         "Indexing policy of the pattern sequence table",
     )
     pattern_sequence_table_replacement_policy = Param.BaseReplacementPolicy(
-        LRURP(), "Replacement policy of the pattern sequence table"
+        LRURP(),
+        "Replacement policy of the pattern sequence table",
     )
 
     region_miss_order_buffer_entries = Param.Unsigned(
-        131072, "Number of entries of the Region Miss Order Buffer"
+        131072,
+        "Number of entries of the Region Miss Order Buffer",
     )
     add_duplicate_entries_to_rmob = Param.Bool(
-        True, "Add duplicate entries to RMOB"
+        True,
+        "Add duplicate entries to RMOB",
     )
     reconstruction_entries = Param.Unsigned(
-        256, "Number of reconstruction entries"
+        256,
+        "Number of reconstruction entries",
     )
 
 
@@ -647,7 +719,8 @@ class HWPProbeEventRetiredInsts(HWPProbeEvent):
         if self.obj:
             for name in self.names:
                 self.prefetcher.getCCObject().addEventProbeRetiredInsts(
-                    self.obj.getCCObject(), name
+                    self.obj.getCCObject(),
+                    name,
                 )
 
 
@@ -658,10 +731,12 @@ class PIFPrefetcher(QueuedPrefetcher):
     cxx_exports = [PyBindMethod("addEventProbeRetiredInsts")]
 
     prec_spatial_region_bits = Param.Unsigned(
-        2, "Number of preceding addresses in the spatial region"
+        2,
+        "Number of preceding addresses in the spatial region",
     )
     succ_spatial_region_bits = Param.Unsigned(
-        8, "Number of subsequent addresses in the spatial region"
+        8,
+        "Number of subsequent addresses in the spatial region",
     )
     compactor_entries = Param.Unsigned(2, "Entries in the temp. compactor")
     stream_address_buffer_entries = Param.Unsigned(7, "Entries in the SAB")
@@ -671,17 +746,20 @@ class PIFPrefetcher(QueuedPrefetcher):
     index_assoc = Param.Unsigned(64, "Associativity of the index")
     index_indexing_policy = Param.BaseIndexingPolicy(
         SetAssociative(
-            entry_size=1, assoc=Parent.index_assoc, size=Parent.index_entries
+            entry_size=1,
+            assoc=Parent.index_assoc,
+            size=Parent.index_entries,
         ),
         "Indexing policy of the index",
     )
     index_replacement_policy = Param.BaseReplacementPolicy(
-        LRURP(), "Replacement policy of the index"
+        LRURP(),
+        "Replacement policy of the index",
     )
 
     def listenFromProbeRetiredInstructions(self, simObj):
         if not isinstance(simObj, SimObject):
             raise TypeError("argument must be of SimObject type")
         self.addEvent(
-            HWPProbeEventRetiredInsts(self, simObj, "RetiredInstsPC")
+            HWPProbeEventRetiredInsts(self, simObj, "RetiredInstsPC"),
         )

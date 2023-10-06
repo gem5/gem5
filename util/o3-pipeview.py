@@ -125,7 +125,7 @@ def process_trace(
     # Print header
     outfile.write(
         "// f = fetch, d = decode, n = rename, p = dispatch, "
-        "i = issue, c = complete, r = retire"
+        "i = issue, c = complete, r = retire",
     )
 
     if store_completions:
@@ -142,7 +142,7 @@ def process_trace(
         + "  "
         + "disasm".ljust(25)
         + "  "
-        + "seq_num".center(10)
+        + "seq_num".center(10),
     )
     if timestamps:
         outfile.write("timestamps".center(25))
@@ -207,7 +207,13 @@ def process_trace(
 # Puts new instruction into the print queue.
 # Sorts out and prints instructions when their number reaches threshold value
 def queue_inst(
-    outfile, inst, cycle_time, width, color, timestamps, store_completions
+    outfile,
+    inst,
+    cycle_time,
+    width,
+    color,
+    timestamps,
+    store_completions,
 ):
     global insts
     l_copy = copy.deepcopy(inst)
@@ -276,7 +282,13 @@ def print_insts(
 
 # Prints a single instruction
 def print_inst(
-    outfile, inst, cycle_time, width, color, timestamps, store_completions
+    outfile,
+    inst,
+    cycle_time,
+    width,
+    color,
+    timestamps,
+    store_completions,
 ):
     if color:
         from m5.util.terminal import termcap
@@ -326,7 +338,7 @@ def print_inst(
                 "name": "store",
                 "color": termcap.Yellow + termcap.Reverse,
                 "shorthand": "s",
-            }
+            },
         )
 
     # Print
@@ -379,7 +391,7 @@ def print_inst(
                             stages[stage_idx]["name"],
                             stage_idx,
                             tick,
-                        )
+                        ),
                     )
         events.sort()
         outfile.write("[")
@@ -394,7 +406,7 @@ def print_inst(
                 continue
             outfile.write(curr_color + dot * ((event[0] // cycle_time) - pos))
             outfile.write(
-                stages[event[2]]["color"] + stages[event[2]]["shorthand"]
+                stages[event[2]]["color"] + stages[event[2]]["shorthand"],
             )
 
             if event[3] != last_event_time:  # event is not the last one
@@ -409,7 +421,7 @@ def print_inst(
             + termcap.Normal
             + "]-("
             + str(base_tick + i * time_width).rjust(15)
-            + ") "
+            + ") ",
         )
         if i == 0:
             outfile.write(
@@ -419,7 +431,7 @@ def print_inst(
                     inst["upc"],
                     inst["disasm"].ljust(25),
                     str(inst["sn"]).rjust(10),
-                )
+                ),
             )
             if timestamps:
                 outfile.write(f"  f={inst['fetch']}, r={inst['retire']}")
@@ -444,7 +456,8 @@ def main():
     # Parse args
     usage = "%(prog)s [OPTION]... TRACE_FILE"
     parser = argparse.ArgumentParser(
-        usage=usage, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        usage=usage,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "-o",
@@ -453,7 +466,10 @@ def main():
         help="output file",
     )
     parser.add_argument(
-        "-t", dest="tick_range", default="0:-1", help="tick range (-1 == inf.)"
+        "-t",
+        dest="tick_range",
+        default="0:-1",
+        help="tick range (-1 == inf.)",
     )
     parser.add_argument(
         "-i",
@@ -462,7 +478,11 @@ def main():
         help="instruction range (-1 == inf.)",
     )
     parser.add_argument(
-        "-w", dest="width", type=int, default=80, help="timeline width"
+        "-w",
+        dest="width",
+        type=int,
+        default=80,
+        help="timeline width",
     )
     parser.add_argument(
         "--color",
@@ -527,7 +547,10 @@ def main():
 if __name__ == "__main__":
     sys.path.append(
         os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "..", "src", "python"
-        )
+            os.path.dirname(os.path.abspath(__file__)),
+            "..",
+            "src",
+            "python",
+        ),
     )
     main()

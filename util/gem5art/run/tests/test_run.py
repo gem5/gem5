@@ -48,7 +48,7 @@ class TestSERun(unittest.TestCase):
                 "git": artifact.getGit(Path(".")),
                 "cwd": "/",
                 "inputs": [],
-            }
+            },
         )
 
         self.gem5gitart = artifact.Artifact(
@@ -63,7 +63,7 @@ class TestSERun(unittest.TestCase):
                 "git": artifact.getGit(Path(".")),
                 "cwd": "/",
                 "inputs": [],
-            }
+            },
         )
 
         self.runscptart = artifact.Artifact(
@@ -78,7 +78,7 @@ class TestSERun(unittest.TestCase):
                 "git": artifact.getGit(Path(".")),
                 "cwd": "/",
                 "inputs": [],
-            }
+            },
         )
 
         self.run = gem5Run.createSERun(

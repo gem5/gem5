@@ -70,33 +70,33 @@ class MHU(BasicPioDevice):
     lowp_scp2ap = Param.Scp2ApDoorbell(
         "Low Priority doorbell channel for communications "
         "from the System Control Processor (SCP) to the "
-        "Application Processor (AP)"
+        "Application Processor (AP)",
     )
     highp_scp2ap = Param.Scp2ApDoorbell(
         "High Priority doorbell channel for communications "
         "from the System Control Processor (SCP) to the "
-        "Application Processor (AP)"
+        "Application Processor (AP)",
     )
     sec_scp2ap = Param.Scp2ApDoorbell(
         "Secure doorbell channel for communications "
         "from the System Control Processor (SCP) to the "
-        "Application Processor (AP)"
+        "Application Processor (AP)",
     )
 
     lowp_ap2scp = Param.Ap2ScpDoorbell(
         "Low Priority doorbell channel for communications "
         "from the Application Processor (AP) to the "
-        "System Control Processor (SCP)"
+        "System Control Processor (SCP)",
     )
     highp_ap2scp = Param.Ap2ScpDoorbell(
         "High Priority doorbell channel for communications "
         "from the Application Processor (AP) to the "
-        "System Control Processor (SCP)"
+        "System Control Processor (SCP)",
     )
     sec_ap2scp = Param.Ap2ScpDoorbell(
         "Secure doorbell channel for communications "
         "from the Application Processor (AP) to the "
-        "System Control Processor (SCP)"
+        "System Control Processor (SCP)",
     )
 
     scp = Param.Scp(Parent.any, "System Control Processor")
@@ -109,7 +109,7 @@ class MHU(BasicPioDevice):
                 "reg",
                 state.addrCells(self.pio_addr)
                 + state.sizeCells(self.pio_size),
-            )
+            ),
         )
         node.append(FdtPropertyWords("#mbox-cells", 1))
 
@@ -127,7 +127,7 @@ class MHU(BasicPioDevice):
                     int(self.sec_scp2ap.interrupt.num) - 32,
                     1,
                 ],
-            )
+            ),
         )
 
         realview = self._parent.unproxy(self)
@@ -138,7 +138,7 @@ class MHU(BasicPioDevice):
                     state.phandle(realview.mcc.osc_peripheral),
                     state.phandle(realview.dcc.osc_smb),
                 ],
-            )
+            ),
         )
         node.append(FdtPropertyStrings("clock-names", ["apb_pclk"]))
 

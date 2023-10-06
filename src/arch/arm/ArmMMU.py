@@ -49,7 +49,8 @@ class ArmTableWalker(ClockedObject):
     cxx_header = "arch/arm/table_walker.hh"
     is_stage2 = Param.Bool(False, "Is this object for stage 2 translation?")
     num_squash_per_cycle = Param.Unsigned(
-        2, "Number of outstanding walks that can be squashed per cycle"
+        2,
+        "Number of outstanding walks that can be squashed per cycle",
     )
 
     port = RequestPort("Table Walker port")
@@ -75,20 +76,24 @@ class ArmMMU(BaseMMU):
     dtb = ArmTLB(entry_type="data", next_level=Parent.l2_shared)
 
     stage2_itb = Param.ArmTLB(
-        ArmStage2TLB(entry_type="instruction"), "Stage 2 Instruction TLB"
+        ArmStage2TLB(entry_type="instruction"),
+        "Stage 2 Instruction TLB",
     )
     stage2_dtb = Param.ArmTLB(
-        ArmStage2TLB(entry_type="data"), "Stage 2 Data TLB"
+        ArmStage2TLB(entry_type="data"),
+        "Stage 2 Data TLB",
     )
 
     itb_walker = Param.ArmTableWalker(ArmTableWalker(), "HW Table walker")
     dtb_walker = Param.ArmTableWalker(ArmTableWalker(), "HW Table walker")
 
     stage2_itb_walker = Param.ArmTableWalker(
-        ArmStage2TableWalker(), "HW Table walker"
+        ArmStage2TableWalker(),
+        "HW Table walker",
     )
     stage2_dtb_walker = Param.ArmTableWalker(
-        ArmStage2TableWalker(), "HW Table walker"
+        ArmStage2TableWalker(),
+        "HW Table walker",
     )
 
     sys = Param.System(Parent.any, "system object parameter")

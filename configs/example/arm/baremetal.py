@@ -133,7 +133,7 @@ def create(args):
         # functionality to avoid writing changes to the stored copy of
         # the disk image.
         system.realview.vio[0].vio = VirtIOBlock(
-            image=create_cow_image(args.disk_image)
+            image=create_cow_image(args.disk_image),
         )
 
     # Wire up the system's memory system
@@ -149,7 +149,7 @@ def create(args):
             *cpu_types[args.cpu],
             tarmac_gen=args.tarmac_gen,
             tarmac_dest=args.tarmac_dest,
-        )
+        ),
     ]
 
     # Create a cache hierarchy for the cluster. We are assuming that
@@ -171,13 +171,13 @@ def create(args):
 
     if args.with_pmu:
         enabled_pmu_events = set(
-            (*args.pmu_dump_stats_on, *args.pmu_reset_stats_on)
+            (*args.pmu_dump_stats_on, *args.pmu_reset_stats_on),
         )
         exit_sim_on_control = bool(
-            enabled_pmu_events & set(pmu_control_events.keys())
+            enabled_pmu_events & set(pmu_control_events.keys()),
         )
         exit_sim_on_interrupt = bool(
-            enabled_pmu_events & set(pmu_interrupt_events.keys())
+            enabled_pmu_events & set(pmu_interrupt_events.keys()),
         )
         for cluster in system.cpu_cluster:
             interrupt_numbers = [args.pmu_ppi_number] * len(cluster)
@@ -219,13 +219,13 @@ def run(args):
             if exit_msg in pmu_stats_dump_msgs:
                 print(
                     f"Dumping stats at tick {m5.curTick():d}, "
-                    f"due to {exit_msg}"
+                    f"due to {exit_msg}",
                 )
                 m5.stats.dump()
             if exit_msg in pmu_stats_reset_msgs:
                 print(
                     f"Resetting stats at tick {m5.curTick():d}, "
-                    f"due to {exit_msg}"
+                    f"due to {exit_msg}",
                 )
                 m5.stats.reset()
         else:
@@ -246,7 +246,10 @@ def main():
     parser = argparse.ArgumentParser(epilog=__doc__)
 
     parser.add_argument(
-        "--kernel", type=str, default=None, help="Binary to run"
+        "--kernel",
+        type=str,
+        default=None,
+        help="Binary to run",
     )
     parser.add_argument(
         "--workload",
@@ -256,7 +259,10 @@ def main():
         help="Workload type",
     )
     parser.add_argument(
-        "--disk-image", type=str, default=None, help="Disk to instantiate"
+        "--disk-image",
+        type=str,
+        default=None,
+        help="Disk to instantiate",
     )
     parser.add_argument(
         "--readfile",
@@ -273,7 +279,10 @@ def main():
     )
     parser.add_argument("--cpu-freq", type=str, default="4GHz")
     parser.add_argument(
-        "--num-cores", type=int, default=1, help="Number of CPU cores"
+        "--num-cores",
+        type=int,
+        default=1,
+        help="Number of CPU cores",
     )
     parser.add_argument(
         "--machine-type",
@@ -289,7 +298,10 @@ def main():
         help="type of memory to use",
     )
     parser.add_argument(
-        "--mem-channels", type=int, default=1, help="number of memory channels"
+        "--mem-channels",
+        type=int,
+        default=1,
+        help="number of memory channels",
     )
     parser.add_argument(
         "--mem-ranks",
@@ -361,7 +373,9 @@ def main():
         help="Doesn't run simulation, it generates a DTB only",
     )
     parser.add_argument(
-        "--semi-enable", action="store_true", help="Enable semihosting support"
+        "--semi-enable",
+        action="store_true",
+        help="Enable semihosting support",
     )
     parser.add_argument(
         "--semi-stdin",

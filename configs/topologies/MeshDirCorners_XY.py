@@ -97,7 +97,7 @@ class MeshDirCorners_XY(SimpleTopology):
                     ext_node=n,
                     int_node=routers[router_id],
                     latency=link_latency,
-                )
+                ),
             )
             link_count += 1
 
@@ -126,7 +126,7 @@ class MeshDirCorners_XY(SimpleTopology):
                 ext_node=dir_nodes[0],
                 int_node=routers[0],
                 latency=link_latency,
-            )
+            ),
         )
         link_count += 1
         ext_links.append(
@@ -135,7 +135,7 @@ class MeshDirCorners_XY(SimpleTopology):
                 ext_node=dir_nodes[1],
                 int_node=routers[num_columns - 1],
                 latency=link_latency,
-            )
+            ),
         )
         link_count += 1
         ext_links.append(
@@ -144,7 +144,7 @@ class MeshDirCorners_XY(SimpleTopology):
                 ext_node=dir_nodes[2],
                 int_node=routers[num_routers - num_columns],
                 latency=link_latency,
-            )
+            ),
         )
         link_count += 1
         ext_links.append(
@@ -153,7 +153,7 @@ class MeshDirCorners_XY(SimpleTopology):
                 ext_node=dir_nodes[3],
                 int_node=routers[num_routers - 1],
                 latency=link_latency,
-            )
+            ),
         )
         link_count += 1
 
@@ -166,7 +166,7 @@ class MeshDirCorners_XY(SimpleTopology):
                     ext_node=node,
                     int_node=routers[0],
                     latency=link_latency,
-                )
+                ),
             )
 
         network.ext_links = ext_links
@@ -189,7 +189,7 @@ class MeshDirCorners_XY(SimpleTopology):
                             dst_inport="West",
                             latency=link_latency,
                             weight=1,
-                        )
+                        ),
                     )
                     link_count += 1
 
@@ -208,7 +208,7 @@ class MeshDirCorners_XY(SimpleTopology):
                             dst_inport="East",
                             latency=link_latency,
                             weight=1,
-                        )
+                        ),
                     )
                     link_count += 1
 
@@ -227,7 +227,7 @@ class MeshDirCorners_XY(SimpleTopology):
                             dst_inport="South",
                             latency=link_latency,
                             weight=2,
-                        )
+                        ),
                     )
                     link_count += 1
 
@@ -246,7 +246,7 @@ class MeshDirCorners_XY(SimpleTopology):
                             dst_inport="North",
                             latency=link_latency,
                             weight=2,
-                        )
+                        ),
                     )
                     link_count += 1
 
@@ -258,6 +258,8 @@ class MeshDirCorners_XY(SimpleTopology):
         for n in numa_nodes:
             if n:
                 FileSystemConfig.register_node(
-                    n, MemorySize(options.mem_size) // num_numa_nodes, i
+                    n,
+                    MemorySize(options.mem_size) // num_numa_nodes,
+                    i,
                 )
             i += 1

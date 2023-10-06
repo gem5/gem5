@@ -52,7 +52,8 @@ class DVFSHandler(SimObject):
 
     # System domain (its clock and voltage) is not controllable
     sys_clk_domain = Param.SrcClockDomain(
-        Parent.clk_domain, "Clk domain in which the handler is instantiated"
+        Parent.clk_domain,
+        "Clk domain in which the handler is instantiated",
     )
 
     enable = Param.Bool(False, "Enable/Disable the handler")
@@ -64,5 +65,6 @@ class DVFSHandler(SimObject):
     # associated with all migrations. Configure this to maximum latency that
     # the hardware will take to migratate between any two perforamnce levels.
     transition_latency = Param.Latency(
-        "100us", "fixed latency for perf level migration"
+        "100us",
+        "fixed latency for perf level migration",
     )

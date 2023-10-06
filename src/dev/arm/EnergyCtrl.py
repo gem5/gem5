@@ -47,7 +47,10 @@ class EnergyCtrl(BasicPioDevice):
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(
-            state, "gem5_energy_ctrl", self.pio_addr, 0x1000
+            state,
+            "gem5_energy_ctrl",
+            self.pio_addr,
+            0x1000,
         )
 
         node.appendCompatible("arm,gem5-energy-ctrl")

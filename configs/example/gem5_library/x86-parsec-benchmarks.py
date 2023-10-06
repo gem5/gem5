@@ -92,7 +92,7 @@ benchmark_choices = [
 size_choices = ["simsmall", "simmedium", "simlarge"]
 
 parser = argparse.ArgumentParser(
-    description="An example configuration script to run the npb benchmarks."
+    description="An example configuration script to run the npb benchmarks.",
 )
 
 # The arguments accepted are the benchmark name and the simulation size.
@@ -236,9 +236,11 @@ print("Performance statistics:")
 
 print("Simulated time in ROI: " + ((str(simulator.get_roi_ticks()[0]))))
 print(
-    "Ran a total of", simulator.get_current_tick() / 1e12, "simulated seconds"
+    "Ran a total of",
+    simulator.get_current_tick() / 1e12,
+    "simulated seconds",
 )
 print(
     "Total wallclock time: %.2fs, %.2f min"
-    % (time.time() - globalStart, (time.time() - globalStart) / 60)
+    % (time.time() - globalStart, (time.time() - globalStart) / 60),
 )

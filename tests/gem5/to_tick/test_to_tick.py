@@ -38,8 +38,8 @@ gem5_verify_config(
     name="test-to-max-tick-at-execution-100",
     verifiers=[
         verifier.MatchStdoutNoPerf(
-            joinpath(getcwd(), "ref", "tick-to-max-at-execution-100.txt")
-        )
+            joinpath(getcwd(), "ref", "tick-to-max-at-execution-100.txt"),
+        ),
     ],
     fixtures=(),
     config=joinpath(
@@ -73,8 +73,8 @@ gem5_verify_config(
                 getcwd(),
                 "ref",
                 "tick-to-max-at-execution-and-after-100-200.txt",
-            )
-        )
+            ),
+        ),
     ],
     fixtures=(),
     config=joinpath(
@@ -105,8 +105,8 @@ gem5_verify_config(
     name="test-to-max-tick-before-execution-250",
     verifiers=[
         verifier.MatchStdoutNoPerf(
-            joinpath(getcwd(), "ref", "tick-to-max-before-execution-250.txt")
-        )
+            joinpath(getcwd(), "ref", "tick-to-max-before-execution-250.txt"),
+        ),
     ],
     fixtures=(),
     config=joinpath(
@@ -133,12 +133,17 @@ gem5_verify_config(
     name="test-to-tick-exit-100",
     verifiers=[
         verifier.MatchStdoutNoPerf(
-            joinpath(getcwd(), "ref", "tick-exit-100.txt")
-        )
+            joinpath(getcwd(), "ref", "tick-exit-100.txt"),
+        ),
     ],
     fixtures=(),
     config=joinpath(
-        config.base_dir, "tests", "gem5", "to_tick", "configs", "tick-exit.py"
+        config.base_dir,
+        "tests",
+        "gem5",
+        "to_tick",
+        "configs",
+        "tick-exit.py",
     ),
     config_args=["--resource-directory", resource_path, "--tick-exits", "100"],
     valid_isas=(constants.all_compiled_tag,),
@@ -151,12 +156,17 @@ gem5_verify_config(
     name="test-to-tick-exit-10-20-30-40",
     verifiers=[
         verifier.MatchStdoutNoPerf(
-            joinpath(getcwd(), "ref", "tick-exit-10-20-30-40.txt")
-        )
+            joinpath(getcwd(), "ref", "tick-exit-10-20-30-40.txt"),
+        ),
     ],
     fixtures=(),
     config=joinpath(
-        config.base_dir, "tests", "gem5", "to_tick", "configs", "tick-exit.py"
+        config.base_dir,
+        "tests",
+        "gem5",
+        "to_tick",
+        "configs",
+        "tick-exit.py",
     ),
     config_args=[
         "--resource-directory",

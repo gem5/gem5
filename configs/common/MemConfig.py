@@ -131,7 +131,9 @@ def config_mem(options, system):
     # Optional options
     opt_tlm_memory = getattr(options, "tlm_memory", None)
     opt_external_memory_system = getattr(
-        options, "external_memory_system", None
+        options,
+        "external_memory_system",
+        None,
     )
     opt_elastic_trace_en = getattr(options, "elastic_trace_en", False)
     opt_mem_ranks = getattr(options, "mem_ranks", None)
@@ -190,7 +192,7 @@ def config_mem(options, system):
     if opt_elastic_trace_en and not issubclass(intf, m5.objects.SimpleMemory):
         fatal(
             "When elastic trace is enabled, configure mem-type as "
-            "simple-mem."
+            "simple-mem.",
         )
 
     # The default behaviour is to interleave memory channels on 128
@@ -212,7 +214,12 @@ def config_mem(options, system):
             if opt_mem_type and (not opt_nvm_type or range_iter % 2 != 0):
                 # Create the DRAM interface
                 dram_intf = create_mem_intf(
-                    intf, r, i, intlv_bits, intlv_size, opt_xor_low_bit
+                    intf,
+                    r,
+                    i,
+                    intlv_bits,
+                    intlv_size,
+                    opt_xor_low_bit,
                 )
 
                 # Set the number of ranks based on the command-line
@@ -231,7 +238,7 @@ def config_mem(options, system):
                     dram_intf.latency = "1ns"
                     print(
                         "For elastic trace, over-riding Simple Memory "
-                        "latency to 1ns."
+                        "latency to 1ns.",
                     )
 
                 # Create the controller that will drive the interface
@@ -241,7 +248,12 @@ def config_mem(options, system):
 
             elif opt_nvm_type and (not opt_mem_type or range_iter % 2 == 0):
                 nvm_intf = create_mem_intf(
-                    n_intf, r, i, intlv_bits, intlv_size, opt_xor_low_bit
+                    n_intf,
+                    r,
+                    i,
+                    intlv_bits,
+                    intlv_size,
+                    opt_xor_low_bit,
                 )
 
                 # Set the number of ranks based on the command-line

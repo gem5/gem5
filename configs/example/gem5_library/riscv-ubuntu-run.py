@@ -60,7 +60,9 @@ from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierar
 
 # Here we setup the parameters of the l1 and l2 caches.
 cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-    l1d_size="16kB", l1i_size="16kB", l2_size="256kB"
+    l1d_size="16kB",
+    l1i_size="16kB",
+    l2_size="256kB",
 )
 
 # Memory: Dual Channel DDR4 2400 DRAM device.
@@ -69,7 +71,9 @@ memory = DualChannelDDR4_2400(size="3GB")
 
 # Here we setup the processor. We use a simple processor.
 processor = SimpleProcessor(
-    cpu_type=CPUTypes.TIMING, isa=ISA.RISCV, num_cores=2
+    cpu_type=CPUTypes.TIMING,
+    isa=ISA.RISCV,
+    num_cores=2,
 )
 
 # Here we setup the board. The RiscvBoard allows for Full-System RISCV

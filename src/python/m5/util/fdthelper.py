@@ -208,7 +208,8 @@ class FdtNode(pyfdt.FdtNode):
                 item = None
 
             if isinstance(item, pyfdt.FdtNode) and isinstance(
-                subnode, pyfdt.FdtNode
+                subnode,
+                pyfdt.FdtNode,
             ):
                 item.merge(subnode)
                 subnode = item

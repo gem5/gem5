@@ -148,7 +148,7 @@ def handle_statement(parser, container, statement):
             )
         except:
             print_error(
-                f"Error creating microop object with mnemonic {statement.mnemonic}."
+                f"Error creating microop object with mnemonic {statement.mnemonic}.",
             )
             raise
         try:
@@ -406,11 +406,11 @@ def p_macroop_def_0(t):
     if not t.parser.rom_macroop_type:
         print_error(
             "ROM based macroop found, but no ROM macroop "
-            + "class was specified."
+            + "class was specified.",
         )
         raise TypeError(
             "ROM based macroop found, but no ROM macroop "
-            + "class was specified."
+            + "class was specified.",
         )
     macroop = t.parser.rom_macroop_type(t[3], t[5])
     t.parser.macroops[t[3]] = macroop

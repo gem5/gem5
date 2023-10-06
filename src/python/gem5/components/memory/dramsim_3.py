@@ -50,15 +50,15 @@ def config_ds3(mem_type: str, num_chnls: int) -> Tuple[str, str]:
         raise Exception(
             "The `ext/DRAMsim3` directory cannot be found.\n"
             "Please navigate to `ext` and run:\n"
-            "git clone git@github.com:umd-memsys/DRAMsim3.git"
+            "git clone git@github.com:umd-memsys/DRAMsim3.git",
         )
     elif not os.path.isdir(dramsim_3_mem_configs):
         raise Exception(
-            "The `ext/DRAMsim3/configs` directory cannot be found."
+            "The `ext/DRAMsim3/configs` directory cannot be found.",
         )
     elif not os.path.isfile(input_file):
         raise Exception(
-            "The configuration file '" + input_file + "' cannot  be found."
+            "The configuration file '" + input_file + "' cannot  be found.",
         )
 
     output_file = "/tmp/" + mem_type + "_chnls" + str(num_chnls) + ".ini"
@@ -104,7 +104,7 @@ class SingleChannel(AbstractMemorySystem):
         self._size = toMemorySize(size)
         if not size:
             raise NotImplementedError(
-                "DRAMSim3 memory controller requires a size parameter."
+                "DRAMSim3 memory controller requires a size parameter.",
             )
 
     @overrides(AbstractMemorySystem)
@@ -128,7 +128,7 @@ class SingleChannel(AbstractMemorySystem):
         if len(ranges != 1) or ranges[0].size != self._size:
             raise Exception(
                 "Single channel DRAMSim memory controller requires a single "
-                "range which matches the memory's size."
+                "range which matches the memory's size.",
             )
         self.mem_ctrl.range = ranges[0]
 

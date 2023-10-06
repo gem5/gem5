@@ -107,7 +107,8 @@ def instantiate(ckpt_dir=None):
             import json
 
             json_file = open(
-                os.path.join(options.outdir, options.json_config), "w"
+                os.path.join(options.outdir, options.json_config),
+                "w",
             )
             d = root.get_config_as_dict()
             json.dump(d, json_file, indent=4)
@@ -233,7 +234,8 @@ def getTicksUntilMax() -> int:
 
 
 def scheduleTickExitFromCurrent(
-    ticks: int, exit_string: str = "Tick exit reached"
+    ticks: int,
+    exit_string: str = "Tick exit reached",
 ) -> None:
     """Schedules a tick exit event from the current tick. I.e., if ticks == 100
     then an exit event will be scheduled at tick `curTick() + 100`.
@@ -250,7 +252,8 @@ def scheduleTickExitFromCurrent(
 
 
 def scheduleTickExitAbsolute(
-    tick: int, exit_string: str = "Tick exit reached"
+    tick: int,
+    exit_string: str = "Tick exit reached",
 ) -> None:
     """Schedules a tick exit event using absolute ticks. I.e., if tick == 100
     then an exit event will be scheduled at tick 100.
@@ -332,7 +335,7 @@ def _changeMemoryMode(system, mode):
     if not isinstance(system, (objects.Root, objects.System)):
         raise TypeError(
             "Parameter of type '%s'.  Must be type %s or %s."
-            % (type(system), objects.Root, objects.System)
+            % (type(system), objects.Root, objects.System),
         )
     if system.getMemoryMode() != mode:
         system.setMemoryMode(mode)
@@ -372,23 +375,23 @@ def switchCpus(system, cpuList, verbose=True):
             raise TypeError(f"{new_cpu} is not of type BaseCPU")
         if new_cpu in old_cpu_set:
             raise RuntimeError(
-                f"New CPU ({old_cpu}) is in the list of old CPUs."
+                f"New CPU ({old_cpu}) is in the list of old CPUs.",
             )
         if not new_cpu.switchedOut():
             raise RuntimeError(f"New CPU ({new_cpu}) is already active.")
         if not new_cpu.support_take_over():
             raise RuntimeError(
-                f"New CPU ({old_cpu}) does not support CPU handover."
+                f"New CPU ({old_cpu}) does not support CPU handover.",
             )
         if new_cpu.memory_mode() != memory_mode_name:
             raise RuntimeError(
-                f"{new_cpu} and {new_cpus[0]} require different memory modes."
+                f"{new_cpu} and {new_cpus[0]} require different memory modes.",
             )
         if old_cpu.switchedOut():
             raise RuntimeError(f"Old CPU ({new_cpu}) is inactive.")
         if not old_cpu.support_take_over():
             raise RuntimeError(
-                f"Old CPU ({old_cpu}) does not support CPU handover."
+                f"Old CPU ({old_cpu}) does not support CPU handover.",
             )
 
     MemoryMode = params.allEnums["MemoryMode"]

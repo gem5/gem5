@@ -53,7 +53,8 @@ class CfiMemory(AbstractMemory):
     # The memory bandwidth limit default is set to 12.8GB/s which is
     # representative of a x64 DDR3-1600 channel.
     bandwidth = Param.MemoryBandwidth(
-        "12.8GB/s", "Combined read and write bandwidth"
+        "12.8GB/s",
+        "Combined read and write bandwidth",
     )
 
     vendor_id = Param.UInt16(0, "vendor ID")

@@ -128,7 +128,10 @@ for test_name, basename_noext, args in null_tests:
         fixtures=(),
         verifiers=(),
         config=joinpath(
-            config.base_dir, "configs", "example", basename_noext + ".py"
+            config.base_dir,
+            "configs",
+            "example",
+            basename_noext + ".py",
         ),
         config_args=args,
         valid_isas=(constants.null_tag,),

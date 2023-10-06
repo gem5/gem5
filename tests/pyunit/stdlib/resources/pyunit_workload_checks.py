@@ -42,7 +42,7 @@ mock_config_json = {
         "baba": {
             "url": Path(__file__).parent / "refs/workload-checks.json",
             "isMongo": False,
-        }
+        },
     },
 }
 
@@ -62,7 +62,8 @@ class CustomWorkloadTestSuite(unittest.TestCase):
             function="set_se_binary_workload",
             parameters={
                 "binary": obtain_resource(
-                    "x86-hello64-static-example", gem5_version="develop"
+                    "x86-hello64-static-example",
+                    gem5_version="develop",
                 ),
                 "arguments": ["hello", 6],
             },
@@ -72,7 +73,8 @@ class CustomWorkloadTestSuite(unittest.TestCase):
         # Tests `CustomWorkload.get_function_str`
 
         self.assertEqual(
-            "set_se_binary_workload", self.custom_workload.get_function_str()
+            "set_se_binary_workload",
+            self.custom_workload.get_function_str(),
         )
 
     def test_get_parameters(self) -> None:
@@ -99,7 +101,8 @@ class CustomWorkloadTestSuite(unittest.TestCase):
 
         self.assertTrue("test_param" in self.custom_workload.get_parameters())
         self.assertEquals(
-            10, self.custom_workload.get_parameters()["test_param"]
+            10,
+            self.custom_workload.get_parameters()["test_param"],
         )
 
         # Cleanup
@@ -114,7 +117,8 @@ class CustomWorkloadTestSuite(unittest.TestCase):
         self.custom_workload.set_parameter("binary", "test")
         self.assertTrue("binary" in self.custom_workload.get_parameters())
         self.assertEquals(
-            "test", self.custom_workload.get_parameters()["binary"]
+            "test",
+            self.custom_workload.get_parameters()["binary"],
         )
 
         # We set the overridden parameter back to it's old value
@@ -138,7 +142,8 @@ class WorkloadTestSuite(unittest.TestCase):
         # Tests `Resource.get_function_str`
 
         self.assertEquals(
-            "set_kernel_disk_workload", self.workload.get_function_str()
+            "set_kernel_disk_workload",
+            self.workload.get_function_str(),
         )
 
     def test_get_parameters(self) -> None:
@@ -154,12 +159,13 @@ class WorkloadTestSuite(unittest.TestCase):
 
         self.assertTrue("disk-image" in parameters)
         self.assertTrue(
-            isinstance(parameters["disk-image"], DiskImageResource)
+            isinstance(parameters["disk-image"], DiskImageResource),
         )
 
         self.assertTrue("readfile_contents" in parameters)
         self.assertTrue(
-            "echo 'Boot successful'; m5 exit", parameters["readfile_contents"]
+            "echo 'Boot successful'; m5 exit",
+            parameters["readfile_contents"],
         )
 
     def test_add_parameters(self) -> None:
@@ -183,7 +189,8 @@ class WorkloadTestSuite(unittest.TestCase):
         self.workload.set_parameter("readfile_contents", "test")
         self.assertTrue("readfile_contents" in self.workload.get_parameters())
         self.assertEquals(
-            "test", self.workload.get_parameters()["readfile_contents"]
+            "test",
+            self.workload.get_parameters()["readfile_contents"],
         )
 
         # We set the overridden parameter back to it's old value.

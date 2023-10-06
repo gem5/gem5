@@ -58,7 +58,7 @@ class SmeVectorLength(UInt8):
         # not zero. Hence:
         if self.value & (self.value - 1) != 0:
             raise TypeError(
-                "SME vector length is not a power of 2: %d" % self.value
+                "SME vector length is not a power of 2: %d" % self.value,
             )
 
 
@@ -293,13 +293,16 @@ class ArmSystem(System):
         "Supported physical address range in bits when using AArch64 (ARMv8)",
     )
     have_large_asid_64 = Param.Bool(
-        False, "True if ASID is 16 bits in AArch64 (ARMv8)"
+        False,
+        "True if ASID is 16 bits in AArch64 (ARMv8)",
     )
     sve_vl = Param.SveVectorLength(
-        1, "SVE vector length in quadwords (128-bit)"
+        1,
+        "SVE vector length in quadwords (128-bit)",
     )
     sme_vl = Param.SveVectorLength(
-        1, "SME vector length in quadwords (128-bit)"
+        1,
+        "SME vector length in quadwords (128-bit)",
     )
     semihosting = Param.ArmSemihosting(
         NULL,
@@ -339,7 +342,7 @@ class ArmSystem(System):
                     "reg",
                     state.addrCells(mem_range.start)
                     + state.sizeCells(mem_range.size()),
-                )
+                ),
             )
             return node
 

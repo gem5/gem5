@@ -91,7 +91,7 @@ class MetaParamValue(type):
         if name in allParams:
             warn(
                 "%s already exists in allParams. This may be caused by the "
-                "Python 2.7 compatibility layer." % (name,)
+                "Python 2.7 compatibility layer." % (name,),
             )
         allParams[name] = cls
         return cls
@@ -189,7 +189,7 @@ class ParamDesc(object):
             return ptype
 
         raise AttributeError(
-            f"'{type(self).__name__}' object has no attribute '{attr}'"
+            f"'{type(self).__name__}' object has no attribute '{attr}'",
         )
 
     def example_str(self):
@@ -245,7 +245,7 @@ class ParamDesc(object):
 class VectorParamValue(list, metaclass=MetaParamValue):
     def __setattr__(self, attr, value):
         raise AttributeError(
-            f"Not allowed to set {attr} on '{type(self).__name__}'"
+            f"Not allowed to set {attr} on '{type(self).__name__}'",
         )
 
     def config_value(self):
@@ -315,7 +315,7 @@ class SimObjectVector(VectorParamValue):
         if value.has_parent():
             warn(
                 f"SimObject {value.get_name()} already has a parent"
-                + " that is being overwritten by a SimObjectVector"
+                + " that is being overwritten by a SimObjectVector",
             )
         value.set_parent(val.get_parent(), val._name)
         super().__setitem__(key, value)
@@ -610,7 +610,7 @@ class CheckedInt(NumericParamValue, metaclass=CheckedIntType):
         if not self.min <= self.value <= self.max:
             raise TypeError(
                 "Integer param out of bounds %d < %d < %d"
-                % (self.min, self.value, self.max)
+                % (self.min, self.value, self.max),
             )
 
     def __init__(self, value):
@@ -620,7 +620,7 @@ class CheckedInt(NumericParamValue, metaclass=CheckedIntType):
             self.value = int(value)
         else:
             raise TypeError(
-                f"Can't convert object of type {type(value).__name__} to CheckedInt"
+                f"Can't convert object of type {type(value).__name__} to CheckedInt",
             )
         self._check()
 
@@ -764,7 +764,7 @@ class Float(ParamValue, float):
             self.value = float(value)
         else:
             raise TypeError(
-                f"Can't convert object of type {type(value).__name__} to Float"
+                f"Can't convert object of type {type(value).__name__} to Float",
             )
 
     def __call__(self, value):
@@ -1024,7 +1024,10 @@ class AddrRange(ParamValue):
         from _m5.range import AddrRange
 
         return AddrRange(
-            int(self.start), int(self.end), self.masks, int(self.intlvMatch)
+            int(self.start),
+            int(self.end),
+            self.masks,
+            int(self.intlvMatch),
         )
 
     def exclude(self, ranges):
@@ -1537,7 +1540,7 @@ class MetaEnum(MetaParamValue):
             if not isinstance(cls.map, dict):
                 raise TypeError(
                     "Enum-derived class attribute 'map' "
-                    "must be of type dict"
+                    "must be of type dict",
                 )
             # build list of value strings from map
             cls.vals = list(cls.map.keys())
@@ -1546,7 +1549,7 @@ class MetaEnum(MetaParamValue):
             if not isinstance(cls.vals, list):
                 raise TypeError(
                     "Enum-derived class attribute 'vals' "
-                    "must be of type list"
+                    "must be of type list",
                 )
             # build string->value map from vals sequence
             cls.map = {}
@@ -1554,7 +1557,7 @@ class MetaEnum(MetaParamValue):
                 cls.map[val] = idx
         else:
             raise TypeError(
-                "Enum-derived class must define attribute 'map' or 'vals'"
+                "Enum-derived class must define attribute 'map' or 'vals'",
             )
 
         if cls.is_class:
@@ -1584,7 +1587,7 @@ class Enum(ParamValue, metaclass=MetaEnum):
     def __init__(self, value):
         if value not in self.map:
             raise TypeError(
-                f"Enum param got bad value '{value}' (not in {self.vals})"
+                f"Enum param got bad value '{value}' (not in {self.vals})",
             )
         self.value = value
 
@@ -2070,7 +2073,7 @@ class PortRef(object):
             # shorthand for proxies
             return self.peer.simobj
         raise AttributeError(
-            f"'{self.__class__.__name__}' object has no attribute '{attr}'"
+            f"'{self.__class__.__name__}' object has no attribute '{attr}'",
         )
 
     # Full connection is symmetric (both ways).  Called via
@@ -2095,7 +2098,7 @@ class PortRef(object):
             return
         elif not isinstance(other, PortRef):
             raise TypeError(
-                f"assigning non-port reference '{other}' to port '{self}'"
+                f"assigning non-port reference '{other}' to port '{self}'",
             )
 
         if not Port.is_compat(self, other):
@@ -2121,7 +2124,7 @@ class PortRef(object):
 
         if not isinstance(new_1, PortRef) or not isinstance(new_2, PortRef):
             raise TypeError(
-                f"Splicing non-port references '{new_1}','{new_2}' to port '{self}'"
+                f"Splicing non-port references '{new_1}','{new_2}' to port '{self}'",
             )
 
         old_peer = self.peer
@@ -2170,7 +2173,7 @@ class PortRef(object):
                 realPeer = self.peer.unproxy(self.simobj)
             except:
                 print(
-                    f"Error in unproxying port '{self.name}' of {self.simobj.path()}"
+                    f"Error in unproxying port '{self.name}' of {self.simobj.path()}",
                 )
                 raise
             self.connect(realPeer)
@@ -2240,7 +2243,11 @@ class VectorPortRef(object):
             # need to extend list
             ext = [
                 VectorPortElementRef(
-                    self.simobj, self.name, self.role, self.is_source, i
+                    self.simobj,
+                    self.name,
+                    self.role,
+                    self.is_source,
+                    i,
                 )
                 for i in range(len(self.elements), key + 1)
             ]

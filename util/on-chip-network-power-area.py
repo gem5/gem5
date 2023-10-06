@@ -74,19 +74,23 @@ def parseConfig(config_file):
         sys.exit(1)
 
     number_of_virtual_networks = config.getint(
-        "system.ruby.network", "number_of_virtual_networks"
+        "system.ruby.network",
+        "number_of_virtual_networks",
     )
     vcs_per_vnet = config.getint("system.ruby.network", "vcs_per_vnet")
 
     buffers_per_data_vc = config.getint(
-        "system.ruby.network", "buffers_per_data_vc"
+        "system.ruby.network",
+        "buffers_per_data_vc",
     )
     buffers_per_control_vc = config.getint(
-        "system.ruby.network", "buffers_per_ctrl_vc"
+        "system.ruby.network",
+        "buffers_per_ctrl_vc",
     )
 
     ni_flit_size_bits = 8 * config.getint(
-        "system.ruby.network", "ni_flit_size"
+        "system.ruby.network",
+        "ni_flit_size",
     )
 
     routers = config.get("system.ruby.network", "routers").split()
@@ -196,7 +200,9 @@ def parseStats(
     # Now parse the stats
     pattern = "sim_seconds"
     lines = string.split(
-        subprocess.check_output(["grep", pattern, stats_file]), "\n", -1
+        subprocess.check_output(["grep", pattern, stats_file]),
+        "\n",
+        -1,
     )
     assert len(lines) >= 1
 
@@ -232,11 +238,17 @@ def parseStats(
     # Compute the power consumed by the links
     for link in int_links:
         computeLinkPower(
-            link, stats_file, config, simulation_length_in_seconds
+            link,
+            stats_file,
+            config,
+            simulation_length_in_seconds,
         )
     for link in ext_links:
         computeLinkPower(
-            link, stats_file, config, simulation_length_in_seconds
+            link,
+            stats_file,
+            config,
+            simulation_length_in_seconds,
         )
 
     # Finalize DSENT
@@ -257,7 +269,7 @@ def main():
 
     print(
         "WARNING: configuration files for DSENT and McPAT are separate. "
-        "Changes made to one are not reflected in the other."
+        "Changes made to one are not reflected in the other.",
     )
 
     (

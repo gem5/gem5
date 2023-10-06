@@ -44,7 +44,8 @@ parser.add_argument("hh", help="the path of the debug flag header file")
 parser.add_argument("name", help="the name of the debug flag")
 parser.add_argument("desc", help="a description of the debug flag")
 parser.add_argument(
-    "fmt", help="whether the flag is a format flag (True or False)"
+    "fmt",
+    help="whether the flag is a format flag (True or False)",
 )
 parser.add_argument(
     "components",
@@ -72,7 +73,7 @@ code(
 
 #include "base/compiler.hh" // For namespace deprecation
 #include "base/debug.hh"
-"""
+""",
 )
 for flag in components:
     code('#include "debug/${flag}.hh"')
@@ -86,7 +87,7 @@ namespace debug
 
 namespace unions
 {
-"""
+""",
 )
 
 # Use unions to prevent debug flags from being destructed. It's the
@@ -106,7 +107,7 @@ inline union ${{args.name}}
         }
     };
 } ${{args.name}};
-"""
+""",
     )
 else:
     code(
@@ -118,7 +119,7 @@ inline union ${{args.name}}
         "${{args.name}}", "${{args.desc}}", ${{"true" if fmt else "false"}}
     };
 } ${{args.name}};
-"""
+""",
     )
 
 code(
@@ -132,7 +133,7 @@ inline constexpr const auto& ${{args.name}} =
 } // namespace gem5
 
 #endif // __DEBUG_${{args.name}}_HH__
-"""
+""",
 )
 
 code.write(args.hh)

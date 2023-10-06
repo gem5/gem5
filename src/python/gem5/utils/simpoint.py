@@ -76,7 +76,7 @@ class SimPoint:
             "This `SimPoint` class has been deprecated in favor of "
             "`SimpointResource` and `SimpointDirectory` resource which may be "
             "found in `gem5.resources.resource`. Please utilize these. This "
-            "`SimPoint` class will be removed in future releases of gem5."
+            "`SimPoint` class will be removed in future releases of gem5.",
         )
 
         # initalize input if you're passing in a CustomResource
@@ -86,10 +86,10 @@ class SimPoint:
             simpoint_file_path = simpoint_directory.get_simpoint_file()
             weight_file_path = simpoint_resource.get_weight_file()
             simpoint_interval = simpoint_resource.get_metadata().get(
-                "simpoint_interval"
+                "simpoint_interval",
             )
             warmup_interval = simpoint_resource.get_metadata().get(
-                "warmup_interval"
+                "warmup_interval",
             )
 
         self._simpoint_interval = simpoint_interval
@@ -98,7 +98,7 @@ class SimPoint:
             if simpoint_list is None or weight_list is None:
                 fatal(
                     "Please pass in file paths or lists for both simpoints "
-                    "and weights."
+                    "and weights.",
                 )
             else:
                 self._simpoint_start_insts = list(
@@ -112,7 +112,8 @@ class SimPoint:
                 self._simpoint_start_insts,
                 self._weight_list,
             ) = self.get_weights_and_simpoints_from_file(
-                simpoint_file_path, weight_file_path
+                simpoint_file_path,
+                weight_file_path,
             )
 
         if warmup_interval != 0:
@@ -131,7 +132,7 @@ class SimPoint:
         """
         simpoint = []
         with open(simpoint_path) as simpoint_file, open(
-            weight_path
+            weight_path,
         ) as weight_file:
             while True:
                 line = simpoint_file.readline()

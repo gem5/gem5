@@ -86,10 +86,12 @@ class InternalTestResult(_CommonMetadataMixin):
         self.suite = suite
 
         self.stderr = os.path.join(
-            InternalSavedResults.output_path(self.uid, suite.uid), "stderr"
+            InternalSavedResults.output_path(self.uid, suite.uid),
+            "stderr",
         )
         self.stdout = os.path.join(
-            InternalSavedResults.output_path(self.uid, suite.uid), "stdout"
+            InternalSavedResults.output_path(self.uid, suite.uid),
+            "stdout",
         )
 
 
@@ -225,7 +227,7 @@ class XMLAttribute(object):
 
     def write(self, file_):
         file_.write(
-            "%s=%s" % (self.name, xml.sax.saxutils.quoteattr(self.value))
+            "%s=%s" % (self.name, xml.sax.saxutils.quoteattr(self.value)),
         )
 
 
@@ -243,7 +245,7 @@ class JUnitTestSuites(XMLElement):
         self.attributes = []
         for result, tests in results.items():
             self.attributes.append(
-                self.result_attribute(result, str(len(tests)))
+                self.result_attribute(result, str(len(tests))),
             )
 
         self.elements = []
@@ -269,7 +271,7 @@ class JUnitTestSuite(JUnitTestSuites):
         self.attributes = [XMLAttribute("name", suite_result.name)]
         for result, tests in results.items():
             self.attributes.append(
-                self.result_attribute(result, str(len(tests)))
+                self.result_attribute(result, str(len(tests))),
             )
 
         self.elements = []
@@ -302,7 +304,7 @@ class JUnitTestCase(XMLElement):
 
         if str(test_result.result) == "Failed":
             self.elements.append(
-                JUnitFailure("Test failed", str(test_result.result.reason))
+                JUnitFailure("Test failed", str(test_result.result.reason)),
             )
 
 

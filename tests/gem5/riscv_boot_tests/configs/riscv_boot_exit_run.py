@@ -44,11 +44,15 @@ from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
 
 parser = argparse.ArgumentParser(
-    description="A script to run the RISCV boot exit tests."
+    description="A script to run the RISCV boot exit tests.",
 )
 
 parser.add_argument(
-    "-n", "--num-cpus", type=int, required=True, help="The number of CPUs."
+    "-n",
+    "--num-cpus",
+    type=int,
+    required=True,
+    help="The number of CPUs.",
 )
 
 parser.add_argument(
@@ -106,7 +110,9 @@ if args.mem_system == "classic":
 
     # Setup the cache hierarchy.
     cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-        l1d_size="32KiB", l1i_size="32KiB", l2_size="512KiB"
+        l1d_size="32KiB",
+        l1i_size="32KiB",
+        l2_size="512KiB",
     )
 elif args.mem_system == "mesi_two_level":
     from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
@@ -142,11 +148,13 @@ elif args.cpu == "minor":
     cpu_type = CPUTypes.MINOR
 else:
     raise NotImplementedError(
-        f"CPU type '{args.cpu}' is not supported in the boot tests."
+        f"CPU type '{args.cpu}' is not supported in the boot tests.",
     )
 
 processor = SimpleProcessor(
-    cpu_type=cpu_type, isa=ISA.RISCV, num_cores=args.num_cpus
+    cpu_type=cpu_type,
+    isa=ISA.RISCV,
+    num_cores=args.num_cpus,
 )
 
 # Setup the board.
@@ -159,7 +167,8 @@ board = RiscvBoard(
 
 # Set the workload.
 workload = obtain_resource(
-    "riscv-ubuntu-20.04-boot", resource_directory=args.resource_directory
+    "riscv-ubuntu-20.04-boot",
+    resource_directory=args.resource_directory,
 )
 board.set_workload(workload)
 
@@ -173,6 +182,7 @@ else:
 
 print(
     "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(), simulator.get_last_exit_event_cause()
-    )
+        simulator.get_current_tick(),
+        simulator.get_last_exit_event_cause(),
+    ),
 )

@@ -66,7 +66,9 @@ memory = SingleChannelDDR3_1600(size="32MB")
 
 # We use a simple Timing processor with one core.
 processor = SimpleProcessor(
-    cpu_type=CPUTypes.TIMING, isa=ISA.RISCV, num_cores=1
+    cpu_type=CPUTypes.TIMING,
+    isa=ISA.RISCV,
+    num_cores=1,
 )
 
 # The gem5 library simble board which can be used to run simple SE-mode
@@ -99,6 +101,7 @@ simulator.run()
 
 print(
     "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(), simulator.get_last_exit_event_cause()
-    )
+        simulator.get_current_tick(),
+        simulator.get_last_exit_event_cause(),
+    ),
 )

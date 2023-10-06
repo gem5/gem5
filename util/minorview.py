@@ -121,7 +121,9 @@ if __name__ == "__main__":
         controller.startTime = args.start_time
         controller.endTime = args.end_time
         model.load_events(
-            args.eventFile, startTime=args.start_time, endTime=args.end_time
+            args.eventFile,
+            startTime=args.start_time,
+            endTime=args.end_time,
         )
         controller.set_time_index(0)
     else:

@@ -87,7 +87,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
             raise Exception(
                 "The RISCVBoard requires a processor using the"
                 "RISCV ISA. Current processor ISA: "
-                f"'{processor.get_isa().name}'."
+                f"'{processor.get_isa().name}'.",
             )
 
     @overrides(AbstractSystemBoard)
@@ -139,7 +139,11 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
 
         # Add Ethernet card
         self.ethernet = IGbE_e1000(
-            pci_bus=0, pci_dev=0, pci_func=0, InterruptLine=1, InterruptPin=1
+            pci_bus=0,
+            pci_dev=0,
+            pci_func=0,
+            InterruptLine=1,
+            InterruptPin=1,
         )
 
         self.ethernet.host = self.platform.pci_host
@@ -187,7 +191,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # TODO: Not sure if this should be done per-core like in the example
         for cpu in self.get_processor().get_cores():
             cpu.get_mmu().pma_checker = PMAChecker(
-                uncacheable=uncacheable_range
+                uncacheable=uncacheable_range,
             )
 
     @overrides(AbstractSystemBoard)
@@ -198,7 +202,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
     def get_dma_ports(self) -> List[Port]:
         raise NotImplementedError(
             "RISCVBoard does not have DMA Ports. "
-            "Use `has_dma_ports()` to check this."
+            "Use `has_dma_ports()` to check this.",
         )
 
     @overrides(AbstractSystemBoard)
@@ -246,7 +250,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
                     "reg",
                     state.addrCells(mem_range.start)
                     + state.sizeCells(mem_range.size()),
-                )
+                ),
             )
             root.append(node)
 
@@ -296,7 +300,10 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # CLINT node
         clint = self.platform.clint
         clint_node = clint.generateBasicPioDeviceNode(
-            soc_state, "clint", clint.pio_addr, clint.pio_size
+            soc_state,
+            "clint",
+            clint.pio_addr,
+            clint.pio_size,
         )
         int_extended = list()
         for i, core in enumerate(self.get_processor().get_cores()):
@@ -306,7 +313,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
             int_extended.append(phandle)
             int_extended.append(0x7)
         clint_node.append(
-            FdtPropertyWords("interrupts-extended", int_extended)
+            FdtPropertyWords("interrupts-extended", int_extended),
         )
         clint_node.appendCompatible(["riscv,clint0"])
         soc_node.append(clint_node)
@@ -314,7 +321,10 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # PLIC node
         plic = self.platform.plic
         plic_node = plic.generateBasicPioDeviceNode(
-            soc_state, "plic", plic.pio_addr, plic.pio_size
+            soc_state,
+            "plic",
+            plic.pio_addr,
+            plic.pio_size,
         )
 
         int_state = FdtState(addr_cells=0, interrupt_cells=1)
@@ -341,7 +351,10 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
 
         # PCI
         pci_state = FdtState(
-            addr_cells=3, size_cells=2, cpu_cells=1, interrupt_cells=1
+            addr_cells=3,
+            size_cells=2,
+            cpu_cells=1,
+            interrupt_cells=1,
         )
         pci_node = FdtNode("pci")
 
@@ -364,7 +377,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
                 "reg",
                 soc_state.addrCells(self.platform.pci_host.conf_base)
                 + soc_state.sizeCells(self.platform.pci_host.conf_size),
-            )
+            ),
         )
 
         # Ranges mapping
@@ -392,7 +405,8 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
 
         for i in range(int(self.platform.pci_host.int_count)):
             interrupts += self.platform.pci_host.pciFdtAddr(
-                device=i, addr=0
+                device=i,
+                addr=0,
             ) + [int(i) + 1, plic_handle, int(int_base) + i]
 
         pci_node.append(FdtPropertyWords("interrupt-map", interrupts))
@@ -402,7 +416,8 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
             fatal("PCI interrupt count should be power of 2")
 
         intmask = self.platform.pci_host.pciFdtAddr(
-            device=int_count - 1, addr=0
+            device=int_count - 1,
+            addr=0,
         ) + [0x0]
         pci_node.append(FdtPropertyWords("interrupt-map-mask", intmask))
 
@@ -414,14 +429,17 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # UART node
         uart = self.platform.uart
         uart_node = uart.generateBasicPioDeviceNode(
-            soc_state, "uart", uart.pio_addr, uart.pio_size
+            soc_state,
+            "uart",
+            uart.pio_addr,
+            uart.pio_size,
         )
         uart_node.append(
-            FdtPropertyWords("interrupts", [self.platform.uart_int_id])
+            FdtPropertyWords("interrupts", [self.platform.uart_int_id]),
         )
         uart_node.append(FdtPropertyWords("clock-frequency", [0x384000]))
         uart_node.append(
-            FdtPropertyWords("interrupt-parent", soc_state.phandle(plic))
+            FdtPropertyWords("interrupt-parent", soc_state.phandle(plic)),
         )
         uart_node.appendCompatible(["ns8250"])
         soc_node.append(uart_node)
@@ -429,11 +447,14 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # VirtIO MMIO disk node
         disk = self.disk
         disk_node = disk.generateBasicPioDeviceNode(
-            soc_state, "virtio_mmio", disk.pio_addr, disk.pio_size
+            soc_state,
+            "virtio_mmio",
+            disk.pio_addr,
+            disk.pio_size,
         )
         disk_node.append(FdtPropertyWords("interrupts", [disk.interrupt_id]))
         disk_node.append(
-            FdtPropertyWords("interrupt-parent", soc_state.phandle(plic))
+            FdtPropertyWords("interrupt-parent", soc_state.phandle(plic)),
         )
         disk_node.appendCompatible(["virtio,mmio"])
         soc_node.append(disk_node)
@@ -441,11 +462,14 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # VirtIO MMIO rng node
         rng = self.rng
         rng_node = rng.generateBasicPioDeviceNode(
-            soc_state, "virtio_mmio", rng.pio_addr, rng.pio_size
+            soc_state,
+            "virtio_mmio",
+            rng.pio_addr,
+            rng.pio_size,
         )
         rng_node.append(FdtPropertyWords("interrupts", [rng.interrupt_id]))
         rng_node.append(
-            FdtPropertyWords("interrupt-parent", soc_state.phandle(plic))
+            FdtPropertyWords("interrupt-parent", soc_state.phandle(plic)),
         )
         rng_node.appendCompatible(["virtio,mmio"])
         soc_node.append(rng_node)
@@ -464,7 +488,8 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
     @overrides(KernelDiskWorkload)
     def _add_disk_to_board(self, disk_image: AbstractResource):
         image = CowDiskImage(
-            child=RawDiskImage(read_only=True), read_only=False
+            child=RawDiskImage(read_only=True),
+            read_only=False,
         )
         image.child.image_file = disk_image.get_local_path()
         self.disk.vio.image = image
@@ -480,7 +505,8 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
 
         self.generate_device_tree(m5.options.outdir)
         self.workload.dtb_filename = os.path.join(
-            m5.options.outdir, "device.dtb"
+            m5.options.outdir,
+            "device.dtb",
         )
 
     @overrides(KernelDiskWorkload)

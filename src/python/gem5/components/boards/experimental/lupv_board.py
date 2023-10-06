@@ -90,7 +90,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
             raise Exception(
                 "The LupvBoard requires a processor using the "
                 "RISCV ISA. Current processor "
-                f"ISA: '{processor.get_isa().name}'."
+                f"ISA: '{processor.get_isa().name}'.",
             )
 
         super().__init__(clk_freq, processor, memory, cache_hierarchy)
@@ -237,7 +237,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # TODO: Not sure if this should be done per-core like in the example
         for cpu in self.get_processor().get_cores():
             cpu.get_mmu().pma_checker = PMAChecker(
-                uncacheable=uncacheable_range
+                uncacheable=uncacheable_range,
             )
 
     @overrides(AbstractSystemBoard)
@@ -248,7 +248,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
     def get_dma_ports(self) -> List[Port]:
         raise NotImplementedError(
             "The LupvBoard does not have DMA Ports. "
-            "Use `has_dma_ports()` to check this."
+            "Use `has_dma_ports()` to check this.",
         )
 
     @overrides(AbstractSystemBoard)
@@ -291,7 +291,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
                     "reg",
                     state.addrCells(mem_range.start)
                     + state.sizeCells(mem_range.size()),
-                )
+                ),
             )
             root.append(node)
 
@@ -335,7 +335,10 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # CLINT node
         clint = self.clint
         clint_node = clint.generateBasicPioDeviceNode(
-            soc_state, "clint", clint.pio_addr, clint.pio_size
+            soc_state,
+            "clint",
+            clint.pio_addr,
+            clint.pio_size,
         )
 
         clint_node.append(FdtPropertyStrings("status", "disable"))
@@ -348,7 +351,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
             int_extended.append(phandle)
             int_extended.append(self._excep_code["INT_TIMER_MACHINE"])
         clint_node.append(
-            FdtPropertyWords("interrupts-extended", int_extended)
+            FdtPropertyWords("interrupts-extended", int_extended),
         )
         clint_node.appendCompatible(["riscv,clint0"])
         soc_node.append(clint_node)
@@ -365,7 +368,10 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # LupioTMR
         lupio_tmr = self.lupio_tmr
         lupio_tmr_node = lupio_tmr.generateBasicPioDeviceNode(
-            soc_state, "lupio-tmr", lupio_tmr.pio_addr, lupio_tmr.pio_size
+            soc_state,
+            "lupio-tmr",
+            lupio_tmr.pio_addr,
+            lupio_tmr.pio_size,
         )
         int_state = FdtState(addr_cells=0, interrupt_cells=1)
         lupio_tmr_node.append(FdtPropertyWords("clocks", [clk_phandle]))
@@ -375,7 +381,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
             int_extended.append(phandle)
             int_extended.append(self._excep_code["INT_TIMER_SUPER"])
         lupio_tmr_node.append(
-            FdtPropertyWords("interrupts-extended", int_extended)
+            FdtPropertyWords("interrupts-extended", int_extended),
         )
         lupio_tmr_node.appendCompatible(["lupio,tmr"])
         soc_node.append(lupio_tmr_node)
@@ -383,7 +389,10 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # PLIC node
         plic = self.pic
         plic_node = plic.generateBasicPioDeviceNode(
-            soc_state, "plic", plic.pio_addr, plic.pio_size
+            soc_state,
+            "plic",
+            plic.pio_addr,
+            plic.pio_size,
         )
 
         plic_node.append(FdtPropertyStrings("status", "disable"))
@@ -410,7 +419,10 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # LupioIPI Device
         lupio_ipi = self.lupio_ipi
         lupio_ipi_node = lupio_ipi.generateBasicPioDeviceNode(
-            soc_state, "lupio-ipi", lupio_ipi.pio_addr, lupio_ipi.pio_size
+            soc_state,
+            "lupio-ipi",
+            lupio_ipi.pio_addr,
+            lupio_ipi.pio_size,
         )
         int_extended = list()
         for i, core in enumerate(self.get_processor().get_cores()):
@@ -418,7 +430,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
             int_extended.append(phandle)
             int_extended.append(self._excep_code["INT_SOFT_SUPER"])
         lupio_ipi_node.append(
-            FdtPropertyWords("interrupts-extended", int_extended)
+            FdtPropertyWords("interrupts-extended", int_extended),
         )
         lupio_ipi_node.append(FdtProperty("interrupt-controller"))
         lupio_ipi_node.appendCompatible(["lupio,ipi"])
@@ -427,7 +439,10 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # LupioPIC Device
         lupio_pic = self.lupio_pic
         lupio_pic_node = lupio_pic.generateBasicPioDeviceNode(
-            soc_state, "lupio-pic", lupio_pic.pio_addr, lupio_pic.pio_size
+            soc_state,
+            "lupio-pic",
+            lupio_pic.pio_addr,
+            lupio_pic.pio_size,
         )
         int_state = FdtState(interrupt_cells=1)
         lupio_pic_node.append(int_state.interruptCellsProperty())
@@ -439,7 +454,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
             int_extended.append(phandle)
             int_extended.append(self._excep_code["INT_EXT_SUPER"])
         lupio_pic_node.append(
-            FdtPropertyWords("interrupts-extended", int_extended)
+            FdtPropertyWords("interrupts-extended", int_extended),
         )
         lupio_pic_node.append(FdtProperty("interrupt-controller"))
         lupio_pic_node.appendCompatible(["lupio,pic"])
@@ -448,35 +463,44 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # LupioBLK Device
         lupio_blk = self.lupio_blk
         lupio_blk_node = lupio_blk.generateBasicPioDeviceNode(
-            soc_state, "lupio-blk", lupio_blk.pio_addr, lupio_blk.pio_size
+            soc_state,
+            "lupio-blk",
+            lupio_blk.pio_addr,
+            lupio_blk.pio_size,
         )
         lupio_blk_node.appendCompatible(["lupio,blk"])
         lupio_blk_node.append(
             FdtPropertyWords(
                 "interrupts-extended",
                 [state.phandle(self.lupio_pic), self.lupio_blk.int_id],
-            )
+            ),
         )
         soc_node.append(lupio_blk_node)
 
         # LupioRNG Device
         lupio_rng = self.lupio_rng
         lupio_rng_node = lupio_rng.generateBasicPioDeviceNode(
-            soc_state, "lupio-rng", lupio_rng.pio_addr, lupio_rng.pio_size
+            soc_state,
+            "lupio-rng",
+            lupio_rng.pio_addr,
+            lupio_rng.pio_size,
         )
         lupio_rng_node.appendCompatible(["lupio,rng"])
         lupio_rng_node.append(
             FdtPropertyWords(
                 "interrupts-extended",
                 [state.phandle(self.lupio_pic), self.lupio_rng.int_id],
-            )
+            ),
         )
         soc_node.append(lupio_rng_node)
 
         # LupioSYS Device
         lupio_sys = self.lupio_sys
         lupio_sys_node = lupio_sys.generateBasicPioDeviceNode(
-            soc_state, "lupio-sys", lupio_sys.pio_addr, lupio_sys.pio_size
+            soc_state,
+            "lupio-sys",
+            lupio_sys.pio_addr,
+            lupio_sys.pio_size,
         )
         lupio_sys_node.appendCompatible(["syscon"])
         sys_phandle = state.phandle(self.lupio_sys)
@@ -500,7 +524,10 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # LupioRTC Device
         lupio_rtc = self.lupio_rtc
         lupio_rtc_node = lupio_rtc.generateBasicPioDeviceNode(
-            soc_state, "lupio-rtc", lupio_rtc.pio_addr, lupio_rtc.pio_size
+            soc_state,
+            "lupio-rtc",
+            lupio_rtc.pio_addr,
+            lupio_rtc.pio_size,
         )
         lupio_rtc_node.appendCompatible(["lupio,rtc"])
         soc_node.append(lupio_rtc_node)
@@ -508,14 +535,17 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # LupioTTY Device
         lupio_tty = self.lupio_tty
         lupio_tty_node = lupio_tty.generateBasicPioDeviceNode(
-            soc_state, "lupio-tty", lupio_tty.pio_addr, lupio_tty.pio_size
+            soc_state,
+            "lupio-tty",
+            lupio_tty.pio_addr,
+            lupio_tty.pio_size,
         )
         lupio_tty_node.appendCompatible(["lupio,tty"])
         lupio_tty_node.append(
             FdtPropertyWords(
                 "interrupts-extended",
                 [state.phandle(self.lupio_pic), self.lupio_tty.int_id],
-            )
+            ),
         )
         soc_node.append(lupio_tty_node)
 
@@ -540,7 +570,8 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
 
         # Set the disk image for the block device to use
         image = CowDiskImage(
-            child=RawDiskImage(read_only=True), read_only=False
+            child=RawDiskImage(read_only=True),
+            read_only=False,
         )
         image.child.image_file = disk_image.get_local_path()
         self.lupio_blk.image = image
@@ -556,5 +587,6 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         # device tree file.
         self._generate_device_tree(m5.options.outdir)
         self.workload.dtb_filename = os.path.join(
-            m5.options.outdir, "device.dtb"
+            m5.options.outdir,
+            "device.dtb",
         )

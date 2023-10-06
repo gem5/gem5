@@ -41,7 +41,7 @@ mock_config_json = {
         "baba": {
             "url": mock_json_path,
             "isMongo": False,
-        }
+        },
     },
 }
 
@@ -81,7 +81,8 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertIsInstance(resource, BinaryResource)
 
         self.assertEquals(
-            "binary-example documentation.", resource.get_description()
+            "binary-example documentation.",
+            resource.get_description(),
         )
         self.assertEquals("src/simple", resource.get_source())
         self.assertEquals(ISA.ARM, resource.get_architecture())
@@ -97,7 +98,8 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertIsInstance(resource, KernelResource)
 
         self.assertEquals(
-            "kernel-example documentation.", resource.get_description()
+            "kernel-example documentation.",
+            resource.get_description(),
         )
         self.assertEquals("src/linux-kernel", resource.get_source())
         self.assertEquals(ISA.RISCV, resource.get_architecture())
@@ -113,7 +115,8 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertIsInstance(resource, BootloaderResource)
 
         self.assertEquals(
-            "bootloader documentation.", resource.get_description()
+            "bootloader documentation.",
+            resource.get_description(),
         )
         self.assertIsNone(resource.get_source())
         self.assertIsNone(resource.get_architecture())
@@ -129,7 +132,8 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertIsInstance(resource, DiskImageResource)
 
         self.assertEquals(
-            "disk-image documentation.", resource.get_description()
+            "disk-image documentation.",
+            resource.get_description(),
         )
         self.assertEquals("src/x86-ubuntu", resource.get_source())
         self.assertEquals("1", resource.get_root_partition())
@@ -145,7 +149,8 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertIsInstance(resource, CheckpointResource)
 
         self.assertEquals(
-            "checkpoint-example documentation.", resource.get_description()
+            "checkpoint-example documentation.",
+            resource.get_description(),
         )
         self.assertIsNone(resource.get_source())
 
@@ -173,7 +178,8 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertIsInstance(resource, SimpointDirectoryResource)
 
         self.assertEquals(
-            "simpoint directory documentation.", resource.get_description()
+            "simpoint directory documentation.",
+            resource.get_description(),
         )
         self.assertIsNone(resource.get_source())
 
@@ -183,7 +189,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
             Path(
                 Path(self.get_resource_dir())
                 / "simpoint-directory-example"
-                / "simpoint.simpt"
+                / "simpoint.simpt",
             ),
             resource.get_simpoint_file(),
         )
@@ -191,7 +197,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
             Path(
                 Path(self.get_resource_dir())
                 / "simpoint-directory-example"
-                / "simpoint.weight"
+                / "simpoint.weight",
             ),
             resource.get_weight_file(),
         )
@@ -208,7 +214,8 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertIsInstance(resource, SimpointResource)
 
         self.assertEquals(
-            "simpoint documentation.", resource.get_description()
+            "simpoint documentation.",
+            resource.get_description(),
         )
         self.assertIsNone(resource.get_source())
         self.assertIsNone(resource.get_local_path())
@@ -242,7 +249,8 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertIsInstance(resource, DirectoryResource)
 
         self.assertEquals(
-            "directory-example documentation.", resource.get_description()
+            "directory-example documentation.",
+            resource.get_description(),
         )
         self.assertIsNone(resource.get_source())
 
@@ -263,7 +271,8 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertIsInstance(resource, LooppointCsvLoader)
 
         self.assertEquals(
-            "A looppoint pinpoints csv file.", resource.get_description()
+            "A looppoint pinpoints csv file.",
+            resource.get_description(),
         )
         self.assertIsNone(resource.get_source())
 
@@ -285,6 +294,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertTrue("1" in resource.get_regions())
 
         self.assertEquals(
-            "A looppoint json file resource.", resource.get_description()
+            "A looppoint json file resource.",
+            resource.get_description(),
         )
         self.assertIsNone(resource.get_source())

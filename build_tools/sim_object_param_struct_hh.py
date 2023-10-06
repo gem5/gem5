@@ -66,7 +66,7 @@ code = code_formatter()
 # will also be inherited from the base class's param struct
 # here). Sort the params based on their key
 params = list(
-    map(lambda k_v: k_v[1], sorted(sim_object._params.local.items()))
+    map(lambda k_v: k_v[1], sorted(sim_object._params.local.items())),
 )
 ports = sim_object._ports.local
 try:
@@ -103,7 +103,7 @@ class CxxClass(object):
                         print(
                             "Nested template argument in cxx_class."
                             " This feature is largely untested and "
-                            " may not work."
+                            " may not work.",
                         )
                 elif c == ">":
                     depth = depth - 1
@@ -158,7 +158,7 @@ code(
 #ifndef __PARAMS__${sim_object}__
 #define __PARAMS__${sim_object}__
 
-"""
+""",
 )
 
 
@@ -214,7 +214,7 @@ SimObjectParams() {}
 virtual ~SimObjectParams() {}
 
 std::string name;
-    """
+    """,
     )
 
 for param in params:

@@ -36,7 +36,8 @@ class Workload(SimObject):
 
     wait_for_remote_gdb = Param.Bool(False, "Wait for a remote GDB connection")
     remote_gdb_port = Param.HostSocket(
-        7000, "Default port/socket used for remote GDB connection"
+        7000,
+        "Default port/socket used for remote GDB connection",
     )
 
     @cxxMethod
@@ -55,7 +56,8 @@ class StubWorkload(Workload):
 
     entry = Param.Addr(0, "Dummy entry point for this workload.")
     byte_order = Param.ByteOrder(
-        "little", "Dummy byte order for this workload."
+        "little",
+        "Dummy byte order for this workload.",
     )
 
 
@@ -67,7 +69,8 @@ class KernelWorkload(Workload):
     object_file = Param.String("", "File that contains the kernel code")
     extras = VectorParam.String([], "Additional object files to load")
     extras_addrs = VectorParam.Addr(
-        [], "Load addresses for additional object files"
+        [],
+        "Load addresses for additional object files",
     )
 
     addr_check = Param.Bool(
@@ -114,7 +117,7 @@ class SEWorkload(Workload, metaclass=SEWorkloadMeta):
             filter(
                 lambda wld: wld._is_compatible_with(obj),
                 SEWorkloadMeta.all_se_workload_classes,
-            )
+            ),
         )
 
         return options

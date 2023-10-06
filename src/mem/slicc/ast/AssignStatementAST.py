@@ -56,5 +56,7 @@ class AssignStatementAST(StatementAST):
             # 'NetDest class'
             if str(ltype) != "NetDest" and str(rtype) != "Set":
                 self.error(
-                    "Assignment type mismatch '%s' and '%s'", ltype, rtype
+                    "Assignment type mismatch '%s' and '%s'",
+                    ltype,
+                    rtype,
                 )

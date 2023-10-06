@@ -77,7 +77,9 @@ memory = SingleChannelDDR3_1600(size="32MB")
 
 # We use a simple Timing processor with one core.
 processor = SimpleProcessor(
-    cpu_type=CPUTypes.TIMING, isa=ISA.RISCV, num_cores=1
+    cpu_type=CPUTypes.TIMING,
+    isa=ISA.RISCV,
+    num_cores=1,
 )
 
 # The gem5 library simble board which can be used to run simple SE-mode
@@ -100,7 +102,7 @@ board.set_se_binary_workload(
     # Any resource specified in this file will be automatically retrieved.
     # At the time of writing, this file is a WIP and does not contain all
     # resources. Jira ticket: https://gem5.atlassian.net/browse/GEM5-1096
-    obtain_resource("riscv-hello")
+    obtain_resource("riscv-hello"),
 )
 
 # Lastly we run the simulation.
@@ -110,8 +112,9 @@ simulator.run(max_ticks=max_ticks)
 
 print(
     "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(), simulator.get_last_exit_event_cause()
-    )
+        simulator.get_current_tick(),
+        simulator.get_last_exit_event_cause(),
+    ),
 )
 
 print("Taking a checkpoint at", args.checkpoint_path)

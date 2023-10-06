@@ -102,7 +102,7 @@ except:
             "--python_out=util",
             "--proto_path=src/proto",
             "src/proto/inst_dep_record.proto",
-        ]
+        ],
     )
     if not error:
         import inst_dep_record_pb2

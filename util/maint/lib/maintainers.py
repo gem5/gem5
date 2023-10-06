@@ -101,7 +101,8 @@ class Subsystem(object):
 
 class Maintainers(object):
     DEFAULT_MAINTAINERS = os.path.join(
-        os.path.dirname(__file__), "../../../MAINTAINERS.yaml"
+        os.path.dirname(__file__),
+        "../../../MAINTAINERS.yaml",
     )
 
     _subsystems: Dict[str, Subsystem]  # tag -> Subsystem
@@ -113,7 +114,8 @@ class Maintainers(object):
 
     @classmethod
     def from_file(
-        cls, path_or_file: Optional[PathOrFile] = None
+        cls,
+        path_or_file: Optional[PathOrFile] = None,
     ) -> "Maintainers":
         return cls(Maintainers._load_maintainers_file(path_or_file))
 
@@ -123,7 +125,8 @@ class Maintainers(object):
 
     @classmethod
     def _load_maintainers_file(
-        cls, path_or_file: Optional[PathOrFile] = None
+        cls,
+        path_or_file: Optional[PathOrFile] = None,
     ) -> Mapping[str, Any]:
         if path_or_file is None:
             path_or_file = cls.DEFAULT_MAINTAINERS
@@ -141,20 +144,20 @@ class Maintainers(object):
                 return ydict[name]
             except KeyError:
                 raise MissingFieldException(
-                    f"{tag}: Required field '{name}' is missing"
+                    f"{tag}: Required field '{name}' is missing",
                 )
 
         maintainers: List[Tuple[str, str]] = []
         raw_maintainers = ydict.get("maintainers", [])
         if not isinstance(raw_maintainers, Sequence):
             raise IllegalValueException(
-                f"{tag}: Illegal field 'maintainers' isn't a list."
+                f"{tag}: Illegal field 'maintainers' isn't a list.",
             )
         for maintainer in raw_maintainers:
             name, address = email.utils.parseaddr(maintainer)
             if name == "" and address == "":
                 raise IllegalValueException(
-                    f"{tag}: Illegal maintainer field: '{maintainer}'"
+                    f"{tag}: Illegal maintainer field: '{maintainer}'",
                 )
             maintainers.append((name, address))
 
@@ -162,7 +165,7 @@ class Maintainers(object):
             status = Status.from_str(required_field("status"))
         except KeyError:
             raise IllegalValueException(
-                f"{tag}: Invalid status '{ydict['status']}'"
+                f"{tag}: Invalid status '{ydict['status']}'",
             )
 
         return Subsystem(

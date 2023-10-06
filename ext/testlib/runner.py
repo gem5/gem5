@@ -149,7 +149,8 @@ class TestRunner(RunnerPattern):
             test_params.test.test(test_params)
         except Exception:
             self.testable.result = Result(
-                Result.Failed, traceback.format_exc()
+                Result.Failed,
+                traceback.format_exc(),
             )
         else:
             self.testable.result = Result(Result.Passed)
@@ -213,7 +214,9 @@ class FixtureBuilder(object):
                 log.test_log.warn("%s\n%s" % (exc, msg))
 
                 raise BrokenFixtureException(
-                    fixture, testitem, traceback.format_exc()
+                    fixture,
+                    testitem,
+                    traceback.format_exc(),
                 )
 
     def post_test_procedure(self, testitem):

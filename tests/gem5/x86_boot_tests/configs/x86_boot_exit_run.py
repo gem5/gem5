@@ -44,7 +44,7 @@ from gem5.utils.requires import requires
 
 parser = argparse.ArgumentParser(
     description="A script to run the gem5 boot test. This test boots the "
-    "linux kernel."
+    "linux kernel.",
 )
 parser.add_argument(
     "-m",
@@ -147,7 +147,7 @@ elif args.mem_system == "classic":
     cache_hierarchy = PrivateL1CacheHierarchy(l1d_size="16kB", l1i_size="16kB")
 else:
     raise NotImplementedError(
-        f"Memory system '{args.mem_system}' is not supported in the boot tests."
+        f"Memory system '{args.mem_system}' is not supported in the boot tests.",
     )
 
 assert cache_hierarchy != None
@@ -180,7 +180,8 @@ if args.boot_type == "init":
 
 # Set the workload.
 workload = obtain_resource(
-    "x86-ubuntu-18.04-boot", resource_directory=args.resource_directory
+    "x86-ubuntu-18.04-boot",
+    resource_directory=args.resource_directory,
 )
 workload.set_parameter("kernel_args", kernal_args)
 motherboard.set_workload(workload)
@@ -201,6 +202,7 @@ else:
 
 print(
     "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(), simulator.get_last_exit_event_cause()
-    )
+        simulator.get_current_tick(),
+        simulator.get_last_exit_event_cause(),
+    ),
 )

@@ -133,20 +133,20 @@ class SourceFilter(object):
     def __or__(self, other):
         return SourceFilter(
             lambda env, tags: self.predicate(env, tags)
-            or other.predicate(env, tags)
+            or other.predicate(env, tags),
         )
 
     def __and__(self, other):
         return SourceFilter(
             lambda env, tags: self.predicate(env, tags)
-            and other.predicate(env, tags)
+            and other.predicate(env, tags),
         )
 
 
 def with_any_tags(*tags):
     """Return a list of sources with any of the supplied tags."""
     return SourceFilter(
-        lambda env, stags: len(resolve_tags(env, tags) & stags) > 0
+        lambda env, stags: len(resolve_tags(env, tags) & stags) > 0,
     )
 
 
@@ -163,7 +163,7 @@ def with_tag(tag):
 def without_tags(*tags):
     """Return a list of sources without any of the supplied tags."""
     return SourceFilter(
-        lambda env, stags: len(resolve_tags(env, tags) & stags) == 0
+        lambda env, stags: len(resolve_tags(env, tags) & stags) == 0,
     )
 
 
@@ -179,7 +179,7 @@ SourceFilter.factories.update(
         "with_tag": with_tag,
         "without_tags": without_tags,
         "without_tag": without_tag,
-    }
+    },
 )
 
 

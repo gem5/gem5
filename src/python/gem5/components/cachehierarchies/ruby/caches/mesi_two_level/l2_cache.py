@@ -34,7 +34,12 @@ from ..abstract_l2_cache import AbstractL2Cache
 
 class L2Cache(AbstractL2Cache):
     def __init__(
-        self, l2_size, l2_assoc, network, num_l2Caches, cache_line_size
+        self,
+        l2_size,
+        l2_assoc,
+        network,
+        num_l2Caches,
+        cache_line_size,
     ):
         super().__init__(network, cache_line_size)
 

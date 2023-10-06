@@ -46,5 +46,6 @@ class RubyDirectoryMemory(SimObject):
     cxx_header = "mem/ruby/structures/DirectoryMemory.hh"
 
     addr_ranges = VectorParam.AddrRange(
-        Parent.addr_ranges, "Address range this directory responds to"
+        Parent.addr_ranges,
+        "Address range this directory responds to",
     )

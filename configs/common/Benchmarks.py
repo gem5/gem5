@@ -33,7 +33,12 @@ from m5.defines import buildEnv
 
 class SysConfig:
     def __init__(
-        self, script=None, mem=None, disks=None, rootdev=None, os_type="linux"
+        self,
+        script=None,
+        mem=None,
+        disks=None,
+        rootdev=None,
+        os_type="linux",
     ):
         self.scriptname = script
         self.disknames = disks
@@ -145,7 +150,7 @@ Benchmarks = {
             ["ARMv7a-Gingerbread-Android.SMP.mouse.nolock.clean.img"],
             None,
             "android-gingerbread",
-        )
+        ),
     ],
     "bbench-gb": [
         SysConfig(
@@ -154,7 +159,7 @@ Benchmarks = {
             ["ARMv7a-Gingerbread-Android.SMP.mouse.nolock.img"],
             None,
             "android-gingerbread",
-        )
+        ),
     ],
     "ArmAndroid-ICS": [
         SysConfig(
@@ -163,7 +168,7 @@ Benchmarks = {
             ["ARMv7a-ICS-Android.SMP.nolock.clean.img"],
             None,
             "android-ics",
-        )
+        ),
     ],
     "bbench-ics": [
         SysConfig(
@@ -172,7 +177,7 @@ Benchmarks = {
             ["ARMv7a-ICS-Android.SMP.nolock.img"],
             None,
             "android-ics",
-        )
+        ),
     ],
 }
 

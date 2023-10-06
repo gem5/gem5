@@ -46,7 +46,8 @@ class SeriesRequestGenerator(DirectedGenerator):
 
     addr_increment_size = Param.Int(64, "address increment size")
     num_series = Param.UInt32(
-        1, "number of different address streams to generate"
+        1,
+        "number of different address streams to generate",
     )
     percent_writes = Param.Percent(50, "percent of access that are writes")
 

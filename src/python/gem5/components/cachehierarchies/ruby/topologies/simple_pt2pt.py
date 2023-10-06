@@ -64,6 +64,10 @@ class SimplePt2Pt(SimpleNetwork):
                     continue  # Don't connect a router to itself!
                 link_count += 1
                 int_links.append(
-                    SimpleIntLink(link_id=link_count, src_node=ri, dst_node=rj)
+                    SimpleIntLink(
+                        link_id=link_count,
+                        src_node=ri,
+                        dst_node=rj,
+                    ),
                 )
         self.int_links = int_links

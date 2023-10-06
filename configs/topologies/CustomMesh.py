@@ -88,7 +88,7 @@ class CustomMesh(SimpleTopology):
                             dst_inport="West",
                             latency=llat,
                             weight=link_weights[0],
-                        )
+                        ),
                     )
                     self._link_count += 1
 
@@ -111,7 +111,7 @@ class CustomMesh(SimpleTopology):
                             dst_inport="East",
                             latency=llat,
                             weight=link_weights[1],
-                        )
+                        ),
                     )
                     self._link_count += 1
 
@@ -134,7 +134,7 @@ class CustomMesh(SimpleTopology):
                             dst_inport="South",
                             latency=llat,
                             weight=link_weights[2],
-                        )
+                        ),
                     )
                     self._link_count += 1
 
@@ -157,7 +157,7 @@ class CustomMesh(SimpleTopology):
                             dst_inport="North",
                             latency=llat,
                             weight=link_weights[3],
-                        )
+                        ),
                     )
                     self._link_count += 1
 
@@ -169,7 +169,8 @@ class CustomMesh(SimpleTopology):
         # Create a zero-latency router bridging node controllers
         # and the mesh router
         node_router = self._Router(
-            router_id=len(self._routers), latency=self.node_router_latency
+            router_id=len(self._routers),
+            latency=self.node_router_latency,
         )
         self._routers.append(node_router)
 
@@ -180,7 +181,7 @@ class CustomMesh(SimpleTopology):
                 src_node=node_router,
                 dst_node=mesh_router,
                 latency=self._router_link_latency,
-            )
+            ),
         )
         self._link_count += 1
 
@@ -190,7 +191,7 @@ class CustomMesh(SimpleTopology):
                 src_node=mesh_router,
                 dst_node=node_router,
                 latency=self._router_link_latency,
-            )
+            ),
         )
         self._link_count += 1
 
@@ -206,7 +207,7 @@ class CustomMesh(SimpleTopology):
         if num_nodes_per_router:
             # evenly distribute nodes to all listed routers
             assert len(router_idx_list) * num_nodes_per_router == len(
-                node_list
+                node_list,
             )
 
             for idx, node in enumerate(node_list):
@@ -228,7 +229,7 @@ class CustomMesh(SimpleTopology):
                             ext_node=c,
                             int_node=router,
                             latency=self._node_link_latency,
-                        )
+                        ),
                     )
                     self._link_count += 1
         else:
@@ -249,7 +250,7 @@ class CustomMesh(SimpleTopology):
                             ext_node=c,
                             int_node=router,
                             latency=self._node_link_latency,
-                        )
+                        ),
                     )
                     self._link_count += 1
                 idx = (idx + 1) % len(router_idx_list)
@@ -325,7 +326,7 @@ class CustomMesh(SimpleTopology):
                 rni_io_params = check_same(type(n).NoC_Params, rni_io_params)
             else:
                 fatal(
-                    f"topologies.CustomMesh: {n.__class__.__name__} not supported"
+                    f"topologies.CustomMesh: {n.__class__.__name__} not supported",
                 )
 
         # Create all mesh routers
@@ -437,7 +438,7 @@ class CustomMesh(SimpleTopology):
                 if r.start.value != tgt_range_start:
                     fatal(
                         "topologies.CustomMesh: not supporting pairing of "
-                        "main memory with multiple ranges"
+                        "main memory with multiple ranges",
                     )
 
         # reassign ranges for a 1 -> N paring
@@ -478,7 +479,7 @@ class CustomMesh(SimpleTopology):
                     for m in src_range.masks:
                         # TODO should mask all the way to the max range size
                         new_src_mask.append(
-                            m | (m * 2) | (m * 4) | (m * 8) | (m * 16)
+                            m | (m * 2) | (m * 4) | (m * 8) | (m * 16),
                         )
                     for tgt in src._pairing:
                         paired = False
@@ -499,8 +500,9 @@ class CustomMesh(SimpleTopology):
                             fatal(
                                 "topologies.CustomMesh: could not "
                                 "reassign ranges {} {}".format(
-                                    src.path(), tgt.path()
-                                )
+                                    src.path(),
+                                    tgt.path(),
+                                ),
                             )
 
         if len(all_mem) >= len(all_cache):

@@ -108,7 +108,8 @@ class BaseSystem(object, metaclass=ABCMeta):
           cpu -- CPU instance to work on.
         """
         cpu.addPrivateSplitL1Caches(
-            L1_ICache(size="32kB", assoc=1), L1_DCache(size="32kB", assoc=4)
+            L1_ICache(size="32kB", assoc=1),
+            L1_DCache(size="32kB", assoc=4),
         )
 
     def create_caches_shared(self, system):
@@ -122,7 +123,9 @@ class BaseSystem(object, metaclass=ABCMeta):
         """
         system.toL2Bus = L2XBar(clk_domain=system.cpu_clk_domain)
         system.l2c = L2Cache(
-            clk_domain=system.cpu_clk_domain, size="4MB", assoc=8
+            clk_domain=system.cpu_clk_domain,
+            size="4MB",
+            assoc=8,
         )
         system.l2c.cpu_side = system.toL2Bus.mem_side_ports
         system.l2c.mem_side = system.membus.cpu_side_ports
@@ -202,12 +205,18 @@ class BaseSystem(object, metaclass=ABCMeta):
 
             bootmem = getattr(system, "_bootmem", None)
             Ruby.create_system(
-                args, True, system, system.iobus, system._dma_ports, bootmem
+                args,
+                True,
+                system,
+                system.iobus,
+                system._dma_ports,
+                bootmem,
             )
 
             # Create a seperate clock domain for Ruby
             system.ruby.clk_domain = SrcClockDomain(
-                clock=args.ruby_clock, voltage_domain=system.voltage_domain
+                clock=args.ruby_clock,
+                voltage_domain=system.voltage_domain,
             )
             for i, cpu in enumerate(system.cpu):
                 if not cpu.switched_out:
@@ -219,7 +228,7 @@ class BaseSystem(object, metaclass=ABCMeta):
                 self.init_cpu(system, cpu, sha_bus)
 
         if _have_kvm_support and any(
-            [isinstance(c, BaseKvmCPU) for c in system.cpu]
+            [isinstance(c, BaseKvmCPU) for c in system.cpu],
         ):
             self.init_kvm(system)
             self.init_kvm_cpus(system.cpu)
@@ -230,13 +239,15 @@ class BaseSystem(object, metaclass=ABCMeta):
         # by a different clock domain.
         system.voltage_domain = VoltageDomain()
         system.clk_domain = SrcClockDomain(
-            clock="1GHz", voltage_domain=system.voltage_domain
+            clock="1GHz",
+            voltage_domain=system.voltage_domain,
         )
 
         # Create a seperate clock domain for components that should
         # run at CPUs frequency
         system.cpu_clk_domain = SrcClockDomain(
-            clock="2GHz", voltage_domain=system.voltage_domain
+            clock="2GHz",
+            voltage_domain=system.voltage_domain,
         )
 
     @abstractmethod

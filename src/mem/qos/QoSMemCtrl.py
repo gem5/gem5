@@ -58,30 +58,35 @@ class QoSMemCtrl(ClockedObject):
 
     # QoS scheduler policy: tags request with QoS priority value
     qos_policy = Param.QoSPolicy(
-        NULL, "Memory Controller Requests QoS arbitration policy"
+        NULL,
+        "Memory Controller Requests QoS arbitration policy",
     )
 
     # Select QoS driven turnaround policy
     # (direction switch triggered by highest priority buffer content)
     qos_turnaround_policy = Param.QoSTurnaroundPolicy(
-        NULL, "Selects QoS driven turnaround policy"
+        NULL,
+        "Selects QoS driven turnaround policy",
     )
 
     # QoS Queue Select policy: selects packets among same priority level
     # (only supported in QoSMemSinkCtrl)
     qos_q_policy = Param.QoSQPolicy(
-        "fifo", "Memory Controller Requests same-QoS selection policy"
+        "fifo",
+        "Memory Controller Requests same-QoS selection policy",
     )
 
     # flag to select QoS syncronised scheduling
     # (calls the scheduler on all requestors at every packet arrival)
     qos_syncro_scheduler = Param.Bool(
-        False, "Enables QoS syncronized scheduling"
+        False,
+        "Enables QoS syncronized scheduling",
     )
 
     # flag to enable QoS priority escalation
     qos_priority_escalation = Param.Bool(
-        False, "Enables QoS priority escalation"
+        False,
+        "Enables QoS priority escalation",
     )
 
     # Requestor ID to be mapped to service parameters in QoS schedulers
@@ -90,5 +95,6 @@ class QoSMemCtrl(ClockedObject):
         "Requestor Names to be mapped to service parameters in QoS scheduler",
     )
     qos_masters = DeprecatedParam(
-        qos_requestors, "`qos_master` is now called `qos_requestors`"
+        qos_requestors,
+        "`qos_master` is now called `qos_requestors`",
     )

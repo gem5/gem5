@@ -107,7 +107,8 @@ class AmbaIntDevice(AmbaPioDevice):
     cxx_class = "gem5::AmbaIntDevice"
     interrupt = Param.ArmInterruptPin("Interrupt that connects to GIC")
     int_delay = Param.Latency(
-        "100ns", "Time between action and interrupt generation by device"
+        "100ns",
+        "Time between action and interrupt generation by device",
     )
 
 
@@ -143,7 +144,7 @@ class GenericArmPciHost(GenericPciHost):
     int_policy = Param.ArmPciIntRouting("PCI interrupt routing policy")
     int_base = Param.Unsigned("PCI interrupt base")
     int_count = Param.Unsigned(
-        "Maximum number of interrupts used by this host"
+        "Maximum number of interrupts used by this host",
     )
 
     # This python parameter can be used in configuration scripts to turn
@@ -152,7 +153,10 @@ class GenericArmPciHost(GenericPciHost):
 
     def generateDeviceTree(self, state):
         local_state = FdtState(
-            addr_cells=3, size_cells=2, cpu_cells=1, interrupt_cells=1
+            addr_cells=3,
+            size_cells=2,
+            cpu_cells=1,
+            interrupt_cells=1,
         )
 
         node = FdtNode("pci")
@@ -176,7 +180,7 @@ class GenericArmPciHost(GenericPciHost):
                 "reg",
                 state.addrCells(self.conf_base)
                 + state.sizeCells(self.conf_size),
-            )
+            ),
         )
 
         # Ranges mapping
@@ -210,7 +214,9 @@ class GenericArmPciHost(GenericPciHost):
 
             for i in range(int(self.int_count)):
                 parent_interrupt = gic.interruptCells(
-                    0, int(self.int_base) - 32 + i, 1
+                    0,
+                    int(self.int_base) - 32 + i,
+                    1,
                 )
 
                 interrupts += (
@@ -232,7 +238,7 @@ class GenericArmPciHost(GenericPciHost):
         else:
             m5.fatal(
                 "Unsupported PCI interrupt policy "
-                + "for Device Tree generation"
+                + "for Device Tree generation",
             )
 
         if self._dma_coherent:
@@ -254,8 +260,9 @@ class RealViewCtrl(BasicPioDevice):
         node.appendCompatible("arm,vexpress-sysreg")
         node.append(
             FdtPropertyWords(
-                "reg", state.addrCells(self.pio_addr) + state.sizeCells(0x1000)
-            )
+                "reg",
+                state.addrCells(self.pio_addr) + state.sizeCells(0x1000),
+            ),
         )
         node.append(FdtProperty("gpio-controller"))
         node.append(FdtPropertyWords("#gpio-cells", [2]))
@@ -275,7 +282,8 @@ class RealViewOsc(ClockDomain):
     # which means we have to associate oscillators with a voltage
     # source.
     voltage_domain = Param.VoltageDomain(
-        Parent.voltage_domain, "Voltage domain"
+        Parent.voltage_domain,
+        "Voltage domain",
     )
 
     # See ARM DUI 0447J (ARM Motherboard Express uATX -- V2M-P1) and
@@ -298,8 +306,9 @@ class RealViewOsc(ClockDomain):
         node.appendCompatible("arm,vexpress-osc")
         node.append(
             FdtPropertyWords(
-                "arm,vexpress-sysreg,func", [0x1, int(self.device)]
-            )
+                "arm,vexpress-sysreg,func",
+                [0x1, int(self.device)],
+            ),
         )
         node.append(FdtPropertyWords("#clock-cells", [0]))
 
@@ -311,10 +320,13 @@ class RealViewOsc(ClockDomain):
             return int(1.0 / prop.value)
 
         node.append(
-            FdtPropertyWords("freq-range", [to_freq(minf), to_freq(maxf)])
+            FdtPropertyWords("freq-range", [to_freq(minf), to_freq(maxf)]),
         )
         node.append(
-            FdtPropertyStrings("clock-output-names", ["oscclk" + str(phandle)])
+            FdtPropertyStrings(
+                "clock-output-names",
+                ["oscclk" + str(phandle)],
+            ),
         )
         node.appendPhandle(self)
         yield node
@@ -354,11 +366,17 @@ class VExpressMCC(SubSystem):
 
     osc_mcc = Osc(device=0, min_freq="25MHz", max_freq="60MHz", freq="50MHz")
     osc_clcd = Osc(
-        device=1, min_freq="23.75MHz", max_freq="63.5MHz", freq="23.75MHz"
+        device=1,
+        min_freq="23.75MHz",
+        max_freq="63.5MHz",
+        freq="23.75MHz",
     )
     osc_peripheral = Osc(device=2, freq="24MHz")
     osc_system_bus = Osc(
-        device=4, min_freq="2MHz", max_freq="230MHz", freq="24MHz"
+        device=4,
+        min_freq="2MHz",
+        max_freq="230MHz",
+        freq="24MHz",
     )
 
     # See Table 4.19 in ARM DUI 0447J (Motherboard Express uATX TRM).
@@ -394,7 +412,10 @@ class CoreTile2A15DCC(SubSystem):
     osc_cpu = Osc(device=0, min_freq="20MHz", max_freq="60MHz", freq="60MHz")
     osc_hsbm = Osc(device=4, min_freq="20MHz", max_freq="40MHz", freq="40MHz")
     osc_pxl = Osc(
-        device=5, min_freq="23.76MHz", max_freq="165MHz", freq="23.75MHz"
+        device=5,
+        min_freq="23.76MHz",
+        max_freq="165MHz",
+        freq="23.75MHz",
     )
     osc_smb = Osc(device=6, min_freq="20MHz", max_freq="50MHz", freq="50MHz")
     osc_sys = Osc(device=7, min_freq="20MHz", max_freq="60MHz", freq="60MHz")
@@ -426,7 +447,8 @@ class SysSecCtrl(BasicPioDevice):
     cxx_class = "gem5::SysSecCtrl"
 
     ssc_dbgcfg_stat = Param.Unsigned(
-        0x00010000, "Debug authentication configuration status"
+        0x00010000,
+        "Debug authentication configuration status",
     )
     ssc_version = Param.Unsigned(0x100417B0, "Version register")
     ssc_pid0 = Param.Unsigned(0x44, "Peripheral ID0 register")
@@ -445,7 +467,8 @@ class AmbaFake(AmbaPioDevice):
     cxx_header = "dev/arm/amba_fake.hh"
     cxx_class = "gem5::AmbaFake"
     ignore_access = Param.Bool(
-        False, "Ignore reads/writes to this device, (e.g. IsaFake + AMBA)"
+        False,
+        "Ignore reads/writes to this device, (e.g. IsaFake + AMBA)",
     )
     amba_id = 0
 
@@ -464,7 +487,7 @@ class FixedClock(SrcClockDomain):
         node.appendCompatible("fixed-clock")
         node.append(FdtPropertyWords("#clock-cells", 0))
         node.append(
-            FdtPropertyWords("clock-frequency", self.clock[0].frequency)
+            FdtPropertyWords("clock-frequency", self.clock[0].frequency),
         )
         node.appendPhandle(self)
         FixedClock._index += 1
@@ -478,15 +501,21 @@ class Pl011(Uart):
     cxx_class = "gem5::Pl011"
     interrupt = Param.ArmInterruptPin("Interrupt that connects to GIC")
     end_on_eot = Param.Bool(
-        False, "End the simulation when a EOT is received on the UART"
+        False,
+        "End the simulation when a EOT is received on the UART",
     )
     int_delay = Param.Latency(
-        "100ns", "Time between action and interrupt generation by UART"
+        "100ns",
+        "Time between action and interrupt generation by UART",
     )
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(
-            state, "uart", self.pio_addr, 0x1000, [self.interrupt]
+            state,
+            "uart",
+            self.pio_addr,
+            0x1000,
+            [self.interrupt],
         )
         node.appendCompatible(["arm,pl011", "arm,primecell"])
 
@@ -500,7 +529,7 @@ class Pl011(Uart):
                     state.phandle(realview.mcc.osc_peripheral),
                     state.phandle(realview.dcc.osc_smb),
                 ],
-            )
+            ),
         )
         node.append(FdtPropertyStrings("clock-names", ["uartclk", "apb_pclk"]))
         yield node
@@ -533,7 +562,11 @@ class Sp805(AmbaIntDevice):
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(
-            state, "watchdog", self.pio_addr, 0x1000, [self.interrupt]
+            state,
+            "watchdog",
+            self.pio_addr,
+            0x1000,
+            [self.interrupt],
         )
         node.appendCompatible(["arm,sp805", "arm,primecell"])
         clocks = [state.phandle(self.clk_domain.unproxy(self))]
@@ -580,13 +613,18 @@ class PL031(AmbaIntDevice):
     cxx_header = "dev/arm/rtc_pl031.hh"
     cxx_class = "gem5::PL031"
     time = Param.Time(
-        "01/01/2009", "System time to use ('Now' for actual time)"
+        "01/01/2009",
+        "System time to use ('Now' for actual time)",
     )
     amba_id = 0x00041031
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(
-            state, "rtc", self.pio_addr, 0x1000, [self.interrupt]
+            state,
+            "rtc",
+            self.pio_addr,
+            0x1000,
+            [self.interrupt],
         )
 
         node.appendCompatible(["arm,pl031", "arm,primecell"])
@@ -607,7 +645,11 @@ class Pl050(AmbaIntDevice):
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(
-            state, "kmi", self.pio_addr, 0x1000, [self.interrupt]
+            state,
+            "kmi",
+            self.pio_addr,
+            0x1000,
+            [self.interrupt],
         )
 
         node.appendCompatible(["arm,pl050", "arm,primecell"])
@@ -623,11 +665,13 @@ class Pl111(AmbaDmaDevice):
     cxx_class = "gem5::Pl111"
     pixel_clock = Param.Clock("24MHz", "Pixel clock")
     vnc = Param.VncInput(
-        Parent.any, "Vnc server for remote frame buffer display"
+        Parent.any,
+        "Vnc server for remote frame buffer display",
     )
     amba_id = 0x00141111
     enable_capture = Param.Bool(
-        True, "capture frame to system.framebuffer.bmp"
+        True,
+        "capture frame to system.framebuffer.bmp",
     )
 
 
@@ -636,20 +680,25 @@ class HDLcd(AmbaDmaDevice):
     cxx_header = "dev/arm/hdlcd.hh"
     cxx_class = "gem5::HDLcd"
     vnc = Param.VncInput(
-        Parent.any, "Vnc server for remote frame buffer display"
+        Parent.any,
+        "Vnc server for remote frame buffer display",
     )
     amba_id = 0x00141000
     workaround_swap_rb = Param.Bool(
-        False, "Workaround incorrect color selector order in some kernels"
+        False,
+        "Workaround incorrect color selector order in some kernels",
     )
     workaround_dma_line_count = Param.Bool(
-        True, "Workaround incorrect DMA line count (off by 1)"
+        True,
+        "Workaround incorrect DMA line count (off by 1)",
     )
     enable_capture = Param.Bool(
-        True, "capture frame to system.framebuffer.{extension}"
+        True,
+        "capture frame to system.framebuffer.{extension}",
     )
     frame_format = Param.ImageFormat(
-        "Auto", "image format of the captured frame"
+        "Auto",
+        "image format of the captured frame",
     )
 
     pixel_buffer_size = Param.MemorySize32("2KiB", "Size of address range")
@@ -657,7 +706,8 @@ class HDLcd(AmbaDmaDevice):
     pxl_clk = Param.ClockDomain("Pixel clock source")
     pixel_chunk = Param.Unsigned(32, "Number of pixels to handle in one batch")
     virt_refresh_rate = Param.Frequency(
-        "20Hz", "Frame refresh rate in KVM mode"
+        "20Hz",
+        "Frame refresh rate in KVM mode",
     )
     _status = "ok"
 
@@ -678,12 +728,13 @@ class HDLcd(AmbaDmaDevice):
                 FdtPropertyWords(
                     "remote-endpoint",
                     [state.phandle(self.encoder.endpointPhandle())],
-                )
+                ),
             )
             encoder_endpoint.append(
                 FdtPropertyWords(
-                    "remote-endpoint", [state.phandle(self.endpointPhandle())]
-                )
+                    "remote-endpoint",
+                    [state.phandle(self.endpointPhandle())],
+                ),
             )
 
             yield encoder_node
@@ -692,7 +743,11 @@ class HDLcd(AmbaDmaDevice):
         port_node.append(endpoint_node)
 
         node = self.generateBasicPioDeviceNode(
-            state, "hdlcd", self.pio_addr, 0x1000, [self.interrupt]
+            state,
+            "hdlcd",
+            self.pio_addr,
+            0x1000,
+            [self.interrupt],
         )
 
         node.appendCompatible(["arm,hdlcd"])
@@ -752,7 +807,7 @@ class MmioSRAM(ParentMem):
                 "reg",
                 state.addrCells(self.range.start)
                 + state.sizeCells(self.range.size()),
-            )
+            ),
         )
 
         local_state = FdtState(addr_cells=2, size_cells=2, cpu_cells=1)
@@ -764,7 +819,7 @@ class MmioSRAM(ParentMem):
                 local_state.addrCells(0)
                 + state.addrCells(self.range.start)
                 + state.sizeCells(self.range.size()),
-            )
+            ),
         )
 
         self.generateSubnodes(node, state)
@@ -802,13 +857,16 @@ class GenericMHU(MHU):
         interrupt=ArmSPI(num=69),
     )
     lowp_ap2scp = Ap2ScpDoorbell(
-        set_address=0x10020108, clear_address=0x10020110
+        set_address=0x10020108,
+        clear_address=0x10020110,
     )
     highp_ap2scp = Ap2ScpDoorbell(
-        set_address=0x10020128, clear_address=0x10020130
+        set_address=0x10020128,
+        clear_address=0x10020130,
     )
     sec_ap2scp = Ap2ScpDoorbell(
-        set_address=0x10020308, clear_address=0x10020310
+        set_address=0x10020308,
+        clear_address=0x10020310,
     )
 
 
@@ -895,7 +953,7 @@ class RealView(Platform):
     def generateDeviceTree(self, state):
         node = FdtNode("/")  # Things in this module need to end up in the root
         node.append(
-            FdtPropertyWords("interrupt-parent", state.phandle(self.gic))
+            FdtPropertyWords("interrupt-parent", state.phandle(self.gic)),
         )
 
         for subnode in self.recurseDeviceTree(state):
@@ -916,7 +974,7 @@ class RealView(Platform):
                 FdtPropertyWords(
                     "cpu-release-addr",
                     state.addrCells(system.workload.cpu_release_addr),
-                )
+                ),
             )
 
 
@@ -1008,10 +1066,14 @@ class VExpress_EMM(RealView):
     )
     clcd = Pl111(pio_addr=0x1C1F0000, interrupt=ArmSPI(num=46))
     kmi0 = Pl050(
-        pio_addr=0x1C060000, interrupt=ArmSPI(num=44), ps2=PS2Keyboard()
+        pio_addr=0x1C060000,
+        interrupt=ArmSPI(num=44),
+        ps2=PS2Keyboard(),
     )
     kmi1 = Pl050(
-        pio_addr=0x1C070000, interrupt=ArmSPI(num=45), ps2=PS2TouchKit()
+        pio_addr=0x1C070000,
+        interrupt=ArmSPI(num=45),
+        ps2=PS2TouchKit(),
     )
     cf_ctrl = IdeController(
         disks=[],
@@ -1027,7 +1089,8 @@ class VExpress_EMM(RealView):
 
     bootmem = SimpleMemory(range=AddrRange("64MiB"), conf_table_reported=False)
     vram = SimpleMemory(
-        range=AddrRange(0x18000000, size="32MiB"), conf_table_reported=False
+        range=AddrRange(0x18000000, size="32MiB"),
+        conf_table_reported=False,
     )
     rtc = PL031(pio_addr=0x1C170000, interrupt=ArmSPI(num=36))
 
@@ -1078,7 +1141,11 @@ class VExpress_EMM(RealView):
     # Attach any PCI devices that are supported
     def attachPciDevices(self):
         self.ethernet = IGbE_e1000(
-            pci_bus=0, pci_dev=0, pci_func=0, InterruptLine=1, InterruptPin=1
+            pci_bus=0,
+            pci_dev=0,
+            pci_func=0,
+            InterruptLine=1,
+            InterruptPin=1,
         )
         self.ide = IdeController(
             disks=[],
@@ -1091,11 +1158,13 @@ class VExpress_EMM(RealView):
 
     def enableMSIX(self):
         self.gic = Gic400(
-            dist_addr=0x2C001000, cpu_addr=0x2C002000, it_lines=512
+            dist_addr=0x2C001000,
+            cpu_addr=0x2C002000,
+            it_lines=512,
         )
         self.gicv2m = Gicv2m()
         self.gicv2m.frames = [
-            Gicv2mFrame(spi_base=256, spi_len=64, addr=0x2C1C0000)
+            Gicv2mFrame(spi_base=256, spi_len=64, addr=0x2C1C0000),
         ]
 
     def setupBootLoader(self, cur_sys, loc, boot_loader=None):
@@ -1122,7 +1191,11 @@ class VExpress_EMM64(VExpress_EMM):
         if boot_loader is None:
             boot_loader = loc("boot_emm.arm64")
         RealView.setupBootLoader(
-            self, cur_sys, boot_loader, 0x8000000, 0x80000000
+            self,
+            cur_sys,
+            boot_loader,
+            0x8000000,
+            0x80000000,
         )
 
 
@@ -1284,26 +1357,31 @@ class VExpress_GEM5_Base(RealView):
     ]
 
     bootmem = SimpleMemory(
-        range=AddrRange(0, size="64MiB"), conf_table_reported=False
+        range=AddrRange(0, size="64MiB"),
+        conf_table_reported=False,
     )
 
     # NOR flash, flash0
     flash0 = SimpleMemory(
-        range=AddrRange(0x08000000, size="64MiB"), conf_table_reported=False
+        range=AddrRange(0x08000000, size="64MiB"),
+        conf_table_reported=False,
     )
 
     # Trusted SRAM
     trusted_sram = SimpleMemory(
-        range=AddrRange(0x04000000, size="256KiB"), conf_table_reported=False
+        range=AddrRange(0x04000000, size="256KiB"),
+        conf_table_reported=False,
     )
     # Trusted DRAM
     # TODO: preventing access from unsecure world to the trusted RAM
     trusted_dram = SimpleMemory(
-        range=AddrRange(0x06000000, size="32MB"), conf_table_reported=False
+        range=AddrRange(0x06000000, size="32MB"),
+        conf_table_reported=False,
     )
     # Non-Trusted SRAM
     non_trusted_sram = MmioSRAM(
-        range=AddrRange(0x2E000000, size=0x8000), conf_table_reported=False
+        range=AddrRange(0x2E000000, size=0x8000),
+        conf_table_reported=False,
     )
 
     # Platform control device (off-chip)
@@ -1384,21 +1462,31 @@ class VExpress_GEM5_Base(RealView):
     uart = [
         Pl011(pio_addr=0x1C090000, interrupt=ArmSPI(num=37)),
         Pl011(
-            pio_addr=0x1C0A0000, interrupt=ArmSPI(num=38), device=Terminal()
+            pio_addr=0x1C0A0000,
+            interrupt=ArmSPI(num=38),
+            device=Terminal(),
         ),
         Pl011(
-            pio_addr=0x1C0B0000, interrupt=ArmSPI(num=39), device=Terminal()
+            pio_addr=0x1C0B0000,
+            interrupt=ArmSPI(num=39),
+            device=Terminal(),
         ),
         Pl011(
-            pio_addr=0x1C0C0000, interrupt=ArmSPI(num=40), device=Terminal()
+            pio_addr=0x1C0C0000,
+            interrupt=ArmSPI(num=40),
+            device=Terminal(),
         ),
     ]
 
     kmi0 = Pl050(
-        pio_addr=0x1C060000, interrupt=ArmSPI(num=44), ps2=PS2Keyboard()
+        pio_addr=0x1C060000,
+        interrupt=ArmSPI(num=44),
+        ps2=PS2Keyboard(),
     )
     kmi1 = Pl050(
-        pio_addr=0x1C070000, interrupt=ArmSPI(num=45), ps2=PS2TouchKit()
+        pio_addr=0x1C070000,
+        interrupt=ArmSPI(num=45),
+        ps2=PS2TouchKit(),
     )
 
     watchdog = Sp805(pio_addr=0x1C0F0000, interrupt=ArmSPI(num=32))
@@ -1423,21 +1511,27 @@ class VExpress_GEM5_Base(RealView):
 
     vio = [
         MmioVirtIO(
-            pio_addr=0x1C130000, pio_size=0x1000, interrupt=ArmSPI(num=74)
+            pio_addr=0x1C130000,
+            pio_size=0x1000,
+            interrupt=ArmSPI(num=74),
         ),
         MmioVirtIO(
-            pio_addr=0x1C140000, pio_size=0x1000, interrupt=ArmSPI(num=75)
+            pio_addr=0x1C140000,
+            pio_size=0x1000,
+            interrupt=ArmSPI(num=75),
         ),
     ]
 
     # NOR flash, flash1
     flash1 = CfiMemory(
-        range=AddrRange(0x0C000000, 0x10000000), conf_table_reported=False
+        range=AddrRange(0x0C000000, 0x10000000),
+        conf_table_reported=False,
     )
 
     # VRAM
     vram = SimpleMemory(
-        range=AddrRange(0x18000000, size="32MB"), conf_table_reported=False
+        range=AddrRange(0x18000000, size="32MB"),
+        conf_table_reported=False,
     )
 
     def _off_chip_devices(self):
@@ -1552,7 +1646,7 @@ class VExpress_GEM5_Base(RealView):
 
             psci_node = FdtNode("psci")
             psci_node.appendCompatible(
-                ["arm,psci-1.0", "arm,psci-0.2", "arm,psci"]
+                ["arm,psci-1.0", "arm,psci-0.2", "arm,psci"],
             )
             method = "smc"
             psci_node.append(FdtPropertyStrings("method", method))
@@ -1568,7 +1662,9 @@ class VExpress_GEM5_Base(RealView):
 
 class VExpress_GEM5_V1_Base(VExpress_GEM5_Base):
     gic = kvm_gicv2_class(
-        dist_addr=0x2C001000, cpu_addr=0x2C002000, it_lines=512
+        dist_addr=0x2C001000,
+        cpu_addr=0x2C002000,
+        it_lines=512,
     )
     vgic = VGic(vcpu_addr=0x2C006000, hv_addr=0x2C004000, maint_int=25)
     gicv2m = Gicv2m()

@@ -50,7 +50,12 @@ from slicc.symbols import SymbolTable
 
 class SLICC(Grammar):
     def __init__(
-        self, filename, base_dir, verbose=False, traceback=False, **kwargs
+        self,
+        filename,
+        base_dir,
+        verbose=False,
+        traceback=False,
+        **kwargs,
     ):
         self.protocol = None
         self.traceback = traceback
@@ -67,7 +72,9 @@ class SLICC(Grammar):
 
     def currentLocation(self):
         return util.Location(
-            self.current_source, self.current_line, no_warning=not self.verbose
+            self.current_source,
+            self.current_line,
+            no_warning=not self.verbose,
         )
 
     def codeFormatter(self, *args, **kwargs):
@@ -400,13 +407,23 @@ class SLICC(Grammar):
     def p_obj_decl__2(self, p):
         "obj_decl : type ident ASSIGN expr SEMI"
         p[0] = ast.ObjDeclAST(
-            self, p[1], p[2], ast.PairListAST(self), p[4], False
+            self,
+            p[1],
+            p[2],
+            ast.PairListAST(self),
+            p[4],
+            False,
         )
 
     def p_obj_decl__3(self, p):
         "obj_decl : type STAR ident ASSIGN expr SEMI"
         p[0] = ast.ObjDeclAST(
-            self, p[1], p[3], ast.PairListAST(self), p[5], True
+            self,
+            p[1],
+            p[3],
+            ast.PairListAST(self),
+            p[5],
+            True,
         )
 
     # Function definition and declaration
@@ -693,7 +710,10 @@ class SLICC(Grammar):
     def p_statement__if_else_if(self, p):
         "if_statement : IF '(' expr ')' statements ELSE if_statement"
         p[0] = ast.IfStatementAST(
-            self, p[3], p[5], ast.StatementListAST(self, p[7])
+            self,
+            p[3],
+            p[5],
+            ast.StatementListAST(self, p[7]),
         )
 
     def p_expr__static_cast(self, p):
@@ -739,19 +759,25 @@ class SLICC(Grammar):
     def p_expr__member_method_call(self, p):
         "aexpr : aexpr DOT ident '(' exprs ')'"
         p[0] = ast.MemberMethodCallExprAST(
-            self, p[1], ast.FuncCallExprAST(self, p[3], p[5])
+            self,
+            p[1],
+            ast.FuncCallExprAST(self, p[3], p[5]),
         )
 
     def p_expr__member_method_call_lookup(self, p):
         "aexpr : aexpr '[' exprs ']'"
         p[0] = ast.MemberMethodCallExprAST(
-            self, p[1], ast.FuncCallExprAST(self, "lookup", p[3])
+            self,
+            p[1],
+            ast.FuncCallExprAST(self, "lookup", p[3]),
         )
 
     def p_expr__class_method_call(self, p):
         "aexpr : type DOUBLE_COLON ident '(' exprs ')'"
         p[0] = ast.ClassMethodCallExprAST(
-            self, p[1], ast.FuncCallExprAST(self, p[3], p[5])
+            self,
+            p[1],
+            ast.FuncCallExprAST(self, p[3], p[5]),
         )
 
     def p_expr__aexpr(self, p):

@@ -90,10 +90,12 @@ class SCFastModelGIC(SystemC_ScModule):
     vPEID_bits = Param.Unsigned(16, "Number of bits of vPEID with GICv4.1.")
     print_mmap = Param.Bool(False, "Print memory map to stdout")
     monolithic = Param.Bool(
-        False, "Indicate that the implementation is not distributed"
+        False,
+        "Indicate that the implementation is not distributed",
     )
     direct_lpi_support = Param.Bool(
-        False, "Enable support for LPI operations through GICR registers"
+        False,
+        "Enable support for LPI operations through GICR registers",
     )
     cpu_affinities = Param.String(
         "",
@@ -124,10 +126,12 @@ class SCFastModelGIC(SystemC_ScModule):
         "SPI signalling register aliases(0:Disabled)",
     )
     has_two_security_states = Param.Bool(
-        True, "If true, has two security states"
+        True,
+        "If true, has two security states",
     )
     DS_fixed_to_zero = Param.Bool(
-        False, "Enable/disable support of single security state"
+        False,
+        "Enable/disable support of single security state",
     )
     IIDR = Param.UInt32(0x0, "GICD_IIDR and GICR_IIDR value")
     gicv2_only = Param.Bool(
@@ -135,31 +139,40 @@ class SCFastModelGIC(SystemC_ScModule):
         "If true, when using the GICv3 model, pretend to be a GICv2 system",
     )
     STATUSR_implemented = Param.Bool(
-        True, "Determines whether the GICR_STATUSR register is implemented."
+        True,
+        "Determines whether the GICR_STATUSR register is implemented.",
     )
     priority_bits_implemented = Param.Unsigned(
-        5, "Number of implemented priority bits"
+        5,
+        "Number of implemented priority bits",
     )
     itargets_razwi = Param.Bool(
-        False, "If true, the GICD_ITARGETS registers are RAZ/WI"
+        False,
+        "If true, the GICD_ITARGETS registers are RAZ/WI",
     )
     icfgr_sgi_mask = Param.UInt32(
-        0x0, "Mask for writes to ICFGR registers that configure SGIs"
+        0x0,
+        "Mask for writes to ICFGR registers that configure SGIs",
     )
     icfgr_ppi_mask = Param.UInt32(
-        0xAAAAAAAA, "Mask for writes to ICFGR registers that configure PPIs"
+        0xAAAAAAAA,
+        "Mask for writes to ICFGR registers that configure PPIs",
     )
     icfgr_spi_mask = Param.UInt32(
-        0xAAAAAAAA, "Mask for writes to ICFGR registers that configure SPIs"
+        0xAAAAAAAA,
+        "Mask for writes to ICFGR registers that configure SPIs",
     )
     icfgr_sgi_reset = Param.UInt32(
-        0xAAAAAAAA, "Reset value for ICFGR registers that configure SGIs"
+        0xAAAAAAAA,
+        "Reset value for ICFGR registers that configure SGIs",
     )
     icfgr_ppi_reset = Param.UInt32(
-        0x0, "Reset value for ICFGR regesters that configure PPIs"
+        0x0,
+        "Reset value for ICFGR regesters that configure PPIs",
     )
     icfgr_spi_reset = Param.UInt32(
-        0x0, "Reset value for ICFGR regesters that configure SPIs"
+        0x0,
+        "Reset value for ICFGR regesters that configure SPIs",
     )
     icfgr_ppi_rsvd_bit = Param.Bool(
         False,
@@ -167,16 +180,20 @@ class SCFastModelGIC(SystemC_ScModule):
         "bits i.e. bit 0,2,4..30 of ICFGRn for n>0",
     )
     igroup_sgi_mask = Param.UInt16(
-        0xFFFF, "Mask for writes to SGI bits in IGROUP registers"
+        0xFFFF,
+        "Mask for writes to SGI bits in IGROUP registers",
     )
     igroup_ppi_mask = Param.UInt16(
-        0xFFFF, "Mask for writes to PPI bits in IGROUP registers"
+        0xFFFF,
+        "Mask for writes to PPI bits in IGROUP registers",
     )
     igroup_sgi_reset = Param.UInt16(
-        0x0, "Reset value for SGI bits in IGROUP registers"
+        0x0,
+        "Reset value for SGI bits in IGROUP registers",
     )
     igroup_ppi_reset = Param.UInt16(
-        0x0, "Reset value for SGI bits in IGROUP registers"
+        0x0,
+        "Reset value for SGI bits in IGROUP registers",
     )
     ppi_implemented_mask = Param.UInt16(
         0xFFFF,
@@ -220,16 +237,20 @@ class SCFastModelGIC(SystemC_ScModule):
         "to be instantiated (0=none)",
     )
     its0_base = Param.Addr(
-        0, "Register base address for ITS0 (automatic if 0)."
+        0,
+        "Register base address for ITS0 (automatic if 0).",
     )
     its1_base = Param.Addr(
-        0, "Register base address for ITS1 (automatic if 0)."
+        0,
+        "Register base address for ITS1 (automatic if 0).",
     )
     its2_base = Param.Addr(
-        0, "Register base address for ITS2 (automatic if 0)."
+        0,
+        "Register base address for ITS2 (automatic if 0).",
     )
     its3_base = Param.Addr(
-        0, "Register base address for ITS3 (automatic if 0)."
+        0,
+        "Register base address for ITS3 (automatic if 0).",
     )
     gits_pidr = Param.UInt64(
         0x0,
@@ -286,52 +307,68 @@ class SCFastModelGIC(SystemC_ScModule):
         "2 = Virtual Processors; 3 = Physical Processors; 4 = Collections",
     )
     gits_baser0_entry_bytes = Param.Unsigned(
-        8, "Number of bytes required per entry for GITS_BASER0 register."
+        8,
+        "Number of bytes required per entry for GITS_BASER0 register.",
     )
     gits_baser1_entry_bytes = Param.Unsigned(
-        8, "Number of bytes required per entry for GITS_BASER1 register."
+        8,
+        "Number of bytes required per entry for GITS_BASER1 register.",
     )
     gits_baser2_entry_bytes = Param.Unsigned(
-        8, "Number of bytes required per entry for GITS_BASER2 register."
+        8,
+        "Number of bytes required per entry for GITS_BASER2 register.",
     )
     gits_baser3_entry_bytes = Param.Unsigned(
-        8, "Number of bytes required per entry for GITS_BASER3 register."
+        8,
+        "Number of bytes required per entry for GITS_BASER3 register.",
     )
     gits_baser4_entry_bytes = Param.Unsigned(
-        8, "Number of bytes required per entry for GITS_BASER4 register."
+        8,
+        "Number of bytes required per entry for GITS_BASER4 register.",
     )
     gits_baser5_entry_bytes = Param.Unsigned(
-        8, "Number of bytes required per entry for GITS_BASER5 register."
+        8,
+        "Number of bytes required per entry for GITS_BASER5 register.",
     )
     gits_baser6_entry_bytes = Param.Unsigned(
-        8, "Number of bytes required per entry for GITS_BASER6 register."
+        8,
+        "Number of bytes required per entry for GITS_BASER6 register.",
     )
     gits_baser7_entry_bytes = Param.Unsigned(
-        8, "Number of bytes required per entry for GITS_BASER7 register."
+        8,
+        "Number of bytes required per entry for GITS_BASER7 register.",
     )
     gits_baser0_indirect_raz = Param.Bool(
-        False, "Indirect field for GITS_BASER0 register is RAZ/WI."
+        False,
+        "Indirect field for GITS_BASER0 register is RAZ/WI.",
     )
     gits_baser1_indirect_raz = Param.Bool(
-        False, "Indirect field for GITS_BASER1 register is RAZ/WI."
+        False,
+        "Indirect field for GITS_BASER1 register is RAZ/WI.",
     )
     gits_baser2_indirect_raz = Param.Bool(
-        False, "Indirect field for GITS_BASER2 register is RAZ/WI."
+        False,
+        "Indirect field for GITS_BASER2 register is RAZ/WI.",
     )
     gits_baser3_indirect_raz = Param.Bool(
-        False, "Indirect field for GITS_BASER3 register is RAZ/WI."
+        False,
+        "Indirect field for GITS_BASER3 register is RAZ/WI.",
     )
     gits_baser4_indirect_raz = Param.Bool(
-        False, "Indirect field for GITS_BASER4 register is RAZ/WI."
+        False,
+        "Indirect field for GITS_BASER4 register is RAZ/WI.",
     )
     gits_baser5_indirect_raz = Param.Bool(
-        False, "Indirect field for GITS_BASER5 register is RAZ/WI."
+        False,
+        "Indirect field for GITS_BASER5 register is RAZ/WI.",
     )
     gits_baser6_indirect_raz = Param.Bool(
-        False, "Indirect field for GITS_BASER6 register is RAZ/WI."
+        False,
+        "Indirect field for GITS_BASER6 register is RAZ/WI.",
     )
     gits_baser7_indirect_raz = Param.Bool(
-        False, "Indirect field for GITS_BASER7 register is RAZ/WI."
+        False,
+        "Indirect field for GITS_BASER7 register is RAZ/WI.",
     )
     its_baser_force_page_alignement = Param.Bool(
         True,
@@ -352,25 +389,32 @@ class SCFastModelGIC(SystemC_ScModule):
         "port rather than an AXI4 port).",
     )
     a3_affinity_supported = Param.Bool(
-        False, "Device supports affinity level 3 values that are non-zero."
+        False,
+        "Device supports affinity level 3 values that are non-zero.",
     )
     SGI_RSS_support = Param.Bool(
-        False, "Device has support for the Range Selector feature for SGI"
+        False,
+        "Device has support for the Range Selector feature for SGI",
     )
     gicr_propbaser_read_only = Param.Bool(
-        False, "GICR_PROPBASER register is read-only."
+        False,
+        "GICR_PROPBASER register is read-only.",
     )
     gicr_propbaser_reset = Param.UInt64(
-        0x0, "Value of GICR_PROPBASER on reset."
+        0x0,
+        "Value of GICR_PROPBASER on reset.",
     )
     its_device_bits = Param.Unsigned(
-        16, "Number of bits supported for ITS device IDs."
+        16,
+        "Number of bits supported for ITS device IDs.",
     )
     its_entry_size = Param.Unsigned(
-        8, "Number of bytes required to store each entry in the ITT tables."
+        8,
+        "Number of bytes required to store each entry in the ITT tables.",
     )
     its_id_bits = Param.Unsigned(
-        16, "Number of interrupt bits supported by ITS."
+        16,
+        "Number of interrupt bits supported by ITS.",
     )
     its_collection_id_bits = Param.Unsigned(
         0,
@@ -386,7 +430,8 @@ class SCFastModelGIC(SystemC_ScModule):
         "the number supported in memory only. Irrelevant when HCC=0",
     )
     delay_ITS_accesses = Param.Bool(
-        True, "Delay accesses from the ITS until GICR_SYNCR is read."
+        True,
+        "Delay accesses from the ITS until GICR_SYNCR is read.",
     )
     local_SEIs = Param.Bool(False, "Generate SEI to signal internal issues")
     local_VSEIs = Param.Bool(False, "Generate VSEI to signal internal issues")
@@ -397,10 +442,12 @@ class SCFastModelGIC(SystemC_ScModule):
         "for distributed implementations",
     )
     ITS_hardware_collection_count = Param.Unsigned(
-        0, "Number of hardware collections held exclusively in the ITS"
+        0,
+        "Number of hardware collections held exclusively in the ITS",
     )
     ITS_MOVALL_update_collections = Param.Bool(
-        False, "Whether MOVALL command updates the collection entires"
+        False,
+        "Whether MOVALL command updates the collection entires",
     )
     ITS_TRANSLATE64R = Param.Bool(
         False,
@@ -409,7 +456,8 @@ class SCFastModelGIC(SystemC_ScModule):
         "interupt[31:0])",
     )
     enable_protocol_checking = Param.Bool(
-        False, "Enable/disable protocol checking at cpu interface"
+        False,
+        "Enable/disable protocol checking at cpu interface",
     )
     fixed_routed_spis = Param.String(
         "",
@@ -473,10 +521,12 @@ class SCFastModelGIC(SystemC_ScModule):
         "GICv4 Virtual LPIs and Direct injection of Virtual LPIs supported",
     )
     virtual_priority_bits = Param.Unsigned(
-        5, "Number of implemented virtual priority bits"
+        5,
+        "Number of implemented virtual priority bits",
     )
     LPI_cache_type = Param.Unsigned(
-        1, "Cache type for LPIs, 0:No caching, 1:Full caching"
+        1,
+        "Cache type for LPIs, 0:No caching, 1:Full caching",
     )
     LPI_cache_check_data = Param.Bool(
         False,
@@ -498,7 +548,8 @@ class SCFastModelGIC(SystemC_ScModule):
         "supported and GICD_CTLR.ARE_* is always one",
     )
     legacy_sgi_enable_rao = Param.Bool(
-        False, "Enables for SGI associated with an ARE=0 regime are RAO/WI"
+        False,
+        "Enables for SGI associated with an ARE=0 regime are RAO/WI",
     )
     pa_size = Param.Unsigned(48, "Number of valid bits in physical address")
     MSI_IIDR = Param.UInt32(0x0, "Value returned in MSI_IIDR registers.")
@@ -763,7 +814,8 @@ class SCFastModelGIC(SystemC_ScModule):
         "the core fast model.",
     )
     SPI_MBIS = Param.Bool(
-        True, "Distributor supports meassage based signaling of SPI"
+        True,
+        "Distributor supports meassage based signaling of SPI",
     )
     SPI_unimplemented = Param.String(
         "",
@@ -772,7 +824,8 @@ class SCFastModelGIC(SystemC_ScModule):
         "'35, 39-42, 73)'",
     )
     irm_razwi = Param.Bool(
-        False, "GICD_IROUTERn.InterruptRoutingMode is RAZ/WI"
+        False,
+        "GICD_IROUTERn.InterruptRoutingMode is RAZ/WI",
     )
     common_LPI_configuration = Param.Unsigned(
         0,
@@ -810,7 +863,8 @@ class SCFastModelGIC(SystemC_ScModule):
         "transient loading state when valid=1",
     )
     allow_LPIEN_clear = Param.Bool(
-        False, "Allow RW behaviour on GICR_CTLR.LPIEN isntead of set once"
+        False,
+        "Allow RW behaviour on GICR_CTLR.LPIEN isntead of set once",
     )
     GICD_legacy_reg_reserved = Param.Bool(
         False,
@@ -838,14 +892,15 @@ class FastModelGIC(BaseGic):
     cxx_header = "arch/arm/fastmodel/GIC/gic.hh"
 
     sc_gic = Param.SCFastModelGIC(
-        SCFastModelGIC(), "SystemC version of the GIC"
+        SCFastModelGIC(),
+        "SystemC version of the GIC",
     )
 
     amba_m = AmbaInitiatorSocket(64, "Memory initiator socket")
     amba_s = AmbaTargetSocket(64, "Memory target socket")
 
     redistributor = VectorGicv3CommsInitiatorSocket(
-        "GIC communication initiator"
+        "GIC communication initiator",
     )
 
     wake_request = VectorIntSourcePin("GIC wake request initiator")
@@ -921,8 +976,9 @@ class FastModelGIC(BaseGic):
         redist_stride = 0x40000 if sc_gic.has_gicv4_1 else 0x20000
         node.append(
             FdtPropertyWords(
-                "redistributor-stride", state.sizeCells(redist_stride)
-            )
+                "redistributor-stride",
+                state.sizeCells(redist_stride),
+            ),
         )
 
         regs = (
@@ -935,7 +991,7 @@ class FastModelGIC(BaseGic):
         node.append(FdtPropertyWords("reg", regs))
         # Maintenance interrupt (PPI 25).
         node.append(
-            FdtPropertyWords("interrupts", self.interruptCells(1, 9, 0x4))
+            FdtPropertyWords("interrupts", self.interruptCells(1, 9, 0x4)),
         )
 
         node.appendPhandle(self)
@@ -950,7 +1006,10 @@ class FastModelGIC(BaseGic):
         ]
         for its_base in its_bases:
             its_node = self.generateBasicPioDeviceNode(
-                state, "gic-its", its_base, 2 * its_frame_size
+                state,
+                "gic-its",
+                its_base,
+                2 * its_frame_size,
             )
             its_node.appendCompatible(["arm,gic-v3-its"])
             its_node.append(FdtProperty("msi-controller"))

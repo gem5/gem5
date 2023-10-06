@@ -36,7 +36,7 @@ from gem5.resources.md5_utils import md5
 parser = argparse.ArgumentParser(
     description="A script that will checks that input resource IDs will "
     "download a resource and that resources md5 value is correct. "
-    "If no resource IDs are specified, all will be checked."
+    "If no resource IDs are specified, all will be checked.",
 )
 
 parser.add_argument(
@@ -108,7 +108,8 @@ for id in ids:
             # Workloads are not downloaded as part of this test.
             continue
         download_path = os.path.join(
-            args.download_directory, f"{id}-v{resource_version}"
+            args.download_directory,
+            f"{id}-v{resource_version}",
         )
         try:
             get_resource(

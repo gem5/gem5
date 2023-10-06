@@ -47,7 +47,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("modpath", help="module the enum belongs to")
 parser.add_argument("enum_cc", help="enum cc file to generate")
 parser.add_argument(
-    "use_python", help="whether python is enabled in gem5 (True or False)"
+    "use_python",
+    help="whether python is enabled in gem5 (True or False)",
 )
 
 args = parser.parse_args()
@@ -81,7 +82,7 @@ code(
 namespace gem5
 {
 
-"""
+""",
 )
 
 if enum.wrapper_is_struct:
@@ -91,12 +92,12 @@ else:
         code(
             """\
 const char *${name}Strings[static_cast<int>(${name}::Num_${name})] =
-"""
+""",
         )
     else:
         code(
             """namespace ${wrapper_name}
-{"""
+{""",
         )
         code.indent(1)
         code("const char *${name}Strings[Num_${name}] =")
@@ -136,7 +137,7 @@ module_init(py::module_ &m_internal)
 {
     py::module_ m = m_internal.def_submodule("enum_${name}");
 
-"""
+""",
     )
     if enum.is_class:
         code('py::enum_<${enum_name}>(m, "enum_${name}")')
@@ -160,7 +161,7 @@ module_init(py::module_ &m_internal)
 static EmbeddedPyBind embed_enum("enum_${name}", module_init);
 
 } // namespace gem5
-    """
+    """,
     )
 
 code.write(args.enum_cc)

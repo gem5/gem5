@@ -49,7 +49,10 @@ from style.verifiers import all_verifiers
 parser = argparse.ArgumentParser(description="gem5 git style checker hook")
 
 parser.add_argument(
-    "--verbose", "-v", action="store_true", help="Produce verbose output"
+    "--verbose",
+    "-v",
+    action="store_true",
+    help="Produce verbose output",
 )
 
 args = parser.parse_args()

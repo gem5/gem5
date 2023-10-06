@@ -43,7 +43,8 @@ from .caches.mmu_cache import MMUCache
 
 
 class PrivateL1SharedL2CacheHierarchy(
-    AbstractClassicCacheHierarchy, AbstractTwoLevelCacheHierarchy
+    AbstractClassicCacheHierarchy,
+    AbstractTwoLevelCacheHierarchy,
 ):
     """
     A cache setup where each core has a private L1 Data and Instruction Cache,
@@ -155,7 +156,8 @@ class PrivateL1SharedL2CacheHierarchy(
             self.dptw_caches[i].mem_side = self.l2bus.cpu_side_ports
 
             cpu.connect_walker_ports(
-                self.iptw_caches[i].cpu_side, self.dptw_caches[i].cpu_side
+                self.iptw_caches[i].cpu_side,
+                self.dptw_caches[i].cpu_side,
             )
 
             if board.get_processor().get_isa() == ISA.X86:

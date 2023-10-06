@@ -113,8 +113,8 @@ board = SimpleBoard(
 
 board.set_workload(
     obtain_resource(
-        f"x86-matrix-multiply-omp-100-8-looppoint-region-{args.checkpoint_region}"
-    )
+        f"x86-matrix-multiply-omp-100-8-looppoint-region-{args.checkpoint_region}",
+    ),
 )
 
 

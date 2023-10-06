@@ -43,7 +43,7 @@ class FileLock(object):
         """
         if timeout is not None and delay is None:
             raise ValueError(
-                "If timeout is not None, then delay must not be None."
+                "If timeout is not None, then delay must not be None.",
             )
         self.is_locked = False
         self.lockfile = os.path.join(os.getcwd(), f"{file_name}.lock")
@@ -61,7 +61,8 @@ class FileLock(object):
         while True:
             try:
                 self.fd = os.open(
-                    self.lockfile, os.O_CREAT | os.O_EXCL | os.O_RDWR
+                    self.lockfile,
+                    os.O_CREAT | os.O_EXCL | os.O_RDWR,
                 )
                 self.is_locked = True  # moved to ensure tag only when locked
                 break
@@ -77,12 +78,13 @@ class FileLock(object):
                 if self.timeout is None:
                     raise FileLockException(
                         "Could not acquire lock on {}. {}".format(
-                            self.file_name, solution_message
-                        )
+                            self.file_name,
+                            solution_message,
+                        ),
                     )
                 if (time.time() - start_time) >= self.timeout:
                     raise FileLockException(
-                        f"Timeout occured. {solution_message}"
+                        f"Timeout occured. {solution_message}",
                     )
                 time.sleep(self.delay)
 

@@ -45,18 +45,19 @@ def entry_message():
     log.test_log.message(
         "To see details as the testing scripts are"
         " running, use the option"
-        " -v, -vv, or -vvv"
+        " -v, -vv, or -vvv",
     )
 
 
 class RunLogHandler:
     def __init__(self):
         term_handler = handlers.TerminalHandler(
-            verbosity=configuration.config.verbose + log.LogLevel.Info
+            verbosity=configuration.config.verbose + log.LogLevel.Info,
         )
         summary_handler = handlers.SummaryHandler()
         self.mp_handler = handlers.MultiprocessingHandlerWrapper(
-            summary_handler, term_handler
+            summary_handler,
+            term_handler,
         )
         self.mp_handler.async_process()
         log.test_log.add_handler(self.mp_handler)
@@ -65,7 +66,8 @@ class RunLogHandler:
     def schedule_finalized(self, test_schedule):
         # Create the result handler object.
         self.result_handler = handlers.ResultHandler(
-            test_schedule, configuration.config.result_path
+            test_schedule,
+            configuration.config.result_path,
         )
         self.mp_handler.add_handler(self.result_handler)
 
@@ -109,7 +111,7 @@ def filter_with_config_tags(loaded_library):
             tag_opts = getattr(cfg, name)
             for tag in tag_opts:
                 final_tags.append(
-                    configuration.TagRegex(True, regex_fmt % tag)
+                    configuration.TagRegex(True, regex_fmt % tag),
                 )
 
     def _append_rem_tag_filter(name):
@@ -118,7 +120,7 @@ def filter_with_config_tags(loaded_library):
             for tag in cfg.constants.supported_tags[name]:
                 if tag not in tag_opts:
                     final_tags.append(
-                        configuration.TagRegex(False, regex_fmt % tag)
+                        configuration.TagRegex(False, regex_fmt % tag),
                     )
 
     # Append additional tags for the isa, length, and variant options.
@@ -248,14 +250,14 @@ def do_list():
                 "Unable to list a standalone test.\n"
                 "Gem5 expects test suites to be the smallest unit "
                 " of test.\n\n"
-                "Pass a SuiteUID instead."
+                "Pass a SuiteUID instead.",
             )
             return
         test_schedule = loader_mod.Loader().load_schedule_for_suites(uid_)
         if get_config_tags():
             log.test_log.warn(
                 "The '--uid' flag was supplied,"
-                " '--include-tags' and '--exclude-tags' will be ignored."
+                " '--include-tags' and '--exclude-tags' will be ignored.",
             )
     else:
         test_schedule = load_tests().schedule
@@ -310,7 +312,9 @@ def run_schedule(test_schedule, log_handler):
         bold=True,
     )
     log.test_log.message(
-        "Results will be stored in {}".format(configuration.config.result_path)
+        "Results will be stored in {}".format(
+            configuration.config.result_path,
+        ),
     )
     log.test_log.message(terminal.separator())
 
@@ -339,14 +343,14 @@ def do_run():
                     "Unable to run a standalone test.\n"
                     "Gem5 expects test suites to be the smallest unit "
                     " of test.\n\n"
-                    "Pass a SuiteUID instead."
+                    "Pass a SuiteUID instead.",
                 )
                 return
             test_schedule = loader_mod.Loader().load_schedule_for_suites(uid_)
             if get_config_tags():
                 log.test_log.warn(
                     "The '--uid' flag was supplied,"
-                    " '--include-tags' and '--exclude-tags' will be ignored."
+                    " '--include-tags' and '--exclude-tags' will be ignored.",
                 )
         else:
             test_schedule = load_tests().schedule
@@ -364,7 +368,7 @@ def do_rerun():
             os.path.join(
                 configuration.config.result_path,
                 configuration.constants.pickle_filename,
-            )
+            ),
         )
 
         rerun_suites = (suite.uid for suite in results if suite.unsuccessful)

@@ -64,7 +64,7 @@ def verify(
     for verifier in [v(ui, opts, base=base) for v in verifiers]:
         if verbose:
             print(
-                f"Applying {verifier.test_name} ({verifier.__class__.__name__})"
+                f"Applying {verifier.test_name} ({verifier.__class__.__name__})",
             )
         if verifier.apply(filename, regions=regions):
             return False
@@ -100,7 +100,10 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--verbose", "-v", action="count", help="Produce verbose output"
+        "--verbose",
+        "-v",
+        action="count",
+        help="Produce verbose output",
     )
 
     parser.add_argument(

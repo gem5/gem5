@@ -47,16 +47,18 @@ class SMMUv3DeviceInterface(ClockedObject):
     device_port = ResponsePort("Device port")
     slave = DeprecatedParam(device_port, "`slave` is now called `device_port`")
     ats_mem_side_port = RequestPort(
-        "ATS mem side port,sends requests and receives responses"
+        "ATS mem side port,sends requests and receives responses",
     )
     ats_master = DeprecatedParam(
-        ats_mem_side_port, "`ats_master` is now called `ats_mem_side_port`"
+        ats_mem_side_port,
+        "`ats_master` is now called `ats_mem_side_port`",
     )
     ats_dev_side_port = ResponsePort(
-        "ATS dev_side_port,sends responses and receives requests"
+        "ATS dev_side_port,sends responses and receives requests",
     )
     ats_slave = DeprecatedParam(
-        ats_dev_side_port, "`ats_slave` is now called `ats_dev_side_port`"
+        ats_dev_side_port,
+        "`ats_slave` is now called `ats_dev_side_port`",
     )
 
     port_width = Param.Unsigned(16, "Port width in bytes (= 1 beat)")
@@ -79,7 +81,8 @@ class SMMUv3DeviceInterface(ClockedObject):
 
     prefetch_enable = Param.Bool(False, "Enable prefetch")
     prefetch_reserve_last_way = Param.Bool(
-        True, "Reserve last way of the main TLB for prefetched entries"
+        True,
+        "Reserve last way of the main TLB for prefetched entries",
     )
 
 
@@ -90,10 +93,10 @@ class SMMUv3(ClockedObject):
 
     request = RequestPort("Request port")
     walker = RequestPort(
-        "Request port for SMMU initiated HWTW requests (optional)"
+        "Request port for SMMU initiated HWTW requests (optional)",
     )
     control = ResponsePort(
-        "Control port for accessing memory-mapped registers"
+        "Control port for accessing memory-mapped registers",
     )
     sample_period = Param.Clock("10us", "Stats sample period")
     reg_map = Param.AddrRange("Address range for control registers")
@@ -107,7 +110,8 @@ class SMMUv3(ClockedObject):
     )
 
     device_interfaces = VectorParam.SMMUv3DeviceInterface(
-        [], "Responder interfaces"
+        [],
+        "Responder interfaces",
     )
 
     # RESPONDER INTERFACE<->SMMU link parameters
@@ -119,7 +123,8 @@ class SMMUv3(ClockedObject):
     ptw_slots = Param.Unsigned(16, "SMMU page table walk slots")
 
     request_port_width = Param.Unsigned(
-        16, "Request port width in bytes (= 1 beat)"
+        16,
+        "Request port width in bytes (= 1 beat)",
     )
 
     tlb_entries = Param.Unsigned(2048, "TLB size (entries)")
@@ -155,13 +160,16 @@ class SMMUv3(ClockedObject):
     walk_policy = Param.String("rr", "Walk cache replacement policy")
     walk_enable = Param.Bool(True, "Walk cache enable")
     wc_nonfinal_enable = Param.Bool(
-        False, "Nonfinal translations use walk cache"
+        False,
+        "Nonfinal translations use walk cache",
     )
     wc_s1_levels = Param.Unsigned(
-        7, "S1 PT levels cached in walk cache (bit 0 is L0, bit 1 is L1, etc)"
+        7,
+        "S1 PT levels cached in walk cache (bit 0 is L0, bit 1 is L1, etc)",
     )
     wc_s2_levels = Param.Unsigned(
-        7, "S2 PT levels cached in walk cache (bit 0 is L0, bit 1 is L1, etc)"
+        7,
+        "S2 PT levels cached in walk cache (bit 0 is L0, bit 1 is L1, etc)",
     )
 
     walk_lat = Param.Cycles(4, "Walk cache lookup latency")
@@ -206,8 +214,9 @@ class SMMUv3(ClockedObject):
         node.appendCompatible("arm,smmu-v3")
         node.append(
             FdtPropertyWords(
-                "reg", state.addrCells(reg_addr) + state.sizeCells(reg_size)
-            )
+                "reg",
+                state.addrCells(reg_addr) + state.sizeCells(reg_size),
+            ),
         )
         node.append(FdtPropertyWords("#iommu-cells", [1]))
 

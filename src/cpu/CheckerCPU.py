@@ -36,7 +36,8 @@ class CheckerCPU(BaseCPU):
 
     exitOnError = Param.Bool(False, "Exit on an error")
     updateOnError = Param.Bool(
-        False, "Update the checker with the main CPU's state on an error"
+        False,
+        "Update the checker with the main CPU's state on an error",
     )
     warnOnlyOnLoadError = Param.Bool(
         True,

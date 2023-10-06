@@ -187,8 +187,8 @@ class Artifact:
                 cleandoc(
                     """Must provide longer documentation!
                 This documentation is how your future data will remember what
-                this artifact is and how it was created."""
-                )
+                this artifact is and how it was created.""",
+                ),
             )
 
         data["command"] = cleandoc(command)
@@ -342,7 +342,7 @@ class Artifact:
                 ][:]
             elif isinstance(other["supported_gem5_versions"], str):
                 self.supported_gem5_versions = json.loads(
-                    other["supported_gem5_versions"]
+                    other["supported_gem5_versions"],
                 )
         self.version = other.get("version", "")
 
@@ -363,7 +363,7 @@ class Artifact:
                 f"path: {self.path}",
                 f"inputs: {inputs}",
                 self.documentation,
-            ]
+            ],
         )
 
     def __repr__(self) -> str:
@@ -375,7 +375,7 @@ class Artifact:
         data["cwd"] = str(data["cwd"])
         data["path"] = str(data["path"])
         data["supported_gem5_versions"] = json.dumps(
-            self.supported_gem5_versions
+            self.supported_gem5_versions,
         )
         data["extra"] = json.dumps(self.extra)
         return data
@@ -405,32 +405,32 @@ class Artifact:
         if self.name != other.name:
             print(
                 f"WARNING: name mismatch for {self.name}! "
-                f"{self.name} != {other.name}"
+                f"{self.name} != {other.name}",
             )
         if self.documentation != other.documentation:
             print(
                 f"WARNING: documentation mismatch for {self.name}! "
-                f"{self.documentation} != {other.documentation}"
+                f"{self.documentation} != {other.documentation}",
             )
         if self.command != other.command:
             print(
                 f"WARNING: command mismatch for {self.name}! "
-                f"{self.command} != {other.command}"
+                f"{self.command} != {other.command}",
             )
         if self.path != other.path:
             print(
                 f"WARNING: path mismatch for {self.name}! "
-                f"{self.path} != {other.path}"
+                f"{self.path} != {other.path}",
             )
         if self.cwd != other.cwd:
             print(
                 f"WARNING: cwd mismatch for {self.name}! "
-                f"{self.cwd} != {other.cwd}"
+                f"{self.cwd} != {other.cwd}",
             )
         if self.git != other.git:
             print(
                 f"WARNING: git mismatch for {self.name}! "
-                f"{self.git} != {other.git}"
+                f"{self.git} != {other.git}",
             )
         mismatch = set(self.inputs).symmetric_difference(other.inputs)
         if mismatch:

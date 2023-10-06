@@ -41,7 +41,10 @@ class SimpleCore(BaseCPUCore):
     """
 
     def __init__(
-        self, cpu_type: CPUTypes, core_id: int, isa: Optional[ISA] = None
+        self,
+        cpu_type: CPUTypes,
+        core_id: int,
+        isa: Optional[ISA] = None,
     ):
         # If the ISA is not specified, we infer it via the `get_runtime_isa`
         # function.
@@ -53,7 +56,9 @@ class SimpleCore(BaseCPUCore):
 
         super().__init__(
             core=SimpleCore.cpu_simobject_factory(
-                isa=isa, cpu_type=cpu_type, core_id=core_id
+                isa=isa,
+                cpu_type=cpu_type,
+                core_id=core_id,
             ),
             isa=isa,
         )
@@ -98,14 +103,14 @@ class SimpleCore(BaseCPUCore):
         if isa not in _isa_string_map:
             raise NotImplementedError(
                 f"ISA '{isa.name}' does not have an"
-                "entry in `AbstractCore.cpu_simobject_factory._isa_string_map`"
+                "entry in `AbstractCore.cpu_simobject_factory._isa_string_map`",
             )
 
         if cpu_type not in _cpu_types_string_map:
             raise NotImplementedError(
                 f"CPUType '{cpu_type.name}' "
                 "does not have an entry in "
-                "`AbstractCore.cpu_simobject_factory._cpu_types_string_map`"
+                "`AbstractCore.cpu_simobject_factory._cpu_types_string_map`",
             )
 
         if cpu_type == CPUTypes.KVM:
@@ -135,13 +140,14 @@ class SimpleCore(BaseCPUCore):
 
         try:
             to_return_cls = getattr(
-                importlib.import_module(module_str), cpu_class_str
+                importlib.import_module(module_str),
+                cpu_class_str,
             )
         except ImportError:
             raise Exception(
                 f"Cannot find CPU type '{cpu_type.name}' for '{isa.name}' "
                 "ISA. Please ensure you have compiled the correct version of "
-                "gem5."
+                "gem5.",
             )
 
         return to_return_cls(cpu_id=core_id)

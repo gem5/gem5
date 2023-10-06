@@ -72,7 +72,7 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
                 "will result in usage of `runtime.get_runtime_isa` to obtain "
                 "the ISA. This function is deprecated and will be removed in "
                 "future releases of gem5. Please explicitly state the ISA "
-                "via the processor constructor."
+                "via the processor constructor.",
             )
 
         if num_cores <= 0:
@@ -96,7 +96,8 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
         }
 
         super().__init__(
-            switchable_cores=switchable_cores, starting_cores=self._start_key
+            switchable_cores=switchable_cores,
+            starting_cores=self._start_key,
         )
 
     @overrides(SwitchableProcessor)
@@ -110,7 +111,7 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
             warn(
                 "Using an atomic core with Ruby will result in "
                 "'atomic_noncaching' memory mode. This will skip caching "
-                "completely."
+                "completely.",
             )
             self._mem_mode = MemMode.ATOMIC_NONCACHING
         board.set_mem_mode(self._mem_mode)

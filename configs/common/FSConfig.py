@@ -54,7 +54,7 @@ if m5.defines.buildEnv["USE_ARM_ISA"]:
             "android-jellybean",
             "android-kitkat",
             "android-nougat",
-        ]
+        ],
     )
 if m5.defines.buildEnv["USE_MIPS_ISA"]:
     os_types.add("linux")
@@ -116,7 +116,8 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
 
     class CowMmDisk(MmDisk):
         image = CowDiskImage(
-            child=RawDiskImage(read_only=True), read_only=False
+            child=RawDiskImage(read_only=True),
+            read_only=False,
         )
 
         def childImage(self, ci):
@@ -175,7 +176,8 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
     )
     # nvram
     self.nvram = SimpleMemory(
-        image_file=binary("nvram1"), range=AddrRange(0x1F11000000, size="8kB")
+        image_file=binary("nvram1"),
+        range=AddrRange(0x1F11000000, size="8kB"),
     )
     # hypervisor description
     self.hypervisor_desc = SimpleMemory(
@@ -268,14 +270,14 @@ def makeArmSystem(
             break
         warn(
             "Memory size specified spans more than one region. Creating"
-            " another memory controller for that range."
+            " another memory controller for that range.",
         )
 
     if size_remain > 0:
         fatal(
             "The currently selected ARM platforms doesn't support"
             " the amount of DRAM you've selected. Please try"
-            " another platform"
+            " another platform",
         )
 
     if bare_metal:
@@ -310,14 +312,14 @@ def makeArmSystem(
         # the error message below. The disk can have any name now and
         # doesn't need to include 'android' substring.
         if mdesc.disks() and os.path.split(mdesc.disks()[0])[-1].lower().count(
-            "android"
+            "android",
         ):
             if "android" not in mdesc.os_type():
                 fatal(
                     "It looks like you are trying to boot an Android "
                     "platform.  To boot Android, you must specify "
                     "--os-type with an appropriate Android release on "
-                    "the command line."
+                    "the command line.",
                 )
 
         # android-specific tweaks
@@ -350,7 +352,8 @@ def makeArmSystem(
     if external_memory:
         # I/O traffic enters iobus
         self.external_io = ExternalMaster(
-            port_data="external_io", port_type=external_memory
+            port_data="external_io",
+            port_type=external_memory,
         )
         self.external_io.port = self.iobus.cpu_side_ports
 
@@ -372,7 +375,9 @@ def makeArmSystem(
         self._dma_ports = []
         self._mem_ports = []
         self.realview.attachOnChipIO(
-            self.iobus, dma_ports=self._dma_ports, mem_ports=self._mem_ports
+            self.iobus,
+            dma_ports=self._dma_ports,
+            mem_ports=self._mem_ports,
         )
         self.realview.attachIO(self.iobus, dma_ports=self._dma_ports)
     else:
@@ -382,7 +387,9 @@ def makeArmSystem(
 
     for dev in pci_devices:
         self.realview.attachPciDevice(
-            dev, self.iobus, dma_ports=self._dma_ports if ruby else None
+            dev,
+            self.iobus,
+            dma_ports=self._dma_ports if ruby else None,
         )
 
     self.terminal = Terminal()
@@ -399,7 +406,7 @@ def makeArmSystem(
             fatal(
                 "The MI_example protocol cannot implement Load/Store "
                 "Exclusive operations. Multicore ARM systems configured "
-                "with the MI_example protocol will not work properly."
+                "with the MI_example protocol will not work properly.",
             )
 
     return self
@@ -409,7 +416,10 @@ def makeLinuxMipsSystem(mem_mode, mdesc=None, cmdline=None):
     class BaseMalta(Malta):
         ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
         ide = IdeController(
-            disks=Parent.disks, pci_func=0, pci_dev=0, pci_bus=0
+            disks=Parent.disks,
+            pci_func=0,
+            pci_dev=0,
+            pci_bus=0,
         )
 
     self = System()
@@ -431,7 +441,7 @@ def makeLinuxMipsSystem(mem_mode, mdesc=None, cmdline=None):
     self.malta.ethernet.pio = self.iobus.mem_side_ports
     self.malta.ethernet.dma = self.iobus.cpu_side_ports
     self.simple_disk = SimpleDisk(
-        disk=RawDiskImage(image_file=mdesc.disks()[0], read_only=True)
+        disk=RawDiskImage(image_file=mdesc.disks()[0], read_only=True),
     )
     self.mem_mode = mem_mode
     self.terminal = Terminal()
@@ -485,7 +495,7 @@ def connectX86ClassicSystem(x86_sys, numCPUs):
         AddrRange(
             interrupts_address_space_base,
             interrupts_address_space_base + numCPUs * APIC_range_size - 1,
-        )
+        ),
     ]
 
     # connect the io bus
@@ -525,7 +535,7 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, workload=None, Ruby=False):
     # for various devices.  Hence, if the physical memory size is greater than
     # 3GB, we need to split it into two parts.
     excess_mem_size = convert.toMemorySize(mdesc.mem()) - convert.toMemorySize(
-        "3GB"
+        "3GB",
     )
     if excess_mem_size <= 0:
         self.mem_ranges = [AddrRange(mdesc.mem())]
@@ -533,7 +543,7 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, workload=None, Ruby=False):
         warn(
             "Physical memory size specified is %s which is greater than "
             "3GB.  Twice the number of memory controllers would be "
-            "created." % (mdesc.mem())
+            "created." % (mdesc.mem()),
         )
 
         self.mem_ranges = [
@@ -573,12 +583,15 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, workload=None, Ruby=False):
         lapic = X86ACPIMadtLAPIC(acpi_processor_id=i, apic_id=i, flags=1)
         madt_records.append(lapic)
     io_apic = X86IntelMPIOAPIC(
-        id=numCPUs, version=0x11, enable=True, address=0xFEC00000
+        id=numCPUs,
+        version=0x11,
+        enable=True,
+        address=0xFEC00000,
     )
     self.pc.south_bridge.io_apic.apic_id = io_apic.id
     base_entries.append(io_apic)
     madt_records.append(
-        X86ACPIMadtIOAPIC(id=io_apic.id, address=io_apic.address, int_base=0)
+        X86ACPIMadtIOAPIC(id=io_apic.id, address=io_apic.address, int_base=0),
     )
     # In gem5 Pc::calcPciConfigAddr(), it required "assert(bus==0)",
     # but linux kernel cannot config PCI device if it was not connected to
@@ -588,7 +601,9 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, workload=None, Ruby=False):
     isa_bus = X86IntelMPBus(bus_id=1, bus_type="ISA   ")
     base_entries.append(isa_bus)
     connect_busses = X86IntelMPBusHierarchy(
-        bus_id=1, subtractive_decode=True, parent_bus=0
+        bus_id=1,
+        subtractive_decode=True,
+        parent_bus=0,
     )
     ext_entries.append(connect_busses)
     pci_dev4_inta = X86IntelMPIOIntAssignment(
@@ -632,7 +647,10 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, workload=None, Ruby=False):
         base_entries.append(assign_to_apic)
         # acpi
         assign_to_apic_acpi = X86ACPIMadtIntSourceOverride(
-            bus_source=1, irq_source=irq, sys_int=apicPin, flags=0
+            bus_source=1,
+            irq_source=irq,
+            sys_int=apicPin,
+            flags=0,
         )
         madt_records.append(assign_to_apic_acpi)
 
@@ -644,7 +662,9 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, workload=None, Ruby=False):
     workload.intel_mp_table.ext_entries = ext_entries
 
     madt = X86ACPIMadt(
-        local_apic_address=0, records=madt_records, oem_id="madt"
+        local_apic_address=0,
+        records=madt_records,
+        oem_id="madt",
     )
     workload.acpi_description_table_pointer.rsdt.entries.append(madt)
     workload.acpi_description_table_pointer.xsdt.entries.append(madt)
@@ -655,7 +675,11 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, workload=None, Ruby=False):
 
 
 def makeLinuxX86System(
-    mem_mode, numCPUs=1, mdesc=None, Ruby=False, cmdline=None
+    mem_mode,
+    numCPUs=1,
+    mdesc=None,
+    Ruby=False,
+    cmdline=None,
 ):
     # Build up the x86 system and then specialize it for Linux
     self = makeX86System(mem_mode, numCPUs, mdesc, X86FsLinux(), Ruby)
@@ -687,7 +711,7 @@ def makeLinuxX86System(
                 addr=self.mem_ranges[0].size(),
                 size="%dB" % (0xC0000000 - self.mem_ranges[0].size()),
                 range_type=2,
-            )
+            ),
         )
 
     # Reserve the last 16kB of the 32-bit address space for the m5op interface
@@ -703,7 +727,7 @@ def makeLinuxX86System(
                 addr=0x100000000,
                 size="%dB" % (self.mem_ranges[1].size()),
                 range_type=1,
-            )
+            ),
         )
 
     self.workload.e820_table.entries = entries

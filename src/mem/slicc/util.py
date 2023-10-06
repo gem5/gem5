@@ -50,11 +50,11 @@ class Location(object):
     def __init__(self, filename, lineno, no_warning=False):
         if not isinstance(filename, str):
             raise AttributeError(
-                f"filename must be a string, found {type(filename)}"
+                f"filename must be a string, found {type(filename)}",
             )
         if not isinstance(lineno, int):
             raise AttributeError(
-                f"filename must be an integer, found {type(lineno)}"
+                f"filename must be an integer, found {type(lineno)}",
             )
         self.filename = filename
         self.lineno = lineno

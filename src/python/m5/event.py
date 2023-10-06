@@ -55,7 +55,7 @@ class EventWrapper(Event):
 
         if not callable(func):
             raise RuntimeError(
-                f"Can't wrap '{str(func)}', object is not callable"
+                f"Can't wrap '{str(func)}', object is not callable",
             )
 
         self._func = func

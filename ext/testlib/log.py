@@ -70,7 +70,7 @@ class Record(object, metaclass=RecordTypeCounterMetaclass):
     def __getitem__(self, item):
         if item not in self.data:
             raise KeyError(
-                "%s not in record %s" % (item, self.__class__.__name__)
+                "%s not in record %s" % (item, self.__class__.__name__),
             )
         return self.data[item]
 
@@ -162,7 +162,7 @@ class Log(object):
             self.finish_init()
         if self._closed:
             raise Exception(
-                "The log has been closed" " and is no longer available."
+                "The log has been closed" " and is no longer available.",
             )
 
         for handler in self.handlers:
@@ -178,7 +178,10 @@ class Log(object):
             )
         else:
             record = LibraryMessage(
-                message=message, level=level, bold=bold, **metadata
+                message=message,
+                level=level,
+                bold=bold,
+                **metadata,
             )
 
         self.log(record)

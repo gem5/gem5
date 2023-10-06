@@ -61,8 +61,8 @@ class PathSearchFunc(object):
                     raise IOError(
                         "Can't find system files directory, "
                         "check your {} environment variable".format(
-                            self.environment_variable
-                        )
+                            self.environment_variable,
+                        ),
                     )
 
                 self._sys_paths = list(paths)
@@ -73,7 +73,7 @@ class PathSearchFunc(object):
                 return next(p for p in paths if os.path.exists(p))
             except StopIteration:
                 raise IOError(
-                    f"Can't find file '{filepath}' on {self.environment_variable}."
+                    f"Can't find file '{filepath}' on {self.environment_variable}.",
                 )
 
 

@@ -69,10 +69,12 @@ class BaseKvmCPU(BaseCPU):
     )
     useCoalescedMMIO = Param.Bool(False, "Use coalesced MMIO (EXPERIMENTAL)")
     usePerfOverflow = Param.Bool(
-        False, "Use perf event overflow counters (EXPERIMENTAL)"
+        False,
+        "Use perf event overflow counters (EXPERIMENTAL)",
     )
     alwaysSyncTC = Param.Bool(
-        False, "Always sync thread contexts on entry/exit"
+        False,
+        "Always sync thread contexts on entry/exit",
     )
 
     hostFreq = Param.Clock("2GHz", "Host clock frequency")

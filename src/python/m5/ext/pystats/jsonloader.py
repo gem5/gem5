@@ -79,7 +79,7 @@ class JsonLoader(json.JSONDecoder):
 
             else:
                 raise ValueError(
-                    f"SimStat object has invalid type {d['type']}"
+                    f"SimStat object has invalid type {d['type']}",
                 )
         else:
             return SimStat(**d)

@@ -77,7 +77,7 @@ class OperandList(object):
                 if op_ext and op_ext != "" and op_desc.ext != op_ext:
                     error(
                         "Inconsistent extensions for operand %s: %s - %s"
-                        % (op_base, op_desc.ext, op_ext)
+                        % (op_base, op_desc.ext, op_ext),
                     )
                 op_desc.is_src = op_desc.is_src or is_src
                 op_desc.is_dest = op_desc.is_dest or is_dest
@@ -90,7 +90,7 @@ class OperandList(object):
                             if ae_ext != elem_ext:
                                 error(
                                     "Inconsistent extensions for elem"
-                                    " operand %s" % elem_base
+                                    " operand %s" % elem_base,
                                 )
                             else:
                                 found = True
@@ -99,7 +99,11 @@ class OperandList(object):
             else:
                 # new operand: create new descriptor
                 op_desc = parser.operandNameMap[op_base](
-                    parser, op_full, op_ext, is_src, is_dest
+                    parser,
+                    op_full,
+                    op_ext,
+                    is_src,
+                    is_dest,
                 )
                 # if operand is a vector elem, add the corresponding vector
                 # operand if not already done
@@ -206,7 +210,7 @@ class SubOperandList(OperandList):
             op_desc = requestor_list.find_base(op_base)
             if not op_desc:
                 error(
-                    f"Found operand {op_base} which is not in the requestor list!"
+                    f"Found operand {op_base} which is not in the requestor list!",
                 )
             else:
                 # See if we've already found this operand

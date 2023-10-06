@@ -28,5 +28,5 @@ from m5.util import fatal
 fatal(
     "The 'configs/example/se.py' script has been deprecated. It can be "
     "found in 'configs/deprecated/example' if required. Its usage should be "
-    "avoided as it will be removed in future releases of gem5."
+    "avoided as it will be removed in future releases of gem5.",
 )

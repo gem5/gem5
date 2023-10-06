@@ -55,7 +55,7 @@ from gem5.utils.requires import requires
 from m5.objects import Root
 
 parser = argparse.ArgumentParser(
-    description="A script to test forking gem5 and switching cpus."
+    description="A script to test forking gem5 and switching cpus.",
 )
 parser.add_argument(
     "-m",
@@ -146,7 +146,7 @@ elif args.mem_system == "classic":
     cache_hierarchy = PrivateL1CacheHierarchy(l1d_size="16kB", l1i_size="16kB")
 else:
     raise NotImplementedError(
-        f"Memory system '{args.mem_system}' is not supported in the boot tests."
+        f"Memory system '{args.mem_system}' is not supported in the boot tests.",
     )
 
 assert cache_hierarchy != None
@@ -175,16 +175,18 @@ kernel_args = motherboard.get_default_kernel_args() + [args.kernel_args]
 # Set the Full System workload.
 motherboard.set_kernel_disk_workload(
     kernel=obtain_resource(
-        "x86-linux-kernel-5.4.49", resource_directory=args.resource_directory
+        "x86-linux-kernel-5.4.49",
+        resource_directory=args.resource_directory,
     ),
     disk_image=obtain_resource(
-        "x86-ubuntu-18.04-img", resource_directory=args.resource_directory
+        "x86-ubuntu-18.04-img",
+        resource_directory=args.resource_directory,
     ),
     readfile_contents=dedent(
         """
         m5 exit # signal end of boot
         m5 exit # exit in children and parent
-        """
+        """,
     ),
     kernel_args=kernel_args,
 )

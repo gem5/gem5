@@ -69,25 +69,29 @@ class BaseTrafficGen(ClockedObject):
     # rate of the traffic generator will be slowed down if requests
     # are not immediately accepted
     elastic_req = Param.Bool(
-        False, "Slow down requests in case of backpressure"
+        False,
+        "Slow down requests in case of backpressure",
     )
 
     # Maximum number of requests waiting for response. Set to 0 for an
     # unlimited number of outstanding requests.
     max_outstanding_reqs = Param.Int(
-        0, "Maximum number of outstanding requests"
+        0,
+        "Maximum number of outstanding requests",
     )
 
     # Let the user know if we have waited for a retry and not made any
     # progress for a long period of time. The default value is
     # somewhat arbitrary and may well have to be tuned.
     progress_check = Param.Latency(
-        "1ms", "Time before exiting due to lack of progress"
+        "1ms",
+        "Time before exiting due to lack of progress",
     )
 
     # Generator type used for applying Stream and/or Substream IDs to requests
     stream_gen = Param.StreamGenType(
-        "none", "Generator for adding Stream and/or Substream ID's to requests"
+        "none",
+        "Generator for adding Stream and/or Substream ID's to requests",
     )
 
     # Sources for Stream/Substream IDs to apply to requests
@@ -126,7 +130,9 @@ class BaseTrafficGen(ClockedObject):
 
     def connectBus(self, bus):
         self.connectAllPorts(
-            bus.cpu_side_ports, bus.cpu_side_ports, bus.mem_side_ports
+            bus.cpu_side_ports,
+            bus.cpu_side_ports,
+            bus.mem_side_ports,
         )
 
     def addPrivateSplitL1Caches(self, ic, dc, iwc=None, dwc=None):

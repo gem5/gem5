@@ -40,7 +40,10 @@ class SimpleProcessor(BaseCPUProcessor):
     """
 
     def __init__(
-        self, cpu_type: CPUTypes, num_cores: int, isa: Optional[ISA] = None
+        self,
+        cpu_type: CPUTypes,
+        num_cores: int,
+        isa: Optional[ISA] = None,
     ) -> None:
         """
         :param cpu_type: The CPU type for each type in the processor.
@@ -58,11 +61,11 @@ class SimpleProcessor(BaseCPUProcessor):
                 "result in usage of `runtime.get_runtime_isa` to obtain the "
                 "ISA. This function is deprecated and will be removed in "
                 "future releases of gem5. Please explicitly state the ISA "
-                "via the processor constructor."
+                "via the processor constructor.",
             )
         super().__init__(
             cores=[
                 SimpleCore(cpu_type=cpu_type, core_id=i, isa=isa)
                 for i in range(num_cores)
-            ]
+            ],
         )

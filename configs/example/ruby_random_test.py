@@ -47,7 +47,10 @@ parser = argparse.ArgumentParser()
 Options.addNoISAOptions(parser)
 
 parser.add_argument(
-    "--maxloads", metavar="N", default=100, help="Stop after N loads"
+    "--maxloads",
+    metavar="N",
+    default=100,
+    help="Stop after N loads",
 )
 parser.add_argument(
     "-f",
@@ -67,7 +70,7 @@ exec(
         open(os.path.join(config_root, "common", "Options.py")).read(),
         os.path.join(config_root, "common", "Options.py"),
         "exec",
-    )
+    ),
 )
 
 args = parser.parse_args()
@@ -111,7 +114,8 @@ system = System(cpu=tester, mem_ranges=[AddrRange(args.mem_size)])
 system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
 
 system.clk_domain = SrcClockDomain(
-    clock=args.sys_clock, voltage_domain=system.voltage_domain
+    clock=args.sys_clock,
+    voltage_domain=system.voltage_domain,
 )
 
 # the ruby tester reuses num_cpus to specify the
@@ -124,7 +128,8 @@ Ruby.create_system(args, False, system, cpus=cpu_list)
 
 # Create a seperate clock domain for Ruby
 system.ruby.clk_domain = SrcClockDomain(
-    clock=args.ruby_clock, voltage_domain=system.voltage_domain
+    clock=args.ruby_clock,
+    voltage_domain=system.voltage_domain,
 )
 
 assert args.num_cpus == len(system.ruby._cpu_ports)

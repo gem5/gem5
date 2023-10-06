@@ -82,7 +82,8 @@ class SimpleSeSystem(System):
         # Create a voltage and clock domain for system components
         self.voltage_domain = VoltageDomain(voltage="3.3V")
         self.clk_domain = SrcClockDomain(
-            clock="1GHz", voltage_domain=self.voltage_domain
+            clock="1GHz",
+            voltage_domain=self.voltage_domain,
         )
 
         # Create the off-chip memory bus.
@@ -165,7 +166,7 @@ def create(args):
     if len(processes) != args.num_cores:
         print(
             "Error: Cannot map %d command(s) onto %d CPU(s)"
-            % (len(processes), args.num_cores)
+            % (len(processes), args.num_cores),
         )
         sys.exit(1)
 
@@ -196,7 +197,10 @@ def main():
     )
     parser.add_argument("--cpu-freq", type=str, default="4GHz")
     parser.add_argument(
-        "--num-cores", type=int, default=1, help="Number of CPU cores"
+        "--num-cores",
+        type=int,
+        default=1,
+        help="Number of CPU cores",
     )
     parser.add_argument(
         "--mem-type",
@@ -205,7 +209,10 @@ def main():
         help="type of memory to use",
     )
     parser.add_argument(
-        "--mem-channels", type=int, default=2, help="number of memory channels"
+        "--mem-channels",
+        type=int,
+        default=2,
+        help="number of memory channels",
     )
     parser.add_argument(
         "--mem-ranks",

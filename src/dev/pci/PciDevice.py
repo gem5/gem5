@@ -136,25 +136,31 @@ class PciDevice(DmaDevice):
     # Capabilities List structures for PCIe devices
     # PMCAP - PCI Power Management Capability
     PMCAPBaseOffset = Param.UInt8(
-        0x00, "Base offset of PMCAP in PCI Config space"
+        0x00,
+        "Base offset of PMCAP in PCI Config space",
     )
     PMCAPNextCapability = Param.UInt8(0x00, "Pointer to next capability block")
     PMCAPCapId = Param.UInt8(
-        0x00, "Specifies this is the Power Management capability"
+        0x00,
+        "Specifies this is the Power Management capability",
     )
     PMCAPCapabilities = Param.UInt16(
-        0x0000, "PCI Power Management Capabilities Register"
+        0x0000,
+        "PCI Power Management Capabilities Register",
     )
     PMCAPCtrlStatus = Param.UInt16(
-        0x0000, "PCI Power Management Control and Status"
+        0x0000,
+        "PCI Power Management Control and Status",
     )
 
     # MSICAP - Message Signaled Interrupt Capability
     MSICAPBaseOffset = Param.UInt8(
-        0x00, "Base offset of MSICAP in PCI Config space"
+        0x00,
+        "Base offset of MSICAP in PCI Config space",
     )
     MSICAPNextCapability = Param.UInt8(
-        0x00, "Pointer to next capability block"
+        0x00,
+        "Pointer to next capability block",
     )
     MSICAPCapId = Param.UInt8(0x00, "Specifies this is the MSI Capability")
     MSICAPMsgCtrl = Param.UInt16(0x0000, "MSI Message Control")
@@ -166,21 +172,25 @@ class PciDevice(DmaDevice):
 
     # MSIXCAP - MSI-X Capability
     MSIXCAPBaseOffset = Param.UInt8(
-        0x00, "Base offset of MSIXCAP in PCI Config space"
+        0x00,
+        "Base offset of MSIXCAP in PCI Config space",
     )
     MSIXCAPNextCapability = Param.UInt8(
-        0x00, "Pointer to next capability block"
+        0x00,
+        "Pointer to next capability block",
     )
     MSIXCAPCapId = Param.UInt8(0x00, "Specifices this the MSI-X Capability")
     MSIXMsgCtrl = Param.UInt16(0x0000, "MSI-X Message Control")
     MSIXTableOffset = Param.UInt32(
-        0x00000000, "MSI-X Table Offset and Table BIR"
+        0x00000000,
+        "MSI-X Table Offset and Table BIR",
     )
     MSIXPbaOffset = Param.UInt32(0x00000000, "MSI-X PBA Offset and PBA BIR")
 
     # PXCAP - PCI Express Capability
     PXCAPBaseOffset = Param.UInt8(
-        0x00, "Base offset of PXCAP in PCI Config space"
+        0x00,
+        "Base offset of PXCAP in PCI Config space",
     )
     PXCAPNextCapability = Param.UInt8(0x00, "Pointer to next capability block")
     PXCAPCapId = Param.UInt8(0x00, "Specifies this is the PCIe Capability")

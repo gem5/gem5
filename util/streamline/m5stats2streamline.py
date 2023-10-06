@@ -119,7 +119,9 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--verbose", action="store_true", help="Enable verbose output"
+    "--verbose",
+    action="store_true",
+    help="Enable verbose output",
 )
 
 args = parser.parse_args()
@@ -661,7 +663,7 @@ def parseProcessInfo(task_file):
 
     process_re = re.compile(
         "tick=(\d+)\s+(\d+)\s+cpu_id=(\d+)\s+"
-        + "next_pid=([-\d]+)\s+next_tgid=([-\d]+)\s+next_task=(.*)"
+        + "next_pid=([-\d]+)\s+next_tgid=([-\d]+)\s+next_task=(.*)",
     )
 
     task_name_failure_warned = False
@@ -682,7 +684,7 @@ def parseProcessInfo(task_file):
                     print("-------------------------------------------------")
                     print("WARNING: Task name not set correctly!")
                     print(
-                        "Process/Thread info will not be displayed correctly"
+                        "Process/Thread info will not be displayed correctly",
                     )
                     print("Perhaps forgot to apply m5struct.patch to kernel?")
                     print("-------------------------------------------------")
@@ -706,7 +708,12 @@ def parseProcessInfo(task_file):
                     else:
                         # parent process name not known yet
                         process = Task(
-                            uid, tgid, tgid, "_Unknown_", True, tick
+                            uid,
+                            tgid,
+                            tgid,
+                            "_Unknown_",
+                            True,
+                            tick,
                         )
                 if tgid == -1:  # kernel
                     kernel_uid = 0
@@ -867,12 +874,13 @@ class StatsEntry(object):
                 print("\t", per_cpu_name)
 
                 self.per_cpu_regex_string.append(
-                    "^" + per_cpu_name + "\s+[\d\.]+"
+                    "^" + per_cpu_name + "\s+[\d\.]+",
                 )
                 self.per_cpu_regex.append(
                     re.compile(
-                        "^" + per_cpu_name + "\s+([\d\.e\-]+)\s+# (.*)$", re.M
-                    )
+                        "^" + per_cpu_name + "\s+([\d\.e\-]+)\s+# (.*)$",
+                        re.M,
+                    ),
                 )
                 self.values.append([])
                 self.per_cpu_found.append(False)
@@ -895,7 +903,7 @@ class Stats(object):
     def register(self, name, group, group_index, per_cpu):
         print("registering stat:", name, "group:", group, group_index)
         self.stats_list.append(
-            StatsEntry(name, group, group_index, per_cpu, self.next_key)
+            StatsEntry(name, group, group_index, per_cpu, self.next_key),
         )
         self.next_key += 1
 
@@ -975,10 +983,10 @@ def readGem5Stats(stats, gem5_stats_file):
     ext = os.path.splitext(gem5_stats_file)[1]
 
     window_start_regex = re.compile(
-        "^---------- Begin Simulation Statistics ----------"
+        "^---------- Begin Simulation Statistics ----------",
     )
     window_end_regex = re.compile(
-        "^---------- End Simulation Statistics   ----------"
+        "^---------- End Simulation Statistics   ----------",
     )
     final_tick_regex = re.compile("^final_tick\s+(\d+)")
 
@@ -1017,7 +1025,7 @@ def readGem5Stats(stats, gem5_stats_file):
                 sim_freq = int(m.group(1))  # ticks in 1 sec
                 ticks_in_ns = int(sim_freq / 1e9)
                 print(
-                    f"Simulation frequency found! 1 tick == {1.0 / sim_freq:e} sec\n"
+                    f"Simulation frequency found! 1 tick == {1.0 / sim_freq:e} sec\n",
                 )
 
         # Final tick in gem5 stats: current absolute timestamp
@@ -1044,7 +1052,7 @@ def readGem5Stats(stats, gem5_stats_file):
                                 )
                                 print(
                                     "suppressing further warnings for "
-                                    + "this stat"
+                                    + "this stat",
                                 )
                                 stat.not_found_at_least_once = True
                             stat.values[i].append(str(0))
@@ -1189,7 +1197,9 @@ def writeCookiesThreads(blob):
         writeBinary(
             blob,
             threadNameFrame(
-                ticksToNs(thread.tick), thread.pid, thread.task_name
+                ticksToNs(thread.tick),
+                thread.pid,
+                thread.task_name,
             ),
         )
 
@@ -1218,7 +1228,8 @@ def writeSchedEvents(blob):
                 print(cpu, timestamp, pid, tid, cookie)
 
             writeBinary(
-                blob, schedSwitchFrame(cpu, timestamp, pid, tid, cookie, state)
+                blob,
+                schedSwitchFrame(cpu, timestamp, pid, tid, cookie, state),
             )
 
 
@@ -1382,11 +1393,11 @@ stats = registerStats(stat_config_file)
 ####
 # Check if both stats.txt and stats.txt.gz exist and warn if both exist
 if os.path.exists(input_path + "/stats.txt") and os.path.exists(
-    input_path + "/stats.txt.gz"
+    input_path + "/stats.txt.gz",
 ):
     print(
         "WARNING: Both stats.txt.gz and stats.txt exist. \
-            Using stats.txt.gz by default."
+            Using stats.txt.gz by default.",
     )
 
 gem5_stats_file = input_path + "/stats.txt.gz"

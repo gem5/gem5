@@ -57,7 +57,7 @@ from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 
 parser = argparse.ArgumentParser(
-    description="A gem5 script for running simple binaries in SE mode."
+    description="A gem5 script for running simple binaries in SE mode.",
 )
 
 parser.add_argument(
@@ -101,7 +101,8 @@ motherboard = SimpleBoard(
 # Note: Here we're using the "x86-m5-exit-repeat" resource. This calls an
 # `m5_exit(0)` command in an infinite while-loop.
 binary = obtain_resource(
-    "x86-m5-exit-repeat", resource_directory=args.resource_directory
+    "x86-m5-exit-repeat",
+    resource_directory=args.resource_directory,
 )
 motherboard.set_se_binary_workload(binary)
 

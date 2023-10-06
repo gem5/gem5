@@ -97,7 +97,7 @@ size_choices = [
 ]
 
 parser = argparse.ArgumentParser(
-    description="An example configuration script to run the gapbs benchmarks."
+    description="An example configuration script to run the gapbs benchmarks.",
 )
 
 # The only positional argument accepted is the benchmark name in this script.
@@ -260,12 +260,14 @@ print()
 print("Performance statistics:")
 
 print(
-    f"Simulated time in ROI: {(end_tick - start_tick) / 1000000000000.0:.2f}s"
+    f"Simulated time in ROI: {(end_tick - start_tick) / 1000000000000.0:.2f}s",
 )
 print(
-    "Ran a total of", simulator.get_current_tick() / 1e12, "simulated seconds"
+    "Ran a total of",
+    simulator.get_current_tick() / 1e12,
+    "simulated seconds",
 )
 print(
     "Total wallclock time: %.2fs, %.2f min"
-    % (time.time() - globalStart, (time.time() - globalStart) / 60)
+    % (time.time() - globalStart, (time.time() - globalStart) / 60),
 )

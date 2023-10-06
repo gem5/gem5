@@ -66,7 +66,11 @@ def makeGpuFSSystem(args):
         disks.extend([args.second_disk])
     bm = SysConfig(disks=disks, mem=args.mem_size)
     system = makeLinuxX86System(
-        test_mem_mode, args.num_cpus, bm, True, cmdline=cmdline
+        test_mem_mode,
+        args.num_cpus,
+        bm,
+        True,
+        cmdline=cmdline,
     )
     system.workload.object_file = binary(args.kernel)
 
@@ -76,13 +80,15 @@ def makeGpuFSSystem(args):
     # Create a top-level voltage and clock domain.
     system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
     system.clk_domain = SrcClockDomain(
-        clock=args.sys_clock, voltage_domain=system.voltage_domain
+        clock=args.sys_clock,
+        voltage_domain=system.voltage_domain,
     )
 
     # Create a CPU voltage and clock domain.
     system.cpu_voltage_domain = VoltageDomain()
     system.cpu_clk_domain = SrcClockDomain(
-        clock=args.cpu_clock, voltage_domain=system.cpu_voltage_domain
+        clock=args.cpu_clock,
+        voltage_domain=system.cpu_voltage_domain,
     )
 
     # Setup VGA ROM region
@@ -116,7 +122,9 @@ def makeGpuFSSystem(args):
     dispatcher = GPUDispatcher(kernel_exit_events=dispatcher_exit_events)
     cp_pt_walker = VegaPagetableWalker()
     gpu_cmd_proc = GPUCommandProcessor(
-        hsapp=gpu_hsapp, dispatcher=dispatcher, walker=cp_pt_walker
+        hsapp=gpu_hsapp,
+        dispatcher=dispatcher,
+        walker=cp_pt_walker,
     )
     shader.dispatcher = dispatcher
     shader.gpu_cmd_proc = gpu_cmd_proc
@@ -216,7 +224,11 @@ def makeGpuFSSystem(args):
     # Full system needs special TLBs for SQC, Scalar, and vector data ports
     args.full_system = True
     GPUTLBConfig.config_tlb_hierarchy(
-        args, system, shader_idx, system.pc.south_bridge.gpu, True
+        args,
+        system,
+        shader_idx,
+        system.pc.south_bridge.gpu,
+        True,
     )
 
     # Create Ruby system using disjoint VIPER topology
@@ -225,7 +237,8 @@ def makeGpuFSSystem(args):
 
     # Create a seperate clock domain for Ruby
     system.ruby.clk_domain = SrcClockDomain(
-        clock=args.ruby_clock, voltage_domain=system.voltage_domain
+        clock=args.ruby_clock,
+        voltage_domain=system.voltage_domain,
     )
 
     # If we are using KVM cpu, enable AVX. AVX is used in some ROCm libraries

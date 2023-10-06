@@ -125,7 +125,7 @@ def test_termcap(obj):
             + c_name
             + "Bold Underline "
             + c
-            + obj.Normal
+            + obj.Normal,
         )
 
 

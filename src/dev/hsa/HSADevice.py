@@ -50,5 +50,6 @@ class HSAPacketProcessor(DmaVirtDevice):
     #      runtime/kps
     pktProcessDelay = Param.Tick(4400000, "Packet processing delay")
     walker = Param.VegaPagetableWalker(
-        VegaPagetableWalker(), "Page table walker"
+        VegaPagetableWalker(),
+        "Page table walker",
     )

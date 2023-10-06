@@ -34,6 +34,6 @@ config = {
             "authUrl": "https://realm.mongodb.com/api/client/v2.0/app/data-ejhjf/auth/providers/api-key/login",
             "apiKey": "OIi5bAP7xxIGK782t8ZoiD2BkBGEzMdX3upChf9zdCxHSnMoiTnjI22Yw5kOSgy9",
             "isMongo": True,
-        }
-    }
+        },
+    },
 }

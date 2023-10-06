@@ -39,7 +39,7 @@ from gem5art.run import getRunsByNameLike
 
 def parseArgs():
     parser = ArgumentParser(
-        description="Dump all runs from the database into a json file"
+        description="Dump all runs from the database into a json file",
     )
 
     default_db_uri = gem5art.artifact._artifactdb._default_uri
@@ -63,7 +63,10 @@ def parseArgs():
         help=f"The database to connect to. Default {default_db_uri}",
     )
     parser.add_argument(
-        "-s", "--search_name", help="Query for the name field", default=""
+        "-s",
+        "--search_name",
+        help="Query for the name field",
+        default="",
     )
 
     return parser.parse_args()
@@ -77,7 +80,10 @@ if __name__ == "__main__":
     with open(args.filename, "w") as f:
         if args.search_name:
             runs = getRunsByNameLike(
-                db, args.search_name, args.fs_only, args.limit
+                db,
+                args.search_name,
+                args.fs_only,
+                args.limit,
             )
         else:
             runs = getRuns(db, args.fs_only, args.limit)

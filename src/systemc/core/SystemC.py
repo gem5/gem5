@@ -56,7 +56,7 @@ class SystemC_ScObject(SimObject):
         {
             method.name: (lambda *a, **k: None)
             for method in SimObject.cxx_exports
-        }
+        },
     )
 
 

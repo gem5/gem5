@@ -55,7 +55,8 @@ class BaseTags(ClockedObject):
 
     # Get the tag lookup latency from the parent (cache)
     tag_latency = Param.Cycles(
-        Parent.tag_latency, "The tag lookup latency for this cache"
+        Parent.tag_latency,
+        "The tag lookup latency for this cache",
     )
 
     # Get the warmup percentage from the parent (cache)
@@ -71,12 +72,14 @@ class BaseTags(ClockedObject):
 
     # Get indexing policy
     indexing_policy = Param.BaseIndexingPolicy(
-        SetAssociative(), "Indexing policy"
+        SetAssociative(),
+        "Indexing policy",
     )
 
     # Set the indexing entry size as the block size
     entry_size = Param.Int(
-        Parent.cache_line_size, "Indexing entry size in bytes"
+        Parent.cache_line_size,
+        "Indexing entry size in bytes",
     )
 
 
@@ -90,7 +93,8 @@ class BaseSetAssoc(BaseTags):
 
     # Get replacement policy from the parent (cache)
     replacement_policy = Param.BaseReplacementPolicy(
-        Parent.replacement_policy, "Replacement policy"
+        Parent.replacement_policy,
+        "Replacement policy",
     )
 
 
@@ -110,7 +114,8 @@ class SectorTags(BaseTags):
 
     # Get replacement policy from the parent (cache)
     replacement_policy = Param.BaseReplacementPolicy(
-        Parent.replacement_policy, "Replacement policy"
+        Parent.replacement_policy,
+        "Replacement policy",
     )
 
 
@@ -121,7 +126,8 @@ class CompressedTags(SectorTags):
 
     # Maximum number of compressed blocks per tag
     max_compression_ratio = Param.Int(
-        2, "Maximum number of compressed blocks per tag."
+        2,
+        "Maximum number of compressed blocks per tag.",
     )
 
     # We simulate superblock as sector blocks
@@ -138,7 +144,8 @@ class FALRU(BaseTags):
     cxx_class = "gem5::FALRU"
 
     min_tracked_cache_size = Param.MemorySize(
-        "128KiB", "Minimum cache size for which we track statistics"
+        "128KiB",
+        "Minimum cache size for which we track statistics",
     )
 
     # This tag uses its own embedded indexing

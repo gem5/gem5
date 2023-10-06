@@ -191,10 +191,16 @@ def addOptions(parser):
         help="Restore from checkpoint",
     )
     parser.add_argument(
-        "--dtb", type=str, default=None, help="DTB file to load"
+        "--dtb",
+        type=str,
+        default=None,
+        help="DTB file to load",
     )
     parser.add_argument(
-        "--kernel", type=str, required=True, help="Linux kernel"
+        "--kernel",
+        type=str,
+        required=True,
+        help="Linux kernel",
     )
     parser.add_argument(
         "--root",
@@ -217,7 +223,10 @@ def addOptions(parser):
         help="Disks to instantiate",
     )
     parser.add_argument(
-        "--bootscript", type=str, default="", help="Linux bootscript"
+        "--bootscript",
+        type=str,
+        default="",
+        help="Linux bootscript",
     )
     parser.add_argument(
         "--cpu-type",
@@ -227,7 +236,10 @@ def addOptions(parser):
         help="CPU simulation mode. Default: %(default)s",
     )
     parser.add_argument(
-        "--kernel-init", type=str, default="/sbin/init", help="Override init"
+        "--kernel-init",
+        type=str,
+        default="/sbin/init",
+        help="Override init",
     )
     parser.add_argument(
         "--big-cpus",
@@ -309,7 +321,9 @@ def addOptions(parser):
         "only parameters of its children.",
     )
     parser.add_argument(
-        "--vio-9p", action="store_true", help=Options.vio_9p_help
+        "--vio-9p",
+        action="store_true",
+        help=Options.vio_9p_help,
     )
     parser.add_argument(
         "--dtb-gen",
@@ -364,7 +378,9 @@ def build(options):
     # big cluster
     if options.big_cpus > 0:
         system.bigCluster = big_model(
-            system, options.big_cpus, options.big_cpu_clock
+            system,
+            options.big_cpus,
+            options.big_cpu_clock,
         )
         system.mem_mode = system.bigCluster.memory_mode()
         all_cpus += system.bigCluster.cpus
@@ -372,7 +388,9 @@ def build(options):
     # little cluster
     if options.little_cpus > 0:
         system.littleCluster = little_model(
-            system, options.little_cpus, options.little_cpu_clock
+            system,
+            options.little_cpus,
+            options.little_cpu_clock,
         )
         system.mem_mode = system.littleCluster.memory_mode()
         all_cpus += system.littleCluster.cpus
@@ -403,7 +421,8 @@ def build(options):
         system.workload.dtb_filename = SysPaths.binary(options.dtb)
     else:
         system.workload.dtb_filename = os.path.join(
-            m5.options.outdir, "system.dtb"
+            m5.options.outdir,
+            "system.dtb",
         )
         system.generateDtb(system.workload.dtb_filename)
 
@@ -415,7 +434,7 @@ def build(options):
         # setup SystemC
         root.systemc_kernel = m5.objects.SystemC_Kernel()
         m5.tlm.tlm_global_quantum_instance().set(
-            sc.sc_time(10000.0 / 100000000.0, sc.sc_time.SC_SEC)
+            sc.sc_time(10000.0 / 100000000.0, sc.sc_time.SC_SEC),
         )
 
     if options.vio_9p:
@@ -499,7 +518,7 @@ def generateDtb(root):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generic ARM big.LITTLE configuration"
+        description="Generic ARM big.LITTLE configuration",
     )
     addOptions(parser)
     options = parser.parse_args()

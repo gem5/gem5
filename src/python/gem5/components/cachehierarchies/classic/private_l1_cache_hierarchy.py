@@ -128,7 +128,8 @@ class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
             self.dptw_caches[i].mem_side = self.membus.cpu_side_ports
 
             cpu.connect_walker_ports(
-                self.iptw_caches[i].cpu_side, self.dptw_caches[i].cpu_side
+                self.iptw_caches[i].cpu_side,
+                self.dptw_caches[i].cpu_side,
             )
 
             if board.get_processor().get_isa() == ISA.X86:

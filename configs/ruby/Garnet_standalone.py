@@ -45,7 +45,13 @@ def define_options(parser):
 
 
 def create_system(
-    options, full_system, system, dma_ports, bootmem, ruby_system, cpus
+    options,
+    full_system,
+    system,
+    dma_ports,
+    bootmem,
+    ruby_system,
+    cpus,
 ):
     if buildEnv["PROTOCOL"] != "Garnet_standalone":
         panic("This script requires Garnet_standalone protocol to be built.")
@@ -81,11 +87,15 @@ def create_system(
         # Only one unified L1 cache exists.  Can cache instructions and data.
         #
         l1_cntrl = L1Cache_Controller(
-            version=i, cacheMemory=cache, ruby_system=ruby_system
+            version=i,
+            cacheMemory=cache,
+            ruby_system=ruby_system,
         )
 
         cpu_seq = RubySequencer(
-            dcache=cache, garnet_standalone=True, ruby_system=ruby_system
+            dcache=cache,
+            garnet_standalone=True,
+            ruby_system=ruby_system,
         )
 
         l1_cntrl.sequencer = cpu_seq
@@ -102,7 +112,10 @@ def create_system(
         l1_cntrl.forwardFromCache = MessageBuffer()
 
     mem_dir_cntrl_nodes, rom_dir_cntrl_node = create_directories(
-        options, bootmem, ruby_system, system
+        options,
+        bootmem,
+        ruby_system,
+        system,
     )
     dir_cntrl_nodes = mem_dir_cntrl_nodes[:]
     if rom_dir_cntrl_node is not None:

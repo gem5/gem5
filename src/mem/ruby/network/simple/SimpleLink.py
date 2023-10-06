@@ -65,7 +65,7 @@ class SimpleIntLink(BasicIntLink):
         if len(self.buffers) > 0:
             fatal(
                 "User should not manually set links' \
-                   in_buffers or out_buffers"
+                   in_buffers or out_buffers",
             )
 
         # The network needs number_of_virtual_networks buffers per
@@ -85,7 +85,7 @@ class SimpleIntLink(BasicIntLink):
         # the size should be at least latency+1.
         if len(network.physical_vnets_channels) != 0:
             assert len(network.physical_vnets_channels) == int(
-                network.number_of_virtual_networks
+                network.number_of_virtual_networks,
             )
             for i in range(int(network.number_of_virtual_networks)):
                 buffers[i].buffer_size = network.physical_vnets_channels[i] * (

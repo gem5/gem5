@@ -63,7 +63,8 @@ class CpuCluster(SubSystem):
         """
         self.cpus = [
             cpu_type(
-                cpu_id=CpuCluster._NUM_CPUS + idx, clk_domain=self.clk_domain
+                cpu_id=CpuCluster._NUM_CPUS + idx,
+                clk_domain=self.clk_domain,
             )
             for idx in range(num_cpus)
         ]

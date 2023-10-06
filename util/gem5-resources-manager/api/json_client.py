@@ -74,7 +74,7 @@ class JSONClient(Client):
         return max(
             found_resources,
             key=lambda resource: tuple(
-                map(int, resource["resource_version"].split("."))
+                map(int, resource["resource_version"].split(".")),
             ),
         )
 
@@ -89,11 +89,11 @@ class JSONClient(Client):
         for resource in self.resources:
             if resource["id"] == query["id"]:
                 versions.append(
-                    {"resource_version": resource["resource_version"]}
+                    {"resource_version": resource["resource_version"]},
                 )
         versions.sort(
             key=lambda resource: tuple(
-                map(int, resource["resource_version"].split("."))
+                map(int, resource["resource_version"].split(".")),
             ),
             reverse=True,
         )

@@ -44,7 +44,8 @@ def help():
     print()
     print("Compound Flags:")
     for name, flag in filter(
-        lambda kv: isinstance(kv[1], CompoundFlag), sorted_flags
+        lambda kv: isinstance(kv[1], CompoundFlag),
+        sorted_flags,
     ):
         print(f"    {name}: {flag.desc}")
         # The list of kids for flag "All" is too long, so it is not printed

@@ -334,7 +334,11 @@ class CHI_MNController(MiscNode_Controller):
     """
 
     def __init__(
-        self, ruby_system, addr_range, l1d_caches, early_nonsync_comp
+        self,
+        ruby_system,
+        addr_range,
+        l1d_caches,
+        early_nonsync_comp,
     ):
         super(CHI_MNController, self).__init__(
             version=Versions.getVersion(MiscNode_Controller),
@@ -429,7 +433,8 @@ class CPUSequencerWrapper:
             if str(p) != "icache_port":
                 exec(f"cpu.{p} = self.data_seq.in_ports")
         cpu.connectUncachedPorts(
-            self.data_seq.in_ports, self.data_seq.interrupt_out_port
+            self.data_seq.in_ports,
+            self.data_seq.interrupt_out_port,
         )
 
     def connectIOPorts(self, piobus):
@@ -475,23 +480,27 @@ class CHI_RNF(CHI_Node):
         # First creates L1 caches and sequencers
         for cpu in self._cpus:
             cpu.inst_sequencer = RubySequencer(
-                version=Versions.getSeqId(), ruby_system=ruby_system
+                version=Versions.getSeqId(),
+                ruby_system=ruby_system,
             )
             cpu.data_sequencer = RubySequencer(
-                version=Versions.getSeqId(), ruby_system=ruby_system
+                version=Versions.getSeqId(),
+                ruby_system=ruby_system,
             )
 
             self._seqs.append(
-                CPUSequencerWrapper(cpu.inst_sequencer, cpu.data_sequencer)
+                CPUSequencerWrapper(cpu.inst_sequencer, cpu.data_sequencer),
             )
 
             # caches
             l1i_cache = l1Icache_type(
-                start_index_bit=self._block_size_bits, is_icache=True
+                start_index_bit=self._block_size_bits,
+                is_icache=True,
             )
 
             l1d_cache = l1Dcache_type(
-                start_index_bit=self._block_size_bits, is_icache=False
+                start_index_bit=self._block_size_bits,
+                is_icache=False,
             )
 
             # Placeholders for future prefetcher support
@@ -502,11 +511,17 @@ class CHI_RNF(CHI_Node):
 
             # cache controllers
             cpu.l1i = CHI_L1Controller(
-                ruby_system, cpu.inst_sequencer, l1i_cache, l1i_pf
+                ruby_system,
+                cpu.inst_sequencer,
+                l1i_cache,
+                l1i_pf,
             )
 
             cpu.l1d = CHI_L1Controller(
-                ruby_system, cpu.data_sequencer, l1d_cache, l1d_pf
+                ruby_system,
+                cpu.data_sequencer,
+                l1d_cache,
+                l1d_pf,
             )
 
             cpu.inst_sequencer.dcache = NULL
@@ -541,7 +556,8 @@ class CHI_RNF(CHI_Node):
         self._ll_cntrls = []
         for cpu in self._cpus:
             l2_cache = cache_type(
-                start_index_bit=self._block_size_bits, is_icache=False
+                start_index_bit=self._block_size_bits,
+                is_icache=False,
             )
             if pf_type != None:
                 m5.fatal("Prefetching not supported yet")
@@ -609,7 +625,10 @@ class CHI_HNF(CHI_Node):
 
         ll_cache = llcache_type(start_index_bit=intlvHighBit + 1)
         self._cntrl = CHI_HNFController(
-            ruby_system, ll_cache, NULL, addr_ranges
+            ruby_system,
+            ll_cache,
+            NULL,
+            addr_ranges,
         )
 
         if parent == None:
@@ -645,7 +664,10 @@ class CHI_MN(CHI_Node):
         addr_range = AddrRange(0, size="1kB")
 
         self._cntrl = CHI_MNController(
-            ruby_system, addr_range, l1d_caches, early_nonsync_comp
+            ruby_system,
+            addr_range,
+            l1d_caches,
+            early_nonsync_comp,
         )
 
         self.cntrl = self._cntrl

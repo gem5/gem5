@@ -50,7 +50,8 @@ class X86ACPISysDescTable(SimObject):
 
     creator_id = Param.UInt32(0, "ID identifying the generator of the table")
     creator_revision = Param.UInt32(
-        0, "revision number for the creator of the table"
+        0,
+        "revision number for the creator of the table",
     )
 
 
@@ -149,5 +150,6 @@ class X86ACPIRSDP(SimObject):
 
     rsdt = Param.X86ACPIRSDT(X86ACPIRSDT(), "root system description table")
     xsdt = Param.X86ACPIXSDT(
-        X86ACPIXSDT(), "extended system description table"
+        X86ACPIXSDT(),
+        "extended system description table",
     )

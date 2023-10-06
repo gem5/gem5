@@ -122,7 +122,7 @@ size_choices = ["test", "train", "ref"]
 
 parser = argparse.ArgumentParser(
     description="An example configuration script to run the \
-        SPEC CPU2006 benchmarks."
+        SPEC CPU2006 benchmarks.",
 )
 
 # The arguments accepted are: a. disk-image name, b. benchmark name, c.
@@ -174,7 +174,7 @@ if not os.path.exists(args.image):
     warn("Disk image not found!")
     print("Instructions on building the disk image can be found at: ")
     print(
-        "https://gem5art.readthedocs.io/en/latest/tutorials/spec-tutorial.html"
+        "https://gem5art.readthedocs.io/en/latest/tutorials/spec-tutorial.html",
     )
     fatal(f"The disk-image is not found at {args.image}")
 
@@ -306,9 +306,11 @@ roi_end_ticks = simulator.get_tick_stopwatch()[1][1]
 print("roi simulated ticks: " + str(roi_end_ticks - roi_begin_ticks))
 
 print(
-    "Ran a total of", simulator.get_current_tick() / 1e12, "simulated seconds"
+    "Ran a total of",
+    simulator.get_current_tick() / 1e12,
+    "simulated seconds",
 )
 print(
     "Total wallclock time: %.2fs, %.2f min"
-    % (time.time() - globalStart, (time.time() - globalStart) / 60)
+    % (time.time() - globalStart, (time.time() - globalStart) / 60),
 )

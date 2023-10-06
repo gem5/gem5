@@ -71,7 +71,7 @@ extern const std::uint8_t ${symbol}[];
 
 } // namespace Blobs
 } // namespace gem5
-"""
+""",
     )
     hh_code.write(str(hh))
 
@@ -88,14 +88,14 @@ namespace Blobs
 {
 
 const std::size_t ${symbol}_len = ${{len(data)}};
-"""
+""",
     )
     bytesToCppArray(cc_code, symbol, data)
     cc_code(
         """
 } // namespace Blobs
 } // namespace gem5
-"""
+""",
     )
     cc_code.write(str(cc))
 

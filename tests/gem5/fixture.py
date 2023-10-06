@@ -68,7 +68,7 @@ class TempdirFixture(Fixture):
     def __init__(self):
         self.path = None
         super(TempdirFixture, self).__init__(
-            name=constants.tempdir_fixture_name
+            name=constants.tempdir_fixture_name,
         )
 
     def setup(self, testitem):
@@ -78,7 +78,9 @@ class TempdirFixture(Fixture):
         suiteUID = testitem.metadata.uid.suite
         testUID = testitem.metadata.name
         testing_result_folder = os.path.join(
-            config.result_path, "SuiteUID-" + suiteUID, "TestUID-" + testUID
+            config.result_path,
+            "SuiteUID-" + suiteUID,
+            "TestUID-" + testUID,
         )
 
         # Copy the output files of the run from /tmp to testing-results
@@ -174,15 +176,15 @@ class SConsFixture(UniqueFixture):
                 "No SCons targets specified, this will"
                 " build the default all target.\n"
                 "This is likely unintended, and you"
-                " may wish to kill testlib and reconfigure."
+                " may wish to kill testlib and reconfigure.",
             )
         else:
             log.test_log.message(
-                "Building the following targets. This may take a while."
+                "Building the following targets. This may take a while.",
             )
             log.test_log.message(f"{', '.join(self.targets)}")
             log.test_log.message(
-                "You may want to use --skip-build, or use 'rerun'."
+                "You may want to use --skip-build, or use 'rerun'.",
             )
 
         command.extend(self.targets)
@@ -223,7 +225,11 @@ class MakeFixture(Fixture):
     def __init__(self, directory, *args, **kwargs):
         name = f"make -C {directory}"
         super(MakeFixture, self).__init__(
-            build_once=True, lazy_init=False, name=name, *args, **kwargs
+            build_once=True,
+            lazy_init=False,
+            name=name,
+            *args,
+            **kwargs,
         )
         self.targets = []
         self.directory = directory
@@ -249,7 +255,9 @@ class MakeTarget(Fixture):
 
         if make_fixture is None:
             make_fixture = MakeFixture(
-                absdirpath(target), lazy_init=True, build_once=False
+                absdirpath(target),
+                lazy_init=True,
+                build_once=False,
             )
 
         self.make_fixture = make_fixture
@@ -339,8 +347,9 @@ class DownloadedProgram(UniqueFixture):
 
         return time.mktime(
             datetime.datetime.strptime(
-                u.info()["Last-Modified"], "%a, %d %b %Y %X GMT"
-            ).timetuple()
+                u.info()["Last-Modified"],
+                "%a, %d %b %Y %X GMT",
+            ).timetuple(),
         )
 
     def _setup(self, testitem):
@@ -353,7 +362,7 @@ class DownloadedProgram(UniqueFixture):
             except (urllib.error.URLError, socket.timeout):
                 # Problem checking the server, use the old files.
                 log.test_log.debug(
-                    "Could not contact server. Binaries may be old."
+                    "Could not contact server. Binaries may be old.",
                 )
                 return
             # If the server version is more recent, download it
@@ -380,7 +389,11 @@ class DownloadedArchive(DownloadedProgram):
                 return prefix == abs_directory
 
             def safe_extract(
-                tar, path=".", members=None, *, numeric_owner=False
+                tar,
+                path=".",
+                members=None,
+                *,
+                numeric_owner=False,
             ):
                 for member in tar.getmembers():
                     member_path = os.path.join(path, member.name)
@@ -402,7 +415,7 @@ class DownloadedArchive(DownloadedProgram):
             except (urllib.error.URLError, socket.timeout):
                 # Problem checking the server, use the old files.
                 log.test_log.debug(
-                    "Could not contact server. Binaries may be old."
+                    "Could not contact server. Binaries may be old.",
                 )
                 return
             # If the server version is more recent, download it

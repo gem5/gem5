@@ -36,7 +36,7 @@ from gem5.runtime import get_runtime_isa
 
 parser = argparse.ArgumentParser(
     description="A simple script used to check the output of "
-    "`gem5.runtime.get_runtime_isa`"
+    "`gem5.runtime.get_runtime_isa`",
 )
 
 parser.add_argument(

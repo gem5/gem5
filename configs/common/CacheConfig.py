@@ -132,7 +132,8 @@ def config_cache(options, system):
         # are not connected using addTwoLevelCacheHierarchy. Use the
         # same clock as the CPUs.
         system.l2 = l2_cache_class(
-            clk_domain=system.cpu_clk_domain, **_get_cache_opts("l2", options)
+            clk_domain=system.cpu_clk_domain,
+            **_get_cache_opts("l2", options),
         )
 
         system.tol2bus = L2XBar(clk_domain=system.cpu_clk_domain)
@@ -174,7 +175,10 @@ def config_cache(options, system):
             # When connecting the caches, the clock is also inherited
             # from the CPU in question
             system.cpu[i].addPrivateSplitL1Caches(
-                icache, dcache, iwalkcache, dwalkcache
+                icache,
+                dcache,
+                iwalkcache,
+                dwalkcache,
             )
 
             if options.memchecker:
@@ -211,7 +215,8 @@ def config_cache(options, system):
             )
         elif options.external_memory_system:
             system.cpu[i].connectUncachedPorts(
-                system.membus.cpu_side_ports, system.membus.mem_side_ports
+                system.membus.cpu_side_ports,
+                system.membus.mem_side_ports,
             )
         else:
             system.cpu[i].connectBus(system.membus)
@@ -238,7 +243,9 @@ class ExternalCache(ExternalSlave):
 def ExternalCacheFactory(port_type):
     def make(name):
         return ExternalCache(
-            port_data=name, port_type=port_type, addr_ranges=[AllMemory]
+            port_data=name,
+            port_type=port_type,
+            addr_ranges=[AllMemory],
         )
 
     return make

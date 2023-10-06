@@ -82,7 +82,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
         if self.get_processor().get_isa() != ISA.X86:
             raise Exception(
                 "The X86Board requires a processor using the X86 "
-                f"ISA. Current processor ISA: '{processor.get_isa().name}'."
+                f"ISA. Current processor ISA: '{processor.get_isa().name}'.",
             )
 
     @overrides(AbstractSystemBoard)
@@ -131,7 +131,8 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
             self.bridge.ranges = [
                 AddrRange(0xC0000000, 0xFFFF0000),
                 AddrRange(
-                    IO_address_space_base, interrupts_address_space_base - 1
+                    IO_address_space_base,
+                    interrupts_address_space_base - 1,
                 ),
                 AddrRange(pci_config_address_space_base, Addr.max),
             ]
@@ -147,7 +148,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
                     interrupts_address_space_base
                     + self.get_processor().get_num_cores() * APIC_range_size
                     - 1,
-                )
+                ),
             ]
             self.pc.attachIO(self.get_io_bus())
 
@@ -180,7 +181,9 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
         isa_bus = X86IntelMPBus(bus_id=1, bus_type="ISA   ")
         base_entries.append(isa_bus)
         connect_busses = X86IntelMPBusHierarchy(
-            bus_id=1, subtractive_decode=True, parent_bus=0
+            bus_id=1,
+            subtractive_decode=True,
+            parent_bus=0,
         )
         ext_entries.append(connect_busses)
 
@@ -242,7 +245,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
 
         # Reserve the last 16kB of the 32-bit address space for m5ops
         entries.append(
-            X86E820Entry(addr=0xFFFF0000, size="64kB", range_type=2)
+            X86E820Entry(addr=0xFFFF0000, size="64kB", range_type=2),
         )
 
         self.workload.e820_table.entries = entries
@@ -278,7 +281,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
         if memory.get_size() > toMemorySize("3GB"):
             raise Exception(
                 "X86Board currently only supports memory sizes up "
-                "to 3GB because of the I/O hole."
+                "to 3GB because of the I/O hole.",
             )
         data_range = AddrRange(memory.get_size())
         memory.set_memory_range([data_range])
@@ -298,7 +301,8 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
         ide_disk = IdeDisk()
         ide_disk.driveID = "device0"
         ide_disk.image = CowDiskImage(
-            child=RawDiskImage(read_only=True), read_only=False
+            child=RawDiskImage(read_only=True),
+            read_only=False,
         )
         ide_disk.image.child.image_file = disk_image.get_local_path()
 

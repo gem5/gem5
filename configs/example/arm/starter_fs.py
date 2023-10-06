@@ -113,7 +113,7 @@ def create(args):
         # disk. Attach the disk image using gem5's Copy-on-Write
         # functionality to avoid writing changes to the stored copy of
         # the disk image.
-        PciVirtIO(vio=VirtIOBlock(image=create_cow_image(args.disk_image)))
+        PciVirtIO(vio=VirtIOBlock(image=create_cow_image(args.disk_image))),
     ]
 
     # Attach the PCI devices to the system. The helper method in the
@@ -135,7 +135,7 @@ def create(args):
             *cpu_types[args.cpu],
             tarmac_gen=args.tarmac_gen,
             tarmac_dest=args.tarmac_dest,
-        )
+        ),
     ]
 
     # Create a cache hierarchy for the cluster. We are assuming that
@@ -151,7 +151,8 @@ def create(args):
     else:
         # No DTB specified: autogenerate DTB
         system.workload.dtb_filename = os.path.join(
-            m5.options.outdir, "system.dtb"
+            m5.options.outdir,
+            "system.dtb",
         )
         system.generateDtb(system.workload.dtb_filename)
 
@@ -215,10 +216,16 @@ def main():
     parser = argparse.ArgumentParser(epilog=__doc__)
 
     parser.add_argument(
-        "--dtb", type=str, default=None, help="DTB file to load"
+        "--dtb",
+        type=str,
+        default=None,
+        help="DTB file to load",
     )
     parser.add_argument(
-        "--kernel", type=str, default=default_kernel, help="Linux kernel"
+        "--kernel",
+        type=str,
+        default=default_kernel,
+        help="Linux kernel",
     )
     parser.add_argument(
         "--initrd",
@@ -239,7 +246,10 @@ def main():
         help=f"OS device name for root partition (default: {default_root_device})",
     )
     parser.add_argument(
-        "--script", type=str, default="", help="Linux bootscript"
+        "--script",
+        type=str,
+        default="",
+        help="Linux bootscript",
     )
     parser.add_argument(
         "--cpu",
@@ -250,7 +260,10 @@ def main():
     )
     parser.add_argument("--cpu-freq", type=str, default="4GHz")
     parser.add_argument(
-        "--num-cores", type=int, default=1, help="Number of CPU cores"
+        "--num-cores",
+        type=int,
+        default=1,
+        help="Number of CPU cores",
     )
     parser.add_argument(
         "--mem-type",
@@ -259,7 +272,10 @@ def main():
         help="type of memory to use",
     )
     parser.add_argument(
-        "--mem-channels", type=int, default=1, help="number of memory channels"
+        "--mem-channels",
+        type=int,
+        default=1,
+        help="number of memory channels",
     )
     parser.add_argument(
         "--mem-ranks",

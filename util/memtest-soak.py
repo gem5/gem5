@@ -58,7 +58,7 @@ for i in range(args.count):
             "configs/example/memtest.py",
             "-r",
             "-m %d" % (args.ticks),
-        ]
+        ],
     )
     if status != 0:
         print("Error: memtest run failed\n")

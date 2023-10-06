@@ -51,17 +51,27 @@ from m5.objects import *
 # and testers not only at the L1s, but also at the L2s, L3s etc.
 
 parser = argparse.ArgumentParser(
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 
 parser.add_argument(
-    "-a", "--atomic", action="store_true", help="Use atomic (non-timing) mode"
+    "-a",
+    "--atomic",
+    action="store_true",
+    help="Use atomic (non-timing) mode",
 )
 parser.add_argument(
-    "-b", "--blocking", action="store_true", help="Use blocking caches"
+    "-b",
+    "--blocking",
+    action="store_true",
+    help="Use blocking caches",
 )
 parser.add_argument(
-    "-l", "--maxloads", metavar="N", default=0, help="Stop after N loads"
+    "-l",
+    "--maxloads",
+    metavar="N",
+    default=0,
+    help="Stop after N loads",
 )
 parser.add_argument(
     "-m",
@@ -211,7 +221,7 @@ else:
 
     if numtesters(cachespec, testerspec) > block_size:
         print(
-            f"Error: Limited to {block_size} testers because of false sharing"
+            f"Error: Limited to {block_size} testers because of false sharing",
         )
         sys.exit(1)
 
@@ -272,7 +282,8 @@ system = System(physmem=SimpleMemory(), cache_line_size=block_size)
 system.voltage_domain = VoltageDomain(voltage="1V")
 
 system.clk_domain = SrcClockDomain(
-    clock=args.sys_clock, voltage_domain=system.voltage_domain
+    clock=args.sys_clock,
+    voltage_domain=system.voltage_domain,
 )
 
 # For each level, track the next subsys index to use

@@ -38,13 +38,15 @@ system = System(cpu=cpus, physmem=SimpleMemory(), membus=SystemXBar())
 # Dummy voltage domain for all our clock domains
 system.voltage_domain = VoltageDomain()
 system.clk_domain = SrcClockDomain(
-    clock="1GHz", voltage_domain=system.voltage_domain
+    clock="1GHz",
+    voltage_domain=system.voltage_domain,
 )
 
 # Create a seperate clock domain for components that should run at
 # CPUs frequency
 system.cpu_clk_domain = SrcClockDomain(
-    clock="2GHz", voltage_domain=system.voltage_domain
+    clock="2GHz",
+    voltage_domain=system.voltage_domain,
 )
 
 system.toL2Bus = L2XBar(clk_domain=system.cpu_clk_domain)

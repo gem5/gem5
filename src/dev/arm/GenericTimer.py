@@ -117,7 +117,7 @@ class GenericTimer(SimObject):
         node = FdtNode("timer")
 
         node.appendCompatible(
-            ["arm,cortex-a15-timer", "arm,armv7-timer", "arm,armv8-timer"]
+            ["arm,cortex-a15-timer", "arm,armv7-timer", "arm,armv8-timer"],
         )
 
         gic = self._parent.unproxy(self).gic
@@ -129,7 +129,7 @@ class GenericTimer(SimObject):
                 + self.int_el1_virt.generateFdtProperty(gic)
                 + self.int_el2_ns_phys.generateFdtProperty(gic)
                 + self.int_el2_ns_virt.generateFdtProperty(gic),
-            )
+            ),
         )
 
         if self._freq_in_dtb:
@@ -174,7 +174,7 @@ class GenericTimerFrame(PioDevice):
         reg = state.addrCells(self.cnt_base) + state.sizeCells(0x1000)
         if self.cnt_el0_base.value != MaxAddr:
             reg.extend(
-                state.addrCells(self.cnt_el0_base) + state.sizeCells(0x1000)
+                state.addrCells(self.cnt_el0_base) + state.sizeCells(0x1000),
             )
         node.append(FdtPropertyWords("reg", reg))
 
@@ -212,7 +212,10 @@ class GenericTimerMem(PioDevice):
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(
-            state, "timer", self.cnt_ctl_base, 0x1000
+            state,
+            "timer",
+            self.cnt_ctl_base,
+            0x1000,
         )
         node.appendCompatible(["arm,armv7-timer-mem"])
         node.append(state.addrCellsProperty())

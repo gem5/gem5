@@ -117,7 +117,7 @@ def main():
     if not (len(ranges) == len(final_rd_lat)):
         print(
             "Address ranges (%d) and read latency (%d) do not match"
-            % (len(ranges), len(final_rd_lat))
+            % (len(ranges), len(final_rd_lat)),
         )
         exit(-1)
 

@@ -49,8 +49,9 @@ args = parser.parse_args()
 try:
     cpu = TrafficGen(
         config_file=os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "tgen-simple-mem.cfg"
-        )
+            os.path.dirname(os.path.abspath(__file__)),
+            "tgen-simple-mem.cfg",
+        ),
     )
 except NameError:
     m5.fatal("protobuf required for simple memory test")

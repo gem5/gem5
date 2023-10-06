@@ -39,7 +39,8 @@ class Gem5ToTlmBridgeBase(SystemC_ScModule):
 
     gem5 = ResponsePort("gem5 response port")
     addr_ranges = VectorParam.AddrRange(
-        [], "Addresses served by this port's TLM side"
+        [],
+        "Addresses served by this port's TLM side",
     )
 
 

@@ -118,7 +118,7 @@ class GitRepo(AbstractRepo):
         if self._repo_base is None:
             self._repo_base = (
                 subprocess.check_output(
-                    [self.git, "rev-parse", "--show-toplevel"]
+                    [self.git, "rev-parse", "--show-toplevel"],
                 )
                 .decode()
                 .rstrip("\n")
@@ -202,12 +202,12 @@ class GitRepo(AbstractRepo):
 
     def file_from_index(self, name):
         return subprocess.check_output([self.git, "show", f":{name}"]).decode(
-            "utf-8"
+            "utf-8",
         )
 
     def file_from_head(self, name):
         return subprocess.check_output(
-            [self.git, "show", f"{self.head_revision()}:{name}"]
+            [self.git, "show", f"{self.head_revision()}:{name}"],
         ).decode("utf-8")
 
 

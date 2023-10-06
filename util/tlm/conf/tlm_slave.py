@@ -57,7 +57,8 @@ system.physmem = (
 )  # This must be instanciated, even if not needed
 system.cpu = TrafficGen(config_file="conf/tgen.cfg")
 system.clk_domain = SrcClockDomain(
-    clock="1.5GHz", voltage_domain=VoltageDomain(voltage="1V")
+    clock="1.5GHz",
+    voltage_domain=VoltageDomain(voltage="1V"),
 )
 
 # Create a external TLM port:

@@ -48,12 +48,14 @@ class RubyController(ClockedObject):
 
     version = Param.Int("")
     addr_ranges = VectorParam.AddrRange(
-        [AllMemory], "Address range this controller responds to"
+        [AllMemory],
+        "Address range this controller responds to",
     )
     cluster_id = Param.UInt32(0, "Id of this controller's cluster")
 
     transitions_per_cycle = Param.Int(
-        32, "no. of  SLICC state machine transitions per cycle"
+        32,
+        "no. of  SLICC state machine transitions per cycle",
     )
     buffer_size = Param.UInt32(0, "max buffer size 0 means infinite")
 
@@ -83,8 +85,10 @@ class RubyController(ClockedObject):
     # These can be used by a protocol to enable reuse of the same machine
     # types to model different levels of the cache hierarchy
     upstream_destinations = VectorParam.RubyController(
-        [], "Possible destinations for requests sent towards the CPU"
+        [],
+        "Possible destinations for requests sent towards the CPU",
     )
     downstream_destinations = VectorParam.RubyController(
-        [], "Possible destinations for requests sent towards memory"
+        [],
+        "Possible destinations for requests sent towards memory",
     )

@@ -70,7 +70,7 @@ class Crossbar(SimpleTopology):
                     src_node=routers[i],
                     dst_node=xbar,
                     latency=link_latency,
-                )
+                ),
             )
 
         link_count += len(self.nodes)
@@ -82,7 +82,7 @@ class Crossbar(SimpleTopology):
                     src_node=xbar,
                     dst_node=routers[i],
                     latency=link_latency,
-                )
+                ),
             )
 
         network.int_links = int_links

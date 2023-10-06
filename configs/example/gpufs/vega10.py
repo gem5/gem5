@@ -78,10 +78,16 @@ chmod +x myapp
 
 def addDemoOptions(parser):
     parser.add_argument(
-        "-a", "--app", default=None, help="GPU application to run"
+        "-a",
+        "--app",
+        default=None,
+        help="GPU application to run",
     )
     parser.add_argument(
-        "-o", "--opts", default="", help="GPU application arguments"
+        "-o",
+        "--opts",
+        default="",
+        help="GPU application arguments",
     )
 
 
@@ -127,7 +133,10 @@ def runVegaGPUFS(cpu_type):
     _, tempRunscript = tempfile.mkstemp()
     with open(tempRunscript, "w") as b64file:
         runscriptStr = demo_runscript.format(
-            args.app, args.opts, encodedBin, args.opts
+            args.app,
+            args.opts,
+            encodedBin,
+            args.opts,
         )
         b64file.write(runscriptStr)
 

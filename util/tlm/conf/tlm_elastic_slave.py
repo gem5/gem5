@@ -76,7 +76,8 @@ system.voltage_domain = VoltageDomain()
 # Create a source clock for the system. This is used as the clock period for
 # xbar and memory:
 system.clk_domain = SrcClockDomain(
-    clock="1GHz", voltage_domain=system.voltage_domain
+    clock="1GHz",
+    voltage_domain=system.voltage_domain,
 )
 
 # Create a CPU voltage domain:
@@ -85,7 +86,8 @@ system.cpu_voltage_domain = VoltageDomain()
 # Create a separate clock domain for the CPUs. In case of Trace CPUs this clock
 # is actually used only by the caches connected to the CPU:
 system.cpu_clk_domain = SrcClockDomain(
-    clock="1GHz", voltage_domain=system.cpu_voltage_domain
+    clock="1GHz",
+    voltage_domain=system.cpu_voltage_domain,
 )
 
 # Setup CPU's L1 caches:

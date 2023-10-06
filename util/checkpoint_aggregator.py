@@ -72,7 +72,9 @@ def aggregate(output_dir, cpts, no_compress, memory_size):
                 for item in items:
                     if item[0] == "paddr":
                         merged_config.set(
-                            newsec, item[0], int(item[1]) + (page_ptr << 12)
+                            newsec,
+                            item[0],
+                            int(item[1]) + (page_ptr << 12),
                         )
                         continue
                     merged_config.set(newsec, item[0], item[1])
@@ -131,11 +133,14 @@ def aggregate(output_dir, cpts, no_compress, memory_size):
 
     print("WARNING: ")
     print(
-        "Make sure the simulation using this checkpoint has at least ", end=" "
+        "Make sure the simulation using this checkpoint has at least ",
+        end=" ",
     )
     print(page_ptr, "x 4K of memory")
     merged_config.set(
-        "system.physmem.store0", "range_size", page_ptr * 4 * 1024
+        "system.physmem.store0",
+        "range_size",
+        page_ptr * 4 * 1024,
     )
 
     merged_config.add_section("Globals")
@@ -155,10 +160,13 @@ if __name__ == "__main__":
 
     parser = ArgumentParser(
         usage="%(prog)s [options] <directory names which "
-        "hold the checkpoints to be combined>"
+        "hold the checkpoints to be combined>",
     )
     parser.add_argument(
-        "-o", "--output-dir", action="store", help="Output directory"
+        "-o",
+        "--output-dir",
+        action="store",
+        help="Output directory",
     )
     parser.add_argument("-c", "--no-compress", action="store_true")
     parser.add_argument("--cpts", nargs="+")
@@ -171,7 +179,7 @@ if __name__ == "__main__":
     if len(options.cpts) <= 1:
         parser.error(
             "You must specify atleast two checkpoint files that "
-            "need to be combined."
+            "need to be combined.",
         )
 
     aggregate(

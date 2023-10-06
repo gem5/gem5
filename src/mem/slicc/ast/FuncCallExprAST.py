@@ -159,31 +159,31 @@ class FuncCallExprAST(ExprAST):
             code(
                 """
 {
-"""
+""",
             )
             if machine.TBEType != None and machine.EntryType != None:
                 code(
                     """
     TransitionResult result = doTransition(${{cvec[0]}}, ${{cvec[2]}}, ${{cvec[3]}}, ${{cvec[1]}});
-"""
+""",
                 )
             elif machine.TBEType != None:
                 code(
                     """
     TransitionResult result = doTransition(${{cvec[0]}}, ${{cvec[2]}}, ${{cvec[1]}});
-"""
+""",
                 )
             elif machine.EntryType != None:
                 code(
                     """
     TransitionResult result = doTransition(${{cvec[0]}}, ${{cvec[2]}}, ${{cvec[1]}});
-"""
+""",
                 )
             else:
                 code(
                     """
     TransitionResult result = doTransition(${{cvec[0]}}, ${{cvec[1]}});
-"""
+""",
                 )
 
             assert "in_port" in kwargs
@@ -195,7 +195,7 @@ class FuncCallExprAST(ExprAST):
         counter++;
         continue; // Check the first port again
     } else if (result == TransitionResult_ResourceStall) {
-"""
+""",
             )
             if "rsc_stall_handler" in in_port.pairs:
                 stall_func_name = in_port.pairs["rsc_stall_handler"]
@@ -208,19 +208,19 @@ class FuncCallExprAST(ExprAST):
             scheduleEvent(Cycles(1));
             // Cannot do anything with this transition, go check next doable transition (mostly likely of next port)
         }
-"""
+""",
                 )
             else:
                 code(
                     """
         scheduleEvent(Cycles(1));
         // Cannot do anything with this transition, go check next doable transition (mostly likely of next port)
-"""
+""",
                 )
             code(
                 """
     } else if (result == TransitionResult_ProtocolStall) {
-"""
+""",
             )
             if "prot_stall_handler" in in_port.pairs:
                 stall_func_name = in_port.pairs["prot_stall_handler"]
@@ -233,21 +233,21 @@ class FuncCallExprAST(ExprAST):
             scheduleEvent(Cycles(1));
             // Cannot do anything with this transition, go check next doable transition (mostly likely of next port)
         }
-"""
+""",
                 )
             else:
                 code(
                     """
         scheduleEvent(Cycles(1));
         // Cannot do anything with this transition, go check next doable transition (mostly likely of next port)
-"""
+""",
                 )
             code(
                 """
     }
 
 }
-"""
+""",
             )
         elif self.proc_name == "error":
             code("$0", self.exprs[0].embedError(cvec[0]))
@@ -260,7 +260,7 @@ if (!(${{cvec[0]}})) {
     $error
 }
 #endif
-"""
+""",
             )
 
         elif self.proc_name == "set_cache_entry":

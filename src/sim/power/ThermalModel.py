@@ -54,7 +54,8 @@ class ThermalResistor(SimObject):
     cxx_exports = [PyBindMethod("setNodes")]
 
     resistance = Param.Float(
-        1.0, "Thermal resistance, expressed in Kelvin per Watt"
+        1.0,
+        "Thermal resistance, expressed in Kelvin per Watt",
     )
 
 
@@ -67,7 +68,8 @@ class ThermalCapacitor(SimObject):
     cxx_exports = [PyBindMethod("setNodes")]
 
     capacitance = Param.Float(
-        1.0, "Thermal capacitance, expressed in Joules per Kelvin"
+        1.0,
+        "Thermal capacitance, expressed in Joules per Kelvin",
     )
 
 
@@ -99,7 +101,8 @@ class ThermalModel(ClockedObject):
     ]
 
     step = Param.Float(
-        0.01, "Simulation step (in seconds) for thermal simulation"
+        0.01,
+        "Simulation step (in seconds) for thermal simulation",
     )
 
     def populate(self):
@@ -127,13 +130,15 @@ class ThermalModel(ClockedObject):
 
         for cap, node1, node2 in self._capacitors:
             cap.getCCObject().setNodes(
-                node1.getCCObject(), node2.getCCObject()
+                node1.getCCObject(),
+                node2.getCCObject(),
             )
             self.getCCObject().addCapacitor(cap.getCCObject())
 
         for res, node1, node2 in self._resistors:
             res.getCCObject().setNodes(
-                node1.getCCObject(), node2.getCCObject()
+                node1.getCCObject(),
+                node2.getCCObject(),
             )
             self.getCCObject().addResistor(res.getCCObject())
 

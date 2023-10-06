@@ -66,6 +66,7 @@ sim = Simulator(board=board, full_system=False)
 sim.run()
 print(
     "Exiting @ tick {} because {}.".format(
-        sim.get_current_tick(), sim.get_last_exit_event_cause()
-    )
+        sim.get_current_tick(),
+        sim.get_last_exit_event_cause(),
+    ),
 )

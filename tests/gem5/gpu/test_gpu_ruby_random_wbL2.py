@@ -47,7 +47,10 @@ gem5_verify_config(
     fixtures=(),
     verifiers=(),
     config=joinpath(
-        config.base_dir, "configs", "example", "ruby_gpu_random_test.py"
+        config.base_dir,
+        "configs",
+        "example",
+        "ruby_gpu_random_test.py",
     ),
     config_args=["--WB_L2", "--test-length", "50000", "--num-dmas", "0"],
     valid_isas=(constants.vega_x86_tag,),
@@ -74,7 +77,10 @@ gem5_verify_config(
     fixtures=(),
     verifiers=(),
     config=joinpath(
-        config.base_dir, "configs", "example", "ruby_gpu_random_test.py"
+        config.base_dir,
+        "configs",
+        "example",
+        "ruby_gpu_random_test.py",
     ),
     config_args=["--WB_L2", "--test-length", "5000000", "--num-dmas", "0"],
     valid_isas=(constants.vega_x86_tag,),

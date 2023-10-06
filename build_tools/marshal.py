@@ -90,7 +90,7 @@ namespace gem5
 namespace
 {
 
-"""
+""",
 )
 
 bytesToCppArray(code, "embedded_module_data", compressed)
@@ -109,7 +109,7 @@ EmbeddedPython embedded_module_info(
 
 } // anonymous namespace
 } // namespace gem5
-"""
+""",
 )
 
 code.write(cpp)

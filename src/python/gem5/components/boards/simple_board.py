@@ -74,7 +74,7 @@ class SimpleBoard(AbstractSystemBoard, SEBinaryWorkload):
     def get_io_bus(self) -> IOXBar:
         raise NotImplementedError(
             "SimpleBoard does not have an IO Bus. "
-            "Use `has_io_bus()` to check this."
+            "Use `has_io_bus()` to check this.",
         )
 
     @overrides(AbstractSystemBoard)
@@ -85,7 +85,7 @@ class SimpleBoard(AbstractSystemBoard, SEBinaryWorkload):
     def get_dma_ports(self) -> List[Port]:
         raise NotImplementedError(
             "SimpleBoard does not have DMA Ports. "
-            "Use `has_dma_ports()` to check this."
+            "Use `has_dma_ports()` to check this.",
         )
 
     @overrides(AbstractSystemBoard)
@@ -96,7 +96,7 @@ class SimpleBoard(AbstractSystemBoard, SEBinaryWorkload):
     def get_mem_side_coherent_io_port(self) -> Port:
         raise NotImplementedError(
             "SimpleBoard does not have any I/O ports. Use has_coherent_io to "
-            "check this."
+            "check this.",
         )
 
     @overrides(AbstractSystemBoard)

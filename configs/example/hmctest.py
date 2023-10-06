@@ -116,7 +116,7 @@ def build_system(options):
 def main():
     parser = argparse.ArgumentParser(
         description="Simple system using HMC as\
-                                     main memory"
+                                     main memory",
     )
     HMC.add_options(parser)
     add_options(parser)
@@ -130,7 +130,7 @@ def main():
     m5.stats.dump()
     print(
         "Exiting @ tick %i because %s (exit code is %i)"
-        % (m5.curTick(), event.getCause(), event.getCode())
+        % (m5.curTick(), event.getCause(), event.getCode()),
     )
     print("Done")
 

@@ -66,7 +66,7 @@ class QoSFixedPriorityPolicy(QoSPolicy):
         warn(
             "QosFixedPriority.setMasterPriority is deprecated in favor of "
             "setRequestorPriority. See src/mem/qos/QoSPolicy.py for more "
-            "information"
+            "information",
         )
         self.setRequestorPriority(request_port, priority)
 
@@ -74,7 +74,7 @@ class QoSFixedPriorityPolicy(QoSPolicy):
         if not self._requestor_priorities:
             print(
                 "Error,"
-                "use setRequestorPriority to init requestors/priorities\n"
+                "use setRequestorPriority to init requestors/priorities\n",
             )
             exit(1)
         else:
@@ -83,16 +83,19 @@ class QoSFixedPriorityPolicy(QoSPolicy):
                 priority = prio[1]
                 if isinstance(request_port, str):
                     self.getCCObject().initRequestorName(
-                        request_port, int(priority)
+                        request_port,
+                        int(priority),
                     )
                 else:
                     self.getCCObject().initRequestorObj(
-                        request_port.getCCObject(), priority
+                        request_port.getCCObject(),
+                        priority,
                     )
 
     # default fixed priority value for non-listed Requestors
     qos_fixed_prio_default_prio = Param.UInt8(
-        0, "Default priority for non-listed Requestors"
+        0,
+        "Default priority for non-listed Requestors",
     )
 
 
@@ -124,11 +127,13 @@ class QoSPropFairPolicy(QoSPolicy):
                 score = prio[1]
                 if isinstance(request_port, str):
                     self.getCCObject().initRequestorName(
-                        request_port, float(score)
+                        request_port,
+                        float(score),
                     )
                 else:
                     self.getCCObject().initRequestorObj(
-                        request_port.getCCObject(), float(score)
+                        request_port.getCCObject(),
+                        float(score),
                     )
 
     weight = Param.Float(0.5, "Pf score weight")

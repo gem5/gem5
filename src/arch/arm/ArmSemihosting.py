@@ -46,13 +46,16 @@ class ArmSemihosting(SimObject):
     cmd_line = Param.String("", "Command line to report to guest")
     stdin = Param.String("stdin", "Standard input (stdin for gem5's terminal)")
     stdout = Param.String(
-        "stdout", "Standard output (stdout for gem5's terminal)"
+        "stdout",
+        "Standard output (stdout for gem5's terminal)",
     )
     stderr = Param.String(
-        "stderr", "Standard error (stderr for gem5's terminal)"
+        "stderr",
+        "Standard error (stderr for gem5's terminal)",
     )
     files_root_dir = Param.String(
-        "", "Host root directory for files handled by Semihosting"
+        "",
+        "Host root directory for files handled by Semihosting",
     )
 
     mem_reserve = Param.MemorySize(
@@ -63,5 +66,6 @@ class ArmSemihosting(SimObject):
     stack_size = Param.MemorySize("32MiB", "Application stack size")
 
     time = Param.Time(
-        "01/01/2009", "System time to use ('Now' for actual time)"
+        "01/01/2009",
+        "System time to use ('Now' for actual time)",
     )

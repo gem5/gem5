@@ -78,7 +78,8 @@ class NoCache(AbstractClassicCacheHierarchy):
         return membus
 
     def __init__(
-        self, membus: BaseXBar = _get_default_membus.__func__()
+        self,
+        membus: BaseXBar = _get_default_membus.__func__(),
     ) -> None:
         """
         :param membus: The memory bus for this setup. This parameter is
@@ -106,7 +107,8 @@ class NoCache(AbstractClassicCacheHierarchy):
             core.connect_icache(self.membus.cpu_side_ports)
             core.connect_dcache(self.membus.cpu_side_ports)
             core.connect_walker_ports(
-                self.membus.cpu_side_ports, self.membus.cpu_side_ports
+                self.membus.cpu_side_ports,
+                self.membus.cpu_side_ports,
             )
 
             if board.get_processor().get_isa() == ISA.X86:

@@ -66,11 +66,13 @@ class BaseTLB(SimObject):
     # Ports to connect with other TLB levels
     cpu_side_ports = VectorResponsePort("Ports closer to the CPU side")
     slave = DeprecatedParam(
-        cpu_side_ports, "`slave` is now called `cpu_side_ports`"
+        cpu_side_ports,
+        "`slave` is now called `cpu_side_ports`",
     )
     mem_side_port = RequestPort("Port closer to memory side")
     master = DeprecatedParam(
-        mem_side_port, "`master` is now called `mem_side_port`"
+        mem_side_port,
+        "`master` is now called `mem_side_port`",
     )
 
     entry_type = Param.TypeTLB("Instruction/Data/Unified TLB entries")

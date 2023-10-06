@@ -37,7 +37,7 @@ def overrides(interface_class):
         if method.__name__ not in dir(interface_class):
             raise NotImplementedError(
                 f"function {method.__name__} is an @override, but that"
-                f" function is not implemented in base class {interface_class}"
+                f" function is not implemented in base class {interface_class}",
             )
 
         def func():
@@ -48,7 +48,7 @@ def overrides(interface_class):
             raise NotImplementedError(
                 f"function {method.__name__} is an @overide, but that is"
                 f" implemented as type {type(attr)} in base class"
-                f" {interface_class}, expected implemented type {type(func)}."
+                f" {interface_class}, expected implemented type {type(func)}.",
             )
         return method
 

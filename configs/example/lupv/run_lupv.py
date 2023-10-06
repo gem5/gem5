@@ -57,7 +57,9 @@ parser.add_argument(
     help="The type of CPU in the system",
 )
 parser.add_argument(
-    "num_cpus", type=int, help="The number of CPU in the system"
+    "num_cpus",
+    type=int,
+    help="The number of CPU in the system",
 )
 parser.add_argument(
     "--max-ticks",
@@ -70,7 +72,9 @@ parser.add_argument(
 args = parser.parse_args()
 
 cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-    l1d_size="32KiB", l1i_size="32KiB", l2_size="512KiB"
+    l1d_size="32KiB",
+    l1i_size="32KiB",
+    l2_size="512KiB",
 )
 
 # Setup the system memory.
@@ -78,11 +82,15 @@ memory = SingleChannelDDR3_1600(size="128MB")
 # Setup a single core Processor.
 if args.cpu_type == "atomic":
     processor = SimpleProcessor(
-        cpu_type=CPUTypes.ATOMIC, num_cores=args.num_cpus, isa=ISA.RISCV
+        cpu_type=CPUTypes.ATOMIC,
+        num_cores=args.num_cpus,
+        isa=ISA.RISCV,
     )
 elif args.cpu_type == "timing":
     processor = SimpleProcessor(
-        cpu_type=CPUTypes.TIMING, num_cores=args.num_cpus, isa=ISA.RISCV
+        cpu_type=CPUTypes.TIMING,
+        num_cores=args.num_cpus,
+        isa=ISA.RISCV,
     )
 
 # Setup the board.

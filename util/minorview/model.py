@@ -113,7 +113,8 @@ class Id(BlobVisualData):
 
     def from_string(self, string):
         m = re.match(
-            "^(F;)?(\d+)/(\d+)\.(\d+)/(\d+)(/(\d+)(\.(\d+))?)?", string
+            "^(F;)?(\d+)/(\d+)\.(\d+)/(\d+)(/(\d+)(\.(\d+))?)?",
+            string,
         )
 
         def seqnum_from_string(string):
@@ -330,7 +331,7 @@ class TwoDColours(ColourPattern):
             else:
                 parsed = parse.list_parser(pairs[dataName])
                 return class_(
-                    parse.map2(special_view_decoder(elemClass), parsed)
+                    parse.map2(special_view_decoder(elemClass), parsed),
                 )
 
         return decode
@@ -378,7 +379,7 @@ class TwoDColours(ColourPattern):
                         print(
                             "Element out of range strips: %d,"
                             " stripelems %d, index: %d"
-                            % (strips, strip_elems, index)
+                            % (strips, strip_elems, index),
                         )
 
                 # return class_(array)
@@ -483,11 +484,14 @@ def find_colour_decoder(stripSpace, decoderName, dataName, picPairs):
         return FrameColours.decoder(Counts, stripSpace, dataName)
     elif decoderName in decoder_element_classes:
         return TwoDColours.decoder(
-            decoder_element_classes[decoderName], dataName
+            decoder_element_classes[decoderName],
+            dataName,
         )
     elif decoderName in indexed_decoder_element_classes:
         return TwoDColours.indexed_decoder(
-            indexed_decoder_element_classes[decoderName], dataName, picPairs
+            indexed_decoder_element_classes[decoderName],
+            dataName,
+            picPairs,
         )
     else:
         return None
@@ -710,7 +714,12 @@ class BlobModel(object):
         return self.lines.get(key, None)
 
     def find_event_bisection(
-        self, unit, time, events, lower_index, upper_index
+        self,
+        unit,
+        time,
+        events,
+        lower_index,
+        upper_index,
     ):
         """Find an event by binary search on time indices"""
         while lower_index <= upper_index:
@@ -742,7 +751,11 @@ class BlobModel(object):
         if unit in self.unitEvents:
             events = self.unitEvents[unit]
             ret = self.find_event_bisection(
-                unit, time, events, 0, len(events) - 1
+                unit,
+                time,
+                events,
+                0,
+                len(events) - 1,
             )
 
             return ret
@@ -867,7 +880,7 @@ class BlobModel(object):
                 l = f.readline()
 
         match_line_re = re.compile(
-            "^\s*(\d+):\s*([\w\.]+):\s*(Minor\w+:)?\s*(.*)$"
+            "^\s*(\d+):\s*([\w\.]+):\s*(Minor\w+:)?\s*(.*)$",
         )
 
         # Parse each line of the events file, accumulating comments to be
@@ -880,7 +893,9 @@ class BlobModel(object):
                 event_time = int(event_time)
 
                 unit = re.sub(
-                    "^" + self.unitNamePrefix + "\.?(.*)$", "\\1", unit
+                    "^" + self.unitNamePrefix + "\.?(.*)$",
+                    "\\1",
+                    unit,
                 )
 
                 # When the time changes, resolve comments
@@ -1013,7 +1028,7 @@ class BlobModel(object):
                             start + offset,
                             direc=direc,
                             size=(Point(1, 1) + arrow_point - start),
-                        )
+                        ),
                     )
                 else:
                     print("Bad arrow", start)
@@ -1034,11 +1049,11 @@ class BlobModel(object):
                 char = pic_at(point)
                 if char == "->":
                     self.add_blob(
-                        blobs.Arrow("_", point + offset, direc="right")
+                        blobs.Arrow("_", point + offset, direc="right"),
                     )
                 elif char == "<-":
                     self.add_blob(
-                        blobs.Arrow("_", point + offset, direc="left")
+                        blobs.Arrow("_", point + offset, direc="left"),
                     )
                 elif char == "-\\" or char == "/-":
                     find_arrow(point)
@@ -1056,7 +1071,7 @@ class BlobModel(object):
                                     nameDict.get(char, "_"),
                                     topLeft,
                                     size=size,
-                                )
+                                ),
                             )
                         else:
                             # Named blobs, set visual info.
@@ -1114,7 +1129,10 @@ class BlobModel(object):
                     dataElement = pairs.get("dataElement", decoderName)
 
                     decoder = find_colour_decoder(
-                        ret.blankStrips, decoderName, dataElement, pairs
+                        ret.blankStrips,
+                        decoderName,
+                        dataElement,
+                        pairs,
                     )
                     if decoder is not None:
                         ret.visualDecoder = decoder
@@ -1196,7 +1214,8 @@ class BlobModel(object):
                 picture.append(re.sub("\s*$", "", l))
             else:
                 line_match = re.match(
-                    "^([a-zA-Z0-9][a-zA-Z0-9]):\s+([\w.]+)\s*(.*)", l
+                    "^([a-zA-Z0-9][a-zA-Z0-9]):\s+([\w.]+)\s*(.*)",
+                    l,
                 )
                 macro_match = re.match("macro\s+(\w+):(.*)", l)
 
@@ -1206,7 +1225,10 @@ class BlobModel(object):
                 elif line_match is not None:
                     char, unit, pairs = line_match.groups()
                     blob = parse_blob_description(
-                        char, unit, macros, parse.parse_pairs_list(pairs)
+                        char,
+                        unit,
+                        macros,
+                        parse.parse_pairs_list(pairs),
                     )
                     blob_char_dict[char] = blob
                     # Setup the events structure

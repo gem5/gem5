@@ -47,7 +47,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("modpath", help="module the simobject belongs to")
 parser.add_argument("param_cc", help="parameter cc file to generate")
 parser.add_argument(
-    "use_python", help="whether python is enabled in gem5 (True or False)"
+    "use_python",
+    help="whether python is enabled in gem5 (True or False)",
 )
 
 args = parser.parse_args()
@@ -80,7 +81,7 @@ py_class_name = sim_object.pybind_class
 # will also be inherited from the base class's param struct
 # here). Sort the params based on their key
 params = list(
-    map(lambda k_v: k_v[1], sorted(sim_object._params.local.items()))
+    map(lambda k_v: k_v[1], sorted(sim_object._params.local.items())),
 )
 ports = sim_object._ports.local
 
@@ -99,7 +100,7 @@ if use_python:
 
 #include "${{sim_object.cxx_header}}"
 
-"""
+""",
     )
 else:
     code(
@@ -111,7 +112,7 @@ else:
 
 #include "${{sim_object.cxx_header}}"
 
-"""
+""",
     )
 # only include the python params code if python is enabled.
 if use_python:
@@ -128,7 +129,7 @@ static void
 module_init(py::module_ &m_internal)
 {
 py::module_ m = m_internal.def_submodule("param_${sim_object}");
-"""
+""",
     )
     code.indent()
     if sim_object._base:
@@ -136,13 +137,13 @@ py::module_ m = m_internal.def_submodule("param_${sim_object}");
             "py::class_<${sim_object}Params, "
             "${{sim_object._base.type}}Params, "
             "std::unique_ptr<${{sim_object}}Params, py::nodelete>>("
-            'm, "${sim_object}Params")'
+            'm, "${sim_object}Params")',
         )
     else:
         code(
             "py::class_<${sim_object}Params, "
             "std::unique_ptr<${sim_object}Params, py::nodelete>>("
-            'm, "${sim_object}Params")'
+            'm, "${sim_object}Params")',
         )
 
     code.indent()
@@ -186,13 +187,13 @@ py::module_ m = m_internal.def_submodule("param_${sim_object}");
         code(
             "py::class_<${{sim_object.cxx_class}}, ${base_str}, "
             "std::unique_ptr<${{sim_object.cxx_class}}, py::nodelete>>("
-            'm, "${py_class_name}")'
+            'm, "${py_class_name}")',
         )
     else:
         code(
             "py::class_<${{sim_object.cxx_class}}, "
             "std::unique_ptr<${{sim_object.cxx_class}}, py::nodelete>>("
-            'm, "${py_class_name}")'
+            'm, "${py_class_name}")',
         )
     code.indent()
     for exp in sim_object.cxx_exports:
@@ -288,7 +289,7 @@ Dummy${sim_object}Shunt<${{sim_object.cxx_class}}>::Params::create() const
 }
 
 } // namespace gem5
-"""
+""",
         )
 
 code.write(args.param_cc)

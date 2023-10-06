@@ -119,7 +119,7 @@ style_ignores = [
     # code
     _re_only(
         "^((.*\/)?(SConscript|SConstruct)|"
-        ".*\.(c|h|cc|hh|cpp|hpp|isa|proto))$"
+        ".*\.(c|h|cc|hh|cpp|hpp|isa|proto))$",
     ),
 ]
 

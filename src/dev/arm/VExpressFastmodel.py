@@ -38,7 +38,7 @@ class VExpressFastmodel(VExpress_GEM5_Base):
             reg_base=0x2C000000,
             reg_base_per_redistributor="0.0.0.0=0x2c010000",
             spi_count=988,
-        )
+        ),
     )
 
     hdlcd = HDLcd(

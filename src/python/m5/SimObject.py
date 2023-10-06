@@ -118,7 +118,8 @@ noCxxHeader = False
 
 def public_value(key, value):
     return key.startswith("_") or isinstance(
-        value, (FunctionType, MethodType, ModuleType, classmethod, type)
+        value,
+        (FunctionType, MethodType, ModuleType, classmethod, type),
     )
 
 
@@ -223,7 +224,7 @@ class MetaSimObject(type):
                 bTotal += 1
             if bTotal > 1:
                 raise TypeError(
-                    "SimObjects do not support multiple inheritance"
+                    "SimObjects do not support multiple inheritance",
                 )
 
         base = bases[0]
@@ -294,7 +295,7 @@ class MetaSimObject(type):
     def _set_keyword(cls, keyword, val, kwtype):
         if not isinstance(val, kwtype):
             raise TypeError(
-                f"keyword {keyword} has bad type {type(val)} (expecting {kwtype})"
+                f"keyword {keyword} has bad type {type(val)} (expecting {kwtype})",
             )
         if isinstance(val, FunctionType):
             val = classmethod(val)
@@ -389,7 +390,7 @@ class MetaSimObject(type):
             raise RuntimeError(
                 "cannot set SimObject parameter '%s' after\n"
                 "    class %s has been instantiated or subclassed"
-                % (attr, cls.__name__)
+                % (attr, cls.__name__),
             )
 
         # check for param
@@ -429,7 +430,7 @@ class MetaSimObject(type):
             return getattr(cls.getCCClass(), attr)
         except AttributeError:
             raise AttributeError(
-                f"object '{cls.__name__}' has no attribute '{attr}'"
+                f"object '{cls.__name__}' has no attribute '{attr}'",
             )
 
     def __str__(cls):
@@ -567,12 +568,12 @@ class SimObjectCliWrapper(object):
                     setattr(sim_object, key, val)
                 else:
                     raise SimObjectCliWrapperException(
-                        "tried to set or unsettableobject parameter: " + key
+                        "tried to set or unsettableobject parameter: " + key,
                     )
             else:
                 raise SimObjectCliWrapperException(
                     "tried to set or access non-existent"
-                    "object parameter: " + key
+                    "object parameter: " + key,
                 )
 
     def __getitem__(self, idx):
@@ -589,7 +590,7 @@ class SimObjectCliWrapper(object):
                 _range = range(idx, idx + 1)
             elif not isinstance(idx, slice):
                 raise SimObjectCliWrapperException(
-                    "invalid index type: " + repr(idx)
+                    "invalid index type: " + repr(idx),
                 )
             for sim_object in self._sim_objects:
                 if isinstance(idx, slice):
@@ -650,7 +651,9 @@ class SimObject(object, metaclass=MetaSimObject):
                     next_cmdline_str = next_cmdline_str + "."
                     next_access_str = next_access_str + "."
                 flags_dict = child.enumerateParams(
-                    flags_dict, next_cmdline_str, next_access_str
+                    flags_dict,
+                    next_cmdline_str,
+                    next_access_str,
                 )
 
             # Go through the simple params in the simobject in this level
@@ -673,7 +676,8 @@ class SimObject(object, metaclass=MetaSimObject):
                         keys in self._hr_values
                         and keys in self._values
                         and not isinstance(
-                            self._values[keys], m5.proxy.BaseProxy
+                            self._values[keys],
+                            m5.proxy.BaseProxy,
                         )
                     ):
                         cmd_str = cmd_line_str + keys
@@ -770,7 +774,7 @@ class SimObject(object, metaclass=MetaSimObject):
         if not self._init_called:
             raise RuntimeError(
                 f"{str(self.__class__)} is missing a call "
-                "to super().__init__()"
+                "to super().__init__()",
             )
 
     # "Clone" the current instance by creating another instance of
@@ -787,7 +791,7 @@ class SimObject(object, metaclass=MetaSimObject):
                 raise RuntimeError(
                     "attempt to clone object %s "
                     "not at the root of a tree (parent = %s)"
-                    % (self, self._parent)
+                    % (self, self._parent),
                 )
             # create a new dict and use that.
             memo_dict = {}
@@ -905,7 +909,7 @@ class SimObject(object, metaclass=MetaSimObject):
 
         # no valid assignment... raise exception
         raise AttributeError(
-            f"Class {self.__class__.__name__} has no parameter {attr}"
+            f"Class {self.__class__.__name__} has no parameter {attr}",
         )
 
     # this hack allows tacking a '[0]' onto parameters that may or may
@@ -958,7 +962,7 @@ class SimObject(object, metaclass=MetaSimObject):
         if child.has_parent():
             warn(
                 f"{self}.{name} already has parent not resetting parent.\n"
-                f"\tNote: {name} is not a parameter of {type(self).__name__}"
+                f"\tNote: {name} is not a parameter of {type(self).__name__}",
             )
             warn(f"(Previously declared as {child._parent}.{name}")
             return
@@ -1029,7 +1033,7 @@ class SimObject(object, metaclass=MetaSimObject):
                 if found_obj != None and child != found_obj:
                     raise AttributeError(
                         "parent.any matched more than one: %s %s"
-                        % (found_obj.path, child.path)
+                        % (found_obj.path, child.path),
                     )
                 found_obj = child
         # search param space
@@ -1039,7 +1043,7 @@ class SimObject(object, metaclass=MetaSimObject):
                 if found_obj != None and found_obj != match_obj:
                     raise AttributeError(
                         "parent.any matched more than one: %s and %s"
-                        % (found_obj.path, match_obj.path)
+                        % (found_obj.path, match_obj.path),
                     )
                 found_obj = match_obj
         return found_obj, found_obj != None
@@ -1086,7 +1090,7 @@ class SimObject(object, metaclass=MetaSimObject):
                     value = value.unproxy(self)
                 except:
                     print(
-                        f"Error in unproxying param '{param}' of {self.path()}"
+                        f"Error in unproxying param '{param}' of {self.path()}",
                     )
                     raise
                 setattr(self, param, value)
@@ -1238,7 +1242,7 @@ class SimObject(object, metaclass=MetaSimObject):
                 self._ccObject = params.create()
         elif self._ccObject == -1:
             raise RuntimeError(
-                f"{self.path()}: Cycle found in configuration hierarchy."
+                f"{self.path()}: Cycle found in configuration hierarchy.",
             )
         return self._ccObject
 

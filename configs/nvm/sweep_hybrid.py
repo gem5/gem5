@@ -86,11 +86,17 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--rd-perc", type=int, default=100, help="Percentage of read commands"
+    "--rd-perc",
+    type=int,
+    default=100,
+    help="Percentage of read commands",
 )
 
 parser.add_argument(
-    "--nvm-perc", type=int, default=100, help="Percentage of NVM commands"
+    "--nvm-perc",
+    type=int,
+    default=100,
+    help="Percentage of NVM commands",
 )
 
 parser.add_argument(
@@ -117,7 +123,8 @@ args = parser.parse_args()
 # which amounts to 42.7 GByte/s per layer and thus per port
 system = System(membus=IOXBar(width=32))
 system.clk_domain = SrcClockDomain(
-    clock="2.0GHz", voltage_domain=VoltageDomain(voltage="1V")
+    clock="2.0GHz",
+    voltage_domain=VoltageDomain(voltage="1V"),
 )
 
 # set 2 ranges, the first, smaller range for DDR
@@ -173,7 +180,7 @@ burst_size_dram = int(
         * system.mem_ctrls[0].dram.device_bus_width.value
         * system.mem_ctrls[0].dram.burst_length.value
     )
-    / 8
+    / 8,
 )
 
 # next, get the page size in bytes
@@ -192,7 +199,7 @@ burst_size_nvm = int(
         * system.mem_ctrls[0].nvm.device_bus_width.value
         * system.mem_ctrls[0].nvm.burst_length.value
     )
-    / 8
+    / 8,
 )
 
 
@@ -251,7 +258,7 @@ def trace():
     generator = hybrid_generators[args.mode](system.tgen)
     for stride_size in range(burst_size, max_stride + 1, burst_size):
         num_seq_pkts_dram = int(
-            math.ceil(float(stride_size) / burst_size_dram)
+            math.ceil(float(stride_size) / burst_size_dram),
         )
         num_seq_pkts_nvm = int(math.ceil(float(stride_size) / burst_size_nvm))
         yield generator(

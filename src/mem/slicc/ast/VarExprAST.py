@@ -54,7 +54,8 @@ class VarExprAST(ExprAST):
 
         if not expected_type:
             self.error(
-                "There must be a type '%s' declared in this scope", type_ident
+                "There must be a type '%s' declared in this scope",
+                type_ident,
             )
 
         if self.var.type != expected_type:

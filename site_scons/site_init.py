@@ -45,7 +45,7 @@ except SystemExit as e:
         """
 For more details, see:
     http://gem5.org/documentation/general_docs/building
-"""
+""",
     )
     raise
 
@@ -81,7 +81,7 @@ Python 3 environment,
 
 (Optional) For convenience reasons, you can set up an alias for the Python3 \
 scons phrase in your environment. \033[0m
-"""
+""",
     )
     raise
 

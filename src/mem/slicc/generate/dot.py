@@ -36,7 +36,7 @@ def printDotty(sm, code):
 
         code("${{t.getStateShorthand()}} -> ${{t.getNextStateShorthand()}")
         code(
-            '    [label="${{t.getEventShorthand()}}/${{t.getActionShorthands()}}"'
+            '    [label="${{t.getEventShorthand()}}/${{t.getActionShorthands()}}"',
         )
     code.dedent()
     code("}")

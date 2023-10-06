@@ -46,7 +46,7 @@ def run_single_job(run):
     finish_time = time.time()
     print(
         f"Finished {' '.join(run.command)} at {time.time()}. "
-        f"Total time = {finish_time - start_time}"
+        f"Total time = {finish_time - start_time}",
     )
 
 

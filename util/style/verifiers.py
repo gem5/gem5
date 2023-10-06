@@ -180,7 +180,9 @@ class Verifier(object, metaclass=ABCMeta):
                     self.fix(filename, regions)
                 else:
                     result = self.ui.prompt(
-                        "(a)bort, (i)gnore, or (f)ix?", "aif", "a"
+                        "(a)bort, (i)gnore, or (f)ix?",
+                        "aif",
+                        "a",
                     )
                     if result == "f":
                         self.fix(filename, regions)
@@ -244,7 +246,7 @@ class LineVerifier(Verifier):
                 if not silent:
                     self.ui.write(
                         "invalid %s in %s:%d\n"
-                        % (self.test_name, filename, num + 1)
+                        % (self.test_name, filename, num + 1),
                     )
                     if self.ui.verbose:
                         self.ui.write(f">>{s_line[:-1]}<<\n")
@@ -293,7 +295,7 @@ class Whitespace(LineVerifier):
     """
 
     languages = set(
-        ("C", "C++", "swig", "python", "asm", "isa", "scons", "make", "dts")
+        ("C", "C++", "swig", "python", "asm", "isa", "scons", "make", "dts"),
     )
     trail_only = set(("make", "dts"))
 
@@ -372,7 +374,7 @@ class SortedIncludes(Verifier):
                 self.ui.write(
                     "invalid sorting of includes in %s. Note: If "
                     "there is more than one empty line under the "
-                    "#include region, please reduce it to one.\n" % (filename)
+                    "#include region, please reduce it to one.\n" % (filename),
                 )
                 if self.ui.verbose:
                     for start, end in modified.regions:
@@ -444,7 +446,7 @@ class ControlCharacters(LineVerifier):
     opt_name = "ascii"
 
     invalid = "".join(
-        [chr(i) for i in range(0, 0x20) if chr(i) not in ("\n", "\t")]
+        [chr(i) for i in range(0, 0x20) if chr(i) not in ("\n", "\t")],
     )
 
     def check_line(self, line, **kwargs):
@@ -472,7 +474,7 @@ class BoolCompare(LineVerifier):
             else:
                 self.ui.write(
                     "Warning: cannot automatically fix "
-                    "comparisons with false/False.\n"
+                    "comparisons with false/False.\n",
                 )
         return line
 
@@ -530,7 +532,7 @@ class StructureBraces(LineVerifier):
         + regex_avoid
         + regex_name
         + "\{"
-        + regex_extra
+        + regex_extra,
     )
 
     def check_line(self, line, **kwargs):

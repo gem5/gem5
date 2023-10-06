@@ -48,7 +48,7 @@ from m5.objects import ArmDefaultRelease
 from m5.objects import VExpress_GEM5_Foundation
 
 parser = argparse.ArgumentParser(
-    description="A script to run the ARM boot exit tests."
+    description="A script to run the ARM boot exit tests.",
 )
 
 parser.add_argument(
@@ -118,7 +118,9 @@ elif args.mem_system == "classic":
     )
 
     cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-        l1d_size="32KiB", l1i_size="32KiB", l2_size="512KiB"
+        l1d_size="32KiB",
+        l1i_size="32KiB",
+        l2_size="512KiB",
     )
 
 elif args.mem_system == "chi":
@@ -157,7 +159,7 @@ elif args.mem_system == "mi_example":
     cache_hierarchy = MIExampleCacheHierarchy(size="32kB", assoc=4)
 else:
     raise NotImplementedError(
-        f"Memory type '{args.mem_system}' is not supported in the boot tests."
+        f"Memory type '{args.mem_system}' is not supported in the boot tests.",
     )
 
 # Setup the system memory.
@@ -170,7 +172,9 @@ memory = memory_class(size="4GiB")
 cpu_type = get_cpu_type_from_str(args.cpu)
 
 processor = SimpleProcessor(
-    cpu_type=cpu_type, num_cores=args.num_cpus, isa=ISA.ARM
+    cpu_type=cpu_type,
+    num_cores=args.num_cpus,
+    isa=ISA.ARM,
 )
 
 
@@ -220,5 +224,5 @@ print(
     "Exiting @ tick {} because {}.".format(
         simulator.get_current_tick(),
         simulator.get_last_exit_event_cause(),
-    )
+    ),
 )

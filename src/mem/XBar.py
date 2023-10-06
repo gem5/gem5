@@ -49,16 +49,18 @@ class BaseXBar(ClockedObject):
     cxx_class = "gem5::BaseXBar"
 
     cpu_side_ports = VectorResponsePort(
-        "Vector port for connecting mem side ports"
+        "Vector port for connecting mem side ports",
     )
     slave = DeprecatedParam(
-        cpu_side_ports, "`slave` is now called `cpu_side_ports`"
+        cpu_side_ports,
+        "`slave` is now called `cpu_side_ports`",
     )
     mem_side_ports = VectorRequestPort(
-        "Vector port for connecting cpu side ports"
+        "Vector port for connecting cpu side ports",
     )
     master = DeprecatedParam(
-        mem_side_ports, "`master` is now called `mem_side_ports`"
+        mem_side_ports,
+        "`master` is now called `mem_side_ports`",
     )
 
     # Latencies governing the time taken for the variuos paths a
@@ -96,7 +98,8 @@ class BaseXBar(ClockedObject):
     # a two-level hierarchical lookup. This is useful e.g. for the PCI
     # xbar configuration.
     use_default_range = Param.Bool(
-        False, "Perform address mapping for the default port"
+        False,
+        "Perform address mapping for the default port",
     )
 
 
@@ -128,12 +131,14 @@ class CoherentXBar(BaseXBar):
     # already committed to responding, by establishing if the crossbar
     # is the point of coherency or not.
     point_of_coherency = Param.Bool(
-        False, "Consider this crossbar the point of coherency"
+        False,
+        "Consider this crossbar the point of coherency",
     )
 
     # Specify whether this crossbar is the point of unification.
     point_of_unification = Param.Bool(
-        False, "Consider this crossbar the point of unification"
+        False,
+        "Consider this crossbar the point of unification",
     )
 
     system = Param.System(Parent.any, "System that the crossbar belongs to.")

@@ -43,7 +43,7 @@ mock_config_json = {
         "baba": {
             "url": mock_json_path,
             "isMongo": False,
-        }
+        },
     },
 }
 
@@ -78,7 +78,8 @@ class TestObtainResourcesCheck(unittest.TestCase):
         self.assertEquals("1.7.0", resource.get_resource_version())
         self.assertIsInstance(resource, BinaryResource)
         self.assertEquals(
-            "test description v1.7.0", resource.get_description()
+            "test description v1.7.0",
+            resource.get_description(),
         )
         self.assertEquals("src/test-source", resource.get_source())
         self.assertEquals(ISA.ARM, resource.get_architecture())
@@ -93,7 +94,8 @@ class TestObtainResourcesCheck(unittest.TestCase):
         self.assertEquals("1.5.0", resource.get_resource_version())
         self.assertIsInstance(resource, BinaryResource)
         self.assertEquals(
-            "test description for 1.5.0", resource.get_description()
+            "test description for 1.5.0",
+            resource.get_description(),
         )
         self.assertEquals("src/test-source", resource.get_source())
         self.assertEquals(ISA.ARM, resource.get_architecture())
@@ -117,7 +119,8 @@ class TestObtainResourcesCheck(unittest.TestCase):
         self.assertEquals("1.5.0", resource.get_resource_version())
         self.assertIsInstance(resource, BinaryResource)
         self.assertEquals(
-            "test description for 1.5.0", resource.get_description()
+            "test description for 1.5.0",
+            resource.get_description(),
         )
         self.assertEquals("src/test-source", resource.get_source())
         self.assertEquals(ISA.ARM, resource.get_architecture())
@@ -131,7 +134,7 @@ class TestObtainResourcesCheck(unittest.TestCase):
             )
         self.assertTrue(
             "Resource with ID 'invalid-id' not found."
-            in str(context.exception)
+            in str(context.exception),
         )
 
     def test_obtain_resources_with_version_invalid_id(self):
@@ -144,7 +147,7 @@ class TestObtainResourcesCheck(unittest.TestCase):
             )
         self.assertTrue(
             "Resource with ID 'invalid-id' not found."
-            in str(context.exception)
+            in str(context.exception),
         )
 
     def test_obtain_resources_with_version_invalid_version(self):
@@ -158,5 +161,5 @@ class TestObtainResourcesCheck(unittest.TestCase):
             f"Resource test-binary-resource with version '3.0.0'"
             " not found.\nResource versions can be found at: "
             f"https://resources.gem5.org/resources/test-binary-resource/versions"
-            in str(context.exception)
+            in str(context.exception),
         )

@@ -52,7 +52,10 @@ generator = LinearGenerator(
     max_addr=memory.get_size(),
 )
 board = TestBoard(
-    clk_freq="3GHz", generator=generator, memory=memory, cache_hierarchy=None
+    clk_freq="3GHz",
+    generator=generator,
+    memory=memory,
+    cache_hierarchy=None,
 )
 
 root = Root(full_system=False, system=board)

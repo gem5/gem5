@@ -102,7 +102,8 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
             core.connect_dcache(cache.sequencer.in_ports)
 
             core.connect_walker_ports(
-                cache.sequencer.in_ports, cache.sequencer.in_ports
+                cache.sequencer.in_ports,
+                cache.sequencer.in_ports,
             )
 
             # Connect the interrupt ports
@@ -134,7 +135,8 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
             dma_ports = board.get_dma_ports()
             for i, port in enumerate(dma_ports):
                 ctrl = DMAController(
-                    self.ruby_system.network, board.get_cache_line_size()
+                    self.ruby_system.network,
+                    board.get_cache_line_size(),
                 )
                 ctrl.dma_sequencer = DMASequencer(version=i, in_ports=port)
 
@@ -144,7 +146,7 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
                 self._dma_controllers.append(ctrl)
 
         self.ruby_system.num_of_sequencers = len(self._controllers) + len(
-            self._dma_controllers
+            self._dma_controllers,
         )
 
         # Connect the controllers.
@@ -157,7 +159,7 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
         self.ruby_system.network.connectControllers(
             self._controllers
             + self._directory_controllers
-            + self._dma_controllers
+            + self._dma_controllers,
         )
         self.ruby_system.network.setup_buffers()
 

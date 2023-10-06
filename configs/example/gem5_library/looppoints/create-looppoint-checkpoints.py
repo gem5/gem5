@@ -65,7 +65,7 @@ from gem5.utils.requires import requires
 requires(isa_required=ISA.X86)
 
 parser = argparse.ArgumentParser(
-    description="An example looppoint workload file path"
+    description="An example looppoint workload file path",
 )
 
 # The lone arguments is a file path to a directory to store the checkpoints.
@@ -109,7 +109,7 @@ board = SimpleBoard(
 )
 
 board.set_workload(
-    obtain_resource("x86-matrix-multiply-omp-100-8-looppoint-csv")
+    obtain_resource("x86-matrix-multiply-omp-100-8-looppoint-csv"),
 )
 
 dir = Path(args.checkpoint_path)
@@ -128,7 +128,7 @@ simulator = Simulator(
             # pairs in the LoopPoint data file have been encountered. Default
             # as True.
             exit_when_empty=True,
-        )
+        ),
     },
 )
 

@@ -53,11 +53,13 @@ class CopyEngine(PciDevice):
 
     ChanCnt = Param.UInt8(4, "Number of DMA channels that exist on device")
     XferCap = Param.MemorySize(
-        "4KiB", "Number of bits of transfer size that are supported"
+        "4KiB",
+        "Number of bits of transfer size that are supported",
     )
 
     latBeforeBegin = Param.Latency(
-        "20ns", "Latency after a DMA command is seen before it's proccessed"
+        "20ns",
+        "Latency after a DMA command is seen before it's proccessed",
     )
     latAfterCompletion = Param.Latency(
         "20ns",

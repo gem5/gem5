@@ -57,7 +57,7 @@ requires(isa_required=ISA.X86)
 
 parser = argparse.ArgumentParser(
     description="A script to run the PARSEC benchmarks on a basic X86 full "
-    "system."
+    "system.",
 )
 
 parser.add_argument(
@@ -148,7 +148,9 @@ if args.mem_system == "classic":
     )
 
     cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-        l1d_size="32kB", l1i_size="32kB", l2_size="256kB"
+        l1d_size="32kB",
+        l1i_size="32kB",
+        l2_size="256kB",
     )
 elif args.mem_system == "mesi_two_level":
     from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
@@ -201,10 +203,12 @@ command = (
 
 board.set_kernel_disk_workload(
     kernel=obtain_resource(
-        "x86-linux-kernel-5.4.49", resource_directory=args.resource_directory
+        "x86-linux-kernel-5.4.49",
+        resource_directory=args.resource_directory,
     ),
     disk_image=obtain_resource(
-        "x86-parsec", resource_directory=args.resource_directory
+        "x86-parsec",
+        resource_directory=args.resource_directory,
     ),
     readfile_contents=command,
 )
@@ -245,6 +249,6 @@ print("Performance statistics:")
 
 print(f"Simulated time in ROI: {roi_ticks[0] / 1000000000000.0}s")
 print(
-    f"Ran a total of {simulator.get_current_tick() / 1000000000000.0} simulated seconds"
+    f"Ran a total of {simulator.get_current_tick() / 1000000000000.0} simulated seconds",
 )
 print(f"Total wallclock time: {global_time}s, {global_time / 60} min")

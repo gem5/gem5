@@ -82,10 +82,10 @@ t16_inst = make_implicant("1_00xx__xxxx_xxxx_xxxx_xxxx__xxxx_xxxx_xxxx_xxxx")
 any_inst = make_implicant("x_xxxx__xxxx_xxxx_xxxx_xxxx__xxxx_xxxx_xxxx_xxxx")
 #                          | ||
 any_a64_inst = make_implicant(
-    "x_x1xx__xxxx_xxxx_xxxx_xxxx__xxxx_xxxx_xxxx_xxxx"
+    "x_x1xx__xxxx_xxxx_xxxx_xxxx__xxxx_xxxx_xxxx_xxxx",
 )
 any_non_a64_inst = make_implicant(
-    "x_x0xx__xxxx_xxxx_xxxx_xxxx__xxxx_xxxx_xxxx_xxxx"
+    "x_x0xx__xxxx_xxxx_xxxx_xxxx__xxxx_xxxx_xxxx_xxxx",
 )
 
 
@@ -602,7 +602,7 @@ sdiv_lat_expr = expr_top(
                 bin("UDiv", ref("left_minus_right"), literal(4)),
             ),
         ),
-    )
+    ),
 )
 
 sdiv_lat_expr64 = expr_top(
@@ -652,7 +652,7 @@ sdiv_lat_expr64 = expr_top(
                 bin("UDiv", ref("left_minus_right"), literal(4)),
             ),
         ),
-    )
+    ),
 )
 
 
@@ -982,7 +982,7 @@ udiv_lat_expr = expr_top(
             literal(0),
             bin("UDiv", ref("left_minus_right"), literal(4)),
         ),
-    )
+    ),
 )
 
 
@@ -1433,7 +1433,7 @@ class HPI_FloatSimdFU(MinorFU):
             "SimdFloatMultAcc",
             "SimdFloatMatMultAcc",
             "SimdFloatSqrt",
-        ]
+        ],
     )
 
     timings = [
@@ -1649,7 +1649,7 @@ class HPI_IntDivFU(MinorFU):
 
 class HPI_MemFU(MinorFU):
     opClasses = minorMakeOpClassSet(
-        ["MemRead", "MemWrite", "FloatMemRead", "FloatMemWrite"]
+        ["MemRead", "MemWrite", "FloatMemRead", "FloatMemWrite"],
     )
     timings = [HPI_DefaultMem(), HPI_DefaultMem64()]
     opLat = 1

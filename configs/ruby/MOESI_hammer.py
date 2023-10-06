@@ -61,7 +61,9 @@ def define_options(parser):
         help="allow migratory sharing for atomic only accessed blocks",
     )
     parser.add_argument(
-        "--pf-on", action="store_true", help="Hammer: enable Probe Filter"
+        "--pf-on",
+        action="store_true",
+        help="Hammer: enable Probe Filter",
     )
     parser.add_argument(
         "--dir-on",
@@ -71,7 +73,13 @@ def define_options(parser):
 
 
 def create_system(
-    options, full_system, system, dma_ports, bootmem, ruby_system, cpus
+    options,
+    full_system,
+    system,
+    dma_ports,
+    bootmem,
+    ruby_system,
+    cpus,
 ):
     if buildEnv["PROTOCOL"] != "MOESI_hammer":
         panic("This script requires the MOESI_hammer protocol to be built.")
@@ -189,11 +197,15 @@ def create_system(
     # the ruby system
     # clk_divider value is a fix to pass regression.
     ruby_system.memctrl_clk_domain = DerivedClockDomain(
-        clk_domain=ruby_system.clk_domain, clk_divider=3
+        clk_domain=ruby_system.clk_domain,
+        clk_divider=3,
     )
 
     mem_dir_cntrl_nodes, rom_dir_cntrl_node = create_directories(
-        options, bootmem, ruby_system, system
+        options,
+        bootmem,
+        ruby_system,
+        system,
     )
     dir_cntrl_nodes = mem_dir_cntrl_nodes[:]
     if rom_dir_cntrl_node is not None:
@@ -234,7 +246,9 @@ def create_system(
         # Create the Ruby objects associated with the dma controller
         #
         dma_seq = DMASequencer(
-            version=i, ruby_system=ruby_system, in_ports=dma_port
+            version=i,
+            ruby_system=ruby_system,
+            in_ports=dma_port,
         )
 
         dma_cntrl = DMA_Controller(

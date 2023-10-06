@@ -49,14 +49,15 @@ class ScmiChannel(SimObject):
     cxx_header = "dev/arm/css/scmi_platform.hh"
     cxx_class = "gem5::scmi::VirtualChannel"
     shmem_range = Param.AddrRange(
-        "Virtual channel's shared memory address range"
+        "Virtual channel's shared memory address range",
     )
     phys_id = Param.Unsigned(4, "Physical slot of the channel")
     virt_id = Param.Unsigned(
-        0, "Virtual slot of the channel (within the physical)"
+        0,
+        "Virtual slot of the channel (within the physical)",
     )
     doorbell = Param.Doorbell(
-        "This is the doorbell used to notify the SCMI platform"
+        "This is the doorbell used to notify the SCMI platform",
     )
 
     def __init__(self, shmem, *args, **kwargs):
@@ -67,8 +68,9 @@ class ScmiChannel(SimObject):
             shmem_node.appendCompatible(["arm,scmi-shmem"])
             shmem_node.append(
                 FdtPropertyWords(
-                    "reg", state.addrCells(0) + state.sizeCells(0x200)
-                )
+                    "reg",
+                    state.addrCells(0) + state.sizeCells(0x200),
+                ),
             )
             # shmem_node.appendPhandle(self._parent.unproxy(self).channel)
             shmem_node.appendPhandle("scmi_virt" + str(self.virt_id))
@@ -121,7 +123,8 @@ class ScmiPlatform(Scp):
 
     comms = VectorParam.ScmiCommunication([], "SCMI Communications")
     agents = VectorParam.String(
-        ["OSPM"], "Vector of SCMI agents (names) in the system"
+        ["OSPM"],
+        "Vector of SCMI agents (names) in the system",
     )
 
     sys = Param.System(Parent.any, "System object parameter")
@@ -129,7 +132,8 @@ class ScmiPlatform(Scp):
 
     # Protocol params
     base_vendor = Param.String(
-        "arm", "Return string for the Base protocol DISCOVER_VENDOR command"
+        "arm",
+        "Return string for the Base protocol DISCOVER_VENDOR command",
     )
     base_subvendor = Param.String(
         "gem5",
@@ -156,10 +160,12 @@ class ScmiPlatform(Scp):
         shmem_phandles = []
         for comm in self.unproxy(self).comms:
             shmem_phandles.append(
-                state.phandle("scmi_virt" + str(comm.agent_channel.virt_id))
+                state.phandle("scmi_virt" + str(comm.agent_channel.virt_id)),
             )
             shmem_phandles.append(
-                state.phandle("scmi_virt" + str(comm.platform_channel.virt_id))
+                state.phandle(
+                    "scmi_virt" + str(comm.platform_channel.virt_id),
+                ),
             )
 
         phys_channel = 1  # HP-NonSecure

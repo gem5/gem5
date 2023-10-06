@@ -75,7 +75,8 @@ class QemuFwCfg(PioDevice):
     abstract = True
 
     items = VectorParam.QemuFwCfgItem(
-        [], "Items exported by the firmware config device"
+        [],
+        "Items exported by the firmware config device",
     )
 
 
@@ -99,5 +100,5 @@ class QemuFwCfgMmio(QemuFwCfg):
 
     # The data register is 8, 16, 32 or 64 bits wide.
     data_addr_range = Param.AddrRange(
-        "Memory address range for the data register"
+        "Memory address range for the data register",
     )

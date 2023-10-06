@@ -59,19 +59,27 @@ cpu_types_string_map = {
 }
 
 parser = argparse.ArgumentParser(
-    description="A gem5 script for running simple binaries in SE mode."
+    description="A gem5 script for running simple binaries in SE mode.",
 )
 
 parser.add_argument(
-    "resource", type=str, help="The gem5 resource binary to run."
+    "resource",
+    type=str,
+    help="The gem5 resource binary to run.",
 )
 
 parser.add_argument(
-    "cpu", type=str, choices=get_cpu_types_str_set(), help="The CPU type used."
+    "cpu",
+    type=str,
+    choices=get_cpu_types_str_set(),
+    help="The CPU type used.",
 )
 
 parser.add_argument(
-    "isa", type=str, choices=get_isas_str_set(), help="The ISA used"
+    "isa",
+    type=str,
+    choices=get_isas_str_set(),
+    help="The ISA used",
 )
 
 parser.add_argument(
@@ -124,7 +132,8 @@ motherboard = SimpleBoard(
 
 # Set the workload
 binary = obtain_resource(
-    args.resource, resource_directory=args.resource_directory
+    args.resource,
+    resource_directory=args.resource_directory,
 )
 motherboard.set_se_binary_workload(binary, arguments=args.arguments)
 
@@ -134,6 +143,7 @@ simulator.run()
 
 print(
     "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(), simulator.get_last_exit_event_cause()
-    )
+        simulator.get_current_tick(),
+        simulator.get_last_exit_event_cause(),
+    ),
 )

@@ -103,7 +103,11 @@ StatToKey = {
 
 
 def plotLowPStates(
-    plot_dir, stats_fname, bank_util_list, seqbytes_list, delay_list
+    plot_dir,
+    stats_fname,
+    bank_util_list,
+    seqbytes_list,
+    delay_list,
 ):
     """
     plotLowPStates generates plots by parsing statistics output by the DRAM
@@ -167,7 +171,7 @@ def plotLowPStates(
                         state = statistic.split("::")[1]
                         # store the value of the stat in the results dict
                         results[delay][bank_util][seq_bytes][state] = int(
-                            stime
+                            stime,
                         )
                     #### state energy values ####
                     elif line.strip().split()[0] in list(StatToKey.keys()):
@@ -269,7 +273,10 @@ def plotStackedStates(delay, states_list, bottom_state, plot_name, ylabel_str):
             results[delay][bank_util][x][state] for x in seqBytesValues
         ]
         p_states[state] = ax[sub_idx].bar(
-            ind, l_states[state], width, color=StackColors[state]
+            ind,
+            l_states[state],
+            width,
+            color=StackColors[state],
         )
 
         time_sum = l_states[state]

@@ -90,16 +90,28 @@ def test_kvm_switch(cpu: str, num_cpus: int, mem_system: str, length: str):
 #### The quick (pre-submit/Kokoro) tests ####
 
 test_kvm_switch(
-    cpu="atomic", num_cpus=1, mem_system="classic", length=constants.quick_tag
+    cpu="atomic",
+    num_cpus=1,
+    mem_system="classic",
+    length=constants.quick_tag,
 )
 test_kvm_switch(
-    cpu="timing", num_cpus=1, mem_system="classic", length=constants.quick_tag
+    cpu="timing",
+    num_cpus=1,
+    mem_system="classic",
+    length=constants.quick_tag,
 )
 test_kvm_switch(
-    cpu="o3", num_cpus=1, mem_system="classic", length=constants.quick_tag
+    cpu="o3",
+    num_cpus=1,
+    mem_system="classic",
+    length=constants.quick_tag,
 )
 test_kvm_switch(
-    cpu="timing", num_cpus=4, mem_system="classic", length=constants.quick_tag
+    cpu="timing",
+    num_cpus=4,
+    mem_system="classic",
+    length=constants.quick_tag,
 )
 
 ### The long (nightly) tests ####

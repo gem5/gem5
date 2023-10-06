@@ -57,7 +57,10 @@ def convert_time_in_seconds(delta):
 
 
 def add_maintainers_to_change(
-    change, maintainers, maintainers_account_ids, gerrit_api
+    change,
+    maintainers,
+    maintainers_account_ids,
+    gerrit_api,
 ):
     tags, message = parse_commit_subject(change["subject"])
     change_id = change["id"]
@@ -79,7 +82,7 @@ def add_maintainers_to_change(
                 (
                     f"warning: `change-{change_id}` has an unknown tag: "
                     f"`{tag}`"
-                )
+                ),
             )
     for email in maintainer_emails:
         if email in avoid_emails:

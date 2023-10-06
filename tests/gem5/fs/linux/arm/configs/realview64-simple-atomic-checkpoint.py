@@ -39,9 +39,13 @@ from arm_generic import *
 from m5.objects import *
 
 root = LinuxArmFSSystemUniprocessor(
-    mem_mode="atomic", mem_class=SimpleMemory, cpu_class=ArmAtomicSimpleCPU
+    mem_mode="atomic",
+    mem_class=SimpleMemory,
+    cpu_class=ArmAtomicSimpleCPU,
 ).create_root()
 
 run_test = functools.partial(
-    checkpoint.run_test, interval=0.2, max_checkpoints=3
+    checkpoint.run_test,
+    interval=0.2,
+    max_checkpoints=3,
 )

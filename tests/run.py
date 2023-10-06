@@ -214,7 +214,7 @@ exec(
         open(joinpath(tests_root, "configs", test_filename + ".py")).read(),
         joinpath(tests_root, "configs", test_filename + ".py"),
         "exec",
-    )
+    ),
 )
 
 # set default maxtick... script can override
@@ -228,7 +228,7 @@ exec(
         open(joinpath(tests_root, category, mode, name, "test.py")).read(),
         joinpath(tests_root, category, mode, name, "test.py"),
         "exec",
-    )
+    ),
 )
 
 

@@ -47,7 +47,8 @@ class MaltaIO(BasicPioDevice):
         "System time to use (0 for actual time, default is 1/1/06)",
     )
     year_is_bcd = Param.Bool(
-        False, "The RTC should interpret the year as a BCD value"
+        False,
+        "The RTC should interpret the year as a BCD value",
     )
     malta = Param.Malta(Parent.any, "Malta")
     frequency = Param.Frequency("1024Hz", "frequency of interrupts")

@@ -67,7 +67,7 @@ except:
             "--python_out=configs/dram",
             "--proto_path=src/proto",
             "src/proto/packet.proto",
-        ]
+        ],
     )
     if not error:
         print("Generated packet proto definitions")
@@ -111,7 +111,8 @@ args = parser.parse_args()
 # amounts to 42.7 GByte/s per layer and thus per port
 system = System(membus=SystemXBar(width=32))
 system.clk_domain = SrcClockDomain(
-    clock="2.0GHz", voltage_domain=VoltageDomain(voltage="1V")
+    clock="2.0GHz",
+    voltage_domain=VoltageDomain(voltage="1V"),
 )
 
 mem_range = AddrRange(args.mem_size)
@@ -233,7 +234,8 @@ period = int(itt * (max_range / burst_size))
 # now we create the states for each range
 for r in ranges:
     filename = os.path.join(
-        m5.options.outdir, "lat_mem_rd%d.trc.gz" % nxt_range
+        m5.options.outdir,
+        "lat_mem_rd%d.trc.gz" % nxt_range,
     )
 
     if not args.reuse_trace:
@@ -247,7 +249,7 @@ for r in ranges:
     # the measuring states
     for i in range(iterations):
         cfg_file.write(
-            "STATE %d %d TRACE %s 0\n" % (nxt_state, period, filename)
+            "STATE %d %d TRACE %s 0\n" % (nxt_state, period, filename),
         )
         nxt_state = nxt_state + 1
 

@@ -55,7 +55,8 @@ class _TestStreamManager(object):
         if test_result in self._writers:
             raise ValueError("Cannot have multiple writters on a single test.")
         self._writers[test_result] = _TestStreams(
-            test_result.stdout, test_result.stderr
+            test_result.stdout,
+            test_result.stderr,
         )
 
     def get_writer(self, test_result):
@@ -105,7 +106,8 @@ class ResultHandler(object):
         """
         self.directory = directory
         self.internal_results = result.InternalLibraryResults(
-            schedule, directory
+            schedule,
+            directory,
         )
         self.test_stream_manager = _TestStreamManager()
         self._closed = False
@@ -128,7 +130,7 @@ class ResultHandler(object):
 
     def handle_suite_result(self, record):
         suite_result = self.internal_results.get_suite_result(
-            record["metadata"].uid
+            record["metadata"].uid,
         )
         suite_result.result = record["result"]
 
@@ -138,17 +140,18 @@ class ResultHandler(object):
 
     def handle_stderr(self, record):
         self.test_stream_manager.get_writer(
-            self._get_test_result(record)
+            self._get_test_result(record),
         ).stderr.write(record["buffer"])
 
     def handle_stdout(self, record):
         self.test_stream_manager.get_writer(
-            self._get_test_result(record)
+            self._get_test_result(record),
         ).stdout.write(record["buffer"])
 
     def _get_test_result(self, test_record):
         return self.internal_results.get_test_result(
-            test_record["metadata"].uid, test_record["metadata"].suite_uid
+            test_record["metadata"].uid,
+            test_record["metadata"].suite_uid,
         )
 
     def _save(self):
@@ -242,8 +245,9 @@ class SummaryHandler(object):
             if count:
                 strings.append(
                     outcome_fmt.format(
-                        count=count, outcome=state.Result.enums[outcome]
-                    )
+                        count=count,
+                        outcome=state.Result.enums[outcome],
+                    ),
                 )
                 most_severe_outcome = outcome
         string = ",".join(strings)
@@ -258,7 +262,8 @@ class SummaryHandler(object):
             )
         string += " "
         return terminal.insert_separator(
-            string, color=self.colormap[most_severe_outcome] + self.color.Bold
+            string,
+            color=self.colormap[most_severe_outcome] + self.color.Bold,
         )
 
 
@@ -291,7 +296,7 @@ class TerminalHandler(object):
             + name
             + " "
             + state.Result.enums[outcome]
-            + SummaryHandler.reset
+            + SummaryHandler.reset,
         )
 
         if reason is not None:
@@ -303,18 +308,19 @@ class TerminalHandler(object):
     def handle_teststatus(self, record):
         if record["status"] == state.Status.Running:
             log.test_log.debug(
-                "Starting Test Case: %s" % record["metadata"].name
+                "Starting Test Case: %s" % record["metadata"].name,
             )
 
     def handle_testresult(self, record):
         self._display_outcome(
-            "Test: %s" % record["metadata"].name, record["result"].value
+            "Test: %s" % record["metadata"].name,
+            record["result"].value,
         )
 
     def handle_suitestatus(self, record):
         if record["status"] == state.Status.Running:
             log.test_log.debug(
-                "Starting Test Suite: %s " % record["metadata"].name
+                "Starting Test Suite: %s " % record["metadata"].name,
             )
 
     def handle_stderr(self, record):
@@ -333,8 +339,10 @@ class TerminalHandler(object):
         if not self.machine_only or record.data.get("machine_readable", False):
             print(
                 self._colorize(
-                    record["message"], record["level"], record["bold"]
-                )
+                    record["message"],
+                    record["level"],
+                    record["bold"],
+                ),
             )
 
     def _colorize(self, message, level, bold=False):

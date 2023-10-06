@@ -120,7 +120,7 @@ def list_revs(branch, baseline=None, paths=[]):
         query = str(branch)
 
     changes = subprocess.check_output(
-        ["git", "rev-list", query, "--"] + paths
+        ["git", "rev-list", query, "--"] + paths,
     ).decode()
 
     if changes == "":
@@ -136,10 +136,10 @@ def list_changes(upstream, feature, paths=[]):
     upstream_revs = tuple(list_revs(feature, upstream, paths=paths))
 
     feature_cids = dict(
-        [(c.change_id, c) for c in feature_revs if c.change_id is not None]
+        [(c.change_id, c) for c in feature_revs if c.change_id is not None],
     )
     upstream_cids = dict(
-        [(c.change_id, c) for c in upstream_revs if c.change_id is not None]
+        [(c.change_id, c) for c in upstream_revs if c.change_id is not None],
     )
 
     incoming = [
@@ -169,7 +169,7 @@ def _main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="List incoming and outgoing changes in a feature branch"
+        description="List incoming and outgoing changes in a feature branch",
     )
 
     parser.add_argument(
@@ -192,7 +192,9 @@ def _main():
         help="Print changes without Change-Id tags",
     )
     parser.add_argument(
-        "--show-common", action="store_true", help="Print common changes"
+        "--show-common",
+        action="store_true",
+        help="Print common changes",
     )
     parser.add_argument(
         "--deep-search",
@@ -254,7 +256,7 @@ def _main():
                 (c.change_id, c)
                 for c in all_upstream_revs
                 if c.change_id is not None
-            ]
+            ],
         )
         incorrect_outgoing = [
             r for r in outgoing if r.change_id in all_upstream_cids

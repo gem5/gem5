@@ -92,7 +92,8 @@ class TestComprehensive(unittest.TestCase):
         test_resource_version = test_resource["resource_version"]
         # insert resource
         response = self.test_client.post(
-            "/insert", json={"resource": test_resource, "alias": self.alias}
+            "/insert",
+            json={"resource": test_resource, "alias": self.alias},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"status": "Inserted"})
@@ -166,7 +167,8 @@ class TestComprehensive(unittest.TestCase):
         self.assertEqual(response.json, {"exists": False})
         # insert resource
         response = self.test_client.post(
-            "/insert", json={"resource": test_resource, "alias": self.alias}
+            "/insert",
+            json={"resource": test_resource, "alias": self.alias},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"status": "Inserted"})
@@ -204,7 +206,8 @@ class TestComprehensive(unittest.TestCase):
         test_resource_version = test_resource["resource_version"]
         # insert resource
         response = self.test_client.post(
-            "/insert", json={"resource": test_resource, "alias": self.alias}
+            "/insert",
+            json={"resource": test_resource, "alias": self.alias},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"status": "Inserted"})
@@ -235,7 +238,8 @@ class TestComprehensive(unittest.TestCase):
 
         # get resource versions
         response = self.test_client.post(
-            "/versions", json={"id": test_id, "alias": self.alias}
+            "/versions",
+            json={"id": test_id, "alias": self.alias},
         )
         return_json = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
@@ -301,7 +305,8 @@ class TestComprehensive(unittest.TestCase):
 
         # get resource versions
         response = self.test_client.post(
-            "/versions", json={"id": test_id, "alias": self.alias}
+            "/versions",
+            json={"id": test_id, "alias": self.alias},
         )
         return_json = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
@@ -311,14 +316,16 @@ class TestComprehensive(unittest.TestCase):
         )
         # delete older version
         response = self.test_client.post(
-            "/delete", json={"resource": test_resource, "alias": self.alias}
+            "/delete",
+            json={"resource": test_resource, "alias": self.alias},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"status": "Deleted"})
 
         # get resource versions
         response = self.test_client.post(
-            "/versions", json={"id": test_id, "alias": self.alias}
+            "/versions",
+            json={"id": test_id, "alias": self.alias},
         )
         return_json = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
@@ -369,7 +376,8 @@ class TestComprehensive(unittest.TestCase):
 
         # get resource versions
         response = self.test_client.post(
-            "/versions", json={"id": test_id, "alias": self.alias}
+            "/versions",
+            json={"id": test_id, "alias": self.alias},
         )
         return_json = json.loads(response.data)
         self.assertEqual(response.status_code, 200)

@@ -108,11 +108,13 @@ class EtherSwitch(SimObject):
 
     dump = Param.EtherDump(NULL, "dump object")
     fabric_speed = Param.NetworkBandwidth(
-        "10Gbps", "switch fabric speed in bits per second"
+        "10Gbps",
+        "switch fabric speed in bits per second",
     )
     interface = VectorEtherInt("Ethernet Interface")
     output_buffer_size = Param.MemorySize(
-        "1MiB", "size of output port buffers"
+        "1MiB",
+        "size of output port buffers",
     )
     delay = Param.Latency("0us", "packet transmit delay")
     delay_var = Param.Latency("0ns", "packet transmit delay variability")
@@ -138,7 +140,8 @@ if buildEnv["HAVE_TUNTAP"]:
         cxx_class = "gem5::EtherTap"
 
         tun_clone_device = Param.String(
-            "/dev/net/tun", "Path to the tun clone device node"
+            "/dev/net/tun",
+            "Path to the tun clone device node",
         )
         tap_device_name = Param.String("gem5-tap", "Tap device name")
 
@@ -176,15 +179,18 @@ class IGbE(EtherDevice):
     cxx_class = "gem5::IGbE"
 
     hardware_address = Param.EthernetAddr(
-        NextEthernetAddr, "Ethernet Hardware Address"
+        NextEthernetAddr,
+        "Ethernet Hardware Address",
     )
     rx_fifo_size = Param.MemorySize("384KiB", "Size of the rx FIFO")
     tx_fifo_size = Param.MemorySize("384KiB", "Size of the tx FIFO")
     rx_desc_cache_size = Param.Int(
-        64, "Number of enteries in the rx descriptor cache"
+        64,
+        "Number of enteries in the rx descriptor cache",
     )
     tx_desc_cache_size = Param.Int(
-        64, "Number of enteries in the rx descriptor cache"
+        64,
+        "Number of enteries in the rx descriptor cache",
     )
     VendorID = 0x8086
     SubsystemID = 0x1008
@@ -231,7 +237,8 @@ class EtherDevBase(EtherDevice):
     cxx_class = "gem5::EtherDevBase"
 
     hardware_address = Param.EthernetAddr(
-        NextEthernetAddr, "Ethernet Hardware Address"
+        NextEthernetAddr,
+        "Ethernet Hardware Address",
     )
 
     dma_read_delay = Param.Latency("0us", "fixed delay for dma reads")
@@ -288,7 +295,8 @@ class Sinic(EtherDevBase):
     virtual_count = Param.UInt32(1, "Virtualized SINIC")
     zero_copy_size = Param.UInt32(64, "Bytes to copy if below threshold")
     zero_copy_threshold = Param.UInt32(
-        256, "Only zero copy above this threshold"
+        256,
+        "Only zero copy above this threshold",
     )
     zero_copy = Param.Bool(False, "Zero copy receive")
     delay_copy = Param.Bool(False, "Delayed copy transmit")

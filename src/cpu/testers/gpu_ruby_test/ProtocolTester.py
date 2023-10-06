@@ -63,7 +63,8 @@ class ProtocolTester(ClockedObject):
 
     num_atomic_locations = Param.Int(2, "Number of atomic locations")
     num_normal_locs_per_atomic = Param.Int(
-        1000, "Number of normal locations per atomic"
+        1000,
+        "Number of normal locations per atomic",
     )
 
     episode_length = Param.Int(10, "Number of actions per episode")

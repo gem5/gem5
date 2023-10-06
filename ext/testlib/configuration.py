@@ -190,7 +190,7 @@ class _Config(object):
         elif not self._initialized:
             raise UninitializedConfigException(
                 "Cannot directly access elements from the config before it is"
-                " initialized"
+                " initialized",
             )
         else:
             val = self._lookup_val(attr)
@@ -198,7 +198,7 @@ class _Config(object):
                 return val[0]
             else:
                 raise UninitialzedAttributeException(
-                    "%s was not initialzed in the config." % attr
+                    "%s was not initialzed in the config." % attr,
                 )
 
     def get_tags(self):
@@ -220,12 +220,12 @@ def define_defaults(defaults):
     we aren't going to build anything.
     """
     defaults.base_dir = os.path.abspath(
-        os.path.join(absdirpath(__file__), os.pardir, os.pardir)
+        os.path.join(absdirpath(__file__), os.pardir, os.pardir),
     )
     defaults.result_path = os.path.join(os.getcwd(), "testing-results")
     defaults.resource_url = "http://dist.gem5.org/dist/develop"
     defaults.resource_path = os.path.abspath(
-        os.path.join(defaults.base_dir, "tests", "gem5", "resources")
+        os.path.join(defaults.base_dir, "tests", "gem5", "resources"),
     )
 
 
@@ -331,7 +331,7 @@ def define_constants(constants):
 
     # The root directory which all test names will be based off of.
     constants.testing_base = absdirpath(
-        os.path.join(absdirpath(__file__), os.pardir)
+        os.path.join(absdirpath(__file__), os.pardir),
     )
 
 
@@ -430,7 +430,8 @@ def define_post_processors(config):
     config._add_post_processor("threads", threads_as_int)
     config._add_post_processor("test_threads", test_threads_as_int)
     config._add_post_processor(
-        StorePositionalTagsAction.position_kword, compile_tag_regex
+        StorePositionalTagsAction.position_kword,
+        compile_tag_regex,
     )
 
 
@@ -455,7 +456,7 @@ class Argument(object):
                 if not flag.startswith("-"):
                     raise ValueError(
                         "invalid option string %s: must start"
-                        "with a character '-'" % flag
+                        "with a character '-'" % flag,
                     )
 
                 if flag.startswith("--"):
@@ -581,7 +582,9 @@ def define_common_args(config):
             help="UID of a specific test item to run.",
         ),
         Argument(
-            "--build-dir", action="store", help="Build directory for SCons"
+            "--build-dir",
+            action="store",
+            help="Build directory for SCons",
         ),
         Argument(
             "--base-dir",
@@ -716,7 +719,8 @@ class ListParser(ArgParser):
 
     def __init__(self, subparser):
         parser = subparser.add_parser(
-            "list", help="""List and query test metadata."""
+            "list",
+            help="""List and query test metadata.""",
         )
         super(ListParser, self).__init__(parser)
 

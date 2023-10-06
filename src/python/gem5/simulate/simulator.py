@@ -312,7 +312,7 @@ class Simulator:
                 else:
                     raise Exception(
                         f"`on_exit_event` for '{key.value}' event is "
-                        "not a Generator or List[Callable]."
+                        "not a Generator or List[Callable].",
                     )
         else:
             self._on_exit_event = self._default_on_exit_dict
@@ -333,7 +333,7 @@ class Simulator:
                 "Please set this through via the appropriate workload "
                 "function (i.e., `set_se_binary_workload` or "
                 "`set_kernel_disk_workload`). If both are set the workload "
-                "function set takes precedence."
+                "function set takes precedence.",
             )
 
         self._checkpoint_path = checkpoint_path
@@ -350,7 +350,8 @@ class Simulator:
         if self._board.get_processor().get_num_cores() > 1:
             warn("SimPoints only work with one core")
         self._board.get_processor().get_cores()[0].set_simpoint(
-            simpoint_start_insts, self._instantiated
+            simpoint_start_insts,
+            self._instantiated,
         )
 
     def schedule_max_insts(self, inst: int) -> None:
@@ -386,7 +387,7 @@ class Simulator:
 
         if not self._instantiated:
             raise Exception(
-                "Cannot obtain simulation statistics prior to initialization."
+                "Cannot obtain simulation statistics prior to initialization.",
             )
 
         return m5.stats.gem5stats.get_simstat(self._root)
@@ -412,7 +413,7 @@ class Simulator:
             )
         ):
             raise Exception(
-                f"Specified text stats output path '{path}' is invalid."
+                f"Specified text stats output path '{path}' is invalid.",
             )
         addStatVisitor(path)
 
@@ -436,7 +437,7 @@ class Simulator:
             )
         ):
             raise Exception(
-                f"Specified json stats output path '{path}' is invalid."
+                f"Specified json stats output path '{path}' is invalid.",
             )
         addStatVisitor(f"json://{path}")
 
@@ -550,7 +551,7 @@ class Simulator:
                 raise Exception(
                     f"The banned module '{banned_module}' has been included. "
                     "Please do not use this in your simulations. "
-                    f"Reason: {self._banned_modules[banned_module]}"
+                    f"Reason: {self._banned_modules[banned_module]}",
                 )
 
         # We instantiate the board if it has not already been instantiated.
@@ -562,7 +563,7 @@ class Simulator:
 
             # Translate the exit event cause to the exit event enum.
             exit_enum = ExitEvent.translate_exit_status(
-                self.get_last_exit_event_cause()
+                self.get_last_exit_event_cause(),
             )
 
             # Check to see the run is corresponding to the expected execution
@@ -574,7 +575,7 @@ class Simulator:
                 if exit_enum.value != expected_enum.value:
                     raise Exception(
                         f"Expected a '{expected_enum.value}' exit event but a "
-                        f"'{exit_enum.value}' exit event was encountered."
+                        f"'{exit_enum.value}' exit event was encountered.",
                     )
 
             # Record the current tick and exit event enum.
@@ -590,16 +591,16 @@ class Simulator:
                 warn(
                     "User-specified generator/function list for the exit "
                     f"event'{exit_enum.value}' has ended. Using the default "
-                    "generator."
+                    "generator.",
                 )
                 exit_on_completion = next(
-                    self._default_on_exit_dict[exit_enum]
+                    self._default_on_exit_dict[exit_enum],
                 )
             except KeyError:
                 # If the user has not specified their own generator for this
                 # exit event, use the default.
                 exit_on_completion = next(
-                    self._default_on_exit_dict[exit_enum]
+                    self._default_on_exit_dict[exit_enum],
                 )
 
             self._exit_event_count += 1

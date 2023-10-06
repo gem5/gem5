@@ -47,7 +47,9 @@ class L1Cache(AbstractL1Cache):
         super().__init__(network, cache_line_size)
 
         self.cacheMemory = RubyCache(
-            size=size, assoc=assoc, start_index_bit=self.getBlockSizeBits()
+            size=size,
+            assoc=assoc,
+            start_index_bit=self.getBlockSizeBits(),
         )
 
         self.clk_domain = clk_domain

@@ -188,7 +188,12 @@ def config_filesystem(system, options=None):
 
 def register_node(cpu_list, mem, node_number):
     nodebasedir = joinpath(
-        m5.options.outdir, "fs", "sys", "devices", "system", "node"
+        m5.options.outdir,
+        "fs",
+        "sys",
+        "devices",
+        "system",
+        "node",
     )
 
     nodedir = joinpath(nodebasedir, "node%d" % node_number)
@@ -218,12 +223,14 @@ def register_cpu(physical_package_id, core_siblings, core_id, thread_siblings):
 
     file_append((cpudir, "online"), "1")
     file_append(
-        (cpudir, "topology", "physical_package_id"), physical_package_id
+        (cpudir, "topology", "physical_package_id"),
+        physical_package_id,
     )
     file_append((cpudir, "topology", "core_siblings"), hex_mask(core_siblings))
     file_append((cpudir, "topology", "core_id"), core_id)
     file_append(
-        (cpudir, "topology", "thread_siblings"), hex_mask(thread_siblings)
+        (cpudir, "topology", "thread_siblings"),
+        hex_mask(thread_siblings),
     )
 
 
@@ -231,7 +238,13 @@ def register_cache(level, idu_type, size, line_size, assoc, cpus):
     fsdir = joinpath(m5.options.outdir, "fs")
     for i in cpus:
         cachedir = joinpath(
-            fsdir, "sys", "devices", "system", "cpu", "cpu%d" % i, "cache"
+            fsdir,
+            "sys",
+            "devices",
+            "system",
+            "cpu",
+            "cpu%d" % i,
+            "cache",
         )
 
         j = 0
@@ -252,7 +265,8 @@ def register_cache(level, idu_type, size, line_size, assoc, cpus):
         file_append((indexdir, "physical_line_partition"), "1")
         file_append((indexdir, "shared_cpu_map"), hex_mask(cpus))
         file_append(
-            (indexdir, "shared_cpu_list"), ",".join(str(cpu) for cpu in cpus)
+            (indexdir, "shared_cpu_list"),
+            ",".join(str(cpu) for cpu in cpus),
         )
 
 
@@ -260,13 +274,16 @@ def _redirect_paths(options):
     # Redirect filesystem syscalls from src to the first matching dests
     redirect_paths = [
         RedirectPath(
-            app_path="/proc", host_paths=[f"{m5.options.outdir}/fs/proc"]
+            app_path="/proc",
+            host_paths=[f"{m5.options.outdir}/fs/proc"],
         ),
         RedirectPath(
-            app_path="/sys", host_paths=[f"{m5.options.outdir}/fs/sys"]
+            app_path="/sys",
+            host_paths=[f"{m5.options.outdir}/fs/sys"],
         ),
         RedirectPath(
-            app_path="/tmp", host_paths=[f"{m5.options.outdir}/fs/tmp"]
+            app_path="/tmp",
+            host_paths=[f"{m5.options.outdir}/fs/tmp"],
         ),
     ]
 
@@ -276,15 +293,16 @@ def _redirect_paths(options):
     for redirect in redirects:
         app_path, host_path = redirect.split("=")
         redirect_paths.append(
-            RedirectPath(app_path=app_path, host_paths=[host_path])
+            RedirectPath(app_path=app_path, host_paths=[host_path]),
         )
 
     chroot = getattr(options, "chroot", None)
     if chroot:
         redirect_paths.append(
             RedirectPath(
-                app_path="/", host_paths=[f"{os.path.expanduser(chroot)}"]
-            )
+                app_path="/",
+                host_paths=[f"{os.path.expanduser(chroot)}"],
+            ),
         )
 
     return redirect_paths

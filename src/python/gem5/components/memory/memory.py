@@ -146,7 +146,7 @@ class ChanneledMemory(AbstractMemorySystem):
         else:
             raise ValueError(
                 "Only these address mappings are supported: "
-                "RoRaBaChCo, RoRaBaCoCh, RoCoRaBaCh"
+                "RoRaBaChCo, RoRaBaCoCh, RoCoRaBaCh",
             )
 
         intlv_bits = log(self._num_channels, 2)
@@ -167,7 +167,7 @@ class ChanneledMemory(AbstractMemorySystem):
                 "Memory interleaving size can not be smaller than"
                 " board's cache line size.\nBoard's cache line size: "
                 f"{board.get_cache_line_size()}\n, This memory's interleaving "
-                f"size: {self._intlv_size}"
+                f"size: {self._intlv_size}",
             )
 
     @overrides(AbstractMemorySystem)
@@ -192,7 +192,7 @@ class ChanneledMemory(AbstractMemorySystem):
                 "Multi channel memory controller requires a single range "
                 "which matches the memory's size.\n"
                 f"The range size: {range[0].size()}\n"
-                f"This memory's size: {self._size}"
+                f"This memory's size: {self._size}",
             )
         self._mem_range = ranges[0]
         self._interleave_addresses()

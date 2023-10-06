@@ -64,7 +64,8 @@ class NVMInterface(MemInterface):
     tSEND = Param.Latency("15ns", "Access latency")
 
     two_cycle_rdwr = Param.Bool(
-        False, "Two cycles required to send read and write commands"
+        False,
+        "Two cycles required to send read and write commands",
     )
 
     def controller(self):

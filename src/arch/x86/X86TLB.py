@@ -46,7 +46,8 @@ class X86PagetableWalker(ClockedObject):
     port = RequestPort("Port for the hardware table walker")
     system = Param.System(Parent.any, "system object")
     num_squash_per_cycle = Param.Unsigned(
-        4, "Number of outstanding walks that can be squashed per cycle"
+        4,
+        "Number of outstanding walks that can be squashed per cycle",
     )
 
 
@@ -58,5 +59,6 @@ class X86TLB(BaseTLB):
     size = Param.Unsigned(64, "TLB size")
     system = Param.System(Parent.any, "system object")
     walker = Param.X86PagetableWalker(
-        X86PagetableWalker(), "page table walker"
+        X86PagetableWalker(),
+        "page table walker",
     )

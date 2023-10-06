@@ -97,6 +97,10 @@ class ActionDeclAST(DeclAST):
             self.symtab.popFrame()
 
         action = Action(
-            self.symtab, self.ident, resources, self.location, self.pairs
+            self.symtab,
+            self.ident,
+            resources,
+            self.location,
+            self.pairs,
         )
         machine.addAction(action)

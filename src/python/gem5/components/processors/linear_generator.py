@@ -53,7 +53,7 @@ class LinearGenerator(AbstractGenerator):
                 max_addr=max_addr,
                 rd_perc=rd_perc,
                 data_limit=data_limit,
-            )
+            ),
         )
         """The linear generator
 

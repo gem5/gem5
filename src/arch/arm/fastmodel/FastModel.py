@@ -108,7 +108,8 @@ class AmbaToTlmBridge64(SystemC_ScModule):
     tlm = TlmInitiatorSocket(64, "TLM initiator socket")
 
     set_stream_id = Param.Bool(
-        False, "Set this true to forward stream ID to gem5 world"
+        False,
+        "Set this true to forward stream ID to gem5 world",
     )
 
 

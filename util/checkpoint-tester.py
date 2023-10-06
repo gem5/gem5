@@ -129,7 +129,7 @@ for i in range(1, len(cpts)):
             cptdir,
             "--checkpoint-restore",
             str(i),
-        ]
+        ],
     )
     cpt_name = "cpt.%d" % cpts[i]
     diff_name = os.path.join(mydir, "diffout")

@@ -71,7 +71,7 @@ def cmd_line_template():
     if args.command_line and args.command_line_file:
         print(
             "Error: --command-line and --command-line-file are "
-            "mutually exclusive"
+            "mutually exclusive",
         )
         sys.exit(1)
     if args.command_line:
@@ -90,11 +90,17 @@ def build_test_system(np):
         test_sys = makeSparcSystem(test_mem_mode, bm[0], cmdline=cmdline)
     elif isa == ISA.RISCV:
         test_sys = makeBareMetalRiscvSystem(
-            test_mem_mode, bm[0], cmdline=cmdline
+            test_mem_mode,
+            bm[0],
+            cmdline=cmdline,
         )
     elif isa == ISA.X86:
         test_sys = makeLinuxX86System(
-            test_mem_mode, np, bm[0], args.ruby, cmdline=cmdline
+            test_mem_mode,
+            np,
+            bm[0],
+            args.ruby,
+            cmdline=cmdline,
         )
     elif isa == ISA.ARM:
         test_sys = makeArmSystem(
@@ -123,7 +129,8 @@ def build_test_system(np):
 
     # Create a source clock for the system and set the clock period
     test_sys.clk_domain = SrcClockDomain(
-        clock=args.sys_clock, voltage_domain=test_sys.voltage_domain
+        clock=args.sys_clock,
+        voltage_domain=test_sys.voltage_domain,
     )
 
     # Create a CPU voltage domain
@@ -131,7 +138,8 @@ def build_test_system(np):
 
     # Create a source clock for the CPUs and set the clock period
     test_sys.cpu_clk_domain = SrcClockDomain(
-        clock=args.cpu_clock, voltage_domain=test_sys.cpu_voltage_domain
+        clock=args.cpu_clock,
+        voltage_domain=test_sys.cpu_voltage_domain,
     )
 
     if buildEnv["USE_RISCV_ISA"]:
@@ -153,12 +161,18 @@ def build_test_system(np):
     if args.ruby:
         bootmem = getattr(test_sys, "_bootmem", None)
         Ruby.create_system(
-            args, True, test_sys, test_sys.iobus, test_sys._dma_ports, bootmem
+            args,
+            True,
+            test_sys,
+            test_sys.iobus,
+            test_sys._dma_ports,
+            bootmem,
         )
 
         # Create a seperate clock domain for Ruby
         test_sys.ruby.clk_domain = SrcClockDomain(
-            clock=args.ruby_clock, voltage_domain=test_sys.voltage_domain
+            clock=args.ruby_clock,
+            voltage_domain=test_sys.voltage_domain,
         )
 
         # Connect the ruby io port to the PIO bus,
@@ -183,7 +197,8 @@ def build_test_system(np):
             test_sys.iocache.mem_side = test_sys.membus.cpu_side_ports
         elif not args.external_memory_system:
             test_sys.iobridge = Bridge(
-                delay="50ns", ranges=test_sys.mem_ranges
+                delay="50ns",
+                ranges=test_sys.mem_ranges,
             )
             test_sys.iobridge.cpu_side_port = test_sys.iobus.mem_side_ports
             test_sys.iobridge.mem_side_port = test_sys.membus.cpu_side_ports
@@ -194,7 +209,7 @@ def build_test_system(np):
                 fatal("SimPoint generation should be done with atomic cpu")
             if np > 1:
                 fatal(
-                    "SimPoint generation not supported with more than one CPUs"
+                    "SimPoint generation not supported with more than one CPUs",
                 )
 
         for i in range(np):
@@ -208,7 +223,7 @@ def build_test_system(np):
                     test_sys.cpu[i].branchPred = bpClass()
                 if args.indirect_bp_type:
                     IndirectBPClass = ObjectList.indirect_bp_list.get(
-                        args.indirect_bp_type
+                        args.indirect_bp_type,
                     )
                     test_sys.cpu[
                         i
@@ -234,7 +249,7 @@ def build_test_system(np):
         MemConfig.config_mem(args, test_sys)
 
     if ObjectList.is_kvm_cpu(TestCPUClass) or ObjectList.is_kvm_cpu(
-        FutureClass
+        FutureClass,
     ):
         # Assign KVM CPUs to their own event queues / threads. This
         # has to be done after creating caches and other child objects
@@ -265,7 +280,10 @@ def build_drive_system(np):
         drive_sys = makeSparcSystem(drive_mem_mode, bm[1], cmdline=cmdline)
     elif buildEnv["USE_X86_ISA"]:
         drive_sys = makeLinuxX86System(
-            drive_mem_mode, np, bm[1], cmdline=cmdline
+            drive_mem_mode,
+            np,
+            bm[1],
+            cmdline=cmdline,
         )
     elif buildEnv["USE_ARM_ISA"]:
         drive_sys = makeArmSystem(
@@ -282,7 +300,8 @@ def build_drive_system(np):
 
     # Create a source clock for the system and set the clock period
     drive_sys.clk_domain = SrcClockDomain(
-        clock=args.sys_clock, voltage_domain=drive_sys.voltage_domain
+        clock=args.sys_clock,
+        voltage_domain=drive_sys.voltage_domain,
     )
 
     # Create a CPU voltage domain
@@ -290,11 +309,13 @@ def build_drive_system(np):
 
     # Create a source clock for the CPUs and set the clock period
     drive_sys.cpu_clk_domain = SrcClockDomain(
-        clock=args.cpu_clock, voltage_domain=drive_sys.cpu_voltage_domain
+        clock=args.cpu_clock,
+        voltage_domain=drive_sys.cpu_voltage_domain,
     )
 
     drive_sys.cpu = DriveCPUClass(
-        clk_domain=drive_sys.cpu_clk_domain, cpu_id=0
+        clk_domain=drive_sys.cpu_clk_domain,
+        cpu_id=0,
     )
     drive_sys.cpu.createThreads()
     drive_sys.cpu.createInterruptController()
@@ -324,7 +345,7 @@ def build_drive_system(np):
 
 warn(
     "The fs.py script is deprecated. It will be removed in future releases of "
-    " gem5."
+    " gem5.",
 )
 
 # Add args
@@ -374,7 +395,7 @@ else:
                 rootdev=args.root_device,
                 mem=args.mem_size,
                 os_type=args.os_type,
-            )
+            ),
         ]
 
 np = args.num_cpus
@@ -426,7 +447,7 @@ if buildEnv["USE_ARM_ISA"] and not args.bare_metal and not args.dtb_filename:
         warn(
             "Can only correctly generate a dtb for VExpress_GEM5_* "
             "platforms, unless custom hardware models have been equipped "
-            "with generation functionality."
+            "with generation functionality.",
         )
 
     # Generate a Device Tree
@@ -434,7 +455,8 @@ if buildEnv["USE_ARM_ISA"] and not args.bare_metal and not args.dtb_filename:
         if hasattr(root, sysname):
             sys = getattr(root, sysname)
             sys.workload.dtb_filename = os.path.join(
-                m5.options.outdir, f"{sysname}.dtb"
+                m5.options.outdir,
+                f"{sysname}.dtb",
             )
             sys.generateDtb(sys.workload.dtb_filename)
 

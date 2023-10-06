@@ -73,14 +73,14 @@ code(
 
 namespace gem5
 {
-"""
+""",
 )
 if enum.is_class:
     code(
         """\
 enum class $name
 {
-"""
+""",
     )
 else:
     code(
@@ -88,7 +88,7 @@ else:
 $wrapper $wrapper_name {
 enum $name
 {
-"""
+""",
     )
     code.indent(1)
 code.indent(1)
@@ -102,7 +102,7 @@ if enum.is_class:
     code(
         """\
 extern const char *${name}Strings[static_cast<int>(${name}::Num_${name})];
-"""
+""",
     )
 elif enum.wrapper_is_struct:
     code("static const char *${name}Strings[Num_${name}];")

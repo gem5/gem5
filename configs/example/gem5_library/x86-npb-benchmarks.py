@@ -84,7 +84,7 @@ benchmark_choices = ["bt", "cg", "ep", "ft", "is", "lu", "mg", "sp"]
 size_choices = ["A", "B", "C"]
 
 parser = argparse.ArgumentParser(
-    description="An example configuration script to run the npb benchmarks."
+    description="An example configuration script to run the npb benchmarks.",
 )
 
 # The only positional argument accepted is the benchmark name in this script.
@@ -121,7 +121,7 @@ args = parser.parse_args()
 if args.benchmark == "mg" and args.size == "C":
     warn(
         "mg.C uses 3.3 GB of memory. Currently we are simulating 3 GB\
-    of main memory in the system."
+    of main memory in the system.",
     )
 
 # The simulation will fail in the case of `ft` with class C. We warn the user
@@ -129,7 +129,7 @@ if args.benchmark == "mg" and args.size == "C":
 elif args.benchmark == "ft" and args.size == "C":
     warn(
         "There is not enough memory for ft.C. Currently we are\
-    simulating 3 GB of main memory in the system."
+    simulating 3 GB of main memory in the system.",
     )
 
 # Checking for the maximum number of instructions, if provided by the user.
@@ -281,9 +281,9 @@ else:
     print(f"Simulated time in ROI: {simulator.get_roi_ticks()[0] / 1e12}s")
 
 print(
-    f"Ran a total of {simulator.get_current_tick() / 1e12} simulated seconds"
+    f"Ran a total of {simulator.get_current_tick() / 1e12} simulated seconds",
 )
 print(
     "Total wallclock time: %.2fs, %.2f min"
-    % (time.time() - globalStart, (time.time() - globalStart) / 60)
+    % (time.time() - globalStart, (time.time() - globalStart) / 60),
 )

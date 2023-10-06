@@ -40,7 +40,7 @@ else:
 
 hello_verifier = verifier.MatchRegex(re.compile(r"Hello world!"))
 save_checkpoint_verifier = verifier.MatchRegex(
-    re.compile(r"Done taking a checkpoint")
+    re.compile(r"Done taking a checkpoint"),
 )
 
 gem5_verify_config(
@@ -48,7 +48,11 @@ gem5_verify_config(
     fixtures=(),
     verifiers=(hello_verifier,),
     config=joinpath(
-        config.base_dir, "configs", "example", "gem5_library", "arm-hello.py"
+        config.base_dir,
+        "configs",
+        "example",
+        "gem5_library",
+        "arm-hello.py",
     ),
     config_args=[],
     valid_isas=(constants.all_compiled_tag,),
@@ -274,7 +278,11 @@ gem5_verify_config(
     fixtures=(),
     verifiers=(),
     config=joinpath(
-        config.base_dir, "configs", "example", "lupv", "run_lupv.py"
+        config.base_dir,
+        "configs",
+        "example",
+        "lupv",
+        "run_lupv.py",
     ),
     config_args=["timing", "1", "--max-ticks", "1000000000"],
     valid_isas=(constants.all_compiled_tag,),

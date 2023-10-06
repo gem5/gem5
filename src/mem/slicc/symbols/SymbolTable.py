@@ -170,7 +170,7 @@ class SymbolTable(object):
     <frame name="Status" src="empty.html">
 </frameset>
 </html>
-"""
+""",
         )
         code.write(path, "index.html")
 

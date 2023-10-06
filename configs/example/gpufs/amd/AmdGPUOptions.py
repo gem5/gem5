@@ -58,7 +58,10 @@ def addAmdGPUOptions(parser):
         help="Number of CUs sharing a scalar cache",
     )
     parser.add_argument(
-        "--simds-per-cu", type=int, default=4, help="SIMD units per CU"
+        "--simds-per-cu",
+        type=int,
+        default=4,
+        help="SIMD units per CU",
     )
     parser.add_argument(
         "--cu-per-sa",
@@ -81,7 +84,10 @@ def addAmdGPUOptions(parser):
         help="Number of GPU complexes",
     )
     parser.add_argument(
-        "--wf-size", type=int, default=64, help="Wavefront size(in workitems)"
+        "--wf-size",
+        type=int,
+        default=64,
+        help="Wavefront size(in workitems)",
     )
     parser.add_argument(
         "--sp-bypass-path-length",
@@ -176,10 +182,16 @@ def addAmdGPUOptions(parser):
         help="bandwidth scalor for scalability analysis",
     )
     parser.add_argument(
-        "--CPUClock", type=str, default="2GHz", help="CPU clock"
+        "--CPUClock",
+        type=str,
+        default="2GHz",
+        help="CPU clock",
     )
     parser.add_argument(
-        "--gpu-clock", type=str, default="1GHz", help="GPU clock"
+        "--gpu-clock",
+        type=str,
+        default="1GHz",
+        help="GPU clock",
     )
     parser.add_argument(
         "--cpu-voltage",
@@ -212,7 +224,9 @@ def addAmdGPUOptions(parser):
         help="Count Page Accesses and output in per-CU output files",
     )
     parser.add_argument(
-        "--TLB-prefetch", type=int, help="prefetch depth for TLBs"
+        "--TLB-prefetch",
+        type=int,
+        help="prefetch depth for TLBs",
     )
     parser.add_argument(
         "--pf-type",
@@ -233,7 +247,10 @@ def addAmdGPUOptions(parser):
         help="number of cycles per LDS bank conflict",
     )
     parser.add_argument(
-        "--lds-size", type=int, default=65536, help="Size of the LDS in bytes"
+        "--lds-size",
+        type=int,
+        default=65536,
+        help="Size of the LDS in bytes",
     )
     parser.add_argument(
         "--num-hw-queues",

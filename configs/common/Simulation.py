@@ -152,7 +152,7 @@ def findCptDir(options, cptdir, testsys):
         dirs = listdir(cptdir)
         expr = re.compile(
             "cpt\.simpoint_(\d+)_inst_(\d+)"
-            + "_weight_([\d\.e\-]+)_interval_(\d+)_warmup_(\d+)"
+            + "_weight_([\d\.e\-]+)_interval_(\d+)_warmup_(\d+)",
         )
         cpts = []
         for dir in dirs:
@@ -183,7 +183,7 @@ def findCptDir(options, cptdir, testsys):
         print("Resuming from SimPoint", end=" ")
         print(
             "#%d, start_inst:%d, weight:%f, interval:%d, warmup:%d"
-            % (index, start_inst, weight_inst, interval_length, warmup_length)
+            % (index, start_inst, weight_inst, interval_length, warmup_length),
         )
 
     else:
@@ -228,8 +228,9 @@ def scriptCheckpoints(options, maxtick, cptdir):
         if exit_cause == "a thread reached the max instruction count":
             m5.checkpoint(
                 joinpath(
-                    cptdir, "cpt.%s.%d" % (options.bench, checkpoint_inst)
-                )
+                    cptdir,
+                    "cpt.%s.%d" % (options.bench, checkpoint_inst),
+                ),
             )
             print("Checkpoint written.")
 
@@ -348,7 +349,7 @@ def parseSimpointAnalysisFile(options, testsys):
             actual_warmup_length = interval * interval_length
 
         simpoints.append(
-            (interval, weight, starting_inst_count, actual_warmup_length)
+            (interval, weight, starting_inst_count, actual_warmup_length),
         )
 
     # Sort SimPoints by starting inst count
@@ -403,11 +404,11 @@ def takeSimpointCheckpoints(simpoints, interval_length, cptdir):
                         interval_length,
                         actual_warmup_length,
                     ),
-                )
+                ),
             )
             print(
                 "Checkpoint #%d written. start inst:%d weight:%f"
-                % (num_checkpoints, starting_inst_count, weight)
+                % (num_checkpoints, starting_inst_count, weight),
             )
             num_checkpoints += 1
             last_chkpnt_inst_count = starting_inst_count
@@ -529,7 +530,7 @@ def run(options, root, testsys, cpu_class):
                 switch_cpus[i].branchPred = bpClass()
             if options.indirect_bp_type:
                 IndirectBPClass = ObjectList.indirect_bp_list.get(
-                    options.indirect_bp_type
+                    options.indirect_bp_type,
                 )
                 switch_cpus[
                     i
@@ -665,7 +666,8 @@ def run(options, root, testsys, cpu_class):
 
     if options.take_simpoint_checkpoints != None:
         simpoints, interval_length = parseSimpointAnalysisFile(
-            options, testsys
+            options,
+            testsys,
         )
 
     checkpoint_dir = None
@@ -703,7 +705,7 @@ def run(options, root, testsys, cpu_class):
                     "Relative max tick specified with --at-instruction or"
                     " --simpoint\n      These options don't specify the "
                     "checkpoint start tick, so assuming\n      you mean "
-                    "absolute max tick"
+                    "absolute max tick",
                 )
         explicit_maxticks += 1
     if options.maxtime:
@@ -712,7 +714,7 @@ def run(options, root, testsys, cpu_class):
     if explicit_maxticks > 1:
         warn(
             "Specified multiple of --abs-max-tick, --rel-max-tick, --maxtime."
-            " Using least"
+            " Using least",
         )
     maxtick = min([maxtick_from_abs, maxtick_from_rel, maxtick_from_maxtime])
 
@@ -728,13 +730,13 @@ def run(options, root, testsys, cpu_class):
         if options.standard_switch:
             print(
                 "Switch at instruction count:%s"
-                % str(testsys.cpu[0].max_insts_any_thread)
+                % str(testsys.cpu[0].max_insts_any_thread),
             )
             exit_event = m5.simulate()
         elif cpu_class and options.fast_forward:
             print(
                 "Switch at instruction count:%s"
-                % str(testsys.cpu[0].max_insts_any_thread)
+                % str(testsys.cpu[0].max_insts_any_thread),
             )
             exit_event = m5.simulate()
         else:
@@ -747,7 +749,7 @@ def run(options, root, testsys, cpu_class):
         if options.standard_switch:
             print(
                 "Switch at instruction count:%d"
-                % (testsys.switch_cpus[0].max_insts_any_thread)
+                % (testsys.switch_cpus[0].max_insts_any_thread),
             )
 
             # warmup instruction count may have already been set
@@ -758,7 +760,7 @@ def run(options, root, testsys, cpu_class):
             print(f"Switching CPUS @ tick {m5.curTick()}")
             print(
                 "Simulation ends instruction count:%d"
-                % (testsys.switch_cpus_1[0].max_insts_any_thread)
+                % (testsys.switch_cpus_1[0].max_insts_any_thread),
             )
             m5.switchCpus(testsys, switch_cpu_list1)
 
@@ -798,13 +800,16 @@ def run(options, root, testsys, cpu_class):
         # will occur in the benchmark code it self.
         if options.repeat_switch and maxtick > options.repeat_switch:
             exit_event = repeatSwitch(
-                testsys, repeat_switch_cpu_list, maxtick, options.repeat_switch
+                testsys,
+                repeat_switch_cpu_list,
+                maxtick,
+                options.repeat_switch,
             )
         else:
             exit_event = benchCheckpoints(options, maxtick, cptdir)
 
     print(
-        "Exiting @ tick %i because %s" % (m5.curTick(), exit_event.getCause())
+        "Exiting @ tick %i because %s" % (m5.curTick(), exit_event.getCause()),
     )
     if options.checkpoint_at_end:
         m5.checkpoint(joinpath(cptdir, "cpt.%d"))

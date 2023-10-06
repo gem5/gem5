@@ -61,13 +61,15 @@ class System(SimObject):
     ]
 
     memories = VectorParam.AbstractMemory(
-        Self.all, "All memories in the system"
+        Self.all,
+        "All memories in the system",
     )
     mem_mode = Param.MemoryMode("atomic", "The mode the memory system is in")
 
     thermal_model = Param.ThermalModel(NULL, "Thermal model")
     thermal_components = VectorParam.SimObject(
-        [], "A collection of all thermal components in the system."
+        [],
+        "A collection of all thermal components in the system.",
     )
 
     # When reserving memory on the host, we have the option of
@@ -75,19 +77,22 @@ class System(SimObject):
     # mmap). By enabling this flag, we accommodate cases where a large
     # (but sparse) memory is simulated.
     mmap_using_noreserve = Param.Bool(
-        False, "mmap the backing store without reserving swap"
+        False,
+        "mmap the backing store without reserving swap",
     )
 
     # The memory ranges are to be populated when creating the system
     # such that these can be passed from the I/O subsystem through an
     # I/O bridge or cache
     mem_ranges = VectorParam.AddrRange(
-        [], "Ranges that constitute main memory"
+        [],
+        "Ranges that constitute main memory",
     )
 
     # The ranges backed by a shadowed ROM
     shadow_rom_ranges = VectorParam.AddrRange(
-        [], "Ranges  backed by a shadowed ROM"
+        [],
+        "Ranges  backed by a shadowed ROM",
     )
 
     shared_backstore = Param.String(
@@ -115,22 +120,28 @@ class System(SimObject):
     work_item_id = Param.Int(-1, "specific work item id")
     num_work_ids = Param.Int(16, "Number of distinct work item types")
     work_begin_cpu_id_exit = Param.Int(
-        -1, "work started on specific id, now exit simulation"
+        -1,
+        "work started on specific id, now exit simulation",
     )
     work_begin_ckpt_count = Param.Counter(
-        0, "create checkpoint when work items begin count value is reached"
+        0,
+        "create checkpoint when work items begin count value is reached",
     )
     work_begin_exit_count = Param.Counter(
-        0, "exit simulation when work items begin count value is reached"
+        0,
+        "exit simulation when work items begin count value is reached",
     )
     work_end_ckpt_count = Param.Counter(
-        0, "create checkpoint when work items end count value is reached"
+        0,
+        "create checkpoint when work items end count value is reached",
     )
     work_end_exit_count = Param.Counter(
-        0, "exit simulation when work items end count value is reached"
+        0,
+        "exit simulation when work items end count value is reached",
     )
     work_cpus_ckpt_count = Param.Counter(
-        0, "create checkpoint when active cpu count value is reached"
+        0,
+        "create checkpoint when active cpu count value is reached",
     )
 
     workload = Param.Workload(StubWorkload(), "Workload to run on this system")
@@ -139,7 +150,8 @@ class System(SimObject):
     symbolfile = Param.String("", "file to get the symbols from")
 
     multi_thread = Param.Bool(
-        False, "Supports multi-threaded CPUs? Impacts Thread/Context IDs"
+        False,
+        "Supports multi-threaded CPUs? Impacts Thread/Context IDs",
     )
 
     # Dynamic voltage and frequency handler for the system, disabled by default

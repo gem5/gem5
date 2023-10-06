@@ -117,7 +117,8 @@ class ArmCpuCluster(CpuCluster):
 
         self.voltage_domain = VoltageDomain(voltage=cpu_voltage)
         self.clk_domain = SrcClockDomain(
-            clock=cpu_clock, voltage_domain=self.voltage_domain
+            clock=cpu_clock,
+            voltage_domain=self.voltage_domain,
         )
 
         self.generate_cpus(cpu_type, num_cpus)
@@ -258,7 +259,7 @@ class FastmodelCluster(CpuCluster):
         # Setup GIC
         gic = system.realview.gic
         gic.sc_gic.cpu_affinities = ",".join(
-            ["0.0.%d.0" % i for i in range(num_cpus)]
+            ["0.0.%d.0" % i for i in range(num_cpus)],
         )
 
         # Parse the base address of redistributor.
@@ -268,12 +269,13 @@ class FastmodelCluster(CpuCluster):
             [
                 "0.0.%d.0=%#x" % (i, redist_base + redist_frame_size * i)
                 for i in range(num_cpus)
-            ]
+            ],
         )
 
         gic_a2t = AmbaToTlmBridge64(amba=gic.amba_m)
         gic_t2g = TlmToGem5Bridge64(
-            tlm=gic_a2t.tlm, gem5=system.iobus.cpu_side_ports
+            tlm=gic_a2t.tlm,
+            gem5=system.iobus.cpu_side_ports,
         )
         gic_g2t = Gem5ToTlmBridge64(gem5=system.membus.mem_side_ports)
         gic_g2t.addr_ranges = gic.get_addr_ranges()
@@ -288,7 +290,8 @@ class FastmodelCluster(CpuCluster):
 
         self.voltage_domain = VoltageDomain(voltage=cpu_voltage)
         self.clk_domain = SrcClockDomain(
-            clock=cpu_clock, voltage_domain=self.voltage_domain
+            clock=cpu_clock,
+            voltage_domain=self.voltage_domain,
         )
 
         # Setup CPU
@@ -302,7 +305,9 @@ class FastmodelCluster(CpuCluster):
         CpuClass = CpuClasses[num_cpus - 1]
 
         cpu = CpuClass(
-            GICDISABLE=False, BROADCASTATOMIC=False, BROADCASTOUTER=False
+            GICDISABLE=False,
+            BROADCASTATOMIC=False,
+            BROADCASTOUTER=False,
         )
         for core in cpu.cores:
             core.semihosting_enable = False
@@ -344,7 +349,8 @@ class BaseSimpleSystem(ArmSystem):
 
         self.voltage_domain = VoltageDomain(voltage="1.0V")
         self.clk_domain = SrcClockDomain(
-            clock="1GHz", voltage_domain=Parent.voltage_domain
+            clock="1GHz",
+            voltage_domain=Parent.voltage_domain,
         )
 
         if platform is None:
@@ -377,7 +383,7 @@ class BaseSimpleSystem(ArmSystem):
             size_in_range = min(mem_size, mem_range.size())
 
             mem_ranges.append(
-                AddrRange(start=mem_range.start, size=size_in_range)
+                AddrRange(start=mem_range.start, size=size_in_range),
             )
 
             mem_size -= size_in_range
@@ -408,7 +414,8 @@ class BaseSimpleSystem(ArmSystem):
                 cluster.addL2(cluster.clk_domain)
         if last_cache_level > 2:
             max_clock_cluster = max(
-                self._clusters, key=lambda c: c.clk_domain.clock[0]
+                self._clusters,
+                key=lambda c: c.clk_domain.clock[0],
             )
             self.l3 = L3(clk_domain=max_clock_cluster.clk_domain)
             self.toL3Bus = L2XBar(width=64)
@@ -472,7 +479,9 @@ class ArmRubySystem(BaseSimpleSystem):
 
     def connect(self):
         self.realview.attachOnChipIO(
-            self.iobus, dma_ports=self._dma_ports, mem_ports=self._mem_ports
+            self.iobus,
+            dma_ports=self._dma_ports,
+            mem_ports=self._mem_ports,
         )
 
         self.realview.attachIO(self.iobus, dma_ports=self._dma_ports)
@@ -483,5 +492,7 @@ class ArmRubySystem(BaseSimpleSystem):
 
     def attach_pci(self, dev):
         self.realview.attachPciDevice(
-            dev, self.iobus, dma_ports=self._dma_ports
+            dev,
+            self.iobus,
+            dma_ports=self._dma_ports,
         )

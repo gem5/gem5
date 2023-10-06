@@ -17,7 +17,7 @@ def upgrader(cpt):
 
         if len(ptrs) != len(limits):
             print(
-                f"'{sec}ptrs' and '{limits}limits' were not the same length!"
+                f"'{sec}ptrs' and '{limits}limits' were not the same length!",
             )
 
         cpt.set(sec, "num_mem_pools", str(len(ptrs)))

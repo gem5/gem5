@@ -80,8 +80,8 @@ class ClientWrapper:
             try:
                 resources.extend(
                     self.clients[client].get_resources(
-                        gem5_version=gem5_version
-                    )
+                        gem5_version=gem5_version,
+                    ),
                 )
             except Exception as e:
                 warn(f"Error getting resources from client {client}: {str(e)}")
@@ -114,7 +114,7 @@ class ClientWrapper:
                 raise Exception(f"Client: {client} does not exist")
             try:
                 resources.extend(
-                    self.clients[client].get_resources_by_id(resource_id)
+                    self.clients[client].get_resources_by_id(resource_id),
                 )
             except Exception as e:
                 warn(f"Error getting resources from client {client}: {str(e)}")
@@ -123,7 +123,7 @@ class ClientWrapper:
             if res1["resource_version"] == res2["resource_version"]:
                 raise Exception(
                     f"Resource {resource_id} has multiple resources with "
-                    f"the same version: {res1['resource_version']}"
+                    f"the same version: {res1['resource_version']}",
                 )
         return resources
 
@@ -157,31 +157,38 @@ class ClientWrapper:
 
         if resource_version:
             resource_to_return = self._search_version_in_resources(
-                resources, resource_id, resource_version
+                resources,
+                resource_id,
+                resource_version,
             )
 
         else:
             compatible_resources = (
                 self._get_resources_compatible_with_gem5_version(
-                    resources, gem5_version=gem5_version
+                    resources,
+                    gem5_version=gem5_version,
                 )
             )
             if len(compatible_resources) == 0:
                 resource_to_return = self._sort_resources(resources)[0]
             else:
                 resource_to_return = self._sort_resources(
-                    compatible_resources
+                    compatible_resources,
                 )[0]
 
         if gem5_version:
             self._check_resource_version_compatibility(
-                resource_to_return, gem5_version=gem5_version
+                resource_to_return,
+                gem5_version=gem5_version,
             )
 
         return resource_to_return
 
     def _search_version_in_resources(
-        self, resources: List, resource_id: str, resource_version: str
+        self,
+        resources: List,
+        resource_id: str,
+        resource_version: str,
     ) -> Dict:
         """
         Searches for the resource with the given version. If the resource is
@@ -197,7 +204,7 @@ class ClientWrapper:
                     resource
                     for resource in resources
                     if resource["resource_version"] == resource_version
-                ]
+                ],
             ),
             None,
         )
@@ -206,12 +213,14 @@ class ClientWrapper:
                 f"Resource {resource_id} with version '{resource_version}'"
                 " not found.\nResource versions can be found at: "
                 "https://resources.gem5.org/"
-                f"resources/{resource_id}/versions"
+                f"resources/{resource_id}/versions",
             )
         return return_resource
 
     def _get_resources_compatible_with_gem5_version(
-        self, resources: List, gem5_version: str = core.gem5Version
+        self,
+        resources: List,
+        gem5_version: str = core.gem5Version,
     ) -> List:
         """
         Returns a list of compatible resources with the current gem5 version.
@@ -274,7 +283,9 @@ class ClientWrapper:
         )
 
     def _check_resource_version_compatibility(
-        self, resource: dict, gem5_version: Optional[str] = core.gem5Version
+        self,
+        resource: dict,
+        gem5_version: Optional[str] = core.gem5Version,
     ) -> bool:
         """
         Checks if the resource is compatible with the gem5 version.
@@ -290,7 +301,8 @@ class ClientWrapper:
             gem5_version
             and not gem5_version.upper().startswith("DEVELOP")
             and not self._get_resources_compatible_with_gem5_version(
-                [resource], gem5_version=gem5_version
+                [resource],
+                gem5_version=gem5_version,
             )
         ):
             if not gem5_version.upper().startswith("DEVELOP"):
@@ -302,7 +314,7 @@ class ClientWrapper:
                     "This resource's compatibility "
                     "with different gem5 versions can be found here: "
                     "https://resources.gem5.org"
-                    f"/resources/{resource['id']}/versions"
+                    f"/resources/{resource['id']}/versions",
                 )
             return False
         return True

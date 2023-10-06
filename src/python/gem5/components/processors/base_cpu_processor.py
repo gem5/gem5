@@ -81,7 +81,8 @@ class BaseCPUProcessor(AbstractProcessor):
         ):
             board.set_mem_mode(MemMode.TIMING)
         elif isinstance(
-            self.cores[0].get_simobject(), BaseNonCachingSimpleCPU
+            self.cores[0].get_simobject(),
+            BaseNonCachingSimpleCPU,
         ):
             board.set_mem_mode(MemMode.ATOMIC_NONCACHING)
         elif isinstance(self.cores[0].get_simobject(), BaseAtomicSimpleCPU):
@@ -89,7 +90,7 @@ class BaseCPUProcessor(AbstractProcessor):
                 warn(
                     "Using an atomic core with Ruby will result in "
                     "'atomic_noncaching' memory mode. This will skip caching "
-                    "completely."
+                    "completely.",
                 )
                 board.set_mem_mode(MemMode.ATOMIC_NONCACHING)
             else:

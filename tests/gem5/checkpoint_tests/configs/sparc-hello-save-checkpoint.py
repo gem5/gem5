@@ -58,7 +58,9 @@ cache_hierarchy = NoCache()
 
 memory = SingleChannelDDR3_1600(size="32MB")
 processor = SimpleProcessor(
-    cpu_type=CPUTypes.TIMING, isa=ISA.SPARC, num_cores=2
+    cpu_type=CPUTypes.TIMING,
+    isa=ISA.SPARC,
+    num_cores=2,
 )
 
 board = SimpleBoard(
@@ -74,8 +76,9 @@ max_ticks = 10**6
 sim.run(max_ticks=max_ticks)
 print(
     "Exiting @ tick {} because {}.".format(
-        sim.get_current_tick(), sim.get_last_exit_event_cause()
-    )
+        sim.get_current_tick(),
+        sim.get_last_exit_event_cause(),
+    ),
 )
 print("Taking checkpoint at", args.checkpoint_path)
 sim.save_checkpoint(args.checkpoint_path)

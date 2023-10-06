@@ -40,18 +40,23 @@ import update_copyright
 class TestUpdateCopyright(unittest.TestCase):
     def update_arm_copyright(self, data, cur_year):
         return update_copyright.update_copyright(
-            data, cur_year, update_copyright.org_alias_map["arm"]
+            data,
+            cur_year,
+            update_copyright.org_alias_map["arm"],
         )
 
     def update_uc_copyright(self, data, cur_year):
         return update_copyright.update_copyright(
-            data, cur_year, update_copyright.org_alias_map["uc"]
+            data,
+            cur_year,
+            update_copyright.org_alias_map["uc"],
         )
 
     def test_cpp(self):
         self.assertEqual(
             self.update_arm_copyright(
-                b" * Copyright (c) 2019 ARM Limited\n", 2020
+                b" * Copyright (c) 2019 ARM Limited\n",
+                2020,
             ),
             b" * Copyright (c) 2019-2020 ARM Limited\n",
         )
@@ -66,7 +71,8 @@ class TestUpdateCopyright(unittest.TestCase):
     def test_python(self):
         self.assertEqual(
             self.update_arm_copyright(
-                b"# Copyright (c) 2019 ARM Limited\n", 2020
+                b"# Copyright (c) 2019 ARM Limited\n",
+                2020,
             ),
             b"# Copyright (c) 2019-2020 ARM Limited\n",
         )
@@ -89,7 +95,8 @@ class TestUpdateCopyright(unittest.TestCase):
     def test_comma(self):
         self.assertEqual(
             self.update_arm_copyright(
-                b"# Copyright (c) 2018 ARM Limited\n", 2020
+                b"# Copyright (c) 2018 ARM Limited\n",
+                2020,
             ),
             b"# Copyright (c) 2018, 2020 ARM Limited\n",
         )
@@ -97,7 +104,8 @@ class TestUpdateCopyright(unittest.TestCase):
     def test_extend_dash(self):
         self.assertEqual(
             self.update_arm_copyright(
-                b"# Copyright (c) 2018-2019 ARM Limited\n", 2020
+                b"# Copyright (c) 2018-2019 ARM Limited\n",
+                2020,
             ),
             b"# Copyright (c) 2018-2020 ARM Limited\n",
         )
@@ -105,7 +113,8 @@ class TestUpdateCopyright(unittest.TestCase):
     def test_comma_and_dash_extend(self):
         self.assertEqual(
             self.update_arm_copyright(
-                b"# Copyright (c) 2016, 2018-2019 ARM Limited\n", 2020
+                b"# Copyright (c) 2016, 2018-2019 ARM Limited\n",
+                2020,
             ),
             b"# Copyright (c) 2016, 2018-2020 ARM Limited\n",
         )
@@ -113,7 +122,8 @@ class TestUpdateCopyright(unittest.TestCase):
     def test_standardize_case(self):
         self.assertEqual(
             self.update_arm_copyright(
-                b"# Copyright (c) 2020 Arm Limited\n", 2020
+                b"# Copyright (c) 2020 Arm Limited\n",
+                2020,
             ),
             b"# Copyright (c) 2020 ARM Limited\n",
         )

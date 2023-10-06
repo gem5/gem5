@@ -54,7 +54,7 @@ if __name__ == "__m5_main__":
 
     options = parse_options(
         ("--module " + " --module ".join(modules)).split(" ")
-        + ["--output", "typings"]
+        + ["--output", "typings"],
     )
     generate_stubs(options)
 

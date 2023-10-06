@@ -52,10 +52,12 @@ class GenericRiscvPciHost(GenericPciHost):
     cxx_header = "dev/riscv/pci_host.hh"
     cxx_class = "gem5::GenericRiscvPciHost"
     int_base = Param.Int(
-        0x10, "Base number used as interrupt line and PLIC source."
+        0x10,
+        "Base number used as interrupt line and PLIC source.",
     )
     int_count = Param.Unsigned(
-        4, "Maximum number of interrupts used by this host"
+        4,
+        "Maximum number of interrupts used by this host",
     )
     # This python parameter can be used in configuration scripts to turn
     # on/off the fdt dma-coherent flag when doing dtb autogeneration

@@ -54,7 +54,9 @@ class ProbeEvent(object):
         if self.obj:
             for name in self.names:
                 self.pmu.getCCObject().addEventProbe(
-                    self.eventId, self.obj.getCCObject(), name
+                    self.eventId,
+                    self.obj.getCCObject(),
+                    name,
                 )
 
 
@@ -88,7 +90,7 @@ class ArmPMU(SimObject):
             or isinstance(newObject, SoftwareIncrement)
         ):
             raise TypeError(
-                "argument must be of ProbeEvent or SoftwareIncrement type"
+                "argument must be of ProbeEvent or SoftwareIncrement type",
             )
 
         if not self._events:
@@ -155,13 +157,13 @@ class ArmPMU(SimObject):
         self.addEvent(ProbeEvent(self, 0x10, bpred, "Misses"))
         # 0x11: CPU_CYCLES
         self.addEvent(
-            ProbeEvent(self, ARCH_EVENT_CORE_CYCLES, cpu, "ActiveCycles")
+            ProbeEvent(self, ARCH_EVENT_CORE_CYCLES, cpu, "ActiveCycles"),
         )
         # 0x12: BR_PRED
         self.addEvent(ProbeEvent(self, 0x12, bpred, "Branches"))
         # 0x13: MEM_ACCESS
         self.addEvent(
-            ProbeEvent(self, 0x13, cpu, "RetiredLoads", "RetiredStores")
+            ProbeEvent(self, 0x13, cpu, "RetiredLoads", "RetiredStores"),
         )
         # 0x14: L1I_CACHE
         # 0x15: L1D_CACHE_WB
@@ -205,8 +207,9 @@ class ArmPMU(SimObject):
         gic = self.platform.unproxy(self).gic
         node.append(
             FdtPropertyWords(
-                "interrupts", self.interrupt.generateFdtProperty(gic)
-            )
+                "interrupts",
+                self.interrupt.generateFdtProperty(gic),
+            ),
         )
 
         yield node
@@ -216,7 +219,8 @@ class ArmPMU(SimObject):
     eventCounters = Param.Int(31, "Number of supported PMU counters")
     interrupt = Param.ArmInterruptPin("PMU interrupt")
     exitOnPMUControl = Param.Bool(
-        False, "Exit on PMU enable, disable, or reset"
+        False,
+        "Exit on PMU enable, disable, or reset",
     )
     exitOnPMUInterrupt = Param.Bool(False, "Exit on PMU interrupt")
 

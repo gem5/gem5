@@ -47,19 +47,19 @@ def _printErrorQuit(error_message):
     print(
         "The commit has been cancelled, but a copy of it can be found in "
         + sys.argv[1]
-        + " : "
+        + " : ",
     )
 
     print(
         """
 --------------------------------------------------------------------------
-    """
+    """,
     )
     print(open(sys.argv[1], "r").read())
     print(
         """
 --------------------------------------------------------------------------
-    """
+    """,
     )
 
     print(
@@ -81,7 +81,7 @@ e.g.:
     mem,mem-cache: Improve packet class readability
 
     The packet class...
-"""
+""",
     )
     sys.exit(1)
 
@@ -118,7 +118,8 @@ commit_message = open(sys.argv[1]).read()
 commit_message_lines = commit_message.splitlines()
 commit_header = commit_message_lines[0]
 commit_header_match = re.search(
-    "^(fixup! )?(\S[\w\-][,\s*[\w\-]+]*:.+\S$)", commit_header
+    "^(fixup! )?(\S[\w\-][,\s*[\w\-]+]*:.+\S$)",
+    commit_header,
 )
 if commit_header_match is None:
     _printErrorQuit("Invalid commit header")
@@ -137,7 +138,7 @@ if len(commit_header) > max_header_size:
         + str(len(commit_header))
         + " > "
         + str(max_header_size)
-        + ")"
+        + ")",
     )
 
 # Then there must be at least one empty line between the commit header and
@@ -145,12 +146,13 @@ if len(commit_header) > max_header_size:
 if commit_message_lines[1] != "":
     _printErrorQuit(
         "Please add an empty line between the commit title and "
-        "its description"
+        "its description",
     )
 
 # Encourage providing descriptions
 if re.search(
-    "^(Signed-off-by|Change-Id|Reviewed-by):", commit_message_lines[2]
+    "^(Signed-off-by|Change-Id|Reviewed-by):",
+    commit_message_lines[2],
 ):
     print("Warning: Commit does not have a description")
 

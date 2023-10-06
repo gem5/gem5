@@ -73,7 +73,8 @@ class ObjectList(object):
 
         print(f"Available {self.base_cls} classes:")
         doc_wrapper = TextWrapper(
-            initial_indent="\t\t", subsequent_indent="\t\t"
+            initial_indent="\t\t",
+            subsequent_indent="\t\t",
         )
         for name, cls in list(self._sub_classes.items()):
             print(f"\t{name}")
@@ -128,7 +129,8 @@ class CPUList(ObjectList):
         # and ProxyFactory classes have a tendency to confuse it.
         try:
             return super(CPUList, self)._is_obj_class(cls) and not issubclass(
-                cls, m5.objects.CheckerCPU
+                cls,
+                m5.objects.CheckerCPU,
             )
         except (TypeError, AttributeError):
             return False
@@ -143,17 +145,20 @@ class CPUList(ObjectList):
         } | {isa.name.lower() for isa in get_supported_isas()}:
             try:
                 package = import_module(
-                    ".cores." + isa, package=__name__.rpartition(".")[0]
+                    ".cores." + isa,
+                    package=__name__.rpartition(".")[0],
                 )
             except ImportError:
                 # No timing models for this ISA
                 continue
 
             for mod_name, module in inspect.getmembers(
-                package, inspect.ismodule
+                package,
+                inspect.ismodule,
             ):
                 for name, cls in inspect.getmembers(
-                    module, self._is_obj_class
+                    module,
+                    self._is_obj_class,
                 ):
                     self._sub_classes[name] = cls
 
@@ -178,14 +183,15 @@ hwp_list = ObjectList(getattr(m5.objects, "BasePrefetcher", None))
 indirect_bp_list = ObjectList(getattr(m5.objects, "IndirectPredictor", None))
 mem_list = ObjectList(getattr(m5.objects, "AbstractMemory", None))
 dram_addr_map_list = EnumList(
-    getattr(m5.internal.params, "enum_AddrMap", None)
+    getattr(m5.internal.params, "enum_AddrMap", None),
 )
 
 # Platform aliases. The platforms listed here might not be compiled,
 # we make sure they exist before we add them to the platform list.
 _platform_aliases_all = [("VExpress_GEM5", "VExpress_GEM5_V1")]
 platform_list = ObjectList(
-    getattr(m5.objects, "Platform", None), _platform_aliases_all
+    getattr(m5.objects, "Platform", None),
+    _platform_aliases_all,
 )
 
 

@@ -66,7 +66,8 @@ class AbstractStat(SerializableStat):
                     to_return.append(obj)
                 if recursive:
                     to_return = to_return + obj.children(
-                        predicate=predicate, recursive=True
+                        predicate=predicate,
+                        recursive=True,
                     )
 
         return to_return
@@ -90,5 +91,6 @@ class AbstractStat(SerializableStat):
         else:
             pattern = regex
         return self.children(
-            lambda _name: re.match(pattern, _name), recursive=True
+            lambda _name: re.match(pattern, _name),
+            recursive=True,
         )

@@ -95,10 +95,10 @@ class IrisBaseCPU(BaseCPU, IrisCPU):
         return False
 
     evs = Param.SystemC_ScModule(
-        "Fast model exported virtual subsystem holding cores"
+        "Fast model exported virtual subsystem holding cores",
     )
     thread_paths = VectorParam.String(
-        "Sub-paths to elements in the EVS which support a thread context"
+        "Sub-paths to elements in the EVS which support a thread context",
     )
 
     mmu = IrisMMU()

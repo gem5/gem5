@@ -54,7 +54,8 @@ class BaseGic(PioDevice):
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
 
     gicd_iidr = Param.UInt32(
-        0, "Distributor Implementer Identification Register"
+        0,
+        "Distributor Implementer Identification Register",
     )
     gicd_pidr = Param.UInt32(0, "Peripheral Identification Register")
     gicc_iidr = Param.UInt32(0, "CPU Interface Identification Register")
@@ -104,7 +105,8 @@ class ArmInterruptPin(SimObject):
     platform = Param.Platform(Parent.any, "Platform with interrupt controller")
     num = Param.UInt32("Interrupt number in GIC")
     int_type = Param.ArmInterruptType(
-        "IRQ_TYPE_LEVEL_HIGH", "Interrupt type (level/edge triggered)"
+        "IRQ_TYPE_LEVEL_HIGH",
+        "Interrupt type (level/edge triggered)",
     )
 
 
@@ -123,7 +125,9 @@ class ArmSPI(ArmInterruptPin):
         gem5 uses the internal GIC numbering (SPIs start at 32)
         """
         return gic.interruptCells(
-            self._LINUX_ID, self.num - 32, int(self.int_type.getValue())
+            self._LINUX_ID,
+            self.num - 32,
+            int(self.int_type.getValue()),
         )
 
 
@@ -142,7 +146,9 @@ class ArmPPI(ArmInterruptPin):
         gem5 uses the internal GIC numbering (PPIs start at 16)
         """
         return gic.interruptCells(
-            self._LINUX_ID, self.num - 16, int(self.int_type.getValue())
+            self._LINUX_ID,
+            self.num - 16,
+            int(self.int_type.getValue()),
         )
 
 
@@ -166,7 +172,8 @@ class GicV2(BaseGic):
     cpu_pio_delay = Param.Latency("10ns", "Delay for PIO r/w to cpu interface")
     int_latency = Param.Latency("10ns", "Delay for interrupt to get to CPU")
     it_lines = Param.UInt32(
-        128, "Number of interrupt lines supported (max = 1020)"
+        128,
+        "Number of interrupt lines supported (max = 1020)",
     )
     gem5_extensions = Param.Bool(False, "Enable gem5 extensions")
 
@@ -219,7 +226,8 @@ class VGic(PioDevice):
 
     # gicv_iidr same as gicc_idr
     gicv_iidr = Param.UInt32(
-        Self.gic.gicc_iidr, "VM CPU Interface Identification Register"
+        Self.gic.gicc_iidr,
+        "VM CPU Interface Identification Register",
     )
 
     def generateDeviceTree(self, state):
@@ -227,7 +235,7 @@ class VGic(PioDevice):
 
         node = FdtNode("interrupt-controller")
         node.appendCompatible(
-            ["gem5,gic", "arm,cortex-a15-gic", "arm,cortex-a9-gic"]
+            ["gem5,gic", "arm,cortex-a15-gic", "arm,cortex-a9-gic"],
         )
         node.append(gic._state.interruptCellsProperty())
         node.append(gic._state.addrCellsProperty())
@@ -247,8 +255,9 @@ class VGic(PioDevice):
         node.append(FdtPropertyWords("reg", regs))
         node.append(
             FdtPropertyWords(
-                "interrupts", [1, int(self.maint_int) - 16, 0xF04]
-            )
+                "interrupts",
+                [1, int(self.maint_int) - 16, 0xF04],
+            ),
         )
 
         node.appendPhandle(gic)
@@ -271,7 +280,10 @@ class Gicv3Its(BasicPioDevice):
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(
-            state, "gic-its", self.pio_addr, self.pio_size
+            state,
+            "gic-its",
+            self.pio_addr,
+            self.pio_size,
         )
         node.appendCompatible(["arm,gic-v3-its"])
         node.append(FdtProperty("msi-controller"))
@@ -294,16 +306,18 @@ class Gicv3(BaseGic):
     dist_pio_delay = Param.Latency("10ns", "Delay for PIO r/w to distributor")
     redist_addr = Param.Addr("Address for redistributors")
     redist_pio_delay = Param.Latency(
-        "10ns", "Delay for PIO r/w to redistributors"
+        "10ns",
+        "Delay for PIO r/w to redistributors",
     )
     it_lines = Param.UInt32(
-        1020, "Number of interrupt lines supported (max = 1020)"
+        1020,
+        "Number of interrupt lines supported (max = 1020)",
     )
 
     maint_int = Param.ArmInterruptPin(
         "HV maintenance interrupt."
         "ARM strongly recommends that maintenance interrupts "
-        "are configured to use INTID 25 (PPI Interrupt)."
+        "are configured to use INTID 25 (PPI Interrupt).",
     )
 
     cpu_max = Param.Unsigned(
@@ -349,8 +363,9 @@ class Gicv3(BaseGic):
         redist_stride = 0x40000 if self.gicv4 else 0x20000
         node.append(
             FdtPropertyWords(
-                "redistributor-stride", state.sizeCells(redist_stride)
-            )
+                "redistributor-stride",
+                state.sizeCells(redist_stride),
+            ),
         )
 
         regs = (
@@ -365,7 +380,7 @@ class Gicv3(BaseGic):
             FdtPropertyWords(
                 "interrupts",
                 self.interruptCells(1, int(self.maint_int.num) - 16, 0x4),
-            )
+            ),
         )
 
         node.appendPhandle(self)

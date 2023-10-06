@@ -43,7 +43,7 @@ class TypeFieldEnumAST(TypeFieldAST):
     def generate(self, type, **kwargs):
         if str(type) == "State":
             self.error(
-                "States must in a State Declaration, not a normal enum."
+                "States must in a State Declaration, not a normal enum.",
             )
 
         # Add enumeration
@@ -63,6 +63,9 @@ class TypeFieldEnumAST(TypeFieldAST):
             if not machine:
                 self.error("RequestType declaration not part of a machine.")
             s = RequestType(
-                self.symtab, self.field_id, self.location, self.pairs
+                self.symtab,
+                self.field_id,
+                self.location,
+                self.pairs,
             )
             machine.addRequestType(s)

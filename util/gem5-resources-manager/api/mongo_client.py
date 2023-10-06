@@ -47,7 +47,9 @@ class MongoDBClient(Client):
         self.collection_name = collection_name
         self.database_name = database_name
         self.collection = self._get_database(
-            mongo_uri, database_name, collection_name
+            mongo_uri,
+            database_name,
+            collection_name,
         )
 
     def _get_database(
@@ -74,7 +76,7 @@ class MongoDBClient(Client):
         except ConnectionFailure:
             client.close()
             raise DatabaseConnectionError(
-                "Could not connect to MongoClient with given URI!"
+                "Could not connect to MongoClient with given URI!",
             )
         except ConfigurationError as e:
             raise DatabaseConnectionError(e)
@@ -159,7 +161,8 @@ class MongoDBClient(Client):
         :return: json_resource: JSON object with all resource versions
         """
         versions = self.collection.find(
-            {"id": query["id"]}, {"resource_version": 1, "_id": 0}
+            {"id": query["id"]},
+            {"resource_version": 1, "_id": 0},
         ).sort("resource_version", -1)
         # convert to json
         res = json_util.dumps(versions)
@@ -177,7 +180,7 @@ class MongoDBClient(Client):
         :return: json_response: JSON object with status message
         """
         self.collection.delete_one(
-            {"id": query["id"], "resource_version": query["resource_version"]}
+            {"id": query["id"], "resource_version": query["resource_version"]},
         )
         return {"status": "Deleted"}
 

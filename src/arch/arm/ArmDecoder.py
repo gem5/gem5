@@ -44,5 +44,6 @@ class ArmDecoder(InstDecoder):
     cxx_header = "arch/arm/decoder.hh"
 
     dvm_enabled = Param.Bool(
-        False, "Does the decoder implement DVM operations"
+        False,
+        "Does the decoder implement DVM operations",
     )

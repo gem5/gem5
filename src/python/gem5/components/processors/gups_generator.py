@@ -61,8 +61,8 @@ class GUPSGenerator(AbstractGenerator):
                     mem_size=mem_size,
                     update_limit=update_limit,
                     clk_freq=clk_freq,
-                )
-            ]
+                ),
+            ],
         )
 
     @overrides(AbstractGenerator)

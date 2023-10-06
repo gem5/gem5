@@ -51,7 +51,8 @@ from .ruby_network_components import RubyRouter
 # OctopiCache owns the directory controllers
 # RubySystem owns the DMA Controllers
 class OctopiCache(
-    AbstractRubyCacheHierarchy, AbstractThreeLevelCacheHierarchy
+    AbstractRubyCacheHierarchy,
+    AbstractThreeLevelCacheHierarchy,
 ):
     def __init__(
         self,
@@ -88,7 +89,7 @@ class OctopiCache(
 
     def incorporate_cache(self, board: AbstractBoard) -> None:
         requires(
-            coherence_protocol_required=CoherenceProtocol.MESI_THREE_LEVEL
+            coherence_protocol_required=CoherenceProtocol.MESI_THREE_LEVEL,
         )
 
         cache_line_size = board.get_cache_line_size()
@@ -173,7 +174,8 @@ class OctopiCache(
         self.directory_controller_ext_links = [
             RubyExtLink(ext_node=dir_ctrl, int_node=dir_router)
             for dir_ctrl, dir_router in zip(
-                self.directory_controllers, self.directory_controller_routers
+                self.directory_controllers,
+                self.directory_controller_routers,
             )
         ]
         for ext_link in self.directory_controller_ext_links:
@@ -181,7 +183,8 @@ class OctopiCache(
         _directory_controller_int_links = []
         for router in self.directory_controller_routers:
             int_link_1, int_link_2 = RubyIntLink.create_bidirectional_links(
-                router, self.ruby_system.network.cross_ccd_router
+                router,
+                self.ruby_system.network.cross_ccd_router,
             )
             _directory_controller_int_links.extend([int_link_1, int_link_2])
             self.ruby_system.network._add_int_link(int_link_1)
@@ -192,11 +195,13 @@ class OctopiCache(
         # IOController for full system simulation
         if self._is_fullsystem:
             self.io_sequencer = DMASequencer(
-                version=0, ruby_system=self.ruby_system
+                version=0,
+                ruby_system=self.ruby_system,
             )
             self.io_sequencer.in_ports = board.get_mem_side_coherent_io_port()
             self.ruby_system.io_controller = DMAController(
-                dma_sequencer=self.io_sequencer, ruby_system=self.ruby_system
+                dma_sequencer=self.io_sequencer,
+                ruby_system=self.ruby_system,
             )
             self._io_controllers.append(self.ruby_system.io_controller)
             self.io_controller_router = RubyRouter(self.ruby_system.network)
@@ -213,10 +218,10 @@ class OctopiCache(
                 )
             )
             self.ruby_system.network._add_int_link(
-                self.io_controller_int_links[0]
+                self.io_controller_int_links[0],
             )
             self.ruby_system.network._add_int_link(
-                self.io_controller_int_links[1]
+                self.io_controller_int_links[1],
             )
 
         self._dma_controllers = []
@@ -238,19 +243,22 @@ class OctopiCache(
             self.dma_ext_links = [
                 RubyExtLink(ext_node=dma_controller, int_node=dma_router)
                 for dma_controller, dma_router in zip(
-                    self._dma_controllers, self.dma_routers
+                    self._dma_controllers,
+                    self.dma_routers,
                 )
             ]
             for link in self.dma_ext_links:
                 self.ruby_system.network._add_ext_link(link)
             self.dma_int_links = [
                 RubyIntLink(
-                    dma_router, self.ruby_system.network.cross_ccd_router
+                    dma_router,
+                    self.ruby_system.network.cross_ccd_router,
                 )
                 for dma_router in self.dma_routers
             ] + [
                 RubyIntLink(
-                    self.ruby_system.network.cross_ccd_router, dma_router
+                    self.ruby_system.network.cross_ccd_router,
+                    dma_router,
                 )
                 for dma_router in self.dma_routers
             ]

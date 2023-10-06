@@ -83,11 +83,13 @@ class ArmISA(BaseISA):
 
     pmu = Param.ArmPMU(NULL, "Performance Monitoring Unit")
     decoderFlavor = Param.DecoderFlavor(
-        "Generic", "Decoder flavor specification"
+        "Generic",
+        "Decoder flavor specification",
     )
 
     release_se = Param.ArmRelease(
-        ArmDefaultSERelease(), "Set of features/extensions to use in SE mode"
+        ArmDefaultSERelease(),
+        "Set of features/extensions to use in SE mode",
     )
 
     # If no MIDR value is provided, 0x0 is treated by gem5 as follows:
@@ -123,44 +125,53 @@ class ArmISA(BaseISA):
 
     # [31:0] is implementation defined
     id_aa64afr0_el1 = Param.UInt64(
-        0x0000000000000000, "AArch64 Auxiliary Feature Register 0"
+        0x0000000000000000,
+        "AArch64 Auxiliary Feature Register 0",
     )
     # Reserved for future expansion
     id_aa64afr1_el1 = Param.UInt64(
-        0x0000000000000000, "AArch64 Auxiliary Feature Register 1"
+        0x0000000000000000,
+        "AArch64 Auxiliary Feature Register 1",
     )
 
     # 1 CTX CMPs | 16 WRPs | 16 BRPs | !PMU | !Trace | Debug v8-A
     id_aa64dfr0_el1 = Param.UInt64(
-        0x0000000000F0F006, "AArch64 Debug Feature Register 0"
+        0x0000000000F0F006,
+        "AArch64 Debug Feature Register 0",
     )
     # Reserved for future expansion
     id_aa64dfr1_el1 = Param.UInt64(
-        0x0000000000000000, "AArch64 Debug Feature Register 1"
+        0x0000000000000000,
+        "AArch64 Debug Feature Register 1",
     )
 
     # !FHM | !TME | !Atomic | !CRC32 | !SHA2 | RDM | !SHA1 | !AES
     id_aa64isar0_el1 = Param.UInt64(
-        0x0000000010000000, "AArch64 Instruction Set Attribute Register 0"
+        0x0000000010000000,
+        "AArch64 Instruction Set Attribute Register 0",
     )
 
     # !I8MM | !BF16 | SPECRES = 0 | !SB |
     # GPI = 0x0 | GPA = 0x1 | API=0x0 | FCMA | JSCVT | APA=0x1
     id_aa64isar1_el1 = Param.UInt64(
-        0x0000000001011010, "AArch64 Instruction Set Attribute Register 1"
+        0x0000000001011010,
+        "AArch64 Instruction Set Attribute Register 1",
     )
 
     # 4K | 64K | !16K | !BigEndEL0 | !SNSMem | !BigEnd | 8b ASID | 40b PA
     id_aa64mmfr0_el1 = Param.UInt64(
-        0x0000000000F00002, "AArch64 Memory Model Feature Register 0"
+        0x0000000000F00002,
+        "AArch64 Memory Model Feature Register 0",
     )
     # PAN | HPDS | !VHE | VMIDBits
     id_aa64mmfr1_el1 = Param.UInt64(
-        0x0000000000101020, "AArch64 Memory Model Feature Register 1"
+        0x0000000000101020,
+        "AArch64 Memory Model Feature Register 1",
     )
     # |VARANGE | UAO
     id_aa64mmfr2_el1 = Param.UInt64(
-        0x0000000000010010, "AArch64 Memory Model Feature Register 2"
+        0x0000000000010010,
+        "AArch64 Memory Model Feature Register 2",
     )
 
     # Any access (read/write) to an unimplemented
@@ -174,10 +185,12 @@ class ArmISA(BaseISA):
     # These are required because in SE mode a generic System SimObject
     # is allocated, instead of an ArmSystem
     sve_vl_se = Param.SveVectorLength(
-        1, "SVE vector length in quadwords (128-bit), SE-mode only"
+        1,
+        "SVE vector length in quadwords (128-bit), SE-mode only",
     )
     sme_vl_se = Param.SmeVectorLength(
-        1, "SME vector length in quadwords (128-bit), SE-mode only"
+        1,
+        "SME vector length in quadwords (128-bit), SE-mode only",
     )
 
     # Recurse into subnodes to generate DTB entries. This is mainly needed to

@@ -51,7 +51,7 @@ from common import MemConfig
 # through an idle state with no requests to enforce self-refresh.
 
 parser = argparse.ArgumentParser(
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 
 # Use a single-channel DDR4-2400 in 16x4 configuration by default
@@ -86,7 +86,10 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--rd-perc", type=int, default=100, help="Percentage of read commands"
+    "--rd-perc",
+    type=int,
+    default=100,
+    help="Percentage of read commands",
 )
 
 parser.add_argument(
@@ -110,7 +113,8 @@ args = parser.parse_args()
 # which amounts to 42.7 GByte/s per layer and thus per port.
 system = System(membus=IOXBar(width=32))
 system.clk_domain = SrcClockDomain(
-    clock="2.0GHz", voltage_domain=VoltageDomain(voltage="1V")
+    clock="2.0GHz",
+    voltage_domain=VoltageDomain(voltage="1V"),
 )
 
 # We are fine with 256 MB memory for now.
@@ -166,7 +170,7 @@ burst_size = int(
         * system.mem_ctrls[0].dram.device_bus_width.value
         * system.mem_ctrls[0].dram.burst_length.value
     )
-    / 8
+    / 8,
 )
 
 # next, get the page size in bytes (the rowbuffer size is already in bytes)
@@ -218,7 +222,7 @@ bank_util_values = [1, int(nbr_banks / 2), nbr_banks]
 cfg_file.write(
     """# STATE state# period mode=DRAM
 # read_percent start_addr end_addr req_size min_itt max_itt data_limit
-# stride_size page_size #banks #banks_util addr_map #ranks\n"""
+# stride_size page_size #banks #banks_util addr_map #ranks\n""",
 )
 
 addr_map = m5.objects.AddrMap.map[args.addr_map]
@@ -246,7 +250,7 @@ for itt_max in itt_max_values:
                     bank,
                     addr_map,
                     args.mem_ranks,
-                )
+                ),
             )
             nxt_state = nxt_state + 1
 
@@ -293,7 +297,7 @@ print("--- Done DRAM low power sweep ---")
 print("Fixed params - ")
 print(
     "\tburst: %d, banks: %d, max stride: %d, itt min: %s ns"
-    % (burst_size, nbr_banks, max_stride, itt_min)
+    % (burst_size, nbr_banks, max_stride, itt_min),
 )
 print("Swept params - ")
 print("\titt max multiples input:", itt_max_multiples)

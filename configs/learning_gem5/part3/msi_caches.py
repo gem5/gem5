@@ -69,7 +69,7 @@ class MyCacheSystem(RubySystem):
         # Create one controller for each L1 cache (and the cache mem obj.)
         # Create a single directory controller (Really the memory cntrl)
         self.controllers = [L1Cache(system, self, cpu) for cpu in cpus] + [
-            DirController(self, system.mem_ranges, mem_ctrls)
+            DirController(self, system.mem_ranges, mem_ctrls),
         ]
 
         # Create one sequencer per CPU. In many systems this is more
@@ -124,7 +124,9 @@ class L1Cache(L1Cache_Controller):
         self.version = self.versionCount()
         # This is the cache memory object that stores the cache data and tags
         self.cacheMemory = RubyCache(
-            size="16kB", assoc=8, start_index_bit=self.getBlockSizeBits(system)
+            size="16kB",
+            assoc=8,
+            start_index_bit=self.getBlockSizeBits(system),
         )
         self.clk_domain = cpu.clk_domain
         self.send_evictions = self.sendEvicts(cpu)
@@ -242,6 +244,10 @@ class MyNetwork(SimpleNetwork):
                     continue  # Don't connect a router to itself!
                 link_count += 1
                 int_links.append(
-                    SimpleIntLink(link_id=link_count, src_node=ri, dst_node=rj)
+                    SimpleIntLink(
+                        link_id=link_count,
+                        src_node=ri,
+                        dst_node=rj,
+                    ),
                 )
         self.int_links = int_links

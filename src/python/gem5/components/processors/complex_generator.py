@@ -130,7 +130,8 @@ class ComplexGenerator(AbstractGenerator):
             )
 
     def set_traffic_from_python_generator(
-        self, generator: Iterator[Any]
+        self,
+        generator: Iterator[Any],
     ) -> None:
         """
         Sets the traffic pattern defined by generator argument.

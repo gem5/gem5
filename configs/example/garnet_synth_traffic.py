@@ -82,7 +82,10 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--sim-cycles", type=int, default=1000, help="Number of simulation cycles"
+    "--sim-cycles",
+    type=int,
+    default=1000,
+    help="Number of simulation cycles",
 )
 
 parser.add_argument(
@@ -149,14 +152,16 @@ system = System(cpu=cpus, mem_ranges=[AddrRange(args.mem_size)])
 system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
 
 system.clk_domain = SrcClockDomain(
-    clock=args.sys_clock, voltage_domain=system.voltage_domain
+    clock=args.sys_clock,
+    voltage_domain=system.voltage_domain,
 )
 
 Ruby.create_system(args, False, system)
 
 # Create a seperate clock domain for Ruby
 system.ruby.clk_domain = SrcClockDomain(
-    clock=args.ruby_clock, voltage_domain=system.voltage_domain
+    clock=args.ruby_clock,
+    voltage_domain=system.voltage_domain,
 )
 
 i = 0

@@ -57,6 +57,6 @@ class AST(PairContainer):
         code(
             """
 panic("Runtime Error at ${{self.location}}: %s.\\n", $message);
-"""
+""",
         )
         return code

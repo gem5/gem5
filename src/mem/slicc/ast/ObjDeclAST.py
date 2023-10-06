@@ -67,7 +67,7 @@ class ObjDeclAST(DeclAST):
             rvalue_type, init_code = self.rvalue.inline(True)
             if type != rvalue_type:
                 self.error(
-                    f"Initialization type mismatch '{type}' and '{rvalue_type}'"
+                    f"Initialization type mismatch '{type}' and '{rvalue_type}'",
                 )
 
         machine = self.symtab.state_machine
@@ -85,7 +85,10 @@ class ObjDeclAST(DeclAST):
         # Add data member to the parent type
         if parent:
             if not parent.addDataMember(
-                self.ident, type, self.pairs, init_code
+                self.ident,
+                type,
+                self.pairs,
+                init_code,
             ):
                 self.error(f"Duplicate data member: {parent}:{self.ident}")
 

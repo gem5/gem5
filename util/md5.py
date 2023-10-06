@@ -32,7 +32,7 @@ from gem5.resources.md5_utils import md5_file
 parser = argparse.ArgumentParser(
     description="A utility to determine the md5 hash of files and "
     "directories. These will correspond the hash values recorded "
-    "for gem5-resources entries."
+    "for gem5-resources entries.",
 )
 
 parser.add_argument("path", type=str, help="The path to the file/directory.")

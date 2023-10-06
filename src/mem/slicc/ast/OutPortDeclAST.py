@@ -55,7 +55,8 @@ class OutPortDeclAST(DeclAST):
 
         if not self.symtab.find(self.msg_type.ident, Type):
             self.error(
-                "The message type '%s' does not exist.", self.msg_type.ident
+                "The message type '%s' does not exist.",
+                self.msg_type.ident,
             )
 
         var = Var(

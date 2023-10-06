@@ -145,7 +145,8 @@ class MemberMethodCallExprAST(MethodCallExprAST):
                 implementedMethodId = ""
                 if implements_interface:
                     implementedMethodId = obj_type.methodIdAbstract(
-                        self.proc_name, implemented_paramTypes
+                        self.proc_name,
+                        implemented_paramTypes,
                     )
 
                 if implementedMethodId not in obj_type.methods:

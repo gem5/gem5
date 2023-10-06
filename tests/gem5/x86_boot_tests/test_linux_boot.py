@@ -44,7 +44,11 @@ def test_boot(
     to_tick: Optional[int] = None,
 ):
     name = "{}-cpu_{}-cores_{}_{}_{}_x86-boot-test".format(
-        cpu, str(num_cpus), mem_system, memory_class, boot_type
+        cpu,
+        str(num_cpus),
+        mem_system,
+        memory_class,
+        boot_type,
     )
     verifiers = []
     additional_config_args = []
@@ -52,7 +56,7 @@ def test_boot(
     if to_tick != None:
         name += "_to-tick"
         exit_regex = re.compile(
-            f"Exiting @ tick {str(to_tick)} because simulate\\(\\) limit reached"
+            f"Exiting @ tick {str(to_tick)} because simulate\\(\\) limit reached",
         )
         verifiers.append(verifier.MatchRegex(exit_regex))
         additional_config_args.append("--tick-exit")

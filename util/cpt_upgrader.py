@@ -114,14 +114,14 @@ class Upgrader:
         if hasattr(self, "upgrader"):
             if not isinstance(self.upgrader, types.FunctionType):
                 print(
-                    f"Error: 'upgrader' for {self.tag} is {type(self)}, not function"
+                    f"Error: 'upgrader' for {self.tag} is {type(self)}, not function",
                 )
                 sys.exit(1)
             Upgrader.tag_set.add(self.tag)
         elif hasattr(self, "downgrader"):
             if not isinstance(self.downgrader, types.FunctionType):
                 print(
-                    f"Error: 'downgrader' for {self.tag} is {type(self)}, not function"
+                    f"Error: 'downgrader' for {self.tag} is {type(self)}, not function",
                 )
                 sys.exit(1)
             Upgrader.untag_set.add(self.tag)
@@ -173,14 +173,14 @@ class Upgrader:
                 if fd not in Upgrader.by_tag:
                     print(
                         "Error: '{}' cannot (forward) depend on "
-                        "nonexistent tag '{}'".format(fd, tag)
+                        "nonexistent tag '{}'".format(fd, tag),
                     )
                     sys.exit(1)
                 Upgrader.by_tag[fd].depends.append(tag)
             for dep in upg.depends:
                 if dep not in Upgrader.by_tag:
                     print(
-                        f"Error: '{tag}' cannot depend on nonexistent tag '{dep}'"
+                        f"Error: '{tag}' cannot depend on nonexistent tag '{dep}'",
                     )
                     sys.exit(1)
 
@@ -328,7 +328,7 @@ if __name__ == "__main__":
     elif not args.checkpoint:
         parser.error(
             "You must specify a checkpoint file to modify or a "
-            "directory of checkpoints to recursively update"
+            "directory of checkpoints to recursively update",
         )
 
     # Deal with shell variables and ~

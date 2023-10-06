@@ -49,22 +49,25 @@ class SerialLink(ClockedObject):
     cxx_class = "gem5::SerialLink"
 
     mem_side_port = RequestPort(
-        "This port sends requests and receives responses"
+        "This port sends requests and receives responses",
     )
     master = DeprecatedParam(
-        mem_side_port, "`master` is now called `mem_side_port`"
+        mem_side_port,
+        "`master` is now called `mem_side_port`",
     )
     cpu_side_port = ResponsePort(
-        "This port receives requests and sends responses"
+        "This port receives requests and sends responses",
     )
     slave = DeprecatedParam(
-        cpu_side_port, "`slave` is now called `cpu_side_port`"
+        cpu_side_port,
+        "`slave` is now called `cpu_side_port`",
     )
     req_size = Param.Unsigned(16, "The number of requests to buffer")
     resp_size = Param.Unsigned(16, "The number of responses to buffer")
     delay = Param.Latency("0ns", "The latency of this serial_link")
     ranges = VectorParam.AddrRange(
-        [AllMemory], "Address ranges to pass through the serial_link"
+        [AllMemory],
+        "Address ranges to pass through the serial_link",
     )
     # Bandwidth of the serial link is determined by the clock domain which the
     #  link belongs to and the number of lanes:

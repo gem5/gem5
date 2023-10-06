@@ -42,7 +42,8 @@ from .topologies.simple_pt2pt import SimplePt2Pt
 
 
 class MESITwoLevelCacheHierarchy(
-    AbstractRubyCacheHierarchy, AbstractTwoLevelCacheHierarchy
+    AbstractRubyCacheHierarchy,
+    AbstractTwoLevelCacheHierarchy,
 ):
     """A two level private L1 shared L2 MESI hierarchy.
 
@@ -104,7 +105,9 @@ class MESITwoLevelCacheHierarchy(
             )
 
             cache.sequencer = RubySequencer(
-                version=i, dcache=cache.L1Dcache, clk_domain=cache.clk_domain
+                version=i,
+                dcache=cache.L1Dcache,
+                clk_domain=cache.clk_domain,
             )
 
             if board.has_io_bus():
@@ -116,7 +119,8 @@ class MESITwoLevelCacheHierarchy(
             core.connect_dcache(cache.sequencer.in_ports)
 
             core.connect_walker_ports(
-                cache.sequencer.in_ports, cache.sequencer.in_ports
+                cache.sequencer.in_ports,
+                cache.sequencer.in_ports,
             )
 
             # Connect the interrupt ports
@@ -163,7 +167,7 @@ class MESITwoLevelCacheHierarchy(
                 ctrl.ruby_system = self.ruby_system
 
         self.ruby_system.num_of_sequencers = len(self._l1_controllers) + len(
-            self._dma_controllers
+            self._dma_controllers,
         )
         self.ruby_system.l1_controllers = self._l1_controllers
         self.ruby_system.l2_controllers = self._l2_controllers
@@ -177,7 +181,7 @@ class MESITwoLevelCacheHierarchy(
             self._l1_controllers
             + self._l2_controllers
             + self._directory_controllers
-            + self._dma_controllers
+            + self._dma_controllers,
         )
         self.ruby_system.network.setup_buffers()
 

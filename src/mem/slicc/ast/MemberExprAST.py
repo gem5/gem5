@@ -67,5 +67,5 @@ class MemberExprAST(ExprAST):
                         return interface_type.data_members[self.field].type
         self.error(
             "Invalid object field: "
-            + f"Type '{return_type}' does not have data member {self.field}"
+            + f"Type '{return_type}' does not have data member {self.field}",
         )

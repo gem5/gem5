@@ -105,14 +105,17 @@ class Switch(BasicRouter):
     cxx_class = "gem5::ruby::Switch"
 
     virt_nets = Param.Int(
-        Parent.number_of_virtual_networks, "number of virtual networks"
+        Parent.number_of_virtual_networks,
+        "number of virtual networks",
     )
 
     int_routing_latency = Param.Cycles(
-        BasicRouter.latency, "Routing latency to internal links"
+        BasicRouter.latency,
+        "Routing latency to internal links",
     )
     ext_routing_latency = Param.Cycles(
-        BasicRouter.latency, "Routing latency to external links"
+        BasicRouter.latency,
+        "Routing latency to external links",
     )
 
     # Internal port buffers used between the PerfectSwitch and
@@ -123,7 +126,8 @@ class Switch(BasicRouter):
     port_buffers = VectorParam.MessageBuffer([], "Port buffers")
 
     routing_unit = Param.BaseRoutingUnit(
-        WeightBased(adaptive_routing=False), "Routing strategy to be used"
+        WeightBased(adaptive_routing=False),
+        "Routing strategy to be used",
     )
 
     def setup_buffers(self, network):
@@ -151,7 +155,7 @@ class Switch(BasicRouter):
             if link.dst_node == self:
                 for i in range(int(network.number_of_virtual_networks)):
                     router_buffers.append(
-                        SwitchPortBuffer(buffer_size=vnet_buffer_size(i))
+                        SwitchPortBuffer(buffer_size=vnet_buffer_size(i)),
                     )
 
         # Add message buffers to routers for each external link connection
@@ -160,7 +164,7 @@ class Switch(BasicRouter):
             if link.int_node == self:
                 for i in range(int(network.number_of_virtual_networks)):
                     router_buffers.append(
-                        SwitchPortBuffer(buffer_size=vnet_buffer_size(i))
+                        SwitchPortBuffer(buffer_size=vnet_buffer_size(i)),
                     )
 
         self.port_buffers = router_buffers

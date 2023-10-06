@@ -67,10 +67,12 @@ class PyTrafficGen(BaseTrafficGen):
     def createTrace(self, duration, trace_file, addr_offset=0):
         if buildEnv["HAVE_PROTOBUF"]:
             return self.getCCObject().createTrace(
-                duration, trace_file, addr_offset=addr_offset
+                duration,
+                trace_file,
+                addr_offset=addr_offset,
             )
         else:
             raise NotImplementedError(
                 "Trace playback requires that gem5 "
-                "was built with protobuf support."
+                "was built with protobuf support.",
             )

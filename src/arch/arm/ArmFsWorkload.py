@@ -55,7 +55,8 @@ class ArmFsWorkload(KernelWorkload):
     )
 
     dtb_filename = Param.String(
-        "", "File that contains the Device Tree Blob. Don't use DTB if empty."
+        "",
+        "File that contains the Device Tree Blob. Don't use DTB if empty.",
     )
     dtb_addr = Param.Addr(0, "DTB or ATAGS address")
     initrd_filename = Param.String(
@@ -70,17 +71,21 @@ class ArmFsWorkload(KernelWorkload):
         "Machine id from http://www.arm.linux.org.uk/developer/machines/",
     )
     early_kernel_symbols = Param.Bool(
-        False, "enable early kernel symbol tables before MMU"
+        False,
+        "enable early kernel symbol tables before MMU",
     )
     enable_context_switch_stats_dump = Param.Bool(
-        False, "enable stats/task info dumping at context switch boundaries"
+        False,
+        "enable stats/task info dumping at context switch boundaries",
     )
 
     panic_on_panic = Param.Bool(
-        False, "Trigger a gem5 panic if the guest kernel panics"
+        False,
+        "Trigger a gem5 panic if the guest kernel panics",
     )
     panic_on_oops = Param.Bool(
-        False, "Trigger a gem5 panic if the guest kernel oopses"
+        False,
+        "Trigger a gem5 panic if the guest kernel oopses",
     )
 
 

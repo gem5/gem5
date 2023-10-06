@@ -85,11 +85,16 @@ which is equivalent to the previous invocation.
     formatter_class=argparse.RawTextHelpFormatter,
 )
 parser.add_argument(
-    "start", nargs="?", help="The commit before the last commit to be modified"
+    "start",
+    nargs="?",
+    help="The commit before the last commit to be modified",
 )
 parser.add_argument("org-string", nargs="?", help="Copyright holder name")
 parser.add_argument(
-    "-o", "--org", choices=("arm",), help="Alias for known organizations"
+    "-o",
+    "--org",
+    choices=("arm",),
+    help="Alias for known organizations",
 )
 args = parser.parse_args()
 
@@ -134,10 +139,13 @@ filter_repo_args.replace_refs = "update-no-add"
 
 def blob_callback(blob, callback_metadata, org_bytes):
     blob.data = update_copyright.update_copyright(
-        blob.data, datetime.datetime.now().year, org_bytes
+        blob.data,
+        datetime.datetime.now().year,
+        org_bytes,
     )
 
 
 git_filter_repo.RepoFilter(
-    filter_repo_args, blob_callback=lambda x, y: blob_callback(x, y, org_bytes)
+    filter_repo_args,
+    blob_callback=lambda x, y: blob_callback(x, y, org_bytes),
 ).run()

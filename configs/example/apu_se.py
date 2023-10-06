@@ -78,7 +78,8 @@ parser.add_argument(
     help="Number of GPU Command Processors (CP)",
 )
 parser.add_argument(
-    "--benchmark-root", help="Root of benchmark directory tree"
+    "--benchmark-root",
+    help="Root of benchmark directory tree",
 )
 
 # not super important now, but to avoid putting the number 4 everywhere, make
@@ -96,7 +97,10 @@ parser.add_argument(
     help="Number of CUs sharing a scalar cache",
 )
 parser.add_argument(
-    "--simds-per-cu", type=int, default=4, help="SIMD unitsper CU"
+    "--simds-per-cu",
+    type=int,
+    default=4,
+    help="SIMD unitsper CU",
 )
 parser.add_argument(
     "--cu-per-sa",
@@ -112,10 +116,16 @@ parser.add_argument(
     help="Number of shader arrays per complex",
 )
 parser.add_argument(
-    "--num-gpu-complexes", type=int, default=1, help="Number of GPU complexes"
+    "--num-gpu-complexes",
+    type=int,
+    default=1,
+    help="Number of GPU complexes",
 )
 parser.add_argument(
-    "--wf-size", type=int, default=64, help="Wavefront size(in workitems)"
+    "--wf-size",
+    type=int,
+    default=64,
+    help="Wavefront size(in workitems)",
 )
 parser.add_argument(
     "--sp-bypass-path-length",
@@ -241,7 +251,9 @@ parser.add_argument(
     help="checks for GPU seg fault before TLB access",
 )
 parser.add_argument(
-    "--FunctionalTLB", action="store_true", help="Assumes TLB has no latency"
+    "--FunctionalTLB",
+    action="store_true",
+    help="Assumes TLB has no latency",
 )
 parser.add_argument(
     "--LocalMemBarrier",
@@ -312,7 +324,10 @@ parser.add_argument(
     help="number of cycles per LDS bank conflict",
 )
 parser.add_argument(
-    "--lds-size", type=int, default=65536, help="Size of the LDS in bytes"
+    "--lds-size",
+    type=int,
+    default=65536,
+    help="Size of the LDS in bytes",
 )
 parser.add_argument(
     "--fast-forward-pseudo-op",
@@ -485,7 +500,7 @@ for i in range(n_cu):
                 bankConflictPenalty=args.ldsBankConflictPenalty,
                 size=args.lds_size,
             ),
-        )
+        ),
     )
     wavefronts = []
     vrfs = []
@@ -495,7 +510,7 @@ for i in range(n_cu):
     for j in range(args.simds_per_cu):
         for k in range(shader.n_wf):
             wavefronts.append(
-                Wavefront(simdId=j, wf_slot_id=k, wf_size=args.wf_size)
+                Wavefront(simdId=j, wf_slot_id=k, wf_size=args.wf_size),
             )
 
         if args.reg_alloc_policy == "simple":
@@ -503,37 +518,41 @@ for i in range(n_cu):
                 SimplePoolManager(
                     pool_size=args.vreg_file_size,
                     min_alloc=args.vreg_min_alloc,
-                )
+                ),
             )
             srf_pool_mgrs.append(
                 SimplePoolManager(
                     pool_size=args.sreg_file_size,
                     min_alloc=args.vreg_min_alloc,
-                )
+                ),
             )
         elif args.reg_alloc_policy == "dynamic":
             vrf_pool_mgrs.append(
                 DynPoolManager(
                     pool_size=args.vreg_file_size,
                     min_alloc=args.vreg_min_alloc,
-                )
+                ),
             )
             srf_pool_mgrs.append(
                 DynPoolManager(
                     pool_size=args.sreg_file_size,
                     min_alloc=args.vreg_min_alloc,
-                )
+                ),
             )
 
         vrfs.append(
             VectorRegisterFile(
-                simd_id=j, wf_size=args.wf_size, num_regs=args.vreg_file_size
-            )
+                simd_id=j,
+                wf_size=args.wf_size,
+                num_regs=args.vreg_file_size,
+            ),
         )
         srfs.append(
             ScalarRegisterFile(
-                simd_id=j, wf_size=args.wf_size, num_regs=args.sreg_file_size
-            )
+                simd_id=j,
+                wf_size=args.wf_size,
+                num_regs=args.sreg_file_size,
+            ),
         )
 
     compute_units[-1].wavefronts = wavefronts
@@ -578,7 +597,7 @@ shader.timing = True
 if args.fast_forward and args.fast_forward_pseudo_op:
     fatal(
         "Cannot fast-forward based both on the number of instructions and"
-        " on pseudo-ops"
+        " on pseudo-ops",
     )
 fast_forward = args.fast_forward or args.fast_forward_pseudo_op
 
@@ -667,7 +686,8 @@ render_driver = GPURenderDriver(filename=f"dri/renderD{renderDriNum}")
 # packet processor (HSAPP), GPU command processor (CP), and the
 # dispatcher.
 gpu_hsapp = HSAPacketProcessor(
-    pioAddr=hsapp_gpu_map_paddr, numHWQueues=args.num_hw_queues
+    pioAddr=hsapp_gpu_map_paddr,
+    numHWQueues=args.num_hw_queues,
 )
 dispatcher = GPUDispatcher()
 gpu_cmd_proc = GPUCommandProcessor(hsapp=gpu_hsapp, dispatcher=dispatcher)
@@ -718,7 +738,7 @@ else:
                 os.getenv("ROCM_PATH", "/opt/rocm") + "/hipblas/lib",
                 os.getenv("ROCM_PATH", "/opt/rocm") + "/rocblas/lib",
                 "/usr/lib/x86_64-linux-gnu",
-            ]
+            ],
         ),
         f"HOME={os.getenv('HOME', '/')}",
         # Disable the VM fault handler signal creation for dGPUs also
@@ -779,7 +799,8 @@ if fast_forward:
     system.future_cpu = future_cpu_list
 system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
 system.clk_domain = SrcClockDomain(
-    clock=args.sys_clock, voltage_domain=system.voltage_domain
+    clock=args.sys_clock,
+    voltage_domain=system.voltage_domain,
 )
 
 if fast_forward:
@@ -798,12 +819,16 @@ GPUTLBConfig.config_tlb_hierarchy(args, system, shader_idx)
 
 # create Ruby system
 system.piobus = IOXBar(
-    width=32, response_latency=0, frontend_latency=0, forward_latency=0
+    width=32,
+    response_latency=0,
+    frontend_latency=0,
+    forward_latency=0,
 )
 dma_list = [gpu_hsapp, gpu_cmd_proc]
 Ruby.create_system(args, None, system, None, dma_list, None)
 system.ruby.clk_domain = SrcClockDomain(
-    clock=args.ruby_clock, voltage_domain=system.voltage_domain
+    clock=args.ruby_clock,
+    voltage_domain=system.voltage_domain,
 )
 gpu_cmd_proc.pio = system.piobus.mem_side_ports
 gpu_hsapp.pio = system.piobus.mem_side_ports
@@ -833,7 +858,8 @@ for i in range(args.num_cpus):
         ].int_responder = system.piobus.mem_side_ports
         if fast_forward:
             system.cpu[i].mmu.connectWalkerPorts(
-                ruby_port.in_ports, ruby_port.in_ports
+                ruby_port.in_ports,
+                ruby_port.in_ports,
             )
 
 # attach CU ports to Ruby
@@ -925,7 +951,8 @@ else:
 
 redirect_paths = [
     RedirectPath(
-        app_path="/proc", host_paths=[f"{m5.options.outdir}/fs/proc"]
+        app_path="/proc",
+        host_paths=[f"{m5.options.outdir}/fs/proc"],
     ),
     RedirectPath(app_path="/sys", host_paths=[f"{m5.options.outdir}/fs/sys"]),
     RedirectPath(app_path="/tmp", host_paths=[f"{m5.options.outdir}/fs/tmp"]),

@@ -234,7 +234,7 @@ def summarize_warnings():
         termcap.Yellow
         + termcap.Bold
         + "*** Summary of Warnings ***"
-        + termcap.Normal
+        + termcap.Normal,
     )
     list(map(print, all_warnings))
 

@@ -128,7 +128,9 @@ class AbstractCore(SubSystem):
 
     @abstractmethod
     def _set_simpoint(
-        self, inst_starts: List[int], board_initialized: bool
+        self,
+        inst_starts: List[int],
+        board_initialized: bool,
     ) -> None:
         """Schedule simpoint exit events for the core.
 
@@ -146,7 +148,9 @@ class AbstractCore(SubSystem):
 
     @abstractmethod
     def _set_inst_stop_any_thread(
-        self, inst: int, board_initialized: bool
+        self,
+        inst: int,
+        board_initialized: bool,
     ) -> None:
         """Schedule an exit event when any thread in this core reaches the
         given number of instructions. This is called through the simulator
@@ -163,6 +167,8 @@ class AbstractCore(SubSystem):
 
     @abstractmethod
     def add_pc_tracker_probe(
-        self, target_pair: List[PcCountPair], manager: PcCountTrackerManager
+        self,
+        target_pair: List[PcCountPair],
+        manager: PcCountTrackerManager,
     ) -> None:
         raise NotImplementedError

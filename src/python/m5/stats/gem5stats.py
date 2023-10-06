@@ -159,7 +159,10 @@ def __get_scaler(statistic: _m5.stats.ScalarInfo) -> Scalar:
     datatype = StorageType["f64"]
 
     return Scalar(
-        value=value, unit=unit, description=description, datatype=datatype
+        value=value,
+        unit=unit,
+        description=description,
+        datatype=datatype,
     )
 
 
@@ -216,7 +219,10 @@ def __get_vector(statistic: _m5.stats.VectorInfo) -> Vector:
             index_string = str(index)
 
         to_add[index_string] = Scalar(
-            value=value, unit=unit, description=description, datatype=datatype
+            value=value,
+            unit=unit,
+            description=description,
+            datatype=datatype,
         )
 
     return Vector(scalar_map=to_add)
@@ -237,7 +243,8 @@ def _prepare_stats(group: _m5.stats.Group):
 
 
 def get_simstat(
-    root: Union[SimObject, List[SimObject]], prepare_stats: bool = True
+    root: Union[SimObject, List[SimObject]],
+    prepare_stats: bool = True,
 ) -> SimStat:
     """
     This function will return the SimStat object for a simulation given a
@@ -290,7 +297,7 @@ def get_simstat(
             raise TypeError(
                 "Object (" + str(r) + ") passed is not a "
                 "SimObject. " + __name__ + " only processes "
-                "SimObjects, or a list of  SimObjects."
+                "SimObjects, or a list of  SimObjects.",
             )
 
     return SimStat(

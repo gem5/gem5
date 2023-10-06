@@ -293,7 +293,8 @@ class TCC(RubyCache):
         if (self.size.value / int(self.assoc)) < 128:
             self.size.value = int(128 * self.assoc)
         self.start_index_bit = math.log(options.cacheline_size, 2) + math.log(
-            options.num_tccs, 2
+            options.num_tccs,
+            2,
         )
         self.replacement_policy = TreePLRURP()
 
@@ -344,7 +345,8 @@ class L3Cntrl(L3Cache_Controller, CntrlBase):
         self.L3cache.create(options, ruby_system, system)
 
         self.l3_response_latency = max(
-            self.L3cache.dataAccessLatency, self.L3cache.tagAccessLatency
+            self.L3cache.dataAccessLatency,
+            self.L3cache.tagAccessLatency,
         )
         self.ruby_system = ruby_system
 
@@ -416,10 +418,14 @@ def define_options(parser):
     parser.add_argument("--cpu-to-dir-latency", type=int, default=120)
     parser.add_argument("--gpu-to-dir-latency", type=int, default=120)
     parser.add_argument(
-        "--no-resource-stalls", action="store_false", default=True
+        "--no-resource-stalls",
+        action="store_false",
+        default=True,
     )
     parser.add_argument(
-        "--no-tcc-resource-stalls", action="store_false", default=True
+        "--no-tcc-resource-stalls",
+        action="store_false",
+        default=True,
     )
     parser.add_argument("--use-L3-on-WT", action="store_true", default=False)
     parser.add_argument("--num-tbes", type=int, default=256)
@@ -431,10 +437,16 @@ def define_options(parser):
         help="number of TCC banks in the GPU",
     )
     parser.add_argument(
-        "--sqc-size", type=str, default="32kB", help="SQC cache size"
+        "--sqc-size",
+        type=str,
+        default="32kB",
+        help="SQC cache size",
     )
     parser.add_argument(
-        "--sqc-assoc", type=int, default=8, help="SQC cache assoc"
+        "--sqc-assoc",
+        type=int,
+        default=8,
+        help="SQC cache assoc",
     )
     parser.add_argument(
         "--sqc-deadlock-threshold",
@@ -443,10 +455,16 @@ def define_options(parser):
     )
 
     parser.add_argument(
-        "--WB_L1", action="store_true", default=False, help="writeback L1"
+        "--WB_L1",
+        action="store_true",
+        default=False,
+        help="writeback L1",
     )
     parser.add_argument(
-        "--WB_L2", action="store_true", default=False, help="writeback L2"
+        "--WB_L2",
+        action="store_true",
+        default=False,
+        help="writeback L2",
     )
     parser.add_argument(
         "--TCP_latency",
@@ -463,14 +481,23 @@ def define_options(parser):
         help="Hit latency for TCP",
     )
     parser.add_argument(
-        "--TCC_latency", type=int, default=16, help="TCC latency"
+        "--TCC_latency",
+        type=int,
+        default=16,
+        help="TCC latency",
     )
     parser.add_argument(
-        "--tcc-size", type=str, default="256kB", help="agregate tcc size"
+        "--tcc-size",
+        type=str,
+        default="256kB",
+        help="agregate tcc size",
     )
     parser.add_argument("--tcc-assoc", type=int, default=16, help="tcc assoc")
     parser.add_argument(
-        "--tcp-size", type=str, default="16kB", help="tcp size"
+        "--tcp-size",
+        type=str,
+        default="16kB",
+        help="tcp size",
     )
     parser.add_argument("--tcp-assoc", type=int, default=16, help="tcp assoc")
     parser.add_argument(
@@ -486,7 +513,10 @@ def define_options(parser):
     )
 
     parser.add_argument(
-        "--noL1", action="store_true", default=False, help="bypassL1"
+        "--noL1",
+        action="store_true",
+        default=False,
+        help="bypassL1",
     )
     parser.add_argument(
         "--scalar-buffer-size",
@@ -496,7 +526,10 @@ def define_options(parser):
         "cache controller",
     )
     parser.add_argument(
-        "--glc-atomic-latency", type=int, default=1, help="GLC Atomic Latency"
+        "--glc-atomic-latency",
+        type=int,
+        default=1,
+        help="GLC Atomic Latency",
     )
     parser.add_argument(
         "--tcp-num-banks",
@@ -726,7 +759,9 @@ def construct_tcps(options, system, ruby_system, network):
 
     for i in range(options.num_compute_units):
         tcp_cntrl = TCPCntrl(
-            TCC_select_num_bits=TCC_bits, issue_latency=1, number_of_TBEs=2560
+            TCC_select_num_bits=TCC_bits,
+            issue_latency=1,
+            number_of_TBEs=2560,
         )
         # TBEs set to max outstanding requests
         tcp_cntrl.create(options, ruby_system, system)
@@ -822,7 +857,7 @@ def construct_scalars(options, system, ruby_system, network):
         scalar_cntrl.responseToSQC.in_port = network.out_port
 
         scalar_cntrl.mandatoryQueue = MessageBuffer(
-            buffer_size=options.scalar_buffer_size
+            buffer_size=options.scalar_buffer_size,
         )
 
     return (scalar_sequencers, scalar_cntrl_nodes)
@@ -840,7 +875,9 @@ def construct_cmdprocs(options, system, ruby_system, network):
         sqc_ID = options.num_sqc + i
 
         tcp_cntrl = TCPCntrl(
-            TCC_select_num_bits=TCC_bits, issue_latency=1, number_of_TBEs=2560
+            TCC_select_num_bits=TCC_bits,
+            issue_latency=1,
+            number_of_TBEs=2560,
         )
         # TBEs set to max outstanding requests
         tcp_cntrl.createCP(options, ruby_system, system)
@@ -931,7 +968,13 @@ def construct_tccs(options, system, ruby_system, network):
 
 
 def create_system(
-    options, full_system, system, dma_devices, bootmem, ruby_system, cpus
+    options,
+    full_system,
+    system,
+    dma_devices,
+    bootmem,
+    ruby_system,
+    cpus,
 ):
     if buildEnv["PROTOCOL"] != "GPU_VIPER":
         panic("This script requires the GPU_VIPER protocol to be built.")
@@ -963,14 +1006,20 @@ def create_system(
 
     # Create CPU directory controllers
     dir_cntrl_nodes = construct_dirs(
-        options, system, ruby_system, ruby_system.network
+        options,
+        system,
+        ruby_system,
+        ruby_system.network,
     )
     for dir_cntrl in dir_cntrl_nodes:
         mainCluster.add(dir_cntrl)
 
     # Create CPU core pairs
     (cp_sequencers, cp_cntrl_nodes) = construct_corepairs(
-        options, system, ruby_system, ruby_system.network
+        options,
+        system,
+        ruby_system,
+        ruby_system.network,
     )
     cpu_sequencers.extend(cp_sequencers)
     for cp_cntrl in cp_cntrl_nodes:
@@ -1041,7 +1090,10 @@ def create_system(
 
     # Create TCPs
     (tcp_sequencers, tcp_cntrl_nodes) = construct_tcps(
-        options, system, ruby_system, ruby_system.network
+        options,
+        system,
+        ruby_system,
+        ruby_system.network,
     )
     cpu_sequencers.extend(tcp_sequencers)
     for tcp_cntrl in tcp_cntrl_nodes:
@@ -1049,7 +1101,10 @@ def create_system(
 
     # Create SQCs
     (sqc_sequencers, sqc_cntrl_nodes) = construct_sqcs(
-        options, system, ruby_system, ruby_system.network
+        options,
+        system,
+        ruby_system,
+        ruby_system.network,
     )
     cpu_sequencers.extend(sqc_sequencers)
     for sqc_cntrl in sqc_cntrl_nodes:
@@ -1057,7 +1112,10 @@ def create_system(
 
     # Create Scalars
     (scalar_sequencers, scalar_cntrl_nodes) = construct_scalars(
-        options, system, ruby_system, ruby_system.network
+        options,
+        system,
+        ruby_system,
+        ruby_system.network,
     )
     cpu_sequencers.extend(scalar_sequencers)
     for scalar_cntrl in scalar_cntrl_nodes:
@@ -1065,7 +1123,10 @@ def create_system(
 
     # Create command processors
     (cmdproc_sequencers, cmdproc_cntrl_nodes) = construct_cmdprocs(
-        options, system, ruby_system, ruby_system.network
+        options,
+        system,
+        ruby_system,
+        ruby_system.network,
     )
     cpu_sequencers.extend(cmdproc_sequencers)
     for cmdproc_cntrl in cmdproc_cntrl_nodes:
@@ -1073,7 +1134,10 @@ def create_system(
 
     # Create TCCs
     tcc_cntrl_nodes = construct_tccs(
-        options, system, ruby_system, ruby_system.network
+        options,
+        system,
+        ruby_system,
+        ruby_system.network,
     )
     for tcc_cntrl in tcc_cntrl_nodes:
         gpuCluster.add(tcc_cntrl)
@@ -1081,7 +1145,9 @@ def create_system(
     for i, dma_device in enumerate(dma_devices):
         dma_seq = DMASequencer(version=i, ruby_system=ruby_system)
         dma_cntrl = DMA_Controller(
-            version=i, dma_sequencer=dma_seq, ruby_system=ruby_system
+            version=i,
+            dma_sequencer=dma_seq,
+            ruby_system=ruby_system,
         )
         exec("system.dma_cntrl%d = dma_cntrl" % i)
 
@@ -1091,12 +1157,12 @@ def create_system(
         elif dma_device.type == "MemTest":
             exec(
                 "system.dma_cntrl%d.dma_sequencer.in_ports = dma_devices.test"
-                % i
+                % i,
             )
         else:
             exec(
                 "system.dma_cntrl%d.dma_sequencer.in_ports = dma_device.dma"
-                % i
+                % i,
             )
 
         dma_cntrl.requestToDir = MessageBuffer(buffer_size=0)

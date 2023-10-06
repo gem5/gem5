@@ -53,5 +53,5 @@ class WakeupPortStatementAST(StatementAST):
         code(
             """
         wakeUpBuffer(&($in_port_code), $address_code);
-        """
+        """,
         )

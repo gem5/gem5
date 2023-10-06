@@ -43,7 +43,8 @@ class KvmVM(SimObject):
     cxx_class = "gem5::KvmVM"
 
     coalescedMMIO = VectorParam.AddrRange(
-        [], "memory ranges for coalesced MMIO"
+        [],
+        "memory ranges for coalesced MMIO",
     )
 
     system = Param.System(Parent.any, "system this VM belongs to")

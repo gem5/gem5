@@ -129,7 +129,7 @@ def create_network(options, ruby):
         warn(
             "Usage of option 'garnet2.0' will be depracated. "
             "Please use 'garnet' for using the latest garnet "
-            "version. Current version: 3.0"
+            "version. Current version: 3.0",
         )
         options.network = "garnet"
 
@@ -200,14 +200,14 @@ def init_network(options, network, InterfaceClass):
                     link=extLink.network_links[0],
                     vtype="OBJECT_LINK",
                     width=extLink.width,
-                )
+                ),
             )
             ext_net_bridges.append(
                 NetworkBridge(
                     link=extLink.network_links[1],
                     vtype="LINK_OBJECT",
                     width=extLink.width,
-                )
+                ),
             )
             extLink.ext_net_bridge = ext_net_bridges
 
@@ -217,14 +217,14 @@ def init_network(options, network, InterfaceClass):
                     link=extLink.credit_links[0],
                     vtype="LINK_OBJECT",
                     width=extLink.width,
-                )
+                ),
             )
             ext_credit_bridges.append(
                 NetworkBridge(
                     link=extLink.credit_links[1],
                     vtype="OBJECT_LINK",
                     width=extLink.width,
-                )
+                ),
             )
             extLink.ext_cred_bridge = ext_credit_bridges
 
@@ -234,14 +234,14 @@ def init_network(options, network, InterfaceClass):
                     link=extLink.network_links[0],
                     vtype="LINK_OBJECT",
                     width=extLink.int_node.width,
-                )
+                ),
             )
             int_net_bridges.append(
                 NetworkBridge(
                     link=extLink.network_links[1],
                     vtype="OBJECT_LINK",
                     width=extLink.int_node.width,
-                )
+                ),
             )
             extLink.int_net_bridge = int_net_bridges
 
@@ -251,21 +251,21 @@ def init_network(options, network, InterfaceClass):
                     link=extLink.credit_links[0],
                     vtype="OBJECT_LINK",
                     width=extLink.int_node.width,
-                )
+                ),
             )
             int_cred_bridges.append(
                 NetworkBridge(
                     link=extLink.credit_links[1],
                     vtype="LINK_OBJECT",
                     width=extLink.int_node.width,
-                )
+                ),
             )
             extLink.int_cred_bridge = int_cred_bridges
 
     if options.network == "simple":
         if options.simple_physical_channels:
             network.physical_vnets_channels = [1] * int(
-                network.number_of_virtual_networks
+                network.number_of_virtual_networks,
             )
         network.setup_buffers()
 

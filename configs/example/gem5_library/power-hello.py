@@ -61,7 +61,9 @@ memory = SingleChannelDDR4_2400(size="32MB")
 
 # We use a simple ATOMIC processor with one core.
 processor = SimpleProcessor(
-    cpu_type=CPUTypes.ATOMIC, isa=ISA.POWER, num_cores=1
+    cpu_type=CPUTypes.ATOMIC,
+    isa=ISA.POWER,
+    num_cores=1,
 )
 
 # The gem5 library simple board which can be used to run simple SE-mode
@@ -83,5 +85,5 @@ print(
     "Exiting @ tick {} because {}.".format(
         simulator.get_current_tick(),
         simulator.get_last_exit_event_cause(),
-    )
+    ),
 )

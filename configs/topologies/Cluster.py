@@ -132,5 +132,5 @@ class Cluster(BaseTopology):
 
     def __len__(self):
         return len([i for i in self.nodes if type(i) != Cluster]) + sum(
-            [len(i) for i in self.nodes if type(i) == Cluster]
+            [len(i) for i in self.nodes if type(i) == Cluster],
         )

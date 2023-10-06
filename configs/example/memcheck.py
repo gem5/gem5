@@ -43,15 +43,21 @@ import m5
 from m5.objects import *
 
 parser = argparse.ArgumentParser(
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 
 
 parser.add_argument(
-    "-a", "--atomic", action="store_true", help="Use atomic (non-timing) mode"
+    "-a",
+    "--atomic",
+    action="store_true",
+    help="Use atomic (non-timing) mode",
 )
 parser.add_argument(
-    "-b", "--blocking", action="store_true", help="Use blocking caches"
+    "-b",
+    "--blocking",
+    action="store_true",
+    help="Use blocking caches",
 )
 parser.add_argument(
     "-m",
@@ -62,10 +68,16 @@ parser.add_argument(
     help="Stop after T ticks",
 )
 parser.add_argument(
-    "-p", "--prefetchers", action="store_true", help="Use prefetchers"
+    "-p",
+    "--prefetchers",
+    action="store_true",
+    help="Use prefetchers",
 )
 parser.add_argument(
-    "-s", "--stridepref", action="store_true", help="Use strided prefetchers"
+    "-s",
+    "--stridepref",
+    action="store_true",
+    help="Use strided prefetchers",
 )
 
 # This example script has a lot in common with the memtest.py in that
@@ -251,7 +263,8 @@ system = System(physmem=MemCtrl(dram=DDR3_1600_8x8()))
 system.voltage_domain = VoltageDomain(voltage="1V")
 
 system.clk_domain = SrcClockDomain(
-    clock=args.sys_clock, voltage_domain=system.voltage_domain
+    clock=args.sys_clock,
+    voltage_domain=system.voltage_domain,
 )
 
 system.memchecker = MemChecker()

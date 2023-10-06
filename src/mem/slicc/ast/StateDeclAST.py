@@ -54,7 +54,11 @@ class StateDeclAST(DeclAST):
 
         # Make the new type
         t = Type(
-            self.symtab, ident, self.location, self.pairs, self.state_machine
+            self.symtab,
+            ident,
+            self.location,
+            self.pairs,
+            self.state_machine,
         )
         self.symtab.newSymbol(t)
 

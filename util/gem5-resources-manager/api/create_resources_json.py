@@ -105,7 +105,10 @@ class ResourceJsonCreator:
             file_path = os.path.join(folder_path, filename)
             if os.path.isfile(file_path):
                 with open(
-                    file_path, "r", encoding="utf-8", errors="ignore"
+                    file_path,
+                    "r",
+                    encoding="utf-8",
+                    errors="ignore",
                 ) as f:
                     contents = f.read()
                     if id in contents:
@@ -184,7 +187,8 @@ class ResourceJsonCreator:
         id = resource["id"]
         # search for files in the folder tree that contain the 'id' value
         matching_files = self._search_folder(
-            source + "/configs", '"' + id + '"'
+            source + "/configs",
+            '"' + id + '"',
         )
         filenames = [os.path.basename(path) for path in matching_files]
         tested_files = []
@@ -192,7 +196,7 @@ class ResourceJsonCreator:
             tested_files.append(
                 True
                 if len(self._search_folder(source + "/tests/gem5", file)) > 0
-                else False
+                else False,
             )
 
         matching_files = [
@@ -305,7 +309,8 @@ class ResourceJsonCreator:
 
             if "url" in resource:
                 download_url = res["url"].replace(
-                    "{url_base}", "http://dist.gem5.org/dist/develop"
+                    "{url_base}",
+                    "http://dist.gem5.org/dist/develop",
                 )
                 res["url"] = download_url
                 res["size"] = self._get_size(download_url)

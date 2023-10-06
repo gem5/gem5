@@ -102,24 +102,29 @@ class X86SMBiosBiosInformation(X86SMBiosSMBiosStructure):
     vendor = Param.String("", "vendor name string")
     version = Param.String("", "version string")
     starting_addr_segment = Param.UInt16(
-        0, "segment location of bios starting address"
+        0,
+        "segment location of bios starting address",
     )
     release_date = Param.String("06/08/2008", "release date")
     rom_size = Param.UInt8(0, "rom size")
     characteristics = VectorParam.Characteristic(
-        [], "bios characteristic bit vector"
+        [],
+        "bios characteristic bit vector",
     )
     characteristic_ext_bytes = VectorParam.ExtCharacteristic(
-        [], "extended bios characteristic bit vector"
+        [],
+        "extended bios characteristic bit vector",
     )
     major = Param.UInt8(0, "major version number")
     minor = Param.UInt8(0, "minor version number")
     emb_cont_firmware_major = Param.UInt8(
-        0, "embedded controller firmware major version number"
+        0,
+        "embedded controller firmware major version number",
     )
 
     emb_cont_firmware_minor = Param.UInt8(
-        0, "embedded controller firmware minor version number"
+        0,
+        "embedded controller firmware minor version number",
     )
 
 

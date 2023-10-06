@@ -591,7 +591,9 @@ class gem5Run:
         database."""
 
         with zipfile.ZipFile(
-            self.outdir / "results.zip", "w", zipfile.ZIP_DEFLATED
+            self.outdir / "results.zip",
+            "w",
+            zipfile.ZIP_DEFLATED,
         ) as zipf:
             for path in self.outdir.glob("**/*"):
                 if path.name == "results.zip":
@@ -612,7 +614,9 @@ class gem5Run:
 
 
 def getRuns(
-    db: ArtifactDB, fs_only: bool = False, limit: int = 0
+    db: ArtifactDB,
+    fs_only: bool = False,
+    limit: int = 0,
 ) -> Iterable[gem5Run]:
     """Returns a generator of gem5Run objects.
 
@@ -631,7 +635,10 @@ def getRuns(
 
 
 def getRunsByName(
-    db: ArtifactDB, name: str, fs_only: bool = False, limit: int = 0
+    db: ArtifactDB,
+    name: str,
+    fs_only: bool = False,
+    limit: int = 0,
 ) -> Iterable[gem5Run]:
     """Returns a generator of gem5Run objects, which have the field "name"
     **exactly** the same as the name parameter. The name used in this query
@@ -653,7 +660,10 @@ def getRunsByName(
 
 
 def getRunsByNameLike(
-    db: ArtifactDB, name: str, fs_only: bool = False, limit: int = 0
+    db: ArtifactDB,
+    name: str,
+    fs_only: bool = False,
+    limit: int = 0,
 ) -> Iterable[gem5Run]:
     """Return a generator of gem5Run objects, which have the field "name"
     containing the name parameter as a substring. The name used in this
@@ -676,7 +686,10 @@ def getRunsByNameLike(
 
 
 def getRerunnableRunsByNameLike(
-    db: ArtifactDB, name: str, fs_only: bool = False, limit: int = 0
+    db: ArtifactDB,
+    name: str,
+    fs_only: bool = False,
+    limit: int = 0,
 ) -> Iterable[gem5Run]:
     """Returns a generator of gem5Run objects having rerunnable as true
     and the object "name" containing the name parameter as a substring. The

@@ -80,7 +80,8 @@ class TimedWaitPID(object):
             pid, status, resource_usage = os.wait4(pid, options)
             with self._access_lock:
                 self._time_for_pid[pid] = TimedWaitPID.TimeRecord(
-                    resource_usage.ru_utime, resource_usage.ru_stime
+                    resource_usage.ru_utime,
+                    resource_usage.ru_stime,
                 )
             return (pid, status)
 
@@ -153,7 +154,7 @@ def log_call(logger, command, time, *popenargs, **kwargs):
             cmdstr = " ".join(command)
         except TypeError as e:
             logger.trace(
-                "Argument <command> must be an iterable of string-convertible types"
+                "Argument <command> must be an iterable of string-convertible types",
             )
             raise e
 
@@ -181,11 +182,13 @@ def log_call(logger, command, time, *popenargs, **kwargs):
             log_callback(line.rstrip())
 
     stdout_thread = threading.Thread(
-        target=log_output, args=(logger_callback, p.stdout, stdout_redirect)
+        target=log_output,
+        args=(logger_callback, p.stdout, stdout_redirect),
     )
     stdout_thread.setDaemon(True)
     stderr_thread = threading.Thread(
-        target=log_output, args=(logger_callback, p.stderr, stderr_redirect)
+        target=log_output,
+        args=(logger_callback, p.stderr, stderr_redirect),
     )
     stderr_thread.setDaemon(True)
 
@@ -421,7 +424,7 @@ class FrozenAttrDict(AttrDict):
     def __setattr__(self, attr, val):
         if self.__initialized:
             raise FrozenSetException(
-                "Cannot modify an attribute in a FozenAttrDict"
+                "Cannot modify an attribute in a FozenAttrDict",
             )
         else:
             super(FrozenAttrDict, self).__setattr__(attr, val)
@@ -429,7 +432,7 @@ class FrozenAttrDict(AttrDict):
     def update(self, items):
         if self.__initialized:
             raise FrozenSetException(
-                "Cannot modify an attribute in a FozenAttrDict"
+                "Cannot modify an attribute in a FozenAttrDict",
             )
         else:
             super(FrozenAttrDict, self).update(items)

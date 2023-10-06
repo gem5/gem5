@@ -79,7 +79,7 @@ class UID(object):
             self.type_idx: self.__class__.__name__,
         }
         return self.sep.join(
-            itertools.chain([common_opts[0], common_opts[1]], self.attributes)
+            itertools.chain([common_opts[0], common_opts[1]], self.attributes),
         )
 
     def __hash__(self):

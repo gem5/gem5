@@ -56,7 +56,7 @@ except:
             "--python_out=util",
             "--proto_path=src/proto",
             "src/proto/inst.proto",
-        ]
+        ],
     )
     if not error:
         print("Generated inst proto definitions")
@@ -140,18 +140,18 @@ def main():
 
         ascii_out.write(
             "%-20d: (%03d/%03d) %#010x @ %#016x "
-            % (tick, node_id, cpu_id, inst.inst, inst.pc)
+            % (tick, node_id, cpu_id, inst.inst, inst.pc),
         )
 
         if inst.HasField("type"):
             ascii_out.write(
                 " : %10s"
-                % inst_pb2._INST_INSTTYPE.values_by_number[inst.type].name
+                % inst_pb2._INST_INSTTYPE.values_by_number[inst.type].name,
             )
 
         for mem_acc in inst.mem_access:
             ascii_out.write(
-                " %#x-%#x;" % (mem_acc.addr, mem_acc.addr + mem_acc.size)
+                " %#x-%#x;" % (mem_acc.addr, mem_acc.addr + mem_acc.size),
             )
 
         ascii_out.write("\n")

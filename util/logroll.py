@@ -38,7 +38,7 @@ parser = argparse.ArgumentParser(
 
     While that's running, to see the most recent 25 lines of output without
     interrupting "command", send SIGUSR1 to the logroll.py process:
-    kill -s USR1 ${PID of logroll.py}"""
+    kill -s USR1 ${PID of logroll.py}""",
 )
 parser.add_argument(
     "-n",
@@ -157,7 +157,7 @@ class TestLogroll(unittest.TestCase):
         with unittest.mock.patch("builtins.print") as mock_print:
             dump_lines(self.lines2, len(self.lines2))
             calls = list(
-                [unittest.mock.call(line, end="") for line in self.lines2]
+                [unittest.mock.call(line, end="") for line in self.lines2],
             )
             mock_print.assert_has_calls(calls)
 
@@ -165,7 +165,7 @@ class TestLogroll(unittest.TestCase):
         with unittest.mock.patch("builtins.print") as mock_print:
             dump_lines(self.lines2, 0)
             calls = list(
-                [unittest.mock.call(line, end="") for line in self.lines2]
+                [unittest.mock.call(line, end="") for line in self.lines2],
             )
             mock_print.assert_has_calls(calls)
 
@@ -181,9 +181,10 @@ class TestLogroll(unittest.TestCase):
 
     def test_dump_and_exit(self):
         with unittest.mock.patch(
-            "sys.exit"
+            "sys.exit",
         ) as mock_sys_exit, unittest.mock.patch(
-            __name__ + ".dump_lines", new_callable=CopyingMock
+            __name__ + ".dump_lines",
+            new_callable=CopyingMock,
         ) as mock_dump_lines:
             idx = 1
             dump_and_exit(self.lines3, idx)
@@ -194,7 +195,7 @@ class TestLogroll(unittest.TestCase):
         with unittest.mock.patch("builtins.print") as mock_print:
             main(5, self.line_gen(self.lines3))
             calls = list(
-                [unittest.mock.call(line, end="") for line in self.lines3]
+                [unittest.mock.call(line, end="") for line in self.lines3],
             )
             mock_print.assert_has_calls(calls)
 
@@ -202,22 +203,29 @@ class TestLogroll(unittest.TestCase):
         with unittest.mock.patch("builtins.print") as mock_print:
             main(5, self.line_gen(self.lines8))
             calls = list(
-                [unittest.mock.call(line, end="") for line in self.lines8[-5:]]
+                [
+                    unittest.mock.call(line, end="")
+                    for line in self.lines8[-5:]
+                ],
             )
             mock_print.assert_has_calls(calls)
 
     def test_sigusr1_filling_main(self):
         with unittest.mock.patch(
-            "signal.signal"
+            "signal.signal",
         ) as mock_signal, unittest.mock.patch(
-            __name__ + ".dump_lines", new_callable=CopyingMock
+            __name__ + ".dump_lines",
+            new_callable=CopyingMock,
         ) as mock_dump_lines:
             signal_dict = self.mock_signal_dict(mock_signal)
 
             main(
                 4,
                 self.signal_line_gen(
-                    self.lines8, 3, signal_dict, signal.SIGUSR1
+                    self.lines8,
+                    3,
+                    signal_dict,
+                    signal.SIGUSR1,
                 ),
             )
 
@@ -225,14 +233,15 @@ class TestLogroll(unittest.TestCase):
                 [
                     unittest.mock.call(self.lines8[0:3], 3 % 4),
                     unittest.mock.call(self.lines8[-4:], len(self.lines8) % 4),
-                ]
+                ],
             )
 
     def test_sigint_filling_main(self):
         with unittest.mock.patch(
-            "signal.signal"
+            "signal.signal",
         ) as mock_signal, unittest.mock.patch(
-            __name__ + ".dump_lines", new_callable=CopyingMock
+            __name__ + ".dump_lines",
+            new_callable=CopyingMock,
         ) as mock_dump_lines:
             signal_dict = self.mock_signal_dict(mock_signal)
 
@@ -240,43 +249,52 @@ class TestLogroll(unittest.TestCase):
                 main(
                     4,
                     self.signal_line_gen(
-                        self.lines8, 3, signal_dict, signal.SIGINT
+                        self.lines8,
+                        3,
+                        signal_dict,
+                        signal.SIGINT,
                     ),
                 )
 
             mock_dump_lines.assert_has_calls(
-                [unittest.mock.call(self.lines8[0:3], 3 % 4)]
+                [unittest.mock.call(self.lines8[0:3], 3 % 4)],
             )
 
     def test_sigusr1_full_main(self):
         with unittest.mock.patch(
-            "signal.signal"
+            "signal.signal",
         ) as mock_signal, unittest.mock.patch(
-            __name__ + ".dump_lines", new_callable=CopyingMock
+            __name__ + ".dump_lines",
+            new_callable=CopyingMock,
         ) as mock_dump_lines:
             signal_dict = self.mock_signal_dict(mock_signal)
 
             main(
                 4,
                 self.signal_line_gen(
-                    self.lines8, 5, signal_dict, signal.SIGUSR1
+                    self.lines8,
+                    5,
+                    signal_dict,
+                    signal.SIGUSR1,
                 ),
             )
 
             mock_dump_lines.assert_has_calls(
                 [
                     unittest.mock.call(
-                        self.lines8[4:5] + self.lines8[1:4], 5 % 4
+                        self.lines8[4:5] + self.lines8[1:4],
+                        5 % 4,
                     ),
                     unittest.mock.call(self.lines8[-4:], len(self.lines8) % 4),
-                ]
+                ],
             )
 
     def test_sigint_full_main(self):
         with unittest.mock.patch(
-            "signal.signal"
+            "signal.signal",
         ) as mock_signal, unittest.mock.patch(
-            __name__ + ".dump_lines", new_callable=CopyingMock
+            __name__ + ".dump_lines",
+            new_callable=CopyingMock,
         ) as mock_dump_lines:
             signal_dict = self.mock_signal_dict(mock_signal)
 
@@ -284,14 +302,18 @@ class TestLogroll(unittest.TestCase):
                 main(
                     4,
                     self.signal_line_gen(
-                        self.lines8, 5, signal_dict, signal.SIGINT
+                        self.lines8,
+                        5,
+                        signal_dict,
+                        signal.SIGINT,
                     ),
                 )
 
             mock_dump_lines.assert_has_calls(
                 [
                     unittest.mock.call(
-                        self.lines8[4:5] + self.lines8[1:4], 5 % 4
-                    )
-                ]
+                        self.lines8[4:5] + self.lines8[1:4],
+                        5 % 4,
+                    ),
+                ],
             )
