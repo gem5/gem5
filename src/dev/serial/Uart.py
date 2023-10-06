@@ -82,5 +82,5 @@ class RiscvUart8250(Uart8250):
         node.append(FdtPropertyWords("interrupts", [platform.uart_int_id]))
         node.append(FdtPropertyWords("clock-frequency", [0x384000]))
         node.append(FdtPropertyWords("interrupt-parent", state.phandle(plic)))
-        node.appendCompatible(["ns8250"])
+        node.appendCompatible(["ns8250", "ns16550a"])
         yield node

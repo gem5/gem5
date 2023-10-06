@@ -438,7 +438,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload):
         uart_node.append(
             FdtPropertyWords("interrupt-parent", soc_state.phandle(plic))
         )
-        uart_node.appendCompatible(["ns8250"])
+        uart_node.appendCompatible(["ns8250", "ns16550a"])
         soc_node.append(uart_node)
 
         # VirtIO MMIO disk node
