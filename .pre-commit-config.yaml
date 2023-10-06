@@ -64,6 +64,8 @@ repos:
             args: [--fix=lf]
           - id: check-ast
           - id: check-case-conflict
+          - id: check-merge-conflict
+          - id: requirements-txt-fixer
     - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
       rev: 0.2.3
       hooks:
