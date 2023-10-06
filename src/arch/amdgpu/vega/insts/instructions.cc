@@ -43894,9 +43894,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             return;
         }
 
@@ -43978,9 +43980,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             return;
         }
 
@@ -44063,9 +44067,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             return;
         }
 
@@ -44118,9 +44124,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             return;
         }
 
@@ -44173,9 +44181,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             return;
         }
 
@@ -44237,9 +44247,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             return;
         }
 
@@ -44304,9 +44316,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             wf->decExpInstsIssued();
             return;
         }
@@ -44361,9 +44375,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             wf->decExpInstsIssued();
             return;
         }
@@ -44418,9 +44434,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             wf->decExpInstsIssued();
             return;
         }
@@ -44476,9 +44494,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             wf->decExpInstsIssued();
             return;
         }
@@ -44534,9 +44554,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             wf->decExpInstsIssued();
             return;
         }
@@ -44600,9 +44622,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             wf->decExpInstsIssued();
             return;
         }
@@ -44677,9 +44701,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             return;
         }
 
@@ -44757,9 +44783,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             return;
         }
 
@@ -44837,9 +44865,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             return;
         }
 
@@ -45370,9 +45400,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             return;
         }
 
@@ -45451,9 +45483,11 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
 
-        if (gpuDynInst->exec_mask.none() && isFlat()) {
+        if (gpuDynInst->exec_mask.none()) {
             wf->decVMemInstsIssued();
-            wf->decLGKMInstsIssued();
+            if (isFlat()) {
+                wf->decLGKMInstsIssued();
+            }
             return;
         }
 
