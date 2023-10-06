@@ -118,6 +118,12 @@ BootloaderKernelWorkload::loadBootloader()
             system->physProxy
         );
         delete bootloader;
+
+        inform("Loaded bootloader \'%s\' at 0x%llx\n",
+               params().bootloader_filename,
+               bootloader_addr_offset);
+    } else {
+        inform("Bootloader is not specified.\n");
     }
 }
 
@@ -130,6 +136,12 @@ BootloaderKernelWorkload::loadKernel()
             system->physProxy
         );
         delete kernel;
+
+        inform("Loaded kernel \'%s\' at 0x%llx\n",
+                params().kernel_filename,
+                kernel_paddr_offset);
+    } else {
+        inform("Kernel is not specified.\n");
     }
 }
 
@@ -144,9 +156,15 @@ BootloaderKernelWorkload::loadDtb()
             .write(system->physProxy);
         delete dtb_file;
 
+        inform("Loaded DTB \'%s\' at 0x%llx\n",
+                params().dtb_filename,
+                params().dtb_addr);
+
         for (auto *tc: system->threads) {
             tc->setReg(int_reg::A1, params().dtb_addr);
         }
+    } else {
+        inform("DTB file is not specified.\n");
     }
 }
 
