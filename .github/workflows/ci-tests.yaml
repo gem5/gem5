@@ -24,6 +24,7 @@ jobs:
   # ensures we have a change-id in every commit, needed for gerrit
     check-for-change-id:
     # runs on github hosted runner
+    runs-on: ubuntu-22.04
     if: github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v3
@@ -174,7 +175,7 @@ jobs:
     # merged. The 'testlib-quick-execution' is a matrix job which runs all the
     # the testlib quick tests. This job is therefore a stub which will pass if
     # all the testlib-quick-execution jobs pass.
-        runs-on: ubuntu-22.04
-        needs: testlib-quick-execution
-        steps:
-            - run: echo "This job's status is ${{ job.status }}."
+    runs-on: [self-hosted, linux, x64]
+    needs: testlib-quick-execution
+    steps:
+      - run: echo "This job's status is ${{ job.status }}."

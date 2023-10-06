@@ -13,12 +13,12 @@ on:
     workflow_dispatch:
 
 jobs:
-    build-gem5:
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/gcn-gpu:latest
-        steps:
-            - uses: actions/checkout@v3
-              with:
+  build-gem5:
+    runs-on: [self-hosted, linux, x64]
+    container: gcr.io/gem5-test/gcn-gpu:latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
           # Scheduled workflows run on the default branch by default. We
           # therefore need to explicitly checkout the develop branch.
                   ref: develop
@@ -31,14 +31,14 @@ jobs:
                   retention-days: 5
             - run: echo "This job's status is ${{ job.status }}."
 
-    HACC-tests:
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/gcn-gpu:latest
-        needs: build-gem5
-        timeout-minutes: 120 # 2 hours
-        steps:
-            - uses: actions/checkout@v3
-              with:
+  HACC-tests:
+    runs-on: [self-hosted, linux, x64]
+    container: gcr.io/gem5-test/gcn-gpu:latest
+    needs: build-gem5
+    timeout-minutes: 120 # 2 hours
+    steps:
+      - uses: actions/checkout@v3
+        with:
           # Scheduled workflows run on the default branch by default. We
           # therefore need to explicitly checkout the develop branch.
                   ref: develop
