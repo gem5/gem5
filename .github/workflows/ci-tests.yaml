@@ -149,7 +149,6 @@ jobs:
                   find . -name "gem5.fast" -exec chmod u+x {} \;
 
         # Run the testlib quick tests in the given directory.
-      - name: Run "tests/${{ matrix.test-dir }}" TestLib quick tests
         id: run-tests
         working-directory: ${{ github.workspace }}/tests
         run: ./main.py run --skip-build -t $(nproc) -vv ${{ matrix.test-dir }}
