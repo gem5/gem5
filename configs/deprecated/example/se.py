@@ -94,7 +94,7 @@ def get_processes(args):
         process.gid = os.getgid()
 
         if args.env:
-            with open(args.env, "r") as f:
+            with open(args.env) as f:
                 process.env = [line.rstrip() for line in f]
 
         if len(pargs) > idx:

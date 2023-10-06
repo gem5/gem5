@@ -48,7 +48,7 @@ class EnqueueStatementAST(StatementAST):
         self.statements = statements
 
     def __repr__(self):
-        return "[EnqueueStatementAst: %s %s %s]" % (
+        return "[EnqueueStatementAst: {} {} {}]".format(
             self.queue_name,
             self.type_ast.ident,
             self.statements,

@@ -42,7 +42,7 @@ from .util import error
 from .util import stringRE
 
 
-class OperandList(object):
+class OperandList:
     """Find all the operands in the given code block.  Returns an operand
     descriptor list (instance of class OperandList)."""
 

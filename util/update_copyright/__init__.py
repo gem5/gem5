@@ -77,7 +77,7 @@ def _update_copyright_years(m, cur_year, org_bytes):
 
 def update_copyright(data, cur_year, org_bytes):
     update_copyright_regexp = re.compile(
-        b" Copyright \\(c\\) ([0-9,\- ]+) " + org_bytes + b"\n",
+        b" Copyright \\(c\\) ([0-9,\\- ]+) " + org_bytes + b"\n",
         re.IGNORECASE,
     )
     return update_copyright_regexp.sub(

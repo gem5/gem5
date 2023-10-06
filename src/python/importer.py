@@ -40,7 +40,7 @@ class ByteCodeLoader(importlib.abc.Loader):
 # Simple importer that allows python to import data from a dict of
 # code objects.  The keys are the module path, and the items are the
 # filename and bytecode of the file.
-class CodeImporter(object):
+class CodeImporter:
     def __init__(self):
         self.modules = {}
         override_var = os.environ.get("M5_OVERRIDE_PY_SOURCE", "false")
@@ -59,7 +59,7 @@ class CodeImporter(object):
         abspath, code = self.modules[fullname]
 
         if self.override and os.path.exists(abspath):
-            src = open(abspath, "r").read()
+            src = open(abspath).read()
             code = compile(src, abspath, "exec")
 
         is_package = os.path.basename(abspath) == "__init__.py"

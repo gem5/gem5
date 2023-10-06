@@ -33,14 +33,14 @@ from testlib.configuration import constants
 
 class SkipException(Exception):
     def __init__(self, fixture, testitem):
-        self.msg = 'Fixture "%s" raised SkipException for "%s".' % (
+        self.msg = 'Fixture "{}" raised SkipException for "{}".'.format(
             fixture.name,
             testitem.name,
         )
-        super(SkipException, self).__init__(self.msg)
+        super().__init__(self.msg)
 
 
-class Fixture(object):
+class Fixture:
     """
     Base Class for a test Fixture.
 
@@ -59,7 +59,7 @@ class Fixture(object):
     collector = helper.InstanceCollector()
 
     def __new__(klass, *args, **kwargs):
-        obj = super(Fixture, klass).__new__(klass)
+        obj = super().__new__(klass)
         Fixture.collector.collect(obj)
         return obj
 

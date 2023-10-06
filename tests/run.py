@@ -185,7 +185,7 @@ def run_config(config, argv=None):
     src_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
     abs_path = joinpath(src_root, config)
 
-    code = compile(open(abs_path, "r").read(), abs_path, "exec")
+    code = compile(open(abs_path).read(), abs_path, "exec")
     scope = {"__file__": config, "__name__": "__m5_main__"}
 
     # Set the working directory in case we are executing from

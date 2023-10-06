@@ -528,7 +528,7 @@ def main():
         sys.exit(1)
     # Process trace
     print("Processing trace... ", end=" ")
-    with open(args.tracefile, "r") as trace:
+    with open(args.tracefile) as trace:
         with open(args.outfile, "w") as out:
             process_trace(
                 trace,

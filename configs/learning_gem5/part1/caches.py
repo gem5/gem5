@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2015 Jason Power
 # All rights reserved.
 #
@@ -53,7 +52,7 @@ class L1Cache(Cache):
     tgts_per_mshr = 20
 
     def __init__(self, options=None):
-        super(L1Cache, self).__init__()
+        super().__init__()
         pass
 
     def connectBus(self, bus):
@@ -78,7 +77,7 @@ class L1ICache(L1Cache):
     )
 
     def __init__(self, opts=None):
-        super(L1ICache, self).__init__(opts)
+        super().__init__(opts)
         if not opts or not opts.l1i_size:
             return
         self.size = opts.l1i_size
@@ -100,7 +99,7 @@ class L1DCache(L1Cache):
     )
 
     def __init__(self, opts=None):
-        super(L1DCache, self).__init__(opts)
+        super().__init__(opts)
         if not opts or not opts.l1d_size:
             return
         self.size = opts.l1d_size
@@ -125,7 +124,7 @@ class L2Cache(Cache):
     SimpleOpts.add_option("--l2_size", help=f"L2 cache size. Default: {size}")
 
     def __init__(self, opts=None):
-        super(L2Cache, self).__init__()
+        super().__init__()
         if not opts or not opts.l2_size:
             return
         self.size = opts.l2_size

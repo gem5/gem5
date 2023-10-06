@@ -43,7 +43,7 @@ from m5.proxy import *
 from m5.SimObject import *
 
 
-class HWPProbeEvent(object):
+class HWPProbeEvent:
     def __init__(self, prefetcher, obj, *listOfNames):
         self.obj = obj
         self.prefetcher = prefetcher

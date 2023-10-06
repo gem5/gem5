@@ -112,7 +112,7 @@ def main():
             filename = plotter.stateTimePlotName(str(delay) + "-")
             outfile.write(wrapForGraphic(filename, textwidth))
             outfile.write(getCaption(delay))
-        outfile.write("\end{figure}\n")
+        outfile.write("\\end{figure}\n")
 
         # Energy plots for all delay values
         outfile.write("\\begin{figure} \n\\centering\n")

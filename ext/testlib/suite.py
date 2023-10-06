@@ -29,7 +29,7 @@ import testlib.helper as helper
 import testlib.runner as runner_mod
 
 
-class TestSuite(object):
+class TestSuite:
     """
     An object grouping a collection of tests. It provides tags which enable
     filtering during list and run selection. All tests held in the suite must
@@ -52,7 +52,7 @@ class TestSuite(object):
     tags = set()
 
     def __new__(klass, *args, **kwargs):
-        obj = super(TestSuite, klass).__new__(klass)
+        obj = super().__new__(klass)
         TestSuite.collector.collect(obj)
         return obj
 

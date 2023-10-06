@@ -86,7 +86,7 @@ class TestGit(unittest.TestCase):
         git = artifact.artifact.getGit(Path("."))
         self.assertSetEqual(
             set(git.keys()),
-            set(["origin", "hash", "name"]),
+            {"origin", "hash", "name"},
             "git keys wrong",
         )
 

@@ -79,17 +79,17 @@ def CheckLinkFlag(context, flag, autoadd=True, set_for_shared=True):
 def CheckMember(context, include, decl, member, include_quotes="<>"):
     context.Message(f"Checking for member {member} in {decl}...")
     text = """
-#include %(header)s
-int main(){
-  %(decl)s test;
-  (void)test.%(member)s;
+#include {header}
+int main(){{
+  {decl} test;
+  (void)test.{member};
   return 0;
-};
-""" % {
-        "header": include_quotes[0] + include + include_quotes[1],
-        "decl": decl,
-        "member": member,
-    }
+}};
+""".format(
+        header=include_quotes[0] + include + include_quotes[1],
+        decl=decl,
+        member=member,
+    )
 
     ret = context.TryCompile(text, extension=".cc")
     context.Result(ret)

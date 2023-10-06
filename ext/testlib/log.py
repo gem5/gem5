@@ -56,7 +56,7 @@ class RecordTypeCounterMetaclass(type):
         RecordTypeCounterMetaclass.counter += 1
 
 
-class Record(object, metaclass=RecordTypeCounterMetaclass):
+class Record(metaclass=RecordTypeCounterMetaclass):
     """
     A generic object that is passed to the :class:`Log` and its handlers.
 
@@ -70,7 +70,7 @@ class Record(object, metaclass=RecordTypeCounterMetaclass):
     def __getitem__(self, item):
         if item not in self.data:
             raise KeyError(
-                "%s not in record %s" % (item, self.__class__.__name__),
+                f"{item} not in record {self.__class__.__name__}",
             )
         return self.data[item]
 
@@ -131,7 +131,7 @@ class LibraryMessage(Record):
     pass
 
 
-class Log(object):
+class Log:
     _result_typemap = {
         wrappers.LoadedLibrary.__name__: LibraryResult,
         wrappers.LoadedSuite.__name__: SuiteResult,

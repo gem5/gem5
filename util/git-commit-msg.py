@@ -55,7 +55,7 @@ def _printErrorQuit(error_message):
 --------------------------------------------------------------------------
     """,
     )
-    print(open(sys.argv[1], "r").read())
+    print(open(sys.argv[1]).read())
     print(
         """
 --------------------------------------------------------------------------
@@ -103,7 +103,7 @@ def _validateTags(commit_header):
 
     tags = "".join(commit_header.split(":")[0].split()).split(",")
     if any(tag not in valid_tags for tag in tags):
-        invalid_tag = next((tag for tag in tags if tag not in valid_tags))
+        invalid_tag = next(tag for tag in tags if tag not in valid_tags)
         _printErrorQuit("Invalid Gem5 tag: " + invalid_tag)
 
 
@@ -118,7 +118,7 @@ commit_message = open(sys.argv[1]).read()
 commit_message_lines = commit_message.splitlines()
 commit_header = commit_message_lines[0]
 commit_header_match = re.search(
-    "^(fixup! )?(\S[\w\-][,\s*[\w\-]+]*:.+\S$)",
+    r"^(fixup! )?(\S[\w\-][,\s*[\w\-]+]*:.+\S$)",
     commit_header,
 )
 if commit_header_match is None:

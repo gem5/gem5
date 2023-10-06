@@ -61,7 +61,7 @@ debug = False
 labelRE = re.compile(r"(?<!%)%\(([^\)]+)\)[sd]")
 
 
-class Template(object):
+class Template:
     def __init__(self, parser, t):
         self.parser = parser
         self.template = t
@@ -95,12 +95,10 @@ class Template(object):
                 l for l in labelRE.findall(template) if l in d.snippets
             ]
 
-            snippets = dict(
-                [
-                    (s, self.parser.mungeSnippet(d.snippets[s]))
-                    for s in snippetLabels
-                ],
-            )
+            snippets = {
+                s: self.parser.mungeSnippet(d.snippets[s])
+                for s in snippetLabels
+            }
 
             myDict.update(snippets)
 
@@ -201,7 +199,7 @@ class Template(object):
 # definition.
 
 
-class Format(object):
+class Format:
     def __init__(self, id, params, code):
         self.id = id
         self.params = params
@@ -244,7 +242,7 @@ class Format(object):
 
 # Special null format to catch an implicit-format instruction
 # definition outside of any format block.
-class NoFormat(object):
+class NoFormat:
     def __init__(self):
         self.defaultInst = ""
 
@@ -268,7 +266,7 @@ class NoFormat(object):
 # to allow explicit default clauses to override default default clauses.
 
 
-class GenCode(object):
+class GenCode:
     # Constructor.
     def __init__(
         self,
@@ -358,7 +356,7 @@ def substBitOps(code):
             if here < 0:
                 sys.exit("Didn't find '('!")
         exprStart = here + 1
-        newExpr = r"bits(%s, %s, %s)" % (
+        newExpr = r"bits({}, {}, {})".format(
             code[exprStart : exprEnd + 1],
             match.group(1),
             match.group(2),
@@ -416,7 +414,7 @@ instFlagRE = re.compile(r"Is.*")
 opClassRE = re.compile(r".*Op|No_OpClass")
 
 
-class InstObjParams(object):
+class InstObjParams:
     def __init__(
         self,
         parser,
@@ -568,7 +566,7 @@ class ISAParser(Grammar):
         self.fileNameStack = Stack()
 
         symbols = ("makeList", "re")
-        self.exportContext = dict([(s, eval(s)) for s in symbols])
+        self.exportContext = {s: eval(s) for s in symbols}
         self.exportContext.update(
             {
                 "overrideInOperand": overrideInOperand,
@@ -603,7 +601,7 @@ class ISAParser(Grammar):
     # Change the file suffix of a base filename:
     #   (e.g.) decoder.cc -> decoder-g.cc.inc for 'global' outputs
     def suffixize(self, s, sec):
-        extn = re.compile("(\.[^\.]+)$")  # isolate extension
+        extn = re.compile(r"(\.[^\.]+)$")  # isolate extension
         if self.namespace:
             return extn.sub(r"-ns\1.inc", s)  # insert some text on either side
         else:
@@ -695,7 +693,7 @@ class ISAParser(Grammar):
             # is guaranteed to have been written for parse to complete
             f.write(f'#include "{fn}"\n')
 
-        extn = re.compile("(\.[^\.]+)$")
+        extn = re.compile(r"(\.[^\.]+)$")
 
         # instruction constructors
         splits = self.splits[self.get_file("decoder")]
@@ -1575,9 +1573,9 @@ StaticInstPtr
 
         operandsREString = r"""
         (?<!\w|:)     # neg. lookbehind assertion: prevent partial matches
-        ((%s)(?:_(%s))?)   # match: operand with optional '_' then suffix
+        (({})(?:_({}))?)   # match: operand with optional '_' then suffix
         (?!\w)       # neg. lookahead assertion: prevent partial matches
-        """ % (
+        """.format(
             "|".join(operands),
             "|".join(extensions),
         )
@@ -1590,7 +1588,7 @@ StaticInstPtr
         # Same as operandsREString, but extension is mandatory, and only two
         # groups are returned (base and ext, not full name as above).
         # Used for subtituting '_' for '.' to make C++ identifiers.
-        operandsWithExtREString = r"(?<!\w)(%s)_(%s)(?!\w)" % (
+        operandsWithExtREString = r"(?<!\w)({})_({})(?!\w)".format(
             "|".join(operands),
             "|".join(extensions),
         )
@@ -1644,7 +1642,7 @@ StaticInstPtr
 
         fname = matchobj.group("filename")
         full_fname = os.path.normpath(os.path.join(dirname, fname))
-        contents = '##newfile "%s"\n%s\n##endfile\n' % (
+        contents = '##newfile "{}"\n{}\n##endfile\n'.format(
             full_fname,
             self.read_and_flatten(full_fname),
         )
@@ -1656,7 +1654,7 @@ StaticInstPtr
         current_dir = os.path.dirname(filename)
         try:
             contents = open(filename).read()
-        except IOError:
+        except OSError:
             error(f'Error including file "{filename}"')
 
         self.fileNameStack.push(LineTracker(filename))

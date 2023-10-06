@@ -50,8 +50,7 @@ def warn_default_decorator(gen: Generator, type: str, effect: str):
             f"No behavior was set by the user for {type}."
             f" Default behavior is {effect}.",
         )
-        for value in gen(*args, **kw_args):
-            yield value
+        yield from gen(*args, **kw_args)
 
     return wrapped_generator
 

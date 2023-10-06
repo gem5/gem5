@@ -71,7 +71,7 @@ class Transition(Symbol):
                 self.resources[var] = str(num)
 
     def __repr__(self):
-        return "[Transition: (%r, %r) -> %r, %r]" % (
+        return "[Transition: ({!r}, {!r}) -> {!r}, {!r}]".format(
             self.state,
             self.event,
             self.nextState,

@@ -39,7 +39,7 @@ def upgrader(cpt):
             import re
 
             # Search for all ISA sections
-            if re.search(".*sys.*\.cpu.*\.isa\d*$", sec):
+            if re.search(r".*sys.*\.cpu.*\.isa\d*$", sec):
                 mr = cpt.get(sec, "miscRegs").split()
                 if int(mr[0]) & 16 == 0:  # CPSR reg width; 0 for AArch64
                     mr[112] = mr[111]  # ACTLR_NS = ACTLR

@@ -45,7 +45,7 @@ def getFileContent(file_path: Path) -> Dict:
     :return: The content of the file
     """
     if file_path.exists():
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
             return json.load(file)
     else:
         raise Exception(f"File not found at {file_path}")

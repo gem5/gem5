@@ -42,7 +42,7 @@ from .region import *
 from .style import modified_regions
 
 
-class AbstractRepo(object, metaclass=ABCMeta):
+class AbstractRepo(metaclass=ABCMeta):
     def file_path(self, fname):
         """Get the absolute path to a file relative within the repository. The
         input file name must be a valid path within the repository.
@@ -75,7 +75,7 @@ class AbstractRepo(object, metaclass=ABCMeta):
         to the repository root.
 
         """
-        with open(self.file_path(name), "r") as f:
+        with open(self.file_path(name)) as f:
             return f.read()
 
     @abstractmethod

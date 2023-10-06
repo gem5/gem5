@@ -123,7 +123,7 @@ def main():
 
     try:
         ascii_out = open(sys.argv[2], "w")
-    except IOError:
+    except OSError:
         print("Failed to open ", sys.argv[2], " for writing")
         exit(-1)
 

@@ -12,7 +12,7 @@ def upgrader(cpt):
             import re
 
             # Search for all ISA sections
-            if re.search(".*sys.*\.cpu.*\.isa$", sec):
+            if re.search(r".*sys.*\.cpu.*\.isa$", sec):
                 # haveSVE = false
                 cpt.set(sec, "haveSVE", "false")
 

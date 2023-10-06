@@ -53,7 +53,7 @@ def ConfigFile(env):
     # operands are the name of the variable and a Value node containing the
     # value of the variable.
     def build_config_file(target, source, env):
-        (variable, value) = [s.get_contents().decode("utf-8") for s in source]
+        (variable, value) = (s.get_contents().decode("utf-8") for s in source)
         with open(str(target[0].abspath), "w") as f:
             print("#define", variable, value, file=f)
         return None

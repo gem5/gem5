@@ -72,14 +72,14 @@ def main():
     mode = sys.argv[1][1]
 
     try:
-        stats = open(sys.argv[2] + "/stats.txt", "r")
-    except IOError:
+        stats = open(sys.argv[2] + "/stats.txt")
+    except OSError:
         print("Failed to open ", sys.argv[2] + "/stats.txt", " for reading")
         exit(-1)
 
     try:
-        simout = open(sys.argv[2] + "/simout.txt", "r")
-    except IOError:
+        simout = open(sys.argv[2] + "/simout.txt")
+    except OSError:
         print("Failed to open ", sys.argv[2] + "/simout.txt", " for reading")
         exit(-1)
 
@@ -89,7 +89,7 @@ def main():
 
     for line in simout:
         match = re.match(
-            "DRAM sweep with burst: (\d+), banks: (\d+), max stride: (\d+)",
+            r"DRAM sweep with burst: (\d+), banks: (\d+), max stride: (\d+)",
             line,
         )
         if match:
@@ -112,15 +112,15 @@ def main():
     avg_pwr = []
 
     for line in stats:
-        match = re.match(".*busUtil\s+(\d+\.\d+)\s+#.*", line)
+        match = re.match(r".*busUtil\s+(\d+\.\d+)\s+#.*", line)
         if match:
             bus_util.append(float(match.groups(0)[0]))
 
-        match = re.match(".*peakBW\s+(\d+\.\d+)\s+#.*", line)
+        match = re.match(r".*peakBW\s+(\d+\.\d+)\s+#.*", line)
         if match:
             peak_bw.append(float(match.groups(0)[0]))
 
-        match = re.match(".*averagePower\s+(\d+\.?\d*)\s+#.*", line)
+        match = re.match(r".*averagePower\s+(\d+\.?\d*)\s+#.*", line)
         if match:
             avg_pwr.append(float(match.groups(0)[0]))
     stats.close()

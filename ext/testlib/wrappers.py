@@ -75,7 +75,7 @@ class LibraryMetadata:
         self.status = status
 
 
-class LoadedTestable(object):
+class LoadedTestable:
     """
     Base class for loaded test items.
 

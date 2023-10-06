@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2017 Jason Power
 # All rights reserved.
 #
@@ -46,7 +45,7 @@ class TestCacheSystem(RubySystem):
         if buildEnv["PROTOCOL"] != "MSI":
             fatal("This system assumes MSI from learning gem5!")
 
-        super(TestCacheSystem, self).__init__()
+        super().__init__()
 
     def setup(self, system, tester, mem_ctrls):
         """Set up the Ruby cache subsystem. Note: This can't be done in the

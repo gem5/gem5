@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-class _neg_inf(object):
+class _neg_inf:
     """This object always compares less than any other object"""
 
     def __repr__(self):
@@ -53,7 +53,7 @@ class _neg_inf(object):
 neg_inf = _neg_inf()
 
 
-class _pos_inf(object):
+class _pos_inf:
     """This object always compares greater than any other object"""
 
     def __repr__(self):
@@ -176,7 +176,7 @@ class Region(tuple):
         return self[1] > other
 
 
-class Regions(object):
+class Regions:
     """A set of regions (ranges).  Basically a region with holes.
     Includes utility functions to merge regions and figure out if
     something is in one of the regions."""

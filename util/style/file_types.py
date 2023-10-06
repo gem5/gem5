@@ -100,7 +100,7 @@ def lang_type(filename, firstline=None, openok=True):
     # if a first line was not provided but the file is ok to open,
     # grab the first line of the file.
     if firstline is None and openok:
-        handle = open(filename, "r")
+        handle = open(filename)
         firstline = handle.readline()
         handle.close()
 

@@ -125,8 +125,8 @@ def main():
 
     # Open the file in read mode
     try:
-        ascii_in = open(sys.argv[1], "r")
-    except IOError:
+        ascii_in = open(sys.argv[1])
+    except OSError:
         print("Failed to open ", sys.argv[1], " for reading")
         exit(-1)
 

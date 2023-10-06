@@ -185,7 +185,7 @@ def connectGPU(system, args):
     elif args.gpu_device == "Vega10":
         system.pc.south_bridge.gpu.DeviceID = 0x6863
     else:
-        panic("Unknown GPU device: {}".format(args.gpu_device))
+        panic(f"Unknown GPU device: {args.gpu_device}")
 
     # Use the gem5 default of 0x280 OR'd  with 0x10 which tells Linux there is
     # a PCI capabilities list to travse.

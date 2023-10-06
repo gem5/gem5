@@ -64,7 +64,7 @@ code = code_formatter()
 wrapper_name = enum.wrapper_name
 wrapper = "struct" if enum.wrapper_is_struct else "namespace"
 name = enum.__name__ if enum.enum_name is None else enum.enum_name
-idem_macro = "__ENUM__%s__%s__" % (wrapper_name, name)
+idem_macro = f"__ENUM__{wrapper_name}__{name}__"
 
 code(
     """\

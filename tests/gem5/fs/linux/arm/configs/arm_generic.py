@@ -57,7 +57,7 @@ class ArmSESystemUniprocessor(BaseSESystemUniprocessor):
     """
 
     def __init__(self, **kwargs):
-        super(ArmSESystemUniprocessor, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def create_caches_private(self, cpu):
         # The atomic SE configurations do not use caches
@@ -70,7 +70,7 @@ class ArmSESystemUniprocessor(BaseSESystemUniprocessor):
             )
 
 
-class LinuxArmSystemBuilder(object):
+class LinuxArmSystemBuilder:
     """Mix-in that implements create_system.
 
     This mix-in is intended as a convenient way of adding an

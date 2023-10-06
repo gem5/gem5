@@ -142,7 +142,7 @@ def filter_with_config_tags(loaded_library):
 
     filters = list(itertools.chain(final_tags, tags))
     string = "Filtering suites with tags as follows:\n"
-    filter_string = "\t\n".join((str(f) for f in filters))
+    filter_string = "\t\n".join(str(f) for f in filters)
     log.test_log.trace(string + filter_string)
 
     return filter_with_tags(loaded_library, filters)
@@ -308,7 +308,7 @@ def run_schedule(test_schedule, log_handler):
 
     log.test_log.message(terminal.separator())
     log.test_log.message(
-        "Running Tests from {} suites".format(len(test_schedule.suites)),
+        f"Running Tests from {len(test_schedule.suites)} suites",
         bold=True,
     )
     log.test_log.message(

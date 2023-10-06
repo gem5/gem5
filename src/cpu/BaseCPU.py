@@ -305,8 +305,7 @@ class BaseCPU(ClockedObject):
         # Generate nodes from the BaseCPU children (hence under the root node,
         # and don't add them as subnode). Please note: this is mainly needed
         # for the ISA class, to generate the PMU entry in the DTB.
-        for child_node in self.recurseDeviceTree(state):
-            yield child_node
+        yield from self.recurseDeviceTree(state)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

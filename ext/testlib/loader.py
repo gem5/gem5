@@ -108,7 +108,7 @@ def path_as_modulename(filepath):
 
 
 def path_as_suitename(filepath):
-    return os.path.split(os.path.dirname(os.path.abspath((filepath))))[-1]
+    return os.path.split(os.path.dirname(os.path.abspath(filepath)))[-1]
 
 
 def _assert_files_in_same_dir(files):
@@ -119,7 +119,7 @@ def _assert_files_in_same_dir(files):
                 assert os.path.dirname(f) == directory
 
 
-class Loader(object):
+class Loader:
     """
     Class for discovering tests.
 

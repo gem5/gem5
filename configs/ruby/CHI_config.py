@@ -115,7 +115,7 @@ class CHI_Node(SubSystem):
         router_list = None
 
     def __init__(self, ruby_system):
-        super(CHI_Node, self).__init__()
+        super().__init__()
         self._ruby_system = ruby_system
         self._network = ruby_system.network
 
@@ -200,7 +200,7 @@ class CHI_Cache_Controller(Cache_Controller):
     """
 
     def __init__(self, ruby_system):
-        super(CHI_Cache_Controller, self).__init__(
+        super().__init__(
             version=Versions.getVersion(Cache_Controller),
             ruby_system=ruby_system,
             mandatoryQueue=MessageBuffer(),
@@ -227,7 +227,7 @@ class CHI_L1Controller(CHI_Cache_Controller):
     """
 
     def __init__(self, ruby_system, sequencer, cache, prefetcher):
-        super(CHI_L1Controller, self).__init__(ruby_system)
+        super().__init__(ruby_system)
         self.sequencer = sequencer
         self.cache = cache
         self.use_prefetcher = False
@@ -263,7 +263,7 @@ class CHI_L2Controller(CHI_Cache_Controller):
     """
 
     def __init__(self, ruby_system, cache, prefetcher):
-        super(CHI_L2Controller, self).__init__(ruby_system)
+        super().__init__(ruby_system)
         self.sequencer = NULL
         self.cache = cache
         self.use_prefetcher = False
@@ -298,7 +298,7 @@ class CHI_HNFController(CHI_Cache_Controller):
     """
 
     def __init__(self, ruby_system, cache, prefetcher, addr_ranges):
-        super(CHI_HNFController, self).__init__(ruby_system)
+        super().__init__(ruby_system)
         self.sequencer = NULL
         self.cache = cache
         self.use_prefetcher = False
@@ -340,7 +340,7 @@ class CHI_MNController(MiscNode_Controller):
         l1d_caches,
         early_nonsync_comp,
     ):
-        super(CHI_MNController, self).__init__(
+        super().__init__(
             version=Versions.getVersion(MiscNode_Controller),
             ruby_system=ruby_system,
             mandatoryQueue=MessageBuffer(),
@@ -371,7 +371,7 @@ class CHI_DMAController(CHI_Cache_Controller):
     """
 
     def __init__(self, ruby_system, sequencer):
-        super(CHI_DMAController, self).__init__(ruby_system)
+        super().__init__(ruby_system)
         self.sequencer = sequencer
 
         class DummyCache(RubyCache):
@@ -463,7 +463,7 @@ class CHI_RNF(CHI_Node):
         l1Iprefetcher_type=None,
         l1Dprefetcher_type=None,
     ):
-        super(CHI_RNF, self).__init__(ruby_system)
+        super().__init__(ruby_system)
 
         self._block_size_bits = int(math.log(cache_line_size, 2))
 
@@ -617,7 +617,7 @@ class CHI_HNF(CHI_Node):
     # The CHI controller can be a child of this object or another if
     # 'parent' if specified
     def __init__(self, hnf_idx, ruby_system, llcache_type, parent):
-        super(CHI_HNF, self).__init__(ruby_system)
+        super().__init__(ruby_system)
 
         addr_ranges, intlvHighBit = self.getAddrRanges(hnf_idx)
         # All ranges should have the same interleaving
@@ -658,7 +658,7 @@ class CHI_MN(CHI_Node):
     # The CHI controller can be a child of this object or another if
     # 'parent' if specified
     def __init__(self, ruby_system, l1d_caches, early_nonsync_comp=False):
-        super(CHI_MN, self).__init__(ruby_system)
+        super().__init__(ruby_system)
 
         # MiscNode has internal address range starting at 0
         addr_range = AddrRange(0, size="1kB")
@@ -692,7 +692,7 @@ class CHI_SNF_Base(CHI_Node):
     # The CHI controller can be a child of this object or another if
     # 'parent' if specified
     def __init__(self, ruby_system, parent):
-        super(CHI_SNF_Base, self).__init__(ruby_system)
+        super().__init__(ruby_system)
 
         self._cntrl = Memory_Controller(
             version=Versions.getVersion(Memory_Controller),
@@ -739,7 +739,7 @@ class CHI_SNF_BootMem(CHI_SNF_Base):
     """
 
     def __init__(self, ruby_system, parent, bootmem):
-        super(CHI_SNF_BootMem, self).__init__(ruby_system, parent)
+        super().__init__(ruby_system, parent)
         self._cntrl.memory_out_port = bootmem.port
         self._cntrl.addr_ranges = self.getMemRange(bootmem)
 
@@ -750,7 +750,7 @@ class CHI_SNF_MainMem(CHI_SNF_Base):
     """
 
     def __init__(self, ruby_system, parent, mem_ctrl=None):
-        super(CHI_SNF_MainMem, self).__init__(ruby_system, parent)
+        super().__init__(ruby_system, parent)
         if mem_ctrl:
             self._cntrl.memory_out_port = mem_ctrl.port
             self._cntrl.addr_ranges = self.getMemRange(mem_ctrl)
@@ -765,7 +765,7 @@ class CHI_RNI_Base(CHI_Node):
     # The CHI controller can be a child of this object or another if
     # 'parent' if specified
     def __init__(self, ruby_system, parent):
-        super(CHI_RNI_Base, self).__init__(ruby_system)
+        super().__init__(ruby_system)
 
         self._sequencer = RubySequencer(
             version=Versions.getSeqId(),
@@ -794,7 +794,7 @@ class CHI_RNI_DMA(CHI_RNI_Base):
     """
 
     def __init__(self, ruby_system, dma_port, parent):
-        super(CHI_RNI_DMA, self).__init__(ruby_system, parent)
+        super().__init__(ruby_system, parent)
         assert dma_port != None
         self._sequencer.in_ports = dma_port
 
@@ -805,5 +805,5 @@ class CHI_RNI_IO(CHI_RNI_Base):
     """
 
     def __init__(self, ruby_system, parent):
-        super(CHI_RNI_IO, self).__init__(ruby_system, parent)
+        super().__init__(ruby_system, parent)
         ruby_system._io_port = self._sequencer

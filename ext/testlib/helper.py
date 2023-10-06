@@ -54,7 +54,7 @@ from collections import namedtuple
 from collections.abc import MutableSet
 
 
-class TimedWaitPID(object):
+class TimedWaitPID:
     """Utility to monkey-patch os.waitpid() with os.wait4().
 
     This allows process usage time to be obtained directly from the OS
@@ -71,7 +71,7 @@ class TimedWaitPID(object):
 
     TimeRecord = namedtuple("_TimeRecord", "user_time system_time")
 
-    class Wrapper(object):
+    class Wrapper:
         def __init__(self):
             self._time_for_pid = {}
             self._access_lock = threading.Lock()
@@ -92,7 +92,7 @@ class TimedWaitPID(object):
         def get_time_for_pid(self, pid):
             with self._access_lock:
                 if pid not in self._time_for_pid:
-                    raise Exception("No resource usage for pid {}".format(pid))
+                    raise Exception(f"No resource usage for pid {pid}")
                 time_for_pid = self._time_for_pid[pid]
                 del self._time_for_pid[pid]
                 return time_for_pid
@@ -347,8 +347,8 @@ class OrderedSet(MutableSet):
 
     def __repr__(self):
         if not self:
-            return "%s()" % (self.__class__.__name__,)
-        return "%s(%r)" % (self.__class__.__name__, list(self))
+            return f"{self.__class__.__name__}()"
+        return f"{self.__class__.__name__}({list(self)!r})"
 
     def __eq__(self, other):
         if isinstance(other, OrderedSet):
@@ -387,7 +387,7 @@ class FrozenSetException(Exception):
     pass
 
 
-class AttrDict(object):
+class AttrDict:
     """Object which exposes its own internal dictionary through attributes."""
 
     def __init__(self, dict_={}):
@@ -418,7 +418,7 @@ class FrozenAttrDict(AttrDict):
     __initialized = False
 
     def __init__(self, dict_={}):
-        super(FrozenAttrDict, self).__init__(dict_)
+        super().__init__(dict_)
         self.__initialized = True
 
     def __setattr__(self, attr, val):
@@ -427,7 +427,7 @@ class FrozenAttrDict(AttrDict):
                 "Cannot modify an attribute in a FozenAttrDict",
             )
         else:
-            super(FrozenAttrDict, self).__setattr__(attr, val)
+            super().__setattr__(attr, val)
 
     def update(self, items):
         if self.__initialized:
@@ -435,10 +435,10 @@ class FrozenAttrDict(AttrDict):
                 "Cannot modify an attribute in a FozenAttrDict",
             )
         else:
-            super(FrozenAttrDict, self).update(items)
+            super().update(items)
 
 
-class InstanceCollector(object):
+class InstanceCollector:
     """
     A class used to simplify collecting of Classes.
 
@@ -476,7 +476,7 @@ def append_dictlist(dict_, key, value):
 
 
 def _filter_file(fname, filters):
-    with open(fname, "r") as file_:
+    with open(fname) as file_:
         for line in file_:
             for regex in filters:
                 if re.match(regex, line):
@@ -530,7 +530,7 @@ def diff_out_file(ref_file, out_file, logger, ignore_regexes=tuple()):
         except OSError:
             # Likely signals that diff does not exist on this system. fallback
             # to difflib
-            with open(out_file, "r") as outf, open(ref_file, "r") as reff:
+            with open(out_file) as outf, open(ref_file) as reff:
                 diff = difflib.unified_diff(
                     iter(reff.readline, ""),
                     iter(outf.readline, ""),

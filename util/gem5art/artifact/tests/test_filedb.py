@@ -59,7 +59,7 @@ class TestArtifactFileDB(unittest.TestCase):
         self.assertTrue(Path("test.json").exists())
 
     def test_json_content(self):
-        with open("test.json", "r") as f:
+        with open("test.json") as f:
             artifacts = json.load(f)
         self.assertTrue(len(artifacts) == 1)
         artifact = artifacts[0]

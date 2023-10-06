@@ -43,14 +43,14 @@ def list_parser(names):
     ret = []
     accum = []
     for elem in elems:
-        if re.search("^\((.*)\)$", elem):
-            accum.append(re.sub("^\((.*)\)", "\\1", elem))
+        if re.search(r"^\((.*)\)$", elem):
+            accum.append(re.sub(r"^\((.*)\)", "\\1", elem))
             ret.append(accum)
             accum = []
-        elif re.search("^\(", elem):
-            accum.append(re.sub("^\(", "", elem))
-        elif re.search("\)$", elem):
-            accum.append(re.sub("\)$", "", elem))
+        elif re.search(r"^\(", elem):
+            accum.append(re.sub(r"^\(", "", elem))
+        elif re.search(r"\)$", elem):
+            accum.append(re.sub(r"\)$", "", elem))
             ret.append(accum)
             accum = []
         elif len(accum) != 0:
@@ -71,18 +71,18 @@ def map2(f, ls):
 
 
 def remove_trailing_ws(line):
-    return re.sub("\s*$", "", line)
+    return re.sub(r"\s*$", "", line)
 
 
 def remove_leading_and_trailing_ws(line):
-    return re.sub("\s*$", "", re.sub("^\s*", "", line))
+    return re.sub(r"\s*$", "", re.sub(r"^\s*", "", line))
 
 
 def parse_pairs_list(pairString):
     """parse a string like 'name=value name2=value2' into a
     list of pairs of ('name', 'value') ..."""
     ret = []
-    pairs = re.finditer('(\w+)(=("[^"]*"|[^\s]*))?', pairString)
+    pairs = re.finditer(r'(\w+)(=("[^"]*"|[^\s]*))?', pairString)
     for pair in pairs:
         name, rest, value = pair.groups()
         if value is not None:

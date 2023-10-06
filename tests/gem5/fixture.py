@@ -60,14 +60,14 @@ from testlib.state import Result
 
 class VariableFixture(Fixture):
     def __init__(self, value=None, name=None):
-        super(VariableFixture, self).__init__(name=name)
+        super().__init__(name=name)
         self.value = value
 
 
 class TempdirFixture(Fixture):
     def __init__(self):
         self.path = None
-        super(TempdirFixture, self).__init__(
+        super().__init__(
             name=constants.tempdir_fixture_name,
         )
 
@@ -117,7 +117,7 @@ class UniqueFixture(Fixture):
         if target in cls.fixtures:
             obj = cls.fixtures[target]
         else:
-            obj = super(UniqueFixture, cls).__new__(cls)
+            obj = super().__new__(cls)
             obj.lock = threading.Lock()
             obj.target = target
             cls.fixtures[target] = obj
@@ -127,7 +127,7 @@ class UniqueFixture(Fixture):
         with self.lock:
             if hasattr(self, "_init_done"):
                 return
-            super(UniqueFixture, self).__init__(self, **kwargs)
+            super().__init__(self, **kwargs)
             self._init(*args, **kwargs)
             self._init_done = True
 
@@ -150,7 +150,7 @@ class SConsFixture(UniqueFixture):
     """
 
     def __new__(cls, target):
-        obj = super(SConsFixture, cls).__new__(cls, target)
+        obj = super().__new__(cls, target)
         return obj
 
     def _setup(self, testitem):
@@ -199,7 +199,7 @@ class Gem5Fixture(SConsFixture):
         if protocol:
             target_dir += "_" + protocol
         target = joinpath(target_dir, f"gem5.{variant}")
-        obj = super(Gem5Fixture, cls).__new__(cls, target)
+        obj = super().__new__(cls, target)
         return obj
 
     def _init(self, isa, variant, protocol=None):
@@ -224,7 +224,7 @@ class Gem5Fixture(SConsFixture):
 class MakeFixture(Fixture):
     def __init__(self, directory, *args, **kwargs):
         name = f"make -C {directory}"
-        super(MakeFixture, self).__init__(
+        super().__init__(
             build_once=True,
             lazy_init=False,
             name=name,
@@ -235,7 +235,7 @@ class MakeFixture(Fixture):
         self.directory = directory
 
     def setup(self):
-        super(MakeFixture, self).setup()
+        super().setup()
         targets = set(self.required_by)
         command = ["make", "-C", self.directory]
         command.extend([target.target for target in targets])
@@ -250,7 +250,7 @@ class MakeTarget(Fixture):
         scons we need to know what invocation to attach to. If none given,
         creates its own.
         """
-        super(MakeTarget, self).__init__(name=target, *args, **kwargs)
+        super().__init__(name=target, *args, **kwargs)
         self.target = self.name
 
         if make_fixture is None:
@@ -266,7 +266,7 @@ class MakeTarget(Fixture):
         self.require(self.make_fixture)
 
     def setup(self, testitem):
-        super(MakeTarget, self).setup()
+        super().setup()
         self.make_fixture.setup()
         return self
 
@@ -276,7 +276,7 @@ class TestProgram(MakeTarget):
         make_dir = joinpath(config.bin_dir, program)
         make_fixture = MakeFixture(make_dir)
         target = joinpath("bin", isa, os, program)
-        super(TestProgram, self).__init__(target, make_fixture)
+        super().__init__(target, make_fixture)
         self.path = joinpath(make_dir, target)
         self.recompile = recompile
 
@@ -296,7 +296,7 @@ class DownloadedProgram(UniqueFixture):
 
     def __new__(cls, url, path, filename, gzip_decompress=False):
         target = joinpath(path, filename)
-        return super(DownloadedProgram, cls).__new__(cls, target)
+        return super().__new__(cls, target)
 
     def _init(self, url, path, filename, gzip_decompress=False, **kwargs):
         """

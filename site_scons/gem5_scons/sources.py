@@ -124,7 +124,7 @@ def resolve_tags(env, tags):
     return tags
 
 
-class SourceFilter(object):
+class SourceFilter:
     factories = {}
 
     def __init__(self, predicate):
@@ -207,11 +207,11 @@ class SourceMeta(type):
     particular type."""
 
     def __init__(cls, name, bases, dict):
-        super(SourceMeta, cls).__init__(name, bases, dict)
+        super().__init__(name, bases, dict)
         cls.all = SourceList()
 
 
-class SourceItem(object, metaclass=SourceMeta):
+class SourceItem(metaclass=SourceMeta):
     """Base object that encapsulates the notion of a source component for
     gem5. This specifies a set of tags which help group components into groups
     based on arbitrary properties."""

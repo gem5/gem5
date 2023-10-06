@@ -38,7 +38,7 @@ def upgrader(cpt):
         for sec in cpt.sections():
             import re
 
-            if not re.search("\.gic$", sec):
+            if not re.search(r"\.gic$", sec):
                 continue
             cpuEnabled = cpt.get(sec, "cpuEnabled").split()
 

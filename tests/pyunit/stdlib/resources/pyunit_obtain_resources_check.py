@@ -75,14 +75,14 @@ class TestObtainResourcesCheck(unittest.TestCase):
             resource_directory=self.get_resource_dir(),
             gem5_version="develop",
         )
-        self.assertEquals("1.7.0", resource.get_resource_version())
+        self.assertEqual("1.7.0", resource.get_resource_version())
         self.assertIsInstance(resource, BinaryResource)
-        self.assertEquals(
+        self.assertEqual(
             "test description v1.7.0",
             resource.get_description(),
         )
-        self.assertEquals("src/test-source", resource.get_source())
-        self.assertEquals(ISA.ARM, resource.get_architecture())
+        self.assertEqual("src/test-source", resource.get_source())
+        self.assertEqual(ISA.ARM, resource.get_architecture())
 
     def test_obtain_resources_with_version_compatible(self):
         resource = obtain_resource(
@@ -91,14 +91,14 @@ class TestObtainResourcesCheck(unittest.TestCase):
             resource_version="1.5.0",
             gem5_version="develop",
         )
-        self.assertEquals("1.5.0", resource.get_resource_version())
+        self.assertEqual("1.5.0", resource.get_resource_version())
         self.assertIsInstance(resource, BinaryResource)
-        self.assertEquals(
+        self.assertEqual(
             "test description for 1.5.0",
             resource.get_description(),
         )
-        self.assertEquals("src/test-source", resource.get_source())
-        self.assertEquals(ISA.ARM, resource.get_architecture())
+        self.assertEqual("src/test-source", resource.get_source())
+        self.assertEqual(ISA.ARM, resource.get_architecture())
 
     def test_obtain_resources_with_version_incompatible(self):
         resource = None
@@ -116,14 +116,14 @@ class TestObtainResourcesCheck(unittest.TestCase):
             resource_version="1.5.0",
             gem5_version="develop",
         )
-        self.assertEquals("1.5.0", resource.get_resource_version())
+        self.assertEqual("1.5.0", resource.get_resource_version())
         self.assertIsInstance(resource, BinaryResource)
-        self.assertEquals(
+        self.assertEqual(
             "test description for 1.5.0",
             resource.get_description(),
         )
-        self.assertEquals("src/test-source", resource.get_source())
-        self.assertEquals(ISA.ARM, resource.get_architecture())
+        self.assertEqual("src/test-source", resource.get_source())
+        self.assertEqual(ISA.ARM, resource.get_architecture())
 
     def test_obtain_resources_no_version_invalid_id(self):
         with self.assertRaises(Exception) as context:

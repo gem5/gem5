@@ -188,7 +188,7 @@ def cross(cr, centre, size):
     cr.line_to(x, bottom)
 
 
-class Blob(object):
+class Blob:
     """Blob super class"""
 
     def __init__(self, picChar, unit, topLeft, colour, size=Point(1, 1)):
@@ -224,7 +224,7 @@ class Block(Blob):
         colour=colours.black,
         size=Point(1, 1),
     ):
-        super(Block, self).__init__(picChar, unit, topLeft, colour, size=size)
+        super().__init__(picChar, unit, topLeft, colour, size=size)
         # {horiz, vert}
         self.stripDir = "horiz"
         # {LR, RL}: LR means the first strip will be on the left/top,
@@ -400,7 +400,7 @@ class Key(Blob):
         colour=colours.black,
         size=Point(1, 1),
     ):
-        super(Key, self).__init__(picChar, unit, topLeft, colour, size=size)
+        super().__init__(picChar, unit, topLeft, colour, size=size)
         self.colours = "BBBB"
         self.displayName = unit
 
@@ -478,7 +478,7 @@ class Arrow(Blob):
         size=Point(1.0, 1.0),
         direc="right",
     ):
-        super(Arrow, self).__init__(unit, unit, topLeft, colour, size=size)
+        super().__init__(unit, unit, topLeft, colour, size=size)
         self.direc = direc
 
     def render(self, cr, view, event, select, time):

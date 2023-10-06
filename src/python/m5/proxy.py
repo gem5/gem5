@@ -43,7 +43,7 @@
 import copy
 
 
-class BaseProxy(object):
+class BaseProxy:
     def __init__(self, search_self, search_up):
         self._search_self = search_self
         self._search_up = search_up
@@ -270,7 +270,7 @@ def isproxy(obj):
     return False
 
 
-class ProxyFactory(object):
+class ProxyFactory:
     def __init__(self, search_self, search_up):
         self.search_self = search_self
         self.search_up = search_up

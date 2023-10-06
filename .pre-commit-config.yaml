@@ -86,6 +86,13 @@ repos:
       rev: v3.1.0
       hooks:
           - id: add-trailing-comma
+    - repo: https://github.com/asottile/pyupgrade
+      rev: v3.14.0
+      hooks:
+          - id: pyupgrade
+            # Python 3.8 is the earliest version supported.
+            # We therefore conform to the standards compatible with 3.8+.
+            args: [--py38-plus]
     - repo: local
       hooks:
           - id: gem5-style-checker

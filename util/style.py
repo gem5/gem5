@@ -43,7 +43,7 @@ from style.file_types import lang_type
 from style.region import all_regions
 from style.style import StdioUI
 
-verifier_names = dict([(c.__name__, c) for c in style.verifiers.all_verifiers])
+verifier_names = {c.__name__: c for c in style.verifiers.all_verifiers}
 
 
 def verify(

@@ -27,7 +27,7 @@ import os
 import sys
 
 
-class PairContainer(object):
+class PairContainer:
     def __init__(self, pairs=None):
         self.pairs = {}
         if pairs:
@@ -46,7 +46,7 @@ class PairContainer(object):
         return self.pairs.get(item, failobj)
 
 
-class Location(object):
+class Location:
     def __init__(self, filename, lineno, no_warning=False):
         if not isinstance(filename, str):
             raise AttributeError(

@@ -64,7 +64,7 @@ total = 0
 prof = {}
 linenum = 0
 for line in f.readlines():
-    line = re.sub("\(no symbols\)", "nosym", line)
+    line = re.sub(r"\(no symbols\)", "nosym", line)
     line = re.sub("anonymous.*", "nosym", line)
     linenum += 1
     if linenum < 4:

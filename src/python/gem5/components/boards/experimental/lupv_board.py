@@ -84,7 +84,7 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         cache_hierarchy: AbstractCacheHierarchy,
     ) -> None:
         if cache_hierarchy.is_ruby():
-            raise EnvironmentError("RiscvBoard is not compatible with Ruby")
+            raise OSError("RiscvBoard is not compatible with Ruby")
 
         if processor.get_isa() != ISA.RISCV:
             raise Exception(

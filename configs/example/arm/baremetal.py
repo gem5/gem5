@@ -170,9 +170,10 @@ def create(args):
     system.workload = workload_class(object_file, system)
 
     if args.with_pmu:
-        enabled_pmu_events = set(
-            (*args.pmu_dump_stats_on, *args.pmu_reset_stats_on),
-        )
+        enabled_pmu_events = {
+            *args.pmu_dump_stats_on,
+            *args.pmu_reset_stats_on,
+        }
         exit_sim_on_control = bool(
             enabled_pmu_events & set(pmu_control_events.keys()),
         )

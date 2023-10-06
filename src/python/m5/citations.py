@@ -112,7 +112,7 @@ gem5_citations = """@article{Binkert:2011:gem5,
                   Mohammad Alian and
                   Rico Amslinger and
                   Matteo Andreozzi and
-                  Adri{\`{a}} Armejach and
+                  Adri{\\`{a}} Armejach and
                   Nils Asmussen and
                   Srikant Bharadwaj and
                   Gabe Black and

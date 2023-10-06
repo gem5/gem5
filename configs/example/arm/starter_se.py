@@ -72,7 +72,7 @@ class SimpleSeSystem(System):
     cache_line_size = 64
 
     def __init__(self, args, **kwargs):
-        super(SimpleSeSystem, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         # Setup book keeping to be able to use CpuClusters from the
         # devices module.

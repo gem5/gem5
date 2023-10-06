@@ -55,7 +55,7 @@ for source in args.files:
     # `README.md = "..."` which is not valid as `md` is not a property of
     # `README`.
     src = os.path.basename(source).replace(".", "_")
-    with open(source, "r") as f:
+    with open(source) as f:
         data = "".join(f)
     code("${src} = ${{repr(data)}}")
 

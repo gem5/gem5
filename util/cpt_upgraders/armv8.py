@@ -12,7 +12,7 @@ def upgrader(cpt):
     )
     # Find the CPU context's and upgrade their registers
     for sec in cpt.sections():
-        re_xc_match = re.match("^.*?sys.*?\.cpu(\d+)*\.xc\.*", sec)
+        re_xc_match = re.match(r"^.*?sys.*?\.cpu(\d+)*\.xc\.*", sec)
         if not re_xc_match:
             continue
 
@@ -38,7 +38,7 @@ def upgrader(cpt):
 
     # Update the cpu interrupt field
     for sec in cpt.sections():
-        re_int_match = re.match("^.*?sys.*?\.cpu(\d+)*$", sec)
+        re_int_match = re.match(r"^.*?sys.*?\.cpu(\d+)*$", sec)
         if not re_int_match:
             continue
 
@@ -49,7 +49,7 @@ def upgrader(cpt):
 
     # Update the per cpu interrupt structure
     for sec in cpt.sections():
-        re_int_match = re.match("^.*?sys.*?\.cpu(\d+)*\.interrupts$", sec)
+        re_int_match = re.match(r"^.*?sys.*?\.cpu(\d+)*\.interrupts$", sec)
         if not re_int_match:
             continue
 
@@ -60,7 +60,7 @@ def upgrader(cpt):
 
     # Update the misc regs and add in new isa specific fields
     for sec in cpt.sections():
-        re_isa_match = re.match("^.*?sys.*?\.cpu(\d+)*\.isa$", sec)
+        re_isa_match = re.match(r"^.*?sys.*?\.cpu(\d+)*\.isa$", sec)
         if not re_isa_match:
             continue
 
@@ -254,7 +254,7 @@ def upgrader(cpt):
     cpu_prefix = {}
     # Add in state for ITB/DTB
     for sec in cpt.sections():
-        re_tlb_match = re.match("(^.*?sys.*?\.cpu(\d+)*)\.(dtb|itb)$", sec)
+        re_tlb_match = re.match(r"(^.*?sys.*?\.cpu(\d+)*)\.(dtb|itb)$", sec)
         if not re_tlb_match:
             continue
 
@@ -271,7 +271,7 @@ def upgrader(cpt):
     # Add in extra state for the new TLB Entries
     for sec in cpt.sections():
         re_tlbentry_match = re.match(
-            "(^.*?sys.*?\.cpu(\d+)*)\.(dtb|itb).TlbEntry\d+$",
+            r"(^.*?sys.*?\.cpu(\d+)*)\.(dtb|itb).TlbEntry\d+$",
             sec,
         )
         if not re_tlbentry_match:

@@ -66,7 +66,7 @@ class AbstractNode(Cache_Controller):
     # TODO: I don't love that we have to pass in the cache line size.
     # However, we need some way to set the index bits
     def __init__(self, network: RubyNetwork, cache_line_size: int):
-        super(AbstractNode, self).__init__()
+        super().__init__()
 
         # Note: Need to call versionCount method on *this* class, not the
         # potentially derived class

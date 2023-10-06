@@ -190,7 +190,7 @@ class InternalSavedResults:
             return pickle.load(f)
 
 
-class XMLElement(object):
+class XMLElement:
     def write(self, file_):
         self.begin(file_)
         self.end(file_)
@@ -220,14 +220,14 @@ class XMLElement(object):
         file_.write("</%s>" % self.name)
 
 
-class XMLAttribute(object):
+class XMLAttribute:
     def __init__(self, name, value):
         self.name = name
         self.value = value
 
     def write(self, file_):
         file_.write(
-            "%s=%s" % (self.name, xml.sax.saxutils.quoteattr(self.value)),
+            f"{self.name}={xml.sax.saxutils.quoteattr(self.value)}",
         )
 
 
@@ -329,10 +329,10 @@ class LargeFileElement(XMLElement):
 
     def body(self, file_):
         try:
-            with open(self.filename, "r") as f:
+            with open(self.filename) as f:
                 for line in f:
                     file_.write(xml.sax.saxutils.escape(line))
-        except IOError:
+        except OSError:
             # TODO Better error logic, this is sometimes O.K.
             # if there was no stdout/stderr captured for the test
             #

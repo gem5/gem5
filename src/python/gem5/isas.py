@@ -78,7 +78,7 @@ def get_isa_from_str(input: str) -> ISA:
         if input.lower() == isa.value:
             return isa
 
-    valid_isas_str_list = str()
+    valid_isas_str_list = ""
     for isa_str in get_isas_str_set():
         valid_isas_str_list += f"{os.linesep}{isa_str}"
 

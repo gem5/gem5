@@ -63,12 +63,12 @@ mock_config_combined["sources"]["baba"] = mock_config_json["sources"]["baba"]
 
 mock_json = {}
 
-with open(Path(__file__).parent / "refs/mongo-mock.json", "r") as f:
+with open(Path(__file__).parent / "refs/mongo-mock.json") as f:
     mock_json = json.load(f)
 
 duplicate_mock_json = {}
 
-with open(Path(__file__).parent / "refs/mongo-dup-mock.json", "r") as f:
+with open(Path(__file__).parent / "refs/mongo-dup-mock.json") as f:
     duplicate_mock_json = json.load(f)
 
 

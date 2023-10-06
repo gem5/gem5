@@ -63,7 +63,7 @@ class ResourceJsonCreator:
 
     def __init__(self):
         self.schema = {}
-        with open("schema/schema.json", "r") as f:
+        with open("schema/schema.json") as f:
             self.schema = json.load(f)
 
     def _get_file_data(self, url):
@@ -106,7 +106,6 @@ class ResourceJsonCreator:
             if os.path.isfile(file_path):
                 with open(
                     file_path,
-                    "r",
                     encoding="utf-8",
                     errors="ignore",
                 ) as f:

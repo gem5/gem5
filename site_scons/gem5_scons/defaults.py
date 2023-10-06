@@ -44,32 +44,30 @@ from gem5_python_paths import extra_python_paths
 
 def EnvDefaults(env):
     # initialize the toolchain related env with host environment
-    use_vars = set(
-        [
-            "AS",
-            "AR",
-            "CC",
-            "CXX",
-            "HOME",
-            "CPATH",
-            "LD_LIBRARY_PATH",
-            "LIBRARY_PATH",
-            "PATH",
-            "PKG_CONFIG_PATH",
-            "PROTOC",
-            "PYTHONPATH",
-            "RANLIB",
-            "TERM",  # for clang reports errors in color
-            "PYTHON_CONFIG",  # gem5 specific build env
-            "CCFLAGS_EXTRA",  # gem5 specific build env
-            "GEM5PY_CCFLAGS_EXTRA",  # gem5 specific build env
-            "GEM5PY_LINKFLAGS_EXTRA",  # gem5 specific build env
-            "LINKFLAGS_EXTRA",  # gem5 specific build env
-            "LANG",  # for work with non-ascii directory path
-            "LC_CTYPE",  # for work with non-ascii directory path
-            "DISPLAY",  # for gui program, ex kconfig guiconfig
-        ],
-    )
+    use_vars = {
+        "AS",
+        "AR",
+        "CC",
+        "CXX",
+        "HOME",
+        "CPATH",
+        "LD_LIBRARY_PATH",
+        "LIBRARY_PATH",
+        "PATH",
+        "PKG_CONFIG_PATH",
+        "PROTOC",
+        "PYTHONPATH",
+        "RANLIB",
+        "TERM",  # for clang reports errors in color
+        "PYTHON_CONFIG",  # gem5 specific build env
+        "CCFLAGS_EXTRA",  # gem5 specific build env
+        "GEM5PY_CCFLAGS_EXTRA",  # gem5 specific build env
+        "GEM5PY_LINKFLAGS_EXTRA",  # gem5 specific build env
+        "LINKFLAGS_EXTRA",  # gem5 specific build env
+        "LANG",  # for work with non-ascii directory path
+        "LC_CTYPE",  # for work with non-ascii directory path
+        "DISPLAY",  # for gui program, ex kconfig guiconfig
+    }
 
     use_prefixes = [
         "ASAN_",  # address sanitizer symbolizer path and settings

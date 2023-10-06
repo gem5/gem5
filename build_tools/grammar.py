@@ -35,7 +35,7 @@ class ParseError(Exception):
         self.token = token
 
 
-class Grammar(object):
+class Grammar:
     def setupLexerFactory(self, **kwargs):
         if "module" in kwargs:
             raise AttributeError("module is an illegal attribute")
@@ -91,7 +91,7 @@ class Grammar(object):
             return self.current_lexer.lineno
 
         raise AttributeError(
-            "'%s' object has no attribute '%s'" % (type(self), attr),
+            f"'{type(self)}' object has no attribute '{attr}'",
         )
 
     def parse_string(self, data, source="<string>", debug=None, tracking=0):
@@ -117,7 +117,7 @@ class Grammar(object):
     def parse_file(self, f, **kwargs):
         if isinstance(f, str):
             source = f
-            f = open(f, "r")
+            f = open(f)
         elif isinstance(f, file):
             source = f.name
         else:
@@ -136,7 +136,7 @@ class Grammar(object):
                 t.value,
             )
         else:
-            msg = "Syntax error at end of %s" % (self.current_source,)
+            msg = f"Syntax error at end of {self.current_source}"
         raise ParseError(msg, t)
 
     def t_error(self, t):

@@ -28,11 +28,11 @@ import sys
 from optparse import *
 
 
-class nodefault(object):
+class nodefault:
     pass
 
 
-class splitter(object):
+class splitter:
     def __init__(self, split):
         self.split = split
 

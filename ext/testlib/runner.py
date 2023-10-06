@@ -74,7 +74,7 @@ def compute_aggregate_result(iterable):
         return Result(Result.Passed)
 
 
-class TestParameters(object):
+class TestParameters:
     def __init__(self, test, suite):
         self.test = test
         self.suite = suite
@@ -188,10 +188,10 @@ class BrokenFixtureException(Exception):
             'Exception raised building "%s" raised SkipException'
             ' for "%s".' % (trace, fixture.name, testitem.name)
         )
-        super(BrokenFixtureException, self).__init__(self.msg)
+        super().__init__(self.msg)
 
 
-class FixtureBuilder(object):
+class FixtureBuilder:
     def __init__(self, fixtures):
         self.fixtures = fixtures
         self.built_fixtures = []
@@ -211,7 +211,7 @@ class FixtureBuilder(object):
                     "Exception raised while setting up fixture for %s"
                     % testitem.uid
                 )
-                log.test_log.warn("%s\n%s" % (exc, msg))
+                log.test_log.warn(f"{exc}\n{msg}")
 
                 raise BrokenFixtureException(
                     fixture,
@@ -234,4 +234,4 @@ class FixtureBuilder(object):
                     "Exception raised while tearing down fixture for %s"
                     % testitem.uid
                 )
-                log.test_log.warn("%s\n%s" % (exc, msg))
+                log.test_log.warn(f"{exc}\n{msg}")
