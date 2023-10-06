@@ -244,6 +244,7 @@ class CHI_L1Controller(CHI_Cache_Controller):
         self.alloc_on_readunique = True
         self.alloc_on_readonce = True
         self.alloc_on_writeback = True
+        self.alloc_on_atomic = False
         self.dealloc_on_unique = False
         self.dealloc_on_shared = False
         self.dealloc_backinv_unique = True
@@ -280,6 +281,7 @@ class CHI_L2Controller(CHI_Cache_Controller):
         self.alloc_on_readunique = True
         self.alloc_on_readonce = True
         self.alloc_on_writeback = True
+        self.alloc_on_atomic = False
         self.dealloc_on_unique = False
         self.dealloc_on_shared = False
         self.dealloc_backinv_unique = True
@@ -316,6 +318,7 @@ class CHI_HNFController(CHI_Cache_Controller):
         self.alloc_on_readunique = False
         self.alloc_on_readonce = True
         self.alloc_on_writeback = True
+        self.alloc_on_atomic = True
         self.dealloc_on_unique = True
         self.dealloc_on_shared = False
         self.dealloc_backinv_unique = False
@@ -392,6 +395,7 @@ class CHI_DMAController(CHI_Cache_Controller):
         self.alloc_on_readunique = False
         self.alloc_on_readonce = False
         self.alloc_on_writeback = False
+        self.alloc_on_atomic = False
         self.dealloc_on_unique = False
         self.dealloc_on_shared = False
         self.dealloc_backinv_unique = False

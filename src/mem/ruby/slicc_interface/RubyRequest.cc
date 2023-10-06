@@ -123,5 +123,14 @@ RubyRequest::functionalWrite(Packet *pkt)
     return cBase < cTail;
 }
 
+void
+RubyRequest::setWriteMask(uint32_t offset, uint32_t len,
+        std::vector< std::pair<int,AtomicOpFunctor*>> atomicOps)
+{
+    m_writeMask.setMask(offset, len);
+    m_writeMask.setAtomicOps(atomicOps);
+}
+
+
 } // namespace ruby
 } // namespace gem5

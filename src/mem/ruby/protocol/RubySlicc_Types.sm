@@ -139,6 +139,13 @@ structure (Sequencer, external = "yes") {
                      Cycles, Cycles, Cycles);
   void writeUniqueCallback(Addr, DataBlock);
 
+  void atomicCallback(Addr, DataBlock);
+  void atomicCallback(Addr, DataBlock, bool);
+  void atomicCallback(Addr, DataBlock, bool, MachineType);
+  void atomicCallback(Addr, DataBlock, bool, MachineType,
+                      Cycles, Cycles, Cycles);
+
+
   void unaddressedCallback(Addr, RubyRequestType);
   void unaddressedCallback(Addr, RubyRequestType, MachineType);
   void unaddressedCallback(Addr, RubyRequestType, MachineType,

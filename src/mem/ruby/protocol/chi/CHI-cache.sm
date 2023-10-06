@@ -51,6 +51,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
   // sending necessary snoops.
   Cycles read_hit_latency := 0;
   Cycles read_miss_latency := 0;
+  Cycles atomic_op_latency := 0;
   Cycles write_fe_latency := 0; // Front-end: Rcv req -> Snd req
   Cycles write_be_latency := 0; // Back-end: Rcv ack -> Snd data
   Cycles fill_latency := 0; // Fill latency
@@ -126,10 +127,23 @@ machine(MachineType:Cache, "Cache coherency protocol") :
   // possible.
   bool enable_DCT;
 
+  // Atomic Operation Policy
+  // All Near executes all Atomics at L1 (variable set to 0; default)
+  // Unique Near executes Atomics at HNF for states I, SC, SD (set to 1)
+  // Present Near execites all Atomics at L1 except when state is I (set to 2)
+  int policy_type := 1;
+
+
   // Use separate Comp/DBIDResp responses for WriteUnique
   bool comp_wu := "False";
   // additional latency for the WU Comp response
   Cycles comp_wu_latency := 0;
+
+
+  // Use separate Comp/DBIDResp responses for AtomicNoResponse
+  bool comp_anr := "False";
+  // additional latency for the ANR Comp response
+  Cycles comp_anr_latency := 0;
 
   // Controls cache clusivity for different request types.
   // set all alloc_on* to false to completelly disable caching
@@ -139,6 +153,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
   bool alloc_on_writeback;
   bool alloc_on_seq_acc;
   bool alloc_on_seq_line_write;
+  bool alloc_on_atomic;
   // Controls if the clusivity is strict.
   bool dealloc_on_unique;
   bool dealloc_on_shared;
@@ -285,6 +300,8 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     // See CHIRequestType in CHi-msg.sm for descriptions
     Load,                        desc="", in_trans="yes";
     Store,                       desc="", in_trans="yes";
+    AtomicLoad,                  desc="", in_trans="yes";
+    AtomicStore,                 desc="", in_trans="yes";
     Prefetch,                    desc="", in_trans="yes";
     ReadShared,                  desc="", in_trans="yes";
     ReadNotSharedDirty,          desc="", in_trans="yes";
@@ -300,6 +317,10 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     WriteUniquePtl_PoC,          desc="", in_trans="yes";
     WriteUniqueFull_PoC,         desc="", in_trans="yes";
     WriteUniqueFull_PoC_Alloc,   desc="", in_trans="yes";
+    AtomicReturn,                desc="", in_trans="yes";
+    AtomicNoReturn,              desc="", in_trans="yes";
+    AtomicReturn_PoC,            desc="", in_trans="yes";
+    AtomicNoReturn_PoC,          desc="", in_trans="yes";
     SnpCleanInvalid,             desc="", in_trans="yes";
     SnpShared,                   desc="", in_trans="yes";
     SnpSharedFwd,                desc="", in_trans="yes";
@@ -418,11 +439,12 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     DataArrayWriteOnFill, desc="Write the cache data array (cache fill)";
 
     // Events for modeling the pipeline latency
-    ReadHitPipe,  desc="Latency of reads served from local cache";
-    ReadMissPipe, desc="Latency of reads not served from local cache";
-    WriteFEPipe,  desc="Front-end latency of write requests";
-    WriteBEPipe,  desc="Back-end latency of write requests";
-    FillPipe,     desc="Cache fill latency";
+    ReadHitPipe,   desc="Latency of reads served from local cache";
+    ReadMissPipe,  desc="Latency of reads not served from local cache";
+    WriteFEPipe,   desc="Front-end latency of write requests";
+    WriteBEPipe,   desc="Back-end latency of write requests";
+    FillPipe,      desc="Cache fill latency";
+    DelayAtomic,   desc="Atomic operation latency";
     SnpSharedPipe, desc="Latency for SnpShared requests";
     SnpInvPipe,    desc="Latency for SnpUnique and SnpCleanInv requests";
     SnpOncePipe,   desc="Latency for SnpOnce requests";
@@ -435,9 +457,9 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SendReadUnique,       out_trans="yes", desc="Send a ReadUnique";
     SendCompAck,          desc="Send CompAck";
     // Read handling at the completer
-    SendCompData,    desc="Send CompData";
-    WaitCompAck,     desc="Expect to receive CompAck";
-    SendRespSepData, desc="Send RespSepData for a DMT request";
+    SendCompData,         desc="Send CompData";
+    WaitCompAck,          desc="Expect to receive CompAck";
+    SendRespSepData,      desc="Send RespSepData for a DMT request";
 
     // Send a write request downstream.
     SendWriteBackOrWriteEvict, out_trans="yes", desc="Send a WriteBackFull (if line is UD or SD) or WriteEvictFull (if UC)";
@@ -449,11 +471,25 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SendWUData,                desc="Send write unique data";
     SendWUDataCB,              desc="Send write unique data from a sequencer callback";
     // Write handling at the completer
-    SendCompDBIDResp,      desc="Ack WB with CompDBIDResp";
-    SendCompDBIDRespStale, desc="Ack stale WB with CompDBIDResp";
-    SendCompDBIDResp_WU,   desc="Ack WU with CompDBIDResp and set expected data";
-    SendDBIDResp_WU,       desc="Ack WU with DBIDResp and set expected data";
-    SendComp_WU,           desc="Ack WU completion";
+    SendCompDBIDResp,          desc="Ack WB with CompDBIDResp";
+    SendCompDBIDRespStale,     desc="Ack stale WB with CompDBIDResp";
+    SendCompDBIDResp_WU,       desc="Ack WU with CompDBIDResp and set expected data";
+    SendDBIDResp_WU,           desc="Ack WU with DBIDResp and set expected data";
+    SendComp_WU,               desc="Ack WU completion";
+
+    // Send an atomic request downstream.
+    SendAtomicReturn,          out_trans="yes", desc="Send atomic request with return";
+    SendAtomicReturn_NoWait,   out_trans="yes", desc="Send atomic request with return, but no DBID";
+    SendAtomicNoReturn,        out_trans="yes", desc="Send atomic request without return";
+    SendARData,                desc="Send atomic return request data";
+    SendANRData,               desc="Send atomic no return request data";
+    // Atomic handling at the completer
+    SendDBIDResp_AR,       desc="Ack AR with DBIDResp and set expected data";
+    SendCompData_AR,       desc="Ack AR completion";
+    SendCompDBIDResp_ANR,  desc="Ack ANR with CompDBIDResp and set expected data";
+    SendDBIDResp_ANR,      desc="Ack ANR with DBIDResp and set expected data";
+    SendComp_ANR,          desc="Ack ANR completion";
+
 
     // Dataless requests
     SendEvict,      out_trans="yes", desc="Send a Evict";
@@ -502,6 +538,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     // Misc triggers
     LoadHit,  desc="Complete a load hit";
     StoreHit, desc="Complete a store hit";
+    AtomicHit, desc="Complete an atomic hit";
     UseTimeout, desc="Transition from UD_T -> UD";
     RestoreFromHazard, desc="Restore from a snoop hazard";
     TX_Data, desc="Transmit pending data messages";
@@ -613,6 +650,10 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     bool is_local_pf,       desc="Request generated by a local prefetcher";
     bool is_remote_pf,      desc="Request generated a prefetcher in another cache";
 
+    // Atomic info associated with the transaction
+    WriteMask atomic_op,    desc="Atomic Operation Wrapper";
+    bool atomic_to_be_done, desc="We have yet to perform the atomic";
+
     // NOTE: seqReq is a smart pointer pointing to original CPU request object
     // that triggers transactions associated with this TBE. seqReq carries some
     // information (e.g., PC of requesting instruction, virtual address of this
@@ -630,8 +671,10 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     // stable state.
     bool hasUseTimeout,           desc="Line is locked under store/use timeout";
     DataBlock dataBlk,            desc="Local copy of the line";
+    DataBlock oldDataBlk,         desc="Local copy of the line before executing atomic";
     WriteMask dataBlkValid,       desc="Marks which bytes in the DataBlock are valid";
     bool dataValid,               desc="Local copy is valid";
+    bool dataAMOValid,            desc="Local copy is valid for AMO";
     bool dataDirty,               desc="Local copy is dirtry";
     bool dataMaybeDirtyUpstream,  desc="Line maybe dirty upstream";
     bool dataUnique,              desc="Line is unique either locally or upsatream";

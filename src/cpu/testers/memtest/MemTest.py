@@ -63,6 +63,7 @@ class MemTest(ClockedObject):
     percent_reads = Param.Percent(65, "Percentage reads")
     percent_functional = Param.Percent(50, "Percentage functional accesses")
     percent_uncacheable = Param.Percent(10, "Percentage uncacheable")
+    percent_atomic = Param.Percent(50, "Percentage atomics")
 
     # Determine how often to print progress messages and what timeout
     # to use for checking progress of both requests and responses
