@@ -1,0 +1,35 @@
+name: Write Comment on PR Update
+
+on:
+    pull_request:
+        types: [opened, edited, synchronize]
+
+jobs:
+    write-single-commit-commment:
+        # Only run when the pull request is mergeable and has one commit
+        if: github.event.pull_request.mergeable == true && github.event.pull_request.comments == 1
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/github-script@v6
+              with:
+                script: |
+                    github.rest.issues.createComment({
+                        issue_number: context.issue.number,
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        body: 'This PR is now in a mergeable state. As it contains a single commit, we recommend using the `Squash Merge`. This will effectively rebase the change on top of the branch and thereby avoids the creation of a needless merge commit.'
+                    })
+    write-multi-commit-comment:
+        # Only run when the pull request is mergeable and has more then one commit
+        if: github.event.pull_request.mergeable == true && github.event.pull_request.comments > 1
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/github-script@v6
+              with:
+                script: |
+                    github.rest.issues.createComment({
+                        issue_number: context.issue.number,
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        body: 'This PR is now in a mergeable state. As it as a multi-commit PR, we recommend using the `Merge`. Please ensure the title and description of the merge commit (defaulted to the PR title and description) is sufficient to describe the collection of patches. `Squash` may be used if you wish to squash all the commits into a single commit.'
+                    })
