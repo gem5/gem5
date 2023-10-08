@@ -1,6 +1,16 @@
 /*
  * Copyright (c) 2014 ARM Limited
- * All rights reserved.
+ * Copyright (c) 2023 The University of Edinburgh
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,11 +36,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* @file
+ * Indirect target predictor interface
+ */
+
 #ifndef __CPU_PRED_INDIRECT_BASE_HH__
 #define __CPU_PRED_INDIRECT_BASE_HH__
 
 #include "arch/generic/pcstate.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/pred/branch_type.hh"
 #include "params/IndirectPredictor.hh"
 #include "sim/sim_object.hh"
 
@@ -51,21 +66,57 @@ class IndirectPredictor : public SimObject
     {
     }
 
-    virtual bool lookup(Addr br_addr, PCStateBase& br_target,
-                        ThreadID tid) = 0;
-    virtual void recordIndirect(Addr br_addr, Addr tgt_addr,
-                                InstSeqNum seq_num, ThreadID tid) = 0;
-    virtual void commit(InstSeqNum seq_num, ThreadID tid,
-                        void * indirect_history) = 0;
-    virtual void squash(InstSeqNum seq_num, ThreadID tid) = 0;
-    virtual void recordTarget(InstSeqNum seq_num, void * indirect_history,
-                              const PCStateBase& target, ThreadID tid) = 0;
-    virtual void genIndirectInfo(ThreadID tid, void* & indirect_history) = 0;
-    virtual void updateDirectionInfo(ThreadID tid, bool actually_taken) = 0;
-    virtual void deleteIndirectInfo(ThreadID tid, void * indirect_history) = 0;
-    virtual void changeDirectionPrediction(ThreadID tid,
-                                           void * indirect_history,
-                                           bool actually_taken) = 0;
+    virtual void reset() {};
+
+    /**
+     * Predicts the indirect target of an indirect branch.
+     * @param tid Thread ID of the branch.
+     * @param sn The sequence number of the branch.
+     * @param pc The branch PC address.
+     * @param i_history The pointer to the history object.
+     * @return For a hit the predictor returns a pointer to the target PCState
+     *         otherwise a nullptr is returned.
+     */
+    virtual const PCStateBase* lookup(ThreadID tid, InstSeqNum sn,
+                                      Addr pc, void * &i_history) = 0;
+
+    /**
+     * Updates the indirect predictor with history information of a branch.
+     * Is called right after the prediction which updates the state
+     * speculatively. In case the branch was mispredicted the function
+     * is called again with the corrected information.
+     * The function is called for ALL branches as some predictors incooperate
+     * all branches in their history.
+     * @param tid Thread ID
+     * @param sn The sequence number of the branch.
+     * @param pc The branch PC address.
+     * @param squash Whether the update is called at a misprediction
+     * @param taken Whether a conditional branch was taken
+     * @param target The target address if this branch.
+     * @param br_type The branch instruction type.
+     * @param i_history The pointer to the history object.
+     */
+    virtual void update(ThreadID tid, InstSeqNum sn, Addr pc, bool squash,
+                        bool taken, const PCStateBase& target,
+                        BranchType br_type, void * &i_history) = 0;
+
+    /**
+     * Squashes a branch. If the branch modified the history
+     * reverts the modification.
+     * @param tid Thread ID
+     * @param sn The sequence number of the branch.
+     * @param i_history The pointer to the history object.
+     */
+    virtual void squash(ThreadID tid, InstSeqNum sn, void * &i_history) = 0;
+
+    /**
+     * A branch gets finally commited. Updates the internal state of
+     * the indirect predictor (counter and target information).
+     * @param tid Thread ID
+     * @param sn The sequence number of the branch.
+     * @param i_history The pointer to the history object.
+     */
+    virtual void commit(ThreadID tid, InstSeqNum sn, void * &i_history) = 0;
 };
 
 } // namespace branch_prediction

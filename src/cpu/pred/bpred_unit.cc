@@ -158,10 +158,6 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                 tid, seqNum,  pred_taken, pc);
     }
 
-    const bool orig_pred_taken = pred_taken;
-    if (iPred) {
-        iPred->genIndirectInfo(tid, indirect_history);
-    }
 
     DPRINTF(Branch,
             "[tid:%i] [sn:%llu] Creating prediction history for PC %s\n",
@@ -250,11 +246,16 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                 predict_record.wasIndirect = true;
                 ++stats.indirectLookups;
                 //Consult indirect predictor on indirect control
-                if (iPred->lookup(pc.instAddr(), *target, tid)) {
+                const PCStateBase *itarget = iPred->lookup(tid,
+                                            seqNum, pc.instAddr(),
+                                            predict_record.indirectHistory);
+                if (itarget) {
                     // Indirect predictor hit
                     ++stats.indirectHits;
+                    set(target, *itarget);
+
                     DPRINTF(Branch,
-                            "[tid:%i] [sn:%llu] Instruction %s predicted "
+                            "[tid:%i, sn:%llu] Instruction %s predicted "
                             "indirect target is %s\n",
                             tid, seqNum, pc, *target);
                 } else {
@@ -262,9 +263,9 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                     pred_taken = false;
                     predict_record.predTaken = pred_taken;
                     DPRINTF(Branch,
-                            "[tid:%i] [sn:%llu] Instruction %s no indirect "
-                            "target\n",
-                            tid, seqNum, pc);
+                            "[tid:%i, sn:%llu] PC:%#x no indirect target\n",
+                            tid, seqNum, pc.instAddr());
+
                     if (!inst->isCall() && !inst->isReturn()) {
 
                     } else if (inst->isCall() && !inst->isUncondCtrl()) {
@@ -273,8 +274,6 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                     }
                     inst->advancePC(*target);
                 }
-                iPred->recordIndirect(pc.instAddr(), target->instAddr(),
-                        seqNum, tid);
             }
         }
     } else {
@@ -289,11 +288,10 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
 
     if (iPred) {
         // Update the indirect predictor with the direction prediction
-        // Note that this happens after indirect lookup, so it does not use
-        // the new information
-        // Note also that we use orig_pred_taken instead of pred_taken in
-        // as this is the actual outcome of the direction prediction
-        iPred->updateDirectionInfo(tid, orig_pred_taken);
+        iPred->update(tid, seqNum, predict_record.pc, false,
+                           predict_record.predTaken, *target,
+                           getBranchType(inst),
+                           predict_record.indirectHistory);
     }
 
     predHist[tid].push_front(predict_record);
@@ -321,8 +319,10 @@ BPredUnit::update(const InstSeqNum &done_sn, ThreadID tid)
                     predHist[tid].back().inst,
                     predHist[tid].back().target);
 
+        // Commite also Indirect predictor and RAS
         if (iPred) {
-            iPred->commit(done_sn, tid, predHist[tid].back().indirectHistory);
+            iPred->commit(tid, predHist[tid].back().seqNum,
+                            predHist[tid].back().indirectHistory);
         }
 
         predHist[tid].pop_back();
@@ -333,10 +333,6 @@ void
 BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
 {
     History &pred_hist = predHist[tid];
-
-    if (iPred) {
-        iPred->squash(squashed_sn, tid);
-    }
 
     while (!pred_hist.empty() &&
            pred_hist.front().seqNum > squashed_sn) {
@@ -369,7 +365,8 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
         // This call should delete the bpHistory.
         squash(tid, pred_hist.front().bpHistory);
         if (iPred) {
-            iPred->deleteIndirectInfo(tid, pred_hist.front().indirectHistory);
+            iPred->squash(tid, pred_hist.front().seqNum,
+                               pred_hist.front().indirectHistory);
         }
 
         DPRINTF(Branch, "[tid:%i] [squash sn:%llu] "
@@ -453,9 +450,13 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                pred_hist.front().bpHistory, true, pred_hist.front().inst,
                corr_target.instAddr());
 
+        // Correct Indirect predictor -------------------
         if (iPred) {
-            iPred->changeDirectionPrediction(tid,
-                pred_hist.front().indirectHistory, actually_taken);
+            iPred->update(tid, squashed_sn, (*hist_it).pc,
+                            true, actually_taken, corr_target,
+                            getBranchType(pred_hist.front().inst),
+                            (*hist_it).indirectHistory);
+
         }
 
         if (actually_taken) {
@@ -470,11 +471,6 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
             }
             if (hist_it->wasIndirect) {
                 ++stats.indirectMispredicted;
-                if (iPred) {
-                    iPred->recordTarget(
-                        hist_it->seqNum, pred_hist.front().indirectHistory,
-                        corr_target, tid);
-                }
             } else {
                 DPRINTF(Branch,"[tid:%i] [squash sn:%llu] "
                         "BTB Update called for [sn:%llu] "
