@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 Advanced Micro Devices, Inc.
+ * Copyright (c) 2023 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,53 +28,48 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef DEV_HSA_HSA_SIGNAL_H
-#define DEV_HSA_HSA_SIGNAL_H
 
-#include <cstdint>
+#ifndef __DEV_AMDGPU_AMDGPU_GFX_HH__
+#define __DEV_AMDGPU_AMDGPU_GFX_HH__
+
+#include "base/types.hh"
+#include "mem/packet.hh"
+
+/**
+ * MMIO offsets for GFX. This class handles MMIO reads/writes to the GFX_BASE
+ * aperture which are generally read/written by the gfx driver source here:
+ *
+ *      drivers/gpu/drm/amd/amdgpu/amdgpu_discovery.c
+ * https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/blob/master/
+ *      drivers/gpu/drm/amd/amdgpu/gfx_v9_0.c
+ *
+ * The MMIO addresses in the file are dword addresses. Here they are converted
+ * to byte addresses so gem5 does not need to shift the values.
+ */
+
+// Registers used to read GPU clock count used in profiling
+#define AMDGPU_MM_RLC_GPU_CLOCK_COUNT_LSB                 0x13090
+#define AMDGPU_MM_RLC_GPU_CLOCK_COUNT_MSB                 0x13094
+#define AMDGPU_MM_RLC_CAPTURE_GPU_CLOCK_COUNT             0x13098
 
 namespace gem5
 {
 
-// AMD Signal Kind Enumeration Values.
-typedef int64_t amd_signal_kind64_t;
-enum amd_signal_kind_t
+class AMDGPUGfx
 {
-  AMD_SIGNAL_KIND_INVALID = 0,
-  AMD_SIGNAL_KIND_USER = 1,
-  AMD_SIGNAL_KIND_DOORBELL = -1,
-  AMD_SIGNAL_KIND_LEGACY_DOORBELL = -2
+  public:
+    AMDGPUGfx() { }
+
+    void readMMIO(PacketPtr pkt, Addr offset);
+    void writeMMIO(PacketPtr pkt, Addr offset);
+
+  private:
+    /*
+     * GPU clock count at the time capture MMIO is received.
+     */
+    uint64_t captured_clock_count = 1;
 };
-
-// AMD Signal.
-typedef struct amd_signal_s
-{
-  amd_signal_kind64_t kind;
-  union
-  {
-    volatile int64_t value;
-    volatile uint32_t* legacy_hardware_doorbell_ptr;
-    volatile uint64_t* hardware_doorbell_ptr;
-  };
-  uint64_t event_mailbox_ptr;
-  uint32_t event_id;
-  uint32_t reserved1;
-  uint64_t start_ts;
-  uint64_t end_ts;
-  union
-  {
-    uint64_t queue_ptr;
-    uint64_t reserved2;
-  };
-  uint32_t reserved3[2];
-} amd_signal_t;
-
-typedef struct
-{
-  uint64_t start_ts;
-  uint64_t end_ts;
-} amd_event_t;
 
 } // namespace gem5
 
-#endif // DEV_HSA_HSA_SIGNAL_H
+#endif // __DEV_AMDGPU_AMDGPU_GFX_HH__
