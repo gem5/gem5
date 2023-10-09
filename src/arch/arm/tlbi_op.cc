@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022 Arm Limited
+ * Copyright (c) 2018-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -209,6 +209,22 @@ TLBIALLN::match(TlbEntry* te, vmid_t vmid) const
         te->checkELMatch(targetEL, false);
 }
 
+TlbEntry::Lookup
+TLBIMVAA::lookupGen(vmid_t vmid) const
+{
+    TlbEntry::Lookup lookup_data;
+    lookup_data.va = sext<56>(addr);
+    lookup_data.ignoreAsn = true;
+    lookup_data.vmid = vmid;
+    lookup_data.hyp = targetEL == EL2;
+    lookup_data.secure = secureLookup;
+    lookup_data.functional = true;
+    lookup_data.targetEL = targetEL;
+    lookup_data.inHost = inHost;
+    lookup_data.mode = BaseMMU::Read;
+    return lookup_data;
+}
+
 void
 TLBIMVAA::operator()(ThreadContext* tc)
 {
@@ -225,9 +241,18 @@ TLBIMVAA::operator()(ThreadContext* tc)
 bool
 TLBIMVAA::match(TlbEntry* te, vmid_t vmid) const
 {
+    TlbEntry::Lookup lookup_data = lookupGen(vmid);
+
+    return te->match(lookup_data) && (!lastLevel || !te->partial);
+}
+
+TlbEntry::Lookup
+TLBIMVA::lookupGen(vmid_t vmid) const
+{
     TlbEntry::Lookup lookup_data;
     lookup_data.va = sext<56>(addr);
-    lookup_data.ignoreAsn = true;
+    lookup_data.asn = asid;
+    lookup_data.ignoreAsn = false;
     lookup_data.vmid = vmid;
     lookup_data.hyp = targetEL == EL2;
     lookup_data.secure = secureLookup;
@@ -236,7 +261,7 @@ TLBIMVAA::match(TlbEntry* te, vmid_t vmid) const
     lookup_data.inHost = inHost;
     lookup_data.mode = BaseMMU::Read;
 
-    return te->match(lookup_data) && (!lastLevel || !te->partial);
+    return lookup_data;
 }
 
 void
@@ -255,17 +280,7 @@ TLBIMVA::operator()(ThreadContext* tc)
 bool
 TLBIMVA::match(TlbEntry* te, vmid_t vmid) const
 {
-    TlbEntry::Lookup lookup_data;
-    lookup_data.va = sext<56>(addr);
-    lookup_data.asn = asid;
-    lookup_data.ignoreAsn = false;
-    lookup_data.vmid = vmid;
-    lookup_data.hyp = targetEL == EL2;
-    lookup_data.secure = secureLookup;
-    lookup_data.functional = true;
-    lookup_data.targetEL = targetEL;
-    lookup_data.inHost = inHost;
-    lookup_data.mode = BaseMMU::Read;
+    TlbEntry::Lookup lookup_data = lookupGen(vmid);
 
     return te->match(lookup_data) && (!lastLevel || !te->partial);
 }
@@ -302,6 +317,38 @@ TLBIIPA::operator()(ThreadContext* tc)
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
         getMMUPtr(checker)->flushStage2(makeStage2());
+    }
+}
+
+bool
+TLBIRMVA::match(TlbEntry* te, vmid_t vmid) const
+{
+    TlbEntry::Lookup lookup_data = lookupGen(vmid);
+    lookup_data.size = rangeSize();
+
+    auto addr_match = te->match(lookup_data) && (!lastLevel || !te->partial);
+    if (addr_match) {
+        return tgMap[rangeData.tg] == te->tg &&
+        (resTLBIttl(rangeData.tg, rangeData.ttl) ||
+            rangeData.ttl == te->lookupLevel);
+    } else {
+        return false;
+    }
+}
+
+bool
+TLBIRMVAA::match(TlbEntry* te, vmid_t vmid) const
+{
+    TlbEntry::Lookup lookup_data = lookupGen(vmid);
+    lookup_data.size = rangeSize();
+
+    auto addr_match = te->match(lookup_data) && (!lastLevel || !te->partial);
+    if (addr_match) {
+        return tgMap[rangeData.tg] == te->tg &&
+        (resTLBIttl(rangeData.tg, rangeData.ttl) ||
+            rangeData.ttl == te->lookupLevel);
+    } else {
+        return false;
     }
 }
 

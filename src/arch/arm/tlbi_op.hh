@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, 2022 Arm Limited
+ * Copyright (c) 2018-2020, 2022-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -300,6 +300,8 @@ class TLBIALLN : public TLBIOp
 /** TLB Invalidate by VA, All ASID */
 class TLBIMVAA : public TLBIOp
 {
+  protected:
+    TlbEntry::Lookup lookupGen(vmid_t vmid) const;
   public:
     TLBIMVAA(ExceptionLevel _targetEL, bool _secure,
              Addr _addr, bool last_level)
@@ -319,6 +321,9 @@ class TLBIMVAA : public TLBIOp
 /** TLB Invalidate by VA */
 class TLBIMVA : public TLBIOp
 {
+  protected:
+    TlbEntry::Lookup lookupGen(vmid_t vmid) const;
+
   public:
     TLBIMVA(ExceptionLevel _targetEL, bool _secure,
             Addr _addr, uint16_t _asid, bool last_level)
@@ -368,6 +373,61 @@ class DTLBIMVA : public TLBIMVA
     bool match(TlbEntry *entry, vmid_t curr_vmid) const override;
 };
 
+class TLBIRange
+{
+  public:
+    /**
+     * Is the range valid? This mainly depends on the specified
+     * translation granule.
+     */
+    bool valid() const { return granule != ReservedGrain; }
+
+  protected:
+    BitUnion64(RangeData)
+        Bitfield<47, 46> tg;
+        Bitfield<45, 44> scale;
+        Bitfield<43, 39> num;
+        Bitfield<38, 37> ttl;
+        Bitfield<36, 0> baseAddr;
+    EndBitUnion(RangeData)
+
+    static constexpr std::array<GrainSize, 4> tgMap = {
+        ReservedGrain,
+        Grain4KB,
+        Grain16KB,
+        Grain64KB
+    };
+
+    TLBIRange(RegVal val)
+      : rangeData(val), granule(tgMap[rangeData.tg])
+    {}
+
+    Addr
+    startAddress() const
+    {
+        return sext<37>(rangeData.baseAddr) << granule;
+    }
+
+    Addr
+    rangeSize() const
+    {
+        return (rangeData.num + 1) << (5 * rangeData.scale + 1 + granule);
+    }
+
+    bool
+    resTLBIttl(uint8_t tg, uint8_t ttl) const
+    {
+        switch (ttl) {
+          case 0: return true;
+          case 1: return tgMap[tg] == Grain16KB;
+          default: return false;
+        }
+    }
+
+    RangeData rangeData;
+    GrainSize granule;
+};
+
 /** TLB Invalidate by Intermediate Physical Address */
 class TLBIIPA : public TLBIOp
 {
@@ -392,7 +452,7 @@ class TLBIIPA : public TLBIOp
     }
 
     /** TLBIIPA is basically a TLBIMVAA for stage2 TLBs */
-    TLBIMVAA
+    virtual TLBIMVAA
     makeStage2() const
     {
         return TLBIMVAA(EL1, secureLookup, addr, lastLevel);
@@ -400,6 +460,49 @@ class TLBIIPA : public TLBIOp
 
     Addr addr;
     bool lastLevel;
+};
+
+/** TLB Range Invalidate by VA */
+class TLBIRMVA : public TLBIRange, public TLBIMVA
+{
+  public:
+    TLBIRMVA(ExceptionLevel _targetEL, bool _secure,
+             RegVal val, uint16_t _asid, bool last_level)
+      : TLBIRange(val),
+        TLBIMVA(_targetEL, _secure, startAddress(), _asid, last_level)
+    {}
+
+    bool match(TlbEntry *entry, vmid_t curr_vmid) const override;
+};
+
+/** TLB Range Invalidate by VA, All ASIDs */
+class TLBIRMVAA : public TLBIRange, public TLBIMVAA
+{
+  public:
+    TLBIRMVAA(ExceptionLevel _targetEL, bool _secure,
+              RegVal val, bool last_level)
+      : TLBIRange(val),
+        TLBIMVAA(_targetEL, _secure, startAddress(), last_level)
+    {}
+
+    bool match(TlbEntry *entry, vmid_t curr_vmid) const override;
+};
+
+/** TLB Range Invalidate by VA, All ASIDs */
+class TLBIRIPA : public TLBIRange, public TLBIIPA
+{
+  public:
+    TLBIRIPA(ExceptionLevel _targetEL, bool _secure,
+             RegVal val, bool last_level)
+      : TLBIRange(val),
+        TLBIIPA(_targetEL, _secure, startAddress(), last_level)
+    {}
+
+    virtual TLBIMVAA
+    makeStage2() const
+    {
+        return TLBIRMVAA(EL1, secureLookup, rangeData, lastLevel);
+    }
 };
 
 } // namespace ArmISA
