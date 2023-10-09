@@ -73,7 +73,7 @@ opts=(".opt"
 builds_per_compiler=1
 
 # Base URL of the gem5 testing images.
-base_url="gcr.io/gem5-test"
+base_url="ghcr.io/gem5"
 
 # Arguments passed into scons on every build target test.
 if [ $# -eq 0 ];then
