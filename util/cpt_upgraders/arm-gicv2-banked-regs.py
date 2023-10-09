@@ -33,6 +33,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 # duplicate banked registers into new per-cpu arrays.
 def upgrader(cpt):
     if cpt.get("root", "isa", fallback="") == "arm":

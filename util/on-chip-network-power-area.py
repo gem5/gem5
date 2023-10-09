@@ -55,6 +55,7 @@ os.chdir("../../../")
 sys.path.append("build/ext/dsent")
 import dsent
 
+
 # Parse gem5 config.ini file for the configuration parameters related to
 # the on-chip network.
 def parseConfig(config_file):
@@ -182,7 +183,6 @@ def parseStats(
     buffers_per_control_vc,
     ni_flit_size_bits,
 ):
-
     # Open the stats.txt file and parse it to for the required numbers
     # and the number of routers.
     try:

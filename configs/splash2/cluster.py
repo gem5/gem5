@@ -64,6 +64,7 @@ parser.add_argument("-b", "--benchmark", help="Splash 2 benchmark to run")
 
 args = parser.parse_args()
 
+
 # --------------------
 # Define Splash2 Benchmarks
 # ====================

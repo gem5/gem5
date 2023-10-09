@@ -672,7 +672,6 @@ def getRunsByNameLike(
 def getRerunnableRunsByNameLike(
     db: ArtifactDB, name: str, fs_only: bool = False, limit: int = 0
 ) -> Iterable[gem5Run]:
-
     """Returns a generator of gem5Run objects having rerunnable as true
     and the object "name" containing the name parameter as a substring. The
     parameter is case sensitive.

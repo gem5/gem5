@@ -52,7 +52,6 @@ from m5.objects.ReplacementPolicies import RRIPRP as rp
 
 
 def python_generator(generator):
-
     yield generator.createLinear(60000, 0, 63, 64, 30000, 30000, 0, 0)
     yield generator.createLinear(60000, 0, 63, 64, 30000, 30000, 0, 0)
     yield generator.createLinear(60000, 0, 63, 64, 30000, 30000, 0, 0)

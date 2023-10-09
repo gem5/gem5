@@ -30,7 +30,6 @@ from m5.objects import L2Cache_Controller
 
 
 class AbstractL2Cache(L2Cache_Controller):
-
     _version = 0
 
     @classmethod

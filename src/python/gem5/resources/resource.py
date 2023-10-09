@@ -863,7 +863,6 @@ def obtain_resource(
 
     # If the "url" field is specified, the resoruce must be downloaded.
     if "url" in resource_json and resource_json["url"]:
-
         # If the `to_path` parameter is set, we use that as the path to which
         # the resource is to be downloaded. Otherwise, default to the
         # `resource_directory` parameter plus the resource ID.

@@ -374,6 +374,7 @@ def substBitOps(code):
 #
 #####################################################################
 
+
 # Force the argument to be a list.  Useful for flags, where a caller
 # can specify a singleton flag or a list of flags.  Also usful for
 # converting tuples to lists so they can be modified.

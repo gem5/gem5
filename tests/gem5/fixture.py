@@ -370,7 +370,6 @@ class DownloadedArchive(DownloadedProgram):
         with tarfile.open(self.filename) as tf:
 
             def is_within_directory(directory, target):
-
                 abs_directory = os.path.abspath(directory)
                 abs_target = os.path.abspath(target)
 
@@ -381,7 +380,6 @@ class DownloadedArchive(DownloadedProgram):
             def safe_extract(
                 tar, path=".", members=None, *, numeric_owner=False
             ):
-
                 for member in tar.getmembers():
                     member_path = os.path.join(path, member.name)
                     if not is_within_directory(path, member_path):

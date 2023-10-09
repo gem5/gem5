@@ -139,7 +139,6 @@ class DerivedGoldStandard(MatchGoldStandard):
     def __init__(
         self, standard_filename, ignore_regex=__ignore_regex_sentinel, **kwargs
     ):
-
         if ignore_regex == self.__ignore_regex_sentinel:
             ignore_regex = self._default_ignore_regex
 

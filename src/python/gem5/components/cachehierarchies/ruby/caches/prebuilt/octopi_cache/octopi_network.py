@@ -32,6 +32,7 @@ from .ruby_network_components import (
     RubyIntLink,
 )
 
+
 # . The Network owns all routers, all int links and all ext links that are not in CCD's.
 # . The CCD subsystems are not of type RubyNetwork, so we need to copy the references of
 # routers and links to OctopiNetwork._routers, ._int_links, and ._ext_links; which will

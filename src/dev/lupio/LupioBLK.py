@@ -31,7 +31,6 @@ from m5.proxy import Parent
 
 
 class LupioBLK(DmaDevice):
-
     type = "LupioBLK"
     cxx_class = "gem5::LupioBLK"
     cxx_header = "dev/lupio/lupio_blk.hh"

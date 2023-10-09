@@ -90,7 +90,6 @@ stdout_verifier = verifier.MatchRegex(regex)
 
 
 def verify_config(isa, binary, cpu, hosts, verifier, input):
-
     gem5_verify_config(
         name="test-" + binary + "-" + cpu,
         fixtures=(),

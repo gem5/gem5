@@ -140,7 +140,6 @@ def wrapForGraphic(filename, width="1.0"):
 
 
 def startDocText(outfile):
-
     start_stuff = """
 \\documentclass[a4paper,landscape,twocolumn]{article}
 
@@ -152,7 +151,6 @@ def startDocText(outfile):
 
 
 def endDocText(outfile):
-
     end_stuff = """
 
 \\end{document}

@@ -36,6 +36,7 @@
 from m5.params import *
 from m5.SimObject import SimObject
 
+
 # An address mapper changes the packet addresses in going from the
 # response port side of the mapper to the request port side. When the
 # response port is queried for the address ranges, it also performs the

@@ -31,6 +31,7 @@ from m5.objects import *
 #                ex5 big core (based on the ARM Cortex-A15)
 # -----------------------------------------------------------------------
 
+
 # Simple ALU Instructions have a latency of 1
 class ex5_big_Simple_Int(FUDesc):
     opList = [OpDesc(opClass="IntAlu", opLat=1)]

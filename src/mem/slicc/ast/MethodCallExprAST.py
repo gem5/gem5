@@ -189,7 +189,6 @@ class ClassMethodCallExprAST(MethodCallExprAST):
         return f"[MethodCallExpr: {self.proc_name!r} {self.expr_ast_vec!r}]"
 
     def generate_prefix(self, paramTypes):
-
         # class method call
         prefix = f"({self.type_ast}::"
         obj_type = self.type_ast.type

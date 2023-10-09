@@ -55,6 +55,7 @@ except ImportError:
     tqdm = FakeTQDM()
     _have_tqdm = False
 
+
 # Hook for the progress bar
 def progress_hook(t):
     if not _have_tqdm:

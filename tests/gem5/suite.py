@@ -98,7 +98,6 @@ def gem5_verify_config(
     for host in valid_hosts:
         for opt in valid_variants:
             for isa in valid_isas:
-
                 # Create a tempdir fixture to be shared throughout the test.
                 tempdir = TempdirFixture()
                 gem5_returncode = VariableFixture(

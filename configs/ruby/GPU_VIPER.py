@@ -524,7 +524,6 @@ def define_options(parser):
 
 
 def construct_dirs(options, system, ruby_system, network):
-
     dir_cntrl_nodes = []
 
     # For an odd number of CPUs, still create the right number of controllers
@@ -592,7 +591,6 @@ def construct_dirs(options, system, ruby_system, network):
 
 
 def construct_gpudirs(options, system, ruby_system, network):
-
     dir_cntrl_nodes = []
     mem_ctrls = []
 
@@ -681,12 +679,10 @@ def construct_gpudirs(options, system, ruby_system, network):
 
 
 def construct_corepairs(options, system, ruby_system, network):
-
     cpu_sequencers = []
     cp_cntrl_nodes = []
 
     for i in range((options.num_cpus + 1) // 2):
-
         cp_cntrl = CPCntrl()
         cp_cntrl.create(options, ruby_system, system)
 
@@ -721,7 +717,6 @@ def construct_corepairs(options, system, ruby_system, network):
 
 
 def construct_tcps(options, system, ruby_system, network):
-
     tcp_sequencers = []
     tcp_cntrl_nodes = []
 
@@ -729,7 +724,6 @@ def construct_tcps(options, system, ruby_system, network):
     TCC_bits = int(math.log(options.num_tccs, 2))
 
     for i in range(options.num_compute_units):
-
         tcp_cntrl = TCPCntrl(
             TCC_select_num_bits=TCC_bits, issue_latency=1, number_of_TBEs=2560
         )
@@ -769,7 +763,6 @@ def construct_tcps(options, system, ruby_system, network):
 
 
 def construct_sqcs(options, system, ruby_system, network):
-
     sqc_sequencers = []
     sqc_cntrl_nodes = []
 
@@ -777,7 +770,6 @@ def construct_sqcs(options, system, ruby_system, network):
     TCC_bits = int(math.log(options.num_tccs, 2))
 
     for i in range(options.num_sqc):
-
         sqc_cntrl = SQCCntrl(TCC_select_num_bits=TCC_bits)
         sqc_cntrl.create(options, ruby_system, system)
 
@@ -804,7 +796,6 @@ def construct_sqcs(options, system, ruby_system, network):
 
 
 def construct_scalars(options, system, ruby_system, network):
-
     scalar_sequencers = []
     scalar_cntrl_nodes = []
 
@@ -837,7 +828,6 @@ def construct_scalars(options, system, ruby_system, network):
 
 
 def construct_cmdprocs(options, system, ruby_system, network):
-
     cmdproc_sequencers = []
     cmdproc_cntrl_nodes = []
 
@@ -845,7 +835,6 @@ def construct_cmdprocs(options, system, ruby_system, network):
     TCC_bits = int(math.log(options.num_tccs, 2))
 
     for i in range(options.num_cp):
-
         tcp_ID = options.num_compute_units + i
         sqc_ID = options.num_sqc + i
 
@@ -898,11 +887,9 @@ def construct_cmdprocs(options, system, ruby_system, network):
 
 
 def construct_tccs(options, system, ruby_system, network):
-
     tcc_cntrl_nodes = []
 
     for i in range(options.num_tccs):
-
         tcc_cntrl = TCCCntrl(l2_response_latency=options.TCC_latency)
         tcc_cntrl.create(options, ruby_system, system)
         tcc_cntrl.l2_request_latency = options.gpu_to_dir_latency

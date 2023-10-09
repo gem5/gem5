@@ -90,7 +90,6 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
         memory: AbstractMemorySystem,
         cache_hierarchy: AbstractCacheHierarchy,
     ) -> None:
-
         if cache_hierarchy.is_ruby():
             raise EnvironmentError("RiscvBoard is not compatible with Ruby")
 
@@ -105,7 +104,6 @@ class LupvBoard(AbstractSystemBoard, KernelDiskWorkload):
 
     @overrides(AbstractSystemBoard)
     def _setup_board(self) -> None:
-
         self.workload = RiscvLinux()
 
         # Initialize all the devices that we want to use on this board

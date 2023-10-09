@@ -80,7 +80,6 @@ class MESIThreeLevelCacheHierarchy(
         self._num_l3_banks = num_l3_banks
 
     def incorporate_cache(self, board: AbstractBoard) -> None:
-
         requires(
             coherence_protocol_required=CoherenceProtocol.MESI_THREE_LEVEL
         )

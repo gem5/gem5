@@ -192,6 +192,7 @@ board.set_kernel_disk_workload(
     readfile_contents=command,
 )
 
+
 # functions to handle different exit events during the simuation
 def handle_workbegin():
     print("Done booting Linux")

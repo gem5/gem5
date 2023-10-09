@@ -43,7 +43,6 @@ def test_parsec(
     size: str,
     length: str,
 ):
-
     if (boot_cpu == "kvm" or detailed_cpu == "kvm") and not os.access(
         "/dev/kvm", mode=os.R_OK | os.W_OK
     ):

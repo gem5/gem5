@@ -36,6 +36,7 @@
 from m5.SimObject import *
 from m5.params import *
 
+
 # Represents a group of simobj which produce heat
 class ThermalDomain(SimObject):
     type = "ThermalDomain"

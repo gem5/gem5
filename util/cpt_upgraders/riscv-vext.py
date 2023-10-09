@@ -40,7 +40,6 @@ def upgrader(cpt):
 
         # Search for all XC sections
         if re.search(".*processor.*\.core.*\.xc.*", sec):
-
             # Updating RVV vector registers (dummy values)
             # Assuming VLEN = 256 bits (32 bytes)
             mr = cpt.get(sec, "regs.vector").split()
@@ -58,7 +57,6 @@ def upgrader(cpt):
 
         # Search for all ISA sections
         if re.search(".*processor.*\.core.*\.isa$", sec):
-
             # Updating RVV misc registers (dummy values)
             mr = cpt.get(sec, "miscRegFile").split()
             if len(mr) == 164:
