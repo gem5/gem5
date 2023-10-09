@@ -11,14 +11,14 @@ on:
     workflow_dispatch:
 
 jobs:
-  build-gem5:
-    runs-on: [self-hosted, linux, x64]
-    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    outputs:
-      build-name: ${{ steps.artifact-name.outputs.name }}
-    steps:
-      - uses: actions/checkout@v3
-        with:
+    build-gem5:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+        outputs:
+            build-name: ${{ steps.artifact-name.outputs.name }}
+        steps:
+            - uses: actions/checkout@v3
+              with:
           # Scheduled workflows run on the default branch by default. We
           # therefore need to explicitly checkout the develop branch.
                   ref: develop
@@ -35,23 +35,20 @@ jobs:
             - run: echo "This job's status is ${{ job.status }}."
 
   # start running the very-long tests
-  testlib-very-long-tests:
-    strategy:
-      fail-fast: false
-      matrix:
-        test-type: [gem5_library_example_tests, gem5_resources, parsec_benchmarks, x86_boot_tests]
-    runs-on: [self-hosted, linux, x64]
-    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    needs: [build-gem5]
-    timeout-minutes: 4320 # 3 days
-    steps:
-    - name: Clean runner
-      run:
-        rm -rf ./* || true
-        rm -rf ./.??* || true
-        rm -rf ~/.cache || true
-    - uses: actions/checkout@v3
-      with:
+    testlib-very-long-tests:
+        strategy:
+            fail-fast: false
+            matrix:
+                test-type: [gem5_library_example_tests, gem5_resources, parsec_benchmarks, x86_boot_tests]
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
+        needs: [build-gem5]
+        timeout-minutes: 4320 # 3 days
+        steps:
+            - name: Clean runner
+              run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
+            - uses: actions/checkout@v3
+              with:
         # Scheduled workflows run on the default branch by default. We
         # therefore need to explicitly checkout the develop branch.
                   ref: develop
@@ -79,13 +76,13 @@ jobs:
                   retention-days: 7
             - run: echo "This job's status is ${{ job.status }}."
 
-  dramsys-tests:
-    runs-on: [self-hosted, linux, x64]
-    container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
-    timeout-minutes: 4320 # 3 days
-    steps:
-      - uses: actions/checkout@v3
-        with:
+    dramsys-tests:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
+        timeout-minutes: 4320 # 3 days
+        steps:
+            - uses: actions/checkout@v3
+              with:
           # Scheduled workflows run on the default branch by default. We
           # therefore need to explicitly checkout the develop branch.
                   ref: develop
