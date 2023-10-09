@@ -13,7 +13,7 @@ on:
 jobs:
     build-gem5:
         runs-on: [self-hosted, linux, x64]
-        container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         outputs:
             build-name: ${{ steps.artifact-name.outputs.name }}
         steps:
@@ -41,7 +41,7 @@ jobs:
             matrix:
                 test-type: [gem5_library_example_tests, gem5_resources, parsec_benchmarks, x86_boot_tests]
         runs-on: [self-hosted, linux, x64]
-        container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         needs: [build-gem5]
         timeout-minutes: 4320 # 3 days
         steps:
@@ -78,7 +78,7 @@ jobs:
 
     dramsys-tests:
         runs-on: [self-hosted, linux, x64]
-        container: gcr.io/gem5-test/ubuntu-22.04_all-dependencies:latest
+        container: ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest
         timeout-minutes: 4320 # 3 days
         steps:
             - uses: actions/checkout@v3
