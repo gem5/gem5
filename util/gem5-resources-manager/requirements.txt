@@ -21,9 +21,9 @@ packaging==23.1
 pycparser==2.21
 pymongo==4.3.3
 pyrsistent==0.19.3
+python-dotenv==1.0.0
 requests==2.31.0
 sentinels==1.0.0
 urllib3==2.0.2
 Werkzeug==2.3.4
 zipp==3.15.0
-python-dotenv==1.0.0
