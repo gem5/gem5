@@ -32,3 +32,6 @@ e73655d038cdfa68964109044e33c9a6e7d85ac9
 
 # A commit which ran pre-commit on ext/testlib
 9e1afdecefaf910fa6e266f29dc480a32b0fa83e
+
+# A commit which runs the `reorder-python-imports` on all files.
+4e121769cfdbd7ac1a33676edd263f4d13eaa470
